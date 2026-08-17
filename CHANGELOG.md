@@ -2,6 +2,46 @@
 
 ## [Unreleased]
 
+### Added - the developer-experience wave, part one: flow, packs, and vocabulary (22 suggestions)
+
+Drawn from a mockup audited twice - once for the condition/action lane, once for the ACE
+kind on Godot's primitives - so every outcome that HAPPENS is a trigger backed by a real
+signal with its payload as the row's captured context, every check is a condition, and no
+debugger information is program text or on by default.
+
+**Flow.** Wait Until / Wait For All Of / Wait For Any Of pause a row until a check or a set
+of signals comes true, with a deadline, and read back on the next row as **Wait Succeeded** /
+**Wait Timed Out** - never a variable to remember. **On Failure Of** / **On Success Of** are
+triggers any verb can raise (Report Failure / Report Success), with the reason as payload, so
+recovery can live in another event or sheet. **Retry Up To N Times** is a looping condition
+with Retries Exhausted and a backoff; **At Most Every** throttles; **Poke** / **Has Been
+Quiet For** debounce; **Only Once Per Node / Per Name / This Scene Load** fix Trigger Once
+firing only for the first item in a loop.
+
+**Five new packs.** **Event Bus** (named channels with a payload, On Event as one signal,
+Wait For Event with its read-back pair, one-shot listen, group fan-out). **Named Scenes** (a
+registry so no res:// path appears in a row, a handoff payload, scene_ready as the trigger).
+**Game Settings** (settings that declare themselves, On Setting Changed with name and value
+as payload - the exemplar shape). **Debug Overlay** (values, bars and marks on the game, off
+unless a row turns it on). **Follow A Path** (a Move To sibling with path_finished). 91
+packs total.
+
+**Vocabulary.** Register As Service / Service Named / Has Service and For Each Node That
+Can; Do After Frame / Call Later / Set Property Deferred and Only Once This Frame; Spawn
+Scene As with the node as trigger payload; Watch Data File / Reload Data Asset with
+data_file_changed as the trigger, and Validate Data Folder; Value Trails, Frame Over Budget,
+FPS Below For, named stopwatches; a spatial module (screen and world both ways, random point
+in a shape, bounce/slide/aim, grid math without a TileMap, falloff and radial force); and the
+Save System's Local-Storage-shaped keys - per-key triggers including **On Save Key Missing**,
+Remove Save Key, Clear Slot Keys, Check Save Key, Is Saving / Is Loading, Save Key Count /
+At. A Doctor check names a trigger whose signal the sheet never declared, which otherwise
+compiles silently and never runs.
+
+Every verb is pinned at its emitted line and run at runtime; every trigger's test connects
+to its signal and asserts the payload. 565 new strings translated across all nine bundled
+languages. Every group has worked use cases in the guide a reader would search, written as
+compilable rows so the in-editor reader lights them as live figures.
+
 ### Added - a guide to writing the docs
 
 `docs/GUIDE-WRITING-THE-DOCS.md`: how documentation works here and how to add to it - the

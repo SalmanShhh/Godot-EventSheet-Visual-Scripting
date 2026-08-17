@@ -124,6 +124,9 @@ All ACEs live in the **Save System** category and are called on the `SaveSystem`
 | Delete Slot | (none) | Removes the active slot's save file. |
 | Save Game | (none) | Broadcasts On Before Save so every sheet writes its state, snapshots the persist group, flushes the file, then broadcasts On Save Written. |
 | Load Game | (none) | Restores the persist-group snapshots, then broadcasts On After Load so every sheet reads its state back. |
+| Remove Save Key | `key` (String) | Takes one key out of the active slot and rewrites the file, then fires On Key Removed. A key the slot does not hold fires On Save Key Missing instead. |
+| Clear Slot Keys | (none) | Empties the slot of everything the game saved, firing On Key Removed once per key. The file, its slot card, its version stamp, its run number and its backups all stay. |
+| Check Save Key | `key` (String) | Asks whether the slot holds the key and answers with a row: On Key Loaded when it does, On Save Key Missing when it does not. |
 
 ### Conditions
 
@@ -133,6 +136,9 @@ All ACEs live in the **Save System** category and are called on the `SaveSystem`
 | Slot Exists | `slot_index` (int) | Whether the given slot has a save file. |
 | Save File Is Format | `path` (String), `expected_format` (String) | Whether the save file at the path is the given format (`config`/`json`/`binary`/`csv`/`ini`/`xml`). |
 | Save Format Is | `expected_format` (String) | Whether the active save format (the Inspector `format` property) equals the given one. |
+| Save Key Is | `key` (String), `value` (any) | Whether the stored key equals this value, with no variable in between. A key the slot does not hold matches nothing, so a missing key reads as false. |
+| Is Saving | (none) | Whether a write is in flight right now - inside On Before Save, a Save All Addons sweep, or an autosave. The write is synchronous, so this is a re-entrancy guard, not a progress spinner. |
+| Is Loading | (none) | Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside the window. |
 
 ### Expressions
 
@@ -147,6 +153,8 @@ All ACEs live in the **Save System** category and are called on the `SaveSystem`
 | Save File Format | `path` (String) | String | Detects the format of the save file at the path (by extension, then by content), or `""` when missing or unrecognised. Feed it to Read Save File. |
 | List Slots | (none) | Array | The slot numbers that currently have a save file - build a save/load menu from it. |
 | Slot Modified Time | `slot_index` (int) | int | Unix modified time of the slot's file, or 0 when the slot has no file. |
+| Save Key Count | (none) | int | How many keys the active slot holds - the number a save inspector puts in its header. Counts exactly what List Save Keys lists. |
+| Save Key At | `index` (int) | String | The key at that position in the active slot, for a numbered or paged list; an empty string when the position is past the end. |
 
 ### Triggers
 
@@ -155,8 +163,12 @@ All ACEs live in the **Save System** category and are called on the `SaveSystem`
 | On Before Save | Save Game starts - your cue for every sheet to write its own state before the file is flushed. |
 | On Save Written | Save Game has finished flushing the file (also fires per automatic autosave). |
 | On After Load | Load Game is called - your cue for every sheet to read its own state back. |
+| On Key Saved | One key's value has landed on disk - Save Value, Save Number and Save Text all raise it. A key held back by Never Save This Key never does, because it never reached the file. |
+| On Key Loaded | Check Save Key found the key in the slot. |
+| On Key Removed | Remove Save Key took the key out of the file - and once per key that Clear Slot Keys emptied out of it. |
+| On Save Key Missing | A key was asked for and the slot does not hold it: Check Save Key came up empty, or Remove Save Key had nothing to remove. |
 
-Each trigger passes the slot number that was saved or loaded, so a handler can tell which slot the broadcast is for.
+Each slot-wide trigger passes the slot number that was saved or loaded, so a handler can tell which slot the broadcast is for. The four per-key triggers pass the `key` first and the slot second, so one trigger serves every key: the row reads `key` straight off the trigger, and a handler that wants exactly one key drops an ordinary condition on that captured value underneath. Nothing has to remember to check a "last saved key" variable afterwards.
 
 ### Inspector properties
 
@@ -469,6 +481,143 @@ Switch `format` to `binary` for the release build and the same Save Game writes 
 ```
 On Button Pressed "SaveButton"
   -> SaveSystem: Save Game
+```
+
+### 22. A save inspector that lists what a slot really holds
+
+**Save Key Count** gives the header number and **Save Key At** gives the numbered rows, so a debug panel can show a slot's contents without loading a thing. Both read the same list **List Save Keys** loops - use the loop when you just want them all, and these two when you need a count or a position (a header, a numbered row, a paged list).
+
+```
+On Panel Opened  "SaveInspector"
+  -> HUD Kit: Set text from  SaveSystem.Save Key Count & " keys in slot " & SaveSystem.slot
+
+Repeat  SaveSystem.Save Key Count  times
+  -> HUD Kit: Add list row  SaveSystem.Save Key At(loopindex) & " = " & SaveSystem.Load Text(SaveSystem.Save Key At(loopindex))
+```
+
+A position past the end reads as an empty string rather than faulting, so a paged list that asks for row 20 of a 12-key slot simply draws nothing.
+
+### 23. Grey out the empty entries in that inspector
+
+**Save Key Is** compares a stored key against a value with no variable in between - handy inside a loop, where a temporary variable would need clearing every pass.
+
+```
+Repeat  SaveSystem.Save Key Count  times
+  Save System: Save Key Is  SaveSystem.Save Key At(loopindex), ""
+    -> HUD Kit: Tint last row  Color.GRAY
+```
+
+A key the slot has never held matches nothing at all, so an absent key reads as false rather than accidentally equalling an empty default.
+
+### 24. Forget one flag without deleting the player's save
+
+**Remove Save Key** is the middle ground the pack was missing: **Never Save This Key** blocks a key forever, **Delete Slot** takes the whole file, and this takes exactly one key out and rewrites the rest.
+
+```
+On Button Pressed  "ForgetTutorial"
+  -> SaveSystem: Remove Save Key  "tutorial_seen"
+
+On Key Removed
+  -> HUD Kit: Show Toast from  "Forgot " & key
+```
+
+If the slot never held that key, **On Save Key Missing** fires instead of On Key Removed - so a stale key from an old build that is already gone reports honestly instead of looking like a successful removal.
+
+### 25. A reset-profile button that keeps the slot card and the backups
+
+**Clear Slot Keys** empties everything the game saved but leaves the file, its slot card (chapter, hero, percent, playtime), its version stamp, its run number and its backup ring in place. That is the difference between "start this profile over" and "destroy this save".
+
+```
+On Button Pressed  "ResetProfile"
+  -> SaveSystem: Clear Slot Keys
+  -> HUD Kit: Show Toast  "Profile reset"
+```
+
+It reports one **On Key Removed** per key it actually emptied, so a sheet watching a single key hears about that key instead of decoding a slot-wide event. A slot with nothing to empty writes nothing and reports nothing.
+
+### 26. A "saved" toast that is true because the write landed
+
+**On Key Saved** fires when the value is on disk, carrying the key that was written. That is stronger than popping the toast next to the Save Value row, which only tells you the row ran.
+
+```
+On Action  "submit_score" pressed
+  -> SaveSystem: Save Value  "high_score", score
+
+On Key Saved
+  Compare  key = "high_score"
+    -> HUD Kit: Show Toast  "Score saved"
+
+On Save Failed
+  -> HUD Kit: Show Toast from  "Could not save: " & SaveSystem.Last Save Problem
+```
+
+The failure half is already shipped: **On Save Failed** and the **Last Save Problem** sentence. And a key you have excluded with Never Save This Key never raises On Key Saved, because it never reached the file.
+
+### 27. Seed a first-run default once, instead of defaulting forever
+
+**Load Number** returning 0 for a missing key is indistinguishable from a genuine saved zero, so a first run silently defaults every session. **Check Save Key** asks the question as a row and the answer comes back as a trigger.
+
+```
+On After Load
+  -> SaveSystem: Check Save Key  "high_score"
+
+On Save Key Missing
+  Compare  key = "high_score"
+    -> SaveSystem: Save Number  "high_score", 0
+```
+
+After the seed, the same ask answers **On Key Loaded** instead, so the branch runs exactly once per profile.
+
+### 28. A quit button that lets the write finish
+
+The write is synchronous - a temp file, then a rename - so **Is Saving** is true only inside that window. That window is precisely where an On Before Save handler, a Save All Addons sweep or a quit can do damage, which is what makes the condition worth asking.
+
+```
+On Quit Requested
+  Save System: Is Saving
+    -> System: Do After This Frame:  Quit Game
+  Else
+    -> System: Quit Game
+```
+
+The window is counted, not flagged: a sheet that saves its own key during On Before Save opens a second window inside the first, and finishing the inner write does not close the outer one.
+
+### 29. Hold gameplay still while a load is in flight
+
+**Is Loading** covers the whole restore - the read, the migration gap and the On After Load broadcast - so rows that must not fight the restore can stand aside for it.
+
+```
+Every tick
+  Save System: Is Loading  (inverted)
+    -> Enemy AI: Think
+```
+
+This is the honest scope: it is a re-entrancy guard over a synchronous window, not a progress bar for a background job.
+
+### 30. Confirm a per-quest key really left the file
+
+Packs that write one key per thing - **Quest**'s Save Quests, **Checkpoint**'s per-respawn keys, **Game Options**' per-setting writes - are exactly where a per-key trigger beats watching the whole slot.
+
+```
+On Quest Abandoned
+  -> SaveSystem: Remove Save Key  "quest_" & quest_id
+
+On Key Removed
+  -> System: Log Value  "save", key
+```
+
+Because the key is the trigger's own captured value, one handler covers every quest and a condition on `key` narrows it to one.
+
+### 31. Porting a Construct 3 Local Storage project
+
+Almost every Local Storage row already had a home here; these fill the last gaps. Set item is **Save Value**, Get item is **Load Value**, Item exists is **Has Save Key**, Get all key names is **List Save Keys**, and ErrorMessage is **Last Save Problem**. Remove item is **Remove Save Key**, Clear storage is **Clear Slot Keys**, "on item set" and "on item missing" are **On Key Saved** and **On Save Key Missing**, and the browser round trip that made C3's version asynchronous simply does not exist here - this store is a file read, answered on the spot.
+
+```
+On Start of Layout
+  -> SaveSystem: Check Save Key  "profile_name"
+
+On Save Key Missing
+  -> SaveSystem: Save Text  "profile_name", "Player"
 ```
 
 ### Other use cases

@@ -368,6 +368,27 @@ Node script extending `CharacterBody2D`.
 - **Offline Id** - The currency credited (inside On Offline Gain).
 - **Offline Gain** - The amount credited offline (inside On Offline Gain).
 
+### DebugOverlayAddon (`res://eventsheet_addons/debug_overlay/debug_overlay_addon.gd`)
+@ace_tags(debug, overlay, hud, profiling) @ace_category("Debug Overlay") @ace_version(1.0.0)
+
+#### Triggers
+- **On Overlay Toggled** (`shown: bool`)
+
+#### Conditions
+- **Overlay Is Visible** - True while the overlay is on screen. False in a release build, before any row has drawn to it, and while the toggle key has it hidden.
+
+#### Actions
+- **Watch Value** (`watch_name: String, value: Variant`) - Shows name = value in the on-screen list, refreshed every time you set it. Call it from an Every Frame row and it reads like a live watch window over the running game. Debug builds only.
+- **Clear Watch** (`watch_name: String`) - Drops one named value from the on-screen list, for when a watch has served its purpose and is just taking up a line.
+- **Show Bar** (`bar_name: String, fraction: float, bar_color: Color`) - Draws a named meter filled to a fraction from 0 to 1, in the colour you pick. The fastest way to see stamina, a cooldown, or an AI's confidence without building any UI.
+- **Mark Point** (`at: Vector2, mark_label: String, seconds: float`) - Drops a labelled cross at a world position for a moment, so you can SEE where something happened. The mark stays glued to the world while the camera moves, then fades out on its own.
+- **Draw Ray** (`origin: Vector2, direction: Vector2, length: float, ray_color: Color, seconds: float`) - Draws a line from a world position along a direction for a given length, which is what you want on screen while tuning a detection cone, an aim vector, or a raycast that keeps missing.
+- **Label Above** (`node: Node, label_text: String, seconds: float`) - Floats a line of text above a node for a moment - the fastest way to debug a dozen enemies at once, because each one carries its own state on screen. Works for a Node2D, a Control, or a Node3D seen through the active camera.
+- **Show Overlay** - Makes the overlay visible again after it was hidden. Fires On Overlay Toggled when it was actually hidden.
+- **Hide Overlay** - Hides the overlay without clearing anything. Rows keep recording, so showing it again brings the values straight back.
+- **Toggle Overlay** - Flips the overlay between shown and hidden, the same thing the toggle key does - put it on a button so a playtester can turn it on for a screenshot.
+- **Clear Overlay** - Wipes every watch, bar, mark, ray and label at once. Useful between levels, or at the head of a run so last run's evidence does not confuse this one.
+
 ### DecalPainter (`res://eventsheet_addons/decal_painter/decal_painter_behavior.gd`)
 @ace_tags(3d, drawing, visual) @ace_category("Decal Painter") @ace_version(1.0.0)
 
@@ -540,6 +561,30 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Spawned Group** - The group the most recent spawn was added to ("" when its beat named none).
 - **Encounter Report** - The whole plan as plain text: the beat table (time, count, scene, group, note), the totals, everything the data does not say clearly, and the spawn density per 30 seconds. Every line is DERIVED from the loaded beats - nothing is written down twice - so it can never fall out of step with the encounter. Print it, show it in a debug overlay, or save it with Write Encounter Report.
 
+### EventBusPackAddon (`res://eventsheet_addons/event_bus/event_bus_addon.gd`)
+@ace_tags(events, messaging, decoupling) @ace_category("Events") @ace_version(1.0.0)
+
+#### Triggers
+- **On Event** (`channel: String, payload: Dictionary`)
+
+#### Conditions
+- **Wait For Event Succeeded** (`channel: String = "door_opened"`) - Whether the most recent Wait For Event on this channel ended because the message arrived. Put it on the rows under the wait - it is a state check on the wait that just finished, not a trigger. A wait still in flight is neither succeeded nor timed out.
+- **Wait For Event Timed Out** (`channel: String = "door_opened"`) - Whether the most recent Wait For Event on this channel gave up without the message arriving. The recovery branch: say something else, open a different door, skip the beat. It stays false while a wait is still running, so it can only mean give-up.
+- **Event Was Broadcast This Frame** (`channel: String = "boss_defeated"`) - Whether this channel was broadcast during the frame being processed right now. The polled read for a per-frame event; where you can, answer with the On Event trigger instead - it costs nothing and cannot miss.
+- **Event Was Ever Broadcast** (`channel: String = "boss_defeated"`) - Whether this channel has been broadcast at least once since the game started. Useful for a gate that must stay open once something has happened, e.g. "the boss has been defeated at some point".
+
+#### Actions
+- **Wait For Event** (`channel: String = "door_opened", seconds: float = 8.0`) - Suspends this event until the named message is broadcast, or until the give-up time passes. The rows below it run when it resolves, so read what happened with the Wait For Event Succeeded / Wait For Event Timed Out conditions. A give-up time of 0 waits forever.
+- **Broadcast Event** (`channel: String = "boss_defeated", payload: Dictionary = {}`) - Sends a named message to everyone listening, with a record of details. Anyone anywhere can answer it with On Event - the listener needs no reference to you, and you need none to it. The details arrive on the listener's row as the payload record, read by key.
+- **Listen Once For Event** (`channel: String = "tutorial_done", on_node: Node = null, method_name: String = "_on_bus_event"`) - Asks for ONE delivery of a channel and then unsubscribes itself, so a tutorial gate or a one-time hint can never fire twice and can never leak. When the message arrives the named method is called on the node you picked, with the channel and the payload as its two arguments.
+- **Broadcast To Group** (`group: String = "listeners", method_name: String = "on_bus_event", payload: Dictionary = {}`) - Calls a named method on every member of a group that actually has it, handing over the payload record. The fan-out half of the bus: use it when the answer belongs to a family of nodes rather than to a sheet, and nothing breaks when a member does not implement the method.
+- **Clear Event Log** - Empties the record of what has been broadcast this session. The counters that Event Broadcast Count reads are kept, so only the report text is affected.
+- **Print Event Bus Report** - Prints every broadcast recorded this session to the output, newest last, one channel and payload per line. A diagnostic: reach for it while you are hunting a missing listener, not in shipping rows.
+
+#### Expressions
+- **Event Broadcast Count** (`channel: String = "boss_defeated"`) - How many times this channel has been broadcast since the game started. 0 for a channel nobody has used.
+- **Event Bus Report** - Everything broadcast this session as text, one "channel  payload" line each, newest last. Drop it into a debug label while you are hunting a listener that never fired.
+
 ### FadeBehavior (`res://eventsheet_addons/fade/fade_behavior.gd`)
 @ace_tags(fade, juice) @ace_category("Fade") @ace_version(1.0.0)
 
@@ -582,6 +627,27 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Start Following** (`path: String`) - Follows the node at the given path.
 - **Follow Group** (`group: String`) - Follows the first node in a group - no tree path, so it survives the target being moved or renamed.
 - **Stop Following** - Stops trailing the target.
+
+### PathFollowBehavior (`res://eventsheet_addons/follow_path/path_follow_behavior.gd`)
+@ace_tags(movement, path, curve) @ace_category("Path") @ace_version(1.0.0)
+
+#### Triggers
+- **On Path Finished**
+
+#### Conditions
+- **Is Following Path** - True while the host is actually travelling - the gate for a walk animation, a conveyor's hum, or a Stop row that should only fire once.
+- **Is At Path End** - True while the host is parked at the far end of its route right now. This is the STATE question, asked whenever a row is reached; for the moment of arrival use the On Path Finished trigger instead - it fires once, for free, with no per-frame checking.
+
+#### Actions
+- **Follow Path** (`path: Path2D, speed: float = 120.0, mode: String = "once"`) - Sends the host travelling along a drawn Path2D at a real speed - patrol routes, conveyor lanes, camera dollies, tower-defence lanes. Ping-pong walks it back and forth forever; Once fires On Path Finished at the end.
+- **Stop Following Path** - Halts the run where it stands, WITHOUT firing On Path Finished - a stunned patroller, a conveyor switched off, a dolly interrupted by the player. Follow Path starts it again from the top.
+
+#### Expressions
+- **Progress Along Path** - How far along its route the host has come, from 0 at the start to 1 at the end - a racer's lap bar, a delivery tracker, a boss phase keyed to how far the sweep has gone.
+- **Point On Path At** (`path: Path2D, progress: float = 0.5`) - The world point a fraction of the way along a path (0 is the start, 1 is the end) - drive a camera dolly, a progress marker, or a preview ghost without moving anything.
+- **Direction Along Path At** (`path: Path2D, progress: float = 0.5`) - Which way the path is heading a fraction of the way along it, as a direction one unit long - point a camera down the track, aim a spawned thing along the lane, or rotate a marker to match the curve.
+- **Path Length** (`path: Path2D`) - How long a route is in pixels, measured along the curve rather than corner to corner - divide by a speed to know how many seconds the trip takes, or space things evenly along it.
+- **Nearest Point On Path** (`path: Path2D, point: Vector2`) - The point on a route closest to a world position - snap a dragged tower onto the lane, work out where a stray unit rejoins its patrol, or find the spot on the track a racer left.
 
 ### FPSController (`res://eventsheet_addons/fps_controller/fps_controller_behavior.gd`)
 @ace_category("FPS Controller") @ace_expose_all(node) @ace_version(1.0.0)
@@ -633,6 +699,32 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Look Pitch** - The current vertical look angle in degrees (clamped to Pitch Min/Max).
 - **Wall Normal X** - The touched wall's outward normal, X component (zero when not on a wall) - with Z, the direction a wall jump pushes; feed it to camera lean.
 - **Wall Normal Z** - The touched wall's outward normal, Z component (zero when not on a wall).
+
+### GameSettingsAddon (`res://eventsheet_addons/game_settings/game_settings_addon.gd`)
+@ace_tags(settings, options, accessibility, audio) @ace_category("Settings") @ace_version(1.0.0)
+
+#### Triggers
+- **On Setting Changed** (`setting_name: String, value: Variant`)
+
+#### Conditions
+- **Changed Setting Is** (`setting_name: String`) - Whether the setting being announced right now is this one - the branch under On Setting Changed. Put one sub-event per setting under the trigger and each reaction stays a plain row. Once the announcement is over it keeps answering about the setting announced most recently, which is what makes it survive a reaction that waits; where several settings are applied in one go (Apply All Settings) and the reaction waits, branch on the trigger row's own setting_name value instead.
+- **Setting Is** (`setting_name: String, value: Variant`) - Whether a setting currently holds this value - the plain state check, usable anywhere and at any time. difficulty is hard gates a rule; screen_shake is true guards an effect. An undeclared name reads as not matching.
+- **Setting Is Declared** (`setting_name: String`) - Whether a setting has been declared at all. Useful when one sheet declares the settings and another might run first.
+
+#### Actions
+- **Declare Setting** (`setting_name: String, default_value: Variant, kind: String = "percent", choices: String = ""`) - Names a setting once: what it is called, what it defaults to, what kind of value it is, and (for a Choice) its options. Everything else in this pack reads that declaration, so the default is written in one place instead of at five call sites. Declaring the same name again replaces the declaration and keeps any value already set.
+- **Set Setting** (`setting_name: String, value: Variant`) - Changes a declared setting and fires On Setting Changed with its name and new value. Setting it to the value it already holds does nothing at all, so a slider dragged back to where it started fires no reaction. A name that was never declared is refused with a warning rather than quietly stored.
+- **Apply All Settings** - Re-fires On Setting Changed for EVERY declared setting, with the value in force now. This is the one row that makes boot and the options screen take the same path: the volume, the shake and the difficulty are applied by the same events either way, so they can never drift apart. Call it once after Load All Settings.
+- **Reset Settings To Defaults** - Forgets every value that was set or loaded, so each setting falls back to its declared default, then re-applies them all (On Setting Changed fires for each). The options screen's Reset button, for free. Save All Settings afterwards to make it stick.
+- **Load All Settings** - Reads saved values out of user://settings.cfg (the settings section) for every declared setting. The built-in Save Setting action writes the same file but takes its section as a parameter, so values saved that way are picked up when that row names the settings section. A setting with nothing saved keeps its default. Nothing is applied yet: follow it with Apply All Settings.
+- **Save All Settings** - Writes every declared setting's current value into user://settings.cfg (the settings section), keeping anything else already in the file. Call it when the player closes the options screen. Settings live outside your save slots on purpose, so starting a new run never resets the volume.
+
+#### Expressions
+- **Setting Value** (`setting_name: String`) - The value a setting holds right now: the one that was set or loaded, or its declared default when nothing was ever saved. That fallback is the whole point of declaring - the game is correct on a fresh install, before the player has opened the options screen once. An undeclared name gives nothing.
+- **Setting Kind** (`setting_name: String`) - What kind of value a setting is - percent, toggle, choice, number or text. This is what an options menu reads to know whether to build a slider, a checkbox or a dropdown. Blank when the name was never declared.
+- **Setting Choices** (`setting_name: String`) - The options of a Choice setting as a list, in the order they were declared - drop it straight into a dropdown. Empty for every other kind.
+- **Declared Setting Names** - Every declared setting's name, in the order they were declared - For Each over it and an options menu builds itself from the declaration instead of a hand-wired control per setting.
+- **Settings Report** - Every declared setting as one readable line - name, kind, the value in force and the default it came from. What your game actually offers, in a form you can print, show in a debug overlay, or paste into a bug report. Blank when nothing has been declared.
 
 ### SimpleHealthBehavior (`res://eventsheet_addons/health/health_behavior.gd`)
 @ace_category("Health") @ace_expose_all(node) @ace_version(1.0.0)
@@ -1032,6 +1124,34 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Move To Position (3D)** (`x: float, y: float, z: float`) - Replaces the queue and glides toward the point.
 - **Add Waypoint (3D)** (`x: float, y: float, z: float`) - Appends a stop to the queue.
 - **Stop Moving (3D)** - Clears the queue without firing On Arrived.
+
+### NamedScenesPackAddon (`res://eventsheet_addons/named_scenes/named_scenes_addon.gd`)
+@ace_tags(scenes, navigation, levels) @ace_category("Scenes") @ace_version(1.0.0)
+
+#### Triggers
+- **On Scene Ready** (`scene_name: String`)
+
+#### Conditions
+- **Current Scene Is** (`scene_name: String = "hub"`) - Whether the named scene is the one running right now. It answers on the name last announced ready, so it keeps working for a scene you loaded by hand as long as Announce Scene Ready was called.
+- **Scene Is Registered** (`scene_name: String = "arena"`) - Whether a name has a scene behind it. Ask before Go To Named Scene when the name comes from data (a level list, a save file) rather than from a row you typed.
+- **Named Scene Is Preloaded** (`scene_name: String = "arena"`) - Whether Preload Named Scene has already warmed this scene. Show the Continue button when it has, a spinner while it has not.
+- **Has Scene Argument** (`key: String = "door"`) - Whether the scene you are in was handed a value under this key. Lets a level tell "came in by a door" apart from "started here from the menu" without a magic default.
+
+#### Actions
+- **Register Scene** (`scene_name: String = "arena", scene_path: String = ""`) - Gives a scene file a short name every row can use instead of its path. Registering the same name again replaces the path, so a boot sheet can safely re-run. Do this once at startup, in a sheet every scene reaches.
+- **Register Scenes In Folder** (`folder: String = "res://levels"`) - Registers every .tscn directly inside a folder under its own file name, so res://levels/arena.tscn becomes "arena". The folder IS the level list: add a scene to it and the game knows about it with no row to edit. Sub-folders are left alone.
+- **Forget Named Scene** (`scene_name: String = "arena"`) - Removes one name from the registry and drops anything Preload Named Scene had warmed for it. Use it when a level is unlocked or retired at runtime; rows that still name it will warn instead of changing scene.
+- **Go To Named Scene** (`scene_name: String = "arena"`) - Changes to the scene registered under this name. Nothing happens (with a warning) if the name was never registered, or if the file behind it can no longer be opened, so neither a typo nor a moved .tscn can leave the game on a black screen. On Scene Ready fires with the name only once the new scene is really the one running.
+- **Preload Named Scene** (`scene_name: String = "arena"`) - Loads a registered scene into memory now, without changing to it, so the change is instant when it comes. Warm the next level while the player is reading a hint or watching a door open. Loading it twice does no extra work.
+- **Carry Into Next Scene** (`payload: Dictionary = {}`) - Hands a record to the scene you are about to open: a spawn door, a difficulty, who sent you. It belongs to the NEXT scene, so the one you are leaving still reads its own arguments until the change lands.
+- **Announce Scene Ready** (`scene_name: String = "arena"`) - Marks a named scene as the one now running: the carried record becomes readable through Scene Argument, Current Scene Is starts answering this name, and On Scene Ready fires with it. Go To Named Scene calls this for you once the new scene exists - call it yourself only when you changed scene some other way.
+
+#### Expressions
+- **Scene Argument** (`key: String = "door", fallback: String = ""`) - A value the previous scene carried over, as text - the door you came in by, who sent you. Answers the fallback when nothing was carried under that key.
+- **Scene Argument Number** (`key: String = "attempt", fallback: float = 0.0`) - A carried value as a number - an attempt count, a difficulty, a starting score. Answers the fallback when nothing was carried under that key.
+- **Path Of Named Scene** (`scene_name: String = "arena"`) - The res:// path registered under a name, or "" when the name is unknown. The escape hatch for a verb that still wants a path, e.g. the Scene Flow pack's Fade To Scene.
+- **Current Scene Name** - The name of the scene running right now, or "" before the first one was announced. Stabler than a path: save it, show it in a debug corner, key a music track off it.
+- **Registered Scene Names** - Every registered name, sorted. A level-select screen builds itself from this instead of from a list somebody has to keep in step.
 
 ### NavAgent3D (`res://eventsheet_addons/nav_agent_3d/nav_agent_3d_behavior.gd`)
 @ace_tags(movement, 3d, ai, pathfinding) @ace_category("Nav Agent 3D") @ace_expose_all(node) @ace_version(1.0.0)
@@ -1470,6 +1590,10 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Load Failed** (`slot_index: int, reason: String`)
 - **On Save Failed** (`slot_index: int, reason: String`)
 - **On New Run Started** (`slot_index: int, run_number: int`)
+- **On Key Saved** (`key: String, slot_index: int`)
+- **On Key Loaded** (`key: String, slot_index: int`)
+- **On Key Removed** (`key: String, slot_index: int`)
+- **On Save Key Missing** (`key: String, slot_index: int`)
 
 #### Conditions
 - **For Each Saved Slot**
@@ -1483,6 +1607,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Safe To Save Now** - Whether writing the active slot right now would lose nothing: the slot either has no file yet, or its file reads back cleanly. Guard Save Game with it (and read it inside On Autosave Due before you commit to a write).
 - **Slot Is Readable** (`slot_index: int`) - Whether that slot's file opens and parses. A slot with NO file reads as false, so pair it with Slot Exists to tell a slot with no save yet apart from a damaged one.
 - **Addon Saves Itself** (`addon_name: String`) - Whether that autoload takes part in Save All Addons (it exposes save_state, itself or through a behavior child). Invert it to catch the pack somebody forgot to give a save seam.
+- **Is Saving** - Whether a write is in flight right now - inside On Before Save, a Save All Addons sweep, or an autosave. Guard a second write with it, or hold a quit until it clears.
+- **Is Loading** - Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside it. Rows that must not fight the restore can stand aside while it is true.
+- **Save Key Is** (`key: String, value: Variant`) - Whether the stored key equals this value, without loading it into a variable first. A key the slot does not hold never equals anything, so a missing key reads as false.
 
 #### Actions
 - **Save Value** (`key: String, value: Variant`) - Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.
@@ -1510,6 +1637,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Restore Slot From Backup** (`slot_index: int, how_many_back: int`) - Puts an earlier version of the slot back (1 = the save before this one, 2 = the one before that). The CURRENT file is backed up first, so a restore is never a one-way door. Needs Backup Count above 0.
 - **Carry Value Into Next Run** (`key: String`) - Marks one key to survive Start New Run - unlocked skins, a best time, the settings. Everything not marked is wiped. Marks last for the session, so declare them right before the reset.
 - **Start New Run** (`slot_index: int`) - Wipes the slot and writes back ONLY the carried keys, its slot card, and a run counter one higher than before, then fires On New Run Started. New Game Plus, a chapter reset, a seasonal wipe, or the Reset Progress button that must keep the settings.
+- **Remove Save Key** (`key: String`) - Takes one key out of the active slot and rewrites the file, then fires On Key Removed. A key the slot does not hold fires On Save Key Missing instead. Never Save This Key blocks a key forever; this removes the one copy that is already there.
+- **Clear Slot Keys** - Empties the active slot of everything the game saved, and fires On Key Removed once per key. The file itself stays, and so do its slot card, its version stamp, its run number and its backups - the reset-profile button that does not cost the player their save file.
+- **Check Save Key** (`key: String`) - Asks the slot whether it holds the key and answers with a row: On Key Loaded when it does, On Save Key Missing when it does not. The row that turns a silent default into a first-run seed.
 
 #### Expressions
 - **Load Value** (`key: String, default_value: Variant`) - Reads any value (your default when missing).
@@ -1533,6 +1663,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Save Report** - A plain-text breakdown of the active save: total bytes, key count, then the heaviest keys in order. Log it, or show it in a debug overlay when a player reports a save that will not stop growing. The total is the real size of the file on disk; the per-key numbers are relative WEIGHTS (each value written out as text, measured in characters), so they rank the keys against one another rather than adding up to the total.
 - **Slot Backup Count** (`slot_index: int`) - How many earlier versions of that slot are kept right now (0 when backups are off or nothing has been overwritten yet).
 - **Run Number** - 1 on a fresh save, 2 after the first New Game Plus, and so on - the number every NG+ banner, difficulty curve and you-have-beaten-this-N-times line is really asking for.
+- **Save Key Count** - How many keys the active slot holds - the number a save inspector puts in its header. Counts exactly what List Save Keys lists, the pack's own reserved keys included.
+- **Save Key At** (`index: int`) - The key at this position in the active slot, for a numbered or paged list ("" when the position is past the end). Loop List Save Keys instead when you just want them all.
 
 ### SceneFlowBehavior (`res://eventsheet_addons/scene_flow/scene_flow_behavior.gd`)
 @ace_category("Scenes") @ace_expose_all(node) @ace_version(1.0.0)
@@ -2217,6 +2349,10 @@ Collections (rich variables)
 - **Dictionary Is Empty** (`var_name: String`) - True when the dictionary has no keys at all.
 - **Contains** (`var_name: String, value: String`) - True when the array holds the given value somewhere.
 - **Array Is Empty** (`var_name: String`) - True when the array has no items at all.
+- **Wait Succeeded** (`wait_name: String`) - True when the named wait ended because what it was waiting for happened. A wait that has never run is neither succeeded nor timed out, so nothing fires before the wait does.
+- **Wait Timed Out** (`wait_name: String`) - True when the named wait gave up instead of finishing - the recovery branch for a load that never reported in. The same timeout also reports on verb_failed, so another event can handle it as On Failure Of.
+- **Retry Up To N Times** (`retry_name: String, times: String`) - Runs this event's actions over and over, up to a number of attempts, so a nested Stop Retrying can end it the moment the thing works. With no waiting inside it stays instant, which makes it the procedural-placement loop as much as the disk retry. Read the try number with Retry Attempt Number.
+- **Retries Exhausted** (`retry_name: String`) - True when the retry loop above ran out of tries without a Stop Retrying - the give-up branch. Put it in a sibling row directly beneath the retry loop, using the same name; a retry that has never run is not exhausted, so nothing fires before the loop does. Reading it clears the record, so the next run starts clean. When the retry WAITS between tries (Wait Before Next Try) the loop is still running while the rows beneath it are reached, so report that give-up with Report Failure on the last attempt and handle it in an On Failure Of event instead.
 - **Is Game Paused** - True when the game is currently paused.
 - **Is Playing** (`target: String`) - True while the audio player is currently playing a sound.
 - **Is Animation Playing** (`target: String`) - True while the animated sprite is currently playing an animation.
@@ -2250,6 +2386,11 @@ Collections (rich variables)
 - **Await If Over Budget** (`ms: String`) - Yields to the next frame only if this frame's time budget is used up.
 - **Call After Delay** (`seconds: String, callable: String`) - Schedules a method to run later without pausing this event.
 - **Repeat With Delay** (`times: String, delay: String, do: String`) - Runs one statement several times with a pause between each - burst fire, drip-spawns, a ticking countdown. It suspends this event the same way Wait does, so pair it with Once At A Time (Single Flight) when the trigger can fire again mid-burst.
+- **Wait Until** (`wait_name: String, check: String, seconds: String`) - Pauses this event until a check comes true, or until the give-up time passes. Read which happened on the next row with Wait Succeeded / Wait Timed Out, naming this wait. It polls once a frame, so prefer Wait For Signal when a real signal exists for what you are waiting on.
+- **Wait For All Of** (`wait_name: String, signals: String, seconds: String`) - Pauses this event until every signal in the list has fired at least once, or until the give-up time passes. It connects them ALL up front, one-shot, so nothing can fire into the gap between two waits - the bug a hand-written chain of awaits always has. An empty list succeeds at once.
+- **Wait For Any Of** (`wait_name: String, signals: String, seconds: String`) - Pauses this event until the first of several signals fires, then carries on - a race, or a sudden-death timer. Read which one won with First To Finish, naming this wait: it answers "Node.signal", so racing $Player.died against $Boss.died still tells you which one it was. Every signal is connected one-shot up front, so the winner is whichever really fired first, and the losers are disconnected when the race ends.
+- **Stop Retrying** (`retry_name: String`) - Ends the retry loop right now because the attempt worked, and records that it worked so Retries Exhausted below stays false. Put it under the condition that means success.
+- **Wait Before Next Try** (`delay: String, growth: String, attempt: String`) - Pauses before the next attempt, waiting longer each time when you set a growth above 1 - the polite way to retry a disk or a slow source. It suspends this event like Wait does, so pair the retry with Once At A Time when the trigger can fire again mid-retry.
 - **Read Input Axis Into** (`name: String, negative: String, positive: String`) - Reads a left/right input axis into a local variable for this event.
 - **Tween Property** (`target: String, property: String, value: String, duration: String, transition: String, ease: String`) - Smoothly animates a node's property to a target value over time with an easing curve.
 - **Tween Callback** (`callable: String, delay: String`) - Waits a delay, then calls a method or function once (handy for timed events).
@@ -2301,6 +2442,8 @@ Collections (rich variables)
 - **Value At** (`var_name: String, index: String`) - Gives the item stored at a specific position in the array.
 - **Array Size** (`var_name: String`) - Gives how many items the array currently holds.
 - **Pick Random** (`var_name: String`) - Gives one random item picked from the array.
+- **First To Finish** (`wait_name: String`) - Which signal a Wait For Any Of was watching finished first, written as "Node.signal" (the node's name, a dot, the signal's name), or empty text when it timed out. The node is part of the answer on purpose: a race between $Player.died and $Boss.died is two signals with the same name, and only the owner tells them apart. Compare it in a condition cell to branch on the winner.
+- **Retry Attempt Number** (`loop_var: String`) - Which try this is, counting from 1 - the number you put in the log line or the HUD. Only readable inside a Retry Up To N Times loop, and it reads that loop's own variable, so change the cell if you renamed it.
 - **Action Strength** (`action: String`) - Gives how hard an input action is pressed, from 0 to 1.
 - **Input Axis** (`negative: String, positive: String`) - Gives a -1 to 1 value from two opposing input actions, like left and right.
 - **Playback Position** (`target: String`) - Returns how many seconds into the sound the audio player currently is.
@@ -2594,6 +2737,8 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 Developer helper vocabulary (the everyday dev tools).
 
 #### Conditions
+- **Frame Took Longer Than** (`ms: String`) - True on a frame that took longer than your budget, which is the hitch caught as it happens. Needs a per-frame trigger.
+- **FPS Below For** (`fps: String, seconds: String`) - True once the framerate has stayed under your floor for the whole stretch you name, which tells a real performance drop apart from one stuttery frame. Needs a per-frame trigger.
 - **Is In Group** (`target: String, group: String`) - True when the given node currently belongs to the named group.
 - **Has Metadata** (`target: String, name: String`) - True when the object has metadata stored under the given key.
 - **Has Node** (`target: String, path: String`) - True when a node exists at the given path under this one.
@@ -2608,6 +2753,14 @@ Developer helper vocabulary (the everyday dev tools).
 - **Assert** (`condition: String, message: String`) - Crashes during testing if a condition isn't true, catching bugs early; removed from release.
 - **Print Scene Tree** - Prints the whole scene's node hierarchy to the output log for debugging.
 - **Breakpoint (pause debugger)** - Pauses the game in the debugger right here so you can inspect things.
+- **Remember In Trail** (`value: String, trail: String, keep: String`) - Records a value into a named rolling history you can dump, chart, or check when something goes wrong.
+- **Log Trail** (`trail: String`) - Prints the whole trail to the Output console, so the seconds before a bug arrive with the bug.
+- **Save Trail To CSV** (`trail: String, path: String`) - Writes a trail to a two-column CSV file you can open in a spreadsheet and plot.
+- **Clear Trail** (`trail: String`) - Forgets everything a trail recorded, so the next run starts from nothing.
+- **Start Measuring** (`named: String`) - Starts a named stopwatch. Pair it with Stop Measuring around the work you suspect.
+- **Stop Measuring** (`named: String`) - Stops a named stopwatch and files the result, keeping the last, the average and the worst reading for that name.
+- **Log Measurements** - Prints every named measurement taken so far with its last, average and peak cost - the report you paste into a bug or a devlog.
+- **Clear Measurements** - Throws away every measurement recorded so far, so a fresh run starts from a clean slate.
 - **Add To Group** (`target: String, group: String`) - Tags a node into a named group so you can find or affect it later.
 - **Remove From Group** (`target: String, group: String`) - Untags a node from a named group when it should no longer belong.
 - **Call Method On Group** (`group: String, method: String`) - Calls the named method on every node in a group at once.
@@ -2616,6 +2769,15 @@ Developer helper vocabulary (the everyday dev tools).
 - **Remove Metadata** (`target: String, name: String`) - Deletes a stored metadata value from an object by its key.
 
 #### Expressions
+- **Trail Values** (`trail: String`) - Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.
+- **Lowest In Trail** (`trail: String`) - The smallest value recorded in a trail, which is the spike a per-frame watch blinked past. An empty trail reads as INF.
+- **Highest In Trail** (`trail: String`) - The largest value recorded in a trail. An empty trail reads as -INF.
+- **Average In Trail** (`trail: String`) - The mean of every number recorded in a trail - a rolling average that is as useful in gameplay as in debugging. An empty trail reads as 0.
+- **Newest In Trail** (`trail: String`) - The most recently recorded value in a trail, or 0 when nothing has been recorded yet.
+- **Trail Length** (`trail: String`) - How many values a trail is currently holding, which tops out at the Keep you gave it.
+- **Last Measured (ms)** (`named: String`) - How many milliseconds the most recent run of a named measurement took.
+- **Average Measured (ms)** (`named: String`) - The mean cost in milliseconds across every run of a named measurement, which is the number to quote when you claim an optimization worked.
+- **Peak Measured (ms)** (`named: String`) - The worst run of a named measurement in milliseconds, which is usually the one the player felt.
 - **Get First Node In Group** (`group: String`) - Returns the first node found in a named group, or nothing if empty.
 - **Count Nodes In Group** (`group: String`) - Returns how many nodes are currently in the named group.
 - **Sum In Group** (`group: String, property: String`) - Returns the total of a numeric property added up across every group member.
@@ -2950,6 +3112,9 @@ Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 - **Is Animating (in object)** (`target: String`) - True when any AnimationPlayer beneath the object is currently playing.
 - **Is Within Distance (of a node)** (`other: String, distance: String, target: String`) - True when another node is closer than the given number of pixels. The proximity test behind prompts, pickups and aggro ranges - pick the node, type the pixels, no parentheses-math to write.
 - **Is Within Distance (choose metric)** (`other: String, distance: String, metric: String`) - Is Within Distance with a geometry dropdown: straight line, horizontal or vertical only, grid steps (Manhattan), or king moves (Chebyshev) - one condition that fits platformers, roguelikes and strategy games alike.
+- **Has Service** (`service_name: String`) - True when a node is registered under this name and is still alive. Guard an optional system with it - a missing audio director then costs you a skipped row instead of a crash.
+- **For Each Node That Can** (`method_name: String`) - Runs this event's actions once per node ANYWHERE in the tree that answers to a method name - the save sweep, the pause sweep, the shutdown sweep, with no list to keep in step. It walks the whole tree, so run it on an event, not every frame. Read the current one as `node`.
+- **Only Once This Frame** (`key_id: String`) - True the FIRST time it is reached in a frame under this name, and false for every other time that frame - counting a physics tick as its own frame, so a row under On Physics Process is not folded in with the drawn frame around it. Fifty inventory changes then rebuild the panel once instead of fifty times. Give two rows the same name and they share one run per frame.
 
 #### Actions
 - **Add Child** (`node: String`) - Attaches another node as a child of this one at runtime, e.g. spawning a bullet.
@@ -2972,6 +3137,10 @@ Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 - **Pull Group Toward** (`group: String, radius: String, speed: String`) - The vacuum-pickup loop - coins fly to the player, one row.
 - **Orbit Around** (`center: String, radius: String, degrees_per_second: String`) - Circles this node around another one - a shield satellite, a moon, a spinning hazard. Run it under a per-frame trigger.
 - **Vanish, Respawn In** (`seconds: String`) - Hides this pickup (and pauses its Area sensing when it has any), waits, then brings it back - calling its reset() if it defines one. The health-pack-respawns-in-10s pattern as one row; it awaits, so it suspends like Wait.
+- **Register As Service** (`service_name: String`) - Publishes this node under a short name anything can ask for, so no other row needs a path to it. Run it under On Ready. Registering the same name again replaces it, and a freed node answers as nothing at all, so a scene reload leaves no dangling reference behind.
+- **Do After This Frame** (`do: String`) - Runs one action once the frame's physics and signal storm has finished, which is the only safe moment to add, free or reparent nodes. The number one crash a beginner hits is doing that from inside a collision callback; this is the fix, and the rows below it still run immediately.
+- **Call Later** (`seconds: String, do: String`) - Runs one action after a delay, with no Timer node and WITHOUT suspending - the rows below it keep running. The connection is one-shot, so a delayed beat can neither leak nor fire twice. The readable form of the small follow-up: eject the shell, close the door, play the second thud.
+- **Set Property (after this frame)** (`target: String, property: String, value: String`) - Sets a property at the end of the frame instead of right now. The one Godot insists on for collision shapes and monitoring: flipping those mid-physics is the error every beginner meets, and deferring is the documented answer.
 
 #### Expressions
 - **Duplicate Node** (`target: String`) - Clones a node so you can add the copy elsewhere, e.g. mass-spawning identical objects.
@@ -2990,6 +3159,7 @@ Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 - **Random Node In Group (empty-safe)** (`group: String`) - Returns a random member of a group, or nothing at all when the group is empty.
 - **Group Member With Smallest Property** (`group: String, property: String`) - Returns the group member whose named property is lowest, e.g. the weakest enemy.
 - **Group Member With Largest Property** (`group: String, property: String`) - Returns the group member whose named property is highest, e.g. the toughest enemy.
+- **Service Named** (`service_name: String`) - The node published under a name, or nothing at all when nobody registered it or it has been freed. Drop it wherever a node is asked for - it never crashes and never needs a path.
 
 ### Node Activation (`res://addons/eventforge/registration/modules/node_activation_aces.gd`)
 turning nodes on and off, and pausing them
@@ -3247,9 +3417,13 @@ Rendering vocabulary (the RenderingServer from events).
 ### Resource (`res://addons/eventforge/registration/modules/resource_aces.gd`)
 Data assets: a folder of .tres as vocabulary, independent copies, pouring
 
+#### Triggers
+- **On Data File Changed** (`path: String`) - Runs when a Watch Data File row notices that a watched file has been written. The path arrives on the row as path, so the reaction reloads exactly the file that changed even when two land in the same check. Needs a Signal row for data_file_changed(path: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.
+
 #### Conditions
 - **Matches Properties Of** (`target: String, names: String, other: String`) - True while the listed properties hold the same values on both objects - the cheap 'is this ghost still in sync' or 'has anything changed' check. A name neither object has reads as NOT matching, so a typo shows up instead of quietly passing, and either side being gone reads as not matching too.
 - **Data Is Older Than Version** (`record: String, field: String, version: String`) - True when a loaded record was written by an older build than this one - the gate a migration sits under. A record with NO version field counts as 0, so the very first format upgrades too, and so does one whose version field is empty or is not a number at all.
+- **Data Folder Is Valid** (`folder: String`) - True when every data asset in a folder loads, has an id, and has an id no sibling shares - the check to put in front of loading a mod folder or user content. Read the reasons with Data Folder Problems.
 
 #### Actions
 - **Copy Values From** (`target: String, source: String, names: String`) - Pours a list of values off another object onto this one, in one row instead of one row per property. Names the target does not have are skipped, so a single preset can serve several kinds of node.
@@ -3257,6 +3431,9 @@ Data assets: a folder of .tres as vocabulary, independent copies, pouring
 - **Apply Preset To Node** (`preset: String, target: String`) - Pours a data asset's fields onto the same-named properties of a node, so difficulty tiers, weapon tunings and boss phases become a data edit instead of a wall of rows.
 - **Rename Field** (`record: String, from_field: String, to_field: String`) - Moves a value to its new field name, and does nothing at all when the old name is not there - so a migration is safe to run twice.
 - **Stamp Data Version** (`record: String, field: String, version: String`) - Writes the current format number onto a record, so the next load knows it has already been migrated. Data Is Older Than Version reads it back, and reads it as 0 when it is missing or is not a number.
+- **Watch Data File** (`path: String`) - Checks whether a data file has been written since the last check, and fires the sheet's data_file_changed(path) signal when it has - so you edit an enemy's numbers in the Inspector and the running game picks them up. Put it under Every X Seconds; the first check only takes a reading, so nothing fires just because the row started. This is a debug-build tool: it reads the file's timestamp each time it runs.
+- **Reload Data Asset** (`path: String`) - Re-reads a data asset from disk into the copy every node is already holding, so the new numbers apply without restarting or re-assigning anything. It reloads DATA, not code: a changed script still needs a restart. Nothing happens when the path is not there.
+- **Validate Data Folder** (`folder: String`) - Checks a folder of data assets and writes every problem it finds to the Output as one warning, saying which file and what is wrong. A clean folder says nothing at all, so it is safe to leave in a startup event.
 
 #### Expressions
 - **Resources In Folder** (`folder: String`) - Loads every data asset (.tres) in a folder as a list, so a folder of files becomes your content - items, enemies, levels, or a mod folder. A missing folder gives an empty list, and a file that fails to load is left out rather than arriving as nothing.
@@ -3267,9 +3444,71 @@ Data assets: a folder of .tres as vocabulary, independent copies, pouring
 - **Copy Resource (Share Sub-Resources)** (`resource: String`) - Makes a cheap copy whose own fields are separate but whose inner resources and lists are still SHARED with the original. Pick this only when you want that sharing - otherwise use Copy Resource (Independent).
 - **Deep Copy** (`var_name: String`) - Copies the array AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Array only copies the outer level.
 - **Deep Copy** (`var_name: String`) - Copies the dictionary AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Dictionary only copies the outer level.
+- **Data Folder Problems** (`folder: String`) - Every structural problem in a folder of data assets, one per line, and "" when it is clean: a file that cannot be loaded, one with no usable id, and two files claiming the same id (where the second quietly wins every lookup). Show it, log it, or fail a build with it.
+
+### Spatial (`res://addons/eventforge/registration/modules/spatial_aces.gd`)
+Spatial vocabulary (screen/world, random geometry, surfaces, grids, falloff).
+
+#### Conditions
+- **Is Point On Screen** (`world_point: Vector2, margin: float`) - True while a world point is inside the visible view - the honest gate for spawning, culling, showing an off-screen arrow, or holding a tutorial callout until its subject is actually visible.
+- **Is Behind Camera (3D)** (`world_point: Vector3`) - True when a 3D point sits behind the camera plane, where its projected screen position is a mirrored lie. The guard every 3D waypoint marker needs before it draws. With no camera in the scene it reads true, so nothing is drawn into a view that does not exist.
+- **Is Cell In Bounds** (`cell: Vector2i, size: Vector2i`) - True while a cell is on the board - the guard before every placement, every move and every array lookup keyed by cell. Counting starts at 0,0 in the top-left, so a 20 by 12 board's last cell is 19,11.
+- **For Each Cell In Radius** (`center: Vector2i, radius: int, shape: String`) - Runs this event's actions once per cell within a step radius of a centre cell - range previews, blast footprints, fog reveal, area-of-effect highlights. Read the current one as `cell`.
+- **Is Within Cone Of** (`origin: Vector2, facing_degrees: float, point: Vector2, fov_degrees: float, range_px: float`) - True while a point sits inside a facing wedge - guard vision, spotlight checks, melee arcs, directional blasts. The cheap test to put in front of an expensive raycast: if it is not in the cone, there is nothing to trace.
+
+#### Actions
+- **Wrap Inside The View (3D)** - The Asteroids rule in 3D: leave the right of the view and come back on the left, off the top and back at the bottom, at the same distance from the camera. The missing twin of the 2D Wrap Inside The Screen, for a wrap-around arena or an endless shoal. Does nothing while there is no 3D camera.
+- **Face Along Velocity** (`velocity: Vector2`) - Turns this node to point the way it is travelling, and leaves it alone while it is standing still so a stopped thing never snaps back to facing right. Arrows, fish, cars, thrown knives, a camera that leads the motion.
+- **Look At (safe up)** (`target: Vector3`) - Turns a 3D node to face a point WITHOUT the crash the plain Look At has: when the target is directly overhead or underfoot, the usual up vector points the same way as the look direction and Godot cannot build a rotation from that. This one swaps the up vector at the last moment, and does nothing at all when the target is where the node already is.
+- **Look At (flat)** (`target: Vector3`) - Turns a 3D node to face a point but only around the up axis, so a character looks at the player without tipping over to stare at their feet. The rotation every humanoid, turret base and standing NPC actually wants.
+- **Apply Radial Impulse** (`center: Vector2, strength: float, radius: float`) - Throws this physics body away from a blast, weaker the further it was - barrels, crates, ragdolls and debris flung by an explosion. One row on the body; the blast only has to say where it happened.
+- **Push Group Away From** (`group: String, center: Vector2, radius: float, strength: float`) - Shoves every member of a group away from a point, hardest at the centre and not at all past the radius - the mirror of Pull Group Toward. A shockwave clearing a crowd, a repulsor field, a dash that parts the enemies it passes through.
+
+#### Expressions
+- **World Point To Screen** (`world_point: Vector2`) - Where a world point sits on screen right now, camera zoom and scroll included - pin a nameplate, a health bar or a damage number to something that moves. Put the answer on a node that lives on a CanvasLayer and it will track its target without lagging behind the camera.
+- **Screen Point To World** (`screen_point: Vector2`) - The world position under a screen pixel - click-to-place, a gamepad cursor, a HUD marker dragged onto the map. The exact opposite of World Point To Screen, so the two round-trip.
+- **Project To Screen (3D)** (`world_point: Vector3`) - Where a 3D world point lands on screen - nameplates over 3D characters, damage numbers, objective pins drawn on a CanvasLayer. Reads as 0,0 while there is no active 3D camera, so it never faults during a scene change. Check Is Behind Camera (3D) first: a point behind you still projects to a number.
+- **Screen Edge Position For** (`world_point: Vector2, margin: float`) - A screen position that follows a target while it is visible and sticks to the edge of the view once it is not - the off-screen objective arrow, the radar blip, the "your teammate is over there" chevron. Pair it with Marker Angle Toward for the rotation.
+- **Marker Angle Toward** (`world_point: Vector2`) - The rotation in degrees an on-screen arrow needs so it points from the middle of the view at a world thing - the other half of the off-screen marker, and it stays right while the camera zooms or rotates.
+- **Visible World Rect** - The rectangle of the world the camera can currently see, in world coordinates - spawn just outside it, cull outside it, clamp a node inside it, or size a minimap to it. Follows the camera's zoom and position with nothing to keep in sync.
+- **Random Point In Circle** (`center: Vector2, radius: float`) - An evenly spread random point inside a circle - the sqrt weighting is done for you, so scatter does not bunch up in the middle the way the obvious version does.
+- **Random Point On Circle** (`center: Vector2, radius: float`) - A random point exactly ON the rim of a circle, never inside it - a spawn ring around the player, orbiting decor, a radial menu slot, the starting point of a homing shot.
+- **Random Point In Ring** (`center: Vector2, inner_radius: float, outer_radius: float`) - A random point in the doughnut between two radii - the off-screen spawner that never drops an enemy in the player's lap, and never so far away it never arrives. Evenly spread across the whole band, not crowded against the inner edge.
+- **Random Point In Rectangle** (`top_left: Vector2, size: Vector2`) - A random point inside an axis-aligned rectangle - loot scatter across a room, prop placement, confetti over a banner, a patrol target inside a zone. Feed it Visible World Rect's position and size to scatter across whatever the camera can see.
+- **Random Point In Cone** (`center: Vector2, facing_degrees: float, spread_degrees: float, radius: float`) - A random point inside a wedge - shotgun spread, cone attacks, directional scatter, a spray of sparks away from a wall. Facing and spread are in degrees, so the row reads the way you think about it.
+- **Random Point Around** (`node: String, min_radius: float, max_radius: float`) - Random scatter around a node that is already in the scene - blood splats around a hit, footprints around a stomp, sparkles around a pickup, a wander target around home. Pick the node instead of typing its position, and the scatter follows it as it moves.
+- **Random Direction (2D)** - A random unit direction in 2D - multiply it by a speed for a random shove, by a distance for a random offset. Always exactly one unit long, so the strength stays where you set it.
+- **Random Direction (3D)** - A random unit direction in 3D, evenly spread over the whole sphere. The naive three-random-numbers version crowds the corners of a cube; this one does not, so debris and shrapnel fly out honestly.
+- **Random Point In Sphere** (`center: Vector3, radius: float`) - An evenly spread random point inside a 3D sphere - spawn clouds, debris fields, flocking targets. The cube-root weighting keeps the middle from filling up first.
+- **Random Point In Box** (`center: Vector3, size: Vector3`) - A random point inside an axis-aligned 3D box - scatter trees over a chunk, spawn enemies in a room volume, place ambient audio emitters. Size is the FULL box, measured around the centre.
+- **Random Point On Screen Edge** - A random WORLD position on the border of what the camera can see - the wave spawner that comes in from a random side, ambient wildlife entering the frame, a meteor starting its run. Grow it with Visible World Rect if you want them to appear from just outside.
+- **Jitter** (`value: String, amount: String`) - Nudges a value by a random amount up to the size you give - pitch variation on a sound, a pixel or two of scatter on a decal, a shade of variation on a tint. Works on numbers, vectors and colors as long as the amount is the same kind of value.
+- **Bounce Off Surface** (`velocity: Vector2, normal: Vector2, bounciness: float`) - The velocity a moving thing has AFTER hitting a surface - feed it the normal any hit trigger or raycast hands you. Ricochets, pinball, breakout, deflect shields.
+- **Slide Along Surface** (`velocity: Vector2, normal: Vector2`) - The velocity left over once the part pushing INTO a surface is removed - a wall slide that keeps you moving along the wall instead of sticking to it, slope movement, a dash that grazes a corner rather than stopping dead.
+- **Angle Reflected** (`degrees: float, normal: Vector2`) - The heading in degrees a thing travels on after bouncing off a surface - the answer to feed straight back into Set Angle Of Motion when a bullet should ricochet instead of dying.
+- **Push Out Of Surface** (`point: Vector2, normal: Vector2, distance: float`) - A position just clear of a surface instead of exactly on it - park a ricocheting bullet, a decal or a spawned effect here. Landing exactly on a surface is how a thing ends up stuck inside it on the next frame, because a ray that starts inside a shape does not report it.
+- **Aim At Moving Target** (`shooter_position: Vector2, target_position: Vector2, target_velocity: Vector2, projectile_speed: float`) - Where to aim so a shot MEETS a moving target instead of trailing it - the interception point every turret and archer needs. When the target is faster than the shot no lead exists, and it falls back to the target's current spot rather than pointing somewhere absurd.
+- **Launch Angle For Arc** (`distance: float, height: float, speed: float, gravity: float`) - The angle in degrees to fire something so it ARCS onto a target - grenades, mortars, catapults, a coin tossed into a counter. Picks the flatter of the two possible arcs, and reads as 45 degrees when the shot cannot reach at all, so a row never produces a number that is not a number.
+- **Time To Reach** (`from_position: Vector2, to_position: Vector2, speed: float`) - How many seconds something moving at a steady speed needs to cover a distance - time a warning before the missile lands, size a tween to match a walk, decide whether the interceptor can get there first.
+- **Cell Of Point** (`point: Vector2, cell_size: float`) - Which grid cell a world position falls in - no TileMapLayer needed, so build grids, inventory slots and chunk keys all speak the same language. Negative positions land in negative cells, which is what a grid that extends left and up actually wants.
+- **Center Of Cell** (`cell: Vector2i, cell_size: float`) - The world position at the middle of a grid cell - where the placement ghost sits, where the tower is built, where the piece lands. The exact partner of Cell Of Point, so the pair round-trips.
+- **Snap Point To Grid** (`point: Vector2, cell_size: float`) - The nearest grid intersection to a loose position - a dragged card falling into its slot, a level editor brush, a UI element clicking onto a column. Rounds to the nearest, so a thing dropped just past halfway moves forward rather than back.
+- **Snap Point To Grid (3D)** (`point: Vector3, cell_size: float`) - The nearest point on a 3D grid - voxel placement, modular level pieces clicking together, a build cursor that lines up with the floor tiles.
+- **Cell Distance** (`from_cell: Vector2i, to_cell: Vector2i, metric: String`) - How far apart two grid cells are, with the same geometry dropdown the rest of the plugin uses: straight line, horizontal or vertical only, grid steps (Manhattan) or king moves (Chebyshev). One expression that fits a roguelike, a strategy game and a puzzle board alike.
+- **Neighbours Of Cell** (`cell: Vector2i, shape: String`) - The cells touching a cell, as a list - flood fill, path search, "is anything next to me", spreading fire, match-three clearing. Choose four sides, eight including diagonals, or the six neighbours of an axial hex board.
+- **Cells In Line** (`from_cell: Vector2i, to_cell: Vector2i`) - Every cell a straight line passes through, in order from one cell to the other - a laser beam's path, tile-based line of sight, a corridor carved between two rooms, a ruler for a ranged attack. Both ends are included.
+- **Cells In Radius** (`center: Vector2i, radius: int, shape: String`) - Every cell within a step radius of a centre cell, as a list - a blast footprint, a range preview, a fog reveal, the tiles a tower covers. Choose the diamond (counting grid steps) or the square (counting king moves).
+- **Cells In Rectangle** (`top_left: Vector2i, size: Vector2i`) - Every cell in a rectangular block, row by row - stamping a room, laying out an inventory grid, placing a multi-cell building, clearing a region of fog. An empty or negative size walks nothing rather than looping backwards.
+- **Falloff At Distance** (`center: Vector2, point: Vector2, radius: float, shape: String`) - How strong an effect is at a distance, from 1 at the centre to 0 at the edge - the one number that makes an explosion, a sound, a magnet or a screen shake care how close it was. Anything past the radius reads as 0, so it is safe to multiply straight into damage. For a hand-drawn profile, feed this number into Sample Curve.
+- **Strength Toward** (`node: String, radius: float`) - Falloff between THIS node and another one, without spelling out either position - guard suspicion that builds faster the closer you are, a magnet that pulls harder up close, a sound that ducks as you approach. Reads 0 once the other node is out of range.
 
 ### System (`res://addons/eventforge/registration/modules/system_aces.gd`)
 System (event-sheet System parity)
+
+#### Triggers
+- **On Scene Spawned** (`spawn_name: String, node: Node`) - Runs when a Spawn Scene As row spawns something. The name and the new node arrive on the row as spawn_name and node, so a reaction can configure or announce the node without asking what was spawned last - correct even when one loop spawns six things in a frame. Needs a Signal row for scene_spawned(spawn_name: String, node: Node) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.
+- **On Failure Of** (`verb_id: String, reason: String`) - Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.
+- **On Success Of** (`verb_id: String`) - Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.
 
 #### Conditions
 - **Is Within Angle** (`angle: String, within: String, target: String`) - True when two angles are close, taking wrap-around into account (350 is within 20 of 10).
@@ -3294,6 +3533,12 @@ System (event-sheet System parity)
 - **Expression Is True** (`expr: String`) - True when your custom GDScript expression evaluates to true; an escape hatch for advanced checks.
 - **Is Group Active** (`group: String`) - True when the named runtime group is currently switched on.
 - **Only Once Ever** (`key: String`) - True exactly once, ever - even across closing the game. Show a tutorial hint the first time and never again; Forget First Time resets it for testing (takes effect next run).
+- **Spawn Is Alive** (`spawn_name: String`) - True while the node spawned under this name still exists - the guard to put in front of any row that talks to a named spawn, and the honest way to ask 'is the boss still up?'.
+- **At Most Every** (`seconds: String`) - Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.
+- **Has Been Quiet For** (`poke_name: String, seconds: String`) - True once a poked name has stopped being poked for this long - the settle-down check. Autosave after the player stops editing, search after they stop typing. Needs a per-frame trigger, and stays true until you Clear Poke.
+- **Only Once Per Node** (`node: String, label: String`) - True the first time this row is reached for each node, and never again for that node. The initialiser you want when the row sits inside a For Each over spawned things; the memory lives on the node, so Forget Once For clears it.
+- **Only Once Per Name** (`key: String`) - True the first time this row is reached for each name, and never again for that name. One discovery line per item type, one loot roll per chest id - with no flag variable each. Kept on this node, so Forget Once For clears it.
+- **Only Once This Scene Load** (`key: String`) - True the first time this row is reached for each name in this scene load, and again after the scene is reloaded or changed. The welcome line, the per-level check - forgotten on Restart Scene rather than remembered forever.
 
 #### Actions
 - **Set Time Scale** (`scale: String`) - Speeds up or slows the whole game; use for slow-motion or pausing.
@@ -3313,6 +3558,12 @@ System (event-sheet System parity)
 - **Set Material** (`material: String, target: String`) - Assigns a shader or canvas material to this node to change how it draws.
 - **Clear Material** (`target: String`) - Removes any material from this node, returning it to default drawing.
 - **Forget First Time** (`key: String`) - Resets an Only Once Ever memory so it fires again - for testing, or for New Game+. Rows already running this session keep their cached answer until the next run.
+- **Spawn Scene As** (`path: String, spawn_name: String, values: String, parent: String, position: String`) - Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Spawned. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.
+- **Report Failure** (`verb: String, reason: String`) - Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.
+- **Report Success** (`verb: String`) - Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.
+- **Poke** (`poke_name: String`) - Marks that something just happened, by name. Poke on every keystroke or every change, then let Has Been Quiet For notice when it stops.
+- **Clear Poke** (`poke_name: String`) - Forgets a poke so Has Been Quiet For stops firing. Clear it right after acting on the quiet, the same way you consume a buffered press.
+- **Forget Once For** (`node: String, label: String`) - Clears an Only Once Per Node / Per Name memory so the row fires again for that node. Drop it in an Object Pool's reset seam and a recycled instance initialises like a fresh one.
 
 #### Expressions
 - **Time Scale** - Gives the current game speed (1 = normal, below 1 = slow motion).
@@ -3350,6 +3601,7 @@ System (event-sheet System parity)
 - **OS Name** - Gives the name of the operating system the game is running on.
 - **Cooldown Time Left** (`name: String`) - Gives the seconds left on a named cooldown, or 0 when it is ready - handy for a HUD readout.
 - **Shader Parameter** (`param: String, target: String`) - Gives the current value of a named shader uniform on this node.
+- **The Spawned** (`spawn_name: String`) - The node a Spawn Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.
 
 ### Table (`res://addons/eventforge/registration/modules/table_aces.gd`)
 Tables (a spreadsheet read as rows of records) plus the text/folder loops.

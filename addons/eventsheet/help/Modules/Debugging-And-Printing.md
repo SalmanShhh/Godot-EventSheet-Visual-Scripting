@@ -1,6 +1,6 @@
 # Debugging And Printing
 
-Sixteen builtin verbs for seeing what your sheet is actually doing. They cover the three console streams
+The builtin verbs for seeing what your sheet is actually doing. They cover the three console streams
 Godot ships (the Output panel, the debugger's warning list, the debugger's error list), the combo-driven
 **Log** family that picks a stream from a dropdown, an assertion, a manual breakpoint, a scene-tree dump,
 and two live runtime readouts. Nothing here needs a pack enabled, and every one of them compiles to the
@@ -32,6 +32,11 @@ that chooses the stream, so one verb covers Message, Warning, Error and Rich tex
 - **Dumping the scene tree** when a node is not where you thought it was.
 - **Pausing exactly here** in the debugger without hunting for a gutter line.
 - **On-screen FPS and memory** for a performance HUD you can leave in.
+- **The two seconds before the bug**, kept in a named trail and dumped when something goes wrong.
+- **Catching the hitch as it happens** with a frame-budget condition, then logging what caused it.
+- **Sustained low framerate as a branch** you can act on, including shipping behaviour like dropping
+  particle quality, rather than a number you can only display.
+- **Timing a region of a sheet** with a named stopwatch, then reading it back as last, average or peak.
 
 ## Core concepts
 
@@ -99,6 +104,53 @@ The Performance Monitor dropdown offers `Performance.TIME_FPS`, `Performance.TIM
 `Performance.TIME_PHYSICS_PROCESS`, `Performance.OBJECT_COUNT`, `Performance.OBJECT_NODE_COUNT`,
 `Performance.RENDER_TOTAL_OBJECTS_IN_FRAME`, `Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME` and
 `Performance.PHYSICS_2D_ACTIVE_OBJECTS`.
+
+### Value trails - the last N values of anything
+
+Every other live surface shows the current frame. A trail is a named rolling history you fill from a
+row and read back later, so the two seconds before the frame you are looking at are still there when
+you go looking. It records silently: nothing appears anywhere until a row logs it, writes it, or
+reads it. Trails are stored in node metadata, so a trail filled in one event is readable from any
+other event on the same node, and a trail name is free text (spaces are fine).
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Remember In Trail | Records a value into a named rolling history you can dump, chart, or check when something goes wrong. | `__trails_N[{trail}] = __trail_N` (append plus a trim to Keep) |
+| Trail Values | Returns the whole trail as an array, oldest first. | `(get_meta(&"__ef_trails", {}) as Dictionary).get({trail}, []) as Array` |
+| Lowest In Trail | The smallest value recorded in a trail, which is the spike a per-frame watch blinked past. | `(...).reduce(func(__acc, __v): return min(__acc, __v), INF)` |
+| Highest In Trail | The largest value recorded in a trail. | `(...).reduce(func(__acc, __v): return max(__acc, __v), -INF)` |
+| Average In Trail | The mean of every number recorded in a trail. | `(...).reduce(...) / maxf(float((...).size()), 1.0)` |
+| Newest In Trail | The most recently recorded value, or 0 when nothing has been recorded yet. | `([0] + (...)).back()` |
+| Trail Length | How many values a trail is currently holding, which tops out at the Keep you gave it. | `(...).size()` |
+| Log Trail | Prints the whole trail to the Output console. | `print("trail ", {trail}, ": ", ...)` |
+| Save Trail To CSV | Writes a trail to a two-column CSV file you can open in a spreadsheet and plot. | `FileAccess.open({path}, FileAccess.WRITE)` plus one line per value |
+| Clear Trail | Forgets everything a trail recorded. | `__trails_N.erase({trail})` |
+
+**Lowest In Trail and Highest In Trail read `INF` and `-INF` on an empty trail**, the same sentinel the
+Lowest In Group and Highest In Group expressions use. Average In Trail and Newest In Trail read 0.
+
+### Frame budget and named stopwatches
+
+Two threshold questions and a stopwatch. These are vocabulary, not chrome: they add nothing to any
+row's margin and no always-on display anywhere. A measurement becomes visible only where you send
+it, whether that is Log Measurements, a label, or the Debug Overlay pack.
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Frame Took Longer Than | True on a frame that took longer than your budget, which is the hitch caught as it happens. | `(get_process_delta_time() * 1000.0 > {ms})` |
+| FPS Below For | True once the framerate has stayed under your floor for the whole stretch you name. | `__fps_below_for_N({fps}, {seconds})` plus a per-row clock member |
+| Start Measuring | Starts a named stopwatch. Pair it with Stop Measuring around the work you suspect. | `__starts_N[{named}] = Time.get_ticks_usec()` |
+| Stop Measuring | Stops a named stopwatch and files the result, keeping the last, the average and the worst reading. | `__stats_N[{named}] = [total, samples, peak, last]` |
+| Last Measured (ms) | How many milliseconds the most recent run of a named measurement took. | `float((... .get({named}, [0.0, 0, 0.0, 0.0]) as Array)[3])` |
+| Average Measured (ms) | The mean cost across every run of a named measurement. | `total / maxf(float(samples), 1.0)` |
+| Peak Measured (ms) | The worst run of a named measurement, which is usually the one the player felt. | `float((...)[2])` |
+| Log Measurements | Prints every named measurement with its last, average and peak cost. | a loop over the stats dictionary into `print(...)` |
+| Clear Measurements | Throws away every measurement recorded so far. | `set_meta(&"__ef_spans", {})` |
+
+**Both conditions need a per-frame trigger** (Every Frame). Frame Took Longer Than asks about the
+frame it is evaluated on, and FPS Below For has to be reached every frame to keep its clock honest.
+**FPS Below For is the one that tells a real drop apart from one stuttery frame**: the framerate has
+to stay under the floor for the whole window, and one healthy frame re-arms it from scratch.
 
 ## Use cases
 
@@ -278,6 +330,216 @@ Every Frame
        + "  nodes " + str(Performance Monitor(Performance.OBJECT_NODE_COUNT))
 ```
 
+**19. Keep the last two seconds of fall speed.** One Remember In Trail row under Every Frame, and the
+two seconds before any bug are still there when you go looking. Nothing is displayed; it just records.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	var __trails_1: Dictionary = get_meta(&"__ef_trails", {}) as Dictionary
+	var __trail_1: Array = __trails_1.get("vy", []) as Array
+	__trail_1.append(velocity.y)
+	if __trail_1.size() > maxi(int(120), 1):
+		__trail_1 = __trail_1.slice(__trail_1.size() - maxi(int(120), 1))
+	__trails_1["vy"] = __trail_1
+	set_meta(&"__ef_trails", __trails_1)
+```
+
+**20. Dump the trail from the signal that marks the moment.** The Health pack already fires On Died,
+so the dump hangs off that trigger rather than off a per-frame "has died" poll. A trail is filled by a
+tick and dumped from whatever signal marks the moment worth keeping.
+
+```gdscript
+extends Node
+
+
+func _on_health_on_death() -> void:
+	print("trail ", "vy", ": ", (get_meta(&"__ef_trails", {}) as Dictionary).get("vy", []))
+```
+
+**21. Catch an impossible value you never saw happen.** Lowest In Trail is an expression, so it reads
+inside an ordinary condition cell. This is the spike a per-frame watch blinks past.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	if (((get_meta(&"__ef_trails", {}) as Dictionary).get("vy", []) as Array).reduce(func(__acc, __v): return min(__acc, __v), INF)) < -2000.0:
+		push_warning("impossible fall speed - see trail")
+```
+
+**22. Export a tuning curve and plot it in a spreadsheet.** Save Trail To CSV writes `index,value`
+rows, which is exactly what a chart tool wants. Acceleration, damage over time, camera shake.
+
+```gdscript
+extends Node
+
+
+func _on_run_finished() -> void:
+	var __csv_1: FileAccess = FileAccess.open("user://accel.csv", FileAccess.WRITE)
+	if __csv_1 != null:
+		__csv_1.store_line("index,value")
+		var __rows_1: Array = (get_meta(&"__ef_trails", {}) as Dictionary).get("accel", []) as Array
+		for __i_1: int in __rows_1.size():
+			__csv_1.store_line("%d,%s" % [__i_1, str(__rows_1[__i_1])])
+		__csv_1.close()
+```
+
+**23. A rolling average as real gameplay, not debugging.** Recent DPS, momentum, "how hot is this
+player right now" - Average In Trail over a short trail is the whole implementation.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	dps_label.text = "DPS %.0f" % (((get_meta(&"__ef_trails", {}) as Dictionary).get("dmg", []) as Array).reduce(func(__acc, __v): return __acc + float(__v), 0.0) / maxf(float(((get_meta(&"__ef_trails", {}) as Dictionary).get("dmg", []) as Array).size()), 1.0))
+```
+
+**24. Start every run from a clean trail.** Clear Trail on the run-start trigger, so last run's
+evidence never confuses this one. Clearing a trail that was never filled is harmless.
+
+```gdscript
+extends Node
+
+
+func _on_run_started() -> void:
+	var __trails_1: Dictionary = get_meta(&"__ef_trails", {}) as Dictionary
+	__trails_1.erase("vy")
+	set_meta(&"__ef_trails", __trails_1)
+```
+
+**25. Show a beginner what a value does over time.** Newest In Trail and Trail Length together read
+as "the current value, out of the last N", which is a far better teaching label than a bare number.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	debug_label.text = "%s of %d samples" % [str(([0] + ((get_meta(&"__ef_trails", {}) as Dictionary).get("vy", []) as Array)).back()), ((get_meta(&"__ef_trails", {}) as Dictionary).get("vy", []) as Array).size()]
+```
+
+**26. Catch the hitch as it happens.** Frame Took Longer Than is a condition, so the whole event only
+runs on the bad frames. 16.6 is one frame at 60 FPS; 20 leaves a little headroom.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	if (get_process_delta_time() * 1000.0 > 20.0):
+		print("%s = %s" % ["slow frame at", Engine.get_frames_drawn()])
+```
+
+**27. Log what was actually happening on the slow frame.** The point of catching a hitch in the sheet
+rather than in a profiler is that everything the sheet knows is in scope right there.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	if (get_process_delta_time() * 1000.0 > 20.0):
+		print("%s = %s" % ["enemies alive", get_tree().get_node_count_in_group("enemies")])
+```
+
+**28. Adaptive quality on a sustained drop.** This one ships, it is not just debugging. One stuttery
+frame is not a reason to drop particle quality; three seconds under 45 FPS is.
+
+```gdscript
+extends Node
+
+
+var __fpslow_1: float = -1.0
+
+
+func __fps_below_for_1(limit: float, seconds: float) -> bool:
+	var now: float = Time.get_ticks_msec() * 0.001
+	if Engine.get_frames_per_second() >= limit:
+		__fpslow_1 = -1.0
+		return false
+	if __fpslow_1 < 0.0:
+		__fpslow_1 = now
+		return false
+	return now - __fpslow_1 >= seconds
+
+
+func _process(delta: float) -> void:
+	if __fps_below_for_1(45.0, 3.0):
+		particle_quality = 0
+```
+
+**29. Time the work you suspect.** Start Measuring and Stop Measuring wrap the rows in between. The
+name is free text, so "spawn wave" and "rebuild nav graph" read as themselves in the report.
+
+```gdscript
+extends Node
+
+
+func _on_wave_due() -> void:
+	var __starts_1: Dictionary = get_meta(&"__ef_span_starts", {}) as Dictionary
+	__starts_1["spawn wave"] = Time.get_ticks_usec()
+	set_meta(&"__ef_span_starts", __starts_1)
+	spawn_wave(current_wave)
+	var __starts_2: Dictionary = get_meta(&"__ef_span_starts", {}) as Dictionary
+	var __span_2: float = float(Time.get_ticks_usec() - int(__starts_2.get("spawn wave", Time.get_ticks_usec()))) / 1000.0
+	var __stats_2: Dictionary = get_meta(&"__ef_spans", {}) as Dictionary
+	var __row_2: Array = __stats_2.get("spawn wave", [0.0, 0, 0.0, 0.0]) as Array
+	__stats_2["spawn wave"] = [float(__row_2[0]) + __span_2, int(__row_2[1]) + 1, maxf(float(__row_2[2]), __span_2), __span_2]
+	set_meta(&"__ef_spans", __stats_2)
+```
+
+**30. Prove an optimization worked with a number.** Average Measured is the figure to quote. Peak
+Measured is the one the player actually felt, and the two often disagree.
+
+```gdscript
+extends Node
+
+
+func _on_level_finished() -> void:
+	print("avg ", (float(((get_meta(&"__ef_spans", {}) as Dictionary).get("spawn wave", [0.0, 0, 0.0, 0.0]) as Array)[0]) / maxf(float(((get_meta(&"__ef_spans", {}) as Dictionary).get("spawn wave", [0.0, 0, 0.0, 0.0]) as Array)[1]), 1.0)), " peak ", (float(((get_meta(&"__ef_spans", {}) as Dictionary).get("spawn wave", [0.0, 0, 0.0, 0.0]) as Array)[2])))
+```
+
+**31. Choose a Time Slicer budget from measurement instead of guessing.** Measure the batch first,
+then set the budget to something the measurement supports.
+
+```gdscript
+extends Node
+
+
+func _on_ready_to_tune() -> void:
+	TimeSlicer.set_frame_budget((float(((get_meta(&"__ef_spans", {}) as Dictionary).get("batch", [0.0, 0, 0.0, 0.0]) as Array)[2])) * 1.2)
+```
+
+**32. Print the whole report at the end of a level.** Log Measurements walks every name you measured
+and prints last, average, peak and sample count, which is the block you paste into a bug or a devlog.
+
+```gdscript
+extends Node
+
+
+func _on_level_finished() -> void:
+	for __key_1: Variant in (get_meta(&"__ef_spans", {}) as Dictionary):
+		var __row_1: Array = (get_meta(&"__ef_spans", {}) as Dictionary)[__key_1] as Array
+		print("%s: last %.2fms  avg %.2fms  peak %.2fms  (%d samples)" % [str(__key_1), float(__row_1[3]), float(__row_1[0]) / maxf(float(__row_1[1]), 1.0), float(__row_1[2]), int(__row_1[1])])
+```
+
+**33. Reset the measurements between runs.** A soak test is only readable if each run starts from
+zero, otherwise the average creeps up and hides the regression you are hunting.
+
+```gdscript
+extends Node
+
+
+func _on_run_started() -> void:
+	set_meta(&"__ef_spans", {})
+	set_meta(&"__ef_span_starts", {})
+```
+
 ### Other use cases
 
 **Tag your systems.** Give every subsystem its own Log Value label prefix ("ai", "audio", "save") so the console can be read by squinting instead of by searching.
@@ -320,3 +582,19 @@ Every Frame
   megabytes.
 - **The BBCode field only appears for Rich text.** If the B / I / U / S buttons are missing from a Log
   row's Message cell, the As dropdown is on Message, Warning or Error - switch it to Rich text (BBCode).
+- **A trail lives on the node the row runs on.** Two sheets on the same node share a trail called
+  "vy"; the same name on a different node is a different trail. That is usually what you want, and it
+  is worth knowing before you wonder why the enemy's trail is empty.
+- **Keep is a count of samples, not seconds.** At 60 FPS a Keep of 120 is two seconds. Change the
+  framerate and the same Keep covers a different stretch of time.
+- **An empty trail's lowest is `INF`.** So is its highest, as `-INF`. A comparison against a trail
+  nobody has filled yet is false, which is the safe answer, but do not print the number raw into a HUD.
+- **Save Trail To CSV needs a `user://` path.** A `res://` path is read-only in an exported game, so
+  the file silently never appears for the playtester whose data you actually wanted.
+- **Both performance conditions need Every Frame.** Frame Took Longer Than asks about the frame it is
+  evaluated on, and FPS Below For keeps a clock that only stays honest if the row is reached each frame.
+- **Stop Measuring without a Start reads as zero, not as an error.** A stopwatch you forgot to start
+  files a 0 ms sample, which quietly drags the average down. If a measurement looks impossibly good,
+  check that both rows actually run on the same path.
+- **Nothing here displays itself.** A measurement is only visible where you send it: Log Measurements,
+  a label, or the Debug Overlay pack. No row grows a chip and no panel turns itself on.

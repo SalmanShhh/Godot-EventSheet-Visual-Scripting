@@ -36,11 +36,15 @@ Install as a single project-wide autoload you call from any sheet by name.
 - [ProcRoom](ProcRoom.md) - a seeded, tiered room-graph map (start to boss) with visited/available/locked traversal.
 - [ComboBox](ComboBox.md) - an input-sequence detector: register token sequences, fire On Combo Matched, with timing windows and wildcards.
 - [ObjectPool](ObjectPool.md) - reuse nodes instead of spawning and freeing them, so heavy scenes stay smooth.
+- [Debug Overlay](Debug-Overlay.md) - watches, bars, world marks, rays and node labels drawn over the running game, in debug builds only, off until a row asks.
 - [Save System](Save-System.md) - save and load your variables and progress to disk.
 - [Quest](Quest.md) - quests as .tres data assets: objectives, chains, rewards, and triggers, with the "3/5" journal text one expression away.
+- [Game Settings](Game-Settings.md) - settings that declare themselves: one default, an On Setting Changed trigger to branch on, and an options menu buildable from the declaration.
 - [Phase Cycle](Phase-Cycle.md) - day/night and any repeating phases: cycle, react on change, and read the 0-1 progress for sun dials.
 - [Platform Info](Platform-Info.md) - what is this game running on: OS/device/screen/touch/locale/GPU/CPU conditions and expressions, safe-area insets included.
 - [Advanced Random](Advanced-Random.md) - richer randomness: weighted picks, shuffled bags, dice, and noise.
+- [Event Bus](Event-Bus.md) - a game-wide message board addressed by name: broadcast a channel with a payload, answer it with On Event anywhere, and Wait For Event with a give-up time.
+- [Named Scenes](Named-Scenes.md) - give each .tscn a short name so rows stop carrying res:// paths, carry a record into the next scene, and read back On Scene Ready / Current Scene Is.
 
 ## Incremental and idle
 
@@ -69,6 +73,7 @@ Attach to a node to move it.
 - [Wrap](Wrap.md) - Asteroids-style screen wrapping, per axis - rectangle or circular arenas.
 - [Rotate](Rotate.md) - constant spin with speed + acceleration, 2D or any 3D axis, previewable in the editor.
 - [Move To](Move-To.md) - move a node to a point or along a path.
+- [Follow Path](Follow-Path.md) - walk a drawn Path2D at a real speed, once, looping or ping-pong, with On Path Finished at the end.
 - [Follow](Follow.md) - chase or trail another node with easing.
 - [Bullet](Bullet.md) - fire a node in a straight line at a speed and angle.
 - [Sine](Sine.md) - oscillate a property (position, size, angle) on a sine wave.

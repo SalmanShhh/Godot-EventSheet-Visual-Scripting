@@ -1146,3 +1146,568 @@ Variable or property,变量或属性
 "What to change one part of: a node's own member (velocity, modulate, position) picked from the list, or the name of a sheet variable holding a Vector, Color or record.",要改动其中一个分量的对象：从列表里挑的节点自身成员（velocity、modulate、position），或某个存放向量、颜色或记录的表变量名。
 Which named part to write.,写入哪个具名分量。
 The new value for that one part.,该分量的新值。
+Watch Data File,监视数据文件
+"Checks whether a data file has been written since the last check, and fires the sheet's data_file_changed(path) signal when it has - so you edit an enemy's numbers in the Inspector and the running game picks them up. Put it under Every X Seconds; the first check only takes a reading, so nothing fires just because the row started. This is a debug-build tool: it reads the file's timestamp each time it runs.",检查某个数据文件自上次检查以来是否被写入过，如果是，就触发事件表的 data_file_changed(path) 信号 - 这样你在 Inspector 里改敌人的数值，运行中的游戏就能立刻用上。把它放在“每 X 秒”下面；第一次检查只是取一个读数，所以不会仅仅因为这一行开始运行就触发。这是调试版本用的工具：它每次运行都会读取文件的时间戳。
+watch [b]{path}[/b] for edits,监视 [b]{path}[/b] 的改动
+"The data file to watch (a .tres, .json or .csv).",要监视的数据文件（.tres、.json 或 .csv）。
+Reload Data Asset,重新加载数据资产
+"Re-reads a data asset from disk into the copy every node is already holding, so the new numbers apply without restarting or re-assigning anything. It reloads DATA, not code: a changed script still needs a restart. Nothing happens when the path is not there.",把一个数据资产从磁盘重新读入每个节点已经持有的那份副本，于是新数值无需重启、也无需重新赋值就能生效。它重新加载的是数据，不是代码：脚本改了仍然需要重启。路径不存在时什么也不会发生。
+reload data asset [b]{path}[/b],重新加载数据资产 [b]{path}[/b]
+The data asset to re-read from disk.,要从磁盘重新读取的数据资产。
+On Data File Changed,当数据文件变化时
+"Runs when a Watch Data File row notices that a watched file has been written. The path arrives on the row as path, so the reaction reloads exactly the file that changed even when two land in the same check. Needs a Signal row for data_file_changed(path: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.",当一行“监视数据文件”发现被监视的文件被写入时运行。路径会以 path 的形式送到这一行上，所以即使两个文件在同一次检查中变化，反应也能准确地重新加载真正变化的那一个。需要一行 data_file_changed(path: String) 的信号行 - 没有它事件表仍能编译，但没有任何东西连接这个事件，所以它永远不会运行。项目 Doctor 会标记这一点。
+On data file changed ( {path} ),当数据文件变化时 ( {path} )
+"The file that was written, carried by the signal itself.",被写入的那个文件，由信号本身携带。
+Data Folder Problems,数据文件夹问题
+"Every structural problem in a folder of data assets, one per line, and """" when it is clean: a file that cannot be loaded, one with no usable id, and two files claiming the same id (where the second quietly wins every lookup). Show it, log it, or fail a build with it.","一个数据资产文件夹里的每个结构性问题，每行一条，干净时为 """"：无法加载的文件、没有可用 id 的文件，以及两个文件声明了同一个 id（此时后一个会悄悄赢下每一次查找）。可以显示它、记录它，或者用它让构建失败。"
+problems in [b]{folder}[/b],[b]{folder}[/b] 中的问题
+Folder of data assets to check (not recursive).,要检查的数据资产文件夹（不递归）。
+Data Folder Is Valid,数据文件夹有效
+"True when every data asset in a folder loads, has an id, and has an id no sibling shares - the check to put in front of loading a mod folder or user content. Read the reasons with Data Folder Problems.",当一个文件夹里的每个数据资产都能加载、都有 id、且 id 不与任何同级重复时为真 - 加载 mod 文件夹或用户内容之前该放的那道检查。用“数据文件夹问题”查看具体原因。
+[b]{folder}[/b] is valid data,[b]{folder}[/b] 是有效的数据
+Validate Data Folder,验证数据文件夹
+"Checks a folder of data assets and writes every problem it finds to the Output as one warning, saying which file and what is wrong. A clean folder says nothing at all, so it is safe to leave in a startup event.",检查一个数据资产文件夹，把发现的每个问题作为一条警告写入输出，说明是哪个文件、哪里不对。完全干净的文件夹什么也不会说，所以放在启动事件里很安全。
+validate data folder [b]{folder}[/b],验证数据文件夹 [b]{folder}[/b]
+World Point To Screen,世界坐标转屏幕坐标
+"Where a world point sits on screen right now, camera zoom and scroll included - pin a nameplate, a health bar or a damage number to something that moves. Put the answer on a node that lives on a CanvasLayer and it will track its target without lagging behind the camera.",一个世界坐标点此刻在屏幕上的位置，已经算上摄像机的缩放和滚动 - 把名牌、血条或伤害数字钉在会移动的东西上。把结果用在位于 CanvasLayer 上的节点上，它就能跟住目标，而不会落后于摄像机。
+Math & Random,数学与随机
+screen position of [b]{world_point}[/b],[b]{world_point}[/b] 的屏幕位置
+World Point,世界坐标点
+A position in the game world.,游戏世界中的一个位置。
+Screen Point To World,屏幕坐标转世界坐标
+"The world position under a screen pixel - click-to-place, a gamepad cursor, a HUD marker dragged onto the map. The exact opposite of World Point To Screen, so the two round-trip.",某个屏幕像素下方的世界位置 - 点击放置、手柄光标、拖到地图上的 HUD 标记。它与“世界坐标转屏幕坐标”正好相反，两者可以来回转换。
+world position of screen point [b]{screen_point}[/b],屏幕点 [b]{screen_point}[/b] 的世界位置
+Screen Point,屏幕坐标点
+"A position in screen pixels, with 0,0 at the top-left of the view.","以像素表示的屏幕位置，0,0 在视图左上角。"
+Project To Screen (3D),投影到屏幕（3D）
+"Where a 3D world point lands on screen - nameplates over 3D characters, damage numbers, objective pins drawn on a CanvasLayer. Reads as 0,0 while there is no active 3D camera, so it never faults during a scene change. Check Is Behind Camera (3D) first: a point behind you still projects to a number.","一个 3D 世界坐标点落在屏幕上的位置 - 3D 角色头顶的名牌、伤害数字、画在 CanvasLayer 上的目标图钉。没有活动的 3D 摄像机时读作 0,0，所以切换场景时它绝不会出错。请先检查“在摄像机后方（3D）”：位于你身后的点同样会投影出一个数字。"
+screen position of 3D point [b]{world_point}[/b],3D 点 [b]{world_point}[/b] 的屏幕位置
+A position in the 3D world.,3D 世界中的一个位置。
+Is Point On Screen,点在屏幕上
+"True while a world point is inside the visible view - the honest gate for spawning, culling, showing an off-screen arrow, or holding a tutorial callout until its subject is actually visible.",当一个世界坐标点位于可见视图内时为真 - 生成、剔除、显示屏幕外箭头，或者把教程提示留到它的主体真正可见时才出现，这些场合最诚实的判断。
+[b]{world_point}[/b] is on screen (margin [b]{margin}[/b]),[b]{world_point}[/b] 在屏幕上（边距 [b]{margin}[/b]）
+The world position being tested.,被测试的世界位置。
+Margin,边距
+Pixels of slack outside the view that still count as on screen. Negative pulls the test inward.,视图之外仍然算作在屏幕上的像素余量。负值会把测试范围向内收。
+Is Behind Camera (3D),在摄像机后方（3D）
+"True when a 3D point sits behind the camera plane, where its projected screen position is a mirrored lie. The guard every 3D waypoint marker needs before it draws. With no camera in the scene it reads true, so nothing is drawn into a view that does not exist.",当一个 3D 点位于摄像机平面后方时为真，此时它投影出的屏幕位置是一个镜像的谎言。每个 3D 路点标记在绘制前都需要的守卫。场景里没有摄像机时它读作真，于是不会往一个并不存在的视图里画东西。
+[b]{world_point}[/b] is behind the camera,[b]{world_point}[/b] 在摄像机后方
+The 3D position being tested.,被测试的 3D 位置。
+Screen Edge Position For,目标的屏幕边缘位置
+"A screen position that follows a target while it is visible and sticks to the edge of the view once it is not - the off-screen objective arrow, the radar blip, the ""your teammate is over there"" chevron. Pair it with Marker Angle Toward for the rotation.",目标可见时跟随它、不可见时贴在视图边缘的一个屏幕位置 - 屏幕外的目标箭头、雷达光点、“你的队友在那边”的指示符。搭配“标记指向角度”来得到旋转。
+screen edge position for [b]{world_point}[/b] (margin [b]{margin}[/b]),[b]{world_point}[/b] 的屏幕边缘位置（边距 [b]{margin}[/b]）
+The thing being pointed at.,被指向的那个东西。
+How far in from the edge the marker is parked.,标记停在离边缘多远的地方。
+Marker Angle Toward,标记指向角度
+"The rotation in degrees an on-screen arrow needs so it points from the middle of the view at a world thing - the other half of the off-screen marker, and it stays right while the camera zooms or rotates.",屏幕上的箭头需要多少度的旋转，才能从视图中心指向世界中的某个东西 - 屏幕外标记的另一半，而且摄像机缩放或旋转时它依然正确。
+marker angle toward [b]{world_point}[/b],指向 [b]{world_point}[/b] 的标记角度
+Visible World Rect,可见世界矩形
+"The rectangle of the world the camera can currently see, in world coordinates - spawn just outside it, cull outside it, clamp a node inside it, or size a minimap to it. Follows the camera's zoom and position with nothing to keep in sync.",摄像机当前能看到的那块世界矩形，以世界坐标表示 - 在它外面一点生成、在它外面剔除、把节点限制在里面，或者按它来设定小地图的大小。它跟随摄像机的缩放和位置，无需你同步任何东西。
+visible world rect,可见世界矩形
+Wrap Inside The View (3D),在视图内循环（3D）
+"The Asteroids rule in 3D: leave the right of the view and come back on the left, off the top and back at the bottom, at the same distance from the camera. The missing twin of the 2D Wrap Inside The Screen, for a wrap-around arena or an endless shoal. Does nothing while there is no 3D camera.",3D 版的《爆破彗星》规则：从视图右边离开就从左边回来，从上面出去就从下面回来，与摄像机的距离保持不变。2D “在屏幕内循环”缺失的那个孪生兄弟，适合环绕式竞技场或无尽鱼群。没有 3D 摄像机时它什么也不做。
+Movement,移动
+wrap inside the view,在视图内循环
+Random Point In Circle,圆内随机点
+"An evenly spread random point inside a circle - the sqrt weighting is done for you, so scatter does not bunch up in the middle the way the obvious version does.",圆内均匀分布的随机点 - 平方根加权已经替你做好，所以散布不会像想当然的写法那样在中间堆成一团。
+random point within [b]{radius}[/b] of [b]{center}[/b],距 [b]{center}[/b] 不超过 [b]{radius}[/b] 的随机点
+Center,中心
+Middle of the circle.,圆的中心。
+Radius,半径
+In pixels.,以像素为单位。
+Random Point On Circle,圆周上随机点
+"A random point exactly ON the rim of a circle, never inside it - a spawn ring around the player, orbiting decor, a radial menu slot, the starting point of a homing shot.",恰好落在圆周上、绝不落在圆内的随机点 - 玩家周围的生成环、环绕的装饰、径向菜单的槽位、追踪弹的起点。
+random point on a circle of [b]{radius}[/b] around [b]{center}[/b],以 [b]{center}[/b] 为中心、半径 [b]{radius}[/b] 的圆周上的随机点
+Random Point In Ring,圆环内随机点
+"A random point in the doughnut between two radii - the off-screen spawner that never drops an enemy in the player's lap, and never so far away it never arrives. Evenly spread across the whole band, not crowded against the inner edge.",两个半径之间那个甜甜圈里的随机点 - 既不会把敌人扔到玩家脸上、又不会远到永远走不过来的屏幕外生成器。在整条环带上均匀分布，不会挤在内缘。
+random point between [b]{inner_radius}[/b] and [b]{outer_radius}[/b] of [b]{center}[/b],距 [b]{center}[/b] 在 [b]{inner_radius}[/b] 与 [b]{outer_radius}[/b] 之间的随机点
+Middle of the ring.,圆环的中心。
+Inner Radius,内半径
+Nothing spawns closer than this.,生成位置不会比这更近。
+Outer Radius,外半径
+Nothing spawns further than this.,生成位置不会比这更远。
+Random Point In Rectangle,矩形内随机点
+"A random point inside an axis-aligned rectangle - loot scatter across a room, prop placement, confetti over a banner, a patrol target inside a zone. Feed it Visible World Rect's position and size to scatter across whatever the camera can see.",轴对齐矩形内的随机点 - 房间里散落的战利品、道具摆放、横幅上方的彩纸、区域内的巡逻目标。把“可见世界矩形”的位置和大小喂给它，就能在摄像机能看到的范围内散布。
+random point in the rect at [b]{top_left}[/b] sized [b]{size}[/b],在 [b]{top_left}[/b] 处、大小为 [b]{size}[/b] 的矩形内的随机点
+Top Left,左上角
+Corner the rectangle starts at.,矩形起始的那个角。
+Size,大小
+Width and height in pixels.,以像素为单位的宽和高。
+Random Point In Cone,扇形内随机点
+"A random point inside a wedge - shotgun spread, cone attacks, directional scatter, a spray of sparks away from a wall. Facing and spread are in degrees, so the row reads the way you think about it.",一个楔形里的随机点 - 霰弹散布、锥形攻击、定向散射、贴着墙飞溅的火花。朝向和张角都用度，所以这一行读起来和你脑子里想的一样。
+random point in a [b]{spread_degrees}[/b] cone facing [b]{facing_degrees}[/b] from [b]{center}[/b],从 [b]{center}[/b] 出发、朝向 [b]{facing_degrees}[/b]、张角 [b]{spread_degrees}[/b] 的扇形内的随机点
+Tip,顶点
+Where the wedge starts.,楔形起始的位置。
+Facing,朝向
+"Direction the wedge points, in degrees.",楔形指向的方向，以度为单位。
+Spread,张角
+"Total width of the cone in degrees, half either side of facing.",扇形的总宽度（度），朝向两侧各占一半。
+Reach,长度
+How far the wedge extends.,楔形延伸多远。
+Random Point Around,节点周围随机点
+"Random scatter around a node that is already in the scene - blood splats around a hit, footprints around a stomp, sparkles around a pickup, a wander target around home. Pick the node instead of typing its position, and the scatter follows it as it moves.",围绕场景中已有节点的随机散布 - 命中处的血迹、踩踏后的脚印、拾取物周围的闪光、以家为中心的游荡目标。选节点而不是手打位置，散布就会随它一起移动。
+random point [b]{min_radius}[/b] to [b]{max_radius}[/b] around [i]{node}[/i],[i]{node}[/i] 周围 [b]{min_radius}[/b] 到 [b]{max_radius}[/b] 的随机点
+Around,围绕
+Node the point is scattered around.,散布所围绕的节点。
+Nearest,最近
+Nothing lands closer than this.,落点不会比这更近。
+Furthest,最远
+Nothing lands further than this.,落点不会比这更远。
+Random Direction (2D),随机方向（2D）
+"A random unit direction in 2D - multiply it by a speed for a random shove, by a distance for a random offset. Always exactly one unit long, so the strength stays where you set it.",2D 中的一个随机单位方向 - 乘以速度得到随机推力，乘以距离得到随机偏移。长度永远正好是一个单位，所以强度还是你设定的那个。
+random direction,随机方向
+Random Direction (3D),随机方向（3D）
+"A random unit direction in 3D, evenly spread over the whole sphere. The naive three-random-numbers version crowds the corners of a cube; this one does not, so debris and shrapnel fly out honestly.",3D 中的随机单位方向，在整个球面上均匀分布。朴素的“三个随机数”写法会挤在立方体的角上；这个不会，所以碎片和弹片飞得诚实。
+random direction (3D),随机方向（3D）
+Random Point In Sphere,球内随机点
+"An evenly spread random point inside a 3D sphere - spawn clouds, debris fields, flocking targets. The cube-root weighting keeps the middle from filling up first.",3D 球体内均匀分布的随机点 - 生成云团、碎片场、集群目标。立方根加权让中间不会先被填满。
+random point within [b]{radius}[/b] of [b]{center}[/b] (3D),距 [b]{center}[/b] 不超过 [b]{radius}[/b] 的随机点（3D）
+Middle of the sphere.,球体的中心。
+In metres.,以米为单位。
+Random Point In Box,立方体内随机点
+"A random point inside an axis-aligned 3D box - scatter trees over a chunk, spawn enemies in a room volume, place ambient audio emitters. Size is the FULL box, measured around the centre.",轴对齐 3D 盒体内的随机点 - 在一个区块里撒树、在房间体积里生成敌人、放置环境音源。大小是整个盒体的尺寸，以中心为基准。
+random point in a [b]{size}[/b] box at [b]{center}[/b],在 [b]{center}[/b] 处、大小为 [b]{size}[/b] 的盒体内的随机点
+Middle of the box.,盒体的中心。
+"Full width, height and depth.",完整的宽、高、深。
+Random Point On Screen Edge,屏幕边缘随机点
+"A random WORLD position on the border of what the camera can see - the wave spawner that comes in from a random side, ambient wildlife entering the frame, a meteor starting its run. Grow it with Visible World Rect if you want them to appear from just outside.",摄像机可见范围边界上的一个随机世界位置 - 从随机一侧涌来的波次生成器、进入画面的环境生物、开始俯冲的陨石。想让它们从刚好在画面外出现，就用“可见世界矩形”把范围放大一点。
+random point on the screen edge,屏幕边缘上的随机点
+Jitter,抖动
+"Nudges a value by a random amount up to the size you give - pitch variation on a sound, a pixel or two of scatter on a decal, a shade of variation on a tint. Works on numbers, vectors and colors as long as the amount is the same kind of value.",把一个值随机地推动不超过你给定的幅度 - 音效的音高变化、贴花上一两个像素的偏移、染色上的一点深浅差别。只要幅度是同一种值，数字、向量和颜色都能用。
+[b]{value}[/b] jittered by [b]{amount}[/b],[b]{value}[/b] 抖动 [b]{amount}[/b]
+"The number, vector or color being nudged.",被推动的数字、向量或颜色。
+By,幅度
+"The most it can move, as the SAME kind of value - a number for a number, a Vector2 for a position, a Color for a tint.",它最多能移动多少，必须是同一种值 - 数字对数字，位置用 Vector2，染色用 Color。
+Bounce Off Surface,从表面反弹
+"The velocity a moving thing has AFTER hitting a surface - feed it the normal any hit trigger or raycast hands you. Ricochets, pinball, breakout, deflect shields.",一个运动中的物体撞到表面之后的速度 - 把任何命中触发器或射线检测给你的法线喂进去。跳弹、弹球、打砖块、偏转护盾。
+[b]{velocity}[/b] bounced off [b]{normal}[/b],[b]{velocity}[/b] 从 [b]{normal}[/b] 反弹后
+Velocity,速度
+How the thing was moving when it hit.,撞上时它的运动方式。
+Surface Normal,表面法线
+The normal any hit trigger or raycast hands you.,任何命中触发器或射线检测给你的那个法线。
+Bounciness,弹性
+"1 keeps all the speed, 0.6 is a rubber ball, 0 is a dead stop.",1 保留全部速度，0.6 像橡皮球，0 是完全停住。
+Slide Along Surface,沿表面滑动
+"The velocity left over once the part pushing INTO a surface is removed - a wall slide that keeps you moving along the wall instead of sticking to it, slope movement, a dash that grazes a corner rather than stopping dead.",去掉“压进表面”的那部分之后剩下的速度 - 让你贴着墙继续移动而不是黏在墙上的贴墙滑行、斜坡移动、擦过拐角而不是当场停死的冲刺。
+[b]{velocity}[/b] slid along [b]{normal}[/b],[b]{velocity}[/b] 沿 [b]{normal}[/b] 滑动后
+How the thing was moving when it met the surface.,碰到表面时它的运动方式。
+Angle Reflected,反射后的角度
+The heading in degrees a thing travels on after bouncing off a surface - the answer to feed straight back into Set Angle Of Motion when a bullet should ricochet instead of dying.,一个物体从表面弹开之后前进的朝向（度）- 当子弹应该跳弹而不是消失时，直接喂回“设置运动角度”的那个答案。
+[b]{degrees}[/b] reflected off [b]{normal}[/b],[b]{degrees}[/b] 从 [b]{normal}[/b] 反射后
+Angle,角度
+"The heading it was travelling on, in degrees.",它原本前进的朝向，以度为单位。
+The normal the hit reported.,命中报告的那个法线。
+Push Out Of Surface,推出表面
+"A position just clear of a surface instead of exactly on it - park a ricocheting bullet, a decal or a spawned effect here. Landing exactly on a surface is how a thing ends up stuck inside it on the next frame, because a ray that starts inside a shape does not report it.",一个刚好脱离表面、而不是正好贴在表面上的位置 - 把跳弹的子弹、贴花或生成的特效停在这里。正好落在表面上，正是一个物体下一帧陷进去的原因，因为从形状内部出发的射线不会报告它。
+[b]{point}[/b] pushed [b]{distance}[/b] out of [b]{normal}[/b],[b]{point}[/b] 沿 [b]{normal}[/b] 推出 [b]{distance}[/b]
+Hit Point,命中点
+Where the hit happened.,命中发生的位置。
+Clearance,间隙
+Pixels of daylight to leave between the thing and the surface.,在物体和表面之间留出的像素空隙。
+Face Along Velocity,朝速度方向转向
+"Turns this node to point the way it is travelling, and leaves it alone while it is standing still so a stopped thing never snaps back to facing right. Arrows, fish, cars, thrown knives, a camera that leads the motion.",让这个节点转向它前进的方向，静止时则不去动它，所以停下来的东西绝不会突然弹回朝右。箭矢、鱼、汽车、飞刀，以及领着运动走的摄像机。
+face along [b]{velocity}[/b],朝 [b]{velocity}[/b] 方向转向
+"How this node is moving - Get Velocity on a body, or the direction you are driving it with.",这个节点的运动方式 - 物体上的“获取速度”，或者你驱动它的那个方向。
+Look At (safe up),看向（安全上方向）
+"Turns a 3D node to face a point WITHOUT the crash the plain Look At has: when the target is directly overhead or underfoot, the usual up vector points the same way as the look direction and Godot cannot build a rotation from that. This one swaps the up vector at the last moment, and does nothing at all when the target is where the node already is.",让一个 3D 节点朝向某个点，而且不会有普通“看向”那样的崩溃：当目标正好在头顶或脚下时，通常的上方向向量与视线方向重合，Godot 无法据此构造旋转。这个会在最后关头换掉上方向向量，而当目标就在节点自己所在处时，它什么也不做。
+look at [b]{target}[/b] (safe up),看向 [b]{target}[/b]（安全上方向）
+Look At,看向
+The world position to face.,要面对的世界位置。
+Look At (flat),看向（水平）
+"Turns a 3D node to face a point but only around the up axis, so a character looks at the player without tipping over to stare at their feet. The rotation every humanoid, turret base and standing NPC actually wants.",让一个 3D 节点朝向某个点，但只绕上轴旋转，于是角色看向玩家时不会歪倒去盯着人家的脚。每个人形、炮塔底座和站立 NPC 真正想要的那种旋转。
+look at [b]{target}[/b] (flat),看向 [b]{target}[/b]（水平）
+Aim At Moving Target,瞄准移动目标
+"Where to aim so a shot MEETS a moving target instead of trailing it - the interception point every turret and archer needs. When the target is faster than the shot no lead exists, and it falls back to the target's current spot rather than pointing somewhere absurd.",该往哪里打，才能让一发射击迎上移动的目标而不是追在它后面 - 每个炮塔和弓箭手都需要的拦截点。当目标比射击还快时不存在提前量，它会退回目标当前的位置，而不是指向某个荒唐的方向。
+aim at [b]{target_position}[/b] moving [b]{target_velocity}[/b],瞄准位于 [b]{target_position}[/b]、速度为 [b]{target_velocity}[/b] 的目标
+Shooting From,射击起点
+Where the shot starts.,射击开始的位置。
+Target At,目标位置
+Where the target is right now.,目标此刻在哪里。
+Target Moving At,目标速度
+"How the target is moving, in pixels per second.",目标的运动速度，以像素每秒计。
+Shot Speed,射速
+"How fast your shot travels, in pixels per second.",你的射击飞得多快，以像素每秒计。
+Launch Angle For Arc,抛物线发射角
+"The angle in degrees to fire something so it ARCS onto a target - grenades, mortars, catapults, a coin tossed into a counter. Picks the flatter of the two possible arcs, and reads as 45 degrees when the shot cannot reach at all, so a row never produces a number that is not a number.",要让东西以弧线落到目标上，应该以多少度发射 - 手雷、迫击炮、投石机、抛进柜台的硬币。它会在两条可能的弧线里选更平的那条，而当射程根本够不着时读作 45 度，所以这一行绝不会产出一个“不是数字”的数字。
+"launch angle to reach [b]{distance}[/b] away, [b]{height}[/b] up",发射角：到达 [b]{distance}[/b] 远、[b]{height}[/b] 高处
+Distance,距离
+"How far away the target is, along the ground.",目标沿地面有多远。
+Height Difference,高度差
+How much higher the target is than the launcher; negative is downhill.,目标比发射点高多少；负数表示往下打。
+Launch Speed,发射速度
+How fast the thing leaves the launcher.,物体离开发射点时有多快。
+Gravity,重力
+"Pull downward, in the same units as the speed.",向下的拉力，单位与速度相同。
+Time To Reach,到达所需时间
+"How many seconds something moving at a steady speed needs to cover a distance - time a warning before the missile lands, size a tween to match a walk, decide whether the interceptor can get there first.",以匀速运动的东西走完一段距离需要多少秒 - 在导弹落地前预留警告时间、让补间时长与走路匹配、判断拦截者能不能先到。
+time for [b]{speed}[/b] to cross [b]{from_position}[/b] to [b]{to_position}[/b],[b]{speed}[/b] 从 [b]{from_position}[/b] 到 [b]{to_position}[/b] 所需的时间
+Where it starts.,它从哪里出发。
+Where it is going.,它要去哪里。
+Speed,速度
+Pixels per second.,像素每秒。
+Cell Of Point,点所在的格子
+"Which grid cell a world position falls in - no TileMapLayer needed, so build grids, inventory slots and chunk keys all speak the same language. Negative positions land in negative cells, which is what a grid that extends left and up actually wants.",一个世界位置落在哪个网格格子里 - 不需要 TileMapLayer，于是网格、物品栏格位和区块键都说同一种语言。负的位置落在负的格子里，这正是一个向左、向上延伸的网格真正想要的。
+cell of [b]{point}[/b] on a [b]{cell_size}[/b] grid,[b]{point}[/b] 在 [b]{cell_size}[/b] 网格上的格子
+Point,点
+A world position.,一个世界位置。
+Cell Size,格子大小
+Pixels across one cell. Type Tiles(1) to read your project's own tile size instead.,一个格子有多少像素宽。输入 Tiles(1) 可以改用你项目自己的图块大小。
+Center Of Cell,格子中心
+"The world position at the middle of a grid cell - where the placement ghost sits, where the tower is built, where the piece lands. The exact partner of Cell Of Point, so the pair round-trips.",一个网格格子正中间的世界位置 - 放置幽灵预览待的地方、塔建起来的地方、棋子落下的地方。它是“点所在的格子”的精确搭档，两者可以来回转换。
+center of cell [b]{cell}[/b] on a [b]{cell_size}[/b] grid,格子 [b]{cell}[/b] 在 [b]{cell_size}[/b] 网格上的中心
+Cell,格子
+The grid cell.,那个网格格子。
+Pixels across one cell.,一个格子有多少像素宽。
+Snap Point To Grid,吸附到网格
+"The nearest grid intersection to a loose position - a dragged card falling into its slot, a level editor brush, a UI element clicking onto a column. Rounds to the nearest, so a thing dropped just past halfway moves forward rather than back.",离一个松散位置最近的网格交点 - 落进槽位的拖拽卡牌、关卡编辑器的笔刷、咔哒对齐到某一列的 UI 元素。它取最近的一个，所以刚过半程的东西会往前走而不是退回去。
+[b]{point}[/b] snapped to a [b]{cell_size}[/b] grid,[b]{point}[/b] 吸附到 [b]{cell_size}[/b] 网格
+The loose world position.,那个松散的世界位置。
+Snap Point To Grid (3D),吸附到网格（3D）
+"The nearest point on a 3D grid - voxel placement, modular level pieces clicking together, a build cursor that lines up with the floor tiles.",3D 网格上最近的点 - 体素放置、拼接式关卡组件的咔哒对齐、与地板图块对齐的建造光标。
+[b]{point}[/b] snapped to a [b]{cell_size}[/b] grid (3D),[b]{point}[/b] 吸附到 [b]{cell_size}[/b] 网格（3D）
+Metres across one cell.,一个格子有多少米宽。
+Cell Distance,格子距离
+"How far apart two grid cells are, with the same geometry dropdown the rest of the plugin uses: straight line, horizontal or vertical only, grid steps (Manhattan) or king moves (Chebyshev). One expression that fits a roguelike, a strategy game and a puzzle board alike.",两个网格格子相距多远，用的是插件其他地方一样的那个几何下拉框：直线、只算水平或垂直、网格步数（曼哈顿）或王步（切比雪夫）。一个表达式同时适合 roguelike、策略游戏和益智棋盘。
+"distance from cell [b]{from_cell}[/b] to [b]{to_cell}[/b], measured as [b]{metric}[/b]",从格子 [b]{from_cell}[/b] 到 [b]{to_cell}[/b] 的距离，按 [b]{metric}[/b] 计算
+From Cell,起始格子
+One cell.,一个格子。
+To Cell,目标格子
+The other cell.,另一个格子。
+Measured As,计算方式
+"How the distance is counted - a roguelike wants Grid steps, a chess board wants King moves.",距离怎么算 - roguelike 要网格步数，国际象棋盘要王步。
+Straight line,直线
+Horizontal only,只算水平
+Vertical only,只算垂直
+Grid steps,网格步数
+King moves,王步
+Neighbours Of Cell,格子的邻居
+"The cells touching a cell, as a list - flood fill, path search, ""is anything next to me"", spreading fire, match-three clearing. Choose four sides, eight including diagonals, or the six neighbours of an axial hex board.",与一个格子相邻的那些格子，以列表返回 - 洪水填充、路径搜索、“我旁边有东西吗”、火势蔓延、三消消除。可以选四邻、含对角的八邻，或者轴向六边形棋盘的六个邻居。
+neighbours of cell [b]{cell}[/b] ([b]{shape}[/b]),格子 [b]{cell}[/b] 的邻居（[b]{shape}[/b]）
+The cell whose neighbours you want.,你想取其邻居的那个格子。
+Shape,形状
+How cells touch on this board.,在这个棋盘上格子如何相邻。
+4 sides,四邻
+8 including diagonals,八邻（含对角）
+6 hex (axial),六邻（轴向六边形）
+Cells In Line,直线上的格子
+"Every cell a straight line passes through, in order from one cell to the other - a laser beam's path, tile-based line of sight, a corridor carved between two rooms, a ruler for a ranged attack. Both ends are included.",一条直线经过的每个格子，从一端到另一端依次排列 - 激光束的路径、基于图块的视线、两个房间之间凿出的走廊、远程攻击的量尺。两端都包含在内。
+cells in the line from [b]{from_cell}[/b] to [b]{to_cell}[/b],从 [b]{from_cell}[/b] 到 [b]{to_cell}[/b] 直线上的格子
+Where the line starts.,直线的起点。
+Where the line ends.,直线的终点。
+Cells In Radius,半径内的格子
+"Every cell within a step radius of a centre cell, as a list - a blast footprint, a range preview, a fog reveal, the tiles a tower covers. Choose the diamond (counting grid steps) or the square (counting king moves).",距离中心格子在若干步以内的每个格子，以列表返回 - 爆炸范围、射程预览、迷雾揭示、一座塔覆盖的图块。可以选菱形（按网格步数算）或方形（按王步算）。
+cells within [b]{radius}[/b] of [b]{center}[/b] ([b]{shape}[/b]),[b]{center}[/b] 周围 [b]{radius}[/b] 以内的格子（[b]{shape}[/b]）
+Center Cell,中心格子
+The middle of the area.,区域的中心。
+Radius In Cells,半径（格）
+How many steps out from the middle.,从中心往外几步。
+Whether the corners count.,角落算不算在内。
+Grid steps (diamond),网格步数（菱形）
+King moves (square),王步（方形）
+Cells In Rectangle,矩形内的格子
+"Every cell in a rectangular block, row by row - stamping a room, laying out an inventory grid, placing a multi-cell building, clearing a region of fog. An empty or negative size walks nothing rather than looping backwards.",一个矩形区块内的每个格子，一行一行排列 - 盖出一个房间、排布物品栏网格、放置占多格的建筑、清除一片迷雾。大小为空或为负时它一个也不走，而不是倒着循环。
+cells in the [b]{size}[/b] block at [b]{top_left}[/b],[b]{top_left}[/b] 处 [b]{size}[/b] 区块内的格子
+Top Left Cell,左上格子
+Corner the block starts at.,区块起始的那个角。
+Size In Cells,大小（格）
+How many cells across and down.,横向和纵向各有多少格。
+Is Cell In Bounds,格子在范围内
+"True while a cell is on the board - the guard before every placement, every move and every array lookup keyed by cell. Counting starts at 0,0 in the top-left, so a 20 by 12 board's last cell is 19,11.","当一个格子在棋盘上时为真 - 每次放置、每次移动、每次按格子查数组之前该有的守卫。计数从左上角的 0,0 开始，所以 20 乘 12 的棋盘最后一格是 19,11。"
+cell [b]{cell}[/b] is inside a [b]{size}[/b] board,格子 [b]{cell}[/b] 在 [b]{size}[/b] 的棋盘内
+The cell being tested.,被测试的那个格子。
+Board Size,棋盘大小
+How many cells the board is across and down.,棋盘横向和纵向各有多少格。
+For Each Cell In Radius,遍历半径内的每个格子
+"Runs this event's actions once per cell within a step radius of a centre cell - range previews, blast footprints, fog reveal, area-of-effect highlights. Read the current one as `cell`.",对距离中心格子若干步以内的每个格子各运行一次本事件的动作 - 射程预览、爆炸范围、迷雾揭示、范围效果高亮。用 `cell` 读取当前这一个。
+for each cell within [b]{radius}[/b] of [b]{center}[/b],遍历 [b]{center}[/b] 周围 [b]{radius}[/b] 以内的每个格子
+Falloff At Distance,距离衰减
+"How strong an effect is at a distance, from 1 at the centre to 0 at the edge - the one number that makes an explosion, a sound, a magnet or a screen shake care how close it was. Anything past the radius reads as 0, so it is safe to multiply straight into damage. For a hand-drawn profile, feed this number into Sample Curve.",一个效果在某个距离上的强度，从中心的 1 递减到边缘的 0 - 让爆炸、声音、磁力或屏幕震动懂得“离得多近”的那一个数字。超出半径的一律读作 0，所以直接乘进伤害里也很安全。想要手绘的曲线，就把这个数字喂给“采样曲线”。
+falloff from [b]{center}[/b] at [b]{point}[/b] within [b]{radius}[/b],从 [b]{center}[/b] 到 [b]{point}[/b] 在 [b]{radius}[/b] 内的衰减
+Where the effect comes from.,效果从哪里来。
+What is being affected.,被影响的是什么。
+Past this it reads 0.,超出这个距离就读作 0。
+Profile,曲线
+How quickly the strength drops off with distance.,强度随距离下降得多快。
+Linear,线性
+Sharp (squared),陡峭（平方）
+Smooth (ease out),平滑（缓出）
+Strength Toward,朝向目标的强度
+"Falloff between THIS node and another one, without spelling out either position - guard suspicion that builds faster the closer you are, a magnet that pulls harder up close, a sound that ducks as you approach. Reads 0 once the other node is out of range.",这个节点与另一个节点之间的衰减，无需写出任何一方的位置 - 越靠近涨得越快的守卫警觉度、离近了拉得更狠的磁铁、你一走近就压低的声音。对方节点超出范围时读作 0。
+strength toward [i]{node}[/i] within [b]{radius}[/b],在 [b]{radius}[/b] 内朝向 [i]{node}[/i] 的强度
+Toward,朝向
+The node the strength is measured against.,强度所针对的那个节点。
+Apply Radial Impulse,施加径向冲量
+"Throws this physics body away from a blast, weaker the further it was - barrels, crates, ragdolls and debris flung by an explosion. One row on the body; the blast only has to say where it happened.",把这个物理体从爆炸处推开，越远越弱 - 被爆炸掀飞的桶、板条箱、布娃娃和碎片。物体上只要一行；爆炸只需要说清它发生在哪里。
+apply radial impulse [b]{strength}[/b] from [b]{center}[/b],从 [b]{center}[/b] 施加强度 [b]{strength}[/b] 的径向冲量
+Blast Center,爆炸中心
+Where the explosion went off.,爆炸发生的位置。
+Strength,强度
+"The push at the very centre, in impulse units.",正中心处的推力，以冲量单位计。
+Past this the push is nothing.,超出这个距离，推力为零。
+Push Group Away From,把分组推离
+"Shoves every member of a group away from a point, hardest at the centre and not at all past the radius - the mirror of Pull Group Toward. A shockwave clearing a crowd, a repulsor field, a dash that parts the enemies it passes through.",把一个分组的每个成员从某个点推开，中心最猛、超出半径则完全不推 - “把分组拉向”的镜像。清场的冲击波、斥力场、把途中敌人分开的冲刺。
+push group [b]{group}[/b] away from [b]{center}[/b] within [b]{radius}[/b],把分组 [b]{group}[/b] 从 [b]{center}[/b] 推开，范围 [b]{radius}[/b]
+Group whose members get shoved.,成员会被推开的那个分组。
+Away From,推离
+Where the shove comes from.,推力来自哪里。
+Only members inside this are shoved.,只有在这个范围内的成员会被推开。
+Pixels the closest member is moved.,最近的成员被移动多少像素。
+Is Within Cone Of,在扇形范围内
+"True while a point sits inside a facing wedge - guard vision, spotlight checks, melee arcs, directional blasts. The cheap test to put in front of an expensive raycast: if it is not in the cone, there is nothing to trace.",当一个点位于朝向楔形内时为真 - 守卫视野、聚光灯判定、近战弧、定向爆破。放在昂贵的射线检测前面的那道廉价判定：不在扇形里，就没什么可追踪的。
+[b]{point}[/b] is within a [b]{fov_degrees}[/b] cone of [b]{origin}[/b] facing [b]{facing_degrees}[/b],[b]{point}[/b] 位于 [b]{origin}[/b] 朝向 [b]{facing_degrees}[/b]、张角 [b]{fov_degrees}[/b] 的扇形内
+Cone From,扇形起点
+"Tip of the wedge - the guard, the spotlight, the blast.",楔形的顶点 - 守卫、聚光灯、爆炸点。
+"Which way the wedge points, in degrees.",楔形指向哪一边，以度为单位。
+The position being tested.,被测试的那个位置。
+Cone Width,扇形宽度
+Total width of the wedge in degrees.,楔形的总宽度，以度为单位。
+"How far the wedge extends, in pixels.",楔形延伸多远，以像素计。
+Wait Until,等待直到
+"Pauses this event until a check comes true, or until the give-up time passes. Read which happened on the next row with Wait Succeeded / Wait Timed Out, naming this wait. It polls once a frame, so prefer Wait For Signal when a real signal exists for what you are waiting on.",暂停这个事件，直到某个判断成立，或者放弃时间到了。在下一行用“等待成功 / 等待超时”并写上这次等待的名字来读取结果。它每帧轮询一次，所以当真的存在对应信号时，优先用“等待信号”。
+Time,时间
+"wait [b]{wait_name}[/b] until [b]{check}[/b], give up after [b]{seconds}[/b]s",等待 [b]{wait_name}[/b] 直到 [b]{check}[/b]，[b]{seconds}[/b] 秒后放弃
+Named,名称
+"A name for this wait, so Wait Succeeded / Wait Timed Out can say which one they mean.",给这次等待起个名字，好让“等待成功 / 等待超时”说清楚它们指的是哪一次。
+Until,直到
+"The check to wait for, tested once a frame.",要等待的判断，每帧检测一次。
+Give Up After,放弃时间
+Seconds before giving up. 0 waits forever.,多少秒后放弃。0 表示一直等下去。
+Wait For All Of,等待全部
+"Pauses this event until every signal in the list has fired at least once, or until the give-up time passes. It connects them ALL up front, one-shot, so nothing can fire into the gap between two waits - the bug a hand-written chain of awaits always has. An empty list succeeds at once.",暂停这个事件，直到列表里的每个信号都至少触发过一次，或者放弃时间到了。它会预先把它们全部一次性连接好，所以没有任何信号会掉进两次等待之间的缝隙里 - 手写的 await 链总会有的那个 bug。空列表会立刻成功。
+"wait [b]{wait_name}[/b] for ALL of [b]{signals}[/b], give up after [b]{seconds}[/b]s",等待 [b]{wait_name}[/b] 直到 [b]{signals}[/b] 全部触发，[b]{seconds}[/b] 秒后放弃
+Signals,信号
+"The signals to join, as a list: [$Door.opened, $Camera.arrived].","要一起等待的信号，写成列表：[$Door.opened, $Camera.arrived]。"
+Wait For Any Of,等待任一
+"Pauses this event until the first of several signals fires, then carries on - a race, or a sudden-death timer. Read which one won with First To Finish, naming this wait: it answers ""Node.signal"", so racing $Player.died against $Boss.died still tells you which one it was. Every signal is connected one-shot up front, so the winner is whichever really fired first, and the losers are disconnected when the race ends.","暂停这个事件，直到几个信号中的第一个触发，然后继续 - 一场竞速，或者一个突然死亡计时。用“最先完成”并写上这次等待的名字来读取谁赢了：它回答的是 ""Node.signal""，所以让 $Player.died 和 $Boss.died 赛跑时，你依然知道是哪一个。每个信号都预先一次性连接，所以赢家是真正最先触发的那个，竞速结束时输家会被断开。"
+wait [b]{wait_name}[/b] for ANY of [b]{signals}[/b],等待 [b]{wait_name}[/b] 直到 [b]{signals}[/b] 中任一触发
+"A name for this wait, so First To Finish and the outcome conditions can say which one they mean.",给这次等待起个名字，好让“最先完成”和结果条件说清楚它们指的是哪一次。
+"The signals to race, as a list: [$Player.died, $Boss.died].","要赛跑的信号，写成列表：[$Player.died, $Boss.died]。"
+Wait Succeeded,等待成功
+"True when the named wait ended because what it was waiting for happened. A wait that has never run is neither succeeded nor timed out, so nothing fires before the wait does.",当指定名字的等待是因为等到了它要等的东西而结束时为真。从未运行过的等待既不算成功也不算超时，所以在等待发生之前不会有任何东西触发。
+wait [b]{wait_name}[/b] succeeded,等待 [b]{wait_name}[/b] 成功
+The name the wait row used.,那一行等待所使用的名字。
+Wait Timed Out,等待超时
+"True when the named wait gave up instead of finishing - the recovery branch for a load that never reported in. The same timeout also reports on verb_failed, so another event can handle it as On Failure Of.",当指定名字的等待是放弃而不是完成时为真 - 一次永远没有回报的加载的恢复分支。同一次超时也会在 verb_failed 上报告，所以另一个事件可以用“当动词失败时”来处理它。
+wait [b]{wait_name}[/b] timed out,等待 [b]{wait_name}[/b] 超时
+First To Finish,最先完成
+"Which signal a Wait For Any Of was watching finished first, written as ""Node.signal"" (the node's name, a dot, the signal's name), or empty text when it timed out. The node is part of the answer on purpose: a race between $Player.died and $Boss.died is two signals with the same name, and only the owner tells them apart. Compare it in a condition cell to branch on the winner.","一个“等待任一”所监视的信号中哪一个最先完成，写作 ""Node.signal""（节点名、一个点、信号名），超时时则为空文本。节点是答案的一部分，这是有意的：$Player.died 和 $Boss.died 之间的竞速是两个同名信号，只有拥有者才能把它们区分开。在条件单元格里比较它，就能按赢家分支。"
+first to finish ( [b]{wait_name}[/b] ),最先完成 ( [b]{wait_name}[/b] )
+The name the Wait For Any Of row used.,那一行“等待任一”所使用的名字。
+Retry Up To N Times,最多重试 N 次
+"Runs this event's actions over and over, up to a number of attempts, so a nested Stop Retrying can end it the moment the thing works. With no waiting inside it stays instant, which makes it the procedural-placement loop as much as the disk retry. Read the try number with Retry Attempt Number.",反复运行这个事件的动作，最多若干次尝试，于是嵌套在里面的“停止重试”能在事情一成功就结束它。里面没有等待时它是瞬间完成的，所以它既是磁盘重试循环，也同样是程序化摆放的循环。用“重试次数”读取这是第几次。
+retry [b]{retry_name}[/b] up to [b]{times}[/b] times,重试 [b]{retry_name}[/b] 最多 [b]{times}[/b] 次
+"A name for this retry, matching its Stop Retrying and Retries Exhausted rows.",给这次重试起个名字，与它的“停止重试”和“重试次数用尽”行相匹配。
+Times,次数
+Most attempts before giving up.,放弃前最多尝试多少次。
+Retry Attempt Number,重试次数
+"Which try this is, counting from 1 - the number you put in the log line or the HUD. Only readable inside a Retry Up To N Times loop, and it reads that loop's own variable, so change the cell if you renamed it.",这是第几次尝试，从 1 开始数 - 你写进日志行或 HUD 的那个数字。只有在“最多重试 N 次”循环内部才能读取，而且它读的是那个循环自己的变量，所以你改了名字就要改这个单元格。
+retry attempt number,重试次数
+Loop Variable,循环变量
+The retry loop's own variable. Leave it as attempt unless you renamed the loop variable on the Retry Up To N Times row.,重试循环自己的变量。除非你在“最多重试 N 次”行上改过循环变量名，否则保持 attempt 不动。
+Stop Retrying,停止重试
+"Ends the retry loop right now because the attempt worked, and records that it worked so Retries Exhausted below stays false. Put it under the condition that means success.",因为这次尝试成功了，立刻结束重试循环，并记下它成功了，于是下面的“重试次数用尽”保持为假。把它放在表示成功的那个条件下面。
+stop retrying [b]{retry_name}[/b],停止重试 [b]{retry_name}[/b]
+The name the Retry Up To N Times row uses.,上面那行“最多重试 N 次”所使用的名字。
+Retries Exhausted,重试次数用尽
+"True when the retry loop above ran out of tries without a Stop Retrying - the give-up branch. Put it in a sibling row directly beneath the retry loop, using the same name; a retry that has never run is not exhausted, so nothing fires before the loop does. Reading it clears the record, so the next run starts clean. When the retry WAITS between tries (Wait Before Next Try) the loop is still running while the rows beneath it are reached, so report that give-up with Report Failure on the last attempt and handle it in an On Failure Of event instead.",当上面的重试循环用完了所有次数却没有遇到“停止重试”时为真 - 放弃分支。把它放在重试循环正下方的同级行里，用同一个名字；从未运行过的重试不算用尽，所以循环发生之前不会有东西触发。读取它会清掉这条记录，于是下一次运行从干净的状态开始。当重试在两次尝试之间等待（“下次尝试前等待”）时，下面的行被走到时循环仍在运行，所以请在最后一次尝试上用“报告失败”来报告这次放弃，并改在“当动词失败时”事件里处理它。
+retries for [b]{retry_name}[/b] exhausted,[b]{retry_name}[/b] 的重试次数已用尽
+Wait Before Next Try,下次尝试前等待
+"Pauses before the next attempt, waiting longer each time when you set a growth above 1 - the polite way to retry a disk or a slow source. It suspends this event like Wait does, so pair the retry with Once At A Time when the trigger can fire again mid-retry.",在下一次尝试前暂停，当你把增长设为大于 1 时每次等得更久 - 重试磁盘或慢速数据源时礼貌的做法。它像“等待”一样挂起这个事件，所以当触发器可能在重试中途再次触发时，请给重试搭配“同一时间只运行一次”。
+wait [b]{delay}[/b]s before try [b]{attempt}[/b] (growing x[b]{growth}[/b]),第 [b]{attempt}[/b] 次尝试前等待 [b]{delay}[/b] 秒（每次 x[b]{growth}[/b] 增长）
+Wait after the first failed try.,第一次失败后等待多久。
+Growing By,增长倍数
+"1 = the same wait every time, 2 = doubling backoff.",1 = 每次等待相同，2 = 等待时间翻倍。
+On Try,第几次尝试
+Which try this is - put Retry Attempt Number here.,这是第几次尝试 - 把“重试次数”放在这里。
+Remember In Trail,记入轨迹
+"Records a value into a named rolling history you can dump, chart, or check when something goes wrong.",把一个值记录进一条命名的滚动历史，出问题时你可以把它导出、绘图或检查。
+Debug,调试
+"remember [b]{value}[/b] in trail [b]{trail}[/b], keep [b]{keep}[/b]",把 [b]{value}[/b] 记入轨迹 [b]{trail}[/b]，保留 [b]{keep}[/b] 条
+"The value to record this tick - a number, a vector, anything printable.",这一刻要记录的值 - 数字、向量，任何可打印的东西。
+Trail,轨迹
+Trail name - any label you also use in the trail expressions.,轨迹名称 - 任何你在轨迹表达式里同样使用的标签。
+Keep,保留
+How many recent values to hold (older ones drop off the front).,保留最近多少个值（更早的会从前面掉出去）。
+Trail Values,轨迹的值
+"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.",把整条轨迹作为数组返回，最旧的在前 - 喂给图表、表格或数组动词。
+trail [b]{trail}[/b] values,轨迹 [b]{trail}[/b] 的值
+"Trail name, matching a Remember In Trail action.",轨迹名称，与某个“记入轨迹”动作相匹配。
+Lowest In Trail,轨迹最小值
+"The smallest value recorded in a trail, which is the spike a per-frame watch blinked past. An empty trail reads as INF.",一条轨迹中记录到的最小值，也就是逐帧观察一眨眼就错过的那个尖峰。空轨迹读作 INF。
+lowest in trail [b]{trail}[/b],轨迹 [b]{trail}[/b] 的最小值
+Highest In Trail,轨迹最大值
+The largest value recorded in a trail. An empty trail reads as -INF.,一条轨迹中记录到的最大值。空轨迹读作 -INF。
+highest in trail [b]{trail}[/b],轨迹 [b]{trail}[/b] 的最大值
+Average In Trail,轨迹平均值
+The mean of every number recorded in a trail - a rolling average that is as useful in gameplay as in debugging. An empty trail reads as 0.,一条轨迹里所有数字的平均值 - 一个在玩法里和在调试里同样有用的滚动平均。空轨迹读作 0。
+average of trail [b]{trail}[/b],轨迹 [b]{trail}[/b] 的平均值
+Newest In Trail,轨迹最新值
+"The most recently recorded value in a trail, or 0 when nothing has been recorded yet.",一条轨迹中最近记录的那个值，还没记录过任何东西时为 0。
+newest in trail [b]{trail}[/b],轨迹 [b]{trail}[/b] 的最新值
+Trail Length,轨迹长度
+"How many values a trail is currently holding, which tops out at the Keep you gave it.",一条轨迹当前保存了多少个值，上限就是你给它的“保留”条数。
+length of trail [b]{trail}[/b],轨迹 [b]{trail}[/b] 的长度
+Log Trail,打印轨迹
+"Prints the whole trail to the Output console, so the seconds before a bug arrive with the bug.",把整条轨迹打印到输出控制台，于是 bug 出现时，它之前那几秒也一起到场。
+log trail [b]{trail}[/b],打印轨迹 [b]{trail}[/b]
+Save Trail To CSV,保存轨迹为 CSV
+Writes a trail to a two-column CSV file you can open in a spreadsheet and plot.,把一条轨迹写成两列的 CSV 文件，你可以用电子表格打开并绘图。
+save trail [b]{trail}[/b] to [b]{path}[/b],把轨迹 [b]{trail}[/b] 保存到 [b]{path}[/b]
+Where to write the file. Use user:// so it works in an exported game.,文件写到哪里。请用 user:// 以便在导出的游戏里也能用。
+Clear Trail,清空轨迹
+"Forgets everything a trail recorded, so the next run starts from nothing.",忘掉一条轨迹记录的一切，于是下一次运行从零开始。
+clear trail [b]{trail}[/b],清空轨迹 [b]{trail}[/b]
+Frame Took Longer Than,帧耗时超过
+"True on a frame that took longer than your budget, which is the hitch caught as it happens. Needs a per-frame trigger.",在一帧耗时超过你的预算时为真，也就是当场抓住的那次卡顿。需要一个逐帧触发器。
+frame took longer than [b]{ms}[/b] ms,帧耗时超过 [b]{ms}[/b] 毫秒
+Milliseconds,毫秒
+The budget. 16.6 is one frame at 60 FPS.,预算值。16.6 是 60 FPS 下的一帧。
+FPS Below For,FPS 低于并持续
+"True once the framerate has stayed under your floor for the whole stretch you name, which tells a real performance drop apart from one stuttery frame. Needs a per-frame trigger.",当帧率在你指定的整段时间里一直低于你的下限时为真，这能把真正的性能下降和偶尔一帧的卡顿区分开。需要一个逐帧触发器。
+FPS below [b]{fps}[/b] for [b]{seconds}[/b] seconds,FPS 低于 [b]{fps}[/b] 持续 [b]{seconds}[/b] 秒
+FPS,FPS
+The framerate floor. Below this counts as a drop.,帧率下限。低于这个就算下降。
+For Seconds,持续秒数
+How long the drop must last before this is true.,下降必须持续多久，这一条才成立。
+Start Measuring,开始计时
+Starts a named stopwatch. Pair it with Stop Measuring around the work you suspect.,启动一个命名的秒表。把它和“停止计时”一起夹在你怀疑的那段工作两边。
+start measuring [b]{named}[/b],开始计时 [b]{named}[/b]
+The name this measurement is reported under.,这次测量以什么名字报告。
+Stop Measuring,停止计时
+"Stops a named stopwatch and files the result, keeping the last, the average and the worst reading for that name.",停止一个命名的秒表并归档结果，为该名字保留最近一次、平均值和最差值。
+stop measuring [b]{named}[/b],停止计时 [b]{named}[/b]
+The name you gave Start Measuring.,你给“开始计时”的那个名字。
+Last Measured (ms),最近一次测量（毫秒）
+How many milliseconds the most recent run of a named measurement took.,某个命名测量最近一次运行花了多少毫秒。
+last measured [b]{named}[/b] ms,[b]{named}[/b] 最近一次测量的毫秒数
+Average Measured (ms),平均测量值（毫秒）
+"The mean cost in milliseconds across every run of a named measurement, which is the number to quote when you claim an optimization worked.",某个命名测量在所有运行中的平均耗时（毫秒），也就是你声称优化奏效时该引用的那个数字。
+average measured [b]{named}[/b] ms,[b]{named}[/b] 的平均测量毫秒数
+Peak Measured (ms),峰值测量（毫秒）
+"The worst run of a named measurement in milliseconds, which is usually the one the player felt.",某个命名测量最差的那一次运行，以毫秒计，通常也就是玩家真正感觉到的那一次。
+peak measured [b]{named}[/b] ms,[b]{named}[/b] 的峰值测量毫秒数
+Log Measurements,打印测量结果
+"Prints every named measurement taken so far with its last, average and peak cost - the report you paste into a bug or a devlog.",打印到目前为止每个命名测量的最近一次、平均和峰值耗时 - 你可以粘进 bug 报告或开发日志的那份报告。
+log measurements,打印测量结果
+Clear Measurements,清空测量结果
+"Throws away every measurement recorded so far, so a fresh run starts from a clean slate.",丢掉到目前为止记录的每一项测量，于是新的一轮从干净的状态开始。
+clear measurements,清空测量结果
+Register As Service,注册为服务
+"Publishes this node under a short name anything can ask for, so no other row needs a path to it. Run it under On Ready. Registering the same name again replaces it, and a freed node answers as nothing at all, so a scene reload leaves no dangling reference behind.",把这个节点以一个简短的名字发布出去，任何东西都能索取它，于是别的行都不需要知道它的路径。请在“当就绪时”下面运行。用同一个名字再次注册会替换掉它，被释放的节点会返回“什么也没有”，所以重新加载场景不会留下悬空引用。
+register this as service [b]{service_name}[/b],把这个注册为服务 [b]{service_name}[/b]
+"A role, not a class - ""player"", ""audio_director"", ""wallet"". Registering the same name again replaces it.","一个角色，而不是一个类 - ""player""、""audio_director""、""wallet""。用同一个名字再次注册会替换掉它。"
+Service Named,名为…的服务
+"The node published under a name, or nothing at all when nobody registered it or it has been freed. Drop it wherever a node is asked for - it never crashes and never needs a path.",以某个名字发布的那个节点，没人注册过或它已被释放时则为“什么也没有”。凡是需要节点的地方都能放 - 它绝不崩溃，也不需要路径。
+service named [b]{service_name}[/b],名为 [b]{service_name}[/b] 的服务
+The name the node registered itself under.,节点注册自己时所使用的名字。
+Has Service,服务存在
+True when a node is registered under this name and is still alive. Guard an optional system with it - a missing audio director then costs you a skipped row instead of a crash.,当有节点以这个名字注册且仍然存活时为真。用它来守卫一个可选系统 - 缺失的音频总监于是只让你少跑一行，而不是崩溃。
+service [b]{service_name}[/b] exists,服务 [b]{service_name}[/b] 存在
+The service name to test for.,要检测的服务名。
+For Each Node That Can,遍历每个能响应的节点
+"Runs this event's actions once per node ANYWHERE in the tree that answers to a method name - the save sweep, the pause sweep, the shutdown sweep, with no list to keep in step. It walks the whole tree, so run it on an event, not every frame. Read the current one as `node`.",对树中任何位置、能响应某个方法名的每个节点各运行一次本事件的动作 - 存档扫描、暂停扫描、关闭扫描，不用维护任何列表。它会遍历整棵树，所以请在事件里运行它，不要每帧运行。用 `node` 读取当前这一个。
+Nodes: Picking,节点：挑选
+for each node that can [b]{method_name}[/b],遍历每个能 [b]{method_name}[/b] 的节点
+Answers To,能响应
+"The method name a node must have to be picked up, e.g. save_state or on_game_paused.",节点必须具备哪个方法名才会被选中，例如 save_state 或 on_game_paused。
+Do After This Frame,本帧之后执行
+"Runs one action once the frame's physics and signal storm has finished, which is the only safe moment to add, free or reparent nodes. The number one crash a beginner hits is doing that from inside a collision callback; this is the fix, and the rows below it still run immediately.",在本帧的物理和信号风暴结束之后运行一个动作，那是添加、释放或重新挂载节点唯一安全的时刻。新手遇到的头号崩溃就是在碰撞回调里做这些事；这就是解法，而它下面的行仍然会立刻运行。
+after this frame: [b]{do}[/b],本帧之后：[b]{do}[/b]
+Do,执行
+"The action to run once this frame's work is finished - the only safe moment to add, free or reparent a node.",本帧的工作结束后要运行的动作 - 添加、释放或重新挂载节点唯一安全的时刻。
+Call Later,稍后调用
+"Runs one action after a delay, with no Timer node and WITHOUT suspending - the rows below it keep running. The connection is one-shot, so a delayed beat can neither leak nor fire twice. The readable form of the small follow-up: eject the shell, close the door, play the second thud.",在一段延迟之后运行一个动作，不需要 Timer 节点，而且不会挂起 - 它下面的行照常运行。连接是一次性的，所以延迟的小动作既不会泄漏也不会触发两次。它是那种小后续动作的可读写法：弹壳退出、门关上、第二声闷响。
+call later ([b]{seconds}[/b]s): [b]{do}[/b],稍后调用（[b]{seconds}[/b] 秒）：[b]{do}[/b]
+Seconds to wait before the action runs.,动作运行前要等待的秒数。
+The action to run when the delay is up.,延迟结束时要运行的动作。
+Set Property (after this frame),设置属性（本帧之后）
+"Sets a property at the end of the frame instead of right now. The one Godot insists on for collision shapes and monitoring: flipping those mid-physics is the error every beginner meets, and deferring is the documented answer.",在本帧末尾而不是此刻设置一个属性。碰撞形状和监测开关，Godot 坚持要用这种方式：在物理过程中翻转它们是每个新手都会遇到的报错，而延迟设置就是官方给出的答案。
+set [b]{property}[/b] of [i]{target}[/i] to [b]{value}[/b] after this frame,本帧之后把 [i]{target}[/i] 的 [b]{property}[/b] 设为 [b]{value}[/b]
+On,在
+Node whose property to set.,要设置其属性的节点。
+Property,属性
+Name of the property to set.,要设置的属性名。
+The value to set it to.,要设成的值。
+Only Once This Frame,本帧只执行一次
+"True the FIRST time it is reached in a frame under this name, and false for every other time that frame - counting a physics tick as its own frame, so a row under On Physics Process is not folded in with the drawn frame around it. Fifty inventory changes then rebuild the panel once instead of fifty times. Give two rows the same name and they share one run per frame.",在一帧中以这个名字第一次走到它时为真，这一帧其余每次都为假 - 物理刻会被当作它自己的一帧，所以“当物理帧处理时”下面的行不会和外面绘制的那一帧混在一起。于是五十次物品栏变化只会重建一次面板，而不是五十次。给两行相同的名字，它们就共享每帧一次的机会。
+only once this frame ( [b]{key_id}[/b] ),本帧只执行一次 ( [b]{key_id}[/b] )
+The gate's name. Every row using the same name folds into one run per frame.,这个闸门的名字。使用同一名字的每一行都会合并成每帧一次。
+Spawn Scene As,生成场景为
+"Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Spawned. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.","以一个名字生成场景，在它进入树之前把一组值设到它身上，并以那个名字记住它，于是之后每一行都能说“已生成的”。如果事件表声明了 scene_spawned(spawn_name, node) 信号，这会带上两者一起触发它，于是另一个事件无需追问“最后生成的是什么”就能对新节点做出反应。"
+Scene,场景
+Spawn [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i],生成 [b]{path}[/b] 为 [b]{spawn_name}[/b]，带上 [i]{values}[/i]
+Scene file to instance.,要实例化的场景文件。
+As,命名为
+"A name for this spawn, so later rows can say The Spawned ""boss"".",给这次生成起个名字，于是之后的行可以说“已生成的 boss”。
+With,带上
+"Values to set as it arrives, as a record: {""max_health"": 200, ""tier"": 3}. Names the scene does not have are set anyway, so keep to its own fields.","到达时要设置的值，写成记录：{""max_health"": 200, ""tier"": 3}。场景没有的名字也照样会被设置，所以请只写它自己的字段。"
+The node to add it under. Leave as nothing to add it under this one.,把它添加到哪个节点下。留空则添加到这一个下面。
+Spawn position.,生成位置。
+The Spawned,已生成的
+"The node a Spawn Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.",某一行“生成场景为”以这个名字造出的节点，从未生成过或此后已被释放时则为“什么也没有” - 于是伸手去够一个已死 boss 的行拿到的是空，而不是崩溃。
+the spawned [b]{spawn_name}[/b],已生成的 [b]{spawn_name}[/b]
+The name a Spawn Scene As row used.,某一行“生成场景为”所使用的名字。
+Spawn Is Alive,生成物存活
+"True while the node spawned under this name still exists - the guard to put in front of any row that talks to a named spawn, and the honest way to ask 'is the boss still up?'.",当以这个名字生成的节点仍然存在时为真 - 任何要和某个命名生成物打交道的行前面都该放的守卫，也是“boss 还站着吗”最诚实的问法。
+the spawned [b]{spawn_name}[/b] is alive,已生成的 [b]{spawn_name}[/b] 仍存活
+On Scene Spawned,当场景生成时
+"Runs when a Spawn Scene As row spawns something. The name and the new node arrive on the row as spawn_name and node, so a reaction can configure or announce the node without asking what was spawned last - correct even when one loop spawns six things in a frame. Needs a Signal row for scene_spawned(spawn_name: String, node: Node) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","当一行“生成场景为”生成了东西时运行。名字和新节点会以 spawn_name 和 node 的形式送到这一行上，于是反应无需追问最后生成的是什么就能配置或宣告这个节点 - 即使一个循环在一帧里生成了六个东西也依然正确。需要一行 scene_spawned(spawn_name: String, node: Node) 的信号行 - 没有它事件表仍能编译，但没有任何东西连接这个事件，所以它永远不会运行。项目 Doctor 会标记这一点。"
+On scene spawned {spawn_name} ( {node} ),当场景生成时 {spawn_name} ( {node} )
+The name the Spawn Scene As row gave this spawn.,那一行“生成场景为”给这次生成起的名字。
+Node,节点
+"The node that was just spawned, carried by the signal itself.",刚刚生成的那个节点，由信号本身携带。
+On Failure Of,当动词失败时
+"Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","当一个动词报告它拒绝执行时运行。动词名和原因会以 verb_id 和 reason 的形式送到这一行上，于是恢复逻辑住在它自己的事件里 - 在它下面加一个条件就能只处理某一个动词。需要一行 verb_failed(verb_id: String, reason: String) 的“声明信号”行 - 没有它事件表仍能编译，但没有任何东西连接这个事件，所以它永远不会运行。项目 Doctor 会标记这一点。"
+On failure of {verb_id} ( {reason} ),当 {verb_id} 失败时 ( {reason} )
+Verb,动词
+Which verb refused - the name the Report Failure row used.,哪个动词拒绝了 - “报告失败”行所使用的那个名字。
+Reason,原因
+"Why it refused, carried by the signal itself.",它为什么拒绝，由信号本身携带。
+On Success Of,当动词成功时
+"Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.",当一个动词报告它完成时运行。动词名会以 verb_id 的形式送到这一行上。需要一行 verb_succeeded(verb_id: String) 的“声明信号”行 - 没有它事件表仍能编译，但没有任何东西连接这个事件，所以它永远不会运行。项目 Doctor 会标记这一点。
+On success of {verb_id},当 {verb_id} 成功时
+Which verb finished - the name the Report Success row used.,哪个动词完成了 - “报告成功”行所使用的那个名字。
+Report Failure,报告失败
+"Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.",宣告一个动词拒绝了执行，于是针对那个动词的每个“当动词失败时”事件都会运行。在你自己发布的动词内部使用它，或者在一次发现了空资源、空结果的检查之后使用。
+Report failure of [b]{verb}[/b]: [b]{reason}[/b],报告 [b]{verb}[/b] 失败：[b]{reason}[/b]
+Name of the verb that refused - the same name the On Failure Of row picks.,拒绝执行的那个动词的名字 - 与“当动词失败时”行所选的名字相同。
+Plain words a player or a log line can read.,玩家或日志行读得懂的大白话。
+Report Success,报告成功
+"Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.",宣告一个动词完成了，于是针对那个动词的每个“当动词成功时”事件都会运行。“报告失败”的确认版孪生兄弟。
+Report success of [b]{verb}[/b],报告 [b]{verb}[/b] 成功
+Name of the verb that finished - the same name the On Success Of row picks.,完成了的那个动词的名字 - 与“当动词成功时”行所选的名字相同。
+At Most Every,最多每隔
+"Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.",不论被走到多少次，都让这个事件最多每隔若干秒运行一次。搜索框、昂贵的读数，或者一帧里落下的四十个命中音效的限流器。
+at most every [b]{seconds}[/b]s,最多每 [b]{seconds}[/b] 秒一次
+Shortest gap between two runs of this event.,这个事件两次运行之间的最短间隔。
+Poke,戳一下
+"Marks that something just happened, by name. Poke on every keystroke or every change, then let Has Been Quiet For notice when it stops.",按名字标记某件事刚刚发生过。每次按键或每次变化都戳一下，然后让“已安静达”来发现它停下来了。
+poke [b]{poke_name}[/b],戳一下 [b]{poke_name}[/b]
+Poke name - any label you also use in Has Been Quiet For.,戳的名字 - 任何你在“已安静达”里同样使用的标签。
+Clear Poke,清除戳记
+"Forgets a poke so Has Been Quiet For stops firing. Clear it right after acting on the quiet, the same way you consume a buffered press.",忘掉一次戳记，于是“已安静达”不再触发。在对安静做出反应之后立刻清除它，就像你消费一次缓冲按键那样。
+clear poke [b]{poke_name}[/b],清除戳记 [b]{poke_name}[/b]
+"Poke name, matching a Poke action.",戳的名字，与某个“戳一下”动作相匹配。
+Has Been Quiet For,已安静达
+"True once a poked name has stopped being poked for this long - the settle-down check. Autosave after the player stops editing, search after they stop typing. Needs a per-frame trigger, and stays true until you Clear Poke.",当一个被戳的名字停止被戳达到这么久时为真 - 安定下来的判断。玩家停止编辑后自动保存，停止输入后再搜索。需要一个逐帧触发器，而且在你“清除戳记”之前会一直为真。
+[b]{poke_name}[/b] has been quiet for [b]{seconds}[/b]s,[b]{poke_name}[/b] 已安静达 [b]{seconds}[/b] 秒
+How long the quiet has to last.,安静必须持续多久。
+Only Once Per Node,每个节点只一次
+"True the first time this row is reached for each node, and never again for that node. The initialiser you want when the row sits inside a For Each over spawned things; the memory lives on the node, so Forget Once For clears it.",对每个节点，这一行第一次被走到时为真，之后对那个节点永远不再为真。当这一行位于对生成物的“遍历每个”内部时，你想要的就是这个初始化判断；这份记忆存在节点上，所以“清除只一次记忆”可以清掉它。
+only once per node ( [b]{node}[/b] / [b]{label}[/b] ),每个节点只一次 ( [b]{node}[/b] / [b]{label}[/b] )
+"The node the memory belongs to - inside a For Each, the loop item.",这份记忆所属的节点 - 在“遍历每个”内部就是循环项。
+Memory,记忆
+Name the memory so one node can hold several.,给这份记忆起个名字，于是一个节点可以持有好几份。
+Only Once Per Name,每个名字只一次
+"True the first time this row is reached for each name, and never again for that name. One discovery line per item type, one loot roll per chest id - with no flag variable each. Kept on this node, so Forget Once For clears it.",对每个名字，这一行第一次被走到时为真，之后对那个名字永远不再为真。每种物品一句发现台词，每个箱子 id 一次掉落判定 - 不用为每个都建一个标记变量。记忆保存在这个节点上，所以“清除只一次记忆”可以清掉它。
+only once per name ( [b]{key}[/b] ),每个名字只一次 ( [b]{key}[/b] )
+The memory's name - one true per name on this node.,这份记忆的名字 - 在这个节点上每个名字只为真一次。
+Only Once This Scene Load,本次场景加载只一次
+"True the first time this row is reached for each name in this scene load, and again after the scene is reloaded or changed. The welcome line, the per-level check - forgotten on Restart Scene rather than remembered forever.",在本次场景加载中，对每个名字这一行第一次被走到时为真，场景重新加载或切换之后会再次为真。欢迎语、每关一次的检查 - 在“重启场景”时被忘掉，而不是永远记住。
+only once this scene load ( [b]{key}[/b] ),本次场景加载只一次 ( [b]{key}[/b] )
+The memory's name - one true per name until the scene reloads.,这份记忆的名字 - 每个名字在场景重新加载前只为真一次。
+Forget Once For,清除只一次记忆
+Clears an Only Once Per Node / Per Name memory so the row fires again for that node. Drop it in an Object Pool's reset seam and a recycled instance initialises like a fresh one.,清掉一份“每个节点只一次 / 每个名字只一次”的记忆，于是这一行对那个节点会再次触发。把它放进对象池的重置接口，回收的实例就会像新的一样初始化。
+forget once ( [b]{label}[/b] ) for [b]{node}[/b],清除只一次 ( [b]{label}[/b] ) 于 [b]{node}[/b]
+The node holding the memory.,持有这份记忆的节点。
+The Only Once Per Node / Per Name memory to clear.,要清除的那份“每个节点只一次 / 每个名字只一次”记忆。

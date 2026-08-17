@@ -31,7 +31,7 @@
 "ids": ["Modules/README"],
 "title": "Built-in vocabulary"
 }, {
-"ids": ["Addons/README", "Addons/Advanced-Random", "Addons/Big-Numbers", "Addons/Boosts", "Addons/Bound-To", "Addons/Bullet", "Addons/Bullet-3D", "Addons/Car", "Addons/Checkpoint", "Addons/Click-Power", "Addons/ComboBox", "Addons/Currency-Ledger", "Addons/Decal-Painter", "Addons/Dialogue-Kit", "Addons/Drag-And-Drop", "Addons/Drawing-Canvas", "Addons/Eight-Direction", "Addons/Encounter-Timeline", "Addons/FPS-Controller", "Addons/Fade", "Addons/Flash", "Addons/Follow", "Addons/HTN-Agent", "Addons/HUD-Kit", "Addons/Health", "Addons/Home-And-Leash", "Addons/Idle-Generator", "Addons/Interaction", "Addons/Juice", "Addons/Juice-3D", "Addons/Line-Of-Sight", "Addons/Line-Of-Sight-3D", "Addons/Loot-Table", "Addons/Milestones", "Addons/Move-To", "Addons/Move-To-3D", "Addons/Nav-Agent-3D", "Addons/ObjectPool", "Addons/Orbit", "Addons/Orbit-3D", "Addons/Phase-Cycle", "Addons/Physics-Car", "Addons/Platform-Info", "Addons/Platformer", "Addons/Platformer-Pathfinding", "Addons/Prestige", "Addons/Priced-Tables", "Addons/ProcRoom", "Addons/Quest", "Addons/README", "Addons/Rotate", "Addons/Run-In-Background", "Addons/Save-System", "Addons/Scene-Flow", "Addons/Simple-Abilities", "Addons/Sine", "Addons/Sine-3D", "Addons/SkinVault", "Addons/Slide-Movement", "Addons/Spring", "Addons/StatForge", "Addons/State-Machine", "Addons/Storylet-Weaver", "Addons/Tile-Movement", "Addons/Time-Slicer", "Addons/Timer", "Addons/Tween", "Addons/UHTN-Planning", "Addons/Upgrades", "Addons/UtilityBrain", "Addons/Virtual-Cursor", "Addons/Weapon-Kit", "Addons/Wrap"],
+"ids": ["Addons/README", "Addons/Advanced-Random", "Addons/Big-Numbers", "Addons/Boosts", "Addons/Bound-To", "Addons/Bullet", "Addons/Bullet-3D", "Addons/Car", "Addons/Checkpoint", "Addons/Click-Power", "Addons/ComboBox", "Addons/Currency-Ledger", "Addons/Debug-Overlay", "Addons/Decal-Painter", "Addons/Dialogue-Kit", "Addons/Drag-And-Drop", "Addons/Drawing-Canvas", "Addons/Eight-Direction", "Addons/Encounter-Timeline", "Addons/Event-Bus", "Addons/FPS-Controller", "Addons/Fade", "Addons/Flash", "Addons/Follow", "Addons/Follow-Path", "Addons/Game-Settings", "Addons/HTN-Agent", "Addons/HUD-Kit", "Addons/Health", "Addons/Home-And-Leash", "Addons/Idle-Generator", "Addons/Interaction", "Addons/Juice", "Addons/Juice-3D", "Addons/Line-Of-Sight", "Addons/Line-Of-Sight-3D", "Addons/Loot-Table", "Addons/Milestones", "Addons/Move-To", "Addons/Move-To-3D", "Addons/Named-Scenes", "Addons/Nav-Agent-3D", "Addons/ObjectPool", "Addons/Orbit", "Addons/Orbit-3D", "Addons/Phase-Cycle", "Addons/Physics-Car", "Addons/Platform-Info", "Addons/Platformer", "Addons/Platformer-Pathfinding", "Addons/Prestige", "Addons/Priced-Tables", "Addons/ProcRoom", "Addons/Quest", "Addons/README", "Addons/Rotate", "Addons/Run-In-Background", "Addons/Save-System", "Addons/Scene-Flow", "Addons/Simple-Abilities", "Addons/Sine", "Addons/Sine-3D", "Addons/SkinVault", "Addons/Slide-Movement", "Addons/Spring", "Addons/StatForge", "Addons/State-Machine", "Addons/Storylet-Weaver", "Addons/Tile-Movement", "Addons/Time-Slicer", "Addons/Timer", "Addons/Tween", "Addons/UHTN-Planning", "Addons/Upgrades", "Addons/UtilityBrain", "Addons/Virtual-Cursor", "Addons/Weapon-Kit", "Addons/Wrap"],
 "title": "Addon packs"
 }, {
 "ids": ["Modules/Animation-And-Sprites", "Modules/Automating-The-Editor", "Modules/Buttons-Sliders-Labels-And-Menus", "Modules/Calling-Your-Own-Code-From-Rows", "Modules/Cameras-Graphics-And-Screenshots", "Modules/Collisions-Joints-And-World-Physics", "Modules/Colors-Gradients-And-Curves", "Modules/Comparing-Values", "Modules/Copying-Sharing-And-Remembering-Values", "Modules/Debugging-And-Printing", "Modules/Doing-Math-And-Randomness", "Modules/Finding-And-Rearranging-Nodes", "Modules/Game-Options-And-The-Window", "Modules/Groups-Tags-And-Systems", "Modules/Localising-Your-Game", "Modules/Making-Text-Readable-On-Screen", "Modules/Making-Things-Move-In-2D", "Modules/Particles-And-Drawing-On-Screen", "Modules/README", "Modules/Raycasting-And-Overlaps-In-2D", "Modules/Raycasting-And-Overlaps-In-3D", "Modules/Reading-Keyboard-Mouse-And-Gamepad", "Modules/Reading-Spreadsheets-And-Data-Assets", "Modules/Scenes-Pausing-And-Turning-Nodes-Off", "Modules/Setting-And-Changing-Variables", "Modules/Setting-Up-And-Rebinding-Controls", "Modules/Sound-And-Music", "Modules/Timers-Waiting-And-Cooldowns", "Modules/Triggers-Signals-And-When-Rows-Run", "Modules/Working-In-3D", "Modules/Working-With-Files", "Modules/Working-With-Lists", "Modules/Working-With-Records", "Modules/Working-With-Text", "Modules/Working-With-Tilemaps", "Modules/Working-With-Vectors-And-Directions"],
@@ -49,16 +49,20 @@
 "Addons/Click-Power": "Click Power",
 "Addons/ComboBox": "ComboBox",
 "Addons/Currency-Ledger": "Currency Ledger",
+"Addons/Debug-Overlay": "Debug Overlay",
 "Addons/Decal-Painter": "Decal Painter - Blob Shadows, Splats, and Ground Marks in 3D",
 "Addons/Dialogue-Kit": "Dialogue Kit",
 "Addons/Drag-And-Drop": "Drag And Drop - Pick Up, Move, Snap, and Throw, One Behavior Per Node",
 "Addons/Drawing-Canvas": "Drawing Canvas - Draw Shapes, Trails, and Line of Sight from the Sheet",
 "Addons/Eight-Direction": "Eight Direction - Top-Down Movement You Attach and Forget",
 "Addons/Encounter-Timeline": "Encounter Timeline",
+"Addons/Event-Bus": "Event Bus",
 "Addons/FPS-Controller": "FPS Controller",
 "Addons/Fade": "Fade",
 "Addons/Flash": "Flash - Blink a Node On and Off, Then Restore It",
 "Addons/Follow": "Follow - One Node Trails Another, Smooth or Delayed",
+"Addons/Follow-Path": "Follow Path",
+"Addons/Game-Settings": "Game Settings",
 "Addons/HTN-Agent": "HTN Agent - Hierarchical Task Planning, One Planner Per Node",
 "Addons/HUD-Kit": "HUD Kit - Menus and HUDs by Node Name, Zero Wiring",
 "Addons/Health": "Health - Damage, Death, and Layered Shields, One Behavior Per Node",
@@ -73,6 +77,7 @@
 "Addons/Milestones": "Milestones",
 "Addons/Move-To": "Move To - Glide a Node to a Point, One Behavior Per Node",
 "Addons/Move-To-3D": "Move To 3D - Glide a Node3D Through a Queue of Points",
+"Addons/Named-Scenes": "Named Scenes",
 "Addons/Nav-Agent-3D": "Nav Agent 3D - Navmesh Pathfinding for 3D, Sheet-Shaped",
 "Addons/ObjectPool": "ObjectPool",
 "Addons/Orbit": "Orbit - Circle and Ellipse Motion Around a Point, One Behavior Per Node",

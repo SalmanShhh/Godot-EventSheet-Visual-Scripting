@@ -42,6 +42,18 @@ and nothing to attach. They compile to plain Godot: `await get_tree().create_tim
 - **Every X Seconds needs a per-frame trigger.** It accumulates frame time, so it only counts while
   the event it sits in is being evaluated. Under Every Frame it is a metronome; under a one-shot
   trigger it is a condition that never comes true.
+- **A wait that can end two ways names itself.** Wait Until, Wait For All Of and Wait For Any Of each
+  take a name, stamp their verdict under it, and hand the branch back as two ordinary conditions:
+  **Wait Succeeded** and **Wait Timed Out**, on the next rows of the same event. The outcome is never
+  a variable you have to remember to check, and two waits under one trigger stay unambiguous.
+- **Retrying is a loop row, not a clever action.** **Retry Up To N Times** sits in the condition lane
+  with the attempt as its actions, success is a nested condition whose action is **Stop Retrying**,
+  and giving up is the sibling condition **Retries Exhausted**. The canvas nesting is the emitted
+  nesting, so what you read is what compiles.
+- **The two rate limits are opposites.** **At Most Every** is the leading edge - run now, then refuse
+  until the window passes. **Poke** plus **Has Been Quiet For** is the trailing edge - run only once
+  things have stopped happening. A debounce has to fire when nothing is happening, which is why no
+  signal can back it and it needs a per-frame trigger.
 - **Cooldowns and buffers are named, not declared.** **Start Cooldown** writes a deadline into node
   metadata keyed by the name you type, so a Start Cooldown in one event and a **Cooldown Is Ready**
   in a completely different event on the same node agree with no wiring and no variable between them.
@@ -73,6 +85,38 @@ row, so two Every X Seconds conditions in the same script keep separate accumula
 | Call After Delay | Schedules a method to run later without pausing this event | `get_tree().create_timer({seconds}).timeout.connect({callable})` |
 | Repeat With Delay | Runs one statement several times with a pause between each | `for __rep_{uid}: int in maxi({times}, 0):` then `{do}` then an await of `{delay}` |
 | Vanish, Respawn In | Hides this node, pauses its Area sensing, waits, brings it back and calls its `reset()` if it has one | `visible = false` … `await get_tree().create_timer(maxf({seconds}, 0.0)).timeout` … `visible = true` |
+
+### Time: waits that can end two ways
+
+Wait pauses for a clock and Wait For Signal for one signal. These three wait for a CHECK, for ALL of
+several signals, or for the FIRST of them - and because each can end either way, each stamps its
+verdict under the name you give it, which Wait Succeeded / Wait Timed Out read back on the next row.
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Wait Until | Pauses this event until a check comes true, or until the give-up time passes | a `while not ({check})` loop with a deadline and `await get_tree().process_frame`, then a `set_meta` verdict |
+| Wait For All Of | Pauses until every signal in the list has fired at least once | a one-shot `connect` per signal (its own arguments unbound) up front, then a wait on the remaining count |
+| Wait For Any Of | Pauses until the first of several signals fires | the same one-shot connections, then a wait on an empty winner slot |
+| Wait Succeeded | True when the named wait ended because what it waited for happened | `int(get_meta(&"__ef_wait_" + str({wait_name}).to_utf8_buffer().hex_encode(), 0)) == 1` |
+| Wait Timed Out | True when the named wait gave up instead of finishing | `int(get_meta(&"__ef_wait_" + str({wait_name}).to_utf8_buffer().hex_encode(), 0)) == 2` |
+| First To Finish | Which signal a Wait For Any Of raced finished first, as `Node.signal` | `str(get_meta(&"__ef_first_" + str({wait_name}).to_utf8_buffer().hex_encode(), ""))` |
+
+### Loops: retrying until it works
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Retry Up To N Times | Runs this event's actions up to a number of attempts, so a nested Stop Retrying can end it | a loop row over a named `range()`, opening a three-state record, with `attempt` as its iterator |
+| Retry Attempt Number | Which try this is, counting from 1 | `({loop_var} + 1)`, reading the retry loop's own variable |
+| Stop Retrying | Ends the retry loop now because the attempt worked, and records that it worked | `set_meta(&"__ef_retry_" + str({retry_name}).to_utf8_buffer().hex_encode(), 2)` then `break` |
+| Retries Exhausted | True when the loop above ran out of tries without a Stop Retrying | a helper that reads the three-state record and clears it in the same call |
+| Wait Before Next Try | Pauses before the next attempt, waiting longer each time when growth is above 1 | `await get_tree().create_timer(maxf({delay}, 0.0) * pow(maxf({growth}, 1.0), maxf(float({attempt}) - 1.0, 0.0))).timeout` |
+
+### Time: the settle-down pair
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Poke | Marks by name that something just happened | `set_meta(&"__ef_poke_" + str({poke_name}), Time.get_ticks_msec())` |
+| Clear Poke | Forgets a poke so Has Been Quiet For stops firing | `set_meta(&"__ef_poke_" + str({poke_name}), 0)` |
 
 ### Time: repeating cadence
 
@@ -401,6 +445,204 @@ On level generation requested
 
 The loop pauses at the next frame whenever it has spent 8ms, then carries on where it left off.
 
+**23. Wait for a condition, with a deadline.** Wait Until pauses the event until a check comes true.
+Give the wait a name, and the very next rows read which way it ended.
+
+```
+On Ready
+  -> Show  "Loading..."
+  -> Wait Until  "load", not loader.is_running, give up after 10
+  Condition: Wait Timed Out  "load"
+    -> Show  "Could not load in time"
+  Condition: Wait Succeeded  "load"
+    -> Show  "Ready"
+```
+
+The emitted wait is a plain polling loop with a deadline and a verdict, which is the part hand-written
+versions leave out:
+
+```gdscript
+extends Node
+
+var loading_done: bool = false
+
+
+func _ready() -> void:
+	var __wait_end_a: int = Time.get_ticks_msec() + int(maxf(10.0, 0.0) * 1000.0)
+	var __wait_ok_a: bool = true
+	while not (loading_done):
+		if 10.0 > 0.0 and Time.get_ticks_msec() >= __wait_end_a:
+			__wait_ok_a = false
+			break
+		await get_tree().process_frame
+	set_meta(&"__ef_wait_" + str("load"), 1 if __wait_ok_a else 2)
+	if int(get_meta(&"__ef_wait_" + str("load"), 0)) == 1:
+		print("Ready")
+```
+
+**24. Reveal the level only when every stream has reported in.** Wait For All Of connects every
+signal one-shot BEFORE it starts waiting, so a signal that fires while another is still being awaited
+is not lost - the bug in every hand-written chain of awaits.
+
+```
+On Signal  boss_intro
+  -> Wait For All Of  "gate", [ $Door.opened, $Camera.arrived, $Music.finished ], give up after 8
+  Condition: Wait Succeeded  "gate"
+    -> Start Dialogue
+  Condition: Wait Timed Out  "gate"
+    -> Skip to  "fight"
+```
+
+**25. A race, and the winner decides the ending.** Wait For Any Of carries on the moment the first of
+its signals fires, and First To Finish names which one it was - as `Node.signal`, because the two
+racers here carry a signal with the SAME name and only the owner tells them apart.
+
+```
+On Ready
+  -> Wait For Any Of  "race", [ $Player.died, $Boss.died ]
+  Condition: First To Finish ( "race" ) = "Boss.died"
+    -> Go To Scene  "res://victory.tscn"
+  Condition: First To Finish ( "race" ) = "Player.died"
+    -> Go To Scene  "res://defeat.tscn"
+```
+
+**26. Try a slow thing until it works, waiting longer each time.** Retry Up To N Times is a loop
+row, so the attempt is its actions and success is an ordinary nested condition whose action is Stop
+Retrying. Because Wait Before Next Try SUSPENDS the event, the give-up is reported from inside the
+loop with Report Failure and handled as its own On Failure Of event - a sibling Retries Exhausted
+row would be reached while the retry is still running, and would answer for a loop that has not
+finished. (Use case 27 shows the sibling form, which is right when nothing inside the loop waits.)
+
+```
+On Save Failed
+  Condition: Retry Up To N Times  "save", 4
+    -> Save Game
+    -> Wait Before Next Try  0.5, growing 2.0, on try Retry Attempt Number
+    Condition: Save Game succeeded
+      -> Set text from  "Saved on try " & Retry Attempt Number
+      -> Stop Retrying  "save"
+    Condition: Retry Attempt Number = 4
+      -> Report Failure  "save_game", "four tries, still no disk"
+
+On Failure Of  ( verb_id, reason )
+  Condition: Compare Text  verb_id = "save_game"
+    -> Set text from  "Could not save: " & reason
+```
+
+**27. Place a room until one fits.** The same loop with no waiting at all stays fully synchronous,
+so it is the procedural-placement loop as much as the disk retry - and because nothing suspends,
+the loop has really finished by the time the sibling row beneath it is reached, which is what makes
+Retries Exhausted the right give-up branch here.
+
+```
+On Ready
+  Condition: Retry Up To N Times  "room", 30
+    -> Place room at  Random Point In Rectangle ( map_rect )
+    Condition: Room was placed
+      -> Stop Retrying  "room"
+  Condition: Retries Exhausted  "room"
+    -> Print  "gave up placing room"
+```
+
+That compiles to a plain loop over a named range, plus the two small helpers the sheet synthesizes
+for the shared three-state record - 0 for a retry that has never run, 1 while it is running, 2 once
+a Stop Retrying has ended it:
+
+```gdscript
+extends Node
+
+var placed: bool = false
+
+
+func __retry_begin_r1(key: String, times: int) -> Array:
+	set_meta(StringName("__ef_retry_" + key.to_utf8_buffer().hex_encode()), 1)
+	return range(maxi(times, 1))
+
+
+func __exhausted_r1(key: String) -> bool:
+	var meta_key: StringName = StringName("__ef_retry_" + key.to_utf8_buffer().hex_encode())
+	var state: int = int(get_meta(meta_key, 0))
+	set_meta(meta_key, 0)
+	return state == 1
+
+
+func place_room() -> bool:
+	return true
+
+
+func _ready() -> void:
+	for attempt: int in __retry_begin_r1(str("room"), int(30)):
+		placed = place_room()
+		if placed:
+			set_meta(&"__ef_retry_" + str("room").to_utf8_buffer().hex_encode(), 2)
+			break
+	if __exhausted_r1(str("room")):
+		print("gave up placing room")
+```
+
+**28. Search as you type, without refiltering on every keystroke.** Poke marks that something just
+happened; the throttle limits how often the expensive work runs; Has Been Quiet For notices when the
+typing stops.
+
+```
+Every Frame
+  Condition: search_box.text has changed
+    -> Poke  "search"
+  Condition: At Most Every  0.25
+    -> Filter the list by  search_box.text
+  Condition: Has Been Quiet For  "search", 0.6
+    -> Save Game
+    -> Clear Poke  "search"
+```
+
+```gdscript
+extends Node
+
+
+func _process(_delta: float) -> void:
+	set_meta(&"__ef_poke_" + str("search"), Time.get_ticks_msec())
+	if (int(get_meta(&"__ef_poke_" + str("search"), 0)) > 0 and Time.get_ticks_msec() - int(get_meta(&"__ef_poke_" + str("search"), 0)) >= int(maxf(0.6, 0.0) * 1000.0)):
+		set_meta(&"__ef_poke_" + str("search"), 0)
+```
+
+**29. Autosave once the player stops editing.** The trailing edge on its own: Poke on every change,
+and let the save wait for two seconds of quiet.
+
+```
+On level edited
+  -> Poke  "editing"
+
+Every Frame
+  Condition: Has Been Quiet For  "editing", 2.0
+    -> Save Game
+    -> Clear Poke  "editing"
+```
+
+**30. One hit sound instead of twenty.** At Most Every caps the rate whatever the event is reached by,
+and it is hoisted to the end of the row's condition chain so the window is only spent when everything
+else already held.
+
+```
+On body entered  body
+  Condition: body is in group  "bullets"
+  Condition: At Most Every  0.08
+    -> Play Sound  "res://hit.ogg"
+```
+
+**31. A timeout another sheet can handle.** Every wait that gives up also reports on the sheet's
+`verb_failed` signal, so a UI sheet can own the "could not load" message without knowing where the
+wait lives. Declare the signal once with a Declare Signal row and the trigger is available.
+
+```
+Declare Signal  verb_failed(verb_id: String, reason: String)
+
+On Ready
+  -> Wait Until  "load", assets_ready, give up after 10
+
+On Failure Of  verb_id, reason
+  -> Show text from  "Could not load: " & reason
+```
+
 ### Other use cases
 
 **Combo window.** Buffer the second attack press for 0.3s and let the swing animation's end check Press Is Buffered, so a well-timed player chains hits and a mashing one does not.
@@ -458,3 +700,33 @@ The loop pauses at the next frame whenever it has spent 8ms, then carries on whe
   you want spreading without minding this yourself.
 - **Vanish, Respawn In awaits**, so it suspends the event like Wait does. It also only touches
   `monitoring` when the node actually has it, so it is safe on a plain Sprite2D as well as an Area2D.
+- **A wait with a give-up time of 0 waits forever.** That is deliberate for Wait For Any Of, whose
+  whole job is often "whichever of these happens first". It is a hang for Wait Until, so leave the
+  give-up time on unless you are certain the check comes true.
+- **Wait Until polls once a frame.** Where a pack already emits a signal for the thing you are
+  waiting on - Run In Background's On Done, Time Slicer's On Drained - wait for that signal instead.
+  Wait For All Of and Wait For Any Of exist to COMBINE those signals, not to replace them.
+- **Name every wait, and use the same name in the read-back.** `"load"` in the wait and `"Load"` in
+  Wait Timed Out are two different waits, and the second one has never run, so neither outcome
+  condition ever fires. This is the cooldown-name trap wearing a different hat.
+- **A wait that never ran is neither succeeded nor timed out.** Both conditions read false, so rows
+  under them stay quiet until the wait has actually happened once.
+- **Any name will do, spaces and all.** `"boss intro"` is as good a wait name as `"boss_intro"`: the
+  name is encoded into the metadata key rather than used as one, so nothing is quietly dropped.
+- **Read Retries Exhausted exactly once per loop**, in a sibling row directly beneath it. Reading it
+  clears the record, so a second reading of the same name in the same pass answers "not exhausted".
+- **Retries Exhausted needs a retry that has FINISHED.** A retry that has never run is not
+  exhausted, so nothing fires before the loop does - but a retry that WAITS inside itself is still
+  running when the rows beneath it are reached, so pair that one with Report Failure and an On
+  Failure Of event instead (use case 26).
+- **The retry loop, Stop Retrying and Retries Exhausted must all share a name**, the same way Start
+  Cooldown and Cooldown Is Ready do. A mismatch means the give-up branch never fires.
+- **Retry Attempt Number reads the loop's own variable.** It ships as `attempt` because that is what
+  the loop row ships as; rename the loop variable and change the cell to match.
+- **Wait Before Next Try suspends**, so a retry that uses it is asynchronous for the whole run. Add
+  the Once At A Time condition when the trigger can fire again mid-retry. Leave it out and the retry
+  is fully synchronous, which is what the procedural-placement case wants.
+- **Has Been Quiet For stays true until you Clear Poke.** It is a state, not an edge, so an event
+  without a Clear Poke fires on every frame after the quiet begins.
+- **A name that was never poked is never quiet**, which is what stops every debounce row in the
+  project firing once at startup.

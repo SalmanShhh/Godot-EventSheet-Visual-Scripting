@@ -1146,3 +1146,568 @@ Variable or property,Переменная или свойство
 "What to change one part of: a node's own member (velocity, modulate, position) picked from the list, or the name of a sheet variable holding a Vector, Color or record.","То, у чего меняется одна часть: собственный член узла (velocity, modulate, position), выбранный из списка, или имя переменной листа, хранящей вектор, цвет или запись."
 Which named part to write.,Какую именованную часть записывать.
 The new value for that one part.,Новое значение именно для этой части.
+Watch Data File,Следить за файлом данных
+"Checks whether a data file has been written since the last check, and fires the sheet's data_file_changed(path) signal when it has - so you edit an enemy's numbers in the Inspector and the running game picks them up. Put it under Every X Seconds; the first check only takes a reading, so nothing fires just because the row started. This is a debug-build tool: it reads the file's timestamp each time it runs.","Проверяет, был ли файл данных записан со времени прошлой проверки, и если да - отправляет сигнал листа data_file_changed(path): вы правите числа врага в Inspector, а запущенная игра их подхватывает. Ставьте под Каждые X секунд; первая проверка только снимает показание, поэтому ничего не срабатывает просто оттого, что строка началась. Это инструмент отладочной сборки: при каждом запуске он читает отметку времени файла."
+watch [b]{path}[/b] for edits,следить за правками [b]{path}[/b]
+"The data file to watch (a .tres, .json or .csv).","Файл данных, за которым следить (.tres, .json или .csv)."
+Reload Data Asset,Перезагрузить ассет данных
+"Re-reads a data asset from disk into the copy every node is already holding, so the new numbers apply without restarting or re-assigning anything. It reloads DATA, not code: a changed script still needs a restart. Nothing happens when the path is not there.","Заново читает ассет данных с диска в ту самую копию, которую уже держит каждый узел, поэтому новые числа применяются без перезапуска и без переназначений. Перезагружаются ДАННЫЕ, а не код: изменённый скрипт всё равно требует перезапуска. Если по пути ничего нет, ничего и не происходит."
+reload data asset [b]{path}[/b],перезагрузить ассет данных [b]{path}[/b]
+The data asset to re-read from disk.,"Ассет данных, который заново прочитать с диска."
+On Data File Changed,При изменении файла данных
+"Runs when a Watch Data File row notices that a watched file has been written. The path arrives on the row as path, so the reaction reloads exactly the file that changed even when two land in the same check. Needs a Signal row for data_file_changed(path: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Выполняется, когда строка Следить за файлом данных замечает, что за файлом была запись. Путь приходит в строку как path, поэтому реакция перезагружает именно изменившийся файл, даже если за одну проверку их пришло два. Нужна строка Сигнал для data_file_changed(path: String) - без неё лист всё равно компилируется, но событие ни к чему не подключено, поэтому никогда не выполняется. Doctor проекта на это указывает."
+On data file changed ( {path} ),При изменении файла данных ( {path} )
+"The file that was written, carried by the signal itself.","Файл, в который была запись; приходит вместе с самим сигналом."
+Data Folder Problems,Проблемы папки данных
+"Every structural problem in a folder of data assets, one per line, and """" when it is clean: a file that cannot be loaded, one with no usable id, and two files claiming the same id (where the second quietly wins every lookup). Show it, log it, or fail a build with it.","Все структурные проблемы папки с ассетами данных, по одной на строку, и """" когда всё чисто: файл, который не загружается, файл без пригодного id и два файла с одним и тем же id (где второй тихо выигрывает любой поиск). Покажите это, запишите в лог или завалите этим сборку."
+problems in [b]{folder}[/b],проблемы в [b]{folder}[/b]
+Folder of data assets to check (not recursive).,Папка с ассетами данных для проверки (без вложенных).
+Data Folder Is Valid,Папка данных корректна
+"True when every data asset in a folder loads, has an id, and has an id no sibling shares - the check to put in front of loading a mod folder or user content. Read the reasons with Data Folder Problems.","Истина, когда каждый ассет данных в папке загружается, имеет id и этот id не повторяется у соседей - проверка, которую ставят перед загрузкой папки модов или пользовательского контента. Причины читайте через Проблемы папки данных."
+[b]{folder}[/b] is valid data,[b]{folder}[/b] - корректные данные
+Validate Data Folder,Проверить папку данных
+"Checks a folder of data assets and writes every problem it finds to the Output as one warning, saying which file and what is wrong. A clean folder says nothing at all, so it is safe to leave in a startup event.","Проверяет папку с ассетами данных и пишет каждую найденную проблему в Output одним предупреждением, называя файл и что именно не так. Чистая папка не говорит ничего, поэтому строку безопасно оставить в стартовом событии."
+validate data folder [b]{folder}[/b],проверить папку данных [b]{folder}[/b]
+World Point To Screen,Мировая точка на экран
+"Where a world point sits on screen right now, camera zoom and scroll included - pin a nameplate, a health bar or a damage number to something that moves. Put the answer on a node that lives on a CanvasLayer and it will track its target without lagging behind the camera.","Где мировая точка находится на экране прямо сейчас, с учётом зума и прокрутки камеры - приколоть табличку с именем, полоску здоровья или число урона к чему-то движущемуся. Положите ответ на узел, который живёт на CanvasLayer, и он будет следовать за целью, не отставая от камеры."
+Math & Random,Математика и случайность
+screen position of [b]{world_point}[/b],экранная позиция [b]{world_point}[/b]
+World Point,Мировая точка
+A position in the game world.,Позиция в игровом мире.
+Screen Point To World,Точка экрана в мир
+"The world position under a screen pixel - click-to-place, a gamepad cursor, a HUD marker dragged onto the map. The exact opposite of World Point To Screen, so the two round-trip.","Мировая позиция под экранным пикселем - клик для размещения, курсор геймпада, маркер HUD, перетащенный на карту. Полная противоположность Мировой точки на экран, поэтому эти двое дают точный круговой перевод."
+world position of screen point [b]{screen_point}[/b],мировая позиция экранной точки [b]{screen_point}[/b]
+Screen Point,Точка экрана
+"A position in screen pixels, with 0,0 at the top-left of the view.","Позиция в экранных пикселях, где 0,0 - левый верхний угол вида."
+Project To Screen (3D),Спроецировать на экран (3D)
+"Where a 3D world point lands on screen - nameplates over 3D characters, damage numbers, objective pins drawn on a CanvasLayer. Reads as 0,0 while there is no active 3D camera, so it never faults during a scene change. Check Is Behind Camera (3D) first: a point behind you still projects to a number.","Где 3D-точка мира оказывается на экране - таблички над 3D-персонажами, числа урона, метки целей, нарисованные на CanvasLayer. Пока активной 3D-камеры нет, читается как 0,0, поэтому никогда не ломается при смене сцены. Сначала проверьте Точка за камерой (3D): точка позади вас всё равно проецируется в какое-то число."
+screen position of 3D point [b]{world_point}[/b],экранная позиция 3D-точки [b]{world_point}[/b]
+A position in the 3D world.,Позиция в 3D-мире.
+Is Point On Screen,Точка на экране
+"True while a world point is inside the visible view - the honest gate for spawning, culling, showing an off-screen arrow, or holding a tutorial callout until its subject is actually visible.","Истина, пока мировая точка находится внутри видимой области - честная проверка перед появлением, отсечением, показом стрелки за краем экрана или удержанием подсказки, пока её предмет действительно не станет виден."
+[b]{world_point}[/b] is on screen (margin [b]{margin}[/b]),[b]{world_point}[/b] на экране (запас [b]{margin}[/b])
+The world position being tested.,"Мировая позиция, которую проверяем."
+Margin,Запас
+Pixels of slack outside the view that still count as on screen. Negative pulls the test inward.,"Пиксели за пределами вида, которые всё ещё считаются экраном. Отрицательное значение поджимает проверку внутрь."
+Is Behind Camera (3D),Точка за камерой (3D)
+"True when a 3D point sits behind the camera plane, where its projected screen position is a mirrored lie. The guard every 3D waypoint marker needs before it draws. With no camera in the scene it reads true, so nothing is drawn into a view that does not exist.","Истина, когда 3D-точка находится позади плоскости камеры, где её спроецированная экранная позиция - зеркальная ложь. Страховка, нужная каждому 3D-маркеру цели перед отрисовкой. Если камеры в сцене нет, читается как истина, поэтому в несуществующий вид ничего не рисуется."
+[b]{world_point}[/b] is behind the camera,[b]{world_point}[/b] за камерой
+The 3D position being tested.,"3D-позиция, которую проверяем."
+Screen Edge Position For,Позиция у края экрана для
+"A screen position that follows a target while it is visible and sticks to the edge of the view once it is not - the off-screen objective arrow, the radar blip, the ""your teammate is over there"" chevron. Pair it with Marker Angle Toward for the rotation.","Экранная позиция, которая следует за целью, пока та видна, и прилипает к краю вида, как только цель исчезла - стрелка к цели за экраном, отметка на радаре, указатель «твой напарник вон там». В пару к ней берите Угол маркера на для поворота."
+screen edge position for [b]{world_point}[/b] (margin [b]{margin}[/b]),позиция у края экрана для [b]{world_point}[/b] (запас [b]{margin}[/b])
+The thing being pointed at.,"То, на что указываем."
+How far in from the edge the marker is parked.,Насколько глубже от края припаркован маркер.
+Marker Angle Toward,Угол маркера на
+"The rotation in degrees an on-screen arrow needs so it points from the middle of the view at a world thing - the other half of the off-screen marker, and it stays right while the camera zooms or rotates.","Поворот в градусах, нужный экранной стрелке, чтобы указывать из середины вида на мировой объект - вторая половина маркера за экраном; остаётся верным, пока камера приближается или вращается."
+marker angle toward [b]{world_point}[/b],угол маркера на [b]{world_point}[/b]
+Visible World Rect,Видимый прямоугольник мира
+"The rectangle of the world the camera can currently see, in world coordinates - spawn just outside it, cull outside it, clamp a node inside it, or size a minimap to it. Follows the camera's zoom and position with nothing to keep in sync.","Прямоугольник мира, который камера видит прямо сейчас, в мировых координатах - порождайте прямо за ним, отсекайте за ним, зажимайте узел внутри него или подгоняйте под него мини-карту. Следует за зумом и позицией камеры, и синхронизировать ничего не нужно."
+visible world rect,видимый прямоугольник мира
+Wrap Inside The View (3D),Заворачивать внутри вида (3D)
+"The Asteroids rule in 3D: leave the right of the view and come back on the left, off the top and back at the bottom, at the same distance from the camera. The missing twin of the 2D Wrap Inside The Screen, for a wrap-around arena or an endless shoal. Does nothing while there is no 3D camera.","Правило Asteroids в 3D: уходите за правый край вида и возвращаетесь слева, за верх - и обратно снизу, на том же расстоянии от камеры. Недостающий близнец двумерного Заворачивать внутри экрана, для арены с заворотом или бесконечного косяка рыб. Пока 3D-камеры нет, ничего не делает."
+Movement,Движение
+wrap inside the view,заворачивать внутри вида
+Random Point In Circle,Случайная точка в круге
+"An evenly spread random point inside a circle - the sqrt weighting is done for you, so scatter does not bunch up in the middle the way the obvious version does.","Равномерно распределённая случайная точка внутри круга - взвешивание через корень уже сделано за вас, поэтому разброс не сбивается к середине, как в очевидной версии."
+random point within [b]{radius}[/b] of [b]{center}[/b],случайная точка в пределах [b]{radius}[/b] от [b]{center}[/b]
+Center,Центр
+Middle of the circle.,Середина круга.
+Radius,Радиус
+In pixels.,В пикселях.
+Random Point On Circle,Случайная точка на окружности
+"A random point exactly ON the rim of a circle, never inside it - a spawn ring around the player, orbiting decor, a radial menu slot, the starting point of a homing shot.","Случайная точка строго НА ободе круга, никогда внутри него - кольцо появления вокруг игрока, вращающийся декор, слот радиального меню, начальная точка самонаводящегося выстрела."
+random point on a circle of [b]{radius}[/b] around [b]{center}[/b],случайная точка на окружности радиусом [b]{radius}[/b] вокруг [b]{center}[/b]
+Random Point In Ring,Случайная точка в кольце
+"A random point in the doughnut between two radii - the off-screen spawner that never drops an enemy in the player's lap, and never so far away it never arrives. Evenly spread across the whole band, not crowded against the inner edge.","Случайная точка в бублике между двумя радиусами - спавнер за экраном, который никогда не роняет врага игроку на голову и никогда не отправляет его так далеко, что он не дойдёт. Равномерно распределена по всей полосе, а не сгущается у внутреннего края."
+random point between [b]{inner_radius}[/b] and [b]{outer_radius}[/b] of [b]{center}[/b],случайная точка между [b]{inner_radius}[/b] и [b]{outer_radius}[/b] от [b]{center}[/b]
+Middle of the ring.,Середина кольца.
+Inner Radius,Внутренний радиус
+Nothing spawns closer than this.,Ближе этого ничего не появляется.
+Outer Radius,Внешний радиус
+Nothing spawns further than this.,Дальше этого ничего не появляется.
+Random Point In Rectangle,Случайная точка в прямоугольнике
+"A random point inside an axis-aligned rectangle - loot scatter across a room, prop placement, confetti over a banner, a patrol target inside a zone. Feed it Visible World Rect's position and size to scatter across whatever the camera can see.","Случайная точка внутри прямоугольника, выровненного по осям - разброс лута по комнате, расстановка реквизита, конфетти над баннером, цель патруля внутри зоны. Подайте сюда позицию и размер Видимого прямоугольника мира, чтобы разбросать по всему, что видит камера."
+random point in the rect at [b]{top_left}[/b] sized [b]{size}[/b],случайная точка в прямоугольнике в [b]{top_left}[/b] размером [b]{size}[/b]
+Top Left,Левый верхний угол
+Corner the rectangle starts at.,"Угол, с которого начинается прямоугольник."
+Size,Размер
+Width and height in pixels.,Ширина и высота в пикселях.
+Random Point In Cone,Случайная точка в конусе
+"A random point inside a wedge - shotgun spread, cone attacks, directional scatter, a spray of sparks away from a wall. Facing and spread are in degrees, so the row reads the way you think about it.","Случайная точка внутри сектора - разброс дробовика, конусные атаки, направленный разброс, сноп искр от стены. Направление и разброс задаются в градусах, поэтому строка читается так, как вы об этом думаете."
+random point in a [b]{spread_degrees}[/b] cone facing [b]{facing_degrees}[/b] from [b]{center}[/b],случайная точка в конусе [b]{spread_degrees}[/b] с направлением [b]{facing_degrees}[/b] из [b]{center}[/b]
+Tip,Вершина
+Where the wedge starts.,Откуда начинается сектор.
+Facing,Направление
+"Direction the wedge points, in degrees.","Куда указывает сектор, в градусах."
+Spread,Разброс
+"Total width of the cone in degrees, half either side of facing.","Полная ширина конуса в градусах, половина по каждую сторону от направления."
+Reach,Дальность
+How far the wedge extends.,Насколько далеко тянется сектор.
+Random Point Around,Случайная точка вокруг
+"Random scatter around a node that is already in the scene - blood splats around a hit, footprints around a stomp, sparkles around a pickup, a wander target around home. Pick the node instead of typing its position, and the scatter follows it as it moves.","Случайный разброс вокруг узла, который уже есть в сцене - брызги крови вокруг попадания, следы вокруг удара, искорки вокруг подбираемого предмета, точка блуждания вокруг дома. Выберите узел вместо того, чтобы вписывать его позицию, и разброс будет следовать за ним по мере движения."
+random point [b]{min_radius}[/b] to [b]{max_radius}[/b] around [i]{node}[/i],случайная точка от [b]{min_radius}[/b] до [b]{max_radius}[/b] вокруг [i]{node}[/i]
+Around,Вокруг
+Node the point is scattered around.,"Узел, вокруг которого разбрасывается точка."
+Nearest,Ближе всего
+Nothing lands closer than this.,Ближе этого ничего не ложится.
+Furthest,Дальше всего
+Nothing lands further than this.,Дальше этого ничего не ложится.
+Random Direction (2D),Случайное направление (2D)
+"A random unit direction in 2D - multiply it by a speed for a random shove, by a distance for a random offset. Always exactly one unit long, so the strength stays where you set it.","Случайное единичное направление в 2D - умножьте его на скорость, чтобы получить случайный толчок, или на расстояние, чтобы получить случайное смещение. Всегда ровно единичной длины, поэтому сила остаётся такой, какой вы её задали."
+random direction,случайное направление
+Random Direction (3D),Случайное направление (3D)
+"A random unit direction in 3D, evenly spread over the whole sphere. The naive three-random-numbers version crowds the corners of a cube; this one does not, so debris and shrapnel fly out honestly.","Случайное единичное направление в 3D, равномерно распределённое по всей сфере. Наивная версия с тремя случайными числами сгущается к углам куба; эта - нет, поэтому обломки и осколки разлетаются честно."
+random direction (3D),случайное направление (3D)
+Random Point In Sphere,Случайная точка в сфере
+"An evenly spread random point inside a 3D sphere - spawn clouds, debris fields, flocking targets. The cube-root weighting keeps the middle from filling up first.","Равномерно распределённая случайная точка внутри 3D-сферы - облака появления, поля обломков, цели для стайного поведения. Взвешивание через кубический корень не даёт середине заполниться первой."
+random point within [b]{radius}[/b] of [b]{center}[/b] (3D),случайная точка в пределах [b]{radius}[/b] от [b]{center}[/b] (3D)
+Middle of the sphere.,Середина сферы.
+In metres.,В метрах.
+Random Point In Box,Случайная точка в блоке
+"A random point inside an axis-aligned 3D box - scatter trees over a chunk, spawn enemies in a room volume, place ambient audio emitters. Size is the FULL box, measured around the centre.","Случайная точка внутри выровненного по осям 3D-блока - разбросать деревья по куску карты, породить врагов в объёме комнаты, расставить источники фонового звука. Размер - это ПОЛНЫЙ блок, отмеренный вокруг центра."
+random point in a [b]{size}[/b] box at [b]{center}[/b],случайная точка в блоке [b]{size}[/b] в [b]{center}[/b]
+Middle of the box.,Середина блока.
+"Full width, height and depth.","Полные ширина, высота и глубина."
+Random Point On Screen Edge,Случайная точка на краю экрана
+"A random WORLD position on the border of what the camera can see - the wave spawner that comes in from a random side, ambient wildlife entering the frame, a meteor starting its run. Grow it with Visible World Rect if you want them to appear from just outside.","Случайная МИРОВАЯ позиция на границе того, что видит камера - спавнер волн, приходящий со случайной стороны, фоновая живность, входящая в кадр, метеор, начинающий свой путь. Расширьте Видимым прямоугольником мира, если хотите, чтобы они появлялись чуть за краем."
+random point on the screen edge,случайная точка на краю экрана
+Jitter,Разброс
+"Nudges a value by a random amount up to the size you give - pitch variation on a sound, a pixel or two of scatter on a decal, a shade of variation on a tint. Works on numbers, vectors and colors as long as the amount is the same kind of value.","Сдвигает значение на случайную величину в пределах заданного размера - вариация высоты тона у звука, пиксель-другой разброса у декали, оттеночная вариация у тинта. Работает с числами, векторами и цветами, пока величина того же рода, что и значение."
+[b]{value}[/b] jittered by [b]{amount}[/b],[b]{value}[/b] с разбросом [b]{amount}[/b]
+"The number, vector or color being nudged.","Число, вектор или цвет, который сдвигаем."
+By,На
+"The most it can move, as the SAME kind of value - a number for a number, a Vector2 for a position, a Color for a tint.","Максимум сдвига, ТОГО ЖЕ рода значение - число для числа, Vector2 для позиции, Color для тинта."
+Bounce Off Surface,Отскок от поверхности
+"The velocity a moving thing has AFTER hitting a surface - feed it the normal any hit trigger or raycast hands you. Ricochets, pinball, breakout, deflect shields.","Скорость, которую движущийся объект имеет ПОСЛЕ удара о поверхность - подайте сюда нормаль, которую даёт любой триггер попадания или луч. Рикошеты, пинбол, арканоид, отражающие щиты."
+[b]{velocity}[/b] bounced off [b]{normal}[/b],[b]{velocity}[/b] отскочившая от [b]{normal}[/b]
+Velocity,Скорость
+How the thing was moving when it hit.,Как объект двигался в момент удара.
+Surface Normal,Нормаль поверхности
+The normal any hit trigger or raycast hands you.,"Нормаль, которую даёт любой триггер попадания или луч."
+Bounciness,Упругость
+"1 keeps all the speed, 0.6 is a rubber ball, 0 is a dead stop.","1 сохраняет всю скорость, 0.6 - резиновый мяч, 0 - полная остановка."
+Slide Along Surface,Скольжение вдоль поверхности
+"The velocity left over once the part pushing INTO a surface is removed - a wall slide that keeps you moving along the wall instead of sticking to it, slope movement, a dash that grazes a corner rather than stopping dead.","Скорость, оставшаяся после того, как убрали часть, толкающую В поверхность - скольжение по стене, которое продолжает движение вдоль неё вместо прилипания, ход по склону, рывок, который задевает угол, а не останавливается намертво."
+[b]{velocity}[/b] slid along [b]{normal}[/b],[b]{velocity}[/b] скользящая вдоль [b]{normal}[/b]
+How the thing was moving when it met the surface.,Как объект двигался в момент встречи с поверхностью.
+Angle Reflected,Отражённый угол
+The heading in degrees a thing travels on after bouncing off a surface - the answer to feed straight back into Set Angle Of Motion when a bullet should ricochet instead of dying.,"Курс в градусах, по которому объект движется после отскока от поверхности - ответ, который можно сразу подать в Задать угол движения, когда пуля должна срикошетить, а не погибнуть."
+[b]{degrees}[/b] reflected off [b]{normal}[/b],[b]{degrees}[/b] отражённый от [b]{normal}[/b]
+Angle,Угол
+"The heading it was travelling on, in degrees.","Курс, по которому объект двигался, в градусах."
+The normal the hit reported.,"Нормаль, о которой сообщило попадание."
+Push Out Of Surface,Вытолкнуть из поверхности
+"A position just clear of a surface instead of exactly on it - park a ricocheting bullet, a decal or a spawned effect here. Landing exactly on a surface is how a thing ends up stuck inside it on the next frame, because a ray that starts inside a shape does not report it.","Позиция чуть в стороне от поверхности, а не строго на ней - паркуйте здесь срикошетившую пулю, декаль или порождённый эффект. Именно из-за посадки строго на поверхность объект на следующем кадре оказывается застрявшим внутри неё: луч, начавшийся внутри фигуры, о ней не сообщает."
+[b]{point}[/b] pushed [b]{distance}[/b] out of [b]{normal}[/b],[b]{point}[/b] вытолкнутая на [b]{distance}[/b] из [b]{normal}[/b]
+Hit Point,Точка попадания
+Where the hit happened.,Где произошло попадание.
+Clearance,Зазор
+Pixels of daylight to leave between the thing and the surface.,Сколько пикселей просвета оставить между объектом и поверхностью.
+Face Along Velocity,Повернуть по направлению движения
+"Turns this node to point the way it is travelling, and leaves it alone while it is standing still so a stopped thing never snaps back to facing right. Arrows, fish, cars, thrown knives, a camera that leads the motion.","Поворачивает этот узел туда, куда он движется, и не трогает его, пока он стоит на месте, так что остановившийся объект никогда не щёлкает обратно вправо. Стрелы, рыбы, машины, метательные ножи, камера, ведущая движение."
+face along [b]{velocity}[/b],повернуть по [b]{velocity}[/b]
+"How this node is moving - Get Velocity on a body, or the direction you are driving it with.","Как движется этот узел - Получить скорость у тела или направление, которым вы его ведёте."
+Look At (safe up),Смотреть на (безопасный верх)
+"Turns a 3D node to face a point WITHOUT the crash the plain Look At has: when the target is directly overhead or underfoot, the usual up vector points the same way as the look direction and Godot cannot build a rotation from that. This one swaps the up vector at the last moment, and does nothing at all when the target is where the node already is.","Поворачивает 3D-узел лицом к точке БЕЗ падения, которое устраивает обычный Look At: когда цель точно сверху или снизу, привычный вектор верха смотрит туда же, куда и направление взгляда, и Godot не может построить из этого поворот. Здесь вектор верха подменяется в последний момент, а если цель там же, где узел, не делается вообще ничего."
+look at [b]{target}[/b] (safe up),смотреть на [b]{target}[/b] (безопасный верх)
+Look At,Смотреть на
+The world position to face.,"Мировая позиция, к которой поворачиваемся."
+Look At (flat),Смотреть на (по горизонтали)
+"Turns a 3D node to face a point but only around the up axis, so a character looks at the player without tipping over to stare at their feet. The rotation every humanoid, turret base and standing NPC actually wants.","Поворачивает 3D-узел лицом к точке, но только вокруг оси верха, поэтому персонаж смотрит на игрока, не заваливаясь, чтобы уставиться ему в ноги. Именно этот поворот на самом деле нужен любому гуманоиду, основанию турели и стоящему NPC."
+look at [b]{target}[/b] (flat),смотреть на [b]{target}[/b] (по горизонтали)
+Aim At Moving Target,Прицел по движущейся цели
+"Where to aim so a shot MEETS a moving target instead of trailing it - the interception point every turret and archer needs. When the target is faster than the shot no lead exists, and it falls back to the target's current spot rather than pointing somewhere absurd.","Куда целиться, чтобы выстрел ВСТРЕТИЛ движущуюся цель, а не тащился за ней - точка перехвата, нужная каждой турели и каждому лучнику. Когда цель быстрее выстрела, упреждения не существует, и результат откатывается к текущему месту цели, а не указывает в нелепую сторону."
+aim at [b]{target_position}[/b] moving [b]{target_velocity}[/b],"целиться в [b]{target_position}[/b], движущуюся [b]{target_velocity}[/b]"
+Shooting From,Выстрел из
+Where the shot starts.,Откуда начинается выстрел.
+Target At,Цель в
+Where the target is right now.,Где цель находится прямо сейчас.
+Target Moving At,Цель движется со
+"How the target is moving, in pixels per second.","Как движется цель, в пикселях в секунду."
+Shot Speed,Скорость выстрела
+"How fast your shot travels, in pixels per second.","Насколько быстро летит ваш выстрел, в пикселях в секунду."
+Launch Angle For Arc,Угол запуска для дуги
+"The angle in degrees to fire something so it ARCS onto a target - grenades, mortars, catapults, a coin tossed into a counter. Picks the flatter of the two possible arcs, and reads as 45 degrees when the shot cannot reach at all, so a row never produces a number that is not a number.","Угол в градусах, под которым нужно выстрелить, чтобы снаряд ДУГОЙ пришёл в цель - гранаты, миномёты, катапульты, монетка, брошенная на прилавок. Выбирается более пологая из двух возможных дуг, а если выстрел вообще не долетает, читается как 45 градусов, поэтому строка никогда не выдаёт «не число»."
+"launch angle to reach [b]{distance}[/b] away, [b]{height}[/b] up","угол запуска, чтобы достать [b]{distance}[/b] по горизонтали и [b]{height}[/b] вверх"
+Distance,Расстояние
+"How far away the target is, along the ground.","Насколько далеко цель, вдоль земли."
+Height Difference,Разница высот
+How much higher the target is than the launcher; negative is downhill.,Насколько цель выше пусковой точки; отрицательное значение - вниз по склону.
+Launch Speed,Скорость запуска
+How fast the thing leaves the launcher.,Насколько быстро объект покидает пусковую точку.
+Gravity,Гравитация
+"Pull downward, in the same units as the speed.","Притяжение вниз, в тех же единицах, что и скорость."
+Time To Reach,Время в пути
+"How many seconds something moving at a steady speed needs to cover a distance - time a warning before the missile lands, size a tween to match a walk, decide whether the interceptor can get there first.","Сколько секунд нужно объекту, движущемуся с постоянной скоростью, чтобы преодолеть расстояние - отмерить предупреждение перед прилётом ракеты, подогнать твин под шаг, решить, успеет ли перехватчик первым."
+time for [b]{speed}[/b] to cross [b]{from_position}[/b] to [b]{to_position}[/b],время для [b]{speed}[/b] пройти от [b]{from_position}[/b] до [b]{to_position}[/b]
+Where it starts.,Откуда начинается.
+Where it is going.,Куда направляется.
+Speed,Скорость
+Pixels per second.,Пикселей в секунду.
+Cell Of Point,Ячейка точки
+"Which grid cell a world position falls in - no TileMapLayer needed, so build grids, inventory slots and chunk keys all speak the same language. Negative positions land in negative cells, which is what a grid that extends left and up actually wants.","В какую ячейку сетки попадает мировая позиция - TileMapLayer не нужен, поэтому сетки, слоты инвентаря и ключи чанков говорят на одном языке. Отрицательные позиции попадают в отрицательные ячейки, а это ровно то, что нужно сетке, продолжающейся влево и вверх."
+cell of [b]{point}[/b] on a [b]{cell_size}[/b] grid,ячейка [b]{point}[/b] на сетке [b]{cell_size}[/b]
+Point,Точка
+A world position.,Мировая позиция.
+Cell Size,Размер ячейки
+Pixels across one cell. Type Tiles(1) to read your project's own tile size instead.,"Пикселей в одной ячейке. Напишите Tiles(1), чтобы взять собственный размер тайла вашего проекта."
+Center Of Cell,Центр ячейки
+"The world position at the middle of a grid cell - where the placement ghost sits, where the tower is built, where the piece lands. The exact partner of Cell Of Point, so the pair round-trips.","Мировая позиция в середине ячейки сетки - где стоит призрак размещения, где строится башня, куда ложится фишка. Точный напарник Ячейки точки, поэтому пара даёт круговой перевод."
+center of cell [b]{cell}[/b] on a [b]{cell_size}[/b] grid,центр ячейки [b]{cell}[/b] на сетке [b]{cell_size}[/b]
+Cell,Ячейка
+The grid cell.,Ячейка сетки.
+Pixels across one cell.,Пикселей в одной ячейке.
+Snap Point To Grid,Привязать точку к сетке
+"The nearest grid intersection to a loose position - a dragged card falling into its slot, a level editor brush, a UI element clicking onto a column. Rounds to the nearest, so a thing dropped just past halfway moves forward rather than back.","Ближайший узел сетки к вольной позиции - перетащенная карта, падающая в свой слот, кисть редактора уровней, элемент интерфейса, щёлкающий в колонку. Округляет до ближайшего, поэтому объект, брошенный чуть за середину, идёт вперёд, а не назад."
+[b]{point}[/b] snapped to a [b]{cell_size}[/b] grid,[b]{point}[/b] привязанная к сетке [b]{cell_size}[/b]
+The loose world position.,Вольная мировая позиция.
+Snap Point To Grid (3D),Привязать точку к сетке (3D)
+"The nearest point on a 3D grid - voxel placement, modular level pieces clicking together, a build cursor that lines up with the floor tiles.","Ближайшая точка на 3D-сетке - расстановка вокселей, модульные куски уровня, которые щёлкают друг к другу, курсор строительства, выравнивающийся по плиткам пола."
+[b]{point}[/b] snapped to a [b]{cell_size}[/b] grid (3D),[b]{point}[/b] привязанная к сетке [b]{cell_size}[/b] (3D)
+Metres across one cell.,Метров в одной ячейке.
+Cell Distance,Расстояние между ячейками
+"How far apart two grid cells are, with the same geometry dropdown the rest of the plugin uses: straight line, horizontal or vertical only, grid steps (Manhattan) or king moves (Chebyshev). One expression that fits a roguelike, a strategy game and a puzzle board alike.","Насколько далеко друг от друга две ячейки сетки, с тем же выпадающим списком геометрии, что и во всём остальном плагине: по прямой, только по горизонтали или вертикали, шагами сетки (Манхэттен) или ходами короля (Чебышев). Одно выражение, которое одинаково подходит рогалику, стратегии и головоломке на доске."
+"distance from cell [b]{from_cell}[/b] to [b]{to_cell}[/b], measured as [b]{metric}[/b]","расстояние от ячейки [b]{from_cell}[/b] до [b]{to_cell}[/b], меряя как [b]{metric}[/b]"
+From Cell,Из ячейки
+One cell.,Одна ячейка.
+To Cell,В ячейку
+The other cell.,Другая ячейка.
+Measured As,Меряя как
+"How the distance is counted - a roguelike wants Grid steps, a chess board wants King moves.","Как считается расстояние - рогалику нужны Шаги сетки, шахматной доске - Ходы короля."
+Straight line,По прямой
+Horizontal only,Только по горизонтали
+Vertical only,Только по вертикали
+Grid steps,Шаги сетки
+King moves,Ходы короля
+Neighbours Of Cell,Соседи ячейки
+"The cells touching a cell, as a list - flood fill, path search, ""is anything next to me"", spreading fire, match-three clearing. Choose four sides, eight including diagonals, or the six neighbours of an axial hex board.","Ячейки, касающиеся ячейки, списком - заливка, поиск пути, «есть ли что-то рядом со мной», распространение огня, схлопывание три-в-ряд. Выберите четыре стороны, восемь с диагоналями или шесть соседей осевой гексагональной доски."
+neighbours of cell [b]{cell}[/b] ([b]{shape}[/b]),соседи ячейки [b]{cell}[/b] ([b]{shape}[/b])
+The cell whose neighbours you want.,"Ячейка, соседей которой вы хотите."
+Shape,Форма
+How cells touch on this board.,Как ячейки касаются друг друга на этой доске.
+4 sides,4 стороны
+8 including diagonals,8 с диагоналями
+6 hex (axial),6 гекс (осевые)
+Cells In Line,Ячейки на линии
+"Every cell a straight line passes through, in order from one cell to the other - a laser beam's path, tile-based line of sight, a corridor carved between two rooms, a ruler for a ranged attack. Both ends are included.","Все ячейки, через которые проходит прямая линия, по порядку от одной ячейки к другой - путь лазерного луча, линия видимости по тайлам, коридор, прорубленный между двумя комнатами, линейка для дальней атаки. Оба конца включены."
+cells in the line from [b]{from_cell}[/b] to [b]{to_cell}[/b],ячейки на линии от [b]{from_cell}[/b] до [b]{to_cell}[/b]
+Where the line starts.,Где линия начинается.
+Where the line ends.,Где линия заканчивается.
+Cells In Radius,Ячейки в радиусе
+"Every cell within a step radius of a centre cell, as a list - a blast footprint, a range preview, a fog reveal, the tiles a tower covers. Choose the diamond (counting grid steps) or the square (counting king moves).","Все ячейки в пределах радиуса в шагах от центральной ячейки, списком - след взрыва, предпросмотр дальности, снятие тумана войны, тайлы, которые накрывает башня. Выберите ромб (счёт по шагам сетки) или квадрат (счёт по ходам короля)."
+cells within [b]{radius}[/b] of [b]{center}[/b] ([b]{shape}[/b]),ячейки в пределах [b]{radius}[/b] от [b]{center}[/b] ([b]{shape}[/b])
+Center Cell,Центральная ячейка
+The middle of the area.,Середина области.
+Radius In Cells,Радиус в ячейках
+How many steps out from the middle.,Сколько шагов от середины.
+Whether the corners count.,Считаются ли углы.
+Grid steps (diamond),Шаги сетки (ромб)
+King moves (square),Ходы короля (квадрат)
+Cells In Rectangle,Ячейки в прямоугольнике
+"Every cell in a rectangular block, row by row - stamping a room, laying out an inventory grid, placing a multi-cell building, clearing a region of fog. An empty or negative size walks nothing rather than looping backwards.","Все ячейки в прямоугольном блоке, строка за строкой - штамповка комнаты, раскладка сетки инвентаря, размещение здания на несколько клеток, снятие тумана с области. Пустой или отрицательный размер не проходит ничего, а не крутится в обратную сторону."
+cells in the [b]{size}[/b] block at [b]{top_left}[/b],ячейки в блоке [b]{size}[/b] в [b]{top_left}[/b]
+Top Left Cell,Левая верхняя ячейка
+Corner the block starts at.,"Угол, с которого начинается блок."
+Size In Cells,Размер в ячейках
+How many cells across and down.,Сколько ячеек в ширину и в высоту.
+Is Cell In Bounds,Ячейка в пределах поля
+"True while a cell is on the board - the guard before every placement, every move and every array lookup keyed by cell. Counting starts at 0,0 in the top-left, so a 20 by 12 board's last cell is 19,11.","Истина, пока ячейка находится на доске - страховка перед каждым размещением, каждым ходом и каждым обращением к массиву по ячейке. Счёт начинается с 0,0 в левом верхнем углу, поэтому последняя ячейка доски 20 на 12 - это 19,11."
+cell [b]{cell}[/b] is inside a [b]{size}[/b] board,ячейка [b]{cell}[/b] внутри доски [b]{size}[/b]
+The cell being tested.,"Ячейка, которую проверяем."
+Board Size,Размер доски
+How many cells the board is across and down.,Сколько ячеек доска в ширину и в высоту.
+For Each Cell In Radius,Для каждой ячейки в радиусе
+"Runs this event's actions once per cell within a step radius of a centre cell - range previews, blast footprints, fog reveal, area-of-effect highlights. Read the current one as `cell`.","Выполняет действия этого события по разу на каждую ячейку в пределах радиуса в шагах от центральной ячейки - предпросмотр дальности, следы взрывов, снятие тумана, подсветка области действия. Текущая читается как `cell`."
+for each cell within [b]{radius}[/b] of [b]{center}[/b],для каждой ячейки в пределах [b]{radius}[/b] от [b]{center}[/b]
+Falloff At Distance,Спад на расстоянии
+"How strong an effect is at a distance, from 1 at the centre to 0 at the edge - the one number that makes an explosion, a sound, a magnet or a screen shake care how close it was. Anything past the radius reads as 0, so it is safe to multiply straight into damage. For a hand-drawn profile, feed this number into Sample Curve.","Насколько силён эффект на расстоянии, от 1 в центре до 0 у края - одно число, из-за которого взрыв, звук, магнит или тряска экрана начинают считаться с тем, насколько близко это было. Всё за радиусом читается как 0, поэтому это безопасно умножать прямо на урон. Для нарисованного вручную профиля подайте это число в Взять значение кривой."
+falloff from [b]{center}[/b] at [b]{point}[/b] within [b]{radius}[/b],спад от [b]{center}[/b] в [b]{point}[/b] в пределах [b]{radius}[/b]
+Where the effect comes from.,Откуда исходит эффект.
+What is being affected.,На что оказывается воздействие.
+Past this it reads 0.,Дальше этого читается 0.
+Profile,Профиль
+How quickly the strength drops off with distance.,Насколько быстро сила падает с расстоянием.
+Linear,Линейный
+Sharp (squared),Резкий (квадрат)
+Smooth (ease out),Плавный (ease out)
+Strength Toward,Сила к узлу
+"Falloff between THIS node and another one, without spelling out either position - guard suspicion that builds faster the closer you are, a magnet that pulls harder up close, a sound that ducks as you approach. Reads 0 once the other node is out of range.","Спад между ЭТИМ узлом и другим, без выписывания обеих позиций - подозрение стражника, растущее тем быстрее, чем вы ближе, магнит, который тянет сильнее вблизи, звук, который приглушается по мере приближения. Как только другой узел вне радиуса, читается 0."
+strength toward [i]{node}[/i] within [b]{radius}[/b],сила к [i]{node}[/i] в пределах [b]{radius}[/b]
+Toward,К
+The node the strength is measured against.,"Узел, относительно которого меряется сила."
+Apply Radial Impulse,Применить радиальный импульс
+"Throws this physics body away from a blast, weaker the further it was - barrels, crates, ragdolls and debris flung by an explosion. One row on the body; the blast only has to say where it happened.","Отбрасывает это физическое тело от взрыва, тем слабее, чем оно было дальше - бочки, ящики, рэгдоллы и обломки, разлетающиеся от взрыва. Одна строка на теле; взрыву достаточно сказать, где он произошёл."
+apply radial impulse [b]{strength}[/b] from [b]{center}[/b],применить радиальный импульс [b]{strength}[/b] от [b]{center}[/b]
+Blast Center,Центр взрыва
+Where the explosion went off.,Где рвануло.
+Strength,Сила
+"The push at the very centre, in impulse units.","Толчок в самом центре, в единицах импульса."
+Past this the push is nothing.,Дальше этого толчка нет.
+Push Group Away From,Оттолкнуть группу от
+"Shoves every member of a group away from a point, hardest at the centre and not at all past the radius - the mirror of Pull Group Toward. A shockwave clearing a crowd, a repulsor field, a dash that parts the enemies it passes through.","Отталкивает каждого участника группы от точки, сильнее всего в центре и совсем никак за радиусом - зеркало Притянуть группу к. Ударная волна, расчищающая толпу, поле отталкивания, рывок, раздвигающий врагов, сквозь которых он проходит."
+push group [b]{group}[/b] away from [b]{center}[/b] within [b]{radius}[/b],оттолкнуть группу [b]{group}[/b] от [b]{center}[/b] в пределах [b]{radius}[/b]
+Group whose members get shoved.,"Группа, участников которой отталкивает."
+Away From,От
+Where the shove comes from.,Откуда идёт толчок.
+Only members inside this are shoved.,Отталкиваются только участники внутри этого.
+Pixels the closest member is moved.,На сколько пикселей сдвигается ближайший участник.
+Is Within Cone Of,В конусе обзора
+"True while a point sits inside a facing wedge - guard vision, spotlight checks, melee arcs, directional blasts. The cheap test to put in front of an expensive raycast: if it is not in the cone, there is nothing to trace.","Истина, пока точка находится внутри сектора направления - обзор стражника, проверки прожектора, дуги ближнего боя, направленные взрывы. Дешёвая проверка, которую ставят перед дорогим лучом: если это не в конусе, то и трассировать нечего."
+[b]{point}[/b] is within a [b]{fov_degrees}[/b] cone of [b]{origin}[/b] facing [b]{facing_degrees}[/b],[b]{point}[/b] в конусе [b]{fov_degrees}[/b] из [b]{origin}[/b] с направлением [b]{facing_degrees}[/b]
+Cone From,Конус из
+"Tip of the wedge - the guard, the spotlight, the blast.","Вершина сектора - стражник, прожектор, взрыв."
+"Which way the wedge points, in degrees.","Куда указывает сектор, в градусах."
+The position being tested.,"Позиция, которую проверяем."
+Cone Width,Ширина конуса
+Total width of the wedge in degrees.,Полная ширина сектора в градусах.
+"How far the wedge extends, in pixels.","Насколько далеко тянется сектор, в пикселях."
+Wait Until,Ждать пока
+"Pauses this event until a check comes true, or until the give-up time passes. Read which happened on the next row with Wait Succeeded / Wait Timed Out, naming this wait. It polls once a frame, so prefer Wait For Signal when a real signal exists for what you are waiting on.","Приостанавливает это событие, пока проверка не станет истинной или пока не выйдет время ожидания. Что именно случилось, читайте в следующей строке через Ожидание успешно / Ожидание истекло, назвав это ожидание. Опрос идёт раз в кадр, поэтому, если для того, чего вы ждёте, есть настоящий сигнал, лучше берите Ждать сигнала."
+Time,Время
+"wait [b]{wait_name}[/b] until [b]{check}[/b], give up after [b]{seconds}[/b]s","ждать [b]{wait_name}[/b] пока [b]{check}[/b], сдаться через [b]{seconds}[/b] с"
+Named,Именем
+"A name for this wait, so Wait Succeeded / Wait Timed Out can say which one they mean.","Имя этого ожидания, чтобы Ожидание успешно / Ожидание истекло могли сказать, о каком из них речь."
+Until,Пока
+"The check to wait for, tested once a frame.","Проверка, которой ждём, тестируется раз в кадр."
+Give Up After,Сдаться через
+Seconds before giving up. 0 waits forever.,"Секунд до того, как сдаться. 0 ждёт вечно."
+Wait For All Of,Ждать все
+"Pauses this event until every signal in the list has fired at least once, or until the give-up time passes. It connects them ALL up front, one-shot, so nothing can fire into the gap between two waits - the bug a hand-written chain of awaits always has. An empty list succeeds at once.","Приостанавливает это событие, пока каждый сигнал из списка не сработает хотя бы раз, или пока не выйдет время ожидания. Все они подключаются ЗАРАНЕЕ и одноразово, поэтому ничто не может сработать в зазор между двумя ожиданиями - баг, который всегда есть у написанной вручную цепочки await. Пустой список успешен сразу."
+"wait [b]{wait_name}[/b] for ALL of [b]{signals}[/b], give up after [b]{seconds}[/b]s","ждать [b]{wait_name}[/b] ВСЕ из [b]{signals}[/b], сдаться через [b]{seconds}[/b] с"
+Signals,Сигналы
+"The signals to join, as a list: [$Door.opened, $Camera.arrived].","Сигналы, которые объединяем, списком: [$Door.opened, $Camera.arrived]."
+Wait For Any Of,Ждать любое
+"Pauses this event until the first of several signals fires, then carries on - a race, or a sudden-death timer. Read which one won with First To Finish, naming this wait: it answers ""Node.signal"", so racing $Player.died against $Boss.died still tells you which one it was. Every signal is connected one-shot up front, so the winner is whichever really fired first, and the losers are disconnected when the race ends.","Приостанавливает это событие, пока не сработает первый из нескольких сигналов, а затем продолжает - гонка или таймер на выбывание. Кто победил, читайте через Первый финишировавший, назвав это ожидание: он отвечает «Node.signal», поэтому гонка $Player.died против $Boss.died всё равно скажет, кто именно это был. Каждый сигнал подключается заранее и одноразово, поэтому победитель - тот, кто действительно сработал первым, а проигравшие отключаются, когда гонка закончена."
+wait [b]{wait_name}[/b] for ANY of [b]{signals}[/b],ждать [b]{wait_name}[/b] ЛЮБОЕ из [b]{signals}[/b]
+"A name for this wait, so First To Finish and the outcome conditions can say which one they mean.","Имя этого ожидания, чтобы Первый финишировавший и условия исхода могли сказать, о каком из них речь."
+"The signals to race, as a list: [$Player.died, $Boss.died].","Сигналы, которые участвуют в гонке, списком: [$Player.died, $Boss.died]."
+Wait Succeeded,Ожидание успешно
+"True when the named wait ended because what it was waiting for happened. A wait that has never run is neither succeeded nor timed out, so nothing fires before the wait does.","Истина, когда названное ожидание завершилось потому, что случилось то, чего оно ждало. Ожидание, которое ни разу не запускалось, не является ни успешным, ни истёкшим, поэтому ничто не срабатывает раньше самого ожидания."
+wait [b]{wait_name}[/b] succeeded,ожидание [b]{wait_name}[/b] успешно
+The name the wait row used.,"Имя, которое использовала строка ожидания."
+Wait Timed Out,Ожидание истекло
+"True when the named wait gave up instead of finishing - the recovery branch for a load that never reported in. The same timeout also reports on verb_failed, so another event can handle it as On Failure Of.","Истина, когда названное ожидание сдалось, а не завершилось - ветка восстановления для загрузки, которая так и не отчиталась. Тот же тайм-аут отчитывается и через verb_failed, поэтому другое событие может обработать его как При отказе."
+wait [b]{wait_name}[/b] timed out,ожидание [b]{wait_name}[/b] истекло
+First To Finish,Первый финишировавший
+"Which signal a Wait For Any Of was watching finished first, written as ""Node.signal"" (the node's name, a dot, the signal's name), or empty text when it timed out. The node is part of the answer on purpose: a race between $Player.died and $Boss.died is two signals with the same name, and only the owner tells them apart. Compare it in a condition cell to branch on the winner.","Какой сигнал из тех, за которыми следило Ждать любое, завершился первым, записанный как «Node.signal» (имя узла, точка, имя сигнала), или пустой текст, когда время вышло. Узел входит в ответ намеренно: гонка между $Player.died и $Boss.died - это два сигнала с одинаковым именем, и различает их только владелец. Сравните это в ячейке условия, чтобы ветвиться по победителю."
+first to finish ( [b]{wait_name}[/b] ),первый финишировавший ( [b]{wait_name}[/b] )
+The name the Wait For Any Of row used.,"Имя, которое использовала строка Ждать любое."
+Retry Up To N Times,Повторять до N раз
+"Runs this event's actions over and over, up to a number of attempts, so a nested Stop Retrying can end it the moment the thing works. With no waiting inside it stays instant, which makes it the procedural-placement loop as much as the disk retry. Read the try number with Retry Attempt Number.","Выполняет действия этого события снова и снова, до заданного числа попыток, чтобы вложенное Прекратить повторы могло закончить всё в тот момент, когда получилось. Без ожидания внутри работает мгновенно, что делает это циклом процедурной расстановки не меньше, чем повтором обращения к диску. Номер попытки читайте через Номер попытки."
+retry [b]{retry_name}[/b] up to [b]{times}[/b] times,повторять [b]{retry_name}[/b] до [b]{times}[/b] раз
+"A name for this retry, matching its Stop Retrying and Retries Exhausted rows.","Имя этого повтора, совпадающее с его строками Прекратить повторы и Повторы исчерпаны."
+Times,Раз
+Most attempts before giving up.,"Больше этого числа попыток не будет, дальше сдаётся."
+Retry Attempt Number,Номер попытки
+"Which try this is, counting from 1 - the number you put in the log line or the HUD. Only readable inside a Retry Up To N Times loop, and it reads that loop's own variable, so change the cell if you renamed it.","Какая это попытка, считая с 1 - число, которое вы ставите в строку лога или на HUD. Читается только внутри цикла Повторять до N раз, и читает собственную переменную этого цикла, поэтому, если вы её переименовали, поправьте ячейку."
+retry attempt number,номер попытки
+Loop Variable,Переменная цикла
+The retry loop's own variable. Leave it as attempt unless you renamed the loop variable on the Retry Up To N Times row.,"Собственная переменная цикла повторов. Оставьте attempt, если только вы не переименовали переменную цикла в строке Повторять до N раз."
+Stop Retrying,Прекратить повторы
+"Ends the retry loop right now because the attempt worked, and records that it worked so Retries Exhausted below stays false. Put it under the condition that means success.","Заканчивает цикл повторов прямо сейчас, потому что попытка удалась, и записывает это, чтобы Повторы исчерпаны ниже осталось ложным. Ставьте под условием, которое означает успех."
+stop retrying [b]{retry_name}[/b],прекратить повторы [b]{retry_name}[/b]
+The name the Retry Up To N Times row uses.,"Имя, которое использует строка Повторять до N раз."
+Retries Exhausted,Повторы исчерпаны
+"True when the retry loop above ran out of tries without a Stop Retrying - the give-up branch. Put it in a sibling row directly beneath the retry loop, using the same name; a retry that has never run is not exhausted, so nothing fires before the loop does. Reading it clears the record, so the next run starts clean. When the retry WAITS between tries (Wait Before Next Try) the loop is still running while the rows beneath it are reached, so report that give-up with Report Failure on the last attempt and handle it in an On Failure Of event instead.","Истина, когда цикл повторов выше израсходовал все попытки без Прекратить повторы - ветка «сдаёмся». Ставьте в соседнюю строку прямо под циклом повторов, с тем же именем; повтор, который ни разу не запускался, не исчерпан, поэтому ничто не срабатывает раньше самого цикла. Чтение очищает запись, поэтому следующий запуск начинается с чистого листа. Когда повтор ЖДЁТ между попытками (Пауза перед следующей попыткой), цикл всё ещё работает, пока строки под ним уже достигнуты, поэтому сообщайте о таком отказе через Сообщить об отказе на последней попытке и обрабатывайте его в событии При отказе."
+retries for [b]{retry_name}[/b] exhausted,повторы [b]{retry_name}[/b] исчерпаны
+Wait Before Next Try,Пауза перед следующей попыткой
+"Pauses before the next attempt, waiting longer each time when you set a growth above 1 - the polite way to retry a disk or a slow source. It suspends this event like Wait does, so pair the retry with Once At A Time when the trigger can fire again mid-retry.","Делает паузу перед следующей попыткой, каждый раз всё дольше, если задать рост больше 1 - вежливый способ повторно обратиться к диску или медленному источнику. Приостанавливает это событие так же, как Ждать, поэтому, если триггер может сработать снова посреди повтора, соедините повтор с По одному за раз."
+wait [b]{delay}[/b]s before try [b]{attempt}[/b] (growing x[b]{growth}[/b]),ждать [b]{delay}[/b] с перед попыткой [b]{attempt}[/b] (рост x[b]{growth}[/b])
+Wait after the first failed try.,Пауза после первой неудачной попытки.
+Growing By,Растёт на
+"1 = the same wait every time, 2 = doubling backoff.","1 = одна и та же пауза каждый раз, 2 = удвоение задержки."
+On Try,На попытке
+Which try this is - put Retry Attempt Number here.,Какая это попытка - поставьте сюда Номер попытки.
+Remember In Trail,Записать в след
+"Records a value into a named rolling history you can dump, chart, or check when something goes wrong.","Записывает значение в именованную скользящую историю, которую можно вывести, построить графиком или проверить, когда что-то пошло не так."
+Debug,Отладка
+"remember [b]{value}[/b] in trail [b]{trail}[/b], keep [b]{keep}[/b]","запомнить [b]{value}[/b] в следе [b]{trail}[/b], хранить [b]{keep}[/b]"
+"The value to record this tick - a number, a vector, anything printable.","Значение, которое записать в этот тик - число, вектор, что угодно печатаемое."
+Trail,След
+Trail name - any label you also use in the trail expressions.,"Имя следа - любая метка, которую вы используете и в выражениях следа."
+Keep,Хранить
+How many recent values to hold (older ones drop off the front).,Сколько последних значений держать (старые сходят спереди).
+Trail Values,Значения следа
+"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.","Возвращает весь след массивом, от самого старого - подайте его в график, таблицу или глагол работы с массивом."
+trail [b]{trail}[/b] values,значения следа [b]{trail}[/b]
+"Trail name, matching a Remember In Trail action.","Имя следа, совпадающее с действием Записать в след."
+Lowest In Trail,Минимум в следе
+"The smallest value recorded in a trail, which is the spike a per-frame watch blinked past. An empty trail reads as INF.","Наименьшее значение, записанное в след, то есть тот всплеск, который покадровое наблюдение проморгало. Пустой след читается как INF."
+lowest in trail [b]{trail}[/b],минимум в следе [b]{trail}[/b]
+Highest In Trail,Максимум в следе
+The largest value recorded in a trail. An empty trail reads as -INF.,"Наибольшее значение, записанное в след. Пустой след читается как -INF."
+highest in trail [b]{trail}[/b],максимум в следе [b]{trail}[/b]
+Average In Trail,Среднее по следу
+The mean of every number recorded in a trail - a rolling average that is as useful in gameplay as in debugging. An empty trail reads as 0.,"Среднее всех чисел, записанных в след - скользящее среднее, полезное в игровой логике не меньше, чем в отладке. Пустой след читается как 0."
+average of trail [b]{trail}[/b],среднее следа [b]{trail}[/b]
+Newest In Trail,Последнее в следе
+"The most recently recorded value in a trail, or 0 when nothing has been recorded yet.","Самое недавно записанное значение следа или 0, если пока ничего не записано."
+newest in trail [b]{trail}[/b],последнее в следе [b]{trail}[/b]
+Trail Length,Длина следа
+"How many values a trail is currently holding, which tops out at the Keep you gave it.",Сколько значений след держит прямо сейчас; больше значения Хранить не станет.
+length of trail [b]{trail}[/b],длина следа [b]{trail}[/b]
+Log Trail,Вывести след
+"Prints the whole trail to the Output console, so the seconds before a bug arrive with the bug.","Печатает весь след в консоль Output, чтобы секунды перед багом приходили вместе с багом."
+log trail [b]{trail}[/b],вывести след [b]{trail}[/b]
+Save Trail To CSV,Сохранить след в CSV
+Writes a trail to a two-column CSV file you can open in a spreadsheet and plot.,"Записывает след в двухколоночный файл .csv, который можно открыть в таблице и построить по нему график."
+save trail [b]{trail}[/b] to [b]{path}[/b],сохранить след [b]{trail}[/b] в [b]{path}[/b]
+Where to write the file. Use user:// so it works in an exported game.,"Куда писать файл. Используйте user://, чтобы это работало в экспортированной игре."
+Clear Trail,Очистить след
+"Forgets everything a trail recorded, so the next run starts from nothing.","Забывает всё, что записал след, чтобы следующий запуск начался с нуля."
+clear trail [b]{trail}[/b],очистить след [b]{trail}[/b]
+Frame Took Longer Than,Кадр занял больше
+"True on a frame that took longer than your budget, which is the hitch caught as it happens. Needs a per-frame trigger.","Истина на кадре, который занял больше вашего бюджета, то есть подлавливает рывок прямо на месте. Нужен покадровый триггер."
+frame took longer than [b]{ms}[/b] ms,кадр занял больше [b]{ms}[/b] мс
+Milliseconds,Миллисекунды
+The budget. 16.6 is one frame at 60 FPS.,Бюджет. 16.6 - это один кадр при 60 FPS.
+FPS Below For,FPS ниже порога в течение
+"True once the framerate has stayed under your floor for the whole stretch you name, which tells a real performance drop apart from one stuttery frame. Needs a per-frame trigger.","Истина, как только частота кадров продержалась ниже вашего порога весь названный отрезок; это отличает настоящую просадку производительности от одного дёрганого кадра. Нужен покадровый триггер."
+FPS below [b]{fps}[/b] for [b]{seconds}[/b] seconds,FPS ниже [b]{fps}[/b] в течение [b]{seconds}[/b] секунд
+FPS,FPS
+The framerate floor. Below this counts as a drop.,Нижний порог частоты кадров. Ниже него считается просадкой.
+For Seconds,В течение секунд
+How long the drop must last before this is true.,"Сколько просадка должна длиться, прежде чем это станет истиной."
+Start Measuring,Начать измерение
+Starts a named stopwatch. Pair it with Stop Measuring around the work you suspect.,"Запускает именованный секундомер. Соедините его с Остановить измерение вокруг работы, которую подозреваете."
+start measuring [b]{named}[/b],начать измерение [b]{named}[/b]
+The name this measurement is reported under.,"Имя, под которым отчитывается это измерение."
+Stop Measuring,Остановить измерение
+"Stops a named stopwatch and files the result, keeping the last, the average and the worst reading for that name.","Останавливает именованный секундомер и подшивает результат, храня для этого имени последнее, среднее и худшее показание."
+stop measuring [b]{named}[/b],остановить измерение [b]{named}[/b]
+The name you gave Start Measuring.,"Имя, которое вы дали Начать измерение."
+Last Measured (ms),Последнее измерение (мс)
+How many milliseconds the most recent run of a named measurement took.,Сколько миллисекунд занял самый недавний прогон именованного измерения.
+last measured [b]{named}[/b] ms,последнее измерение [b]{named}[/b] мс
+Average Measured (ms),Среднее измерение (мс)
+"The mean cost in milliseconds across every run of a named measurement, which is the number to quote when you claim an optimization worked.","Средняя стоимость в миллисекундах по всем прогонам именованного измерения; именно это число стоит приводить, когда вы заявляете, что оптимизация сработала."
+average measured [b]{named}[/b] ms,среднее измерение [b]{named}[/b] мс
+Peak Measured (ms),Пиковое измерение (мс)
+"The worst run of a named measurement in milliseconds, which is usually the one the player felt.",Худший прогон именованного измерения в миллисекундах; обычно именно его игрок и почувствовал.
+peak measured [b]{named}[/b] ms,пиковое измерение [b]{named}[/b] мс
+Log Measurements,Вывести измерения
+"Prints every named measurement taken so far with its last, average and peak cost - the report you paste into a bug or a devlog.","Печатает каждое именованное измерение, снятое на данный момент, с его последней, средней и пиковой стоимостью - отчёт, который вы вставляете в баг-репорт или девлог."
+log measurements,вывести измерения
+Clear Measurements,Очистить измерения
+"Throws away every measurement recorded so far, so a fresh run starts from a clean slate.","Выбрасывает все снятые до сих пор измерения, чтобы свежий прогон начинался с чистого листа."
+clear measurements,очистить измерения
+Register As Service,Зарегистрировать как службу
+"Publishes this node under a short name anything can ask for, so no other row needs a path to it. Run it under On Ready. Registering the same name again replaces it, and a freed node answers as nothing at all, so a scene reload leaves no dangling reference behind.","Публикует этот узел под коротким именем, которое может запросить кто угодно, так что ни одной другой строке не нужен путь к нему. Запускайте под При готовности. Повторная регистрация того же имени заменяет прежнюю, а освобождённый узел отвечает как «ничего», поэтому перезагрузка сцены не оставляет висячих ссылок."
+register this as service [b]{service_name}[/b],зарегистрировать это как службу [b]{service_name}[/b]
+"A role, not a class - ""player"", ""audio_director"", ""wallet"". Registering the same name again replaces it.","Роль, а не класс - «player», «audio_director», «wallet». Повторная регистрация того же имени заменяет прежнюю."
+Service Named,Служба по имени
+"The node published under a name, or nothing at all when nobody registered it or it has been freed. Drop it wherever a node is asked for - it never crashes and never needs a path.","Узел, опубликованный под именем, или «ничего», когда его никто не зарегистрировал или он был освобождён. Подставляйте туда, где просят узел - это никогда не падает и никогда не требует пути."
+service named [b]{service_name}[/b],служба по имени [b]{service_name}[/b]
+The name the node registered itself under.,"Имя, под которым узел себя зарегистрировал."
+Has Service,Служба есть
+True when a node is registered under this name and is still alive. Guard an optional system with it - a missing audio director then costs you a skipped row instead of a crash.,"Истина, когда узел зарегистрирован под этим именем и всё ещё жив. Прикрывайте этим необязательную систему - отсутствующий звуковой режиссёр тогда стоит вам пропущенной строки, а не падения."
+service [b]{service_name}[/b] exists,служба [b]{service_name}[/b] существует
+The service name to test for.,"Имя службы, которое проверяем."
+For Each Node That Can,"Для каждого узла, который умеет"
+"Runs this event's actions once per node ANYWHERE in the tree that answers to a method name - the save sweep, the pause sweep, the shutdown sweep, with no list to keep in step. It walks the whole tree, so run it on an event, not every frame. Read the current one as `node`.","Выполняет действия этого события по разу на каждый узел ГДЕ УГОДНО в дереве, который отзывается на имя метода - обход сохранения, обход паузы, обход завершения, и никакого списка, который нужно держать в актуальном виде. Он обходит всё дерево, поэтому запускайте его по событию, а не каждый кадр. Текущий читается как `node`."
+Nodes: Picking,Узлы: выбор
+for each node that can [b]{method_name}[/b],"для каждого узла, который умеет [b]{method_name}[/b]"
+Answers To,Отзывается на
+"The method name a node must have to be picked up, e.g. save_state or on_game_paused.","Имя метода, который должен быть у узла, чтобы его подхватили, напр. save_state или on_game_paused."
+Do After This Frame,Сделать после этого кадра
+"Runs one action once the frame's physics and signal storm has finished, which is the only safe moment to add, free or reparent nodes. The number one crash a beginner hits is doing that from inside a collision callback; this is the fix, and the rows below it still run immediately.","Выполняет одно действие после того, как физика и шквал сигналов этого кадра закончились; это единственный безопасный момент, чтобы добавлять, освобождать или переподвешивать узлы. Падение номер один, на которое натыкается новичок, - делать это прямо из обработчика столкновения; вот лекарство, а строки под ним всё равно выполняются сразу."
+after this frame: [b]{do}[/b],после этого кадра: [b]{do}[/b]
+Do,Сделать
+"The action to run once this frame's work is finished - the only safe moment to add, free or reparent a node.","Действие, которое выполнить, когда работа этого кадра закончена - единственный безопасный момент, чтобы добавить, освободить или переподвесить узел."
+Call Later,Вызвать позже
+"Runs one action after a delay, with no Timer node and WITHOUT suspending - the rows below it keep running. The connection is one-shot, so a delayed beat can neither leak nor fire twice. The readable form of the small follow-up: eject the shell, close the door, play the second thud.","Выполняет одно действие после задержки, без узла Timer и БЕЗ приостановки - строки под ним продолжают выполняться. Подключение одноразовое, поэтому отложенный такт не может ни утечь, ни сработать дважды. Читаемая форма маленького довеска: выбросить гильзу, закрыть дверь, сыграть второй глухой удар."
+call later ([b]{seconds}[/b]s): [b]{do}[/b],вызвать позже ([b]{seconds}[/b] с): [b]{do}[/b]
+Seconds to wait before the action runs.,"Секунд ожидания перед тем, как выполнится действие."
+The action to run when the delay is up.,"Действие, которое выполнить, когда задержка вышла."
+Set Property (after this frame),Задать свойство (после этого кадра)
+"Sets a property at the end of the frame instead of right now. The one Godot insists on for collision shapes and monitoring: flipping those mid-physics is the error every beginner meets, and deferring is the documented answer.","Задаёт свойство в конце кадра, а не прямо сейчас. То самое, на чём настаивает Godot для форм столкновений и мониторинга: переключение их посреди физики - ошибка, с которой встречается каждый новичок, а отложенный вызов и есть задокументированный ответ."
+set [b]{property}[/b] of [i]{target}[/i] to [b]{value}[/b] after this frame,задать [b]{property}[/b] у [i]{target}[/i] в [b]{value}[/b] после этого кадра
+On,У
+Node whose property to set.,"Узел, свойство которого задаём."
+Property,Свойство
+Name of the property to set.,"Имя свойства, которое задаём."
+The value to set it to.,"Значение, в которое его задать."
+Only Once This Frame,Только раз за кадр
+"True the FIRST time it is reached in a frame under this name, and false for every other time that frame - counting a physics tick as its own frame, so a row under On Physics Process is not folded in with the drawn frame around it. Fifty inventory changes then rebuild the panel once instead of fifty times. Give two rows the same name and they share one run per frame.","Истина в ПЕРВЫЙ раз, когда до строки дошли в кадре под этим именем, и ложь во все остальные разы за тот кадр - причём физический тик считается собственным кадром, поэтому строка под При обработке физики не сливается с отрисованным кадром вокруг неё. Пятьдесят изменений инвентаря тогда пересобирают панель один раз, а не пятьдесят. Дайте двум строкам одно имя, и они разделят один прогон за кадр."
+only once this frame ( [b]{key_id}[/b] ),только раз за кадр ( [b]{key_id}[/b] )
+The gate's name. Every row using the same name folds into one run per frame.,Имя заслонки. Все строки с одним именем сливаются в один прогон за кадр.
+Spawn Scene As,Породить сцену как
+"Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Spawned. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.","Порождает сцену под именем, задаёт ей набор значений до того, как она войдёт в дерево, и запоминает её под этим именем, чтобы любая последующая строка могла сказать Порождённый. Если лист объявляет сигнал scene_spawned(spawn_name, node), это отправляет его с обоими значениями, так что другое событие может отреагировать на новый узел, ни разу не спрашивая, что породили последним."
+Scene,Сцена
+Spawn [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i],Породить [b]{path}[/b] как [b]{spawn_name}[/b] со значениями [i]{values}[/i]
+Scene file to instance.,"Файл сцены, который создать."
+As,Как
+"A name for this spawn, so later rows can say The Spawned ""boss"".","Имя для этого порождения, чтобы последующие строки могли сказать Порождённый «boss»."
+With,Со значениями
+"Values to set as it arrives, as a record: {""max_health"": 200, ""tier"": 3}. Names the scene does not have are set anyway, so keep to its own fields.","Значения, которые задать при появлении, набором: {""max_health"": 200, ""tier"": 3}. Имена, которых у сцены нет, всё равно задаются, поэтому держитесь её собственных полей."
+The node to add it under. Leave as nothing to add it under this one.,"Узел, под который её добавить. Оставьте пустым, чтобы добавить под этот."
+Spawn position.,Позиция появления.
+The Spawned,Порождённый
+"The node a Spawn Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.","Узел, который строка Породить сцену как создала под этим именем, или «ничего», когда его никогда не порождали или он с тех пор освобождён - так что строка, тянущаяся к мёртвому боссу, получает «ничего» вместо падения."
+the spawned [b]{spawn_name}[/b],порождённый [b]{spawn_name}[/b]
+The name a Spawn Scene As row used.,"Имя, которое использовала строка Породить сцену как."
+Spawn Is Alive,Порождённый жив
+"True while the node spawned under this name still exists - the guard to put in front of any row that talks to a named spawn, and the honest way to ask 'is the boss still up?'.","Истина, пока узел, порождённый под этим именем, всё ещё существует - страховка, которую ставят перед любой строкой, говорящей с именованным порождением, и честный способ спросить «босс ещё жив?»."
+the spawned [b]{spawn_name}[/b] is alive,порождённый [b]{spawn_name}[/b] жив
+On Scene Spawned,При порождении сцены
+"Runs when a Spawn Scene As row spawns something. The name and the new node arrive on the row as spawn_name and node, so a reaction can configure or announce the node without asking what was spawned last - correct even when one loop spawns six things in a frame. Needs a Signal row for scene_spawned(spawn_name: String, node: Node) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Выполняется, когда строка Породить сцену как что-то породила. Имя и новый узел приходят в строку как spawn_name и node, поэтому реакция может настроить или объявить узел, не спрашивая, что породили последним - и это верно, даже когда один цикл порождает шесть штук за кадр. Нужна строка Сигнал для scene_spawned(spawn_name: String, node: Node) - без неё лист всё равно компилируется, но событие ни к чему не подключено, поэтому никогда не выполняется. Doctor проекта на это указывает."
+On scene spawned {spawn_name} ( {node} ),При порождении сцены {spawn_name} ( {node} )
+The name the Spawn Scene As row gave this spawn.,"Имя, которое строка Породить сцену как дала этому порождению."
+Node,Узел
+"The node that was just spawned, carried by the signal itself.","Узел, который только что породили; приходит вместе с самим сигналом."
+On Failure Of,При отказе
+"Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Выполняется, когда глагол сообщает, что он отказался. Имя глагола и причина приходят в строку как verb_id и reason, поэтому восстановление живёт в собственном событии - добавьте под ним условие, чтобы обрабатывать только один глагол. Нужна строка Объявить сигнал для verb_failed(verb_id: String, reason: String) - без неё лист всё равно компилируется, но событие ни к чему не подключено, поэтому никогда не выполняется. Doctor проекта на это указывает."
+On failure of {verb_id} ( {reason} ),При отказе {verb_id} ( {reason} )
+Verb,Глагол
+Which verb refused - the name the Report Failure row used.,"Какой глагол отказался - имя, которое использовала строка Сообщить об отказе."
+Reason,Причина
+"Why it refused, carried by the signal itself.",Почему он отказался; приходит вместе с самим сигналом.
+On Success Of,При успехе
+"Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Выполняется, когда глагол сообщает, что он завершился. Имя глагола приходит в строку как verb_id. Нужна строка Объявить сигнал для verb_succeeded(verb_id: String) - без неё лист всё равно компилируется, но событие ни к чему не подключено, поэтому никогда не выполняется. Doctor проекта на это указывает."
+On success of {verb_id},При успехе {verb_id}
+Which verb finished - the name the Report Success row used.,"Какой глагол завершился - имя, которое использовала строка Сообщить об успехе."
+Report Failure,Сообщить об отказе
+"Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.","Объявляет, что глагол отказался, поэтому выполняется каждое событие При отказе для этого глагола. Используйте внутри глагола, который публикуете сами, или после проверки, нашедшей null-ресурс либо пустой результат."
+Report failure of [b]{verb}[/b]: [b]{reason}[/b],Сообщить об отказе [b]{verb}[/b]: [b]{reason}[/b]
+Name of the verb that refused - the same name the On Failure Of row picks.,"Имя глагола, который отказался - то же имя, которое подхватывает строка При отказе."
+Plain words a player or a log line can read.,"Простые слова, которые может прочитать игрок или строка лога."
+Report Success,Сообщить об успехе
+"Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.","Объявляет, что глагол завершился, поэтому выполняется каждое событие При успехе для этого глагола. Подтверждающий близнец Сообщить об отказе."
+Report success of [b]{verb}[/b],Сообщить об успехе [b]{verb}[/b]
+Name of the verb that finished - the same name the On Success Of row picks.,"Имя глагола, который завершился - то же имя, которое подхватывает строка При успехе."
+At Most Every,Не чаще чем раз в
+"Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.","Позволяет этому событию выполняться не чаще одного раза в столько-то секунд, как бы часто до него ни доходили. Ограничитель частоты для строки поиска, дорогого показателя или сорока звуков попадания, пришедшихся на один кадр."
+at most every [b]{seconds}[/b]s,не чаще чем раз в [b]{seconds}[/b] с
+Shortest gap between two runs of this event.,Наименьший промежуток между двумя выполнениями этого события.
+Poke,Толкнуть
+"Marks that something just happened, by name. Poke on every keystroke or every change, then let Has Been Quiet For notice when it stops.","Отмечает, что только что что-то произошло, по имени. Толкайте на каждое нажатие клавиши или каждое изменение, а дальше пусть Тишина в течение заметит, когда это прекратится."
+poke [b]{poke_name}[/b],толкнуть [b]{poke_name}[/b]
+Poke name - any label you also use in Has Been Quiet For.,"Имя толчка - любая метка, которую вы используете и в Тишина в течение."
+Clear Poke,Очистить толчок
+"Forgets a poke so Has Been Quiet For stops firing. Clear it right after acting on the quiet, the same way you consume a buffered press.","Забывает толчок, чтобы Тишина в течение перестала срабатывать. Очищайте сразу после того, как отреагировали на тишину, так же как расходуют буферизованное нажатие."
+clear poke [b]{poke_name}[/b],очистить толчок [b]{poke_name}[/b]
+"Poke name, matching a Poke action.","Имя толчка, совпадающее с действием Толкнуть."
+Has Been Quiet For,Тишина в течение
+"True once a poked name has stopped being poked for this long - the settle-down check. Autosave after the player stops editing, search after they stop typing. Needs a per-frame trigger, and stays true until you Clear Poke.","Истина, как только толкаемое имя перестали толкать на столько времени - проверка «всё улеглось». Автосохранение после того, как игрок перестал править, поиск после того, как он перестал печатать. Нужен покадровый триггер; остаётся истиной, пока вы не сделаете Очистить толчок."
+[b]{poke_name}[/b] has been quiet for [b]{seconds}[/b]s,[b]{poke_name}[/b] тихо уже [b]{seconds}[/b] с
+How long the quiet has to last.,Сколько должна длиться тишина.
+Only Once Per Node,Только раз на узел
+"True the first time this row is reached for each node, and never again for that node. The initialiser you want when the row sits inside a For Each over spawned things; the memory lives on the node, so Forget Once For clears it.","Истина в первый раз, когда до этой строки дошли для каждого узла, и больше никогда для этого узла. То самое начальное действие, которое нужно, когда строка стоит внутри Для каждого по порождённым объектам; память живёт на узле, поэтому её очищает Забыть «только раз» для."
+only once per node ( [b]{node}[/b] / [b]{label}[/b] ),только раз на узел ( [b]{node}[/b] / [b]{label}[/b] )
+"The node the memory belongs to - inside a For Each, the loop item.","Узел, которому принадлежит память - внутри Для каждого это элемент цикла."
+Memory,Память
+Name the memory so one node can hold several.,"Назовите память, чтобы один узел мог держать несколько."
+Only Once Per Name,Только раз на имя
+"True the first time this row is reached for each name, and never again for that name. One discovery line per item type, one loot roll per chest id - with no flag variable each. Kept on this node, so Forget Once For clears it.","Истина в первый раз, когда до этой строки дошли для каждого имени, и больше никогда для этого имени. Одна строка открытия на тип предмета, один бросок лута на id сундука - и без отдельной переменной-флага на каждый. Хранится на этом узле, поэтому её очищает Забыть «только раз» для."
+only once per name ( [b]{key}[/b] ),только раз на имя ( [b]{key}[/b] )
+The memory's name - one true per name on this node.,Имя памяти - одна истина на имя на этом узле.
+Only Once This Scene Load,Только раз за загрузку сцены
+"True the first time this row is reached for each name in this scene load, and again after the scene is reloaded or changed. The welcome line, the per-level check - forgotten on Restart Scene rather than remembered forever.","Истина в первый раз, когда до этой строки дошли для каждого имени в этой загрузке сцены, и снова после того, как сцену перезагрузили или сменили. Приветственная строка, проверка на уровень - забывается при Перезапустить сцену, а не помнится вечно."
+only once this scene load ( [b]{key}[/b] ),только раз за загрузку сцены ( [b]{key}[/b] )
+The memory's name - one true per name until the scene reloads.,"Имя памяти - одна истина на имя, пока сцена не перезагрузится."
+Forget Once For,Забыть «только раз» для
+Clears an Only Once Per Node / Per Name memory so the row fires again for that node. Drop it in an Object Pool's reset seam and a recycled instance initialises like a fresh one.,"Очищает память Только раз на узел / на имя, чтобы строка снова сработала для этого узла. Положите это в шов сброса Пула объектов, и переиспользованный экземпляр инициализируется как свежий."
+forget once ( [b]{label}[/b] ) for [b]{node}[/b],забыть «только раз» ( [b]{label}[/b] ) для [b]{node}[/b]
+The node holding the memory.,"Узел, который держит память."
+The Only Once Per Node / Per Name memory to clear.,"Память Только раз на узел / на имя, которую очистить."

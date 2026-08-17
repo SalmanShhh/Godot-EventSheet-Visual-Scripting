@@ -1146,3 +1146,568 @@ Variable or property,Variable ou propriété
 "What to change one part of: a node's own member (velocity, modulate, position) picked from the list, or the name of a sheet variable holding a Vector, Color or record.","Ce dont on change une partie : un membre propre au nœud (velocity, modulate, position) choisi dans la liste, ou le nom d'une variable de feuille contenant un vecteur, une couleur ou un enregistrement."
 Which named part to write.,Quelle partie nommée est écrite.
 The new value for that one part.,La nouvelle valeur pour cette seule partie.
+Watch Data File,Surveiller le fichier de données
+"Checks whether a data file has been written since the last check, and fires the sheet's data_file_changed(path) signal when it has - so you edit an enemy's numbers in the Inspector and the running game picks them up. Put it under Every X Seconds; the first check only takes a reading, so nothing fires just because the row started. This is a debug-build tool: it reads the file's timestamp each time it runs.","Vérifie si un fichier de données a été écrit depuis la dernière vérification, et émet le signal data_file_changed(path) de la feuille quand c'est le cas - vous modifiez ainsi les valeurs d'un ennemi dans l'inspecteur et le jeu en cours les récupère. À placer sous Toutes les X secondes ; la première vérification ne fait que prendre une mesure, donc rien ne se déclenche simplement parce que la ligne a démarré. C'est un outil pour les builds de débogage : il lit l'horodatage du fichier à chaque exécution."
+watch [b]{path}[/b] for edits,surveiller les modifications de [b]{path}[/b]
+"The data file to watch (a .tres, .json or .csv).","Le fichier de données à surveiller (un .tres, .json ou .csv)."
+Reload Data Asset,Recharger la ressource de données
+"Re-reads a data asset from disk into the copy every node is already holding, so the new numbers apply without restarting or re-assigning anything. It reloads DATA, not code: a changed script still needs a restart. Nothing happens when the path is not there.","Relit une ressource de données depuis le disque dans la copie que chaque nœud détient déjà, si bien que les nouvelles valeurs s'appliquent sans redémarrer ni réassigner quoi que ce soit. Elle recharge les DONNÉES, pas le code : un script modifié demande toujours un redémarrage. Rien ne se produit quand le chemin n'existe pas."
+reload data asset [b]{path}[/b],recharger la ressource de données [b]{path}[/b]
+The data asset to re-read from disk.,La ressource de données à relire depuis le disque.
+On Data File Changed,Quand un fichier de données change
+"Runs when a Watch Data File row notices that a watched file has been written. The path arrives on the row as path, so the reaction reloads exactly the file that changed even when two land in the same check. Needs a Signal row for data_file_changed(path: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","S'exécute quand une ligne Surveiller le fichier de données constate qu'un fichier surveillé a été écrit. Le chemin arrive sur la ligne sous le nom path, si bien que la réaction recharge exactement le fichier qui a changé, même quand deux tombent dans la même vérification. Nécessite une ligne Signal pour data_file_changed(path: String) - sans elle la feuille compile toujours, mais rien ne connecte cet événement, donc il ne s'exécute jamais. Le Docteur du projet le signale."
+On data file changed ( {path} ),Quand le fichier de données change ( {path} )
+"The file that was written, carried by the signal itself.","Le fichier qui a été écrit, porté par le signal lui-même."
+Data Folder Problems,Problèmes du dossier de données
+"Every structural problem in a folder of data assets, one per line, and """" when it is clean: a file that cannot be loaded, one with no usable id, and two files claiming the same id (where the second quietly wins every lookup). Show it, log it, or fail a build with it.","Tous les problèmes structurels d'un dossier de ressources de données, un par ligne, et """" quand il est sain : un fichier qui ne peut pas être chargé, un fichier sans id utilisable, et deux fichiers qui réclament le même id (où le second l'emporte silencieusement à chaque recherche). Affichez-les, journalisez-les, ou faites échouer une build avec."
+problems in [b]{folder}[/b],problèmes dans [b]{folder}[/b]
+Folder of data assets to check (not recursive).,Dossier de ressources de données à vérifier (non récursif).
+Data Folder Is Valid,Le dossier de données est valide
+"True when every data asset in a folder loads, has an id, and has an id no sibling shares - the check to put in front of loading a mod folder or user content. Read the reasons with Data Folder Problems.","Vrai quand chaque ressource de données d'un dossier se charge, possède un id, et possède un id qu'aucune voisine ne partage - la vérification à placer avant de charger un dossier de mods ou du contenu utilisateur. Lisez les raisons avec Problèmes du dossier de données."
+[b]{folder}[/b] is valid data,[b]{folder}[/b] est un dossier de données valide
+Validate Data Folder,Valider le dossier de données
+"Checks a folder of data assets and writes every problem it finds to the Output as one warning, saying which file and what is wrong. A clean folder says nothing at all, so it is safe to leave in a startup event.","Vérifie un dossier de ressources de données et écrit chaque problème trouvé dans la Sortie sous forme d'un avertissement, en indiquant quel fichier et ce qui ne va pas. Un dossier sain ne dit rien du tout, on peut donc le laisser sans risque dans un événement de démarrage."
+validate data folder [b]{folder}[/b],valider le dossier de données [b]{folder}[/b]
+World Point To Screen,Point du monde vers l'écran
+"Where a world point sits on screen right now, camera zoom and scroll included - pin a nameplate, a health bar or a damage number to something that moves. Put the answer on a node that lives on a CanvasLayer and it will track its target without lagging behind the camera.","Où un point du monde se trouve à l'écran en ce moment, zoom et défilement de la caméra compris - épinglez une plaque de nom, une barre de vie ou un nombre de dégâts sur quelque chose qui bouge. Placez la réponse sur un nœud qui vit dans un CanvasLayer et il suivra sa cible sans retard sur la caméra."
+Math & Random,Maths et aléatoire
+screen position of [b]{world_point}[/b],position à l'écran de [b]{world_point}[/b]
+World Point,Point du monde
+A position in the game world.,Une position dans le monde du jeu.
+Screen Point To World,Point de l'écran vers le monde
+"The world position under a screen pixel - click-to-place, a gamepad cursor, a HUD marker dragged onto the map. The exact opposite of World Point To Screen, so the two round-trip.","La position dans le monde sous un pixel de l'écran - cliquer pour placer, un curseur de manette, un marqueur d'ATH glissé sur la carte. L'exact inverse de Point du monde vers l'écran, les deux font donc l'aller-retour."
+world position of screen point [b]{screen_point}[/b],position dans le monde du point d'écran [b]{screen_point}[/b]
+Screen Point,Point de l'écran
+"A position in screen pixels, with 0,0 at the top-left of the view.","Une position en pixels d'écran, avec 0,0 en haut à gauche de la vue."
+Project To Screen (3D),Projeter à l'écran (3D)
+"Where a 3D world point lands on screen - nameplates over 3D characters, damage numbers, objective pins drawn on a CanvasLayer. Reads as 0,0 while there is no active 3D camera, so it never faults during a scene change. Check Is Behind Camera (3D) first: a point behind you still projects to a number.","Où un point du monde 3D atterrit à l'écran - plaques de nom au-dessus des personnages 3D, nombres de dégâts, repères d'objectif dessinés sur un CanvasLayer. Se lit 0,0 tant qu'il n'y a pas de caméra 3D active, si bien qu'il ne faute jamais pendant un changement de scène. Vérifiez d'abord Est derrière la caméra (3D) : un point derrière vous se projette quand même sur un nombre."
+screen position of 3D point [b]{world_point}[/b],position à l'écran du point 3D [b]{world_point}[/b]
+A position in the 3D world.,Une position dans le monde 3D.
+Is Point On Screen,Le point est à l'écran
+"True while a world point is inside the visible view - the honest gate for spawning, culling, showing an off-screen arrow, or holding a tutorial callout until its subject is actually visible.","Vrai tant qu'un point du monde est dans la vue visible - la vraie condition pour faire apparaître, pour éliminer, pour afficher une flèche hors écran, ou pour retenir une bulle de tutoriel jusqu'à ce que son sujet soit réellement visible."
+[b]{world_point}[/b] is on screen (margin [b]{margin}[/b]),[b]{world_point}[/b] est à l'écran (marge [b]{margin}[/b])
+The world position being tested.,La position du monde qui est testée.
+Margin,Marge
+Pixels of slack outside the view that still count as on screen. Negative pulls the test inward.,Pixels de jeu hors de la vue qui comptent encore comme à l'écran. Une valeur négative resserre le test vers l'intérieur.
+Is Behind Camera (3D),Est derrière la caméra (3D)
+"True when a 3D point sits behind the camera plane, where its projected screen position is a mirrored lie. The guard every 3D waypoint marker needs before it draws. With no camera in the scene it reads true, so nothing is drawn into a view that does not exist.","Vrai quand un point 3D se trouve derrière le plan de la caméra, là où sa position projetée à l'écran est un mensonge en miroir. La garde dont a besoin tout marqueur de point de passage 3D avant de se dessiner. Sans caméra dans la scène, il se lit vrai, si bien que rien n'est dessiné dans une vue qui n'existe pas."
+[b]{world_point}[/b] is behind the camera,[b]{world_point}[/b] est derrière la caméra
+The 3D position being tested.,La position 3D qui est testée.
+Screen Edge Position For,Position sur le bord de l'écran pour
+"A screen position that follows a target while it is visible and sticks to the edge of the view once it is not - the off-screen objective arrow, the radar blip, the ""your teammate is over there"" chevron. Pair it with Marker Angle Toward for the rotation.","Une position à l'écran qui suit une cible tant qu'elle est visible et qui colle au bord de la vue dès qu'elle ne l'est plus - la flèche d'objectif hors écran, le point radar, le chevron « votre coéquipier est par là ». À associer à Angle du marqueur vers pour la rotation."
+screen edge position for [b]{world_point}[/b] (margin [b]{margin}[/b]),position sur le bord de l'écran pour [b]{world_point}[/b] (marge [b]{margin}[/b])
+The thing being pointed at.,La chose qui est désignée.
+How far in from the edge the marker is parked.,À quelle distance du bord le marqueur est garé.
+Marker Angle Toward,Angle du marqueur vers
+"The rotation in degrees an on-screen arrow needs so it points from the middle of the view at a world thing - the other half of the off-screen marker, and it stays right while the camera zooms or rotates.","La rotation en degrés dont une flèche à l'écran a besoin pour pointer depuis le milieu de la vue vers une chose du monde - l'autre moitié du marqueur hors écran, et elle reste juste pendant que la caméra zoome ou tourne."
+marker angle toward [b]{world_point}[/b],angle du marqueur vers [b]{world_point}[/b]
+Visible World Rect,Rectangle visible du monde
+"The rectangle of the world the camera can currently see, in world coordinates - spawn just outside it, cull outside it, clamp a node inside it, or size a minimap to it. Follows the camera's zoom and position with nothing to keep in sync.","Le rectangle du monde que la caméra peut voir actuellement, en coordonnées du monde - faites apparaître juste à l'extérieur, éliminez à l'extérieur, contenez un nœud à l'intérieur, ou dimensionnez une minicarte dessus. Suit le zoom et la position de la caméra sans rien à garder synchronisé."
+visible world rect,rectangle visible du monde
+Wrap Inside The View (3D),Reboucler dans la vue (3D)
+"The Asteroids rule in 3D: leave the right of the view and come back on the left, off the top and back at the bottom, at the same distance from the camera. The missing twin of the 2D Wrap Inside The Screen, for a wrap-around arena or an endless shoal. Does nothing while there is no 3D camera.","La règle d'Asteroids en 3D : sortez par la droite de la vue et revenez par la gauche, sortez par le haut et revenez par le bas, à la même distance de la caméra. Le jumeau manquant de Reboucler dans l'écran en 2D, pour une arène qui reboucle ou un banc de poissons sans fin. Ne fait rien tant qu'il n'y a pas de caméra 3D."
+Movement,Déplacement
+wrap inside the view,reboucler dans la vue
+Random Point In Circle,Point aléatoire dans un cercle
+"An evenly spread random point inside a circle - the sqrt weighting is done for you, so scatter does not bunch up in the middle the way the obvious version does.","Un point aléatoire réparti uniformément dans un cercle - la pondération en racine carrée est faite pour vous, si bien que la dispersion ne s'entasse pas au milieu comme le fait la version évidente."
+random point within [b]{radius}[/b] of [b]{center}[/b],point aléatoire à moins de [b]{radius}[/b] de [b]{center}[/b]
+Center,Centre
+Middle of the circle.,Le milieu du cercle.
+Radius,Rayon
+In pixels.,En pixels.
+Random Point On Circle,Point aléatoire sur un cercle
+"A random point exactly ON the rim of a circle, never inside it - a spawn ring around the player, orbiting decor, a radial menu slot, the starting point of a homing shot.","Un point aléatoire exactement SUR le bord d'un cercle, jamais à l'intérieur - un anneau d'apparition autour du joueur, un décor en orbite, un emplacement de menu radial, le point de départ d'un tir à tête chercheuse."
+random point on a circle of [b]{radius}[/b] around [b]{center}[/b],point aléatoire sur un cercle de [b]{radius}[/b] autour de [b]{center}[/b]
+Random Point In Ring,Point aléatoire dans un anneau
+"A random point in the doughnut between two radii - the off-screen spawner that never drops an enemy in the player's lap, and never so far away it never arrives. Evenly spread across the whole band, not crowded against the inner edge.","Un point aléatoire dans le beignet entre deux rayons - le générateur hors écran qui ne lâche jamais un ennemi sur les genoux du joueur, et jamais si loin qu'il n'arrive jamais. Réparti uniformément sur toute la bande, pas entassé contre le bord intérieur."
+random point between [b]{inner_radius}[/b] and [b]{outer_radius}[/b] of [b]{center}[/b],point aléatoire entre [b]{inner_radius}[/b] et [b]{outer_radius}[/b] de [b]{center}[/b]
+Middle of the ring.,Le milieu de l'anneau.
+Inner Radius,Rayon intérieur
+Nothing spawns closer than this.,Rien n'apparaît plus près que ça.
+Outer Radius,Rayon extérieur
+Nothing spawns further than this.,Rien n'apparaît plus loin que ça.
+Random Point In Rectangle,Point aléatoire dans un rectangle
+"A random point inside an axis-aligned rectangle - loot scatter across a room, prop placement, confetti over a banner, a patrol target inside a zone. Feed it Visible World Rect's position and size to scatter across whatever the camera can see.","Un point aléatoire dans un rectangle aligné sur les axes - du butin éparpillé dans une pièce, du placement d'accessoires, des confettis au-dessus d'une bannière, une cible de patrouille dans une zone. Donnez-lui la position et la taille de Rectangle visible du monde pour disperser sur tout ce que la caméra peut voir."
+random point in the rect at [b]{top_left}[/b] sized [b]{size}[/b],point aléatoire dans le rectangle en [b]{top_left}[/b] de taille [b]{size}[/b]
+Top Left,Haut gauche
+Corner the rectangle starts at.,Le coin où commence le rectangle.
+Size,Taille
+Width and height in pixels.,Largeur et hauteur en pixels.
+Random Point In Cone,Point aléatoire dans un cône
+"A random point inside a wedge - shotgun spread, cone attacks, directional scatter, a spray of sparks away from a wall. Facing and spread are in degrees, so the row reads the way you think about it.","Un point aléatoire dans un secteur - dispersion de fusil à pompe, attaques en cône, dispersion directionnelle, une gerbe d'étincelles s'éloignant d'un mur. L'orientation et l'ouverture sont en degrés, si bien que la ligne se lit comme vous y pensez."
+random point in a [b]{spread_degrees}[/b] cone facing [b]{facing_degrees}[/b] from [b]{center}[/b],point aléatoire dans un cône de [b]{spread_degrees}[/b] orienté à [b]{facing_degrees}[/b] depuis [b]{center}[/b]
+Tip,Pointe
+Where the wedge starts.,Là où commence le secteur.
+Facing,Orientation
+"Direction the wedge points, in degrees.","La direction vers laquelle pointe le secteur, en degrés."
+Spread,Ouverture
+"Total width of the cone in degrees, half either side of facing.","Largeur totale du cône en degrés, la moitié de chaque côté de l'orientation."
+Reach,Portée
+How far the wedge extends.,Jusqu'où s'étend le secteur.
+Random Point Around,Point aléatoire autour de
+"Random scatter around a node that is already in the scene - blood splats around a hit, footprints around a stomp, sparkles around a pickup, a wander target around home. Pick the node instead of typing its position, and the scatter follows it as it moves.","Dispersion aléatoire autour d'un nœud déjà présent dans la scène - des éclaboussures de sang autour d'un impact, des empreintes autour d'un piétinement, des étincelles autour d'un objet ramassé, une cible d'errance autour du domicile. Sélectionnez le nœud au lieu de taper sa position, et la dispersion le suit quand il bouge."
+random point [b]{min_radius}[/b] to [b]{max_radius}[/b] around [i]{node}[/i],point aléatoire de [b]{min_radius}[/b] à [b]{max_radius}[/b] autour de [i]{node}[/i]
+Around,Autour de
+Node the point is scattered around.,Le nœud autour duquel le point est dispersé.
+Nearest,Le plus près
+Nothing lands closer than this.,Rien ne tombe plus près que ça.
+Furthest,Le plus loin
+Nothing lands further than this.,Rien ne tombe plus loin que ça.
+Random Direction (2D),Direction aléatoire (2D)
+"A random unit direction in 2D - multiply it by a speed for a random shove, by a distance for a random offset. Always exactly one unit long, so the strength stays where you set it.","Une direction unitaire aléatoire en 2D - multipliez-la par une vitesse pour une poussée aléatoire, par une distance pour un décalage aléatoire. Toujours exactement d'une unité de long, si bien que la force reste là où vous l'avez réglée."
+random direction,direction aléatoire
+Random Direction (3D),Direction aléatoire (3D)
+"A random unit direction in 3D, evenly spread over the whole sphere. The naive three-random-numbers version crowds the corners of a cube; this one does not, so debris and shrapnel fly out honestly.","Une direction unitaire aléatoire en 3D, répartie uniformément sur toute la sphère. La version naïve à trois nombres aléatoires entasse les coins d'un cube ; celle-ci non, si bien que les débris et les éclats volent honnêtement."
+random direction (3D),direction aléatoire (3D)
+Random Point In Sphere,Point aléatoire dans une sphère
+"An evenly spread random point inside a 3D sphere - spawn clouds, debris fields, flocking targets. The cube-root weighting keeps the middle from filling up first.","Un point aléatoire réparti uniformément dans une sphère 3D - nuages d'apparition, champs de débris, cibles de nuée. La pondération en racine cubique empêche le milieu de se remplir en premier."
+random point within [b]{radius}[/b] of [b]{center}[/b] (3D),point aléatoire à moins de [b]{radius}[/b] de [b]{center}[/b] (3D)
+Middle of the sphere.,Le milieu de la sphère.
+In metres.,En mètres.
+Random Point In Box,Point aléatoire dans une boîte
+"A random point inside an axis-aligned 3D box - scatter trees over a chunk, spawn enemies in a room volume, place ambient audio emitters. Size is the FULL box, measured around the centre.","Un point aléatoire dans une boîte 3D alignée sur les axes - éparpiller des arbres sur une portion, faire apparaître des ennemis dans le volume d'une pièce, placer des émetteurs audio d'ambiance. La taille est la boîte ENTIÈRE, mesurée autour du centre."
+random point in a [b]{size}[/b] box at [b]{center}[/b],point aléatoire dans une boîte de [b]{size}[/b] en [b]{center}[/b]
+Middle of the box.,Le milieu de la boîte.
+"Full width, height and depth.","Largeur, hauteur et profondeur entières."
+Random Point On Screen Edge,Point aléatoire sur le bord de l'écran
+"A random WORLD position on the border of what the camera can see - the wave spawner that comes in from a random side, ambient wildlife entering the frame, a meteor starting its run. Grow it with Visible World Rect if you want them to appear from just outside.","Une position aléatoire dans le MONDE sur la bordure de ce que la caméra peut voir - le générateur de vagues qui arrive par un côté au hasard, la faune d'ambiance qui entre dans le cadre, une météorite qui commence sa course. Agrandissez-la avec Rectangle visible du monde si vous voulez qu'ils apparaissent juste à l'extérieur."
+random point on the screen edge,point aléatoire sur le bord de l'écran
+Jitter,Perturbation aléatoire
+"Nudges a value by a random amount up to the size you give - pitch variation on a sound, a pixel or two of scatter on a decal, a shade of variation on a tint. Works on numbers, vectors and colors as long as the amount is the same kind of value.","Décale une valeur d'une quantité aléatoire allant jusqu'à la taille que vous donnez - variation de hauteur sur un son, un pixel ou deux de dispersion sur un décalque, une nuance de variation sur une teinte. Fonctionne sur les nombres, les vecteurs et les couleurs tant que la quantité est du même type de valeur."
+[b]{value}[/b] jittered by [b]{amount}[/b],[b]{value}[/b] perturbé de [b]{amount}[/b]
+"The number, vector or color being nudged.","Le nombre, le vecteur ou la couleur qui est décalé."
+By,De
+"The most it can move, as the SAME kind of value - a number for a number, a Vector2 for a position, a Color for a tint.","Le maximum dont elle peut bouger, dans le MÊME type de valeur - un nombre pour un nombre, un Vector2 pour une position, une Color pour une teinte."
+Bounce Off Surface,Rebondir sur une surface
+"The velocity a moving thing has AFTER hitting a surface - feed it the normal any hit trigger or raycast hands you. Ricochets, pinball, breakout, deflect shields.","La vélocité qu'a une chose en mouvement APRÈS avoir heurté une surface - donnez-lui la normale que vous remet n'importe quel déclencheur d'impact ou raycast. Ricochets, flipper, casse-briques, boucliers déflecteurs."
+[b]{velocity}[/b] bounced off [b]{normal}[/b],[b]{velocity}[/b] rebondie sur [b]{normal}[/b]
+Velocity,Vélocité
+How the thing was moving when it hit.,Comment la chose se déplaçait au moment de l'impact.
+Surface Normal,Normale de la surface
+The normal any hit trigger or raycast hands you.,La normale que vous remet n'importe quel déclencheur d'impact ou raycast.
+Bounciness,Rebond
+"1 keeps all the speed, 0.6 is a rubber ball, 0 is a dead stop.","1 conserve toute la vitesse, 0.6 est une balle en caoutchouc, 0 est un arrêt net."
+Slide Along Surface,Glisser le long d'une surface
+"The velocity left over once the part pushing INTO a surface is removed - a wall slide that keeps you moving along the wall instead of sticking to it, slope movement, a dash that grazes a corner rather than stopping dead.","La vélocité qui reste une fois retirée la part qui pousse DANS une surface - une glissade murale qui vous garde en mouvement le long du mur au lieu d'y coller, le déplacement en pente, une ruée qui frôle un coin plutôt que de s'arrêter net."
+[b]{velocity}[/b] slid along [b]{normal}[/b],[b]{velocity}[/b] glissée le long de [b]{normal}[/b]
+How the thing was moving when it met the surface.,Comment la chose se déplaçait quand elle a rencontré la surface.
+Angle Reflected,Angle réfléchi
+The heading in degrees a thing travels on after bouncing off a surface - the answer to feed straight back into Set Angle Of Motion when a bullet should ricochet instead of dying.,Le cap en degrés que suit une chose après avoir rebondi sur une surface - la réponse à renvoyer directement dans Définir l'angle de déplacement quand une balle doit ricocher au lieu de mourir.
+[b]{degrees}[/b] reflected off [b]{normal}[/b],[b]{degrees}[/b] réfléchi sur [b]{normal}[/b]
+Angle,Angle
+"The heading it was travelling on, in degrees.","Le cap qu'elle suivait, en degrés."
+The normal the hit reported.,La normale rapportée par l'impact.
+Push Out Of Surface,Écarter d'une surface
+"A position just clear of a surface instead of exactly on it - park a ricocheting bullet, a decal or a spawned effect here. Landing exactly on a surface is how a thing ends up stuck inside it on the next frame, because a ray that starts inside a shape does not report it.","Une position juste dégagée d'une surface au lieu d'exactement dessus - garez ici une balle qui ricoche, un décalque ou un effet créé. Atterrir exactement sur une surface, c'est ainsi qu'une chose finit coincée dedans à la frame suivante, parce qu'un rayon qui part de l'intérieur d'une forme ne la rapporte pas."
+[b]{point}[/b] pushed [b]{distance}[/b] out of [b]{normal}[/b],[b]{point}[/b] écarté de [b]{distance}[/b] de [b]{normal}[/b]
+Hit Point,Point d'impact
+Where the hit happened.,Où l'impact a eu lieu.
+Clearance,Dégagement
+Pixels of daylight to leave between the thing and the surface.,Pixels de jour à laisser entre la chose et la surface.
+Face Along Velocity,Orienter selon la vélocité
+"Turns this node to point the way it is travelling, and leaves it alone while it is standing still so a stopped thing never snaps back to facing right. Arrows, fish, cars, thrown knives, a camera that leads the motion.","Tourne ce nœud pour qu'il pointe dans la direction où il va, et le laisse tranquille tant qu'il est à l'arrêt, si bien qu'une chose arrêtée ne se remet jamais brusquement à regarder vers la droite. Flèches, poissons, voitures, couteaux lancés, une caméra qui devance le mouvement."
+face along [b]{velocity}[/b],orienter selon [b]{velocity}[/b]
+"How this node is moving - Get Velocity on a body, or the direction you are driving it with.","Comment ce nœud se déplace - Obtenir la vélocité sur un corps, ou la direction avec laquelle vous le pilotez."
+Look At (safe up),Regarder vers (haut sûr)
+"Turns a 3D node to face a point WITHOUT the crash the plain Look At has: when the target is directly overhead or underfoot, the usual up vector points the same way as the look direction and Godot cannot build a rotation from that. This one swaps the up vector at the last moment, and does nothing at all when the target is where the node already is.","Tourne un nœud 3D pour faire face à un point SANS le plantage du Look At ordinaire : quand la cible est juste au-dessus ou juste en dessous, le vecteur haut habituel pointe dans la même direction que la direction du regard et Godot ne peut pas construire de rotation à partir de ça. Celui-ci échange le vecteur haut au dernier moment, et ne fait rien du tout quand la cible est là où le nœud se trouve déjà."
+look at [b]{target}[/b] (safe up),regarder vers [b]{target}[/b] (haut sûr)
+Look At,Regarder vers
+The world position to face.,La position du monde vers laquelle se tourner.
+Look At (flat),Regarder vers (à plat)
+"Turns a 3D node to face a point but only around the up axis, so a character looks at the player without tipping over to stare at their feet. The rotation every humanoid, turret base and standing NPC actually wants.","Tourne un nœud 3D pour faire face à un point mais seulement autour de l'axe vertical, si bien qu'un personnage regarde le joueur sans basculer pour fixer ses pieds. La rotation que veulent vraiment tout humanoïde, toute base de tourelle et tout PNJ debout."
+look at [b]{target}[/b] (flat),regarder vers [b]{target}[/b] (à plat)
+Aim At Moving Target,Viser une cible en mouvement
+"Where to aim so a shot MEETS a moving target instead of trailing it - the interception point every turret and archer needs. When the target is faster than the shot no lead exists, and it falls back to the target's current spot rather than pointing somewhere absurd.","Où viser pour qu'un tir RENCONTRE une cible en mouvement au lieu de la suivre - le point d'interception dont ont besoin toute tourelle et tout archer. Quand la cible est plus rapide que le tir, aucune anticipation n'existe, et il retombe sur la position actuelle de la cible plutôt que de pointer vers quelque chose d'absurde."
+aim at [b]{target_position}[/b] moving [b]{target_velocity}[/b],viser [b]{target_position}[/b] se déplaçant à [b]{target_velocity}[/b]
+Shooting From,Tir depuis
+Where the shot starts.,Où commence le tir.
+Target At,Cible en
+Where the target is right now.,Où se trouve la cible en ce moment.
+Target Moving At,Cible se déplaçant à
+"How the target is moving, in pixels per second.","Comment la cible se déplace, en pixels par seconde."
+Shot Speed,Vitesse du tir
+"How fast your shot travels, in pixels per second.","À quelle vitesse votre tir se déplace, en pixels par seconde."
+Launch Angle For Arc,Angle de tir pour une trajectoire en cloche
+"The angle in degrees to fire something so it ARCS onto a target - grenades, mortars, catapults, a coin tossed into a counter. Picks the flatter of the two possible arcs, and reads as 45 degrees when the shot cannot reach at all, so a row never produces a number that is not a number.","L'angle en degrés auquel tirer quelque chose pour qu'il ARRIVE en cloche sur une cible - grenades, mortiers, catapultes, une pièce lancée dans un comptoir. Choisit la plus tendue des deux trajectoires possibles, et se lit 45 degrés quand le tir ne peut pas atteindre du tout, si bien qu'une ligne ne produit jamais un nombre qui n'en est pas un."
+"launch angle to reach [b]{distance}[/b] away, [b]{height}[/b] up","angle de tir pour atteindre [b]{distance}[/b] plus loin, [b]{height}[/b] plus haut"
+Distance,Distance
+"How far away the target is, along the ground.","À quelle distance se trouve la cible, au sol."
+Height Difference,Différence de hauteur
+How much higher the target is than the launcher; negative is downhill.,De combien la cible est plus haute que le lanceur ; une valeur négative descend.
+Launch Speed,Vitesse de lancement
+How fast the thing leaves the launcher.,À quelle vitesse la chose quitte le lanceur.
+Gravity,Gravité
+"Pull downward, in the same units as the speed.","L'attraction vers le bas, dans les mêmes unités que la vitesse."
+Time To Reach,Temps pour atteindre
+"How many seconds something moving at a steady speed needs to cover a distance - time a warning before the missile lands, size a tween to match a walk, decide whether the interceptor can get there first.","Combien de secondes il faut à quelque chose se déplaçant à vitesse constante pour parcourir une distance - minuter un avertissement avant l'impact du missile, dimensionner un tween pour coller à une marche, décider si l'intercepteur peut y arriver en premier."
+time for [b]{speed}[/b] to cross [b]{from_position}[/b] to [b]{to_position}[/b],temps pour que [b]{speed}[/b] aille de [b]{from_position}[/b] à [b]{to_position}[/b]
+Where it starts.,Où ça commence.
+Where it is going.,Où ça va.
+Speed,Vitesse
+Pixels per second.,Pixels par seconde.
+Cell Of Point,Cellule d'un point
+"Which grid cell a world position falls in - no TileMapLayer needed, so build grids, inventory slots and chunk keys all speak the same language. Negative positions land in negative cells, which is what a grid that extends left and up actually wants.","Dans quelle cellule de grille tombe une position du monde - aucun TileMapLayer nécessaire, si bien que les grilles, les emplacements d'inventaire et les clés de portion parlent tous la même langue. Les positions négatives tombent dans des cellules négatives, ce qui est bien ce que veut une grille qui s'étend vers la gauche et vers le haut."
+cell of [b]{point}[/b] on a [b]{cell_size}[/b] grid,cellule de [b]{point}[/b] sur une grille de [b]{cell_size}[/b]
+Point,Point
+A world position.,Une position du monde.
+Cell Size,Taille de cellule
+Pixels across one cell. Type Tiles(1) to read your project's own tile size instead.,Pixels de côté d'une cellule. Tapez Tiles(1) pour lire plutôt la taille de tuile de votre propre projet.
+Center Of Cell,Centre d'une cellule
+"The world position at the middle of a grid cell - where the placement ghost sits, where the tower is built, where the piece lands. The exact partner of Cell Of Point, so the pair round-trips.","La position du monde au milieu d'une cellule de grille - là où se pose le fantôme de placement, là où la tour est construite, là où la pièce atterrit. Le partenaire exact de Cellule d'un point, la paire fait donc l'aller-retour."
+center of cell [b]{cell}[/b] on a [b]{cell_size}[/b] grid,centre de la cellule [b]{cell}[/b] sur une grille de [b]{cell_size}[/b]
+Cell,Cellule
+The grid cell.,La cellule de la grille.
+Pixels across one cell.,Pixels de côté d'une cellule.
+Snap Point To Grid,Aligner un point sur la grille
+"The nearest grid intersection to a loose position - a dragged card falling into its slot, a level editor brush, a UI element clicking onto a column. Rounds to the nearest, so a thing dropped just past halfway moves forward rather than back.","L'intersection de grille la plus proche d'une position libre - une carte glissée qui tombe dans son emplacement, une brosse d'éditeur de niveau, un élément d'interface qui s'enclenche sur une colonne. Arrondit au plus proche, si bien qu'une chose lâchée juste après la moitié avance plutôt que de reculer."
+[b]{point}[/b] snapped to a [b]{cell_size}[/b] grid,[b]{point}[/b] aligné sur une grille de [b]{cell_size}[/b]
+The loose world position.,La position libre dans le monde.
+Snap Point To Grid (3D),Aligner un point sur la grille (3D)
+"The nearest point on a 3D grid - voxel placement, modular level pieces clicking together, a build cursor that lines up with the floor tiles.","Le point le plus proche sur une grille 3D - placement de voxels, pièces de niveau modulaires qui s'emboîtent, un curseur de construction aligné sur les dalles du sol."
+[b]{point}[/b] snapped to a [b]{cell_size}[/b] grid (3D),[b]{point}[/b] aligné sur une grille de [b]{cell_size}[/b] (3D)
+Metres across one cell.,Mètres de côté d'une cellule.
+Cell Distance,Distance entre cellules
+"How far apart two grid cells are, with the same geometry dropdown the rest of the plugin uses: straight line, horizontal or vertical only, grid steps (Manhattan) or king moves (Chebyshev). One expression that fits a roguelike, a strategy game and a puzzle board alike.","À quelle distance se trouvent deux cellules de grille, avec la même liste déroulante de géométrie que le reste du plugin : ligne droite, horizontal ou vertical seulement, pas de grille (Manhattan) ou coups de roi (Chebyshev). Une seule expression qui convient aussi bien à un roguelike, à un jeu de stratégie qu'à un plateau de puzzle."
+"distance from cell [b]{from_cell}[/b] to [b]{to_cell}[/b], measured as [b]{metric}[/b]","distance de la cellule [b]{from_cell}[/b] à [b]{to_cell}[/b], mesurée en [b]{metric}[/b]"
+From Cell,Depuis la cellule
+One cell.,Une cellule.
+To Cell,Vers la cellule
+The other cell.,L'autre cellule.
+Measured As,Mesurée en
+"How the distance is counted - a roguelike wants Grid steps, a chess board wants King moves.","Comment la distance est comptée - un roguelike veut Pas de grille, un échiquier veut Coups de roi."
+Straight line,Ligne droite
+Horizontal only,Horizontal seulement
+Vertical only,Vertical seulement
+Grid steps,Pas de grille
+King moves,Coups de roi
+Neighbours Of Cell,Voisines d'une cellule
+"The cells touching a cell, as a list - flood fill, path search, ""is anything next to me"", spreading fire, match-three clearing. Choose four sides, eight including diagonals, or the six neighbours of an axial hex board.","Les cellules qui touchent une cellule, sous forme de liste - remplissage par diffusion, recherche de chemin, « y a-t-il quelque chose à côté de moi », propagation du feu, élimination d'un match-trois. Choisissez quatre côtés, huit avec les diagonales, ou les six voisines d'un plateau hexagonal axial."
+neighbours of cell [b]{cell}[/b] ([b]{shape}[/b]),voisines de la cellule [b]{cell}[/b] ([b]{shape}[/b])
+The cell whose neighbours you want.,La cellule dont vous voulez les voisines.
+Shape,Forme
+How cells touch on this board.,Comment les cellules se touchent sur ce plateau.
+4 sides,4 côtés
+8 including diagonals,8 avec les diagonales
+6 hex (axial),6 hexagonales (axial)
+Cells In Line,Cellules en ligne
+"Every cell a straight line passes through, in order from one cell to the other - a laser beam's path, tile-based line of sight, a corridor carved between two rooms, a ruler for a ranged attack. Both ends are included.","Chaque cellule que traverse une ligne droite, dans l'ordre d'une cellule à l'autre - le trajet d'un rayon laser, la ligne de vue en tuiles, un couloir creusé entre deux pièces, une règle pour une attaque à distance. Les deux extrémités sont incluses."
+cells in the line from [b]{from_cell}[/b] to [b]{to_cell}[/b],cellules sur la ligne de [b]{from_cell}[/b] à [b]{to_cell}[/b]
+Where the line starts.,Où la ligne commence.
+Where the line ends.,Où la ligne se termine.
+Cells In Radius,Cellules dans un rayon
+"Every cell within a step radius of a centre cell, as a list - a blast footprint, a range preview, a fog reveal, the tiles a tower covers. Choose the diamond (counting grid steps) or the square (counting king moves).","Chaque cellule à un rayon de tant de pas d'une cellule centrale, sous forme de liste - l'empreinte d'une explosion, un aperçu de portée, une révélation de brouillard, les tuiles que couvre une tour. Choisissez le losange (en comptant les pas de grille) ou le carré (en comptant les coups de roi)."
+cells within [b]{radius}[/b] of [b]{center}[/b] ([b]{shape}[/b]),cellules à moins de [b]{radius}[/b] de [b]{center}[/b] ([b]{shape}[/b])
+Center Cell,Cellule centrale
+The middle of the area.,Le milieu de la zone.
+Radius In Cells,Rayon en cellules
+How many steps out from the middle.,Combien de pas depuis le milieu.
+Whether the corners count.,Si les coins comptent ou non.
+Grid steps (diamond),Pas de grille (losange)
+King moves (square),Coups de roi (carré)
+Cells In Rectangle,Cellules dans un rectangle
+"Every cell in a rectangular block, row by row - stamping a room, laying out an inventory grid, placing a multi-cell building, clearing a region of fog. An empty or negative size walks nothing rather than looping backwards.","Chaque cellule d'un bloc rectangulaire, ligne par ligne - estamper une pièce, disposer une grille d'inventaire, placer un bâtiment multicellulaire, dégager une région de brouillard. Une taille vide ou négative ne parcourt rien plutôt que de boucler à l'envers."
+cells in the [b]{size}[/b] block at [b]{top_left}[/b],cellules du bloc de [b]{size}[/b] en [b]{top_left}[/b]
+Top Left Cell,Cellule en haut à gauche
+Corner the block starts at.,Le coin où commence le bloc.
+Size In Cells,Taille en cellules
+How many cells across and down.,Combien de cellules en largeur et en hauteur.
+Is Cell In Bounds,La cellule est dans les limites
+"True while a cell is on the board - the guard before every placement, every move and every array lookup keyed by cell. Counting starts at 0,0 in the top-left, so a 20 by 12 board's last cell is 19,11.","Vrai tant qu'une cellule est sur le plateau - la garde avant chaque placement, chaque déplacement et chaque accès à un tableau indexé par cellule. Le comptage commence à 0,0 en haut à gauche, si bien que la dernière cellule d'un plateau de 20 sur 12 est 19,11."
+cell [b]{cell}[/b] is inside a [b]{size}[/b] board,la cellule [b]{cell}[/b] est dans un plateau de [b]{size}[/b]
+The cell being tested.,La cellule testée.
+Board Size,Taille du plateau
+How many cells the board is across and down.,Combien de cellules le plateau fait en largeur et en hauteur.
+For Each Cell In Radius,Pour chaque cellule dans un rayon
+"Runs this event's actions once per cell within a step radius of a centre cell - range previews, blast footprints, fog reveal, area-of-effect highlights. Read the current one as `cell`.","Exécute les actions de cet événement une fois par cellule à un rayon de tant de pas d'une cellule centrale - aperçus de portée, empreintes d'explosion, révélation de brouillard, surbrillances de zone d'effet. Lisez la cellule courante avec `cell`."
+for each cell within [b]{radius}[/b] of [b]{center}[/b],pour chaque cellule à moins de [b]{radius}[/b] de [b]{center}[/b]
+Falloff At Distance,Atténuation à distance
+"How strong an effect is at a distance, from 1 at the centre to 0 at the edge - the one number that makes an explosion, a sound, a magnet or a screen shake care how close it was. Anything past the radius reads as 0, so it is safe to multiply straight into damage. For a hand-drawn profile, feed this number into Sample Curve.","Quelle est la force d'un effet à une distance donnée, de 1 au centre à 0 au bord - le seul nombre qui fait qu'une explosion, un son, un aimant ou une secousse d'écran se soucient de la proximité. Tout ce qui dépasse le rayon se lit 0, on peut donc le multiplier directement dans les dégâts. Pour un profil dessiné à la main, donnez ce nombre à Échantillonner la courbe."
+falloff from [b]{center}[/b] at [b]{point}[/b] within [b]{radius}[/b],atténuation depuis [b]{center}[/b] en [b]{point}[/b] dans [b]{radius}[/b]
+Where the effect comes from.,D'où vient l'effet.
+What is being affected.,Ce qui est affecté.
+Past this it reads 0.,"Au-delà, ça se lit 0."
+Profile,Profil
+How quickly the strength drops off with distance.,À quelle vitesse la force décroît avec la distance.
+Linear,Linéaire
+Sharp (squared),Marquée (au carré)
+Smooth (ease out),Douce (ease out)
+Strength Toward,Force vers
+"Falloff between THIS node and another one, without spelling out either position - guard suspicion that builds faster the closer you are, a magnet that pulls harder up close, a sound that ducks as you approach. Reads 0 once the other node is out of range.","L'atténuation entre CE nœud et un autre, sans écrire ni l'une ni l'autre position - la suspicion d'un garde qui monte d'autant plus vite que vous êtes proche, un aimant qui tire plus fort de près, un son qui s'efface quand vous approchez. Se lit 0 dès que l'autre nœud est hors de portée."
+strength toward [i]{node}[/i] within [b]{radius}[/b],force vers [i]{node}[/i] dans [b]{radius}[/b]
+Toward,Vers
+The node the strength is measured against.,Le nœud par rapport auquel la force est mesurée.
+Apply Radial Impulse,Appliquer une impulsion radiale
+"Throws this physics body away from a blast, weaker the further it was - barrels, crates, ragdolls and debris flung by an explosion. One row on the body; the blast only has to say where it happened.","Projette ce corps physique loin d'une explosion, d'autant plus faiblement qu'il était loin - barils, caisses, poupées de chiffon et débris projetés par une explosion. Une seule ligne sur le corps ; l'explosion n'a qu'à dire où elle a eu lieu."
+apply radial impulse [b]{strength}[/b] from [b]{center}[/b],appliquer une impulsion radiale [b]{strength}[/b] depuis [b]{center}[/b]
+Blast Center,Centre de l'explosion
+Where the explosion went off.,Où l'explosion s'est produite.
+Strength,Force
+"The push at the very centre, in impulse units.","La poussée en plein centre, en unités d'impulsion."
+Past this the push is nothing.,"Au-delà, la poussée est nulle."
+Push Group Away From,Repousser un groupe depuis
+"Shoves every member of a group away from a point, hardest at the centre and not at all past the radius - the mirror of Pull Group Toward. A shockwave clearing a crowd, a repulsor field, a dash that parts the enemies it passes through.","Repousse chaque membre d'un groupe loin d'un point, le plus fort au centre et pas du tout au-delà du rayon - le miroir de Attirer un groupe vers. Une onde de choc qui disperse une foule, un champ de répulsion, une ruée qui fend les ennemis qu'elle traverse."
+push group [b]{group}[/b] away from [b]{center}[/b] within [b]{radius}[/b],repousser le groupe [b]{group}[/b] depuis [b]{center}[/b] dans [b]{radius}[/b]
+Group whose members get shoved.,Le groupe dont les membres sont repoussés.
+Away From,Depuis
+Where the shove comes from.,D'où vient la poussée.
+Only members inside this are shoved.,Seuls les membres à l'intérieur sont repoussés.
+Pixels the closest member is moved.,Pixels dont le membre le plus proche est déplacé.
+Is Within Cone Of,Est dans le cône de
+"True while a point sits inside a facing wedge - guard vision, spotlight checks, melee arcs, directional blasts. The cheap test to put in front of an expensive raycast: if it is not in the cone, there is nothing to trace.","Vrai tant qu'un point se trouve dans un secteur orienté - vision de garde, contrôles de projecteur, arcs de mêlée, explosions directionnelles. Le test bon marché à placer avant un raycast coûteux : si ce n'est pas dans le cône, il n'y a rien à tracer."
+[b]{point}[/b] is within a [b]{fov_degrees}[/b] cone of [b]{origin}[/b] facing [b]{facing_degrees}[/b],[b]{point}[/b] est dans un cône de [b]{fov_degrees}[/b] depuis [b]{origin}[/b] orienté à [b]{facing_degrees}[/b]
+Cone From,Cône depuis
+"Tip of the wedge - the guard, the spotlight, the blast.","La pointe du secteur - le garde, le projecteur, l'explosion."
+"Which way the wedge points, in degrees.","Vers où pointe le secteur, en degrés."
+The position being tested.,La position testée.
+Cone Width,Largeur du cône
+Total width of the wedge in degrees.,Largeur totale du secteur en degrés.
+"How far the wedge extends, in pixels.","Jusqu'où s'étend le secteur, en pixels."
+Wait Until,Attendre jusqu'à ce que
+"Pauses this event until a check comes true, or until the give-up time passes. Read which happened on the next row with Wait Succeeded / Wait Timed Out, naming this wait. It polls once a frame, so prefer Wait For Signal when a real signal exists for what you are waiting on.","Met cet événement en pause jusqu'à ce qu'une condition devienne vraie, ou jusqu'à ce que le délai d'abandon passe. Lisez ce qui s'est produit sur la ligne suivante avec Attente réussie / Attente expirée, en nommant cette attente. Elle scrute une fois par frame, préférez donc Attendre un signal quand un vrai signal existe pour ce que vous attendez."
+Time,Temps
+"wait [b]{wait_name}[/b] until [b]{check}[/b], give up after [b]{seconds}[/b]s","attendre [b]{wait_name}[/b] jusqu'à [b]{check}[/b], abandonner après [b]{seconds}[/b]s"
+Named,Nommée
+"A name for this wait, so Wait Succeeded / Wait Timed Out can say which one they mean.","Un nom pour cette attente, pour qu'Attente réussie / Attente expirée puissent dire de laquelle elles parlent."
+Until,Jusqu'à
+"The check to wait for, tested once a frame.","La condition à attendre, testée une fois par frame."
+Give Up After,Abandonner après
+Seconds before giving up. 0 waits forever.,Secondes avant d'abandonner. 0 attend indéfiniment.
+Wait For All Of,Attendre tous les signaux
+"Pauses this event until every signal in the list has fired at least once, or until the give-up time passes. It connects them ALL up front, one-shot, so nothing can fire into the gap between two waits - the bug a hand-written chain of awaits always has. An empty list succeeds at once.","Met cet événement en pause jusqu'à ce que chaque signal de la liste se soit déclenché au moins une fois, ou jusqu'à ce que le délai d'abandon passe. Il les connecte TOUS d'avance, à usage unique, si bien que rien ne peut se déclencher dans l'intervalle entre deux attentes - le bug qu'a toujours une chaîne d'await écrite à la main. Une liste vide réussit immédiatement."
+"wait [b]{wait_name}[/b] for ALL of [b]{signals}[/b], give up after [b]{seconds}[/b]s","attendre [b]{wait_name}[/b] pour TOUS les [b]{signals}[/b], abandonner après [b]{seconds}[/b]s"
+Signals,Signaux
+"The signals to join, as a list: [$Door.opened, $Camera.arrived].","Les signaux à réunir, sous forme de liste : [$Door.opened, $Camera.arrived]."
+Wait For Any Of,Attendre l'un quelconque des signaux
+"Pauses this event until the first of several signals fires, then carries on - a race, or a sudden-death timer. Read which one won with First To Finish, naming this wait: it answers ""Node.signal"", so racing $Player.died against $Boss.died still tells you which one it was. Every signal is connected one-shot up front, so the winner is whichever really fired first, and the losers are disconnected when the race ends.","Met cet événement en pause jusqu'à ce que le premier de plusieurs signaux se déclenche, puis continue - une course, ou une mort subite. Lisez lequel a gagné avec Premier arrivé, en nommant cette attente : elle répond « Nœud.signal », si bien que faire courir $Player.died contre $Boss.died vous dit quand même lequel c'était. Chaque signal est connecté à usage unique d'avance, si bien que le gagnant est celui qui s'est vraiment déclenché en premier, et les perdants sont déconnectés à la fin de la course."
+wait [b]{wait_name}[/b] for ANY of [b]{signals}[/b],attendre [b]{wait_name}[/b] pour L'UN des [b]{signals}[/b]
+"A name for this wait, so First To Finish and the outcome conditions can say which one they mean.","Un nom pour cette attente, pour que Premier arrivé et les conditions de résultat puissent dire de laquelle ils parlent."
+"The signals to race, as a list: [$Player.died, $Boss.died].","Les signaux à faire courir, sous forme de liste : [$Player.died, $Boss.died]."
+Wait Succeeded,Attente réussie
+"True when the named wait ended because what it was waiting for happened. A wait that has never run is neither succeeded nor timed out, so nothing fires before the wait does.","Vrai quand l'attente nommée s'est terminée parce que ce qu'elle attendait est arrivé. Une attente qui ne s'est jamais exécutée n'est ni réussie ni expirée, si bien que rien ne se déclenche avant l'attente."
+wait [b]{wait_name}[/b] succeeded,l'attente [b]{wait_name}[/b] a réussi
+The name the wait row used.,Le nom qu'a utilisé la ligne d'attente.
+Wait Timed Out,Attente expirée
+"True when the named wait gave up instead of finishing - the recovery branch for a load that never reported in. The same timeout also reports on verb_failed, so another event can handle it as On Failure Of.","Vrai quand l'attente nommée a abandonné au lieu de se terminer - la branche de secours pour un chargement qui n'a jamais donné signe de vie. Ce même délai dépassé se signale aussi sur verb_failed, si bien qu'un autre événement peut le traiter avec En cas d'échec de."
+wait [b]{wait_name}[/b] timed out,l'attente [b]{wait_name}[/b] a expiré
+First To Finish,Premier arrivé
+"Which signal a Wait For Any Of was watching finished first, written as ""Node.signal"" (the node's name, a dot, the signal's name), or empty text when it timed out. The node is part of the answer on purpose: a race between $Player.died and $Boss.died is two signals with the same name, and only the owner tells them apart. Compare it in a condition cell to branch on the winner.","Quel signal surveillé par un Attendre l'un quelconque des signaux a fini en premier, écrit « Nœud.signal » (le nom du nœud, un point, le nom du signal), ou un texte vide quand l'attente a expiré. Le nœud fait partie de la réponse à dessein : une course entre $Player.died et $Boss.died, ce sont deux signaux du même nom, et seul le propriétaire les distingue. Comparez-le dans une cellule de condition pour brancher sur le gagnant."
+first to finish ( [b]{wait_name}[/b] ),premier arrivé ( [b]{wait_name}[/b] )
+The name the Wait For Any Of row used.,Le nom qu'a utilisé la ligne Attendre l'un quelconque des signaux.
+Retry Up To N Times,Réessayer jusqu'à N fois
+"Runs this event's actions over and over, up to a number of attempts, so a nested Stop Retrying can end it the moment the thing works. With no waiting inside it stays instant, which makes it the procedural-placement loop as much as the disk retry. Read the try number with Retry Attempt Number.","Exécute les actions de cet événement encore et encore, jusqu'à un certain nombre de tentatives, si bien qu'un Arrêter de réessayer imbriqué peut y mettre fin dès que la chose fonctionne. Sans attente à l'intérieur, elle reste instantanée, ce qui en fait autant la boucle de placement procédural que la relance de disque. Lisez le numéro de la tentative avec Numéro de tentative."
+retry [b]{retry_name}[/b] up to [b]{times}[/b] times,réessayer [b]{retry_name}[/b] jusqu'à [b]{times}[/b] fois
+"A name for this retry, matching its Stop Retrying and Retries Exhausted rows.","Un nom pour cette relance, correspondant à ses lignes Arrêter de réessayer et Tentatives épuisées."
+Times,Fois
+Most attempts before giving up.,Nombre maximum de tentatives avant d'abandonner.
+Retry Attempt Number,Numéro de tentative
+"Which try this is, counting from 1 - the number you put in the log line or the HUD. Only readable inside a Retry Up To N Times loop, and it reads that loop's own variable, so change the cell if you renamed it.","De quelle tentative il s'agit, en comptant à partir de 1 - le nombre que vous mettez dans la ligne de journal ou dans l'ATH. Lisible seulement à l'intérieur d'une boucle Réessayer jusqu'à N fois, et il lit la variable propre de cette boucle, changez donc la cellule si vous l'avez renommée."
+retry attempt number,numéro de tentative
+Loop Variable,Variable de boucle
+The retry loop's own variable. Leave it as attempt unless you renamed the loop variable on the Retry Up To N Times row.,La variable propre à la boucle de relance. Laissez attempt sauf si vous avez renommé la variable de boucle sur la ligne Réessayer jusqu'à N fois.
+Stop Retrying,Arrêter de réessayer
+"Ends the retry loop right now because the attempt worked, and records that it worked so Retries Exhausted below stays false. Put it under the condition that means success.","Met fin à la boucle de relance immédiatement parce que la tentative a fonctionné, et enregistre qu'elle a fonctionné pour que Tentatives épuisées, en dessous, reste faux. À placer sous la condition qui signifie la réussite."
+stop retrying [b]{retry_name}[/b],arrêter de réessayer [b]{retry_name}[/b]
+The name the Retry Up To N Times row uses.,Le nom qu'utilise la ligne Réessayer jusqu'à N fois.
+Retries Exhausted,Tentatives épuisées
+"True when the retry loop above ran out of tries without a Stop Retrying - the give-up branch. Put it in a sibling row directly beneath the retry loop, using the same name; a retry that has never run is not exhausted, so nothing fires before the loop does. Reading it clears the record, so the next run starts clean. When the retry WAITS between tries (Wait Before Next Try) the loop is still running while the rows beneath it are reached, so report that give-up with Report Failure on the last attempt and handle it in an On Failure Of event instead.","Vrai quand la boucle de relance ci-dessus a épuisé ses tentatives sans un Arrêter de réessayer - la branche d'abandon. Placez-la dans une ligne sœur directement sous la boucle de relance, avec le même nom ; une relance qui ne s'est jamais exécutée n'est pas épuisée, si bien que rien ne se déclenche avant la boucle. La lire efface l'enregistrement, si bien que la prochaine exécution repart propre. Quand la relance ATTEND entre les tentatives (Attendre avant la prochaine tentative), la boucle tourne encore pendant que les lignes en dessous sont atteintes ; signalez donc cet abandon avec Signaler un échec à la dernière tentative et traitez-le dans un événement En cas d'échec de à la place."
+retries for [b]{retry_name}[/b] exhausted,tentatives pour [b]{retry_name}[/b] épuisées
+Wait Before Next Try,Attendre avant la prochaine tentative
+"Pauses before the next attempt, waiting longer each time when you set a growth above 1 - the polite way to retry a disk or a slow source. It suspends this event like Wait does, so pair the retry with Once At A Time when the trigger can fire again mid-retry.","Marque une pause avant la tentative suivante, en attendant de plus en plus longtemps quand vous réglez une croissance au-dessus de 1 - la façon polie de réessayer un disque ou une source lente. Elle suspend cet événement comme le fait Attendre, associez donc la relance à Une seule à la fois quand le déclencheur peut se redéclencher en pleine relance."
+wait [b]{delay}[/b]s before try [b]{attempt}[/b] (growing x[b]{growth}[/b]),attendre [b]{delay}[/b]s avant la tentative [b]{attempt}[/b] (croissance x[b]{growth}[/b])
+Wait after the first failed try.,Attente après la première tentative échouée.
+Growing By,Croissance
+"1 = the same wait every time, 2 = doubling backoff.","1 = la même attente à chaque fois, 2 = un doublement à chaque fois."
+On Try,À la tentative
+Which try this is - put Retry Attempt Number here.,De quelle tentative il s'agit - mettez Numéro de tentative ici.
+Remember In Trail,Mémoriser dans une trace
+"Records a value into a named rolling history you can dump, chart, or check when something goes wrong.","Enregistre une valeur dans un historique glissant nommé que vous pouvez vider, tracer ou consulter quand quelque chose tourne mal."
+Debug,Débogage
+"remember [b]{value}[/b] in trail [b]{trail}[/b], keep [b]{keep}[/b]","mémoriser [b]{value}[/b] dans la trace [b]{trail}[/b], garder [b]{keep}[/b]"
+"The value to record this tick - a number, a vector, anything printable.","La valeur à enregistrer à ce tick - un nombre, un vecteur, tout ce qui s'affiche."
+Trail,Trace
+Trail name - any label you also use in the trail expressions.,Nom de la trace - n'importe quelle étiquette que vous utilisez aussi dans les expressions de trace.
+Keep,Garder
+How many recent values to hold (older ones drop off the front).,Combien de valeurs récentes conserver (les plus anciennes tombent par l'avant).
+Trail Values,Valeurs de la trace
+"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.","Renvoie toute la trace sous forme de tableau, la plus ancienne d'abord - donnez-la à un graphique, à une table ou à un verbe de tableau."
+trail [b]{trail}[/b] values,valeurs de la trace [b]{trail}[/b]
+"Trail name, matching a Remember In Trail action.","Nom de la trace, correspondant à une action Mémoriser dans une trace."
+Lowest In Trail,Minimum de la trace
+"The smallest value recorded in a trail, which is the spike a per-frame watch blinked past. An empty trail reads as INF.","La plus petite valeur enregistrée dans une trace, c'est-à-dire le pic qu'une surveillance par frame a manqué. Une trace vide se lit INF."
+lowest in trail [b]{trail}[/b],minimum de la trace [b]{trail}[/b]
+Highest In Trail,Maximum de la trace
+The largest value recorded in a trail. An empty trail reads as -INF.,La plus grande valeur enregistrée dans une trace. Une trace vide se lit -INF.
+highest in trail [b]{trail}[/b],maximum de la trace [b]{trail}[/b]
+Average In Trail,Moyenne de la trace
+The mean of every number recorded in a trail - a rolling average that is as useful in gameplay as in debugging. An empty trail reads as 0.,La moyenne de tous les nombres enregistrés dans une trace - une moyenne glissante aussi utile en jeu qu'en débogage. Une trace vide se lit 0.
+average of trail [b]{trail}[/b],moyenne de la trace [b]{trail}[/b]
+Newest In Trail,Dernière valeur de la trace
+"The most recently recorded value in a trail, or 0 when nothing has been recorded yet.","La valeur la plus récemment enregistrée dans une trace, ou 0 quand rien n'a encore été enregistré."
+newest in trail [b]{trail}[/b],dernière valeur de la trace [b]{trail}[/b]
+Trail Length,Longueur de la trace
+"How many values a trail is currently holding, which tops out at the Keep you gave it.","Combien de valeurs une trace contient actuellement, ce qui plafonne au Garder que vous lui avez donné."
+length of trail [b]{trail}[/b],longueur de la trace [b]{trail}[/b]
+Log Trail,Journaliser la trace
+"Prints the whole trail to the Output console, so the seconds before a bug arrive with the bug.","Affiche toute la trace dans la console de Sortie, si bien que les secondes précédant un bug arrivent avec le bug."
+log trail [b]{trail}[/b],journaliser la trace [b]{trail}[/b]
+Save Trail To CSV,Enregistrer la trace en CSV
+Writes a trail to a two-column CSV file you can open in a spreadsheet and plot.,Écrit une trace dans un fichier CSV à deux colonnes que vous pouvez ouvrir dans un tableur et tracer.
+save trail [b]{trail}[/b] to [b]{path}[/b],enregistrer la trace [b]{trail}[/b] dans [b]{path}[/b]
+Where to write the file. Use user:// so it works in an exported game.,Où écrire le fichier. Utilisez user:// pour que ça marche aussi dans un jeu exporté.
+Clear Trail,Effacer la trace
+"Forgets everything a trail recorded, so the next run starts from nothing.","Oublie tout ce qu'une trace a enregistré, si bien que la prochaine exécution repart de rien."
+clear trail [b]{trail}[/b],effacer la trace [b]{trail}[/b]
+Frame Took Longer Than,La frame a duré plus de
+"True on a frame that took longer than your budget, which is the hitch caught as it happens. Needs a per-frame trigger.","Vrai sur une frame qui a dépassé votre budget, c'est-à-dire le à-coup pris sur le fait. Nécessite un déclencheur par frame."
+frame took longer than [b]{ms}[/b] ms,la frame a duré plus de [b]{ms}[/b] ms
+Milliseconds,Millisecondes
+The budget. 16.6 is one frame at 60 FPS.,Le budget. 16.6 est une frame à 60 FPS.
+FPS Below For,FPS sous le seuil pendant
+"True once the framerate has stayed under your floor for the whole stretch you name, which tells a real performance drop apart from one stuttery frame. Needs a per-frame trigger.","Vrai dès que la fréquence d'images est restée sous votre plancher pendant toute la durée que vous nommez, ce qui distingue une vraie chute de performance d'une seule frame saccadée. Nécessite un déclencheur par frame."
+FPS below [b]{fps}[/b] for [b]{seconds}[/b] seconds,FPS sous [b]{fps}[/b] pendant [b]{seconds}[/b] secondes
+FPS,FPS
+The framerate floor. Below this counts as a drop.,"Le plancher de fréquence d'images. En dessous, cela compte comme une chute."
+For Seconds,Pendant (secondes)
+How long the drop must last before this is true.,Combien de temps la chute doit durer avant que ce soit vrai.
+Start Measuring,Démarrer une mesure
+Starts a named stopwatch. Pair it with Stop Measuring around the work you suspect.,Démarre un chronomètre nommé. Associez-le à Arrêter la mesure autour du travail que vous soupçonnez.
+start measuring [b]{named}[/b],démarrer la mesure [b]{named}[/b]
+The name this measurement is reported under.,Le nom sous lequel cette mesure est rapportée.
+Stop Measuring,Arrêter la mesure
+"Stops a named stopwatch and files the result, keeping the last, the average and the worst reading for that name.","Arrête un chronomètre nommé et classe le résultat, en gardant la dernière, la moyenne et la pire mesure pour ce nom."
+stop measuring [b]{named}[/b],arrêter la mesure [b]{named}[/b]
+The name you gave Start Measuring.,Le nom que vous avez donné à Démarrer une mesure.
+Last Measured (ms),Dernière mesure (ms)
+How many milliseconds the most recent run of a named measurement took.,Combien de millisecondes a duré la plus récente exécution d'une mesure nommée.
+last measured [b]{named}[/b] ms,dernière mesure [b]{named}[/b] ms
+Average Measured (ms),Mesure moyenne (ms)
+"The mean cost in milliseconds across every run of a named measurement, which is the number to quote when you claim an optimization worked.","Le coût moyen en millisecondes sur toutes les exécutions d'une mesure nommée, c'est-à-dire le nombre à citer quand vous affirmez qu'une optimisation a marché."
+average measured [b]{named}[/b] ms,mesure moyenne [b]{named}[/b] ms
+Peak Measured (ms),Mesure maximale (ms)
+"The worst run of a named measurement in milliseconds, which is usually the one the player felt.","La pire exécution d'une mesure nommée en millisecondes, qui est en général celle que le joueur a sentie."
+peak measured [b]{named}[/b] ms,mesure maximale [b]{named}[/b] ms
+Log Measurements,Journaliser les mesures
+"Prints every named measurement taken so far with its last, average and peak cost - the report you paste into a bug or a devlog.","Affiche chaque mesure nommée prise jusqu'ici avec son coût dernier, moyen et maximal - le rapport que vous collez dans un bug ou un devlog."
+log measurements,journaliser les mesures
+Clear Measurements,Effacer les mesures
+"Throws away every measurement recorded so far, so a fresh run starts from a clean slate.","Jette toutes les mesures enregistrées jusqu'ici, si bien qu'une nouvelle exécution repart d'une page blanche."
+clear measurements,effacer les mesures
+Register As Service,Enregistrer comme service
+"Publishes this node under a short name anything can ask for, so no other row needs a path to it. Run it under On Ready. Registering the same name again replaces it, and a freed node answers as nothing at all, so a scene reload leaves no dangling reference behind.","Publie ce nœud sous un nom court que n'importe quoi peut demander, si bien qu'aucune autre ligne n'a besoin d'un chemin vers lui. À exécuter sous À l'initialisation (ready). Enregistrer le même nom à nouveau le remplace, et un nœud libéré répond comme rien du tout, si bien qu'un rechargement de scène ne laisse aucune référence pendante."
+register this as service [b]{service_name}[/b],enregistrer ceci comme service [b]{service_name}[/b]
+"A role, not a class - ""player"", ""audio_director"", ""wallet"". Registering the same name again replaces it.","Un rôle, pas une classe - « player », « audio_director », « wallet ». Enregistrer le même nom à nouveau le remplace."
+Service Named,Service nommé
+"The node published under a name, or nothing at all when nobody registered it or it has been freed. Drop it wherever a node is asked for - it never crashes and never needs a path.","Le nœud publié sous un nom, ou rien du tout quand personne ne l'a enregistré ou qu'il a été libéré. Déposez-le partout où un nœud est demandé - il ne plante jamais et n'a jamais besoin d'un chemin."
+service named [b]{service_name}[/b],service nommé [b]{service_name}[/b]
+The name the node registered itself under.,Le nom sous lequel le nœud s'est enregistré.
+Has Service,Le service existe
+True when a node is registered under this name and is still alive. Guard an optional system with it - a missing audio director then costs you a skipped row instead of a crash.,Vrai quand un nœud est enregistré sous ce nom et qu'il est toujours vivant. Protégez un système optionnel avec - un directeur audio manquant vous coûte alors une ligne sautée au lieu d'un plantage.
+service [b]{service_name}[/b] exists,le service [b]{service_name}[/b] existe
+The service name to test for.,Le nom de service à tester.
+For Each Node That Can,Pour chaque nœud qui sait
+"Runs this event's actions once per node ANYWHERE in the tree that answers to a method name - the save sweep, the pause sweep, the shutdown sweep, with no list to keep in step. It walks the whole tree, so run it on an event, not every frame. Read the current one as `node`.","Exécute les actions de cet événement une fois par nœud N'IMPORTE OÙ dans l'arbre qui répond à un nom de méthode - le balayage de sauvegarde, le balayage de pause, le balayage d'extinction, sans liste à tenir à jour. Il parcourt tout l'arbre, exécutez-le donc sur un événement, pas à chaque frame. Lisez le nœud courant avec `node`."
+Nodes: Picking,Nœuds : sélection
+for each node that can [b]{method_name}[/b],pour chaque nœud qui sait [b]{method_name}[/b]
+Answers To,Répond à
+"The method name a node must have to be picked up, e.g. save_state or on_game_paused.","Le nom de méthode qu'un nœud doit avoir pour être retenu, par ex. save_state ou on_game_paused."
+Do After This Frame,Faire après cette frame
+"Runs one action once the frame's physics and signal storm has finished, which is the only safe moment to add, free or reparent nodes. The number one crash a beginner hits is doing that from inside a collision callback; this is the fix, and the rows below it still run immediately.","Exécute une action une fois que la physique et la tempête de signaux de la frame sont terminées, c'est-à-dire le seul moment sûr pour ajouter, libérer ou reparenter des nœuds. Le plantage numéro un que rencontre un débutant, c'est de faire ça depuis un rappel de collision ; voici le remède, et les lignes en dessous s'exécutent quand même immédiatement."
+after this frame: [b]{do}[/b],après cette frame : [b]{do}[/b]
+Do,Faire
+"The action to run once this frame's work is finished - the only safe moment to add, free or reparent a node.","L'action à exécuter une fois le travail de cette frame terminé - le seul moment sûr pour ajouter, libérer ou reparenter un nœud."
+Call Later,Appeler plus tard
+"Runs one action after a delay, with no Timer node and WITHOUT suspending - the rows below it keep running. The connection is one-shot, so a delayed beat can neither leak nor fire twice. The readable form of the small follow-up: eject the shell, close the door, play the second thud.","Exécute une action après un délai, sans nœud Timer et SANS suspendre - les lignes en dessous continuent de s'exécuter. La connexion est à usage unique, si bien qu'un temps différé ne peut ni fuir ni se déclencher deux fois. La forme lisible du petit enchaînement : éjecter la douille, fermer la porte, jouer le second bruit sourd."
+call later ([b]{seconds}[/b]s): [b]{do}[/b],appeler plus tard ([b]{seconds}[/b]s) : [b]{do}[/b]
+Seconds to wait before the action runs.,Secondes à attendre avant que l'action ne s'exécute.
+The action to run when the delay is up.,L'action à exécuter à la fin du délai.
+Set Property (after this frame),Définir une propriété (après cette frame)
+"Sets a property at the end of the frame instead of right now. The one Godot insists on for collision shapes and monitoring: flipping those mid-physics is the error every beginner meets, and deferring is the documented answer.","Définit une propriété à la fin de la frame au lieu de tout de suite. Celle sur laquelle Godot insiste pour les formes de collision et le monitoring : les basculer en pleine physique est l'erreur que rencontre chaque débutant, et différer est la réponse documentée."
+set [b]{property}[/b] of [i]{target}[/i] to [b]{value}[/b] after this frame,définir [b]{property}[/b] de [i]{target}[/i] à [b]{value}[/b] après cette frame
+On,Sur
+Node whose property to set.,Le nœud dont on définit la propriété.
+Property,Propriété
+Name of the property to set.,Le nom de la propriété à définir.
+The value to set it to.,La valeur à lui donner.
+Only Once This Frame,Une seule fois dans cette frame
+"True the FIRST time it is reached in a frame under this name, and false for every other time that frame - counting a physics tick as its own frame, so a row under On Physics Process is not folded in with the drawn frame around it. Fifty inventory changes then rebuild the panel once instead of fifty times. Give two rows the same name and they share one run per frame.","Vrai la PREMIÈRE fois qu'on l'atteint dans une frame sous ce nom, et faux toutes les autres fois de cette frame - en comptant un tick de physique comme sa propre frame, si bien qu'une ligne sous À chaque frame physique n'est pas confondue avec la frame dessinée qui l'entoure. Cinquante changements d'inventaire reconstruisent alors le panneau une fois au lieu de cinquante. Donnez le même nom à deux lignes et elles partagent une seule exécution par frame."
+only once this frame ( [b]{key_id}[/b] ),une seule fois dans cette frame ( [b]{key_id}[/b] )
+The gate's name. Every row using the same name folds into one run per frame.,Le nom de la barrière. Chaque ligne utilisant le même nom se fond en une seule exécution par frame.
+Spawn Scene As,Faire apparaître une scène sous le nom
+"Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Spawned. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.","Fait apparaître une scène sous un nom, lui applique un enregistrement de valeurs avant qu'elle n'entre dans l'arbre, et la retient sous ce nom pour que chaque ligne suivante puisse dire La chose apparue. Si la feuille déclare un signal scene_spawned(spawn_name, node), ceci l'émet avec les deux, si bien qu'un autre événement peut réagir au nouveau nœud sans jamais demander ce qui a été créé en dernier."
+Scene,Scène
+Spawn [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i],Faire apparaître [b]{path}[/b] sous le nom [b]{spawn_name}[/b] avec [i]{values}[/i]
+Scene file to instance.,Le fichier de scène à instancier.
+As,Sous le nom
+"A name for this spawn, so later rows can say The Spawned ""boss"".","Un nom pour cette apparition, pour que les lignes suivantes puissent dire La chose apparue « boss »."
+With,Avec
+"Values to set as it arrives, as a record: {""max_health"": 200, ""tier"": 3}. Names the scene does not have are set anyway, so keep to its own fields.","Valeurs à appliquer à son arrivée, sous forme d'enregistrement : {""max_health"": 200, ""tier"": 3}. Les noms que la scène ne possède pas sont quand même définis, tenez-vous-en donc à ses propres champs."
+The node to add it under. Leave as nothing to add it under this one.,Le nœud sous lequel l'ajouter. Laissez vide pour l'ajouter sous celui-ci.
+Spawn position.,La position d'apparition.
+The Spawned,La chose apparue
+"The node a Spawn Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.","Le nœud qu'une ligne Faire apparaître une scène sous le nom a créé sous ce nom, ou rien du tout quand il n'a jamais été créé ou qu'il a été libéré depuis - si bien qu'une ligne qui cherche un boss mort obtient rien du tout au lieu d'un plantage."
+the spawned [b]{spawn_name}[/b],la chose apparue [b]{spawn_name}[/b]
+The name a Spawn Scene As row used.,Le nom qu'a utilisé une ligne Faire apparaître une scène sous le nom.
+Spawn Is Alive,La chose apparue est vivante
+"True while the node spawned under this name still exists - the guard to put in front of any row that talks to a named spawn, and the honest way to ask 'is the boss still up?'.","Vrai tant que le nœud apparu sous ce nom existe encore - la garde à placer avant toute ligne qui parle à une apparition nommée, et la façon honnête de demander « le boss est-il encore debout ? »."
+the spawned [b]{spawn_name}[/b] is alive,la chose apparue [b]{spawn_name}[/b] est vivante
+On Scene Spawned,Quand une scène apparaît
+"Runs when a Spawn Scene As row spawns something. The name and the new node arrive on the row as spawn_name and node, so a reaction can configure or announce the node without asking what was spawned last - correct even when one loop spawns six things in a frame. Needs a Signal row for scene_spawned(spawn_name: String, node: Node) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","S'exécute quand une ligne Faire apparaître une scène sous le nom crée quelque chose. Le nom et le nouveau nœud arrivent sur la ligne sous les noms spawn_name et node, si bien qu'une réaction peut configurer ou annoncer le nœud sans demander ce qui a été créé en dernier - correct même quand une boucle crée six choses dans une frame. Nécessite une ligne Signal pour scene_spawned(spawn_name: String, node: Node) - sans elle la feuille compile toujours, mais rien ne connecte cet événement, donc il ne s'exécute jamais. Le Docteur du projet le signale."
+On scene spawned {spawn_name} ( {node} ),Quand la scène {spawn_name} apparaît ( {node} )
+The name the Spawn Scene As row gave this spawn.,Le nom que la ligne Faire apparaître une scène sous le nom a donné à cette apparition.
+Node,Nœud
+"The node that was just spawned, carried by the signal itself.","Le nœud qui vient d'apparaître, porté par le signal lui-même."
+On Failure Of,En cas d'échec de
+"Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","S'exécute quand un verbe signale qu'il a refusé. Le nom du verbe et la raison arrivent sur la ligne sous les noms verb_id et reason, si bien que la récupération vit dans son propre événement - ajoutez une condition en dessous pour ne traiter qu'un seul verbe. Nécessite une ligne Déclarer un signal pour verb_failed(verb_id: String, reason: String) - sans elle la feuille compile toujours, mais rien ne connecte cet événement, donc il ne s'exécute jamais. Le Docteur du projet le signale."
+On failure of {verb_id} ( {reason} ),En cas d'échec de {verb_id} ( {reason} )
+Verb,Verbe
+Which verb refused - the name the Report Failure row used.,Quel verbe a refusé - le nom qu'a utilisé la ligne Signaler un échec.
+Reason,Raison
+"Why it refused, carried by the signal itself.","Pourquoi il a refusé, porté par le signal lui-même."
+On Success Of,En cas de réussite de
+"Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","S'exécute quand un verbe signale qu'il a terminé. Le nom du verbe arrive sur la ligne sous le nom verb_id. Nécessite une ligne Déclarer un signal pour verb_succeeded(verb_id: String) - sans elle la feuille compile toujours, mais rien ne connecte cet événement, donc il ne s'exécute jamais. Le Docteur du projet le signale."
+On success of {verb_id},En cas de réussite de {verb_id}
+Which verb finished - the name the Report Success row used.,Quel verbe a terminé - le nom qu'a utilisé la ligne Signaler une réussite.
+Report Failure,Signaler un échec
+"Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.","Annonce qu'un verbe a refusé, si bien que chaque événement En cas d'échec de pour ce verbe s'exécute. À utiliser à l'intérieur d'un verbe que vous publiez vous-même, ou après une vérification qui a trouvé une ressource nulle ou un résultat vide."
+Report failure of [b]{verb}[/b]: [b]{reason}[/b],Signaler l'échec de [b]{verb}[/b] : [b]{reason}[/b]
+Name of the verb that refused - the same name the On Failure Of row picks.,Le nom du verbe qui a refusé - le même nom que sélectionne la ligne En cas d'échec de.
+Plain words a player or a log line can read.,Des mots simples qu'un joueur ou une ligne de journal peut lire.
+Report Success,Signaler une réussite
+"Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.","Annonce qu'un verbe a terminé, si bien que chaque événement En cas de réussite de pour ce verbe s'exécute. Le jumeau de confirmation de Signaler un échec."
+Report success of [b]{verb}[/b],Signaler la réussite de [b]{verb}[/b]
+Name of the verb that finished - the same name the On Success Of row picks.,Le nom du verbe qui a terminé - le même nom que sélectionne la ligne En cas de réussite de.
+At Most Every,Au plus toutes les
+"Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.","Laisse cet événement s'exécuter au plus une fois toutes les tant de secondes, quelle que soit la fréquence à laquelle il est atteint. La limite de débit pour un champ de recherche, un affichage coûteux, ou quarante sons d'impact qui tombent dans une seule frame."
+at most every [b]{seconds}[/b]s,au plus toutes les [b]{seconds}[/b]s
+Shortest gap between two runs of this event.,L'écart minimum entre deux exécutions de cet événement.
+Poke,Signaler une activité
+"Marks that something just happened, by name. Poke on every keystroke or every change, then let Has Been Quiet For notice when it stops.","Marque que quelque chose vient de se produire, par nom. Signalez l'activité à chaque frappe ou à chaque changement, puis laissez Est calme depuis remarquer quand ça s'arrête."
+poke [b]{poke_name}[/b],signaler l'activité [b]{poke_name}[/b]
+Poke name - any label you also use in Has Been Quiet For.,Nom d'activité - n'importe quelle étiquette que vous utilisez aussi dans Est calme depuis.
+Clear Poke,Effacer l'activité
+"Forgets a poke so Has Been Quiet For stops firing. Clear it right after acting on the quiet, the same way you consume a buffered press.","Oublie une activité pour qu'Est calme depuis cesse de se déclencher. Effacez-la juste après avoir agi sur le calme, de la même façon que vous consommez une pression mise en tampon."
+clear poke [b]{poke_name}[/b],effacer l'activité [b]{poke_name}[/b]
+"Poke name, matching a Poke action.","Nom d'activité, correspondant à une action Signaler une activité."
+Has Been Quiet For,Est calme depuis
+"True once a poked name has stopped being poked for this long - the settle-down check. Autosave after the player stops editing, search after they stop typing. Needs a per-frame trigger, and stays true until you Clear Poke.","Vrai dès qu'un nom signalé a cessé d'être signalé pendant tout ce temps - la vérification d'accalmie. Sauvegarde automatique après que le joueur a fini de modifier, recherche après qu'il a fini de taper. Nécessite un déclencheur par frame, et reste vrai jusqu'à ce que vous fassiez Effacer l'activité."
+[b]{poke_name}[/b] has been quiet for [b]{seconds}[/b]s,[b]{poke_name}[/b] est calme depuis [b]{seconds}[/b]s
+How long the quiet has to last.,Combien de temps le calme doit durer.
+Only Once Per Node,Une seule fois par nœud
+"True the first time this row is reached for each node, and never again for that node. The initialiser you want when the row sits inside a For Each over spawned things; the memory lives on the node, so Forget Once For clears it.","Vrai la première fois que cette ligne est atteinte pour chaque nœud, et plus jamais pour ce nœud. L'initialisation que vous voulez quand la ligne est dans un Pour chaque parcourant des choses apparues ; la mémoire vit sur le nœud, si bien qu'Oublier le une seule fois l'efface."
+only once per node ( [b]{node}[/b] / [b]{label}[/b] ),une seule fois par nœud ( [b]{node}[/b] / [b]{label}[/b] )
+"The node the memory belongs to - inside a For Each, the loop item.","Le nœud à qui appartient la mémoire - dans un Pour chaque, l'élément de la boucle."
+Memory,Mémoire
+Name the memory so one node can hold several.,Nommez la mémoire pour qu'un même nœud puisse en tenir plusieurs.
+Only Once Per Name,Une seule fois par nom
+"True the first time this row is reached for each name, and never again for that name. One discovery line per item type, one loot roll per chest id - with no flag variable each. Kept on this node, so Forget Once For clears it.","Vrai la première fois que cette ligne est atteinte pour chaque nom, et plus jamais pour ce nom. Une réplique de découverte par type d'objet, un tirage de butin par id de coffre - sans une variable témoin pour chacun. Conservé sur ce nœud, si bien qu'Oublier le une seule fois l'efface."
+only once per name ( [b]{key}[/b] ),une seule fois par nom ( [b]{key}[/b] )
+The memory's name - one true per name on this node.,Le nom de la mémoire - un seul vrai par nom sur ce nœud.
+Only Once This Scene Load,Une seule fois par chargement de scène
+"True the first time this row is reached for each name in this scene load, and again after the scene is reloaded or changed. The welcome line, the per-level check - forgotten on Restart Scene rather than remembered forever.","Vrai la première fois que cette ligne est atteinte pour chaque nom dans ce chargement de scène, et de nouveau après que la scène a été rechargée ou changée. La réplique de bienvenue, la vérification par niveau - oubliée au Redémarrer la scène plutôt que retenue pour toujours."
+only once this scene load ( [b]{key}[/b] ),une seule fois par chargement de scène ( [b]{key}[/b] )
+The memory's name - one true per name until the scene reloads.,Le nom de la mémoire - un seul vrai par nom jusqu'au rechargement de la scène.
+Forget Once For,Oublier le une seule fois
+Clears an Only Once Per Node / Per Name memory so the row fires again for that node. Drop it in an Object Pool's reset seam and a recycled instance initialises like a fresh one.,Efface une mémoire Une seule fois par nœud / par nom pour que la ligne se redéclenche pour ce nœud. Déposez-le dans le point de réinitialisation d'un Pool d'objets et une instance recyclée s'initialise comme une neuve.
+forget once ( [b]{label}[/b] ) for [b]{node}[/b],oublier le une seule fois ( [b]{label}[/b] ) pour [b]{node}[/b]
+The node holding the memory.,Le nœud qui détient la mémoire.
+The Only Once Per Node / Per Name memory to clear.,La mémoire Une seule fois par nœud / par nom à effacer.

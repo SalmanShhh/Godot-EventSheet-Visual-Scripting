@@ -1146,3 +1146,568 @@ Variable or property,変数またはプロパティ
 "What to change one part of: a node's own member (velocity, modulate, position) picked from the list, or the name of a sheet variable holding a Vector, Color or record.",1 成分を変える対象: リストから選んだノード自身のメンバー (velocity、modulate、position など)、またはベクトル・色・レコードを保持するシート変数の名前。
 Which named part to write.,どの名前の成分に書き込むか。
 The new value for that one part.,その 1 成分に入れる新しい値。
+Watch Data File,データファイルを監視
+"Checks whether a data file has been written since the last check, and fires the sheet's data_file_changed(path) signal when it has - so you edit an enemy's numbers in the Inspector and the running game picks them up. Put it under Every X Seconds; the first check only takes a reading, so nothing fires just because the row started. This is a debug-build tool: it reads the file's timestamp each time it runs.",データファイルが前回のチェック以降に書き込まれたかを調べ、書き込まれていればシートの data_file_changed(path) シグナルを発信します - インスペクターで敵の数値を編集すると、実行中のゲームがそれを拾います。X 秒ごと の下に置いてください。最初のチェックは読み取るだけなので、行が始まっただけでは何も発信されません。これはデバッグビルド向けのツールです。実行のたびにファイルのタイムスタンプを読み取ります。
+watch [b]{path}[/b] for edits,[b]{path}[/b] の編集を監視
+"The data file to watch (a .tres, .json or .csv).",監視するデータファイル (.tres、.json、.csv)。
+Reload Data Asset,データアセットを再読み込み
+"Re-reads a data asset from disk into the copy every node is already holding, so the new numbers apply without restarting or re-assigning anything. It reloads DATA, not code: a changed script still needs a restart. Nothing happens when the path is not there.",ディスクからデータアセットを読み直し、すべてのノードがすでに持っているコピーに反映します。再起動も再代入もせずに新しい数値が効きます。読み直すのは「データ」であってコードではありません。スクリプトを変更した場合は再起動が必要です。パスが存在しない場合は何も起こりません。
+reload data asset [b]{path}[/b],データアセット [b]{path}[/b] を再読み込み
+The data asset to re-read from disk.,ディスクから読み直すデータアセット。
+On Data File Changed,データファイルが変わったとき
+"Runs when a Watch Data File row notices that a watched file has been written. The path arrives on the row as path, so the reaction reloads exactly the file that changed even when two land in the same check. Needs a Signal row for data_file_changed(path: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.",監視中のファイルが書き込まれたことを データファイルを監視 の行が検知したときに実行されます。パスは行に path として届くので、2 つのファイルが同じチェックで変わっても、変わったファイルをそのまま読み直せます。data_file_changed(path: String) のシグナル行が必要です - 無くてもシートはコンパイルされますが、このイベントには何も接続されないため実行されません。プロジェクトドクターがそれを指摘します。
+On data file changed ( {path} ),データファイルが変わったとき ( {path} )
+"The file that was written, carried by the signal itself.",書き込まれたファイル。シグナル自身が運びます。
+Data Folder Problems,データフォルダーの問題
+"Every structural problem in a folder of data assets, one per line, and """" when it is clean: a file that cannot be loaded, one with no usable id, and two files claiming the same id (where the second quietly wins every lookup). Show it, log it, or fail a build with it.","データアセットのフォルダーにある構造的な問題を 1 行につき 1 件で返し、問題が無ければ """" を返します: 読み込めないファイル、使える id が無いファイル、同じ id を主張する 2 つのファイル (2 つ目が黙ってすべての参照を奪います)。表示する、ログに出す、ビルドを失敗させる、どれにも使えます。"
+problems in [b]{folder}[/b],[b]{folder}[/b] の問題
+Folder of data assets to check (not recursive).,検査するデータアセットのフォルダー (再帰しません)。
+Data Folder Is Valid,データフォルダーが正しい
+"True when every data asset in a folder loads, has an id, and has an id no sibling shares - the check to put in front of loading a mod folder or user content. Read the reasons with Data Folder Problems.",フォルダー内のすべてのデータアセットが読み込めて、id を持ち、その id を兄弟のどれとも共有していないとき真になります - MOD フォルダーやユーザーコンテンツを読み込む前に置く条件です。理由は データフォルダーの問題 で読めます。
+[b]{folder}[/b] is valid data,[b]{folder}[/b] は正しいデータ
+Validate Data Folder,データフォルダーを検証
+"Checks a folder of data assets and writes every problem it finds to the Output as one warning, saying which file and what is wrong. A clean folder says nothing at all, so it is safe to leave in a startup event.",データアセットのフォルダーを検査し、見つかった問題をすべて 1 件ずつ警告として出力に書き出します。どのファイルの何が問題かも示します。問題の無いフォルダーは何も言わないので、起動時のイベントに置いたままでも安全です。
+validate data folder [b]{folder}[/b],データフォルダー [b]{folder}[/b] を検証
+World Point To Screen,ワールド座標を画面座標に
+"Where a world point sits on screen right now, camera zoom and scroll included - pin a nameplate, a health bar or a damage number to something that moves. Put the answer on a node that lives on a CanvasLayer and it will track its target without lagging behind the camera.",ワールド上の座標が今どの画面位置にあるか。カメラのズームとスクロールも込みです - ネームプレート、体力バー、ダメージ数値を動くものに貼り付けられます。答えを CanvasLayer 上のノードに与えれば、カメラに遅れることなく対象を追いかけます。
+Math & Random,数学と乱数
+screen position of [b]{world_point}[/b],[b]{world_point}[/b] の画面位置
+World Point,ワールド座標
+A position in the game world.,ゲームワールド内の位置。
+Screen Point To World,画面座標をワールド座標に
+"The world position under a screen pixel - click-to-place, a gamepad cursor, a HUD marker dragged onto the map. The exact opposite of World Point To Screen, so the two round-trip.",画面上のピクセルの下にあるワールド位置 - クリックで配置、ゲームパッドのカーソル、HUD のマーカーをマップにドラッグ、など。ワールド座標を画面座標に のちょうど逆なので、2 つは往復します。
+world position of screen point [b]{screen_point}[/b],画面座標 [b]{screen_point}[/b] のワールド位置
+Screen Point,画面座標
+"A position in screen pixels, with 0,0 at the top-left of the view.","画面ピクセルでの位置。0,0 はビューの左上です。"
+Project To Screen (3D),画面へ投影 (3D)
+"Where a 3D world point lands on screen - nameplates over 3D characters, damage numbers, objective pins drawn on a CanvasLayer. Reads as 0,0 while there is no active 3D camera, so it never faults during a scene change. Check Is Behind Camera (3D) first: a point behind you still projects to a number.","3D のワールド座標が画面のどこに落ちるか - 3D キャラクターの上のネームプレート、ダメージ数値、CanvasLayer に描く目標ピン。有効な 3D カメラが無い間は 0,0 を返すので、シーン切り替え中でも壊れません。まず カメラの背後にある (3D) を確認してください。背後にある点でも数値としては投影されます。"
+screen position of 3D point [b]{world_point}[/b],3D 座標 [b]{world_point}[/b] の画面位置
+A position in the 3D world.,3D ワールド内の位置。
+Is Point On Screen,座標が画面内にある
+"True while a world point is inside the visible view - the honest gate for spawning, culling, showing an off-screen arrow, or holding a tutorial callout until its subject is actually visible.",ワールド座標が見えている範囲の中にある間、真になります - スポーン、カリング、画面外の矢印表示、対象が実際に見えるまでチュートリアルの吹き出しを待たせる、といった判定の正直な条件です。
+[b]{world_point}[/b] is on screen (margin [b]{margin}[/b]),[b]{world_point}[/b] は画面内 (余白 [b]{margin}[/b])
+The world position being tested.,検査するワールド位置。
+Margin,余白
+Pixels of slack outside the view that still count as on screen. Negative pulls the test inward.,ビューの外側でも画面内とみなすピクセル数。負の値にすると内側に狭めます。
+Is Behind Camera (3D),カメラの背後にある (3D)
+"True when a 3D point sits behind the camera plane, where its projected screen position is a mirrored lie. The guard every 3D waypoint marker needs before it draws. With no camera in the scene it reads true, so nothing is drawn into a view that does not exist.",3D の座標がカメラ平面の後ろにあるとき真になります。そこでは投影された画面位置は鏡写しの嘘になります。3D の目標マーカーが描画前に必ず必要とするガードです。シーンにカメラが無い場合は真を返すので、存在しないビューに何かを描いてしまうことはありません。
+[b]{world_point}[/b] is behind the camera,[b]{world_point}[/b] はカメラの背後
+The 3D position being tested.,検査する 3D 位置。
+Screen Edge Position For,画面端の位置
+"A screen position that follows a target while it is visible and sticks to the edge of the view once it is not - the off-screen objective arrow, the radar blip, the ""your teammate is over there"" chevron. Pair it with Marker Angle Toward for the rotation.",対象が見えている間はそれを追い、見えなくなるとビューの端に貼り付く画面位置 - 画面外の目標矢印、レーダーの点、「味方はあっちだ」の山形マーク。回転は マーカーの向き角度 と組み合わせてください。
+screen edge position for [b]{world_point}[/b] (margin [b]{margin}[/b]),[b]{world_point}[/b] の画面端の位置 (余白 [b]{margin}[/b])
+The thing being pointed at.,指し示す対象。
+How far in from the edge the marker is parked.,端からどれだけ内側にマーカーを置くか。
+Marker Angle Toward,マーカーの向き角度
+"The rotation in degrees an on-screen arrow needs so it points from the middle of the view at a world thing - the other half of the off-screen marker, and it stays right while the camera zooms or rotates.",画面上の矢印がビューの中心からワールド上のものを指すために必要な回転 (度) - 画面外マーカーのもう半分で、カメラがズームや回転をしても正しいままです。
+marker angle toward [b]{world_point}[/b],[b]{world_point}[/b] へのマーカーの向き角度
+Visible World Rect,見えているワールド矩形
+"The rectangle of the world the camera can currently see, in world coordinates - spawn just outside it, cull outside it, clamp a node inside it, or size a minimap to it. Follows the camera's zoom and position with nothing to keep in sync.",カメラが今見えているワールドの矩形を、ワールド座標で返します - すぐ外側にスポーンする、外側をカリングする、ノードを内側に収める、ミニマップの大きさを合わせる、など。カメラのズームと位置に自動で追従し、同期を保つ手間はありません。
+visible world rect,見えているワールド矩形
+Wrap Inside The View (3D),ビュー内でラップ (3D)
+"The Asteroids rule in 3D: leave the right of the view and come back on the left, off the top and back at the bottom, at the same distance from the camera. The missing twin of the 2D Wrap Inside The Screen, for a wrap-around arena or an endless shoal. Does nothing while there is no 3D camera.",3D 版のアステロイド則: ビューの右から出たら左から戻り、上から出たら下から戻ります。カメラからの距離はそのままです。2D の 画面内でラップ に欠けていた片割れで、ラップアラウンドの闘技場や果てしない魚群に。3D カメラが無い間は何もしません。
+Movement,移動
+wrap inside the view,ビュー内でラップ
+Random Point In Circle,円内のランダムな点
+"An evenly spread random point inside a circle - the sqrt weighting is done for you, so scatter does not bunch up in the middle the way the obvious version does.",円の中に均等に散らばるランダムな点 - sqrt の重み付けは済ませてあるので、素朴な方法のように中央に固まりません。
+random point within [b]{radius}[/b] of [b]{center}[/b],[b]{center}[/b] から [b]{radius}[/b] 以内のランダムな点
+Center,中心
+Middle of the circle.,円の中心。
+Radius,半径
+In pixels.,ピクセル単位。
+Random Point On Circle,円周上のランダムな点
+"A random point exactly ON the rim of a circle, never inside it - a spawn ring around the player, orbiting decor, a radial menu slot, the starting point of a homing shot.",円の「縁の上」ちょうどにあるランダムな点で、内側には入りません - プレイヤーを囲むスポーンリング、周回する装飾、放射メニューの位置、追尾弾の開始点に。
+random point on a circle of [b]{radius}[/b] around [b]{center}[/b],[b]{center}[/b] を中心とする半径 [b]{radius}[/b] の円周上のランダムな点
+Random Point In Ring,輪の中のランダムな点
+"A random point in the doughnut between two radii - the off-screen spawner that never drops an enemy in the player's lap, and never so far away it never arrives. Evenly spread across the whole band, not crowded against the inner edge.",2 つの半径にはさまれたドーナツ状の領域のランダムな点 - プレイヤーの真横に敵を落とさず、かといって遠すぎて到達しない距離にもしない画面外スポナーです。帯の全体に均等に散らばり、内側の縁に寄りません。
+random point between [b]{inner_radius}[/b] and [b]{outer_radius}[/b] of [b]{center}[/b],[b]{center}[/b] から [b]{inner_radius}[/b] と [b]{outer_radius}[/b] の間のランダムな点
+Middle of the ring.,輪の中心。
+Inner Radius,内半径
+Nothing spawns closer than this.,これより近くにはスポーンしません。
+Outer Radius,外半径
+Nothing spawns further than this.,これより遠くにはスポーンしません。
+Random Point In Rectangle,矩形内のランダムな点
+"A random point inside an axis-aligned rectangle - loot scatter across a room, prop placement, confetti over a banner, a patrol target inside a zone. Feed it Visible World Rect's position and size to scatter across whatever the camera can see.",軸に沿った矩形の中のランダムな点 - 部屋に散らばる戦利品、小物の配置、横断幕に降る紙吹雪、ゾーン内の巡回目標に。見えているワールド矩形 の位置とサイズを渡せば、カメラに映る範囲全体に散らばります。
+random point in the rect at [b]{top_left}[/b] sized [b]{size}[/b],[b]{top_left}[/b] にある大きさ [b]{size}[/b] の矩形内のランダムな点
+Top Left,左上
+Corner the rectangle starts at.,矩形が始まる角。
+Size,サイズ
+Width and height in pixels.,幅と高さ (ピクセル)。
+Random Point In Cone,扇内のランダムな点
+"A random point inside a wedge - shotgun spread, cone attacks, directional scatter, a spray of sparks away from a wall. Facing and spread are in degrees, so the row reads the way you think about it.",くさび形の中のランダムな点 - ショットガンの拡散、扇状の攻撃、方向性のある散らばり、壁から飛ぶ火花。向きと拡がりは度で指定するので、行が考えたとおりに読めます。
+random point in a [b]{spread_degrees}[/b] cone facing [b]{facing_degrees}[/b] from [b]{center}[/b],[b]{center}[/b] から [b]{facing_degrees}[/b] を向いた [b]{spread_degrees}[/b] の扇内のランダムな点
+Tip,頂点
+Where the wedge starts.,くさびが始まる位置。
+Facing,向き
+"Direction the wedge points, in degrees.",くさびが向く方向 (度)。
+Spread,拡がり
+"Total width of the cone in degrees, half either side of facing.",扇の全体の幅 (度)。向きの左右に半分ずつです。
+Reach,到達距離
+How far the wedge extends.,くさびが伸びる距離。
+Random Point Around,周囲のランダムな点
+"Random scatter around a node that is already in the scene - blood splats around a hit, footprints around a stomp, sparkles around a pickup, a wander target around home. Pick the node instead of typing its position, and the scatter follows it as it moves.",すでにシーンにあるノードの周りへのランダムな散らばり - 被弾時の血しぶき、踏みつけの足跡、拾得物のきらめき、拠点の周りの徘徊目標。位置を打ち込む代わりにノードを選ぶので、ノードが動けば散らばりも追従します。
+random point [b]{min_radius}[/b] to [b]{max_radius}[/b] around [i]{node}[/i],[i]{node}[/i] の周り [b]{min_radius}[/b] から [b]{max_radius}[/b] のランダムな点
+Around,周囲
+Node the point is scattered around.,点を散らす中心となるノード。
+Nearest,最も近い距離
+Nothing lands closer than this.,これより近くには落ちません。
+Furthest,最も遠い距離
+Nothing lands further than this.,これより遠くには落ちません。
+Random Direction (2D),ランダムな方向 (2D)
+"A random unit direction in 2D - multiply it by a speed for a random shove, by a distance for a random offset. Always exactly one unit long, so the strength stays where you set it.",2D のランダムな単位方向 - 速さを掛ければランダムな突き飛ばし、距離を掛ければランダムなずれになります。常にちょうど 1 の長さなので、強さは設定したままです。
+random direction,ランダムな方向
+Random Direction (3D),ランダムな方向 (3D)
+"A random unit direction in 3D, evenly spread over the whole sphere. The naive three-random-numbers version crowds the corners of a cube; this one does not, so debris and shrapnel fly out honestly.",球全体に均等に散らばる 3D のランダムな単位方向。素朴な「乱数 3 つ」版は立方体の角に偏りますが、これは偏らないので、破片や榴弾片が正直に飛び散ります。
+random direction (3D),ランダムな方向 (3D)
+Random Point In Sphere,球内のランダムな点
+"An evenly spread random point inside a 3D sphere - spawn clouds, debris fields, flocking targets. The cube-root weighting keeps the middle from filling up first.",3D の球の中に均等に散らばるランダムな点 - 雲のスポーン、破片の帯、群れの目標に。三乗根の重み付けにより中央から埋まることがありません。
+random point within [b]{radius}[/b] of [b]{center}[/b] (3D),[b]{center}[/b] から [b]{radius}[/b] 以内のランダムな点 (3D)
+Middle of the sphere.,球の中心。
+In metres.,メートル単位。
+Random Point In Box,直方体内のランダムな点
+"A random point inside an axis-aligned 3D box - scatter trees over a chunk, spawn enemies in a room volume, place ambient audio emitters. Size is the FULL box, measured around the centre.",軸に沿った 3D の直方体の中のランダムな点 - 区画に木を散らす、部屋のボリュームに敵をスポーンする、環境音のエミッターを置く、など。サイズは中心を基準にした「全体」の大きさです。
+random point in a [b]{size}[/b] box at [b]{center}[/b],[b]{center}[/b] にある大きさ [b]{size}[/b] の直方体内のランダムな点
+Middle of the box.,直方体の中心。
+"Full width, height and depth.",全体の幅、高さ、奥行き。
+Random Point On Screen Edge,画面端のランダムな点
+"A random WORLD position on the border of what the camera can see - the wave spawner that comes in from a random side, ambient wildlife entering the frame, a meteor starting its run. Grow it with Visible World Rect if you want them to appear from just outside.",カメラに映る範囲の境界上のランダムな「ワールド」位置 - ランダムな方向から来るウェーブスポナー、フレームに入ってくる環境の生き物、走り出す隕石。すぐ外側から現れてほしいときは 見えているワールド矩形 で広げてください。
+random point on the screen edge,画面端のランダムな点
+Jitter,ゆらぎ
+"Nudges a value by a random amount up to the size you give - pitch variation on a sound, a pixel or two of scatter on a decal, a shade of variation on a tint. Works on numbers, vectors and colors as long as the amount is the same kind of value.",指定した大きさまでのランダムな量だけ値を動かします - 音のピッチのばらつき、デカールの数ピクセルの散らばり、色合いの微妙な違い。量が同じ種類の値であれば、数値、ベクトル、色に使えます。
+[b]{value}[/b] jittered by [b]{amount}[/b],[b]{amount}[/b] だけゆらいだ [b]{value}[/b]
+"The number, vector or color being nudged.",動かす数値、ベクトル、または色。
+By,量
+"The most it can move, as the SAME kind of value - a number for a number, a Vector2 for a position, a Color for a tint.",動きうる最大量。「同じ種類」の値で指定します - 数値には数値、位置には Vector2、色合いには Color。
+Bounce Off Surface,面で跳ね返る
+"The velocity a moving thing has AFTER hitting a surface - feed it the normal any hit trigger or raycast hands you. Ricochets, pinball, breakout, deflect shields.",動いているものが面に当たった「後」の速度 - 当たり判定のトリガーやレイキャストが返す法線をそのまま渡してください。跳弾、ピンボール、ブロック崩し、反射シールドに。
+[b]{velocity}[/b] bounced off [b]{normal}[/b],[b]{normal}[/b] で跳ね返った [b]{velocity}[/b]
+Velocity,速度
+How the thing was moving when it hit.,当たった瞬間の動き方。
+Surface Normal,面の法線
+The normal any hit trigger or raycast hands you.,当たり判定のトリガーやレイキャストが返す法線。
+Bounciness,弾み
+"1 keeps all the speed, 0.6 is a rubber ball, 0 is a dead stop.",1 なら速さをすべて保ち、0.6 はゴムボール、0 は完全停止です。
+Slide Along Surface,面に沿って滑る
+"The velocity left over once the part pushing INTO a surface is removed - a wall slide that keeps you moving along the wall instead of sticking to it, slope movement, a dash that grazes a corner rather than stopping dead.",面に「押し込む」成分を取り除いた後に残る速度 - 壁に張り付かずに沿って動く壁ずり、斜面の移動、角をかすめても止まらないダッシュに。
+[b]{velocity}[/b] slid along [b]{normal}[/b],[b]{normal}[/b] に沿って滑った [b]{velocity}[/b]
+How the thing was moving when it met the surface.,面に触れた瞬間の動き方。
+Angle Reflected,反射した角度
+The heading in degrees a thing travels on after bouncing off a surface - the answer to feed straight back into Set Angle Of Motion when a bullet should ricochet instead of dying.,面で跳ね返った後に進む向き (度) - 弾が消えずに跳弾すべきときに、移動角度を設定 へそのまま渡せる答えです。
+[b]{degrees}[/b] reflected off [b]{normal}[/b],[b]{normal}[/b] で反射した [b]{degrees}[/b]
+Angle,角度
+"The heading it was travelling on, in degrees.",それまで進んでいた向き (度)。
+The normal the hit reported.,当たり判定が返した法線。
+Push Out Of Surface,面から押し出す
+"A position just clear of a surface instead of exactly on it - park a ricocheting bullet, a decal or a spawned effect here. Landing exactly on a surface is how a thing ends up stuck inside it on the next frame, because a ray that starts inside a shape does not report it.",面のちょうど上ではなく、少し離れた位置 - 跳弾した弾、デカール、生成したエフェクトはここに置いてください。面のちょうど上に置くと、次のフレームで中に埋まってしまいます。形状の内側から始まるレイは、その形状を報告しないからです。
+[b]{point}[/b] pushed [b]{distance}[/b] out of [b]{normal}[/b],[b]{normal}[/b] から [b]{distance}[/b] 押し出した [b]{point}[/b]
+Hit Point,当たった点
+Where the hit happened.,当たりが起きた位置。
+Clearance,余裕
+Pixels of daylight to leave between the thing and the surface.,ものと面の間に空けておくピクセル数。
+Face Along Velocity,進行方向を向く
+"Turns this node to point the way it is travelling, and leaves it alone while it is standing still so a stopped thing never snaps back to facing right. Arrows, fish, cars, thrown knives, a camera that leads the motion.",このノードを進んでいる向きに回し、止まっている間は放っておくので、停止したものが右向きに戻ってしまうことはありません。矢、魚、車、投げナイフ、動きを先導するカメラに。
+face along [b]{velocity}[/b],[b]{velocity}[/b] の向きを向く
+"How this node is moving - Get Velocity on a body, or the direction you are driving it with.",このノードの動き方 - ボディの 速度を取得 か、動かしている方向です。
+Look At (safe up),注視 (安全な上方向)
+"Turns a 3D node to face a point WITHOUT the crash the plain Look At has: when the target is directly overhead or underfoot, the usual up vector points the same way as the look direction and Godot cannot build a rotation from that. This one swaps the up vector at the last moment, and does nothing at all when the target is where the node already is.",3D ノードを指定の点に向けます。素の Look At が起こすクラッシュはありません: 対象が真上や真下にあると、通常の上方向ベクトルが視線方向と同じ向きになり、Godot は回転を作れません。こちらは直前で上方向ベクトルを差し替え、対象がノードと同じ位置にあるときは何もしません。
+look at [b]{target}[/b] (safe up),[b]{target}[/b] を注視 (安全な上方向)
+Look At,注視先
+The world position to face.,向くワールド位置。
+Look At (flat),注視 (水平)
+"Turns a 3D node to face a point but only around the up axis, so a character looks at the player without tipping over to stare at their feet. The rotation every humanoid, turret base and standing NPC actually wants.",3D ノードを上方向の軸まわりだけで点に向けるので、キャラクターは倒れ込んで足元を見つめることなくプレイヤーを見ます。人型、砲台の土台、立っている NPC が実際に求める回転です。
+look at [b]{target}[/b] (flat),[b]{target}[/b] を注視 (水平)
+Aim At Moving Target,動く標的を狙う
+"Where to aim so a shot MEETS a moving target instead of trailing it - the interception point every turret and archer needs. When the target is faster than the shot no lead exists, and it falls back to the target's current spot rather than pointing somewhere absurd.",弾が動く標的を追いかけるのではなく「出会う」ために狙うべき位置 - すべての砲台と射手が必要とする迎撃点です。標的が弾より速い場合、先読み点は存在しないので、ばかげた方向を指す代わりに標的の現在位置を返します。
+aim at [b]{target_position}[/b] moving [b]{target_velocity}[/b],[b]{target_velocity}[/b] で動く [b]{target_position}[/b] を狙う
+Shooting From,射出位置
+Where the shot starts.,弾が始まる位置。
+Target At,標的の位置
+Where the target is right now.,標的が今いる位置。
+Target Moving At,標的の速度
+"How the target is moving, in pixels per second.",標的の動き方 (ピクセル毎秒)。
+Shot Speed,弾速
+"How fast your shot travels, in pixels per second.",自分の弾が進む速さ (ピクセル毎秒)。
+Launch Angle For Arc,放物線の発射角
+"The angle in degrees to fire something so it ARCS onto a target - grenades, mortars, catapults, a coin tossed into a counter. Picks the flatter of the two possible arcs, and reads as 45 degrees when the shot cannot reach at all, so a row never produces a number that is not a number.",標的へ「弧を描いて」当てるための発射角 (度) - 手榴弾、迫撃砲、投石機、カウンターに投げるコイン。2 つある弧のうち低いほうを選び、まったく届かない場合は 45 度を返すので、行が数値でないものを生むことはありません。
+"launch angle to reach [b]{distance}[/b] away, [b]{height}[/b] up",[b]{distance}[/b] 先、高さ [b]{height}[/b] に届く発射角
+Distance,距離
+"How far away the target is, along the ground.",標的までの地面に沿った距離。
+Height Difference,高低差
+How much higher the target is than the launcher; negative is downhill.,標的が発射地点よりどれだけ高いか。負なら下り坂です。
+Launch Speed,初速
+How fast the thing leaves the launcher.,発射時の速さ。
+Gravity,重力
+"Pull downward, in the same units as the speed.",下向きの引き。速さと同じ単位です。
+Time To Reach,到達までの時間
+"How many seconds something moving at a steady speed needs to cover a distance - time a warning before the missile lands, size a tween to match a walk, decide whether the interceptor can get there first.",一定の速さで動くものが距離を進むのに必要な秒数 - ミサイル着弾前の警告のタイミング、歩きに合わせたトゥイーンの長さ、迎撃機が間に合うかの判断に。
+time for [b]{speed}[/b] to cross [b]{from_position}[/b] to [b]{to_position}[/b],[b]{speed}[/b] で [b]{from_position}[/b] から [b]{to_position}[/b] まで進む時間
+Where it starts.,出発する位置。
+Where it is going.,向かう位置。
+Speed,速さ
+Pixels per second.,ピクセル毎秒。
+Cell Of Point,座標のセル
+"Which grid cell a world position falls in - no TileMapLayer needed, so build grids, inventory slots and chunk keys all speak the same language. Negative positions land in negative cells, which is what a grid that extends left and up actually wants.",ワールド位置がどのグリッドセルに入るか - TileMapLayer は不要なので、グリッド、インベントリの枠、チャンクのキーがすべて同じ言葉で話せます。負の位置は負のセルに入りますが、それは左や上へ伸びるグリッドが本当に求める挙動です。
+cell of [b]{point}[/b] on a [b]{cell_size}[/b] grid,[b]{cell_size}[/b] のグリッド上での [b]{point}[/b] のセル
+Point,座標
+A world position.,ワールド位置。
+Cell Size,セルサイズ
+Pixels across one cell. Type Tiles(1) to read your project's own tile size instead.,セル 1 つの幅 (ピクセル)。プロジェクト自身のタイルサイズを読むには Tiles(1) と入力してください。
+Center Of Cell,セルの中心
+"The world position at the middle of a grid cell - where the placement ghost sits, where the tower is built, where the piece lands. The exact partner of Cell Of Point, so the pair round-trips.",グリッドセルの中央にあたるワールド位置 - 配置ゴーストが立つ場所、タワーが建つ場所、駒が落ちる場所です。座標のセル のちょうど相方なので、2 つは往復します。
+center of cell [b]{cell}[/b] on a [b]{cell_size}[/b] grid,[b]{cell_size}[/b] のグリッド上でのセル [b]{cell}[/b] の中心
+Cell,セル
+The grid cell.,グリッドのセル。
+Pixels across one cell.,セル 1 つの幅 (ピクセル)。
+Snap Point To Grid,座標をグリッドにスナップ
+"The nearest grid intersection to a loose position - a dragged card falling into its slot, a level editor brush, a UI element clicking onto a column. Rounds to the nearest, so a thing dropped just past halfway moves forward rather than back.",中途半端な位置にいちばん近いグリッドの交点 - ドラッグしたカードが枠に収まる、レベルエディターのブラシ、UI 要素が列にはまる、など。いちばん近い点に丸めるので、半分をわずかに越えて置いたものは戻らずに前へ進みます。
+[b]{point}[/b] snapped to a [b]{cell_size}[/b] grid,[b]{cell_size}[/b] のグリッドにスナップした [b]{point}[/b]
+The loose world position.,中途半端なワールド位置。
+Snap Point To Grid (3D),座標をグリッドにスナップ (3D)
+"The nearest point on a 3D grid - voxel placement, modular level pieces clicking together, a build cursor that lines up with the floor tiles.",3D グリッド上でいちばん近い点 - ボクセルの配置、モジュール式のレベルパーツの接合、床タイルに揃うビルドカーソルに。
+[b]{point}[/b] snapped to a [b]{cell_size}[/b] grid (3D),[b]{cell_size}[/b] のグリッドにスナップした [b]{point}[/b] (3D)
+Metres across one cell.,セル 1 つの幅 (メートル)。
+Cell Distance,セル間の距離
+"How far apart two grid cells are, with the same geometry dropdown the rest of the plugin uses: straight line, horizontal or vertical only, grid steps (Manhattan) or king moves (Chebyshev). One expression that fits a roguelike, a strategy game and a puzzle board alike.",2 つのグリッドセルがどれだけ離れているかを、プラグインの他の部分と同じ幾何のドロップダウンで求めます: 直線、水平のみ、垂直のみ、グリッドの歩数 (マンハッタン)、キングの移動 (チェビシェフ)。1 つの式でローグライクにも戦略ゲームにもパズル盤にも合います。
+"distance from cell [b]{from_cell}[/b] to [b]{to_cell}[/b], measured as [b]{metric}[/b]",セル [b]{from_cell}[/b] から [b]{to_cell}[/b] までの距離、[b]{metric}[/b] で計測
+From Cell,起点セル
+One cell.,一方のセル。
+To Cell,終点セル
+The other cell.,もう一方のセル。
+Measured As,計測方法
+"How the distance is counted - a roguelike wants Grid steps, a chess board wants King moves.",距離の数え方 - ローグライクなら グリッドの歩数、チェス盤なら キングの移動 です。
+Straight line,直線
+Horizontal only,水平のみ
+Vertical only,垂直のみ
+Grid steps,グリッドの歩数
+King moves,キングの移動
+Neighbours Of Cell,セルの隣接セル
+"The cells touching a cell, as a list - flood fill, path search, ""is anything next to me"", spreading fire, match-three clearing. Choose four sides, eight including diagonals, or the six neighbours of an axial hex board.",あるセルに接するセルをリストで返します - 塗りつぶし、経路探索、「隣に何かあるか」、延焼、マッチ 3 の消去に。4 方向、斜めを含む 8 方向、軸座標ヘックス盤の 6 方向から選べます。
+neighbours of cell [b]{cell}[/b] ([b]{shape}[/b]),セル [b]{cell}[/b] の隣接セル ([b]{shape}[/b])
+The cell whose neighbours you want.,隣接セルを知りたいセル。
+Shape,形
+How cells touch on this board.,この盤でセルがどう接するか。
+4 sides,4 方向
+8 including diagonals,斜めを含む 8 方向
+6 hex (axial),6 方向ヘックス (軸座標)
+Cells In Line,直線上のセル
+"Every cell a straight line passes through, in order from one cell to the other - a laser beam's path, tile-based line of sight, a corridor carved between two rooms, a ruler for a ranged attack. Both ends are included.",直線が通るすべてのセルを、一方のセルからもう一方へ順番に返します - レーザーの経路、タイル単位の視線、部屋の間に掘る通路、遠距離攻撃の物差しに。両端とも含まれます。
+cells in the line from [b]{from_cell}[/b] to [b]{to_cell}[/b],セル [b]{from_cell}[/b] から [b]{to_cell}[/b] までの直線上のセル
+Where the line starts.,直線が始まる位置。
+Where the line ends.,直線が終わる位置。
+Cells In Radius,半径内のセル
+"Every cell within a step radius of a centre cell, as a list - a blast footprint, a range preview, a fog reveal, the tiles a tower covers. Choose the diamond (counting grid steps) or the square (counting king moves).",中心セルから歩数半径の内側にあるすべてのセルをリストで返します - 爆風の範囲、射程のプレビュー、霧の解除、タワーがカバーするタイルに。グリッドの歩数で数えるひし形か、キングの移動で数える正方形かを選べます。
+cells within [b]{radius}[/b] of [b]{center}[/b] ([b]{shape}[/b]),[b]{center}[/b] から [b]{radius}[/b] 以内のセル ([b]{shape}[/b])
+Center Cell,中心セル
+The middle of the area.,範囲の中心。
+Radius In Cells,半径 (セル数)
+How many steps out from the middle.,中心から何歩ぶん外側までか。
+Whether the corners count.,角を数えるかどうか。
+Grid steps (diamond),グリッドの歩数 (ひし形)
+King moves (square),キングの移動 (正方形)
+Cells In Rectangle,矩形内のセル
+"Every cell in a rectangular block, row by row - stamping a room, laying out an inventory grid, placing a multi-cell building, clearing a region of fog. An empty or negative size walks nothing rather than looping backwards.",矩形のブロックにあるすべてのセルを 1 行ずつ返します - 部屋の型押し、インベントリのグリッド配置、複数セルの建物の設置、霧の一区画の解除に。サイズが 0 や負の場合は逆走せずに何も回しません。
+cells in the [b]{size}[/b] block at [b]{top_left}[/b],[b]{top_left}[/b] にある [b]{size}[/b] のブロック内のセル
+Top Left Cell,左上のセル
+Corner the block starts at.,ブロックが始まる角。
+Size In Cells,サイズ (セル数)
+How many cells across and down.,横と縦のセル数。
+Is Cell In Bounds,セルが盤内にある
+"True while a cell is on the board - the guard before every placement, every move and every array lookup keyed by cell. Counting starts at 0,0 in the top-left, so a 20 by 12 board's last cell is 19,11.","セルが盤の上にある間、真になります - すべての配置、すべての移動、セルをキーにした配列参照の前に置くガードです。数え始めは左上の 0,0 なので、20 x 12 の盤の最後のセルは 19,11 です。"
+cell [b]{cell}[/b] is inside a [b]{size}[/b] board,セル [b]{cell}[/b] は [b]{size}[/b] の盤の内側
+The cell being tested.,検査するセル。
+Board Size,盤のサイズ
+How many cells the board is across and down.,盤の横と縦のセル数。
+For Each Cell In Radius,半径内のセルごとに
+"Runs this event's actions once per cell within a step radius of a centre cell - range previews, blast footprints, fog reveal, area-of-effect highlights. Read the current one as `cell`.",中心セルから歩数半径の内側にあるセル 1 つにつき 1 回、このイベントのアクションを実行します - 射程プレビュー、爆風の範囲、霧の解除、範囲効果のハイライトに。現在のセルは `cell` で読めます。
+for each cell within [b]{radius}[/b] of [b]{center}[/b],[b]{center}[/b] から [b]{radius}[/b] 以内のセルごとに
+Falloff At Distance,距離による減衰
+"How strong an effect is at a distance, from 1 at the centre to 0 at the edge - the one number that makes an explosion, a sound, a magnet or a screen shake care how close it was. Anything past the radius reads as 0, so it is safe to multiply straight into damage. For a hand-drawn profile, feed this number into Sample Curve.",距離に応じた効果の強さを、中心の 1 から端の 0 まで返します - 爆発、音、磁力、画面揺れが「どれだけ近かったか」を気にするようになる唯一の数値です。半径より外は 0 になるので、そのままダメージに掛けても安全です。手描きの曲線が欲しいときは、この数値を カーブをサンプル に渡してください。
+falloff from [b]{center}[/b] at [b]{point}[/b] within [b]{radius}[/b],[b]{radius}[/b] の範囲で [b]{center}[/b] から [b]{point}[/b] への減衰
+Where the effect comes from.,効果の発生源。
+What is being affected.,影響を受けるもの。
+Past this it reads 0.,これを超えると 0 になります。
+Profile,曲線
+How quickly the strength drops off with distance.,距離に応じて強さがどれだけ速く落ちるか。
+Linear,直線
+Sharp (squared),急 (2 乗)
+Smooth (ease out),なめらか (イーズアウト)
+Strength Toward,相手への強さ
+"Falloff between THIS node and another one, without spelling out either position - guard suspicion that builds faster the closer you are, a magnet that pulls harder up close, a sound that ducks as you approach. Reads 0 once the other node is out of range.",「このノード」と別のノードの間の減衰を、どちらの位置も書かずに求めます - 近いほど速く高まる衛兵の警戒度、近づくほど強く引く磁石、近づくと引っ込む音。相手が範囲外になると 0 になります。
+strength toward [i]{node}[/i] within [b]{radius}[/b],[b]{radius}[/b] の範囲での [i]{node}[/i] への強さ
+Toward,相手
+The node the strength is measured against.,強さを測る相手のノード。
+Apply Radial Impulse,放射状の力を加える
+"Throws this physics body away from a blast, weaker the further it was - barrels, crates, ragdolls and debris flung by an explosion. One row on the body; the blast only has to say where it happened.",この物理ボディを爆風から遠ざけるように吹き飛ばします。遠いほど弱くなります - 爆発で飛ぶ樽、木箱、ラグドール、破片に。行はボディ側に 1 つ置くだけで、爆風はどこで起きたかを言えば済みます。
+apply radial impulse [b]{strength}[/b] from [b]{center}[/b],[b]{center}[/b] から放射状の力 [b]{strength}[/b] を加える
+Blast Center,爆心
+Where the explosion went off.,爆発が起きた位置。
+Strength,強さ
+"The push at the very centre, in impulse units.",中心ちょうどでの押しの強さ (力積の単位)。
+Past this the push is nothing.,これを超えると押しはゼロになります。
+Push Group Away From,グループを押しのける
+"Shoves every member of a group away from a point, hardest at the centre and not at all past the radius - the mirror of Pull Group Toward. A shockwave clearing a crowd, a repulsor field, a dash that parts the enemies it passes through.",グループのすべてのメンバーをある点から遠ざけます。中心がいちばん強く、半径を超えるとまったく効きません - グループを引き寄せる の鏡です。群衆を蹴散らす衝撃波、斥力フィールド、通り抜けざまに敵を分けるダッシュに。
+push group [b]{group}[/b] away from [b]{center}[/b] within [b]{radius}[/b],グループ [b]{group}[/b] を [b]{radius}[/b] の範囲で [b]{center}[/b] から押しのける
+Group whose members get shoved.,メンバーが押しのけられるグループ。
+Away From,押しのける基点
+Where the shove comes from.,押しが生じる位置。
+Only members inside this are shoved.,この範囲の中のメンバーだけが押しのけられます。
+Pixels the closest member is moved.,いちばん近いメンバーが動くピクセル数。
+Is Within Cone Of,扇の中にある
+"True while a point sits inside a facing wedge - guard vision, spotlight checks, melee arcs, directional blasts. The cheap test to put in front of an expensive raycast: if it is not in the cone, there is nothing to trace.",座標が向きを持つくさびの中にある間、真になります - 衛兵の視界、スポットライトの判定、近接攻撃の弧、方向性のある爆風に。高価なレイキャストの前に置く安い判定です: 扇の中に無いなら、そもそも辿るものがありません。
+[b]{point}[/b] is within a [b]{fov_degrees}[/b] cone of [b]{origin}[/b] facing [b]{facing_degrees}[/b],[b]{point}[/b] は [b]{facing_degrees}[/b] を向いた [b]{origin}[/b] の [b]{fov_degrees}[/b] の扇の中
+Cone From,扇の起点
+"Tip of the wedge - the guard, the spotlight, the blast.",くさびの頂点 - 衛兵、スポットライト、爆風など。
+"Which way the wedge points, in degrees.",くさびが向く方向 (度)。
+The position being tested.,検査する位置。
+Cone Width,扇の幅
+Total width of the wedge in degrees.,くさびの全体の幅 (度)。
+"How far the wedge extends, in pixels.",くさびが伸びる距離 (ピクセル)。
+Wait Until,条件まで待つ
+"Pauses this event until a check comes true, or until the give-up time passes. Read which happened on the next row with Wait Succeeded / Wait Timed Out, naming this wait. It polls once a frame, so prefer Wait For Signal when a real signal exists for what you are waiting on.",条件が真になるまで、または諦める時間が過ぎるまで、このイベントを一時停止します。どちらが起きたかは、この待機の名前を指定して 待機が成功した / 待機がタイムアウトした で次の行から読めます。1 フレームに 1 回調べるので、待っている対象に本物のシグナルがあるなら シグナルを待つ のほうが向いています。
+Time,時間
+"wait [b]{wait_name}[/b] until [b]{check}[/b], give up after [b]{seconds}[/b]s",[b]{check}[/b] まで [b]{wait_name}[/b] を待つ、[b]{seconds}[/b] 秒で諦める
+Named,名前
+"A name for this wait, so Wait Succeeded / Wait Timed Out can say which one they mean.",この待機の名前です。待機が成功した / 待機がタイムアウトした がどの待機を指すか言えるようにします。
+Until,条件
+"The check to wait for, tested once a frame.",待つ対象の条件。1 フレームに 1 回調べます。
+Give Up After,諦めるまで
+Seconds before giving up. 0 waits forever.,諦めるまでの秒数。0 なら永遠に待ちます。
+Wait For All Of,すべてを待つ
+"Pauses this event until every signal in the list has fired at least once, or until the give-up time passes. It connects them ALL up front, one-shot, so nothing can fire into the gap between two waits - the bug a hand-written chain of awaits always has. An empty list succeeds at once.",リストのすべてのシグナルが少なくとも 1 回発信されるまで、または諦める時間が過ぎるまで、このイベントを一時停止します。最初にすべてをワンショットで接続するので、2 つの待機のすき間に発信が落ちることはありません - 手書きの await の連鎖が必ず持つバグです。空のリストはただちに成功します。
+"wait [b]{wait_name}[/b] for ALL of [b]{signals}[/b], give up after [b]{seconds}[/b]s",[b]{signals}[/b] の「すべて」を [b]{wait_name}[/b] で待つ、[b]{seconds}[/b] 秒で諦める
+Signals,シグナル
+"The signals to join, as a list: [$Door.opened, $Camera.arrived].","まとめて待つシグナルをリストで: [$Door.opened, $Camera.arrived]。"
+Wait For Any Of,いずれかを待つ
+"Pauses this event until the first of several signals fires, then carries on - a race, or a sudden-death timer. Read which one won with First To Finish, naming this wait: it answers ""Node.signal"", so racing $Player.died against $Boss.died still tells you which one it was. Every signal is connected one-shot up front, so the winner is whichever really fired first, and the losers are disconnected when the race ends.","複数のシグナルのうち最初の 1 つが発信されるまでこのイベントを一時停止し、その後は続行します - 競争、あるいはサドンデスのタイマーに。どれが勝ったかは、この待機の名前を指定して 最初に終わったもの で読めます: 答えは ""Node.signal"" の形なので、$Player.died と $Boss.died を競わせてもどちらだったか分かります。すべてのシグナルは最初にワンショットで接続されるので、勝者は本当に最初に発信したものであり、負けたほうは競争の終わりに切断されます。"
+wait [b]{wait_name}[/b] for ANY of [b]{signals}[/b],[b]{signals}[/b] の「いずれか」を [b]{wait_name}[/b] で待つ
+"A name for this wait, so First To Finish and the outcome conditions can say which one they mean.",この待機の名前です。最初に終わったもの や結果の条件がどの待機を指すか言えるようにします。
+"The signals to race, as a list: [$Player.died, $Boss.died].","競わせるシグナルをリストで: [$Player.died, $Boss.died]。"
+Wait Succeeded,待機が成功した
+"True when the named wait ended because what it was waiting for happened. A wait that has never run is neither succeeded nor timed out, so nothing fires before the wait does.",名前の付いた待機が、待っていたことが起きたために終わったとき真になります。一度も実行されていない待機は成功でもタイムアウトでもないので、待機より先に何かが動くことはありません。
+wait [b]{wait_name}[/b] succeeded,待機 [b]{wait_name}[/b] が成功した
+The name the wait row used.,待機の行が使った名前。
+Wait Timed Out,待機がタイムアウトした
+"True when the named wait gave up instead of finishing - the recovery branch for a load that never reported in. The same timeout also reports on verb_failed, so another event can handle it as On Failure Of.",名前の付いた待機が、終わらずに諦めたとき真になります - 報告の来ない読み込みに対する復旧の分岐です。同じタイムアウトは verb_failed でも報告されるので、別のイベントが 失敗したとき として処理することもできます。
+wait [b]{wait_name}[/b] timed out,待機 [b]{wait_name}[/b] がタイムアウトした
+First To Finish,最初に終わったもの
+"Which signal a Wait For Any Of was watching finished first, written as ""Node.signal"" (the node's name, a dot, the signal's name), or empty text when it timed out. The node is part of the answer on purpose: a race between $Player.died and $Boss.died is two signals with the same name, and only the owner tells them apart. Compare it in a condition cell to branch on the winner.","いずれかを待つ が見ていたシグナルのうち最初に終わったものを ""Node.signal"" (ノードの名前、ドット、シグナルの名前) の形で返します。タイムアウトした場合は空のテキストです。ノードが答えに含まれるのは意図的です: $Player.died と $Boss.died の競争は同じ名前のシグナル 2 つであり、持ち主だけが両者を見分けられます。条件セルで比較すれば勝者で分岐できます。"
+first to finish ( [b]{wait_name}[/b] ),最初に終わったもの ( [b]{wait_name}[/b] )
+The name the Wait For Any Of row used.,いずれかを待つ の行が使った名前。
+Retry Up To N Times,最大 N 回まで再試行
+"Runs this event's actions over and over, up to a number of attempts, so a nested Stop Retrying can end it the moment the thing works. With no waiting inside it stays instant, which makes it the procedural-placement loop as much as the disk retry. Read the try number with Retry Attempt Number.",このイベントのアクションを、指定した回数まで繰り返し実行します。中に置いた 再試行をやめる で、うまくいった瞬間に終われます。中で待たなければ即座に終わるので、ディスクの再試行と同じくらい手続き的な配置ループにも向きます。何回目かは 再試行の回数 で読めます。
+retry [b]{retry_name}[/b] up to [b]{times}[/b] times,[b]{retry_name}[/b] を最大 [b]{times}[/b] 回まで再試行
+"A name for this retry, matching its Stop Retrying and Retries Exhausted rows.",この再試行の名前です。対応する 再試行をやめる と 再試行を使い切った の行と一致させます。
+Times,回数
+Most attempts before giving up.,諦めるまでの最大試行回数。
+Retry Attempt Number,再試行の回数
+"Which try this is, counting from 1 - the number you put in the log line or the HUD. Only readable inside a Retry Up To N Times loop, and it reads that loop's own variable, so change the cell if you renamed it.",今が何回目かを 1 から数えて返します - ログ行や HUD に入れる数値です。最大 N 回まで再試行 のループの中でだけ読め、そのループ自身の変数を読むので、ループ変数の名前を変えたならセルも変えてください。
+retry attempt number,再試行の回数
+Loop Variable,ループ変数
+The retry loop's own variable. Leave it as attempt unless you renamed the loop variable on the Retry Up To N Times row.,再試行ループ自身の変数です。最大 N 回まで再試行 の行でループ変数の名前を変えていないかぎり、attempt のままにしてください。
+Stop Retrying,再試行をやめる
+"Ends the retry loop right now because the attempt worked, and records that it worked so Retries Exhausted below stays false. Put it under the condition that means success.",試行が成功したので再試行ループを今すぐ終わらせ、成功したことを記録するので、下にある 再試行を使い切った は偽のままになります。成功を意味する条件の下に置いてください。
+stop retrying [b]{retry_name}[/b],[b]{retry_name}[/b] の再試行をやめる
+The name the Retry Up To N Times row uses.,最大 N 回まで再試行 の行が使っている名前。
+Retries Exhausted,再試行を使い切った
+"True when the retry loop above ran out of tries without a Stop Retrying - the give-up branch. Put it in a sibling row directly beneath the retry loop, using the same name; a retry that has never run is not exhausted, so nothing fires before the loop does. Reading it clears the record, so the next run starts clean. When the retry WAITS between tries (Wait Before Next Try) the loop is still running while the rows beneath it are reached, so report that give-up with Report Failure on the last attempt and handle it in an On Failure Of event instead.",上の再試行ループが 再試行をやめる に出会わないまま回数を使い切ったとき真になります - 諦めの分岐です。再試行ループのすぐ下の兄弟の行に、同じ名前で置いてください。一度も実行されていない再試行は使い切っていないので、ループより先に何かが動くことはありません。読み取ると記録は消えるので、次の実行はきれいな状態から始まります。再試行が試行の間に「待つ」場合 (次の試行まで待つ)、下の行に到達した時点でループはまだ動いているので、その諦めは最後の試行で 失敗を報告 して 失敗したとき のイベントで処理してください。
+retries for [b]{retry_name}[/b] exhausted,[b]{retry_name}[/b] の再試行を使い切った
+Wait Before Next Try,次の試行まで待つ
+"Pauses before the next attempt, waiting longer each time when you set a growth above 1 - the polite way to retry a disk or a slow source. It suspends this event like Wait does, so pair the retry with Once At A Time when the trigger can fire again mid-retry.",次の試行の前に待ちます。増加率を 1 より大きくすると毎回長く待ちます - ディスクや遅い供給元に対する礼儀正しい再試行のしかたです。待つ と同じようにこのイベントを中断するので、再試行の途中でトリガーが再び発火しうるときは 一度に 1 つだけ と組み合わせてください。
+wait [b]{delay}[/b]s before try [b]{attempt}[/b] (growing x[b]{growth}[/b]),試行 [b]{attempt}[/b] の前に [b]{delay}[/b] 秒待つ (x[b]{growth}[/b] で増加)
+Wait after the first failed try.,最初の失敗の後に待つ時間。
+Growing By,増加率
+"1 = the same wait every time, 2 = doubling backoff.",1 = 毎回同じ待ち時間、2 = 倍々のバックオフ。
+On Try,試行回数
+Which try this is - put Retry Attempt Number here.,今が何回目か - ここには 再試行の回数 を入れます。
+Remember In Trail,履歴に記録
+"Records a value into a named rolling history you can dump, chart, or check when something goes wrong.",値を名前付きの巡回履歴に記録し、後で書き出したり、図にしたり、問題が起きたときに確認したりできます。
+Debug,デバッグ
+"remember [b]{value}[/b] in trail [b]{trail}[/b], keep [b]{keep}[/b]",[b]{value}[/b] を履歴 [b]{trail}[/b] に記録、[b]{keep}[/b] 件保持
+"The value to record this tick - a number, a vector, anything printable.",このティックで記録する値 - 数値、ベクトル、表示できるものなら何でも。
+Trail,履歴
+Trail name - any label you also use in the trail expressions.,履歴の名前 - 履歴の式でも使う任意のラベルです。
+Keep,保持件数
+How many recent values to hold (older ones drop off the front).,直近の値を何件保持するか (古いものから順に落ちます)。
+Trail Values,履歴の値
+"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.",履歴全体を配列として、古い順に返します - 図、表、配列の動詞に渡せます。
+trail [b]{trail}[/b] values,履歴 [b]{trail}[/b] の値
+"Trail name, matching a Remember In Trail action.",履歴の名前。履歴に記録 のアクションと一致させます。
+Lowest In Trail,履歴の最小値
+"The smallest value recorded in a trail, which is the spike a per-frame watch blinked past. An empty trail reads as INF.",履歴に記録された最小の値。毎フレームの監視では見逃していた急落がこれです。空の履歴は INF になります。
+lowest in trail [b]{trail}[/b],履歴 [b]{trail}[/b] の最小値
+Highest In Trail,履歴の最大値
+The largest value recorded in a trail. An empty trail reads as -INF.,履歴に記録された最大の値。空の履歴は -INF になります。
+highest in trail [b]{trail}[/b],履歴 [b]{trail}[/b] の最大値
+Average In Trail,履歴の平均
+The mean of every number recorded in a trail - a rolling average that is as useful in gameplay as in debugging. An empty trail reads as 0.,履歴に記録されたすべての数値の平均 - デバッグと同じくらいゲーム内でも役に立つ移動平均です。空の履歴は 0 になります。
+average of trail [b]{trail}[/b],履歴 [b]{trail}[/b] の平均
+Newest In Trail,履歴の最新値
+"The most recently recorded value in a trail, or 0 when nothing has been recorded yet.",履歴にいちばん最近記録された値。まだ何も記録されていない場合は 0 です。
+newest in trail [b]{trail}[/b],履歴 [b]{trail}[/b] の最新値
+Trail Length,履歴の長さ
+"How many values a trail is currently holding, which tops out at the Keep you gave it.",履歴が現在保持している値の件数。指定した 保持件数 が上限です。
+length of trail [b]{trail}[/b],履歴 [b]{trail}[/b] の長さ
+Log Trail,履歴をログ出力
+"Prints the whole trail to the Output console, so the seconds before a bug arrive with the bug.",履歴全体を出力コンソールに表示するので、バグの直前の数秒がバグと一緒に届きます。
+log trail [b]{trail}[/b],履歴 [b]{trail}[/b] をログ出力
+Save Trail To CSV,履歴を CSV に保存
+Writes a trail to a two-column CSV file you can open in a spreadsheet and plot.,履歴を 2 列の CSV ファイルに書き出します。表計算ソフトで開いて図にできます。
+save trail [b]{trail}[/b] to [b]{path}[/b],履歴 [b]{trail}[/b] を [b]{path}[/b] に保存
+Where to write the file. Use user:// so it works in an exported game.,ファイルを書き出す場所。書き出したゲームでも動くように user:// を使ってください。
+Clear Trail,履歴をクリア
+"Forgets everything a trail recorded, so the next run starts from nothing.",履歴が記録したものをすべて忘れるので、次の実行は何も無い状態から始まります。
+clear trail [b]{trail}[/b],履歴 [b]{trail}[/b] をクリア
+Frame Took Longer Than,フレームが指定時間を超えた
+"True on a frame that took longer than your budget, which is the hitch caught as it happens. Needs a per-frame trigger.",予算より時間のかかったフレームで真になります。起きたその場で捕まえたカクつきです。毎フレームのトリガーが必要です。
+frame took longer than [b]{ms}[/b] ms,フレームが [b]{ms}[/b] ms を超えた
+Milliseconds,ミリ秒
+The budget. 16.6 is one frame at 60 FPS.,予算。16.6 は 60 FPS の 1 フレームです。
+FPS Below For,FPS が一定時間下回った
+"True once the framerate has stayed under your floor for the whole stretch you name, which tells a real performance drop apart from one stuttery frame. Needs a per-frame trigger.",フレームレートが指定した下限を、指定した期間ずっと下回り続けたときに真になります。本物の性能低下と 1 フレームだけのつまずきを見分けられます。毎フレームのトリガーが必要です。
+FPS below [b]{fps}[/b] for [b]{seconds}[/b] seconds,FPS が [b]{seconds}[/b] 秒間 [b]{fps}[/b] を下回った
+FPS,FPS
+The framerate floor. Below this counts as a drop.,フレームレートの下限。これを下回ると低下とみなします。
+For Seconds,継続秒数
+How long the drop must last before this is true.,真になるまでに低下が続かなければならない長さ。
+Start Measuring,計測を開始
+Starts a named stopwatch. Pair it with Stop Measuring around the work you suspect.,名前付きのストップウォッチを開始します。疑わしい処理を挟むように 計測を停止 と組み合わせてください。
+start measuring [b]{named}[/b],[b]{named}[/b] の計測を開始
+The name this measurement is reported under.,この計測が報告される名前。
+Stop Measuring,計測を停止
+"Stops a named stopwatch and files the result, keeping the last, the average and the worst reading for that name.",名前付きのストップウォッチを止めて結果を記録し、その名前について最新値、平均、最悪値を保持します。
+stop measuring [b]{named}[/b],[b]{named}[/b] の計測を停止
+The name you gave Start Measuring.,計測を開始 で付けた名前。
+Last Measured (ms),最新の計測値 (ms)
+How many milliseconds the most recent run of a named measurement took.,名前付きの計測の最新の実行が何ミリ秒かかったか。
+last measured [b]{named}[/b] ms,[b]{named}[/b] の最新の計測値 (ms)
+Average Measured (ms),平均の計測値 (ms)
+"The mean cost in milliseconds across every run of a named measurement, which is the number to quote when you claim an optimization worked.",名前付きの計測のすべての実行にわたる平均コスト (ミリ秒)。最適化が効いたと主張するときに挙げるべき数値です。
+average measured [b]{named}[/b] ms,[b]{named}[/b] の平均の計測値 (ms)
+Peak Measured (ms),最悪の計測値 (ms)
+"The worst run of a named measurement in milliseconds, which is usually the one the player felt.",名前付きの計測でいちばん悪かった実行のミリ秒。たいていはプレイヤーが感じ取ったのがこれです。
+peak measured [b]{named}[/b] ms,[b]{named}[/b] の最悪の計測値 (ms)
+Log Measurements,計測をログ出力
+"Prints every named measurement taken so far with its last, average and peak cost - the report you paste into a bug or a devlog.",これまでに取ったすべての名前付き計測を、最新値、平均、最悪値とともに表示します - バグ報告や開発日誌に貼り付けるレポートです。
+log measurements,計測をログ出力
+Clear Measurements,計測をクリア
+"Throws away every measurement recorded so far, so a fresh run starts from a clean slate.",これまでに記録したすべての計測を捨てるので、次の実行はまっさらな状態から始まります。
+clear measurements,計測をクリア
+Register As Service,サービスとして登録
+"Publishes this node under a short name anything can ask for, so no other row needs a path to it. Run it under On Ready. Registering the same name again replaces it, and a freed node answers as nothing at all, so a scene reload leaves no dangling reference behind.",このノードを、どこからでも呼び出せる短い名前で公開するので、他のどの行もこのノードへのパスを必要としません。準備ができたとき の下で実行してください。同じ名前で登録し直すと置き換わり、解放されたノードは「何も無い」と答えるので、シーンを読み込み直しても宙ぶらりんの参照は残りません。
+register this as service [b]{service_name}[/b],これをサービス [b]{service_name}[/b] として登録
+"A role, not a class - ""player"", ""audio_director"", ""wallet"". Registering the same name again replaces it.","クラスではなく役割です - ""player""、""audio_director""、""wallet"" など。同じ名前で登録し直すと置き換わります。"
+Service Named,名前付きサービス
+"The node published under a name, or nothing at all when nobody registered it or it has been freed. Drop it wherever a node is asked for - it never crashes and never needs a path.",その名前で公開されたノード。誰も登録していない場合や解放された場合は「何も無い」を返します。ノードが求められる場所にそのまま置けます - クラッシュせず、パスも要りません。
+service named [b]{service_name}[/b],名前が [b]{service_name}[/b] のサービス
+The name the node registered itself under.,ノードが自身を登録した名前。
+Has Service,サービスがある
+True when a node is registered under this name and is still alive. Guard an optional system with it - a missing audio director then costs you a skipped row instead of a crash.,その名前でノードが登録されていて、まだ生きているとき真になります。任意のシステムをこれで守れば、オーディオディレクターが無くてもクラッシュではなく行が 1 つ飛ばされるだけで済みます。
+service [b]{service_name}[/b] exists,サービス [b]{service_name}[/b] が存在する
+The service name to test for.,検査するサービス名。
+For Each Node That Can,メソッドを持つノードごとに
+"Runs this event's actions once per node ANYWHERE in the tree that answers to a method name - the save sweep, the pause sweep, the shutdown sweep, with no list to keep in step. It walks the whole tree, so run it on an event, not every frame. Read the current one as `node`.",ツリーの「どこにあっても」メソッド名に応えるノード 1 つにつき 1 回、このイベントのアクションを実行します - セーブの一斉処理、ポーズの一斉処理、終了の一斉処理を、リストを保守せずに行えます。ツリー全体を歩くので、毎フレームではなくイベントで実行してください。現在のノードは `node` で読めます。
+Nodes: Picking,ノード: ピック
+for each node that can [b]{method_name}[/b],[b]{method_name}[/b] を持つノードごとに
+Answers To,応えるメソッド
+"The method name a node must have to be picked up, e.g. save_state or on_game_paused.",ピックされるためにノードが持っていなければならないメソッド名。たとえば save_state や on_game_paused です。
+Do After This Frame,このフレームの後に実行
+"Runs one action once the frame's physics and signal storm has finished, which is the only safe moment to add, free or reparent nodes. The number one crash a beginner hits is doing that from inside a collision callback; this is the fix, and the rows below it still run immediately.",このフレームの物理とシグナルの嵐が終わってからアクションを 1 つ実行します。ノードの追加、解放、親の変更が安全にできる唯一のタイミングです。初心者が最も多くぶつかるクラッシュは、それを衝突コールバックの中でやってしまうことです。これがその修正で、下の行はそのまま即座に実行されます。
+after this frame: [b]{do}[/b],このフレームの後: [b]{do}[/b]
+Do,実行内容
+"The action to run once this frame's work is finished - the only safe moment to add, free or reparent a node.",このフレームの処理が終わってから実行するアクション - ノードの追加、解放、親の変更が安全にできる唯一のタイミングです。
+Call Later,後で呼ぶ
+"Runs one action after a delay, with no Timer node and WITHOUT suspending - the rows below it keep running. The connection is one-shot, so a delayed beat can neither leak nor fire twice. The readable form of the small follow-up: eject the shell, close the door, play the second thud.",遅延の後にアクションを 1 つ実行します。Timer ノードは不要で、中断も「しません」 - 下の行はそのまま動き続けます。接続はワンショットなので、遅らせた一拍が漏れることも 2 回鳴ることもありません。ちょっとした後追い処理を読みやすく書けます: 薬莢を排出する、扉を閉じる、2 つ目の鈍い音を鳴らす。
+call later ([b]{seconds}[/b]s): [b]{do}[/b],後で呼ぶ ([b]{seconds}[/b] 秒後): [b]{do}[/b]
+Seconds to wait before the action runs.,アクションが実行されるまで待つ秒数。
+The action to run when the delay is up.,遅延が終わったときに実行するアクション。
+Set Property (after this frame),プロパティを設定 (このフレームの後)
+"Sets a property at the end of the frame instead of right now. The one Godot insists on for collision shapes and monitoring: flipping those mid-physics is the error every beginner meets, and deferring is the documented answer.",プロパティを今すぐではなくフレームの最後に設定します。衝突形状や monitoring について Godot が要求するやり方です: 物理の途中でこれらを切り替えるのは初心者が必ず出会うエラーで、遅延させるのが公式の答えです。
+set [b]{property}[/b] of [i]{target}[/i] to [b]{value}[/b] after this frame,このフレームの後に [i]{target}[/i] の [b]{property}[/b] を [b]{value}[/b] に設定
+On,対象
+Node whose property to set.,プロパティを設定するノード。
+Property,プロパティ
+Name of the property to set.,設定するプロパティの名前。
+The value to set it to.,設定する値。
+Only Once This Frame,このフレームで一度だけ
+"True the FIRST time it is reached in a frame under this name, and false for every other time that frame - counting a physics tick as its own frame, so a row under On Physics Process is not folded in with the drawn frame around it. Fifty inventory changes then rebuild the panel once instead of fifty times. Give two rows the same name and they share one run per frame.",その名前でフレーム内に「最初に」到達したときだけ真になり、そのフレームの他のすべての回では偽になります - 物理ティックはそれ自身を 1 フレームとして数えるので、物理処理のとき の下の行が、周囲の描画フレームに巻き込まれることはありません。インベントリが 50 回変わっても、パネルの再構築は 50 回ではなく 1 回で済みます。2 つの行に同じ名前を付けると、フレームあたり 1 回の実行を共有します。
+only once this frame ( [b]{key_id}[/b] ),このフレームで一度だけ ( [b]{key_id}[/b] )
+The gate's name. Every row using the same name folds into one run per frame.,このゲートの名前です。同じ名前を使う行はすべて、フレームあたり 1 回の実行にまとまります。
+Spawn Scene As,名前を付けてシーンを生成
+"Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Spawned. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.","シーンを名前付きで生成し、ツリーに入る前に値のレコードを設定し、その名前で覚えておくので、後のどの行も 生成されたもの と言えます。シートが scene_spawned(spawn_name, node) シグナルを宣言していれば、両方を添えて発信するので、最後に何が生成されたか尋ねることなく別のイベントが新しいノードに反応できます。"
+Scene,シーン
+Spawn [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i],[b]{path}[/b] を [b]{spawn_name}[/b] として [i]{values}[/i] つきで生成
+Scene file to instance.,インスタンス化するシーンファイル。
+As,名前
+"A name for this spawn, so later rows can say The Spawned ""boss"".","この生成の名前です。後の行が 生成されたもの ""boss"" と言えるようになります。"
+With,設定値
+"Values to set as it arrives, as a record: {""max_health"": 200, ""tier"": 3}. Names the scene does not have are set anyway, so keep to its own fields.","到着時に設定する値をレコードで: {""max_health"": 200, ""tier"": 3}。シーンが持たない名前も設定されてしまうので、シーン自身のフィールドに留めてください。"
+The node to add it under. Leave as nothing to add it under this one.,追加先のノード。空のままにするとこのノードの下に追加します。
+Spawn position.,生成位置。
+The Spawned,生成されたもの
+"The node a Spawn Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.",名前を付けてシーンを生成 の行がこの名前で作ったノード。一度も生成されていない場合や、その後に解放された場合は「何も無い」を返します - 死んだボスに手を伸ばした行は、クラッシュではなく何も得られません。
+the spawned [b]{spawn_name}[/b],生成されたもの [b]{spawn_name}[/b]
+The name a Spawn Scene As row used.,名前を付けてシーンを生成 の行が使った名前。
+Spawn Is Alive,生成されたものが生きている
+"True while the node spawned under this name still exists - the guard to put in front of any row that talks to a named spawn, and the honest way to ask 'is the boss still up?'.",この名前で生成されたノードがまだ存在する間、真になります - 名前付きの生成物に話しかけるすべての行の前に置くガードで、「ボスはまだ健在か」を正直に尋ねる方法です。
+the spawned [b]{spawn_name}[/b] is alive,生成されたもの [b]{spawn_name}[/b] が生きている
+On Scene Spawned,シーンが生成されたとき
+"Runs when a Spawn Scene As row spawns something. The name and the new node arrive on the row as spawn_name and node, so a reaction can configure or announce the node without asking what was spawned last - correct even when one loop spawns six things in a frame. Needs a Signal row for scene_spawned(spawn_name: String, node: Node) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","名前を付けてシーンを生成 の行が何かを生成したときに実行されます。名前と新しいノードは行に spawn_name と node として届くので、最後に何が生成されたか尋ねることなく、反応側がノードを設定したり知らせたりできます - 1 つのループが 1 フレームに 6 つ生成しても正しく動きます。scene_spawned(spawn_name: String, node: Node) のシグナル行が必要です - 無くてもシートはコンパイルされますが、このイベントには何も接続されないため実行されません。プロジェクトドクターがそれを指摘します。"
+On scene spawned {spawn_name} ( {node} ),シーンが生成されたとき {spawn_name} ( {node} )
+The name the Spawn Scene As row gave this spawn.,名前を付けてシーンを生成 の行がこの生成に与えた名前。
+Node,ノード
+"The node that was just spawned, carried by the signal itself.",たった今生成されたノード。シグナル自身が運びます。
+On Failure Of,失敗したとき
+"Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","動詞が拒否を報告したときに実行されます。動詞の名前と理由は行に verb_id と reason として届くので、復旧処理を独立したイベントに置けます - 1 つの動詞だけを扱うなら下に条件を足してください。verb_failed(verb_id: String, reason: String) の シグナルを宣言 行が必要です - 無くてもシートはコンパイルされますが、このイベントには何も接続されないため実行されません。プロジェクトドクターがそれを指摘します。"
+On failure of {verb_id} ( {reason} ),{verb_id} が失敗したとき ( {reason} )
+Verb,動詞
+Which verb refused - the name the Report Failure row used.,どの動詞が拒否したか - 失敗を報告 の行が使った名前です。
+Reason,理由
+"Why it refused, carried by the signal itself.",拒否した理由。シグナル自身が運びます。
+On Success Of,成功したとき
+"Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.",動詞が完了を報告したときに実行されます。動詞の名前は行に verb_id として届きます。verb_succeeded(verb_id: String) の シグナルを宣言 行が必要です - 無くてもシートはコンパイルされますが、このイベントには何も接続されないため実行されません。プロジェクトドクターがそれを指摘します。
+On success of {verb_id},{verb_id} が成功したとき
+Which verb finished - the name the Report Success row used.,どの動詞が完了したか - 成功を報告 の行が使った名前です。
+Report Failure,失敗を報告
+"Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.",動詞が拒否したことを知らせるので、その動詞に対するすべての 失敗したとき のイベントが実行されます。自分で公開する動詞の中や、リソースが null だったり結果が空だったりした確認の後で使ってください。
+Report failure of [b]{verb}[/b]: [b]{reason}[/b],[b]{verb}[/b] の失敗を報告: [b]{reason}[/b]
+Name of the verb that refused - the same name the On Failure Of row picks.,拒否した動詞の名前 - 失敗したとき の行が拾うのと同じ名前です。
+Plain words a player or a log line can read.,プレイヤーやログ行が読める平易な言葉。
+Report Success,成功を報告
+"Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.",動詞が完了したことを知らせるので、その動詞に対するすべての 成功したとき のイベントが実行されます。失敗を報告 の対になる確認です。
+Report success of [b]{verb}[/b],[b]{verb}[/b] の成功を報告
+Name of the verb that finished - the same name the On Success Of row picks.,完了した動詞の名前 - 成功したとき の行が拾うのと同じ名前です。
+At Most Every,最短間隔
+"Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.",どれだけ頻繁に到達しても、このイベントを指定した秒数につき最大 1 回だけ実行させます。検索ボックス、重い表示、1 フレームに 40 個届くヒット音のレート制限に。
+at most every [b]{seconds}[/b]s,最短でも [b]{seconds}[/b] 秒ごと
+Shortest gap between two runs of this event.,このイベントの実行と実行の最短の間隔。
+Poke,合図
+"Marks that something just happened, by name. Poke on every keystroke or every change, then let Has Been Quiet For notice when it stops.",何かが起きたことを名前付きで記録します。キー入力ごと、変更ごとに合図を出しておき、止まったときに 静かになってから で気づかせます。
+poke [b]{poke_name}[/b],[b]{poke_name}[/b] に合図
+Poke name - any label you also use in Has Been Quiet For.,合図の名前 - 静かになってから でも使う任意のラベルです。
+Clear Poke,合図をクリア
+"Forgets a poke so Has Been Quiet For stops firing. Clear it right after acting on the quiet, the same way you consume a buffered press.",合図を忘れさせて 静かになってから の発火を止めます。バッファした入力を消費するのと同じように、静けさに反応した直後にクリアしてください。
+clear poke [b]{poke_name}[/b],合図 [b]{poke_name}[/b] をクリア
+"Poke name, matching a Poke action.",合図の名前。合図 のアクションと一致させます。
+Has Been Quiet For,静かになってから
+"True once a poked name has stopped being poked for this long - the settle-down check. Autosave after the player stops editing, search after they stop typing. Needs a per-frame trigger, and stays true until you Clear Poke.",合図を出していた名前が、この長さのあいだ合図されなくなったとき真になります - 落ち着きを確かめる条件です。プレイヤーが編集をやめたら自動保存、入力をやめたら検索。毎フレームのトリガーが必要で、合図をクリア するまで真のままです。
+[b]{poke_name}[/b] has been quiet for [b]{seconds}[/b]s,[b]{poke_name}[/b] が [b]{seconds}[/b] 秒間静かになった
+How long the quiet has to last.,静けさが続かなければならない長さ。
+Only Once Per Node,ノードごとに一度だけ
+"True the first time this row is reached for each node, and never again for that node. The initialiser you want when the row sits inside a For Each over spawned things; the memory lives on the node, so Forget Once For clears it.",この行がノードごとに最初に到達したときだけ真になり、そのノードについて二度と真になりません。生成されたものを回す 各要素について の中に行があるときに欲しくなる初期化です。記憶はノードに載るので、一度きりを忘れる で消せます。
+only once per node ( [b]{node}[/b] / [b]{label}[/b] ),ノードごとに一度だけ ( [b]{node}[/b] / [b]{label}[/b] )
+"The node the memory belongs to - inside a For Each, the loop item.",記憶が属するノード - 各要素について の中なら、ループの要素です。
+Memory,記憶
+Name the memory so one node can hold several.,記憶に名前を付ければ、1 つのノードが複数持てます。
+Only Once Per Name,名前ごとに一度だけ
+"True the first time this row is reached for each name, and never again for that name. One discovery line per item type, one loot roll per chest id - with no flag variable each. Kept on this node, so Forget Once For clears it.",この行が名前ごとに最初に到達したときだけ真になり、その名前について二度と真になりません。アイテム種別ごとに 1 回の発見メッセージ、宝箱の id ごとに 1 回の戦利品抽選を、それぞれのフラグ変数なしで実現します。このノードに保持されるので、一度きりを忘れる で消せます。
+only once per name ( [b]{key}[/b] ),名前ごとに一度だけ ( [b]{key}[/b] )
+The memory's name - one true per name on this node.,記憶の名前 - このノードで名前ごとに 1 回だけ真になります。
+Only Once This Scene Load,このシーン読み込みで一度だけ
+"True the first time this row is reached for each name in this scene load, and again after the scene is reloaded or changed. The welcome line, the per-level check - forgotten on Restart Scene rather than remembered forever.",このシーンの読み込みにおいて、この行が名前ごとに最初に到達したときだけ真になり、シーンを読み込み直したり切り替えたりすると再び真になります。ようこそメッセージやレベルごとの確認に - 永遠に覚えているのではなく シーンを再開 で忘れます。
+only once this scene load ( [b]{key}[/b] ),このシーン読み込みで一度だけ ( [b]{key}[/b] )
+The memory's name - one true per name until the scene reloads.,記憶の名前 - シーンが読み込み直されるまで名前ごとに 1 回だけ真になります。
+Forget Once For,一度きりを忘れる
+Clears an Only Once Per Node / Per Name memory so the row fires again for that node. Drop it in an Object Pool's reset seam and a recycled instance initialises like a fresh one.,ノードごとに一度だけ / 名前ごとに一度だけ の記憶を消すので、そのノードについて行が再び発火します。オブジェクトプールのリセットの継ぎ目に置けば、再利用されたインスタンスも新品のように初期化されます。
+forget once ( [b]{label}[/b] ) for [b]{node}[/b],[b]{node}[/b] の一度きり ( [b]{label}[/b] ) を忘れる
+The node holding the memory.,記憶を保持しているノード。
+The Only Once Per Node / Per Name memory to clear.,消す ノードごとに一度だけ / 名前ごとに一度だけ の記憶。

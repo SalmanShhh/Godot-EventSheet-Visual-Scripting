@@ -43,6 +43,7 @@ const NEW_MODULES: Array[String] = [
 	"res://addons/eventforge/registration/modules/table_aces.gd",
 	"res://addons/eventforge/registration/modules/text_extract_aces.gd",
 	"res://addons/eventforge/registration/modules/text_format_aces.gd",
+	"res://addons/eventforge/registration/modules/spatial_aces.gd",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the
@@ -54,6 +55,34 @@ const EXTENDED_MODULES: Dictionary = {
 	],
 	"res://addons/eventforge/registration/modules/collection_aces.gd": [
 		"NumberOr", "TextOr", "ListOr", "RecordOr", "ValueOr", "PartOf", "SetPartOf",
+		# The flow wave: waits that can end two ways, retries, and the race.
+		"WaitUntil", "WaitForAllOf", "WaitForAnyOf", "WaitSucceeded", "WaitTimedOut",
+		"FirstToFinish", "RetryUpTo", "RetryAttemptNumber", "StopRetrying", "RetriesExhausted",
+		"WaitBeforeNextTry",
+	],
+	# The flow/diagnostics wave: trails, measurements and the frame-budget conditions.
+	"res://addons/eventforge/registration/modules/dev_aces.gd": [
+		"RememberInTrail", "TrailValues", "TrailLowest", "TrailHighest", "TrailAverage",
+		"TrailNewest", "TrailLength", "LogTrail", "SaveTrailCsv", "ClearTrail",
+		"FrameOverBudget", "FpsBelowFor", "StartMeasuring", "StopMeasuring", "MeasuredLast",
+		"MeasuredAverage", "MeasuredPeak", "LogMeasurements", "ClearMeasurements",
+	],
+	# The flow wave: the service registry, the capability loop and the deferral verbs.
+	"res://addons/eventforge/registration/modules/node_aces.gd": [
+		"RegisterAsService", "ServiceNamed", "HasService", "ForEachNodeThatCan",
+		"DoAfterFrame", "CallLater", "SetPropertyDeferred", "OnceThisFrame",
+	],
+	# The data wave: watched data files and the data-folder validation verbs.
+	"res://addons/eventforge/registration/modules/resource_aces.gd": [
+		"WatchDataFile", "ReloadDataAsset", "signal:data_file_changed",
+		"DataFolderProblems", "DataFolderIsValid", "ValidateDataFolder",
+	],
+	# The flow wave: named spawns, the success/failure report seam and the once-per-thing guards.
+	"res://addons/eventforge/registration/modules/system_aces.gd": [
+		"SpawnSceneAs", "TheSpawned", "SpawnIsAlive", "signal:scene_spawned",
+		"signal:verb_failed", "signal:verb_succeeded", "ReportFailure", "ReportSuccess",
+		"AtMostEvery", "Poke", "ClearPoke", "HasBeenQuiet", "OnlyOncePerNode",
+		"OnlyOncePerName", "OnlyOnceThisSceneLoad", "ForgetOnceFor",
 	],
 }
 
