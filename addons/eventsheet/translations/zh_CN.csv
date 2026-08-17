@@ -1711,3 +1711,16 @@ Clears an Only Once Per Node / Per Name memory so the row fires again for that n
 forget once ( [b]{label}[/b] ) for [b]{node}[/b],清除只一次 ( [b]{label}[/b] ) 于 [b]{node}[/b]
 The node holding the memory.,持有这份记忆的节点。
 The Only Once Per Node / Per Name memory to clear.,要清除的那份“每个节点只一次 / 每个名字只一次”记忆。
+Wrap in Condition…,用条件包裹…
+Unwrap Event,解开事件
+Inline This Call,内联此调用
+Inline Everywhere and Remove,全部内联并移除
+Duplicate as Variant…,复制为变体…
+Refactor,重构
+Why didn't this fire?,为什么没有触发?
+Compare With…,与…比较
+Loose Ends…,未完成事项…
+Find Repeated Rows…,查找重复行…
+Row Hit Counts,行命中次数
+Reset Hit Counts,重置命中次数
+Run Tests…,运行测试…

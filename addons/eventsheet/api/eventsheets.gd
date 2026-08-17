@@ -380,9 +380,10 @@ static func describe_inspector(type_name: String, attributes: Dictionary, export
 ## behavior, autoload, or tool script from code (there is no other public "create sheet" entry).
 ## All keys optional:
 ##   {"class_name": "Enemy", "host_class": "CharacterBody2D", "behavior_mode": false,
-##    "autoload_mode": false, "autoload_name": "", "tool_mode": false,
+##    "autoload_mode": false, "autoload_name": "", "tool_mode": false, "test_mode": false,
 ##    "category": "My Pack", "tags": ["ai"], "description": "..."}
-## For a tool script pass {"tool_mode": true, "host_class": "EditorScript"}. Append events and
+## For a tool script pass {"tool_mode": true, "host_class": "EditorScript"}; for a Test sheet pass
+## {"test_mode": true}, which adds the runner's start signal and the discovery marker. Append events and
 ## functions to the returned sheet, then compile() it or open_sheet() its saved path.
 static func new_sheet(config: Dictionary = {}) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -392,6 +393,7 @@ static func new_sheet(config: Dictionary = {}) -> EventSheetResource:
 	sheet.autoload_mode = bool(config.get("autoload_mode", false))
 	sheet.autoload_name = str(config.get("autoload_name", ""))
 	sheet.tool_mode = bool(config.get("tool_mode", false))
+	sheet.test_mode = bool(config.get("test_mode", false))
 	sheet.addon_category = str(config.get("category", ""))
 	sheet.class_description = str(config.get("description", ""))
 	if config.has("tags"):
@@ -1621,6 +1623,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"spatial": "Working-With-Vectors-And-Directions",
 	"system": "Timers-Waiting-And-Cooldowns",
 	"table": "Reading-Spreadsheets-And-Data-Assets",
+	"testing": "Testing-Your-Game",
 	"text_extract": "Working-With-Text",
 	"text_fit": "Making-Text-Readable-On-Screen",
 	"text_format": "Making-Text-Readable-On-Screen",

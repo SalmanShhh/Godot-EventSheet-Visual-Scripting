@@ -3617,6 +3617,28 @@ Tables (a spreadsheet read as rows of records) plus the text/folder loops.
 - **Column Of Table** (`table: String, column: String`) - Gives one whole column as a list, in row order - handy for a dropdown's items, a weights list, or a quick sum. A row missing that column contributes empty text.
 - **Row Where** (`table: String, column: String, value: String`) - Finds the FIRST record whose column holds this value - the single-item lookup, e.g. the row for item "sword". Gives an empty record when nothing matches, so check it with Dictionary Is Empty before reading fields.
 
+### Testing (`res://addons/eventforge/registration/modules/testing_aces.gd`)
+Testing vocabulary (a sheet that makes claims and reports pass/fail).
+
+#### Triggers
+- **On Test Start** - Runs when a test runner starts this test sheet. A Test sheet declares signal test_started(test_name: String) and the runner emits it, so the test's name arrives as a parameter you can use in messages.
+
+#### Conditions
+- **Watch For Signal Succeeded** (`signal_name: String`) - True when the matching Watch For Signal row saw its signal fire before the time ran out.
+- **Watch For Signal Timed Out** (`signal_name: String`) - True when the matching Watch For Signal row ran out of time without the signal firing - the outcome a test has to be able to name.
+
+#### Actions
+- **Assert That** (`named: String, claim: String`) - Records a pass when the check is true and a failure when it is not, under the name you give it. The failure message says what the check was, so the report can be read without opening the sheet.
+- **Assert Equal** (`named: String, actual: String, expected: String`) - Records a pass when the two values are equal. The failure message carries BOTH values ("expected 3, got 2") - the one fact a failing equality check always needs.
+- **Expect Signal** (`named: String, signal_name: String, target: String, seconds: String`) - Waits for a signal and records the verdict itself: a pass when it fires in time, a failure saying "expected within 2.00s, never fired" when it does not. Use Watch For Signal instead when the test should decide what each outcome means.
+- **Pass Test** (`named: String`) - Records a pass under this name and marks the test finished, so a runner stops waiting on it and moves to the next one.
+- **Fail Test** (`named: String, reason: String`) - Records a failure with its reason and marks the test finished. The reason is what the report prints beside the name.
+- **Watch For Signal** (`signal_name: String, target: String, seconds: String`) - Waits until the signal fires or the time runs out, then records which happened. It states no verdict of its own: the next rows read it with Watch For Signal Succeeded / Watch For Signal Timed Out and decide what each outcome means.
+- **Load Scene Under Test** (`scene_path: String, as_name: String`) - Instantiates a scene, adds it under the test node so it really runs, and remembers it under a short name. A missing scene is recorded as a failure rather than crashing the test.
+
+#### Expressions
+- **Scene Under Test** (`as_name: String`) - The node a Load Scene Under Test row loaded under this name, so later rows can read its position, call its methods, or watch its signals.
+
 ### Text Extract (`res://addons/eventforge/registration/modules/text_extract_aces.gd`)
 reading a part out of a line, and saying what went wrong.
 

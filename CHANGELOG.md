@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Added - the developer-experience wave, part two: the editor seams (9 suggestions)
+
+Debugging that stays out of the way: **Row Hit Counts** (View menu, ships unticked) show
+how often each event fired since Run as a small chip in the gutter margin - never inside a
+cell, warm when hot, x0 with a dim rail when it never fired - and a hover on the event
+number gives the count with nothing turned on; with the toggle off the sheet is pixel-
+identical to before. **Why didn't this fire?** opens one panel for one row and lists each
+condition's verdict and the value it saw, from the live values the running game already
+streams; it never guesses, and leaves nothing behind. **Test Sheets**: a sheet kind whose
+claims (Assert That, Assert Equal, Expect Signal, Watch For Signal with Succeeded / Timed
+Out read back on the next rows) run headless through Tools > Run Tests... or
+tools/run_test_sheets.gd, printing per-test verdicts and the same summary line the plugin's
+own suite uses; On Test Start is a real signal-backed trigger.
+
+Authoring speed: a **Refactor** row menu with **Wrap in Condition...**, **Unwrap Event**,
+**Inline This Function** (the inverse of Extract to Function) and **Duplicate as
+Variant...** (copy a block with a rename applied, previewed first); **snippets with blanks**
+({{blank:Label}} fields filled in one small dialog at insert). **Compare With...** (another
+sheet or a backup from the ring, side by side, copy-over as ordinary rows). **Loose Ends** -
+a panel, deliberately not row badges - indexing TODO/FIXME, unfinished events, disabled rows,
+breakpoints left on and uncalled verbs, click to jump. **Find Repeated Rows** finds identical
+action runs and hands the fix to Extract to Function. Every refactor is one undo step, and
+every test asserts undo restores the sheet byte for byte.
+
+Under the hood: the addon listing and the pack-fleet walk are cached on directory and file
+modification times, so per-keystroke refreshes stop rescanning ~90 pack folders (the scale
+budget had already been blown by fleet growth and passed only on lucky timing).
+
 ### Added - the developer-experience wave, part one: flow, packs, and vocabulary (22 suggestions)
 
 Drawn from a mockup audited twice - once for the condition/action lane, once for the ACE

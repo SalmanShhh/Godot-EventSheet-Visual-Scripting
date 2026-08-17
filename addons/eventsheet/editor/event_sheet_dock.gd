@@ -2083,6 +2083,8 @@ func _toggle_detached_view() -> void:
 	_detached_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_detached_viewport.set_ace_registry(_ace_registry)
 	_detached_viewport.adopt_shared_state(_viewport.get_shared_state())
+	# The hit-counts lens is a per-pane flag; a new pane inherits the choice already made.
+	_detached_viewport.show_hit_counts = _viewport.show_hit_counts
 	detached_scroll.add_child(_detached_viewport)
 	_connect_view_signals(_detached_viewport)
 	add_child(_detached_window)
@@ -2382,6 +2384,14 @@ func set_live_values_debugger(debugger: EventSheetLiveValuesDebugger) -> void:
 	if debugger != null:
 		_ace_params._expression_picker.live_query = debugger.send_query_children
 		debugger.children_report_received.connect(_ace_params._expression_picker._on_live_children_report)
+		debugger.session_ended.connect(_on_debug_session_ended)
+
+
+## The debug session ended: the last streamed frame stops counting as live values. Without this the
+## Why didn't this fire? panel would keep answering from a stopped game's final frame - the case a
+## reader is most likely to hit, since you stop the game and THEN ask why.
+func _on_debug_session_ended() -> void:
+	_ensure_live_values_panel().clear_live_values()
 
 
 func _toggle_live_values() -> void:
@@ -2434,6 +2444,10 @@ static func _find_event_by_uid(rows: Array, uid: String) -> EventRow:
 
 ## Live event-trace sink (wired by the plugin): highlight the firing rows in every pane.
 func update_fired_events(uids: PackedStringArray) -> void:
+	# The streamed window is a TALLY (one entry per fire, repeats included), so it is counted
+	# before it is deduped into the highlight. Counting always; DRAWING only when the reader
+	# ticks View > Row Hit Counts, or hovers one event number.
+	EventSheetTraceHitCounts.note_fired(uids)
 	for pane: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if pane != null:
 			pane.set_fired_events(uids)
@@ -2453,6 +2467,57 @@ func _toggle_event_trace() -> void:
 			if pane != null:
 				pane.set_fired_events(PackedStringArray())
 		_set_status("Event Trace OFF (recompile to remove the instrumentation).")
+
+
+# ── Row hit counts + Why didn't this fire? (the trace read as numbers, and one row explained) ──
+## The View menu id the Row Hit Counts check item is registered under (menu_bar.gd), kept here
+## so the toggle and the tick can never drift onto two different items.
+const HIT_COUNTS_VIEW_ID := 9601
+
+
+## View > Row Hit Counts: the gutter chip that says how many times each event fired since Run.
+## SHIPS UNTICKED, and that is the design - with it off the sheet is the program and nothing else.
+func _toggle_row_hit_counts(view_popup: PopupMenu) -> void:
+	# ONE target state for every pane, decided from the main viewport. Flipping each pane's own flag
+	# would desynchronise them the moment a split pane is opened while the lens is on (a fresh pane
+	# ships OFF), and the tick would then report whichever pane happened to be iterated last.
+	var showing: bool = not (_viewport != null and _viewport.show_hit_counts)
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		view.show_hit_counts = showing
+		view.queue_redraw()
+	if view_popup != null:
+		view_popup.set_item_checked(view_popup.get_item_index(HIT_COUNTS_VIEW_ID), showing)
+	if not showing:
+		_set_status("Row Hit Counts off - the gutter is back to event numbers only.")
+	elif EventSheetTraceHitCounts.has_run():
+		_set_status("Row Hit Counts on: x-counts in the gutter, warm for the busiest rows, x0 for never fired since Run.")
+	else:
+		_set_status("Row Hit Counts on - no traced run yet. Tools > Event Trace (live highlight), then run the game.")
+
+
+## Tools > Reset Hit Counts: start the tally over without restarting the game (the "now do it
+## again and watch" gesture - reset, trigger the thing, see exactly which rows moved).
+func _reset_row_hit_counts() -> void:
+	EventSheetTraceHitCounts.reset()
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.queue_redraw()
+	_set_status("Hit counts reset - counting starts again from the next streamed window.")
+
+
+## Row menu > Why didn't this fire?: one row, each condition's verdict against the values the
+## Live Values stream is already carrying. Opens a panel and leaves NOTHING on the sheet.
+func _open_why_didnt_this_fire() -> void:
+	var row: EventRow = _context_row.source_resource as EventRow if _context_row != null else null
+	if row == null:
+		_set_status("Pick an event row first.", true)
+		return
+	var panel: GDScript = load("res://addons/eventsheet/editor/docs/doc_why_panel.gd")
+	if panel == null:
+		return
+	panel.open_for_row(self, row, _ensure_live_values_panel()._last_values)
 
 
 # ── Single-param inline editing (double-click value / colour swatch / node drop) → dock/inline_param_editor.gd ──

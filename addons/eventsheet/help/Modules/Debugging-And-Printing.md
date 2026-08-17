@@ -19,6 +19,7 @@ that chooses the stream, so one verb covers Message, Warning, Error and Rich tex
 3. [Verb reference](#verb-reference)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
+6. [Reading the trace: hit counts and "Why didn't this fire?"](#reading-the-trace-hit-counts-and-why-didnt-this-fire)
 
 ## Where this shines
 
@@ -598,3 +599,84 @@ func _on_run_started() -> void:
   check that both rows actually run on the same path.
 - **Nothing here displays itself.** A measurement is only visible where you send it: Log Measurements,
   a label, or the Debug Overlay pack. No row grows a chip and no panel turns itself on.
+
+## Reading the trace: hit counts and "Why didn't this fire?"
+
+Everything above prints. This section is about the two readouts that print nothing: they are
+**lenses over the Event Trace** you pick up and put down, and they add no rows, no vocabulary and no
+text to your sheet. With both of them off - which is how a fresh install ships - a sheet looks
+exactly like the sheet you wrote:
+
+![The sheet with the lens off](../images/hit-counts-off.png)
+
+Tick **View > Row Hit Counts** and the same sheet grows a count in the **left margin only**. The
+cells are untouched; compare them line for line with the picture above:
+
+![The same sheet with Row Hit Counts on](../images/hit-counts-on.png)
+
+The margin says three things: a blue `x3`-style chip for a row that has fired, a **warm** chip for
+the busiest rows of the run, and a muted `x0` plus a **dim rail** down the edge for a row that has
+not fired once since Run. The chip is a glance - the exact number ("fired 1,431 times since Run -
+hot") is in the tooltip when you hover the event number.
+
+To use any of it: **Tools > Event Trace (live highlight)** (it turns Live Values on too), recompile,
+and run the game. **Tools > Reset Hit Counts** starts the tally over without restarting the game.
+A new Run resets it automatically.
+
+### Use cases
+
+1. **"Is this event even running?"** Hover its number. No toggle, no mode, nothing left behind - the
+   tooltip either names a count or stays silent because nothing has run yet.
+2. **Find the dead branch in a state machine.** Turn the lens on after a play session and scroll: the
+   rows wearing `x0` and a rail are the states you never entered.
+3. **Prove a trigger is wired.** A trigger row that stays at `x0` while you do the thing that should
+   fire it has a wiring problem, not a logic problem - that is a different afternoon of debugging.
+4. **Catch a sub-event that lost its Trigger Once.** A row you expected to fire twice wearing the
+   run's warm tint is the per-frame leak, found by looking rather than by profiling.
+5. **Balance by watching which branch dominates.** Run the loot or dialogue sheet for a minute and
+   read the counts: the branch with the biggest number is the one players actually see.
+6. **Check coverage after a refactor.** Play through the level once, then look for margins that never
+   lit: those are the rows your playtest did not touch.
+7. **Teach "every tick".** Put a beginner in front of one Every Frame row with the lens on and let
+   them watch the number climb. It explains the frame loop in about four seconds.
+8. **Compare two runs of the same fight.** Reset Hit Counts, fight it the other way, and read the
+   difference instead of guessing at it.
+
+### Why didn't this fire?
+
+Right-click one event row you are stuck on and pick **Why didn't this fire?**. A panel opens for
+**that row only** and reports each of its conditions: which were true, which were false, and the
+value each one actually saw.
+
+![The Why didn't this fire? panel](../images/why-didnt-fire.png)
+
+It reads the values your game is already streaming (Live Values), so it needs a running game - and
+when there is not one it says so in a plain line instead of showing you a table of confident
+nonsense. A condition that reads the node rather than a sheet variable (`Is on floor`, a behaviour's
+own state) is reported as **not observable from here**, never guessed at. Nothing is written to any
+cell, and closing the panel leaves nothing behind.
+
+More use cases:
+
+9. **The three-condition AND you are sure about.** One of them is false, the panel marks which, and
+   the argument ends.
+10. **Distinguish "never arrived" from "rejected".** A trigger row with no false condition did not get
+    its signal; that sends you to the connection, not to the logic.
+11. **Cooldowns, where the remaining value is the interesting fact.** `cooldown <= 0.0` reads false
+    and the panel shows you the 0.31 it saw.
+12. **Read a stranger's sheet by watching it decide.** Open the panel on the row you do not
+    understand and step the game; the verdicts explain the row faster than the code does.
+13. **Teach boolean AND.** Three conditions, one false, one obvious conclusion - to someone who has
+    never written a line of code.
+
+### Tips for these two
+
+- **They are off, and they stay off.** No lens turns itself on, and neither one survives as a mark on
+  the sheet. A screenshot of a sheet with the lens off is identical to one taken before the feature
+  existed.
+- **Counts need Event Trace, not just Live Values.** Without the trace the game streams no fired-event
+  windows, and the margin correctly stays empty rather than showing zeros it cannot vouch for.
+- **`x0` means "not since this Run".** Reset Hit Counts, or a new launch, is what the "since" refers to.
+- **The chip abbreviates; the tooltip does not.** `1k` in the margin is `fired 1,431 times` on hover.
+- **The panel explains conditions, not actions.** If every condition is true and the row still did not
+  run, look at its trigger, or at an enclosing group that is switched off.

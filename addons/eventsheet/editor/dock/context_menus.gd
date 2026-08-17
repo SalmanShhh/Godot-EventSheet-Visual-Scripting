@@ -13,6 +13,10 @@ extends RefCounted
 # event_sheet_dock.gd to keep that file maintainable; the dock keeps thin delegates so the
 # context-menu sites and the tests don't change.
 
+## The row-menu id for "Why didn't this fire?" (appended seam - see build_all). Deliberately far
+## above the 900+ extension range so the shared dispatcher recognises it as neither.
+const ROW_MENU_WHY_DIDNT_FIRE := 9700
+
 var _dock: Control = null
 
 
@@ -117,6 +121,27 @@ func build_all() -> void:
 	_dock._empty_space_context_menu.add_item("Insert Snippet…", _dock.EMPTY_MENU_INSERT_SNIPPET)
 	_dock._empty_space_context_menu.id_pressed.connect(_dock._on_empty_space_context_menu_id_pressed)
 	_dock.add_child(_dock._empty_space_context_menu)
+
+	# ── Refactor seam (dock/refactor_menu.gd) ────────────────────────────────────────────────
+	# The reverse gestures - Wrap, Unwrap, Inline, Duplicate as Variant. The submenu owns its own
+	# id_pressed (like New Function ▸ above), so its ids never meet the dock's ROW_MENU_* numbering,
+	# and it is found by NAME per right-click rather than stored on the dock.
+	_dock._row_context_menu.add_child(EventSheetRefactorMenu.build_submenu(_dock))
+	# Inline This Call sits on an ACTION's own menu, beside Extract All Actions to Function… - the
+	# same gesture with the other direction. The dock's action dispatcher matches its own ids and
+	# ignores anything else, so this second listener on one popup cannot collide with it.
+	_dock._action_context_menu.add_item("Inline This Call", EventSheetRefactorMenu.ACTION_MENU_INLINE_CALL)
+	_dock._action_context_menu.set_item_tooltip(_dock._action_context_menu.item_count - 1,
+		"Replace this call with the verb's own rows (the inverse of Extract to Function).")
+	_dock._action_context_menu.id_pressed.connect(func(id: int) -> void:
+		if id == EventSheetRefactorMenu.ACTION_MENU_INLINE_CALL:
+			EventSheetRefactorMenu.inline_call_requested(_dock))
+	# ── "Why didn't this fire?" (appended block - keep together) ───────────────────────────────
+	# Its own handler on the row menu, so the item costs the shared dispatcher nothing: id 9700 is
+	# far above the 900+ extension range, where that dispatcher finds no extension item and returns.
+	_dock._row_context_menu.id_pressed.connect(func(id: int) -> void:
+		if id == ROW_MENU_WHY_DIDNT_FIRE:
+			_dock._open_why_didnt_this_fire())
 
 
 ## Rebuilds the row context menu for the clicked row: only the items that apply to its
@@ -252,6 +277,21 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_separator()
 		for extension_index: int in range(extension_items.size()):
 			menu.add_item(str(extension_items[extension_index].get("label", "")), 900 + extension_index)
+	# ── "Why didn't this fire?" (appended block - keep together) ───────────────────────────────
+	# Only on a real event row with conditions: it explains which condition said no, and a row
+	# with nothing to say no has no explanation to give. It opens a panel and draws nothing on
+	# the sheet, which is why it can sit on the plain menu instead of behind Simple Mode.
+	var why_row: EventRow = row_data.source_resource as EventRow if row_data != null else null
+	if is_event and why_row != null and not why_row.conditions.is_empty():
+		menu.add_separator()
+		menu.add_item("Why didn't this fire?", ROW_MENU_WHY_DIDNT_FIRE)
+	# ── Refactor ▸ (appended block - keep together; dock/refactor_menu.gd) ─────────────────────
+	# The reverse gestures, grouped: Wrap in Condition…, Unwrap Event, Inline Everywhere and
+	# Remove, Duplicate as Variant…. Each lands ordinary rows in ONE undo step; an item that cannot
+	# apply to THIS row shows disabled with the reason as its tooltip.
+	if EventSheetRefactorMenu.configure_submenu(_dock, row_data):
+		menu.add_separator()
+		menu.add_submenu_item("Refactor", EventSheetRefactorMenu.SUBMENU_NAME, 882)
 
 
 ## THE data-class resolver - the ONE answer to "which RawCodeRow does this context click

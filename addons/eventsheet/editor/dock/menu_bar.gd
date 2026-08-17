@@ -382,8 +382,78 @@ func build(root: Node) -> void:
 			_quick_add_edit.clear()
 	)
 	_toolbar.add_child(_quick_add_edit)
+	# ── Compare / Loose Ends / Find Repeated Rows (appended block - keep together) ──────────────
+	# Three "scan, list, jump, fix" tools, which is why they sit beside Project Doctor and Check
+	# Sheet for Errors. Each owns its own window, so they live in a lazily-filled dictionary here
+	# rather than on the dock: nothing is constructed until the first time one is opened, and a
+	# session that never opens them pays nothing. Ids start at 60 so the block above can grow
+	# without colliding. A second id_pressed handler is deliberate - the match below simply
+	# ignores every id it does not own, exactly as the first handler ignores these.
+	var dev_tools: Dictionary = {}
+	var open_dev_tool: Callable = func(key: String, factory: Callable) -> void:
+		if not dev_tools.has(key):
+			var made: Variant = factory.call()
+			made.init(_dock)
+			dev_tools[key] = made
+		dev_tools[key].open()
+	tools_popup.add_separator()
+	tools_popup.add_item("Compare With…", 60)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(60), "Compare this sheet against its last save, a backup, or another sheet - in rows, not in generated code. A row that only exists on the other side can be brought over in one undo step.")
+	tools_popup.add_item("Loose Ends…", 61)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(61), "Everything you left unfinished, indexed: TODO/FIXME notes, disabled rows, events with no actions, breakpoints left on, verbs nothing calls. Nothing is drawn on the sheet - click an entry to jump to the row.")
+	tools_popup.add_item("Find Repeated Rows…", 62)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(62), "Find action sequences written more than once, then turn one into a reusable verb: extracted where it first appears, called everywhere else, in one undo step.")
+	tools_popup.id_pressed.connect(func(id: int) -> void:
+		match id:
+			60: open_dev_tool.call("compare", func() -> Variant: return EventSheetCompareDialog.new())
+			61: open_dev_tool.call("loose_ends", func() -> Variant: return EventSheetLooseEndsPanel.new())
+			62: open_dev_tool.call("repeated", func() -> Variant: return EventSheetRepeatedRows.new())
+	)
 	# The persisted Simple Mode preference loads before the toolbar builds - apply its gates now.
 	_dock._apply_simple_mode_gates()
+	# ── Row Hit Counts + Reset Hit Counts (appended block - keep together) ─────────────────────
+	# The Event Trace lens, made switchable. Row Hit Counts sits beside Event Numbers because it is
+	# the same question about the same margin ("what is this row's number" / "how often did it
+	# run"), and it is added UNCHECKED on purpose: a count on every row is noise 95% of the time,
+	# so the counts are kept always and drawn only when asked for. Reset Hit Counts joins the Event
+	# Trace entry it belongs to. Ids 9601/9602 are clear of every block above; a third id_pressed
+	# handler is deliberate - each ignores the ids it does not own.
+	view_popup.add_check_item("Row Hit Counts", _dock.HIT_COUNTS_VIEW_ID)
+	view_popup.set_item_checked(view_popup.get_item_index(_dock.HIT_COUNTS_VIEW_ID), false)
+	view_popup.set_item_tooltip(view_popup.get_item_index(_dock.HIT_COUNTS_VIEW_ID),
+		"Show how many times each event has fired since Run, as a small chip in the left margin - warm for the busiest rows, x0 and a dim rail for rows that never fired. Off by default; your rows are never touched. Needs Tools > Event Trace and a running game. You can also just hover an event number.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == _dock.HIT_COUNTS_VIEW_ID:
+			_dock._toggle_row_hit_counts(view_popup))
+	tools_popup.add_item("Reset Hit Counts", 9602)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(9602),
+		"Start the Event Trace's per-row tally over without restarting the game - reset, do the thing you are testing, and see exactly which rows moved.")
+	tools_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 9602:
+			_dock._reset_row_hit_counts())
+	# ── Run Tests… (appended block - keep together) ────────────────────────────────────────────
+	# Test sheets, run and reported. It belongs beside Test Bench: that item plays a behavior and
+	# tells you nothing, this one runs every Test sheet in the project and says what each claim
+	# said. The window is the whole output - no row is marked, ever. Id 9701 is clear of every
+	# block above; a separate id_pressed handler keeps this block trivially mergeable.
+	tools_popup.add_item("Run Tests…", 9701)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(9701),
+		"Run every Test sheet in the project and show what each claim said - pass, fail, and why. The same run happens headlessly with: godot --headless --script tools/run_test_sheets.gd. Nothing is drawn on your sheets.")
+	tools_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 9701:
+			_open_run_tests())
+
+
+## The Run Tests… window, built the first time it is asked for and kept afterwards. Loaded by path
+## so the editor's boot path never carries it (the boot-lazy gate) and nothing here names the class.
+var _test_report_panel: RefCounted = null
+
+
+func _open_run_tests() -> void:
+	if _test_report_panel == null:
+		_test_report_panel = load("res://addons/eventsheet/editor/dock/test_report_panel.gd").new()
+		_test_report_panel.init(_dock)
+	_test_report_panel.open()
 
 
 ## Adds a one-click toolbar button wired to `callable`, with an optional editor icon.
