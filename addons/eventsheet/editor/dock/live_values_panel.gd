@@ -252,6 +252,14 @@ func _remove_selected_watch() -> void:
 		_refresh_watches(_last_values)
 
 
+## The run ended: the last streamed frame is history now, not live. Anything that reads
+## `_last_values` to decide whether it is looking at a running game (the Why didn't this fire?
+## panel) has to see the emptiness, or it stamps minutes-old numbers "live".
+func clear_live_values() -> void:
+	_last_values = {}
+	_refresh_watches(_last_values)
+
+
 ## Re-evaluates every watch against the latest values frame (editor-side, via Expression).
 func _refresh_watches(values: Dictionary) -> void:
 	_last_values = values

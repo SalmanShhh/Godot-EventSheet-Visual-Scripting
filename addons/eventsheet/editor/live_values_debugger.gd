@@ -15,6 +15,10 @@ signal fired_events_received(uids: PackedStringArray)
 ## announces its row uid right before the `breakpoint` statement (core debugger messages never reach
 ## editor plugins, so the code reports its own location), and the editor reveals that row.
 signal paused_row_received(uid: String)
+## Emitted when the debug session ENDS (the game exited or was stopped). The last streamed frame
+## stops being live the moment the game does: without this, a panel holding those values would go on
+## stamping them "live" and answering questions about a game that is no longer running.
+signal session_ended()
 ## Emitted when the running game answers a query_children request: the behaviour children of the
 ## first node running the asked-for script (the Self section's LIVE grounding - real runtime
 ## names, including behaviours attached at runtime).
@@ -25,6 +29,26 @@ var _last_session_id: int = -1
 
 func _has_capture(capture: String) -> bool:
 	return capture == "eventsheets"
+
+
+## A new debug session IS the Run: the trace's hit counts belong to one run, so they start over
+## here rather than accumulating across launches (a count that spans two runs answers no question
+## anyone asked). Loaded BY PATH - this bridge is constructed at plugin boot, and naming a class
+## here would compile it into every editor start for a store most sessions never look at.
+func _setup_session(session_id: int) -> void:
+	_last_session_id = session_id
+	var counts: GDScript = load("res://addons/eventsheet/editor/trace_hit_counts.gd")
+	if counts != null:
+		counts.reset()
+	var session: EditorDebuggerSession = get_session(session_id)
+	if session != null and not session.stopped.is_connected(_on_session_stopped):
+		session.stopped.connect(_on_session_stopped)
+
+
+## The run ended. Announced rather than inferred: "no values have arrived recently" and "the game is
+## gone" look identical from the receiving end, and only one of them means the numbers are stale.
+func _on_session_stopped() -> void:
+	session_ended.emit()
 
 
 func _capture(message: String, data: Array, session_id: int) -> bool:

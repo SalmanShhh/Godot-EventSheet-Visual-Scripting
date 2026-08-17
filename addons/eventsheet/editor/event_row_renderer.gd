@@ -34,6 +34,26 @@ static var _icon_plate_style: StyleBoxFlat = null
 # per-row alternative - a dynamic control.get() in the draw loop - is exactly the lookup
 # the rule above forbids.
 var show_event_numbers: bool = true
+## Stamped the same way: the Event Trace hit-count lens (View > Row Hit Counts, ships OFF).
+## While false NOTHING below is drawn and the gutter paints exactly as it always has.
+var show_hit_counts: bool = false
+
+# ── The hit-count chip (LEFT MARGIN ONLY - never a cell, never program text) ──
+# Height/inset of the small count chip that stacks under the event number in the 20px gutter.
+const HIT_CHIP_HEIGHT := 11.0
+const HIT_CHIP_INSET := 1.5
+# The count chip's tones. Blue is the resting readout; warm marks the run's busiest rows; the
+# muted pair plus a dim left rail marks a row that has not fired once since Run.
+const HIT_CHIP_FILL := Color(0.31, 0.56, 0.87, 0.15)
+const HIT_CHIP_BORDER := Color(0.31, 0.56, 0.87, 0.30)
+const HIT_CHIP_TEXT := Color("#7fb0e8")
+const HIT_CHIP_HOT_FILL := Color(0.93, 0.58, 0.26, 0.20)
+const HIT_CHIP_HOT_BORDER := Color(0.93, 0.58, 0.26, 0.38)
+const HIT_CHIP_HOT_TEXT := Color("#f0b174")
+const HIT_CHIP_COLD_FILL := Color(1.0, 1.0, 1.0, 0.04)
+const HIT_CHIP_COLD_BORDER := Color(1.0, 1.0, 1.0, 0.09)
+const HIT_CHIP_COLD_TEXT := Color("#6f7580")
+const HIT_CHIP_COLD_RAIL := Color(1.0, 1.0, 1.0, 0.13)
 
 
 ## The fixed object-name column width for a span's lane (0 = flow, the classic behavior).
@@ -368,7 +388,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	var is_event_row: bool = row_data.row_type == EventRowData.RowType.EVENT
 	var row_fill_rect: Rect2 = Rect2(gutter_rect.end.x, row_rect.position.y, maxf(row_rect.size.x - gutter_rect.size.x, 0.0), row_rect.size.y) if is_event_row else row_rect
 	var gutter_number: int = int(layout.get("event_number", 0)) if show_event_numbers else line_number
-	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style)
+	# The hit-count lens: resolved ONCE per row here, so _draw_gutter stays a painter. Empty
+	# string = draw the gutter exactly as before (lens off, no traced run, or not an event row).
+	var hit_uid: String = hit_chip_uid(show_hit_counts, is_event_row, str(layout.get("event_uid", "")))
+	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style, hit_uid)
 	if row_data.row_type == EventRowData.RowType.GROUP:
 		var group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 		if row_data.source_resource is EventGroup:
@@ -506,18 +529,83 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		_draw_debug_overlay(control, row_rect, font, font_size, debug_text)
 
 
-func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null) -> void:
+func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null, hit_uid: String = "") -> void:
 	if gutter_rect.size == Vector2.ZERO:
 		return
 	var gutter_bg: Color = event_style.gutter_background_color if event_style != null else EventSheetPalette.COLOR_GUTTER_BG
 	var gutter_text: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
 	control.draw_rect(gutter_rect, gutter_bg, true)
 	control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), EventSheetPalette.COLOR_GUTTER_RAIL, true)
+	# The count chip stacks UNDER the number rather than beside it: this gutter is 20px wide, and a
+	# margin that grows when a debugger lens is switched on would reflow the whole sheet - the one
+	# thing the lens must never do. Only a run that has actually streamed draws anything.
+	var stacked: bool = not hit_uid.is_empty() and EventSheetTraceHitCounts.has_run()
 	if line_number > 0:
 		var text: String = str(line_number)
-		var baseline_y: float = gutter_rect.position.y + (gutter_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
+		var center_ratio: float = ROW_VERTICAL_CENTER_RATIO if not stacked else 0.0
+		var baseline_y: float = gutter_rect.position.y + (gutter_rect.size.y * center_ratio) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
+		if stacked:
+			baseline_y = gutter_rect.get_center().y - 1.0
 		_draw_text(control, Vector2(gutter_rect.position.x + 4.0, baseline_y), text, gutter_rect.size.x - 8.0, font, font_size - 1, gutter_text)
+	if stacked:
+		_draw_hit_count_chip(control, gutter_rect, hit_uid, font, font_size)
 	_draw_gutter_markers(control, gutter_rect, breakpoint_enabled, bookmark_enabled)
+
+
+## THE gate: which row gets a hit-count chip, and therefore whether ANY of this feature is
+## painted. Returns the uid to report on, or "" for "draw the gutter exactly as it always was".
+## Static and total, so "with the lens off nothing is emitted" is provable by the suite instead
+## of by staring at two screenshots.
+static func hit_chip_uid(lens_on: bool, is_event_row: bool, event_uid: String) -> String:
+	if not lens_on or not is_event_row or event_uid.is_empty():
+		return ""
+	# No traced run means no counts. An unknown count is never drawn as a zero.
+	return event_uid if EventSheetTraceHitCounts.has_run() else ""
+
+
+## The chip's text for a uid: "x3" while the exact number fits, "1k"/"14k" once it does not.
+## The x reads as a multiplier at a glance and is dropped where the width is needed for digits.
+static func hit_chip_text(event_uid: String) -> String:
+	var count: int = EventSheetTraceHitCounts.count_for(event_uid)
+	var compact: String = EventSheetTraceHitCounts.chip_text(count)
+	return ("x" + compact) if count < 1000 else compact
+
+
+## The Event Trace's tally for one row, as a chip in the bottom half of the gutter cell: a muted
+## count, warm when the row is among the run's busiest, and a dim left rail plus x0 when the row
+## has not fired once since Run. The exact number is one hover away (the gutter tooltip) - at this
+## width the chip is a glance, not a readout.
+func _draw_hit_count_chip(control: Control, gutter_rect: Rect2, hit_uid: String, font: Font, font_size: int) -> void:
+	var count: int = EventSheetTraceHitCounts.count_for(hit_uid)
+	var fill: Color = HIT_CHIP_FILL
+	var border: Color = HIT_CHIP_BORDER
+	var text_color: Color = HIT_CHIP_TEXT
+	if count == 0:
+		fill = HIT_CHIP_COLD_FILL
+		border = HIT_CHIP_COLD_BORDER
+		text_color = HIT_CHIP_COLD_TEXT
+		# The never-fired rail: a dim bar down the margin, so a cold row is findable by scrolling
+		# past it rather than by reading every chip.
+		control.draw_rect(Rect2(gutter_rect.position.x, gutter_rect.position.y + 1.0, 2.0, gutter_rect.size.y - 2.0), HIT_CHIP_COLD_RAIL, true)
+	elif EventSheetTraceHitCounts.is_hot(hit_uid):
+		fill = HIT_CHIP_HOT_FILL
+		border = HIT_CHIP_HOT_BORDER
+		text_color = HIT_CHIP_HOT_TEXT
+	var chip_rect := Rect2(
+		gutter_rect.position.x + HIT_CHIP_INSET,
+		gutter_rect.get_center().y + 1.0,
+		maxf(gutter_rect.size.x - HIT_CHIP_INSET * 2.0 - 1.0, 4.0),
+		HIT_CHIP_HEIGHT
+	)
+	_draw_rounded_rect(control, chip_rect, fill, 2, 2, 2, 2)
+	control.draw_rect(chip_rect.grow(-0.5), border, false, 1.0)
+	var chip_font_size: int = maxi(font_size - 4, 7)
+	var chip_text: String = hit_chip_text(hit_uid)
+	var text_width: float = font.get_string_size(chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, chip_font_size).x if font != null else 0.0
+	var text_x: float = chip_rect.position.x + maxf((chip_rect.size.x - text_width) * 0.5, 0.5)
+	# No width limit: draw_string CLIPS at the width it is given, measured from the draw position,
+	# so passing the chip's own width would slice the last glyph off a CENTRED string.
+	_draw_text(control, Vector2(text_x, chip_rect.position.y + HIT_CHIP_HEIGHT - 2.5), chip_text, -1.0, font, chip_font_size, text_color)
 
 
 ## The breakpoint dot + bookmark pennant, separated so full-bleed rows (group/comment/

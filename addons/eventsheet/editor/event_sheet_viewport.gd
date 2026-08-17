@@ -1280,6 +1280,13 @@ func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1)
 ## filtering never renumbers anything and "check event 34" stays stable.
 var show_event_numbers: bool = true
 
+## Row Hit Counts (View menu, SHIPS OFF): the Event Trace's per-row tally, drawn as a small chip
+## under the event number in the GUTTER. Off is the default forever - debugger information is a
+## lens the reader picks up, so with this false the sheet paints exactly as it did before the
+## feature existed. The counts themselves are always kept (EventSheetTraceHitCounts); this flag
+## only decides whether they are drawn.
+var show_hit_counts: bool = false
+
 
 ## instance-id -> 1-based event number, walking the sheet the way C3 counts: every
 ## EventRow in order, descending into groups and sub-events. Pure and static.
@@ -1559,6 +1566,8 @@ func _draw() -> void:
 	# Read once per frame, not per row: the flag is constant across the frame and a
 	# dynamic control.get() per row is exactly the draw-loop lookup the repo rule forbids.
 	_renderer.show_event_numbers = show_event_numbers
+	# Same once-per-frame rule as the numbers above: the hit-count lens is constant across a frame.
+	_renderer.show_hit_counts = show_hit_counts
 	for index in range(visible_range.x, visible_range.y + 1):
 		var row_info: Dictionary = _flat_rows[index]
 		var row_data: EventRowData = row_info.get("row")
@@ -2861,6 +2870,14 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var hovered_error_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
 	if hovered_error_row != null and not hovered_error_row.error_message.is_empty():
 		return "⚠ %s" % hovered_error_row.error_message
+	# The event number answers "has this even run?" on hover, with nothing turned on and nothing
+	# left behind - the one-off form of the hit-count lens. Silent unless a traced run has actually
+	# streamed: an unknown count is never dressed up as a zero.
+	if bool(hit.get("gutter", false)) and hovered_error_row != null and hovered_error_row.source_resource is EventRow:
+		var hit_count_hover: String = EventSheetTraceHitCounts.tooltip_for(
+			(hovered_error_row.source_resource as EventRow).event_uid, hovered_error_row.event_number)
+		if not hit_count_hover.is_empty():
+			return hit_count_hover
 	var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
 	var kind: String = str(metadata.get("kind", ""))
 	# A sentence or chip view over a raw statement keeps the CODE one hover away - the flat exit
