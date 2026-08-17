@@ -44,6 +44,27 @@ const TRIGGER_SCOPED_ACES: Dictionary = {
 	"ExportHasFeature": "OnProjectExport",
 }
 
+## Async-open progress, published for the editor's "Opening <file>" strip. The lift can run on a
+## worker thread (see EventSheetOpenJob) while the main thread paints, so these are DISPLAY ONLY:
+## plain ints/strings written by the worker and read by the poller without a lock. A torn read
+## shows a stale count for one frame and nothing else - no sheet data crosses this seam.
+static var progress_phase: String = ""
+static var progress_functions_total: int = 0
+static var progress_functions_done: int = 0
+## Set by the main thread to abandon the lift ("Show as code instead"). Checked before each
+## function; the lift then reverts whatever it mutated and reports failure, so the caller keeps the
+## raw (unlifted) sheet - exactly the state a file that cannot lift at all ends in.
+static var cancel_requested: bool = false
+
+
+## Clears the progress/cancel state before a new open. Called on the MAIN thread by the job, never
+## from attempt_lift itself - the event-only retry pass must not clear a cancel the user just asked for.
+static func reset_progress() -> void:
+	progress_phase = ""
+	progress_functions_total = 0
+	progress_functions_done = 0
+	cancel_requested = false
+
 
 ## Attempts the lift on an imported external sheet. Mutates sheet.events only when the
 ## byte-identical round-trip verifies; otherwise leaves the sheet untouched.
@@ -51,6 +72,40 @@ const TRIGGER_SCOPED_ACES: Dictionary = {
 ## if its byte-verify fails (e.g. annotations we can't regenerate), the event-only lift is
 ## retried so files keep at least the coverage older versions had.
 static func attempt_lift(sheet: EventSheetResource, source: String, lift_functions: bool = true) -> bool:
+	# Only the OUTER pass owns the progress counters - the event-only retry below re-enters this
+	# function and must not restart the bar the user is watching. The body has many early returns
+	# (GDScript has no try/finally), so the finalize lives here in the wrapper.
+	if sheet == null or not lift_functions:
+		return _attempt_lift_body(sheet, source, lift_functions)
+	progress_phase = "lifting"
+	progress_functions_done = 0
+	progress_functions_total = _count_lift_candidates(sheet)
+	var lifted: bool = _attempt_lift_body(sheet, source, lift_functions)
+	progress_functions_done = progress_functions_total
+	progress_phase = "done"
+	return lifted
+
+
+## Every top-level function row the two lift passes below may attempt, counted before either runs -
+## the stable denominator the progress strip divides into. An upper bound by construction (the
+## trailing scan can re-anchor and the mid-file pass skips virtuals), which is why the per-function
+## increment clamps and the wrapper above snaps the bar to full when the lift returns.
+static func _count_lift_candidates(sheet: EventSheetResource) -> int:
+	var total: int = 0
+	for entry: Variant in sheet.events:
+		var row: RawCodeRow = entry as RawCodeRow
+		if row != null and (row.code.begins_with("func ") or row.code.begins_with("static func ")):
+			total += 1
+	return total
+
+
+## One more function attempted. Clamped: the counters are display state read without a lock, and a
+## bar that reads "9 of 7" is worse than one that sits at full for a beat.
+static func _note_function_progress() -> void:
+	progress_functions_done = mini(progress_functions_done + 1, progress_functions_total)
+
+
+static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_functions: bool = true) -> bool:
 	if sheet == null:
 		return false
 	# The trailing run: function blocks, their @ace annotation blocks, blank separators,
@@ -174,6 +229,12 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 						comment.text = chunk.trim_prefix("# ").replace("\n# ", "\n")
 						lifted_comments.append(comment)
 			"func":
+				# The user asked for the raw code instead ("Show as code instead"). Nothing in this
+				# scan has mutated the sheet yet - the backup below is taken after the loop - so
+				# bailing here simply hands back the unlifted sheet.
+				if cancel_requested:
+					return false
+				_note_function_progress()
 				var header: String = row.code.split("\n")[0]
 				# A split-out async coroutine the handler above already inlined back as an
 				# event: consumed here (emission regenerates it, single-blank attached).
@@ -319,6 +380,12 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			if mid_row == null or not (mid_row.code.begins_with("func ") or mid_row.code.begins_with("static func ")):
 				mid_index += 1
 				continue
+			# Cancelled mid-run: this pass HAS mutated the sheet (the trailing lift above, and any
+			# anchor already placed), so unwind it all before handing the raw sheet back.
+			if cancel_requested:
+				_revert_lift(sheet, backup, functions_backup, boundary, boundary_code, peeled_rows)
+				return false
+			_note_function_progress()
 			var mid_header: String = mid_row.code.split("\n")[0]
 			if _is_lifecycle_header(mid_header) or _is_connected_handler(mid_header, connections):
 				mid_index += 1
@@ -394,6 +461,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 		return _retry_or_fail(sheet, source, lift_functions) if anchor_index != first_run_index else false
 
 	# Verify: the lifted sheet must reproduce the source byte-for-byte.
+	progress_phase = "verifying"
 	var saved_path: String = sheet.external_source_path
 	sheet.external_source_path = "user://eventforge_lift_verify.gd"
 	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_lift_verify.gd").get("output", ""))
@@ -419,13 +487,21 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 					print("[lift-debug]   out L", context_index + 1, ": <", out_lines[context_index], ">")
 				break
 		print("[lift-debug] src=", src_lines.size(), " out=", out_lines.size(), " lines")
+	_revert_lift(sheet, backup, functions_backup, boundary, boundary_code, peeled_rows)
+	return _retry_or_fail(sheet, source, lift_functions)
+
+
+## Puts the sheet back exactly as the import left it. The events backup is SHALLOW, so the two rows
+## the lift edited in place - the boundary row it stripped a separator/annotation block off, and any
+## raw row it peeled an annotation tail from - have to be restored by hand. Shared by the byte-verify
+## failure path and the cancel path, which must land in the identical state.
+static func _revert_lift(sheet: EventSheetResource, backup: Array[Resource], functions_backup: Array[Resource], boundary: RawCodeRow, boundary_code: String, peeled_rows: Array) -> void:
 	sheet.events = backup
 	sheet.functions = functions_backup
 	if boundary != null:
 		boundary.code = boundary_code
 	for peeled: Array in peeled_rows:
 		(peeled[0] as RawCodeRow).code = str(peeled[1])
-	return _retry_or_fail(sheet, source, lift_functions)
 
 
 ## Records the source's blank-line gap before the FIRST section a lift produced, so emission

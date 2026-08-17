@@ -52,11 +52,29 @@ static var _row_group_path: Dictionary = {}
 # ACEs must call on the parent host, not the behavior Node itself), "" everywhere else. Per-compile.
 static var _behavior_host_default: String = ""
 
+# Serializes every compile. The per-compile scratch statics above (and the scratch output file a
+# verify compile writes) are shared process-wide, and opening a .gd as a sheet now runs its lift -
+# which recompiles the whole sheet to byte-verify it - on a WORKER THREAD while the editor keeps
+# painting. A compile-on-save or a Project Doctor pass on the main thread would otherwise stomp
+# that scratch mid-emission. Locked at the two PUBLIC entry points ONLY (compile and
+# emit_function_block_text); no helper takes it, and neither entry point calls the other, so the
+# lock is never taken twice on one thread and cannot deadlock.
+static var _compile_mutex: Mutex = Mutex.new()
+
 
 ## Compiles an event sheet resource to a GDScript output file.
 ## omit_generated_banner drops the "AUTO-GENERATED / DO NOT EDIT" header - used when the .gd IS the
 ## user's source of truth (Save As .gd), not a regenerated companion of a .tres sheet.
+## The body lives in _compile_body so this can hold the compile lock across every early return
+## (GDScript has no try/finally, so a wrapper is the only leak-proof shape).
 static func compile(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false) -> Dictionary:
+	_compile_mutex.lock()
+	var locked_result: Dictionary = _compile_body(sheet, output_path, omit_generated_banner)
+	_compile_mutex.unlock()
+	return locked_result
+
+
+static func _compile_body(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false) -> Dictionary:
 	var result: Dictionary = {
 		"success": true,
 		"errors": [] as Array[String],
@@ -817,10 +835,14 @@ static func _emit_function_block(event_function: EventFunction, sheet: EventShee
 ## The lifter's per-anchor gate: exactly what _emit_function_block would produce for this
 ## function, as text, with no side effects. A mid-file helper lifts only when this equals the
 ## original source lines byte-for-byte, so anchoring can never change a file.
+## Takes the same compile lock as compile(): the lifter calls this per candidate function from the
+## async-open worker thread, and _emit_function_block reads the same per-compile scratch statics.
 static func emit_function_block_text(event_function: EventFunction, sheet: EventSheetResource) -> String:
+	_compile_mutex.lock()
 	var lines: PackedStringArray = PackedStringArray()
 	var scratch: Dictionary = {"warnings": [], "errors": []}
 	_emit_function_block(event_function, sheet, lines, [], scratch)
+	_compile_mutex.unlock()
 	return "\n".join(lines)
 
 

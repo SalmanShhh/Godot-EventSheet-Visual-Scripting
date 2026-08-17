@@ -15,6 +15,13 @@ extends RefCounted
 # _run_diagnostics → _refresh_title_strip → status. Preserved verbatim from the dock.
 
 var _dock: Control = null
+# The in-flight asynchronous .gd open (see _begin_async_gd_open). Null when nothing is opening.
+var _open_job: EventSheetOpenJob = null
+var _open_job_path: String = ""
+## The raw sheet the open painted first - the identity that finds the right tab when the lift lands
+## (the same file can legitimately be open in two tabs, so the path alone is not an identity).
+var _open_job_raw: EventSheetResource = null
+var _open_polling: bool = false
 
 
 func init(dock: Control) -> void:
@@ -29,25 +36,7 @@ func _load_sheet_from_path(path: String) -> void:
 	# GDScript-backed sheets: any .gd opens losslessly (lifted rows + verbatim blocks); the
 	# file stays the single source of truth and Save compiles back to it.
 	if resolved_path.get_extension() == "gd":
-		var imported: EventSheetResource = GDScriptImporter.new().import_external(resolved_path)
-		if imported == null:
-			_dock._set_status("Open failed: could not read %s." % resolved_path.get_file(), true)
-			return
-		# Open a .gd as a SAFE read-only PREVIEW by default - a casual look can never
-		# overwrite the hand-written script. "Edit Events" in the banner unlocks editing.
-		imported.read_only = true
-		_dock.setup(imported)
-		_dock._current_sheet_path = resolved_path
-		_dock._dirty = false
-		_dock._refresh_title_strip()
-		_dock._clear_undo_history()
-		_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
-		# The lift report explains the structure/code boundary per block - the teaching
-		# surface for what GDScript maps to which events (the banner recomputes its own copy
-		# from the active sheet, so tab switches always show the right counts).
-		_dock._refresh_preview_banner()
-		EventSheets._notify_lifecycle("opened", {"sheet": imported, "path": resolved_path})
-		_dock._set_status("Opened %s - viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(imported))])
+		_begin_async_gd_open(resolved_path)
 		return
 	var loaded: Resource = ResourceLoader.load(resolved_path)
 	if loaded is EventSheetResource:
@@ -59,6 +48,156 @@ func _load_sheet_from_path(path: String) -> void:
 		EventSheets._notify_lifecycle("opened", {"sheet": loaded, "path": resolved_path})
 		return
 	_dock._set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
+
+
+## Opens a .gd as a sheet WITHOUT freezing the editor.
+##
+## Opening a .gd is two passes: a fast raw one (rows + verbatim code blocks) and the ACE lift, which
+## reverse-matches every function against the vocabulary and then recompiles the whole sheet to
+## byte-verify it. The lift is the slow half - measured at 3.9 s for the FPS controller pack and
+## 21 s for a 4,600-line dock helper - and running it inline blocked the editor with no repaint at
+## all, so a big file looked like a crash.
+##
+## PAINT FIRST: the raw pass (12-40 ms on those same files) runs here on the main thread and is set
+## up immediately, so the file is on screen as rows and code blocks right away. The lift then runs on
+## a worker thread behind the "Opening…" strip, and its result replaces the sheet in the SAME tab
+## when it lands. "Show as code instead" cancels the lift and keeps exactly what is already showing.
+func _begin_async_gd_open(resolved_path: String) -> void:
+	# One open at a time: an in-flight lift is abandoned (its result is discarded) so the newer
+	# request wins. Cancel makes the worker bail at its next function, so the join is short.
+	_abandon_open_job()
+	var raw: EventSheetResource = GDScriptImporter.new().import_external(resolved_path, false)
+	if raw == null:
+		_dock._set_status("Open failed: could not read %s." % resolved_path.get_file(), true)
+		return
+	# Open a .gd as a SAFE read-only PREVIEW by default - a casual look can never
+	# overwrite the hand-written script. "Edit Events" in the banner unlocks editing.
+	raw.read_only = true
+	_dock.setup(raw)
+	_dock._current_sheet_path = resolved_path
+	_dock._dirty = false
+	_dock._refresh_title_strip()
+	_dock._clear_undo_history()
+	_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
+	_dock._refresh_preview_banner()
+	_dock._set_status("Opening %s - showing the code now, working out the events…" % resolved_path.get_file())
+	_open_job = EventSheetOpenJob.new()
+	_open_job_path = resolved_path
+	_open_job_raw = raw
+	if not _open_job.start(resolved_path):
+		_open_job = null
+		_open_job_raw = null
+		return
+	if _dock._open_progress != null:
+		_dock._open_progress.cancel_requested_callback = _cancel_open_job
+		_dock._open_progress.show_for(resolved_path)
+	# No tree (a headless test driving the dock directly): there are no frames to poll on, so join
+	# right here - same result, just synchronous.
+	if not _dock.is_inside_tree():
+		_collect_open_job()
+		return
+	_dock.get_tree().process_frame.connect(_poll_open_job)
+	_open_polling = true
+
+
+## Per-frame poll: republish the worker's counters, and collect the sheet once it lands.
+func _poll_open_job() -> void:
+	if _open_job == null:
+		_stop_open_polling()
+		return
+	if _dock._open_progress != null:
+		_dock._open_progress.update(_open_job.status_text(), _open_job.progress_ratio())
+	if _open_job.is_done():
+		_collect_open_job()
+
+
+func _cancel_open_job() -> void:
+	if _open_job != null:
+		_open_job.cancel()
+
+
+## Drops an in-flight open without showing its result (a newer open superseded it).
+func _abandon_open_job() -> void:
+	if _open_job == null:
+		return
+	_open_job.cancel()
+	_open_job.finish()
+	_open_job = null
+	_open_job_path = ""
+	_open_job_raw = null
+	_stop_open_polling()
+	if _dock._open_progress != null:
+		_dock._open_progress.hide_strip()
+
+
+func _stop_open_polling() -> void:
+	if not _open_polling:
+		return
+	_open_polling = false
+	if _dock.is_inside_tree() and _dock.get_tree().process_frame.is_connected(_poll_open_job):
+		_dock.get_tree().process_frame.disconnect(_poll_open_job)
+
+
+## Joins the worker and shows what it produced.
+func _collect_open_job() -> void:
+	var job: EventSheetOpenJob = _open_job
+	var job_path: String = _open_job_path
+	var job_raw: EventSheetResource = _open_job_raw
+	_open_job = null
+	_open_job_path = ""
+	_open_job_raw = null
+	_stop_open_polling()
+	if _dock._open_progress != null:
+		_dock._open_progress.hide_strip()
+	if job == null:
+		return
+	var lifted: EventSheetResource = job.finish()
+	if lifted == null:
+		# The strip is already down - never leave it up on failure.
+		_dock._set_status("Open failed: could not read %s." % job_path.get_file(), true)
+		return
+	_finish_gd_open(lifted, job_raw, job_path, job.was_canceled())
+
+
+## Swaps the finished sheet into the tab the raw pass opened and reports what happened. The tab is
+## found by the RAW SHEET's identity: the user is free to switch (or close) tabs while a lift runs,
+## and the same file can legitimately be open twice, so the result has to land in the exact tab it
+## came from rather than in whichever one happens to be active.
+func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, resolved_path: String, was_canceled: bool) -> void:
+	var tab_index: int = -1
+	for index: int in range(_dock._open_tabs.size()):
+		if _dock._open_tabs[index].get("sheet") == raw_sheet:
+			tab_index = index
+			break
+	if tab_index < 0:
+		# The tab was closed while the lift ran - nothing to update, and nothing to say.
+		return
+	# Edited while the lift ran (the user unlocked it with "Edit Events" and changed something):
+	# their rows win. Swapping in the lifted sheet would silently throw the edit away.
+	var is_active: bool = tab_index == _dock._active_tab_index
+	if bool(_dock._open_tabs[tab_index].get("dirty", false)) or (is_active and _dock._dirty):
+		_dock._set_status("Opened %s - you started editing while it loaded, so it stays as you left it (reopen the file to read it as events)." % resolved_path.get_file())
+		return
+	# "Edit Events" during the open is a real answer to "is this a preview?" - carry it across
+	# rather than snapping the sheet back to read-only under the user.
+	sheet.read_only = raw_sheet.read_only if raw_sheet != null else true
+	sheet.external_source_path = resolved_path
+	_dock._open_tabs[tab_index] = {"sheet": sheet, "path": resolved_path, "dirty": false}
+	if is_active:
+		# Re-activating the tab reloads the viewport and re-points _current_sheet/_path/_dirty +
+		# clears undo. setup() cannot be used: it dedups by object identity, and this is a fresh
+		# resource, so it would append a SECOND tab for the same file.
+		_dock._activate_tab(tab_index)
+		_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
+		# The lift report explains the structure/code boundary per block - the teaching
+		# surface for what GDScript maps to which events (the banner recomputes its own copy
+		# from the active sheet, so tab switches always show the right counts).
+		_dock._refresh_preview_banner()
+	EventSheets._notify_lifecycle("opened", {"sheet": sheet, "path": resolved_path})
+	if was_canceled:
+		_dock._set_status("Opened %s as code - stopped working out the events, so every function is shown as a code block. Reopen the file to try again." % resolved_path.get_file())
+		return
+	_dock._set_status("Opened %s - viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(sheet))])
 
 
 ## Opens a freshly-created .gd as an EDITABLE sheet tab, NOT the read-only preview a casual Open

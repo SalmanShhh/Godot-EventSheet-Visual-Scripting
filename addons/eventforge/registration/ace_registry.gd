@@ -10,6 +10,8 @@ extends RefCounted
 # sheets that reference fallback/unknown ACEs).
 static var _builtin_cache: Array[ACEDescriptor] = []
 static var _builtin_index: Dictionary = {}
+## The runtime bridge autoload, remembered from the last MAIN-THREAD lookup (see _get_bridge).
+static var _bridge_cache: Node = null
 
 
 ## Builds the builtin descriptor cache + lookup index once.
@@ -111,13 +113,22 @@ static func normalize_descriptor(entry: Variant) -> ACEDescriptor:
 
 ## Fetches the EventForgeBridge autoload if available.
 static func _get_bridge() -> Node:
+	# Scene-tree lookups belong to the main thread, and descriptor queries now also run from the
+	# async-open worker (the lifter rebuilds its reverse index there). So the LOOKUP is main-thread
+	# only and its answer is remembered; an off-thread caller reuses that remembered node instead of
+	# walking the tree. EventSheetOpenJob.warm_registries() runs a main-thread query before starting
+	# the worker precisely so the cache is populated and the worker sees the same vocabulary the
+	# editor does - dropping the runtime providers off-thread would have lifted a different sheet.
+	if OS.get_thread_caller_id() != OS.get_main_thread_id():
+		return _bridge_cache if is_instance_valid(_bridge_cache) else null
+	_bridge_cache = null
 	var loop: MainLoop = Engine.get_main_loop()
 	if loop is SceneTree:
 		var tree: SceneTree = loop
 		var root: Node = tree.root
 		if root != null and root.has_node("EventForgeBridge"):
-			return root.get_node("EventForgeBridge")
-	return null
+			_bridge_cache = root.get_node("EventForgeBridge")
+	return _bridge_cache
 
 
 ## Normalizes ACEDescriptor or dictionary metadata into a descriptor.

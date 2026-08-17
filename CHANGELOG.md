@@ -32,6 +32,67 @@ reproduce re-anchors instead of failing the file. Result: **79 of 79 packs that 
 open with them; 1,264 of 1,269 verbs fleet-wide** (five single functions remain raw, listed in
 the new test), zero byte drift. `tests/pack_open_lift_test.gd` opens every pack and pins it.
 
+### Changed - an opened pack reads like a Construct sheet: Function blocks, a Helpers group, Reading mode
+
+Now that every pack opens WITH its verbs, the next question is what those verbs SAY. A verb header
+used to carry seven things at once - a kind badge, the display name (printing its `[b]` tags raw),
+a category chip, a ★, a "gives back number" chip, an "internal" marker, and the `@ace_description`
+as a grey caption welded above it. Opened side by side with Construct, none of that is on a
+Function block: **ƒ, the name, one chip per input, and nothing else.**
+
+- **A published verb is a Function block.** The header is `ƒ Jump`, `ƒ Set Third Person`
+  `enabled true/false`, `ƒ Add Look` `x number` `y number` - the inputs read in plain words
+  (`float`/`int` → number, `bool` → true/false, `String` → text, `Array` → list, `Dictionary` →
+  table, any Node class → node). The kind survives as the header's **wash** - action, condition and
+  expression tint differently - so you still tell them apart at a glance without a badge word. A
+  display name written with `[b]…[/b]` now draws **bold**; the tags are never printed.
+- **Everything else is one click away.** Clicking a verb header opens its **ACE properties**: kind,
+  category, inputs with their types and defaults, what it gives back, the description (rendered),
+  its picker entry (featured, icon), the exact line it inserts, and the function and file behind it -
+  with *Edit…*, *Open guide* and *Show in code*. One place instead of chips scattered over the row;
+  *Edit…* opens the same verb dialog that always edited those fields.
+- **Helpers are just functions.** A helper the pack does not publish reads as the same ƒ block with
+  no "internal" badge, its doc comment as the muted right-lane caption - which is how a Construct
+  user reads a function they did not write. In a read-only preview they gather under one closed
+  **Helpers** bar ("functions this pack uses inside itself - 7") after the last published verb. Pure
+  view: nothing is grouped, reordered or written in the file.
+- **Reading mode on open.** A `.gd` opens as a read-only preview, so it now renders as one: no
+  "+ Add condition" / "+ Add action" scaffolding you cannot use, and a body-only row leaves its left
+  cell blank instead of saying *Always*. Press the banner's **Edit Events** and all of it returns.
+
+No `## @ace_*` line is ever drawn as prose again. `tools/render_opened_pack_preview.gd` regenerates
+`docs/images/opened-pack-verbs.png` and `docs/images/ace-properties-popup.png` from the real FPS
+Controller pack, and `tests/opened_pack_reading_test.gd` pins the header spans, the tints, the
+Helpers bar, the suppressed scaffolding and the properties panel by value.
+
+### Fixed - opening a `.gd` as a sheet no longer freezes the editor (18 s of nothing, measured)
+
+Opening a `.gd` runs two passes: a fast raw one (every line lands as a row or a verbatim code
+block) and the ACE lift, which works out which events the code maps to and then recompiles the
+whole sheet to prove it still reproduces your file byte-for-byte. The lift is the slow half, and
+it ran on the same thread that draws the editor. Measured: **the FPS Controller pack blocked the
+editor 3.9 s, the Save System pack 7.2 s, and a 4,623-line file 21.3 s - with zero frames drawn
+the entire time.** No spinner, no cursor, no repaint. It did not look like work; it looked like a
+crash, and the honest advice was "don't open big files".
+
+Now the file is **on screen first** and the slow half runs behind it. The raw pass (36 ms for that
+same 4,623-line file) paints immediately, so you are reading your code as rows straight away, and
+a slim strip above the sheet says what is still happening: *Opening event_sheet_dock.gd - lifting
+functions 212 of 454 · 8.4 s*, with a bar. The editor stays live throughout - the same open now
+draws **1,352 frames while it works**. When the lift lands, the sheet upgrades in place: the
+functions become real Function rows and the usual "viewing it as a sheet" summary appears.
+
+And there is a way out. **Show as code instead** stops the lift wherever it is and keeps exactly
+what you are already looking at - your file as code blocks, unchanged on disk either way. Nothing
+is half-lifted: a cancelled open lands in the same state as a file the lifter cannot read at all,
+still round-tripping to the original bytes.
+
+Under the hood the lift runs on a worker thread, the compiler serializes its scratch state so a
+save or a Project Doctor pass can compile while a sheet opens, and every registry the import
+reads is built on the main thread first. `tests/open_job_test.gd` pins the threaded open against
+the old synchronous one (byte-identical output for a pack and a hand-written file), the cancel
+path, the progress counters, and the lock under real contention.
+
 ### Added - coyote time on the FPS Controller (the 3D movement behaviour that jumps)
 
 The 2D Platformer has shipped coyote time as an Inspector feel-number since its first release;

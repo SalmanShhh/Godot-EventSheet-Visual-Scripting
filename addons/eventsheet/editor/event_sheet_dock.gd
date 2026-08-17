@@ -158,6 +158,9 @@ var _column_header: SheetColumnHeader = null
 var _identity_banner: SheetIdentityBanner = null
 var _preview_banner: PanelContainer = null
 var _preview_label: Label = null
+## The "Opening <file>" strip shown while a .gd's ACE lift runs on a worker thread (dock/open_progress.gd).
+## Owns its own widgets - the dock only holds the helper so sheet_io can drive it.
+var _open_progress: EventSheetOpenProgress = EventSheetOpenProgress.new()
 var _viewport: EventSheetViewport = null
 var _side_panel: VBoxContainer = null
 var _preview_window: Window = null
@@ -238,6 +241,7 @@ var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
 var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
+var _verb_properties: EventSheetVerbProperties = EventSheetVerbProperties.new()  # a published verb's header click: the ACE properties popup (kind, category, inputs, inserts) (dock/verb_properties_popup.gd)
 var _ghost_row: EventSheetGhostRow = EventSheetGhostRow.new()  # zero-dialog add: E/C/A open a type-a-sentence popup at the selected row (dock/ghost_row.gd)
 var _navigate: EventSheetNavigate = EventSheetNavigate.new()  # Ctrl+Click go-to-definition: addon verbs open their behaviour as a sheet (dock/navigate.gd)
 var _export_pack: EventSheetExportPack = EventSheetExportPack.new()  # Sheet ▸ Export Addon Pack: writes eventsheet_addons/<class>/ (.tres + .gd + README, bundles includes) (dock/export_pack.gd)
@@ -321,6 +325,10 @@ func _init() -> void:
 	# Preview-glue helper MUST be wired before _build_ui(): _build_ui calls
 	# _preview_glue.build_preview_banner(), which assigns _preview_banner/_preview_label back on the dock.
 	_preview_glue.init(self)
+	_verb_properties.init(self)
+	# Same rule as _preview_glue: _build_ui() calls _open_progress.build(), so the back-reference
+	# has to be wired before it (init() only stores _dock - nothing tree-bound).
+	_open_progress.init(self)
 	# Theme-manager MUST be wired before _build_ui() too: _build_ui() calls
 	# _theme_manager.build_theme_file_dialog() (via the dock delegate). init() only stores _dock.
 	_theme_manager.init(self)
@@ -865,6 +873,8 @@ func _notification(what: int) -> void:
 		# binding is owned by EventSheetThemeManager, so its teardown lives there too.
 		_theme_manager.teardown_theme_binding()
 		_release_ace_sources()
+		# A .gd still opening: join its worker before the job (and its Thread) is freed with us.
+		_sheet_io._abandon_open_job()
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		# GDScript-backed sheets: refocusing the editor is the moment external edits (the
 		# script editor, another tool, git) usually land - offer to reload from disk. This is also
@@ -3890,6 +3900,50 @@ func _open_function_dialog() -> void:
 
 func _apply_function_data(data: Dictionary) -> void:
 	_function_dialog_glue._apply_function_data(data)
+
+
+# ── ACE properties: a published verb's header click → dock/verb_properties_popup.gd ─────
+## Clicking a verb's Function-block header opens its ACE properties (kind, category, inputs, what it
+## gives back, description, picker entry, the line it inserts, the function behind it).
+func open_verb_properties(event_function: Resource) -> void:
+	_verb_properties.open_for(event_function)
+
+
+## The popup's "Edit…": the existing verb dialog, pre-filled - the ONE place a verb's name, category,
+## description, parameters and featured flag are edited, reached from here instead of duplicated.
+func edit_function(event_function: Resource) -> void:
+	if event_function == null:
+		return
+	_function_dialog_glue._open_function_dialog_for(event_function)
+
+
+## The popup's "Open guide": the guide of the pack the open sheet came from, through the same public
+## "addon:<pack>" doc id the picker's read-more link uses.
+func open_pack_guide_for_sheet() -> bool:
+	if _current_sheet == null:
+		return false
+	# The pack a .gd-backed sheet belongs to IS the folder it was opened from - no registry lookup
+	# needed, and it answers for a pack whose provider has not been scanned yet.
+	var pack_dir: String = _current_sheet.external_source_path.get_base_dir()
+	if not pack_dir.begins_with("res://eventsheet_addons/"):
+		pack_dir = ""
+	if pack_dir.is_empty():
+		_set_status("This sheet is not part of an addon pack, so it has no pack guide.", true)
+		return false
+	return EventSheets.open_docs("addon:%s" % pack_dir)
+
+
+## The popup's "Show in code": the verb's own function in Godot's script editor. Falls back to the top
+## of the file when the line cannot be found - landing in the right file always beats not opening.
+func show_verb_in_code(event_function: Resource) -> void:
+	if _current_sheet == null or _current_sheet.external_source_path.is_empty():
+		_set_status("This sheet has no .gd file behind it - Save As… a .gd to read its code.", true)
+		return
+	var verb: EventFunction = event_function as EventFunction
+	var line: int = -1
+	if verb != null:
+		line = EventSheetVerbProperties.function_line_in(_current_sheet.external_source_path, verb.function_name)
+	_open_gdscript_path_in_godot(_current_sheet.external_source_path, line)
 
 
 # ── Welcome (Tools → Welcome…) - the window lives in dock/welcome_window.gd ──

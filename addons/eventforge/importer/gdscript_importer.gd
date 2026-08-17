@@ -26,10 +26,13 @@ func import_script(script_path: String) -> EventSheetResource:
 ## exactly (guarded by golden round-trip tests).
 
 
-func import_external(script_path: String) -> EventSheetResource:
+## lift=false stops after the raw line pass: rows and verbatim code blocks, no ACE-level lifting.
+## That pass is effectively instant on any real file, so the editor can paint a readable sheet the
+## moment a .gd is opened and run the (much slower) lift behind it - see EventSheetOpenJob.
+func import_external(script_path: String, lift: bool = true) -> EventSheetResource:
 	if not FileAccess.file_exists(script_path):
 		return null
-	var sheet: EventSheetResource = import_external_source(FileAccess.get_file_as_string(script_path))
+	var sheet: EventSheetResource = import_external_source(FileAccess.get_file_as_string(script_path), lift)
 	sheet.external_source_path = script_path
 	_recover_autoload_identity(sheet, script_path)
 	return sheet
@@ -65,7 +68,7 @@ static func _autoload_target_matches(target: String, script_path: String) -> boo
 	return false
 
 
-func import_external_source(source: String) -> EventSheetResource:
+func import_external_source(source: String, lift: bool = true) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = _parse_host_class(source)
 	var lines: PackedStringArray = source.split("\n")
@@ -280,7 +283,8 @@ func import_external_source(source: String) -> EventSheetResource:
 	# Tier 2: reverse template matching lifts trailing trigger functions, sheet functions
 	# (with their @ace annotation blocks), and trailing comments into real rows - verified
 	# by a byte-identical recompile and reverted otherwise (the lossless rule always wins).
-	EventSheetACELifter.attempt_lift(sheet, source)
+	if lift:
+		EventSheetACELifter.attempt_lift(sheet, source)
 	return sheet
 
 
