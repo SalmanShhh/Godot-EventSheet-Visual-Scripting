@@ -15,6 +15,8 @@ An **editor tool** is an event sheet whose events run inside the Godot editor it
 7. [Undo done right](#7-undo-done-right)
 8. [Use cases](#8-use-cases)
 9. [Troubleshooting](#9-troubleshooting)
+10. [The Tools menu - compare, loose ends, repeats](#10-the-tools-menu---compare-loose-ends-repeats)
+11. [Test sheets - claims that run headless](#11-test-sheets---claims-that-run-headless)
 
 ---
 
@@ -581,3 +583,165 @@ The mobile preset gets the low-quality settings resource; the release build lose
 - **The rolled percentages change every run.** They should not - the seed is a parameter. If they move, the **Seed** field is being fed something that changes (a call to `randi()`, a time value). Put a plain number in it.
 - **My On Project Export step never ran.** Three things to check, in order: the sheet's type is **Editor Tool** (a node sheet is skipped, with a warning naming the file in the Output panel); the sheet has been saved since you added the trigger, so the compiled `.gd` actually declares the handler; and the file you are exporting to is a *project* export, not a "play the scene" run.
 - **The file my bake step writes is not in the exported build.** The export reads what is on disk, so a file the project has never seen may not be in its file list yet. Run the tool once with File > Run, let the FileSystem dock index the new file, and later exports pick up the refreshed contents.
+
+---
+
+## 10. The Tools menu - compare, loose ends, repeats
+
+The three tools in this section are not tool *sheets*. They live in the event sheet dock's **Tools** menu and work on whatever sheet you have open - a gameplay sheet, a behaviour pack, an editor tool. They belong in this guide because they answer the same kind of question a tool sheet does: a chore you would otherwise do by hand, one click instead.
+
+All three are the same shape: **scan, list, jump, fix**. None of them draws anything on your rows. With their windows closed the sheet reads exactly as it does today.
+
+### 10.1 Compare With… - the diff, in rows
+
+![Compare With: the row-language diff against a chosen side, with Bring This Row Over](images/tools-compare-with.png)
+
+**Tools > Compare With…** opens the shipped row-language comparison with the target unfrozen. The dropdown offers, in this order:
+
+- **Last save** - the same question **Sheet > What Changed Since Save…** answers, which keeps working unchanged.
+- **Backups** - every entry in the ring behind **Tools > Sheet Backups…**, newest first, stamped with its time.
+- **Sheets** - every other event sheet in the project.
+- **Browse…** - any `.gd` or `.tres` on disk: a teammate's file, a downloaded pack, an older copy you kept.
+
+Press **Compare** and you get two columns. On the left, rows of the open sheet that differ; on the right, rows of the compared sheet that are missing or different here. Double-click a row on the left to jump to it. Select one on the right and press **Bring This Row Over**, and that row is copied into your sheet as an ordinary row - one undo step, a fresh row id, nothing special about it afterwards. Any sheet variable the row needs and this sheet does not declare comes across with it - created, never overwritten, the same rule a paste follows - so the row you brought over compiles. The comparison never writes either file: both sides compile to scratch paths, and the generated header (which names a version and a source path) is ignored, because it is not a difference anyone made.
+
+**Use cases**
+
+1. **Review a teammate's changes in rows.** Open your copy, compare against theirs, read the difference as events instead of as a generated-script diff.
+2. **Restore one event from a backup.** A bad edit half an hour ago: compare against the backup, bring back the one row, keep everything since.
+3. **Compare two difficulty variants.** Point one level sheet at the other and see exactly which numbers and guards differ.
+4. **Prove a refactor changed nothing.** Extract verbs, reorder groups, then compare against the last save: "identical" is the proof.
+5. **Code review on a pull request.** Check out the branch, browse to the changed `.gd`, and read the change in the language the author wrote it in.
+6. **Debug a pack upgrade.** Compare the old shipped `.gd` against the republished one to see what a version bump actually moved.
+7. **Recover from a bad merge.** Compare against the pre-merge backup and bring back the rows the merge dropped.
+
+### 10.2 Loose Ends… - what you left unfinished
+
+![Loose Ends: TODO notes, disabled rows, unfinished events, breakpoints and uncalled verbs, indexed](images/tools-loose-ends.png)
+
+**Tools > Loose Ends…** indexes the states your sheet already carries and never advertises:
+
+- **TODO / FIXME** - comment rows written as notes to self, plus the markers `TODO`, `FIXME`, `HACK` and `XXX` in a comment inside a GDScript block. Matched as whole words and only in comments, so "no TODOs left here" and a string your game prints containing `XXX` are not listed. A **Warning**-styled comment is not listed either: that style is a standing note ("this runs every frame"), permanent documentation rather than unfinished work, and an index you can never clear is one you learn to ignore.
+- **Unfinished events** - an event with conditions and no actions, the most common half-written shape there is.
+- **Disabled rows** - events, groups, comments, single actions and conditions that are turned off.
+- **Breakpoints left on** - the F9 flag you set during a bug hunt three weeks ago.
+- **Verbs nothing calls** - a published function no row (and no code block) ever calls.
+- **Rows the checker flags** - the same findings **Tools > Check Sheet for Errors** produces.
+
+Click an entry and the sheet jumps to that row and selects it.
+
+**This is a panel, deliberately not row badges.** Marking every TODO and disabled row in the margin would put a permanent warning layer over a sheet whose author already knows what is in it, and would ask a beginner to ignore something on their first read. So the states stay drawn exactly as they always were - a comment looks like a comment, a disabled row looks disabled - and the index is somewhere you *go* when the question comes up, which is a few times a project, not continuously.
+
+**Use cases**
+
+1. **Coming back after a break.** The panel is the "where was I" answer: your own TODOs are the fastest re-entry into your own thinking.
+2. **The pre-release sweep.** Find the debug print you disabled instead of deleting, and the breakpoint you forgot.
+3. **Team handoff.** Open a colleague's sheet and read their TODOs first - that is where they knew something was wrong.
+4. **Jam triage on the last night.** Unfinished events tell you exactly which ideas are half-built, ranked by nothing but honesty.
+5. **Cleaning up after an extraction spree.** Verbs nothing calls are the ones you extracted and never wired up.
+6. **Teaching.** "Conditions and no actions" is the beginner shape; showing it in a list makes the missing half obvious.
+
+### 10.3 Find Repeated Rows… - the repeats you stopped noticing
+
+![Find Repeated Rows: identical action runs across the sheet, ranked by rows saved, with Make a Verb](images/tools-find-repeated-rows.png)
+
+The abstraction lever already ships: right-click an event > **Extract All Actions to Function…** turns a run of actions into one named verb. What it cannot do is *notice*. **Tools > Find Repeated Rows…** scans the whole sheet for identical ordered runs of actions that appear twice or more, ranks them by rows saved, and lists each with the actions it contains.
+
+Pick one, press **Make a Verb…**, and name it. The run is extracted at the first place it appears - by the same extractor the right-click gesture uses - and every other occurrence is replaced with a Call to the new verb. One undo step for the lot: a half-applied refactor would be worse than none.
+
+A run that leans on an event-local variable or a For Each item is listed and marked **needs parameters**, and the button stays off. Those sites cannot share one verb without arguments, and offering a one-click fix that fails would be worse than saying so.
+
+**Use cases**
+
+1. **A sheet that grew during a jam.** The repeats you pasted at 3am are exactly the concepts the game turned out to have.
+2. **Copy-paste drift.** Two of five copies were updated and three were not: the scan reports three occurrences instead of five, which is the bug.
+3. **Turning a prototype into a behaviour pack.** The repeated runs are the verbs the pack should publish.
+4. **Inheriting a project.** The repeats name its real concepts before anyone has written a document about them.
+5. **Shrinking generated output.** A size-sensitive export gets smaller by exactly the rows the list says it will.
+6. **Feeding Teach a Verb.** Publish the extracted verb project-wide instead of waiting to notice the repetition again.
+
+---
+
+## 11. Test sheets - claims that run headless
+
+![Run Tests: the verdict pill, one card per test with its claims, and the copyable report](images/tools-run-tests.png)
+
+A **Test sheet** is a sheet whose whole job is to make claims about your game and report which held. It is the same rows as ever - a trigger, some conditions, some actions - but the actions assert instead of shoot, and the run ends in a verdict rather than a score.
+
+**Sheet > Sheet Type… > Test** makes one. What that compiles to is plain GDScript with no plugin dependency, like every sheet: a `Node` script that declares `signal test_started(test_name: String)` and carries the marker comment `## @ace_test_sheet` on a line of its own. The marker is how a runner finds the file - there is no registry to keep in sync, and a test copied into another project is still a test.
+
+### 11.1 The shape of a test
+
+```
+On Test Start (test_name)     →  Load scene "res://player.tscn" as "P"
+                                 Assert That  "spawns with full hp"  P.hp == P.max_hp
+
+Wait Until  ... 30 frames      →  Assert That  "gravity pulls down"  P.position.y > 100
+
+On Test Start (test_name)     →  Watch for signal "died" on "P" for 2 s
+  Watch For Signal succeeded  →  Pass Test "death fires on zero hp"
+  Watch For Signal timed out  →  Fail Test "death fires on zero hp", "never fired"
+```
+
+The vocabulary lives in the picker's **Testing** section:
+
+| Verb | Kind | What it does |
+| --- | --- | --- |
+| On Test Start | trigger | Runs when a runner starts this sheet. The test's name arrives as a parameter. |
+| Assert That | action | Records a pass when a check is true, a failure with "expected true, got false" when it is not. |
+| Assert Equal | action | Records a pass when two values match; the failure carries BOTH ("expected 3, got 2"). |
+| Expect Signal | action | Waits for a signal and records the verdict itself ("expected within 2.00s, never fired"). |
+| Watch For Signal | action | Waits for a signal or the deadline, and records WHICH - it states no verdict of its own. |
+| Watch For Signal Succeeded / Timed Out | conditions | Read what the watch saw, on the next rows, and decide what each outcome means. |
+| Pass Test / Fail Test | actions | State a verdict outright and finish the test. Fail Test carries the reason. |
+| Load Scene Under Test / Scene Under Test | action / expression | Instantiate the scene this test exercises and address it by a short name. |
+
+**Why the deadline is an action, not a trigger head.** "On signal within 2 s" hides a decision inside a trigger: when the signal never comes, nothing fires and the interesting outcome - it never fired - can only be inferred from silence. Watch For Signal is an ordinary wait instead, and its two outcomes are conditions on the following rows. A test that cannot say *why* it failed is the one thing a test may not be.
+
+### 11.2 Running them
+
+**Tools > Run Tests…** runs every Test sheet in the project and shows the report: a verdict pill, one card per test with its claims as a table, and the whole report as copyable text. Headlessly, the same run is one command:
+
+```
+godot --headless --path . --script tools/run_test_sheets.gd
+```
+
+It prints a heading per test, a line per claim, the totals, and then either `All tests passed.` or `Some tests failed.` - and exits 0 or 1 to match, so a CI step can gate on either. Point it somewhere else with `-- --root res://tests_folder`, and give slow tests more room with `-- --timeout 10`.
+
+Two rules the runner keeps, because a test suite that lies is worse than none:
+
+- **A test that recorded nothing is a failure**, reported as "no claims were recorded; this test asserted nothing". A crashed test must never look like a clean run.
+- **The verdict is always printed.** Absence of failure lines is not a verdict, so the run says which one it was in words.
+
+**The report is a window, never row chrome.** Nothing is drawn on your sheets - no row gains a tick or a cross, and with the window closed the canvas is byte-identical to what it was before the run. A result is a fact about a run, not a property of a row.
+
+### 11.3 Use cases
+
+1. **Pin a save round-trip.** Save the game state, change it, load it back, `Assert Equal` on every field. The first test worth writing in any project.
+2. **Gravity actually pulls.** Load the player scene, wait a beat, assert its `position.y` grew. Catches a physics layer you renamed away.
+3. **A signal that must fire.** `Expect Signal "died" on "P" within 2 s` after setting hp to zero - the check nobody does by hand twice.
+4. **A signal that must NOT fire.** Watch For Signal for 1 s, then `Watch For Signal Timed Out → Pass Test "no damage while invulnerable"`. Timing out is the pass here.
+5. **Does the scene still load?** After an engine upgrade, one `Load Scene Under Test` per scene is a smoke test that finds the broken one in seconds.
+6. **Balance stays inside a range.** Roll a seeded damage formula 1,000 times and assert the average lands between two numbers - the pack supplies the seed, the test pins the outcome.
+7. **A pool never grows past N.** Take and return an object twenty times, then assert the pool's size. Not something you can eyeball.
+8. **Quest transitions.** Complete an objective, assert the chain moved to the next one - exactly the thing you want pinned before a refactor.
+9. **Bug-first workflow.** Turn a bug report into a failing test, fix the sheet, watch the line flip to PASS. The report is the acceptance criterion.
+10. **Before Publish New Version.** Run the tests for a behaviour pack before you publish it, so the version you ship is the version that passed.
+11. **CI on every push.** One line in the pipeline; a red build the moment a claim stops holding, with the failing claim named in the log.
+12. **Teaching why anyone writes tests.** No framework, no syntax to learn - a beginner writes the same rows they already write, and the verdict explains itself.
+
+**Other use cases**
+
+- **A settings round-trip.** Write every option, reload, assert each came back - the fastest way to catch a key you renamed in one place only.
+- **Localization coverage.** Load a locale, assert a handful of keys resolve to something other than the key itself.
+- **A boss fight's phase order.** Watch for each phase signal in turn; a phase that never arrives names itself in the report.
+- **Autoload wiring.** Assert the singletons your sheets call actually exist before a build goes out with one unregistered.
+- **A refactor's safety net.** Write the asserts BEFORE moving rows around; the report tells you when you are done, instead of your memory.
+
+### 11.4 Troubleshooting
+
+- **"No test sheets found."** The marker line is missing: set the sheet's type to **Test** in Sheet > Sheet Type… and save, so the compiled `.gd` carries `## @ace_test_sheet`.
+- **"no claims were recorded".** The test started but nothing asserted - the rows are under a condition that never came true, or the event has no trigger. A bare event with no trigger emits nothing at all.
+- **A test hangs until the timeout.** It never said it was finished. End it with **Pass Test** / **Fail Test**, or let it record its last claim and fall quiet - the runner stops on either.
+- **"a test sheet has to be a Node script".** The sheet's host was changed to something that is not a node (a Resource). A test runs in a tree; Test sheets force `extends Node`.
+- **The claims run before the scene is ready.** Put them after a wait: `Load Scene Under Test`, then **Wait Until** with a deadline (or a frame wait), then assert.
