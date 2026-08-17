@@ -668,13 +668,14 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Conditions
 - **Is Sprinting** - True while the sprint key (Shift) is held.
 - **Is First Person** - True in first-person camera mode.
+- **Can Jump** - True while some jump is available right now: standing on the floor, within Coyote Time after leaving it, touching a wall with Wall Jump enabled, or holding a mid-air jump. Use it to show a jump prompt or gate a jump sound.
 - **Is Crouching** - True while crouched (including during a crouch slide).
 - **Is Sliding** - True during a crouch slide.
 - **Is Wall Riding** - True while riding a wall (airborne, glued to it, gravity softened).
 - **Can Stand Up** - True when there is headroom to stand from the current crouch (no ceiling in the way).
 
 #### Actions
-- **Jump** - Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor; call it yourself for a scripted jump.
+- **Jump** - Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor or within Coyote Time; call it yourself for a scripted jump. Spends the coyote window, so it never grants a second ground jump.
 - **Air Jump** - Performs a mid-air (double) jump with Jump Velocity and fires On Air Jumped, regardless of the remaining jump budget. The tick calls this automatically when Max Jumps allows; call it yourself for a power-up jump.
 - **Add Look** (`x: float, y: float`) - Turns the view by a mouse delta (pixels): yaw rotates the host, pitch tilts the Head child, clamped to Pitch Min/Max.
 - **Set Third Person** (`enabled: bool`) - Switches between first person (off) and third person (on) and fires On Camera Mode Changed.
@@ -689,6 +690,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Crouching** (`enabled: bool`) - Crouches (on) or stands (off) - the scripted version of holding/releasing Ctrl.
 - **Stop Sliding** - Ends a crouch slide early (you stay crouched). Fires On Slide Ended.
 - **Wall Jump** - Kicks off the wall the host is touching: Jump Velocity upward plus Wall Jump Push away from the wall (the push fades over about half a second). Ends any wall ride. Fires On Wall Jumped. Pressing jump mid-air against a wall does this automatically.
+- **Set Coyote Time** (`seconds: float`) - Changes the coyote grace window at runtime (0 turns it off) - a floaty-feel power-up, a hard-mode toggle, or a per-level tweak.
 - **Reset Jumps** - Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.
 - **Stop Wall Ride** - Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.
 - **Set Gravity Direction** (`x: float, y: float, z: float`) - Points gravity along a new 3D direction (normalized for you). (0, -1, 0) is normal down; (0, 1, 0) walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal.

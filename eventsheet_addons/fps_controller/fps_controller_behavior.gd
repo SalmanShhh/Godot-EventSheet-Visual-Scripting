@@ -59,6 +59,7 @@ signal wall_ride_ended
 ## @ace_category("FPS Controller")
 signal wall_jumped
 
+var _coyote_timer: float = 0.0
 var _jumps_left: int = 0
 var ai_move_x: float = 0.0
 var ai_move_z: float = 0.0
@@ -102,8 +103,10 @@ var yaw: float = 0.0
 @export var slide_enabled: bool = true
 ## Minimum horizontal speed needed to start a crouch slide.
 @export var slide_min_speed: float = 6.5
-## Upward velocity applied on a jump (and on a wall jump).
+## Grace window in seconds to still take the ground jump just after walking off a ledge (0 turns it off). A coyote jump is the floor jump, not a mid-air one, so it never spends the air-jump budget.
 @export_group("Jump")
+@export var coyote_time: float = 0.1
+## Upward velocity applied on a jump (and on a wall jump).
 @export var jump_velocity: float = 4.5
 ## Total jumps before touching the floor again (1 = a single jump, 2 = double jump, 3 = triple). Extra jumps happen in mid-air.
 @export var max_jumps: int = 1
@@ -213,10 +216,16 @@ func _physics_process(delta: float) -> void:
 		_start_wall_ride()
 	# Refill the air-jump budget while grounded: max_jumps counts the floor jump too, so
 	# _jumps_left holds the EXTRA (mid-air) jumps still available (2 = one air jump left).
+	# Coyote time: the ground jump stays available for coyote_time seconds after leaving the
+	# floor WITHOUT jumping. The jump itself zeroes the timer, so a coyote jump can never be
+	# followed by a second ground jump, and falling past the window grants nothing.
 	if on_floor:
 		_jumps_left = maxi(max_jumps - 1, 0)
+		_coyote_timer = coyote_time
+	else:
+		_coyote_timer = maxf(_coyote_timer - delta, 0.0)
 	if Input.is_action_just_pressed("ui_accept"):
-		if on_floor:
+		if on_floor or _coyote_timer > 0.0:
 			if sliding:
 				stop_sliding()
 			do_jump()
@@ -240,12 +249,13 @@ func _launch_jump() -> void:
 ## @ace_action
 ## @ace_name("Jump")
 ## @ace_category("FPS Controller")
-## @ace_description("Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor; call it yourself for a scripted jump.")
+## @ace_description("Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor or within Coyote Time; call it yourself for a scripted jump. Spends the coyote window, so it never grants a second ground jump.")
 ## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
 ## @ace_codegen_template("$FPSController.do_jump()")
 func do_jump() -> void:
 	if host == null:
 		return
+	_coyote_timer = 0.0
 	_launch_jump()
 	jumped.emit()
 
@@ -474,6 +484,26 @@ func do_wall_jump() -> void:
 	host.velocity += -_gravity_dir() * jump_velocity
 	wall_jumped.emit()
 
+## @ace_condition
+## @ace_name("Can Jump")
+## @ace_category("FPS Controller")
+## @ace_description("True while some jump is available right now: standing on the floor, within Coyote Time after leaving it, touching a wall with Wall Jump enabled, or holding a mid-air jump. Use it to show a jump prompt or gate a jump sound.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.can_jump()")
+func can_jump() -> bool:
+	if host == null:
+		return false
+	return host.is_on_floor() or _coyote_timer > 0.0 or (wall_jump_enabled and host.is_on_wall()) or _jumps_left > 0
+
+## @ace_action
+## @ace_name("Set Coyote Time")
+## @ace_category("FPS Controller")
+## @ace_description("Changes the coyote grace window at runtime (0 turns it off) - a floaty-feel power-up, a hard-mode toggle, or a per-level tweak.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.set_coyote_time({seconds})")
+func set_coyote_time(seconds: float) -> void:
+	coyote_time = maxf(seconds, 0.0)
+
 ## @ace_action
 ## @ace_name("Reset Jumps")
 ## @ace_category("FPS Controller")
@@ -613,4 +643,4 @@ func _start_wall_ride() -> void:
 			host.velocity -= _gravity_dir() * fall * 0.75
 	wall_ride_started.emit()
 
-# FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person. Set Max Jumps to 2 for a double jump (3 for a triple) - extra jumps happen in mid-air and fire On Air Jumped. Movement tech included: crouch (hold Ctrl, capsule shrinks, ceiling-checked stand), crouch slide (crouch while sprinting), wall ride (hold forward against a wall mid-air), and wall jump (jump off any wall mid-air).
+# FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person. Set Max Jumps to 2 for a double jump (3 for a triple) - extra jumps happen in mid-air and fire On Air Jumped. Coyote Time keeps the ground jump available for a moment after walking off a ledge. Movement tech included: crouch (hold Ctrl, capsule shrinks, ceiling-checked stand), crouch slide (crouch while sprinting), wall ride (hold forward against a wall mid-air), and wall jump (jump off any wall mid-air).

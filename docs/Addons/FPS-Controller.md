@@ -3,7 +3,9 @@
 FPS Controller is a complete first-person / third-person character controller you attach under a
 `CharacterBody3D` and drive from event-sheet rows. It handles mouse look (yaw on the body, pitch
 on the head), WASD/arrow movement relative to where you look, Shift sprint, Space jump with
-gravity, landing detection, and a one-verb camera-mode switch between first and third person.
+gravity and **coyote time** (the ground jump still fires for a tenth of a second after you walk
+off a ledge, so presses never feel dropped), landing detection, and a one-verb camera-mode switch
+between first and third person.
 Movement tech is built in: **crouch** (hold Ctrl - the capsule physically shrinks, and standing
 is ceiling-checked so you cannot pop up inside a vent), **crouch slide** (crouch while
 sprinting), **wall ride** (hold forward against a wall mid-air to glide along it), and
@@ -82,6 +84,7 @@ the behavior finds them by name and quietly skips what's missing.
 | Action | Stop Sliding | Ends a crouch slide early (you stay crouched). |
 | Action | Jump / Air Jump | Launches up with Jump Velocity: Jump fires On Jumped, Air Jump is the mid-air (double) jump firing On Air Jumped. The tick calls the right one automatically; call them for scripted or power-up jumps. |
 | Action | Reset Jumps | Refills the mid-air jump budget now (e.g. a double-jump power-up) without landing. |
+| Action | Set Coyote Time (seconds) | Retunes the coyote grace window at runtime (0 turns it off) - a floaty-feel power-up, a hard-mode toggle, a per-level tweak. |
 | Action | Wall Jump | Kicks off the touched wall: Jump Velocity up + Wall Jump Push away (the push fades over ~0.5 s). Pressing jump mid-air against a wall does this automatically. |
 | Action | Stop Wall Ride | Detaches from the wall; full gravity resumes. |
 | Trigger | On Crouched / On Stood Up | Crouch state changes. |
@@ -93,12 +96,16 @@ the behavior finds them by name and quietly skips what's missing.
 | Condition | Is First Person | True in first-person mode. |
 | Condition | Is Crouching / Is Sliding / Is Wall Riding | The movement-tech states. |
 | Condition | Can Stand Up | True when there is headroom to stand (no ceiling above the crouched capsule). |
+| Condition | Can Jump | True while some jump is available right now: on the floor, inside the coyote window just after leaving it, against a wall with Wall Jump enabled, or holding a mid-air jump. Show a jump prompt or gate a jump sound with it. |
 | Expression | Current Speed | Horizontal speed in m/s (drive a speed HUD or FOV kick). |
 | Expression | Look Yaw / Look Pitch | The current view angles in degrees. |
 | Expression | Wall Normal X / Z | The touched wall's outward normal (zero off-wall) - the wall-jump push direction; feed it to a camera lean. |
 
 Exported knobs (Inspector or sheet variables): Move Speed, Sprint Multiplier, Jump Velocity,
 Max Jumps (1 = single, 2 = double jump, 3 = triple - the extras are mid-air),
+Coyote Time (the grace window, 0.1 s by default, in which the GROUND jump still fires just after
+walking off a ledge - it is the floor jump, so it never spends the air-jump budget, and taking it
+closes the window so a coyote jump can never chain into a second ground jump; 0 turns it off),
 Gravity, Gravity Direction, Mouse Sensitivity, Pitch Min/Max, Third Person, Camera Distance, Capture Mouse On Ready.
 Movement tech knobs: Crouch Height + Crouch Speed Multiplier; Slide Enabled + Slide Boost Speed +
 Slide Min Speed (the speed a crouch must be moving at to slide - default just above walking, so
@@ -120,6 +127,10 @@ Wall Ride Max Time + Wall Ride Min Speed; Wall Jump Enabled + Wall Jump Push.
   or your speed runs out.
 - **Wall jump** works from a ride or any mid-air wall touch: up at Jump Velocity, away at Wall
   Jump Push, and the push decays over about half a second so air control comes back smoothly.
+- **Coyote time** opens a Coyote Time window (0.1 s) the moment you leave the floor without
+  jumping; a jump press inside it is the ordinary ground jump (On Jumped, not On Air Jumped) and
+  spends none of the Max Jumps air budget. Taking it closes the window, and past the window a press
+  falls through to a wall jump or an air jump exactly as before. Set Coyote Time 0 turns it off.
 
 ### Inspector properties are ACEs too
 
@@ -181,6 +192,16 @@ dock, the section grounds to that node's actual children before you even press R
    length.
 15. **Compass strip.** `Every tick → scroll the compass texture by Look Yaw` - the expression is
    already in degrees, so 0-360 maps straight onto a wrap-around compass HUD.
+16. **Ledge jumps that never feel dropped.** Nothing to build: with Coyote Time at its 0.1 s
+   default, a jump pressed a hair after walking off a rooftop still fires as the ground jump.
+   Tune it in the Inspector like Jump Velocity; set it to 0 for a strict "feet on the floor"
+   game, or 0.15 for a floaty, forgiving one.
+17. **Jump prompt.** `Every tick + Can Jump → show the A-button hint`, `else → hide it` - the
+   condition already knows about the floor, the coyote window, walls and banked air jumps, so
+   the prompt agrees with what a press would actually do.
+18. **Hard mode / floaty power-up.** `On Setting Changed "hard_mode" → Set Coyote Time 0` and
+   `On feather pickup → Set Coyote Time 0.25` + `Every 10 seconds → Set Coyote Time 0.1` to
+   wear off - the same knob a designer tunes, driven by rows at runtime.
 
 ### Other use cases
 

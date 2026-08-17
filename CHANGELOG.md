@@ -1,5 +1,30 @@
 # Changelog
 
+## [Unreleased]
+
+### Added - coyote time on the FPS Controller (the 3D movement behaviour that jumps)
+
+The 2D Platformer has shipped coyote time as an Inspector feel-number since its first release;
+the FPS Controller - the one 3D movement pack with a jump - never had it, so a press a hair
+after walking off a rooftop was silently dropped. It now has the same shape as the 2D pack: a
+**Coyote Time** knob (0.1 s, group Jump, 0 turns it off) that opens a window the moment the host
+leaves the floor without jumping. A press inside it is the ordinary GROUND jump - On Jumped, not
+On Air Jumped - and spends none of the Max Jumps air budget; taking it closes the window, so a
+coyote jump can never chain into a second ground jump, and past the window a press falls
+through to a wall jump or an air jump exactly as before. Two verbs alongside: **Can Jump**
+(condition - floor, open coyote window, wall with Wall Jump enabled, or a banked air jump; the
+prompt agrees with what a press would actually do) and **Set Coyote Time** (a floaty power-up, a
+hard-mode toggle, a per-level tweak; negatives clamp to off). Nav Agent 3D, Move To 3D, Bullet 3D
+and the other 3D packs read the floor only for gravity and have no jump, so nothing changes there.
+
+Proven twice: the logic in the tech test (the window opens Can Jump off-floor, the jump spends it,
+the air budget is untouched, the tick's open/decay and jump branch are pinned on the emitted
+source), and under real physics in a non-headless smoke - three rigs walk off a ledge; the one
+with Coyote Time 0.1 pressed two frames after leaving jumps, the one with 0 does not, and the one
+pressing 0.5 s later does not. The FPS Controller guide gains the knob, both verbs and three use
+cases; the vocabulary catalog and help bundle are regenerated. Existing scenes keep their feel:
+the default 0.1 s only ever adds a jump that used to be dropped.
+
 ## [0.17.0] - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 
 ### Added - the developer-experience wave, part two: the editor seams (9 suggestions)

@@ -114,6 +114,33 @@ static func run() -> bool:
 	behavior.stop_wall_ride()
 	all_passed = _check("Stop Wall Ride off-wall is safe", behavior.is_wall_riding(), false) and all_passed
 
+	# ── Coyote time: the decision logic, off the floor (no physics space here, so is_on_floor()
+	# is false throughout - exactly the "just walked off a ledge" state). The window's decay and
+	# the tick's own jump branch are pinned on the emitted source; the real walk-off-a-ledge run
+	# is the FPS Arena runtime smoke.
+	all_passed = _check("Coyote Time ships as an Inspector feel-number at 0.1 s", is_equal_approx(float(behavior.get("coyote_time")), 0.1), true) and all_passed
+	behavior.set("max_jumps", 1)
+	behavior.set("_jumps_left", 0)
+	behavior.set("_coyote_timer", 0.0)
+	all_passed = _check("Can Jump is false off-floor once the window has closed", behavior.can_jump(), false) and all_passed
+	behavior.set("_coyote_timer", 0.05)
+	all_passed = _check("Can Jump is true off-floor while the coyote window is open", behavior.can_jump(), true) and all_passed
+	air_events.clear()
+	host.velocity = Vector3.ZERO
+	behavior.do_jump()
+	all_passed = _check("a coyote jump is the GROUND jump (fires On Jumped, launches up)", host.velocity.y > 0.0 and air_events == ["ground"], true) and all_passed
+	all_passed = _check("the jump spends the coyote window (no second ground jump)", is_equal_approx(float(behavior.get("_coyote_timer")), 0.0), true) and all_passed
+	all_passed = _check("the coyote jump did not touch the air-jump budget", int(behavior.get("_jumps_left")), 0) and all_passed
+	all_passed = _check("Can Jump is false again after the coyote jump", behavior.can_jump(), false) and all_passed
+	behavior.set_coyote_time(0.25)
+	all_passed = _check("Set Coyote Time retunes the window", is_equal_approx(float(behavior.get("coyote_time")), 0.25), true) and all_passed
+	behavior.set_coyote_time(-1.0)
+	all_passed = _check("Set Coyote Time clamps a negative to off (0)", is_equal_approx(float(behavior.get("coyote_time")), 0.0), true) and all_passed
+	var source: String = script.source_code
+	all_passed = _check("the tick opens the window on the floor and decays it in the air",
+		source.contains("\t\t_coyote_timer = coyote_time\n\telse:\n\t\t_coyote_timer = maxf(_coyote_timer - delta, 0.0)"), true) and all_passed
+	all_passed = _check("the tick's jump branch honours the open window", source.contains("if on_floor or _coyote_timer > 0.0:"), true) and all_passed
+
 	host.free()
 	return all_passed
 

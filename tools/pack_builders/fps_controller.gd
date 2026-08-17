@@ -24,6 +24,7 @@ static func build() -> bool:
 		"gravity": {"type": "float", "default": 9.8, "exported": true, "description": "Downward acceleration pulling the host to the floor, in metres per second squared.", "attributes": {"group": "Movement"}},
 		"jump_velocity": {"type": "float", "default": 4.5, "exported": true, "description": "Upward velocity applied on a jump (and on a wall jump).", "attributes": {"group": "Jump"}},
 		"max_jumps": {"type": "int", "default": 1, "exported": true, "description": "Total jumps before touching the floor again (1 = a single jump, 2 = double jump, 3 = triple). Extra jumps happen in mid-air.", "attributes": {"group": "Jump"}},
+		"coyote_time": {"type": "float", "default": 0.1, "exported": true, "description": "Grace window in seconds to still take the ground jump just after walking off a ledge (0 turns it off). A coyote jump is the floor jump, not a mid-air one, so it never spends the air-jump budget.", "attributes": {"group": "Jump"}},
 		"mouse_sensitivity": {"type": "float", "default": 0.12, "exported": true, "description": "Look sensitivity in degrees turned per mouse pixel moved.", "attributes": {"group": "Look"}},
 		"pitch_min": {"type": "float", "default": -80.0, "exported": true, "description": "Lowest look angle in degrees (how far you can look down).", "attributes": {"group": "Look"}},
 		"pitch_max": {"type": "float", "default": 80.0, "exported": true, "description": "Highest look angle in degrees (how far you can look up).", "attributes": {"group": "Look"}},
@@ -50,6 +51,7 @@ static func build() -> bool:
 		"sprint_held": {"type": "bool", "default": false, "exported": false},
 		"was_on_floor": {"type": "bool", "default": true, "exported": false},
 		"_jumps_left": {"type": "int", "default": 0, "exported": false},
+		"_coyote_timer": {"type": "float", "default": 0.0, "exported": false},
 		"crouching": {"type": "bool", "default": false, "exported": false},
 		"sliding": {"type": "bool", "default": false, "exported": false},
 		"slide_time": {"type": "float", "default": 0.0, "exported": false},
@@ -65,7 +67,7 @@ static func build() -> bool:
 		"push_z": {"type": "float", "default": 0.0, "exported": false},
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person. Set Max Jumps to 2 for a double jump (3 for a triple) - extra jumps happen in mid-air and fire On Air Jumped. Movement tech included: crouch (hold Ctrl, capsule shrinks, ceiling-checked stand), crouch slide (crouch while sprinting), wall ride (hold forward against a wall mid-air), and wall jump (jump off any wall mid-air)."
+	about.text = "FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person. Set Max Jumps to 2 for a double jump (3 for a triple) - extra jumps happen in mid-air and fire On Air Jumped. Coyote Time keeps the ground jump available for a moment after walking off a ledge. Movement tech included: crouch (hold Ctrl, capsule shrinks, ceiling-checked stand), crouch slide (crouch while sprinting), wall ride (hold forward against a wall mid-air), and wall jump (jump off any wall mid-air)."
 	sheet.events.append(about)
 
 	var jumped_signal: SignalRow = SignalRow.new()
@@ -274,10 +276,16 @@ static func build() -> bool:
 		"\t_start_wall_ride()",
 		"# Refill the air-jump budget while grounded: max_jumps counts the floor jump too, so",
 		"# _jumps_left holds the EXTRA (mid-air) jumps still available (2 = one air jump left).",
+		"# Coyote time: the ground jump stays available for coyote_time seconds after leaving the",
+		"# floor WITHOUT jumping. The jump itself zeroes the timer, so a coyote jump can never be",
+		"# followed by a second ground jump, and falling past the window grants nothing.",
 		"if on_floor:",
 		"\t_jumps_left = maxi(max_jumps - 1, 0)",
+		"\t_coyote_timer = coyote_time",
+		"else:",
+		"\t_coyote_timer = maxf(_coyote_timer - delta, 0.0)",
 		"if Input.is_action_just_pressed(\"ui_accept\"):",
-		"\tif on_floor:",
+		"\tif on_floor or _coyote_timer > 0.0:",
 		"\t\tif sliding:",
 		"\t\t\tstop_sliding()",
 		"\t\tdo_jump()",
@@ -314,11 +322,12 @@ static func build() -> bool:
 	jump_fn.expose_as_ace = true
 	jump_fn.ace_display_name = "Jump"
 	jump_fn.ace_category = "FPS Controller"
-	jump_fn.description = "Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor; call it yourself for a scripted jump."
+	jump_fn.description = "Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor or within Coyote Time; call it yourself for a scripted jump. Spends the coyote window, so it never grants a second ground jump."
 	var jump_body: RawCodeRow = RawCodeRow.new()
 	jump_body.code = "\n".join(PackedStringArray([
 		"if host == null:",
 		"\treturn",
+		"_coyote_timer = 0.0",
 		"_launch_jump()",
 		"jumped.emit()"
 	]))
@@ -584,6 +593,15 @@ static func build() -> bool:
 			"host.velocity += -_gravity_dir() * jump_velocity",
 			"wall_jumped.emit()"
 		])))
+	Lib.append_function(sheet, "can_jump", "Can Jump", "FPS Controller",
+		"True while some jump is available right now: standing on the floor, within Coyote Time after leaving it, touching a wall with Wall Jump enabled, or holding a mid-air jump. Use it to show a jump prompt or gate a jump sound.",
+		[],
+		"if host == null:\n\treturn false\nreturn host.is_on_floor() or _coyote_timer > 0.0 or (wall_jump_enabled and host.is_on_wall()) or _jumps_left > 0")
+	_last_returns(sheet, TYPE_BOOL)
+	Lib.append_function(sheet, "set_coyote_time", "Set Coyote Time", "FPS Controller",
+		"Changes the coyote grace window at runtime (0 turns it off) - a floaty-feel power-up, a hard-mode toggle, or a per-level tweak.",
+		[["seconds", "float"]],
+		"coyote_time = maxf(seconds, 0.0)")
 	Lib.append_function(sheet, "reset_jumps", "Reset Jumps", "FPS Controller",
 		"Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.",
 		[],
