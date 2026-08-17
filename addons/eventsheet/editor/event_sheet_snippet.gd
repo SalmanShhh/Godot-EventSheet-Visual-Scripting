@@ -21,6 +21,87 @@ static func clipboard_text() -> String:
 	return DisplayServer.clipboard_get()
 
 
+# ── Blanks: the fill-in-the-parameters half of a snippet ─────────────────────
+#
+# Snippets are strictly literal, so every reuse is insert-then-fix-the-five-values. A snippet may
+# instead mark a value as a BLANK by writing {{blank:Label}} (or {{blank:Label|default}}) into any
+# parameter, raw code line or comment before saving it. Insert Snippet… then shows one small form,
+# one field per label, and what lands on the sheet is plain rows with the answers substituted -
+# no placeholder is left behind anywhere.
+#
+# The token rides inside the ordinary serialized text, so a snippet with blanks is still a v1
+# snippet: an older editor pastes it verbatim (visibly wrong, never corrupt) rather than failing,
+# and nothing about the format version or the whitelist deserializer changes.
+
+## The blank grammar: {{blank:Label}} with an optional |default after the label.
+const BLANK_PATTERN := "\\{\\{blank:([^}|]+)(?:\\|([^}]*))?\\}\\}"
+
+
+## Every blank a snippet carries, in first-appearance order and deduped by label, as
+## [{label, default}]. The dialog builds one field per entry, in this order.
+static func blanks_in(text: String) -> Array:
+	var blanks: Array = []
+	var seen: Dictionary = {}
+	var regex: RegEx = RegEx.create_from_string(BLANK_PATTERN)
+	if regex == null:
+		return blanks
+	for found: RegExMatch in regex.search_all(text):
+		var label: String = found.get_string(1).strip_edges()
+		if label.is_empty() or seen.has(label):
+			continue
+		seen[label] = true
+		blanks.append({"label": label, "default": _unescaped(found.get_string(2).strip_edges())})
+	return blanks
+
+
+static func has_blanks(text: String) -> bool:
+	return not blanks_in(text).is_empty()
+
+
+## The labels still unanswered by `values` (blank or missing). Inserting with any of these left
+## would land a row with a placeholder in it, so the dialog refuses and names them.
+static func missing_blanks(text: String, values: Dictionary) -> PackedStringArray:
+	var missing: PackedStringArray = PackedStringArray()
+	for blank: Dictionary in blanks_in(text):
+		var label: String = str(blank.get("label", ""))
+		if str(values.get(label, "")).strip_edges().is_empty():
+			missing.append(label)
+	return missing
+
+
+## The snippet text with every blank replaced by its answer (`values` is label -> text). A label
+## with no answer falls back to the blank's own default, so a form left untouched still produces
+## the rows the snippet's author demonstrated. Every occurrence of a label is filled, which is why
+## one label can stand for a node used on five rows.
+static func fill_blanks(text: String, values: Dictionary) -> String:
+	var regex: RegEx = RegEx.create_from_string(BLANK_PATTERN)
+	if regex == null:
+		return text
+	var matches: Array[RegExMatch] = regex.search_all(text)
+	var filled: String = text
+	# Back to front, so each splice leaves the offsets of the matches before it valid.
+	for index: int in range(matches.size() - 1, -1, -1):
+		var found: RegExMatch = matches[index]
+		var answer: String = str(values.get(found.get_string(1).strip_edges(), "")).strip_edges()
+		# A blank always sits INSIDE one of the payload's quoted strings, so the answer is written
+		# back escaped exactly as var_to_str would have written it. Without this an answer holding a
+		# quote (a sound name, a printed line) would end the string early and the whole snippet would
+		# stop parsing - deserialize returns nothing and the insert silently lands no rows.
+		filled = filled.left(found.get_start()) + _escaped(answer if not answer.is_empty() else _unescaped(found.get_string(2).strip_edges())) + filled.substr(found.get_end())
+	return filled
+
+
+## The text as it reads OUTSIDE the payload (a form field, a status line): the escapes var_to_str
+## put in are taken back out, so a default of \"coin.ogg\" is shown as "coin.ogg".
+static func _unescaped(text: String) -> String:
+	return text.replace("\\\"", "\"").replace("\\\\", "\\")
+
+
+## The inverse: what a plain answer must look like inside the payload's quoted string.
+static func _escaped(text: String) -> String:
+	return text.replace("\\", "\\\\").replace("\"", "\\\"")
+
+
 static func is_snippet_text(text: String) -> bool:
 	var stripped: String = text.strip_edges()
 	return stripped.begins_with(HEADER) and stripped.ends_with(FOOTER)

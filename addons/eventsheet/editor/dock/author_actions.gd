@@ -358,5 +358,12 @@ func _open_insert_snippet() -> void:
 ## Insert = the normal snippet paste (fresh uids, missing variables created - the
 ## whole paste contract for free).
 func _insert_snippet_path(snippet_path: String) -> void:
-	if not _dock._paste_snippet_text(EventSheetSnippetLibrary.read_snippet(snippet_path)):
+	var snippet_text: String = EventSheetSnippetLibrary.read_snippet(snippet_path)
+	# A snippet may mark values as BLANKS ({{blank:Label}}); then insert shows one small fill-in
+	# form first and the rows land filled, with no placeholder left behind. A snippet without
+	# blanks takes the same path it always did (dock/snippet_blanks_dialog.gd).
+	if EventSheetSnippet.has_blanks(snippet_text):
+		EventSheetSnippetBlanksDialog.open_for(_dock, snippet_path.get_file().get_basename().capitalize(), snippet_text)
+		return
+	if not _dock._paste_snippet_text(snippet_text):
 		_dock._set_status("That file isn't a sheet snippet: %s" % snippet_path.get_file(), true)

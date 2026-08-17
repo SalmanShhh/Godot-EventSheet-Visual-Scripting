@@ -466,6 +466,107 @@ Two ways to stop repeating yourself.
   the sheet's events iterate over a whole **family** of nodes (family-scoped), so one sheet drives the
   group. The **Family Arena** showcase (`demo/showcase/family_arena/family_arena.tscn`) shows it end to end.
 
+### 15a. Reshaping what you already wrote - Refactor
+
+Creating structure was always fast; changing it was not. **Refactor ▸** on any row's right-click menu
+holds the gestures that go the other way. Each one produces ordinary condition and action rows and
+lands as **one undo step**, so a refactor is something you try, look at, and undo.
+
+![The row menu's Refactor submenu on a real sheet: Wrap in Condition, a greyed-out Unwrap Event, and Duplicate as Variant](images/refactor-row-menu.png)
+
+- **Wrap in Condition…** takes the run of actions you have selected (or all of the event's actions if
+  you select none), opens the ACE picker, and moves them inside a fresh sub-event guarded by the
+  condition you pick. Before: three unguarded actions under *Every Frame*. After: *Every Frame* with
+  no actions of its own and one child, *Player is moving*, holding all three.
+  The picker lists triggers as well as conditions, because an ordinary sub-event may have one -
+  but a wrap may not, and picking a trigger here is refused in one line. A trigger says when an
+  event *starts*; it does not decide whether these actions run, so a trigger-headed guard would show
+  you a guarded row and emit unguarded code.
+- **Unwrap Event** is the inverse: a sub-event's rows are lifted into the event above it and the
+  empty shell is dropped. A guard added by reflex is removable by reflex. A guard that was carrying
+  something of its own - it is turned off, or it is scoped with **With node** - keeps that: its
+  actions travel in a row that is still off, or still pointed at that node, rather than quietly
+  joining the parent and changing what your game does.
+- **Inline This Call** (on a **Call** row's own right-click menu, beside *Extract All Actions to
+  Function…*) replaces the call with the verb's own rows.
+- **Inline Everywhere and Remove** (on a verb's **Define** row) does that at every call site and then
+  deletes the verb, so a verb published too early can be un-published without leaving broken calls.
+- **Duplicate as Variant…** copies the selection with names swapped.
+
+**What it refuses, and why.** A guard runs *after* the actions above it, so **Wrap** only takes the
+**last** run of actions; a gapped or mid-block selection would silently reorder your program, and is
+refused with that reason instead. **Unwrap** refuses on a top-level row (there is nothing above it to
+lift into), on a **For Each** sub-event (its rows would run once instead of per item), and on one
+whose **Else** sits below it. **Inline** refuses a verb whose body is not a plain run of actions, and
+a call passing an expression such as `speed * 2` rather than a plain name. Every refusal appears as
+the disabled item's tooltip, so you read it before you click.
+
+Use cases:
+
+1. **Add a difficulty guard to rows you already wrote.** Select the actions, Wrap in Condition…,
+   pick *Is Hard Mode*. No retyping, and undo puts it back.
+2. **Split a grown tick event into per-state branches.** Wrap the trailing run behind
+   *State is "chasing"*, then wrap the next run behind the next state.
+3. **Add the null or alive guard exactly where it crashed.** Wrap the offending actions behind
+   *Health > 0* on the rows the stack trace named.
+4. **Take a guard back off.** A debug-only `if` you no longer need: Unwrap Event, and the rows return
+   to the parent in the same order.
+5. **Undo a premature abstraction.** You extracted a verb, then found the shape was wrong. Inline
+   Everywhere and Remove folds it back and the sheet reads as it did before extraction.
+6. **Make one caller differ.** Inline This Call at that one site, edit the rows there, and the other
+   callers stay on the verb.
+7. **Flatten helper verbs before Export Addon Pack**, so the pack ships a flat, readable body.
+8. **Read a stranger's sheet.** Inline once to see what a verb actually does, then undo.
+9. **Un-publish a verb** without hunting down its call rows first.
+10. **Recover from the extract refusal.** Extract-to-Function refuses when a captured local is not
+    visible; wrap the run behind a condition instead and keep the shape you wanted.
+
+### 15b. The second of everything - Duplicate as Variant…
+
+Player 2, the second weapon, the third upgrade tier: the same rows with one object and one name
+swapped. That used to be two gestures (**Duplicate**, then **Replace Object References…**). Select
+the rows, right-click ▸ **Refactor ▸ Duplicate as Variant…**, and the dialog does both in one undo
+step: one *find X, replace with Y* field per object reference and per variable the rows use, a live
+preview of the rows it will produce, and an **Again with…** button that keeps the form open so the
+third and fourth variant are one edit each.
+
+![The Duplicate as Variant dialog: a find-and-replace field per object and variable, and a live preview of the rows it will produce](images/duplicate-as-variant.png)
+
+Object references are rewritten token-safely (`$Player` never touches `$PlayerSpawner`). A variable
+name this sheet already has is **reused**; one it lacks is **created**. The sentence beside each
+field says which, before you commit.
+
+Use cases:
+
+11. **Players 2, 3 and 4** from the player 1 block, one click each.
+12. **Enemy variants** differing by scene, speed and sound.
+13. **Per-level or per-difficulty copies** of one rules block.
+14. **The same UI block wired to a second panel.**
+15. **A/B experiment variants** kept side by side and disabled alternately.
+
+### 15c. Snippets with blanks
+
+Snippets already cross projects and chat clients as text (**More ▸ Save Selection as Snippet…**,
+then **Insert Snippet…**). They are literal, so every reuse used to be insert-then-fix-the-values.
+Write `{{blank:Label}}` into any parameter value before saving (or `{{blank:Label|default}}` to
+demonstrate a default), and **Insert Snippet…** shows a small fill-in form instead: one field per
+label, filled once. What lands on the sheet is plain rows with your answers substituted, with no
+placeholder left behind anywhere. A snippet without blanks inserts exactly as it always did.
+
+![Insert Snippet's fill-in form for a snippet with three blanks, each seeded with the author's default](images/snippet-blanks.png)
+
+One label can stand for a value used on five rows: every occurrence is filled from the one field.
+A blank left empty is refused by name, because a placeholder that reached the sheet would be a row
+that does not run.
+
+Use cases:
+
+16. **Any idiom you retype more than twice** that never earns a published verb.
+17. **Onboarding**, by shipping your project's house patterns so a newcomer cannot get the shape wrong.
+18. **Jam speed**, with a personal library of pickup, door, checkpoint and menu blocks.
+19. **Tutorials**, where a snippet with labelled blanks is a runnable teaching example.
+20. **Team standards**, since the text form already crosses projects and chat clients unchanged.
+
 ---
 
 ## 16. Tips and Common Mistakes

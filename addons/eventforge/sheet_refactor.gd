@@ -32,10 +32,15 @@ static func validate_new_name(sheet: EventSheetResource, old_name: String, new_n
 
 ## Renames a variable or function across the sheet. Returns the replacement count
 ## (0 = the symbol appears nowhere, including as a declaration).
-static func rename_symbol(sheet: EventSheetResource, old_name: String, new_name: String) -> int:
+##
+## `skip_string_literals` leaves text INSIDE quotes alone. Rename Everywhere wants the default
+## (an author renaming a concept means the prose too), but a caller substituting a value - inlining
+## a verb's parameter with the argument passed at the call site - must not rewrite the sentences the
+## body prints: `print("who is out")` is displayed text, not a reference to the parameter.
+static func rename_symbol(sheet: EventSheetResource, old_name: String, new_name: String, skip_string_literals: bool = false) -> int:
 	if sheet == null or old_name.is_empty():
 		return 0
-	var counter: Dictionary = {"count": 0}
+	var counter: Dictionary = {"count": 0, "skip_string_literals": skip_string_literals}
 	var regex: RegEx = RegEx.create_from_string("\\b%s\\b" % old_name)
 	# The declaration itself: a sheet-variables key (order preserved - Dictionaries
 	# keep insertion order, so rebuild in place)…
@@ -264,12 +269,45 @@ static func _rename_text(text: String, regex: RegEx, new_name: String, counter: 
 	var found: Array[RegExMatch] = regex.search_all(text)
 	if found.is_empty():
 		return text
-	counter["count"] = int(counter["count"]) + found.size()
+	# The mask is only computed when a caller asked for literal-safety, so the everyday rename pays
+	# nothing for it.
+	var mask: PackedByteArray = _string_literal_mask(text) if bool(counter.get("skip_string_literals", false)) 		else PackedByteArray()
 	# Manual back-to-front splice instead of regex.sub: sub() treats "$" in the
 	# replacement as a backreference marker, which would eat node references like
 	# "$EliteEnemy". Renames are always literal here.
 	var out: String = text
 	for match_index: int in range(found.size() - 1, -1, -1):
 		var found_match: RegExMatch = found[match_index]
-		out = out.substr(0, found_match.get_start()) + new_name + out.substr(found_match.get_end())
+		var start: int = found_match.get_start()
+		if start < mask.size() and mask[start] == 1:
+			continue
+		counter["count"] = int(counter["count"]) + 1
+		out = out.substr(0, start) + new_name + out.substr(found_match.get_end())
 	return out
+
+
+## One byte per character: 1 where the character sits inside a quoted string literal (the quotes
+## themselves included), 0 everywhere else. Single and double quotes both open a literal, a
+## backslash escapes the next character, and an unterminated quote runs to the end of the text -
+## which is the safe direction, since the point is to leave displayed prose alone.
+static func _string_literal_mask(text: String) -> PackedByteArray:
+	var mask: PackedByteArray = PackedByteArray()
+	mask.resize(text.length())
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if quote.is_empty():
+			if character == "\"" or character == "'":
+				quote = character
+				mask[index] = 1
+		else:
+			mask[index] = 1
+			if character == "\\":
+				index += 1
+				if index < text.length():
+					mask[index] = 1
+			elif character == quote:
+				quote = ""
+		index += 1
+	return mask

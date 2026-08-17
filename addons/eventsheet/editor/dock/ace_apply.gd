@@ -259,6 +259,16 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 				return true
 			"new_sub_condition_event":
 				if selected_resource is EventRow:
+					# ── Wrap in Condition… refuses a TRIGGER ──────────────────────────────────
+					# This arm also serves the wrap gesture, and the picker lists triggers here
+					# because an ordinary sub-event may have one. A wrap may not: the compiler
+					# builds a sub-event's `if` out of its CONDITIONS only, so a trigger-headed
+					# guard emits no guard at all and the wrapped actions would run unconditionally
+					# while the sheet showed them guarded.
+					var wrap_targets: Array = context.get("wrap_actions", []) if context.get("wrap_actions") is Array else []
+					if not wrap_targets.is_empty() and definition.ace_type == ACEDefinition.ACEType.TRIGGER:
+						message["text"] = "Wrap needs a CONDITION - a trigger says when an event starts, not whether these actions run. Pick a condition instead."
+						return false
 					var child_condition_event: EventRow = EventRow.new()
 					if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
 						child_condition_event.trigger = _create_condition_from_definition(definition, params)
@@ -267,6 +277,15 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 						_append_condition_entry(child_condition_event, definition, params)
 					(selected_resource as EventRow).sub_events.append(child_condition_event)
 					message["text"] = "Added sub-condition."
+					# ── Wrap in Condition… (editor/wrap_unwrap.gd) ────────────────────────────
+					# The wrap gesture reuses this arm so the picker filters and titles itself
+					# correctly, then re-parents the chosen actions under the fresh guard INSIDE
+					# this same undoable edit - which is what makes the whole wrap one undo step.
+					if not wrap_targets.is_empty():
+						var wrapped: int = EventSheetWrapUnwrap.wrap_actions_into(selected_resource as EventRow, wrap_targets, child_condition_event)
+						if wrapped == 0:
+							return false
+						message["text"] = "Wrapped %d action(s) in a condition." % wrapped
 					return true
 			"append_condition":
 				if selected_resource is EventRow:
@@ -384,6 +403,10 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 				return true
 		return false
 	)
+	if not changed and not str(message.get("text", "")).strip_edges().is_empty():
+		# A refusal that set a reason says it out loud: an apply that quietly does nothing is the
+		# one outcome the author cannot act on.
+		_dock._set_status(str(message["text"]), true)
 	if changed:
 		_dock._mark_dirty(str(message.get("text", "Applied.")))
 		# Every successful apply is the user choosing this verb - the counter feeds the ghost
