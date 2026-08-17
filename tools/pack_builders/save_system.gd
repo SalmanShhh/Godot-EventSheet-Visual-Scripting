@@ -439,7 +439,8 @@ static func build() -> bool:
 		"",
 		"# Atomic write: every backend writes a .tmp sibling then renames it over the slot,",
 		"# so a crash mid-write leaves the previous good save intact, never a half-file.",
-		"func _write_all(data: Dictionary, stamp_current_version: bool = false) -> bool:",
+		"# Reached through _write_all, which is the door that opens and closes the write window.",
+		"func _write_file(data: Dictionary, stamp_current_version: bool = false) -> bool:",
 		"\tvar path: String = _slot_path()",
 		"\tvar tmp: String = path + \".tmp\"",
 		"\t# Two facts get applied on the way out, both no-ops at their defaults so a project",
@@ -673,6 +674,112 @@ static func build() -> bool:
 		"\treturn found"
 	]))
 	sheet.events.append(loops)
+	# Per-key outcomes, the write window, and the two verbs whose bodies must sit INSIDE it.
+	# Each trigger is one plain signal carrying the key it is about: the signal's arguments
+	# become the trigger row's captured context, so one signal serves every key, the row reads
+	# `key`, and a handler that wants exactly one key adds an ordinary condition on it
+	# underneath. No per-key filter, and no "last saved key" variable to remember to check.
+	var key_events: RawCodeRow = RawCodeRow.new()
+	key_events.code = "\n".join(PackedStringArray([
+		"## Fires when one key's value has landed on disk - Save Value, Save Number and Save Text",
+		"## all raise it, with the key that was written as the row's own captured value. A key held",
+		"## back by Never Save This Key never raises it, because it never reached the file.",
+		"## @ace_trigger",
+		"## @ace_name(\"On Key Saved\")",
+		"## @ace_category(\"Save System\")",
+		"signal key_saved(key: String, slot_index: int)",
+		"",
+		"## Fires when Check Save Key finds the key in the slot - the found half of that question,",
+		"## answered as a row instead of a value somebody has to remember to test.",
+		"## @ace_trigger",
+		"## @ace_name(\"On Key Loaded\")",
+		"## @ace_category(\"Save System\")",
+		"signal key_loaded(key: String, slot_index: int)",
+		"",
+		"## Fires when Remove Save Key has taken the key out of the file, and once per key that",
+		"## Clear Slot Keys emptied out of it.",
+		"## @ace_trigger",
+		"## @ace_name(\"On Key Removed\")",
+		"## @ace_category(\"Save System\")",
+		"signal key_removed(key: String, slot_index: int)",
+		"",
+		"## Fires when a key was asked for and the slot does not hold it - Check Save Key, or a",
+		"## Remove Save Key with nothing to remove. This is where a first run seeds its default",
+		"## once, instead of quietly defaulting forever.",
+		"## @ace_trigger",
+		"## @ace_name(\"On Save Key Missing\")",
+		"## @ace_category(\"Save System\")",
+		"signal save_key_missing(key: String, slot_index: int)",
+		"",
+		"# The save and load windows, counted rather than flagged. This pack writes synchronously",
+		"# (a .tmp, then a rename), so a window is short - but an On Before Save handler that saves",
+		"# a key of its own opens a second one INSIDE it, and a plain bool would close the outer",
+		"# window when the inner write finished. Is Saving and Is Loading read these.",
+		"var _write_depth: int = 0",
+		"var _load_depth: int = 0",
+		"",
+		"# Every write goes through this door, so Is Saving covers the whole window - which is",
+		"# exactly where a second writer, a Save All Addons sweep, or a quit button does damage.",
+		"func _write_all(data: Dictionary, stamp_current_version: bool = false) -> bool:",
+		"\t_write_depth += 1",
+		"\tvar written: bool = _write_file(data, stamp_current_version)",
+		"\t_write_depth -= 1",
+		"\treturn written",
+		"",
+		"# Save Game's body, held one call away so the whole broadcast - On Before Save included -",
+		"# sits inside the write window, without threading a flag through its early returns.",
+		"func _run_save_game() -> void:",
+		"\tbefore_save.emit(slot)",
+		"\tvar data: Dictionary = _read_all()",
+		"\tif not _last_read_ok:",
+		"\t\t_fail_save(slot, \"slot %d exists but could not be read - refusing to overwrite it (%s).\" % [slot, _last_read_problem])",
+		"\t\treturn",
+		"\tvar persisted: Dictionary = _collect_group_state(persist_group)",
+		"\tif not persisted.is_empty():",
+		"\t\tdata[\"__persist\"] = persisted",
+		"\t# The slot card rides along on every full save, so a load menu can show playtime even in a",
+		"\t# game that never calls Set Slot Detail. The seconds are ADDED to the slot's own total, so",
+		"\t# two instances writing the same slot never overwrite each other's hours.",
+		"\tvar card: Dictionary = _bank_playtime(_card_of(data))",
+		"\tdata[CARD_KEY] = card",
+		"\tif _write_all(data):",
+		"\t\tsave_written.emit(slot)",
+		"\telse:",
+		"\t\t_fail_save(slot, \"slot %d could not be written - is the save folder writable?\" % slot)",
+		"",
+		"# Load Game's body, held one call away for the same reason: Is Loading stays true across",
+		"# the read, the migration gap and the On After Load broadcast, so a row that fires during",
+		"# the restore can tell it is looking at a game mid-load.",
+		"func _run_load_game() -> void:",
+		"\tvar data: Dictionary = _read_all()",
+		"\tif not _last_read_ok:",
+		"\t\t_fail_load(slot, \"slot %d could not be read - %s.\" % [slot, _last_read_problem])",
+		"\t\treturn",
+		"\t# The migration seam: a file written by an older Save Version is handed to the sheet",
+		"\t# BEFORE anything reads it, and Use Upgraded Save writes the fixed record back. With",
+		"\t# no handler connected none of this runs, so an existing project is untouched.",
+		"\tvar from_version: int = int(data.get(VERSION_KEY, 1))",
+		"\tif from_version < save_version and not save_needs_upgrade.get_connections().is_empty():",
+		"\t\t_upgrade_applied = false",
+		"\t\tsave_needs_upgrade.emit(data, from_version)",
+		"\t\tif _upgrade_applied:",
+		"\t\t\tdata = _read_all()",
+		"\t\t\tif not _last_read_ok:",
+		"\t\t\t\t# The one path that could report success on a FAILED read: every sheet would then",
+		"\t\t\t\t# read its state back out of an empty record and the game would quietly start from",
+		"\t\t\t\t# defaults with nothing said.",
+		"\t\t\t\t_fail_load(slot, \"slot %d could not be read back after its upgrade - %s.\" % [slot, _last_read_problem])",
+		"\t\t\t\treturn",
+		"\t# A clean read is the load working: the sentence from an earlier failure comes down.",
+		"\t_last_problem = \"\"",
+		"\t# This session's count starts here; the card already holds every second banked before it.",
+		"\t_playtime = 0.0",
+		"\t_playtime_slot = slot",
+		"\tif data.get(\"__persist\", null) is Dictionary:",
+		"\t\t_apply_states(data[\"__persist\"] as Dictionary)",
+		"\tafter_load.emit(slot)"
+	]))
+	sheet.events.append(key_events)
 	# Variant-typed core.
 	Lib.append_function(sheet, "save_value", "Save Value", "Save System", "Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.",
 		[["key", "String"], ["value", "Variant"]],
@@ -683,7 +790,13 @@ static func build() -> bool:
 			"\treturn",
 			"data[key] = value",
 			"if not _write_all(data):",
-			"\t_fail_save(slot, \"slot %d could not be written - is the save folder writable?\" % slot)"
+			"\t_fail_save(slot, \"slot %d could not be written - is the save folder writable?\" % slot)",
+			"\treturn",
+			"# The write landed. A key on the Never Save This Key list was dropped on the way to the",
+			"# file, so the file is fine but THIS key is not in it - saying it saved would be the one",
+			"# lie On Key Saved exists to prevent.",
+			"if not _never_save.has(key):",
+			"\tkey_saved.emit(key, slot)"
 		])))
 	var load_value: EventFunction = Lib.exposed_function("load_value", "Load Value", "Save System", "Reads any value (your default when missing).", [["key", "String"], ["default_value", "Variant"]],
 		"return _read_all().get(key, default_value)")
@@ -743,54 +856,16 @@ static func build() -> bool:
 	Lib.append_function(sheet, "save_game", "Save Game", "Save System", "Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, stamps the slot card, then fires On Save Written (or On Save Failed).",
 		[],
 		"\n".join(PackedStringArray([
-			"before_save.emit(slot)",
-			"var data: Dictionary = _read_all()",
-			"if not _last_read_ok:",
-			"\t_fail_save(slot, \"slot %d exists but could not be read - refusing to overwrite it (%s).\" % [slot, _last_read_problem])",
-			"\treturn",
-			"var persisted: Dictionary = _collect_group_state(persist_group)",
-			"if not persisted.is_empty():",
-			"\tdata[\"__persist\"] = persisted",
-			"# The slot card rides along on every full save, so a load menu can show playtime even in a",
-			"# game that never calls Set Slot Detail. The seconds are ADDED to the slot's own total, so",
-			"# two instances writing the same slot never overwrite each other's hours.",
-			"var card: Dictionary = _bank_playtime(_card_of(data))",
-			"data[CARD_KEY] = card",
-			"if _write_all(data):",
-			"\tsave_written.emit(slot)",
-			"else:",
-			"\t_fail_save(slot, \"slot %d could not be written - is the save folder writable?\" % slot)"
+			"_write_depth += 1",
+			"_run_save_game()",
+			"_write_depth -= 1"
 		])))
 	Lib.append_function(sheet, "load_game", "Load Game", "Save System", "Reads the slot, gives migration rows their moment (On Save Needs Upgrade) when an older build wrote it, restores every persist-group snapshot, then broadcasts On After Load. A file it cannot read fires On Load Failed instead.",
 		[],
 		"\n".join(PackedStringArray([
-			"var data: Dictionary = _read_all()",
-			"if not _last_read_ok:",
-			"\t_fail_load(slot, \"slot %d could not be read - %s.\" % [slot, _last_read_problem])",
-			"\treturn",
-			"# The migration seam: a file written by an older Save Version is handed to the sheet",
-			"# BEFORE anything reads it, and Use Upgraded Save writes the fixed record back. With",
-			"# no handler connected none of this runs, so an existing project is untouched.",
-			"var from_version: int = int(data.get(VERSION_KEY, 1))",
-			"if from_version < save_version and not save_needs_upgrade.get_connections().is_empty():",
-			"\t_upgrade_applied = false",
-			"\tsave_needs_upgrade.emit(data, from_version)",
-			"\tif _upgrade_applied:",
-			"\t\tdata = _read_all()",
-			"\t\tif not _last_read_ok:",
-			"\t\t\t# The one path that could report success on a FAILED read: every sheet would then",
-			"\t\t\t# read its state back out of an empty record and the game would quietly start from",
-			"\t\t\t# defaults with nothing said.",
-			"\t\t\t_fail_load(slot, \"slot %d could not be read back after its upgrade - %s.\" % [slot, _last_read_problem])",
-			"\t\t\treturn",
-			"# A clean read is the load working: the sentence from an earlier failure comes down.",
-			"_last_problem = \"\"",
-			"# This session's count starts here; the card already holds every second banked before it.",
-			"_playtime = 0.0",
-			"_playtime_slot = slot",
-			"if data.get(\"__persist\", null) is Dictionary:",
-			"\t_apply_states(data[\"__persist\"] as Dictionary)",
-			"after_load.emit(slot)"
+			"_load_depth += 1",
+			"_run_load_game()",
+			"_load_depth -= 1"
 		])))
 	# Targeted state verbs: the same seam, aimed at one node, one group, or a singleton.
 	Lib.append_function(sheet, "save_node_state", "Save Node State", "Save System", "Snapshots a node and its behaviors (any child with save_state) under the key.",
@@ -1129,6 +1204,88 @@ static func build() -> bool:
 		"return int(_read_all().get(RUN_KEY, 1))")
 	run_number.return_type = TYPE_INT
 	sheet.functions.append(run_number)
+	# Single-key housekeeping. The pack could refuse a key forever (Never Save This Key) or take
+	# the whole file away (Delete Slot), and nothing in between - so forgetting one tutorial flag
+	# meant nuking a player's slot. Removal raises its outcome as a row either way: the key left,
+	# or it was never there.
+	Lib.append_function(sheet, "remove_save_key", "Remove Save Key", "Save System", "Takes one key out of the active slot and rewrites the file, then fires On Key Removed. A key the slot does not hold fires On Save Key Missing instead. Never Save This Key blocks a key forever; this removes the one copy that is already there.",
+		[["key", "String"]],
+		"\n".join(PackedStringArray([
+			"var data: Dictionary = _read_all()",
+			"if not _last_read_ok:",
+			"\t_fail_save(slot, \"slot %d exists but could not be read - refusing to overwrite it (%s).\" % [slot, _last_read_problem])",
+			"\treturn",
+			"if not data.has(key):",
+			"\tsave_key_missing.emit(key, slot)",
+			"\treturn",
+			"data.erase(key)",
+			"if _write_all(data):",
+			"\tkey_removed.emit(key, slot)",
+			"else:",
+			"\t_fail_save(slot, \"%s could not be removed from slot %d - is the save folder writable?\" % [key, slot])"
+		])))
+	Lib.append_function(sheet, "clear_slot_keys", "Clear Slot Keys", "Save System", "Empties the active slot of everything the game saved, and fires On Key Removed once per key. The file itself stays, and so do its slot card, its version stamp, its run number and its backups - the reset-profile button that does not cost the player their save file.",
+		[],
+		"\n".join(PackedStringArray([
+			"var data: Dictionary = _read_all()",
+			"if not _last_read_ok:",
+			"\t_fail_save(slot, \"slot %d could not be read - refusing to clear it (%s).\" % [slot, _last_read_problem])",
+			"\treturn",
+			"var kept: Dictionary = {}",
+			"var removed: Array = []",
+			"for stored: Variant in data.keys():",
+			"\t# The pack's own reserved keys stay: the card a load menu reads without loading, the",
+			"\t# stamp a migration needs, and the run counter. Everything the game wrote goes.",
+			"\tif str(stored) == CARD_KEY or str(stored) == VERSION_KEY or str(stored) == RUN_KEY:",
+			"\t\tkept[stored] = data[stored]",
+			"\telse:",
+			"\t\tremoved.append(str(stored))",
+			"if removed.is_empty():",
+			"\treturn",
+			"if not _write_all(kept):",
+			"\t_fail_save(slot, \"slot %d could not be cleared - is the save folder writable?\" % slot)",
+			"\treturn",
+			"# Emitted only once the file is on disk, and once per key, so a handler watching one key",
+			"# hears about that key rather than about a slot-wide event it has to decode.",
+			"for gone: String in removed:",
+			"\tkey_removed.emit(gone, slot)"
+		])))
+	Lib.append_function(sheet, "check_save_key", "Check Save Key", "Save System", "Asks the slot whether it holds the key and answers with a row: On Key Loaded when it does, On Save Key Missing when it does not. The row that turns a silent default into a first-run seed.",
+		[["key", "String"]],
+		"\n".join(PackedStringArray([
+			"var data: Dictionary = _read_all()",
+			"if not _last_read_ok:",
+			"\t_fail_load(slot, \"slot %d could not be read - %s.\" % [slot, _last_read_problem])",
+			"\treturn",
+			"if data.has(key):",
+			"\tkey_loaded.emit(key, slot)",
+			"else:",
+			"\tsave_key_missing.emit(key, slot)"
+		])))
+	# The write window, as a question a row can ask. Honest about what this pack is: the write is
+	# synchronous, so these are true inside the window and nowhere else - a re-entrancy guard for
+	# a second writer or a quit button, not a spinner for a background job.
+	Lib.condition(sheet, "is_saving", "Is Saving", "Save System", "Whether a write is in flight right now - inside On Before Save, a Save All Addons sweep, or an autosave. Guard a second write with it, or hold a quit until it clears.", [],
+		"return _write_depth > 0")
+	Lib.condition(sheet, "is_loading", "Is Loading", "Save System", "Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside it. Rows that must not fight the restore can stand aside while it is true.", [],
+		"return _load_depth > 0")
+	Lib.condition(sheet, "save_key_is", "Save Key Is", "Save System", "Whether the stored key equals this value, without loading it into a variable first. A key the slot does not hold never equals anything, so a missing key reads as false.",
+		[["key", "String"], ["value", "Variant"]],
+		"return _read_all().get(key, null) == value")
+	# Counted and indexed reads. List Save Keys already gives the loop; these are the two answers
+	# a loop cannot give: a "12 keys saved" label and a numbered inspector row.
+	var key_count: EventFunction = Lib.exposed_function("save_key_count", "Save Key Count", "Save System", "How many keys the active slot holds - the number a save inspector puts in its header. Counts exactly what List Save Keys lists, the pack's own reserved keys included.", [],
+		"return _read_all().size()")
+	key_count.return_type = TYPE_INT
+	sheet.functions.append(key_count)
+	var key_at: EventFunction = Lib.exposed_function("save_key_at", "Save Key At", "Save System", "The key at this position in the active slot, for a numbered or paged list (\"\" when the position is past the end). Loop List Save Keys instead when you just want them all.",
+		[["index", "int"]],
+		"\n".join(PackedStringArray([
+			"var keys: Array = _read_all().keys()",
+			"return str(keys[index]) if index >= 0 and index < keys.size() else \"\""
+		])))
+	key_at.return_type = TYPE_STRING
+	sheet.functions.append(key_at)
 	# Authored row sentences for the new verbs (the C3-style styled read).
 	Lib.verb_sentences(sheet, {
 		"set_slot_detail": "remember [b]{detail_name}[/b] = [b]{value}[/b] on this slot",
@@ -1141,6 +1298,9 @@ static func build() -> bool:
 		"never_save_key": "never put [b]{key}[/b] in a save",
 		"restore_slot_from_backup": "put slot [b]{slot_index}[/b] back to backup [b]{how_many_back}[/b]",
 		"carry_value_into_next_run": "carry [b]{key}[/b] into the next run",
+		"remove_save_key": "forget [b]{key}[/b] from this slot",
+		"clear_slot_keys": "forget everything this slot saved",
+		"check_save_key": "ask whether [b]{key}[/b] is saved",
 		"start_new_run": "start a new run in slot [b]{slot_index}[/b]"
 	})
 	# The pack's hero verbs: starred + bold at the top of their picker section.

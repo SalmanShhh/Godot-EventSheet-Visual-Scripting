@@ -53,6 +53,32 @@ signal save_failed(slot_index: int, reason: String)
 ## @ace_name("On New Run Started")
 ## @ace_category("Save System")
 signal new_run_started(slot_index: int, run_number: int)
+## Fires when one key's value has landed on disk - Save Value, Save Number and Save Text
+## all raise it, with the key that was written as the row's own captured value. A key held
+## back by Never Save This Key never raises it, because it never reached the file.
+## @ace_trigger
+## @ace_name("On Key Saved")
+## @ace_category("Save System")
+signal key_saved(key: String, slot_index: int)
+## Fires when Check Save Key finds the key in the slot - the found half of that question,
+## answered as a row instead of a value somebody has to remember to test.
+## @ace_trigger
+## @ace_name("On Key Loaded")
+## @ace_category("Save System")
+signal key_loaded(key: String, slot_index: int)
+## Fires when Remove Save Key has taken the key out of the file, and once per key that
+## Clear Slot Keys emptied out of it.
+## @ace_trigger
+## @ace_name("On Key Removed")
+## @ace_category("Save System")
+signal key_removed(key: String, slot_index: int)
+## Fires when a key was asked for and the slot does not hold it - Check Save Key, or a
+## Remove Save Key with nothing to remove. This is where a first run seeds its default
+## once, instead of quietly defaulting forever.
+## @ace_trigger
+## @ace_name("On Save Key Missing")
+## @ace_category("Save System")
+signal save_key_missing(key: String, slot_index: int)
 
 var autosave_accumulator: float = 0.0
 ## Seconds between autosaves (0 = off). Fires On Before Save first.
@@ -169,6 +195,13 @@ func each_backup_of_slot(slot_index: int) -> Array:
 		found.append(backup_path)
 	return found
 
+# The save and load windows, counted rather than flagged. This pack writes synchronously
+# (a .tmp, then a rename), so a window is short - but an On Before Save handler that saves
+# a key of its own opens a second one INSIDE it, and a plain bool would close the outer
+# window when the inner write finished. Is Saving and Is Loading read these.
+var _write_depth: int = 0
+var _load_depth: int = 0
+
 func _process(delta: float) -> void:
 	if _playtime_slot != slot:
 		# The active slot changed. Whatever was counted belongs to the slot that was active and
@@ -203,6 +236,12 @@ func save_value(key: String, value: Variant) -> void:
 	data[key] = value
 	if not _write_all(data):
 		_fail_save(slot, "slot %d could not be written - is the save folder writable?" % slot)
+		return
+	# The write landed. A key on the Never Save This Key list was dropped on the way to the
+	# file, so the file is fine but THIS key is not in it - saying it saved would be the one
+	# lie On Key Saved exists to prevent.
+	if not _never_save.has(key):
+		key_saved.emit(key, slot)
 
 ## @ace_expression
 ## @ace_name("Load Value")
@@ -332,23 +371,9 @@ func delete_slot() -> void:
 ## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_game()")
 func save_game() -> void:
-	before_save.emit(slot)
-	var data: Dictionary = _read_all()
-	if not _last_read_ok:
-		_fail_save(slot, "slot %d exists but could not be read - refusing to overwrite it (%s)." % [slot, _last_read_problem])
-		return
-	var persisted: Dictionary = _collect_group_state(persist_group)
-	if not persisted.is_empty():
-		data["__persist"] = persisted
-	# The slot card rides along on every full save, so a load menu can show playtime even in a
-	# game that never calls Set Slot Detail. The seconds are ADDED to the slot's own total, so
-	# two instances writing the same slot never overwrite each other's hours.
-	var card: Dictionary = _bank_playtime(_card_of(data))
-	data[CARD_KEY] = card
-	if _write_all(data):
-		save_written.emit(slot)
-	else:
-		_fail_save(slot, "slot %d could not be written - is the save folder writable?" % slot)
+	_write_depth += 1
+	_run_save_game()
+	_write_depth -= 1
 
 ## @ace_action
 ## @ace_featured
@@ -358,33 +383,9 @@ func save_game() -> void:
 ## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.load_game()")
 func load_game() -> void:
-	var data: Dictionary = _read_all()
-	if not _last_read_ok:
-		_fail_load(slot, "slot %d could not be read - %s." % [slot, _last_read_problem])
-		return
-	# The migration seam: a file written by an older Save Version is handed to the sheet
-	# BEFORE anything reads it, and Use Upgraded Save writes the fixed record back. With
-	# no handler connected none of this runs, so an existing project is untouched.
-	var from_version: int = int(data.get(VERSION_KEY, 1))
-	if from_version < save_version and not save_needs_upgrade.get_connections().is_empty():
-		_upgrade_applied = false
-		save_needs_upgrade.emit(data, from_version)
-		if _upgrade_applied:
-			data = _read_all()
-			if not _last_read_ok:
-				# The one path that could report success on a FAILED read: every sheet would then
-				# read its state back out of an empty record and the game would quietly start from
-				# defaults with nothing said.
-				_fail_load(slot, "slot %d could not be read back after its upgrade - %s." % [slot, _last_read_problem])
-				return
-	# A clean read is the load working: the sentence from an earlier failure comes down.
-	_last_problem = ""
-	# This session's count starts here; the card already holds every second banked before it.
-	_playtime = 0.0
-	_playtime_slot = slot
-	if data.get("__persist", null) is Dictionary:
-		_apply_states(data["__persist"] as Dictionary)
-	after_load.emit(slot)
+	_load_depth += 1
+	_run_load_game()
+	_load_depth -= 1
 
 ## @ace_action
 ## @ace_name("Save Node State")
@@ -904,6 +905,121 @@ func start_new_run(slot_index: int) -> void:
 func run_number() -> int:
 	return int(_read_all().get(RUN_KEY, 1))
 
+## @ace_action
+## @ace_name("Remove Save Key")
+## @ace_category("Save System")
+## @ace_description("Takes one key out of the active slot and rewrites the file, then fires On Key Removed. A key the slot does not hold fires On Save Key Missing instead. Never Save This Key blocks a key forever; this removes the one copy that is already there.")
+## @ace_display_template("forget [b]{key}[/b] from this slot")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.remove_save_key({key})")
+func remove_save_key(key: String) -> void:
+	var data: Dictionary = _read_all()
+	if not _last_read_ok:
+		_fail_save(slot, "slot %d exists but could not be read - refusing to overwrite it (%s)." % [slot, _last_read_problem])
+		return
+	if not data.has(key):
+		save_key_missing.emit(key, slot)
+		return
+	data.erase(key)
+	if _write_all(data):
+		key_removed.emit(key, slot)
+	else:
+		_fail_save(slot, "%s could not be removed from slot %d - is the save folder writable?" % [key, slot])
+
+## @ace_action
+## @ace_name("Clear Slot Keys")
+## @ace_category("Save System")
+## @ace_description("Empties the active slot of everything the game saved, and fires On Key Removed once per key. The file itself stays, and so do its slot card, its version stamp, its run number and its backups - the reset-profile button that does not cost the player their save file.")
+## @ace_display_template("forget everything this slot saved")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.clear_slot_keys()")
+func clear_slot_keys() -> void:
+	var data: Dictionary = _read_all()
+	if not _last_read_ok:
+		_fail_save(slot, "slot %d could not be read - refusing to clear it (%s)." % [slot, _last_read_problem])
+		return
+	var kept: Dictionary = {}
+	var removed: Array = []
+	for stored: Variant in data.keys():
+		# The pack's own reserved keys stay: the card a load menu reads without loading, the
+		# stamp a migration needs, and the run counter. Everything the game wrote goes.
+		if str(stored) == CARD_KEY or str(stored) == VERSION_KEY or str(stored) == RUN_KEY:
+			kept[stored] = data[stored]
+		else:
+			removed.append(str(stored))
+	if removed.is_empty():
+		return
+	if not _write_all(kept):
+		_fail_save(slot, "slot %d could not be cleared - is the save folder writable?" % slot)
+		return
+	# Emitted only once the file is on disk, and once per key, so a handler watching one key
+	# hears about that key rather than about a slot-wide event it has to decode.
+	for gone: String in removed:
+		key_removed.emit(gone, slot)
+
+## @ace_action
+## @ace_name("Check Save Key")
+## @ace_category("Save System")
+## @ace_description("Asks the slot whether it holds the key and answers with a row: On Key Loaded when it does, On Save Key Missing when it does not. The row that turns a silent default into a first-run seed.")
+## @ace_display_template("ask whether [b]{key}[/b] is saved")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.check_save_key({key})")
+func check_save_key(key: String) -> void:
+	var data: Dictionary = _read_all()
+	if not _last_read_ok:
+		_fail_load(slot, "slot %d could not be read - %s." % [slot, _last_read_problem])
+		return
+	if data.has(key):
+		key_loaded.emit(key, slot)
+	else:
+		save_key_missing.emit(key, slot)
+
+## @ace_condition
+## @ace_name("Is Saving")
+## @ace_category("Save System")
+## @ace_description("Whether a write is in flight right now - inside On Before Save, a Save All Addons sweep, or an autosave. Guard a second write with it, or hold a quit until it clears.")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.is_saving()")
+func is_saving() -> bool:
+	return _write_depth > 0
+
+## @ace_condition
+## @ace_name("Is Loading")
+## @ace_category("Save System")
+## @ace_description("Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside it. Rows that must not fight the restore can stand aside while it is true.")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.is_loading()")
+func is_loading() -> bool:
+	return _load_depth > 0
+
+## @ace_condition
+## @ace_name("Save Key Is")
+## @ace_category("Save System")
+## @ace_description("Whether the stored key equals this value, without loading it into a variable first. A key the slot does not hold never equals anything, so a missing key reads as false.")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.save_key_is({key}, {value})")
+func save_key_is(key: String, value: Variant) -> bool:
+	return _read_all().get(key, null) == value
+
+## @ace_expression
+## @ace_name("Save Key Count")
+## @ace_category("Save System")
+## @ace_description("How many keys the active slot holds - the number a save inspector puts in its header. Counts exactly what List Save Keys lists, the pack's own reserved keys included.")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.save_key_count()")
+func save_key_count() -> int:
+	return _read_all().size()
+
+## @ace_expression
+## @ace_name("Save Key At")
+## @ace_category("Save System")
+## @ace_description("The key at this position in the active slot, for a numbered or paged list ("" when the position is past the end). Loop List Save Keys instead when you just want them all.")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
+## @ace_codegen_template("SaveSystem.save_key_at({index})")
+func save_key_at(index: int) -> String:
+	var keys: Array = _read_all().keys()
+	return str(keys[index]) if index >= 0 and index < keys.size() else ""
+
 func _slot_path(target_slot: int = -1) -> String:
 	var chosen: int = slot if target_slot < 0 else target_slot
 	return save_directory.path_join(file_pattern.replace("{slot}", str(chosen)))
@@ -1167,9 +1283,10 @@ func _detect_format(path: String) -> String:
 		return "csv"
 	return ""
 
-func _write_all(data: Dictionary, stamp_current_version: bool = false) -> bool:
+func _write_file(data: Dictionary, stamp_current_version: bool = false) -> bool:
 	# Atomic write: every backend writes a .tmp sibling then renames it over the slot,
 	# so a crash mid-write leaves the previous good save intact, never a half-file.
+	# Reached through _write_all, which is the door that opens and closes the write window.
 	var path: String = _slot_path()
 	var tmp: String = path + ".tmp"
 	# Two facts get applied on the way out, both no-ops at their defaults so a project
@@ -1339,5 +1456,66 @@ func _apply_states(states: Dictionary) -> void:
 			# The save holds state for a node that is not here now (renamed, re-parented,
 			# or the scene is not loaded yet). Surface it rather than dropping it silently.
 			push_warning("Save System: no node at %s to restore its saved state." % str(path))
+
+func _write_all(data: Dictionary, stamp_current_version: bool = false) -> bool:
+	# Every write goes through this door, so Is Saving covers the whole window - which is
+	# exactly where a second writer, a Save All Addons sweep, or a quit button does damage.
+	_write_depth += 1
+	var written: bool = _write_file(data, stamp_current_version)
+	_write_depth -= 1
+	return written
+
+func _run_save_game() -> void:
+	# Save Game's body, held one call away so the whole broadcast - On Before Save included -
+	# sits inside the write window, without threading a flag through its early returns.
+	before_save.emit(slot)
+	var data: Dictionary = _read_all()
+	if not _last_read_ok:
+		_fail_save(slot, "slot %d exists but could not be read - refusing to overwrite it (%s)." % [slot, _last_read_problem])
+		return
+	var persisted: Dictionary = _collect_group_state(persist_group)
+	if not persisted.is_empty():
+		data["__persist"] = persisted
+	# The slot card rides along on every full save, so a load menu can show playtime even in a
+	# game that never calls Set Slot Detail. The seconds are ADDED to the slot's own total, so
+	# two instances writing the same slot never overwrite each other's hours.
+	var card: Dictionary = _bank_playtime(_card_of(data))
+	data[CARD_KEY] = card
+	if _write_all(data):
+		save_written.emit(slot)
+	else:
+		_fail_save(slot, "slot %d could not be written - is the save folder writable?" % slot)
+
+func _run_load_game() -> void:
+	# Load Game's body, held one call away for the same reason: Is Loading stays true across
+	# the read, the migration gap and the On After Load broadcast, so a row that fires during
+	# the restore can tell it is looking at a game mid-load.
+	var data: Dictionary = _read_all()
+	if not _last_read_ok:
+		_fail_load(slot, "slot %d could not be read - %s." % [slot, _last_read_problem])
+		return
+	# The migration seam: a file written by an older Save Version is handed to the sheet
+	# BEFORE anything reads it, and Use Upgraded Save writes the fixed record back. With
+	# no handler connected none of this runs, so an existing project is untouched.
+	var from_version: int = int(data.get(VERSION_KEY, 1))
+	if from_version < save_version and not save_needs_upgrade.get_connections().is_empty():
+		_upgrade_applied = false
+		save_needs_upgrade.emit(data, from_version)
+		if _upgrade_applied:
+			data = _read_all()
+			if not _last_read_ok:
+				# The one path that could report success on a FAILED read: every sheet would then
+				# read its state back out of an empty record and the game would quietly start from
+				# defaults with nothing said.
+				_fail_load(slot, "slot %d could not be read back after its upgrade - %s." % [slot, _last_read_problem])
+				return
+	# A clean read is the load working: the sentence from an earlier failure comes down.
+	_last_problem = ""
+	# This session's count starts here; the card already holds every second banked before it.
+	_playtime = 0.0
+	_playtime_slot = slot
+	if data.get("__persist", null) is Dictionary:
+		_apply_states(data["__persist"] as Dictionary)
+	after_load.emit(slot)
 
 # Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet - extend it by editing it.
