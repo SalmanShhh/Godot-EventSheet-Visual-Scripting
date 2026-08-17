@@ -54,6 +54,12 @@ const FORBIDDEN := {
 	"res://addons/eventforge/editor/export_tools_plugin.gd": [
 		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectFind", "EventSheetTemplates",
 	],
+	# The Live Values bridge is constructed eagerly in _enter_tree (the transport has to be live
+	# before the workspace opens), so it is a boot file too: the hit-count store it resets on every
+	# new Run is reached by path, never named.
+	"res://addons/eventsheet/editor/live_values_debugger.gd": [
+		"EventSheetTraceHitCounts", "EventSheetWhyPanel", "EventSheetViewport",
+	],
 }
 
 ## Every path a deferred feature is reached through - each must exist, or the feature breaks at
@@ -77,6 +83,12 @@ const LAZY_PATHS := [
 	"res://addons/eventforge/compiler/sheet_compiler.gd",
 	"res://addons/eventforge/sheet_templates.gd",
 	"res://addons/eventforge/editor/export_tools_plugin.gd",
+	# The debugger lenses and the Run Tests panel: all three are reached by a load() of a string
+	# literal, so a rename would break the exact click that needs them - hit counts would quietly
+	# stop resetting per Run, the Why panel would open onto nothing - with the suite still green.
+	"res://addons/eventsheet/editor/trace_hit_counts.gd",
+	"res://addons/eventsheet/editor/docs/doc_why_panel.gd",
+	"res://addons/eventsheet/editor/dock/test_report_panel.gd",
 ]
 
 

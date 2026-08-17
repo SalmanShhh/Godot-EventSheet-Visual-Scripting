@@ -15,6 +15,7 @@ enum Intent {
 	AUTOLOAD,
 	EDITOR_TOOL,
 	CUSTOM_RESOURCE,
+	TEST,
 }
 
 
@@ -23,6 +24,8 @@ enum Intent {
 static func of_sheet(sheet: EventSheetResource) -> Intent:
 	if sheet == null:
 		return Intent.EVENT_SHEET
+	if sheet.test_mode:
+		return Intent.TEST
 	if sheet.autoload_mode:
 		return Intent.AUTOLOAD
 	if sheet.behavior_mode:
@@ -60,6 +63,8 @@ static func display(intent: Intent) -> Dictionary:
 			return {"label": "Custom Resource", "glyph": "▣"}
 		Intent.CUSTOM_NODE:
 			return {"label": "Custom Node", "glyph": "◆"}
+		Intent.TEST:
+			return {"label": "Test", "glyph": "✓"}
 		_:
 			return {"label": "Event Sheet", "glyph": "▤"}
 
@@ -96,6 +101,12 @@ static func empty_sheet_advice(sheet: EventSheetResource) -> Dictionary:
 				"heading": "Empty editor tool",
 				"primary": "Add an On Editor Run event - its actions execute when you run this script from the editor (File > Run).",
 				"tip": "Tip: great for batch renames, scene checks, and one-click project chores.",
+			}
+		Intent.TEST:
+			return {
+				"heading": "Empty test sheet",
+				"primary": "Add an On Test Start event, then assert something - Assert That, Assert Equal, or Expect Signal.",
+				"tip": "Tip: Tools > Run Tests… runs every test sheet in the project and prints a verdict.",
 			}
 		Intent.CUSTOM_RESOURCE:
 			return {

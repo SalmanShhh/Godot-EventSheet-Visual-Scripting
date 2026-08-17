@@ -77,4 +77,5 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 
 - [Debugging And Printing](Debugging-And-Printing.md) - the three console streams, the combo-driven Log family, assertions, breakpoints, a scene-tree dump, and live runtime readouts.
 - [Automating The Editor](Automating-The-Editor.md) - sheets that are tools: open, edit and save scenes, write resources, rescan the FileSystem, and bake on project export.
+- [Testing Your Game](Testing-Your-Game.md) - Test sheets: claims that record pass/fail with a readable message, signal deadlines that read back as conditions, and a headless run that ends in a verdict.
 - [Calling Your Own Code From Rows](Calling-Your-Own-Code-From-Rows.md) - the structured escape hatch: set any property, call any method, evaluate any expression, build a callable, and reach a behaviour's host node.

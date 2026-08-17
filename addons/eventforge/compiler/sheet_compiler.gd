@@ -122,6 +122,12 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	# Tool sheets (EXPERIMENTAL): @tool must precede class_name/extends.
 	if sheet.tool_mode:
 		lines.append("@tool")
+	# Test sheets carry a marker line so a runner can FIND them without a registry: the headless
+	# tools/run_test_sheets.gd and the editor's Run Tests panel both scan for this exact comment.
+	# Metadata only (the importer recovers it without removing it from a .gd sheet's verbatim
+	# prelude, exactly like @ace_tags), so it can never double-emit.
+	if sheet.test_mode:
+		lines.append("## @ace_test_sheet")
 	# A named sheet defines a custom node type: `@icon` + `class_name` make the generated
 	# script register in the Create Node dialog exactly like hand-written GDScript.
 	if not sheet.custom_class_name.strip_edges().is_empty():
@@ -243,6 +249,14 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 				lines.append(annotation_line)
 			lines.append(signal_line)
 			source_map.append({"uid": str(signal_row.get_instance_id()), "start": signal_start, "end": lines.size(), "kind": "signal"})
+	# A Test sheet's own start signal - the thing behind the On Test Start trigger. Declared HERE
+	# rather than asked of the author, because a test sheet that cannot be started is not a test
+	# sheet; a runner emits it with the test's name. Skipped when the sheet already declares one
+	# itself, so a hand-written declaration is never duplicated into a parse error.
+	if sheet.test_mode and not _declares_signal_named(signal_rows, "test_started"):
+		lines.append("")
+		lines.append("## Emitted by a test runner as this test begins - On Test Start events handle it.")
+		lines.append("signal test_started(test_name: String)")
 	# Custom Block API rows (preloads, region markers, registered pack kinds) emit before the
 	# variables so a `const … := preload(…)` can be referenced by a variable default below.
 	var custom_block_rows: Array = []
@@ -448,6 +462,8 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	for signal_entry: Variant in signal_rows:
 		if signal_entry is SignalRow and (signal_entry as SignalRow).enabled:
 			declared_signals.append((signal_entry as SignalRow).signal_name)
+	if sheet.test_mode:
+		declared_signals.append("test_started")  # emitted above; On Test Start connects to it
 	var connect_context: Dictionary = {
 		"self_class": "Node" if sheet.behavior_mode else (sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node"),
 		"declared_signals": declared_signals
@@ -2369,6 +2385,19 @@ static func _collect_signal_rows(entries: Array, into: Array) -> void:
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_collect_signal_rows(group.events if not group.events.is_empty() else group.rows, into)
+
+
+## True when the sheet already declares a signal by this name as a first-class row, so a
+## compiler-supplied declaration (a Test sheet's test_started) can stand down instead of
+## emitting a duplicate `signal` line, which would not parse.
+## Only an ENABLED row declares anything: a disabled SignalRow emits no `signal` line, so treating
+## it as the declaration would suppress the compiler's own and leave a Test sheet connecting to a
+## signal that exists nowhere.
+static func _declares_signal_named(signal_rows: Array, wanted: String) -> bool:
+	for entry: Variant in signal_rows:
+		if entry is SignalRow and (entry as SignalRow).enabled and (entry as SignalRow).signal_name.strip_edges() == wanted:
+			return true
+	return false
 
 
 ## Recursively gathers EnumRow rows (top level and inside groups).

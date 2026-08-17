@@ -1,0 +1,229 @@
+# EventForge module - Testing vocabulary (a sheet that makes claims and reports pass/fail).
+#
+# The verbs a Test sheet is written in: On Test Start (the trigger the runner raises), Assert That /
+# Assert Equal (record a claim with a readable message), Expect Signal (a claim about something that
+# has to happen within a deadline), Watch For Signal plus the two conditions that read what happened
+# (succeeded / timed out - the deadline is never hidden in a trigger head), Pass Test / Fail Test,
+# and Load Scene Under Test / Scene Under Test so a test has something to make claims about.
+#
+# WHERE THE RESULTS LIVE. Every record writes onto the test node's OWN metadata: the report is
+# `set_meta(&"__ef_test_report", ...)`, an Array of [name, passed, message] triples, and a finished
+# test sets `__ef_test_finished`. That is plain `Object.set_meta` - no runtime, no autoload, no
+# plugin reference - so a compiled test script is ordinary GDScript that any runner (the headless
+# tools/run_test_sheets.gd, the editor's Run Tests panel, a CI step, or a scene you press Play on)
+# can read back by asking the node for its meta. A failing claim ALSO push_error()s, so a test
+# played by hand still says what broke in the Output panel without any runner at all.
+#
+# The watch keys hex-encode the signal name exactly the way the shipped Wait family keys its waits,
+# so "watch died" and "watch landed" never collide and the two reading conditions find their own.
+@tool
+class_name EventForgeTestingACEs
+extends RefCounted
+
+const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
+const CAT := "Testing"
+
+## The meta key the report accumulates under. Read by tools/run_test_sheets.gd and the editor panel.
+const REPORT_META := "__ef_test_report"
+## Set by Pass Test / Fail Test: the runner stops waiting on a test that has said it is done.
+const FINISHED_META := "__ef_test_finished"
+## How many rows are SUSPENDED on a deadline right now (Expect Signal / Watch For Signal). A runner
+## may not treat a test as finished while this is above zero: a row awaiting its signal records
+## nothing for the whole wait, which otherwise reads exactly like a test with nothing left to say.
+const PENDING_META := "__ef_test_pending"
+## Prefix of the per-signal watch key ("waiting" 0 / "fired" 1 / "timed out" 2).
+const WATCH_META_PREFIX := "__ef_watch_"
+## Prefix of the per-name key a loaded scene-under-test is remembered under.
+const SCENE_META_PREFIX := "__ef_scene_"
+
+
+static func get_descriptors() -> Array[ACEDescriptor]:
+	var descriptors: Array[ACEDescriptor] = []
+
+	# ── The trigger the runner raises (backed by the sheet's own test_started signal) ──
+	descriptors.append(F.make_descriptor("Core", "OnTestStart", "On Test Start", ACEDescriptor.ACEType.TRIGGER, "", "test_started", [], CAT, "On test start ([b]test_name[/b])")
+		.described("Runs when a test runner starts this test sheet. A Test sheet declares signal test_started(test_name: String) and the runner emits it, so the test's name arrives as a parameter you can use in messages.")
+		.featured())
+
+	# ── Claims (each records one line of the report) ──
+	descriptors.append(F.make_descriptor("Core", "AssertThat", "Assert That", ACEDescriptor.ACEType.ACTION, _assert_that_template(), "", [
+		F.make_param("named", "String", "\"gravity pulls down\"", "Named", "What this check is called in the report - write it as the claim, so a failure reads like a sentence.", "expression"),
+		F.make_param("claim", "String", "true", "Is True", "The check that has to be true. Anything that reads as a yes/no.", "expression"),
+	], CAT, "assert [b]{named}[/b]: [b]{claim}[/b]")
+		.described("Records a pass when the check is true and a failure when it is not, under the name you give it. The failure message says what the check was, so the report can be read without opening the sheet.")
+		.featured())
+	descriptors.append(F.make_descriptor("Core", "AssertEqual", "Assert Equal", ACEDescriptor.ACEType.ACTION, _assert_equal_template(), "", [
+		F.make_param("named", "String", "\"score after one pickup\"", "Named", "What this check is called in the report.", "expression"),
+		F.make_param("actual", "String", "0", "Got", "The value your game produced.", "expression"),
+		F.make_param("expected", "String", "0", "Expected", "The value it should be.", "expression"),
+	], CAT, "assert [b]{named}[/b]: [b]{actual}[/b] equals [b]{expected}[/b]")
+		.described("Records a pass when the two values are equal. The failure message carries BOTH values (\"expected 3, got 2\") - the one fact a failing equality check always needs."))
+	descriptors.append(F.make_descriptor("Core", "ExpectSignal", "Expect Signal", ACEDescriptor.ACEType.ACTION, _expect_signal_template(), "", [
+		F.make_param("named", "String", "\"death fires on zero hp\"", "Named", "What this check is called in the report.", "expression"),
+		F.make_param("signal_name", "String", "\"tree_exited\"", "Signal", "The name of the signal that has to fire.", "expression"),
+		F.make_param("target", "String", "self", "On", "The node that should emit it.", "expression"),
+		F.make_param("seconds", "String", "2.0", "Within", "How long to give it, in seconds.", "expression"),
+	], CAT, "expect [b]{signal_name}[/b] on [b]{target}[/b] within [b]{seconds}[/b]s - [b]{named}[/b]")
+		.described("Waits for a signal and records the verdict itself: a pass when it fires in time, a failure saying \"expected within 2.00s, never fired\" when it does not. Use Watch For Signal instead when the test should decide what each outcome means."))
+
+	# ── Verdicts a test states outright ──
+	descriptors.append(F.make_descriptor("Core", "PassTest", "Pass Test", ACEDescriptor.ACEType.ACTION, _record_template("{named}", "true", "\"\"") + "\nset_meta(&\"%s\", true)" % FINISHED_META, "", [
+		F.make_param("named", "String", "\"death fires on zero hp\"", "Named", "What passed, as it should read in the report.", "expression"),
+	], CAT, "pass test [b]{named}[/b]")
+		.described("Records a pass under this name and marks the test finished, so a runner stops waiting on it and moves to the next one."))
+	descriptors.append(F.make_descriptor("Core", "FailTest", "Fail Test", ACEDescriptor.ACEType.ACTION, _fail_test_template(), "", [
+		F.make_param("named", "String", "\"death fires on zero hp\"", "Named", "What failed, as it should read in the report.", "expression"),
+		F.make_param("reason", "String", "\"expected within 2.00s, never fired\"", "Because", "Why it failed, in plain words. A test that cannot say why it failed is the one thing a test may not be.", "expression"),
+	], CAT, "fail test [b]{named}[/b] - [b]{reason}[/b]")
+		.described("Records a failure with its reason and marks the test finished. The reason is what the report prints beside the name."))
+
+	# ── The watch and the two conditions that read it ──
+	descriptors.append(F.make_descriptor("Core", "WatchForSignal", "Watch For Signal", ACEDescriptor.ACEType.ACTION, _watch_for_signal_template(), "", [
+		F.make_param("signal_name", "String", "\"tree_exited\"", "Signal", "The name of the signal to watch for.", "expression"),
+		F.make_param("target", "String", "self", "On", "The node to watch.", "expression"),
+		F.make_param("seconds", "String", "2.0", "For", "How long to watch, in seconds.", "expression"),
+	], CAT, "watch for [b]{signal_name}[/b] on [b]{target}[/b] for [b]{seconds}[/b]s")
+		.described("Waits until the signal fires or the time runs out, then records which happened. It states no verdict of its own: the next rows read it with Watch For Signal Succeeded / Watch For Signal Timed Out and decide what each outcome means."))
+	descriptors.append(F.make_descriptor("Core", "WatchForSignalSucceeded", "Watch For Signal Succeeded", ACEDescriptor.ACEType.CONDITION, _watch_state_template("1"), "", [
+		F.make_param("signal_name", "String", "\"tree_exited\"", "Signal", "The signal name the Watch For Signal row used.", "expression"),
+	], CAT, "watch for [b]{signal_name}[/b] succeeded")
+		.described("True when the matching Watch For Signal row saw its signal fire before the time ran out."))
+	descriptors.append(F.make_descriptor("Core", "WatchForSignalTimedOut", "Watch For Signal Timed Out", ACEDescriptor.ACEType.CONDITION, _watch_state_template("2"), "", [
+		F.make_param("signal_name", "String", "\"tree_exited\"", "Signal", "The signal name the Watch For Signal row used.", "expression"),
+	], CAT, "watch for [b]{signal_name}[/b] timed out")
+		.described("True when the matching Watch For Signal row ran out of time without the signal firing - the outcome a test has to be able to name."))
+
+	# ── Something to make claims about ──
+	descriptors.append(F.make_descriptor("Core", "LoadSceneUnderTest", "Load Scene Under Test", ACEDescriptor.ACEType.ACTION, _load_scene_template(), "", [
+		F.make_param("scene_path", "String", "\"res://scene.tscn\"", "Scene", "The scene this test exercises.", "scene_path"),
+		F.make_param("as_name", "String", "\"P\"", "As", "A short name to address it by on later rows.", "expression"),
+	], CAT, "load scene [b]{scene_path}[/b] as [b]{as_name}[/b]")
+		.described("Instantiates a scene, adds it under the test node so it really runs, and remembers it under a short name. A missing scene is recorded as a failure rather than crashing the test.")
+		.featured())
+	descriptors.append(F.make_descriptor("Core", "SceneUnderTest", "Scene Under Test", ACEDescriptor.ACEType.EXPRESSION, _scene_under_test_template(), "", [
+		F.make_param("as_name", "String", "\"P\"", "Named", "The short name the Load Scene Under Test row gave it.", "expression"),
+	], CAT, "scene [b]{as_name}[/b]")
+		.described("The node a Load Scene Under Test row loaded under this name, so later rows can read its position, call its methods, or watch its signals."))
+
+	return descriptors
+
+
+## Picker blurb for the section header, so the group explains itself before a single row is dropped.
+static func section_descriptions() -> Dictionary:
+	return {
+		CAT: "Claims a Test sheet makes and the verdicts it records. A test runner starts the sheet (On Test Start), the rows assert things, and the report - name, passed, message - is read back off the test node.",
+	}
+
+
+## The one line every record shares: append [name, passed, message] to the report meta. Written as a
+## single expression (no temp var) so it can be dropped into any branch of a bigger template without
+## dragging a declaration along, and so two records in one row can never collide on a variable name.
+static func _record_template(name_expression: String, passed_expression: String, message_expression: String) -> String:
+	return "set_meta(&\"%s\", (get_meta(&\"%s\", []) as Array) + [[str(%s), %s, str(%s)]])" % [
+		REPORT_META, REPORT_META, name_expression, passed_expression, message_expression]
+
+
+## Assert That. The claim is evaluated ONCE into a local - a claim is allowed to be a call with a
+## cost (or a side effect), and evaluating it a second time for the push_error would be a different
+## check than the one that was recorded.
+static func _assert_that_template() -> String:
+	return "\n".join(PackedStringArray([
+		"var __assert_ok_{uid}: bool = bool({claim})",
+		_record_template("{named}", "__assert_ok_{uid}", "\"\" if __assert_ok_{uid} else \"expected true, got false\""),
+		"if not __assert_ok_{uid}:",
+		"\tpush_error(\"[test] FAIL %s - expected true, got false\" % str({named}))",
+	]))
+
+
+static func _assert_equal_template() -> String:
+	return "\n".join(PackedStringArray([
+		"var __assert_got_{uid}: Variant = {actual}",
+		"var __assert_want_{uid}: Variant = {expected}",
+		"var __assert_ok_{uid}: bool = __assert_got_{uid} == __assert_want_{uid}",
+		"var __assert_why_{uid}: String = \"\" if __assert_ok_{uid} else \"expected %s, got %s\" % [str(__assert_want_{uid}), str(__assert_got_{uid})]",
+		_record_template("{named}", "__assert_ok_{uid}", "__assert_why_{uid}"),
+		"if not __assert_ok_{uid}:",
+		"\tpush_error(\"[test] FAIL %s - %s\" % [str({named}), __assert_why_{uid}])",
+	]))
+
+
+static func _fail_test_template() -> String:
+	return "\n".join(PackedStringArray([
+		_record_template("{named}", "false", "{reason}"),
+		"set_meta(&\"%s\", true)" % FINISHED_META,
+		"push_error(\"[test] FAIL %s - %s\" % [str({named}), str({reason})])",
+	]))
+
+
+## The shared signal wait. Godot connects a callable ONLY when its argument count matches the
+## signal's, and a test may watch a signal of any shape, so the arity is read off the object's own
+## signal list and the zero-argument callable is unbind()ed to match - the same trick the shipped
+## Wait For All Of join uses. The poll loop (rather than a bare await) is what makes the deadline
+## real: awaiting the signal alone would hang forever on the very failure a test exists to catch.
+static func _watch_lines(prefix: String, result_lines: PackedStringArray) -> String:
+	var lines: PackedStringArray = PackedStringArray([
+		# Raised before the wait and lowered after it, in BOTH branches, so a runner can tell "this
+		# test is still waiting" apart from "this test has stopped saying anything".
+		"set_meta(&\"%s\", int(get_meta(&\"%s\", 0)) + 1)" % [PENDING_META, PENDING_META],
+		"var %s_target_{uid}: Object = {target}" % prefix,
+		"var %s_hit_{uid}: Array[bool] = [false]" % prefix,
+		"if %s_target_{uid} != null and %s_target_{uid}.has_signal({signal_name}):" % [prefix, prefix],
+		"\tvar %s_arity_{uid}: int = 0" % prefix,
+		"\tfor %s_info_{uid}: Dictionary in %s_target_{uid}.get_signal_list():" % [prefix, prefix],
+		"\t\tif str(%s_info_{uid}.get(\"name\", \"\")) == str({signal_name}):" % prefix,
+		"\t\t\t%s_arity_{uid} = (%s_info_{uid}.get(\"args\", []) as Array).size()" % [prefix, prefix],
+		"\tvar %s_cb_{uid}: Callable = func() -> void: %s_hit_{uid}[0] = true" % [prefix, prefix],
+		"\tif %s_arity_{uid} > 0:" % prefix,
+		"\t\t%s_cb_{uid} = %s_cb_{uid}.unbind(%s_arity_{uid})" % [prefix, prefix, prefix],
+		"\t%s_target_{uid}.connect({signal_name}, %s_cb_{uid}, CONNECT_ONE_SHOT)" % [prefix, prefix],
+		"\tvar %s_end_{uid}: int = Time.get_ticks_msec() + int(maxf(float({seconds}), 0.0) * 1000.0)" % prefix,
+		"\twhile not %s_hit_{uid}[0] and Time.get_ticks_msec() < %s_end_{uid}:" % [prefix, prefix],
+		"\t\tawait get_tree().process_frame",
+		"\tif %s_target_{uid}.is_connected({signal_name}, %s_cb_{uid}):" % [prefix, prefix],
+		"\t\t%s_target_{uid}.disconnect({signal_name}, %s_cb_{uid})" % [prefix, prefix],
+		"else:",
+		"\tpush_warning(\"[test] nothing here emits %s - the watch can only time out.\" % str({signal_name}))",
+		"set_meta(&\"%s\", maxi(int(get_meta(&\"%s\", 0)) - 1, 0))" % [PENDING_META, PENDING_META],
+	])
+	lines.append_array(result_lines)
+	return "\n".join(lines)
+
+
+static func _watch_for_signal_template() -> String:
+	return _watch_lines("__watch", PackedStringArray([
+		"set_meta(&\"%s\" + str({signal_name}).to_utf8_buffer().hex_encode(), 1 if __watch_hit_{uid}[0] else 2)" % WATCH_META_PREFIX,
+	]))
+
+
+static func _watch_state_template(state: String) -> String:
+	return "int(get_meta(&\"%s\" + str({signal_name}).to_utf8_buffer().hex_encode(), 0)) == %s" % [WATCH_META_PREFIX, state]
+
+
+static func _expect_signal_template() -> String:
+	return _watch_lines("__expect", PackedStringArray([
+		"var __expect_why_{uid}: String = \"\" if __expect_hit_{uid}[0] else \"expected within %.2fs, never fired\" % maxf(float({seconds}), 0.0)",
+		_record_template("{named}", "__expect_hit_{uid}[0]", "__expect_why_{uid}"),
+		"if not __expect_hit_{uid}[0]:",
+		"\tpush_error(\"[test] FAIL %s - %s\" % [str({named}), __expect_why_{uid}])",
+	]))
+
+
+## Load Scene Under Test. A missing scene is a RECORDED FAILURE, not a crash and not silence: the
+## report names the path that resolved to nothing, which is the whole answer to "why did every later
+## claim fail?". The instance is parented to the test node so it enters the tree and really runs.
+static func _load_scene_template() -> String:
+	return "\n".join(PackedStringArray([
+		"var __under_{uid}: PackedScene = (load({scene_path}) as PackedScene) if ResourceLoader.exists({scene_path}) else null",
+		"if __under_{uid} == null:",
+		"\t" + _record_template("{as_name}", "false", "\"no scene at \" + str({scene_path})"),
+		"\tpush_error(\"[test] FAIL %s - no scene at %s\" % [str({as_name}), str({scene_path})])",
+		"else:",
+		"\tvar __under_node_{uid}: Node = __under_{uid}.instantiate()",
+		"\tadd_child(__under_node_{uid})",
+		"\tset_meta(&\"%s\" + str({as_name}).to_utf8_buffer().hex_encode(), __under_node_{uid})" % SCENE_META_PREFIX,
+	]))
+
+
+static func _scene_under_test_template() -> String:
+	return "(get_meta(&\"%s\" + str({as_name}).to_utf8_buffer().hex_encode(), null) as Node)" % SCENE_META_PREFIX

@@ -44,6 +44,12 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# feature tags. Plain GDScript on both sides, so the emitted script keeps zero plugin
 			# dependency and simply does nothing when nobody calls it.
 			return _lifecycle("_on_project_export", "is_debug: bool, features: PackedStringArray")
+		"OnTestStart":
+			# A Test sheet's start. Signal-backed on the sheet itself: the sheet declares
+			# `signal test_started(test_name: String)` (the compiler emits it for a test sheet) and a
+			# runner emits it with the test's name, so the trigger has a real signal behind it and the
+			# name arrives as the handler's argument - not a bare hook nobody can raise by hand.
+			return _signal_backed("_on_test_started", "test_name: String", "test_started", "")
 		"OnPostTick":
 			# Godot's "post-tick": SceneTree.process_frame fires ONCE after every node's _process this
 			# frame - for logic that must run after everything else updated (a camera that follows after

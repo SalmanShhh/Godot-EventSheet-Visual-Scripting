@@ -73,6 +73,9 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 		_dock._current_sheet.autoload_name = autoload_name_text.strip_edges() if type_index == 4 else ""
 		if type_index == 4:
 			_dock._current_sheet.host_class = "Node"
+		# Test preset: a plain Node script whose job is asserting. It forces its host like Autoload
+		# does, and the compiler adds the test_started signal On Test Start hangs off.
+		_dock._current_sheet.test_mode = type_index == 6
 		# Editor Tool preset: an EditorScript with @tool - pair with On Editor Run.
 		_dock._current_sheet.tool_mode = tool_enabled or type_index == 3
 		_dock._current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
@@ -102,6 +105,10 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 		_dock._current_sheet.requires_behaviors = applied_requires
 		if type_index == 4:
 			pass  # Autoload already forced host_class = "Node" above; the dialog's stale host text must not undo it
+		elif type_index == 6:
+			# A test runs as a node in a tree; the host row is hidden, so the field's stale text
+			# must not slip through here the way it must not for Autoload above.
+			_dock._current_sheet.host_class = "Node"
 		elif type_index == 3:
 			_dock._current_sheet.host_class = "EditorScript"
 		elif type_index == 5:

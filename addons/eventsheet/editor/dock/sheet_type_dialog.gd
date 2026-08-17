@@ -49,6 +49,7 @@ const TYPE_HINTS: Array[String] = [
 	"Runs inside the editor (File > Run), not in the game. Experimental.",
 	"One always-on instance the whole game can call by name.",
 	"A data asset type: each saved file of it is edited in the Inspector.",
+	"Claims about your game that a runner checks and reports pass/fail on.",
 ]
 
 ## The curated "what does this sheet control?" shortlist for the host Choose menu - friendly words
@@ -80,6 +81,8 @@ func open() -> void:
 			_sheet_type_option.select(2)
 		EventSheetScriptIntent.Intent.AUTOLOAD:
 			_sheet_type_option.select(4)
+		EventSheetScriptIntent.Intent.TEST:
+			_sheet_type_option.select(6)
 		EventSheetScriptIntent.Intent.CUSTOM_RESOURCE:
 			_sheet_type_option.select(5)
 		EventSheetScriptIntent.Intent.CUSTOM_NODE:
@@ -108,9 +111,12 @@ func open() -> void:
 ## so the host row hides; Family only means something for node instances (custom node / behavior).
 ## Static and value-driven so tests pin it without building the dialog.
 static func field_visibility(type_index: int) -> Dictionary:
+	# A Test sheet is not a type anyone instantiates by name - it is a script a runner starts - so it
+	# hides the class-name/icon pair a Create Node entry needs while keeping the description (what
+	# this test covers) and forcing its own host, like Editor Tool and Autoload do.
 	return {
-		"name": type_index != 0,
-		"icon": type_index != 0,
+		"name": type_index != 0 and type_index != 6,
+		"icon": type_index != 0 and type_index != 6,
 		"description": type_index != 0,
 		"host": type_index in [0, 1, 2, 5],
 		"family": type_index in [1, 2],
@@ -134,7 +140,9 @@ static func identity_preview(type_index: int, class_name_text: String, host_text
 		if class_name_value != own_class_name and _class_is_known(class_name_value):
 			return "x \"%s\" is already a class name - pick another." % class_name_value
 	var effective_host: String = host_value
-	if type_index == 3:
+	if type_index == 6:
+		effective_host = "Node"
+	elif type_index == 3:
 		effective_host = "EditorScript"
 	elif type_index == 4:
 		effective_host = "Node"
@@ -244,6 +252,7 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_option.add_item("Editor Tool")           # EXPERIMENTAL: events -> editor tooling
 	_sheet_type_option.add_item("Autoload (always-on singleton)")  # extends Node; registered project-wide
 	_sheet_type_option.add_item("Custom Resource (data asset)")  # extends Resource; each .tres is designer-editable
+	_sheet_type_option.add_item("Test (asserts + verdict)")  # extends Node + signal test_started; run headlessly
 	_sheet_type_option.item_selected.connect(func(_index: int) -> void: _refresh_type_ui())
 	form.add_child(_sheet_type_option)
 	_type_hint = EventSheetPopupUI.hint_label(TYPE_HINTS[0], 440.0)

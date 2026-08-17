@@ -25,6 +25,12 @@ extends Resource
 ## to build editor tooling from events (File > Run / Ctrl+Shift+X). Runtime ACEs stay on
 ## stable APIs only - editor APIs are Godot's most volatile surface.
 @export var tool_mode: bool = false
+## Test sheets: the sheet's whole job is to make claims and report pass/fail. Compiles to an
+## `extends Node` script that declares `signal test_started(test_name: String)` - the signal a test
+## runner emits to start it - so the On Test Start trigger has something real behind it. Discovered
+## by the marker line `## @ace_test_sheet` in the emitted script, which is what
+## tools/run_test_sheets.gd scans for; the report itself lives in the node's own metadata.
+@export var test_mode: bool = false
 ## Debug compile: emit `breakpoint` statements for rows flagged via the gutter (F9).
 @export var emit_breakpoints: bool = false
 ## Debug compile: stream this sheet's variables to the editor's Live Values window

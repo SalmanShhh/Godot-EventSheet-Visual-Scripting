@@ -193,6 +193,10 @@ func import_external_source(source: String) -> EventSheetResource:
 	var family_regex: RegEx = RegEx.new()
 	if family_regex.compile("(?m)^## @ace_family\\(") == OK:
 		sheet.is_family = family_regex.search(source) != null
+	# Recover the Test marker (`## @ace_test_sheet`) so a test .gd re-opens as a Test sheet and the
+	# runner and the sheet agree on what this file is. Metadata only (the line stays in the verbatim
+	# prelude), exactly like @ace_family above, so it can never double-emit.
+	sheet.test_mode = source.contains("\n## @ace_test_sheet\n") or source.begins_with("## @ace_test_sheet\n")
 	# Recover the dependency declaration (`## @ace_requires(a, b)`). Metadata only, HEADER
 	# scoped (a member-level occurrence must never become the class declaration), and the
 	# split+strip is the exact inverse of the emitter's ", ".join - or bytes drift.

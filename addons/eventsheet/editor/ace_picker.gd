@@ -195,6 +195,10 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Scene": "PackedScene",
 	"Signals / Scene / Input": "Signals",
 	"Systems": "Groups",
+	# A Test sheet's claims: the name is not a class and the verbs record onto the test node rather
+	# than driving one, so derivation cannot reach it. The tick reads as pass/fail, which is what a
+	# claim is.
+	"Testing": "GuiChecked",
 	"Text": "String",
 	"Time": "Timer",
 	"Touch": "InputEventScreenTouch",
