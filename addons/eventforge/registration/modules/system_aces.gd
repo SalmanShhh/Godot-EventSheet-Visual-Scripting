@@ -246,4 +246,100 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.stateful("var __onceever_{uid}: int = -1\n\nfunc __once_ever_{uid}(key: String) -> bool:\n\tif __onceever_{uid} == -1:\n\t\tvar __cfg: ConfigFile = ConfigFile.new()\n\t\t__cfg.load(\"user://remembered.cfg\")\n\t\t__onceever_{uid} = 1 if bool(__cfg.get_value(\"OnceEver\", key, false)) else 0\n\tif __onceever_{uid} == 1:\n\t\treturn false\n\t__onceever_{uid} = 1\n\tvar __save: ConfigFile = ConfigFile.new()\n\t__save.load(\"user://remembered.cfg\")\n\t__save.set_value(\"OnceEver\", key, true)\n\t__save.save(\"user://remembered.cfg\")\n\treturn true"))
 	descriptors.append(F.make_descriptor("Core", "ForgetOnce", "Forget First Time", ACEDescriptor.ACEType.ACTION, "var __forget_{uid}: ConfigFile = ConfigFile.new()\n__forget_{uid}.load(\"user://remembered.cfg\")\n__forget_{uid}.set_value(\"OnceEver\", {key}, false)\n__forget_{uid}.save(\"user://remembered.cfg\")", "", [F.make_param("key", "String", "\"hint_dash\"", "Name", "The Only Once Ever name to reset.", "expression")], "Run Context", "forget first time ( {key} )")
 		.described("Resets an Only Once Ever memory so it fires again - for testing, or for New Game+. Rows already running this session keep their cached answer until the next run."))
+
+	# ── Spawn And Configure: a spawn you can name, and therefore talk about later ──
+	#
+	# Spawn Scene At and Spawn Scene (Full) build into a hidden `__spawn_<uid>` local, so the row
+	# after them cannot reach the thing that was just made - setting its health, its target or its
+	# tier means dropping into GDScript. These three close that in the smallest possible way:
+	#
+	#   * The NAME is the address. The new node is stored in host metadata under the name the row
+	#     typed - the same stateless, name-keyed trick the cooldowns and the input buffer use - so
+	#     The Spawned "boss" reads it back from any later row, in any event, on the same host. No
+	#     class member is involved, which matters because an ACTION cannot declare one.
+	#   * The "with" record sets values ON THE WAY IN, before the node enters the tree, so a
+	#     projectile has its damage and its owner before its first physics frame.
+	#   * The spawn HAPPENING is handed on as a real Godot signal, not as a "last spawned" side
+	#     channel that a loop spawning six things in one frame would corrupt. Declare
+	#     `signal scene_spawned(spawn_name: String, node: Node)` on the sheet (Add ▸ Signal) and the
+	#     row's On Signal trigger receives both as its own captured payload - the name that was
+	#     spawned and the node itself. A sheet that declares no such signal skips the emit, so the
+	#     action still stands alone anywhere (has_signal is the whole guard).
+	#
+	# Reading it back is ALWAYS guarded by has_meta first, never by get_meta's default argument:
+	# Object.get_meta treats a `null` default as "no default given" and pushes an error, so the
+	# obvious `get_meta(key, null)` prints an engine error every time a row asks about a name that
+	# was never spawned - which is exactly the case the expression exists to answer.
+	var spawn_key: String = "&\"__ef_spawn_\" + str({spawn_name}).to_utf8_buffer().hex_encode()"
+	var spawn_alive: String = "(has_meta(%s) and is_instance_valid(get_meta(%s)))" % [spawn_key, spawn_key]
+	descriptors.append(F.make_descriptor("Core", "SpawnSceneAs", "Spawn Scene As", ACEDescriptor.ACEType.ACTION, "var __spawn_{uid} = load({path}).instantiate()\n__spawn_{uid}.position = {position}\nvar __values_{uid}: Dictionary = {values}\nfor __field_{uid}: Variant in __values_{uid}:\n\t__spawn_{uid}.set(__field_{uid}, __values_{uid}[__field_{uid}])\nvar __parent_{uid}: Node = {parent}\n(__parent_{uid} if __parent_{uid} != null else self).add_child(__spawn_{uid})\nset_meta(&\"__ef_spawn_\" + str({spawn_name}).to_utf8_buffer().hex_encode(), __spawn_{uid})\nif has_signal(&\"scene_spawned\"):\n\temit_signal(&\"scene_spawned\", {spawn_name}, __spawn_{uid})", "", [F.make_param("path", "String", "\"res://enemy.tscn\"", "Scene", "Scene file to instance.", "scene_path"), F.make_param("spawn_name", "String", "\"boss\"", "As", "A name for this spawn, so later rows can say The Spawned \"boss\".", "expression"), F.make_param("values", "String", "{}", "With", "Values to set as it arrives, as a record: {\"max_health\": 200, \"tier\": 3}. Names the scene does not have are set anyway, so keep to its own fields.", "expression"), F.make_param("parent", "String", "null", "Into", "The node to add it under. Leave as nothing to add it under this one.", "expression"), F.make_param("position", "String", "Vector2(0, 0)", "At", "Spawn position.", "expression")], "Scene", "Spawn [b]{path}[/b] as [b]{spawn_name}[/b] with [i]{values}[/i]")
+		.described("Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Spawned. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.").featured())
+	descriptors.append(F.make_descriptor("Core", "TheSpawned", "The Spawned", ACEDescriptor.ACEType.EXPRESSION, "(get_meta(%s) if %s else null)" % [spawn_key, spawn_alive], "", [F.make_param("spawn_name", "String", "\"boss\"", "Name", "The name a Spawn Scene As row used.", "expression")], "Scene", "the spawned [b]{spawn_name}[/b]")
+		.described("The node a Spawn Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash."))
+	descriptors.append(F.make_descriptor("Core", "SpawnIsAlive", "Spawn Is Alive", ACEDescriptor.ACEType.CONDITION, spawn_alive, "", [F.make_param("spawn_name", "String", "\"boss\"", "Name", "The name a Spawn Scene As row used.", "expression")], "Scene", "the spawned [b]{spawn_name}[/b] is alive")
+		.described("True while the node spawned under this name still exists - the guard to put in front of any row that talks to a named spawn, and the honest way to ask 'is the boss still up?'."))
+	# The trigger half. "signal:<name>" is the id convention that binds a row to a real signal: the
+	# sheet declares `scene_spawned(spawn_name: String, node: Node)` with a Signal row, and the
+	# compiler emits the handler plus its _ready connection. The two arguments arrive as the row's
+	# OWN captured payload, which is why no "last spawned node" expression exists - a loop spawning
+	# six things in one frame would make that answer wrong, and this one stays right.
+	descriptors.append(F.make_descriptor("Core", "signal:scene_spawned", "On Scene Spawned", ACEDescriptor.ACEType.TRIGGER, "", "scene_spawned", [F.make_param("spawn_name", "String", "", "Name", "The name the Spawn Scene As row gave this spawn."), F.make_param("node", "Node", "", "Node", "The node that was just spawned, carried by the signal itself.")], "Scene", "On scene spawned {spawn_name} ( {node} )")
+		.described("Runs when a Spawn Scene As row spawns something. The name and the new node arrive on the row as spawn_name and node, so a reaction can configure or announce the node without asking what was spawned last - correct even when one loop spawns six things in a frame. Needs a Signal row for scene_spawned(spawn_name: String, node: Node) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that."))
+
+	# ── Outcome triggers: the shared shape for "the verb refused" ─────────────────────────
+	# GDScript has no exceptions, so every pack used to mint a private failure trigger. These two
+	# generalize the shipped On Save Failed / On Purchase Refused: ONE signal per outcome, with the
+	# verb name and the reason as the signal's ARGUMENTS - so the reason arrives as the trigger row's
+	# own captured payload instead of a "last failure" expression somebody has to remember to read.
+	# The ace_ids use the compiler's "signal:<name>" convention, which is what binds the row to a
+	# real signal: the sheet declares `verb_failed(verb_id: String, reason: String)` with a Declare
+	# Signal row, and the compiler emits the handler plus the _ready connection. Report Failure /
+	# Report Success are guarded by has_signal, so a sheet that has NOT declared the signal still
+	# compiles and simply does nothing - the row is always droppable.
+	descriptors.append(F.make_descriptor("Core", "signal:verb_failed", "On Failure Of", ACEDescriptor.ACEType.TRIGGER, "", "verb_failed", [F.make_param("verb_id", "String", "", "Verb", "Which verb refused - the name the Report Failure row used."), F.make_param("reason", "String", "", "Reason", "Why it refused, carried by the signal itself.")], "Run Context", "On failure of {verb_id} ( {reason} )")
+		.described("Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that."))
+	descriptors.append(F.make_descriptor("Core", "signal:verb_succeeded", "On Success Of", ACEDescriptor.ACEType.TRIGGER, "", "verb_succeeded", [F.make_param("verb_id", "String", "", "Verb", "Which verb finished - the name the Report Success row used.")], "Run Context", "On success of {verb_id}")
+		.described("Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that."))
+	descriptors.append(F.make_descriptor("Core", "ReportFailure", "Report Failure", ACEDescriptor.ACEType.ACTION, "if has_signal(&\"verb_failed\"):\n\temit_signal(&\"verb_failed\", str({verb}), str({reason}))", "", [F.make_param("verb", "String", "\"save_game\"", "Verb", "Name of the verb that refused - the same name the On Failure Of row picks.", "expression"), F.make_param("reason", "String", "\"disk write refused\"", "Reason", "Plain words a player or a log line can read.", "expression")], "Run Context", "Report failure of [b]{verb}[/b]: [b]{reason}[/b]")
+		.described("Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result."))
+	descriptors.append(F.make_descriptor("Core", "ReportSuccess", "Report Success", ACEDescriptor.ACEType.ACTION, "if has_signal(&\"verb_succeeded\"):\n\temit_signal(&\"verb_succeeded\", str({verb}))", "", [F.make_param("verb", "String", "\"save_game\"", "Verb", "Name of the verb that finished - the same name the On Success Of row picks.", "expression")], "Run Context", "Report success of [b]{verb}[/b]")
+		.described("Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure."))
+
+	# ── Rate limits: the leading edge (throttle) and the trailing edge (debounce) ─────────
+	# At Most Every is stateful and uses the SAME .evaluated_last() hoist that makes Trigger Once
+	# correct - the term is pushed to the end of the emitted `and` chain, so the window is only
+	# consumed once every other condition on the row has already held.
+	descriptors.append(F.make_descriptor("Core", "AtMostEvery", "At Most Every", ACEDescriptor.ACEType.CONDITION, "__throttle_{uid}(maxf({seconds}, 0.0))", "", [F.make_param("seconds", "String", "0.25", "Seconds", "Shortest gap between two runs of this event.", "expression")], "Run Context", "at most every [b]{seconds}[/b]s")
+		.described("Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.")
+		.stateful("var __throttle_at_{uid}: int = -1000000\n\nfunc __throttle_{uid}(window: float) -> bool:\n\tif Time.get_ticks_msec() - __throttle_at_{uid} < int(window * 1000.0):\n\t\treturn false\n\t__throttle_at_{uid} = Time.get_ticks_msec()\n\treturn true")
+		.evaluated_last())
+	# The debounce pair is stateless name-keyed node metadata, copying Start Cooldown / Cooldown Is
+	# Ready exactly, so a Poke in one event and the quiet check in another agree with no wiring. A
+	# name that was never poked is never quiet, so nothing fires at startup. The name is HEX-ENCODED
+	# into the metadata key because Object.set_meta refuses a key that is not a valid identifier: a
+	# poke called "search box" would otherwise store nothing at all and read wrong forever, silently.
+	descriptors.append(F.make_descriptor("Core", "Poke", "Poke", ACEDescriptor.ACEType.ACTION, "set_meta(&\"__ef_poke_\" + str({poke_name}).to_utf8_buffer().hex_encode(), Time.get_ticks_msec())", "", [F.make_param("poke_name", "String", "\"search\"", "Name", "Poke name - any label you also use in Has Been Quiet For.", "expression")], "Time", "poke [b]{poke_name}[/b]")
+		.described("Marks that something just happened, by name. Poke on every keystroke or every change, then let Has Been Quiet For notice when it stops."))
+	descriptors.append(F.make_descriptor("Core", "ClearPoke", "Clear Poke", ACEDescriptor.ACEType.ACTION, "set_meta(&\"__ef_poke_\" + str({poke_name}).to_utf8_buffer().hex_encode(), 0)", "", [F.make_param("poke_name", "String", "\"search\"", "Name", "Poke name, matching a Poke action.", "expression")], "Time", "clear poke [b]{poke_name}[/b]")
+		.described("Forgets a poke so Has Been Quiet For stops firing. Clear it right after acting on the quiet, the same way you consume a buffered press."))
+	descriptors.append(F.make_descriptor("Core", "HasBeenQuiet", "Has Been Quiet For", ACEDescriptor.ACEType.CONDITION, "(int(get_meta(&\"__ef_poke_\" + str({poke_name}).to_utf8_buffer().hex_encode(), 0)) > 0 and Time.get_ticks_msec() - int(get_meta(&\"__ef_poke_\" + str({poke_name}).to_utf8_buffer().hex_encode(), 0)) >= int(maxf({seconds}, 0.0) * 1000.0))", "", [F.make_param("poke_name", "String", "\"search\"", "Name", "Poke name, matching a Poke action.", "expression"), F.make_param("seconds", "String", "0.6", "Seconds", "How long the quiet has to last.", "expression")], "Run Context", "[b]{poke_name}[/b] has been quiet for [b]{seconds}[/b]s")
+		.described("True once a poked name has stopped being poked for this long - the settle-down check. Autosave after the player stops editing, search after they stop typing. Needs a per-frame trigger, and stays true until you Clear Poke."))
+
+	# ── Once per THING: the middle ground between Trigger Once and Only Once Ever ─────────
+	# Trigger Once is per ROW instance, so inside a For Each it fires for the first item and never
+	# for the rest. These key the memory by the thing instead: the node (metadata under the
+	# hex-encoded name, since a metadata key must be a valid identifier and "first hit" is not, so the memory
+	# travels with it and a pool's reset seam can clear it with Forget Once For), a name, or this
+	# scene load (a plain member, so reloading the scene starts over).
+	descriptors.append(F.make_descriptor("Core", "OnlyOncePerNode", "Only Once Per Node", ACEDescriptor.ACEType.CONDITION, "__once_node_{uid}({node}, str({label}))", "", [F.make_param("node", "String", "self", "Node", "The node the memory belongs to - inside a For Each, the loop item.", "expression"), F.make_param("label", "String", "\"init\"", "Memory", "Name the memory so one node can hold several.", "expression")], "Run Context", "only once per node ( [b]{node}[/b] / [b]{label}[/b] )")
+		.described("True the first time this row is reached for each node, and never again for that node. The initialiser you want when the row sits inside a For Each over spawned things; the memory lives on the node, so Forget Once For clears it.")
+		.stateful("func __once_node_{uid}(node: Object, label: String) -> bool:\n\tif node == null:\n\t\treturn false\n\tvar key: StringName = StringName(\"__ef_once_\" + label.to_utf8_buffer().hex_encode())\n\tif node.has_meta(key):\n\t\treturn false\n\tnode.set_meta(key, true)\n\treturn true"))
+	descriptors.append(F.make_descriptor("Core", "OnlyOncePerName", "Only Once Per Name", ACEDescriptor.ACEType.CONDITION, "__once_name_{uid}(str({key}))", "", [F.make_param("key", "String", "\"discovered\"", "Name", "The memory's name - one true per name on this node.", "expression")], "Run Context", "only once per name ( [b]{key}[/b] )")
+		.described("True the first time this row is reached for each name, and never again for that name. One discovery line per item type, one loot roll per chest id - with no flag variable each. Kept on this node, so Forget Once For clears it.")
+		.stateful("func __once_name_{uid}(key: String) -> bool:\n\tvar meta_key: StringName = StringName(\"__ef_once_\" + key.to_utf8_buffer().hex_encode())\n\tif has_meta(meta_key):\n\t\treturn false\n\tset_meta(meta_key, true)\n\treturn true"))
+	descriptors.append(F.make_descriptor("Core", "OnlyOnceThisSceneLoad", "Only Once This Scene Load", ACEDescriptor.ACEType.CONDITION, "__once_scene_{uid}(str({key}))", "", [F.make_param("key", "String", "\"welcome\"", "Name", "The memory's name - one true per name until the scene reloads.", "expression")], "Run Context", "only once this scene load ( [b]{key}[/b] )")
+		.described("True the first time this row is reached for each name in this scene load, and again after the scene is reloaded or changed. The welcome line, the per-level check - forgotten on Restart Scene rather than remembered forever.")
+		.stateful("var __once_load_{uid}: Dictionary = {}\n\nfunc __once_scene_{uid}(key: String) -> bool:\n\tif __once_load_{uid}.has(key):\n\t\treturn false\n\t__once_load_{uid}[key] = true\n\treturn true"))
+	descriptors.append(F.make_descriptor("Core", "ForgetOnceFor", "Forget Once For", ACEDescriptor.ACEType.ACTION, "if {node} != null and {node}.has_meta(&\"__ef_once_\" + str({label}).to_utf8_buffer().hex_encode()):\n\t{node}.remove_meta(&\"__ef_once_\" + str({label}).to_utf8_buffer().hex_encode())", "", [F.make_param("node", "String", "self", "Node", "The node holding the memory.", "expression"), F.make_param("label", "String", "\"init\"", "Memory", "The Only Once Per Node / Per Name memory to clear.", "expression")], "Run Context", "forget once ( [b]{label}[/b] ) for [b]{node}[/b]")
+		.described("Clears an Only Once Per Node / Per Name memory so the row fires again for that node. Drop it in an Object Pool's reset seam and a recycled instance initialises like a fresh one."))
 	return descriptors

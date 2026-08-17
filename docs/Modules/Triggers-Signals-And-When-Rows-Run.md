@@ -48,6 +48,17 @@ runtime left in the output.
 - **A condition can also be a gate.** **Trigger Once**, **Has Changed**, **Was Recently True**,
   **Once At A Time** and **Only Once Ever** are conditions, not triggers: they sit in the condition lane
   of an event that already has a trigger, and narrow "every tick" down to the tick you meant.
+- **An outcome is something that happens, so it is a trigger.** A verb that refuses announces it with
+  **Report Failure**, and **On Failure Of** heads the event that recovers - which may sit anywhere on
+  the sheet, far from the row that made the attempt. This is the shape the shipped packs already use
+  for On Save Failed and On Purchase Refused, shared so any verb can raise it.
+- **A trigger's payload is the signal's own arguments.** `verb_failed(verb_id, reason)` puts both on
+  the row, in scope as values. Nothing stores a "last failure" for you to fetch, which is also why
+  two failures in one frame can never be confused. Narrow the row to one verb with an ordinary
+  condition on `verb_id`, exactly as you would filter any other payload.
+- **Once per ROW and once per THING are different questions.** **Trigger Once** is per row instance,
+  so inside a For Each it fires for the first item only. **Only Once Per Node**, **Only Once Per Name**
+  and **Only Once This Scene Load** key the memory by the thing, which is what the row usually means.
 - **Signals are the decoupling tool.** **Emit Signal** broadcasts without knowing who is listening;
   **On Signal** listens without knowing who emits. That pair is how two sheets talk without either one
   holding a path to the other.
@@ -84,6 +95,37 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 | Forget First Time | Resets an Only Once Ever memory so it fires again. | a `ConfigFile` write of `false` into the `OnceEver` section of `user://remembered.cfg` |
 | On Group Emptied | True on the single tick a watched **Group**'s last member leaves or dies. | `__group_emptied_{uid}({group})` |
 | On Group Gains First Member | True on the single tick a watched **Group** goes from empty to holding something. | `__group_first_{uid}({group})` |
+
+### Run Context - once per THING, and the two rate limits
+
+Trigger Once is per ROW instance and Only Once Ever is per machine forever. These sit in between: the
+memory is keyed by the node, by a name, or by this scene load. At Most Every and Has Been Quiet For
+are the two rate limits - the leading edge and the trailing edge.
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Only Once Per Node | True the first time this row is reached for each **Node**, and never again for that node. | `__once_node_{uid}({node}, str({label}))`, a helper over the node's own metadata |
+| Only Once Per Name | True the first time this row is reached for each **Name**, kept on this node. | `__once_name_{uid}(str({key}))` |
+| Only Once This Scene Load | True the first time per **Name** in this scene load, and again after a reload. | `__once_scene_{uid}(str({key}))`, over a per-row Dictionary member |
+| Forget Once For | Clears an Only Once Per Node / Per Name memory so the row fires again. | a guarded `remove_meta` of `__ef_once_{label}` on the node |
+| At Most Every | Lets this event run at most once every so many **Seconds**, however often it is reached. | `__throttle_{uid}(maxf({seconds}, 0.0))`, hoisted to the end of the condition chain |
+| Has Been Quiet For | True once a poked **Name** has stopped being poked for **Seconds**. | a comparison of `Time.get_ticks_msec()` against the `__ef_poke_{name}` stamp |
+
+### Run Context - outcomes: what happened to a verb
+
+GDScript has no exceptions, so an outcome is announced rather than thrown. One signal per outcome
+carries the verb's name and the reason as its ARGUMENTS, which arrive on the trigger row as
+`verb_id` and `reason`. Declare the signal once with a Declare Signal row.
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| On Failure Of | Runs when a verb reports that it refused; hands you **verb_id** and **reason**. | a handler connected to the sheet's `verb_failed(verb_id: String, reason: String)` |
+| On Success Of | Runs when a verb reports that it finished; hands you **verb_id**. | a handler connected to the sheet's `verb_succeeded(verb_id: String)` |
+| Report Failure | Announces that a **Verb** refused, with a **Reason** a player can read. | `if has_signal(&"verb_failed"):` then `emit_signal(&"verb_failed", str({verb}), str({reason}))` |
+| Report Success | Announces that a **Verb** finished. | the same guarded emit of `verb_succeeded` |
+| Wait Succeeded | True when the named wait ended because what it waited for happened. | `int(get_meta(&"__ef_wait_" + str({wait_name}), 0)) == 1` |
+| Wait Timed Out | True when the named wait gave up instead of finishing. | `int(get_meta(&"__ef_wait_" + str({wait_name}), 0)) == 2` |
+| First To Finish | Which signal a Wait For Any Of raced finished first, as `Node.signal`. | `str(get_meta(&"__ef_first_" + str({wait_name}).to_utf8_buffer().hex_encode(), ""))` |
 
 ### General Conditions
 
@@ -350,6 +392,125 @@ On Unhandled Input
 If a Control consumed the click, this event never runs - which is what you want for a game that also
 has a HUD.
 
+**21. Recovery as its own event.** GDScript has no exceptions, so a verb that refuses has to announce
+it. Report Failure raises one shared signal, and On Failure Of heads the event that handles it - which
+may sit anywhere on the sheet, far from where the attempt was made.
+
+```
+Declare Signal  verb_failed(verb_id: String, reason: String)
+
+On Action  "save" pressed
+  -> Save Game
+
+On Failure Of  verb_id, reason
+  Condition: verb_id = "save_game"
+    -> Show text from  "Could not save: " & reason
+    -> Wait  2
+    -> Save Game To Slot  2
+```
+
+The reason is not something to go looking for: it is the signal's own second argument, in scope on
+the row the moment it fires.
+
+```gdscript
+extends Node
+
+signal verb_failed(verb_id: String, reason: String)
+
+
+func _ready() -> void:
+	verb_failed.connect(_on_verb_failed)
+
+
+func _on_verb_failed(verb_id: String, reason: String) -> void:
+	if verb_id == "save_game":
+		print("Could not save: " + reason)
+```
+
+**22. A verb you wrote this morning can refuse in the same words.** Report Failure is an ordinary
+action, so any row of yours can raise the outcome instead of returning a null nobody checks.
+
+```
+On Ready
+  -> Set local variable  data = Load Resource  "res://mods/pack.tres"
+  Condition: data is null
+    -> Report Failure  "load_resource", "mod pack missing"
+
+On Failure Of  verb_id, reason
+  Condition: verb_id = "load_resource"
+    -> Log Value  "mods" = reason
+    -> Use fallback pack
+```
+
+**23. Confirmation, the same shape.** Report Success and On Success Of are the pair for the happy
+path, so the "Saved" toast lives in the UI sheet rather than being copied into every save row.
+
+```
+Declare Signal  verb_succeeded(verb_id: String)
+
+On Success Of  verb_id
+  Condition: verb_id = "save_game"
+    -> Show  "Saved"
+```
+
+**24. Initialise each spawned enemy exactly once.** Trigger Once is per ROW, so inside a For Each it
+fires for the first item and never for the rest. Only Once Per Node is per THING, which is what this
+row actually means.
+
+```
+Every Frame
+  Condition: For Each  enemy in group "enemies"
+    Condition: Only Once Per Node  ( enemy, "init" )
+      -> Apply stat sheet to  enemy
+      -> Set property  enemy.modulate = team_color
+```
+
+```gdscript
+extends Node
+
+
+func __once_node_q(node: Object, label: String) -> bool:
+	if node == null:
+		return false
+	var key: StringName = StringName("__ef_once_" + label)
+	if node.has_meta(key):
+		return false
+	node.set_meta(key, true)
+	return true
+
+
+func _process(_delta: float) -> void:
+	for enemy: Node in get_tree().get_nodes_in_group("enemies"):
+		if __once_node_q(enemy, str("init")):
+			enemy.modulate = Color.RED
+```
+
+**25. One discovery line per item type.** Only Once Per Name keys the memory by a name instead of a
+node, so a hundred torches share one "you found a torch" line without a flag variable each.
+
+```
+On Focus Changed
+  Condition: Only Once Per Name  ( focused.item_id )
+    -> Show  "New item type discovered!"
+```
+
+**26. A welcome line that comes back when the level does.** Only Once This Scene Load is forgotten
+when the scene reloads, which is the difference between it and Only Once Ever.
+
+```
+On Ready
+  Condition: Only Once This Scene Load  ( "welcome" )
+    -> Show  "Welcome to the caves"
+```
+
+**27. Recycle an instance and let it initialise again.** Forget Once For clears the memory that lives
+on the node, so a pooled enemy coming back out is a fresh one.
+
+```
+On pool item reset  item
+  -> Forget Once For  ( item, "init" )
+```
+
 ### Other use cases
 
 **Hitbox and hurtbox pairs.** On Area Entered on the hurtbox, with a group test on the incoming **area**, keeps damage wiring to one event per fighter instead of one per attack.
@@ -364,6 +525,28 @@ has a HUD.
 
 ## Tips and common mistakes
 
+- **On Failure Of and On Success Of need their signal declared.** Add a Declare Signal row for
+  `verb_failed(verb_id: String, reason: String)` (and `verb_succeeded(verb_id: String)`) to the sheet
+  that listens. Without it the compiler has nothing to connect to and the trigger never fires.
+- **Report Failure on a sheet with no declared signal does nothing.** That is deliberate - the row is
+  always droppable and never errors - but it also means a missing Declare Signal row is silent. If a
+  recovery event is not running, check the declaration first.
+- **The outcome signals are the sheet's own.** They fire on the node the sheet is attached to, so the
+  handler belongs on that node's sheet. To reach another node, connect the signal there with the
+  shipped Connect Signal, or route it through an autoload bus.
+- **Narrow the trigger with a condition, not a second signal.** One `verb_failed` carries every verb,
+  and the row that only cares about saving puts `verb_id = "save_game"` underneath. Two saves in one
+  sheet stay unambiguous because the name is the payload.
+- **Trigger Once inside a For Each is almost always the wrong verb.** It is per row, so it fires for
+  the first item and never for the rest. Only Once Per Node is the one that means "once per thing".
+- **Only Once Per Node keeps its memory ON the node**, so it survives reparenting and a pooled
+  instance remembers it was already initialised. Clear it with Forget Once For in the pool's reset.
+- **Only Once This Scene Load is forgotten on Restart Scene**, unlike Only Once Ever, which persists
+  to `user://remembered.cfg` across runs. Pick by how long you want the memory to last.
+- **At Most Every is a rate, not an edge.** It lets the event run once per window however often it is
+  reached; Trigger Once fires on the rising edge and never again until the conditions go false.
+- **Has Been Quiet For needs a per-frame trigger**, because it has to be asked repeatedly while
+  nothing is happening. That is the whole point of a debounce, and no signal can back it.
 - **A bare event with no trigger emits nothing.** If a row seems to do nothing at all, check the event
   actually has a trigger and not just conditions.
 - **`delta` only exists where the callback provides it.** It is a real value under **Every Frame** and
@@ -385,6 +568,11 @@ has a HUD.
   the first of them to run consumes it. Give each hint its own name.
 - **Forget First Time takes effect next run.** The condition caches its answer in a member after the
   first read, so resetting the file mid-session does not re-arm a row that already answered.
+- **A signal-backed trigger needs its Signal row, or the event is dead and silent.** On Failure Of,
+  On Success Of, On Scene Spawned and On Data File Changed each bind to a signal your sheet declares.
+  Leave the declaration out and the sheet still compiles - the handler is emitted, nothing is
+  connected to it, and the event simply never runs. The Project Doctor reports it by name, which is
+  the only warning you get.
 - **Emit Signal takes a bare identifier**, not a quoted string: `died`, not `"died"`. The emitted form
   is the modern `died.emit(...)`.
 - **On Signal's Arguments field is a signature, not values.** Write `amount: int`, not `5`. Leaving it

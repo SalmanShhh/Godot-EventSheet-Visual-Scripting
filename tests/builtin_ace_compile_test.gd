@@ -28,6 +28,8 @@ const NOT_STANDALONE: Array[String] = [
 	"EveryXSeconds", "TriggerOnce", "SingleFlight", "HasChanged",  # call sheet-synthesized companion state (an accumulator / an edge-test helper / a busy latch / a previous-value slot)
 	"EveryRandomSeconds",  # calls a sheet-synthesized helper over its own accumulator + rolled-interval slots
 	"WasRecentlyTrue", "OnlyOnceEver",  # calls a sheet-synthesized helper over its own last-true timestamp slot
+	"OnceThisFrame",  # calls a sheet-synthesized helper over its own per-frame claim slots
+	"FpsBelowFor",  # calls a sheet-synthesized helper over its own drop-started-at slot
 	"OnGroupEmptied", "OnGroupFirstMember",  # call sheet-synthesized helpers over their own previous-count slots
 	"AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
@@ -36,6 +38,11 @@ const NOT_STANDALONE: Array[String] = [
 	"IsLocaleChangeNotification",  # references `what` - only exists inside _notification (its trigger's virtual)
 	"ExportIsDebug", "ExportHasFeature",  # read `is_debug` / `features` - the arguments On Project Export's handler receives
 	"BehaviorHost", "BehaviorHostValid",  # read the behaviour-only `host` var (synthesized only when behavior_mode)
+	"AtMostEvery",  # calls a sheet-synthesized helper over its own last-run timestamp slot
+	"OnlyOncePerNode", "OnlyOncePerName", "OnlyOnceThisSceneLoad",  # call sheet-synthesized once-memory helpers
+	"StopRetrying",  # ends with `break` - only compiles inside the Retry Up To N Times loop it belongs to
+	"RetryAttemptNumber",  # reads `attempt`, the Retry Up To N Times loop's own iterator
+	"RetryUpTo", "RetriesExhausted",  # call sheet-synthesized helpers over the retry's own three-state record
 ]
 
 
