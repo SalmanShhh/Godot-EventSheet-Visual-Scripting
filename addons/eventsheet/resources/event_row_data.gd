@@ -56,6 +56,11 @@ var height_scale: float = 1.0
 # marks this row as STARTING that block, so the gap lands above the caption instead of between the
 # caption and its verb. View-only, never serialized.
 var attached_below: bool = false
+# True on a row whose content spans BOTH lanes as one track (no divider, no action column). A
+# Construct Function block header is the case it exists for: it carries the verb and its input chips
+# and nothing else, so clipping those chips at the lane divider - with an empty right lane sitting
+# beside them - wastes half the row. View-only, never serialized.
+var full_width_lanes: bool = false
 # True on a row rendered INSIDE a published verb's body. A sheet's own events run every frame, so a
 # condition-less event reads as "Every Tick" there - but a verb's body runs when the verb is CALLED, so
 # the same row must read "Always" instead. View-only, never serialized.

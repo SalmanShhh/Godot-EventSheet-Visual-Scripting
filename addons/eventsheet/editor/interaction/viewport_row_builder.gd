@@ -425,6 +425,330 @@ func fold_nested_verb_rows(rows: Array[EventRowData], nested: bool = false) -> v
 			fold_nested_verb_rows(row_data.children, true)
 
 
+## THE HEAD OF AN OPENED PACK, in Construct grammar. A read-only preview used to open on two and a
+## half screens of prelude before its first rule: a Class setup bar, a `host` variable, a Host binding
+## bar, every trigger as its own row, then 46 variable rows, then the pack's about text repeated at the
+## end as a grey wall. Construct puts that same material in four shapes, and this is the lens that
+## reads it back as them:
+##   1. ONE Include bar carrying the pack's identity (the slot Construct uses for "Include: Sheet") -
+##      the class-setup strip, the `host` variable and the Host binding bar fold INTO it.
+##   2. The class description ONCE, as a comment bar right underneath (never again at the end).
+##   3. Foldable group bars - Triggers, one per @export_group in FILE order, Settings for exported
+##      knobs declared before any group, and Internal state for what the pack keeps to itself.
+##   4. Variable rows in the reading shape (type word, name, value, description).
+## PURE VIEW, like the Class setup strip and the Helpers bar: the already-built rows are re-parented
+## (or rebuilt from the SAME LocalVariable resources) inside the list, so `sheet.events`, the resources
+## and the emitted bytes are untouched. Read-only only - on a sheet you are authoring, every one of
+## these rows is something you reach for, and hiding it behind a fold would cost more than it saves.
+## Returns the root list to use (the caller assigns it back).
+func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
+	if sheet == null or not sheet.read_only or rows.is_empty():
+		return rows
+	var host_class: String = ""
+	var identity_seen: bool = false
+	var triggers: Array[EventRowData] = []
+	# [{variable: LocalVariable, group: String, description: String}] in FILE order.
+	var knobs: Array = []
+	var leftovers: Array[EventRowData] = []
+	var pending_description: String = ""
+	# The @export_group in force: Godot's grouping runs until the NEXT group line, so the importer
+	# records it on the FIRST knob of each run only - carry it forward or every group but its first
+	# knob lands in the wrong bar.
+	var current_group: String = ""
+	var consumed: int = 0
+	for index in range(rows.size()):
+		var row_data: EventRowData = rows[index]
+		var source: Resource = row_data.source_resource
+		if row_data.row_uid.begins_with("scaffolding_strip_"):
+			identity_seen = true
+			consumed = index + 1
+			continue
+		if source is RawCodeRow:
+			var code: String = (source as RawCodeRow).code
+			var bound_class: String = host_binding_class(code)
+			if not bound_class.is_empty():
+				host_class = bound_class
+				identity_seen = true
+				consumed = index + 1
+				continue
+			var code_lines: PackedStringArray = code.split("\n")
+			if is_blank_block(code_lines):
+				consumed = index + 1
+				continue
+			if is_comment_only_block(code_lines):
+				# A doc comment the importer could not absorb onto its variable (a multi-line one)
+				# is still that variable's description - it belongs in the row below, not as a grey
+				# line of its own. An ANNOTATION block says nothing to a reader and nothing to the
+				# next row either, so it stays a visible row rather than being silently hidden.
+				var comment_text: String = _head_comment_text(code_lines)
+				if comment_text.is_empty():
+					leftovers.append(row_data)
+				else:
+					pending_description = comment_text
+				consumed = index + 1
+				continue
+			break
+		if source is SignalRow:
+			_shift_row_indent(row_data, 1)
+			triggers.append(row_data)
+			pending_description = ""
+			consumed = index + 1
+			continue
+		if source is LocalVariable:
+			var variable: LocalVariable = source as LocalVariable
+			# The `host` variable IS the host binding written as a member - one fact, said once, on
+			# the include bar.
+			if variable.name == "host" and not variable.exported:
+				identity_seen = true
+				if host_class.is_empty():
+					host_class = variable.type_name
+				pending_description = ""
+				consumed = index + 1
+				continue
+			var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
+			if variable.exported:
+				var declared_group: String = str(attributes.get("group", "")).strip_edges()
+				if not declared_group.is_empty():
+					current_group = declared_group
+			var description: String = str(attributes.get("tooltip", "")).strip_edges()
+			if description.is_empty():
+				description = pending_description
+			knobs.append({
+				"variable": variable,
+				"group": current_group if variable.exported else "",
+				"description": description
+			})
+			pending_description = ""
+			consumed = index + 1
+			continue
+		break
+	# Nothing that reads as a pack head - leave the sheet exactly as it was built.
+	if not identity_seen or (triggers.is_empty() and knobs.is_empty()):
+		return rows
+	var head: Array[EventRowData] = [_build_pack_include_bar_row(sheet, host_class)]
+	var about_index: int = _pack_about_row_index(rows, consumed)
+	var about_row: EventRowData = rows[about_index] if about_index >= 0 else _build_pack_about_row(sheet)
+	if about_row != null:
+		about_row.indent = 0
+		head.append(about_row)
+	if not triggers.is_empty():
+		head.append(_build_head_group_row(
+			sheet,
+			"pack_triggers",
+			EventSheetL10n.translate("Triggers"),
+			EventSheetL10n.translate("this pack fires - %d") % triggers.size(),
+			triggers
+		))
+	head.append_array(_build_knob_group_rows(sheet, knobs))
+	head.append_array(leftovers)
+	var output: Array[EventRowData] = []
+	output.append_array(head)
+	for tail_index in range(consumed, rows.size()):
+		if tail_index == about_index:
+			continue  # the about text reads at the TOP now; a second copy at the end is the grey wall
+		output.append(rows[tail_index])
+	return output
+
+
+## The prose of a comment-only block, "" when it carries only `## @ace_*` annotations (which say
+## nothing to a reader) - what a stray doc comment above a variable contributes as its description.
+func _head_comment_text(code_lines: PackedStringArray) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for line: String in code_lines:
+		var stripped: String = line.strip_edges()
+		if stripped.is_empty() or is_ace_annotation_line(stripped):
+			continue
+		parts.append(strip_comment_prefix(stripped).strip_edges())
+	return " ".join(parts).strip_edges()
+
+
+## The pack's identity as ONE bar, in the slot Construct uses for its "Include: Sheet" strip:
+## `⇥ Addon Pack  [FPSController] [v1.0.0]  behaves on a  [CharacterBody3D]`. Inert (null source) and
+## wearing the same accent band + 1.5x presence the Class setup and Host binding bars wore, because it
+## replaces all three of them on a read-only preview.
+func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = 0
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "pack_include_bar_%d" % sheet.get_instance_id()
+	row_data.height_scale = 1.5
+	var accent: Color = _viewport._get_event_style().behavior_accent_color
+	row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.22)
+	var badge_meta: Dictionary = {
+		"editable": false,
+		"badge": true,
+		"badge_style": "trigger",
+		"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
+		"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
+		"kind": "pack_include",
+		"line_index": 0
+	}
+	var icon_class: String = host_class if not host_class.is_empty() else sheet.host_class
+	var identity_icon: Texture2D = ACEPickerDialog.editor_icon(icon_class) if not icon_class.is_empty() else null
+	if identity_icon != null:
+		badge_meta["badge_icon"] = identity_icon
+	var spans: Array[SemanticSpan] = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, badge_meta)]
+	spans.append(_make_span(EventSheetL10n.translate("Addon Pack"), SemanticSpan.SpanType.VALUE, {
+		"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_PRIMARY
+	}))
+	var pack_name: String = sheet.custom_class_name.strip_edges()
+	if pack_name.is_empty():
+		pack_name = str(sheet.external_source_path).get_file().get_basename()
+	if not pack_name.is_empty():
+		spans.append(_pack_include_chip(pack_name))
+	var version: String = sheet.addon_version.strip_edges()
+	if not version.is_empty():
+		spans.append(_pack_include_chip("v%s" % version))
+	if not host_class.is_empty():
+		spans.append(_make_span(EventSheetL10n.translate("behaves on a"), SemanticSpan.SpanType.VALUE, {
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+		}))
+		spans.append(_pack_include_chip(host_class))
+	row_data.spans = spans
+	return row_data
+
+
+func _pack_include_chip(text: String) -> SemanticSpan:
+	return _make_span(text, SemanticSpan.SpanType.KEYWORD, {
+		"editable": false,
+		"badge": true,
+		"badge_style": "scope",
+		"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+		"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+		"kind": "pack_include",
+		"line_index": 0
+	})
+
+
+## Index of the pack's about text among the already-built rows - the class doc a pack repeats at the
+## END of its file, which reads there as a grey wall nobody scrolls to. Only the LAST content row
+## qualifies, and only when it is a paragraph rather than a note about the code above it.
+func _pack_about_row_index(rows: Array[EventRowData], from_index: int) -> int:
+	for index in range(rows.size() - 1, maxi(from_index, 0) - 1, -1):
+		var row_data: EventRowData = rows[index]
+		if row_data.source_resource is RawCodeRow and is_blank_block((row_data.source_resource as RawCodeRow).code.split("\n")):
+			continue
+		if row_data.row_type == EventRowData.RowType.COMMENT and row_data.source_resource is CommentRow \
+				and (row_data.source_resource as CommentRow).text.strip_edges().length() >= 60:
+			return index
+		return -1
+	return -1
+
+
+## The comment bar when the file keeps no trailing about-comment: the class description (the `##` block
+## under `extends`) drawn in the comment-row look. Inert - it is a lens over sheet metadata, not a row
+## the file actually carries.
+func _build_pack_about_row(sheet: EventSheetResource) -> EventRowData:
+	var description: String = sheet.class_description.strip_edges()
+	if description.is_empty():
+		return null
+	var comment := CommentRow.new()
+	comment.text = description
+	var row_data: EventRowData = _build_comment_row(comment, 0)
+	row_data.source_resource = null
+	row_data.row_uid = "pack_about_%d" % sheet.get_instance_id()
+	for span: SemanticSpan in row_data.spans:
+		if span.metadata is Dictionary:
+			(span.metadata as Dictionary)["editable"] = false
+	return row_data
+
+
+## The pack's knobs as Construct setting folders: one bar per @export_group in FILE order, a Settings
+## bar for exported knobs declared before any group, and Internal state for the rest.
+func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[EventRowData]:
+	var order: PackedStringArray = PackedStringArray()
+	var buckets: Dictionary = {}
+	var internal: Array[EventRowData] = []
+	for entry: Variant in knobs:
+		var record: Dictionary = entry as Dictionary
+		var variable: LocalVariable = record.get("variable")
+		var row_data: EventRowData = _build_reading_variable_row(variable, str(record.get("description", "")), 1)
+		if not variable.exported:
+			internal.append(row_data)
+			continue
+		var group_name: String = str(record.get("group", "")).strip_edges()
+		if group_name.is_empty():
+			group_name = EventSheetL10n.translate("Settings")
+		if not buckets.has(group_name):
+			buckets[group_name] = [] as Array[EventRowData]
+			order.append(group_name)
+		(buckets[group_name] as Array[EventRowData]).append(row_data)
+	var bars: Array[EventRowData] = []
+	for group_name: String in order:
+		var members: Array[EventRowData] = buckets[group_name]
+		bars.append(_build_head_group_row(
+			sheet,
+			"pack_settings_%s" % group_name,
+			group_name,
+			(EventSheetL10n.translate("%d setting") if members.size() == 1 else EventSheetL10n.translate("%d settings")) % members.size(),
+			members
+		))
+	if not internal.is_empty():
+		bars.append(_build_head_group_row(
+			sheet,
+			"pack_internal_state",
+			EventSheetL10n.translate("Internal state"),
+			EventSheetL10n.translate("values the pack keeps for itself - %d") % internal.size(),
+			internal
+		))
+	return bars
+
+
+## One head bar: the event-group header look (folder icon, title, muted count), owning its rows as
+## children so the existing fold machinery collapses them for free. Null source - a lens, not a
+## resource. Folded by default on a read-only preview (the reading order is identity, then logic);
+## an editable sheet would open them, because there the knobs are what you came to edit.
+func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title: String, subtitle: String,
+		members: Array[EventRowData]) -> EventRowData:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var row_data := EventRowData.new()
+	row_data.indent = 0
+	row_data.row_type = EventRowData.RowType.GROUP
+	row_data.source_resource = null
+	row_data.row_uid = "%s_%d" % [uid_suffix, sheet.get_instance_id()]
+	row_data.children = members
+	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, sheet.read_only))
+	row_data.spans = [
+		_make_span(title, SemanticSpan.SpanType.OBJECT, {
+			"editable": false,
+			"kind": "pack_head_group",
+			"line_index": 0,
+			"object_icon": _folder_icon() if _viewport.show_object_icons else null,
+			"text_color": event_style.group_title_color
+		}),
+		_make_span(subtitle, SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "pack_head_group",
+			"line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		})
+	]
+	return row_data
+
+
+## A knob in the Construct reading: `[number] jump_velocity = 4.5  Upward velocity applied on a jump.`
+## The type word leads as a chip (a reader learns WHAT it is, not that GDScript spells it `float`), and
+## the @export / group chips are gone - the bar above the row carries the group, and everything inside
+## a settings bar is exported by definition.
+func _build_reading_variable_row(variable: LocalVariable, description: String, indent: int) -> EventRowData:
+	return _build_variable_row(
+		"tree",
+		variable.name,
+		variable.type_name,
+		variable.default_value,
+		indent,
+		{
+			"is_constant": variable.is_constant,
+			"expression_default": variable.expression_default or variable.inferred_type or variable.onready,
+			"source_resource": variable,
+			"row_uid": "variable_reading_%d" % variable.get_instance_id(),
+			"reading": true,
+			"description": description
+		}
+	)
+
+
 ## The EventFunction a FunctionAnchorRow names, or null when the sheet carries no such verb (the
 ## anchor then keeps its muted "defined here" stub).
 static func find_function_by_name(sheet: EventSheetResource, function_name: String) -> EventFunction:
@@ -889,6 +1213,11 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			maxf(_verb_tint_strength(), VERB_KIND_TINT_ALPHA)
 		)
 		row_data.spans = _build_verb_function_block_spans(event_function, role, display_name)
+		# The header is the whole block: with nothing in the right lane, the input chips get the WHOLE
+		# row instead of being squeezed into the condition track (at a narrow lane split, "y  number"
+		# clipped to "y  numb"). A helper's doc caption does live in the right lane, so that header
+		# keeps the two-lane split.
+		row_data.full_width_lanes = not _has_action_lane_span(row_data.spans)
 		_append_verb_body_rows(row_data, event_function, indent, display_name)
 		row_data.line_count = 1
 		return row_data
@@ -1004,6 +1333,14 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	_append_verb_body_rows(row_data, event_function, indent, display_name)
 	row_data.line_count = maxi(condition_lines, 1)
 	return row_data
+
+
+## True when any span of a row sits in the ACTION lane - i.e. the row's right half carries something.
+static func _has_action_lane_span(spans: Array[SemanticSpan]) -> bool:
+	for span: SemanticSpan in spans:
+		if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("lane", "")) == "action":
+			return true
+	return false
 
 
 ## ƒ + the verb's DISPLAY NAME + one chip per input, and nothing else - the Construct Function block
@@ -3506,11 +3843,31 @@ func _build_variable_row(
 	# variable is one), and the "local" pill on event-scoped vars read as noise too - scope is obvious from
 	# the row's nesting under its event, and the @export badge carries the meaningful distinction
 	# (Inspector-visible vs internal). So a variable row leads straight with its name.
-	row_data.spans = [
-		_make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, variable_meta.merged({"editable": false}, true)),
-		_make_span(":", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)),
-		_make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, variable_meta.merged({"editable": false}, true))
-	]
+	# READING SHAPE (an opened pack's head): the TYPE leads as a plain-word chip - "number", not
+	# "float" - and the `name : Type` code grammar goes away, because a reader is being told what the
+	# knob is, not how GDScript declares it. The @export and group chips are dropped by the caller's
+	# options: inside a settings bar every knob is exported, and the bar names the group.
+	if bool(options.get("reading", false)):
+		row_data.spans = [
+			_make_span(
+				friendly_type_word(type_name),
+				SemanticSpan.SpanType.KEYWORD,
+				variable_meta.merged({
+					"editable": false,
+					"badge": true,
+					"badge_style": "scope",
+					"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+					"badge_fg": EventSheetPalette.COLOR_CHIP_FG
+				}, true)
+			),
+			_make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, variable_meta.merged({"editable": false}, true))
+		]
+	else:
+		row_data.spans = [
+			_make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, variable_meta.merged({"editable": false}, true)),
+			_make_span(":", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)),
+			_make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, variable_meta.merged({"editable": false}, true))
+		]
 	if is_constant:
 		row_data.spans.append(
 			_make_span(
@@ -3586,6 +3943,18 @@ func _build_variable_row(
 			variable_meta.merged({"editable": false}, true)
 		)
 	)
+	# The knob's own sentence, muted, trailing the value - the `##` doc comment the Inspector shows as
+	# its tooltip. A reader of an opened pack should never have to open the .gd to learn what a setting
+	# does. Reading shape only; an authored row keeps the tooltip in the variable dialog.
+	var variable_description: String = str(options.get("description", "")).strip_edges()
+	if not variable_description.is_empty():
+		row_data.spans.append(
+			_make_span(
+				variable_description,
+				SemanticSpan.SpanType.COMMENT,
+				variable_meta.merged({"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true)
+			)
+		)
 	return row_data
 
 # ── Event-span assembly (the "model → SemanticSpans" pass) ───────────────────────────────────────

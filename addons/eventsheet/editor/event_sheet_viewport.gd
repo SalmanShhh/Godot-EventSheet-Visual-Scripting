@@ -1974,6 +1974,12 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 		var row_data: EventRowData = _build_row_from_resource(entry, 0)
 		if row_data != null:
 			root_rows.append(row_data)
+	# A read-only preview reads its HEAD in Construct grammar: one Include bar for the pack's identity,
+	# the description once as a comment bar, then foldable Triggers / setting / Internal state bars -
+	# in place of the prelude, signal and variable rows that used to fill two and a half screens before
+	# the first rule. Pure view, run over the already-built rows (the resources are untouched), and
+	# BEFORE the fence pairing so a #region opened mid-file still walks a settled list.
+	root_rows = _row_builder.build_read_only_head_rows(root_rows, sheet)
 	# Pair #region/#endregion fences into foldable ranges (view layer only; the
 	# data model and emission stay flat). Runs before the footer so the trailing
 	# "Add event…" row can never be swallowed by an unclosed fence.
