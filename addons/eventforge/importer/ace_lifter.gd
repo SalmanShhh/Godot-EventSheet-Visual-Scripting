@@ -149,6 +149,12 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 		var ready_row: RawCodeRow = sheet.events[index] as RawCodeRow
 		if ready_row != null and ready_row.code.begins_with("func _ready() -> void:"):
 			connections = _parse_connections(ready_row.code.split("\n"))
+	# The same map over the WHOLE file, for the mid-file anchor pass below: a hand-written script
+	# writes `_ready` FIRST, above the handlers it connects, so the trailing-run map above (which
+	# only sees the tail) is empty there and every `_on_<node>_<signal>` would read as a helper
+	# function instead of the trigger it is. Kept separate on purpose - widening the trailing
+	# scan's map would change which functions that scan tries to lift as events.
+	var all_connections: Dictionary = _parse_all_connections(sheet)
 	# Lift the run PER FUNCTION with re-anchoring: when a function's body (or a stray row) can't
 	# lift, everything scanned so far - including it - stays raw and the run RE-ANCHORS just after
 	# it, so the longest cleanly-lifting TRAILING subset still becomes real functions instead of one
@@ -387,8 +393,30 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				return false
 			_note_function_progress()
 			var mid_header: String = mid_row.code.split("\n")[0]
-			if _is_lifecycle_header(mid_header) or _is_connected_handler(mid_header, connections):
-				mid_index += 1
+			if _is_lifecycle_header(mid_header) or _is_connected_handler(mid_header, all_connections):
+				# A lifecycle/signal handler stranded between raw blocks. The trailing scan above
+				# cannot lift it (emission writes events BEFORE the trailing functions, so lifting
+				# it there would hoist the handler above every verb below it and break the verify),
+				# which is why an `_unhandled_input` written under a pack's vocabulary used to stay
+				# a code block. Anchor it in place instead: an EventAnchorRow takes the slot, the
+				# lifted EventRows follow it in the array, and the external compile path emits one
+				# function for them right there. Gated exactly like a mid-file function - the
+				# re-emitted handler text must equal this row's bytes, or it stays raw.
+				var handler_events: Array = _anchor_handler_events(mid_row, all_connections)
+				if handler_events.is_empty():
+					mid_index += 1
+					continue
+				var event_anchor: EventAnchorRow = EventAnchorRow.new()
+				event_anchor.trigger_id = (handler_events[0] as EventRow).trigger_id
+				var handler_uids: PackedStringArray = PackedStringArray()
+				for handler_event: Variant in handler_events:
+					handler_uids.append((handler_event as EventRow).event_uid)
+				event_anchor.event_uids = handler_uids
+				sheet.events[mid_index] = event_anchor
+				for insert_offset in range(handler_events.size()):
+					sheet.events.insert(mid_index + 1 + insert_offset, handler_events[insert_offset])
+				anchored_count += 1
+				mid_index += 1 + handler_events.size()
 				continue
 			# Engine virtual callbacks are STRUCTURE, not sheet vocabulary: `_enter_tree` is the
 			# host binding (folds to metadata on open), `_get_configuration_warnings` is the
@@ -1316,6 +1344,52 @@ static func _parse_connections(ready_lines: PackedStringArray) -> Dictionary:
 			"source": regex_match.get_string(1)
 		}
 	return connections
+
+
+## Every `<signal>.connect(<handler>)` / `connect("<signal>", <handler>)` line ANYWHERE in the
+## imported file, as handler_name -> {signal, source}. The trailing-run map above only reads the
+## connects at the top of a `_ready` in the tail; a hand-written script puts `_ready` first and
+## often mixes connects with other setup, so the mid-file anchor pass reads this wider map instead.
+## Position-blind on purpose: the byte-verify is what decides whether a handler actually lifts.
+static func _parse_all_connections(sheet: EventSheetResource) -> Dictionary:
+	var connections: Dictionary = {}
+	var member_regex: RegEx = RegEx.create_from_string("^\\s*(?:([A-Za-z_$%][A-Za-z0-9_/\"%$]*)\\.)?([A-Za-z_][A-Za-z0-9_]*)\\.connect\\(([A-Za-z_][A-Za-z0-9_]*)\\)$")
+	var string_regex: RegEx = RegEx.create_from_string("^\\s*(?:([A-Za-z_$%][A-Za-z0-9_/\"%$]*)\\.)?connect\\(\"([A-Za-z_][A-Za-z0-9_]*)\", *([A-Za-z_][A-Za-z0-9_]*)\\)$")
+	for entry: Variant in sheet.events:
+		var raw_row: RawCodeRow = entry as RawCodeRow
+		if raw_row == null or not raw_row.code.contains(".connect(") and not raw_row.code.contains("connect(\""):
+			continue
+		for line: String in raw_row.code.split("\n"):
+			var line_match: RegExMatch = member_regex.search(line)
+			if line_match == null:
+				line_match = string_regex.search(line)
+			if line_match == null:
+				continue
+			var source: String = line_match.get_string(1)
+			connections[line_match.get_string(3)] = {
+				"signal": line_match.get_string(2),
+				# `get_node("Path")` reduces to the path; a `$Node` / `%Node` shorthand keeps its name.
+				"source": source.trim_prefix("$").trim_prefix("%").trim_prefix("\"").trim_suffix("\"")
+			}
+	return connections
+
+
+## The EventRows a mid-file lifecycle/signal handler lifts to, or [] when it must stay raw. The
+## gate: the compiler's in-place re-emission of those events has to reproduce this row's bytes
+## exactly, so anchoring can never change a file.
+static func _anchor_handler_events(mid_row: RawCodeRow, connections: Dictionary) -> Array:
+	var handler_lift: Dictionary = _lift_function(mid_row.code.split("\n"), connections, true)
+	if not bool(handler_lift.get("ok", false)):
+		return []
+	var handler_events: Array = handler_lift.get("events", [])
+	if handler_events.is_empty() or not (handler_events[0] is EventRow):
+		return []
+	for handler_event: Variant in handler_events:
+		if not (handler_event is EventRow):
+			return []
+	if SheetCompiler.emit_anchored_trigger_text(handler_events) != mid_row.code:
+		return []
+	return handler_events
 
 
 ## One trigger function → {ok: bool, events: Array}. Recognizes lifecycle headers and -
