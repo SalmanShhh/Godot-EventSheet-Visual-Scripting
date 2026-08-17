@@ -70,6 +70,10 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	var pending_annotation_lines: PackedStringArray = PackedStringArray()
 	# The plain `##` Godot doc-comment text riding onto the next lifted function (see doc_comment).
 	var pending_doc_comment: String = ""
+	# The exact header text (annotation block, doc lines, @rpc lines) the next lifted function must
+	# re-emit byte-for-byte - the per-function gate below, so one body the grammar cannot reproduce
+	# re-anchors instead of failing the whole file at the end.
+	var pending_header_text: String = ""
 	if lift_functions and first_run_index > 0 and sheet.events[first_run_index - 1] is RawCodeRow:
 		var boundary_lines: PackedStringArray = (sheet.events[first_run_index - 1] as RawCodeRow).code.split("\n")
 		var annotation_start: int = boundary_lines.size()
@@ -82,6 +86,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			pending_annotations = _parse_annotations("\n".join(annotation_lines))
 			pending_annotation_lines = _collect_gd_annotation_lines("\n".join(annotation_lines))
 			pending_doc_comment = _collect_doc_comment_text("\n".join(annotation_lines))
+			pending_header_text = "\n".join(annotation_lines)
 	# `_ready`'s leading connect lines reveal which functions are signal handlers
 	# (and for which signal/source node). Emission regenerates the connects.
 	var connections: Dictionary = {}
@@ -145,6 +150,11 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 				pending_annotations = _parse_annotations(row.code)
 				pending_annotation_lines = _collect_gd_annotation_lines(row.code)
 				pending_doc_comment = _collect_doc_comment_text(row.code)
+				# The header is the row minus its leading blank lines (those are the gap).
+				var header_lines: PackedStringArray = row.code.split("\n")
+				while not header_lines.is_empty() and header_lines[0].strip_edges().is_empty():
+					header_lines.remove_at(0)
+				pending_header_text = "\n".join(header_lines)
 				if pending_annotations.is_empty() and pending_annotation_lines.is_empty() and pending_doc_comment.is_empty():
 					failed = true
 			"comments":
@@ -174,6 +184,15 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 				if _is_lifecycle_header(header) or _is_connected_handler(header, connections):
 					if not pending_annotations.is_empty() or not pending_annotation_lines.is_empty() or not pending_doc_comment.is_empty():
 						failed = true  # a lifecycle handler lifts to events, not an EventFunction, so it can't carry a doc
+					elif not lifted_functions.is_empty():
+						# A handler that sits AFTER functions in the file cannot lift as an event from
+						# here: emission writes every event before the trailing functions, so lifting it
+						# would move it above them and fail the whole-file verify - which used to revert
+						# the ENTIRE file (every published verb of a pack whose `_unhandled_input` follows
+						# its verbs). Re-anchor instead: the handler stays a verbatim block where it is,
+						# the functions after it still lift here, and the ones before it anchor in place
+						# in the mid-file pass below.
+						failed = true
 					else:
 						# Lenient ifs: unmatched control flow becomes in-flow GDScript inside
 						# the event instead of failing the file (byte-verify still gates).
@@ -202,6 +221,12 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 						pending_annotations = {}
 						pending_annotation_lines = PackedStringArray()
 						pending_doc_comment = ""
+						var expected_block: String = (pending_header_text + "\n" if not pending_header_text.is_empty() else "") + row.code
+						pending_header_text = ""
+						# Per-function gate: the lifted function must re-emit header + body exactly, or it
+						# stays raw and the run re-anchors after it (a bad body used to revert the file).
+						if bool(function_lift.get("ok", false)) and SheetCompiler.emit_function_block_text(function_lift.get("function"), sheet) != expected_block:
+							function_lift = {"ok": false}
 						if bool(function_lift.get("ok", false)):
 							saw_function = true
 							var lifted_function: Variant = function_lift.get("function")
@@ -226,6 +251,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			pending_annotations = {}
 			pending_annotation_lines = PackedStringArray()
 			pending_doc_comment = ""
+			pending_header_text = ""
 			saw_function = false
 			first_section_blanks = -1
 			anchor_index = index + 1
@@ -283,13 +309,19 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	# exactly - so this pass can never regress a file that already lifts (a failed candidate
 	# just stays a raw block). Runs after the backup above, so the whole-file revert undoes it.
 	var anchored_count: int = 0
+	# Raw rows whose trailing annotation block was peeled onto an anchored function, with their
+	# original code - the events backup is SHALLOW, so a revert must restore these explicitly.
+	var peeled_rows: Array = []
 	if lift_functions:
-		for mid_index in range(sheet.events.size()):
+		var mid_index: int = 0
+		while mid_index < sheet.events.size():
 			var mid_row: RawCodeRow = sheet.events[mid_index] as RawCodeRow
 			if mid_row == null or not (mid_row.code.begins_with("func ") or mid_row.code.begins_with("static func ")):
+				mid_index += 1
 				continue
 			var mid_header: String = mid_row.code.split("\n")[0]
 			if _is_lifecycle_header(mid_header) or _is_connected_handler(mid_header, connections):
+				mid_index += 1
 				continue
 			# Engine virtual callbacks are STRUCTURE, not sheet vocabulary: `_enter_tree` is the
 			# host binding (folds to metadata on open), `_get_configuration_warnings` is the
@@ -297,26 +329,66 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			# hide load-bearing boilerplate inside the Functions panel. Private HELPERS
 			# (`_get_pool`) still lift - only known virtual names are excluded.
 			if _is_engine_virtual_header(mid_header):
+				mid_index += 1
 				continue
-			# A `## @ace_*` block right above belongs to this function (exposure metadata); the
-			# trailing scan owns that flow - anchoring would silently orphan the annotations.
-			if mid_index > 0 and sheet.events[mid_index - 1] is RawCodeRow:
-				var previous_lines: PackedStringArray = (sheet.events[mid_index - 1] as RawCodeRow).code.strip_edges().split("\n")
-				if previous_lines[previous_lines.size() - 1].strip_edges().begins_with("## @ace_"):
+			# A `## @ace_*` block, a plain `##` doc, or an `@rpc`-style annotation right above
+			# belongs to this function. It rides onto the anchored function (exposure metadata, doc
+			# comment, verbatim annotations) and is peeled off the raw row above - but ONLY when the
+			# compiler's re-emission of the whole annotated block reproduces annotations + function
+			# byte-for-byte. Before this, any function wearing a `## @ace_*` line was skipped here
+			# outright, so a pack whose file layout defeated the trailing scan opened with every
+			# published verb as a code block.
+			var previous_row: RawCodeRow = sheet.events[mid_index - 1] as RawCodeRow if mid_index > 0 else null
+			var previous_lines: PackedStringArray = previous_row.code.split("\n") if previous_row != null else PackedStringArray()
+			var tail_start: int = previous_lines.size()
+			while tail_start > 0 and (previous_lines[tail_start - 1].begins_with("## ") or previous_lines[tail_start - 1] == "##" or _is_function_annotation_line(previous_lines[tail_start - 1])):
+				tail_start -= 1
+			var tail_text: String = "\n".join(previous_lines.slice(tail_start)) if tail_start < previous_lines.size() else ""
+			var mid_function: EventFunction = null
+			var strip_tail: bool = false
+			if not tail_text.is_empty():
+				var tail_annotations: Dictionary = _parse_annotations(tail_text)
+				var tail_gd_lines: PackedStringArray = _collect_gd_annotation_lines(tail_text)
+				var tail_doc: String = _collect_doc_comment_text(tail_text)
+				if not (tail_annotations.is_empty() and tail_gd_lines.is_empty() and tail_doc.is_empty()):
+					var annotated_lift: Dictionary = _lift_sheet_function(mid_row.code.split("\n"), tail_annotations, true, tail_gd_lines, tail_doc)
+					if bool(annotated_lift.get("ok", false)):
+						var candidate: EventFunction = annotated_lift.get("function")
+						if candidate != null and SheetCompiler._find_function_by_name(sheet, candidate.function_name) == null and SheetCompiler.emit_function_block_text(candidate, sheet) == tail_text + "\n" + mid_row.code:
+							mid_function = candidate
+							strip_tail = true
+			if mid_function == null:
+				# The tail (if any) stays where it is - but a `## @ace_*` block that could NOT be
+				# absorbed must not be orphaned by anchoring the bare function under it.
+				if tail_text.contains("## @ace_"):
+					mid_index += 1
 					continue
-			var mid_lift: Dictionary = _lift_sheet_function(mid_row.code.split("\n"), {}, true)
-			if not bool(mid_lift.get("ok", false)):
-				continue
-			var mid_function: EventFunction = mid_lift.get("function")
-			if mid_function == null or SheetCompiler._find_function_by_name(sheet, mid_function.function_name) != null:
-				continue
-			if SheetCompiler.emit_function_block_text(mid_function, sheet) != mid_row.code:
-				continue
+				var mid_lift: Dictionary = _lift_sheet_function(mid_row.code.split("\n"), {}, true)
+				if not bool(mid_lift.get("ok", false)):
+					mid_index += 1
+					continue
+				mid_function = mid_lift.get("function")
+				if mid_function == null or SheetCompiler._find_function_by_name(sheet, mid_function.function_name) != null:
+					mid_index += 1
+					continue
+				if SheetCompiler.emit_function_block_text(mid_function, sheet) != mid_row.code:
+					mid_index += 1
+					continue
 			var anchor: FunctionAnchorRow = FunctionAnchorRow.new()
 			anchor.function_name = mid_function.function_name
 			sheet.events[mid_index] = anchor
 			sheet.functions.append(mid_function)
 			anchored_count += 1
+			if strip_tail:
+				peeled_rows.append([previous_row, previous_row.code])
+				if tail_start == 0:
+					# The row above was NOTHING but this function's block: drop it, or an empty raw
+					# row would emit a blank line the source never had.
+					sheet.events.remove_at(mid_index - 1)
+					mid_index -= 1
+				else:
+					previous_row.code = "\n".join(previous_lines.slice(0, tail_start))
+			mid_index += 1
 	if not trailing_lifted and anchored_count == 0:
 		# Nothing lifted anywhere and nothing was mutated - same exit the trailing-only lift had.
 		return _retry_or_fail(sheet, source, lift_functions) if anchor_index != first_run_index else false
@@ -351,6 +423,8 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	sheet.functions = functions_backup
 	if boundary != null:
 		boundary.code = boundary_code
+	for peeled: Array in peeled_rows:
+		(peeled[0] as RawCodeRow).code = str(peeled[1])
 	return _retry_or_fail(sheet, source, lift_functions)
 
 
@@ -940,7 +1014,13 @@ static func _run_row_kind(code: String, lift_functions: bool) -> String:
 			saw_gd_annotation = true  # @rpc / @warning_ignore / ... - rides onto the next function
 		else:
 			return "other"
+	# A doc / annotation block that ENDS on a blank line is not attached to what follows - it is a
+	# class-level doc paragraph (the importer splits it off the function header below it), and it
+	# must stay a verbatim row rather than ride onto the next function as its doc.
 	if (saw_annotation or saw_gd_annotation) and not saw_comment and lift_functions:
+		var block_lines: PackedStringArray = code.split("\n")
+		if block_lines[block_lines.size() - 1].strip_edges().is_empty():
+			return "other"
 		return "annotations"
 	if saw_comment and not saw_annotation and not saw_gd_annotation and lift_functions:
 		return "comments"
@@ -999,8 +1079,10 @@ static func _parse_annotations(code: String) -> Dictionary:
 			var hint_space: int = hint_inner.find(" ")
 			if hint_space > 0:
 				(fields["param_hints"] as Dictionary)[hint_inner.substr(0, hint_space)] = hint_inner.substr(hint_space + 1).strip_edges()
-		elif text.begins_with("## @ace_codegen_template("):
-			pass  # regenerated from the function shape; byte-verify confirms it matches
+		elif text.begins_with("## @ace_codegen_template(\"") and text.ends_with("\")"):
+			# Kept: the call prefix (or a custom template) is re-emitted from the function, because a
+			# pack opened outside its own project cannot re-derive an autoload / static prefix.
+			fields["codegen_template"] = text.substr(26, text.length() - 28)
 		elif text.begins_with("## @ace_icon("):
 			pass  # regenerated from the sheet's custom_class_icon; byte-verify confirms
 		elif text.begins_with("## @"):
@@ -1090,6 +1172,20 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.description = str(annotations.get("description", ""))
 	event_function.display_template = str(annotations.get("display_template", ""))
 	event_function.featured = bool(annotations.get("featured", false))
+	# The source's call template: `<prefix>name({a}, {b})` keeps just the prefix (renames and
+	# parameter edits still track); any other shape is kept verbatim.
+	var source_template: String = str(annotations.get("codegen_template", ""))
+	if not source_template.is_empty():
+		var call_tokens: PackedStringArray = PackedStringArray()
+		for template_param: ACEParam in event_function.params:
+			if not template_param.id.strip_edges().is_empty():
+				call_tokens.append("{%s}" % template_param.id)
+		var derived_call: String = "%s(%s)" % [event_function.function_name, ", ".join(call_tokens)]
+		if source_template.ends_with(derived_call):
+			event_function.codegen_call_prefix = source_template.substr(0, source_template.length() - derived_call.length())
+			event_function.codegen_prefix_known = true
+		else:
+			event_function.codegen_template_override = source_template
 	# @ace_param_options / @ace_param_hint ride on the params themselves, so emission can
 	# ship them back out and the picker gets its dropdowns and widgets.
 	var lifted_param_options: Dictionary = annotations.get("param_options", {})
@@ -2285,7 +2381,14 @@ static func _template_to_regex(template: String) -> RegEx:
 		# (value, expression, target…) still requires at least one char. An empty match can only land
 		# against the literal `()` in the template, so this never over-claims, and it round-trips.
 		var quantifier: String = "*?" if param_name == "args" else "+?"
-		pattern += "(?<%s>.%s)" % [param_name, quantifier]
+		# A placeholder the template REPEATS (`{var_name} = not {var_name}`) must match the same text
+		# both times - a backreference, not a second capture. Without it Toggle claimed
+		# `_running = not _phases.is_empty() and ...` with var_name = _running, re-emitted it as
+		# `_running = not _running`, and the whole file reverted on the byte-verify.
+		if pattern.contains("(?<%s>" % param_name):
+			pattern += "\\k<%s>" % param_name
+		else:
+			pattern += "(?<%s>.%s)" % [param_name, quantifier]
 		cursor = close + 1
 	pattern += "$"
 	var regex: RegEx = RegEx.new()

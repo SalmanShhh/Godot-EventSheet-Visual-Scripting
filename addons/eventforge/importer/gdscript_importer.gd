@@ -82,6 +82,32 @@ func import_external_source(source: String) -> EventSheetResource:
 		# Top-level function: emitted as its OWN block row (one row per function gives the
 		# sheet useful granularity and per-function provenance without lossy lifting).
 		if line.begins_with("func ") or line.begins_with("static func "):
+			# Only the CONTIGUOUS block of `##` doc / `## @ace_*` / `@rpc` lines directly above a
+			# function is that function's header. Anything above the last blank line (a class-level
+			# doc paragraph, a note about the section) belongs to the file, so it flushes as its own
+			# row - otherwise the lifter absorbed a class doc as the first verb's doc and dropped the
+			# blank between them, which failed the byte-verify and reverted every verb in the file.
+			var last_blank: int = -1
+			var head_has_text: bool = false
+			for scan_index: int in range(pending.size()):
+				if pending[scan_index].strip_edges().is_empty():
+					last_blank = scan_index
+			for scan_index: int in range(maxi(last_blank, 0)):
+				if not pending[scan_index].strip_edges().is_empty():
+					head_has_text = true
+			# A head of nothing but blank lines is the function's own separator and stays with the
+			# header row (the lifter reads the gap from the row's leading blanks).
+			if last_blank >= 0 and last_blank < pending.size() - 1 and head_has_text:
+				var head: PackedStringArray = pending.slice(0, last_blank + 1)
+				var tail: PackedStringArray = pending.slice(last_blank + 1)
+				var tail_is_header: bool = true
+				for tail_line: String in tail:
+					if not (tail_line.begins_with("## ") or tail_line == "##" or (tail_line.begins_with("@") and not tail_line.begins_with("@export") and not tail_line.begins_with("@onready"))):
+						tail_is_header = false
+						break
+				if tail_is_header:
+					_flush_pending(head, sheet)
+					pending = tail
 			_flush_pending(pending, sheet)
 			var function_lines: PackedStringArray = PackedStringArray([line])
 			index += 1

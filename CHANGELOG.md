@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+### Fixed - every pack opens as a sheet WITH its verbs (38 of 91 opened with none)
+
+Opening a behaviour pack's `.gd` as a sheet is supposed to show its published verbs as
+two-lane Function rows. Measured against the fleet: **38 of 91 packs opened with ZERO verbs** -
+the FPS Controller, Save System, Storylet Weaver, ProcRoom, Big Number, Loot Table, Event Bus,
+Quest, ... - every one of them falling back to the annotation-shell placeholder over a collapsed
+`ƒ` code block, so the sheet read WORSE than the script it was made from. Five causes, each of
+which reverted a whole file on the byte-verify:
+
+- A lifecycle handler after the verbs (`_unhandled_input` at the end of the FPS Controller):
+  emission writes events before functions, so lifting it moved it and failed the file. It now
+  re-anchors instead - the handler stays a verbatim block where it is, everything else lifts.
+- Annotated verbs could never anchor in place: the mid-file pass skipped any function wearing a
+  `## @ace_*` line. It now absorbs the annotation / doc / `@rpc` block from the row above, gated
+  per function on the compiler re-emitting header + body byte-for-byte.
+- A pack opened outside its own project cannot know it was an autoload or a static class, so the
+  regenerated `## @ace_codegen_template` lost its `Quests.` / `BigNumber.` prefix. The source's
+  call prefix (or a non-call template) now rides on the function and re-emits.
+- A class-level doc paragraph glued to the first verb was absorbed as that verb's doc and the
+  blank between them dropped. Only the contiguous header block directly above a function is its
+  header now; anything above the last blank line stays with the file.
+- Toggle claimed `_running = not _phases.is_empty() and ...` as `_running = not _running`: a
+  template that repeats a placeholder now compiles to a backreference, so both occurrences must
+  match the same text.
+
+And the trailing scan verifies each lifted function individually - one body the grammar cannot
+reproduce re-anchors instead of failing the file. Result: **79 of 79 packs that publish verbs
+open with them; 1,264 of 1,269 verbs fleet-wide** (five single functions remain raw, listed in
+the new test), zero byte drift. `tests/pack_open_lift_test.gd` opens every pack and pins it.
+
 ### Added - coyote time on the FPS Controller (the 3D movement behaviour that jumps)
 
 The 2D Platformer has shipped coyote time as an Inspector feel-number since its first release;

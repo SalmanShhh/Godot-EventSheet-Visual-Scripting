@@ -26,6 +26,18 @@ extends Resource
 ## Set on lift from the leading annotation lines above a function and byte-gated, so a `@rpc` function opens as
 ## an editable function instead of a raw block. Empty = none.
 @export var annotation_lines: PackedStringArray = PackedStringArray()
+## How the published verb is CALLED from another sheet, as the opened file declared it. The compiler
+## normally derives `## @ace_codegen_template` from the sheet's mode (`$Class.fn(...)` for a behaviour,
+## `Autoload.fn(...)` for a singleton, bare `fn(...)` otherwise) - but a pack opened from another
+## project cannot know it was an autoload, or that its class is addressed statically, so the source's
+## own call prefix (`Quests.`, `BigNumber.`, `$FPSController.`) is kept here and re-emitted; a rename or a
+## parameter edit still tracks because only the PREFIX is stored. Empty with `codegen_prefix_known` false
+## = derive as before (every generated pack, byte-unchanged).
+@export var codegen_call_prefix: String = ""
+@export var codegen_prefix_known: bool = false
+## A template that is NOT of the `<prefix>name({args})` shape (an `await ...` wrapper, a reordered call):
+## kept verbatim and re-emitted as-is, so the file round-trips; the picker still reads it from the file.
+@export var codegen_template_override: String = ""
 ## Inspector button: a non-empty label emits
 ## `@export_tool_button("Label") var _btn_<name>: Callable = <name>` so the Inspector
 ## shows a clickable button running this function. Needs a @tool sheet to act in-editor

@@ -2024,8 +2024,16 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 	for param in event_function.params:
 		if param is ACEParam and not (param as ACEParam).id.strip_edges().is_empty():
 			argument_tokens.append("{%s}" % (param as ACEParam).id)
+	# A template that is not of the prefix + call shape (kept verbatim from an opened file) wins outright.
+	if not event_function.codegen_template_override.strip_edges().is_empty():
+		lines.append("## @ace_codegen_template(\"%s\")" % event_function.codegen_template_override)
+		return
 	var call_prefix: String = ""
-	if sheet.behavior_mode and not sheet.custom_class_name.strip_edges().is_empty():
+	if event_function.codegen_prefix_known:
+		# The opened file's own prefix (`Quests.`, `BigNumber.`, `$FPSController.`): a pack read outside
+		# its project cannot re-derive an autoload or static address, so the source's is authoritative.
+		call_prefix = event_function.codegen_call_prefix
+	elif sheet.behavior_mode and not sheet.custom_class_name.strip_edges().is_empty():
 		call_prefix = "$%s." % sheet.custom_class_name.strip_edges()
 	elif sheet.autoload_mode and not sheet.autoload_name.strip_edges().is_empty():
 		# Singletons are addressed by their autoload name - works from every scene,
