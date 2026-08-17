@@ -1746,3 +1746,17 @@ Edit…,Modifica…
 Open guide,Apri la guida
 Show in code,Mostra nel codice
 This verb is no longer on the sheet.,Questo verbo non è più nel foglio.
+On mouse moved,Al movimento del mouse
+On mouse wheel up,Alla rotellina su
+On mouse wheel down,Alla rotellina giù
+On %s button pressed,Alla pressione del tasto %s
+On %s button released,Al rilascio del tasto %s
+On %s pressed,Alla pressione di %s
+On %s released,Al rilascio di %s
+On touch started,All'inizio del tocco
+On touch ended,Alla fine del tocco
+On button %s pressed,Alla pressione del pulsante %s
+On button %s released,Al rilascio del pulsante %s
+mouse's ΔX,ΔX del mouse
+mouse's ΔY,ΔY del mouse
+mouse's Δ,Δ del mouse

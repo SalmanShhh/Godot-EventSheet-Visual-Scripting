@@ -2,6 +2,47 @@
 
 ## [Unreleased]
 
+### Added - input handlers read as Mouse / Keyboard triggers, and they lift where they sit
+
+A `_unhandled_input` written under a pack's verbs used to stay a code block: emission writes
+events BEFORE the trailing functions, so lifting the handler would have hoisted it above every
+verb below it and broken the byte-verify. **EventAnchorRow** takes the handler's slot in the
+sheet, the lifted events follow it in place, and the external compile path emits that one
+function right there. The FPS Controller now opens with `_ready`, `_physics_process` AND
+`_unhandled_input` as real events - 24 rows that were three grey code blocks - and still
+recompiles byte-for-byte.
+
+With the handler lifted, each of its top-level branches reads as the Construct trigger it is,
+one row per branch:
+
+- `event is InputEventMouseMotion` reads **Mouse ▸ On mouse moved**, with a remaining
+  `Input.mouse_mode == MOUSE_MODE_CAPTURED` conjunct left as its own **Mouse ▸ mouse is captured**
+  condition row, and `event.relative.x` / `.y` reading as **mouse's ΔX / ΔY**.
+- `InputEventMouseButton` reads **On left/right/middle button pressed** (or released), and a
+  wheel index as **On mouse wheel up / down**.
+- `InputEventKey` reads **Keyboard ▸ On Escape pressed** (or released), `InputEventScreenTouch`
+  as **Touch ▸ On touch started / ended**, `InputEventJoypadButton` as **Gamepad ▸ On button A
+  pressed**. The `(event as InputEventKey)` casts never reach a sentence.
+
+The reading matches on ATOMS rather than on line text, which buys **symmetry for free**: a
+Mouse/Keyboard trigger authored from the picker compiles to ONE parenthesized conjunction, a
+hand-written handler splits the same test across separate cast conjuncts - both flatten to the
+same atoms, so a sheet saved and reopened reads exactly like the handler someone typed by hand.
+No frozen codegen template changed; the reader learned the second spelling.
+
+A hand-written signal handler now reads as **its source node** with its parameters as payload
+chips - `Hurtbox ▸ On Body Entered  [body]` instead of a `ƒ _on_hurtbox_body_entered(body: Node2D)`
+helper - and the connect grammar covers the spellings people actually type (`$Node`, `%Unique`, a
+member variable, the `connect("sig", fn)` overload). The connect line and the handler's own header
+ride along verbatim, so emission reproduces `$Hurtbox...` and `body: Node2D` rather than rewriting
+them into the canonical forms and reverting the file.
+
+Also: a reverse match whose captured parameter has lopsided brackets is rejected, so
+`add_look((event as InputEventMouseMotion).relative.x, ...)` stops reading as a Call Method with
+half an expression for a target; Mouse / Keyboard / Gamepad / Touch are OBJECTS in the row's
+object cell rather than System; `_unhandled_key_input` joins the lifecycle vocabulary as **On
+Unhandled Key Input**. `tests/input_handler_reading_test.gd` pins every sentence above by value.
+
 ### Fixed - every pack opens as a sheet WITH its verbs (38 of 91 opened with none)
 
 Opening a behaviour pack's `.gd` as a sheet is supposed to show its published verbs as

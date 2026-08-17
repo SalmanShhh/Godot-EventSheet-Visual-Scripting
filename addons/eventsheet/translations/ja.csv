@@ -1746,3 +1746,17 @@ Edit…,編集…
 Open guide,ガイドを開く
 Show in code,コードで表示
 This verb is no longer on the sheet.,この動詞はもうシートにありません。
+On mouse moved,マウス移動時
+On mouse wheel up,ホイール上回転時
+On mouse wheel down,ホイール下回転時
+On %s button pressed,%s ボタンを押したとき
+On %s button released,%s ボタンを離したとき
+On %s pressed,%s を押したとき
+On %s released,%s を離したとき
+On touch started,タッチ開始時
+On touch ended,タッチ終了時
+On button %s pressed,ボタン %s を押したとき
+On button %s released,ボタン %s を離したとき
+mouse's ΔX,マウスのΔX
+mouse's ΔY,マウスのΔY
+mouse's Δ,マウスのΔ

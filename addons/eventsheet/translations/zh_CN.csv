@@ -1746,3 +1746,17 @@ Edit…,编辑…
 Open guide,打开指南
 Show in code,在代码中显示
 This verb is no longer on the sheet.,该动作已不在事件表中。
+On mouse moved,当鼠标移动时
+On mouse wheel up,当滚轮上滚时
+On mouse wheel down,当滚轮下滚时
+On %s button pressed,当按下 %s 键时
+On %s button released,当松开 %s 键时
+On %s pressed,当按下 %s 时
+On %s released,当松开 %s 时
+On touch started,当触摸开始时
+On touch ended,当触摸结束时
+On button %s pressed,当按下按钮 %s 时
+On button %s released,当松开按钮 %s 时
+mouse's ΔX,鼠标的 ΔX
+mouse's ΔY,鼠标的 ΔY
+mouse's Δ,鼠标的 Δ

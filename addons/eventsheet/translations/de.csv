@@ -1746,3 +1746,17 @@ Edit…,Bearbeiten…
 Open guide,Anleitung öffnen
 Show in code,Im Code zeigen
 This verb is no longer on the sheet.,Dieses Verb steht nicht mehr auf dem Blatt.
+On mouse moved,Bei Mausbewegung
+On mouse wheel up,Bei Mausrad hoch
+On mouse wheel down,Bei Mausrad runter
+On %s button pressed,Bei Maustaste %s gedrückt
+On %s button released,Bei Maustaste %s losgelassen
+On %s pressed,Bei %s gedrückt
+On %s released,Bei %s losgelassen
+On touch started,Bei Berührungsbeginn
+On touch ended,Bei Berührungsende
+On button %s pressed,Bei Taste %s gedrückt
+On button %s released,Bei Taste %s losgelassen
+mouse's ΔX,ΔX der Maus
+mouse's ΔY,ΔY der Maus
+mouse's Δ,Δ der Maus
