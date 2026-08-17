@@ -1618,6 +1618,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"regex": "Working-With-Text",
 	"rendering": "Cameras-Graphics-And-Screenshots",
 	"resource": "Reading-Spreadsheets-And-Data-Assets",
+	"spatial": "Working-With-Vectors-And-Directions",
 	"system": "Timers-Waiting-And-Cooldowns",
 	"table": "Reading-Spreadsheets-And-Data-Assets",
 	"text_extract": "Working-With-Text",
