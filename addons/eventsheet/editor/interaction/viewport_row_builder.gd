@@ -5158,9 +5158,9 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 	# LIFTED into a real ACE gets its reading here, at the one place its display text is built.
 	# M12 strips a leading NOT because the ✕ in the badge column says it instead (see
 	# _condition_reads_negated, which asks the same question for the badge).
-	var base_text: String = _reading_sentence(str(EventSheetViewportLenses.strip_leading_not(
+	var base_text: String = _reading_sentence(_humanized_input_event_text(str(EventSheetViewportLenses.strip_leading_not(
 		_format_condition_descriptor_base(condition)
-	).get("text", "")))
+	).get("text", ""))))
 	var ace_note: String = str(condition.comment).strip_edges()
 	if not ace_note.is_empty():
 		return "%s   ⊳ %s" % [base_text, ace_note]
@@ -5284,15 +5284,18 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	# arms where the template resolves (translation-fallback aware).
 	_pending_display_bbcode = _param_markup_applies(action.provider_id, action.ace_id, action.params)
 	# M9 / M10 lens hook for LIFTED action rows - the twin of the condition hook above.
-	var base_text: String = _reading_sentence(_format_action_descriptor_base(action))
+	# Input-event words FIRST (casts stripped, `event.relative.x` -> mouse's ΔX), the name lens
+	# after: the lens sees `(event as InputEventMouseMotion).relative.x` as a chain around a
+	# cast and the cast stripper then hollowed the middle out ("eventrelative X").
+	var base_text: String = _reading_sentence(_humanized_input_event_text(_format_action_descriptor_base(action)))
 	# Awaiting actions wear an hourglass (the GDevelop async-action cue): everything after
 	# this row in the SAME event waits for it, so the suspension point should be visible.
 	if action_awaits(action):
 		base_text = "⏳ " + base_text
 	var ace_note: String = str(action.comment).strip_edges()
 	if not ace_note.is_empty():
-		return "%s   ⊳ %s" % [_humanized_input_event_text(base_text), ace_note]
-	return _humanized_input_event_text(base_text)
+		return "%s   ⊳ %s" % [base_text, ace_note]
+	return base_text
 
 
 ## Whether an action suspends the handler: the awaited-call flags, an `await` anywhere in
