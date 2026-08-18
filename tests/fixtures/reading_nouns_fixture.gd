@@ -17,6 +17,7 @@ var hp: int = 3
 @onready var sfx: AudioStreamPlayer = $Sfx
 @onready var hud: CanvasLayer = $HUD
 @onready var boss: Node2D = $Enemies/Boss
+@onready var score: Label = get_node_or_null("HUD/Score")
 
 
 func _ready() -> void:

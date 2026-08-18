@@ -121,7 +121,7 @@ static func _stacked_conditions(view: EventSheetViewport, rows: PackedStringArra
 	var ok: bool = true
 	ok = _check("a ternary's `and` test stacks as two condition lines",
 		_reading_at(rows, "Return host's wall normal X"),
-		"host exists > host is on wall | Return host's wall normal X") and ok
+		"host exists > host Is by wall | Return host's wall normal X") and ok
 	ok = _check("a ternary's `or` test is the OR block",
 		_reading_at(rows, "Return \"gold\""), "ORhp > 100 > ORseconds left > 9 | Return \"gold\"") and ok
 	ok = _check("no condition cell anywhere in the fixture spells `and`",
@@ -155,7 +155,7 @@ static func _connected_lambdas(rows: PackedStringArray) -> bool:
 	ok = _check("and the lambda's body is its action row",
 		_reading_at(rows, "Subtract 1 from seconds left"), " | Subtract 1 from seconds left") and ok
 	ok = _check("a multi-line lambda's trigger carries its payload chip",
-		_reading_at(rows, "➜host On Body Entered"), "➜host On Body Entered   body | ") and ok
+		_reading_at(rows, "➜host On collision with"), "➜host On collision with   body | ") and ok
 	ok = _check("and its first statement is an action row",
 		_reading_at(rows, "Add 1 to seconds left"), " | Add 1 to seconds left") and ok
 	ok = _check("and the branch inside that lambda is a sub-event of it",

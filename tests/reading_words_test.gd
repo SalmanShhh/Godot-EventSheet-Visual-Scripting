@@ -163,7 +163,7 @@ static func _grammar_values() -> bool:
 		# M25 - the script's object, never `self`
 		["position.x = 100", "Player ▸ Set X to 100"],
 		["self.position.y = 100", "Player ▸ Set Y to 100"],
-		["rotation += 1", "Player ▸ Add 1 to rotation"],
+		["rotation += 1", "Player ▸ Add 1 to angle (radians)"],
 		["score += 1", "System ▸ Add 1 to score"],
 		["self.queue_free()", "Player ▸ Destroy"],
 		# M27 - delta is Construct's dt
@@ -214,7 +214,7 @@ static func _grammar_values() -> bool:
 static func _condition_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
-		["rotation > 1.5", "Player ▸ rotation > 1.5"],
+		["rotation > 1.5", "Player ▸ angle (radians) > 1.5"],
 		["position.x <= 0", "Player ▸ X <= 0"],
 		["visible", "Player ▸ visible is true"],
 		["crouching", "System ▸ crouching is true"],
@@ -230,7 +230,7 @@ static func _condition_values() -> bool:
 static func _call_readings() -> bool:
 	var ok: bool = true
 	for entry: Array in [
-		["$AnimatedSprite2D.play(\"run\")", PackedStringArray(["name"]), "AnimatedSprite2D ▸ Play   name = \"run\""],
+		["$AnimatedSprite2D.play(\"run\")", PackedStringArray(["name"]), "AnimatedSprite2D ▸ Set animation to \"run\" (play)"],
 		["$Path/To/Label.set_text(str(score))", PackedStringArray(["text"]), "Label ▸ Set text to score"],
 		["print(\"ready\")", PackedStringArray(), "System ▸ Print   \"ready\""],
 		["self.take_damage(3)", PackedStringArray(), "Player ▸ Take damage   3"],
@@ -354,7 +354,7 @@ static func _picked_matches_typed() -> bool:
 	for expected: String in [
 		"ReadingWordsPlayer ▸ Signal On Damaged   amount = 3   source = attacker",
 		"ReadingWordsPlayer ▸ Set X to 100",
-		"AnimatedSprite2D ▸ Play   name = \"run\""
+		"AnimatedSprite2D ▸ Set animation to \"run\" (play)"
 	]:
 		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok
 	return ok

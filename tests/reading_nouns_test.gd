@@ -35,6 +35,7 @@ var hp: int = 3
 @onready var sfx: AudioStreamPlayer = $Sfx
 @onready var hud: CanvasLayer = $HUD
 @onready var boss: Node2D = $Enemies/Boss
+@onready var score: Label = get_node_or_null("HUD/Score")
 
 func _ready() -> void:
 	state = State.CHASE
@@ -107,8 +108,10 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set reading to fps",
 	# M46 off by default - the Godot nouns stand
 	"System ▸ Go to scene \"res://scenes/menu.tscn\"",
-	# M47 - a node lookup IS the object it names
+	# M47 - a node lookup IS the object it names, and an "or null" one says it may not be there
 	"Boss ▸ Subtract 10 from hp",
+	"$HUD/Score",
+	"may be missing",
 	"boss ▸ Set hp to 3",
 	# M41 - the collision family and the platform words
 	"ReadingNounsPlayer ▸ Is by wall",

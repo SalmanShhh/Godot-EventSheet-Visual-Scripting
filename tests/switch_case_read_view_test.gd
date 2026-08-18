@@ -71,7 +71,7 @@ static func run() -> bool:
 			(case_rows[0] as EventRowData).row_type == EventRowData.RowType.EVENT, true) and ok
 		ok = _check("the first case's PATTERN is in the condition cell", _lane_text(case_rows[0], "condition"), "0") and ok
 		# Case bodies read as sentences (the same view every raw statement row gets).
-		ok = _check("the first case's BODY is in the action cell", _lane_text(case_rows[0], "action"), "Set velocity to Vector2.ZERO") and ok
+		ok = _check("the first case's BODY is in the action cell", _lane_text(case_rows[0], "action"), "Set velocity to (0, 0)") and ok
 		ok = _check("the default case's pattern is in the condition cell", _lane_text(case_rows[1], "condition"), "_") and ok
 		ok = _check("an empty case reads as a `pass` action", _lane_text(case_rows[1], "action"), "pass") and ok
 

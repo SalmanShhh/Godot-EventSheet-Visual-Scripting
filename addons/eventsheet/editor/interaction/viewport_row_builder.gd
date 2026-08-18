@@ -3451,7 +3451,12 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 	row_data.row_uid = "variable_tree_%d" % variable.get_instance_id()
 	row_data.line_count = 1
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	var node_reference: String = variable.default_value.strip_edges()
+	# ── M47 lens hook ──────────────────────────────────────────────────────────────────────────
+	# A `get_node("A/B")` lookup names the same object `$A/B` does, so it reads as that reference -
+	# and the `_or_null` spelling says, in the muted note, that the object may not be there.
+	var declaration_value: Dictionary = EventSheetViewportReadingRows.object_declaration_value(variable)
+	var node_reference: String = str(declaration_value.get("value", ""))
+	var missing_note: String = str(declaration_value.get("note", ""))
 	var declared_class: String = EventSheetViewportReadingRows.declared_class_of(variable)
 	# The object's NAME is not humanized, even with the lens on: this row is where the object gets
 	# its identity, and every later row refers to it by exactly this spelling. Construct shows an
@@ -3478,6 +3483,11 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 	]
 	if not declared_class.is_empty():
 		spans.append(_make_span(declared_class, SemanticSpan.SpanType.COMMENT, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}))
+	if not missing_note.is_empty():
+		spans.append(_make_span(missing_note, SemanticSpan.SpanType.COMMENT, {
 			"editable": false, "kind": "variable", "line_index": 0,
 			"text_color": EventSheetPalette.TEXT_MUTED
 		}))

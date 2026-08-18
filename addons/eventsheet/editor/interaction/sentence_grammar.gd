@@ -1953,12 +1953,20 @@ static func _split_object(target: String, context: Dictionary) -> Array:
 	if is_engine_property(head, context):
 		return [script_object(context), engine_member_name(text)]
 	if dot_at <= 0:
-		return [self_object, engine_member_name(text)]
+		return [self_object, _member_word(text)]
 	var object_name: String = head
 	if object_name == "self":
 		object_name = script_object(context)
 	# M47. `$Enemies/Boss` is the object `Boss` - the name a reader sees in the scene tree.
-	return [object_of_reference(object_name), engine_member_name(text.substr(dot_at + 1))]
+	return [object_of_reference(object_name), _member_word(text.substr(dot_at + 1))]
+
+
+## M43. The Construct word for a member of ANOTHER object - only the renamed ones. The axis rule
+## that `engine_member_name` also applies belongs to the script's own object, where the sheet knows
+## the member IS the node's place; on someone else's `position.x` it would drop a segment a reader
+## needs.
+static func _member_word(chain: String) -> String:
+	return translate(str(MEMBER_WORDS[chain])) if MEMBER_WORDS.has(chain) else chain
 
 
 ## M25. True when `name` is a property the ENGINE reports on the object this script is - the set is

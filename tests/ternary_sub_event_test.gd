@@ -75,7 +75,7 @@ static func _grammar() -> bool:
 		"sprinting => fast | (else) => base") and ok
 	# The condition lane reads each conjunct through the grammar, not as a line of code.
 	ok = _check("a run of conjuncts reads as words",
-		_condition("host != null and host.is_on_wall()"), "host exists and host is on wall") and ok
+		_condition("host != null and host.is_on_wall()"), "host exists and host Is by wall") and ok
 	ok = _check("one conjunct keeps the object column",
 		_condition_object("head_node != null"), "head_node") and ok
 	# A no-argument getter is a property read wearing a call's clothes.
@@ -97,7 +97,7 @@ static func _fixture_rows() -> bool:
 	# event, exactly as a lifted `if a and b:` already stacks them.
 	ok = _check("a lone ternary return replaces its row with the pair",
 		_reading_at(rows, "Set return value to host's wall normal X"),
-		"host exists > host is on wall | Set return value to host's wall normal X") and ok
+		"host exists > host Is by wall | Set return value to host's wall normal X") and ok
 	ok = _check("the pair's second arm is the Else row",
 		_reading_at(rows, "Set return value to 0"), "Else | Set return value to 0") and ok
 	ok = _check("a sub-expression ternary re-reads the whole assignment",
