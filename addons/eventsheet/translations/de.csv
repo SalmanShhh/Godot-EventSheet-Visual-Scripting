@@ -1755,3 +1755,8 @@ Settings,Einstellungen
 Internal state,Interner Zustand
 values the pack keeps for itself - %d,Werte nur für dieses Paket - %d
 Script,Skript
+Humanized Names,Lesbare Namen
+Functions,Funktionen
+Call,Aufrufen
+line,Zeile
+lines,Zeilen

@@ -1755,3 +1755,8 @@ Settings,Настройки
 Internal state,Внутреннее состояние
 values the pack keeps for itself - %d,значения только для этого пакета - %d
 Script,Скрипт
+Humanized Names,Понятные имена
+Functions,Функции
+Call,Вызвать
+line,строка
+lines,строк

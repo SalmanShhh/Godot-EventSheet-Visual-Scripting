@@ -1755,3 +1755,8 @@ Settings,设置
 Internal state,内部状态
 values the pack keeps for itself - %d,扩展包自用的值 - %d
 Script,脚本
+Humanized Names,易读名称
+Functions,函数
+Call,调用
+line,行
+lines,行

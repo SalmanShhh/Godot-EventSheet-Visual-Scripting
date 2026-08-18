@@ -2973,8 +2973,45 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"kind": "lift_note",
 			"line_index": 0
 		}))
-	for line_index in range(code_lines.size()):
+	# ── M17 - the folded code card ─────────────────────────────────────────────────────────────
+	# A block that could not lift is a wall of statements you did not ask to read. While READING a
+	# sheet it costs one row - "code · 12 lines" - and opens in place to the exact GDScript; while
+	# AUTHORING one the statement lines stay put, because those are what you edit. The fold rides
+	# the CHILD-row mechanism the enum fold already uses, so the arrow, the click, the keyboard
+	# fold and the fold memory all work here without a line of new interaction code.
+	if _viewport.is_reading_mode() and code_lines.size() > 1:
 		spans.append(_make_span(
+			EventSheetViewportReadingRows.code_card_label(code_lines.size()),
+			SemanticSpan.SpanType.VALUE,
+			{"editable": false, "kind": "raw_code", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED}
+		))
+		row_data.spans = spans
+		row_data.line_count = 1
+		row_data.folded = bool(_viewport._fold_state.get(
+			row_data.row_uid,
+			EventSheetViewportReadingRows.code_card_default_folded(true)
+		))
+		var opened := EventRowData.new()
+		opened.indent = indent + 1
+		opened.row_type = EventRowData.RowType.SECTION
+		opened.source_resource = raw_row
+		opened.row_uid = "%s_code" % row_data.row_uid
+		opened.line_count = code_lines.size()
+		opened.spans = _raw_code_line_spans(code_lines, line_fg)
+		row_data.children = [opened]
+		return row_data
+	spans.append_array(_raw_code_line_spans(code_lines, line_fg))
+	row_data.spans = spans
+	return row_data
+
+
+## The exact GDScript of a raw block, one span per source line. Shared by the ordinary authoring
+## render and by what an M17 code card opens to, so "the code" is literally the same rows either
+## way and the two can never drift into showing different text.
+func _raw_code_line_spans(code_lines: PackedStringArray, line_fg: Color) -> Array[SemanticSpan]:
+	var line_spans: Array[SemanticSpan] = []
+	for line_index: int in range(code_lines.size()):
+		line_spans.append(_make_span(
 			code_lines[line_index] if not code_lines[line_index].is_empty() else " ",
 			SemanticSpan.SpanType.VALUE,
 			{
@@ -2984,8 +3021,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"text_color": line_fg
 			}
 		))
-	row_data.spans = spans
-	return row_data
+	return line_spans
 
 
 ## Builds the foldable "Data class" block for a RawCodeRow that data_class_lifts recognises: a one-line
@@ -3285,8 +3321,63 @@ func _build_class_method_row(class_name_str: String, child_index: int, method_li
 	return row_data
 
 
+## M20 - an `@onready var hp_bar: ProgressBar = %HpBar` read as an OBJECT declaration rather than
+## as a value one: this is how Construct's object list is recovered from a script. The row says
+## what the object is called, which node it is, and its class - with the class's own Godot icon,
+## the same icon every later row using `hp_bar` as its object then shows (M13).
+##
+## Reading mode only. While AUTHORING, the @onready variable row stays exactly as it was: it is
+## the row the variable dialog edits, and re-shaping an editable row would be a lens with
+## consequences. Returns null when the variable is not an object declaration.
+func _build_object_declaration_row(variable: LocalVariable, indent: int) -> EventRowData:
+	if not _viewport.is_reading_mode() or not EventSheetViewportReadingRows.is_object_declaration(variable):
+		return null
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = variable
+	row_data.row_uid = "variable_tree_%d" % variable.get_instance_id()
+	row_data.line_count = 1
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var node_reference: String = variable.default_value.strip_edges()
+	var declared_class: String = EventSheetViewportReadingRows.declared_class_of(variable)
+	var shown_name: String = variable.name
+	if _viewport.humanize_names_enabled():
+		shown_name = EventSheetViewportLenses.humanize_identifier(variable.name)
+	var spans: Array[SemanticSpan] = [
+		_make_span(EventSheetL10n.translate("Object"), SemanticSpan.SpanType.KEYWORD, {
+			"editable": false, "kind": "variable", "line_index": 0, "badge": true, "badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_GROUP_CHIP_BG, "badge_fg": EventSheetPalette.COLOR_GROUP_CHIP_FG
+		}),
+		_make_span(shown_name, SemanticSpan.SpanType.OBJECT, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": event_style.object_label_color
+		}),
+		_make_span("=", SemanticSpan.SpanType.OPERATOR, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}),
+		_make_span(node_reference, SemanticSpan.SpanType.VALUE, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": event_style.value_highlight_color,
+			"object_icon": _reading_class_icon_for(node_reference)
+		})
+	]
+	if not declared_class.is_empty():
+		spans.append(_make_span(declared_class, SemanticSpan.SpanType.COMMENT, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}))
+	row_data.spans = spans
+	return row_data
+
+
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
 func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowData:
+	# M20 - while reading, an @onready node reference is an OBJECT declaration, not a variable row.
+	var object_row: EventRowData = _build_object_declaration_row(variable, indent)
+	if object_row != null:
+		return object_row
 	var row_data: EventRowData = _build_variable_row(
 		"tree",
 		variable.name,
@@ -3608,21 +3699,25 @@ func _joined_call_args(call: Dictionary) -> String:
 ## method name already does ("can_see_player()" reads "Can See Player" - a beginner should
 ## never meet parentheses in a condition cell). The computed-check cue is the ƒ SVG BADGE the
 ## caller adds in the icon column (the same ƒ collapsed functions wear, one symbol taught
-## once), never inline text. `not` reads as the word Not, and value comparisons ("hp < 20")
-## keep their values. Display-only; the hover carries the code.
+## once), never inline text. M12: a negated guard does NOT say the word "not" - the sentence is
+## the positive one and the inversion is the red ✕ in the badge column, the same mark an inverted
+## ACE condition has always worn, so one symbol means one thing everywhere on the sheet. Value
+## comparisons ("hp < 20") keep their values. Display-only; the hover carries the code.
 func _friendly_guard_text(guard: String) -> String:
-	var text: String = guard.strip_edges()
-	var negated: bool = text.begins_with("not ")
-	if negated:
-		text = text.substr(4).strip_edges()
+	var text: String = str(EventSheetViewportLenses.strip_leading_not(guard.strip_edges()).get("text", ""))
 	var friendly: String = text
 	var call: Dictionary = ViewportRowBuilder.call_parts(text)
 	if not call.is_empty() and (str(call.get("target", "")).is_empty() or str(call.get("target", "")) == "self"):
 		var args_text: String = _joined_call_args(call)
 		friendly = str(call.get("verb", "")) if args_text.strip_edges().is_empty() else "%s ( %s )" % [str(call.get("verb", "")), args_text]
-	if negated:
-		return "%s %s" % [EventSheetL10n.translate("Not"), friendly]
 	return friendly
+
+
+## M12 - whether a guard is inverted, so the caller can draw the ✕ the sentence no longer says.
+## Split from _friendly_guard_text because the two answers go to different places: the words go
+## in the condition cell, the inversion goes in the badge column beside it.
+func _guard_is_negated(guard: String) -> bool:
+	return bool(EventSheetViewportLenses.strip_leading_not(guard.strip_edges()).get("negated", false))
 
 
 ## A body-level `if <guard>:` block inside a match case IS a condition, so it renders as a
@@ -3646,7 +3741,7 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 		if inner_line.begins_with("\t") or inner_line.begins_with("elif") or inner_line.begins_with("else"):
 			return null
 		inner.append(_friendly_statement_text(inner_line))
-	var child: EventRowData = _build_condition_action_row(_friendly_guard_text(guard), inner, indent, match_row)
+	var child: EventRowData = _build_condition_action_row(_friendly_guard_text(guard), inner, indent, match_row, _guard_is_negated(guard))
 	child.language_block = true
 	# A computed-check guard wears the ƒ SVG badge in the icon column - the reader learns at a
 	# glance the value comes from a FUNCTION, not a bool variable, without meeting parentheses.
@@ -3700,7 +3795,10 @@ func _pattern_leaf(pattern_text: String) -> String:
 ## spans. Reusable so any feature can render a construct as sheet-native events (the switch/case dogfoods it;
 ## exposed via EventSheets.build_condition_action_row for custom blocks). Non-interactive (spans editable:
 ## false); the caller sets source_resource for double-click routing.
-func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource) -> EventRowData:
+## `negated` is for callers that already turned an inverted guard into its positive sentence
+## (_friendly_guard_text does): they pass the inversion here so the ✕ still gets drawn. Callers
+## handing over raw text can leave it false - the lens below finds a leading NOT on its own.
+func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource, negated: bool = false) -> EventRowData:
 	var row := EventRowData.new()
 	row.indent = indent
 	row.row_type = EventRowData.RowType.EVENT
@@ -3708,14 +3806,22 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 	row.line_count = maxi(action_lines.size(), 1)
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	var spans: Array[SemanticSpan] = [
-		_make_span(condition_text if not condition_text.is_empty() else " ", SemanticSpan.SpanType.CONDITION, {
+	# M12 - a lifted `if not <cond>:` shows its inversion as the red ✕ in the badge column, exactly
+	# as an inverted ACE condition does, and the sentence beside it is the POSITIVE one. Callers
+	# that already stripped the negation pass plain text and nothing happens here.
+	var inversion: Dictionary = EventSheetViewportLenses.strip_leading_not(condition_text)
+	var shown_condition: String = str(inversion.get("text", condition_text))
+	var spans: Array[SemanticSpan] = []
+	if negated or bool(inversion.get("negated", false)):
+		spans.append(_negated_badge_span(condition_style, 0))
+	spans.append_array([
+		_make_span(shown_condition if not shown_condition.is_empty() else " ", SemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "match_case",
 			"editable": false,
 			"line_index": 0
 		}.merged(condition_style, true))
-	]
+	])
 	for line_index: int in range(action_lines.size()):
 		spans.append(_make_span(action_lines[line_index] if not action_lines[line_index].is_empty() else " ", SemanticSpan.SpanType.ACTION, {
 			"lane": "action",
@@ -4636,16 +4742,7 @@ func _append_condition_prefix_spans(
 	# negation first. When a line has both badges, ✕ is placed in column 1
 	# and OR follows in column 2.
 	if condition.negated:
-		var negated_meta: Dictionary = _viewport.BADGE_NEGATED_METADATA.duplicate(true)
-		negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
-		negated_meta["condition_index"] = condition_index
-		negated_meta["line_index"] = line_index
-		negated_meta["badge_style"] = "negated"
-		# Event-sheet-style inverted-condition marker: a bare red ✗ (the --invert-icon-color),
-		# no circle behind it. Themable via EventSheetEventStyle.invert_marker_color.
-		negated_meta["badge_bg"] = Color(0.0, 0.0, 0.0, 0.0)
-		negated_meta["badge_fg"] = _viewport._get_event_style().invert_marker_color
-		spans.append(_make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta))
+		spans.append(_negated_badge_span(condition_style_meta, line_index, condition_index))
 	if (
 		event_row.condition_mode == EventRow.ConditionMode.OR
 		and displayed_condition_count > 1
@@ -4658,6 +4755,22 @@ func _append_condition_prefix_spans(
 		or_meta["line_index"] = line_index
 		or_meta["badge_style"] = "or"
 		spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
+
+
+## M12 - the inverted-condition mark: a bare red ✕ in the badge column, no circle behind it
+## (themable via EventSheetEventStyle.invert_marker_color). ONE factory, because the mark now has
+## two producers - an ACE condition with its `negated` flag, and a lifted `if not <cond>:` whose
+## sentence dropped the word - and they must draw the identical glyph or the sheet teaches two
+## symbols for one idea.
+func _negated_badge_span(condition_style_meta: Dictionary, line_index: int, condition_index: int = -1) -> SemanticSpan:
+	var negated_meta: Dictionary = _viewport.BADGE_NEGATED_METADATA.duplicate(true)
+	negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+	negated_meta["condition_index"] = condition_index
+	negated_meta["line_index"] = line_index
+	negated_meta["badge_style"] = "negated"
+	negated_meta["badge_bg"] = Color(0.0, 0.0, 0.0, 0.0)
+	negated_meta["badge_fg"] = _viewport._get_event_style().invert_marker_color
+	return _make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta)
 
 
 func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, font_size: int) -> float:

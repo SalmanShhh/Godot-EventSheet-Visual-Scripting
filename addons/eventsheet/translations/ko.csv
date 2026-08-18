@@ -1755,3 +1755,8 @@ Settings,설정
 Internal state,내부 상태
 values the pack keeps for itself - %d,팩이 내부에서만 쓰는 값 - %d
 Script,스크립트
+Humanized Names,읽기 쉬운 이름
+Functions,함수
+Call,호출
+line,줄
+lines,줄

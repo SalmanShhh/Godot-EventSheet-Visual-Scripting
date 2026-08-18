@@ -2,6 +2,47 @@
 
 ## [Unreleased]
 
+### Added - the reading lenses: a sheet that reads like a sheet, not like the script it came from
+
+Eight display lenses over an opened `.gd`. Every one of them is view-only - no row model, no
+sheet resource and no emitted byte changes, the exact GDScript is still on hover, and the file
+still re-emits byte for byte (a fixture carrying all eight is the round-trip gate).
+
+- **Humanized names.** `_coyote_timer` reads "coyote timer"; an `@export` knob reads with Godot's
+  own Inspector capitalisation ("Coyote Time"), so the sheet and the Inspector say the same
+  thing. New **View ▾ Humanized Names**, and it is tri-state on purpose: with no choice made it
+  follows the surface - on where a sheet is being READ, off where one is being AUTHORED - and an
+  explicit choice persists per project per user, like Compact Rows. Only identifiers the row
+  builder already resolved as variables or parameters are touched; never a string literal, never
+  a constant, never a name inside an expression holding a call.
+- **Possessive property chains.** `host.velocity.x` reads "host's velocity X", `event.relative.x`
+  reads "event's relative X"; axis components read as capitals. Only simple identifier chains
+  qualify - anything with a `(` stays exactly as written, because a half-translated expression
+  reads worse than the code did.
+- **NOT is a mark, not a word.** A lifted `if not <cond>:` now shows the same red ✕ in the badge
+  column that an inverted ACE condition has always worn, and its sentence is the positive one.
+  One symbol, one meaning, wherever the inversion came from. Invert Condition is unchanged.
+- **Class icons on objects.** The pack's host, any `$Node` / `%Node` reference and any `@onready`
+  node variable draw their Godot class icon before the object label, recovered from the sheet's
+  host class and its `@onready` declarations - nothing is instantiated and no scene is opened.
+  Nothing resolves headless, which keeps renders text-only rather than crashing them.
+- **Tree guide lines.** A continuous connector from a parent event down to its sub-events, with
+  an elbow into the row it parents, replacing indent stops that dashed and left you counting.
+  Strictly draw-only: it reserves no width and is never measured, so no layout metric moves. It
+  follows row density.
+- **`Functions ▸ Call Name`.** A hand-written call the sheet can attribute to one of its own
+  functions reads Construct's way, with one argument per parameter name (`x = event's relative
+  X`), so a call documents itself. A callee the sheet does not know keeps the plain reading - a
+  call to something unknown is never dressed up as a project function.
+- **Folded code cards.** While reading, a block that could not lift costs ONE row - "code · 12
+  lines" - and opens in place to the exact GDScript. While authoring, the statement rows stay,
+  because those are what you edit. The fold rides the same child-row mechanism the enum fold
+  uses, so the arrow, the click, the keyboard fold and the fold memory all came for free.
+- **Object declarations.** `@onready var hp_bar: ProgressBar = %HpBar` reads as an Object row -
+  name, node, class, class icon - which is how Construct's object list is recovered from a
+  script; every later row using `hp_bar` then shows the same icon. Reading mode only: while
+  authoring, that row is the one the variable dialog edits.
+
 ### Fixed - every pack opens as a sheet WITH its verbs (38 of 91 opened with none)
 
 Opening a behaviour pack's `.gd` as a sheet is supposed to show its published verbs as
