@@ -15,6 +15,10 @@ const FIXTURE_SOURCE: String = """@tool
 class_name DoorController
 extends Node
 
+signal opened
+
+signal hit(body: Node2D)
+
 var hp: int = 10
 var seconds_left: int = 3
 var host: Node = null

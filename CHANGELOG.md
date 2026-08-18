@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Fixed - three rows of an opened file stopped saying things that were not true
+
+- **`if i == 1:` is a comparison, not an identity test.** Is The Same Object's reverse template is the
+  bare `{a} == {b}`, which matches every equality anybody ever wrote - so a loop counter against a
+  number read `i is the same object as 1`. The lifter now hands an equality to **Compare Variable**
+  unless one side is recognisably a reference (`null`, `self`, a `$Node` / `%Node` path, a `get_node`
+  / `get_parent()` lookup, or a member the file declared with an object type), and Is The Same Object
+  keeps only the rows it is actually about. `x == null` still reads `x does not exist`; the emitted
+  bytes are identical either way, because both templates emit `{a} == {b}`.
+- **And it reads the way a sheet reads it**: `i = 1`, `hp ≠ 3`. GDScript doubles the sign because a
+  language has to tell assignment from a question - a row is only ever the question.
+- **A plain script's signals are its triggers.** The Triggers folder listed them as raw rows -
+  `died | internal`, `picked_up_coin | internal`. They now read `➜ On Died`, `➜ On Picked Up Coin`,
+  `➜ On Hit  body` - the same shape every other trigger in the editor has, with the values the signal
+  passes as chips beside it. "internal" named a distinction only a behavior pack has, and a pack's
+  rows are unchanged.
+- **A connected lambda's payload is a chip, not words inside the cell.** `$Timer.timeout.connect(func(body): …)`
+  drew `On Hit   body` crammed into the trigger cell; it now draws the SAME payload span a lifted
+  signal handler's row draws, so one event reads one way whether it was wired with a `func` or a
+  lambda. The reason it was crammed in is fixed rather than worked around: a condition/trigger cell
+  reserves the width its trailing payload chips need instead of filling the lane to the divider and
+  leaving them a sliver - which is what a declared handler's `[body]` chip had been drawing as too.
+
 ### Added - the head of an opened plain script reads as the object it drives
 
 Opening somebody's own `.gd` used to say `⇥ Script` and then list GDScript type names -

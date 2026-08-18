@@ -24,8 +24,11 @@ const TEXT_EXTENSIONS: Array[String] = ["gd", "md", "cfg", "csv", "json", "yml",
 ## Not repository content: local editor state and engine caches, every one of them ignored by
 ## git. They are FULL of machine paths by design - that is what a cache is - and sweeping them
 ## would fail this gate on a clean checkout, which is how a gate gets switched off.
+## `.claude` holds agent worktrees - whole COPIES of this repo, including this file, whose detector
+## fixtures are examples of the very thing it forbids. Sweeping them reports the copy's examples as
+## leaks in the original, which is a gate failing on itself.
 const LOCAL_STATE_DIRS: Array[String] = [".git", ".godot", ".import", ".vscode", ".idea",
-	"__pycache__", "eventsheet_translations"]
+	".claude", "__pycache__", "eventsheet_translations"]
 
 ## The file that defines the rule must contain examples of the thing it forbids.
 const SELF_PATH: String = "res://tests/personal_paths_test.gd"

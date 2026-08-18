@@ -177,6 +177,9 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var existence: Dictionary = _existence_condition(text)
 	if not existence.is_empty():
 		return existence
+	var comparison: Dictionary = _comparison_condition(text)
+	if not comparison.is_empty():
+		return comparison
 	var chance: Dictionary = _chance_condition(text)
 	if not chance.is_empty():
 		return chance
@@ -1049,6 +1052,32 @@ static func _existence_condition(text: String) -> Dictionary:
 		if operator == " == ":
 			return _sentence(subject, "does not exist", {})
 		return _sentence(subject, "exists", {})
+	return {}
+
+
+## `i == 1` as Construct's Compare: `i = 1`, and `hp != 3` as `hp ≠ 3`. GDScript doubles the sign
+## because a language needs to tell assignment from a question; a sheet row is only ever the question,
+## so the row says what a reader means by it. Equality ONLY - `<`, `>=` and the rest already read as
+## themselves - and a `== null` never reaches here, because the existence reading claims it first.
+## The row belongs to System, the way Construct's own Compare condition does.
+static func _comparison_condition(text: String) -> Dictionary:
+	for operator: String in [" == ", " != "]:
+		var at: int = top_level_index(text, operator)
+		if at < 0:
+			continue
+		var left: String = text.substr(0, at).strip_edges()
+		var right: String = text.substr(at + operator.length()).strip_edges()
+		if left.is_empty() or right.is_empty():
+			return {}
+		# One comparison only: `a == b == c` is not a shape GDScript writes, and a run of them joined
+		# by `and` was already split into terms before this ever saw a word of it.
+		if top_level_index(right, operator) >= 0:
+			return {}
+		return {"object": OBJECT_SYSTEM, "segments": [
+			{"text": expression_text(left), "tone": "value"},
+			{"text": " %s " % ("=" if operator == " == " else "≠"), "tone": "plain"},
+			{"text": expression_text(right), "tone": "value"}
+		]}
 	return {}
 
 

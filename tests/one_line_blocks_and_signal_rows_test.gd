@@ -90,7 +90,7 @@ static func run() -> bool:
 	ok = _one_line_blocks(rows) and ok
 	ok = _stacked_conditions(view, rows) and ok
 	ok = _awaits(rows) and ok
-	ok = _connected_lambdas(rows) and ok
+	ok = _connected_lambdas(view, rows) and ok
 	dock.free()
 	ok = _shipped_packs() and ok
 	return ok
@@ -107,12 +107,15 @@ static func _one_line_blocks(rows: PackedStringArray) -> bool:
 		_reading_at(rows, "\"low\""), "Else > hp < 5 | Play from \"low\"s") and ok
 	ok = _check("a one-line else is the plain Else",
 		_reading_at(rows, "\"hurt\""), "Else | Play from \"hurt\"s") and ok
+	# `i == 1` is a COMPARISON, not an identity test. Is The Same Object's reverse template is the bare
+	# `{a} == {b}`, so it used to claim every equality ever written and these two rows read "i is the
+	# same object as 1" - a confident lie about a loop counter and a number.
 	ok = _check("a one-line continue keeps its loop meaning",
 		_reading_at(rows, "Next"),
-		"i is the same object as 1 | Next") and ok
+		"i = 1 | Next") and ok
 	ok = _check("a one-line break does too",
 		_reading_at(rows, "Stop loop"),
-		"i is the same object as 2 | Stop loop") and ok
+		"i = 2 | Stop loop") and ok
 	return ok
 
 
@@ -146,7 +149,7 @@ static func _awaits(rows: PackedStringArray) -> bool:
 
 
 ## ── M29: a connected lambda IS a trigger event ───────────────────────────────────────────────
-static func _connected_lambdas(rows: PackedStringArray) -> bool:
+static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray) -> bool:
 	var ok: bool = true
 	ok = _check("the connect line keeps a muted note naming what it wires",
 		_reading_at(rows, "connects Timer On Timeout").contains("connects Timer On Timeout"), true) and ok
@@ -155,7 +158,12 @@ static func _connected_lambdas(rows: PackedStringArray) -> bool:
 	ok = _check("and the lambda's body is its action row",
 		_reading_at(rows, "Subtract 1 from seconds left"), " | Subtract 1 from seconds left") and ok
 	ok = _check("a multi-line lambda's trigger carries its payload chip",
-		_reading_at(rows, "➜host On Body Entered"), "➜host On Body Entered   body | ") and ok
+		_reading_at(rows, "➜host On Body Entered"), "➜host On Body Enteredbody | ") and ok
+	# The payload used to be crammed INSIDE the trigger cell ("On Hit   body"), because a chip after a
+	# trigger cell drew as a sliver. It is now the same span a declared handler's trigger row draws,
+	# so one event reads one way whether it was wired with a func or with a lambda.
+	ok = _check("and that chip is the shared trigger-payload span, not words inside the cell",
+		_span_kinds(view, "On Body Entered"), "|trigger|trigger_payload") and ok
 	ok = _check("and its first statement is an action row",
 		_reading_at(rows, "Add 1 to seconds left"), " | Add 1 to seconds left") and ok
 	ok = _check("and the branch inside that lambda is a sub-event of it",
@@ -239,6 +247,29 @@ static func _walk(view: EventSheetViewport, rows: Array, into: PackedStringArray
 				parts.append(text)
 		into.append("%s | %s" % [" > ".join(parts), right.strip_edges()])
 		_walk(view, row_data.children, into)
+
+
+## The span KINDS, in order, of the row whose trigger cell says `trigger_text` - the shape check that
+## tells a chip beside the cell apart from words crammed inside it.
+static func _span_kinds(view: EventSheetViewport, trigger_text: String) -> String:
+	var found: PackedStringArray = PackedStringArray()
+	_sweep_span_kinds(view, view._root_rows, trigger_text, found)
+	return found[0] if not found.is_empty() else "no trigger cell saying \"%s\"" % trigger_text
+
+
+static func _sweep_span_kinds(view: EventSheetViewport, rows: Array, trigger_text: String,
+		found: PackedStringArray) -> void:
+	for row_data: EventRowData in rows:
+		view._ensure_event_spans(row_data)
+		var kinds: PackedStringArray = PackedStringArray()
+		var matched: bool = false
+		for span: SemanticSpan in row_data.spans:
+			kinds.append(str(span.metadata.get("kind", "")))
+			if span.text == trigger_text and str(span.metadata.get("kind", "")) == "trigger":
+				matched = true
+		if matched and found.is_empty():
+			found.append("|".join(kinds))
+		_sweep_span_kinds(view, row_data.children, trigger_text, found)
 
 
 static func _reading_at(readings: PackedStringArray, needle: String) -> String:

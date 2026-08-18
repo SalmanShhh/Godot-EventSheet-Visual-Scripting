@@ -65,15 +65,39 @@ static var cancel_requested: bool = false
 static var _cached_reverse_entries: Array = []
 static var _cached_reverse_count: int = -1
 
+## Member names the file being lifted declares with an OBJECT type ({name: true}) - `var host: Node`,
+## `@onready var cam: Camera2D`. Written by each lift entry point before it matches a line, and read
+## only by _is_object_expression, which is what lets `candidate == host` stay an identity test while
+## `i == 1` reads as the comparison it is. Display-level attribution only: both spellings emit the
+## same `{a} == {b}` bytes, so a stale set can never change what a file compiles to.
+static var _object_reference_names: Dictionary = {}
+
+## GDScript's VALUE types - everything a `var x: T` can be annotated with that is NOT an object.
+## Anything else (Node2D, PackedScene, Resource, a project class_name) is a reference, which is the
+## only question _object_names_from_source asks.
+const VALUE_TYPE_NAMES: Array[String] = [
+	"bool", "int", "float", "String", "StringName", "NodePath", "RID", "Callable", "Signal",
+	"Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i", "Rect2", "Rect2i",
+	"Transform2D", "Transform3D", "Plane", "Quaternion", "AABB", "Basis", "Projection", "Color",
+	"Array", "Dictionary", "Variant", "PackedByteArray", "PackedInt32Array", "PackedInt64Array",
+	"PackedFloat32Array", "PackedFloat64Array", "PackedStringArray", "PackedVector2Array",
+	"PackedVector3Array", "PackedVector4Array", "PackedColorArray"
+]
+
 
 ## Lifts a run of DEDENTED body lines (a lambda body, a snippet) into event rows, exactly as a
 ## function body lifts: statements become actions, an `if`/`for`/`while` becomes a nested event.
 ## Nothing is written to a sheet and nothing is byte-verified, because nothing is being changed -
 ## this is for a reading of code that stays exactly where it is. Returns [] when the run does not
 ## lift cleanly.
-static func lift_body_rows(body_lines: PackedStringArray) -> Array:
+static func lift_body_rows(body_lines: PackedStringArray, object_names: PackedStringArray = PackedStringArray()) -> Array:
 	if body_lines.is_empty():
 		return []
+	# The caller knows the file's object-typed members; without them an identity test in a lambda
+	# body would read differently from the identical line in a declared handler.
+	_object_reference_names = {}
+	for name: String in object_names:
+		_object_reference_names[name] = true
 	var descriptors: Array = ACERegistry.get_all_descriptors()
 	if _cached_reverse_count != descriptors.size():
 		_cached_reverse_entries = _build_reverse_entries()
@@ -136,6 +160,9 @@ static func _note_function_progress() -> void:
 static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_functions: bool = true) -> bool:
 	if sheet == null:
 		return false
+	# The file's own object-typed members, read before any line is matched: they are what tells
+	# `candidate == host` apart from `i == 1` (see _is_object_expression).
+	_object_reference_names = _object_names_from_source(source)
 	# The trailing run: function blocks, their @ace annotation blocks, blank separators,
 	# and a final top-level comment block - EventForge's emission layout in row form.
 	var first_run_index: int = sheet.events.size()
@@ -2639,6 +2666,11 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 		# string/expression value at an internal `:` or `=` (see decl_name). Reject so the plain form wins.
 		if bool((entry as Dictionary).get("decl_name", false)) and not _is_bare_identifier(str(params.get("name", ""))):
 			continue
+		# Is The Same Object's `{a} == {b}` matches every equality there is. It may only CLAIM one
+		# that reads as an identity test; anything else falls through to Compare Variable, whose
+		# `{var_name} {op} {value}` says what `i == 1` actually asks. Same bytes either way.
+		if str((entry as Dictionary).get("ace_id", "")) == "IsSameObject" and not _reads_as_object_identity(params):
+			continue
 		return {"provider": (entry as Dictionary).get("provider"), "ace_id": (entry as Dictionary).get("ace_id"), "params": params}
 	return {}
 
@@ -2680,6 +2712,50 @@ static func _is_balanced_expression(text: String) -> bool:
 			return false
 		index += 1
 	return round_depth == 0 and square_depth == 0 and curly_depth == 0 and quote.is_empty()
+
+
+## The file's object-typed member names, read off its `var`/`@onready var` declarations. Only a
+## declaration with an EXPLICIT annotation counts: `var host: Node` says what it holds, `var best = null`
+## does not, and guessing would be exactly the confident lie this whole grammar refuses.
+static func _object_names_from_source(source: String) -> Dictionary:
+	var names: Dictionary = {}
+	var declaration: RegEx = RegEx.new()
+	if declaration.compile("^(?:@onready\\s+)?var\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*:\\s*([A-Za-z_][A-Za-z0-9_]*)") != OK:
+		return names
+	for line: String in source.split("\n"):
+		if line.begins_with("\t") or line.begins_with(" "):
+			continue  # a member is written at file scope; a local is somebody else's business
+		var found: RegExMatch = declaration.search(line.strip_edges())
+		if found == null:
+			continue
+		if found.get_string(2) in VALUE_TYPE_NAMES:
+			continue
+		names[found.get_string(1)] = true
+	return names
+
+
+## True when an `==` / `!=` is really asking "are these the SAME OBJECT" rather than "is this value
+## that value". The reverse template of Is The Same Object is the bare `{a} == {b}`, which matches
+## every equality ever written, so without this test `if i == 1:` read "i is the same object as 1".
+## One side has to be recognisably a reference: `null`, `self`, a `$Node` / `%Node` path, a lookup that
+## returns a node, or a member the file declared with an object type.
+static func _reads_as_object_identity(params: Dictionary) -> bool:
+	return _is_object_expression(str(params.get("a", ""))) or _is_object_expression(str(params.get("b", "")))
+
+
+## True when one side of an equality is clearly a node/object reference (see _reads_as_object_identity).
+static func _is_object_expression(text: String) -> bool:
+	var expression: String = text.strip_edges()
+	if expression.is_empty():
+		return false
+	if expression in ["null", "self"]:
+		return true
+	if expression.begins_with("$") or expression.begins_with("%"):
+		return true
+	for lookup: String in ["get_node(", "get_parent()", "get_owner()", "get_tree()", "instantiate()"]:
+		if expression.contains(lookup):
+			return true
+	return _is_bare_identifier(expression) and _object_reference_names.has(expression)
 
 
 ## True when the text is a single GDScript identifier (no spaces, operators, or quotes) - used to reject a

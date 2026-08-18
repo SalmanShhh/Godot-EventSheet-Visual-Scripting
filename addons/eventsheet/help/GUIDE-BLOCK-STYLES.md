@@ -87,6 +87,10 @@ The ➜ badge (bright for a published trigger, dimmed for an internal signal), t
 one field cell per value the signal passes, and the action lane stating the one thing the left
 lane hides: `emits state_changed`, or `internal`.
 
+In an opened plain script the row takes the trigger shape instead - `➜ On Died`, `➜ On Hit  body` -
+because there every declared signal simply IS one of the file's triggers, with the values it passes
+as chips beside it. "internal" names a distinction only a behavior pack has.
+
 ## Published verbs (Define rows)
 
 A pack's exposed function reads as a Define row - role badge, friendly name, category chip -

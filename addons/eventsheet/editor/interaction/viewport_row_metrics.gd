@@ -171,7 +171,9 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 			else:
 				var text_start: float = float(cond_text_x.get(line, float(cond_badge_x.get(line, condition_text_start_x))))
 				if str(metadata.get("kind", "")) in ["condition", "trigger"]:
-					var available_c: float = maxf(max_condition_right - text_start, _viewport.MIN_SPAN_WIDTH)
+					var available_c: float = maxf(
+						max_condition_right - condition_trailing_width(row_data, line, font, font_size) - text_start,
+						_viewport.MIN_SPAN_WIDTH)
 					cond_count[line] = maxi(int(cond_count.get(line, 1)), _fill_cell_line_count(span, metadata, available_c + 2.0, font, font_size, object_column_override(metadata, condition_text_start_x, text_start)))
 					cond_text_x[line] = text_start + available_c + 2.0 + _viewport._get_span_gap(span)
 				else:
@@ -201,6 +203,28 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 		"chip_x": chip_x, "chip_offset": chip_offset,
 		"total": maxi(maxi(cond_cursor, act_cursor), 1)
 	}
+
+
+## Width the payload chips trailing a trigger cell need on one condition line. A condition/trigger cell
+## otherwise fills the lane to its right edge, which left a chip after it drawn as a sliver at the
+## divider - so the cell gives exactly this much back and the chips sit beside it at their own size.
+## Called by the height metrics AND the layout pass, for the same reason condition_right_limit is:
+## the reserved width and the drawn width must never disagree.
+func condition_trailing_width(row_data: EventRowData, line_index: int, font: Font, font_size: int) -> float:
+	if row_data == null:
+		return 0.0
+	var total: float = 0.0
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if str(metadata.get("kind", "")) != "trigger_payload":
+			continue
+		if int(metadata.get("line_index", 0)) != line_index:
+			continue
+		total += _viewport._measure_span_width(span, span.text, font, font_size) + 2.0 \
+			+ maxf(_viewport._get_span_gap(span), EventSheetPalette.SPAN_GAP)
+	return total
 
 
 ## How far right a CONDITION-lane cell may reach. Normally the lane divider (minus its padding); on a

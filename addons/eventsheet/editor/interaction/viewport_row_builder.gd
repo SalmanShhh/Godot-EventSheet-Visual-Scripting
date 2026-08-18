@@ -1959,9 +1959,14 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	var chip_bg: Color = _verb_chip_colors()[0]
 	var chip_fg: Color = _verb_chip_colors()[1]
 	# A published trigger reads by its friendly @ace_name; a plain signal has only its own name.
+	# EXCEPT in an opened plain script, where a declared signal IS that object's trigger - nothing
+	# else fires it and nothing else listens - so it reads the way every other trigger in the editor
+	# does: `On Died`, `On Picked Up Coin`, with its values as chips beside it. A PACK is different:
+	# there, "published as an ACE" is a real distinction its author made, and the row keeps saying so.
+	var script_trigger: bool = not signal_row.trigger and _reads_as_script_trigger()
 	var title: String = signal_row.ace_name.strip_edges() if signal_row.trigger else ""
 	if title.is_empty():
-		title = signal_row.signal_name
+		title = "On %s" % signal_row.signal_name.capitalize() if script_trigger else signal_row.signal_name
 	# The kind cue is a single glyph in the same narrow badge column every event row uses - the
 	# fired-signal arrow for a published trigger, a dimmed one for an internal signal (the action
 	# lane already spells out "emits X" vs "internal"). A word in a box here reads as a pill, and
@@ -1972,7 +1977,7 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 			"badge": true,
 			"badge_style": "trigger",
 			"badge_bg": chip_bg,
-			"badge_fg": event_style.behavior_accent_color if signal_row.trigger else event_style.behavior_accent_color.lerp(chip_bg, 0.45),
+			"badge_fg": event_style.behavior_accent_color if signal_row.trigger or script_trigger else event_style.behavior_accent_color.lerp(chip_bg, 0.45),
 			"kind": "signal_row",
 			"lane": "condition",
 			"line_index": 0
@@ -1984,26 +1989,41 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 			"text_color": event_style.object_label_color
 		})
 	]
-	var condition_lines: int = _append_signal_param_spans(spans, signal_row) + 1
+	var condition_lines: int = _append_signal_param_spans(spans, signal_row, script_trigger) + 1
 	# The ACTION lane answers "and what actually fires?". For a trigger that is the underlying signal
 	# identifier - the friendly name hides it, but it is what game code connects to, and it is the one
 	# fact a reader cannot recover from the left lane. A plain signal's name IS its identifier, so
 	# repeating it would be noise; it says "internal" instead, the same word a Define row uses for a
 	# verb that is not published as an ACE.
+	# In an opened plain script there is no such distinction to draw: every signal the file declares is
+	# a trigger of it, so "internal" said nothing except that this was not a pack - and the whole row
+	# already says that. The lane stays empty rather than carrying a word with no other word to be.
 	if signal_row.trigger:
 		spans.append(_define_chip(EventSheetL10n.translate("emits %s") % signal_row.signal_name, chip_bg, chip_fg, 0, "signal_row"))
-	else:
+	elif not script_trigger:
 		spans.append(_define_chip(EventSheetL10n.translate("internal"), chip_bg, chip_fg.lerp(chip_bg, 0.45), 0, "signal_row"))
 	row_data.spans = spans
 	row_data.line_count = maxi(condition_lines, 1)
 	return row_data
 
 
+## True when this view is showing an ORDINARY script somebody opened - not a behavior pack, and not a
+## sheet being authored. That is the one case where a declared signal has no second reading to lose:
+## the file is being READ, and what a reader wants to know is which events it fires.
+func _reads_as_script_trigger() -> bool:
+	var sheet: EventSheetResource = _viewport._sheet
+	return sheet != null and sheet.read_only and not is_addon_pack(sheet)
+
+
 ## One cell per value the signal passes to whoever handles it, in the shared field-cell grammar (the
 ## same one a condition cell and a verb parameter use). SignalRow stores them as raw declaration text
 ## ("damage" or "damage: int"), so the type is split off and read as a plain word - a handler author
 ## needs to know a number is coming, not that GDScript spells it `int`. Returns the last line used.
-func _append_signal_param_spans(spans: Array[SemanticSpan], signal_row: SignalRow) -> int:
+##
+## An opened script's trigger row takes the OTHER shape: the payload rides beside the trigger as chips,
+## one per value, exactly as a lifted signal handler's row draws them - so `➜ On Hit  body` reads the
+## same whether the row came from the signal declaration or from the handler that answers it.
+func _append_signal_param_spans(spans: Array[SemanticSpan], signal_row: SignalRow, as_chips: bool = false) -> int:
 	var line: int = 0
 	var cell_host := EventRowData.new()
 	for index in range(signal_row.params.size()):
@@ -2016,6 +2036,9 @@ func _append_signal_param_spans(spans: Array[SemanticSpan], signal_row: SignalRo
 		if colon >= 0:
 			param_name = declaration.substr(0, colon).strip_edges()
 			type_word = friendly_type_word(declaration.substr(colon + 1).strip_edges())
+		if as_chips:
+			spans.append(_trigger_payload_span(param_name.replace("_", " "), index, 0))
+			continue
 		line += 1
 		append_field_cell(cell_host, param_name, type_word, {
 			"kind": "signal_row",
@@ -2024,6 +2047,22 @@ func _append_signal_param_spans(spans: Array[SemanticSpan], signal_row: SignalRo
 		})
 	spans.append_array(cell_host.spans)
 	return line
+
+
+## One payload chip beside a trigger cell - the value the event hands whoever answers it. THE shape,
+## shared by the three rows that carry a payload (a lifted handler, a connected lambda, an opened
+## script's signal declaration), so the same event reads identically wherever a reader meets it.
+func _trigger_payload_span(chip_text: String, param_index: int, line_index: int) -> SemanticSpan:
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	return _make_span(chip_text, SemanticSpan.SpanType.CONDITION, {
+		"editable": false,
+		"lane": "condition",
+		"kind": "trigger_payload",
+		"param_index": param_index,
+		"chip": true,
+		"hoverable": false,
+		"line_index": line_index
+	}.merged(condition_style_meta, true))
 
 
 ## The host class ("" when not a match) if a RawCodeRow is EXACTLY the compiler's generated
@@ -4926,16 +4965,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# A signal handler's PARAMETERS are the trigger's payload - the body that entered, the item
 		# that was picked up. Construct shows them as chips beside the trigger, so a reader knows
 		# what the event hands them without opening the code.
-		for payload_index in range(_handler_payload_chips(event_row).size()):
-			spans.append(_make_span(_handler_payload_chips(event_row)[payload_index], SemanticSpan.SpanType.CONDITION, {
-				"editable": false,
-				"lane": "condition",
-				"kind": "trigger_payload",
-				"param_index": payload_index,
-				"chip": true,
-				"hoverable": false,
-				"line_index": condition_line_index
-			}.merged(condition_style_meta, true)))
+		var handler_payload: PackedStringArray = _handler_payload_chips(event_row)
+		for payload_index in range(handler_payload.size()):
+			spans.append(_trigger_payload_span(handler_payload[payload_index], payload_index, condition_line_index))
 		condition_line_index += 1
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
 		var inline_trigger: ACECondition = event_row.conditions[inline_trigger_condition_index]
@@ -5711,7 +5743,8 @@ func _build_connect_lambda_rows(event_row: EventRow, anchor_base: String, indent
 		var trigger_row: EventRowData = _build_connect_trigger_row(event_row, parts, anchor, indent, action_index)
 		# The body reads through the very same lift a declared handler's body goes through, so a
 		# statement says the same thing whether it was written in a func or handed to connect.
-		for body_event: Variant in EventSheetACELifter.lift_body_rows(parts.get("body", PackedStringArray())):
+		for body_event: Variant in EventSheetACELifter.lift_body_rows(
+				parts.get("body", PackedStringArray()), _sheet_object_variable_names()):
 			if not (body_event is EventRow):
 				continue
 			var body_row: EventRowData = _build_event_row(body_event as EventRow, indent + 1)
@@ -5721,15 +5754,34 @@ func _build_connect_lambda_rows(event_row: EventRow, anchor_base: String, indent
 	return rows
 
 
+## The sheet's variables that hold an OBJECT, handed to the lifter so a line in a lambda body reads
+## the way the identical line in a declared handler does: `candidate == host` is an identity test,
+## `i == 1` is a comparison, and only the declared type of `host` tells them apart.
+func _sheet_object_variable_names() -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var sheet: EventSheetResource = _viewport._sheet
+	if sheet == null:
+		return names
+	for row: Variant in sheet.events:
+		if not (row is LocalVariable):
+			continue
+		var type_name: String = (row as LocalVariable).type_name.strip_edges()
+		if type_name.is_empty() or type_name in EventSheetACELifter.VALUE_TYPE_NAMES:
+			continue
+		names.append((row as LocalVariable).name)
+	return names
+
+
 ## The lambda's parameter names - the payload the trigger hands its body.
 static func payload_names(parts: Dictionary) -> PackedStringArray:
 	return parts.get("args", PackedStringArray()) as PackedStringArray
 
 
-## The trigger row itself: the ➜ badge and `<Object> On <Signal> <payload>` - the signal plus the
-## names the lambda gives what it is handed, so a reader knows what the event passes them without
-## opening the code. The payload rides IN the trigger cell rather than beside it, because the
-## condition lane gives its trigger cell the whole lane and a chip after it has nowhere to sit.
+## The trigger row itself: the ➜ badge, `<Object> On <Signal>`, and one chip per name the lambda gives
+## what it is handed, so a reader knows what the event passes them without opening the code. The chips
+## are the SHARED payload span a declared handler's trigger row uses - the same event has to read the
+## same way whether it was wired with a func or with a lambda, and it used to read `On Hit   body`
+## with the names crammed inside the trigger cell.
 func _build_connect_trigger_row(event_row: EventRow, parts: Dictionary, anchor: String, indent: int,
 		action_index: int) -> EventRowData:
 	var trigger_row := EventRowData.new()
@@ -5751,11 +5803,7 @@ func _build_connect_trigger_row(event_row: EventRow, parts: Dictionary, anchor: 
 	trigger_row.spans.append(_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta))
 	# "trigger", not "condition": a trigger cell sizes to its words and leaves room for the payload
 	# chips beside it, exactly as a declared handler's trigger row does.
-	var payload: PackedStringArray = payload_names(parts)
-	var trigger_text: String = str(parts.get("trigger", ""))
-	if not payload.is_empty():
-		trigger_text += "   " + ", ".join(payload)
-	trigger_row.spans.append(_make_span(trigger_text, SemanticSpan.SpanType.CONDITION, {
+	trigger_row.spans.append(_make_span(str(parts.get("trigger", "")), SemanticSpan.SpanType.CONDITION, {
 		"lane": "condition",
 		"kind": "trigger",
 		"ace_index": -1,
@@ -5765,6 +5813,9 @@ func _build_connect_trigger_row(event_row: EventRow, parts: Dictionary, anchor: 
 		"line_index": 0,
 		"object_label": str(parts.get("object", ""))
 	}.merged(condition_style_meta, true)))
+	var payload: PackedStringArray = payload_names(parts)
+	for payload_index in range(payload.size()):
+		trigger_row.spans.append(_trigger_payload_span(payload[payload_index].replace("_", " "), payload_index, 0))
 	return trigger_row
 
 

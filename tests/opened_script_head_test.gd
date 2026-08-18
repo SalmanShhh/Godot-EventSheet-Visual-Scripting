@@ -67,12 +67,36 @@ static func _test_a_script_with_a_class_name() -> bool:
 	ok = _check("the head bars read in file order",
 		_head_bar_titles(rows), "Triggers | Movement | Internal state") and ok
 	ok = _check("the Triggers bar says a SCRIPT fires them",
-		_texts(_bar_titled(rows, "Triggers")), "Triggers | this script fires - 2") and ok
+		_texts(_bar_titled(rows, "Triggers")), "Triggers | this script fires - 3") and ok
+	ok = _test_signals_read_as_triggers(view) and ok
 	ok = _check("the @export_group is the settings bar",
 		_texts(_bar_titled(rows, "Movement")), "Movement | 2 settings") and ok
 	ok = _check("the private state is the script's own",
 		_texts(_bar_titled(rows, "Internal state")), "Internal state | values this script keeps for itself - 7") and ok
 	view.free()
+	return ok
+
+
+## A plain script's signals ARE its triggers - nothing publishes them and nothing has to. So each row
+## reads the way every other trigger in the editor reads: the ➜ badge, `On <Signal>` in the words a
+## reader uses, and the values it hands over as chips beside it. The row used to say `died | internal`,
+## which named a distinction only a behavior pack has.
+static func _test_signals_read_as_triggers(view: EventSheetViewport) -> bool:
+	var ok: bool = true
+	var signals: Array[EventRowData] = _signal_rows(view)
+	ok = _check("the file's three signals are three rows", signals.size(), 3) and ok
+	if signals.size() != 3:
+		return false
+	ok = _check("a declared signal reads as the trigger it is",
+		_texts(signals[0]), "➜ | On Died") and ok
+	ok = _check("a multi-word signal name reads in words",
+		_texts(signals[1]), "➜ | On Picked Up Coin") and ok
+	ok = _check("the values a signal passes are chips beside it",
+		_texts(signals[2]), "➜ | On Hit | body") and ok
+	ok = _check("and that payload is the SAME span shape a handler's trigger row draws",
+		_span_kinds(signals[2]), "signal_row | signal_row | trigger_payload") and ok
+	ok = _check("no signal row of a plain script says \"internal\"",
+		_texts(signals[0]).contains("internal"), false) and ok
 	return ok
 
 
@@ -209,6 +233,31 @@ static func _texts(row_data: EventRowData) -> String:
 	var parts: PackedStringArray = PackedStringArray()
 	for span: SemanticSpan in row_data.spans:
 		parts.append(str(span.text))
+	return " | ".join(parts)
+
+
+## Every signal row of an opened file, in file order. Walked from the row TREE, not the flat list -
+## the Triggers bar opens folded, so its rows are real and simply not on screen yet.
+static func _signal_rows(view: EventSheetViewport) -> Array[EventRowData]:
+	var found: Array[EventRowData] = []
+	_sweep_signal_rows(view, view._root_rows, found)
+	return found
+
+
+static func _sweep_signal_rows(view: EventSheetViewport, rows: Array, found: Array[EventRowData]) -> void:
+	for row_data: EventRowData in rows:
+		if row_data.row_uid.begins_with("signal_"):
+			view._ensure_event_spans(row_data)
+			found.append(row_data)
+		_sweep_signal_rows(view, row_data.children, found)
+
+
+static func _span_kinds(row_data: EventRowData) -> String:
+	if row_data == null:
+		return ""
+	var parts: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		parts.append(str(span.metadata.get("kind", "")))
 	return " | ".join(parts)
 
 

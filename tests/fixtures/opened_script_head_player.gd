@@ -7,6 +7,8 @@ signal died
 
 signal picked_up_coin
 
+signal hit(body: Node2D)
+
 const PAD_SCENE := preload("res://tests/fixtures/opened_script_head_pad.tscn")
 const MAX_SPEED := 300.0
 

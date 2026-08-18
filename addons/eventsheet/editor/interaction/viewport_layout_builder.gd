@@ -223,7 +223,11 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				)
 				span_width = max(min(badge_width, max_condition_right - span_x), _viewport.MIN_SPAN_WIDTH)
 			elif str(metadata.get("kind", "")) in ["condition", "trigger"]:
-				span_width = max(max_condition_right - span_x, _viewport.MIN_SPAN_WIDTH)
+				# Minus whatever the payload chips after this cell need: a trigger cell that took the
+				# whole lane left them drawn as a sliver against the divider.
+				var trailing: float = _viewport._row_metrics_helper.condition_trailing_width(
+					row_data, int(metadata.get("line_index", 0)), font, font_size)
+				span_width = max(max_condition_right - trailing - span_x, _viewport.MIN_SPAN_WIDTH)
 			else:
 				span_width = max(min(span_width, max_condition_right - span_x), _viewport.MIN_SPAN_WIDTH)
 		elif span_lane == "action" and action_lane_rect.size.x > 0.0:
