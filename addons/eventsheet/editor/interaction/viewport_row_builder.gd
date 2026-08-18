@@ -6107,8 +6107,180 @@ func expand_ternary_rows(rows: Array[EventRowData]) -> Array[EventRowData]:
 	var out: Array[EventRowData] = []
 	for row: EventRowData in rows:
 		row.children = expand_ternary_rows(row.children)
+		# M36 runs first: it REPLACES a loop row with the event its body reads as, and that event may
+		# itself carry a ternary the pass below still has to see.
+		var picked: Array[EventRowData] = _expand_picking_row(row)
+		if not picked.is_empty():
+			out.append_array(picked)
+			continue
 		out.append_array(_expand_ternary_row(row))
 	return out
+
+
+# ── M36: a loop over a group with one `if` inside is Construct's picking, and reads as one event ──
+#
+# This is Construct's whole model: a condition on an object PICKS the instances, and the actions run
+# on the ones it picked. Godot has no picking, so the same idea is spelled as a loop with an `if` in
+# it - two rows for one thought. When the loop's ENTIRE body is that `if`, the pair reads as the one
+# event it means: the loop's object with a muted note saying where the instances came from, the `if`
+# as its condition, its body as the actions.
+#
+# A view over two unchanged rows. Both still sit in the sheet exactly as the file wrote them, so
+# emission and the byte round-trip are untouched; every row produced carries the LOOP's uid as its
+# statement uid, so selection, drag and the gutter address the whole reading as one. A body with any
+# statement outside the `if` is not this shape and keeps the plain For-each + sub-event reading -
+# there the loop really is doing something of its own.
+
+
+## The rows a loop-with-one-`if` reads as, or [] when this row is not that shape.
+func _expand_picking_row(row: EventRowData) -> Array[EventRowData]:
+	if not _viewport.is_reading_mode() or row.ternary_view or not row.picking_object.is_empty():
+		return []
+	if row.row_type != EventRowData.RowType.EVENT or not (row.source_resource is EventRow):
+		return []
+	var loop: EventRow = row.source_resource as EventRow
+	var words: Dictionary = _picking_words(loop)
+	if words.is_empty() or row.children.is_empty() or row.children.size() != loop.sub_events.size():
+		return []
+	var shifted: Array[EventRowData] = []
+	for child_index: int in range(row.children.size()):
+		var child: EventRowData = row.children[child_index]
+		if child.row_type != EventRowData.RowType.EVENT or not (child.source_resource is EventRow):
+			return []
+		if child.source_resource != loop.sub_events[child_index]:
+			return []
+		shifted.append(child)
+	# The first sub-event must be the `if` itself; the ones after it can only be its Else arms, which
+	# a lifted `if/else` writes as further condition-less sub-events.
+	if (shifted[0].source_resource as EventRow).conditions.is_empty():
+		return []
+	for shifted_index: int in range(shifted.size()):
+		var moved: EventRowData = shifted[shifted_index]
+		_shift_row_indent(moved, row.indent - moved.indent)
+		moved.ternary_view = true
+		moved.ternary_anchor_uid = row.row_uid
+		moved.ternary_lead = shifted_index == 0
+		moved.disabled = moved.disabled or row.disabled
+	# Only the row that states the test wears the note: an Else arm has already been placed by it.
+	shifted[0].picking_object = str(words.get("object", ""))
+	shifted[0].picking_note = str(words.get("note", ""))
+	shifted[0].spans.clear()
+	return shifted
+
+
+## Whether a loop is the picking shape, and the words for it: the object its body works on (the
+## iterator's own name, which is what the body calls each instance) plus the muted note saying where
+## the instances came from. {} for anything that is not one plain For-each over a list.
+func _picking_words(loop: EventRow) -> Dictionary:
+	if loop == null or not loop.conditions.is_empty() or not loop.actions.is_empty():
+		return {}
+	if not loop.local_variables.is_empty() or loop.sub_events.is_empty() or loop.pick_filters.size() != 1:
+		return {}
+	if not loop.trigger_id.is_empty() or loop.else_mode != EventRow.ElseMode.NONE:
+		return {}
+	var pick: PickFilter = loop.pick_filters[0]
+	if pick == null or not pick.enabled or pick.iterator_name.strip_edges().is_empty():
+		return {}
+	# A filtered, ordered, capped, indexed or frame-spread loop is doing work of its own that the
+	# merged row would not say; only a plain walk of a list reads as picking.
+	if not pick.filter_conditions.is_empty() or not pick.predicate_expression.strip_edges().is_empty():
+		return {}
+	if not pick.order_by_expression.strip_edges().is_empty() or pick.pick_first_n != 0:
+		return {}
+	if not pick.index_name.strip_edges().is_empty() or pick.frame_spread_count != 0 or pick.frame_spread_budget_ms != 0.0:
+		return {}
+	# Repeat and While are counts and tests, not collections of instances - Construct spells those
+	# with its own loop rows and never as picking.
+	if pick.collection_kind == PickFilter.CollectionKind.REPEAT or pick.collection_kind == PickFilter.CollectionKind.WHILE:
+		return {}
+	var collection: String = pick.collection_value.strip_edges()
+	if collection.is_empty():
+		collection = pick.source_expression.strip_edges()
+	return {
+		"object": pick.iterator_name.strip_edges().capitalize(),
+		"note": _picking_source_note(pick.collection_kind, collection),
+	}
+
+
+## The muted note beside the picked object: which instances these are.
+func _picking_source_note(collection_kind: int, collection: String) -> String:
+	if collection_kind == PickFilter.CollectionKind.GROUP and not collection.is_empty():
+		return "(%s %s)" % [EventSheetL10n.translate("group"), _quoted_group_name(collection)]
+	var group_name: String = _group_name_in(collection)
+	if not group_name.is_empty():
+		return "(%s \"%s\")" % [EventSheetL10n.translate("group"), group_name]
+	if collection == "get_children()":
+		return "(%s)" % EventSheetL10n.translate("children")
+	if collection.ends_with(".get_children()"):
+		var owner_name: String = collection.substr(0, collection.length() - ".get_children()".length()).strip_edges()
+		if _is_identifier_path(owner_name):
+			return "(%s %s)" % [EventSheetL10n.translate("children of"), EventSheetSentence.object_of_reference(owner_name)]
+	if collection.is_empty():
+		return ""
+	return "(%s %s)" % [EventSheetL10n.translate("in"), EventSheetSentence.expression_text(collection)]
+
+
+## The group name inside `get_tree().get_nodes_in_group("enemies")`, or "" when the expression is
+## anything else. Written out rather than pattern-matched loosely: a near-miss would label a list of
+## something else as a group, which is worse than saying nothing.
+static func _group_name_in(collection: String) -> String:
+	var marker: String = "get_nodes_in_group(\""
+	var start: int = collection.find(marker)
+	if start < 0:
+		return ""
+	start += marker.length()
+	var end: int = collection.find("\"", start)
+	if end <= start or not collection.substr(end).begins_with("\")"):
+		return ""
+	return collection.substr(start, end - start)
+
+
+## A GROUP pick stores its name either bare or already quoted; the note always shows it quoted.
+static func _quoted_group_name(collection: String) -> String:
+	var text: String = collection.strip_edges()
+	if text.begins_with("\"") or text.begins_with("&\""):
+		return text.trim_prefix("&")
+	return "\"%s\"" % text
+
+
+## `enemy's hp < 10` -> `hp < 10`, but ONLY when the possessive is the picked object's own name. A
+## condition on some OTHER object inside the loop keeps its possessive, because there it is the thing
+## that says which object is meant.
+static func _strip_picked_possessive(text: String, picked_object: String) -> String:
+	var at: int = text.find("'s ")
+	if at <= 0:
+		return text
+	var owner_name: String = text.substr(0, at)
+	if not EventSheetSentence.is_identifier(owner_name) or owner_name.capitalize() != picked_object:
+		return text
+	return text.substr(at + 3)
+
+
+## M36 - the picked object and its note, written onto the first condition line once its spans exist.
+## The cell keeps its own condition text; what changes is that it now reads as a condition ON an
+## object, which is exactly what the loop around it was saying.
+func _apply_picking_note(row_data: EventRowData) -> void:
+	for span: SemanticSpan in row_data.spans:
+		if str(span.metadata.get("lane", "")) != "condition" or int(span.metadata.get("line_index", 0)) != 0:
+			continue
+		if not str(span.metadata.get("kind", "")) in ["condition", "match_case"]:
+			continue
+		span.metadata["object_label"] = row_data.picking_object
+		span.metadata["object_icon"] = _reading_class_icon_for(row_data.picking_object)
+		var owned: String = _strip_picked_possessive(span.text, row_data.picking_object)
+		if owned != span.text:
+			# The object column already names the thing; "Enemy | enemy's hp < 10" says it twice, and
+			# Construct's cell is just the property. Only the loop's OWN name is dropped.
+			span.text = owned
+			span.metadata.erase("bbcode_segments")
+			span.metadata.erase("value_ranges")
+		if not row_data.picking_note.is_empty():
+			span.text = "%s %s" % [row_data.picking_note, span.text]
+			# The styled runs were measured against the text before the note; recomputing them here
+			# would mean re-reading the whole cell, and a note in muted grey needs neither.
+			span.metadata.erase("bbcode_segments")
+			span.metadata.erase("value_ranges")
+		return
 
 
 ## One row's expansion: itself when nothing branches, else the actions before the branch, the branch
@@ -6565,6 +6737,8 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
 		_verb_kind_override = outer_kind
+		if not row_data.picking_object.is_empty():
+			_apply_picking_note(row_data)
 
 
 func _append_condition_prefix_spans(
