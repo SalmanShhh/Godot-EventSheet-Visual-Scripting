@@ -49,6 +49,10 @@ func refresh_anatomy_panel() -> void:
 		_dock._anatomy_panel.refresh(_dock._current_sheet)
 	if _dock._picker_preview_panel != null:
 		_dock._picker_preview_panel.refresh(_dock._current_sheet)
+	# N10 - the Objects rail is a census of the OPEN sheet's own rows, so it refreshes with the rest
+	# of the rail rather than keeping any state of its own between sheets.
+	if _dock._objects_panel != null:
+		_dock._objects_panel.set_sheet(_dock._current_sheet)
 
 
 func on_open_sheets_panel_collapsed(collapsed: bool) -> void:

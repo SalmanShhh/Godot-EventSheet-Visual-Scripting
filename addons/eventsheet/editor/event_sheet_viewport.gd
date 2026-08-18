@@ -62,6 +62,8 @@ signal function_edit_requested(event_function: Resource)
 ## inputs) and everything else the verb is - kind, category, description, what it gives back, the
 ## line it inserts - answers in the ACE properties popup this asks the dock to open.
 signal verb_properties_requested(event_function: Resource)
+## N10 - a single click on a row's object name asks for that object's popup.
+signal object_properties_requested(object_label: String)
 ## Emitted when a match action cell is double-clicked.
 signal match_edit_requested(match_row: Resource)
 ## Emitted on Ctrl+/ - the dock toggles the selected rows' enabled state (undoable).

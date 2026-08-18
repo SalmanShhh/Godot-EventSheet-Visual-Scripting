@@ -146,10 +146,18 @@ func build_ui() -> void:
 		_dock._navigate.record_current()
 		_dock._navigate.open_or_focus(provider_path)
 		_dock._set_status("Opened %s - a behaviour this sheet uses (Alt+Left jumps back)." % provider_path.get_file()))
+	# N10 - the Objects panel answers "what is in this file" the way the scene tree answers it for a
+	# scene: every node, behaviour, global, group and scene the open file uses, derived from its own
+	# rows. Clicking one highlights its rows through the viewport's filter lens; clicking it again
+	# clears, which is why the dock (not the panel) owns what "highlight" means.
+	_dock._objects_panel = EventSheetObjectsPanel.new()
+	_dock._objects_panel.object_activated.connect(func(object_label: String) -> void:
+		_dock.highlight_object_rows(object_label))
 	var left_rail: VBoxContainer = VBoxContainer.new()
 	left_rail.name = "EventSheetLeftRail"
 	left_rail.add_theme_constant_override("separation", 8)
 	left_rail.add_child(_dock._open_sheets_panel)
+	left_rail.add_child(_dock._objects_panel)
 	left_rail.add_child(_dock._functions_panel)
 	left_rail.add_child(_dock._anatomy_panel)
 	# Picker preview: how the sheet's published verbs will read in the picker, live (rail-folded).
@@ -205,6 +213,7 @@ func build_ui() -> void:
 	_dock._viewport.custom_block_edit_requested.connect(_dock._open_custom_block_dialog)
 	_dock._viewport.function_edit_requested.connect(_dock._function_dialog_glue._open_function_dialog_for)
 	_dock._viewport.verb_properties_requested.connect(_dock.open_verb_properties)
+	_dock._viewport.object_properties_requested.connect(_dock.open_object_properties)
 	_dock._viewport.variable_group_requested.connect(_dock._variable_grouping.on_group_requested)
 	_dock._viewport.variable_group_rename_requested.connect(_dock._variable_grouping.on_rename_requested)
 	_dock._viewport.match_edit_requested.connect(_dock._open_match_dialog)

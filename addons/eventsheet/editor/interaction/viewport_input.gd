@@ -207,6 +207,20 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 					_viewport.color_swatch_edit_requested.emit(swatch_ace, color_param, metadata["swatch_color"] as Color)
 					_viewport.accept_event()
 					return
+		# N10 - ONE click on a row's OBJECT name opens the object popup: what type it is, where in the
+		# scene it lives, which verbs this file uses it with, which of its signals it listens to. The
+		# renderer stamped the label's drawn bounds (the label is drawn inside the cell, not as its own
+		# span), so this is the same hit-test the colour swatch above uses. Checked before the cell's
+		# own handlers so the object column has its own meaning, and skipped on a double-click or with
+		# a modifier so editing the cell and multi-select are untouched.
+		if not event.double_click and not event.ctrl_pressed and not event.meta_pressed and not event.shift_pressed \
+				and metadata.get("object_label_rect") is Rect2 \
+				and (metadata["object_label_rect"] as Rect2).has_point(local_position) \
+				and not str(metadata.get("object_label", "")).is_empty():
+			_viewport._select_from_click(row_index, span_index, false)
+			_viewport.object_properties_requested.emit(str(metadata.get("object_label", "")))
+			_viewport.accept_event()
+			return
 		if row_data != null and row_data.source_resource != null and str(metadata.get("kind", "")) == "add_action":
 			_viewport.ace_picker_requested.emit(row_data, "action")
 			_viewport.accept_event()

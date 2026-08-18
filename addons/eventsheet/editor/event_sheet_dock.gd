@@ -242,6 +242,8 @@ var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
 var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
 var _verb_properties: EventSheetVerbProperties = EventSheetVerbProperties.new()  # a published verb's header click: the ACE properties popup (kind, category, inputs, inserts) (dock/verb_properties_popup.gd)
+var _object_properties: EventSheetObjectProperties = EventSheetObjectProperties.new()  # a row's object-name click: the object popup (type, path, rows, signals) (dock/object_properties_popup.gd)
+var _objects_panel: EventSheetObjectsPanel = null  # left-rail Objects section: every object the open file uses (editor/objects_panel.gd)
 var _ghost_row: EventSheetGhostRow = EventSheetGhostRow.new()  # zero-dialog add: E/C/A open a type-a-sentence popup at the selected row (dock/ghost_row.gd)
 var _navigate: EventSheetNavigate = EventSheetNavigate.new()  # Ctrl+Click go-to-definition: addon verbs open their behaviour as a sheet (dock/navigate.gd)
 var _export_pack: EventSheetExportPack = EventSheetExportPack.new()  # Sheet ▸ Export Addon Pack: writes eventsheet_addons/<class>/ (.tres + .gd + README, bundles includes) (dock/export_pack.gd)
@@ -326,6 +328,7 @@ func _init() -> void:
 	# _preview_glue.build_preview_banner(), which assigns _preview_banner/_preview_label back on the dock.
 	_preview_glue.init(self)
 	_verb_properties.init(self)
+	_object_properties.init(self)
 	# Same rule as _preview_glue: _build_ui() calls _open_progress.build(), so the back-reference
 	# has to be wired before it (init() only stores _dock - nothing tree-bound).
 	_open_progress.init(self)
@@ -4000,6 +4003,78 @@ func _apply_function_data(data: Dictionary) -> void:
 ## gives back, description, picker entry, the line it inserts, the function behind it).
 func open_verb_properties(event_function: Resource) -> void:
 	_verb_properties.open_for(event_function)
+
+
+## N10 - a click on a row's object name opens that object's popup.
+func open_object_properties(object_label: String) -> void:
+	_object_properties.open_for(object_label)
+
+
+## N10 - show only the rows that use one object, through the SAME filter lens the Filter button
+## drives, so there is one notion of "the sheet is filtered" and one way out of it. Asking for the
+## object that is already highlighted clears the filter, which is what makes the rail entry a toggle.
+func highlight_object_rows(object_label: String) -> void:
+	var wanted: String = object_label.strip_edges()
+	if _viewport == null or wanted.is_empty():
+		return
+	if _viewport.lens_active() and _viewport.lens_query() == wanted:
+		_apply_lens("")
+		if _objects_panel != null:
+			_objects_panel.list.deselect_all()
+		return
+	_apply_lens(wanted)
+
+
+## N10 - reveal an object in the Godot scene dock. Only meaningful while the scene holding it is the
+## one open in the editor, which is why the popup's button is disabled otherwise; this still guards,
+## because a scene can be closed between the popup opening and the button being pressed.
+func select_object_in_scene(node_path: String) -> void:
+	var path: String = node_path.strip_edges().trim_prefix("$").trim_prefix("%")
+	if path.is_empty() or not Engine.has_singleton("EditorInterface"):
+		return
+	var edited_root: Node = EditorInterface.get_edited_scene_root()
+	if edited_root == null:
+		_set_status("Open the scene this object lives in to select it there.", true)
+		return
+	var found: Node = edited_root.get_node_or_null(NodePath(path))
+	if found == null:
+		found = edited_root.find_child(path.get_file(), true, false)
+	if found == null:
+		_set_status("No node named %s in the open scene." % path, true)
+		return
+	EditorInterface.get_selection().clear()
+	EditorInterface.get_selection().add_node(found)
+
+
+## N10 - open the .gd behind the sheet at the first line that names the object, so "Show in code"
+## lands ON the object rather than at the top of the file.
+func show_object_in_code(object_label: String) -> void:
+	if _current_sheet == null or _current_sheet.external_source_path.is_empty():
+		_set_status("This sheet has no .gd file behind it - Save As… a .gd to read its code.", true)
+		return
+	_open_gdscript_path_in_godot(_current_sheet.external_source_path,
+		_first_line_naming(_current_sheet.external_source_path, object_label))
+
+
+## The 1-based line a file first names an object on, or -1 when it never does (or cannot be read).
+static func _first_line_naming(source_path: String, object_label: String) -> int:
+	var wanted: String = object_label.strip_edges()
+	if source_path.is_empty() or wanted.is_empty():
+		return -1
+	var file: FileAccess = FileAccess.open(source_path, FileAccess.READ)
+	if file == null:
+		return -1
+	var line_number: int = 0
+	while not file.eof_reached():
+		var line: String = file.get_line()
+		line_number += 1
+		# Comment lines are skipped for the same reason the census skips them: prose that MENTIONS
+		# the object is not the line a reader asked to be taken to.
+		if not line.strip_edges().begins_with("#") and line.contains(wanted):
+			file.close()
+			return line_number
+	file.close()
+	return -1
 
 
 ## The popup's "Edit…": the existing verb dialog, pre-filled - the ONE place a verb's name, category,
