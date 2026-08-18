@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+### Changed - statements without an ACE read in Construct's own grammar: Object ▸ Verb values
+
+A row inside an opened pack used to show the code it came from wearing an object label -
+`System | var remaining: float = amount`, `System | host.call_deferred("queue_free")`,
+`Emit signal on_damaged` naming the member behind a trigger the pack publishes as **On Damaged**.
+Every statement the sheet cannot express as an ACE now reads the way Construct writes its own
+rows - the object first, then the verb, then the values:
+
+- `_jumps_left -= 1` reads **System ▸ Subtract 1 from _jumps_left**; `x += v` **Add v to x**;
+  `x = v` **Set x to v**; `host.velocity.x = expr` **host ▸ Set velocity.x to expr**.
+- `queue_free()` reads **Destroy**, `host.call_deferred("queue_free")` **host ▸ Destroy (at end of
+  frame)**, and `sig.emit(a)` **FPSController ▸ Signal On Jumped** - the PUBLISHED trigger name
+  when the sheet declares that signal, never the snake_case member.
+- `if flag:` reads **flag is true**, `if not flag:` **flag is false**, `host == null`
+  **host ▸ does not exist**, `host != null` **host ▸ exists**, and a bare `return` **Stop event**.
+- A curated Godot-idiom table gives one shape one sentence: `⏳ Wait 0.5 seconds`,
+  `Go to scene res://menu.tscn`, `Keyboard ▸ jump is down`, `Keyboard ▸ On jump pressed`,
+  `max(a, b)`, `v ≈ 0`, `a ≈ b`, `30% chance`, `a moved toward b by d`, `a → b at t`,
+  `x kept between lo and hi`, `|x|`, `x°`. Anything not in it stays the plain statement it is -
+  a fake sentence is worse than code.
+- A `var name: Type = value` line - and the Local Variable rows you drop from the picker - read as
+  Construct's declaration row: a type-word chip, the name, the starting value
+  (**Local number remaining = amount**).
+- Inside a published CONDITION verb a `return` reads **Answer yes** / **Answer no**, inside an
+  EXPRESSION verb **Give back x**, inside an action **Stop event**.
+- No type annotation ever appears in a sentence: `: float` is dropped from a declaration,
+  `(x as Node2D)` reads `x`, and `Vector3(x, y, z)` reads `(x, y, z)`.
+
+All of it is DISPLAY ONLY - the rows and the emitted GDScript are untouched, the exact code is
+still on hover, and opening a file and saving it still reproduces every byte. The grammar lives in
+ONE producer that both the hand-written path and the ACE display path read through, so a shape says
+the same thing whether it was typed or picked - pinned by `tests/sentence_grammar_test.gd` and
+`tests/sentence_shapes_test.gd`, which opens a script holding every shape and asserts the words.
+
 ### Fixed - every pack opens as a sheet WITH its verbs (38 of 91 opened with none)
 
 Opening a behaviour pack's `.gd` as a sheet is supposed to show its published verbs as
