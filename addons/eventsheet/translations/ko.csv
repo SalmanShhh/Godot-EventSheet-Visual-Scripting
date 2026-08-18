@@ -1898,3 +1898,18 @@ expression,표현식
 this script - %d,이 스크립트 - %d
 not published,게시되지 않음
 Insert a call to %s in this script.,이 스크립트에서 %s 호출을 삽입합니다.
+(global),(전역)
+this script,이 스크립트
+behaviour,동작
+autoload,오토로드
+group,그룹
+1 row,1개 행
+%d rows,%d개 행
+Objects,오브젝트
+object,오브젝트
+Signals used,사용된 시그널
+%s in %s,%s (%s 안)
+Highlight rows,행 강조
+Select in scene,씬에서 선택
+This object is no longer used by this file.,이 파일은 더 이상 이 오브젝트를 사용하지 않습니다.
+"Every object this file uses. Click one to highlight its rows, click it again to clear.","이 파일이 사용하는 모든 오브젝트. 클릭하면 해당 행을 강조하고, 다시 클릭하면 해제합니다."

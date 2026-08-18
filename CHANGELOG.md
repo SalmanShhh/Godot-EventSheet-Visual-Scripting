@@ -12,6 +12,42 @@
   draw the comparison for a reader who needs it; `tests/no_product_names_in_code_test.gd` keeps the
   code itself clean.
 
+### Added - an opened file says what its objects ARE, and lists them
+
+A row's object column named a thing but never said what KIND of thing it was, so a project-wide
+global, a node, and a behaviour riding on that node all looked alike - and there was nowhere at all
+to ask "what is in this file".
+
+- **An autoload reads as a global.** A row reaching through a registered autoload now names the
+  singleton in the object column with a muted `(global)` note and a globe, and leaves the bare member
+  in the sentence: `EventForgeBridge (global) ▸ Add 1 to score`, `EventForgeBridge (global) ▸ score >
+  100`. The owner used to be buried mid-cell as a possessive (`event forge bridge's score > 100`),
+  which is the one place a reader does not look for it. Both readings a row can take - the shared
+  grammar and a definition's own display template - go through the same rewrite, on a throwaway copy,
+  so nothing a row stores or compiles to moves.
+- **A behaviour pack reads as its object's behaviour.** A pack node mounted under the script's own
+  node hands its rows back to that object, with the pack's display name as the leading chip:
+  `$Health.take_damage(3)` on a Player reads `Player ▸ Health  Take damage 3`, and
+  `$FPSController.do_jump()` reads `Player ▸ FPS Controller  Do jump`. The pack index is derived from
+  the packs themselves - `class_name`, folder, and `@ace_category` off each file's head - so a
+  dropped-in pack is recognised with no table to maintain.
+- **The left rail gains an Objects section.** Fold-away like the others, it lists every object the
+  open file uses, in reading order: the script's own object, the nodes it reaches for, the behaviours
+  mounted on it, the globals it touches, the groups it addresses, the scenes it spawns. Each carries
+  its class icon, a muted note (`%HpBar · ProgressBar · 2 rows`, `autoload · 2 rows`, `group · 1 row`)
+  and its hover lists the verbs the file uses it with. Clicking one shows only its rows through the
+  same filter lens the Filter button drives; clicking it again clears.
+- **Clicking a row's object name opens the object popup**: Type, Path (with the scene that path is
+  written in, when a scene uses this script), the verbs this file uses it with, the signals it
+  listens to, and **Highlight rows** / **Select in scene** / **Show in code**. Select in scene greys
+  out unless the scene is open, because offered-but-dead is worse than plainly unavailable. The verb
+  header popup is untouched - a ƒ row still opens its ACE properties.
+- The census counts USE, not mention: a doc comment naming `$Health` describes the file rather than
+  using it, a format string is no longer mistaken for a unique-name reference, and a node declared
+  `@onready` is one object under both its variable name and its node path.
+- Translated in all nine languages. Everything here is display-only - the fixture that exercises all
+  of it re-emits byte for byte.
+
 ### Fixed - three rows of an opened file stopped saying things that were not true
 
 - **`if i == 1:` is a comparison, not an identity test.** Is The Same Object's reverse template is the

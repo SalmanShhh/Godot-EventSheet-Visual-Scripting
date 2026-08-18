@@ -1898,3 +1898,18 @@ expression,espressione
 this script - %d,questo script - %d
 not published,non pubblicata
 Insert a call to %s in this script.,Inserisce una chiamata a %s in questo script.
+(global),(globale)
+this script,questo script
+behaviour,comportamento
+autoload,autoload
+group,gruppo
+1 row,1 riga
+%d rows,%d righe
+Objects,Oggetti
+object,oggetto
+Signals used,Segnali usati
+%s in %s,%s in %s
+Highlight rows,Evidenzia le righe
+Select in scene,Seleziona nella scena
+This object is no longer used by this file.,Questo file non usa più questo oggetto.
+"Every object this file uses. Click one to highlight its rows, click it again to clear.","Ogni oggetto usato da questo file. Fai clic per evidenziare le sue righe, di nuovo per azzerare."

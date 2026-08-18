@@ -1898,3 +1898,18 @@ expression,式
 this script - %d,このスクリプト - %d
 not published,未公開
 Insert a call to %s in this script.,このスクリプトで %s の呼び出しを挿入します。
+(global),(グローバル)
+this script,このスクリプト
+behaviour,ビヘイビア
+autoload,オートロード
+group,グループ
+1 row,1 行
+%d rows,%d 行
+Objects,オブジェクト
+object,オブジェクト
+Signals used,使用中のシグナル
+%s in %s,%s (%s 内)
+Highlight rows,行を強調表示
+Select in scene,シーンで選択
+This object is no longer used by this file.,このファイルはこのオブジェクトをもう使用していません。
+"Every object this file uses. Click one to highlight its rows, click it again to clear.",このファイルが使用するすべてのオブジェクト。クリックすると該当行を強調表示し、もう一度クリックすると解除します。

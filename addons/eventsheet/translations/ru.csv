@@ -1898,3 +1898,18 @@ expression,выражение
 this script - %d,этот скрипт - %d
 not published,не опубликовано
 Insert a call to %s in this script.,Вставляет вызов %s в этом скрипте.
+(global),(глобальный)
+this script,этот скрипт
+behaviour,поведение
+autoload,автозагрузка
+group,группа
+1 row,1 строка
+%d rows,строк: %d
+Objects,Объекты
+object,объект
+Signals used,Используемые сигналы
+%s in %s,%s в %s
+Highlight rows,Подсветить строки
+Select in scene,Выбрать в сцене
+This object is no longer used by this file.,Этот файл больше не использует этот объект.
+"Every object this file uses. Click one to highlight its rows, click it again to clear.","Все объекты, которые использует этот файл. Щелчок подсвечивает их строки, повторный щелчок снимает подсветку."

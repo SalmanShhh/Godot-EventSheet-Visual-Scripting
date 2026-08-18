@@ -1898,3 +1898,18 @@ expression,表达式
 this script - %d,此脚本 - %d
 not published,未发布
 Insert a call to %s in this script.,在此脚本中插入对 %s 的调用。
+(global),(全局)
+this script,此脚本
+behaviour,行为
+autoload,自动加载
+group,分组
+1 row,1 行
+%d rows,%d 行
+Objects,对象
+object,对象
+Signals used,使用的信号
+%s in %s,%s 位于 %s
+Highlight rows,高亮这些行
+Select in scene,在场景中选中
+This object is no longer used by this file.,此文件已不再使用该对象。
+"Every object this file uses. Click one to highlight its rows, click it again to clear.",此文件使用的所有对象。点击可高亮其所在行，再次点击取消。
