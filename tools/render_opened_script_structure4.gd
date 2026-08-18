@@ -73,19 +73,27 @@ var _frames: int = 0
 var _viewport: EventSheetViewport = null
 var _scroll: ScrollContainer = null
 var _sheet: EventSheetResource = null
+var _shot: SubViewport = null
 
 
 func _init() -> void:
 	root.title = "Opened script structure"
-	root.size = Vector2i(1500, 1000)
+	root.size = Vector2i(1200, 700)
 	var modern_base := Color("#252525")
+	# The whole reading is taller than any window this machine will open, so it is drawn into a
+	# SubViewport of the size the shot needs and that texture is what gets saved.
+	_shot = SubViewport.new()
+	_shot.size = Vector2i(1500, 1260)
+	_shot.transparent_bg = false
+	_shot.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(_shot)
 	var background: ColorRect = ColorRect.new()
 	background.color = modern_base.darkened(0.25)
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.add_child(background)
+	_shot.add_child(background)
 	_scroll = ScrollContainer.new()
 	_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.add_child(_scroll)
+	_shot.add_child(_scroll)
 	_viewport = EventSheetViewport.new()
 	_viewport.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -112,6 +120,16 @@ func _init() -> void:
 			if row_data != null and not row_data.row_uid.is_empty():
 				_viewport._fold_state[row_data.row_uid] = false
 		_viewport.set_sheet(_sheet)
+	# Two bars fold back so the whole reading fits one frame: the head's value list and the Combat
+	# group, both of which the bars above them already describe.
+	for entry: Dictionary in _viewport.get_flat_rows():
+		var folded_row: EventRowData = entry.get("row")
+		if folded_row == null:
+			continue
+		var title: String = folded_row.spans[0].text if not folded_row.spans.is_empty() else ""
+		if title == "Internal state":
+			_viewport._fold_state[folded_row.row_uid] = true
+	_viewport.set_sheet(_sheet)
 	root.gui_disable_input = true
 	process_frame.connect(_on_frame)
 
@@ -126,7 +144,7 @@ func _on_frame() -> void:
 	_frames += 1
 	if _frames < 12:
 		return
-	var image: Image = root.get_texture().get_image()
+	var image: Image = _shot.get_texture().get_image()
 	image.save_png("res://docs/images/opened-script-structure4.png")
 	print("[preview] opened script structure %dx%d" % [image.get_width(), image.get_height()])
 	print("[preview] round-trips: %s" % str(str(SheetCompiler.new().compile(_sheet).get("output", "")) == FIXTURE_SOURCE))

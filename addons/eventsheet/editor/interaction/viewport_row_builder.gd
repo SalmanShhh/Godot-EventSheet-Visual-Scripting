@@ -5199,9 +5199,10 @@ func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, a
 		"chip": true,
 		"code_cell": false,
 		"natural_width": true,
-		"line_index": action_line_index,
-		"object_label": EventSheetL10n.translate("Include")
+		"line_index": action_line_index
 	}
+	spans.append(_make_span(EventSheetL10n.translate("Include"), SemanticSpan.SpanType.VALUE,
+		base_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true).merged(action_style_meta, false)))
 	spans.append(_make_span(str(reading.get("file", "")), SemanticSpan.SpanType.KEYWORD,
 		base_meta.duplicate().merged({
 			"badge": true,
@@ -5259,6 +5260,16 @@ func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, actio
 		"code_cell": false,
 		"line_index": action_line_index
 	}
+	# The note leads the cell rather than trailing it: the sentence cell stretches to close the lane,
+	# so a word placed after it is pushed off the edge on a narrow canvas - and the one word that says
+	# this row does not run is the one word that must never be the one that gets cut.
+	spans.append(_make_span(EventSheetL10n.translate("disabled"), SemanticSpan.SpanType.COMMENT,
+		disabled_meta.duplicate().merged({
+			"natural_width": true,
+			# The NOTE is not the code: striking it through would say the word itself is switched off.
+			"ace_enabled": true,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}, true).merged(action_style_meta, false)))
 	# The stand-in is DISABLED, which is what the sentence builder reads to strike its cell through;
 	# nothing is written to the sheet, the row it stands for is still the comment the file holds.
 	var stand_in := RawCodeRow.new()
@@ -5267,15 +5278,6 @@ func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, actio
 	if not _append_sentence_spans(spans, stand_in, action_index, action_line_index, action_style_meta):
 		spans.append(_make_span(code, SemanticSpan.SpanType.VALUE,
 			disabled_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true).merged(action_style_meta, false)))
-	spans.append(_make_span(EventSheetL10n.translate("disabled"), SemanticSpan.SpanType.COMMENT, {
-		"lane": "action",
-		"kind": "action",
-		"ace_index": action_index,
-		"ace_enabled": false,
-		"natural_width": true,
-		"line_index": action_line_index,
-		"text_color": EventSheetPalette.TEXT_MUTED
-	}))
 
 
 ## The header spans of a function that IS an await beat: the repeating badge, the words, and the
@@ -5671,9 +5673,14 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		)
 		var trigger_object: String = _handler_object_label(event_row)
 		if not timer_reading.is_empty():
-			trigger_words = EventSheetL10n.translate("Every %s seconds") % str(timer_reading.get("seconds", ""))
-			# The beat belongs to System - it is a clock, not a node's own signal. The Timer NODE is
-			# the receipt, and it rides as the muted note after the words.
+			# ONE cell, not a cell plus a note: a second span in the condition lane takes the object
+			# cell for itself and leaves the row's object unsaid. The Timer's name is the receipt for
+			# the beat, so it rides in the same words, in brackets.
+			trigger_words = "%s (%s)" % [
+				EventSheetL10n.translate("Every %s seconds") % str(timer_reading.get("seconds", "")),
+				str(timer_reading.get("timer", ""))
+			]
+			# The beat belongs to System - it is a clock, not a node's own signal.
 			trigger_object = EventSheetL10n.translate("System")
 		spans.append(
 			_make_span(
@@ -5695,14 +5702,6 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				}.merged(condition_style_meta, true)
 			)
 		)
-		if not timer_reading.is_empty():
-			spans.append(_make_span("(%s)" % str(timer_reading.get("timer", "")), SemanticSpan.SpanType.COMMENT, {
-				"lane": "condition",
-				"kind": "trigger",
-				"ace_index": 0,
-				"line_index": condition_line_index,
-				"text_color": EventSheetPalette.TEXT_MUTED
-			}))
 		# A signal handler's PARAMETERS are the trigger's payload - the body that entered, the item
 		# that was picked up. An event sheet shows them as chips beside the trigger, so a reader knows
 		# what the event hands them without opening the code.
