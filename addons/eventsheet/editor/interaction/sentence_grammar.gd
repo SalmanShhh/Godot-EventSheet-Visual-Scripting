@@ -34,6 +34,46 @@ extends RefCounted
 const OBJECT_SYSTEM := "System"
 ## Input rows belong to Construct's Keyboard object, not to System.
 const OBJECT_KEYBOARD := "Keyboard"
+## M45. The pointer is Construct's Mouse object, exactly as the stick is Keyboard's.
+const OBJECT_MOUSE := "Mouse"
+## M40. An AudioStreamPlayer row belongs to Construct's one Audio object, whatever the player is
+## called in the scene tree.
+const OBJECT_AUDIO := "Audio"
+
+## M38. Vector constants read as the point they ARE - Construct writes (0, 0), never a namespaced
+## name. `INF` keeps the infinity sign the bare constant reads as, in each axis.
+const VECTOR2_CONSTANTS: Dictionary = {
+	"ZERO": "(0, 0)", "ONE": "(1, 1)", "INF": "(∞, ∞)",
+	"UP": "up", "DOWN": "down", "LEFT": "left", "RIGHT": "right"
+}
+const VECTOR3_CONSTANTS: Dictionary = {
+	"ZERO": "(0, 0, 0)", "ONE": "(1, 1, 1)", "INF": "(∞, ∞, ∞)",
+	"UP": "up", "DOWN": "down", "LEFT": "left", "RIGHT": "right",
+	"FORWARD": "forward", "BACK": "back"
+}
+## M38. The bare constants with a symbol every reader knows. `NAN` deliberately stays `NAN`: it has
+## no symbol a reader would recognise, and "not a number" is longer than the word it replaces.
+const GLOBAL_CONSTANTS: Dictionary = {"PI": "π", "TAU": "τ", "INF": "∞"}
+
+## M38. The types whose SCREAMING_CASE members are constants this lens may spell out.
+const VECTOR2_TYPES: PackedStringArray = ["Vector2", "Vector2i"]
+const VECTOR3_TYPES: PackedStringArray = ["Vector3", "Vector3i"]
+
+## M40. The classes whose `play` / `stop` are Construct's animation verbs, and the ones whose are
+## Construct's Audio object. Matched through ClassDB, so a subclass counts as its base.
+const ANIMATION_CLASSES: PackedStringArray = ["AnimatedSprite2D", "AnimatedSprite3D", "AnimationPlayer"]
+const AUDIO_CLASSES: PackedStringArray = ["AudioStreamPlayer", "AudioStreamPlayer2D", "AudioStreamPlayer3D"]
+
+## M43. Construct's object has an ANGLE, and its own place is just "position" - so a distance or an
+## angle measured FROM the object's own place names only the other end.
+const OWN_POSITION_NAMES: PackedStringArray = ["position", "global_position"]
+
+## M43/M46. Members whose Construct word differs from Godot's. The Godot spelling stays one hover
+## away, so the two vocabularies remain learnable side by side.
+const MEMBER_WORDS: Dictionary = {
+	"rotation_degrees": "angle",
+	"rotation": "angle (radians)"
+}
 
 ## Godot call shapes that have one settled Construct sentence. Curated on purpose: an entry is added
 ## only when one shape maps to exactly one reading. `{0}`.. are the call's arguments in order.
@@ -70,7 +110,22 @@ const RECEIVER_IDIOMS: Dictionary = {
 	"size": "{receiver}' count",
 	"direction_to": "direction from {receiver} to {0}",
 	"Input.get_vector": "input vector {0}/{1}/{2}/{3}",
-	"Input.get_axis": "axis {0}/{1}"
+	"Input.get_axis": "axis {0}/{1}",
+	# M43. The vector words the Vectors module's own ACEs use, so a typed line and a picked row read
+	# alike. The dot product keeps its mathematical sign, which is what a reader of the formula sees.
+	"length": "length of {receiver}",
+	"normalized": "{receiver}, normalized",
+	"dot": "{receiver} · {0}",
+	# M44. Emptiness IS a count in Construct - there is no "is empty" condition, only "count = 0".
+	"is_empty": "{receiver}' count = 0"
+}
+
+## M43. The measurements whose reading depends on WHERE they are measured from: `position.distance_to(b)`
+## is the object's own distance to b, while `a.distance_to(b)` has two ends worth naming.
+const MEASURED_IDIOMS: Dictionary = {
+	"distance_to": ["distance to {0}", "distance from {receiver} to {0}"],
+	"angle_to": ["angle to {0}", "angle from {receiver} to {0}"],
+	"angle_to_point": ["angle to {0}", "angle from {receiver} to {0}"]
 }
 
 ## M25. GDScript's global functions - the ones a receiver-less call may belong to. A call to anything
@@ -124,7 +179,9 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	if code.contains("\n"):
 		return {}
 	var indent: int = code.length() - code.lstrip("\t").length()
-	var text: String = code.strip_edges()
+	# M47. A `get_node("A/B")` lookup names the same object `$A/B` does, so the whole grammar below
+	# sees the spelling it already understands.
+	var text: String = node_lookup_text(code.strip_edges())
 	if text.is_empty() or text.begins_with("#"):
 		return {}
 	var keyword: String = leading_word(text)
@@ -155,7 +212,7 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 ## The Construct reading of ONE boolean expression - the text of an `if`, or the expression an
 ## Expression Is True row carries. {} when nothing is recognised, so the caller keeps its own text.
 static func condition(expression: String, context: Dictionary = {}) -> Dictionary:
-	var text: String = expression.strip_edges()
+	var text: String = node_lookup_text(expression.strip_edges())
 	if text.is_empty():
 		return {}
 	var self_object: String = str(context.get("self_object", OBJECT_SYSTEM))
@@ -168,6 +225,24 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 		var bare_flag: String = text.substr(4).strip_edges()
 		var negated_object: String = script_object(context) if is_engine_property(bare_flag, context) else self_object
 		return _sentence(negated_object, "{name} is false", {"name": [bare_flag, "name"]})
+	# ── M41 / M44 / M47 ─────────────────────────────────────────────────────────────────────────
+	# Construct's own questions, before the general shapes: a body's movement state, an overlap, a
+	# count, and a property read through `get("name")` all have one settled sentence each.
+	var body_state: Dictionary = _body_state_condition(text, context)
+	if not body_state.is_empty():
+		return body_state
+	var overlap: Dictionary = _overlap_condition(text, context)
+	if not overlap.is_empty():
+		return overlap
+	var movement: Dictionary = _movement_condition(text, context)
+	if not movement.is_empty():
+		return movement
+	var counted: Dictionary = _count_condition(text, context)
+	if not counted.is_empty():
+		return counted
+	var property_test: Dictionary = _object_property_condition(text, context)
+	if not property_test.is_empty():
+		return property_test
 	var group_test: Dictionary = _group_condition(text, context)
 	if not group_test.is_empty():
 		return group_test
@@ -188,7 +263,7 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 		return input_row
 	# Nothing structural matched, but the expression itself may still hold an idiom
 	# (`is_zero_approx(direction)`) or a type annotation this reading never shows.
-	var rewritten: String = expression_text(text)
+	var rewritten: String = expression_text(text, context)
 	if rewritten != text:
 		return _sentence("", "{value}", {"value": [rewritten, "value"]})
 	return {}
@@ -239,6 +314,11 @@ static func condition_pieces(expression: String, context: Dictionary = {}) -> Di
 ## Construct cell needs (`host.is_on_wall()` is an object and a question, not a line of code).
 static func _condition_reading(part: String, context: Dictionary) -> Dictionary:
 	var text: String = part.strip_edges()
+	# M44. Construct has no "is not empty": the reading of a non-empty list is its count, and the
+	# negation belongs INSIDE the comparison rather than as a mark on a count that reads "= 0".
+	var not_empty: Dictionary = _not_empty_reading(text, context)
+	if not not_empty.is_empty():
+		return not_empty
 	var negated: bool = false
 	if text.begins_with("not ") and not is_identifier(text.substr(4).strip_edges()):
 		negated = true
@@ -247,7 +327,7 @@ static func _condition_reading(part: String, context: Dictionary) -> Dictionary:
 	if reading.is_empty():
 		reading = _predicate_call_reading(text)
 	if reading.is_empty():
-		reading = {"object": "", "segments": [{"text": expression_text(text), "tone": "value"}]}
+		reading = {"object": "", "segments": [{"text": expression_text(text, context), "tone": "value"}]}
 	if negated:
 		var negated_segments: Array = [{"text": "%s " % translate("not"), "tone": "plain"}]
 		negated_segments.append_array(reading.get("segments", []) as Array)
@@ -454,7 +534,7 @@ static func signal_sentence(signal_name: String, arguments: String, context: Dic
 		var values: PackedStringArray = _split_arguments(payload)
 		var segments: Array = [{"text": "%s " % translate("Signal"), "tone": "plain"}, {"text": trigger, "tone": "name"}]
 		for index: int in values.size():
-			var chip: String = expression_text(values[index])
+			var chip: String = expression_text(values[index], context)
 			if index < parameter_names.size():
 				chip = "%s = %s" % [parameter_names[index], chip]
 			segments.append({"text": "   ", "tone": "plain"})
@@ -462,7 +542,7 @@ static func signal_sentence(signal_name: String, arguments: String, context: Dic
 		return {"object": owner, "segments": segments}
 	return _sentence(owner, "Signal {trigger} {values}", {
 		"trigger": [trigger, "name"],
-		"values": [expression_text(payload), "value"]
+		"values": [expression_text(payload, context), "value"]
 	})
 
 
@@ -490,7 +570,7 @@ static func return_sentence(returned: String, context: Dictionary) -> Dictionary
 	var value: String = returned.strip_edges()
 	if value.is_empty():
 		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Stop event", {})
-	var shown: String = expression_text(value)
+	var shown: String = expression_text(value, context)
 	if verb_kind == VerbKind.CONDITION or verb_kind == VerbKind.EXPRESSION:
 		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Set return value to {value}", {"value": [shown, "value"]})
 	return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Return {value}", {"value": [shown, "value"]})
@@ -509,11 +589,11 @@ static func declaration(code: String) -> Dictionary:
 
 ## A value expression with the Godot idioms replaced by their Construct reading and every type
 ## annotation dropped (M11 + M18). Returns the text unchanged when nothing is recognised.
-static func expression_text(text: String) -> String:
+static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var trimmed: String = text.strip_edges()
 	if trimmed.is_empty():
 		return trimmed
-	var without_cast: String = _drop_casts(trimmed)
+	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
 	# M31 before the call rewriting: a join is decided by the WHOLE expression's shape (is any part of
 	# it text?), which the innermost-first call pass would have already taken apart.
 	# A whole value wrapped in `str(...)` is the same value: Construct shows numbers in text without
@@ -522,7 +602,148 @@ static func expression_text(text: String) -> String:
 	joined = _rewrite_join(joined)
 	var rewritten: String = _rewrite_calls(joined)
 	rewritten = _rewrite_indexing(rewritten)
-	return _rewrite_delta(_tidy_numbers(rewritten))
+	return constant_words(_rewrite_delta(_tidy_numbers(rewritten)), context)
+
+
+## M45. The system values every Construct user types by name - the viewport's size, the pointer, the
+## clock, the frame rate. Whole-spelling replacements on purpose: each of these is one exact Godot
+## phrase with one exact Construct word, and a looser match would rename somebody's own helper.
+static func _system_words(text: String) -> String:
+	var out: String = _group_count_words(text)
+	if out.contains("get_viewport_rect()"):
+		out = out.replace("get_viewport_rect().size.x", translate("viewport width"))
+		out = out.replace("get_viewport_rect().size.y", translate("viewport height"))
+	if out.contains("mouse_position"):
+		out = out.replace("get_viewport().get_mouse_position()", translate("mouse position"))
+		out = out.replace("get_global_mouse_position()", translate("mouse position"))
+		out = out.replace("get_local_mouse_position()", translate("mouse position"))
+	if out.contains("Time.get_ticks_msec()"):
+		# The seconds form first: `/ 1000.0` is what makes the number Construct's `time`, and the bare
+		# call is milliseconds, which is a different number and says so.
+		out = out.replace("Time.get_ticks_msec() / 1000.0", translate("time"))
+		out = out.replace("Time.get_ticks_msec() / 1000", translate("time"))
+		out = out.replace("Time.get_ticks_msec()", translate("time in ms"))
+	out = out.replace("Engine.get_frames_per_second()", translate("fps"))
+	return out
+
+
+## M44. `get_tree().get_nodes_in_group("enemies").size()` is Construct's instance count of a family:
+## the group is the OBJECT and the count is what the row shows. Only a LITERAL group name is claimed -
+## a variable group has no word a row could honestly print.
+static func _group_count_words(text: String) -> String:
+	const HEAD := "get_tree().get_nodes_in_group("
+	var out: String = text
+	var guard: int = 0
+	while guard < 8:
+		guard += 1
+		var at: int = out.find(HEAD)
+		if at < 0:
+			return out
+		var close_at: int = closing_paren(out, at + HEAD.length() - 1)
+		if close_at < 0:
+			return out
+		var group_value: String = out.substr(at + HEAD.length(), close_at - at - HEAD.length())
+		var tail: String = out.substr(close_at + 1)
+		if not _is_string_literal(group_value) or not tail.begins_with(".size()"):
+			return out
+		out = "%s%s %s %s%s" % [out.substr(0, at), _unquote(group_value.strip_edges().trim_prefix("&")),
+			translate("(group)"), translate("count"), tail.substr(".size()".length())]
+	return out
+
+
+## M47. `get_node("A/B")` and `get_node_or_null("A/B")` name a node exactly as `$A/B` does, so they
+## read as the same object. Display only - the statement the file holds is untouched.
+static func node_lookup_text(text: String) -> String:
+	var out: String = text
+	for head: String in ["get_node_or_null(", "get_node("]:
+		var guard: int = 0
+		while guard < 8:
+			guard += 1
+			var at: int = out.find(head)
+			if at < 0:
+				break
+			var close_at: int = closing_paren(out, at + head.length() - 1)
+			if close_at < 0:
+				break
+			var path_value: String = out.substr(at + head.length(), close_at - at - head.length())
+			if not _is_string_literal(path_value):
+				break
+			var path: String = _unquote(path_value.strip_edges().trim_prefix("&"))
+			if path.is_empty() or path.contains(" "):
+				break
+			out = "%s$%s%s" % [out.substr(0, at), path, out.substr(close_at + 1)]
+	return out
+
+
+## M38. Named constants as Construct writes them: no namespace, and a symbol where one exists.
+##
+##   State.PATROL   -> PATROL     (when the sheet declares that member exactly once)
+##   Vector2.ZERO   -> (0, 0)
+##   Vector3.UP     -> up
+##   Color.RED      -> red
+##   PI / TAU / INF -> π / τ / ∞
+##
+## Only SCREAMING_CASE members are touched - those are the constants - and only outside string
+## literals. An enum member is claimed only when `context` says the sheet declares that enum and no
+## other enum on the sheet has a member by the same name, because `Facing.LEFT` and `Wall.LEFT` in one
+## file need their enum to stay readable.
+static func constant_words(text: String, context: Dictionary = {}) -> String:
+	if text.is_empty():
+		return text
+	var out: String = ""
+	var token: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if character == "\"" or character == "'":
+			out += _constant_token(token, context)
+			token = ""
+			var quote_end: int = _string_end(text, index)
+			out += text.substr(index, quote_end - index + 1)
+			index = quote_end + 1
+			continue
+		var is_token_character: bool = (
+			character == "_"
+			or character == "."
+			or (character >= "a" and character <= "z")
+			or (character >= "A" and character <= "Z")
+			or (character >= "0" and character <= "9")
+		)
+		if is_token_character:
+			token += character
+		else:
+			# A token followed by "(" is a CALL - `Color.from_hsv(...)` is not the colour word red.
+			out += token if character == "(" else _constant_token(token, context)
+			token = ""
+			out += character
+		index += 1
+	return out + _constant_token(token, context)
+
+
+## One token of constant_words: a `Type.MEMBER` constant, a bare `PI`, or the token untouched.
+static func _constant_token(token: String, context: Dictionary) -> String:
+	if token.is_empty():
+		return token
+	if not token.contains("."):
+		return str(GLOBAL_CONSTANTS.get(token, token))
+	var parts: PackedStringArray = token.split(".", false)
+	if parts.size() != 2 or not is_identifier(parts[0]) or not is_identifier(parts[1]):
+		return token
+	var head: String = parts[0]
+	var member: String = parts[1]
+	# Constants are written in caps deliberately; anything else is a property read, not a constant.
+	if member.to_upper() != member or member.to_lower() == member:
+		return token
+	if VECTOR2_TYPES.has(head) and VECTOR2_CONSTANTS.has(member):
+		return str(VECTOR2_CONSTANTS[member])
+	if VECTOR3_TYPES.has(head) and VECTOR3_CONSTANTS.has(member):
+		return str(VECTOR3_CONSTANTS[member])
+	if head == "Color":
+		return member.to_lower().replace("_", " ")
+	var enums: Dictionary = context.get("enum_members", {})
+	if int(enums.get(member, 0)) == 1 and (context.get("enum_names", {}) as Dictionary).has(head):
+		return member
+	return token
 
 
 ## M27. `delta` is Construct's `dt` - the same number under the name a Construct user writes. Only
@@ -681,7 +902,7 @@ static func _await_statement(text: String, context: Dictionary = {}) -> Dictiona
 		var inner: String = body.substr(24, body.length() - 24 - 9)
 		if inner.strip_edges().is_empty():
 			return {}
-		return _sentence(OBJECT_SYSTEM, "⏳ Wait {seconds} seconds", {"seconds": [expression_text(inner), "value"]})
+		return _sentence(OBJECT_SYSTEM, "⏳ Wait {seconds} seconds", {"seconds": [expression_text(inner, context), "value"]})
 	# M28. One frame of waiting is Construct's tick, and which clock it is IS the one Godot fact
 	# worth keeping - the two frames are different lengths.
 	if body == "get_tree().process_frame":
@@ -791,7 +1012,7 @@ static func _compound_statement(text: String, context: Dictionary) -> Dictionary
 		var split: Array = _split_object(target, context)
 		var values: Dictionary = {
 			"name": [str(split[1]), "name"],
-			"value": [expression_text(amount), "value"]
+			"value": [expression_text(amount, context), "value"]
 		}
 		match operator:
 			" += ":
@@ -811,7 +1032,16 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 		return {}
 	var target: String = text.substr(0, assign_at).strip_edges()
 	var assigned: String = text.substr(assign_at + 3).strip_edges()
-	if not is_simple_target(target) or assigned.is_empty():
+	if assigned.is_empty():
+		return {}
+	# ── M40 / M46 ───────────────────────────────────────────────────────────────────────────────
+	# The property writes Construct spells as its own verbs (visible, opacity, mirrored, size), and
+	# the two globals its glossary renames. Checked before the plain Set, and before the simple-target
+	# gate, because `get_tree().paused` is a settled sentence even though it assigns through a call.
+	var engine_verb: Dictionary = _engine_verb_assignment(target, assigned, context)
+	if not engine_verb.is_empty():
+		return engine_verb
+	if not is_simple_target(target):
 		return {}
 	var split: Array = _split_object(target, context)
 	var object_name: String = str(split[0])
@@ -819,10 +1049,103 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 	# System, exactly as the picked Input Vector row does.
 	if object_name == OBJECT_SYSTEM and assigned.begins_with("Input."):
 		object_name = OBJECT_KEYBOARD
+	# M45. The pointer is Construct's Mouse object for the same reason the stick is Keyboard's.
+	if object_name == OBJECT_SYSTEM and _system_words(assigned) != assigned and assigned.contains("mouse_position"):
+		object_name = OBJECT_MOUSE
 	return _sentence(object_name, "Set {name} to {value}", {
 		"name": [str(split[1]), "name"],
-		"value": [expression_text(assigned), "value"]
+		"value": [expression_text(assigned, context), "value"]
 	})
+
+
+## M40/M46. The assignments Construct writes as a verb rather than as a property write, and the two
+## Godot globals its glossary gives a Construct noun to. {} for everything else, which is the caller's
+## cue to keep the plain "Set X to Y" it already reads.
+##
+##   visible = false        Player ▸ Set invisible          (a CanvasLayer ▸ Set layer invisible)
+##   modulate.a = 0.5       Player ▸ Set opacity to 50%
+##   flip_h = true          Sprite2D ▸ Set mirrored
+##   scale = Vector2(2, 2)  Player ▸ Set size to 200%
+##   get_tree().paused = true   System ▸ Set time scale to 0 (pause)   (Construct words only)
+static func _engine_verb_assignment(target: String, assigned: String, context: Dictionary) -> Dictionary:
+	var construct_words: bool = bool(context.get("construct_words", false))
+	var bare_target: String = target.strip_edges().trim_prefix("self.")
+	# M46. Godot pauses the tree; Construct sets the time scale, and 0 IS the pause.
+	if construct_words and bare_target == "get_tree().paused":
+		if assigned == "true":
+			return _sentence(OBJECT_SYSTEM, "Set time scale to 0 (pause)", {})
+		if assigned == "false":
+			return _sentence(OBJECT_SYSTEM, "Set time scale to 1", {})
+		return {}
+	if construct_words and bare_target == "Engine.time_scale":
+		return _sentence(OBJECT_SYSTEM, "Set time scale to {value}", {"value": [expression_text(assigned, context), "value"]})
+	if not is_simple_target(bare_target):
+		return {}
+	var dot_at: int = bare_target.rfind(".")
+	var member: String = bare_target if dot_at < 0 else bare_target.substr(dot_at + 1)
+	var owner_text: String = "" if dot_at < 0 else bare_target.substr(0, dot_at)
+	# `modulate.a` owns two segments, so the object is whatever precedes BOTH of them.
+	var alpha_write: bool = (member == "a") and (owner_text == "modulate" or owner_text == "self_modulate"
+		or owner_text.ends_with(".modulate") or owner_text.ends_with(".self_modulate"))
+	if alpha_write:
+		var alpha_dot: int = owner_text.rfind(".")
+		owner_text = "" if alpha_dot < 0 else owner_text.substr(0, alpha_dot)
+	var object_name: String = _receiver_object(owner_text, context)
+	var object_class: String = object_class_of(object_name, context)
+	if alpha_write:
+		return _sentence(object_name, "Set opacity to {value}", {"value": [_percent_words(assigned, context), "value"]})
+	match member:
+		"visible":
+			if assigned != "true" and assigned != "false":
+				return {}
+			var is_layer: bool = construct_words and _class_is_any(object_class, PackedStringArray(["CanvasLayer"]))
+			var layer_label: String = "%s %s" % [object_name, translate("(layer)")] if is_layer else object_name
+			if is_layer:
+				return _sentence(layer_label, "Set layer visible" if assigned == "true" else "Set layer invisible", {})
+			return _sentence(object_name, "Set visible" if assigned == "true" else "Set invisible", {})
+		"flip_h":
+			if assigned != "true" and assigned != "false":
+				return {}
+			return _sentence(object_name, "Set mirrored" if assigned == "true" else "Set not mirrored", {})
+		"flip_v":
+			if assigned != "true" and assigned != "false":
+				return {}
+			return _sentence(object_name, "Set flipped" if assigned == "true" else "Set not flipped", {})
+		"scale":
+			var uniform: String = _uniform_scale_factor(assigned)
+			if uniform.is_empty():
+				return {}
+			return _sentence(object_name, "Set size to {value}", {"value": [uniform, "value"]})
+	return {}
+
+
+## M40. A fraction as the percentage Construct shows (`0.5` -> `50%`). A value that is not a plain
+## number keeps its own reading - "opacity to hp / max_hp" is honest, "opacity to hp / max_hp%" is not.
+static func _percent_words(value: String, context: Dictionary) -> String:
+	var text: String = value.strip_edges()
+	if not text.is_valid_float():
+		return expression_text(text, context)
+	var percent: float = text.to_float() * 100.0
+	var shown: String = String.num(percent, 4).rstrip("0").rstrip(".")
+	return "%s%%" % ("0" if shown.is_empty() else shown)
+
+
+## M40. `Vector2(2, 2)` as Construct's size percentage, or "" when the scale is not the SAME on every
+## axis - a non-uniform scale is two numbers, and one percentage would hide one of them.
+static func _uniform_scale_factor(value: String) -> String:
+	var text: String = value.strip_edges()
+	var open_at: int = text.find("(")
+	if open_at <= 0 or not text.ends_with(")"):
+		return ""
+	if not VECTOR_CONSTRUCTORS.has(text.substr(0, open_at)):
+		return ""
+	var axes: PackedStringArray = _split_arguments(text.substr(open_at + 1, text.length() - open_at - 2))
+	if axes.is_empty():
+		return ""
+	for axis: String in axes:
+		if not axis.strip_edges().is_valid_float() or axis.strip_edges() != axes[0].strip_edges():
+			return ""
+	return _percent_words(axes[0], {})
 
 
 ## The call shapes with a settled sentence: destroy, emit, change scene. Anything else is left to the
@@ -834,9 +1157,16 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	if text.begins_with(SCENE_HEAD) and text.ends_with(")"):
 		var scene_path: String = text.substr(SCENE_HEAD.length(), text.length() - SCENE_HEAD.length() - 1)
 		if not scene_path.strip_edges().is_empty():
+			# M46. Construct calls a scene a LAYOUT, and names it without its folder or its extension.
+			if bool(context.get("construct_words", false)):
+				return _sentence(OBJECT_SYSTEM, "Go to layout {path}", {
+					"path": ["\"%s\"" % _unquote(scene_path).get_file().get_basename(), "value"]})
 			# The path stays a quoted string, so a reader (and the name lens) sees content, not a name.
 			return _sentence(OBJECT_SYSTEM, "Go to scene {path}", {"path": ["\"%s\"" % _unquote(scene_path), "value"]})
-	var group_call: Dictionary = _group_call_statement(text)
+	# M46. Godot reloads the current scene; Construct restarts the layout.
+	if bool(context.get("construct_words", false)) and text == "get_tree().reload_current_scene()":
+		return _sentence(OBJECT_SYSTEM, "Restart layout", {})
+	var group_call: Dictionary = _group_call_statement(text, context)
 	if not group_call.is_empty():
 		return group_call
 	var tween: Dictionary = _tween_statement(text, context)
@@ -850,6 +1180,12 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var args: PackedStringArray = call.get("args", PackedStringArray())
 	var self_object: String = str(context.get("self_object", OBJECT_SYSTEM))
 	var object_name: String = self_object if target.is_empty() or target == "self" else target
+	# ── M40 / M43 / M47 ─────────────────────────────────────────────────────────────────────────
+	# The calls Construct writes as one of its own verbs: an animation, a sound, a visibility switch,
+	# an angle, and a property set by name.
+	var engine_verb: Dictionary = _engine_verb_call(call, context)
+	if not engine_verb.is_empty():
+		return engine_verb
 	# M25/M26. `queue_free()` on ANY object is Construct's Destroy, including the script's own object -
 	# which is named, never `self`.
 	if method == "queue_free" and args.is_empty():
@@ -874,9 +1210,58 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	return {}
 
 
+## M40/M43/M47. One call, read as the Construct verb it is - or {} when the call is not one of these,
+## which keeps the ordinary Object ▸ Verb reading.
+##
+##   sprite.play("run")   AnimatedSprite2D ▸ Set animation to "run" (play)
+##   sfx.play()           Audio ▸ Play
+##   hide()               Player ▸ Set invisible
+##   look_at(p)           Turret ▸ Set angle toward p
+##   enemy.set("hp", 3)   enemy ▸ Set hp to 3
+##
+## The animation / audio split is decided by the object's CLASS, because `play` means two different
+## things and only the class says which - an unknown class keeps the plain call reading.
+static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictionary:
+	var method: String = str(call.get("method", ""))
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	var receiver: String = str(call.get("target", ""))
+	var object_name: String = _receiver_object(receiver, context)
+	var object_class: String = object_class_of(object_name, context)
+	match method:
+		"hide":
+			if arguments.is_empty():
+				return _sentence(object_name, "Set invisible", {})
+		"show":
+			if arguments.is_empty():
+				return _sentence(object_name, "Set visible", {})
+		"look_at":
+			if arguments.size() >= 1:
+				return _sentence(object_name, "Set angle toward {target}", {
+					"target": [expression_text(arguments[0], context), "value"]})
+		"set":
+			if arguments.size() == 2 and _is_string_literal(arguments[0]) and is_identifier(_unquote(arguments[0])):
+				return _sentence(object_name, "Set {name} to {value}", {
+					"name": [_unquote(arguments[0]), "name"],
+					"value": [expression_text(arguments[1], context), "value"]})
+		"play":
+			if _class_is_any(object_class, ANIMATION_CLASSES) and arguments.size() == 1:
+				return _sentence(object_name, "Set animation to {name} (play)", {
+					"name": [expression_text(arguments[0], context), "value"]})
+			if _class_is_any(object_class, AUDIO_CLASSES):
+				return _sentence(OBJECT_AUDIO, "Play", {})
+		"stop":
+			if not arguments.is_empty():
+				return {}
+			if _class_is_any(object_class, ANIMATION_CLASSES):
+				return _sentence(object_name, "Stop animation", {})
+			if _class_is_any(object_class, AUDIO_CLASSES):
+				return _sentence(OBJECT_AUDIO, "Stop", {})
+	return {}
+
+
 ## M30. `get_tree().call_group("enemies", "flee", extra)` - the group is the OBJECT the row acts on
 ## (Construct's family), the method is the verb, and anything after it is a value the call passes on.
-static func _group_call_statement(text: String) -> Dictionary:
+static func _group_call_statement(text: String, context: Dictionary = {}) -> Dictionary:
 	const GROUP_HEAD := "get_tree().call_group("
 	const DEFERRED_HEAD := "get_tree().call_group_flags("
 	var head: String = ""
@@ -907,7 +1292,7 @@ static func _group_call_statement(text: String) -> Dictionary:
 	]
 	for index: int in range(2, arguments.size()):
 		segments.append({"text": "   ", "tone": "plain"})
-		segments.append({"text": expression_text(arguments[index]), "tone": "value"})
+		segments.append({"text": expression_text(arguments[index], context), "tone": "value"})
 	return {"object": object_label, "segments": segments}
 
 
@@ -928,8 +1313,8 @@ static func _tween_statement(text: String, context: Dictionary) -> Dictionary:
 		object_name = script_object(context)
 	return _sentence(object_name, "Tween {property} to {value} over {duration}s", {
 		"property": [_unquote(arguments[1]), "name"],
-		"value": [expression_text(arguments[2]), "value"],
-		"duration": [expression_text(arguments[3]), "value"]
+		"value": [expression_text(arguments[2], context), "value"],
+		"duration": [expression_text(arguments[3], context), "value"]
 	})
 
 
@@ -998,7 +1383,7 @@ static func call_reading(text: String, context: Dictionary, parameter_names: Pac
 	# name chip that would repeat what the verb just said.
 	var value_follows_verb: bool = verb.ends_with(" %s" % translate("to")) and arguments.size() == 1
 	for index: int in arguments.size():
-		var chip: String = expression_text(arguments[index])
+		var chip: String = expression_text(arguments[index], context)
 		if not value_follows_verb and index < parameter_names.size() and not parameter_names[index].is_empty():
 			chip = "%s = %s" % [parameter_names[index], chip]
 		segments.append({"text": " " if value_follows_verb else "   ", "tone": "plain"})
@@ -1117,9 +1502,190 @@ static func _engine_property_condition(text: String, context: Dictionary) -> Dic
 		return {"object": script_object(context), "segments": [
 			{"text": engine_member_name(subject.trim_prefix("self.")), "tone": "name"},
 			{"text": operator, "tone": "plain"},
-			{"text": expression_text(compared), "tone": "value"}
+			{"text": expression_text(compared, context), "tone": "value"}
 		]}
 	return {}
+
+
+## M41. The movement questions Construct's Platform behaviour asks. `is_on_wall` and `is_on_ceiling`
+## get Construct's own words (a wall is beside you, a ceiling above you); `is_on_floor` already reads
+## the same in both engines. The Godot phrase stays one hover away on the row.
+const BODY_STATE_WORDS: Dictionary = {
+	"is_on_floor": "Is on floor",
+	"is_on_wall": "Is by wall",
+	"is_on_ceiling": "Is by ceiling"
+}
+
+
+static func _body_state_condition(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty() or not (call.get("args", PackedStringArray()) as PackedStringArray).is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	if not BODY_STATE_WORDS.has(method):
+		return {}
+	return _sentence(_receiver_object(str(call.get("target", "")), context), str(BODY_STATE_WORDS[method]), {})
+
+
+## M41. `hurtbox.overlaps_body(player)` and the "is anything touching me" pair, as Construct's one
+## overlap condition. Construct names the other object, or says "something" when the test does not.
+static func _overlap_condition(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	var object_name: String = _receiver_object(str(call.get("target", "")), context)
+	if (method == "overlaps_body" or method == "overlaps_area") and arguments.size() == 1:
+		return _sentence(object_name, "Is overlapping {other}", {"other": [expression_text(arguments[0], context), "value"]})
+	if method in ["has_overlapping_bodies", "has_overlapping_areas"] and arguments.is_empty():
+		return _sentence(object_name, "Is overlapping something", {})
+	return {}
+
+
+## M41. `velocity.y < 0` is Construct's "Is jumping" - but ONLY on a 2D body, where Y grows downward.
+## In 3D the same test means the opposite, so the reading is refused there and the comparison stands.
+static func _movement_condition(text: String, context: Dictionary) -> Dictionary:
+	for operator: String in [" < ", " > "]:
+		var at: int = top_level_index(text, operator)
+		if at < 0:
+			continue
+		if text.substr(at + operator.length()).strip_edges() != "0":
+			return {}
+		var subject: String = text.substr(0, at).strip_edges().trim_prefix("self.")
+		if not subject.ends_with("velocity.y"):
+			return {}
+		var owner_name: String = subject.substr(0, maxi(subject.length() - "velocity.y".length() - 1, 0))
+		if object_class_of(_receiver_object(owner_name, context), context) != "CharacterBody2D":
+			return {}
+		return _sentence(_receiver_object(owner_name, context),
+			"Is jumping" if operator == " < " else "Is falling", {})
+	return {}
+
+
+## M41. The movement reading of a "is this number below / above zero" test, for the picked rows that
+## ask it that way. {} whenever the shape is not a 2D body's vertical speed, which is the caller's cue
+## to keep the reading it already had.
+static func movement_words(value: String, operator: String, context: Dictionary) -> Dictionary:
+	var text: String = "%s %s 0" % [value.strip_edges(), operator]
+	var movement: Dictionary = _movement_condition(text, context)
+	if not movement.is_empty():
+		return movement
+	# M47. `enemy.get("hp") > 0` still reads as the property it asks about; every other number keeps
+	# the vocabulary's own wording, which is why nothing else is tried here.
+	return _object_property_condition(text, context)
+
+
+## M44. Counting objects: a group's instance count, and a node's children.
+static func _count_condition(text: String, context: Dictionary) -> Dictionary:
+	for operator: String in [" >= ", " <= ", " != ", " == ", " > ", " < "]:
+		var at: int = top_level_index(text, operator)
+		if at < 0:
+			continue
+		var subject: String = text.substr(0, at).strip_edges()
+		var compared: String = text.substr(at + operator.length()).strip_edges()
+		if compared.is_empty():
+			return {}
+		var counted: String = _group_count_words(subject)
+		if counted != subject:
+			# "enemies (group) count" - the group is the OBJECT, and the count is what the row shows.
+			var count_word: String = translate("count")
+			var group_label: String = counted.substr(0, counted.length() - count_word.length()).strip_edges()
+			return {"object": group_label, "segments": [
+				{"text": count_word, "tone": "name"},
+				{"text": operator, "tone": "plain"},
+				{"text": expression_text(compared, context), "tone": "value"}
+			]}
+		var child_call: Dictionary = call_parts(subject)
+		if child_call.is_empty() or str(child_call.get("method", "")) != "get_child_count":
+			return {}
+		if not (child_call.get("args", PackedStringArray()) as PackedStringArray).is_empty():
+			return {}
+		return {"object": _receiver_object(str(child_call.get("target", "")), context), "segments": [
+			{"text": translate("child count"), "tone": "name"},
+			{"text": operator, "tone": "plain"},
+			{"text": expression_text(compared, context), "tone": "value"}
+		]}
+	return {}
+
+
+## M44. `not items.is_empty()` as the count it asks about, so the two emptiness tests read as one
+## pair (`items' count = 0` / `items' count > 0`) rather than as a sentence wearing a NOT mark.
+static func _not_empty_reading(text: String, context: Dictionary) -> Dictionary:
+	if not text.begins_with("not "):
+		return {}
+	var call: Dictionary = call_parts(text.substr(4).strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "is_empty":
+		return {}
+	if not (call.get("args", PackedStringArray()) as PackedStringArray).is_empty():
+		return {}
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	if receiver.is_empty():
+		return {}
+	return {"object": "", "segments": [
+		{"text": "%s' %s > 0" % [expression_text(receiver, context), translate("count")], "tone": "value"}
+	]}
+
+
+## M47. `enemy.get("hp") > 0` reads as the property it asks about, under the object that owns it.
+static func _object_property_condition(text: String, context: Dictionary) -> Dictionary:
+	for operator: String in [" >= ", " <= ", " != ", " == ", " > ", " < "]:
+		var at: int = top_level_index(text, operator)
+		if at < 0:
+			continue
+		var call: Dictionary = call_parts(text.substr(0, at).strip_edges())
+		if call.is_empty() or str(call.get("method", "")) != "get":
+			return {}
+		var arguments: PackedStringArray = call.get("args", PackedStringArray())
+		if arguments.size() != 1 or not _is_string_literal(arguments[0]):
+			return {}
+		var property_name: String = _unquote(arguments[0])
+		var receiver: String = str(call.get("target", "")).strip_edges()
+		if not is_identifier(property_name) or receiver.is_empty():
+			return {}
+		return {"object": _receiver_object(receiver, context), "segments": [
+			{"text": property_name, "tone": "name"},
+			{"text": operator, "tone": "plain"},
+			{"text": expression_text(text.substr(at + operator.length()), context), "tone": "value"}
+		]}
+	return {}
+
+
+## The object a receiver names: the script's own object for a bare or `self` call, the last path
+## segment for a `$Node` / `%Node` reference, and the receiver as written for anything else.
+static func _receiver_object(receiver: String, context: Dictionary) -> String:
+	var text: String = receiver.strip_edges()
+	if text.is_empty() or text == "self":
+		return script_object(context)
+	return object_of_reference(text)
+
+
+## M40/M41. The engine class an object label is known to be - the sheet's own object map first (an
+## @onready node's declared type, the pack's host), then the script's own class for its own object,
+## then the label itself when it names a class. "" when nothing is known, which is the cue to keep
+## the general reading rather than guess a class-specific one.
+static func object_class_of(object_label: String, context: Dictionary) -> String:
+	var label: String = object_label.strip_edges()
+	if label.is_empty():
+		return str(context.get("self_class", ""))
+	var classes: Dictionary = context.get("object_classes", {})
+	var known: String = str(classes.get(label, ""))
+	if not known.is_empty():
+		return known
+	if label == script_object(context) or label == OBJECT_SYSTEM:
+		return str(context.get("self_class", ""))
+	return label if ClassDB.class_exists(label) else ""
+
+
+## True when a known class IS one of `bases` (its own name or a subclass of one).
+static func _class_is_any(class_name_str: String, bases: PackedStringArray) -> bool:
+	var bare: String = class_name_str.strip_edges()
+	if bare.is_empty() or not ClassDB.class_exists(bare):
+		return false
+	for base: String in bases:
+		if bare == base or ClassDB.is_parent_class(bare, base):
+			return true
+	return false
 
 
 ## `randf() < 0.3` as Construct's chance condition. Only a literal probability is claimed - a
@@ -1416,11 +1982,20 @@ static func _split_object(target: String, context: Dictionary) -> Array:
 	if is_engine_property(head, context):
 		return [script_object(context), engine_member_name(text)]
 	if dot_at <= 0:
-		return [self_object, text]
+		return [self_object, _member_word(text)]
 	var object_name: String = head
 	if object_name == "self":
 		object_name = script_object(context)
-	return [object_name, text.substr(dot_at + 1)]
+	# M47. `$Enemies/Boss` is the object `Boss` - the name a reader sees in the scene tree.
+	return [object_of_reference(object_name), _member_word(text.substr(dot_at + 1))]
+
+
+## M43. The Construct word for a member of ANOTHER object - only the renamed ones. The axis rule
+## that `engine_member_name` also applies belongs to the script's own object, where the sheet knows
+## the member IS the node's place; on someone else's `position.x` it would drop a segment a reader
+## needs.
+static func _member_word(chain: String) -> String:
+	return translate(str(MEMBER_WORDS[chain])) if MEMBER_WORDS.has(chain) else chain
 
 
 ## M25. True when `name` is a property the ENGINE reports on the object this script is - the set is
@@ -1438,6 +2013,10 @@ static func engine_member_name(chain: String) -> String:
 		var axis: String = parts[1].to_lower()
 		if axis == "x" or axis == "y" or axis == "z":
 			return axis.to_upper()
+	# M43. Construct's object has an ANGLE. `rotation` is the same angle in radians, and saying so is
+	# the one Godot fact worth keeping - the two numbers are not interchangeable.
+	if MEMBER_WORDS.has(chain):
+		return translate(str(MEMBER_WORDS[chain]))
 	return chain
 
 
@@ -1537,6 +2116,15 @@ static func _receiver_idiom(chain: String, arguments: PackedStringArray) -> Stri
 	var receiver: String = chain.substr(0, dot_at)
 	var method: String = chain.substr(dot_at + 1)
 	var pattern: String = str(RECEIVER_IDIOMS.get(chain, RECEIVER_IDIOMS.get(method, "")))
+	if MEASURED_IDIOMS.has(method):
+		var forms: Array = MEASURED_IDIOMS[method]
+		var own_place: bool = OWN_POSITION_NAMES.has(receiver.trim_prefix("self."))
+		pattern = str(forms[0] if own_place else forms[1])
+	# M47. `enemy.get("hp")` names a property, and Construct shows the property, never the lookup.
+	if method == "get" and arguments.size() == 1 and _is_string_literal(arguments[0]):
+		var property_name: String = _unquote(arguments[0])
+		if is_identifier(property_name):
+			return "%s's %s" % [receiver, property_name]
 	if pattern.is_empty():
 		return ""
 	var filled: String = pattern.replace("{receiver}", receiver)

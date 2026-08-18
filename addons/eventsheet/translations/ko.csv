@@ -1846,3 +1846,44 @@ Wait one tick,한 틱 대기
 Wait one physics tick,물리 한 틱 대기
 Wait for signal {object} {trigger},시그널 {object} {trigger} 대기
 connects {object} {trigger},{object} {trigger} 연결
+Is on floor,바닥에 있음
+Is by wall,벽에 붙어 있음
+Is by ceiling,천장에 닿음
+Is jumping,점프 중
+Is falling,낙하 중
+Is overlapping {other},{other} 와 겹침
+Is overlapping something,무언가와 겹침
+Set invisible,숨기기
+Set visible,보이기
+Set layer invisible,레이어 숨기기
+Set layer visible,레이어 보이기
+Set mirrored,좌우 반전
+Set not mirrored,좌우 반전 해제
+Set flipped,상하 반전
+Set not flipped,상하 반전 해제
+Set opacity to {value},불투명도를 {value} 로 설정
+Set size to {value},크기를 {value} 로 설정
+Set animation to {name} (play),애니메이션을 {name} 로 설정 (재생)
+Stop animation,애니메이션 정지
+Play,재생
+Stop,정지
+Set angle toward {target},각도를 {target} 쪽으로
+Go to layout {path},레이아웃 {path} 로 이동
+Restart layout,레이아웃 재시작
+Set time scale to 0 (pause),시간 배율을 0 으로 (일시정지)
+Set time scale to 1,시간 배율을 1 으로
+Set time scale to {value},시간 배율을 {value} 으로
+count,개수
+child count,자식 수
+(layer),(레이어)
+viewport width,뷰포트 너비
+viewport height,뷰포트 높이
+mouse position,마우스 위치
+time,시간
+time in ms,시간 (ms)
+fps,fps
+angle,각도
+angle (radians),각도 (라디안)
+may be missing,없을 수 있음
+On collision with,충돌했을 때
+On stopped overlapping,겹침이 끝났을 때

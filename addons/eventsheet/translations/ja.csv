@@ -1846,3 +1846,44 @@ Wait one tick,1 ティック待つ
 Wait one physics tick,物理 1 ティック待つ
 Wait for signal {object} {trigger},シグナル {object} {trigger} を待つ
 connects {object} {trigger},{object} {trigger} を接続
+Is on floor,床の上にいる
+Is by wall,壁に接している
+Is by ceiling,天井に接している
+Is jumping,ジャンプ中
+Is falling,落下中
+Is overlapping {other},{other} と重なっている
+Is overlapping something,何かと重なっている
+Set invisible,非表示にする
+Set visible,表示する
+Set layer invisible,レイヤーを非表示にする
+Set layer visible,レイヤーを表示する
+Set mirrored,左右反転する
+Set not mirrored,左右反転を解除
+Set flipped,上下反転する
+Set not flipped,上下反転を解除
+Set opacity to {value},不透明度を {value} にする
+Set size to {value},サイズを {value} にする
+Set animation to {name} (play),アニメーションを {name} にする (再生)
+Stop animation,アニメーションを停止
+Play,再生
+Stop,停止
+Set angle toward {target},角度を {target} に向ける
+Go to layout {path},レイアウト {path} へ移動
+Restart layout,レイアウトを再開
+Set time scale to 0 (pause),タイムスケールを 0 にする (一時停止)
+Set time scale to 1,タイムスケールを 1 にする
+Set time scale to {value},タイムスケールを {value} にする
+count,個数
+child count,子ノード数
+(layer),(レイヤー)
+viewport width,ビューポート幅
+viewport height,ビューポート高さ
+mouse position,マウス位置
+time,時間
+time in ms,時間 (ms)
+fps,fps
+angle,角度
+angle (radians),角度 (ラジアン)
+may be missing,存在しない可能性
+On collision with,衝突したとき
+On stopped overlapping,重なりが終わったとき

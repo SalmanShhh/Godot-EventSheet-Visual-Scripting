@@ -1846,3 +1846,44 @@ Wait one tick,Attendi un tick
 Wait one physics tick,Attendi un tick di fisica
 Wait for signal {object} {trigger},Attendi il segnale {object} {trigger}
 connects {object} {trigger},collega {object} {trigger}
+Is on floor,È a terra
+Is by wall,È vicino al muro
+Is by ceiling,È vicino al soffitto
+Is jumping,Sta saltando
+Is falling,Sta cadendo
+Is overlapping {other},Si sovrappone a {other}
+Is overlapping something,Si sovrappone a qualcosa
+Set invisible,Rendi invisibile
+Set visible,Rendi visibile
+Set layer invisible,Rendi il livello invisibile
+Set layer visible,Rendi il livello visibile
+Set mirrored,Rendi speculare
+Set not mirrored,Togli speculare
+Set flipped,Capovolgi
+Set not flipped,Togli capovolgimento
+Set opacity to {value},Imposta opacità a {value}
+Set size to {value},Imposta dimensione a {value}
+Set animation to {name} (play),Imposta animazione a {name} (riproduci)
+Stop animation,Ferma animazione
+Play,Riproduci
+Stop,Ferma
+Set angle toward {target},Imposta angolo verso {target}
+Go to layout {path},Vai al layout {path}
+Restart layout,Riavvia layout
+Set time scale to 0 (pause),Imposta scala temporale a 0 (pausa)
+Set time scale to 1,Imposta scala temporale a 1
+Set time scale to {value},Imposta scala temporale a {value}
+count,conteggio
+child count,numero di figli
+(layer),(livello)
+viewport width,larghezza viewport
+viewport height,altezza viewport
+mouse position,posizione del mouse
+time,tempo
+time in ms,tempo in ms
+fps,fps
+angle,angolo
+angle (radians),angolo (radianti)
+may be missing,potrebbe mancare
+On collision with,In collisione con
+On stopped overlapping,Quando finisce la sovrapposizione
