@@ -49,8 +49,9 @@ static func _read_condition(expression: String) -> String:
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:
+		print("[PASS] sentence_grammar_test: %s" % label)
 		return true
-	print("[FAIL] %s: expected %s, got %s" % [label, expected, actual])
+	print("[FAIL] sentence_grammar_test: %s - expected %s, got %s" % [label, expected, actual])
 	return false
 
 

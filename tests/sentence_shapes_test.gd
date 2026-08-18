@@ -111,8 +111,9 @@ static func run() -> bool:
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:
+		print("[PASS] sentence_shapes_test: %s" % label)
 		return true
-	print("[FAIL] %s: expected %s, got %s" % [label, expected, actual])
+	print("[FAIL] sentence_shapes_test: %s - expected %s, got %s" % [label, expected, actual])
 	return false
 
 
