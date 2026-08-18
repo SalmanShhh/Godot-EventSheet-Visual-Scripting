@@ -3161,8 +3161,14 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	var tooltip: String = str(attributes.get("tooltip", "")).strip_edges()
 	if tooltip.is_empty():
 		tooltip = local_var.description.strip_edges()
-	if not tooltip.is_empty():
-		prefix += "## %s\n" % tooltip.replace("\n", " ")
+	var doc_line: String = "## %s\n" % tooltip.replace("\n", " ") if not tooltip.is_empty() else ""
+	# Both orders are ordinary Godot: this plugin writes the doc above the section lines, while
+	# Godot's own convention writes `@export_group("…")` first and the doc directly above the variable
+	# it documents. A variable opened from a file that used the second order carries that fact
+	# (doc_after_group), so saving it back reproduces the file it came from byte for byte.
+	var doc_after_group: bool = bool(attributes.get("doc_after_group", false))
+	if not doc_after_group:
+		prefix += doc_line
 	var category: String = str(attributes.get("category", "")).strip_edges()
 	if not category.is_empty():
 		prefix += "@export_category(\"%s\")\n" % category
@@ -3172,6 +3178,8 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	var subgroup: String = str(attributes.get("subgroup", "")).strip_edges()
 	if not subgroup.is_empty():
 		prefix += "@export_subgroup(\"%s\")\n" % subgroup
+	if doc_after_group:
+		prefix += doc_line
 	return prefix
 
 

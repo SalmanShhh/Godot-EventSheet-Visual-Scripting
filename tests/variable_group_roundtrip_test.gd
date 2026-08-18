@@ -76,6 +76,45 @@ static func run() -> bool:
 			SheetCompiler._emit_tree_variable_line(hp),
 			"## Player health.\n@export_group(\"Combat\")\n@export var hp: int = 100") and all_passed
 
+	# Godot's OWN convention writes the section line first and the `##` doc directly above the variable
+	# it documents. In that order the group line used to stay a raw block and the settings folder never
+	# formed for a hand-written script at all - so both orders lift, and each re-emits the one it came
+	# from. (The whole-file round-trip below is what makes "re-emits the order it came from" real.)
+	var godot_order: String = "extends Node2D\n\n@export_group(\"Combat\")\n## Player health.\n@export var hp: int = 100\n@export_subgroup(\"Melee\")\n## Damage per swing.\n@export var dmg: int = 5\n"
+	var godot_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(godot_order)
+	var godot_hp: LocalVariable = null
+	var godot_dmg: LocalVariable = null
+	var godot_block: bool = false
+	for entry: Variant in godot_sheet.events:
+		if entry is LocalVariable and (entry as LocalVariable).name == "hp":
+			godot_hp = entry as LocalVariable
+		if entry is LocalVariable and (entry as LocalVariable).name == "dmg":
+			godot_dmg = entry as LocalVariable
+		if entry is RawCodeRow and (entry as RawCodeRow).code.contains("@export_"):
+			godot_block = true
+	all_passed = _check("a group written ABOVE its doc comment still lifts",
+		godot_hp != null and str((godot_hp.attributes as Dictionary).get("group", "")) == "Combat", true) and all_passed
+	all_passed = _check("its doc is still the variable's tooltip",
+		godot_hp != null and str((godot_hp.attributes as Dictionary).get("tooltip", "")) == "Player health.", true) and all_passed
+	all_passed = _check("a subgroup written the same way lifts too",
+		godot_dmg != null and str((godot_dmg.attributes as Dictionary).get("subgroup", "")) == "Melee", true) and all_passed
+	all_passed = _check("no @export_ line is left behind as a block", godot_block, false) and all_passed
+	if godot_hp != null:
+		all_passed = _check("and it re-emits in the order the file wrote it",
+			SheetCompiler._emit_tree_variable_line(godot_hp),
+			"@export_group(\"Combat\")\n## Player health.\n@export var hp: int = 100") and all_passed
+	# The same file opened the way the dock opens one, so the round-trip measured is the whole file's.
+	var godot_file: String = "@tool\nclass_name VariableGroupOrderFixture\nextends Node2D\n\n@export_group(\"Combat\")\n## Player health.\n@export var hp: int = 100\n@export_subgroup(\"Melee\")\n## Damage per swing.\n@export var dmg: int = 5\n"
+	var fixture_path: String = "user://eventsheets_variable_group_order.gd"
+	var writer: FileAccess = FileAccess.open(fixture_path, FileAccess.WRITE)
+	if writer != null:
+		writer.store_string(godot_file)
+		writer.close()
+		var opened: EventSheetResource = GDScriptImporter.new().import_external(fixture_path)
+		all_passed = _check("the whole file round-trips byte for byte in Godot's order",
+			str(SheetCompiler.new().compile(opened).get("output", "")) if opened != null else "did not open",
+			godot_file) and all_passed
+
 	# A `## @ace_*` annotation immediately before a var is NOT mistaken for a tooltip.
 	var anno_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n## @ace_tags(combat)\n@export var dmg: int = 5\n")
 	var dmg: LocalVariable = null
