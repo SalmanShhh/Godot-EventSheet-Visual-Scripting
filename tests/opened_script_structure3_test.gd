@@ -77,8 +77,14 @@ static func _picking_grammar() -> bool:
 	ok = _check("another object's children say whose",
 		builder._picking_source_note(PickFilter.CollectionKind.EXPRESSION, "spawner.get_children()"),
 		"(children of spawner)") and ok
-	ok = _check("any other list is named as it is written",
+	ok = _check("any other NAMED list is named as it is written",
 		builder._picking_source_note(PickFilter.CollectionKind.EXPRESSION, "wave_members"), "(in wave_members)") and ok
+	# `for i in 3:` is a count and `for x in build()` is a computation - neither is a set of instances,
+	# and calling one "I (in 3)" would say something the code never did.
+	ok = _check("a count is not a set of instances",
+		builder._picking_source_note(PickFilter.CollectionKind.EXPRESSION, "3"), "") and ok
+	ok = _check("a computed list is not either",
+		builder._picking_source_note(PickFilter.CollectionKind.EXPRESSION, "build_wave()"), "") and ok
 	# The object column names the thing, so the condition drops the loop's OWN possessive - and only
 	# that one: a condition about a different object still has to say which.
 	ok = _check("the picked object's possessive goes",
@@ -107,6 +113,29 @@ static func _picking_grammar() -> bool:
 	loop.actions.append(RawCodeRow.new())
 	ok = _check("a body with a statement outside the if is not",
 		builder._picking_words(loop).is_empty(), true) and ok
+
+	# TWO independent ifs are two conditions, not one - merging them would hoist the second out of the
+	# loop it runs in, which is the one thing this reading must never say. Only the first `if` and its
+	# OWN else / elif arms merge, so the expansion is checked on built rows rather than on the words.
+	loop.actions.clear()
+	loop.sub_events.clear()
+	var first_if: EventRow = EventRow.new()
+	first_if.event_uid = "picking_first"
+	first_if.conditions.append(ACECondition.new())
+	var second_if: EventRow = EventRow.new()
+	second_if.event_uid = "picking_second"
+	second_if.conditions.append(ACECondition.new())
+	loop.sub_events.append(first_if)
+	loop.sub_events.append(second_if)
+	loop.event_uid = "picking_loop"
+	viewport.set_reading_mode(true)
+	ok = _check("two independent ifs do not merge into the loop",
+		builder._expand_picking_row(builder._build_event_row(loop, 0)).is_empty(), true) and ok
+	# ...but the second sub-event being an ELSE arm of the first is exactly the shape that does.
+	second_if.conditions.clear()
+	second_if.else_mode = EventRow.ElseMode.ELSE
+	ok = _check("an if with its own else merges",
+		builder._expand_picking_row(builder._build_event_row(loop, 0)).size(), 2) and ok
 	viewport.free()
 	return ok
 

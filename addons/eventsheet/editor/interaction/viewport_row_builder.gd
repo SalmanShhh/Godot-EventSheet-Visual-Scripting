@@ -6165,10 +6165,16 @@ func _expand_picking_row(row: EventRowData) -> Array[EventRowData]:
 		if child.source_resource != loop.sub_events[child_index]:
 			return []
 		shifted.append(child)
-	# The first sub-event must be the `if` itself; the ones after it can only be its Else arms, which
-	# a lifted `if/else` writes as further condition-less sub-events.
+	# The first sub-event must be the `if` itself, and the ones after it can ONLY be its own else / elif
+	# arms. Two independent `if`s in a loop body are two conditions, not one - merging them would hoist
+	# the second out of the loop it runs in, which is the one thing this reading must never say.
 	if (shifted[0].source_resource as EventRow).conditions.is_empty():
 		return []
+	if (shifted[0].source_resource as EventRow).else_mode != EventRow.ElseMode.NONE:
+		return []
+	for arm_index: int in range(1, shifted.size()):
+		if (shifted[arm_index].source_resource as EventRow).else_mode == EventRow.ElseMode.NONE:
+			return []
 	for shifted_index: int in range(shifted.size()):
 		var moved: EventRowData = shifted[shifted_index]
 		_shift_row_indent(moved, row.indent - moved.indent)
@@ -6211,10 +6217,10 @@ func _picking_words(loop: EventRow) -> Dictionary:
 	var collection: String = pick.collection_value.strip_edges()
 	if collection.is_empty():
 		collection = pick.source_expression.strip_edges()
-	return {
-		"object": pick.iterator_name.strip_edges().capitalize(),
-		"note": _picking_source_note(pick.collection_kind, collection),
-	}
+	var note: String = _picking_source_note(pick.collection_kind, collection)
+	if note.is_empty():
+		return {}
+	return {"object": pick.iterator_name.strip_edges().capitalize(), "note": note}
 
 
 ## The muted note beside the picked object: which instances these are.
@@ -6230,9 +6236,12 @@ func _picking_source_note(collection_kind: int, collection: String) -> String:
 		var owner_name: String = collection.substr(0, collection.length() - ".get_children()".length()).strip_edges()
 		if _is_identifier_path(owner_name):
 			return "(%s %s)" % [EventSheetL10n.translate("children of"), EventSheetSentence.object_of_reference(owner_name)]
-	if collection.is_empty():
-		return ""
-	return "(%s %s)" % [EventSheetL10n.translate("in"), EventSheetSentence.expression_text(collection)]
+	# Anything else has to be a NAMED list for this reading to be honest. `for i in 3:` is a count, and
+	# an arbitrary expression is a computation - neither is a set of instances to pick from, and
+	# labelling one "I (in 3)" says something the code never did.
+	if _is_identifier_path(collection):
+		return "(%s %s)" % [EventSheetL10n.translate("in"), EventSheetSentence.expression_text(collection)]
+	return ""
 
 
 ## The group name inside `get_tree().get_nodes_in_group("enemies")`, or "" when the expression is
