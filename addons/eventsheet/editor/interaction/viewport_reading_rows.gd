@@ -772,6 +772,8 @@ static func object_census(sheet: EventSheetResource) -> Array:
 			if not by_label.has(scene_label):
 				order.append(_new_object_entry(by_label, scene_label, "scene", "", scene_path, scene_path))
 	_tally_usage(order, by_label, units)
+	for index: int in order.size():
+		(order[index] as Dictionary)["found_at"] = index
 	order.sort_custom(_by_kind_order)
 	return order
 
@@ -792,10 +794,16 @@ static func _new_object_entry(by_label: Dictionary, label: String, kind: String,
 
 ## Rail order: the kinds in their declared order, and within a kind the order they were found in,
 ## which is the order the file itself introduces them.
+##
+## The found-at tiebreaker is load-bearing, not decoration: `sort_custom` is NOT a stable sort, so
+## without it two objects of the same kind could swap places between refreshes and the rail would
+## reshuffle under the reader's cursor for no reason.
 static func _by_kind_order(left: Dictionary, right: Dictionary) -> bool:
 	var left_kind: int = Array(OBJECT_KINDS).find(str(left.get("kind", "")))
 	var right_kind: int = Array(OBJECT_KINDS).find(str(right.get("kind", "")))
-	return left_kind < right_kind
+	if left_kind != right_kind:
+		return left_kind < right_kind
+	return int(left.get("found_at", 0)) < int(right.get("found_at", 0))
 
 
 ## One text unit per TOP-LEVEL row: every line of code in that row's subtree, joined. The rail's
