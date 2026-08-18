@@ -239,6 +239,66 @@ static func apply_to_pieces(pieces: Array, enabled: bool, knob_names: Dictionary
 	return output
 
 
+## M9 + M10 over a FINISHED sentence - an ACE row's display text, where the verb and the
+## connective words come from a display template and only the parameter values are the user's
+## names. That makes this lens deliberately narrower than humanize_expression:
+##
+##   - text inside quotes is never touched (a string literal is content, not a name)
+##   - a token followed by "(" is a function being called, not a variable
+##   - only a token that is snake_case (holds an underscore), a known @export knob, or a
+##     property chain is rewritten
+##
+## That last rule is what keeps the template's own English intact: "Set", "variable" and "to" are
+## single lowercase-or-capitalised words with no underscore, so they pass through untouched, while
+## `_coyote_timer` and `coyote_time` - the parts the user actually named - read as words.
+static func humanize_sentence(text: String, knob_names: Dictionary = {}) -> String:
+	if text.is_empty():
+		return text
+	var output: String = ""
+	var token: String = ""
+	var quote: String = ""
+	for index: int in range(text.length()):
+		var character: String = text[index]
+		if not quote.is_empty():
+			# Inside a literal: copy through untouched until the matching quote closes it.
+			output += character
+			if character == quote:
+				quote = ""
+			continue
+		var is_token_character: bool = (
+			character == "_"
+			or character == "."
+			or (character >= "a" and character <= "z")
+			or (character >= "A" and character <= "Z")
+			or (character >= "0" and character <= "9")
+		)
+		if is_token_character:
+			token += character
+			continue
+		# A token immediately followed by "(" is a call, and a call's NAME is not a variable.
+		output += token if character == "(" else _sentence_token(token, knob_names)
+		token = ""
+		output += character
+		if character == "\"" or character == "'":
+			quote = character
+	output += _sentence_token(token, knob_names)
+	return output
+
+
+## One token of humanize_sentence: rewritten only when it is unmistakably one of the user's own
+## names - a property chain, a snake_case identifier, or a knob this sheet exports.
+static func _sentence_token(token: String, knob_names: Dictionary) -> String:
+	if token.is_empty():
+		return token
+	if token.contains("."):
+		return possessive_chain(token)
+	if not is_rewritable_name(token):
+		return token
+	if not token.contains("_") and not knob_names.has(token):
+		return token
+	return humanize_identifier(token, knob_names.has(token))
+
+
 ## M12. The leading NOT of a condition sentence, removed so the red ✕ in the badge column can
 ## carry the inversion instead of the word. Returns the sentence unchanged when it does not
 ## start with a negation. `had_not` in the returned dictionary tells the caller whether to draw

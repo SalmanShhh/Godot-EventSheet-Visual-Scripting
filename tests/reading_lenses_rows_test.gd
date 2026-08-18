@@ -32,19 +32,26 @@ static func _open(reading: bool) -> EventSheetViewport:
 
 
 ## Every row's text, one string per row, with each row's spans joined - the same reading the
-## render harness prints, so a value pinned here is a value you can see in the image.
+## render harness prints, so a value pinned here is a value you can see in the image. Children
+## are walked too: reading mode folds the setting groups closed, and a row being folded out of
+## sight must not be the reason an assertion passes or fails.
 static func _row_texts(view: EventSheetViewport) -> PackedStringArray:
 	var texts: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in view.get_flat_rows():
-		var row_data: EventRowData = entry.get("row")
-		if row_data == null:
-			continue
-		view._row_builder._ensure_event_spans(row_data)
-		var parts: PackedStringArray = PackedStringArray()
-		for span: SemanticSpan in row_data.spans:
-			parts.append(span.text)
-		texts.append(" | ".join(parts))
+		_collect_row_texts(view, entry.get("row"), texts)
 	return texts
+
+
+static func _collect_row_texts(view: EventSheetViewport, row_data: EventRowData, texts: PackedStringArray) -> void:
+	if row_data == null:
+		return
+	view._row_builder._ensure_event_spans(row_data)
+	var parts: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		parts.append(span.text)
+	texts.append(" | ".join(parts))
+	for child: EventRowData in row_data.children:
+		_collect_row_texts(view, child, texts)
 
 
 static func _any_row_contains(texts: PackedStringArray, needle: String) -> bool:

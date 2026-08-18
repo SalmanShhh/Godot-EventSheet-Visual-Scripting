@@ -1,8 +1,10 @@
 # EventForge - render harness (dev tool) for the opened-sheet READING LENSES.
-# Opens two read-only previews side by side and screenshots them as one image:
-#   left  - the FPS Controller pack (its head, its published verbs and its physics tick)
-#   right - tests/fixtures/reading_lenses_fixture.gd, a hand-written script carrying an @onready
-#           node, an inverted condition, a nested if and a call with named arguments
+# Opens two read-only previews stacked and screenshots them as one image:
+#   top    - the FPS Controller pack (its published verbs and its physics tick)
+#   bottom - tests/fixtures/reading_lenses_fixture.gd, a hand-written script carrying an @onready
+#            node, an inverted condition, a nested if and a call with named arguments
+# Stacked rather than side by side on purpose: a two-lane sheet in half a window wraps every
+# cell to two or three characters per line, which proves nothing about how the rows read.
 # Writes docs/images/opened-pack-lenses.png, and prints what each row READS as, so one run
 # proves both the look (the image) and the words (the printed spans).
 # Run NON-headless (headless runs cannot render):
@@ -23,13 +25,13 @@ var _pack_scroll: ScrollContainer = null
 
 func _init() -> void:
 	root.title = "Opened sheet - reading lenses"
-	root.size = Vector2i(1600, 940)
+	root.size = Vector2i(1280, 1000)
 	var modern_base := Color("#252525")
 	var background := ColorRect.new()
 	background.color = modern_base.darkened(0.25)
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(background)
-	var columns := HBoxContainer.new()
+	var columns := VBoxContainer.new()
 	columns.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	columns.add_theme_constant_override("separation", 10)
 	root.add_child(columns)
@@ -74,6 +76,9 @@ func _on_frame() -> void:
 	# Scroll the pack pane to its physics tick, which is where the sentence lenses do their work;
 	# the fixture pane is short enough to read whole from the top.
 	_pack_scroll.scroll_vertical = int(_physics_tick_top())
+	# The fixture's head (its identity bar and two folded groups) is proved by the printed rows;
+	# the shot wants the EVENTS, where the lenses do their work.
+	(_fixture_view.get_parent() as ScrollContainer).scroll_vertical = 108
 	await process_frame
 	await process_frame
 	var image: Image = root.get_texture().get_image()
@@ -103,19 +108,26 @@ func _print_rows(label: String, view: EventSheetViewport, limit: int) -> void:
 	print("── %s ──" % label)
 	var printed: int = 0
 	for index: int in range(view._flat_rows.size()):
-		var row_data: EventRowData = view._flat_rows[index].get("row")
-		if row_data == null:
-			continue
-		view._row_builder._ensure_event_spans(row_data)
-		if row_data.spans.is_empty():
-			continue
+		printed = _print_row(view, view._flat_rows[index].get("row"), printed, limit, 0)
+		if printed >= limit:
+			return
+
+
+## One row and, indented under it, its children - reading mode folds the setting groups and the
+## code cards closed, and a row hidden behind a fold still has to be checkable.
+func _print_row(view: EventSheetViewport, row_data: EventRowData, printed: int, limit: int, depth: int) -> int:
+	if row_data == null or printed >= limit:
+		return printed
+	view._row_builder._ensure_event_spans(row_data)
+	if not row_data.spans.is_empty():
 		var texts: PackedStringArray = PackedStringArray()
 		for span: SemanticSpan in row_data.spans:
 			var icon_mark: String = ""
 			if span.metadata is Dictionary and (span.metadata as Dictionary).get("object_icon") is Texture2D:
 				icon_mark = "[icon]"
 			texts.append(icon_mark + span.text)
-		print("  %s" % " | ".join(texts))
+		print("  %s%s" % ["    ".repeat(depth), " | ".join(texts)])
 		printed += 1
-		if printed >= limit:
-			return
+	for child: EventRowData in row_data.children:
+		printed = _print_row(view, child, printed, limit, depth + 1)
+	return printed

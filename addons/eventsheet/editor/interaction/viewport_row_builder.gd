@@ -755,6 +755,11 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 ## the @export / group chips are gone - the bar above the row carries the group, and everything inside
 ## a settings bar is exported by definition.
 func _build_reading_variable_row(variable: LocalVariable, description: String, indent: int) -> EventRowData:
+	# M20 - an @onready node reference is an OBJECT, not a value: it reads as an Object
+	# declaration here too, so the head's variable list and the event tree agree.
+	var object_row: EventRowData = _build_object_declaration_row(variable, indent)
+	if object_row != null:
+		return object_row
 	return _build_variable_row(
 		"tree",
 		variable.name,
@@ -3341,9 +3346,10 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var node_reference: String = variable.default_value.strip_edges()
 	var declared_class: String = EventSheetViewportReadingRows.declared_class_of(variable)
+	# The object's NAME is not humanized, even with the lens on: this row is where the object gets
+	# its identity, and every later row refers to it by exactly this spelling. Construct shows an
+	# object's name verbatim in its object list for the same reason.
 	var shown_name: String = variable.name
-	if _viewport.humanize_names_enabled():
-		shown_name = EventSheetViewportLenses.humanize_identifier(variable.name)
 	var spans: Array[SemanticSpan] = [
 		_make_span(EventSheetL10n.translate("Object"), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false, "kind": "variable", "line_index": 0, "badge": true, "badge_style": "scope",
@@ -4741,7 +4747,7 @@ func _append_condition_prefix_spans(
 	# Keep the primary badge column stable for trigger/invert/OR by rendering
 	# negation first. When a line has both badges, ✕ is placed in column 1
 	# and OR follows in column 2.
-	if condition.negated:
+	if condition.negated or _condition_reads_negated(condition):
 		spans.append(_negated_badge_span(condition_style_meta, line_index, condition_index))
 	if (
 		event_row.condition_mode == EventRow.ConditionMode.OR
@@ -4883,7 +4889,50 @@ func _function_call_label(action: ACEAction) -> String:
 					label = display
 				break
 	var args: String = str(params_dict.get("args", "")).strip_edges()
+	# ── M16 lens hook (LIFTED call rows) ──────────────────────────────────────────────────────
+	# "Call Add Look   x = velocity X   y = velocity Y" instead of "Add Look(velocity.x,
+	# velocity.y)": the argument labels come from the called function's OWN parameter names, so
+	# the row says what each value means rather than making you open the function to find out.
+	var called: EventFunction = find_function_by_name(_viewport._sheet, fn_name)
+	if called != null:
+		var call_pieces: Array = EventSheetViewportReadingRows.call_reading_pieces(
+			label,
+			_split_call_arguments(args),
+			EventSheetViewportReadingRows.parameter_names_of(called),
+			_viewport.humanize_names_enabled(),
+			_export_knob_names()
+		)
+		if not call_pieces.is_empty():
+			var text: String = ""
+			# The object label ("Functions") is the object column's job, so the first piece - which
+			# IS that label - is dropped here rather than repeated inside the sentence.
+			for index: int in range(1, call_pieces.size()):
+				text += str((call_pieces[index] as Array)[0])
+			return text.strip_edges()
 	return "%s(%s)" % [label, args] if not args.is_empty() else label
+
+
+## The argument list of a call row split on TOP-LEVEL commas, so a nested call or a vector
+## literal ("Vector2(1, 2)") stays one argument instead of becoming two.
+func _split_call_arguments(args: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if args.strip_edges().is_empty():
+		return out
+	var depth: int = 0
+	var current: String = ""
+	for index: int in range(args.length()):
+		var character: String = args[index]
+		if character in ["(", "[", "{"]:
+			depth += 1
+		elif character in [")", "]", "}"]:
+			depth -= 1
+		if character == "," and depth == 0:
+			out.append(current.strip_edges())
+			current = ""
+			continue
+		current += character
+	out.append(current.strip_edges())
+	return out
 
 
 func _format_condition_descriptor(condition: ACECondition) -> String:
@@ -4891,7 +4940,14 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 	# where the template is RESOLVED - a locale whose catalog predates the markup translates
 	# the plain sentence, and that plain result must not enter the styled branch.
 	_pending_display_bbcode = _param_markup_applies(condition.provider_id, condition.ace_id, condition.params)
-	var base_text: String = _format_condition_descriptor_base(condition)
+	# ── M9 / M10 / M12 lens hook (LIFTED rows) ────────────────────────────────────────────────
+	# The sentence-layer hook further down only covers code that stayed raw; a condition that
+	# LIFTED into a real ACE gets its reading here, at the one place its display text is built.
+	# M12 strips a leading NOT because the ✕ in the badge column says it instead (see
+	# _condition_reads_negated, which asks the same question for the badge).
+	var base_text: String = _reading_sentence(str(EventSheetViewportLenses.strip_leading_not(
+		_format_condition_descriptor_base(condition)
+	).get("text", "")))
 	var ace_note: String = str(condition.comment).strip_edges()
 	if not ace_note.is_empty():
 		return "%s   ⊳ %s" % [base_text, ace_note]
@@ -5004,7 +5060,8 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	# Same split as the condition formatter: rich-param styling arms here, template markup
 	# arms where the template resolves (translation-fallback aware).
 	_pending_display_bbcode = _param_markup_applies(action.provider_id, action.ace_id, action.params)
-	var base_text: String = _format_action_descriptor_base(action)
+	# M9 / M10 lens hook for LIFTED action rows - the twin of the condition hook above.
+	var base_text: String = _reading_sentence(_format_action_descriptor_base(action))
 	# Awaiting actions wear an hourglass (the GDevelop async-action cue): everything after
 	# this row in the SAME event waits for it, so the suspension point should be visible.
 	if action_awaits(action):
@@ -5329,6 +5386,27 @@ func _reading_class_icon_for(object_label: String) -> Texture2D:
 		return null
 	_reset_lens_caches_if_stale()
 	return EventSheetViewportReadingRows.class_icon_for(object_label, _lens_class_map)
+
+
+## M9/M10 applied to a finished ACE display sentence. One function so every lifted-row lane -
+## conditions, actions, triggers - reads the same way, and so the View toggle has a single switch
+## to flip rather than one per lane.
+func _reading_sentence(text: String) -> String:
+	if not _viewport.humanize_names_enabled():
+		return text
+	return EventSheetViewportLenses.humanize_sentence(text, _export_knob_names())
+
+
+## M12 - whether a lifted condition READS as inverted even though its `negated` flag is not set,
+## which is the case for an expression condition lifted straight from `if not <cond>:`. The badge
+## column asks this so the ✕ appears; _format_condition_descriptor strips the matching word so
+## the two never both show.
+func _condition_reads_negated(condition: ACECondition) -> bool:
+	if condition == null:
+		return false
+	return bool(EventSheetViewportLenses.strip_leading_not(
+		_format_condition_descriptor_base(condition)
+	).get("negated", false))
 
 
 ## M13/M20 - the class icon for the object a statement row acts on. The subject is the head of the
