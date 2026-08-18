@@ -155,7 +155,7 @@ static func _connected_lambdas(rows: PackedStringArray) -> bool:
 	ok = _check("and the lambda's body is its action row",
 		_reading_at(rows, "Subtract 1 from seconds left"), " | Subtract 1 from seconds left") and ok
 	ok = _check("a multi-line lambda's trigger carries its payload chip",
-		_reading_at(rows, "➜host On Body Entered"), "➜host On Body Enteredbody | ") and ok
+		_reading_at(rows, "➜host On Body Entered"), "➜host On Body Entered   body | ") and ok
 	ok = _check("and its first statement is an action row",
 		_reading_at(rows, "Add 1 to seconds left"), " | Add 1 to seconds left") and ok
 	ok = _check("and the branch inside that lambda is a sub-event of it",

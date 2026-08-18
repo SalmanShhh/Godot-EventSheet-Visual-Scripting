@@ -5217,8 +5217,15 @@ func _build_connect_lambda_rows(event_row: EventRow, anchor_base: String, indent
 	return rows
 
 
-## The trigger row itself: the ➜ badge, `<Object> On <Signal>`, and one chip per lambda parameter -
-## the payload the trigger hands its body, drawn exactly as a declared handler's is.
+## The lambda's parameter names - the payload the trigger hands its body.
+static func payload_names(parts: Dictionary) -> PackedStringArray:
+	return parts.get("args", PackedStringArray()) as PackedStringArray
+
+
+## The trigger row itself: the ➜ badge and `<Object> On <Signal> <payload>` - the signal plus the
+## names the lambda gives what it is handed, so a reader knows what the event passes them without
+## opening the code. The payload rides IN the trigger cell rather than beside it, because the
+## condition lane gives its trigger cell the whole lane and a chip after it has nowhere to sit.
 func _build_connect_trigger_row(event_row: EventRow, parts: Dictionary, anchor: String, indent: int,
 		action_index: int) -> EventRowData:
 	var trigger_row := EventRowData.new()
@@ -5238,9 +5245,15 @@ func _build_connect_trigger_row(event_row: EventRow, parts: Dictionary, anchor: 
 	badge_meta["line_index"] = 0
 	badge_meta["badge_style"] = "trigger"
 	trigger_row.spans.append(_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta))
-	trigger_row.spans.append(_make_span(str(parts.get("trigger", "")), SemanticSpan.SpanType.CONDITION, {
+	# "trigger", not "condition": a trigger cell sizes to its words and leaves room for the payload
+	# chips beside it, exactly as a declared handler's trigger row does.
+	var payload: PackedStringArray = payload_names(parts)
+	var trigger_text: String = str(parts.get("trigger", ""))
+	if not payload.is_empty():
+		trigger_text += "   " + ", ".join(payload)
+	trigger_row.spans.append(_make_span(trigger_text, SemanticSpan.SpanType.CONDITION, {
 		"lane": "condition",
-		"kind": "condition",
+		"kind": "trigger",
 		"ace_index": -1,
 		"chip": true,
 		"editable": false,
@@ -5248,18 +5261,6 @@ func _build_connect_trigger_row(event_row: EventRow, parts: Dictionary, anchor: 
 		"line_index": 0,
 		"object_label": str(parts.get("object", ""))
 	}.merged(condition_style_meta, true)))
-	var payload: PackedStringArray = parts.get("args", PackedStringArray())
-	for payload_index in payload.size():
-		trigger_row.spans.append(_make_span(payload[payload_index], SemanticSpan.SpanType.CONDITION, {
-			"editable": false,
-			"lane": "condition",
-			"kind": "trigger_payload",
-			"param_index": payload_index,
-			"chip": true,
-			"hoverable": false,
-			"natural_width": true,
-			"line_index": 0
-		}.merged(condition_style_meta, true)))
 	return trigger_row
 
 
