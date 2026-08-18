@@ -23,12 +23,17 @@ static func run() -> bool:
 	all_passed = _check("function-call object chip is ƒ",
 		viewport._object_label_for("Core", "CallFunction"), "ƒ") and all_passed
 
-	# A no-arg call to a known Function reads as its friendly display name.
+	# M16 - a call to a known Function reads Construct's way: the word Call plus the function's
+	# friendly display name. What this has always guarded against is the RAW form leaking into the
+	# cell (`apply_physics()` - a code name and a pair of parentheses); that still holds, and the
+	# verb is still the display name. Only the leading word is new.
 	var call_known: ACEAction = _call_action("apply_physics", "")
 	all_passed = _check("known function renders its friendly verb name",
-		viewport._function_call_label(call_known), "Apply Physics") and all_passed
-	all_passed = _check("the action descriptor shows the verb, not Call name()",
-		viewport._format_action_descriptor_base(call_known), "Apply Physics") and all_passed
+		viewport._function_call_label(call_known), "Call Apply Physics") and all_passed
+	all_passed = _check("the action descriptor shows the verb, not the raw name()",
+		viewport._format_action_descriptor_base(call_known), "Call Apply Physics") and all_passed
+	all_passed = _check("the raw function name never reaches the cell",
+		viewport._function_call_label(call_known).contains("apply_physics"), false) and all_passed
 
 	# An unknown function humanizes its name; args are appended only when the call passes them.
 	var call_unknown: ACEAction = _call_action("do_stuff", "1, 2")
