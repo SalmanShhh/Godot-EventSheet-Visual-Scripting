@@ -748,7 +748,7 @@ static func functions_page_content(sheet: EventSheetResource) -> Dictionary:
 		if event_function.function_name.strip_edges().is_empty():
 			continue
 		var record: Dictionary = {
-			"function_name": event_function.function_name,
+			"function_name": event_function.function_name.strip_edges(),
 			"label": function_entry_label(event_function)
 		}
 		if event_function.expose_as_ace:
@@ -795,17 +795,22 @@ static func function_call_definitions(sheet: EventSheetResource, registry: Event
 	var out: Array[ACEDefinition] = []
 	if registry == null:
 		return out
-	var content: Dictionary = functions_page_content(sheet)
-	if content.is_empty():
+	# One rule for "is there a Functions page at all", shared with the page itself.
+	if functions_page_content(sheet).is_empty():
 		return out
 	var base: ACEDefinition = registry.find_definition("Core", "CallFunction")
 	if base == null:
 		return out
-	for group_key: String in ["published", "helpers"]:
-		for entry: Variant in content.get(group_key, []):
-			var function_name: String = str((entry as Dictionary).get("function_name", ""))
-			var event_function: EventFunction = ViewportRowBuilder.find_function_by_name(sheet, function_name)
-			if event_function == null:
+	# Published first, then helpers, matching the page. Walked in ONE pass over the sheet per group
+	# rather than by name lookup per entry, so a file with hundreds of functions stays linear while
+	# the picker rebuilds this on every keystroke.
+	for want_published: bool in [true, false]:
+		for entry: Variant in sheet.functions:
+			if not (entry is EventFunction):
+				continue
+			var event_function: EventFunction = entry as EventFunction
+			var function_name: String = event_function.function_name.strip_edges()
+			if function_name.is_empty() or event_function.expose_as_ace != want_published:
 				continue
 			# copy(), never duplicate(): an ACEDefinition's fields are plain vars, so duplicate()
 			# would hand back a blank definition that still looks valid.
