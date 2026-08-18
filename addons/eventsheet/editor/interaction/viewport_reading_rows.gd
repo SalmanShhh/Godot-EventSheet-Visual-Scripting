@@ -213,6 +213,11 @@ static func object_class_map(sheet: EventSheetResource) -> Dictionary:
 	var host_class: String = sheet.host_class.strip_edges()
 	if not host_class.is_empty() and host_class != "Node":
 		map[HOST_LABEL] = host_class
+		# M25 - the script's own object draws the picture of the class it IS, so a row that names it
+		# (`Player ▸ Set X to 100`) shows the same icon the scene tree shows for that node.
+		var script_object: String = script_object_name(sheet)
+		if not script_object.is_empty():
+			map[script_object] = host_class
 	for entry: Variant in sheet.events:
 		var variable: LocalVariable = entry as LocalVariable
 		if variable == null or not variable.onready:

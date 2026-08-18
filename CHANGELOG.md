@@ -2,6 +2,46 @@
 
 ## [Unreleased]
 
+### Added - an opened script reads in Construct's own words
+
+Opening any hand-written `.gd` - not just a pack - now reads as an event sheet a Construct user can
+follow. Everything here is display only over the unchanged file: emission, the byte round-trip and
+double-click-edits-the-line are untouched, and the exact GDScript is still one hover away.
+
+- **The script's own object has a name, and `self` never appears.** A script IS an object: its
+  `class_name`, else the class it sits on. Its ENGINE properties read under that name with its class
+  icon - `position.x = 100` is `Player ▸ Set X to 100`, `rotation > 1.5` is `Player ▸ rotation > 1.5`,
+  exactly as Construct writes `Sprite ▸ Set X`. Plain script variables stay with System, and the global
+  functions (`print`, `randi`, `len`, ...) read as System actions rather than as calls on the object.
+- **Any other call reads Object ▸ Verb values, with no parentheses.** The verb is the method in words
+  (`play` -> `Play`, `set_text(v)` -> `Set text to v`), the arguments wear chips named by the engine's
+  OWN parameter names when the object's class is known (`AnimatedSprite2D ▸ Play  name = "run"`), a
+  `$Path/To/Label` reads by its last segment, and `queue_free()` on anything is `Destroy`. A picked
+  Call Method row reads the same sentence.
+- **`delta` reads `dt`** in every expression - on hand-written lines and on lifted rows alike - and the
+  two tick triggers read `Every tick (physics)` / `Every tick (draw)`. The trigger ids are unchanged.
+- **Signals carry named payload chips**: `damaged.emit(3, attacker)` is
+  `Signal On Damaged  amount = 3  source = attacker`, named from the signal's own declaration. `await`
+  on a signal reads `⏳ Wait for signal door On Opened`, and the two frame awaits read `⏳ Wait one
+  tick` / `⏳ Wait one physics tick` (the Await Next Frame action says the same words now).
+- **Groups read as families.** `get_tree().call_group("enemies", "flee")` is
+  `enemies (group) ▸ Call Flee`, `add_to_group` / `remove_from_group` are `Add to group "enemies"` on
+  their object, and `x.is_in_group("boss")` is `x ▸ is in group "boss"`. The picked group rows say the
+  same words.
+- **Text joins read with Construct's `&`**: `str(lives) + " lives"` is `lives & " lives"` and
+  `"Score: %d" % score` unrolls to `"Score: " & score`; a format the reader cannot unroll stays as
+  written. Indexing reads possessively - `inventory["potion"]` is `inventory's "potion"`, `items[0]` is
+  `items' item 0`.
+- **More idioms with one settled sentence**: `randi_range` -> `random whole number a to b`,
+  `randf_range` -> `random number a to b`, `create_tween().tween_property(...)` ->
+  `Tween position to target over 0.3s`, `Input.get_vector(...)` -> `input vector "l"/"r"/"u"/"d"` under
+  Keyboard, `a.direction_to(b)` -> `direction from a to b`, `rad_to_deg(x)` -> `x in degrees`,
+  `snapped(v, s)` -> `v snapped to s`, and `len(x)` / `x.size()` -> `x' count`.
+- **Loops say what Construct's System loops say**: `Repeat 3 times (loopindex i)`,
+  `For "i" from 2 to 7` (inclusive, the last value the body actually sees), `For each child child` on
+  the object whose children it walks, `While hp > 0`, and `break` / `continue` read `Stop loop` /
+  `Next` - the Break Loop and Continue Loop actions now say those words too.
+
 ### Added - a ternary reads as a sub-event pair, and `return` reads Construct's own wording
 
 An opened pack still had one shape a Construct sheet never shows: a CONDITION inside an ACTION cell.

@@ -6495,6 +6495,12 @@ func _condition_reads_negated(condition: ACECondition) -> bool:
 ## is also what headless returns, so a headless render keeps the text-only look.
 func _reading_sentence_icon(sentence: Dictionary, code: String) -> Texture2D:
 	var subject: String = ""
+	# ── M25 lens hook ──────────────────────────────────────────────────────────────────────────
+	# The row's OBJECT is the subject whenever the sentence names one - an engine property of the
+	# script's own object reads as `Player ▸ Set X to 100`, whose picture is Player's, not X's.
+	var named_object: Texture2D = _reading_class_icon_for(str(sentence.get("object", "")))
+	if named_object != null:
+		return named_object
 	if not sentence.is_empty():
 		for segment: Variant in (sentence.get("segments", []) as Array):
 			var part: Dictionary = segment
