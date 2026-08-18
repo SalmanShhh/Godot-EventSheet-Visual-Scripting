@@ -694,15 +694,15 @@ static func _await_statement(text: String, context: Dictionary = {}) -> Dictiona
 static func _await_signal_statement(body: String, context: Dictionary) -> Dictionary:
 	if body.is_empty() or body.contains("(") or body.contains(" "):
 		return {}
-	var owner_name: String = ""
-	var signal_name: String = body
+	# Only the MEMBER form is claimed (`await door.opened`). A bare `await something` names one
+	# identifier, and an identifier alone does not say it is a signal - papering that over with a
+	# sentence would hide a suspension point behind a guess.
 	var dot_at: int = body.rfind(".")
-	if dot_at > 0:
-		owner_name = body.substr(0, dot_at).strip_edges()
-		signal_name = body.substr(dot_at + 1).strip_edges()
-	if not is_identifier(signal_name):
+	if dot_at <= 0:
 		return {}
-	if not owner_name.is_empty() and not is_simple_target(owner_name):
+	var owner_name: String = body.substr(0, dot_at).strip_edges()
+	var signal_name: String = body.substr(dot_at + 1).strip_edges()
+	if not is_identifier(signal_name) or not is_simple_target(owner_name):
 		return {}
 	if owner_name == "self":
 		owner_name = str(context.get("script_object", "")).strip_edges()
@@ -889,8 +889,12 @@ static func _group_call_statement(text: String) -> Dictionary:
 		arguments = arguments.slice(1)
 	if arguments.size() < 2:
 		return {}
-	var group_name: String = _unquote(arguments[0])
-	var method: String = _unquote(arguments[1])
+	# Both names must be LITERALS: a `call_group(group_var, method_var)` has no words a row could
+	# honestly print, and inventing them is exactly the confident lie this grammar refuses.
+	if not _is_string_literal(arguments[0]) or not _is_string_literal(arguments[1]):
+		return {}
+	var group_name: String = _unquote(arguments[0].strip_edges().trim_prefix("&"))
+	var method: String = _unquote(arguments[1].strip_edges().trim_prefix("&"))
 	if group_name.is_empty() or not is_identifier(method):
 		return {}
 	var object_label: String = "%s %s" % [group_name, translate("(group)")]
@@ -936,10 +940,21 @@ static func script_object(context: Dictionary) -> String:
 	return str(context.get("self_object", OBJECT_SYSTEM))
 
 
-## A value shown as the quoted string it is, whatever spelling the code used (`&"boss"`, `'boss'`).
+## A LITERAL shown as the quoted string it is, whatever spelling the code used (`&"boss"`, `'boss'`).
+## A value that is not a literal comes back as itself: quoting `group_name` would show a reader a
+## group actually called "group_name", which is not what the line does.
 static func _quoted(value: String) -> String:
-	var bare: String = _unquote(value.strip_edges().trim_prefix("&"))
-	return "\"%s\"" % bare
+	var text: String = value.strip_edges().trim_prefix("&")
+	if not (text.begins_with("\"") or text.begins_with("'")):
+		return expression_text(text)
+	return "\"%s\"" % _unquote(text)
+
+
+## True when a value is a plain string literal - the only spelling a group or method NAME can have
+## and still be readable as the name it is.
+static func _is_string_literal(value: String) -> bool:
+	var text: String = value.strip_edges().trim_prefix("&")
+	return text.length() >= 2 and ((text.begins_with("\"") and text.ends_with("\"")) or (text.begins_with("'") and text.ends_with("'")))
 
 
 ## M26. A method name as the verb a reader says: `play` -> "Play", `take_damage` -> "Take damage",

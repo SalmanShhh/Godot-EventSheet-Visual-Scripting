@@ -204,8 +204,10 @@ static func _picked_matches_typed() -> bool:
 	event_row.actions.append(_action("SetProperty", {"target": "host", "property": "position.x", "value": "1.0"}))
 	sheet.events.append(event_row)
 	var readings: PackedStringArray = _render(sheet)
+	# `Fixture ▸ Destroy` rather than `System ▸ Destroy`: this sheet declares a class_name, so its own
+	# object has a name (M25), and a row acting on the script itself says that name.
 	for expected: String in ["host ▸ does not exist", "System ▸ Set coyote timer to 0",
-			"Fixture ▸ Signal On Jumped", "System ▸ Destroy", "System ▸ Stop event",
+			"Fixture ▸ Signal On Jumped", "Fixture ▸ Destroy", "System ▸ Stop event",
 			"host ▸ Set position X to 1"]:
 		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok
 	return ok

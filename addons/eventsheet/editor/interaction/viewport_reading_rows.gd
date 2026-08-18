@@ -51,8 +51,22 @@ static func script_object_name(sheet: EventSheetResource) -> String:
 	var declared: String = sheet.custom_class_name.strip_edges()
 	if not declared.is_empty():
 		return declared
+	# On a BEHAVIOUR the host class belongs to `host`, the node the pack is attached TO - naming the
+	# script after it would send a reader looking for the object on the wrong node.
+	if sheet.behavior_mode or _declares_host(sheet):
+		return ""
 	var host_class: String = sheet.host_class.strip_edges()
 	return host_class if not host_class.is_empty() and host_class != "Node" else ""
+
+
+## True when the sheet keeps its own `host` reference - the mark of a behaviour, whose host class is
+## the node it rides rather than the class the script itself is.
+static func _declares_host(sheet: EventSheetResource) -> bool:
+	for entry: Variant in sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable != null and variable.name == HOST_LABEL:
+			return true
+	return false
 
 
 ## M25. Every property the ENGINE reports on the class this script extends, as a set. A name the
