@@ -43,7 +43,7 @@ and two enemies' `"attack"` cooldowns are independent.
 
 ## Wait, then continue
 
-**Wait** (System, Time) pauses the action list mid-flow: `Show message "Ready..."`, `Wait 1.0 s`,
+**Wait** (System, Time) pauses the action list mid-flow: `Show message "Ready..."`, `Wait 1.0 seconds`,
 `Show message "GO!"`. Everything below the Wait runs after the delay - the sheet reads top to
 bottom exactly like the timeline it is. **Wait For Signal** does the same for "until something
 happens" instead of "until time passes", and **Single Flight** (Run Context) keeps a waiting

@@ -33,7 +33,7 @@ people get wrong.
 | `Trigger once` / `Was recently true (is_on_floor(), 0.1s)` | edge detection - the second one IS coyote time |
 | `Start cooldown "dash" for 1.5s` / `cooldown "dash" is ready` | `last_dash_time` and clock math |
 | `Buffer press "jump" for 0.12s` / `press "jump" is buffered` | input buffering's timestamps |
-| `Wait 1.0 s` / the **Timeline** block (`at 0.0s… at 1.0s…`) | await-chains; the Timeline compiles to exactly one |
+| `Wait 1.0 seconds` / the **Timeline** block (`at 0.0s… at 1.0s…`) | await-chains; the Timeline compiles to exactly one |
 | `5 times, 0.1s apart: …` | the for-await burst loop |
 | `On group "enemies" emptied` | the wave director's "are they all dead yet" polling |
 
