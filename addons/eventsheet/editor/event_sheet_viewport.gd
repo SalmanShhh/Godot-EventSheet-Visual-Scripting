@@ -1485,11 +1485,14 @@ func toggle_bookmark_selected() -> void:
 	var row_data: EventRowData = _row_at(_selected_row_index)
 	if row_data == null:
 		return
-	if _bookmark_rows.has(row_data.row_uid):
-		_bookmark_rows.erase(row_data.row_uid)
+	# Bookmarked per EVENT, like the breakpoint beside it: a ternary pair marks and unmarks as one,
+	# and only the row the pair leads with flies the pennant.
+	var bookmark_key: String = row_data.statement_uid()
+	if _bookmark_rows.has(bookmark_key):
+		_bookmark_rows.erase(bookmark_key)
 	else:
-		_bookmark_rows[row_data.row_uid] = true
-	row_data.bookmark_enabled = _bookmark_rows.has(row_data.row_uid)
+		_bookmark_rows[bookmark_key] = true
+	row_data.bookmark_enabled = _bookmark_rows.has(bookmark_key)
 	queue_redraw()
 
 
@@ -1509,7 +1512,9 @@ func jump_to_bookmark(direction: int = 1) -> bool:
 	var marked: Array[int] = []
 	for index in range(_flat_rows.size()):
 		var marked_row: EventRowData = _row_at(index)
-		if marked_row != null and _bookmark_rows.has(marked_row.row_uid):
+		# Keyed on the statement, but only the pair's lead row is a jump stop - F4 must never park the
+		# selection on a reading of the row it just left.
+		if marked_row != null and _bookmark_rows.has(marked_row.statement_uid()) 				and (marked_row.ternary_anchor_uid.is_empty() or marked_row.ternary_lead):
 			marked.append(index)
 	if marked.is_empty():
 		return false
@@ -1900,13 +1905,18 @@ func _refresh_rows() -> void:
 		var line_row: EventRowData = _flat_rows[index].get("row")
 		if line_row == null:
 			continue
-		line_row.line_number = index + 1
-		line_row.event_number = int(event_numbers.get(line_row.source_resource.get_instance_id(), 0)) if line_row.source_resource != null else 0
-		if _breakpoint_rows.has(line_row.row_uid):
-			line_row.breakpoint_enabled = bool(_breakpoint_rows[line_row.row_uid])
-		line_row.bookmark_enabled = _bookmark_rows.has(line_row.row_uid)
-		if _row_disabled_state.has(line_row.row_uid):
-			line_row.disabled = bool(_row_disabled_state[line_row.row_uid])
+		# A ternary pair is ONE event drawn over several rows, so only the row it leads with wears the
+		# gutter: the event number, the breakpoint dot, the bookmark pennant and the trace hit chip all
+		# belong to the event, and repeating them down the pair would number a reading as an event.
+		var gutter_owner: bool = line_row.ternary_anchor_uid.is_empty() or line_row.ternary_lead
+		var state_uid: String = line_row.statement_uid()
+		line_row.line_number = (index + 1) if gutter_owner else 0
+		line_row.event_number = int(event_numbers.get(line_row.source_resource.get_instance_id(), 0)) if (gutter_owner and line_row.source_resource != null) else 0
+		if _breakpoint_rows.has(state_uid):
+			line_row.breakpoint_enabled = gutter_owner and bool(_breakpoint_rows[state_uid])
+		line_row.bookmark_enabled = gutter_owner and _bookmark_rows.has(state_uid)
+		if _row_disabled_state.has(state_uid):
+			line_row.disabled = bool(_row_disabled_state[state_uid])
 	if _selected_row_index >= _flat_rows.size():
 		_selected_row_index = _flat_rows.size() - 1
 	# Re-derive the caret from the SELECTION when they disagree: after a delete/undo/fold the
@@ -1916,7 +1926,7 @@ func _refresh_rows() -> void:
 	# to the first selected row.
 	if not _selected_row_uids.is_empty():
 		var caret_row: EventRowData = _flat_rows[_selected_row_index].get("row") if _selected_row_index >= 0 and _selected_row_index < _flat_rows.size() else null
-		if caret_row == null or not _selected_row_uids.has(caret_row.row_uid):
+		if caret_row == null or not _selected_row_uids.has(caret_row.statement_uid()):
 			for index in range(_flat_rows.size()):
 				var candidate: EventRowData = _flat_rows[index].get("row")
 				if candidate != null and _selected_row_uids.has(candidate.row_uid):
@@ -1926,7 +1936,7 @@ func _refresh_rows() -> void:
 		var row_data_state: EventRowData = _flat_rows[index].get("row")
 		if row_data_state == null:
 			continue
-		row_data_state.selected = _selected_row_uids.has(row_data_state.row_uid)
+		row_data_state.selected = _selected_row_uids.has(row_data_state.statement_uid())
 		row_data_state.hovered = index == _hovered_row_index
 	_update_canvas_min_size()
 	_layout_cache.clear()
@@ -2012,11 +2022,12 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# (or that sit inside a group), where the enclosing block owns the fold.
 	_row_builder.fold_nested_verb_rows(root_rows)
 	# M23: a statement carrying a ternary reads as the sub-event pair a Construct sheet would draw,
-	# never as an `if ... else` inside an action cell. A reading view only - the pair changes how many
-	# ROWS one statement occupies, and an editable sheet's drag/drop and selection count rows against
-	# the resource list. Pure view over the already-built rows; the resources are untouched.
-	if is_reading_mode():
-		root_rows = _row_builder.expand_ternary_rows(root_rows)
+	# never as an `if ... else` inside an action cell - on EVERY sheet, editable ones included, because
+	# a Construct user must never meet an `if ... else` in an action cell. Pure view over the
+	# already-built rows: the resources, the emitted GDScript and the byte round-trip are untouched.
+	# The pair changes how many ROWS one statement occupies, so every row it produces carries
+	# `ternary_anchor_uid` and the interaction layer addresses the pair through that, as one statement.
+	root_rows = _row_builder.expand_ternary_rows(root_rows)
 	# Event-sheet-style trailing "Add event…" footer at the end of the sheet - not on a read-only
 	# preview, where it is an offer the view cannot honour.
 	if show_add_event_footers and not (sheet != null and sheet.read_only):
@@ -2552,7 +2563,7 @@ func _select_range(target_index: int) -> void:
 	for i in range(mini(anchor, target_index), maxi(anchor, target_index) + 1):
 		var range_row: EventRowData = _row_at(i)
 		if range_row != null:
-			_selected_row_uids[range_row.row_uid] = true
+			_selected_row_uids[range_row.statement_uid()] = true
 	_selected_row_index = target_index
 	_selected_span_index = -1
 	_selection_anchor_index = anchor
@@ -2575,17 +2586,20 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 	if row_data == null:
 		return
 	_ensure_event_spans(row_data)
-	var row_uid: String = row_data.row_uid
+	# Whole-row membership is keyed on the STATEMENT (a ternary pair toggles as one); span membership
+	# stays keyed on the clicked row, because a span index is only meaningful against its own row.
+	var row_uid: String = row_data.statement_uid()
+	var span_row_uid: String = row_data.row_uid
 	var changed: bool = false
 	if span_index >= 0:
-		var indices: Array = _selected_span_indices.get(row_uid, []).duplicate()
+		var indices: Array = _selected_span_indices.get(span_row_uid, []).duplicate()
 		if indices.has(span_index):
 			indices.erase(span_index)
 		else:
 			indices.append(span_index)
 			changed = true
 		if indices.is_empty():
-			_selected_span_indices.erase(row_uid)
+			_selected_span_indices.erase(span_row_uid)
 			# If the row was pulled into the selection set only by a span toggle (never
 			# whole-row selected), removing its last span must release the row too -
 			# otherwise it stays phantom-selected. Whole-row-selected rows are left intact.
@@ -2597,7 +2611,7 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 					_selected_row_index = -1
 					_selected_span_index = -1
 		else:
-			_selected_span_indices[row_uid] = indices
+			_selected_span_indices[span_row_uid] = indices
 			# Record provenance only when the span add is what introduces this row to the
 			# row-selection set; do not downgrade a genuinely whole-row-selected row.
 			if not _selected_row_uids.has(row_uid):
@@ -2607,7 +2621,7 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 			_selected_span_index = span_index
 			changed = true
 	else:
-		if _selected_row_uids.has(row_uid) and not _selected_span_indices.has(row_uid):
+		if _selected_row_uids.has(row_uid) and not _selected_span_indices.has(span_row_uid):
 			_selected_row_uids.erase(row_uid)
 			_span_only_row_uids.erase(row_uid)
 			if _selected_row_index == row_index:
@@ -3242,12 +3256,128 @@ func _get_selected_span_count() -> int:
 	return total
 
 
+# ── M23: a ternary pair is ONE statement ────────────────────────────────────────────────────────
+# A statement carrying a ternary draws as a condition row, its branch rows and an Else - several rows
+# over ONE unchanged action inside ONE unchanged event. Every row of that reading carries the same
+# `ternary_anchor_uid`, and the four helpers below are the only places the rest of the editor has to
+# know about it: which row leads a pair, where a pair ends, how a drop target inside one is snapped
+# out of it, and how the arrow keys step past it. Everything else (delete, cut/copy, the context menu,
+# the ACE editors) already addresses the RESOURCE, which never changed.
+
+
+## The flat index of the row a statement leads with. Handed any row of a ternary pair it walks back to
+## the pair's first row; handed anything else it answers with the index it was given.
+func statement_lead_index(row_index: int) -> int:
+	var row_data: EventRowData = _row_at(row_index)
+	if row_data == null or row_data.ternary_anchor_uid.is_empty():
+		return row_index
+	var statement: String = row_data.statement_uid()
+	var lead: int = row_index
+	while lead > 0:
+		var previous: EventRowData = _row_at(lead - 1)
+		if previous == null or previous.statement_uid() != statement:
+			break
+		lead -= 1
+	return lead
+
+
+## The flat index of a statement's LAST row - the bottom of a ternary pair, or the row itself.
+func statement_last_index(row_index: int) -> int:
+	var row_data: EventRowData = _row_at(row_index)
+	if row_data == null or row_data.ternary_anchor_uid.is_empty():
+		return row_index
+	var statement: String = row_data.statement_uid()
+	var last: int = row_index
+	while last + 1 < _flat_rows.size():
+		var next_row: EventRowData = _row_at(last + 1)
+		if next_row == null or next_row.statement_uid() != statement:
+			break
+		last += 1
+	return last
+
+
+## Snaps a row drop target OUT of a ternary pair. A pair is one statement, not an editable event, so
+## there is no such thing as dropping between its rows: "before" lands above the whole pair, "after"
+## below it, and an "inside" that landed on a reading rather than on the pair's own lead row becomes
+## "after" the pair. Dropping inside the LEAD row still nests (the head is the event itself, and its
+## sub-events draw below the branch rows exactly as they did before the pair existed).
+func normalize_row_drop_target(row_index: int, drop_mode: String) -> Dictionary:
+	var row_data: EventRowData = _row_at(row_index)
+	if row_data == null or row_data.ternary_anchor_uid.is_empty():
+		return {"index": row_index, "mode": drop_mode}
+	var lead: int = statement_lead_index(row_index)
+	if drop_mode == "before":
+		return {"index": lead, "mode": "before"}
+	if drop_mode == "inside" and row_index == lead:
+		return {"index": lead, "mode": "inside"}
+	return {"index": statement_last_index(row_index), "mode": "after"}
+
+
+## The next row an arrow key should land on: the pair the caret is standing in is stepped over as the
+## one row it reads as, so Up/Down can never park on a phantom half of a statement.
+func step_selection_index(from_index: int, direction: int) -> int:
+	if _flat_rows.is_empty() or direction == 0:
+		return from_index
+	var from_row: EventRowData = _row_at(from_index)
+	var statement: String = from_row.statement_uid() if from_row != null else ""
+	var index: int = from_index + direction
+	while index >= 0 and index < _flat_rows.size():
+		var candidate: EventRowData = _row_at(index)
+		if candidate == null or statement.is_empty() or candidate.statement_uid() != statement:
+			return index
+		index += direction
+	return index
+
+
+## True when a drop target is another reading of a statement the drag is already carrying. The
+## indices differ (a pair draws several rows), the statement does not, so the drop is a no-op.
+func drag_targets_dragged_statement(target_row: EventRowData) -> bool:
+	if target_row == null:
+		return false
+	var target_statement: String = target_row.statement_uid()
+	for dragged_index: int in _drag_row_indices:
+		var dragged: EventRowData = _row_at(dragged_index)
+		if dragged != null and dragged.statement_uid() == target_statement:
+			return true
+	return false
+
+
+## Opens the ONE statement a ternary pair reads, from any of its rows. Returns false for every row
+## that is not part of such a pair, so the caller's normal edit routing runs unchanged.
+func request_ternary_statement_edit(row_data: EventRowData) -> bool:
+	if row_data == null or row_data.ternary_action_index < 0:
+		return false
+	if not (row_data.source_resource is EventRow):
+		return false
+	var event_row: EventRow = row_data.source_resource as EventRow
+	var action_index: int = row_data.ternary_action_index
+	if action_index >= event_row.actions.size():
+		return false
+	var statement: Resource = event_row.actions[action_index]
+	if statement is RawCodeRow:
+		raw_code_edit_requested.emit(statement, true)
+		return true
+	if statement is ACEAction:
+		ace_edit_requested.emit(row_data, -1, {"kind": "action", "ace_index": action_index})
+		return true
+	return false
+
+
+## The flat indices the selection stands for - ONE per selected statement. A ternary pair draws
+## several rows over a single statement, so only the first of them is returned: everything downstream
+## (delete, cut/copy, move, indent, drag payloads) then acts on that statement exactly once.
 func _get_selected_row_indices() -> Array[int]:
 	var indices: Array[int] = []
+	var seen: Dictionary = {}
 	for index in range(_flat_rows.size()):
 		var row_data: EventRowData = _row_at(index)
-		if row_data != null and _selected_row_uids.has(row_data.row_uid):
-			indices.append(index)
+		if row_data == null:
+			continue
+		var statement_key: String = row_data.statement_uid()
+		if not _selected_row_uids.has(statement_key) or seen.has(statement_key):
+			continue
+		seen[statement_key] = true
+		indices.append(index)
 	return indices
 
 
@@ -3260,7 +3390,9 @@ func _collect_descendant_row_uids(row_data: EventRowData) -> Array:
 		var child: EventRowData = stack.pop_back() as EventRowData
 		if child == null:
 			continue
-		uids.append(child.row_uid)
+		# A branch row of a ternary pair answers with the head's uid, so cascading a selection down a
+		# subtree can never introduce a second key for one statement.
+		uids.append(child.statement_uid())
 		for grand_child in child.children:
 			stack.append(grand_child)
 	return uids
@@ -3530,14 +3662,18 @@ func _toggle_breakpoint(row_index: int) -> void:
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null:
 		return
-	row_data.breakpoint_enabled = not row_data.breakpoint_enabled
+	# A breakpoint is per EVENT, so it is stored against the statement uid: F9 on any row of a ternary
+	# pair breaks on the one event, and the dot draws once, on the row the pair leads with.
+	var breakpoint_key: String = row_data.statement_uid()
+	var breakpoint_on: bool = not _breakpoint_rows.has(breakpoint_key)
+	row_data.breakpoint_enabled = breakpoint_on
 	# Persist onto the model so debug compiles (sheet.emit_breakpoints) see it.
 	if row_data.source_resource is EventRow:
-		(row_data.source_resource as EventRow).debug_break = row_data.breakpoint_enabled
-	if row_data.breakpoint_enabled:
-		_breakpoint_rows[row_data.row_uid] = true
+		(row_data.source_resource as EventRow).debug_break = breakpoint_on
+	if breakpoint_on:
+		_breakpoint_rows[breakpoint_key] = true
 	else:
-		_breakpoint_rows.erase(row_data.row_uid)
+		_breakpoint_rows.erase(breakpoint_key)
 	queue_redraw()
 
 

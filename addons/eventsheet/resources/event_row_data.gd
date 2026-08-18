@@ -77,9 +77,34 @@ var verb_kind: int = 0
 # serialized: the resource, the emitted GDScript and the byte round-trip are untouched.
 var action_slice_from: int = 0
 var action_slice_to: int = -1
+# M23: true on the slice that carries the EVENT's own trailing furniture - its comment and the
+# "+ Add condition" / "+ Add action" affordances. Normally that is the continuation after the last
+# branch; when the branch IS the final action it is the head, so the scaffolding stays exactly where
+# it sat before the pair existed instead of growing an empty row under every ternary. View-only.
+var action_slice_tail: bool = false
 # M23: true on the continuation row of such a split - its conditions were already drawn by the row
 # the split began at, and a C3 sheet never repeats them. View-only, never serialized.
 var conditions_hidden: bool = false
 # M23: true on a row the ternary reading itself produced (a head slice, a branch row, a continuation),
 # so a second pass over the same tree leaves it alone instead of branching it again. View-only.
 var ternary_view: bool = false
+# M23 (editable sheets): the row_uid of the ONE statement row every row of a pair stands for. The pair
+# is a reading of a single statement, so selection, drag, delete and the gutter must all address it as
+# one - and this is the single field they key on. "" on every row that is not part of such a reading.
+# View-only, never serialized.
+var ternary_anchor_uid: String = ""
+# M23: true on the row a pair LEADS with (the head slice, or the first branch row when the head drew
+# nothing). Exactly one row per pair carries it, which is the row the event number, the breakpoint dot,
+# the bookmark pennant and the trace hit chip belong to - the others must draw no gutter marks at all.
+var ternary_lead: bool = false
+# M23: the index into the source event's `actions` of the statement a branch row reads, or -1. It is
+# what routes a double-click anywhere on the pair (the condition cell and the Else row included) to
+# that ONE line's existing editor. View-only, never serialized.
+var ternary_action_index: int = -1
+
+
+## The uid of the STATEMENT this row belongs to - its own, unless it is one row of a ternary pair, in
+## which case every row of that pair answers with the same uid. Selection sets, drag payloads and the
+## row->resource lookups are all keyed on this, so a pair counts once wherever rows are counted.
+func statement_uid() -> String:
+	return ternary_anchor_uid if not ternary_anchor_uid.is_empty() else row_uid

@@ -369,7 +369,9 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		"event_number": row_data.event_number,
 		# The row's event uid, so the GUTTER can look its trace hit count up without the draw loop
 		# touching the sheet resources. Stable per row, which is why it is safe in a cached layout.
-		"event_uid": (row_data.source_resource as EventRow).event_uid if row_data.source_resource is EventRow else "",
+		# Only the row a ternary pair leads with reports a uid: the hit count is the EVENT's, and a chip
+		# on each reading of one statement would triple-count it by eye.
+		"event_uid": (row_data.source_resource as EventRow).event_uid if (row_data.source_resource is EventRow and (row_data.ternary_anchor_uid.is_empty() or row_data.ternary_lead)) else "",
 		"breakpoint_enabled": row_data.breakpoint_enabled,
 		"disabled": row_data.disabled,
 		"editing_span_index": _viewport._editing_span_index if index == _viewport._editing_row_index else -1,

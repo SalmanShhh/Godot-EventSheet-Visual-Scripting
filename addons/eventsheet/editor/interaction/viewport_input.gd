@@ -104,8 +104,13 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_viewport._update_ace_drag_target(hit, local_position)
 	elif _viewport._drag_row_index >= 0:
 		_viewport._drag_row_copy_mode = event.ctrl_pressed or event.meta_pressed
-		_viewport._drag_target_index = int(hit.get("row_index", -1))
-		_viewport._drag_target_mode = _viewport._resolve_drop_mode(hit, local_position)
+		# A ternary pair is one statement: a target that landed between its rows is snapped out to
+		# before or after the whole pair, so the indicator can never promise a drop the sheet has no
+		# place for.
+		var drop_target: Dictionary = _viewport.normalize_row_drop_target(
+			int(hit.get("row_index", -1)), _viewport._resolve_drop_mode(hit, local_position))
+		_viewport._drag_target_index = int(drop_target.get("index", -1))
+		_viewport._drag_target_mode = str(drop_target.get("mode", "before"))
 		_viewport.queue_redraw()
 
 
@@ -367,6 +372,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				_viewport.raw_code_edit_requested.emit(row_data.source_resource, false)
 				_viewport.accept_event()
 				return
+			# A ternary pair is a reading of ONE statement, so a double-click anywhere on it - the
+			# condition cell and the plain Else row included, neither of which is a real cell - opens that
+			# statement's own editor: the code dialog for a hand-written line, the ACE editor for a
+			# lifted row.
+			if _viewport.request_ternary_statement_edit(row_data):
+				_viewport.accept_event()
+				return
 			_viewport._begin_edit(row_index, span_index)
 			_viewport.accept_event()
 			return
@@ -407,6 +419,10 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		return
 	if _viewport._drag_row_index >= 0 and _viewport._drag_target_index >= 0 and not _viewport._drag_row_indices.has(_viewport._drag_target_index):
 		var target_row: EventRowData = _viewport._row_at(_viewport._drag_target_index)
+		# A drop onto another reading of a statement already being dragged is the same no-op as a drop
+		# onto the dragged row itself - the index differs, the statement does not.
+		if target_row != null and _viewport.drag_targets_dragged_statement(target_row):
+			target_row = null
 		if target_row != null:
 			if _viewport._drag_row_indices.size() > 1:
 				var dragged_rows: Array = []
@@ -459,15 +475,18 @@ func handle_key(event: InputEventKey) -> void:
 		if _viewport._selected_row_index < 0:
 			_viewport._select_range(0)
 		else:
-			_viewport._select_range(_viewport._selected_row_index + (-1 if event.keycode == KEY_UP else 1))
+			_viewport._select_range(_viewport.step_selection_index(
+				_viewport._selected_row_index, -1 if event.keycode == KEY_UP else 1))
 		_viewport.ensure_selection_visible()
 		_viewport.accept_event()
 	elif event.keycode == KEY_UP and not event.alt_pressed:
-		_viewport._select_row(_viewport._selected_row_index - 1, _viewport._selected_span_index)
+		# A ternary pair steps as the ONE row it reads as; Left/Right still walk the cells of whichever
+		# row of it the caret is on.
+		_viewport._select_row(_viewport.step_selection_index(_viewport._selected_row_index, -1), _viewport._selected_span_index)
 		_viewport.ensure_selection_visible()
 		_viewport.accept_event()
 	elif event.keycode == KEY_DOWN and not event.alt_pressed:
-		_viewport._select_row(_viewport._selected_row_index + 1, _viewport._selected_span_index)
+		_viewport._select_row(_viewport.step_selection_index(_viewport._selected_row_index, 1), _viewport._selected_span_index)
 		_viewport.ensure_selection_visible()
 		_viewport.accept_event()
 	elif event.keycode == KEY_BRACKETLEFT and event.ctrl_pressed and event.shift_pressed:

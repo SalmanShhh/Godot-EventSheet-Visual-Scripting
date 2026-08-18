@@ -353,10 +353,15 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
 - **A ternary is a sub-event, never a condition in an action cell.** An `if ... else` INSIDE a statement
   (`return wall_normal.x if host != null and host.is_on_wall() else 0.0`) reads the way a Construct sheet
   draws the same branch: a condition row on the left with the statement on the right, then an `Else` row
-  with the other value - a chain of `Else` rows for a nested ternary, a nested pair for a second
-  independent one. Display only: the file keeps its one line, hover shows the exact GDScript, and
-  double-click edits that statement. A ternary inside a `func(...)` lambda is left alone - its body is a
-  scope of its own, so hoisting a branch out of it would move when that branch runs.
+  with the other value. A nested ternary chains the way Construct writes an else-if: an `Else` on the
+  row's first condition line with that arm's own test stacked under it, and a plain `Else` on the last
+  arm - so no two arms read as though both could fire. A second independent ternary nests its own pair. This is true on every sheet, authored ones included - reading and editing look the
+  same. Display only: the file keeps its one line, hover shows the exact GDScript, and the pair behaves
+  as the ONE statement it reads - clicking any of its rows selects the statement and highlights the whole
+  pair, dragging any of them moves the statement (nothing drops between the pair's rows), and a
+  double-click anywhere on it, the `Else` row included, opens that one line's editor. A ternary inside a
+  `func(...)` lambda is left alone - its body is a scope of its own, so hoisting a branch out of it would
+  move when that branch runs.
 - **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
   as words (`_coyote_timer` -> `coyote timer`, a knob with its Inspector capitalisation), property chains
   read possessively (`host's velocity X`), NOT is the red ✕ in the icon column, the host and any `$Node` /

@@ -12,14 +12,34 @@ in the right-hand lane, where the reader expects a step.
   an assignment, a compound assignment, a local declaration, or a ternary that is only PART of a larger
   value (`speed = move_speed * (sprint_multiplier if sprint_held else 1.0)`) - reads as the rows
   Construct would draw: the test on the LEFT, the whole statement re-read on the RIGHT with that arm's
-  value, then an `Else` row with the other one. A nested ternary chains further `Else` rows; a second
-  independent one nests its own pair beneath the first. `ƒ Wall Normal X` now opens as
+  value, then an `Else` row with the other one. A nested ternary chains further arms as Construct
+  spells an else-if - an `Else` on the row's first condition line with that arm's own test stacked
+  under it, so no two arms can read as though both could fire - and the last arm is a plain `Else`.
+  A second independent ternary nests its own pair beneath the first. `ƒ Wall Normal X` now opens as
   `host exists and host is on wall | Set return value to host's wall normal X` over
   `Else | Set return value to 0`.
 - Display only, over the unchanged statement: the file keeps its one line (byte round-trip identical),
-  hover shows the exact GDScript, and double-click edits that statement. Reading views only - the pair
-  changes how many ROWS a statement occupies, and an editable sheet's drag/drop and selection count rows
-  against the resource list.
+  hover shows the exact GDScript, and double-click edits that statement.
+- **On every sheet, editable ones included.** The pair is no longer a reading-view-only lens: an
+  authored sheet draws it too, because a Construct user must never meet an `if ... else` inside an
+  action cell. Reading and editing look identical.
+- **The pair is ONE statement under the pointer.** Every row of it carries the same statement identity,
+  and that is the single thing selection, drag/drop, delete and the gutter key on:
+  - clicking any row of the pair - the condition row, the branch, the `Else` - selects the one
+    statement and highlights the whole pair as one selection; Shift/Ctrl multi-select counts it once,
+    and the Up/Down arrows step over the pair as the single row it reads as (Left/Right still walk the
+    cells of whichever row the caret is on).
+  - grabbing any row drags the statement, so the pair travels together; a drop BEFORE a branch row
+    lands above the whole pair, a drop INTO one snaps below it, and only the pair's own head still
+    takes a sub-event.
+  - a double-click anywhere on the pair - including the condition cell and the plain `Else` row,
+    neither of which is a real cell - opens that ONE line's existing editor: the code dialog for a
+    hand-written statement, the ACE editor for a lifted row. Delete, Cut, Copy and the row context
+    menu act on the statement, and every edit still goes through the one undo funnel.
+  - no "+ Add condition" / "+ Add action" is drawn inside the pair (a pair is a statement, not an
+    editable event); the event's own scaffolding stays on the event's own row. Event numbers, hit
+    counts, breakpoints and bookmarks belong to the event and are drawn once, on the row the pair
+    leads with - never on a reading.
 - A ternary inside a `func(...)` lambda is deliberately left alone: the body is a scope of its own, so
   hoisting a branch out of it would move when that branch runs. A hand-written statement carrying an
   inline lambda now keeps the GDScript code cell it came from, rather than posing as a sentence.

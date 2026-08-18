@@ -1474,8 +1474,7 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 				# M23 runs HERE, before the body is made inert: the sub-event pair is derived from the
 				# EventRow the row points at, and an inert row has already dropped that pointer.
 				var body_rows: Array[EventRowData] = [child_row]
-				if _viewport.is_reading_mode():
-					body_rows = expand_ternary_rows(body_rows)
+				body_rows = expand_ternary_rows(body_rows)
 				for body_row: EventRowData in body_rows:
 					if not body_editable:
 						_make_row_inert(body_row)
@@ -4293,11 +4292,11 @@ func _wraps_whole_expression(text: String) -> bool:
 ## statement carrying a ternary splits its event into a row of the actions before it, the branch rows,
 ## and a continuation row - three views of ONE unchanged EventRow, each drawing its own slice.
 func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_from: int = 0,
-		slice_to: int = -1, hide_conditions: bool = false) -> Array[SemanticSpan]:
+		slice_to: int = -1, hide_conditions: bool = false, slice_is_tail: bool = false) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
 	if slice_from > 0 or slice_to >= 0 or hide_conditions:
 		return _slice_event_spans(_build_event_spans(event_row, in_verb_body), event_row,
-			slice_from, slice_to, hide_conditions)
+			slice_from, slice_to, hide_conditions, slice_is_tail)
 	var condition_line_index: int = 0
 	var action_line_index: int = 0
 	var inline_trigger_condition_index: int = _find_inline_trigger_condition_index(event_row)
@@ -5013,9 +5012,10 @@ func _return_value_function_pieces(returned: String) -> Array:
 ##
 ## Recursive over children. A pure VIEW over unchanged resources: each row still points at the one
 ## statement the file holds, so hover shows the exact GDScript, double-click edits that line, and both
-## emission and the byte round-trip are untouched. The rows a statement occupies DO change, which is
-## why the caller only runs this on a reading view - an editable sheet's drag/drop and selection count
-## rows against the resource list.
+## emission and the byte round-trip are untouched. The rows a statement occupies DO change - which is
+## why every row of a pair carries `ternary_anchor_uid`, the uid of the ONE statement row they all
+## stand for. Selection, drag/drop, delete and the gutter key on it, so an EDITABLE sheet counts the
+## pair once wherever it counts rows.
 func expand_ternary_rows(rows: Array[EventRowData]) -> Array[EventRowData]:
 	var out: Array[EventRowData] = []
 	for row: EventRowData in rows:
@@ -5033,7 +5033,15 @@ func _expand_ternary_row(row: EventRowData) -> Array[EventRowData]:
 	# An output of this pass would otherwise be branched again, forever.
 	if row.ternary_view:
 		return single
-	return _expand_event_from(row, 0, row.indent, false)
+	var expanded: Array[EventRowData] = _expand_event_from(row, 0, row.indent, false)
+	if expanded.size() == 1 and expanded[0] == row:
+		return single
+	# Exactly ONE row of a pair leads it: the head slice when it survived, otherwise the first branch
+	# row. That row owns the event number, the breakpoint dot, the bookmark pennant and the trace hit
+	# chip - the rest of the pair draws a bare gutter, because they are readings, not events.
+	if not expanded.is_empty():
+		expanded[0].ternary_lead = true
+	return expanded
 
 
 ## The rows one event draws from `from_index` on. `hide_conditions` marks a CONTINUATION - the run of
@@ -5052,7 +5060,12 @@ func _expand_event_from(row: EventRowData, from_index: int, indent: int,
 		return [plain]
 	var action_index: int = int(found.get("index", -1))
 	var head_uid: String = row.row_uid if (not hide_conditions and from_index == 0) else continuation_uid
-	var head: EventRowData = _build_event_slice_row(row, from_index, action_index, hide_conditions, head_uid)
+	# The branch as the event's FINAL action is the case that decides where the event's own comment
+	# and "+ Add" affordances live: with no continuation to carry them they stay on the head, exactly
+	# where they sat before the pair existed, rather than growing an empty row under every ternary.
+	var branch_is_last: bool = action_index + 1 >= event_row.actions.size()
+	var head: EventRowData = _build_event_slice_row(
+		row, from_index, action_index, hide_conditions, head_uid, branch_is_last)
 	head.indent = indent
 	# The head vanishes only when it would draw NOTHING of its own - no conditions, no earlier
 	# actions, no sub-events - which is exactly the one-line verb body (`ƒ Wall Normal X`) the pair
@@ -5065,8 +5078,15 @@ func _expand_event_from(row: EventRowData, from_index: int, indent: int,
 	if branch_rows.is_empty():
 		return [row] if (not hide_conditions and from_index == 0) else [head]
 	var tail_rows: Array[EventRowData] = []
-	if action_index + 1 < event_row.actions.size():
+	if not branch_is_last:
+		# Conditions, once hidden, stay hidden - a C3 sheet never repeats them further down the same event.
 		tail_rows = _expand_event_from(row, action_index + 1, branch_indent, true)
+	elif head_blank and not _scaffolding_suppressed():
+		# The one shape with nowhere left to put the scaffolding: a head that drew NOTHING (the one-line
+		# verb body the pair was designed for) and no actions after the branch. An EDITABLE sheet grows a
+		# bare continuation row under the pair, because otherwise this event could never be added to
+		# again. Conditions are not hidden on it because a blank head means there were none to repeat.
+		tail_rows = _expand_event_from(row, action_index + 1, branch_indent, false)
 	if head_blank:
 		var flattened: Array[EventRowData] = []
 		flattened.append_array(branch_rows)
@@ -5090,6 +5110,10 @@ func _first_ternary_action(event_row: EventRow, from_index: int = 0) -> Dictiona
 		var action_resource: Variant = event_row.actions[action_index]
 		if action_resource is RawCodeRow:
 			var raw: RawCodeRow = action_resource as RawCodeRow
+			# This pass now runs on EVERY sheet, editable ones included, so the overwhelmingly common
+			# answer - "this line has no ternary" - must cost a substring search, not a parse.
+			if not _may_branch(raw.code):
+				continue
 			if is_single_statement(raw.code) and not EventSheetSentence.ternary_branches(raw.code).is_empty():
 				return {"index": action_index, "kind": "code", "param": "", "text": raw.code}
 			continue
@@ -5099,10 +5123,21 @@ func _first_ternary_action(event_row: EventRow, from_index: int = 0) -> Dictiona
 		var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 		for param_key: Variant in params_dict.keys():
 			var value: String = str(params_dict[param_key])
+			if not _may_branch(value):
+				continue
 			if EventSheetSentence.value_branches(value).is_empty():
 				continue
 			return {"index": action_index, "kind": "param", "param": str(param_key), "text": value}
 	return {}
+
+
+## The cheap "could this possibly branch" screen in front of the real grammar walk: a ternary is
+## spelled `A if C else B`, so text without both words cannot be one. Pure substring work, run once
+## per action per rebuild on every sheet in the editor. Deliberately looser than the grammar (it does
+## not demand a space after `else`), because a false POSITIVE only costs the parse this saves, while a
+## false negative would silently stop a real branch from reading as a pair.
+func _may_branch(text: String) -> bool:
+	return text.contains(" if ") and text.contains("else")
 
 
 ## The arms of one branching action - the statement's for a hand-written line, the parameter value's
@@ -5116,6 +5151,10 @@ func _ternary_arms(found: Dictionary) -> Array:
 ## The branch rows for one action: one per `A if C else B` arm, the last of them the `Else`. An arm
 ## whose text STILL carries a ternary (two independent ones in a line) nests its own pair beneath it
 ## rather than flattening, because that is where the second branch actually applies.
+##
+## Every arm AFTER the first is an else-if, and Construct spells an else-if as an Else event WITH a
+## condition under it - two stacked condition cells on the one row. Drawing the arm's test alone would
+## read as a sibling condition, i.e. as though both arms could fire.
 func _build_ternary_branch_rows(row: EventRowData, action_index: int, found: Dictionary, indent: int,
 		uid_path: String) -> Array[EventRowData]:
 	var branches: Array = _ternary_arms(found)
@@ -5126,7 +5165,7 @@ func _build_ternary_branch_rows(row: EventRowData, action_index: int, found: Dic
 		var branch: Dictionary = branches[branch_index]
 		var branch_path: String = "%s_%d" % [uid_path, branch_index]
 		var branch_row: EventRowData = _build_ternary_branch_row(
-			row, indent, str(branch.get("condition", "")), branch_path)
+			row, indent, str(branch.get("condition", "")), branch_path, action_index, branch_index > 0)
 		var arm: Dictionary = found.duplicate()
 		arm["text"] = str(branch.get("code", ""))
 		var nested: Array[EventRowData] = _build_ternary_branch_rows(
@@ -5139,10 +5178,12 @@ func _build_ternary_branch_rows(row: EventRowData, action_index: int, found: Dic
 	return rows
 
 
-## One branch row's shell plus its CONDITION cell - the branch test read through the grammar's
-## condition path, or the plain `Else` chip on the last arm.
+## One branch row's shell plus its CONDITION cells - the branch test read through the grammar's
+## condition path, or the plain `Else` chip on the last arm. `else_if` stacks an `Else` chip ABOVE
+## that test on the same row, which is how Construct draws an else-if: one Else event carrying a
+## condition, never two conditions that could both fire.
 func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: String,
-		uid_path: String) -> EventRowData:
+		uid_path: String, action_index: int, else_if: bool = false) -> EventRowData:
 	var branch_row := EventRowData.new()
 	branch_row.indent = indent
 	branch_row.row_type = EventRowData.RowType.EVENT
@@ -5152,6 +5193,10 @@ func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: S
 	branch_row.in_verb_body = row.in_verb_body
 	branch_row.verb_kind = row.verb_kind
 	branch_row.ternary_view = true
+	branch_row.ternary_anchor_uid = row.row_uid
+	# The ONE line this whole pair reads. A double-click anywhere on the branch - the condition cell
+	# and the plain Else included - opens that statement's own editor through it.
+	branch_row.ternary_action_index = action_index
 	branch_row.line_count = 1
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	if condition_text.strip_edges().is_empty():
@@ -5164,6 +5209,21 @@ func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: S
 			"object_label": _object_label_for("Core", "")
 		}.merged(condition_style_meta, true)))
 		return branch_row
+	# The else-if's first condition LINE is the Else chip itself; the arm's own test lands on the
+	# second, exactly where an event's second condition sits. Same chip the final arm gets, so a chain
+	# reads Else / Else / Else down its left edge with the tests that narrow each one beside them.
+	var condition_line: int = 0
+	if else_if:
+		branch_row.spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "else_keyword",
+			"chip": true,
+			"hoverable": false,
+			"line_index": 0,
+			"object_label": _object_label_for("Core", "")
+		}.merged(condition_style_meta, true)))
+		condition_line = 1
+		branch_row.line_count = 2
 	var reading: Dictionary = EventSheetSentence.condition_pieces(condition_text, sentence_context())
 	var pieces: Array = EventSheetViewportLenses.apply_to_pieces(
 		reading.get("pieces", []) as Array, _viewport.humanize_names_enabled(), _export_knob_names())
@@ -5179,7 +5239,7 @@ func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: S
 		"chip": true,
 		"editable": false,
 		"hoverable": false,
-		"line_index": 0,
+		"line_index": condition_line,
 		"object_label": str(reading.get("object", "")),
 		"bbcode_segments": condition_cell.get("segments", [])
 	}.merged(condition_style_meta, true)))
@@ -5259,7 +5319,7 @@ func _append_branch_ace_spans(spans: Array, action: ACEAction, param_key: String
 
 ## One slice of an event as its own row: same resource, same verb context, its own action range.
 func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
-		hide_conditions: bool, uid: String) -> EventRowData:
+		hide_conditions: bool, uid: String, slice_is_tail: bool = false) -> EventRowData:
 	var slice_row := EventRowData.new()
 	slice_row.indent = row.indent
 	slice_row.row_type = EventRowData.RowType.EVENT
@@ -5271,13 +5331,16 @@ func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
 	slice_row.language_block = row.language_block
 	slice_row.error_message = row.error_message
 	slice_row.ternary_view = true
+	slice_row.ternary_anchor_uid = row.row_uid
 	slice_row.action_slice_from = slice_from
 	slice_row.action_slice_to = slice_to
 	slice_row.conditions_hidden = hide_conditions
+	slice_row.action_slice_tail = slice_is_tail
 	var outer_kind: int = _verb_kind_override
 	_verb_kind_override = row.verb_kind
 	slice_row.spans = _build_event_spans(
-		row.source_resource as EventRow, row.in_verb_body, slice_from, slice_to, hide_conditions)
+		row.source_resource as EventRow, row.in_verb_body, slice_from, slice_to, hide_conditions,
+		slice_is_tail)
 	_verb_kind_override = outer_kind
 	var lines: int = 1
 	for span: SemanticSpan in slice_row.spans:
@@ -5325,7 +5388,7 @@ func _tone_segments(pieces: Array) -> Dictionary:
 ## span pass to skip actions - is what keeps a sliced row's cells identical to the unsliced ones, down
 ## to the style metadata; only which cells survive, and which line each lands on, changes here.
 func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_from: int,
-		slice_to: int, hide_conditions: bool) -> Array[SemanticSpan]:
+		slice_to: int, hide_conditions: bool, slice_is_tail: bool = false) -> Array[SemanticSpan]:
 	var kept: Array[SemanticSpan] = []
 	var used_lines: Array[int] = []
 	for span: SemanticSpan in spans:
@@ -5338,8 +5401,9 @@ func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_f
 		var ace_index: int = int(span.metadata.get("ace_index", -1))
 		if ace_index < 0:
 			# The event comment and the "+ Add action" affordance belong to the event as a whole, so
-			# they ride the LAST slice - the row the reader's eye finishes the event on.
-			if slice_to >= 0 and slice_to < event_row.actions.size():
+			# they ride the slice the reader's eye finishes the event on - the continuation after the
+			# last branch, or the head itself when the branch was the event's final action.
+			if not slice_is_tail and slice_to >= 0 and slice_to < event_row.actions.size():
 				continue
 		elif ace_index < slice_from or (slice_to >= 0 and ace_index >= slice_to):
 			continue
@@ -5379,7 +5443,8 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		var outer_kind: int = _verb_kind_override
 		_verb_kind_override = row_data.verb_kind
 		row_data.spans = _build_event_spans(row_data.source_resource as EventRow, row_data.in_verb_body,
-			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden)
+			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
+			row_data.action_slice_tail)
 		_verb_kind_override = outer_kind
 
 

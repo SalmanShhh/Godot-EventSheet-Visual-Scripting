@@ -97,9 +97,11 @@ func apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
 		var row_rect: Rect2 = layout.get("row_rect", Rect2())
 		if not row_rect.intersects(selection_rect):
 			continue
-		_viewport._selected_row_uids[row_data.row_uid] = true
+		# Keyed on the STATEMENT, so a box drawn across a ternary pair sweeps in the one statement its
+		# rows read rather than one entry per reading.
+		_viewport._selected_row_uids[row_data.statement_uid()] = true
 		# Box selection selects the whole row, so it is no longer span-only provenance.
-		_viewport._span_only_row_uids.erase(row_data.row_uid)
+		_viewport._span_only_row_uids.erase(row_data.statement_uid())
 		_viewport._selected_row_index = row_index
 		_viewport._selected_span_index = -1
 		selected_any = true
@@ -129,21 +131,23 @@ func is_selection_hit(row_index: int, span_index: int) -> bool:
 	var row_data: EventRowData = _viewport._row_at(row_index)
 	if row_data == null:
 		return false
-	var row_uid: String = row_data.row_uid
-	if not _viewport._selected_row_uids.has(row_uid):
+	if not _viewport._selected_row_uids.has(row_data.statement_uid()):
 		return false
 	if span_index < 0:
 		return true
-	var span_indices: Array = _viewport._selected_span_indices.get(row_uid, [])
+	var span_indices: Array = _viewport._selected_span_indices.get(row_data.row_uid, [])
 	if span_indices.is_empty():
 		return true
 	return span_indices.has(span_index)
 
 
+## Grabbing ANY row of a ternary pair drags the statement: the index is first snapped to the row the
+## pair leads with, so the payload is the one event and the pair travels together.
 func begin_row_drag(row_index: int) -> void:
 	if row_index < 0:
 		_viewport._clear_row_drag()
 		return
+	row_index = _viewport.statement_lead_index(row_index)
 	var selected_indices: Array[int] = _viewport._get_selected_row_indices()
 	if selected_indices.size() > 1 and selected_indices.has(row_index):
 		_viewport._drag_row_indices = selected_indices
