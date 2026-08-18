@@ -32,7 +32,10 @@ func import_script(script_path: String) -> EventSheetResource:
 func import_external(script_path: String, lift: bool = true) -> EventSheetResource:
 	if not FileAccess.file_exists(script_path):
 		return null
-	var sheet: EventSheetResource = import_external_source(FileAccess.get_file_as_string(script_path), lift)
+	# The path is handed DOWN rather than stamped on the way out: the lifter needs it while it runs, to
+	# find the scene(s) whose root uses this script and read the signal connections the Godot editor
+	# wrote there (M42). A path stamped afterwards arrives one pass too late.
+	var sheet: EventSheetResource = import_external_source(FileAccess.get_file_as_string(script_path), lift, script_path)
 	sheet.external_source_path = script_path
 	_recover_autoload_identity(sheet, script_path)
 	return sheet
@@ -68,7 +71,7 @@ static func _autoload_target_matches(target: String, script_path: String) -> boo
 	return false
 
 
-func import_external_source(source: String, lift: bool = true) -> EventSheetResource:
+func import_external_source(source: String, lift: bool = true, script_path: String = "") -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = _parse_host_class(source)
 	var lines: PackedStringArray = source.split("\n")
@@ -284,7 +287,14 @@ func import_external_source(source: String, lift: bool = true) -> EventSheetReso
 	# (with their @ace annotation blocks), and trailing comments into real rows - verified
 	# by a byte-identical recompile and reverted otherwise (the lossless rule always wins).
 	if lift:
+		# M42 - which file this source came from, for the one question the lifter cannot answer from the
+		# text: which scene(s) wire signals to it. Handed over as a hint rather than by stamping
+		# `external_source_path` early, because that field also switches the compiler onto its external
+		# emission path - and the lift runs several before/after compiles of its own that must keep
+		# comparing like with like. Cleared after, so an in-memory import never inherits a stale path.
+		EventSheetACELifter.scene_source_path = script_path
 		EventSheetACELifter.attempt_lift(sheet, source)
+		EventSheetACELifter.scene_source_path = ""
 	return sheet
 
 

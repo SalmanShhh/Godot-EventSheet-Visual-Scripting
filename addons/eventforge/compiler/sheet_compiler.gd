@@ -1311,6 +1311,11 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if not lifted_connect.is_empty():
 			ready_connections.append(lifted_connect)
 			continue
+		# A handler the project wired in its SCENE FILE. The .tscn owns that connection; the script
+		# never held one, so emitting the canonical line here would add a second connection at runtime
+		# and put a line into a file that must come back byte-identical. Only ever set at lift time.
+		if events[0] is EventRow and bool((events[0] as EventRow).get_meta("__scene_connected", false)):
+			continue
 		var source_path: String = str(signature.get("source_path", ""))
 		if source_path.is_empty():
 			# Self-connection: the signal must exist on the script's base class or be
