@@ -149,6 +149,96 @@ static func _rendered_token(token: String, humanize: bool) -> String:
 	return possessive_chain(token, humanize)
 
 
+## Words that LOOK like identifiers but are language, not names. Humanizing them would turn
+## `true` into `true` (harmless) but `null` into `null` and `PATROL` into `patrol` (not harmless -
+## an enum member is a NAME the user typed in that exact spelling). Kept as one list so the
+## expression lens has a single place to be conservative in.
+const RESERVED_WORDS: PackedStringArray = [
+	"true", "false", "null", "self", "super", "and", "or", "not", "in", "is", "as", "if", "else",
+]
+
+
+## True when a token is a name this lens may rewrite: a plain identifier that is not a reserved
+## word and not SCREAMING_CASE. A constant or enum member is written in caps deliberately, and
+## "PATROL" -> "patrol" loses the fact that it is one exact spelling from an enum.
+static func is_rewritable_name(token: String) -> bool:
+	if not is_identifier(token) or RESERVED_WORDS.has(token):
+		return false
+	return token.to_upper() != token or token.to_lower() == token
+
+
+## M9 + M10 over a whole value expression: every name reads as words and every chain reads
+## possessively, while operators, numbers and literals stay exactly as written.
+##   "direction.x * speed + push_x" -> "direction X * speed + push x"
+## An expression holding a call or a string literal is returned verbatim - the lens does not
+## reach inside code it cannot fully account for, because a half-translated line reads worse
+## than the code did. `knob_names` is the set of @export knob names (any Dictionary works as a
+## set); those read with Godot's Inspector capitalisation.
+static func humanize_expression(expression: String, knob_names: Dictionary = {}) -> String:
+	if expression.is_empty() or expression.contains("(") or expression.contains("\"") or expression.contains("'"):
+		return expression
+	var output: String = ""
+	var token: String = ""
+	for index: int in range(expression.length()):
+		var character: String = expression[index]
+		var is_token_character: bool = (
+			character == "_"
+			or character == "."
+			or (character >= "a" and character <= "z")
+			or (character >= "A" and character <= "Z")
+			or (character >= "0" and character <= "9")
+		)
+		if is_token_character:
+			token += character
+		else:
+			output += _humanized_token(token, knob_names)
+			token = ""
+			output += character
+	output += _humanized_token(token, knob_names)
+	return output
+
+
+## One token of humanize_expression: a chain reads possessively, a rewritable name reads as
+## words, and everything else (numbers, float literals, reserved words, CONSTANTS) is untouched.
+static func _humanized_token(token: String, knob_names: Dictionary) -> String:
+	if token.is_empty():
+		return token
+	if token.contains("."):
+		return possessive_chain(token)
+	if not is_rewritable_name(token):
+		return token
+	return humanize_identifier(token, knob_names.has(token))
+
+
+## M9 + M10 applied to the sentence layer's OUTPUT. The sentence layer decides what a statement
+## SAYS (its verb, its word order, which piece is a name and which is a value); this lens only
+## rewrites how the names inside it are SPELLED, so the two can evolve independently.
+##
+## `pieces` is the sentence layer's [[text, tone], ...] list. Only "name" (an identifier the
+## builder already resolved as a variable or parameter) and "value" (a value expression) are
+## touched - "plain" is connective English and "object" is a label the object column owns.
+## Returns a NEW list; the input is never mutated. With `enabled` false it returns the pieces
+## unchanged, so the View toggle costs nothing when it is off.
+static func apply_to_pieces(pieces: Array, enabled: bool, knob_names: Dictionary = {}) -> Array:
+	if not enabled:
+		return pieces
+	var output: Array = []
+	for piece: Variant in pieces:
+		var entry: Array = piece
+		var text: String = str(entry[0])
+		var tone: String = str(entry[1])
+		match tone:
+			"name":
+				# A "name" can still be a chain (`host.velocity.x` is a simple assignment target),
+				# so it goes through the same two-step the value tone does.
+				output.append([humanize_expression(text, knob_names), tone])
+			"value":
+				output.append([humanize_expression(text, knob_names), tone])
+			_:
+				output.append([text, tone])
+	return output
+
+
 ## M12. The leading NOT of a condition sentence, removed so the red ✕ in the badge column can
 ## carry the inversion instead of the word. Returns the sentence unchanged when it does not
 ## start with a negation. `had_not` in the returned dictionary tells the caller whether to draw

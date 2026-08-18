@@ -5107,20 +5107,41 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		if call_info.is_empty():
 			return false
 		indent = int(call_info.get("indent", 0))
-		pieces.append([str(call_info.get("target", "")) + "  ", "object"])
-		pieces.append([str(call_info.get("verb", "")), "name"])
 		var args: PackedStringArray = call_info.get("args", PackedStringArray())
-		if args.is_empty():
-			pieces.append(["  ( )", "plain"])
+		# ── M16 lens hook ──────────────────────────────────────────────────────────────────────
+		# Applied AFTER the sentence layer has resolved this row as a call: when the callee is one
+		# of THIS sheet's functions, the row reads Construct's way ("Functions ▸ Call Add Look",
+		# one argument per parameter name) instead of as a bare method call. A callee the sheet
+		# does not know falls straight through to the ordinary reading below - a call to something
+		# unknown must never be dressed up as a project function.
+		var call_pieces: Array = _reading_call_pieces(raw.code, args)
+		if not call_pieces.is_empty():
+			pieces = call_pieces
 		else:
-			pieces.append(["  ( ", "plain"])
-			for argument_index: int in args.size():
-				if argument_index > 0:
-					pieces.append([", ", "plain"])
-				pieces.append([args[argument_index], "value"])
-			pieces.append([" )", "plain"])
+			pieces.append([str(call_info.get("target", "")) + "  ", "object"])
+			pieces.append([str(call_info.get("verb", "")), "name"])
+			if args.is_empty():
+				pieces.append(["  ( )", "plain"])
+			else:
+				pieces.append(["  ( ", "plain"])
+				for argument_index: int in args.size():
+					if argument_index > 0:
+						pieces.append([", ", "plain"])
+					pieces.append([args[argument_index], "value"])
+				pieces.append([" )", "plain"])
 	if pieces.is_empty():
 		return false
+	# ── M9 / M10 lens hook ─────────────────────────────────────────────────────────────────────
+	# Applied to the sentence layer's OUTPUT, never inside it: the sentence layer decides what a
+	# statement SAYS, this only decides how the names in it are SPELLED. Only "name" and "value"
+	# pieces are touched (identifiers the builder already resolved), never a string literal and
+	# never a connective word, and the row's hover still shows the exact GDScript.
+	pieces = EventSheetViewportLenses.apply_to_pieces(pieces, _viewport.humanize_names_enabled(), _export_knob_names())
+	# ── M13 / M20 lens hook ────────────────────────────────────────────────────────────────────
+	# The object this statement acts on draws its Godot class icon, the way an event sheet shows
+	# an object's picture in every cell it appears in. Resolved from the RAW pieces (before the
+	# lens above respelled them) so the lookup keys stay the names the file actually uses.
+	var sentence_icon: Texture2D = _reading_sentence_icon(sentence, raw.code)
 	# ONE span, tinted by BBCode segments, so the sentence reads as a single continuous cell -
 	# separate flowing spans each painted their own chip and the row read as a strip of boxes,
 	# the exact fragmented look the entry rows were already reworked away from. Four spaces per
@@ -5155,9 +5176,90 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		"raw_action": true,
 		"code_cell": false,
 		"line_index": line_index,
-		"bbcode_segments": sentence_segments
+		"bbcode_segments": sentence_segments,
+		"object_icon": sentence_icon
 	}.merged(action_style_meta, false)))
 	return true
+
+
+# ── Reading lenses (M9/M10/M13/M16/M20) ───────────────────────────────────────────────────────
+# The lenses themselves live in viewport_lenses.gd (text) and viewport_reading_rows.gd (rows).
+# What lives HERE is only the per-rebuild caching: both need to ask the sheet a question whose
+# answer is the same for every row in the pass, and asking it per span would walk the whole
+# events array thousands of times on a large sheet. Cleared whenever the sheet identity changes.
+var _lens_sheet_stamp: int = 0
+var _lens_knob_names: Dictionary = {}
+var _lens_class_map: Dictionary = {}
+
+
+func _reset_lens_caches_if_stale() -> void:
+	var sheet: EventSheetResource = _viewport._sheet
+	var stamp: int = 0 if sheet == null else int(sheet.get_instance_id())
+	if stamp == _lens_sheet_stamp:
+		return
+	_lens_sheet_stamp = stamp
+	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
+	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)
+
+
+## M9 - the sheet's @export knob names, so the lens can show those with Godot's Inspector
+## capitalisation while ordinary variables read as plain lowercase words.
+func _export_knob_names() -> Dictionary:
+	_reset_lens_caches_if_stale()
+	return _lens_knob_names
+
+
+## M13/M20 - the object-label to class-name map, so a row naming the pack's host, a $Node / %Node
+## reference or an @onready node variable can draw that class's Godot icon.
+func _reading_class_icon_for(object_label: String) -> Texture2D:
+	if not _viewport.show_object_icons:
+		return null
+	_reset_lens_caches_if_stale()
+	return EventSheetViewportReadingRows.class_icon_for(object_label, _lens_class_map)
+
+
+## M13/M20 - the class icon for the object a statement row acts on. The subject is the head of the
+## statement: the assignment target for a `Set` sentence (`$Head.rotation.x` -> `$Head`), the
+## receiver for a call (`host.move_and_slide()` -> `host`). Null whenever nothing is known, which
+## is also what headless returns, so a headless render keeps the text-only look.
+func _reading_sentence_icon(sentence: Dictionary, code: String) -> Texture2D:
+	var subject: String = ""
+	if not sentence.is_empty():
+		for segment: Variant in (sentence.get("segments", []) as Array):
+			var part: Dictionary = segment
+			if str(part.get("tone", "")) == "name":
+				subject = str(part.get("text", ""))
+				break
+	else:
+		subject = str(call_parts(code).get("target", ""))
+	subject = subject.strip_edges()
+	if subject.is_empty():
+		return null
+	var dot_at: int = subject.find(".")
+	if dot_at > 0:
+		subject = subject.substr(0, dot_at)
+	return _reading_class_icon_for(subject)
+
+
+## M16 - the "Functions ▸ Call Name" pieces for a hand-written call the sheet can attribute to one
+## of its own functions, or [] when it cannot.
+func _reading_call_pieces(code: String, arguments: PackedStringArray) -> Array:
+	var sheet: EventSheetResource = _viewport._sheet
+	if sheet == null:
+		return []
+	var function_name: String = EventSheetViewportReadingRows.called_function_name(code)
+	if function_name.is_empty():
+		return []
+	var event_function: EventFunction = find_function_by_name(sheet, function_name)
+	if event_function == null:
+		return []
+	return EventSheetViewportReadingRows.call_reading_pieces(
+		EventSheetViewportLenses.function_display_name(function_name, event_function.ace_display_name),
+		arguments,
+		EventSheetViewportReadingRows.parameter_names_of(event_function),
+		_viewport.humanize_names_enabled(),
+		_export_knob_names()
+	)
 
 
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:

@@ -448,6 +448,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(Rect2(border_left, row_fill_rect.position.y, border_width, 1.0), block_border, true)
 		control.draw_rect(Rect2(border_left, row_fill_rect.end.y - 1.0, border_width, 1.0), block_border, true)
 	_draw_indent_guides(control, row_rect, row_data.indent)
+	# M15 - the tree connector from a parent event down to this sub-event, on top of the indent
+	# stops above. Draw-only: it reserves no width and is never measured, so it cannot move a
+	# glyph; the guide geometry itself lives in its own helper.
+	EventSheetViewportGuideLines.draw_guides(control, row_rect, row_data.indent, EventSheetPalette.COLOR_TREE_GUIDE)
 	if row_data.language_block:
 		# A LANGUAGE block (a data-class holder, a methods-class, a host binding, a lifted switch case...)
 		# reads as an event row but is not a regular ACE event: a quiet indigo left stripe + faint wash mark
