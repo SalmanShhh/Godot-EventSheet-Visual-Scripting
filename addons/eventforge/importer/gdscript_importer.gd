@@ -593,6 +593,12 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 		lifted.attributes = saved_attrs
 
 
+## A `##` line that is a variable's DOC comment rather than an annotation: `## @ace_tags(…)` and its
+## siblings are recovered elsewhere and are never tooltips.
+static func _is_variable_doc_line(line: String) -> bool:
+	return line.begins_with("## ") and not line.begins_with("## @")
+
+
 ## When a tree variable lifts, pull a directly-preceding @export_group / @export_subgroup off the pending
 ## block onto the variable's attributes - but only if the variable's canonical re-emission then reproduces
 ## those exact lines plus the var line (the verify-lift rule). A wrong guess is reverted, so a grouped var
@@ -603,6 +609,20 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	var group_value: String = ""
 	var meta_count: int = 0
 	var cursor: int = pending.size() - 1
+	# Godot's own convention writes the section line FIRST and the `##` doc directly above the
+	# variable it documents (`@export_group("Aim")` / `## How fast…` / `@export var …`); this plugin's
+	# canonical emission writes the doc above the section lines. Both are ordinary, both must lift, so
+	# the order the file used is read here and remembered (doc_after_group) for re-emission - a
+	# hand-written script whose group line stayed a raw block never grew its settings folder at all.
+	var tooltip_value: String = ""
+	var doc_after_group: bool = false
+	if cursor >= 0 and _is_variable_doc_line(pending[cursor]):
+		var trailing_doc: String = pending[cursor].substr(3).strip_edges()
+		if not trailing_doc.is_empty():
+			tooltip_value = trailing_doc
+			doc_after_group = true
+			meta_count += 1
+			cursor -= 1
 	if cursor >= 0 and pending[cursor].begins_with("@export_subgroup(\""):
 		subgroup_value = _extract_first_quoted(pending[cursor])
 		meta_count += 1
@@ -616,15 +636,18 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		category_value = _extract_first_quoted(pending[cursor])
 		meta_count += 1
 		cursor -= 1
-	var tooltip_value: String = ""
-	# A doc comment immediately before the var (no blank line - a blank line would sit at pending's tail
-	# instead) is the variable's tooltip, per Godot's `##` doc-comment convention. Exclude `## @...`
-	# annotation lines (@ace_tags / @icon / …), which are recovered elsewhere and are never tooltips.
-	if cursor >= 0 and pending[cursor].begins_with("## ") and not pending[cursor].begins_with("## @"):
+	# A doc comment above the section lines (no blank line - a blank line would sit at pending's tail
+	# instead) is the variable's tooltip, per Godot's `##` doc-comment convention, in this plugin's own
+	# canonical order. The other order was already taken above, so this only runs when it was not.
+	if not doc_after_group and cursor >= 0 and _is_variable_doc_line(pending[cursor]):
 		tooltip_value = pending[cursor].substr(3).strip_edges()
 		if not tooltip_value.is_empty():
 			meta_count += 1
 			cursor -= 1
+	# The flag is only worth carrying when there IS a section line to sit above: with none, the two
+	# orders are the same bytes, and a stray flag would be a difference the sheet cannot justify.
+	doc_after_group = doc_after_group and not (
+		category_value.is_empty() and group_value.is_empty() and subgroup_value.is_empty())
 	# Inspector decor rides ABOVE the tooltip (canonical emission order: header, info, tooltip, groups) -
 	# plain `#` comments the editor renders as a section header / info panel. Recovered into the same
 	# attributes the emitter reads so they reopen as editable dialog fields, verify-gated like the rest.
@@ -695,6 +718,8 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		candidate["group"] = group_value
 	if not subgroup_value.is_empty():
 		candidate["subgroup"] = subgroup_value
+	if doc_after_group:
+		candidate["doc_after_group"] = true
 	if candidate.is_empty():
 		return
 	# MERGE, don't overwrite: a drawer (+ its range bounds) may already have been recovered onto the variable

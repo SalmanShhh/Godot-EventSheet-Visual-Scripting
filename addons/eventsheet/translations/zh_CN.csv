@@ -1842,3 +1842,7 @@ times,次
 loopindex,循环索引
 While,当
 For each child,对每个子节点
+Wait one tick,等待一个 tick
+Wait one physics tick,等待一个物理 tick
+Wait for signal {object} {trigger},等待信号 {object} {trigger}
+connects {object} {trigger},连接 {object} {trigger}

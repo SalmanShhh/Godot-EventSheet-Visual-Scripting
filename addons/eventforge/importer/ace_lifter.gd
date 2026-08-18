@@ -58,6 +58,33 @@ static var progress_functions_done: int = 0
 static var cancel_requested: bool = false
 
 
+## The reverse index, kept for callers that ask for a lift OUTSIDE an import - the editor's M29
+## reading of a connected lambda rebuilds one on every canvas rebuild, and building the index from
+## the whole descriptor set each time would put a registry walk on the paint path. Keyed on the
+## descriptor count so a rescan that publishes new ACEs rebuilds it.
+static var _cached_reverse_entries: Array = []
+static var _cached_reverse_count: int = -1
+
+
+## Lifts a run of DEDENTED body lines (a lambda body, a snippet) into event rows, exactly as a
+## function body lifts: statements become actions, an `if`/`for`/`while` becomes a nested event.
+## Nothing is written to a sheet and nothing is byte-verified, because nothing is being changed -
+## this is for a reading of code that stays exactly where it is. Returns [] when the run does not
+## lift cleanly.
+static func lift_body_rows(body_lines: PackedStringArray) -> Array:
+	if body_lines.is_empty():
+		return []
+	var descriptors: Array = ACERegistry.get_all_descriptors()
+	if _cached_reverse_count != descriptors.size():
+		_cached_reverse_entries = _build_reverse_entries()
+		_cached_reverse_count = descriptors.size()
+	var parsed: Dictionary = _parse_body(
+		body_lines, 0, 0, "", "", "", "", _cached_reverse_entries, true, false, "")
+	if not bool(parsed.get("ok", false)):
+		return []
+	return parsed.get("rows", []) as Array
+
+
 ## Clears the progress/cancel state before a new open. Called on the MAIN thread by the job, never
 ## from attempt_lift itself - the event-only retry pass must not clear a cancel the user just asked for.
 static func reset_progress() -> void:
@@ -1568,15 +1595,27 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			index += 1
 			continue
 		var at_this_depth: bool = not rest.begins_with("\t")
-		var is_if: bool = at_this_depth and rest.begins_with("if ") and rest.ends_with(":")
-		var is_elif: bool = at_this_depth and chain_open and rest.begins_with("elif ") and rest.ends_with(":")
-		var is_else: bool = at_this_depth and chain_open and rest == "else:"
+		# A guard clause written on ONE line (`if target == null: return`, `else: play("hurt")`) is the
+		# same block as its multi-line twin, and a beginner writes far more of them than of the indented
+		# form. The header is separated here so the whole if/elif/else grammar below runs unchanged; the
+		# one-line shape is remembered on the row (__source_inline_block) and the compiler folds the body
+		# back onto the header, so the file it came from re-emits byte for byte.
+		var block_head: String = rest
+		var inline_body: String = ""
+		if at_this_depth and not rest.ends_with(":"):
+			var inline_split: Dictionary = _inline_block_split(rest)
+			if not inline_split.is_empty():
+				block_head = str(inline_split.get("head", ""))
+				inline_body = str(inline_split.get("body", ""))
+		var is_if: bool = at_this_depth and block_head.begins_with("if ") and block_head.ends_with(":")
+		var is_elif: bool = at_this_depth and chain_open and block_head.begins_with("elif ") and block_head.ends_with(":")
+		var is_else: bool = at_this_depth and chain_open and block_head == "else:"
 		if is_if or is_elif or is_else:
 			var expression: String = ""
 			if is_if:
-				expression = rest.substr(3, rest.length() - 4)
+				expression = block_head.substr(3, block_head.length() - 4)
 			elif is_elif:
-				expression = rest.substr(5, rest.length() - 6)
+				expression = block_head.substr(5, block_head.length() - 6)
 			var block_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 			if not is_if:
 				block_event.else_mode = EventRow.ElseMode.ELSE
@@ -1584,8 +1623,15 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			var inner: Dictionary = {}
 			if representable:
 				# An `if` inherits the loop context of its parent (a break/continue inside it belongs to the
-				# enclosing loop), so pass in_loop straight through.
-				inner = _parse_body(lines, index + 1, depth + 1, "", "", "", "", reverse_entries, lenient_ifs, in_loop, scope_trigger)
+				# enclosing loop), so pass in_loop straight through. A one-line body is parsed through the
+				# very same walk, from a synthetic line at the depth it would have occupied - so a lifted
+				# `if c: return` holds exactly the rows its indented twin holds.
+				var body_lines: PackedStringArray = lines
+				var body_start: int = index + 1
+				if not inline_body.is_empty():
+					body_lines = PackedStringArray(["\t".repeat(depth + 1) + inline_body])
+					body_start = 0
+				inner = _parse_body(body_lines, body_start, depth + 1, "", "", "", "", reverse_entries, lenient_ifs, in_loop, scope_trigger)
 				representable = bool(inner.get("ok", false)) and _adopt_block_body(block_event, inner.get("rows", []))
 			if not representable:
 				if not lenient_ifs:
@@ -1609,8 +1655,13 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				pending_group_slug = _stamp_group(block_event, pending_group_slug)
 			# A blank before this block re-emits above its `if`/`elif`/`else` header.
 			_stamp_body_blanks(block_event, blank_box)
+			if not inline_body.is_empty():
+				# The one bit of the source shape a row cannot otherwise remember: this block was
+				# written on its header's line. The compiler reads it back and re-folds exactly one
+				# emitted body line onto the header, which is what keeps the file byte-identical.
+				block_event.set_meta("__source_inline_block", true)
 			rows.append(block_event)
-			index = int(inner.get("next"))
+			index = index + 1 if not inline_body.is_empty() else int(inner.get("next"))
 			chain_open = true
 			continue
 		# Loops ('For Each' / repeat / while): `for X in EXPR:` or `while EXPR:` at this
@@ -1779,6 +1830,65 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		chain_open = false
 	_flush_raw(current, pending_raw, blank_box)
 	return {"ok": true, "rows": rows, "next": index}
+
+
+## Splits a ONE-LINE `if`/`elif`/`else` (`if hp <= 0: die()`) into {head "if hp <= 0:", body "die()"},
+## or {} when the line is not that shape. The split is deliberately strict, because it is only safe as
+## far as it is byte-reversible: the colon must be followed by EXACTLY one space (the separator the
+## compiler writes back), the body must carry no leading or trailing whitespace of its own, and a body
+## that itself opens a block is refused - a nested one-liner would re-emit as two indented lines and
+## fail the whole-file verify, taking the entire function back to a verbatim wall with it.
+static func _inline_block_split(rest: String) -> Dictionary:
+	var keyword: String = ""
+	for candidate: String in ["if ", "elif ", "else:"]:
+		if rest.begins_with(candidate):
+			keyword = candidate
+			break
+	if keyword.is_empty():
+		return {}
+	var colon: int = 4 if keyword == "else:" else _top_level_colon(rest, keyword.length())
+	if colon < 0 or colon + 2 >= rest.length():
+		return {}
+	if rest[colon + 1] != " ":
+		return {}
+	var body: String = rest.substr(colon + 2)
+	if body != body.strip_edges() or body.is_empty():
+		return {}
+	for opener: String in ["if ", "elif ", "else:", "for ", "while ", "match "]:
+		if body.begins_with(opener):
+			return {}
+	return {"head": rest.substr(0, colon + 1), "body": body}
+
+
+## The index of the first `:` at bracket depth 0 outside a string literal, scanning from `from`, or -1.
+## Bracket-aware so a lambda argument list (`func(v): …` inside a call) and a dictionary literal keep
+## their own colons; a condition itself can hold none, so the first top-level one always ends it.
+static func _top_level_colon(text: String, from: int) -> int:
+	var depth: int = 0
+	var in_string: bool = false
+	var quote: String = ""
+	var index: int = from
+	while index < text.length():
+		var character: String = text[index]
+		if in_string:
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				in_string = false
+			index += 1
+			continue
+		if character == "\"" or character == "'":
+			in_string = true
+			quote = character
+		elif character == "(" or character == "[" or character == "{":
+			depth += 1
+		elif character == ")" or character == "]" or character == "}":
+			depth -= 1
+		elif depth == 0 and character == ":":
+			return index
+		index += 1
+	return -1
 
 
 ## Stamps a pending `# @group:<slug>` breadcrumb onto a freshly lifted event (any row kind -

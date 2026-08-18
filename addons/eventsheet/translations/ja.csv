@@ -1842,3 +1842,7 @@ times,回
 loopindex,ループ番号
 While,の間
 For each child,子ごとに
+Wait one tick,1 ティック待つ
+Wait one physics tick,物理 1 ティック待つ
+Wait for signal {object} {trigger},シグナル {object} {trigger} を待つ
+connects {object} {trigger},{object} {trigger} を接続

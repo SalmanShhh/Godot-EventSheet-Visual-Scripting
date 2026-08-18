@@ -69,6 +69,46 @@ double-click-edits-the-line are untouched, and the exact GDScript is still one h
   `For "i" from 2 to 7` (inclusive, the last value the body actually sees), `For each child child` on
   the object whose children it walks, `While hp > 0`, and `break` / `continue` read `Stop loop` /
   `Next` - the Break Loop and Continue Loop actions now say those words too.
+### Added - stacked conditions, the awaits Construct has words for, connected lambdas, and one-line `if`s
+
+Four more shapes an ordinary `.gd` file writes, now read the way a Construct sheet writes them.
+
+- **`and` never appears inside a condition cell.** Construct has no word for "and": each top-level
+  conjunct is a condition LINE of the one event, stacked, and a top-level `or` is the OR block. A
+  lifted `if a and b:` already stacked; the readings the grammar INVENTS now agree with it, so a
+  ternary's branch test reads `host exists` / `host is on wall` on two lines instead of spelling the
+  word, and `"gold" if hp > 100 or seconds_left > 9 else …` reads as an OR block. A mixed
+  `a and (b or c)` stacks `a` and keeps the parenthesised group whole on its own line - a condition
+  line cannot hold a nested OR block, and inventing one would say something the source does not.
+- **An `await` says which tick or which signal it waits for.** `await get_tree().process_frame` reads
+  `⏳ Wait one tick`, `physics_frame` reads `⏳ Wait one physics tick`, and an await on a signal reads
+  Construct's own System action, `⏳ Wait for signal host On Tree Exited`. The timer wait keeps its
+  `⏳ Wait 0.5 seconds` sentence, and every other await still keeps its GDScript - a sentence must
+  never paper over a suspension point it cannot name. Both the lifted row and a hand-written line read
+  the same, and all three readings are translated.
+- **A lambda handed to `connect` reads as the trigger event it is.** `$Timer.timeout.connect(func():
+  seconds_left -= 1)` inside `_ready` - one of the commonest things real Godot code does, and
+  something Construct has no equivalent for - now draws as `Timer ▸ On Timeout` with the lambda's body
+  as its rows, through the same body grammar a declared handler's body gets: statements become
+  actions, a branch inside the lambda becomes a sub-event, and the lambda's parameters read as the
+  trigger's payload. Multi-line lambdas too. The connect line itself keeps a muted note,
+  `connects Timer On Timeout`, so the wiring is still written down where the file writes it. Display
+  only: the file keeps its one statement, the reading is anchored to it, and clicking or dragging
+  anywhere in it addresses that statement.
+- **A one-line `if` / `elif` / `else` lifts as the sub-event its indented twin does.** `if target ==
+  null: return`, `if hp <= 0: die()` / `else: play("hurt")`, `if i == 1: continue` - a beginner's most
+  common shapes - stayed verbatim code before, which meant a guard clause never became an event at
+  all. They now open as real rows, and the file re-emits byte for byte: the row remembers it was
+  written on one line and the compiler folds its single body line back onto the header. Nothing an
+  author builds in the editor changes shape.
+
+### Fixed - an `@export_group` written above its doc comment
+
+Godot's own convention writes `@export_group("Aim")` first and the `##` doc directly above the
+variable it documents; the importer only recognised the other order (doc, then group). In Godot's
+order the group line stayed a raw GDScript block and the settings folder never formed at all for a
+hand-written script. Both orders now lift, the variable remembers which one its file used, and saving
+reproduces that file byte for byte either way.
 
 ### Added - a ternary reads as a sub-event pair, and `return` reads Construct's own wording
 
@@ -84,8 +124,8 @@ in the right-hand lane, where the reader expects a step.
   spells an else-if - an `Else` on the row's first condition line with that arm's own test stacked
   under it, so no two arms can read as though both could fire - and the last arm is a plain `Else`.
   A second independent ternary nests its own pair beneath the first. `ƒ Wall Normal X` now opens as
-  `host exists and host is on wall | Set return value to host's wall normal X` over
-  `Else | Set return value to 0`.
+  `host exists` / `host is on wall` (two condition lines - see below) beside
+  `Set return value to host's wall normal X`, over `Else | Set return value to 0`.
 - Display only, over the unchanged statement: the file keeps its one line (byte round-trip identical),
   hover shows the exact GDScript, and double-click edits that statement.
 - **On every sheet, editable ones included.** The pair is no longer a reading-view-only lens: an

@@ -1842,3 +1842,7 @@ times,mal
 loopindex,Schleifenindex
 While,Solange
 For each child,Für jedes Kind
+Wait one tick,Einen Tick warten
+Wait one physics tick,Einen Physik-Tick warten
+Wait for signal {object} {trigger},Auf Signal {object} {trigger} warten
+connects {object} {trigger},verbindet {object} {trigger}

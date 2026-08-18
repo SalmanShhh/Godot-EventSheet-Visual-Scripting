@@ -1842,3 +1842,7 @@ times,fois
 loopindex,index de boucle
 While,Tant que
 For each child,Pour chaque enfant
+Wait one tick,Attendre un tick
+Wait one physics tick,Attendre un tick physique
+Wait for signal {object} {trigger},Attendre le signal {object} {trigger}
+connects {object} {trigger},connecte {object} {trigger}

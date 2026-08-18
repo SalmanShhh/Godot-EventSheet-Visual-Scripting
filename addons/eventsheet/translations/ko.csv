@@ -1842,3 +1842,7 @@ times,회
 loopindex,루프 인덱스
 While,동안
 For each child,각 자식마다
+Wait one tick,한 틱 대기
+Wait one physics tick,물리 한 틱 대기
+Wait for signal {object} {trigger},시그널 {object} {trigger} 대기
+connects {object} {trigger},{object} {trigger} 연결

@@ -1842,3 +1842,7 @@ times,раз
 loopindex,индекс цикла
 While,Пока
 For each child,Для каждого потомка
+Wait one tick,Ждать один тик
+Wait one physics tick,Ждать один тик физики
+Wait for signal {object} {trigger},Ждать сигнал {object} {trigger}
+connects {object} {trigger},подключает {object} {trigger}
