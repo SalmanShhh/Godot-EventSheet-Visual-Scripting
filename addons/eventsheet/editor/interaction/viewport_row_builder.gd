@@ -4038,6 +4038,127 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 	return rows
 
 
+# ── M39: instantiate + add_child (+ the first position) is Construct's Create object ──────────────
+# Godot spells spawning as three statements that only mean anything together; Construct spells it as
+# one action, and a Construct user reads the three as noise around the one thing that happened. So
+# the run reads as `System ▸ Create object <Scene> at <P> (as b)` - the three lines stay exactly as
+# they are in the file, on hover and under a double-click, and nothing about emission changes.
+
+
+## The Create object runs in one action lane: {"leads": {index: {text, alias, line_count}}, "consumed":
+## {index: true}}. A group is a local declaration (or assignment) of `<scene>.instantiate()`, the
+## `add_child` / `add_sibling` that plants it, and - only when it comes straight after - the first
+## line that puts it somewhere.
+func _create_object_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	# Refreshed HERE, before anything reads it: the sentence below ADDS the new object's own name to the
+	# class map, and a refresh triggered later (by the icon lookup on the very span being built) would
+	# rebuild the map from the sheet and drop it again.
+	_reset_lens_caches_if_stale()
+	var index: int = 0
+	while index < actions.size() - 1:
+		var spawn: Dictionary = _instantiate_action_parts(actions[index])
+		if spawn.is_empty() or not _plants_node(actions[index + 1], str(spawn.get("alias", ""))):
+			index += 1
+			continue
+		var last: int = index + 1
+		var position_text: String = ""
+		if last + 1 < actions.size():
+			position_text = _placement_value(actions[last + 1], str(spawn.get("alias", "")))
+			if not position_text.is_empty():
+				last += 1
+		var indices: Array[int] = []
+		for member_index: int in range(index, last + 1):
+			indices.append(member_index)
+		leads[index] = {
+			"text": _create_object_text(str(spawn.get("source", "")), str(spawn.get("alias", "")),
+				position_text, bool(spawn.get("copy", false))),
+			"alias": str(spawn.get("alias", "")),
+			"line_count": last - index + 1,
+			"indices": indices,
+		}
+		for consumed_index: int in range(index + 1, last + 1):
+			consumed[consumed_index] = true
+		index = last + 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## `var b := bullet_scene.instantiate()` / `b = X.duplicate()` -> {alias, source, copy}, else {}.
+func _instantiate_action_parts(action_resource: Variant) -> Dictionary:
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled:
+		return {}
+	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	var alias: String = str(params.get("name", params.get("var_name", ""))).strip_edges()
+	var value: String = str(params.get("value", "")).strip_edges()
+	if alias.is_empty() or not EventSheetSentence.is_identifier(alias):
+		return {}
+	for suffix: String in [".instantiate()", ".duplicate()"]:
+		if not value.ends_with(suffix):
+			continue
+		var source: String = value.substr(0, value.length() - suffix.length()).strip_edges()
+		if source.is_empty() or not _is_identifier_path(source):
+			return {}
+		return {"alias": alias, "source": source, "copy": suffix == ".duplicate()"}
+	return {}
+
+
+## True when the action is the `add_child(b)` / `add_sibling(b)` (on this node or on a named parent)
+## that puts the freshly made object into the tree.
+func _plants_node(action_resource: Variant, alias: String) -> bool:
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled or alias.is_empty():
+		return false
+	if not (action.ace_id.contains("AddChild") or action.ace_id.contains("AddSibling")):
+		return false
+	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	return str(params.get("node", params.get("child", ""))).strip_edges() == alias
+
+
+## The value of a `b.global_position = P` / `b.position = P` that immediately follows, or "" when the
+## next line is anything else. Only the FIRST placement joins the row: the ones after it are ordinary
+## "set a property of the new object" actions, and Construct draws those separately too.
+func _placement_value(action_resource: Variant, alias: String) -> String:
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled or alias.is_empty():
+		return ""
+	if not action.ace_id.contains("SetProperty"):
+		return ""
+	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	if str(params.get("target", "")).strip_edges() != alias:
+		return ""
+	var property_name: String = str(params.get("property", "")).strip_edges()
+	if property_name != "global_position" and property_name != "position":
+		return ""
+	return str(params.get("value", "")).strip_edges()
+
+
+## The sentence itself. The object created is named the way a Construct user names it - the scene's
+## ROOT node - whenever the source is a preloaded scene this sheet declares; otherwise the variable's
+## own name, which is the honest answer when nothing else is known.
+func _create_object_text(source: String, alias: String, position_text: String, copy: bool) -> String:
+	var shown: String = source
+	var resolved: Dictionary = _lens_scene_vars.get(source, {}) as Dictionary
+	if not resolved.is_empty() and not str(resolved.get("name", "")).is_empty():
+		shown = str(resolved.get("name", ""))
+		# The new object answers to its local name for the rest of the event, and draws the scene root's
+		# picture while it does - Construct's "picked new instance", spelled in Godot's own names.
+		var icon_class: String = str(resolved.get("icon_class", ""))
+		if not icon_class.is_empty() and not alias.is_empty():
+			_lens_class_map[alias] = icon_class
+	if copy:
+		shown = "(%s %s)" % [EventSheetL10n.translate("copy of"), shown]
+	var text: String = "%s %s" % [EventSheetL10n.translate("Create object"), shown]
+	if not position_text.is_empty():
+		# Through the shared value lens, so the place a thing is made reads exactly as it would in any
+		# other cell - `Vector2(10, 20)` is a point, and Construct writes a point as `(10, 20)`.
+		text += " %s %s" % [EventSheetL10n.translate("at"), _reading_sentence(EventSheetSentence.expression_text(position_text))]
+	if not alias.is_empty():
+		text += " (%s %s)" % [EventSheetL10n.translate("as"), alias]
+	return text
+
+
 ## M37 - whether a `match` says nothing more than "which of these values is it?", which is the only
 ## thing an Else-if chain can say back. Every branch must be one or more PLAIN values; a pattern that
 ## binds (`var n`), destructures (`[a, b]` / `{"k": v}`), or tests a type keeps the switch reading,
@@ -5250,8 +5371,33 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 	if not event_row.actions.is_empty():
+		# M39 - the instantiate + add_child (+ first position) run is Construct's single Create object.
+		# Worked out once for the whole lane, because a group is recognised by what FOLLOWS its lead.
+		var create_groups: Dictionary = _create_object_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
+			# A line the Create object row above already said. Skipped without advancing the line index,
+			# which is what turns three lines into one row.
+			if bool(create_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			if (create_groups.get("leads", {}) as Dictionary).has(action_index):
+				var create: Dictionary = (create_groups["leads"] as Dictionary)[action_index]
+				spans.append(_make_span(str(create.get("text", "")), SemanticSpan.SpanType.ACTION, {
+					"lane": "action",
+					"kind": "action",
+					"ace_index": action_index,
+					"ace_enabled": true,
+					"chip": true,
+					"line_index": action_line_index,
+					"object_label": _object_label_for("Core", ""),
+					"object_icon": _reading_class_icon_for(str(create.get("alias", ""))),
+					"compiled_lines": int(create.get("line_count", 1)),
+					# The statements this ONE cell stands for. Hover shows all of them, so the row never
+					# hides a line: it says what happened, and the file's own spelling is a pointer away.
+					"create_object_indices": create.get("indices", [])
+				}.merged(action_style_meta, true)))
+				action_line_index += 1
+				continue
 			# M29 - whichever shape the line took (a Call Method row or a verbatim block), the line
 			# that wires a lambda to a signal reads as a muted NOTE: the work it describes is drawn
 			# below it as the trigger event it is. Nothing is hidden - the note names the object and
@@ -7479,6 +7625,10 @@ func _current_verb_kind() -> int:
 var _lens_sheet_stamp: int = 0
 var _lens_knob_names: Dictionary = {}
 var _lens_class_map: Dictionary = {}
+## M39 - variable name -> the object a preloaded scene/script IS, as resolve_res_object answers it
+## ({name, kind_word, icon_class}). `bullet_scene` is not what a Construct user calls the thing they
+## spawn; the scene's root node is, and this is where Create object gets that name and its picture.
+var _lens_scene_vars: Dictionary = {}
 
 
 func _reset_lens_caches_if_stale() -> void:
@@ -7489,6 +7639,28 @@ func _reset_lens_caches_if_stale() -> void:
 	_lens_sheet_stamp = stamp
 	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
 	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)
+	_lens_scene_vars = _scene_variable_map(sheet)
+
+
+## Every `var x = preload("res://...")` / `const X := preload(...)` of a sheet, resolved once per
+## rebuild through the SAME cached scan the file's head uses to draw those declarations - the scan is
+## keyed on the res:// path, so asking it again here costs a dictionary lookup and never re-reads a
+## file.
+func _scene_variable_map(sheet: EventSheetResource) -> Dictionary:
+	var map: Dictionary = {}
+	if sheet == null:
+		return map
+	for entry: Variant in sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable == null or variable.name.is_empty():
+			continue
+		var res_path: String = ViewportRowBuilder.preloaded_path(str(variable.default_value))
+		if res_path.is_empty():
+			continue
+		var resolved: Dictionary = ViewportRowBuilder.resolve_res_object(res_path)
+		if not resolved.is_empty():
+			map[variable.name] = resolved
+	return map
 
 
 ## M9 - the sheet's @export knob names, so the lens can show those with Godot's Inspector

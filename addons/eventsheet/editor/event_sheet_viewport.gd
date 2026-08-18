@@ -2974,6 +2974,21 @@ func _get_tooltip(at_position: Vector2) -> String:
 			# (built from the same descriptors the cells draw), then the hovered cell's own description.
 			var sentence: String = _row_builder.row_sentence(row_data.source_resource as EventRow)
 			var sentence_prefix: String = "%s\n\n" % sentence if not sentence.is_empty() else ""
+			# M39 - a Create object cell stands for two or three statements. Hover shows all of them, so
+			# the shorter reading never costs the reader the ability to see what the file actually says.
+			var create_indices: Array = metadata.get("create_object_indices", []) as Array
+			if not create_indices.is_empty():
+				var create_lines: PackedStringArray = PackedStringArray()
+				for create_index: Variant in create_indices:
+					var created: ACEAction = _resolve_ace_resource(row_data.source_resource, "action", int(create_index)) as ACEAction
+					if created == null:
+						continue
+					var created_code: String = _tooltip_helper.codegen_preview_for(created.provider_id, created.ace_id,
+						created.params if not created.params.is_empty() else created.parameters)
+					if not created_code.strip_edges().is_empty():
+						create_lines.append(created_code)
+				if not create_lines.is_empty():
+					return sentence_prefix + "GDScript:\n%s" % "\n".join(create_lines)
 			var ace_resource: Resource = _resolve_ace_resource(row_data.source_resource, kind, int(metadata.get("ace_index", -1)))
 			# Show the plain-language DESCRIPTION of the ACE / function (what it does) on hover. Built-in
 			# ACEs get theirs from the generated map; custom ACEs + functions carry their own.
