@@ -1735,7 +1735,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		# block is unrepresentable (actions emit before sub-events) and falls to the lenient raw path.
 		# Loop-index prelude (the emitter's exact three-line shape): `var X: int = -1` directly
 		# above a loop whose body's FIRST line is `X += 1` lifts back into PickFilter.index_name -
-		# the C3-style loopindex. All three lines must match or the var stays an ordinary statement.
+		# the loop index counter. All three lines must match or the var stays an ordinary statement.
 		var loop_index_lift: String = ""
 		if at_this_depth and index + 2 < lines.size():
 			var index_probe: RegEx = RegEx.new()
@@ -2279,7 +2279,7 @@ static func _split_top_level(expression: String, sep: String) -> PackedStringArr
 ## negation), setting the event's AND/OR condition_mode. All terms must match or the lift fails - though
 ## the generic Expression Is True condition (bare {expr}) catches any term no specific ACE claims.
 ## Top-level ` or ` splits FIRST (matching GDScript, where `or` binds loosest): any ` or ` at the top
-## makes a C3-style "Or block" whose terms keep their inner `and`s whole, and only a pure-AND
+## makes an event-sheet "Or block" whose terms keep their inner `and`s whole, and only a pure-AND
 ## expression splits on ` and ` into AND'd conditions.
 static func _parse_conditions(expression: String, event: EventRow, reverse_entries: Array, scope_trigger: String = "") -> bool:
 	# Precedence-correct split order: `or` binds LOOSEST in GDScript, so `a and b or c`

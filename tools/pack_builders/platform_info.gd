@@ -6,7 +6,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 const CAT := "Platform Info"
 
 
-## Platform Info: Construct's Platform Info plugin, Godot-shaped - one autoload answering
+## Platform Info: an event-sheet Platform Info plugin, Godot-shaped - one autoload answering
 ## "what am I running on?" from plain event rows: OS / device / screen / touch / locale /
 ## GPU / processor conditions and expressions. Every call is a direct engine query (parity
 ## covenant - no caching layer, no state), so the pack is a bank of pure lookups.
@@ -23,7 +23,7 @@ static func build() -> bool:
 	about.text = "Platform Info: register as the PlatformInfo autoload, then branch on the machine from any sheet - Is On Mobile switches to touch controls, Screen DPI scales the HUD, Safe Area Top pads under a notch, GPU Name picks a quality preset. Everything is a live engine query. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)
 
-	# ── Where am I running? (the C3 is-on-platform family, via Godot feature tags) ──
+	# ── Where am I running? (the is-on-platform family, via Godot feature tags) ──
 	Lib.condition(sheet, "is_mobile", "Is On Mobile", CAT,
 		"True on Android and iOS builds - the switch-to-touch-controls condition.",
 		[], "return OS.has_feature(\"mobile\")")

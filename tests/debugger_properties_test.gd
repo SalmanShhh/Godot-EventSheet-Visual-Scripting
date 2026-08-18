@@ -1,4 +1,4 @@
-# EventForge - the behavior debugger seam (Construct's GetDebuggerProperties idea): a child
+# EventForge - the behavior debugger seam (the event-sheet GetDebuggerProperties idea): a child
 # node defining `debugger_properties() -> Dictionary` joins the sheet's throttled live-values
 # frame, keys namespaced "ChildName.key", and the Live Values panel groups them per behavior
 # (read-only). Pins: the compiled send block carries the duck-typed child scan, the panel's

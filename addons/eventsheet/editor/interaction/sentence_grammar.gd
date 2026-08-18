@@ -2,7 +2,7 @@
 class_name EventSheetSentence
 extends RefCounted
 
-# Construct-style row grammar for statements that have no ACE of their own.
+# Event-sheet row grammar for statements that have no ACE of their own.
 #
 # ONE producer, TWO callers. A row that says `host.velocity.x = speed` must read the same whether
 # the user typed that line in a .gd file (a RawCodeRow the viewport lifts to a sentence) or dropped
@@ -10,7 +10,7 @@ extends RefCounted
 # Both paths land here, so the two readings cannot drift apart: the viewport's raw path calls
 # `statement()` / `condition()`, and its ACE path calls the same helpers with the row's params.
 #
-# The shape of every reading is Construct's own word order - OBJECT, then VERB, then the values:
+# The shape of every reading is the event-sheet word order - OBJECT, then VERB, then the values:
 #
 #     _jumps_left -= 1                 System ▸ Subtract 1 from _jumps_left
 #     host.velocity.x = speed          host   ▸ Set velocity.x to speed
@@ -32,15 +32,15 @@ extends RefCounted
 
 ## The object a receiver-less statement belongs to, matching the picker's own word for Core rows.
 const OBJECT_SYSTEM := "System"
-## Input rows belong to Construct's Keyboard object, not to System.
+## Input rows belong to the event-sheet Keyboard object, not to System.
 const OBJECT_KEYBOARD := "Keyboard"
-## M45. The pointer is Construct's Mouse object, exactly as the stick is Keyboard's.
+## M45. The pointer is the event-sheet Mouse object, exactly as the stick is Keyboard's.
 const OBJECT_MOUSE := "Mouse"
-## M40. An AudioStreamPlayer row belongs to Construct's one Audio object, whatever the player is
-## called in the scene tree.
+## M40. An AudioStreamPlayer row belongs to the one Audio object an event sheet files these under,
+## whatever the player is called in the scene tree.
 const OBJECT_AUDIO := "Audio"
 
-## M38. Vector constants read as the point they ARE - Construct writes (0, 0), never a namespaced
+## M38. Vector constants read as the point they ARE - an event sheet writes (0, 0), never a namespaced
 ## name. `INF` keeps the infinity sign the bare constant reads as, in each axis.
 const VECTOR2_CONSTANTS: Dictionary = {
 	"ZERO": "(0, 0)", "ONE": "(1, 1)", "INF": "(∞, ∞)",
@@ -59,23 +59,23 @@ const GLOBAL_CONSTANTS: Dictionary = {"PI": "π", "TAU": "τ", "INF": "∞"}
 const VECTOR2_TYPES: PackedStringArray = ["Vector2", "Vector2i"]
 const VECTOR3_TYPES: PackedStringArray = ["Vector3", "Vector3i"]
 
-## M40. The classes whose `play` / `stop` are Construct's animation verbs, and the ones whose are
-## Construct's Audio object. Matched through ClassDB, so a subclass counts as its base.
+## M40. The classes whose `play` / `stop` are the event-sheet animation verbs, and the ones whose
+## are the event-sheet Audio object. Matched through ClassDB, so a subclass counts as its base.
 const ANIMATION_CLASSES: PackedStringArray = ["AnimatedSprite2D", "AnimatedSprite3D", "AnimationPlayer"]
 const AUDIO_CLASSES: PackedStringArray = ["AudioStreamPlayer", "AudioStreamPlayer2D", "AudioStreamPlayer3D"]
 
-## M43. Construct's object has an ANGLE, and its own place is just "position" - so a distance or an
+## M43. An event-sheet object has an ANGLE, and its own place is just "position" - so a distance or an
 ## angle measured FROM the object's own place names only the other end.
 const OWN_POSITION_NAMES: PackedStringArray = ["position", "global_position"]
 
-## M43/M46. Members whose Construct word differs from Godot's. The Godot spelling stays one hover
+## M43/M46. Members whose event-sheet word differs from Godot's. The Godot spelling stays one hover
 ## away, so the two vocabularies remain learnable side by side.
 const MEMBER_WORDS: Dictionary = {
 	"rotation_degrees": "angle",
 	"rotation": "angle (radians)"
 }
 
-## Godot call shapes that have one settled Construct sentence. Curated on purpose: an entry is added
+## Godot call shapes that have one settled event-sheet sentence. Curated on purpose: an entry is added
 ## only when one shape maps to exactly one reading. `{0}`.. are the call's arguments in order.
 const EXPRESSION_IDIOMS: Dictionary = {
 	"maxf": "max({0}, {1})",
@@ -90,7 +90,7 @@ const EXPRESSION_IDIOMS: Dictionary = {
 	"deg_to_rad": "{0}°",
 	"is_zero_approx": "{0} ≈ 0",
 	"is_equal_approx": "{0} ≈ {1}",
-	# M32. Each of these has exactly one Construct sentence, and each matches the vocabulary's own
+	# M32. Each of these has exactly one event-sheet sentence, and each matches the vocabulary's own
 	# wording for the same thing, so a typed line and the picked ACE read alike.
 	"randi_range": "random whole number {0} to {1}",
 	"randf_range": "random number {0} to {1}",
@@ -116,7 +116,7 @@ const RECEIVER_IDIOMS: Dictionary = {
 	"length": "length of {receiver}",
 	"normalized": "{receiver}, normalized",
 	"dot": "{receiver} · {0}",
-	# M44. Emptiness IS a count in Construct - there is no "is empty" condition, only "count = 0".
+	# M44. Emptiness IS a count in an event sheet - there is no "is empty" condition, only "count = 0".
 	"is_empty": "{receiver}' count = 0"
 }
 
@@ -163,7 +163,7 @@ enum VerbKind {
 }
 
 
-## The Construct reading of ONE GDScript statement, or {} when no shape is recognised.
+## The event-sheet reading of ONE GDScript statement, or {} when no shape is recognised.
 ##
 ## `context` may carry:
 ##   "self_object"  - the object a receiver-less statement belongs to (default "System")
@@ -187,7 +187,7 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var keyword: String = leading_word(text)
 	if keyword == "await":
 		return _with_indent(_await_statement(text, context), indent)
-	# M33. Construct's own words for the two loop steps. Claimed only for the BARE keyword, so a
+	# M33. The event-sheet words for the two loop steps. Claimed only for the BARE keyword, so a
 	# `break` that is part of something longer is not mistaken for the statement.
 	if text == "break":
 		return _with_indent(_sentence(OBJECT_SYSTEM, "Stop loop", {}), indent)
@@ -209,14 +209,14 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	return _with_indent(_call_statement(text, context), indent)
 
 
-## The Construct reading of ONE boolean expression - the text of an `if`, or the expression an
+## The event-sheet reading of ONE boolean expression - the text of an `if`, or the expression an
 ## Expression Is True row carries. {} when nothing is recognised, so the caller keeps its own text.
 static func condition(expression: String, context: Dictionary = {}) -> Dictionary:
 	var text: String = node_lookup_text(expression.strip_edges())
 	if text.is_empty():
 		return {}
 	var self_object: String = str(context.get("self_object", OBJECT_SYSTEM))
-	# `if crouching:` - a bare flag is Construct's "is boolean set" condition. An engine flag of the
+	# `if crouching:` - a bare flag is the event-sheet "is boolean set" condition. An engine flag of the
 	# script's own object (`visible`) belongs to that object instead (M25).
 	if is_identifier(text):
 		var flag_object: String = script_object(context) if is_engine_property(text, context) else self_object
@@ -226,7 +226,7 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 		var negated_object: String = script_object(context) if is_engine_property(bare_flag, context) else self_object
 		return _sentence(negated_object, "{name} is false", {"name": [bare_flag, "name"]})
 	# ── M41 / M44 / M47 ─────────────────────────────────────────────────────────────────────────
-	# Construct's own questions, before the general shapes: a body's movement state, an overlap, a
+	# The event-sheet questions, before the general shapes: a body's movement state, an overlap, a
 	# count, and a property read through `get("name")` all have one settled sentence each.
 	var body_state: Dictionary = _body_state_condition(text, context)
 	if not body_state.is_empty():
@@ -269,12 +269,12 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	return {}
 
 
-## The Construct reading of a condition that may be a RUN of conjuncts (M23): `host != null and
+## The event-sheet reading of a condition that may be a RUN of conjuncts (M23): `host != null and
 ## host.is_on_wall()` reads `host exists and host is on wall`, each conjunct through `condition()`.
 ##
 ## Returns {"object", "pieces"} - `pieces` an array of [text, tone] the caller draws in order, and
 ## `object` the row's object label, filled only when every conjunct belongs to the SAME object (with
-## more than one object in play the words go inline instead, the way a Construct cell names each).
+## more than one object in play the words go inline instead, the way an event-sheet cell names each).
 ## Never {}: an expression nothing is recognised in still reads as itself.
 static func condition_pieces(expression: String, context: Dictionary = {}) -> Dictionary:
 	var text: String = expression.strip_edges()
@@ -292,7 +292,7 @@ static func condition_pieces(expression: String, context: Dictionary = {}) -> Di
 	for part: String in parts:
 		readings.append(_condition_reading(part, context))
 	# The object column can name ONE object. A run of conjuncts therefore says each object inline, the
-	# way a Construct cell repeats the object picture in every condition it draws.
+	# way an event-sheet cell repeats the object picture in every condition it draws.
 	var one_object: bool = readings.size() == 1
 	var shared_object: String = str((readings[0] as Dictionary).get("object", "")) if one_object else ""
 	var pieces: Array = []
@@ -310,11 +310,11 @@ static func condition_pieces(expression: String, context: Dictionary = {}) -> Di
 	return {"object": shared_object if one_object else "", "pieces": pieces}
 
 
-## One conjunct's reading: the ordinary condition path first, then the predicate-call fallback a
-## Construct cell needs (`host.is_on_wall()` is an object and a question, not a line of code).
+## One conjunct's reading: the ordinary condition path first, then the predicate-call fallback an
+## event-sheet cell needs (`host.is_on_wall()` is an object and a question, not a line of code).
 static func _condition_reading(part: String, context: Dictionary) -> Dictionary:
 	var text: String = part.strip_edges()
-	# M44. Construct has no "is not empty": the reading of a non-empty list is its count, and the
+	# M44. An event sheet has no "is not empty": the reading of a non-empty list is its count, and the
 	# negation belongs INSIDE the comparison rather than as a mark on a count that reads "= 0".
 	var not_empty: Dictionary = _not_empty_reading(text, context)
 	if not not_empty.is_empty():
@@ -356,7 +356,7 @@ static func _predicate_call_reading(text: String) -> Dictionary:
 
 
 ## The sub-event reading of a statement whose value carries a ternary (M23). A `if ... else` INSIDE
-## a statement is a BRANCH, and a Construct sheet never puts a branch in an action cell - so the
+## a statement is a BRANCH, and an event sheet never puts a branch in an action cell - so the
 ## caller draws one row per branch: the condition on the left, the whole statement re-read on the
 ## right with that branch's value substituted, and a final `Else` row for the last one.
 ##
@@ -503,8 +503,9 @@ static func _split_ternary(text: String) -> Array:
 	return [value_true, test, value_false]
 
 
-## `Input.is_action_pressed("jump")` and its just-pressed sibling, as the Keyboard rows a Construct
-## user already knows. Shared by the raw path and by the two Core input ACEs, so both read alike.
+## `Input.is_action_pressed("jump")` and its just-pressed sibling, as the Keyboard rows a reader
+## coming from another event-sheet editor already knows. Shared by the raw path and by the two Core
+## input ACEs, so both read alike.
 static func input_action_sentence(action_value: String, just_pressed: bool) -> Dictionary:
 	var shown: String = strip_action_name(action_value)
 	if shown.is_empty():
@@ -560,7 +561,7 @@ static func _signal_parameter_names(signal_name: String, context: Dictionary) ->
 	return out
 
 
-## The reading of a `return`, given the kind of verb whose body it sits in (M14). Construct's function
+## The reading of a `return`, given the kind of verb whose body it sits in (M14). The event-sheet function
 ## block has exactly one action for handing a value back - `Set return value to X` - so a published
 ## CONDITION and a published EXPRESSION both read that, with `true` / `false` as themselves. An
 ## action's bare `return` is `Stop event` (the rest of the event does not run). Shared with the Core
@@ -587,7 +588,7 @@ static func declaration(code: String) -> Dictionary:
 	return parsed
 
 
-## A value expression with the Godot idioms replaced by their Construct reading and every type
+## A value expression with the Godot idioms replaced by their event-sheet reading and every type
 ## annotation dropped (M11 + M18). Returns the text unchanged when nothing is recognised.
 static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var trimmed: String = text.strip_edges()
@@ -596,7 +597,7 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
 	# M31 before the call rewriting: a join is decided by the WHOLE expression's shape (is any part of
 	# it text?), which the innermost-first call pass would have already taken apart.
-	# A whole value wrapped in `str(...)` is the same value: Construct shows numbers in text without
+	# A whole value wrapped in `str(...)` is the same value: an event sheet shows numbers in text without
 	# a conversion, so the conversion is a GDScript chore rather than part of what the row says.
 	var joined: String = _rewrite_format(_string_call_value(without_cast))
 	joined = _rewrite_join(joined)
@@ -605,9 +606,9 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	return constant_words(_rewrite_delta(_tidy_numbers(rewritten)), context)
 
 
-## M45. The system values every Construct user types by name - the viewport's size, the pointer, the
+## M45. The system values an event-sheet reader types by name - the viewport's size, the pointer, the
 ## clock, the frame rate. Whole-spelling replacements on purpose: each of these is one exact Godot
-## phrase with one exact Construct word, and a looser match would rename somebody's own helper.
+## phrase with one exact event-sheet word, and a looser match would rename somebody's own helper.
 static func _system_words(text: String) -> String:
 	var out: String = _group_count_words(text)
 	if out.contains("get_viewport_rect()"):
@@ -618,7 +619,7 @@ static func _system_words(text: String) -> String:
 		out = out.replace("get_global_mouse_position()", translate("mouse position"))
 		out = out.replace("get_local_mouse_position()", translate("mouse position"))
 	if out.contains("Time.get_ticks_msec()"):
-		# The seconds form first: `/ 1000.0` is what makes the number Construct's `time`, and the bare
+		# The seconds form first: `/ 1000.0` is what makes the number the event-sheet `time`, and the bare
 		# call is milliseconds, which is a different number and says so.
 		out = out.replace("Time.get_ticks_msec() / 1000.0", translate("time"))
 		out = out.replace("Time.get_ticks_msec() / 1000", translate("time"))
@@ -627,7 +628,7 @@ static func _system_words(text: String) -> String:
 	return out
 
 
-## M44. `get_tree().get_nodes_in_group("enemies").size()` is Construct's instance count of a family:
+## M44. `get_tree().get_nodes_in_group("enemies").size()` is the instance count of a family:
 ## the group is the OBJECT and the count is what the row shows. Only a LITERAL group name is claimed -
 ## a variable group has no word a row could honestly print.
 static func _group_count_words(text: String) -> String:
@@ -675,7 +676,7 @@ static func node_lookup_text(text: String) -> String:
 	return out
 
 
-## M38. Named constants as Construct writes them: no namespace, and a symbol where one exists.
+## M38. Named constants as an event sheet writes them: no namespace, and a symbol where one exists.
 ##
 ##   State.PATROL   -> PATROL     (when the sheet declares that member exactly once)
 ##   Vector2.ZERO   -> (0, 0)
@@ -746,8 +747,9 @@ static func _constant_token(token: String, context: Dictionary) -> String:
 	return token
 
 
-## M27. `delta` is Construct's `dt` - the same number under the name a Construct user writes. Only
-## the whole word is replaced, so `delta_v` and `_delta` keep their own names.
+## M27. `delta` is the per-frame delta the event-sheet grammar calls `dt` - the same number under the
+## name a reader coming from another event-sheet editor writes. Only the whole word is replaced, so
+## `delta_v` and `_delta` keep their own names.
 static func _rewrite_delta(text: String) -> String:
 	if not text.contains("delta"):
 		return text
@@ -757,7 +759,7 @@ static func _rewrite_delta(text: String) -> String:
 	return regex.sub(text, "dt", true)
 
 
-## M31. `"a" + b` and `str(a) + " b"` read with Construct's join. Claimed only when a part is plainly
+## M31. `"a" + b` and `str(a) + " b"` read with the event-sheet join. Claimed only when a part is plainly
 ## TEXT (a literal or a `str()` call): `x + y` on two numbers is arithmetic, and reading it as a join
 ## would be a confident lie.
 static func _rewrite_join(text: String) -> String:
@@ -778,8 +780,8 @@ static func _rewrite_join(text: String) -> String:
 	return " & ".join(spelled)
 
 
-## The value inside a `str(x)` wrapper - Construct joins values with text directly, so the conversion
-## is a GDScript chore, not part of what the row says. Anything else comes back unchanged.
+## The value inside a `str(x)` wrapper - an event sheet joins values with text directly, so the
+## conversion is a GDScript chore, not part of what the row says. Anything else comes back unchanged.
 static func _string_call_value(part: String) -> String:
 	var text: String = part.strip_edges()
 	if not text.begins_with("str(") or not text.ends_with(")"):
@@ -830,7 +832,7 @@ static func _rewrite_format(text: String) -> String:
 	return " & ".join(pieces)
 
 
-## M31. Indexing read the way Construct reads a dictionary or an array: `inventory["potion"]` is
+## M31. Indexing read the way an event sheet reads a dictionary or an array: `inventory["potion"]` is
 ## `inventory's "potion"`, `items[0]` is `items' item 0`. Only a NAMED base is claimed - an index into
 ## a literal or a call result has no name to possess.
 static func _rewrite_indexing(text: String) -> String:
@@ -893,8 +895,8 @@ static func type_word(type_name: String) -> String:
 # ── Statement shapes ────────────────────────────────────────────────────────────
 
 
-## The awaits with a settled Construct sentence (M11 + M28): the timer wait, the two tick waits, and
-## an await on a SIGNAL, which is Construct's own "Wait for signal" action. Every other await keeps
+## The awaits with a settled event-sheet sentence (M11 + M28): the timer wait, the two tick waits, and
+## an await on a SIGNAL, which is the event-sheet "Wait for signal" verb. Every other await keeps
 ## its code, because a sentence must never paper over a suspension point nobody can name.
 static func _await_statement(text: String, context: Dictionary = {}) -> Dictionary:
 	var body: String = text.substr(6).strip_edges()
@@ -903,7 +905,7 @@ static func _await_statement(text: String, context: Dictionary = {}) -> Dictiona
 		if inner.strip_edges().is_empty():
 			return {}
 		return _sentence(OBJECT_SYSTEM, "⏳ Wait {seconds} seconds", {"seconds": [expression_text(inner, context), "value"]})
-	# M28. One frame of waiting is Construct's tick, and which clock it is IS the one Godot fact
+	# M28. One frame of waiting is the event-sheet tick, and which clock it is IS the one Godot fact
 	# worth keeping - the two frames are different lengths.
 	if body == "get_tree().process_frame":
 		return _sentence(OBJECT_SYSTEM, "⏳ Wait one tick", {})
@@ -912,7 +914,7 @@ static func _await_statement(text: String, context: Dictionary = {}) -> Dictiona
 	return _await_signal_statement(body, context)
 
 
-## M28. `await door.opened` / `await opened` as Construct's Wait for signal, naming the object the
+## M28. `await door.opened` / `await opened` as the event-sheet Wait for signal verb, naming the object the
 ## signal lives on and the trigger it publishes as. Only a plain member read is claimed: an await on
 ## a CALL suspends on whatever that call returns, which no sentence can honestly name.
 static func _await_signal_statement(body: String, context: Dictionary) -> Dictionary:
@@ -940,7 +942,7 @@ static func _await_signal_statement(body: String, context: Dictionary) -> Dictio
 
 
 ## The published trigger name behind a signal member - the sheet's own @ace_name when it declares
-## one, else the member read as words with Construct's "On" in front.
+## one, else the member read as words with the event-sheet "On" in front.
 static func trigger_name_of(signal_name: String, context: Dictionary) -> String:
 	var declared: Dictionary = context.get("signals", {})
 	var trigger: String = str(declared.get(signal_name, "")).strip_edges()
@@ -1035,7 +1037,7 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 	if assigned.is_empty():
 		return {}
 	# ── M40 / M46 ───────────────────────────────────────────────────────────────────────────────
-	# The property writes Construct spells as its own verbs (visible, opacity, mirrored, size), and
+	# The property writes an event sheet spells as its own verbs (visible, opacity, mirrored, size), and
 	# the two globals its glossary renames. Checked before the plain Set, and before the simple-target
 	# gate, because `get_tree().paused` is a settled sentence even though it assigns through a call.
 	var engine_verb: Dictionary = _engine_verb_assignment(target, assigned, context)
@@ -1045,11 +1047,11 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 		return {}
 	var split: Array = _split_object(target, context)
 	var object_name: String = str(split[0])
-	# M32. Construct files the input devices as OBJECTS: reading the stick belongs to Keyboard, not to
-	# System, exactly as the picked Input Vector row does.
+	# M32. An event sheet files the input devices as OBJECTS: reading the stick belongs to Keyboard,
+	# not to System, exactly as the picked Input Vector row does.
 	if object_name == OBJECT_SYSTEM and assigned.begins_with("Input."):
 		object_name = OBJECT_KEYBOARD
-	# M45. The pointer is Construct's Mouse object for the same reason the stick is Keyboard's.
+	# M45. The pointer is the event-sheet Mouse object for the same reason the stick is Keyboard's.
 	if object_name == OBJECT_SYSTEM and _system_words(assigned) != assigned and assigned.contains("mouse_position"):
 		object_name = OBJECT_MOUSE
 	return _sentence(object_name, "Set {name} to {value}", {
@@ -1058,26 +1060,26 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 	})
 
 
-## M40/M46. The assignments Construct writes as a verb rather than as a property write, and the two
-## Godot globals its glossary gives a Construct noun to. {} for everything else, which is the caller's
-## cue to keep the plain "Set X to Y" it already reads.
+## M40/M46. The assignments an event sheet writes as a verb rather than as a property write, and the
+## two Godot globals its glossary gives an event-sheet noun to. {} for everything else, which is the
+## caller's cue to keep the plain "Set X to Y" it already reads.
 ##
 ##   visible = false        Player ▸ Set invisible          (a CanvasLayer ▸ Set layer invisible)
 ##   modulate.a = 0.5       Player ▸ Set opacity to 50%
 ##   flip_h = true          Sprite2D ▸ Set mirrored
 ##   scale = Vector2(2, 2)  Player ▸ Set size to 200%
-##   get_tree().paused = true   System ▸ Set time scale to 0 (pause)   (Construct words only)
+##   get_tree().paused = true   System ▸ Set time scale to 0 (pause)   (Familiar Words only)
 static func _engine_verb_assignment(target: String, assigned: String, context: Dictionary) -> Dictionary:
-	var construct_words: bool = bool(context.get("construct_words", false))
+	var familiar_words: bool = bool(context.get("familiar_words", false))
 	var bare_target: String = target.strip_edges().trim_prefix("self.")
-	# M46. Godot pauses the tree; Construct sets the time scale, and 0 IS the pause.
-	if construct_words and bare_target == "get_tree().paused":
+	# M46. Godot pauses the tree; an event sheet sets the time scale, and 0 IS the pause.
+	if familiar_words and bare_target == "get_tree().paused":
 		if assigned == "true":
 			return _sentence(OBJECT_SYSTEM, "Set time scale to 0 (pause)", {})
 		if assigned == "false":
 			return _sentence(OBJECT_SYSTEM, "Set time scale to 1", {})
 		return {}
-	if construct_words and bare_target == "Engine.time_scale":
+	if familiar_words and bare_target == "Engine.time_scale":
 		return _sentence(OBJECT_SYSTEM, "Set time scale to {value}", {"value": [expression_text(assigned, context), "value"]})
 	if not is_simple_target(bare_target):
 		return {}
@@ -1098,7 +1100,7 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 		"visible":
 			if assigned != "true" and assigned != "false":
 				return {}
-			var is_layer: bool = construct_words and _class_is_any(object_class, PackedStringArray(["CanvasLayer"]))
+			var is_layer: bool = familiar_words and _class_is_any(object_class, PackedStringArray(["CanvasLayer"]))
 			var layer_label: String = "%s %s" % [object_name, translate("(layer)")] if is_layer else object_name
 			if is_layer:
 				return _sentence(layer_label, "Set layer visible" if assigned == "true" else "Set layer invisible", {})
@@ -1119,7 +1121,7 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 	return {}
 
 
-## M40. A fraction as the percentage Construct shows (`0.5` -> `50%`). A value that is not a plain
+## M40. A fraction as the percentage an event sheet shows (`0.5` -> `50%`). A value that is not a plain
 ## number keeps its own reading - "opacity to hp / max_hp" is honest, "opacity to hp / max_hp%" is not.
 static func _percent_words(value: String, context: Dictionary) -> String:
 	var text: String = value.strip_edges()
@@ -1130,7 +1132,7 @@ static func _percent_words(value: String, context: Dictionary) -> String:
 	return "%s%%" % ("0" if shown.is_empty() else shown)
 
 
-## M40. `Vector2(2, 2)` as Construct's size percentage, or "" when the scale is not the SAME on every
+## M40. `Vector2(2, 2)` as the event-sheet size percentage, or "" when the scale is not the SAME on every
 ## axis - a non-uniform scale is two numbers, and one percentage would hide one of them.
 static func _uniform_scale_factor(value: String) -> String:
 	var text: String = value.strip_edges()
@@ -1152,19 +1154,19 @@ static func _uniform_scale_factor(value: String) -> String:
 ## caller's own Object / Verb / parameters rendering.
 static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	# Checked before the plain call split, because the receiver is itself a call: `get_tree()` is not
-	# an object a sentence can name, but the scene switch behind it is one of Construct's own actions.
+	# an object a sentence can name, but the scene switch behind it is a settled event-sheet action.
 	const SCENE_HEAD := "get_tree().change_scene_to_file("
 	if text.begins_with(SCENE_HEAD) and text.ends_with(")"):
 		var scene_path: String = text.substr(SCENE_HEAD.length(), text.length() - SCENE_HEAD.length() - 1)
 		if not scene_path.strip_edges().is_empty():
-			# M46. Construct calls a scene a LAYOUT, and names it without its folder or its extension.
-			if bool(context.get("construct_words", false)):
+			# M46. An event sheet calls a scene a LAYOUT, and names it without its folder or its extension.
+			if bool(context.get("familiar_words", false)):
 				return _sentence(OBJECT_SYSTEM, "Go to layout {path}", {
 					"path": ["\"%s\"" % _unquote(scene_path).get_file().get_basename(), "value"]})
 			# The path stays a quoted string, so a reader (and the name lens) sees content, not a name.
 			return _sentence(OBJECT_SYSTEM, "Go to scene {path}", {"path": ["\"%s\"" % _unquote(scene_path), "value"]})
-	# M46. Godot reloads the current scene; Construct restarts the layout.
-	if bool(context.get("construct_words", false)) and text == "get_tree().reload_current_scene()":
+	# M46. Godot reloads the current scene; an event sheet restarts the layout.
+	if bool(context.get("familiar_words", false)) and text == "get_tree().reload_current_scene()":
 		return _sentence(OBJECT_SYSTEM, "Restart layout", {})
 	var group_call: Dictionary = _group_call_statement(text, context)
 	if not group_call.is_empty():
@@ -1181,18 +1183,18 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var self_object: String = str(context.get("self_object", OBJECT_SYSTEM))
 	var object_name: String = self_object if target.is_empty() or target == "self" else target
 	# ── M40 / M43 / M47 ─────────────────────────────────────────────────────────────────────────
-	# The calls Construct writes as one of its own verbs: an animation, a sound, a visibility switch,
+	# The calls an event sheet writes as one of its own verbs: an animation, a sound, a visibility switch,
 	# an angle, and a property set by name.
 	var engine_verb: Dictionary = _engine_verb_call(call, context)
 	if not engine_verb.is_empty():
 		return engine_verb
-	# M25/M26. `queue_free()` on ANY object is Construct's Destroy, including the script's own object -
-	# which is named, never `self`.
+	# M25/M26. `queue_free()` on ANY object is the event-sheet Destroy verb, including the script's
+	# own object - which is named, never `self`.
 	if method == "queue_free" and args.is_empty():
 		if target.is_empty() or target == "self":
 			object_name = script_object(context)
 		return _sentence(object_name, "Destroy", {})
-	# M30. A group is the nearest thing Godot has to a Construct family, so joining one says so.
+	# M30. A group is the nearest thing Godot has to an event-sheet family, so joining one says so.
 	if method == "add_to_group" and args.size() >= 1:
 		if target.is_empty() or target == "self":
 			object_name = script_object(context)
@@ -1210,7 +1212,7 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	return {}
 
 
-## M40/M43/M47. One call, read as the Construct verb it is - or {} when the call is not one of these,
+## M40/M43/M47. One call, read as the event-sheet verb it is - or {} when the call is not one of these,
 ## which keeps the ordinary Object ▸ Verb reading.
 ##
 ##   sprite.play("run")   AnimatedSprite2D ▸ Set animation to "run" (play)
@@ -1260,7 +1262,7 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 
 
 ## M30. `get_tree().call_group("enemies", "flee", extra)` - the group is the OBJECT the row acts on
-## (Construct's family), the method is the verb, and anything after it is a value the call passes on.
+## (an event-sheet family), the method is the verb, and anything after it is a value the call passes on.
 static func _group_call_statement(text: String, context: Dictionary = {}) -> Dictionary:
 	const GROUP_HEAD := "get_tree().call_group("
 	const DEFERRED_HEAD := "get_tree().call_group_flags("
@@ -1365,8 +1367,8 @@ static func verb_words(method: String) -> String:
 
 
 ## M25/M26. The reading of ANY method call the sheet has no verb of its own for: Object, then the
-## verb in words, then one chip per argument - and never a pair of parentheses, because a Construct
-## row shows values, not a call.
+## verb in words, then one chip per argument - and never a pair of parentheses, because an
+## event-sheet row shows values, not a call.
 ##
 ## `parameter_names` are the engine's own names for the method's arguments when the object's class is
 ## known (a caller that knows nothing passes none, and the chips are plain values). Returns {} when
@@ -1419,7 +1421,7 @@ static func object_of_reference(reference: String) -> String:
 # ── Condition shapes ────────────────────────────────────────────────────────────
 
 
-## `host == null` / `host != null` as Construct's own existence condition.
+## `host == null` / `host != null` as the event-sheet existence condition.
 static func _existence_condition(text: String) -> Dictionary:
 	for operator: String in [" == ", " != "]:
 		var at: int = top_level_index(text, operator)
@@ -1440,11 +1442,11 @@ static func _existence_condition(text: String) -> Dictionary:
 	return {}
 
 
-## `i == 1` as Construct's Compare: `i = 1`, and `hp != 3` as `hp ≠ 3`. GDScript doubles the sign
+## `i == 1` as the event-sheet Compare verb: `i = 1`, and `hp != 3` as `hp ≠ 3`. GDScript doubles the sign
 ## because a language needs to tell assignment from a question; a sheet row is only ever the question,
 ## so the row says what a reader means by it. Equality ONLY - `<`, `>=` and the rest already read as
 ## themselves - and a `== null` never reaches here, because the existence reading claims it first.
-## The row belongs to System, the way Construct's own Compare condition does.
+## The row belongs to System, the way the event-sheet Compare verb does.
 static func _comparison_condition(text: String) -> Dictionary:
 	for operator: String in [" == ", " != "]:
 		var at: int = top_level_index(text, operator)
@@ -1482,7 +1484,7 @@ static func _group_condition(text: String, context: Dictionary) -> Dictionary:
 
 
 ## M25. `rotation > 1.5` - a comparison whose subject is an ENGINE property of the script's own
-## object reads under that object, the way `Sprite > X > 100` does in Construct.
+## object reads under that object, the way `Sprite > X > 100` does in an event sheet.
 static func _engine_property_condition(text: String, context: Dictionary) -> Dictionary:
 	for operator: String in [" >= ", " <= ", " != ", " == ", " > ", " < "]:
 		var at: int = top_level_index(text, operator)
@@ -1507,8 +1509,8 @@ static func _engine_property_condition(text: String, context: Dictionary) -> Dic
 	return {}
 
 
-## M41. The movement questions Construct's Platform behaviour asks. `is_on_wall` and `is_on_ceiling`
-## get Construct's own words (a wall is beside you, a ceiling above you); `is_on_floor` already reads
+## M41. The movement questions an event-sheet Platform behaviour asks. `is_on_wall` and `is_on_ceiling`
+## get the event-sheet words (a wall is beside you, a ceiling above you); `is_on_floor` already reads
 ## the same in both engines. The Godot phrase stays one hover away on the row.
 const BODY_STATE_WORDS: Dictionary = {
 	"is_on_floor": "Is on floor",
@@ -1527,8 +1529,8 @@ static func _body_state_condition(text: String, context: Dictionary) -> Dictiona
 	return _sentence(_receiver_object(str(call.get("target", "")), context), str(BODY_STATE_WORDS[method]), {})
 
 
-## M41. `hurtbox.overlaps_body(player)` and the "is anything touching me" pair, as Construct's one
-## overlap condition. Construct names the other object, or says "something" when the test does not.
+## M41. `hurtbox.overlaps_body(player)` and the "is anything touching me" pair, as the one event-sheet
+## overlap condition. The reading names the other object, or says "something" when the test does not.
 static func _overlap_condition(text: String, context: Dictionary) -> Dictionary:
 	var call: Dictionary = call_parts(text)
 	if call.is_empty():
@@ -1543,7 +1545,7 @@ static func _overlap_condition(text: String, context: Dictionary) -> Dictionary:
 	return {}
 
 
-## M41. `velocity.y < 0` is Construct's "Is jumping" - but ONLY on a 2D body, where Y grows downward.
+## M41. `velocity.y < 0` is the event-sheet "Is jumping" - but ONLY on a 2D body, where Y grows downward.
 ## In 3D the same test means the opposite, so the reading is refused there and the comparison stands.
 static func _movement_condition(text: String, context: Dictionary) -> Dictionary:
 	for operator: String in [" < ", " > "]:
@@ -1688,7 +1690,7 @@ static func _class_is_any(class_name_str: String, bases: PackedStringArray) -> b
 	return false
 
 
-## `randf() < 0.3` as Construct's chance condition. Only a literal probability is claimed - a
+## `randf() < 0.3` as the event-sheet chance condition. Only a literal probability is claimed - a
 ## computed one has no honest percentage to show.
 static func _chance_condition(text: String) -> Dictionary:
 	var at: int = top_level_index(text, " < ")
@@ -1782,7 +1784,7 @@ static func _rewrite_calls(text: String) -> String:
 	return out
 
 
-## The Construct reading of one call, or "" when the head is not in the curated table.
+## The event-sheet reading of one call, or "" when the head is not in the curated table.
 static func _idiom_for(head: String, arguments: PackedStringArray) -> String:
 	if head.is_empty():
 		return ""
@@ -1798,7 +1800,7 @@ static func _idiom_for(head: String, arguments: PackedStringArray) -> String:
 		return _fill(translate("{value} kept between {low} and {high}"), {
 			"value": arguments[0], "low": arguments[1], "high": arguments[2]
 		})
-	# A no-argument `get_thing()` is a PROPERTY READ wearing a call's clothes: Construct shows the
+	# A no-argument `get_thing()` is a PROPERTY READ wearing a call's clothes: an event sheet shows the
 	# property, so `host.get_wall_normal().x` reads `host.wall_normal.x` and the possessive lens can
 	# then spell it `host's wall normal X`. Only the zero-argument form is claimed - `get_node(path)`
 	# takes an argument and stays the call it is.
@@ -1909,7 +1911,7 @@ static func call_parts(text: String) -> Dictionary:
 
 
 ## The `&"action"` StringName prefix dropped, the QUOTES kept: an input action is a string the
-## user typed, and Construct shows it as one ("jump" is down). Kept quoted, the name lens also
+## user typed, and an event sheet shows it as one ("jump" is down). Kept quoted, the name lens also
 ## knows to leave it alone (it never rewrites inside a literal), so `ui_accept` stays `ui_accept`.
 static func strip_action_name(value: String) -> String:
 	var bare: String = _unquote(value.strip_edges().trim_prefix("&"))
@@ -1977,8 +1979,8 @@ static func _split_object(target: String, context: Dictionary) -> Array:
 		text = text.substr(5)
 	var dot_at: int = text.find(".")
 	var head: String = text if dot_at <= 0 else text.substr(0, dot_at)
-	# M25. An ENGINE property of the script's own object belongs to that object, exactly as Construct
-	# draws Sprite > Set X. A plain script variable is not one of these, and stays with System.
+	# M25. An ENGINE property of the script's own object belongs to that object, exactly as an event
+	# sheet draws Sprite > Set X. A plain script variable is not one of these, and stays with System.
 	if is_engine_property(head, context):
 		return [script_object(context), engine_member_name(text)]
 	if dot_at <= 0:
@@ -1990,7 +1992,7 @@ static func _split_object(target: String, context: Dictionary) -> Array:
 	return [object_of_reference(object_name), _member_word(text.substr(dot_at + 1))]
 
 
-## M43. The Construct word for a member of ANOTHER object - only the renamed ones. The axis rule
+## M43. The event-sheet word for a member of ANOTHER object - only the renamed ones. The axis rule
 ## that `engine_member_name` also applies belongs to the script's own object, where the sheet knows
 ## the member IS the node's place; on someone else's `position.x` it would drop a segment a reader
 ## needs.
@@ -2005,7 +2007,7 @@ static func is_engine_property(property_name: String, context: Dictionary) -> bo
 	return properties.has(property_name.strip_edges())
 
 
-## M25. What an engine property chain is CALLED on the row: Construct writes an object's place as X
+## M25. What an engine property chain is CALLED on the row: an event sheet writes an object's place as X
 ## and Y, so `position.x` reads X. Everything else keeps its chain and the possessive lens spells it.
 static func engine_member_name(chain: String) -> String:
 	var parts: PackedStringArray = chain.split(".", false)
@@ -2013,7 +2015,7 @@ static func engine_member_name(chain: String) -> String:
 		var axis: String = parts[1].to_lower()
 		if axis == "x" or axis == "y" or axis == "z":
 			return axis.to_upper()
-	# M43. Construct's object has an ANGLE. `rotation` is the same angle in radians, and saying so is
+	# M43. An event-sheet object has an ANGLE. `rotation` is the same angle in radians, and saying so is
 	# the one Godot fact worth keeping - the two numbers are not interchangeable.
 	if MEMBER_WORDS.has(chain):
 		return translate(str(MEMBER_WORDS[chain]))
@@ -2120,7 +2122,7 @@ static func _receiver_idiom(chain: String, arguments: PackedStringArray) -> Stri
 		var forms: Array = MEASURED_IDIOMS[method]
 		var own_place: bool = OWN_POSITION_NAMES.has(receiver.trim_prefix("self."))
 		pattern = str(forms[0] if own_place else forms[1])
-	# M47. `enemy.get("hp")` names a property, and Construct shows the property, never the lookup.
+	# M47. `enemy.get("hp")` names a property, and an event sheet shows the property, never the lookup.
 	if method == "get" and arguments.size() == 1 and _is_string_literal(arguments[0]):
 		var property_name: String = _unquote(arguments[0])
 		if is_identifier(property_name):

@@ -102,8 +102,8 @@ static func run() -> bool:
 	ok = _check("one case row built", case_rows.size(), 1) and ok
 	ok = _check("case row leads with the state badge", case_rows[0].spans[0].text, "◆") and ok
 	ok = _check("case row reads State: leaf", case_rows[0].spans[1].text, "State: PATROL") and ok
-	# M37 - a match on an ORDINARY value is not a state machine at all, and Construct has no switch:
-	# it reads as the if / else-if chain a Construct user knows, so the first case states the test.
+	# M37 - a match on an ORDINARY value is not a state machine at all, and an event sheet has no switch:
+	# it reads as the if / else-if chain an event-sheet user knows, so the first case states the test.
 	lifted_match.match_expression = "damage_type"
 	var plain_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("a non-state match reads as its test", plain_rows[0].spans[0].text, "damage_type = State.PATROL") and ok

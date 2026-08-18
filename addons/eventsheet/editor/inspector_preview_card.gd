@@ -96,7 +96,7 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 
 
 ## One plain sentence naming the type, the widget, the bounds, and the grouping -
-## in C3-first language. Pinned by tests as exact strings.
+## in event-sheet-first language. Pinned by tests as exact strings.
 static func describe(type_name: String, attributes: Dictionary, exported: bool, constant: bool) -> String:
 	if constant:
 		return "A constant - fixed while the game runs, not editable in the Inspector."

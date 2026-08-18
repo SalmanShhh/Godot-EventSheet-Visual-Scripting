@@ -1,5 +1,5 @@
-# EventForge - the C3-style Else block is a first-class, DISCOVERABLE gesture: right-clicking an event
-# offers "Make Else" / "Make Else-If" top-level (Simple Mode included - a Construct reflex, not an expert
+# EventForge - the event-sheet Else block is a first-class, DISCOVERABLE gesture: right-clicking an event
+# offers "Make Else" / "Make Else-If" top-level (Simple Mode included - an event-sheet reflex, not an expert
 # feature), the labels flip to "Clear Else" / "Clear Else-If" when the selection already carries that mode
 # (the click toggles it off), and the whole flow compiles to a real `else:` / `elif:` chain that reads back
 # with the "Else" badge. Pins: menu presence in SIMPLE mode, the live-state relabel, the toggle behavior
@@ -24,7 +24,7 @@ static func run() -> bool:
 	if_event.conditions.append(guard)
 	var else_event: EventRow = EventRow.new()
 	# Same trigger as the if-event: same-trigger events group into ONE handler body, where adjacent
-	# rows chain - exactly where a C3 Else lives (immediately after its if, at the same level).
+	# rows chain - exactly where an event-sheet Else lives (immediately after its if, at the same level).
 	else_event.trigger_provider_id = "Core"
 	else_event.trigger_id = "OnProcess"
 	var die: ACEAction = ACEAction.new()
@@ -79,8 +79,8 @@ static func run() -> bool:
 	var live_else: EventRow = dock.get_current_sheet().events[1] as EventRow
 	ok = _check("Make Else on an else row clears it (toggle)", live_else.else_mode, EventRow.ElseMode.NONE) and ok
 
-	# ── Rendering (C3-style): the Else reads as a CONDITION - a "System | Else If" chip heading the
-	# condition lane - and the row does NOT redraw its trigger (a C3 Else block never repeats it; the
+	# ── Rendering (event-sheet): the Else reads as a CONDITION - a "System | Else If" chip heading the
+	# condition lane - and the row does NOT redraw its trigger (an event-sheet Else block never repeats it; the
 	# trigger stays structural for the same-handler chain). ──
 	live_else.else_mode = EventRow.ElseMode.ELIF
 	dock._refresh_after_edit()

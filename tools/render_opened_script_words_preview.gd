@@ -1,4 +1,4 @@
-# EventForge - render harness (dev tool) for the Construct WORDS an opened script reads in
+# EventForge - render harness (dev tool) for the familiar WORDS an opened script reads in
 # (M25 - M33). Opens two read-only previews stacked and screenshots them as one image:
 #   top    - the FPS Controller pack (its physics tick, where the sentences do their work)
 #   bottom - tests/fixtures/reading_words_fixture.gd, a hand-written script carrying one of every
@@ -23,7 +23,7 @@ var _pack_scroll: ScrollContainer = null
 
 
 func _init() -> void:
-	root.title = "Opened script - Construct words"
+	root.title = "Opened script - familiar words"
 	root.size = Vector2i(1280, 1040)
 	var modern_base := Color("#252525")
 	var background := ColorRect.new()

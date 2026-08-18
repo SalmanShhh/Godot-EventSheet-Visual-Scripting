@@ -4,7 +4,7 @@ extends RefCounted
 
 # The ACE PROPERTIES popup - what a published verb's header hands over when you click it.
 #
-# A verb row reads as a Construct Function block: ƒ, its name, one chip per input, nothing else. Every
+# A verb row reads as an event-sheet Function block: ƒ, its name, one chip per input, nothing else. Every
 # other thing the verb IS - its kind, its picker category, what it gives back, its description, whether
 # it is featured and with which icon, the exact line it inserts, and which function in which file backs
 # it - lives here, one click away, in ONE place instead of scattered across chips on the row.

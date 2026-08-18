@@ -1,20 +1,20 @@
 # Pack builder - uhtn_planning (one pack per file; run via tools/build_sample_behaviors.gd).
 #
-# UHTN Planning - the utility-driven Hierarchical Task Network the author's C3 addons were built
+# UHTN Planning - the utility-driven Hierarchical Task Network the author's earlier addons were built
 # around, as ONE per-node behavior with BOTH halves finally combined: HTN decomposition chooses HOW
 # to do things (methods with ordered subtasks + preconditions, with backtracking) and Utility AI
 # chooses WHICH way is best RIGHT NOW (response-curve scorers evaluated against live world state
 # rank the methods at plan time). A fixed utility number is the fallback when a method names no
 # scorer, so simple networks stay simple.
 #
-# Two equally-supported authoring paths, matching the C3 guides' Path A/B:
+# Two equally-supported authoring paths, matching the original guides' Path A/B:
 #  - DATA-DRIVEN: drop a UHTNPlanResource (.tres authored in Inspector grids) onto the Plan Resource
 #    slot - loaded automatically on ready. Same asset drives any number of agents.
 #  - BUILDER ACEs: Add Primitive / Add Compound / Add Method / Add Method Condition / Add Method
 #    Subtask / Add Scorer Input / Set Method Scorer, straight from the event sheet.
 #
 # Honest scope (unchanged from the HTN Agent pack this supersedes): squad coordination, slot
-# reservation, and decaying alert stimuli from the C3 manager stay out - the per-node core is what
+# reservation, and decaying alert stimuli from the original manager stay out - the per-node core is
 # every kind of game reuses. The shipped htn_agent + utility_ai packs remain for compatibility.
 @tool
 

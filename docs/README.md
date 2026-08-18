@@ -55,7 +55,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 ## Coming from Construct 3
 
-- [Migration Guide](GUIDE-C3-MIGRATION.md) - every concept, behavior, and plugin mapped to its home here.
+- [Migration Guide](GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md) - every concept, behavior, and plugin mapped to its home here.
 - [Glossary](REFERENCE-GLOSSARY.md) - the cross-tool term map.
 
 ## Reference

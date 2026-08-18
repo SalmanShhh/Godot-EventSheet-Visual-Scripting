@@ -1,4 +1,4 @@
-# Godot EventSheets - the live filter lens (C3's "show only matching events")
+# Godot EventSheets - the live filter lens (the event-sheet "show only matching events")
 # A view-layer predicate: with a lens set, only top-level rows whose subtree mentions the
 # term stay in the flattened view - the sheet itself is never mutated, the hidden count is
 # reported, and clearing restores everything. Pins: filtering in/out, sub-event matches

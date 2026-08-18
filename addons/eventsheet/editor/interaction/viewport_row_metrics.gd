@@ -64,7 +64,7 @@ func rebuild() -> void:
 
 func _resolve_row_height(row_data: EventRowData) -> float:
 	# Header-like rows reserve height_scale times their natural height (state headers, the
-	# Class setup bar, Host binding - the C3 Includes-bar presence); layout re-centers content.
+	# Class setup bar, Host binding - the event-sheet Includes-bar presence); layout re-centers content.
 	return _resolve_row_height_natural(row_data) * clampf(row_data.height_scale if row_data != null else 1.0, 1.0, 3.0)
 
 
@@ -110,7 +110,7 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 
 
 ## Per-lane visual-line layout for an EVENT row once cell text WRAPS to its lane - the
-## Construct rule: the cell grows taller, the text never clips. Returns, per logical line,
+## event-sheet rule: the cell grows taller, the text never clips. Returns, per logical line,
 ## the visual line each lane's cells start at (cond_top / act_top), how many visual lines each
 ## fill cell needs (cond_count / act_count), and the row's visual-line total. ONE function
 ## shared by the height metrics and the layout pass, so the reserved height and the drawn
@@ -135,7 +135,7 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 	var act_x: Dictionary = {}
 	var cond_count: Dictionary = {}
 	var act_count: Dictionary = {}
-	# Full-width rows (a Construct Function block header) flow their chips across the whole row and
+	# Full-width rows (a Function block header) flow their chips across the whole row and
 	# WRAP onto a second visual line when they run out of it. The chosen x / visual offset per span is
 	# handed to the layout pass so the drawn chips land exactly where the counted lines reserved room.
 	var chip_x: Dictionary = {}
@@ -274,11 +274,11 @@ func _fill_text_wrap_width(metadata: Dictionary, cell_rect_width: float, font: F
 	return maxf(cell_rect_width - lead - trail, 1.0)
 
 
-## The C3 sub-lane rule: within a lane, every cell's object-column SEPARATOR sits at the same
+## The event-sheet sub-lane rule: within a lane, every cell's object-column SEPARATOR sits at the same
 ## absolute x, regardless of where that cell starts (a badge on the trigger line shifts its
 ## cell right; without this, its separator drifted a few px from the lines below - the
 ## "awkward and misaligned" middle). The shared boundary always reserves the object ICON slot
-## (icon + label are ONE column, like Construct), so an icon-bearing cell keeps its full
+## (icon + label are ONE column, as an event sheet draws it), so an icon-bearing cell keeps its full
 ## label room and an iconless one simply gets a slightly wider label area at the same edge.
 ## Returns the column width THIS span must use so its boundary lands there, or -1.0 when the
 ## span has no label or the lane is in flow mode. Floored at 24px so a cell starting
@@ -340,7 +340,7 @@ func _measure_comment_height(row_data: EventRowData) -> float:
 ## Where comment text begins on the row (logical/unzoomed px). Kept in sync with the comment
 ## branch of the layout pass so wrapping width, hit-testing, and drawing all agree.
 func _comment_text_origin_x(indent: int) -> float:
-	# Construct-style banner: comment text starts at the row's left edge (no badge-column indent),
+	# Event-sheet banner: comment text starts at the row's left edge (no badge-column indent),
 	# kept in sync with the comment branch of the layout pass (which now adds no indent either).
 	return (
 		EventSheetPalette.ROW_HORIZONTAL_PADDING

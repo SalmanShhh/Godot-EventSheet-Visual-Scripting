@@ -279,7 +279,7 @@ static func signature_hint(text_before_caret: String, sheet: EventSheetResource)
 
 
 ## Signature + plain-word hints for the GDScript global functions an expression author reaches
-## for (the Construct-style "what goes in these parentheses" tooltip shown while typing inside
+## for (the event-sheet "what goes in these parentheses" tooltip shown while typing inside
 ## a call). Sheet functions and host methods resolve above from live reflection; these cover
 ## the language's own math/utility globals, which reflection can't reach.
 const GDSCRIPT_GLOBAL_HINTS: Dictionary = {

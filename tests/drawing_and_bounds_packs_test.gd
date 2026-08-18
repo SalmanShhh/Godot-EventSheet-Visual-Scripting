@@ -71,7 +71,7 @@ static func run() -> bool:
 	all_passed = _check("empty mask reads as No layers", dialog.call("_physics_mask_summary", 0, "2d_physics"), "No layers") and all_passed
 	field.free()
 
-	# ── Rotate: the C3-parity spinner + its editor-preview contract
+	# ── Rotate: the event-sheet-parity spinner + its editor-preview contract
 	var rotate_script: GDScript = load("res://eventsheet_addons/rotate/rotate_behavior.gd")
 	var rotate: Node = rotate_script.new()
 	for rotate_method: String in ["set_rotation_enabled", "set_rotation_speed", "set_rotation_acceleration", "set_rotation_type", "reverse_rotation", "is_rotating", "rotation_speed"]:

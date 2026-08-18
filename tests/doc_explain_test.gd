@@ -223,7 +223,7 @@ static func _test_pack_verb_page() -> bool:
 		str(_block(section_blocks, "prose").get("text", "")),
 		EventSheetSectionInfo.description_for("Debug")) and all_passed
 
-	# The panel draws those blocks. Constructed, never popped: the suite must not open a window.
+	# The panel draws those blocks. Built, never popped: the suite must not open a window.
 	var panel: EventSheetDocPanel = EventSheetDocPanel.new()
 	all_passed = _check("the panel draws a definition", panel.show_definition(definition), true) and all_passed
 	all_passed = _check("the panel titles itself after the verb", panel.current_title(), "Advance Objective") and all_passed

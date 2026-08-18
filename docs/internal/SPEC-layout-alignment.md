@@ -45,7 +45,7 @@ Token sizing/spacing lives in `EventSheetElementStyle`:
 - AND remains implicit (no badge).
 - Set `condition_badge_column_width` to control badge column width and keep badge alignment stable across dense rows.
 
-## Construct 3-like tuning recipe
+## Stacked-layout tuning recipe
 
 1. Start from any bundled theme under `res://demo/themes/` (e.g. `gruvbox_dark_theme.tres`).
 2. Keep `condition_badge_column_width` between 24–32.

@@ -1900,11 +1900,11 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			lines.append("%sif %s is Object and not is_instance_valid(%s):" % [indent, iterator, iterator])
 			lines.append("%s\tcontinue" % indent)
 		else:
-			# Construct-style loop index (opt-in): a named 0-based counter - declared just above
+			# Event-sheet loop index (opt-in): a named 0-based counter - declared just above
 			# the loop, bumped as the body's FIRST statement. The importer lifts this exact
 			# three-line shape back into index_name, so it round-trips byte-identically. Kept
 			# 0-based independently of the iterator (a Repeat over range(2, 8) still counts from
-			# 0), which is what makes it the C3 loopindex rather than "the iterator again".
+			# 0), which is what makes it the loop index counter rather than "the iterator again".
 			var loop_index_name: String = pick.index_name.strip_edges()
 			if not loop_index_name.is_valid_identifier():
 				loop_index_name = ""
@@ -2432,9 +2432,9 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 ## The throttled live-values SEND block (shared by both _process emission sites): builds the
 ## frame from the sheet's baked variable pairs, then asks each CHILD node implementing
 ## `debugger_properties() -> Dictionary` for its live section - the behavior-debugger seam
-## (Construct's GetDebuggerProperties idea). Keys arrive namespaced "ChildName.key" and the
-## Live Values panel groups them per behavior. Plain duck-typed GDScript: a pack opts in by
-## defining the method, with zero plugin coupling (parity covenant intact).
+## (the live debugger-properties idea other event-sheet editors expose). Keys arrive namespaced
+## "ChildName.key" and the Live Values panel groups them per behavior. Plain duck-typed GDScript: a
+## pack opts in by defining the method, with zero plugin coupling (parity covenant intact).
 static func _emit_live_values_send(lines: PackedStringArray) -> void:
 	lines.append("\t\tvar __live_frame: Array = [%s]" % _live_values_payload)
 	lines.append("\t\tfor __live_child in get_children():")
@@ -3263,7 +3263,7 @@ static func _to_code_literal(value: Variant) -> String:
 			for key: Variant in dictionary_value.keys():
 				entries.append("%s: %s" % [_to_code_literal(key), _to_code_literal(dictionary_value[key])])
 			return "{%s}" % ", ".join(entries)
-		# Constructor literals for the common game-value types (so Vector/Color variables emit valid,
+		# Emit constructor literals for the common game-value types (so Vector/Color variables emit valid,
 		# str_to_var-parseable GDScript that the importer round-trips - str(Vector2) would give "(0, 0)").
 		# Components reuse the float rule, whose str() form is shortest-round-trippable, keeping re-emission
 		# byte-stable.

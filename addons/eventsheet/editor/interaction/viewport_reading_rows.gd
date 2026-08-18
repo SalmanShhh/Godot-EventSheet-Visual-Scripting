@@ -178,7 +178,7 @@ static func class_of_object(object_label: String, class_map: Dictionary) -> Stri
 	return label if ClassDB.class_exists(label) else ""
 
 
-## M27. Construct's words for the two tick triggers. The trigger ids are untouched - this is the
+## M27. The event-sheet words for the two tick triggers. The trigger ids are untouched - this is the
 ## reading only, so a sheet still stores (and compiles to) exactly what it did before.
 static func tick_trigger_words(trigger_id: String, display_text: String) -> String:
 	match trigger_id:
@@ -186,12 +186,12 @@ static func tick_trigger_words(trigger_id: String, display_text: String) -> Stri
 			return "%s %s" % [EventSheetL10n.translate("Every tick"), EventSheetL10n.translate("(physics)")]
 		"OnProcess":
 			return "%s %s" % [EventSheetL10n.translate("Every tick"), EventSheetL10n.translate("(draw)")]
-	# M41 - the collision family reads as Construct's own two triggers.
+	# M41 - the collision family reads as the event-sheet's own two triggers.
 	var collision: String = collision_trigger_words(trigger_id)
 	return collision if not collision.is_empty() else display_text
 
 
-## M41. Construct has one collision trigger and one for the overlap ending, where Godot has four
+## M41. An event sheet has one collision trigger and one for the overlap ending, where Godot has four
 ## signals (bodies and areas, entering and leaving). Keyed by the trigger id AND usable from the
 ## signal name, so a handler lifted from a `.connect(...)` line and one lifted from a declared
 ## `func _on_body_entered` read the same words. "" when the trigger is not one of the four.
@@ -204,10 +204,10 @@ static func collision_trigger_words(trigger_id: String) -> String:
 	return ""
 
 
-## M33. Construct's own words for a loop row, and the object it belongs to.
+## M33. The event-sheet words for a loop row, and the object it belongs to.
 ##
 ## Returns {"text", "object"} - `object` empty for the System loops, and the host for a loop over
-## another object's children, which Construct draws as that object's own For each. The loop rows
+## another object's children, which an event sheet draws as that object's own For each. The loop rows
 ## themselves are unchanged: this is what they SAY, never what they are.
 static func loop_words(kind: int, iterator_name: String, collection: String) -> Dictionary:
 	var iterator: String = iterator_name.strip_edges()
@@ -216,7 +216,7 @@ static func loop_words(kind: int, iterator_name: String, collection: String) -> 
 		PickFilter.CollectionKind.REPEAT:
 			var bounds: PackedStringArray = EventSheetSentence.split_top_level(source, ", ")
 			if bounds.size() == 2:
-				# Construct's For loop is INCLUSIVE at both ends, and `range(2, 8)` stops at 7 - so the
+				# The event-sheet For loop is INCLUSIVE at both ends, and `range(2, 8)` stops at 7 - so the
 				# row says 7, which is the last value the loop body actually sees.
 				var last: String = _one_less(bounds[1])
 				if not last.is_empty():
@@ -230,7 +230,7 @@ static func loop_words(kind: int, iterator_name: String, collection: String) -> 
 			return {"text": "%s %s" % [EventSheetL10n.translate("While"), source], "object": ""}
 		PickFilter.CollectionKind.CHILDREN:
 			return {"text": "%s %s" % [EventSheetL10n.translate("For each child"), iterator], "object": ""}
-	# `for child in host.get_children()` is that object's own For each, exactly as Construct draws it -
+	# `for child in host.get_children()` is that object's own For each, exactly as a sheet draws it -
 	# and a receiver-less `get_children()` is the script's own, which the object column already names.
 	if source == "get_children()":
 		return {"text": "%s %s" % [EventSheetL10n.translate("For each child"), iterator], "object": ""}
@@ -252,7 +252,7 @@ static func _children_receiver(expression: String) -> String:
 	return EventSheetSentence.object_of_reference(receiver)
 
 
-## `8` -> `7`, so a half-open Godot range reads as the inclusive Construct one. Empty when the bound
+## `8` -> `7`, so a half-open Godot range reads as the inclusive event-sheet one. Empty when the bound
 ## is not a plain number - `range(2, n)` has no last value a reader could be shown.
 static func _one_less(bound: String) -> String:
 	var text: String = bound.strip_edges()
@@ -321,7 +321,7 @@ static func declared_class_of(variable: LocalVariable) -> String:
 
 
 ## M20 - true when a variable is an OBJECT declaration rather than a value one: an @onready that
-## reads a node out of the scene. Those are the ones that become Construct's object list.
+## reads a node out of the scene. Those are the ones that become the sheet's object list.
 static func is_object_declaration(variable: LocalVariable) -> bool:
 	if variable == null or not variable.onready:
 		return false

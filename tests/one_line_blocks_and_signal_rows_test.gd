@@ -1,4 +1,4 @@
-# Godot EventSheets - M24 / M28 / M29 / M35: the four shapes a Construct reader expects to find
+# Godot EventSheets - M24 / M28 / M29 / M35: the four shapes an event-sheet reader expects to find
 # where real GDScript writes something else.
 #
 #   M24  `and` never appears INSIDE a condition cell. Each top-level conjunct is a condition line of

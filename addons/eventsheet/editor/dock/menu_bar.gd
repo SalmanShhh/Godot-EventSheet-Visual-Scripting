@@ -3,7 +3,7 @@ class_name EventSheetMenuBar
 extends RefCounted
 # The dock's top toolbar + menu bar: the HFlowContainer that flow-wraps the grouped
 # Sheet/Add/Edit/View/Tools MenuButtons, the high-frequency one-click buttons, the per-sheet
-# theme picker, and the quick-add LineEdit. Construction-only - every menu/button action targets
+# theme picker, and the quick-add LineEdit. Assembly only - every menu/button action targets
 # a dock method that STAYS on the dock, reached through the `_dock` back-reference (the same
 # pattern as the other dock/ helpers). The widgets the dock reads later (_toolbar, _view_popup,
 # _theme_picker, _quick_add_edit) stay DECLARED on the dock; build() constructs them and assigns
@@ -198,9 +198,9 @@ func build(root: Node) -> void:
 	view_popup.add_check_item("Humanized Names", 20)
 	view_popup.set_item_checked(view_popup.get_item_index(20), _dock._humanized_names_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(20), "Read variable names as words: \"_coyote_timer\" becomes \"coyote timer\", and an exported knob reads with its Inspector name (\"Coyote Time\"). The raw name is always on hover. On by default while reading a sheet, off while authoring one.")
-	view_popup.add_check_item("Construct Words", 21)
-	view_popup.set_item_checked(view_popup.get_item_index(21), _dock._construct_words_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(21), "Read the few Godot nouns Construct names differently in Construct's word: a scene is a layout, pausing is time scale 0, a CanvasLayer is a layer. The Godot word stays on hover. Off by default.")
+	view_popup.add_check_item("Familiar Words", 21)
+	view_popup.set_item_checked(view_popup.get_item_index(21), _dock._familiar_words_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(21), "Read the few Godot nouns other event-sheet editors name differently in the familiar word: a scene is a layout, pausing is time scale 0, a CanvasLayer is a layer. The Godot word stays on hover. Off by default.")
 	view_popup.add_item("Outline…", 17)
 	view_popup.set_item_tooltip(view_popup.get_item_index(17), "Jump tree of the sheet's groups, regions, and published functions.")
 	view_popup.add_separator()
@@ -275,7 +275,7 @@ func build(root: Node) -> void:
 			18: _dock._toggle_object_column_alignment(view_popup)
 			19: _dock._toggle_compact_rows(view_popup)
 			20: _dock._toggle_humanized_names(view_popup)
-			21: _dock._toggle_construct_words(view_popup)
+			21: _dock._toggle_familiar_words(view_popup)
 			17: _dock._open_outline_panel()
 			11: _dock.set_simple_mode(not _dock._simple_mode)
 			12: _dock._toggle_mcp_server(view_popup)

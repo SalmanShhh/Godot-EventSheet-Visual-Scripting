@@ -1356,7 +1356,7 @@ func _selected_event_for_action() -> EventRow:
 	return selected as EventRow if selected is EventRow else null
 
 
-## Toolbar/menu "Add Code (GDScript)": C3-style script action on the selected event.
+## Toolbar/menu "Add Code (GDScript)": event-sheet script action on the selected event.
 func _on_add_gdscript_action_requested() -> void:
 	if not _ensure_sheet_for_editing():
 		return
@@ -1887,7 +1887,7 @@ func _load_simple_mode_preference() -> void:
 	# Compact-preferring project never flashes Comfortable.
 	_apply_compact_rows_pref()
 	_apply_humanized_names_pref()
-	_apply_construct_words_pref()
+	_apply_familiar_words_pref()
 
 
 ## Declutter toggle: show/hide the trailing "+ Add event…" affordance rows across every
@@ -1895,7 +1895,7 @@ func _load_simple_mode_preference() -> void:
 ## View > Object Icons: show/hide the icons before object/module names (rows + group folders).
 ## Icons live in span metadata, so a rebuild (set_sheet) applies the flip; the icon cache stays
 ## warm for flipping back.
-## View > Event Numbers: event rows show their stable C3-style sheet-order number in the
+## View > Event Numbers: event rows show their stable event-sheet number (sheet order) in the
 ## gutter (default); off restores the flat row index on every row.
 func _toggle_event_numbers(view_popup: PopupMenu) -> void:
 	var show_numbers: bool = true
@@ -2025,46 +2025,46 @@ func _toggle_humanized_names(view_popup: PopupMenu) -> void:
 		else "Raw names - variables read exactly as they are spelled in the file.")
 
 
-## M46 - View ▾ "Construct Words". OFF by default and stored as a plain on/off (unlike the
+## M46 - View ▾ "Familiar Words". OFF by default and stored as a plain on/off (unlike the
 ## humanized-names lens, which has an AUTO state): this one does not respell the user's own names, it
-## swaps a handful of Godot nouns for the Construct ones - scene becomes layout, pausing becomes a
-## time scale of 0, a CanvasLayer becomes a layer - with the Godot word still on hover. Persisted per
-## project per user in editor metadata, exactly like Compact Rows.
-func _construct_words_enabled() -> bool:
+## swaps a handful of Godot nouns for the words other event-sheet editors use - scene becomes
+## layout, pausing becomes a time scale of 0, a CanvasLayer becomes a layer - with the Godot word
+## still on hover. Persisted per project per user in editor metadata, exactly like Compact Rows.
+func _familiar_words_enabled() -> bool:
 	if _viewport != null:
-		return _viewport.construct_words_enabled()
-	return _stored_construct_words()
+		return _viewport.familiar_words_enabled()
+	return _stored_familiar_words()
 
 
-func _stored_construct_words() -> bool:
+func _stored_familiar_words() -> bool:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		return bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "construct_words", false))
+		return bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "familiar_words", false))
 	return false
 
 
-func _apply_construct_words_pref() -> void:
-	var stored: bool = _stored_construct_words()
+func _apply_familiar_words_pref() -> void:
+	var stored: bool = _stored_familiar_words()
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
-			view.construct_words = stored
+			view.familiar_words = stored
 
 
-func _toggle_construct_words(view_popup: PopupMenu) -> void:
-	var construct: bool = not _construct_words_enabled()
+func _toggle_familiar_words(view_popup: PopupMenu) -> void:
+	var familiar: bool = not _familiar_words_enabled()
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", "construct_words", construct)
+		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", "familiar_words", familiar)
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view == null:
 			continue
-		view.construct_words = construct
+		view.familiar_words = familiar
 		# The words are baked into span TEXT at build time, so the glossary needs a span rebuild, not
 		# a redraw - the same reason the humanized-names toggle re-sets the sheet.
 		view.set_sheet(_current_sheet)
 	if view_popup != null:
 		var item_index: int = view_popup.get_item_index(21)
 		if item_index >= 0:
-			view_popup.set_item_checked(item_index, construct)
-	_set_status("Construct words - layout, time scale, layer; the Godot word is on hover." if construct
+			view_popup.set_item_checked(item_index, familiar)
+	_set_status("Familiar words - layout, time scale, layer; the Godot word is on hover." if familiar
 		else "Godot words - scenes, pausing and CanvasLayers read by their Godot names.")
 
 
@@ -2077,7 +2077,7 @@ func _object_columns_aligned() -> bool:
 	return event_style != null and event_style.condition_object_column_width > 0
 
 
-## View ▾ "Aligned Object Columns": flips the C3-style object column between ALIGNED (the default -
+## View ▾ "Aligned Object Columns": flips the event-sheet object column between ALIGNED (the default -
 ## every row's text starts at the same edge, so a sheet scans as a table) and FLOW (each row's text
 ## follows its own object name, so it starts somewhere different on every row). The condition lane is
 ## written through the same handler a divider DRAG uses, so a default-themed sheet is promoted to a
@@ -2247,7 +2247,7 @@ var _lens_button: Button = null
 var _replace_object_dialog: AcceptDialog = null
 
 
-## Replace Object References (the Construct gesture, param-aware): pick a reference the
+## Replace Object References (the event-sheet gesture, param-aware): pick a reference the
 ## selection actually uses, give the new one, and every matching token across the selected
 ## rows' params, With-Node scopes, pick filters, and raw code rewrites - token-safe
 ## ($Enemy never touches $EnemySpawner), one undo step.
@@ -2388,7 +2388,7 @@ func _remove_data_class_field_from_context() -> void:
 		_mark_dirty("Removed the field.")
 
 
-## Batch param edit (C3's edit-many reflex): any condition/action that appears more than
+## Batch param edit (the event-sheet edit-many reflex): any condition/action that appears more than
 ## once across the selected rows can be edited ONCE - the params dialog opens pre-filled
 ## from the first instance and OK applies those values to every matching instance as a
 ## single undo step. With several repeated ACEs, a small menu picks which one to edit.
@@ -3392,7 +3392,7 @@ func _on_viewport_lane_ratio_changed(ratio: float) -> void:
 	_mark_dirty("Resized conditions/actions lane to %d%%." % int(round(ratio * 100.0)))
 
 
-## Persists an object-column resize (the C3 sub-lane between object names and display text),
+## Persists an object-column resize (the event-sheet sub-lane between object names and display text),
 ## same promote-or-edit flow as the lane ratio so the width saves with the sheet.
 func _on_viewport_object_column_width_changed(lane: String, width: int) -> void:
 	if _current_sheet == null:
@@ -3468,7 +3468,7 @@ func _on_viewport_empty_space_double_clicked() -> void:
 	# and the "+ Add event…" footer, so every "make a new event" path opens the same picker.
 	if _viewport != null:
 		_viewport.clear_selection()
-	# The C3 gesture in full: double-click empty space leads with OBJECT cards (System,
+	# The event-sheet gesture in full: double-click empty space leads with OBJECT cards (System,
 	# behaviors, packs), then that object's verbs. Toolbar/footer adds keep the classic tree.
 	_ace_picker.open("new_event", false, null, {"object_first": true})
 
@@ -3773,7 +3773,7 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
 	_input_dispatch.on_row_context_menu_id_pressed(id)
 
 
-## Select All Matching (the C3 "find my other uses" reflex): selects every event in the
+## Select All Matching (the event-sheet "find my other uses" reflex): selects every event in the
 ## sheet that uses the right-clicked cell's ACE - as trigger, condition, or action - so
 ## Replace Object References and Edit Values Across Selection have their rows one click
 ## later. Pure view-layer: nothing is mutated.
@@ -4196,7 +4196,7 @@ func _on_add_blank_subevent_key() -> void:
 	_insert_child_event_for_context_row()
 
 
-## S - add a picker-backed sub-event under the selected event (Construct's add-sub-event key).
+## S - add a picker-backed sub-event under the selected event (the event-sheet add-sub-event key).
 func _on_add_sub_condition_key() -> void:
 	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
 		_set_status("Select an event first - S adds a sub-event under it.", true)
@@ -4255,7 +4255,7 @@ func _insert_context_row_above(resource_entry: Resource, message: String) -> voi
 
 
 ## Cut = Copy + Delete: the copy is clipboard-only state, so the delete is the ONE undo step
-## (undoing a Cut restores the rows and the clipboard still holds the copy - C3's behaviour).
+## (undoing a Cut restores the rows and the clipboard still holds the copy - the event-sheet behaviour).
 func _cut_selected_rows() -> void:
 	_on_copy_requested()
 	_delete_selected_rows()

@@ -1,9 +1,9 @@
-# Godot EventSheets - the head of an opened PLAIN SCRIPT, read in Construct grammar (M34).
+# Godot EventSheets - the head of an opened PLAIN SCRIPT, read in the event-sheet grammar (M34).
 #
 # A behavior pack introduces itself as one. Everybody else's .gd is a game script, and the head it
 # used to show said "Script" and then listed GDScript type names: `Array[String] names = []`,
 # `const SPEED = 300.0`, `PackedScene bullet_scene = preload("res://bullet.tscn")`. None of that is a
-# sentence a Construct user reads. This test pins what replaced it, over two REAL hand-written
+# sentence an event-sheet user reads. This test pins what replaced it, over two REAL hand-written
 # fixtures (a fixture proves the shapes; only a real file proves the lens fires on one):
 #
 #   1. The Include bar names the OBJECT - its class_name when it has one, the ROOT NODE of the scene

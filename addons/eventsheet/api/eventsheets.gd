@@ -1742,7 +1742,7 @@ static func docs_version() -> String:
 
 
 ## The absolute URL of a repo-relative documentation path, pinned to the released tag.
-## `relative_path` is repo-relative ("docs/GUIDE-C3-MIGRATION.md"); `anchor` is a
+## `relative_path` is repo-relative ("docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md"); `anchor` is a
 ## GitHub heading slug, with or without its leading "#". Returns "" for an empty path.
 ## An already-absolute http(s) URL is returned unchanged, so a pack that hosts its guide
 ## elsewhere flows through the same call.

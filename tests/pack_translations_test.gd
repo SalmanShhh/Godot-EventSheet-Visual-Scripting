@@ -1,4 +1,4 @@
-# EventForge - pack-local translations (the Construct lang.json idea): a pack ships
+# EventForge - pack-local translations (the event-sheet lang.json idea): a pack ships
 # eventsheet_addons/<pack>/translations.csv and its vocabulary localises everywhere it shows.
 # Pins: the scanner discovers pack CSVs (the shipped health demo included), the fingerprint
 # sees pack-file changes (hot-reload), translated display TEMPLATES substitute {slots} after

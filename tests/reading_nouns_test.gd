@@ -2,8 +2,8 @@
 class_name ReadingNounsTest
 extends RefCounted
 
-# Pins the Construct NOUNS - the constants, the sprite and audio verbs, the collision family, the
-# angles and distances, the counts, the system values, the Construct-words glossary and the node
+# Pins the event-sheet NOUNS - the constants, the sprite and audio verbs, the collision family, the
+# angles and distances, the counts, the system values, the familiar-words glossary and the node
 # lookups (M38 - M47).
 #
 # Four gates, in the order they matter:
@@ -149,7 +149,7 @@ static func run() -> bool:
 	ok = _verb_values() and ok
 	ok = _measurement_values() and ok
 	ok = _condition_values() and ok
-	ok = _construct_words() and ok
+	ok = _familiar_words() and ok
 	ok = _opened_file_reads() and ok
 	ok = _toggle_defaults_off() and ok
 	ok = _round_trip() and ok
@@ -217,7 +217,7 @@ static func _constant_values() -> bool:
 	return ok
 
 
-## M40 / M47 - the verbs Construct writes instead of a property write or a call.
+## M40 / M47 - the verbs an event sheet writes instead of a property write or a call.
 static func _verb_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -311,10 +311,10 @@ static func _condition_values() -> bool:
 
 
 ## M46 - the glossary: nothing changes with it off, and each word only appears with it on.
-static func _construct_words() -> bool:
+static func _familiar_words() -> bool:
 	var ok: bool = true
-	var construct: Dictionary = CONTEXT.duplicate(true)
-	construct["construct_words"] = true
+	var familiar: Dictionary = CONTEXT.duplicate(true)
+	familiar["familiar_words"] = true
 	for entry: Array in [
 		["get_tree().change_scene_to_file(\"res://scenes/menu.tscn\")",
 			"System ▸ Go to scene \"res://scenes/menu.tscn\"", "System ▸ Go to layout \"menu\""],
@@ -327,7 +327,7 @@ static func _construct_words() -> bool:
 		ok = _check("with the glossary off \"%s\" reads \"%s\"" % [str(entry[0]), str(entry[1])],
 			_read(str(entry[0])), str(entry[1])) and ok
 		ok = _check("with the glossary on \"%s\" reads \"%s\"" % [str(entry[0]), str(entry[2])],
-			_read(str(entry[0]), construct), str(entry[2])) and ok
+			_read(str(entry[0]), familiar), str(entry[2])) and ok
 	return ok
 
 
@@ -344,7 +344,7 @@ static func _opened_file_reads() -> bool:
 static func _toggle_defaults_off() -> bool:
 	var ok: bool = true
 	var plain: EventSheetViewport = EventSheetViewport.new()
-	ok = _check("the Construct-words glossary is off by default", plain.construct_words_enabled(), false) and ok
+	ok = _check("the familiar-words glossary is off by default", plain.familiar_words_enabled(), false) and ok
 	plain.free()
 	var readings: PackedStringArray = _render(_import(), true)
 	for expected: String in [
@@ -365,7 +365,7 @@ static func _import() -> EventSheetResource:
 
 
 ## The readings of one sheet, straight off the canvas's own spans.
-static func _render(sheet: EventSheetResource, construct_words: bool = false) -> PackedStringArray:
+static func _render(sheet: EventSheetResource, familiar_words: bool = false) -> PackedStringArray:
 	sheet.read_only = true
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 	style.ensure_defaults()
@@ -374,7 +374,7 @@ static func _render(sheet: EventSheetResource, construct_words: bool = false) ->
 	viewport.set_ace_registry(EventSheetACERegistry.new())
 	# Set BEFORE the sheet: the words are baked into span text at build time, which is exactly why
 	# the dock's toggle re-sets the sheet rather than queueing a redraw.
-	viewport.construct_words = construct_words
+	viewport.familiar_words = familiar_words
 	viewport.set_sheet(sheet)
 	viewport.set_reading_mode(true)
 	var readings: PackedStringArray = PackedStringArray()

@@ -1,4 +1,4 @@
-# EventSheet - the C3 parameter emphasis: display substitution tracks where each param value
+# EventSheet - the event-sheet parameter emphasis: display substitution tracks where each param value
 # lands ([start, length] ranges the renderer bolds). Pins the tracking helper's VALUES (exact
 # starts/lengths, repeated slots, cross-pass shifting, the overlap-drop degenerate, empty
 # values), the span attach through the REAL formatter (including the hourglass-prefix shift),

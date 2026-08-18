@@ -44,7 +44,7 @@ var evaluate_last: bool = false
 ## Blank = never value-triggered rich (a bbcode_text param hint still counts as rich).
 var rich_when_param: String = ""
 var rich_when_value: String = ""
-## Looping condition (the Construct "is looping" idea, the builtin twin of `## @ace_looping`):
+## Looping condition (the event-sheet "is looping" idea, the builtin twin of `## @ace_looping`):
 ## the template returns a COLLECTION instead of a bool, and applying the condition lands a pick
 ## filter on the event, so its actions run once per item under this iterator name. Set via the
 ## fluent `.looping("line")`.

@@ -2,7 +2,7 @@
 class_name ReadingNounsFixture
 extends CharacterBody2D
 
-# A hand-written script carrying one of every shape the Construct NOUNS claim (M38 - M47), so the
+# A hand-written script carrying one of every shape the event-sheet NOUNS claim (M38 - M47), so the
 # render harness can show what they read like. Never run: it exists to be OPENED.
 
 enum State { PATROL, CHASE }

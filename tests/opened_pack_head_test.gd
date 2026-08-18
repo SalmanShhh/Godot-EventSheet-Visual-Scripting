@@ -1,4 +1,4 @@
-# Godot EventSheets - the head of an opened pack, read in Construct grammar.
+# Godot EventSheets - the head of an opened pack, read in the event-sheet grammar.
 #
 # A pack opened as a read-only preview used to spend two and a half screens before its first rule: a
 # Class setup bar, a `host` variable, a Host binding bar, eleven trigger rows, forty-six variable rows
@@ -6,7 +6,7 @@
 # test pins the reading that replaced them, over the REAL FPS Controller pack (a fixture cannot prove
 # a lens that only fires on a file's actual shape):
 #
-#   1. The Include bar - the pack's identity as ONE bar, the way Construct opens a sheet with its
+#   1. The Include bar - the pack's identity as ONE bar, the way an event sheet opens with its
 #      includes: name, version, and the class it behaves on. The three head bars it replaces are gone.
 #   2. The description ONCE, as a comment bar right under it, and never again at the end of the file.
 #   3. Group bars in FILE order (Triggers, then each @export_group, then Internal state), closed by

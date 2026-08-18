@@ -16,8 +16,8 @@ const COLOR_TRIGGER = EventSheetPalette.COLOR_TRIGGER
 const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
-# Object icon drawn before the object label in ACE cells (event-sheet grammar). Construct-style
-# framing: the icon sits centred on a subtle rounded plate (the C3 "{my}" icon chip), so icons
+# Object icon drawn before the object label in ACE cells (event-sheet grammar). Event-sheet
+# framing: the icon sits centred on a subtle rounded plate (the "{my}" icon chip), so icons
 # read as a tidy column instead of loose glyphs. The advance must stay in sync with
 # _measure_span_width in the viewport or hit-testing drifts.
 const OBJECT_ICON_SIZE := 14.0
@@ -61,7 +61,7 @@ const HIT_CHIP_COLD_RAIL := Color(1.0, 1.0, 1.0, 0.13)
 ## three can never disagree about where display text starts.
 ## `text` shortened with a trailing ellipsis until it fits `max_width`. Godot's draw_string takes a
 ## width but CLIPS at it - a name in a user-draggable column would be sliced through a glyph, which is
-## what Construct avoids by eliding. Returns the text untouched when it already fits (the common case),
+## eliding avoids. Returns the text untouched when it already fits (the common case),
 ## so the measuring loop only ever runs on a name that is actually too long for its column.
 static func _elide(text: String, max_width: float, font: Font, font_size: int) -> String:
 	if max_width <= 0.0 or font == null:
@@ -76,7 +76,7 @@ static func _elide(text: String, max_width: float, font: Font, font_size: int) -
 	return "…"
 
 
-## The hairline that marks an object column's right edge inside a cell - Construct's permanent
+## The hairline that marks an object column's right edge inside a cell - the event-sheet permanent
 ## sub-lane split. It sits ON the boundary the resize grab tests against, so what you see is exactly
 ## what you can drag. Skipped for a cell too short to show it.
 ##
@@ -379,9 +379,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	# ── Gutter paint policy (structural, not paint-order): EVENT rows (and synthetic
 	# sub-rows) OWN a visible gutter cell, so their fills use row_fill_rect, which starts
 	# PAST the gutter - no later fill can cover the number, ever. GROUP/COMMENT/SECTION
-	# rows are full-bleed bars: they draw over the gutter for the seamless C3 look, with
+	# rows are full-bleed bars: they draw over the gutter for the seamless event-sheet look,
 	# their x=0 accent stripes visible (they show no number, so nothing is lost).
-	# Event-number mode (default on, the C3 margin): event rows show their STABLE
+	# Event-number mode (default on, the event-sheet margin): event rows show their STABLE
 	# sheet-order number INSTEAD of the flat row index - never both, or the two digit
 	# strings smear whenever a comment/group/variable row makes them diverge. Off
 	# restores the flat index on every row (visible where fills don't cover the gutter).
@@ -410,7 +410,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	else:
 		var section_bg: Color = BG_1 if alternating else BG_0
 		# A row may carry a faint role tint (a published-verb Define row washed by its ACE kind): blend it
-		# over the base so the block reads as its kind - a Construct-style event block - then a left accent
+		# over the base so the block reads as its kind - an event block - then a left accent
 		# bar in the same hue drives the cue home. custom_color.a == 0 rows are untouched.
 		if row_data.custom_color.a > 0.01:
 			section_bg = section_bg.lerp(Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, section_bg.a), row_data.custom_color.a)
@@ -826,8 +826,8 @@ func _draw_spans(
 		# (e.g. "[icon] System  Is on floor").
 		var object_icon: Variant = metadata.get("object_icon")
 		if object_icon is Texture2D:
-			# C3-style icon chip: a subtle rounded plate behind the icon so every row's icon
-			# reads as one tidy framed column (the Construct "{my}" look).
+			# Event-sheet icon chip: a subtle rounded plate behind the icon so every row's icon
+			# reads as one tidy framed column (the "{my}" look).
 			var plate_y: float = span.rect.position.y + (span.rect.size.y - OBJECT_ICON_PLATE_SIZE) * 0.5
 			var plate_rect := Rect2(text_x, plate_y, OBJECT_ICON_PLATE_SIZE, OBJECT_ICON_PLATE_SIZE)
 			control.draw_style_box(_object_icon_plate_style(), plate_rect)
@@ -843,7 +843,7 @@ func _draw_spans(
 			# actual condition/action, not a column of identical "System" labels.
 			if object_label == "System":
 				object_color.a *= 0.5
-			# C3-style sub-lane: a fixed object column aligns every row's display text at the
+			# Event-sheet sub-lane: a fixed object column aligns every row's display text at the
 			# same edge (label clipped to the column); width 0 keeps the classic flow where
 			# text follows each label.
 			# The lane width comes back through the control (the same way zoom does above): _draw_spans
@@ -869,7 +869,7 @@ func _draw_spans(
 				_draw_text(control, Vector2(text_x, baseline_y), object_label, text_width, font, draw_font_size, object_color)
 				text_x += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 			# The object column's RESTING separator - a hairline on the same boundary the resize grab
-			# uses. Construct shows this split permanently, so the object column reads as a real column
+			# uses. An event sheet shows this split permanently, so the object column reads as a real column
 			# rather than as text that happens to start further along; without it the boundary was
 			# invisible until the cursor crossed it and the resize cursor appeared.
 			# ONLY in column mode: in flow mode there is no column, so a line after each label would
@@ -887,7 +887,7 @@ func _draw_spans(
 			# in its range's hue, so `[b]{amount}[/b]` reads bold AND number-green.
 			# When the layout stamped segment_wrap_breaks (the cell is taller than one line),
 			# the segment run is sliced at those exact offsets and drawn as stacked visual
-			# lines - the Construct rule: the cell grows, styled text never clips.
+			# lines - the event-sheet rule: the cell grows, styled text never clips.
 			var bbcode_value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
 			var seg_breaks: PackedInt32Array = metadata.get("segment_wrap_breaks", PackedInt32Array()) if span_index != editing_span_index else PackedInt32Array()
 			if seg_breaks.is_empty():
@@ -960,7 +960,7 @@ func _draw_spans(
 		else:
 			var value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
 			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color, EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
-		# The C3 parameter emphasis: every substituted parameter value re-draws 0.7px over -
+		# The event-sheet parameter emphasis: every substituted parameter value re-draws 0.7px over -
 		# the same double-draw bold the BBCode cells use - in whatever colour that run already
 		# has, so the typed value tints never wash out.
 		if not param_ranges.is_empty() and bbcode_segments.is_empty() and not bool(metadata.get("comment_wrap", false)):

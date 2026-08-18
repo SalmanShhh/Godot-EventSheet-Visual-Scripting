@@ -546,7 +546,7 @@ Plain GDScript - anything valid in an expression works here. Ctrl+Space complete
 Expressions dictionary,式の辞書
 Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,ダブルクリックでカーソル位置に挿入します - 辞書は開いたままなので結果をつなげられます。フィールドに直接入力しても OK: 同じ式が入力に合わせて自動補完されます。
 Loop index (optional),ループインデックス (任意)
-"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","各パスで 0, 1, 2... と進むカウンターに名前を付けます - Construct の loopindex です。Loop Index 式で読み取り、ネストしたループには別々の名前を付けて、外側のループは Loop Index Of で読み取ります。"
+"Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","各パスで 0, 1, 2... と進むカウンターに名前を付けます。Loop Index 式で読み取り、ネストしたループには別々の名前を付けて、外側のループは Loop Index Of で読み取ります。"
 Write one value per line (multi-line enum),1 行に 1 値ずつ書く (複数行の列挙型)
 "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","オフ: enum State { IDLE, RUN }。オン: 各値がタブでインデントされた 1 行ずつになります - 明示的な数値を持つ長い列挙型の定番の形です。"
 Addon Pack,アドオンパック

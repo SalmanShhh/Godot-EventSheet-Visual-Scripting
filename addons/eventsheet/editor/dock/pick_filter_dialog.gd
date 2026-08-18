@@ -63,11 +63,11 @@ func _ensure_pick_dialog() -> void:
 	form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var loop_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_pick_iterator_edit = _dock._add_sheet_type_field(loop_box, "Iterator name", "item")
-	# Construct-style loopindex, opt-in per loop: name it and the loop counts 0,1,2... in a
+	# Event-sheet loop index, opt-in per loop: name it and the loop counts 0,1,2... in a
 	# local of that name (the Loop Index expressions read it). Distinct names on nested loops
-	# give C3's loopindex("name"). Empty = no counter (output unchanged).
+	# give each its own loop index counter. Empty = no counter (output unchanged).
 	_pick_index_edit = _dock._add_sheet_type_field(loop_box, "Loop index (optional)", "loop_index")
-	_pick_index_edit.tooltip_text = "Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of."
+	_pick_index_edit.tooltip_text = "Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of."
 	var kind_row: HBoxContainer = HBoxContainer.new()
 	var kind_label: Label = Label.new()
 	kind_label.text = "Collection"

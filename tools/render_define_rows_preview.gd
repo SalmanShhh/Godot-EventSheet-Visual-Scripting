@@ -1,5 +1,5 @@
 # EventForge - render harness (dev tool) for the Define function rows: opens the abilities pack as a
-# sheet and screenshots its published-verb rows, so the C3-style reading (verb + typed param chips +
+# sheet and screenshots its published-verb rows, so the event-sheet reading (verb + typed param chips +
 # "gives back" return, NO raw func signature) can be eyeballed. Run NON-headless:
 #   godot --path . --script tools/render_define_rows_preview.gd
 @tool

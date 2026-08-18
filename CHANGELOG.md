@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - product names out of the code
+
+- Comments, tooltips, ACE descriptions and test labels across `addons/`, `tools/`, `tests/`,
+  `eventsheet_addons/` and `demo/` now describe the BEHAVIOUR instead of naming another event-sheet
+  editor. The View toggle formerly called **Construct Words** is now **Familiar Words** (same lens:
+  layout, restart layout, time scale, layer nouns), stored under the `familiar_words` key. The
+  migration guide moved to `docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md`. Guides may still
+  draw the comparison for a reader who needs it; `tests/no_product_names_in_code_test.gd` keeps the
+  code itself clean.
+
 ### Fixed - three rows of an opened file stopped saying things that were not true
 
 - **`if i == 1:` is a comparison, not an identity test.** Is The Same Object's reverse template is the

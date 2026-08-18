@@ -1,9 +1,9 @@
-# EventForge - the third batch of Construct habits Godot spells differently (M36/M37/M39/M42),
+# EventForge - the third batch of event-sheet habits Godot spells differently (M36/M37/M39/M42),
 # pinned by VALUE on real fixture files rather than on hand-built resources:
 #
-#   M36  a For-each whose ENTIRE body is one `if` is Construct's picking, and reads as one event
-#   M37  a `match` on a plain value reads as the if / else-if / else chain a Construct user knows
-#   M39  instantiate + add_child (+ the first position) is Construct's single Create object
+#   M36  a For-each whose ENTIRE body is one `if` is the event-sheet picking, and reads as one event
+#   M37  a `match` on a plain value reads as the if / else-if / else chain an event-sheet user knows
+#   M39  instantiate + add_child (+ the first position) is the event-sheet single Create object
 #   M42  a signal the Godot editor wired in the .tscn reads as the trigger it is
 #
 # All four are READINGS. The rows in the sheet, the GDScript that comes back out, and every byte of

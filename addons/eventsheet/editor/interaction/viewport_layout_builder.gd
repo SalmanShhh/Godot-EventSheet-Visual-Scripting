@@ -109,7 +109,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	)
 	var action_line_x: Dictionary = {}
 	var action_line_reservations: Dictionary = _viewport._build_action_line_reservations(row_data, action_lane_rect, font, font_size)
-	# Wrapping (the Construct rule - cells grow, text never clips): the SAME extents walk
+	# Wrapping (the event-sheet rule - cells grow, text never clips): the SAME extents walk
 	# the height metrics used, so drawn positions always fit the reserved height.
 	var event_extents: Dictionary = _viewport._row_metrics_helper.event_line_extents(row_data, width, font, font_size) if row_data.row_type == EventRowData.RowType.EVENT else {}
 	var cond_line_tops: Dictionary = event_extents.get("cond_top", {})
@@ -123,7 +123,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# Running X per line for non-event rows (group / variable / comment / GDScript block),
 	# which lay out left-to-right; multi-line rows stack by span line_index.
 	var non_event_origin_x: float = x
-	# Comments read as a Construct-style full-width banner: text starts at the row's left edge (no
+	# Comments read as an event-sheet full-width banner: text starts at the row's left edge (no
 	# badge-column indent) and the cell fills the row (see the width branch below).
 	var non_event_line_x: Dictionary = {}
 	# Comment wrapping: each logical line wraps to the row width, so a span can be several
@@ -189,7 +189,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				span_x = float(chip_flow_x[span_index])
 				span_y += float(int(chip_flow_offset.get(span_index, 0))) * line_height
 				condition_line_x[line_index] = span_x
-		# The C3 sub-lane rule: every cell's object-column separator sits at ONE shared x per
+		# The event-sheet sub-lane rule: every cell's object-column separator sits at ONE shared x per
 		# lane. Stamp the per-span aligned column width so the renderer, the resize hit-test,
 		# and the wrap math all land the boundary on the same line.
 		if lane_divider_x > 0.0:
@@ -252,7 +252,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				else:
 					span_width = max(min(span_width, max_action_width), 1.0)
 		elif is_comment_row:
-			# A comment fills to the row's right padding (Construct-style banner), not just its text
+			# A comment fills to the row's right padding (event-sheet banner), not just its text
 			# width, so the whole row reads as one solid note band.
 			span_width = max(row_right_limit - span_x - 2.0, 1.0)
 		else:

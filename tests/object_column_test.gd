@@ -1,4 +1,4 @@
-# EventForge - the C3-style object column (a draggable sub-lane between object names and display
+# EventForge - the event-sheet object column (a draggable sub-lane between object names and display
 # text, per lane). Pins the ONE resolver (object_column_width_for) and that the two geometry
 # twins - span width measurement and the text-origin used by hit-testing - advance by the fixed
 # column width when set and by the label's own width in flow mode (0), so draw, measure, and
@@ -13,7 +13,7 @@ static func run() -> bool:
 
 	# ---- the resolver: per-lane token, 0 = flow, non-lanes never column ----
 	var event_style: EventSheetEventStyle = EventSheetEventStyle.new()
-	# The column is ALIGNED by default (the Construct look): every row's text starts at the same x, so
+	# The column is ALIGNED by default (the event-sheet look): every row's text starts at the same x, so
 	# the sheet scans as a table instead of each row starting wherever its own object name happens to
 	# end. Flow mode is still reachable by setting the token to 0.
 	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 130.0, "condition lane is aligned by default")

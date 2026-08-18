@@ -140,7 +140,7 @@ func _ensure_expression_window() -> void:
 	if _expression_window != null:
 		return
 	_expression_window = AcceptDialog.new()
-	# Construct-style: a floating EXPRESSIONS DICTIONARY, not a modal insert step. Non-exclusive
+	# Event-sheet style: a floating EXPRESSIONS DICTIONARY, not a modal insert step. Non-exclusive
 	# so the params dialog underneath stays live (type in the field, dictionary at your side),
 	# and inserting keeps it OPEN - close with X, reopen any time with the field's ƒx
 	# (Find Expressions) button. Typing in the field itself pops the unfocused autocomplete;
@@ -205,9 +205,9 @@ func _refresh_expression_tree() -> void:
 	_expression_tree.clear()
 	var root: TreeItem = _expression_tree.create_item()
 	var query: String = _expression_search.text.strip_edges()
-	# The Self section pins FIRST - the C3 "what does my object know about itself" reflex. A
+	# The Self section pins FIRST - the "what does my object know about itself" reflex. A
 	# self-scoped query ("self", "Self.X") filters WITHIN the section and hides the rest of the
-	# tree, mirroring how typing Self. in Construct scopes its panel to the object's own list.
+	# tree, mirroring how typing Self. elsewhere scopes the panel to the object's own list.
 	var self_query: Dictionary = EventSheetSelfExpressions.normalize_query(query)
 	_add_self_section(root, str(self_query.get("remainder", "")))
 	if bool(self_query.get("self_scoped", false)):
@@ -240,8 +240,9 @@ func _refresh_expression_tree() -> void:
 	_add_sheet_variable_expressions(root, query)
 
 
-## The pinned Self section: the sheet's own variables, the host's C3-common properties under
-## their C3 names, and the sheet's expression functions - each leaf inserting plain GDScript.
+## The pinned Self section: the sheet's own variables, the host's event-sheet-common properties
+## under their familiar names, and the sheet's expression functions - each leaf inserting plain
+## GDScript.
 ## The model (and its host gating) lives in EventSheetSelfExpressions, static + pure; this only
 ## draws it. Subgroups with no surviving entries are dropped, never shown empty.
 func _add_self_section(root: TreeItem, lowered_query: String) -> void:

@@ -1,4 +1,4 @@
-# EventSheet - recent parameter values (the C3 "I keep typing the same thing" fix).
+# EventSheet - recent parameter values (the "I keep typing the same thing" fix).
 # Remembers the last few values COMMITTED for each parameter (keyed provider::ace::param) across
 # the whole project, and serves them to the param dialogs' suggestion combos - so the third time
 # an action needs "jump" or "res://sfx/hit.ogg", it is one pick instead of a retype.

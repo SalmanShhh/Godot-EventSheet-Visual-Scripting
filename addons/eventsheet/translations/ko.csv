@@ -546,7 +546,7 @@ Plain GDScript - anything valid in an expression works here. Ctrl+Space complete
 Expressions dictionary,표현식 사전
 Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,더블 클릭하면 커서 위치에 삽입됩니다 - 사전이 계속 열려 있어 결과를 이어 붙일 수 있습니다. 필드에 그냥 입력해도 됩니다: 같은 표현식이 입력하는 대로 자동 완성됩니다.
 Loop index (optional),루프 인덱스 (선택 사항)
-"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","매 반복마다 0, 1, 2... 로 증가하는 카운터의 이름을 정합니다 - Construct의 loopindex 입니다. Loop Index 표현식으로 읽고, 중첩 루프에는 서로 다른 이름을 주고 바깥 루프는 Loop Index Of 로 읽으세요."
+"Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","매 반복마다 0, 1, 2... 로 증가하는 카운터의 이름을 정합니다. Loop Index 표현식으로 읽고, 중첩 루프에는 서로 다른 이름을 주고 바깥 루프는 Loop Index Of 로 읽으세요."
 Write one value per line (multi-line enum),한 줄에 값 하나씩 쓰기 (여러 줄 열거형)
 "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","끄면: enum State { IDLE, RUN }. 켜면: 각 값이 탭 들여쓰기된 자기 줄에 놓입니다 - 명시적 숫자가 있는 긴 열거형의 일반적인 형태입니다."
 Addon Pack,애드온 팩

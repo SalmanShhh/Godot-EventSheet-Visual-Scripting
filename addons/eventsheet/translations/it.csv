@@ -546,7 +546,7 @@ Plain GDScript - anything valid in an expression works here. Ctrl+Space complete
 Expressions dictionary,Dizionario delle espressioni
 Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,Doppio clic per inserire al cursore - il dizionario resta aperto così i risultati si concatenano. Puoi anche scrivere direttamente nel campo: le stesse espressioni si autocompletano mentre digiti.
 Loop index (optional),Indice del ciclo (opzionale)
-"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","Dai un nome a un contatore che fa 0, 1, 2... a ogni passaggio - il loopindex di Construct. Leggilo con l'espressione Loop Index; dai nomi distinti ai cicli annidati e leggi quello esterno con Loop Index Of."
+"Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","Dai un nome a un contatore che fa 0, 1, 2... a ogni passaggio. Leggilo con l'espressione Loop Index; dai nomi distinti ai cicli annidati e leggi quello esterno con Loop Index Of."
 Write one value per line (multi-line enum),Scrivi un valore per riga (enum multiriga)
 "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","Disattivato: enum State { IDLE, RUN }. Attivato: ogni valore su una propria riga indentata con tab - la forma consueta dei lunghi enum con numeri espliciti."
 Addon Pack,Pacchetto di estensione

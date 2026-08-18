@@ -49,7 +49,7 @@ static func run() -> bool:
 	all_passed = _check("choosing fires On Choice Made and clears the active storylet",
 		chose[0] == 1 and sw.chosen_id() == "climb" and not sw.has_active(), true) and all_passed
 
-	# Missing quality reads as 0 (not the C3 "everything fails" rule) + text qualities.
+	# Missing quality reads as 0 (not the event-sheet "everything fails" rule) + text qualities.
 	_reset(sw)
 	sw.define_storylet("rich", "Rich", "You strike gold.")
 	sw.add_requirement("rich", "gold", ">=", 10)
@@ -101,7 +101,7 @@ static func run() -> bool:
 	all_passed = _check("the cooldown clears once enough game time passes",
 		not sw.is_on_cooldown("nap") and sw.is_available("nap"), true) and all_passed
 
-	# --- Effects + forecasts (data-driven consequences, ported from the C3 addon) ---
+	# --- Effects + forecasts (data-driven consequences, ported from the event-sheet addon) ---
 	_reset(sw)
 	sw.define_storylet("gate", "The Gate", "Pay the toll.")
 	sw.add_effect("gate", "inc", "visits", 1)

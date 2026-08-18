@@ -1,4 +1,4 @@
-# Godot EventSheets - in-editor behavior preview (the C3-style "see it move in the editor").
+# Godot EventSheets - in-editor behavior preview (the event-sheet "see it move in the editor").
 #
 # Pins the two halves of the feature:
 # 1. The contract: the Sine pack's emitted static editor_preview_sample(params, base, time) is

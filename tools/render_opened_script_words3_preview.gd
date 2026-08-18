@@ -1,7 +1,7 @@
-# EventForge - render harness (dev tool) for the Construct NOUNS an opened script reads in
+# EventForge - render harness (dev tool) for the familiar NOUNS an opened script reads in
 # (M38 - M47). Opens tests/fixtures/reading_nouns_fixture.gd twice, stacked:
 #   top    - as it reads by default (Godot's nouns: scene, CanvasLayer)
-#   bottom - with View ▾ "Construct Words" on (layout, time scale, layer)
+#   bottom - with View ▾ "Familiar Words" on (layout, time scale, layer)
 # Writes docs/images/opened-script-words3.png and prints what every row READS, so one run proves
 # both the look (the image) and the words (the printed spans).
 # Run NON-headless (headless runs cannot render):
@@ -19,11 +19,11 @@ const ACTION_SCROLL: int = 560
 var _frames: int = 0
 var _shot_taken: bool = false
 var _plain_view: EventSheetViewport = null
-var _construct_view: EventSheetViewport = null
+var _familiar_view: EventSheetViewport = null
 
 
 func _init() -> void:
-	root.title = "Opened script - Construct nouns"
+	root.title = "Opened script - familiar nouns"
 	root.size = Vector2i(1900, 900)
 	var modern_base := Color("#252525")
 	var background := ColorRect.new()
@@ -35,7 +35,7 @@ func _init() -> void:
 	columns.add_theme_constant_override("separation", 10)
 	root.add_child(columns)
 	_plain_view = _add_pane(columns, modern_base, false).get_child(0) as EventSheetViewport
-	_construct_view = _add_pane(columns, modern_base, true).get_child(0) as EventSheetViewport
+	_familiar_view = _add_pane(columns, modern_base, true).get_child(0) as EventSheetViewport
 	# No pointer input at all, so wherever the mouse rests no hover tooltip drifts into the shot.
 	root.gui_disable_input = true
 	process_frame.connect(_on_frame)
@@ -43,7 +43,7 @@ func _init() -> void:
 
 ## One read-only preview pane: a scroll box holding a viewport with the fixture already open in
 ## reading mode, which is what the dock hands a .gd opened as a sheet.
-func _add_pane(parent: Control, modern_base: Color, construct_words: bool) -> ScrollContainer:
+func _add_pane(parent: Control, modern_base: Color, familiar_words: bool) -> ScrollContainer:
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -53,7 +53,7 @@ func _add_pane(parent: Control, modern_base: Color, construct_words: bool) -> Sc
 	view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	view.set_ace_registry(EventSheetACERegistry.new())
 	# Before the sheet: the words are baked into span text at build time.
-	view.construct_words = construct_words
+	view.familiar_words = familiar_words
 	scroll.add_child(view)
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(FIXTURE_PATH)
 	sheet.read_only = true
@@ -72,16 +72,16 @@ func _on_frame() -> void:
 		return
 	_shot_taken = true
 	# Both panes open on the rows the glossary actually changes, so the shot shows the same file
-	# reading in Godot's nouns on the left and Construct's on the right.
+	# reading in Godot's nouns on the left and the familiar event-sheet ones on the right.
 	(_plain_view.get_parent() as ScrollContainer).scroll_vertical = int(_row_top("Go to", _plain_view)) + ACTION_SCROLL
-	(_construct_view.get_parent() as ScrollContainer).scroll_vertical = int(_row_top("Go to", _construct_view)) + ACTION_SCROLL
+	(_familiar_view.get_parent() as ScrollContainer).scroll_vertical = int(_row_top("Go to", _familiar_view)) + ACTION_SCROLL
 	await process_frame
 	await process_frame
 	var image: Image = root.get_texture().get_image()
 	image.save_png(IMAGE_PATH)
 	print("[nouns] %s  %dx%d" % [IMAGE_PATH, image.get_width(), image.get_height()])
 	_print_rows("godot nouns", _plain_view, 40)
-	_print_rows("construct words", _construct_view, 40)
+	_print_rows("familiar words", _familiar_view, 40)
 	quit(0)
 
 

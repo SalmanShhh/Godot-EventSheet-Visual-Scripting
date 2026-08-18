@@ -1,5 +1,5 @@
 # EventSheet - the Self expression section census (Self section, Phase 1).
-# Pins the derived model VALUES (never counts): the C3 alias table's fragments, the host gating,
+# Pins the derived model VALUES (never counts): the event-sheet alias table's fragments, the host gating,
 # the variables census, the expression-only function filter, and the query scoping. All static +
 # pure - no dialog, no editor.
 @tool
@@ -82,7 +82,7 @@ static func run() -> bool:
 	all_passed = _check("bool function is a CONDITION, not listed", _fragment_for(functions, "is_ready_check"), "") and all_passed
 	all_passed = _check("void function is an ACTION, not listed", _fragment_for(functions, "heal"), "") and all_passed
 
-	# ── Query scoping: the C3 "type Self. and browse" reflex ─────────────────────────────
+	# ── Query scoping: the event-sheet "type Self. and browse" reflex ────────────────────
 	var scoped: Dictionary = EventSheetSelfExpressions.normalize_query("Self.X")
 	all_passed = _check("Self.X is self-scoped", bool(scoped.get("self_scoped")), true) and all_passed
 	all_passed = _check("Self.X remainder is x", str(scoped.get("remainder")), "x") and all_passed
@@ -91,9 +91,9 @@ static func run() -> bool:
 	all_passed = _check("a plain query is not self-scoped",
 		EventSheetSelfExpressions.normalize_query("position"), {"self_scoped": false, "remainder": "position"}) and all_passed
 
-	# Matching covers BOTH spellings: the C3 label and the GDScript fragment.
+	# Matching covers BOTH spellings: the event-sheet label and the GDScript fragment.
 	var x_entry: Dictionary = {"label": "X · position.x", "fragment": "position.x"}
-	all_passed = _check("query x matches the C3 label", EventSheetSelfExpressions.entry_matches(x_entry, "x"), true) and all_passed
+	all_passed = _check("query x matches the event-sheet label", EventSheetSelfExpressions.entry_matches(x_entry, "x"), true) and all_passed
 	all_passed = _check("query position matches the fragment", EventSheetSelfExpressions.entry_matches(x_entry, "position"), true) and all_passed
 	all_passed = _check("query angle does not match X", EventSheetSelfExpressions.entry_matches(x_entry, "angle"), false) and all_passed
 
@@ -379,7 +379,7 @@ static func _group_of(groups: Array, provider: String) -> Dictionary:
 	return {}
 
 
-## The fragment of the entry whose label STARTS with the given C3 name / variable name ("" when
+## The fragment of the entry whose label STARTS with the given event-sheet name / variable name ("" when
 ## absent) - value-pinning helper. The separator is " · " for aliases, " : " for typed variables.
 static func _fragment_for(entries: Array, label_head: String) -> String:
 	for entry: Variant in entries:

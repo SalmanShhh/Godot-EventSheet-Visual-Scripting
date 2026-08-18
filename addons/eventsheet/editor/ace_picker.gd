@@ -327,7 +327,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	# open thousands of px tall. A bare Control ignores its children's minimums and reports only
 	# its own, so the split fills it (anchored) and the trees scroll internally at a fixed height.
 	var body_holder: Control = Control.new()
-	# Object-first front page (the Construct add-event gesture): big object cards - System,
+	# Object-first front page (the event-sheet add-event gesture): big object cards - System,
 	# the host's behaviors, packs, autoloads - shown before the category tree when the picker
 	# opens from a double-click on empty canvas. Picking a card scopes the tree to that
 	# object's vocabulary; typing anything drops straight into classic full search.
@@ -582,7 +582,7 @@ const SEARCH_SYNONYMS := {
 	"on start of layout": "ready",
 	"start of layout": "ready",
 	"every tick": "process",
-	# C3 Self.* property names whose Godot spelling genuinely differs (the Self expression
+	# Familiar Self.* property names whose Godot spelling genuinely differs (the Self expression
 	# section's alias table carries the full list; these bridge the MAIN picker's search too).
 	"angle": "rotation",
 	"opacity": "modulate",
@@ -656,7 +656,7 @@ static func _c3_synonym_queries(query: String) -> Array[String]:
 	return extra
 
 
-## Shows the object-cards front page (and hides the tree) - the C3 "pick the object
+## Shows the object-cards front page (and hides the tree) - the event-sheet "pick the object
 ## first" step. Cards enumerate live from the registry so new packs appear untouched.
 func _show_objects_page() -> void:
 	if _objects_page == null:
@@ -684,7 +684,7 @@ func _show_classic(show_breadcrumb: bool) -> void:
 
 
 ## The distinct "objects" the front page offers, from an assembled definitions list:
-## one card per provider, Core folded into a leading "System" card (the C3 convention).
+## one card per provider, Core folded into a leading "System" card (the event-sheet convention).
 ## Pure and static so tests pin the enumeration.
 static func object_cards_for(definitions: Array[ACEDefinition]) -> Array[Dictionary]:
 	var seen: Dictionary = {}
@@ -822,7 +822,7 @@ func _project_definitions_for(provider: String) -> Array[ACEDefinition]:
 	return []
 
 
-## Single-click an object (the C3 first step): scope the classic tree to its verbs.
+## Single-click an object (the event-sheet first step): scope the classic tree to its verbs.
 func _on_object_tree_selected() -> void:
 	var selected: TreeItem = _objects_tree.get_selected()
 	if selected == null or not (selected.get_metadata(0) is String):
@@ -910,7 +910,7 @@ func _refresh_tree() -> void:
 			host_filtered.append(host_candidate)
 	definitions = host_filtered
 	# Object-first scope: a picked object card narrows the tree to that provider's verbs
-	# (search still filters WITHIN the object, exactly the C3 second step).
+	# (search still filters WITHIN the object, exactly the event-sheet second step).
 	if not _object_filter_provider.is_empty():
 		# A "Your Project" card scopes to a class the registry has no definitions for - its
 		# verbs are reflected on demand here, so they exist to be scoped to. Reflection is

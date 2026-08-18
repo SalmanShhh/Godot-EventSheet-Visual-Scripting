@@ -58,7 +58,7 @@ signal custom_block_edit_requested(block_row: Resource)
 ## Emitted when a signal row is double-clicked.
 signal signal_edit_requested(signal_row: Resource)
 signal function_edit_requested(event_function: Resource)
-## A published verb's header was CLICKED: the row carries the Construct Function block (ƒ, name,
+## A published verb's header was CLICKED: the row carries the Function block (ƒ, name,
 ## inputs) and everything else the verb is - kind, category, description, what it gives back, the
 ## line it inserts - answers in the ACE properties popup this asks the dock to open.
 signal verb_properties_requested(event_function: Resource)
@@ -249,14 +249,14 @@ var _zoom_factor: float = 1.0
 var reading_mode: bool = false
 var _layout_style_signature: String = ""
 var _dragging_lane_divider: bool = false
-# The full-sheet DIVIDER GUIDE (the Construct cue): the logical X of the column boundary under the
+# The full-sheet DIVIDER GUIDE (the event-sheet cue): the logical X of the column boundary under the
 # pointer, or the one being dragged. Negative = none. A per-row divider only ever paints inside its own
 # row band, so a boundary reads as a broken, dashed hint and the object-column boundary has no resting
 # line at all - this draws ONE continuous line through the whole sheet instead, faint while hovering
 # (so a grabbable boundary is discoverable) and solid while dragging (so the landing spot is exact).
 var _divider_guide_x: float = -1.0
 var _divider_guide_dragging: bool = false
-# C3-style object-column resize: dragging the gap between an object name and its display text
+# Event-sheet object-column resize: dragging the gap between an object name and its display text
 # sets the lane's fixed object-column width ("condition"/"action"; "" = not dragging). The
 # anchor is where the column starts (span x + icon advance) so width = cursor x - anchor.
 var _dragging_object_column_lane: String = ""
@@ -272,18 +272,18 @@ var show_object_icons: bool = true
 ## M9 - the humanized-names lens: "_coyote_timer" reads "coyote timer", an @export knob reads with
 ## its Inspector capitalisation, and the raw name stays on hover. Tri-state on purpose: -1 AUTO
 ## (the default) means "on where the sheet is being READ, off where it is being AUTHORED", which
-## is the honest default for the two audiences - a Construct reader wants the words, a programmer
+## is the honest default for the two audiences - a reader wants the words, a programmer
 ## editing the file wants the identifiers that are actually in it. 0/1 are the user's explicit
 ## View-menu choice, which persists and then applies everywhere. Span builds read this, so
 ## flipping it rebuilds via set_sheet, exactly like show_object_icons.
 var humanize_names_override: int = -1
-## M46 - the Construct-words glossary: the few Godot nouns Construct has a different word for read
-## in Construct's word (scene -> layout, pause -> time scale 0, CanvasLayer -> layer), with the Godot
-## word still one hover away. OFF by default and never automatic: unlike the humanized-names lens,
+## M46 - the familiar-words glossary: the few Godot nouns other event-sheet editors have a different
+## word for read in that word (scene -> layout, pause -> time scale 0, CanvasLayer -> layer), with
+## the Godot word still one hover away. OFF by default and never automatic: unlike the humanized-names lens,
 ## this one teaches a SECOND vocabulary rather than respelling the user's own names, so it is only
 ## ever on because somebody asked for it in View ▾. Span builds read it, so flipping it rebuilds via
 ## set_sheet, exactly like show_object_icons.
-var construct_words: bool = false
+var familiar_words: bool = false
 ## Event-sheet-style drag ghost: a faint label of the dragged content following the cursor.
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO
@@ -379,11 +379,11 @@ func humanize_names_enabled() -> bool:
 	return is_reading_mode()
 
 
-## M46 - whether this view reads the few renamed nouns in Construct's words. Plain on/off: there is
+## M46 - whether this view reads the few renamed nouns in their familiar words. Plain on/off: there is
 ## no reading surface where a second vocabulary is the honest default, so nothing resolves it for the
 ## user the way the humanized-names lens does.
-func construct_words_enabled() -> bool:
-	return construct_words
+func familiar_words_enabled() -> bool:
+	return familiar_words
 
 
 func set_sheet(sheet: EventSheetResource) -> void:
@@ -972,7 +972,7 @@ func select_resources(resources: Array) -> int:
 
 
 
-## The keyboard cell walk (C3's arrow-through-cells): the selected row's ACE cells -
+## The keyboard cell walk (the event-sheet arrow-through-cells): the selected row's ACE cells -
 ## trigger, conditions, actions - in span order. Left/Right move the cell focus through
 ## them; Enter (the existing handler) edits the focused cell; Esc drops back to the row.
 func interactive_span_indices(row_data: EventRowData) -> Array[int]:
@@ -1084,7 +1084,7 @@ func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> floa
 		origin_x += EventRowRenderer.OBJECT_ICON_ADVANCE
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
-		# Fixed object column (C3 sub-lane) advances by the column width; flow mode by the
+		# Fixed object column (the event-sheet sub-lane) advances by the column width; flow mode by the
 		# label's own width - mirrors the renderer exactly.
 		var span_lane: String = str(metadata.get("lane", ""))
 		var object_column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), span_lane, lane_width_for(span_lane))
@@ -1316,7 +1316,7 @@ func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1)
 	return true
 
 
-# ── Event numbers (the C3 margin numbers; view-only, computed from the sheet) ──
+# ── Event numbers (the event-sheet margin numbers; view-only, computed from the sheet) ──
 ## Shown in the gutter for event rows when on (View menu); the numbers come from the
 ## SHEET's order - flat and sequential through groups and sub-events - so folding or
 ## filtering never renumbers anything and "check event 34" stays stable.
@@ -1330,7 +1330,7 @@ var show_event_numbers: bool = true
 var show_hit_counts: bool = false
 
 
-## instance-id -> 1-based event number, walking the sheet the way C3 counts: every
+## instance-id -> 1-based event number, walking the sheet the way an event sheet counts: every
 ## EventRow in order, descending into groups and sub-events. Pure and static.
 static func event_numbers_for(entries: Array) -> Dictionary:
 	var numbers: Dictionary = {}
@@ -1641,7 +1641,7 @@ func _draw() -> void:
 
 
 ## The full-sheet DIVIDER GUIDE: one continuous vertical line at the column boundary under the pointer,
-## or the one being dragged - the Construct cue. Per-row dividers only paint inside their own row band,
+## or the one being dragged - the event-sheet cue. Per-row dividers only paint inside their own row band,
 ## so a boundary reads as a broken dashed hint, and the object-column boundary draws nothing at all at
 ## rest; a single line spanning the whole canvas makes it obvious where the split IS and where a drag
 ## will leave it. Faint while hovering (discoverable, not loud), solid and wider while dragging, with a
@@ -1888,7 +1888,7 @@ func _refresh_rows() -> void:
 	_update_layout_style_signature(_get_font_size())
 	_group_breadcrumb.invalidate()
 	_flat_rows.clear()
-	# Live filter lens (the C3 "show only matching events" view): a non-mutating view
+	# Live filter lens (the event-sheet "show only matching events" view): a non-mutating view
 	# predicate - top-level rows whose subtree never mentions the term are skipped at
 	# flatten time (the sheet itself is untouched; clearing the lens restores everything).
 	_lens_hidden_count = 0
@@ -2015,8 +2015,8 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 		var row_data: EventRowData = _build_row_from_resource(entry, 0)
 		if row_data != null:
 			root_rows.append(row_data)
-	# A read-only preview reads its HEAD in Construct grammar: one Include bar for the pack's identity,
-	# the description once as a comment bar, then foldable Triggers / setting / Internal state bars -
+	# A read-only preview reads its HEAD in the event-sheet grammar: one Include bar for the pack's
+	# identity, the description once as a comment bar, then foldable Triggers / setting / state bars -
 	# in place of the prelude, signal and variable rows that used to fill two and a half screens before
 	# the first rule. Pure view, run over the already-built rows (the resources are untouched), and
 	# BEFORE the fence pairing so a #region opened mid-file still walks a settled list.
@@ -2035,9 +2035,9 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# Verbs open by default; this re-folds only the ones the fence pairing just moved inside a #region
 	# (or that sit inside a group), where the enclosing block owns the fold.
 	_row_builder.fold_nested_verb_rows(root_rows)
-	# M23: a statement carrying a ternary reads as the sub-event pair a Construct sheet would draw,
+	# M23: a statement carrying a ternary reads as the sub-event pair an event sheet would draw,
 	# never as an `if ... else` inside an action cell - on EVERY sheet, editable ones included, because
-	# a Construct user must never meet an `if ... else` in an action cell. Pure view over the
+	# a sheet reader must never meet an `if ... else` in an action cell. Pure view over the
 	# already-built rows: the resources, the emitted GDScript and the byte round-trip are untouched.
 	# The pair changes how many ROWS one statement occupies, so every row it produces carries
 	# `ternary_anchor_uid` and the interaction layer addresses the pair through that, as one statement.
@@ -3655,7 +3655,7 @@ static func _value_ranges_for(text: String) -> Array:
 # test needs no edit. Nothing internal reads this var.
 var _pending_display_bbcode: bool = false
 
-# Same bridge for the builder's _pending_param_ranges one-shot (the C3 parameter emphasis):
+# Same bridge for the builder's _pending_param_ranges one-shot (the event-sheet parameter emphasis):
 # tests poke this then call the delegate; the real render path never crosses here.
 var _pending_param_ranges: Dictionary = {}
 

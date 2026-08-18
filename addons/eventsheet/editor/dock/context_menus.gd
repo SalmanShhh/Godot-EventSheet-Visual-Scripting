@@ -3,7 +3,7 @@ class_name EventSheetContextMenus
 extends RefCounted
 # The dock's right-click context menus: the static condition/action/variable/empty-space PopupMenus
 # built once, plus the row menu (rebuilt per right-click to show only what applies to the clicked
-# row type + selection) and its Insert ▸ / More ▸ submenus. Construction + per-click configuration
+# row type + selection) and its Insert ▸ / More ▸ submenus. Building + per-click configuration
 # only - every menu item targets a dock handler that STAYS on the dock (the _on_*_context_menu_id_pressed
 # dispatchers and the per-item actions), reached through the `_dock` back-reference, the same pattern as
 # the other dock/ helpers. The seven PopupMenu members the dock + 20+ tests read later
@@ -221,7 +221,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	elif is_event:
 		menu.add_item("Add Sub-Event", _dock.ROW_MENU_ADD_SUB_EVENT)
 		menu.add_item("Convert to OR Block", _dock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
-		# The event-sheet Else block, top-level like the other event transforms (a C3 reflex, so it is
+		# The event-sheet Else block, top-level like the other event transforms (a reflex authors expect, so it is
 		# NOT gated behind Expert mode). Clicking again clears it; _configure_context_menu relabels to
 		# the live state ("Clear Else" / "Clear Else-If").
 		menu.add_item("Make Else", _dock.ROW_MENU_MAKE_ELSE)
@@ -329,7 +329,7 @@ func _data_class_field_index(row_data: EventRowData) -> int:
 
 
 ## The Insert ▸ submenu - a sibling row of any type below the clicked one (plus Event Above,
-## the C3 reflex for slotting a new event before the current one).
+## the event-sheet reflex for slotting a new event before the current one).
 func _build_row_insert_submenu() -> void:
 	var m: PopupMenu = _dock._row_insert_submenu
 	m.clear()
@@ -356,7 +356,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
 	# and snippet reuse so a beginner's right-click stays short and unintimidating.
 	if is_event and not _dock._simple_mode:
 		m.add_item("Add Sub-Condition", _dock.ROW_MENU_ADD_SUB_CONDITION)
-		# Make Else / Make Else-If moved to the TOP-LEVEL event menu (a C3 reflex, Simple Mode included).
+		# Make Else / Make Else-If moved to the TOP-LEVEL event menu (an event-sheet reflex, Simple Mode too).
 		m.add_item("Extract All Actions to Function…", _dock.ROW_MENU_EXTRACT_GDSCRIPT_FN)
 		m.add_item("Add Comment Sub-Event", _dock.ROW_MENU_ADD_COMMENT_SUB_EVENT)
 		m.add_item("Add GDScript Action", _dock.ROW_MENU_ADD_GDSCRIPT_ACTION)

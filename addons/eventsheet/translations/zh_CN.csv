@@ -546,7 +546,7 @@ Plain GDScript - anything valid in an expression works here. Ctrl+Space complete
 Expressions dictionary,表达式字典
 Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,双击即可在光标处插入 - 字典保持打开，方便连续插入。你也可以直接在字段中输入：同样的表达式会随输入自动补全。
 Loop index (optional),循环索引（可选）
-"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","给一个每轮从 0, 1, 2... 递增的计数器命名 - 即 Construct 的 loopindex。用 Loop Index 表达式读取它；给嵌套循环起不同的名字，用 Loop Index Of 读取外层循环。"
+"Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","给一个每轮从 0, 1, 2... 递增的计数器命名。用 Loop Index 表达式读取它；给嵌套循环起不同的名字，用 Loop Index Of 读取外层循环。"
 Write one value per line (multi-line enum),每行写一个值（多行枚举）
 "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","关闭时：enum State { IDLE, RUN }。开启时：每个值单独占一行并以制表符缩进 - 带显式数字的长枚举的常见写法。"
 Addon Pack,插件包

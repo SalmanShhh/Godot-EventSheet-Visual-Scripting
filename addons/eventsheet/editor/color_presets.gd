@@ -1,4 +1,4 @@
-# EventSheet - the saved colour palette (the C3 swatch shelf). Colours a user saves in the
+# EventSheet - the saved colour palette (the event-sheet swatch shelf). Colours a user saves in the
 # inline swatch picker persist per project and reappear in every picker session - the third
 # time a team colour is needed, it is one click on the shelf, not a re-pick.
 #

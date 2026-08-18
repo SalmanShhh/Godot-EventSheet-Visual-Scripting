@@ -1,5 +1,5 @@
 ## An ordinary hand-written arena script - nothing here was written for the plugin. It exists to show
-## the four Construct habits Godot spells differently: picking a group with a loop and an `if`, a
+## the four event-sheet habits Godot spells differently: picking a group with a loop and an `if`, a
 ## `match` on a plain value, spawning as instantiate + add_child + position, and two handlers whose
 ## signals are wired in the scene beside this file rather than in any code.
 class_name Structure3Arena

@@ -1,4 +1,4 @@
-# Condition/action cells WRAP instead of clipping (the Construct rule): when a cell's text is
+# Condition/action cells WRAP instead of clipping (the event-sheet rule): when a cell's text is
 # wider than its lane, the row grows by whole visual lines and the renderer wraps the text.
 # One shared walk (ViewportRowMetrics.event_line_extents) feeds BOTH the height metrics and the
 # layout pass, so the reserved height and the drawn rects can never disagree. Pins:

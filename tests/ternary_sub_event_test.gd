@@ -1,5 +1,5 @@
 # EventForge - M23: an `if ... else` INSIDE a statement reads as a sub-event pair, never as a
-# condition sitting in an action cell (which is the one thing a Construct sheet never does).
+# condition sitting in an action cell (which is the one thing an event sheet never does).
 #
 # Three things are pinned here, all of them pure view state over unchanged statements:
 #   1. the grammar's branch split, for every shape a ternary takes - a return, an assignment, a
@@ -109,7 +109,7 @@ static func _fixture_rows() -> bool:
 	# values stay QUOTED, because a string is content the reader is looking at, not a name.
 	ok = _check("a nested chain draws three arms",
 		_reading_at(rows, "Set tier to \"gold\""), "score > 100 | Set tier to \"gold\"") and ok
-	# The middle arm is an ELSE-IF, and Construct spells one as an Else event carrying a condition -
+	# The middle arm is an ELSE-IF, and an event sheet spells one as an Else event carrying a condition -
 	# the Else chip on the row's first condition line, the arm's test on its second. Drawn as a bare
 	# `score > 50` it would read as a sibling, i.e. as though both arms could fire.
 	ok = _check("the chain's middle arm is an Else WITH its condition under it",

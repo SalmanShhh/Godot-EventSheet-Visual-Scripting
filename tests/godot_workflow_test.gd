@@ -205,13 +205,13 @@ static func run() -> bool:
 	all_passed = _check("reset restores the default binding",
 		EventSheetShortcuts.binding_for("duplicate"), "Ctrl+D") and all_passed
 
-	# ── The Construct-parity key grammar: the defaults ARE C3's event-sheet keys ─
-	for c3_pair: Array in [["add_event", "E"], ["add_condition", "C"], ["add_action", "A"],
+	# ── The event-sheet key grammar: the defaults ARE the familiar sheet keys ────
+	for key_pair: Array in [["add_event", "E"], ["add_condition", "C"], ["add_action", "A"],
 			["add_comment", "Q"], ["add_group", "G"], ["toggle_enabled", "D"],
 			["add_blank_subevent", "B"], ["add_sub_condition", "S"], ["add_variable", "V"],
 			["invert_condition", "I"], ["replace_ace", "R"]]:
-		all_passed = _check("C3 key parity: %s is %s" % [str(c3_pair[0]), str(c3_pair[1])],
-			str(EventSheetShortcuts.DEFAULTS.get(str(c3_pair[0]), "")), str(c3_pair[1])) and all_passed
+		all_passed = _check("event-sheet key parity: %s is %s" % [str(key_pair[0]), str(key_pair[1])],
+			str(EventSheetShortcuts.DEFAULTS.get(str(key_pair[0]), "")), str(key_pair[1])) and all_passed
 	var bare_s: InputEventKey = InputEventKey.new()
 	bare_s.keycode = KEY_S
 	all_passed = _check("bare S routes to add-sub-event, not Save",
@@ -389,7 +389,7 @@ static func run() -> bool:
 		sheet_menu != null and sheet_menu.get_popup().item_count == 19  # +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…
 		and add_menu != null and add_menu.get_popup().item_count == 6 + 1 + EventSheetBlockRegistry.addable_kinds().size()  # +separator +Code action, then +separator + one item per registered Custom Block kind
 		and edit_menu != null and edit_menu.get_popup().item_count == 10
-		and view_menu != null and view_menu.get_popup().item_count == 28, true) and all_passed  # +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Construct Words
+		and view_menu != null and view_menu.get_popup().item_count == 28, true) and all_passed  # +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words
 
 	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
 	# The window now lives in the extracted EventSheetWelcomeWindow (dock/welcome_window.gd); the dock
@@ -644,7 +644,7 @@ static func run() -> bool:
 	menu_editor._build_row_context_menu(event_row)
 	var event_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("event menu is short and type-specific",
-		event_labels.size() <= 13  # +1: Cut joined Copy/Paste (C3 parity)
+		event_labels.size() <= 13  # +1: Cut joined Copy/Paste (event-sheet parity)
 		and event_labels.has("Add Sub-Event") and event_labels.has("Convert to OR Block")
 		and event_labels.has("Cut")
 		and event_labels.has("Insert") and event_labels.has("More") and event_labels.has("Delete")

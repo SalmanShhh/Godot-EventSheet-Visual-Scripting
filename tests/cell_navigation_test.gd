@@ -1,4 +1,4 @@
-# Godot EventSheets - keyboard cell navigation (C3's arrow-through-cells): Left/Right walk
+# Godot EventSheets - keyboard cell navigation (the event-sheet arrow-through-cells): Left/Right walk
 # the selected event's ACE cells (trigger, conditions, actions), Enter edits the focused
 # cell (the existing handler), Esc drops back to row selection. Pins: the interactive-span
 # walk (kinds, order), stepping (entry, clamped ends), and the Esc clear.

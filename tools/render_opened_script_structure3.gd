@@ -1,4 +1,4 @@
-# EventForge - render harness (dev tool) for the THIRD batch of Construct habits, on a hand-written
+# EventForge - render harness (dev tool) for the THIRD batch of event-sheet habits, on a hand-written
 # script nobody wrote for the plugin (tests/fixtures/opened_script_structure3.gd + its .tscn):
 #
 #   M36  a For-each over a group whose whole body is one `if` reads as one event on that object
@@ -20,7 +20,7 @@ var _sheet: EventSheetResource = null
 
 
 func _init() -> void:
-	root.title = "Opened script - Construct habits"
+	root.title = "Opened script - event-sheet habits"
 	root.size = Vector2i(1500, 820)
 	var modern_base := Color("#252525")
 	var background: ColorRect = ColorRect.new()
