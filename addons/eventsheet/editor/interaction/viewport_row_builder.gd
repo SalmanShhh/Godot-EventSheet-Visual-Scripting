@@ -46,6 +46,11 @@ var _verb_kind_override: int = -1
 # fold key ("label#n") that survives sessions - row uids are instance-based and cannot
 # (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
 var _region_occurrences: Dictionary = {}
+
+# Compiled once and shared: both of these run per row (or per action) on the paint path.
+static var _await_loop_regex: RegEx = null
+static var _super_call_regex: RegEx = null
+
 # Per-build occurrence counters for class-block row uids ("Stats" -> count). Class rows key
 # their uids by class NAME (stable across the undo funnel's resource rebuild, so expand /
 # disabled state survives edits) - but two blocks sharing a name then shared ONE uid, so
@@ -122,13 +127,14 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 			var fold_key: String = "%s#%d" % [opener_label, occurrence]
 			opener.set_meta("region_fold_key", fold_key)
 			opener.folded = bool(_viewport._fold_state.get(opener.row_uid, bool(_viewport.persisted_region_folds.get(fold_key, false))))
-			if opener.folded:
-				var hidden_count: int = region_children.size() - 1
-				opener.spans.append(_make_span(
-					"· %d row%s hidden" % [hidden_count, "" if hidden_count == 1 else "s"],
-					SemanticSpan.SpanType.VALUE,
-					{"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.75)}
-				))
+			# N1 - the bar carries its muted count, open or folded: a group bar should say how much
+			# it holds before you decide whether to open it. The closing fence is plumbing, so it
+			# never counts.
+			opener.spans.append(_make_span(
+				_region_member_count_text(region_children),
+				SemanticSpan.SpanType.VALUE,
+				{"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.75)}
+			))
 			_append_to_sink(output, stack, opener)
 			continue
 		_append_to_sink(output, stack, row_data)
@@ -145,6 +151,23 @@ func _append_to_sink(output: Array[EventRowData], stack: Array[Dictionary], row_
 		output.append(row_data)
 	else:
 		(stack[stack.size() - 1].get("collected") as Array[EventRowData]).append(row_data)
+
+
+## The muted count a region's group bar wears: how many EVENTS it holds when it holds any (the word
+## a group bar is read for), else how many rows. The closing fence rides as the last
+## child and is plumbing, so it is never counted.
+func _region_member_count_text(region_children: Array[EventRowData]) -> String:
+	var events: int = 0
+	var rows: int = 0
+	for index: int in range(maxi(region_children.size() - 1, 0)):
+		rows += 1
+		if region_children[index].row_type == EventRowData.RowType.EVENT:
+			events += 1
+	if events > 0:
+		return EventSheetL10n.translate("%d event") % events if events == 1 \
+			else EventSheetL10n.translate("%d events") % events
+	return EventSheetL10n.translate("%d row") % rows if rows == 1 \
+		else EventSheetL10n.translate("%d rows") % rows
 
 
 func _is_region_row(row_data: EventRowData) -> bool:
@@ -574,6 +597,12 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	if not identity_seen or (triggers.is_empty() and knobs.is_empty()):
 		return rows
 	var head: Array[EventRowData] = [_build_pack_include_bar_row(sheet, host_class)]
+	# N12 - a script that extends ANOTHER SCRIPT of this project is including that sheet: everything
+	# the base declares runs here too. That is a second bar under the identity one, naming the file
+	# and offering to open it, rather than an inheritance keyword nobody outside the language knows.
+	var base_include_row: EventRowData = _build_base_script_include_bar_row(sheet)
+	if base_include_row != null:
+		head.append(base_include_row)
 	var about_index: int = _pack_about_row_index(rows, consumed)
 	var about_row: EventRowData = rows[about_index] if about_index >= 0 else _build_pack_about_row(sheet, strip_about)
 	if about_row != null:
@@ -716,6 +745,10 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 			"text_color": event_style.object_label_color
 		}))
 	var base_class: String = sheet.host_class.strip_edges()
+	# `extends "res://enemy.gd"` is a FILE, not a class: quoting a path into the identity chip reads as
+	# noise, and the Include bar directly below already names that file (N12).
+	if base_class.begins_with("\"") or base_class.begins_with("'"):
+		base_class = ""
 	if not base_class.is_empty() and base_class != object_name:
 		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE, {
 			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
@@ -731,6 +764,72 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
 		}))
 	return spans
+
+
+## The project script a sheet EXTENDS, as a res:// path - "" when it extends an engine class (which
+## is what the identity bar already says) or when the base cannot be found. Both spellings resolve:
+## `extends "res://enemy.gd"` by its path, `extends Enemy` through the project's own class list.
+static func base_script_path(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return ""
+	var base: String = sheet.host_class.strip_edges()
+	if base.is_empty():
+		return ""
+	if base.begins_with("\"") or base.begins_with("'"):
+		var quoted: String = base.trim_prefix("\"").trim_suffix("\"").trim_prefix("'").trim_suffix("'")
+		return quoted if quoted.begins_with("res://") else ""
+	if ClassDB.class_exists(base):
+		return ""
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == base:
+			var path: String = str(entry.get("path", ""))
+			# A .gd sheet's own file is never its base: a class list that has not caught up yet would
+			# otherwise offer to open the file already open.
+			return path if path != str(sheet.external_source_path) else ""
+	return ""
+
+
+## N12's second head bar: `⇥ Include <base.gd> - open as a sheet`. Null when the base is an engine
+## class. Inert as a resource (a lens over the `extends` line, which stays exactly where it is); the
+## chip carries the path so opening it goes through the same jump the rest of the canvas uses.
+func _build_base_script_include_bar_row(sheet: EventSheetResource) -> EventRowData:
+	var base_path: String = base_script_path(sheet)
+	if base_path.is_empty():
+		return null
+	var row_data := EventRowData.new()
+	row_data.indent = 0
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "base_include_bar_%d" % sheet.get_instance_id()
+	var accent: Color = _viewport._get_event_style().behavior_accent_color
+	row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.12)
+	var open_meta: Dictionary = {
+		"editable": false,
+		"kind": "include_open",
+		"include_path": base_path,
+		"line_index": 0
+	}
+	var spans: Array[SemanticSpan] = [
+		_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
+			"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG
+		}, true)),
+		_make_span(EventSheetL10n.translate("Include"), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
+			"text_color": EventSheetPalette.TEXT_PRIMARY
+		}, true)),
+		_make_span(base_path.get_file(), SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+			"badge_fg": EventSheetPalette.COLOR_CHIP_FG
+		}, true)),
+		_make_span(EventSheetL10n.translate("- open as a sheet"), SemanticSpan.SpanType.COMMENT,
+			open_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true))
+	]
+	row_data.spans = spans
+	return row_data
 
 
 func _pack_include_chip(text: String) -> SemanticSpan:
@@ -1846,11 +1945,23 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 				{"kind": "custom_block_row", "text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.7)}
 			)]
 			return row_data
+		# N1 - `#region Name` IS a Group: Godot folds a script with regions, an event sheet
+		# organises itself with groups, and they are the same idea said twice. So the opening fence
+		# wears the event-group BAR (folder icon, title, muted count, the group row's height and
+		# chrome) instead of a plain section line. Storage is untouched - the sheet still holds the two
+		# fence rows the file has, which is what keeps the byte round-trip free.
+		row_data.row_type = EventRowData.RowType.GROUP
+		row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.22)
 		var region_label: String = str(block.fields.get("label", "")).strip_edges()
 		row_data.spans = [_make_span(
-			region_label if not region_label.is_empty() else "(unnamed region)",
-			SemanticSpan.SpanType.VALUE,
-			{"kind": "custom_block_row", "text_color": accent}
+			region_label if not region_label.is_empty() else EventSheetL10n.translate("(unnamed region)"),
+			SemanticSpan.SpanType.OBJECT,
+			{
+				"kind": "custom_block_row",
+				"group_title": true,
+				"object_icon": _folder_icon() if _viewport.show_object_icons else null,
+				"text_color": event_style.group_title_color
+			}
 		)]
 		var region_description: String = str(block.fields.get("description", "")).strip_edges()
 		if not region_description.is_empty():
@@ -3038,6 +3149,13 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	if not function_info.is_empty():
 		row_data.line_count = 1
 		row_data.language_block = true  # a collapsed function header - language structure, not an event
+		# N3 - `while true: await get_tree().create_timer(x).timeout` is a beat, not a helper: the
+		# function exists to run its body every x seconds. It reads as that beat, with the loop's own
+		# lines as its content (the card opens to the exact GDScript, unchanged).
+		var loop_seconds: String = await_loop_seconds(raw_row.code)
+		if not loop_seconds.is_empty():
+			row_data.spans = _await_loop_trigger_spans(loop_seconds)
+			return row_data
 		var function_spans: Array[SemanticSpan] = [
 			_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
@@ -4880,6 +4998,330 @@ func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, t
 			return "➜"
 
 
+# ── N3 - "Every X seconds" over Godot's two spellings of it ─────────────────────────────────────
+#
+# An event sheet's most-used trigger is `Every X seconds`. Godot writes the same thing twice: a repeating
+# Timer node plus a `timeout` handler, or `while true: await get_tree().create_timer(x).timeout` with
+# the work in the loop. Both read as the trigger here. DISPLAY ONLY - the file keeps its handler, its
+# connect line and its loop, and the connect note still sits on the `_ready` row (M29).
+#
+# Only a REPEATING timer qualifies. A `one_shot = true` anywhere in the file takes its node back out
+# (that Timer keeps `On timeout`, which is what it does), and a Timer whose wait_time the script never
+# sets is left alone rather than guessed at - a wrong number is worse than the plain reading.
+
+## Timer node name -> the wait_time the file sets on it, cached per sheet instance the way the lens
+## caches are (a rebuild on the same sheet reuses it; a reopened file rebuilds it).
+var _repeat_timers: Dictionary = {}
+var _repeat_timers_stamp: int = -1
+
+
+func _repeating_timers() -> Dictionary:
+	var sheet: EventSheetResource = _viewport._sheet
+	var stamp: int = 0 if sheet == null else int(sheet.get_instance_id())
+	if stamp == _repeat_timers_stamp:
+		return _repeat_timers
+	_repeat_timers_stamp = stamp
+	_repeat_timers = {}
+	if sheet == null:
+		return _repeat_timers
+	var statements: PackedStringArray = PackedStringArray()
+	_collect_statement_text(sheet.events, statements)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			_collect_statement_text((entry as EventFunction).events, statements)
+	var wait_regex := RegEx.new()
+	var one_shot_regex := RegEx.new()
+	if wait_regex.compile("^([^\\s=]+)\\.wait_time\\s*=\\s*(.+)$") != OK:
+		return _repeat_timers
+	if one_shot_regex.compile("^([^\\s=]+)\\.one_shot\\s*=\\s*(true|false)$") != OK:
+		return _repeat_timers
+	var waits: Dictionary = {}
+	var one_shot: Dictionary = {}
+	for statement: String in statements:
+		var text: String = statement.strip_edges()
+		var wait_match: RegExMatch = wait_regex.search(text)
+		if wait_match != null:
+			waits[timer_node_name(wait_match.get_string(1))] = wait_match.get_string(2).strip_edges()
+			continue
+		var shot_match: RegExMatch = one_shot_regex.search(text)
+		if shot_match != null and shot_match.get_string(2) == "true":
+			one_shot[timer_node_name(shot_match.get_string(1))] = true
+	for node_name: String in waits.keys():
+		if not one_shot.has(node_name):
+			_repeat_timers[node_name] = str(waits[node_name])
+	return _repeat_timers
+
+
+## The bare node NAME behind any of the spellings a script reaches a Timer with - `$SpawnTimer`,
+## `%Spawn`, `get_node("Timers/Spawn")`, a plain member. "" when there is no name to read.
+static func timer_node_name(reference: String) -> String:
+	var text: String = reference.strip_edges()
+	if text.begins_with("get_node(") and text.ends_with(")"):
+		text = text.substr(9, text.length() - 10).strip_edges()
+	text = text.lstrip("$%").strip_edges()
+	text = text.trim_prefix("\"").trim_suffix("\"").trim_prefix("'").trim_suffix("'")
+	if text.contains("/"):
+		text = text.get_slice("/", text.get_slice_count("/") - 1)
+	return text.strip_edges()
+
+
+## Every statement the sheet holds, as source text - what the Timer scan reads. Recursive through
+## events, sub-events and groups; an ACE contributes the line it compiles to, a verbatim block its
+## own lines. Non-mutating.
+func _collect_statement_text(rows: Array, into: PackedStringArray) -> void:
+	for row: Variant in rows:
+		if row is RawCodeRow:
+			into.append_array((row as RawCodeRow).code.split("\n"))
+		elif row is ACEAction:
+			var generated: String = ActionCodegen.generate_action(row as ACEAction)
+			if not generated.is_empty():
+				into.append_array(generated.split("\n"))
+		elif row is EventGroup:
+			_collect_statement_text(_viewport._group_children(row as EventGroup), into)
+		elif row is EventRow:
+			var event_row: EventRow = row as EventRow
+			_collect_statement_text(event_row.actions, into)
+			_collect_statement_text(event_row.sub_events, into)
+
+
+## What a lifted `timeout` handler READS as when its Timer repeats: {"seconds", "timer"}, else {}.
+func _repeating_timer_reading(event_row: EventRow) -> Dictionary:
+	if event_row == null or event_row.trigger_id != "OnTimeout":
+		return {}
+	var node_name: String = timer_node_name(event_row.trigger_source_path)
+	if node_name.is_empty():
+		return {}
+	var seconds: String = str(_repeating_timers().get(node_name, ""))
+	if seconds.is_empty():
+		return {}
+	return {"seconds": _trimmed_seconds(seconds), "timer": node_name}
+
+
+## `2.0` reads as `2` - a row shows the number, not the float spelling. Anything that is not a
+## plain number (an expression, a knob name) is left exactly as the file wrote it.
+static func _trimmed_seconds(text: String) -> String:
+	if not text.is_valid_float():
+		return text
+	var value: float = text.to_float()
+	return str(int(value)) if is_equal_approx(value, float(int(value))) else text
+
+
+## The seconds a function body loops on when it IS the await spelling of Every X seconds - a body
+## whose first two statements are `while true:` and `await get_tree().create_timer(X).timeout`.
+## "" for every other body, so nothing else is ever re-titled.
+static func await_loop_seconds(code: String) -> String:
+	var lines: PackedStringArray = code.split("\n")
+	var header_index: int = -1
+	for index: int in range(lines.size()):
+		var text: String = lines[index].strip_edges()
+		if text.is_empty():
+			continue
+		if not text.begins_with("func ") and not text.begins_with("static func "):
+			return ""
+		header_index = index
+		break
+	if header_index < 0:
+		return ""
+	var body: PackedStringArray = PackedStringArray()
+	for index: int in range(header_index + 1, lines.size()):
+		if not lines[index].strip_edges().is_empty():
+			body.append(lines[index].strip_edges())
+	if body.size() < 2 or body[0] != "while true:":
+		return ""
+	# Compiled once and shared: this runs for every function card the canvas paints.
+	if _await_loop_regex == null:
+		_await_loop_regex = RegEx.new()
+		if _await_loop_regex.compile("^await get_tree\\(\\)\\.create_timer\\((.+)\\)\\.timeout$") != OK:
+			return ""
+	var await_match: RegExMatch = _await_loop_regex.search(body[1])
+	if await_match == null:
+		return ""
+	return _trimmed_seconds(await_match.get_string(1).strip_edges())
+
+
+# ── N12 - `super` reads as calling the included sheet ───────────────────────────────────────────
+
+
+## The base script path, resolved once per sheet: the answer needs the project's class list, and a
+## row asks for it once per `super` line.
+var _base_script_path: String = ""
+var _base_script_stamp: int = -1
+
+
+func _cached_base_script_path() -> String:
+	var sheet: EventSheetResource = _viewport._sheet
+	var stamp: int = 0 if sheet == null else int(sheet.get_instance_id())
+	if stamp != _base_script_stamp:
+		_base_script_stamp = stamp
+		_base_script_path = base_script_path(sheet)
+	return _base_script_path
+
+
+## What a `super` statement SAYS, as {"file", "verb", "args"} - or {} when the action is not one, or
+## when the base is an engine class (there is no sheet to name, so the line keeps its own reading).
+##
+## `super._ready()` inside the On Ready handler says "run its On Ready", so the verb is left blank and
+## the trigger's own name is used; `super.take_damage(x)` names the verb; a bare `super()` inside a
+## function means the same function of the base.
+func super_call_reading(action_resource: Variant, event_row: EventRow) -> Dictionary:
+	var base_path: String = _cached_base_script_path()
+	if base_path.is_empty():
+		return {}
+	var code: String = ""
+	if action_resource is RawCodeRow:
+		code = (action_resource as RawCodeRow).code.strip_edges()
+	elif action_resource is ACEAction:
+		code = ActionCodegen.generate_action(action_resource as ACEAction).strip_edges()
+	if code.is_empty() or code.contains("\n") or not code.begins_with("super"):
+		return {}
+	# Compiled once and shared: this runs for every action of every row the canvas paints.
+	if _super_call_regex == null:
+		_super_call_regex = RegEx.new()
+		if _super_call_regex.compile("^super(?:\\.([A-Za-z_][A-Za-z0-9_]*))?\\((.*)\\)$") != OK:
+			return {}
+	var call_match: RegExMatch = _super_call_regex.search(code)
+	if call_match == null:
+		return {}
+	var method: String = call_match.get_string(1)
+	var verb: String = ""
+	var runs_trigger: String = ""
+	if method.is_empty() or method.begins_with("_"):
+		# A lifecycle name is the handler this row already sits in, so the row says which of the
+		# include's handlers it runs rather than repeating an engine method name.
+		runs_trigger = _trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id) \
+			if event_row != null and not event_row.trigger_id.is_empty() else ""
+		if runs_trigger.is_empty():
+			verb = method.capitalize() if not method.is_empty() else ""
+	else:
+		verb = method.capitalize()
+	return {"file": base_path.get_file(), "verb": verb, "runs": runs_trigger, "args": call_match.get_string(2).strip_edges()}
+
+
+## The action cell for a `super` call: `Include <file> ▸ run its On Ready` / `▸ Call Take Damage x`.
+func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, action_index: int,
+		action_line_index: int, action_style_meta: Dictionary) -> void:
+	var base_meta: Dictionary = {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": true,
+		"chip": true,
+		"code_cell": false,
+		"natural_width": true,
+		"line_index": action_line_index
+	}
+	spans.append(_make_span(EventSheetL10n.translate("Include"), SemanticSpan.SpanType.VALUE,
+		base_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true).merged(action_style_meta, false)))
+	spans.append(_make_span(str(reading.get("file", "")), SemanticSpan.SpanType.KEYWORD,
+		base_meta.duplicate().merged({
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+			"badge_fg": EventSheetPalette.COLOR_CHIP_FG
+		}, true).merged(action_style_meta, false)))
+	var runs: String = str(reading.get("runs", ""))
+	var tail: String = ""
+	if not runs.is_empty():
+		tail = "%s %s" % [EventSheetL10n.translate("▸ run its"), runs]
+	else:
+		tail = "%s %s" % [EventSheetL10n.translate("▸ Call"), str(reading.get("verb", ""))]
+	var args: String = str(reading.get("args", ""))
+	if not args.is_empty():
+		tail = "%s  %s" % [tail, args]
+	spans.append(_make_span(tail, SemanticSpan.SpanType.ACTION, base_meta.duplicate().merged({
+		"natural_width": false,
+		"text_color": EventSheetPalette.TEXT_PRIMARY
+	}, true).merged(action_style_meta, false)))
+
+
+# ── N2 - commented-out code reads as a switched-off row ─────────────────────────────────────────
+
+
+## The code behind an action-lane resource that is really a commented-out statement, "" otherwise.
+## Both shapes a comment arrives in are read: the first-class CommentRow the body lift builds, and a
+## one-line verbatim block that is nothing but a comment.
+static func commented_out_code(action_resource: Variant) -> String:
+	if action_resource is CommentRow:
+		var note: CommentRow = action_resource as CommentRow
+		return CommentRow.code_text(note.text) if note.enabled else ""
+	if action_resource is RawCodeRow:
+		var lines: PackedStringArray = (action_resource as RawCodeRow).code.split("\n")
+		if lines.size() != 1:
+			return ""
+		var text: String = lines[0].strip_edges()
+		if not text.begins_with("#") or text.begins_with("##"):
+			return ""
+		return CommentRow.code_text(text.trim_prefix("#").trim_prefix(" "))
+	return ""
+
+
+## The action-lane cell for a switched-off row: the sentence the code reads as when a sentence claims
+## it, the code itself otherwise, followed by the muted "disabled" note. `ace_enabled` false is what
+## draws the strike-through, and the row wash comes from the disabled look the sheet already has.
+func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, action_index: int,
+		action_line_index: int, action_style_meta: Dictionary) -> void:
+	var disabled_meta: Dictionary = {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": false,
+		"chip": true,
+		"code_cell": false,
+		"line_index": action_line_index
+	}
+	# The note leads the cell rather than trailing it: the sentence cell stretches to close the lane,
+	# so a word placed after it is pushed off the edge on a narrow canvas - and the one word that says
+	# this row does not run is the one word that must never be the one that gets cut.
+	spans.append(_make_span(EventSheetL10n.translate("disabled"), SemanticSpan.SpanType.COMMENT,
+		disabled_meta.duplicate().merged({
+			"natural_width": true,
+			# The NOTE is not the code: striking it through would say the word itself is switched off.
+			"ace_enabled": true,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}, true).merged(action_style_meta, false)))
+	# The stand-in is DISABLED, which is what the sentence builder reads to strike its cell through;
+	# nothing is written to the sheet, the row it stands for is still the comment the file holds.
+	var stand_in := RawCodeRow.new()
+	stand_in.code = code
+	stand_in.enabled = false
+	if not _append_sentence_spans(spans, stand_in, action_index, action_line_index, action_style_meta):
+		spans.append(_make_span(code, SemanticSpan.SpanType.VALUE,
+			disabled_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true).merged(action_style_meta, false)))
+
+
+## The header spans of a function that IS an await beat: the repeating badge, the words, and the
+## muted note saying the beat only runs while the loop does.
+func _await_loop_trigger_spans(seconds: String) -> Array[SemanticSpan]:
+	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+	badge_meta["tempo"] = TriggerResolver.TEMPO_EVERY_TICK
+	badge_meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_BG
+	badge_meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_FG
+	badge_meta["badge_style"] = "trigger"
+	badge_meta["kind"] = "raw_code"
+	badge_meta["line_index"] = 0
+	return [
+		_make_span("⟳", SemanticSpan.SpanType.KEYWORD, badge_meta),
+		_make_span(EventSheetL10n.translate("System"), SemanticSpan.SpanType.OBJECT, {
+			"editable": false,
+			"kind": "raw_code",
+			"line_index": 0,
+			"text_color": _viewport._get_event_style().object_label_color
+		}),
+		_make_span(EventSheetL10n.translate("Every %s seconds") % seconds, SemanticSpan.SpanType.CONDITION, {
+			"editable": false,
+			"kind": "raw_code",
+			"line_index": 0,
+			"text_color": EventSheetPalette.TEXT_PRIMARY
+		}),
+		_make_span(EventSheetL10n.translate("(while running)"), SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "raw_code",
+			"line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		})
+	]
+
+
 ## The lifecycle handlers whose top-level branches read as the input triggers a player would name.
 const INPUT_HANDLER_TRIGGERS: Array[String] = ["OnInput", "OnUnhandledInput", "OnUnhandledKeyInput"]
 
@@ -5222,18 +5664,38 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# Same tempo badge on the lifted / lifecycle path (trigger_id with no authored ACECondition) -
 		# this is where On Physics Process etc. render, so the ⟳ hot-path glyph lands here too.
 		var trigger_id_glyph: String = _apply_trigger_tempo(trigger_id_badge_meta, event_style, event_row.trigger_id)
+		# N3 - a repeating Timer's handler runs on a beat, so it wears the repeating tempo rather than
+		# the one-off signal arrow, and says the beat in the sheet's own words below.
+		var timer_reading: Dictionary = _repeating_timer_reading(event_row)
+		if not timer_reading.is_empty():
+			trigger_id_glyph = "⟳"
+			trigger_id_badge_meta["tempo"] = TriggerResolver.TEMPO_EVERY_TICK
+			trigger_id_badge_meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_BG
+			trigger_id_badge_meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_FG
 		trigger_id_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		trigger_id_badge_meta["line_index"] = condition_line_index
 		trigger_id_badge_meta["badge_style"] = "trigger"
 		spans.append(_make_span(trigger_id_glyph, SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
+		var trigger_words: String = EventSheetViewportReadingRows.tick_trigger_words(
+			event_row.trigger_id,
+			_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id)
+		)
+		var trigger_object: String = _handler_object_label(event_row)
+		if not timer_reading.is_empty():
+			# ONE cell, not a cell plus a note: a second span in the condition lane takes the object
+			# cell for itself and leaves the row's object unsaid. The Timer's name is the receipt for
+			# the beat, so it rides in the same words, in brackets.
+			trigger_words = "%s (%s)" % [
+				EventSheetL10n.translate("Every %s seconds") % str(timer_reading.get("seconds", "")),
+				str(timer_reading.get("timer", ""))
+			]
+			# The beat belongs to System - it is a clock, not a node's own signal.
+			trigger_object = EventSheetL10n.translate("System")
 		spans.append(
 			_make_span(
 				# ── M27 lens hook (tick triggers) ──────────────────────────────────────────────
 				# The event-sheet words for the two ticks; every other trigger keeps its own name.
-				EventSheetViewportReadingRows.tick_trigger_words(
-					event_row.trigger_id,
-					_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id)
-				),
+				trigger_words,
 				SemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
@@ -5241,7 +5703,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"ace_index": 0,
 					"chip": true,
 					"line_index": condition_line_index,
-					"object_label": _handler_object_label(event_row),
+					"object_label": trigger_object,
 					# M42 - a handler the SCENE wired knows exactly which node emits and what class it
 					# is, so that node's own picture leads the row instead of the generic trigger icon.
 					"object_icon": _scene_trigger_icon(event_row) if _scene_trigger_icon(event_row) != null \
@@ -5474,6 +5936,22 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"line_index": action_line_index,
 					"text_color": EventSheetPalette.TEXT_MUTED
 				}.merged(action_style_meta, false)))
+				action_line_index += 1
+				continue
+			# N2 - a comment whose text is a STATEMENT is not a note, it is a row somebody switched
+			# off, which is the only way a .gd file has of recording that. It reads as the row it
+			# would be, struck through and greyed the way a disabled row already is, with the muted
+			# word saying so. Prose stays a comment. The file is untouched either way.
+			# N12 - `super.take_damage(x)` is calling the INCLUDED sheet's verb, not an object named
+			# `super`. It reads that way: the include, the file it names, and the verb.
+			var super_call: Dictionary = super_call_reading(action_resource, event_row)
+			if not super_call.is_empty():
+				_append_super_call_spans(spans, super_call, action_index, action_line_index, action_style_meta)
+				action_line_index += 1
+				continue
+			var commented_out: String = commented_out_code(action_resource)
+			if not commented_out.is_empty():
+				_append_disabled_code_spans(spans, commented_out, action_index, action_line_index, action_style_meta)
 				action_line_index += 1
 				continue
 			if action_resource is ACEAction:

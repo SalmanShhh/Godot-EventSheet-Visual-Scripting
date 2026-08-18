@@ -48,8 +48,10 @@ static func run() -> bool:
 		var folded_opener: EventRowData = _region_rows_in(folded_rows)[0]
 		ok = _check("fold state seeds the rebuilt opener", folded_opener.folded, true) and ok
 		var tail_span: SemanticSpan = folded_opener.spans[folded_opener.spans.size() - 1]
-		# The count names CONTENT rows; the closing fence is plumbing, not content.
-		ok = _check("a folded region names its hidden count", tail_span.text, "· 2 rows hidden") and ok
+		# The count names CONTENT rows; the closing fence is plumbing, not content. It is the group
+		# bar's own count now, so it reads the same open or folded - a bar should say how much it
+		# holds before you decide whether to open it.
+		ok = _check("a region bar names how much it holds", tail_span.text, "2 rows") and ok
 		viewport._fold_state.clear()
 
 	# ── Unbalanced fences stay flat ──

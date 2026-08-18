@@ -1913,3 +1913,16 @@ Highlight rows,行を強調表示
 Select in scene,シーンで選択
 This object is no longer used by this file.,このファイルはこのオブジェクトをもう使用していません。
 "Every object this file uses. Click one to highlight its rows, click it again to clear.",このファイルが使用するすべてのオブジェクト。クリックすると該当行を強調表示し、もう一度クリックすると解除します。
+System,システム
+Include,インクルード
+disabled,無効
+Every %s seconds,%s 秒ごと
+(while running),(実行中のみ)
+- open as a sheet,- シートとして開く
+▸ run its,▸ 実行:
+▸ Call,▸ 呼び出し
+%d event,イベント %d 件
+%d events,イベント %d 件
+%d row,%d 行
+%d rows,%d 行
+(unnamed region),(名前のないリージョン)

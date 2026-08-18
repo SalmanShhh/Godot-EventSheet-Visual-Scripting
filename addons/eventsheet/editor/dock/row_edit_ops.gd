@@ -95,6 +95,11 @@ func _bulk_duplicate_rows(targets: Array) -> void:
 func _bulk_group_rows(targets: Array) -> String:
 	if targets.is_empty():
 		return "Nothing selected to group."
+	# N1 authoring symmetry - a group on a .gd sheet is written the file's own way, as a
+	# `#region` / `#endregion` fence pair, which reads back as the same bar.
+	if _dock._current_sheet != null and not str(_dock._current_sheet.external_source_path).is_empty():
+		_dock._surround_selection_with_region()
+		return ""
 	var first_location: Dictionary = _dock._find_resource_location(targets[0])
 	if first_location.is_empty():
 		return "Couldn't locate the selection."
@@ -277,8 +282,31 @@ func _ace_target_enabled(target: Dictionary) -> bool:
 		"condition":
 			return ace_index < 0 or ace_index >= event_row.conditions.size() or event_row.conditions[ace_index].enabled
 		"action":
-			return ace_index < 0 or ace_index >= event_row.actions.size() or not (event_row.actions[ace_index] is ACEAction) or (event_row.actions[ace_index] as ACEAction).enabled
+			if ace_index < 0 or ace_index >= event_row.actions.size():
+				return true
+			# On a .gd sheet a switched-off row IS a commented-out line - the file has nowhere else to
+			# record it - so a comment holding a statement reports as disabled, and toggling it
+			# uncomments the line (see _set_ace_target_enabled).
+			if not commented_out_code(event_row.actions[ace_index]).is_empty():
+				return false
+			return not (event_row.actions[ace_index] is ACEAction) or (event_row.actions[ace_index] as ACEAction).enabled
 	return true
+
+
+## The code behind an action that is really a commented-out statement, "" otherwise.
+static func commented_out_code(action_resource: Variant) -> String:
+	return ViewportRowBuilder.commented_out_code(action_resource)
+
+
+## The source line an action would compile to - what commenting it out has to write.
+static func _action_source_line(action_resource: Variant) -> String:
+	if action_resource is RawCodeRow:
+		var code: String = (action_resource as RawCodeRow).code
+		return code if not code.contains("\n") else ""
+	if action_resource is ACEAction:
+		var generated: String = ActionCodegen.generate_action(action_resource as ACEAction)
+		return generated if not generated.contains("\n") else ""
+	return ""
 
 
 func _set_ace_target_enabled(target: Dictionary, enabled: bool) -> bool:
@@ -296,8 +324,32 @@ func _set_ace_target_enabled(target: Dictionary, enabled: bool) -> bool:
 				event_row.conditions[ace_index].enabled = enabled
 				return true
 		"action":
-			if ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction:
-				(event_row.actions[ace_index] as ACEAction).enabled = enabled
+			if ace_index < 0 or ace_index >= event_row.actions.size():
+				return false
+			var action_resource: Variant = event_row.actions[ace_index]
+			# Enabling a commented-out statement UNCOMMENTS the line; disabling any single-line action
+			# comments it. That is the whole disabled-row storage a .gd sheet has, and it is the same
+			# gesture a person makes by hand in the script editor.
+			var commented: String = commented_out_code(action_resource)
+			if not commented.is_empty():
+				if not enabled:
+					return false  # already off
+				var restored := RawCodeRow.new()
+				restored.code = commented
+				event_row.actions[ace_index] = restored
+				return true
+			# Only on a .gd sheet: a .tres sheet has a real `enabled` flag to store this in, and turning
+			# its action into a comment would throw the row's structure away.
+			if not enabled and _dock._current_sheet != null \
+					and not str(_dock._current_sheet.external_source_path).is_empty():
+				var source_line: String = _action_source_line(action_resource)
+				if not source_line.is_empty() and not CommentRow.code_text(source_line).is_empty():
+					var note := CommentRow.new()
+					note.text = source_line.strip_edges()
+					event_row.actions[ace_index] = note
+					return true
+			if action_resource is ACEAction:
+				(action_resource as ACEAction).enabled = enabled
 				return true
 	return false
 

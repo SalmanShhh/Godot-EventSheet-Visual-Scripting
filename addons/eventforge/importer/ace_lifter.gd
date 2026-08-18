@@ -2356,6 +2356,13 @@ static func _body_literal_close(lines: PackedStringArray, start: int, depth: int
 ## Action line → ACEAction when a template matches; otherwise queued as raw GDScript so the
 ## event still lifts (in-flow blocks re-emit verbatim at the body indent).
 static func _consume_action_line(event: EventRow, line: String, _depth: int, pending_raw: PackedStringArray, reverse_entries: Array, in_loop: bool = false, blank_box: Array = []) -> void:
+	# A COMMENT is never an action, whatever it says. The reverse index matches on shape, so a
+	# commented-out `# velocity.x = 0.0` used to claim the Set-property template with `# velocity` as
+	# its target, and the row then read `set # velocity X = 0.0` - the `#` swallowed into a sentence.
+	# Comment lines go to the raw path, which turns a run of them into the CommentRow they are.
+	if line.strip_edges().begins_with("#"):
+		_append_raw_line(event, pending_raw, blank_box, line)
+		return
 	var matched: Dictionary = _match_entry(line, reverse_entries, "action", in_loop)
 	if matched.is_empty():
 		# No ACE claims it - defer to the raw block. Any pending blank rides along and lands on that
@@ -2384,6 +2391,24 @@ static func _append_raw_line(event: EventRow, pending_raw: PackedStringArray, bl
 	pending_raw.append(line)
 
 
+## Splits a run of comment lines wherever it changes character - a commented-out statement next to a
+## note about the code. The concatenation of the groups is always the input, so emission is unchanged.
+static func _split_comment_run(pending_raw: PackedStringArray, marker: String) -> Array[PackedStringArray]:
+	var groups: Array[PackedStringArray] = []
+	var current: PackedStringArray = PackedStringArray()
+	var current_is_code: bool = false
+	for line: String in pending_raw:
+		var is_code: bool = not CommentRow.code_text(line.substr(marker.length())).is_empty()
+		if not current.is_empty() and is_code != current_is_code:
+			groups.append(current)
+			current = PackedStringArray()
+		current.append(line)
+		current_is_code = is_code
+	if not current.is_empty():
+		groups.append(current)
+	return groups
+
+
 static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_box: Array = []) -> void:
 	if pending_raw.is_empty() or event == null:
 		return
@@ -2395,18 +2420,27 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 	# the round-trip.
 	var comment_marker: String = _shared_comment_marker(pending_raw)
 	if not comment_marker.is_empty():
-		var note: CommentRow = CommentRow.new()
-		var note_lines: PackedStringArray = PackedStringArray()
-		for comment_line: String in pending_raw:
-			note_lines.append(comment_line.substr(comment_marker.length()))
-		note.text = "
+		# A run that mixes a commented-out STATEMENT with a note about it is two different things
+		# said in the same marker: one is a row somebody switched off, the other is prose. Split at
+		# that boundary so each becomes its own comment row - which is also what lets the switched-off
+		# one be read, dragged and switched back on by itself. Byte-neutral: consecutive comment rows
+		# re-emit their lines in order with the same marker.
+		var first_note: bool = true
+		for group: PackedStringArray in _split_comment_run(pending_raw, comment_marker):
+			var note: CommentRow = CommentRow.new()
+			var note_lines: PackedStringArray = PackedStringArray()
+			for comment_line: String in group:
+				note_lines.append(comment_line.substr(comment_marker.length()))
+			note.text = "
 ".join(note_lines)
-		# Recording the marker is what lets an unusual one be claimed at all: emission writes it
-		# back verbatim, so `#no space` and `## doc` reproduce as written instead of gaining or
-		# losing a character. Left empty for the ordinary "# ", which every authored comment uses.
-		note.source_marker = "" if comment_marker == "# " else comment_marker
-		_stamp_body_blanks(note, blank_box)
-		event.actions.append(note)
+			# Recording the marker is what lets an unusual one be claimed at all: emission writes it
+			# back verbatim, so `#no space` and `## doc` reproduce as written instead of gaining or
+			# losing a character. Left empty for the ordinary "# ", which every authored comment uses.
+			note.source_marker = "" if comment_marker == "# " else comment_marker
+			if first_note:
+				_stamp_body_blanks(note, blank_box)
+				first_note = false
+			event.actions.append(note)
 		pending_raw.clear()
 		return
 	# One STATEMENT, one action. A run of unmatched lines used to arrive as a single wall of code;

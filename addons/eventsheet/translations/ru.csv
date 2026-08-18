@@ -1913,3 +1913,16 @@ Highlight rows,Подсветить строки
 Select in scene,Выбрать в сцене
 This object is no longer used by this file.,Этот файл больше не использует этот объект.
 "Every object this file uses. Click one to highlight its rows, click it again to clear.","Все объекты, которые использует этот файл. Щелчок подсвечивает их строки, повторный щелчок снимает подсветку."
+System,Система
+Include,Включение
+disabled,отключено
+Every %s seconds,Каждые %s сек.
+(while running),(пока выполняется)
+- open as a sheet,- открыть как лист
+▸ run its,▸ выполнить его
+▸ Call,▸ Вызвать
+%d event,%d событие
+%d events,%d событий
+%d row,%d строка
+%d rows,%d строк
+(unnamed region),(регион без имени)

@@ -1913,3 +1913,16 @@ Highlight rows,Resaltar filas
 Select in scene,Seleccionar en la escena
 This object is no longer used by this file.,Este archivo ya no usa este objeto.
 "Every object this file uses. Click one to highlight its rows, click it again to clear.",Cada objeto que usa este archivo. Haz clic para resaltar sus filas y clic de nuevo para limpiar.
+System,Sistema
+Include,Incluir
+disabled,desactivado
+Every %s seconds,Cada %s segundos
+(while running),(mientras se ejecuta)
+- open as a sheet,- abrir como hoja
+▸ run its,▸ ejecuta su
+▸ Call,▸ Llamar
+%d event,%d evento
+%d events,%d eventos
+%d row,%d fila
+%d rows,%d filas
+(unnamed region),(región sin nombre)

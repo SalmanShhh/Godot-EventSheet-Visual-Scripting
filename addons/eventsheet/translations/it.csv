@@ -1913,3 +1913,16 @@ Highlight rows,Evidenzia le righe
 Select in scene,Seleziona nella scena
 This object is no longer used by this file.,Questo file non usa più questo oggetto.
 "Every object this file uses. Click one to highlight its rows, click it again to clear.","Ogni oggetto usato da questo file. Fai clic per evidenziare le sue righe, di nuovo per azzerare."
+System,Sistema
+Include,Includi
+disabled,disattivato
+Every %s seconds,Ogni %s secondi
+(while running),(mentre è in esecuzione)
+- open as a sheet,- apri come foglio
+▸ run its,▸ esegue il suo
+▸ Call,▸ Chiama
+%d event,%d evento
+%d events,%d eventi
+%d row,%d riga
+%d rows,%d righe
+(unnamed region),(regione senza nome)

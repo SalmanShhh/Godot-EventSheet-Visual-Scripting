@@ -30,6 +30,11 @@ func can_navigate(row_data: EventRowData, metadata: Dictionary) -> bool:
 ## Where a cell's ACE leads: {"kind": "sheet", "path", "provider"} for an addon-backed verb, {} when
 ## there is nowhere meaningful to go (built-ins, non-ACE spans).
 func resolve_target(row_data: EventRowData, metadata: Dictionary) -> Dictionary:
+	# The head's Include bar carries its target on the span itself: it is a lens over the `extends`
+	# line, so there is no ACE to resolve it from.
+	var include_path: String = str(metadata.get("include_path", "")).strip_edges()
+	if not include_path.is_empty():
+		return {"kind": "sheet", "path": include_path, "provider": ""}
 	if row_data == null or not (row_data.source_resource is EventRow):
 		return {}
 	var kind: String = str(metadata.get("kind", ""))
@@ -60,7 +65,10 @@ func navigate(row_data: EventRowData, _span_index: int, metadata: Dictionary) ->
 		return
 	record_current()
 	open_or_focus(str(target.get("path")))
-	_dock._set_status("Opened %s - the behaviour that defines this verb (Alt+Left jumps back)." % str(target.get("path")).get_file())
+	if str(metadata.get("include_path", "")).strip_edges().is_empty():
+		_dock._set_status("Opened %s - the behaviour that defines this verb (Alt+Left jumps back)." % str(target.get("path")).get_file())
+	else:
+		_dock._set_status("Opened %s - the sheet this one includes (Alt+Left jumps back)." % str(target.get("path")).get_file())
 
 # ── Jump history (Alt+Left / Alt+Right) - the licence for fearless clicking ─────────────────────
 # Two stacks of sheet paths. Every jump-away records the CURRENT file-backed sheet on the back stack

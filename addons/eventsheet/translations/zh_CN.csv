@@ -1913,3 +1913,16 @@ Highlight rows,高亮这些行
 Select in scene,在场景中选中
 This object is no longer used by this file.,此文件已不再使用该对象。
 "Every object this file uses. Click one to highlight its rows, click it again to clear.",此文件使用的所有对象。点击可高亮其所在行，再次点击取消。
+System,系统
+Include,包含
+disabled,已禁用
+Every %s seconds,每 %s 秒
+(while running),（运行时）
+- open as a sheet,- 作为表打开
+▸ run its,▸ 运行其
+▸ Call,▸ 调用
+%d event,%d 个事件
+%d events,%d 个事件
+%d row,%d 行
+%d rows,%d 行
+(unnamed region),（未命名区域）

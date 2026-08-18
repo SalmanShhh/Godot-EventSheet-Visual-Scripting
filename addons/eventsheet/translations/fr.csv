@@ -1913,3 +1913,16 @@ Highlight rows,Mettre les lignes en évidence
 Select in scene,Sélectionner dans la scène
 This object is no longer used by this file.,Ce fichier n'utilise plus cet objet.
 "Every object this file uses. Click one to highlight its rows, click it again to clear.","Chaque objet utilisé par ce fichier. Cliquez pour mettre ses lignes en évidence, cliquez de nouveau pour effacer."
+System,Système
+Include,Inclure
+disabled,désactivé
+Every %s seconds,Toutes les %s secondes
+(while running),(tant qu'elle tourne)
+- open as a sheet,- ouvrir comme feuille
+▸ run its,▸ exécute son
+▸ Call,▸ Appeler
+%d event,%d événement
+%d events,%d événements
+%d row,%d ligne
+%d rows,%d lignes
+(unnamed region),(région sans nom)

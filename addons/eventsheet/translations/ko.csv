@@ -1913,3 +1913,16 @@ Highlight rows,행 강조
 Select in scene,씬에서 선택
 This object is no longer used by this file.,이 파일은 더 이상 이 오브젝트를 사용하지 않습니다.
 "Every object this file uses. Click one to highlight its rows, click it again to clear.","이 파일이 사용하는 모든 오브젝트. 클릭하면 해당 행을 강조하고, 다시 클릭하면 해제합니다."
+System,시스템
+Include,포함
+disabled,비활성
+Every %s seconds,%s초마다
+(while running),(실행 중일 때)
+- open as a sheet,- 시트로 열기
+▸ run its,▸ 실행:
+▸ Call,▸ 호출
+%d event,이벤트 %d개
+%d events,이벤트 %d개
+%d row,%d행
+%d rows,%d행
+(unnamed region),(이름 없는 영역)
