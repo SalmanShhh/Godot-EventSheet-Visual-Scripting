@@ -202,15 +202,18 @@ static func run() -> bool:
 	var add_sentence: Dictionary = ViewportRowBuilder.statement_sentence("score += wave[1]")
 	ok = _check("the added amount is tinted as a value",
 		str(((add_sentence.get("segments", []) as Array)[1] as Dictionary).get("tone", "")), "value") and ok
-	ok = _check("a typed declaration reads as Let (the type stays in the code)",
-		_sentence_text("var label: String = wave[0]"), "Let label = wave[0]") and ok
-	ok = _check("an inferred declaration reads the same", _sentence_text("var n := 3"), "Let n = 3") and ok
+	# A declaration is its own ROW SHAPE now (a type-word chip, the name, the value), so it reads as
+	# Construct's local-variable row rather than as a step - and the annotation never shows.
+	ok = _check("a typed declaration reads as a local row",
+		_sentence_text("var label: String = wave[0]"), "Local text label = wave[0]") and ok
+	ok = _check("an inferred declaration reads the same", _sentence_text("var n := 3"), "Local number n = 3") and ok
 	ok = _check("plain assignment reads as Set", _sentence_text("x = 5"), "Set x to 5") and ok
 	ok = _check("compound subtract reads as Subtract", _sentence_text("hp -= dmg"), "Subtract dmg from hp") and ok
 	ok = _check("compound multiply names the target first", _sentence_text("speed *= 2"), "Multiply speed by 2") and ok
 	ok = _check("compound divide names the target first", _sentence_text("speed /= 2"), "Divide speed by 2") and ok
 	ok = _check("a returned value reads as Return", _sentence_text("return rows"), "Return rows") and ok
-	ok = _check("a bare return is one word", _sentence_text("return"), "Return") and ok
+	# A bare return inside an ordinary action body means "stop here", which is Construct's Stop event.
+	ok = _check("a bare return stops the event", _sentence_text("return"), "Stop event") and ok
 	# ...and the refusals. A comparison is NOT an assignment, control flow is a branch rather than a
 	# step, and a call belongs to the Object/Verb view below.
 	ok = _check("a comparison is never mistaken for an assignment",

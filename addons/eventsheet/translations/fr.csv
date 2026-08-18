@@ -1769,3 +1769,32 @@ On button %s released,Au relâchement du bouton %s
 mouse's ΔX,ΔX de la souris
 mouse's ΔY,ΔY de la souris
 mouse's Δ,Δ de la souris
+Add {value} to {name},Ajouter {value} à {name}
+Subtract {value} from {name},Soustraire {value} de {name}
+Multiply {name} by {value},Multiplier {name} par {value}
+Divide {name} by {value},Diviser {name} par {value}
+Set {name} to {value},Définir {name} sur {value}
+Destroy,Détruire
+Destroy (at end of frame),Détruire (en fin de frame)
+⏳ Wait {seconds} seconds,⏳ Attendre {seconds} secondes
+Go to scene {path},Aller à la scène {path}
+Signal {trigger},Signal {trigger}
+Signal {trigger} {values},Signal {trigger} {values}
+exists,existe
+does not exist,n'existe pas
+Stop event,Arrêter l'événement
+Answer {value},Répondre {value}
+Give back {value},Renvoyer {value}
+Return {value},Retourner {value}
+{name} is true,{name} est vrai
+{name} is false,{name} est faux
+{action} is down,{action} est enfoncé
+On {action} pressed,Quand {action} est pressé
+{percent}% chance,{percent}% de chance
+{from} moved toward {to} by {amount},{from} déplacé vers {to} de {amount}
+{value} kept between {low} and {high},{value} maintenu entre {low} et {high}
+yes,oui
+no,non
+value,valeur
+Local,Local
+Local constant,Constante locale

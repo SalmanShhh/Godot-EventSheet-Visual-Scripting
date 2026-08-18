@@ -1769,3 +1769,32 @@ On button %s released,ボタン %s を離したとき
 mouse's ΔX,マウスのΔX
 mouse's ΔY,マウスのΔY
 mouse's Δ,マウスのΔ
+Add {value} to {name},{name} に {value} を加算
+Subtract {value} from {name},{name} から {value} を減算
+Multiply {name} by {value},{name} に {value} を乗算
+Divide {name} by {value},{name} を {value} で除算
+Set {name} to {value},{name} を {value} に設定
+Destroy,破棄
+Destroy (at end of frame),破棄 (フレーム終了時)
+⏳ Wait {seconds} seconds,⏳ {seconds} 秒待つ
+Go to scene {path},シーン {path} へ移動
+Signal {trigger},シグナル {trigger}
+Signal {trigger} {values},シグナル {trigger} {values}
+exists,が存在する
+does not exist,が存在しない
+Stop event,イベントを終了
+Answer {value},{value} と答える
+Give back {value},{value} を返す
+Return {value},{value} を返す
+{name} is true,{name} が真
+{name} is false,{name} が偽
+{action} is down,{action} が押されている
+On {action} pressed,{action} が押されたとき
+{percent}% chance,{percent}% の確率
+{from} moved toward {to} by {amount},{from} を {to} へ {amount} 近づける
+{value} kept between {low} and {high},{value} を {low} と {high} の間に収める
+yes,はい
+no,いいえ
+value,値
+Local,ローカル
+Local constant,ローカル定数
