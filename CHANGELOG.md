@@ -2,6 +2,46 @@
 
 ## [Unreleased]
 
+### Added - an opened script reads in Construct's NOUNS: constants, sprites, collisions, angles, counts
+
+The sentences said what a line DOES; the nouns inside them were still Godot's. A Construct reader
+now recognises the values and the objects too, on both the typed line and the picked row - both read
+through one grammar, so they cannot drift apart. Display only: the file keeps every byte it had.
+
+- **Named constants have no namespace.** `State.PATROL` reads `PATROL` while no other enum on the
+  sheet has a `PATROL` of its own (else it keeps its enum, because the name alone stops saying
+  which). `Vector2.ZERO` is `(0, 0)`, `Vector3.FORWARD` is `forward`, `Color.RED` is `red`, and
+  `PI` / `TAU` / `INF` wear their symbols. `NAN` stays `NAN` - it has no symbol a reader knows.
+- **Sprite, audio and visibility read as Construct's own verbs**, chosen by the object's CLASS:
+  an AnimatedSprite2D / AnimationPlayer `play("run")` is `Set animation to "run" (play)` and its
+  `stop()` is `Stop animation`, while an AudioStreamPlayer's are the `Audio` object's `Play` and
+  `Stop`. `visible = false` is `Set invisible`, `modulate.a = 0.5` is `Set opacity to 50%`,
+  `flip_h`/`flip_v` are `Set mirrored` / `Set flipped`, and a uniform `scale = Vector2(2, 2)` is
+  `Set size to 200%`. An unknown class keeps the plain call reading - `play` means two things.
+- **The collision family reads as Construct's two triggers**: `body_entered` / `area_entered` are
+  `On collision with`, their `*_exited` twins are `On stopped overlapping`, and `overlaps_body` /
+  `has_overlapping_bodies` are `Is overlapping X` / `Is overlapping something`. A 2D body's
+  `is_on_wall()` is `Is by wall`, `is_on_ceiling()` is `Is by ceiling`, and `velocity.y < 0` / `> 0`
+  are `Is jumping` / `Is falling` - claimed in 2D only, where Y grows downward.
+- **Angles and distances in plain words.** `rotation_degrees` is `angle` (and `rotation` is
+  `angle (radians)`, which is the one Godot fact worth keeping), `look_at(p)` is
+  `Set angle toward p`, `position.distance_to(b)` is `distance to b` (`distance from a to b` when it
+  is measured between two other points), `v.length()` is `length of v`, `v.normalized()` is
+  `v, normalized`, and `a.dot(b)` is `a · b`.
+- **Counting reads as a count**: `get_tree().get_nodes_in_group("enemies").size()` is
+  `enemies (group) ▸ count`, `get_child_count()` is `child count`, and `is_empty()` / `not is_empty()`
+  are `items' count = 0` / `items' count > 0` - Construct has no "is empty".
+- **The system values by name**: `viewport width` / `viewport height`, `mouse position` (under the
+  `Mouse` object), `time`, `time in ms` and `fps`.
+- **A node lookup IS the object it names.** `get_node("Enemies/Boss").hp -= 10` reads
+  `Boss ▸ Subtract 10 from hp`, `get_node_or_null(...)` reads the same object with a "may be missing"
+  note, `obj.set("hp", 3)` is `obj ▸ Set hp to 3` and `obj.get("hp")` is `obj's hp`.
+- **View ▾ "Construct Words"** (new, OFF by default, persisted per project like Compact Rows): for
+  people who think in Construct's nouns, a scene becomes a `layout`, `reload_current_scene()` becomes
+  `Restart layout`, pausing and `Engine.time_scale` become `Set time scale to 0 (pause)` / `to 0.5`,
+  and a CanvasLayer becomes `HUD (layer) ▸ Set layer invisible`. With it off nothing changes, and the
+  Godot word is on hover either way.
+
 ### Added - the head of an opened plain script reads as the object it drives
 
 Opening somebody's own `.gd` used to say `⇥ Script` and then list GDScript type names -
