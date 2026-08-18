@@ -1615,7 +1615,9 @@ static func _emit_event_body(
 			warnings.append("Else/Else-If event has no preceding conditioned event to chain onto; emitted standalone.")
 			wants_chain = false
 		var emitted_block: bool = false
+		var block_header_line: int = -1
 		if wants_chain:
+			block_header_line = lines.size()
 			if condition_texts.size() > 0:
 				lines.append("%selif %s:" % [indent, joined_conditions])
 			else:
@@ -1623,6 +1625,7 @@ static func _emit_event_body(
 			emitted_block = true
 			had_body = true
 		elif condition_texts.size() > 0:
+			block_header_line = lines.size()
 			lines.append("%sif %s:" % [indent, joined_conditions])
 			emitted_block = true
 			had_body = true
@@ -1783,6 +1786,16 @@ static func _emit_event_body(
 		if (emitted_block or emitted_pick_loop) and lines.size() == body_start_size:
 			lines.append(body_indent + "pass")
 			had_body = true
+		# A block the importer lifted from a ONE-LINE source (`if target == null: return`) folds its
+		# single body line back onto its header, which is where that line was written. Only ever taken
+		# for a row carrying the lift's own flag, so nothing an author builds in the editor changes
+		# shape; refused the moment the body is not exactly one line (a pick loop, a sub-event, a
+		# multi-statement template), because then there is no one line to fold.
+		if emitted_block and not emitted_pick_loop and block_header_line >= 0 \
+				and bool(event_row.get_meta("__source_inline_block", false)) \
+				and lines.size() == block_header_line + 2:
+			lines[block_header_line] = "%s %s" % [lines[block_header_line], lines[block_header_line + 1].substr(body_indent.length())]
+			lines.remove_at(block_header_line + 1)
 		if lines.size() >= event_start_line:
 			source_map.append({"uid": str(event_row.get_instance_id()), "start": event_start_line, "end": lines.size(), "kind": "event"})
 		chain_open = emitted_block
