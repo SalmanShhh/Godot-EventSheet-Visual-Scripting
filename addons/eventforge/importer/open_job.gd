@@ -83,6 +83,12 @@ func _run() -> void:
 	if not EventSheetACELifter.cancel_requested:
 		EventSheetACELifter.progress_phase = "lifting"
 		EventSheetACELifter.attempt_lift(raw_sheet, FileAccess.get_file_as_string(_path))
+	if not EventSheetACELifter.cancel_requested:
+		# Whether the engine can actually parse this file, asked of the engine itself. It costs a few
+		# hundred milliseconds because it runs a second Godot, which is exactly why it belongs here on
+		# the worker rather than anywhere near the paint path - and why the answer is cached per file.
+		EventSheetACELifter.progress_phase = "checking"
+		EventSheetParseErrors.store_on_sheet(raw_sheet, EventSheetParseErrors.check_file(_path))
 	_sheet = raw_sheet
 
 
@@ -150,6 +156,8 @@ func status_text() -> String:
 		detail = "lifting functions %d of %d" % [int(state["functions_done"]), int(state["functions_total"])]
 	elif phase == "verifying":
 		detail = "checking the code still matches"
+	elif phase == "checking":
+		detail = "checking the script compiles"
 	elif phase == "done":
 		detail = "finishing up"
 	return "%s · %.1f s" % [detail, float(state["elapsed_seconds"])]

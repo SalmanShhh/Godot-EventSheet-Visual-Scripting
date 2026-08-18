@@ -193,11 +193,27 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 		# surface for what GDScript maps to which events (the banner recomputes its own copy
 		# from the active sheet, so tab switches always show the right counts).
 		_dock._refresh_preview_banner()
+		_flag_parse_error_rows(sheet, resolved_path)
 	EventSheets._notify_lifecycle("opened", {"sheet": sheet, "path": resolved_path})
 	if was_canceled:
 		_dock._set_status("Opened %s as code - stopped working out the events, so every function is shown as a code block. Reopen the file to try again." % resolved_path.get_file())
 		return
 	_dock._set_status("Opened %s - viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(sheet))])
+
+
+## Marks the rows built from lines the ENGINE could not parse, using the errors the open job already
+## collected. The line-to-row join is the source map of a compile of this sheet: an opened file
+## re-emits byte-identically, so line N of the output is line N of the file on disk. A file that
+## parses clears any marks a previous check left behind.
+func _flag_parse_error_rows(sheet: EventSheetResource, resolved_path: String) -> void:
+	if sheet == null or _dock._viewport == null:
+		return
+	var errors: Array = EventSheetParseErrors.errors_for(sheet)
+	if errors.is_empty():
+		_dock._viewport.clear_row_diagnostics()
+		return
+	var source_map: Array = SheetCompiler.compile(sheet, resolved_path).get("source_map", [])
+	_dock._viewport.set_row_diagnostics(EventSheetParseErrors.row_diagnostics(errors, source_map))
 
 
 ## Opens a freshly-created .gd as an EDITABLE sheet tab, NOT the read-only preview a casual Open

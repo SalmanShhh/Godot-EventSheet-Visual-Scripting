@@ -105,6 +105,21 @@ hover away.
   trigger event it is instead of stranding the whole handler as a code block. The connect line is
   re-emitted verbatim, flags and all.
 
+### Added - a script that does not compile shows WHICH rows are broken
+
+An event sheet marks a broken event red with the reason. An opened `.gd` now does the same: the rows
+built from the offending lines carry the engine's own message, and the count is available to the head
+bar as "N errors - the game will not run this script".
+
+The reason is the ENGINE'S, not a second checker of our own that could disagree with the one that
+actually refuses to run the game - Godot does not bind its parse diagnostics to scripting, so the file
+is put to a second Godot with `--check-only` and its report is read back as line + message. That runs
+on the open job's worker thread, never on the paint path, and the answer is cached per file and
+modification time, so reopening a tab is free. The line-to-row join is the source map the compiler
+already keeps: an opened file re-emits byte-identically, so line N of the output is line N of the file.
+A file that parses reports nothing, which is also what an unreachable check reports - a reading that
+invents errors is worse than one that shows none.
+
 ### Added - the paint, tree and notification callbacks read as the object's own triggers
 
 Four engine callbacks that used to open as helper functions now read as the lifecycle triggers they
@@ -202,6 +217,7 @@ to ask "what is in this file".
   `@onready` is one object under both its variable name and its node path.
 - Translated in all nine languages. Everything here is display-only - the fixture that exercises all
   of it re-emits byte for byte.
+
 ### Added - the structure an opened script is organised with now reads as sheet structure
 
 Four shapes every real Godot script is full of used to read as code, as comments, or as nothing at
@@ -264,6 +280,7 @@ the two can be read - and switched on - separately.
   lambda. The reason it was crammed in is fixed rather than worked around: a condition/trigger cell
   reserves the width its trailing payload chips need instead of filling the lane to the divider and
   leaving them a sliver - which is what a declared handler's `[body]` chip had been drawing as too.
+
 ### Added - an opened script reads in Construct's NOUNS: constants, sprites, collisions, angles, counts
 
 The sentences said what a line DOES; the nouns inside them were still Godot's. A Construct reader
@@ -303,6 +320,7 @@ through one grammar, so they cannot drift apart. Display only: the file keeps ev
   `Restart layout`, pausing and `Engine.time_scale` become `Set time scale to 0 (pause)` / `to 0.5`,
   and a CanvasLayer becomes `HUD (layer) ▸ Set layer invisible`. With it off nothing changes, and the
   Godot word is on hover either way.
+
 ### Added - four more Construct habits Godot spells differently
 
 Construct's commonest idioms have no Godot spelling of their own, so a project writes them as
@@ -363,6 +381,7 @@ drives, in the same Construct grammar.
   with the class setup strip.
 - Display-only throughout: opening either of the new fixtures and re-emitting reproduces the file
   byte for byte, and a pack's head is unchanged.
+
 ### Added - an opened script reads in Construct's own words
 
 Opening any hand-written `.gd` - not just a pack - now reads as an event sheet a Construct user can
@@ -402,6 +421,7 @@ double-click-edits-the-line are untouched, and the exact GDScript is still one h
   `For "i" from 2 to 7` (inclusive, the last value the body actually sees), `For each child child` on
   the object whose children it walks, `While hp > 0`, and `break` / `continue` read `Stop loop` /
   `Next` - the Break Loop and Continue Loop actions now say those words too.
+
 ### Added - stacked conditions, the awaits Construct has words for, connected lambdas, and one-line `if`s
 
 Four more shapes an ordinary `.gd` file writes, now read the way a Construct sheet writes them.
@@ -534,6 +554,7 @@ Also: a reverse match whose captured parameter has lopsided brackets is rejected
 half an expression for a target; Mouse / Keyboard / Gamepad / Touch are OBJECTS in the row's
 object cell rather than System; `_unhandled_key_input` joins the lifecycle vocabulary as **On
 Unhandled Key Input**. `tests/input_handler_reading_test.gd` pins every sentence above by value.
+
 ### Changed - statements without an ACE read in Construct's own grammar: Object ▸ Verb values
 
 A row inside an opened pack used to show the code it came from wearing an object label -
@@ -568,6 +589,7 @@ still on hover, and opening a file and saving it still reproduces every byte. Th
 ONE producer that both the hand-written path and the ACE display path read through, so a shape says
 the same thing whether it was typed or picked - pinned by `tests/sentence_grammar_test.gd` and
 `tests/sentence_shapes_test.gd`, which opens a script holding every shape and asserts the words.
+
 ### Added - the reading lenses: a sheet that reads like a sheet, not like the script it came from
 
 Eight display lenses over an opened `.gd`. Every one of them is view-only - no row model, no
