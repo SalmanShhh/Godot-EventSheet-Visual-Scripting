@@ -149,11 +149,13 @@ static func _returns() -> bool:
 	expression_context["verb_kind"] = EventSheetSentence.VerbKind.EXPRESSION
 	ok = _check("action return", _read("return"), "System ▸ Stop event") and ok
 	ok = _check("action return value", _read("return _jumps_left"), "System ▸ Return _jumps_left") and ok
-	ok = _check("condition yes", _read("return true", condition_context), "System ▸ Answer yes") and ok
-	ok = _check("condition no", _read("return false", condition_context), "System ▸ Answer no") and ok
+	ok = _check("condition true", _read("return true", condition_context),
+		"System ▸ Set return value to true") and ok
+	ok = _check("condition false", _read("return false", condition_context),
+		"System ▸ Set return value to false") and ok
 	ok = _check("condition expression", _read("return host.is_on_floor()", condition_context),
-		"System ▸ Answer host.is_on_floor()") and ok
-	ok = _check("expression gives back", _read("return _jumps_left", expression_context),
-		"System ▸ Give back _jumps_left") and ok
+		"System ▸ Set return value to host.is_on_floor()") and ok
+	ok = _check("expression returns a value", _read("return _jumps_left", expression_context),
+		"System ▸ Set return value to _jumps_left") and ok
 	ok = _check("bare return in condition", _read("return", condition_context), "System ▸ Stop event") and ok
 	return ok

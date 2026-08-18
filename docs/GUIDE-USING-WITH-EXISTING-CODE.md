@@ -346,9 +346,17 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   `FPSController ▸ Signal On Jumped`, `host ▸ exists` / `does not exist`, `Local number remaining = amount`
   (a Local variable row you can also add from the picker), `⏳ Wait 0.5 seconds`, `Go to scene
   "res://menu.tscn"`, `Keyboard ▸ "jump" is down`, `push x moved toward 0 by push fade`, and inside a
-  Condition verb `System ▸ Answer yes` / inside an Expression verb `Give back jumps left`. The same sentence
-  appears whether the row was typed in GDScript or picked from the palette - one grammar produces both - and
-  the exact code is always on hover.
+  Condition verb `System ▸ Set return value to true` / inside an Expression verb `Set return value to
+  jumps left` (Construct's own function-block action). The same sentence appears whether the row was typed
+  in GDScript or picked from the palette - one grammar produces both - and the exact code is always on
+  hover.
+- **A ternary is a sub-event, never a condition in an action cell.** An `if ... else` INSIDE a statement
+  (`return wall_normal.x if host != null and host.is_on_wall() else 0.0`) reads the way a Construct sheet
+  draws the same branch: a condition row on the left with the statement on the right, then an `Else` row
+  with the other value - a chain of `Else` rows for a nested ternary, a nested pair for a second
+  independent one. Display only: the file keeps its one line, hover shows the exact GDScript, and
+  double-click edits that statement. A ternary inside a `func(...)` lambda is left alone - its body is a
+  scope of its own, so hoisting a branch out of it would move when that branch runs.
 - **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
   as words (`_coyote_timer` -> `coyote timer`, a knob with its Inspector capitalisation), property chains
   read possessively (`host's velocity X`), NOT is the red ✕ in the icon column, the host and any `$Node` /

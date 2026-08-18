@@ -1783,8 +1783,8 @@ Signal {trigger} {values},시그널 {trigger} {values}
 exists,존재함
 does not exist,존재하지 않음
 Stop event,이벤트 중단
-Answer {value},{value} 로 답하기
-Give back {value},{value} 돌려주기
+Set return value to {value},반환값을 {value} 로 설정
+not,아님
 Return {value},{value} 반환
 {name} is true,{name}이(가) 참
 {name} is false,{name}이(가) 거짓

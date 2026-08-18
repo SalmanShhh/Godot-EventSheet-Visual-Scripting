@@ -37,7 +37,7 @@ const VERB_KIND_TINT_ALPHA: float = 0.16
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
-# CONDITION verb read their `return` as "Answer yes/no" and inside an EXPRESSION verb as "Give back",
+# CONDITION or EXPRESSION verb read their `return` as "Set return value to x" rather than "Stop event",
 # and only the walk knows which verb owns the rows it is building.
 var _current_verb_function: EventFunction = null
 # The verb kind a lazily-built row carries with it, or -1 when the walk itself is the authority.
@@ -1471,9 +1471,15 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 				# Mark the subtree BEFORE any span build: a condition-less row inside a verb body must
 				# read "Always" (it runs when the verb is called), not the sheet's "Every Tick".
 				_mark_verb_body(child_row, _current_verb_kind())
-				if not body_editable:
-					_make_row_inert(child_row)
-				row_data.children.append(child_row)
+				# M23 runs HERE, before the body is made inert: the sub-event pair is derived from the
+				# EventRow the row points at, and an inert row has already dropped that pointer.
+				var body_rows: Array[EventRowData] = [child_row]
+				if _viewport.is_reading_mode():
+					body_rows = expand_ternary_rows(body_rows)
+				for body_row: EventRowData in body_rows:
+					if not body_editable:
+						_make_row_inert(body_row)
+					row_data.children.append(body_row)
 	_current_verb_function = outer_verb
 	# The way IN to a verb's body, mirroring a group's own footer. A freshly created verb has an empty
 	# body, so without this there is nowhere to put its first event - and since a "run only when" guard
@@ -4283,8 +4289,15 @@ func _wraps_whole_expression(text: String) -> bool:
 	return false
 
 
-func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Array[SemanticSpan]:
+## `slice_from` / `slice_to` (half-open, -1 = to the end) and `hide_conditions` exist for M23: a
+## statement carrying a ternary splits its event into a row of the actions before it, the branch rows,
+## and a continuation row - three views of ONE unchanged EventRow, each drawing its own slice.
+func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_from: int = 0,
+		slice_to: int = -1, hide_conditions: bool = false) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
+	if slice_from > 0 or slice_to >= 0 or hide_conditions:
+		return _slice_event_spans(_build_event_spans(event_row, in_verb_body), event_row,
+			slice_from, slice_to, hide_conditions)
 	var condition_line_index: int = 0
 	var action_line_index: int = 0
 	var inline_trigger_condition_index: int = _find_inline_trigger_condition_index(event_row)
@@ -4733,7 +4746,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 				# ONE statement is one action, so it wears the ordinary action chrome the rows around it use.
 				# The GDScript code cell exists to hold a WALL of several statements together; using it for a
 				# single line made ordinary code look like an escape hatch instead of a step in the flow.
-				var inline_is_literal_part: bool = is_literal_part(inline_raw.code) or is_single_statement(inline_raw.code)
+				# A statement carrying an inline lambda is CODE, not a step: the `func(...)` body is a
+				# second scope with its own returns and its own branches, so no one-cell sentence can
+				# honestly stand for it - and hoisting a branch out of it would move when that branch
+				# runs. It keeps the GDScript code cell it came from.
+				var inline_is_literal_part: bool = (
+					is_literal_part(inline_raw.code) or is_single_statement(inline_raw.code)
+				) and not inline_raw.code.contains("func(")
 				if not inline_literal.is_empty():
 					inline_lines = PackedStringArray(["%s %s   %d entries" % [
 						str(inline_literal.get("head")), str(inline_literal.get("close")),
@@ -4919,6 +4938,431 @@ func _count_event_lines(event_row: EventRow) -> int:
 	return maxi(max_condition_line, max_action_line) + 1
 
 
+## M16 inside a `Set return value` cell: when the value is a call to one of THIS sheet's own
+## functions, the cell names the Function the way the picker does - `Set return value to Can Stand Up`
+## rather than `_can_stand_up()`. With arguments the Call wording stays, so the argument chips have a
+## verb to hang off. A call to anything the sheet does not know falls straight through: a call to
+## something unknown must never be dressed up as a project function.
+func _named_return_sentence(sentence: Dictionary, returned: String) -> Dictionary:
+	if sentence.is_empty():
+		return sentence
+	var replacement: Array = _return_value_function_pieces(returned)
+	if replacement.is_empty():
+		return sentence
+	var expected: String = EventSheetSentence.expression_text(returned.strip_edges())
+	var segments: Array = []
+	var replaced: bool = false
+	for entry: Variant in (sentence.get("segments", []) as Array):
+		var segment: Dictionary = entry
+		if not replaced and str(segment.get("tone", "")) == "value" and str(segment.get("text", "")) == expected:
+			for piece: Variant in replacement:
+				segments.append({"text": str((piece as Array)[0]), "tone": str((piece as Array)[1])})
+			replaced = true
+			continue
+		segments.append(segment)
+	if not replaced:
+		return sentence
+	var named: Dictionary = sentence.duplicate(true)
+	named["segments"] = segments
+	return named
+
+
+## The pieces a known-function call reads as inside a return cell, or [] when the callee is not one
+## of the sheet's own functions.
+func _return_value_function_pieces(returned: String) -> Array:
+	var sheet: EventSheetResource = _viewport._sheet
+	if sheet == null:
+		return []
+	var text: String = returned.strip_edges()
+	var call: Dictionary = EventSheetSentence.call_parts(text)
+	if call.is_empty():
+		return []
+	var function_name: String = EventSheetViewportReadingRows.called_function_name(text)
+	if function_name.is_empty():
+		return []
+	var event_function: EventFunction = find_function_by_name(sheet, function_name)
+	if event_function == null:
+		return []
+	var display_name: String = EventSheetViewportLenses.function_display_name(
+		function_name, event_function.ace_display_name)
+	if display_name.strip_edges().is_empty():
+		return []
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	if arguments.is_empty():
+		return [[display_name, "name"]]
+	var parameter_names: PackedStringArray = EventSheetViewportReadingRows.parameter_names_of(event_function)
+	var pieces: Array = [[EventSheetL10n.translate("Call") + " ", "plain"], [display_name, "name"]]
+	for index: int in arguments.size():
+		var parameter_name: String = parameter_names[index] if index < parameter_names.size() else ""
+		var value: String = arguments[index].strip_edges()
+		if _viewport.humanize_names_enabled():
+			value = EventSheetViewportLenses.humanize_expression(value, _export_knob_names())
+		else:
+			value = EventSheetViewportLenses.possessive_in_expression(value, false)
+		pieces.append(["   ", "plain"])
+		pieces.append([EventSheetViewportLenses.call_argument_chip(parameter_name, value, false), "value"])
+	return pieces
+
+
+# ── M23: a ternary reads as a sub-event pair, never a condition in an action cell ───────────────
+
+
+## Rewrites a list of sibling rows so a statement carrying a ternary reads the way a Construct sheet
+## would show the same branch: the condition on the LEFT, the statement re-read on the RIGHT with that
+## branch's value, then an `Else` row for the other one (an Else-if chain for a nested ternary).
+##
+## Recursive over children. A pure VIEW over unchanged resources: each row still points at the one
+## statement the file holds, so hover shows the exact GDScript, double-click edits that line, and both
+## emission and the byte round-trip are untouched. The rows a statement occupies DO change, which is
+## why the caller only runs this on a reading view - an editable sheet's drag/drop and selection count
+## rows against the resource list.
+func expand_ternary_rows(rows: Array[EventRowData]) -> Array[EventRowData]:
+	var out: Array[EventRowData] = []
+	for row: EventRowData in rows:
+		row.children = expand_ternary_rows(row.children)
+		out.append_array(_expand_ternary_row(row))
+	return out
+
+
+## One row's expansion: itself when nothing branches, else the actions before the branch, the branch
+## rows, and - recursively, because a row may hold several branching statements - everything after.
+func _expand_ternary_row(row: EventRowData) -> Array[EventRowData]:
+	var single: Array[EventRowData] = [row]
+	if row.row_type != EventRowData.RowType.EVENT or not (row.source_resource is EventRow):
+		return single
+	# An output of this pass would otherwise be branched again, forever.
+	if row.ternary_view:
+		return single
+	return _expand_event_from(row, 0, row.indent, false)
+
+
+## The rows one event draws from `from_index` on. `hide_conditions` marks a CONTINUATION - the run of
+## actions after a branch, whose conditions the row above already drew, and which a C3 sheet never
+## repeats. Recursive, so a second branching statement further down the same event splits again.
+func _expand_event_from(row: EventRowData, from_index: int, indent: int,
+		hide_conditions: bool) -> Array[EventRowData]:
+	var event_row: EventRow = row.source_resource as EventRow
+	var continuation_uid: String = "%s_after%d" % [row.row_uid, from_index]
+	var found: Dictionary = _first_ternary_action(event_row, from_index)
+	if found.is_empty():
+		if not hide_conditions and from_index == 0:
+			return [row]
+		var plain: EventRowData = _build_event_slice_row(row, from_index, -1, hide_conditions, continuation_uid)
+		plain.indent = indent
+		return [plain]
+	var action_index: int = int(found.get("index", -1))
+	var head_uid: String = row.row_uid if (not hide_conditions and from_index == 0) else continuation_uid
+	var head: EventRowData = _build_event_slice_row(row, from_index, action_index, hide_conditions, head_uid)
+	head.indent = indent
+	# The head vanishes only when it would draw NOTHING of its own - no conditions, no earlier
+	# actions, no sub-events - which is exactly the one-line verb body (`ƒ Wall Normal X`) the pair
+	# was designed for. Otherwise it survives and the branch rows become its sub-events, which is
+	# both what Construct draws and what keeps the head's conditions gating them.
+	var head_blank: bool = _slice_row_is_blank(head) and (hide_conditions or row.children.is_empty())
+	var branch_indent: int = indent if head_blank else indent + 1
+	var branch_rows: Array[EventRowData] = _build_ternary_branch_rows(
+		row, action_index, found, branch_indent, str(action_index))
+	if branch_rows.is_empty():
+		return [row] if (not hide_conditions and from_index == 0) else [head]
+	var tail_rows: Array[EventRowData] = []
+	if action_index + 1 < event_row.actions.size():
+		tail_rows = _expand_event_from(row, action_index + 1, branch_indent, true)
+	if head_blank:
+		var flattened: Array[EventRowData] = []
+		flattened.append_array(branch_rows)
+		flattened.append_array(tail_rows)
+		return flattened
+	var children: Array[EventRowData] = []
+	children.append_array(branch_rows)
+	children.append_array(tail_rows)
+	if not hide_conditions:
+		children.append_array(row.children)
+	head.children = children
+	return [head]
+
+
+## The first action of `event_row` that carries a hoistable ternary, as {index, kind, param, text},
+## or {} when none does. Both row shapes are asked the same question: a hand-written line through its
+## own code (`kind` "code"), a lifted ACE through the PARAMETER whose value branches (`kind` "param")
+## - so a ternary reads as the pair whether it was typed or picked.
+func _first_ternary_action(event_row: EventRow, from_index: int = 0) -> Dictionary:
+	for action_index in range(from_index, event_row.actions.size()):
+		var action_resource: Variant = event_row.actions[action_index]
+		if action_resource is RawCodeRow:
+			var raw: RawCodeRow = action_resource as RawCodeRow
+			if is_single_statement(raw.code) and not EventSheetSentence.ternary_branches(raw.code).is_empty():
+				return {"index": action_index, "kind": "code", "param": "", "text": raw.code}
+			continue
+		if not (action_resource is ACEAction):
+			continue
+		var action: ACEAction = action_resource as ACEAction
+		var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+		for param_key: Variant in params_dict.keys():
+			var value: String = str(params_dict[param_key])
+			if EventSheetSentence.value_branches(value).is_empty():
+				continue
+			return {"index": action_index, "kind": "param", "param": str(param_key), "text": value}
+	return {}
+
+
+## The arms of one branching action - the statement's for a hand-written line, the parameter value's
+## for a lifted row.
+func _ternary_arms(found: Dictionary) -> Array:
+	if str(found.get("kind", "")) == "param":
+		return EventSheetSentence.value_branches(str(found.get("text", "")))
+	return EventSheetSentence.ternary_branches(str(found.get("text", "")))
+
+
+## The branch rows for one action: one per `A if C else B` arm, the last of them the `Else`. An arm
+## whose text STILL carries a ternary (two independent ones in a line) nests its own pair beneath it
+## rather than flattening, because that is where the second branch actually applies.
+func _build_ternary_branch_rows(row: EventRowData, action_index: int, found: Dictionary, indent: int,
+		uid_path: String) -> Array[EventRowData]:
+	var branches: Array = _ternary_arms(found)
+	if branches.is_empty():
+		return []
+	var rows: Array[EventRowData] = []
+	for branch_index: int in branches.size():
+		var branch: Dictionary = branches[branch_index]
+		var branch_path: String = "%s_%d" % [uid_path, branch_index]
+		var branch_row: EventRowData = _build_ternary_branch_row(
+			row, indent, str(branch.get("condition", "")), branch_path)
+		var arm: Dictionary = found.duplicate()
+		arm["text"] = str(branch.get("code", ""))
+		var nested: Array[EventRowData] = _build_ternary_branch_rows(
+			row, action_index, arm, indent + 1, branch_path)
+		if nested.is_empty():
+			_append_branch_action_spans(branch_row, row, action_index, arm)
+		else:
+			branch_row.children.append_array(nested)
+		rows.append(branch_row)
+	return rows
+
+
+## One branch row's shell plus its CONDITION cell - the branch test read through the grammar's
+## condition path, or the plain `Else` chip on the last arm.
+func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: String,
+		uid_path: String) -> EventRowData:
+	var branch_row := EventRowData.new()
+	branch_row.indent = indent
+	branch_row.row_type = EventRowData.RowType.EVENT
+	branch_row.source_resource = row.source_resource
+	branch_row.row_uid = "%s_branch_%s" % [row.row_uid, uid_path]
+	branch_row.disabled = row.disabled
+	branch_row.in_verb_body = row.in_verb_body
+	branch_row.verb_kind = row.verb_kind
+	branch_row.ternary_view = true
+	branch_row.line_count = 1
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	if condition_text.strip_edges().is_empty():
+		branch_row.spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "else_keyword",
+			"chip": true,
+			"hoverable": false,
+			"line_index": 0,
+			"object_label": _object_label_for("Core", "")
+		}.merged(condition_style_meta, true)))
+		return branch_row
+	var reading: Dictionary = EventSheetSentence.condition_pieces(condition_text, sentence_context())
+	var pieces: Array = EventSheetViewportLenses.apply_to_pieces(
+		reading.get("pieces", []) as Array, _viewport.humanize_names_enabled(), _export_knob_names())
+	var condition_cell: Dictionary = _tone_segments(pieces)
+	branch_row.spans.append(_make_span(str(condition_cell.get("text", "")), SemanticSpan.SpanType.CONDITION, {
+		"lane": "condition",
+		# "condition" is what makes the cell FILL its lane and wrap like every other condition cell
+		# (the layout gates both on this kind) - so a long branch test grows the row instead of
+		# clipping. There is no ACECondition behind it, so the index is -1 and the cell is inert:
+		# nothing may index the event's condition list from a reading the grammar invented.
+		"kind": "condition",
+		"ace_index": -1,
+		"chip": true,
+		"editable": false,
+		"hoverable": false,
+		"line_index": 0,
+		"object_label": str(reading.get("object", "")),
+		"bbcode_segments": condition_cell.get("segments", [])
+	}.merged(condition_style_meta, true)))
+	return branch_row
+
+
+## The branch's ACTION cell: the whole action re-read with this arm's value in place of the ternary,
+## through the very same path the unbranched row uses - a hand-written line through the sentence
+## layer, a lifted row through its own display descriptor - so the two readings cannot drift. The cell
+## keeps the ORIGINAL action's index, which is what makes hover show the exact source line and
+## double-click open that one statement.
+func _append_branch_action_spans(branch_row: EventRowData, row: EventRowData, action_index: int,
+		arm: Dictionary) -> void:
+	var action_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var event_row: EventRow = row.source_resource as EventRow
+	var source_action: Variant = event_row.actions[action_index] if action_index < event_row.actions.size() else null
+	var spans: Array = []
+	var outer_kind: int = _verb_kind_override
+	_verb_kind_override = row.verb_kind
+	if str(arm.get("kind", "")) == "param" and source_action is ACEAction:
+		_append_branch_ace_spans(spans, source_action as ACEAction, str(arm.get("param", "")),
+			str(arm.get("text", "")), action_index, action_style_meta)
+	else:
+		var synthetic := RawCodeRow.new()
+		synthetic.code = str(arm.get("text", ""))
+		synthetic.enabled = true
+		if not _append_sentence_spans(spans, synthetic, action_index, 0, action_style_meta):
+			spans.append(_make_span(str(arm.get("text", "")).strip_edges(), SemanticSpan.SpanType.VALUE, {
+				"lane": "action",
+				"kind": "action",
+				"ace_index": action_index,
+				"chip": true,
+				"code_cell": false,
+				"line_index": 0
+			}.merged(action_style_meta, false)))
+		for span: SemanticSpan in spans:
+			span.metadata["raw_action"] = source_action is RawCodeRow
+	_verb_kind_override = outer_kind
+	for span: SemanticSpan in spans:
+		span.metadata["line_index"] = 0
+		branch_row.spans.append(span)
+
+
+## One lifted row re-rendered with a single parameter swapped for this arm's value, through the very
+## same two shapes the unbranched row uses - a Local Variable row stays a DECLARATION, everything else
+## reads as its display sentence. The copy is a DISPLAY copy and never leaves this function: the sheet
+## still holds the one action the file wrote.
+func _append_branch_ace_spans(spans: Array, action: ACEAction, param_key: String, value: String,
+		action_index: int, action_style_meta: Dictionary) -> void:
+	var branch_action: ACEAction = action.duplicate(true) as ACEAction
+	if not branch_action.params.is_empty():
+		branch_action.params[param_key] = value
+	else:
+		branch_action.parameters[param_key] = value
+	var declaration: Dictionary = grammar_action_declaration(branch_action)
+	if not declaration.is_empty():
+		append_local_declaration_spans(spans, declaration, {
+			"lane": "action",
+			"kind": "action",
+			"ace_index": action_index,
+			"ace_enabled": action.enabled,
+			"line_index": 0
+		}, action_style_meta)
+		return
+	spans.append(_make_span(_format_action_descriptor(branch_action), SemanticSpan.SpanType.ACTION, {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": action.enabled,
+		"chip": true,
+		"line_index": 0,
+		"object_label": _object_label_or_pending(action.provider_id, action.ace_id),
+		"object_icon": _object_icon_for(action.provider_id, action.ace_id),
+		"swatch_color": _first_color_in_params(action)
+	}.merged(action_style_meta, true)))
+
+
+## One slice of an event as its own row: same resource, same verb context, its own action range.
+func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
+		hide_conditions: bool, uid: String) -> EventRowData:
+	var slice_row := EventRowData.new()
+	slice_row.indent = row.indent
+	slice_row.row_type = EventRowData.RowType.EVENT
+	slice_row.source_resource = row.source_resource
+	slice_row.row_uid = uid
+	slice_row.disabled = row.disabled
+	slice_row.in_verb_body = row.in_verb_body
+	slice_row.verb_kind = row.verb_kind
+	slice_row.language_block = row.language_block
+	slice_row.error_message = row.error_message
+	slice_row.ternary_view = true
+	slice_row.action_slice_from = slice_from
+	slice_row.action_slice_to = slice_to
+	slice_row.conditions_hidden = hide_conditions
+	var outer_kind: int = _verb_kind_override
+	_verb_kind_override = row.verb_kind
+	slice_row.spans = _build_event_spans(
+		row.source_resource as EventRow, row.in_verb_body, slice_from, slice_to, hide_conditions)
+	_verb_kind_override = outer_kind
+	var lines: int = 1
+	for span: SemanticSpan in slice_row.spans:
+		lines = maxi(lines, int(span.metadata.get("line_index", 0)) + 1)
+	slice_row.line_count = lines
+	return slice_row
+
+
+## True when a slice draws nothing a reader would see - the case where keeping the row would put an
+## empty two-lane strip above the branch rows.
+func _slice_row_is_blank(row: EventRowData) -> bool:
+	for span: SemanticSpan in row.spans:
+		if str(span.metadata.get("kind", "")) in ["add_action", "add_condition"]:
+			continue
+		if not span.text.strip_edges().is_empty():
+			return false
+	return true
+
+
+## Tone pieces -> {text, segments}: the same tinting `_append_sentence_spans` gives a hand-written
+## sentence, so a branch cell reads exactly like the line it was hoisted out of. Segments are built
+## DIRECTLY (never through the BBCode parser), because condition text is full of square brackets.
+func _tone_segments(pieces: Array) -> Dictionary:
+	var text: String = ""
+	var segments: Array[Dictionary] = []
+	for piece: Variant in pieces:
+		var pair: Array = piece
+		var piece_text: String = str(pair[0])
+		text += piece_text
+		var tone_color: Variant = null
+		var tone_bold: bool = false
+		match str(pair[1]):
+			"name":
+				tone_color = EventSheetPalette.TEXT_PRIMARY
+				tone_bold = true
+			"value":
+				tone_color = _viewport._get_event_style().value_highlight_color
+			"object":
+				tone_color = EventSheetPalette.COLOR_OBJECT
+		segments.append({"text": piece_text, "color": tone_color, "bold": tone_bold, "italic": false})
+	return {"text": text, "segments": segments}
+
+
+## One slice of an event's finished spans (M23). Filtering the WHOLE build - rather than teaching the
+## span pass to skip actions - is what keeps a sliced row's cells identical to the unsliced ones, down
+## to the style metadata; only which cells survive, and which line each lands on, changes here.
+func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_from: int,
+		slice_to: int, hide_conditions: bool) -> Array[SemanticSpan]:
+	var kept: Array[SemanticSpan] = []
+	var used_lines: Array[int] = []
+	for span: SemanticSpan in spans:
+		var lane: String = _viewport._resolve_span_lane(span)
+		if lane == "condition":
+			if hide_conditions:
+				continue
+			kept.append(span)
+			continue
+		var ace_index: int = int(span.metadata.get("ace_index", -1))
+		if ace_index < 0:
+			# The event comment and the "+ Add action" affordance belong to the event as a whole, so
+			# they ride the LAST slice - the row the reader's eye finishes the event on.
+			if slice_to >= 0 and slice_to < event_row.actions.size():
+				continue
+		elif ace_index < slice_from or (slice_to >= 0 and ace_index >= slice_to):
+			continue
+		var line_index: int = int(span.metadata.get("line_index", 0))
+		if not used_lines.has(line_index):
+			used_lines.append(line_index)
+		kept.append(span)
+	used_lines.sort()
+	var out: Array[SemanticSpan] = []
+	for span: SemanticSpan in kept:
+		if _viewport._resolve_span_lane(span) == "condition":
+			out.append(span)
+			continue
+		var moved := SemanticSpan.new()
+		moved.text = span.text
+		moved.type = span.type
+		moved.hoverable = span.hoverable
+		moved.metadata = span.metadata.duplicate(true)
+		moved.metadata["line_index"] = used_lines.find(int(span.metadata.get("line_index", 0)))
+		out.append(moved)
+	return out
+
+
 ## Builds an event row's spans on demand. Event-row spans are deferred (see
 ## _build_event_row) so large sheets load fast; this is called from the row layout
 ## choke point and selection paths before any span data is read. Idempotent: built
@@ -4934,7 +5378,8 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		# the row carries the answer and puts it back for the duration of the build.
 		var outer_kind: int = _verb_kind_override
 		_verb_kind_override = row_data.verb_kind
-		row_data.spans = _build_event_spans(row_data.source_resource as EventRow, row_data.in_verb_body)
+		row_data.spans = _build_event_spans(row_data.source_resource as EventRow, row_data.in_verb_body,
+			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden)
 		_verb_kind_override = outer_kind
 
 
@@ -5506,6 +5951,8 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	var indent: int = 0
 	var object_label: String = ""
 	var sentence: Dictionary = statement_sentence(raw.code, sentence_context())
+	if EventSheetSentence.leading_word(raw.code.strip_edges()) == "return":
+		sentence = _named_return_sentence(sentence, raw.code.strip_edges().substr(6))
 	# A `var` line is a DECLARATION, not a step: it reads as Construct's own local-variable row - a type
 	# chip, the name, the starting value - rather than as an action wearing an object label.
 	if str(sentence.get("kind", "")) == "declaration":
@@ -5681,7 +6128,9 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"ReturnEarly":
 			return EventSheetSentence.return_sentence("", context)
 		"ReturnValue":
-			return EventSheetSentence.return_sentence(str(params_dict.get("value", "")), context)
+			return _named_return_sentence(
+				EventSheetSentence.return_sentence(str(params_dict.get("value", "")), context),
+				str(params_dict.get("value", "")))
 		"SetProperty":
 			return EventSheetSentence.statement("%s.%s = %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
@@ -5826,7 +6275,7 @@ func _sheet_signal_rows(sheet: Resource) -> Array:
 
 
 ## Which kind of verb body the rows being built belong to, so a `return` inside a published condition
-## reads "Answer yes" rather than "Stop event". ACTION whenever no published verb is being walked.
+## reads "Set return value to x" rather than "Stop event". ACTION whenever no published verb is walked.
 func _current_verb_kind() -> int:
 	if _verb_kind_override >= 0:
 		return _verb_kind_override

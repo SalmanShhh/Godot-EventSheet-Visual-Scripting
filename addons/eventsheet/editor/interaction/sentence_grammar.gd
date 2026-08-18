@@ -134,6 +134,235 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	return {}
 
 
+## The Construct reading of a condition that may be a RUN of conjuncts (M23): `host != null and
+## host.is_on_wall()` reads `host exists and host is on wall`, each conjunct through `condition()`.
+##
+## Returns {"object", "pieces"} - `pieces` an array of [text, tone] the caller draws in order, and
+## `object` the row's object label, filled only when every conjunct belongs to the SAME object (with
+## more than one object in play the words go inline instead, the way a Construct cell names each).
+## Never {}: an expression nothing is recognised in still reads as itself.
+static func condition_pieces(expression: String, context: Dictionary = {}) -> Dictionary:
+	var text: String = expression.strip_edges()
+	while text.begins_with("(") and closing_paren(text, 0) == text.length() - 1:
+		text = text.substr(1, text.length() - 2).strip_edges()
+	# One connective only. A mixed `a and b or c` has a precedence a flat run of words would misstate,
+	# so it is left whole and reads as the expression it is.
+	var connective: String = ""
+	if top_level_index(text, " and ") >= 0 and top_level_index(text, " or ") < 0:
+		connective = " and "
+	elif top_level_index(text, " or ") >= 0 and top_level_index(text, " and ") < 0:
+		connective = " or "
+	var parts: PackedStringArray = split_top_level(text, connective) if not connective.is_empty() else PackedStringArray([text])
+	var readings: Array = []
+	for part: String in parts:
+		readings.append(_condition_reading(part, context))
+	# The object column can name ONE object. A run of conjuncts therefore says each object inline, the
+	# way a Construct cell repeats the object picture in every condition it draws.
+	var one_object: bool = readings.size() == 1
+	var shared_object: String = str((readings[0] as Dictionary).get("object", "")) if one_object else ""
+	var pieces: Array = []
+	for index: int in readings.size():
+		var reading: Dictionary = readings[index]
+		if index > 0:
+			pieces.append([" %s " % translate(connective.strip_edges()), "plain"])
+		var object_name: String = str(reading.get("object", ""))
+		if not one_object and not object_name.is_empty():
+			pieces.append([object_name, "object"])
+			pieces.append([" ", "plain"])
+		for segment: Variant in (reading.get("segments", []) as Array):
+			var part_segment: Dictionary = segment
+			pieces.append([str(part_segment.get("text", "")), str(part_segment.get("tone", "plain"))])
+	return {"object": shared_object if one_object else "", "pieces": pieces}
+
+
+## One conjunct's reading: the ordinary condition path first, then the predicate-call fallback a
+## Construct cell needs (`host.is_on_wall()` is an object and a question, not a line of code).
+static func _condition_reading(part: String, context: Dictionary) -> Dictionary:
+	var text: String = part.strip_edges()
+	var negated: bool = false
+	if text.begins_with("not ") and not is_identifier(text.substr(4).strip_edges()):
+		negated = true
+		text = text.substr(4).strip_edges()
+	var reading: Dictionary = condition(text, context)
+	if reading.is_empty():
+		reading = _predicate_call_reading(text)
+	if reading.is_empty():
+		reading = {"object": "", "segments": [{"text": expression_text(text), "tone": "value"}]}
+	if negated:
+		var negated_segments: Array = [{"text": "%s " % translate("not"), "tone": "plain"}]
+		negated_segments.append_array(reading.get("segments", []) as Array)
+		reading = {"object": str(reading.get("object", "")), "segments": negated_segments}
+	return reading
+
+
+## `host.is_on_wall()` -> object `host`, sentence `is on wall`. Only a no-argument call whose verb
+## already ASKS something (is/has/can) is claimed: a plain `host.update()` is a step, not a question,
+## and reading it as one would be exactly the confident lie this grammar refuses.
+static func _predicate_call_reading(text: String) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if not args.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var is_question: bool = method.begins_with("is_") or method.begins_with("has_") or method.begins_with("can_")
+	if not is_question:
+		return {}
+	return {
+		"object": str(call.get("target", "")),
+		"segments": [{"text": method.replace("_", " "), "tone": "plain"}]
+	}
+
+
+## The sub-event reading of a statement whose value carries a ternary (M23). A `if ... else` INSIDE
+## a statement is a BRANCH, and a Construct sheet never puts a branch in an action cell - so the
+## caller draws one row per branch: the condition on the left, the whole statement re-read on the
+## right with that branch's value substituted, and a final `Else` row for the last one.
+##
+## Returns [] when there is nothing to hoist, else an array of {"condition", "code"} - `condition`
+## empty on the final Else branch, `code` the ORIGINAL statement with the ternary replaced. Purely a
+## reading: the caller keeps the one statement the file holds, so emission cannot move.
+##
+## Claimed only for statements that HAVE a value (a return, an assignment, a compound assignment, a
+## local declaration) and only outside a lambda: hoisting a branch out of a `func(...)` body would
+## move when it is evaluated, which is a different program.
+static func ternary_branches(code: String) -> Array:
+	if code.contains("\n"):
+		return []
+	var text: String = code.strip_edges()
+	if text.is_empty() or text.begins_with("#") or text.contains("func("):
+		return []
+	var value_start: int = _value_offset(text)
+	if value_start < 0:
+		return []
+	return _branches_in(text, value_start)
+
+
+## The same reading for a bare VALUE rather than a whole statement - what a lifted ACE row carries in
+## one of its parameters (`Add {delta_v} to velocity`). Each entry's "code" is the whole value with
+## that arm substituted, so the caller re-renders its own row with the value swapped.
+static func value_branches(value: String) -> Array:
+	if value.contains("\n"):
+		return []
+	var text: String = value.strip_edges()
+	if text.is_empty() or text.contains("func("):
+		return []
+	return _branches_in(text, 0)
+
+
+## The arms of the ternary that lives in `text` at or after `value_start`, as {condition, code}.
+static func _branches_in(text: String, value_start: int) -> Array:
+	var span: Array = _ternary_span(text, value_start)
+	if span.is_empty():
+		return []
+	var head: String = text.substr(0, int(span[0]))
+	var tail: String = text.substr(int(span[1]))
+	var branches: Array = []
+	var remainder: String = text.substr(int(span[0]), int(span[1]) - int(span[0]))
+	var guard: int = 0
+	while guard < 8:
+		guard += 1
+		var peeled: String = remainder.strip_edges()
+		while peeled.begins_with("(") and closing_paren(peeled, 0) == peeled.length() - 1:
+			peeled = peeled.substr(1, peeled.length() - 2).strip_edges()
+		var split: Array = _split_ternary(peeled)
+		if split.is_empty():
+			branches.append({"condition": "", "code": head + peeled + tail})
+			return branches
+		branches.append({"condition": str(split[1]), "code": head + str(split[0]) + tail})
+		remainder = str(split[2])
+	return []
+
+
+## Top-level split of `text` on `connective`, quote- and bracket-aware. One entry when nothing splits.
+static func split_top_level(text: String, connective: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	var rest: String = text
+	var guard: int = 0
+	while guard < 32:
+		guard += 1
+		var at: int = top_level_index(rest, connective)
+		if at < 0:
+			break
+		out.append(rest.substr(0, at).strip_edges())
+		rest = rest.substr(at + connective.length())
+	out.append(rest.strip_edges())
+	return out
+
+
+## Where a statement's VALUE begins, or -1 when the statement has no single value to branch on.
+static func _value_offset(text: String) -> int:
+	var keyword: String = leading_word(text)
+	if keyword == "return":
+		return 7 if text.length() > 7 else -1
+	if keyword == "var" or keyword == "const":
+		var rest_at: int = keyword.length() + 1
+		var rest: String = text.substr(rest_at)
+		var walrus_at: int = top_level_index(rest, " := ")
+		var declared_at: int = top_level_index(rest, " = ")
+		if walrus_at >= 0 and (declared_at < 0 or walrus_at < declared_at):
+			return rest_at + walrus_at + 4
+		if declared_at >= 0:
+			return rest_at + declared_at + 3
+		return -1
+	for operator: String in [" = ", " += ", " -= ", " *= ", " /= "]:
+		var at: int = top_level_index(text, operator)
+		if at < 0:
+			continue
+		if not is_simple_target(text.substr(0, at).strip_edges()):
+			return -1
+		return at + operator.length()
+	return -1
+
+
+## The [start, end) of the ternary the caller must hoist, searching the value at `value_start` and
+## then, when the value is not itself a ternary, the first bracketed group that holds one - the
+## `move_speed * (fast if sprinting else 1.0)` shape, where the branch is only PART of the value.
+## The span INCLUDES the brackets that wrap it, so substituting a branch leaves no empty pair behind.
+static func _ternary_span(text: String, value_start: int) -> Array:
+	var value: String = text.substr(value_start)
+	if not _split_ternary(value.strip_edges()).is_empty():
+		return [value_start, text.length()]
+	var index: int = 0
+	while index < value.length():
+		var character: String = value[index]
+		if character == "\"" or character == "'":
+			index = _string_end(value, index) + 1
+			continue
+		if character != "(" and character != "[" and character != "{":
+			index += 1
+			continue
+		var close_at: int = closing_paren(value, index)
+		if close_at < 0:
+			return []
+		var inner: String = value.substr(index + 1, close_at - index - 1)
+		if not _split_ternary(inner.strip_edges()).is_empty():
+			return [value_start + index, value_start + close_at + 1]
+		var nested: Array = _ternary_span(value.substr(index + 1, close_at - index - 1), 0)
+		if not nested.is_empty():
+			return [value_start + index + 1 + int(nested[0]), value_start + index + 1 + int(nested[1])]
+		index = close_at + 1
+	return []
+
+
+## `A if C else B` split at its own top level, as [A, C, B]; [] when the text is not a ternary.
+static func _split_ternary(text: String) -> Array:
+	var if_at: int = top_level_index(text, " if ")
+	if if_at <= 0:
+		return []
+	var tail: String = text.substr(if_at + 4)
+	var else_at: int = top_level_index(tail, " else ")
+	if else_at <= 0:
+		return []
+	var value_true: String = text.substr(0, if_at).strip_edges()
+	var test: String = tail.substr(0, else_at).strip_edges()
+	var value_false: String = tail.substr(else_at + 6).strip_edges()
+	if value_true.is_empty() or test.is_empty() or value_false.is_empty():
+		return []
+	return [value_true, test, value_false]
+
+
 ## `Input.is_action_pressed("jump")` and its just-pressed sibling, as the Keyboard rows a Construct
 ## user already knows. Shared by the raw path and by the two Core input ACEs, so both read alike.
 static func input_action_sentence(action_value: String, just_pressed: bool) -> Dictionary:
@@ -169,23 +398,19 @@ static func signal_sentence(signal_name: String, arguments: String, context: Dic
 	})
 
 
-## The reading of a `return`, given the kind of verb whose body it sits in (M14): a condition ANSWERS,
-## an expression GIVES BACK, an action STOPS. Shared with the Core Return row so both read alike.
+## The reading of a `return`, given the kind of verb whose body it sits in (M14). Construct's function
+## block has exactly one action for handing a value back - `Set return value to X` - so a published
+## CONDITION and a published EXPRESSION both read that, with `true` / `false` as themselves. An
+## action's bare `return` is `Stop event` (the rest of the event does not run). Shared with the Core
+## Return row so a picked row and a typed one read alike.
 static func return_sentence(returned: String, context: Dictionary) -> Dictionary:
 	var verb_kind: int = int(context.get("verb_kind", VerbKind.ACTION))
 	var value: String = returned.strip_edges()
 	if value.is_empty():
 		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Stop event", {})
 	var shown: String = expression_text(value)
-	match verb_kind:
-		VerbKind.CONDITION:
-			if value == "true":
-				shown = translate("yes")
-			elif value == "false":
-				shown = translate("no")
-			return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Answer {value}", {"value": [shown, "value"]})
-		VerbKind.EXPRESSION:
-			return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Give back {value}", {"value": [shown, "value"]})
+	if verb_kind == VerbKind.CONDITION or verb_kind == VerbKind.EXPRESSION:
+		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Set return value to {value}", {"value": [shown, "value"]})
 	return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Return {value}", {"value": [shown, "value"]})
 
 
@@ -498,6 +723,12 @@ static func _idiom_for(head: String, arguments: PackedStringArray) -> String:
 		return _fill(translate("{value} kept between {low} and {high}"), {
 			"value": arguments[0], "low": arguments[1], "high": arguments[2]
 		})
+	# A no-argument `get_thing()` is a PROPERTY READ wearing a call's clothes: Construct shows the
+	# property, so `host.get_wall_normal().x` reads `host.wall_normal.x` and the possessive lens can
+	# then spell it `host's wall normal X`. Only the zero-argument form is claimed - `get_node(path)`
+	# takes an argument and stays the call it is.
+	if arguments.is_empty() and head.begins_with("get_") and head.length() > 4:
+		return head.substr(4)
 	if not EXPRESSION_IDIOMS.has(head):
 		return ""
 	var pattern: String = str(EXPRESSION_IDIOMS[head])

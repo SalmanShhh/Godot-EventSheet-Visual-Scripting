@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Added - a ternary reads as a sub-event pair, and `return` reads Construct's own wording
+
+An opened pack still had one shape a Construct sheet never shows: a CONDITION inside an ACTION cell.
+`Give back host.get_wall_normal().x if host != null and host.is_on_wall() else 0` put the whole branch
+in the right-hand lane, where the reader expects a step.
+
+- **A ternary is now a sub-event pair.** A statement whose value carries an `if ... else` - a `return`,
+  an assignment, a compound assignment, a local declaration, or a ternary that is only PART of a larger
+  value (`speed = move_speed * (sprint_multiplier if sprint_held else 1.0)`) - reads as the rows
+  Construct would draw: the test on the LEFT, the whole statement re-read on the RIGHT with that arm's
+  value, then an `Else` row with the other one. A nested ternary chains further `Else` rows; a second
+  independent one nests its own pair beneath the first. `ƒ Wall Normal X` now opens as
+  `host exists and host is on wall | Set return value to host's wall normal X` over
+  `Else | Set return value to 0`.
+- Display only, over the unchanged statement: the file keeps its one line (byte round-trip identical),
+  hover shows the exact GDScript, and double-click edits that statement. Reading views only - the pair
+  changes how many ROWS a statement occupies, and an editable sheet's drag/drop and selection count rows
+  against the resource list.
+- A ternary inside a `func(...)` lambda is deliberately left alone: the body is a scope of its own, so
+  hoisting a branch out of it would move when that branch runs. A hand-written statement carrying an
+  inline lambda now keeps the GDScript code cell it came from, rather than posing as a sentence.
+- **`return` reads Construct's function-block wording.** Inside a published CONDITION or EXPRESSION verb
+  a `return` now reads **Set return value to x** (`true` / `false` as themselves), replacing the earlier
+  "Answer" / "Give back" split. A bare `return` in an action still reads **Stop event**.
+- A call to one of the sheet's OWN functions inside a return cell reads by its Function name -
+  **Set return value to Can Stand Up** rather than `_can_stand_up()`, with `Call <Name>` plus argument
+  chips when it takes any (the same M16 rule the Call rows already follow).
+- A no-argument `get_thing()` now reads as the property it is (`host.get_wall_normal().x` ->
+  `host's wall normal X`), and a condition made of `and` / `or` conjuncts reads each one through the
+  grammar (`host != null and host.is_on_wall()` -> `host exists and host is on wall`).
+
 ### Added - input handlers read as Mouse / Keyboard triggers, and they lift where they sit
 
 A `_unhandled_input` written under a pack's verbs used to stay a code block: emission writes
@@ -65,8 +96,9 @@ rows - the object first, then the verb, then the values:
 - A `var name: Type = value` line - and the Local Variable rows you drop from the picker - read as
   Construct's declaration row: a type-word chip, the name, the starting value
   (**Local number remaining = amount**).
-- Inside a published CONDITION verb a `return` reads **Answer yes** / **Answer no**, inside an
-  EXPRESSION verb **Give back x**, inside an action **Stop event**.
+- Inside a published CONDITION or EXPRESSION verb a `return` reads Construct's own function-block
+  action, **Set return value to x** (with `true` / `false` as themselves); inside an action a bare
+  `return` reads **Stop event**.
 - No type annotation ever appears in a sentence: `: float` is dropped from a declaration,
   `(x as Node2D)` reads `x`, and `Vector3(x, y, z)` reads `(x, y, z)`.
 

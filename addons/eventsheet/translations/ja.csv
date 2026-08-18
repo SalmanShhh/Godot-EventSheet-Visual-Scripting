@@ -1783,8 +1783,8 @@ Signal {trigger} {values},シグナル {trigger} {values}
 exists,が存在する
 does not exist,が存在しない
 Stop event,イベントを終了
-Answer {value},{value} と答える
-Give back {value},{value} を返す
+Set return value to {value},戻り値を {value} にする
+not,でない
 Return {value},{value} を返す
 {name} is true,{name} が真
 {name} is false,{name} が偽

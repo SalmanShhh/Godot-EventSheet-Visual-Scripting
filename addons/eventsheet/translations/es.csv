@@ -1783,8 +1783,8 @@ Signal {trigger} {values},Señal {trigger} {values}
 exists,existe
 does not exist,no existe
 Stop event,Detener el evento
-Answer {value},Responder {value}
-Give back {value},Devolver {value}
+Set return value to {value},Establecer el valor de retorno a {value}
+not,no
 Return {value},Retornar {value}
 {name} is true,{name} es verdadero
 {name} is false,{name} es falso

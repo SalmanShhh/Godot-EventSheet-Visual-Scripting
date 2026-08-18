@@ -1783,8 +1783,8 @@ Signal {trigger} {values},信号 {trigger} {values}
 exists,存在
 does not exist,不存在
 Stop event,停止事件
-Answer {value},回答 {value}
-Give back {value},返回 {value}
+Set return value to {value},设置返回值为 {value}
+not,非
 Return {value},返回 {value}
 {name} is true,{name} 为真
 {name} is false,{name} 为假

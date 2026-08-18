@@ -66,7 +66,20 @@ var full_width_lanes: bool = false
 # the same row must read "Always" instead. View-only, never serialized.
 var in_verb_body: bool = false
 # Which KIND of published verb this row's body belongs to (an EventSheetSentence.VerbKind). A `return`
-# inside a published condition reads "Answer yes", inside an expression "Give back", and inside an
+# inside a published condition or expression reads "Set return value to x", and inside an
 # action "Stop event" - and spans are built lazily, long after the walk that knew which verb this was,
 # so the answer is carried on the row. View-only, never serialized.
 var verb_kind: int = 0
+# M23: the half-open range of the source event's ACTIONS this row draws. A statement carrying a
+# ternary reads as a sub-event pair, which splits the event it lives in into the actions BEFORE the
+# branch (this row), the branch rows, and the actions after (a continuation row) - so each of those
+# rows renders its own slice of the one unchanged EventRow. -1 means "to the end". View-only, never
+# serialized: the resource, the emitted GDScript and the byte round-trip are untouched.
+var action_slice_from: int = 0
+var action_slice_to: int = -1
+# M23: true on the continuation row of such a split - its conditions were already drawn by the row
+# the split began at, and a C3 sheet never repeats them. View-only, never serialized.
+var conditions_hidden: bool = false
+# M23: true on a row the ternary reading itself produced (a head slice, a branch row, a continuation),
+# so a second pass over the same tree leaves it alone instead of branching it again. View-only.
+var ternary_view: bool = false

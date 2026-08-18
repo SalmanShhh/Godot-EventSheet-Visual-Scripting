@@ -2011,6 +2011,12 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# Verbs open by default; this re-folds only the ones the fence pairing just moved inside a #region
 	# (or that sit inside a group), where the enclosing block owns the fold.
 	_row_builder.fold_nested_verb_rows(root_rows)
+	# M23: a statement carrying a ternary reads as the sub-event pair a Construct sheet would draw,
+	# never as an `if ... else` inside an action cell. A reading view only - the pair changes how many
+	# ROWS one statement occupies, and an editable sheet's drag/drop and selection count rows against
+	# the resource list. Pure view over the already-built rows; the resources are untouched.
+	if is_reading_mode():
+		root_rows = _row_builder.expand_ternary_rows(root_rows)
 	# Event-sheet-style trailing "Add event…" footer at the end of the sheet - not on a read-only
 	# preview, where it is an offer the view cannot honour.
 	if show_add_event_footers and not (sheet != null and sheet.read_only):

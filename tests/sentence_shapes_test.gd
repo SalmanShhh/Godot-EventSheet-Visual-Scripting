@@ -92,9 +92,9 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ ⏳ Wait 0.5 seconds",
 	"System ▸ Go to scene \"res://menu.tscn\"",
 	"host ▸ exists",
-	"System ▸ Answer yes",
-	"System ▸ Answer no",
-	"System ▸ Give back jumps left"
+	"System ▸ Set return value to true",
+	"System ▸ Set return value to false",
+	"System ▸ Set return value to jumps left"
 ])
 
 

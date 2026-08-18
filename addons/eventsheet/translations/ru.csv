@@ -1783,8 +1783,8 @@ Signal {trigger} {values},Сигнал {trigger} {values}
 exists,существует
 does not exist,не существует
 Stop event,Остановить событие
-Answer {value},Ответить {value}
-Give back {value},Вернуть {value}
+Set return value to {value},Задать возвращаемое значение {value}
+not,не
 Return {value},Вернуть {value}
 {name} is true,{name} истинно
 {name} is false,{name} ложно
