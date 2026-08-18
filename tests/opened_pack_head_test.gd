@@ -119,6 +119,54 @@ static func run() -> bool:
 	ok = _check("a row with something in its right lane keeps the two lanes",
 		trigger_row != null and not trigger_row.full_width_lanes, true) and ok
 
+	ok = _test_a_plain_script_is_not_called_a_pack() and ok
+	ok = _test_an_editable_sheet_keeps_its_rows() and ok
+	view.free()
+	return ok
+
+
+## "Addon Pack" is a claim about the file. A read-only .gd with no @ace_version, living outside the
+## addon folder, is a script - and must say so, or a beginner learns the wrong word for what they
+## opened.
+static func _test_a_plain_script_is_not_called_a_pack() -> bool:
+	var ok: bool = true
+	var sheet := EventSheetResource.new()
+	sheet.read_only = true
+	sheet.custom_class_name = "Patrol"
+	var prelude := RawCodeRow.new()
+	prelude.code = "class_name Patrol\nextends Node2D\n## @ace_tags(movement)"
+	sheet.events.append(prelude)
+	var speed := LocalVariable.new()
+	speed.name = "speed"
+	speed.type_name = "float"
+	speed.default_value = 200.0
+	speed.exported = true
+	sheet.events.append(speed)
+	var view := EventSheetViewport.new()
+	view.set_ace_registry(EventSheetACERegistry.new())
+	view.set_sheet(sheet)
+	var bar: EventRowData = _row_at(view.get_flat_rows(), 0)
+	ok = _check("a plain script still gets the Include bar", bar != null and bar.row_uid.begins_with("pack_include_bar_"), true) and ok
+	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | Script | Patrol") and ok
+	ok = _check("its exported knob lands in the Settings bar",
+		_texts(_bar_titled(view.get_flat_rows(), "Settings")), "Settings | 1 setting") and ok
+	view.free()
+	return ok
+
+
+## The lens is the READING of a preview. An authored sheet keeps every row it always had - the
+## variables you are editing must never be one fold away from the sheet you are working on.
+static func _test_an_editable_sheet_keeps_its_rows() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PACK_PATH)
+	sheet.read_only = false
+	var view := EventSheetViewport.new()
+	view.set_ace_registry(EventSheetACERegistry.new())
+	view.set_sheet(sheet)
+	var rows: Array = view.get_flat_rows()
+	ok = _check("an editable sheet grows no Include bar", _has_uid_prefix(rows, "pack_include_bar_"), false) and ok
+	ok = _check("its class setup strip is still there", _has_uid_prefix(rows, "scaffolding_strip_"), true) and ok
+	ok = _check("its knobs are still rows of their own", _has_variable_row(rows, "jump_velocity"), true) and ok
 	view.free()
 	return ok
 

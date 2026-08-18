@@ -450,7 +450,10 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	# [{variable: LocalVariable, group: String, description: String}] in FILE order.
 	var knobs: Array = []
 	var leftovers: Array[EventRowData] = []
+	# A doc comment waiting to become the NEXT variable's description, and the row it came from - kept
+	# so a comment nothing claims is shown rather than quietly swallowed.
 	var pending_description: String = ""
+	var pending_row: EventRowData = null
 	# The @export_group in force: Godot's grouping runs until the NEXT group line, so the importer
 	# records it on the FIRST knob of each run only - carry it forward or every group but its first
 	# knob lands in the wrong bar.
@@ -481,10 +484,14 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 				# line of its own. An ANNOTATION block says nothing to a reader and nothing to the
 				# next row either, so it stays a visible row rather than being silently hidden.
 				var comment_text: String = _head_comment_text(code_lines)
+				if pending_row != null:
+					leftovers.append(pending_row)
+					pending_row = null
 				if comment_text.is_empty():
 					leftovers.append(row_data)
 				else:
 					pending_description = comment_text
+					pending_row = row_data
 				consumed = index + 1
 				continue
 			break
@@ -492,6 +499,9 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			_shift_row_indent(row_data, 1)
 			triggers.append(row_data)
 			pending_description = ""
+			if pending_row != null:
+				leftovers.append(pending_row)
+				pending_row = null
 			consumed = index + 1
 			continue
 		if source is LocalVariable:
@@ -503,6 +513,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 				if host_class.is_empty():
 					host_class = variable.type_name
 				pending_description = ""
+				pending_row = null  # the `host` doc comment says what the include bar now says
 				consumed = index + 1
 				continue
 			var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
@@ -513,15 +524,20 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			var description: String = str(attributes.get("tooltip", "")).strip_edges()
 			if description.is_empty():
 				description = pending_description
+			elif pending_row != null:
+				leftovers.append(pending_row)  # the knob had its own sentence; this one belongs to nobody
 			knobs.append({
 				"variable": variable,
 				"group": current_group if variable.exported else "",
 				"description": description
 			})
 			pending_description = ""
+			pending_row = null
 			consumed = index + 1
 			continue
 		break
+	if pending_row != null:
+		leftovers.append(pending_row)
 	# Nothing that reads as a pack head - leave the sheet exactly as it was built.
 	if not identity_seen or (triggers.is_empty() and knobs.is_empty()):
 		return rows
@@ -589,9 +605,16 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 	if identity_icon != null:
 		badge_meta["badge_icon"] = identity_icon
 	var spans: Array[SemanticSpan] = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, badge_meta)]
-	spans.append(_make_span(EventSheetL10n.translate("Addon Pack"), SemanticSpan.SpanType.VALUE, {
-		"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_PRIMARY
-	}))
+	# "Addon Pack" is a CLAIM, so only a file that actually is one makes it: a declared @ace_version,
+	# or a script living in the addon folder. Any other opened .gd is just a script, and saying
+	# otherwise would teach a beginner the wrong word for what they are looking at.
+	var is_pack: bool = not sheet.addon_version.strip_edges().is_empty() \
+		or str(sheet.external_source_path).begins_with("res://eventsheet_addons/")
+	spans.append(_make_span(
+		EventSheetL10n.translate("Addon Pack") if is_pack else EventSheetL10n.translate("Script"),
+		SemanticSpan.SpanType.VALUE,
+		{"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_PRIMARY}
+	))
 	var pack_name: String = sheet.custom_class_name.strip_edges()
 	if pack_name.is_empty():
 		pack_name = str(sheet.external_source_path).get_file().get_basename()
