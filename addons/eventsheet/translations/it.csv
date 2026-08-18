@@ -1846,3 +1846,46 @@ Wait one tick,Attendi un tick
 Wait one physics tick,Attendi un tick di fisica
 Wait for signal {object} {trigger},Attendi il segnale {object} {trigger}
 connects {object} {trigger},collega {object} {trigger}
+is a {type},è un {type}
+{value} is one of {entries},{value} è uno di {entries}
+{table} has key {key},{table} ha la chiave {key}
+{list} contains {value},{list} contiene {value}
+has function {verb},ha la funzione {verb}
+has child {child},ha il figlio {child}
+has item {key},ha l'elemento {key}
+{file} exists,{file} esiste
+On {action} released,Quando {action} rilasciato
+On {action} pressed (this event),Quando {action} premuto (questo evento)
+On {action} released (this event),Quando {action} rilasciato (questo evento)
+{key} is down,{key} è premuto
+{key} button is down,Il pulsante {key} è premuto
+Log error {value},Registra errore {value}
+Log warning {value},Registra avviso {value}
+Log {value},Registra {value}
+Assert {condition},Asserisci {condition}
+Assert {condition} {message},Asserisci {condition} {message}
+Set item {key} to {value} (section {section}),Imposta l'elemento {key} a {value} (sezione {section})
+Write {text},Scrivi {text}
+Save {file},Salva {file}
+Load {file},Carica {file}
+Open {file} for writing (as {handle}),Apri {file} in scrittura (come {handle})
+Open {file} for reading (as {handle}),Apri {file} in lettura (come {handle})
+Open {file} for reading and writing (as {handle}),Apri {file} in lettura e scrittura (come {handle})
+Set collision with layer {layer} {state},Collisione con il livello {layer} {state}
+Set collisions {state},Collisioni {state}
+Set as active camera,Imposta come camera attiva
+Restart,Riavvia
+Apply impulse {value},Applica impulso {value}
+Apply force {value},Applica forza {value}
+Set velocity to {value},Imposta la velocità a {value}
+Set angular velocity to {value},Imposta la velocità angolare a {value}
+Start spraying,Inizia a emettere
+Stop spraying,Smetti di emettere
+Set zoom to {percent},Imposta lo zoom a {percent}
+item {key},elemento {key}
+item {key} (default {fallback}),elemento {key} (predefinito {fallback})
+on,attiva
+off,disattiva
+Physics,Fisica
+Particles,Particelle
+runs in editor,viene eseguito nell'editor

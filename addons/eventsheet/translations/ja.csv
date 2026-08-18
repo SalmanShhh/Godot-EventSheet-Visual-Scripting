@@ -1846,3 +1846,46 @@ Wait one tick,1 ティック待つ
 Wait one physics tick,物理 1 ティック待つ
 Wait for signal {object} {trigger},シグナル {object} {trigger} を待つ
 connects {object} {trigger},{object} {trigger} を接続
+is a {type},{type} である
+{value} is one of {entries},{value} が {entries} のいずれか
+{table} has key {key},{table} にキー {key} がある
+{list} contains {value},{list} に {value} が含まれる
+has function {verb},関数 {verb} がある
+has child {child},子 {child} がある
+has item {key},項目 {key} がある
+{file} exists,{file} が存在する
+On {action} released,{action} を離したとき
+On {action} pressed (this event),{action} を押したとき (このイベント)
+On {action} released (this event),{action} を離したとき (このイベント)
+{key} is down,{key} が押されている
+{key} button is down,{key} ボタンが押されている
+Log error {value},エラーを記録 {value}
+Log warning {value},警告を記録 {value}
+Log {value},記録 {value}
+Assert {condition},アサート {condition}
+Assert {condition} {message},アサート {condition} {message}
+Set item {key} to {value} (section {section}),項目 {key} を {value} に設定 (セクション {section})
+Write {text},{text} を書き込む
+Save {file},{file} を保存
+Load {file},{file} を読み込む
+Open {file} for writing (as {handle}),{file} を書き込み用に開く ({handle} として)
+Open {file} for reading (as {handle}),{file} を読み込み用に開く ({handle} として)
+Open {file} for reading and writing (as {handle}),{file} を読み書き用に開く ({handle} として)
+Set collision with layer {layer} {state},レイヤー {layer} との衝突を {state}
+Set collisions {state},衝突を {state}
+Set as active camera,アクティブなカメラにする
+Restart,再開
+Apply impulse {value},力積 {value} を加える
+Apply force {value},力 {value} を加える
+Set velocity to {value},速度を {value} に設定
+Set angular velocity to {value},角速度を {value} に設定
+Start spraying,噴出を開始
+Stop spraying,噴出を停止
+Set zoom to {percent},ズームを {percent} に設定
+item {key},項目 {key}
+item {key} (default {fallback}),項目 {key} (既定 {fallback})
+on,オン
+off,オフ
+Physics,物理
+Particles,パーティクル
+runs in editor,エディタで実行

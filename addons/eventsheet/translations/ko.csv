@@ -1846,3 +1846,46 @@ Wait one tick,한 틱 대기
 Wait one physics tick,물리 한 틱 대기
 Wait for signal {object} {trigger},시그널 {object} {trigger} 대기
 connects {object} {trigger},{object} {trigger} 연결
+is a {type},{type} 임
+{value} is one of {entries},{value} 이(가) {entries} 중 하나
+{table} has key {key},{table} 에 키 {key} 있음
+{list} contains {value},{list} 에 {value} 포함
+has function {verb},함수 {verb} 있음
+has child {child},자식 {child} 있음
+has item {key},항목 {key} 있음
+{file} exists,{file} 존재함
+On {action} released,{action} 뗐을 때
+On {action} pressed (this event),{action} 눌렀을 때 (이 이벤트)
+On {action} released (this event),{action} 뗐을 때 (이 이벤트)
+{key} is down,{key} 눌림
+{key} button is down,{key} 버튼 눌림
+Log error {value},오류 기록 {value}
+Log warning {value},경고 기록 {value}
+Log {value},기록 {value}
+Assert {condition},단언 {condition}
+Assert {condition} {message},단언 {condition} {message}
+Set item {key} to {value} (section {section}),항목 {key} 을(를) {value} (으)로 설정 (섹션 {section})
+Write {text},{text} 쓰기
+Save {file},{file} 저장
+Load {file},{file} 불러오기
+Open {file} for writing (as {handle}),{file} 쓰기용으로 열기 ({handle} 로)
+Open {file} for reading (as {handle}),{file} 읽기용으로 열기 ({handle} 로)
+Open {file} for reading and writing (as {handle}),{file} 읽기 쓰기용으로 열기 ({handle} 로)
+Set collision with layer {layer} {state},레이어 {layer} 충돌 {state}
+Set collisions {state},충돌 {state}
+Set as active camera,활성 카메라로 설정
+Restart,다시 시작
+Apply impulse {value},충격량 {value} 적용
+Apply force {value},힘 {value} 적용
+Set velocity to {value},속도를 {value} (으)로 설정
+Set angular velocity to {value},각속도를 {value} (으)로 설정
+Start spraying,분사 시작
+Stop spraying,분사 중지
+Set zoom to {percent},줌을 {percent} (으)로 설정
+item {key},항목 {key}
+item {key} (default {fallback}),항목 {key} (기본값 {fallback})
+on,켬
+off,끔
+Physics,물리
+Particles,파티클
+runs in editor,에디터에서 실행

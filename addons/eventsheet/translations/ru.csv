@@ -1846,3 +1846,46 @@ Wait one tick,Ждать один тик
 Wait one physics tick,Ждать один тик физики
 Wait for signal {object} {trigger},Ждать сигнал {object} {trigger}
 connects {object} {trigger},подключает {object} {trigger}
+is a {type},является {type}
+{value} is one of {entries},{value} - одно из {entries}
+{table} has key {key},{table} содержит ключ {key}
+{list} contains {value},{list} содержит {value}
+has function {verb},имеет функцию {verb}
+has child {child},имеет потомка {child}
+has item {key},имеет запись {key}
+{file} exists,{file} существует
+On {action} released,При отпускании {action}
+On {action} pressed (this event),При нажатии {action} (это событие)
+On {action} released (this event),При отпускании {action} (это событие)
+{key} is down,{key} нажата
+{key} button is down,Кнопка {key} нажата
+Log error {value},Записать ошибку {value}
+Log warning {value},Записать предупреждение {value}
+Log {value},Записать {value}
+Assert {condition},Проверить {condition}
+Assert {condition} {message},Проверить {condition} {message}
+Set item {key} to {value} (section {section}),Установить запись {key} в {value} (раздел {section})
+Write {text},Записать {text}
+Save {file},Сохранить {file}
+Load {file},Загрузить {file}
+Open {file} for writing (as {handle}),Открыть {file} для записи (как {handle})
+Open {file} for reading (as {handle}),Открыть {file} для чтения (как {handle})
+Open {file} for reading and writing (as {handle}),Открыть {file} для чтения и записи (как {handle})
+Set collision with layer {layer} {state},Столкновение со слоем {layer} {state}
+Set collisions {state},Столкновения {state}
+Set as active camera,Сделать активной камерой
+Restart,Перезапустить
+Apply impulse {value},Применить импульс {value}
+Apply force {value},Применить силу {value}
+Set velocity to {value},Установить скорость в {value}
+Set angular velocity to {value},Установить угловую скорость в {value}
+Start spraying,Начать выброс
+Stop spraying,Остановить выброс
+Set zoom to {percent},Установить масштаб в {percent}
+item {key},запись {key}
+item {key} (default {fallback}),запись {key} (по умолчанию {fallback})
+on,вкл
+off,выкл
+Physics,Физика
+Particles,Частицы
+runs in editor,работает в редакторе

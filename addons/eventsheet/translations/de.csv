@@ -1846,3 +1846,46 @@ Wait one tick,Einen Tick warten
 Wait one physics tick,Einen Physik-Tick warten
 Wait for signal {object} {trigger},Auf Signal {object} {trigger} warten
 connects {object} {trigger},verbindet {object} {trigger}
+is a {type},ist ein {type}
+{value} is one of {entries},{value} ist eines von {entries}
+{table} has key {key},{table} hat Schlüssel {key}
+{list} contains {value},{list} enthält {value}
+has function {verb},hat Funktion {verb}
+has child {child},hat Kind {child}
+has item {key},hat Eintrag {key}
+{file} exists,{file} existiert
+On {action} released,Bei {action} losgelassen
+On {action} pressed (this event),Bei {action} gedrückt (dieses Ereignis)
+On {action} released (this event),Bei {action} losgelassen (dieses Ereignis)
+{key} is down,{key} ist gedrückt
+{key} button is down,Taste {key} ist gedrückt
+Log error {value},Fehler protokollieren {value}
+Log warning {value},Warnung protokollieren {value}
+Log {value},Protokollieren {value}
+Assert {condition},Sicherstellen {condition}
+Assert {condition} {message},Sicherstellen {condition} {message}
+Set item {key} to {value} (section {section}),Eintrag {key} auf {value} setzen (Abschnitt {section})
+Write {text},{text} schreiben
+Save {file},{file} speichern
+Load {file},{file} laden
+Open {file} for writing (as {handle}),{file} zum Schreiben öffnen (als {handle})
+Open {file} for reading (as {handle}),{file} zum Lesen öffnen (als {handle})
+Open {file} for reading and writing (as {handle}),{file} zum Lesen und Schreiben öffnen (als {handle})
+Set collision with layer {layer} {state},Kollision mit Ebene {layer} {state}
+Set collisions {state},Kollisionen {state}
+Set as active camera,Als aktive Kamera setzen
+Restart,Neu starten
+Apply impulse {value},Impuls {value} anwenden
+Apply force {value},Kraft {value} anwenden
+Set velocity to {value},Geschwindigkeit auf {value} setzen
+Set angular velocity to {value},Winkelgeschwindigkeit auf {value} setzen
+Start spraying,Ausstoß starten
+Stop spraying,Ausstoß stoppen
+Set zoom to {percent},Zoom auf {percent} setzen
+item {key},Eintrag {key}
+item {key} (default {fallback}),Eintrag {key} (Standard {fallback})
+on,ein
+off,aus
+Physics,Physik
+Particles,Partikel
+runs in editor,läuft im Editor

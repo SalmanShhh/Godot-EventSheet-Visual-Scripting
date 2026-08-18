@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+### Added - an opened script's questions, text, saving, behaviours, input and logging read as rows
+
+Six more families of everyday GDScript now read as the rows they are instead of as the code they are
+written in. Display only: the file is untouched, the byte round-trip is unchanged, and the exact
+GDScript is still one hover away. Every shape reads the same whether it was typed by hand or dropped
+from the picker, because both go through the one row grammar.
+
+- **What an object is and has.** `body is Player` reads `body ▸ is a Player` with the class as a chip;
+  `"potion" in inventory` reads `inventory has key "potion"`; `x in [1, 2, 3]` reads
+  `x is one of 1, 2, 3`; `x in wave` reads `wave contains x`; `body.has_method("take_damage")` reads
+  `body ▸ has function Take Damage`; `has_node("Ball")` reads `Player ▸ has child Ball`. And `>=` and
+  `<=` are drawn `≥` and `≤` wherever a comparison is shown - in a condition and inside a value alike,
+  next to the `≠` that already was.
+- **Text and math in the names a reader types into a field.** `uppercase(s)`, `lowercase(s)`,
+  `left(s, n)`, `mid(s, a, n)`, `right(s, n)`, `len(s)`, `find(s, x)`, `replace(s, a, b)`, `trim(s)`,
+  `split(s, ",")`, `s starts with x`, `s ends with x`, `s contains x`, `x ^ y` for a power, and both
+  `"%s: %d".format([a, b])` and `"{0}: {1}".format([a, b])` unrolled into the join `a & ": " & b`.
+  `int()`, `float()` and `str()` are already the same word and stay as they are.
+- **Saving, files and JSON under the three objects that own them.** `Storage ▸ Set item "score" to hp
+  (section "save")`, `Storage ▸ Set s to item "score" (default 0)`, `Storage ▸ Save "save.cfg"`,
+  `Storage ▸ has item "score"`, `JSON ▸ Set d to parsed text`, `JSON ▸ Set t to d as text`,
+  `File ▸ Open "log.txt" for writing (as f)`, `f ▸ Write line` and `File ▸ "log.txt" exists`.
+- **Behaviour words, decided by the object's known class.** A RigidBody reads
+  `ball ▸ Physics  Apply impulse v` / `Physics  Set velocity to v`; a camera reads
+  `Set zoom to 200%` and `Set as active camera`; an emitter reads `Particles  Start spraying` /
+  `Stop spraying` / `Restart`; and the collision knobs read `Set collision with layer 2 on` and
+  `Set collisions off`. A class the sheet does not know gets no behaviour words at all - a guess would
+  put them on the wrong object.
+- **Input phases and devices.** `Keyboard ▸ On "jump" released`, `Keyboard ▸ On "pause" pressed
+  (this event)` for the `InputEvent` spellings, `Keyboard ▸ X is down`, `Mouse ▸ left button is down`,
+  and the analogue reads under the pad: `Gamepad ▸ strength of "gas"`.
+- **Logging, asserts, `breakpoint` and `@tool`.** `System ▸ Log error x` (both `push_error` and
+  `printerr`), `Log warning x`, `Log x` for `print_rich`, and `System ▸ Assert c "msg"`. A bare
+  `breakpoint` says nothing at all: the row wears the sheet's own breakpoint dot, which is what that
+  line means. `@tool` reads as a `runs in editor` chip on the Include bar rather than as a row.
+
 ### Fixed - three rows of an opened file stopped saying things that were not true
 
 - **`if i == 1:` is a comparison, not an identity test.** Is The Same Object's reverse template is the
