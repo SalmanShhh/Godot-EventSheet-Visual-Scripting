@@ -38,6 +38,13 @@ const FAVORITES_SETTING := "eventsheets/picker/favorites"
 ## Marks an object-card entry as "hidden class, select to restore" rather than a scope target.
 const UNHIDE_PREFIX := "unhide:"
 
+## Marks an object-page entry as "one of the open script's own functions - insert a call to it"
+## rather than a scope target. The rest of the string is the GDScript function name.
+const FUNCTION_PREFIX := "function:"
+## Where a Functions entry stashes the function it targets, so the single commit path can pre-fill
+## the Call Function parameters instead of needing a second dispatch table.
+const FUNCTION_META_KEY := "eventsheet_function_name"
+
 ## Simple Mode (the newcomer view) hides the advanced "drop to code" + debug ACEs from the picker,
 ## so beginners aren't shown Run GDScript / Evaluate / Breakpoint / Assert / Print Rich. Keyed by
 ## "provider_id::ace_id" (definition.id == the descriptor's ace_id - see ace_adapter.gd).
@@ -255,6 +262,10 @@ var _registry: EventSheetACERegistry = null
 ## Must be called before open().
 func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_registry = registry
+	# The node the picker hangs on IS the dock, and the dock owns the open sheet - so the Functions
+	# page reads `get_current_sheet()` off it directly and follows the active tab with no extra
+	# wiring to keep in sync.
+	_host_node = parent_node
 	load_recents()  # hydrate this project's persisted recents before the ★ Recent pane first draws
 	if _window != null:
 		return
@@ -438,6 +449,8 @@ var _simple_mode_provider: Callable = Callable()
 var _reflect_class_provider: Callable = Callable()
 ## Returns whether the current sheet is a behaviour (its `host` var exists); gates the host-only ACEs.
 var _behavior_mode_provider: Callable = Callable()
+## The node the dialog was attached to (the dock). Only read for the open sheet, never held onto.
+var _host_node: Node = null
 
 
 func set_simple_mode_provider(provider: Callable) -> void:
@@ -705,11 +718,173 @@ static func object_cards_for(definitions: Array[ACEDefinition]) -> Array[Diction
 	return cards
 
 
+## The open sheet, when there is a dock to read it off. Null everywhere else (a bare picker in a
+## test, a headless run), which is exactly what the Functions page treats as "no script open".
+func _sheet_for_functions() -> EventSheetResource:
+	if _host_node == null or not _host_node.has_method("get_current_sheet"):
+		return null
+	return _host_node.get_current_sheet() as EventSheetResource
+
+
+## The picker's Functions page for a sheet opened FROM a .gd: every function that file declares,
+## the published verbs first and the plain helpers folded under their own header. Helpers are
+## listed rather than hidden - they are functions of the same script and calling one is a normal
+## thing to do - but each entry says it was never published as an ACE.
+##
+## Pure + static (no Tree, no icons, no editor theme), so a test reads exactly what the page says
+## and a headless run builds it without a display. Returns {} when there is nothing to show: no
+## sheet, no .gd behind it, or a file that declares no functions.
+##
+## Shape: {"title", "note", "helpers_header", "published": [{"function_name", "label"}], "helpers": [...]}
+static func functions_page_content(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null or sheet.external_source_path.strip_edges().is_empty():
+		return {}
+	var published: Array[Dictionary] = []
+	var helpers: Array[Dictionary] = []
+	for entry: Variant in sheet.functions:
+		if not (entry is EventFunction):
+			continue
+		var event_function: EventFunction = entry as EventFunction
+		if event_function.function_name.strip_edges().is_empty():
+			continue
+		var record: Dictionary = {
+			"function_name": event_function.function_name,
+			"label": function_entry_label(event_function)
+		}
+		if event_function.expose_as_ace:
+			published.append(record)
+		else:
+			helpers.append(record)
+	if published.is_empty() and helpers.is_empty():
+		return {}
+	return {
+		"title": "ƒ %s" % EventSheetL10n.translate("Functions"),
+		"note": EventSheetL10n.translate("this script - %d") % (published.size() + helpers.size()),
+		"published": published,
+		"helpers": helpers,
+		"helpers_header": "+ %s (%d)" % [EventSheetL10n.translate("Helpers"), helpers.size()]
+	}
+
+
+## One function's entry line: its display name, its kind in one word ("action" / "condition" /
+## "expression" - void returns nothing, a bool answers a question, anything else hands a value
+## back), then one chip per parameter as "<name> <type-word>". So a reader learns what the verb IS
+## and what it takes without opening anything. An unpublished helper carries "not published" beside
+## its kind: it is callable, but it is not part of any sheet's vocabulary.
+static func function_entry_label(event_function: EventFunction) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	parts.append(EventSheetBBCodeLite.strip(EventSheetVerbProperties.display_name_of(event_function)))
+	var kind: String = EventSheetL10n.translate(ViewportRowBuilder.define_role_for(event_function))
+	if not event_function.expose_as_ace:
+		kind = "%s · %s" % [kind, EventSheetL10n.translate("not published")]
+	parts.append(kind)
+	for param: Variant in event_function.params:
+		if param is ACEParam:
+			parts.append("%s %s" % [
+				ViewportRowBuilder.friendly_param_label(param as ACEParam),
+				ViewportRowBuilder.friendly_type_word((param as ACEParam).type_name)
+			])
+	return "   ".join(parts)
+
+
+## The script's own functions as pickable definitions: COPIES of the Core "Call Function" ACE with
+## the target named up front, so choosing one inserts the ordinary call row - frozen ace id, frozen
+## template - instead of anything new. The target rides in metadata; _commit_definition reads it
+## back and pre-fills the parameters. Published verbs lead, helpers follow, matching the page.
+static func function_call_definitions(sheet: EventSheetResource, registry: EventSheetACERegistry) -> Array[ACEDefinition]:
+	var out: Array[ACEDefinition] = []
+	if registry == null:
+		return out
+	var content: Dictionary = functions_page_content(sheet)
+	if content.is_empty():
+		return out
+	var base: ACEDefinition = registry.find_definition("Core", "CallFunction")
+	if base == null:
+		return out
+	for group_key: String in ["published", "helpers"]:
+		for entry: Variant in content.get(group_key, []):
+			var function_name: String = str((entry as Dictionary).get("function_name", ""))
+			var event_function: EventFunction = ViewportRowBuilder.find_function_by_name(sheet, function_name)
+			if event_function == null:
+				continue
+			# copy(), never duplicate(): an ACEDefinition's fields are plain vars, so duplicate()
+			# would hand back a blank definition that still looks valid.
+			var definition: ACEDefinition = base.copy()
+			definition.display_name = "%s %s" % [
+				EventSheetL10n.translate("Call"),
+				EventSheetBBCodeLite.strip(EventSheetVerbProperties.display_name_of(event_function))
+			]
+			if not event_function.description.strip_edges().is_empty():
+				definition.description = event_function.description.strip_edges()
+			definition.metadata[FUNCTION_META_KEY] = function_name
+			out.append(definition)
+	return out
+
+
+## Whether a search query should turn up one of the script's functions: part of the entry's own
+## words ("Call Award Points"), part of the GDScript name a coder would type ("award_points"), or
+## the same in-order subsequence the rest of the picker's search accepts. Static + pure so the
+## searchable-ness of a function is pinned without a live picker window.
+static func function_matches_query(definition: ACEDefinition, query: String) -> bool:
+	if definition == null:
+		return false
+	var lowered: String = query.strip_edges().to_lower()
+	if lowered.is_empty():
+		return false
+	if definition.display_name.to_lower().contains(lowered):
+		return true
+	if str(definition.metadata.get(FUNCTION_META_KEY, "")).to_lower().contains(lowered):
+		return true
+	return fuzzy_match(query, definition.display_name)
+
+
+## The Functions section, built as the FIRST thing on the object page: what the open file itself
+## can do comes before what the engine and the packs can do.
+func _populate_function_cards(root: TreeItem) -> void:
+	var content: Dictionary = functions_page_content(_sheet_for_functions())
+	if content.is_empty():
+		return
+	var header: TreeItem = _objects_tree.create_item(root)
+	header.set_text(0, "%s   %s" % [str(content.get("title", "")), str(content.get("note", ""))])
+	header.set_custom_color(0, GROUP_COLOR_CUSTOM)
+	header.set_selectable(0, false)
+	for entry: Variant in content.get("published", []):
+		_add_function_item(header, entry as Dictionary, false)
+	var helpers: Array = content.get("helpers", [])
+	if helpers.is_empty():
+		return
+	# Folded, not hidden: the everyday reading is the published verbs, and the helpers are one
+	# click away for the moment you do want to call one.
+	var helpers_header: TreeItem = _objects_tree.create_item(header)
+	helpers_header.set_text(0, str(content.get("helpers_header", "")))
+	helpers_header.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+	helpers_header.set_selectable(0, false)
+	helpers_header.collapsed = true
+	for entry: Variant in helpers:
+		_add_function_item(helpers_header, entry as Dictionary, true)
+
+
+func _add_function_item(parent_item: TreeItem, entry: Dictionary, muted: bool) -> void:
+	var function_name: String = str(entry.get("function_name", ""))
+	var item: TreeItem = _objects_tree.create_item(parent_item)
+	item.set_text(0, str(entry.get("label", "")))
+	item.set_tooltip_text(0, EventSheetL10n.translate("Insert a call to %s in this script.") % function_name)
+	item.set_metadata(0, "%s%s" % [FUNCTION_PREFIX, function_name])
+	if muted:
+		item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+	# Headless has no editor theme, so this is null there and the entry simply carries no icon.
+	var function_icon: Texture2D = editor_icon("MemberMethod")
+	if function_icon != null:
+		item.set_icon(0, function_icon)
+		item.set_icon_max_width(0, 16)
+
+
 func _populate_object_cards() -> void:
 	if _objects_tree == null or _registry == null:
 		return
 	_objects_tree.clear()
 	var root: TreeItem = _objects_tree.create_item()
+	_populate_function_cards(root)
 	var definitions: Array[ACEDefinition] = _registry.get_all_definitions()
 	# System is one selectable row at the top (colored like a node-type header, it IS the
 	# whole Core vocabulary); every other object sits under one section header.
@@ -836,6 +1011,10 @@ func _on_object_tree_selected() -> void:
 		if _info_label != null:
 			_info_label.text = "%s is visible again." % restored
 		return
+	# A Functions entry is not an object to browse - it IS the row, so picking it adds the call.
+	if chosen.begins_with(FUNCTION_PREFIX):
+		_commit_function_call(chosen.trim_prefix(FUNCTION_PREFIX))
+		return
 	_object_filter_provider = str(selected.get_metadata(0))
 	_objects_back.text = "◂ All objects · %s" % selected.get_text(0)
 	_show_classic(true)
@@ -900,6 +1079,13 @@ func _refresh_tree() -> void:
 			if fuzzy_match(query, candidate.display_name):
 				definitions.append(candidate)
 				fuzzy_added += 1
+	# The open file's OWN functions are vocabulary too: typing part of a function's name finds it
+	# here, as the ordinary Call Function row aimed at that function. Search only - browsing them
+	# is the object page's Functions section, and an unfiltered tree should not grow a second copy.
+	if filtering:
+		for function_definition: ACEDefinition in function_call_definitions(_sheet_for_functions(), _registry):
+			if function_matches_query(function_definition, query):
+				definitions.append(function_definition)
 	# Behaviour-only host vocabulary: hide Host / Host Is Valid off a non-behaviour sheet (they read the
 	# literal `host`, which only a behaviour sheet's prelude declares). Single chokepoint - `definitions`
 	# is the assembled set that renders, so this covers search, synonyms, reflection, and fuzzy hits.
@@ -1943,13 +2129,30 @@ func _on_add_button_pressed() -> void:
 	_commit_definition(_selected_definition)
 
 
+## Picking one of the open script's functions: find its Call Function definition and commit that -
+## same path as every other entry, so undo, recents and the params dialog behave identically.
+func _commit_function_call(function_name: String) -> void:
+	for definition: ACEDefinition in function_call_definitions(_sheet_for_functions(), _registry):
+		if str(definition.metadata.get(FUNCTION_META_KEY, "")) == function_name:
+			_commit_definition(definition)
+			return
+
+
 ## Single commit path for the tree, the side panes, and the Add button.
 func _commit_definition(definition: ACEDefinition) -> void:
 	if definition == null:
 		return
 	close()
 	note_recent(definition.provider_id, definition.id)
-	ace_selected.emit(definition, _context.duplicate(true))
+	var context: Dictionary = _context.duplicate(true)
+	# A Functions entry is a Call Function row whose target is already chosen, so the params dialog
+	# opens on the ARGUMENTS instead of asking again which function was meant.
+	var target_function: String = str(definition.metadata.get(FUNCTION_META_KEY, ""))
+	if not target_function.is_empty():
+		var initial_values: Dictionary = context.get("existing_params", {})
+		initial_values["function_name"] = target_function
+		context["existing_params"] = initial_values
+	ace_selected.emit(definition, context)
 
 
 func close() -> void:

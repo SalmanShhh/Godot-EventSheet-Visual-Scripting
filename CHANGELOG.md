@@ -522,6 +522,25 @@ pressing 0.5 s later does not. The FPS Controller guide gains the knob, both ver
 cases; the vocabulary catalog and help bundle are regenerated. Existing scenes keep their feel:
 the default 0.1 s only ever adds a jump that used to be dropped.
 
+### Added - the picker opens on the open script's own functions
+
+- **`ƒ Functions` is the first section of the picker's object page** when the sheet came from a `.gd`
+  file, with the muted sub-note `this script - 4`. Before System, before the packs, before your
+  project: what the file in front of you can already do. Each published verb shows its display name,
+  its kind in one word (`action` / `condition` / `expression`), and one chip per parameter as
+  `amount number`, `enabled true/false` - so you learn what the verb is and what it takes without
+  opening anything.
+- **The unpublished helpers are folded, not hidden**, under a `+ Helpers (2)` header. They are
+  functions of the same script and calling one is a normal thing to do; each entry says
+  `not published` beside its kind so nobody mistakes a helper for part of the vocabulary.
+- **Picking one inserts an ordinary call.** Every entry is a copy of the frozen `Core/CallFunction`
+  ace with its target pre-filled, so the row lands through the path that already existed, emits a
+  plain `award_points(5.0)`, and reads back as `Functions · Call Award Points   amount = 5.0` when
+  the file is reopened. No new ace id, no template change.
+- **Search finds them too** - part of a verb's display name or of its GDScript name - and the ghost
+  row's before-you-type chips lead with the script's own verbs, which live in no usage table and no
+  featured list.
+
 ## [0.17.0] - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 
 ### Added - the developer-experience wave, part two: the editor seams (9 suggestions)

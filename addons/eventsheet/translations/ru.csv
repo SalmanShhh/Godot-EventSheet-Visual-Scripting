@@ -527,11 +527,9 @@ One entry is a…,Одна запись - это…
 Resource name,Имя ресурса
 What does an entry have?,Что есть у записи?
 "One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
-
 name
 kind: coin|gem|key
 weight: float","Один столбец на строку. Обычные слова дают текстовый столбец; добавьте "": float"", "": int"" или "": bool"" для чисел и переключателей; перечислите варианты через | для выпадающего списка.
-
 name
 kind: coin|gem|key
 weight: float"
@@ -1894,3 +1892,9 @@ group,группа
 children,потомки
 children of,потомки от
 in,в
+action,действие
+condition,условие
+expression,выражение
+this script - %d,этот скрипт - %d
+not published,не опубликовано
+Insert a call to %s in this script.,Вставляет вызов %s в этом скрипте.

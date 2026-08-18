@@ -527,11 +527,9 @@ One entry is a…,1 つのエントリーは…
 Resource name,リソース名
 What does an entry have?,エントリーには何がありますか?
 "One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
-
 name
 kind: coin|gem|key
 weight: float","1 行に 1 列。普通の単語はテキスト列になり、数値やトグルには "": float""、"": int""、"": bool"" を付けます。選択肢を | で並べるとドロップダウンになります。
-
 name
 kind: coin|gem|key
 weight: float"
@@ -1894,3 +1892,9 @@ group,グループ
 children,子
 children of,の子
 in,の中
+action,アクション
+condition,条件
+expression,式
+this script - %d,このスクリプト - %d
+not published,未公開
+Insert a call to %s in this script.,このスクリプトで %s の呼び出しを挿入します。

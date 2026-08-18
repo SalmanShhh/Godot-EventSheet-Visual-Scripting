@@ -527,11 +527,9 @@ One entry is a…,Une entrée est un(e)…
 Resource name,Nom de la ressource
 What does an entry have?,Que contient une entrée ?
 "One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
-
 name
 kind: coin|gem|key
 weight: float","Une colonne par ligne. Des mots simples créent une colonne de texte ; ajoutez "": float"", "": int"" ou "": bool"" pour les nombres et les interrupteurs ; listez des choix avec | pour une liste déroulante.
-
 name
 kind: coin|gem|key
 weight: float"
@@ -1894,3 +1892,9 @@ group,groupe
 children,enfants
 children of,enfants de
 in,dans
+action,action
+condition,condition
+expression,expression
+this script - %d,ce script - %d
+not published,non publiée
+Insert a call to %s in this script.,Insère un appel à %s dans ce script.

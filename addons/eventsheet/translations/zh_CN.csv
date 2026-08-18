@@ -527,11 +527,9 @@ One entry is a…,一条条目是…
 Resource name,资源名称
 What does an entry have?,一条条目包含什么？
 "One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
-
 name
 kind: coin|gem|key
 weight: float","每行一列。普通词语会成为文本列；加上 "": float""、"": int"" 或 "": bool"" 表示数字和开关；用 | 列出选项即可得到下拉框。
-
 name
 kind: coin|gem|key
 weight: float"
@@ -1894,3 +1892,9 @@ group,组
 children,子节点
 children of,的子节点
 in,在
+action,动作
+condition,条件
+expression,表达式
+this script - %d,此脚本 - %d
+not published,未发布
+Insert a call to %s in this script.,在此脚本中插入对 %s 的调用。

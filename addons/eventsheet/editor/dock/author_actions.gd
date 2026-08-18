@@ -195,7 +195,14 @@ func suggested_definitions(origin: String, limit: int = 4) -> Array:
 		var b_definition: ACEDefinition = b["definition"]
 		return "%s|%s" % [a_definition.provider_id, a_definition.id] < "%s|%s" % [b_definition.provider_id, b_definition.id])
 	var out: Array = []
-	for entry: Dictionary in scored.slice(0, limit):
+	# The open script's OWN functions lead the chips when the add key means an action: a file's own
+	# verbs are the vocabulary its author reaches for first, and they exist in no usage table and no
+	# featured list. Capped at half the row so the everyday verbs below are never pushed off entirely.
+	if wanted == ACEDefinition.ACEType.ACTION:
+		var own_functions: Array = ACEPickerDialog.function_call_definitions(_dock._current_sheet, _dock._ace_registry)
+		for definition: ACEDefinition in own_functions.slice(0, maxi(1, limit / 2)):
+			out.append(definition)
+	for entry: Dictionary in scored.slice(0, maxi(0, limit - out.size())):
 		out.append(entry["definition"])
 	return out
 

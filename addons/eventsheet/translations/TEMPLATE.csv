@@ -518,7 +518,6 @@ One entry is a…,
 Resource name,
 What does an entry have?,
 "One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
-
 name
 kind: coin|gem|key
 weight: float",
@@ -1881,3 +1880,9 @@ group,
 children,
 children of,
 in,
+action,
+condition,
+expression,
+this script - %d,
+not published,
+Insert a call to %s in this script.,

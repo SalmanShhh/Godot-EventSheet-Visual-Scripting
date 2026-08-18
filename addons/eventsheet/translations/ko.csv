@@ -527,11 +527,9 @@ One entry is a…,항목 하나는…
 Resource name,리소스 이름
 What does an entry have?,항목 하나에는 무엇이 있나요?
 "One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
-
 name
 kind: coin|gem|key
 weight: float","한 줄에 열 하나씩. 일반 단어는 텍스트 열이 되고, 숫자와 토글에는 "": float"", "": int"", "": bool""을 붙이세요. 선택지를 | 로 나열하면 드롭다운이 됩니다.
-
 name
 kind: coin|gem|key
 weight: float"
@@ -1894,3 +1892,9 @@ group,그룹
 children,자식
 children of,의 자식
 in,안
+action,액션
+condition,조건
+expression,표현식
+this script - %d,이 스크립트 - %d
+not published,게시되지 않음
+Insert a call to %s in this script.,이 스크립트에서 %s 호출을 삽입합니다.
