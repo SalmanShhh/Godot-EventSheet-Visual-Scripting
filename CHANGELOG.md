@@ -11,6 +11,7 @@
   migration guide moved to `docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md`. Guides may still
   draw the comparison for a reader who needs it; `tests/no_product_names_in_code_test.gd` keeps the
   code itself clean.
+
 ### Added - the structure an opened script is organised with now reads as sheet structure
 
 Four shapes every real Godot script is full of used to read as code, as comments, or as nothing at
