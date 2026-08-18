@@ -1846,3 +1846,10 @@ Wait one tick,Einen Tick warten
 Wait one physics tick,Einen Physik-Tick warten
 Wait for signal {object} {trigger},Auf Signal {object} {trigger} warten
 connects {object} {trigger},verbindet {object} {trigger}
+Create object,Objekt erzeugen
+as,als
+copy of,Kopie von
+group,Gruppe
+children,Kinder
+children of,Kinder von
+in,in

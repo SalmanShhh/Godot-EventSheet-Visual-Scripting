@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+### Added - four more Construct habits Godot spells differently
+
+Construct's commonest idioms have no Godot spelling of their own, so a project writes them as
+several statements that only mean anything together. Opening any hand-written `.gd` now reads them
+back as the one thing each of them says. All four are readings over unchanged rows: the file's own
+GDScript is what emission produces, byte for byte, and it is still one hover and one double-click
+away.
+
+- **Picking.** A For-each whose ENTIRE body is one `if` is Construct's whole model - a condition on
+  an object picks the instances, the actions run on the picked ones - and now reads as the one event
+  it means: `Enemy  (group "enemies")  hp < 10` on the left, its body on the right. The note says
+  where the instances came from (a group by name, the children of an object, any other list), and the
+  object column names the thing, so the condition drops the loop's own possessive. A body with any
+  statement outside the `if`, or a loop that filters, orders, caps, counts or spreads across frames,
+  is doing work of its own and keeps the plain For-each + sub-event reading.
+- **`match` on a plain value** reads as the if / else-if / else chain a Construct user knows: the
+  first case states its test, every later case is an `Else` carrying its own test on a second
+  condition line, and `_` is a plain `Else`. A case listing several values becomes the OR block. A
+  pattern that binds a name or destructures says more than a chain can and keeps the switch reading;
+  a state-shaped subject keeps its `◆ State:` reading.
+- **Spawning is Construct's Create object.** `var b := X.instantiate()`, `add_child(b)` and the first
+  line that places it read as one row - `System ▸ Create object Enemy at (10, 20) (as b)` - naming
+  the SCENE'S ROOT node the way a Construct user names the thing they spawn, falling back to the
+  variable's own name when the project has no scene for it. `.duplicate()` reads as a copy, all the
+  lines show on hover, and the new object then answers to its local name with the scene root's icon.
+- **Signals wired in the SCENE read as triggers.** Most projects connect signals in the Godot editor,
+  which writes the wiring into the `.tscn` and leaves the script holding a bare
+  `func _on_button_pressed()` - so the commonest UI script of all used to open as a list of nameless
+  helpers. The connections of the scene(s) whose root uses the script are now read back and the
+  handler lifts as `Button ▸ On pressed`, with the emitting node's name and class picture taken from
+  the scene. The scene is never touched and no connect line is ever emitted into the script.
+
 ### Added - the head of an opened plain script reads as the object it drives
 
 Opening somebody's own `.gd` used to say `⇥ Script` and then list GDScript type names -

@@ -1846,3 +1846,10 @@ Wait one tick,1 ティック待つ
 Wait one physics tick,物理 1 ティック待つ
 Wait for signal {object} {trigger},シグナル {object} {trigger} を待つ
 connects {object} {trigger},{object} {trigger} を接続
+Create object,オブジェクトを作成
+as,として
+copy of,のコピー
+group,グループ
+children,子
+children of,の子
+in,の中

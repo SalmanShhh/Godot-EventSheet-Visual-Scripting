@@ -1846,3 +1846,10 @@ Wait one tick,等待一个 tick
 Wait one physics tick,等待一个物理 tick
 Wait for signal {object} {trigger},等待信号 {object} {trigger}
 connects {object} {trigger},连接 {object} {trigger}
+Create object,创建对象
+as,名为
+copy of,副本
+group,组
+children,子节点
+children of,的子节点
+in,在

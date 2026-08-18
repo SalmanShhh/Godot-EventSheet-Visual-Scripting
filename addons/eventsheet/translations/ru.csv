@@ -1846,3 +1846,10 @@ Wait one tick,Ждать один тик
 Wait one physics tick,Ждать один тик физики
 Wait for signal {object} {trigger},Ждать сигнал {object} {trigger}
 connects {object} {trigger},подключает {object} {trigger}
+Create object,Создать объект
+as,как
+copy of,копия
+group,группа
+children,потомки
+children of,потомки от
+in,в

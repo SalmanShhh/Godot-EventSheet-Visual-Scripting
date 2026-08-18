@@ -1846,3 +1846,10 @@ Wait one tick,한 틱 대기
 Wait one physics tick,물리 한 틱 대기
 Wait for signal {object} {trigger},시그널 {object} {trigger} 대기
 connects {object} {trigger},{object} {trigger} 연결
+Create object,오브젝트 생성
+as,이름
+copy of,복사본
+group,그룹
+children,자식
+children of,의 자식
+in,안

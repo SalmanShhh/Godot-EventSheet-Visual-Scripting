@@ -4846,6 +4846,18 @@ func _handler_object_label(event_row: EventRow) -> String:
 	return _object_label_for(event_row.trigger_provider_id, event_row.trigger_id)
 
 
+## M42 - the class picture of the node a SCENE-wired signal comes from. The scene said what class the
+## emitter is when the connection was read, so this is a known answer rather than a guess; null for
+## every other trigger, which keeps its vocabulary icon.
+func _scene_trigger_icon(event_row: EventRow) -> Texture2D:
+	if event_row == null or not _viewport.show_object_icons:
+		return null
+	var source_class: String = str(event_row.get_meta("__scene_source_class", ""))
+	if source_class.is_empty():
+		return null
+	return ACEPickerDialog.editor_icon(source_class)
+
+
 ## The payload chips for a signal-backed trigger: one per handler parameter, named the way the
 ## handler names it ("body: Node2D" -> "body"). Empty for every trigger that hands nothing over.
 func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
@@ -5180,7 +5192,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"chip": true,
 					"line_index": condition_line_index,
 					"object_label": _handler_object_label(event_row),
-					"object_icon": _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
+					# M42 - a handler the SCENE wired knows exactly which node emits and what class it
+					# is, so that node's own picture leads the row instead of the generic trigger icon.
+					"object_icon": _scene_trigger_icon(event_row) if _scene_trigger_icon(event_row) != null \
+						else _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
 				}.merged(condition_style_meta, true)
 			)
 		)
@@ -7825,15 +7840,23 @@ func _scene_variable_map(sheet: EventSheetResource) -> Dictionary:
 	if sheet == null:
 		return map
 	for entry: Variant in sheet.events:
+		var declared_name: String = ""
+		var res_path: String = ""
 		var variable: LocalVariable = entry as LocalVariable
-		if variable == null or variable.name.is_empty():
-			continue
-		var res_path: String = ViewportRowBuilder.preloaded_path(str(variable.default_value))
-		if res_path.is_empty():
+		if variable != null:
+			declared_name = variable.name
+			res_path = ViewportRowBuilder.preloaded_path(str(variable.default_value))
+		elif entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "preload":
+			# `const ENEMY_SCENE := preload("res://enemy.tscn")` lifts to a preload BLOCK rather than a
+			# variable, and a const is how most projects hold the thing they spawn.
+			var fields: Dictionary = (entry as CustomBlockRow).fields
+			declared_name = str(fields.get("name", ""))
+			res_path = str(fields.get("path", ""))
+		if declared_name.is_empty() or res_path.is_empty():
 			continue
 		var resolved: Dictionary = ViewportRowBuilder.resolve_res_object(res_path)
 		if not resolved.is_empty():
-			map[variable.name] = resolved
+			map[declared_name] = resolved
 	return map
 
 
