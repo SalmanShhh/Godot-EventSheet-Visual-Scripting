@@ -12,7 +12,26 @@ extends RefCounted
 ## Returns a stable trigger-group key. The source path is part of the key because the same
 ## signal from different source nodes needs different handlers.
 static func get_trigger_key(event: EventRow) -> String:
-	return "%s::%s::%s" % [event.trigger_provider_id, event.trigger_id, event.trigger_source_path]
+	var trigger_id: String = event.trigger_id
+	if trigger_id.begins_with(NOTIFICATION_PREFIX):
+		# Every notification a sheet reacts to shares ONE `_notification` handler: the engine calls
+		# that single function for every notification, and two same-named functions do not parse.
+		# Which notification an event wants rides on its own id and becomes a case inside the handler.
+		trigger_id = "OnNotification"
+	return "%s::%s::%s" % [event.trigger_provider_id, trigger_id, event.trigger_source_path]
+
+
+## Trigger ids of the form "OnNotification:<NAME>" - one per engine notification constant a sheet
+## reacts to (NAME is the constant without its `NOTIFICATION_` prefix stripped: the id carries the
+## full constant, so the emitted case is the constant itself).
+const NOTIFICATION_PREFIX: String = "OnNotification:"
+
+
+## The notification constant an "OnNotification:<NAME>" event names, or "" for any other trigger.
+static func notification_constant_for(trigger_id: String) -> String:
+	if not trigger_id.begins_with(NOTIFICATION_PREFIX):
+		return ""
+	return trigger_id.substr(NOTIFICATION_PREFIX.length())
 
 
 ## Resolves trigger metadata for code generation:
@@ -37,6 +56,14 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_unhandled_input", "event: InputEvent")
 		"OnUnhandledKeyInput":
 			return _lifecycle("_unhandled_key_input", "event: InputEvent")
+		"OnDraw":
+			# The object's own paint pass. Runs when the node is asked to redraw (`queue_redraw()`),
+			# which is why it classifies as a reaction rather than a per-frame tick below.
+			return _lifecycle("_draw", "")
+		"OnEnterTree":
+			return _lifecycle("_enter_tree", "")
+		"OnExitTree":
+			return _lifecycle("_exit_tree", "")
 		"OnEditorRun":
 			return _lifecycle("_run", "")
 		"OnProjectExport":
@@ -101,6 +128,10 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			var signal_name: String = str(event.trigger_params.get("signal_name", "eventforge_signal"))
 			return _signal_backed("_on%s_%s" % [source_token, signal_name], str(event.trigger_params.get("args", "")).strip_edges(), signal_name, source_path)
 		_:
+			# One engine notification. Every such event compiles into the SAME `_notification`
+			# handler as a case of its `match what:` - see get_trigger_key and the emitter.
+			if event.trigger_id.begins_with(NOTIFICATION_PREFIX):
+				return _lifecycle("_notification", "what: int")
 			# Custom signal triggers from reflection providers/addons ("signal:<name>").
 			if event.trigger_id.begins_with("signal:"):
 				var custom_signal: String = event.trigger_id.trim_prefix("signal:")
@@ -128,7 +159,8 @@ static func tempo_class_for(trigger_id: String) -> String:
 			return TEMPO_EVERY_TICK
 		"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput":
 			return TEMPO_INPUT
-		"OnReady", "OnEditorRun", "OnProjectExport":
+		"OnReady", "OnEditorRun", "OnProjectExport", "OnEnterTree", "OnExitTree":
+			# The tree callbacks run once per lifetime of the object, like _ready does.
 			return TEMPO_ONCE
 		_:
 			return TEMPO_SIGNAL

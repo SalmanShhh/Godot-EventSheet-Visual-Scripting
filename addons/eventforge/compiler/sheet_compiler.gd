@@ -887,8 +887,33 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 		lines.append("func %s() -> void:" % function_name)
 	else:
 		lines.append("func %s(%s) -> void:" % [function_name, args])
+	if _emit_notification_match(events, lines, source_map, result["warnings"]):
+		return
 	if not _emit_event_body(events, lines, source_map, 1, result["warnings"]):
 		lines.append("\tpass")
+
+
+## The `_notification` handler's body: `match what:` with one case per notification the sheet reacts
+## to, in sheet order. Returns false (emitting nothing) unless EVERY event in the group names a
+## notification, which is what keeps every other trigger on the ordinary body path. The engine calls
+## `_notification` once for every notification, so the match - not one function each - is the shape.
+static func _emit_notification_match(events: Array, lines: PackedStringArray, source_map: Array, warnings: Array) -> bool:
+	var constants: PackedStringArray = PackedStringArray()
+	for event_entry: Variant in events:
+		if not (event_entry is EventRow):
+			return false
+		var constant: String = TriggerResolver.notification_constant_for((event_entry as EventRow).trigger_id)
+		if constant.is_empty():
+			return false
+		constants.append(constant)
+	if constants.is_empty():
+		return false
+	lines.append("\tmatch what:")
+	for case_index: int in range(events.size()):
+		lines.append("\t\t%s:" % constants[case_index])
+		if not _emit_event_body([events[case_index]], lines, source_map, 3, warnings):
+			lines.append("\t\t\tpass")
+	return true
 
 
 ## The lifter's per-anchor gate for a lifecycle handler: exactly what the slot above would emit for
@@ -1429,6 +1454,8 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 				for event_entry: Variant in events:
 					if event_entry is EventRow and _subtree_awaits(event_entry as EventRow):
 						split_events.append(event_entry)
+		if _emit_notification_match(events, lines, source_map, result["warnings"]):
+			continue
 		if split_events.is_empty():
 			had_body = _emit_event_body(events, lines, source_map, 1, result["warnings"]) or had_body
 		else:

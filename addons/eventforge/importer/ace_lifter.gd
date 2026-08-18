@@ -28,6 +28,14 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _input(event: InputEvent) -> void:": "OnInput",
 	"func _unhandled_input(event: InputEvent) -> void:": "OnUnhandledInput",
 	"func _unhandled_key_input(event: InputEvent) -> void:": "OnUnhandledKeyInput",
+	# The tree + paint callbacks. They carry authored logic as often as `_ready` does, so they read as
+	# the object's own lifecycle triggers rather than as helper functions. `_enter_tree` is the one that
+	# needs a body check as well as a header one: the host-binding boilerplate every host-targeting pack
+	# emits wears the same header, and the compiler regenerates THAT from the sheet's host metadata, so
+	# lifting it would emit the function twice (see _is_host_binding_body).
+	"func _draw() -> void:": "OnDraw",
+	"func _enter_tree() -> void:": "OnEnterTree",
+	"func _exit_tree() -> void:": "OnExitTree",
 	"func _run() -> void:": "OnEditorRun",
 	"func _on_project_export(is_debug: bool, features: PackedStringArray) -> void:": "OnProjectExport"
 }
@@ -1494,7 +1502,7 @@ static func _anchor_handler_events(mid_row: RawCodeRow, connections: Dictionary)
 ## arrow). Both dispatch to the event lift; the loose form carries its source header as meta so
 ## emission reproduces it exactly.
 static func _is_lifecycle_header(header: String) -> bool:
-	return LIFECYCLE_TRIGGERS.has(header) or _loose_lifecycle_match(header) != null
+	return LIFECYCLE_TRIGGERS.has(header) or header == NOTIFICATION_HEADER or _loose_lifecycle_match(header) != null
 
 
 static func _loose_lifecycle_match(header: String) -> RegExMatch:
@@ -1502,9 +1510,75 @@ static func _loose_lifecycle_match(header: String) -> RegExMatch:
 	return loose_regex.search(header)
 
 
+## True when an `_enter_tree` body is EXACTLY the host-binding boilerplate a host-targeting behaviour
+## pack ships (`host = get_parent() as <Class>` plus the null warning). The compiler emits that block
+## from the sheet's host metadata, never from an event, so it must stay a raw row: lifting it would
+## emit the same function twice. The match is strict on all four lines, so a hand-modified
+## `_enter_tree` - the case P8 is actually about - lifts to its trigger as normal.
+static func _is_host_binding_body(function_lines: PackedStringArray) -> bool:
+	var lines: PackedStringArray = function_lines.duplicate()
+	while lines.size() > 0 and lines[lines.size() - 1].strip_edges().is_empty():
+		lines.remove_at(lines.size() - 1)
+	if lines.size() != 4 or lines[0] != "func _enter_tree() -> void:":
+		return false
+	var bind: RegEx = RegEx.create_from_string("^\\thost = get_parent\\(\\) as [A-Za-z_][A-Za-z0-9_]*$")
+	if bind == null or bind.search(lines[1]) == null:
+		return false
+	if lines[2] != "\tif host == null:":
+		return false
+	return lines[3].begins_with("\t\tpush_warning(\"") and lines[3].rstrip(" ").ends_with("parent.\")")
+
+
+## `_notification(what)` whose whole body is a `match what:` over NOTIFICATION_* constants: one
+## trigger event per case, id "OnNotification:<CONSTANT>". The engine calls the ONE handler for every
+## notification, so the cases - not a function each - are what the sheet's events map onto, and the
+## compiler re-emits exactly this shape back from those ids. Anything else in the body (the `if what
+## == ...` spelling, a statement beside the match, a case that is not a NOTIFICATION_ constant, or a
+## case needing more than one event row) fails the lift and the function stays a code block.
+static func _lift_notification_function(function_lines: PackedStringArray) -> Dictionary:
+	if function_lines.size() < 3 or function_lines[1] != "\tmatch what:":
+		return {"ok": false}
+	var case_regex: RegEx = RegEx.create_from_string("^\\t\\t(NOTIFICATION_[A-Z0-9_]+):$")
+	if case_regex == null:
+		return {"ok": false}
+	var reverse_entries: Array = _build_reverse_entries()
+	var events: Array = []
+	var index: int = 2
+	while index < function_lines.size():
+		var case_match: RegExMatch = case_regex.search(function_lines[index])
+		if case_match == null:
+			return {"ok": false}
+		var trigger_id: String = "OnNotification:%s" % case_match.get_string(1)
+		var parsed: Dictionary = _parse_body(function_lines, index + 1, 3, trigger_id, "Core", "", "", reverse_entries, false, false, trigger_id)
+		if not bool(parsed.get("ok", false)):
+			return {"ok": false}
+		var case_rows: Array = parsed.get("rows", [])
+		# One case is one event. A case whose body needs several top-level rows has no single event to
+		# hang the trigger on, so the handler stays code rather than lifting a shape the emitter - which
+		# writes exactly one event per case - could not put back byte-for-byte.
+		if case_rows.size() != 1 or not (case_rows[0] is EventRow):
+			return {"ok": false}
+		var next_index: int = int(parsed.get("next", index + 1))
+		if next_index <= index:
+			return {"ok": false}
+		events.append(case_rows[0])
+		index = next_index
+	if events.is_empty():
+		return {"ok": false}
+	return {"ok": true, "events": events}
+
+
+## The one `_notification` header a match lift reads. Any other spelling stays a code block, which is
+## also what keeps the `if what == NOTIFICATION_TRANSLATION_CHANGED:` shape of the language-changed
+## trigger on the path it already had.
+const NOTIFICATION_HEADER: String = "func _notification(what: int) -> void:"
+
+
 static func _lift_function(function_lines: PackedStringArray, connections: Dictionary = {}, lenient_ifs: bool = false) -> Dictionary:
 	if function_lines.is_empty():
 		return {"ok": false}
+	if function_lines[0] == NOTIFICATION_HEADER:
+		return _lift_notification_function(function_lines)
 	var trigger_id: String = ""
 	var trigger_provider: String = "Core"
 	var trigger_args: String = ""
@@ -1536,6 +1610,12 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			source_header = function_lines[0]
 		else:
 			trigger_id = str(LIFECYCLE_TRIGGERS[function_lines[0]])
+		if trigger_id == "OnEnterTree" and _is_host_binding_body(function_lines):
+			# The host-binding `_enter_tree` a host-targeting behaviour pack ships. The compiler
+			# regenerates it from the sheet's host metadata, so lifting it to a trigger event would
+			# emit the function a second time and fail the byte-verify - reverting the WHOLE file to
+			# code blocks. Left raw, it keeps reading as the one-line "Host binding" row it already is.
+			return {"ok": false}
 		if function_lines[0].begins_with("func _ready()"):
 			# Skip the connect lines the map above CLAIMED; what remains is the OnReady body. Only
 			# claimed lines are skipped: a connect the map could not read would otherwise vanish from

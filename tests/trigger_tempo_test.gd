@@ -10,11 +10,11 @@ extends RefCounted
 # with resolve_trigger's match (both live in trigger_resolver.gd) - a new trigger id must land here too.
 const EVERY_TICK := ["OnProcess", "OnPhysicsProcess", "OnPostTick", "OnPhysicsPostTick"]
 const INPUT := ["OnInput", "OnUnhandledInput"]
-const ONCE := ["OnReady", "OnEditorRun", "OnProjectExport"]
+const ONCE := ["OnReady", "OnEditorRun", "OnProjectExport", "OnEnterTree", "OnExitTree"]
 const SIGNAL := [
 	"OnCloseRequested", "OnBodyEntered", "OnAreaEntered", "OnBodyExited", "OnAreaExited", "OnTimeout",
 	"OnAnimationFinished", "OnButtonPressed", "OnButtonToggled", "OnParticlesFinished", "OnTreeEntered",
-	"OnTreeExiting", "OnTreeExited", "OnRenamed", "OnChildEnteredTree", "OnSignal",
+	"OnTreeExiting", "OnTreeExited", "OnRenamed", "OnChildEnteredTree", "OnSignal", "OnDraw",
 ]
 
 

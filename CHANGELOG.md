@@ -105,6 +105,22 @@ hover away.
   trigger event it is instead of stranding the whole handler as a code block. The connect line is
   re-emitted verbatim, flags and all.
 
+### Added - the paint, tree and notification callbacks read as the object's own triggers
+
+Four engine callbacks that used to open as helper functions now read as the lifecycle triggers they
+are. The file is untouched: every shape below is gated by the same byte-exact re-emission as the rest
+of the importer, so the exact GDScript comes back out unchanged.
+
+- **`_draw()`** reads as the object's paint trigger, and its body reads through the drawing words.
+- **`_enter_tree()` and `_exit_tree()`** read as the object's created and destroyed triggers - except
+  for the host-binding `_enter_tree` a host-targeting behaviour pack ships, which is regenerated from
+  the sheet's host and therefore keeps reading as the one-line Host binding row it already was.
+- **`_notification(what)` whose whole body is a `match what:`** reads as one trigger event per matched
+  notification, and all of them compile back into the single `_notification` handler the engine calls -
+  the match shape is carried on the events themselves, so the file round-trips byte-for-byte. The
+  older `if what == NOTIFICATION_TRANSLATION_CHANGED:` spelling is a different shape and is deliberately
+  left exactly as it read before.
+
 ### Added - an opened script's questions, text, saving, behaviours, input and logging read as rows
 
 Six more families of everyday GDScript now read as the rows they are instead of as the code they are
