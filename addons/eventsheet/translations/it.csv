@@ -1803,3 +1803,7 @@ Functions,Funzioni
 Call,Chiama
 line,riga
 lines,righe
+Wait one tick,Attendi un tick
+Wait one physics tick,Attendi un tick di fisica
+Wait for signal {object} {trigger},Attendi il segnale {object} {trigger}
+connects {object} {trigger},collega {object} {trigger}

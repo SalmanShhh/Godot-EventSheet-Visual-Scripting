@@ -93,9 +93,11 @@ static func _fixture_rows() -> bool:
 	dock.setup(sheet)
 	var view: EventSheetViewport = dock._active_view()
 	var rows: PackedStringArray = _row_readings(view)
+	# M24: `and` never appears inside a condition cell - each conjunct is a condition LINE of the one
+	# event, exactly as a lifted `if a and b:` already stacks them.
 	ok = _check("a lone ternary return replaces its row with the pair",
 		_reading_at(rows, "Set return value to host's wall normal X"),
-		"host exists and host is on wall | Set return value to host's wall normal X") and ok
+		"host exists > host is on wall | Set return value to host's wall normal X") and ok
 	ok = _check("the pair's second arm is the Else row",
 		_reading_at(rows, "Set return value to 0"), "Else | Set return value to 0") and ok
 	ok = _check("a sub-expression ternary re-reads the whole assignment",
@@ -380,6 +382,15 @@ static func _condition_lane(view: EventSheetViewport, row_data: EventRowData) ->
 		if not lines.has(line_index):
 			lines[line_index] = ""
 			order.append(line_index)
+		# The object column is part of what a cell SAYS ("host exists"), and a conjunct read on its
+		# own line hoists its object into it - so a reading that dropped it could not tell the two
+		# stacked lines of `host != null and host.is_on_wall()` apart from one another.
+		# "System" is the label every objectless row wears, so it says nothing about this cell.
+		var object_label: String = str(span.metadata.get("object_label", "")).strip_edges()
+		if object_label == EventSheetSentence.OBJECT_SYSTEM:
+			object_label = ""
+		if not object_label.is_empty():
+			lines[line_index] = str(lines[line_index]) + object_label + " "
 		lines[line_index] = str(lines[line_index]) + span.text
 	order.sort()
 	var parts: PackedStringArray = PackedStringArray()

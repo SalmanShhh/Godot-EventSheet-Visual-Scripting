@@ -1803,3 +1803,7 @@ Functions,함수
 Call,호출
 line,줄
 lines,줄
+Wait one tick,한 틱 대기
+Wait one physics tick,물리 한 틱 대기
+Wait for signal {object} {trigger},시그널 {object} {trigger} 대기
+connects {object} {trigger},{object} {trigger} 연결

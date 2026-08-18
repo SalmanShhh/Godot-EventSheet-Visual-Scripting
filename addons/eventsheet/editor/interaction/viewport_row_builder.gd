@@ -2180,7 +2180,29 @@ static func function_body_info(code: String) -> Dictionary:
 ## read through the SAME producer - a shape must say one thing whether it was typed or picked.
 ## Kept here as a thin forwarder so the classifiers around it keep one import surface.
 static func statement_sentence(code: String, context: Dictionary = {}) -> Dictionary:
+	# M28: the awaits Construct has words for, ahead of the grammar - a hand-written `await` that no
+	# ACE claimed (inside a lambda, inside a block that stayed code) reads the same as the lifted row
+	# beside it. Every other await falls straight through and keeps its GDScript.
+	var awaited: Dictionary = _raw_await_reading(code)
+	if not awaited.is_empty():
+		return awaited
 	return EventSheetSentence.statement(code, context)
+
+
+## The M28 reading of a hand-written `await <expression>` line, indent and all, or {} when the shape
+## is not one of the named ones.
+static func _raw_await_reading(code: String) -> Dictionary:
+	var indent: int = 0
+	while indent < code.length() and code[indent] == "\t":
+		indent += 1
+	var text: String = code.substr(indent).strip_edges()
+	if not text.begins_with("await "):
+		return {}
+	var reading: Dictionary = await_reading(text.substr(6), true)
+	if reading.is_empty():
+		return {}
+	reading["indent"] = indent
+	return reading
 
 
 ## The Object / Verb / parameters split of a statement that is EXACTLY one call:
@@ -5224,26 +5246,58 @@ func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: S
 		}.merged(condition_style_meta, true)))
 		condition_line = 1
 		branch_row.line_count = 2
-	var reading: Dictionary = EventSheetSentence.condition_pieces(condition_text, sentence_context())
-	var pieces: Array = EventSheetViewportLenses.apply_to_pieces(
-		reading.get("pieces", []) as Array, _viewport.humanize_names_enabled(), _export_knob_names())
-	var condition_cell: Dictionary = _tone_segments(pieces)
-	branch_row.spans.append(_make_span(str(condition_cell.get("text", "")), SemanticSpan.SpanType.CONDITION, {
-		"lane": "condition",
-		# "condition" is what makes the cell FILL its lane and wrap like every other condition cell
-		# (the layout gates both on this kind) - so a long branch test grows the row instead of
-		# clipping. There is no ACECondition behind it, so the index is -1 and the cell is inert:
-		# nothing may index the event's condition list from a reading the grammar invented.
-		"kind": "condition",
-		"ace_index": -1,
-		"chip": true,
-		"editable": false,
-		"hoverable": false,
-		"line_index": condition_line,
-		"object_label": str(reading.get("object", "")),
-		"bbcode_segments": condition_cell.get("segments", [])
-	}.merged(condition_style_meta, true)))
+	_append_conjunct_condition_lines(branch_row, condition_text, condition_line, condition_style_meta)
 	return branch_row
+
+
+## M24 - the branch test as CONDITION LINES, never as one cell spelling `and`. Construct has no word
+## for "and": each conjunct is a condition of the one event, stacked, and an `or` is the OR block. This
+## is the same shape the lifted `if a and b:` already draws, applied to the readings the grammar
+## invents, so a test says the same thing however the row got here. Precedence follows GDScript, where
+## `or` binds loosest: a top-level ` or ` splits FIRST into OR-marked lines, and only a pure-AND test
+## splits on ` and `. A mixed `a and (b or c)` therefore stacks `a` and keeps the parenthesised group
+## whole on its own line - a line cannot hold a nested OR block, and inventing one would say something
+## the source does not.
+func _append_conjunct_condition_lines(branch_row: EventRowData, condition_text: String,
+		first_line: int, condition_style_meta: Dictionary) -> void:
+	var terms: PackedStringArray = EventSheetSentence.split_top_level(condition_text, " or ")
+	var or_block: bool = terms.size() > 1
+	if not or_block:
+		terms = EventSheetSentence.split_top_level(condition_text, " and ")
+	var line_index: int = first_line
+	for term: String in terms:
+		if term.strip_edges().is_empty():
+			continue
+		if or_block:
+			var or_meta: Dictionary = _viewport.BADGE_OR_METADATA.duplicate(true)
+			or_meta["badge_bg"] = condition_style_meta.get("badge_bg", _viewport.BADGE_OR_METADATA.get("badge_bg"))
+			or_meta["badge_fg"] = condition_style_meta.get("badge_fg", _viewport.BADGE_OR_METADATA.get("badge_fg"))
+			or_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+			or_meta["condition_index"] = -1
+			or_meta["line_index"] = line_index
+			or_meta["badge_style"] = "or"
+			branch_row.spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
+		var reading: Dictionary = EventSheetSentence.condition_pieces(term, sentence_context())
+		var pieces: Array = EventSheetViewportLenses.apply_to_pieces(
+			reading.get("pieces", []) as Array, _viewport.humanize_names_enabled(), _export_knob_names())
+		var condition_cell: Dictionary = _tone_segments(pieces)
+		branch_row.spans.append(_make_span(str(condition_cell.get("text", "")), SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			# "condition" is what makes the cell FILL its lane and wrap like every other condition cell
+			# (the layout gates both on this kind) - so a long branch test grows the row instead of
+			# clipping. There is no ACECondition behind it, so the index is -1 and the cell is inert:
+			# nothing may index the event's condition list from a reading the grammar invented.
+			"kind": "condition",
+			"ace_index": -1,
+			"chip": true,
+			"editable": false,
+			"hoverable": false,
+			"line_index": line_index,
+			"object_label": str(reading.get("object", "")),
+			"bbcode_segments": condition_cell.get("segments", [])
+		}.merged(condition_style_meta, true)))
+		line_index += 1
+	branch_row.line_count = maxi(branch_row.line_count, line_index)
 
 
 ## The branch's ACTION cell: the whole action re-read with this arm's value in place of the ternary,
@@ -6204,10 +6258,101 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("%s.%s += %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
 				str(params_dict.get("value", ""))], context)
+		"AwaitNextFrame":
+			return await_reading("get_tree().process_frame", false)
+		"AwaitSignal":
+			return await_reading(str(params_dict.get("signal_expression", "")), false)
 	# Deliberately NOT claimed: Wait. Its own display template already says the grammar's words
 	# ("Wait {seconds} seconds") and the row wears the hourglass through the await chip, so leaving it
 	# on the ordinary path keeps the parameter emphasis its substitution earns.
 	return {}
+
+
+## M28 - what an `await` says in Construct's words. Construct has "Wait for signal" as a System
+## action and counts ticks, so suspending on a signal reads as that action and suspending on a frame
+## reads as the one tick it is. Returns {} for every other await (a timer wait already has its own
+## "Wait N seconds" reading, and an await on a call keeps its GDScript) - a sentence must never paper
+## over a suspension point it cannot name.
+##
+## `hourglass` is the RAW-line form: a lifted ACE row gets the ⏳ from the await chip the descriptor
+## formatter adds, but a hand-written line has no chip, so the glyph belongs in the sentence.
+##
+## NOTE for merge: this lives here rather than in the sentence grammar only because the grammar file
+## was being edited elsewhere at the time; its natural home is beside _await_statement().
+static func await_reading(expression: String, hourglass: bool) -> Dictionary:
+	var text: String = expression.strip_edges()
+	if text == "get_tree().process_frame":
+		return _slot_sentence(EventSheetSentence.OBJECT_SYSTEM, "Wait one tick", {}, hourglass)
+	if text == "get_tree().physics_frame":
+		return _slot_sentence(EventSheetSentence.OBJECT_SYSTEM, "Wait one physics tick", {}, hourglass)
+	# A call anywhere in the expression is not a signal reference: `create_timer(x).timeout` is the
+	# timer wait, which already reads as its own seconds sentence.
+	if text.contains("(") or text.contains(")"):
+		return {}
+	var dot_at: int = text.rfind(".")
+	if dot_at <= 0 or dot_at + 1 >= text.length():
+		return {}
+	var signal_bare: String = text.substr(dot_at + 1)
+	if not EventSheetSentence.is_identifier(signal_bare):
+		return {}
+	var object_word: String = _await_object_word(text.substr(0, dot_at))
+	if object_word.is_empty():
+		return {}
+	return _slot_sentence(EventSheetSentence.OBJECT_SYSTEM, "Wait for signal {object} {trigger}", {
+		"object": [object_word, "name"],
+		"trigger": ["On %s" % signal_bare.capitalize(), "name"]
+	}, hourglass)
+
+
+## The object half of an awaited signal reference as a reader names it: a node path by its last
+## segment without the sigil (`$Head/Camera` -> "Camera"), anything else verbatim. "" when the text
+## is not a plain reference, which is the caller's cue to leave the await as code.
+static func _await_object_word(reference: String) -> String:
+	var text: String = reference.strip_edges()
+	if text.is_empty():
+		return ""
+	if text.begins_with("$") or text.begins_with("%"):
+		text = text.substr(1)
+		var slash_at: int = text.rfind("/")
+		if slash_at >= 0:
+			text = text.substr(slash_at + 1)
+		return text.strip_edges().trim_prefix("\"").trim_suffix("\"")
+	if text.contains(" ") or text.contains("["):
+		return ""
+	return text
+
+
+## The grammar's own {slot} template fill, kept locally so a new reading can be added without
+## reaching into the sentence file: each `{slot}` becomes its own toned segment, so a locale may
+## reorder the sentence and the emphasis still lands on the values.
+static func _slot_sentence(object_name: String, template: String, values: Dictionary,
+		hourglass: bool = false) -> Dictionary:
+	var rest: String = EventSheetL10n.translate(template)
+	var segments: Array = []
+	if hourglass:
+		# The suspension glyph rides OUTSIDE the translated template, so a locale translates the
+		# words alone and every reading of an await wears the same mark the await chip draws.
+		segments.append({"text": "⏳ ", "tone": "plain"})
+	var guard: int = 0
+	while guard < 12:
+		guard += 1
+		var next_slot: String = ""
+		var next_at: int = -1
+		for slot: String in values.keys():
+			var at: int = rest.find("{%s}" % slot)
+			if at >= 0 and (next_at < 0 or at < next_at):
+				next_at = at
+				next_slot = slot
+		if next_at < 0:
+			break
+		if next_at > 0:
+			segments.append({"text": rest.substr(0, next_at), "tone": "plain"})
+		var pair: Array = values[next_slot]
+		segments.append({"text": str(pair[0]), "tone": str(pair[1])})
+		rest = rest.substr(next_at + next_slot.length() + 2)
+	if not rest.is_empty():
+		segments.append({"text": rest, "tone": "plain"})
+	return {"object": object_name, "segments": segments}
 
 
 ## The shared-grammar reading of an ACE CONDITION, or {} when the row has no hand-written twin.

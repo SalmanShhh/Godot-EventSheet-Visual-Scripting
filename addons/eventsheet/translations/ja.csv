@@ -1803,3 +1803,7 @@ Functions,関数
 Call,呼び出し
 line,行
 lines,行
+Wait one tick,1 ティック待つ
+Wait one physics tick,物理 1 ティック待つ
+Wait for signal {object} {trigger},シグナル {object} {trigger} を待つ
+connects {object} {trigger},{object} {trigger} を接続

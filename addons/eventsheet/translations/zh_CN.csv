@@ -1803,3 +1803,7 @@ Functions,函数
 Call,调用
 line,行
 lines,行
+Wait one tick,等待一个 tick
+Wait one physics tick,等待一个物理 tick
+Wait for signal {object} {trigger},等待信号 {object} {trigger}
+connects {object} {trigger},连接 {object} {trigger}
