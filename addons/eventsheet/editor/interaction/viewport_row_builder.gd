@@ -3496,6 +3496,11 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	row_data.line_count = _count_event_lines(event_row)
 	for local_variable_row in _build_local_variable_rows(event_row, indent + 1):
 		row_data.children.append(local_variable_row)
+	# M29 - a lambda handed to `connect` IS a trigger event; Construct has no lambdas, only triggers.
+	# Its reading sits with the actions (which is where the connect line sits) and above the real
+	# sub-events, because that is the order the file runs in.
+	for connect_row: EventRowData in _build_connect_lambda_rows(event_row, row_data.row_uid, indent + 1):
+		row_data.children.append(connect_row)
 	for child in event_row.sub_events:
 		var child_row: EventRowData = _viewport._build_row_from_resource(child, indent + 1)
 		if child_row != null:
@@ -4603,6 +4608,25 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	if not event_row.actions.is_empty():
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
+			# M29 - whichever shape the line took (a Call Method row or a verbatim block), the line
+			# that wires a lambda to a signal reads as a muted NOTE: the work it describes is drawn
+			# below it as the trigger event it is. Nothing is hidden - the note names the object and
+			# the signal, and double-click still opens the exact GDScript.
+			var connect_parts: Dictionary = connect_lambda_parts(connect_statement_of(action_resource))
+			if not connect_parts.is_empty():
+				spans.append(_make_span(_connect_note_text(connect_parts), SemanticSpan.SpanType.VALUE, {
+					"lane": "action",
+					"kind": "action",
+					"ace_index": action_index,
+					"ace_enabled": true,
+					"chip": true,
+					"raw_action": action_resource is RawCodeRow,
+					"code_cell": false,
+					"line_index": action_line_index,
+					"text_color": EventSheetPalette.TEXT_MUTED
+				}.merged(action_style_meta, false)))
+				action_line_index += 1
+				continue
 			if action_resource is ACEAction:
 				# A Local Variable row is a DECLARATION, not a step - the same row shape a hand-written
 				# `var` line gets, so a local reads alike whether it was picked or typed.
@@ -4940,7 +4964,13 @@ func _count_event_lines(event_row: EventRow) -> int:
 		if action_resource is ACEAction:
 			action_count += 1
 		elif action_resource is RawCodeRow:
-			action_count += maxi((action_resource as RawCodeRow).code.split("\n").size(), 1)
+			# M29: a connected lambda collapses to ONE muted note line however many lines it spans,
+			# because its body is drawn below as the trigger event it reads as.
+			var raw_code: String = (action_resource as RawCodeRow).code
+			if not connect_lambda_parts(connect_statement_of(action_resource)).is_empty():
+				action_count += 1
+			else:
+				action_count += maxi(raw_code.split("\n").size(), 1)
 		elif action_resource is CollectionDeclRow:
 			# Header line + one line per entry; the brackets never render, so they never count.
 			action_count += 1 + (action_resource as CollectionDeclRow).entry_values.size()
@@ -5023,6 +5053,250 @@ func _return_value_function_pieces(returned: String) -> Array:
 		pieces.append(["   ", "plain"])
 		pieces.append([EventSheetViewportLenses.call_argument_chip(parameter_name, value, false), "value"])
 	return pieces
+
+
+# ── M29: a lambda connected to a signal reads as the trigger event it is ────────────────────────
+
+
+## The GDScript a connect-a-lambda action stands for, whichever shape the open lifted it into: a
+## verbatim block keeps its own text, and the generic Call Method row it usually becomes is put back
+## together from its parameters. "" when the action is not a connect at all - which is the common
+## case, and the reason this is a substring test before anything else.
+static func connect_statement_of(action_resource: Variant) -> String:
+	if action_resource is RawCodeRow:
+		var code: String = (action_resource as RawCodeRow).code
+		return code if code.contains(".connect(func(") else ""
+	if not (action_resource is ACEAction):
+		return ""
+	var action: ACEAction = action_resource as ACEAction
+	if action.ace_id != "CallMethod":
+		return ""
+	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	var method: String = str(params_dict.get("method", ""))
+	var arguments: String = str(params_dict.get("args", ""))
+	if not method.ends_with("connect") or not arguments.begins_with("func("):
+		return ""
+	return "%s.%s(%s)" % [str(params_dict.get("target", "")), method, arguments]
+
+
+## "connects Timer On Timeout" - the muted note the connect line keeps, so the wiring is still
+## written down where the file writes it even though the work reads as a trigger event below.
+static func _connect_note_text(parts: Dictionary) -> String:
+	return EventSheetL10n.translate("connects {object} {trigger}") \
+		.replace("{object}", str(parts.get("object", ""))) \
+		.replace("{trigger}", str(parts.get("trigger", "")))
+
+
+## Splits `$Timer.timeout.connect(func(): seconds_left -= 1)` - and its multi-line twin - into
+## {object, trigger, args, body}. Returns {} for anything else, including a connect that hands over a
+## NAMED function: that already reads as the handler it is, in the place the function was declared.
+##
+## The parse is deliberately shape-bound rather than clever, because everything downstream of it is a
+## reading: nothing is lifted, nothing is written, and the file keeps the one line it always had.
+static func connect_lambda_parts(code: String) -> Dictionary:
+	var marker: int = code.find(".connect(func(")
+	if marker < 0:
+		return {}
+	var lines: PackedStringArray = code.split("\n")
+	var first: String = lines[0]
+	if first.find(".connect(func(") != marker:
+		return {}  # the shape must OPEN the statement, not sit inside a later line
+	var head: String = first.substr(0, marker).strip_edges()
+	var dot_at: int = head.rfind(".")
+	if dot_at <= 0:
+		return {}
+	var signal_bare: String = head.substr(dot_at + 1)
+	if not EventSheetSentence.is_identifier(signal_bare):
+		return {}
+	var object_word: String = _await_object_word(head.substr(0, dot_at))
+	if object_word.is_empty():
+		return {}
+	var params_open: int = marker + 13  # the "(" of `func(`
+	var params_close: int = _matching_paren(first, params_open)
+	if params_close < 0:
+		return {}
+	var params_text: String = first.substr(params_open + 1, params_close - params_open - 1)
+	var after: String = first.substr(params_close + 1)
+	var colon_at: int = after.find(":")
+	if colon_at < 0:
+		return {}
+	var between: String = after.substr(0, colon_at).strip_edges()
+	if not between.is_empty() and not between.begins_with("->"):
+		return {}
+	var body_lines: PackedStringArray = PackedStringArray()
+	if lines.size() == 1:
+		# One line: the body runs from the colon to the `)` that closes `connect(` itself.
+		var connect_close: int = _matching_paren(first, marker + 8)
+		var body_start: int = params_close + 1 + colon_at + 1
+		if connect_close <= body_start:
+			return {}
+		var body: String = first.substr(body_start, connect_close - body_start).strip_edges()
+		if body.is_empty():
+			return {}
+		body_lines.append(body)
+	else:
+		if not after.substr(colon_at + 1).strip_edges().is_empty():
+			return {}
+		if lines[lines.size() - 1].strip_edges() != ")":
+			return {}
+		for line_index: int in range(1, lines.size() - 1):
+			var body_line: String = lines[line_index]
+			body_lines.append(body_line.substr(1) if body_line.begins_with("\t") else body_line.strip_edges())
+		if body_lines.is_empty():
+			return {}
+	var args: PackedStringArray = PackedStringArray()
+	for parameter: String in params_text.split(","):
+		var bare: String = parameter.strip_edges()
+		if bare.is_empty():
+			continue
+		var type_at: int = bare.find(":")
+		args.append((bare.substr(0, type_at) if type_at > 0 else bare).strip_edges())
+	return {
+		"object": object_word,
+		"trigger": "On %s" % signal_bare.capitalize(),
+		"args": args,
+		"body": body_lines
+	}
+
+
+## The index of the `)` closing the `(` at `open_at`, or -1. Quote-aware, so a bracket inside a
+## string literal in an argument never closes the call.
+static func _matching_paren(text: String, open_at: int) -> int:
+	if open_at < 0 or open_at >= text.length() or text[open_at] != "(":
+		return -1
+	var depth: int = 0
+	var in_string: bool = false
+	var quote: String = ""
+	var index: int = open_at
+	while index < text.length():
+		var character: String = text[index]
+		if in_string:
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				in_string = false
+			index += 1
+			continue
+		if character == "\"" or character == "'":
+			in_string = true
+			quote = character
+		elif character == "(":
+			depth += 1
+		elif character == ")":
+			depth -= 1
+			if depth == 0:
+				return index
+		index += 1
+	return -1
+
+
+## The trigger event (plus its body rows) that each connected lambda in this event reads as. Pure
+## view: the rows stand for the ONE connect statement the file holds, which is why they all carry its
+## `ternary_anchor_uid` - selection, the arrow keys, drag and the gutter then treat the whole reading
+## as that statement, exactly as they already do for a ternary pair.
+func _build_connect_lambda_rows(event_row: EventRow, anchor_base: String, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if event_row == null:
+		return rows
+	for action_index in range(event_row.actions.size()):
+		var parts: Dictionary = connect_lambda_parts(connect_statement_of(event_row.actions[action_index]))
+		if parts.is_empty():
+			continue
+		var anchor: String = "%s_connect%d" % [anchor_base, action_index]
+		var trigger_row: EventRowData = _build_connect_trigger_row(event_row, parts, anchor, indent, action_index)
+		# The body reads through the very same lift a declared handler's body goes through, so a
+		# statement says the same thing whether it was written in a func or handed to connect.
+		for body_event: Variant in EventSheetACELifter.lift_body_rows(parts.get("body", PackedStringArray())):
+			if not (body_event is EventRow):
+				continue
+			var body_row: EventRowData = _build_event_row(body_event as EventRow, indent + 1)
+			_mark_connect_reading(body_row, event_row, anchor, action_index)
+			trigger_row.children.append(body_row)
+		rows.append(trigger_row)
+	return rows
+
+
+## The trigger row itself: the ➜ badge, `<Object> On <Signal>`, and one chip per lambda parameter -
+## the payload the trigger hands its body, drawn exactly as a declared handler's is.
+func _build_connect_trigger_row(event_row: EventRow, parts: Dictionary, anchor: String, indent: int,
+		action_index: int) -> EventRowData:
+	var trigger_row := EventRowData.new()
+	trigger_row.indent = indent
+	trigger_row.row_type = EventRowData.RowType.EVENT
+	trigger_row.source_resource = event_row
+	trigger_row.row_uid = "%s_trigger" % anchor
+	trigger_row.ternary_view = true
+	trigger_row.ternary_anchor_uid = anchor
+	trigger_row.ternary_lead = true
+	trigger_row.ternary_action_index = action_index
+	trigger_row.line_count = 1
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+	var badge_glyph: String = _apply_trigger_tempo(badge_meta, _viewport._get_event_style(), "")
+	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+	badge_meta["line_index"] = 0
+	badge_meta["badge_style"] = "trigger"
+	trigger_row.spans.append(_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta))
+	trigger_row.spans.append(_make_span(str(parts.get("trigger", "")), SemanticSpan.SpanType.CONDITION, {
+		"lane": "condition",
+		"kind": "condition",
+		"ace_index": -1,
+		"chip": true,
+		"editable": false,
+		"hoverable": false,
+		"line_index": 0,
+		"object_label": str(parts.get("object", ""))
+	}.merged(condition_style_meta, true)))
+	var payload: PackedStringArray = parts.get("args", PackedStringArray())
+	for payload_index in payload.size():
+		trigger_row.spans.append(_make_span(payload[payload_index], SemanticSpan.SpanType.CONDITION, {
+			"editable": false,
+			"lane": "condition",
+			"kind": "trigger_payload",
+			"param_index": payload_index,
+			"chip": true,
+			"hoverable": false,
+			"natural_width": true,
+			"line_index": 0
+		}.merged(condition_style_meta, true)))
+	return trigger_row
+
+
+## Stamps a lifted body row (and everything under it) as a READING of the connect statement: the
+## resource it points at is the event the file holds, and the anchor uid is what makes the whole
+## reading behave as that one statement rather than as rows of its own.
+func _mark_connect_reading(row_data: EventRowData, event_row: EventRow, anchor: String,
+		action_index: int) -> void:
+	if row_data == null:
+		return
+	# Spans are normally built lazily FROM source_resource, and this row's source is about to become
+	# the event the file holds rather than the lifted stand-in it was read from - so its cells are
+	# built here, while the stand-in is still what it points at. A row that already has spans is
+	# never rebuilt, which is exactly what keeps the reading and the routing from fighting.
+	_ensure_event_spans(row_data)
+	# A reading invites nothing: the "Every Tick" placeholder and the "+ Add" affordances are offers
+	# to edit a row, and there is no row here to edit - only one connect statement, which is what a
+	# double-click anywhere on this reading opens.
+	var kept: Array[SemanticSpan] = []
+	var lines: int = 1
+	for span: SemanticSpan in row_data.spans:
+		if bool(span.metadata.get("placeholder", false)):
+			continue
+		if str(span.metadata.get("kind", "")) in ["add_action", "add_condition"]:
+			continue
+		kept.append(span)
+		lines = maxi(lines, int(span.metadata.get("line_index", 0)) + 1)
+	row_data.spans = kept
+	row_data.line_count = lines
+	row_data.source_resource = event_row
+	row_data.row_uid = "%s_%s" % [anchor, row_data.row_uid]
+	row_data.ternary_view = true
+	row_data.ternary_anchor_uid = anchor
+	row_data.ternary_lead = false
+	row_data.ternary_action_index = action_index
+	for child: EventRowData in row_data.children:
+		_mark_connect_reading(child, event_row, anchor, action_index)
 
 
 # ── M23: a ternary reads as a sub-event pair, never a condition in an action cell ───────────────

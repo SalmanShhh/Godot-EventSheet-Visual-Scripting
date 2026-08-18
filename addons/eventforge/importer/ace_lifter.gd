@@ -58,6 +58,33 @@ static var progress_functions_done: int = 0
 static var cancel_requested: bool = false
 
 
+## The reverse index, kept for callers that ask for a lift OUTSIDE an import - the editor's M29
+## reading of a connected lambda rebuilds one on every canvas rebuild, and building the index from
+## the whole descriptor set each time would put a registry walk on the paint path. Keyed on the
+## descriptor count so a rescan that publishes new ACEs rebuilds it.
+static var _cached_reverse_entries: Array = []
+static var _cached_reverse_count: int = -1
+
+
+## Lifts a run of DEDENTED body lines (a lambda body, a snippet) into event rows, exactly as a
+## function body lifts: statements become actions, an `if`/`for`/`while` becomes a nested event.
+## Nothing is written to a sheet and nothing is byte-verified, because nothing is being changed -
+## this is for a reading of code that stays exactly where it is. Returns [] when the run does not
+## lift cleanly.
+static func lift_body_rows(body_lines: PackedStringArray) -> Array:
+	if body_lines.is_empty():
+		return []
+	var descriptors: Array = ACERegistry.get_all_descriptors()
+	if _cached_reverse_count != descriptors.size():
+		_cached_reverse_entries = _build_reverse_entries()
+		_cached_reverse_count = descriptors.size()
+	var parsed: Dictionary = _parse_body(
+		body_lines, 0, 0, "", "", "", "", _cached_reverse_entries, true, false, "")
+	if not bool(parsed.get("ok", false)):
+		return []
+	return parsed.get("rows", []) as Array
+
+
 ## Clears the progress/cancel state before a new open. Called on the MAIN thread by the job, never
 ## from attempt_lift itself - the event-only retry pass must not clear a cancel the user just asked for.
 static func reset_progress() -> void:
