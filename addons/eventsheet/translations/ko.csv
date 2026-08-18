@@ -1894,3 +1894,16 @@ group,그룹
 children,자식
 children of,의 자식
 in,안
+System,시스템
+Include,포함
+disabled,비활성
+Every %s seconds,%s초마다
+(while running),(실행 중일 때)
+- open as a sheet,- 시트로 열기
+▸ run its,▸ 실행:
+▸ Call,▸ 호출
+%d event,이벤트 %d개
+%d events,이벤트 %d개
+%d row,%d행
+%d rows,%d행
+(unnamed region),(이름 없는 영역)

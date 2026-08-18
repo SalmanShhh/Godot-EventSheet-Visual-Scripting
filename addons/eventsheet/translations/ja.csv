@@ -1894,3 +1894,16 @@ group,グループ
 children,子
 children of,の子
 in,の中
+System,システム
+Include,インクルード
+disabled,無効
+Every %s seconds,%s 秒ごと
+(while running),(実行中のみ)
+- open as a sheet,- シートとして開く
+▸ run its,▸ 実行:
+▸ Call,▸ 呼び出し
+%d event,イベント %d 件
+%d events,イベント %d 件
+%d row,%d 行
+%d rows,%d 行
+(unnamed region),(名前のないリージョン)

@@ -1894,3 +1894,16 @@ group,组
 children,子节点
 children of,的子节点
 in,在
+System,系统
+Include,包含
+disabled,已禁用
+Every %s seconds,每 %s 秒
+(while running),（运行时）
+- open as a sheet,- 作为表打开
+▸ run its,▸ 运行其
+▸ Call,▸ 调用
+%d event,%d 个事件
+%d events,%d 个事件
+%d row,%d 行
+%d rows,%d 行
+(unnamed region),（未命名区域）

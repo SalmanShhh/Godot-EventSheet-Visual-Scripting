@@ -11,6 +11,45 @@
   migration guide moved to `docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md`. Guides may still
   draw the comparison for a reader who needs it; `tests/no_product_names_in_code_test.gd` keeps the
   code itself clean.
+### Added - the structure an opened script is organised with now reads as sheet structure
+
+Four shapes every real Godot script is full of used to read as code, as comments, or as nothing at
+all. All four are lenses over the unchanged file: the fixture behind them re-emits byte for byte,
+which is the assertion that keeps them honest.
+
+- **`#region Movement` / `#endregion` reads as a GROUP bar.** The folder icon, the name, the muted
+  count (`Movement  2 events`), the group row's height and its accent band - and it folds, with the
+  fold remembered across reopens. A region written inside another nests inside its bar. The file
+  still holds exactly the two fence lines it always did.
+- **Authoring symmetry**: Add Group (and Group Selection) on a `.gd` sheet writes `#region <name>` /
+  `#endregion` instead of a marker comment, so a group made on the sheet is a fold in Godot's own
+  script editor, and reopening the file brings the same bar back. A `.tres` sheet's groups are
+  untouched - every generated pack is byte-identical.
+- **Commented-out code reads as a switched-off row.** A `.gd` file has nowhere to record that a row
+  is disabled except by commenting the line out, so that IS the storage: a comment whose text is a
+  statement (`# velocity.x = 0.0`, `# if hp <= 0: die()`) now reads as the row it would be, greyed
+  and struck through with the muted word `disabled`, while prose (`# TODO: add coyote time`) stays
+  the note it is. Switching such a row back on uncomments the line; switching a row off on a `.gd`
+  sheet comments it.
+- **Repeating Timers read as `Every X seconds`.** A `_ready` that sets `$SpawnTimer.wait_time`,
+  connects `timeout` and starts it makes its handler read `⟳ System  Every 2 seconds (SpawnTimer)`;
+  `while true: await get_tree().create_timer(0.5).timeout` reads `⟳ System  Every 0.5 seconds
+  (while running)`. A one-shot Timer keeps `On timeout`, which is what it does, and a Timer whose
+  wait time the script never sets is left alone rather than guessed at.
+- **A base script of this project reads as an Include.** `extends "res://enemy.gd"` (or
+  `extends Enemy`, resolved through the project's class list) adds a second head bar -
+  `⇥ Include enemy.gd - open as a sheet` - and clicking it opens that file as a sheet in its own tab
+  (Alt+Left comes back). `super._ready()` reads `Include enemy.gd ▸ run its On Ready`,
+  `super.take_damage(amount)` reads `▸ Call Take Damage  amount`. Extending an engine class adds no
+  bar: the identity bar above already says that.
+
+### Fixed - a comment could be read as an action
+
+A commented-out line was matched against the ACE templates like any other statement, so
+`# velocity.x = 0.0` claimed the set-property template with `# velocity` as its target and the row
+drew `set # velocity X = 0.0`. A comment is never an action now, whatever it says. A run of comment
+lines that mixes a commented-out statement with a note about it also splits into one row each, so
+the two can be read - and switched on - separately.
 
 ### Fixed - three rows of an opened file stopped saying things that were not true
 

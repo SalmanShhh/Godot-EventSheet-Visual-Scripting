@@ -1894,3 +1894,16 @@ group,группа
 children,потомки
 children of,потомки от
 in,в
+System,Система
+Include,Включение
+disabled,отключено
+Every %s seconds,Каждые %s сек.
+(while running),(пока выполняется)
+- open as a sheet,- открыть как лист
+▸ run its,▸ выполнить его
+▸ Call,▸ Вызвать
+%d event,%d событие
+%d events,%d событий
+%d row,%d строка
+%d rows,%d строк
+(unnamed region),(регион без имени)

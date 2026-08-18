@@ -122,9 +122,9 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 			var fold_key: String = "%s#%d" % [opener_label, occurrence]
 			opener.set_meta("region_fold_key", fold_key)
 			opener.folded = bool(_viewport._fold_state.get(opener.row_uid, bool(_viewport.persisted_region_folds.get(fold_key, false))))
-			# N1 - the bar carries the group's muted count, open or folded, because a Construct group
-			# bar says how much it holds before you decide whether to open it. The closing fence is
-			# plumbing, so it never counts.
+			# N1 - the bar carries its muted count, open or folded: a group bar should say how much
+			# it holds before you decide whether to open it. The closing fence is plumbing, so it
+			# never counts.
 			opener.spans.append(_make_span(
 				_region_member_count_text(region_children),
 				SemanticSpan.SpanType.VALUE,
@@ -149,7 +149,7 @@ func _append_to_sink(output: Array[EventRowData], stack: Array[Dictionary], row_
 
 
 ## The muted count a region's group bar wears: how many EVENTS it holds when it holds any (the word
-## a Construct user reads on a group bar), else how many rows. The closing fence rides as the last
+## a group bar is read for), else how many rows. The closing fence rides as the last
 ## child and is plumbing, so it is never counted.
 func _region_member_count_text(region_children: Array[EventRowData]) -> String:
 	var events: int = 0
@@ -1940,8 +1940,8 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 				{"kind": "custom_block_row", "text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.7)}
 			)]
 			return row_data
-		# N1 - `#region Name` IS Construct's Group: Godot folds a script with regions, Construct
-		# organises a sheet with groups, and they are the same idea said twice. So the opening fence
+		# N1 - `#region Name` IS a Group: Godot folds a script with regions, an event sheet
+		# organises itself with groups, and they are the same idea said twice. So the opening fence
 		# wears the event-group BAR (folder icon, title, muted count, the group row's height and
 		# chrome) instead of a plain section line. Storage is untouched - the sheet still holds the two
 		# fence rows the file has, which is what keeps the byte round-trip free.
@@ -4993,9 +4993,9 @@ func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, t
 			return "➜"
 
 
-# ── N3 - Construct's "Every X seconds" over Godot's two spellings of it ─────────────────────────
+# ── N3 - "Every X seconds" over Godot's two spellings of it ─────────────────────────────────────
 #
-# Construct's most-used trigger is `Every X seconds`. Godot writes the same thing twice: a repeating
+# An event sheet's most-used trigger is `Every X seconds`. Godot writes the same thing twice: a repeating
 # Timer node plus a `timeout` handler, or `while true: await get_tree().create_timer(x).timeout` with
 # the work in the loop. Both read as the trigger here. DISPLAY ONLY - the file keeps its handler, its
 # connect line and its loop, and the connect note still sits on the `_ready` row (M29).
@@ -5092,7 +5092,7 @@ func _repeating_timer_reading(event_row: EventRow) -> Dictionary:
 	return {"seconds": _trimmed_seconds(seconds), "timer": node_name}
 
 
-## `2.0` reads as `2` - Construct writes the number, not the float spelling. Anything that is not a
+## `2.0` reads as `2` - a row shows the number, not the float spelling. Anything that is not a
 ## plain number (an expression, a knob name) is left exactly as the file wrote it.
 static func _trimmed_seconds(text: String) -> String:
 	if not text.is_valid_float():
@@ -5656,7 +5656,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# this is where On Physics Process etc. render, so the ⟳ hot-path glyph lands here too.
 		var trigger_id_glyph: String = _apply_trigger_tempo(trigger_id_badge_meta, event_style, event_row.trigger_id)
 		# N3 - a repeating Timer's handler runs on a beat, so it wears the repeating tempo rather than
-		# the one-off signal arrow, and says the beat in Construct's words below.
+		# the one-off signal arrow, and says the beat in the sheet's own words below.
 		var timer_reading: Dictionary = _repeating_timer_reading(event_row)
 		if not timer_reading.is_empty():
 			trigger_id_glyph = "⟳"

@@ -60,8 +60,8 @@ func on_add_group_requested() -> void:
 		return
 	# N1 authoring symmetry - on a .gd sheet the file is the truth, and the file's own way of
 	# grouping is `#region Name` / `#endregion`, which Godot folds in the script editor. So a Group
-	# added here is written as that fence pair; it reads back as the same bar, and a Construct user's
-	# groups arrive in Godot as folds instead of as a marker comment nobody else understands.
+	# added here is written as that fence pair; it reads back as the same bar, so a group made on the
+	# sheet arrives in Godot as a fold instead of as a marker comment nobody else understands.
 	if _dock._current_sheet != null and not str(_dock._current_sheet.external_source_path).is_empty():
 		_add_region_group()
 		return

@@ -1894,3 +1894,16 @@ group,grupo
 children,hijos
 children of,hijos de
 in,en
+System,Sistema
+Include,Incluir
+disabled,desactivado
+Every %s seconds,Cada %s segundos
+(while running),(mientras se ejecuta)
+- open as a sheet,- abrir como hoja
+▸ run its,▸ ejecuta su
+▸ Call,▸ Llamar
+%d event,%d evento
+%d events,%d eventos
+%d row,%d fila
+%d rows,%d filas
+(unnamed region),(región sin nombre)

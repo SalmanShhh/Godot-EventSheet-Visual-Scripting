@@ -164,7 +164,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# A synthetic row (EVENT-typed but with no sheet resource - a data-class field row) must
 	# never get the real event menu: its items would act on a null anchor / the sheet root.
 	var is_event: bool = row_type == EventRowData.RowType.EVENT and (row_data == null or row_data.source_resource != null)
-	# A `#region` bar READS as a group bar (it is one, to a Construct user) but the sheet stores two
+	# A `#region` bar READS as a group bar - it is one - but the sheet stores two
 	# fence rows, not an EventGroup - so the group menu, whose handlers cast to EventGroup, must not
 	# claim it. Its own block menu below still applies.
 	var is_group: bool = row_type == EventRowData.RowType.GROUP \
