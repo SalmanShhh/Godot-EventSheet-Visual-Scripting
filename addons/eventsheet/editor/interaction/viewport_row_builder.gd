@@ -3973,6 +3973,13 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 		# "State: <pattern leaf>" - the same reading an authored Is In State header gets, derived
 		# from the code's own names rather than any pack. Other matches keep their pattern text.
 		var state_shaped: bool = _is_state_shaped_subject(match_row.match_expression)
+		# M37 - Construct has no switch. A reader of a Construct sheet knows if / else-if / else, so a
+		# match on an ORDINARY value reads as that chain: the first case as its test, every later case as
+		# an Else carrying its own test, `_` as a plain Else. Only shapes that MEAN "one of these values"
+		# qualify; a pattern that binds a name or destructures an array is doing something an Else-if
+		# cannot say, and keeps its pattern text.
+		var else_if_chain: bool = not state_shaped and _match_reads_as_else_if(match_row)
+		var chain_index: int = 0
 		for match_case: MatchCase in match_row.cases:
 			if match_case == null:
 				continue
@@ -4004,7 +4011,18 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			var case_label: String = pattern_text
 			if state_shaped and pattern_text != "_":
 				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
-			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row)
+			var chain_spans: Array[SemanticSpan] = []
+			if else_if_chain:
+				chain_spans = _match_else_if_condition_spans(match_row.match_expression, pattern_text, chain_index)
+				chain_index += 1
+			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row, false, chain_spans)
+			if not chain_spans.is_empty():
+				# An Else-if's test sits on the SECOND condition line, under the Else chip, so the row is
+				# two lines tall however few actions it carries.
+				var chain_lines: int = 0
+				for chain_span: SemanticSpan in chain_spans:
+					chain_lines = maxi(chain_lines, int(chain_span.metadata.get("line_index", 0)) + 1)
+				case_row.line_count = maxi(case_row.line_count, chain_lines)
 			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
 			for transition_child: EventRowData in transition_children:
 				case_row.children.append(transition_child)
@@ -4018,6 +4036,114 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				case_row.spans.insert(0, _make_span("◆", SemanticSpan.SpanType.KEYWORD, case_badge_meta))
 			rows.append(case_row)
 	return rows
+
+
+## M37 - whether a `match` says nothing more than "which of these values is it?", which is the only
+## thing an Else-if chain can say back. Every branch must be one or more PLAIN values; a pattern that
+## binds (`var n`), destructures (`[a, b]` / `{"k": v}`), or tests a type keeps the switch reading,
+## because rewriting it as `subject = pattern` would state something the code does not.
+static func is_plain_match_pattern(pattern: String) -> bool:
+	var text: String = pattern.strip_edges()
+	if text.is_empty():
+		return false
+	if text == "_":
+		return true
+	for term: String in EventSheetSentence.split_top_level(text, ", "):
+		var value: String = term.strip_edges()
+		if value.is_empty():
+			return false
+		# A binding, a destructuring pattern, an open range, or anything with a call in it.
+		if value.begins_with("var ") or value.begins_with("[") or value.begins_with("{") \
+				or value.contains("(") or value.contains("..") or value == "..":
+			return false
+		if value.begins_with("\"") or value.begins_with("'"):
+			continue
+		if value.is_valid_float() or (value.begins_with("-") and value.substr(1).is_valid_float()):
+			continue
+		if value == "true" or value == "false" or value == "null":
+			continue
+		# A bare or dotted identifier - a constant, an enum member, a named value.
+		if not _is_identifier_path(value):
+			return false
+	return true
+
+
+## `State.PATROL` / `SPEED` - every dot-separated piece a plain identifier. A small local helper on
+## purpose: the sentence grammar has the single-identifier test, and this is the one caller that needs
+## the dotted form.
+static func _is_identifier_path(text: String) -> bool:
+	var pieces: PackedStringArray = text.split(".")
+	if pieces.is_empty():
+		return false
+	for piece: String in pieces:
+		if not EventSheetSentence.is_identifier(piece):
+			return false
+	return true
+
+
+## True when EVERY case of a match is a plain-value branch and the default (if present) is last, which
+## is what makes the whole thing readable as one if / else-if / else chain.
+func _match_reads_as_else_if(match_row: MatchRow) -> bool:
+	if match_row == null or match_row.cases.size() < 1:
+		return false
+	if match_row.match_expression.strip_edges().is_empty():
+		return false
+	for case_index: int in range(match_row.cases.size()):
+		var match_case: MatchCase = match_row.cases[case_index]
+		if match_case == null or not ViewportRowBuilder.is_plain_match_pattern(match_case.pattern):
+			return false
+		# A `_` anywhere but last would mean the branches after it are dead; that is not a chain.
+		if str(match_case.pattern).strip_edges() == "_" and case_index != match_row.cases.size() - 1:
+			return false
+	return true
+
+
+## The condition cells of one Else-if arm: the Else chip alone for `_`, the bare test for the first
+## case, and the Else chip ABOVE the test for every case after it - which is exactly how Construct
+## draws an else-if, and exactly what a chained ternary already draws here. Several values in one
+## pattern (`"a", "b":`) become the OR block, since that is what the branch means.
+func _match_else_if_condition_spans(subject: String, pattern: String, chain_index: int) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var text: String = pattern.strip_edges()
+	if chain_index > 0 or text == "_":
+		spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "else_keyword",
+			"chip": true,
+			"hoverable": false,
+			"line_index": 0,
+			"object_label": _object_label_for("Core", "")
+		}.merged(condition_style_meta, true)))
+	if text == "_":
+		return spans
+	var tests: PackedStringArray = PackedStringArray()
+	for term: String in EventSheetSentence.split_top_level(text, ", "):
+		if not term.strip_edges().is_empty():
+			tests.append("%s == %s" % [subject.strip_edges(), term.strip_edges()])
+	if tests.is_empty():
+		return spans
+	# Routed through the shared conjunct/OR splitter so a multi-value branch draws the very same OR
+	# block a hand-written `if a or b:` draws, tone lens and all.
+	var carrier := EventRowData.new()
+	_append_conjunct_condition_lines(carrier, " or ".join(tests), 1 if chain_index > 0 else 0, condition_style_meta)
+	for carried: SemanticSpan in carrier.spans:
+		_say_equals_once(carried)
+		spans.append(carried)
+	return spans
+
+
+## Construct compares with a single `=`, and nobody typed the `==` in these cells: the reading built
+## it, out of a match pattern that has no operator at all. So it is written the way Construct writes
+## it. A comparison the user really did type is left exactly as typed, elsewhere and on purpose.
+func _say_equals_once(span: SemanticSpan) -> void:
+	span.text = span.text.replace(" == ", " = ")
+	var segments: Array = span.metadata.get("bbcode_segments", []) as Array
+	for segment: Variant in segments:
+		var piece: Dictionary = segment as Dictionary
+		if piece == null:
+			continue
+		piece["text"] = str(piece.get("text", "")).replace(" == ", " = ")
 
 
 ## The friendly one-line reading of a case-body statement: a sentence when the statement
@@ -4153,7 +4279,11 @@ func _pattern_leaf(pattern_text: String) -> String:
 ## `negated` is for callers that already turned an inverted guard into its positive sentence
 ## (_friendly_guard_text does): they pass the inversion here so the ✕ still gets drawn. Callers
 ## handing over raw text can leave it false - the lens below finds a leading NOT on its own.
-func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource, negated: bool = false) -> EventRowData:
+## `condition_spans`, when given, REPLACES the single condition cell this would otherwise draw - the
+## M37 Else-if chain hands over its own stacked Else + test lines, built by the same helpers a ternary
+## chain uses, so both readings of "one of these branches runs" look identical on the sheet.
+func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource, negated: bool = false,
+		condition_spans: Array[SemanticSpan] = []) -> EventRowData:
 	var row := EventRowData.new()
 	row.indent = indent
 	row.row_type = EventRowData.RowType.EVENT
@@ -4161,6 +4291,16 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 	row.line_count = maxi(action_lines.size(), 1)
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	if not condition_spans.is_empty():
+		row.spans = condition_spans.duplicate()
+		for line_index: int in range(action_lines.size()):
+			row.spans.append(_make_span(action_lines[line_index] if not action_lines[line_index].is_empty() else " ", SemanticSpan.SpanType.ACTION, {
+				"lane": "action",
+				"kind": "match_case",
+				"editable": false,
+				"line_index": line_index
+			}.merged(action_style, true)))
+		return row
 	# M12 - a lifted `if not <cond>:` shows its inversion as the red ✕ in the badge column, exactly
 	# as an inverted ACE condition does, and the sentence beside it is the POSITIVE one. Callers
 	# that already stripped the negation pass plain text and nothing happens here.
