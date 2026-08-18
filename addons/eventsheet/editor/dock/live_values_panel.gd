@@ -117,7 +117,7 @@ func update_values(values: Dictionary) -> void:
 	ensure_window()
 	label.text = "Streaming - double-click a value to edit it in the running game."
 	# Sheet variables list flat (editable); dotted keys ("Sine.phase" - a behavior's
-	# debugger_properties section, the Construct debugger idea) group under one read-only
+	# debugger_properties section, the event-sheet debugger idea) group under one read-only
 	# section per behavior child, after the variables.
 	var plan: Dictionary = build_display_plan(values)
 	var plain_keys: Array = plan.get("plain", [])

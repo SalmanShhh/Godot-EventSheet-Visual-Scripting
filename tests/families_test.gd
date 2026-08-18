@@ -1,4 +1,4 @@
-# Godot EventSheets - Families (the C3-style "one rule for every instance of a type").
+# Godot EventSheets - Families (the event-sheet "one rule for every instance of a type").
 #
 # Pins the Families v1 contract:
 #   - A sheet flagged `is_family` emits a `## @ace_family(<Class>)` marker (metadata only, like @ace_tags

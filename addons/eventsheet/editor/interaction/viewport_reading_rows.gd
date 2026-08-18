@@ -32,11 +32,43 @@ const HOST_LABEL := "host"
 static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	if sheet == null:
 		return {}
+	# ── M38 / M40 lens hook ────────────────────────────────────────────────────────────────────
+	# The sheet's own enums (so an unambiguous member can drop its enum name) and the class behind
+	# every object label (so `play` can tell an animation from a sound). Both are plain walks of the
+	# sheet, cached with the rest of the context.
+	var enums: Dictionary = enum_member_map(sheet)
 	return {
 		"script_object": script_object_name(sheet),
 		"engine_properties": engine_property_set(sheet),
-		"signal_params": signal_parameter_map(sheet)
+		"signal_params": signal_parameter_map(sheet),
+		"enum_members": enums.get("members", {}),
+		"enum_names": enums.get("names", {}),
+		"object_classes": object_class_map(sheet),
+		"self_class": sheet.host_class.strip_edges()
 	}
+
+
+## M38. The sheet's enums, as {"names": {EnumName: true}, "members": {MEMBER: how many enums declare
+## it}}. The count is what decides whether a member may drop its enum name: `State.PATROL` reads
+## `PATROL` only while no other enum on the sheet has a `PATROL` of its own.
+static func enum_member_map(sheet: EventSheetResource) -> Dictionary:
+	var names: Dictionary = {}
+	var members: Dictionary = {}
+	if sheet == null:
+		return {"names": names, "members": members}
+	for entry: Variant in sheet.events:
+		var enum_row: EnumRow = entry as EnumRow
+		if enum_row == null or enum_row.enum_name.strip_edges().is_empty():
+			continue
+		names[enum_row.enum_name.strip_edges()] = true
+		for value: String in enum_row.members:
+			# A value may carry its number ("PATROL = 0"); the NAME is its head.
+			var member: String = value.strip_edges()
+			if member.contains("="):
+				member = member.substr(0, member.find("=")).strip_edges()
+			if not member.is_empty():
+				members[member] = int(members.get(member, 0)) + 1
+	return {"names": names, "members": members}
 
 
 ## M25. The name a script's own object goes by: its `class_name` first, then the class it extends -
@@ -146,7 +178,7 @@ static func class_of_object(object_label: String, class_map: Dictionary) -> Stri
 	return label if ClassDB.class_exists(label) else ""
 
 
-## M27. Construct's words for the two tick triggers. The trigger ids are untouched - this is the
+## M27. The event-sheet words for the two tick triggers. The trigger ids are untouched - this is the
 ## reading only, so a sheet still stores (and compiles to) exactly what it did before.
 static func tick_trigger_words(trigger_id: String, display_text: String) -> String:
 	match trigger_id:
@@ -154,13 +186,28 @@ static func tick_trigger_words(trigger_id: String, display_text: String) -> Stri
 			return "%s %s" % [EventSheetL10n.translate("Every tick"), EventSheetL10n.translate("(physics)")]
 		"OnProcess":
 			return "%s %s" % [EventSheetL10n.translate("Every tick"), EventSheetL10n.translate("(draw)")]
-	return display_text
+	# M41 - the collision family reads as the event-sheet's own two triggers.
+	var collision: String = collision_trigger_words(trigger_id)
+	return collision if not collision.is_empty() else display_text
 
 
-## M33. Construct's own words for a loop row, and the object it belongs to.
+## M41. An event sheet has one collision trigger and one for the overlap ending, where Godot has four
+## signals (bodies and areas, entering and leaving). Keyed by the trigger id AND usable from the
+## signal name, so a handler lifted from a `.connect(...)` line and one lifted from a declared
+## `func _on_body_entered` read the same words. "" when the trigger is not one of the four.
+static func collision_trigger_words(trigger_id: String) -> String:
+	match trigger_id:
+		"OnBodyEntered", "OnAreaEntered", "body_entered", "area_entered":
+			return EventSheetL10n.translate("On collision with")
+		"OnBodyExited", "OnAreaExited", "body_exited", "area_exited":
+			return EventSheetL10n.translate("On stopped overlapping")
+	return ""
+
+
+## M33. The event-sheet words for a loop row, and the object it belongs to.
 ##
 ## Returns {"text", "object"} - `object` empty for the System loops, and the host for a loop over
-## another object's children, which Construct draws as that object's own For each. The loop rows
+## another object's children, which an event sheet draws as that object's own For each. The loop rows
 ## themselves are unchanged: this is what they SAY, never what they are.
 static func loop_words(kind: int, iterator_name: String, collection: String) -> Dictionary:
 	var iterator: String = iterator_name.strip_edges()
@@ -169,7 +216,7 @@ static func loop_words(kind: int, iterator_name: String, collection: String) -> 
 		PickFilter.CollectionKind.REPEAT:
 			var bounds: PackedStringArray = EventSheetSentence.split_top_level(source, ", ")
 			if bounds.size() == 2:
-				# Construct's For loop is INCLUSIVE at both ends, and `range(2, 8)` stops at 7 - so the
+				# The event-sheet For loop is INCLUSIVE at both ends, and `range(2, 8)` stops at 7 - so the
 				# row says 7, which is the last value the loop body actually sees.
 				var last: String = _one_less(bounds[1])
 				if not last.is_empty():
@@ -183,7 +230,7 @@ static func loop_words(kind: int, iterator_name: String, collection: String) -> 
 			return {"text": "%s %s" % [EventSheetL10n.translate("While"), source], "object": ""}
 		PickFilter.CollectionKind.CHILDREN:
 			return {"text": "%s %s" % [EventSheetL10n.translate("For each child"), iterator], "object": ""}
-	# `for child in host.get_children()` is that object's own For each, exactly as Construct draws it -
+	# `for child in host.get_children()` is that object's own For each, exactly as a sheet draws it -
 	# and a receiver-less `get_children()` is the script's own, which the object column already names.
 	if source == "get_children()":
 		return {"text": "%s %s" % [EventSheetL10n.translate("For each child"), iterator], "object": ""}
@@ -205,7 +252,7 @@ static func _children_receiver(expression: String) -> String:
 	return EventSheetSentence.object_of_reference(receiver)
 
 
-## `8` -> `7`, so a half-open Godot range reads as the inclusive Construct one. Empty when the bound
+## `8` -> `7`, so a half-open Godot range reads as the inclusive event-sheet one. Empty when the bound
 ## is not a plain number - `range(2, n)` has no last value a reader could be shown.
 static func _one_less(bound: String) -> String:
 	var text: String = bound.strip_edges()
@@ -243,10 +290,13 @@ static func object_class_map(sheet: EventSheetResource) -> Dictionary:
 		# `%HpBar` / `$Head`: the row that USES the node often names the path rather than the
 		# variable, so the path resolves to the same class. Both spellings, and the bare name
 		# after the sigil, so "HpBar" resolves too.
-		var node_reference: String = variable.default_value.strip_edges()
+		# M47 - a `get_node("A/B")` lookup names the same node `$A/B` does, so both spellings (and the
+		# last segment the rows read it under) resolve to the class the variable declared.
+		var node_reference: String = EventSheetSentence.node_lookup_text(variable.default_value.strip_edges())
 		if node_reference.begins_with("%") or node_reference.begins_with("$"):
 			map[node_reference] = declared_type
 			map[node_reference.substr(1)] = declared_type
+			map[EventSheetSentence.object_of_reference(node_reference)] = declared_type
 	return map
 
 
@@ -271,12 +321,26 @@ static func declared_class_of(variable: LocalVariable) -> String:
 
 
 ## M20 - true when a variable is an OBJECT declaration rather than a value one: an @onready that
-## reads a node out of the scene. Those are the ones that become Construct's object list.
+## reads a node out of the scene. Those are the ones that become the sheet's object list.
 static func is_object_declaration(variable: LocalVariable) -> bool:
 	if variable == null or not variable.onready:
 		return false
 	var value: String = variable.default_value.strip_edges()
-	return value.begins_with("%") or value.begins_with("$")
+	# M47 - `get_node("A/B")` names a node exactly as `$A/B` does, so it is the same declaration.
+	return value.begins_with("%") or value.begins_with("$") \
+		or value.begins_with("get_node(") or value.begins_with("get_node_or_null(")
+
+
+## M47. What an object declaration's VALUE reads as: the node reference in its `$Path` spelling,
+## whichever way the file spells it. A `get_node_or_null` lookup may find nothing, and that is worth
+## saying, so the note comes back beside the value: {"value", "note"} - `note` empty for the rest.
+static func object_declaration_value(variable: LocalVariable) -> Dictionary:
+	if variable == null:
+		return {"value": "", "note": ""}
+	var raw: String = variable.default_value.strip_edges()
+	var shown: String = EventSheetSentence.node_lookup_text(raw)
+	var note: String = EventSheetL10n.translate("may be missing") if raw.begins_with("get_node_or_null(") else ""
+	return {"value": shown, "note": note}
 
 
 ## M17 - the label on a folded code card: "code  12 lines". The exact GDScript is what the card

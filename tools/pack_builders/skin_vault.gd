@@ -7,11 +7,11 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## SkinVault: a cosmetic-ownership manager as an AUTOLOAD sheet (SkinVault) for gacha/unlock systems.
 ## It owns WHAT the player has and can still get - you build the UI. Register rarities + skins, then
 ## unlock via three paths (Roll / Purchase / Grant), all funnelling into On Skin Unlocked. Ported from
-## the Construct 3 addon, Godot-native + beginner-friendly:
+## an event-sheet addon of the same idea, Godot-native + beginner-friendly:
 ##  - Discrete typed ACEs (Register Rarity / Register Skin) instead of the JSON-blob registration the
-##    C3 version used.
+##    original version used.
 ##  - Pity uses an explicit rarity TIER integer, so "guarantee an epic-or-better after N misses" no
-##    longer depends on the fragile registration ORDER the C3 addon relied on.
+##    longer depends on the fragile registration ORDER the original addon relied on.
 ##  - Currency stays external: Purchase fires On Purchase Requested carrying the cost; YOUR wallet
 ##    (e.g. the Currency Ledger pack) decides, then calls Confirm/Cancel Purchase.
 static func build() -> bool:

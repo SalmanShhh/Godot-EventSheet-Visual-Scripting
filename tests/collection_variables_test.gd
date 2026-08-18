@@ -86,7 +86,7 @@ static func run() -> bool:
 	all_passed = _check("empty items -> empty array literal",
 		VariableDialog.items_to_collection_literal(PackedStringArray(), false), "[]") and all_passed
 
-	# ---- Constructor literals for the whole vector family ----
+	# ---- The constructor literals for the whole vector family ----
 	# A type with no entry in _to_code_literal falls through to str(), which for a Vector3 yields the
 	# bare tuple "(0, 0, 0)" - not GDScript. That failure is SILENT: the compile reports success and
 	# the emitted file simply does not parse, so a 3D sheet loses everything with no error to read.

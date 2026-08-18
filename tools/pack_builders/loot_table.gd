@@ -5,13 +5,14 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
 ## Loot Table: a weighted loot/reward ROLLER as an AUTOLOAD sheet (LootBox). Register tables of
-## weighted entries once, then roll by id and react to what dropped. Ported from the Construct 3
-## addon, Godot-native + beginner-friendly:
+## weighted entries once, then roll by id and react to what dropped. Ported from an event-sheet
+## addon of the same idea, Godot-native + beginner-friendly:
 ##  - Build tables with discrete typed ACEs (Create Table / Add Entry / Add Rare Entry / Add Table
-##    Reference), NOT the escaped-JSON blobs the C3 version used.
+##    Reference), NOT the escaped-JSON blobs the original version used.
 ##  - Real weighted picking via a seeded RandomNumberGenerator (deterministic when you Set Seed).
 ##  - Guarantees (a tag appears at least N times per multi-roll) and HARD pity (a tag is GUARANTEED
-##    after N straight misses - what players actually expect from "pity", instead of C3's soft weight
+##    after N straight misses - what players actually expect from "pity", instead of the original's
+##    soft weight
 ##    doubling that only nudged the odds).
 ##  - Nested tables (an entry that rolls another table inline) via a typed reference, not a magic
 ##    "__table__" string.

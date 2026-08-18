@@ -98,7 +98,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set label to uppercase(label)",
 	"System ▸ Set label to left(label, 3)",
 	"System ▸ Set label to mid(label, 2, 4)",
-	"System ▸ Set hp to len(label)",
+	"System ▸ Set hp to length of label",
 	"System ▸ Set label to trim(label)",
 	"System ▸ Set label to hp & \": \" & label",
 	"System ▸ Set hp to hp ^ 2",
@@ -261,7 +261,7 @@ static func _condition_values() -> bool:
 		["has_node(\"Sprite2D\")", "Player ▸ has child Sprite2D"],
 		["$Hurtbox.has_node(\"Shape\")", "Hurtbox ▸ has child Shape"],
 		# N5 - the two comparison glyphs, wherever a comparison is shown
-		["rotation >= 1.5", "Player ▸ rotation ≥ 1.5"],
+		["rotation >= 1.5", "Player ▸ angle (radians) ≥ 1.5"],
 		["position.x <= 0", "Player ▸ X ≤ 0"],
 		["hp >= 10", " ▸ hp ≥ 10"],
 		# N7 - the storage and file questions
@@ -289,7 +289,9 @@ static func _expression_values() -> bool:
 		["text.substr(0, 3)", "left(text, 3)"],
 		["text.substr(2, 4)", "mid(text, 2, 4)"],
 		["text.right(4)", "right(text, 4)"],
-		["text.length()", "len(text)"],
+		# M43 already reads `length()` as "length of x", which is the honest answer for a vector as
+		# well as for text - so N6 defers to it rather than implying a count with `len(...)`.
+		["text.length()", "length of text"],
 		["text.find(\"x\")", "find(text, \"x\")"],
 		["text.replace(\"a\", \"b\")", "replace(text, \"a\", \"b\")"],
 		["text.strip_edges()", "trim(text)"],

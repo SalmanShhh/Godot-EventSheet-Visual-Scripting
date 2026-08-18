@@ -1,4 +1,4 @@
-# EventForge - a pack opened as a sheet READS like a Construct sheet.
+# EventForge - a pack opened as a sheet READS like an event sheet.
 #
 # Three things are pinned here, all of them pure view state over an unchanged .gd:
 #   M3  a published verb's header is a Function block - [ƒ, name, one chip per input] and NOTHING

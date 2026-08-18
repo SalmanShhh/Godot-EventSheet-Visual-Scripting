@@ -160,7 +160,7 @@ func _build() -> void:
 	# res:// path opened nothing in an installed project. The link is pinned to the installed
 	# version's tag, so the page matches the build in front of the reader.
 	migration_button.pressed.connect(func() -> void:
-		EventSheets.open_online_doc("docs/GUIDE-C3-MIGRATION.md"))
+		EventSheets.open_online_doc("docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md"))
 	migration_row.add_child(migration_button)
 	box.add_child(migration_row)
 	# Second footer row: somebody hitting a bug on day one should not have to work out where the

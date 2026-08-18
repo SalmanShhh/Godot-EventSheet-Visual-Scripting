@@ -7,11 +7,11 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## Storylet Weaver: quality-based narrative (QBN) as an AUTOLOAD sheet (Storylets). Instead of one
 ## giant branching web of if/else, you register many small self-contained STORYLETS, each declaring
 ## its own requirements against a flat "qualities" store; call Draw to get the best eligible one.
-## Ported from the Construct 3 addon, Godot-native + beginner-friendly:
+## Ported from an event-sheet addon of the same idea, Godot-native + beginner-friendly:
 ##  - Build storylets with discrete typed ACEs (Define Storylet / Add Requirement / Add Choice), NOT
-##    the JSON-string blobs the C3 version used.
+##    the JSON-string blobs the original version used.
 ##  - A MISSING quality reads as 0 (numeric) or "" (text) - so `courage >= 3` on an unset quality is
-##    simply false, instead of the C3 addon's surprising "every op except != fails" rule.
+##    simply false, instead of the original addon's surprising "every op except != fails" rule.
 ##  - Cooldowns run off an internal game clock that ticks automatically (delta each frame), so
 ##    "once per 30 seconds" just works with no clock wiring.
 ##  - Draw = evaluate + pick + activate in one call (the 5-second path); Evaluate + the available list
@@ -25,7 +25,7 @@ static func build() -> bool:
 	sheet.class_description = "A quality-based narrative engine, shipped as the Storylets autoload singleton. Register many small storylets that each carry their own requirements, then call Draw to get the best eligible one - adding a story beat is one more storylet, not surgery on a giant if/else web."
 	sheet.addon_category = "Storylets"
 	sheet.addon_tags = PackedStringArray(["narrative", "storylet"])
-	# 1.1.0: ported the recently-updated C3 addon's data-driven layer - effects + forecasts, meta
+	# 1.1.0: ported the recently-updated original addon's data-driven layer - effects + forecasts, meta
 	# payloads, per-choice requirements/effects, and the chance / recency / key-vs-key requirements.
 	# 1.2.0: Load From Resource (loads a StoryletResource .tres book) plus its validation safety net
 	# (Book Resource Is Valid / Validate Book Resource) that reports dangling references before a load.

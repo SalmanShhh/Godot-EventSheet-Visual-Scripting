@@ -22,7 +22,7 @@
 "ids": ["GUIDE-USING-WITH-EXISTING-CODE", "GUIDE-VERSION-CONTROL", "GUIDE-THEMING", "GUIDE-UNINSTALL"],
 "title": "Working with your project"
 }, {
-"ids": ["GUIDE-C3-MIGRATION", "REFERENCE-GLOSSARY"],
+"ids": ["GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR", "REFERENCE-GLOSSARY"],
 "title": "Coming from Construct 3"
 }, {
 "ids": ["REFERENCE-ENGINE-ACES", "REFERENCE-MCP-SERVER", "REFERENCE-PERFORMANCE", "GDSCRIPT-BASICS-COVERAGE"],
@@ -120,7 +120,6 @@
 "GUIDE-BLOCK-STYLES": "Block Styles - How To Read Every Row",
 "GUIDE-BUILDING-EDITOR-TOOLS": "Making Custom Editor Tools with Event Sheets",
 "GUIDE-BUILDING-ON-EVENTSHEETS": "Building on EventSheets",
-"GUIDE-C3-MIGRATION": "Construct 3 → Godot EventSheets Migration Guide",
 "GUIDE-COMMON-GAME-PATTERNS": "Common Game Patterns Without Code",
 "GUIDE-COMPOSITION-SYSTEMS": "Composition and systems (ECS-lite)",
 "GUIDE-CREATING-CUSTOM-MODULES": "Creating custom ACE modules",
@@ -133,6 +132,7 @@
 "GUIDE-DESIGNING-USER-FRIENDLY-ACES": "Designing User-Friendly ACEs",
 "GUIDE-EDITOR-TOOLS": "Editor Tools Guide - Automate the Godot Editor with Event Sheets",
 "GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE": "Make a Behaviour Without Writing Code",
+"GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR": "Construct 3 → Godot EventSheets Migration Guide",
 "GUIDE-PLAYER-AND-AI-INPUT": "Player and AI Input - One Seam, Every Behavior",
 "GUIDE-PROCEDURAL-GENERATION": "Randomness and Procedural Generation with Advanced Random",
 "GUIDE-RECIPES": "Recipes - Build Something, End to End",

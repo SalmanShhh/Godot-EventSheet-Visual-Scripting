@@ -1,6 +1,6 @@
 # EventForge - render harness (dev tool) for an opened behaviour pack read as a sheet.
 # Imports the FPS Controller pack as a READ-ONLY preview and screenshots two things:
-#   docs/images/opened-pack-verbs.png    - the published verbs as Construct Function blocks
+#   docs/images/opened-pack-verbs.png    - the published verbs as event-sheet Function blocks
 #                                          plus the folded Helpers group
 #   docs/images/ace-properties-popup.png - the ACE properties panel a verb header opens
 #   docs/images/opened-pack-input-triggers.png - the pack's `_unhandled_input`, read as one

@@ -51,7 +51,7 @@ static func run() -> bool:
 	var refreshed_last: EventRowData = viewport.get_flat_rows()[2].get("row")
 	all_passed = _check("toggle-off survives refresh (central sync)", refreshed_last.bookmark_enabled, false) and all_passed
 
-	# ── The C3-style Bookmarks panel: grouped tree entries + Clear All ───────
+	# ── The event-sheet Bookmarks panel: grouped tree entries + Clear All ────
 	var panel: EventSheetBookmarksPanel = editor._ensure_bookmarks_panel()
 	panel.build()
 	panel.refresh()

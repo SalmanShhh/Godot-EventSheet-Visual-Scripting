@@ -5,7 +5,7 @@ extends RefCounted
 # M15 - the tree connector from an event to its sub-events.
 #
 # Indent alone loses the depth on a long handler: seven rows in, "which parent is this under"
-# stops being answerable by eye. Construct draws a connector, so this draws one - a continuous
+# stops being answerable by eye. An event sheet draws a connector, so this draws one - a continuous
 # vertical trunk per nesting level, plus a short elbow into the row it belongs to.
 #
 # Strictly draw-only. It reserves no width, shifts no metric and is never measured: the trunks

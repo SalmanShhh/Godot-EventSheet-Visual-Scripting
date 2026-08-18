@@ -546,7 +546,7 @@ Plain GDScript - anything valid in an expression works here. Ctrl+Space complete
 Expressions dictionary,表达式字典
 Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,双击即可在光标处插入 - 字典保持打开，方便连续插入。你也可以直接在字段中输入：同样的表达式会随输入自动补全。
 Loop index (optional),循环索引（可选）
-"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","给一个每轮从 0, 1, 2... 递增的计数器命名 - 即 Construct 的 loopindex。用 Loop Index 表达式读取它；给嵌套循环起不同的名字，用 Loop Index Of 读取外层循环。"
+"Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","给一个每轮从 0, 1, 2... 递增的计数器命名。用 Loop Index 表达式读取它；给嵌套循环起不同的名字，用 Loop Index Of 读取外层循环。"
 Write one value per line (multi-line enum),每行写一个值（多行枚举）
 "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","关闭时：enum State { IDLE, RUN }。开启时：每个值单独占一行并以制表符缩进 - 带显式数字的长枚举的常见写法。"
 Addon Pack,插件包
@@ -1846,6 +1846,54 @@ Wait one tick,等待一个 tick
 Wait one physics tick,等待一个物理 tick
 Wait for signal {object} {trigger},等待信号 {object} {trigger}
 connects {object} {trigger},连接 {object} {trigger}
+Is on floor,在地面上
+Is by wall,靠着墙
+Is by ceiling,靠着天花板
+Is jumping,正在跳跃
+Is falling,正在下落
+Is overlapping {other},与 {other} 重叠
+Is overlapping something,与某物重叠
+Set invisible,设为不可见
+Set visible,设为可见
+Set layer invisible,设图层为不可见
+Set layer visible,设图层为可见
+Set mirrored,设为镜像
+Set not mirrored,取消镜像
+Set flipped,设为翻转
+Set not flipped,取消翻转
+Set opacity to {value},将不透明度设为 {value}
+Set size to {value},将大小设为 {value}
+Set animation to {name} (play),将动画设为 {name}（播放）
+Stop animation,停止动画
+Play,播放
+Stop,停止
+Set angle toward {target},将角度朝向 {target}
+Go to layout {path},转到布局 {path}
+Restart layout,重启布局
+Set time scale to 0 (pause),将时间缩放设为 0（暂停）
+Set time scale to 1,将时间缩放设为 1
+Set time scale to {value},将时间缩放设为 {value}
+count,数量
+child count,子节点数
+(layer),（图层）
+viewport width,视口宽度
+viewport height,视口高度
+mouse position,鼠标位置
+time,时间
+time in ms,时间（毫秒）
+fps,fps
+angle,角度
+angle (radians),角度（弧度）
+may be missing,可能不存在
+On collision with,碰撞时
+On stopped overlapping,重叠结束时
+Create object,创建对象
+as,名为
+copy of,副本
+group,组
+children,子节点
+children of,的子节点
+in,在
 is a {type},是 {type}
 {value} is one of {entries},{value} 是 {entries} 之一
 {table} has key {key},{table} 含有键 {key}

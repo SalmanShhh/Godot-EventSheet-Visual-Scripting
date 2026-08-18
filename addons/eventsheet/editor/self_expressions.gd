@@ -1,9 +1,9 @@
 # EventSheet - the "Self" expression section (Phase 1: Variables / Properties / Functions).
-# Answers the C3 reflex "type Self. and see what my object knows about itself": a pinned section in
-# the Expressions dictionary listing the sheet's own variables, the host's C3-common properties
-# under their C3 names, and the sheet's expression functions. Every entry inserts PLAIN GDScript -
-# the C3 name is only the label a migrating user scans for, so the section teaches the real
-# language and obsoletes itself.
+# Answers the reflex "type Self. and see what my object knows about itself": a pinned section in
+# the Expressions dictionary listing the sheet's own variables, the host's event-sheet-common
+# properties under their familiar names, and the sheet's expression functions. Every entry inserts
+# PLAIN GDScript - the familiar name is only the label a migrating user scans for, so the section
+# teaches the real language and obsoletes itself.
 #
 # This file is the section's whole brain, static + pure, so the census is headless-testable
 # without a dialog. It is a VIEW over data the plugin already derives (sheet variables, ClassDB
@@ -13,14 +13,14 @@
 class_name EventSheetSelfExpressions
 extends RefCounted
 
-## The C3-name override table - the ONLY literal table in the feature, and it is an override list
-## on top of reflection, never a property catalog. An alias exists ONLY when the C3 name and the
-## Godot name genuinely differ (position.x needs "X"; scale needs nothing). `host` gates the entry:
+## The familiar-name override table - the ONLY literal table in the feature, and it is an override
+## list on top of reflection, never a property catalog. An alias exists ONLY when the familiar name
+## and the Godot name genuinely differ (position.x needs "X"; scale needs nothing). `host` gates the entry:
 ## it is dropped (not disabled) when the sheet's host cannot reach the property.
 const ALIAS_OVERRIDES: Array = [
 	# `position` lives on Node2D, Node3D and Control separately (CanvasItem has none), so X/Y gate
 	# on each rather than a shared ancestor. Angle deliberately excludes Node3D: its `rotation` is
-	# a Vector3, and aliasing a scalar C3 name to a vector would insert a lie.
+	# a Vector3, and aliasing a scalar familiar name to a vector would insert a lie.
 	{"label": "X", "fragment": "position.x", "host": "Node2D"},
 	{"label": "Y", "fragment": "position.y", "host": "Node2D"},
 	{"label": "X", "fragment": "position.x", "host": "Node3D"},
@@ -40,9 +40,9 @@ const ALIAS_OVERRIDES: Array = [
 
 ## The whole section model: {variables, properties, functions, host}, each an entry list
 ## {label, fragment, tooltip}. `label` is what the tree shows, `fragment` is the GDScript inserted
-## at the caret. `host` fills only in behaviour mode: the same C3 commons against the pack's HOST
+## at the caret. `host` fills only in behaviour mode: the same commons against the pack's HOST
 ## through the `host` binding every behaviour carries (`host.position.x`) - the second audience
-## with C3 muscle memory is the behaviour author, whose "my object" is the parent.
+## with event-sheet muscle memory is the behaviour author, whose "my object" is the parent.
 ## Pure - callers pass the sheet and the resolved host class name.
 static func section_for(sheet: EventSheetResource, host_class: String) -> Dictionary:
 	var host_entries: Array = []
@@ -56,7 +56,7 @@ static func section_for(sheet: EventSheetResource, host_class: String) -> Dictio
 	}
 
 
-## The host's C3-common properties, host-gated through ClassDB. A custom script class resolves to
+## The host's event-sheet-common properties, host-gated through ClassDB. A custom script class resolves to
 ## its nearest engine base first, so a `class_name PlayerBrain extends CharacterBody2D` host still
 ## receives X/Y/Angle. An unresolvable host keeps only the Object-level commons.
 ## `fragment_prefix` re-aims the commons at another object ("host." for a behaviour's parent).
@@ -71,7 +71,7 @@ static func property_entries(host_class: String, fragment_prefix: String = "") -
 		out.append({
 			"label": "%s · %s" % [str(alias.get("label")), fragment],
 			"fragment": fragment,
-			"tooltip": "C3's Self.%s - inserts %s" % [str(alias.get("label")), fragment],
+			"tooltip": "This object's own %s - inserts %s" % [str(alias.get("label")), fragment],
 		})
 	return out
 
@@ -368,8 +368,8 @@ static func _rows_spawn(rows: Array) -> bool:
 	return false
 
 
-## Every reachable sheet variable as an entry inserting its bare name (C3's Self.MyVariable is a
-## bare member in GDScript). Same census the ƒx picker's Sheet Variables group uses.
+## Every reachable sheet variable as an entry inserting its bare name (a Self.MyVariable elsewhere
+## is a bare member in GDScript). Same census the ƒx picker's Sheet Variables group uses.
 static func variable_entries(sheet: EventSheetResource) -> Array:
 	var out: Array = []
 	if sheet == null:
@@ -384,7 +384,7 @@ static func variable_entries(sheet: EventSheetResource) -> Array:
 		out.append({
 			"label": name_str if type_name.is_empty() else "%s : %s" % [name_str, type_name],
 			"fragment": name_str,
-			"tooltip": "This sheet's own variable - inserts the bare name (C3's Self.%s)" % name_str,
+			"tooltip": "This sheet's own variable - inserts the bare name (%s)" % name_str,
 		})
 	return out
 
@@ -417,7 +417,7 @@ static func function_entries(sheet: EventSheetResource) -> Array:
 
 ## Splits a search query into (self-scoped?, remainder): "Self.X" -> (true, "x"), "self" ->
 ## (true, ""), "position" -> (false, "position"). Self-scoped queries filter WITHIN the Self
-## section and hide the rest of the tree - the C3 "type Self. and browse" reflex.
+## section and hide the rest of the tree - the "type Self. and browse" reflex.
 static func normalize_query(query: String) -> Dictionary:
 	var lowered: String = query.strip_edges().to_lower()
 	for prefix: String in ["self.", "self"]:
@@ -426,7 +426,7 @@ static func normalize_query(query: String) -> Dictionary:
 	return {"self_scoped": false, "remainder": lowered}
 
 
-## Whether an entry survives a (lowered) filter: the label carries the C3 name and the fragment
+## Whether an entry survives a (lowered) filter: the label carries the familiar name and the fragment
 ## carries the GDScript, so both spellings find it.
 static func entry_matches(entry: Dictionary, lowered_query: String) -> bool:
 	if lowered_query.is_empty():

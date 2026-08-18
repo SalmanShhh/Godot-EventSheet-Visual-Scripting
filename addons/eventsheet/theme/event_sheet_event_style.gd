@@ -17,11 +17,11 @@ extends Resource
 @export_range(1, 8, 1) var lane_divider_width: int = int(EventSheetPalette.LANE_DIVIDER_WIDTH)
 @export_range(28, 200, 1) var minimum_row_height: int = EventSheetPalette.ROW_HEIGHT
 ## Height of GROUP header rows. Defaults to double the event row height so groups read as
-## strong section bars (a C3 reflex); themes can pull it back down to the classic slim bar.
+## strong section bars (an event-sheet reflex); themes can pull it back down to the classic slim bar.
 @export_range(28, 200, 1) var group_row_height: int = EventSheetPalette.GROUP_ROW_HEIGHT
-## Fixed width of the object-name column inside the CONDITIONS lane, in pixels (the C3 sub-lane:
-## object names left, condition text aligned at the column edge). Aligned by DEFAULT, so every row's
-## text starts at the same x and the sheet scans as a table - the Construct look. 0 = flow, where the
+## Fixed width of the object-name column inside the CONDITIONS lane, in pixels (the event-sheet
+## sub-lane: object names left, condition text aligned at the column edge). Aligned by DEFAULT, so
+## every row's text starts at the same x and the sheet scans as a table. 0 = flow, where the
 ## text instead follows each label and so starts at a different x on every row. Set by dragging the
 ## gap between an object name and its text, or here / in a theme.
 ## The value is LOGICAL pixels, like every other geometry token here, so it does not grow with the
@@ -39,7 +39,7 @@ extends Resource
 @export var group_badge_background_color: Color = EventSheetPalette.COLOR_GROUP_BADGE_BG
 @export var group_badge_foreground_color: Color = EventSheetPalette.COLOR_GROUP_BADGE_FG
 @export var group_fold_background_color: Color = EventSheetPalette.COLOR_GROUP_FOLD_BG
-# A warm note band (Construct-style) so a full-width comment reads as a banner, not another row.
+# A warm note band (event-sheet style) so a full-width comment reads as a banner, not another row.
 @export var comment_row_background_color: Color = Color("#38321f")
 @export var comment_text_color: Color = EventSheetPalette.COLOR_COMMENT
 @export var selection_fill_color: Color = EventSheetPalette.COLOR_SELECTION

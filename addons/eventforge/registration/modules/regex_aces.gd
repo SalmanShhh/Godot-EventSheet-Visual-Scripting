@@ -1,8 +1,9 @@
-# EventForge module - RegEx text matching (Construct 3's Regex* functions, Godot-native).
+# EventForge module - RegEx text matching (the Regex* verbs event-sheet authors expect, Godot-native).
 #
 # Pattern matching, search, replace, and capture-group extraction via Godot's RegEx - the catalogue's
 # plain string verbs (Find / Replace / Token At / Split…) live in system_aces/collection_aces; this
-# module adds the PATTERN-based ones C3 exposes as RegexReplace / RegexSearch / RegexMatchCount.
+# module adds the PATTERN-based ones other event-sheet editors expose as RegexReplace /
+# RegexSearch / RegexMatchCount.
 #
 # Each compiles to a direct one-liner using RegEx.create_from_string({pattern}) (compiles the pattern
 # inline) - parity-clean, no editor plugin and no pre-built RegEx object needed. The search_all-based

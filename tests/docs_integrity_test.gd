@@ -16,7 +16,7 @@ const REQUIRED_DOCS := {
 		"# EventSheet Layout + Alignment Guide",
 		"Layout model",
 		"Key alignment settings",
-		"Construct 3-like tuning recipe",
+		"Stacked-layout tuning recipe",
 		"Theme token cross-reference"
 	],
 	"res://AGENTS.md": [
@@ -30,7 +30,7 @@ const REQUIRED_DOCS := {
 		"Guidance for future LLM-assisted work"
 	],
 	"res://demo/themes/designer_template_theme_manifest.cfg": [
-		"Construct-inspired EventSheet theme package template",
+		"Stacked event-sheet theme package template",
 		"[package]",
 		"[tokens]",
 		"[designer_notes]"

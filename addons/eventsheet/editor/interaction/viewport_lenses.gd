@@ -19,7 +19,7 @@ extends RefCounted
 # being built, and a view toggle decides whether they run at all.
 
 
-## Axis suffixes shown as a capital letter rather than a word: a sheet writes Player.X, and
+## Axis suffixes shown as a capital letter rather than a word: an event sheet writes Player.X, and
 ## "velocity x" reads as a typo where "velocity X" reads as the axis it is.
 const AXIS_COMPONENTS: PackedStringArray = ["x", "y", "z", "w"]
 
@@ -75,7 +75,7 @@ static func axis_letter(part: String) -> String:
 	return ""
 
 
-## M10. A simple property chain read possessively, the way a sheet writes Player.X.
+## M10. A simple property chain read possessively, the way an event sheet writes Player.X.
 ##   host.velocity.x  -> host's velocity X
 ##   event.relative.x -> event's relative X
 ##   direction.x      -> direction X        (two parts ending in an axis: the axis is a
@@ -95,6 +95,12 @@ static func possessive_chain(raw_chain: String, humanize: bool = true) -> String
 	for part: String in parts:
 		if not is_identifier(part):
 			return raw_chain
+	# M38. A SCREAMING_CASE tail is a CONSTANT, not a possession: `State.PATROL` is one exact spelling
+	# the user typed, and "state's patrol" would be a name nobody wrote. The constant lens decides
+	# what such a token reads as; this lens leaves it exactly as it found it.
+	var tail_part: String = parts[parts.size() - 1]
+	if tail_part.to_upper() == tail_part and tail_part.to_lower() != tail_part:
+		return raw_chain
 	var rendered: PackedStringArray = PackedStringArray()
 	for index: int in range(parts.size()):
 		var axis: String = axis_letter(parts[index]) if index > 0 else ""
@@ -114,7 +120,7 @@ static func possessive_chain(raw_chain: String, humanize: bool = true) -> String
 
 ## Every simple identifier chain inside a value expression, read possessively (M10), with the
 ## rest of the expression left exactly as written. Used where a sentence shows a value: the
-## chains become the sheet's words and the operators around them stay code.
+## chains become the event-sheet words and the operators around them stay code.
 static func possessive_in_expression(expression: String, humanize: bool = true) -> String:
 	if expression.is_empty() or expression.contains("("):
 		return expression
@@ -303,7 +309,7 @@ static func _sentence_token(token: String, knob_names: Dictionary) -> String:
 	return humanize_identifier(token, knob_names.has(token))
 
 
-## M27. `delta` is the sheet's `dt` - the same number under the name a sheet reader writes. Applied
+## M27. `delta` is the event-sheet `dt` - the same number under the name a sheet reader writes. Applied
 ## to a FINISHED sentence (an ACE row's display text), where the grammar's own rewriting never runs,
 ## so a lifted `Add gravity * delta to velocity` row reads like the hand-written line beside it.
 ## Only the whole word is replaced: `delta_v` and `_delta` are somebody's own names.
@@ -338,7 +344,7 @@ static func strip_leading_not(sentence: String) -> Dictionary:
 	return {"text": sentence, "negated": false}
 
 
-## M16. A function's snake_case name as its sheet display name ("add_look" -> "Add Look").
+## M16. A function's snake_case name as its display name ("add_look" -> "Add Look").
 ## A name the pack already published under an @ace_name keeps that name; the caller passes it
 ## as `published_name` and this is only the fallback.
 static func function_display_name(function_name: String, published_name: String = "") -> String:

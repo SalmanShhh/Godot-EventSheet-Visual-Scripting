@@ -1,5 +1,5 @@
 # EventForge - render harness (dev tool) for stable event numbers: a sheet with a sub-event,
-# so the gutter's C3-style numbering (1..5, flat through nesting) can be eyeballed. Run
+# so the gutter's event-sheet numbering (1..5, flat through nesting) can be eyeballed. Run
 # NON-headless:
 #   godot --path . --script tools/render_event_numbers_preview.gd
 @tool

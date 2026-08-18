@@ -8,9 +8,9 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## "Slay-the-Spire map as a data service". Register weighted room types, call Generate(seed), and you
 ## get a reproducible tiered map (depth 0 = start, depth N-1 = boss) plus visited/available/locked
 ## traversal bookkeeping as the player moves. It renders nothing - you read room ids and draw your own
-## map. Ported from the Construct 3 addon, Godot-native + beginner-friendly:
-##  - Discrete typed ACEs (Register Room Type / Generate) instead of the escaped-JSON blobs the C3
-##    version used, and ONE API (the C3 addon doubled every verb with a JSON-string variant).
+## map. Ported from an event-sheet addon of the same idea, Godot-native + beginner-friendly:
+##  - Discrete typed ACEs (Register Room Type / Generate) instead of the escaped-JSON blobs the
+##    original version used, and ONE API (the original doubled every verb with a JSON-string variant).
 ##  - Reproducible from a seed string via a seeded RandomNumberGenerator; every room is reachable
 ##    (each room gets at least one parent, so start always connects through to boss).
 ##  - Real getters return collections (Rooms At Depth, connection counts) instead of only Count+ByIndex.

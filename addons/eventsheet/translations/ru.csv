@@ -546,7 +546,7 @@ Plain GDScript - anything valid in an expression works here. Ctrl+Space complete
 Expressions dictionary,Словарь выражений
 Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,"Двойной щелчок вставляет у курсора - словарь остаётся открытым, так что результаты можно связывать. Можно и просто печатать в поле: те же выражения дополняются по мере ввода."
 Loop index (optional),Индекс цикла (необязательно)
-"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","Назовите счётчик, идущий 0, 1, 2... на каждом проходе - loopindex из Construct. Читайте его выражением Loop Index; дайте вложенным циклам разные имена и читайте внешний через Loop Index Of."
+"Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","Назовите счётчик, идущий 0, 1, 2... на каждом проходе. Читайте его выражением Loop Index; дайте вложенным циклам разные имена и читайте внешний через Loop Index Of."
 Write one value per line (multi-line enum),Записывать по одному значению на строку (многострочное перечисление)
 "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","Выкл: enum State { IDLE, RUN }. Вкл: каждое значение на своей строке с отступом табуляцией - обычная форма для длинных перечислений с явными числами."
 Addon Pack,Пакет аддона
@@ -1846,6 +1846,54 @@ Wait one tick,Ждать один тик
 Wait one physics tick,Ждать один тик физики
 Wait for signal {object} {trigger},Ждать сигнал {object} {trigger}
 connects {object} {trigger},подключает {object} {trigger}
+Is on floor,На полу
+Is by wall,У стены
+Is by ceiling,У потолка
+Is jumping,Прыгает
+Is falling,Падает
+Is overlapping {other},Пересекается с {other}
+Is overlapping something,Пересекается с чем-то
+Set invisible,Сделать невидимым
+Set visible,Сделать видимым
+Set layer invisible,Скрыть слой
+Set layer visible,Показать слой
+Set mirrored,Отразить
+Set not mirrored,Убрать отражение
+Set flipped,Перевернуть
+Set not flipped,Убрать переворот
+Set opacity to {value},Задать непрозрачность {value}
+Set size to {value},Задать размер {value}
+Set animation to {name} (play),Задать анимацию {name} (играть)
+Stop animation,Остановить анимацию
+Play,Играть
+Stop,Стоп
+Set angle toward {target},Повернуть к {target}
+Go to layout {path},Перейти к макету {path}
+Restart layout,Перезапустить макет
+Set time scale to 0 (pause),Задать масштаб времени 0 (пауза)
+Set time scale to 1,Задать масштаб времени 1
+Set time scale to {value},Задать масштаб времени {value}
+count,количество
+child count,число дочерних
+(layer),(слой)
+viewport width,ширина вьюпорта
+viewport height,высота вьюпорта
+mouse position,позиция мыши
+time,время
+time in ms,время в мс
+fps,fps
+angle,угол
+angle (radians),угол (радианы)
+may be missing,может отсутствовать
+On collision with,При столкновении с
+On stopped overlapping,Когда пересечение закончилось
+Create object,Создать объект
+as,как
+copy of,копия
+group,группа
+children,потомки
+children of,потомки от
+in,в
 is a {type},является {type}
 {value} is one of {entries},{value} - одно из {entries}
 {table} has key {key},{table} содержит ключ {key}

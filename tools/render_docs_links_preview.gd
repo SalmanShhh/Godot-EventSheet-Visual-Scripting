@@ -33,7 +33,7 @@ func _init() -> void:
 	background.color = Color("#2b2b2b")
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(background)
-	print("[preview] migration guide -> %s" % EventSheets.doc_url("docs/GUIDE-C3-MIGRATION.md"))
+	print("[preview] migration guide -> %s" % EventSheets.doc_url("docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md"))
 	print("[preview] Quest pack guide -> %s" % EventSheets.doc_url(EventSheets.addon_guide_for_provider("QuestPackAddon")))
 	process_frame.connect(_on_frame)
 

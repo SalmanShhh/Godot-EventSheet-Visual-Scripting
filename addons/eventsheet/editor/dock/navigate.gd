@@ -4,9 +4,9 @@ extends RefCounted
 # Ctrl+Click go-to-definition. Every zero-config addon ACE already carries its own address - its
 # provider_id IS the addon script's class_name (that's how the scanner registers it) - so Ctrl+Clicking
 # a behaviour-pack verb in a consumer sheet opens THAT BEHAVIOUR AS A SHEET: the jump the script editor
-# can't make (it lands you in raw text) and Construct-style tools can't make at all (their behaviors are
-# sealed). Built-in Core/module ACEs have no user-meaningful definition file, so they resolve to nothing
-# and Ctrl+Click keeps its multi-select meaning there (the viewport's probe arbitrates per cell).
+# can't make (it lands you in raw text) and other event-sheet tools can't make at all (their behaviors
+# are sealed). Built-in Core/module ACEs have no user-meaningful definition file, so they resolve to
+# nothing and Ctrl+Click keeps its multi-select meaning there (the viewport's probe arbitrates per cell).
 #
 # ONE helper on the dock (the future home of the back/forward jump history); the viewport stays a dumb
 # emitter: it asks can_navigate() to pick the gesture and emits navigate_requested when it wins.

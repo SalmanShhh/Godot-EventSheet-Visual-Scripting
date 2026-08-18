@@ -19,12 +19,15 @@ const DEFAULTS: Dictionary = {
 	"add_condition": "C",
 	"add_action": "A",
 	"add_group": "G",
-	# D matches Construct 3's toggle-disabled key (was X; rebind via Tools - Keyboard Shortcuts).
+	# D matches the event-sheet keyboard grammar's toggle-disabled key (was X; rebind via Tools -
+	# Keyboard Shortcuts).
 	"toggle_enabled": "D",
 	"add_blank_subevent": "B",
-	# S matches Construct 3's add-sub-event key: picker-backed sub-condition under the selection.
+	# S matches the event-sheet keyboard grammar's add-sub-event key: picker-backed sub-condition
+	# under the selection.
 	"add_sub_condition": "S",
-	# V matches Construct 3's add-variable key (the Ctrl+Shift+V chord remains as well).
+	# V is one of the add-variable keys event-sheet authors already have in their fingers (the
+	# Ctrl+Shift+V chord remains as well).
 	"add_variable": "V",
 	"invert_condition": "I",
 	"replace_ace": "R",

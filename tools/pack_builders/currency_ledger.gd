@@ -6,12 +6,13 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 ## Currency Ledger: a data-driven economy as an AUTOLOAD sheet. Register named currencies
 ## (gold, gems, energy, xp...) by string id, then earn and spend from ANY sheet. Ported from
-## the Construct 3 addon, but Godot-native + beginner-friendly:
-##  - ONE clean money model (the C3 debt/non-negative contradiction is gone): every currency has
-##    a min (default 0) and max (-1 = no cap); Add takes a SIGNED amount and clamps to [min, max];
+## an event-sheet addon of the same idea, but Godot-native + beginner-friendly:
+##  - ONE clean money model (the original's debt/non-negative contradiction is gone): every currency
+##    has a min (default 0) and max (-1 = no cap); Add takes a SIGNED amount and clamps to [min, max];
 ##    Spend fails if you can't afford it; Allow Debt sets a negative min for hunger/heat/etc.
-##  - Discrete typed ACEs instead of the JSON-blob registration the C3 version used.
-##  - Apply Offline Gain CREDITS the gain in one call (C3's two-step calculate-then-add footgun is gone).
+##  - Discrete typed ACEs instead of the JSON-blob registration the original version used.
+##  - Apply Offline Gain CREDITS the gain in one call (the original's two-step calculate-then-add
+##    footgun is gone).
 ##  - Parameterless trigger signals + "changed / spend-failed / offline" getter expressions read INSIDE
 ##    the matching On-event handler - the same shape the plugin's own packs use.
 static func build() -> bool:

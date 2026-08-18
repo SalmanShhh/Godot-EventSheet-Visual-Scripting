@@ -546,7 +546,7 @@ Plain GDScript - anything valid in an expression works here. Ctrl+Space complete
 Expressions dictionary,Ausdrucks-Wörterbuch
 Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,"Doppelklick fügt an der Cursorposition ein - das Wörterbuch bleibt offen, damit sich Ergebnisse verketten lassen. Sie können auch einfach ins Feld tippen: dieselben Ausdrücke vervollständigen sich beim Schreiben."
 Loop index (optional),Schleifenindex (optional)
-"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","Benennen Sie einen Zähler, der pro Durchlauf 0, 1, 2... zählt - Constructs loopindex. Lesen Sie ihn mit dem Ausdruck Loop Index; geben Sie verschachtelten Schleifen eigene Namen und lesen Sie eine äußere mit Loop Index Of."
+"Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","Benennen Sie einen Zähler, der pro Durchlauf 0, 1, 2... zählt. Lesen Sie ihn mit dem Ausdruck Loop Index; geben Sie verschachtelten Schleifen eigene Namen und lesen Sie eine äußere mit Loop Index Of."
 Write one value per line (multi-line enum),Einen Wert pro Zeile schreiben (mehrzeiliges Enum)
 "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","Aus: enum State { IDLE, RUN }. An: jeder Wert auf einer eigenen, mit Tab eingerückten Zeile - die übliche Form für lange Enums mit expliziten Zahlen."
 Addon Pack,Erweiterungspaket
@@ -1846,6 +1846,54 @@ Wait one tick,Einen Tick warten
 Wait one physics tick,Einen Physik-Tick warten
 Wait for signal {object} {trigger},Auf Signal {object} {trigger} warten
 connects {object} {trigger},verbindet {object} {trigger}
+Is on floor,Ist auf dem Boden
+Is by wall,Ist an der Wand
+Is by ceiling,Ist an der Decke
+Is jumping,Springt
+Is falling,Fällt
+Is overlapping {other},Überlappt {other}
+Is overlapping something,Überlappt etwas
+Set invisible,Unsichtbar machen
+Set visible,Sichtbar machen
+Set layer invisible,Ebene unsichtbar machen
+Set layer visible,Ebene sichtbar machen
+Set mirrored,Spiegeln
+Set not mirrored,Nicht spiegeln
+Set flipped,Vertikal spiegeln
+Set not flipped,Nicht vertikal spiegeln
+Set opacity to {value},Deckkraft auf {value} setzen
+Set size to {value},Größe auf {value} setzen
+Set animation to {name} (play),Animation auf {name} setzen (abspielen)
+Stop animation,Animation stoppen
+Play,Abspielen
+Stop,Stoppen
+Set angle toward {target},Winkel auf {target} ausrichten
+Go to layout {path},Zu Layout {path} wechseln
+Restart layout,Layout neu starten
+Set time scale to 0 (pause),Zeitskala auf 0 setzen (Pause)
+Set time scale to 1,Zeitskala auf 1 setzen
+Set time scale to {value},Zeitskala auf {value} setzen
+count,Anzahl
+child count,Anzahl Kinder
+(layer),(Ebene)
+viewport width,Viewport-Breite
+viewport height,Viewport-Höhe
+mouse position,Mausposition
+time,Zeit
+time in ms,Zeit in ms
+fps,fps
+angle,Winkel
+angle (radians),Winkel (Bogenmaß)
+may be missing,kann fehlen
+On collision with,Bei Kollision mit
+On stopped overlapping,Wenn Überlappung endet
+Create object,Objekt erzeugen
+as,als
+copy of,Kopie von
+group,Gruppe
+children,Kinder
+children of,Kinder von
+in,in
 is a {type},ist ein {type}
 {value} is one of {entries},{value} ist eines von {entries}
 {table} has key {key},{table} hat Schlüssel {key}

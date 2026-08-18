@@ -33,7 +33,7 @@ var firing: bool = false
 # every streamed batch and holds near full glow).
 var firing_intensity: float = 0.0
 var line_number: int = 0
-# The C3-style stable event number (1-based, sheet order through groups and sub-events);
+# The event-sheet stable event number (1-based, sheet order through groups and sub-events);
 # 0 for non-event rows. View-only, recomputed per rebuild - never serialized.
 var event_number: int = 0
 var breakpoint_enabled: bool = false
@@ -48,7 +48,7 @@ var custom_color: Color = Color(0, 0, 0, 0)
 var language_block: bool = false
 
 ## Vertical presence multiplier (1.0 = normal). Header-like rows (state headers, the Class
-## setup bar, Host binding) reserve extra height so they read as BARS, the way Construct's
+## setup bar, Host binding) reserve extra height so they read as BARS, the way an event sheet's
 ## Includes strip does; content re-centers inside the taller rect at layout time.
 var height_scale: float = 1.0
 # True when the row DIRECTLY BELOW belongs to this one and must not be pushed away by the inter-block
@@ -56,8 +56,8 @@ var height_scale: float = 1.0
 # marks this row as STARTING that block, so the gap lands above the caption instead of between the
 # caption and its verb. View-only, never serialized.
 var attached_below: bool = false
-# True on a row whose content spans BOTH lanes as one track (no divider, no action column). A
-# Construct Function block header is the case it exists for: it carries the verb and its input chips
+# True on a row whose content spans BOTH lanes as one track (no divider, no action column). An
+# event-sheet Function block header is the case it exists for: it carries the verb and its input chips
 # and nothing else, so clipping those chips at the lane divider - with an empty right lane sitting
 # beside them - wastes half the row. View-only, never serialized.
 var full_width_lanes: bool = false
@@ -83,7 +83,7 @@ var action_slice_to: int = -1
 # it sat before the pair existed instead of growing an empty row under every ternary. View-only.
 var action_slice_tail: bool = false
 # M23: true on the continuation row of such a split - its conditions were already drawn by the row
-# the split began at, and a C3 sheet never repeats them. View-only, never serialized.
+# the split began at, and an event sheet never repeats them. View-only, never serialized.
 var conditions_hidden: bool = false
 # M23: true on a row the ternary reading itself produced (a head slice, a branch row, a continuation),
 # so a second pass over the same tree leaves it alone instead of branching it again. View-only.
@@ -101,6 +101,13 @@ var ternary_lead: bool = false
 # what routes a double-click anywhere on the pair (the condition cell and the Else row included) to
 # that ONE line's existing editor. View-only, never serialized.
 var ternary_action_index: int = -1
+# M36: the object a For-each PICKS, and the muted note saying where they came from ("(group
+# \"enemies\")"). Set on the row a loop-plus-one-`if` merged into, so its first condition line reads as
+# a condition ON that object - which is what event-sheet picking looks like. Spans are built lazily,
+# long after the walk that saw the loop, so the answer is carried on the row. View-only, never
+# serialized: the loop and the `if` are two untouched rows in the sheet.
+var picking_object: String = ""
+var picking_note: String = ""
 
 
 ## The uid of the STATEMENT this row belongs to - its own, unless it is one row of a ternary pair, in

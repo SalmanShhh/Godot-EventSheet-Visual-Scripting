@@ -16,7 +16,7 @@ from the picker, because both go through the one row grammar.
   `<=` are drawn `≥` and `≤` wherever a comparison is shown - in a condition and inside a value alike,
   next to the `≠` that already was.
 - **Text and math in the names a reader types into a field.** `uppercase(s)`, `lowercase(s)`,
-  `left(s, n)`, `mid(s, a, n)`, `right(s, n)`, `len(s)`, `find(s, x)`, `replace(s, a, b)`, `trim(s)`,
+  `left(s, n)`, `mid(s, a, n)`, `right(s, n)`, `find(s, x)`, `replace(s, a, b)`, `trim(s)`,
   `split(s, ",")`, `s starts with x`, `s ends with x`, `s contains x`, `x ^ y` for a power, and both
   `"%s: %d".format([a, b])` and `"{0}: {1}".format([a, b])` unrolled into the join `a & ": " & b`.
   `int()`, `float()` and `str()` are already the same word and stay as they are.
@@ -37,6 +37,16 @@ from the picker, because both go through the one row grammar.
   `printerr`), `Log warning x`, `Log x` for `print_rich`, and `System ▸ Assert c "msg"`. A bare
   `breakpoint` says nothing at all: the row wears the sheet's own breakpoint dot, which is what that
   line means. `@tool` reads as a `runs in editor` chip on the Include bar rather than as a row.
+
+### Changed - product names out of the code
+
+- Comments, tooltips, ACE descriptions and test labels across `addons/`, `tools/`, `tests/`,
+  `eventsheet_addons/` and `demo/` now describe the BEHAVIOUR instead of naming another event-sheet
+  editor. The View toggle formerly called **Construct Words** is now **Familiar Words** (same lens:
+  layout, restart layout, time scale, layer nouns), stored under the `familiar_words` key. The
+  migration guide moved to `docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md`. Guides may still
+  draw the comparison for a reader who needs it; `tests/no_product_names_in_code_test.gd` keeps the
+  code itself clean.
 
 ### Fixed - three rows of an opened file stopped saying things that were not true
 
@@ -60,6 +70,76 @@ from the picker, because both go through the one row grammar.
   lambda. The reason it was crammed in is fixed rather than worked around: a condition/trigger cell
   reserves the width its trailing payload chips need instead of filling the lane to the divider and
   leaving them a sliver - which is what a declared handler's `[body]` chip had been drawing as too.
+### Added - an opened script reads in Construct's NOUNS: constants, sprites, collisions, angles, counts
+
+The sentences said what a line DOES; the nouns inside them were still Godot's. A Construct reader
+now recognises the values and the objects too, on both the typed line and the picked row - both read
+through one grammar, so they cannot drift apart. Display only: the file keeps every byte it had.
+
+- **Named constants have no namespace.** `State.PATROL` reads `PATROL` while no other enum on the
+  sheet has a `PATROL` of its own (else it keeps its enum, because the name alone stops saying
+  which). `Vector2.ZERO` is `(0, 0)`, `Vector3.FORWARD` is `forward`, `Color.RED` is `red`, and
+  `PI` / `TAU` / `INF` wear their symbols. `NAN` stays `NAN` - it has no symbol a reader knows.
+- **Sprite, audio and visibility read as Construct's own verbs**, chosen by the object's CLASS:
+  an AnimatedSprite2D / AnimationPlayer `play("run")` is `Set animation to "run" (play)` and its
+  `stop()` is `Stop animation`, while an AudioStreamPlayer's are the `Audio` object's `Play` and
+  `Stop`. `visible = false` is `Set invisible`, `modulate.a = 0.5` is `Set opacity to 50%`,
+  `flip_h`/`flip_v` are `Set mirrored` / `Set flipped`, and a uniform `scale = Vector2(2, 2)` is
+  `Set size to 200%`. An unknown class keeps the plain call reading - `play` means two things.
+- **The collision family reads as Construct's two triggers**: `body_entered` / `area_entered` are
+  `On collision with`, their `*_exited` twins are `On stopped overlapping`, and `overlaps_body` /
+  `has_overlapping_bodies` are `Is overlapping X` / `Is overlapping something`. A 2D body's
+  `is_on_wall()` is `Is by wall`, `is_on_ceiling()` is `Is by ceiling`, and `velocity.y < 0` / `> 0`
+  are `Is jumping` / `Is falling` - claimed in 2D only, where Y grows downward.
+- **Angles and distances in plain words.** `rotation_degrees` is `angle` (and `rotation` is
+  `angle (radians)`, which is the one Godot fact worth keeping), `look_at(p)` is
+  `Set angle toward p`, `position.distance_to(b)` is `distance to b` (`distance from a to b` when it
+  is measured between two other points), `v.length()` is `length of v`, `v.normalized()` is
+  `v, normalized`, and `a.dot(b)` is `a · b`.
+- **Counting reads as a count**: `get_tree().get_nodes_in_group("enemies").size()` is
+  `enemies (group) ▸ count`, `get_child_count()` is `child count`, and `is_empty()` / `not is_empty()`
+  are `items' count = 0` / `items' count > 0` - Construct has no "is empty".
+- **The system values by name**: `viewport width` / `viewport height`, `mouse position` (under the
+  `Mouse` object), `time`, `time in ms` and `fps`.
+- **A node lookup IS the object it names.** `get_node("Enemies/Boss").hp -= 10` reads
+  `Boss ▸ Subtract 10 from hp`, `get_node_or_null(...)` reads the same object with a "may be missing"
+  note, `obj.set("hp", 3)` is `obj ▸ Set hp to 3` and `obj.get("hp")` is `obj's hp`.
+- **View ▾ "Construct Words"** (new, OFF by default, persisted per project like Compact Rows): for
+  people who think in Construct's nouns, a scene becomes a `layout`, `reload_current_scene()` becomes
+  `Restart layout`, pausing and `Engine.time_scale` become `Set time scale to 0 (pause)` / `to 0.5`,
+  and a CanvasLayer becomes `HUD (layer) ▸ Set layer invisible`. With it off nothing changes, and the
+  Godot word is on hover either way.
+### Added - four more Construct habits Godot spells differently
+
+Construct's commonest idioms have no Godot spelling of their own, so a project writes them as
+several statements that only mean anything together. Opening any hand-written `.gd` now reads them
+back as the one thing each of them says. All four are readings over unchanged rows: the file's own
+GDScript is what emission produces, byte for byte, and it is still one hover and one double-click
+away.
+
+- **Picking.** A For-each whose ENTIRE body is one `if` is Construct's whole model - a condition on
+  an object picks the instances, the actions run on the picked ones - and now reads as the one event
+  it means: `Enemy  (group "enemies")  hp < 10` on the left, its body on the right. The note says
+  where the instances came from (a group by name, the children of an object, any other list), and the
+  object column names the thing, so the condition drops the loop's own possessive. A body with any
+  statement outside the `if`, or a loop that filters, orders, caps, counts or spreads across frames,
+  is doing work of its own and keeps the plain For-each + sub-event reading.
+- **`match` on a plain value** reads as the if / else-if / else chain a Construct user knows: the
+  first case states its test, every later case is an `Else` carrying its own test on a second
+  condition line, and `_` is a plain `Else`. A case listing several values becomes the OR block. A
+  pattern that binds a name or destructures says more than a chain can and keeps the switch reading;
+  a state-shaped subject keeps its `◆ State:` reading.
+- **Spawning is Construct's Create object.** `var b := X.instantiate()`, `add_child(b)` and the first
+  line that places it read as one row - `System ▸ Create object Enemy at (10, 20) (as b)` - naming
+  the SCENE'S ROOT node the way a Construct user names the thing they spawn, falling back to the
+  variable's own name when the project has no scene for it. `.duplicate()` reads as a copy, all the
+  lines show on hover, and the new object then answers to its local name with the scene root's icon.
+- **Signals wired in the SCENE read as triggers.** Most projects connect signals in the Godot editor,
+  which writes the wiring into the `.tscn` and leaves the script holding a bare
+  `func _on_button_pressed()` - so the commonest UI script of all used to open as a list of nameless
+  helpers. The connections of the scene(s) whose root uses the script are now read back and the
+  handler lifts as `Button ▸ On pressed`, with the emitting node's name and class picture taken from
+  the scene. The scene is never touched and no connect line is ever emitted into the script.
 
 ### Added - the head of an opened plain script reads as the object it drives
 

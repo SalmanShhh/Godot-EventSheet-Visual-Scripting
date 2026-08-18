@@ -1,4 +1,4 @@
-# Godot EventSheets - Replace Object References (the Construct gesture, param-aware)
+# Godot EventSheets - Replace Object References (the event-sheet gesture, param-aware)
 # Select rows, pick a reference they use, give the new one - every matching token across
 # params, With-Node scopes, pick filters, and raw code rewrites, token-safe. Pins: the
 # reference enumeration (every shape found, sorted, self only as a whole value), the

@@ -2,7 +2,7 @@
 class_name SentenceGrammarTest
 extends RefCounted
 
-# Pins the Construct row grammar VALUES - one shape, one sentence.
+# Pins the event-sheet row grammar VALUES - one shape, one sentence.
 #
 # These strings are what a reader sees, so they are asserted literally: a shape that quietly starts
 # reading differently is a regression even when nothing crashes. The grammar is static and pure, so

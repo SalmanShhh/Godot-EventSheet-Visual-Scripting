@@ -1,4 +1,4 @@
-# EventForge module - Console vocabulary (C3 Browser/console-style logging).
+# EventForge module - Console vocabulary (browser/console-style logging).
 #
 # Friendly, combo-driven logging verbs. A single "As" dropdown (Message / Warning / Error) picks the
 # output stream - the label is shown, but the matching Godot call (print / push_warning / push_error)
@@ -37,7 +37,7 @@ static func _level_param() -> ACEParam:
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	# Bare immediate log to any stream - the C3 "Log message" with a type dropdown. The trailing
+	# Bare immediate log to any stream - the familiar "Log message" with a type dropdown. The trailing
 	# `# @ace:Core.ConsoleLog` marker rides the line so it reverse-lifts back AS this combined verb:
 	# without it, a `push_warning("x")` line is identical to (and shadowed by) the specific Push Warning
 	# verb, so it would silently reopen as that. The marker makes this verb's reverse-template distinct

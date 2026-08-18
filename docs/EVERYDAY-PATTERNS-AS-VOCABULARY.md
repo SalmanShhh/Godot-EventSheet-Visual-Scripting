@@ -96,4 +96,4 @@ The catalog works because the sheet obeys a small set of enforced rules, not tas
 The hands-on version of this catalog - with authoring steps and screenshots - is
 [Common Game Patterns Without Code](GUIDE-COMMON-GAME-PATTERNS.md). The reading rules are
 [Block Styles](GUIDE-BLOCK-STYLES.md). Coming from Construct 3, the whole worldview maps over:
-[the C3 migration guide](GUIDE-C3-MIGRATION.md).
+[the C3 migration guide](GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md).

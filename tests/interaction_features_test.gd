@@ -1,4 +1,4 @@
-# Godot EventSheets - Construct-style interaction features:
+# Godot EventSheets - event-sheet interaction features:
 #   - OR / AND condition blocks (right-click an event → "Convert to OR Block"): conditions join with
 #     `or` instead of `and`.
 #   - Condition inversion (right-click a condition → "Invert Condition"): compiles to `not (…)`.

@@ -41,7 +41,7 @@ static func run() -> bool:
 	play.params = {"path": "\"res://demo/sound.ogg\"", "bus": "\"Master\"", "volume_db": "0.0"}
 	event.actions.append(play)
 	sheet.events.append(event)
-	# The C3-style follow-up: Play, then retune the LAST sound (pitch variation in two rows).
+	# The event-sheet follow-up: Play, then retune the LAST sound (pitch variation in two rows).
 	var rate: ACEAction = ACEAction.new()
 	rate.provider_id = "Core"
 	rate.ace_id = "SetLastSoundRate"

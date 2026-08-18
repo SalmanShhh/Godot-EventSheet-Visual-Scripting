@@ -245,7 +245,7 @@ func _emit_data_class_default_edit(raw_row: Resource, field_index: int, new_valu
 
 ## Clicking a cell's colour swatch opens a ColorPicker right there (no params dialog), inline.
 ## The pick is committed once, when the popup closes - so dragging the picker is one clean undo step, not
-## one per colour change. The picker carries the project's SAVED PALETTE (the C3 swatch shelf):
+## one per colour change. The picker carries the project's SAVED PALETTE (the event-sheet swatch shelf):
 ## presets a user saves persist per project and reappear in every session; saving/removing one
 ## in the picker updates the store live. Headless-safe: state arms and presets load, only the
 ## window itself is skipped - tests drive the same commit path a real close takes.

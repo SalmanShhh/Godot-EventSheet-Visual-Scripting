@@ -69,10 +69,13 @@ static func run() -> bool:
 	if case_rows.size() == 2:
 		ok = _check("a case row is an EVENT row (so it gets the condition | action lanes)",
 			(case_rows[0] as EventRowData).row_type == EventRowData.RowType.EVENT, true) and ok
-		ok = _check("the first case's PATTERN is in the condition cell", _lane_text(case_rows[0], "condition"), "0") and ok
+		# M37 - an event sheet has no switch, so a match on a plain value states its branches as the
+		# if / else-if / else chain an event-sheet user reads: the first case says the TEST (subject and
+		# value, not the bare pattern), and `_` is the plain Else it means.
+		ok = _check("the first case's condition cell states the test", _lane_text(case_rows[0], "condition"), "phase = 0") and ok
 		# Case bodies read as sentences (the same view every raw statement row gets).
-		ok = _check("the first case's BODY is in the action cell", _lane_text(case_rows[0], "action"), "Set velocity to Vector2.ZERO") and ok
-		ok = _check("the default case's pattern is in the condition cell", _lane_text(case_rows[1], "condition"), "_") and ok
+		ok = _check("the first case's BODY is in the action cell", _lane_text(case_rows[0], "action"), "Set velocity to (0, 0)") and ok
+		ok = _check("the default case reads as the Else it is", _lane_text(case_rows[1], "condition"), "Else") and ok
 		ok = _check("an empty case reads as a `pass` action", _lane_text(case_rows[1], "action"), "pass") and ok
 
 	# ── A raw-text MatchRow (no cases) still shows its branches and keeps the double-click dialog ──

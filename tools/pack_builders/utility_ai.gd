@@ -8,12 +8,12 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## companion, or NPC). It replaces brittle if/else state machines: you register candidate ACTIONS,
 ## give each a few CONSIDERATIONS (a world-state input mapped through a response curve to a 0-1
 ## score), feed the current world state, then call Evaluate - the highest-scoring action wins and
-## fires triggers your sheet reacts to. Ported from the Construct 3 UtilityAI addon, made Godot-native
+## fires triggers your sheet reacts to. Ported from an event-sheet UtilityAI addon, made Godot-native
 ## and beginner-friendly:
-##  - Per-node, so the NODE is the agent: every "agent id" argument the C3 addon threaded through
+##  - Per-node, so the NODE is the agent: every "agent id" argument the original addon threaded
 ##    every action/condition/expression is gone. One brain, one enemy.
 ##  - Discrete typed ACEs (Add Action / Add Consideration) instead of the JSON-blob registration the
-##    C3 version used - no hand-written JSON, no consideration-id typos to silently drop a factor.
+##    original version used - no hand-written JSON, no consideration-id typos to silently drop a factor.
 ##  - Response curves are a friendly named dropdown (linear / inverse / quadratic / logistic /
 ##    threshold / bell) with center + slope knobs, instead of raw curve math in a JSON string.
 ##  - A consideration-less action scores a constant fallback, so registering an "idle" action IS the

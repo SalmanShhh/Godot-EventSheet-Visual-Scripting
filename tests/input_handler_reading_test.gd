@@ -4,7 +4,7 @@
 #   A  a lifecycle handler that sits AFTER a pack's verbs still lifts as EVENTS, anchored in place
 #      (EventAnchorRow), and the file recompiles byte-identically.
 #   B  each top-level branch of an `_input` / `_unhandled_input` / `_unhandled_key_input` reads as
-#      ONE Construct trigger row - Mouse > On mouse moved, Keyboard > On Escape pressed - with the
+#      ONE event-sheet trigger row - Mouse > On mouse moved, Keyboard > On Escape pressed - with the
 #      casts gone from the sentence and `event.relative.x` reading as the mouse's delta.
 #   C  a hand-written signal handler reads as its SOURCE NODE plus the payload its parameters carry.
 #   D  symmetry: a Mouse/Keyboard trigger AUTHORED on a sheet compiles to GDScript that, reopened,
@@ -54,7 +54,7 @@ static func run() -> bool:
 	ok = _check("the opened FPS pack recompiles byte-identically",
 		str(SheetCompiler.compile(fps, FPS_PACK).get("output", "")), FileAccess.get_file_as_string(FPS_PACK)) and ok
 
-	# ── B: the FPS pack's `_unhandled_input` reads as two Construct trigger rows ──
+	# ── B: the FPS pack's `_unhandled_input` reads as two event-sheet trigger rows ─
 	var fps_rows: Array[PackedStringArray] = _handler_readings(fps, "OnUnhandledInput")
 	ok = _check("the mouse-motion branch reads as a Mouse trigger with the capture check under it",
 		fps_rows[0] if fps_rows.size() > 0 else PackedStringArray(),
@@ -80,7 +80,7 @@ static func run() -> bool:
 		PackedStringArray(["Keyboard|On Space released", "ƒ|Call Stop Firing"])) and ok
 	ok = _check("a hand-written signal handler reads as its source node, with its payload as a chip",
 		hand_rows[2] if hand_rows.size() > 2 else PackedStringArray(),
-		PackedStringArray(["Hurtbox|On Body Entered", "|body", "System|Print body.name"])) and ok
+		PackedStringArray(["Hurtbox|On collision with", "|body", "System|Print body.name"])) and ok
 
 	# ── D: an AUTHORED Keyboard/Mouse trigger reads back as the same row after save + reopen ──
 	ok = _check("an authored Keyboard trigger reopens as the same row",

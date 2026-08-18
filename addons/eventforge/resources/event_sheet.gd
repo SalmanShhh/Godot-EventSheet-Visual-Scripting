@@ -51,7 +51,7 @@ extends Resource
 @export var addon_tags: PackedStringArray = PackedStringArray()
 ## Class-level picker category default: emitted as a class-level `## @ace_category("...")`
 ## annotation, so every member without its own category lands in ONE tidy picker group
-## (a C3-behavior-style ACE group). Per-member @ace_category still wins.
+## (an event-sheet behavior-style ACE group). Per-member @ace_category still wins.
 @export var addon_category: String = ""
 ## Publish every own public method and signal as ACEs with zero per-member annotations:
 ## "" = off (only annotated members surface), "all" = owned-instance calls, "node" =

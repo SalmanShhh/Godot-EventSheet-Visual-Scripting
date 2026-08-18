@@ -1286,7 +1286,7 @@ static func build() -> bool:
 		])))
 	key_at.return_type = TYPE_STRING
 	sheet.functions.append(key_at)
-	# Authored row sentences for the new verbs (the C3-style styled read).
+	# Authored row sentences for the new verbs (the event-sheet styled read).
 	Lib.verb_sentences(sheet, {
 		"set_slot_detail": "remember [b]{detail_name}[/b] = [b]{value}[/b] on this slot",
 		"capture_slot_thumbnail": "photograph this slot at [b]{width}[/b] x [b]{height}[/b]",

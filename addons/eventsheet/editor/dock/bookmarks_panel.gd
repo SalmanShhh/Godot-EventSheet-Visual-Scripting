@@ -1,6 +1,6 @@
 # Godot EventSheets - the Bookmarks panel (dock subsystem)
 #
-# The Construct-style bookmarks bar: a toolbar (Previous / Next / Clear All) over a tree
+# The event-sheet bookmarks bar: a toolbar (Previous / Next / Clear All) over a tree
 # of every Ctrl+M'd row, grouped under a colored sheet header, each entry carrying its
 # margin event number so "event 12" in the panel matches the number in the gutter.
 # Clicking an entry jumps to (reveals + selects) the row; Previous/Next reuse the
@@ -112,7 +112,7 @@ func refresh() -> void:
 		_empty_hint.visible = marked == 0
 
 
-## The C3-style entry line: the margin event number first (when the row has one), then the
+## The event-sheet entry line: the margin event number first (when the row has one), then the
 ## row's readable text - so the panel and the gutter agree on what "event 12" is. Icon-only
 ## spans (the trigger glyph cell) are skipped so the entry reads as words, not "▶".
 ## Static-shaped for tests: pure function of the row data.

@@ -1,4 +1,4 @@
-# Godot EventSheets - the object-first Add flow (Construct's add-event gesture)
+# Godot EventSheets - the object-first Add flow (the event-sheet add-event gesture)
 # Double-clicking empty canvas opens the picker on a front page of OBJECT cards - System
 # first, then every provider alphabetically - and picking one scopes the tree to that
 # object's verbs. Pins: the card enumeration (distinct, System-folded Core leading,

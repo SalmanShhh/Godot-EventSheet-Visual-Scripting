@@ -233,7 +233,7 @@ static func run() -> bool:
 	ok = _check("the pack shows its verbs inline - one row per lifted function",
 		_count_define_rows_deep(dock._active_view()._root_rows), opened.functions.size()) and ok
 	# A REAL pack's `## @ace_description(...)` blurbs reach the reader - but an opened pack is a READING
-	# surface (read-only), where a verb draws as a Construct Function block and its description answers in
+	# surface (read-only), where a verb draws as an event-sheet Function block and its description answers in
 	# the ACE properties panel instead of as a caption row welded above the row.
 	ok = _check("an opened pack draws no caption rows in Reading mode",
 		_find_rows_by_uid_prefix(dock._active_view(), "verb_note_").size(), 0) and ok

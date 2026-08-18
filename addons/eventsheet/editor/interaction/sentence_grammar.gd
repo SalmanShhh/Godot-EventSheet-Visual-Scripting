@@ -10,7 +10,7 @@ extends RefCounted
 # Both paths land here, so the two readings cannot drift apart: the viewport's raw path calls
 # `statement()` / `condition()`, and its ACE path calls the same helpers with the row's params.
 #
-# The shape of every reading is the sheet's own word order - OBJECT, then VERB, then the values:
+# The shape of every reading is the event-sheet word order - OBJECT, then VERB, then the values:
 #
 #     _jumps_left -= 1                 System ▸ Subtract 1 from _jumps_left
 #     host.velocity.x = speed          host   ▸ Set velocity.x to speed
@@ -32,13 +32,17 @@ extends RefCounted
 
 ## The object a receiver-less statement belongs to, matching the picker's own word for Core rows.
 const OBJECT_SYSTEM := "System"
-## Input rows belong to the sheet's Keyboard object, not to System.
+## Input rows belong to the event-sheet Keyboard object, not to System.
 const OBJECT_KEYBOARD := "Keyboard"
-## N9. An analogue read is a Gamepad question, and a button is a Mouse one. Same split the object
-## bar draws, so a reader coming from another event-sheet tool looks for the row under the object
-## they already associate with it.
-const OBJECT_GAMEPAD := "Gamepad"
+## M45. The pointer is the event-sheet Mouse object, exactly as the stick is Keyboard's.
 const OBJECT_MOUSE := "Mouse"
+## M40. An AudioStreamPlayer row belongs to the one Audio object an event sheet files these under,
+## whatever the player is called in the scene tree.
+const OBJECT_AUDIO := "Audio"
+## N9. An analogue read is a Gamepad question, and the pointer is already the Mouse object above.
+## Same split the object bar draws, so a reader looks for the row under the object they associate
+## with it.
+const OBJECT_GAMEPAD := "Gamepad"
 ## N7. Saving, files and JSON belong to three objects of their own - Local Storage, JSON and AJAX.
 ## Hand-written ConfigFile / JSON / FileAccess code reads under the same three names, so the rows a
 ## reader already recognises are the rows they see here.
@@ -46,7 +50,60 @@ const OBJECT_STORAGE := "Storage"
 const OBJECT_JSON := "JSON"
 const OBJECT_FILE := "File"
 
-## Godot call shapes that have one settled sentence. Curated on purpose: an entry is added
+## N8. The methods and properties that can carry behaviour words at all. Checked BEFORE the object's
+## class is resolved, so an ordinary call or assignment - which is most of them - never pays for a
+## class lookup it cannot use, and so the whole set of lines these words may claim reads in one place.
+const BEHAVIOUR_METHODS: PackedStringArray = [
+	"apply_impulse", "apply_central_impulse", "apply_force", "apply_central_force",
+	"make_current", "restart"
+]
+const BEHAVIOUR_MEMBERS: PackedStringArray = [
+	"linear_velocity", "angular_velocity", "emitting", "zoom"
+]
+## N8. The classes each behaviour's words belong to, resolved through ClassDB so the 2D and 3D twins
+## and any subclass of them answer alike.
+const BODY_CLASSES: PackedStringArray = ["RigidBody2D", "RigidBody3D"]
+const CAMERA_CLASSES: PackedStringArray = ["Camera2D", "Camera3D"]
+const PARTICLE_CLASSES: PackedStringArray = [
+	"GPUParticles2D", "GPUParticles3D", "CPUParticles2D", "CPUParticles3D"
+]
+
+## M38. Vector constants read as the point they ARE - an event sheet writes (0, 0), never a namespaced
+## name. `INF` keeps the infinity sign the bare constant reads as, in each axis.
+const VECTOR2_CONSTANTS: Dictionary = {
+	"ZERO": "(0, 0)", "ONE": "(1, 1)", "INF": "(∞, ∞)",
+	"UP": "up", "DOWN": "down", "LEFT": "left", "RIGHT": "right"
+}
+const VECTOR3_CONSTANTS: Dictionary = {
+	"ZERO": "(0, 0, 0)", "ONE": "(1, 1, 1)", "INF": "(∞, ∞, ∞)",
+	"UP": "up", "DOWN": "down", "LEFT": "left", "RIGHT": "right",
+	"FORWARD": "forward", "BACK": "back"
+}
+## M38. The bare constants with a symbol every reader knows. `NAN` deliberately stays `NAN`: it has
+## no symbol a reader would recognise, and "not a number" is longer than the word it replaces.
+const GLOBAL_CONSTANTS: Dictionary = {"PI": "π", "TAU": "τ", "INF": "∞"}
+
+## M38. The types whose SCREAMING_CASE members are constants this lens may spell out.
+const VECTOR2_TYPES: PackedStringArray = ["Vector2", "Vector2i"]
+const VECTOR3_TYPES: PackedStringArray = ["Vector3", "Vector3i"]
+
+## M40. The classes whose `play` / `stop` are the event-sheet animation verbs, and the ones whose
+## are the event-sheet Audio object. Matched through ClassDB, so a subclass counts as its base.
+const ANIMATION_CLASSES: PackedStringArray = ["AnimatedSprite2D", "AnimatedSprite3D", "AnimationPlayer"]
+const AUDIO_CLASSES: PackedStringArray = ["AudioStreamPlayer", "AudioStreamPlayer2D", "AudioStreamPlayer3D"]
+
+## M43. An event-sheet object has an ANGLE, and its own place is just "position" - so a distance or an
+## angle measured FROM the object's own place names only the other end.
+const OWN_POSITION_NAMES: PackedStringArray = ["position", "global_position"]
+
+## M43/M46. Members whose event-sheet word differs from Godot's. The Godot spelling stays one hover
+## away, so the two vocabularies remain learnable side by side.
+const MEMBER_WORDS: Dictionary = {
+	"rotation_degrees": "angle",
+	"rotation": "angle (radians)"
+}
+
+## Godot call shapes that have one settled event-sheet sentence. Curated on purpose: an entry is added
 ## only when one shape maps to exactly one reading. `{0}`.. are the call's arguments in order.
 const EXPRESSION_IDIOMS: Dictionary = {
 	"maxf": "max({0}, {1})",
@@ -61,7 +118,7 @@ const EXPRESSION_IDIOMS: Dictionary = {
 	"deg_to_rad": "{0}°",
 	"is_zero_approx": "{0} ≈ 0",
 	"is_equal_approx": "{0} ≈ {1}",
-	# M32. Each of these has exactly one the sheet sentence, and each matches the vocabulary's own
+	# M32. Each of these has exactly one event-sheet sentence, and each matches the vocabulary's own
 	# wording for the same thing, so a typed line and the picked ACE read alike.
 	"randi_range": "random whole number {0} to {1}",
 	"randf_range": "random number {0} to {1}",
@@ -70,7 +127,7 @@ const EXPRESSION_IDIOMS: Dictionary = {
 	"snappedf": "{0} snapped to {1}",
 	"snappedi": "{0} snapped to {1}",
 	"len": "{0}' count",
-	# N6. A sheet spells a power with the caret a user types into an expression field.
+	# N6. A power is spelled with the caret a reader types into an expression field.
 	"pow": "{0} ^ {1}"
 }
 
@@ -79,20 +136,26 @@ const EXPRESSION_IDIOMS: Dictionary = {
 ## same on anything (`arr.size()`).
 ## The input-vector wording is the published Input Vector ACE's own sentence rather than the mockup's
 ## "direction from", so a typed `Input.get_vector(...)` and the picked row read the same words.
-## N6 adds the sheet's own SYSTEM EXPRESSION names to the same table. These are deliberately NOT
-## translated: `uppercase`, `left`, `mid`, `len`, `find`, `replace`, `trim` and `split` are the names a
-## migrating user TYPES into an expression field, so they are identifiers rather than prose - exactly
-## like `max` and `min` above. The few word-shaped ones (`starts with`, `contains`) follow the same
-## rule the table already set with `direction from ... to ...`.
 const RECEIVER_IDIOMS: Dictionary = {
 	"size": "{receiver}' count",
 	"direction_to": "direction from {receiver} to {0}",
 	"Input.get_vector": "input vector {0}/{1}/{2}/{3}",
 	"Input.get_axis": "axis {0}/{1}",
-	# N6 - text in the sheet's system-expression names
+	# M43. The vector words the Vectors module's own ACEs use, so a typed line and a picked row read
+	# alike. The dot product keeps its mathematical sign, which is what a reader of the formula sees.
+	"length": "length of {receiver}",
+	"normalized": "{receiver}, normalized",
+	"dot": "{receiver} · {0}",
+	# M44. Emptiness IS a count in an event sheet - there is no "is empty" condition, only "count = 0".
+	"is_empty": "{receiver}' count = 0",
+	# ── N6 - text under the SYSTEM EXPRESSION names a reader types into a field ──────────────────
+	# Deliberately NOT translated: `uppercase`, `left`, `mid`, `find`, `replace`, `trim` and `split`
+	# are identifiers a reader types, exactly like `max` and `min` above. The few word-shaped ones
+	# follow the rule the table already set with `direction from ... to ...`.
+	# `length` is deliberately absent: M43 already reads it as "length of x", which is the honest
+	# answer for a vector as well as for text, where a `len(...)` would have implied a count.
 	"to_upper": "uppercase({receiver})",
 	"to_lower": "lowercase({receiver})",
-	"length": "len({receiver})",
 	"strip_edges": "trim({receiver})",
 	"right": "right({receiver}, {0})",
 	"find": "find({receiver}, {0})",
@@ -108,6 +171,14 @@ const RECEIVER_IDIOMS: Dictionary = {
 	# N9 - the analogue reads belong to the pad
 	"Input.get_action_strength": "strength of {0}",
 	"Input.get_action_raw_strength": "raw strength of {0}"
+}
+
+## M43. The measurements whose reading depends on WHERE they are measured from: `position.distance_to(b)`
+## is the object's own distance to b, while `a.distance_to(b)` has two ends worth naming.
+const MEASURED_IDIOMS: Dictionary = {
+	"distance_to": ["distance to {0}", "distance from {receiver} to {0}"],
+	"angle_to": ["angle to {0}", "angle from {receiver} to {0}"],
+	"angle_to_point": ["angle to {0}", "angle from {receiver} to {0}"]
 }
 
 ## M25. GDScript's global functions - the ones a receiver-less call may belong to. A call to anything
@@ -130,17 +201,6 @@ const GLOBAL_FUNCTIONS: PackedStringArray = [
 	"error_string", "rid_allocate_id", "rid_from_int64", "Color8"
 ]
 
-## N8. The methods and properties that can carry behaviour words at all. Checked BEFORE the object's
-## class is resolved, so an ordinary call or assignment - which is most of them - never pays for a
-## class lookup it cannot use, and so the whole set of lines these words may claim reads in one place.
-const BEHAVIOUR_METHODS: PackedStringArray = [
-	"apply_impulse", "apply_central_impulse", "apply_force", "apply_central_force",
-	"make_current", "restart"
-]
-const BEHAVIOUR_MEMBERS: PackedStringArray = [
-	"linear_velocity", "angular_velocity", "emitting", "zoom"
-]
-
 ## Vector constructors read as the plain tuple they build - the type word is in the row's chip, never
 ## in the middle of a sentence.
 const VECTOR_CONSTRUCTORS: PackedStringArray = ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"]
@@ -156,7 +216,7 @@ enum VerbKind {
 }
 
 
-## The reading of ONE GDScript statement, or {} when no shape is recognised.
+## The event-sheet reading of ONE GDScript statement, or {} when no shape is recognised.
 ##
 ## `context` may carry:
 ##   "self_object"  - the object a receiver-less statement belongs to (default "System")
@@ -172,22 +232,23 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	if code.contains("\n"):
 		return {}
 	var indent: int = code.length() - code.lstrip("\t").length()
-	var text: String = code.strip_edges()
+	# M47. A `get_node("A/B")` lookup names the same object `$A/B` does, so the whole grammar below
+	# sees the spelling it already understands.
+	var text: String = node_lookup_text(code.strip_edges())
 	if text.is_empty() or text.begins_with("#"):
 		return {}
 	var keyword: String = leading_word(text)
 	if keyword == "await":
 		return _with_indent(_await_statement(text, context), indent)
-	# M33. The sheet's own words for the two loop steps. Claimed only for the BARE keyword, so a
+	# M33. The event-sheet words for the two loop steps. Claimed only for the BARE keyword, so a
 	# `break` that is part of something longer is not mistaken for the statement.
 	if text == "break":
 		return _with_indent(_sentence(OBJECT_SYSTEM, "Stop loop", {}), indent)
 	if text == "continue":
 		return _with_indent(_sentence(OBJECT_SYSTEM, "Next", {}), indent)
-	# N11. A sheet marks a pause point ON the row, so a bare `breakpoint` says nothing in words: the
-	# caller reads the flag and lights the sheet's own breakpoint dot. Display only - the statement in
-	# the file is untouched, and the one blank segment keeps the row an ordinary row to select, hover
-	# and open.
+	# N11. A pause point is marked ON the row, so a bare `breakpoint` says nothing in words: the caller
+	# reads the flag and lights the sheet's own breakpoint dot. Display only - the statement in the file
+	# is untouched, and the one blank segment keeps the row an ordinary row to select, hover and open.
 	if text == "breakpoint":
 		return _with_indent({"object": "", "segments": [{"text": " ", "tone": "plain"}], "breakpoint": true}, indent)
 	# Control flow is a BRANCH, not a step, and it already renders as its own structure elsewhere.
@@ -195,10 +256,10 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 		return {}
 	if keyword == "return":
 		return _with_indent(_return_statement(text, context), indent)
-	# N7. A file handle is OPENED, not declared: `var f = FileAccess.open(...)` is the sheet's own
-	# "open the file" row, with the handle named after it rather than in front of it. Checked ahead of
-	# the declaration reading, which would otherwise show the GDScript call as the local's value.
-	var opened_file: Dictionary = _file_open_statement(text)
+	# N7. A file handle is OPENED, not declared: `var f = FileAccess.open(...)` is the open-the-file row,
+	# with the handle named after it rather than in front of it. Checked ahead of the declaration
+	# reading, which would otherwise show the GDScript call as the local's value.
+	var opened_file: Dictionary = _file_open_statement(text, context)
 	if not opened_file.is_empty():
 		return _with_indent(opened_file, indent)
 	if keyword == "var" or keyword == "const":
@@ -212,14 +273,14 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	return _with_indent(_call_statement(text, context), indent)
 
 
-## The reading of ONE boolean expression - the text of an `if`, or the expression an
+## The event-sheet reading of ONE boolean expression - the text of an `if`, or the expression an
 ## Expression Is True row carries. {} when nothing is recognised, so the caller keeps its own text.
 static func condition(expression: String, context: Dictionary = {}) -> Dictionary:
-	var text: String = expression.strip_edges()
+	var text: String = node_lookup_text(expression.strip_edges())
 	if text.is_empty():
 		return {}
 	var self_object: String = str(context.get("self_object", OBJECT_SYSTEM))
-	# `if crouching:` - a bare flag is the sheet's "is boolean set" condition. An engine flag of the
+	# `if crouching:` - a bare flag is the event-sheet "is boolean set" condition. An engine flag of the
 	# script's own object (`visible`) belongs to that object instead (M25).
 	if is_identifier(text):
 		var flag_object: String = script_object(context) if is_engine_property(text, context) else self_object
@@ -228,23 +289,41 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 		var bare_flag: String = text.substr(4).strip_edges()
 		var negated_object: String = script_object(context) if is_engine_property(bare_flag, context) else self_object
 		return _sentence(negated_object, "{name} is false", {"name": [bare_flag, "name"]})
+	# ── M41 / M44 / M47 ─────────────────────────────────────────────────────────────────────────
+	# The event-sheet questions, before the general shapes: a body's movement state, an overlap, a
+	# count, and a property read through `get("name")` all have one settled sentence each.
+	var body_state: Dictionary = _body_state_condition(text, context)
+	if not body_state.is_empty():
+		return body_state
+	var overlap: Dictionary = _overlap_condition(text, context)
+	if not overlap.is_empty():
+		return overlap
+	var movement: Dictionary = _movement_condition(text, context)
+	if not movement.is_empty():
+		return movement
+	var counted: Dictionary = _count_condition(text, context)
+	if not counted.is_empty():
+		return counted
+	var property_test: Dictionary = _object_property_condition(text, context)
+	if not property_test.is_empty():
+		return property_test
 	var group_test: Dictionary = _group_condition(text, context)
 	if not group_test.is_empty():
 		return group_test
-	# ── N5 ──────────────────────────────────────────────────────────────────────────────────────
-	# The four questions every gameplay script asks that still read as operators today: what an object
-	# IS, what a table or a list HOLDS, and what an object HAS. Ahead of the comparison readings, none
-	# of which can claim an `is` / `in` / `has_*` line anyway.
+	# ── N5 / N7 ─────────────────────────────────────────────────────────────────────────────────
+	# The questions every gameplay script asks that still read as operators today: what an object IS,
+	# what a table or a list HOLDS, what an object HAS, and what storage holds. Ahead of the comparison
+	# readings, none of which can claim an `is` / `in` / `has_*` line anyway.
 	var type_test: Dictionary = _type_condition(text, context)
 	if not type_test.is_empty():
 		return type_test
-	var membership: Dictionary = _membership_condition(text)
+	var membership: Dictionary = _membership_condition(text, context)
 	if not membership.is_empty():
 		return membership
 	var capability: Dictionary = _capability_condition(text, context)
 	if not capability.is_empty():
 		return capability
-	var storage_test: Dictionary = _storage_condition(text)
+	var storage_test: Dictionary = _storage_condition(text, context)
 	if not storage_test.is_empty():
 		return storage_test
 	var engine_test: Dictionary = _engine_property_condition(text, context)
@@ -264,18 +343,18 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 		return input_row
 	# Nothing structural matched, but the expression itself may still hold an idiom
 	# (`is_zero_approx(direction)`) or a type annotation this reading never shows.
-	var rewritten: String = expression_text(text)
+	var rewritten: String = expression_text(text, context)
 	if rewritten != text:
 		return _sentence("", "{value}", {"value": [rewritten, "value"]})
 	return {}
 
 
-## The reading of a condition that may be a RUN of conjuncts (M23): `host != null and
+## The event-sheet reading of a condition that may be a RUN of conjuncts (M23): `host != null and
 ## host.is_on_wall()` reads `host exists and host is on wall`, each conjunct through `condition()`.
 ##
 ## Returns {"object", "pieces"} - `pieces` an array of [text, tone] the caller draws in order, and
 ## `object` the row's object label, filled only when every conjunct belongs to the SAME object (with
-## more than one object in play the words go inline instead, the way a sheet cell names each).
+## more than one object in play the words go inline instead, the way an event-sheet cell names each).
 ## Never {}: an expression nothing is recognised in still reads as itself.
 static func condition_pieces(expression: String, context: Dictionary = {}) -> Dictionary:
 	var text: String = expression.strip_edges()
@@ -293,7 +372,7 @@ static func condition_pieces(expression: String, context: Dictionary = {}) -> Di
 	for part: String in parts:
 		readings.append(_condition_reading(part, context))
 	# The object column can name ONE object. A run of conjuncts therefore says each object inline, the
-	# way a sheet cell repeats the object picture in every condition it draws.
+	# way an event-sheet cell repeats the object picture in every condition it draws.
 	var one_object: bool = readings.size() == 1
 	var shared_object: String = str((readings[0] as Dictionary).get("object", "")) if one_object else ""
 	var pieces: Array = []
@@ -311,10 +390,15 @@ static func condition_pieces(expression: String, context: Dictionary = {}) -> Di
 	return {"object": shared_object if one_object else "", "pieces": pieces}
 
 
-## One conjunct's reading: the ordinary condition path first, then the predicate-call fallback a
-## sheet cell needs (`host.is_on_wall()` is an object and a question, not a line of code).
+## One conjunct's reading: the ordinary condition path first, then the predicate-call fallback an
+## event-sheet cell needs (`host.is_on_wall()` is an object and a question, not a line of code).
 static func _condition_reading(part: String, context: Dictionary) -> Dictionary:
 	var text: String = part.strip_edges()
+	# M44. An event sheet has no "is not empty": the reading of a non-empty list is its count, and the
+	# negation belongs INSIDE the comparison rather than as a mark on a count that reads "= 0".
+	var not_empty: Dictionary = _not_empty_reading(text, context)
+	if not not_empty.is_empty():
+		return not_empty
 	var negated: bool = false
 	if text.begins_with("not ") and not is_identifier(text.substr(4).strip_edges()):
 		negated = true
@@ -323,7 +407,7 @@ static func _condition_reading(part: String, context: Dictionary) -> Dictionary:
 	if reading.is_empty():
 		reading = _predicate_call_reading(text)
 	if reading.is_empty():
-		reading = {"object": "", "segments": [{"text": expression_text(text), "tone": "value"}]}
+		reading = {"object": "", "segments": [{"text": expression_text(text, context), "tone": "value"}]}
 	if negated:
 		var negated_segments: Array = [{"text": "%s " % translate("not"), "tone": "plain"}]
 		negated_segments.append_array(reading.get("segments", []) as Array)
@@ -499,8 +583,9 @@ static func _split_ternary(text: String) -> Array:
 	return [value_true, test, value_false]
 
 
-## `Input.is_action_pressed("jump")` and its just-pressed sibling, as the Keyboard rows a the sheet
-## user already knows. Shared by the raw path and by the two Core input ACEs, so both read alike.
+## `Input.is_action_pressed("jump")` and its just-pressed sibling, as the Keyboard rows a reader
+## coming from another event-sheet editor already knows. Shared by the raw path and by the two Core
+## input ACEs, so both read alike.
 static func input_action_sentence(action_value: String, just_pressed: bool) -> Dictionary:
 	var shown: String = strip_action_name(action_value)
 	if shown.is_empty():
@@ -530,7 +615,7 @@ static func signal_sentence(signal_name: String, arguments: String, context: Dic
 		var values: PackedStringArray = _split_arguments(payload)
 		var segments: Array = [{"text": "%s " % translate("Signal"), "tone": "plain"}, {"text": trigger, "tone": "name"}]
 		for index: int in values.size():
-			var chip: String = expression_text(values[index])
+			var chip: String = expression_text(values[index], context)
 			if index < parameter_names.size():
 				chip = "%s = %s" % [parameter_names[index], chip]
 			segments.append({"text": "   ", "tone": "plain"})
@@ -538,7 +623,7 @@ static func signal_sentence(signal_name: String, arguments: String, context: Dic
 		return {"object": owner, "segments": segments}
 	return _sentence(owner, "Signal {trigger} {values}", {
 		"trigger": [trigger, "name"],
-		"values": [expression_text(payload), "value"]
+		"values": [expression_text(payload, context), "value"]
 	})
 
 
@@ -556,7 +641,7 @@ static func _signal_parameter_names(signal_name: String, context: Dictionary) ->
 	return out
 
 
-## The reading of a `return`, given the kind of verb whose body it sits in (M14). A sheet's function
+## The reading of a `return`, given the kind of verb whose body it sits in (M14). The event-sheet function
 ## block has exactly one action for handing a value back - `Set return value to X` - so a published
 ## CONDITION and a published EXPRESSION both read that, with `true` / `false` as themselves. An
 ## action's bare `return` is `Stop event` (the rest of the event does not run). Shared with the Core
@@ -566,7 +651,7 @@ static func return_sentence(returned: String, context: Dictionary) -> Dictionary
 	var value: String = returned.strip_edges()
 	if value.is_empty():
 		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Stop event", {})
-	var shown: String = expression_text(value)
+	var shown: String = expression_text(value, context)
 	if verb_kind == VerbKind.CONDITION or verb_kind == VerbKind.EXPRESSION:
 		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Set return value to {value}", {"value": [shown, "value"]})
 	return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Return {value}", {"value": [shown, "value"]})
@@ -583,27 +668,27 @@ static func declaration(code: String) -> Dictionary:
 	return parsed
 
 
-## A value expression with the Godot idioms replaced by their sheet reading and every type
+## A value expression with the Godot idioms replaced by their event-sheet reading and every type
 ## annotation dropped (M11 + M18). Returns the text unchanged when nothing is recognised.
-static func expression_text(text: String) -> String:
+static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var trimmed: String = text.strip_edges()
 	if trimmed.is_empty():
 		return trimmed
-	var without_cast: String = _drop_casts(trimmed)
+	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
 	# M31 before the call rewriting: a join is decided by the WHOLE expression's shape (is any part of
 	# it text?), which the innermost-first call pass would have already taken apart.
-	# A whole value wrapped in `str(...)` is the same value: a sheet shows numbers in text without
+	# A whole value wrapped in `str(...)` is the same value: an event sheet shows numbers in text without
 	# a conversion, so the conversion is a GDScript chore rather than part of what the row says.
 	var joined: String = _rewrite_format(_rewrite_dot_format(_string_call_value(without_cast)))
 	joined = _rewrite_join(joined)
 	var rewritten: String = _rewrite_calls(joined)
 	rewritten = _rewrite_indexing(rewritten)
 	# N5 last, so no earlier pass ever has to recognise a glyph it did not write.
-	return comparison_symbols(_rewrite_delta(_tidy_numbers(rewritten)))
+	return comparison_symbols(constant_words(_rewrite_delta(_tidy_numbers(rewritten)), context))
 
 
-## N5. A sheet writes ≥, ≤ and ≠ where GDScript writes >=, <= and !=. A language needs the two-
-## character spelling; a sheet row is only ever the question, so it says the question the way a reader
+## N5. The reader's sheet writes ≥, ≤ and ≠ where GDScript writes >=, <= and !=. A language needs the
+## two-character spelling; a row is only ever the question, so it says the question the way a reader
 ## means it. Quote-aware: a `>=` inside a string literal is content the user typed, not an operator.
 static func comparison_symbols(text: String) -> String:
 	if not (text.contains(">=") or text.contains("<=") or text.contains("!=")):
@@ -633,9 +718,9 @@ static func comparison_symbols(text: String) -> String:
 	return out
 
 
-## N6. `"{0}: {1}".format([a, b])` and the `%s` spelling of the same call, unrolled into the sheet's
-## join. Claimed only when the WHOLE value is that one call on a literal pattern and every value it
-## was handed is used exactly once - a half-unrolled format shows a reader a value in the wrong place.
+## N6. `"{0}: {1}".format([a, b])` and the `%s` spelling of the same call, unrolled into the join.
+## Claimed only when the WHOLE value is that one call on a literal pattern and every value it was
+## handed is used exactly once - a half-unrolled format shows a reader a value in the wrong place.
 static func _rewrite_dot_format(text: String) -> String:
 	const HEAD := ".format("
 	var trimmed: String = text.strip_edges()
@@ -683,8 +768,150 @@ static func _rewrite_dot_format(text: String) -> String:
 	return " & ".join(pieces)
 
 
-## M27. `delta` is the sheet's `dt` - the same number under the name a sheet reader writes. Only
-## the whole word is replaced, so `delta_v` and `_delta` keep their own names.
+## M45. The system values an event-sheet reader types by name - the viewport's size, the pointer, the
+## clock, the frame rate. Whole-spelling replacements on purpose: each of these is one exact Godot
+## phrase with one exact event-sheet word, and a looser match would rename somebody's own helper.
+static func _system_words(text: String) -> String:
+	var out: String = _group_count_words(text)
+	if out.contains("get_viewport_rect()"):
+		out = out.replace("get_viewport_rect().size.x", translate("viewport width"))
+		out = out.replace("get_viewport_rect().size.y", translate("viewport height"))
+	if out.contains("mouse_position"):
+		out = out.replace("get_viewport().get_mouse_position()", translate("mouse position"))
+		out = out.replace("get_global_mouse_position()", translate("mouse position"))
+		out = out.replace("get_local_mouse_position()", translate("mouse position"))
+	if out.contains("Time.get_ticks_msec()"):
+		# The seconds form first: `/ 1000.0` is what makes the number the event-sheet `time`, and the bare
+		# call is milliseconds, which is a different number and says so.
+		out = out.replace("Time.get_ticks_msec() / 1000.0", translate("time"))
+		out = out.replace("Time.get_ticks_msec() / 1000", translate("time"))
+		out = out.replace("Time.get_ticks_msec()", translate("time in ms"))
+	out = out.replace("Engine.get_frames_per_second()", translate("fps"))
+	return out
+
+
+## M44. `get_tree().get_nodes_in_group("enemies").size()` is the instance count of a family:
+## the group is the OBJECT and the count is what the row shows. Only a LITERAL group name is claimed -
+## a variable group has no word a row could honestly print.
+static func _group_count_words(text: String) -> String:
+	const HEAD := "get_tree().get_nodes_in_group("
+	var out: String = text
+	var guard: int = 0
+	while guard < 8:
+		guard += 1
+		var at: int = out.find(HEAD)
+		if at < 0:
+			return out
+		var close_at: int = closing_paren(out, at + HEAD.length() - 1)
+		if close_at < 0:
+			return out
+		var group_value: String = out.substr(at + HEAD.length(), close_at - at - HEAD.length())
+		var tail: String = out.substr(close_at + 1)
+		if not _is_string_literal(group_value) or not tail.begins_with(".size()"):
+			return out
+		out = "%s%s %s %s%s" % [out.substr(0, at), _unquote(group_value.strip_edges().trim_prefix("&")),
+			translate("(group)"), translate("count"), tail.substr(".size()".length())]
+	return out
+
+
+## M47. `get_node("A/B")` and `get_node_or_null("A/B")` name a node exactly as `$A/B` does, so they
+## read as the same object. Display only - the statement the file holds is untouched.
+static func node_lookup_text(text: String) -> String:
+	var out: String = text
+	for head: String in ["get_node_or_null(", "get_node("]:
+		var guard: int = 0
+		while guard < 8:
+			guard += 1
+			var at: int = out.find(head)
+			if at < 0:
+				break
+			var close_at: int = closing_paren(out, at + head.length() - 1)
+			if close_at < 0:
+				break
+			var path_value: String = out.substr(at + head.length(), close_at - at - head.length())
+			if not _is_string_literal(path_value):
+				break
+			var path: String = _unquote(path_value.strip_edges().trim_prefix("&"))
+			if path.is_empty() or path.contains(" "):
+				break
+			out = "%s$%s%s" % [out.substr(0, at), path, out.substr(close_at + 1)]
+	return out
+
+
+## M38. Named constants as an event sheet writes them: no namespace, and a symbol where one exists.
+##
+##   State.PATROL   -> PATROL     (when the sheet declares that member exactly once)
+##   Vector2.ZERO   -> (0, 0)
+##   Vector3.UP     -> up
+##   Color.RED      -> red
+##   PI / TAU / INF -> π / τ / ∞
+##
+## Only SCREAMING_CASE members are touched - those are the constants - and only outside string
+## literals. An enum member is claimed only when `context` says the sheet declares that enum and no
+## other enum on the sheet has a member by the same name, because `Facing.LEFT` and `Wall.LEFT` in one
+## file need their enum to stay readable.
+static func constant_words(text: String, context: Dictionary = {}) -> String:
+	if text.is_empty():
+		return text
+	var out: String = ""
+	var token: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if character == "\"" or character == "'":
+			out += _constant_token(token, context)
+			token = ""
+			var quote_end: int = _string_end(text, index)
+			out += text.substr(index, quote_end - index + 1)
+			index = quote_end + 1
+			continue
+		var is_token_character: bool = (
+			character == "_"
+			or character == "."
+			or (character >= "a" and character <= "z")
+			or (character >= "A" and character <= "Z")
+			or (character >= "0" and character <= "9")
+		)
+		if is_token_character:
+			token += character
+		else:
+			# A token followed by "(" is a CALL - `Color.from_hsv(...)` is not the colour word red.
+			out += token if character == "(" else _constant_token(token, context)
+			token = ""
+			out += character
+		index += 1
+	return out + _constant_token(token, context)
+
+
+## One token of constant_words: a `Type.MEMBER` constant, a bare `PI`, or the token untouched.
+static func _constant_token(token: String, context: Dictionary) -> String:
+	if token.is_empty():
+		return token
+	if not token.contains("."):
+		return str(GLOBAL_CONSTANTS.get(token, token))
+	var parts: PackedStringArray = token.split(".", false)
+	if parts.size() != 2 or not is_identifier(parts[0]) or not is_identifier(parts[1]):
+		return token
+	var head: String = parts[0]
+	var member: String = parts[1]
+	# Constants are written in caps deliberately; anything else is a property read, not a constant.
+	if member.to_upper() != member or member.to_lower() == member:
+		return token
+	if VECTOR2_TYPES.has(head) and VECTOR2_CONSTANTS.has(member):
+		return str(VECTOR2_CONSTANTS[member])
+	if VECTOR3_TYPES.has(head) and VECTOR3_CONSTANTS.has(member):
+		return str(VECTOR3_CONSTANTS[member])
+	if head == "Color":
+		return member.to_lower().replace("_", " ")
+	var enums: Dictionary = context.get("enum_members", {})
+	if int(enums.get(member, 0)) == 1 and (context.get("enum_names", {}) as Dictionary).has(head):
+		return member
+	return token
+
+
+## M27. `delta` is the per-frame delta the event-sheet grammar calls `dt` - the same number under the
+## name a reader coming from another event-sheet editor writes. Only the whole word is replaced, so
+## `delta_v` and `_delta` keep their own names.
 static func _rewrite_delta(text: String) -> String:
 	if not text.contains("delta"):
 		return text
@@ -694,7 +921,7 @@ static func _rewrite_delta(text: String) -> String:
 	return regex.sub(text, "dt", true)
 
 
-## M31. `"a" + b` and `str(a) + " b"` read with the sheet's join. Claimed only when a part is plainly
+## M31. `"a" + b` and `str(a) + " b"` read with the event-sheet join. Claimed only when a part is plainly
 ## TEXT (a literal or a `str()` call): `x + y` on two numbers is arithmetic, and reading it as a join
 ## would be a confident lie.
 static func _rewrite_join(text: String) -> String:
@@ -715,8 +942,8 @@ static func _rewrite_join(text: String) -> String:
 	return " & ".join(spelled)
 
 
-## The value inside a `str(x)` wrapper - a sheet joins values with text directly, so the conversion
-## is a GDScript chore, not part of what the row says. Anything else comes back unchanged.
+## The value inside a `str(x)` wrapper - an event sheet joins values with text directly, so the
+## conversion is a GDScript chore, not part of what the row says. Anything else comes back unchanged.
 static func _string_call_value(part: String) -> String:
 	var text: String = part.strip_edges()
 	if not text.begins_with("str(") or not text.ends_with(")"):
@@ -767,7 +994,7 @@ static func _rewrite_format(text: String) -> String:
 	return " & ".join(pieces)
 
 
-## M31. Indexing read the way a sheet reads a dictionary or an array: `inventory["potion"]` is
+## M31. Indexing read the way an event sheet reads a dictionary or an array: `inventory["potion"]` is
 ## `inventory's "potion"`, `items[0]` is `items' item 0`. Only a NAMED base is claimed - an index into
 ## a literal or a call result has no name to possess.
 static func _rewrite_indexing(text: String) -> String:
@@ -830,8 +1057,8 @@ static func type_word(type_name: String) -> String:
 # ── Statement shapes ────────────────────────────────────────────────────────────
 
 
-## The awaits with a settled sentence (M11 + M28): the timer wait, the two tick waits, and
-## an await on a SIGNAL, which is the sheet's own "Wait for signal" action. Every other await keeps
+## The awaits with a settled event-sheet sentence (M11 + M28): the timer wait, the two tick waits, and
+## an await on a SIGNAL, which is the event-sheet "Wait for signal" verb. Every other await keeps
 ## its code, because a sentence must never paper over a suspension point nobody can name.
 static func _await_statement(text: String, context: Dictionary = {}) -> Dictionary:
 	var body: String = text.substr(6).strip_edges()
@@ -839,8 +1066,8 @@ static func _await_statement(text: String, context: Dictionary = {}) -> Dictiona
 		var inner: String = body.substr(24, body.length() - 24 - 9)
 		if inner.strip_edges().is_empty():
 			return {}
-		return _sentence(OBJECT_SYSTEM, "⏳ Wait {seconds} seconds", {"seconds": [expression_text(inner), "value"]})
-	# M28. One frame of waiting is the sheet's tick, and which clock it is IS the one Godot fact
+		return _sentence(OBJECT_SYSTEM, "⏳ Wait {seconds} seconds", {"seconds": [expression_text(inner, context), "value"]})
+	# M28. One frame of waiting is the event-sheet tick, and which clock it is IS the one Godot fact
 	# worth keeping - the two frames are different lengths.
 	if body == "get_tree().process_frame":
 		return _sentence(OBJECT_SYSTEM, "⏳ Wait one tick", {})
@@ -849,7 +1076,7 @@ static func _await_statement(text: String, context: Dictionary = {}) -> Dictiona
 	return _await_signal_statement(body, context)
 
 
-## M28. `await door.opened` / `await opened` as the sheet's Wait for signal, naming the object the
+## M28. `await door.opened` / `await opened` as the event-sheet Wait for signal verb, naming the object the
 ## signal lives on and the trigger it publishes as. Only a plain member read is claimed: an await on
 ## a CALL suspends on whatever that call returns, which no sentence can honestly name.
 static func _await_signal_statement(body: String, context: Dictionary) -> Dictionary:
@@ -877,7 +1104,7 @@ static func _await_signal_statement(body: String, context: Dictionary) -> Dictio
 
 
 ## The published trigger name behind a signal member - the sheet's own @ace_name when it declares
-## one, else the member read as words with the sheet's "On" in front.
+## one, else the member read as words with the event-sheet "On" in front.
 static func trigger_name_of(signal_name: String, context: Dictionary) -> String:
 	var declared: Dictionary = context.get("signals", {})
 	var trigger: String = str(declared.get(signal_name, "")).strip_edges()
@@ -949,7 +1176,7 @@ static func _compound_statement(text: String, context: Dictionary) -> Dictionary
 		var split: Array = _split_object(target, context)
 		var values: Dictionary = {
 			"name": [str(split[1]), "name"],
-			"value": [expression_text(amount), "value"]
+			"value": [expression_text(amount, context), "value"]
 		}
 		match operator:
 			" += ":
@@ -969,57 +1196,149 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 		return {}
 	var target: String = text.substr(0, assign_at).strip_edges()
 	var assigned: String = text.substr(assign_at + 3).strip_edges()
-	if not is_simple_target(target) or assigned.is_empty():
+	if assigned.is_empty():
+		return {}
+	# ── M40 / M46 ───────────────────────────────────────────────────────────────────────────────
+	# The property writes an event sheet spells as its own verbs (visible, opacity, mirrored, size), and
+	# the two globals its glossary renames. Checked before the plain Set, and before the simple-target
+	# gate, because `get_tree().paused` is a settled sentence even though it assigns through a call.
+	var engine_verb: Dictionary = _engine_verb_assignment(target, assigned, context)
+	if not engine_verb.is_empty():
+		return engine_verb
+	if not is_simple_target(target):
 		return {}
 	var split: Array = _split_object(target, context)
 	var object_name: String = str(split[0])
-	# N8. A property every reader knows as a BEHAVIOUR knob - a body's velocity, a camera's zoom, a
-	# particle emitter's switch - reads in that behaviour's words, decided by the object's known class.
-	var behaviour: Dictionary = _behaviour_assignment(str(split[0]), str(split[1]), assigned, target, context)
+	# N8. A property every reader knows as a BEHAVIOUR knob - a body's velocity, a camera's zoom, an
+	# emitter's switch - reads in that behaviour's words, decided by the object's known class.
+	var behaviour: Dictionary = _behaviour_assignment(object_name, str(split[1]), assigned, target, context)
 	if not behaviour.is_empty():
 		return behaviour
-	# M32 / N7 / N9. The engine's services are filed as OBJECTS: reading the stick belongs to
-	# Keyboard, saving belongs to Storage, parsing belongs to JSON - exactly as the picked rows do.
+	# M45. The pointer is the event-sheet Mouse object for the same reason the stick is Keyboard's.
+	# Ahead of the service reading below, so the pointer keeps the object M45 gave it.
+	if object_name == OBJECT_SYSTEM and _system_words(assigned) != assigned and assigned.contains("mouse_position"):
+		object_name = OBJECT_MOUSE
+	# M32 / N7 / N9. The engine's services are filed as OBJECTS: reading the stick belongs to Keyboard,
+	# saving belongs to Storage, parsing belongs to JSON - exactly as the picked rows do.
 	if object_name == OBJECT_SYSTEM:
 		var service: String = value_object(assigned)
 		if not service.is_empty():
 			object_name = service
 	return _sentence(object_name, "Set {name} to {value}", {
 		"name": [str(split[1]), "name"],
-		"value": [expression_text(assigned), "value"]
+		"value": [expression_text(assigned, context), "value"]
 	})
 
 
-## N7/N9. The service object a VALUE comes from, or "" when it comes from nowhere in particular.
-## Matched on the call as WRITTEN, before any rewriting, so the decision rests on the code rather than
-## on words this grammar itself produced.
-static func value_object(expression: String) -> String:
-	var text: String = expression.strip_edges()
-	if text.begins_with("JSON.parse_string(") or text.begins_with("JSON.stringify("):
-		return OBJECT_JSON
-	if text.begins_with("FileAccess."):
-		return OBJECT_FILE
-	if top_level_index(text, ".get_value(") > 0:
-		return OBJECT_STORAGE
-	if text.begins_with("Input.get_action_strength(") or text.begins_with("Input.get_action_raw_strength("):
-		return OBJECT_GAMEPAD
-	if text.begins_with("Input."):
-		return OBJECT_KEYBOARD
-	return ""
+## M40/M46. The assignments an event sheet writes as a verb rather than as a property write, and the
+## two Godot globals its glossary gives an event-sheet noun to. {} for everything else, which is the
+## caller's cue to keep the plain "Set X to Y" it already reads.
+##
+##   visible = false        Player ▸ Set invisible          (a CanvasLayer ▸ Set layer invisible)
+##   modulate.a = 0.5       Player ▸ Set opacity to 50%
+##   flip_h = true          Sprite2D ▸ Set mirrored
+##   scale = Vector2(2, 2)  Player ▸ Set size to 200%
+##   get_tree().paused = true   System ▸ Set time scale to 0 (pause)   (Familiar Words only)
+static func _engine_verb_assignment(target: String, assigned: String, context: Dictionary) -> Dictionary:
+	var familiar_words: bool = bool(context.get("familiar_words", false))
+	var bare_target: String = target.strip_edges().trim_prefix("self.")
+	# M46. Godot pauses the tree; an event sheet sets the time scale, and 0 IS the pause.
+	if familiar_words and bare_target == "get_tree().paused":
+		if assigned == "true":
+			return _sentence(OBJECT_SYSTEM, "Set time scale to 0 (pause)", {})
+		if assigned == "false":
+			return _sentence(OBJECT_SYSTEM, "Set time scale to 1", {})
+		return {}
+	if familiar_words and bare_target == "Engine.time_scale":
+		return _sentence(OBJECT_SYSTEM, "Set time scale to {value}", {"value": [expression_text(assigned, context), "value"]})
+	if not is_simple_target(bare_target):
+		return {}
+	var dot_at: int = bare_target.rfind(".")
+	var member: String = bare_target if dot_at < 0 else bare_target.substr(dot_at + 1)
+	var owner_text: String = "" if dot_at < 0 else bare_target.substr(0, dot_at)
+	# `modulate.a` owns two segments, so the object is whatever precedes BOTH of them.
+	var alpha_write: bool = (member == "a") and (owner_text == "modulate" or owner_text == "self_modulate"
+		or owner_text.ends_with(".modulate") or owner_text.ends_with(".self_modulate"))
+	if alpha_write:
+		var alpha_dot: int = owner_text.rfind(".")
+		owner_text = "" if alpha_dot < 0 else owner_text.substr(0, alpha_dot)
+	var object_name: String = _receiver_object(owner_text, context)
+	var object_class: String = object_class_of(object_name, context)
+	if alpha_write:
+		return _sentence(object_name, "Set opacity to {value}", {"value": [_percent_words(assigned, context), "value"]})
+	match member:
+		"visible":
+			if assigned != "true" and assigned != "false":
+				return {}
+			var is_layer: bool = familiar_words and _class_is_any(object_class, PackedStringArray(["CanvasLayer"]))
+			var layer_label: String = "%s %s" % [object_name, translate("(layer)")] if is_layer else object_name
+			if is_layer:
+				return _sentence(layer_label, "Set layer visible" if assigned == "true" else "Set layer invisible", {})
+			return _sentence(object_name, "Set visible" if assigned == "true" else "Set invisible", {})
+		"flip_h":
+			if assigned != "true" and assigned != "false":
+				return {}
+			return _sentence(object_name, "Set mirrored" if assigned == "true" else "Set not mirrored", {})
+		"flip_v":
+			if assigned != "true" and assigned != "false":
+				return {}
+			return _sentence(object_name, "Set flipped" if assigned == "true" else "Set not flipped", {})
+		"scale":
+			var uniform: String = _uniform_scale_factor(assigned)
+			if uniform.is_empty():
+				return {}
+			return _sentence(object_name, "Set size to {value}", {"value": [uniform, "value"]})
+	return {}
+
+
+## M40. A fraction as the percentage an event sheet shows (`0.5` -> `50%`). A value that is not a plain
+## number keeps its own reading - "opacity to hp / max_hp" is honest, "opacity to hp / max_hp%" is not.
+static func _percent_words(value: String, context: Dictionary) -> String:
+	var text: String = value.strip_edges()
+	if not text.is_valid_float():
+		return expression_text(text, context)
+	var percent: float = text.to_float() * 100.0
+	var shown: String = String.num(percent, 4).rstrip("0").rstrip(".")
+	return "%s%%" % ("0" if shown.is_empty() else shown)
+
+
+## M40. `Vector2(2, 2)` as the event-sheet size percentage, or "" when the scale is not the SAME on every
+## axis - a non-uniform scale is two numbers, and one percentage would hide one of them.
+static func _uniform_scale_factor(value: String) -> String:
+	var text: String = value.strip_edges()
+	var open_at: int = text.find("(")
+	if open_at <= 0 or not text.ends_with(")"):
+		return ""
+	if not VECTOR_CONSTRUCTORS.has(text.substr(0, open_at)):
+		return ""
+	var axes: PackedStringArray = _split_arguments(text.substr(open_at + 1, text.length() - open_at - 2))
+	if axes.is_empty():
+		return ""
+	for axis: String in axes:
+		if not axis.strip_edges().is_valid_float() or axis.strip_edges() != axes[0].strip_edges():
+			return ""
+	return _percent_words(axes[0], {})
 
 
 ## The call shapes with a settled sentence: destroy, emit, change scene. Anything else is left to the
 ## caller's own Object / Verb / parameters rendering.
 static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	# Checked before the plain call split, because the receiver is itself a call: `get_tree()` is not
-	# an object a sentence can name, but the scene switch behind it is one of the sheet's own actions.
+	# an object a sentence can name, but the scene switch behind it is a settled event-sheet action.
 	const SCENE_HEAD := "get_tree().change_scene_to_file("
 	if text.begins_with(SCENE_HEAD) and text.ends_with(")"):
 		var scene_path: String = text.substr(SCENE_HEAD.length(), text.length() - SCENE_HEAD.length() - 1)
 		if not scene_path.strip_edges().is_empty():
+			# M46. An event sheet calls a scene a LAYOUT, and names it without its folder or its extension.
+			if bool(context.get("familiar_words", false)):
+				return _sentence(OBJECT_SYSTEM, "Go to layout {path}", {
+					"path": ["\"%s\"" % _unquote(scene_path).get_file().get_basename(), "value"]})
 			# The path stays a quoted string, so a reader (and the name lens) sees content, not a name.
 			return _sentence(OBJECT_SYSTEM, "Go to scene {path}", {"path": ["\"%s\"" % _unquote(scene_path), "value"]})
-	var group_call: Dictionary = _group_call_statement(text)
+	# M46. Godot reloads the current scene; an event sheet restarts the layout.
+	if bool(context.get("familiar_words", false)) and text == "get_tree().reload_current_scene()":
+		return _sentence(OBJECT_SYSTEM, "Restart layout", {})
+	var group_call: Dictionary = _group_call_statement(text, context)
 	if not group_call.is_empty():
 		return group_call
 	var tween: Dictionary = _tween_statement(text, context)
@@ -1033,13 +1352,19 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var args: PackedStringArray = call.get("args", PackedStringArray())
 	var self_object: String = str(context.get("self_object", OBJECT_SYSTEM))
 	var object_name: String = self_object if target.is_empty() or target == "self" else target
-	# M25/M26. `queue_free()` on ANY object is the sheet's Destroy, including the script's own object -
-	# which is named, never `self`.
+	# ── M40 / M43 / M47 ─────────────────────────────────────────────────────────────────────────
+	# The calls an event sheet writes as one of its own verbs: an animation, a sound, a visibility switch,
+	# an angle, and a property set by name.
+	var engine_verb: Dictionary = _engine_verb_call(call, context)
+	if not engine_verb.is_empty():
+		return engine_verb
+	# M25/M26. `queue_free()` on ANY object is the event-sheet Destroy verb, including the script's
+	# own object - which is named, never `self`.
 	if method == "queue_free" and args.is_empty():
 		if target.is_empty() or target == "self":
 			object_name = script_object(context)
 		return _sentence(object_name, "Destroy", {})
-	# M30. A group is the nearest thing Godot has to a sheet family, so joining one says so.
+	# M30. A group is the nearest thing Godot has to an event-sheet family, so joining one says so.
 	if method == "add_to_group" and args.size() >= 1:
 		if target.is_empty() or target == "self":
 			object_name = script_object(context)
@@ -1055,9 +1380,9 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	if method == "emit":
 		return signal_sentence(target, ", ".join(args), context)
 	# ── N7 / N8 / N11 ───────────────────────────────────────────────────────────────────────────
-	# The three families of call that the sheet has settled rows for. Each is checked here, at the end
-	# of the curated shapes, so an unrecognised call still falls through to M26's Object ▸ Verb chips.
-	var storage_step: Dictionary = _storage_statement(target, method, args)
+	# The three families of call with settled rows of their own. Checked here, at the end of the
+	# curated shapes, so an unrecognised call still falls through to M26's Object ▸ Verb chips.
+	var storage_step: Dictionary = _storage_statement(target, method, args, context)
 	if not storage_step.is_empty():
 		return storage_step
 	# A behaviour step on the script's OWN object belongs to that object by name, never to System: a
@@ -1066,58 +1391,65 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var behaviour_step: Dictionary = _behaviour_call(acting_object, method, args, target, context)
 	if not behaviour_step.is_empty():
 		return behaviour_step
-	return _debug_statement(target, method, args)
+	return _debug_statement(target, method, args, context)
 
 
-## N11. The sheet's Browser ▸ Log is the debug verb everyone knows, and Godot's print family is the
-## same three levels under different names. `print` itself is deliberately NOT claimed: it already
-## reads "Print", which is the word on its own picked row.
-static func _debug_statement(target: String, method: String, args: PackedStringArray) -> Dictionary:
+## N11. The Log verb is the debug word everyone knows, and Godot's print family is the same three
+## levels under different names. `print` itself is deliberately NOT claimed: it already reads "Print",
+## which is the word on its own picked row.
+static func _debug_statement(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
 	if not target.is_empty():
 		return {}
 	if args.size() == 1:
 		match method:
 			"push_error", "printerr":
-				return _sentence(OBJECT_SYSTEM, "Log error {value}", {"value": [expression_text(args[0]), "value"]})
+				return _sentence(OBJECT_SYSTEM, "Log error {value}",
+					{"value": [expression_text(args[0], context), "value"]})
 			"push_warning":
-				return _sentence(OBJECT_SYSTEM, "Log warning {value}", {"value": [expression_text(args[0]), "value"]})
+				return _sentence(OBJECT_SYSTEM, "Log warning {value}",
+					{"value": [expression_text(args[0], context), "value"]})
 			"print_rich":
-				return _sentence(OBJECT_SYSTEM, "Log {value}", {"value": [expression_text(args[0]), "value"]})
+				return _sentence(OBJECT_SYSTEM, "Log {value}",
+					{"value": [expression_text(args[0], context), "value"]})
 	if method != "assert" or args.is_empty() or args.size() > 2:
 		return {}
 	if args.size() == 1:
-		return _sentence(OBJECT_SYSTEM, "Assert {condition}", {"condition": [expression_text(args[0]), "value"]})
+		return _sentence(OBJECT_SYSTEM, "Assert {condition}",
+			{"condition": [expression_text(args[0], context), "value"]})
 	return _sentence(OBJECT_SYSTEM, "Assert {condition} {message}", {
-		"condition": [expression_text(args[0]), "value"],
-		"message": [expression_text(args[1]), "plain"]
+		"condition": [expression_text(args[0], context), "value"],
+		"message": [expression_text(args[1], context), "plain"]
 	})
 
 
-## N7. The ConfigFile and FileAccess STEPS, in the sheet's Local Storage / AJAX words.
+## N7. The ConfigFile and FileAccess STEPS, in the Local Storage / AJAX words.
 ##
 ## `save` and `load` are ordinary English and live on plenty of other classes, so they are claimed
 ## only for a literal path that plainly names a config file - which is the one spelling that says
 ## "this is storage" without asking what the receiver holds at run time.
-static func _storage_statement(target: String, method: String, args: PackedStringArray) -> Dictionary:
+static func _storage_statement(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
 	if target.is_empty():
 		return {}
 	if method == "set_value" and args.size() == 3:
 		return _sentence(OBJECT_STORAGE, "Set item {key} to {value} (section {section})", {
-			"key": [expression_text(args[1]), "value"],
-			"value": [expression_text(args[2]), "value"],
-			"section": [expression_text(args[0]), "plain"]
+			"key": [expression_text(args[1], context), "value"],
+			"value": [expression_text(args[2], context), "value"],
+			"section": [expression_text(args[0], context), "plain"]
 		})
 	if method == "store_string" and args.size() == 1:
-		return _sentence(object_of_reference(target), "Write {text}", {"text": [expression_text(args[0]), "value"]})
+		return _sentence(object_of_reference(target), "Write {text}",
+			{"text": [expression_text(args[0], context), "value"]})
 	if (method != "save" and method != "load") or args.size() != 1 or not _is_config_path(args[0]):
 		return {}
 	if method == "save":
-		return _sentence(OBJECT_STORAGE, "Save {file}", {"file": [file_name_value(args[0]), "value"]})
-	return _sentence(OBJECT_STORAGE, "Load {file}", {"file": [file_name_value(args[0]), "value"]})
+		return _sentence(OBJECT_STORAGE, "Save {file}", {"file": [file_name_value(args[0], context), "value"]})
+	return _sentence(OBJECT_STORAGE, "Load {file}", {"file": [file_name_value(args[0], context), "value"]})
 
 
 ## True when a value is a literal path to a settings file - the only argument a bare `save` / `load`
-## may have and still be honestly readable as the sheet's storage.
+## may have and still be honestly readable as storage.
 static func _is_config_path(value: String) -> bool:
 	if not _is_string_literal(value):
 		return false
@@ -1125,10 +1457,10 @@ static func _is_config_path(value: String) -> bool:
 	return path.ends_with(".cfg") or path.ends_with(".ini")
 
 
-## N7. `var f = FileAccess.open("user://log.txt", FileAccess.WRITE)` as the sheet's own open-the-file
-## row: the verb first, the file it names, which way it was opened, and the handle named after it all
-## as the receipt it is. Returns {} for anything that is not exactly that assignment.
-static func _file_open_statement(text: String) -> Dictionary:
+## N7. `var f = FileAccess.open("user://log.txt", FileAccess.WRITE)` as the open-the-file row: the verb
+## first, the file it names, which way it was opened, and the handle named after it as the receipt it
+## is. Returns {} for anything that is not exactly that assignment.
+static func _file_open_statement(text: String, context: Dictionary) -> Dictionary:
 	if not text.contains("FileAccess.open("):
 		return {}
 	var body: String = text
@@ -1156,62 +1488,45 @@ static func _file_open_statement(text: String) -> Dictionary:
 	var arguments: PackedStringArray = call.get("args", PackedStringArray())
 	if arguments.size() != 2:
 		return {}
-	var mode: String = arguments[1].strip_edges()
 	# The three modes a reader cares about, said as the thing they are about to do with the file.
 	var mode_word: String = ""
-	if mode == "FileAccess.WRITE":
-		mode_word = "Open {file} for writing (as {handle})"
-	elif mode == "FileAccess.READ":
-		mode_word = "Open {file} for reading (as {handle})"
-	elif mode == "FileAccess.READ_WRITE":
-		mode_word = "Open {file} for reading and writing (as {handle})"
+	match arguments[1].strip_edges():
+		"FileAccess.WRITE":
+			mode_word = "Open {file} for writing (as {handle})"
+		"FileAccess.READ":
+			mode_word = "Open {file} for reading (as {handle})"
+		"FileAccess.READ_WRITE":
+			mode_word = "Open {file} for reading and writing (as {handle})"
 	if mode_word.is_empty():
 		return {}
 	return _sentence(OBJECT_FILE, mode_word, {
-		"file": [file_name_value(arguments[0]), "value"],
+		"file": [file_name_value(arguments[0], context), "value"],
 		"handle": [handle, "name"]
 	})
 
 
-## N8. What the sheet knows an object's class to be, or "" when it knows nothing. `object_classes` is
-## handed in by the caller, because only the caller can ask the sheet; a label that is itself an engine
-## class name (`$Camera2D` reads "Camera2D") resolves through ClassDB, which is the same answer.
-## A guessed class would put behaviour words on the wrong object, so "" means the row keeps its code.
-static func class_of(object_label: String, context: Dictionary) -> String:
-	var bare: String = object_of_reference(object_label.strip_edges())
-	if bare.is_empty():
-		return ""
-	# `self` is never a name a reader sees, and it is never a class either: it is whatever object this
-	# script IS, which the sheet already knows by name.
-	if bare == "self":
-		bare = script_object(context)
-	var classes: Dictionary = context.get("object_classes", {})
-	for key: String in [object_label.strip_edges(), bare]:
-		var found: String = str(classes.get(key, "")).strip_edges()
-		if not found.is_empty():
-			return found
-	return bare if ClassDB.class_exists(bare) else ""
+## N7/N9. The service object a VALUE comes from, or "" when it comes from nowhere in particular.
+## Matched on the call as WRITTEN, before any rewriting, so the decision rests on the code rather than
+## on words this grammar itself produced.
+static func value_object(expression: String) -> String:
+	var text: String = expression.strip_edges()
+	if text.begins_with("JSON.parse_string(") or text.begins_with("JSON.stringify("):
+		return OBJECT_JSON
+	if text.begins_with("FileAccess."):
+		return OBJECT_FILE
+	if top_level_index(text, ".get_value(") > 0:
+		return OBJECT_STORAGE
+	if text.begins_with("Input.get_action_strength(") or text.begins_with("Input.get_action_raw_strength("):
+		return OBJECT_GAMEPAD
+	if text.begins_with("Input."):
+		return OBJECT_KEYBOARD
+	return ""
 
 
-## N8. True when a known class is one of the families whose words this reading claims. Matched on the
-## class NAME rather than through ClassDB inheritance so the 2D and 3D twins answer alike and a
-## headless run (where no scene tree exists) reads exactly as the editor does.
-static func _is_class_family(class_name_text: String, family: String) -> bool:
-	if class_name_text.is_empty():
-		return false
-	match family:
-		"body":
-			return class_name_text.begins_with("RigidBody")
-		"camera":
-			return class_name_text.begins_with("Camera")
-		"particles":
-			return class_name_text.ends_with("Particles2D") or class_name_text.ends_with("Particles3D")
-	return false
-
-
-## N8. One behaviour reading: a sheet puts the behaviour's NAME on the row as a chip and then says
-## the step in that behaviour's words, so a reader knows which of an object's behaviours is acting.
-static func _behaviour_sentence(object_name: String, chip: String, template: String, values: Dictionary) -> Dictionary:
+## N8. One behaviour reading: the behaviour's NAME rides on the row as a chip and the step follows in
+## that behaviour's words, so a reader knows which of an object's behaviours is acting.
+static func _behaviour_sentence(object_name: String, chip: String, template: String,
+		values: Dictionary) -> Dictionary:
 	var reading: Dictionary = _sentence(object_name, template, values)
 	if chip.is_empty():
 		return reading
@@ -1229,28 +1544,28 @@ static func _behaviour_call(object_name: String, method: String, args: PackedStr
 		if switch != "true" and switch != "false":
 			return {}
 		return _sentence(object_name, "Set collision with layer {layer} {state}", {
-			"layer": [expression_text(args[0]), "value"],
+			"layer": [expression_text(args[0], context), "value"],
 			"state": [translate("on") if switch == "true" else translate("off"), "name"]
 		})
 	if not BEHAVIOUR_METHODS.has(method):
 		return {}
-	var known_class: String = class_of(target if not target.is_empty() else object_name, context)
+	var known_class: String = object_class_of(target if not target.is_empty() else object_name, context)
 	if known_class.is_empty():
 		return {}
-	if args.size() == 1 and _is_class_family(known_class, "body"):
+	if args.size() == 1 and _class_is_any(known_class, BODY_CLASSES):
 		match method:
 			"apply_impulse", "apply_central_impulse":
 				return _behaviour_sentence(object_name, "Physics", "Apply impulse {value}",
-					{"value": [expression_text(args[0]), "value"]})
+					{"value": [expression_text(args[0], context), "value"]})
 			"apply_force", "apply_central_force":
 				return _behaviour_sentence(object_name, "Physics", "Apply force {value}",
-					{"value": [expression_text(args[0]), "value"]})
+					{"value": [expression_text(args[0], context), "value"]})
 		return {}
 	if not args.is_empty():
 		return {}
-	if method == "make_current" and _is_class_family(known_class, "camera"):
+	if method == "make_current" and _class_is_any(known_class, CAMERA_CLASSES):
 		return _sentence(object_name, "Set as active camera", {})
-	if method == "restart" and _is_class_family(known_class, "particles"):
+	if method == "restart" and _class_is_any(known_class, PARTICLE_CLASSES):
 		return _behaviour_sentence(object_name, "Particles", "Restart", {})
 	return {}
 
@@ -1265,24 +1580,25 @@ static func _behaviour_assignment(object_name: String, member: String, assigned:
 		return _sentence(object_name, "Set collisions {state}", {"state": [translate("off"), "name"]})
 	if not BEHAVIOUR_MEMBERS.has(member):
 		return {}
-	var known_class: String = class_of(target.split(".", false)[0] if target.contains(".") else object_name, context)
+	var known_class: String = object_class_of(
+		target.split(".", false)[0] if target.contains(".") else object_name, context)
 	if known_class.is_empty():
 		return {}
-	if _is_class_family(known_class, "body"):
+	if _class_is_any(known_class, BODY_CLASSES):
 		if member == "linear_velocity":
 			return _behaviour_sentence(object_name, "Physics", "Set velocity to {value}",
-				{"value": [expression_text(value), "value"]})
+				{"value": [expression_text(value, context), "value"]})
 		if member == "angular_velocity":
 			return _behaviour_sentence(object_name, "Physics", "Set angular velocity to {value}",
-				{"value": [expression_text(value), "value"]})
+				{"value": [expression_text(value, context), "value"]})
 		return {}
-	if member == "emitting" and _is_class_family(known_class, "particles"):
+	if member == "emitting" and _class_is_any(known_class, PARTICLE_CLASSES):
 		if value == "true":
 			return _behaviour_sentence(object_name, "Particles", "Start spraying", {})
 		if value == "false":
 			return _behaviour_sentence(object_name, "Particles", "Stop spraying", {})
 		return {}
-	if member == "zoom" and _is_class_family(known_class, "camera"):
+	if member == "zoom" and _class_is_any(known_class, CAMERA_CLASSES):
 		var percent: String = _zoom_percent(value)
 		if percent.is_empty():
 			return {}
@@ -1303,9 +1619,58 @@ static func _zoom_percent(value: String) -> String:
 	return "" if shown.is_empty() else "%s%%" % shown
 
 
+## M40/M43/M47. One call, read as the event-sheet verb it is - or {} when the call is not one of these,
+## which keeps the ordinary Object ▸ Verb reading.
+##
+##   sprite.play("run")   AnimatedSprite2D ▸ Set animation to "run" (play)
+##   sfx.play()           Audio ▸ Play
+##   hide()               Player ▸ Set invisible
+##   look_at(p)           Turret ▸ Set angle toward p
+##   enemy.set("hp", 3)   enemy ▸ Set hp to 3
+##
+## The animation / audio split is decided by the object's CLASS, because `play` means two different
+## things and only the class says which - an unknown class keeps the plain call reading.
+static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictionary:
+	var method: String = str(call.get("method", ""))
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	var receiver: String = str(call.get("target", ""))
+	var object_name: String = _receiver_object(receiver, context)
+	var object_class: String = object_class_of(object_name, context)
+	match method:
+		"hide":
+			if arguments.is_empty():
+				return _sentence(object_name, "Set invisible", {})
+		"show":
+			if arguments.is_empty():
+				return _sentence(object_name, "Set visible", {})
+		"look_at":
+			if arguments.size() >= 1:
+				return _sentence(object_name, "Set angle toward {target}", {
+					"target": [expression_text(arguments[0], context), "value"]})
+		"set":
+			if arguments.size() == 2 and _is_string_literal(arguments[0]) and is_identifier(_unquote(arguments[0])):
+				return _sentence(object_name, "Set {name} to {value}", {
+					"name": [_unquote(arguments[0]), "name"],
+					"value": [expression_text(arguments[1], context), "value"]})
+		"play":
+			if _class_is_any(object_class, ANIMATION_CLASSES) and arguments.size() == 1:
+				return _sentence(object_name, "Set animation to {name} (play)", {
+					"name": [expression_text(arguments[0], context), "value"]})
+			if _class_is_any(object_class, AUDIO_CLASSES):
+				return _sentence(OBJECT_AUDIO, "Play", {})
+		"stop":
+			if not arguments.is_empty():
+				return {}
+			if _class_is_any(object_class, ANIMATION_CLASSES):
+				return _sentence(object_name, "Stop animation", {})
+			if _class_is_any(object_class, AUDIO_CLASSES):
+				return _sentence(OBJECT_AUDIO, "Stop", {})
+	return {}
+
+
 ## M30. `get_tree().call_group("enemies", "flee", extra)` - the group is the OBJECT the row acts on
-## (a sheet family), the method is the verb, and anything after it is a value the call passes on.
-static func _group_call_statement(text: String) -> Dictionary:
+## (an event-sheet family), the method is the verb, and anything after it is a value the call passes on.
+static func _group_call_statement(text: String, context: Dictionary = {}) -> Dictionary:
 	const GROUP_HEAD := "get_tree().call_group("
 	const DEFERRED_HEAD := "get_tree().call_group_flags("
 	var head: String = ""
@@ -1336,7 +1701,7 @@ static func _group_call_statement(text: String) -> Dictionary:
 	]
 	for index: int in range(2, arguments.size()):
 		segments.append({"text": "   ", "tone": "plain"})
-		segments.append({"text": expression_text(arguments[index]), "tone": "value"})
+		segments.append({"text": expression_text(arguments[index], context), "tone": "value"})
 	return {"object": object_label, "segments": segments}
 
 
@@ -1357,8 +1722,8 @@ static func _tween_statement(text: String, context: Dictionary) -> Dictionary:
 		object_name = script_object(context)
 	return _sentence(object_name, "Tween {property} to {value} over {duration}s", {
 		"property": [_unquote(arguments[1]), "name"],
-		"value": [expression_text(arguments[2]), "value"],
-		"duration": [expression_text(arguments[3]), "value"]
+		"value": [expression_text(arguments[2], context), "value"],
+		"duration": [expression_text(arguments[3], context), "value"]
 	})
 
 
@@ -1409,8 +1774,8 @@ static func verb_words(method: String) -> String:
 
 
 ## M25/M26. The reading of ANY method call the sheet has no verb of its own for: Object, then the
-## verb in words, then one chip per argument - and never a pair of parentheses, because a the sheet
-## row shows values, not a call.
+## verb in words, then one chip per argument - and never a pair of parentheses, because an
+## event-sheet row shows values, not a call.
 ##
 ## `parameter_names` are the engine's own names for the method's arguments when the object's class is
 ## known (a caller that knows nothing passes none, and the chips are plain values). Returns {} when
@@ -1427,7 +1792,7 @@ static func call_reading(text: String, context: Dictionary, parameter_names: Pac
 	# name chip that would repeat what the verb just said.
 	var value_follows_verb: bool = verb.ends_with(" %s" % translate("to")) and arguments.size() == 1
 	for index: int in arguments.size():
-		var chip: String = expression_text(arguments[index])
+		var chip: String = expression_text(arguments[index], context)
 		if not value_follows_verb and index < parameter_names.size() and not parameter_names[index].is_empty():
 			chip = "%s = %s" % [parameter_names[index], chip]
 		segments.append({"text": " " if value_follows_verb else "   ", "tone": "plain"})
@@ -1463,7 +1828,7 @@ static func object_of_reference(reference: String) -> String:
 # ── Condition shapes ────────────────────────────────────────────────────────────
 
 
-## `host == null` / `host != null` as the sheet's own existence condition.
+## `host == null` / `host != null` as the event-sheet existence condition.
 static func _existence_condition(text: String) -> Dictionary:
 	for operator: String in [" == ", " != "]:
 		var at: int = top_level_index(text, operator)
@@ -1484,11 +1849,11 @@ static func _existence_condition(text: String) -> Dictionary:
 	return {}
 
 
-## `i == 1` as the sheet's Compare: `i = 1`, and `hp != 3` as `hp ≠ 3`. GDScript doubles the sign
+## `i == 1` as the event-sheet Compare verb: `i = 1`, and `hp != 3` as `hp ≠ 3`. GDScript doubles the sign
 ## because a language needs to tell assignment from a question; a sheet row is only ever the question,
 ## so the row says what a reader means by it. Equality ONLY - `<`, `>=` and the rest already read as
 ## themselves - and a `== null` never reaches here, because the existence reading claims it first.
-## The row belongs to System, the way the sheet's own Compare condition does.
+## The row belongs to System, the way the event-sheet Compare verb does.
 static func _comparison_condition(text: String) -> Dictionary:
 	for operator: String in [" == ", " != "]:
 		var at: int = top_level_index(text, operator)
@@ -1525,9 +1890,9 @@ static func _group_condition(text: String, context: Dictionary) -> Dictionary:
 	return _sentence(object_of_reference(target), "is in group {group}", {"group": [_quoted(arguments[0]), "value"]})
 
 
-## N5. `body is Player` - the sheet's own type check, with the class drawn as the chip it is rather
-## than left as a bare word in the middle of a sentence. Only `X is <ClassName>` is claimed: an
-## `is not` (whose right-hand side is not a single identifier) refuses, and keeps its code.
+## N5. `body is Player` - the type check, with the class drawn as the chip it is rather than left as a
+## bare word in the middle of a sentence. Only `X is <ClassName>` is claimed: an `is not` (whose
+## right-hand side is not a single identifier) refuses, and keeps its code.
 static func _type_condition(text: String, context: Dictionary) -> Dictionary:
 	var at: int = top_level_index(text, " is ")
 	if at <= 0:
@@ -1541,11 +1906,11 @@ static func _type_condition(text: String, context: Dictionary) -> Dictionary:
 	return _sentence(object_of_reference(subject), "is a {type}", {"type": [type_name, "chip"]})
 
 
-## N5. `in` asks three different questions in GDScript, and the sheet has a different row for each.
-## Which one this line asks is decided by its SHAPE, never by a guess about what a name holds at run
-## time: a LITERAL list on the right is the sheet's "is one of", a quoted key on the left is a table
-## lookup, and anything else is a list being asked whether it contains a value.
-static func _membership_condition(text: String) -> Dictionary:
+## N5. `in` asks three different questions in GDScript, and there is a different row for each. Which
+## one this line asks is decided by its SHAPE, never by a guess about what a name holds at run time: a
+## LITERAL list on the right is "is one of", a quoted key on the left is a table lookup, and anything
+## else is a list being asked whether it contains a value.
+static func _membership_condition(text: String, context: Dictionary) -> Dictionary:
 	var at: int = top_level_index(text, " in ")
 	if at <= 0:
 		return {}
@@ -1559,9 +1924,9 @@ static func _membership_condition(text: String) -> Dictionary:
 			return {}
 		var shown: PackedStringArray = PackedStringArray()
 		for entry: String in entries:
-			shown.append(expression_text(entry))
+			shown.append(expression_text(entry, context))
 		return _sentence(OBJECT_SYSTEM, "{value} is one of {entries}", {
-			"value": [expression_text(needle), "value"],
+			"value": [expression_text(needle, context), "value"],
 			"entries": [", ".join(shown), "value"]
 		})
 	if not is_simple_target(haystack):
@@ -1573,13 +1938,13 @@ static func _membership_condition(text: String) -> Dictionary:
 		})
 	return _sentence(OBJECT_SYSTEM, "{list} contains {value}", {
 		"list": [haystack, "name"],
-		"value": [expression_text(needle), "value"]
+		"value": [expression_text(needle, context), "value"]
 	})
 
 
-## N5. `obj.has_method("take_damage")` and `has_node("Sprite2D")` - a sheet asks whether an object
-## HAS something, and names the thing it has the way the sheet names it everywhere else: a function
-## under its display name, a child under its own object label. Only a LITERAL name is claimed - a
+## N5. `obj.has_method("take_damage")` and `has_node("Sprite2D")` - asking whether an object HAS
+## something, naming the thing it has the way the sheet names it everywhere else: a function under its
+## display name, a child under its own object label. Only a LITERAL name is claimed - a
 ## `has_method(method_var)` has no words a row could honestly print.
 static func _capability_condition(text: String, context: Dictionary) -> Dictionary:
 	var call: Dictionary = call_parts(text)
@@ -1598,30 +1963,34 @@ static func _capability_condition(text: String, context: Dictionary) -> Dictiona
 	if named.is_empty():
 		return {}
 	if method == "has_method":
-		return _sentence(object_of_reference(target), "has function {verb}", {"verb": [function_words(named), "name"]})
+		return _sentence(object_of_reference(target), "has function {verb}",
+			{"verb": [function_words(named), "name"]})
 	return _sentence(object_of_reference(target), "has child {child}", {"child": [named, "chip"]})
 
 
-## N7. `cfg.has_section_key(section, key)` as the sheet's "storage has item". The section is a
-## GDScript filing detail the Storage object already implies, so only the key is in the sentence.
-static func _storage_condition(text: String) -> Dictionary:
+## N7. `cfg.has_section_key(section, key)` as the storage-has-item question, and the file test beside
+## it. The section is a GDScript filing detail the Storage object already implies, so only the key is
+## in the sentence.
+static func _storage_condition(text: String, context: Dictionary) -> Dictionary:
 	var call: Dictionary = call_parts(text)
 	if call.is_empty():
 		return {}
 	var arguments: PackedStringArray = call.get("args", PackedStringArray())
 	if str(call.get("method", "")) == "has_section_key" and arguments.size() == 2:
-		return _sentence(OBJECT_STORAGE, "has item {key}", {"key": [expression_text(arguments[1]), "value"]})
+		return _sentence(OBJECT_STORAGE, "has item {key}",
+			{"key": [expression_text(arguments[1], context), "value"]})
 	if text.begins_with("FileAccess.file_exists(") and arguments.size() == 1:
-		return _sentence(OBJECT_FILE, "{file} exists", {"file": [file_name_value(arguments[0]), "value"]})
+		return _sentence(OBJECT_FILE, "{file} exists",
+			{"file": [file_name_value(arguments[0], context), "value"]})
 	return {}
 
 
 ## N7. The FILE a path names, as the quoted word a reader recognises: `"user://saves/slot1.cfg"` is
 ## `"slot1.cfg"`. The directory is a Godot filing detail, and the Storage / File object already says
 ## where the sheet keeps things. A value that is not a literal path stays exactly as written.
-static func file_name_value(path_value: String) -> String:
+static func file_name_value(path_value: String, context: Dictionary = {}) -> String:
 	if not _is_string_literal(path_value):
-		return expression_text(path_value)
+		return expression_text(path_value, context)
 	var path: String = _unquote(path_value.strip_edges().trim_prefix("&"))
 	var slash_at: int = path.rfind("/")
 	if slash_at >= 0:
@@ -1629,10 +1998,10 @@ static func file_name_value(path_value: String) -> String:
 	return "\"%s\"" % path
 
 
-## A method name as the FUNCTION it is: Title Case, the way a published verb reads in the picker and
-## in a Call row ("take_damage" -> "Take Damage"). Deliberately not `verb_words()`, which spells an
-## unknown method as a sentence-case step; asking whether an object has a FUNCTION is asking about
-## the named thing, so it reads under the name that thing would be published as.
+## A method name as the FUNCTION it is: Title Case, the way a published verb reads in the picker and in
+## a Call row ("take_damage" -> "Take Damage"). Deliberately not `verb_words()`, which spells an unknown
+## method as a sentence-case step; asking whether an object has a FUNCTION is asking about the named
+## thing, so it reads under the name that thing would be published as.
 static func function_words(method: String) -> String:
 	var bare: String = method.strip_edges()
 	while bare.begins_with("_"):
@@ -1641,7 +2010,7 @@ static func function_words(method: String) -> String:
 
 
 ## M25. `rotation > 1.5` - a comparison whose subject is an ENGINE property of the script's own
-## object reads under that object, the way `Sprite > X > 100` does on a sheet.
+## object reads under that object, the way `Sprite > X > 100` does in an event sheet.
 static func _engine_property_condition(text: String, context: Dictionary) -> Dictionary:
 	for operator: String in [" >= ", " <= ", " != ", " == ", " > ", " < "]:
 		var at: int = top_level_index(text, operator)
@@ -1661,12 +2030,193 @@ static func _engine_property_condition(text: String, context: Dictionary) -> Dic
 		return {"object": script_object(context), "segments": [
 			{"text": engine_member_name(subject.trim_prefix("self.")), "tone": "name"},
 			{"text": comparison_symbols(operator), "tone": "plain"},
-			{"text": expression_text(compared), "tone": "value"}
+			{"text": expression_text(compared, context), "tone": "value"}
 		]}
 	return {}
 
 
-## `randf() < 0.3` as the sheet's chance condition. Only a literal probability is claimed - a
+## M41. The movement questions an event-sheet Platform behaviour asks. `is_on_wall` and `is_on_ceiling`
+## get the event-sheet words (a wall is beside you, a ceiling above you); `is_on_floor` already reads
+## the same in both engines. The Godot phrase stays one hover away on the row.
+const BODY_STATE_WORDS: Dictionary = {
+	"is_on_floor": "Is on floor",
+	"is_on_wall": "Is by wall",
+	"is_on_ceiling": "Is by ceiling"
+}
+
+
+static func _body_state_condition(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty() or not (call.get("args", PackedStringArray()) as PackedStringArray).is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	if not BODY_STATE_WORDS.has(method):
+		return {}
+	return _sentence(_receiver_object(str(call.get("target", "")), context), str(BODY_STATE_WORDS[method]), {})
+
+
+## M41. `hurtbox.overlaps_body(player)` and the "is anything touching me" pair, as the one event-sheet
+## overlap condition. The reading names the other object, or says "something" when the test does not.
+static func _overlap_condition(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	var object_name: String = _receiver_object(str(call.get("target", "")), context)
+	if (method == "overlaps_body" or method == "overlaps_area") and arguments.size() == 1:
+		return _sentence(object_name, "Is overlapping {other}", {"other": [expression_text(arguments[0], context), "value"]})
+	if method in ["has_overlapping_bodies", "has_overlapping_areas"] and arguments.is_empty():
+		return _sentence(object_name, "Is overlapping something", {})
+	return {}
+
+
+## M41. `velocity.y < 0` is the event-sheet "Is jumping" - but ONLY on a 2D body, where Y grows downward.
+## In 3D the same test means the opposite, so the reading is refused there and the comparison stands.
+static func _movement_condition(text: String, context: Dictionary) -> Dictionary:
+	for operator: String in [" < ", " > "]:
+		var at: int = top_level_index(text, operator)
+		if at < 0:
+			continue
+		if text.substr(at + operator.length()).strip_edges() != "0":
+			return {}
+		var subject: String = text.substr(0, at).strip_edges().trim_prefix("self.")
+		if not subject.ends_with("velocity.y"):
+			return {}
+		var owner_name: String = subject.substr(0, maxi(subject.length() - "velocity.y".length() - 1, 0))
+		if object_class_of(_receiver_object(owner_name, context), context) != "CharacterBody2D":
+			return {}
+		return _sentence(_receiver_object(owner_name, context),
+			"Is jumping" if operator == " < " else "Is falling", {})
+	return {}
+
+
+## M41. The movement reading of a "is this number below / above zero" test, for the picked rows that
+## ask it that way. {} whenever the shape is not a 2D body's vertical speed, which is the caller's cue
+## to keep the reading it already had.
+static func movement_words(value: String, operator: String, context: Dictionary) -> Dictionary:
+	var text: String = "%s %s 0" % [value.strip_edges(), operator]
+	var movement: Dictionary = _movement_condition(text, context)
+	if not movement.is_empty():
+		return movement
+	# M47. `enemy.get("hp") > 0` still reads as the property it asks about; every other number keeps
+	# the vocabulary's own wording, which is why nothing else is tried here.
+	return _object_property_condition(text, context)
+
+
+## M44. Counting objects: a group's instance count, and a node's children.
+static func _count_condition(text: String, context: Dictionary) -> Dictionary:
+	for operator: String in [" >= ", " <= ", " != ", " == ", " > ", " < "]:
+		var at: int = top_level_index(text, operator)
+		if at < 0:
+			continue
+		var subject: String = text.substr(0, at).strip_edges()
+		var compared: String = text.substr(at + operator.length()).strip_edges()
+		if compared.is_empty():
+			return {}
+		var counted: String = _group_count_words(subject)
+		if counted != subject:
+			# "enemies (group) count" - the group is the OBJECT, and the count is what the row shows.
+			var count_word: String = translate("count")
+			var group_label: String = counted.substr(0, counted.length() - count_word.length()).strip_edges()
+			return {"object": group_label, "segments": [
+				{"text": count_word, "tone": "name"},
+				{"text": operator, "tone": "plain"},
+				{"text": expression_text(compared, context), "tone": "value"}
+			]}
+		var child_call: Dictionary = call_parts(subject)
+		if child_call.is_empty() or str(child_call.get("method", "")) != "get_child_count":
+			return {}
+		if not (child_call.get("args", PackedStringArray()) as PackedStringArray).is_empty():
+			return {}
+		return {"object": _receiver_object(str(child_call.get("target", "")), context), "segments": [
+			{"text": translate("child count"), "tone": "name"},
+			{"text": operator, "tone": "plain"},
+			{"text": expression_text(compared, context), "tone": "value"}
+		]}
+	return {}
+
+
+## M44. `not items.is_empty()` as the count it asks about, so the two emptiness tests read as one
+## pair (`items' count = 0` / `items' count > 0`) rather than as a sentence wearing a NOT mark.
+static func _not_empty_reading(text: String, context: Dictionary) -> Dictionary:
+	if not text.begins_with("not "):
+		return {}
+	var call: Dictionary = call_parts(text.substr(4).strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "is_empty":
+		return {}
+	if not (call.get("args", PackedStringArray()) as PackedStringArray).is_empty():
+		return {}
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	if receiver.is_empty():
+		return {}
+	return {"object": "", "segments": [
+		{"text": "%s' %s > 0" % [expression_text(receiver, context), translate("count")], "tone": "value"}
+	]}
+
+
+## M47. `enemy.get("hp") > 0` reads as the property it asks about, under the object that owns it.
+static func _object_property_condition(text: String, context: Dictionary) -> Dictionary:
+	for operator: String in [" >= ", " <= ", " != ", " == ", " > ", " < "]:
+		var at: int = top_level_index(text, operator)
+		if at < 0:
+			continue
+		var call: Dictionary = call_parts(text.substr(0, at).strip_edges())
+		if call.is_empty() or str(call.get("method", "")) != "get":
+			return {}
+		var arguments: PackedStringArray = call.get("args", PackedStringArray())
+		if arguments.size() != 1 or not _is_string_literal(arguments[0]):
+			return {}
+		var property_name: String = _unquote(arguments[0])
+		var receiver: String = str(call.get("target", "")).strip_edges()
+		if not is_identifier(property_name) or receiver.is_empty():
+			return {}
+		return {"object": _receiver_object(receiver, context), "segments": [
+			{"text": property_name, "tone": "name"},
+			{"text": operator, "tone": "plain"},
+			{"text": expression_text(text.substr(at + operator.length()), context), "tone": "value"}
+		]}
+	return {}
+
+
+## The object a receiver names: the script's own object for a bare or `self` call, the last path
+## segment for a `$Node` / `%Node` reference, and the receiver as written for anything else.
+static func _receiver_object(receiver: String, context: Dictionary) -> String:
+	var text: String = receiver.strip_edges()
+	if text.is_empty() or text == "self":
+		return script_object(context)
+	return object_of_reference(text)
+
+
+## M40/M41. The engine class an object label is known to be - the sheet's own object map first (an
+## @onready node's declared type, the pack's host), then the script's own class for its own object,
+## then the label itself when it names a class. "" when nothing is known, which is the cue to keep
+## the general reading rather than guess a class-specific one.
+static func object_class_of(object_label: String, context: Dictionary) -> String:
+	var label: String = object_label.strip_edges()
+	if label.is_empty():
+		return str(context.get("self_class", ""))
+	var classes: Dictionary = context.get("object_classes", {})
+	var known: String = str(classes.get(label, ""))
+	if not known.is_empty():
+		return known
+	if label == script_object(context) or label == OBJECT_SYSTEM:
+		return str(context.get("self_class", ""))
+	return label if ClassDB.class_exists(label) else ""
+
+
+## True when a known class IS one of `bases` (its own name or a subclass of one).
+static func _class_is_any(class_name_str: String, bases: PackedStringArray) -> bool:
+	var bare: String = class_name_str.strip_edges()
+	if bare.is_empty() or not ClassDB.class_exists(bare):
+		return false
+	for base: String in bases:
+		if bare == base or ClassDB.is_parent_class(bare, base):
+			return true
+	return false
+
+
+## `randf() < 0.3` as the event-sheet chance condition. Only a literal probability is claimed - a
 ## computed one has no honest percentage to show.
 static func _chance_condition(text: String) -> Dictionary:
 	var at: int = top_level_index(text, " < ")
@@ -1692,7 +2242,7 @@ static func _input_condition(text: String) -> Dictionary:
 	# ── N9 ──────────────────────────────────────────────────────────────────────────────────────
 	# The releases, the InputEvent spellings and the two raw device questions. An `event.` line asks
 	# about the ONE event the handler was handed, which is a different question from the device's live
-	# state, so the reading says which - the sheet's own distinction between a trigger and a check.
+	# state, so the reading says which - the same distinction a trigger and a check already draw.
 	var call: Dictionary = call_parts(text)
 	if call.is_empty():
 		return {}
@@ -1717,8 +2267,8 @@ static func _input_condition(text: String) -> Dictionary:
 
 
 ## N9. `Input.is_action_just_released("jump")` and the two `event.is_action_*` spellings, as the
-## Keyboard rows a sheet reader knows. `this_event` marks the InputEvent forms, which ask about the
-## one event the handler was handed rather than about the device's live state.
+## Keyboard rows a reader knows. `this_event` marks the InputEvent forms, which ask about the one
+## event the handler was handed rather than about the device's live state.
 static func input_phase_sentence(action_value: String, pressed: bool, this_event: bool) -> Dictionary:
 	var shown: String = strip_action_name(action_value)
 	if shown.is_empty():
@@ -1733,7 +2283,8 @@ static func input_phase_sentence(action_value: String, pressed: bool, this_event
 
 ## N9. `KEY_X` / `MOUSE_BUTTON_LEFT` as the key or button a reader would say. Only a bare engine
 ## constant is claimed: a computed keycode has no letter to print.
-static func _key_sentence(object_name: String, prefix: String, constant: String, template: String) -> Dictionary:
+static func _key_sentence(object_name: String, prefix: String, constant: String,
+		template: String) -> Dictionary:
 	var bare: String = constant.strip_edges()
 	if not bare.begins_with(prefix) or not is_identifier(bare):
 		return {}
@@ -1741,7 +2292,7 @@ static func _key_sentence(object_name: String, prefix: String, constant: String,
 	if named.is_empty():
 		return {}
 	# A single letter or digit stays the character it is; a word key reads as the word ("SPACE" is
-	# Space), and a mouse button reads in the lower case a sheet writes it in.
+	# Space), and a mouse button reads in the lower case it is written in.
 	var shown: String = named if named.length() == 1 else named.capitalize()
 	if object_name == OBJECT_MOUSE:
 		shown = shown.to_lower()
@@ -1816,7 +2367,7 @@ static func _rewrite_calls(text: String) -> String:
 	return out
 
 
-## The reading of one call, or "" when the head is not in the curated table.
+## The event-sheet reading of one call, or "" when the head is not in the curated table.
 static func _idiom_for(head: String, arguments: PackedStringArray) -> String:
 	if head.is_empty():
 		return ""
@@ -1832,7 +2383,7 @@ static func _idiom_for(head: String, arguments: PackedStringArray) -> String:
 		return _fill(translate("{value} kept between {low} and {high}"), {
 			"value": arguments[0], "low": arguments[1], "high": arguments[2]
 		})
-	# A no-argument `get_thing()` is a PROPERTY READ wearing a call's clothes: a sheet shows the
+	# A no-argument `get_thing()` is a PROPERTY READ wearing a call's clothes: an event sheet shows the
 	# property, so `host.get_wall_normal().x` reads `host.wall_normal.x` and the possessive lens can
 	# then spell it `host's wall normal X`. Only the zero-argument form is claimed - `get_node(path)`
 	# takes an argument and stays the call it is.
@@ -1943,7 +2494,7 @@ static func call_parts(text: String) -> Dictionary:
 
 
 ## The `&"action"` StringName prefix dropped, the QUOTES kept: an input action is a string the
-## user typed, and a sheet shows it as one ("jump" is down). Kept quoted, the name lens also
+## user typed, and an event sheet shows it as one ("jump" is down). Kept quoted, the name lens also
 ## knows to leave it alone (it never rewrites inside a literal), so `ui_accept` stays `ui_accept`.
 static func strip_action_name(value: String) -> String:
 	var bare: String = _unquote(value.strip_edges().trim_prefix("&"))
@@ -2011,16 +2562,25 @@ static func _split_object(target: String, context: Dictionary) -> Array:
 		text = text.substr(5)
 	var dot_at: int = text.find(".")
 	var head: String = text if dot_at <= 0 else text.substr(0, dot_at)
-	# M25. An ENGINE property of the script's own object belongs to that object, exactly as the sheet
-	# draws Sprite > Set X. A plain script variable is not one of these, and stays with System.
+	# M25. An ENGINE property of the script's own object belongs to that object, exactly as an event
+	# sheet draws Sprite > Set X. A plain script variable is not one of these, and stays with System.
 	if is_engine_property(head, context):
 		return [script_object(context), engine_member_name(text)]
 	if dot_at <= 0:
-		return [self_object, text]
+		return [self_object, _member_word(text)]
 	var object_name: String = head
 	if object_name == "self":
 		object_name = script_object(context)
-	return [object_name, text.substr(dot_at + 1)]
+	# M47. `$Enemies/Boss` is the object `Boss` - the name a reader sees in the scene tree.
+	return [object_of_reference(object_name), _member_word(text.substr(dot_at + 1))]
+
+
+## M43. The event-sheet word for a member of ANOTHER object - only the renamed ones. The axis rule
+## that `engine_member_name` also applies belongs to the script's own object, where the sheet knows
+## the member IS the node's place; on someone else's `position.x` it would drop a segment a reader
+## needs.
+static func _member_word(chain: String) -> String:
+	return translate(str(MEMBER_WORDS[chain])) if MEMBER_WORDS.has(chain) else chain
 
 
 ## M25. True when `name` is a property the ENGINE reports on the object this script is - the set is
@@ -2030,7 +2590,7 @@ static func is_engine_property(property_name: String, context: Dictionary) -> bo
 	return properties.has(property_name.strip_edges())
 
 
-## M25. What an engine property chain is CALLED on the row: a sheet writes an object's place as X
+## M25. What an engine property chain is CALLED on the row: an event sheet writes an object's place as X
 ## and Y, so `position.x` reads X. Everything else keeps its chain and the possessive lens spells it.
 static func engine_member_name(chain: String) -> String:
 	var parts: PackedStringArray = chain.split(".", false)
@@ -2038,6 +2598,10 @@ static func engine_member_name(chain: String) -> String:
 		var axis: String = parts[1].to_lower()
 		if axis == "x" or axis == "y" or axis == "z":
 			return axis.to_upper()
+	# M43. An event-sheet object has an ANGLE. `rotation` is the same angle in radians, and saying so is
+	# the one Godot fact worth keeping - the two numbers are not interchangeable.
+	if MEMBER_WORDS.has(chain):
+		return translate(str(MEMBER_WORDS[chain]))
 	return chain
 
 
@@ -2137,12 +2701,21 @@ static func _receiver_idiom(chain: String, arguments: PackedStringArray) -> Stri
 	var receiver: String = chain.substr(0, dot_at)
 	var method: String = chain.substr(dot_at + 1)
 	# N6/N7. The two shapes whose reading depends on the ARGUMENTS rather than on the method alone:
-	# `substr` is the sheet's left() from zero and its mid() anywhere else, and a config read says
-	# whether it has a fallback. Everything else is one method, one pattern.
+	# `substr` is left() from zero and mid() anywhere else, and a config read says whether it has a
+	# fallback. Everything else below is one method, one pattern.
 	var shaped: String = _shaped_receiver_idiom(receiver, method, arguments)
 	if not shaped.is_empty():
 		return shaped
 	var pattern: String = str(RECEIVER_IDIOMS.get(chain, RECEIVER_IDIOMS.get(method, "")))
+	if MEASURED_IDIOMS.has(method):
+		var forms: Array = MEASURED_IDIOMS[method]
+		var own_place: bool = OWN_POSITION_NAMES.has(receiver.trim_prefix("self."))
+		pattern = str(forms[0] if own_place else forms[1])
+	# M47. `enemy.get("hp")` names a property, and an event sheet shows the property, never the lookup.
+	if method == "get" and arguments.size() == 1 and _is_string_literal(arguments[0]):
+		var property_name: String = _unquote(arguments[0])
+		if is_identifier(property_name):
+			return "%s's %s" % [receiver, property_name]
 	if pattern.is_empty():
 		return ""
 	# The pattern must account for EVERY argument. Without this, `s.find(x, from)` would fill the one
@@ -2165,17 +2738,19 @@ static func _slot_count(pattern: String) -> int:
 
 
 ## N6/N7. The receiver idioms whose reading is decided by the argument list.
-static func _shaped_receiver_idiom(receiver: String, method: String, arguments: PackedStringArray) -> String:
+static func _shaped_receiver_idiom(receiver: String, method: String,
+		arguments: PackedStringArray) -> String:
 	if method == "substr" and arguments.size() == 2:
 		if arguments[0].strip_edges() == "0":
 			return "left(%s, %s)" % [receiver, arguments[1]]
 		return "mid(%s, %s, %s)" % [receiver, arguments[0], arguments[1]]
-	# `cfg.get_value(section, key)` is the sheet's "read an item from storage"; the section is a
+	# `cfg.get_value(section, key)` is the read-an-item-from-storage expression; the section is a
 	# GDScript filing detail the Storage object already implies, so only the KEY is in the sentence.
 	if method == "get_value" and arguments.size() == 2:
 		return _fill(translate("item {key}"), {"key": arguments[1]})
 	if method == "get_value" and arguments.size() == 3:
-		return _fill(translate("item {key} (default {fallback})"), {"key": arguments[1], "fallback": arguments[2]})
+		return _fill(translate("item {key} (default {fallback})"),
+			{"key": arguments[1], "fallback": arguments[2]})
 	return ""
 
 

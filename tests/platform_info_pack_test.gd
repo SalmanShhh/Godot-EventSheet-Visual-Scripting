@@ -1,4 +1,4 @@
-# EventForge - the Platform Info pack (Construct's Platform Info, Godot-shaped). The pack is a
+# EventForge - the Platform Info pack (the event-sheet Platform Info block, Godot-shaped). The pack is a
 # bank of PURE engine queries, so the test instantiates the shipped addon and calls every verb
 # headless: conditions must return bools, expressions their advertised types, and nothing may
 # crash under the headless display server (which answers with defaults - values are the OS's

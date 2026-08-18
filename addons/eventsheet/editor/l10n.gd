@@ -59,7 +59,7 @@ static func rescan() -> void:
 			continue
 		for file_name: String in DirAccess.get_files_at(dir_path):
 			load_translation_file("%s/%s" % [dir_path, file_name])
-	# Pack-local translations (the Construct lang.json idea): a pack ships
+	# Pack-local translations (the lang.json idea other event-sheet editors use): a pack ships
 	# eventsheet_addons/<pack>/translations.csv - same drop-in CSV shape, one column per
 	# locale - and its display names/descriptions/templates localise everywhere they show
 	# (picker rows, tooltips, viewport sentences). Merged after the editor's own catalogs,

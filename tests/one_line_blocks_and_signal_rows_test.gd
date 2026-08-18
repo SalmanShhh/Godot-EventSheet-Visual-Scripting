@@ -1,4 +1,4 @@
-# Godot EventSheets - M24 / M28 / M29 / M35: the four shapes a Construct reader expects to find
+# Godot EventSheets - M24 / M28 / M29 / M35: the four shapes an event-sheet reader expects to find
 # where real GDScript writes something else.
 #
 #   M24  `and` never appears INSIDE a condition cell. Each top-level conjunct is a condition line of
@@ -124,7 +124,7 @@ static func _stacked_conditions(view: EventSheetViewport, rows: PackedStringArra
 	var ok: bool = true
 	ok = _check("a ternary's `and` test stacks as two condition lines",
 		_reading_at(rows, "Return host's wall normal X"),
-		"host exists > host is on wall | Return host's wall normal X") and ok
+		"host exists > host Is by wall | Return host's wall normal X") and ok
 	ok = _check("a ternary's `or` test is the OR block",
 		_reading_at(rows, "Return \"gold\""), "ORhp > 100 > ORseconds left > 9 | Return \"gold\"") and ok
 	ok = _check("no condition cell anywhere in the fixture spells `and`",
@@ -158,12 +158,12 @@ static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray
 	ok = _check("and the lambda's body is its action row",
 		_reading_at(rows, "Subtract 1 from seconds left"), " | Subtract 1 from seconds left") and ok
 	ok = _check("a multi-line lambda's trigger carries its payload chip",
-		_reading_at(rows, "➜host On Body Entered"), "➜host On Body Enteredbody | ") and ok
+		_reading_at(rows, "➜host On collision with"), "➜host On collision withbody | ") and ok
 	# The payload used to be crammed INSIDE the trigger cell ("On Hit   body"), because a chip after a
 	# trigger cell drew as a sliver. It is now the same span a declared handler's trigger row draws,
 	# so one event reads one way whether it was wired with a func or with a lambda.
 	ok = _check("and that chip is the shared trigger-payload span, not words inside the cell",
-		_span_kinds(view, "On Body Entered"), "|trigger|trigger_payload") and ok
+		_span_kinds(view, "On collision with"), "|trigger|trigger_payload") and ok
 	ok = _check("and its first statement is an action row",
 		_reading_at(rows, "Add 1 to seconds left"), " | Add 1 to seconds left") and ok
 	ok = _check("and the branch inside that lambda is a sub-event of it",

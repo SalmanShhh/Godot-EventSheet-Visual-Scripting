@@ -1,4 +1,4 @@
-# Godot EventSheets - stable event numbers (the C3 margin numbers)
+# Godot EventSheets - stable event numbers (the event-sheet margin numbers)
 # Every EventRow gets a 1-based number in sheet order - flat and sequential through groups
 # and sub-events - computed from the SHEET, so folding or filtering never renumbers and
 # "check event 34" stays meaningful. Pins: the numbering walk (groups descend, sub-events

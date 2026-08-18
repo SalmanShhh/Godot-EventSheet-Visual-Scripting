@@ -1,4 +1,4 @@
-# Godot EventSheets - batch param edit (the C3 edit-many reflex): a condition/action that
+# Godot EventSheets - batch param edit (the event-sheet edit-many reflex): a condition/action that
 # appears more than once across the selected rows edits ONCE - the dialog's values apply
 # to every matching instance in a single undo step. Pins: the enumeration walk (same
 # provider + ace id groups, sub-events and groups descend, singletons excluded), the

@@ -1,4 +1,4 @@
-# EventForge - render harness (dev tool) for the C3-style Bookmarks panel: builds a sheet
+# EventForge - render harness (dev tool) for the event-sheet Bookmarks panel: builds a sheet
 # with a few bookmarked events, opens the panel, and screenshots it. Run NON-headless:
 #   godot --path . --script tools/render_bookmarks_panel_preview.gd
 @tool

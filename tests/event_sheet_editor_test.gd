@@ -393,7 +393,7 @@ static func run() -> bool:
     # row the built menu is [0]="Add Sub-Event", [1]="Convert to AND/OR Block".
     dock._build_row_context_menu(dock_viewport.get_flat_rows()[0].get("row"))
     all_passed = _check("or block toggle is second row menu item", dock._row_context_menu.get_item_id(1), EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK) and all_passed
-    # C3-parity items: Cut sits with Copy/Paste; the Insert submenu leads with Event Above.
+    # Event-sheet-parity items: Cut sits with Copy/Paste; the Insert submenu leads with Event Above.
     all_passed = _check("cut is offered on the row menu", dock._row_context_menu.get_item_index(EventSheetDock.ROW_MENU_CUT) >= 0, true) and all_passed
     all_passed = _check("insert submenu leads with Event Above", dock._row_insert_submenu.get_item_id(0), EventSheetDock.ROW_MENU_ADD_EVENT_ABOVE) and all_passed
     all_passed = _check("copy as text lives in the More submenu", dock._row_more_submenu.get_item_index(EventSheetDock.ROW_MENU_COPY_AS_TEXT) >= 0, true) and all_passed

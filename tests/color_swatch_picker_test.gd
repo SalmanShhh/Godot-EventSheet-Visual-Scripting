@@ -1,4 +1,4 @@
-# Godot EventSheets - inline colour-swatch picker (Construct-style).
+# Godot EventSheets - inline colour-swatch picker (event-sheet style).
 #
 # Clicking the colour swatch drawn on a condition/action cell opens a ColorPicker right there (no dialog)
 # and writes the chosen colour back into the ACE's Color param. Pins: finding WHICH param holds the
@@ -37,7 +37,7 @@ static func run() -> bool:
 	all_passed = _check("the written colour round-trips losslessly",
 		parsed is Color and (parsed as Color).is_equal_approx(picked), true) and all_passed
 
-	# ── The saved palette store (the C3 swatch shelf) ──
+	# ── The saved palette store (the event-sheet swatch shelf) ──
 	EventSheetColorPresets.reset_for_tests()
 	all_passed = _check("the shelf starts empty", EventSheetColorPresets.all().size(), 0) and all_passed
 	EventSheetColorPresets.add(Color.RED)

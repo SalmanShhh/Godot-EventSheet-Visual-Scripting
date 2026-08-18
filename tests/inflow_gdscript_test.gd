@@ -125,7 +125,7 @@ static func run() -> bool:
 	all_passed = _check("the added block seeds an editable comment, not a bare pass",
 		(event.actions[event.actions.size() - 1] as RawCodeRow).code.begins_with("# GDScript"), true) and all_passed
 
-	# C3-style toolbar/menu path: "Add Code" targets the SELECTED event (no right-click context).
+	# Event-sheet toolbar/menu path: "Add Code" targets the SELECTED event (no right-click context).
 	for entry in editor_viewport.get_flat_rows():
 		var sel_row: EventRowData = entry.get("row")
 		if sel_row != null and sel_row.source_resource == event:

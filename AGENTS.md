@@ -58,7 +58,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - `docs/internal/SPEC-gdscript-pairing.md` - how the sheet pairs with GDScript (blocks, codegen tooltips, expressions, C3 synonyms, importer round-trip)
 - `docs/GUIDE-THEMING.md` - designer-facing theme workflow
 - `docs/internal/SPEC-layout-alignment.md` - stacked layout tuning
-- `docs/GUIDE-C3-MIGRATION.md` - user-facing C3→Godot concept/behavior/plugin map
+- `docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md` - user-facing C3→Godot concept/behavior/plugin map
 - `docs/GUIDE-CUSTOM-BLOCKS.md` - the Custom Block API (register non-ACE row kinds; contract, built-ins, use cases)
 - `docs/GUIDE-TRANSLATING-YOUR-GAME.md` - localisation the Godot way (globe-marked params, POT, Set Language)
 - `docs/GUIDE-SAVING-AND-LOADING.md` - the save story (six slot formats, the persist group, the `save_state`/`load_state` seam every stateful pack ships, Save Studio)

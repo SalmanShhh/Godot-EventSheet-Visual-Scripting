@@ -30,7 +30,7 @@ extends RefCounted
 # without a live viewport; the viewport keeps a static forwarder for any class-name caller.
 
 ## The alpha floor a published verb's header wash keeps in READING mode. Reading mode drops the
-## "Action" / "Condition" / "Expression" word badge from the header (a Construct Function block
+## "Action" / "Condition" / "Expression" word badge from the header (an event-sheet Function block
 ## carries its name and its inputs, nothing else), so the role tint becomes the ONLY kind cue and
 ## has to be visible even when the theme ships verb_row_tint_strength at 0.0 for the authoring look.
 const VERB_KIND_TINT_ALPHA: float = 0.16
@@ -175,7 +175,7 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 	var line_total: int = 0
 	for child: EventRowData in scaffold_rows:
 		line_total += child.line_count
-	# The strip is the sheet's IDENTITY, read like Construct's Includes bar: closed, just the
+	# The strip is the sheet's IDENTITY, read like an event sheet's Includes bar: closed, just the
 	# inheritance breadcrumb (Node ▸ CharacterBody2D ▸ ExternalSample - the chain a beginner
 	# learns from); open, the secondary facts as a label+value LIST (never crammed inline on the
 	# bar), with the raw prelude lines as the last children, editable as before.
@@ -320,9 +320,9 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 ## pack author's own `## @ace_description` reads as the sentence above the verb it describes.
 func build_verb_block_rows(event_function: EventFunction, indent: int) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
-	# In READING mode the caption is gone: a Construct Function block is its name and its inputs, and
-	# the description is one of the things the ACE properties popup answers. (An unpublished helper
-	# keeps its doc comment - in the header's right lane, where a Construct user reads it.)
+	# In READING mode the caption is gone: an event-sheet Function block is its name and its inputs,
+	# and the description is one of the things the ACE properties popup answers. (An unpublished
+	# helper keeps its doc comment - in the header's right lane, where a reader expects it.)
 	if not _verb_reading_mode():
 		var note_row: EventRowData = _build_verb_note_row(event_function, define_role_for(event_function), indent)
 		if note_row != null:
@@ -349,7 +349,7 @@ func build_trailing_verb_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 
 
 ## Gathers a read-only preview's UNPUBLISHED helpers under one foldable "Helpers" bar, placed after the
-## last published verb and closed by default - the Construct reading, where a pack's vocabulary comes
+## last published verb and closed by default - the event-sheet reading, where a pack's vocabulary comes
 ## first and the functions it uses on itself sit in a group you open when you care. PURE VIEW: the rows
 ## are re-parented in the already-built list, so `sheet.functions`, `sheet.events` and the emitted file
 ## are untouched (exactly like the "Class setup" strip). Only in a read-only preview: on a sheet you are
@@ -431,12 +431,12 @@ func fold_nested_verb_rows(rows: Array[EventRowData], nested: bool = false) -> v
 			fold_nested_verb_rows(row_data.children, true)
 
 
-## THE HEAD OF AN OPENED PACK, in Construct grammar. A read-only preview used to open on two and a
+## THE HEAD OF AN OPENED PACK, in the event-sheet grammar. A read-only preview used to open on two and a
 ## half screens of prelude before its first rule: a Class setup bar, a `host` variable, a Host binding
 ## bar, every trigger as its own row, then 46 variable rows, then the pack's about text repeated at the
-## end as a grey wall. Construct puts that same material in four shapes, and this is the lens that
+## end as a grey wall. An event sheet puts that same material in four shapes, and this is the lens that
 ## reads it back as them:
-##   1. ONE Include bar carrying the pack's identity (the slot Construct uses for "Include: Sheet") -
+##   1. ONE Include bar carrying the pack's identity (the slot an event sheet uses for "Include: Sheet") -
 ##      the class-setup strip, the `host` variable and the Host binding bar fold INTO it.
 ##   2. The class description ONCE, as a comment bar right underneath (never again at the end).
 ##   3. Foldable group bars - Triggers, one per @export_group in FILE order, Settings for exported
@@ -629,7 +629,7 @@ func _scaffolding_about_text(strip_row: EventRowData) -> String:
 	return ""
 
 
-## The file's identity as ONE bar, in the slot Construct uses for its "Include: Sheet" strip. A pack
+## The file's identity as ONE bar, in the slot an event sheet uses for its "Include: Sheet" strip. A pack
 ## introduces itself as one - `⇥ Addon Pack  [FPSController] [v1.0.0]  behaves on a  [CharacterBody3D]`
 ## - and any other opened script names the OBJECT it drives instead (M34):
 ## `⇥ [icon] Player  a  [CharacterBody2D]  · player.gd · scene Player.tscn`. Inert (null source) and
@@ -786,7 +786,7 @@ func _build_pack_about_row(sheet: EventSheetResource, fallback_text: String = ""
 	return row_data
 
 
-## The pack's knobs as Construct setting folders: one bar per @export_group in FILE order, a Settings
+## The pack's knobs as event-sheet setting folders: one bar per @export_group in FILE order, a Settings
 ## bar for exported knobs declared before any group, and Internal state for the rest.
 func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[EventRowData]:
 	var order: PackedStringArray = PackedStringArray()
@@ -867,7 +867,7 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 	return row_data
 
 
-## A knob in the Construct reading: `[number] jump_velocity = 4.5  Upward velocity applied on a jump.`
+## A knob in the event-sheet reading: `[number] jump_velocity = 4.5  Upward velocity applied on a jump.`
 ## The type word leads as a chip (a reader learns WHAT it is, not that GDScript spells it `float`), and
 ## the @export / group chips are gone - the bar above the row carries the group, and everything inside
 ## a settings bar is exported by definition.
@@ -1061,7 +1061,7 @@ func _verb_metadata_editable() -> bool:
 
 ## True when the sheet is being READ rather than authored: an opened .gd preview (read_only, the safe
 ## default when a pack opens as a sheet) or the Simple pill's Reading Mode lens. In that state a
-## published verb draws as a Construct Function block - ƒ, its name, its inputs, nothing else - and its
+## published verb draws as an event-sheet Function block - ƒ, its name, its inputs, nothing else - and its
 ## picker metadata lives one click away in the ACE properties popup instead of on the row. Pure view
 ## state: no resource, no emission and no fold is touched by it.
 func _verb_reading_mode() -> bool:
@@ -1081,14 +1081,14 @@ func _scaffolding_suppressed() -> bool:
 
 ## True when a `##` line is one of the plugin's own `@ace_*` annotations. Those lines are METADATA -
 ## they already read as the verb's kind, name, category and description - so printing them as prose
-## next to the row they configure is noise a Construct user has no way to interpret. Every surface
+## next to the row they configure is noise a reader has no way to interpret. Every surface
 ## that turns doc comments into captions filters through here.
 static func is_ace_annotation_line(line: String) -> bool:
 	return strip_comment_prefix(line).strip_edges().begins_with("@ace_")
 
 
 ## The first real sentence of a function's doc comment - the caption a helper wears in its RIGHT lane,
-## because a doc comment is exactly how a Construct user reads a function they did not write. Empty
+## because a doc comment is exactly how a reader takes in a function they did not write. Empty
 ## when the function is undocumented or documented only with `@ace_*` annotation lines.
 static func helper_doc_line(event_function: EventFunction) -> String:
 	for line: String in event_function.doc_comment.split("\n"):
@@ -1403,7 +1403,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	row_data.disabled = not event_function.enabled
 	var role: String = define_role_for(event_function)
 	var badge_colors: Array = _define_role_colors(role)
-	# The whole verb reads as a Construct-style event block tinted by its ACE kind: a wash of the role's
+	# The whole verb reads as an event-sheet block tinted by its ACE kind: a wash of the role's
 	# accent behind the row (drawn by the renderer, which takes its strength from this alpha) plus a left
 	# accent bar, so Action / Condition / Expression are distinguishable at a glance, not only by the
 	# badge word. The alpha IS the theme's verb_row_tint_strength - the renderer reads it back off
@@ -1418,7 +1418,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	# The de-emphasised chips (static / internal) are the chip pair mixed toward its own background, so
 	# they read as quieter WITHOUT a second theme token.
 	var muted: Color = chip_fg.lerp(chip_bg, 0.45)
-	# READING MODE: the verb reads as a Construct Function block - ƒ, its name, one chip per input, and
+	# READING MODE: the verb reads as an event-sheet Function block - ƒ, its name, one chip per input, and
 	# nothing else. Its kind survives as the header's wash (the role accent at VERB_KIND_TINT_ALPHA),
 	# and every other property it has - category, description, what it gives back, whether it is
 	# featured, the line it inserts - lives one click away in the ACE properties popup.
@@ -1558,11 +1558,11 @@ static func _has_action_lane_span(spans: Array[SemanticSpan]) -> bool:
 	return false
 
 
-## ƒ + the verb's DISPLAY NAME + one chip per input, and nothing else - the Construct Function block
+## ƒ + the verb's DISPLAY NAME + one chip per input, and nothing else - the event-sheet Function block
 ## header a pack reads as in Reading mode. A display name written with the plugin's BBCode-lite
 ## (`Take [b]amount[/b] damage`) draws STYLED: the span carries the stripped text plus the parsed
 ## segments the renderer paints, so the tags themselves are never printed. An unpublished helper adds
-## the one caption a Construct user reads a function by - its doc comment - in the RIGHT lane, muted.
+## the one caption a reader takes a function in by - its doc comment - in the RIGHT lane, muted.
 func _build_verb_function_block_spans(event_function: EventFunction, role: String, display_name: String) -> Array[SemanticSpan]:
 	var badge_colors: Array = _define_role_colors(role)
 	var name_color: Color = _define_role_name_color(role)
@@ -1590,7 +1590,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 		plain_name = EventSheetBBCodeLite.strip(display_name)
 		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(display_name, name_color)
 	spans.append(_make_span(plain_name, SemanticSpan.SpanType.OBJECT, name_meta))
-	# The inputs, as Construct's own input chips - `enabled  true/false` - INLINE on the header line,
+	# The inputs, as an event sheet's own input chips - `enabled  true/false` - INLINE on the header line,
 	# because the header is the whole block: a reader takes in the verb and what it needs in one look.
 	var chip_texts: PackedStringArray = PackedStringArray()
 	for param: Variant in event_function.params:
@@ -1630,7 +1630,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 ## The verb's BODY as foldable children, plus the fold seed and the "+ Add event" way in. Shared by
 ## both header forms so a Reading-mode block opens exactly like an authoring one.
 func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunction, indent: int, display_name: String) -> void:
-	# Construct-style expandable block: the function BODY renders as foldable children (its conditions,
+	# Event-sheet expandable block: the function BODY renders as foldable children (its conditions,
 	# actions, and raw GDScript blocks), built by the SAME dispatcher as sheet events, folding like a group.
 	# On an AUTHORED sheet the body is LIVE - the child rows keep their source_resource so selection / drag /
 	# delete / inline edit reach the verb's own conditions and actions (edits route to event_function.events
@@ -2386,7 +2386,7 @@ static func function_body_info(code: String) -> Dictionary:
 	}
 
 
-## The Construct-3 sentence a single GDScript statement reads as: `score += wave[1]` becomes
+## The event-sheet sentence a single GDScript statement reads as: `score += wave[1]` becomes
 ## "Add wave[1] to score", `host.call_deferred("queue_free")` becomes "Destroy (at end of frame)"
 ## under the object "host". Returns {indent, object, segments} - each segment {text, tone} with tone
 ## "plain" | "name" | "value" - or {} when no shape is recognised.
@@ -2400,7 +2400,7 @@ static func function_body_info(code: String) -> Dictionary:
 ## read through the SAME producer - a shape must say one thing whether it was typed or picked.
 ## Kept here as a thin forwarder so the classifiers around it keep one import surface.
 static func statement_sentence(code: String, context: Dictionary = {}) -> Dictionary:
-	# M28: the awaits Construct has words for, ahead of the grammar - a hand-written `await` that no
+	# M28: the awaits an event sheet has words for, ahead of the grammar - a hand-written `await` that no
 	# ACE claimed (inside a lambda, inside a block that stayed code) reads the same as the lifted row
 	# beside it. Every other await falls straight through and keeps its GDScript.
 	var awaited: Dictionary = _raw_await_reading(code)
@@ -3479,7 +3479,7 @@ func _build_class_method_row(class_name_str: String, child_index: int, method_li
 
 
 ## M20 - an `@onready var hp_bar: ProgressBar = %HpBar` read as an OBJECT declaration rather than
-## as a value one: this is how Construct's object list is recovered from a script. The row says
+## as a value one: this is how an event sheet's object list is recovered from a script. The row says
 ## what the object is called, which node it is, and its class - with the class's own Godot icon,
 ## the same icon every later row using `hp_bar` as its object then shows (M13).
 ##
@@ -3496,10 +3496,15 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 	row_data.row_uid = "variable_tree_%d" % variable.get_instance_id()
 	row_data.line_count = 1
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	var node_reference: String = variable.default_value.strip_edges()
+	# ── M47 lens hook ──────────────────────────────────────────────────────────────────────────
+	# A `get_node("A/B")` lookup names the same object `$A/B` does, so it reads as that reference -
+	# and the `_or_null` spelling says, in the muted note, that the object may not be there.
+	var declaration_value: Dictionary = EventSheetViewportReadingRows.object_declaration_value(variable)
+	var node_reference: String = str(declaration_value.get("value", ""))
+	var missing_note: String = str(declaration_value.get("note", ""))
 	var declared_class: String = EventSheetViewportReadingRows.declared_class_of(variable)
 	# The object's NAME is not humanized, even with the lens on: this row is where the object gets
-	# its identity, and every later row refers to it by exactly this spelling. Construct shows an
+	# its identity, and every later row refers to it by exactly this spelling. An event sheet shows an
 	# object's name verbatim in its object list for the same reason.
 	var shown_name: String = variable.name
 	var spans: Array[SemanticSpan] = [
@@ -3523,6 +3528,11 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 	]
 	if not declared_class.is_empty():
 		spans.append(_make_span(declared_class, SemanticSpan.SpanType.COMMENT, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}))
+	if not missing_note.is_empty():
+		spans.append(_make_span(missing_note, SemanticSpan.SpanType.COMMENT, {
 			"editable": false, "kind": "variable", "line_index": 0,
 			"text_color": EventSheetPalette.TEXT_MUTED
 		}))
@@ -3953,7 +3963,7 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	row_data.line_count = _count_event_lines(event_row)
 	for local_variable_row in _build_local_variable_rows(event_row, indent + 1):
 		row_data.children.append(local_variable_row)
-	# M29 - a lambda handed to `connect` IS a trigger event; Construct has no lambdas, only triggers.
+	# M29 - a lambda handed to `connect` IS a trigger event; an event sheet has no lambdas, only triggers.
 	# Its reading sits with the actions (which is where the connect line sits) and above the real
 	# sub-events, because that is the order the file runs in.
 	for connect_row: EventRowData in _build_connect_lambda_rows(event_row, row_data.row_uid, indent + 1):
@@ -4018,6 +4028,13 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 		# "State: <pattern leaf>" - the same reading an authored Is In State header gets, derived
 		# from the code's own names rather than any pack. Other matches keep their pattern text.
 		var state_shaped: bool = _is_state_shaped_subject(match_row.match_expression)
+		# M37 - an event sheet has no switch. A reader of one knows if / else-if / else, so a
+		# match on an ORDINARY value reads as that chain: the first case as its test, every later case as
+		# an Else carrying its own test, `_` as a plain Else. Only shapes that MEAN "one of these values"
+		# qualify; a pattern that binds a name or destructures an array is doing something an Else-if
+		# cannot say, and keeps its pattern text.
+		var else_if_chain: bool = not state_shaped and _match_reads_as_else_if(match_row)
+		var chain_index: int = 0
 		for match_case: MatchCase in match_row.cases:
 			if match_case == null:
 				continue
@@ -4049,7 +4066,18 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			var case_label: String = pattern_text
 			if state_shaped and pattern_text != "_":
 				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
-			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row)
+			var chain_spans: Array[SemanticSpan] = []
+			if else_if_chain:
+				chain_spans = _match_else_if_condition_spans(match_row.match_expression, pattern_text, chain_index)
+				chain_index += 1
+			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row, false, chain_spans)
+			if not chain_spans.is_empty():
+				# An Else-if's test sits on the SECOND condition line, under the Else chip, so the row is
+				# two lines tall however few actions it carries.
+				var chain_lines: int = 0
+				for chain_span: SemanticSpan in chain_spans:
+					chain_lines = maxi(chain_lines, int(chain_span.metadata.get("line_index", 0)) + 1)
+				case_row.line_count = maxi(case_row.line_count, chain_lines)
 			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
 			for transition_child: EventRowData in transition_children:
 				case_row.children.append(transition_child)
@@ -4063,6 +4091,236 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				case_row.spans.insert(0, _make_span("◆", SemanticSpan.SpanType.KEYWORD, case_badge_meta))
 			rows.append(case_row)
 	return rows
+
+
+# ── M39: instantiate + add_child (+ the first position) is an event sheet's Create object ─────────
+# Godot spells spawning as three statements that only mean anything together; an event sheet spells
+# it as one action, and a reader takes in the three as noise around the one thing that happened. So
+# the run reads as `System ▸ Create object <Scene> at <P> (as b)` - the three lines stay exactly as
+# they are in the file, on hover and under a double-click, and nothing about emission changes.
+
+
+## The Create object runs in one action lane: {"leads": {index: {text, alias, line_count}}, "consumed":
+## {index: true}}. A group is a local declaration (or assignment) of `<scene>.instantiate()`, the
+## `add_child` / `add_sibling` that plants it, and - only when it comes straight after - the first
+## line that puts it somewhere.
+func _create_object_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	# Refreshed HERE, before anything reads it: the sentence below ADDS the new object's own name to the
+	# class map, and a refresh triggered later (by the icon lookup on the very span being built) would
+	# rebuild the map from the sheet and drop it again.
+	_reset_lens_caches_if_stale()
+	var index: int = 0
+	while index < actions.size() - 1:
+		var spawn: Dictionary = _instantiate_action_parts(actions[index])
+		if spawn.is_empty() or not _plants_node(actions[index + 1], str(spawn.get("alias", ""))):
+			index += 1
+			continue
+		var last: int = index + 1
+		var position_text: String = ""
+		if last + 1 < actions.size():
+			position_text = _placement_value(actions[last + 1], str(spawn.get("alias", "")))
+			if not position_text.is_empty():
+				last += 1
+		var indices: Array[int] = []
+		for member_index: int in range(index, last + 1):
+			indices.append(member_index)
+		leads[index] = {
+			"text": _create_object_text(str(spawn.get("source", "")), str(spawn.get("alias", "")),
+				position_text, bool(spawn.get("copy", false))),
+			"alias": str(spawn.get("alias", "")),
+			"line_count": last - index + 1,
+			"indices": indices,
+		}
+		for consumed_index: int in range(index + 1, last + 1):
+			consumed[consumed_index] = true
+		index = last + 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## `var b := bullet_scene.instantiate()` / `b = X.duplicate()` -> {alias, source, copy}, else {}.
+func _instantiate_action_parts(action_resource: Variant) -> Dictionary:
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled:
+		return {}
+	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	var alias: String = str(params.get("name", params.get("var_name", ""))).strip_edges()
+	var value: String = str(params.get("value", "")).strip_edges()
+	if alias.is_empty() or not EventSheetSentence.is_identifier(alias):
+		return {}
+	for suffix: String in [".instantiate()", ".duplicate()"]:
+		if not value.ends_with(suffix):
+			continue
+		var source: String = value.substr(0, value.length() - suffix.length()).strip_edges()
+		if source.is_empty() or not _is_identifier_path(source):
+			return {}
+		return {"alias": alias, "source": source, "copy": suffix == ".duplicate()"}
+	return {}
+
+
+## True when the action is the `add_child(b)` / `add_sibling(b)` (on this node or on a named parent)
+## that puts the freshly made object into the tree.
+func _plants_node(action_resource: Variant, alias: String) -> bool:
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled or alias.is_empty():
+		return false
+	if not (action.ace_id.contains("AddChild") or action.ace_id.contains("AddSibling")):
+		return false
+	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	return str(params.get("node", params.get("child", ""))).strip_edges() == alias
+
+
+## The value of a `b.global_position = P` / `b.position = P` that immediately follows, or "" when the
+## next line is anything else. Only the FIRST placement joins the row: the ones after it are ordinary
+## "set a property of the new object" actions, and an event sheet draws those separately too.
+func _placement_value(action_resource: Variant, alias: String) -> String:
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled or alias.is_empty():
+		return ""
+	if not action.ace_id.contains("SetProperty"):
+		return ""
+	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	if str(params.get("target", "")).strip_edges() != alias:
+		return ""
+	var property_name: String = str(params.get("property", "")).strip_edges()
+	if property_name != "global_position" and property_name != "position":
+		return ""
+	return str(params.get("value", "")).strip_edges()
+
+
+## The sentence itself. The object created is named the way an event sheet names it - the scene's
+## ROOT node - whenever the source is a preloaded scene this sheet declares; otherwise the variable's
+## own name, which is the honest answer when nothing else is known.
+func _create_object_text(source: String, alias: String, position_text: String, copy: bool) -> String:
+	var shown: String = source
+	var resolved: Dictionary = _lens_scene_vars.get(source, {}) as Dictionary
+	if not resolved.is_empty() and not str(resolved.get("name", "")).is_empty():
+		shown = str(resolved.get("name", ""))
+		# The new object answers to its local name for the rest of the event, and draws the scene root's
+		# picture while it does - the event-sheet "picked new instance", spelled in Godot's own names.
+		var icon_class: String = str(resolved.get("icon_class", ""))
+		if not icon_class.is_empty() and not alias.is_empty():
+			_lens_class_map[alias] = icon_class
+	if copy:
+		shown = "(%s %s)" % [EventSheetL10n.translate("copy of"), shown]
+	var text: String = "%s %s" % [EventSheetL10n.translate("Create object"), shown]
+	if not position_text.is_empty():
+		# Through the shared value lens, so the place a thing is made reads exactly as it would in any
+		# other cell - `Vector2(10, 20)` is a point, and an event sheet writes a point as `(10, 20)`.
+		text += " %s %s" % [EventSheetL10n.translate("at"), _reading_sentence(EventSheetSentence.expression_text(position_text))]
+	if not alias.is_empty():
+		text += " (%s %s)" % [EventSheetL10n.translate("as"), alias]
+	return text
+
+
+## M37 - whether a `match` says nothing more than "which of these values is it?", which is the only
+## thing an Else-if chain can say back. Every branch must be one or more PLAIN values; a pattern that
+## binds (`var n`), destructures (`[a, b]` / `{"k": v}`), or tests a type keeps the switch reading,
+## because rewriting it as `subject = pattern` would state something the code does not.
+static func is_plain_match_pattern(pattern: String) -> bool:
+	var text: String = pattern.strip_edges()
+	if text.is_empty():
+		return false
+	if text == "_":
+		return true
+	for term: String in EventSheetSentence.split_top_level(text, ", "):
+		var value: String = term.strip_edges()
+		if value.is_empty():
+			return false
+		# A binding, a destructuring pattern, an open range, or anything with a call in it.
+		if value.begins_with("var ") or value.begins_with("[") or value.begins_with("{") \
+				or value.contains("(") or value.contains("..") or value == "..":
+			return false
+		if value.begins_with("\"") or value.begins_with("'"):
+			continue
+		if value.is_valid_float() or (value.begins_with("-") and value.substr(1).is_valid_float()):
+			continue
+		if value == "true" or value == "false" or value == "null":
+			continue
+		# A bare or dotted identifier - a constant, an enum member, a named value.
+		if not _is_identifier_path(value):
+			return false
+	return true
+
+
+## `State.PATROL` / `SPEED` - every dot-separated piece a plain identifier. A small local helper on
+## purpose: the sentence grammar has the single-identifier test, and this is the one caller that needs
+## the dotted form.
+static func _is_identifier_path(text: String) -> bool:
+	var pieces: PackedStringArray = text.split(".")
+	if pieces.is_empty():
+		return false
+	for piece: String in pieces:
+		if not EventSheetSentence.is_identifier(piece):
+			return false
+	return true
+
+
+## True when EVERY case of a match is a plain-value branch and the default (if present) is last, which
+## is what makes the whole thing readable as one if / else-if / else chain.
+func _match_reads_as_else_if(match_row: MatchRow) -> bool:
+	if match_row == null or match_row.cases.size() < 1:
+		return false
+	if match_row.match_expression.strip_edges().is_empty():
+		return false
+	for case_index: int in range(match_row.cases.size()):
+		var match_case: MatchCase = match_row.cases[case_index]
+		if match_case == null or not ViewportRowBuilder.is_plain_match_pattern(match_case.pattern):
+			return false
+		# A `_` anywhere but last would mean the branches after it are dead; that is not a chain.
+		if str(match_case.pattern).strip_edges() == "_" and case_index != match_row.cases.size() - 1:
+			return false
+	return true
+
+
+## The condition cells of one Else-if arm: the Else chip alone for `_`, the bare test for the first
+## case, and the Else chip ABOVE the test for every case after it - which is exactly how an event sheet
+## draws an else-if, and exactly what a chained ternary already draws here. Several values in one
+## pattern (`"a", "b":`) become the OR block, since that is what the branch means.
+func _match_else_if_condition_spans(subject: String, pattern: String, chain_index: int) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var text: String = pattern.strip_edges()
+	if chain_index > 0 or text == "_":
+		spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "else_keyword",
+			"chip": true,
+			"hoverable": false,
+			"line_index": 0,
+			"object_label": _object_label_for("Core", "")
+		}.merged(condition_style_meta, true)))
+	if text == "_":
+		return spans
+	var tests: PackedStringArray = PackedStringArray()
+	for term: String in EventSheetSentence.split_top_level(text, ", "):
+		if not term.strip_edges().is_empty():
+			tests.append("%s == %s" % [subject.strip_edges(), term.strip_edges()])
+	if tests.is_empty():
+		return spans
+	# Routed through the shared conjunct/OR splitter so a multi-value branch draws the very same OR
+	# block a hand-written `if a or b:` draws, tone lens and all.
+	var carrier := EventRowData.new()
+	_append_conjunct_condition_lines(carrier, " or ".join(tests), 1 if chain_index > 0 else 0, condition_style_meta)
+	for carried: SemanticSpan in carrier.spans:
+		_say_equals_once(carried)
+		spans.append(carried)
+	return spans
+
+
+## An event sheet compares with a single `=`, and nobody typed the `==` in these cells: the reading
+## built it, out of a match pattern that has no operator at all. So it is written the way an event
+## sheet writes it. A comparison the user really did type is left exactly as typed, elsewhere and
+## on purpose.
+func _say_equals_once(span: SemanticSpan) -> void:
+	span.text = span.text.replace(" == ", " = ")
+	var segments: Array = span.metadata.get("bbcode_segments", []) as Array
+	for segment: Variant in segments:
+		var piece: Dictionary = segment as Dictionary
+		if piece == null:
+			continue
+		piece["text"] = str(piece.get("text", "")).replace(" == ", " = ")
 
 
 ## The friendly one-line reading of a case-body statement: a sentence when the statement
@@ -4198,7 +4456,11 @@ func _pattern_leaf(pattern_text: String) -> String:
 ## `negated` is for callers that already turned an inverted guard into its positive sentence
 ## (_friendly_guard_text does): they pass the inversion here so the ✕ still gets drawn. Callers
 ## handing over raw text can leave it false - the lens below finds a leading NOT on its own.
-func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource, negated: bool = false) -> EventRowData:
+## `condition_spans`, when given, REPLACES the single condition cell this would otherwise draw - the
+## M37 Else-if chain hands over its own stacked Else + test lines, built by the same helpers a ternary
+## chain uses, so both readings of "one of these branches runs" look identical on the sheet.
+func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource, negated: bool = false,
+		condition_spans: Array[SemanticSpan] = []) -> EventRowData:
 	var row := EventRowData.new()
 	row.indent = indent
 	row.row_type = EventRowData.RowType.EVENT
@@ -4206,6 +4468,16 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 	row.line_count = maxi(action_lines.size(), 1)
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	if not condition_spans.is_empty():
+		row.spans = condition_spans.duplicate()
+		for line_index: int in range(action_lines.size()):
+			row.spans.append(_make_span(action_lines[line_index] if not action_lines[line_index].is_empty() else " ", SemanticSpan.SpanType.ACTION, {
+				"lane": "action",
+				"kind": "match_case",
+				"editable": false,
+				"line_index": line_index
+			}.merged(action_style, true)))
+		return row
 	# M12 - a lifted `if not <cond>:` shows its inversion as the red ✕ in the badge column, exactly
 	# as an inverted ACE condition does, and the sentence beside it is the POSITIVE one. Callers
 	# that already stripped the negation pass plain text and nothing happens here.
@@ -4619,7 +4891,7 @@ const INPUT_HANDLER_TRIGGERS: Array[String] = ["OnInput", "OnUnhandledInput", "O
 
 
 ## The object a trigger row belongs to. A signal-backed trigger belongs to the NODE that emits it -
-## "Hurtbox > On Body Entered", the way Construct names the object before the verb - so a connected
+## "Hurtbox > On Body Entered", the way an event sheet names the object before the verb - so a connected
 ## handler reads as its source node rather than as the generic class the vocabulary filed it under.
 ## Falls back to the ordinary vocabulary label when the trigger names no source (a self-connection,
 ## a lifecycle handler).
@@ -4628,6 +4900,18 @@ func _handler_object_label(event_row: EventRow) -> String:
 	if not source_path.is_empty() and not source_path.begins_with("@") and not source_path.begins_with("autoload:"):
 		return source_path.get_file() if source_path.contains("/") else source_path
 	return _object_label_for(event_row.trigger_provider_id, event_row.trigger_id)
+
+
+## M42 - the class picture of the node a SCENE-wired signal comes from. The scene said what class the
+## emitter is when the connection was read, so this is a known answer rather than a guess; null for
+## every other trigger, which keeps its vocabulary icon.
+func _scene_trigger_icon(event_row: EventRow) -> Texture2D:
+	if event_row == null or not _viewport.show_object_icons:
+		return null
+	var source_class: String = str(event_row.get_meta("__scene_source_class", ""))
+	if source_class.is_empty():
+		return null
+	return ACEPickerDialog.editor_icon(source_class)
 
 
 ## The payload chips for a signal-backed trigger: one per handler parameter, named the way the
@@ -4644,11 +4928,11 @@ func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
 	return chips
 
 
-## Builtin categories that are OBJECTS in Construct's grammar, not part of System - a row of theirs
+## Builtin categories that are OBJECTS in the event-sheet grammar, not part of System - a row of theirs
 ## wears the device name in its object cell (Mouse, Keyboard, Gamepad, Touch).
 const INPUT_DEVICE_OBJECTS: Array[String] = ["Mouse", "Keyboard", "Gamepad", "Touch"]
 
-## `event is <class>` -> the Construct module that owns the trigger the branch reads as.
+## `event is <class>` -> the event-sheet module that owns the trigger the branch reads as.
 const INPUT_EVENT_MODULES: Dictionary = {
 	"InputEventMouseMotion": "Mouse",
 	"InputEventMouseButton": "Mouse",
@@ -4662,7 +4946,7 @@ const INPUT_EVENT_MODULES: Dictionary = {
 ## is not one of the shapes below (which keeps today's reading, never a guessed one).
 ##
 ## An `_input` / `_unhandled_input` / `_unhandled_key_input` body branches on the event's TYPE, and
-## that branch is exactly one Construct trigger: `event is InputEventMouseMotion` is Mouse > On
+## that branch is exactly one event-sheet trigger: `event is InputEventMouseMotion` is Mouse > On
 ## mouse moved, `event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE` is
 ## Keyboard > On Escape pressed. Display only - the file still holds one handler with an if/elif chain.
 ##
@@ -4761,7 +5045,7 @@ func _input_branch_sentence(event_class: String, edge: int, button: String, key:
 	return ""
 
 
-## "MOUSE_BUTTON_LEFT" -> "left" (the word Construct puts in the sentence).
+## "MOUSE_BUTTON_LEFT" -> "left" (the word an event sheet puts in the sentence).
 func _mouse_button_word(button: String) -> String:
 	return button.trim_prefix("MOUSE_BUTTON_").to_lower().replace("_", " ")
 
@@ -4773,7 +5057,7 @@ func _key_word(key: String) -> String:
 	return key.trim_prefix("KEY_").capitalize()
 
 
-## Construct's own words for the pieces of an input event a row reads out: the mouse delta is
+## The event-sheet words for the pieces of an input event a row reads out: the mouse delta is
 ## `mouse's ΔX` / `ΔY`, and the static-typing casts around `event` are not part of any sentence.
 ## Applied to every row's text - `event.relative` and an `as InputEvent…` cast only ever appear
 ## inside an input handler, so there is nothing else for it to touch.
@@ -4865,7 +5149,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	# An input handler's branch reads as the trigger it is - one Construct trigger row per branch,
+	# An input handler's branch reads as the trigger it is - one event-sheet trigger row per branch,
 	# in place of both the Else chip (a branch is its own trigger, not a continuation) and the
 	# generic "On unhandled input event" cell. Pure lens; the emitted handler is untouched.
 	var input_reading: Dictionary = _input_branch_reading(event_row)
@@ -4894,10 +5178,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		)
 		condition_line_index += 1
 	if input_reading.is_empty() and event_row.else_mode != EventRow.ElseMode.NONE:
-		# The event-sheet Else reads as a CONDITION, exactly like Construct's System Else: a "System | Else"
+		# The event-sheet Else reads as a CONDITION, exactly like the System Else does: a "System | Else"
 		# chip heading the condition lane (an ELIF is the Else chip with its own conditions beneath). The
 		# row's trigger stays structural (it is what chains the block into the same handler) but is NOT
-		# re-drawn - a C3 Else block never repeats its trigger. Canvas-drawn, so translated at build time.
+		# re-drawn - an Else block never repeats its trigger. Canvas-drawn, so translated at build time.
 		var else_text: String = EventSheetL10n.translate("Else" if event_row.else_mode == EventRow.ElseMode.ELSE else "Else If")
 		spans.append(
 			_make_span(
@@ -4951,7 +5235,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(
 			_make_span(
 				# ── M27 lens hook (tick triggers) ──────────────────────────────────────────────
-				# Construct's words for the two ticks; every other trigger keeps its own name.
+				# The event-sheet words for the two ticks; every other trigger keeps its own name.
 				EventSheetViewportReadingRows.tick_trigger_words(
 					event_row.trigger_id,
 					_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id)
@@ -4964,12 +5248,15 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"chip": true,
 					"line_index": condition_line_index,
 					"object_label": _handler_object_label(event_row),
-					"object_icon": _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
+					# M42 - a handler the SCENE wired knows exactly which node emits and what class it
+					# is, so that node's own picture leads the row instead of the generic trigger icon.
+					"object_icon": _scene_trigger_icon(event_row) if _scene_trigger_icon(event_row) != null \
+						else _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
 				}.merged(condition_style_meta, true)
 			)
 		)
 		# A signal handler's PARAMETERS are the trigger's payload - the body that entered, the item
-		# that was picked up. Construct shows them as chips beside the trigger, so a reader knows
+		# that was picked up. An event sheet shows them as chips beside the trigger, so a reader knows
 		# what the event hands them without opening the code.
 		var handler_payload: PackedStringArray = _handler_payload_chips(event_row)
 		for payload_index in range(handler_payload.size()):
@@ -5075,7 +5362,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		if pick == null or not pick.enabled:
 			continue
 		# ── M33 lens hook (loop rows) ──────────────────────────────────────────────────────────
-		# One call: the loop's Construct words, and the object a For-each-child loop belongs to.
+		# One call: the loop's familiar words, and the object a For-each-child loop belongs to.
 		# A filtered or limited pick says more than the loop words can carry, so it keeps its own text.
 		var loop_reading: Dictionary = {}
 		if pick.predicate_expression.strip_edges().is_empty() and pick.pick_first_n <= 0:
@@ -5092,7 +5379,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"pick_index": pick_index,
 					"chip": true,
 					"line_index": condition_line_index,
-					# Loops are System's, like in Construct - and the label puts the line in the
+					# Loops are System's, as in any event sheet - and the label puts the line in the
 					# shared object sub-lane, so its text aligns with the cells above it.
 					"object_label": loop_object if not loop_object.is_empty() else _object_label_for("Core", ""),
 					"object_icon": _reading_class_icon_for(loop_object)
@@ -5100,8 +5387,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 		condition_line_index += 1
-	# In a READ-ONLY preview a body-only row leaves its left cell blank, exactly as Construct draws one:
-	# "Always" is a placeholder that invites a condition, and a view that accepts none must not invite.
+	# In a READ-ONLY preview a body-only row leaves its left cell blank, exactly as an event sheet
+	# draws one: "Always" is a placeholder that invites a condition, and a view that accepts none
+	# must not invite.
 	var always_placeholder_suppressed: bool = in_verb_body and _scaffolding_suppressed()
 	if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE and not always_placeholder_suppressed:
 		# An event with no conditions reads as "every tick"; render it as a real cell (not bare
@@ -5148,8 +5436,33 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 	if not event_row.actions.is_empty():
+		# M39 - the instantiate + add_child (+ first position) run is an event sheet's single Create object.
+		# Worked out once for the whole lane, because a group is recognised by what FOLLOWS its lead.
+		var create_groups: Dictionary = _create_object_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
+			# A line the Create object row above already said. Skipped without advancing the line index,
+			# which is what turns three lines into one row.
+			if bool(create_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			if (create_groups.get("leads", {}) as Dictionary).has(action_index):
+				var create: Dictionary = (create_groups["leads"] as Dictionary)[action_index]
+				spans.append(_make_span(str(create.get("text", "")), SemanticSpan.SpanType.ACTION, {
+					"lane": "action",
+					"kind": "action",
+					"ace_index": action_index,
+					"ace_enabled": true,
+					"chip": true,
+					"line_index": action_line_index,
+					"object_label": _object_label_for("Core", ""),
+					"object_icon": _reading_class_icon_for(str(create.get("alias", ""))),
+					"compiled_lines": int(create.get("line_count", 1)),
+					# The statements this ONE cell stands for. Hover shows all of them, so the row never
+					# hides a line: it says what happened, and the file's own spelling is a pointer away.
+					"create_object_indices": create.get("indices", [])
+				}.merged(action_style_meta, true)))
+				action_line_index += 1
+				continue
 			# M29 - whichever shape the line took (a Call Method row or a verbatim block), the line
 			# that wires a lambda to a signal reads as a muted NOTE: the work it describes is drawn
 			# below it as the trigger event it is. Nothing is hidden - the note names the object and
@@ -5460,7 +5773,7 @@ func _count_event_lines(event_row: EventRow) -> int:
 	if event_row == null:
 		return 1
 	# Condition lane. An else row leads with its "System | Else" condition chip INSTEAD of a trigger line
-	# (a C3 Else block never repeats its trigger) - the span pass renders exactly one of the two, so the
+	# (an Else block never repeats its trigger) - the span pass renders exactly one of the two, so the
 	# count mirrors that with a plain either/or.
 	var condition_lines: int = 0
 	# Mirrors the span pass exactly: a recognized input branch draws ONE trigger line in place of
@@ -5693,9 +6006,12 @@ static func connect_lambda_parts(code: String) -> Dictionary:
 			continue
 		var type_at: int = bare.find(":")
 		args.append((bare.substr(0, type_at) if type_at > 0 else bare).strip_edges())
+	# ── M41 lens hook ──────────────────────────────────────────────────────────────────────────
+	# A collision signal reads as the event-sheet trigger it is, exactly as a declared handler's does.
+	var collision_words: String = EventSheetViewportReadingRows.collision_trigger_words(signal_bare)
 	return {
 		"object": object_word,
-		"trigger": "On %s" % signal_bare.capitalize(),
+		"trigger": collision_words if not collision_words.is_empty() else "On %s" % signal_bare.capitalize(),
 		"args": args,
 		"body": body_lines
 	}
@@ -5864,7 +6180,7 @@ func _mark_connect_reading(row_data: EventRowData, event_row: EventRow, anchor: 
 # ── M23: a ternary reads as a sub-event pair, never a condition in an action cell ───────────────
 
 
-## Rewrites a list of sibling rows so a statement carrying a ternary reads the way a Construct sheet
+## Rewrites a list of sibling rows so a statement carrying a ternary reads the way an event sheet
 ## would show the same branch: the condition on the LEFT, the statement re-read on the RIGHT with that
 ## branch's value, then an `Else` row for the other one (an Else-if chain for a nested ternary).
 ##
@@ -5878,8 +6194,193 @@ func expand_ternary_rows(rows: Array[EventRowData]) -> Array[EventRowData]:
 	var out: Array[EventRowData] = []
 	for row: EventRowData in rows:
 		row.children = expand_ternary_rows(row.children)
+		# M36 runs first: it REPLACES a loop row with the event its body reads as, and that event may
+		# itself carry a ternary the pass below still has to see.
+		var picked: Array[EventRowData] = _expand_picking_row(row)
+		if not picked.is_empty():
+			out.append_array(picked)
+			continue
 		out.append_array(_expand_ternary_row(row))
 	return out
+
+
+# ── M36: a loop over a group with one `if` inside is event-sheet picking, and reads as one event ──
+#
+# This is the event-sheet model: a condition on an object PICKS the instances, and the actions run
+# on the ones it picked. Godot has no picking, so the same idea is spelled as a loop with an `if` in
+# it - two rows for one thought. When the loop's ENTIRE body is that `if`, the pair reads as the one
+# event it means: the loop's object with a muted note saying where the instances came from, the `if`
+# as its condition, its body as the actions.
+#
+# A view over two unchanged rows. Both still sit in the sheet exactly as the file wrote them, so
+# emission and the byte round-trip are untouched; every row produced carries the LOOP's uid as its
+# statement uid, so selection, drag and the gutter address the whole reading as one. A body with any
+# statement outside the `if` is not this shape and keeps the plain For-each + sub-event reading -
+# there the loop really is doing something of its own.
+
+
+## The rows a loop-with-one-`if` reads as, or [] when this row is not that shape.
+func _expand_picking_row(row: EventRowData) -> Array[EventRowData]:
+	if not _viewport.is_reading_mode() or row.ternary_view or not row.picking_object.is_empty():
+		return []
+	if row.row_type != EventRowData.RowType.EVENT or not (row.source_resource is EventRow):
+		return []
+	var loop: EventRow = row.source_resource as EventRow
+	var words: Dictionary = _picking_words(loop)
+	if words.is_empty() or row.children.is_empty() or row.children.size() != loop.sub_events.size():
+		return []
+	var shifted: Array[EventRowData] = []
+	for child_index: int in range(row.children.size()):
+		var child: EventRowData = row.children[child_index]
+		if child.row_type != EventRowData.RowType.EVENT or not (child.source_resource is EventRow):
+			return []
+		if child.source_resource != loop.sub_events[child_index]:
+			return []
+		shifted.append(child)
+	# The first sub-event must be the `if` itself, and the ones after it can ONLY be its own else / elif
+	# arms. Two independent `if`s in a loop body are two conditions, not one - merging them would hoist
+	# the second out of the loop it runs in, which is the one thing this reading must never say.
+	if (shifted[0].source_resource as EventRow).conditions.is_empty():
+		return []
+	if (shifted[0].source_resource as EventRow).else_mode != EventRow.ElseMode.NONE:
+		return []
+	for arm_index: int in range(1, shifted.size()):
+		if (shifted[arm_index].source_resource as EventRow).else_mode == EventRow.ElseMode.NONE:
+			return []
+	for shifted_index: int in range(shifted.size()):
+		var moved: EventRowData = shifted[shifted_index]
+		_shift_row_indent(moved, row.indent - moved.indent)
+		moved.ternary_view = true
+		moved.ternary_anchor_uid = row.row_uid
+		moved.ternary_lead = shifted_index == 0
+		moved.disabled = moved.disabled or row.disabled
+	# Only the row that states the test wears the note: an Else arm has already been placed by it.
+	shifted[0].picking_object = str(words.get("object", ""))
+	shifted[0].picking_note = str(words.get("note", ""))
+	shifted[0].spans.clear()
+	return shifted
+
+
+## Whether a loop is the picking shape, and the words for it: the object its body works on (the
+## iterator's own name, which is what the body calls each instance) plus the muted note saying where
+## the instances came from. {} for anything that is not one plain For-each over a list.
+func _picking_words(loop: EventRow) -> Dictionary:
+	if loop == null or not loop.conditions.is_empty() or not loop.actions.is_empty():
+		return {}
+	if not loop.local_variables.is_empty() or loop.sub_events.is_empty() or loop.pick_filters.size() != 1:
+		return {}
+	if not loop.trigger_id.is_empty() or loop.else_mode != EventRow.ElseMode.NONE:
+		return {}
+	var pick: PickFilter = loop.pick_filters[0]
+	if pick == null or not pick.enabled or pick.iterator_name.strip_edges().is_empty():
+		return {}
+	# A filtered, ordered, capped, indexed or frame-spread loop is doing work of its own that the
+	# merged row would not say; only a plain walk of a list reads as picking.
+	if not pick.filter_conditions.is_empty() or not pick.predicate_expression.strip_edges().is_empty():
+		return {}
+	if not pick.order_by_expression.strip_edges().is_empty() or pick.pick_first_n != 0:
+		return {}
+	if not pick.index_name.strip_edges().is_empty() or pick.frame_spread_count != 0 or pick.frame_spread_budget_ms != 0.0:
+		return {}
+	# Repeat and While are counts and tests, not collections of instances - an event sheet spells those
+	# with its own loop rows and never as picking.
+	if pick.collection_kind == PickFilter.CollectionKind.REPEAT or pick.collection_kind == PickFilter.CollectionKind.WHILE:
+		return {}
+	var collection: String = pick.collection_value.strip_edges()
+	if collection.is_empty():
+		collection = pick.source_expression.strip_edges()
+	var note: String = _picking_source_note(pick.collection_kind, collection)
+	if note.is_empty():
+		return {}
+	return {"object": pick.iterator_name.strip_edges().capitalize(), "note": note}
+
+
+## The muted note beside the picked object: which instances these are.
+func _picking_source_note(collection_kind: int, collection: String) -> String:
+	if collection_kind == PickFilter.CollectionKind.GROUP and not collection.is_empty():
+		return "(%s %s)" % [EventSheetL10n.translate("group"), _quoted_group_name(collection)]
+	var group_name: String = _group_name_in(collection)
+	if not group_name.is_empty():
+		return "(%s \"%s\")" % [EventSheetL10n.translate("group"), group_name]
+	if collection == "get_children()":
+		return "(%s)" % EventSheetL10n.translate("children")
+	if collection.ends_with(".get_children()"):
+		var owner_name: String = collection.substr(0, collection.length() - ".get_children()".length()).strip_edges()
+		if _is_identifier_path(owner_name):
+			return "(%s %s)" % [EventSheetL10n.translate("children of"), EventSheetSentence.object_of_reference(owner_name)]
+	# Anything else has to be a NAMED list for this reading to be honest. `for i in 3:` is a count, and
+	# an arbitrary expression is a computation - neither is a set of instances to pick from, and
+	# labelling one "I (in 3)" says something the code never did.
+	if _is_identifier_path(collection):
+		return "(%s %s)" % [EventSheetL10n.translate("in"), EventSheetSentence.expression_text(collection)]
+	return ""
+
+
+## The group name inside `get_tree().get_nodes_in_group("enemies")`, or "" when the expression is
+## anything else. Written out rather than pattern-matched loosely: a near-miss would label a list of
+## something else as a group, which is worse than saying nothing.
+static func _group_name_in(collection: String) -> String:
+	var marker: String = "get_nodes_in_group(\""
+	var start: int = collection.find(marker)
+	if start < 0:
+		return ""
+	start += marker.length()
+	var end: int = collection.find("\"", start)
+	if end <= start or not collection.substr(end).begins_with("\")"):
+		return ""
+	return collection.substr(start, end - start)
+
+
+## A GROUP pick stores its name either bare or already quoted; the note always shows it quoted.
+static func _quoted_group_name(collection: String) -> String:
+	var text: String = collection.strip_edges()
+	if text.begins_with("\"") or text.begins_with("&\""):
+		return text.trim_prefix("&")
+	return "\"%s\"" % text
+
+
+## `enemy's hp < 10` -> `hp < 10`, but ONLY when the possessive is the picked object's own name. A
+## condition on some OTHER object inside the loop keeps its possessive, because there it is the thing
+## that says which object is meant.
+static func _strip_picked_possessive(text: String, picked_object: String) -> String:
+	var at: int = text.find("'s ")
+	if at <= 0:
+		return text
+	var owner_name: String = text.substr(0, at)
+	if not EventSheetSentence.is_identifier(owner_name) or owner_name.capitalize() != picked_object:
+		return text
+	return text.substr(at + 3)
+
+
+## M36 - the picked object and its note, written onto the first condition line once its spans exist.
+## The cell keeps its own condition text; what changes is that it now reads as a condition ON an
+## object, which is exactly what the loop around it was saying.
+func _apply_picking_note(row_data: EventRowData) -> void:
+	for span: SemanticSpan in row_data.spans:
+		if str(span.metadata.get("lane", "")) != "condition" or int(span.metadata.get("line_index", 0)) != 0:
+			continue
+		if not str(span.metadata.get("kind", "")) in ["condition", "match_case"]:
+			continue
+		span.metadata["object_label"] = row_data.picking_object
+		span.metadata["object_icon"] = _reading_class_icon_for(row_data.picking_object)
+		var owned: String = _strip_picked_possessive(span.text, row_data.picking_object)
+		if owned != span.text:
+			# The object column already names the thing; "Enemy | enemy's hp < 10" says it twice, and
+			# The event-sheet cell is just the property. Only the loop's OWN name is dropped.
+			span.text = owned
+			span.metadata.erase("bbcode_segments")
+			span.metadata.erase("value_ranges")
+		if not row_data.picking_note.is_empty():
+			# The note is a receipt, not part of the test: muted, so the eye lands on the condition.
+			# Written as segments because the styled runs behind the old text were measured against
+			# offsets the note has just moved, and re-deriving those costs a re-read of the whole cell.
+			span.metadata["bbcode_segments"] = [
+				{"text": "%s " % row_data.picking_note, "color": EventSheetPalette.TEXT_MUTED, "bold": false, "italic": false},
+				{"text": span.text, "color": null, "bold": false, "italic": false},
+			]
+			span.metadata.erase("value_ranges")
+			span.text = "%s %s" % [row_data.picking_note, span.text]
+		return
 
 
 ## One row's expansion: itself when nothing branches, else the actions before the branch, the branch
@@ -5903,7 +6404,7 @@ func _expand_ternary_row(row: EventRowData) -> Array[EventRowData]:
 
 
 ## The rows one event draws from `from_index` on. `hide_conditions` marks a CONTINUATION - the run of
-## actions after a branch, whose conditions the row above already drew, and which a C3 sheet never
+## actions after a branch, whose conditions the row above already drew, and which an event sheet never
 ## repeats. Recursive, so a second branching statement further down the same event splits again.
 func _expand_event_from(row: EventRowData, from_index: int, indent: int,
 		hide_conditions: bool) -> Array[EventRowData]:
@@ -5928,7 +6429,7 @@ func _expand_event_from(row: EventRowData, from_index: int, indent: int,
 	# The head vanishes only when it would draw NOTHING of its own - no conditions, no earlier
 	# actions, no sub-events - which is exactly the one-line verb body (`ƒ Wall Normal X`) the pair
 	# was designed for. Otherwise it survives and the branch rows become its sub-events, which is
-	# both what Construct draws and what keeps the head's conditions gating them.
+	# both what an event sheet draws and what keeps the head's conditions gating them.
 	var head_blank: bool = _slice_row_is_blank(head) and (hide_conditions or row.children.is_empty())
 	var branch_indent: int = indent if head_blank else indent + 1
 	var branch_rows: Array[EventRowData] = _build_ternary_branch_rows(
@@ -5937,7 +6438,7 @@ func _expand_event_from(row: EventRowData, from_index: int, indent: int,
 		return [row] if (not hide_conditions and from_index == 0) else [head]
 	var tail_rows: Array[EventRowData] = []
 	if not branch_is_last:
-		# Conditions, once hidden, stay hidden - a C3 sheet never repeats them further down the same event.
+		# Conditions, once hidden, stay hidden - an event sheet never repeats them further down the event.
 		tail_rows = _expand_event_from(row, action_index + 1, branch_indent, true)
 	elif head_blank and not _scaffolding_suppressed():
 		# The one shape with nowhere left to put the scaffolding: a head that drew NOTHING (the one-line
@@ -6010,7 +6511,7 @@ func _ternary_arms(found: Dictionary) -> Array:
 ## whose text STILL carries a ternary (two independent ones in a line) nests its own pair beneath it
 ## rather than flattening, because that is where the second branch actually applies.
 ##
-## Every arm AFTER the first is an else-if, and Construct spells an else-if as an Else event WITH a
+## Every arm AFTER the first is an else-if, and an event sheet spells an else-if as an Else event WITH a
 ## condition under it - two stacked condition cells on the one row. Drawing the arm's test alone would
 ## read as a sibling condition, i.e. as though both arms could fire.
 func _build_ternary_branch_rows(row: EventRowData, action_index: int, found: Dictionary, indent: int,
@@ -6038,7 +6539,7 @@ func _build_ternary_branch_rows(row: EventRowData, action_index: int, found: Dic
 
 ## One branch row's shell plus its CONDITION cells - the branch test read through the grammar's
 ## condition path, or the plain `Else` chip on the last arm. `else_if` stacks an `Else` chip ABOVE
-## that test on the same row, which is how Construct draws an else-if: one Else event carrying a
+## that test on the same row, which is how an event sheet draws an else-if: one Else event carrying a
 ## condition, never two conditions that could both fire.
 func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: String,
 		uid_path: String, action_index: int, else_if: bool = false) -> EventRowData:
@@ -6086,7 +6587,7 @@ func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: S
 	return branch_row
 
 
-## M24 - the branch test as CONDITION LINES, never as one cell spelling `and`. Construct has no word
+## M24 - the branch test as CONDITION LINES, never as one cell spelling `and`. An event sheet has no word
 ## for "and": each conjunct is a condition of the one event, stacked, and an `or` is the OR block. This
 ## is the same shape the lifted `if a and b:` already draws, applied to the readings the grammar
 ## invents, so a test says the same thing however the row got here. Precedence follows GDScript, where
@@ -6342,6 +6843,8 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 			row_data.breakpoint_enabled = true
 			_pending_grammar_breakpoint = false
 		_verb_kind_override = outer_kind
+		if not row_data.picking_object.is_empty():
+			_apply_picking_note(row_data)
 
 
 func _append_condition_prefix_spans(
@@ -6405,7 +6908,7 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 	var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
-		# Fixed object column (C3 sub-lane): the label occupies exactly the column width;
+		# Fixed object column (event-sheet sub-lane): the label occupies exactly the column width;
 		# flow mode occupies the label's own width. Must mirror the renderer's advance.
 		var measured_lane: String = str(metadata.get("lane", ""))
 		var object_column_width: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), measured_lane, _viewport.lane_width_for(measured_lane))
@@ -6481,7 +6984,7 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 		if not node_type.is_empty():
 			return node_type
 	if provider_id.is_empty() or provider_id == "Core":
-		# Construct treats the input devices as OBJECTS, not as part of System: a captured-cursor
+		# An event sheet treats the input devices as OBJECTS, not as part of System: a captured-cursor
 		# check reads "Mouse > mouse is captured", a key test "Keyboard > Key Space is down". The
 		# builtin vocabulary already files these under exactly those categories, so the label is
 		# read off the descriptor rather than kept as a second list to maintain.
@@ -6598,7 +7101,7 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# on any one pack's name, so every state-machine-like behavior gets the reading for free.
 	# The value shows verbatim minus quotes (state strings are case-sensitive - no prettifying).
 	# Display-only: the stored row and the compiled call are untouched.
-	# Same shared grammar the action lane uses: a condition whose shape Construct already has a
+	# Same shared grammar the action lane uses: a condition whose shape an event sheet already has a
 	# sentence for reads that sentence whether it was picked or typed. Cleared first for the same
 	# reason the action lane clears: a text-only reading must not leave a label behind.
 	_pending_object_label = ""
@@ -6725,7 +7228,7 @@ static func action_awaits(action: ACEAction) -> bool:
 
 
 func _format_action_descriptor_base(action: ACEAction) -> String:
-	# A row whose SHAPE has a settled Construct sentence reads through the shared grammar, so the
+	# A row whose SHAPE has a settled event-sheet sentence reads through the shared grammar, so the
 	# picked row and the hand-written line beside it say the same words. Both one-shots are cleared
 	# FIRST: a formatter also runs for text-only readings (a match case's summary line), and a value
 	# left behind there would land on whatever span is built next.
@@ -6899,9 +7402,10 @@ var _pending_display_bbcode: bool = false
 
 # One-shot record from the LAST display substitution: {"text": the substituted sentence, "ranges":
 # [[start, length], ...] marking where each parameter's value landed}. _make_span consumes + clears it
-# to bold the substituted parameters (the C3 emphasis) - but only after re-finding the recorded text
-# inside the span's final text, so a formatter suffix (an ACE note) or prefix (the await hourglass)
-# shifts the ranges instead of mis-bolding, and any other post-processing degrades to no emphasis.
+# to bold the substituted parameters (the event-sheet emphasis) - but only after re-finding the
+# recorded text inside the span's final text, so a formatter suffix (an ACE note) or prefix (the
+# await hourglass) shifts the ranges instead of mis-bolding, and any other post-processing degrades
+# to no emphasis.
 var _pending_param_ranges: Dictionary = {}
 
 # N11. Raised by _append_sentence_spans when a row holds a bare `breakpoint` statement, and consumed
@@ -6912,7 +7416,7 @@ var _pending_param_ranges: Dictionary = {}
 var _pending_grammar_breakpoint: bool = false
 
 
-## Appends the flowing spans that make a single-statement raw row read as a Construct-3 sentence
+## Appends the flowing spans that make a single-statement raw row read as an event-sheet sentence
 ## ("Add 1 to score") or as an Object / Verb / parameters chip run, and returns true when it did.
 ## The caller then skips its per-line default for that action.
 ##
@@ -6932,7 +7436,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		_pending_grammar_breakpoint = true
 	if EventSheetSentence.leading_word(raw.code.strip_edges()) == "return":
 		sentence = _named_return_sentence(sentence, raw.code.strip_edges().substr(6))
-	# A `var` line is a DECLARATION, not a step: it reads as Construct's own local-variable row - a type
+	# A `var` line is a DECLARATION, not a step: it reads as the event-sheet local-variable row - a type
 	# chip, the name, the starting value - rather than as an action wearing an object label.
 	if str(sentence.get("kind", "")) == "declaration":
 		append_local_declaration_spans(spans, sentence, {
@@ -6959,7 +7463,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		var args: PackedStringArray = call_info.get("args", PackedStringArray())
 		# ── M16 lens hook ──────────────────────────────────────────────────────────────────────
 		# Applied AFTER the sentence layer has resolved this row as a call: when the callee is one
-		# of THIS sheet's functions, the row reads Construct's way ("Functions ▸ Call Add Look",
+		# of THIS sheet's functions, the row reads the event-sheet way ("Functions ▸ Call Add Look",
 		# one argument per parameter name) instead of as a bare method call. A callee the sheet
 		# does not know falls straight through to the ordinary reading below - a call to something
 		# unknown must never be dressed up as a project function.
@@ -7044,7 +7548,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	return true
 
 
-## Construct's local-variable row: a type-word chip, the name, and the starting value. Shared by the
+## The event-sheet local-variable row: a type-word chip, the name, and the starting value. Shared by the
 ## hand-written `var` line and by the Local Variable ACE, so a local reads the same however it got
 ## there. `base_meta` carries the row identity (which lane, which action index) and `style_meta` the
 ## cell chrome; the LAST span omits natural_width so the cell background closes the row.
@@ -7163,22 +7667,22 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		# these five the reading would depend on whether the lifter happened to claim the line - the
 		# one thing the shared grammar exists to prevent.
 		"MakeCameraCurrent":
-			return EventSheetSentence.statement("%s.make_current()" % _behaviour_target(params_dict), context)
+			return EventSheetSentence.statement("%s.make_current()" % _ace_target(params_dict), context)
 		"SetCameraZoom":
 			return EventSheetSentence.statement("%s.zoom = %s" % [
-				_behaviour_target(params_dict), str(params_dict.get("zoom", ""))], context)
+				_ace_target(params_dict), str(params_dict.get("zoom", ""))], context)
 		"SetEmitting", "SetEmittingCPU":
 			return EventSheetSentence.statement("%s.emitting = %s" % [
-				_behaviour_target(params_dict), str(params_dict.get("emitting", ""))], context)
+				_ace_target(params_dict), str(params_dict.get("emitting", ""))], context)
 		"RestartParticles", "RestartParticlesCPU":
-			return EventSheetSentence.statement("%s.restart()" % _behaviour_target(params_dict), context)
+			return EventSheetSentence.statement("%s.restart()" % _ace_target(params_dict), context)
 		"SetCollisionMaskBit":
 			return EventSheetSentence.statement("%s.set_collision_mask_value(%s, %s)" % [
-				_behaviour_target(params_dict), str(params_dict.get("mask", "")),
+				_ace_target(params_dict), str(params_dict.get("mask", "")),
 				str(params_dict.get("enabled", ""))], context)
 		"SetCollisionLayerBit":
 			return EventSheetSentence.statement("%s.set_collision_layer_value(%s, %s)" % [
-				_behaviour_target(params_dict), str(params_dict.get("layer", "")),
+				_ace_target(params_dict), str(params_dict.get("layer", "")),
 				str(params_dict.get("enabled", ""))], context)
 		# ── N7 lens hook (the JSON object owns its two verbs) ────────────────────────────────────
 		"JsonParseToVar":
@@ -7207,6 +7711,55 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			# little: the flag is raised here because this row never goes through the raw-line path.
 			_pending_grammar_breakpoint = true
 			return EventSheetSentence.statement("breakpoint", context)
+		# ── M40 / M43 / M46 / M47 lens hook ───────────────────────────────────────────────────
+		# The picked rows whose hand-written twin now reads in the event-sheet verbs: an animation,
+		# a sound, a visibility switch, an angle, a size, a property set by name. Each hands the
+		# grammar the exact line the ACE compiles to, so the two readings cannot drift apart.
+		"HideNode":
+			return EventSheetSentence.statement("%s.hide()" % _ace_target(params_dict), context)
+		"ShowNode":
+			return EventSheetSentence.statement("%s.show()" % _ace_target(params_dict), context)
+		"SetFlipH":
+			return EventSheetSentence.statement("%s.flip_h = %s" % [
+				_ace_target(params_dict), str(params_dict.get("flipped", ""))], context)
+		"SetRotationDeg":
+			return EventSheetSentence.statement("%s.rotation_degrees = %s" % [
+				_ace_target(params_dict), str(params_dict.get("degrees", ""))], context)
+		"SetScale3D":
+			return EventSheetSentence.statement("%s.scale = %s" % [
+				_ace_target(params_dict), str(params_dict.get("scale", ""))], context)
+		"PlaySpriteAnimation":
+			return EventSheetSentence.statement("%s.play(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("anim", ""))], context)
+		"StopSpriteAnimation", "AudioStop":
+			return EventSheetSentence.statement("%s.stop()" % _ace_target(params_dict), context)
+		"AudioPlay":
+			return EventSheetSentence.statement("%s.play(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("from", ""))], context)
+		"LookAt3D":
+			return EventSheetSentence.statement("look_at(%s)" % str(params_dict.get("target", "")), context)
+		"SetTreeParam":
+			return EventSheetSentence.statement("%s.set(%s, %s)" % [
+				_ace_target(params_dict), str(params_dict.get("path", "")),
+				str(params_dict.get("value", ""))], context)
+		"SubtractFromProperty":
+			return EventSheetSentence.statement("%s.%s -= %s" % [
+				str(params_dict.get("target", "self")), str(params_dict.get("property", "")),
+				str(params_dict.get("value", ""))], context)
+		# M46 - the three the Familiar Words glossary renames. Claimed ONLY while the glossary is on, so
+		# with it off each row keeps the vocabulary's own wording, untouched.
+		"ReloadScene":
+			if not bool(context.get("familiar_words", false)):
+				return {}
+			return EventSheetSentence.statement("get_tree().reload_current_scene()", context)
+		"SetPaused":
+			if not bool(context.get("familiar_words", false)):
+				return {}
+			return EventSheetSentence.statement("get_tree().paused = %s" % str(params_dict.get("paused", "")), context)
+		"SetTimeScale":
+			if not bool(context.get("familiar_words", false)):
+				return {}
+			return EventSheetSentence.statement("Engine.time_scale = %s" % str(params_dict.get("scale", "")), context)
 		"AwaitNextFrame":
 			return await_reading("get_tree().process_frame", false)
 		"AwaitSignal":
@@ -7217,7 +7770,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 	return {}
 
 
-## M28 - what an `await` says in Construct's words. Construct has "Wait for signal" as a System
+## M28 - what an `await` says in event-sheet words. An event sheet has "Wait for signal" as a System
 ## action and counts ticks, so suspending on a signal reads as that action and suspending on a frame
 ## reads as the one tick it is. Returns {} for every other await (a timer wait already has its own
 ## "Wait N seconds" reading, and an await on a call keeps its GDScript) - a sentence must never paper
@@ -7317,7 +7870,7 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 			return EventSheetSentence.condition("%s == %s" % [
 				str(params_dict.get("a", "")), str(params_dict.get("b", ""))], context)
 		"CompareVar":
-			# Only the null comparisons have a Construct sentence ("host does not exist"); every other
+			# Only the null comparisons have an event-sheet sentence ("host does not exist"); every other
 			# operator already reads as the comparison it is, so the grammar hands those straight back.
 			return EventSheetSentence.condition("%s %s %s" % [
 				str(params_dict.get("var_name", "")), str(params_dict.get("op", "==")),
@@ -7354,15 +7907,41 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 		"MouseButtonDown":
 			return EventSheetSentence.condition("Input.is_mouse_button_pressed(%s)" % str(
 				params_dict.get("button", "")), context)
+		# ── M41 lens hook ─────────────────────────────────────────────────────────────────────
+		# The event-sheet Platform and collision questions, so a picked row and the same test typed by
+		# hand ask it in the same words.
+		"IsOnFloor", "IsOnFloor3D":
+			return EventSheetSentence.condition("%s.is_on_floor()" % _ace_target(params_dict), context)
+		"IsOnWall", "IsOnWall3D":
+			return EventSheetSentence.condition("%s.is_on_wall()" % _ace_target(params_dict), context)
+		"IsOnCeiling", "IsOnCeiling3D":
+			return EventSheetSentence.condition("%s.is_on_ceiling()" % _ace_target(params_dict), context)
+		"OverlapsBody", "OverlapsBody3D":
+			return EventSheetSentence.condition("%s.overlaps_body(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("body", ""))], context)
+		"OverlapsArea", "OverlapsArea3D":
+			return EventSheetSentence.condition("%s.overlaps_area(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("area", ""))], context)
+		"HasOverlappingBodies", "HasOverlappingBodies3D":
+			return EventSheetSentence.condition("%s.has_overlapping_bodies()" % _ace_target(params_dict), context)
+		"HasOverlappingAreas", "HasOverlappingAreas3D":
+			return EventSheetSentence.condition("%s.has_overlapping_areas()" % _ace_target(params_dict), context)
+		"ArrayIsEmpty", "DictIsEmpty":
+			# M44 - an event sheet has no "is empty": emptiness IS a count of zero.
+			return EventSheetSentence.condition("%s.is_empty()" % str(params_dict.get("var_name", "")), context)
+		"IsNegative", "IsPositive":
+			# Claimed ONLY for the shape an event sheet has a word for (a 2D body's vertical speed); every
+			# other number keeps the vocabulary's own "is negative" reading.
+			return EventSheetSentence.movement_words(str(params_dict.get("value", "")),
+				"<" if condition.ace_id == "IsNegative" else ">", context)
 	return {}
 
 
-## N8. The node a picked node-scoped row acts on: the "On node" target it names, or the row's own
-## host when that is left blank (which is exactly what the ACE compiles to). Written as code because
-## the grammar reads code - the same line the user would have typed by hand.
-static func _behaviour_target(params_dict: Dictionary) -> String:
+## The node a picked row acts on: the "On node" parameter a node-scoped ACE carries, or `self` for a
+## host-scoped one, which is the object the compiled line acts on either way.
+func _ace_target(params_dict: Dictionary) -> String:
 	var target: String = str(params_dict.get("target", "")).strip_edges()
-	return target if not target.is_empty() else "self"
+	return "self" if target.is_empty() else target
 
 
 ## The local-variable DECLARATION an ACE row reads as, or {} when it is not one of the Local Variable
@@ -7443,6 +8022,10 @@ func sentence_context() -> Dictionary:
 	if sheet == _sentence_context_sheet and not _sentence_context_cache.is_empty():
 		var reused: Dictionary = _sentence_context_cache.duplicate()
 		reused["verb_kind"] = _current_verb_kind()
+		# ── M46 lens hook ─────────────────────────────────────────────────────────────────────
+		# The Familiar Words glossary is VIEW state, not sheet state, so it is stamped after the
+		# per-sheet cache - flipping the toggle must change the reading without invalidating it.
+		reused["familiar_words"] = _familiar_words_enabled()
 		return reused
 	var context: Dictionary = {"self_object": EventSheetSentence.OBJECT_SYSTEM, "owner": "", "signals": {}}
 	if sheet != null:
@@ -7460,15 +8043,17 @@ func sentence_context() -> Dictionary:
 		# What only something able to ASK can answer: the script's own object name, its engine
 		# properties, and each signal's parameter names. Cached with the rest of the context.
 		context.merge(EventSheetViewportReadingRows.sentence_context_extras(sheet as EventSheetResource), true)
-		# ── N8 lens hook ───────────────────────────────────────────────────────────────────────
-		# The object-label to class map the icons and the call chips already use, handed to the
-		# grammar so a body, a camera or a particle emitter can read in its behaviour's words. The
-		# same cached map, so this costs nothing beyond the dictionary reference.
-		context["object_classes"] = _reading_class_map()
 	_sentence_context_sheet = sheet
 	_sentence_context_cache = context.duplicate()
 	context["verb_kind"] = _current_verb_kind()
+	context["familiar_words"] = _familiar_words_enabled()
 	return context
+
+
+## M46 - whether this view is reading in the familiar nouns (layout, time scale, layer). Off unless
+## the user asked for it in View ▾, and never on for a headless build with no viewport.
+func _familiar_words_enabled() -> bool:
+	return _viewport != null and _viewport.familiar_words_enabled()
 
 
 ## Every SignalRow the sheet declares, wherever it sits in the row tree.
@@ -7508,6 +8093,10 @@ func _current_verb_kind() -> int:
 var _lens_sheet_stamp: int = 0
 var _lens_knob_names: Dictionary = {}
 var _lens_class_map: Dictionary = {}
+## M39 - variable name -> the object a preloaded scene/script IS, as resolve_res_object answers it
+## ({name, kind_word, icon_class}). `bullet_scene` is not what a reader calls the thing they
+## spawn; the scene's root node is, and this is where Create object gets that name and its picture.
+var _lens_scene_vars: Dictionary = {}
 
 
 func _reset_lens_caches_if_stale() -> void:
@@ -7518,6 +8107,36 @@ func _reset_lens_caches_if_stale() -> void:
 	_lens_sheet_stamp = stamp
 	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
 	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)
+	_lens_scene_vars = _scene_variable_map(sheet)
+
+
+## Every `var x = preload("res://...")` / `const X := preload(...)` of a sheet, resolved once per
+## rebuild through the SAME cached scan the file's head uses to draw those declarations - the scan is
+## keyed on the res:// path, so asking it again here costs a dictionary lookup and never re-reads a
+## file.
+func _scene_variable_map(sheet: EventSheetResource) -> Dictionary:
+	var map: Dictionary = {}
+	if sheet == null:
+		return map
+	for entry: Variant in sheet.events:
+		var declared_name: String = ""
+		var res_path: String = ""
+		var variable: LocalVariable = entry as LocalVariable
+		if variable != null:
+			declared_name = variable.name
+			res_path = ViewportRowBuilder.preloaded_path(str(variable.default_value))
+		elif entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "preload":
+			# `const ENEMY_SCENE := preload("res://enemy.tscn")` lifts to a preload BLOCK rather than a
+			# variable, and a const is how most projects hold the thing they spawn.
+			var fields: Dictionary = (entry as CustomBlockRow).fields
+			declared_name = str(fields.get("name", ""))
+			res_path = str(fields.get("path", ""))
+		if declared_name.is_empty() or res_path.is_empty():
+			continue
+		var resolved: Dictionary = ViewportRowBuilder.resolve_res_object(res_path)
+		if not resolved.is_empty():
+			map[declared_name] = resolved
+	return map
 
 
 ## M9 - the sheet's @export knob names, so the lens can show those with Godot's Inspector
@@ -7548,12 +8167,17 @@ func _reading_class_icon_for(object_label: String) -> Texture2D:
 ## to flip rather than one per lane.
 func _reading_sentence(text: String) -> String:
 	# ── M27 lens hook ──────────────────────────────────────────────────────────────────────────
-	# `delta` reads `dt` whatever else is switched on: it is the number's Construct name, not a
+	# `delta` reads `dt` whatever else is switched on: it is the number's event-sheet name, not a
 	# respelling of somebody's variable, so it does not belong behind the humanized-names toggle.
 	var with_dt: String = EventSheetViewportLenses.dt_words(text)
+	# ── M38 lens hook ──────────────────────────────────────────────────────────────────────────
+	# A named constant reads as the value it IS whatever else is switched on, for the same reason dt
+	# does: `Vector2.ZERO` is not somebody's variable name, it is the point (0, 0). Applied here so a
+	# row that reached the canvas through a display TEMPLATE reads it exactly as a typed line does.
+	var with_constants: String = EventSheetSentence.constant_words(with_dt, sentence_context())
 	if not _viewport.humanize_names_enabled():
-		return with_dt
-	return EventSheetViewportLenses.humanize_sentence(with_dt, _export_knob_names())
+		return with_constants
+	return EventSheetViewportLenses.humanize_sentence(with_constants, _export_knob_names())
 
 
 ## M12 - whether a lifted condition READS as inverted even though its `negated` flag is not set,
@@ -7747,7 +8371,7 @@ func _resolve_template(raw_template: String) -> String:
 
 ## Substitutes display-template slots EXACTLY like the sequential String.replace chain above
 ## always did, while tracking where each substituted value landed in the final text - the
-## ranges the renderer bolds (the C3 parameter emphasis). `replacements` is an ordered list
+## ranges the renderer bolds (the event-sheet parameter emphasis). `replacements` is an ordered list
 ## of [token, value] pairs; every occurrence of each token substitutes (left to right,
 ## non-overlapping, like String.replace). Returns {"text": String, "ranges": [[start, length],
 ## ...] sorted}. A range a LATER substitution rewrites through is dropped - the degenerate

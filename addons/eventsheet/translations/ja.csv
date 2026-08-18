@@ -546,7 +546,7 @@ Plain GDScript - anything valid in an expression works here. Ctrl+Space complete
 Expressions dictionary,式の辞書
 Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,ダブルクリックでカーソル位置に挿入します - 辞書は開いたままなので結果をつなげられます。フィールドに直接入力しても OK: 同じ式が入力に合わせて自動補完されます。
 Loop index (optional),ループインデックス (任意)
-"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","各パスで 0, 1, 2... と進むカウンターに名前を付けます - Construct の loopindex です。Loop Index 式で読み取り、ネストしたループには別々の名前を付けて、外側のループは Loop Index Of で読み取ります。"
+"Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","各パスで 0, 1, 2... と進むカウンターに名前を付けます。Loop Index 式で読み取り、ネストしたループには別々の名前を付けて、外側のループは Loop Index Of で読み取ります。"
 Write one value per line (multi-line enum),1 行に 1 値ずつ書く (複数行の列挙型)
 "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","オフ: enum State { IDLE, RUN }。オン: 各値がタブでインデントされた 1 行ずつになります - 明示的な数値を持つ長い列挙型の定番の形です。"
 Addon Pack,アドオンパック
@@ -1846,6 +1846,54 @@ Wait one tick,1 ティック待つ
 Wait one physics tick,物理 1 ティック待つ
 Wait for signal {object} {trigger},シグナル {object} {trigger} を待つ
 connects {object} {trigger},{object} {trigger} を接続
+Is on floor,床の上にいる
+Is by wall,壁に接している
+Is by ceiling,天井に接している
+Is jumping,ジャンプ中
+Is falling,落下中
+Is overlapping {other},{other} と重なっている
+Is overlapping something,何かと重なっている
+Set invisible,非表示にする
+Set visible,表示する
+Set layer invisible,レイヤーを非表示にする
+Set layer visible,レイヤーを表示する
+Set mirrored,左右反転する
+Set not mirrored,左右反転を解除
+Set flipped,上下反転する
+Set not flipped,上下反転を解除
+Set opacity to {value},不透明度を {value} にする
+Set size to {value},サイズを {value} にする
+Set animation to {name} (play),アニメーションを {name} にする (再生)
+Stop animation,アニメーションを停止
+Play,再生
+Stop,停止
+Set angle toward {target},角度を {target} に向ける
+Go to layout {path},レイアウト {path} へ移動
+Restart layout,レイアウトを再開
+Set time scale to 0 (pause),タイムスケールを 0 にする (一時停止)
+Set time scale to 1,タイムスケールを 1 にする
+Set time scale to {value},タイムスケールを {value} にする
+count,個数
+child count,子ノード数
+(layer),(レイヤー)
+viewport width,ビューポート幅
+viewport height,ビューポート高さ
+mouse position,マウス位置
+time,時間
+time in ms,時間 (ms)
+fps,fps
+angle,角度
+angle (radians),角度 (ラジアン)
+may be missing,存在しない可能性
+On collision with,衝突したとき
+On stopped overlapping,重なりが終わったとき
+Create object,オブジェクトを作成
+as,として
+copy of,のコピー
+group,グループ
+children,子
+children of,の子
+in,の中
 is a {type},{type} である
 {value} is one of {entries},{value} が {entries} のいずれか
 {table} has key {key},{table} にキー {key} がある

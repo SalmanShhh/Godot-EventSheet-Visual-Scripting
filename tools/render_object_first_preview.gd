@@ -1,5 +1,5 @@
 # EventForge - render harness (dev tool) for the object-first Add flow: opens the ACE
-# picker with the object-cards front page (the Construct add-event gesture) so the card
+# picker with the object-cards front page (the familiar add-event gesture) so the card
 # grid can be eyeballed - System first, packs as their own cards with icons. Run
 # NON-headless:
 #   godot --path . --script tools/render_object_first_preview.gd

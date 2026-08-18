@@ -85,7 +85,7 @@ static func _reading_rows() -> bool:
 	passed = _check("an inverted condition's sentence drops the word not",
 		_any_row_contains(texts, "not is_on_floor"), false) and passed
 
-	# M16 - the call to the fixture's own add_look reads Construct's way, with the parameter
+	# M16 - the call to the fixture's own add_look reads the familiar way, with the parameter
 	# names supplying the argument labels.
 	passed = _check("a known call reads Functions > Call", _any_row_contains(texts, "Call Add Look"), true) and passed
 	passed = _check("call arguments are named by the parameters",

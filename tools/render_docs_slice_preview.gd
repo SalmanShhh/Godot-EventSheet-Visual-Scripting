@@ -15,8 +15,8 @@
 # run, so the suite can pin the slug and the registration but never the scroll.
 #
 # It also prints the one PERFORMANCE number no headless run can reach: the per-frame cost of a page
-# with N live figures on screen, beside the same measurement on a page of pure prose. Construction
-# cost was measured headlessly and is linear; DRAW cost needs a laid-out, painting tree.
+# with N live figures on screen, beside the same measurement on a page of pure prose. Build cost
+# was measured headlessly and is linear; DRAW cost needs a laid-out, painting tree.
 #
 # The second image is the one that settles the picker's panel-height question: the description
 # panel keeps its 110 px minimum and the figure lives in its own row below it, so a long
@@ -234,7 +234,7 @@ func _on_frame() -> void:
 		return
 	if _stage == 20 and _frames == 146:
 		# The open question the spec left for this phase: what N VISIBLE FIGURES cost per frame.
-		# Construction was measured headlessly and is linear; DRAW is not reachable there at all.
+		# Build cost was measured headlessly and is linear; DRAW is not reachable there at all.
 		_begin_sampling(_page_with_most_figures())
 		_stage = 21
 		return
@@ -355,7 +355,7 @@ func _report_search() -> void:
 
 
 ## PER-FRAME COST, which is the one performance question a headless suite cannot answer at all: it
-## never enters a tree, never lays anything out and never draws. Construction was measured headless
+## never enters a tree, never lays anything out and never draws. Build cost was measured headless
 ## and scales linearly; what was left open is whether a page carrying a dozen live canvases stays
 ## cheap once they are all on screen. The sampler opens a page, lets it settle, and then times the
 ## frames themselves.

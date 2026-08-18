@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/opened_script_structure3_menu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+script = ExtResource("1_menu")
+
+[node name="StartButton" type="Button" parent="."]
+
+[node name="Countdown" type="Timer" parent="."]
+
+[connection signal="pressed" from="StartButton" to="." method="_on_start_button_pressed"]
+
+[connection signal="timeout" from="Countdown" to="." method="_on_countdown_timeout"]

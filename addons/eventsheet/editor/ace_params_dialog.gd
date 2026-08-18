@@ -1170,8 +1170,8 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	edit.custom_minimum_size = Vector2(0.0, 31.0)
 	edit.scroll_fit_content_height = true
 	# Wrap a long expression across the box width (with scroll_fit_content_height the box grows taller to
-	# fit) so the whole thing is readable without a horizontal scroll - C3-style. Still one LOGICAL line
-	# (wrap is visual only; the newline-strip below keeps Enter confirming the dialog).
+	# fit) so the whole thing is readable without a horizontal scroll - event-sheet style. Still one
+	# LOGICAL line (wrap is visual only; the newline-strip below keeps Enter confirming the dialog).
 	edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	edit.gutters_draw_line_numbers = false
 	edit.code_completion_enabled = true
@@ -1180,7 +1180,7 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	# separate expression language to memorize.
 	edit.placeholder_text = "GDScript expression (e.g. health + 10)"
 	edit.tooltip_text = "Plain GDScript - anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members. Alt+Enter grows the box for a long expression (and shrinks it back)."
-	# Alt+Enter toggles a TALL editing box (C3 reflex): the same one logical expression, just
+	# Alt+Enter toggles a TALL editing box (an event-sheet reflex): the same one logical expression, just
 	# room to read it - wrap already fills the height. Plain Enter keeps confirming the dialog.
 	edit.gui_input.connect(func(event: InputEvent) -> void:
 		var key_event: InputEventKey = event as InputEventKey
@@ -1662,7 +1662,7 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 			str(candidate.get("label", "")),
 			str(candidate.get("label", ""))
 		)
-	# The expressions dictionary, while typing (Construct-style): every EXPRESSION verb the
+	# The expressions dictionary, while typing (event-sheet style): every EXPRESSION verb the
 	# picker window lists also autocompletes right in the field - display name shown, the code
 	# fragment inserted. Skipped in member (`x.`) position, where only that type's members apply.
 	if _registry != null and not text_before_dot(before_caret):

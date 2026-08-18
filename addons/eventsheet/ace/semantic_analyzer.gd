@@ -348,7 +348,7 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 			"@ace_trigger":
 				overrides["forced_ace_type"] = ACEDefinition.ACEType.TRIGGER
 			"@ace_looping":
-				# `@ace_looping(buff)` - a LOOPING condition (the C3 idea): the method returns a
+				# `@ace_looping(buff)` - a LOOPING condition (the event-sheet idea): the method returns a
 				# collection and applying it loops the event's actions once per item, via the
 				# pick-filter machinery. The optional value names the iterator ("item" default).
 				overrides["looping"] = true
@@ -442,7 +442,7 @@ func _parse_param_spec(spec: String, overrides: Dictionary) -> void:
 				var param_hints: Dictionary = overrides.get("param_hints", {})
 				param_hints[param_name] = value
 				overrides["param_hints"] = param_hints
-				# `hint: comparison` is the whole operator dropdown in one word (C3's `cmp` type).
+				# `hint: comparison` is the whole operator dropdown in one word (the event-sheet `cmp` type).
 				# It only SEEDS the options, so an explicit `options:` on the same param still wins.
 				if value.strip_edges().to_lower() == "comparison":
 					var comparison_options: Dictionary = overrides.get("param_options", {})

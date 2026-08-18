@@ -1,4 +1,4 @@
-# EventForge - render harness (dev tool) for the Construct row grammar.
+# EventForge - render harness (dev tool) for the event-sheet row grammar.
 # Opens the FPS Controller pack as a read-only sheet and screenshots the verb bodies, where the
 # statements that have no ACE of their own read as Object ▸ Verb rows:
 #   docs/images/opened-pack-sentences.png

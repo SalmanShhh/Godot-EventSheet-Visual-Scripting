@@ -452,7 +452,7 @@ Everything in this section SHIPPED and is kept as the design record:
   stay on stable APIs only).
 - **More behavior packs**: tweens and beyond (platformer, 8-direction, timer, flash, and
   state machine ship today - see Implemented).
-- **C3 migration guide**: implemented - `docs/GUIDE-C3-MIGRATION.md` (concept map + System
+- **C3 migration guide**: implemented - `docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md` (concept map + System
   vocabulary table); future nicety: link it from the picker UI.
 
 ## Testing

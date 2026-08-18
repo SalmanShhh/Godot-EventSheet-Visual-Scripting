@@ -203,7 +203,7 @@ static func run() -> bool:
 	ok = _check("the added amount is tinted as a value",
 		str(((add_sentence.get("segments", []) as Array)[1] as Dictionary).get("tone", "")), "value") and ok
 	# A declaration is its own ROW SHAPE now (a type-word chip, the name, the value), so it reads as
-	# Construct's local-variable row rather than as a step - and the annotation never shows.
+	# the event-sheet local-variable row rather than as a step - and the annotation never shows.
 	ok = _check("a typed declaration reads as a local row",
 		_sentence_text("var label: String = wave[0]"), "Local text label = wave' item 0") and ok
 	ok = _check("an inferred declaration reads the same", _sentence_text("var n := 3"), "Local number n = 3") and ok
@@ -212,7 +212,7 @@ static func run() -> bool:
 	ok = _check("compound multiply names the target first", _sentence_text("speed *= 2"), "Multiply speed by 2") and ok
 	ok = _check("compound divide names the target first", _sentence_text("speed /= 2"), "Divide speed by 2") and ok
 	ok = _check("a returned value reads as Return", _sentence_text("return rows"), "Return rows") and ok
-	# A bare return inside an ordinary action body means "stop here", which is Construct's Stop event.
+	# A bare return inside an ordinary action body means "stop here", which is the event-sheet Stop event.
 	ok = _check("a bare return stops the event", _sentence_text("return"), "Stop event") and ok
 	# ...and the refusals. A comparison is NOT an assignment, control flow is a branch rather than a
 	# step, and a call belongs to the Object/Verb view below.

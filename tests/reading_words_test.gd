@@ -2,7 +2,7 @@
 class_name ReadingWordsTest
 extends RefCounted
 
-# Pins the Construct WORDS for the shapes an ordinary game script is full of (M25 - M33).
+# Pins the event-sheet WORDS for the shapes an ordinary game script is full of (M25 - M33).
 #
 # Three gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -94,10 +94,10 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# M28 - payload chips and the two tick waits
 	"ReadingWordsPlayer ▸ Signal On Damaged   amount = 3   source = attacker",
 	"System ▸ ⏳ Wait one tick",
-	# M27 - the tick triggers in Construct's words
+	# M27 - the tick triggers in the familiar words
 	"System ▸ Every tick (physics)",
 	"System ▸ Every tick (draw)",
-	# M33 - Construct's loop words
+	# M33 - the familiar loop words
 	"System ▸ Repeat 3 times (loopindex i)",
 	"System ▸ For \"i\" from 2 to 7",
 	"System ▸ While lives > 0",
@@ -163,10 +163,10 @@ static func _grammar_values() -> bool:
 		# M25 - the script's object, never `self`
 		["position.x = 100", "Player ▸ Set X to 100"],
 		["self.position.y = 100", "Player ▸ Set Y to 100"],
-		["rotation += 1", "Player ▸ Add 1 to rotation"],
+		["rotation += 1", "Player ▸ Add 1 to angle (radians)"],
 		["score += 1", "System ▸ Add 1 to score"],
 		["self.queue_free()", "Player ▸ Destroy"],
-		# M27 - delta is Construct's dt
+		# M27 - delta is the familiar dt
 		["velocity.x = speed * delta", "Player ▸ Set velocity.x to speed * dt"],
 		["delta_time = 1", "System ▸ Set delta_time to 1"],
 		# M28 - payload chips, the signal wait, the tick waits
@@ -214,7 +214,7 @@ static func _grammar_values() -> bool:
 static func _condition_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
-		["rotation > 1.5", "Player ▸ rotation > 1.5"],
+		["rotation > 1.5", "Player ▸ angle (radians) > 1.5"],
 		["position.x <= 0", "Player ▸ X ≤ 0"],
 		["visible", "Player ▸ visible is true"],
 		["crouching", "System ▸ crouching is true"],
@@ -230,7 +230,7 @@ static func _condition_values() -> bool:
 static func _call_readings() -> bool:
 	var ok: bool = true
 	for entry: Array in [
-		["$AnimatedSprite2D.play(\"run\")", PackedStringArray(["name"]), "AnimatedSprite2D ▸ Play   name = \"run\""],
+		["$AnimatedSprite2D.play(\"run\")", PackedStringArray(["name"]), "AnimatedSprite2D ▸ Set animation to \"run\" (play)"],
 		["$Path/To/Label.set_text(str(score))", PackedStringArray(["text"]), "Label ▸ Set text to score"],
 		["print(\"ready\")", PackedStringArray(), "System ▸ Print   \"ready\""],
 		["self.take_damage(3)", PackedStringArray(), "Player ▸ Take damage   3"],
@@ -267,10 +267,10 @@ static func _loop_words() -> bool:
 		EventSheetViewportReadingRows.loop_words(PickFilter.CollectionKind.EXPRESSION, "x", "wave").is_empty(),
 		true) and ok
 	# M27 - the tick triggers, wording only: every other trigger keeps its own name.
-	ok = _check("the physics trigger reads Construct's words",
+	ok = _check("the physics trigger reads the familiar words",
 		EventSheetViewportReadingRows.tick_trigger_words("OnPhysicsProcess", "Every Physics Tick"),
 		"Every tick (physics)") and ok
-	ok = _check("the frame trigger reads Construct's words",
+	ok = _check("the frame trigger reads the familiar words",
 		EventSheetViewportReadingRows.tick_trigger_words("OnProcess", "Every Frame"),
 		"Every tick (draw)") and ok
 	ok = _check("any other trigger keeps its own name",
@@ -354,7 +354,7 @@ static func _picked_matches_typed() -> bool:
 	for expected: String in [
 		"ReadingWordsPlayer ▸ Signal On Damaged   amount = 3   source = attacker",
 		"ReadingWordsPlayer ▸ Set X to 100",
-		"AnimatedSprite2D ▸ Play   name = \"run\""
+		"AnimatedSprite2D ▸ Set animation to \"run\" (play)"
 	]:
 		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok
 	return ok

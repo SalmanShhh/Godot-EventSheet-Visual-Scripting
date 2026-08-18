@@ -70,7 +70,7 @@ static func _test_hardwired_doc_paths() -> bool:
 	# Pinned by NAME, not by count: the sweep must not be able to pass by matching nothing, and
 	# these two are the literals that actually ship today.
 	all_passed = _check("the migration guide the Welcome window opens is swept",
-		seen.has("docs/GUIDE-C3-MIGRATION.md"), true) and all_passed
+		seen.has("docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md"), true) and all_passed
 	all_passed = _check("the guide index the docs window opens is swept",
 		seen.has("docs/README.md"), true) and all_passed
 	# And the detector must be able to FAIL: the same regex on a call site naming a guide that is
@@ -110,9 +110,9 @@ static func _test_doc_urls() -> bool:
 	var all_passed: bool = true
 	# Derived, never literal: the expectation is built from the same constant the code reads, so
 	# this test keeps passing across a version bump and still fails if the SHAPE changes.
-	var pinned: String = "%s/blob/v%s/docs/GUIDE-C3-MIGRATION.md" % [EventSheets.DOCS_REPO_URL, SheetCompiler.VERSION]
+	var pinned: String = "%s/blob/v%s/docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md" % [EventSheets.DOCS_REPO_URL, SheetCompiler.VERSION]
 	all_passed = _check("a guide path becomes a tag-pinned blob URL",
-		EventSheets.doc_url("docs/GUIDE-C3-MIGRATION.md"), pinned) and all_passed
+		EventSheets.doc_url("docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md"), pinned) and all_passed
 	all_passed = _check("the pinned version is the compiler's VERSION",
 		EventSheets.docs_version(), SheetCompiler.VERSION) and all_passed
 	all_passed = _check("an anchor rides on the end",

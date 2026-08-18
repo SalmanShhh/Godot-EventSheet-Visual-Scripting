@@ -1,4 +1,4 @@
-# EventForge - looping conditions (@ace_looping, the C3 is-looping idea): a pack method that
+# EventForge - looping conditions (@ace_looping, the event-sheet is-looping idea): a pack method that
 # returns a collection, annotated `## @ace_looping(iterator)`, sits with conditions in the
 # picker but APPLIES as a pick filter - the event's actions loop once per returned item,
 # through the existing pick machinery (for-emission, lane UI, round-trip lift all reused).

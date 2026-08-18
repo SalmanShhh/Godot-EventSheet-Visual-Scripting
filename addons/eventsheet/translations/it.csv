@@ -546,7 +546,7 @@ Plain GDScript - anything valid in an expression works here. Ctrl+Space complete
 Expressions dictionary,Dizionario delle espressioni
 Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,Doppio clic per inserire al cursore - il dizionario resta aperto così i risultati si concatenano. Puoi anche scrivere direttamente nel campo: le stesse espressioni si autocompletano mentre digiti.
 Loop index (optional),Indice del ciclo (opzionale)
-"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","Dai un nome a un contatore che fa 0, 1, 2... a ogni passaggio - il loopindex di Construct. Leggilo con l'espressione Loop Index; dai nomi distinti ai cicli annidati e leggi quello esterno con Loop Index Of."
+"Name a counter that runs 0, 1, 2... each pass. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","Dai un nome a un contatore che fa 0, 1, 2... a ogni passaggio. Leggilo con l'espressione Loop Index; dai nomi distinti ai cicli annidati e leggi quello esterno con Loop Index Of."
 Write one value per line (multi-line enum),Scrivi un valore per riga (enum multiriga)
 "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","Disattivato: enum State { IDLE, RUN }. Attivato: ogni valore su una propria riga indentata con tab - la forma consueta dei lunghi enum con numeri espliciti."
 Addon Pack,Pacchetto di estensione
@@ -1846,6 +1846,54 @@ Wait one tick,Attendi un tick
 Wait one physics tick,Attendi un tick di fisica
 Wait for signal {object} {trigger},Attendi il segnale {object} {trigger}
 connects {object} {trigger},collega {object} {trigger}
+Is on floor,È a terra
+Is by wall,È vicino al muro
+Is by ceiling,È vicino al soffitto
+Is jumping,Sta saltando
+Is falling,Sta cadendo
+Is overlapping {other},Si sovrappone a {other}
+Is overlapping something,Si sovrappone a qualcosa
+Set invisible,Rendi invisibile
+Set visible,Rendi visibile
+Set layer invisible,Rendi il livello invisibile
+Set layer visible,Rendi il livello visibile
+Set mirrored,Rendi speculare
+Set not mirrored,Togli speculare
+Set flipped,Capovolgi
+Set not flipped,Togli capovolgimento
+Set opacity to {value},Imposta opacità a {value}
+Set size to {value},Imposta dimensione a {value}
+Set animation to {name} (play),Imposta animazione a {name} (riproduci)
+Stop animation,Ferma animazione
+Play,Riproduci
+Stop,Ferma
+Set angle toward {target},Imposta angolo verso {target}
+Go to layout {path},Vai al layout {path}
+Restart layout,Riavvia layout
+Set time scale to 0 (pause),Imposta scala temporale a 0 (pausa)
+Set time scale to 1,Imposta scala temporale a 1
+Set time scale to {value},Imposta scala temporale a {value}
+count,conteggio
+child count,numero di figli
+(layer),(livello)
+viewport width,larghezza viewport
+viewport height,altezza viewport
+mouse position,posizione del mouse
+time,tempo
+time in ms,tempo in ms
+fps,fps
+angle,angolo
+angle (radians),angolo (radianti)
+may be missing,potrebbe mancare
+On collision with,In collisione con
+On stopped overlapping,Quando finisce la sovrapposizione
+Create object,Crea oggetto
+as,come
+copy of,copia di
+group,gruppo
+children,figli
+children of,figli di
+in,in
 is a {type},è un {type}
 {value} is one of {entries},{value} è uno di {entries}
 {table} has key {key},{table} ha la chiave {key}

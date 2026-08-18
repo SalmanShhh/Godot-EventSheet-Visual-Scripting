@@ -85,7 +85,7 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_HSIZE
 		_viewport.set_divider_guide(_viewport.get_lane_divider_x(_viewport._get_logical_canvas_width()), false)
 	elif not object_column_hover.is_empty():
-		# The object-name / display-text gap is a C3-style sub-lane divider: same ↔ affordance.
+		# The object-name / display-text gap is an event-sheet sub-lane divider: same ↔ affordance.
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_HSIZE
 		_viewport.set_divider_guide(float(object_column_hover.get("boundary_x", -1.0)), false)
 	elif over_drag_zone:
@@ -514,7 +514,7 @@ func handle_key(event: InputEventKey) -> void:
 	elif event.keycode == KEY_LEFT and not event.alt_pressed:
 		# Plain Left folds; Alt+Left is the dock's jump-history Back and must pass through.
 		# With a cell focused OR nothing to fold, Left walks the cell focus instead
-		# (C3's arrow-through-cells) - left_key_folds gates on both.
+		# (the event-sheet arrow-through-cells) - left_key_folds gates on both.
 		if _viewport.left_key_folds():
 			_viewport._toggle_row_fold(_viewport._selected_row_index)
 			_viewport.accept_event()

@@ -1,4 +1,4 @@
-# EventForge - the Construct-style loop index (loopindex). Opt-in per loop via
+# EventForge - the event-sheet loop index (loopindex). Opt-in per loop via
 # PickFilter.index_name: the emitter declares `var <name>: int = -1` above the loop and bumps
 # it as the body's FIRST statement, so the counter runs 0, 1, 2... regardless of the loop kind
 # (For Each, Repeat - even over a range that starts elsewhere - and While). The importer lifts
@@ -40,7 +40,7 @@ static func run() -> bool:
 	var lifted_pick: PickFilter = _first_pick(lifted)
 	ok = _check(ok, lifted_pick != null and lifted_pick.index_name == "loop_index", "the lift recovers index_name (got %s)" % (lifted_pick.index_name if lifted_pick != null else "<no pick>"))
 
-	# ---- nested loops with distinct names (the C3 loopindex(\"name\") shape) ----
+	# ---- nested loops with distinct names (the event-sheet loopindex(\"name\") shape) ----
 	var nested: EventSheetResource = _loop_sheet(PickFilter.CollectionKind.EXPRESSION, "waves", "wave_index")
 	var outer_row: EventRow = nested.events[0] as EventRow
 	var inner_row: EventRow = EventRow.new()
