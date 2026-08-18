@@ -6290,11 +6290,15 @@ func _apply_picking_note(row_data: EventRowData) -> void:
 			span.metadata.erase("bbcode_segments")
 			span.metadata.erase("value_ranges")
 		if not row_data.picking_note.is_empty():
-			span.text = "%s %s" % [row_data.picking_note, span.text]
-			# The styled runs were measured against the text before the note; recomputing them here
-			# would mean re-reading the whole cell, and a note in muted grey needs neither.
-			span.metadata.erase("bbcode_segments")
+			# The note is a receipt, not part of the test: muted, so the eye lands on the condition.
+			# Written as segments because the styled runs behind the old text were measured against
+			# offsets the note has just moved, and re-deriving those costs a re-read of the whole cell.
+			span.metadata["bbcode_segments"] = [
+				{"text": "%s " % row_data.picking_note, "color": EventSheetPalette.TEXT_MUTED, "bold": false, "italic": false},
+				{"text": span.text, "color": null, "bold": false, "italic": false},
+			]
 			span.metadata.erase("value_ranges")
+			span.text = "%s %s" % [row_data.picking_note, span.text]
 		return
 
 
