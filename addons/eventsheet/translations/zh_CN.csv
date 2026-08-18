@@ -1902,7 +1902,6 @@ Insert a call to %s in this script.,在此脚本中插入对 %s 的调用。
 this script,此脚本
 behaviour,行为
 autoload,自动加载
-group,分组
 1 row,1 行
 %d rows,%d 行
 Objects,对象
@@ -1924,5 +1923,47 @@ Every %s seconds,每 %s 秒
 %d event,%d 个事件
 %d events,%d 个事件
 %d row,%d 行
-%d rows,%d 行
 (unnamed region),（未命名区域）
+is a {type},是 {type}
+{value} is one of {entries},{value} 是 {entries} 之一
+{table} has key {key},{table} 含有键 {key}
+{list} contains {value},{list} 包含 {value}
+has function {verb},有函数 {verb}
+has child {child},有子节点 {child}
+has item {key},有条目 {key}
+{file} exists,{file} 存在
+On {action} released,松开 {action} 时
+On {action} pressed (this event),按下 {action} 时 (此事件)
+On {action} released (this event),松开 {action} 时 (此事件)
+{key} is down,{key} 处于按下状态
+{key} button is down,{key} 键处于按下状态
+Log error {value},记录错误 {value}
+Log warning {value},记录警告 {value}
+Log {value},记录 {value}
+Assert {condition},断言 {condition}
+Assert {condition} {message},断言 {condition} {message}
+Set item {key} to {value} (section {section}),将条目 {key} 设为 {value} (区段 {section})
+Write {text},写入 {text}
+Save {file},保存 {file}
+Load {file},加载 {file}
+Open {file} for writing (as {handle}),以写入方式打开 {file} (作为 {handle})
+Open {file} for reading (as {handle}),以读取方式打开 {file} (作为 {handle})
+Open {file} for reading and writing (as {handle}),以读写方式打开 {file} (作为 {handle})
+Set collision with layer {layer} {state},与层 {layer} 的碰撞 {state}
+Set collisions {state},碰撞 {state}
+Set as active camera,设为当前摄像机
+Restart,重新开始
+Apply impulse {value},施加冲量 {value}
+Apply force {value},施加力 {value}
+Set velocity to {value},将速度设为 {value}
+Set angular velocity to {value},将角速度设为 {value}
+Start spraying,开始喷射
+Stop spraying,停止喷射
+Set zoom to {percent},将缩放设为 {percent}
+item {key},条目 {key}
+item {key} (default {fallback}),条目 {key} (默认 {fallback})
+on,开
+off,关
+Physics,物理
+Particles,粒子
+runs in editor,在编辑器中运行

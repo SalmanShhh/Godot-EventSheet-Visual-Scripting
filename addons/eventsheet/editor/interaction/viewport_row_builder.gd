@@ -754,6 +754,12 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
 		}))
 		spans.append(_pack_include_chip(base_class))
+	# ── N11 lens hook ─────────────────────────────────────────────────────────────────────────
+	# `@tool` is not a line of the program; it is a fact about WHEN the whole file runs, which is
+	# exactly what a chip on the head bar is for. The importer already recorded it on the sheet, so
+	# this only shows what the file said.
+	if bool(sheet.tool_mode):
+		spans.append(_pack_include_chip(EventSheetL10n.translate("runs in editor")))
 	var receipts: PackedStringArray = PackedStringArray()
 	if not source_path.is_empty():
 		receipts.append("· %s" % source_path.get_file())
@@ -7317,9 +7323,15 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		# the row carries the answer and puts it back for the duration of the build.
 		var outer_kind: int = _verb_kind_override
 		_verb_kind_override = row_data.verb_kind
+		_pending_grammar_breakpoint = false
 		row_data.spans = _build_event_spans(row_data.source_resource as EventRow, row_data.in_verb_body,
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
+		# N11 - a row holding a bare `breakpoint` wears the gutter dot. OR-ed in, never assigned, so a
+		# user's own breakpoint on the same row is not cleared by a rebuild.
+		if _pending_grammar_breakpoint:
+			row_data.breakpoint_enabled = true
+			_pending_grammar_breakpoint = false
 		_verb_kind_override = outer_kind
 		if not row_data.picking_object.is_empty():
 			_apply_picking_note(row_data)
@@ -7916,6 +7928,13 @@ var _pending_display_bbcode: bool = false
 # to no emphasis.
 var _pending_param_ranges: Dictionary = {}
 
+# N11. Raised by _append_sentence_spans when a row holds a bare `breakpoint` statement, and consumed
+# by _ensure_event_spans, which is the only place that knows which row the spans just built belong to.
+# A pause point is marked ON the row here, so the row says it the way a user-set breakpoint says it
+# rather than spelling the keyword out in the action cell. Display only: the statement in the file is
+# untouched, and nothing about this reaches the view state a user's own breakpoints live in.
+var _pending_grammar_breakpoint: bool = false
+
 
 ## Appends the flowing spans that make a single-statement raw row read as an event-sheet sentence
 ## ("Add 1 to score") or as an Object / Verb / parameters chip run, and returns true when it did.
@@ -7931,6 +7950,10 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	var indent: int = 0
 	var object_label: String = ""
 	var sentence: Dictionary = statement_sentence(raw.code, sentence_context())
+	# ── N11 lens hook ─────────────────────────────────────────────────────────────────────────
+	# A bare `breakpoint` reads as the mark it is: the row wears the gutter dot and says nothing.
+	if bool(sentence.get("breakpoint", false)):
+		_pending_grammar_breakpoint = true
 	if EventSheetSentence.leading_word(raw.code.strip_edges()) == "return":
 		sentence = _named_return_sentence(sentence, raw.code.strip_edges().substr(6))
 	# A `var` line is a DECLARATION, not a step: it reads as the event-sheet local-variable row - a type
@@ -8176,6 +8199,55 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("%s.%s += %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
 				str(params_dict.get("value", ""))], context)
+		# ── N8 lens hook (behaviour words on the picked rows too) ────────────────────────────────
+		# These are the rows a hand-written camera / emitter / collision line LIFTS to, so without
+		# these five the reading would depend on whether the lifter happened to claim the line - the
+		# one thing the shared grammar exists to prevent.
+		"MakeCameraCurrent":
+			return EventSheetSentence.statement("%s.make_current()" % _ace_target(params_dict), context)
+		"SetCameraZoom":
+			return EventSheetSentence.statement("%s.zoom = %s" % [
+				_ace_target(params_dict), str(params_dict.get("zoom", ""))], context)
+		"SetEmitting", "SetEmittingCPU":
+			return EventSheetSentence.statement("%s.emitting = %s" % [
+				_ace_target(params_dict), str(params_dict.get("emitting", ""))], context)
+		"RestartParticles", "RestartParticlesCPU":
+			return EventSheetSentence.statement("%s.restart()" % _ace_target(params_dict), context)
+		"SetCollisionMaskBit":
+			return EventSheetSentence.statement("%s.set_collision_mask_value(%s, %s)" % [
+				_ace_target(params_dict), str(params_dict.get("mask", "")),
+				str(params_dict.get("enabled", ""))], context)
+		"SetCollisionLayerBit":
+			return EventSheetSentence.statement("%s.set_collision_layer_value(%s, %s)" % [
+				_ace_target(params_dict), str(params_dict.get("layer", "")),
+				str(params_dict.get("enabled", ""))], context)
+		# ── N7 lens hook (the JSON object owns its two verbs) ────────────────────────────────────
+		"JsonParseToVar":
+			return EventSheetSentence.statement("%s = JSON.parse_string(%s)" % [
+				str(params_dict.get("var_name", "")), str(params_dict.get("text", ""))], context)
+		# ── N11 lens hook (the debug verbs) ──────────────────────────────────────────────────────
+		# The picked debug rows read the same words a typed `push_error(...)` / `assert(...)` now
+		# reads, so the log vocabulary is one sentence whichever way the row got onto the sheet.
+		"PushError":
+			return EventSheetSentence.statement("push_error(%s)" % str(params_dict.get("message", "")), context)
+		"PushWarning":
+			return EventSheetSentence.statement("push_warning(%s)" % str(params_dict.get("message", "")), context)
+		"PrintRich":
+			return EventSheetSentence.statement("print_rich(%s)" % str(params_dict.get("value", "")), context)
+		"Assert":
+			return EventSheetSentence.statement("assert(%s, %s)" % [
+				str(params_dict.get("condition", "")), str(params_dict.get("message", ""))], context)
+		"CallFunction":
+			# A receiver-less call the sheet has no verb of its own for. Only the settled shapes claim
+			# it (the debug verbs among them); a call to one of THIS sheet's functions is not one of
+			# them, so it falls straight through to its own Call reading.
+			return EventSheetSentence.statement("%s(%s)" % [
+				str(params_dict.get("function_name", "")), str(params_dict.get("args", ""))], context)
+		"Breakpoint":
+			# The picked pause row wears the same gutter mark the typed keyword does, and says as
+			# little: the flag is raised here because this row never goes through the raw-line path.
+			_pending_grammar_breakpoint = true
+			return EventSheetSentence.statement("breakpoint", context)
 		# ── M40 / M43 / M46 / M47 lens hook ───────────────────────────────────────────────────
 		# The picked rows whose hand-written twin now reads in the event-sheet verbs: an animation,
 		# a sound, a visibility switch, an angle, a size, a property set by name. Each hands the
@@ -8344,6 +8416,34 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), false)
 		"IsActionJustPressed":
 			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), true)
+		# ── N9 / N7 lens hook ────────────────────────────────────────────────────────────────────
+		# The release check and the file test read the same words their hand-written twins now read.
+		"IsActionJustReleased":
+			return EventSheetSentence.input_phase_sentence(str(params_dict.get("action", "")), false, false)
+		"FileExists":
+			return EventSheetSentence.condition(
+				"FileAccess.file_exists(%s)" % str(params_dict.get("path", "")), context)
+		# ── N5 lens hook ─────────────────────────────────────────────────────────────────────────
+		# The row a hand-written `x in y` lifts to, so both spellings ask the same question in words.
+		"TextIsOneOf":
+			return EventSheetSentence.condition("%s in %s" % [
+				str(params_dict.get("text", "")), str(params_dict.get("options", ""))], context)
+		# ── N6 lens hook ─────────────────────────────────────────────────────────────────────────
+		# The three text questions a hand-written line lifts to. Routed through the grammar rather
+		# than reworded in the frozen display templates, which are a compatibility promise.
+		"StringBeginsWith", "TextBeginsWith":
+			return EventSheetSentence.condition("%s.begins_with(%s)" % [
+				str(params_dict.get("text", "")), str(params_dict.get("prefix", ""))], context)
+		"StringEndsWith":
+			return EventSheetSentence.condition("%s.ends_with(%s)" % [
+				str(params_dict.get("text", "")), str(params_dict.get("suffix", ""))], context)
+		"StringContains":
+			return EventSheetSentence.condition("%s.contains(%s)" % [
+				str(params_dict.get("text", "")), str(params_dict.get("needle", ""))], context)
+		# ── N9 lens hook ─────────────────────────────────────────────────────────────────────────
+		"MouseButtonDown":
+			return EventSheetSentence.condition("Input.is_mouse_button_pressed(%s)" % str(
+				params_dict.get("button", "")), context)
 		# ── M41 lens hook ─────────────────────────────────────────────────────────────────────
 		# The event-sheet Platform and collision questions, so a picked row and the same test typed by
 		# hand ask it in the same words.
@@ -8433,6 +8533,11 @@ func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
 				tone_color = _viewport._get_event_style().value_highlight_color
 			"object":
 				tone_color = EventSheetPalette.COLOR_OBJECT
+			"chip":
+				# N5/N8 - a class name or a behaviour name is a LABEL on the row, not a word in the
+				# sentence, so it wears the object hue the object column uses for the same idea.
+				tone_color = EventSheetPalette.COLOR_OBJECT
+				tone_bold = true
 		segments.append({"text": str(part.get("text", "")), "color": tone_color, "bold": tone_bold, "italic": false})
 	return segments
 

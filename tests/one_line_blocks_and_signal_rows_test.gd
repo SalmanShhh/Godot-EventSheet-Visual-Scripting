@@ -102,7 +102,7 @@ static func _one_line_blocks(rows: PackedStringArray) -> bool:
 	ok = _check("a one-line guard clause is a sub-event, not a code cell",
 		_reading_at(rows, "Stop event"), "host does not exist | Stop event") and ok
 	ok = _check("a one-line if calls its verb",
-		_reading_at(rows, "Call Die"), "hp <= 0 | Call Die") and ok
+		_reading_at(rows, "Call Die"), "hp ≤ 0 | Call Die") and ok
 	ok = _check("a one-line elif is an Else with its own condition",
 		_reading_at(rows, "\"low\""), "Else > hp < 5 | Play from \"low\"s") and ok
 	ok = _check("a one-line else is the plain Else",
@@ -167,7 +167,7 @@ static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray
 	ok = _check("and its first statement is an action row",
 		_reading_at(rows, "Add 1 to seconds left"), " | Add 1 to seconds left") and ok
 	ok = _check("and the branch inside that lambda is a sub-event of it",
-		_reading_at(rows, "Stop"), "seconds left <= 0 | Stop") and ok
+		_reading_at(rows, "Stop"), "seconds left ≤ 0 | Stop") and ok
 	ok = _check("a connect handed a NAMED function is left exactly as it was",
 		_connect_parts("timer.timeout.connect(_on_timeout)"), "") and ok
 	ok = _check("a connect whose lambda body is empty is refused",
