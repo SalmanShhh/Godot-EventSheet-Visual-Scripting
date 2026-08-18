@@ -1,7 +1,7 @@
 ## A hand-written script that names every KIND of object a reader looks for, so the object model
 ## is proved against real lifted rows rather than against strings a test made up.
 ## It carries, on purpose: the script's own object (its class_name), an @onready node with a
-## declared type, a bare `$Node` reference, a behaviour pack node under the same node, an
+## declared type, a bare node reference, a behaviour pack node under the same node, an
 ## autoload singleton, a group, and a preloaded scene.
 ##
 ## It is also a round-trip subject: opening it as a sheet and re-emitting it must reproduce this

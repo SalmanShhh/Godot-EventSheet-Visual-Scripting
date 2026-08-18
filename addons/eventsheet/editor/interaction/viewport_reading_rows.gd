@@ -770,17 +770,20 @@ static func object_census(sheet: EventSheetResource) -> Array:
 		for scene_path: String in _scene_references(code):
 			var scene_label: String = scene_path.get_file().get_basename().to_pascal_case()
 			if not by_label.has(scene_label):
-				order.append(_new_object_entry(by_label, scene_label, "scene", "", scene_path))
+				order.append(_new_object_entry(by_label, scene_label, "scene", "", scene_path, scene_path))
 	_tally_usage(order, by_label, units)
 	order.sort_custom(_by_kind_order)
 	return order
 
 
 ## A fresh census entry, registered under its label so a second sighting only tallies.
+## `match_token` is the text the tally counts by when it differs from the label - a scene is named
+## in code by its res:// path, never by the display name the rail shows it under.
 static func _new_object_entry(by_label: Dictionary, label: String, kind: String,
-		class_name_str: String, path: String) -> Dictionary:
+		class_name_str: String, path: String, match_token: String = "") -> Dictionary:
 	var entry: Dictionary = {
 		"label": label, "kind": kind, "class": class_name_str, "path": path,
+		"match": match_token if not match_token.is_empty() else label,
 		"rows": 0, "verbs": PackedStringArray(), "signals": PackedStringArray()
 	}
 	by_label[label] = entry
@@ -819,7 +822,7 @@ static func _collect_code(resource: Variant, into: PackedStringArray) -> void:
 		return
 	var raw: RawCodeRow = resource as RawCodeRow
 	if raw != null:
-		into.append(raw.code)
+		into.append(_without_comments(raw.code))
 		return
 	var variable: LocalVariable = resource as LocalVariable
 	if variable != null:
@@ -851,15 +854,32 @@ static func _collect_code(resource: Variant, into: PackedStringArray) -> void:
 	if (resource as Resource).get("params") != null or (resource as Resource).get("parameters") != null:
 		_collect_ace_code(resource, into)
 		return
-	# Any other row kind - a preload, a signal declaration, a pack block - contributes its text
-	# properties. A census that only knew the kinds named above would silently miss the scene a
-	# preload row names, and the rail would be short an object with no way to tell.
+	# Any other row kind - a preload, a signal declaration, a pack block - contributes its text.
+	# A custom block keeps its content in a `fields` dictionary rather than in properties, which is
+	# where a preload row's scene path lives; without it the rail was silently short every scene the
+	# file spawns, with nothing to say it had missed one.
+	var fields: Variant = (resource as Resource).get("fields")
+	if fields is Dictionary:
+		for value: Variant in (fields as Dictionary).values():
+			into.append(str(value))
 	for property_info: Dictionary in (resource as Resource).get_property_list():
 		if int(property_info.get("type", TYPE_NIL)) != TYPE_STRING:
 			continue
-		var value: String = str((resource as Resource).get(str(property_info.get("name", ""))))
-		if not value.is_empty():
-			into.append(value)
+		var text: String = str((resource as Resource).get(str(property_info.get("name", ""))))
+		if not text.is_empty():
+			into.append(text)
+
+
+## A block of GDScript with its comment lines dropped. Prose is not use: a doc comment that MENTIONS
+## `$Health` describes the file, and censusing it put objects in the rail that no line of the file
+## ever touches. Only whole-line comments go - a trailing `# note` after real code cannot introduce
+## an object the code did not already name.
+static func _without_comments(code: String) -> String:
+	var kept: PackedStringArray = PackedStringArray()
+	for line: String in code.split("\n"):
+		if not line.strip_edges().begins_with("#"):
+			kept.append(line)
+	return "\n".join(kept)
 
 
 ## One lifted row written back out as the call it stands for. A row carrying both a target and a
@@ -895,7 +915,8 @@ static func _tally_usage(order: Array, by_label: Dictionary, units: Array) -> vo
 		var seen: Dictionary = {}
 		for entry: Dictionary in order:
 			var label: String = str(entry.get("label", ""))
-			if seen.has(label) or not _mentions(code, label):
+			var token: String = str(entry.get("match", label))
+			if seen.has(label) or not _mentions(code, token):
 				continue
 			seen[label] = true
 			entry["rows"] = int(entry.get("rows", 0)) + 1
@@ -1004,19 +1025,21 @@ static func _group_references(code: String) -> PackedStringArray:
 	return found
 
 
-## Every packed scene a piece of code preloads or loads.
+## Every packed scene a piece of code names. Any `res://` path ending in a scene extension counts,
+## whether it was written as a `preload("…")` call or arrived as a preload row's stored field - the
+## two spellings are the same object, and matching only the call shape listed the scenes a file
+## typed while missing the ones it declared.
 static func _scene_references(code: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for marker: String in ["preload(\"", "load(\""]:
-		var from: int = code.find(marker)
-		while from >= 0:
-			var after: int = from + marker.length()
-			var close_at: int = code.find("\"", after)
-			if close_at > after:
-				var path: String = code.substr(after, close_at - after)
-				if path.ends_with(".tscn") or path.ends_with(".scn"):
-					found.append(path)
-			from = code.find(marker, after)
+	var from: int = code.find("res://")
+	while from >= 0:
+		var walk: int = from
+		while walk < code.length() and not code[walk] in ["\"", "'", " ", "\t", "\n", ")", ","]:
+			walk += 1
+		var path: String = code.substr(from, walk - from)
+		if path.ends_with(".tscn") or path.ends_with(".scn"):
+			found.append(path)
+		from = code.find("res://", from + 1)
 	return found
 
 
