@@ -1798,3 +1798,8 @@ no,否
 value,值
 Local,局部
 Local constant,局部常量
+Humanized Names,易读名称
+Functions,函数
+Call,调用
+line,行
+lines,行

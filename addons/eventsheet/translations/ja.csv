@@ -1798,3 +1798,8 @@ no,いいえ
 value,値
 Local,ローカル
 Local constant,ローカル定数
+Humanized Names,分かりやすい名前
+Functions,関数
+Call,呼び出し
+line,行
+lines,行

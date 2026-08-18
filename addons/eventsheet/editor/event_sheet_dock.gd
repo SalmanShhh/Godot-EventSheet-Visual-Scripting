@@ -1886,6 +1886,7 @@ func _load_simple_mode_preference() -> void:
 	# Row density rides the same startup read: applied before the first layout, so a
 	# Compact-preferring project never flashes Comfortable.
 	_apply_compact_rows_pref()
+	_apply_humanized_names_pref()
 
 
 ## Declutter toggle: show/hide the trailing "+ Add event…" affordance rows across every
@@ -1973,6 +1974,54 @@ func _toggle_compact_rows(view_popup: PopupMenu) -> void:
 			view_popup.set_item_checked(item_index, compact)
 	_set_status("Compact rows - more events on screen, same text size." if compact
 		else "Comfortable rows - the default breathing room.")
+
+
+## M9 - View ▾ "Humanized Names". Three states, two of them the user's: AUTO (nothing stored, the
+## default) means the lens follows the surface - on where a sheet is being READ (an opened pack, a
+## .gd preview, the Reading lens), off where one is being AUTHORED - and an explicit choice, once
+## made, applies everywhere and persists per-project per-user (editor metadata, not repo state),
+## exactly like Compact Rows. Stored as an int so "no choice yet" stays distinguishable from "off".
+const HUMANIZED_NAMES_AUTO := -1
+
+
+func _humanized_names_override() -> int:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return int(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "humanized_names", HUMANIZED_NAMES_AUTO))
+	return HUMANIZED_NAMES_AUTO
+
+
+## What the View menu's check mark shows: the lens as it is actually running right now, which
+## under AUTO is whatever the current view resolves it to.
+func _humanized_names_enabled() -> bool:
+	if _viewport != null:
+		return _viewport.humanize_names_enabled()
+	return _humanized_names_override() == 1
+
+
+func _apply_humanized_names_pref() -> void:
+	var stored: int = _humanized_names_override()
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.humanize_names_override = stored
+
+
+func _toggle_humanized_names(view_popup: PopupMenu) -> void:
+	var humanized: bool = not _humanized_names_enabled()
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", "humanized_names", 1 if humanized else 0)
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		view.humanize_names_override = 1 if humanized else 0
+		# Names are baked into span TEXT at build time, so the lens needs a span rebuild, not a
+		# redraw - the same reason Object Icons re-sets the sheet rather than queueing a repaint.
+		view.set_sheet(_current_sheet)
+	if view_popup != null:
+		var item_index: int = view_popup.get_item_index(20)
+		if item_index >= 0:
+			view_popup.set_item_checked(item_index, humanized)
+	_set_status("Humanized names - variables read as words; the raw name is on hover." if humanized
+		else "Raw names - variables read exactly as they are spelled in the file.")
 
 
 func _object_columns_aligned() -> bool:

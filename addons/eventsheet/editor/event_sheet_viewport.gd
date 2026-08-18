@@ -269,6 +269,14 @@ var show_add_event_footers: bool = true
 ## Object/module icons before names (rows + group folders). Toggleable (View menu) for users
 ## who prefer a text-only sheet; span builds read it, so flipping it rebuilds via set_sheet.
 var show_object_icons: bool = true
+## M9 - the humanized-names lens: "_coyote_timer" reads "coyote timer", an @export knob reads with
+## its Inspector capitalisation, and the raw name stays on hover. Tri-state on purpose: -1 AUTO
+## (the default) means "on where the sheet is being READ, off where it is being AUTHORED", which
+## is the honest default for the two audiences - a Construct reader wants the words, a programmer
+## editing the file wants the identifiers that are actually in it. 0/1 are the user's explicit
+## View-menu choice, which persists and then applies everywhere. Span builds read this, so
+## flipping it rebuilds via set_sheet, exactly like show_object_icons.
+var humanize_names_override: int = -1
 ## Event-sheet-style drag ghost: a faint label of the dragged content following the cursor.
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO
@@ -353,6 +361,15 @@ func set_reading_mode(enabled: bool) -> void:
 	reading_mode = enabled
 	_refresh_rows()
 	queue_redraw()
+
+
+## M9 - whether the humanized-names lens is running for this view right now. AUTO (-1, the
+## default) resolves to reading mode, so an opened pack or the Reading lens shows the words and an
+## editable sheet shows the identifiers; an explicit View-menu choice overrides that everywhere.
+func humanize_names_enabled() -> bool:
+	if humanize_names_override >= 0:
+		return humanize_names_override == 1
+	return is_reading_mode()
 
 
 func set_sheet(sheet: EventSheetResource) -> void:

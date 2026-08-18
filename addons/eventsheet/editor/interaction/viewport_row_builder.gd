@@ -761,6 +761,11 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 ## the @export / group chips are gone - the bar above the row carries the group, and everything inside
 ## a settings bar is exported by definition.
 func _build_reading_variable_row(variable: LocalVariable, description: String, indent: int) -> EventRowData:
+	# M20 - an @onready node reference is an OBJECT, not a value: it reads as an Object
+	# declaration here too, so the head's variable list and the event tree agree.
+	var object_row: EventRowData = _build_object_declaration_row(variable, indent)
+	if object_row != null:
+		return object_row
 	return _build_variable_row(
 		"tree",
 		variable.name,
@@ -2878,8 +2883,45 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"kind": "lift_note",
 			"line_index": 0
 		}))
-	for line_index in range(code_lines.size()):
+	# ── M17 - the folded code card ─────────────────────────────────────────────────────────────
+	# A block that could not lift is a wall of statements you did not ask to read. While READING a
+	# sheet it costs one row - "code · 12 lines" - and opens in place to the exact GDScript; while
+	# AUTHORING one the statement lines stay put, because those are what you edit. The fold rides
+	# the CHILD-row mechanism the enum fold already uses, so the arrow, the click, the keyboard
+	# fold and the fold memory all work here without a line of new interaction code.
+	if _viewport.is_reading_mode() and code_lines.size() > 1:
 		spans.append(_make_span(
+			EventSheetViewportReadingRows.code_card_label(code_lines.size()),
+			SemanticSpan.SpanType.VALUE,
+			{"editable": false, "kind": "raw_code", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED}
+		))
+		row_data.spans = spans
+		row_data.line_count = 1
+		row_data.folded = bool(_viewport._fold_state.get(
+			row_data.row_uid,
+			EventSheetViewportReadingRows.code_card_default_folded(true)
+		))
+		var opened := EventRowData.new()
+		opened.indent = indent + 1
+		opened.row_type = EventRowData.RowType.SECTION
+		opened.source_resource = raw_row
+		opened.row_uid = "%s_code" % row_data.row_uid
+		opened.line_count = code_lines.size()
+		opened.spans = _raw_code_line_spans(code_lines, line_fg)
+		row_data.children = [opened]
+		return row_data
+	spans.append_array(_raw_code_line_spans(code_lines, line_fg))
+	row_data.spans = spans
+	return row_data
+
+
+## The exact GDScript of a raw block, one span per source line. Shared by the ordinary authoring
+## render and by what an M17 code card opens to, so "the code" is literally the same rows either
+## way and the two can never drift into showing different text.
+func _raw_code_line_spans(code_lines: PackedStringArray, line_fg: Color) -> Array[SemanticSpan]:
+	var line_spans: Array[SemanticSpan] = []
+	for line_index: int in range(code_lines.size()):
+		line_spans.append(_make_span(
 			code_lines[line_index] if not code_lines[line_index].is_empty() else " ",
 			SemanticSpan.SpanType.VALUE,
 			{
@@ -2889,8 +2931,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"text_color": line_fg
 			}
 		))
-	row_data.spans = spans
-	return row_data
+	return line_spans
 
 
 ## Builds the foldable "Data class" block for a RawCodeRow that data_class_lifts recognises: a one-line
@@ -3190,8 +3231,64 @@ func _build_class_method_row(class_name_str: String, child_index: int, method_li
 	return row_data
 
 
+## M20 - an `@onready var hp_bar: ProgressBar = %HpBar` read as an OBJECT declaration rather than
+## as a value one: this is how Construct's object list is recovered from a script. The row says
+## what the object is called, which node it is, and its class - with the class's own Godot icon,
+## the same icon every later row using `hp_bar` as its object then shows (M13).
+##
+## Reading mode only. While AUTHORING, the @onready variable row stays exactly as it was: it is
+## the row the variable dialog edits, and re-shaping an editable row would be a lens with
+## consequences. Returns null when the variable is not an object declaration.
+func _build_object_declaration_row(variable: LocalVariable, indent: int) -> EventRowData:
+	if not _viewport.is_reading_mode() or not EventSheetViewportReadingRows.is_object_declaration(variable):
+		return null
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = variable
+	row_data.row_uid = "variable_tree_%d" % variable.get_instance_id()
+	row_data.line_count = 1
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var node_reference: String = variable.default_value.strip_edges()
+	var declared_class: String = EventSheetViewportReadingRows.declared_class_of(variable)
+	# The object's NAME is not humanized, even with the lens on: this row is where the object gets
+	# its identity, and every later row refers to it by exactly this spelling. Construct shows an
+	# object's name verbatim in its object list for the same reason.
+	var shown_name: String = variable.name
+	var spans: Array[SemanticSpan] = [
+		_make_span(EventSheetL10n.translate("Object"), SemanticSpan.SpanType.KEYWORD, {
+			"editable": false, "kind": "variable", "line_index": 0, "badge": true, "badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_GROUP_CHIP_BG, "badge_fg": EventSheetPalette.COLOR_GROUP_CHIP_FG
+		}),
+		_make_span(shown_name, SemanticSpan.SpanType.OBJECT, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": event_style.object_label_color
+		}),
+		_make_span("=", SemanticSpan.SpanType.OPERATOR, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}),
+		_make_span(node_reference, SemanticSpan.SpanType.VALUE, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": event_style.value_highlight_color,
+			"object_icon": _reading_class_icon_for(node_reference)
+		})
+	]
+	if not declared_class.is_empty():
+		spans.append(_make_span(declared_class, SemanticSpan.SpanType.COMMENT, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}))
+	row_data.spans = spans
+	return row_data
+
+
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
 func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowData:
+	# M20 - while reading, an @onready node reference is an OBJECT declaration, not a variable row.
+	var object_row: EventRowData = _build_object_declaration_row(variable, indent)
+	if object_row != null:
+		return object_row
 	var row_data: EventRowData = _build_variable_row(
 		"tree",
 		variable.name,
@@ -3513,21 +3610,25 @@ func _joined_call_args(call: Dictionary) -> String:
 ## method name already does ("can_see_player()" reads "Can See Player" - a beginner should
 ## never meet parentheses in a condition cell). The computed-check cue is the ƒ SVG BADGE the
 ## caller adds in the icon column (the same ƒ collapsed functions wear, one symbol taught
-## once), never inline text. `not` reads as the word Not, and value comparisons ("hp < 20")
-## keep their values. Display-only; the hover carries the code.
+## once), never inline text. M12: a negated guard does NOT say the word "not" - the sentence is
+## the positive one and the inversion is the red ✕ in the badge column, the same mark an inverted
+## ACE condition has always worn, so one symbol means one thing everywhere on the sheet. Value
+## comparisons ("hp < 20") keep their values. Display-only; the hover carries the code.
 func _friendly_guard_text(guard: String) -> String:
-	var text: String = guard.strip_edges()
-	var negated: bool = text.begins_with("not ")
-	if negated:
-		text = text.substr(4).strip_edges()
+	var text: String = str(EventSheetViewportLenses.strip_leading_not(guard.strip_edges()).get("text", ""))
 	var friendly: String = text
 	var call: Dictionary = ViewportRowBuilder.call_parts(text)
 	if not call.is_empty() and (str(call.get("target", "")).is_empty() or str(call.get("target", "")) == "self"):
 		var args_text: String = _joined_call_args(call)
 		friendly = str(call.get("verb", "")) if args_text.strip_edges().is_empty() else "%s ( %s )" % [str(call.get("verb", "")), args_text]
-	if negated:
-		return "%s %s" % [EventSheetL10n.translate("Not"), friendly]
 	return friendly
+
+
+## M12 - whether a guard is inverted, so the caller can draw the ✕ the sentence no longer says.
+## Split from _friendly_guard_text because the two answers go to different places: the words go
+## in the condition cell, the inversion goes in the badge column beside it.
+func _guard_is_negated(guard: String) -> bool:
+	return bool(EventSheetViewportLenses.strip_leading_not(guard.strip_edges()).get("negated", false))
 
 
 ## A body-level `if <guard>:` block inside a match case IS a condition, so it renders as a
@@ -3551,7 +3652,7 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 		if inner_line.begins_with("\t") or inner_line.begins_with("elif") or inner_line.begins_with("else"):
 			return null
 		inner.append(_friendly_statement_text(inner_line))
-	var child: EventRowData = _build_condition_action_row(_friendly_guard_text(guard), inner, indent, match_row)
+	var child: EventRowData = _build_condition_action_row(_friendly_guard_text(guard), inner, indent, match_row, _guard_is_negated(guard))
 	child.language_block = true
 	# A computed-check guard wears the ƒ SVG badge in the icon column - the reader learns at a
 	# glance the value comes from a FUNCTION, not a bool variable, without meeting parentheses.
@@ -3605,7 +3706,10 @@ func _pattern_leaf(pattern_text: String) -> String:
 ## spans. Reusable so any feature can render a construct as sheet-native events (the switch/case dogfoods it;
 ## exposed via EventSheets.build_condition_action_row for custom blocks). Non-interactive (spans editable:
 ## false); the caller sets source_resource for double-click routing.
-func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource) -> EventRowData:
+## `negated` is for callers that already turned an inverted guard into its positive sentence
+## (_friendly_guard_text does): they pass the inversion here so the ✕ still gets drawn. Callers
+## handing over raw text can leave it false - the lens below finds a leading NOT on its own.
+func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource, negated: bool = false) -> EventRowData:
 	var row := EventRowData.new()
 	row.indent = indent
 	row.row_type = EventRowData.RowType.EVENT
@@ -3613,14 +3717,22 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 	row.line_count = maxi(action_lines.size(), 1)
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	var spans: Array[SemanticSpan] = [
-		_make_span(condition_text if not condition_text.is_empty() else " ", SemanticSpan.SpanType.CONDITION, {
+	# M12 - a lifted `if not <cond>:` shows its inversion as the red ✕ in the badge column, exactly
+	# as an inverted ACE condition does, and the sentence beside it is the POSITIVE one. Callers
+	# that already stripped the negation pass plain text and nothing happens here.
+	var inversion: Dictionary = EventSheetViewportLenses.strip_leading_not(condition_text)
+	var shown_condition: String = str(inversion.get("text", condition_text))
+	var spans: Array[SemanticSpan] = []
+	if negated or bool(inversion.get("negated", false)):
+		spans.append(_negated_badge_span(condition_style, 0))
+	spans.append_array([
+		_make_span(shown_condition if not shown_condition.is_empty() else " ", SemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
 			"kind": "match_case",
 			"editable": false,
 			"line_index": 0
 		}.merged(condition_style, true))
-	]
+	])
 	for line_index: int in range(action_lines.size()):
 		spans.append(_make_span(action_lines[line_index] if not action_lines[line_index].is_empty() else " ", SemanticSpan.SpanType.ACTION, {
 			"lane": "action",
@@ -4841,17 +4953,8 @@ func _append_condition_prefix_spans(
 	# Keep the primary badge column stable for trigger/invert/OR by rendering
 	# negation first. When a line has both badges, ✕ is placed in column 1
 	# and OR follows in column 2.
-	if condition.negated:
-		var negated_meta: Dictionary = _viewport.BADGE_NEGATED_METADATA.duplicate(true)
-		negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
-		negated_meta["condition_index"] = condition_index
-		negated_meta["line_index"] = line_index
-		negated_meta["badge_style"] = "negated"
-		# Event-sheet-style inverted-condition marker: a bare red ✗ (the --invert-icon-color),
-		# no circle behind it. Themable via EventSheetEventStyle.invert_marker_color.
-		negated_meta["badge_bg"] = Color(0.0, 0.0, 0.0, 0.0)
-		negated_meta["badge_fg"] = _viewport._get_event_style().invert_marker_color
-		spans.append(_make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta))
+	if condition.negated or _condition_reads_negated(condition):
+		spans.append(_negated_badge_span(condition_style_meta, line_index, condition_index))
 	if (
 		event_row.condition_mode == EventRow.ConditionMode.OR
 		and displayed_condition_count > 1
@@ -4864,6 +4967,22 @@ func _append_condition_prefix_spans(
 		or_meta["line_index"] = line_index
 		or_meta["badge_style"] = "or"
 		spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
+
+
+## M12 - the inverted-condition mark: a bare red ✕ in the badge column, no circle behind it
+## (themable via EventSheetEventStyle.invert_marker_color). ONE factory, because the mark now has
+## two producers - an ACE condition with its `negated` flag, and a lifted `if not <cond>:` whose
+## sentence dropped the word - and they must draw the identical glyph or the sheet teaches two
+## symbols for one idea.
+func _negated_badge_span(condition_style_meta: Dictionary, line_index: int, condition_index: int = -1) -> SemanticSpan:
+	var negated_meta: Dictionary = _viewport.BADGE_NEGATED_METADATA.duplicate(true)
+	negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+	negated_meta["condition_index"] = condition_index
+	negated_meta["line_index"] = line_index
+	negated_meta["badge_style"] = "negated"
+	negated_meta["badge_bg"] = Color(0.0, 0.0, 0.0, 0.0)
+	negated_meta["badge_fg"] = _viewport._get_event_style().invert_marker_color
+	return _make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta)
 
 
 func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, font_size: int) -> float:
@@ -4983,7 +5102,50 @@ func _function_call_label(action: ACEAction) -> String:
 					label = display
 				break
 	var args: String = str(params_dict.get("args", "")).strip_edges()
+	# ── M16 lens hook (LIFTED call rows) ──────────────────────────────────────────────────────
+	# "Call Add Look   x = velocity X   y = velocity Y" instead of "Add Look(velocity.x,
+	# velocity.y)": the argument labels come from the called function's OWN parameter names, so
+	# the row says what each value means rather than making you open the function to find out.
+	var called: EventFunction = find_function_by_name(_viewport._sheet, fn_name)
+	if called != null:
+		var call_pieces: Array = EventSheetViewportReadingRows.call_reading_pieces(
+			label,
+			_split_call_arguments(args),
+			EventSheetViewportReadingRows.parameter_names_of(called),
+			_viewport.humanize_names_enabled(),
+			_export_knob_names()
+		)
+		if not call_pieces.is_empty():
+			var text: String = ""
+			# The object label ("Functions") is the object column's job, so the first piece - which
+			# IS that label - is dropped here rather than repeated inside the sentence.
+			for index: int in range(1, call_pieces.size()):
+				text += str((call_pieces[index] as Array)[0])
+			return text.strip_edges()
 	return "%s(%s)" % [label, args] if not args.is_empty() else label
+
+
+## The argument list of a call row split on TOP-LEVEL commas, so a nested call or a vector
+## literal ("Vector2(1, 2)") stays one argument instead of becoming two.
+func _split_call_arguments(args: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if args.strip_edges().is_empty():
+		return out
+	var depth: int = 0
+	var current: String = ""
+	for index: int in range(args.length()):
+		var character: String = args[index]
+		if character in ["(", "[", "{"]:
+			depth += 1
+		elif character in [")", "]", "}"]:
+			depth -= 1
+		if character == "," and depth == 0:
+			out.append(current.strip_edges())
+			current = ""
+			continue
+		current += character
+	out.append(current.strip_edges())
+	return out
 
 
 func _format_condition_descriptor(condition: ACECondition) -> String:
@@ -4991,7 +5153,14 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 	# where the template is RESOLVED - a locale whose catalog predates the markup translates
 	# the plain sentence, and that plain result must not enter the styled branch.
 	_pending_display_bbcode = _param_markup_applies(condition.provider_id, condition.ace_id, condition.params)
-	var base_text: String = _format_condition_descriptor_base(condition)
+	# ── M9 / M10 / M12 lens hook (LIFTED rows) ────────────────────────────────────────────────
+	# The sentence-layer hook further down only covers code that stayed raw; a condition that
+	# LIFTED into a real ACE gets its reading here, at the one place its display text is built.
+	# M12 strips a leading NOT because the ✕ in the badge column says it instead (see
+	# _condition_reads_negated, which asks the same question for the badge).
+	var base_text: String = _reading_sentence(str(EventSheetViewportLenses.strip_leading_not(
+		_format_condition_descriptor_base(condition)
+	).get("text", "")))
 	var ace_note: String = str(condition.comment).strip_edges()
 	if not ace_note.is_empty():
 		return "%s   ⊳ %s" % [base_text, ace_note]
@@ -5114,7 +5283,8 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	# Same split as the condition formatter: rich-param styling arms here, template markup
 	# arms where the template resolves (translation-fallback aware).
 	_pending_display_bbcode = _param_markup_applies(action.provider_id, action.ace_id, action.params)
-	var base_text: String = _format_action_descriptor_base(action)
+	# M9 / M10 lens hook for LIFTED action rows - the twin of the condition hook above.
+	var base_text: String = _reading_sentence(_format_action_descriptor_base(action))
 	# Awaiting actions wear an hourglass (the GDevelop async-action cue): everything after
 	# this row in the SAME event waits for it, so the suspension point should be visible.
 	if action_awaits(action):
@@ -5357,20 +5527,41 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		if call_info.is_empty():
 			return false
 		indent = int(call_info.get("indent", 0))
-		pieces.append([str(call_info.get("target", "")) + "  ", "object"])
-		pieces.append([str(call_info.get("verb", "")), "name"])
 		var args: PackedStringArray = call_info.get("args", PackedStringArray())
-		if args.is_empty():
-			pieces.append(["  ( )", "plain"])
+		# ── M16 lens hook ──────────────────────────────────────────────────────────────────────
+		# Applied AFTER the sentence layer has resolved this row as a call: when the callee is one
+		# of THIS sheet's functions, the row reads Construct's way ("Functions ▸ Call Add Look",
+		# one argument per parameter name) instead of as a bare method call. A callee the sheet
+		# does not know falls straight through to the ordinary reading below - a call to something
+		# unknown must never be dressed up as a project function.
+		var call_pieces: Array = _reading_call_pieces(raw.code, args)
+		if not call_pieces.is_empty():
+			pieces = call_pieces
 		else:
-			pieces.append(["  ( ", "plain"])
-			for argument_index: int in args.size():
-				if argument_index > 0:
-					pieces.append([", ", "plain"])
-				pieces.append([args[argument_index], "value"])
-			pieces.append([" )", "plain"])
+			pieces.append([str(call_info.get("target", "")) + "  ", "object"])
+			pieces.append([str(call_info.get("verb", "")), "name"])
+			if args.is_empty():
+				pieces.append(["  ( )", "plain"])
+			else:
+				pieces.append(["  ( ", "plain"])
+				for argument_index: int in args.size():
+					if argument_index > 0:
+						pieces.append([", ", "plain"])
+					pieces.append([args[argument_index], "value"])
+				pieces.append([" )", "plain"])
 	if pieces.is_empty():
 		return false
+	# ── M9 / M10 lens hook ─────────────────────────────────────────────────────────────────────
+	# Applied to the sentence layer's OUTPUT, never inside it: the sentence layer decides what a
+	# statement SAYS, this only decides how the names in it are SPELLED. Only "name" and "value"
+	# pieces are touched (identifiers the builder already resolved), never a string literal and
+	# never a connective word, and the row's hover still shows the exact GDScript.
+	pieces = EventSheetViewportLenses.apply_to_pieces(pieces, _viewport.humanize_names_enabled(), _export_knob_names())
+	# ── M13 / M20 lens hook ────────────────────────────────────────────────────────────────────
+	# The object this statement acts on draws its Godot class icon, the way an event sheet shows
+	# an object's picture in every cell it appears in. Resolved from the RAW pieces (before the
+	# lens above respelled them) so the lookup keys stay the names the file actually uses.
+	var sentence_icon: Texture2D = _reading_sentence_icon(sentence, raw.code)
 	# ONE span, tinted by BBCode segments, so the sentence reads as a single continuous cell -
 	# separate flowing spans each painted their own chip and the row read as a strip of boxes,
 	# the exact fragmented look the entry rows were already reworked away from. Four spaces per
@@ -5408,7 +5599,8 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		# The object column, exactly as an ACE row fills it: a variable belongs to System, a member
 		# assignment to the node it is on. A declaration row names no object at all.
 		"object_label": object_label,
-		"bbcode_segments": sentence_segments
+		"bbcode_segments": sentence_segments,
+		"object_icon": sentence_icon
 	}.merged(action_style_meta, false)))
 	return true
 
@@ -5645,6 +5837,107 @@ func _current_verb_kind() -> int:
 	if _current_verb_function.return_type != TYPE_NIL or (not type_name.is_empty() and type_name != "void"):
 		return EventSheetSentence.VerbKind.EXPRESSION
 	return EventSheetSentence.VerbKind.ACTION
+
+
+# ── Reading lenses (M9/M10/M13/M16/M20) ───────────────────────────────────────────────────────
+# The lenses themselves live in viewport_lenses.gd (text) and viewport_reading_rows.gd (rows).
+# What lives HERE is only the per-rebuild caching: both need to ask the sheet a question whose
+# answer is the same for every row in the pass, and asking it per span would walk the whole
+# events array thousands of times on a large sheet. Cleared whenever the sheet identity changes.
+var _lens_sheet_stamp: int = 0
+var _lens_knob_names: Dictionary = {}
+var _lens_class_map: Dictionary = {}
+
+
+func _reset_lens_caches_if_stale() -> void:
+	var sheet: EventSheetResource = _viewport._sheet
+	var stamp: int = 0 if sheet == null else int(sheet.get_instance_id())
+	if stamp == _lens_sheet_stamp:
+		return
+	_lens_sheet_stamp = stamp
+	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
+	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)
+
+
+## M9 - the sheet's @export knob names, so the lens can show those with Godot's Inspector
+## capitalisation while ordinary variables read as plain lowercase words.
+func _export_knob_names() -> Dictionary:
+	_reset_lens_caches_if_stale()
+	return _lens_knob_names
+
+
+## M13/M20 - the object-label to class-name map, so a row naming the pack's host, a $Node / %Node
+## reference or an @onready node variable can draw that class's Godot icon.
+func _reading_class_icon_for(object_label: String) -> Texture2D:
+	if not _viewport.show_object_icons:
+		return null
+	_reset_lens_caches_if_stale()
+	return EventSheetViewportReadingRows.class_icon_for(object_label, _lens_class_map)
+
+
+## M9/M10 applied to a finished ACE display sentence. One function so every lifted-row lane -
+## conditions, actions, triggers - reads the same way, and so the View toggle has a single switch
+## to flip rather than one per lane.
+func _reading_sentence(text: String) -> String:
+	if not _viewport.humanize_names_enabled():
+		return text
+	return EventSheetViewportLenses.humanize_sentence(text, _export_knob_names())
+
+
+## M12 - whether a lifted condition READS as inverted even though its `negated` flag is not set,
+## which is the case for an expression condition lifted straight from `if not <cond>:`. The badge
+## column asks this so the ✕ appears; _format_condition_descriptor strips the matching word so
+## the two never both show.
+func _condition_reads_negated(condition: ACECondition) -> bool:
+	if condition == null:
+		return false
+	return bool(EventSheetViewportLenses.strip_leading_not(
+		_format_condition_descriptor_base(condition)
+	).get("negated", false))
+
+
+## M13/M20 - the class icon for the object a statement row acts on. The subject is the head of the
+## statement: the assignment target for a `Set` sentence (`$Head.rotation.x` -> `$Head`), the
+## receiver for a call (`host.move_and_slide()` -> `host`). Null whenever nothing is known, which
+## is also what headless returns, so a headless render keeps the text-only look.
+func _reading_sentence_icon(sentence: Dictionary, code: String) -> Texture2D:
+	var subject: String = ""
+	if not sentence.is_empty():
+		for segment: Variant in (sentence.get("segments", []) as Array):
+			var part: Dictionary = segment
+			if str(part.get("tone", "")) == "name":
+				subject = str(part.get("text", ""))
+				break
+	else:
+		subject = str(call_parts(code).get("target", ""))
+	subject = subject.strip_edges()
+	if subject.is_empty():
+		return null
+	var dot_at: int = subject.find(".")
+	if dot_at > 0:
+		subject = subject.substr(0, dot_at)
+	return _reading_class_icon_for(subject)
+
+
+## M16 - the "Functions ▸ Call Name" pieces for a hand-written call the sheet can attribute to one
+## of its own functions, or [] when it cannot.
+func _reading_call_pieces(code: String, arguments: PackedStringArray) -> Array:
+	var sheet: EventSheetResource = _viewport._sheet
+	if sheet == null:
+		return []
+	var function_name: String = EventSheetViewportReadingRows.called_function_name(code)
+	if function_name.is_empty():
+		return []
+	var event_function: EventFunction = find_function_by_name(sheet, function_name)
+	if event_function == null:
+		return []
+	return EventSheetViewportReadingRows.call_reading_pieces(
+		EventSheetViewportLenses.function_display_name(function_name, event_function.ace_display_name),
+		arguments,
+		EventSheetViewportReadingRows.parameter_names_of(event_function),
+		_viewport.humanize_names_enabled(),
+		_export_knob_names()
+	)
 
 
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
