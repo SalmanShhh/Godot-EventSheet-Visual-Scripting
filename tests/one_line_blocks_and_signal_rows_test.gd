@@ -108,11 +108,11 @@ static func _one_line_blocks(rows: PackedStringArray) -> bool:
 	ok = _check("a one-line else is the plain Else",
 		_reading_at(rows, "\"hurt\""), "Else | Play from \"hurt\"s") and ok
 	ok = _check("a one-line continue keeps its loop meaning",
-		_reading_at(rows, "Skip to the next loop item"),
-		"i is the same object as 1 | Skip to the next loop item") and ok
+		_reading_at(rows, "Next"),
+		"i is the same object as 1 | Next") and ok
 	ok = _check("a one-line break does too",
-		_reading_at(rows, "Break out of the loop"),
-		"i is the same object as 2 | Break out of the loop") and ok
+		_reading_at(rows, "Stop loop"),
+		"i is the same object as 2 | Stop loop") and ok
 	return ok
 
 

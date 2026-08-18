@@ -369,6 +369,24 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   of the sheet's own functions reads `Functions ▸ Call Add Look  x = mouse's ΔX  y = mouse's ΔY`, and code
   that could not lift is one folded card with a line count. **View > Humanized Names** turns the name lens
   on or off for editable sheets; nothing on the sheet is scaffolding until you press **Edit Events**.
+- **A plain script is an object.** Its Include bar names it (`class_name`, else its scene's root node,
+  else the file) with its class icon and the scene it lives in; its engine properties read under that
+  name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
+  System (`System ▸ Print "ready"`). Any method call reads `Object ▸ Verb args` with the argument names
+  Godot itself declares (`Sprite2D ▸ Play  name = "run"`), a node path by its last segment with its icon,
+  `queue_free()` as Destroy. `delta` reads `dt`; the tick triggers read `Every tick (physics)` /
+  `Every tick (draw)`. `and` never sits inside a condition cell - each conjunct is its own condition
+  line, and `or` is the OR block. `"Score: %d" % score` reads `"Score: " & score`, `d["k"]` reads
+  `d's "k"`, `arr[0]` reads `arr' item 0`; groups read as families (`enemies (group) ▸ Call Flee`,
+  `For each e in group "enemies"`); loops read `Repeat 10 times`, `For "i" from 2 to 7`, `For each
+  child`, `While`, `Stop loop`, `Next`; `randi_range(1, 6)` reads `random whole number 1 to 6`,
+  `tween_property` reads `Tween position to target over 0.3s`, `await x.opened` reads `⏳ Wait for signal
+  x On Opened`, `await get_tree().process_frame` reads `⏳ Wait one tick`. A signal emit shows its
+  payload by the signal's own parameter names (`Signal On Damaged  amount = 3  source = attacker`). A
+  lambda connected to a signal (`$Timer.timeout.connect(func(): ...)`) reads as the trigger event it is,
+  with the lambda's body as its rows, and the connect line keeps a muted `connects Timer On Timeout`
+  note. One-line `if c: stmt` / `if c: return` / `else: stmt` lift as the same sub-events their
+  indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
 - **A big file never freezes the editor.** The raw sheet paints within a frame under a progress strip
   (`Opening event_sheet_dock.gd - lifting functions 212 of 458 - 6.1 s`, a bar, and **Show as code
   instead**); the lift runs behind it, and the strip goes away when the last function lands.
