@@ -195,17 +195,17 @@ static func run() -> bool:
 	ok = _check("a genuine code block round-trips byte-identically", code_reemit == code_source, true) and ok
 
 	# -- statement_sentence + call_parts: a single lifted statement READS as a step --
-	# `score += wave[1]` shown as "Add wave[1] to score" removes the one part of a line a reader has
+	# `score += wave[1]` shown as "Add wave' item 1 to score" removes the one part of a line a reader has
 	# to decode. Both classifiers are pure views over the unchanged RawCodeRow, so nothing here can
 	# touch emission; the refusals below are what keep an ALMOST-right sentence off the canvas.
-	ok = _check("compound add reads as a sentence", _sentence_text("score += wave[1]"), "Add wave[1] to score") and ok
+	ok = _check("compound add reads as a sentence", _sentence_text("score += wave[1]"), "Add wave' item 1 to score") and ok
 	var add_sentence: Dictionary = ViewportRowBuilder.statement_sentence("score += wave[1]")
 	ok = _check("the added amount is tinted as a value",
 		str(((add_sentence.get("segments", []) as Array)[1] as Dictionary).get("tone", "")), "value") and ok
 	# A declaration is its own ROW SHAPE now (a type-word chip, the name, the value), so it reads as
 	# Construct's local-variable row rather than as a step - and the annotation never shows.
 	ok = _check("a typed declaration reads as a local row",
-		_sentence_text("var label: String = wave[0]"), "Local text label = wave[0]") and ok
+		_sentence_text("var label: String = wave[0]"), "Local text label = wave' item 0") and ok
 	ok = _check("an inferred declaration reads the same", _sentence_text("var n := 3"), "Local number n = 3") and ok
 	ok = _check("plain assignment reads as Set", _sentence_text("x = 5"), "Set x to 5") and ok
 	ok = _check("compound subtract reads as Subtract", _sentence_text("hp -= dmg"), "Subtract dmg from hp") and ok

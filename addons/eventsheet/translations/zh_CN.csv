@@ -1803,3 +1803,25 @@ Functions,函数
 Call,调用
 line,行
 lines,行
+Stop loop,跳出循环
+⏳ Wait one tick,⏳ 等待一帧
+⏳ Wait one physics tick,⏳ 等待一个物理帧
+⏳ Wait for signal {trigger},⏳ 等待信号 {trigger}
+⏳ Wait for signal {owner} {trigger},⏳ 等待信号 {owner} {trigger}
+Add to group {group},加入组 {group}
+Remove from group {group},移出组 {group}
+(group),(组)
+Tween {property} to {value} over {duration}s,将 {property} 在 {duration} 秒内补间到 {value}
+to,为
+is in group {group},在组 {group} 中
+item,项
+Every tick,每帧
+(physics),(物理)
+(draw),(绘制)
+For,对
+from,从
+Repeat,重复
+times,次
+loopindex,循环索引
+While,当
+For each child,对每个子节点

@@ -1803,3 +1803,25 @@ Functions,Fonctions
 Call,Appeler
 line,ligne
 lines,lignes
+Stop loop,Arrêter la boucle
+⏳ Wait one tick,⏳ Attendre un tick
+⏳ Wait one physics tick,⏳ Attendre un tick physique
+⏳ Wait for signal {trigger},⏳ Attendre le signal {trigger}
+⏳ Wait for signal {owner} {trigger},⏳ Attendre le signal {owner} {trigger}
+Add to group {group},Ajouter au groupe {group}
+Remove from group {group},Retirer du groupe {group}
+(group),(groupe)
+Tween {property} to {value} over {duration}s,Animer {property} vers {value} en {duration}s
+to,à
+is in group {group},est dans le groupe {group}
+item,élément
+Every tick,Chaque tick
+(physics),(physique)
+(draw),(dessin)
+For,Pour
+from,de
+Repeat,Répéter
+times,fois
+loopindex,index de boucle
+While,Tant que
+For each child,Pour chaque enfant

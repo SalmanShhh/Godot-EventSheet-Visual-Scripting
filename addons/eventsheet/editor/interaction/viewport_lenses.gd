@@ -303,6 +303,19 @@ static func _sentence_token(token: String, knob_names: Dictionary) -> String:
 	return humanize_identifier(token, knob_names.has(token))
 
 
+## M27. `delta` is Construct's `dt` - the same number under the name a Construct user writes. Applied
+## to a FINISHED sentence (an ACE row's display text), where the grammar's own rewriting never runs,
+## so a lifted `Add gravity * delta to velocity` row reads like the hand-written line beside it.
+## Only the whole word is replaced: `delta_v` and `_delta` are somebody's own names.
+static func dt_words(text: String) -> String:
+	if not text.contains("delta"):
+		return text
+	var regex: RegEx = RegEx.create_from_string("(?<![\\w.])delta(?![\\w])")
+	if regex == null:
+		return text
+	return regex.sub(text, "dt", true)
+
+
 ## M12. The leading NOT of a condition sentence, removed so the red ✕ in the badge column can
 ## carry the inversion instead of the word. Returns the sentence unchanged when it does not
 ## start with a negation. `had_not` in the returned dictionary tells the caller whether to draw

@@ -1803,3 +1803,25 @@ Functions,関数
 Call,呼び出し
 line,行
 lines,行
+Stop loop,ループを抜ける
+⏳ Wait one tick,⏳ 1ティック待つ
+⏳ Wait one physics tick,⏳ 物理1ティック待つ
+⏳ Wait for signal {trigger},⏳ シグナル {trigger} を待つ
+⏳ Wait for signal {owner} {trigger},⏳ シグナル {owner} {trigger} を待つ
+Add to group {group},グループ {group} に追加
+Remove from group {group},グループ {group} から削除
+(group),(グループ)
+Tween {property} to {value} over {duration}s,{property} を {value} へ {duration}秒でトゥイーン
+to,へ
+is in group {group},グループ {group} にいる
+item,項目
+Every tick,毎ティック
+(physics),(物理)
+(draw),(描画)
+For,各
+from,から
+Repeat,繰り返し
+times,回
+loopindex,ループ番号
+While,の間
+For each child,子ごとに
