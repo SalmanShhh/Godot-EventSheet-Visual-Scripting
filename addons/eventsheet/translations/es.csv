@@ -1746,3 +1746,32 @@ Edit…,Editar…
 Open guide,Abrir la guía
 Show in code,Ver en el código
 This verb is no longer on the sheet.,Este verbo ya no está en la hoja.
+Add {value} to {name},Sumar {value} a {name}
+Subtract {value} from {name},Restar {value} de {name}
+Multiply {name} by {value},Multiplicar {name} por {value}
+Divide {name} by {value},Dividir {name} entre {value}
+Set {name} to {value},Establecer {name} en {value}
+Destroy,Destruir
+Destroy (at end of frame),Destruir (al final del fotograma)
+⏳ Wait {seconds} seconds,⏳ Esperar {seconds} segundos
+Go to scene {path},Ir a la escena {path}
+Signal {trigger},Señal {trigger}
+Signal {trigger} {values},Señal {trigger} {values}
+exists,existe
+does not exist,no existe
+Stop event,Detener el evento
+Answer {value},Responder {value}
+Give back {value},Devolver {value}
+Return {value},Retornar {value}
+{name} is true,{name} es verdadero
+{name} is false,{name} es falso
+{action} is down,{action} está pulsado
+On {action} pressed,Al pulsar {action}
+{percent}% chance,{percent}% de probabilidad
+{from} moved toward {to} by {amount},{from} movido hacia {to} en {amount}
+{value} kept between {low} and {high},{value} limitado entre {low} y {high}
+yes,sí
+no,no
+value,valor
+Local,Local
+Local constant,Constante local

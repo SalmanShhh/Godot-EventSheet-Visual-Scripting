@@ -92,7 +92,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# JSON moved to its own module (json_aces.gd / EventForgeJsonACEs) so it is its own thing.
 
 	# Time (System: Wait - handlers are implicit coroutines, await is safe anywhere)
-	descriptors.append(F.make_descriptor("Core", "Wait", "Wait", ACEDescriptor.ACEType.ACTION, "await get_tree().create_timer({seconds}).timeout", "", [F.make_param("seconds", "String", "1.0", "Seconds", "How long to wait before the next action runs.", "expression")], "Time", "Wait {seconds} s")
+	descriptors.append(F.make_descriptor("Core", "Wait", "Wait", ACEDescriptor.ACEType.ACTION, "await get_tree().create_timer({seconds}).timeout", "", [F.make_param("seconds", "String", "1.0", "Seconds", "How long to wait before the next action runs.", "expression")], "Time", "Wait {seconds} seconds")
 		.described("Pauses this event for a number of seconds before continuing."))
 	descriptors.append(F.make_descriptor("Core", "AwaitSignal", "Wait For Signal", ACEDescriptor.ACEType.ACTION, "await {signal_expression}", "", [F.make_param("signal_expression", "String", "get_tree().process_frame", "Signal", "Signal to wait for (e.g. $Timer.timeout).", "expression")], "Time", "Wait for {signal_expression}")
 		.described("Pauses this event until a chosen signal fires, like a timer finishing."))

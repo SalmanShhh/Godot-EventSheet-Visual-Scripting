@@ -202,7 +202,7 @@ static func run() -> bool:
     all_passed = _check("group row no longer renders the redundant 'Group' badge text", _row_contains_text(group_row, "Group"), false) and all_passed
     all_passed = _check("group row shows its title", _row_contains_text(group_row, "Rules"), true) and all_passed
     all_passed = _check("event row inherits indent", event_row_data.indent, 1) and all_passed
-    all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Queue free"), true) and all_passed
+    all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Destroy"), true) and all_passed
     all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
     var layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
     var condition_lane_rect: Rect2 = layout.get("condition_lane_rect", Rect2())

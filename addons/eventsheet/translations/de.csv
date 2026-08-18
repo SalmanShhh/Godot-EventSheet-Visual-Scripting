@@ -1746,3 +1746,32 @@ Edit…,Bearbeiten…
 Open guide,Anleitung öffnen
 Show in code,Im Code zeigen
 This verb is no longer on the sheet.,Dieses Verb steht nicht mehr auf dem Blatt.
+Add {value} to {name},{value} zu {name} addieren
+Subtract {value} from {name},{value} von {name} subtrahieren
+Multiply {name} by {value},{name} mit {value} multiplizieren
+Divide {name} by {value},{name} durch {value} dividieren
+Set {name} to {value},{name} auf {value} setzen
+Destroy,Zerstören
+Destroy (at end of frame),Zerstören (am Frame-Ende)
+⏳ Wait {seconds} seconds,⏳ {seconds} Sekunden warten
+Go to scene {path},Zu Szene {path} wechseln
+Signal {trigger},Signal {trigger}
+Signal {trigger} {values},Signal {trigger} {values}
+exists,existiert
+does not exist,existiert nicht
+Stop event,Ereignis beenden
+Answer {value},{value} antworten
+Give back {value},{value} zurückgeben
+Return {value},Zurückgeben: {value}
+{name} is true,{name} ist wahr
+{name} is false,{name} ist falsch
+{action} is down,{action} ist gedrückt
+On {action} pressed,Bei {action} gedrückt
+{percent}% chance,{percent}% Chance
+{from} moved toward {to} by {amount},{from} um {amount} in Richtung {to} bewegt
+{value} kept between {low} and {high},{value} zwischen {low} und {high} gehalten
+yes,ja
+no,nein
+value,Wert
+Local,Lokal
+Local constant,Lokale Konstante

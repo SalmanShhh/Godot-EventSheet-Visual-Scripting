@@ -1746,3 +1746,32 @@ Edit…,编辑…
 Open guide,打开指南
 Show in code,在代码中显示
 This verb is no longer on the sheet.,该动作已不在事件表中。
+Add {value} to {name},将 {value} 加到 {name}
+Subtract {value} from {name},从 {name} 减去 {value}
+Multiply {name} by {value},将 {name} 乘以 {value}
+Divide {name} by {value},将 {name} 除以 {value}
+Set {name} to {value},将 {name} 设为 {value}
+Destroy,销毁
+Destroy (at end of frame),销毁（帧结束时）
+⏳ Wait {seconds} seconds,⏳ 等待 {seconds} 秒
+Go to scene {path},转到场景 {path}
+Signal {trigger},信号 {trigger}
+Signal {trigger} {values},信号 {trigger} {values}
+exists,存在
+does not exist,不存在
+Stop event,停止事件
+Answer {value},回答 {value}
+Give back {value},返回 {value}
+Return {value},返回 {value}
+{name} is true,{name} 为真
+{name} is false,{name} 为假
+{action} is down,{action} 处于按下状态
+On {action} pressed,当按下 {action}
+{percent}% chance,{percent}% 几率
+{from} moved toward {to} by {amount},{from} 向 {to} 移动 {amount}
+{value} kept between {low} and {high},{value} 限制在 {low} 与 {high} 之间
+yes,是
+no,否
+value,值
+Local,局部
+Local constant,局部常量

@@ -4339,6 +4339,7 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	var grammar: Dictionary = grammar_condition_sentence(condition)
 	if not grammar.is_empty():
 		_pending_object_label = str(grammar.get("object", ""))
+		_pending_grammar_segments = grammar.get("segments", []) as Array
 		return _joined_segments(grammar)
 	if _is_state_header_condition(condition):
 		var state_value: String = str(params_dict.get("state_name", "")).strip_edges()
@@ -4458,6 +4459,7 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	var grammar: Dictionary = grammar_action_sentence(action)
 	if not grammar.is_empty():
 		_pending_object_label = str(grammar.get("object", ""))
+		_pending_grammar_segments = grammar.get("segments", []) as Array
 		return _joined_segments(grammar)
 	# Function calls read as the named verb (under the "ƒ" chip), not the raw "Call name()" template.
 	if _is_function_call_action(action):
@@ -4753,6 +4755,11 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 # always run back to back (the descriptor is the first argument of the _make_span call whose metadata
 # reads the label).
 var _pending_object_label: String = ""
+# One-shot tone segments from the same reading, so a grammar-read ACE row is tinted exactly like the
+# hand-written line beside it. Consumed and cleared by _make_span, and attached only when the text
+# still matches - a formatter suffix (an ACE note) or prefix (the await hourglass) degrades to no
+# tinting rather than to segments that no longer line up with the characters.
+var _pending_grammar_segments: Array = []
 # The sheet the cached sentence context was built for, so a tab switch rebuilds it.
 var _sentence_context_sheet: Resource = null
 var _sentence_context_cache: Dictionary = {}
@@ -4798,12 +4805,9 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("%s.%s += %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
 				str(params_dict.get("value", ""))], context)
-		"Wait":
-			# The hourglass belongs to the row's AWAIT chip, which _format_action_descriptor puts back on
-			# every awaiting action - so the sentence hands over the words only and never doubles it.
-			var wait: Dictionary = EventSheetSentence.statement(
-				"await get_tree().create_timer(%s).timeout" % str(params_dict.get("seconds", "")), context)
-			return _without_hourglass(wait)
+	# Deliberately NOT claimed: Wait. Its own display template already says the grammar's words
+	# ("Wait {seconds} seconds") and the row wears the hourglass through the await chip, so leaving it
+	# on the ordinary path keeps the parameter emphasis its substitution earns.
 	return {}
 
 
@@ -4867,18 +4871,25 @@ func _joined_segments(sentence: Dictionary) -> String:
 	return text
 
 
-## The same reading minus a leading hourglass, for the one caller that adds its own.
-func _without_hourglass(sentence: Dictionary) -> Dictionary:
-	if sentence.is_empty():
-		return sentence
-	var segments: Array = (sentence.get("segments", []) as Array).duplicate()
-	if not segments.is_empty():
-		var first: Dictionary = (segments[0] as Dictionary).duplicate()
-		first["text"] = str(first.get("text", "")).trim_prefix("⏳ ")
-		segments[0] = first
-	var trimmed: Dictionary = sentence.duplicate()
-	trimmed["segments"] = segments
-	return trimmed
+## The draw-ready segments of a grammar reading: names bold, values in the theme's value hue,
+## connectives left to the cell's own colour. Built DIRECTLY, never through the BBCode parser - code
+## text is full of square brackets (`wave[1]`) and a parser eats them as tags.
+func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
+	var segments: Array[Dictionary] = []
+	for piece: Variant in pieces:
+		var part: Dictionary = piece
+		var tone_color: Variant = null
+		var tone_bold: bool = false
+		match str(part.get("tone", "plain")):
+			"name":
+				tone_color = EventSheetPalette.TEXT_PRIMARY
+				tone_bold = true
+			"value":
+				tone_color = _viewport._get_event_style().value_highlight_color
+			"object":
+				tone_color = EventSheetPalette.COLOR_OBJECT
+		segments.append({"text": str(part.get("text", "")), "color": tone_color, "bold": tone_bold, "italic": false})
+	return segments
 
 
 ## The label an ACE row shows in its object column - the pending one when the row's shape named its
@@ -4901,10 +4912,10 @@ func sentence_context() -> Dictionary:
 		return reused
 	var context: Dictionary = {"self_object": EventSheetSentence.OBJECT_SYSTEM, "owner": "", "signals": {}}
 	if sheet != null:
-		var owner_name: String = str(sheet.get("custom_class_name")).strip_edges()
-		if owner_name.is_empty():
-			owner_name = str(sheet.get("host_class")).strip_edges()
-		context["owner"] = owner_name
+		# Only a class_name is an honest owner for a signal row. The host CLASS is the node the
+		# behaviour is attached TO, which does not own the signal - naming it would send a reader
+		# looking for a trigger on the wrong object, so a sheet without a class_name says System.
+		context["owner"] = str(sheet.get("custom_class_name")).strip_edges()
 		var declared: Dictionary = {}
 		for entry: Variant in _sheet_signal_rows(sheet):
 			var signal_row: SignalRow = entry
@@ -4969,6 +4980,10 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 			var ranges: Array = _value_ranges_for(text)
 			if not ranges.is_empty():
 				span.metadata["value_ranges"] = ranges
+			# A row the shared grammar read carries ITS tones, so a picked row is tinted exactly like
+			# the typed line beside it. Attached only while the text is still the grammar's own.
+			if not _pending_grammar_segments.is_empty() and _joined_segments({"segments": _pending_grammar_segments}) == text:
+				span.metadata["bbcode_segments"] = grammar_bbcode_segments(_pending_grammar_segments)
 			var pending_text: String = str(_pending_param_ranges.get("text", ""))
 			if not pending_text.is_empty() and not (_pending_param_ranges.get("ranges", []) as Array).is_empty():
 				var at: int = text.find(pending_text)
@@ -4979,6 +4994,7 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 					span.metadata["param_ranges"] = shifted
 	_pending_display_bbcode = false
 	_pending_param_ranges = {}
+	_pending_grammar_segments = []
 	return span
 
 

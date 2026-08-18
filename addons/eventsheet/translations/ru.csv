@@ -1746,3 +1746,32 @@ Edit…,Изменить…
 Open guide,Открыть руководство
 Show in code,Показать в коде
 This verb is no longer on the sheet.,Этого глагола больше нет на листе.
+Add {value} to {name},Добавить {value} к {name}
+Subtract {value} from {name},Вычесть {value} из {name}
+Multiply {name} by {value},Умножить {name} на {value}
+Divide {name} by {value},Разделить {name} на {value}
+Set {name} to {value},Задать {name} = {value}
+Destroy,Уничтожить
+Destroy (at end of frame),Уничтожить (в конце кадра)
+⏳ Wait {seconds} seconds,⏳ Ждать {seconds} с
+Go to scene {path},Перейти к сцене {path}
+Signal {trigger},Сигнал {trigger}
+Signal {trigger} {values},Сигнал {trigger} {values}
+exists,существует
+does not exist,не существует
+Stop event,Остановить событие
+Answer {value},Ответить {value}
+Give back {value},Вернуть {value}
+Return {value},Вернуть {value}
+{name} is true,{name} истинно
+{name} is false,{name} ложно
+{action} is down,{action} нажата
+On {action} pressed,При нажатии {action}
+{percent}% chance,Шанс {percent}%
+{from} moved toward {to} by {amount},{from} к {to} на {amount}
+{value} kept between {low} and {high},{value} в пределах {low} и {high}
+yes,да
+no,нет
+value,значение
+Local,Локальная
+Local constant,Локальная константа
