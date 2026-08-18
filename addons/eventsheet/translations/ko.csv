@@ -1755,3 +1755,17 @@ Settings,설정
 Internal state,내부 상태
 values the pack keeps for itself - %d,팩이 내부에서만 쓰는 값 - %d
 Script,스크립트
+On mouse moved,마우스가 움직일 때
+On mouse wheel up,휠을 위로 굴릴 때
+On mouse wheel down,휠을 아래로 굴릴 때
+On %s button pressed,%s 버튼을 눌렀을 때
+On %s button released,%s 버튼을 놓았을 때
+On %s pressed,%s 키를 눌렀을 때
+On %s released,%s 키를 놓았을 때
+On touch started,터치를 시작할 때
+On touch ended,터치를 마칠 때
+On button %s pressed,버튼 %s 을 눌렀을 때
+On button %s released,버튼 %s 을 놓았을 때
+mouse's ΔX,마우스의 ΔX
+mouse's ΔY,마우스의 ΔY
+mouse's Δ,마우스의 Δ

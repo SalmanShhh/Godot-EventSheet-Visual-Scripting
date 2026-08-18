@@ -1755,3 +1755,17 @@ Settings,设置
 Internal state,内部状态
 values the pack keeps for itself - %d,扩展包自用的值 - %d
 Script,脚本
+On mouse moved,当鼠标移动时
+On mouse wheel up,当滚轮上滚时
+On mouse wheel down,当滚轮下滚时
+On %s button pressed,当按下 %s 键时
+On %s button released,当松开 %s 键时
+On %s pressed,当按下 %s 时
+On %s released,当松开 %s 时
+On touch started,当触摸开始时
+On touch ended,当触摸结束时
+On button %s pressed,当按下按钮 %s 时
+On button %s released,当松开按钮 %s 时
+mouse's ΔX,鼠标的 ΔX
+mouse's ΔY,鼠标的 ΔY
+mouse's Δ,鼠标的 Δ

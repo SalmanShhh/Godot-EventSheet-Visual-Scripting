@@ -639,6 +639,13 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	var source_map: Array = result["source_map"]
 	var added_event_rows: Array = []
 	var deferred_comment_lines_external: PackedStringArray = PackedStringArray()
+	# Lifted MID-FILE lifecycle handlers (EventAnchorRow): the events they own emit as one function
+	# at the anchor's slot below, so the trailing grouped section must not claim them a second time.
+	var anchored_event_uids: Dictionary = {}
+	for entry: Variant in sheet.events:
+		if entry is EventAnchorRow:
+			for anchored_uid: String in (entry as EventAnchorRow).event_uids:
+				anchored_event_uids[anchored_uid] = true
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable:
 			# The declaration can be MULTI-LINE (a `## doc` comment above the `@export var` line).
@@ -662,6 +669,8 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			for code_line: String in (entry as RawCodeRow).code.split("\n"):
 				lines.append(code_line)
 			source_map.append({"uid": str((entry as RawCodeRow).get_instance_id()), "start": block_start, "end": lines.size(), "kind": "raw"})
+		elif entry is EventRow and anchored_event_uids.has((entry as EventRow).event_uid):
+			pass  # emitted in place by its EventAnchorRow, just above it in this array
 		elif entry is EventRow or entry is EventGroup:
 			added_event_rows.append(entry)
 		elif entry is CommentRow and (entry as CommentRow).enabled and not (entry as CommentRow).text.strip_edges().is_empty():
@@ -703,6 +712,11 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			var anchored_function: EventFunction = _find_function_by_name(sheet, (entry as FunctionAnchorRow).function_name)
 			if anchored_function != null and anchored_function.enabled:
 				_emit_function_block(anchored_function, sheet, lines, source_map, result)
+		elif entry is EventAnchorRow:
+			# A lifted MID-FILE lifecycle handler emits its ONE function at the original slot (no
+			# added blank - the separator lives verbatim in the raw block above), so a
+			# `_unhandled_input` written below a pack's verbs keeps its place in the file.
+			_emit_anchored_trigger_function(_collect_anchored_events(sheet, entry as EventAnchorRow), lines, source_map, result)
 	# External sheets: raw rows include the original file's verbatim segments, so signals
 	# declared anywhere in the source validate self-connections.
 	var external_raw_rows: Array = []
@@ -837,6 +851,58 @@ static func _emit_function_block(event_function: EventFunction, sheet: EventShee
 ## original source lines byte-for-byte, so anchoring can never change a file.
 ## Takes the same compile lock as compile(): the lifter calls this per candidate function from the
 ## async-open worker thread, and _emit_function_block reads the same per-compile scratch statics.
+## The EventRows an anchor owns, in sheet order - they follow the anchor in sheet.events and are
+## addressed by event_uid, so an edit that reorders or removes one simply narrows the handler
+## rather than emitting a stale copy.
+static func _collect_anchored_events(sheet: EventSheetResource, anchor: EventAnchorRow) -> Array:
+	var wanted: Dictionary = {}
+	for anchored_uid: String in anchor.event_uids:
+		wanted[anchored_uid] = true
+	var events: Array = []
+	for entry: Variant in sheet.events:
+		if entry is EventRow and wanted.has((entry as EventRow).event_uid):
+			events.append(entry)
+	return events
+
+
+## One trigger handler emitted at an EventAnchorRow's slot: the header (the source's own spelling
+## when the lift captured one) plus the events' body, and nothing else. Deliberately narrower than
+## _emit_grouped_trigger_functions - no leading blank (the raw block above owns the separator), no
+## regenerated `_ready` connections (a handler whose connects live in a raw block must keep them
+## there), no live-values plumbing (an opened hand-written file is not a streaming sheet). Anything
+## outside that narrow shape simply fails the lifter's byte gate and stays a raw block.
+static func _emit_anchored_trigger_function(events: Array, lines: PackedStringArray, source_map: Array, result: Dictionary) -> void:
+	if events.is_empty() or not (events[0] is EventRow):
+		return
+	var signature: Dictionary = TriggerResolver.resolve_trigger(events[0] as EventRow)
+	var function_name: String = str(signature.get("function_name", ""))
+	if function_name.is_empty():
+		(result["warnings"] as Array[String]).append("Unsupported anchored trigger %s" % (events[0] as EventRow).trigger_id)
+		return
+	var source_header: String = str((events[0] as EventRow).get_meta("__source_trigger_header", ""))
+	var args: String = str(signature.get("args", ""))
+	if not source_header.is_empty():
+		lines.append(source_header)
+	elif args.is_empty():
+		lines.append("func %s() -> void:" % function_name)
+	else:
+		lines.append("func %s(%s) -> void:" % [function_name, args])
+	if not _emit_event_body(events, lines, source_map, 1, result["warnings"]):
+		lines.append("\tpass")
+
+
+## The lifter's per-anchor gate for a lifecycle handler: exactly what the slot above would emit for
+## these events, as text, with no side effects. The handler anchors only when this equals the
+## original source lines byte-for-byte, so anchoring can never change a file.
+static func emit_anchored_trigger_text(events: Array) -> String:
+	_compile_mutex.lock()
+	var lines: PackedStringArray = PackedStringArray()
+	var scratch: Dictionary = {"warnings": [], "errors": []}
+	_emit_anchored_trigger_function(events, lines, [], scratch)
+	_compile_mutex.unlock()
+	return "\n".join(lines)
+
+
 static func emit_function_block_text(event_function: EventFunction, sheet: EventSheetResource) -> String:
 	_compile_mutex.lock()
 	var lines: PackedStringArray = PackedStringArray()
@@ -1236,6 +1302,14 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		var signal_name: String = str(signature.get("signal_name", ""))
 		var function_name: String = str(signature.get("function_name", ""))
 		if signal_name.is_empty() or function_name.is_empty():
+			continue
+		# A LIFTED handler carries the connect line that actually wired it in the source. Re-emit that
+		# verbatim: the canonical `get_node("X").sig.connect(fn)` spelling would rewrite a hand-written
+		# `$X.sig.connect(fn)` and fail the byte-verify, reverting the whole file to code blocks. Only
+		# ever set at lift time, so every authored sheet still gets the generated line below.
+		var lifted_connect: String = str((events[0] as EventRow).get_meta("__source_connect_line", "")) if events[0] is EventRow else ""
+		if not lifted_connect.is_empty():
+			ready_connections.append(lifted_connect)
 			continue
 		var source_path: String = str(signature.get("source_path", ""))
 		if source_path.is_empty():
@@ -1916,6 +1990,13 @@ static func _condition_base_expr(condition: ACECondition) -> String:
 		template = descriptor.codegen_template
 	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	return ActionCodegen._apply_template(template, params)
+
+
+## The GDScript a condition compiles to, negation aside - the editor's readers use it to recognize
+## shapes no single template names, like the input-event type test a handler branches on. Public
+## because reading a row must never have to guess at what the row will emit.
+static func condition_source_text(condition: ACECondition) -> String:
+	return _condition_base_expr(condition) if condition != null else ""
 
 
 ## True when a condition targets the implicit node (node_type set), so in a pick loop it

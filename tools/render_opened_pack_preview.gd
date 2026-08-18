@@ -3,6 +3,8 @@
 #   docs/images/opened-pack-verbs.png    - the published verbs as Construct Function blocks
 #                                          plus the folded Helpers group
 #   docs/images/ace-properties-popup.png - the ACE properties panel a verb header opens
+#   docs/images/opened-pack-input-triggers.png - the pack's `_unhandled_input`, read as one
+#                                          Mouse / Keyboard trigger row per branch
 # Run NON-headless (headless runs cannot render):
 #   godot --path . --script tools/render_opened_pack_preview.gd
 @tool
@@ -16,6 +18,7 @@ var _viewport: EventSheetViewport = null
 var _scroll: ScrollContainer = null
 var _sheet: EventSheetResource = null
 var _style: EventSheetEditorStyle = null
+var _popup_frame: PanelContainer = null
 
 
 func _init() -> void:
@@ -69,10 +72,21 @@ func _on_frame() -> void:
 			_show_popup()
 			_stage = 2
 			_frames = 0
-		_:
+		2:
 			var popup_img: Image = root.get_texture().get_image()
 			popup_img.save_png("res://docs/images/ace-properties-popup.png")
 			print("[preview] popup %dx%d" % [popup_img.get_width(), popup_img.get_height()])
+			if _popup_frame != null:
+				_popup_frame.queue_free()
+				_popup_frame = null
+			_scroll.scroll_vertical = int(_input_handler_top())
+			_stage = 3
+			_frames = 0
+		_:
+			var input_img: Image = root.get_texture().get_image()
+			input_img.save_png("res://docs/images/opened-pack-input-triggers.png")
+			print("[preview] input triggers %dx%d" % [input_img.get_width(), input_img.get_height()])
+			_print_input_rows()
 			quit(0)
 
 
@@ -113,6 +127,44 @@ func _print_verb_rows() -> void:
 			return
 
 
+## The event_uids the pack's `_unhandled_input` anchor owns - the rows the third shot frames.
+func _input_event_uids() -> Dictionary:
+	var uids: Dictionary = {}
+	for entry: Variant in _sheet.events:
+		if entry is EventAnchorRow and (entry as EventAnchorRow).trigger_id == "OnUnhandledInput":
+			for anchored_uid: String in (entry as EventAnchorRow).event_uids:
+				uids[anchored_uid] = true
+	return uids
+
+
+## Where the third shot opens: a little above the first branch of the input handler.
+func _input_handler_top() -> float:
+	var uids: Dictionary = _input_event_uids()
+	for index in range(_viewport._flat_rows.size()):
+		var row_data: EventRowData = _viewport._flat_rows[index].get("row")
+		if row_data == null or not (row_data.source_resource is EventRow):
+			continue
+		if uids.has((row_data.source_resource as EventRow).event_uid):
+			return maxf(_viewport._row_metrics_helper.row_top(index) - _scroll.size.y * 0.35, 0.0)
+	return 0.0
+
+
+## Prints what each branch of the input handler READS as - the words behind the third image.
+func _print_input_rows() -> void:
+	var uids: Dictionary = _input_event_uids()
+	for entry: Dictionary in _viewport.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data == null or not (row_data.source_resource is EventRow):
+			continue
+		if not uids.has((row_data.source_resource as EventRow).event_uid):
+			continue
+		_viewport._ensure_event_spans(row_data)
+		var texts: PackedStringArray = PackedStringArray()
+		for span: SemanticSpan in row_data.spans:
+			texts.append(span.text)
+		print("  branch: [%s]" % " | ".join(texts))
+
+
 ## Draws the ACE properties panel over the sheet, exactly as the popup shows it.
 func _show_popup() -> void:
 	var target: EventFunction = null
@@ -136,3 +188,4 @@ func _show_popup() -> void:
 	frame.size = Vector2(640, 0)
 	frame.add_child(panel)
 	root.add_child(frame)
+	_popup_frame = frame

@@ -1755,3 +1755,17 @@ Settings,Paramètres
 Internal state,État interne
 values the pack keeps for itself - %d,valeurs que le pack garde pour lui - %d
 Script,Script
+On mouse moved,Au mouvement de la souris
+On mouse wheel up,À la molette vers le haut
+On mouse wheel down,À la molette vers le bas
+On %s button pressed,Au clic du bouton %s
+On %s button released,Au relâchement du bouton %s
+On %s pressed,À l'appui sur %s
+On %s released,Au relâchement de %s
+On touch started,Au début du toucher
+On touch ended,À la fin du toucher
+On button %s pressed,À l'appui sur le bouton %s
+On button %s released,Au relâchement du bouton %s
+mouse's ΔX,ΔX de la souris
+mouse's ΔY,ΔY de la souris
+mouse's Δ,Δ de la souris

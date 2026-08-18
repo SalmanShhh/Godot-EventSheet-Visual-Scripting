@@ -1755,3 +1755,17 @@ Settings,Настройки
 Internal state,Внутреннее состояние
 values the pack keeps for itself - %d,значения только для этого пакета - %d
 Script,Скрипт
+On mouse moved,При движении мыши
+On mouse wheel up,При прокрутке вверх
+On mouse wheel down,При прокрутке вниз
+On %s button pressed,При нажатии кнопки %s
+On %s button released,При отпускании кнопки %s
+On %s pressed,При нажатии %s
+On %s released,При отпускании %s
+On touch started,При начале касания
+On touch ended,При завершении касания
+On button %s pressed,При нажатии кнопки %s
+On button %s released,При отпускании кнопки %s
+mouse's ΔX,ΔX мыши
+mouse's ΔY,ΔY мыши
+mouse's Δ,Δ мыши
