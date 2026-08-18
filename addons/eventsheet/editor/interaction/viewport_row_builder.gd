@@ -3068,6 +3068,13 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	if not function_info.is_empty():
 		row_data.line_count = 1
 		row_data.language_block = true  # a collapsed function header - language structure, not an event
+		# N3 - `while true: await get_tree().create_timer(x).timeout` is a beat, not a helper: the
+		# function exists to run its body every x seconds. It reads as that beat, with the loop's own
+		# lines as its content (the card opens to the exact GDScript, unchanged).
+		var loop_seconds: String = await_loop_seconds(raw_row.code)
+		if not loop_seconds.is_empty():
+			row_data.spans = _await_loop_trigger_spans(loop_seconds)
+			return row_data
 		var function_spans: Array[SemanticSpan] = [
 			_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
@@ -4910,6 +4917,232 @@ func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, t
 			return "➜"
 
 
+# ── N3 - Construct's "Every X seconds" over Godot's two spellings of it ─────────────────────────
+#
+# Construct's most-used trigger is `Every X seconds`. Godot writes the same thing twice: a repeating
+# Timer node plus a `timeout` handler, or `while true: await get_tree().create_timer(x).timeout` with
+# the work in the loop. Both read as the trigger here. DISPLAY ONLY - the file keeps its handler, its
+# connect line and its loop, and the connect note still sits on the `_ready` row (M29).
+#
+# Only a REPEATING timer qualifies. A `one_shot = true` anywhere in the file takes its node back out
+# (that Timer keeps `On timeout`, which is what it does), and a Timer whose wait_time the script never
+# sets is left alone rather than guessed at - a wrong number is worse than the plain reading.
+
+## Timer node name -> the wait_time the file sets on it, cached per sheet instance the way the lens
+## caches are (a rebuild on the same sheet reuses it; a reopened file rebuilds it).
+var _repeat_timers: Dictionary = {}
+var _repeat_timers_stamp: int = -1
+
+
+func _repeating_timers() -> Dictionary:
+	var sheet: EventSheetResource = _viewport._sheet
+	var stamp: int = 0 if sheet == null else int(sheet.get_instance_id())
+	if stamp == _repeat_timers_stamp:
+		return _repeat_timers
+	_repeat_timers_stamp = stamp
+	_repeat_timers = {}
+	if sheet == null:
+		return _repeat_timers
+	var statements: PackedStringArray = PackedStringArray()
+	_collect_statement_text(sheet.events, statements)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			_collect_statement_text((entry as EventFunction).events, statements)
+	var wait_regex := RegEx.new()
+	var one_shot_regex := RegEx.new()
+	if wait_regex.compile("^([^\\s=]+)\\.wait_time\\s*=\\s*(.+)$") != OK:
+		return _repeat_timers
+	if one_shot_regex.compile("^([^\\s=]+)\\.one_shot\\s*=\\s*(true|false)$") != OK:
+		return _repeat_timers
+	var waits: Dictionary = {}
+	var one_shot: Dictionary = {}
+	for statement: String in statements:
+		var text: String = statement.strip_edges()
+		var wait_match: RegExMatch = wait_regex.search(text)
+		if wait_match != null:
+			waits[timer_node_name(wait_match.get_string(1))] = wait_match.get_string(2).strip_edges()
+			continue
+		var shot_match: RegExMatch = one_shot_regex.search(text)
+		if shot_match != null and shot_match.get_string(2) == "true":
+			one_shot[timer_node_name(shot_match.get_string(1))] = true
+	for node_name: String in waits.keys():
+		if not one_shot.has(node_name):
+			_repeat_timers[node_name] = str(waits[node_name])
+	return _repeat_timers
+
+
+## The bare node NAME behind any of the spellings a script reaches a Timer with - `$SpawnTimer`,
+## `%Spawn`, `get_node("Timers/Spawn")`, a plain member. "" when there is no name to read.
+static func timer_node_name(reference: String) -> String:
+	var text: String = reference.strip_edges()
+	if text.begins_with("get_node(") and text.ends_with(")"):
+		text = text.substr(9, text.length() - 10).strip_edges()
+	text = text.lstrip("$%").strip_edges()
+	text = text.trim_prefix("\"").trim_suffix("\"").trim_prefix("'").trim_suffix("'")
+	if text.contains("/"):
+		text = text.get_slice("/", text.get_slice_count("/") - 1)
+	return text.strip_edges()
+
+
+## Every statement the sheet holds, as source text - what the Timer scan reads. Recursive through
+## events, sub-events and groups; an ACE contributes the line it compiles to, a verbatim block its
+## own lines. Non-mutating.
+func _collect_statement_text(rows: Array, into: PackedStringArray) -> void:
+	for row: Variant in rows:
+		if row is RawCodeRow:
+			into.append_array((row as RawCodeRow).code.split("\n"))
+		elif row is ACEAction:
+			var generated: String = ActionCodegen.generate_action(row as ACEAction)
+			if not generated.is_empty():
+				into.append_array(generated.split("\n"))
+		elif row is EventGroup:
+			_collect_statement_text(_viewport._group_children(row as EventGroup), into)
+		elif row is EventRow:
+			var event_row: EventRow = row as EventRow
+			_collect_statement_text(event_row.actions, into)
+			_collect_statement_text(event_row.sub_events, into)
+
+
+## What a lifted `timeout` handler READS as when its Timer repeats: {"seconds", "timer"}, else {}.
+func _repeating_timer_reading(event_row: EventRow) -> Dictionary:
+	if event_row == null or event_row.trigger_id != "OnTimeout":
+		return {}
+	var node_name: String = timer_node_name(event_row.trigger_source_path)
+	if node_name.is_empty():
+		return {}
+	var seconds: String = str(_repeating_timers().get(node_name, ""))
+	if seconds.is_empty():
+		return {}
+	return {"seconds": _trimmed_seconds(seconds), "timer": node_name}
+
+
+## `2.0` reads as `2` - Construct writes the number, not the float spelling. Anything that is not a
+## plain number (an expression, a knob name) is left exactly as the file wrote it.
+static func _trimmed_seconds(text: String) -> String:
+	if not text.is_valid_float():
+		return text
+	var value: float = text.to_float()
+	return str(int(value)) if is_equal_approx(value, float(int(value))) else text
+
+
+## The seconds a function body loops on when it IS the await spelling of Every X seconds - a body
+## whose first two statements are `while true:` and `await get_tree().create_timer(X).timeout`.
+## "" for every other body, so nothing else is ever re-titled.
+static func await_loop_seconds(code: String) -> String:
+	var lines: PackedStringArray = code.split("\n")
+	var header_index: int = -1
+	for index: int in range(lines.size()):
+		var text: String = lines[index].strip_edges()
+		if text.is_empty():
+			continue
+		if not text.begins_with("func ") and not text.begins_with("static func "):
+			return ""
+		header_index = index
+		break
+	if header_index < 0:
+		return ""
+	var body: PackedStringArray = PackedStringArray()
+	for index: int in range(header_index + 1, lines.size()):
+		if not lines[index].strip_edges().is_empty():
+			body.append(lines[index].strip_edges())
+	if body.size() < 2 or body[0] != "while true:":
+		return ""
+	var await_regex := RegEx.new()
+	if await_regex.compile("^await get_tree\\(\\)\\.create_timer\\((.+)\\)\\.timeout$") != OK:
+		return ""
+	var await_match: RegExMatch = await_regex.search(body[1])
+	if await_match == null:
+		return ""
+	return _trimmed_seconds(await_match.get_string(1).strip_edges())
+
+
+# ── N2 - commented-out code reads as a switched-off row ─────────────────────────────────────────
+
+
+## The code behind an action-lane resource that is really a commented-out statement, "" otherwise.
+## Both shapes a comment arrives in are read: the first-class CommentRow the body lift builds, and a
+## one-line verbatim block that is nothing but a comment.
+static func commented_out_code(action_resource: Variant) -> String:
+	if action_resource is CommentRow:
+		var note: CommentRow = action_resource as CommentRow
+		return CommentRow.code_text(note.text) if note.enabled else ""
+	if action_resource is RawCodeRow:
+		var lines: PackedStringArray = (action_resource as RawCodeRow).code.split("\n")
+		if lines.size() != 1:
+			return ""
+		var text: String = lines[0].strip_edges()
+		if not text.begins_with("#") or text.begins_with("##"):
+			return ""
+		return CommentRow.code_text(text.trim_prefix("#").trim_prefix(" "))
+	return ""
+
+
+## The action-lane cell for a switched-off row: the sentence the code reads as when a sentence claims
+## it, the code itself otherwise, followed by the muted "disabled" note. `ace_enabled` false is what
+## draws the strike-through, and the row wash comes from the disabled look the sheet already has.
+func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, action_index: int,
+		action_line_index: int, action_style_meta: Dictionary) -> void:
+	var disabled_meta: Dictionary = {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": false,
+		"chip": true,
+		"code_cell": false,
+		"line_index": action_line_index
+	}
+	# The stand-in is DISABLED, which is what the sentence builder reads to strike its cell through;
+	# nothing is written to the sheet, the row it stands for is still the comment the file holds.
+	var stand_in := RawCodeRow.new()
+	stand_in.code = code
+	stand_in.enabled = false
+	if not _append_sentence_spans(spans, stand_in, action_index, action_line_index, action_style_meta):
+		spans.append(_make_span(code, SemanticSpan.SpanType.VALUE,
+			disabled_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true).merged(action_style_meta, false)))
+	spans.append(_make_span(EventSheetL10n.translate("disabled"), SemanticSpan.SpanType.COMMENT, {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": false,
+		"natural_width": true,
+		"line_index": action_line_index,
+		"text_color": EventSheetPalette.TEXT_MUTED
+	}))
+
+
+## The header spans of a function that IS an await beat: the repeating badge, the words, and the
+## muted note saying the beat only runs while the loop does.
+func _await_loop_trigger_spans(seconds: String) -> Array[SemanticSpan]:
+	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+	badge_meta["tempo"] = TriggerResolver.TEMPO_EVERY_TICK
+	badge_meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_BG
+	badge_meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_FG
+	badge_meta["badge_style"] = "trigger"
+	badge_meta["kind"] = "raw_code"
+	badge_meta["line_index"] = 0
+	return [
+		_make_span("⟳", SemanticSpan.SpanType.KEYWORD, badge_meta),
+		_make_span(EventSheetL10n.translate("System"), SemanticSpan.SpanType.OBJECT, {
+			"editable": false,
+			"kind": "raw_code",
+			"line_index": 0,
+			"text_color": _viewport._get_event_style().object_label_color
+		}),
+		_make_span(EventSheetL10n.translate("Every %s seconds") % seconds, SemanticSpan.SpanType.CONDITION, {
+			"editable": false,
+			"kind": "raw_code",
+			"line_index": 0,
+			"text_color": EventSheetPalette.TEXT_PRIMARY
+		}),
+		_make_span(EventSheetL10n.translate("(while running)"), SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "raw_code",
+			"line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		})
+	]
+
+
 ## The lifecycle handlers whose top-level branches read as the input triggers a player would name.
 const INPUT_HANDLER_TRIGGERS: Array[String] = ["OnInput", "OnUnhandledInput", "OnUnhandledKeyInput"]
 
@@ -5252,18 +5485,33 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# Same tempo badge on the lifted / lifecycle path (trigger_id with no authored ACECondition) -
 		# this is where On Physics Process etc. render, so the ⟳ hot-path glyph lands here too.
 		var trigger_id_glyph: String = _apply_trigger_tempo(trigger_id_badge_meta, event_style, event_row.trigger_id)
+		# N3 - a repeating Timer's handler runs on a beat, so it wears the repeating tempo rather than
+		# the one-off signal arrow, and says the beat in Construct's words below.
+		var timer_reading: Dictionary = _repeating_timer_reading(event_row)
+		if not timer_reading.is_empty():
+			trigger_id_glyph = "⟳"
+			trigger_id_badge_meta["tempo"] = TriggerResolver.TEMPO_EVERY_TICK
+			trigger_id_badge_meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_BG
+			trigger_id_badge_meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_FG
 		trigger_id_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		trigger_id_badge_meta["line_index"] = condition_line_index
 		trigger_id_badge_meta["badge_style"] = "trigger"
 		spans.append(_make_span(trigger_id_glyph, SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
+		var trigger_words: String = EventSheetViewportReadingRows.tick_trigger_words(
+			event_row.trigger_id,
+			_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id)
+		)
+		var trigger_object: String = _handler_object_label(event_row)
+		if not timer_reading.is_empty():
+			trigger_words = EventSheetL10n.translate("Every %s seconds") % str(timer_reading.get("seconds", ""))
+			# The beat belongs to System - it is a clock, not a node's own signal. The Timer NODE is
+			# the receipt, and it rides as the muted note after the words.
+			trigger_object = EventSheetL10n.translate("System")
 		spans.append(
 			_make_span(
 				# ── M27 lens hook (tick triggers) ──────────────────────────────────────────────
 				# The event-sheet words for the two ticks; every other trigger keeps its own name.
-				EventSheetViewportReadingRows.tick_trigger_words(
-					event_row.trigger_id,
-					_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id)
-				),
+				trigger_words,
 				SemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
@@ -5271,7 +5519,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"ace_index": 0,
 					"chip": true,
 					"line_index": condition_line_index,
-					"object_label": _handler_object_label(event_row),
+					"object_label": trigger_object,
 					# M42 - a handler the SCENE wired knows exactly which node emits and what class it
 					# is, so that node's own picture leads the row instead of the generic trigger icon.
 					"object_icon": _scene_trigger_icon(event_row) if _scene_trigger_icon(event_row) != null \
@@ -5279,6 +5527,14 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				}.merged(condition_style_meta, true)
 			)
 		)
+		if not timer_reading.is_empty():
+			spans.append(_make_span("(%s)" % str(timer_reading.get("timer", "")), SemanticSpan.SpanType.COMMENT, {
+				"lane": "condition",
+				"kind": "trigger",
+				"ace_index": 0,
+				"line_index": condition_line_index,
+				"text_color": EventSheetPalette.TEXT_MUTED
+			}))
 		# A signal handler's PARAMETERS are the trigger's payload - the body that entered, the item
 		# that was picked up. An event sheet shows them as chips beside the trigger, so a reader knows
 		# what the event hands them without opening the code.
@@ -5504,6 +5760,15 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"line_index": action_line_index,
 					"text_color": EventSheetPalette.TEXT_MUTED
 				}.merged(action_style_meta, false)))
+				action_line_index += 1
+				continue
+			# N2 - a comment whose text is a STATEMENT is not a note, it is a row somebody switched
+			# off, which is the only way a .gd file has of recording that. It reads as the row it
+			# would be, struck through and greyed the way a disabled row already is, with the muted
+			# word saying so. Prose stays a comment. The file is untouched either way.
+			var commented_out: String = commented_out_code(action_resource)
+			if not commented_out.is_empty():
+				_append_disabled_code_spans(spans, commented_out, action_index, action_line_index, action_style_meta)
 				action_line_index += 1
 				continue
 			if action_resource is ACEAction:
