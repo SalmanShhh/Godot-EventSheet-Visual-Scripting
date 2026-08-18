@@ -5687,6 +5687,15 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id)
 		)
 		var trigger_object: String = _handler_object_label(event_row)
+		# ── P8 / P9 lens hook ──────────────────────────────────────────────────────────────────
+		# The lifecycle triggers in the sheet's own words, always on: the layout starting or an object
+		# being created, the layout ending or an object being destroyed, a draw, and the notifications.
+		var lifecycle_reading: Dictionary = EventSheetViewportReadingRows.lifecycle_trigger_reading(
+			event_row.trigger_id, trigger_object,
+			bool(sentence_context().get("scene_root", false)), _script_object_name())
+		if not lifecycle_reading.is_empty():
+			trigger_words = str(lifecycle_reading.get("text", trigger_words))
+			trigger_object = str(lifecycle_reading.get("object", trigger_object))
 		if not timer_reading.is_empty():
 			# ONE cell, not a cell plus a note: a second span in the condition lane takes the object
 			# cell for itself and leaves the row's object unsaid. The Timer's name is the receipt for
@@ -7261,6 +7270,9 @@ func _tone_segments(pieces: Array) -> Dictionary:
 				tone_color = _viewport._get_event_style().value_highlight_color
 			"object":
 				tone_color = EventSheetPalette.COLOR_OBJECT
+			"muted":
+				# P6 - a connective the sentence needs but the reader does not read ("then").
+				tone_color = EventSheetPalette.TEXT_MUTED
 		segments.append({"text": piece_text, "color": tone_color, "bold": tone_bold, "italic": false})
 	return {"text": text, "segments": segments}
 
@@ -8066,6 +8078,9 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 				# bold, so it reads as part of WHO acts rather than as part of what the verb says.
 				tone_color = EventSheetPalette.COLOR_OBJECT
 				tone_bold = true
+			"muted":
+				# P6 - a connective the sentence needs but the reader does not read ("then").
+				tone_color = EventSheetPalette.TEXT_MUTED
 		sentence_segments.append({"text": text, "color": tone_color, "bold": tone_bold, "italic": false})
 	spans.append(_make_span(sentence_text, SemanticSpan.SpanType.VALUE, {
 		"lane": "action",
@@ -8297,6 +8312,33 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			if not bool(context.get("familiar_words", false)):
 				return {}
 			return EventSheetSentence.statement("Engine.time_scale = %s" % str(params_dict.get("scale", "")), context)
+		# ── P6 lens hook ─────────────────────────────────────────────────────────────────────────
+		# The tick switches and the process mode, and the one-shot timer's "wait, then". Each is
+		# rebuilt as the exact line it compiles to and handed to the same grammar the typed line goes
+		# through, so a picked row and a hand-written one cannot say two different things.
+		"NodeSetProcessing":
+			return EventSheetSentence.statement("%s.set_process(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("on", ""))], context)
+		"NodeSetPhysicsProcessing":
+			return EventSheetSentence.statement("%s.set_physics_process(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("on", ""))], context)
+		"NodeSetInputProcessing":
+			return EventSheetSentence.statement("%s.set_process_input(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("on", ""))], context)
+		"NodeSetUnhandledInputProcessing":
+			return EventSheetSentence.statement("%s.set_process_unhandled_input(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("on", ""))], context)
+		"NodeSetProcessMode":
+			return EventSheetSentence.statement("%s.process_mode = %s" % [
+				_ace_target(params_dict), str(params_dict.get("mode", ""))], context)
+		"CallAfterDelay":
+			return EventSheetSentence.statement("get_tree().create_timer(%s).timeout.connect(%s)" % [
+				str(params_dict.get("seconds", "")), str(params_dict.get("callable", ""))], context)
+		"CallLater":
+			# This one's parameter is a STATEMENT, not a callable - the template wraps it in the lambda
+			# itself, so the reading rebuilds the same wrapper before reading it.
+			return EventSheetSentence.statement("get_tree().create_timer(%s).timeout.connect(func(): %s)" % [
+				str(params_dict.get("seconds", "")), str(params_dict.get("do", ""))], context)
 		"AwaitNextFrame":
 			return await_reading("get_tree().process_frame", false)
 		"AwaitSignal":
@@ -8423,6 +8465,11 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 		"FileExists":
 			return EventSheetSentence.condition(
 				"FileAccess.file_exists(%s)" % str(params_dict.get("path", "")), context)
+		# ── P6 lens hook ─────────────────────────────────────────────────────────────────────────
+		# "is in the editor" - one question, one sentence, whichever of Godot's two spellings the file
+		# used and whether the row was typed or picked.
+		"IsInEditor":
+			return EventSheetSentence.condition("Engine.is_editor_hint()", context)
 		# ── N5 lens hook ─────────────────────────────────────────────────────────────────────────
 		# The row a hand-written `x in y` lifts to, so both spellings ask the same question in words.
 		"TextIsOneOf":
@@ -8538,6 +8585,9 @@ func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
 				# sentence, so it wears the object hue the object column uses for the same idea.
 				tone_color = EventSheetPalette.COLOR_OBJECT
 				tone_bold = true
+			"muted":
+				# P6 - a connective the sentence needs but the reader does not read ("then").
+				tone_color = EventSheetPalette.TEXT_MUTED
 		segments.append({"text": str(part.get("text", "")), "color": tone_color, "bold": tone_bold, "italic": false})
 	return segments
 

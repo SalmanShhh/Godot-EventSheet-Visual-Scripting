@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/opened_script_words5_root.gd" id="1_root"]
+[ext_resource type="Script" path="res://tests/fixtures/opened_script_words5_part.gd" id="2_part"]
+
+[node name="Stage" type="Node2D"]
+script = ExtResource("1_root")
+
+[node name="Mover" type="CharacterBody2D" parent="."]
+script = ExtResource("2_part")

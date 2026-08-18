@@ -96,6 +96,27 @@ const AUDIO_CLASSES: PackedStringArray = ["AudioStreamPlayer", "AudioStreamPlaye
 ## angle measured FROM the object's own place names only the other end.
 const OWN_POSITION_NAMES: PackedStringArray = ["position", "global_position"]
 
+## P6. An event sheet switches a whole group of events on and off; Godot switches an object's
+## callbacks. The two are the same gesture, so the switch reads in the sheet's own activation words -
+## the WHAT of each switch, with "activated" / "deactivated" after it.
+const PROCESS_SWITCH_WORDS: Dictionary = {
+	"set_process": "Every tick (draw)",
+	"set_physics_process": "Every tick (physics)",
+	"set_process_input": "input",
+	"set_process_unhandled_input": "unhandled input",
+	"set_process_unhandled_key_input": "unhandled key input"
+}
+
+## P6. `process_mode` in the sheet's words. An event sheet says whether a thing runs, always runs, or
+## only runs while paused; these are Godot's five spellings of exactly that.
+const PROCESS_MODE_WORDS: Dictionary = {
+	"PROCESS_MODE_DISABLED": "disabled",
+	"PROCESS_MODE_INHERIT": "enabled",
+	"PROCESS_MODE_ALWAYS": "always active",
+	"PROCESS_MODE_PAUSABLE": "pausable",
+	"PROCESS_MODE_WHEN_PAUSED": "active only when paused"
+}
+
 ## M43/M46. Members whose event-sheet word differs from Godot's. The Godot spelling stays one hover
 ## away, so the two vocabularies remain learnable side by side.
 const MEMBER_WORDS: Dictionary = {
@@ -323,6 +344,9 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var capability: Dictionary = _capability_condition(text, context)
 	if not capability.is_empty():
 		return capability
+	var in_editor: Dictionary = _editor_condition(text)
+	if not in_editor.is_empty():
+		return in_editor
 	var storage_test: Dictionary = _storage_condition(text, context)
 	if not storage_test.is_empty():
 		return storage_test
@@ -1288,6 +1312,19 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 			if uniform.is_empty():
 				return {}
 			return _sentence(object_name, "Set size to {value}", {"value": [uniform, "value"]})
+		"process_mode":
+			# ── P6 ────────────────────────────────────────────────────────────────────────────
+			# Whether an object runs at all is a SWITCH in an event sheet, not a property write, and
+			# Godot's constant already names which of the five states it is. Both spellings resolve,
+			# because a `@tool` script often writes the qualified one.
+			var mode: String = assigned.strip_edges()
+			var dot_in_mode: int = mode.rfind(".")
+			if dot_in_mode >= 0:
+				mode = mode.substr(dot_in_mode + 1)
+			if not PROCESS_MODE_WORDS.has(mode):
+				return {}
+			return _sentence(object_name, "Set {mode}", {
+				"mode": [translate(str(PROCESS_MODE_WORDS[mode])), "name"]})
 	return {}
 
 
@@ -1338,6 +1375,12 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	# M46. Godot reloads the current scene; an event sheet restarts the layout.
 	if bool(context.get("familiar_words", false)) and text == "get_tree().reload_current_scene()":
 		return _sentence(OBJECT_SYSTEM, "Restart layout", {})
+	# ── P6 ──────────────────────────────────────────────────────────────────────────────────────
+	# The one-shot timer and its callback, ahead of every other call shape: the receiver is itself a
+	# call, so nothing below could name it, and the sheet already has the "wait, then" this line is.
+	var wait_then: Dictionary = _wait_then_statement(text, context)
+	if not wait_then.is_empty():
+		return wait_then
 	var group_call: Dictionary = _group_call_statement(text, context)
 	if not group_call.is_empty():
 		return group_call
@@ -1392,6 +1435,89 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	if not behaviour_step.is_empty():
 		return behaviour_step
 	return _debug_statement(target, method, args, context)
+
+
+## P6. `get_tree().create_timer(2).timeout.connect(func(): explode())` is the "wait, then" a beginner
+## writes, and an event sheet already has that shape: Wait N seconds as an action, with the steps after
+## it running when the wait ends. So the row says the wait, then what follows it, with a muted "then"
+## between - one row, nothing hidden, and the exact GDScript still on the hover.
+##
+## {} unless the whole line is that shape and the callback is one step this grammar can name; a line
+## that only half fits keeps its code rather than reading as a wait that quietly loses its callback.
+static func _wait_then_statement(text: String, context: Dictionary) -> Dictionary:
+	const TIMER_HEAD := "get_tree().create_timer("
+	const CONNECT_TAIL := ".timeout.connect("
+	if not text.begins_with(TIMER_HEAD) or not text.ends_with(")"):
+		return {}
+	var seconds_close: int = closing_paren(text, TIMER_HEAD.length() - 1)
+	if seconds_close < 0:
+		return {}
+	var seconds: String = text.substr(TIMER_HEAD.length(), seconds_close - TIMER_HEAD.length()).strip_edges()
+	if seconds.is_empty() or not text.substr(seconds_close + 1).begins_with(CONNECT_TAIL):
+		return {}
+	var connect_open: int = seconds_close + CONNECT_TAIL.length()
+	var connect_close: int = closing_paren(text, connect_open)
+	if connect_close != text.length() - 1:
+		return {}
+	var handed: PackedStringArray = _split_arguments(
+		text.substr(connect_open + 1, connect_close - connect_open - 1))
+	if handed.is_empty():
+		return {}
+	var then_segments: Array = _wait_body_segments(handed[0].strip_edges(), context)
+	if then_segments.is_empty():
+		return {}
+	var waiting: Dictionary = _sentence(OBJECT_SYSTEM, "⏳ Wait {seconds} seconds", {
+		"seconds": [expression_text(seconds, context), "value"]})
+	var segments: Array = waiting.get("segments", []) as Array
+	segments.append({"text": " %s " % translate("then"), "tone": "muted"})
+	segments.append_array(then_segments)
+	return {"object": OBJECT_SYSTEM, "segments": segments}
+
+
+## P6. What runs when the wait ends, read as the step it is: a lambda hands over its body, and a named
+## function hands over the sheet's own Call verb. [] for anything else - a bound callable or a member
+## reference is not one step that can be named, and the line then keeps its code.
+static func _wait_body_segments(handed: String, context: Dictionary) -> Array:
+	var body: String = handed
+	if body.begins_with("func("):
+		var params_close: int = closing_paren(body, 4)
+		if params_close < 0:
+			return []
+		var after: String = body.substr(params_close + 1)
+		var colon_at: int = after.find(":")
+		if colon_at < 0:
+			return []
+		var between: String = after.substr(0, colon_at).strip_edges()
+		if not between.is_empty() and not between.begins_with("->"):
+			return []
+		body = after.substr(colon_at + 1).strip_edges()
+	if body.is_empty():
+		return []
+	# A bare name IS the function it names - the sheet's own Call row, exactly as the picker writes it.
+	if is_identifier(body):
+		return [
+			{"text": "%s " % translate("Call"), "tone": "plain"},
+			{"text": function_words(body), "tone": "name"}
+		]
+	var call: Dictionary = call_parts(body)
+	if not call.is_empty() and str(call.get("target", "")).strip_edges().is_empty():
+		var called: Array = [
+			{"text": "%s " % translate("Call"), "tone": "plain"},
+			{"text": function_words(str(call.get("method", ""))), "tone": "name"}
+		]
+		for value: String in (call.get("args", PackedStringArray()) as PackedStringArray):
+			called.append({"text": "   ", "tone": "plain"})
+			called.append({"text": expression_text(value, context), "tone": "value"})
+		return called
+	var step: Dictionary = statement(body, context)
+	if step.is_empty():
+		return []
+	var owner: String = str(step.get("object", "")).strip_edges()
+	var pieces: Array = []
+	if not owner.is_empty() and owner != OBJECT_SYSTEM:
+		pieces.append({"text": "%s  " % owner, "tone": "object"})
+	pieces.append_array(step.get("segments", []) as Array)
+	return pieces
 
 
 ## N11. The Log verb is the debug word everyone knows, and Godot's print family is the same three
@@ -1653,9 +1779,16 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 					"name": [_unquote(arguments[0]), "name"],
 					"value": [expression_text(arguments[1], context), "value"]})
 		"play":
-			if _class_is_any(object_class, ANIMATION_CLASSES) and arguments.size() == 1:
-				return _sentence(object_name, "Set animation to {name} (play)", {
+			# P11. `play("run", 2.0)` hands over a SPEED as its second argument, and the engine's own
+			# name for it is what makes the value legible - a bare "2" beside the clip name says nothing.
+			if _class_is_any(object_class, ANIMATION_CLASSES) and arguments.size() >= 1 and arguments.size() <= 2:
+				var played: Dictionary = _sentence(object_name, "Set animation to {name} (play)", {
 					"name": [expression_text(arguments[0], context), "value"]})
+				if arguments.size() == 2:
+					var speed_chip: String = "%s = %s" % [translate("speed"), expression_text(arguments[1], context)]
+					(played["segments"] as Array).append({"text": "   ", "tone": "plain"})
+					(played["segments"] as Array).append({"text": speed_chip, "tone": "value"})
+				return played
 			if _class_is_any(object_class, AUDIO_CLASSES):
 				return _sentence(OBJECT_AUDIO, "Play", {})
 		"stop":
@@ -1665,7 +1798,68 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 				return _sentence(object_name, "Stop animation", {})
 			if _class_is_any(object_class, AUDIO_CLASSES):
 				return _sentence(OBJECT_AUDIO, "Stop", {})
+		# ── P8 ──────────────────────────────────────────────────────────────────────────────────
+		# The drawing verbs, in the words the Drawing Canvas pack already publishes them under, so a
+		# `_draw` body reads the same whether the shapes were typed or dropped from that pack.
+		"queue_redraw":
+			if arguments.is_empty():
+				return _sentence(object_name, "Redraw", {})
+	var drawn: Dictionary = _draw_call(object_name, method, arguments, context)
+	if not drawn.is_empty():
+		return drawn
+	# ── P6 ──────────────────────────────────────────────────────────────────────────────────────
+	# Switching a callback on or off is the sheet's own group activation, said about a tick.
+	var switched: Dictionary = _process_switch_call(object_name, method, arguments)
+	if not switched.is_empty():
+		return switched
 	return {}
+
+
+## P8. `draw_line(a, b, colour)` and its neighbours as the Drawing verbs. Claimed only at the argument
+## counts a sentence can name honestly - a `draw_line` with a width behind the colour keeps its code,
+## because a row that quietly drops an argument is worse than the line it replaced.
+static func _draw_call(object_name: String, method: String, arguments: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	match method:
+		"draw_line":
+			if arguments.size() == 3:
+				return _sentence(object_name, "Draw line {from} to {to}, {colour}", {
+					"from": [expression_text(arguments[0], context), "value"],
+					"to": [expression_text(arguments[1], context), "value"],
+					"colour": [expression_text(arguments[2], context), "value"]})
+		"draw_rect":
+			if arguments.size() == 2:
+				return _sentence(object_name, "Draw rectangle {rect}, {colour}", {
+					"rect": [expression_text(arguments[0], context), "value"],
+					"colour": [expression_text(arguments[1], context), "value"]})
+		"draw_circle":
+			if arguments.size() == 3:
+				return _sentence(object_name, "Draw circle at {at}, radius {radius}, {colour}", {
+					"at": [expression_text(arguments[0], context), "value"],
+					"radius": [expression_text(arguments[1], context), "value"],
+					"colour": [expression_text(arguments[2], context), "value"]})
+		"draw_string":
+			if arguments.size() >= 3:
+				return _sentence(object_name, "Draw text {text} at {at}", {
+					"text": [expression_text(arguments[2], context), "value"],
+					"at": [expression_text(arguments[1], context), "value"]})
+	return {}
+
+
+## P6. `set_physics_process(false)` -> "Set Every tick (physics) deactivated". Only the two literals
+## are claimed: `set_process(enabled)` switches to whatever that variable holds, and no sentence can
+## say which of the two states a row is in without reading the value.
+static func _process_switch_call(object_name: String, method: String,
+		arguments: PackedStringArray) -> Dictionary:
+	if not PROCESS_SWITCH_WORDS.has(method) or arguments.size() != 1:
+		return {}
+	var state: String = arguments[0].strip_edges()
+	if state != "true" and state != "false":
+		return {}
+	return _sentence(object_name, "Set {what} {state}", {
+		"what": [translate(str(PROCESS_SWITCH_WORDS[method])), "name"],
+		"state": [translate("activated") if state == "true" else translate("deactivated"), "plain"]
+	})
 
 
 ## M30. `get_tree().call_group("enemies", "flee", extra)` - the group is the OBJECT the row acts on
@@ -1966,6 +2160,15 @@ static func _capability_condition(text: String, context: Dictionary) -> Dictiona
 		return _sentence(object_of_reference(target), "has function {verb}",
 			{"verb": [function_words(named), "name"]})
 	return _sentence(object_of_reference(target), "has child {child}", {"child": [named, "chip"]})
+
+
+## P6. A `@tool` script asks whether it is running inside the editor rather than in the game, and both
+## of Godot's spellings ask exactly that. One question, one sentence, so a reader never has to know
+## that `OS.has_feature("editor")` and `Engine.is_editor_hint()` are the same thing.
+static func _editor_condition(text: String) -> Dictionary:
+	if text == "Engine.is_editor_hint()" or text == "OS.has_feature(\"editor\")":
+		return _sentence(OBJECT_SYSTEM, "is in the editor", {})
+	return {}
 
 
 ## N7. `cfg.has_section_key(section, key)` as the storage-has-item question, and the file test beside

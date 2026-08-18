@@ -46,8 +46,25 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		"enum_members": enums.get("members", {}),
 		"enum_names": enums.get("names", {}),
 		"object_classes": object_class_map(sheet),
-		"self_class": sheet.host_class.strip_edges()
+		"self_class": sheet.host_class.strip_edges(),
+		# ── P9 ────────────────────────────────────────────────────────────────────────────────
+		# Whether this file is the scene's OWN script, which decides whether its `_ready` reads as the
+		# layout starting or as one object being created. Cached here with the rest of the context
+		# because the answer only changes when the opened sheet does.
+		"scene_root": is_scene_root_script(sheet)
 	}
+
+
+## P9. True when the opened file is the script the SCENE ITSELF carries - the one on its root node.
+## The scene scan already answers exactly this (it records a script only when the ROOT carries it), so
+## this is a lookup rather than a second walk of the project.
+static func is_scene_root_script(sheet: EventSheetResource) -> bool:
+	if sheet == null:
+		return false
+	var source_path: String = str(sheet.external_source_path).strip_edges()
+	if source_path.is_empty():
+		return false
+	return not ViewportRowBuilder.scene_using_script(source_path).is_empty()
 
 
 ## M38. The sheet's enums, as {"names": {EnumName: true}, "members": {MEMBER: how many enums declare
@@ -191,6 +208,84 @@ static func tick_trigger_words(trigger_id: String, display_text: String) -> Stri
 	# M41 - the collision family reads as the event-sheet's own two triggers.
 	var collision: String = collision_trigger_words(trigger_id)
 	return collision if not collision.is_empty() else display_text
+
+
+## P8. The notification a `_notification` branch reads as. Only the ones an event sheet already has a
+## word for are named; every other notification humanizes, which says what happened without pretending
+## the sheet has a trigger of its own for it.
+const NOTIFICATION_TRIGGER_WORDS: Dictionary = {
+	"NOTIFICATION_APPLICATION_PAUSED": "On suspended",
+	"NOTIFICATION_APPLICATION_RESUMED": "On resumed",
+	"NOTIFICATION_APPLICATION_FOCUS_OUT": "On lost focus",
+	"NOTIFICATION_APPLICATION_FOCUS_IN": "On gained focus",
+	"NOTIFICATION_WM_CLOSE_REQUEST": "On close",
+	"NOTIFICATION_PAUSED": "On paused",
+	"NOTIFICATION_UNPAUSED": "On unpaused",
+	"NOTIFICATION_PREDELETE": "On destroyed"
+}
+
+## The trigger id prefix a lifted `_notification` branch carries, with Godot's own constant after it.
+const NOTIFICATION_TRIGGER_PREFIX := "OnNotification:"
+
+## P8/P9. The lifecycle triggers whose reading is the same wherever the script sits. `_ready` and
+## `_exit_tree` are NOT here: what those two say depends on whether the file is the scene's own script,
+## which is the whole point of P9.
+const LIFECYCLE_TRIGGER_WORDS: Dictionary = {
+	"OnDraw": "On draw",
+	"OnEnterTree": "On created",
+	"OnExitTree": "On destroyed"
+}
+
+
+## P8/P9. The lifecycle triggers in the event sheet's own words, and who they belong to.
+##
+## Always on, never behind the Familiar Words toggle: these are not a friendlier spelling of Godot's
+## names, they ARE the sheet's trigger names, and a reader who knows the sheet should find them here.
+## Godot's own word stays one hover away, as it does for every other reading.
+##
+## The scene decides two of them. A `_ready` on the script the SCENE ITSELF carries is the layout
+## starting - there is one of those per layout, and it runs when the layout opens; a `_ready` on a
+## script sitting on some object in the scene is that object being created, which happens once per
+## instance. Same split for `_exit_tree`: the layout ending, or the object being destroyed.
+##
+## Returns {"text", "object"} - both always filled - or {} when the trigger is not a lifecycle one,
+## which is the caller's cue to keep whatever it was already drawing.
+static func lifecycle_trigger_reading(trigger_id: String, object_label: String,
+		scene_root: bool, script_object: String) -> Dictionary:
+	var owner: String = script_object.strip_edges()
+	if owner.is_empty():
+		owner = object_label
+	var system: String = EventSheetL10n.translate("System")
+	match trigger_id:
+		"OnReady":
+			if scene_root:
+				return {"text": EventSheetL10n.translate("On start of layout"), "object": system}
+			return {"text": EventSheetL10n.translate("On created"), "object": owner}
+		"OnExitTree":
+			if scene_root:
+				return {"text": EventSheetL10n.translate("On end of layout"), "object": system}
+			return {"text": EventSheetL10n.translate("On destroyed"), "object": owner}
+	if LIFECYCLE_TRIGGER_WORDS.has(trigger_id):
+		return {"text": EventSheetL10n.translate(str(LIFECYCLE_TRIGGER_WORDS[trigger_id])), "object": owner}
+	if trigger_id.begins_with(NOTIFICATION_TRIGGER_PREFIX):
+		# A notification is something that happened to the GAME, not to one node, so it belongs to
+		# System - the same object the sheet files its other whole-game triggers under.
+		return {"text": notification_trigger_words(trigger_id.substr(NOTIFICATION_TRIGGER_PREFIX.length())),
+			"object": system}
+	return {}
+
+
+## P8. One notification constant in the sheet's words. An unknown one reads as its own name in plain
+## words ("On wm mouse enter") rather than as the SCREAMING_CASE constant: the reader still learns what
+## happened, and nothing claims a trigger the sheet does not have.
+static func notification_trigger_words(constant_name: String) -> String:
+	var bare: String = constant_name.strip_edges()
+	if NOTIFICATION_TRIGGER_WORDS.has(bare):
+		return EventSheetL10n.translate(str(NOTIFICATION_TRIGGER_WORDS[bare]))
+	var humanized: String = bare.trim_prefix("NOTIFICATION_").capitalize().to_lower()
+	if humanized.is_empty():
+		return EventSheetL10n.translate("On notification")
+	return "%s %s" % [EventSheetL10n.translate("On"), humanized]
 
 
 ## M41. An event sheet has one collision trigger and one for the overlap ending, where Godot has four
