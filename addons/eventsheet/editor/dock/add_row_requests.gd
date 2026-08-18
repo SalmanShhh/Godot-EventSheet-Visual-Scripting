@@ -58,6 +58,13 @@ func on_add_comment_requested() -> void:
 func on_add_group_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
+	# N1 authoring symmetry - on a .gd sheet the file is the truth, and the file's own way of
+	# grouping is `#region Name` / `#endregion`, which Godot folds in the script editor. So a Group
+	# added here is written as that fence pair; it reads back as the same bar, and a Construct user's
+	# groups arrive in Godot as folds instead of as a marker comment nobody else understands.
+	if _dock._current_sheet != null and not str(_dock._current_sheet.external_source_path).is_empty():
+		_add_region_group()
+		return
 	var group: EventGroup = EventGroup.new()
 	group.name = "Group"
 	group.group_name = group.name
@@ -71,6 +78,37 @@ func on_add_group_requested() -> void:
 		# the same inline title edit you'd reach by double-clicking it or pressing Enter,
 		# just triggered for you. Deferred so it runs after the viewport rebuilds.
 		call_deferred("_begin_group_rename", group)
+
+
+## Add Group on a GDScript-backed sheet: an empty `#region Group` / `#endregion` pair inserted below
+## the selection as ONE undo step, then the fence editor so the region gets its name straight away -
+## the same "name it now" beat the EventGroup path has.
+func _add_region_group() -> void:
+	var opener: CustomBlockRow = CustomBlockRow.new()
+	opener.kind_id = "region"
+	opener.fields = {"label": "Group", "is_end": false}
+	var closer: CustomBlockRow = CustomBlockRow.new()
+	closer.kind_id = "region"
+	closer.fields = {"label": "", "is_end": true}
+	var changed: bool = _dock._perform_undoable_sheet_edit("Add Group", func() -> bool:
+		_dock._insert_row_below_selection(opener)
+		var opener_index: int = _dock._current_sheet.events.find(opener)
+		if opener_index == -1:
+			_dock._current_sheet.events.append(closer)
+		else:
+			_dock._current_sheet.events.insert(opener_index + 1, closer)
+		return true
+	)
+	if not changed:
+		return
+	_dock._mark_dirty("Added group.")
+	# The undo funnel replaces resources with snapshot duplicates on commit, so the live opener is
+	# re-fetched from the sheet rather than trusting the instance built above.
+	for entry: Variant in _dock._current_sheet.events:
+		if entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "region" \
+				and str((entry as CustomBlockRow).fields.get("label", "")) == "Group":
+			_dock.call_deferred("_open_block_editor", entry)
+			return
 
 
 ## Selects a group and opens its editor popup (used right after Add Group so the user can name it

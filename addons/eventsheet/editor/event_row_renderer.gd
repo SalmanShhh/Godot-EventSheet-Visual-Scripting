@@ -396,6 +396,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 		if row_data.source_resource is EventGroup:
 			group_tint = (row_data.source_resource as EventGroup).custom_color
+		elif row_data.custom_color.a > 0.01:
+			# A `#region` bar is a group bar without an EventGroup behind it (the file stores two
+			# fence lines), so its accent arrives on the row itself.
+			group_tint = row_data.custom_color
 		_draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style, group_tint)
 	elif row_data.row_type == EventRowData.RowType.COMMENT and event_style != null:
 		# Per-comment colors (event-sheet parity): the row's custom tint wins over the theme token.

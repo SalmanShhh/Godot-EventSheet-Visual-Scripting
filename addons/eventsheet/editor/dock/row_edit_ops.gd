@@ -95,6 +95,11 @@ func _bulk_duplicate_rows(targets: Array) -> void:
 func _bulk_group_rows(targets: Array) -> String:
 	if targets.is_empty():
 		return "Nothing selected to group."
+	# N1 authoring symmetry - a group on a .gd sheet is written the file's own way, as a
+	# `#region` / `#endregion` fence pair, which reads back as the same bar.
+	if _dock._current_sheet != null and not str(_dock._current_sheet.external_source_path).is_empty():
+		_dock._surround_selection_with_region()
+		return ""
 	var first_location: Dictionary = _dock._find_resource_location(targets[0])
 	if first_location.is_empty():
 		return "Couldn't locate the selection."

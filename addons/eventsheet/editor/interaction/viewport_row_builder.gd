@@ -122,13 +122,14 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 			var fold_key: String = "%s#%d" % [opener_label, occurrence]
 			opener.set_meta("region_fold_key", fold_key)
 			opener.folded = bool(_viewport._fold_state.get(opener.row_uid, bool(_viewport.persisted_region_folds.get(fold_key, false))))
-			if opener.folded:
-				var hidden_count: int = region_children.size() - 1
-				opener.spans.append(_make_span(
-					"· %d row%s hidden" % [hidden_count, "" if hidden_count == 1 else "s"],
-					SemanticSpan.SpanType.VALUE,
-					{"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.75)}
-				))
+			# N1 - the bar carries the group's muted count, open or folded, because a Construct group
+			# bar says how much it holds before you decide whether to open it. The closing fence is
+			# plumbing, so it never counts.
+			opener.spans.append(_make_span(
+				_region_member_count_text(region_children),
+				SemanticSpan.SpanType.VALUE,
+				{"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.75)}
+			))
 			_append_to_sink(output, stack, opener)
 			continue
 		_append_to_sink(output, stack, row_data)
@@ -145,6 +146,23 @@ func _append_to_sink(output: Array[EventRowData], stack: Array[Dictionary], row_
 		output.append(row_data)
 	else:
 		(stack[stack.size() - 1].get("collected") as Array[EventRowData]).append(row_data)
+
+
+## The muted count a region's group bar wears: how many EVENTS it holds when it holds any (the word
+## a Construct user reads on a group bar), else how many rows. The closing fence rides as the last
+## child and is plumbing, so it is never counted.
+func _region_member_count_text(region_children: Array[EventRowData]) -> String:
+	var events: int = 0
+	var rows: int = 0
+	for index: int in range(maxi(region_children.size() - 1, 0)):
+		rows += 1
+		if region_children[index].row_type == EventRowData.RowType.EVENT:
+			events += 1
+	if events > 0:
+		return EventSheetL10n.translate("%d event") % events if events == 1 \
+			else EventSheetL10n.translate("%d events") % events
+	return EventSheetL10n.translate("%d row") % rows if rows == 1 \
+		else EventSheetL10n.translate("%d rows") % rows
 
 
 func _is_region_row(row_data: EventRowData) -> bool:
@@ -1846,11 +1864,23 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 				{"kind": "custom_block_row", "text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.7)}
 			)]
 			return row_data
+		# N1 - `#region Name` IS Construct's Group: Godot folds a script with regions, Construct
+		# organises a sheet with groups, and they are the same idea said twice. So the opening fence
+		# wears the event-group BAR (folder icon, title, muted count, the group row's height and
+		# chrome) instead of a plain section line. Storage is untouched - the sheet still holds the two
+		# fence rows the file has, which is what keeps the byte round-trip free.
+		row_data.row_type = EventRowData.RowType.GROUP
+		row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.22)
 		var region_label: String = str(block.fields.get("label", "")).strip_edges()
 		row_data.spans = [_make_span(
-			region_label if not region_label.is_empty() else "(unnamed region)",
-			SemanticSpan.SpanType.VALUE,
-			{"kind": "custom_block_row", "text_color": accent}
+			region_label if not region_label.is_empty() else EventSheetL10n.translate("(unnamed region)"),
+			SemanticSpan.SpanType.OBJECT,
+			{
+				"kind": "custom_block_row",
+				"group_title": true,
+				"object_icon": _folder_icon() if _viewport.show_object_icons else null,
+				"text_color": event_style.group_title_color
+			}
 		)]
 		var region_description: String = str(block.fields.get("description", "")).strip_edges()
 		if not region_description.is_empty():

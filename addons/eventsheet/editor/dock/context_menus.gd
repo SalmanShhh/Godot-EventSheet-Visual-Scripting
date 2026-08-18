@@ -164,7 +164,11 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# A synthetic row (EVENT-typed but with no sheet resource - a data-class field row) must
 	# never get the real event menu: its items would act on a null anchor / the sheet root.
 	var is_event: bool = row_type == EventRowData.RowType.EVENT and (row_data == null or row_data.source_resource != null)
-	var is_group: bool = row_type == EventRowData.RowType.GROUP
+	# A `#region` bar READS as a group bar (it is one, to a Construct user) but the sheet stores two
+	# fence rows, not an EventGroup - so the group menu, whose handlers cast to EventGroup, must not
+	# claim it. Its own block menu below still applies.
+	var is_group: bool = row_type == EventRowData.RowType.GROUP \
+		and not (row_data != null and row_data.source_resource is CustomBlockRow)
 	# A CAPTION row (a published verb's @ace_description, or any caption an extension builds through
 	# EventSheets.build_caption_row) renders as a COMMENT row but has NO CommentRow behind it, so it must
 	# not offer Edit Comment / Attach To Event Above - both handlers cast source_resource to CommentRow
