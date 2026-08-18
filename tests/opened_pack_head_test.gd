@@ -147,7 +147,9 @@ static func _test_a_plain_script_is_not_called_a_pack() -> bool:
 	view.set_sheet(sheet)
 	var bar: EventRowData = _row_at(view.get_flat_rows(), 0)
 	ok = _check("a plain script still gets the Include bar", bar != null and bar.row_uid.begins_with("pack_include_bar_"), true) and ok
-	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | Script | Patrol") and ok
+	# M34 - and it does not wear the word "Script" either: the bar names the OBJECT the script drives
+	# and the class it is, which is what a reader is actually looking at.
+	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | Patrol | a | Node") and ok
 	ok = _check("its exported knob lands in the Settings bar",
 		_texts(_bar_titled(view.get_flat_rows(), "Settings")), "Settings | 1 setting") and ok
 	view.free()

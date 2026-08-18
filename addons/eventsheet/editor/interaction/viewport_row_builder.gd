@@ -465,11 +465,18 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	# knob lands in the wrong bar.
 	var current_group: String = ""
 	var consumed: int = 0
+	# The file's own opening sentence when the importer recovered no class description (see below).
+	var strip_about: String = ""
 	for index in range(rows.size()):
 		var row_data: EventRowData = rows[index]
 		var source: Resource = row_data.source_resource
 		if row_data.row_uid.begins_with("scaffolding_strip_"):
 			identity_seen = true
+			# A hand-written script writes its doc block ABOVE `class_name`, where the importer's
+			# class-description rule (the block under `extends`) never sees it - so the sentence that
+			# says what the file IS would fold into the strip and disappear with it. Kept here as the
+			# comment bar's fallback, because the head is exactly where a reader looks for it.
+			strip_about = _scaffolding_about_text(row_data)
 			consumed = index + 1
 			continue
 		if source is RawCodeRow:
@@ -508,6 +515,25 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			if pending_row != null:
 				leftovers.append(pending_row)
 				pending_row = null
+			consumed = index + 1
+			continue
+		# M34 - `const BULLET_SCENE := preload("res://bullet.tscn")` lifts to a `preload` block, not a
+		# variable. It is still a name the file introduces, so it reads as an Object row in the head
+		# rather than stopping it dead one line in.
+		if source is CustomBlockRow and (source as CustomBlockRow).kind_id == "preload":
+			var block_fields: Dictionary = (source as CustomBlockRow).fields
+			var block_row: EventRowData = _build_preload_object_row(
+				str(block_fields.get("name", "")),
+				str(block_fields.get("path", "")),
+				1,
+				source,
+				"preload_reading_%d" % source.get_instance_id()
+			)
+			if block_row == null:
+				break
+			knobs.append({"row": block_row, "group": "", "description": ""})
+			pending_description = ""
+			pending_row = null
 			consumed = index + 1
 			continue
 		if source is LocalVariable:
@@ -549,16 +575,19 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 		return rows
 	var head: Array[EventRowData] = [_build_pack_include_bar_row(sheet, host_class)]
 	var about_index: int = _pack_about_row_index(rows, consumed)
-	var about_row: EventRowData = rows[about_index] if about_index >= 0 else _build_pack_about_row(sheet)
+	var about_row: EventRowData = rows[about_index] if about_index >= 0 else _build_pack_about_row(sheet, strip_about)
 	if about_row != null:
 		about_row.indent = 0
 		head.append(about_row)
 	if not triggers.is_empty():
+		var fires_subtitle: String = EventSheetL10n.translate("this pack fires - %d") \
+			if is_addon_pack(sheet) \
+			else EventSheetL10n.translate("this script fires - %d")
 		head.append(_build_head_group_row(
 			sheet,
 			"pack_triggers",
 			EventSheetL10n.translate("Triggers"),
-			EventSheetL10n.translate("this pack fires - %d") % triggers.size(),
+			fires_subtitle % triggers.size(),
 			triggers
 		))
 	head.append_array(_build_knob_group_rows(sheet, knobs))
@@ -584,8 +613,26 @@ func _head_comment_text(code_lines: PackedStringArray) -> String:
 	return " ".join(parts).strip_edges()
 
 
-## The pack's identity as ONE bar, in the slot Construct uses for its "Include: Sheet" strip:
-## `⇥ Addon Pack  [FPSController] [v1.0.0]  behaves on a  [CharacterBody3D]`. Inert (null source) and
+## The prose inside a folded Class setup strip - the `##` block a hand-written script opens with,
+## which sits ABOVE `class_name` and so is never the importer's "class description". "" when the
+## strip holds only code and annotations.
+func _scaffolding_about_text(strip_row: EventRowData) -> String:
+	for child: EventRowData in strip_row.children:
+		if not (child.source_resource is RawCodeRow):
+			continue
+		var code_lines: PackedStringArray = (child.source_resource as RawCodeRow).code.split("\n")
+		if not is_comment_only_block(code_lines):
+			continue
+		var prose: String = _head_comment_text(code_lines)
+		if not prose.is_empty():
+			return prose
+	return ""
+
+
+## The file's identity as ONE bar, in the slot Construct uses for its "Include: Sheet" strip. A pack
+## introduces itself as one - `⇥ Addon Pack  [FPSController] [v1.0.0]  behaves on a  [CharacterBody3D]`
+## - and any other opened script names the OBJECT it drives instead (M34):
+## `⇥ [icon] Player  a  [CharacterBody2D]  · player.gd · scene Player.tscn`. Inert (null source) and
 ## wearing the same accent band + 1.5x presence the Class setup and Host binding bars wore, because it
 ## replaces all three of them on a read-only preview.
 func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) -> EventRowData:
@@ -611,13 +658,12 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 	if identity_icon != null:
 		badge_meta["badge_icon"] = identity_icon
 	var spans: Array[SemanticSpan] = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, badge_meta)]
-	# "Addon Pack" is a CLAIM, so only a file that actually is one makes it: a declared @ace_version,
-	# or a script living in the addon folder. Any other opened .gd is just a script, and saying
-	# otherwise would teach a beginner the wrong word for what they are looking at.
-	var is_pack: bool = not sheet.addon_version.strip_edges().is_empty() \
-		or str(sheet.external_source_path).begins_with("res://eventsheet_addons/")
+	if not is_addon_pack(sheet):
+		spans.append_array(_script_include_spans(sheet))
+		row_data.spans = spans
+		return row_data
 	spans.append(_make_span(
-		EventSheetL10n.translate("Addon Pack") if is_pack else EventSheetL10n.translate("Script"),
+		EventSheetL10n.translate("Addon Pack"),
 		SemanticSpan.SpanType.VALUE,
 		{"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_PRIMARY}
 	))
@@ -636,6 +682,55 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 		spans.append(_pack_include_chip(host_class))
 	row_data.spans = spans
 	return row_data
+
+
+## "Addon Pack" is a CLAIM, so only a file that actually is one makes it: a declared @ace_version, or a
+## script living in the addon folder. Any other opened .gd is somebody's game script, and calling it a
+## pack would teach a beginner the wrong word for what they are looking at.
+static func is_addon_pack(sheet: EventSheetResource) -> bool:
+	if sheet == null:
+		return false
+	return not sheet.addon_version.strip_edges().is_empty() \
+		or str(sheet.external_source_path).begins_with("res://eventsheet_addons/")
+
+
+## M34 - the rest of a plain script's Include bar: the OBJECT it drives, the class it is, and the two
+## receipts (its file, and the scene it is attached to) muted at the end.
+##
+## The name is the one a reader already uses for this thing: its `class_name` when it has one, else the
+## ROOT NODE of the scene the script is attached to (a scene script rarely declares a class, and
+## "Player" is what its author calls it), else the file name, which is the last thing left.
+func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var source_path: String = str(sheet.external_source_path)
+	var scene: Dictionary = scene_using_script(source_path) if not source_path.is_empty() else {}
+	var object_name: String = sheet.custom_class_name.strip_edges()
+	if object_name.is_empty():
+		object_name = str(scene.get("root_name", ""))
+	if object_name.is_empty():
+		object_name = source_path.get_file().get_basename()
+	var spans: Array[SemanticSpan] = []
+	if not object_name.is_empty():
+		spans.append(_make_span(object_name, SemanticSpan.SpanType.OBJECT, {
+			"editable": false, "kind": "pack_include", "line_index": 0,
+			"text_color": event_style.object_label_color
+		}))
+	var base_class: String = sheet.host_class.strip_edges()
+	if not base_class.is_empty() and base_class != object_name:
+		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE, {
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+		}))
+		spans.append(_pack_include_chip(base_class))
+	var receipts: PackedStringArray = PackedStringArray()
+	if not source_path.is_empty():
+		receipts.append("· %s" % source_path.get_file())
+	if not scene.is_empty():
+		receipts.append("· %s %s" % [EventSheetL10n.translate("scene"), str(scene.get("scene_path", "")).get_file()])
+	if not receipts.is_empty():
+		spans.append(_make_span(" ".join(receipts), SemanticSpan.SpanType.COMMENT, {
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+		}))
+	return spans
 
 
 func _pack_include_chip(text: String) -> SemanticSpan:
@@ -668,8 +763,10 @@ func _pack_about_row_index(rows: Array[EventRowData], from_index: int) -> int:
 ## The comment bar when the file keeps no trailing about-comment: the class description (the `##` block
 ## under `extends`) drawn in the comment-row look. Inert - it is a lens over sheet metadata, not a row
 ## the file actually carries.
-func _build_pack_about_row(sheet: EventSheetResource) -> EventRowData:
+func _build_pack_about_row(sheet: EventSheetResource, fallback_text: String = "") -> EventRowData:
 	var description: String = sheet.class_description.strip_edges()
+	if description.is_empty():
+		description = fallback_text.strip_edges()
 	if description.is_empty():
 		return null
 	var comment := CommentRow.new()
@@ -692,6 +789,11 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 	for entry: Variant in knobs:
 		var record: Dictionary = entry as Dictionary
 		var variable: LocalVariable = record.get("variable")
+		# A prebuilt row (a `preload` block read as an Object) is never exported - it is something the
+		# file keeps for itself, so it lands with the rest of the internal state, in file order.
+		if variable == null:
+			internal.append(record.get("row") as EventRowData)
+			continue
 		var row_data: EventRowData = _build_reading_variable_row(variable, str(record.get("description", "")), 1)
 		if not variable.exported:
 			internal.append(row_data)
@@ -714,11 +816,14 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 			members
 		))
 	if not internal.is_empty():
+		var internal_subtitle: String = EventSheetL10n.translate("values the pack keeps for itself - %d") \
+			if is_addon_pack(sheet) \
+			else EventSheetL10n.translate("values this script keeps for itself - %d")
 		bars.append(_build_head_group_row(
 			sheet,
 			"pack_internal_state",
 			EventSheetL10n.translate("Internal state"),
-			EventSheetL10n.translate("values the pack keeps for itself - %d") % internal.size(),
+			internal_subtitle % internal.size(),
 			internal
 		))
 	return bars
@@ -766,6 +871,14 @@ func _build_reading_variable_row(variable: LocalVariable, description: String, i
 	var object_row: EventRowData = _build_object_declaration_row(variable, indent)
 	if object_row != null:
 		return object_row
+	# M34 - a preloaded scene / script / resource is an OBJECT too, whichever row shape carried it.
+	var preload_path: String = preloaded_path(str(variable.default_value))
+	if not preload_path.is_empty():
+		var preload_row: EventRowData = _build_preload_object_row(
+			variable.name, preload_path, indent, variable, "variable_reading_%d" % variable.get_instance_id()
+		)
+		if preload_row != null:
+			return preload_row
 	return _build_variable_row(
 		"tree",
 		variable.name,
@@ -1049,15 +1162,77 @@ static func friendly_type_word(type_name: String) -> String:
 			return EventSheetL10n.translate("list")
 		"Dictionary":
 			return EventSheetL10n.translate("table")
+		"Callable":
+			return EventSheetL10n.translate("function")
+		"Signal":
+			return EventSheetL10n.translate("signal")
 		"", "Variant":
 			return EventSheetL10n.translate("any")
 		_:
+			var bare_type: String = type_name.strip_edges()
+			# A collection says WHAT IT HOLDS, because that is the whole question a reader has about
+			# one: `Array[String]` is a list of text, `PackedVector2Array` a list of points. The
+			# element word is the same vocabulary the rest of the row uses, pluralised, so the two
+			# readings never drift apart. A Packed*Array is spelled as the Array it behaves like
+			# first, so one rule covers both spellings.
+			var element_type: String = _array_element_type(bare_type)
+			if not element_type.is_empty():
+				return EventSheetL10n.translate("list of %s") % _plural_type_word(element_type)
+			if bare_type.begins_with("Array[") and bare_type.ends_with("]"):
+				return EventSheetL10n.translate("list")
 			# Every Node class is one word to a reader: a node. The specific class is what the picker
 			# and the tooltip say; on a row it is the KIND of thing that matters. Derived from ClassDB
 			# rather than a list, so a class the engine adds tomorrow reads right with no edit here.
-			var bare_type: String = type_name.strip_edges()
 			if ClassDB.class_exists(bare_type) and ClassDB.is_parent_class(bare_type, "Node"):
 				return EventSheetL10n.translate("node")
+			# A Resource subclass keeps its class name: `StatSheet` IS the noun the author chose, and
+			# "resource" would tell a reader strictly less than the name already does.
+			return bare_type
+
+
+## The element type a collection type name holds ("Array[String]" / "PackedStringArray" -> "String"),
+## or "" when the type is not a collection or holds no declared element type (a bare `Array`).
+## Packed*Array is normalised to its Array[...] equivalent so both spellings read the same.
+static func _array_element_type(type_name: String) -> String:
+	match type_name:
+		"PackedStringArray":
+			return "String"
+		"PackedInt32Array", "PackedInt64Array", "PackedByteArray":
+			return "int"
+		"PackedFloat32Array", "PackedFloat64Array":
+			return "float"
+		"PackedVector2Array":
+			return "Vector2"
+		"PackedVector3Array", "PackedVector4Array":
+			return "Vector3"
+		"PackedColorArray":
+			return "Color"
+	if type_name.begins_with("Array[") and type_name.ends_with("]"):
+		return type_name.substr(6, type_name.length() - 7).strip_edges()
+	return ""
+
+
+## The plural of a friendly type word, for "list of …". Only the words a collection actually reads
+## with are spelled out; anything else (a class name) is already the noun the author chose and is
+## repeated as-is, because inventing an English plural for `StatSheet` would be a guess.
+static func _plural_type_word(type_name: String) -> String:
+	match type_name.strip_edges():
+		"String", "StringName":
+			return EventSheetL10n.translate("text")
+		"int", "float":
+			return EventSheetL10n.translate("numbers")
+		"bool":
+			return EventSheetL10n.translate("true/false values")
+		"Vector2", "Vector3", "Vector4":
+			return EventSheetL10n.translate("points")
+		"Color":
+			return EventSheetL10n.translate("colors")
+		"Dictionary":
+			return EventSheetL10n.translate("tables")
+		_:
+			var bare_type: String = type_name.strip_edges()
+			if ClassDB.class_exists(bare_type) and ClassDB.is_parent_class(bare_type, "Node"):
+				return EventSheetL10n.translate("nodes")
 			return bare_type
 
 
@@ -3288,6 +3463,243 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 	return row_data
 
 
+## M34 - a preloaded scene, script or resource is an OBJECT, not a value: `bullet_scene` holding
+## `preload("res://bullet.tscn")` reads `Object bullet_scene = Bullet  scene · bullet.tscn`, with the
+## scene root's own class icon. The res:// path is punctuation to a reader; the THING at the end of it
+## is what they are looking for, and the file name stays as the muted receipt. Returns null when the
+## value is not a preload/load of a project path.
+## Display-only: `source` and `row_uid` come from whatever row carried the preload (a lifted
+## LocalVariable or a `preload` block), so selection and the byte round-trip are untouched.
+func _build_preload_object_row(object_name: String, res_path: String, indent: int, source: Resource,
+		row_uid: String) -> EventRowData:
+	var resolved: Dictionary = resolve_res_object(res_path)
+	if resolved.is_empty():
+		return null
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = source
+	row_data.row_uid = row_uid
+	row_data.line_count = 1
+	var icon_class: String = str(resolved.get("icon_class", ""))
+	var icon: Texture2D = null
+	if _viewport.show_object_icons and not icon_class.is_empty():
+		icon = ACEPickerDialog.editor_icon(icon_class)
+	row_data.spans = [
+		_make_span(EventSheetL10n.translate("Object"), SemanticSpan.SpanType.KEYWORD, {
+			"editable": false, "kind": "variable", "line_index": 0, "badge": true, "badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_GROUP_CHIP_BG, "badge_fg": EventSheetPalette.COLOR_GROUP_CHIP_FG
+		}),
+		_make_span(object_name, SemanticSpan.SpanType.OBJECT, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": event_style.object_label_color
+		}),
+		_make_span("=", SemanticSpan.SpanType.OPERATOR, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}),
+		_make_span(str(resolved.get("name", "")), SemanticSpan.SpanType.VALUE, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": event_style.value_highlight_color,
+			"object_icon": icon
+		}),
+		_make_span("%s · %s" % [str(resolved.get("kind_word", "")), res_path.get_file()], SemanticSpan.SpanType.COMMENT, {
+			"editable": false, "kind": "variable", "line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		})
+	]
+	return row_data
+
+
+## The res:// path a `preload(...)` / `load(...)` expression names, "" when the text is not one.
+static func preloaded_path(expression: String) -> String:
+	if _preload_regex == null:
+		_preload_regex = RegEx.new()
+		_preload_regex.compile("^(?:preload|load)\\(\\s*\"(res://[^\"]+)\"\\s*\\)$")
+	var found: RegExMatch = _preload_regex.search(expression.strip_edges())
+	return found.get_string(1) if found != null else ""
+
+
+static var _preload_regex: RegEx = null
+static var _res_object_cache: Dictionary = {}
+
+
+## What sits at the end of a res:// path, as {name, kind_word, icon_class} - the noun a reader wants
+## instead of the path. A scene answers with its ROOT NODE (name and class, straight from the
+## `[node ...]` line, which is the first node the file lists); a resource with the class it was saved
+## as (its `script_class` when it has one, because that is the name the author gave it); a script with
+## its `class_name`. Anything else keeps its file name, which is all a .png or a .ogg has to give.
+## Returns {} for a path the project does not have, so the caller can fall back to the plain value.
+## Parsed off DISK and cached per session - these files do not change while a sheet is open, and the
+## reader would otherwise re-read them on every redraw.
+static func resolve_res_object(res_path: String) -> Dictionary:
+	if res_path.is_empty():
+		return {}
+	if _res_object_cache.has(res_path):
+		return _res_object_cache[res_path]
+	var resolved: Dictionary = {}
+	if FileAccess.file_exists(res_path):
+		match res_path.get_extension().to_lower():
+			"tscn":
+				resolved = _resolve_scene_object(res_path)
+			"tres":
+				resolved = _resolve_resource_object(res_path)
+			"gd":
+				resolved = _resolve_script_object(res_path)
+			_:
+				resolved = {
+					"name": res_path.get_file().get_basename(),
+					"kind_word": res_path.get_extension().to_lower(),
+					"icon_class": ""
+				}
+	_res_object_cache[res_path] = resolved
+	return resolved
+
+
+static func _resolve_scene_object(res_path: String) -> Dictionary:
+	var root: Dictionary = scene_root_of(res_path)
+	if root.is_empty():
+		return {}
+	return {
+		"name": str(root.get("name", "")),
+		"kind_word": EventSheetL10n.translate("scene"),
+		"icon_class": str(root.get("type", ""))
+	}
+
+
+static func _resolve_resource_object(res_path: String) -> Dictionary:
+	var handle: FileAccess = FileAccess.open(res_path, FileAccess.READ)
+	if handle == null:
+		return {}
+	var header: String = handle.get_line()
+	handle.close()
+	var script_class: String = _quoted_attribute(header, "script_class")
+	var base_type: String = _quoted_attribute(header, "type")
+	var shown: String = script_class if not script_class.is_empty() else base_type
+	if shown.is_empty():
+		shown = res_path.get_file().get_basename()
+	return {"name": shown, "kind_word": EventSheetL10n.translate("resource"), "icon_class": base_type}
+
+
+static func _resolve_script_object(res_path: String) -> Dictionary:
+	var handle: FileAccess = FileAccess.open(res_path, FileAccess.READ)
+	if handle == null:
+		return {}
+	var shown: String = ""
+	var base_type: String = ""
+	while not handle.eof_reached():
+		var line: String = handle.get_line().strip_edges()
+		if line.begins_with("class_name "):
+			shown = line.substr("class_name ".length()).strip_edges()
+		elif line.begins_with("extends "):
+			base_type = line.substr("extends ".length()).strip_edges()
+		elif line.begins_with("func ") or line.begins_with("var ") or line.begins_with("const "):
+			break
+	handle.close()
+	if shown.is_empty():
+		shown = res_path.get_file().get_basename()
+	return {"name": shown, "kind_word": EventSheetL10n.translate("script"), "icon_class": base_type}
+
+
+## The root node of a .tscn as {name, type}, read straight off the text: the FIRST `[node ...]` line
+## is the root by the scene format's own rule. {} when the file cannot be read or lists no node. An
+## instanced root (`instance=ExtResource(...)`) declares no type, so only the name comes back.
+static func scene_root_of(scene_path: String) -> Dictionary:
+	var handle: FileAccess = FileAccess.open(scene_path, FileAccess.READ)
+	if handle == null:
+		return {}
+	while not handle.eof_reached():
+		var line: String = handle.get_line()
+		if not line.begins_with("[node "):
+			continue
+		handle.close()
+		return {"name": _quoted_attribute(line, "name"), "type": _quoted_attribute(line, "type")}
+	handle.close()
+	return {}
+
+
+## The value of a `key="value"` attribute inside one .tscn / .tres header line, "" when absent.
+static func _quoted_attribute(line: String, key: String) -> String:
+	var marker: String = "%s=\"" % key
+	var start: int = line.find(marker)
+	if start < 0:
+		return ""
+	start += marker.length()
+	var end: int = line.find("\"", start)
+	return line.substr(start, end - start) if end > start else ""
+
+
+static var _script_scene_cache: Dictionary = {}
+static var _script_scene_scanned: bool = false
+
+
+## The scene a script is attached to as its ROOT, as {scene_path, root_name} - what lets a script with
+## no `class_name` still be named after the object it drives. {} when no scene in the project uses it
+## that way. Built by ONE sweep of the project's .tscn files (a scene names its scripts in the
+## `[ext_resource]` lines at the very top, so only the head of each file is read) and cached for the
+## session, because the answer cannot change while the editor holds the file open.
+static func scene_using_script(script_path: String) -> Dictionary:
+	if not _script_scene_scanned:
+		_script_scene_scanned = true
+		_scan_scenes_for_scripts("res://")
+	return _script_scene_cache.get(script_path, {})
+
+
+static func _scan_scenes_for_scripts(directory_path: String) -> void:
+	var directory: DirAccess = DirAccess.open(directory_path)
+	if directory == null:
+		return
+	directory.list_dir_begin()
+	var entry: String = directory.get_next()
+	while not entry.is_empty():
+		if entry.begins_with("."):
+			entry = directory.get_next()
+			continue
+		var full_path: String = directory_path.path_join(entry)
+		if directory.current_is_dir():
+			_scan_scenes_for_scripts(full_path)
+		elif entry.get_extension().to_lower() == "tscn":
+			_record_scene_root_script(full_path)
+		entry = directory.get_next()
+	directory.list_dir_end()
+
+
+## Records `script path -> {scene_path, root_name}` for one scene, when its ROOT node carries a
+## script. Only the root counts: a script on a child says nothing about what the scene IS.
+static func _record_scene_root_script(scene_path: String) -> void:
+	var handle: FileAccess = FileAccess.open(scene_path, FileAccess.READ)
+	if handle == null:
+		return
+	var script_ids: Dictionary = {}
+	var root_name: String = ""
+	var in_root: bool = false
+	while not handle.eof_reached():
+		var line: String = handle.get_line()
+		if line.begins_with("[ext_resource "):
+			if line.contains("type=\"Script\""):
+				script_ids[_quoted_attribute(line, "id")] = _quoted_attribute(line, "path")
+			continue
+		if line.begins_with("[node "):
+			if not root_name.is_empty():
+				break  # past the root; a child's script is not this scene's identity
+			root_name = _quoted_attribute(line, "name")
+			in_root = true
+			continue
+		if not in_root or not line.begins_with("script = ExtResource("):
+			continue
+		var id_start: int = line.find("\"")
+		var id_end: int = line.rfind("\"")
+		if id_start < 0 or id_end <= id_start:
+			break
+		var script_id: String = line.substr(id_start + 1, id_end - id_start - 1)
+		var script_path: String = str(script_ids.get(script_id, ""))
+		if not script_path.is_empty() and not _script_scene_cache.has(script_path):
+			_script_scene_cache[script_path] = {"scene_path": scene_path, "root_name": root_name}
+		break
+	handle.close()
+
+
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
 func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowData:
 	# M20 - while reading, an @onready node reference is an OBJECT declaration, not a variable row.
@@ -3892,10 +4304,20 @@ func _build_variable_row(
 	# "float" - and the `name : Type` code grammar goes away, because a reader is being told what the
 	# knob is, not how GDScript declares it. The @export and group chips are dropped by the caller's
 	# options: inside a settings bar every knob is exported, and the bar names the group.
-	if bool(options.get("reading", false)):
+	var reading: bool = bool(options.get("reading", false))
+	if reading:
+		# The type word a READER needs, which is not always the declared one: `const SPEED := 300.0`
+		# declares nothing, so the word comes from the value, and a constant says so in the chip
+		# itself ("constant number") rather than wearing a separate `const` pill nobody reads as a
+		# type.
+		var reading_type_word: String = _reading_type_word(
+			type_name, default_value, bool(options.get("expression_default", false))
+		)
+		if is_constant:
+			reading_type_word = EventSheetL10n.translate("constant %s") % reading_type_word
 		row_data.spans = [
 			_make_span(
-				friendly_type_word(type_name),
+				reading_type_word,
 				SemanticSpan.SpanType.KEYWORD,
 				variable_meta.merged({
 					"editable": false,
@@ -3913,7 +4335,7 @@ func _build_variable_row(
 			_make_span(":", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)),
 			_make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, variable_meta.merged({"editable": false}, true))
 		]
-	if is_constant:
+	if is_constant and not reading:
 		row_data.spans.append(
 			_make_span(
 				"const",
@@ -3981,6 +4403,8 @@ func _build_variable_row(
 	# An expression default (`State.PATROL`, `Vector2.ZERO`, a walrus var's verbatim `100`) is
 	# CODE stored as text - quoting it would misread it as a string literal.
 	var value_text: String = str(default_value) if bool(options.get("expression_default", false)) else _format_variable_value(default_value)
+	if reading:
+		value_text = _reading_value_text(value_text)
 	row_data.spans.append(
 		_make_span(
 			value_text,
@@ -4001,6 +4425,72 @@ func _build_variable_row(
 			)
 		)
 	return row_data
+
+
+## The type word a variable READS with, which is not always the one it declares. `const SPEED := 300.0`
+## and `var mode := "idle"` declare no type at all, and "any" would tell a reader nothing the value in
+## front of them does not already say - so an undeclared type is read off the literal instead. A
+## declared type always wins, because the author said it on purpose.
+static func _reading_type_word(type_name: String, default_value: Variant, expression_default: bool) -> String:
+	var declared: String = type_name.strip_edges()
+	if declared.is_empty() or declared == "Variant":
+		var inferred: String = _inferred_type_word(default_value, expression_default)
+		if not inferred.is_empty():
+			return inferred
+	return friendly_type_word(declared)
+
+
+## The type word a literal gives away, "" when the value settles nothing. An expression default is
+## stored as SOURCE TEXT (`300.0`, `"idle"`, `[]`), so the shapes are matched as written; a real
+## Variant default is matched by its actual type.
+static func _inferred_type_word(default_value: Variant, expression_default: bool) -> String:
+	if not expression_default:
+		match typeof(default_value):
+			TYPE_STRING, TYPE_STRING_NAME:
+				return friendly_type_word("String")
+			TYPE_INT, TYPE_FLOAT:
+				return friendly_type_word("int")
+			TYPE_BOOL:
+				return friendly_type_word("bool")
+			TYPE_ARRAY:
+				return friendly_type_word("Array")
+			TYPE_DICTIONARY:
+				return friendly_type_word("Dictionary")
+		return ""
+	var text: String = str(default_value).strip_edges()
+	if text.is_empty():
+		return ""
+	if text == "true" or text == "false":
+		return friendly_type_word("bool")
+	if text.begins_with("\"") or text.begins_with("'"):
+		return friendly_type_word("String")
+	if text.begins_with("["):
+		return friendly_type_word("Array")
+	if text.begins_with("{"):
+		return friendly_type_word("Dictionary")
+	if text.is_valid_float():
+		return friendly_type_word("float")
+	return ""
+
+
+## A value in the reading shape. An empty collection reads `empty` - `[]` and `{}` are punctuation a
+## reader has to decode, and "nothing in it yet" is the whole fact. A whole number written as a float
+## (`300.0`, how GDScript spells a float constant) drops the tail it does not need; `4.5` keeps every
+## digit it has.
+static func _reading_value_text(value_text: String) -> String:
+	var text: String = value_text.strip_edges()
+	if text == "[]" or text == "{}" or text == "[  ]" or text == "{  }":
+		return EventSheetL10n.translate("empty")
+	if _trailing_zero_regex == null:
+		_trailing_zero_regex = RegEx.new()
+		_trailing_zero_regex.compile("^(-?\\d+)\\.0+$")
+	var trimmed: RegExMatch = _trailing_zero_regex.search(text)
+	if trimmed != null:
+		return trimmed.get_string(1)
+	return value_text
+
+
+static var _trailing_zero_regex: RegEx = null
 
 # ── Event-span assembly (the "model → SemanticSpans" pass) ───────────────────────────────────────
 

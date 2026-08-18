@@ -1803,3 +1803,20 @@ Functions,函数
 Call,调用
 line,行
 lines,行
+function,函数
+signal,信号
+list of %s,%s 列表
+numbers,数字
+true/false values,真/假 值
+points,坐标
+colors,颜色
+tables,表
+nodes,节点
+constant %s,常量 %s
+empty,空
+scene,场景
+resource,资源
+script,脚本
+a,是
+values this script keeps for itself - %d,此脚本自用的值 - %d
+this script fires - %d,此脚本触发 - %d

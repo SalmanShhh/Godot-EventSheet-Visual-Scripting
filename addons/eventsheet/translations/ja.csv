@@ -1803,3 +1803,20 @@ Functions,関数
 Call,呼び出し
 line,行
 lines,行
+function,関数
+signal,シグナル
+list of %s,%sのリスト
+numbers,数値
+true/false values,true/false の値
+points,座標
+colors,色
+tables,テーブル
+nodes,ノード
+constant %s,定数の%s
+empty,空
+scene,シーン
+resource,リソース
+script,スクリプト
+a,は
+values this script keeps for itself - %d,このスクリプト専用の値 - %d
+this script fires - %d,このスクリプトが発火 - %d

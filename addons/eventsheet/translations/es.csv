@@ -1803,3 +1803,20 @@ Functions,Funciones
 Call,Llamar
 line,línea
 lines,líneas
+function,función
+signal,señal
+list of %s,lista de %s
+numbers,números
+true/false values,valores verdadero/falso
+points,puntos
+colors,colores
+tables,tablas
+nodes,nodos
+constant %s,%s constante
+empty,vacío
+scene,escena
+resource,recurso
+script,script
+a,un
+values this script keeps for itself - %d,valores solo para este script - %d
+this script fires - %d,este script dispara - %d

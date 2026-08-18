@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Added - the head of an opened plain script reads as the object it drives
+
+Opening somebody's own `.gd` used to say `⇥ Script` and then list GDScript type names -
+`Array[String] names = []`, `const SPEED = 300.0`, `PackedScene bullet_scene = preload(...)`. A
+behavior pack introduces itself as a pack; every other script now introduces itself as the OBJECT it
+drives, in the same Construct grammar.
+
+- **The Include bar names the object.** `⇥ Player  a  CharacterBody2D  · player.gd · scene Player.tscn`
+  - the name is the script's `class_name`, or the ROOT NODE of the scene it is attached to when it
+  declares none (the common shape of a beginner's scene script), or the file name as the last resort.
+  The class icon is the editor's own, and the file and the scene trail it as muted receipts.
+- **Collections say what they hold.** `list of text`, `list of numbers`, `list of points`, `table`,
+  `function`, `signal` - derived from the element type, so `Array[String]` and `PackedStringArray`
+  read the same and a Resource subclass keeps the author's own class name. An empty `[]` / `{}` reads
+  `empty`.
+- **A constant says so in its type chip** - `constant number  MAX_SPEED = 300` - and an undeclared
+  type (`const SPEED := 300.0`, `var mode := "idle"`) is read off the value instead of showing "any".
+  A whole number written as a float drops the tail GDScript needs and a reader does not.
+- **A preloaded scene, script or resource is an Object row**:
+  `Object bullet_scene = Bullet  scene · bullet.tscn`, with the scene root's class icon. Both shapes
+  read this way - a typed `var` and a `const`, the latter of which used to stop the head dead one
+  line in.
+- **Same folders as a pack** - Triggers, Settings (one bar per `@export_group`), Internal state -
+  saying "script" rather than "pack". A script's opening `##` block, which sits above `class_name`
+  where the class-description rule never looked, now reads as the comment bar instead of folding away
+  with the class setup strip.
+- Display-only throughout: opening either of the new fixtures and re-emitting reproduces the file
+  byte for byte, and a pack's head is unchanged.
+
 ### Added - a ternary reads as a sub-event pair, and `return` reads Construct's own wording
 
 An opened pack still had one shape a Construct sheet never shows: a CONDITION inside an ACTION cell.

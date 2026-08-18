@@ -1803,3 +1803,20 @@ Functions,Функции
 Call,Вызвать
 line,строка
 lines,строк
+function,функция
+signal,сигнал
+list of %s,список: %s
+numbers,числа
+true/false values,значения да/нет
+points,точки
+colors,цвета
+tables,таблицы
+nodes,узлы
+constant %s,константа: %s
+empty,пусто
+scene,сцена
+resource,ресурс
+script,скрипт
+a,-
+values this script keeps for itself - %d,значения только для этого скрипта - %d
+this script fires - %d,этот скрипт запускает - %d

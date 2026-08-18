@@ -1803,3 +1803,20 @@ Functions,함수
 Call,호출
 line,줄
 lines,줄
+function,함수
+signal,시그널
+list of %s,%s 목록
+numbers,숫자
+true/false values,참/거짓 값
+points,좌표
+colors,색
+tables,테이블
+nodes,노드
+constant %s,상수 %s
+empty,비어 있음
+scene,씬
+resource,리소스
+script,스크립트
+a,은
+values this script keeps for itself - %d,이 스크립트 전용 값 - %d
+this script fires - %d,이 스크립트가 발생 - %d
