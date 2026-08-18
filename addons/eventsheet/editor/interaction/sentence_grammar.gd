@@ -130,6 +130,17 @@ const GLOBAL_FUNCTIONS: PackedStringArray = [
 	"error_string", "rid_allocate_id", "rid_from_int64", "Color8"
 ]
 
+## N8. The methods and properties that can carry behaviour words at all. Checked BEFORE the object's
+## class is resolved, so an ordinary call or assignment - which is most of them - never pays for a
+## class lookup it cannot use, and so the whole set of lines these words may claim reads in one place.
+const BEHAVIOUR_METHODS: PackedStringArray = [
+	"apply_impulse", "apply_central_impulse", "apply_force", "apply_central_force",
+	"make_current", "restart"
+]
+const BEHAVIOUR_MEMBERS: PackedStringArray = [
+	"linear_velocity", "angular_velocity", "emitting", "zoom"
+]
+
 ## Vector constructors read as the plain tuple they build - the type word is in the row's chip, never
 ## in the middle of a sentence.
 const VECTOR_CONSTRUCTORS: PackedStringArray = ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"]
@@ -1221,6 +1232,8 @@ static func _behaviour_call(object_name: String, method: String, args: PackedStr
 			"layer": [expression_text(args[0]), "value"],
 			"state": [translate("on") if switch == "true" else translate("off"), "name"]
 		})
+	if not BEHAVIOUR_METHODS.has(method):
+		return {}
 	var known_class: String = class_of(target if not target.is_empty() else object_name, context)
 	if known_class.is_empty():
 		return {}
@@ -1250,6 +1263,8 @@ static func _behaviour_assignment(object_name: String, member: String, assigned:
 	var value: String = assigned.strip_edges()
 	if (member == "collision_layer" or member == "collision_mask") and value == "0":
 		return _sentence(object_name, "Set collisions {state}", {"state": [translate("off"), "name"]})
+	if not BEHAVIOUR_MEMBERS.has(member):
+		return {}
 	var known_class: String = class_of(target.split(".", false)[0] if target.contains(".") else object_name, context)
 	if known_class.is_empty():
 		return {}

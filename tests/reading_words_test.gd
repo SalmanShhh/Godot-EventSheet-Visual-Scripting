@@ -215,7 +215,7 @@ static func _condition_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
 		["rotation > 1.5", "Player ▸ rotation > 1.5"],
-		["position.x <= 0", "Player ▸ X <= 0"],
+		["position.x <= 0", "Player ▸ X ≤ 0"],
 		["visible", "Player ▸ visible is true"],
 		["crouching", "System ▸ crouching is true"],
 		["enemy.is_in_group(\"boss\")", "enemy ▸ is in group \"boss\""],
