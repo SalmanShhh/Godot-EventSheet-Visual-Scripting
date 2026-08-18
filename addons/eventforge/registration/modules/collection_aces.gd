@@ -100,7 +100,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# The handler becomes an implicit coroutine, so use these ONLY inside a one-shot trigger
 	# (On Ready / On Signal / a custom function) with a run-once guard - NEVER inside a re-firing On
 	# Process, where overlapping suspended runs would duplicate work. For the easy path use the Time Slicer pack.
-	descriptors.append(F.make_descriptor("Core", "AwaitNextFrame", "Await Next Frame", ACEDescriptor.ACEType.ACTION, "await get_tree().process_frame", "", [], "Performance", "await next frame")
+	descriptors.append(F.make_descriptor("Core", "AwaitNextFrame", "Await Next Frame", ACEDescriptor.ACEType.ACTION, "await get_tree().process_frame", "", [], "Performance", "Wait one tick")
 		.described("Pauses this event until the next game frame, to spread work out."))
 	descriptors.append(F.make_descriptor("Core", "BeginFrameBudget", "Begin Frame Budget", ACEDescriptor.ACEType.ACTION, "var __ace_budget_end := Time.get_ticks_usec() + int({ms} * 1000.0)", "", [F.make_param("ms", "String", "8.0", "Budget (ms)", "Per-frame millisecond budget for the loop that follows (pair with Await If Over Budget in the SAME handler).", "expression")], "Performance", "begin {ms}ms frame budget")
 		.described("Starts a per-frame time budget for the loop that follows, to avoid stutter."))

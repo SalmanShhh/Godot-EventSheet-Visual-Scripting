@@ -1820,3 +1820,25 @@ script,скрипт
 a,-
 values this script keeps for itself - %d,значения только для этого скрипта - %d
 this script fires - %d,этот скрипт запускает - %d
+Stop loop,Прервать цикл
+⏳ Wait one tick,⏳ Ждать один тик
+⏳ Wait one physics tick,⏳ Ждать один тик физики
+⏳ Wait for signal {trigger},⏳ Ждать сигнал {trigger}
+⏳ Wait for signal {owner} {trigger},⏳ Ждать сигнал {owner} {trigger}
+Add to group {group},Добавить в группу {group}
+Remove from group {group},Убрать из группы {group}
+(group),(группа)
+Tween {property} to {value} over {duration}s,Плавно менять {property} до {value} за {duration}с
+to,на
+is in group {group},в группе {group}
+item,элемент
+Every tick,Каждый тик
+(physics),(физика)
+(draw),(отрисовка)
+For,Для
+from,от
+Repeat,Повторить
+times,раз
+loopindex,индекс цикла
+While,Пока
+For each child,Для каждого потомка

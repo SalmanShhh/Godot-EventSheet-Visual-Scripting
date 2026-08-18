@@ -4878,7 +4878,12 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(_make_span(trigger_id_glyph, SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
 		spans.append(
 			_make_span(
-				_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id),
+				# ── M27 lens hook (tick triggers) ──────────────────────────────────────────────
+				# Construct's words for the two ticks; every other trigger keeps its own name.
+				EventSheetViewportReadingRows.tick_trigger_words(
+					event_row.trigger_id,
+					_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id)
+				),
 				SemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
@@ -5004,9 +5009,17 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var pick: PickFilter = event_row.pick_filters[pick_index] as PickFilter
 		if pick == null or not pick.enabled:
 			continue
+		# ── M33 lens hook (loop rows) ──────────────────────────────────────────────────────────
+		# One call: the loop's Construct words, and the object a For-each-child loop belongs to.
+		# A filtered or limited pick says more than the loop words can carry, so it keeps its own text.
+		var loop_reading: Dictionary = {}
+		if pick.predicate_expression.strip_edges().is_empty() and pick.pick_first_n <= 0:
+			loop_reading = EventSheetViewportReadingRows.loop_words(
+				pick.collection_kind, pick.iterator_name, _pick_collection_text(pick))
+		var loop_object: String = str(loop_reading.get("object", ""))
 		spans.append(
 			_make_span(
-				_format_pick_filter(pick),
+				str(loop_reading.get("text", "")) if not loop_reading.is_empty() else _format_pick_filter(pick),
 				SemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
@@ -5016,7 +5029,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"line_index": condition_line_index,
 					# Loops are System's, like in Construct - and the label puts the line in the
 					# shared object sub-lane, so its text aligns with the cells above it.
-					"object_label": _object_label_for("Core", "")
+					"object_label": loop_object if not loop_object.is_empty() else _object_label_for("Core", ""),
+					"object_icon": _reading_class_icon_for(loop_object)
 				}.merged(condition_style_meta, true)
 			)
 		)
@@ -6030,6 +6044,13 @@ func _format_with_node(event_row: EventRow) -> String:
 	return "With node  %s" % event_row.with_node_target.strip_edges()
 
 
+## The expression a pick filter loops over, with the legacy spelling as the fallback. One helper so
+## the loop's own text and its M33 reading can never disagree about what the loop walks.
+func _pick_collection_text(pick: PickFilter) -> String:
+	var collection: String = pick.collection_value.strip_edges()
+	return collection if not collection.is_empty() else pick.source_expression.strip_edges()
+
+
 func _format_pick_filter(pick: PickFilter) -> String:
 	var iterator: String = pick.iterator_name.strip_edges()
 	if iterator.is_empty():
@@ -6543,17 +6564,27 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		if not call_pieces.is_empty():
 			pieces = call_pieces
 		else:
-			pieces.append([str(call_info.get("target", "")) + "  ", "object"])
-			pieces.append([str(call_info.get("verb", "")), "name"])
-			if args.is_empty():
-				pieces.append(["  ( )", "plain"])
+			# ── M25 / M26 lens hook ───────────────────────────────────────────────────────────
+			# Any other call reads Object ▸ Verb chips - the verb in words, the arguments named by
+			# the engine's own parameter names when the object's class is known, and no
+			# parentheses anywhere. Only a line that is not one call at all keeps the old form.
+			var generic: Dictionary = EventSheetViewportReadingRows.generic_call_pieces(
+				raw.code, sentence_context(), _reading_class_map())
+			if not generic.is_empty():
+				object_label = str(generic.get("object", ""))
+				pieces = generic.get("pieces", []) as Array
 			else:
-				pieces.append(["  ( ", "plain"])
-				for argument_index: int in args.size():
-					if argument_index > 0:
-						pieces.append([", ", "plain"])
-					pieces.append([args[argument_index], "value"])
-				pieces.append([" )", "plain"])
+				pieces.append([str(call_info.get("target", "")) + "  ", "object"])
+				pieces.append([str(call_info.get("verb", "")), "name"])
+				if args.is_empty():
+					pieces.append(["  ( )", "plain"])
+				else:
+					pieces.append(["  ( ", "plain"])
+					for argument_index: int in args.size():
+						if argument_index > 0:
+							pieces.append([", ", "plain"])
+						pieces.append([args[argument_index], "value"])
+					pieces.append([" )", "plain"])
 	if pieces.is_empty():
 		return false
 	# ── M9 / M10 lens hook ─────────────────────────────────────────────────────────────────────
@@ -6670,11 +6701,41 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"QueueFree":
 			return EventSheetSentence.statement("queue_free()", context)
 		"CallMethod":
-			# A generic call only reads as a sentence when its shape is one of the settled ones
-			# (`call_deferred("queue_free")` is a destroy); anything else keeps its own reading.
-			return EventSheetSentence.statement("%s.%s(%s)" % [
+			# A generic call reads as one of the settled sentences when it has one
+			# (`call_deferred("queue_free")` is a destroy) - and otherwise as M26's Object ▸ Verb
+			# chips, which is exactly what the same call typed by hand now reads.
+			var call_code: String = "%s.%s(%s)" % [
 				str(params_dict.get("target", "")), str(params_dict.get("method", "")),
-				str(params_dict.get("args", ""))], context)
+				str(params_dict.get("args", ""))]
+			var settled: Dictionary = EventSheetSentence.statement(call_code, context)
+			if not settled.is_empty():
+				return settled
+			var generic_call: Dictionary = EventSheetViewportReadingRows.generic_call_pieces(
+				call_code, context, _reading_class_map())
+			if generic_call.is_empty():
+				return {}
+			var call_segments: Array = []
+			for piece: Variant in (generic_call.get("pieces", []) as Array):
+				call_segments.append({"text": str((piece as Array)[0]), "tone": str((piece as Array)[1])})
+			return {"object": str(generic_call.get("object", "")), "segments": call_segments}
+		# ── M30 lens hook (groups as families) ────────────────────────────────────────────────
+		# The picked group rows read the same words a typed `add_to_group(...)` /
+		# `get_tree().call_group(...)` now reads, so the family vocabulary is one sentence either way.
+		"AddToGroup":
+			return EventSheetSentence.statement("%s.add_to_group(%s)" % [
+				str(params_dict.get("target", "self")), str(params_dict.get("group", ""))], context)
+		"RemoveFromGroup":
+			return EventSheetSentence.statement("%s.remove_from_group(%s)" % [
+				str(params_dict.get("target", "self")), str(params_dict.get("group", ""))], context)
+		"CallGroup":
+			return EventSheetSentence.statement("get_tree().call_group(%s, %s)" % [
+				str(params_dict.get("group", "")), str(params_dict.get("method", ""))], context)
+		"CallGroupWith":
+			var group_args: String = str(params_dict.get("args", "")).strip_edges()
+			var group_call: String = "get_tree().call_group(%s, %s%s)" % [
+				str(params_dict.get("group", "")), str(params_dict.get("method", "")),
+				"" if group_args.is_empty() else ", %s" % group_args]
+			return EventSheetSentence.statement(group_call, context)
 		"QueueFreeNode":
 			return EventSheetSentence.statement("%s.queue_free()" % str(params_dict.get("target", "self")), context)
 		"ChangeScene":
@@ -6811,6 +6872,10 @@ func sentence_context() -> Dictionary:
 			var published: String = str(signal_row.ace_name).strip_edges()
 			declared[signal_row.signal_name] = published if not published.is_empty() else signal_row.signal_name.capitalize()
 		context["signals"] = declared
+		# ── M25 / M28 lens hook ────────────────────────────────────────────────────────────────
+		# What only something able to ASK can answer: the script's own object name, its engine
+		# properties, and each signal's parameter names. Cached with the rest of the context.
+		context.merge(EventSheetViewportReadingRows.sentence_context_extras(sheet as EventSheetResource), true)
 	_sentence_context_sheet = sheet
 	_sentence_context_cache = context.duplicate()
 	context["verb_kind"] = _current_verb_kind()
@@ -6875,6 +6940,13 @@ func _export_knob_names() -> Dictionary:
 
 ## M13/M20 - the object-label to class-name map, so a row naming the pack's host, a $Node / %Node
 ## reference or an @onready node variable can draw that class's Godot icon.
+## M26 - the object-label to class-name map itself, so a call's chips can be named by the engine's
+## own parameter names for that class.
+func _reading_class_map() -> Dictionary:
+	_reset_lens_caches_if_stale()
+	return _lens_class_map
+
+
 func _reading_class_icon_for(object_label: String) -> Texture2D:
 	if not _viewport.show_object_icons:
 		return null
@@ -6886,9 +6958,13 @@ func _reading_class_icon_for(object_label: String) -> Texture2D:
 ## conditions, actions, triggers - reads the same way, and so the View toggle has a single switch
 ## to flip rather than one per lane.
 func _reading_sentence(text: String) -> String:
+	# ── M27 lens hook ──────────────────────────────────────────────────────────────────────────
+	# `delta` reads `dt` whatever else is switched on: it is the number's Construct name, not a
+	# respelling of somebody's variable, so it does not belong behind the humanized-names toggle.
+	var with_dt: String = EventSheetViewportLenses.dt_words(text)
 	if not _viewport.humanize_names_enabled():
-		return text
-	return EventSheetViewportLenses.humanize_sentence(text, _export_knob_names())
+		return with_dt
+	return EventSheetViewportLenses.humanize_sentence(with_dt, _export_knob_names())
 
 
 ## M12 - whether a lifted condition READS as inverted even though its `negated` flag is not set,
@@ -6909,6 +6985,12 @@ func _condition_reads_negated(condition: ACECondition) -> bool:
 ## is also what headless returns, so a headless render keeps the text-only look.
 func _reading_sentence_icon(sentence: Dictionary, code: String) -> Texture2D:
 	var subject: String = ""
+	# ── M25 lens hook ──────────────────────────────────────────────────────────────────────────
+	# The row's OBJECT is the subject whenever the sentence names one - an engine property of the
+	# script's own object reads as `Player ▸ Set X to 100`, whose picture is Player's, not X's.
+	var named_object: Texture2D = _reading_class_icon_for(str(sentence.get("object", "")))
+	if named_object != null:
+		return named_object
 	if not sentence.is_empty():
 		for segment: Variant in (sentence.get("segments", []) as Array):
 			var part: Dictionary = segment

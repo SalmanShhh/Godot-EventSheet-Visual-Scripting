@@ -1820,3 +1820,25 @@ script,script
 a,un
 values this script keeps for itself - %d,valores solo para este script - %d
 this script fires - %d,este script dispara - %d
+Stop loop,Detener bucle
+⏳ Wait one tick,⏳ Esperar un tick
+⏳ Wait one physics tick,⏳ Esperar un tick de física
+⏳ Wait for signal {trigger},⏳ Esperar la señal {trigger}
+⏳ Wait for signal {owner} {trigger},⏳ Esperar la señal {owner} {trigger}
+Add to group {group},Añadir al grupo {group}
+Remove from group {group},Quitar del grupo {group}
+(group),(grupo)
+Tween {property} to {value} over {duration}s,Animar {property} a {value} en {duration}s
+to,a
+is in group {group},está en el grupo {group}
+item,elemento
+Every tick,Cada tick
+(physics),(física)
+(draw),(dibujo)
+For,Para
+from,desde
+Repeat,Repetir
+times,veces
+loopindex,índice de bucle
+While,Mientras
+For each child,Para cada hijo

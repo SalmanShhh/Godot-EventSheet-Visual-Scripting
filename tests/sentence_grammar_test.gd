@@ -112,7 +112,7 @@ static func _idioms() -> bool:
 	ok = _check("abs", EventSheetSentence.expression_text("abs(x)"), "|x|") and ok
 	ok = _check("degrees", EventSheetSentence.expression_text("deg_to_rad(x)"), "x°") and ok
 	ok = _check("nested idioms", EventSheetSentence.expression_text("maxf(_coyote_timer - delta, 0.0)"),
-		"max(_coyote_timer - delta, 0)") and ok
+		"max(_coyote_timer - dt, 0)") and ok
 	ok = _check("vector constructor", EventSheetSentence.expression_text("Vector3(x, y, z)"), "(x, y, z)") and ok
 	ok = _check("cast dropped", EventSheetSentence.expression_text("(child as CollisionShape3D).shape"),
 		"child.shape") and ok
