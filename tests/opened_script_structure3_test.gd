@@ -172,14 +172,14 @@ static func _rows() -> bool:
 		"i2 [Enemy> (group \"enemies\") hp < 10 | enemy> Flee]") and ok
 	ok = _check("an if/else inside a children loop keeps its Else",
 		_row_containing(rows, "(children)"),
-		"i2 [Child> (children) Is visible | System> Hide]") and ok
+		"i2 [Child> (children) Is visible | child> Set invisible]") and ok
 	# M37 - first case states the test, later cases are an Else carrying theirs, `_` is a plain Else.
 	ok = _check("the first case states its test",
 		_row_containing(rows, "difficulty = \"easy\""),
-		"i3 [difficulty = \"easy\" | Set reward to 10]") and ok
+		"i3 [System> difficulty = \"easy\" | Set reward to 10]") and ok
 	ok = _check("a multi-value case is an Else with an OR block",
 		_row_containing(rows, "difficulty = \"normal\""),
-		"i3 [System> Else | OR | difficulty = \"normal\" | OR | difficulty = \"hard\" | Set reward to 25]") and ok
+		"i3 [System> Else | OR | System> difficulty = \"normal\" | OR | System> difficulty = \"hard\" | Set reward to 25]") and ok
 	ok = _check("the default is a plain Else",
 		_row_containing(rows, "Set reward to 0"),
 		"i3 [System> Else | Set reward to 0]") and ok
