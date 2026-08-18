@@ -3641,6 +3641,7 @@ func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, t
 ## The lifecycle handlers whose top-level branches read as the input triggers a player would name.
 const INPUT_HANDLER_TRIGGERS: Array[String] = ["OnInput", "OnUnhandledInput", "OnUnhandledKeyInput"]
 
+
 ## The object a trigger row belongs to. A signal-backed trigger belongs to the NODE that emits it -
 ## "Hurtbox > On Body Entered", the way Construct names the object before the verb - so a connected
 ## handler reads as its source node rather than as the generic class the vocabulary filed it under.
