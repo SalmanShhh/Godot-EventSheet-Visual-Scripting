@@ -133,6 +133,20 @@ static func _disabled_comments() -> bool:
 	passed = _check("a sentence with an equals sign is not code",
 		CommentRow.code_text("Speed = how fast the player runs"), "") and passed
 	passed = _check("a note is not code", CommentRow.code_text("the player is hit here"), "") and passed
+	# The switch itself: what the enable/disable gesture reads off an action row. A comment holding a
+	# statement hands back the line to uncomment; a note and a real action hand back nothing.
+	var note := CommentRow.new()
+	note.text = "hp = 0"
+	passed = _check("a code comment offers its line back",
+		ViewportRowBuilder.commented_out_code(note), "hp = 0") and passed
+	var prose := CommentRow.new()
+	prose.text = "the player is hit here"
+	passed = _check("a note offers nothing to switch on",
+		ViewportRowBuilder.commented_out_code(prose), "") and passed
+	var live := RawCodeRow.new()
+	live.code = "hp = 0"
+	passed = _check("a live statement is not a switched-off row",
+		ViewportRowBuilder.commented_out_code(live), "") and passed
 	view.free()
 	return passed
 
