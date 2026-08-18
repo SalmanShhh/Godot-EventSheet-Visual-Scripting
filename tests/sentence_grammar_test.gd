@@ -75,7 +75,7 @@ static func _statements() -> bool:
 		"FPSController ▸ Signal On Damaged amount, true") and ok
 	ok = _check("wait", _read("await get_tree().create_timer(0.5).timeout"), "System ▸ ⏳ Wait 0.5 seconds") and ok
 	ok = _check("change scene", _read("get_tree().change_scene_to_file(\"res://menu.tscn\")"),
-		"System ▸ Go to scene res://menu.tscn") and ok
+		"System ▸ Go to scene \"res://menu.tscn\"") and ok
 	# Refusals: a sentence that is almost right is worse than the code it replaced.
 	ok = _check("comparison refused", _read("x == y"), "") and ok
 	ok = _check("control flow refused", _read("if ready:"), "") and ok
@@ -92,9 +92,9 @@ static func _conditions() -> bool:
 	ok = _check("null check", _read_condition("host == null"), "host ▸ does not exist") and ok
 	ok = _check("not null check", _read_condition("host != null"), "host ▸ exists") and ok
 	ok = _check("chance", _read_condition("randf() < 0.3"), "System ▸ 30% chance") and ok
-	ok = _check("key down", _read_condition("Input.is_action_pressed(&\"jump\")"), "Keyboard ▸ jump is down") and ok
+	ok = _check("key down", _read_condition("Input.is_action_pressed(&\"jump\")"), "Keyboard ▸ \"jump\" is down") and ok
 	ok = _check("key pressed", _read_condition("Input.is_action_just_pressed(\"jump\")"),
-		"Keyboard ▸ On jump pressed") and ok
+		"Keyboard ▸ On \"jump\" pressed") and ok
 	ok = _check("zero approx", _read_condition("is_zero_approx(direction)"), " ▸ direction ≈ 0") and ok
 	ok = _check("plain comparison untouched", _read_condition("health > 0"), "") and ok
 	return ok

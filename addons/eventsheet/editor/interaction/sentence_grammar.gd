@@ -351,7 +351,8 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	if text.begins_with(SCENE_HEAD) and text.ends_with(")"):
 		var scene_path: String = text.substr(SCENE_HEAD.length(), text.length() - SCENE_HEAD.length() - 1)
 		if not scene_path.strip_edges().is_empty():
-			return _sentence(OBJECT_SYSTEM, "Go to scene {path}", {"path": [_unquote(scene_path), "value"]})
+			# The path stays a quoted string, so a reader (and the name lens) sees content, not a name.
+			return _sentence(OBJECT_SYSTEM, "Go to scene {path}", {"path": ["\"%s\"" % _unquote(scene_path), "value"]})
 	var call: Dictionary = call_parts(text)
 	if call.is_empty():
 		return {}
@@ -601,9 +602,12 @@ static func call_parts(text: String) -> Dictionary:
 	return {"target": target, "method": method, "args": _split_arguments(inner)}
 
 
-## Quotes and the `&"action"` StringName prefix dropped: an input action reads as its bare name.
+## The `&"action"` StringName prefix dropped, the QUOTES kept: an input action is a string the
+## user typed, and Construct shows it as one ("jump" is down). Kept quoted, the name lens also
+## knows to leave it alone (it never rewrites inside a literal), so `ui_accept` stays `ui_accept`.
 static func strip_action_name(value: String) -> String:
-	return _unquote(value.strip_edges().trim_prefix("&"))
+	var bare: String = _unquote(value.strip_edges().trim_prefix("&"))
+	return "" if bare.is_empty() else "\"%s\"" % bare
 
 
 ## Editor-UI translation, kept in one place so every sentence word goes through the same door.

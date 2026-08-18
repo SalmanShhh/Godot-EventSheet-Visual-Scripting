@@ -120,6 +120,10 @@ static func possessive_in_expression(expression: String, humanize: bool = true) 
 		return expression
 	if not expression.contains("."):
 		return expression
+	# A path or a string is not a property chain: `res://menu.tscn` must never read as
+	# "menu's tscn". Anything carrying a slash, a colon or a quote is left exactly as written.
+	if expression.contains("/") or expression.contains(":") or expression.contains("\"") or expression.contains("'"):
+		return expression
 	var output: String = ""
 	var token: String = ""
 	for index: int in range(expression.length()):

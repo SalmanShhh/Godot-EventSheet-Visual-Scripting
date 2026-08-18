@@ -58,10 +58,10 @@ static func run() -> bool:
 	var fps_rows: Array[PackedStringArray] = _handler_readings(fps, "OnUnhandledInput")
 	ok = _check("the mouse-motion branch reads as a Mouse trigger with the capture check under it",
 		fps_rows[0] if fps_rows.size() > 0 else PackedStringArray(),
-		PackedStringArray(["Mouse|On mouse moved", "Mouse|mouse is captured", "ƒ|Add Look(mouse's ΔX, mouse's ΔY)"])) and ok
+		PackedStringArray(["Mouse|On mouse moved", "Mouse|mouse is captured", "ƒ|Call Add Look   x = mouse's ΔX   y = mouse's ΔY"])) and ok
 	ok = _check("the key branch reads as a Keyboard trigger, not an Else",
 		fps_rows[1] if fps_rows.size() > 1 else PackedStringArray(),
-		PackedStringArray(["Keyboard|On Escape pressed", "ƒ|Release Mouse"])) and ok
+		PackedStringArray(["Keyboard|On Escape pressed", "ƒ|Call Release Mouse"])) and ok
 
 	# ── B + C: a hand-written file - mouse button, key released, and a connected handler ──
 	var handwritten_path: String = "user://eventsheets_handwritten_input_test.gd"
@@ -74,10 +74,10 @@ static func run() -> bool:
 	var hand_rows: Array[PackedStringArray] = _event_readings(hand)
 	ok = _check("a mouse-button branch names the button and the edge",
 		hand_rows[0] if hand_rows.size() > 0 else PackedStringArray(),
-		PackedStringArray(["Mouse|On right button pressed", "ƒ|Fire"])) and ok
+		PackedStringArray(["Mouse|On right button pressed", "ƒ|Call Fire"])) and ok
 	ok = _check("a key-RELEASED branch says released",
 		hand_rows[1] if hand_rows.size() > 1 else PackedStringArray(),
-		PackedStringArray(["Keyboard|On Space released", "ƒ|Stop Firing"])) and ok
+		PackedStringArray(["Keyboard|On Space released", "ƒ|Call Stop Firing"])) and ok
 	ok = _check("a hand-written signal handler reads as its source node, with its payload as a chip",
 		hand_rows[2] if hand_rows.size() > 2 else PackedStringArray(),
 		PackedStringArray(["Hurtbox|On Body Entered", "|body", "System|Print body.name"])) and ok
@@ -85,10 +85,10 @@ static func run() -> bool:
 	# ── D: an AUTHORED Keyboard/Mouse trigger reads back as the same row after save + reopen ──
 	ok = _check("an authored Keyboard trigger reopens as the same row",
 		_authored_round_trip("KeyEventPressed", {"key": "KEY_ESCAPE"}, "user://eventsheets_authored_key_test.gd"),
-		PackedStringArray(["Keyboard|On Escape pressed", "ƒ|Fire"])) and ok
+		PackedStringArray(["Keyboard|On Escape pressed", "ƒ|Call Fire"])) and ok
 	ok = _check("an authored Mouse trigger reopens as the same row",
 		_authored_round_trip("MouseButtonEventPressed", {"button": "MOUSE_BUTTON_RIGHT"}, "user://eventsheets_authored_mouse_test.gd"),
-		PackedStringArray(["Mouse|On right button pressed", "ƒ|Fire"])) and ok
+		PackedStringArray(["Mouse|On right button pressed", "ƒ|Call Fire"])) and ok
 	return ok
 
 

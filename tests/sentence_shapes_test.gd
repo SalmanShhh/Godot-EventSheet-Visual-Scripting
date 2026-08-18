@@ -74,27 +74,27 @@ func jumps_left() -> int:
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"host ▸ does not exist",
 	"System ▸ Stop event",
-	"System ▸ Subtract 1 from _jumps_left",
-	"System ▸ Add amount to _coyote_timer",
-	"System ▸ Set _coyote_timer to max(_coyote_timer - amount, 0)",
-	"host ▸ Set position.x to amount * 2",
+	"System ▸ Subtract 1 from jumps left",
+	"System ▸ Add amount to coyote timer",
+	"System ▸ Set coyote timer to max(coyote timer - amount, 0)",
+	"host ▸ Set position X to amount * 2",
 	"Local number remaining = amount",
-	"System ▸ Set push_x to push_x moved toward 0 by remaining",
+	"System ▸ Set push x to push x moved toward 0 by remaining",
 	"System ▸ crouching is true",
-	"System ▸ Set push_x to push_x kept between -1 and 1",
+	"System ▸ Set push x to push x kept between -1 and 1",
 	"System ▸ crouching is false",
-	"System ▸ Set push_x to amount°",
-	"Keyboard ▸ ui_accept is down",
+	"System ▸ Set push x to amount°",
+	"Keyboard ▸ \"ui_accept\" is down",
 	"System ▸ Destroy",
 	"System ▸ 30% chance",
 	"host ▸ Destroy (at end of frame)",
 	"System ▸ Signal On Jumped",
 	"System ▸ ⏳ Wait 0.5 seconds",
-	"System ▸ Go to scene res://menu.tscn",
+	"System ▸ Go to scene \"res://menu.tscn\"",
 	"host ▸ exists",
 	"System ▸ Answer yes",
 	"System ▸ Answer no",
-	"System ▸ Give back _jumps_left"
+	"System ▸ Give back jumps left"
 ])
 
 
@@ -204,9 +204,9 @@ static func _picked_matches_typed() -> bool:
 	event_row.actions.append(_action("SetProperty", {"target": "host", "property": "position.x", "value": "1.0"}))
 	sheet.events.append(event_row)
 	var readings: PackedStringArray = _render(sheet)
-	for expected: String in ["host ▸ does not exist", "System ▸ Set _coyote_timer to 0",
+	for expected: String in ["host ▸ does not exist", "System ▸ Set coyote timer to 0",
 			"Fixture ▸ Signal On Jumped", "System ▸ Destroy", "System ▸ Stop event",
-			"host ▸ Set position.x to 1"]:
+			"host ▸ Set position X to 1"]:
 		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok
 	return ok
 
