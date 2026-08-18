@@ -6608,7 +6608,17 @@ func _append_conjunct_condition_lines(branch_row: EventRowData, condition_text: 
 			or_meta["line_index"] = line_index
 			or_meta["badge_style"] = "or"
 			branch_row.spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
-		var reading: Dictionary = EventSheetSentence.condition_pieces(term, sentence_context())
+		# ── N4 lens hook ───────────────────────────────────────────────────────────────────────
+		# A test written on an autoload's member belongs to that autoload: `Game.score > 100` reads
+		# as the object `Game (global)` and the test `score > 100`, so the owner is visible in the
+		# object column instead of buried in the sentence. The term is
+		# re-attributed BEFORE the grammar reads it, so the grammar never sees a receiver it would
+		# have to spell out possessively.
+		var global_term: Dictionary = EventSheetViewportReadingRows.global_condition(term, _reading_autoloads())
+		var read_term: String = str(global_term.get("text", term)) if not global_term.is_empty() else term
+		var reading: Dictionary = EventSheetSentence.condition_pieces(read_term, sentence_context())
+		var condition_object: String = str(global_term.get("object", "")) if not global_term.is_empty() \
+			else str(reading.get("object", ""))
 		var pieces: Array = EventSheetViewportLenses.apply_to_pieces(
 			reading.get("pieces", []) as Array, _viewport.humanize_names_enabled(), _export_knob_names())
 		var condition_cell: Dictionary = _tone_segments(pieces)
@@ -6624,7 +6634,9 @@ func _append_conjunct_condition_lines(branch_row: EventRowData, condition_text: 
 			"editable": false,
 			"hoverable": false,
 			"line_index": line_index,
-			"object_label": str(reading.get("object", "")),
+			"object_label": condition_object,
+			"object_icon": EventSheetViewportReadingRows.autoload_icon() if not global_term.is_empty() \
+				and _viewport.show_object_icons else null,
 			"bbcode_segments": condition_cell.get("segments", [])
 		}.merged(condition_style_meta, true)))
 		line_index += 1
@@ -7094,11 +7106,28 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# reason the action lane clears: a text-only reading must not leave a label behind.
 	_pending_object_label = ""
 	_pending_grammar_segments = []
-	var grammar: Dictionary = grammar_condition_sentence(condition)
+	# ── N4 lens hook ───────────────────────────────────────────────────────────────────────────
+	# A test reaching through an autoload (`EventForgeBridge.score > 100`) is re-read as a test the
+	# autoload owns: the singleton prefix comes off the values and moves to the object column, where
+	# a reader looks for the owner. Everything downstream reads the rewritten COPY - the stored
+	# parameters, and everything the row compiles to, are untouched - and both readings a condition
+	# can take (the shared grammar, and a definition's own display template) go through it, because
+	# which one a given row takes is not something this lens should have to know.
+	var global_read: Dictionary = EventSheetViewportReadingRows.global_member_params(
+		params_dict, _reading_autoloads())
+	var global_owner: String = str(global_read.get("object", ""))
+	var read_params: Dictionary = global_read.get("params", params_dict) if not global_read.is_empty() else params_dict
+	var read_condition: ACECondition = condition
+	if not global_read.is_empty():
+		read_condition = condition.duplicate()
+		read_condition.params = read_params
+	var grammar: Dictionary = grammar_condition_sentence(read_condition)
 	if not grammar.is_empty():
+		grammar = _attributed_grammar(grammar, global_owner)
 		_pending_object_label = str(grammar.get("object", ""))
 		_pending_grammar_segments = grammar.get("segments", []) as Array
 		return _joined_segments(grammar)
+	_pending_object_label = global_owner
 	if _is_state_header_condition(condition):
 		var state_value: String = str(params_dict.get("state_name", "")).strip_edges()
 		if state_value.length() >= 2 and state_value.begins_with("\"") and state_value.ends_with("\""):
@@ -7112,8 +7141,8 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 		# this a pack condition fell back to the raw id and the cell showed
 		# "method:can_afford_entry" beside actions that read "Buy" - the id leaking into the one
 		# lane a beginner reads first.
-		return _reflected_member_sentence(condition.ace_id, params_dict)
-	return _format_display_translated(generated_definition, descriptor, params_dict)
+		return _reflected_member_sentence(condition.ace_id, read_params)
+	return _format_display_translated(generated_definition, descriptor, read_params)
 
 
 ## A reflected `method:<name>` id as a readable sentence with the row's own values in call
@@ -7222,17 +7251,30 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	# left behind there would land on whatever span is built next.
 	_pending_object_label = ""
 	_pending_grammar_segments = []
-	var grammar: Dictionary = grammar_action_sentence(action)
+	# ── N4 lens hook ───────────────────────────────────────────────────────────────────────────
+	# The same re-read the condition lane gets, on the same throwaway copy: a step reaching through
+	# an autoload's member belongs to that autoload, not to System.
+	var action_params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	var global_read: Dictionary = EventSheetViewportReadingRows.global_member_params(
+		action_params, _reading_autoloads())
+	var global_owner: String = str(global_read.get("object", ""))
+	var params_dict: Dictionary = global_read.get("params", action_params) if not global_read.is_empty() else action_params
+	var read_action: ACEAction = action
+	if not global_read.is_empty():
+		read_action = action.duplicate()
+		read_action.params = params_dict
+	var grammar: Dictionary = grammar_action_sentence(read_action)
 	if not grammar.is_empty():
+		grammar = _attributed_grammar(grammar, global_owner)
 		_pending_object_label = str(grammar.get("object", ""))
 		_pending_grammar_segments = grammar.get("segments", []) as Array
 		return _joined_segments(grammar)
+	_pending_object_label = global_owner
 	# Function calls read as the named verb (under the "ƒ" chip), not the raw "Call name()" template.
 	if _is_function_call_action(action):
 		var verb: String = _function_call_label(action)
 		if not verb.is_empty():
 			return verb
-	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var generated_definition: ACEDefinition = _viewport._find_definition(action.provider_id, action.ace_id)
 	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(action.provider_id, action.ace_id)
 	if generated_definition == null and descriptor == null:
@@ -7471,6 +7513,16 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 					pieces.append([" )", "plain"])
 	if pieces.is_empty():
 		return false
+	# ── N4 lens hook ───────────────────────────────────────────────────────────────────────────
+	# WHO this statement belongs to, decided once the sentence layer has said what it DOES. An
+	# autoload gains its "(global)" note and a globe; a pack node under the script's own node hands
+	# its rows to that object with the pack's name as the leading chip. Applied before the spelling
+	# lens below so the lookup keys are still the names the file actually uses.
+	var attribution: Dictionary = EventSheetViewportReadingRows.object_attribution(
+		object_label, pieces, _script_object_name(), _reading_class_map(), _reading_autoloads())
+	object_label = str(attribution.get("object", object_label))
+	pieces = attribution.get("pieces", pieces) as Array
+	var attributed_icon: Variant = attribution.get("icon")
 	# ── M9 / M10 lens hook ─────────────────────────────────────────────────────────────────────
 	# Applied to the sentence layer's OUTPUT, never inside it: the sentence layer decides what a
 	# statement SAYS, this only decides how the names in it are SPELLED. Only "name" and "value"
@@ -7482,6 +7534,8 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	# an object's picture in every cell it appears in. Resolved from the RAW pieces (before the
 	# lens above respelled them) so the lookup keys stay the names the file actually uses.
 	var sentence_icon: Texture2D = _reading_sentence_icon(sentence, raw.code)
+	if attributed_icon is Texture2D and _viewport.show_object_icons:
+		sentence_icon = attributed_icon as Texture2D
 	# ONE span, tinted by BBCode segments, so the sentence reads as a single continuous cell -
 	# separate flowing spans each painted their own chip and the row read as a strip of boxes,
 	# the exact fragmented look the entry rows were already reworked away from. Four spaces per
@@ -7506,6 +7560,11 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 				tone_color = _viewport._get_event_style().value_highlight_color
 			"object":
 				tone_color = EventSheetPalette.COLOR_OBJECT
+			"behaviour":
+				# N4 - the pack's name between the object and its verb. Drawn in the object tint and
+				# bold, so it reads as part of WHO acts rather than as part of what the verb says.
+				tone_color = EventSheetPalette.COLOR_OBJECT
+				tone_bold = true
 		sentence_segments.append({"text": text, "color": tone_color, "bold": tone_bold, "italic": false})
 	spans.append(_make_span(sentence_text, SemanticSpan.SpanType.VALUE, {
 		"lane": "action",
@@ -7992,6 +8051,8 @@ var _lens_class_map: Dictionary = {}
 ## ({name, kind_word, icon_class}). `bullet_scene` is not what a reader calls the thing they
 ## spawn; the scene's root node is, and this is where Create object gets that name and its picture.
 var _lens_scene_vars: Dictionary = {}
+## N4 - every registered autoload, so a row naming one can say it is a project-wide global.
+var _lens_autoloads: Dictionary = {}
 
 
 func _reset_lens_caches_if_stale() -> void:
@@ -8003,6 +8064,10 @@ func _reset_lens_caches_if_stale() -> void:
 	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
 	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)
 	_lens_scene_vars = _scene_variable_map(sheet)
+	# N4 - walking ProjectSettings for the autoload list is the same answer for every row in a pass,
+	# and asking it per object label walked a several-hundred-entry property list thousands of times
+	# on a large sheet.
+	_lens_autoloads = EventSheetViewportReadingRows.autoload_singletons()
 
 
 ## Every `var x = preload("res://...")` / `const X := preload(...)` of a sheet, resolved once per
@@ -8048,6 +8113,51 @@ func _export_knob_names() -> Dictionary:
 func _reading_class_map() -> Dictionary:
 	_reset_lens_caches_if_stale()
 	return _lens_class_map
+
+
+## N4 - every registered autoload, so a row naming one can say it is a project-wide global.
+func _reading_autoloads() -> Dictionary:
+	_reset_lens_caches_if_stale()
+	return _lens_autoloads
+
+
+## N4 - WHO a grammar-read row belongs to, applied to both lanes so a picked row and the hand-written
+## line beside it are attributed the same way.
+##
+## `global_owner` is the autoload label recovered from the row's parameters, when the row reached
+## through one; it wins outright, because a row that names `Game.score` belongs to Game whatever the
+## grammar guessed. Otherwise the object the grammar named is offered to the attribution lens, which
+## adds the "(global)" note to an autoload and hands a behaviour pack's rows back to the object the
+## pack is mounted on, with the pack's name as the leading chip.
+func _attributed_grammar(grammar: Dictionary, global_owner: String) -> Dictionary:
+	if not global_owner.is_empty():
+		var owned: Dictionary = grammar.duplicate()
+		owned["object"] = global_owner
+		return owned
+	var segments: Array = grammar.get("segments", []) as Array
+	var pieces: Array = []
+	for entry: Variant in segments:
+		var segment: Dictionary = entry
+		pieces.append([str(segment.get("text", "")), str(segment.get("tone", "plain"))])
+	var attribution: Dictionary = EventSheetViewportReadingRows.object_attribution(
+		str(grammar.get("object", "")), pieces, _script_object_name(),
+		_reading_class_map(), _reading_autoloads())
+	var attributed_pieces: Array = attribution.get("pieces", pieces) as Array
+	if attributed_pieces.size() == pieces.size():
+		var same: Dictionary = grammar.duplicate()
+		same["object"] = str(attribution.get("object", grammar.get("object", "")))
+		return same
+	var rebuilt: Array = []
+	for piece: Array in attributed_pieces:
+		rebuilt.append({"text": str(piece[0]), "tone": str(piece[1])})
+	return {"object": str(attribution.get("object", "")), "segments": rebuilt}
+
+
+## N4 - the name the script's own object goes by, so a behaviour pack mounted under it can hand its
+## rows back to it. Empty on a sheet with no object of its own, which is the attribution's cue to
+## leave the reading alone.
+func _script_object_name() -> String:
+	return str(sentence_context().get("script_object", ""))
 
 
 func _reading_class_icon_for(object_label: String) -> Texture2D:

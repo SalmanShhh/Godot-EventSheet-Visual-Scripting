@@ -15,6 +15,8 @@ extends RefCounted
 #                                       and one argument per parameter name
 #   M17      folded code cards        - a raw block that could not lift reads as one card
 #   M20      object declaration rows  - @onready var hp_bar: ProgressBar = %HpBar
+#   N4       autoloads and behaviours - an autoload reads as a global, and a pack node under the
+#                                       script's own node reads as that object's behaviour
 
 
 ## The object label a pack's host is shown under. One constant so the icon map, the row builder
@@ -463,3 +465,592 @@ static func export_knob_names(sheet: EventSheetResource) -> Dictionary:
 		if variable != null and variable.exported:
 			knobs[variable.name] = true
 	return knobs
+
+
+# ── N4. Autoloads as globals, pack nodes as behaviours ────────────────────────────────────────
+# An event sheet has project-wide globals and per-object behaviours; Godot spells those as autoload
+# singletons and as behaviour packs mounted on child nodes. Both already READ - `Game.score += 1`
+# lands under the object `Game`, `$Health.take_damage(3)` under `Health` - but neither says WHAT it
+# is, so a reader cannot tell a project-wide global from a node, or a behaviour from a sibling.
+# Everything below only decides what those two shapes SAY; no row model and no emitted line moves.
+
+
+## The muted word an autoload's object label wears, so a global is legible as one.
+const GLOBAL_NOTE := "(global)"
+
+## Editor-theme icons tried, in order, as the globe on an autoload's row. Which names a build ships
+## is not something a headless run can answer - it has no editor theme and returns null for every
+## name - so this degrades to NO icon rather than to a wrong one, and the "(global)" note carries
+## the meaning on its own.
+const AUTOLOAD_ICON_NAMES: PackedStringArray = ["Environment", "World3D", "Node"]
+
+
+## Every registered autoload, singleton name -> the path its script lives at.
+##
+## Deliberately not the project scanner's list: that one drops an autoload whose script sits inside
+## an addon, which is right for a picker (its verbs arrive through the provider system) and wrong
+## here - an autoload is a global a reader can name whatever folder it was written in.
+##
+## Walking ProjectSettings is not free and the answer is the same for every row in a rebuild, so
+## every per-row caller takes the map as an argument and the row builder hoists this call beside its
+## other per-rebuild lens caches. Nothing here caches: a hidden cache on a settings list that the
+## Project Settings dialog can change under it would go stale exactly when it mattered.
+static func autoload_singletons() -> Dictionary:
+	var found: Dictionary = {}
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var setting: String = str(property_info.get("name", ""))
+		if not setting.begins_with("autoload/"):
+			continue
+		var singleton: String = setting.trim_prefix("autoload/").strip_edges()
+		if singleton.is_empty():
+			continue
+		found[singleton] = str(ProjectSettings.get_setting(setting, "")).trim_prefix("*").strip_edges()
+	return found
+
+
+## True when an object label names a registered autoload - the singleton name game code types.
+static func is_autoload_object(object_label: String, autoloads: Dictionary) -> bool:
+	var label: String = object_label.strip_edges()
+	return not label.is_empty() and autoloads.has(label)
+
+
+## An autoload's object label with its note: "Game" -> "Game (global)". Every other label comes back
+## untouched, so a caller can pipe all of them through this one door.
+static func global_object_label(object_label: String, autoloads: Dictionary) -> String:
+	if not is_autoload_object(object_label, autoloads):
+		return object_label
+	return "%s %s" % [object_label.strip_edges(), EventSheetL10n.translate(GLOBAL_NOTE)]
+
+
+## The globe an autoload's row wears, or null when the editor theme has nothing to give.
+static func autoload_icon() -> Texture2D:
+	for icon_name: String in AUTOLOAD_ICON_NAMES:
+		var icon: Texture2D = ACEPickerDialog.editor_icon(icon_name)
+		if icon != null:
+			return icon
+	return null
+
+
+## N4. A condition written on an autoload's member, re-attributed to the autoload: `Game.score > 100`
+## becomes the object `Game (global)` and the test `score > 100`, so the owner is visible in the
+## object column instead of buried in the sentence.
+##
+## Returns {"object", "text"}, or {} when the term does not open with a registered singleton, which
+## is the caller's cue to read it exactly as before.
+static func global_condition(condition_text: String, autoloads: Dictionary) -> Dictionary:
+	var text: String = condition_text.strip_edges()
+	var dot_at: int = text.find(".")
+	if dot_at <= 0:
+		return {}
+	var head: String = text.substr(0, dot_at).strip_edges()
+	if not is_autoload_object(head, autoloads):
+		return {}
+	var rest: String = text.substr(dot_at + 1).strip_edges()
+	if not EventSheetViewportLenses.is_identifier(leading_identifier(rest)):
+		return {}
+	return {"object": global_object_label(head, autoloads), "text": rest}
+
+
+## N4. A lifted row whose parameters reach THROUGH an autoload to one of its members, re-read as a
+## row belonging to that autoload: a Compare on `EventForgeBridge.score` becomes the object
+## `EventForgeBridge (global)` comparing `score`, so the owner sits in the object column rather than
+## inside the sentence, where it read as a possessive ("event forge bridge's score").
+##
+## Returns {"object", "params"} - the owner's label and a COPY of the parameters with the singleton
+## prefix taken off every value that carried it. Returns {} unless exactly one autoload is named:
+## a row reaching through two globals has no single owner, and guessing one would be a lie.
+##
+## Nothing here mutates the row. The caller reads the rewritten copy and throws it away; the stored
+## parameters, and everything the row compiles to, are untouched.
+static func global_member_params(params: Dictionary, autoloads: Dictionary) -> Dictionary:
+	var owner: String = ""
+	var rewritten: Dictionary = {}
+	var changed: bool = false
+	for key: Variant in params.keys():
+		var value: String = str(params[key])
+		var dot_at: int = value.find(".")
+		var head: String = value.substr(0, dot_at).strip_edges() if dot_at > 0 else ""
+		var member: String = leading_identifier(value.substr(dot_at + 1)) if dot_at > 0 else ""
+		if head.is_empty() or member.is_empty() or not is_autoload_object(head, autoloads):
+			rewritten[key] = params[key]
+			continue
+		if not owner.is_empty() and owner != head:
+			return {}
+		owner = head
+		rewritten[key] = value.substr(dot_at + 1)
+		changed = true
+	if not changed:
+		return {}
+	return {"object": global_object_label(owner, autoloads), "params": rewritten}
+
+
+## The identifier a piece of code opens with ("score" from "score > 100"), or "" when it opens with
+## anything else.
+static func leading_identifier(text: String) -> String:
+	var out: String = ""
+	for index: int in text.length():
+		var character: String = text[index]
+		if character == "_" or character.to_lower() != character.to_upper() or character.is_valid_int():
+			out += character
+		else:
+			break
+	return out
+
+
+## Every behaviour pack the editor ships or the project drops in, indexed by every name a row could
+## call it by: its `class_name`, its folder in PascalCase, and its `@ace_category` with the spaces
+## taken out. The value is that category - the pack's own display name, which is exactly the chip
+## that belongs between an object and its behaviour verb ("Player > [Platform] Set max speed").
+##
+## Derived, never a maintained table: packs are compiler output, and a new one appears by being
+## dropped in a folder. Only each file's HEAD is read (class_name and the annotations all sit above
+## the first member), and the index is cached on the scanner's own file listing.
+static func behaviour_pack_index() -> Dictionary:
+	var scripts: Array[String] = EventSheetAddonScanner.list_addon_scripts()
+	var key: String = "|".join(scripts)
+	if key == _pack_index_key:
+		return _pack_index
+	var index: Dictionary = {}
+	for path: String in scripts:
+		var head: Dictionary = _pack_head(path)
+		var category: String = str(head.get("category", ""))
+		if category.is_empty():
+			continue
+		var declared: String = str(head.get("class", ""))
+		if not declared.is_empty():
+			index[declared] = category
+		index[path.get_base_dir().get_file().to_pascal_case()] = category
+		index[category.replace(" ", "")] = category
+	_pack_index_key = key
+	_pack_index = index
+	return _pack_index
+
+
+static var _pack_index: Dictionary = {}
+static var _pack_index_key: String = ""
+
+
+## A pack script's `class_name` and its `@ace_category`, read off the file's head. Stops at the first
+## member declaration: everything wanted here is above it, and a pack file runs to thousands of lines.
+static func _pack_head(path: String) -> Dictionary:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {}
+	var head: Dictionary = {}
+	while not file.eof_reached():
+		var line: String = file.get_line().strip_edges()
+		if line.begins_with("class_name "):
+			head["class"] = line.substr("class_name ".length()).strip_edges()
+		elif line.begins_with("## @ace_category("):
+			head["category"] = line.substr("## @ace_category(".length()).trim_suffix(")").strip_edges() \
+				.trim_prefix("\"").trim_suffix("\"")
+		elif line.begins_with("func ") or line.begins_with("var ") or line.begins_with("signal "):
+			break
+	file.close()
+	return head
+
+
+## N4. The behaviour a call's object IS, when that object is a pack node mounted under the script's
+## own node. Returns the pack's display name, or "" when the label names no pack the editor knows.
+##
+## Two ways in, both honest: the label's DECLARED class is a pack class (`@onready var health:
+## SimpleHealthBehavior`), or the label itself is a name a pack goes by. The declared class is tried
+## first, so a node merely NAMED like a pack but typed as something else keeps its own reading.
+static func behaviour_pack_of(object_label: String, class_map: Dictionary) -> String:
+	var label: String = object_label.strip_edges()
+	if label.is_empty():
+		return ""
+	var index: Dictionary = behaviour_pack_index()
+	var declared: String = str(class_map.get(label, ""))
+	if not declared.is_empty():
+		return str(index.get(declared, ""))
+	return str(index.get(label, ""))
+
+
+## N4 applied to a finished reading, at the one moment a lane holds both its object label and its
+## sentence pieces. Returns {"object", "pieces", "icon"} - always all three, so a caller never has to
+## ask whether anything happened.
+##
+## Two shapes and nothing else. An autoload gains its "(global)" note and a globe. A pack node hands
+## its rows back to the object the pack is mounted ON, with the pack's name as the leading chip, so
+## the row reads "Player > [Health] Take damage 3". When the sheet has no object of its own (a plain
+## `extends Node`), a behaviour keeps its own label rather than being handed to nobody.
+static func object_attribution(object_label: String, pieces: Array, script_object: String,
+		class_map: Dictionary, autoloads: Dictionary) -> Dictionary:
+	var label: String = object_label.strip_edges()
+	var unchanged: Dictionary = {"object": object_label, "pieces": pieces, "icon": null}
+	if label.is_empty():
+		return unchanged
+	if is_autoload_object(label, autoloads):
+		return {"object": global_object_label(label, autoloads), "pieces": pieces, "icon": autoload_icon()}
+	var pack: String = behaviour_pack_of(label, class_map)
+	if pack.is_empty():
+		return unchanged
+	var owner: String = script_object.strip_edges()
+	if owner.is_empty():
+		return unchanged
+	var chipped: Array = [[pack, "behaviour"], ["  ", "plain"]]
+	chipped.append_array(pieces)
+	return {"object": owner, "pieces": chipped, "icon": class_icon_for(owner, class_map)}
+
+
+# ── N10. The census: every object an open file uses ───────────────────────────────────────────
+# One derived list, read by the Objects rail, by the object popup and by the picker's object page,
+# so those three can never disagree about what is in this file. Everything here is recovered FROM
+# the sheet - there is no stored object list to fall out of date, and nothing is instantiated and no
+# scene is opened, because a rail refresh runs on every sheet change.
+#
+# The order is the one a reader looks for: the script's own object first, then the nodes it reaches
+# for, then the behaviours mounted on it, then the project-wide globals, then groups, then the
+# scenes it spawns.
+
+
+## The kinds an object entry can be, in the order the rail lists them.
+const OBJECT_KINDS: PackedStringArray = ["script", "node", "behaviour", "autoload", "group", "scene"]
+
+## The muted words each kind wears in the rail and in the popup's title line.
+const OBJECT_KIND_WORDS: Dictionary = {
+	"script": "this script",
+	"node": "node",
+	"behaviour": "behaviour",
+	"autoload": "autoload",
+	"group": "group",
+	"scene": "scene"
+}
+
+
+## Every object the open file uses, in rail order. Each entry:
+##   {"label", "kind", "class", "path", "rows", "verbs", "signals", "note"}
+## `rows` counts the TOP-LEVEL rows whose subtree mentions the object, which is the number a reader
+## can go and click; `verbs` are the verbs the file calls on it, in first-seen order; `signals` the
+## signals it connects or waits on.
+static func object_census(sheet: EventSheetResource) -> Array:
+	if sheet == null:
+		return []
+	var class_map: Dictionary = object_class_map(sheet)
+	var autoloads: Dictionary = autoload_singletons()
+	var by_label: Dictionary = {}
+	var order: Array = []
+	var script_object: String = script_object_name(sheet)
+	if not script_object.is_empty():
+		order.append(_new_object_entry(by_label, script_object, "script", sheet.host_class.strip_edges(), ""))
+	# @onready node declarations are the file's own object list, already typed and already named.
+	for entry: Variant in sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable == null or not is_object_declaration(variable):
+			continue
+		var declared: String = declared_class_of(variable)
+		var kind: String = "behaviour" if not str(behaviour_pack_index().get(declared, "")).is_empty() else "node"
+		var reference: String = str(variable.default_value).strip_edges()
+		order.append(_new_object_entry(by_label, variable.name, kind, declared, reference))
+		# `@onready var hp_bar := %HpBar` is ONE object with two names. Claiming the path's own label
+		# here keeps the scan below from listing the same node a second time as "HpBar".
+		by_label[EventSheetSentence.object_of_reference(reference)] = by_label[variable.name]
+	# Then everything the CODE names that nothing declared: bare $Node / %Unique references, the
+	# autoloads it touches, the groups it addresses and the scenes it preloads.
+	var units: Array = _row_units(sheet)
+	for unit: Dictionary in units:
+		var code: String = str(unit.get("code", ""))
+		for reference: String in _node_references(code):
+			var label: String = EventSheetSentence.object_of_reference(reference)
+			if label.is_empty() or by_label.has(label):
+				continue
+			var declared: String = str(class_map.get(label, ""))
+			var pack: String = behaviour_pack_of(label, class_map)
+			order.append(_new_object_entry(by_label, label,
+				"behaviour" if not pack.is_empty() else "node",
+				pack if not pack.is_empty() else declared, reference))
+		for singleton: String in _autoload_references(code, autoloads):
+			if not by_label.has(singleton):
+				order.append(_new_object_entry(by_label, singleton, "autoload", "",
+					str(autoloads.get(singleton, ""))))
+		for group_name: String in _group_references(code):
+			if not by_label.has(group_name):
+				order.append(_new_object_entry(by_label, group_name, "group", "", ""))
+		for scene_path: String in _scene_references(code):
+			var scene_label: String = scene_path.get_file().get_basename().to_pascal_case()
+			if not by_label.has(scene_label):
+				order.append(_new_object_entry(by_label, scene_label, "scene", "", scene_path))
+	_tally_usage(order, by_label, units)
+	order.sort_custom(_by_kind_order)
+	return order
+
+
+## A fresh census entry, registered under its label so a second sighting only tallies.
+static func _new_object_entry(by_label: Dictionary, label: String, kind: String,
+		class_name_str: String, path: String) -> Dictionary:
+	var entry: Dictionary = {
+		"label": label, "kind": kind, "class": class_name_str, "path": path,
+		"rows": 0, "verbs": PackedStringArray(), "signals": PackedStringArray()
+	}
+	by_label[label] = entry
+	return entry
+
+
+## Rail order: the kinds in their declared order, and within a kind the order they were found in,
+## which is the order the file itself introduces them.
+static func _by_kind_order(left: Dictionary, right: Dictionary) -> bool:
+	var left_kind: int = Array(OBJECT_KINDS).find(str(left.get("kind", "")))
+	var right_kind: int = Array(OBJECT_KINDS).find(str(right.get("kind", "")))
+	return left_kind < right_kind
+
+
+## One text unit per TOP-LEVEL row: every line of code in that row's subtree, joined. The rail's
+## "N rows" is a count of these, so a number in the rail is a number of things a reader can click.
+static func _row_units(sheet: EventSheetResource) -> Array:
+	var units: Array = []
+	for entry: Variant in sheet.events:
+		var lines: PackedStringArray = PackedStringArray()
+		_collect_code(entry, lines)
+		if not lines.is_empty():
+			units.append({"code": "\n".join(lines)})
+	return units
+
+
+## Everything under one row resource, however deeply it nests, rendered back into the ONE shape the
+## scanners read: lines of GDScript-looking text.
+##
+## A lifted row does not hold code - it holds an object in one parameter and a verb in another - so
+## an ACE row is written back out as the call it stands for (`$Health.take_damage(3)`). That way a
+## hand-written line and the lifted row beside it are censused by exactly the same scanner, and a
+## file that has been half-lifted cannot report two different object lists.
+static func _collect_code(resource: Variant, into: PackedStringArray) -> void:
+	if resource == null or not (resource is Resource):
+		return
+	var raw: RawCodeRow = resource as RawCodeRow
+	if raw != null:
+		into.append(raw.code)
+		return
+	var variable: LocalVariable = resource as LocalVariable
+	if variable != null:
+		into.append("%s = %s" % [variable.name, str(variable.default_value)])
+		return
+	var event_row: EventRow = resource as EventRow
+	if event_row != null:
+		_collect_ace_code(event_row.trigger, into)
+		for condition: Variant in event_row.conditions:
+			_collect_ace_code(condition, into)
+		for action: Variant in event_row.actions:
+			_collect_code(action, into)
+		for pick_filter: Variant in event_row.pick_filters:
+			var filter: PickFilter = pick_filter as PickFilter
+			if filter != null:
+				into.append(filter.collection_value if not filter.collection_value.is_empty()
+					else filter.source_expression)
+		for local: Variant in event_row.local_variables:
+			_collect_code(local, into)
+		for sub_event: Variant in event_row.sub_events:
+			_collect_code(sub_event, into)
+		return
+	for container_property: String in ["events", "rows"]:
+		var children: Variant = (resource as Resource).get(container_property)
+		if children is Array and not (children as Array).is_empty():
+			for child: Variant in (children as Array):
+				_collect_code(child, into)
+			return
+	if (resource as Resource).get("params") != null or (resource as Resource).get("parameters") != null:
+		_collect_ace_code(resource, into)
+		return
+	# Any other row kind - a preload, a signal declaration, a pack block - contributes its text
+	# properties. A census that only knew the kinds named above would silently miss the scene a
+	# preload row names, and the rail would be short an object with no way to tell.
+	for property_info: Dictionary in (resource as Resource).get_property_list():
+		if int(property_info.get("type", TYPE_NIL)) != TYPE_STRING:
+			continue
+		var value: String = str((resource as Resource).get(str(property_info.get("name", ""))))
+		if not value.is_empty():
+			into.append(value)
+
+
+## One lifted row written back out as the call it stands for. A row carrying both a target and a
+## method reconstructs the call exactly; one carrying only a target names the member it touches; a
+## row with neither contributes its parameter values, which is where any remaining object name hides.
+static func _collect_ace_code(resource: Variant, into: PackedStringArray) -> void:
+	if not (resource is Resource):
+		return
+	# Only the LIVE parameters. The legacy `parameters` mirror carries an unfilled row's DEFAULTS, and
+	# a default target ("$Node") censused as a real reference put a node in the rail that no line of
+	# the file ever names.
+	var params: Variant = (resource as Resource).get("params")
+	if not (params is Dictionary):
+		return
+	var params_dict: Dictionary = params
+	var target: String = str(params_dict.get("target", "")).strip_edges()
+	var method: String = str(params_dict.get("method", "")).strip_edges()
+	var property_name: String = str(params_dict.get("property", params_dict.get("var_name", ""))).strip_edges()
+	if not target.is_empty() and not method.is_empty():
+		into.append("%s.%s(%s)" % [target, method, str(params_dict.get("args", ""))])
+	elif not target.is_empty() and not property_name.is_empty():
+		into.append("%s.%s" % [target, property_name])
+	elif not target.is_empty():
+		into.append(target)
+	for value: Variant in params_dict.values():
+		into.append(str(value))
+
+
+## How many top-level rows each object appears in, and which verbs and signals it is used with.
+static func _tally_usage(order: Array, by_label: Dictionary, units: Array) -> void:
+	for unit: Dictionary in units:
+		var code: String = str(unit.get("code", ""))
+		var seen: Dictionary = {}
+		for entry: Dictionary in order:
+			var label: String = str(entry.get("label", ""))
+			if seen.has(label) or not _mentions(code, label):
+				continue
+			seen[label] = true
+			entry["rows"] = int(entry.get("rows", 0)) + 1
+			_collect_members(code, label, entry)
+	for entry: Dictionary in order:
+		by_label[str(entry.get("label", ""))] = entry
+
+
+## The verbs and signals one object is used with, in the order the code introduces them. A member
+## followed by `(` is a verb; one connected or awaited is a signal.
+static func _collect_members(code: String, label: String, entry: Dictionary) -> void:
+	var verbs: PackedStringArray = entry.get("verbs", PackedStringArray())
+	var signals_used: PackedStringArray = entry.get("signals", PackedStringArray())
+	for prefix: String in ["%s." % label, "$%s." % label, "%%%s." % label]:
+		var from: int = code.find(prefix)
+		while from >= 0:
+			var after: int = from + prefix.length()
+			var member: String = leading_identifier(code.substr(after))
+			if not member.is_empty():
+				var tail: String = code.substr(after + member.length())
+				if tail.begins_with("("):
+					var verb: String = EventSheetSentence.verb_words(member)
+					if not verb.is_empty() and Array(verbs).find(verb) < 0:
+						verbs.append(verb)
+				elif tail.begins_with(".connect") or tail.begins_with(".emit") or tail.begins_with(".disconnect"):
+					if Array(signals_used).find(member) < 0:
+						signals_used.append(member)
+			from = code.find(prefix, after)
+	entry["verbs"] = verbs
+	entry["signals"] = signals_used
+
+
+## True when a piece of code names an object - as a whole word, so `hp` does not match `hp_bar`.
+static func _mentions(code: String, label: String) -> bool:
+	if label.is_empty():
+		return false
+	var from: int = code.find(label)
+	while from >= 0:
+		var before_ok: bool = from == 0 or not _is_word_character(code[from - 1])
+		var after_at: int = from + label.length()
+		var after_ok: bool = after_at >= code.length() or not _is_word_character(code[after_at])
+		if before_ok and after_ok:
+			return true
+		from = code.find(label, from + 1)
+	return false
+
+
+static func _is_word_character(character: String) -> bool:
+	return character == "_" or character.to_lower() != character.to_upper() or character.is_valid_int()
+
+
+## Every `$Node` / `%Unique` reference written in a piece of code.
+##
+## The name must open with a capital, which is what keeps a format string out of the object list:
+## `"%s"` and `"%d"` are the same two characters as a unique-name reference, and one phantom object
+## in the rail costs a reader more than a lowercase node name that goes unlisted (that node still
+## reaches the rail through its @onready declaration, which is typed and unambiguous).
+static func _node_references(code: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for index: int in code.length():
+		var sigil: String = code[index]
+		if sigil != "$" and sigil != "%":
+			continue
+		var head: String = code[index + 1] if index + 1 < code.length() else ""
+		if head.is_empty() or head != head.to_upper() or head == head.to_lower():
+			continue
+		var body: String = ""
+		var walk: int = index + 1
+		while walk < code.length() and (_is_word_character(code[walk]) or code[walk] == "/"):
+			body += code[walk]
+			walk += 1
+		if not body.is_empty():
+			found.append(sigil + body)
+	return found
+
+
+## Every registered singleton a piece of code names as an object (`Game.score`), so an autoload that
+## is merely mentioned in a string is not mistaken for one that is used.
+static func _autoload_references(code: String, autoloads: Dictionary) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for singleton: Variant in autoloads.keys():
+		var name_text: String = str(singleton)
+		if code.contains("%s." % name_text) and _mentions(code, name_text):
+			found.append(name_text)
+	return found
+
+
+## The group names a piece of code addresses. Only the calls that TAKE a group name are read, so an
+## ordinary string never becomes a phantom object in the rail.
+static func _group_references(code: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for marker: String in ["get_nodes_in_group(", "add_to_group(", "remove_from_group(",
+			"is_in_group(", "call_group(", "get_first_node_in_group(", "notify_group("]:
+		var from: int = code.find(marker)
+		while from >= 0:
+			var after: int = from + marker.length()
+			var rest: String = code.substr(after).strip_edges()
+			# call_group takes the group SECOND ("group", "method"); the first argument is a flag on
+			# some overloads, so only a leading string literal is read and anything else is skipped.
+			if rest.begins_with("\"") or rest.begins_with("&\""):
+				var quoted: String = rest.trim_prefix("&").substr(1)
+				var close_at: int = quoted.find("\"")
+				if close_at > 0:
+					found.append(quoted.substr(0, close_at))
+			from = code.find(marker, after)
+	return found
+
+
+## Every packed scene a piece of code preloads or loads.
+static func _scene_references(code: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for marker: String in ["preload(\"", "load(\""]:
+		var from: int = code.find(marker)
+		while from >= 0:
+			var after: int = from + marker.length()
+			var close_at: int = code.find("\"", after)
+			if close_at > after:
+				var path: String = code.substr(after, close_at - after)
+				if path.ends_with(".tscn") or path.ends_with(".scn"):
+					found.append(path)
+			from = code.find(marker, after)
+	return found
+
+
+## The muted note one census entry wears in the rail: what kind of thing it is, the class or path it
+## resolves to when that adds anything, and how many rows use it.
+static func object_note(entry: Dictionary) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	var kind: String = str(entry.get("kind", ""))
+	var kind_word: String = str(OBJECT_KIND_WORDS.get(kind, kind))
+	var class_name_str: String = str(entry.get("class", "")).strip_edges()
+	var path: String = str(entry.get("path", "")).strip_edges()
+	if kind == "script":
+		parts.append(EventSheetL10n.translate(kind_word))
+		if not class_name_str.is_empty():
+			parts.append(class_name_str)
+		return " · ".join(parts)
+	if path.begins_with("$") or path.begins_with("%"):
+		parts.append(path)
+	else:
+		parts.append(EventSheetL10n.translate(kind_word))
+	if not class_name_str.is_empty() and class_name_str != parts[0]:
+		parts.append(class_name_str)
+	var rows: int = int(entry.get("rows", 0))
+	if rows > 0:
+		parts.append(EventSheetL10n.translate("%d rows") % rows if rows != 1 else EventSheetL10n.translate("1 row"))
+	return " · ".join(parts)
+
+
+## The icon one census entry draws: its class picture for a node, the globe for an autoload, and
+## nothing for a group (which is a name, not a thing with a picture).
+static func object_icon(entry: Dictionary, class_map: Dictionary) -> Texture2D:
+	if str(entry.get("kind", "")) == "autoload":
+		return autoload_icon()
+	var class_name_str: String = str(entry.get("class", "")).strip_edges()
+	if not class_name_str.is_empty() and ClassDB.class_exists(class_name_str):
+		return ACEPickerDialog.editor_icon(class_name_str)
+	return class_icon_for(str(entry.get("label", "")), class_map)
