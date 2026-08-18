@@ -57,6 +57,13 @@ static var progress_functions_done: int = 0
 ## raw (unlifted) sheet - exactly the state a file that cannot lift at all ends in.
 static var cancel_requested: bool = false
 
+## M42 - the res:// path of the file being lifted, when the caller knows it. Used for exactly one
+## question the source text cannot answer: which scene(s) wire signals to this script, so a handler
+## the Godot editor connected reads as the trigger it is rather than as a nameless helper. The
+## importer sets it around the lift and clears it after; a caller that hands over a bare sheet with
+## `external_source_path` already on it (the async open job) is picked up from there instead.
+static var scene_source_path: String = ""
+
 
 ## The reverse index, kept for callers that ask for a lift OUTSIDE an import - the editor's M29
 ## reading of a connected lambda rebuilds one on every canvas rebuild, and building the index from
@@ -199,11 +206,15 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 			pending_header_text = "\n".join(annotation_lines)
 	# `_ready`'s leading connect lines reveal which functions are signal handlers
 	# (and for which signal/source node). Emission regenerates the connects.
-	var connections: Dictionary = {}
+	# M42 - and so does the project's own scene wiring, for a handler the editor connected instead of
+	# `_ready`. A handler sitting at the END of the file never reaches the mid-file pass below, so the
+	# scene map has to seed this one too or the commonest shape of all (a UI script whose only
+	# functions are `_on_*` handlers) still opens as a list of helpers.
+	var connections: Dictionary = EventSheetSceneConnections.for_script(_scene_source_path_of(sheet)).duplicate(true)
 	for index in range(first_run_index, sheet.events.size()):
 		var ready_row: RawCodeRow = sheet.events[index] as RawCodeRow
 		if ready_row != null and ready_row.code.begins_with("func _ready() -> void:"):
-			connections = _parse_connections(ready_row.code.split("\n"))
+			connections.merge(_parse_connections(ready_row.code.split("\n")), true)
 	# The same map over the WHOLE file, for the mid-file anchor pass below: a hand-written script
 	# writes `_ready` FIRST, above the handlers it connects, so the trailing-run map above (which
 	# only sees the tail) is empty there and every `_on_<node>_<signal>` would read as a helper
@@ -1409,6 +1420,14 @@ static func _parse_connect_line(line: String) -> Dictionary:
 	}
 
 
+## The file the sheet under lift came from: the importer's hint when it set one, else whatever the
+## sheet already knows. "" for an in-memory import, which simply gets no scene-connection reading.
+static func _scene_source_path_of(sheet: EventSheetResource) -> String:
+	if not scene_source_path.is_empty():
+		return scene_source_path
+	return sheet.external_source_path if sheet != null else ""
+
+
 ## Parses `_ready`'s leading connect lines into {handler_name: {signal, source, line}}.
 ## Shapes (what _emit_grouped_trigger_functions emits, plus the hand-written spellings):
 ##   	body_entered.connect(_on_body_entered)
@@ -1430,7 +1449,10 @@ static func _parse_connections(ready_lines: PackedStringArray) -> Dictionary:
 ## mid-file anchor pass reads this wider map instead. Position-blind on purpose: the byte-verify is
 ## what decides whether a handler actually lifts.
 static func _parse_all_connections(sheet: EventSheetResource) -> Dictionary:
-	var connections: Dictionary = {}
+	# M42 - the wiring a project did in the Godot editor lives in the .tscn, not here. Those handlers
+	# are read FIRST so a connect actually written in the file still wins: the code is the closer
+	# authority on its own bytes, and only a code connect has a line to re-emit.
+	var connections: Dictionary = EventSheetSceneConnections.for_script(_scene_source_path_of(sheet)).duplicate(true)
 	for entry: Variant in sheet.events:
 		var raw_row: RawCodeRow = entry as RawCodeRow
 		if raw_row == null or not raw_row.code.contains(".connect("):
@@ -1487,6 +1509,11 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	var trigger_source: String = ""
 	# The connect line VERBATIM, so emission reproduces the author's own spelling of it.
 	var connect_line: String = ""
+	# M42 - true when the wiring lives in the .tscn instead. There is no connect line to reproduce and
+	# none may be invented: the script's bytes must come back exactly as they went in.
+	var scene_connected: bool = false
+	# M42 - the emitting node's class as the scene declares it, so the row can draw its picture.
+	var source_class: String = ""
 	var index: int = 1
 	# A lifecycle header the canonical table missed but that still NAMES a lifecycle function is
 	# beginner spelling (`func _physics_process(delta):` - untyped param, no return arrow). It
@@ -1526,6 +1553,8 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		var signal_name: String = str(connection.get("signal", ""))
 		trigger_source = str(connection.get("source", ""))
 		connect_line = str(connection.get("line", ""))
+		scene_connected = bool(connection.get("scene", false))
+		source_class = str(connection.get("source_class", ""))
 		# A hand-written handler types the payload the way its scene needs it (`body: Node2D` where
 		# the canonical Core trigger says `body: Node`), so the source header rides along and
 		# emission reproduces it - otherwise the re-typed argument fails the byte-verify.
@@ -1560,6 +1589,14 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		# handler reproduces the author's spelling rather than the canonical get_node() one.
 		for event: Variant in events:
 			(event as EventRow).set_meta("__source_connect_line", connect_line)
+	if scene_connected:
+		# M42 - the .tscn already holds this wiring. Emission must add NOTHING: a generated
+		# `<node>.<signal>.connect(<handler>)` would both duplicate the connection at runtime and
+		# fail the byte-verify, reverting the whole file to code blocks.
+		for event: Variant in events:
+			(event as EventRow).set_meta("__scene_connected", true)
+			if not source_class.is_empty():
+				(event as EventRow).set_meta("__scene_source_class", source_class)
 	return {"ok": true, "events": events}
 
 

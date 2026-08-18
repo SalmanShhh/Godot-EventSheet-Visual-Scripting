@@ -1887,3 +1887,10 @@ angle (radians),角度（弧度）
 may be missing,可能不存在
 On collision with,碰撞时
 On stopped overlapping,重叠结束时
+Create object,创建对象
+as,名为
+copy of,副本
+group,组
+children,子节点
+children of,的子节点
+in,在

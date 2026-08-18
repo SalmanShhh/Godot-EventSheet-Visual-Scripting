@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/opened_script_structure3.gd" id="1_arena"]
+
+[node name="Arena" type="Node2D"]
+script = ExtResource("1_arena")
+
+[node name="StartButton" type="Button" parent="."]
+
+[node name="WaveTimer" type="Timer" parent="."]
+
+[connection signal="pressed" from="StartButton" to="." method="_on_start_button_pressed"]
+
+[connection signal="timeout" from="WaveTimer" to="." method="_on_wave_timer_timeout"]

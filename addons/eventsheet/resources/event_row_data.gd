@@ -101,6 +101,13 @@ var ternary_lead: bool = false
 # what routes a double-click anywhere on the pair (the condition cell and the Else row included) to
 # that ONE line's existing editor. View-only, never serialized.
 var ternary_action_index: int = -1
+# M36: the object a For-each PICKS, and the muted note saying where they came from ("(group
+# \"enemies\")"). Set on the row a loop-plus-one-`if` merged into, so its first condition line reads as
+# a condition ON that object - which is what Construct's picking looks like. Spans are built lazily,
+# long after the walk that saw the loop, so the answer is carried on the row. View-only, never
+# serialized: the loop and the `if` are two untouched rows in the sheet.
+var picking_object: String = ""
+var picking_note: String = ""
 
 
 ## The uid of the STATEMENT this row belongs to - its own, unless it is one row of a ternary pair, in

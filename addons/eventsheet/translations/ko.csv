@@ -1887,3 +1887,10 @@ angle (radians),각도 (라디안)
 may be missing,없을 수 있음
 On collision with,충돌했을 때
 On stopped overlapping,겹침이 끝났을 때
+Create object,오브젝트 생성
+as,이름
+copy of,복사본
+group,그룹
+children,자식
+children of,의 자식
+in,안

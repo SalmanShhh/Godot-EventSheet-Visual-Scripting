@@ -4022,6 +4022,13 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 		# "State: <pattern leaf>" - the same reading an authored Is In State header gets, derived
 		# from the code's own names rather than any pack. Other matches keep their pattern text.
 		var state_shaped: bool = _is_state_shaped_subject(match_row.match_expression)
+		# M37 - Construct has no switch. A reader of a Construct sheet knows if / else-if / else, so a
+		# match on an ORDINARY value reads as that chain: the first case as its test, every later case as
+		# an Else carrying its own test, `_` as a plain Else. Only shapes that MEAN "one of these values"
+		# qualify; a pattern that binds a name or destructures an array is doing something an Else-if
+		# cannot say, and keeps its pattern text.
+		var else_if_chain: bool = not state_shaped and _match_reads_as_else_if(match_row)
+		var chain_index: int = 0
 		for match_case: MatchCase in match_row.cases:
 			if match_case == null:
 				continue
@@ -4053,7 +4060,18 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			var case_label: String = pattern_text
 			if state_shaped and pattern_text != "_":
 				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
-			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row)
+			var chain_spans: Array[SemanticSpan] = []
+			if else_if_chain:
+				chain_spans = _match_else_if_condition_spans(match_row.match_expression, pattern_text, chain_index)
+				chain_index += 1
+			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row, false, chain_spans)
+			if not chain_spans.is_empty():
+				# An Else-if's test sits on the SECOND condition line, under the Else chip, so the row is
+				# two lines tall however few actions it carries.
+				var chain_lines: int = 0
+				for chain_span: SemanticSpan in chain_spans:
+					chain_lines = maxi(chain_lines, int(chain_span.metadata.get("line_index", 0)) + 1)
+				case_row.line_count = maxi(case_row.line_count, chain_lines)
 			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
 			for transition_child: EventRowData in transition_children:
 				case_row.children.append(transition_child)
@@ -4067,6 +4085,235 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				case_row.spans.insert(0, _make_span("◆", SemanticSpan.SpanType.KEYWORD, case_badge_meta))
 			rows.append(case_row)
 	return rows
+
+
+# ── M39: instantiate + add_child (+ the first position) is Construct's Create object ──────────────
+# Godot spells spawning as three statements that only mean anything together; Construct spells it as
+# one action, and a Construct user reads the three as noise around the one thing that happened. So
+# the run reads as `System ▸ Create object <Scene> at <P> (as b)` - the three lines stay exactly as
+# they are in the file, on hover and under a double-click, and nothing about emission changes.
+
+
+## The Create object runs in one action lane: {"leads": {index: {text, alias, line_count}}, "consumed":
+## {index: true}}. A group is a local declaration (or assignment) of `<scene>.instantiate()`, the
+## `add_child` / `add_sibling` that plants it, and - only when it comes straight after - the first
+## line that puts it somewhere.
+func _create_object_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	# Refreshed HERE, before anything reads it: the sentence below ADDS the new object's own name to the
+	# class map, and a refresh triggered later (by the icon lookup on the very span being built) would
+	# rebuild the map from the sheet and drop it again.
+	_reset_lens_caches_if_stale()
+	var index: int = 0
+	while index < actions.size() - 1:
+		var spawn: Dictionary = _instantiate_action_parts(actions[index])
+		if spawn.is_empty() or not _plants_node(actions[index + 1], str(spawn.get("alias", ""))):
+			index += 1
+			continue
+		var last: int = index + 1
+		var position_text: String = ""
+		if last + 1 < actions.size():
+			position_text = _placement_value(actions[last + 1], str(spawn.get("alias", "")))
+			if not position_text.is_empty():
+				last += 1
+		var indices: Array[int] = []
+		for member_index: int in range(index, last + 1):
+			indices.append(member_index)
+		leads[index] = {
+			"text": _create_object_text(str(spawn.get("source", "")), str(spawn.get("alias", "")),
+				position_text, bool(spawn.get("copy", false))),
+			"alias": str(spawn.get("alias", "")),
+			"line_count": last - index + 1,
+			"indices": indices,
+		}
+		for consumed_index: int in range(index + 1, last + 1):
+			consumed[consumed_index] = true
+		index = last + 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## `var b := bullet_scene.instantiate()` / `b = X.duplicate()` -> {alias, source, copy}, else {}.
+func _instantiate_action_parts(action_resource: Variant) -> Dictionary:
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled:
+		return {}
+	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	var alias: String = str(params.get("name", params.get("var_name", ""))).strip_edges()
+	var value: String = str(params.get("value", "")).strip_edges()
+	if alias.is_empty() or not EventSheetSentence.is_identifier(alias):
+		return {}
+	for suffix: String in [".instantiate()", ".duplicate()"]:
+		if not value.ends_with(suffix):
+			continue
+		var source: String = value.substr(0, value.length() - suffix.length()).strip_edges()
+		if source.is_empty() or not _is_identifier_path(source):
+			return {}
+		return {"alias": alias, "source": source, "copy": suffix == ".duplicate()"}
+	return {}
+
+
+## True when the action is the `add_child(b)` / `add_sibling(b)` (on this node or on a named parent)
+## that puts the freshly made object into the tree.
+func _plants_node(action_resource: Variant, alias: String) -> bool:
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled or alias.is_empty():
+		return false
+	if not (action.ace_id.contains("AddChild") or action.ace_id.contains("AddSibling")):
+		return false
+	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	return str(params.get("node", params.get("child", ""))).strip_edges() == alias
+
+
+## The value of a `b.global_position = P` / `b.position = P` that immediately follows, or "" when the
+## next line is anything else. Only the FIRST placement joins the row: the ones after it are ordinary
+## "set a property of the new object" actions, and Construct draws those separately too.
+func _placement_value(action_resource: Variant, alias: String) -> String:
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled or alias.is_empty():
+		return ""
+	if not action.ace_id.contains("SetProperty"):
+		return ""
+	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	if str(params.get("target", "")).strip_edges() != alias:
+		return ""
+	var property_name: String = str(params.get("property", "")).strip_edges()
+	if property_name != "global_position" and property_name != "position":
+		return ""
+	return str(params.get("value", "")).strip_edges()
+
+
+## The sentence itself. The object created is named the way a Construct user names it - the scene's
+## ROOT node - whenever the source is a preloaded scene this sheet declares; otherwise the variable's
+## own name, which is the honest answer when nothing else is known.
+func _create_object_text(source: String, alias: String, position_text: String, copy: bool) -> String:
+	var shown: String = source
+	var resolved: Dictionary = _lens_scene_vars.get(source, {}) as Dictionary
+	if not resolved.is_empty() and not str(resolved.get("name", "")).is_empty():
+		shown = str(resolved.get("name", ""))
+		# The new object answers to its local name for the rest of the event, and draws the scene root's
+		# picture while it does - Construct's "picked new instance", spelled in Godot's own names.
+		var icon_class: String = str(resolved.get("icon_class", ""))
+		if not icon_class.is_empty() and not alias.is_empty():
+			_lens_class_map[alias] = icon_class
+	if copy:
+		shown = "(%s %s)" % [EventSheetL10n.translate("copy of"), shown]
+	var text: String = "%s %s" % [EventSheetL10n.translate("Create object"), shown]
+	if not position_text.is_empty():
+		# Through the shared value lens, so the place a thing is made reads exactly as it would in any
+		# other cell - `Vector2(10, 20)` is a point, and Construct writes a point as `(10, 20)`.
+		text += " %s %s" % [EventSheetL10n.translate("at"), _reading_sentence(EventSheetSentence.expression_text(position_text))]
+	if not alias.is_empty():
+		text += " (%s %s)" % [EventSheetL10n.translate("as"), alias]
+	return text
+
+
+## M37 - whether a `match` says nothing more than "which of these values is it?", which is the only
+## thing an Else-if chain can say back. Every branch must be one or more PLAIN values; a pattern that
+## binds (`var n`), destructures (`[a, b]` / `{"k": v}`), or tests a type keeps the switch reading,
+## because rewriting it as `subject = pattern` would state something the code does not.
+static func is_plain_match_pattern(pattern: String) -> bool:
+	var text: String = pattern.strip_edges()
+	if text.is_empty():
+		return false
+	if text == "_":
+		return true
+	for term: String in EventSheetSentence.split_top_level(text, ", "):
+		var value: String = term.strip_edges()
+		if value.is_empty():
+			return false
+		# A binding, a destructuring pattern, an open range, or anything with a call in it.
+		if value.begins_with("var ") or value.begins_with("[") or value.begins_with("{") \
+				or value.contains("(") or value.contains("..") or value == "..":
+			return false
+		if value.begins_with("\"") or value.begins_with("'"):
+			continue
+		if value.is_valid_float() or (value.begins_with("-") and value.substr(1).is_valid_float()):
+			continue
+		if value == "true" or value == "false" or value == "null":
+			continue
+		# A bare or dotted identifier - a constant, an enum member, a named value.
+		if not _is_identifier_path(value):
+			return false
+	return true
+
+
+## `State.PATROL` / `SPEED` - every dot-separated piece a plain identifier. A small local helper on
+## purpose: the sentence grammar has the single-identifier test, and this is the one caller that needs
+## the dotted form.
+static func _is_identifier_path(text: String) -> bool:
+	var pieces: PackedStringArray = text.split(".")
+	if pieces.is_empty():
+		return false
+	for piece: String in pieces:
+		if not EventSheetSentence.is_identifier(piece):
+			return false
+	return true
+
+
+## True when EVERY case of a match is a plain-value branch and the default (if present) is last, which
+## is what makes the whole thing readable as one if / else-if / else chain.
+func _match_reads_as_else_if(match_row: MatchRow) -> bool:
+	if match_row == null or match_row.cases.size() < 1:
+		return false
+	if match_row.match_expression.strip_edges().is_empty():
+		return false
+	for case_index: int in range(match_row.cases.size()):
+		var match_case: MatchCase = match_row.cases[case_index]
+		if match_case == null or not ViewportRowBuilder.is_plain_match_pattern(match_case.pattern):
+			return false
+		# A `_` anywhere but last would mean the branches after it are dead; that is not a chain.
+		if str(match_case.pattern).strip_edges() == "_" and case_index != match_row.cases.size() - 1:
+			return false
+	return true
+
+
+## The condition cells of one Else-if arm: the Else chip alone for `_`, the bare test for the first
+## case, and the Else chip ABOVE the test for every case after it - which is exactly how Construct
+## draws an else-if, and exactly what a chained ternary already draws here. Several values in one
+## pattern (`"a", "b":`) become the OR block, since that is what the branch means.
+func _match_else_if_condition_spans(subject: String, pattern: String, chain_index: int) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var text: String = pattern.strip_edges()
+	if chain_index > 0 or text == "_":
+		spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "else_keyword",
+			"chip": true,
+			"hoverable": false,
+			"line_index": 0,
+			"object_label": _object_label_for("Core", "")
+		}.merged(condition_style_meta, true)))
+	if text == "_":
+		return spans
+	var tests: PackedStringArray = PackedStringArray()
+	for term: String in EventSheetSentence.split_top_level(text, ", "):
+		if not term.strip_edges().is_empty():
+			tests.append("%s == %s" % [subject.strip_edges(), term.strip_edges()])
+	if tests.is_empty():
+		return spans
+	# Routed through the shared conjunct/OR splitter so a multi-value branch draws the very same OR
+	# block a hand-written `if a or b:` draws, tone lens and all.
+	var carrier := EventRowData.new()
+	_append_conjunct_condition_lines(carrier, " or ".join(tests), 1 if chain_index > 0 else 0, condition_style_meta)
+	for carried: SemanticSpan in carrier.spans:
+		_say_equals_once(carried)
+		spans.append(carried)
+	return spans
+
+
+## Construct compares with a single `=`, and nobody typed the `==` in these cells: the reading built
+## it, out of a match pattern that has no operator at all. So it is written the way Construct writes
+## it. A comparison the user really did type is left exactly as typed, elsewhere and on purpose.
+func _say_equals_once(span: SemanticSpan) -> void:
+	span.text = span.text.replace(" == ", " = ")
+	var segments: Array = span.metadata.get("bbcode_segments", []) as Array
+	for segment: Variant in segments:
+		var piece: Dictionary = segment as Dictionary
+		if piece == null:
+			continue
+		piece["text"] = str(piece.get("text", "")).replace(" == ", " = ")
 
 
 ## The friendly one-line reading of a case-body statement: a sentence when the statement
@@ -4202,7 +4449,11 @@ func _pattern_leaf(pattern_text: String) -> String:
 ## `negated` is for callers that already turned an inverted guard into its positive sentence
 ## (_friendly_guard_text does): they pass the inversion here so the ✕ still gets drawn. Callers
 ## handing over raw text can leave it false - the lens below finds a leading NOT on its own.
-func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource, negated: bool = false) -> EventRowData:
+## `condition_spans`, when given, REPLACES the single condition cell this would otherwise draw - the
+## M37 Else-if chain hands over its own stacked Else + test lines, built by the same helpers a ternary
+## chain uses, so both readings of "one of these branches runs" look identical on the sheet.
+func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource, negated: bool = false,
+		condition_spans: Array[SemanticSpan] = []) -> EventRowData:
 	var row := EventRowData.new()
 	row.indent = indent
 	row.row_type = EventRowData.RowType.EVENT
@@ -4210,6 +4461,16 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 	row.line_count = maxi(action_lines.size(), 1)
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	if not condition_spans.is_empty():
+		row.spans = condition_spans.duplicate()
+		for line_index: int in range(action_lines.size()):
+			row.spans.append(_make_span(action_lines[line_index] if not action_lines[line_index].is_empty() else " ", SemanticSpan.SpanType.ACTION, {
+				"lane": "action",
+				"kind": "match_case",
+				"editable": false,
+				"line_index": line_index
+			}.merged(action_style, true)))
+		return row
 	# M12 - a lifted `if not <cond>:` shows its inversion as the red ✕ in the badge column, exactly
 	# as an inverted ACE condition does, and the sentence beside it is the POSITIVE one. Callers
 	# that already stripped the negation pass plain text and nothing happens here.
@@ -4634,6 +4895,18 @@ func _handler_object_label(event_row: EventRow) -> String:
 	return _object_label_for(event_row.trigger_provider_id, event_row.trigger_id)
 
 
+## M42 - the class picture of the node a SCENE-wired signal comes from. The scene said what class the
+## emitter is when the connection was read, so this is a known answer rather than a guess; null for
+## every other trigger, which keeps its vocabulary icon.
+func _scene_trigger_icon(event_row: EventRow) -> Texture2D:
+	if event_row == null or not _viewport.show_object_icons:
+		return null
+	var source_class: String = str(event_row.get_meta("__scene_source_class", ""))
+	if source_class.is_empty():
+		return null
+	return ACEPickerDialog.editor_icon(source_class)
+
+
 ## The payload chips for a signal-backed trigger: one per handler parameter, named the way the
 ## handler names it ("body: Node2D" -> "body"). Empty for every trigger that hands nothing over.
 func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
@@ -4968,7 +5241,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"chip": true,
 					"line_index": condition_line_index,
 					"object_label": _handler_object_label(event_row),
-					"object_icon": _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
+					# M42 - a handler the SCENE wired knows exactly which node emits and what class it
+					# is, so that node's own picture leads the row instead of the generic trigger icon.
+					"object_icon": _scene_trigger_icon(event_row) if _scene_trigger_icon(event_row) != null \
+						else _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
 				}.merged(condition_style_meta, true)
 			)
 		)
@@ -5152,8 +5428,33 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 	if not event_row.actions.is_empty():
+		# M39 - the instantiate + add_child (+ first position) run is Construct's single Create object.
+		# Worked out once for the whole lane, because a group is recognised by what FOLLOWS its lead.
+		var create_groups: Dictionary = _create_object_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
+			# A line the Create object row above already said. Skipped without advancing the line index,
+			# which is what turns three lines into one row.
+			if bool(create_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			if (create_groups.get("leads", {}) as Dictionary).has(action_index):
+				var create: Dictionary = (create_groups["leads"] as Dictionary)[action_index]
+				spans.append(_make_span(str(create.get("text", "")), SemanticSpan.SpanType.ACTION, {
+					"lane": "action",
+					"kind": "action",
+					"ace_index": action_index,
+					"ace_enabled": true,
+					"chip": true,
+					"line_index": action_line_index,
+					"object_label": _object_label_for("Core", ""),
+					"object_icon": _reading_class_icon_for(str(create.get("alias", ""))),
+					"compiled_lines": int(create.get("line_count", 1)),
+					# The statements this ONE cell stands for. Hover shows all of them, so the row never
+					# hides a line: it says what happened, and the file's own spelling is a pointer away.
+					"create_object_indices": create.get("indices", [])
+				}.merged(action_style_meta, true)))
+				action_line_index += 1
+				continue
 			# M29 - whichever shape the line took (a Call Method row or a verbatim block), the line
 			# that wires a lambda to a signal reads as a muted NOTE: the work it describes is drawn
 			# below it as the trigger event it is. Nothing is hidden - the note names the object and
@@ -5885,8 +6186,193 @@ func expand_ternary_rows(rows: Array[EventRowData]) -> Array[EventRowData]:
 	var out: Array[EventRowData] = []
 	for row: EventRowData in rows:
 		row.children = expand_ternary_rows(row.children)
+		# M36 runs first: it REPLACES a loop row with the event its body reads as, and that event may
+		# itself carry a ternary the pass below still has to see.
+		var picked: Array[EventRowData] = _expand_picking_row(row)
+		if not picked.is_empty():
+			out.append_array(picked)
+			continue
 		out.append_array(_expand_ternary_row(row))
 	return out
+
+
+# ── M36: a loop over a group with one `if` inside is Construct's picking, and reads as one event ──
+#
+# This is Construct's whole model: a condition on an object PICKS the instances, and the actions run
+# on the ones it picked. Godot has no picking, so the same idea is spelled as a loop with an `if` in
+# it - two rows for one thought. When the loop's ENTIRE body is that `if`, the pair reads as the one
+# event it means: the loop's object with a muted note saying where the instances came from, the `if`
+# as its condition, its body as the actions.
+#
+# A view over two unchanged rows. Both still sit in the sheet exactly as the file wrote them, so
+# emission and the byte round-trip are untouched; every row produced carries the LOOP's uid as its
+# statement uid, so selection, drag and the gutter address the whole reading as one. A body with any
+# statement outside the `if` is not this shape and keeps the plain For-each + sub-event reading -
+# there the loop really is doing something of its own.
+
+
+## The rows a loop-with-one-`if` reads as, or [] when this row is not that shape.
+func _expand_picking_row(row: EventRowData) -> Array[EventRowData]:
+	if not _viewport.is_reading_mode() or row.ternary_view or not row.picking_object.is_empty():
+		return []
+	if row.row_type != EventRowData.RowType.EVENT or not (row.source_resource is EventRow):
+		return []
+	var loop: EventRow = row.source_resource as EventRow
+	var words: Dictionary = _picking_words(loop)
+	if words.is_empty() or row.children.is_empty() or row.children.size() != loop.sub_events.size():
+		return []
+	var shifted: Array[EventRowData] = []
+	for child_index: int in range(row.children.size()):
+		var child: EventRowData = row.children[child_index]
+		if child.row_type != EventRowData.RowType.EVENT or not (child.source_resource is EventRow):
+			return []
+		if child.source_resource != loop.sub_events[child_index]:
+			return []
+		shifted.append(child)
+	# The first sub-event must be the `if` itself, and the ones after it can ONLY be its own else / elif
+	# arms. Two independent `if`s in a loop body are two conditions, not one - merging them would hoist
+	# the second out of the loop it runs in, which is the one thing this reading must never say.
+	if (shifted[0].source_resource as EventRow).conditions.is_empty():
+		return []
+	if (shifted[0].source_resource as EventRow).else_mode != EventRow.ElseMode.NONE:
+		return []
+	for arm_index: int in range(1, shifted.size()):
+		if (shifted[arm_index].source_resource as EventRow).else_mode == EventRow.ElseMode.NONE:
+			return []
+	for shifted_index: int in range(shifted.size()):
+		var moved: EventRowData = shifted[shifted_index]
+		_shift_row_indent(moved, row.indent - moved.indent)
+		moved.ternary_view = true
+		moved.ternary_anchor_uid = row.row_uid
+		moved.ternary_lead = shifted_index == 0
+		moved.disabled = moved.disabled or row.disabled
+	# Only the row that states the test wears the note: an Else arm has already been placed by it.
+	shifted[0].picking_object = str(words.get("object", ""))
+	shifted[0].picking_note = str(words.get("note", ""))
+	shifted[0].spans.clear()
+	return shifted
+
+
+## Whether a loop is the picking shape, and the words for it: the object its body works on (the
+## iterator's own name, which is what the body calls each instance) plus the muted note saying where
+## the instances came from. {} for anything that is not one plain For-each over a list.
+func _picking_words(loop: EventRow) -> Dictionary:
+	if loop == null or not loop.conditions.is_empty() or not loop.actions.is_empty():
+		return {}
+	if not loop.local_variables.is_empty() or loop.sub_events.is_empty() or loop.pick_filters.size() != 1:
+		return {}
+	if not loop.trigger_id.is_empty() or loop.else_mode != EventRow.ElseMode.NONE:
+		return {}
+	var pick: PickFilter = loop.pick_filters[0]
+	if pick == null or not pick.enabled or pick.iterator_name.strip_edges().is_empty():
+		return {}
+	# A filtered, ordered, capped, indexed or frame-spread loop is doing work of its own that the
+	# merged row would not say; only a plain walk of a list reads as picking.
+	if not pick.filter_conditions.is_empty() or not pick.predicate_expression.strip_edges().is_empty():
+		return {}
+	if not pick.order_by_expression.strip_edges().is_empty() or pick.pick_first_n != 0:
+		return {}
+	if not pick.index_name.strip_edges().is_empty() or pick.frame_spread_count != 0 or pick.frame_spread_budget_ms != 0.0:
+		return {}
+	# Repeat and While are counts and tests, not collections of instances - Construct spells those
+	# with its own loop rows and never as picking.
+	if pick.collection_kind == PickFilter.CollectionKind.REPEAT or pick.collection_kind == PickFilter.CollectionKind.WHILE:
+		return {}
+	var collection: String = pick.collection_value.strip_edges()
+	if collection.is_empty():
+		collection = pick.source_expression.strip_edges()
+	var note: String = _picking_source_note(pick.collection_kind, collection)
+	if note.is_empty():
+		return {}
+	return {"object": pick.iterator_name.strip_edges().capitalize(), "note": note}
+
+
+## The muted note beside the picked object: which instances these are.
+func _picking_source_note(collection_kind: int, collection: String) -> String:
+	if collection_kind == PickFilter.CollectionKind.GROUP and not collection.is_empty():
+		return "(%s %s)" % [EventSheetL10n.translate("group"), _quoted_group_name(collection)]
+	var group_name: String = _group_name_in(collection)
+	if not group_name.is_empty():
+		return "(%s \"%s\")" % [EventSheetL10n.translate("group"), group_name]
+	if collection == "get_children()":
+		return "(%s)" % EventSheetL10n.translate("children")
+	if collection.ends_with(".get_children()"):
+		var owner_name: String = collection.substr(0, collection.length() - ".get_children()".length()).strip_edges()
+		if _is_identifier_path(owner_name):
+			return "(%s %s)" % [EventSheetL10n.translate("children of"), EventSheetSentence.object_of_reference(owner_name)]
+	# Anything else has to be a NAMED list for this reading to be honest. `for i in 3:` is a count, and
+	# an arbitrary expression is a computation - neither is a set of instances to pick from, and
+	# labelling one "I (in 3)" says something the code never did.
+	if _is_identifier_path(collection):
+		return "(%s %s)" % [EventSheetL10n.translate("in"), EventSheetSentence.expression_text(collection)]
+	return ""
+
+
+## The group name inside `get_tree().get_nodes_in_group("enemies")`, or "" when the expression is
+## anything else. Written out rather than pattern-matched loosely: a near-miss would label a list of
+## something else as a group, which is worse than saying nothing.
+static func _group_name_in(collection: String) -> String:
+	var marker: String = "get_nodes_in_group(\""
+	var start: int = collection.find(marker)
+	if start < 0:
+		return ""
+	start += marker.length()
+	var end: int = collection.find("\"", start)
+	if end <= start or not collection.substr(end).begins_with("\")"):
+		return ""
+	return collection.substr(start, end - start)
+
+
+## A GROUP pick stores its name either bare or already quoted; the note always shows it quoted.
+static func _quoted_group_name(collection: String) -> String:
+	var text: String = collection.strip_edges()
+	if text.begins_with("\"") or text.begins_with("&\""):
+		return text.trim_prefix("&")
+	return "\"%s\"" % text
+
+
+## `enemy's hp < 10` -> `hp < 10`, but ONLY when the possessive is the picked object's own name. A
+## condition on some OTHER object inside the loop keeps its possessive, because there it is the thing
+## that says which object is meant.
+static func _strip_picked_possessive(text: String, picked_object: String) -> String:
+	var at: int = text.find("'s ")
+	if at <= 0:
+		return text
+	var owner_name: String = text.substr(0, at)
+	if not EventSheetSentence.is_identifier(owner_name) or owner_name.capitalize() != picked_object:
+		return text
+	return text.substr(at + 3)
+
+
+## M36 - the picked object and its note, written onto the first condition line once its spans exist.
+## The cell keeps its own condition text; what changes is that it now reads as a condition ON an
+## object, which is exactly what the loop around it was saying.
+func _apply_picking_note(row_data: EventRowData) -> void:
+	for span: SemanticSpan in row_data.spans:
+		if str(span.metadata.get("lane", "")) != "condition" or int(span.metadata.get("line_index", 0)) != 0:
+			continue
+		if not str(span.metadata.get("kind", "")) in ["condition", "match_case"]:
+			continue
+		span.metadata["object_label"] = row_data.picking_object
+		span.metadata["object_icon"] = _reading_class_icon_for(row_data.picking_object)
+		var owned: String = _strip_picked_possessive(span.text, row_data.picking_object)
+		if owned != span.text:
+			# The object column already names the thing; "Enemy | enemy's hp < 10" says it twice, and
+			# Construct's cell is just the property. Only the loop's OWN name is dropped.
+			span.text = owned
+			span.metadata.erase("bbcode_segments")
+			span.metadata.erase("value_ranges")
+		if not row_data.picking_note.is_empty():
+			# The note is a receipt, not part of the test: muted, so the eye lands on the condition.
+			# Written as segments because the styled runs behind the old text were measured against
+			# offsets the note has just moved, and re-deriving those costs a re-read of the whole cell.
+			span.metadata["bbcode_segments"] = [
+				{"text": "%s " % row_data.picking_note, "color": EventSheetPalette.TEXT_MUTED, "bold": false, "italic": false},
+				{"text": span.text, "color": null, "bold": false, "italic": false},
+			]
+			span.metadata.erase("value_ranges")
+			span.text = "%s %s" % [row_data.picking_note, span.text]
+		return
 
 
 ## One row's expansion: itself when nothing branches, else the actions before the branch, the branch
@@ -6343,6 +6829,8 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
 		_verb_kind_override = outer_kind
+		if not row_data.picking_object.is_empty():
+			_apply_picking_note(row_data)
 
 
 func _append_condition_prefix_spans(
@@ -7497,6 +7985,10 @@ func _current_verb_kind() -> int:
 var _lens_sheet_stamp: int = 0
 var _lens_knob_names: Dictionary = {}
 var _lens_class_map: Dictionary = {}
+## M39 - variable name -> the object a preloaded scene/script IS, as resolve_res_object answers it
+## ({name, kind_word, icon_class}). `bullet_scene` is not what a Construct user calls the thing they
+## spawn; the scene's root node is, and this is where Create object gets that name and its picture.
+var _lens_scene_vars: Dictionary = {}
 
 
 func _reset_lens_caches_if_stale() -> void:
@@ -7507,6 +7999,36 @@ func _reset_lens_caches_if_stale() -> void:
 	_lens_sheet_stamp = stamp
 	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
 	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)
+	_lens_scene_vars = _scene_variable_map(sheet)
+
+
+## Every `var x = preload("res://...")` / `const X := preload(...)` of a sheet, resolved once per
+## rebuild through the SAME cached scan the file's head uses to draw those declarations - the scan is
+## keyed on the res:// path, so asking it again here costs a dictionary lookup and never re-reads a
+## file.
+func _scene_variable_map(sheet: EventSheetResource) -> Dictionary:
+	var map: Dictionary = {}
+	if sheet == null:
+		return map
+	for entry: Variant in sheet.events:
+		var declared_name: String = ""
+		var res_path: String = ""
+		var variable: LocalVariable = entry as LocalVariable
+		if variable != null:
+			declared_name = variable.name
+			res_path = ViewportRowBuilder.preloaded_path(str(variable.default_value))
+		elif entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "preload":
+			# `const ENEMY_SCENE := preload("res://enemy.tscn")` lifts to a preload BLOCK rather than a
+			# variable, and a const is how most projects hold the thing they spawn.
+			var fields: Dictionary = (entry as CustomBlockRow).fields
+			declared_name = str(fields.get("name", ""))
+			res_path = str(fields.get("path", ""))
+		if declared_name.is_empty() or res_path.is_empty():
+			continue
+		var resolved: Dictionary = ViewportRowBuilder.resolve_res_object(res_path)
+		if not resolved.is_empty():
+			map[declared_name] = resolved
+	return map
 
 
 ## M9 - the sheet's @export knob names, so the lens can show those with Godot's Inspector

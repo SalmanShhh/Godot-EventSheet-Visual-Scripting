@@ -1887,3 +1887,10 @@ angle (radians),角度 (ラジアン)
 may be missing,存在しない可能性
 On collision with,衝突したとき
 On stopped overlapping,重なりが終わったとき
+Create object,オブジェクトを作成
+as,として
+copy of,のコピー
+group,グループ
+children,子
+children of,の子
+in,の中
