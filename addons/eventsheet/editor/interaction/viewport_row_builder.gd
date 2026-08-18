@@ -4335,7 +4335,10 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# The value shows verbatim minus quotes (state strings are case-sensitive - no prettifying).
 	# Display-only: the stored row and the compiled call are untouched.
 	# Same shared grammar the action lane uses: a condition whose shape Construct already has a
-	# sentence for reads that sentence whether it was picked or typed.
+	# sentence for reads that sentence whether it was picked or typed. Cleared first for the same
+	# reason the action lane clears: a text-only reading must not leave a label behind.
+	_pending_object_label = ""
+	_pending_grammar_segments = []
 	var grammar: Dictionary = grammar_condition_sentence(condition)
 	if not grammar.is_empty():
 		_pending_object_label = str(grammar.get("object", ""))
@@ -4455,7 +4458,11 @@ static func action_awaits(action: ACEAction) -> bool:
 
 func _format_action_descriptor_base(action: ACEAction) -> String:
 	# A row whose SHAPE has a settled Construct sentence reads through the shared grammar, so the
-	# picked row and the hand-written line beside it say the same words.
+	# picked row and the hand-written line beside it say the same words. Both one-shots are cleared
+	# FIRST: a formatter also runs for text-only readings (a match case's summary line), and a value
+	# left behind there would land on whatever span is built next.
+	_pending_object_label = ""
+	_pending_grammar_segments = []
 	var grammar: Dictionary = grammar_action_sentence(action)
 	if not grammar.is_empty():
 		_pending_object_label = str(grammar.get("object", ""))
