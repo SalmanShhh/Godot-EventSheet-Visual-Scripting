@@ -24,7 +24,7 @@ func take_damage(amount: int) -> void:
 	pass
 """
 
-const FIXTURE_SOURCE: String = """extends PreviewEnemyBase
+const FIXTURE_SOURCE: String = """extends "res://enemy_base_preview.gd"
 
 var hp: int = 10
 var seconds_left: int = 3

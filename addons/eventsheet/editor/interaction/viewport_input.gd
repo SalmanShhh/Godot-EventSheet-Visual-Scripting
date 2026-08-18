@@ -219,6 +219,14 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.add_event_requested.emit(metadata.get("add_event_owner", null))
 			_viewport.accept_event()
 			return
+		# The head's Include bar says "open as a sheet", so ONE click does exactly that. It carries
+		# its own path, and the dock's navigation probe already knows how to reach it, so this is the
+		# same jump Ctrl+Click makes anywhere else - just without the modifier, because the bar offers
+		# it in words.
+		if not event.double_click and str(metadata.get("kind", "")) == "include_open" and _viewport.navigation_probe.is_valid() and bool(_viewport.navigation_probe.call(row_data, metadata)):
+			_viewport.navigate_requested.emit(row_data, span_index, metadata)
+			_viewport.accept_event()
+			return
 		if bool(hit.get("fold", false)):
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport._toggle_row_fold(row_index)

@@ -592,6 +592,12 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	if not identity_seen or (triggers.is_empty() and knobs.is_empty()):
 		return rows
 	var head: Array[EventRowData] = [_build_pack_include_bar_row(sheet, host_class)]
+	# N12 - a script that extends ANOTHER SCRIPT of this project is including that sheet: everything
+	# the base declares runs here too. That is a second bar under the identity one, naming the file
+	# and offering to open it, rather than an inheritance keyword nobody outside the language knows.
+	var base_include_row: EventRowData = _build_base_script_include_bar_row(sheet)
+	if base_include_row != null:
+		head.append(base_include_row)
 	var about_index: int = _pack_about_row_index(rows, consumed)
 	var about_row: EventRowData = rows[about_index] if about_index >= 0 else _build_pack_about_row(sheet, strip_about)
 	if about_row != null:
@@ -734,6 +740,10 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 			"text_color": event_style.object_label_color
 		}))
 	var base_class: String = sheet.host_class.strip_edges()
+	# `extends "res://enemy.gd"` is a FILE, not a class: quoting a path into the identity chip reads as
+	# noise, and the Include bar directly below already names that file (N12).
+	if base_class.begins_with("\"") or base_class.begins_with("'"):
+		base_class = ""
 	if not base_class.is_empty() and base_class != object_name:
 		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE, {
 			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
@@ -749,6 +759,72 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
 		}))
 	return spans
+
+
+## The project script a sheet EXTENDS, as a res:// path - "" when it extends an engine class (which
+## is what the identity bar already says) or when the base cannot be found. Both spellings resolve:
+## `extends "res://enemy.gd"` by its path, `extends Enemy` through the project's own class list.
+static func base_script_path(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return ""
+	var base: String = sheet.host_class.strip_edges()
+	if base.is_empty():
+		return ""
+	if base.begins_with("\"") or base.begins_with("'"):
+		var quoted: String = base.trim_prefix("\"").trim_suffix("\"").trim_prefix("'").trim_suffix("'")
+		return quoted if quoted.begins_with("res://") else ""
+	if ClassDB.class_exists(base):
+		return ""
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == base:
+			var path: String = str(entry.get("path", ""))
+			# A .gd sheet's own file is never its base: a class list that has not caught up yet would
+			# otherwise offer to open the file already open.
+			return path if path != str(sheet.external_source_path) else ""
+	return ""
+
+
+## N12's second head bar: `⇥ Include <base.gd> - open as a sheet`. Null when the base is an engine
+## class. Inert as a resource (a lens over the `extends` line, which stays exactly where it is); the
+## chip carries the path so opening it goes through the same jump the rest of the canvas uses.
+func _build_base_script_include_bar_row(sheet: EventSheetResource) -> EventRowData:
+	var base_path: String = base_script_path(sheet)
+	if base_path.is_empty():
+		return null
+	var row_data := EventRowData.new()
+	row_data.indent = 0
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "base_include_bar_%d" % sheet.get_instance_id()
+	var accent: Color = _viewport._get_event_style().behavior_accent_color
+	row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.12)
+	var open_meta: Dictionary = {
+		"editable": false,
+		"kind": "include_open",
+		"include_path": base_path,
+		"line_index": 0
+	}
+	var spans: Array[SemanticSpan] = [
+		_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
+			"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG
+		}, true)),
+		_make_span(EventSheetL10n.translate("Include"), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
+			"text_color": EventSheetPalette.TEXT_PRIMARY
+		}, true)),
+		_make_span(base_path.get_file(), SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+			"badge_fg": EventSheetPalette.COLOR_CHIP_FG
+		}, true)),
+		_make_span(EventSheetL10n.translate("- open as a sheet"), SemanticSpan.SpanType.COMMENT,
+			open_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true))
+	]
+	row_data.spans = spans
+	return row_data
 
 
 func _pack_include_chip(text: String) -> SemanticSpan:
@@ -5056,6 +5132,98 @@ static func await_loop_seconds(code: String) -> String:
 	return _trimmed_seconds(await_match.get_string(1).strip_edges())
 
 
+# ── N12 - `super` reads as calling the included sheet ───────────────────────────────────────────
+
+
+## The base script path, resolved once per sheet: the answer needs the project's class list, and a
+## row asks for it once per `super` line.
+var _base_script_path: String = ""
+var _base_script_stamp: int = -1
+
+
+func _cached_base_script_path() -> String:
+	var sheet: EventSheetResource = _viewport._sheet
+	var stamp: int = 0 if sheet == null else int(sheet.get_instance_id())
+	if stamp != _base_script_stamp:
+		_base_script_stamp = stamp
+		_base_script_path = base_script_path(sheet)
+	return _base_script_path
+
+
+## What a `super` statement SAYS, as {"file", "verb", "args"} - or {} when the action is not one, or
+## when the base is an engine class (there is no sheet to name, so the line keeps its own reading).
+##
+## `super._ready()` inside the On Ready handler says "run its On Ready", so the verb is left blank and
+## the trigger's own name is used; `super.take_damage(x)` names the verb; a bare `super()` inside a
+## function means the same function of the base.
+func super_call_reading(action_resource: Variant, event_row: EventRow) -> Dictionary:
+	var base_path: String = _cached_base_script_path()
+	if base_path.is_empty():
+		return {}
+	var code: String = ""
+	if action_resource is RawCodeRow:
+		code = (action_resource as RawCodeRow).code.strip_edges()
+	elif action_resource is ACEAction:
+		code = ActionCodegen.generate_action(action_resource as ACEAction).strip_edges()
+	if code.is_empty() or code.contains("\n") or not code.begins_with("super"):
+		return {}
+	var call_regex := RegEx.new()
+	if call_regex.compile("^super(?:\\.([A-Za-z_][A-Za-z0-9_]*))?\\((.*)\\)$") != OK:
+		return {}
+	var call_match: RegExMatch = call_regex.search(code)
+	if call_match == null:
+		return {}
+	var method: String = call_match.get_string(1)
+	var verb: String = ""
+	var runs_trigger: String = ""
+	if method.is_empty() or method.begins_with("_"):
+		# A lifecycle name is the handler this row already sits in, so the row says which of the
+		# include's handlers it runs rather than repeating an engine method name.
+		runs_trigger = _trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id) \
+			if event_row != null and not event_row.trigger_id.is_empty() else ""
+		if runs_trigger.is_empty():
+			verb = method.capitalize() if not method.is_empty() else ""
+	else:
+		verb = method.capitalize()
+	return {"file": base_path.get_file(), "verb": verb, "runs": runs_trigger, "args": call_match.get_string(2).strip_edges()}
+
+
+## The action cell for a `super` call: `Include <file> ▸ run its On Ready` / `▸ Call Take Damage x`.
+func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, action_index: int,
+		action_line_index: int, action_style_meta: Dictionary) -> void:
+	var base_meta: Dictionary = {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": true,
+		"chip": true,
+		"code_cell": false,
+		"natural_width": true,
+		"line_index": action_line_index,
+		"object_label": EventSheetL10n.translate("Include")
+	}
+	spans.append(_make_span(str(reading.get("file", "")), SemanticSpan.SpanType.KEYWORD,
+		base_meta.duplicate().merged({
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+			"badge_fg": EventSheetPalette.COLOR_CHIP_FG
+		}, true).merged(action_style_meta, false)))
+	var runs: String = str(reading.get("runs", ""))
+	var tail: String = ""
+	if not runs.is_empty():
+		tail = "%s %s" % [EventSheetL10n.translate("▸ run its"), runs]
+	else:
+		tail = "%s %s" % [EventSheetL10n.translate("▸ Call"), str(reading.get("verb", ""))]
+	var args: String = str(reading.get("args", ""))
+	if not args.is_empty():
+		tail = "%s  %s" % [tail, args]
+	spans.append(_make_span(tail, SemanticSpan.SpanType.ACTION, base_meta.duplicate().merged({
+		"natural_width": false,
+		"text_color": EventSheetPalette.TEXT_PRIMARY
+	}, true).merged(action_style_meta, false)))
+
+
 # ── N2 - commented-out code reads as a switched-off row ─────────────────────────────────────────
 
 
@@ -5766,6 +5934,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			# off, which is the only way a .gd file has of recording that. It reads as the row it
 			# would be, struck through and greyed the way a disabled row already is, with the muted
 			# word saying so. Prose stays a comment. The file is untouched either way.
+			# N12 - `super.take_damage(x)` is calling the INCLUDED sheet's verb, not an object named
+			# `super`. It reads that way: the include, the file it names, and the verb.
+			var super_call: Dictionary = super_call_reading(action_resource, event_row)
+			if not super_call.is_empty():
+				_append_super_call_spans(spans, super_call, action_index, action_line_index, action_style_meta)
+				action_line_index += 1
+				continue
 			var commented_out: String = commented_out_code(action_resource)
 			if not commented_out.is_empty():
 				_append_disabled_code_spans(spans, commented_out, action_index, action_line_index, action_style_meta)
