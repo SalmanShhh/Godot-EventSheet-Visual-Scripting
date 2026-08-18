@@ -157,24 +157,24 @@ static func _walk(rows: Array, viewport: EventSheetViewport) -> Array:
 ## The readings of ONE row - "object ▸ text" when the cell names an object, the bare text otherwise.
 ## A declaration is three spans (chip, name, value) and reads back as the one line it draws as.
 static func _append_readings(readings: PackedStringArray, row_data: EventRowData) -> void:
-		var pending_declaration: String = ""
-		for span: SemanticSpan in row_data.spans:
-			var label: String = str(span.metadata.get("object_label", ""))
-			var text: String = span.text.strip_edges()
-			if not label.is_empty():
-				readings.append("%s ▸ %s" % [label, text])
-				continue
-			if text.begins_with("Local ") or text.begins_with("= "):
-				pending_declaration += text if pending_declaration.is_empty() else " %s" % text
-				if text.begins_with("= "):
-					readings.append(pending_declaration)
-					pending_declaration = ""
-				continue
-			if not pending_declaration.is_empty():
-				pending_declaration += " %s" % text
-				continue
-			readings.append(text)
-
+	var pending_declaration: String = ""
+	for span: SemanticSpan in row_data.spans:
+		var label: String = str(span.metadata.get("object_label", ""))
+		var text: String = span.text.strip_edges()
+		if not label.is_empty():
+			readings.append("%s ▸ %s" % [label, text])
+			continue
+		if text.begins_with("Local ") or text.begins_with("= "):
+			pending_declaration += text if pending_declaration.is_empty() else " %s" % text
+			if text.begins_with("= "):
+				readings.append(pending_declaration)
+				pending_declaration = ""
+			continue
+		if not pending_declaration.is_empty():
+			pending_declaration += " %s" % text
+			continue
+		readings.append(text)
+	
 
 static func _round_trip() -> bool:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SOURCE_PATH)
