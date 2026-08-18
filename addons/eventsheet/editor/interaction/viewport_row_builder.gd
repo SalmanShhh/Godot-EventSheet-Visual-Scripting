@@ -46,6 +46,11 @@ var _verb_kind_override: int = -1
 # fold key ("label#n") that survives sessions - row uids are instance-based and cannot
 # (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
 var _region_occurrences: Dictionary = {}
+
+# Compiled once and shared: both of these run per row (or per action) on the paint path.
+static var _await_loop_regex: RegEx = null
+static var _super_call_regex: RegEx = null
+
 # Per-build occurrence counters for class-block row uids ("Stats" -> count). Class rows key
 # their uids by class NAME (stable across the undo funnel's resource rebuild, so expand /
 # disabled state survives edits) - but two blocks sharing a name then shared ONE uid, so
@@ -5123,10 +5128,12 @@ static func await_loop_seconds(code: String) -> String:
 			body.append(lines[index].strip_edges())
 	if body.size() < 2 or body[0] != "while true:":
 		return ""
-	var await_regex := RegEx.new()
-	if await_regex.compile("^await get_tree\\(\\)\\.create_timer\\((.+)\\)\\.timeout$") != OK:
-		return ""
-	var await_match: RegExMatch = await_regex.search(body[1])
+	# Compiled once and shared: this runs for every function card the canvas paints.
+	if _await_loop_regex == null:
+		_await_loop_regex = RegEx.new()
+		if _await_loop_regex.compile("^await get_tree\\(\\)\\.create_timer\\((.+)\\)\\.timeout$") != OK:
+			return ""
+	var await_match: RegExMatch = _await_loop_regex.search(body[1])
 	if await_match == null:
 		return ""
 	return _trimmed_seconds(await_match.get_string(1).strip_edges())
@@ -5167,10 +5174,12 @@ func super_call_reading(action_resource: Variant, event_row: EventRow) -> Dictio
 		code = ActionCodegen.generate_action(action_resource as ACEAction).strip_edges()
 	if code.is_empty() or code.contains("\n") or not code.begins_with("super"):
 		return {}
-	var call_regex := RegEx.new()
-	if call_regex.compile("^super(?:\\.([A-Za-z_][A-Za-z0-9_]*))?\\((.*)\\)$") != OK:
-		return {}
-	var call_match: RegExMatch = call_regex.search(code)
+	# Compiled once and shared: this runs for every action of every row the canvas paints.
+	if _super_call_regex == null:
+		_super_call_regex = RegEx.new()
+		if _super_call_regex.compile("^super(?:\\.([A-Za-z_][A-Za-z0-9_]*))?\\((.*)\\)$") != OK:
+			return {}
+	var call_match: RegExMatch = _super_call_regex.search(code)
 	if call_match == null:
 		return {}
 	var method: String = call_match.get_string(1)

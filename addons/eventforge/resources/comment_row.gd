@@ -39,6 +39,10 @@ func get_row_kind() -> String:
 ## Words that open a note, never a statement - a line starting with one is prose whatever follows it.
 const PROSE_OPENERS: Array[String] = ["TODO", "FIXME", "NOTE", "HACK", "XXX", "BUG", "WARNING"]
 
+## Compiled once and shared: code_text runs for every action of every row the canvas paints.
+static var _assign_regex: RegEx = null
+static var _call_regex: RegEx = null
+
 ## Statement keywords that stand alone or open a block.
 const STATEMENT_OPENERS: Array[String] = [
 	"if ", "elif ", "else:", "for ", "while ", "match ", "return", "await ", "var ", "const ",
@@ -63,13 +67,19 @@ static func code_text(text: String) -> String:
 	for opener: String in STATEMENT_OPENERS:
 		if trimmed == opener.trim_suffix(" ").trim_suffix(":") or trimmed.begins_with(opener):
 			return trimmed
-	var assign_regex := RegEx.new()
-	if assign_regex.compile("^([A-Za-z_$%][A-Za-z0-9_$%.\\[\\]\"']*)\\s*(=|\\+=|-=|\\*=|/=|%=|\\|=|&=)\\s*(\\S.*)$") == OK:
-		var assign_match: RegExMatch = assign_regex.search(trimmed)
-		if assign_match != null and _reads_as_expression(assign_match.get_string(3)):
-			return trimmed
-	var call_regex := RegEx.new()
-	if call_regex.compile("^[A-Za-z_$%][A-Za-z0-9_$%.\\[\\]\"']*\\(.*\\)$") == OK and call_regex.search(trimmed) != null:
+	# Compiled ONCE: this runs for every action of every row the canvas paints, and building two
+	# RegEx objects per line put a regex compile on the paint path.
+	if _assign_regex == null:
+		_assign_regex = RegEx.new()
+		if _assign_regex.compile("^([A-Za-z_$%][A-Za-z0-9_$%.\\[\\]\"']*)\\s*(=|\\+=|-=|\\*=|/=|%=|\\|=|&=)\\s*(\\S.*)$") != OK:
+			return ""
+		_call_regex = RegEx.new()
+		if _call_regex.compile("^[A-Za-z_$%][A-Za-z0-9_$%.\\[\\]\"']*\\(.*\\)$") != OK:
+			return ""
+	var assign_match: RegExMatch = _assign_regex.search(trimmed)
+	if assign_match != null and _reads_as_expression(assign_match.get_string(3)):
+		return trimmed
+	if _call_regex.search(trimmed) != null:
 		return trimmed
 	return ""
 
