@@ -179,12 +179,12 @@ static func _test_symmetry(registry: EventSheetACERegistry) -> bool:
 	call_action.provider_id = picked.provider_id
 	call_action.ace_id = picked.id
 	call_action.codegen_template = str(picked.metadata.get("codegen_template", ""))
-	call_action.params = {"function_name": str(picked.metadata.get(ACEPickerDialog.FUNCTION_META_KEY, "")), "args": "5.0"}
+	call_action.params = {"function_name": str(picked.metadata.get(ACEPickerDialog.FUNCTION_META_KEY, "")), "args": "5"}
 	var host: EventFunction = ViewportRowBuilder.find_function_by_name(sheet, "reset_score")
 	(host.events[0] as EventRow).actions.append(call_action)
 	var emitted: String = str(SheetCompiler.new().compile(sheet, ROUND_TRIP_PATH).get("output", ""))
 	passed = _check("the pick emits a plain call, nothing plugin-shaped",
-		emitted.contains("\taward_points(5.0)\n"), true) and passed
+		emitted.contains("\taward_points(5)\n"), true) and passed
 	var file: FileAccess = FileAccess.open(ROUND_TRIP_PATH, FileAccess.WRITE)
 	file.store_string(emitted)
 	file.close()
@@ -202,13 +202,13 @@ static func _test_symmetry(registry: EventSheetACERegistry) -> bool:
 	passed = _check("aimed at the same function, with the same argument",
 		"%s/%s %s(%s)" % [lifted.provider_id, lifted.ace_id,
 			str(lifted.params.get("function_name", "")), str(lifted.params.get("args", ""))],
-		"Core/CallFunction award_points(5.0)") and passed
+		"Core/CallFunction award_points(5)") and passed
 	# The reading the row draws from that lifted call - the object word, the verb, and one chip per
 	# argument named by the called function's OWN parameter.
 	var called: EventFunction = ViewportRowBuilder.find_function_by_name(reopened, "award_points")
 	var pieces: Array = EventSheetViewportReadingRows.call_reading_pieces(
 		EventSheetVerbProperties.display_name_of(called),
-		PackedStringArray(["5.0"]),
+		PackedStringArray(["5"]),
 		EventSheetViewportReadingRows.parameter_names_of(called),
 		false
 	)
@@ -216,7 +216,7 @@ static func _test_symmetry(registry: EventSheetACERegistry) -> bool:
 	for piece: Variant in pieces:
 		reading.append(str((piece as Array)[0]).strip_edges())
 	passed = _check("and the reopened row reads as the same named verb under Functions",
-		" ".join(reading).strip_edges(), "Functions Call Award Points  amount = 5.0") and passed
+		" ".join(reading).strip_edges(), "Functions Call Award Points  amount = 5") and passed
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(ROUND_TRIP_PATH))
 	return passed
 
