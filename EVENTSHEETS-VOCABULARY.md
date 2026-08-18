@@ -2655,6 +2655,7 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **On Editor Run** - Runs inside the editor while building, useful for tool scripts and live previews.
 - **On Input** - Runs on every input event the node receives, for catching keys, mouse, or touch.
 - **On Unhandled Input** - Runs on input no UI element consumed, ideal for gameplay controls that ignore menu clicks.
+- **On Unhandled Key Input** - Runs on keyboard input no UI element consumed - the keys-only sibling of On Unhandled Input, so mouse and gamepad traffic never wakes it.
 - **On Timeout** - Runs when this Timer counts down to zero, e.g. ending a cooldown or spawn delay.
 - **On Animation Finished** (`anim_name: String`) - Runs when an animation finishes playing, e.g. chaining the next animation or action.
 - **On Tree Entered** - Runs when this node is added into the scene tree.

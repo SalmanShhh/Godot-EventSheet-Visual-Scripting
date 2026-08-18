@@ -318,6 +318,48 @@ above a function - and any ONE of them could revert an entire file, because the 
 file. The rest was structure nobody had split: a run of statements is now one action row per statement,
 which you can select, disable and drag like any other.
 
+### What an opened file reads like - Construct grammar, not annotated code
+
+Open a behaviour pack or any script as a sheet and it reads the way a Construct sheet does, top to bottom:
+
+- **The head is one Include bar, the description once, and folded folders.** `⇥ Addon Pack  FPSController
+  v1.0.0  behaves on a  CharacterBody3D`, the class description as a comment bar, then a `Triggers this pack
+  fires - 11` folder and one folder per `@export_group` (`Jump - 3 settings`, `Movement - 3 settings`, ...)
+  plus `Internal state` for the private variables. Inside a folder a variable reads
+  `number  jump_velocity = 4.5  Upward velocity applied on a jump` - type word, name, value, description. On
+  an editable sheet the head keeps its Class setup strip and `@export` chips, because those are things you
+  edit; the folders are for reading.
+- **Every function is a Function block.** `ƒ Jump`, `ƒ Set Third Person  [enabled true/false]`: the ƒ, the
+  name and one chip per input, nothing else on the row; the header's tint says whether it is an Action,
+  Condition or Expression. Click the header for the **ACE properties** popup - kind, category, inputs, what
+  it gives back, description, whether it is featured, its icon, the exact line it inserts, and the function
+  behind it - with Edit..., Open guide and Show in code. Unpublished helpers are the same blocks with their
+  doc as the right-hand caption, gathered under a closed **Helpers** folder.
+- **Lifecycle handlers are triggers, wherever they sit in the file.** `_physics_process` is `Every Physics
+  Tick`; an `_unhandled_input` that branches on the event type reads as one Construct trigger per branch -
+  `Mouse ▸ On mouse moved` with `Mouse ▸ mouse is captured` under it, `Keyboard ▸ On Escape pressed` - and a
+  hand-written `_on_hurtbox_body_entered(body)` that `_ready` connects reads `Hurtbox ▸ On Body Entered
+  [body]`. A handler that comes after the verbs in the file lifts in place (an event anchor), so the sheet
+  keeps the file's order.
+- **Statements without a verb read in Construct's row grammar - Object ▸ Verb values.** `System ▸ Subtract 1
+  from jumps left`, `host ▸ Set velocity X to direction X * speed`, `host ▸ Destroy (at end of frame)`,
+  `FPSController ▸ Signal On Jumped`, `host ▸ exists` / `does not exist`, `Local number remaining = amount`
+  (a Local variable row you can also add from the picker), `⏳ Wait 0.5 seconds`, `Go to scene
+  "res://menu.tscn"`, `Keyboard ▸ "jump" is down`, `push x moved toward 0 by push fade`, and inside a
+  Condition verb `System ▸ Answer yes` / inside an Expression verb `Give back jumps left`. The same sentence
+  appears whether the row was typed in GDScript or picked from the palette - one grammar produces both - and
+  the exact code is always on hover.
+- **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
+  as words (`_coyote_timer` -> `coyote timer`, a knob with its Inspector capitalisation), property chains
+  read possessively (`host's velocity X`), NOT is the red ✕ in the icon column, the host and any `$Node` /
+  `%Node` / `@onready` reference show their class icon, sub-events hang off tree guide lines, a call to one
+  of the sheet's own functions reads `Functions ▸ Call Add Look  x = mouse's ΔX  y = mouse's ΔY`, and code
+  that could not lift is one folded card with a line count. **View > Humanized Names** turns the name lens
+  on or off for editable sheets; nothing on the sheet is scaffolding until you press **Edit Events**.
+- **A big file never freezes the editor.** The raw sheet paints within a frame under a progress strip
+  (`Opening event_sheet_dock.gd - lifting functions 212 of 458 - 6.1 s`, a bar, and **Show as code
+  instead**); the lift runs behind it, and the strip goes away when the last function lands.
+
 ### What stays code still reads as what it is
 
 Two kinds of block are no longer shown as code at all, because neither one is logic:
