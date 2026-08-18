@@ -95,6 +95,12 @@ static func possessive_chain(raw_chain: String, humanize: bool = true) -> String
 	for part: String in parts:
 		if not is_identifier(part):
 			return raw_chain
+	# M38. A SCREAMING_CASE tail is a CONSTANT, not a possession: `State.PATROL` is one exact spelling
+	# the user typed, and "state's patrol" would be a name nobody wrote. The constant lens decides
+	# what such a token reads as; this lens leaves it exactly as it found it.
+	var tail_part: String = parts[parts.size() - 1]
+	if tail_part.to_upper() == tail_part and tail_part.to_lower() != tail_part:
+		return raw_chain
 	var rendered: PackedStringArray = PackedStringArray()
 	for index: int in range(parts.size()):
 		var axis: String = axis_letter(parts[index]) if index > 0 else ""

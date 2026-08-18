@@ -277,6 +277,13 @@ var show_object_icons: bool = true
 ## View-menu choice, which persists and then applies everywhere. Span builds read this, so
 ## flipping it rebuilds via set_sheet, exactly like show_object_icons.
 var humanize_names_override: int = -1
+## M46 - the Construct-words glossary: the few Godot nouns Construct has a different word for read
+## in Construct's word (scene -> layout, pause -> time scale 0, CanvasLayer -> layer), with the Godot
+## word still one hover away. OFF by default and never automatic: unlike the humanized-names lens,
+## this one teaches a SECOND vocabulary rather than respelling the user's own names, so it is only
+## ever on because somebody asked for it in View ▾. Span builds read it, so flipping it rebuilds via
+## set_sheet, exactly like show_object_icons.
+var construct_words: bool = false
 ## Event-sheet-style drag ghost: a faint label of the dragged content following the cursor.
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO
@@ -370,6 +377,13 @@ func humanize_names_enabled() -> bool:
 	if humanize_names_override >= 0:
 		return humanize_names_override == 1
 	return is_reading_mode()
+
+
+## M46 - whether this view reads the few renamed nouns in Construct's words. Plain on/off: there is
+## no reading surface where a second vocabulary is the honest default, so nothing resolves it for the
+## user the way the humanized-names lens does.
+func construct_words_enabled() -> bool:
+	return construct_words
 
 
 func set_sheet(sheet: EventSheetResource) -> void:

@@ -1846,3 +1846,44 @@ Wait one tick,Ждать один тик
 Wait one physics tick,Ждать один тик физики
 Wait for signal {object} {trigger},Ждать сигнал {object} {trigger}
 connects {object} {trigger},подключает {object} {trigger}
+Is on floor,На полу
+Is by wall,У стены
+Is by ceiling,У потолка
+Is jumping,Прыгает
+Is falling,Падает
+Is overlapping {other},Пересекается с {other}
+Is overlapping something,Пересекается с чем-то
+Set invisible,Сделать невидимым
+Set visible,Сделать видимым
+Set layer invisible,Скрыть слой
+Set layer visible,Показать слой
+Set mirrored,Отразить
+Set not mirrored,Убрать отражение
+Set flipped,Перевернуть
+Set not flipped,Убрать переворот
+Set opacity to {value},Задать непрозрачность {value}
+Set size to {value},Задать размер {value}
+Set animation to {name} (play),Задать анимацию {name} (играть)
+Stop animation,Остановить анимацию
+Play,Играть
+Stop,Стоп
+Set angle toward {target},Повернуть к {target}
+Go to layout {path},Перейти к макету {path}
+Restart layout,Перезапустить макет
+Set time scale to 0 (pause),Задать масштаб времени 0 (пауза)
+Set time scale to 1,Задать масштаб времени 1
+Set time scale to {value},Задать масштаб времени {value}
+count,количество
+child count,число дочерних
+(layer),(слой)
+viewport width,ширина вьюпорта
+viewport height,высота вьюпорта
+mouse position,позиция мыши
+time,время
+time in ms,время в мс
+fps,fps
+angle,угол
+angle (radians),угол (радианы)
+may be missing,может отсутствовать
+On collision with,При столкновении с
+On stopped overlapping,Когда пересечение закончилось

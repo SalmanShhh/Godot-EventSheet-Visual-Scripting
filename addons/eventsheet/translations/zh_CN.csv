@@ -1846,3 +1846,44 @@ Wait one tick,等待一个 tick
 Wait one physics tick,等待一个物理 tick
 Wait for signal {object} {trigger},等待信号 {object} {trigger}
 connects {object} {trigger},连接 {object} {trigger}
+Is on floor,在地面上
+Is by wall,靠着墙
+Is by ceiling,靠着天花板
+Is jumping,正在跳跃
+Is falling,正在下落
+Is overlapping {other},与 {other} 重叠
+Is overlapping something,与某物重叠
+Set invisible,设为不可见
+Set visible,设为可见
+Set layer invisible,设图层为不可见
+Set layer visible,设图层为可见
+Set mirrored,设为镜像
+Set not mirrored,取消镜像
+Set flipped,设为翻转
+Set not flipped,取消翻转
+Set opacity to {value},将不透明度设为 {value}
+Set size to {value},将大小设为 {value}
+Set animation to {name} (play),将动画设为 {name}（播放）
+Stop animation,停止动画
+Play,播放
+Stop,停止
+Set angle toward {target},将角度朝向 {target}
+Go to layout {path},转到布局 {path}
+Restart layout,重启布局
+Set time scale to 0 (pause),将时间缩放设为 0（暂停）
+Set time scale to 1,将时间缩放设为 1
+Set time scale to {value},将时间缩放设为 {value}
+count,数量
+child count,子节点数
+(layer),（图层）
+viewport width,视口宽度
+viewport height,视口高度
+mouse position,鼠标位置
+time,时间
+time in ms,时间（毫秒）
+fps,fps
+angle,角度
+angle (radians),角度（弧度）
+may be missing,可能不存在
+On collision with,碰撞时
+On stopped overlapping,重叠结束时

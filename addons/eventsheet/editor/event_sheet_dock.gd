@@ -1887,6 +1887,7 @@ func _load_simple_mode_preference() -> void:
 	# Compact-preferring project never flashes Comfortable.
 	_apply_compact_rows_pref()
 	_apply_humanized_names_pref()
+	_apply_construct_words_pref()
 
 
 ## Declutter toggle: show/hide the trailing "+ Add event…" affordance rows across every
@@ -2022,6 +2023,49 @@ func _toggle_humanized_names(view_popup: PopupMenu) -> void:
 			view_popup.set_item_checked(item_index, humanized)
 	_set_status("Humanized names - variables read as words; the raw name is on hover." if humanized
 		else "Raw names - variables read exactly as they are spelled in the file.")
+
+
+## M46 - View ▾ "Construct Words". OFF by default and stored as a plain on/off (unlike the
+## humanized-names lens, which has an AUTO state): this one does not respell the user's own names, it
+## swaps a handful of Godot nouns for the Construct ones - scene becomes layout, pausing becomes a
+## time scale of 0, a CanvasLayer becomes a layer - with the Godot word still on hover. Persisted per
+## project per user in editor metadata, exactly like Compact Rows.
+func _construct_words_enabled() -> bool:
+	if _viewport != null:
+		return _viewport.construct_words_enabled()
+	return _stored_construct_words()
+
+
+func _stored_construct_words() -> bool:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "construct_words", false))
+	return false
+
+
+func _apply_construct_words_pref() -> void:
+	var stored: bool = _stored_construct_words()
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.construct_words = stored
+
+
+func _toggle_construct_words(view_popup: PopupMenu) -> void:
+	var construct: bool = not _construct_words_enabled()
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", "construct_words", construct)
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		view.construct_words = construct
+		# The words are baked into span TEXT at build time, so the glossary needs a span rebuild, not
+		# a redraw - the same reason the humanized-names toggle re-sets the sheet.
+		view.set_sheet(_current_sheet)
+	if view_popup != null:
+		var item_index: int = view_popup.get_item_index(21)
+		if item_index >= 0:
+			view_popup.set_item_checked(item_index, construct)
+	_set_status("Construct words - layout, time scale, layer; the Godot word is on hover." if construct
+		else "Godot words - scenes, pausing and CanvasLayers read by their Godot names.")
 
 
 func _object_columns_aligned() -> bool:

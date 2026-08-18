@@ -5655,9 +5655,12 @@ static func connect_lambda_parts(code: String) -> Dictionary:
 			continue
 		var type_at: int = bare.find(":")
 		args.append((bare.substr(0, type_at) if type_at > 0 else bare).strip_edges())
+	# ── M41 lens hook ──────────────────────────────────────────────────────────────────────────
+	# A collision signal reads as Construct's own trigger, exactly as a declared handler's does.
+	var collision_words: String = EventSheetViewportReadingRows.collision_trigger_words(signal_bare)
 	return {
 		"object": object_word,
-		"trigger": "On %s" % signal_bare.capitalize(),
+		"trigger": collision_words if not collision_words.is_empty() else "On %s" % signal_bare.capitalize(),
 		"args": args,
 		"body": body_lines
 	}
@@ -7084,6 +7087,55 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("%s.%s += %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
 				str(params_dict.get("value", ""))], context)
+		# ── M40 / M43 / M46 / M47 lens hook ───────────────────────────────────────────────────
+		# The picked rows whose hand-written twin now reads in Construct's own verbs: an animation,
+		# a sound, a visibility switch, an angle, a size, a property set by name. Each hands the
+		# grammar the exact line the ACE compiles to, so the two readings cannot drift apart.
+		"HideNode":
+			return EventSheetSentence.statement("%s.hide()" % _ace_target(params_dict), context)
+		"ShowNode":
+			return EventSheetSentence.statement("%s.show()" % _ace_target(params_dict), context)
+		"SetFlipH":
+			return EventSheetSentence.statement("%s.flip_h = %s" % [
+				_ace_target(params_dict), str(params_dict.get("flipped", ""))], context)
+		"SetRotationDeg":
+			return EventSheetSentence.statement("%s.rotation_degrees = %s" % [
+				_ace_target(params_dict), str(params_dict.get("degrees", ""))], context)
+		"SetScale3D":
+			return EventSheetSentence.statement("%s.scale = %s" % [
+				_ace_target(params_dict), str(params_dict.get("scale", ""))], context)
+		"PlaySpriteAnimation":
+			return EventSheetSentence.statement("%s.play(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("anim", ""))], context)
+		"StopSpriteAnimation", "AudioStop":
+			return EventSheetSentence.statement("%s.stop()" % _ace_target(params_dict), context)
+		"AudioPlay":
+			return EventSheetSentence.statement("%s.play(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("from", ""))], context)
+		"LookAt3D":
+			return EventSheetSentence.statement("look_at(%s)" % str(params_dict.get("target", "")), context)
+		"SetTreeParam":
+			return EventSheetSentence.statement("%s.set(%s, %s)" % [
+				_ace_target(params_dict), str(params_dict.get("path", "")),
+				str(params_dict.get("value", ""))], context)
+		"SubtractFromProperty":
+			return EventSheetSentence.statement("%s.%s -= %s" % [
+				str(params_dict.get("target", "self")), str(params_dict.get("property", "")),
+				str(params_dict.get("value", ""))], context)
+		# M46 - the three the Construct glossary renames. Claimed ONLY while the glossary is on, so
+		# with it off each row keeps the vocabulary's own wording, untouched.
+		"ReloadScene":
+			if not bool(context.get("construct_words", false)):
+				return {}
+			return EventSheetSentence.statement("get_tree().reload_current_scene()", context)
+		"SetPaused":
+			if not bool(context.get("construct_words", false)):
+				return {}
+			return EventSheetSentence.statement("get_tree().paused = %s" % str(params_dict.get("paused", "")), context)
+		"SetTimeScale":
+			if not bool(context.get("construct_words", false)):
+				return {}
+			return EventSheetSentence.statement("Engine.time_scale = %s" % str(params_dict.get("scale", "")), context)
 		"AwaitNextFrame":
 			return await_reading("get_tree().process_frame", false)
 		"AwaitSignal":
@@ -7203,7 +7255,41 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), false)
 		"IsActionJustPressed":
 			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), true)
+		# ── M41 lens hook ─────────────────────────────────────────────────────────────────────
+		# Construct's Platform and collision questions, so a picked row and the same test typed by
+		# hand ask it in the same words.
+		"IsOnFloor", "IsOnFloor3D":
+			return EventSheetSentence.condition("%s.is_on_floor()" % _ace_target(params_dict), context)
+		"IsOnWall", "IsOnWall3D":
+			return EventSheetSentence.condition("%s.is_on_wall()" % _ace_target(params_dict), context)
+		"IsOnCeiling", "IsOnCeiling3D":
+			return EventSheetSentence.condition("%s.is_on_ceiling()" % _ace_target(params_dict), context)
+		"OverlapsBody", "OverlapsBody3D":
+			return EventSheetSentence.condition("%s.overlaps_body(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("body", ""))], context)
+		"OverlapsArea", "OverlapsArea3D":
+			return EventSheetSentence.condition("%s.overlaps_area(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("area", ""))], context)
+		"HasOverlappingBodies", "HasOverlappingBodies3D":
+			return EventSheetSentence.condition("%s.has_overlapping_bodies()" % _ace_target(params_dict), context)
+		"HasOverlappingAreas", "HasOverlappingAreas3D":
+			return EventSheetSentence.condition("%s.has_overlapping_areas()" % _ace_target(params_dict), context)
+		"ArrayIsEmpty", "DictIsEmpty":
+			# M44 - Construct has no "is empty": emptiness IS a count of zero.
+			return EventSheetSentence.condition("%s.is_empty()" % str(params_dict.get("var_name", "")), context)
+		"IsNegative", "IsPositive":
+			# Claimed ONLY for the shape Construct has a word for (a 2D body's vertical speed); every
+			# other number keeps the vocabulary's own "is negative" reading.
+			return EventSheetSentence.movement_words(str(params_dict.get("value", "")),
+				"<" if condition.ace_id == "IsNegative" else ">", context)
 	return {}
+
+
+## The node a picked row acts on: the "On node" parameter a node-scoped ACE carries, or `self` for a
+## host-scoped one, which is the object the compiled line acts on either way.
+func _ace_target(params_dict: Dictionary) -> String:
+	var target: String = str(params_dict.get("target", "")).strip_edges()
+	return "self" if target.is_empty() else target
 
 
 ## The local-variable DECLARATION an ACE row reads as, or {} when it is not one of the Local Variable
@@ -7279,6 +7365,10 @@ func sentence_context() -> Dictionary:
 	if sheet == _sentence_context_sheet and not _sentence_context_cache.is_empty():
 		var reused: Dictionary = _sentence_context_cache.duplicate()
 		reused["verb_kind"] = _current_verb_kind()
+		# ── M46 lens hook ─────────────────────────────────────────────────────────────────────
+		# The Construct-words glossary is VIEW state, not sheet state, so it is stamped after the
+		# per-sheet cache - flipping the toggle must change the reading without invalidating it.
+		reused["construct_words"] = _construct_words_enabled()
 		return reused
 	var context: Dictionary = {"self_object": EventSheetSentence.OBJECT_SYSTEM, "owner": "", "signals": {}}
 	if sheet != null:
@@ -7299,7 +7389,14 @@ func sentence_context() -> Dictionary:
 	_sentence_context_sheet = sheet
 	_sentence_context_cache = context.duplicate()
 	context["verb_kind"] = _current_verb_kind()
+	context["construct_words"] = _construct_words_enabled()
 	return context
+
+
+## M46 - whether this view is reading in Construct's nouns (layout, time scale, layer). Off unless
+## the user asked for it in View ▾, and never on for a headless build with no viewport.
+func _construct_words_enabled() -> bool:
+	return _viewport != null and _viewport.construct_words_enabled()
 
 
 ## Every SignalRow the sheet declares, wherever it sits in the row tree.
@@ -7382,9 +7479,14 @@ func _reading_sentence(text: String) -> String:
 	# `delta` reads `dt` whatever else is switched on: it is the number's Construct name, not a
 	# respelling of somebody's variable, so it does not belong behind the humanized-names toggle.
 	var with_dt: String = EventSheetViewportLenses.dt_words(text)
+	# ── M38 lens hook ──────────────────────────────────────────────────────────────────────────
+	# A named constant reads as the value it IS whatever else is switched on, for the same reason dt
+	# does: `Vector2.ZERO` is not somebody's variable name, it is the point (0, 0). Applied here so a
+	# row that reached the canvas through a display TEMPLATE reads it exactly as a typed line does.
+	var with_constants: String = EventSheetSentence.constant_words(with_dt, sentence_context())
 	if not _viewport.humanize_names_enabled():
-		return with_dt
-	return EventSheetViewportLenses.humanize_sentence(with_dt, _export_knob_names())
+		return with_constants
+	return EventSheetViewportLenses.humanize_sentence(with_constants, _export_knob_names())
 
 
 ## M12 - whether a lifted condition READS as inverted even though its `negated` flag is not set,
