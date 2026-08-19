@@ -32,6 +32,19 @@
   guide the index does not list, or lists without a description. `tests/module_guides_test.gd` reads
   the reference tables under their new headings, keyed on a set that also accepts a table headed by
   its kind - 333 rows in the addon guides had drifted out of that sweep unnoticed.
+### Fixed - the editor stops answering for a project that has changed
+
+- **A scene saved, added or re-pointed mid-session is seen straight away.** The index that knows
+  which scene a script is the root of - what names the object on a row, the title of a sheet and the
+  thumbnail beside it - was built once and kept for the whole session, so a scene that gained,
+  lost or swapped its script went on reading as the object it used to be until the editor was
+  restarted. It is now dropped when the project's files change, beside the object, signal and
+  thumbnail caches it belongs with, and rebuilt by the next row that asks.
+- **An input action added in Project Settings appears without a restart.** The Input Map is read out
+  of `project.godot`, and that read was only dropped when a sheet was opened in the Object bar -
+  every other row that names an action kept yesterday's list. It is now dropped both when the
+  project's files change and when Project Settings itself changes, which is the only signal that
+  fires when an action is added there.
 
 ### Added - a Local row can be dragged into another event, and says when it may not
 
