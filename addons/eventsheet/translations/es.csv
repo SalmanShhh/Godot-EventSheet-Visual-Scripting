@@ -2494,3 +2494,39 @@ Find path to {target},Buscar camino hacia {target}
 Move along path at {speed},Avanzar por el camino a {speed}
 Move along path at {speed} (avoiding others),Avanzar por el camino a {speed} (esquivando a los demás)
 Has arrived,Ha llegado
+Set as active camera,Establecer como cámara activa
+Set animation frame to {value},Poner fotograma de animacion en {value}
+Set animation speed to {value},Poner velocidad de animacion en {value}
+Set image to {file},Poner imagen {file}
+Set sound to {file},Poner sonido {file}
+Set pitch to {value},Poner tono en {value}
+Set bus to {bus},Poner bus {bus}
+Set volume to {value},Poner volumen en {value}
+Set volume to {value} dB,Poner volumen en {value} dB
+Set master volume to {value},Poner volumen general en {value}
+Set master volume to {value} dB,Poner volumen general en {value} dB
+Set {bus} volume to {value},Poner volumen de {bus} en {value}
+Set {bus} volume to {value} dB,Poner volumen de {bus} en {value} dB
+(0 to 1),(0 a 1)
+Set focus,Poner el foco
+Show dialog,Mostrar dialogo
+(centred),(centrado)
+Seek to {seconds} seconds,Ir al segundo {seconds}
+Set blend {name} to {value},Poner mezcla {name} en {value}
+Travel to animation state {state},Ir al estado de animacion {state}
+Is playing,Se esta reproduciendo
+Set mirrored when {test},Reflejar cuando {test}
+Set flipped when {test},Voltear cuando {test}
+Shake by {amount},Sacudir {amount}
+random offset this tick,desplazamiento aleatorio en este tick
+Bob {axis},Oscilar {axis}
+sine,seno
+magnitude,amplitud
+per second,por segundo
+Ease size back to normal at {rate},Volver al tamano normal a {rate}
+Play sound,Reproducir sonido
+Stop sound,Detener sonido
+"Sprite and animation: mirrored, frame, speed, opacity and the animation tree","Sprite y animacion: reflejo, fotograma, velocidad, opacidad y el arbol de animacion"
+"UI: focus, progress bars, dialogs and the mixer","UI: foco, barras de progreso, dialogos y el mezclador"
+"Sound: the file, its pitch, its bus, its volume and where it plays from","Sonido: el archivo, su tono, su bus, su volumen y desde donde suena"
+"Juice: shake, hitstop, bob, flash and the squash that eases back","Game feel: sacudida, hitstop, oscilacion, destello y el aplastamiento que vuelve"

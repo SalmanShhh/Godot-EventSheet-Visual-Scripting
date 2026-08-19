@@ -7,7 +7,7 @@ Audio in EventSheets comes in three layers, and picking the right one is most of
    as the LAST SOUND, so the row right after it can retune the pitch or the volume of the sound that
    just fired.
 2. **A player node you control.** Put a sheet (or a behavior) on an `AudioStreamPlayer` and you get
-   **Play**, **Play Sound File**, **Stop**, **Seek**, **Set Volume**, **Set Playback Rate**,
+   **Play**, **Play Sound File**, **Stop**, **Seek**, **Set Volume**, **Set Pitch**,
    **Is Playing** and **Playback Position**. This is the layer music, looping ambience and anything
    you need to interrupt belongs on.
 3. **The mixing desk.** Buses are Godot's own idea of "all the SFX" or "all the music", and the
@@ -89,7 +89,10 @@ already `randf_range(0.9, 1.1)`.
 | Stop | Stops this player right now. | `{target.}stop()` |
 | Seek | Jumps playback to a time in seconds. | `{target.}seek({seconds})` |
 | Set Volume | Sets this player's loudness in decibels. | `{target.}volume_db = {db}` |
-| Set Playback Rate | Changes this player's speed and pitch (1 = normal). | `{target.}pitch_scale = {pitch}` |
+| Set Pitch | Changes this player's speed and pitch (1 = normal). | `{target.}pitch_scale = {pitch}` |
+| Set Sound | Puts a sound file into this player, ready to play. | `{target.}stream = load({path})` |
+| Set Bus | Sends this player's sound out on a named bus, like SFX or Music. | `{target.}bus = {bus}` |
+| Set Volume (0 to 1) | Sets how loud this player is from a slider level, decibels done for you. | `{target.}volume_db = linear_to_db({level})` |
 | Is Playing | True while this player is making sound. | `{target.}playing` |
 | Playback Position | The current playback time in seconds. | `{target.}get_playback_position()` |
 
@@ -238,7 +241,7 @@ On Ready
     -> Play  from 0.0  (On node $Music)
 ```
 
-**10. A tension riser.** Raise **Set Playback Rate** as the timer runs down:
+**10. A tension riser.** Raise **Set Pitch** as the timer runs down:
 
 ```gdscript
 $Music.pitch_scale = 1.0 + progress * 0.3

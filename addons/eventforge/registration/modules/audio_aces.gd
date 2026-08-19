@@ -79,18 +79,18 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Stops this audio player from playing right now."))
 	descriptors.append(F.make_descriptor("Core", "AudioSeek", "Seek", ACEDescriptor.ACEType.ACTION,
 		"seek({seconds})", "", [F.make_param("seconds", "String", "0.0", "Seconds", "Playback position.", "expression")],
-		"Audio", "Seek to {seconds}s", "AudioStreamPlayer")
+		"Audio", "Seek to {seconds} seconds", "AudioStreamPlayer")
 		.described("Jumps this audio player's playback to a specific time in seconds."))
 	descriptors.append(F.make_descriptor("Core", "AudioSetVolume", "Set Volume", ACEDescriptor.ACEType.ACTION,
 		"volume_db = {db}", "", [F.make_param("db", "String", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression")],
 		"Audio", "Set volume to {db} dB", "AudioStreamPlayer")
 		.described("Sets how loud this audio player is, in decibels (0 = full, -80 = silent)."))
-	descriptors.append(F.make_descriptor("Core", "AudioSetPitch", "Set Playback Rate", ACEDescriptor.ACEType.ACTION,
+	descriptors.append(F.make_descriptor("Core", "AudioSetPitch", "Set Pitch", ACEDescriptor.ACEType.ACTION,
 		"pitch_scale = {pitch}", "", [F.make_param("pitch", "String", "1.0", "Pitch", "1 = normal speed/pitch.", "expression")],
-		"Audio", "Set playback rate {pitch}x", "AudioStreamPlayer")
+		"Audio", "Set pitch to {pitch}", "AudioStreamPlayer")
 		.described("Changes this player's speed and pitch (1 = normal, higher = faster)."))
 	descriptors.append(F.make_descriptor("Core", "AudioIsPlaying", "Is Playing", ACEDescriptor.ACEType.CONDITION,
-		"playing", "", [], "Audio", "is playing", "AudioStreamPlayer")
+		"playing", "", [], "Audio", "Is playing", "AudioStreamPlayer")
 		.described("True when this audio player is currently making sound."))
 	descriptors.append(F.make_descriptor("Core", "AudioGetPosition", "Playback Position", ACEDescriptor.ACEType.EXPRESSION,
 		"get_playback_position()", "", [], "Audio", "playback position", "AudioStreamPlayer")
@@ -115,5 +115,20 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 			F.make_param("bus", "String", "\"Master\"", "Bus", "Audio bus name.", "expression")
 		], "Audio", "bus {bus} volume")
 		.described("Gives the current volume of a named audio bus, in decibels."))
+
+	# S13 - the sound a player holds, the bus it goes out on, and its volume as the 0-to-1 level a
+	# slider gives rather than as decibels. Each writes the shape the opened-script reading recognises.
+	descriptors.append(F.make_descriptor("Core", "AudioSetStream", "Set Sound", ACEDescriptor.ACEType.ACTION,
+		"stream = load({path})", "", [F.make_param("path", "String", "\"res://sound.ogg\"", "Sound", "Audio file this player holds.", "audio_path")],
+		"Audio", "Set sound to {path}", "AudioStreamPlayer")
+		.described("Puts a sound file into this player, ready to play."))
+	descriptors.append(F.make_descriptor("Core", "AudioSetBus", "Set Bus", ACEDescriptor.ACEType.ACTION,
+		"bus = {bus}", "", [F.make_param("bus", "String", "\"SFX\"", "Bus", "Audio bus this player goes out on.", "expression")],
+		"Audio", "Set bus to {bus}", "AudioStreamPlayer")
+		.described("Sends this player's sound out on a named bus, like SFX or Music."))
+	descriptors.append(F.make_descriptor("Core", "AudioSetVolumeLevel", "Set Volume (0 to 1)", ACEDescriptor.ACEType.ACTION,
+		"volume_db = linear_to_db({level})", "", [F.make_param("level", "String", "0.5", "Level", "0 = silent, 1 = full - the number a volume slider gives.", "expression")],
+		"Audio", "Set volume to {level} (0 to 1)", "AudioStreamPlayer")
+		.described("Sets how loud this player is from a 0-to-1 level, with the decibel conversion done for you."))
 
 	return descriptors

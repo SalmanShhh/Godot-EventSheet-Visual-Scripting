@@ -19,7 +19,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── Actions ──
-	descriptors.append(F.make_descriptor("Core", "SetAnimationSpeed", "Set Animation Speed", ACEDescriptor.ACEType.ACTION, "speed_scale = {scale}", "", [F.make_param("scale", "float", "1.0", "Speed", "1 = normal, 0.5 = half speed, 2 = double, 0 = paused.", "expression")], CAT, "set animation speed to {scale}", "AnimationPlayer")
+	descriptors.append(F.make_descriptor("Core", "SetAnimationSpeed", "Set Animation Speed", ACEDescriptor.ACEType.ACTION, "speed_scale = {scale}", "", [F.make_param("scale", "float", "1.0", "Speed", "1 = normal, 0.5 = half speed, 2 = double, 0 = paused.", "expression")], CAT, "Set animation speed to {scale}", "AnimationPlayer")
 		.described("Scales how fast every animation on this player runs - slow-mo a death, speed up a fast-forward. 0 freezes it in place."))
 	descriptors.append(F.make_descriptor("Core", "SeekAnimation", "Seek Animation", ACEDescriptor.ACEType.ACTION, "seek({time}, true)", "", [F.make_param("time", "float", "0.0", "Time", "Seconds from the animation's start to jump to.", "expression")], CAT, "seek animation to {time}s", "AnimationPlayer")
 		.described("Jumps the play head to a time in seconds (and updates the pose immediately) - scrub, restart from a beat, or sync to another clock."))
@@ -41,6 +41,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("The current animation's total length in seconds - pair with Animation Position for a normalized 0-to-1 progress."))
 	descriptors.append(F.make_descriptor("Core", "AnimationSpeed", "Animation Speed", ACEDescriptor.ACEType.EXPRESSION, "speed_scale", "", [], CAT, "animation speed", "AnimationPlayer")
 		.described("The player's current speed scale (1 = normal)."))
+
+	# S11 - the sprite rows an opened script already READS as its own words, so the picker writes the
+	# exact shape the reading recognises.
+	descriptors.append(F.make_descriptor("Core", "SetFlipV", "Set Flipped", ACEDescriptor.ACEType.ACTION, "flip_v = {flipped}", "", [F.make_param("flipped", "String", "true", "Flipped", "Flip the sprite upside down.", "", ["true", "false"])], CAT, "Set flipped {flipped}", "Sprite2D")
+		.described("Turns this sprite upside down, or back the right way up."))
+	descriptors.append(F.make_descriptor("Core", "SetSpriteTexture", "Set Image", ACEDescriptor.ACEType.ACTION, "texture = load({path})", "", [F.make_param("path", "String", "\"res://icon.svg\"", "Image", "Image file to show.", "expression")], CAT, "Set image to {path}", "Sprite2D")
+		.described("Shows a different image on this sprite."))
+	descriptors.append(F.make_descriptor("Core", "AnimationIsPlaying", "Is Playing", ACEDescriptor.ACEType.CONDITION, "is_playing()", "", [], CAT, "Is playing", "AnimationPlayer")
+		.described("True while this animation player is running an animation."))
 
 	return descriptors
 

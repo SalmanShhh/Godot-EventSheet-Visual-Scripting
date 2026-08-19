@@ -167,7 +167,7 @@ Picker category: **Animation**. Beyond Play and Stop, these drive an `AnimationP
 | **Animation Length** | Expression | The current animation's total length - pair with Animation Position for a normalized 0-to-1 progress. |
 | **Animation Speed** | Expression | The player's current speed scale (`1` = normal). |
 
-The same category also holds the AnimationTree rows (Travel To State, Set Tree Parameter, Is In State, Current State) and the auto-finding "in object" actions (Play Animation, Flip Sprite, Set Sprite Frame) that locate a node's AnimationPlayer or AnimatedSprite2D for you.
+The same category also holds the AnimationTree rows (Travel To State, Set Blend, Is In State, Current State) and the auto-finding "in object" actions (Play Animation, Flip Sprite, Set Sprite Frame) that locate a node's AnimationPlayer or AnimatedSprite2D for you.
 
 ---
 

@@ -159,6 +159,45 @@ untouched, and the byte round-trip and the emitted GDScript cannot move.
 - **The pattern registry is wired into the row build**: claims are cleared at the start of every
   sweep and filled in by the readings that recognise a shape.
 
+### Added - sprites, UI, sound and game feel read (and are written) in the sheet's own words
+
+- **A sprite line reads as the sprite's own row.** `sprite.flip_h = dir < 0` is
+  `Set mirrored when dir < 0` (a mirror decided by a test says the test), `flip_v = true` is
+  `Set flipped`, `frame = 3` is `Set animation frame to 3`, `speed_scale = 2.0` is
+  `Set animation speed to 2`, and `texture = load(\"res://hero.png\")` is `Set image to hero.png`. An
+  AnimationTree's `set(\"parameters/blend_position\", dir)` is `Set blend blend position to dir`, its
+  `travel(\"Hurt\")` is `Travel to animation state Hurt` in either spelling, and `is_playing()` is
+  `Is playing`.
+- **UI patterns read as UI rows.** `grab_focus()` is `Set focus`, `popup_centered()` is
+  `Show dialog (centred)`, and the `AudioServer.set_bus_volume_db(0, linear_to_db(v))` idiom is
+  `Audio ▸ Set master volume to v (0 to 1)` - a named bus says its name.
+- **A sound reads as its player's rows.** `stream = preload(\"res://jump.wav\")` is
+  `Set sound to jump.wav`, `pitch_scale` is `Set pitch`, `bus = \"SFX\"` is `Set bus to SFX`,
+  `volume_db = linear_to_db(0.5)` is `Set volume to 50%` (a raw decibel number keeps its unit),
+  `seek(12.0)` is `Seek to 12 seconds`, and `playing` is `Is playing`. **`play()` now belongs to the
+  player it acts on** (`sfx ▸ Play sound`), so the four lines that set one sound up read under one
+  object instead of two.
+- **The five most copied game-feel snippets read as the behaviors' words.** A random camera offset is
+  `Shake by s`, a base-plus-sine is `Bob y (sine, magnitude 8, 3 per second)`, and a lerp back to
+  `Vector2.ONE` is `Ease size back to normal at 10 (per second)`. Each says the arithmetic as a muted
+  note and offers the Juice or Sine behavior that could replace it outright.
+- **Every one of these claims its pattern.** The pattern registry is cleared at the top of each row
+  build and filled by the readings as they go, so the chip, its evidence lines, Adopt behavior, the
+  Doctor's pattern smells and the coverage counts all read one place instead of re-deriving.
+- **And all of it is authorable in the same words.** New rows: `Set Flipped`, `Set Image`,
+  `Is Playing`, `Set Progress` (a value and its maximum in one row), `Show Dialog`,
+  `Set Master Volume`, `Set Sound`, `Set Bus`, `Set Volume` (0 to 1), and the game-feel five -
+  `Shake`, `Hitstop`, `Bob`, `Flash`, `Ease Size Back`. Each writes the exact shape the reading
+  recognises, so a sheet-authored pattern and a hand-written one are the same bytes.
+
+### Changed - the picker says what the reading says
+
+- Shipped display names renamed to the words the readings use (ace_ids and templates untouched):
+  **Set Frame** is `Set Animation Frame`, **Set Tree Parameter** is `Set Blend`, **Set Playback
+  Rate** is `Set Pitch`, **Grab Focus** is `Set Focus`, and `Seek to 12s` reads
+  `Seek to 12 seconds`. A file name also survives the spelling lens whole - `jump.wav` was reading
+  as `jump's wav`.
+
 ### Changed - the documentation says what the sheet says
 
 - **The whole documentation set speaks the sheet's vocabulary.** A picker entry is an **action**, a

@@ -2494,3 +2494,39 @@ Find path to {target},Chercher un chemin vers {target}
 Move along path at {speed},Avancer sur le chemin à {speed}
 Move along path at {speed} (avoiding others),Avancer sur le chemin à {speed} (en évitant les autres)
 Has arrived,Est arrivé
+Set as active camera,Définir comme caméra active
+Set animation frame to {value},Definir l'image d'animation sur {value}
+Set animation speed to {value},Definir la vitesse d'animation sur {value}
+Set image to {file},Definir l'image sur {file}
+Set sound to {file},Definir le son sur {file}
+Set pitch to {value},Definir la hauteur sur {value}
+Set bus to {bus},Definir le bus sur {bus}
+Set volume to {value},Definir le volume sur {value}
+Set volume to {value} dB,Definir le volume sur {value} dB
+Set master volume to {value},Definir le volume general sur {value}
+Set master volume to {value} dB,Definir le volume general sur {value} dB
+Set {bus} volume to {value},Definir le volume de {bus} sur {value}
+Set {bus} volume to {value} dB,Definir le volume de {bus} sur {value} dB
+(0 to 1),(0 a 1)
+Set focus,Donner le focus
+Show dialog,Afficher la boite de dialogue
+(centred),(centre)
+Seek to {seconds} seconds,Aller a {seconds} secondes
+Set blend {name} to {value},Definir le melange {name} sur {value}
+Travel to animation state {state},Aller a l'etat d'animation {state}
+Is playing,Est en cours de lecture
+Set mirrored when {test},Mettre en miroir quand {test}
+Set flipped when {test},Retourner quand {test}
+Shake by {amount},Secouer de {amount}
+random offset this tick,decalage aleatoire ce tick
+Bob {axis},Osciller {axis}
+sine,sinus
+magnitude,amplitude
+per second,par seconde
+Ease size back to normal at {rate},Revenir a la taille normale a {rate}
+Play sound,Jouer le son
+Stop sound,Arreter le son
+"Sprite and animation: mirrored, frame, speed, opacity and the animation tree","Sprite et animation : miroir, image, vitesse, opacite et l'arbre d'animation"
+"UI: focus, progress bars, dialogs and the mixer","UI : focus, barres de progression, boites de dialogue et le mixeur"
+"Sound: the file, its pitch, its bus, its volume and where it plays from","Son : le fichier, sa hauteur, son bus, son volume et son point de lecture"
+"Juice: shake, hitstop, bob, flash and the squash that eases back","Game feel : secousse, hitstop, oscillation, flash et l'ecrasement qui revient"

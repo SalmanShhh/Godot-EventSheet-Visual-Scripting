@@ -2494,3 +2494,39 @@ Find path to {target},Найти путь к {target}
 Move along path at {speed},Двигаться по пути со скоростью {speed}
 Move along path at {speed} (avoiding others),Двигаться по пути со скоростью {speed} (обходя других)
 Has arrived,Прибыл
+Set as active camera,Сделать активной камерой
+Set animation frame to {value},Задать кадр анимации {value}
+Set animation speed to {value},Задать скорость анимации {value}
+Set image to {file},Задать изображение {file}
+Set sound to {file},Задать звук {file}
+Set pitch to {value},Задать высоту тона {value}
+Set bus to {bus},Задать шину {bus}
+Set volume to {value},Задать громкость {value}
+Set volume to {value} dB,Задать громкость {value} дБ
+Set master volume to {value},Задать общую громкость {value}
+Set master volume to {value} dB,Задать общую громкость {value} дБ
+Set {bus} volume to {value},Задать громкость {bus} {value}
+Set {bus} volume to {value} dB,Задать громкость {bus} {value} дБ
+(0 to 1),(от 0 до 1)
+Set focus,Установить фокус
+Show dialog,Показать диалог
+(centred),(по центру)
+Seek to {seconds} seconds,Перейти к {seconds} с
+Set blend {name} to {value},Задать смешивание {name} {value}
+Travel to animation state {state},Перейти в состояние анимации {state}
+Is playing,Воспроизводится
+Set mirrored when {test},"Отразить, когда {test}"
+Set flipped when {test},"Перевернуть, когда {test}"
+Shake by {amount},Тряска на {amount}
+random offset this tick,случайное смещение в этом тике
+Bob {axis},Покачивание {axis}
+sine,синус
+magnitude,амплитуда
+per second,в секунду
+Ease size back to normal at {rate},Вернуть размер к обычному со скоростью {rate}
+Play sound,Воспроизвести звук
+Stop sound,Остановить звук
+"Sprite and animation: mirrored, frame, speed, opacity and the animation tree","Спрайт и анимация: отражение, кадр, скорость, прозрачность и дерево анимации"
+"UI: focus, progress bars, dialogs and the mixer","Интерфейс: фокус, полосы прогресса, диалоги и микшер"
+"Sound: the file, its pitch, its bus, its volume and where it plays from","Звук: файл, высота тона, шина, громкость и позиция воспроизведения"
+"Juice: shake, hitstop, bob, flash and the squash that eases back","Ощущение игры: тряска, хитстоп, покачивание, вспышка и возврат сжатия"

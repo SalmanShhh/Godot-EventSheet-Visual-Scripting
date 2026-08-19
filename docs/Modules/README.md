@@ -26,6 +26,7 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 - [Making Things Move In 2D](Making-Things-Move-In-2D.md) - move a 2D node by hand, by velocity, by impulse, or by a ready-made motion, and read back where things are and how fast they are going.
 - [Working In 3D](Working-In-3D.md) - Node3D transforms, CharacterBody3D and RigidBody3D, cameras and field of view, and building meshes at runtime.
 - [Animation And Sprites](Animation-And-Sprites.md) - play, stop, scrub and queue AnimationPlayer clips, flip a sprite, and drive an AnimationTree state machine.
+- [Game Feel](Game-Feel.md) - the five snippets every game copies as rows: shake, hitstop, bob, flash, and the squash that eases back.
 - [Timers, Waiting And Cooldowns](Timers-Waiting-And-Cooldowns.md) - Wait, Every X Seconds, cooldowns, buffered presses, tweens, and the engine's own clocks.
 - [Working With Vectors And Directions](Working-With-Vectors-And-Directions.md) - build, measure, aim, turn, blend and cap positions and directions without writing the distance formula out.
 

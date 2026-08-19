@@ -2494,3 +2494,39 @@ Find path to {target},{target} への経路を探す
 Move along path at {speed},経路に沿って {speed} で進む
 Move along path at {speed} (avoiding others),経路に沿って {speed} で進む (他をよけながら)
 Has arrived,到着した
+Set as active camera,アクティブなカメラにする
+Set animation frame to {value},アニメーションフレームを {value} にする
+Set animation speed to {value},アニメーション速度を {value} にする
+Set image to {file},画像を {file} にする
+Set sound to {file},サウンドを {file} にする
+Set pitch to {value},ピッチを {value} にする
+Set bus to {bus},バスを {bus} にする
+Set volume to {value},音量を {value} にする
+Set volume to {value} dB,音量を {value} dB にする
+Set master volume to {value},全体音量を {value} にする
+Set master volume to {value} dB,全体音量を {value} dB にする
+Set {bus} volume to {value},{bus} の音量を {value} にする
+Set {bus} volume to {value} dB,{bus} の音量を {value} dB にする
+(0 to 1),(0 から 1)
+Set focus,フォーカスする
+Show dialog,ダイアログを表示
+(centred),(中央)
+Seek to {seconds} seconds,{seconds} 秒へ移動
+Set blend {name} to {value},ブレンド {name} を {value} にする
+Travel to animation state {state},アニメーション状態 {state} へ移動
+Is playing,再生中
+Set mirrored when {test},{test} のとき左右反転
+Set flipped when {test},{test} のとき上下反転
+Shake by {amount},{amount} だけ揺らす
+random offset this tick,この tick のランダムなずれ
+Bob {axis},{axis} を揺らす
+sine,サイン
+magnitude,振幅
+per second,毎秒
+Ease size back to normal at {rate},サイズを {rate} で元に戻す
+Play sound,サウンドを再生
+Stop sound,サウンドを停止
+"Sprite and animation: mirrored, frame, speed, opacity and the animation tree",スプライトとアニメーション: 反転、フレーム、速度、不透明度、アニメーションツリー
+"UI: focus, progress bars, dialogs and the mixer",UI: フォーカス、進捗バー、ダイアログ、ミキサー
+"Sound: the file, its pitch, its bus, its volume and where it plays from",サウンド: ファイル、ピッチ、バス、音量、再生位置
+"Juice: shake, hitstop, bob, flash and the squash that eases back",ゲームフィール: 揺れ、ヒットストップ、上下動、フラッシュ、戻るスカッシュ
