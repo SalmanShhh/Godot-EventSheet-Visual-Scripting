@@ -81,11 +81,14 @@ static func load_next_member(sheet: EventSheetResource) -> bool:
 	var members: Array = members_of(sheet)
 	for entry: Variant in members:
 		var member: Dictionary = entry
-		if member.get("sheet") != null:
+		if not _is_unread(member):
 			continue
 		var member_sheet: EventSheetResource = _import_member(str(member.get("script_path", "")), scene_path,
 			str(member.get("node", "")), str(member.get("type", "")), int(member.get("instances", 1)))
 		member["sheet"] = member_sheet
+		# A script that cannot be read is marked read anyway: leaving it unread would hand the caller
+		# the same member forever, and a driver that reads one per frame would never stop.
+		member["unreadable"] = member_sheet == null
 		return pending_members(sheet) > 0
 	return false
 
@@ -94,9 +97,13 @@ static func load_next_member(sheet: EventSheetResource) -> bool:
 static func pending_members(sheet: EventSheetResource) -> int:
 	var pending: int = 0
 	for entry: Variant in members_of(sheet):
-		if (entry as Dictionary).get("sheet") == null:
+		if _is_unread(entry as Dictionary):
 			pending += 1
 	return pending
+
+
+static func _is_unread(member: Dictionary) -> bool:
+	return member.get("sheet") == null and not bool(member.get("unreadable", false))
 
 
 ## True for a sheet built by this module. The dock asks before every write path: a composite sheet
