@@ -6,23 +6,7 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
-<<<<<<< HEAD
 ### Changed - the documentation says what the sheet says
-=======
-### Added - an Inspector button is a setting row, and a menu item away
-
-- **`@export_tool_button(\"Bake\", \"Bake\") var bake = _bake` opens as a setting row**, not as a Script
-  block: `button Bake  in the Inspector · calls Bake`. The button's own label leads the row, the type
-  chip says what it is, and there is no value shown at all - `= _bake` is which function it runs,
-  which the note says in words. The lift is byte-gated like every other export family, and it is the
-  one emitted WITHOUT a `: Type`, because that is how Godot spells a button; both the one-argument
-  and the two-argument spelling re-emit exactly as they were written.
-- **Add Inspector Button… on the canvas menu** writes the `@export_tool_button` line and the empty
-  function it calls, in one undo step. It says so when the sheet is not a Tool sheet, since that is
-  what makes the button run while you are editing.
-
-### Changed - a setter that names a node reads on that node
->>>>>>> 810ea6f3 (feat(reading): an Inspector button is a setting row, and a menu item away)
 
 - **The whole documentation set speaks the sheet's vocabulary.** A picker entry is an **action**, a
   **condition**, an **expression** or a **trigger**, and a published one is a **function**; the
@@ -52,6 +36,58 @@ What changed in the build you have installed (v0.17.0), in the words the release
   guide the index does not list, or lists without a description. `tests/module_guides_test.gd` reads
   the reference tables under their new headings, keyed on a set that also accepts a table headed by
   its kind - 333 rows in the addon guides had drifted out of that sweep unnoticed.
+### Added - an Inspector button is a setting row, and a menu item away
+
+- **`@export_tool_button(\"Bake\", \"Bake\") var bake = _bake` opens as a setting row**, not as a Script
+  block: `button Bake  in the Inspector · calls Bake`. The button's own label leads the row, the type
+  chip says what it is, and there is no value shown at all - `= _bake` is which function it runs,
+  which the note says in words. The lift is byte-gated like every other export family, and it is the
+  one emitted WITHOUT a `: Type`, because that is how Godot spells a button; both the one-argument
+  and the two-argument spelling re-emit exactly as they were written.
+- **Add Inspector Button… on the canvas menu** writes the `@export_tool_button` line and the empty
+  function it calls, in one undo step. It says so when the sheet is not a Tool sheet, since that is
+  what makes the button run while you are editing.
+
+### Changed - a setter that names a node reads on that node
+
+- **`n.position = n.position.snapped(Vector2(8, 8))` inside a For each reads
+  `n ▸ Set position to position snapped to 8, 8`.** Three things had to be true for that one row:
+  the place setter now reads through the shared grammar, so the object column says which node is
+  being moved instead of the vocabulary's class name; the value drops the receiver when it is the
+  same one the target names, because the row has already said whose position this is; and
+  `x.snapped(...)` reads as the grid it pulls the value onto, in the same words the free-function
+  spelling `snapped(x, 8)` has always read.
+- A value that reaches through a DIFFERENT object keeps every word of it
+  (`n ▸ Set position to other.position`), and a setter with no receiver of its own drops nothing.
+  Display only - byte round-trip untouched.
+
+### Changed - a tween chain written on one line reads as the step it takes
+
+- **`create_tween().set_loops(3).tween_property(self, \"position\", p, 0.5)` reads as its property
+  step**, not as the `set_loops` call it happens to start with:
+  `Tween position to p in 0.5 seconds  repeat 3 times`. The whole dotted chain on the line is walked
+  now, so the step is the row and the chain calls in front of it are muted notes on it -
+  `repeat 3 times` / `repeat forever` from `set_loops`, `(at the same time)` from `set_parallel` -
+  while the easing tail after it stays the chip it always was.
+- Chain calls written on a line of their OWN are unchanged: `t.set_loops(3)` there is still a row of
+  its own, because that is what the file says. Display only, byte round-trip untouched.
+
+### Changed - the cursor, the click and the gamepad cable read on the objects they belong to
+
+- **`mouse_entered` / `mouse_exited` read as the Mouse's own sentence.** A handler wired to either
+  signal - declared in the file or connected from the scene - reads `Mouse ▸ Cursor is over Player`
+  with the edge said quietly beside it: `(enters)` or `(leaves)`. The object is the node the cursor
+  is over (the wired source when there is one, else the script's own object), so the row answers
+  \"over what?\" without opening the code.
+- **`_input_event` on a clickable body reads as a click on that body.** The handler lifts to a
+  trigger like the other input handlers, and its `if event is InputEventMouseButton and
+  event.pressed:` branch reads `Mouse ▸ On Player clicked`, with the branch's own rows under it.
+  Both spellings lift - Godot's typed signature and the untyped `func _input_event(vp, event,
+  shape):` a beginner writes.
+- **`Input.joy_connection_changed.connect(...)` reads on the Gamepad.**
+  `Gamepad ▸ On gamepad connected / disconnected`, with the handler's `device` and `connected`
+  parameters as the payload chips beside it - one signal, both edges, and the chip says which.
+- All three are readings: the opened file still recompiles byte-identically.
 
 ### Added - a Local row can be dragged into another event, and says when it may not
 

@@ -427,118 +427,6 @@ That is the order this section is in.
   percent; `@export_file("*.png")` reads `file` with its filter; `@export_dir` reads `folder`;
   `@export_multiline` reads `text  multiline`; a Color reads its swatch and its word; and
   `@export_flags(...)` reads `flags` with the names of the bits.
-- **A local variable's scope is enforced, and shown.** A local is visible from the event that
-  declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
-  action that uses `dealt` into an event that cannot see it and the drop refuses before you release,
-  in red: **`dealt is not visible here`**. Hover the variable's name and every other use of it inside
-  that scope lights up, so the highlight doubles as a picture of how far the name reaches. Members,
-  globals and keywords match nothing - they mean something outside this event.
-
-  ![Hovering a local variable's name highlights every use of it in its scope](images/local-variable-uses-highlight.png)
-
-- **A local declared inside a body reads at the top of the event that owns it.** An event sheet
-  declares a local at the top of its event and fills it in with an action, so a `var` line reads as
-  those rows: `var dealt: float = damage * 2` becomes `Local number dealt = 0` up with the event's
-  other locals, and `System ▸ Set dealt to damage * 2` where the line itself sits. A line whose value
-  is already a value - `var hits := 3` - needs no action and gets none; the declaration carries the
-  value and the action lane shows nothing for that line. A type with no starting value of its own (an
-  object, a list, a table, or a value whose type nothing states) keeps its whole declaration on the
-  one row, because inventing a starting value nobody wrote would be a guess. Display only: the file
-  keeps its line, and the row still addresses that statement - clicking, dragging and the row menu
-  reach the same line they always did. **Drag the Local row into another event** and the declaration
-  moves with it, rewritten where it lands through the same undo funnel every other row uses. Two
-  refusals guard the move, both in the red drop bubble: a row that uses a local may not leave the
-  scope that can see it (`dealt is not visible here`), and a local may not be dragged out from under
-  rows that still use it (`dealt is still used here`).
-<<<<<<< HEAD
-=======
-- **A ternary is a sub-event, never a condition in an action cell.** An `if ... else` INSIDE a statement
-  (`return wall_normal.x if host != null and host.is_on_wall() else 0.0`) reads the way a Construct sheet
-  draws the same branch: a condition row on the left with the statement on the right, then an `Else` row
-  with the other value. A nested ternary chains the way Construct writes an else-if: an `Else` on the
-  row's first condition line with that arm's own test stacked under it, and a plain `Else` on the last
-  arm - so no two arms read as though both could fire. A second independent ternary nests its own pair. This is true on every sheet, authored ones included - reading and editing look the
-  same. Display only: the file keeps its one line, hover shows the exact GDScript, and the pair behaves
-  as the ONE statement it reads - clicking any of its rows selects the statement and highlights the whole
-  pair, dragging any of them moves the statement (nothing drops between the pair's rows), and a
-  double-click anywhere on it, the `Else` row included, opens that one line's editor. A ternary inside a
-  `func(...)` lambda is left alone - its body is a scope of its own, so hoisting a branch out of it would
-  move when that branch runs.
-- **The Input Map is an object, and the file says which controls it uses.** An opened script that names
-  any control grows an **Input** head bar - `this script uses 4 actions - jump, move left, move right,
-  fire - Project ▸ Input Map` - and one line per control inside it saying what that control is bound to
-  in the sheet's own spelling: `jump  Space · A button · Up`, `fire  Left mouse button · Right trigger`.
-  The Object bar carries the same list in an **INPUT** section. Bindings come from `project.godot`, and
-  nothing is written on a read. A control the script names that the Input Map does not have wears a ⚠ in
-  both places and gets a Doctor warning naming the fix - that is the typo every beginner makes, and until
-  now it compiled, printed nothing, and simply never fired. Drag a control off the bar onto the canvas
-  and the sheet writes its `On <action> pressed` event.
-- **Analog reads in the Gamepad object's words.** `Input.get_joy_axis(0, JOY_AXIS_LEFT_X)` reads
-  `axis Left analog X of gamepad 0`, `Input.get_joy_name(0)` reads `name of gamepad 0`, and
-  `Input.get_connected_joypads().size()` reads `gamepad count`. The stick names are the Gamepad object's
-  own (Left analog X / Y, Right analog X / Y, Left trigger, Right trigger), so a typed line and a picked
-  row say the same thing, and the exact-match spelling `Input.is_action_pressed("accelerate", true)`
-  reads `Is button down "accelerate" (exact match)` rather than leaving a bare `true` on the row.
-- **Gamepads by number, and the per-player conventions.** `event.device == 1` inside a joypad-button
-  branch is the gamepad NUMBER the sheet already counts from 0, so a local-multiplayer script reads
-  `On gamepad 1 button A pressed` instead of arithmetic. The two naming conventions a two-player project
-  uses - `p2_jump` and `jump_2` - both read as `jump` on gamepad 1 and group under that pad.
-- **Handheld sensors read on the Touch object.** `Input.get_accelerometer()` reads `acceleration`,
-  `get_gravity()` reads `gravity`, `get_gyroscope()` reads `rotation rate` and `get_magnetometer()` reads
-  `magnetic field`. A `var a = Input.get_accelerometer()` is a Local variable row reading
-  `Local value a = acceleration` - never a bare `Local a = ...` cell. They all report 0 on desktop,
-  and every one of them says so.
-- **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
-  as words (`_coyote_timer` -> `coyote timer`, a knob with its Inspector capitalisation), property chains
-  read possessively (`host's velocity X`), NOT is the red ✕ in the icon column, the host and any `$Node` /
-  `%Node` / `@onready` reference show their class icon, sub-events hang off tree guide lines, a call to one
-  of the sheet's own functions reads `Functions ▸ Call Add Look  x = mouse's ΔX  y = mouse's ΔY`, and code
-  that could not lift is one folded card with a line count. **View > Humanized Names** turns the name lens
-  on or off for editable sheets; nothing on the sheet is scaffolding until you press **Edit Events**.
-- **Every event has a number, and everything names it by that number.** The left margin counts events
-  down the sheet - sub-events included, groups descended into - and the count is stable, so folding a
-  group or filtering the sheet never renumbers anything. **Ctrl+G** opens *Go to event* and jumps to
-  one. The status bar says where you are in the same words - `event 4 of 61 · line 38` - and a
-  bookmark, the Find bar's counter (`3 of 12 · event 4`) and a Project Doctor finding
-  (`player.gd · event 4`) all print the same number, so "look at event 12" means one row to everybody
-  reading the file. The numbers are display-only: nothing about them touches the script.
-
-  ![An opened script: the event number in the left margin, a static variable reading "Static number spawned = 0 shared by every Player", a function reading as Functions - On Take Damage, and the status bar saying "event 1 of 1 - line 3"](images/opened-script-event-numbers.png)
-
-- **A `static var` says who shares it.** `static var spawned: int = 0` reads
-  `Static number  spawned = 0  shared by every Player` - the scope word leads the type chip, and the
-  muted tail names the object the value belongs to (the script's `class_name`, else its scene root,
-  else its file). One value on the class, not one per object, is exactly the thing a reader has to be
-  told; on an authored sheet the same fact reads as a `static` badge beside `const`.
-- **The shapes the sheet reads, you can also type.** Right-click an event for **Add blank sub-event
-  (B)**, **Make 'Or' block** (which reads **Make 'And' block** once the event is an Or block) and
-  **Add 'Else'** / **Add 'Else If'** - the same three commands sit on the **Add** menu. On an opened
-  `.gd`, Make 'Or' block rewrites that one event's joined condition (`a and b` becomes `a or b`) and
-  leaves every other byte alone. All three are greyed while the file is a read-only preview; press
-  **Edit Events** first.
-- **A plain script is an object.** Its Include bar names it (`class_name`, else its scene's root node,
-  else the file) with its class icon and the scene it lives in; its engine properties read under that
-  name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
-  System (`System ▸ Print "ready"`). Any method call reads `Object ▸ Verb args` with the argument names
-  Godot itself declares (`Sprite2D ▸ Play  name = "run"`), a node path by its last segment with its icon,
-  `queue_free()` as Destroy. `delta` reads `dt`; the tick triggers read `Every tick (physics)` /
-  `Every tick (draw)`. `and` never sits inside a condition cell - each conjunct is its own condition
-  line, and `or` is the OR block. `"Score: %d" % score` reads `"Score: " & score`, `d["k"]` reads
-  `d's "k"`, `arr[0]` reads `arr' item 0`; groups read as families (`enemies (group) ▸ Call Flee`,
-  `For each e in group "enemies"`); loops read `Repeat 10 times`, `For "i" from 2 to 7`, `For each
-  child`, `While`, `Stop loop`, `Next`; `randi_range(1, 6)` reads `random whole number 1 to 6`,
-  `tween_property` reads `Tween position to target in 0.3 seconds`, `await x.opened` reads `⏳ Wait for signal
-  x On Opened`, `await get_tree().process_frame` reads `⏳ Wait one tick`. A signal emit shows its
-  payload by the signal's own parameter names (`Signal On Damaged  amount = 3  source = attacker`). A
-  lambda connected to a signal (`$Timer.timeout.connect(func(): ...)`) reads as the trigger event it is,
-  with the lambda's body as its rows, and the connect line keeps a muted `connects Timer On Timeout`
-  note. One-line `if c: stmt` / `if c: return` / `else: stmt` lift as the same sub-events their
-  indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
-- **A gamepad branch that names a device reads as one row.** `if event is InputEventJoypadButton and
-  event.pressed and event.device == 0 and event.button_index == JOY_BUTTON_A:` reads `Gamepad ▸ On
-  gamepad 0 button A pressed`, in the Gamepad object's own words, because the device index IS the
-  gamepad number. A branch that names no device keeps `On button A pressed`; a Keyboard branch keeps
-  its `event.device == 1` as an ordinary comparison, since a keyboard has no number in the sheet.
 - **An Inspector button reads as a setting row.** `@export_tool_button("Bake", "Bake") var bake =
   _bake` opens as `button Bake  in the Inspector · calls Bake` instead of as a Script block: the
   button's own label leads the row, and there is no value shown, because `= _bake` is which function
@@ -571,38 +459,20 @@ That is the order this section is in.
 
   ![Hovering a local variable's name highlights every use of it in its scope](images/local-variable-uses-highlight.png)
 
-- **A tween chain reads as Tween actions, one action per row.** `var t = create_tween()` reads
-  `Local object t = a new tween`; each `t.tween_property(...)` under it reads
-  `Player ▸ Tween position to target in 0.5 seconds` on the object being tweened, with
-  `.set_trans(...)` / `.set_ease(...)` as an `ease = Sine out` chip. The second step and every one
-  after it says `(after the previous)`; once `t.set_parallel()` has been called they say `(at the
-  same time)` instead. `t.set_loops(3)` reads `Tween repeat 3 times`, `t.tween_interval(0.5)` reads
-  `Tween wait 0.5 seconds`, `t.tween_callback(queue_free)` reads `Tween then Destroy`, `t.kill()`
-  reads `Stop tween` and `await t.finished` reads `System ▸ ⏳ Wait for tween to finish`.
-
-  ![A tween chain read as Tween actions, and a head whose Instance variables folder carries the accessor events](images/opened-script-tween-and-head-accessors.png)
-
-  The
-  property is the sheet's own word for it - `modulate:a` is **opacity**, `scale` is **size**,
-  `rotation` is the **angle** - and a property the table does not name keeps its own spelling. The
-  chain is joined by the local's name, walked in file order, so a receiver the file never declared
-  from `create_tween()` keeps its plain call reading rather than being given a Tween sentence. A
-  statement broken across lines with a trailing `\` reads as the one statement it is.
-
-  A chain written on ONE line reads as the step it takes rather than as the call it starts with:
-  `create_tween().set_loops(3).tween_property(self, "position", p, 0.5)` is
-  `Tween position to p in 0.5 seconds  repeat 3 times`. The whole dotted chain on the line is walked,
-  so the step is the row and the chain calls in front of it are muted notes on it - `repeat 3 times`
-  or `repeat forever` from `set_loops`, `(at the same time)` from `set_parallel`.
-- **A Timer node reads as the Timer behavior.** `$Timer.stop()` reads `Stop timer "Timer"`,
-  `$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` - whether the line is still
-  hand-written text or the importer has already claimed it as the shipped Start Timer action, since
-  the lifted row is routed back through the same sentence, `not $Timer.is_stopped()` reads `Is
-  timer "Timer" running` (the bare spelling says stopped), and `$Timer.time_left` reads
-  `Timer.CurrentTime("Timer")`. The node's name is the tag and the object is the script's own object,
-  because the timer belongs to it. The `(once)` / `(regular)` mode is read off the file's own
-  `one_shot` line. A timer held in a variable has no tag to prove, so it keeps the plain call reading.
->>>>>>> 810ea6f3 (feat(reading): an Inspector button is a setting row, and a menu item away)
+- **A local declared inside a body reads at the top of the event that owns it.** An event sheet
+  declares a local at the top of its event and fills it in with an action, so a `var` line reads as
+  those rows: `var dealt: float = damage * 2` becomes `Local number dealt = 0` up with the event's
+  other locals, and `System ▸ Set dealt to damage * 2` where the line itself sits. A line whose value
+  is already a value - `var hits := 3` - needs no action and gets none; the declaration carries the
+  value and the action lane shows nothing for that line. A type with no starting value of its own (an
+  object, a list, a table, or a value whose type nothing states) keeps its whole declaration on the
+  one row, because inventing a starting value nobody wrote would be a guess. Display only: the file
+  keeps its line, and the row still addresses that statement - clicking, dragging and the row menu
+  reach the same line they always did. **Drag the Local row into another event** and the declaration
+  moves with it, rewritten where it lands through the same undo funnel every other row uses. Two
+  refusals guard the move, both in the red drop bubble: a row that uses a local may not leave the
+  scope that can see it (`dealt is not visible here`), and a local may not be dragged out from under
+  rows that still use it (`dealt is still used here`).
 - **A property's setter reads as a trigger, its getter as an expression.** A `set(v):` block fires
   when the value is set, with the new value as its payload - which is exactly what a trigger is - so
   it reads `➜ On hp set` with a `v` chip and its body as ordinary actions and sub-events, the first
@@ -787,6 +657,12 @@ That is the order this section is in.
   chain is joined by the local's name, walked in file order, so a receiver the file never declared
   from `create_tween()` keeps its plain call reading rather than being given a Tween sentence. A
   statement broken across lines with a trailing `\` reads as the one statement it is.
+
+  A chain written on ONE line reads as the step it takes rather than as the call it starts with:
+  `create_tween().set_loops(3).tween_property(self, "position", p, 0.5)` is
+  `Tween position to p in 0.5 seconds  repeat 3 times`. The whole dotted chain on the line is walked,
+  so the step is the row and the chain calls in front of it are muted notes on it - `repeat 3 times`
+  or `repeat forever` from `set_loops`, `(at the same time)` from `set_parallel`.
 
   ![A tween chain read as Tween actions, and a head whose Instance variables folder carries the accessor events](images/opened-script-tween-and-head-accessors.png)
 
