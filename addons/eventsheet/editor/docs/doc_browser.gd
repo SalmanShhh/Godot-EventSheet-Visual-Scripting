@@ -127,9 +127,6 @@ var _reading_margin: MarginContainer = null
 ## The verb a search result named, keyed by the tree row, so Ctrl+Enter adds THAT verb without
 ## asking the vocabulary again.
 var _result_definitions: Dictionary = {}
-## Set while the history itself is driving a navigation (a back, a forward), so the page being
-## left is not pushed back onto the stack it was just taken off.
-var _navigating_history: bool = false
 
 
 func _init() -> void:
@@ -604,9 +601,7 @@ func show_doc(doc_id: String, anchor: String = "") -> bool:
 ## is drawn: after the navigation the old scroll offset belongs to a page that is no longer there.
 func _open(doc_id: String, anchor: String, pushed: bool) -> bool:
 	_remember_scroll()
-	_navigating_history = not pushed
 	var opened: bool = _route(doc_id, anchor)
-	_navigating_history = false
 	if opened:
 		if pushed:
 			# The page that ENDED UP on screen, not the id that was asked for: the index resolves to
@@ -932,6 +927,7 @@ func _build_tree() -> void:
 	_active_item = null
 	_tree.clear()
 	var root: TreeItem = _tree.create_item()
+	_build_manual_group(root)
 	for group: Dictionary in EventSheetDocLibrary.groups():
 		var section: TreeItem = _tree.create_item(root)
 		_style_group_row(section, str(group.get("title", "")))
@@ -950,21 +946,21 @@ func _build_tree() -> void:
 	_build_reference_tree(root)
 
 
-## The half of the tree nothing wrote: the Manual's own first pages, a reference page per builtin
-## category, and one per behavior. Built from the vocabulary rather than from the bundle, so a pack
-## installed this morning has a page this morning.
-##
-## Both reference sections start COLLAPSED. They are long by nature (one row per category, one per
-## behavior), and a reader opening the Manual is looking for a guide far more often than for the
-## whole vocabulary laid out.
-func _build_reference_tree(root: TreeItem) -> void:
+## The Manual's own first pages: what the marks on a sheet mean, and the words another event-sheet
+## editor spells differently. Both are generated, and both go FIRST - they are what a reader who
+## has never opened this before needs before any guide.
+func _build_manual_group(root: TreeItem) -> void:
 	var manual: TreeItem = _tree.create_item(root)
 	_style_group_row(manual, EventSheetDocReference.MANUAL_TITLE)
-	for entry: Array in [
-		[EventSheetDocReference.KIND_LEGEND, ""],
-		[EventSheetDocReference.KIND_GLOSSARY, ""],
-	]:
-		_add_reference_row(manual, str(entry[0]), str(entry[1]))
+	# The legend leads, because it answers the question a reader has before they have a question:
+	# what are those marks on my rows.
+	for kind: String in [EventSheetDocReference.KIND_LEGEND, EventSheetDocReference.KIND_GLOSSARY]:
+		_add_reference_row(manual, kind, "")
+
+
+## The reference half of the tree, which sits at the FOOT of it: a reader opening the Manual is
+## looking for a guide far more often than for the whole vocabulary laid out.
+func _build_reference_tree(root: TreeItem) -> void:
 	var sections: PackedStringArray = EventSheetDocReference.section_names()
 	if not sections.is_empty():
 		var branch: TreeItem = _tree.create_item(root)
