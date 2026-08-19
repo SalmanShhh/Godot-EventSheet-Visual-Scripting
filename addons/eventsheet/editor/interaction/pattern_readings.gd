@@ -53,6 +53,62 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 	}
 
 
+## S3. Whether a function body is a SEQUENCE - rows that alternate waiting and doing, which is what
+## a cutscene, an intro and a combo are made of - as {waits, seconds, open_ended} or {} when it is not.
+##
+##   waits       how many times the body stops and waits
+##   seconds     the timer waits added up, so the header can say how long the whole thing takes
+##   open_ended  true when one of the waits is on something whose length nobody knows (an animation,
+##               a signal), which is why the header says "+ a wait" rather than a wrong total
+##
+## Two waits at least, and something to do between them: one `await` in a function is a pause, not a
+## sequence, and reading it as one would promise a structure that is not there.
+static func wait_sequence(body: PackedStringArray) -> Dictionary:
+	var waits: int = 0
+	var seconds: float = 0.0
+	var open_ended: bool = false
+	var steps: int = 0
+	for line: String in body:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		if not text.begins_with("await "):
+			steps += 1
+			continue
+		waits += 1
+		var timed: String = _timer_wait_seconds(text)
+		if timed.is_empty():
+			open_ended = true
+		else:
+			seconds += timed.to_float()
+	if waits < 2 or steps < 1:
+		return {}
+	return {"waits": waits, "seconds": seconds, "open_ended": open_ended}
+
+
+## The seconds an `await get_tree().create_timer(N).timeout` waits, or "" for any other await.
+static func _timer_wait_seconds(line: String) -> String:
+	const HEAD := "await get_tree().create_timer("
+	const TAIL := ").timeout"
+	if not line.begins_with(HEAD) or not line.ends_with(TAIL):
+		return ""
+	var inner: String = line.substr(HEAD.length(), line.length() - HEAD.length() - TAIL.length()).strip_edges()
+	return inner if inner.is_valid_float() else ""
+
+
+## S3. What the chip on a sequence's header says: how long the whole run takes, and whether one of
+## its waits is on something whose length nobody knows.
+static func wait_sequence_words(facts: Dictionary) -> String:
+	if facts.is_empty():
+		return ""
+	var seconds: float = float(facts.get("seconds", 0.0))
+	var total: String = "%s s" % String.num(seconds, 2).trim_suffix("0").trim_suffix("0").trim_suffix(".")
+	if bool(facts.get("open_ended", false)):
+		return "%s %s + %s" % [EventSheetL10n.translate("sequence ·"), total,
+			EventSheetL10n.translate("a wait")]
+	return "%s %s" % [EventSheetL10n.translate("sequence ·"), total]
+
+
 ## The patterns a BODY writes, given the whole file's facts, as an array of
 ## {pattern, evidence, words, adoptable, ace_ids} ready to hand to the registry. `body` is the lines
 ## of one owning unit - a trigger event, a tick event, a function - and `facts` is what `facts()`
@@ -96,6 +152,16 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 			"pattern": "countdown", "evidence": countdown_evidence,
 			"words": "counts %s down and asks whether it has run out" % ", ".join(countdown_names),
 			"adoptable": "", "ace_ids": PackedStringArray(["Core/StartCooldown", "Core/CooldownReady"])
+		})
+	var sequence: Dictionary = wait_sequence(body)
+	if not sequence.is_empty():
+		var beats: PackedStringArray = PackedStringArray()
+		for line: String in body:
+			if line.strip_edges().begins_with("await "):
+				beats.append(line.strip_edges())
+		found.append({
+			"pattern": "wait_sequence", "evidence": beats, "words": wait_sequence_words(sequence),
+			"adoptable": "", "ace_ids": PackedStringArray()
 		})
 	if not pool_evidence.is_empty():
 		found.append({

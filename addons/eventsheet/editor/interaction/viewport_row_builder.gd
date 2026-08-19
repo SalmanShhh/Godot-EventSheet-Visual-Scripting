@@ -2197,6 +2197,20 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 			"natural_width": true,
 			"text_color": _viewport._get_reading_style().muted_text_color
 		}))
+	# ── S3 ──────────────────────────────────────────────────────────────────────────────────────
+	# A function whose rows alternate waiting and doing IS a sequence, and the header says so with how
+	# long the whole run takes. Display only: the body is untouched, and the claim behind the chip is
+	# what the pattern chips and Refactor read.
+	var sequence_words: String = _wait_sequence_words(event_function)
+	if not sequence_words.is_empty():
+		spans.append(_make_span(sequence_words, SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "define_function",
+			"lane": "condition",
+			"line_index": 0,
+			"natural_width": true,
+			"text_color": _viewport._get_reading_style().muted_text_color
+		}))
 	if not event_function.expose_as_ace:
 		var doc_line: String = helper_doc_line(event_function)
 		if not doc_line.is_empty():
@@ -2208,6 +2222,18 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 				"text_color": _viewport._get_reading_style().muted_text_color
 			}))
 	return spans
+
+
+## S3. The `sequence · N s` chip a function of alternating waits and actions wears, or "" for every
+## other function. The body's own lines are the only input, so the chip and the claim behind it can
+## never say different things.
+func _wait_sequence_words(event_function: EventFunction) -> String:
+	if event_function == null:
+		return ""
+	var body: PackedStringArray = PackedStringArray()
+	for entry: Variant in event_function.events:
+		EventSheetViewportReadingRows.append_body_lines(entry, body)
+	return EventSheetPatternReadings.wait_sequence_words(EventSheetPatternReadings.wait_sequence(body))
 
 
 ## The verb's BODY as foldable children, plus the fold seed and the "+ Add event" way in. Shared by

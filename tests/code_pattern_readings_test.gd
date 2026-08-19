@@ -22,6 +22,38 @@ static func run() -> bool:
 	ok = _existence_sentences() and ok
 	ok = _list_and_table_sentences() and ok
 	ok = _local_storage_sentences() and ok
+	ok = _wait_sequences() and ok
+	return ok
+
+
+## S3. A function of alternating waits and actions wears a sequence chip saying how long it takes.
+static func _wait_sequences() -> bool:
+	var ok: bool = true
+	var intro: PackedStringArray = PackedStringArray([
+		"logo.show()",
+		"await get_tree().create_timer(1.0).timeout",
+		"title.show()",
+		"await get_tree().create_timer(2.0).timeout",
+		"await fade.play(\"out\")",
+		"start_game()"
+	])
+	ok = _check("the whole run is added up",
+		EventSheetPatternReadings.wait_sequence_words(EventSheetPatternReadings.wait_sequence(intro)),
+		"sequence · 3 s + a wait") and ok
+	var timed_only: PackedStringArray = PackedStringArray([
+		"a.show()", "await get_tree().create_timer(0.5).timeout",
+		"b.show()", "await get_tree().create_timer(0.25).timeout", "c.show()"
+	])
+	ok = _check("with no open-ended wait the total stands on its own",
+		EventSheetPatternReadings.wait_sequence_words(EventSheetPatternReadings.wait_sequence(timed_only)),
+		"sequence · 0.75 s") and ok
+	ok = _check("one wait is a pause, not a sequence",
+		EventSheetPatternReadings.wait_sequence(PackedStringArray([
+			"a.show()", "await get_tree().create_timer(1.0).timeout"])).is_empty(), true) and ok
+	ok = _check("waits with nothing between them are not a sequence either",
+		EventSheetPatternReadings.wait_sequence(PackedStringArray([
+			"await get_tree().create_timer(1.0).timeout",
+			"await get_tree().create_timer(1.0).timeout"])).is_empty(), true) and ok
 	return ok
 
 

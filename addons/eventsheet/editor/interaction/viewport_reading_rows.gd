@@ -262,6 +262,13 @@ static func _joined_continuation_lines(lines: PackedStringArray) -> PackedString
 
 ## One entry of the ordered walk. Depth-limited so a sheet that somehow nests into itself cannot
 ## spin here.
+## The lines ONE row unit holds, in file order - a function's body, an event and everything under it.
+## The public door onto the shared walk below, for the pattern readings, which ask what a single
+## owning row says rather than what the whole sheet says.
+static func append_body_lines(entry: Variant, lines: PackedStringArray) -> void:
+	_append_ordered_lines(entry, lines, 0)
+
+
 static func _append_ordered_lines(entry: Variant, lines: PackedStringArray, depth: int) -> void:
 	if depth > 64:
 		return
