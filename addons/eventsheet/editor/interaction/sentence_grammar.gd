@@ -398,6 +398,11 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var counted: Dictionary = _count_condition(text, context)
 	if not counted.is_empty():
 		return counted
+	# S11 / S13. Whether a sound or an animation is running is one question with one name, however the
+	# script spells it - ahead of the property reading, which would show the flag instead of the words.
+	var playing: Dictionary = media_condition(text, context)
+	if not playing.is_empty():
+		return playing
 	var property_test: Dictionary = _object_property_condition(text, context)
 	if not property_test.is_empty():
 		return property_test
@@ -1660,6 +1665,16 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 	# S16. Writing the material slot puts an effect on the object, or takes it off.
 	if EFFECT_SLOTS.has(member):
 		return _effects_assignment(object_name, assigned, context)
+	# ── S11 / S13 / S14 ─────────────────────────────────────────────────────────────────────────
+	# The sprite, sound and juice families, ahead of the plain member arms below: each of them is a
+	# member write whose SHAPE says which verb it is, so the shape is asked first and an unrecognised
+	# one falls straight through to the arms.
+	var juiced: Dictionary = juice_assignment(object_name, object_class, member, owner_text, assigned, context)
+	if not juiced.is_empty():
+		return juiced
+	var media: Dictionary = media_assignment(object_name, object_class, member, owner_text, assigned, context)
+	if not media.is_empty():
+		return media
 	match member:
 		"visible":
 			if assigned != "true" and assigned != "false":
@@ -1670,13 +1685,19 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 				return _sentence(layer_label, "Set layer visible" if assigned == "true" else "Set layer invisible", {})
 			return _sentence(object_name, "Set visible" if assigned == "true" else "Set invisible", {})
 		"flip_h":
+			# S11. A mirror driven by a TEST is the same verb with its condition said out loud - a
+			# `flip_h = dir < 0` sets it either way every tick, which "Set mirrored" alone would hide.
 			if assigned != "true" and assigned != "false":
-				return {}
-			return _sentence(object_name, "Set mirrored" if assigned == "true" else "Set not mirrored", {})
+				return _mirror_when(object_name, "Set mirrored when {test}", member, assigned, context)
+			return _with_pattern(_sentence(object_name,
+				"Set mirrored" if assigned == "true" else "Set not mirrored", {}),
+				"sprite_animation", _member_line(owner_text, member, assigned))
 		"flip_v":
 			if assigned != "true" and assigned != "false":
-				return {}
-			return _sentence(object_name, "Set flipped" if assigned == "true" else "Set not flipped", {})
+				return _mirror_when(object_name, "Set flipped when {test}", member, assigned, context)
+			return _with_pattern(_sentence(object_name,
+				"Set flipped" if assigned == "true" else "Set not flipped", {}),
+				"sprite_animation", _member_line(owner_text, member, assigned))
 		"scale":
 			var uniform: String = _uniform_scale_factor(assigned)
 			if uniform.is_empty():
@@ -1817,6 +1838,13 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	# ── M40 / M43 / M47 ─────────────────────────────────────────────────────────────────────────
 	# The calls an event sheet writes as one of its own verbs: an animation, a sound, a visibility switch,
 	# an angle, and a property set by name.
+	# ── S11 / S12 / S13 ─────────────────────────────────────────────────────────────────────────
+	# The focus, dialog, mixer, seek and animation-tree calls, in the words their own objects publish.
+	# Ahead of the engine verbs so `set("parameters/blend_position", v)` reads as the blend it is
+	# rather than as a property named by a path.
+	var media_step: Dictionary = media_call(call.duplicate().merged({"line": text}, true), context)
+	if not media_step.is_empty():
+		return media_step
 	var engine_verb: Dictionary = _engine_verb_call(call, context)
 	if not engine_verb.is_empty():
 		return engine_verb
@@ -2461,15 +2489,20 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 					(played["segments"] as Array).append({"text": "   ", "tone": "plain"})
 					(played["segments"] as Array).append({"text": speed_chip, "tone": "value"})
 				return played
+			# S13. The player is the object the row acts on, exactly as the lines around it are: a
+			# sound's file, pitch, bus and volume are all set on the same named player, and filing the
+			# Play under a different object split one thought across two column entries.
 			if _class_is_any(object_class, AUDIO_CLASSES):
-				return _sentence(OBJECT_AUDIO, "Play", {})
+				return _with_pattern(_sentence(object_name, "Play sound", {}), "sound",
+					"%s.play()" % receiver)
 		"stop":
 			if not arguments.is_empty():
 				return {}
 			if _class_is_any(object_class, ANIMATION_CLASSES):
 				return _sentence(object_name, "Stop animation", {})
 			if _class_is_any(object_class, AUDIO_CLASSES):
-				return _sentence(OBJECT_AUDIO, "Stop", {})
+				return _with_pattern(_sentence(object_name, "Stop sound", {}), "sound",
+					"%s.stop()" % receiver)
 		# ── P8 ──────────────────────────────────────────────────────────────────────────────────
 		# The drawing verbs, in the words the Drawing Canvas pack already publishes them under, so a
 		# `_draw` body reads the same whether the shapes were typed or dropped from that pack.
@@ -6350,3 +6383,394 @@ static func godot_systems_condition(text: String, context: Dictionary) -> Dictio
 	if not arrived.is_empty():
 		return arrived
 	return _collided_family_condition(text, context)
+# ── S11 / S12 / S13 / S14 - the sprite, UI, sound and juice words ───────────────────────────────
+#
+# Four families of line that most beginner scripts are made of, read in the words the sheet's own
+# Sprite / Animation / UI / Audio objects and the Juice, Sine and Flash behaviors already publish.
+# Each reading also NAMES the pattern it recognised (`pattern`, with the source line as its evidence
+# and the pack that could replace the shape), which the row builder hands to the pattern registry -
+# the grammar stays pure and knows nothing about sheets or rows.
+#
+# Strictness is unchanged: every one of these is claimed only at the exact shape, and a line the
+# reading cannot say honestly keeps the property write it is.
+
+## S11. The classes whose `frame` / `texture` are a sprite's, and the ones whose parameter paths are an
+## animation tree's. Matched through ClassDB, so a subclass counts as its base.
+const SPRITE_CLASSES: PackedStringArray = ["Sprite2D", "Sprite3D", "AnimatedSprite2D", "AnimatedSprite3D"]
+const ANIMATION_TREE_CLASSES: PackedStringArray = ["AnimationTree"]
+
+## S11. The head every AnimationTree parameter path starts with, and the one path that is a state
+## machine rather than a value.
+const ANIMATION_PARAMETER_HEAD := "parameters/"
+const ANIMATION_PLAYBACK_PATH := "parameters/playback"
+
+## S14. A bob is written on the object's OWN place, which is the one an event sheet just calls
+## position.
+const JUICE_OWN_POSITION: PackedStringArray = ["position", "global_position"]
+
+
+## The reading with the pattern it recognised attached, for the row builder to claim. Display only:
+## nothing here reaches emission, and an empty reading is returned untouched.
+static func _with_pattern(reading: Dictionary, pattern: String, evidence: String,
+		adoptable: String = "") -> Dictionary:
+	if reading.is_empty():
+		return reading
+	reading["pattern"] = pattern
+	reading["evidence"] = PackedStringArray([evidence.strip_edges()])
+	reading["adoptable"] = adoptable
+	return reading
+
+
+## S11 / S13. The property writes a sprite or an audio player spells as one of its own verbs, or {}
+## when the member is not one of these - which keeps the plain "Set X to Y".
+##
+##   sprite.frame = 3            sprite ▸ Set animation frame to 3
+##   anim.speed_scale = 2.0      anim   ▸ Set animation speed to 2
+##   sprite.texture = load(...)  sprite ▸ Set image to hero.png
+##   sfx.pitch_scale = 1.1       sfx    ▸ Set pitch to 1.1
+##   music.volume_db = linear_to_db(0.5)   music ▸ Set volume to 50%
+static func media_assignment(object_name: String, object_class: String, member: String,
+		owner_text: String, assigned: String, context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	var line: String = _member_line(owner_text, member, value)
+	var sprite: bool = _class_is_any(object_class, SPRITE_CLASSES)
+	var animation: bool = _class_is_any(object_class, ANIMATION_CLASSES)
+	var audio: bool = _class_is_any(object_class, AUDIO_CLASSES)
+	match member:
+		"frame":
+			if sprite:
+				return _with_pattern(_sentence(object_name, "Set animation frame to {value}", {
+					"value": [expression_text(value, context), "value"]}), "sprite_animation", line)
+		"speed_scale":
+			if animation:
+				return _with_pattern(_sentence(object_name, "Set animation speed to {value}", {
+					"value": [expression_text(value, context), "value"]}), "sprite_animation", line)
+		"texture":
+			if sprite:
+				var image: String = _asset_file_name(value)
+				if image.is_empty():
+					return {}
+				return _with_pattern(_sentence(object_name, "Set image to {file}", {
+					"file": [image, "value"]}), "sprite_animation", line)
+		"stream":
+			if audio:
+				var sound: String = _asset_file_name(value)
+				if sound.is_empty():
+					return {}
+				return _with_pattern(_sentence(object_name, "Set sound to {file}", {
+					"file": [sound, "value"]}), "sound", line)
+		"pitch_scale":
+			if audio:
+				return _with_pattern(_sentence(object_name, "Set pitch to {value}", {
+					"value": [expression_text(value, context), "value"]}), "sound", line)
+		"bus":
+			if audio and _is_string_literal(value):
+				return _with_pattern(_sentence(object_name, "Set bus to {bus}", {
+					"bus": [_unquote(value), "name"]}), "sound", line)
+		"volume_db":
+			if audio:
+				return _with_pattern(_volume_sentence(object_name, "Set volume to {value}", value, context),
+					"sound", line)
+	return {}
+
+
+## S11 / S13. The FILE an image or a sound is set from, named the way a reader names it - the file
+## itself, with the folders and the loading call that fetched it left off. "" when the value is not a
+## literal path, which keeps the plain property write: an image chosen at runtime has no file to name.
+static func _asset_file_name(value: String) -> String:
+	var text: String = value.strip_edges()
+	for head: String in ["load(", "preload("]:
+		if text.begins_with(head) and text.ends_with(")") \
+				and closing_paren(text, head.length() - 1) == text.length() - 1:
+			text = text.substr(head.length(), text.length() - head.length() - 1).strip_edges()
+			break
+	if not _is_string_literal(text):
+		return ""
+	var path: String = _unquote(text.trim_prefix("&"))
+	return path.substr(path.rfind("/") + 1)
+
+
+## S11. `flip_h = dir < 0` - the mirror verb with the test that decides it, which is the whole of what
+## the line does. Only a real TEST is claimed: a mirror set from another flag reads as the plain write
+## it is, because "when muted" would say something the line does not.
+static func _mirror_when(object_name: String, template: String, member: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	var test: String = assigned.strip_edges()
+	if _comparison_parts(test).is_empty() and top_level_index(test, " == ") < 0 \
+			and top_level_index(test, " != ") < 0:
+		return {}
+	return _with_pattern(_sentence(object_name, template, {
+		"test": [comparison_symbols(expression_text(test, context)), "value"]}),
+		"sprite_animation", _member_line("", member, test))
+
+
+## The source line a member write came from, for the evidence a pattern claim carries.
+static func _member_line(owner_text: String, member: String, value: String) -> String:
+	var target: String = member if owner_text.is_empty() else "%s.%s" % [owner_text, member]
+	return "%s = %s" % [target, value]
+
+
+## S13 / S12. One loudness in the words a mixer uses: a plain fraction is the percentage a reader set,
+## anything else is the 0-to-1 setting it is. `linear_to_db` is the conversion Godot needs and the
+## reader does not, so it never appears in the sentence; a raw decibel number keeps its unit.
+static func _volume_sentence(object_name: String, template: String, value: String,
+		context: Dictionary) -> Dictionary:
+	var level: String = _linear_volume(value)
+	if level.is_empty():
+		return _sentence(object_name, "%s dB" % template, {
+			"value": [expression_text(value, context), "value"]})
+	if level.is_valid_float():
+		return _sentence(object_name, template, {"value": [_percent_words(level, context), "value"]})
+	var reading: Dictionary = _sentence(object_name, template, {
+		"value": [expression_text(level, context), "value"]})
+	(reading["segments"] as Array).append({"text": " %s" % translate("(0 to 1)"), "tone": "muted"})
+	return reading
+
+
+## The 0-to-1 level inside a `linear_to_db(...)`, or "" when the value is not one.
+static func _linear_volume(value: String) -> String:
+	const HEAD := "linear_to_db("
+	var text: String = value.strip_edges()
+	if not text.begins_with(HEAD) or not text.ends_with(")"):
+		return ""
+	if closing_paren(text, HEAD.length() - 1) != text.length() - 1:
+		return ""
+	return text.substr(HEAD.length(), text.length() - HEAD.length() - 1).strip_edges()
+
+
+## S14. The juice snippets written as an assignment: a camera shake, a sine bob and the squash that
+## eases back to normal size. Each is claimed only at its exact shape, and each says the WHAT in the
+## behavior's own words with the arithmetic as a muted note.
+static func juice_assignment(object_name: String, object_class: String, member: String,
+		owner_text: String, assigned: String, context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	var line: String = _member_line(owner_text, member, value)
+	if member == "offset" and _class_is_any(object_class, CAMERA_CLASSES):
+		var amount: String = _random_offset_amount(value)
+		if amount.is_empty():
+			return {}
+		var shake: Dictionary = _sentence(object_name, "Shake by {amount}", {
+			"amount": [expression_text(amount, context), "value"]})
+		(shake["segments"] as Array).append({
+			"text": " %s" % translate("random offset this tick"), "tone": "muted"})
+		return _with_pattern(shake, "juice", line, "juice")
+	if (member == "y" or member == "x") and JUICE_OWN_POSITION.has(owner_text):
+		var wave: Array = _sine_wave_parts(value)
+		if wave.is_empty():
+			return {}
+		# A bob is written on the script's OWN place, so the row belongs to that object by name - the
+		# receiver here is the word `position`, which is not an object anybody could point at.
+		var bob: Dictionary = _sentence(script_object(context), "Bob {axis}", {"axis": [member, "name"]})
+		(bob["segments"] as Array).append({"text": " %s · %s %s · %s %s" % [
+			translate("sine"), translate("magnitude"), number_words(str(wave[1])),
+			number_words(str(wave[0])), translate("per second")], "tone": "muted"})
+		return _with_pattern(bob, "juice", line, "sine")
+	if member == "scale" and owner_text.is_empty():
+		var rate: String = _ease_to_one_rate(value)
+		if rate.is_empty():
+			return {}
+		var eased: Dictionary = _sentence(object_name, "Ease size back to normal at {rate}", {
+			"rate": [expression_text(rate, context), "value"]})
+		(eased["segments"] as Array).append({"text": " %s" % translate("per second"), "tone": "muted"})
+		return _with_pattern(eased, "juice", line, "juice")
+	return {}
+
+
+## S14. The shake amount in `Vector2(randf_range(-s, s), randf_range(-s, s))`, or "" when the value is
+## anything else. Both axes must be the SAME random range: a shake with two different amounts is two
+## numbers, and printing one of them would be a lie.
+static func _random_offset_amount(value: String) -> String:
+	var text: String = value.strip_edges()
+	var open_at: int = text.find("(")
+	if open_at <= 0 or not text.ends_with(")"):
+		return ""
+	if not VECTOR_CONSTRUCTORS.has(text.substr(0, open_at)):
+		return ""
+	var axes: PackedStringArray = _split_arguments(text.substr(open_at + 1, text.length() - open_at - 2))
+	if axes.size() < 2:
+		return ""
+	var amount: String = ""
+	for axis: String in axes:
+		var axis_amount: String = _symmetric_random_amount(axis.strip_edges())
+		if axis_amount.is_empty():
+			return ""
+		if amount.is_empty():
+			amount = axis_amount
+		elif amount != axis_amount:
+			return ""
+	return amount
+
+
+## The `s` in `randf_range(-s, s)`, or "" when the call is not that symmetric shape.
+static func _symmetric_random_amount(text: String) -> String:
+	const HEAD := "randf_range("
+	if not text.begins_with(HEAD) or not text.ends_with(")"):
+		return ""
+	var arguments: PackedStringArray = _split_arguments(
+		text.substr(HEAD.length(), text.length() - HEAD.length() - 1))
+	if arguments.size() != 2:
+		return ""
+	var low: String = arguments[0].strip_edges()
+	var high: String = arguments[1].strip_edges()
+	if not low.begins_with("-"):
+		return ""
+	return high if low.substr(1).strip_edges() == high else ""
+
+
+## S14. `base_y + sin(t * 3.0) * 8.0` as [frequency, magnitude], or [] when the value is not a bob.
+static func _sine_wave_parts(value: String) -> Array:
+	var plus_at: int = top_level_index(value, " + ")
+	if plus_at <= 0:
+		return []
+	var wave: String = value.substr(plus_at + 3).strip_edges()
+	var times_at: int = top_level_index(wave, " * ")
+	if times_at <= 0:
+		return []
+	var sine: String = wave.substr(0, times_at).strip_edges()
+	var magnitude: String = wave.substr(times_at + 3).strip_edges()
+	const HEAD := "sin("
+	if not sine.begins_with(HEAD) or not sine.ends_with(")"):
+		return []
+	var inner: String = sine.substr(HEAD.length(), sine.length() - HEAD.length() - 1).strip_edges()
+	var rate_at: int = top_level_index(inner, " * ")
+	if rate_at <= 0:
+		return []
+	return [inner.substr(rate_at + 3).strip_edges(), magnitude]
+
+
+## S14. The `10` in `scale.lerp(Vector2.ONE, 10 * delta)`, or "" when the value eases somewhere other
+## than back to normal size.
+static func _ease_to_one_rate(value: String) -> String:
+	const HEAD := "scale.lerp("
+	var text: String = value.strip_edges()
+	if not text.begins_with(HEAD) or not text.ends_with(")"):
+		return ""
+	var arguments: PackedStringArray = _split_arguments(
+		text.substr(HEAD.length(), text.length() - HEAD.length() - 1))
+	if arguments.size() != 2:
+		return ""
+	var destination: String = arguments[0].strip_edges()
+	if destination != "Vector2.ONE" and destination != "Vector3.ONE":
+		return ""
+	var weight: String = arguments[1].strip_edges()
+	var times_at: int = top_level_index(weight, " * ")
+	if times_at <= 0 or weight.substr(times_at + 3).strip_edges() != "delta":
+		return ""
+	return weight.substr(0, times_at).strip_edges()
+
+
+## S11 / S12 / S13. The calls these families spell as one of their own verbs, or {} to keep the
+## ordinary Object ▸ Verb reading.
+##
+##   resume_button.grab_focus()          resume button ▸ Set focus
+##   game_over.popup_centered()          game over ▸ Show dialog (centred)
+##   music.seek(12.0)                    music ▸ Seek to 12 seconds
+##   anim_tree.set("parameters/x", v)    anim tree ▸ Set blend x to v
+##   anim_tree["parameters/playback"].travel("Hurt")   anim tree ▸ Travel to animation state Hurt
+##   AudioServer.set_bus_volume_db(0, linear_to_db(v)) Audio ▸ Set master volume to v (0 to 1)
+static func media_call(call: Dictionary, context: Dictionary) -> Dictionary:
+	var method: String = str(call.get("method", ""))
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	var receiver: String = str(call.get("target", ""))
+	var line: String = str(call.get("line", ""))
+	if receiver == "AudioServer" and method == "set_bus_volume_db" and arguments.size() == 2:
+		return _with_pattern(_bus_volume_sentence(arguments, context), "ui", line)
+	var object_name: String = _receiver_object(receiver, context)
+	var object_class: String = object_class_of(object_name, context)
+	match method:
+		"grab_focus":
+			if arguments.is_empty():
+				return _with_pattern(_sentence(object_name, "Set focus", {}), "ui", line)
+		"popup_centered", "popup_centered_ratio", "popup_centered_clamped":
+			var dialog: Dictionary = _sentence(object_name, "Show dialog", {})
+			(dialog["segments"] as Array).append({"text": " %s" % translate("(centred)"), "tone": "muted"})
+			return _with_pattern(dialog, "ui", line)
+		"seek":
+			if arguments.size() == 1 and _class_is_any(object_class, AUDIO_CLASSES):
+				return _with_pattern(_sentence(object_name, "Seek to {seconds} seconds", {
+					"seconds": [number_words(arguments[0].strip_edges()), "value"]}), "sound", line)
+		"set":
+			if arguments.size() == 2 and _class_is_any(object_class, ANIMATION_TREE_CLASSES):
+				var blended: String = _animation_parameter_name(arguments[0])
+				if not blended.is_empty():
+					return _with_pattern(_sentence(object_name, "Set blend {name} to {value}", {
+						"name": [blended, "name"],
+						"value": [expression_text(arguments[1], context), "value"]}),
+						"sprite_animation", line)
+		"travel":
+			if arguments.size() == 1:
+				var machine: String = _animation_playback_receiver(receiver)
+				if not machine.is_empty():
+					return _with_pattern(_sentence(_receiver_object(machine, context),
+						"Travel to animation state {state}", {
+							"state": [_unquote(arguments[0].strip_edges()), "value"]}),
+						"sprite_animation", line)
+	return {}
+
+
+## S12. `AudioServer.set_bus_volume_db(0, linear_to_db(v))` in the mixer's words. Bus 0 is the master
+## bus every project has; a bus looked up by name says that name instead.
+static func _bus_volume_sentence(arguments: PackedStringArray, context: Dictionary) -> Dictionary:
+	var bus: String = arguments[0].strip_edges()
+	if bus == "0":
+		return _volume_sentence(OBJECT_AUDIO, "Set master volume to {value}", arguments[1], context)
+	var named: String = _bus_index_name(bus)
+	if named.is_empty():
+		return {}
+	return _volume_sentence(OBJECT_AUDIO, _fill("Set {bus} volume to {value}", {"bus": named}),
+		arguments[1], context)
+
+
+## The bus a `AudioServer.get_bus_index("SFX")` names, or "" when the index is computed some other way.
+static func _bus_index_name(expression: String) -> String:
+	const HEAD := "AudioServer.get_bus_index("
+	var text: String = expression.strip_edges()
+	if not text.begins_with(HEAD) or not text.ends_with(")"):
+		return ""
+	var inner: String = text.substr(HEAD.length(), text.length() - HEAD.length() - 1).strip_edges()
+	return _unquote(inner) if _is_string_literal(inner) else ""
+
+
+## S11. The blend name in `"parameters/blend_position"` - the last leg of the path, in words - or ""
+## when the path is not a parameter path or names the state machine rather than a value.
+static func _animation_parameter_name(argument: String) -> String:
+	var text: String = argument.strip_edges()
+	if not _is_string_literal(text):
+		return ""
+	var path: String = _unquote(text)
+	if not path.begins_with(ANIMATION_PARAMETER_HEAD) or path == ANIMATION_PLAYBACK_PATH:
+		return ""
+	return path.substr(path.rfind("/") + 1).replace("_", " ")
+
+
+## S11. The animation tree in `anim_tree["parameters/playback"]`, or "" when the receiver is anything
+## else - a `travel` on something that is not a state machine keeps its own reading.
+static func _animation_playback_receiver(receiver: String) -> String:
+	var text: String = receiver.strip_edges()
+	var open_at: int = text.find("[")
+	if open_at <= 0 or not text.ends_with("]"):
+		return ""
+	var key: String = text.substr(open_at + 1, text.length() - open_at - 2).strip_edges()
+	if not _is_string_literal(key) or _unquote(key) != ANIMATION_PLAYBACK_PATH:
+		return ""
+	return text.substr(0, open_at)
+
+
+## S11 / S13. "Is playing" - the one question a sprite, an animation player and an audio player all
+## answer, whether the script asks it as a call or as a flag. {} for anything else.
+static func media_condition(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = text.strip_edges()
+	var receiver: String = ""
+	if bare.ends_with(".is_playing()"):
+		receiver = bare.substr(0, bare.length() - 13)
+	elif bare.ends_with(".playing"):
+		receiver = bare.substr(0, bare.length() - 8)
+	if receiver.is_empty() or not is_identifier(receiver):
+		return {}
+	var object_name: String = _receiver_object(receiver, context)
+	var object_class: String = object_class_of(object_name, context)
+	var audio: bool = _class_is_any(object_class, AUDIO_CLASSES)
+	if not audio and not _class_is_any(object_class, ANIMATION_CLASSES) \
+			and not _class_is_any(object_class, SPRITE_CLASSES):
+		return {}
+	return _with_pattern(_sentence(object_name, "Is playing", {}), "sound" if audio else "sprite_animation", bare)

@@ -89,7 +89,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# M40 - the sprite / audio / visibility verbs, by the object's own class
 	"sprite ▸ Set animation to \"run\" (play)",
 	"sprite ▸ Stop animation",
-	"Audio ▸ Play",
+	"sfx ▸ Play sound",
 	"sprite ▸ Set mirrored",
 	"ReadingNounsPlayer ▸ Set invisible",
 	"ReadingNounsPlayer ▸ Set opacity to 50%",
@@ -223,8 +223,8 @@ static func _verb_values() -> bool:
 	for pair: Array in [
 		["sprite.play(\"run\")", "sprite ▸ Set animation to \"run\" (play)"],
 		["sprite.stop()", "sprite ▸ Stop animation"],
-		["sfx.play()", "Audio ▸ Play"],
-		["sfx.stop()", "Audio ▸ Stop"],
+		["sfx.play()", "sfx ▸ Play sound"],
+		["sfx.stop()", "sfx ▸ Stop sound"],
 		["visible = false", "Player ▸ Set invisible"],
 		["sprite.visible = true", "sprite ▸ Set visible"],
 		["hide()", "Player ▸ Set invisible"],
@@ -436,7 +436,7 @@ static func _picked_matches_typed() -> bool:
 	for expected: String in [
 		"sprite ▸ Set animation to \"run\" (play)",
 		"sprite ▸ Stop animation",
-		"Audio ▸ Play",
+		"sfx ▸ Play sound",
 		"sprite ▸ Set mirrored",
 		"ReadingNounsPlayer ▸ Set invisible",
 		"ReadingNounsPlayer ▸ Set angle to 90",
