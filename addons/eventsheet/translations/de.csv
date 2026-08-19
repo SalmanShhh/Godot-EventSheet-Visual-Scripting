@@ -2691,3 +2691,47 @@ Learn,Lernen
 Show this page when nothing is open,"Diese Seite zeigen, wenn nichts geöffnet ist"
 Nothing here yet.,Hier ist noch nichts.
 Another event-sheet editor,Ein anderer Ereignisblatt-Editor
+Set Z order to {value},Z-Reihenfolge auf {value} setzen
+Set Z order relative to the layer,Z-Reihenfolge relativ zur Ebene
+Set Z order absolute,Z-Reihenfolge absolut
+Move to top of layer,An den Anfang der Ebene
+Move to bottom of layer,An das Ende der Ebene
+Move to layer {layer},Auf Ebene {layer} verschieben
+Set layer order to {value},Ebenenreihenfolge auf {value} setzen
+relative,relativ
+absolute,absolut
+Set font size to {value},Schriftgroesse auf {value} setzen
+Set font colour to {value},Schriftfarbe auf {value} setzen
+Set outline colour to {value},Umrissfarbe auf {value} setzen
+Set shadow colour to {value},Schattenfarbe auf {value} setzen
+Set font to {value},Schriftart auf {value} setzen
+Set horizontal alignment to {value},Horizontale Ausrichtung auf {value} setzen
+Set vertical alignment to {value},Vertikale Ausrichtung auf {value} setzen
+Set word wrap on,Zeilenumbruch einschalten
+Set word wrap off,Zeilenumbruch ausschalten
+centre,zentriert
+justified,Blocksatz
+middle,Mitte
+translated,uebersetzt
+Go to URL {url},URL {url} oeffnen
+Copy {value} to clipboard,{value} in die Zwischenablage kopieren
+Request fullscreen,Vollbild anfordern
+Leave fullscreen,Vollbild verlassen
+Alert {message},Hinweis {message}
+Vibrate for {milliseconds} ms,{milliseconds} ms vibrieren
+Is on mobile,Laeuft auf Mobilgeraet
+Is on desktop,Laeuft auf Desktop
+Is on web,Laeuft im Browser
+Has feature tag {tag},Hat Feature-Tag {tag}
+Is {platform},Ist {platform}
+Pick a random {family},Zufaelliges {family} waehlen
+Pick top {family},Oberstes {family} waehlen
+Pick bottom {family},Unterstes {family} waehlen
+Pick {family} where {test},{family} waehlen, wenn {test}
+Pick {family} by UID {uid},{family} mit UID {uid} waehlen
+Family,Familie
+Base class,Basisklasse
+GLOBALS,GLOBALE
+extends it,erweitert sie
+the group has the same members,die Gruppe hat dieselben Mitglieder
+what extends this object's class,was die Klasse dieses Objekts erweitert

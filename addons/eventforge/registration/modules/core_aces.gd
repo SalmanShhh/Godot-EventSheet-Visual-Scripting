@@ -245,7 +245,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetScreenSize", "Screen Size", ACEDescriptor.ACEType.EXPRESSION, "DisplayServer.screen_get_size()", "", [], "Utility: Window", "screen size")
 		.described("Returns the size of the player's monitor in pixels."))
 	# (Set Mouse Mode lives in device_aces under "Mouse" - not duplicated here.)
-	descriptors.append(F.make_descriptor("Core", "SetClipboard", "Set Clipboard Text", ACEDescriptor.ACEType.ACTION, "DisplayServer.clipboard_set({text})", "", [F.make_param("text", "String", "\"\"", "Text", "Text to copy to the OS clipboard.", "expression")], "Utility: Window", "copy {text} to clipboard")
+	# T12. The row wears the words the reading uses for it - an opened script's
+	# `DisplayServer.clipboard_set(x)` reads `Browser ▸ Copy x to clipboard` - so a picked row and a
+	# typed line say the same sentence. Id, section and emitted line are frozen and unchanged.
+	descriptors.append(F.make_descriptor("Core", "SetClipboard", "Copy To Clipboard", ACEDescriptor.ACEType.ACTION, "DisplayServer.clipboard_set({text})", "", [F.make_param("text", "String", "\"\"", "Text", "Text to copy to the OS clipboard.", "expression")], "Utility: Window", "copy {text} to clipboard")
 		.described("Copies text to the operating system clipboard for pasting elsewhere."))
 	descriptors.append(F.make_descriptor("Core", "GetClipboard", "Clipboard Text", ACEDescriptor.ACEType.EXPRESSION, "DisplayServer.clipboard_get()", "", [], "Utility: Window", "clipboard text")
 		.described("Returns whatever text is currently on the system clipboard."))

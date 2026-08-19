@@ -43,7 +43,7 @@ plugin dependency at runtime.
   to a float and has no Vector at all.
 - **A share code cannot build objects.** The decoder refuses to instantiate them by default, so a
   hostile code a player pastes in cannot construct anything.
-- **The clipboard is the operating system's, not the game's.** Set Clipboard Text writes to the same
+- **The clipboard is the operating system's, not the game's.** Copy To Clipboard writes to the same
   clipboard the player's browser uses. Read it back with Clipboard Text, and gate on
   Clipboard Has Text or Clipboard Has Image first.
 - **There is deliberately no "On Clipboard Changed".** The shipped **Has Changed** condition already
@@ -100,7 +100,7 @@ never collide.
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Set Clipboard Text | Copies text to the OS clipboard | `DisplayServer.clipboard_set({text})` |
+| Copy To Clipboard | Copies text to the OS clipboard | `DisplayServer.clipboard_set({text})` |
 | Clipboard Text | Whatever text is on the OS clipboard right now | `DisplayServer.clipboard_get()` |
 | Clipboard Text Is | Compares the clipboard text against a value, with your choice of operator | `DisplayServer.clipboard_get() {op} {value}` |
 | Clipboard Has Text | True when the OS clipboard currently holds any text | `DisplayServer.clipboard_has()` |
@@ -205,7 +205,7 @@ Every Frame
 
 ```
 On report bug pressed
-  -> Set Clipboard Text  "build " + version + " / " + Date & Time Text() + " / " + last_error
+  -> Copy To Clipboard  "build " + version + " / " + Date & Time Text() + " / " + last_error
   -> show "Details copied. Please paste them into the report."
 ```
 
@@ -349,7 +349,7 @@ Forgetting a name that was never remembered is harmless.
 
 **Difficulty preview.** Remember the current tuning values, apply the previewed tier so the player can see the numbers change, and restore them the moment they move the selector away.
 
-**Support diagnostics.** Set Clipboard Text with the version, the platform and the last error line turns "it crashed" into a bug report the player can paste in one keystroke.
+**Support diagnostics.** Copy To Clipboard with the version, the platform and the last error line turns "it crashed" into a bug report the player can paste in one keystroke.
 
 ## Tips and common mistakes
 
@@ -363,7 +363,7 @@ Forgetting a name that was never remembered is harmless.
 - **Share codes are not JSON and are not readable.** If you need a human to be able to read or edit the
   payload, use the JSON rows in the Working With Files guide instead - and accept that JSON flattens
   numbers and has no Vector.
-- **Copy Share Code To Clipboard is not the same as Set Clipboard Text.** The first encodes the value
+- **Copy Share Code To Clipboard is not the same as Copy To Clipboard.** The first encodes the value
   first. Passing an already-encoded code to it would encode the code itself.
 - **Reading the clipboard blindly can give you an empty string.** Clipboard Text has no guard of its
   own; gate on Clipboard Has Text when the difference between "empty" and "nothing there" matters.

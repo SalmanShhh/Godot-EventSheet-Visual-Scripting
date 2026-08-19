@@ -321,6 +321,12 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var opened_file: Dictionary = _file_open_statement(text, context)
 	if not opened_file.is_empty():
 		return _with_indent(opened_file, indent)
+	# T8. A line that picks an instance and names it is ONE picking row, not a declaration whose value
+	# happens to be a list step: the sheet's word for what it does is Pick, and the name it filled is
+	# said after it. Ahead of the declaration reading, which would show the GDScript as the value.
+	var picked: Dictionary = picking_statement(text, context)
+	if not picked.is_empty():
+		return _with_indent(picked, indent)
 	if keyword == "var" or keyword == "const":
 		return _with_indent(_declaration_statement(text, keyword), indent)
 	# S4. A countdown is a shape several lines make together, so it is claimed ahead of the arithmetic
@@ -7097,6 +7103,11 @@ static func around_objects_call(target: String, method: String, args: PackedStri
 	var platform: Dictionary = _platform_call(target, method, args, context)
 	if not platform.is_empty():
 		return platform
+	# T10. Godot has `move_to_front()` and no opposite, so the other end of the drawing order is
+	# written as "first among my parent's children" - which is the same one action, said the long way.
+	if target == "get_parent()" and method == "move_child" and args.size() == 2 \
+			and args[0].strip_edges() == "self" and args[1].strip_edges() == "0":
+		return _patterned(_sentence(script_object(context), "Move to bottom of layer", {}), "layers")
 	var object_name: String = _receiver_object(target, context)
 	var styled: Dictionary = _text_call(object_name, method, args, context)
 	if not styled.is_empty():
@@ -7107,3 +7118,151 @@ static func around_objects_call(target: String, method: String, args: PackedStri
 ## T12. The around-objects reading of one CONDITION, or {} when nothing claims it.
 static func around_objects_condition(text: String, context: Dictionary) -> Dictionary:
 	return _platform_condition(text, context)
+
+
+# ── T8 - picking: WHICH instances a row is about ─────────────────────────────────────────────────
+#
+# An event sheet says "which instances" with a pick: nearest, farthest, random, by comparison, top,
+# bottom, by UID. A Godot script says the same things to a list of nodes - `pick_random()`, a
+# `filter` lambda, `back()`, `instance_from_id()` - and each of those lines both PICKS and NAMES what
+# it picked, which is why the row says the pick and then, muted, the name it filled.
+#
+# A pick is only read when the family it picks from is KNOWN: the list was declared from a group, or
+# the variable carries the type. Reading "Pick a random enemies" off a list nobody said the kind of
+# would be inventing an object type, so the line keeps its own words instead.
+
+
+## T8. The list steps that ARE a pick, as {method: the row's words}. `filter` and `instance_from_id`
+## carry a value of their own and are read out separately.
+const PICK_METHODS: Dictionary = {
+	"pick_random": "Pick a random {family}",
+	"back": "Pick top {family}",
+	"front": "Pick bottom {family}"
+}
+
+
+## T8. The family word a type or a group name goes by - the name a reader would say out loud, which
+## is the class as written and a group spelled the way the picker spells a published name.
+static func family_word_of(name_text: String) -> String:
+	var bare: String = name_text.strip_edges()
+	if bare.is_empty():
+		return ""
+	# `Array[Enemy]` names the family its members are.
+	if bare.begins_with("Array[") and bare.ends_with("]"):
+		bare = bare.substr(6, bare.length() - 7).strip_edges()
+	if not is_identifier(bare):
+		return ""
+	return bare if bare == bare.capitalize().replace(" ", "") else function_words(bare)
+
+
+## T8. The family a list holds, from what the FILE said when the list was made: a list built from a
+## group is that group's family. "" when the file never said, which is the cue not to read a pick.
+static func family_of_list(receiver: String, context: Dictionary) -> String:
+	var lists: Dictionary = context.get("family_lists", {})
+	return str(lists.get(receiver.strip_edges(), ""))
+
+
+## T8. The one parameter and the body of a single-argument one-line lambda, as [name, body], or []
+## for anything else. `one_line_lambda` above reads the two-parameter shape a `reduce` is written in;
+## a `filter` test takes exactly one, and a sentence may only stand for a shape it can see whole.
+static func _one_argument_lambda(text: String) -> Array:
+	var body: String = text.strip_edges()
+	if not body.begins_with("func(") or body.contains("\n"):
+		return []
+	var close_at: int = closing_paren(body, 4)
+	if close_at < 0:
+		return []
+	var parameter: String = body.substr(5, close_at - 5).strip_edges()
+	var colon_at: int = parameter.find(":")
+	if colon_at >= 0:
+		parameter = parameter.substr(0, colon_at).strip_edges()
+	if not is_identifier(parameter):
+		return []
+	var rest: String = body.substr(close_at + 1).strip_edges()
+	if not rest.begins_with(":"):
+		return []
+	rest = rest.substr(1).strip_edges()
+	if not rest.begins_with("return "):
+		return []
+	return [parameter, rest.substr(7).strip_edges()]
+
+
+## T8. The `var name[: Type] = value` a pick is written into, as {name, type, value}, or {} when the
+## line declares nothing. Both spellings of the declaration answer.
+static func _picked_declaration(text: String) -> Dictionary:
+	var body: String = text.strip_edges()
+	var keyword: String = leading_word(body)
+	if keyword != "var" and keyword != "const":
+		return {}
+	body = body.substr(keyword.length()).strip_edges()
+	var type_text: String = ""
+	var value: String = ""
+	var name_text: String = ""
+	for separator: String in [" := ", " = "]:
+		var at: int = top_level_index(body, separator)
+		if at <= 0:
+			continue
+		name_text = body.substr(0, at).strip_edges()
+		value = body.substr(at + separator.length()).strip_edges()
+		break
+	if name_text.is_empty() or value.is_empty():
+		return {}
+	var colon_at: int = name_text.find(":")
+	if colon_at >= 0:
+		type_text = name_text.substr(colon_at + 1).strip_edges()
+		name_text = name_text.substr(0, colon_at).strip_edges()
+	if not is_identifier(name_text):
+		return {}
+	return {"name": name_text, "type": type_text, "value": value}
+
+
+## T8. The pick a VALUE is, or {} when the value picks nothing this reading can name.
+static func _pick_reading(value: String, declared_family: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(value)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	# The UID pick names no list at all - the number IS the instance - so the family can only come
+	# from the type the variable carries, and "object" is the honest word when it carries none.
+	if method == "instance_from_id" and receiver.is_empty() and args.size() == 1:
+		var uid_family: String = declared_family if not declared_family.is_empty() else translate("object")
+		return _sentence(OBJECT_SYSTEM, "Pick {family} by UID {uid}", {
+			"family": [uid_family, "name"],
+			"uid": [expression_text(args[0], context), "value"]})
+	var family: String = family_of_list(receiver, context)
+	if family.is_empty():
+		family = declared_family
+	if family.is_empty():
+		return {}
+	if PICK_METHODS.has(method) and args.is_empty():
+		return _sentence(OBJECT_SYSTEM, str(PICK_METHODS[method]), {"family": [family, "name"]})
+	if method == "filter" and args.size() == 1:
+		var lambda: Array = _one_argument_lambda(args[0])
+		if lambda.is_empty():
+			return {}
+		# The lambda's own parameter is a name only that lambda knows, so the test is shown the way a
+		# picking row shows it: about the member, not about the loop variable.
+		var test: String = str(lambda[1])
+		var prefix: String = "%s." % str(lambda[0])
+		if test.begins_with(prefix):
+			test = test.substr(prefix.length())
+		return _sentence(OBJECT_SYSTEM, "Pick {family} where {test}", {
+			"family": [family, "name"], "test": [expression_text(test, context), "value"]})
+	return {}
+
+
+## T8. The reading of one line that picks - a list step or a UID lookup written into a name - or {}
+## when the line picks nothing. The row says the pick, then the name it filled, muted, because the
+## reader's next question about a picked instance is what it is called from here on.
+static func picking_statement(text: String, context: Dictionary) -> Dictionary:
+	var declared: Dictionary = _picked_declaration(text)
+	if declared.is_empty():
+		return {}
+	var reading: Dictionary = _pick_reading(str(declared.get("value", "")),
+		family_word_of(str(declared.get("type", ""))), context)
+	if reading.is_empty():
+		return {}
+	_append_note(reading, "→ %s" % str(declared.get("name", "")).replace("_", " "))
+	return _patterned(reading, "picking")

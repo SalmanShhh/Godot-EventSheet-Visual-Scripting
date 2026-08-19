@@ -2691,3 +2691,47 @@ Learn,学ぶ
 Show this page when nothing is open,何も開いていないときにこのページを表示
 Nothing here yet.,まだ何もありません。
 Another event-sheet editor,別のイベントシートエディタ
+Set Z order to {value},Z順序を {value} にする
+Set Z order relative to the layer,Z順序をレイヤー基準にする
+Set Z order absolute,Z順序を絶対値にする
+Move to top of layer,レイヤーの最前面へ移動
+Move to bottom of layer,レイヤーの最背面へ移動
+Move to layer {layer},レイヤー {layer} へ移動
+Set layer order to {value},レイヤー順序を {value} にする
+relative,相対
+absolute,絶対
+Set font size to {value},文字サイズを {value} にする
+Set font colour to {value},文字色を {value} にする
+Set outline colour to {value},縁取りの色を {value} にする
+Set shadow colour to {value},影の色を {value} にする
+Set font to {value},フォントを {value} にする
+Set horizontal alignment to {value},横方向の配置を {value} にする
+Set vertical alignment to {value},縦方向の配置を {value} にする
+Set word wrap on,折り返しをオンにする
+Set word wrap off,折り返しをオフにする
+centre,中央
+justified,両端揃え
+middle,中央
+translated,翻訳された
+Go to URL {url},URL {url} を開く
+Copy {value} to clipboard,{value} をクリップボードにコピー
+Request fullscreen,全画面を要求
+Leave fullscreen,全画面を終了
+Alert {message},{message} を通知
+Vibrate for {milliseconds} ms,{milliseconds} ミリ秒振動
+Is on mobile,モバイルで動作中
+Is on desktop,デスクトップで動作中
+Is on web,ウェブで動作中
+Has feature tag {tag},機能タグ {tag} を持つ
+Is {platform},{platform} である
+Pick a random {family},{family} をランダムに選ぶ
+Pick top {family},一番上の {family} を選ぶ
+Pick bottom {family},一番下の {family} を選ぶ
+Pick {family} where {test},{test} である {family} を選ぶ
+Pick {family} by UID {uid},UID {uid} の {family} を選ぶ
+Family,ファミリー
+Base class,基底クラス
+GLOBALS,グローバル
+extends it,これを継承
+the group has the same members,グループの構成は同じ
+what extends this object's class,このオブジェクトのクラスを継承するもの

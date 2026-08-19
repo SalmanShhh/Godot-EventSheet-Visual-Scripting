@@ -122,7 +122,9 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"CharacterBody2D ▸ Set process mode to Always",
 	"System ▸ Set dir to DOWN",
 	"art ▸ Set texture filter to Nearest",
-	"caption ▸ Set horizontal alignment to Center",
+	# T10/T11 re-pin: alignment is a TEXT row now, and the sheet's own word for the middle of a line
+	# is "centre" rather than the engine constant's spelling.
+	"caption ▸ Set horizontal alignment to centre",
 	# Q5 - numbers the way a person writes them
 	"System ▸ Set Half to 50%",
 	"CharacterBody2D ▸ Set X to 300",

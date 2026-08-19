@@ -2691,3 +2691,47 @@ Learn,Обучение
 Show this page when nothing is open,"Показывать эту страницу, когда ничего не открыто"
 Nothing here yet.,Здесь пока пусто.
 Another event-sheet editor,Другой редактор листов событий
+Set Z order to {value},Установить Z-порядок в {value}
+Set Z order relative to the layer,Z-порядок относительно слоя
+Set Z order absolute,Z-порядок абсолютный
+Move to top of layer,Переместить на верх слоя
+Move to bottom of layer,Переместить на низ слоя
+Move to layer {layer},Переместить на слой {layer}
+Set layer order to {value},Установить порядок слоя в {value}
+relative,относительный
+absolute,абсолютный
+Set font size to {value},Установить размер шрифта в {value}
+Set font colour to {value},Установить цвет шрифта в {value}
+Set outline colour to {value},Установить цвет обводки в {value}
+Set shadow colour to {value},Установить цвет тени в {value}
+Set font to {value},Установить шрифт {value}
+Set horizontal alignment to {value},Установить выравнивание по горизонтали в {value}
+Set vertical alignment to {value},Установить выравнивание по вертикали в {value}
+Set word wrap on,Включить перенос слов
+Set word wrap off,Выключить перенос слов
+centre,по центру
+justified,по ширине
+middle,середина
+translated,переведённый
+Go to URL {url},Открыть URL {url}
+Copy {value} to clipboard,Скопировать {value} в буфер обмена
+Request fullscreen,Запросить полноэкранный режим
+Leave fullscreen,Выйти из полноэкранного режима
+Alert {message},Сообщение {message}
+Vibrate for {milliseconds} ms,Вибрация {milliseconds} мс
+Is on mobile,Запущено на мобильном
+Is on desktop,Запущено на компьютере
+Is on web,Запущено в браузере
+Has feature tag {tag},Есть тег возможности {tag}
+Is {platform},Это {platform}
+Pick a random {family},Выбрать случайного {family}
+Pick top {family},Выбрать верхнего {family}
+Pick bottom {family},Выбрать нижнего {family}
+Pick {family} where {test},Выбрать {family}, где {test}
+Pick {family} by UID {uid},Выбрать {family} по UID {uid}
+Family,Семейство
+Base class,Базовый класс
+GLOBALS,ГЛОБАЛЬНЫЕ
+extends it,наследует его
+the group has the same members,в группе те же участники
+what extends this object's class,что наследует класс этого объекта
