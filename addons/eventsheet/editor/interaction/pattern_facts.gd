@@ -20,7 +20,10 @@ extends RefCounted
 const PATTERN_IDS: PackedStringArray = [
 	"state_machine", "object_pool", "wait_sequence", "countdown", "local_storage", "existence",
 	"background_loading", "movement", "multiplayer", "sprite_animation", "ui", "sound", "juice",
-	"navigation", "effects", "tilemap", "camera", "blank_event"
+	"navigation", "effects", "tilemap", "camera", "blank_event",
+	"bullet", "turret", "move_to", "rotate", "wrap", "bound", "pin", "fade", "line_of_sight", "drag_drop",
+	"anchor", "solid", "jumpthru", "picking", "family", "layers", "text", "platform", "create_object",
+	"overlap", "advanced_random", "date"
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is
