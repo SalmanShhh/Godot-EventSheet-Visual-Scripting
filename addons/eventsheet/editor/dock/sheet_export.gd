@@ -64,6 +64,22 @@ static func figure_file_name(document_path: String, group_title: String, index: 
 	return "%s-%s.png" % [base, cleaned]
 
 
+# ── stitching ─────────────────────────────────────────────────────────────────────────────────
+
+
+## The same picture in the format the sheet is being stitched into. `Image.blit_rect` requires the
+## two images to share a format and does NOTHING when they do not - it prints one engine error and
+## returns, which is how the whole export once wrote a blank page: the stitch buffer is RGBA8 and a
+## screen grab off an opaque viewport comes back RGB8. Converting a COPY leaves the caller's picture
+## alone; a picture already in the wanted format is handed straight back.
+static func matched_to(picture: Image, format: int) -> Image:
+	if picture == null or picture.get_format() == format:
+		return picture
+	var copy: Image = picture.duplicate()
+	copy.convert(format)
+	return copy
+
+
 # ── pages ─────────────────────────────────────────────────────────────────────────────────────
 
 

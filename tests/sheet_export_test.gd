@@ -14,6 +14,7 @@ extends RefCounted
 
 static func run() -> bool:
 	var all_passed: bool = true
+	all_passed = _test_stitch_formats_match() and all_passed
 	all_passed = _test_page_slices() and all_passed
 	all_passed = _test_split_pages() and all_passed
 	all_passed = _test_pdf_structure() and all_passed
@@ -29,6 +30,36 @@ static func _picture(width: int, height: int) -> Image:
 		for x: int in width:
 			picture.set_pixel(x, y, Color(float(x % 5) / 4.0, float(y % 7) / 6.0, 0.25))
 	return picture
+
+
+# ── stitching ─────────────────────────────────────────────────────────────────────────────────
+
+
+## The bug this pins wrote every export as a blank file. The whole-sheet capture stitches screen
+## grabs into an RGBA8 buffer with `blit_rect`, which requires both images to share a format and
+## does NOTHING when they do not - and a grab off an opaque viewport comes back RGB8. Nothing threw:
+## the PNG, the PDF page and the Markdown figures were all written from an untouched empty buffer.
+static func _test_stitch_formats_match() -> bool:
+	var grab: Image = _picture(6, 4)
+	var passed: bool = _check("the fixture really is the format a screen grab is",
+		grab.get_format(), Image.FORMAT_RGB8)
+	var matched: Image = EventSheetSheetExport.matched_to(grab, Image.FORMAT_RGBA8)
+	passed = _check("it comes back in the format the stitch buffer is",
+		matched.get_format(), Image.FORMAT_RGBA8) and passed
+	passed = _check("and the caller's own picture is not converted under it",
+		grab.get_format(), Image.FORMAT_RGB8) and passed
+	passed = _check("a pixel survives the conversion",
+		matched.get_pixel(3, 2), grab.get_pixel(3, 2)) and passed
+	var already: Image = Image.create_empty(2, 2, false, Image.FORMAT_RGBA8)
+	passed = _check("a picture already in the format is handed straight back",
+		EventSheetSheetExport.matched_to(already, Image.FORMAT_RGBA8) == already, true) and passed
+	# The claim that matters: after matching, the blit actually copies. A blit between mismatched
+	# formats leaves the destination untouched, which is exactly what shipped.
+	var stitched: Image = Image.create_empty(6, 4, false, Image.FORMAT_RGBA8)
+	stitched.blit_rect(matched, Rect2i(0, 0, 6, 4), Vector2i.ZERO)
+	passed = _check("the stitched page holds the grabbed pixels, not blank",
+		stitched.get_pixel(3, 2), grab.get_pixel(3, 2)) and passed
+	return passed
 
 
 # ── pages ─────────────────────────────────────────────────────────────────────────────────────
