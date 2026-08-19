@@ -543,7 +543,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Start Encounter** - Runs the plan from the top: the clock restarts at 0, the spawn tally resets, and each beat fires as its time arrives. An encounter with no beats finishes on its very next frame, so On Encounter Finished still tells you the wave is over.
 - **Stop Encounter** - Freezes the encounter where it stands - the clock stops and no further beat spawns. Already-spawned nodes are left alone (they are yours). Elapsed Seconds keeps its value, so a paused wave can be inspected; Start Encounter restarts from the top.
 - **Use Object Pool Node** (`node: Node`) - Spawns through THIS pool node instead of searching for the ObjectPool autoload - for a per-arena pool, or a pool you wrote yourself. The contract is three functions: has_pool(name), create_pool(name, scene_path, prewarm) and spawn(name); a node missing any of them is ignored and the timeline instantiates scenes as usual. Pass nothing to go back to the autoload.
-- **Skip To** (`seconds: float`) - Jumps the clock to a time WITHOUT spawning anything it passes - the debug verb for checking a late beat, or for a director that fast-forwards a tutorial the player already knows. Beats before that time are marked as played.
+- **Skip To** (`seconds: float`) - Jumps the clock to a time WITHOUT spawning anything it passes - the debug action for checking a late beat, or for a director that fast-forwards a tutorial the player already knows. Beats before that time are marked as played.
 - **Write Encounter Report** (`path: String`) - Saves the Encounter Report to a text file - user://encounter_report.txt is the usual path, and lands in the app's user folder (the editor opens it from Project > Open User Data Folder). Everything in it is derived from the loaded beats, so it always matches the plan; it writes with plain file access and no editor at all, so a build server can produce it too. Warns in the output if the path cannot be written.
 
 #### Expressions
@@ -1151,7 +1151,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Expressions
 - **Scene Argument** (`key: String = "door", fallback: String = ""`) - A value the previous scene carried over, as text - the door you came in by, who sent you. Answers the fallback when nothing was carried under that key.
 - **Scene Argument Number** (`key: String = "attempt", fallback: float = 0.0`) - A carried value as a number - an attempt count, a difficulty, a starting score. Answers the fallback when nothing was carried under that key.
-- **Path Of Named Scene** (`scene_name: String = "arena"`) - The res:// path registered under a name, or "" when the name is unknown. The escape hatch for a verb that still wants a path, e.g. the Scene Flow pack's Fade To Scene.
+- **Path Of Named Scene** (`scene_name: String = "arena"`) - The res:// path registered under a name, or "" when the name is unknown. The escape hatch for an action that still wants a path, e.g. the Scene Flow pack's Fade To Scene.
 - **Current Scene Name** - The name of the scene running right now, or "" before the first one was announced. Stabler than a path: save it, show it in a debug corner, key a music track off it.
 - **Registered Scene Names** - Every registered name, sorted. A level-select screen builds itself from this instead of from a list somebody has to keep in step.
 
@@ -1467,7 +1467,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Price** (`entry_id: String, price: float`) - Re-prices one entry while the game runs - a sale, a haggle, a reputation discount. Negative prices are clamped to 0 (a free entry still goes through the whole purchase, so its trigger still fires).
 - **Set Entry Unlocked** (`entry_id: String, unlocked: bool`) - Opens (or closes) one entry. A locked entry still shows in the table - Entry Is Unlocked greys it out in your UI, and buying it is refused with the reason "locked" - which is how a tier gate, a skill-tree prerequisite or a story unlock is expressed without deleting the row.
 - **Use Wallet Node** (`node: Node`) - Points this table at ONE wallet node, tried before anything else - the direct way when the purse is already in hand (the player's own wallet node, a shared bank, a per-faction till). The contract is two functions, balance(currency) and spend(currency, amount); a node missing either is ignored, so a wrong drag can never silently swallow the money. Pass nothing to go back to searching the wallet group and then the CurrencyLedger autoload.
-- **Set Local Wallet** (`amount: float`) - Sets the fallback purse - the number this table spends from when no wallet node and no CurrencyLedger autoload answer. It is deliberately the ONLY money verb here: as soon as your game has a real economy, install one and this number stops being consulted.
+- **Set Local Wallet** (`amount: float`) - Sets the fallback purse - the number this table spends from when no wallet node and no CurrencyLedger autoload answer. It is deliberately the ONLY money action here: as soon as your game has a real economy, install one and this number stops being consulted.
 
 #### Expressions
 - **Price Of** (`entry_id: String`) - What one entry costs (-1 when the table has no such id, so a missing price never reads as free).
@@ -1826,7 +1826,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stat Is At Least** (`stat: String, value: float`) - The beginner-friendly stat compare (Stat Total works in any expression too).
 
 #### Actions
-- **Add Buff** (`buff_id: String, stat: String, value: float, mode: String = "add", tags: String = "", source: String = "", duration: float = 0.0`) - The one verb that runs the whole system: a named buff targeting a stat with a value and a mode (add / multiply / override - highest override wins). Tags are comma-separated labels for bulk ops, source names who applied it, duration in seconds expires it (0 = permanent). Re-adding an id REPLACES that buff.
+- **Add Buff** (`buff_id: String, stat: String, value: float, mode: String = "add", tags: String = "", source: String = "", duration: float = 0.0`) - The one action that runs the whole system: a named buff targeting a stat with a value and a mode (add / multiply / override - highest override wins). Tags are comma-separated labels for bulk ops, source names who applied it, duration in seconds expires it (0 = permanent). Re-adding an id REPLACES that buff.
 - **Remove Buff** (`buff_id: String`) - Removes one buff by id (a no-op when absent).
 - **Remove Buffs By Tag** (`tag: String`) - Removes every buff carrying the tag - unequip all "equipment" in one action.
 - **Remove Buffs By Source** (`source: String`) - Removes every buff a source applied - clear one enemy's curses when it dies.
@@ -2234,6 +2234,7 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 
 #### Conditions
 - **Has Animation** (`animation: String, target: String`) - True when this player owns a clip by that name - guard a Play so a missing animation never errors.
+- **Is Playing** (`target: String`) - True while this animation player is running an animation.
 
 #### Actions
 - **Set Animation Speed** (`scale: float, target: String`) - Scales how fast every animation on this player runs - slow-mo a death, speed up a fast-forward. 0 freezes it in place.
@@ -2241,6 +2242,8 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 - **Queue Animation** (`animation: String, target: String`) - Lines up an animation to play automatically when the current one ends - combo chains, or dropping back to idle after an attack, without a timer.
 - **Pause Animation** (`target: String`) - Freezes the animation at its current position (Play resumes from here) - a hit-pause on a specific frame, or a photo mode.
 - **Set Current Animation** (`animation: String, target: String`) - Switches which clip is current (assigning it starts it) - a direct set when you don't need Play's blend arguments.
+- **Set Flipped** (`flipped: String, target: String`) - Turns this sprite upside down, or back the right way up.
+- **Set Image** (`path: String, target: String`) - Shows a different image on this sprite.
 
 #### Expressions
 - **Animation Position** (`target: String`) - How many seconds into the current animation the play head is - sync an effect to a frame or drive a progress bar.
@@ -2282,9 +2285,12 @@ Audio (the Audio vocabulary, the Godot way).
 - **Stop** (`target: String`) - Stops this audio player from playing right now.
 - **Seek** (`seconds: String, target: String`) - Jumps this audio player's playback to a specific time in seconds.
 - **Set Volume** (`db: String, target: String`) - Sets how loud this audio player is, in decibels (0 = full, -80 = silent).
-- **Set Playback Rate** (`pitch: String, target: String`) - Changes this player's speed and pitch (1 = normal, higher = faster).
+- **Set Pitch** (`pitch: String, target: String`) - Changes this player's speed and pitch (1 = normal, higher = faster).
 - **Set Bus Volume** (`bus: String, db: String`) - Sets the volume of a named audio bus, like Music or SFX.
 - **Mute Bus** (`bus: String, muted: String`) - Mutes or unmutes a named audio bus all at once.
+- **Set Sound** (`path: String, target: String`) - Puts a sound file into this player, ready to play.
+- **Set Bus** (`bus: String, target: String`) - Sends this player's sound out on a named bus, like SFX or Music.
+- **Set Volume (0 to 1)** (`level: String, target: String`) - Sets how loud this player is from a 0-to-1 level, with the decibel conversion done for you.
 
 #### Expressions
 - **Playback Position** (`target: String`) - Gives the current playback time of this audio player, in seconds.
@@ -2411,7 +2417,7 @@ Collections (rich variables)
 - **Set Volume (dB)** (`db: String, target: String`) - Sets an audio player's loudness in decibels (0 is full, -80 is silent).
 - **Play Sprite Animation** (`anim: String, target: String`) - Plays a named animation on an animated sprite (e.g. run or jump).
 - **Stop Sprite Animation** (`target: String`) - Stops the animated sprite's current animation on the spot.
-- **Set Frame** (`frame: String, target: String`) - Jumps the animated sprite to a specific frame number.
+- **Set Animation Frame** (`frame: String, target: String`) - Jumps the animated sprite to a specific frame number.
 - **Set Mirrored** (`flipped: String, target: String`) - Mirrors the sprite horizontally, great for facing left or right.
 - **Make Current** (`target: String`) - Makes this camera the active one the player views the game through.
 - **Set Zoom** (`zoom: String, target: String`) - Sets how zoomed in or out the camera is.
@@ -2442,7 +2448,7 @@ Collections (rich variables)
 - **Set Part Of** (`var_name: String, part: String, value: String`) - Changes one named part and leaves the rest alone: zero the vertical speed on landing and keep the horizontal, flatten a 3D direction to the ground plane, fade only the see-through part of a tint. Writing a part a record does not have yet ADDS it.
 - **Set AnimationTree Active** (`active: String, target: String`) - Turns this AnimationTree's playback on or off.
 - **Travel To State** (`state: String, target: String`) - Tells the state machine to transition to the named animation state.
-- **Set Tree Parameter** (`path: String, value: String, target: String`) - Sets an AnimationTree parameter like a blend amount, condition or timescale.
+- **Set Blend** (`path: String, value: String, target: String`) - Sets an AnimationTree parameter like a blend amount, condition or timescale.
 - **Start Ramp Clock** - Marks minute zero for this node's Ramped values - call it when the run actually starts, not in menus.
 
 #### Expressions
@@ -2994,6 +3000,16 @@ File management (read / write / JSON, plus directory + file operations).
 - **File Size (bytes)** (`path: String`) - Returns a file's size in bytes, or zero if the file doesn't exist.
 - **List Files** (`path: String`) - Returns the list of file names inside a folder (empty if the folder is missing).
 - **List Subdirectories** (`path: String`) - Returns the list of subfolder names inside a folder.
+
+### Game Feel (`res://addons/eventforge/registration/modules/game_feel_aces.gd`)
+Game Feel: the five snippets every game copies, as rows.
+
+#### Actions
+- **Shake** (`amount: String, target: String`) - Jolts this camera by a random offset for one tick. Run it every tick while a hit lands.
+- **Hitstop** (`seconds: String, scale: String`) - Slows the whole game to a crawl for a moment and then restores it - the punch a hit lands with.
+- **Bob** (`base: String, time: String, frequency: String, magnitude: String, target: String`) - Floats this object up and down on a sine wave. Run it every tick.
+- **Flash** (`colour: String, seconds: String`) - Tints this object for a moment and then puts it back - the damage flash.
+- **Ease Size Back** (`rate: String`) - Eases this object's size back to normal, which is how a squash recovers. Run it every tick.
 
 ### Gradient Curve (`res://addons/eventforge/registration/modules/gradient_curve_aces.gd`)
 Gradient & Curve vocabulary (smooth colour ramps and shaped 0-1 curves).
@@ -3939,7 +3955,7 @@ UI / menu vocabulary (Control / BaseButton / Range / LineEdit)
 - **Is Button Disabled** (`target: String`) - True when this button is disabled and can't be clicked.
 
 #### Actions
-- **Grab Focus** (`target: String`) - Gives this control keyboard focus, so input goes to it next.
+- **Set Focus** (`target: String`) - Gives this control keyboard focus, so input goes to it next.
 - **Release Focus** (`target: String`) - Removes keyboard focus from this control.
 - **Focus Next** - Moves keyboard focus to the next control in tab order.
 - **Focus Previous** - Moves keyboard focus to the previous control in tab order.
@@ -3952,6 +3968,9 @@ UI / menu vocabulary (Control / BaseButton / Range / LineEdit)
 - **Set Max Value** (`max: String, target: String`) - Sets the maximum value of a slider, progress bar, or spinbox.
 - **Set Field Text** (`value: String, target: String`) - Sets the text shown in a single-line text field.
 - **Clear Field** (`target: String`) - Empties a single-line text field of all its text.
+- **Set Progress** (`value: String, max: String, target: String`) - Fills a progress bar to a value out of a maximum, both in one row.
+- **Show Dialog** (`target: String`) - Opens this dialog in the middle of the screen.
+- **Set Master Volume** (`level: String`) - Sets the overall game volume from a 0-to-1 slider value.
 
 #### Expressions
 - **Button Text** (`target: String`) - Returns the label text currently shown on the button.
