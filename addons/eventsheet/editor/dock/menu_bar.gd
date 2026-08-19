@@ -66,7 +66,7 @@ func build(root: Node) -> void:
 	sheet_popup.add_item("Teach a Verb - Share Published Verbs", 10)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(10),
-		"Make this sheet's published verbs (its exposed ƒ functions) available in EVERY sheet's picker, node-targeted at $%s. Extract actions to a function first (right-click an event), then teach it here." % "<ClassName>"
+		"Make this sheet's published functions (its exposed ƒ functions) available in EVERY sheet's picker, node-targeted at $%s. Extract actions to a function first (right-click an event), then teach it here." % "<ClassName>"
 	)
 	sheet_popup.add_item("Inspector Designer…", 11)
 	sheet_popup.set_item_tooltip(
@@ -78,7 +78,7 @@ func build(root: Node) -> void:
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(14), "Bump this pack's @ace_version (patch/minor/major) with a one-line change note recorded in its class docs - backed up first, republished on the spot.")
 	sheet_popup.add_separator()
 	sheet_popup.add_item("Name Raw Calls…", 15)
-	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(15), "Sweep this sheet for raw one-call code rows and name each one that matches a verb you already have - engine classes, your own scripts, installed packs. Each conversion is kept only when it compiles to the exact same line; anything ambiguous is left alone.")
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(15), "Sweep this sheet for raw one-call code rows and name each one that matches an action you already have - engine classes, your own scripts, installed packs. Each conversion is kept only when it compiles to the exact same line; anything ambiguous is left alone.")
 	sheet_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
 			0: _dock._open_template_menu()

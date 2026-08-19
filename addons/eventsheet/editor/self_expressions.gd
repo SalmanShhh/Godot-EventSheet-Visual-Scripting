@@ -249,7 +249,7 @@ static func _script_members(script: Script) -> Array:
 			if argument is Dictionary:
 				argument_names.append(str((argument as Dictionary).get("name", "")))
 		members.append({"member": "%s(%s)" % [method_name, ", ".join(argument_names)],
-			"display": method_name.capitalize(), "tooltip": "Value-returning verb on the attached behaviour."})
+			"display": method_name.capitalize(), "tooltip": "Value-returning expression on the attached behaviour."})
 	if not cache_key.is_empty():
 		# One live entry per path: drop stale-mtime keys so an editing session never accumulates.
 		for existing_key: Variant in _script_members_cache.keys():

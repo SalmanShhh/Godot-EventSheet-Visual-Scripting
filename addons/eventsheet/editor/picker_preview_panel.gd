@@ -33,7 +33,7 @@ func _init() -> void:
 	_header_button = Button.new()
 	_header_button.flat = true
 	_header_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_header_button.tooltip_text = "How this sheet's published verbs will read in the picker - live, before you save. Kind badge, display name, featured star, category, parameters."
+	_header_button.tooltip_text = "How this sheet's published functions will read in the picker - live, before you save. Kind badge, display name, featured star, category, parameters."
 	_header_button.pressed.connect(func() -> void: set_expanded(not _expanded))
 	add_child(_header_button)
 	_scroll = ScrollContainer.new()

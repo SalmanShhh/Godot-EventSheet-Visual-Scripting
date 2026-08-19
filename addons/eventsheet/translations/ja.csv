@@ -611,7 +611,7 @@ Edit Parameter,パラメータを編集
 Add Parameter,パラメータを追加
 Apply,適用
 Delete this parameter,このパラメータを削除
-Edit the whole verb…,動詞全体を編集…
+Edit the whole function…,関数全体を編集…
 e.g. amount,例: amount
 leave empty to make it required,空欄にすると必須になります
 what this input is for,この入力の用途
@@ -626,11 +626,11 @@ Godot's own documentation for this verb. It is written above the function as ## 
 "One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.",この動詞が何をするかを 1 行で書きます。ピッカーで動詞の横に表示されるので、目当ての動詞かどうかを判断する人が読む文になります。
 "The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","ピッカーで関数名の代わりに表示される分かりやすい名前です - ""Deal Damage"" のほうが deal_damage より読みやすいでしょう。空欄にすると動詞名から自動で決まります。"
 "Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.",この動詞をピッカーのどのセクションに分類するかです。同じカテゴリの動詞はまとまって表示されるため、パックは通常すべての動詞を 1 つにまとめます - パック自身の名前が適しています。
-"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the verb's row, so plain words beat abbreviations.",この入力の名前です。生成される GDScript ではパラメータ名になり、動詞の行ではラベルになります。略語よりも平易な言葉が向いています。
+"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the function's row, so plain words beat abbreviations.",この入力の名前です。生成される GDScript ではパラメータ名になり、関数の行ではラベルになります。略語より分かりやすい言葉を。
 "What kind of value this input accepts - a number (int / float), text (String), a true/false (bool), a position (Vector2 / Vector3), or Variant for anything at all.",この入力が受け取れる値の種類です - 数値 (int / float)、テキスト (String)、true/false (bool)、座標 (Vector2 / Vector3)、または何でも受け取れる Variant です。
 "An optional starting value, so whoever uses the verb can skip this input. Written as GDScript (10, 1.5, ""idle"", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down.","省略可能な初期値です。これがあると動詞を使う側はこの入力を省けます。GDScript として書きます (10, 1.5, ""idle"", true)。GDScript では既定値のある入力を最後に置く必要があるため、ここを埋めるとパラメータが下に移動することがあります。"
 "One line explaining this input. It shows in the picker beside the field, which is where somebody decides what to type into it.",この入力を説明する 1 行です。ピッカーで入力欄の横に表示されます - まさに何を入力するか決める場所です。
-Removes the input from the verb entirely. Anything already calling the verb loses the value it was passing here.,この入力を動詞から完全に削除します。すでにこの動詞を呼び出している箇所は、ここに渡していた値を失います。
+Removes the input from the function entirely. Anything already calling the function loses the value it was passing here.,この入力を関数から完全に削除します。すでにこの関数を呼んでいるものは、ここに渡していた値を失います。
 "Each parameter has a name, type, optional default value, and description.",各パラメータには名前、型、省略可能な既定値、説明があります。
 A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled).,GDScript の真偽値の式です - すべてが成り立つときだけ本体が実行されます（例: host.enabled）。
 Publishes the verb into pickers as the chosen kind.,選んだ種類として、この動詞をピッカーに公開します。

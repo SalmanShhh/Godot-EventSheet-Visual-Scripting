@@ -49,7 +49,7 @@ func init_dialog(parent_node: Node) -> void:
 	_name_edit.placeholder_text = "e.g. amount"
 	_dialog.register_text_enter(_name_edit)
 	form.add_child(EventSheetPopupUI.form_row("Name", _name_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
-		"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the verb's row, so plain words beat abbreviations."))
+		"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the function's row, so plain words beat abbreviations."))
 
 	_type_option = OptionButton.new()
 	for type_name: String in EventSheetFunctionDialog.PARAM_TYPES:
@@ -60,7 +60,7 @@ func init_dialog(parent_node: Node) -> void:
 	_default_edit = LineEdit.new()
 	_default_edit.placeholder_text = "leave empty to make it required"
 	form.add_child(EventSheetPopupUI.form_row("Default", _default_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
-		"An optional starting value, so whoever uses the verb can skip this input. Written as GDScript (10, 1.5, \"idle\", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down."))
+		"An optional starting value, so whoever uses the function can skip this input. Written as GDScript (10, 1.5, \"idle\", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down."))
 
 	_description_edit = LineEdit.new()
 	_description_edit.placeholder_text = "what this input is for"
@@ -69,13 +69,13 @@ func init_dialog(parent_node: Node) -> void:
 
 	_remove_check = CheckBox.new()
 	_remove_check.text = "Delete this parameter"
-	_remove_check.tooltip_text = "Removes the input from the verb entirely. Anything already calling the verb loses the value it was passing here."
+	_remove_check.tooltip_text = "Removes the input from the function entirely. Anything already calling the function loses the value it was passing here."
 	form.add_child(_remove_check)
 
 	# The way back to the full verb dialog, for the person who clicked a parameter but meant to change
 	# the verb itself. Without it, narrowing this dialog would have REMOVED a route rather than focused one.
 	var full_editor_button: Button = Button.new()
-	full_editor_button.text = "Edit the whole verb…"
+	full_editor_button.text = "Edit the whole function…"
 	full_editor_button.flat = true
 	full_editor_button.pressed.connect(func() -> void:
 		_dialog.hide()

@@ -611,7 +611,7 @@ Edit Parameter,Modifica parametro
 Add Parameter,Aggiungi parametro
 Apply,Applica
 Delete this parameter,Elimina questo parametro
-Edit the whole verb…,Modifica l'intero verbo…
+Edit the whole function…,Modifica l'intera funzione…
 e.g. amount,es. amount
 leave empty to make it required,lascia vuoto per renderlo obbligatorio
 what this input is for,a cosa serve questo ingresso
@@ -626,11 +626,11 @@ Godot's own documentation for this verb. It is written above the function as ## 
 "One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.","Una riga che dice cosa fa questo verbo. Compare accanto al verbo nel selettore, quindi è ciò che si legge quando si decide se è il verbo giusto."
 "The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","Il nome leggibile mostrato nel selettore al posto del nome della funzione: ""Deal Damage"" si legge meglio di deal_damage. Lascialo vuoto per ricavarlo dal nome del verbo."
 "Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.","In quale sezione del selettore viene archiviato questo verbo. I verbi della stessa categoria stanno insieme, quindi un pacchetto di solito mette tutti i suoi sotto una sola: il proprio nome va benissimo."
-"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the verb's row, so plain words beat abbreviations.","Come si chiama questo ingresso. Diventa il nome del parametro nel GDScript generato e l'etichetta sulla riga del verbo, quindi le parole chiare battono le abbreviazioni."
+"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the function's row, so plain words beat abbreviations.","Come si chiama questo input. Diventa il nome del parametro nel GDScript generato e l'etichetta sulla riga della funzione, quindi le parole chiare battono le abbreviazioni."
 "What kind of value this input accepts - a number (int / float), text (String), a true/false (bool), a position (Vector2 / Vector3), or Variant for anything at all.","Che tipo di valore accetta questo ingresso: un numero (int / float), testo (String), un vero/falso (bool), una posizione (Vector2 / Vector3) o Variant per qualsiasi cosa."
 "An optional starting value, so whoever uses the verb can skip this input. Written as GDScript (10, 1.5, ""idle"", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down.","Un valore iniziale facoltativo, così chi usa il verbo può saltare questo ingresso. Si scrive come GDScript (10, 1.5, ""idle"", true). GDScript richiede che gli ingressi CON un valore predefinito vengano per ultimi, quindi compilarlo può spostare il parametro in basso."
 "One line explaining this input. It shows in the picker beside the field, which is where somebody decides what to type into it.","Una riga che spiega questo ingresso. Compare nel selettore accanto al campo, cioè dove si decide cosa scriverci."
-Removes the input from the verb entirely. Anything already calling the verb loses the value it was passing here.,Rimuove del tutto l'ingresso dal verbo. Tutto ciò che chiama già il verbo perde il valore che passava qui.
+Removes the input from the function entirely. Anything already calling the function loses the value it was passing here.,Rimuove del tutto l'input dalla funzione. Tutto ciò che chiama già la funzione perde il valore che passava qui.
 "Each parameter has a name, type, optional default value, and description.","Ogni parametro ha un nome, un tipo, un valore predefinito facoltativo e una descrizione."
 A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled).,Un'espressione booleana GDScript: il corpo viene eseguito solo quando valgono tutte (es. host.enabled).
 Publishes the verb into pickers as the chosen kind.,Pubblica il verbo nei selettori con il tipo scelto.

@@ -611,7 +611,7 @@ Edit Parameter,Editar parámetro
 Add Parameter,Añadir parámetro
 Apply,Aplicar
 Delete this parameter,Eliminar este parámetro
-Edit the whole verb…,Editar el verbo completo…
+Edit the whole function…,Editar toda la función…
 e.g. amount,p. ej. amount
 leave empty to make it required,déjalo vacío para hacerlo obligatorio
 what this input is for,para qué sirve esta entrada
@@ -626,11 +626,11 @@ Godot's own documentation for this verb. It is written above the function as ## 
 "One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.","Una línea que explica qué hace este verbo. Aparece junto al verbo en el selector, así que es lo que alguien lee al decidir si es el verbo que busca."
 "The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","El nombre amigable que se muestra en el selector en lugar del nombre de la función: ""Deal Damage"" se lee mejor que deal_damage. Déjalo vacío para derivarlo del nombre del verbo."
 "Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.","En qué sección del selector se archiva este verbo. Los verbos de la misma categoría se agrupan, así que un paquete suele poner todos los suyos en una: su propio nombre funciona bien."
-"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the verb's row, so plain words beat abbreviations.","Cómo se llama esta entrada. Se convierte en el nombre del parámetro en el GDScript generado y en la etiqueta de la fila del verbo, así que las palabras claras ganan a las abreviaturas."
+"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the function's row, so plain words beat abbreviations.","Cómo se llama esta entrada. Se convierte en el nombre del parámetro en el GDScript generado y en la etiqueta de la fila de la función, así que las palabras claras ganan a las abreviaturas."
 "What kind of value this input accepts - a number (int / float), text (String), a true/false (bool), a position (Vector2 / Vector3), or Variant for anything at all.","Qué tipo de valor acepta esta entrada: un número (int / float), texto (String), un verdadero/falso (bool), una posición (Vector2 / Vector3) o Variant para cualquier cosa."
 "An optional starting value, so whoever uses the verb can skip this input. Written as GDScript (10, 1.5, ""idle"", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down.","Un valor inicial opcional, para que quien use el verbo pueda omitir esta entrada. Se escribe como GDScript (10, 1.5, ""idle"", true). GDScript exige que las entradas CON valor por defecto vayan al final, así que rellenarlo puede mover el parámetro hacia abajo."
 "One line explaining this input. It shows in the picker beside the field, which is where somebody decides what to type into it.","Una línea que explica esta entrada. Aparece en el selector junto al campo, que es donde alguien decide qué escribir en él."
-Removes the input from the verb entirely. Anything already calling the verb loses the value it was passing here.,Elimina la entrada del verbo por completo. Todo lo que ya llame al verbo pierde el valor que pasaba aquí.
+Removes the input from the function entirely. Anything already calling the function loses the value it was passing here.,Elimina la entrada de la función por completo. Todo lo que ya llama a la función pierde el valor que pasaba aquí.
 "Each parameter has a name, type, optional default value, and description.","Cada parámetro tiene un nombre, un tipo, un valor por defecto opcional y una descripción."
 A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled).,Una expresión booleana de GDScript: el cuerpo se ejecuta solo cuando todas se cumplen (p. ej. host.enabled).
 Publishes the verb into pickers as the chosen kind.,Publica el verbo en los selectores con el tipo elegido.
