@@ -6,6 +6,40 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - an opened script's PATTERNS read as the events they are
+
+The batches before this one made single statements read as the sheet's sentences. These are the
+shapes several lines make together, which no single line can decide, so the whole file is asked once
+per rebuild and every reading that recognises one states it in the pattern registry, on the event
+that owns it, with the exact source lines as evidence. Display only throughout: the file is
+untouched, and the byte round-trip and the emitted GDScript cannot move.
+
+- **A countdown reads as a countdown.** A number counted down by a per-frame delta AND asked about
+  against zero somewhere reads `Count down cooldown (by dt)`, `Start cooldown for 0.5 seconds`,
+  `cooldown has run out` and `invincible_for is running`. The clamped spellings
+  (`max(0.0, x - delta)`, `move_toward(x, 0, delta)`) say `(never below 0)`. Both halves are
+  required, so an ordinary subtraction stays a subtraction.
+- **Object pools read as Create object.** `pool.pop_back() if not pool.is_empty() else
+  BULLET.instantiate()` is one `System ▸ Create object Bullet [pooled]` row, either order of the
+  ternary, and `pool.push_back(b)` reads `b ▸ Return to pool (hidden, ticking off, back in pool)`.
+  The claim offers the shipped Object Pool behavior for a hand-rolled pool.
+- **A sequence of waits says so on its header.** A function whose rows alternate waiting and doing
+  wears a `sequence · 3 s + a wait` chip, with the total of its timer waits and a note when one of
+  them waits on something whose length nobody knows.
+- **Save and load idioms read as Local Storage.** The object is spelled in full, a section and a key
+  address the one item they address (`Set item player/score to score`, `Local Storage.Item(
+  \"player/score\") (or 0)`, `has item player/score`), and `cfg.load(path) != OK` asks what it is
+  really asking: `save file is missing`. `.json`, `.save` and `.dat` join `.cfg` and `.ini` as save
+  files; the extension is what says so, so `sprite.save(\"user://shot.png\")` is still an image.
+- **Existence and relations.** `is_instance_valid(t)` reads `t exists`, `target = null` reads
+  `Forget target`, and `get_parent().remove_child(self)` reads `Remove from layout (kept alive, not
+  destroyed)` - the answer to the first question a reader has about a removed object.
+- **The last list and table gaps.** `stats.get(\"hp\", 100)` reads `stats \"hp\" (or 100 when missing)`,
+  `items.slice(0, 3)` reads `the first 3 of items`, a one-line `reduce` that adds one member up
+  reads `the sum of price over items`, a one-line `sort_custom` reads `Sort items by price (lowest
+  first)`, `items.has(sword)` reads `items contains sword`, and `commands[\"equip\"].call()` reads
+  `Functions ▸ Call the function stored in commands \"equip\"`. A lambda written over two lines keeps
+  its Script block: a sentence may only stand for a shape it can see whole.
 ### Added - the Godot systems an opened script is built from read as the sheet's own rows
 
 - **Loading a layout in the background is three sentences, not six lines of `ResourceLoader`.**

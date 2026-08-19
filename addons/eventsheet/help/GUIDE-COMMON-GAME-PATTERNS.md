@@ -220,6 +220,38 @@ Ten more spellings of everyday game code, shipped the same way:
 - **Ramped** - the difficulty curve as a value (`Every Ramped(2, -0.3, 0.5) seconds` is a
   spawner that speeds up); `Start Ramp Clock` marks minute zero.
 
+## The same patterns, hand-written, opened as a sheet
+
+You do not have to author a pattern from the picker for the sheet to know it is one. Open a script
+that already writes one of these shapes by hand and it reads as the same events, and the event that
+owns it says which pattern it is, with the exact lines that made the sheet think so.
+
+- **A countdown.** `cooldown -= delta` in a tick, and `cooldown <= 0` asked somewhere, reads
+  `Count down cooldown (by dt)`, `cooldown has run out` and `Start cooldown for 0.5 seconds`. Both
+  halves are needed: a number that shrinks by a delta and is never asked about is a subtraction, and
+  the row keeps saying so. `max(0.0, x - delta)` and `move_toward(x, 0, delta)` read the same with
+  `(never below 0)` on the end.
+- **An object pool.** `var b = pool.pop_back() if not pool.is_empty() else BULLET.instantiate()`
+  followed by `add_child(b)` is one `System ▸ Create object Bullet [pooled]` row; `pool.push_back(b)`
+  is `b ▸ Return to pool`. Pooling is how the object is got hold of, not a different thing to do
+  with it, which is why the row is the ordinary Create object row with a chip.
+- **A sequence.** A function whose rows alternate `await get_tree().create_timer(N).timeout` and
+  actions wears a `sequence · 3 s` chip on its header, with the total of its waits. A wait on
+  something whose length nobody knows (an animation, a signal) adds `+ a wait` rather than a wrong
+  total.
+- **Saving.** ConfigFile lines read under **Local Storage**: `Set item player/score to score`,
+  `Local Storage.Item("player/score") (or 0)`, `Save`, `Load`, `has item player/score`, and
+  `cfg.load(path) != OK` reads `save file is missing`. The path is on hover.
+- **Existence.** `is_instance_valid(t)` is `t exists`, `target = null` is `Forget target`, and
+  `get_parent().remove_child(self)` is `Remove from layout (kept alive, not destroyed)` - which is
+  the answer to the first question anyone has about a removed object.
+- **Lists and tables.** `stats.get("hp", 100)` is `stats "hp" (or 100 when missing)`,
+  `items.slice(0, 3)` is `the first 3 of items`, a one-line `sort_custom` is
+  `Sort items by price (lowest first)`, a one-line `reduce` is `the sum of price over items`,
+  `items.has(sword)` is `items contains sword`, and `commands["equip"].call()` is
+  `Functions ▸ Call the function stored in commands "equip"`. A lambda written over two lines keeps
+  its Script block - a sentence may only stand for a shape it can see whole.
+
 ## A loading screen that shows progress
 
 Godot can load the next layout on another thread while the current one keeps running. Written by
