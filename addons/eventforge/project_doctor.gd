@@ -78,6 +78,7 @@ static func run() -> Dictionary:
 	check_unsaved_rebindings(sheet_paths, findings)
 	check_orphaned_provider_calls(sheet_paths, findings)
 	check_sheet_signal_declarations(sheet_paths, findings)
+	check_pattern_smells(sheet_paths, findings)
 	check_vocabulary_doc(findings)
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
@@ -2102,3 +2103,170 @@ static func _project_scripts() -> PackedStringArray:
 ## editor, the bookmarks and the Find results quote a row: "event 4".
 static func _add(findings: Array[Dictionary], severity: String, check: String, path: String, message: String, event_number: int = 0) -> void:
 	findings.append({"severity": severity, "check": check, "path": path, "message": message, "event": event_number})
+
+
+## S22 - THE PATTERN SMELLS: a pattern the readings recognised, missing its other half.
+##
+## Once a reading knows a shape it knows the shape's parts, and a missing part is the classic
+## beginner bug - the countdown that never restarts, the pooled object that is never returned, the
+## state nothing ever asks about, the timer started on the way in and never stopped on the way out.
+## None of them is a compile error, so today they ship green and misbehave at play time.
+##
+## Every check here reads the CLAIM REGISTRY rather than re-deriving a pattern, which is the whole
+## point of the registry: the Doctor accuses exactly the shapes the sheet already marks, so a reader
+## can always see the thing being complained about. The claims are made here rather than taken from
+## a view, because the Doctor runs headlessly over paths and has no viewport.
+static func check_pattern_smells(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		if sheet_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		scan_pattern_smells(sheet, sheet_path, findings)
+
+
+## The walk itself, over ONE sheet already in hand - the entry point the suite drives, because a
+## check that can only be reached through a project scan can only be tested by staging a project.
+static func scan_pattern_smells(sheet: EventSheetResource, sheet_path: String,
+		findings: Array[Dictionary]) -> void:
+	if sheet == null:
+		return
+	EventSheetPatternFacts.clear(sheet)
+	EventSheetPatternReadings.claim_all(sheet)
+	var claims: Array = EventSheetPatternFacts.claims(sheet)
+	if claims.is_empty():
+		return
+	var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events)
+	var events: Dictionary = _events_by_uid(sheet)
+	for entry: Variant in claims:
+		var claim: Dictionary = entry as Dictionary
+		var owner: EventRow = events.get(str(claim.get("row_uid", ""))) as EventRow
+		var number: int = int(numbers.get(owner.get_instance_id(), 0)) if owner != null else 0
+		match str(claim.get("pattern", "")):
+			"countdown":
+				_pattern_smell_countdown(sheet, owner, sheet_path, number, findings)
+			"object_pool":
+				_pattern_smell_pool(sheet, sheet_path, number, findings)
+			"state_machine":
+				_pattern_smell_state(sheet, sheet_path, number, findings)
+			"wait_sequence":
+				_pattern_smell_timer(sheet, owner, sheet_path, number, findings)
+		# "this block is a behavior" - the note that is how Adopt behavior gets discovered at all.
+		# Only when this build can actually do it, because a note offering a rewrite that cannot run
+		# is worse than no note.
+		if EventSheetPatternAdopt.is_adoptable(claim) \
+				and bool(EventSheetPatternAdopt.plan(sheet, claim).get("ok", false)):
+			_add(findings, "info", "pattern-is-a-behavior", sheet_path,
+				"This block is the %s behavior - Adopt behavior?" % EventSheetPatternVocabulary.pack_label(
+					str(claim.get("adoptable", ""))), number)
+
+
+## A countdown that counts but never restarts: it reaches zero once and stays there, so whatever it
+## was gating happens forever afterwards.
+static func _pattern_smell_countdown(sheet: EventSheetResource, owner: EventRow,
+		sheet_path: String, number: int, findings: Array[Dictionary]) -> void:
+	var counted: String = _countdown_name(owner)
+	if counted.is_empty():
+		return
+	for event_row: EventRow in _pattern_events(sheet):
+		for action: Variant in event_row.actions:
+			if action is ACEAction and (action as ACEAction).ace_id == "SetVar" \
+					and str((action as ACEAction).params.get("var_name", "")) == counted:
+				return
+	_add(findings, "warning", "pattern-countdown-never-restarts", sheet_path,
+		"%s counts down but never restarts - this event subtracts from it and nothing sets it above zero." % counted,
+		number)
+
+
+## A pooled object that is taken out and never put back: the pool drains and the reuse the pattern
+## exists for stops happening.
+static func _pattern_smell_pool(sheet: EventSheetResource, sheet_path: String, number: int,
+		findings: Array[Dictionary]) -> void:
+	if _sheet_uses_ace(sheet, "ReturnToPool") or _sheet_uses_ace(sheet, "PoolRelease"):
+		return
+	_add(findings, "warning", "pattern-pool-never-returned", sheet_path,
+		"A pooled object is created here and nothing anywhere returns one to the pool.", number)
+
+
+## A state that is SET and never ASKED about: the value is written every time and no event ever
+## branches on it, so the state machine has states nothing reacts to.
+static func _pattern_smell_state(sheet: EventSheetResource, sheet_path: String, number: int,
+		findings: Array[Dictionary]) -> void:
+	var written: Dictionary = {}
+	var asked: Dictionary = {}
+	for event_row: EventRow in _pattern_events(sheet):
+		for condition: ACECondition in event_row.conditions:
+			if condition != null and condition.ace_id == "CompareVar":
+				asked[str(condition.params.get("var_name", ""))] = true
+		for action: Variant in event_row.actions:
+			if action is ACEAction and (action as ACEAction).ace_id == "SetVar":
+				written[str((action as ACEAction).params.get("var_name", ""))] = true
+	for name_entry: Variant in written.keys():
+		if not asked.has(name_entry):
+			_add(findings, "warning", "pattern-state-never-asked", sheet_path,
+				"%s is set here but no event asks for it." % str(name_entry), number)
+			return
+
+
+## A timer started on the way into a state and never stopped on the way out: it keeps ticking after
+## the state it belonged to has ended, and fires into a state that has moved on.
+static func _pattern_smell_timer(sheet: EventSheetResource, owner: EventRow, sheet_path: String,
+		number: int, findings: Array[Dictionary]) -> void:
+	if owner == null or owner.trigger_id != "OnEnterState":
+		return
+	if _sheet_uses_ace(sheet, "StopTimer") or _sheet_uses_ace(sheet, "CancelDelay"):
+		return
+	_add(findings, "warning", "pattern-timer-never-stopped", sheet_path,
+		"A timer is started on entering this state and nothing stops it on leaving.", number)
+
+
+## The variable an event counts down every tick, or "" when it counts nothing down.
+static func _countdown_name(owner: EventRow) -> String:
+	if owner == null:
+		return ""
+	for action: Variant in owner.actions:
+		if action is ACEAction and (action as ACEAction).ace_id == "SubtractVar":
+			return str((action as ACEAction).params.get("var_name", ""))
+	return ""
+
+
+## Whether any row of the sheet uses a given ACE id, whatever provider it came from - the "is the
+## other half of this pattern anywhere at all" question every check above asks.
+static func _sheet_uses_ace(sheet: EventSheetResource, ace_id: String) -> bool:
+	for event_row: EventRow in _pattern_events(sheet):
+		for condition: ACECondition in event_row.conditions:
+			if condition != null and condition.ace_id == ace_id:
+				return true
+		for action: Variant in event_row.actions:
+			if action is ACEAction and (action as ACEAction).ace_id == ace_id:
+				return true
+	return false
+
+
+## Every EventRow of a sheet, its functions included.
+static func _pattern_events(sheet: EventSheetResource) -> Array[EventRow]:
+	var found: Array[EventRow] = []
+	_collect_pattern_events(sheet.events, found)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			_collect_pattern_events((function_entry as EventFunction).events, found)
+	return found
+
+
+static func _collect_pattern_events(source: Array, into: Array[EventRow]) -> void:
+	for entry: Variant in source:
+		if not (entry is EventRow):
+			continue
+		into.append(entry as EventRow)
+		_collect_pattern_events((entry as EventRow).sub_events, into)
+
+
+## The sheet's events keyed by their uid - how a claim (which carries a uid, never a resource) finds
+## the row it is about.
+static func _events_by_uid(sheet: EventSheetResource) -> Dictionary:
+	var found: Dictionary = {}
+	for event_row: EventRow in _pattern_events(sheet):
+		if not event_row.event_uid.is_empty():
+			found[event_row.event_uid] = event_row
+	return found

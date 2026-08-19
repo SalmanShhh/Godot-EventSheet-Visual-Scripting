@@ -135,6 +135,13 @@ func build(root: Node) -> void:
 	add_popup.add_item("Make 'Or' block", 6)
 	add_popup.add_item("Add 'Else'", 7)
 	add_popup.add_separator()
+	# S23 - the shapes a game is made of, as events. The patterns the sheet can READ it can also
+	# WRITE, from the same fixtures: the list is the Manual's Common Game Patterns page, which draws
+	# each one as a real picture of its rows with an Insert that lands them in this sheet - most
+	# common first, so the ten a beginner wants are the ten they see.
+	add_popup.add_item("Pattern…", 9)
+	add_popup.set_item_tooltip(add_popup.get_item_index(9), "Insert a whole pattern - a cooldown, a wait sequence, a state machine - as events, picked from a page that draws each one.")
+	add_popup.add_separator()
 	add_popup.add_item("Code (GDScript) on Selected Event", 4)
 	# Custom Block API kinds (preloads, region markers, registered pack kinds): one item per
 	# registered kind, ids offset by 100 so the fixed ids above never collide.
@@ -159,6 +166,7 @@ func build(root: Node) -> void:
 			6: _dock._make_or_block_from_selection()
 			7: _dock._make_else_from_selection()
 			8: _dock._on_add_project_global_requested()
+			9: EventSheetPatternManual.open_page("")
 	)
 	# Kept as a reference so Simple Mode can gate the code item (id 4) live.
 	_dock._add_menu_popup = add_popup
