@@ -42,6 +42,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "AnimationSpeed", "Animation Speed", ACEDescriptor.ACEType.EXPRESSION, "speed_scale", "", [], CAT, "animation speed", "AnimationPlayer")
 		.described("The player's current speed scale (1 = normal)."))
 
+	# S11 - the sprite rows an opened script already READS as its own words, so the picker writes the
+	# exact shape the reading recognises.
+	descriptors.append(F.make_descriptor("Core", "SetFlipV", "Set Flipped", ACEDescriptor.ACEType.ACTION, "flip_v = {flipped}", "", [F.make_param("flipped", "String", "true", "Flipped", "Flip the sprite upside down.", "", ["true", "false"])], CAT, "Set flipped {flipped}", "Sprite2D")
+		.described("Turns this sprite upside down, or back the right way up."))
+	descriptors.append(F.make_descriptor("Core", "SetSpriteTexture", "Set Image", ACEDescriptor.ACEType.ACTION, "texture = load({path})", "", [F.make_param("path", "String", "\"res://icon.svg\"", "Image", "Image file to show.", "expression")], CAT, "Set image to {path}", "Sprite2D")
+		.described("Shows a different image on this sprite."))
+	descriptors.append(F.make_descriptor("Core", "AnimationIsPlaying", "Is Playing", ACEDescriptor.ACEType.CONDITION, "is_playing()", "", [], CAT, "Is playing", "AnimationPlayer")
+		.described("True while this animation player is running an animation."))
+
 	return descriptors
 
 

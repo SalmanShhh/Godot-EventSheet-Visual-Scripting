@@ -116,4 +116,19 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		], "Audio", "bus {bus} volume")
 		.described("Gives the current volume of a named audio bus, in decibels."))
 
+	# S13 - the sound a player holds, the bus it goes out on, and its volume as the 0-to-1 level a
+	# slider gives rather than as decibels. Each writes the shape the opened-script reading recognises.
+	descriptors.append(F.make_descriptor("Core", "AudioSetStream", "Set Sound", ACEDescriptor.ACEType.ACTION,
+		"stream = load({path})", "", [F.make_param("path", "String", "\"res://sound.ogg\"", "Sound", "Audio file this player holds.", "audio_path")],
+		"Audio", "Set sound to {path}", "AudioStreamPlayer")
+		.described("Puts a sound file into this player, ready to play."))
+	descriptors.append(F.make_descriptor("Core", "AudioSetBus", "Set Bus", ACEDescriptor.ACEType.ACTION,
+		"bus = {bus}", "", [F.make_param("bus", "String", "\"SFX\"", "Bus", "Audio bus this player goes out on.", "expression")],
+		"Audio", "Set bus to {bus}", "AudioStreamPlayer")
+		.described("Sends this player's sound out on a named bus, like SFX or Music."))
+	descriptors.append(F.make_descriptor("Core", "AudioSetVolumeLevel", "Set Volume (0 to 1)", ACEDescriptor.ACEType.ACTION,
+		"volume_db = linear_to_db({level})", "", [F.make_param("level", "String", "0.5", "Level", "0 = silent, 1 = full - the number a volume slider gives.", "expression")],
+		"Audio", "Set volume to {level} (0 to 1)", "AudioStreamPlayer")
+		.described("Sets how loud this player is from a 0-to-1 level, with the decibel conversion done for you."))
+
 	return descriptors

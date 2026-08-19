@@ -68,4 +68,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetLineEditText", "Field Text", ACEDescriptor.ACEType.EXPRESSION, "text", "", [], "UI", "field text", "LineEdit")
 		.described("Returns whatever text the player has typed into the field."))
 
+	# S12 - the UI shapes an opened script already READS as these words: a bar filled to a value out
+	# of a maximum, a centred dialog, and the mixer's master volume as the 0-to-1 a slider gives.
+	descriptors.append(F.make_descriptor("Core", "SetProgress", "Set Progress", ACEDescriptor.ACEType.ACTION, "value = {value}
+max_value = {max}", "", [F.make_param("value", "String", "0", "Value", "How full the bar is.", "expression"), F.make_param("max", "String", "100", "Of", "The full amount.", "expression")], "UI", "Set progress to {value} of {max}", "Range")
+		.described("Fills a progress bar to a value out of a maximum, both in one row."))
+	descriptors.append(F.make_descriptor("Core", "ShowDialogCentred", "Show Dialog", ACEDescriptor.ACEType.ACTION, "popup_centered()", "", [], "UI", "Show dialog (centred)", "Window")
+		.described("Opens this dialog in the middle of the screen."))
+	descriptors.append(F.make_descriptor("Core", "SetMasterVolume", "Set Master Volume", ACEDescriptor.ACEType.ACTION, "AudioServer.set_bus_volume_db(0, linear_to_db({level}))", "", [F.make_param("level", "String", "0.5", "Level", "0 = silent, 1 = full - the number a volume slider gives.", "expression")], "UI", "Set master volume to {level} (0 to 1)")
+		.described("Sets the overall game volume from a 0-to-1 slider value."))
+
 	return descriptors
