@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed - a lifted Start Timer row says what the typed line says
+
+- **`$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` after the importer has
+  claimed it too.** The shipped Start Timer / Stop Timer rows are now routed back through the same
+  timer sentence a hand-written line reads through - the node path is the tag, the mode comes off the
+  file's own `one_shot` line, and the descriptor's `-1` ("use the Timer's own wait time") is the
+  no-seconds spelling. Until now an opened file read one way before the lift and another after it, so
+  a real project never matched the guide. A row acting on the host itself has no node path to name
+  and keeps the shipped format rather than inventing a tag.
+
 ### Added - a tween chain reads as Tween actions, one action per row
 
 - **`create_tween()` and the chain under it read as the sheet's own Tween words.** A juice line that

@@ -531,8 +531,9 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   from `create_tween()` keeps its plain call reading rather than being given a Tween sentence. A
   statement broken across lines with a trailing `\` reads as the one statement it is.
 - **A Timer node reads as the Timer behavior.** `$Timer.stop()` reads `Stop timer "Timer"`,
-  `$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` while the line is still
-  hand-written text (a line the importer already lifted keeps its shipped Start Timer row), `not $Timer.is_stopped()` reads `Is
+  `$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` - whether the line is still
+  hand-written text or the importer has already claimed it as the shipped Start Timer action, since
+  the lifted row is routed back through the same sentence, `not $Timer.is_stopped()` reads `Is
   timer "Timer" running` (the bare spelling says stopped), and `$Timer.time_left` reads
   `Timer.CurrentTime("Timer")`. The node's name is the tag and the object is the script's own object,
   because the timer belongs to it. The `(once)` / `(regular)` mode is read off the file's own

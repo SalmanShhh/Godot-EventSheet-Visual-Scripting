@@ -9384,6 +9384,12 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 				str(params_dict.get("signal_name", "")), str(params_dict.get("args", "")), context)
 		"QueueFree":
 			return EventSheetSentence.statement("queue_free()", context)
+		# R9. The importer claims `$Timer.start(2.0)` as this row, so the row has to say what the
+		# typed line says - otherwise an opened file reads one way before the lift and another after
+		# it. The node path IS the tag, and the mode comes off the file's own `one_shot` line.
+		"StartTimer", "StopTimer":
+			var timer_code: String = timer_ace_code(action.ace_id, params_dict)
+			return {} if timer_code.is_empty() else EventSheetSentence.statement(timer_code, context)
 		"CallMethod":
 			# A generic call reads as one of the settled sentences when it has one
 			# (`call_deferred("queue_free")` is a destroy) - and otherwise as M26's Object ▸ Verb
@@ -9835,6 +9841,23 @@ func grammar_action_declaration(action: ACEAction) -> Dictionary:
 		"SetLocalConstInferred":
 			return EventSheetSentence.declaration("const %s := %s" % [name_text, value_text])
 	return {}
+
+
+## R9. The GDScript line a lifted Start Timer / Stop Timer row stands for, so the row reads through
+## the SAME timer sentence a hand-written `$Timer.start(2.0)` reads through. "" when the row acts on
+## the host rather than on a named node: a timer with no node path has no tag to name, and the row
+## keeps the shipped format rather than inventing one.
+static func timer_ace_code(ace_id: String, params_dict: Dictionary) -> String:
+	var target: String = str(params_dict.get("target", "")).strip_edges()
+	if target.is_empty():
+		return ""
+	if ace_id == "StopTimer":
+		return "%s.stop()" % target
+	var seconds: String = str(params_dict.get("time", "")).strip_edges()
+	# `-1` is the descriptor's "use the Timer's own wait_time", which is the no-seconds sentence.
+	if seconds.is_empty() or seconds == "-1":
+		return "%s.start()" % target
+	return "%s.start(%s)" % [target, seconds]
 
 
 ## One flat string from a grammar reading's segments - what a descriptor formatter must hand back.

@@ -47,6 +47,24 @@ static func run() -> bool:
 	ok = _check("a literal true is once", modes.get("Timer", null), true) and ok
 	ok = _check("a literal false is regular", modes.get("Loop", null), false) and ok
 	ok = _check("a computed mode is not claimed", modes.has("Maybe"), false) and ok
+
+	# ── The LIFTED row says the same thing the typed line says ──
+	# The importer claims `$Timer.start(2.0)` as the shipped Start Timer action, so the row is routed
+	# back through this sentence rather than through the descriptor's own format.
+	ok = _check("a lifted Start Timer stands for the typed line",
+		ViewportRowBuilder.timer_ace_code("StartTimer", {"target": "$Timer", "time": "2.0"}),
+		"$Timer.start(2.0)") and ok
+	ok = _check("a lifted Start Timer reads the timer sentence",
+		_statement(ViewportRowBuilder.timer_ace_code("StartTimer", {"target": "$Timer", "time": "2.0"}), context),
+		"Player ▸ Start timer \"Timer\" for 2 seconds (once)") and ok
+	ok = _check("the descriptor's -1 is the no-seconds sentence",
+		_statement(ViewportRowBuilder.timer_ace_code("StartTimer", {"target": "%SpawnTimer", "time": "-1"}), context),
+		"Player ▸ Start timer \"SpawnTimer\"") and ok
+	ok = _check("a lifted Stop Timer reads the timer sentence",
+		_statement(ViewportRowBuilder.timer_ace_code("StopTimer", {"target": "$Timer"}), context),
+		"Player ▸ Stop timer \"Timer\"") and ok
+	ok = _check("a row acting on the host itself claims no tag",
+		ViewportRowBuilder.timer_ace_code("StartTimer", {"time": "2.0"}), "") and ok
 	return ok
 
 
