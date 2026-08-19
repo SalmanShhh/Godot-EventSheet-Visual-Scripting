@@ -388,16 +388,16 @@ static func run() -> bool:
 	all_passed = _check("the toolbar wraps instead of clipping",
 		toolbar_editor._toolbar is HFlowContainer, true) and all_passed
 	all_passed = _check("grouping leaves a short toolbar",
-		toolbar_editor._toolbar.get_child_count() <= 17, true) and all_passed  # +1: the Simple Mode pill
+		toolbar_editor._toolbar.get_child_count() <= 20, true) and all_passed  # +1: the Simple Mode pill; +3: the T15 Preview buttons
 	var sheet_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetSheetMenu", true, false) as MenuButton
 	var add_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetAddMenu", true, false) as MenuButton
 	var edit_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetEditMenu", true, false) as MenuButton
 	var view_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetViewMenu", true, false) as MenuButton
 	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
-		sheet_menu != null and sheet_menu.get_popup().item_count == 20  # +Save as Text…, +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…
+		sheet_menu != null and sheet_menu.get_popup().item_count == 22  # +Save as Text…, +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…, +separator +Start page (T14)
 		and add_menu != null and add_menu.get_popup().item_count == 11 + 1 + EventSheetBlockRegistry.addable_kinds().size()  # +separator +the three event-shape commands +separator +Code action, then +separator + one item per registered Custom Block kind; +1: Global Variable… beside Instance Variable…
 		and edit_menu != null and edit_menu.get_popup().item_count == 10
-		and view_menu != null and view_menu.get_popup().item_count == 36, true) and all_passed  # +1: Reset Zoom, +1: Properties Bar, +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words, +6: the collapse sweeps (separator + Collapse All + Expand All + Expand To Level 1/2/3)
+		and view_menu != null and view_menu.get_popup().item_count == 38, true) and all_passed  # +2: Project bar (T13) + Add toolbar (T18); +1: Reset Zoom, +1: Properties Bar, +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words, +6: the collapse sweeps (separator + Collapse All + Expand All + Expand To Level 1/2/3)
 
 	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
 	# The window now lives in the extracted EventSheetWelcomeWindow (dock/welcome_window.gd); the dock
