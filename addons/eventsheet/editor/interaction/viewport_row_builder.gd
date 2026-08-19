@@ -10479,6 +10479,17 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("%s.%s = %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
 				str(params_dict.get("value", ""))], context)
+		# ── T7 lens hook ─────────────────────────────────────────────────────────────────────────
+		# The importer files `$CollisionShape2D.disabled = true` under this row, and a collision shape
+		# switched off is the object's Solid going away - the word a reader looks for on a platform
+		# that opens. Only a COLLISION SHAPE is routed: on a real button this row keeps its own
+		# sentence, which is the one a reader of a menu wants.
+		"SetButtonDisabled":
+			if not EventSheetSentence.is_collision_shape_reference(
+					str(params_dict.get("target", "")), context):
+				return {}
+			return EventSheetSentence.statement("%s.disabled = %s" % [
+				str(params_dict.get("target", "")), str(params_dict.get("disabled", ""))], context)
 		"AddToProperty":
 			return EventSheetSentence.statement("%s.%s += %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
