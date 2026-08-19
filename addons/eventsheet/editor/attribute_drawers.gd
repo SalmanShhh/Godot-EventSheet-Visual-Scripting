@@ -210,7 +210,10 @@ static func parse_table_columns(spec: String) -> Array:
 		if column_name.is_empty() or column_name.contains("="):
 			continue
 		# A fixed-choice column - enum(a|b|c) - renders as a dropdown; the options ride the schema.
-		var enum_options: Array = SheetCompiler.table_enum_options(column_type)
+		# By path, not by class name: this file is constructed at editor boot (add_inspector_plugin
+		# takes an instance), and naming the compiler here would compile its whole subtree into every
+		# session for one schema helper. The widgets module owns the cached load.
+		var enum_options: Array = EventSheetDrawerWidgets.sheet_compiler().table_enum_options(column_type)
 		if not enum_options.is_empty():
 			columns.append({"name": column_name, "type": "enum", "options": enum_options})
 			continue

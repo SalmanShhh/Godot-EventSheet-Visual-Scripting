@@ -9,6 +9,16 @@
 class_name EventSheetDrawerWidgets
 extends RefCounted
 
+## The compiler script, reached BY PATH instead of by class name. This file is on the editor BOOT
+## path (the plugin registers the Inspector drawer plugin in _enter_tree, and add_inspector_plugin
+## takes an instance, so this script really does load at every editor start). Naming a global class
+## compiles that class's whole dependency subtree the moment the script loads, and the compiler's
+## subtree costs hundreds of milliseconds - paid by every session, for the table drawer's three enum
+## helpers, which only a designer editing a table cell ever calls. Loaded once on first use instead.
+const SHEET_COMPILER_PATH: String = "res://addons/eventforge/compiler/sheet_compiler.gd"
+
+static var _compiler_script: Script = null
+
 ## A shared, game-flavoured palette for the swatch-row drawer (and its preview).
 const SWATCH_PRESETS: Array[Color] = [
 	Color("#e6e6e6"), Color("#1a1a1a"), Color("#e23b3b"), Color("#f0883e"),
@@ -21,6 +31,14 @@ const SWATCH_PRESETS: Array[Color] = [
 ## Built from the `# @inspector_header` / `# @inspector_info` decor comments the compiler emits above a
 ## variable. Display-only Controls, reused by the Inspector plugin (above the real property) and by the
 ## render harness, so the two can't diverge.
+
+
+## The compiler script, loaded on first use and cached for the session (see SHEET_COMPILER_PATH).
+## The table drawer asks per cell, so the load must not repeat.
+static func sheet_compiler() -> Script:
+	if _compiler_script == null:
+		_compiler_script = load(SHEET_COMPILER_PATH)
+	return _compiler_script
 
 
 ## An accent-coloured section label with breathing room above, so the section reads as a visual break.
@@ -415,7 +433,7 @@ class DrawerTable:
 				# The KEY, not the label - this value is persisted into the designer's .tres the
 				# moment they click Add Row, and nothing downstream re-validates a stored cell.
 				var options: Array = column.get("options", []) if column.get("options") is Array else []
-				return SheetCompiler.table_enum_key(options[0]) if not options.is_empty() else ""
+				return EventSheetDrawerWidgets.sheet_compiler().table_enum_key(options[0]) if not options.is_empty() else ""
 			"color":
 				return "#ffffff"
 		return ""
@@ -485,14 +503,14 @@ class DrawerTable:
 				var current: String = str(row.get(column_name, ""))
 				var selected_index: int = -1
 				for i: int in range(options.size()):
-					choice.add_item(SheetCompiler.table_enum_label(options[i]))
-					if SheetCompiler.table_enum_key(options[i]) == current:
+					choice.add_item(EventSheetDrawerWidgets.sheet_compiler().table_enum_label(options[i]))
+					if EventSheetDrawerWidgets.sheet_compiler().table_enum_key(options[i]) == current:
 						selected_index = i
 				# A legacy value outside the option list stays untouched (select nothing, don't coerce).
 				choice.select(selected_index)
 				choice.item_selected.connect(func(idx: int) -> void:
 					if idx >= 0 and idx < options.size():
-						row[column_name] = SheetCompiler.table_enum_key(options[idx])
+						row[column_name] = EventSheetDrawerWidgets.sheet_compiler().table_enum_key(options[idx])
 						value_changed.emit(get_value()))
 				return choice
 			"color":
