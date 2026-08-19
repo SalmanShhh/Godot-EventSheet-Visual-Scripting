@@ -166,8 +166,10 @@ static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray
 		_span_kinds(view, "On collision with"), "|trigger|trigger_payload") and ok
 	ok = _check("and its first statement is an action row",
 		_reading_at(rows, "Add 1 to seconds left"), " | Add 1 to seconds left") and ok
+	# R9 re-pinned this one: `$Timer.stop()` is the Timer behavior's own `Stop timer "Timer"` now,
+	# where it used to fall through to the generic Object ▸ Verb reading and say only "Stop".
 	ok = _check("and the branch inside that lambda is a sub-event of it",
-		_reading_at(rows, "Stop"), "seconds left ≤ 0 | Stop") and ok
+		_reading_at(rows, "Stop"), "seconds left ≤ 0 | Stop timer \"Timer\"") and ok
 	ok = _check("a connect handed a NAMED function is left exactly as it was",
 		_connect_parts("timer.timeout.connect(_on_timeout)"), "") and ok
 	ok = _check("a connect whose lambda body is empty is refused",
