@@ -129,7 +129,13 @@ static func action(action_name: String) -> Dictionary:
 	if clean.is_empty():
 		return {}
 	var by_name: Dictionary = _actions_by_name()
-	return (by_name[clean] as Dictionary).duplicate(true) if by_name.has(clean) else {}
+	if by_name.has(clean):
+		return (by_name[clean] as Dictionary).duplicate(true)
+	# An engine default the project never overrode (`ui_accept`, `ui_cancel`) is not in the file's
+	# `[input]` section, but it IS a control the game has - so a row that names one is right, and
+	# flagging it would be the bar crying wolf about the actions Godot ships with.
+	var setting: Variant = ProjectSettings.get_setting("input/%s" % clean, null)
+	return _describe(clean, setting as Dictionary) if setting is Dictionary else {}
 
 
 ## Every project action as `action()` describes it, in the file's order.

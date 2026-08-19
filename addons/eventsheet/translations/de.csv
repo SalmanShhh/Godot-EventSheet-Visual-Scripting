@@ -2126,3 +2126,22 @@ not in %s,nicht in %s
 Nothing in this sheet names an object yet.,Noch nennt nichts in diesem Blatt ein Objekt.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,"Dieses Skript liegt noch auf keiner Szene - ziehen Sie es im Szenen-Dock auf einen Node, dann erscheinen seine Objekte hier."
 {n} scripts,{n} Skripte
+INPUT,EINGABE
+drag one onto the sheet to start an event,"eine auf das Blatt ziehen, um ein Ereignis zu beginnen"
+not in the Input Map,nicht in der Eingabezuordnung
+unbound,nicht belegt
+"""%s"" is not in the Input Map","""%s"" ist nicht in der Eingabezuordnung"
+this script uses 1 action,dieses Skript nutzt 1 Aktion
+this script uses %d actions,dieses Skript nutzt %d Aktionen
+Project ▸ Input Map,Projekt ▸ Eingabezuordnung
+Input,Eingabe
+acceleration,Beschleunigung
+gravity,Schwerkraft
+rotation rate,Drehrate
+magnetic field,Magnetfeld
+gamepad count,Gamepad-Anzahl
+connected gamepads,verbundene Gamepads
+axis {axis} of gamepad {device},Achse {axis} von Gamepad {device}
+name of gamepad {device},Name von Gamepad {device}
+gamepad {device} is recognized,Gamepad {device} ist erkannt
+Is button down {action} (exact match),Taste {action} gedrückt (exakte Übereinstimmung)

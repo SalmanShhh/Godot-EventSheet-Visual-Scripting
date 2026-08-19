@@ -1595,6 +1595,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"comparison": "Comparing-Values",
 	"composition": "Groups-Tags-And-Systems",
 	"console": "Debugging-And-Printing",
+	"controls": "Reading-Keyboard-Mouse-And-Gamepad",
 	"core": "Triggers-Signals-And-When-Rows-Run",
 	"dev": "Debugging-And-Printing",
 	"device": "Reading-Keyboard-Mouse-And-Gamepad",

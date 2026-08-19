@@ -2126,3 +2126,22 @@ not in %s,%s에 없음
 Nothing in this sheet names an object yet.,이 시트는 아직 어떤 오브젝트도 가리키지 않습니다.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,이 스크립트는 아직 씬에 올려져 있지 않습니다. 씬 독의 노드에 끌어다 놓으면 그 오브젝트가 여기에 나타납니다.
 {n} scripts,스크립트 {n}개
+INPUT,입력
+drag one onto the sheet to start an event,시트로 끌어다 놓으면 이벤트가 시작됩니다
+not in the Input Map,입력 맵에 없음
+unbound,할당 없음
+"""%s"" is not in the Input Map","""%s"" 은(는) 입력 맵에 없음"
+this script uses 1 action,이 스크립트는 액션 1개를 사용합니다
+this script uses %d actions,이 스크립트는 액션 %d개를 사용합니다
+Project ▸ Input Map,프로젝트 ▸ 입력 맵
+Input,입력
+acceleration,가속도
+gravity,중력
+rotation rate,회전 속도
+magnetic field,자기장
+gamepad count,게임패드 수
+connected gamepads,연결된 게임패드
+axis {axis} of gamepad {device},게임패드 {device}의 축 {axis}
+name of gamepad {device},게임패드 {device}의 이름
+gamepad {device} is recognized,게임패드 {device}가 인식됨
+Is button down {action} (exact match),버튼 {action} 눌림 (정확히 일치)

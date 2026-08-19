@@ -2126,3 +2126,22 @@ not in %s,不在 %s 中
 Nothing in this sheet names an object yet.,这张事件表还没有提到任何对象。
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,该脚本还没有放到任何场景上 - 在场景面板中把它拖到某个节点上，它的对象就会出现在这里。
 {n} scripts,{n} 个脚本
+INPUT,输入
+drag one onto the sheet to start an event,拖到表上即可开始一个事件
+not in the Input Map,不在输入映射中
+unbound,未绑定
+"""%s"" is not in the Input Map","""%s"" 不在输入映射中"
+this script uses 1 action,此脚本使用 1 个动作
+this script uses %d actions,此脚本使用 %d 个动作
+Project ▸ Input Map,项目 ▸ 输入映射
+Input,输入
+acceleration,加速度
+gravity,重力
+rotation rate,旋转速率
+magnetic field,磁场
+gamepad count,手柄数量
+connected gamepads,已连接的手柄
+axis {axis} of gamepad {device},手柄 {device} 的轴 {axis}
+name of gamepad {device},手柄 {device} 的名称
+gamepad {device} is recognized,手柄 {device} 已识别
+Is button down {action} (exact match),按钮 {action} 按下（完全匹配）

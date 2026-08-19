@@ -2126,3 +2126,22 @@ not in %s,absent de %s
 Nothing in this sheet names an object yet.,Rien dans cette feuille ne nomme encore d'objet.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,Ce script n'est encore sur aucune scène - déposez-le sur un nœud dans le dock Scène et ses objets apparaîtront ici.
 {n} scripts,{n} scripts
+INPUT,ENTRÉE
+drag one onto the sheet to start an event,faites-en glisser une sur la feuille pour commencer un événement
+not in the Input Map,absent de la carte des entrées
+unbound,non assigné
+"""%s"" is not in the Input Map","""%s"" est absent de la carte des entrées"
+this script uses 1 action,ce script utilise 1 action
+this script uses %d actions,ce script utilise %d actions
+Project ▸ Input Map,Projet ▸ Carte des entrées
+Input,Entrée
+acceleration,accélération
+gravity,gravité
+rotation rate,vitesse de rotation
+magnetic field,champ magnétique
+gamepad count,nombre de manettes
+connected gamepads,manettes connectées
+axis {axis} of gamepad {device},axe {axis} de la manette {device}
+name of gamepad {device},nom de la manette {device}
+gamepad {device} is recognized,la manette {device} est reconnue
+Is button down {action} (exact match),Bouton {action} enfoncé (correspondance exacte)

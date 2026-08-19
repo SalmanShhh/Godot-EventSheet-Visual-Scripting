@@ -29,8 +29,15 @@ static func _check_project_actions() -> bool:
 		str(EventSheetInputMapFacts.has_action("ui_left")), "true") and passed
 	passed = _pin("an action the project does not declare is the row's warning",
 		str(EventSheetInputMapFacts.has_action("dash")), "false") and passed
-	passed = _pin("an engine default the project never overrode is not a project action",
-		str(EventSheetInputMapFacts.has_action("ui_text_backspace_word")), "false") and passed
+	# The LIST is the project's own, so a bar led by ui_text_backspace_word can never happen. But a row
+	# that NAMES an engine default is right, and flagging it would be the bar crying wolf about the
+	# controls Godot ships with - so the two questions have two answers.
+	passed = _pin("an engine default is not in the project's list",
+		str(Array(names).has("ui_accept")), "false") and passed
+	passed = _pin("...but a row that names one is not flagged",
+		str(EventSheetInputMapFacts.has_action("ui_accept")), "true") and passed
+	passed = _pin("an engine default reads with its own bindings",
+		EventSheetInputMapFacts.bindings_line("ui_accept"), "Enter · Kp Enter · Space") and passed
 	return passed
 
 

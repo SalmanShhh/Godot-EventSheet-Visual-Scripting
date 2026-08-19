@@ -11,6 +11,20 @@ splash, controller-glyph switching, a custom cursor, rumble.
 
 Every verb here compiles to plain Godot (`Input`, `DisplayServer`, `OS`) with zero plugin references.
 
+The **Controls** vocabulary sits alongside it and covers everything around a device rather than the
+device's raw state: sticks and triggers on the Gamepad object's own -100 to 100 and 0 to 100 scales
+(**Compare Axis**, **Axis Of Gamepad**, **Button Of Gamepad**), gamepads by number
+(**On Gamepad Button Pressed** with the device index read as the gamepad number, **Has Gamepads**,
+**Vibrate Gamepad For**), fingers and gestures (**On Drag**, **On Pinch**, **On Pan**,
+**On Double-Click** with their payloads), a whole controls screen (**Wait For The Next Key Or
+Button**, **Clear The Bindings Of**, **Bind Control To**, **Reset All Bindings**, **Set Deadzone
+Of**, **Save Bindings** / **Load Bindings** - the guide *Let Players Rebind the Controls* strings
+them together), simulated input (**Simulate Control Pressed** / **Released**, **Simulate Input**,
+**Stop This Input Here**), the pointer (**Request Pointer Lock**, **Set Cursor Visible** /
+**Invisible**, **Keep Cursor Inside The Window**, **Move Cursor To**) and the four handheld sensors
+(**Acceleration**, **Gravity Direction**, **Rotation Rate**, **Magnetic Field**, and
+**Compare Acceleration** for tilt - all of which report 0 on desktop).
+
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)

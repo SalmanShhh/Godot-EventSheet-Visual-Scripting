@@ -2126,3 +2126,22 @@ not in %s,%s にありません
 Nothing in this sheet names an object yet.,このシートはまだどのオブジェクトも指していません。
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,このスクリプトはまだシーンに置かれていません。シーンドックのノードにドロップすると、そのオブジェクトがここに表示されます。
 {n} scripts,{n} 個のスクリプト
+INPUT,入力
+drag one onto the sheet to start an event,シートにドラッグしてイベントを作成
+not in the Input Map,入力マップにありません
+unbound,未割り当て
+"""%s"" is not in the Input Map","""%s"" は入力マップにありません"
+this script uses 1 action,このスクリプトは 1 個のアクションを使います
+this script uses %d actions,このスクリプトは %d 個のアクションを使います
+Project ▸ Input Map,プロジェクト ▸ 入力マップ
+Input,入力
+acceleration,加速度
+gravity,重力
+rotation rate,回転速度
+magnetic field,磁場
+gamepad count,ゲームパッド数
+connected gamepads,接続中のゲームパッド
+axis {axis} of gamepad {device},ゲームパッド {device} の軸 {axis}
+name of gamepad {device},ゲームパッド {device} の名前
+gamepad {device} is recognized,ゲームパッド {device} は認識済み
+Is button down {action} (exact match),ボタン {action} が押されている (完全一致)
