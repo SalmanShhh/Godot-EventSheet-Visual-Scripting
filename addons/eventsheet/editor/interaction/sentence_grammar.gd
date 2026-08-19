@@ -6541,15 +6541,17 @@ static func _member_line(owner_text: String, member: String, value: String) -> S
 ## anything else is the 0-to-1 setting it is. `linear_to_db` is the conversion Godot needs and the
 ## reader does not, so it never appears in the sentence; a raw decibel number keeps its unit.
 static func _volume_sentence(object_name: String, template: String, value: String,
-		context: Dictionary) -> Dictionary:
+		context: Dictionary, slots: Dictionary = {}) -> Dictionary:
 	var level: String = _linear_volume(value)
+	var values: Dictionary = slots.duplicate()
 	if level.is_empty():
-		return _sentence(object_name, "%s dB" % template, {
-			"value": [expression_text(value, context), "value"]})
+		values["value"] = [expression_text(value, context), "value"]
+		return _sentence(object_name, "%s dB" % template, values)
 	if level.is_valid_float():
-		return _sentence(object_name, template, {"value": [_percent_words(level, context), "value"]})
-	var reading: Dictionary = _sentence(object_name, template, {
-		"value": [expression_text(level, context), "value"]})
+		values["value"] = [_percent_words(level, context), "value"]
+		return _sentence(object_name, template, values)
+	values["value"] = [expression_text(level, context), "value"]
+	var reading: Dictionary = _sentence(object_name, template, values)
 	(reading["segments"] as Array).append({"text": " %s" % translate("(0 to 1)"), "tone": "muted"})
 	return reading
 
@@ -6744,8 +6746,8 @@ static func _bus_volume_sentence(arguments: PackedStringArray, context: Dictiona
 	var named: String = _bus_index_name(bus)
 	if named.is_empty():
 		return {}
-	return _volume_sentence(OBJECT_AUDIO, _fill("Set {bus} volume to {value}", {"bus": named}),
-		arguments[1], context)
+	return _volume_sentence(OBJECT_AUDIO, "Set {bus} volume to {value}", arguments[1], context,
+		{"bus": [named, "name"]})
 
 
 ## The bus a `AudioServer.get_bus_index("SFX")` names, or "" when the index is computed some other way.

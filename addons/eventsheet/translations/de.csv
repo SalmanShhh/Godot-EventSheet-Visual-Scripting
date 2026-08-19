@@ -2494,3 +2494,39 @@ Find path to {target},Weg zu {target} suchen
 Move along path at {speed},Auf dem Weg mit {speed} bewegen
 Move along path at {speed} (avoiding others),Auf dem Weg mit {speed} bewegen (anderen ausweichen)
 Has arrived,Ist angekommen
+Set as active camera,Als aktive Kamera setzen
+Set animation frame to {value},Animationsbild auf {value} setzen
+Set animation speed to {value},Animationsgeschwindigkeit auf {value} setzen
+Set image to {file},Bild auf {file} setzen
+Set sound to {file},Sound auf {file} setzen
+Set pitch to {value},Tonhohe auf {value} setzen
+Set bus to {bus},Bus auf {bus} setzen
+Set volume to {value},Lautstarke auf {value} setzen
+Set volume to {value} dB,Lautstarke auf {value} dB setzen
+Set master volume to {value},Gesamtlautstarke auf {value} setzen
+Set master volume to {value} dB,Gesamtlautstarke auf {value} dB setzen
+Set {bus} volume to {value},Lautstarke von {bus} auf {value} setzen
+Set {bus} volume to {value} dB,Lautstarke von {bus} auf {value} dB setzen
+(0 to 1),(0 bis 1)
+Set focus,Fokus setzen
+Show dialog,Dialog zeigen
+(centred),(zentriert)
+Seek to {seconds} seconds,Zu Sekunde {seconds} springen
+Set blend {name} to {value},Blend {name} auf {value} setzen
+Travel to animation state {state},Zu Animationszustand {state} wechseln
+Is playing,Lauft
+Set mirrored when {test},"Gespiegelt, wenn {test}"
+Set flipped when {test},"Umgedreht, wenn {test}"
+Shake by {amount},Um {amount} wackeln
+random offset this tick,zufalliger Versatz in diesem Tick
+Bob {axis},{axis} wippen
+sine,Sinus
+magnitude,Ausschlag
+per second,pro Sekunde
+Ease size back to normal at {rate},Grosse mit {rate} zuruck auf normal
+Play sound,Sound abspielen
+Stop sound,Sound stoppen
+"Sprite and animation: mirrored, frame, speed, opacity and the animation tree","Sprite und Animation: gespiegelt, Bild, Tempo, Deckkraft und der Animationsbaum"
+"UI: focus, progress bars, dialogs and the mixer","UI: Fokus, Fortschrittsbalken, Dialoge und der Mischer"
+"Sound: the file, its pitch, its bus, its volume and where it plays from","Sound: die Datei, Tonhohe, Bus, Lautstarke und die Abspielposition"
+"Juice: shake, hitstop, bob, flash and the squash that eases back","Game Feel: Wackeln, Hitstop, Wippen, Blitz und die Stauchung, die zuruckfedert"

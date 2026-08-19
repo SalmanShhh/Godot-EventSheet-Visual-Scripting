@@ -2494,3 +2494,39 @@ Find path to {target},Trova un percorso verso {target}
 Move along path at {speed},Avanza lungo il percorso a {speed}
 Move along path at {speed} (avoiding others),Avanza lungo il percorso a {speed} (evitando gli altri)
 Has arrived,È arrivato
+Set as active camera,Imposta come camera attiva
+Set animation frame to {value},Imposta fotogramma animazione su {value}
+Set animation speed to {value},Imposta velocita animazione su {value}
+Set image to {file},Imposta immagine {file}
+Set sound to {file},Imposta suono {file}
+Set pitch to {value},Imposta intonazione su {value}
+Set bus to {bus},Imposta bus {bus}
+Set volume to {value},Imposta volume su {value}
+Set volume to {value} dB,Imposta volume su {value} dB
+Set master volume to {value},Imposta volume generale su {value}
+Set master volume to {value} dB,Imposta volume generale su {value} dB
+Set {bus} volume to {value},Imposta volume di {bus} su {value}
+Set {bus} volume to {value} dB,Imposta volume di {bus} su {value} dB
+(0 to 1),(0 a 1)
+Set focus,Imposta il focus
+Show dialog,Mostra finestra
+(centred),(centrato)
+Seek to {seconds} seconds,Vai a {seconds} secondi
+Set blend {name} to {value},Imposta fusione {name} su {value}
+Travel to animation state {state},Vai allo stato di animazione {state}
+Is playing,E in riproduzione
+Set mirrored when {test},Specchia quando {test}
+Set flipped when {test},Capovolgi quando {test}
+Shake by {amount},Scuoti di {amount}
+random offset this tick,scostamento casuale in questo tick
+Bob {axis},Ondeggia {axis}
+sine,seno
+magnitude,ampiezza
+per second,al secondo
+Ease size back to normal at {rate},Torna alla dimensione normale a {rate}
+Play sound,Riproduci suono
+Stop sound,Ferma suono
+"Sprite and animation: mirrored, frame, speed, opacity and the animation tree","Sprite e animazione: specchio, fotogramma, velocita, opacita e l'albero di animazione"
+"UI: focus, progress bars, dialogs and the mixer","UI: focus, barre di avanzamento, finestre e il mixer"
+"Sound: the file, its pitch, its bus, its volume and where it plays from","Suono: il file, la sua intonazione, il suo bus, il volume e da dove parte"
+"Juice: shake, hitstop, bob, flash and the squash that eases back","Game feel: scossa, hitstop, ondeggio, lampo e lo schiacciamento che torna"

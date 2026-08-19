@@ -2494,3 +2494,39 @@ Find path to {target},寻找通往 {target} 的路径
 Move along path at {speed},以 {speed} 沿路径移动
 Move along path at {speed} (avoiding others),以 {speed} 沿路径移动 (避开其他对象)
 Has arrived,已到达
+Set as active camera,设为当前摄像机
+Set animation frame to {value},将动画帧设为 {value}
+Set animation speed to {value},将动画速度设为 {value}
+Set image to {file},将图像设为 {file}
+Set sound to {file},将声音设为 {file}
+Set pitch to {value},将音高设为 {value}
+Set bus to {bus},将总线设为 {bus}
+Set volume to {value},将音量设为 {value}
+Set volume to {value} dB,将音量设为 {value} dB
+Set master volume to {value},将总音量设为 {value}
+Set master volume to {value} dB,将总音量设为 {value} dB
+Set {bus} volume to {value},将 {bus} 音量设为 {value}
+Set {bus} volume to {value} dB,将 {bus} 音量设为 {value} dB
+(0 to 1),(0 到 1)
+Set focus,设置焦点
+Show dialog,显示对话框
+(centred),(居中)
+Seek to {seconds} seconds,跳到 {seconds} 秒
+Set blend {name} to {value},将混合 {name} 设为 {value}
+Travel to animation state {state},切换到动画状态 {state}
+Is playing,正在播放
+Set mirrored when {test},当 {test} 时镜像
+Set flipped when {test},当 {test} 时翻转
+Shake by {amount},抖动 {amount}
+random offset this tick,本 tick 的随机偏移
+Bob {axis},上下浮动 {axis}
+sine,正弦
+magnitude,幅度
+per second,每秒
+Ease size back to normal at {rate},以 {rate} 缓回正常大小
+Play sound,播放声音
+Stop sound,停止声音
+"Sprite and animation: mirrored, frame, speed, opacity and the animation tree",精灵与动画：镜像、帧、速度、不透明度和动画树
+"UI: focus, progress bars, dialogs and the mixer",界面：焦点、进度条、对话框和混音器
+"Sound: the file, its pitch, its bus, its volume and where it plays from",声音：文件、音高、总线、音量和播放位置
+"Juice: shake, hitstop, bob, flash and the squash that eases back",手感：抖动、顿帧、浮动、闪光和回弹的挤压

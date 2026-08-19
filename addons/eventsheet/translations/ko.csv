@@ -2494,3 +2494,39 @@ Find path to {target},{target} 로 가는 경로 찾기
 Move along path at {speed},경로를 따라 {speed} 로 이동
 Move along path at {speed} (avoiding others),경로를 따라 {speed} 로 이동 (다른 것을 피하며)
 Has arrived,도착함
+Set as active camera,활성 카메라로 설정
+Set animation frame to {value},애니메이션 프레임을 {value}(으)로 설정
+Set animation speed to {value},애니메이션 속도를 {value}(으)로 설정
+Set image to {file},이미지를 {file}(으)로 설정
+Set sound to {file},사운드를 {file}(으)로 설정
+Set pitch to {value},음높이를 {value}(으)로 설정
+Set bus to {bus},버스를 {bus}(으)로 설정
+Set volume to {value},음량을 {value}(으)로 설정
+Set volume to {value} dB,음량을 {value} dB로 설정
+Set master volume to {value},전체 음량을 {value}(으)로 설정
+Set master volume to {value} dB,전체 음량을 {value} dB로 설정
+Set {bus} volume to {value},{bus} 음량을 {value}(으)로 설정
+Set {bus} volume to {value} dB,{bus} 음량을 {value} dB로 설정
+(0 to 1),(0 에서 1)
+Set focus,포커스 설정
+Show dialog,대화 상자 표시
+(centred),(가운데)
+Seek to {seconds} seconds,{seconds}초로 이동
+Set blend {name} to {value},블렌드 {name}을(를) {value}(으)로 설정
+Travel to animation state {state},애니메이션 상태 {state}(으)로 이동
+Is playing,재생 중
+Set mirrored when {test},{test}일 때 좌우 반전
+Set flipped when {test},{test}일 때 상하 반전
+Shake by {amount},{amount}만큼 흔들기
+random offset this tick,이번 틱의 무작위 오프셋
+Bob {axis},{axis} 흔들기
+sine,사인
+magnitude,진폭
+per second,초당
+Ease size back to normal at {rate},크기를 {rate}(으)로 원래대로
+Play sound,사운드 재생
+Stop sound,사운드 정지
+"Sprite and animation: mirrored, frame, speed, opacity and the animation tree","스프라이트와 애니메이션: 반전, 프레임, 속도, 불투명도, 애니메이션 트리"
+"UI: focus, progress bars, dialogs and the mixer","UI: 포커스, 진행 막대, 대화 상자, 믹서"
+"Sound: the file, its pitch, its bus, its volume and where it plays from","사운드: 파일, 음높이, 버스, 음량, 재생 위치"
+"Juice: shake, hitstop, bob, flash and the squash that eases back","게임 필: 흔들림, 히트스톱, 흔들기, 번쩍임, 되돌아오는 스쿼시"
