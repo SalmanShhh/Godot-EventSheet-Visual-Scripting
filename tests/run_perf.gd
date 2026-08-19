@@ -96,6 +96,8 @@ func _init() -> void:
 	passed = TediumTest.run() and passed
 	passed = GodotWorkflowTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
+	passed = LiftPerfTest.run() and passed
+	passed = PluginBootLazyTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")
 		quit(0)

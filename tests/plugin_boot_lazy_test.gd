@@ -54,6 +54,17 @@ const FORBIDDEN := {
 	"res://addons/eventforge/editor/export_tools_plugin.gd": [
 		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectFind", "EventSheetTemplates",
 	],
+	# The Inspector drawer plugin is registered in _enter_tree and add_inspector_plugin takes an
+	# INSTANCE, so both of these load at every editor start - which makes them boot files, and the
+	# reason the compiler crept back onto the boot path once already: drawer_widgets named
+	# SheetCompiler for three table-enum schema helpers, and that one name carried the compiler's
+	# whole subtree into every session. They reach it by path through a cached accessor instead.
+	"res://addons/eventsheet/editor/attribute_drawers.gd": [
+		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
+	],
+	"res://addons/eventsheet/editor/drawer_widgets.gd": [
+		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
+	],
 	# The Live Values bridge is constructed eagerly in _enter_tree (the transport has to be live
 	# before the workspace opens), so it is a boot file too: the hit-count store it resets on every
 	# new Run is reached by path, never named.

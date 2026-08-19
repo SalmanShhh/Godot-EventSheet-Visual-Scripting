@@ -37,6 +37,29 @@ the one row grammar.
 
 All of it is translated in the nine shipped languages.
 
+### Performance - opening a script is about 7x faster, and the compiler is off the boot path again
+
+Nothing here changes what anything reads as or what any file compiles to; the byte-exact round-trip
+gates are unchanged and green. These are the two hot paths, measured on this repo's own packs.
+
+- **Opening a `.gd` as a sheet: 6.8 s to 0.9 s on the FPS Controller pack (647 lines), 11.7 s to 1.4 s
+  on Save System (1,522 lines).** Two fixes. The lift matches every line against a reverse index of
+  the whole vocabulary, and building that index compiles one regular expression per reversible
+  template - 894 of them on a stock install. The per-function lift path rebuilt the entire index
+  *once per function*, so a file with 76 functions paid 76 full builds: that single line was ~80% of
+  the time an open took. It is now built once and shared. Then matching itself: each line was run
+  against every entry's regular expression, when a length check and one substring search can rule out
+  almost all of them first, and neither test can reject a line the expression would have matched.
+- **The compiler is no longer loaded at editor startup.** The Inspector drawer plugin is constructed
+  at every editor start, and through the drawer widgets it named the compiler for three table-column
+  schema helpers that only a designer editing a table cell ever calls - and naming a class compiles
+  its whole dependency subtree there and then. Reached on first use instead: the plugin's boot
+  subtree drops from 583 ms to 193 ms of script loading. The lazy-boot lint now covers both drawer
+  files, so it cannot creep back a third time.
+- **Both are pinned.** A new `lift_perf_test` asserts the reverse index is handed out by reference
+  (the structural invariant that makes it fast, checkable on any machine at any load) plus a generous
+  wall budget on a real pack open as the backstop, and `run_perf.gd` now runs the boot lint too.
+
 ### Added - an opened script's questions, text, saving, behaviours, input and logging read as rows
 
 Six more families of everyday GDScript now read as the rows they are instead of as the code they are
