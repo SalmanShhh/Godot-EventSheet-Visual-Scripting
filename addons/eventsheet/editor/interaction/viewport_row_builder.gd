@@ -257,6 +257,10 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 			spans.append(_make_span(crumb_text, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffolding_strip", "text_color": EventSheetPalette.TEXT_MUTED}))
 		if not leaf_name.is_empty():
 			spans.append(_make_span(leaf_name, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffolding_strip", "text_color": EventSheetPalette.TEXT_PRIMARY}))
+	# R33 - a tool sheet's own buttons ride the identity strip too. This is the bar an opened editor
+	# script actually gets (the pack Include bar is for a pack), and a Run now that is not where the
+	# tool is written is a Run now nobody finds.
+	spans.append_array(_editor_tool_bar_spans(sheet))
 	row_data.spans = spans
 	# The dropdown facts, prepended above the raw prelude children. Label + value per row; only
 	# facts that exist get a row (no "@tool: no" noise).

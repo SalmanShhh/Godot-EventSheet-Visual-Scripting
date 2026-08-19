@@ -75,6 +75,8 @@ That is the whole loop: edit rows, save, File > Run, read the Output panel. Ever
 
 ### Run it from the sheet - the tool's own Include bar
 
+![An editor plugin sheet: the identity bar carries Run now, Reload, Output and Enable plugin, and the Anatomy rail's EDITOR TOOLS section lists the Tools menu item the plugin adds](images/editor-tool-bar.png)
+
 You do not have to leave the sheet to run a tool. A tool sheet's Include bar carries its own buttons, and they are the whole loop:
 
 | Button | What it does |
