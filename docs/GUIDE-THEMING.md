@@ -1,7 +1,9 @@
 # EventSheet Theme + Editability Guide
 
-> Updated 2026-07. A designer-friendly **visual theme editor** (live preview + grouped
-> token controls) ships as the **Theme Editor dialog**.
+> Updated 2026-08. A designer-friendly **visual theme editor** (live preview + grouped
+> token controls) ships as the **Theme Editor dialog**, and it now covers the marks the
+> sheet learned to draw while an opened script was being taught to read like an event
+> sheet - see "What a theme reaches now" below.
 
 This editor uses Godot-native resources instead of runtime CSS. The goal is still the same as a Construct-style theme.css workflow: designers can duplicate a theme package, tune tokens, reload the editor, and keep shipping reusable presets.
 

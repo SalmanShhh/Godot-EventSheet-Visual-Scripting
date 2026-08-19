@@ -2334,3 +2334,71 @@ Tools menu,도구 메뉴
 dock,독
 object type,객체 타입
 Editor Tools,에디터 도구
+"Reading marks - chips, badges, guides, stripes","읽기 표시 - 칩, 배지, 안내선, 줄무늬"
+"Bars around the sheet - Object bar, status strip, tab title","시트 주변의 바 - 오브젝트 바, 상태 표시줄, 탭 제목"
+Manual pages,설명서 페이지
+"The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.","포함 시트 바의 버튼(지금 실행, 다시 불러오기, 출력)에 붙는 기본 칩, 커버리지 칩, 그리고 행 안의 다른 모든 중립 칩."
+The word on those plain chips.,그 기본 칩에 적히는 글자.
+"The chip that says where something sits in the picker (""Group › Subgroup"").","선택기에서 항목이 어디에 있는지 알려 주는 칩 (""Group › Subgroup"")."
+The word on the picker-category chip.,선택기 분류 칩에 적히는 글자.
+"The ""Inspector"" chip on a variable the game's designer can edit.","게임 디자이너가 편집할 수 있는 변수에 붙는 ""Inspector"" 칩."
+The word on the Inspector chip.,Inspector 칩에 적히는 글자.
+The badge that says a variable is const or static.,변수가 const 또는 static임을 알리는 배지.
+The word on the const / static badge.,const / static 배지에 적히는 글자.
+The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.,설정 띠에 붙는 흐린 배지 - 포함 시트 바를 여는 ▣ 와 ⇥ 표시.
+The glyph on a setup badge.,설정 배지에 표시되는 기호.
+"The ""Script block"" pill on a row that kept its GDScript as it was written.","GDScript를 작성된 그대로 유지한 행에 붙는 ""Script block"" 알약 배지."
+The words on the Script block pill.,Script block 알약 배지에 적히는 글자.
+"The ""⚠ code"" badge that asks you to look at a line the sheet could not read.","시트가 읽지 못한 줄을 살펴보라고 알리는 ""⚠ code"" 배지."
+The words on the ⚠ code badge.,⚠ code 배지에 적히는 글자.
+"The plate behind an OR badge, when the condition lane has nothing of its own to say.",조건 레인에 따로 할 말이 없을 때 OR 배지 뒤에 깔리는 판.
+The word on the OR badge.,OR 배지에 적히는 글자.
+"The ⟳ badge on an event that runs every tick - a tween beat, a repeating timer.","매 틱마다 실행되는 이벤트에 붙는 ⟳ 배지 - 트윈 박자, 반복 타이머 등."
+The glyph on the every-tick badge.,매 틱 배지에 표시되는 기호.
+The ⌨ badge on an event a key or a button starts.,키나 버튼으로 시작하는 이벤트에 붙는 ⌨ 배지.
+The glyph on the input badge.,입력 배지에 표시되는 기호.
+The ▶ badge on an event that runs once.,한 번만 실행되는 이벤트에 붙는 ▶ 배지.
+The glyph on the runs-once badge.,한 번만 실행 배지에 표시되는 기호.
+The main word of a row's sentence.,행 문장의 중심이 되는 낱말.
+The quieter half of a sentence.,문장에서 덜 두드러지는 나머지 부분.
+"The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.","그 뒤에 붙는 흐린 세부 정보 - 포함 시트 바의 파일 이름, INPUT 행의 키, 머리말 바의 부제 등."
+"Text values inside a parameter (""coin""), so magic words are findable by colour.","매개변수 안의 문자열 값(""coin""). 중요한 낱말을 색으로 찾을 수 있게 합니다."
+true and false inside a parameter.,매개변수 안의 true 와 false.
+"""N errors - the game will not run this script"", and the words on a broken row.","""N개의 오류 - 게임이 이 스크립트를 실행하지 않습니다"", 그리고 깨진 행에 적히는 글자."
+The red stripe and wash down a row the engine cannot parse.,엔진이 파싱하지 못하는 행에 그려지는 빨간 줄무늬와 색 덮개.
+The stripe that pulses on an event firing right now while the game runs.,게임이 도는 동안 지금 막 발동한 이벤트에서 깜빡이는 줄무늬.
+The scrim over a row that is switched off.,꺼져 있는 행 위에 씌워지는 가림막.
+The breakpoint dot in the event-number margin.,이벤트 번호 여백에 찍히는 중단점 점.
+The bookmark pennant in the event-number margin.,이벤트 번호 여백에 표시되는 북마크 깃발.
+The hairline down the right edge of the event-number margin.,이벤트 번호 여백 오른쪽 가장자리를 따라 그어지는 가는 선.
+The faint stop that marks each level of indent.,들여쓰기 단계마다 표시되는 옅은 눈금.
+The stronger line from an event down to its sub-events - the one you follow with your eye.,이벤트에서 하위 이벤트로 내려가는 진한 선 - 눈으로 따라가는 그 선입니다.
+The line that shows where a dragged row will land.,끌고 있는 행이 놓일 자리를 보여 주는 선.
+The red a drop turns when it is not allowed.,드롭이 허용되지 않을 때 나타나는 빨간색.
+"The bubble that says why a drop was refused (""dealt is not visible here"").","드롭이 거부된 이유를 알려 주는 말풍선 (""dealt is not visible here"")."
+The same bubble when the drop is fine.,드롭이 괜찮을 때의 같은 말풍선.
+The words in that bubble.,그 말풍선 안의 글자.
+The band behind selected text while you are editing a cell.,셀을 편집하는 동안 선택한 텍스트 뒤에 깔리는 띠.
+The plate a chip sits on when it brought no colour of its own.,고유한 색이 없는 칩이 놓이는 판.
+"The outline around a colour value's swatch, so a pale colour still reads as a swatch.",색상 값 견본을 감싸는 외곽선. 옅은 색도 견본으로 보이게 합니다.
+"How strongly every other use of a hovered variable lights up, inside that variable's own scope.",마우스를 올린 변수의 다른 사용처가 그 변수의 범위 안에서 얼마나 강하게 빛나는지.
+"The headings down the Object bar (SCENE, GLOBALS, INPUT) and the row count beside each entry.","오브젝트 바의 제목(SCENE, GLOBALS, INPUT)과 각 항목 옆의 행 개수."
+"The ⚠ on an Object bar entry the sheet flagged - a node the scene lost, an action the Input Map does not have.","시트가 표시한 오브젝트 바 항목의 ⚠ - 씬에서 사라진 노드, 입력 맵에 없는 액션 등."
+The wash over every row that uses the object you point at in the Object bar.,오브젝트 바에서 가리킨 오브젝트를 쓰는 모든 행에 씌워지는 색 덮개.
+The grab dots on the row under the mouse.,마우스 아래 행에 나타나는 잡기 점.
+Those dots once the pointer is in the grab zone.,포인터가 잡기 영역에 들어갔을 때의 그 점.
+The message along the bottom of the dock.,독 아래쪽에 표시되는 메시지.
+That message when something went wrong.,문제가 생겼을 때의 그 메시지.
+"The row address beside it (""event 12 ▸ action 2"").","그 옆에 표시되는 행 주소 (""event 12 ▸ action 2"")."
+The ● that says this sheet has edits you have not saved.,이 시트에 저장하지 않은 편집이 있음을 알리는 ●.
+The file path printed beside the sheet's name.,시트 이름 옆에 표시되는 파일 경로.
+"Captions, breadcrumbs and the quiet words on a Manual page. Clear = follow the editor.","설명서 페이지의 캡션, 탐색 경로, 조용한 낱말들. 투명 = 에디터를 따릅니다."
+"The paper behind a Manual page. Leave it clear and the Manual sits on the editor's own background, the way it ships.",설명서 페이지 뒤의 종이. 투명하게 두면 설명서가 기본 상태 그대로 에디터의 배경 위에 놓입니다.
+Headings on a Manual page. Clear = follow the editor's own text colour.,설명서 페이지의 제목. 투명 = 에디터 자체의 글자 색을 따릅니다.
+The highlight behind a search hit inside a page.,페이지 안 검색 결과 뒤의 강조 표시.
+The pill on the contents entry for the page you are reading. Clear = the editor's accent.,지금 읽고 있는 페이지의 목차 항목에 붙는 알약 배지. 투명 = 에디터의 강조 색.
+The word on that pill.,그 알약 배지에 적히는 글자.
+The note above a verb its pack has deprecated.,팩이 더 이상 권장하지 않는 동사 위에 표시되는 안내문.
+The rule under a table's header row on a page.,페이지 안 표의 머리글 행 아래에 그어지는 선.
+The strip down the left of the sheet that carries the event numbers.,시트 왼쪽에서 이벤트 번호를 담고 있는 띠.
+The event numbers themselves.,이벤트 번호 자체.

@@ -2334,3 +2334,71 @@ Tools menu,工具菜单
 dock,停靠面板
 object type,对象类型
 Editor Tools,编辑器工具
+"Reading marks - chips, badges, guides, stripes",阅读标记 - 条目、徽章、参考线、条纹
+"Bars around the sheet - Object bar, status strip, tab title",事件表周围的栏 - 对象栏、状态条、标签标题
+Manual pages,手册页面
+"The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.",包含表栏按钮（立即运行、重新加载、输出）上的普通条目、覆盖率条目，以及行内其他所有中性条目。
+The word on those plain chips.,这些普通条目上的文字。
+"The chip that says where something sits in the picker (""Group › Subgroup"").","标明某项在选择器中位置的条目（""Group › Subgroup""）。"
+The word on the picker-category chip.,选择器分类条目上的文字。
+"The ""Inspector"" chip on a variable the game's designer can edit.","游戏设计师可以编辑的变量上的 ""Inspector"" 条目。"
+The word on the Inspector chip.,Inspector 条目上的文字。
+The badge that says a variable is const or static.,标明变量为 const 或 static 的徽章。
+The word on the const / static badge.,const / static 徽章上的文字。
+The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.,设置条上的暗色徽章 - 用来打开包含表栏的 ▣ 和 ⇥ 标记。
+The glyph on a setup badge.,设置徽章上的字形。
+"The ""Script block"" pill on a row that kept its GDScript as it was written.","保留原样 GDScript 的行上的 ""Script block"" 药丸标签。"
+The words on the Script block pill.,Script block 药丸标签上的文字。
+"The ""⚠ code"" badge that asks you to look at a line the sheet could not read.","提醒你查看事件表无法读取的那一行的 ""⚠ code"" 徽章。"
+The words on the ⚠ code badge.,⚠ code 徽章上的文字。
+"The plate behind an OR badge, when the condition lane has nothing of its own to say.",条件栏本身没有内容时，OR 徽章背后的底板。
+The word on the OR badge.,OR 徽章上的文字。
+"The ⟳ badge on an event that runs every tick - a tween beat, a repeating timer.",每一帧都会运行的事件上的 ⟳ 徽章 - 补间节拍、重复计时器等。
+The glyph on the every-tick badge.,每帧徽章上的字形。
+The ⌨ badge on an event a key or a button starts.,由按键或按钮触发的事件上的 ⌨ 徽章。
+The glyph on the input badge.,输入徽章上的字形。
+The ▶ badge on an event that runs once.,只运行一次的事件上的 ▶ 徽章。
+The glyph on the runs-once badge.,只运行一次徽章上的字形。
+The main word of a row's sentence.,行内句子的主要词语。
+The quieter half of a sentence.,句子中较为次要的那一半。
+"The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.",紧随其后的暗色细节 - 包含表栏的文件名、INPUT 行的按键、标题栏的副标题。
+"Text values inside a parameter (""coin""), so magic words are findable by colour.","参数中的文本值（""coin""），让关键词能靠颜色找到。"
+true and false inside a parameter.,参数中的 true 和 false。
+"""N errors - the game will not run this script"", and the words on a broken row.","""N 个错误 - 游戏不会运行这个脚本""，以及出错行上的文字。"
+The red stripe and wash down a row the engine cannot parse.,引擎无法解析的行上的红色条纹和覆色。
+The stripe that pulses on an event firing right now while the game runs.,游戏运行时，正在触发的事件上闪动的条纹。
+The scrim over a row that is switched off.,已关闭的行上覆盖的遮罩。
+The breakpoint dot in the event-number margin.,事件编号边栏中的断点圆点。
+The bookmark pennant in the event-number margin.,事件编号边栏中的书签小旗。
+The hairline down the right edge of the event-number margin.,事件编号边栏右侧的细线。
+The faint stop that marks each level of indent.,标示每一级缩进的淡色刻度。
+The stronger line from an event down to its sub-events - the one you follow with your eye.,从事件向下连到子事件的较粗的线 - 也就是你用眼睛跟随的那条。
+The line that shows where a dragged row will land.,显示被拖动的行将落在何处的那条线。
+The red a drop turns when it is not allowed.,不允许放置时所变成的红色。
+"The bubble that says why a drop was refused (""dealt is not visible here"").","说明放置为何被拒绝的气泡（""dealt is not visible here""）。"
+The same bubble when the drop is fine.,放置合法时的同一个气泡。
+The words in that bubble.,该气泡中的文字。
+The band behind selected text while you are editing a cell.,编辑单元格时，选中文本背后的色带。
+The plate a chip sits on when it brought no colour of its own.,条目自身没有颜色时所依托的底板。
+"The outline around a colour value's swatch, so a pale colour still reads as a swatch.",颜色值色块的描边，让浅色也仍然看得出是一块色样。
+"How strongly every other use of a hovered variable lights up, inside that variable's own scope.",鼠标悬停的变量在其作用域内的其他用法被点亮的强度。
+"The headings down the Object bar (SCENE, GLOBALS, INPUT) and the row count beside each entry.",对象栏中的标题（SCENE、GLOBALS、INPUT）以及每个条目旁的行数。
+"The ⚠ on an Object bar entry the sheet flagged - a node the scene lost, an action the Input Map does not have.",事件表标记出的对象栏条目上的 ⚠ - 场景中已丢失的节点，或输入映射中没有的动作。
+The wash over every row that uses the object you point at in the Object bar.,覆盖在所有使用了对象栏中所指对象的行上的浅色。
+The grab dots on the row under the mouse.,鼠标所在行上的抓取圆点。
+Those dots once the pointer is in the grab zone.,指针进入抓取区域后的那些圆点。
+The message along the bottom of the dock.,停靠面板底部的消息。
+That message when something went wrong.,出错时的那条消息。
+"The row address beside it (""event 12 ▸ action 2"").","旁边的行地址（""event 12 ▸ action 2""）。"
+The ● that says this sheet has edits you have not saved.,表示该事件表有未保存改动的 ●。
+The file path printed beside the sheet's name.,事件表名称旁显示的文件路径。
+"Captions, breadcrumbs and the quiet words on a Manual page. Clear = follow the editor.",手册页面上的图注、面包屑和低调的文字。透明 = 跟随编辑器。
+"The paper behind a Manual page. Leave it clear and the Manual sits on the editor's own background, the way it ships.",手册页面背后的纸面。保持透明，手册就会像出厂时那样落在编辑器自身的背景上。
+Headings on a Manual page. Clear = follow the editor's own text colour.,手册页面上的标题。透明 = 跟随编辑器自身的文字颜色。
+The highlight behind a search hit inside a page.,页面内搜索命中处背后的高亮。
+The pill on the contents entry for the page you are reading. Clear = the editor's accent.,你正在阅读的页面在目录中的药丸标签。透明 = 编辑器的强调色。
+The word on that pill.,该药丸标签上的文字。
+The note above a verb its pack has deprecated.,扩展包已弃用的动词上方的提示文字。
+The rule under a table's header row on a page.,页面中表格表头行下方的分隔线。
+The strip down the left of the sheet that carries the event numbers.,事件表左侧承载事件编号的竖条。
+The event numbers themselves.,事件编号本身。

@@ -2334,3 +2334,71 @@ Tools menu,menu Outils
 dock,dock
 object type,type d'objet
 Editor Tools,Outils d'éditeur
+"Reading marks - chips, badges, guides, stripes","Repères de lecture - puces, badges, guides, rayures"
+"Bars around the sheet - Object bar, status strip, tab title","Barres autour de la feuille - barre des objets, bandeau d'état, titre d'onglet"
+Manual pages,Pages du Manuel
+"The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.","La puce neutre sur un bouton de la barre d'inclusion (Exécuter maintenant, Recharger, Sortie), la puce de couverture et toute autre puce neutre d'une ligne."
+The word on those plain chips.,Le texte sur ces puces neutres.
+"The chip that says where something sits in the picker (""Group › Subgroup"").","La puce qui indique où se trouve un élément dans le sélecteur (""Group › Subgroup"")."
+The word on the picker-category chip.,Le texte sur la puce de catégorie du sélecteur.
+"The ""Inspector"" chip on a variable the game's designer can edit.","La puce ""Inspector"" sur une variable que le concepteur du jeu peut modifier."
+The word on the Inspector chip.,Le texte sur la puce Inspector.
+The badge that says a variable is const or static.,Le badge qui indique qu'une variable est const ou static.
+The word on the const / static badge.,Le texte sur le badge const / static.
+The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.,Le badge discret sur un bandeau de configuration - les marques ▣ et ⇥ qui ouvrent une barre d'inclusion.
+The glyph on a setup badge.,Le glyphe sur un badge de configuration.
+"The ""Script block"" pill on a row that kept its GDScript as it was written.","La pastille ""Script block"" sur une ligne qui a gardé son GDScript tel qu'il a été écrit."
+The words on the Script block pill.,Le texte sur la pastille Script block.
+"The ""⚠ code"" badge that asks you to look at a line the sheet could not read.","Le badge ""⚠ code"" qui vous invite à regarder une ligne que la feuille n'a pas su lire."
+The words on the ⚠ code badge.,Le texte sur le badge ⚠ code.
+"The plate behind an OR badge, when the condition lane has nothing of its own to say.","La plaque derrière un badge OR, quand la voie des conditions n'a rien à dire par elle-même."
+The word on the OR badge.,Le texte sur le badge OR.
+"The ⟳ badge on an event that runs every tick - a tween beat, a repeating timer.","Le badge ⟳ sur un événement qui s'exécute à chaque tick - un temps de tween, une minuterie répétitive."
+The glyph on the every-tick badge.,Le glyphe sur le badge « à chaque tick ».
+The ⌨ badge on an event a key or a button starts.,Le badge ⌨ sur un événement déclenché par une touche ou un bouton.
+The glyph on the input badge.,Le glyphe sur le badge d'entrée.
+The ▶ badge on an event that runs once.,Le badge ▶ sur un événement qui ne s'exécute qu'une fois.
+The glyph on the runs-once badge.,Le glyphe sur le badge « une seule fois ».
+The main word of a row's sentence.,Le mot principal de la phrase d'une ligne.
+The quieter half of a sentence.,La moitié plus discrète d'une phrase.
+"The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.","Le détail discret qui suit - le nom de fichier d'une barre d'inclusion, les touches d'une ligne INPUT, le sous-titre d'une barre d'en-tête."
+"Text values inside a parameter (""coin""), so magic words are findable by colour.","Les valeurs texte dans un paramètre (""coin""), pour retrouver les mots-clés à la couleur."
+true and false inside a parameter.,true et false dans un paramètre.
+"""N errors - the game will not run this script"", and the words on a broken row.","""N erreurs - le jeu n'exécutera pas ce script"", et le texte d'une ligne cassée."
+The red stripe and wash down a row the engine cannot parse.,La bande rouge et le voile sur une ligne que le moteur ne sait pas analyser.
+The stripe that pulses on an event firing right now while the game runs.,La bande qui pulse sur un événement qui se déclenche à l'instant pendant que le jeu tourne.
+The scrim over a row that is switched off.,Le voile sur une ligne désactivée.
+The breakpoint dot in the event-number margin.,Le point d'arrêt dans la marge des numéros d'événement.
+The bookmark pennant in the event-number margin.,Le fanion de signet dans la marge des numéros d'événement.
+The hairline down the right edge of the event-number margin.,Le filet le long du bord droit de la marge des numéros d'événement.
+The faint stop that marks each level of indent.,Le repère discret qui marque chaque niveau d'indentation.
+The stronger line from an event down to its sub-events - the one you follow with your eye.,Le trait plus marqué qui descend d'un événement vers ses sous-événements - celui que l'œil suit.
+The line that shows where a dragged row will land.,La ligne qui montre où une ligne déplacée va atterrir.
+The red a drop turns when it is not allowed.,Le rouge que prend un dépôt lorsqu'il n'est pas autorisé.
+"The bubble that says why a drop was refused (""dealt is not visible here"").","La bulle qui explique pourquoi un dépôt a été refusé (""dealt is not visible here"")."
+The same bubble when the drop is fine.,La même bulle lorsque le dépôt est valide.
+The words in that bubble.,Le texte de cette bulle.
+The band behind selected text while you are editing a cell.,La bande derrière le texte sélectionné pendant l'édition d'une cellule.
+The plate a chip sits on when it brought no colour of its own.,La plaque sur laquelle repose une puce quand elle n'apporte pas sa propre couleur.
+"The outline around a colour value's swatch, so a pale colour still reads as a swatch.","Le contour autour de l'échantillon d'une valeur de couleur, pour qu'une couleur pâle se lise encore comme un échantillon."
+"How strongly every other use of a hovered variable lights up, inside that variable's own scope.","L'intensité avec laquelle s'allument les autres utilisations d'une variable survolée, dans la portée de cette variable."
+"The headings down the Object bar (SCENE, GLOBALS, INPUT) and the row count beside each entry.","Les intitulés de la barre des objets (SCENE, GLOBALS, INPUT) et le nombre de lignes à côté de chaque entrée."
+"The ⚠ on an Object bar entry the sheet flagged - a node the scene lost, an action the Input Map does not have.","Le ⚠ sur une entrée de la barre des objets signalée par la feuille - un nœud que la scène a perdu, une action absente de la carte des entrées."
+The wash over every row that uses the object you point at in the Object bar.,Le voile sur chaque ligne qui utilise l'objet que vous pointez dans la barre des objets.
+The grab dots on the row under the mouse.,Les points de préhension sur la ligne sous la souris.
+Those dots once the pointer is in the grab zone.,Ces mêmes points lorsque le pointeur est dans la zone de préhension.
+The message along the bottom of the dock.,Le message en bas du dock.
+That message when something went wrong.,Ce message lorsqu'une erreur s'est produite.
+"The row address beside it (""event 12 ▸ action 2"").","L'adresse de ligne affichée à côté (""event 12 ▸ action 2"")."
+The ● that says this sheet has edits you have not saved.,Le ● qui indique que cette feuille a des modifications non enregistrées.
+The file path printed beside the sheet's name.,Le chemin de fichier affiché à côté du nom de la feuille.
+"Captions, breadcrumbs and the quiet words on a Manual page. Clear = follow the editor.","Légendes, fil d'Ariane et texte discret d'une page du Manuel. Transparent = suivre l'éditeur."
+"The paper behind a Manual page. Leave it clear and the Manual sits on the editor's own background, the way it ships.","Le papier derrière une page du Manuel. Laissez-le transparent et le Manuel repose sur l'arrière-plan de l'éditeur, comme à la livraison."
+Headings on a Manual page. Clear = follow the editor's own text colour.,Les titres d'une page du Manuel. Transparent = suivre la couleur de texte propre à l'éditeur.
+The highlight behind a search hit inside a page.,La surbrillance derrière un résultat de recherche dans une page.
+The pill on the contents entry for the page you are reading. Clear = the editor's accent.,La pastille sur l'entrée de sommaire de la page en cours de lecture. Transparent = la couleur d'accent de l'éditeur.
+The word on that pill.,Le texte sur cette pastille.
+The note above a verb its pack has deprecated.,La note au-dessus d'un verbe que son pack a déprécié.
+The rule under a table's header row on a page.,Le filet sous la ligne d'en-tête d'un tableau sur une page.
+The strip down the left of the sheet that carries the event numbers.,La bande à gauche de la feuille qui porte les numéros d'événement.
+The event numbers themselves.,Les numéros d'événement eux-mêmes.

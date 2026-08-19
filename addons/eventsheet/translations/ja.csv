@@ -2334,3 +2334,71 @@ Tools menu,ツールメニュー
 dock,ドック
 object type,オブジェクト型
 Editor Tools,エディターツール
+"Reading marks - chips, badges, guides, stripes",読み取りの目印 - チップ、バッジ、ガイド、ストライプ
+"Bars around the sheet - Object bar, status strip, tab title",シート周りのバー - オブジェクトバー、ステータスバー、タブタイトル
+Manual pages,マニュアルのページ
+"The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.",インクルードバーのボタン (今すぐ実行、再読み込み、出力) に付く素のチップ、カバレッジのチップ、そして行の中のその他すべての中立的なチップ。
+The word on those plain chips.,その素のチップに載る文字。
+"The chip that says where something sits in the picker (""Group › Subgroup"").","ピッカー内での場所を示すチップ (""Group › Subgroup"")。"
+The word on the picker-category chip.,ピッカーのカテゴリーチップに載る文字。
+"The ""Inspector"" chip on a variable the game's designer can edit.","ゲームのデザイナーが編集できる変数に付く ""Inspector"" チップ。"
+The word on the Inspector chip.,Inspector チップに載る文字。
+The badge that says a variable is const or static.,変数が const または static であることを示すバッジ。
+The word on the const / static badge.,const / static バッジに載る文字。
+The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.,セットアップ帯に付く控えめなバッジ - インクルードバーを開く ▣ と ⇥ の印。
+The glyph on a setup badge.,セットアップバッジに載る記号。
+"The ""Script block"" pill on a row that kept its GDScript as it was written.","書かれたままの GDScript を保っている行に付く ""Script block"" のピル。"
+The words on the Script block pill.,Script block のピルに載る文字。
+"The ""⚠ code"" badge that asks you to look at a line the sheet could not read.","シートが読み取れなかった行を確認するよう促す ""⚠ code"" バッジ。"
+The words on the ⚠ code badge.,⚠ code バッジに載る文字。
+"The plate behind an OR badge, when the condition lane has nothing of its own to say.",条件レーンに固有の内容がないときに OR バッジの背後に敷かれる板。
+The word on the OR badge.,OR バッジに載る文字。
+"The ⟳ badge on an event that runs every tick - a tween beat, a repeating timer.",毎ティック実行されるイベントに付く ⟳ バッジ - トゥイーンの刻み、繰り返しタイマーなど。
+The glyph on the every-tick badge.,毎ティックバッジに載る記号。
+The ⌨ badge on an event a key or a button starts.,キーやボタンで始まるイベントに付く ⌨ バッジ。
+The glyph on the input badge.,入力バッジに載る記号。
+The ▶ badge on an event that runs once.,一度だけ実行されるイベントに付く ▶ バッジ。
+The glyph on the runs-once badge.,一度だけバッジに載る記号。
+The main word of a row's sentence.,行の文の中心となる語。
+The quieter half of a sentence.,文のうち控えめな側の部分。
+"The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.",その後ろに続く控えめな補足 - インクルードバーのファイル名、INPUT 行のキー、見出しバーのサブタイトルなど。
+"Text values inside a parameter (""coin""), so magic words are findable by colour.","パラメーター内の文字列値 (""coin"")。合言葉を色で見つけられるようにします。"
+true and false inside a parameter.,パラメーター内の true と false。
+"""N errors - the game will not run this script"", and the words on a broken row.",「N 件のエラー - ゲームはこのスクリプトを実行しません」と、壊れた行に載る文字。
+The red stripe and wash down a row the engine cannot parse.,エンジンが解析できない行に引かれる赤い帯と色被せ。
+The stripe that pulses on an event firing right now while the game runs.,ゲームの実行中、いま発火しているイベントで脈打つ帯。
+The scrim over a row that is switched off.,オフにした行にかかる幕。
+The breakpoint dot in the event-number margin.,イベント番号の余白に表示されるブレークポイントの点。
+The bookmark pennant in the event-number margin.,イベント番号の余白に表示されるブックマークの小旗。
+The hairline down the right edge of the event-number margin.,イベント番号の余白の右端に引かれる細い線。
+The faint stop that marks each level of indent.,インデントの各段階を示す淡い目印。
+The stronger line from an event down to its sub-events - the one you follow with your eye.,イベントからサブイベントへ下りる、やや濃い線 - 目で追う線です。
+The line that shows where a dragged row will land.,ドラッグ中の行が落ちる位置を示す線。
+The red a drop turns when it is not allowed.,ドロップが許されないときに変わる赤。
+"The bubble that says why a drop was refused (""dealt is not visible here"").","ドロップが拒否された理由を伝える吹き出し (""dealt is not visible here"")。"
+The same bubble when the drop is fine.,ドロップが問題ないときの同じ吹き出し。
+The words in that bubble.,その吹き出しの中の文字。
+The band behind selected text while you are editing a cell.,セルの編集中、選択したテキストの背後に敷かれる帯。
+The plate a chip sits on when it brought no colour of its own.,固有の色を持たないチップが載る板。
+"The outline around a colour value's swatch, so a pale colour still reads as a swatch.",色の値のスウォッチを囲む輪郭。淡い色でもスウォッチとして見えるようにします。
+"How strongly every other use of a hovered variable lights up, inside that variable's own scope.",ホバー中の変数の他の使用箇所が、その変数のスコープ内でどれだけ強く光るか。
+"The headings down the Object bar (SCENE, GLOBALS, INPUT) and the row count beside each entry.",オブジェクトバーの見出し (SCENE、GLOBALS、INPUT) と、各項目の横に出る行数。
+"The ⚠ on an Object bar entry the sheet flagged - a node the scene lost, an action the Input Map does not have.",シートが警告を付けたオブジェクトバーの項目に出る ⚠ - シーンから失われたノードや、入力マップにないアクションなど。
+The wash over every row that uses the object you point at in the Object bar.,オブジェクトバーで指したオブジェクトを使っているすべての行にかかる色被せ。
+The grab dots on the row under the mouse.,マウス下の行に出るつまみの点。
+Those dots once the pointer is in the grab zone.,ポインターがつまみ領域に入ったときの、その点。
+The message along the bottom of the dock.,ドックの下端に出るメッセージ。
+That message when something went wrong.,問題が起きたときの、そのメッセージ。
+"The row address beside it (""event 12 ▸ action 2"").","その横に出る行の位置表示 (""event 12 ▸ action 2"")。"
+The ● that says this sheet has edits you have not saved.,このシートに未保存の変更があることを示す ●。
+The file path printed beside the sheet's name.,シート名の横に表示されるファイルパス。
+"Captions, breadcrumbs and the quiet words on a Manual page. Clear = follow the editor.",マニュアルページのキャプション、パンくず、控えめな語句。透明 = エディターに合わせます。
+"The paper behind a Manual page. Leave it clear and the Manual sits on the editor's own background, the way it ships.",マニュアルページの背後の紙。透明のままにすると、マニュアルは出荷時のとおりエディター自身の背景の上に載ります。
+Headings on a Manual page. Clear = follow the editor's own text colour.,マニュアルページの見出し。透明 = エディター自身の文字色に合わせます。
+The highlight behind a search hit inside a page.,ページ内の検索ヒットの背後に付くハイライト。
+The pill on the contents entry for the page you are reading. Clear = the editor's accent.,いま読んでいるページの目次項目に付くピル。透明 = エディターのアクセント色。
+The word on that pill.,そのピルに載る文字。
+The note above a verb its pack has deprecated.,パックが非推奨にした動詞の上に出る注記。
+The rule under a table's header row on a page.,ページ内の表の見出し行の下に引かれる罫線。
+The strip down the left of the sheet that carries the event numbers.,シートの左側にあり、イベント番号を並べる帯。
+The event numbers themselves.,イベント番号そのもの。

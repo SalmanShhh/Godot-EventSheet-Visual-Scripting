@@ -2334,3 +2334,71 @@ Tools menu,меню «Инструменты»
 dock,панель
 object type,тип объекта
 Editor Tools,Инструменты редактора
+"Reading marks - chips, badges, guides, stripes","Метки чтения - чипы, значки, направляющие, полосы"
+"Bars around the sheet - Object bar, status strip, tab title","Панели вокруг листа - панель объектов, строка состояния, заголовок вкладки"
+Manual pages,Страницы Руководства
+"The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.","Простой чип на кнопке полосы включения (Запустить сейчас, Перезагрузить, Вывод), чип покрытия и любой другой нейтральный чип в строке."
+The word on those plain chips.,Надпись на этих простых чипах.
+"The chip that says where something sits in the picker (""Group › Subgroup"").","Чип, который показывает, где элемент находится в списке выбора (""Group › Subgroup"")."
+The word on the picker-category chip.,Надпись на чипе категории в списке выбора.
+"The ""Inspector"" chip on a variable the game's designer can edit.","Чип ""Inspector"" на переменной, которую может править дизайнер игры."
+The word on the Inspector chip.,Надпись на чипе Inspector.
+The badge that says a variable is const or static.,"Значок, который сообщает, что переменная const или static."
+The word on the const / static badge.,Надпись на значке const / static.
+The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.,"Приглушённый значок на полосе настройки - метки ▣ и ⇥, которые открывают полосу включения."
+The glyph on a setup badge.,Символ на значке настройки.
+"The ""Script block"" pill on a row that kept its GDScript as it was written.","Плашка ""Script block"" на строке, сохранившей свой GDScript в том виде, как он написан."
+The words on the Script block pill.,Надпись на плашке Script block.
+"The ""⚠ code"" badge that asks you to look at a line the sheet could not read.","Значок ""⚠ code"", который просит взглянуть на строку, которую лист не смог прочитать."
+The words on the ⚠ code badge.,Надпись на значке ⚠ code.
+"The plate behind an OR badge, when the condition lane has nothing of its own to say.","Подложка за значком OR, когда полосе условий нечего сказать самой по себе."
+The word on the OR badge.,Надпись на значке OR.
+"The ⟳ badge on an event that runs every tick - a tween beat, a repeating timer.","Значок ⟳ на событии, которое выполняется каждый тик - такт твина, повторяющийся таймер."
+The glyph on the every-tick badge.,Символ на значке «каждый тик».
+The ⌨ badge on an event a key or a button starts.,"Значок ⌨ на событии, которое запускает клавиша или кнопка."
+The glyph on the input badge.,Символ на значке ввода.
+The ▶ badge on an event that runs once.,"Значок ▶ на событии, которое выполняется один раз."
+The glyph on the runs-once badge.,Символ на значке «один раз».
+The main word of a row's sentence.,Главное слово во фразе строки.
+The quieter half of a sentence.,Более тихая половина фразы.
+"The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.","Приглушённая подробность после него - имя файла полосы включения, клавиши строки INPUT, подзаголовок заголовочной полосы."
+"Text values inside a parameter (""coin""), so magic words are findable by colour.","Текстовые значения внутри параметра (""coin""), чтобы ключевые слова находились по цвету."
+true and false inside a parameter.,true и false внутри параметра.
+"""N errors - the game will not run this script"", and the words on a broken row.","""N ошибок - игра не запустит этот скрипт"" и надписи на сломанной строке."
+The red stripe and wash down a row the engine cannot parse.,"Красная полоса и заливка на строке, которую движок не может разобрать."
+The stripe that pulses on an event firing right now while the game runs.,"Полоса, пульсирующая на событии, которое срабатывает прямо сейчас во время игры."
+The scrim over a row that is switched off.,Затемнение поверх выключенной строки.
+The breakpoint dot in the event-number margin.,Точка останова на поле с номерами событий.
+The bookmark pennant in the event-number margin.,Флажок закладки на поле с номерами событий.
+The hairline down the right edge of the event-number margin.,Тонкая линия вдоль правого края поля с номерами событий.
+The faint stop that marks each level of indent.,"Слабая отметка, которая обозначает каждый уровень отступа."
+The stronger line from an event down to its sub-events - the one you follow with your eye.,"Более заметная линия от события к его подсобытиям - та, за которой следит глаз."
+The line that shows where a dragged row will land.,"Линия, показывающая, куда встанет перетаскиваемая строка."
+The red a drop turns when it is not allowed.,"Красный цвет, в который окрашивается недопустимое перетаскивание."
+"The bubble that says why a drop was refused (""dealt is not visible here"").","Всплывающая подсказка, которая объясняет, почему перетаскивание отклонено (""dealt is not visible here"")."
+The same bubble when the drop is fine.,"Та же подсказка, когда перетаскивание допустимо."
+The words in that bubble.,Текст в этой подсказке.
+The band behind selected text while you are editing a cell.,Полоса за выделенным текстом во время правки ячейки.
+The plate a chip sits on when it brought no colour of its own.,"Подложка, на которой лежит чип, если у него нет собственного цвета."
+"The outline around a colour value's swatch, so a pale colour still reads as a swatch.","Обводка вокруг образца цветового значения, чтобы бледный цвет всё равно читался как образец."
+"How strongly every other use of a hovered variable lights up, inside that variable's own scope.",Насколько ярко подсвечиваются остальные использования переменной под курсором в пределах её области видимости.
+"The headings down the Object bar (SCENE, GLOBALS, INPUT) and the row count beside each entry.","Заголовки в панели объектов (SCENE, GLOBALS, INPUT) и число строк рядом с каждым пунктом."
+"The ⚠ on an Object bar entry the sheet flagged - a node the scene lost, an action the Input Map does not have.","Значок ⚠ у пункта панели объектов, который отметил лист - узел, потерянный сценой, или действие, которого нет в карте ввода."
+The wash over every row that uses the object you point at in the Object bar.,"Заливка поверх каждой строки, которая использует объект, указанный в панели объектов."
+The grab dots on the row under the mouse.,Точки захвата на строке под курсором мыши.
+Those dots once the pointer is in the grab zone.,"Те же точки, когда указатель попадает в зону захвата."
+The message along the bottom of the dock.,Сообщение вдоль нижнего края панели.
+That message when something went wrong.,"То же сообщение, когда что-то пошло не так."
+"The row address beside it (""event 12 ▸ action 2"").","Адрес строки рядом с ним (""event 12 ▸ action 2"")."
+The ● that says this sheet has edits you have not saved.,"Знак ●, который сообщает, что в листе есть несохранённые правки."
+The file path printed beside the sheet's name.,"Путь к файлу, показанный рядом с именем листа."
+"Captions, breadcrumbs and the quiet words on a Manual page. Clear = follow the editor.","Подписи, «хлебные крошки» и тихий текст на странице Руководства. Прозрачный = следовать редактору."
+"The paper behind a Manual page. Leave it clear and the Manual sits on the editor's own background, the way it ships.","«Бумага» за страницей Руководства. Оставьте прозрачной - и Руководство ляжет на собственный фон редактора, как и задумано по умолчанию."
+Headings on a Manual page. Clear = follow the editor's own text colour.,Заголовки на странице Руководства. Прозрачный = следовать собственному цвету текста редактора.
+The highlight behind a search hit inside a page.,Подсветка за найденным совпадением внутри страницы.
+The pill on the contents entry for the page you are reading. Clear = the editor's accent.,"Плашка на пункте оглавления для страницы, которую вы читаете. Прозрачный = акцентный цвет редактора."
+The word on that pill.,Надпись на этой плашке.
+The note above a verb its pack has deprecated.,"Примечание над глаголом, который его пакет объявил устаревшим."
+The rule under a table's header row on a page.,Линия под строкой заголовка таблицы на странице.
+The strip down the left of the sheet that carries the event numbers.,"Полоса вдоль левого края листа, которая несёт номера событий."
+The event numbers themselves.,Сами номера событий.
