@@ -245,6 +245,8 @@ var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-pr
 var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
 var _verb_properties: EventSheetVerbProperties = EventSheetVerbProperties.new()  # a published verb's header click: the ACE properties popup (kind, category, inputs, inserts) (dock/verb_properties_popup.gd)
 var _object_properties: EventSheetObjectProperties = EventSheetObjectProperties.new()  # a row's object-name click: the object popup (type, path, rows, signals) (dock/object_properties_popup.gd)
+var _find_results: EventSheetFindResultsBar = EventSheetFindResultsBar.new()  # Find all references: the results bar under the sheet, grouped by sheet with event numbers (dock/find_results_bar.gd)
+var _properties_bar: EventSheetPropertiesBar = EventSheetPropertiesBar.new()  # the selected condition/action/object/group as fields edited in place, beside the canvas (dock/properties_bar.gd)
 var _objects_panel: EventSheetObjectsPanel = null  # left-rail Objects section: every object the open file uses (editor/objects_panel.gd)
 var _ghost_row: EventSheetGhostRow = EventSheetGhostRow.new()  # zero-dialog add: E/C/A open a type-a-sentence popup at the selected row (dock/ghost_row.gd)
 var _navigate: EventSheetNavigate = EventSheetNavigate.new()  # Ctrl+Click go-to-definition: addon verbs open their behaviour as a sheet (dock/navigate.gd)
@@ -336,6 +338,8 @@ func _init() -> void:
 	_preview_glue.init(self)
 	_verb_properties.init(self)
 	_object_properties.init(self)
+	_find_results.init(self)
+	_properties_bar.init(self)
 	# Same rule as _preview_glue: _build_ui() calls _open_progress.build(), so the back-reference
 	# has to be wired before it (init() only stores _dock - nothing tree-bound).
 	_open_progress.init(self)
@@ -1252,6 +1256,10 @@ func _export_gdscript_requested() -> void:
 	_sheet_io._export_gdscript_requested()
 
 
+func _save_sheet_as_text_requested() -> void:
+	_sheet_io._save_sheet_as_text_requested()
+
+
 func _write_exported_gdscript(path: String) -> void:
 	_sheet_io._write_exported_gdscript(path)
 
@@ -1342,18 +1350,94 @@ func _assign_fresh_event_uids(row: EventRow) -> void:
 
 
 
-func _on_zoom_in_requested() -> void:
-	if _viewport == null:
+# ── Sheet zoom ──────────────────────────────────────────────────────────────────────
+# Ctrl+wheel, Ctrl+= / Ctrl+-, Ctrl+0 and the status-bar pill are four ways into ONE value: the
+# sheet zoom, 50% to 200%, remembered per LAYOUT and not per file - open a second sheet and it is
+# already at the zoom you were reading at. Row density (Comfortable / Compact) stays its own
+# choice: density trades whitespace for rows, zoom changes how big everything is drawn.
+var _zoom_pill: MenuButton = null
+
+
+## The status-bar zoom pill: the current percentage, and the six steps plus Reset behind it.
+func _build_zoom_pill() -> MenuButton:
+	_zoom_pill = MenuButton.new()
+	_zoom_pill.name = "EventSheetZoomPill"
+	_zoom_pill.flat = true
+	_zoom_pill.tooltip_text = "Zoom the sheet (Ctrl + mouse wheel, Ctrl + + / Ctrl + -, Ctrl + 0 for 100%). Remembered for every sheet you open."
+	var popup: PopupMenu = _zoom_pill.get_popup()
+	for level_index: int in range(EventSheetPalette.SHEET_ZOOM_LEVELS.size()):
+		popup.add_item(EventSheetPalette.sheet_zoom_label(EventSheetPalette.SHEET_ZOOM_LEVELS[level_index]), level_index)
+	popup.add_separator()
+	popup.add_item("Reset zoom", 100)
+	popup.id_pressed.connect(func(id: int) -> void:
+		if id == 100:
+			_on_zoom_reset_requested()
+		elif id >= 0 and id < EventSheetPalette.SHEET_ZOOM_LEVELS.size():
+			_apply_sheet_zoom(EventSheetPalette.SHEET_ZOOM_LEVELS[id]))
+	_refresh_zoom_pill()
+	return _zoom_pill
+
+
+func _refresh_zoom_pill() -> void:
+	if _zoom_pill == null:
 		return
-	_viewport.zoom_in()
-	_set_status("Zoom: %d%%" % int(round(_viewport.get_zoom_factor() * 100.0)))
+	_zoom_pill.text = EventSheetPalette.sheet_zoom_label(EventSheetPalette.sheet_zoom())
+
+
+## Sets the zoom on every open view at once and remembers it, then says it in the status line.
+func _apply_sheet_zoom(factor: float) -> void:
+	EventSheetPalette.set_sheet_zoom(factor)
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.set_zoom_factor(EventSheetPalette.sheet_zoom())
+	_refresh_zoom_pill()
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var settings: EditorSettings = EditorInterface.get_editor_settings()
+		if settings != null:
+			settings.set_project_metadata("eventsheets", "sheet_zoom", EventSheetPalette.sheet_zoom())
+	_set_status("Zoom: %s" % EventSheetPalette.sheet_zoom_label(EventSheetPalette.sheet_zoom()))
+
+
+## A view zoomed itself (Ctrl+wheel on the canvas): carry the new factor everywhere else.
+func _on_viewport_zoom_changed(factor: float) -> void:
+	if is_equal_approx(factor, EventSheetPalette.sheet_zoom()):
+		return
+	_apply_sheet_zoom(factor)
+
+
+## Restores the remembered zoom at startup, and onto a view that was only just created.
+func _apply_sheet_zoom_pref() -> void:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var settings: EditorSettings = EditorInterface.get_editor_settings()
+		if settings != null:
+			EventSheetPalette.set_sheet_zoom(float(settings.get_project_metadata("eventsheets", "sheet_zoom", 1.0)))
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.set_zoom_factor(EventSheetPalette.sheet_zoom())
+	_refresh_zoom_pill()
+
+
+func _on_zoom_in_requested() -> void:
+	_apply_sheet_zoom(EventSheetPalette.step_sheet_zoom(EventSheetPalette.sheet_zoom(), 1))
 
 
 func _on_zoom_out_requested() -> void:
-	if _viewport == null:
-		return
-	_viewport.zoom_out()
-	_set_status("Zoom: %d%%" % int(round(_viewport.get_zoom_factor() * 100.0)))
+	_apply_sheet_zoom(EventSheetPalette.step_sheet_zoom(EventSheetPalette.sheet_zoom(), -1))
+
+
+func _on_zoom_reset_requested() -> void:
+	_apply_sheet_zoom(1.0)
+
+
+## View ▸ Properties Bar: show/hide the bar beside the sheet and tick the menu to match.
+func _toggle_properties_bar(view_popup: PopupMenu) -> void:
+	var open: bool = not _properties_bar.is_open()
+	_properties_bar.set_open(open)
+	if view_popup != null:
+		var item_index: int = view_popup.get_item_index(41)
+		if item_index >= 0:
+			view_popup.set_item_checked(item_index, open)
+	_set_status("Properties bar %s." % ("shown" if open else "hidden"))
 
 
 # ── Clipboard / copy-paste → dock/clipboard.gd ──────────────────────────────────────
@@ -1926,6 +2010,9 @@ func set_simple_mode(enabled: bool) -> void:
 ## drop-to-code button hides, and the Add menu's code item disables with a pointer to the toggle.
 ## (The picker and the right-click menus apply their own gates when they open.)
 func _apply_simple_mode_gates() -> void:
+	# The Properties bar is an expert surface: a beginner's sheet is the sheet. View ▸ Properties
+	# Bar brings it back at any time.
+	_properties_bar.set_open(not _simple_mode)
 	if _add_code_button != null:
 		_add_code_button.visible = not _simple_mode
 	if _add_menu_popup != null:
@@ -1946,6 +2033,9 @@ func _load_simple_mode_preference() -> void:
 	_apply_compact_rows_pref()
 	_apply_humanized_names_pref()
 	_apply_familiar_words_pref()
+	# The sheet zoom rides the same startup read: it belongs to the layout, so the first sheet
+	# opens at the size the last one was being read at.
+	_apply_sheet_zoom_pref()
 
 
 ## Declutter toggle: show/hide the trailing "+ Add event…" affordance rows across every
@@ -2338,8 +2428,12 @@ func _open_replace_object_dialog() -> void:
 	_replace_object_dialog.register_text_enter(to_edit)
 	# Autocomplete for the target: every reference the whole sheet uses + the edited
 	# scene's own nodes ($children, %uniques) + self - typed text filters, free text wins.
+	# Objects that have the SAME conditions and actions come first: those are the swaps that will
+	# still read the same afterwards.
 	var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
-	var to_suggestions: PackedStringArray = PackedStringArray(EventSheetRefactor.reference_suggestions(_current_sheet.events if _current_sheet != null else [], scene_root))
+	var to_suggestions: PackedStringArray = EventSheetReplaceObject.rank_suggestions(
+		PackedStringArray(EventSheetRefactor.reference_suggestions(_current_sheet.events if _current_sheet != null else [], scene_root)),
+		references[0] if not references.is_empty() else "", scene_root)
 	var to_row: HBoxContainer = HBoxContainer.new()
 	to_row.add_theme_constant_override("separation", 4)
 	to_row.add_child(to_edit)
@@ -2359,8 +2453,20 @@ func _open_replace_object_dialog() -> void:
 			counter["count"] = EventSheetRefactor.replace_node_reference(targets, from_ref, to_ref)
 			return int(counter["count"]) > 0)
 		if changed:
+			# A parameter that named one of A's instance variables the new object does not have
+			# still compiles, and then fails at runtime - so it is said here and recorded for the
+			# Doctor rather than left to be discovered by a crash.
+			var missing: PackedStringArray = EventSheetReplaceObject.missing_members(targets, from_ref, to_ref, scene_root)
+			EventSheetReplaceObject.last_missing = {"from": from_ref, "to": to_ref, "members": missing, "path": _current_sheet_path}
+			# Registered only while there IS something to report, so a clean project never carries
+			# a check that can only answer "nothing".
+			if missing.is_empty():
+				EventSheetProjectDoctor.unregister_check("replace-object-members")
+			else:
+				EventSheetProjectDoctor.register_check("replace-object-members", EventSheetReplaceObject.doctor_check)
 			_refresh_after_edit()
-			_mark_dirty("Replaced %d reference(s): %s becomes %s." % [int(counter["count"]), from_ref, to_ref])
+			var missing_note: String = "" if missing.is_empty() else " %s does not have %s - see the Doctor." % [to_ref, ", ".join(missing)]
+			_mark_dirty("Replaced %d reference(s): %s becomes %s.%s" % [int(counter["count"]), from_ref, to_ref, missing_note])
 		else:
 			_set_status("Nothing matched %s in the selection." % from_ref, true))
 	EventSheetL10n.apply_to(_replace_object_dialog)
@@ -2723,7 +2829,44 @@ func _on_find_text_changed(text: String) -> void:  # _find_edit.text_changed + g
 
 
 func _find_step(direction: int) -> void:  # multi_view find_step_requested + tests
+	# While the Find results bar is open, F3 / Shift+F3 walk THOSE results - it is the list the
+	# user is looking at. Closed, they step the find bar's matches as before.
+	if _find_results.is_open():
+		_find_results.step(direction)
+		return
 	_find_bar_glue._find_step(direction)
+
+
+## Right-click ▸ Find all references: every place the clicked variable / function / object /
+## signal / behavior is used, in the Find results bar under the sheet.
+func open_find_all_references() -> void:
+	_find_results.open(_find_reference_symbol())
+
+
+## The symbol the right-click was about: the clicked variable or object name first (a span knows
+## exactly what it is), then the row's own identity, then its leading words.
+func _find_reference_symbol() -> String:
+	var metadata: Dictionary = _context_hit.get("span_metadata", {}) if _context_hit is Dictionary else {}
+	var variable_name: String = str(metadata.get("variable_name", "")).strip_edges()
+	if not variable_name.is_empty():
+		return variable_name
+	if not _variables._context_variable.is_empty():
+		return str(_variables._context_variable.get("name", "")).strip_edges()
+	var object_label: String = str(metadata.get("object_label", "")).strip_edges()
+	if not object_label.is_empty():
+		return object_label
+	var target: Resource = _context_row.source_resource if _context_row != null else null
+	if target is LocalVariable:
+		return (target as LocalVariable).name
+	if target is SignalRow:
+		return (target as SignalRow).signal_name
+	if target is EventFunction:
+		return (target as EventFunction).function_name
+	if target is EventGroup:
+		return (target as EventGroup).group_name
+	if _context_row != null and not _context_row.spans.is_empty():
+		return str(_context_row.spans[0].text).get_slice(":", 0).strip_edges()
+	return ""
 
 
 func _replace_all_in_sheet() -> void:  # Replace All button + project_find + tests
@@ -2933,7 +3076,8 @@ const FIXED_KEYS: Array = [
 	["Ctrl + G", "Go to event"],
 	["F9 / Ctrl+B", "Toggle breakpoint"],
 	["Ctrl + M", "Toggle bookmark"],
-	["Ctrl + +  /  Ctrl + -", "Zoom in / out"],
+	["Ctrl + +  /  Ctrl + -", "Zoom in / out (also Ctrl + mouse wheel)"],
+	["Ctrl + 0", "Reset zoom to 100%"],
 	["Esc", "Close a popup / cancel an edit"],
 ]
 
@@ -4577,6 +4721,7 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_follow_selection_in_manual()
 	if _exposed_node != null and _viewport != null:
 		_exposed_node.set_row_context(_active_view().get_selected_ace_resource())
+	_properties_bar.refresh()
 
 
 func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String) -> void:
@@ -4724,6 +4869,7 @@ func _refresh_after_edit() -> void:
 	_refresh_code_panel()
 	_refresh_anatomy_panel()
 	_refresh_functions_list()
+	_properties_bar.refresh()
 
 
 # Live-reload binding to the active theme .tres → dock/theme_manager.gd. Called from _activate_tab /

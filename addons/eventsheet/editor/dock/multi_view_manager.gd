@@ -108,6 +108,10 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
 	view.context_menu_requested.connect(_dock._on_viewport_context_menu_requested)
 	view.raw_code_edit_requested.connect(_dock._on_viewport_raw_code_edit_requested)
 	view.data_class_field_edit_requested.connect(_dock._on_data_class_field_edit_requested)
+	# Zoom belongs to the layout: a pane opened later starts at the zoom already being read at,
+	# and zooming inside it carries back to every other pane.
+	view.set_zoom_factor(EventSheetPalette.sheet_zoom())
+	view.zoom_changed.connect(_dock._on_viewport_zoom_changed)
 
 
 ## "Open in Split": pins the given row in the other pane (opens the split if needed).

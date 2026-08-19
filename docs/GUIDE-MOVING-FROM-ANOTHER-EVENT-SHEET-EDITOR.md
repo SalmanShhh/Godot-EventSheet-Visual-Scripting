@@ -293,8 +293,34 @@ i18n (Godot translations).
   margin event number.
 - **Ctrl+F has a Filter toggle** (the C3 live-filter reflex): the sheet collapses to only
   the events matching the search, the status line counts what's hidden, Esc restores.
+- **Ctrl+Shift+C pastes events as text.** The selection copies as the plain listing every
+  event-sheet community posts - `+ ` in front of a condition, `-> ` in front of an action, one
+  extra indent per sub-event, in exactly the words the canvas is showing under your reading
+  lenses. **Sheet > Save as Text…** writes the whole sheet the same way as Markdown, with the
+  margin event numbers in a gutter so the file and the sheet agree about what "event 12" is. It
+  is read-only output: the round trip already lives in the `.gd`, so nothing pastes back in.
+- **Right-click a name > Find all references** opens the **Find results** bar under the sheet:
+  every place that variable, function, object, signal or behavior is used, grouped by sheet with
+  each hit's event number. Clicking a result jumps to it (opening the sheet when it is not the
+  one on screen), F3 and Shift+F3 step forward and back, and the bar stays until you close it
+  with ✕. Matching is whole-symbol, so `hp` never finds `hp_max`.
+- **The Properties bar is where you edit without leaving the row.** It sits to the right of the
+  canvas, splitter-resizable like the Inspector, and shows whatever is selected: a condition or
+  action's parameters as fields (Enter applies, one undo step, the same edit as the Edit
+  Parameter dialog, so an opened `.gd` stays byte-exact for every line you did not touch), an
+  object's properties, a group's name and enabled state. Simple Mode starts it hidden; **View >
+  Properties Bar** brings it back. The dialog stays for anyone who prefers it.
+- **The sheet zooms like a code editor**: Ctrl + mouse wheel, Ctrl + + / Ctrl + -, Ctrl + 0 for
+  100%, or the pill in the status bar - 50% to 200% in six steps, with text, chips, icons and
+  guide lines scaling together. The zoom is remembered for the layout, not for one file, so the
+  next sheet opens at the size you were reading at. Row density (Comfortable / Compact) stays a
+  separate choice: density trades whitespace for rows, zoom changes how big everything is drawn.
+![The Find results bar under the sheet, the Properties bar beside it, and the zoom pill in the status bar](images/sheet-bars.png)
+
 - **Right-click a cell > Select All Events Using This**, then retarget or retune the lot:
-  *Replace Object References* rewrites every `$Node` / `%Unique` / `self` token-safely, and
+  *Replace object…* rewrites every `$Node` / `%Unique` / `self` token-safely - offering the
+  objects that have the same conditions and actions first, and flagging in the Doctor any
+  parameter that named an instance variable the new object does not have - and
   *Edit Values Across Selection* opens one params dialog whose per-field "all" checkboxes
   decide what overwrites every instance and what stays per-instance - each as one undo step.
 - **Arrows walk cells**: with a row selected, Left / Right step through its trigger,

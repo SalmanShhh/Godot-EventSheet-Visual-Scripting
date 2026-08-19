@@ -189,8 +189,16 @@ static func run() -> bool:
 	chord.keycode = KEY_C
 	chord.ctrl_pressed = true
 	chord.shift_pressed = true
+	# Ctrl+Shift+C is Copy as text (the chord every event-sheet editor uses for it); adding a
+	# condition keeps its primary key C and its Ctrl alternate is Ctrl+Alt+C.
 	all_passed = _check("chords never shadow their plain form",
-		EventSheetShortcuts.matches(chord, "add_condition_chord") and not EventSheetShortcuts.matches(chord, "copy"), true) and all_passed
+		EventSheetShortcuts.matches(chord, "copy_as_text") and not EventSheetShortcuts.matches(chord, "copy"), true) and all_passed
+	var condition_chord: InputEventKey = InputEventKey.new()
+	condition_chord.keycode = KEY_C
+	condition_chord.ctrl_pressed = true
+	condition_chord.alt_pressed = true
+	all_passed = _check("the Add condition alternate moved one modifier over",
+		EventSheetShortcuts.matches(condition_chord, "add_condition_chord"), true) and all_passed
 	EventSheetShortcuts.set_binding("duplicate", "Alt+D")
 	var rebound: InputEventKey = InputEventKey.new()
 	rebound.keycode = KEY_D
@@ -386,10 +394,10 @@ static func run() -> bool:
 	var edit_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetEditMenu", true, false) as MenuButton
 	var view_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetViewMenu", true, false) as MenuButton
 	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
-		sheet_menu != null and sheet_menu.get_popup().item_count == 19  # +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…
+		sheet_menu != null and sheet_menu.get_popup().item_count == 20  # +Save as Text…, +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…
 		and add_menu != null and add_menu.get_popup().item_count == 10 + 1 + EventSheetBlockRegistry.addable_kinds().size()  # +separator +the three event-shape commands +separator +Code action, then +separator + one item per registered Custom Block kind
 		and edit_menu != null and edit_menu.get_popup().item_count == 10
-		and view_menu != null and view_menu.get_popup().item_count == 34, true) and all_passed  # +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words, +6: the collapse sweeps (separator + Collapse All + Expand All + Expand To Level 1/2/3)
+		and view_menu != null and view_menu.get_popup().item_count == 36, true) and all_passed  # +1: Reset Zoom, +1: Properties Bar, +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words, +6: the collapse sweeps (separator + Collapse All + Expand All + Expand To Level 1/2/3)
 
 	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
 	# The window now lives in the extracted EventSheetWelcomeWindow (dock/welcome_window.gd); the dock

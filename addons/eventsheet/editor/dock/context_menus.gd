@@ -17,6 +17,11 @@ extends RefCounted
 ## above the 900+ extension range so the shared dispatcher recognises it as neither.
 const ROW_MENU_WHY_DIDNT_FIRE := 9700
 
+## The id for "Find all references", which rides four menus (variable / condition / action / the
+## row's More ▸). Same rule as above: far outside every shared dispatcher's range.
+const ROW_MENU_FIND_ALL_REFERENCES := 9710
+const FIND_ALL_REFERENCES_TOOLTIP := "Every place this name is used, across the open sheets and the project - grouped by sheet, with event numbers. F3 / Shift+F3 step through them."
+
 var _dock: Control = null
 
 
@@ -142,6 +147,19 @@ func build_all() -> void:
 	_dock._row_context_menu.id_pressed.connect(func(id: int) -> void:
 		if id == ROW_MENU_WHY_DIDNT_FIRE:
 			_dock._open_why_didnt_this_fire())
+	# ── Find all references (appended block - keep together) ───────────────────────────────────
+	# Every place the clicked variable / function / object / signal / behavior is used, in the Find
+	# results bar under the sheet. It rides four menus, so the gesture is the same wherever the name
+	# is. The three static menus get the item here; the row's More ▸ is rebuilt per right-click, so
+	# its item is added there and only the listener lives here.
+	for menu: PopupMenu in [_dock._variable_context_menu, _dock._condition_context_menu, _dock._action_context_menu]:
+		menu.add_item("Find all references", ROW_MENU_FIND_ALL_REFERENCES)
+		menu.set_item_tooltip(menu.item_count - 1, FIND_ALL_REFERENCES_TOOLTIP)
+	for menu: PopupMenu in [_dock._variable_context_menu, _dock._condition_context_menu,
+			_dock._action_context_menu, _dock._row_more_submenu]:
+		menu.id_pressed.connect(func(id: int) -> void:
+			if id == ROW_MENU_FIND_ALL_REFERENCES:
+				_dock.open_find_all_references())
 
 
 ## Rebuilds the row context menu for the clicked row: only the items that apply to its
@@ -264,7 +282,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# The script editor's selection gesture, surfaced top-level on a multi-selection (the single-row
 		# form stays under More): wraps the selected rows in a #region fence pair and opens the name editor.
 		menu.add_item("Create Code Region", _dock.ROW_MENU_SURROUND_REGION)
-		menu.add_item("Replace Object References…", _dock.ROW_MENU_REPLACE_OBJECT)
+		menu.add_item("Replace object…", _dock.ROW_MENU_REPLACE_OBJECT)
 		menu.add_item("Edit Values Across Selection…", _dock.ROW_MENU_BATCH_EDIT_PARAMS)
 	menu.add_separator()
 	_build_row_insert_submenu()
@@ -375,12 +393,14 @@ func _build_row_more_submenu(is_event: bool) -> void:
 		m.add_separator()
 	m.add_item("Copy as Text", _dock.ROW_MENU_COPY_AS_TEXT)
 	m.add_item("Find Usages (project)", _dock.ROW_MENU_FIND_USAGES)
+	m.add_item("Find all references", ROW_MENU_FIND_ALL_REFERENCES)
+	m.set_item_tooltip(m.item_count - 1, FIND_ALL_REFERENCES_TOOLTIP)
 	m.add_item("Open in Split", _dock.ROW_MENU_OPEN_IN_SPLIT)
 	m.add_separator()
 	m.add_item("Save Selection as Snippet…", _dock.ROW_MENU_SAVE_SNIPPET)
 	m.add_item("Insert Snippet…", _dock.ROW_MENU_INSERT_SNIPPET)
 	m.add_item("Create Code Region…", _dock.ROW_MENU_SURROUND_REGION)
-	m.add_item("Replace Object References…", _dock.ROW_MENU_REPLACE_OBJECT)
+	m.add_item("Replace object…", _dock.ROW_MENU_REPLACE_OBJECT)
 	# Paste Special sits beside Replace Object References because it IS that remap, applied on the
 	# way in instead of as a second step. Disabled (with the reason) when the clipboard holds no
 	# snippet, so the gesture stays discoverable rather than silently absent.

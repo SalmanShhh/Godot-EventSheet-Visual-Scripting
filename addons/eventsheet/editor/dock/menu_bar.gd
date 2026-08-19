@@ -44,6 +44,11 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(7),
 		"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency - proof you can leave the addon anytime."
 	)
+	sheet_popup.add_item("Save as Text…", 16)
+	sheet_popup.set_item_tooltip(
+		sheet_popup.get_item_index(16),
+		"Write the whole sheet as a plain listing in its own words - \"+ \" for a condition, \"-> \" for an action, indented by sub-event, event numbers on - ready to paste into an issue, a design doc or a chat."
+	)
 	sheet_popup.add_separator()
 	sheet_popup.add_item("Sheet Type…", 4)
 	sheet_popup.add_item("Manage Includes…", 8)
@@ -97,6 +102,7 @@ func build(root: Node) -> void:
 			11: _dock._open_inspector_designer()
 			12: _dock._starter._new_sheet_from_template(10)
 			13: _dock._new_resource_wizard.open()
+			16: _dock._save_sheet_as_text_requested()
 	)
 	_toolbar.add_child(sheet_menu)
 	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
@@ -233,6 +239,11 @@ func build(root: Node) -> void:
 	view_popup.add_separator()
 	view_popup.add_item("Zoom In", 4)
 	view_popup.add_item("Zoom Out", 5)
+	view_popup.add_item("Reset Zoom", 40)
+	view_popup.set_item_tooltip(view_popup.get_item_index(40), "Back to 100% (Ctrl + 0). The zoom is remembered for every sheet you open, not for one file.")
+	view_popup.add_check_item("Properties Bar", 41)
+	view_popup.set_item_tooltip(view_popup.get_item_index(41), "Show the selected condition, action, object or group beside the sheet, with its parameters editable in place. Hidden by default in Simple Mode.")
+	view_popup.set_item_checked(view_popup.get_item_index(41), not _dock._simple_mode)
 	view_popup.add_separator()
 	view_popup.add_item("Load Theme…", 6)
 	view_popup.add_item("Reload Theme", 7)
@@ -289,6 +300,8 @@ func build(root: Node) -> void:
 			3: _dock._toggle_linked_views()
 			4: _dock._on_zoom_in_requested()
 			5: _dock._on_zoom_out_requested()
+			40: _dock._on_zoom_reset_requested()
+			41: _dock._toggle_properties_bar(view_popup)
 			6: _dock._on_load_theme_requested()
 			7: _dock._on_reload_theme_requested()
 			8: _dock._open_theme_editor()

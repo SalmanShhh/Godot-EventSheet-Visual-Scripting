@@ -259,6 +259,7 @@ func unhandled_key_input(event: InputEvent) -> void:
 		["save", false, _dock._on_save_requested],
 		["open", false, _dock._on_open_requested],
 		["copy", false, _dock._on_copy_requested],
+		["copy_as_text", false, _dock._copy_selection_as_text],
 		["paste", false, _dock._on_paste_requested],
 		["redo", false, _dock._on_redo_requested],
 		["undo", false, _dock._on_undo_requested],
@@ -302,6 +303,9 @@ func unhandled_key_input(event: InputEvent) -> void:
 			_dock.accept_event()
 		elif key_event.keycode in [KEY_MINUS, KEY_KP_SUBTRACT]:
 			_dock._on_zoom_out_requested()
+			_dock.accept_event()
+		elif key_event.keycode in [KEY_0, KEY_KP_0]:
+			_dock._on_zoom_reset_requested()
 			_dock.accept_event()
 		return
 	if typing:

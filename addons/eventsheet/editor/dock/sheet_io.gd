@@ -432,6 +432,48 @@ func _export_gdscript_requested() -> void:
 	dialog.popup_centered(Vector2i(860, 580))
 
 
+## Sheet ▸ Save as text…: the whole sheet as the plain listing every event-sheet community pastes
+## into a forum post or an issue - "+ " for a condition, "-> " for an action, indented by
+## sub-event, event numbers on - written as Markdown. Read-only output in the sheet's own words:
+## the round trip lives in the .gd, so nothing reads back in from here.
+func _save_sheet_as_text_requested() -> void:
+	if _dock._current_sheet == null:
+		_dock._set_status("Open or create a sheet first.", true)
+		return
+	var dialog: FileDialog = FileDialog.new()
+	dialog.title = "Save Sheet as Text"
+	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.filters = PackedStringArray(["*.md ; Markdown"])
+	dialog.current_path = "%s.md" % _exported_script_basename()
+	dialog.file_selected.connect(func(path: String) -> void:
+		_write_sheet_text(path)
+		dialog.call_deferred("queue_free")
+	)
+	dialog.canceled.connect(func() -> void: dialog.queue_free())
+	_dock.add_child(dialog)
+	dialog.popup_centered(Vector2i(860, 580))
+
+
+func _write_sheet_text(path: String) -> void:
+	var target: String = path if path.get_extension() == "md" else path + ".md"
+	var file: FileAccess = FileAccess.open(target, FileAccess.WRITE)
+	if file == null:
+		_dock._set_status("Could not write %s." % target.get_file(), true)
+		return
+	file.store_string(sheet_text_markdown())
+	file.close()
+	_dock._set_status("Saved the sheet as text to %s." % target.get_file())
+
+
+## The whole sheet's listing as Markdown - separated from the file dialog so it is testable.
+func sheet_text_markdown() -> String:
+	var view: EventSheetViewport = _dock._active_view()
+	if view == null:
+		return ""
+	return EventSheetTextListing.markdown_for_rows(view.get_row_tree(), _exported_script_basename())
+
+
 func _exported_script_basename() -> String:
 	if _dock._current_sheet != null and not _dock._current_sheet.custom_class_name.strip_edges().is_empty():
 		return _dock._current_sheet.custom_class_name.to_snake_case()
