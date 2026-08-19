@@ -2798,3 +2798,28 @@ look up/down on,위/아래는
 clamped,제한
 Crossfade {from} → {to} by {amount},{amount} 로 {from} → {to} 교차 페이드
 shared,공유
+Set max FPS to {value},최대 FPS를 {value}(으)로 설정
+Set anti-aliasing to {value},안티앨리어싱을 {value}(으)로 설정
+Set fullscreen on,전체 화면 켜기
+Set fullscreen on (exclusive),전체 화면 켜기 (독점)
+Set fullscreen off,전체 화면 끄기
+Maximize,최대화
+Minimize,최소화
+Set title to {value},제목을 {value}(으)로 설정
+Set position to {value},위치를 {value}(으)로 설정
+Set always on top to {value},항상 위에를 {value}(으)로 설정
+Set vsync on,수직 동기화 켜기
+Set vsync off,수직 동기화 끄기
+Set vsync on (adaptive),수직 동기화 켜기 (적응형)
+Set vsync on (mailbox),수직 동기화 켜기 (메일박스)
+Set vsync to {value},수직 동기화를 {value}(으)로 설정
+Save image {name} as {value},이미지 {name}을(를) {value}(으)로 저장
+Save data asset {name} as {value},데이터 에셋 {name}을(를) {value}(으)로 저장
+a screenshot,스크린샷
+rendered as an image,이미지로 렌더링됨
+the data asset,데이터 에셋
+data type,데이터 타입
+image,이미지
+2×,2×
+4×,4×
+8×,8×

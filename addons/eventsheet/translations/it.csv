@@ -2798,3 +2798,28 @@ look up/down on,su/giù su
 clamped,limitato
 Crossfade {from} → {to} by {amount},Dissolvenza {from} → {to} con {amount}
 shared,condivisa
+Set max FPS to {value},Imposta FPS max a {value}
+Set anti-aliasing to {value},Imposta anti-aliasing a {value}
+Set fullscreen on,Attiva schermo intero
+Set fullscreen on (exclusive),Attiva schermo intero (esclusivo)
+Set fullscreen off,Disattiva schermo intero
+Maximize,Ingrandisci
+Minimize,Riduci a icona
+Set title to {value},Imposta titolo a {value}
+Set position to {value},Imposta posizione a {value}
+Set always on top to {value},Imposta sempre in primo piano a {value}
+Set vsync on,Attiva sincronia verticale
+Set vsync off,Disattiva sincronia verticale
+Set vsync on (adaptive),Attiva sincronia verticale (adattiva)
+Set vsync on (mailbox),Attiva sincronia verticale (mailbox)
+Set vsync to {value},Imposta sincronia verticale a {value}
+Save image {name} as {value},Salva immagine {name} come {value}
+Save data asset {name} as {value},Salva risorsa dati {name} come {value}
+a screenshot,una schermata
+rendered as an image,renderizzato come immagine
+the data asset,la risorsa dati
+data type,tipo di dati
+image,immagine
+2×,2×
+4×,4×
+8×,8×

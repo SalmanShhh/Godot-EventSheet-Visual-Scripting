@@ -2798,3 +2798,28 @@ look up/down on,上下看
 clamped,限制
 Crossfade {from} → {to} by {amount},按 {amount} 将 {from} → {to} 交叉淡入淡出
 shared,共享
+Set max FPS to {value},将最大帧率设为 {value}
+Set anti-aliasing to {value},将抗锯齿设为 {value}
+Set fullscreen on,开启全屏
+Set fullscreen on (exclusive),开启全屏（独占）
+Set fullscreen off,关闭全屏
+Maximize,最大化
+Minimize,最小化
+Set title to {value},将标题设为 {value}
+Set position to {value},将位置设为 {value}
+Set always on top to {value},将置顶设为 {value}
+Set vsync on,开启垂直同步
+Set vsync off,关闭垂直同步
+Set vsync on (adaptive),开启垂直同步（自适应）
+Set vsync on (mailbox),开启垂直同步（邮箱）
+Set vsync to {value},将垂直同步设为 {value}
+Save image {name} as {value},将图像 {name} 保存为 {value}
+Save data asset {name} as {value},将数据资源 {name} 保存为 {value}
+a screenshot,一张截图
+rendered as an image,渲染为图像
+the data asset,数据资源
+data type,数据类型
+image,图像
+2×,2×
+4×,4×
+8×,8×

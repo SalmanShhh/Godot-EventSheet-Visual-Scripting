@@ -2798,3 +2798,28 @@ look up/down on,вверх/вниз на
 clamped,ограничено
 Crossfade {from} → {to} by {amount},Кроссфейд {from} → {to} по {amount}
 shared,общая
+Set max FPS to {value},Задать макс. FPS {value}
+Set anti-aliasing to {value},Задать сглаживание {value}
+Set fullscreen on,Включить полный экран
+Set fullscreen on (exclusive),Включить полный экран (эксклюзивный)
+Set fullscreen off,Выключить полный экран
+Maximize,Развернуть
+Minimize,Свернуть
+Set title to {value},Задать заголовок {value}
+Set position to {value},Задать позицию {value}
+Set always on top to {value},Задать поверх всех окон {value}
+Set vsync on,Включить вертикальную синхронизацию
+Set vsync off,Выключить вертикальную синхронизацию
+Set vsync on (adaptive),Включить вертикальную синхронизацию (адаптивную)
+Set vsync on (mailbox),Включить вертикальную синхронизацию (mailbox)
+Set vsync to {value},Задать вертикальную синхронизацию {value}
+Save image {name} as {value},Сохранить изображение {name} как {value}
+Save data asset {name} as {value},Сохранить ресурс данных {name} как {value}
+a screenshot,снимок экрана
+rendered as an image,отрисованный как изображение
+the data asset,ресурс данных
+data type,тип данных
+image,изображение
+2×,2×
+4×,4×
+8×,8×

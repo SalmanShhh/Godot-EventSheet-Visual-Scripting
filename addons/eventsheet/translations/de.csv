@@ -2798,3 +2798,28 @@ look up/down on,hoch/runter an
 clamped,begrenzt
 Crossfade {from} → {to} by {amount},{from} → {to} überblenden mit {amount}
 shared,geteilt
+Set max FPS to {value},Max. FPS auf {value} setzen
+Set anti-aliasing to {value},Kantenglättung auf {value} setzen
+Set fullscreen on,Vollbild einschalten
+Set fullscreen on (exclusive),Vollbild einschalten (exklusiv)
+Set fullscreen off,Vollbild ausschalten
+Maximize,Maximieren
+Minimize,Minimieren
+Set title to {value},Titel auf {value} setzen
+Set position to {value},Position auf {value} setzen
+Set always on top to {value},Immer im Vordergrund auf {value} setzen
+Set vsync on,VSync einschalten
+Set vsync off,VSync ausschalten
+Set vsync on (adaptive),VSync einschalten (adaptiv)
+Set vsync on (mailbox),VSync einschalten (Mailbox)
+Set vsync to {value},VSync auf {value} setzen
+Save image {name} as {value},Bild {name} als {value} speichern
+Save data asset {name} as {value},Daten-Asset {name} als {value} speichern
+a screenshot,ein Bildschirmfoto
+rendered as an image,als Bild gerendert
+the data asset,das Daten-Asset
+data type,Datentyp
+image,Bild
+2×,2×
+4×,4×
+8×,8×
