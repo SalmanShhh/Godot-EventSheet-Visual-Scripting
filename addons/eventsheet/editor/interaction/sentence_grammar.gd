@@ -1712,6 +1712,7 @@ const UNDO_HISTORY_CALLS: PackedStringArray = [
 	"get_undo_redo()", "EditorInterface.get_editor_undo_redo()"
 ]
 
+
 ## R31. Every step of the undo/redo dance, as an action ON the variable that holds the history -
 ## Object then Verb, exactly like every other row about an object. The history is an ordinary local
 ## object variable, so `ur` is the object cell and the step is the sentence; a reader who can read

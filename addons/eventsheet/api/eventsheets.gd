@@ -1629,6 +1629,10 @@ const MODULE_GUIDE_OVERRIDES := {
 	"text_format": "Making-Text-Readable-On-Screen",
 	"tilemap": "Working-With-Tilemaps",
 	"tooling": "Automating-The-Editor",
+	# R30. The Editor object is a second FILE of the same vocabulary (one category, one object), so it
+	# resolves to the same guide - a reader who followed a dock verb here must not land somewhere else
+	# than a reader who followed a Save Scene one.
+	"editor_object": "Automating-The-Editor",
 	"translation": "Localising-Your-Game",
 	"translation_quality": "Localising-Your-Game",
 	"ui": "Buttons-Sliders-Labels-And-Menus",

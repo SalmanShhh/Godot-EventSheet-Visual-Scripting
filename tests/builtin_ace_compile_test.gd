@@ -38,6 +38,13 @@ const NOT_STANDALONE: Array[String] = [
 	"IsLocaleChangeNotification",  # references `what` - only exists inside _notification (its trigger's virtual)
 	"ExportIsDebug", "ExportHasFeature",  # read `is_debug` / `features` - the arguments On Project Export's handler receives
 	"BehaviorHost", "BehaviorHostValid",  # read the behaviour-only `host` var (synthesized only when behavior_mode)
+	# R30. The Editor object's plugin verbs are EditorPlugin METHODS - they compile in an EditorPlugin
+	# host and nowhere else, and this harness deliberately builds one host class (Node) rather than a
+	# per-ACE menagerie. Their templates are exercised by editor_object_reading_test, which opens a real
+	# hand-written plugin and gates the byte round-trip of what it re-emits.
+	"AddToolsMenuItem", "RemoveToolsMenuItem", "AddEditorDock", "RemoveEditorDock",
+	"AddEditorObjectType", "RemoveEditorObjectType", "AddEditorInspectorPlugin",
+	"RemoveEditorInspectorPlugin", "UpdateViewportOverlays", "EditorUndoHistory",
 	"AtMostEvery",  # calls a sheet-synthesized helper over its own last-run timestamp slot
 	"OnlyOncePerNode", "OnlyOncePerName", "OnlyOnceThisSceneLoad",  # call sheet-synthesized once-memory helpers
 	"StopRetrying",  # ends with `break` - only compiles inside the Retry Up To N Times loop it belongs to

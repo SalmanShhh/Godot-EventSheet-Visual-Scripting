@@ -24,6 +24,7 @@
   none of them is the `.tscn`, so nothing is ever written to it; double-click an object bar to open
   that script as its own editable sheet. One script is read per frame behind the progress strip, so a
   big scene never freezes the editor.
+
 ### Added - an Editor object, so a tool script reads like a sheet
 
 No other event-sheet editor lets you write tools for the editor itself; Godot does. The editor is now

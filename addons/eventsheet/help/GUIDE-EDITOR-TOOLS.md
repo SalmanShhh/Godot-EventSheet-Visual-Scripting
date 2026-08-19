@@ -177,6 +177,57 @@ Four practical notes:
 - **Create the file once before you rely on it.** The bake step rewrites the file at export time, and an export reads what is on disk - but a path the project has never seen may not be in the export's file list yet. Run the tool once (File > Run), let the FileSystem dock pick the file up, and every export after that refreshes its contents.
 - **Several bake steps run in path order.** If two tools touch the same file, that order is the same on your machine and in CI.
 
+### The Editor object - what a tool talks to
+
+Everything in this category belongs to one object: the **Editor**. It stands next to System in the picker, and a row of it wears "Editor" in its object cell, so a tool reads the way every other sheet reads - object, then verb, then the values:
+
+```
+Editor  On plugin enabled          Editor ▸ Add Tools menu item "Snap Selection"
+                                   Editor ▸ Add dock dock at left, top
+                                   Editor ▸ Add object type "Waypoint"
+
+Editor  On plugin disabled         Editor ▸ Remove Tools menu item "Snap Selection"
+```
+
+![An opened EditorPlugin reading with the Editor object: On Plugin Enabled with the menu item, dock and object type one action per row, the 2D overlay pass with a Drawing action under it, and the undo block as a Local object variable with one step per row on it.](images/editor-object-rows.png)
+
+The Editor object appears in the picker **only on a sheet that runs in the editor** - an Editor Tool sheet, or any sheet with Tool ticked. Its rows call `EditorInterface` and the `EditorPlugin` methods, which do not exist in a running game, so offering them on a Player sheet would be offering rows that cannot run.
+
+**Its triggers** are the callbacks the editor already makes:
+
+| Trigger | Runs when | Compiles to |
+| --- | --- | --- |
+| On Editor Run | you pick File > Run | `_run()` |
+| On Plugin Enabled | the plugin is switched on | `_enter_tree()` |
+| On Plugin Disabled | the plugin is switched off | `_exit_tree()` |
+| On Object Selected | the user selects an object this plugin handles | `_edit(object)` |
+| On Draw Over 2D Viewport | the editor paints its 2D overlay | `_forward_canvas_draw_over_viewport(overlay)` |
+| On 2D Viewport Input | input lands in the 2D viewport | `_forward_canvas_gui_input(event)` |
+| On Draw Gizmo | a gizmo repaints | `_redraw()` |
+| On Project Export | an export starts | `_on_project_export(is_debug, features)` |
+
+On an EditorPlugin sheet, `_enter_tree` reads as **On plugin enabled** rather than the "on created" a node script gets - because on a plugin that is what the callback means, and a reader of a plugin is looking for a different idea.
+
+The overlay trigger hands you the surface as `overlay`, and its body is the ordinary Drawing vocabulary: `overlay ▸ Draw circle at pos, radius 6, yellow`. The viewport-input trigger is the one editor callback that *answers*: returning true means this plugin consumed the input and the viewport must not also act on it, so an event under it has to end with a return.
+
+**Its actions** are what a plugin adds to the editor and takes away again - Add / Remove Tools Menu Item, Add / Remove Dock, Add / Remove Object Type, Add / Remove Inspector Plugin, and Redraw Viewport Overlays. Everything a plugin adds on the way in should be removed on the way out, or the editor keeps a dock nobody owns.
+
+**Its expressions** are what the editor can be asked. In a row they read as the Editor's own names, so a loop over the selection says what it walks:
+
+| Reads as | Godot behind it |
+| --- | --- |
+| `Editor.SelectedObjects` | `EditorInterface.get_selection().get_selected_nodes()` |
+| `Editor.OpenLayout` | `EditorInterface.get_edited_scene_root()` |
+| `Editor.Settings` | `EditorInterface.get_editor_settings()` |
+| `Editor.UndoHistory` | `get_undo_redo()` |
+
+So the smallest real tool there is - snap every selected node to the grid - reads as two condition lines in one event, the way the sheet stacks a trigger and a For each:
+
+```
+Editor  On run
+System  For each n in Editor.SelectedObjects      n ▸ Set position to position snapped to 8, 8
+```
+
 ---
 
 ## 5. Inspector buttons - any function becomes a button
@@ -252,6 +303,30 @@ undo.commit_action()
 One `create_action` per user-facing step, `add_do_*` for the change, `add_undo_*` for its exact reverse, `commit_action` to seal it (which also performs the do side). After the run, Ctrl+Z in the editor removes the spawn point again. Keep the rest of the tool - the guards, the loops over Selected Nodes, the prints - as ordinary rows, and reach for the code block only for this paired recipe.
 
 Tools that only *read* (scene checks, reports) or only write *files* (generators guarded by Resource Exists) never need any of this, and the Doctor will not bother you about them.
+
+### How the undo block reads
+
+The recipe above is a code block, but it does not *read* as one. The undo history is an ordinary object variable, so the sheet says what it is and then treats every step as an action on it:
+
+```
+Local object  ur = Editor.UndoHistory
+
+ƒ  Align Left                        ur ▸ Begin undoable action "Align Left"
+System  For each n in nodes          ur ▸ Add do step: set n's x to left
+                                     ur ▸ Add undo step: set n's x to n's x
+                                     ur ▸ Add do step: call Refresh
+                                     ur ▸ Commit undoable action
+```
+
+Object, then verb, one step per row - the same shape as `Player ▸ Set position`. Two things make that readable rather than merely shorter: the variable is declared as what it *is* (an object you go on to call actions on, not a nameless value), and Godot's property addressing stays out of the sentence - `"position:x"` reads as `x`, because the object it belongs to is already named on the row.
+
+### Three more things the Doctor watches on a tool
+
+Beside the undo check above, three notes name the mistakes every first editor tool makes. All three are **info**: each is legal Godot and each is occasionally exactly what you meant.
+
+- **Reaching outside the open layout.** A tool that looks for nodes through `get_tree()` is searching the *editor's* tree, not the scene you have open. Walk `Editor.OpenLayout` instead, or the tool finds nothing - or the wrong thing.
+- **Destroying while editing.** A Destroy in a tool deletes from the layout you have open. Without an undo step around it, the only way back is closing the scene without saving.
+- **Ticking in the editor with no way off.** A `@tool` sheet with a per-frame event is running right now, while you edit. The sheet says so with an "in the editor too" chip on the row; the Doctor suggests the standard guard - an exported **preview in editor** toggle plus a Stop event when the sheet is in the editor and the toggle is off - so you can switch it off.
 
 ---
 

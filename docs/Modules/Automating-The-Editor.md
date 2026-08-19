@@ -76,6 +76,28 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 |------|--------------|----------|
 | On Editor Run | Runs the tool when you press File > Run in the script editor. | the `_run` function of an `EditorScript` |
 | On Project Export | Runs while a project export is starting, before the files are written. | the `_on_project_export` export-plugin hook |
+| On Plugin Enabled | Runs when the plugin is switched on - at editor start, or when you tick it. | the `_enter_tree` function of an `EditorPlugin` |
+| On Plugin Disabled | Runs when the plugin is switched off or the editor closes. | the `_exit_tree` function of an `EditorPlugin` |
+| On Object Selected | Runs when the user selects an object this plugin handles. | `_edit(object)` |
+| On Draw Over 2D Viewport | The editor's 2D overlay pass - draw handles and guides on top of the scene. | `_forward_canvas_draw_over_viewport(overlay)` |
+| On 2D Viewport Input | Input that lands in the 2D viewport, before the viewport itself sees it. | `_forward_canvas_gui_input(event)` |
+| On Draw Gizmo | A gizmo's own paint pass, when its node moves or changes. | `_redraw()` |
+
+### What a plugin adds to the editor
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Add Tools Menu Item | Adds an item to the editor's Project > Tools menu. | `add_tool_menu_item({title}, {handler})` |
+| Remove Tools Menu Item | Takes the plugin's item back out of Project > Tools. | `remove_tool_menu_item({title})` |
+| Add Dock | Hangs a Control in one of the editor's eight dock slots. | `add_control_to_dock({slot}, {control})` |
+| Remove Dock | Takes a dock back out of the editor. | `remove_control_from_docks({control})` |
+| Add Object Type | Teaches the editor a new object type, so it shows up in Create Node. | `add_custom_type({type_name}, {base}, {script}, {icon})` |
+| Remove Object Type | Takes a custom object type back out of the Create Node dialog. | `remove_custom_type({type_name})` |
+| Add Inspector Plugin | Registers a custom Inspector drawer. | `add_inspector_plugin({plugin})` |
+| Remove Inspector Plugin | Takes a custom Inspector drawer back out. | `remove_inspector_plugin({plugin})` |
+| Redraw Viewport Overlays | Asks the editor to run the overlay pass again. | `update_overlays()` |
+| Editor Settings | The editor's own settings object - grid step, theme, font size. | `EditorInterface.get_editor_settings()` |
+| Undo History | The editor's undo / redo history, to add do and undo steps to. | `get_undo_redo()` |
 
 ### Scene lifecycle
 

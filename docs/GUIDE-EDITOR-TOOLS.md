@@ -189,6 +189,8 @@ Editor  On plugin enabled          Editor ▸ Add Tools menu item "Snap Selectio
 Editor  On plugin disabled         Editor ▸ Remove Tools menu item "Snap Selection"
 ```
 
+![An opened EditorPlugin reading with the Editor object: On Plugin Enabled with the menu item, dock and object type one action per row, the 2D overlay pass with a Drawing action under it, and the undo block as a Local object variable with one step per row on it.](images/editor-object-rows.png)
+
 The Editor object appears in the picker **only on a sheet that runs in the editor** - an Editor Tool sheet, or any sheet with Tool ticked. Its rows call `EditorInterface` and the `EditorPlugin` methods, which do not exist in a running game, so offering them on a Player sheet would be offering rows that cannot run.
 
 **Its triggers** are the callbacks the editor already makes:
