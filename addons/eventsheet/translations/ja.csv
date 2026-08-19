@@ -2725,3 +2725,8 @@ Web requests,Web リクエスト
 Lighting,ライティング
 First-person look,一人称視点
 Background work,バックグラウンド処理
+Mouse look,マウスルック
+turn by,回転量
+look up/down on,上下は
+clamped,制限
+Crossfade {from} → {to} by {amount},{amount} で {from} → {to} をクロスフェード

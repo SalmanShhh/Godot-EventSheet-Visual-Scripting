@@ -7419,6 +7419,125 @@ static func long_tail_media_call(call: Dictionary, context: Dictionary) -> Dicti
 	return _with_pattern(_sentence(OBJECT_VIDEO, verb, {}), "ui", str(call.get("line", "")))
 
 
+## U8. `rotate_y(-event.relative.x * sens)` as {"amount"} - the body's half of a mouse look - or {}
+## when the line turns nothing. A receiver is allowed: plenty of scripts turn a pivot rather than the
+## body itself.
+static func mouse_look_turn_parts(text: String) -> Dictionary:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "rotate_y":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1:
+		return {}
+	return {"amount": args[0].strip_edges(), "object": str(call.get("target", "")).strip_edges()}
+
+
+## U8. `cam.rotate_x(-event.relative.y * sens)` as {"camera", "amount"} - the camera's half - or {}.
+## The camera must be NAMED: a look that pitches the body itself is a different shape.
+static func mouse_look_pitch_parts(text: String) -> Dictionary:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "rotate_x":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	var camera: String = str(call.get("target", "")).strip_edges()
+	if args.size() != 1 or not is_simple_target(camera) or camera.is_empty():
+		return {}
+	return {"camera": camera, "amount": args[0].strip_edges()}
+
+
+## U8. The `1.2` in `cam.rotation.x = clamp(cam.rotation.x, -1.2, 1.2)`, or "" when the line is not
+## that clamp on that camera. Only a SYMMETRIC clamp is claimed: two different limits are two numbers,
+## and printing one of them as `±` would be a lie.
+static func mouse_look_clamp_limit(text: String, camera: String) -> String:
+	var bare: String = text.strip_edges()
+	var head: String = "%s.rotation.x" % camera
+	var at: int = top_level_index(bare, " = ")
+	if at <= 0 or bare.substr(0, at).strip_edges() != head:
+		return ""
+	var call: Dictionary = call_parts(bare.substr(at + 3).strip_edges())
+	if call.is_empty() or not str(call.get("target", "")).is_empty():
+		return ""
+	if str(call.get("method", "")) != "clamp" and str(call.get("method", "")) != "clampf":
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 3 or args[0].strip_edges() != head:
+		return ""
+	var low: String = args[1].strip_edges()
+	var high: String = args[2].strip_edges()
+	if not low.begins_with("-") or low.substr(1).strip_edges() != high:
+		return ""
+	return high
+
+
+## U8. What the muted note beside a Mouse look row says: how far the turn goes, which object the
+## up-and-down happens on, and how far it may go. The pieces are the file's own values, so a reader
+## can check the row against the code without opening it.
+static func mouse_look_note(turn: Dictionary, pitch: Dictionary, clamp_limit: String,
+		context: Dictionary) -> String:
+	var pieces: PackedStringArray = PackedStringArray([
+		"%s %s" % [translate("turn by"), expression_text(str(turn.get("amount", "")), context)],
+		"%s %s" % [translate("look up/down on"), object_of_reference(str(pitch.get("camera", "")))]
+	])
+	if not clamp_limit.is_empty():
+		pieces.append("%s ±%s" % [translate("clamped"), clamp_limit])
+	return ", ".join(pieces)
+
+
+## U12. Two adjacent volume writes driven by ONE fraction as {"text"} - the crossfade they are - or
+## {} when they are two unrelated volumes. `1 - t` on one fader and `t` on the other is the whole of
+## what makes it one action, in either order.
+static func crossfade_parts(first: String, second: String, context: Dictionary) -> Dictionary:
+	var down: Dictionary = _volume_write_parts(first)
+	var up: Dictionary = _volume_write_parts(second)
+	if down.is_empty() or up.is_empty():
+		return {}
+	var fading_in: String = str(up.get("level", ""))
+	if fading_in.is_empty() or _one_minus_of(str(down.get("level", ""))) != fading_in:
+		return {}
+	return {"text": _fill(translate("Crossfade {from} → {to} by {amount}"), {
+		"from": _spaced_name(str(down.get("object", ""))),
+		"to": _spaced_name(str(up.get("object", ""))),
+		"amount": expression_text(fading_in, context)
+	})}
+
+
+## A snake_case name as the words it is - `music_a` is `music a`. An event sheet names a thing the
+## way a person says it; the underscore is a language's spelling of a space.
+static func _spaced_name(identifier: String) -> String:
+	return identifier.strip_edges().replace("_", " ")
+
+
+## U12. `music_a.volume_db = linear_to_db(1.0 - t)` as {"object", "level"}, or {} for any other line.
+## The conversion is Godot's and never part of what a row says, so a raw decibel write is not one of
+## these: two numbers on a scale a reader does not set by hand cannot be a crossfade.
+static func _volume_write_parts(text: String) -> Dictionary:
+	var bare: String = text.strip_edges()
+	var at: int = top_level_index(bare, " = ")
+	if at <= 0:
+		return {}
+	var target: String = bare.substr(0, at).strip_edges().trim_prefix("self.")
+	if not target.ends_with(".volume_db"):
+		return {}
+	var object_text: String = target.substr(0, target.length() - 10).strip_edges()
+	if not is_simple_target(object_text) or object_text.is_empty():
+		return {}
+	var level: String = _linear_volume(bare.substr(at + 3).strip_edges())
+	if level.is_empty():
+		return {}
+	return {"object": object_text, "level": level}
+
+
+## U12. The `t` in `1.0 - t`, or "" when the value is not one minus something.
+static func _one_minus_of(value: String) -> String:
+	var at: int = top_level_index(value, " - ")
+	if at <= 0:
+		return ""
+	var whole: String = value.substr(0, at).strip_edges()
+	if whole != "1" and whole != "1.0":
+		return ""
+	return value.substr(at + 3).strip_edges()
+
+
 ## The long tail's call readings in one place, tried in the order that recognises each whole shape
 ## before a narrower one could claim half of it. {} when none of them says anything, which is what
 ## keeps every other call exactly as it reads today.

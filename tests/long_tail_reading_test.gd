@@ -34,6 +34,9 @@ const SOURCE: String = """extends Node3D
 @onready var lamp: PointLight2D = $PointLight2D
 @onready var film: VideoStreamPlayer = $VideoStreamPlayer
 @onready var horn: AudioStreamPlayer2D = $AudioStreamPlayer2D
+@onready var cam: Camera3D = $Camera3D
+@onready var music_a: AudioStreamPlayer = $MusicA
+@onready var music_b: AudioStreamPlayer = $MusicB
 var last_data := ""
 
 func load_scores() -> void:
@@ -49,6 +52,15 @@ func set_the_scene() -> void:
 	horn.attenuation = 2.0
 	film.play()
 
+func turn_the_head(relative: Vector2) -> void:
+	rotate_y(-relative.x * 0.002)
+	cam.rotate_x(-relative.y * 0.002)
+	cam.rotation.x = clamp(cam.rotation.x, -1.2, 1.2)
+
+func fade_the_music(t: float) -> void:
+	music_a.volume_db = linear_to_db(1.0 - t)
+	music_b.volume_db = linear_to_db(t)
+
 func bake_the_level() -> void:
 	WorkerThreadPool.add_task(chunk_of.bind(1))
 	WorkerThreadPool.wait_for_task_completion(1)
@@ -61,13 +73,16 @@ func chunk_of(index: int) -> void:
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"AJAX ▸ Request \"https://example.com/scores\"",
 	"lamp ▸ Set light energy to 50%",
-	"lamp ▸ Set light off",
 	"lamp ▸ Set shadows on",
 	"horn ▸ Set hearing distance to 600",
 	"horn ▸ Set falloff to 2",
 	"Video ▸ Play",
 	"System ▸ Run Chunk Of in the background   index = 1",
-	"System ▸ ⏳ Wait for it to finish"
+	"System ▸ ⏳ Wait for it to finish",
+	# U8 / U12 - the two runs whose lines only mean anything together, each ONE row. The look belongs
+	# to the script's own object, which this file names by the class it extends.
+	"Node3D ▸ Mouse look",
+	"System ▸ Crossfade music a → music b by t"
 ])
 
 ## Readings the file must NOT contain: the words each shape replaced. A reading that silently stopped
@@ -75,7 +90,11 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 	"lamp ▸ Set energy to 0.5",
 	"lamp ▸ Set enabled to false",
-	"horn ▸ Set max_distance to 600"
+	"horn ▸ Set max_distance to 600",
+	# The two faders the crossfade run swallowed: each was a perfectly good volume row on its own,
+	# and a run that stopped firing would leave them behind.
+	"music_a ▸ Set volume to 1 - t (0 to 1)",
+	"music_b ▸ Set volume to t (0 to 1)"
 ])
 
 ## The statements whose sentence these items settle, as "object ▸ sentence".
@@ -233,6 +252,29 @@ static func _grammar_values() -> bool:
 	# U10 - a signal held in a value declares as a signal, in the sheet's own word.
 	ok = _check("a signal type reads as the sheet's word for it",
 		EventSheetSentence.type_word("Signal"), "signal") and ok
+	# U8 - the mouse-look run, recognised piece by piece, and the note that shows the file's values.
+	var turn: Dictionary = EventSheetSentence.mouse_look_turn_parts("rotate_y(-relative.x * 0.002)")
+	var pitch: Dictionary = EventSheetSentence.mouse_look_pitch_parts("cam.rotate_x(-relative.y * 0.002)")
+	ok = _check("the body's half of a mouse look is recognised",
+		str(turn.get("amount", "")), "-relative.x * 0.002") and ok
+	ok = _check("the camera's half names the camera", str(pitch.get("camera", "")), "cam") and ok
+	ok = _check("a symmetric clamp gives the look its limit",
+		EventSheetSentence.mouse_look_clamp_limit("cam.rotation.x = clamp(cam.rotation.x, -1.2, 1.2)", "cam"),
+		"1.2") and ok
+	ok = _check("two different limits are two numbers, so the clamp is refused",
+		EventSheetSentence.mouse_look_clamp_limit("cam.rotation.x = clamp(cam.rotation.x, -1.2, 0.8)", "cam"),
+		"") and ok
+	ok = _check("the note shows the file's own values",
+		EventSheetSentence.mouse_look_note(turn, pitch, "1.2", context),
+		"turn by -relative.x * 0.002, look up/down on cam, clamped ±1.2") and ok
+	# U12 - one fraction driving both faders is a crossfade; two unrelated volumes are not.
+	ok = _check("two faders driven by one fraction read as a crossfade",
+		str(EventSheetSentence.crossfade_parts("music_a.volume_db = linear_to_db(1.0 - t)",
+			"music_b.volume_db = linear_to_db(t)", context).get("text", "")),
+		"Crossfade music a → music b by t") and ok
+	ok = _check("two unrelated volumes are refused",
+		EventSheetSentence.crossfade_parts("music_a.volume_db = linear_to_db(0.5)",
+			"music_b.volume_db = linear_to_db(t)", context).is_empty(), true) and ok
 	return ok
 
 

@@ -2725,3 +2725,8 @@ Web requests,Web-Anfragen
 Lighting,Beleuchtung
 First-person look,Ego-Blick
 Background work,Hintergrundarbeit
+Mouse look,Mausblick
+turn by,drehen um
+look up/down on,hoch/runter an
+clamped,begrenzt
+Crossfade {from} → {to} by {amount},{from} → {to} überblenden mit {amount}

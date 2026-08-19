@@ -165,8 +165,10 @@ static func _refusals() -> bool:
 	ok = _check("a bound callback is refused",
 		_read("get_tree().create_timer(1.0).timeout.connect(spawn.bind(3))"), "") and ok
 	# A repeating connection is not a one-shot wait, and reading it as one would lose the repetition.
-	ok = _check("a plain signal connect is not a wait",
-		_read("$Timer.timeout.connect(explode)"), "") and ok
+	# U10 gave it the sentence it does have - wiring a handler up is an ACTION - so the pin is that it
+	# reads as the wiring it is and never as the wait it is not.
+	ok = _check("a plain signal connect is a wiring, not a wait",
+		_read("$Timer.timeout.connect(explode)"), "Timer ▸ Wire On Timeout to Explode") and ok
 	# A line whose colour argument has a width behind it would have to drop the width to read.
 	ok = _check("a drawn line with a width is refused",
 		_read("draw_line(a, b, Color.RED, 4.0)"), "") and ok

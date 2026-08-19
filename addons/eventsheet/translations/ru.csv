@@ -2725,3 +2725,8 @@ Web requests,Веб-запросы
 Lighting,Освещение
 First-person look,Вид от первого лица
 Background work,Фоновая работа
+Mouse look,Обзор мышью
+turn by,поворот на
+look up/down on,вверх/вниз на
+clamped,ограничено
+Crossfade {from} → {to} by {amount},Кроссфейд {from} → {to} по {amount}

@@ -2725,3 +2725,8 @@ Web requests,Richieste web
 Lighting,Illuminazione
 First-person look,Vista in prima persona
 Background work,Lavoro in background
+Mouse look,Vista col mouse
+turn by,ruota di
+look up/down on,su/giù su
+clamped,limitato
+Crossfade {from} → {to} by {amount},Dissolvenza {from} → {to} con {amount}

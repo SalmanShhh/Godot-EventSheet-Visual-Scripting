@@ -2725,3 +2725,8 @@ Web requests,网络请求
 Lighting,光照
 First-person look,第一人称视角
 Background work,后台工作
+Mouse look,鼠标视角
+turn by,转动
+look up/down on,上下看
+clamped,限制
+Crossfade {from} → {to} by {amount},按 {amount} 将 {from} → {to} 交叉淡入淡出

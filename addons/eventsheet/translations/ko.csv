@@ -2725,3 +2725,8 @@ Web requests,웹 요청
 Lighting,조명
 First-person look,1인칭 시점
 Background work,백그라운드 작업
+Mouse look,마우스 시점
+turn by,회전량
+look up/down on,위/아래는
+clamped,제한
+Crossfade {from} → {to} by {amount},{amount} 로 {from} → {to} 교차 페이드

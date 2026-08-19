@@ -5079,6 +5079,97 @@ func _scroll_limit_note(sides: Dictionary) -> String:
 	return "(%s)" % ", ".join(named)
 
 
+# ── U8 / U12: the two runs whose lines only mean anything together ───────────────────────────────
+# A first-person script turns the body one way and the camera the other and then clamps the camera,
+# and a music crossfade writes one fader up and the other down. Each is ONE thing that happened, and
+# a reader takes the lines in as noise around it. The lines stay exactly as they are in the file - on
+# hover, under a double-click and in the bytes that are saved - which is the promise the Create
+# object and scroll-limits runs above make too.
+
+
+## U8. The mouse-look run in one action lane, as {"leads": {index: {text, note, object, evidence,
+## line_count, indices}}, "consumed": {index: true}}. A run is a `rotate_y(...)` followed by a
+## `<cam>.rotate_x(...)` and - only when it comes straight after - the clamp that keeps the camera
+## from looking through the floor. Both turns are required: one on its own is a turn, not a look.
+func _mouse_look_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var index: int = 0
+	while index < actions.size() - 1:
+		var turn: Dictionary = EventSheetSentence.mouse_look_turn_parts(_group_line_text(actions[index]))
+		var pitch: Dictionary = EventSheetSentence.mouse_look_pitch_parts(_group_line_text(actions[index + 1]))
+		if turn.is_empty() or pitch.is_empty():
+			index += 1
+			continue
+		var last: int = index + 1
+		var clamped: String = ""
+		if last + 1 < actions.size():
+			clamped = EventSheetSentence.mouse_look_clamp_limit(_group_line_text(actions[last + 1]),
+				str(pitch.get("camera", "")))
+			if not clamped.is_empty():
+				last += 1
+		var evidence: PackedStringArray = PackedStringArray()
+		var indices: Array[int] = []
+		for member_index: int in range(index, last + 1):
+			evidence.append(_group_line_text(actions[member_index]))
+			indices.append(member_index)
+		leads[index] = {
+			"text": EventSheetL10n.translate("Mouse look"),
+			"note": EventSheetSentence.mouse_look_note(turn, pitch, clamped, sentence_context()),
+			"object": EventSheetSentence.script_object(sentence_context()),
+			"evidence": evidence,
+			"line_count": last - index + 1,
+			"indices": indices
+		}
+		for consumed_index: int in range(index + 1, last + 1):
+			consumed[consumed_index] = true
+		index = last + 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## U12. The crossfade runs in one action lane, in the same shape. A run is two adjacent volume
+## writes driven by ONE fraction - one fader by `1 - t` and the other by `t` - which is the whole of
+## what a crossfade is. Two volumes set from unrelated values are two rows, and stay two rows.
+func _crossfade_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var index: int = 0
+	while index < actions.size() - 1:
+		var faded: Dictionary = EventSheetSentence.crossfade_parts(
+			_group_line_text(actions[index]), _group_line_text(actions[index + 1]), sentence_context())
+		if faded.is_empty():
+			index += 1
+			continue
+		leads[index] = {
+			"text": str(faded.get("text", "")),
+			"note": "",
+			"object": EventSheetSentence.OBJECT_SYSTEM,
+			"evidence": PackedStringArray([_group_line_text(actions[index]),
+				_group_line_text(actions[index + 1])]),
+			"line_count": 2,
+			"indices": [index, index + 1]
+		}
+		consumed[index + 1] = true
+		index += 2
+	return {"leads": leads, "consumed": consumed}
+
+
+## The one line an action stands for, whichever shape it took in the sheet: the verbatim text of a
+## raw line, or the line a LIFTED row compiles back to. A half-lifted file is the normal case - the
+## importer turns one line of a run into a row while the line beside it stays verbatim - so a run
+## that could only see raw text would be recognised or not depending on how much happened to lift,
+## which is exactly the drift these runs exist to prevent. "" for a disabled row or a multi-line one.
+func _group_line_text(action_resource: Variant) -> String:
+	var raw: RawCodeRow = action_resource as RawCodeRow
+	if raw != null:
+		return raw.code.strip_edges() if raw.enabled and not raw.code.contains("\n") else ""
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled:
+		return ""
+	var compiled: String = ActionCodegen.generate_action(action)
+	return compiled.strip_edges() if not compiled.contains("\n") else ""
+
+
 ## S17. The condition pairs that are really ONE question, as {"leads": {index: {text, object}},
 ## "consumed": {index: true}}. The file writes `if data and data.get_custom_data("solid"):` - one
 ## question with a guard in front of it - and the importer files the two halves as two conditions,
@@ -7365,6 +7456,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var create_groups: Dictionary = _create_object_groups(event_row.actions)
 		# S18 - the run of limit_* writes a camera's bounds are spelled as is one scroll-limits row.
 		var limit_groups: Dictionary = _scroll_limit_groups(event_row.actions)
+		# U8 / U12 - the mouse-look trio and the two faders of a crossfade are one row each.
+		var look_groups: Dictionary = _mouse_look_groups(event_row.actions)
+		var fade_groups: Dictionary = _crossfade_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
 			# A line the Create object row above already said. Skipped without advancing the line index,
@@ -7372,6 +7466,22 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if bool(create_groups.get("consumed", {}).get(action_index, false)):
 				continue
 			if bool(limit_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			# U8 / U12 - the same skip-without-advancing, for the two runs batch ten added.
+			if bool(look_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(fade_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			var run_lead: Dictionary = (look_groups["leads"] as Dictionary).get(action_index, {})
+			var run_pattern: String = "fps_look"
+			if run_lead.is_empty():
+				run_lead = (fade_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "sound"
+			if not run_lead.is_empty():
+				_append_scroll_limit_spans(spans, run_lead, action_index, action_line_index,
+					action_style_meta)
+				for run_line: String in (run_lead.get("evidence", PackedStringArray()) as PackedStringArray):
+					_note_pattern(run_pattern, run_line)
+				action_line_index += 1
 				continue
 			if (limit_groups.get("leads", {}) as Dictionary).has(action_index):
 				var limits: Dictionary = (limit_groups["leads"] as Dictionary)[action_index]
