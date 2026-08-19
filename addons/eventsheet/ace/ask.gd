@@ -83,7 +83,6 @@ static func api_key() -> String:
 
 
 # ── What the request carries ─────────────────────────────────────────────────────────────────
-
 ## The sheet's objects, one per line: the name a row would say, and what it is. Sorted, so the
 ## same sheet always describes itself the same way.
 static func object_census(sheet: EventSheetResource) -> PackedStringArray:
@@ -165,7 +164,6 @@ static func build_request(sentence: String, sheet: EventSheetResource, definitio
 
 
 # ── Asking ───────────────────────────────────────────────────────────────────────────────────
-
 ## The one place a request can leave. Returns {sent, reply, error}: `sent` is false and `reply`
 ## empty whenever Ask is off, the sentence is blank, or no transport answered - so a caller can
 ## always say truthfully whether anything went out.
@@ -183,7 +181,6 @@ static func ask(sentence: String, sheet: EventSheetResource, definitions: Array)
 
 
 # ── Checking the answer ──────────────────────────────────────────────────────────────────────
-
 ## Every row the reply proposed, checked against the registry. Returns
 ## {rows, dropped, error}: `rows` are the ones the project can actually say, `dropped` names each
 ## one it could not and why. A reply that is not JSON, or that has no rows list, is one error and
@@ -254,7 +251,6 @@ static func proposal_lines(rows: Array) -> PackedStringArray:
 
 
 # ── Turning a checked proposal into rows ─────────────────────────────────────────────────────
-
 ## The proposal as real event rows. Conditions and triggers open an event; the actions that
 ## follow hang under it, so one idea is one event and one action is one row - the sheet's own
 ## rules, applied to a proposal exactly as they are applied to typing. `uid_source` mints the

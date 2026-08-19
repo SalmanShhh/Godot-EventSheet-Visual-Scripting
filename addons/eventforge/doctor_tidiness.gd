@@ -36,7 +36,6 @@ const LIFECYCLE_PREFIX := "_"
 
 
 # ── 1. Locals declared and never read ────────────────────────────────────────────────────────
-
 ## The local variables `rows` declares that nothing in `rows` goes on to read. `rows` is one
 ## body (a function's rows, an event's sub-events): a local is only ever in scope there, so the
 ## corpus a name is looked for in is that body and nothing wider. A local's OWN default value is
@@ -82,7 +81,6 @@ static func _walk_body(rows: Array, declared: PackedStringArray, corpus: PackedS
 
 
 # ── 2. Functions nothing calls ───────────────────────────────────────────────────────────────
-
 ## The functions in `sheet` that nothing in `corpus` calls. A function published as vocabulary
 ## (`expose_as_ace`), a lifecycle hook (a leading underscore) and a function whose name the
 ## corpus mentions are all left alone: each of those has a caller the sheet cannot see.
@@ -103,7 +101,6 @@ static func uncalled_functions(sheet: EventSheetResource, corpus: String) -> Pac
 
 
 # ── 3. Triggers nothing fires ────────────────────────────────────────────────────────────────
-
 ## The signals `sheet` declares that nothing in `corpus` emits. Only declarations marked as a
 ## trigger are considered: a plain signal is an offer to the rest of the project, while a trigger
 ## is a promise this sheet makes to its own events.
@@ -124,7 +121,6 @@ static func unfired_triggers(sheet: EventSheetResource, corpus: String) -> Packe
 
 
 # ── 4. Behaviors attached but unused ─────────────────────────────────────────────────────────
-
 ## The behaviors `sheet` requires that no row names. An attached behavior no event uses is a
 ## node's worth of runtime nobody asked for.
 static func unused_behaviors(sheet: EventSheetResource, corpus: String) -> PackedStringArray:
@@ -139,7 +135,6 @@ static func unused_behaviors(sheet: EventSheetResource, corpus: String) -> Packe
 
 
 # ── 5. Events switched off for a long time ───────────────────────────────────────────────────
-
 ## The 1-based margin numbers of the events in `entries` that are switched off. Sub-events of a
 ## disabled parent are not counted twice: the parent already carries the note.
 static func disabled_event_numbers(entries: Array) -> PackedInt32Array:
@@ -186,7 +181,6 @@ static func age_words(source: String, days: int) -> String:
 
 
 # ── 6. Events that read identically ──────────────────────────────────────────────────────────
-
 ## The signature two events are compared by: their trigger, conditions and actions, in order,
 ## with the parameters they were given. Comments, uids, breakpoints and the enabled flag are
 ## deliberately out - two rows that DO the same thing are the finding, however they are annotated.
@@ -244,7 +238,6 @@ static func _collect_identical(rows: Array, numbers: Dictionary, seen: Dictionar
 
 
 # ── 7. A literal typed three times or more ───────────────────────────────────────────────────
-
 ## literal -> how many parameters spell it, for the literals worth naming. A value is a literal
 ## when it is a number or a quoted string; anything with an identifier in it is an expression and
 ## belongs to whatever it names. Sorted by the literal so the report is deterministic.
@@ -360,7 +353,6 @@ static func _replace_literal(rows: Array, literal: String, variable_name: String
 
 
 # ── The checks the Doctor runs ───────────────────────────────────────────────────────────────
-
 ## Every tidiness note for every sheet, appended to `findings` through the Doctor's own `_add`.
 ## One entry point rather than seven, because the sweep loads each sheet once and asks all seven
 ## questions of it - loading a project's sheets seven times over is the slow way to the same report.
