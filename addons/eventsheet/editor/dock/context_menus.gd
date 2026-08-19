@@ -278,7 +278,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# The script editor's selection gesture, surfaced top-level on a multi-selection (the single-row
 		# form stays under More): wraps the selected rows in a #region fence pair and opens the name editor.
 		menu.add_item("Create Code Region", _dock.ROW_MENU_SURROUND_REGION)
-		menu.add_item("Replace Object References…", _dock.ROW_MENU_REPLACE_OBJECT)
+		menu.add_item("Replace object…", _dock.ROW_MENU_REPLACE_OBJECT)
 		menu.add_item("Edit Values Across Selection…", _dock.ROW_MENU_BATCH_EDIT_PARAMS)
 	menu.add_separator()
 	_build_row_insert_submenu()
@@ -396,7 +396,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
 	m.add_item("Save Selection as Snippet…", _dock.ROW_MENU_SAVE_SNIPPET)
 	m.add_item("Insert Snippet…", _dock.ROW_MENU_INSERT_SNIPPET)
 	m.add_item("Create Code Region…", _dock.ROW_MENU_SURROUND_REGION)
-	m.add_item("Replace Object References…", _dock.ROW_MENU_REPLACE_OBJECT)
+	m.add_item("Replace object…", _dock.ROW_MENU_REPLACE_OBJECT)
 	# Paste Special sits beside Replace Object References because it IS that remap, applied on the
 	# way in instead of as a second step. Disabled (with the reason) when the clipboard holds no
 	# snippet, so the gesture stays discoverable rather than silently absent.

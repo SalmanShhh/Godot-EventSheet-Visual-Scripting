@@ -338,6 +338,9 @@ func _init() -> void:
 	_object_properties.init(self)
 	_find_results.init(self)
 	_properties_bar.init(self)
+	# Replace object records what the swap left naming a member the new object lacks; the Doctor
+	# reports it beside every other project finding.
+	EventSheetProjectDoctor.register_check("replace-object-members", EventSheetReplaceObject.doctor_check)
 	# Same rule as _preview_glue: _build_ui() calls _open_progress.build(), so the back-reference
 	# has to be wired before it (init() only stores _dock - nothing tree-bound).
 	_open_progress.init(self)
@@ -2426,8 +2429,12 @@ func _open_replace_object_dialog() -> void:
 	_replace_object_dialog.register_text_enter(to_edit)
 	# Autocomplete for the target: every reference the whole sheet uses + the edited
 	# scene's own nodes ($children, %uniques) + self - typed text filters, free text wins.
+	# Objects that have the SAME conditions and actions come first: those are the swaps that will
+	# still read the same afterwards.
 	var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
-	var to_suggestions: PackedStringArray = PackedStringArray(EventSheetRefactor.reference_suggestions(_current_sheet.events if _current_sheet != null else [], scene_root))
+	var to_suggestions: PackedStringArray = EventSheetReplaceObject.rank_suggestions(
+		PackedStringArray(EventSheetRefactor.reference_suggestions(_current_sheet.events if _current_sheet != null else [], scene_root)),
+		references[0] if not references.is_empty() else "", scene_root)
 	var to_row: HBoxContainer = HBoxContainer.new()
 	to_row.add_theme_constant_override("separation", 4)
 	to_row.add_child(to_edit)
@@ -2447,8 +2454,14 @@ func _open_replace_object_dialog() -> void:
 			counter["count"] = EventSheetRefactor.replace_node_reference(targets, from_ref, to_ref)
 			return int(counter["count"]) > 0)
 		if changed:
+			# A parameter that named one of A's instance variables the new object does not have
+			# still compiles, and then fails at runtime - so it is said here and recorded for the
+			# Doctor rather than left to be discovered by a crash.
+			var missing: PackedStringArray = EventSheetReplaceObject.missing_members(targets, from_ref, to_ref, scene_root)
+			EventSheetReplaceObject.last_missing = {"from": from_ref, "to": to_ref, "members": missing, "path": _current_sheet_path}
 			_refresh_after_edit()
-			_mark_dirty("Replaced %d reference(s): %s becomes %s." % [int(counter["count"]), from_ref, to_ref])
+			var missing_note: String = "" if missing.is_empty() else " %s does not have %s - see the Doctor." % [to_ref, ", ".join(missing)]
+			_mark_dirty("Replaced %d reference(s): %s becomes %s.%s" % [int(counter["count"]), from_ref, to_ref, missing_note])
 		else:
 			_set_status("Nothing matched %s in the selection." % from_ref, true))
 	EventSheetL10n.apply_to(_replace_object_dialog)
