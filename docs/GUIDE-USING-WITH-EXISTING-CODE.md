@@ -941,6 +941,54 @@ opened file says the same thing before and after the lift.
   look and background work - and the last two offer the behavior that does the whole shape.
 
   ![A 3D script read as an event sheet: a web request under the AJAX object, a light's energy and shadows, a video set and played with a positional sound's hearing distance and falloff, the mouse-look trio as one Mouse look row with its values muted beside it, a music crossfade as one row, work run in the background with its wait, and a signal unwired](images/opened-script-long-tail.png)
+- **A rigid body reads as the Physics behavior.** On a `RigidBody2D` or `RigidBody3D`, `mass = 2.0`
+  reads **Physics ▸ Set mass to 2**, `gravity_scale` reads **Set gravity scale**, `linear_damp` and
+  `angular_damp` read **Set linear / angular damping**, `freeze = true` reads **Set immovable**, and
+  `if sleeping:` reads **Is sleeping**. The friction and bounce written on a physics material this
+  file declared (`var mat := PhysicsMaterial.new()`), or on the body's own material slot, read
+  **Set friction** and **Set elasticity** under the object a reader can point at rather than under
+  the variable that happens to hold the resource. `apply_impulse(dir * kick, offset)` and
+  `apply_force(push, offset)` say **at {offset}**; `apply_torque` and `apply_torque_impulse` say the
+  spin. `add_child(PinJoint2D.new())` reads **Create revolute joint** - a damped spring is a
+  distance joint and a groove a prismatic one - and an Area's `gravity` reads **Set world gravity**.
+  Every one of these is also a row you can drop, writing the same line back.
+
+- **The Controls a form is made of read under the object words a form has.** A `LineEdit` or
+  `TextEdit` is **Text input**: `placeholder_text = "Your name"` reads **Text input ▸ Set
+  placeholder to "Your name"**, and the `text_changed` / `text_submitted` handlers read **On text
+  changed** / **On submitted**. An `ItemList`, `OptionButton` or `Tree` is a **List**:
+  `list.add_item("Sword")`, `remove_item(0)`, `select(2)` and `clear()` read **Add item** / **Remove
+  item** / **Select item** / **Clear**, `get_item_text(i)` reads `list.ItemText(i)`, and the
+  `item_selected` handler reads **List ▸ On item selected**. A `CheckBox` is a **Check box** (**Is
+  checked**, **Set checked**), a `FileDialog` is a **File chooser** (**Open**, **On file chosen**),
+  `tabs.current_tab = 1` reads **Tabs ▸ Switch to tab 1**, a `RichTextLabel` reads **Set formatted
+  text** / **Append formatted text**, and `tooltip_text` reads **Set tooltip** on any Control.
+
+- **A path follower reads as the Follow a Path behavior.** `follow.progress += speed * delta` reads
+  **Follow a Path ▸ Move along path at speed** on the object that MOVES, `follow.progress_ratio >=
+  1.0` reads **Has reached the end**, `follow.progress = 0.0` reads **Go to start**, and `loop` and
+  `rotates` read **Set looping** and **Set rotate with path**. A step that is not scaled by the
+  frame time stays the jump it is, and a ratio compared against a half stays a comparison.
+
+- **Text formatting and regular expressions.** `"%s has %d hp" % [name, hp]` reads as the sheet's
+  join (`name & " has " & hp & " hp"`), and `"{a} vs {b}".format({"a": p1, "b": p2})` reads
+  **"{a} vs {b}" with a = p1, b = p2** - claimed only when every key the call handed it is a slot
+  the pattern names. With the Familiar Words glossary on, `str(score).pad_zeros(5)` reads
+  `zeropad(score, 5)` and `raw.capitalize()` reads `capitalised raw`. A regular expression kept in a
+  variable of the file (`var rx := RegEx.new()`) reads as one: `rx.compile("\d+")` is
+  **Text ▸ Set pattern rx to "\d+"**, `rx.search(text)` is `first match of rx in text`,
+  `rx.search_all(text)` is `all matches of rx in text`, `rx.sub(text, "#")` is
+  `replace matches of rx in text with "#"`, and `m.get_string()` is `the match`.
+
+- **The clock, and the wait that freezes the game.** `Engine.get_frames_drawn()` reads `tickcount`,
+  `Engine.get_frames_per_second()` reads `fps`, `Time.get_ticks_usec()` reads
+  `now (microseconds)` and `get_process_delta_time()` reads `dt`. `OS.delay_msec(500)` reads
+  **System ▸ Wait 0.5 seconds** with a muted **⚠ blocks the game** beside it, because that call
+  stops the whole process while it counts - nothing draws, nothing takes input, physics does not
+  step - and the sheet's own Wait is the one everybody means by "wait". The Doctor says the same
+  thing in words, once per script, so the finding and the note can never disagree.
+
+  ![A rigid body opened as an event sheet: the mass, gravity scale, friction and elasticity set under On created, the pushes and the spin under On hit, and a blocking wait marked as one](images/opened-script-physics.png)
 
   ![A controller script read as an event sheet: a layout loaded in the background with its finished-loading condition, the movement math as Apply gravity / Accelerate / Limit speed / Move, the collision switches, a navigation agent's Find path to and Has arrived, and the multiplayer messages sent to everyone and to the host](images/opened-script-systems.png)
 

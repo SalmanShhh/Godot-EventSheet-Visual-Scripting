@@ -245,6 +245,48 @@ no editor in it, so the window, the Doctor and the tests all read the same answe
   wires any script to it with nothing left to ask. Changing the shared sheet changes every includer,
   and the Doctor reports two includes that both handle the same trigger, because that clash is
   invisible in the includer.
+### Added - a rigid body, a form, a path, the text words and the clock read as events
+
+The last families of line a finished Godot game is full of that an event sheet already had words
+for. Every reading is claimed at its exact shape and states the pattern it recognised in the
+registry; every one of them is also AUTHORABLE in the same words, by rows whose templates write
+exactly the line the reading recognises - so a picked row and a hand-written one are the same bytes
+and read the same sentence. Display only otherwise: the file is untouched and the byte round-trip
+cannot move.
+
+- **A RigidBody IS the Physics behavior.** `mass`, `gravity_scale`, `linear_damp` and `angular_damp`
+  read `Physics ▸ Set mass / gravity scale / linear damping / angular damping`; the friction and
+  bounce written on a `PhysicsMaterial.new()` this file declared (or on the body's own material
+  slot) read `Set friction` and `Set elasticity` under the object a reader can point at;
+  `apply_impulse(v, offset)` and `apply_force(v, offset)` say `at {offset}`, and `apply_torque` /
+  `apply_torque_impulse` say the spin; `freeze` reads `Set immovable` / `Is immovable`, `sleeping`
+  reads `Is sleeping`; `add_child(PinJoint2D.new())` reads `Create revolute joint` (a damped spring
+  is a distance joint, a groove a prismatic one); an Area's `gravity` reads `Set world gravity`.
+  New rows: Set Mass, Set Gravity Scale, Set Friction, Set Elasticity, Set Linear / Angular Damping,
+  Set Immovable, Is Sleeping, Apply Torque, Apply Impulse At Offset, Set World Gravity, and the
+  three Create … Joint actions.
+- **The Controls a form is made of read under the object words a form has.** LineEdit and TextEdit
+  are `Text input` (Set text, Set placeholder, On text changed, On submitted); ItemList,
+  OptionButton and Tree are `List` (Add / Remove / Select item, Clear, On item selected, ItemText);
+  CheckBox and CheckButton are `Check box` (Is checked, Set checked, On toggled); FileDialog is
+  `File chooser` (Open, On file chosen); TabContainer is `Tabs ▸ Switch to tab`; a RichTextLabel
+  reads `Set formatted text` / `Append formatted text`; and `tooltip_text` reads `Set tooltip` on
+  any Control. All thirteen ship as rows too.
+- **A PathFollow IS the Follow a Path behavior.** `progress += speed * delta` reads `Move along path
+  at speed`, `progress_ratio >= 1.0` reads `Has reached the end`, `progress = 0.0` reads `Go to
+  start`, and `loop` / `rotates` read `Set looping` / `Set rotate with path`. A step that is not
+  scaled by the frame time is still a jump, and a ratio compared against a half is still a
+  comparison. The claim offers the shipped Follow A Path behavior.
+- **The text a HUD is written with.** `"{a} vs {b}".format({"a": p1, "b": p2})` reads `"{a} vs {b}"
+  with a = p1, b = p2`; `str(score).pad_zeros(5)` reads `zeropad(score, 5)` and `raw.capitalize()`
+  reads `capitalised raw` under the Familiar Words glossary; a regular expression kept in a variable
+  reads `Text ▸ Set pattern rx to "\d+"`, `first match of rx in text`, `all matches of rx in text`,
+  `replace matches of rx in text with …` and `the match`. Four rows author the same shapes.
+- **The clock, and the wait that freezes the game.** `Engine.get_frames_drawn()` reads `tickcount`,
+  `Engine.get_frames_per_second()` reads `fps`, `Time.get_ticks_usec()` reads `now (microseconds)`
+  and `get_process_delta_time()` reads `dt`. `OS.delay_msec(500)` reads `System ▸ Wait 0.5 seconds`
+  with a `⚠ blocks the game` note, and the Doctor says the same thing in words: that call stops the
+  whole process while it counts, and the sheet's own Wait is the one everybody means.
 
 ### Added - the Manual answers in GDScript as well as in the sheet's words
 
