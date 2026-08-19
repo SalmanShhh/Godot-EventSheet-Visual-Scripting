@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Added - an object's variables are a table you edit, not a list you read
+
+- **Instance variables are edited where they are read.** Click an object's name on a row (or select
+  it with the Properties bar open) and the object it is answers with a **table**: name, type in the
+  sheet's own words, initial value, an Inspector tick, and a description that folds open on **✎**.
+  Retype from the dropdown, retitle in place, tick a variable into the Inspector, delete it with
+  **✕**, and add one with **+ Add instance variable**. Renaming here is **Rename Everywhere** and
+  retyping is **Change Type Everywhere**, because a variable's name and type are used by rows all
+  over the sheet and a table that changed only the declaration would break them silently. Every edit
+  goes through the same model the Add variable dialog writes, in one undo step, so the `var` /
+  `@export var` line that lands is the same line either route produces and an opened `.gd` stays
+  byte-exact for every line the edit did not touch. Until now Object properties listed the same
+  variables as read-only chips and every change meant hunting the row on the sheet.
+
+### Fixed
+
+- **A colour swatch no longer paints over the word after it.** The swatch draws just past its span's
+  text, but the span never reserved that room, so anything following it lost its first character -
+  which is why a colour variable's swatch had to ride the very last part of the row. The span now
+  owns the gap and the box, measured from the same two numbers the renderer draws them with, so the
+  swatch sits beside its colour's word (`tint = ▪ white  #ffffff`) and can sit anywhere in a row.
+
 ### Added - a wired-up signal reads as the trigger calling that function, and a scene opens as one sheet
 
 - **A signal wired to ANOTHER object's function reads as the trigger calling it.**

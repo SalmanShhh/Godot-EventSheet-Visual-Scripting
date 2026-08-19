@@ -5328,12 +5328,11 @@ func _build_variable_row(
 		if not hinted_value.is_empty():
 			value_text = hinted_value
 	var value_meta: Dictionary = variable_meta.merged({"editable": false}, true)
-	# The swatch draws AFTER its span's text and the span reserves no room for it, so it rides the
-	# LAST span of the row - the muted hex when a colour has a word, the value itself otherwise. Put
-	# on the value while a note follows, it would paint over the note's first character.
-	var swatch_on_note: bool = facts.get("swatch") is Color \
-		and not str(facts.get("note", "")).strip_edges().is_empty()
-	if facts.get("swatch") is Color and not swatch_on_note:
+	# The swatch belongs beside the colour's WORD, not trailing the row: "tint = white [] #ffffff"
+	# reads as one value with its picture, where the same swatch parked after the hex read as an
+	# afterthought. The span reserves the swatch's room when it measures, so the muted hex that
+	# follows keeps its first character.
+	if facts.get("swatch") is Color:
 		value_meta["swatch_color"] = facts["swatch"] as Color
 	row_data.spans.append(
 		_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta)
@@ -5345,8 +5344,6 @@ func _build_variable_row(
 		var note_meta: Dictionary = variable_meta.merged(
 			{"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true
 		)
-		if swatch_on_note:
-			note_meta["swatch_color"] = facts["swatch"] as Color
 		row_data.spans.append(_make_span(hint_note, SemanticSpan.SpanType.COMMENT, note_meta))
 	# What the SCOPE adds that its word does not say on its own ("shared by every Player"), muted,
 	# in the same slot the limits use - a fact about the variable, ahead of its prose.
@@ -8397,6 +8394,11 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 			span_width += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	if metadata.get("object_icon") is Texture2D:
 		span_width += EventRowRenderer.OBJECT_ICON_ADVANCE
+	if metadata.get("swatch_color") is Color:
+		# The swatch draws just past the span's text, so the span has to OWN that room; without it
+		# the next span starts under the swatch and loses its first character. Mirrors the
+		# renderer's gap + box exactly, which is why the size lives in one place.
+		span_width += EventRowRenderer.swatch_advance_for(draw_font_size)
 	if bool(metadata.get("badge", false)):
 		span_width += max(float(metadata.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)), 0.0)
 		span_width += horizontal_padding * 2.0

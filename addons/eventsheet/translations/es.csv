@@ -2240,3 +2240,13 @@ Every word that is spelled differently here.,Todas las palabras que aquí se esc
 "Opened a scratch sheet - in memory only, never written to your project.","Hoja de borrador abierta: solo en memoria, nunca escrita en tu proyecto."
 Open a sheet first - a scratch tab needs the event-sheet workspace.,Abre antes una hoja: una pestaña de borrador necesita el espacio de trabajo de hojas de eventos.
 "Scratch sheet - in memory only, never written to your project unless you Save As.","Hoja de borrador: solo en memoria, nunca escrita en tu proyecto salvo que uses Guardar como."
+Initial value,Valor inicial
++ Add instance variable,+ Añadir variable de instancia
+This object has no instance variables yet.,Este objeto aún no tiene variables de instancia.
+Renaming here renames every use of the variable.,Renombrar aquí renombra todos los usos de la variable.
+Enter renames the variable and every use of it.,Enter renombra la variable y todos sus usos.
+Enter applies. One undo step.,Enter aplica. Un paso de deshacer.
+Editable in the Inspector (a designer property).,Editable en el Inspector (una propiedad de diseño).
+Describe this variable,Describir esta variable
+Delete this variable,Eliminar esta variable
+Add variable,Añadir variable

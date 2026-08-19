@@ -611,6 +611,16 @@ is instantiated to answer a question.
   read `On Died`, `On Hit  body`), **Behaviors** and **Families**. Two buttons start using it -
   **Add condition** and **Add action**, both opening the picker already scoped to that object - and
   **Open enemy.gd as sheet** jumps to the file that says what it is.
+- **The object this file IS answers with an editable variable table.** For that one object - the
+  thing the open script declares, not the nodes it merely names - the **Instance variables** row
+  becomes a table you work in: **Name**, **Type** (a dropdown of the sheet's own type words),
+  **Initial value**, an **Inspector** tick, and **✎ ✕**. ✎ folds a description field open under the
+  variable; ✕ deletes it; **+ Add instance variable** opens the Add variable dialog on the Instance
+  scope. Renaming in the Name field is **Rename Everywhere** and picking a new type is **Change Type
+  Everywhere**, because a name and a type are used by rows all over the sheet. The same table sits on
+  the Properties bar whenever that object is selected, so a run of variables can be added, retyped
+  and described without opening anything. Every edit writes the same `var` / `@export var` line the
+  Add variable dialog writes, in one undo step, and leaves every other line of the file untouched.
 - **The Object bar is a list you glance at, filter, and drag from.** Three sections: **USED IN THIS
   SHEET** open, with a per-object count and behaviors nested under the object they ride on; **ALSO IN
   THE SCENE** collapsed (the rest of the scene, one line away, no counts because there are none); and

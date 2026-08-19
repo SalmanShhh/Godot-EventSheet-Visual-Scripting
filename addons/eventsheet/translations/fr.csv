@@ -2240,3 +2240,13 @@ Every word that is spelled differently here.,Tous les mots qui s'écrivent autre
 "Opened a scratch sheet - in memory only, never written to your project.","Feuille brouillon ouverte - en mémoire seulement, jamais écrite dans votre projet."
 Open a sheet first - a scratch tab needs the event-sheet workspace.,Ouvrez d'abord une feuille - un onglet brouillon a besoin de l'espace de travail des feuilles d'événements.
 "Scratch sheet - in memory only, never written to your project unless you Save As.","Feuille brouillon - en mémoire seulement, jamais écrite dans votre projet sauf si vous faites Enregistrer sous."
+Initial value,Valeur initiale
++ Add instance variable,+ Ajouter une variable d'instance
+This object has no instance variables yet.,Cet objet n'a pas encore de variables d'instance.
+Renaming here renames every use of the variable.,Renommer ici renomme chaque utilisation de la variable.
+Enter renames the variable and every use of it.,Entrée renomme la variable et chacune de ses utilisations.
+Enter applies. One undo step.,Entrée applique. Une étape d'annulation.
+Editable in the Inspector (a designer property).,Modifiable dans l'Inspecteur (une propriété de conception).
+Describe this variable,Décrire cette variable
+Delete this variable,Supprimer cette variable
+Add variable,Ajouter une variable

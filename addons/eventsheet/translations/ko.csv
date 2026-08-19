@@ -2240,3 +2240,13 @@ Every word that is spelled differently here.,여기서는 다르게 부르는 �
 "Opened a scratch sheet - in memory only, never written to your project.",임시 시트를 열었습니다. 메모리에만 있고 프로젝트에 기록되지 않습니다.
 Open a sheet first - a scratch tab needs the event-sheet workspace.,먼저 시트를 여세요. 임시 탭에는 이벤트 시트 작업 공간이 필요합니다.
 "Scratch sheet - in memory only, never written to your project unless you Save As.","임시 시트 - 메모리에만 있으며, 다른 이름으로 저장하지 않는 한 프로젝트에 기록되지 않습니다."
+Initial value,초기값
++ Add instance variable,+ 인스턴스 변수 추가
+This object has no instance variables yet.,이 오브젝트에는 아직 인스턴스 변수가 없습니다.
+Renaming here renames every use of the variable.,여기서 이름을 바꾸면 변수의 모든 사용처 이름이 바뀝니다.
+Enter renames the variable and every use of it.,Enter 를 누르면 변수와 모든 사용처의 이름이 바뀝니다.
+Enter applies. One undo step.,Enter 로 적용합니다. 실행 취소는 한 단계입니다.
+Editable in the Inspector (a designer property).,인스펙터에서 편집 가능 (디자이너 속성).
+Describe this variable,이 변수 설명하기
+Delete this variable,이 변수 삭제
+Add variable,변수 추가

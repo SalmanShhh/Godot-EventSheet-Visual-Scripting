@@ -245,6 +245,7 @@ var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-pr
 var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
 var _verb_properties: EventSheetVerbProperties = EventSheetVerbProperties.new()  # a published verb's header click: the ACE properties popup (kind, category, inputs, inserts) (dock/verb_properties_popup.gd)
 var _object_properties: EventSheetObjectProperties = EventSheetObjectProperties.new()  # a row's object-name click: the object popup (type, path, rows, signals) (dock/object_properties_popup.gd)
+var _instance_variables: EventSheetInstanceVariableTable = EventSheetInstanceVariableTable.new()  # the object's variables as an editable table on Object properties and the Properties bar (dock/instance_variable_table.gd)
 var _find_results: EventSheetFindResultsBar = EventSheetFindResultsBar.new()  # Find all references: the results bar under the sheet, grouped by sheet with event numbers (dock/find_results_bar.gd)
 var _properties_bar: EventSheetPropertiesBar = EventSheetPropertiesBar.new()  # the selected condition/action/object/group as fields edited in place, beside the canvas (dock/properties_bar.gd)
 var _objects_panel: EventSheetObjectsPanel = null  # left-rail Objects section: every object the open file uses (editor/objects_panel.gd)
@@ -338,6 +339,7 @@ func _init() -> void:
 	_preview_glue.init(self)
 	_verb_properties.init(self)
 	_object_properties.init(self)
+	_instance_variables.init(self)
 	_find_results.init(self)
 	_properties_bar.init(self)
 	# Same rule as _preview_glue: _build_ui() calls _open_progress.build(), so the back-reference

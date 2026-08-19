@@ -2240,3 +2240,13 @@ Every word that is spelled differently here.,"Все слова, которые 
 "Opened a scratch sheet - in memory only, never written to your project.","Открыт черновой лист - только в памяти, в проект не записывается."
 Open a sheet first - a scratch tab needs the event-sheet workspace.,Сначала откройте лист - черновой вкладке нужно рабочее пространство листов событий.
 "Scratch sheet - in memory only, never written to your project unless you Save As.","Черновой лист - только в памяти, в проект не записывается, пока вы не выберете Сохранить как."
+Initial value,Начальное значение
++ Add instance variable,+ Добавить переменную экземпляра
+This object has no instance variables yet.,У этого объекта пока нет переменных экземпляра.
+Renaming here renames every use of the variable.,Переименование здесь переименует каждое использование переменной.
+Enter renames the variable and every use of it.,Enter переименует переменную и каждое её использование.
+Enter applies. One undo step.,Enter применяет. Один шаг отмены.
+Editable in the Inspector (a designer property).,Редактируется в Инспекторе (свойство для дизайнера).
+Describe this variable,Описать эту переменную
+Delete this variable,Удалить эту переменную
+Add variable,Добавить переменную

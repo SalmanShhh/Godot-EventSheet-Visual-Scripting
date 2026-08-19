@@ -195,8 +195,17 @@ func _show_object(object_label: String) -> void:
 			continue
 		_form.add_child(EventSheetPopupUI.hint_label(str((row as Dictionary).get("label", "")), 90.0))
 		_form.add_child(EventSheetPopupUI.hint_label(str((row as Dictionary).get("value", "")), 190.0))
+	# R39 - the same instance-variable table Object properties carries, in the bar, whenever the
+	# selected object is the one this file IS. Selecting an object and editing its variables
+	# without opening a popup is the whole point of the bar.
+	if EventSheetObjectProperties.owns_sheet_variables(entry):
+		var table: Control = _dock._instance_variables.build_for(_dock._current_sheet)
+		if table != null:
+			_form.add_child(EventSheetPopupUI.hint_label(
+				EventSheetL10n.translate("Instance variables"), 90.0))
+			_form.add_child(table)
 	var open_button: Button = Button.new()
-	open_button.text = "Object properties…"
+	open_button.text = EventSheetL10n.translate("Object properties…")
 	open_button.pressed.connect(func() -> void: _dock.open_object_properties(object_label))
 	_form.add_child(Control.new())
 	_form.add_child(open_button)

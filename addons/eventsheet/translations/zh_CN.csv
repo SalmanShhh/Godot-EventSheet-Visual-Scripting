@@ -2240,3 +2240,13 @@ Every word that is spelled differently here.,所有在这里叫法不同的词�
 "Opened a scratch sheet - in memory only, never written to your project.",已打开草稿表 - 仅存于内存，绝不写入你的项目。
 Open a sheet first - a scratch tab needs the event-sheet workspace.,请先打开一个表 - 草稿标签页需要事件表工作区。
 "Scratch sheet - in memory only, never written to your project unless you Save As.",草稿表 - 仅存于内存，除非另存为，否则绝不写入你的项目。
+Initial value,初始值
++ Add instance variable,+ 添加实例变量
+This object has no instance variables yet.,此对象还没有实例变量。
+Renaming here renames every use of the variable.,在这里重命名会重命名该变量的每一处使用。
+Enter renames the variable and every use of it.,回车重命名该变量及其每一处使用。
+Enter applies. One undo step.,回车应用。一步撤销。
+Editable in the Inspector (a designer property).,可在检查器中编辑（设计者属性）。
+Describe this variable,描述此变量
+Delete this variable,删除此变量
+Add variable,添加变量

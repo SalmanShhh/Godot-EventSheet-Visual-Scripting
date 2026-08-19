@@ -2240,3 +2240,13 @@ Every word that is spelled differently here.,"Jedes Wort, das hier anders heißt
 "Opened a scratch sheet - in memory only, never written to your project.","Notizblatt geöffnet - nur im Speicher, nie in dein Projekt geschrieben."
 Open a sheet first - a scratch tab needs the event-sheet workspace.,Öffne zuerst ein Blatt - ein Notiz-Tab braucht den Ereignisblatt-Arbeitsbereich.
 "Scratch sheet - in memory only, never written to your project unless you Save As.","Notizblatt - nur im Speicher, ohne Speichern unter nie in dein Projekt geschrieben."
+Initial value,Anfangswert
++ Add instance variable,+ Instanzvariable hinzufügen
+This object has no instance variables yet.,Dieses Objekt hat noch keine Instanzvariablen.
+Renaming here renames every use of the variable.,Umbenennen hier benennt jede Verwendung der Variable um.
+Enter renames the variable and every use of it.,Enter benennt die Variable und jede Verwendung um.
+Enter applies. One undo step.,Enter übernimmt. Ein Rückgängig-Schritt.
+Editable in the Inspector (a designer property).,Im Inspektor bearbeitbar (eine Designer-Eigenschaft).
+Describe this variable,Diese Variable beschreiben
+Delete this variable,Diese Variable löschen
+Add variable,Variable hinzufügen

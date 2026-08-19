@@ -176,7 +176,7 @@ static func build_panel(entry: Dictionary, scene_name: String = "", class_map: D
 		on_highlight: Callable = Callable(), on_select: Callable = Callable(),
 		on_code: Callable = Callable(), source_path: String = "",
 		on_add_condition: Callable = Callable(), on_add_action: Callable = Callable(),
-		on_open_sheet: Callable = Callable()) -> Control:
+		on_open_sheet: Callable = Callable(), variable_table: Control = null) -> Control:
 	var column: VBoxContainer = EventSheetPopupUI.form_box()
 	column.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(360.0), 0.0)
 	if entry.is_empty():
@@ -206,6 +206,13 @@ static func build_panel(entry: Dictionary, scene_name: String = "", class_map: D
 	for row: Dictionary in property_rows(entry, scene_name, source_path):
 		form.add_child(EventSheetPopupUI.form_row(str(row.get("label", "")), _field_for(row)))
 	column.add_child(EventSheetPopupUI.panel_section(form))
+	# R39 - the object's own variables as a TABLE, not a chip list: the popup is where a reader
+	# already came to ask what the object is, so it is where adding, renaming, retyping and
+	# deleting one belongs. Only the sheet's own object gets it - the table writes into THIS file.
+	if variable_table != null:
+		column.add_child(EventSheetPopupUI.section_header(
+			EventSheetL10n.translate("Instance variables")))
+		column.add_child(variable_table)
 	# Q1 - the two ways to START using the object, first: the popup is where a reader who just learned
 	# what an object offers reaches for it, and both open the picker already scoped to this object.
 	var authoring: HBoxContainer = HBoxContainer.new()
@@ -228,6 +235,13 @@ static func build_panel(entry: Dictionary, scene_name: String = "", class_map: D
 	if buttons.get_child_count() > 0:
 		column.add_child(buttons)
 	return EventSheetPopupUI.margined(column)
+
+
+## True when the object IS the thing this file is - the one object whose instance variables the
+## open sheet declares, and so the only one whose variable table can write anything. Every other
+## object in the census lives in another file (or in the scene) and answers with facts only.
+static func owns_sheet_variables(entry: Dictionary) -> bool:
+	return str(entry.get("kind", "")) == "script"
 
 
 ## True when "Select in scene" can do what it says: the object has a node path, and the editor has
@@ -325,7 +339,8 @@ func open_for(object_label: String) -> void:
 		source_path,
 		func() -> void: _run_and_close(func() -> void: _dock.add_row_for_object(label, false)),
 		func() -> void: _run_and_close(func() -> void: _dock.add_row_for_object(label, true)),
-		func() -> void: _run_and_close(func() -> void: _dock.open_object_file_as_sheet(own_file))
+		func() -> void: _run_and_close(func() -> void: _dock.open_object_file_as_sheet(own_file)),
+		_dock._instance_variables.build_for(sheet) if owns_sheet_variables(entry) else null
 	))
 	_popup.reset_size()
 	_popup.popup(Rect2i(Vector2i(_dock.get_screen_transform() * _dock.get_local_mouse_position()), Vector2i.ZERO))

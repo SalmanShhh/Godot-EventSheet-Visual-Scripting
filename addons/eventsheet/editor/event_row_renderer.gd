@@ -25,6 +25,12 @@ const OBJECT_ICON_PLATE_SIZE := 18.0
 const OBJECT_ICON_ADVANCE := 23.0
 const OBJECT_ICON_PLATE_FILL := Color(1.0, 1.0, 1.0, 0.05)
 const OBJECT_ICON_PLATE_BORDER := Color(1.0, 1.0, 1.0, 0.13)
+# A colour value's live swatch, drawn just past its span's text. The gap and the box are constants
+# here, and the width the span must RESERVE for them is derived from the same two numbers, so a
+# swatch can sit on any span in a row without painting over whatever follows it.
+const SWATCH_GAP := 6.0
+const SWATCH_MIN_BOX := 8.0
+const SWATCH_FONT_RATIO := 0.7
 
 # One shared plate StyleBox (this draws once per icon per frame on a virtualized canvas -
 # never allocate it inside the draw loop).
@@ -116,6 +122,20 @@ static func object_column_width_for(event_style: EventSheetEventStyle, lane: Str
 	if column <= 0.0:
 		return 0.0  # flow mode: text follows each label
 	return minf(column, lane_width * 0.45) if lane_width > 0.0 else column
+
+
+## The side of the colour box drawn for a span carrying `swatch_color`, at the size that span's
+## text draws at - so the swatch grows with the row and with the editor's scale.
+static func swatch_box_for(draw_font_size: int) -> float:
+	return maxf(float(draw_font_size) * SWATCH_FONT_RATIO, SWATCH_MIN_BOX)
+
+
+## What a span carrying `swatch_color` must add to its measured text width: the gap before the box
+## plus the box itself. The measurement side calls this so the reserve and the drawing can never
+## disagree, which is what lets a swatch ride ANY span (a value, a muted hex note, a parameter)
+## instead of only the last one in the row.
+static func swatch_advance_for(draw_font_size: int) -> float:
+	return SWATCH_GAP + swatch_box_for(draw_font_size)
 
 
 static func _object_icon_plate_style() -> StyleBoxFlat:
@@ -1043,8 +1063,8 @@ func _draw_spans(
 		var swatch: Variant = metadata.get("swatch_color")
 		if swatch is Color:
 			var swatch_advance: float = minf(font.get_string_size(draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x, text_width)
-			var swatch_size: float = maxf(draw_font_size * 0.7, 8.0)
-			var swatch_rect: Rect2 = Rect2(text_x + swatch_advance + 6.0, span.rect.position.y + (span.rect.size.y - swatch_size) * 0.5, swatch_size, swatch_size)
+			var swatch_size: float = swatch_box_for(draw_font_size)
+			var swatch_rect: Rect2 = Rect2(text_x + swatch_advance + SWATCH_GAP, span.rect.position.y + (span.rect.size.y - swatch_size) * 0.5, swatch_size, swatch_size)
 			control.draw_rect(swatch_rect, swatch as Color, true)
 			control.draw_rect(swatch_rect, Color(0.0, 0.0, 0.0, 0.55), false, 1.0)
 			# Record where the swatch landed so a click can hit-test it and open the inline colour picker
@@ -1057,7 +1077,7 @@ func _draw_spans(
 		if compiled_lines > 1 and span_index != editing_span_index:
 			var cue_x: float = text_x + minf(font.get_string_size(draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x, text_width) + 8.0
 			if swatch is Color:
-				cue_x += maxf(draw_font_size * 0.7, 8.0) + 8.0
+				cue_x += swatch_box_for(draw_font_size) + 8.0
 			var cue_font_size: int = maxi(draw_font_size - 2, 8)
 			var cue_color: Color = Color(TEXT_MUTED, TEXT_MUTED.a * 0.85)
 			_draw_text(control, Vector2(cue_x, baseline_y), "→%d" % compiled_lines, 64.0, font, cue_font_size, cue_color)

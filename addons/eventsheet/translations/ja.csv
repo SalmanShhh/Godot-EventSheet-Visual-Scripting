@@ -2240,3 +2240,13 @@ Every word that is spelled differently here.,ここでは呼び方が違うす�
 "Opened a scratch sheet - in memory only, never written to your project.",下書きシートを開きました。メモリ上だけで、プロジェクトには書き込まれません。
 Open a sheet first - a scratch tab needs the event-sheet workspace.,先にシートを開いてください。下書きタブにはイベントシートのワークスペースが必要です。
 "Scratch sheet - in memory only, never written to your project unless you Save As.",下書きシート。メモリ上だけで、名前を付けて保存しない限りプロジェクトには書き込まれません。
+Initial value,初期値
++ Add instance variable,+ インスタンス変数を追加
+This object has no instance variables yet.,このオブジェクトにはまだインスタンス変数がありません。
+Renaming here renames every use of the variable.,ここで名前を変えると、変数のすべての使用箇所の名前が変わります。
+Enter renames the variable and every use of it.,Enter で変数とそのすべての使用箇所の名前を変えます。
+Enter applies. One undo step.,Enter で適用します。取り消しは 1 ステップです。
+Editable in the Inspector (a designer property).,インスペクターで編集可能 (デザイナー向けプロパティ)。
+Describe this variable,この変数を説明する
+Delete this variable,この変数を削除
+Add variable,変数を追加
