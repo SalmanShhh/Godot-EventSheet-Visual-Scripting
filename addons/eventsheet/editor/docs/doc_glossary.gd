@@ -205,7 +205,9 @@ static func redirect_for(query: String) -> Dictionary:
 		if str(entry.get("term", "")).to_lower() != wanted:
 			continue
 		var here: String = here_word(str(entry.get("here", "")))
-		if here.is_empty():
+		# A word this editor spells the SAME is not a rename, and saying "here it is called
+		# sub-event" to somebody who typed sub-event is the line making a fool of itself.
+		if here.is_empty() or here.to_lower() == wanted:
 			continue
 		return {
 			"key": str(entry.get("key", "")),
@@ -223,9 +225,10 @@ static func here_word(here_text: String) -> String:
 	var text: String = here_text.strip_edges()
 	var stop: int = text.find(". ")
 	var head: String = text if stop < 0 else text.substr(0, stop)
-	# A leading sentence that is a whole explanation rather than a name is not a rename at all -
-	# "A condition on an object filters which instances..." names nothing to redirect to.
-	return "" if head.split(" ", false).size() > 3 else head.trim_suffix(".")
+	# A leading sentence that EXPLAINS rather than names is not a rename at all - "A condition on an
+	# object filters which instances..." names nothing to redirect to, and neither does "A sheet
+	# variable". Two words is the whole budget: a rename is a name.
+	return "" if head.split(" ", false).size() > 2 else head.trim_suffix(".")
 
 
 ## The sentence itself, pure over its two halves so the suite pins the words.

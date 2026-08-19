@@ -82,17 +82,19 @@ static func _test_reference_pages() -> bool:
 	all_passed = _check("an empty name draws nothing",
 		EventSheetDocReference.blocks_for("pack", "").is_empty(), true) and all_passed
 	# The columns are decided once for the whole page, so its tables stay the same shape down it.
+	# Every table now leads with the row's own MARK (the fixed shape - see doc_tutorials_test),
+	# so the counts here are one higher than they were before that landed.
 	var noted: Dictionary = {"Actions": [{"name": "Do It", "params": "", "note": "Does it."}]}
 	var bare: Dictionary = {"Actions": [{"name": "Do It", "params": "", "note": ""}]}
-	all_passed = _check("a page with blurbs prints the third column",
-		Array(EventSheetDocReference.table_columns(noted)).size(), 3) and all_passed
+	all_passed = _check("a page with blurbs prints the last column",
+		Array(EventSheetDocReference.table_columns(noted)).size(), 4) and all_passed
 	all_passed = _check("a page without them does not",
-		Array(EventSheetDocReference.table_columns(bare)).size(), 2) and all_passed
+		Array(EventSheetDocReference.table_columns(bare)).size(), 3) and all_passed
 	# A row that knows its entry links to it, so a reference page is a way IN rather than a list.
 	var linked: Array = EventSheetDocReference.table_rows(
-		[{"name": "Do It", "params": "", "doc_id": "ace:P/do_it"}], false)
+		[{"name": "Do It", "params": "", "doc_id": "ace:P/do_it"}], false, "➜")
 	all_passed = _check("a verb links to its entry",
-		str((linked[0] as Array)[0]), "[url=ace:P/do_it]Do It[/url]") and all_passed
+		str((linked[0] as Array)[1]), "[url=ace:P/do_it]Do It[/url]") and all_passed
 	return all_passed
 
 
