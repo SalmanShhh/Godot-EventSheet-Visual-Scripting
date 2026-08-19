@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words
+
+Four more families of everyday GDScript read as the rows they are. Display only: the file is
+untouched, the byte round-trip is unchanged, and the exact GDScript is still one hover away. Every
+shape reads the same whether it was typed by hand or dropped from the picker, because both go through
+the one row grammar.
+
+- **The wait, and what runs when it ends.** `get_tree().create_timer(2.0).timeout.connect(func():
+  explode())` reads `System ▸ ⏳ Wait 2 seconds then Call Explode` - the sheet already has that shape,
+  so the callback reads as the step that follows the wait rather than as a lambda handed to a signal.
+  A named function, a lambda body the grammar already has a sentence for (`Destroy`, `Set hp to 0`)
+  and the `CONNECT_ONE_SHOT` spelling all read the same way; a bound callable keeps its code, because
+  a wait that quietly loses its callback is worse than the line it replaced.
+- **Switching the tick on and off.** `set_physics_process(false)` reads
+  `Player ▸ Set Every tick (physics) deactivated`, `set_process(true)` reads
+  `Set Every tick (draw) activated`, and `set_process_input` / `set_process_unhandled_input` read the
+  same way about input - the sheet's own activation words, said about a tick. `process_mode` reads
+  `Set disabled` / `Set enabled` / `Set always active` / `Set pausable` /
+  `Set active only when paused`, in both of Godot's spellings.
+- **The question a `@tool` script asks about itself.** `Engine.is_editor_hint()` and
+  `OS.has_feature("editor")` both read `System ▸ is in the editor` - one question, one sentence.
+- **The drawing verbs, and the lifecycle trigger names.** `draw_line`, `draw_rect`, `draw_circle`,
+  `draw_string` and `queue_redraw` read `Draw line a to b, c`, `Draw rectangle r, c`,
+  `Draw circle at p, radius r, c`, `Draw text ...` and `Redraw`. And the lifecycle triggers now read
+  the sheet's own names, always - never behind the Familiar Words toggle: a `_ready` on the script the
+  SCENE ITSELF carries is `System ▸ On start of layout`, a `_ready` on a script sitting on an object in
+  the scene is that object's `On created`, and `_exit_tree` is `On end of layout` or `On destroyed` the
+  same way round. `_enter_tree` reads `On created`, `_draw` reads `On draw`, and the notifications read
+  `On suspended` / `On resumed` / `On lost focus` / `On gained focus` / `On close` / `On paused` /
+  `On unpaused` / `On destroyed` (any other notification says its own name in plain words).
+- **Named argument chips where a name was still missing.** `sprite.play("run", 2.0)` reads
+  `Set animation to "run" (play)  speed = 2` instead of leaving the second value bare.
+
+All of it is translated in the nine shipped languages.
+
 ### Added - an opened script's questions, text, saving, behaviours, input and logging read as rows
 
 Six more families of everyday GDScript now read as the rows they are instead of as the code they are

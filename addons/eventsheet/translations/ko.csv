@@ -1967,3 +1967,37 @@ off,끔
 Physics,물리
 Particles,파티클
 runs in editor,에디터에서 실행
+Set {what} {state},{what} {state}
+Every tick (draw),매 틱 (그리기)
+Every tick (physics),매 틱 (물리)
+input,입력
+unhandled input,처리되지 않은 입력
+unhandled key input,처리되지 않은 키 입력
+activated,활성화
+deactivated,비활성화
+Set {mode},{mode} 로 설정
+enabled,활성
+always active,항상 활성
+pausable,일시정지 가능
+active only when paused,일시정지 중에만 활성
+then,그다음
+is in the editor,에디터 안에 있음
+"Draw line {from} to {to}, {colour}","선 {from} 에서 {to} 까지 그리기, {colour}"
+"Draw rectangle {rect}, {colour}","사각형 {rect} 그리기, {colour}"
+"Draw circle at {at}, radius {radius}, {colour}","{at} 에 원 그리기, 반지름 {radius}, {colour}"
+Draw text {text} at {at},{at} 에 텍스트 {text} 그리기
+Redraw,다시 그리기
+speed,속도
+On start of layout,레이아웃 시작 시
+On end of layout,레이아웃 종료 시
+On created,생성 시
+On destroyed,파괴 시
+On draw,그릴 때
+On suspended,중단 시
+On resumed,재개 시
+On lost focus,포커스를 잃었을 때
+On gained focus,포커스를 얻었을 때
+On close,닫을 때
+On paused,일시정지 시
+On unpaused,일시정지 해제 시
+On notification,알림 시

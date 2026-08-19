@@ -1493,31 +1493,34 @@ static func _wait_body_segments(handed: String, context: Dictionary) -> Array:
 		body = after.substr(colon_at + 1).strip_edges()
 	if body.is_empty():
 		return []
-	# A bare name IS the function it names - the sheet's own Call row, exactly as the picker writes it.
+	# The step's OWN reading first, so a callback the grammar already has a sentence for keeps it
+	# ("Destroy", "Set hp to 0") rather than being retold as a call to a function nobody wrote.
+	var step: Dictionary = statement(body, context)
+	if not step.is_empty():
+		var owner: String = str(step.get("object", "")).strip_edges()
+		var pieces: Array = []
+		if not owner.is_empty() and owner != OBJECT_SYSTEM:
+			pieces.append({"text": "%s  " % owner, "tone": "object"})
+		pieces.append_array(step.get("segments", []) as Array)
+		return pieces
+	# Whatever is left is a name: a bare callable, or a call to one of the file's own functions. Both
+	# are the sheet's Call row, exactly as the picker writes it.
 	if is_identifier(body):
 		return [
 			{"text": "%s " % translate("Call"), "tone": "plain"},
 			{"text": function_words(body), "tone": "name"}
 		]
 	var call: Dictionary = call_parts(body)
-	if not call.is_empty() and str(call.get("target", "")).strip_edges().is_empty():
-		var called: Array = [
-			{"text": "%s " % translate("Call"), "tone": "plain"},
-			{"text": function_words(str(call.get("method", ""))), "tone": "name"}
-		]
-		for value: String in (call.get("args", PackedStringArray()) as PackedStringArray):
-			called.append({"text": "   ", "tone": "plain"})
-			called.append({"text": expression_text(value, context), "tone": "value"})
-		return called
-	var step: Dictionary = statement(body, context)
-	if step.is_empty():
+	if call.is_empty() or not str(call.get("target", "")).strip_edges().is_empty():
 		return []
-	var owner: String = str(step.get("object", "")).strip_edges()
-	var pieces: Array = []
-	if not owner.is_empty() and owner != OBJECT_SYSTEM:
-		pieces.append({"text": "%s  " % owner, "tone": "object"})
-	pieces.append_array(step.get("segments", []) as Array)
-	return pieces
+	var called: Array = [
+		{"text": "%s " % translate("Call"), "tone": "plain"},
+		{"text": function_words(str(call.get("method", ""))), "tone": "name"}
+	]
+	for value: String in (call.get("args", PackedStringArray()) as PackedStringArray):
+		called.append({"text": "   ", "tone": "plain"})
+		called.append({"text": expression_text(value, context), "tone": "value"})
+	return called
 
 
 ## N11. The Log verb is the debug word everyone knows, and Godot's print family is the same three

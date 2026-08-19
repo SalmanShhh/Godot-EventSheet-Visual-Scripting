@@ -1967,3 +1967,37 @@ off,关
 Physics,物理
 Particles,粒子
 runs in editor,在编辑器中运行
+Set {what} {state},{what} {state}
+Every tick (draw),每帧 (绘制)
+Every tick (physics),每帧 (物理)
+input,输入
+unhandled input,未处理输入
+unhandled key input,未处理按键输入
+activated,已启用
+deactivated,已停用
+Set {mode},设为{mode}
+enabled,启用
+always active,始终活动
+pausable,可暂停
+active only when paused,仅暂停时活动
+then,然后
+is in the editor,在编辑器中
+"Draw line {from} to {to}, {colour}",绘制线段 {from} 到 {to}，{colour}
+"Draw rectangle {rect}, {colour}",绘制矩形 {rect}，{colour}
+"Draw circle at {at}, radius {radius}, {colour}",在 {at} 绘制圆，半径 {radius}，{colour}
+Draw text {text} at {at},在 {at} 绘制文本 {text}
+Redraw,重绘
+speed,速度
+On start of layout,布局开始时
+On end of layout,布局结束时
+On created,创建时
+On destroyed,销毁时
+On draw,绘制时
+On suspended,挂起时
+On resumed,恢复时
+On lost focus,失去焦点时
+On gained focus,获得焦点时
+On close,关闭时
+On paused,暂停时
+On unpaused,取消暂停时
+On notification,通知时

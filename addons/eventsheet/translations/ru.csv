@@ -1967,3 +1967,37 @@ off,выкл
 Physics,Физика
 Particles,Частицы
 runs in editor,работает в редакторе
+Set {what} {state},Сделать {what} {state}
+Every tick (draw),Каждый тик (отрисовка)
+Every tick (physics),Каждый тик (физика)
+input,ввод
+unhandled input,необработанный ввод
+unhandled key input,необработанный ввод клавиш
+activated,включённым
+deactivated,выключенным
+Set {mode},Сделать {mode}
+enabled,включён
+always active,всегда активен
+pausable,приостанавливаемый
+active only when paused,активен только на паузе
+then,затем
+is in the editor,в редакторе
+"Draw line {from} to {to}, {colour}","Нарисовать линию {from} до {to}, {colour}"
+"Draw rectangle {rect}, {colour}","Нарисовать прямоугольник {rect}, {colour}"
+"Draw circle at {at}, radius {radius}, {colour}","Нарисовать круг в {at}, радиус {radius}, {colour}"
+Draw text {text} at {at},Нарисовать текст {text} в {at}
+Redraw,Перерисовать
+speed,скорость
+On start of layout,В начале макета
+On end of layout,В конце макета
+On created,При создании
+On destroyed,При уничтожении
+On draw,При отрисовке
+On suspended,При приостановке
+On resumed,При возобновлении
+On lost focus,При потере фокуса
+On gained focus,При получении фокуса
+On close,При закрытии
+On paused,При паузе
+On unpaused,При снятии паузы
+On notification,При уведомлении

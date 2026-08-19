@@ -1967,3 +1967,37 @@ off,disattiva
 Physics,Fisica
 Particles,Particelle
 runs in editor,viene eseguito nell'editor
+Set {what} {state},Imposta {what} {state}
+Every tick (draw),Ogni tick (disegno)
+Every tick (physics),Ogni tick (fisica)
+input,input
+unhandled input,input non gestito
+unhandled key input,input tasti non gestito
+activated,attivato
+deactivated,disattivato
+Set {mode},Imposta {mode}
+enabled,attivo
+always active,sempre attivo
+pausable,sospendibile
+active only when paused,attivo solo in pausa
+then,poi
+is in the editor,è nell'editor
+"Draw line {from} to {to}, {colour}","Disegna linea {from} a {to}, {colour}"
+"Draw rectangle {rect}, {colour}","Disegna rettangolo {rect}, {colour}"
+"Draw circle at {at}, radius {radius}, {colour}","Disegna cerchio in {at}, raggio {radius}, {colour}"
+Draw text {text} at {at},Disegna testo {text} in {at}
+Redraw,Ridisegna
+speed,velocità
+On start of layout,All'avvio del layout
+On end of layout,Alla fine del layout
+On created,Alla creazione
+On destroyed,Alla distruzione
+On draw,Al disegno
+On suspended,Alla sospensione
+On resumed,Alla ripresa
+On lost focus,Alla perdita del fuoco
+On gained focus,All'acquisizione del fuoco
+On close,Alla chiusura
+On paused,Alla pausa
+On unpaused,Alla ripresa dalla pausa
+On notification,Alla notifica

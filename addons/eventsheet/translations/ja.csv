@@ -1967,3 +1967,37 @@ off,オフ
 Physics,物理
 Particles,パーティクル
 runs in editor,エディタで実行
+Set {what} {state},{what} を{state}
+Every tick (draw),毎ティック (描画)
+Every tick (physics),毎ティック (物理)
+input,入力
+unhandled input,未処理の入力
+unhandled key input,未処理のキー入力
+activated,有効化
+deactivated,無効化
+Set {mode},{mode} にする
+enabled,有効
+always active,常に有効
+pausable,一時停止可
+active only when paused,一時停止中のみ有効
+then,その後
+is in the editor,エディタ内である
+"Draw line {from} to {to}, {colour}",線を {from} から {to} へ描く、{colour}
+"Draw rectangle {rect}, {colour}",矩形 {rect} を描く、{colour}
+"Draw circle at {at}, radius {radius}, {colour}",{at} に円を描く、半径 {radius}、{colour}
+Draw text {text} at {at},{at} にテキスト {text} を描く
+Redraw,再描画
+speed,速度
+On start of layout,レイアウト開始時
+On end of layout,レイアウト終了時
+On created,作成時
+On destroyed,破棄時
+On draw,描画時
+On suspended,中断時
+On resumed,再開時
+On lost focus,フォーカスを失ったとき
+On gained focus,フォーカスを得たとき
+On close,閉じるとき
+On paused,一時停止時
+On unpaused,一時停止解除時
+On notification,通知時

@@ -1967,3 +1967,37 @@ off,désactivée
 Physics,Physique
 Particles,Particules
 runs in editor,s'exécute dans l'éditeur
+Set {what} {state},Mettre {what} {state}
+Every tick (draw),Chaque tick (dessin)
+Every tick (physics),Chaque tick (physique)
+input,entrée
+unhandled input,entrée non traitée
+unhandled key input,entrée clavier non traitée
+activated,activé
+deactivated,désactivé
+Set {mode},Mettre {mode}
+enabled,actif
+always active,toujours actif
+pausable,pausable
+active only when paused,actif seulement en pause
+then,puis
+is in the editor,est dans l'éditeur
+"Draw line {from} to {to}, {colour}","Dessiner ligne {from} vers {to}, {colour}"
+"Draw rectangle {rect}, {colour}","Dessiner rectangle {rect}, {colour}"
+"Draw circle at {at}, radius {radius}, {colour}","Dessiner cercle en {at}, rayon {radius}, {colour}"
+Draw text {text} at {at},Dessiner texte {text} en {at}
+Redraw,Redessiner
+speed,vitesse
+On start of layout,Au début de la mise en page
+On end of layout,À la fin de la mise en page
+On created,À la création
+On destroyed,À la destruction
+On draw,Au dessin
+On suspended,À la suspension
+On resumed,À la reprise
+On lost focus,À la perte du focus
+On gained focus,Au gain du focus
+On close,À la fermeture
+On paused,À la pause
+On unpaused,À la reprise de la pause
+On notification,À la notification
