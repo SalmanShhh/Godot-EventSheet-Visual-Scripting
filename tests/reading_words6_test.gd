@@ -116,7 +116,9 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"CharacterBody2D ▸ Call Reset (at end of frame)",
 	"CharacterBody2D ▸ Set visible to true (at end of frame)",
 	# Q8 - the project's own names for its physics layers
-	"CharacterBody2D ▸ Set collision with layer \"Enemies\" on",
+	# T7 re-pin: sitting on a layer is what this body is to the others, so the row says Solid and keeps
+	# the project's own name for the layer with its number after it.
+	"CharacterBody2D ▸ Solid ▸ On layer Enemies (layer 2)",
 	"CharacterBody2D ▸ Set collision layers to \"World\", \"Player\"",
 	# Q11 - a number written where an enum is expected
 	"CharacterBody2D ▸ Set process mode to Always",

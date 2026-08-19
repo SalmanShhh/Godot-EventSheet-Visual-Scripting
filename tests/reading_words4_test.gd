@@ -228,7 +228,9 @@ static func _statement_values() -> bool:
 		["sparks.emitting = false", "sparks ▸ Particles  Stop spraying"],
 		["sparks.restart()", "sparks ▸ Particles  Restart"],
 		["set_collision_mask_value(2, true)", "Player ▸ Enable collisions with 2"],
-		["set_collision_layer_value(3, false)", "Player ▸ Set collision with layer 3 off"],
+		# T7 re-pin: which layers an object SITS on is what it is to the others, and the sheet's word
+		# for that is Solid. A project that named the layer says the name; this one did not.
+		["set_collision_layer_value(3, false)", "Player ▸ Solid ▸ Not on layer 3"],
 		["collision_layer = 0", "Player ▸ Set collisions off"],
 		["collision_mask = 0", "Player ▸ Set collisions off"],
 		# N9 - the analogue reads belong to the pad
