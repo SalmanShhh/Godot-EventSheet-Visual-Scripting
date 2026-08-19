@@ -2186,3 +2186,27 @@ The row you will get,만들어질 행
 One per object - every copy of this object keeps its own.,오브젝트마다 하나 - 이 오브젝트의 복사본은 각자의 값을 가집니다.
 Lives inside one event and is gone when it ends.,한 이벤트 안에서만 살아 있고 끝나면 사라집니다.
 Set once and never changes while the game runs.,한 번 정하면 게임이 도는 동안 바뀌지 않습니다.
+Yes,예
+No,아니요
+Skip,건너뛰기
+Start,시작
+Carry on,계속하기
+Tutorials,튜토리얼
+What's new,새로운 기능
+Try it in a scratch sheet,임시 시트에서 시험해 보기
+"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.",이 예제를 전용 임시 탭에서 엽니다. 편집할 수 있고 메모리에만 있으며 프로젝트에 기록되지 않습니다.
+"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","설명서의 임시 시트입니다. 메모리에만 존재하며, 다른 이름으로 저장하지 않는 한 프로젝트에 아무것도 기록되지 않고, 묻지 않고 닫히며, 다음 세션에는 남지 않습니다."
+Was this page helpful?,이 페이지가 도움이 되었나요?
+"Thanks - noted on this machine, and sent nowhere.",감사합니다. 이 컴퓨터에만 기록되었고 어디에도 전송되지 않았습니다.
+Noted on this machine. Report a problem opens the tracker if you want to say why.,이 컴퓨터에 기록했습니다. 이유를 알리고 싶다면 문제 신고로 트래커를 열 수 있습니다.
+Kept on this machine. Nothing is sent anywhere.,이 컴퓨터에만 저장됩니다. 어디에도 전송되지 않습니다.
+Report a problem,문제 신고
+"Opens the project's issue tracker in your browser, with this page's name already in the title. It opens a page - it never sends one.","브라우저에서 프로젝트의 이슈 트래커를 열고, 이 페이지 이름을 제목에 미리 채웁니다. 페이지를 열 뿐, 전송하지는 않습니다."
+Smaller text in the Manual.,설명서 글자를 작게.
+Larger text in the Manual.,설명서 글자를 크게.
+This page is not translated yet - help translate it,이 페이지는 아직 번역되지 않았습니다 - 번역에 참여하기
+Opens the page for the word this editor uses.,이 에디터가 쓰는 낱말의 페이지를 엽니다.
+Every word that is spelled differently here.,여기서는 다르게 부르는 모든 낱말.
+"Opened a scratch sheet - in memory only, never written to your project.",임시 시트를 열었습니다. 메모리에만 있고 프로젝트에 기록되지 않습니다.
+Open a sheet first - a scratch tab needs the event-sheet workspace.,먼저 시트를 여세요. 임시 탭에는 이벤트 시트 작업 공간이 필요합니다.
+"Scratch sheet - in memory only, never written to your project unless you Save As.","임시 시트 - 메모리에만 있으며, 다른 이름으로 저장하지 않는 한 프로젝트에 기록되지 않습니다."

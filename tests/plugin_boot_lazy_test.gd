@@ -31,6 +31,10 @@ const FORBIDDEN := {
 		# the usage counts - pulls the same subtree through the vocabulary registry.
 		"EventSheetDocReference", "EventSheetDocGlossary", "EventSheetDocHistory",
 		"EventSheetDocUsage", "EventSheetDocHelpTarget",
+		# The Manual's batch-7 half - the tutorials, What's new, the scratch sandbox, the page
+		# feedback and the per-locale corpus - reaches the same parser and page model.
+		"EventSheetDocTutorials", "EventSheetDocWhatsNew", "EventSheetDocScratch",
+		"EventSheetDocFeedback", "EventSheetDocLocale",
 		# The Help DOCK is the sharpest case: add_dock takes an INSTANCE, so this node really is
 		# constructed at every boot. It is loaded by path and stays an empty container until the
 		# reader opens it - naming the class here would undo that by compiling its subtree anyway.
@@ -45,6 +49,8 @@ const FORBIDDEN := {
 		"EventSheetL10n", "EventSheetViewport", "EventSheetSnippet",
 		"EventSheetDocReference", "EventSheetDocGlossary", "EventSheetDocHistory",
 		"EventSheetDocUsage", "EventSheetDocHelpTarget",
+		"EventSheetDocTutorials", "EventSheetDocWhatsNew", "EventSheetDocScratch",
+		"EventSheetDocFeedback", "EventSheetDocLocale",
 	],
 	"res://addons/eventforge/editor/context_menu_plugin.gd": [
 		"EventSheetWorkflow", "EventSheetProjectDoctor",

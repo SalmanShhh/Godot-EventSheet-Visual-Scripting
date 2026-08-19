@@ -280,8 +280,12 @@ static func _test_entry_points() -> bool:
 		menu_code.contains("22: _dock.open_documentation()"), true) and all_passed
 	var input_code: String = _read(INPUT_DISPATCH_PATH)
 	all_passed = _check("F1 is handled", input_code.contains("KEY_F1"), true) and all_passed
+	# Both F1s funnel into the ONE dock method - plain F1 for "explain what is selected", Ctrl+F1
+	# for "take me back to the page I was reading".
 	all_passed = _check("F1 calls the same dock method",
-		input_code.contains("if key_event.keycode == KEY_F1:\n\t\t_dock.open_documentation()"), true) and all_passed
+		input_code.contains("_dock.open_documentation()"), true) and all_passed
+	all_passed = _check("and Ctrl+F1 calls it with the last page",
+		input_code.contains("_dock.open_documentation(_dock.last_read_doc_id())"), true) and all_passed
 	var dock_code: String = _read(DOCK_PATH)
 	all_passed = _check("the row item registers through the public seam",
 		dock_code.contains("EventSheets.register_row_menu_item(\"What does this do?\""), true) and all_passed

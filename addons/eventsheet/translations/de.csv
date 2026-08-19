@@ -2186,3 +2186,27 @@ The row you will get,"Die Zeile, die du bekommst"
 One per object - every copy of this object keeps its own.,Eine pro Objekt - jede Kopie dieses Objekts hat ihre eigene.
 Lives inside one event and is gone when it ends.,Lebt in einem Ereignis und ist danach weg.
 Set once and never changes while the game runs.,Einmal gesetzt und ändert sich im laufenden Spiel nie.
+Yes,Ja
+No,Nein
+Skip,Überspringen
+Start,Starten
+Carry on,Weitermachen
+Tutorials,Übungen
+What's new,Was ist neu
+Try it in a scratch sheet,In einem Notizblatt ausprobieren
+"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.","Öffnet dieses Beispiel in einem eigenen Notiz-Tab - bearbeitbar, nur im Speicher, nie in dein Projekt geschrieben."
+"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","Ein Notizblatt aus dem Handbuch. Es lebt nur im Speicher - ohne Speichern unter wird nichts in dein Projekt geschrieben, es schließt ohne Nachfrage und ist in der nächsten Sitzung weg."
+Was this page helpful?,War diese Seite hilfreich?
+"Thanks - noted on this machine, and sent nowhere.",Danke - auf diesem Rechner vermerkt und nirgendwohin gesendet.
+Noted on this machine. Report a problem opens the tracker if you want to say why.,"Auf diesem Rechner vermerkt. Problem melden öffnet den Tracker, falls du sagen möchtest, warum."
+Kept on this machine. Nothing is sent anywhere.,Bleibt auf diesem Rechner. Es wird nichts irgendwohin gesendet.
+Report a problem,Problem melden
+"Opens the project's issue tracker in your browser, with this page's name already in the title. It opens a page - it never sends one.","Öffnet den Issue-Tracker des Projekts im Browser, mit dem Namen dieser Seite bereits im Titel. Es öffnet eine Seite - es sendet nie eine."
+Smaller text in the Manual.,Kleinerer Text im Handbuch.
+Larger text in the Manual.,Größerer Text im Handbuch.
+This page is not translated yet - help translate it,"Diese Seite ist noch nicht übersetzt - hilf mit, sie zu übersetzen"
+Opens the page for the word this editor uses.,"Öffnet die Seite zu dem Wort, das dieser Editor verwendet."
+Every word that is spelled differently here.,"Jedes Wort, das hier anders heißt."
+"Opened a scratch sheet - in memory only, never written to your project.","Notizblatt geöffnet - nur im Speicher, nie in dein Projekt geschrieben."
+Open a sheet first - a scratch tab needs the event-sheet workspace.,Öffne zuerst ein Blatt - ein Notiz-Tab braucht den Ereignisblatt-Arbeitsbereich.
+"Scratch sheet - in memory only, never written to your project unless you Save As.","Notizblatt - nur im Speicher, ohne Speichern unter nie in dein Projekt geschrieben."

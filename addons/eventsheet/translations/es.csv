@@ -2186,3 +2186,27 @@ The row you will get,La fila que obtendrás
 One per object - every copy of this object keeps its own.,Una por objeto - cada copia de este objeto tiene la suya.
 Lives inside one event and is gone when it ends.,Vive dentro de un evento y desaparece al terminar.
 Set once and never changes while the game runs.,Se fija una vez y no cambia mientras el juego corre.
+Yes,Sí
+No,No
+Skip,Omitir
+Start,Empezar
+Carry on,Continuar
+Tutorials,Tutoriales
+What's new,Novedades
+Try it in a scratch sheet,Pruébalo en una hoja de borrador
+"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.","Abre este ejemplo en su propia pestaña de borrador: editable, en memoria y nunca escrita en tu proyecto."
+"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","Una hoja de borrador del Manual. Solo vive en memoria: no se escribe nada en tu proyecto salvo que uses Guardar como, se cierra sin preguntar y desaparece en la próxima sesión."
+Was this page helpful?,¿Te ha resultado útil esta página?
+"Thanks - noted on this machine, and sent nowhere.",Gracias: anotado en este equipo y no enviado a ninguna parte.
+Noted on this machine. Report a problem opens the tracker if you want to say why.,Anotado en este equipo. Informar de un problema abre el rastreador si quieres contar por qué.
+Kept on this machine. Nothing is sent anywhere.,Se guarda en este equipo. No se envía nada a ninguna parte.
+Report a problem,Informar de un problema
+"Opens the project's issue tracker in your browser, with this page's name already in the title. It opens a page - it never sends one.","Abre el rastreador de incidencias del proyecto en tu navegador, con el nombre de esta página ya en el título. Abre una página: nunca envía ninguna."
+Smaller text in the Manual.,Texto más pequeño en el Manual.
+Larger text in the Manual.,Texto más grande en el Manual.
+This page is not translated yet - help translate it,Esta página aún no está traducida: ayuda a traducirla
+Opens the page for the word this editor uses.,Abre la página de la palabra que usa este editor.
+Every word that is spelled differently here.,Todas las palabras que aquí se escriben de otra forma.
+"Opened a scratch sheet - in memory only, never written to your project.","Hoja de borrador abierta: solo en memoria, nunca escrita en tu proyecto."
+Open a sheet first - a scratch tab needs the event-sheet workspace.,Abre antes una hoja: una pestaña de borrador necesita el espacio de trabajo de hojas de eventos.
+"Scratch sheet - in memory only, never written to your project unless you Save As.","Hoja de borrador: solo en memoria, nunca escrita en tu proyecto salvo que uses Guardar como."

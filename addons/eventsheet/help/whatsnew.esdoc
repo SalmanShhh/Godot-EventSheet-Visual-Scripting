@@ -6,6 +6,41 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - the Manual you do rather than read: tutorials, scratch sheets, one reference shape, and What's new
+
+The Manual gains the half every event-sheet editor opens with, and loses the two things a reader
+kept having to leave it for.
+
+- **Tutorials, in the live editor, on a sheet nobody minds losing.** Manual ▸ Tutorials lists five:
+  *Your first event*, *Open your own script as a sheet*, *Add a behavior to an object*, *Make a
+  function and call it*, and *Coming from another event-sheet editor*. Each is a sequence of step
+  cards (\"Now add an action: press A or click Add Action ...\"), each step names a control the editor
+  really has and makes the real one **pulse** in the toolbar until it is used, and a step completes
+  on its own the moment the sheet contains what it asked for. Back / Skip / Next, and Next never
+  waits for the check - a step you did your own way is a step you can walk past. Where you got to is
+  remembered per tutorial, and the tour is step 0 of the first one.
+- **\"Try it in a scratch sheet\" on every example.** A figure's rows open in a tab of their own,
+  *Scratch - Wait For Signal*, editable, Reading mode off, in memory. Nothing is written to your
+  project unless you Save As, it closes without asking (it has nowhere to save to), and it is not
+  restored next session. The badge on the tab says which one it is.
+- **One shape for every reference page**: Properties, Conditions, Actions, Expressions, Triggers, in
+  that order, on every object, module and behavior - and every table is the row's own mark, its
+  name, what it takes and one line about it. A behavior's Properties are read off its own scripts,
+  so a knob renamed in the pack renames on the page.
+- **Manual ▸ What's new**: the release notes for the build you have installed, rendered as a page
+  inside the editor, with a dot on the Manual entry after an update until you open it.
+- **Wayfinding.** A search that finds nothing now says *Looking for layout? Here it is called Scene*
+  before the empty list, when the word is one the glossary knows. Every page ends with **Was this
+  page helpful? Yes / No** - kept on your machine and sent nowhere - and **Report a problem**, which
+  opens the project's issue tracker in your browser with the page named in the title and never
+  submits anything by itself. **A-** and **A+** set the Manual's text size, `/` focuses the search,
+  Esc gives the sheet its focus back, and Ctrl+F1 reopens the page you were last reading.
+- **The Manual in your language, page by page.** `docs/<locale>/` is walked by the bundle builder the
+  same way the addon and module guides are - a translated page ships by existing. An untranslated
+  page shows in English with a one-line *This page is not translated yet - help translate it* that
+  opens the folder a translation would go in. No machine translation. The figures on an English page
+  are already in your language, because they are real rows drawn by the real renderer.
+
 ### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words
 
 Four more families of everyday GDScript read as the rows they are. Display only: the file is

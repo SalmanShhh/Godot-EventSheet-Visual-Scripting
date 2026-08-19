@@ -51,6 +51,7 @@ const INDEX_SOURCE := "res://docs/README.md"
 ## listed: a directory that is not here is simply not part of the corpus (docs/internal/).
 const DOC_SETS := ["", "Addons", "Modules"]
 
+
 ## The whole corpus, plus the TRANSLATED sets: every `docs/<locale>/` folder a translator has
 ## started. Those are walked by directory the same way Addons/ and Modules/ are - a translated page
 ## ships by existing - but they are deliberately kept out of the TREE grouping below: a French page

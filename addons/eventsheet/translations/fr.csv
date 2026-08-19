@@ -2186,3 +2186,27 @@ The row you will get,La ligne que vous obtiendrez
 One per object - every copy of this object keeps its own.,Une par objet - chaque copie de cet objet garde la sienne.
 Lives inside one event and is gone when it ends.,Vit dans un seul événement et disparaît à la fin.
 Set once and never changes while the game runs.,Définie une fois et ne change jamais pendant le jeu.
+Yes,Oui
+No,Non
+Skip,Passer
+Start,Commencer
+Carry on,Continuer
+Tutorials,Tutoriels
+What's new,Nouveautés
+Try it in a scratch sheet,Essayer dans une feuille brouillon
+"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.","Ouvre cet exemple dans un onglet brouillon dédié - modifiable, en mémoire, jamais écrit dans votre projet."
+"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","Une feuille brouillon du Manuel. Elle ne vit qu'en mémoire : rien n'est écrit dans votre projet sauf si vous faites Enregistrer sous, elle se ferme sans rien demander et disparaît à la prochaine session."
+Was this page helpful?,Cette page vous a-t-elle été utile ?
+"Thanks - noted on this machine, and sent nowhere.","Merci - noté sur cette machine, et envoyé nulle part."
+Noted on this machine. Report a problem opens the tracker if you want to say why.,Noté sur cette machine. Signaler un problème ouvre le suivi si vous voulez dire pourquoi.
+Kept on this machine. Nothing is sent anywhere.,Conservé sur cette machine. Rien n'est envoyé nulle part.
+Report a problem,Signaler un problème
+"Opens the project's issue tracker in your browser, with this page's name already in the title. It opens a page - it never sends one.","Ouvre le suivi des problèmes du projet dans votre navigateur, avec le nom de cette page déjà dans le titre. Il ouvre une page - il n'en envoie jamais."
+Smaller text in the Manual.,Texte plus petit dans le Manuel.
+Larger text in the Manual.,Texte plus grand dans le Manuel.
+This page is not translated yet - help translate it,Cette page n'est pas encore traduite - aidez à la traduire
+Opens the page for the word this editor uses.,Ouvre la page du mot utilisé par cet éditeur.
+Every word that is spelled differently here.,Tous les mots qui s'écrivent autrement ici.
+"Opened a scratch sheet - in memory only, never written to your project.","Feuille brouillon ouverte - en mémoire seulement, jamais écrite dans votre projet."
+Open a sheet first - a scratch tab needs the event-sheet workspace.,Ouvrez d'abord une feuille - un onglet brouillon a besoin de l'espace de travail des feuilles d'événements.
+"Scratch sheet - in memory only, never written to your project unless you Save As.","Feuille brouillon - en mémoire seulement, jamais écrite dans votre projet sauf si vous faites Enregistrer sous."
