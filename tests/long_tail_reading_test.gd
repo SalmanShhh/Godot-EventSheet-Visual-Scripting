@@ -275,7 +275,27 @@ static func _grammar_values() -> bool:
 	ok = _check("two unrelated volumes are refused",
 		EventSheetSentence.crossfade_parts("music_a.volume_db = linear_to_db(0.5)",
 			"music_b.volume_db = linear_to_db(t)", context).is_empty(), true) and ok
+	# U11 - what a function's parameter chips say: the default a caller gets when it leaves the input
+	# out, the sheet's word for nothing, and the ellipsis that marks the input which swallows the rest.
+	ok = _check("a defaulted input says its default",
+		ViewportRowBuilder.verb_param_chip_text(_param("amount", "int", "10")), "amount = 10") and ok
+	ok = _check("a null default reads as the sheet's word for nothing",
+		ViewportRowBuilder.verb_param_chip_text(_param("source", "Node", "null")), "source = empty") and ok
+	ok = _check("an input with no default says only its name",
+		ViewportRowBuilder.verb_param_chip_text(_param("v", "int", "")), "v") and ok
+	ok = _check("a list named args wears the ellipsis",
+		ViewportRowBuilder.verb_param_chip_text(_param("args", "Array", "")), "args …") and ok
 	return ok
+
+
+## One parameter, as the function dialog would have built it.
+static func _param(param_id: String, type_name: String, default_value: String) -> ACEParam:
+	var param: ACEParam = ACEParam.new()
+	param.id = param_id
+	param.name = param_id
+	param.type_name = type_name
+	param.default_value = default_value
+	return param
 
 
 ## One condition reading as "object ▸ sentence", or the bare sentence when no object is named.
