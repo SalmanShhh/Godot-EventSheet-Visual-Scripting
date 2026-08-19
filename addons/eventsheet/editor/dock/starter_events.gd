@@ -1,0 +1,207 @@
+@tool
+class_name EventSheetStarterEvents
+extends RefCounted
+# STARTER EVENTS (V13) - the four events you were going to type anyway.
+#
+# A class knows its common events: a body is created, moves every physics tick, gets hit and dies; a
+# button is clicked; a timer times out; an area is collided with; an attached behaviour pack fires
+# its own triggers. Object bar ▸ right-click an object ▸ "Add common events…" adds them, each with
+# nothing in its action lane yet - the sheet's own "+ Add action" placeholder, ready for the Ghost
+# Row.
+#
+# DERIVED FIRST: every class's own signals ARE its starter events, read straight out of ClassDB, so
+# a class nobody listed still offers the right ones. The table below is an OVERRIDE list - the few
+# classes whose everyday events are a curated handful rather than "all of them", plus the two
+# lifecycle starters no signal list can know about. Nothing here invents a word: a starter's label
+# is the one the row will read with.
+#
+# Pure and static, so the whole mapping is testable without a dock: `starters_for` answers the list,
+# `build_event` turns one entry into the EventRow the sheet gets, and the dock does the undo step.
+
+## The lifecycle starters, by their Core trigger ids - what "the object was made" and "every physics
+## tick" are called everywhere else in the plugin.
+const TRIGGER_CREATED := "OnReady"
+const TRIGGER_PHYSICS_TICK := "OnPhysicsProcess"
+
+## The override list. A class here gets EXACTLY these starters instead of its derived signal list;
+## everything else derives. Entries are trigger ids: a `signal:<name>` id whose signal the class
+## does not declare is a signal the SHEET declares, and applying the starter declares it.
+const STARTER_OVERRIDES: Dictionary = {
+	"CharacterBody2D": [TRIGGER_CREATED, TRIGGER_PHYSICS_TICK, "signal:hit", "signal:died"],
+	"CharacterBody3D": [TRIGGER_CREATED, TRIGGER_PHYSICS_TICK, "signal:hit", "signal:died"],
+	"RigidBody2D": [TRIGGER_CREATED, "signal:body_entered"],
+	"RigidBody3D": [TRIGGER_CREATED, "signal:body_entered"],
+	"Area2D": ["signal:body_entered"],
+	"Area3D": ["signal:body_entered"],
+	"Button": ["signal:pressed"],
+	"CheckBox": ["signal:toggled"],
+	"Timer": ["signal:timeout"],
+	"AnimationPlayer": ["signal:animation_finished"],
+}
+
+## The words a starter reads with where the sheet already has one that no signal name can give.
+## Every other label is derived from the trigger itself.
+const STARTER_WORDS: Dictionary = {
+	"signal:pressed": "On clicked",
+	"signal:toggled": "On toggled",
+	"signal:timeout": "On timer",
+	"signal:body_entered": "On collision with",
+	"signal:hit": "On hit",
+	"signal:died": "On died",
+}
+
+## How many derived signals a class nobody curated offers before the list stops being a starter set
+## and becomes a directory.
+const DERIVED_LIMIT := 6
+
+
+## The starter events for one host class, plus a trigger per attached behaviour pack. Entries are
+## `{"trigger_provider_id", "trigger_id", "trigger_args", "label", "declares_signal"}` - everything
+## the dock needs to build the event and to say what it added.
+static func starters_for(host_class: String, pack_triggers: PackedStringArray = PackedStringArray()) -> Array:
+	var starters: Array = []
+	for trigger_id: String in _override_ids_for(host_class):
+		starters.append(entry_for(trigger_id, host_class))
+	if starters.is_empty():
+		starters.append(entry_for(TRIGGER_CREATED, host_class))
+		for trigger_id: String in derived_trigger_ids(host_class):
+			starters.append(entry_for(trigger_id, host_class))
+	for pack_trigger: String in pack_triggers:
+		var clean: String = pack_trigger.strip_edges()
+		if clean.is_empty():
+			continue
+		starters.append(entry_for(clean if clean.contains(":") else "signal:%s" % clean, host_class))
+	return starters
+
+
+## The curated list for the nearest class in `host_class`'s own inheritance chain that has one, so a
+## `Player extends CharacterBody2D` gets the body's starters rather than nothing.
+static func _override_ids_for(host_class: String) -> PackedStringArray:
+	var clean: String = host_class.strip_edges()
+	if clean.is_empty():
+		return PackedStringArray()
+	if STARTER_OVERRIDES.has(clean):
+		return PackedStringArray(STARTER_OVERRIDES[clean])
+	if not ClassDB.class_exists(clean):
+		return PackedStringArray()
+	var cursor: String = ClassDB.get_parent_class(clean)
+	while not cursor.is_empty():
+		if STARTER_OVERRIDES.has(cursor):
+			return PackedStringArray(STARTER_OVERRIDES[cursor])
+		cursor = ClassDB.get_parent_class(cursor)
+	return PackedStringArray()
+
+
+## A class's own signals, in ClassDB order - the derived starter set for everything nobody curated.
+static func derived_trigger_ids(host_class: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	var clean: String = host_class.strip_edges()
+	if clean.is_empty() or not ClassDB.class_exists(clean):
+		return out
+	for signal_info: Dictionary in ClassDB.class_get_signal_list(clean, true):
+		var signal_name: String = str(signal_info.get("name", "")).strip_edges()
+		if signal_name.is_empty():
+			continue
+		out.append("signal:%s" % signal_name)
+		if out.size() >= DERIVED_LIMIT:
+			break
+	return out
+
+
+## One starter entry from a trigger id. A `signal:<name>` whose signal the host class already
+## declares rides the engine's own trigger; one it does not is a signal this sheet declares, and
+## `declares_signal` names it so applying the starter declares it too.
+static func entry_for(trigger_id: String, host_class: String = "") -> Dictionary:
+	var clean: String = trigger_id.strip_edges()
+	var entry: Dictionary = {
+		"trigger_provider_id": "Core",
+		"trigger_id": clean,
+		"trigger_args": "",
+		"label": "",
+		"declares_signal": "",
+	}
+	if clean.begins_with("signal:"):
+		var signal_name: String = clean.trim_prefix("signal:")
+		var native: Dictionary = _native_signal(host_class, signal_name)
+		if EventSheetACELifter.CORE_SIGNAL_TRIGGERS.has(signal_name):
+			entry["trigger_id"] = str(EventSheetACELifter.CORE_SIGNAL_TRIGGERS[signal_name])
+		else:
+			entry["trigger_provider_id"] = ""
+			entry["trigger_args"] = _args_signature(native)
+			if native.is_empty():
+				entry["declares_signal"] = signal_name
+	entry["label"] = label_for(clean, str(entry["trigger_id"]), str(entry["trigger_provider_id"]))
+	return entry
+
+
+## The words one starter reads with: the sheet's own word where it has one, then the trigger's own
+## display name, then the signal's name read as a sentence.
+static func label_for(requested_id: String, trigger_id: String, provider_id: String) -> String:
+	if STARTER_WORDS.has(requested_id):
+		return EventSheetL10n.translate(str(STARTER_WORDS[requested_id]))
+	var probe: EventRow = EventRow.new()
+	probe.trigger_provider_id = provider_id
+	probe.trigger_id = trigger_id
+	return EventSheetArrangement.trigger_words(probe)
+
+
+## The EventRow one starter entry adds - a trigger and an empty action lane, which is exactly the
+## sheet's own "+ Add action" placeholder.
+static func build_event(entry: Dictionary) -> EventRow:
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = str(entry.get("trigger_provider_id", "Core"))
+	event.trigger_id = str(entry.get("trigger_id", ""))
+	event.trigger_args = str(entry.get("trigger_args", ""))
+	return event
+
+
+## The signals a starter set needs the sheet to declare, minus the ones it already declares. One
+## SignalRow each, in the order the starters name them.
+static func missing_signal_rows(starters: Array, sheet: EventSheetResource) -> Array:
+	var declared: Dictionary = {}
+	if sheet != null:
+		for row: Variant in sheet.events:
+			if row is SignalRow:
+				declared[str((row as SignalRow).signal_name)] = true
+	var rows: Array = []
+	for entry: Variant in starters:
+		var signal_name: String = str((entry as Dictionary).get("declares_signal", "")).strip_edges()
+		if signal_name.is_empty() or declared.has(signal_name):
+			continue
+		declared[signal_name] = true
+		var declaration: SignalRow = SignalRow.new()
+		declaration.signal_name = signal_name
+		rows.append(declaration)
+	return rows
+
+
+## `{"name": ..., "args": [...]}` for a signal the host class itself declares, or {} when the class
+## does not have one by that name (which is what makes it a signal the sheet declares).
+static func _native_signal(host_class: String, signal_name: String) -> Dictionary:
+	var clean: String = host_class.strip_edges()
+	if clean.is_empty() or not ClassDB.class_exists(clean):
+		return {}
+	for signal_info: Dictionary in ClassDB.class_get_signal_list(clean, false):
+		if str(signal_info.get("name", "")) == signal_name:
+			return signal_info
+	return {}
+
+
+## The baked handler signature a `signal:` trigger carries ("body: Node2D"), read off the signal's
+## own argument list so the handler's parameters are the ones the engine will send.
+static func _args_signature(signal_info: Dictionary) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for argument: Variant in signal_info.get("args", []):
+		var argument_info: Dictionary = argument
+		var argument_name: String = str(argument_info.get("name", ""))
+		if argument_name.is_empty():
+			continue
+		var argument_class: String = str(argument_info.get("class_name", "")).strip_edges()
+		var argument_type: int = int(argument_info.get("type", TYPE_NIL))
+		if not argument_class.is_empty():
+			parts.append("%s: %s" % [argument_name, argument_class])
+		elif argument_type != TYPE_NIL:
+			parts.append("%s: %s" % [argument_name, type_string(argument_type)])
+		else:
+			parts.append(argument_name)
+	return ", ".join(parts)

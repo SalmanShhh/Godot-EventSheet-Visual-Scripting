@@ -2574,7 +2574,7 @@ tiles read and written by position,тайлы читаются и пишутся
 "an event with no condition of its own, so it runs every tick","событие без собственного условия, поэтому идёт каждый тик"
 1 pattern,1 шаблон
 %d patterns,шаблонов: %d
-%d adoptable,из них заменяемых: %d
+%d adoptable,заменяемых: %d
 Open in the Manual,Открыть в Руководстве
 read as the %s pattern,прочитано как шаблон %s
 read as the %s pattern because,"прочитано как шаблон %s, потому что"
@@ -2977,3 +2977,68 @@ Writes a data asset back to a file. An editor tool uses this to generate or bulk
 Asset,Ресурс
 The data asset to write out.,"Ресурс данных, который нужно записать."
 Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,Куда записать. Запись в res:// работает только в редакторе; работающая игра пишет в user://.
+Arrange by,Упорядочить по
+Saved Views,Сохранённые виды
+Save Current View…,Сохранить текущий вид…
+Forget %s,Забыть %s
+File order,Порядок в файле
+1 event,1 событие
+Reading in file order.,Чтение в порядке файла.
+Arranged by %s. The file is unchanged.,Упорядочено по %s. Файл не изменён.
+No saved view by that name.,Вида с таким именем нет.
+View: %s,Вид: %s
+Save View,Сохранить вид
+Name this way of reading the sheet…,Назовите этот способ чтения листа…
+Saved the view %s.,Вид %s сохранён.
+A view needs a name.,Виду нужно имя.
+Forgot the view %s.,Вид %s забыт.
+Add common events…,Добавить обычные события…
+Duplicate events for…,Продублировать события для…
+On clicked,При нажатии
+On toggled,При переключении
+On timer,По таймеру
+On hit,При попадании
+On died,При смерти
+No common events are known for %s.,Для %s обычные события неизвестны.
+Added %s.,Добавлено: %s.
+Duplicate Events For,Продублировать события для
+Name at least one object to duplicate for.,Укажите хотя бы один объект для дублирования.
+No events name %s.,Ни одно событие не называет %s.
+Duplicated %d event(s).,Продублировано событий: %d.
+Show Events in the Scene,Показывать события в сцене
+Events in the scene: on,События в сцене: вкл
+Events in the scene: off,События в сцене: выкл
+Workspaces,Рабочие наборы
+No workspaces yet,Пока нет рабочих наборов
+Open its sheets,Открыть её листы
+That scene has no sheets to open.,В этой сцене нечего открывать.
+That workspace has nothing left to open.,В этом наборе больше нечего открывать.
+Forgot the workspace %s.,Рабочий набор %s забыт.
+Workspace %s: %d sheet(s).,Рабочий набор %s: листов - %d.
+Export,Экспорт
+Image (PNG)…,Изображение (PNG)…
+PDF…,PDF…
+Markdown with figures…,Markdown с рисунками…
+Open a sheet first.,Сначала откройте лист.
+Rendering the sheet…,Отрисовка листа…
+The sheet could not be rendered here.,Здесь лист отрисовать не удалось.
+Could not write %s.,Не удалось записать %s.
+Exported %d page(s) to %s.,Экспортировано страниц: %d в %s.
+Exported %s with %d figure(s).,Экспортировано %s с рисунками: %d.
+Exported the sheet to %s.,Лист экспортирован в %s.
+Export the sheet as a PDF,Экспортировать лист в PDF
+Export the sheet as an image,Экспортировать лист в изображение
+Export the sheet as Markdown with figures,Экспортировать лист в Markdown с рисунками
+Health…,Состояние…
+reads as events %d%%,читается событиями на %d%%
+Doctor %d errors,Доктор: ошибок - %d
+%d notes,заметок: %d
+tests: none yet,тесты: пока нет
+tests: %d Test Sheets,тесты: тестовых листов - %d
+last run green,последний прогон зелёный
+last run failed,последний прогон провалился
+never run,ни разу не запускались
+unused: nothing,не используется: ничего
+unused: 1 thing,не используется: 1
+unused: %d things,не используется: %d
+Sheet Health,Состояние листа

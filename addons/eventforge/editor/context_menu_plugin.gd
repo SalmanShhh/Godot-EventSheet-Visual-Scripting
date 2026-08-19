@@ -19,6 +19,7 @@ var attach_sheet: Callable = Callable()  # Callable(node: Node)
 var goto_row: Callable = Callable()      # Callable(script_path: String)
 var create_sheet: Callable = Callable()  # Callable(directory: String)
 var connect_signal: Callable = Callable()  # Callable(node: Node)
+var open_workspace: Callable = Callable()  # Callable(scene_path: String)
 
 
 func _popup_menu(paths: PackedStringArray) -> void:
@@ -35,6 +36,10 @@ func _popup_menu(paths: PackedStringArray) -> void:
 			# easy to spot among Godot's native file actions.
 			if should_offer_open_as_sheet(slot, paths):
 				add_context_menu_item("Open as Event Sheet", _on_open_requested, _open_as_sheet_icon())
+			# V15 - a scene is a unit of work, not one file: "Open its sheets" opens the whole
+			# layout and every script in it as one named tab group.
+			if should_offer_open_workspace(slot, paths):
+				add_context_menu_item("Open its sheets", _on_open_workspace_requested, _open_as_sheet_icon())
 		EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM_CREATE:
 			# The FileSystem "Create New >" submenu: sit "Event Sheet..." beside the native
 			# Folder/Scene/Script/Resource/TextFile entries. The ellipsis matches the siblings
@@ -119,6 +124,29 @@ func _on_connect_signal_requested(targets: Variant) -> void:
 func _on_create_sheet_requested(targets: Variant) -> void:
 	if create_sheet.is_valid():
 		create_sheet.call(directory_from_targets(targets))
+
+
+## V15 - "Open its sheets" on a scene. Only ever one scene at a time: a workspace is named after
+## the scene it opens, so two scenes are two gestures.
+func _on_open_workspace_requested(targets: Variant) -> void:
+	if not open_workspace.is_valid() or not (targets is PackedStringArray):
+		return
+	for path: String in (targets as PackedStringArray):
+		if path.get_extension().to_lower() == "tscn":
+			open_workspace.call(path)
+			return
+
+
+## True when this slot + paths should offer "Open its sheets": the FileSystem, and a scene among
+## the selection. Pure + static so the decision is unit-testable without instantiating this
+## editor-only plugin.
+static func should_offer_open_workspace(menu_slot: int, paths: PackedStringArray) -> bool:
+	if menu_slot != EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM:
+		return false
+	for path: String in paths:
+		if path.get_extension().to_lower() == "tscn":
+			return true
+	return false
 
 
 ## Slot payloads differ (FileSystem sends paths, the script editor sends Script

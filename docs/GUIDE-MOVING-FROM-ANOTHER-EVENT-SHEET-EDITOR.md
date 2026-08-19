@@ -397,6 +397,43 @@ i18n (Godot translations).
   functions as a click-to-jump tree.
 
   ![View then Outline: regions, nested groups and published functions as one click-to-jump tree](images/outline-panel.png)
+- **View > Arrange by** reads the same sheet four ways: **File order** (the untouched one),
+  **Object**, **Trigger** or **Group**. The events are re-grouped under one header each - `Player`
+  / `Enemy` / `HUD`, or `On created` / `Every tick (physics)` / `On hit` - and they stay editable
+  in place and keep their numbers, because arranging is a way of READING: the file is never
+  reordered, the generated GDScript cannot move, and the byte round-trip is untouched. The
+  breadcrumb names the header you are scrolled inside and the Outline becomes the same
+  arrangement. **View > Saved Views** keeps an arrangement, the filter and the reading lenses under
+  one name and puts all three back in a click.
+
+  ![The same sheet arranged by Object: one folder per object with its event count, the events still numbered and editable inside](images/arrange-by-object.png)
+- **Right-click an object in the Object bar > Add common events…** gives you the four events you
+  were about to type: a `CharacterBody2D` starts with `On created`, `Every tick (physics)`, `On
+  hit` and `On died`, a `Button` with `On clicked`, a `Timer` with `On timer`, an `Area2D` with `On
+  collision with`, and an attached behaviour pack adds its own triggers. Each event arrives with an
+  empty action lane - the sheet's own `+ Add action` waiting for you. A starter naming a signal the
+  class does not have makes the sheet declare that signal too, so the trigger you read is one the
+  file really has. **Duplicate events for…** on the same menu copies every event that names one
+  object, once per object you list, with the reference swapped on each copy.
+- **View > Show Events in the Scene** marks every node whose script is a sheet with a small `⌗` and
+  its event count, in the Scene dock and beside the node in the 2D editor, with its triggers on
+  hover. Nodes with no events are unmarked, and it is off until you ask for it.
+
+  <img src="images/events-overlay-badge.png" alt="A scene tree with a hash badge and an event count beside Player, Enemy and HUD, and nothing beside Background." width="400">
+- **A scene opens as one workspace.** Right-click a scene in the FileSystem > **Open its sheets**
+  opens the whole layout and every script in it, in tree order, as one tab group named after the
+  scene. **Sheet > Workspaces** opens a remembered one again. The unit of work is the scene, so it
+  opens as one thing rather than as five openings.
+- **Sheet > Export** writes the whole sheet as an **Image (PNG)**, a **PDF** (that image split into
+  pages), or **Markdown with figures** (the plain listing plus a figure per group) - in the current
+  theme, density and lenses, with the event numbers on. For a forum post, a design doc, or a
+  lesson.
+- **Sheet > Health…** is one card: how much of the sheet reads as events, its patterns and how many
+  of them a shipped behavior could take over, what the Doctor says about this sheet, its Test
+  Sheets and how they last went, and how much of it nothing uses. Every line opens the panel it
+  came from.
+
+  <img src="images/sheet-health-card.png" alt="The health card for player.gd: reads as events 100% with 4 patterns and 2 adoptable, Doctor 0 errors and 2 notes, 3 Test Sheets with the last run green, and 1 unused thing." width="450">
 - **Your open tabs come back**: the session (tabs + active sheet) restores on editor
   restart, like C3 reopening your workspace.
 - Double-click empty space to add an event; right-click for context actions.

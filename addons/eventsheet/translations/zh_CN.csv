@@ -2574,7 +2574,7 @@ tiles read and written by position,按位置读写瓦片
 "an event with no condition of its own, so it runs every tick",没有自己条件的事件，因此每帧都运行
 1 pattern,1 个模式
 %d patterns,%d 个模式
-%d adoptable,其中 %d 个可替换
+%d adoptable,%d 个可替换
 Open in the Manual,在手册中打开
 read as the %s pattern,读作 %s 模式
 read as the %s pattern because,读作 %s 模式的依据
@@ -2977,3 +2977,68 @@ Writes a data asset back to a file. An editor tool uses this to generate or bulk
 Asset,资源
 The data asset to write out.,要写出的数据资源。
 Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,写到哪里。写入 res:// 只在编辑器中有效；运行中的游戏写入 user://。
+Arrange by,排列方式
+Saved Views,已保存的视图
+Save Current View…,保存当前视图…
+Forget %s,忘记 %s
+File order,文件顺序
+1 event,1 个事件
+Reading in file order.,按文件顺序阅读。
+Arranged by %s. The file is unchanged.,已按 %s 排列。文件未改动。
+No saved view by that name.,没有这个名字的视图。
+View: %s,视图：%s
+Save View,保存视图
+Name this way of reading the sheet…,为这种阅读方式命名…
+Saved the view %s.,已保存视图 %s。
+A view needs a name.,视图需要一个名字。
+Forgot the view %s.,已忘记视图 %s。
+Add common events…,添加常用事件…
+Duplicate events for…,为其他对象复制事件…
+On clicked,被点击时
+On toggled,被切换时
+On timer,计时结束时
+On hit,被击中时
+On died,死亡时
+No common events are known for %s.,不知道 %s 的常用事件。
+Added %s.,已添加 %s。
+Duplicate Events For,为其他对象复制事件
+Name at least one object to duplicate for.,请至少指定一个要复制到的对象。
+No events name %s.,没有事件提到 %s。
+Duplicated %d event(s).,已复制 %d 个事件。
+Show Events in the Scene,在场景中显示事件
+Events in the scene: on,场景中的事件：开
+Events in the scene: off,场景中的事件：关
+Workspaces,工作区
+No workspaces yet,还没有工作区
+Open its sheets,打开它的事件表
+That scene has no sheets to open.,该场景没有可打开的事件表。
+That workspace has nothing left to open.,该工作区已没有可打开的内容。
+Forgot the workspace %s.,已忘记工作区 %s。
+Workspace %s: %d sheet(s).,工作区 %s：%d 个事件表。
+Export,导出
+Image (PNG)…,图片 (PNG)…
+PDF…,PDF…
+Markdown with figures…,带插图的 Markdown…
+Open a sheet first.,请先打开一个事件表。
+Rendering the sheet…,正在绘制事件表…
+The sheet could not be rendered here.,此处无法绘制事件表。
+Could not write %s.,无法写入 %s。
+Exported %d page(s) to %s.,已将 %d 页导出到 %s。
+Exported %s with %d figure(s).,已导出 %s，含 %d 张插图。
+Exported the sheet to %s.,已将事件表导出到 %s。
+Export the sheet as a PDF,将事件表导出为 PDF
+Export the sheet as an image,将事件表导出为图片
+Export the sheet as Markdown with figures,将事件表导出为带插图的 Markdown
+Health…,健康状况…
+reads as events %d%%,%d%% 读作事件
+Doctor %d errors,医生：%d 个错误
+%d notes,%d 条提示
+tests: none yet,测试：还没有
+tests: %d Test Sheets,测试：%d 个测试表
+last run green,上次运行通过
+last run failed,上次运行失败
+never run,从未运行
+unused: nothing,未使用：无
+unused: 1 thing,未使用：1 项
+unused: %d things,未使用：%d 项
+Sheet Health,事件表健康状况

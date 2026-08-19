@@ -1598,6 +1598,44 @@ static func _event_number_owning(entries: Array, target: Resource, numbers: Dict
 var _lens_query: String = ""
 var _lens_hidden_count: int = 0
 
+# ── V12. Arrange by (view-only; applied in _build_rows_from_sheet) ────────────────────────────
+# 0 is file order - the untouched reading, and the default every sheet opens in.
+var arrangement_mode: int = 0
+
+
+## V16 - where each top-level group (a real one, or an Arrange-by header) starts and ends on the
+## canvas: `[{"title": String, "from": int, "to": int}]` in canvas pixels, top to bottom. What "a
+## figure per group" means when a sheet is exported as Markdown. Empty when the sheet has no groups
+## at all, which is the caller's cue that the sheet IS one figure.
+func group_row_bands() -> Array:
+	var bands: Array = []
+	for row_index: int in _flat_rows.size():
+		var row_data: EventRowData = (_flat_rows[row_index] as Dictionary).get("row")
+		if row_data == null or row_data.indent != 0 or row_data.row_type != EventRowData.RowType.GROUP:
+			continue
+		var title: String = ""
+		if row_data.source_resource is EventGroup:
+			title = _group_name(row_data.source_resource as EventGroup)
+		else:
+			title = ViewportGroupBreadcrumb.header_title_of(row_data)
+		if title.is_empty():
+			continue
+		if not bands.is_empty():
+			(bands[bands.size() - 1] as Dictionary)["to"] = int(_row_metrics_helper.row_top(row_index))
+		bands.append({"title": title, "from": int(_row_metrics_helper.row_top(row_index)),
+			"to": int(_row_metrics_helper.total_height())})
+	return bands
+
+
+## Re-reads the sheet under `mode` (an EventSheetArrangement mode). Display only: the sheet, the
+## emitted GDScript and the byte round-trip are untouched, and the events keep their numbers.
+func set_arrangement_mode(mode: int) -> void:
+	if arrangement_mode == mode:
+		return
+	arrangement_mode = mode
+	_refresh_rows()
+	queue_redraw()
+
 
 ## Applies (or with "" clears) the live filter lens: only top-level rows whose subtree
 ## mentions the term stay visible. View-layer only - the sheet is never mutated.
@@ -2320,6 +2358,9 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# A read-only preview gathers the pack's unpublished helpers under one closed "Helpers" bar, after
 	# the last published verb - the vocabulary reads first, the plumbing folds away. Pure view.
 	root_rows = _row_builder.group_helper_verb_rows(root_rows, sheet)
+	# V12: the same events, re-grouped under headers by object / trigger / group. Display only - the
+	# events array keeps its order, the file is never rewritten, and every event keeps its number.
+	root_rows = _row_builder.arrange_rows(root_rows, sheet, arrangement_mode)
 	# Verbs open by default; this re-folds only the ones the fence pairing just moved inside a #region
 	# (or that sit inside a group), where the enclosing block owns the fold.
 	_row_builder.fold_nested_verb_rows(root_rows)

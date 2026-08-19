@@ -2977,3 +2977,68 @@ Writes a data asset back to a file. An editor tool uses this to generate or bulk
 Asset,에셋
 The data asset to write out.,내보낼 데이터 에셋.
 Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,"어디에 쓸지. res:// 아래 쓰기는 에디터에서만 동작하며, 실행 중인 게임은 user://에 씁니다."
+Arrange by,정렬 기준
+Saved Views,저장된 보기
+Save Current View…,현재 보기 저장…
+Forget %s,%s 잊기
+File order,파일 순서
+1 event,이벤트 1개
+Reading in file order.,파일 순서로 읽는 중입니다.
+Arranged by %s. The file is unchanged.,%s 기준으로 정렬했습니다. 파일은 그대로입니다.
+No saved view by that name.,그 이름의 보기가 없습니다.
+View: %s,보기: %s
+Save View,보기 저장
+Name this way of reading the sheet…,시트를 읽는 이 방식에 이름을 붙이세요…
+Saved the view %s.,보기 %s 을(를) 저장했습니다.
+A view needs a name.,보기에는 이름이 필요합니다.
+Forgot the view %s.,보기 %s 을(를) 잊었습니다.
+Add common events…,자주 쓰는 이벤트 추가…
+Duplicate events for…,이벤트를 복제할 대상…
+On clicked,클릭했을 때
+On toggled,전환되었을 때
+On timer,타이머가 끝났을 때
+On hit,맞았을 때
+On died,죽었을 때
+No common events are known for %s.,%s 에 대해 알려진 일반 이벤트가 없습니다.
+Added %s.,%s 을(를) 추가했습니다.
+Duplicate Events For,이벤트를 복제할 대상
+Name at least one object to duplicate for.,복제할 대상을 하나 이상 지정하세요.
+No events name %s.,%s 을(를) 가리키는 이벤트가 없습니다.
+Duplicated %d event(s).,이벤트 %d개를 복제했습니다.
+Show Events in the Scene,장면에 이벤트 표시
+Events in the scene: on,장면의 이벤트: 켜짐
+Events in the scene: off,장면의 이벤트: 꺼짐
+Workspaces,작업 공간
+No workspaces yet,아직 작업 공간이 없습니다
+Open its sheets,그 시트들을 열기
+That scene has no sheets to open.,그 장면에는 열 시트가 없습니다.
+That workspace has nothing left to open.,그 작업 공간에는 더 열 것이 없습니다.
+Forgot the workspace %s.,작업 공간 %s 을(를) 잊었습니다.
+Workspace %s: %d sheet(s).,작업 공간 %s: 시트 %d개.
+Export,내보내기
+Image (PNG)…,이미지 (PNG)…
+PDF…,PDF…
+Markdown with figures…,그림이 있는 Markdown…
+Open a sheet first.,먼저 시트를 여세요.
+Rendering the sheet…,시트를 그리는 중…
+The sheet could not be rendered here.,여기에서는 시트를 그릴 수 없었습니다.
+Could not write %s.,%s 을(를) 쓸 수 없었습니다.
+Exported %d page(s) to %s.,%d 페이지를 %s 로 내보냈습니다.
+Exported %s with %d figure(s).,%s 을(를) 그림 %d개와 함께 내보냈습니다.
+Exported the sheet to %s.,시트를 %s 로 내보냈습니다.
+Export the sheet as a PDF,시트를 PDF 로 내보내기
+Export the sheet as an image,시트를 이미지로 내보내기
+Export the sheet as Markdown with figures,시트를 그림이 있는 Markdown 으로 내보내기
+Health…,상태…
+reads as events %d%%,%d%% 가 이벤트로 읽힘
+Doctor %d errors,닥터: 오류 %d개
+%d notes,참고 %d개
+tests: none yet,테스트: 아직 없음
+tests: %d Test Sheets,테스트: 테스트 시트 %d개
+last run green,지난 실행은 통과
+last run failed,지난 실행은 실패
+never run,실행한 적 없음
+unused: nothing,미사용: 없음
+unused: 1 thing,미사용: 1개
+unused: %d things,미사용: %d개
+Sheet Health,시트 상태

@@ -76,9 +76,16 @@ func draw(width: float, font: Font, font_size: int) -> void:
 	var titles: PackedStringArray = PackedStringArray()
 	for group_index: int in chain:
 		var row_data: EventRowData = (_viewport._flat_rows[group_index] as Dictionary).get("row")
-		if row_data == null or not (row_data.source_resource is EventGroup):
+		if row_data == null:
 			continue
-		titles.append(_viewport._group_name(row_data.source_resource as EventGroup))
+		if row_data.source_resource is EventGroup:
+			titles.append(_viewport._group_name(row_data.source_resource as EventGroup))
+			continue
+		# V12: an Arrange-by header is a group as far as reading goes - it holds events and the
+		# reader is inside it - so the breadcrumb names it too, from its own drawn title.
+		var header_title: String = header_title_of(row_data)
+		if not header_title.is_empty():
+			titles.append(header_title)
 	if titles.is_empty():
 		return
 	_jump_index = chain[chain.size() - 1]
@@ -122,3 +129,17 @@ func _ensure_map() -> void:
 			"indent": row_data.indent if row_data != null else 0,
 		})
 	_map = enclosing_map(shape)
+
+
+## The title a synthetic header row (an Arrange-by bucket) reads with: its first drawn span, and
+## only when the row genuinely stands for no resource - a real group answers through EventGroup.
+static func header_title_of(row_data: EventRowData) -> String:
+	if row_data.source_resource != null or row_data.row_type != EventRowData.RowType.GROUP:
+		return ""
+	if not row_data.row_uid.begins_with("arrange_"):
+		return ""
+	for span: Variant in row_data.spans:
+		var typed: SemanticSpan = span as SemanticSpan
+		if typed != null and not str(typed.text).strip_edges().is_empty():
+			return str(typed.text).strip_edges()
+	return ""

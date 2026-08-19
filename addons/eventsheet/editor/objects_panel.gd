@@ -40,6 +40,12 @@ signal object_behavior_requested(object_label: String)
 ## Right-click > Open its script as a sheet.
 signal object_script_requested(object_label: String)
 
+## V13. Right-click > Add common events… - the starter events this object's class is usually given.
+signal object_starter_events_requested(object_label: String)
+
+## V13. Right-click > Duplicate events for… - this object's events, copied for other objects.
+signal object_duplicate_events_requested(object_label: String)
+
 const _META_KEY: String = "eventsheets_objects_panel"
 
 ## The drag payload a bar entry hands the canvas. Named so the viewport can recognise it without
@@ -733,6 +739,10 @@ func _ensure_menu() -> void:
 	_menu = PopupMenu.new()
 	_menu.add_item(EventSheetL10n.translate("Add condition"), 0)
 	_menu.add_item(EventSheetL10n.translate("Add action"), 1)
+	# V13: the events this object's class is usually given, and this object's events copied for
+	# other objects - both start from what is already on the sheet, so they sit with the add items.
+	_menu.add_item(EventSheetL10n.translate("Add common events…"), 5)
+	_menu.add_item(EventSheetL10n.translate("Duplicate events for…"), 6)
 	_menu.add_separator()
 	_menu.add_item(EventSheetL10n.translate("Add behavior…"), 4)
 	_menu.add_separator()
@@ -754,6 +764,10 @@ func _on_menu_id(id: int) -> void:
 			object_script_requested.emit(_menu_label)
 		4:
 			object_behavior_requested.emit(_menu_label)
+		5:
+			object_starter_events_requested.emit(_menu_label)
+		6:
+			object_duplicate_events_requested.emit(_menu_label)
 
 
 func _on_filter_changed(text: String) -> void:

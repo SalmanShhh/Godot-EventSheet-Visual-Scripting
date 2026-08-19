@@ -2977,3 +2977,68 @@ Writes a data asset back to a file. An editor tool uses this to generate or bulk
 Asset,Risorsa
 The data asset to write out.,La risorsa dati da scrivere.
 Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,Dove scriverlo. Scrivere sotto res:// funziona solo nell'editor; un gioco in esecuzione scrive in user://.
+Arrange by,Ordina per
+Saved Views,Viste salvate
+Save Current View…,Salva la vista attuale…
+Forget %s,Dimentica %s
+File order,Ordine del file
+1 event,1 evento
+Reading in file order.,Lettura nell'ordine del file.
+Arranged by %s. The file is unchanged.,Ordinato per %s. Il file non cambia.
+No saved view by that name.,Nessuna vista salvata con quel nome.
+View: %s,Vista: %s
+Save View,Salva la vista
+Name this way of reading the sheet…,Dai un nome a questo modo di leggere il foglio…
+Saved the view %s.,Vista %s salvata.
+A view needs a name.,Una vista ha bisogno di un nome.
+Forgot the view %s.,Vista %s dimenticata.
+Add common events…,Aggiungi gli eventi consueti…
+Duplicate events for…,Duplica gli eventi per…
+On clicked,Al clic
+On toggled,Al cambio
+On timer,Alla fine del timer
+On hit,Quando colpito
+On died,Alla morte
+No common events are known for %s.,Nessun evento consueto noto per %s.
+Added %s.,%s aggiunto.
+Duplicate Events For,Duplica gli eventi per
+Name at least one object to duplicate for.,Indica almeno un oggetto per cui duplicare.
+No events name %s.,Nessun evento nomina %s.
+Duplicated %d event(s).,%d evento/i duplicato/i.
+Show Events in the Scene,Mostra gli eventi nella scena
+Events in the scene: on,Eventi nella scena: attivi
+Events in the scene: off,Eventi nella scena: spenti
+Workspaces,Spazi di lavoro
+No workspaces yet,Ancora nessuno spazio di lavoro
+Open its sheets,Apri i suoi fogli
+That scene has no sheets to open.,Quella scena non ha fogli da aprire.
+That workspace has nothing left to open.,In quello spazio di lavoro non resta nulla da aprire.
+Forgot the workspace %s.,Spazio di lavoro %s dimenticato.
+Workspace %s: %d sheet(s).,Spazio di lavoro %s: %d foglio/i.
+Export,Esporta
+Image (PNG)…,Immagine (PNG)…
+PDF…,PDF…
+Markdown with figures…,Markdown con figure…
+Open a sheet first.,Apri prima un foglio.
+Rendering the sheet…,Disegno del foglio…
+The sheet could not be rendered here.,Il foglio non ha potuto essere disegnato qui.
+Could not write %s.,Impossibile scrivere %s.
+Exported %d page(s) to %s.,%d pagina/e esportata/e in %s.
+Exported %s with %d figure(s).,%s esportato con %d figura/e.
+Exported the sheet to %s.,Foglio esportato in %s.
+Export the sheet as a PDF,Esporta il foglio come PDF
+Export the sheet as an image,Esporta il foglio come immagine
+Export the sheet as Markdown with figures,Esporta il foglio come Markdown con figure
+Health…,Stato…
+reads as events %d%%,si legge come eventi al %d%%
+Doctor %d errors,Dottore: %d errori
+%d notes,%d note
+tests: none yet,test: ancora nessuno
+tests: %d Test Sheets,test: %d fogli di test
+last run green,ultima esecuzione verde
+last run failed,ultima esecuzione fallita
+never run,mai eseguiti
+unused: nothing,inutilizzato: niente
+unused: 1 thing,inutilizzato: 1 cosa
+unused: %d things,inutilizzato: %d cose
+Sheet Health,Stato del foglio

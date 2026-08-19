@@ -621,6 +621,120 @@ func build(root: Node) -> void:
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9701:
 			_open_run_tests())
+	# ── V12: Arrange by… + Saved Views (appended block - keep together) ────────────────────────
+	# Two submenus on View, wired the explicit way (a named child PopupMenu plus add_submenu_item
+	# with its OWN id) - never an id-less add_submenu_item. Both rebuild on open, so the
+	# arrangement radio always shows the live one and a view saved a second ago is already listed.
+	# Ids 9801/9802 are clear of every block above; each handler ignores the ids it does not own.
+	var arrange_menu: PopupMenu = PopupMenu.new()
+	arrange_menu.name = "EventSheetArrangeMenu"
+	view_popup.add_child(arrange_menu)
+	view_popup.add_submenu_item("Arrange by", "EventSheetArrangeMenu", 9801)
+	view_popup.set_item_tooltip(view_popup.get_item_index(9801),
+		"Read the same events re-grouped under headers - by the object they talk about, by the trigger they hang off, or by the group they sit in. Display only: the file is never reordered and every event keeps its number.")
+	arrange_menu.about_to_popup.connect(func() -> void:
+		arrange_menu.clear()
+		var active_mode: int = _dock.arrangement_mode()
+		for mode: int in EventSheetArrangement.MODE_IDS.size():
+			arrange_menu.add_radio_check_item(EventSheetL10n.translate(EventSheetArrangement.mode_label(mode)), mode)
+			arrange_menu.set_item_checked(mode, mode == active_mode))
+	arrange_menu.id_pressed.connect(func(mode: int) -> void: _dock.set_arrangement_mode(mode))
+	var views_menu: PopupMenu = PopupMenu.new()
+	views_menu.name = "EventSheetSavedViewsMenu"
+	view_popup.add_child(views_menu)
+	view_popup.add_submenu_item("Saved Views", "EventSheetSavedViewsMenu", 9802)
+	view_popup.set_item_tooltip(view_popup.get_item_index(9802),
+		"A named way of reading this sheet - its arrangement, its filter and its reading lenses saved together, and put back in one click.")
+	views_menu.about_to_popup.connect(func() -> void:
+		views_menu.clear()
+		views_menu.add_item(EventSheetL10n.translate("Save Current View…"), 0)
+		var names: PackedStringArray = EventSheetSavedViews.view_names()
+		if names.is_empty():
+			return
+		views_menu.add_separator()
+		for name_index: int in names.size():
+			views_menu.add_item(names[name_index], 100 + name_index)
+		views_menu.add_separator()
+		for name_index: int in names.size():
+			views_menu.add_item(EventSheetL10n.translate("Forget %s") % names[name_index], 500 + name_index))
+	views_menu.id_pressed.connect(func(id: int) -> void:
+		var names: PackedStringArray = EventSheetSavedViews.view_names()
+		if id == 0:
+			_dock.save_current_view_requested()
+		elif id >= 500 and id - 500 < names.size():
+			_dock.delete_saved_view(names[id - 500])
+		elif id >= 100 and id - 100 < names.size():
+			_dock.apply_saved_view(names[id - 100]))
+	# ── V20: Sheet ▸ Health… (appended block - keep together) ──────────────────────────────────
+	# How this sheet is doing, at a glance, with every line clicking through to the panel behind it.
+	# Id 9812 is clear of the Sheet menu's own run.
+	sheet_popup.add_item("Health…", 9812)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9812),
+		"How this sheet is doing in one card: how much of it reads as events, its patterns and which of them a shipped behavior could take over, what the Doctor says, its Test Sheets and how they last went, and how much of it nothing uses. Click a line to open the panel it comes from.")
+	sheet_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 9812:
+			_dock.open_sheet_health())
+	# ── V16: Sheet ▸ Export (appended block - keep together) ───────────────────────────────────
+	# The sheet as a picture, for a forum post, a design doc or a lesson: the canvas exactly as it is
+	# being read. Id 9811 is clear of the Sheet menu's own run; the submenu's ids are its own.
+	var export_menu: PopupMenu = PopupMenu.new()
+	export_menu.name = "EventSheetExportMenu"
+	sheet_popup.add_child(export_menu)
+	sheet_popup.add_submenu_item("Export", "EventSheetExportMenu", 9811)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9811),
+		"The whole sheet as a picture - the current theme, density, arrangement and lenses, with the event numbers on. PDF is that picture split into pages; Markdown is the plain listing with a figure per group.")
+	export_menu.add_item(EventSheetL10n.translate("Image (PNG)…"), 0)
+	export_menu.add_item(EventSheetL10n.translate("PDF…"), 1)
+	export_menu.add_item(EventSheetL10n.translate("Markdown with figures…"), 2)
+	export_menu.id_pressed.connect(func(id: int) -> void:
+		if id == 0:
+			_dock.export_sheet_picture_requested("png")
+		elif id == 1:
+			_dock.export_sheet_picture_requested("pdf")
+		elif id == 2:
+			_dock.export_sheet_picture_requested("md"))
+	# ── V15: Sheet ▸ Workspaces (appended block - keep together) ───────────────────────────────
+	# A scene's sheets, opened together and remembered under the scene's name. Rebuilt on open so a
+	# workspace made a second ago is already listed. Id 9810 is clear of the Sheet menu's own run.
+	var workspaces_menu: PopupMenu = PopupMenu.new()
+	workspaces_menu.name = "EventSheetWorkspacesMenu"
+	sheet_popup.add_child(workspaces_menu)
+	sheet_popup.add_submenu_item("Workspaces", "EventSheetWorkspacesMenu", 9810)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9810),
+		"A scene's sheets, open together: the whole layout plus every script in it, in tree order, as one named tab group. Right-click a scene in the FileSystem ▸ Open its sheets makes one; picking it here opens it again.")
+	workspaces_menu.about_to_popup.connect(func() -> void:
+		workspaces_menu.clear()
+		var names: PackedStringArray = EventSheetWorkspaces.workspace_names()
+		if names.is_empty():
+			workspaces_menu.add_item(EventSheetL10n.translate("No workspaces yet"), -1)
+			workspaces_menu.set_item_disabled(0, true)
+			return
+		for name_index: int in names.size():
+			workspaces_menu.add_item(names[name_index], 100 + name_index)
+		workspaces_menu.add_separator()
+		for name_index: int in names.size():
+			workspaces_menu.add_item(EventSheetL10n.translate("Forget %s") % names[name_index], 500 + name_index))
+	workspaces_menu.id_pressed.connect(func(id: int) -> void:
+		var names: PackedStringArray = EventSheetWorkspaces.workspace_names()
+		if id >= 500 and id - 500 < names.size():
+			_dock.forget_workspace(names[id - 500])
+		elif id >= 100 and id - 100 < names.size():
+			_dock.open_workspace(names[id - 100]))
+	# ── V14: Show Events in the Scene (appended block - keep together) ─────────────────────────
+	# The events overlay's switch. It marks the SCENE, not the sheet, which is why it is one item
+	# rather than a lens - and it starts off. Id 9803 is clear of every block above.
+	view_popup.add_check_item("Show Events in the Scene", 9803)
+	view_popup.set_item_checked(view_popup.get_item_index(9803), EventSheetSceneEvents.is_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(9803),
+		"Mark every node whose script is a sheet with a small ⌗ and its event count - in the Scene dock, and beside the node in the 2D editor. Hover names its triggers. Nodes with no events are unmarked, and this is off by default.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id != 9803:
+			return
+		var wanted: bool = not EventSheetSceneEvents.is_enabled()
+		EventSheetSceneEvents.set_enabled(wanted)
+		view_popup.set_item_checked(view_popup.get_item_index(9803), wanted)
+		_dock._set_status(EventSheetL10n.translate("Events in the scene: on") if wanted
+			else EventSheetL10n.translate("Events in the scene: off")))
 
 
 ## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes

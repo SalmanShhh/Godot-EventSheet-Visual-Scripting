@@ -196,6 +196,12 @@ func build_ui() -> void:
 		_dock.open_object_file_as_sheet(EventSheetObjectFacts.script_path_for_entry(
 			EventSheetObjectProperties.find_entry(_dock._current_sheet, object_label),
 			str(_dock._current_sheet.get("external_source_path")) if _dock._current_sheet != null else "")))
+	# V13 - the two starter gestures: the events this object's class is usually given, and this
+	# object's events copied for other objects.
+	_dock._objects_panel.object_starter_events_requested.connect(func(object_label: String) -> void:
+		_dock.add_common_events_for(object_label))
+	_dock._objects_panel.object_duplicate_events_requested.connect(func(object_label: String) -> void:
+		_dock.open_duplicate_events_dialog(object_label))
 	var left_rail: VBoxContainer = VBoxContainer.new()
 	left_rail.name = "EventSheetLeftRail"
 	left_rail.add_theme_constant_override("separation", 8)

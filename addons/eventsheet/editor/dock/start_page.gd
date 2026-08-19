@@ -99,8 +99,11 @@ static func columns(starters: Array, showcases: PackedStringArray, recents: Arra
 			"note": "%s · %s" % [genre, line], "target": "%s/%s" % [SHOWCASE_DIR, showcase]})
 	var recent_entries: Array = []
 	for path: Variant in recents:
+		# V20 - the health card's short form is the Recent list's second column: how many events the
+		# sheet has and how its tests last went, read from the file rather than by loading it.
 		recent_entries.append({"kind": "recent", "label": str(path).get_file(),
-			"note": str(path).get_base_dir(), "target": str(path)})
+			"note": EventSheetHealthCard.brief_for_path(str(path), str(path).get_base_dir()),
+			"target": str(path)})
 	var learn: Array = []
 	for tutorial: Dictionary in EventSheetDocTutorials.tutorials():
 		learn.append({

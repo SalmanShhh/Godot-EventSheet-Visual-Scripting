@@ -606,7 +606,11 @@ func pulse_control(control_label: String) -> bool:
 func _sync_active_tab_state() -> void:
 	if _active_tab_index < 0 or _active_tab_index >= _open_tabs.size():
 		return
-	_open_tabs[_active_tab_index] = {"sheet": _current_sheet, "path": _current_sheet_path, "dirty": _dirty}
+	# V15 - the workspace this tab was opened as part of is the tab's own, not the live state's, so
+	# it is carried across rather than dropped on every sync.
+	var group: String = str((_open_tabs[_active_tab_index] as Dictionary).get("group", ""))
+	_open_tabs[_active_tab_index] = {"sheet": _current_sheet, "path": _current_sheet_path,
+		"dirty": _dirty, "group": group}
 
 
 ## Closes the tab at index, activating a neighbour (or a fresh demo sheet when none remain).
@@ -646,7 +650,13 @@ func _refresh_tab_bar() -> void:
 		if int(name_counts.get(str(title.get("name", "")), 0)) > 1:
 			shown = "%s · %s" % [shown, str(title.get("file", path)).get_file()]
 		_tab_bar.add_tab(shown)
-		_tab_bar.set_tab_tooltip(tab_index, _tab_tooltip(title, path))
+		# V15 - a tab opened as part of a scene workspace says which group it belongs to, where the
+		# rest of the storage details already live.
+		var group_note: String = str(tab.get("group", "")).strip_edges()
+		var tooltip: String = _tab_tooltip(title, path)
+		if not group_note.is_empty():
+			tooltip = "%s · %s" % [tooltip, group_note]
+		_tab_bar.set_tab_tooltip(tab_index, tooltip)
 		var mark: Texture2D = _tab_icon(title)
 		if mark != null:
 			_tab_bar.set_tab_icon(tab_index, mark)
@@ -691,6 +701,10 @@ func get_open_sheets_state() -> Dictionary:
 			"title": _format_tab_title(tab.get("sheet"), p, bool(tab.get("dirty", false))),
 			"path": p,
 			"dirty": bool(tab.get("dirty", false)),
+			# V20 - the health card's first line on the hover, where sheets are picked. Only this
+			# line: the rest of the card asks the Doctor, and a hover must never sweep the project.
+			"health": EventSheetReadingCoverage.chip_text(tab.get("sheet")),
+			"group": str(tab.get("group", "")),
 		})
 	var recent: Array[String] = []
 	for p2: String in _recent_closed_paths:
@@ -5775,3 +5789,481 @@ func _scene_node_for_object(object_label: String) -> Node:
 	if found == null:
 		found = edited_root.find_child(path.get_file(), true, false)
 	return found
+
+
+# ── V12. Arrange by, and saved views (appended block - keep together) ─────────────────────────
+# Display only from end to end: the arrangement re-groups the ROWS a view has built, never the
+# sheet, so the events array keeps its order, the emitted GDScript cannot move and the byte
+# round-trip is untouched. Every pane of the same sheet is arranged together, because "arranged by
+# Object" is a way of reading the sheet, not a property of one pane.
+
+
+## The arrangement the sheet is being read under right now (file order unless asked otherwise).
+func arrangement_mode() -> int:
+	var view: EventSheetViewport = _active_view()
+	return view.arrangement_mode if view != null else EventSheetArrangement.MODE_FILE_ORDER
+
+
+## Reads the sheet arranged by `mode`, in every open pane, and points the Outline at it too.
+func set_arrangement_mode(mode: int) -> void:
+	for view: Variant in _multi_view.all_views():
+		var pane: EventSheetViewport = view as EventSheetViewport
+		if pane != null:
+			pane.set_arrangement_mode(mode)
+	if _outline_panel != null:
+		_outline_panel.refresh()
+	if mode == EventSheetArrangement.MODE_FILE_ORDER:
+		_set_status(EventSheetL10n.translate("Reading in file order."))
+	else:
+		_set_status(EventSheetL10n.translate("Arranged by %s. The file is unchanged.") % EventSheetL10n.translate(EventSheetArrangement.mode_label(mode)))
+
+
+## The reading lenses a saved view remembers alongside the arrangement and the filter.
+func current_view_lenses() -> Dictionary:
+	var view: EventSheetViewport = _active_view()
+	return {
+		"humanized_names": _humanized_names_enabled(),
+		"familiar_words": _familiar_words_enabled(),
+		"compact_rows": _compact_rows_enabled(),
+		"event_numbers": view != null and view.show_event_numbers,
+		"object_icons": view != null and view.show_object_icons,
+	}
+
+
+## Puts a saved view back: its arrangement, its filter, and each lens it named.
+func apply_saved_view(name: String) -> void:
+	var blob: Dictionary = EventSheetSavedViews.view(name)
+	if blob.is_empty():
+		_set_status(EventSheetL10n.translate("No saved view by that name."), true)
+		return
+	set_arrangement_mode(EventSheetSavedViews.arrangement_of(blob))
+	_apply_lens(EventSheetSavedViews.filter_of(blob))
+	var lenses: Dictionary = EventSheetSavedViews.lenses_of(blob)
+	for pane_entry: Variant in _multi_view.all_views():
+		var pane: EventSheetViewport = pane_entry as EventSheetViewport
+		if pane == null:
+			continue
+		if lenses.has("event_numbers"):
+			pane.show_event_numbers = bool(lenses["event_numbers"])
+		if lenses.has("object_icons"):
+			pane.show_object_icons = bool(lenses["object_icons"])
+		pane.queue_redraw()
+	_set_status(EventSheetL10n.translate("View: %s") % name)
+
+
+var _save_view_dialog: ConfirmationDialog = null
+var _save_view_edit: LineEdit = null
+
+
+## Names the way the sheet is being read right now and keeps it in the View menu.
+func save_current_view_requested() -> void:
+	if _save_view_dialog == null:
+		_save_view_dialog = ConfirmationDialog.new()
+		_save_view_dialog.title = "Save View"
+		_save_view_edit = LineEdit.new()
+		_save_view_edit.placeholder_text = "Name this way of reading the sheet…"
+		_save_view_edit.custom_minimum_size = Vector2(360.0, 0.0)
+		var body_box: VBoxContainer = EventSheetPopupUI.form_box()
+		body_box.add_child(_save_view_edit)
+		_save_view_dialog.add_child(EventSheetPopupUI.margined(body_box))
+		_save_view_dialog.confirmed.connect(_on_save_view_confirmed)
+		add_child(_save_view_dialog)
+		EventSheetL10n.apply_to(_save_view_dialog)
+	_save_view_edit.text = ""
+	_save_view_dialog.popup_centered(Vector2i(420, 110))
+
+
+func _on_save_view_confirmed() -> void:
+	var name: String = _save_view_edit.text.strip_edges()
+	var view: EventSheetViewport = _active_view()
+	var blob: Dictionary = EventSheetSavedViews.describe(arrangement_mode(),
+		view.lens_query() if view != null else "", current_view_lenses())
+	if EventSheetSavedViews.save_view(name, blob):
+		_set_status(EventSheetL10n.translate("Saved the view %s.") % name)
+	else:
+		_set_status(EventSheetL10n.translate("A view needs a name."), true)
+
+
+## Forgets a saved view.
+func delete_saved_view(name: String) -> void:
+	if EventSheetSavedViews.delete_view(name):
+		_set_status(EventSheetL10n.translate("Forgot the view %s.") % name)
+
+
+# ── V13. Starter events per object, and the same events for another object (appended block) ───
+# Two gestures on the Object bar's right-click menu. Both are ordinary sheet edits through the one
+# undo funnel - the starters ADD events (a trigger each, and the sheet's own "+ Add action"
+# placeholder waiting under it), the duplicate COPIES the events an object already has and points
+# each copy at another object.
+
+
+## The class the sheet knows this object is, and the triggers any behaviour pack on it fires.
+func _object_starter_facts(object_label: String) -> Dictionary:
+	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var host_class: String = str(entry.get("class", "")).strip_edges()
+	if host_class.is_empty() and _current_sheet != null:
+		host_class = str(_current_sheet.host_class).strip_edges()
+	var pack_triggers: PackedStringArray = PackedStringArray()
+	var declared: Variant = entry.get("signals", PackedStringArray())
+	if declared is PackedStringArray:
+		pack_triggers = declared as PackedStringArray
+	elif declared is Array:
+		for name_entry: Variant in (declared as Array):
+			pack_triggers.append(str(name_entry))
+	return {"class": host_class, "pack_triggers": pack_triggers}
+
+
+## Adds the events this object's class is usually given - one event per starter trigger, with an
+## empty action lane, plus a declaration for any signal the starters name that the sheet does not
+## declare yet. One undo step.
+func add_common_events_for(object_label: String) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	var facts: Dictionary = _object_starter_facts(object_label)
+	var starters: Array = EventSheetStarterEvents.starters_for(str(facts.get("class", "")),
+		facts.get("pack_triggers", PackedStringArray()))
+	if starters.is_empty():
+		_set_status(EventSheetL10n.translate("No common events are known for %s.") % object_label, true)
+		return
+	var added: Dictionary = {"events": 0, "signals": 0}
+	var changed: bool = _perform_undoable_sheet_edit("Add Common Events", func() -> bool:
+		for declaration: Variant in EventSheetStarterEvents.missing_signal_rows(starters, _current_sheet):
+			_current_sheet.events.append(declaration)
+			added["signals"] = int(added["signals"]) + 1
+		for starter: Variant in starters:
+			_current_sheet.events.append(EventSheetStarterEvents.build_event(starter as Dictionary))
+			added["events"] = int(added["events"]) + 1
+		return int(added["events"]) > 0)
+	if not changed:
+		return
+	_refresh_after_edit()
+	var words: PackedStringArray = PackedStringArray()
+	for starter: Variant in starters:
+		words.append(str((starter as Dictionary).get("label", "")))
+	_mark_dirty(EventSheetL10n.translate("Added %s.") % ", ".join(words))
+
+
+var _duplicate_events_dialog: ConfirmationDialog = null
+var _duplicate_events_edit: LineEdit = null
+var _duplicate_events_source: String = ""
+
+
+## "Duplicate events for…": every event that names this object, copied once per object you list,
+## each copy pointing at that object instead. One undo step for the whole batch.
+func open_duplicate_events_dialog(object_label: String) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	if _duplicate_events_dialog == null:
+		_duplicate_events_dialog = ConfirmationDialog.new()
+		_duplicate_events_dialog.title = "Duplicate Events For"
+		_duplicate_events_edit = LineEdit.new()
+		_duplicate_events_edit.placeholder_text = "Enemy2, Enemy3"
+		_duplicate_events_edit.custom_minimum_size = Vector2(360.0, 0.0)
+		var body_box: VBoxContainer = EventSheetPopupUI.form_box()
+		body_box.add_child(_duplicate_events_edit)
+		_duplicate_events_dialog.add_child(EventSheetPopupUI.margined(body_box))
+		_duplicate_events_dialog.confirmed.connect(_on_duplicate_events_confirmed)
+		add_child(_duplicate_events_dialog)
+		EventSheetL10n.apply_to(_duplicate_events_dialog)
+	_duplicate_events_source = object_label
+	_duplicate_events_edit.text = ""
+	_duplicate_events_dialog.popup_centered(Vector2i(440, 120))
+
+
+func _on_duplicate_events_confirmed() -> void:
+	var targets: PackedStringArray = PackedStringArray()
+	for piece: String in _duplicate_events_edit.text.split(","):
+		var clean: String = piece.strip_edges()
+		if not clean.is_empty():
+			targets.append(clean)
+	if targets.is_empty():
+		_set_status(EventSheetL10n.translate("Name at least one object to duplicate for."), true)
+		return
+	var source: String = _duplicate_events_source
+	var made: Dictionary = {"count": 0}
+	var changed: bool = _perform_undoable_sheet_edit("Duplicate Events For", func() -> bool:
+		var source_reference: String = EventSheetDuplicateEvents.reference_for(_current_sheet, source)
+		for target: String in targets:
+			var copies: Array = EventSheetDuplicateEvents.copies_for(_current_sheet, source_reference, target)
+			for copy: Variant in copies:
+				_assign_fresh_event_uids(copy as Resource)
+				_current_sheet.events.append(copy)
+				made["count"] = int(made["count"]) + 1
+		return int(made["count"]) > 0)
+	if not changed:
+		_set_status(EventSheetL10n.translate("No events name %s.") % source, true)
+		return
+	_refresh_after_edit()
+	_mark_dirty(EventSheetL10n.translate("Duplicated %d event(s).") % int(made["count"]))
+
+
+# ── V15. Scene workspaces (appended block - keep together) ────────────────────────────────────
+# The unit of work is the scene, so it opens as one: the scene-as-sheet plus every script in it, in
+# tree order, as a named tab group that is remembered. Tabs stay individually closable - a
+# workspace is a way of OPENING, never a cage - and nothing is written into the project.
+
+
+## Opens every sheet of one scene as a named tab group, and remembers the group.
+func open_scene_workspace(scene_path: String) -> void:
+	var name: String = EventSheetWorkspaces.remember_scene(scene_path)
+	if name.is_empty():
+		_set_status(EventSheetL10n.translate("That scene has no sheets to open."), true)
+		return
+	_open_workspace_paths(name, EventSheetWorkspaces.members_of_scene(scene_path))
+
+
+## Reopens a remembered workspace by name.
+func open_workspace(name: String) -> void:
+	var paths: PackedStringArray = EventSheetWorkspaces.paths_of(name)
+	if paths.is_empty():
+		_set_status(EventSheetL10n.translate("That workspace has nothing left to open."), true)
+		return
+	_open_workspace_paths(name, paths)
+
+
+## Forgets a remembered workspace (the sheets themselves are untouched).
+func forget_workspace(name: String) -> void:
+	if EventSheetWorkspaces.forget(name):
+		_set_status(EventSheetL10n.translate("Forgot the workspace %s.") % name)
+
+
+func _open_workspace_paths(name: String, paths: PackedStringArray) -> void:
+	var opened: int = 0
+	for path: String in paths:
+		if not FileAccess.file_exists(path):
+			continue
+		_load_sheet_from_path(path)
+		opened += 1
+	if opened == 0:
+		_set_status(EventSheetL10n.translate("That workspace has nothing left to open."), true)
+		return
+	for tab: Dictionary in _open_tabs:
+		if Array(paths).has(str(tab.get("path", ""))):
+			tab["group"] = name
+	_refresh_tab_bar()
+	_persist_session()
+	_set_status(EventSheetL10n.translate("Workspace %s: %d sheet(s).") % [name, opened])
+
+
+# ── V16. Export the sheet as a picture (appended block - keep together) ───────────────────────
+# Sheet ▸ Export ▸ Image (PNG) / PDF / Markdown with figures. The picture is the CANVAS, captured
+# as it is being read - current theme, density, arrangement, lenses, event numbers - so an exported
+# sheet and the sheet on screen can never be two different readings of the same file. The canvas is
+# virtualized (it only ever draws what is on screen), so the whole sheet is captured a screenful at
+# a time and stitched; everything that follows from that picture - the page split, the PDF, the
+# Markdown - is arithmetic and lives in EventSheetSheetExport.
+
+var _export_picture_dialog: EditorFileDialog = null
+var _export_picture_kind: String = "png"
+
+
+## Opens the save dialog for one export kind ("png", "pdf" or "md").
+func export_sheet_picture_requested(kind: String) -> void:
+	if _active_view() == null:
+		_set_status(EventSheetL10n.translate("Open a sheet first."), true)
+		return
+	_export_picture_kind = kind
+	if _export_picture_dialog == null:
+		_export_picture_dialog = EditorFileDialog.new()
+		_export_picture_dialog.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
+		_export_picture_dialog.access = EditorFileDialog.ACCESS_FILESYSTEM
+		_export_picture_dialog.file_selected.connect(_on_export_picture_path_chosen)
+		add_child(_export_picture_dialog)
+		EventSheetL10n.apply_to(_export_picture_dialog)
+	match kind:
+		"pdf":
+			_export_picture_dialog.filters = PackedStringArray(["*.pdf ; PDF"])
+			_export_picture_dialog.title = "Export the sheet as a PDF"
+		"md":
+			_export_picture_dialog.filters = PackedStringArray(["*.md ; Markdown"])
+			_export_picture_dialog.title = "Export the sheet as Markdown with figures"
+		_:
+			_export_picture_dialog.filters = PackedStringArray(["*.png ; PNG image"])
+			_export_picture_dialog.title = "Export the sheet as an image"
+	_export_picture_dialog.current_file = "%s.%s" % [_sheet_io._exported_script_basename(), kind]
+	_export_picture_dialog.popup_centered_ratio(0.6)
+
+
+func _on_export_picture_path_chosen(path: String) -> void:
+	_write_sheet_picture(path, _export_picture_kind)
+
+
+## Captures the sheet and writes it in the asked-for shape. A capture that could not happen (a
+## headless build, no window to draw in) says so rather than writing an empty file.
+func _write_sheet_picture(path: String, kind: String) -> void:
+	_set_status(EventSheetL10n.translate("Rendering the sheet…"))
+	var picture: Image = await capture_sheet_picture()
+	if picture == null:
+		_set_status(EventSheetL10n.translate("The sheet could not be rendered here."), true)
+		return
+	match kind:
+		"pdf":
+			var pages: Array = EventSheetSheetExport.split_pages(picture)
+			var bytes: PackedByteArray = EventSheetSheetExport.pdf_bytes(pages)
+			var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+			if file == null:
+				_set_status(EventSheetL10n.translate("Could not write %s.") % path, true)
+				return
+			file.store_buffer(bytes)
+			file.close()
+			_set_status(EventSheetL10n.translate("Exported %d page(s) to %s.") % [pages.size(), path])
+		"md":
+			var figures: Array = _write_sheet_figures(path, picture)
+			var text: String = EventSheetSheetExport.markdown_with_figures(
+				_active_view().get_row_tree(), _sheet_io._exported_script_basename(), figures)
+			var document: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+			if document == null:
+				_set_status(EventSheetL10n.translate("Could not write %s.") % path, true)
+				return
+			document.store_string(text)
+			document.close()
+			_set_status(EventSheetL10n.translate("Exported %s with %d figure(s).") % [path, figures.size()])
+		_:
+			if picture.save_png(path) != OK:
+				_set_status(EventSheetL10n.translate("Could not write %s.") % path, true)
+				return
+			_set_status(EventSheetL10n.translate("Exported the sheet to %s.") % path)
+
+
+## One figure per group, cropped out of the whole-sheet picture and written beside the document.
+## A sheet with no groups gets one figure of the whole thing, which is the honest answer to "a
+## figure per group" when the sheet IS one group.
+func _write_sheet_figures(document_path: String, picture: Image) -> Array:
+	var figures: Array = []
+	var view: EventSheetViewport = _active_view()
+	var bands: Array = view.group_row_bands() if view.has_method("group_row_bands") else []
+	if bands.is_empty():
+		bands = [{"title": _sheet_io._exported_script_basename(), "from": 0, "to": picture.get_height()}]
+	var folder: String = document_path.get_base_dir()
+	for band_index: int in bands.size():
+		var band: Dictionary = bands[band_index]
+		var from_y: int = clampi(int(band.get("from", 0)), 0, picture.get_height())
+		var to_y: int = clampi(int(band.get("to", 0)), from_y, picture.get_height())
+		if to_y - from_y <= 0:
+			continue
+		var title: String = str(band.get("title", ""))
+		var file_name: String = EventSheetSheetExport.figure_file_name(document_path, title, band_index)
+		var figure: Image = picture.get_region(Rect2i(0, from_y, picture.get_width(), to_y - from_y))
+		if figure.save_png("%s/%s" % [folder, file_name]) == OK:
+			figures.append({"title": title, "path": file_name})
+	return figures
+
+
+## The whole sheet as one tall picture: the canvas captured a screenful at a time and stitched,
+## because a virtualized canvas only ever draws what is on screen. Null when there is no window to
+## draw in (a headless build).
+func capture_sheet_picture() -> Image:
+	var view: EventSheetViewport = _active_view()
+	if view == null or DisplayServer.get_name() == "headless":
+		return null
+	var scroll: ScrollContainer = view._get_scroll_container()
+	var window: Viewport = get_viewport()
+	if scroll == null or window == null:
+		return null
+	var band: Rect2i = Rect2i(scroll.get_global_rect())
+	var total_height: int = maxi(int(scroll.get_v_scroll_bar().max_value), band.size.y)
+	if band.size.x <= 0 or band.size.y <= 0:
+		return null
+	var stitched: Image = Image.create_empty(band.size.x, total_height, false, Image.FORMAT_RGBA8)
+	var restore_to: int = scroll.scroll_vertical
+	var cursor: int = 0
+	while cursor < total_height:
+		scroll.scroll_vertical = cursor
+		await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		var screen: Image = window.get_texture().get_image()
+		var visible: Rect2i = band.intersection(Rect2i(Vector2i.ZERO, screen.get_size()))
+		if visible.size.x <= 0 or visible.size.y <= 0:
+			break
+		# The last band overlaps the one before it (the scroll simply stops), so only the part that
+		# has not been stitched yet is copied.
+		var taken: int = mini(visible.size.y, total_height - cursor)
+		var actual: int = scroll.scroll_vertical
+		stitched.blit_rect(screen,
+			Rect2i(visible.position, Vector2i(visible.size.x, taken)), Vector2i(0, actual))
+		if actual < cursor:
+			break
+		cursor = actual + taken
+	scroll.scroll_vertical = restore_to
+	return stitched
+
+
+# ── V20. The sheet's health card (appended block - keep together) ─────────────────────────────
+# How this sheet is doing, at a glance: how much of it reads as events, its patterns and which of
+# them a shipped behaviour could take over, what the Doctor says about it, its Test Sheets and how
+# they last went, and how much of it nothing uses. Every line clicks through to the panel that owns
+# it, so the card stays a summary rather than becoming a sixth place where things live. Also the
+# hover on an entry in the Open Sheets panel, which is where a sheet is picked.
+
+var _health_dialog: AcceptDialog = null
+
+
+## The card for the sheet in front of the reader, with the Doctor's own findings folded in.
+func sheet_health_card() -> Dictionary:
+	var findings: Array = []
+	var report: Dictionary = EventSheets.doctor()
+	if report.get("findings") is Array:
+		findings = report["findings"]
+	return EventSheetHealthCard.card_for(_current_sheet, _health_sheet_path(), findings)
+
+
+## The file this sheet IS, which for an opened .gd is its source rather than its resource path.
+func _health_sheet_path() -> String:
+	if _current_sheet == null:
+		return ""
+	var external: String = str(_current_sheet.get("external_source_path")).strip_edges()
+	if not external.is_empty():
+		return external
+	return _current_sheet_path if not _current_sheet_path.is_empty() else str(_current_sheet.resource_path)
+
+
+## Sheet ▸ Health… - the card as a small window, one clickable line per panel behind it.
+func open_sheet_health() -> void:
+	if _current_sheet == null:
+		_set_status(EventSheetL10n.translate("Open a sheet first."), true)
+		return
+	var card: Dictionary = sheet_health_card()
+	var lines: VBoxContainer = EventSheetPopupUI.form_box()
+	for entry: Variant in EventSheetHealthCard.card_lines(card):
+		var line: Dictionary = entry
+		var button: Button = Button.new()
+		button.text = str(line.get("text", ""))
+		button.flat = true
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var panel: String = str(line.get("panel", ""))
+		button.pressed.connect(func() -> void: open_health_panel(panel))
+		lines.add_child(button)
+	if _health_dialog != null:
+		_health_dialog.queue_free()
+	_health_dialog = AcceptDialog.new()
+	_health_dialog.title = "Sheet Health"
+	_health_dialog.add_child(EventSheetPopupUI.margined(
+		EventSheetPopupUI.titled_card(str(card.get("title", "")), lines)))
+	add_child(_health_dialog)
+	EventSheetL10n.apply_to(_health_dialog)
+	_health_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(460), EventSheetPalette.scaled(240)))
+
+
+## Clicking a line of the card opens the panel that owns that line.
+func open_health_panel(panel: String) -> void:
+	if _health_dialog != null:
+		_health_dialog.hide()
+	match panel:
+		"coverage":
+			_open_lift_report()
+		"doctor":
+			_open_project_doctor()
+		"tests":
+			_menu_bar._open_run_tests()
+		"loose_ends":
+			_open_loose_ends_panel()
+
+
+var _loose_ends_health_panel: EventSheetLooseEndsPanel = null
+
+
+func _open_loose_ends_panel() -> void:
+	if _loose_ends_health_panel == null:
+		_loose_ends_health_panel = EventSheetLooseEndsPanel.new()
+		_loose_ends_health_panel.init(self)
+	_loose_ends_health_panel.open()
