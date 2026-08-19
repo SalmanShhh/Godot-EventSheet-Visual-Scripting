@@ -4994,7 +4994,7 @@ func _create_object_groups(actions: Array) -> Dictionary:
 			indices.append(member_index)
 		leads[index] = {
 			"text": _create_object_text(str(spawn.get("source", "")), str(spawn.get("alias", "")),
-				position_text, bool(spawn.get("copy", false))),
+				position_text, bool(spawn.get("copy", false)), bool(spawn.get("pooled", false))),
 			"alias": str(spawn.get("alias", "")),
 			"line_count": last - index + 1,
 			"indices": indices,
@@ -5022,6 +5022,13 @@ func _instantiate_action_parts(action_resource: Variant) -> Dictionary:
 		if source.is_empty() or not _is_identifier_path(source):
 			return {}
 		return {"alias": alias, "source": source, "copy": suffix == ".duplicate()"}
+	# ── S2 ──────────────────────────────────────────────────────────────────────────────────────
+	# Taking a spare out of a pool and making a new one only when the pool is empty IS Create object -
+	# pooling is how the object is got hold of, not a different thing to do with it. The row says so
+	# with a `pooled` chip and keeps every line of the guard one hover away.
+	var pooled: Dictionary = EventSheetPatternReadings.pool_take_parts("%s = %s" % [alias, value])
+	if not pooled.is_empty():
+		return {"alias": alias, "source": str(pooled.get("scene", "")), "copy": false, "pooled": true}
 	return {}
 
 
@@ -5058,7 +5065,8 @@ func _placement_value(action_resource: Variant, alias: String) -> String:
 ## The sentence itself. The object created is named the way an event sheet names it - the scene's
 ## ROOT node - whenever the source is a preloaded scene this sheet declares; otherwise the variable's
 ## own name, which is the honest answer when nothing else is known.
-func _create_object_text(source: String, alias: String, position_text: String, copy: bool) -> String:
+func _create_object_text(source: String, alias: String, position_text: String, copy: bool,
+		pooled: bool = false) -> String:
 	var shown: String = source
 	var resolved: Dictionary = _lens_scene_vars.get(source, {}) as Dictionary
 	if not resolved.is_empty() and not str(resolved.get("name", "")).is_empty():
@@ -5077,6 +5085,10 @@ func _create_object_text(source: String, alias: String, position_text: String, c
 		text += " %s %s" % [EventSheetL10n.translate("at"), _reading_sentence(EventSheetSentence.expression_text(position_text))]
 	if not alias.is_empty():
 		text += " (%s %s)" % [EventSheetL10n.translate("as"), alias]
+	# S2. The chip is the whole difference a pool makes to this row: a spare is reused when one is
+	# waiting, and a new object is made when none is.
+	if pooled:
+		text += " [%s]" % EventSheetL10n.translate("pooled")
 	return text
 
 

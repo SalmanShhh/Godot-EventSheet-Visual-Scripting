@@ -257,6 +257,13 @@ static func _pool_facts() -> bool:
 	ok = _check("the returned object is named", back.get("object", ""), "b") and ok
 	ok = _check("a push onto a list that is not a pool is not a return step",
 		EventSheetPatternReadings.pool_return_step("names.push_back(b)", pools).is_empty(), true) and ok
+	var context: Dictionary = {"script_object": "Player", "pool_variables": {"pool": true}}
+	ok = _check("putting an object back in a pool names the object",
+		_reading(EventSheetSentence.statement("pool.push_back(b)", context)),
+		"b ▸ Return to pool (hidden, ticking off, back in pool)") and ok
+	ok = _check("a push onto an ordinary list is still a push back",
+		_reading(EventSheetSentence.statement("names.push_back(b)", context)),
+		"System ▸ Push back b to names") and ok
 	return ok
 
 

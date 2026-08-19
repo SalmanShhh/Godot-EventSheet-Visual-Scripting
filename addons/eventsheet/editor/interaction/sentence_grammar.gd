@@ -1942,6 +1942,16 @@ static func _list_statement(target: String, method: String, args: PackedStringAr
 		return {}
 	var split: Array = _split_object(receiver, context)
 	var values: Dictionary = {"name": [str(split[1]), "name"]}
+	# S2. Putting an object back into a POOL is not a list step - it is the end of that object's life
+	# on screen, and the sheet's word for it names the object rather than the list. Only for a list
+	# this file actually drains as a pool; every other push back is still a push back.
+	var pools: Dictionary = context.get("pool_variables", {})
+	if pools.has(receiver) and args.size() == 1 and method in ["push_back", "push_front", "append"]:
+		var returned: Dictionary = _sentence(object_of_reference(args[0].strip_edges()),
+			"Return to pool", {})
+		(returned["segments"] as Array).append(
+			{"text": " (%s)" % translate("hidden, ticking off, back in pool"), "tone": "muted"})
+		return returned
 	if LIST_STEPS.has(method) and args.is_empty():
 		return _sentence(str(split[0]), str(LIST_STEPS[method]), values)
 	if LIST_STEPS.has(method) and args.size() == 1 and str(LIST_STEPS[method]).contains("{value}"):
