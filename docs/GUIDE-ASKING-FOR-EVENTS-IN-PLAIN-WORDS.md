@@ -42,6 +42,8 @@ Every row is then checked against your project's own vocabulary before you see i
 So the worst a bad answer can do is propose fewer rows than it meant to. It cannot propose
 something your sheet has no words for, and it cannot hand you a block of code to trust.
 
+<img src="images/ask-box-proposal.png" alt="The Ask box: a line saying Ask is on with a local model and naming the endpoint it will reach, the typed sentence 'when the player presses jump and is on the floor, jump and play the jump sound', and a Proposed panel listing a condition row and two action rows followed by one entry dropped because this project has no such vocabulary. Four buttons across the bottom: Ask, Add these events, Try in a scratch sheet, Discard." width="620">
+
 ## The three buttons
 
 Nothing is applied by arriving. The proposal sits in the box until you choose:

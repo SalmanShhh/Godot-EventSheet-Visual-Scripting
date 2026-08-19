@@ -42,7 +42,7 @@ func open() -> void:
 func _build() -> void:
 	_window = Window.new()
 	_window.title = "Ask"
-	_window.size = Vector2i(620, 460)
+	_window.size = Vector2i(620, 560)
 	_window.close_requested.connect(func() -> void: _window.hide())
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	_mode_label = Label.new()
@@ -50,7 +50,8 @@ func _build() -> void:
 	box.add_child(EventSheetPopupUI.panel_section(_mode_label))
 	_prompt_edit = TextEdit.new()
 	_prompt_edit.placeholder_text = "when the player presses jump and is on the floor, jump and play the jump sound"
-	_prompt_edit.custom_minimum_size = Vector2(0, 76)
+	_prompt_edit.custom_minimum_size = Vector2(0, 62)
+	_prompt_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	box.add_child(EventSheetPopupUI.titled_card("What do you want to happen?", _prompt_edit))
 	_proposal_label = RichTextLabel.new()
 	_proposal_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -79,7 +80,9 @@ func _build() -> void:
 	discard_button.pressed.connect(_discard_pressed)
 	buttons.add_child(discard_button)
 	box.add_child(buttons)
-	_window.add_child(EventSheetPopupUI.margined(box))
+	var body: MarginContainer = EventSheetPopupUI.margined(box)
+	body.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_window.add_child(body)
 	_dock.add_child(_window)
 
 

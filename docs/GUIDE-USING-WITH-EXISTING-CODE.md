@@ -1403,6 +1403,8 @@ notes, all advisory, never a build break:
 | `identical-events` | Two events read identically - same trigger, same conditions, same actions, same parameters. Comments and breakpoints are ignored; two rows that *do* the same thing are the finding however they are annotated. |
 | `repeated-literal` | The same number or quoted string is typed three times or more. |
 
+<img src="images/doctor-tidiness-findings.png" alt="The Project Doctor window showing eight tidiness notes on one sheet: an unread local variable, an uncalled function, an unfired trigger, an attached behavior no event uses, an event switched off for a long time, two pairs of identical events, and a literal appearing three times. Re-run checks and Fix selected buttons sit below." width="680">
+
 The last one repairs itself. Select it and the Fix button reads **⚡ Extract to variable**: name the
 value once, and every parameter that spelled it reads the name instead. The edit opens the sheet and
 goes through the ordinary undo funnel, so Ctrl+Z takes it back.
