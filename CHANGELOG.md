@@ -62,6 +62,60 @@ words instead of as a pile of raw handlers and raw calls.
 Display only, as always: the byte round-trip of an opened `.gd` is unchanged and gated for an opened
 EditorPlugin and an opened EditorScript, and the exact GDScript is still one hover away.
 
+### Added - one sentence for a variable, everywhere it appears
+
+A variable used to read one way in the head, another way inside an event, and a third way in Object
+properties. Now there is exactly one sentence for one, and every surface prints it:
+**`<scope> <type> <name> = <value>`**.
+
+- **The scope word leads.** `Global number Score = 0`, `Instance boolean alive = true`,
+  `Local text name = ""`, `Constant number MAX_HP = 100`, `Static number spawned = 0` (which adds
+  `shared by every Player`, because that is the whole surprise a static holds), and
+  `Field number price = 0` on a Resource script. Godot has more scopes than an event sheet does;
+  these are the five words that cover all of them.
+- **The type is in plain words**: number, whole number, text, boolean, vector, color, list (of text,
+  of numbers, of objects), table, object or the class the author named, scene, any. Godot's own
+  spelling (`float`, `int`, `String`, `Array[String]`, `Dictionary`) is still one hover away. A
+  declared `int` reads "whole number" because the author said they wanted no fractions; an
+  undeclared `100` still reads "number", because nothing in that line said so.
+- **Inspector-editable variables wear an Inspector chip** instead of living in a folder of their own,
+  so the head's `Settings` and `Internal state` folders are now one **Instance variables** folder
+  with the Inspector ones first. One list, and the row says which is which.
+- **A colour is always a live swatch** beside its word (`white`) or its hex (`#ff9b3c`), on variable
+  rows as well as on action parameters, whether or not the line bothered to declare the type -
+  `var tint := Color.WHITE` is as much a colour as `var tint: Color = ...`. Clicking the swatch opens
+  the colour picker the sheet already had (wheel, hex, RGBA, named colours, the saved palette,
+  eyedropper), and the pick is written back **in the spelling the line already used**: `Color.RED`
+  stays a named constant, `Color("#ff9b3c")` stays a hex string, `Color(1, 0.6, 0.2)` stays numbers
+  with the argument count it was written with. A colour edit moves the colour and not one byte more.
+
+### Changed - the five variable verbs and the two questions, by the names you would say
+
+The picker used to offer *Set Variable*, *Add Variable*, *Subtract From Variable* and *Toggle* under
+names nobody says out loud, and typing "add to" found the wrong thing. They are now named the way the
+reading already reads them, so what you pick is what you get:
+
+- **Set value**, **Add to**, **Subtract from**, **Toggle boolean** and **Set boolean** (new - the flag
+  half of Set value, so searching for it finds it), and the two questions **Compare variable** and
+  **Boolean is true / is false** (new).
+- A boolean condition reads as the plain sentence it is - `alive is true`, `muted is false` - never
+  "Is alive set", and the negative form flips the word rather than adding a mark.
+- **The ids are frozen.** Only display names changed, so every sheet that already used them keeps
+  working, and the glossary maps each older name to its new one.
+
+### Changed - the Add variable dialog speaks the same sentence, and shows it
+
+- **Scope chips first** (Instance / Local / Constant), in the sheet's own order, with what each one
+  means on hover. Pressing one moves the variable and everything below follows.
+- **The type list uses the reading's own words** - number, text, boolean - instead of Godot-flavoured
+  ones.
+- **A live preview of the exact row it will write**, in the one variable shape:
+  `Instance whole number  hp = 100`. The dialog's whole job is to write one row, so it shows that
+  row, composed through the same grammar the sheet composes its own rows with. The "Ships as" strip
+  is still there underneath for people who read code.
+
+All of it is translated in the nine shipped languages.
+
 ### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words
 
 Four more families of everyday GDScript read as the rows they are. Display only: the file is

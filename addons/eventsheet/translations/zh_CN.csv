@@ -2148,3 +2148,8 @@ Inspector,检查器
 of %s,属于 %s
 shared by every %s,所有 %s 共享
 shared by every copy,所有副本共享
+Scope,作用域
+The row you will get,你将得到的行
+One per object - every copy of this object keeps its own.,每个对象一份 - 该对象的每个副本各自持有。
+Lives inside one event and is gone when it ends.,只存在于一个事件内，事件结束就消失。
+Set once and never changes while the game runs.,设定一次，游戏运行期间不再改变。

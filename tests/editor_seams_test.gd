@@ -125,12 +125,12 @@ static func _run_change_type() -> bool:
 	var dialog: EventSheetVariableRetypeDialog = editor._variable_retype_dialog
 	dialog.open({"name": "score", "scope": "global", "type": "String", "default": "0"})
 	# The REAL UI route to a numeric type is the dropdown, and int is only reachable through the
-	# tick beside it - which is hidden until "Number" is picked. Driven exactly as a click does:
+	# tick beside it - which is hidden until "number" is picked. Driven exactly as a click does:
 	# select the item, emit the signal the OptionButton emits, then tick the box.
 	all_passed = _check("the tick is hidden while the type is Text", dialog._whole_numbers_check.visible, false) and all_passed
 	var number_index: int = -1
 	for index: int in range(dialog._type_option.item_count):
-		if dialog._type_option.get_item_text(index) == "Number":
+		if dialog._type_option.get_item_text(index) == "number":
 			number_index = index
 	dialog._type_option.select(number_index)
 	dialog._type_option.item_selected.emit(number_index)
@@ -143,9 +143,9 @@ static func _run_change_type() -> bool:
 		"Declaration: score is String, becomes int") and all_passed
 	all_passed = _check("the preview names the default change", Array(lines).has("Default: \"0\" becomes 0"), true) and all_passed
 	all_passed = _check("the preview names the compared literal",
-		Array(lines).has("Event 1 - Compare Variable value: \"100\" becomes 100"), true) and all_passed
+		Array(lines).has("Event 1 - Compare variable value: \"100\" becomes 100"), true) and all_passed
 	all_passed = _check("the preview says which row it will NOT touch",
-		Array(lines).has("Event 1 - Set Variable value: Text To Int(score) + 10 left as written (it is an expression, not a plain value)"), true) and all_passed
+		Array(lines).has("Event 1 - Set value value: Text To Int(score) + 10 left as written (it is an expression, not a plain value)"), true) and all_passed
 
 	# ---- apply: one undo step, the whole sheet ----
 	dialog.confirm()

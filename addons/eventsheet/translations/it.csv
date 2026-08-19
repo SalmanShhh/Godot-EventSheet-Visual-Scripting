@@ -2148,3 +2148,8 @@ Inspector,Ispettore
 of %s,di %s
 shared by every %s,condivisa da ogni %s
 shared by every copy,condivisa da ogni copia
+Scope,Ambito
+The row you will get,La riga che otterrai
+One per object - every copy of this object keeps its own.,Una per oggetto - ogni copia di questo oggetto ha la sua.
+Lives inside one event and is gone when it ends.,Vive dentro un evento e sparisce quando finisce.
+Set once and never changes while the game runs.,Impostata una volta e mai cambiata mentre il gioco gira.

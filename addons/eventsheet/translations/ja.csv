@@ -2148,3 +2148,8 @@ Inspector,インスペクター
 of %s,%s の
 shared by every %s,すべての %s で共有
 shared by every copy,すべてのコピーで共有
+Scope,スコープ
+The row you will get,追加される行
+One per object - every copy of this object keeps its own.,オブジェクトごとに 1 つ - このオブジェクトのコピーはそれぞれ自分の値を持ちます。
+Lives inside one event and is gone when it ends.,1 つのイベントの中だけに存在し、終われば消えます。
+Set once and never changes while the game runs.,一度決めたらゲーム中は変わりません。

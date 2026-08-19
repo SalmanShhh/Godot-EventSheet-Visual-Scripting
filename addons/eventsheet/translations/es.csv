@@ -2148,3 +2148,8 @@ Inspector,Inspector
 of %s,de %s
 shared by every %s,compartida por cada %s
 shared by every copy,compartida por cada copia
+Scope,Ámbito
+The row you will get,La fila que obtendrás
+One per object - every copy of this object keeps its own.,Una por objeto - cada copia de este objeto tiene la suya.
+Lives inside one event and is gone when it ends.,Vive dentro de un evento y desaparece al terminar.
+Set once and never changes while the game runs.,Se fija una vez y no cambia mientras el juego corre.
