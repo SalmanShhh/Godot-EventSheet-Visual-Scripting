@@ -609,6 +609,15 @@ func build(root: Node) -> void:
 			_dock.delete_saved_view(names[id - 500])
 		elif id >= 100 and id - 100 < names.size():
 			_dock.apply_saved_view(names[id - 100]))
+	# ── V20: Sheet ▸ Health… (appended block - keep together) ──────────────────────────────────
+	# How this sheet is doing, at a glance, with every line clicking through to the panel behind it.
+	# Id 9812 is clear of the Sheet menu's own run.
+	sheet_popup.add_item("Health…", 9812)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9812),
+		"How this sheet is doing in one card: how much of it reads as events, its patterns and which of them a shipped behavior could take over, what the Doctor says, its Test Sheets and how they last went, and how much of it nothing uses. Click a line to open the panel it comes from.")
+	sheet_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 9812:
+			_dock.open_sheet_health())
 	# ── V16: Sheet ▸ Export (appended block - keep together) ───────────────────────────────────
 	# The sheet as a picture, for a forum post, a design doc or a lesson: the canvas exactly as it is
 	# being read. Id 9811 is clear of the Sheet menu's own run; the submenu's ids are its own.

@@ -128,7 +128,7 @@ func _render() -> void:
 		if not _matches(needle, title, path):
 			continue
 		var idx: int = _list.add_item(title)
-		_list.set_item_tooltip(idx, path if not path.is_empty() else "(unsaved sheet)")
+		_list.set_item_tooltip(idx, hover_text(entry))
 		_list.set_item_metadata(idx, {"kind": "open", "index": i})
 		if i == _active:
 			_list.select(idx)  # highlight the current sheet (no signal)
@@ -149,6 +149,21 @@ func _render() -> void:
 			_list.set_item_tooltip(ridx, "Reopen  " + path3)
 			_list.set_item_metadata(ridx, {"kind": "recent", "path": path3})
 			_list.set_item_custom_fg_color(ridx, _MUTED)
+
+
+## V20 - what an open sheet says on hover, where a sheet is picked: where it is stored, how much of
+## it reads as events, and the workspace it was opened as part of. Pure, so tests pin it.
+static func hover_text(entry: Dictionary) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	var path: String = str(entry.get("path", "")).strip_edges()
+	parts.append(path if not path.is_empty() else "(unsaved sheet)")
+	var health: String = str(entry.get("health", "")).strip_edges()
+	if not health.is_empty():
+		parts.append(health)
+	var group: String = str(entry.get("group", "")).strip_edges()
+	if not group.is_empty():
+		parts.append(group)
+	return "\n".join(parts)
 
 
 ## A row matches when the filter is blank or is a case-insensitive substring of its title or path.

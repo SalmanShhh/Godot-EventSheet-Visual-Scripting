@@ -597,7 +597,11 @@ func pulse_control(control_label: String) -> bool:
 func _sync_active_tab_state() -> void:
 	if _active_tab_index < 0 or _active_tab_index >= _open_tabs.size():
 		return
-	_open_tabs[_active_tab_index] = {"sheet": _current_sheet, "path": _current_sheet_path, "dirty": _dirty}
+	# V15 - the workspace this tab was opened as part of is the tab's own, not the live state's, so
+	# it is carried across rather than dropped on every sync.
+	var group: String = str((_open_tabs[_active_tab_index] as Dictionary).get("group", ""))
+	_open_tabs[_active_tab_index] = {"sheet": _current_sheet, "path": _current_sheet_path,
+		"dirty": _dirty, "group": group}
 
 
 ## Closes the tab at index, activating a neighbour (or a fresh demo sheet when none remain).
@@ -688,6 +692,10 @@ func get_open_sheets_state() -> Dictionary:
 			"title": _format_tab_title(tab.get("sheet"), p, bool(tab.get("dirty", false))),
 			"path": p,
 			"dirty": bool(tab.get("dirty", false)),
+			# V20 - the health card's first line on the hover, where sheets are picked. Only this
+			# line: the rest of the card asks the Doctor, and a hover must never sweep the project.
+			"health": EventSheetReadingCoverage.chip_text(tab.get("sheet")),
+			"group": str(tab.get("group", "")),
 		})
 	var recent: Array[String] = []
 	for p2: String in _recent_closed_paths:
@@ -6028,3 +6036,84 @@ func capture_sheet_picture() -> Image:
 		cursor = actual + taken
 	scroll.scroll_vertical = restore_to
 	return stitched
+
+
+# ── V20. The sheet's health card (appended block - keep together) ─────────────────────────────
+# How this sheet is doing, at a glance: how much of it reads as events, its patterns and which of
+# them a shipped behaviour could take over, what the Doctor says about it, its Test Sheets and how
+# they last went, and how much of it nothing uses. Every line clicks through to the panel that owns
+# it, so the card stays a summary rather than becoming a sixth place where things live. Also the
+# hover on an entry in the Open Sheets panel, which is where a sheet is picked.
+
+var _health_dialog: AcceptDialog = null
+
+
+## The card for the sheet in front of the reader, with the Doctor's own findings folded in.
+func sheet_health_card() -> Dictionary:
+	var findings: Array = []
+	var report: Dictionary = EventSheets.doctor()
+	if report.get("findings") is Array:
+		findings = report["findings"]
+	return EventSheetHealthCard.card_for(_current_sheet, _health_sheet_path(), findings)
+
+
+## The file this sheet IS, which for an opened .gd is its source rather than its resource path.
+func _health_sheet_path() -> String:
+	if _current_sheet == null:
+		return ""
+	var external: String = str(_current_sheet.get("external_source_path")).strip_edges()
+	if not external.is_empty():
+		return external
+	return _current_sheet_path if not _current_sheet_path.is_empty() else str(_current_sheet.resource_path)
+
+
+## Sheet ▸ Health… - the card as a small window, one clickable line per panel behind it.
+func open_sheet_health() -> void:
+	if _current_sheet == null:
+		_set_status(EventSheetL10n.translate("Open a sheet first."), true)
+		return
+	var card: Dictionary = sheet_health_card()
+	var lines: VBoxContainer = EventSheetPopupUI.form_box()
+	for entry: Variant in EventSheetHealthCard.card_lines(card):
+		var line: Dictionary = entry
+		var button: Button = Button.new()
+		button.text = str(line.get("text", ""))
+		button.flat = true
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var panel: String = str(line.get("panel", ""))
+		button.pressed.connect(func() -> void: open_health_panel(panel))
+		lines.add_child(button)
+	if _health_dialog != null:
+		_health_dialog.queue_free()
+	_health_dialog = AcceptDialog.new()
+	_health_dialog.title = "Sheet Health"
+	_health_dialog.add_child(EventSheetPopupUI.margined(
+		EventSheetPopupUI.titled_card(str(card.get("title", "")), lines)))
+	add_child(_health_dialog)
+	EventSheetL10n.apply_to(_health_dialog)
+	_health_dialog.popup_centered(Vector2i(EventSheetPalette.scaled(460), EventSheetPalette.scaled(240)))
+
+
+## Clicking a line of the card opens the panel that owns that line.
+func open_health_panel(panel: String) -> void:
+	if _health_dialog != null:
+		_health_dialog.hide()
+	match panel:
+		"coverage":
+			_open_lift_report()
+		"doctor":
+			_open_project_doctor()
+		"tests":
+			_menu_bar._open_run_tests()
+		"loose_ends":
+			_open_loose_ends_panel()
+
+
+var _loose_ends_health_panel: EventSheetLooseEndsPanel = null
+
+
+func _open_loose_ends_panel() -> void:
+	if _loose_ends_health_panel == null:
+		_loose_ends_health_panel = EventSheetLooseEndsPanel.new()
+		_loose_ends_health_panel.init(self)
+	_loose_ends_health_panel.open()

@@ -45,7 +45,15 @@ func open() -> void:
 		return
 	var results: Array = []
 	for path: String in runner.call("discover", "res://"):
-		results.append(await runner.call("run_script", tree, path, 5.0))
+		var result: Dictionary = await runner.call("run_script", tree, path, 5.0)
+		results.append(result)
+		# V20 - a sheet's health card says how its tests last went, and this run is what it means by
+		# "last". Nothing is written onto any sheet: the memory is the editor's own, per project.
+		var failed: int = 0
+		for entry: Variant in result.get("entries", []):
+			if not bool((entry as Array)[1]):
+				failed += 1
+		EventSheetHealthCard.record_test_result(path, failed)
 	_fill(build_body(results))
 
 
