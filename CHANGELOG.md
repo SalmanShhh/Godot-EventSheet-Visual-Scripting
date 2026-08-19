@@ -20,8 +20,9 @@
   triggers and lifecycle hooks excepted), a declared trigger nothing fires, a required behavior no
   row uses, an event switched off for a long time (how long, from git when git can say, otherwise
   from the file's date and saying which), two events that read identically, and a literal typed
-  three times or more. The last one carries a **⚡ Extract to variable** quick fix: name the number
-  once and every row that spelled it reads the name instead.
+  three times or more. The last one offers an **⚡ Extract 400 to a variable** quick-fix chip
+  through the same seam every other one-step Doctor answer uses: one click names the number and
+  every row that spelled it reads the name instead, undoably.
 - **The reading, for readers who do not read it the same way.** Every row's sentence is now the
   canvas's accessible name, updated as the selection moves, and **View ▸ Speak This Row** says it
   aloud through the platform's own voice. **View ▸ Object Properties** is the keyboard twin of

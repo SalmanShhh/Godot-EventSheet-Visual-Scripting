@@ -1405,9 +1405,11 @@ notes, all advisory, never a build break:
 
 <img src="images/doctor-tidiness-findings.png" alt="The Project Doctor window showing eight tidiness notes on one sheet: an unread local variable, an uncalled function, an unfired trigger, an attached behavior no event uses, an event switched off for a long time, two pairs of identical events, and a literal appearing three times. Re-run checks and Fix selected buttons sit below." width="680">
 
-The last one repairs itself. Select it and the Fix button reads **⚡ Extract to variable**: name the
-value once, and every parameter that spelled it reads the name instead. The edit opens the sheet and
-goes through the ordinary undo funnel, so Ctrl+Z takes it back.
+The last one repairs itself. Select it and a quick-fix chip appears: **⚡ Extract 400 to a
+variable**. One click gives the value a name and points every parameter that spelled it at the name
+instead. The first draft of the name comes from the value itself (`value_400`, `jump_wav`) - rename
+it from its row, which is the point of extracting it. The edit opens the sheet and goes through the
+ordinary undo funnel, so Ctrl+Z takes it back.
 
 ## 10. Tips and Common Mistakes
 
