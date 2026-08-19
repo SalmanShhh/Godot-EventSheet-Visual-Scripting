@@ -32,7 +32,7 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 - [Data-driven Addons with Custom Resources](GUIDE-DATA-DRIVEN-ADDONS.md) - author content as Inspector-edited `.tres` resources.
 - [Building a Data-driven Game](GUIDE-DATA-DRIVEN-GAMES.md) - drive whole games from Custom Resources.
 - [Building on EventSheets](GUIDE-BUILDING-ON-EVENTSHEETS.md) - the public `EventSheets` API for plugins, build tools, and CI.
-- [Editor Tools](GUIDE-EDITOR-TOOLS.md) - one-click editor chores from Sheet > New Editor Tool: File > Run, Inspector buttons, undo done right.
+- [Editor Tools](GUIDE-EDITOR-TOOLS.md) - sheets whose events run inside the editor: the one-click chore, an Editor Plugin, an Import Tool and an Export Hook, with a Run now button where you write them, Inspector buttons, and undo done right.
 - [Custom Resources](GUIDE-CUSTOM-RESOURCES.md) - your own data assets from the three-question wizard: column language, validation, the .tres workflow.
 - [Making Editor Tools from Code](GUIDE-BUILDING-EDITOR-TOOLS.md) - the programmatic side: author tool sheets through the EventSheets API.
 - [Writing the Docs](GUIDE-WRITING-THE-DOCS.md) - how documentation works here and how to add to it: the three doc sets, the guide standard, the figure fences that draw themselves in the editor, and the regenerate-before-commit gate.

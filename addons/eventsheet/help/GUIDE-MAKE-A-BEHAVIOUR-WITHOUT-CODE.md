@@ -79,7 +79,7 @@ Typed knobs get a live Inspector **drawer** (direction dial, colour swatch, curv
 
 - **Set / Add Variable**, **Set Property** (`host.visible = ...`), **Call Method**, **Emit Signal**.
 - **Movement**: *Set Velocity (X/Y)*, *Apply Gravity*, *Accelerate Velocity Toward*, *Move And Slide*, *Read Input Axis Into*.
-- **Collections** (a full set - no GDScript needed): *Push Back*, *Pop Front/Back*, *Push Front*, *Insert At*, *Delete Value*, *Find*, *Sort*, *Clear*; *Set Key*, *Get (with default)*, *Has Key*, *Keys/Values*.
+- **Collections** (a full set - no GDScript needed): *Push Back*, *Push Front*, *Pop Back*, *Pop Front*, *Insert At*, *Delete At*, *Delete Value*, *Index Of*, *Sort Array*, *Clear Array*; *Set Key*, *Get Key (with default)*, *Has Key*, *Delete Key*.
 
 ---
 

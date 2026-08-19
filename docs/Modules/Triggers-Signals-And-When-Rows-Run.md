@@ -541,7 +541,7 @@ On pool item reset  item
   the first item and never for the rest. Only Once Per Node is the one that means "once per thing".
 - **Only Once Per Node keeps its memory ON the node**, so it survives reparenting and a pooled
   instance remembers it was already initialised. Clear it with Forget Once For in the pool's reset.
-- **Only Once This Scene Load is forgotten on Restart Scene**, unlike Only Once Ever, which persists
+- **Only Once This Scene Load is forgotten on Restart Layout**, unlike Only Once Ever, which persists
   to `user://remembered.cfg` across runs. Pick by how long you want the memory to last.
 - **At Most Every is a rate, not an edge.** It lets the event run once per window however often it is
   reached; Trigger Once fires on the rising edge and never again until the conditions go false.

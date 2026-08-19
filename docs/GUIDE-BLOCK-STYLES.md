@@ -93,10 +93,18 @@ one; right-click a beat for "Add Step…".
 
 ## Variable rows
 
-`name : type = value` with the value tinted; expression defaults show as code, never quoted.
-An `@export` chip marks Inspector-visible variables; the walrus spelling (`:=`) round-trips
-exactly. Right-click for Toggle Constant, Remember Between Runs (persists via
-`user://remembered.cfg`), grouping, and rename-everywhere.
+One sentence, in this order: **scope word, plain type word, name, value** - `Instance number
+speed = 200`, `Constant number MAX_HP = 100`, `Static number spawned = 0` (which adds
+`shared by every Player`), `Local text name = ""` inside an event, `Global number Score = 0` on
+an autoload, `Field number price = 0` on a Resource script. The type reads in plain words
+(number, whole number, text, boolean, vector, color, `list of text`, table, object, scene, any)
+with Godot's own spelling one hover away, the value is tinted, and a colour is a live swatch you
+can click. Expression defaults show as code, never quoted.
+
+An **Inspector** chip marks the variables a designer can edit; the walrus spelling (`:=`)
+round-trips exactly. Right-click for Toggle Constant, Remember Between Runs (persists via
+`user://remembered.cfg`), Add setter / Add getter, grouping, and rename-everywhere. A setter
+reads as an `➜ On <name> set` trigger under the row and a getter as an expression block.
 
 ## Signal rows
 
