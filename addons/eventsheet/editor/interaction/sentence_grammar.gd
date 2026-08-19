@@ -63,7 +63,7 @@ const BEHAVIOUR_METHODS: PackedStringArray = [
 	"make_current", "restart"
 ]
 const BEHAVIOUR_MEMBERS: PackedStringArray = [
-	"linear_velocity", "angular_velocity", "emitting", "zoom"
+	"linear_velocity", "angular_velocity", "emitting", "zoom", "position_smoothing_enabled"
 ]
 ## N8. The classes each behaviour's words belong to, resolved through ClassDB so the 2D and 3D twins
 ## and any subclass of them answer alike.
@@ -1521,6 +1521,11 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 	var engine_verb: Dictionary = _engine_verb_assignment(target, assigned, context)
 	if not engine_verb.is_empty():
 		return engine_verb
+	# S18. The camera follow is written THROUGH a call (`...lerp(...)`), so it is asked before the
+	# simple-target gate turns the whole line down.
+	var scrolled: Dictionary = _scroll_toward_assignment(target, assigned, context)
+	if not scrolled.is_empty():
+		return scrolled
 	if not is_simple_target(target):
 		return {}
 	# R5. Writing the clock into a variable is the sheet's "Set ... to now" - the other half of the
@@ -1627,6 +1632,9 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 	var object_class: String = object_class_of(object_name, context)
 	if alpha_write:
 		return _sentence(object_name, "Set opacity to {value}", {"value": [_percent_words(assigned, context), "value"]})
+	# S16. Writing the material slot puts an effect on the object, or takes it off.
+	if EFFECT_SLOTS.has(member):
+		return _effects_assignment(object_name, assigned, context)
 	match member:
 		"visible":
 			if assigned != "true" and assigned != "false":
@@ -1787,6 +1795,16 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var engine_verb: Dictionary = _engine_verb_call(call, context)
 	if not engine_verb.is_empty():
 		return engine_verb
+	# ── S16 / S17 ───────────────────────────────────────────────────────────────────────────────
+	# A shader parameter is an EFFECT parameter and a tilemap cell is a TILE, in both node
+	# generations. Checked here, among the curated shapes, so an unrecognised call still falls
+	# through to the Object ▸ Verb chips below.
+	var effect_step: Dictionary = _effects_call(method, args, target, context)
+	if not effect_step.is_empty():
+		return effect_step
+	var tile_step: Dictionary = _tilemap_call(method, args, target, context)
+	if not tile_step.is_empty():
+		return tile_step
 	# M25/M26. `queue_free()` on ANY object is the event-sheet Destroy verb, including the script's
 	# own object - which is named, never `self`.
 	if method == "queue_free" and args.is_empty():
@@ -2295,8 +2313,10 @@ static func _behaviour_call(object_name: String, method: String, args: PackedStr
 		return {}
 	if not args.is_empty():
 		return {}
+	# S18. The camera page of the sheet says "Make current"; that is the row's name, not a friendlier
+	# spelling of Godot's call.
 	if method == "make_current" and _class_is_any(known_class, CAMERA_CLASSES):
-		return _sentence(object_name, "Set as active camera", {})
+		return _patterned(_sentence(object_name, "Make current", {}), "camera")
 	if method == "restart" and _class_is_any(known_class, PARTICLE_CLASSES):
 		return _behaviour_sentence(object_name, "Particles", "Restart", {})
 	return {}
@@ -2342,7 +2362,14 @@ static func _behaviour_assignment(object_name: String, member: String, assigned:
 		var percent: String = _zoom_percent(value)
 		if percent.is_empty():
 			return {}
-		return _sentence(object_name, "Set zoom to {percent}", {"percent": [percent, "value"]})
+		return _patterned(_sentence(object_name, "Set zoom to {percent}",
+			{"percent": [percent, "value"]}), "camera")
+	# S18. Smoothing is a switch on the camera page, so it reads as one - never as a property write.
+	if member == "position_smoothing_enabled" and _class_is_any(known_class, CAMERA_CLASSES):
+		if value != "true" and value != "false":
+			return {}
+		return _patterned(_sentence(object_name, "Set smoothing {state}",
+			{"state": [translate("on") if value == "true" else translate("off"), "name"]}), "camera")
 	return {}
 
 
@@ -2595,6 +2622,10 @@ static func _tween_statement(text: String, context: Dictionary) -> Dictionary:
 			})
 		"tween_property":
 			return _tween_property_sentence(text, parts, context)
+		"tween_method":
+			# S16 - the one `tween_method` shape with a sentence: an effect parameter driven over
+			# time. Anything else keeps its code, because a lambda can do anything.
+			return _tween_effect_sentence(arguments, context)
 	return {}
 
 
@@ -2658,7 +2689,9 @@ static func tween_chain_notes(parts: Dictionary) -> PackedStringArray:
 static func tween_chain_parts(text: String, context: Dictionary) -> Dictionary:
 	# The calls that ARE a step - the row a reader gets one of. Everything else on the line is a
 	# setting ON that step (the easing tail) or on the chain around it (the two below).
-	const PRIMARY_STEPS: Array[String] = ["tween_property", "tween_callback", "tween_interval", "kill"]
+	const PRIMARY_STEPS: Array[String] = [
+		"tween_property", "tween_callback", "tween_interval", "tween_method", "kill"
+	]
 	## R3. The two calls that say something about the CHAIN rather than about one step of it. Written
 	## on their own line they are a row; written in the middle of a one-line chain they are a note on
 	## the step that follows, which is why the walk keeps them rather than reading them instead of it.
@@ -4240,6 +4273,23 @@ static func _shaped_receiver_idiom(receiver: String, method: String,
 	# argument into `(8, 8)` by the time this is asked, and the brackets only ever held it.
 	if method in ["snapped", "snappedf", "snappedi"] and arguments.size() == 1:
 		return "%s snapped to %s" % [receiver, _unwrapped_group(arguments[0])]
+	# ── S16 ─────────────────────────────────────────────────────────────────────────────────────
+	# Reading a shader parameter is asking an object about one of its effect parameters, so the
+	# material slot comes off the front the same way it does on the write.
+	if method == "get_shader_parameter" and arguments.size() == 1:
+		var wearer: String = receiver
+		for slot: String in EFFECT_SLOTS:
+			if wearer.ends_with(".%s" % slot):
+				wearer = wearer.substr(0, wearer.length() - slot.length() - 1)
+				break
+		return _fill(translate("{object}'s effect parameter {name}"),
+			{"object": wearer, "name": arguments[0]})
+	# ── S17 ─────────────────────────────────────────────────────────────────────────────────────
+	# The three tilemap questions, under the names the sheet's own tilemap expressions carry. The
+	# older node spelling names its layer first; the answer is about the CELL either way.
+	if TILEMAP_EXPRESSION_WORDS.has(method) and arguments.size() >= 1 and arguments.size() <= 2:
+		return "%s.%s(%s)" % [receiver, str(TILEMAP_EXPRESSION_WORDS[method]),
+			arguments[arguments.size() - 1]]
 	return ""
 
 
@@ -4748,6 +4798,11 @@ const VIEWPORT_RECTS: PackedStringArray = [
 ## conjuncts. {} when the expression is not one of them, which is the caller's cue to carry on.
 static func joined_condition(text: String, context: Dictionary) -> Dictionary:
 	var bare: String = stripped_parens(text)
+	# S17. The tile-data question is a guard AND the question it guards, so it is claimed before the
+	# run is split - after the split the guard would read as "data exists" beside it.
+	var tile: Dictionary = _tile_data_condition(bare, context)
+	if not tile.is_empty():
+		return tile
 	# The angle window first: both of its terms wrap the SAME value, which the plain range reading
 	# would happily claim and then print the wrapping arithmetic as the thing being asked about.
 	var angles: Dictionary = _between_angles_condition(bare, context)
@@ -5550,3 +5605,326 @@ static func _color_names(text: String) -> String:
 	for found: RegExMatch in pattern.search_all(text):
 		out = out.replace(found.get_string(0), found.get_string(1).capitalize().to_lower())
 	return out
+
+
+# ── S16 / S17 / S18: effects, tilemaps and the camera ────────────────────────────
+#
+# Three families of line every 2D game writes, and three families of row the sheet already has words
+# for. A ShaderMaterial parameter IS an effect parameter; a TileMap cell IS a tile at a cell; a
+# Camera2D limit IS a scroll limit. Each reading below claims its shape exactly - the strictness at
+# the top of this file applies here too - and carries a "pattern" key so the pattern registry can be
+# filled from the readings themselves rather than from a second, drifting set of matchers.
+
+
+## S16. The property slots an effect is worn in. A ShaderMaterial hangs off one of these, so the row
+## belongs to the OBJECT wearing it: a reader thinks "the sprite is flashing", never "the sprite's
+## material's uniform is 1".
+const EFFECT_SLOTS: PackedStringArray = ["material", "material_override", "material_overlay"]
+
+## S17. The tilemap questions a reader types into an expression field, by the Godot method that asks
+## them. These are NAMES a reader spells, exactly like `max` and `min`, which is why they keep the
+## call shape rather than being turned into prose.
+const TILEMAP_EXPRESSION_WORDS: Dictionary = {
+	"get_cell_source_id": "TileAt",
+	"local_to_map": "PositionToTile",
+	"map_to_local": "TileToPosition"
+}
+
+
+## The reading with the pattern it is an instance of written on it. The row builder reads this key to
+## claim the pattern once per event; nothing about the row itself changes.
+static func _patterned(reading: Dictionary, pattern: String) -> Dictionary:
+	if reading.is_empty():
+		return reading
+	reading["pattern"] = pattern
+	return reading
+
+
+## S16. The object an effect line is ABOUT: `sprite.material` is the sprite, a bare `material` is the
+## script's own object, and a local holding the material is itself the nearest name a reader has.
+static func effects_object(receiver: String, context: Dictionary) -> String:
+	var text: String = receiver.strip_edges().trim_prefix("self.")
+	for slot: String in EFFECT_SLOTS:
+		if text == slot:
+			return script_object(context)
+		if text.ends_with(".%s" % slot):
+			text = text.substr(0, text.length() - slot.length() - 1)
+			break
+	return _receiver_object(text, context)
+
+
+## S16. The effect parameter a call names, without the quoting or the StringName mark the GDScript
+## needed: `&"flash"` and `"flash"` are the same parameter, and a reader means `flash` by both.
+static func effect_parameter_name(argument: String) -> String:
+	var text: String = argument.strip_edges().trim_prefix("&")
+	if _is_string_literal(text):
+		return _unquote(text)
+	return text
+
+
+## S16. `sprite.material.set_shader_parameter("flash", 1.0)` -> `sprite ▸ Set effect parameter flash
+## to 1`. Only the two-argument call is claimed, which is the only shape the method has.
+static func _effects_call(method: String, args: PackedStringArray, receiver: String,
+		context: Dictionary) -> Dictionary:
+	# `tween_method` lives on exactly one class, so a tween holding an effect lambda says what it is
+	# without the chain having to be proved first - which matters, because the tween a hit-flash uses
+	# is usually a field declared far from the line that drives it.
+	if method == "tween_method":
+		return _tween_effect_sentence(args, context)
+	if method != "set_shader_parameter" or args.size() != 2:
+		return {}
+	if receiver.strip_edges().is_empty():
+		return {}
+	return _patterned(_sentence(effects_object(receiver, context),
+		"Set effect parameter {name} to {value}", {
+			"name": [effect_parameter_name(args[0]), "name"],
+			"value": [expression_text(args[1], context), "value"]
+		}), "effects")
+
+
+## S16. Writing the material slot is putting an effect ON an object or taking it OFF again:
+## `sprite.material = null` is Remove effect, and a shader resource is the effect it is named after.
+static func _effects_assignment(object_name: String, assigned: String, context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	if value == "null":
+		return _patterned(_sentence(object_name, "Remove effect", {}), "effects")
+	var named: String = effect_resource_name(value)
+	if named.is_empty():
+		return {}
+	return _patterned(_sentence(object_name, "Set effect to {name}",
+		{"name": [named, "value"]}), "effects")
+
+
+## S16. The name an effect resource goes by - the file it lives in, without the folder it is filed
+## under or the extension Godot needs. A plain variable is already a name; anything else is "" so the
+## row keeps the plain property write rather than inventing a name for it.
+static func effect_resource_name(value: String) -> String:
+	var text: String = value.strip_edges()
+	for head: String in ["preload(", "load("]:
+		if not text.begins_with(head) or not text.ends_with(")"):
+			continue
+		var inner: String = text.substr(head.length(), text.length() - head.length() - 1).strip_edges()
+		if not _is_string_literal(inner):
+			return ""
+		return _unquote(inner).get_file().get_basename()
+	return text if is_identifier(text) else ""
+
+
+## S16. `tween_method(func(v): mat.set_shader_parameter("dissolve", v), 0.0, 1.0, 0.5)` is the one
+## shape the sheet has a sentence for: an effect parameter driven from one value to another over
+## time. The row belongs to the material the lambda writes, because that is what is changing.
+static func _tween_effect_sentence(arguments: PackedStringArray, context: Dictionary) -> Dictionary:
+	if arguments.size() != 4:
+		return {}
+	var lambda: Dictionary = effect_lambda_parts(arguments[0], context)
+	if lambda.is_empty():
+		return {}
+	return _patterned(_sentence(str(lambda.get("object", "")),
+		"Tween effect parameter {name} from {from} to {to} in {seconds} seconds", {
+			"name": [str(lambda.get("name", "")), "name"],
+			"from": [expression_text(arguments[1], context), "value"],
+			"to": [expression_text(arguments[2], context), "value"],
+			"seconds": [expression_text(arguments[3], context), "value"]
+		}), "effects")
+
+
+## S16. `func(v): mat.set_shader_parameter("dissolve", v)` -> {object, name}, or {} when the lambda
+## does anything else. The lambda's own parameter must be exactly what the call hands over: a body
+## that computes something on the way is not a plain tween of that parameter, and no one sentence
+## could say what it does.
+static func effect_lambda_parts(text: String, context: Dictionary) -> Dictionary:
+	var body: String = text.strip_edges()
+	if not body.begins_with("func("):
+		return {}
+	var params_end: int = closing_paren(body, 4)
+	if params_end < 0:
+		return {}
+	var parameter: String = body.substr(5, params_end - 5).strip_edges()
+	var colon_at: int = parameter.find(":")
+	if colon_at >= 0:
+		parameter = parameter.substr(0, colon_at).strip_edges()
+	if not is_identifier(parameter):
+		return {}
+	var rest: String = body.substr(params_end + 1).strip_edges()
+	if not rest.begins_with(":"):
+		return {}
+	var call: Dictionary = call_parts(rest.substr(1).strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "set_shader_parameter":
+		return {}
+	var call_args: PackedStringArray = call.get("args", PackedStringArray())
+	if call_args.size() != 2 or call_args[1].strip_edges() != parameter:
+		return {}
+	var receiver: String = str(call.get("target", ""))
+	if receiver.strip_edges().is_empty():
+		return {}
+	return {"object": effects_object(receiver, context), "name": effect_parameter_name(call_args[0])}
+
+
+## S17. The tilemap verbs. Both node generations answer here: the layer-per-node spelling (4.3+) takes
+## the cell first, the older one names the layer in front of it, and the reading is the same sentence
+## with the layer said quietly at the end.
+static func _tilemap_call(method: String, args: PackedStringArray, receiver: String,
+		context: Dictionary) -> Dictionary:
+	if receiver.strip_edges().is_empty():
+		return {}
+	var object_name: String = _receiver_object(receiver, context)
+	if method == "set_cell" and (args.size() == 3 or args.size() == 4):
+		var layered: bool = args.size() == 4
+		var offset: int = 1 if layered else 0
+		var reading: Dictionary = _sentence(object_name, "Set tile at {cell} to {atlas}", {
+			"cell": [expression_text(args[offset], context), "value"],
+			"atlas": [_unwrapped_group(expression_text(args[offset + 2], context)), "value"]
+		})
+		_append_note(reading, _tilemap_note(args[0] if layered else "",
+			expression_text(args[offset + 1], context)))
+		return _patterned(reading, "tilemap")
+	if method == "erase_cell" and (args.size() == 1 or args.size() == 2):
+		var layered_erase: bool = args.size() == 2
+		var erase_reading: Dictionary = _sentence(object_name, "Erase tile at {cell}", {
+			"cell": [expression_text(args[1 if layered_erase else 0], context), "value"]
+		})
+		_append_note(erase_reading, _tilemap_note(args[0] if layered_erase else "", ""))
+		return _patterned(erase_reading, "tilemap")
+	return {}
+
+
+## S17. The quiet half of a tilemap row: which layer the cell is on and which tileset the tile came
+## from. Both are numbers a reader only wants when something is wrong, so they sit behind the
+## sentence rather than inside it. "" when the line names neither.
+static func _tilemap_note(layer: String, tileset: String) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	if not layer.strip_edges().is_empty():
+		parts.append(_fill(translate("layer {n}"), {"n": layer.strip_edges()}))
+	if not tileset.strip_edges().is_empty():
+		parts.append(_fill(translate("tileset {id}"), {"id": tileset.strip_edges()}))
+	return "" if parts.is_empty() else "(%s)" % " · ".join(parts)
+
+
+## A muted aside appended to a reading, the way a range says which end it leaves out.
+static func _append_note(reading: Dictionary, note: String) -> void:
+	if reading.is_empty() or note.strip_edges().is_empty():
+		return
+	(reading["segments"] as Array).append({"text": " %s" % note, "tone": "muted"})
+
+
+## S17. `if data and data.get_custom_data("solid")` - the tile's own data, asked about the cell the
+## data came from. Both spellings answer: the local a line above filled from `get_cell_tile_data`
+## (the file's own facts say which local that is), and the whole thing written out in one expression,
+## which is what the picked row writes.
+static func _tile_data_condition(text: String, context: Dictionary) -> Dictionary:
+	var and_at: int = top_level_index(text, " and ")
+	if and_at < 0:
+		return {}
+	var guard: String = text.substr(0, and_at).strip_edges()
+	var asked: String = text.substr(and_at + 5).strip_edges()
+	var dot_at: int = asked.rfind(".get_custom_data(")
+	if dot_at <= 0 or not asked.ends_with(")"):
+		return {}
+	var holder: String = asked.substr(0, dot_at).strip_edges()
+	var key: String = asked.substr(dot_at + 17, asked.length() - dot_at - 18).strip_edges()
+	if not _is_string_literal(key):
+		return {}
+	# The guard must be about the SAME thing the question is asked of, however it is spelled.
+	var guarded: String = guard.trim_suffix(" != null").strip_edges()
+	if guarded != holder:
+		return {}
+	var tile: Dictionary = tile_data_source(holder, context)
+	if tile.is_empty():
+		return {}
+	return _patterned(_sentence(str(tile.get("object", "")), "tile at {cell} has {name} set", {
+		"cell": [expression_text(str(tile.get("cell", "")), context), "value"],
+		"name": [_unquote(key), "name"]
+	}), "tilemap")
+
+
+## S17. Where a tile-data value came from, as {object, cell} - either a local the file filled from
+## `get_cell_tile_data` (looked up in the facts the sheet gathered once) or the call written out in
+## place. {} when the holder cannot be proved to be a tile's data, which keeps the plain reading.
+static func tile_data_source(holder: String, context: Dictionary) -> Dictionary:
+	var text: String = holder.strip_edges()
+	if is_identifier(text):
+		var known: Dictionary = context.get("tile_data_locals", {})
+		return (known.get(text, {}) as Dictionary).duplicate() if known.has(text) else {}
+	return tile_data_call_parts(text, context)
+
+
+## S17. `tilemap.get_cell_tile_data(0, cell)` -> {object, cell}, for both node generations. {} for
+## anything else.
+static func tile_data_call_parts(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "get_cell_tile_data":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.is_empty() or args.size() > 2:
+		return {}
+	var receiver: String = str(call.get("target", ""))
+	if receiver.strip_edges().is_empty():
+		return {}
+	return {
+		"object": _receiver_object(receiver, context),
+		"cell": args[args.size() - 1].strip_edges()
+	}
+
+
+## S18. `camera.global_position = camera.global_position.lerp(target.global_position, 5 * delta)` is
+## the follow every 2D game writes, and the sheet says it in one row: scroll toward a thing, at a
+## rate, per second. Claimed only on a camera and only when the rate is a plain per-second one - a
+## lerp with a bare constant is frame-rate dependent and reads as the arithmetic it is.
+static func _scroll_toward_assignment(target: String, assigned: String, context: Dictionary) -> Dictionary:
+	if not OWN_POSITION_NAMES.has(_trailing_member(target)):
+		return {}
+	var object_name: String = _receiver_object(_owner_of(target), context)
+	if not _class_is_any(object_class_of(object_name, context), CAMERA_CLASSES):
+		return {}
+	var call: Dictionary = call_parts(assigned.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "lerp":
+		return {}
+	if str(call.get("target", "")).strip_edges() != target.strip_edges():
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 2:
+		return {}
+	var rate: String = _per_second_factor(args[1])
+	if rate.is_empty():
+		return {}
+	var followed: String = args[0].strip_edges()
+	if OWN_POSITION_NAMES.has(_trailing_member(followed)):
+		followed = _owner_of(followed)
+	if followed.is_empty():
+		return {}
+	var reading: Dictionary = _sentence(object_name, "Scroll toward {target} at {rate}", {
+		"target": [expression_text(followed, context), "value"],
+		"rate": [expression_text(rate, context), "value"]
+	})
+	_append_note(reading, translate("(per second)"))
+	return _patterned(reading, "camera")
+
+
+## The member at the end of a dotted target (`camera.global_position` -> "global_position"), and the
+## part in front of it. Two one-line helpers so the follow reading above reads as one sentence.
+static func _trailing_member(text: String) -> String:
+	var bare: String = text.strip_edges().trim_prefix("self.")
+	var dot_at: int = bare.rfind(".")
+	return bare if dot_at < 0 else bare.substr(dot_at + 1)
+
+
+## The part of a dotted name in front of its last member, "" when there is none.
+static func _owner_of(text: String) -> String:
+	var bare: String = text.strip_edges().trim_prefix("self.")
+	var dot_at: int = bare.rfind(".")
+	return "" if dot_at < 0 else bare.substr(0, dot_at)
+
+
+## S18. The rate out of `5 * delta` / `delta * 5`, or "" when the factor is not per-second at all.
+static func _per_second_factor(value: String) -> String:
+	var text: String = value.strip_edges()
+	var at: int = top_level_index(text, " * ")
+	if at < 0:
+		return ""
+	var left: String = text.substr(0, at).strip_edges()
+	var right: String = text.substr(at + 3).strip_edges()
+	if right == "delta" or right == "_delta":
+		return left
+	if left == "delta" or left == "_delta":
+		return right
+	return ""

@@ -82,7 +82,12 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		# spread over several lines joined only by the local's name, so the rows that belong together
 		# are worked out once here rather than guessed at line by line.
 		"tween_locals": tweens.get("locals", {}),
-		"tween_notes": tweens.get("notes", {})
+		"tween_notes": tweens.get("notes", {}),
+		# ── S17 ───────────────────────────────────────────────────────────────────────────────
+		# Which locals hold a tile's own data, and the cell each one came from. The question a tile
+		# asks ("has solid set") is written a line below the answer's source, so the two are joined
+		# once here rather than guessed at per row.
+		"tile_data_locals": tile_data_local_map(sheet)
 	}
 	extras.merge(patterns, true)
 	return extras
@@ -125,6 +130,41 @@ static func _claim_body(sheet: EventSheetResource, row_uid: String, event_uid: S
 		EventSheetPatternFacts.claim(sheet, str(claim.get("pattern", "")), row_uid, event_uid,
 			claim.get("evidence", PackedStringArray()), str(claim.get("words", "")),
 			str(claim.get("adoptable", "")), claim.get("ace_ids", PackedStringArray()))
+
+
+## S17. {local name: {object, cell}} for every `var data = <tilemap>.get_cell_tile_data(<cell>)` the
+## file writes. A name filled twice from different cells is dropped: the same word may not read two
+## ways on one sheet, exactly as the tween notes refuse a line that means two things.
+static func tile_data_local_map(sheet: EventSheetResource) -> Dictionary:
+	var found: Dictionary = {}
+	var disagreed: Dictionary = {}
+	if sheet == null:
+		return found
+	for line: String in ordered_code_lines(sheet):
+		var text: String = line.strip_edges()
+		if not text.begins_with("var "):
+			continue
+		for separator: String in [" := ", " = "]:
+			var at: int = text.find(separator)
+			if at < 0:
+				continue
+			var name_text: String = text.substr(4, at - 4).strip_edges()
+			var colon_at: int = name_text.find(":")
+			if colon_at >= 0:
+				name_text = name_text.substr(0, colon_at).strip_edges()
+			if not EventSheetSentence.is_identifier(name_text):
+				break
+			var parts: Dictionary = EventSheetSentence.tile_data_call_parts(
+				text.substr(at + separator.length()), {})
+			if parts.is_empty():
+				break
+			if found.has(name_text) and found[name_text] != parts:
+				disagreed[name_text] = true
+			found[name_text] = parts
+			break
+	for name_text: String in disagreed:
+		found.erase(name_text)
+	return found
 
 
 ## R9. {timer tag: true when it fires once} from the `$Timer.one_shot = true` lines the file holds.
