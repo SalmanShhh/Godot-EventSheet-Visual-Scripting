@@ -2856,3 +2856,73 @@ GLOBALS,GLOBALE
 extends it,erweitert sie
 the group has the same members,die Gruppe hat dieselben Mitglieder
 what extends this object's class,was die Klasse dieses Objekts erweitert
+Set mass to {value},Masse auf {value} setzen
+Set linear damping to {value},Lineare Dämpfung auf {value} setzen
+Set angular damping to {value},Winkeldämpfung auf {value} setzen
+Set gravity scale to {value},Schwerkraftfaktor auf {value} setzen
+Set immovable,Unbeweglich machen
+Set movable,Beweglich machen
+Use physics material {value},Physikmaterial {value} verwenden
+Set friction to {value},Reibung auf {value} setzen
+Set elasticity to {value},Elastizität auf {value} setzen
+Set world gravity to {value},Weltschwerkraft auf {value} setzen
+Apply torque {value},Drehmoment {value} anwenden
+Apply torque impulse {value},Drehimpuls {value} anwenden
+Apply impulse {value} at {offset},Impuls {value} bei {offset} anwenden
+Apply force {value} at {offset},Kraft {value} bei {offset} anwenden
+Create {kind} joint,{kind}-Gelenk erstellen
+Is sleeping,Schläft
+Is awake,Ist wach
+Is immovable,Ist unbeweglich
+Is not immovable,Ist nicht unbeweglich
+Is checked,Ist angehakt
+Is not checked,Ist nicht angehakt
+Set checked,Anhaken
+Set unchecked,Haken entfernen
+Set text to {value},Text auf {value} setzen
+Set placeholder to {value},Platzhalter auf {value} setzen
+Set formatted text to {value},Formatierten Text auf {value} setzen
+Append formatted text {value},Formatierten Text {value} anhängen
+Switch to tab {value},Zu Reiter {value} wechseln
+Set tooltip to {value},Tooltip auf {value} setzen
+Add item {value},Eintrag {value} hinzufügen
+Remove item {value},Eintrag {value} entfernen
+Select item {value},Eintrag {value} auswählen
+Clear,Leeren
+Has reached the end,Hat das Ende erreicht
+Go to start,Zum Anfang
+Set looping {state},Wiederholen {state}
+Set rotate with path {state},Mit Pfad drehen {state}
+Set distance along path to {value},Strecke auf dem Pfad auf {value} setzen
+Add path point {value},Pfadpunkt {value} hinzufügen
+Set pattern {name} to {value},Muster {name} auf {value} setzen
+Wait {seconds} seconds,{seconds} Sekunden warten
+Follow a Path,Pfad folgen
+Follow a path,Pfad folgen
+Follow A Path,Pfad folgen
+Text and patterns,Text und Muster
+"a body's weight, surface and pushes, set and applied rather than moved by hand","Gewicht, Oberfläche und Stöße eines Körpers - gesetzt und angewendet statt von Hand bewegt"
+"something travels a drawn route at a speed, and starts again at the end",Etwas fährt eine gezeichnete Route mit einer Geschwindigkeit ab und beginnt am Ende von vorn
+"text built from values, and a regular expression searched or replaced in it","Text aus Werten gebaut, und ein regulärer Ausdruck darin gesucht oder ersetzt"
+Text input,Texteingabe
+List,Liste
+Check box,Kontrollkästchen
+File chooser,Dateiauswahl
+Tabs,Reiter
+blocks the game,blockiert das Spiel
+regular expression,regulärer Ausdruck
+now (microseconds),jetzt (Mikrosekunden)
+a pattern,ein Muster
+the match,der Treffer
+first match of {pattern} in {text},erster Treffer von {pattern} in {text}
+all matches of {pattern} in {text},alle Treffer von {pattern} in {text}
+replace matches of {pattern} in {text} with {value},Treffer von {pattern} in {text} durch {value} ersetzen
+with,mit
+revolute,Dreh
+distance,Abstand
+prismatic,Schiebe
+Text input ▸ On text changed,Texteingabe ▸ Bei Textänderung
+Text input ▸ On submitted,Texteingabe ▸ Bei Bestätigung
+List ▸ On item selected,Liste ▸ Bei Auswahl eines Eintrags
+File chooser ▸ On file chosen,Dateiauswahl ▸ Bei Dateiwahl
+Tabs ▸ On tab changed,Reiter ▸ Bei Reiterwechsel

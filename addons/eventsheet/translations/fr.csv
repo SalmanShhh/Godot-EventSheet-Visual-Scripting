@@ -2856,3 +2856,73 @@ GLOBALS,GLOBAUX
 extends it,en herite
 the group has the same members,le groupe a les memes membres
 what extends this object's class,ce qui herite de la classe de cet objet
+Set mass to {value},Définir la masse à {value}
+Set linear damping to {value},Définir l'amortissement linéaire à {value}
+Set angular damping to {value},Définir l'amortissement angulaire à {value}
+Set gravity scale to {value},Définir l'échelle de gravité à {value}
+Set immovable,Rendre immobile
+Set movable,Rendre mobile
+Use physics material {value},Utiliser le matériau physique {value}
+Set friction to {value},Définir le frottement à {value}
+Set elasticity to {value},Définir l'élasticité à {value}
+Set world gravity to {value},Définir la gravité du monde à {value}
+Apply torque {value},Appliquer le couple {value}
+Apply torque impulse {value},Appliquer l'impulsion de couple {value}
+Apply impulse {value} at {offset},Appliquer l'impulsion {value} à {offset}
+Apply force {value} at {offset},Appliquer la force {value} à {offset}
+Create {kind} joint,Créer une articulation {kind}
+Is sleeping,Est endormi
+Is awake,Est éveillé
+Is immovable,Est immobile
+Is not immovable,N'est pas immobile
+Is checked,Est coché
+Is not checked,N'est pas coché
+Set checked,Cocher
+Set unchecked,Décocher
+Set text to {value},Définir le texte à {value}
+Set placeholder to {value},Définir le texte indicatif à {value}
+Set formatted text to {value},Définir le texte mis en forme à {value}
+Append formatted text {value},Ajouter le texte mis en forme {value}
+Switch to tab {value},Passer à l'onglet {value}
+Set tooltip to {value},Définir l'infobulle à {value}
+Add item {value},Ajouter l'entrée {value}
+Remove item {value},Retirer l'entrée {value}
+Select item {value},Sélectionner l'entrée {value}
+Clear,Vider
+Has reached the end,A atteint la fin
+Go to start,Aller au début
+Set looping {state},Boucle {state}
+Set rotate with path {state},Tourner avec le chemin {state}
+Set distance along path to {value},Définir la distance sur le chemin à {value}
+Add path point {value},Ajouter le point de chemin {value}
+Set pattern {name} to {value},Définir le motif {name} à {value}
+Wait {seconds} seconds,Attendre {seconds} secondes
+Follow a Path,Suivre un chemin
+Follow a path,Suivre un chemin
+Follow A Path,Suivre un chemin
+Text and patterns,Texte et motifs
+"a body's weight, surface and pushes, set and applied rather than moved by hand","le poids, la surface et les poussées d'un corps, réglés et appliqués plutôt que déplacés à la main"
+"something travels a drawn route at a speed, and starts again at the end",quelque chose parcourt un chemin dessiné à une vitesse et recommence à la fin
+"text built from values, and a regular expression searched or replaced in it","du texte construit à partir de valeurs, et une expression régulière recherchée ou remplacée dedans"
+Text input,Champ de texte
+List,Liste
+Check box,Case à cocher
+File chooser,Sélecteur de fichiers
+Tabs,Onglets
+blocks the game,bloque le jeu
+regular expression,expression régulière
+now (microseconds),maintenant (microsecondes)
+a pattern,un motif
+the match,la correspondance
+first match of {pattern} in {text},première correspondance de {pattern} dans {text}
+all matches of {pattern} in {text},toutes les correspondances de {pattern} dans {text}
+replace matches of {pattern} in {text} with {value},remplacer les correspondances de {pattern} dans {text} par {value}
+with,avec
+revolute,pivot
+distance,de distance
+prismatic,glissière
+Text input ▸ On text changed,Champ de texte ▸ Quand le texte change
+Text input ▸ On submitted,Champ de texte ▸ À la validation
+List ▸ On item selected,Liste ▸ Quand une entrée est choisie
+File chooser ▸ On file chosen,Sélecteur de fichiers ▸ Quand un fichier est choisi
+Tabs ▸ On tab changed,Onglets ▸ Au changement d'onglet

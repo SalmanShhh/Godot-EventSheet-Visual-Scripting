@@ -2856,3 +2856,73 @@ GLOBALS,전역
 extends it,이를 상속함
 the group has the same members,그룹 구성원이 동일함
 what extends this object's class,이 오브젝트의 클래스를 상속하는 것
+Set mass to {value},질량을 {value}(으)로 설정
+Set linear damping to {value},선형 감쇠를 {value}(으)로 설정
+Set angular damping to {value},각 감쇠를 {value}(으)로 설정
+Set gravity scale to {value},중력 배율을 {value}(으)로 설정
+Set immovable,고정하기
+Set movable,움직이게 하기
+Use physics material {value},물리 재질 {value} 사용
+Set friction to {value},마찰을 {value}(으)로 설정
+Set elasticity to {value},탄성을 {value}(으)로 설정
+Set world gravity to {value},월드 중력을 {value}(으)로 설정
+Apply torque {value},토크 {value} 적용
+Apply torque impulse {value},토크 임펄스 {value} 적용
+Apply impulse {value} at {offset},임펄스 {value}을(를) {offset}에 적용
+Apply force {value} at {offset},힘 {value}을(를) {offset}에 적용
+Create {kind} joint,{kind} 조인트 만들기
+Is sleeping,잠자는 중
+Is awake,깨어 있음
+Is immovable,고정됨
+Is not immovable,고정되지 않음
+Is checked,체크됨
+Is not checked,체크되지 않음
+Set checked,체크하기
+Set unchecked,체크 해제
+Set text to {value},텍스트를 {value}(으)로 설정
+Set placeholder to {value},안내 문구를 {value}(으)로 설정
+Set formatted text to {value},서식 있는 텍스트를 {value}(으)로 설정
+Append formatted text {value},서식 있는 텍스트 {value} 추가
+Switch to tab {value},탭 {value}(으)로 전환
+Set tooltip to {value},툴팁을 {value}(으)로 설정
+Add item {value},항목 {value} 추가
+Remove item {value},항목 {value} 제거
+Select item {value},항목 {value} 선택
+Clear,비우기
+Has reached the end,끝에 도달함
+Go to start,시작으로 가기
+Set looping {state},반복 {state}
+Set rotate with path {state},경로 따라 회전 {state}
+Set distance along path to {value},경로 위 거리를 {value}(으)로 설정
+Add path point {value},경로 점 {value} 추가
+Set pattern {name} to {value},패턴 {name}을(를) {value}(으)로 설정
+Wait {seconds} seconds,{seconds}초 기다리기
+Follow a Path,경로 따라가기
+Follow a path,경로 따라가기
+Follow A Path,경로 따라가기
+Text and patterns,텍스트와 패턴
+"a body's weight, surface and pushes, set and applied rather than moved by hand",물체의 무게와 표면과 밀기를 손으로 옮기는 대신 설정하고 가한다
+"something travels a drawn route at a speed, and starts again at the end",그려진 길을 일정한 속도로 지나가고 끝에서 다시 시작한다
+"text built from values, and a regular expression searched or replaced in it","값으로 만든 텍스트와, 그 안에서 찾거나 바꾸는 정규식"
+Text input,텍스트 입력
+List,목록
+Check box,체크 상자
+File chooser,파일 선택기
+Tabs,탭
+blocks the game,게임이 멈춤
+regular expression,정규식
+now (microseconds),지금 (마이크로초)
+a pattern,패턴
+the match,일치한 부분
+first match of {pattern} in {text},{text}에서 {pattern}의 첫 일치
+all matches of {pattern} in {text},{text}에서 {pattern}의 모든 일치
+replace matches of {pattern} in {text} with {value},{text}에서 {pattern}의 일치를 {value}(으)로 바꾸기
+with,값:
+revolute,회전
+distance,거리
+prismatic,직선
+Text input ▸ On text changed,텍스트 입력 ▸ 텍스트가 바뀌면
+Text input ▸ On submitted,텍스트 입력 ▸ 입력을 마치면
+List ▸ On item selected,목록 ▸ 항목을 고르면
+File chooser ▸ On file chosen,파일 선택기 ▸ 파일을 고르면
+Tabs ▸ On tab changed,탭 ▸ 탭이 바뀌면

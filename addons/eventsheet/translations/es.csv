@@ -2856,3 +2856,73 @@ GLOBALS,GLOBALES
 extends it,la extiende
 the group has the same members,el grupo tiene los mismos miembros
 what extends this object's class,que extiende la clase de este objeto
+Set mass to {value},Fijar masa a {value}
+Set linear damping to {value},Fijar amortiguación lineal a {value}
+Set angular damping to {value},Fijar amortiguación angular a {value}
+Set gravity scale to {value},Fijar escala de gravedad a {value}
+Set immovable,Hacer inamovible
+Set movable,Hacer movible
+Use physics material {value},Usar material físico {value}
+Set friction to {value},Fijar fricción a {value}
+Set elasticity to {value},Fijar elasticidad a {value}
+Set world gravity to {value},Fijar gravedad del mundo a {value}
+Apply torque {value},Aplicar par {value}
+Apply torque impulse {value},Aplicar impulso de par {value}
+Apply impulse {value} at {offset},Aplicar impulso {value} en {offset}
+Apply force {value} at {offset},Aplicar fuerza {value} en {offset}
+Create {kind} joint,Crear articulación {kind}
+Is sleeping,Está dormido
+Is awake,Está despierto
+Is immovable,Es inamovible
+Is not immovable,No es inamovible
+Is checked,Está marcado
+Is not checked,No está marcado
+Set checked,Marcar
+Set unchecked,Desmarcar
+Set text to {value},Fijar texto a {value}
+Set placeholder to {value},Fijar marcador a {value}
+Set formatted text to {value},Fijar texto con formato a {value}
+Append formatted text {value},Añadir texto con formato {value}
+Switch to tab {value},Cambiar a la pestaña {value}
+Set tooltip to {value},Fijar tooltip a {value}
+Add item {value},Añadir elemento {value}
+Remove item {value},Quitar elemento {value}
+Select item {value},Seleccionar elemento {value}
+Clear,Vaciar
+Has reached the end,Ha llegado al final
+Go to start,Ir al inicio
+Set looping {state},Repetición {state}
+Set rotate with path {state},Girar con la ruta {state}
+Set distance along path to {value},Fijar avance en la ruta a {value}
+Add path point {value},Añadir punto de ruta {value}
+Set pattern {name} to {value},Fijar patrón {name} a {value}
+Wait {seconds} seconds,Esperar {seconds} segundos
+Follow a Path,Seguir una ruta
+Follow a path,Seguir una ruta
+Follow A Path,Seguir una ruta
+Text and patterns,Texto y patrones
+"a body's weight, surface and pushes, set and applied rather than moved by hand","el peso, la superficie y los empujes de un cuerpo, fijados y aplicados en vez de moverlo a mano"
+"something travels a drawn route at a speed, and starts again at the end",algo recorre una ruta dibujada a una velocidad y vuelve a empezar al final
+"text built from values, and a regular expression searched or replaced in it","texto construido a partir de valores, y una expresión regular buscada o reemplazada en él"
+Text input,Campo de texto
+List,Lista
+Check box,Casilla
+File chooser,Selector de archivos
+Tabs,Pestañas
+blocks the game,bloquea el juego
+regular expression,expresión regular
+now (microseconds),ahora (microsegundos)
+a pattern,un patrón
+the match,la coincidencia
+first match of {pattern} in {text},primera coincidencia de {pattern} en {text}
+all matches of {pattern} in {text},todas las coincidencias de {pattern} en {text}
+replace matches of {pattern} in {text} with {value},reemplazar coincidencias de {pattern} en {text} por {value}
+with,con
+revolute,de rotación
+distance,de distancia
+prismatic,prismática
+Text input ▸ On text changed,Campo de texto ▸ Al cambiar el texto
+Text input ▸ On submitted,Campo de texto ▸ Al enviar
+List ▸ On item selected,Lista ▸ Al elegir un elemento
+File chooser ▸ On file chosen,Selector de archivos ▸ Al elegir un archivo
+Tabs ▸ On tab changed,Pestañas ▸ Al cambiar de pestaña

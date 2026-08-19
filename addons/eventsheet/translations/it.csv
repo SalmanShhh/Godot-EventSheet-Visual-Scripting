@@ -2856,3 +2856,73 @@ GLOBALS,GLOBALI
 extends it,la estende
 the group has the same members,il gruppo ha gli stessi membri
 what extends this object's class,cosa estende la classe di questo oggetto
+Set mass to {value},Imposta massa a {value}
+Set linear damping to {value},Imposta smorzamento lineare a {value}
+Set angular damping to {value},Imposta smorzamento angolare a {value}
+Set gravity scale to {value},Imposta scala di gravità a {value}
+Set immovable,Rendi immobile
+Set movable,Rendi mobile
+Use physics material {value},Usa materiale fisico {value}
+Set friction to {value},Imposta attrito a {value}
+Set elasticity to {value},Imposta elasticità a {value}
+Set world gravity to {value},Imposta gravità del mondo a {value}
+Apply torque {value},Applica coppia {value}
+Apply torque impulse {value},Applica impulso di coppia {value}
+Apply impulse {value} at {offset},Applica impulso {value} a {offset}
+Apply force {value} at {offset},Applica forza {value} a {offset}
+Create {kind} joint,Crea giunto {kind}
+Is sleeping,Sta dormendo
+Is awake,È sveglio
+Is immovable,È immobile
+Is not immovable,Non è immobile
+Is checked,È spuntato
+Is not checked,Non è spuntato
+Set checked,Spunta
+Set unchecked,Togli spunta
+Set text to {value},Imposta testo a {value}
+Set placeholder to {value},Imposta segnaposto a {value}
+Set formatted text to {value},Imposta testo formattato a {value}
+Append formatted text {value},Aggiungi testo formattato {value}
+Switch to tab {value},Passa alla scheda {value}
+Set tooltip to {value},Imposta tooltip a {value}
+Add item {value},Aggiungi voce {value}
+Remove item {value},Rimuovi voce {value}
+Select item {value},Seleziona voce {value}
+Clear,Svuota
+Has reached the end,Ha raggiunto la fine
+Go to start,Vai all'inizio
+Set looping {state},Ripetizione {state}
+Set rotate with path {state},Ruota con il percorso {state}
+Set distance along path to {value},Imposta distanza sul percorso a {value}
+Add path point {value},Aggiungi punto del percorso {value}
+Set pattern {name} to {value},Imposta schema {name} a {value}
+Wait {seconds} seconds,Attendi {seconds} secondi
+Follow a Path,Segui un percorso
+Follow a path,Segui un percorso
+Follow A Path,Segui un percorso
+Text and patterns,Testo e schemi
+"a body's weight, surface and pushes, set and applied rather than moved by hand","peso, superficie e spinte di un corpo, impostati e applicati invece di muoverlo a mano"
+"something travels a drawn route at a speed, and starts again at the end",qualcosa percorre un tracciato disegnato a una velocità e ricomincia alla fine
+"text built from values, and a regular expression searched or replaced in it","testo costruito da valori, e un'espressione regolare cercata o sostituita al suo interno"
+Text input,Campo di testo
+List,Elenco
+Check box,Casella
+File chooser,Selettore file
+Tabs,Schede
+blocks the game,blocca il gioco
+regular expression,espressione regolare
+now (microseconds),adesso (microsecondi)
+a pattern,uno schema
+the match,la corrispondenza
+first match of {pattern} in {text},prima corrispondenza di {pattern} in {text}
+all matches of {pattern} in {text},tutte le corrispondenze di {pattern} in {text}
+replace matches of {pattern} in {text} with {value},sostituisci le corrispondenze di {pattern} in {text} con {value}
+with,con
+revolute,rotante
+distance,a distanza
+prismatic,prismatico
+Text input ▸ On text changed,Campo di testo ▸ Al cambio del testo
+Text input ▸ On submitted,Campo di testo ▸ All'invio
+List ▸ On item selected,Elenco ▸ Alla scelta di una voce
+File chooser ▸ On file chosen,Selettore file ▸ Alla scelta di un file
+Tabs ▸ On tab changed,Schede ▸ Al cambio scheda

@@ -2856,3 +2856,73 @@ GLOBALS,全局
 extends it,继承它
 the group has the same members,该组成员相同
 what extends this object's class,继承该对象类的内容
+Set mass to {value},将质量设为 {value}
+Set linear damping to {value},将线性阻尼设为 {value}
+Set angular damping to {value},将角阻尼设为 {value}
+Set gravity scale to {value},将重力比例设为 {value}
+Set immovable,设为不可移动
+Set movable,设为可移动
+Use physics material {value},使用物理材质 {value}
+Set friction to {value},将摩擦设为 {value}
+Set elasticity to {value},将弹性设为 {value}
+Set world gravity to {value},将世界重力设为 {value}
+Apply torque {value},施加扭矩 {value}
+Apply torque impulse {value},施加扭矩冲量 {value}
+Apply impulse {value} at {offset},在 {offset} 处施加冲量 {value}
+Apply force {value} at {offset},在 {offset} 处施加力 {value}
+Create {kind} joint,创建 {kind} 关节
+Is sleeping,处于休眠
+Is awake,处于活动
+Is immovable,不可移动
+Is not immovable,可移动
+Is checked,已勾选
+Is not checked,未勾选
+Set checked,勾选
+Set unchecked,取消勾选
+Set text to {value},将文本设为 {value}
+Set placeholder to {value},将占位文本设为 {value}
+Set formatted text to {value},将富文本设为 {value}
+Append formatted text {value},追加富文本 {value}
+Switch to tab {value},切换到标签页 {value}
+Set tooltip to {value},将提示设为 {value}
+Add item {value},添加条目 {value}
+Remove item {value},移除条目 {value}
+Select item {value},选中条目 {value}
+Clear,清空
+Has reached the end,已到达终点
+Go to start,回到起点
+Set looping {state},循环 {state}
+Set rotate with path {state},随路径旋转 {state}
+Set distance along path to {value},将路径上的距离设为 {value}
+Add path point {value},添加路径点 {value}
+Set pattern {name} to {value},将模式 {name} 设为 {value}
+Wait {seconds} seconds,等待 {seconds} 秒
+Follow a Path,沿路径移动
+Follow a path,沿路径移动
+Follow A Path,沿路径移动
+Text and patterns,文本与模式
+"a body's weight, surface and pushes, set and applied rather than moved by hand",物体的重量、表面与推力，由设置和施力决定，而不是手动移动
+"something travels a drawn route at a speed, and starts again at the end",某物以一定速度沿着画好的路线前进，到终点后重新开始
+"text built from values, and a regular expression searched or replaced in it",由值拼出的文本，以及在其中查找或替换的正则表达式
+Text input,文本输入
+List,列表
+Check box,复选框
+File chooser,文件选择器
+Tabs,标签页
+blocks the game,会卡住游戏
+regular expression,正则表达式
+now (microseconds),现在（微秒）
+a pattern,一个模式
+the match,匹配结果
+first match of {pattern} in {text},{text} 中 {pattern} 的首个匹配
+all matches of {pattern} in {text},{text} 中 {pattern} 的全部匹配
+replace matches of {pattern} in {text} with {value},把 {text} 中 {pattern} 的匹配替换为 {value}
+with,其中
+revolute,旋转
+distance,距离
+prismatic,滑动
+Text input ▸ On text changed,文本输入 ▸ 当文本改变
+Text input ▸ On submitted,文本输入 ▸ 当提交
+List ▸ On item selected,列表 ▸ 当选中条目
+File chooser ▸ On file chosen,文件选择器 ▸ 当选择文件
+Tabs ▸ On tab changed,标签页 ▸ 当切换标签页

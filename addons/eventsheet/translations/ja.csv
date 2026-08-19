@@ -2856,3 +2856,73 @@ GLOBALS,グローバル
 extends it,これを継承
 the group has the same members,グループの構成は同じ
 what extends this object's class,このオブジェクトのクラスを継承するもの
+Set mass to {value},質量を {value} に設定
+Set linear damping to {value},直線減衰を {value} に設定
+Set angular damping to {value},回転減衰を {value} に設定
+Set gravity scale to {value},重力スケールを {value} に設定
+Set immovable,動かせなくする
+Set movable,動かせるようにする
+Use physics material {value},物理マテリアル {value} を使う
+Set friction to {value},摩擦を {value} に設定
+Set elasticity to {value},弾性を {value} に設定
+Set world gravity to {value},ワールド重力を {value} に設定
+Apply torque {value},トルク {value} を加える
+Apply torque impulse {value},トルク力積 {value} を加える
+Apply impulse {value} at {offset},力積 {value} を {offset} に加える
+Apply force {value} at {offset},力 {value} を {offset} に加える
+Create {kind} joint,{kind} ジョイントを作る
+Is sleeping,スリープ中
+Is awake,起きている
+Is immovable,動かせない
+Is not immovable,動かせる
+Is checked,チェックされている
+Is not checked,チェックされていない
+Set checked,チェックする
+Set unchecked,チェックを外す
+Set text to {value},テキストを {value} に設定
+Set placeholder to {value},プレースホルダーを {value} に設定
+Set formatted text to {value},書式付きテキストを {value} に設定
+Append formatted text {value},書式付きテキスト {value} を追加
+Switch to tab {value},タブ {value} に切り替え
+Set tooltip to {value},ツールチップを {value} に設定
+Add item {value},項目 {value} を追加
+Remove item {value},項目 {value} を削除
+Select item {value},項目 {value} を選ぶ
+Clear,空にする
+Has reached the end,終点に着いた
+Go to start,始点に戻る
+Set looping {state},ループ {state}
+Set rotate with path {state},パスに合わせて回転 {state}
+Set distance along path to {value},パス上の距離を {value} に設定
+Add path point {value},パス点 {value} を追加
+Set pattern {name} to {value},パターン {name} を {value} に設定
+Wait {seconds} seconds,{seconds} 秒待つ
+Follow a Path,パスをたどる
+Follow a path,パスをたどる
+Follow A Path,パスをたどる
+Text and patterns,テキストとパターン
+"a body's weight, surface and pushes, set and applied rather than moved by hand",物体の重さ・表面・力を、手で動かすのではなく設定して加える
+"something travels a drawn route at a speed, and starts again at the end",描いたルートを一定の速さで進み、終点で最初に戻る
+"text built from values, and a regular expression searched or replaced in it",値から組み立てたテキストと、その中を検索・置換する正規表現
+Text input,テキスト入力
+List,リスト
+Check box,チェックボックス
+File chooser,ファイル選択
+Tabs,タブ
+blocks the game,ゲームが止まる
+regular expression,正規表現
+now (microseconds),現在 (マイクロ秒)
+a pattern,パターン
+the match,一致した文字列
+first match of {pattern} in {text},{text} 内の {pattern} の最初の一致
+all matches of {pattern} in {text},{text} 内の {pattern} のすべての一致
+replace matches of {pattern} in {text} with {value},{text} 内の {pattern} の一致を {value} に置き換える
+with,値:
+revolute,回転
+distance,距離
+prismatic,直動
+Text input ▸ On text changed,テキスト入力 ▸ テキストが変わったとき
+Text input ▸ On submitted,テキスト入力 ▸ 確定したとき
+List ▸ On item selected,リスト ▸ 項目が選ばれたとき
+File chooser ▸ On file chosen,ファイル選択 ▸ ファイルが選ばれたとき
+Tabs ▸ On tab changed,タブ ▸ タブが変わったとき

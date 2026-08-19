@@ -2856,3 +2856,73 @@ GLOBALS,ГЛОБАЛЬНЫЕ
 extends it,наследует его
 the group has the same members,в группе те же участники
 what extends this object's class,что наследует класс этого объекта
+Set mass to {value},Установить массу в {value}
+Set linear damping to {value},Установить линейное затухание в {value}
+Set angular damping to {value},Установить угловое затухание в {value}
+Set gravity scale to {value},Установить масштаб гравитации в {value}
+Set immovable,Сделать неподвижным
+Set movable,Сделать подвижным
+Use physics material {value},Использовать физматериал {value}
+Set friction to {value},Установить трение в {value}
+Set elasticity to {value},Установить упругость в {value}
+Set world gravity to {value},Установить гравитацию мира в {value}
+Apply torque {value},Приложить момент {value}
+Apply torque impulse {value},Приложить импульс момента {value}
+Apply impulse {value} at {offset},Приложить импульс {value} в {offset}
+Apply force {value} at {offset},Приложить силу {value} в {offset}
+Create {kind} joint,Создать шарнир {kind}
+Is sleeping,Спит
+Is awake,Не спит
+Is immovable,Неподвижен
+Is not immovable,Не неподвижен
+Is checked,Отмечено
+Is not checked,Не отмечено
+Set checked,Отметить
+Set unchecked,Снять отметку
+Set text to {value},Установить текст в {value}
+Set placeholder to {value},Установить подсказку поля в {value}
+Set formatted text to {value},Установить форматированный текст в {value}
+Append formatted text {value},Добавить форматированный текст {value}
+Switch to tab {value},Перейти на вкладку {value}
+Set tooltip to {value},Установить всплывающую подсказку в {value}
+Add item {value},Добавить элемент {value}
+Remove item {value},Удалить элемент {value}
+Select item {value},Выбрать элемент {value}
+Clear,Очистить
+Has reached the end,Достиг конца
+Go to start,В начало
+Set looping {state},Повтор {state}
+Set rotate with path {state},Поворот по пути {state}
+Set distance along path to {value},Установить путь по маршруту в {value}
+Add path point {value},Добавить точку пути {value}
+Set pattern {name} to {value},Установить шаблон {name} в {value}
+Wait {seconds} seconds,Подождать {seconds} с
+Follow a Path,Движение по пути
+Follow a path,Движение по пути
+Follow A Path,Движение по пути
+Text and patterns,Текст и шаблоны
+"a body's weight, surface and pushes, set and applied rather than moved by hand","вес, поверхность и толчки тела - задаются и прикладываются, а не двигаются вручную"
+"something travels a drawn route at a speed, and starts again at the end",что-то движется по нарисованному маршруту со скоростью и начинает заново в конце
+"text built from values, and a regular expression searched or replaced in it","текст, собранный из значений, и регулярное выражение, найденное или заменённое в нём"
+Text input,Поле ввода
+List,Список
+Check box,Флажок
+File chooser,Выбор файла
+Tabs,Вкладки
+blocks the game,останавливает игру
+regular expression,регулярное выражение
+now (microseconds),сейчас (микросекунды)
+a pattern,шаблон
+the match,совпадение
+first match of {pattern} in {text},первое совпадение {pattern} в {text}
+all matches of {pattern} in {text},все совпадения {pattern} в {text}
+replace matches of {pattern} in {text} with {value},заменить совпадения {pattern} в {text} на {value}
+with,со значениями
+revolute,вращательный
+distance,расстояния
+prismatic,поступательный
+Text input ▸ On text changed,Поле ввода ▸ При изменении текста
+Text input ▸ On submitted,Поле ввода ▸ При подтверждении
+List ▸ On item selected,Список ▸ При выборе элемента
+File chooser ▸ On file chosen,Выбор файла ▸ При выборе файла
+Tabs ▸ On tab changed,Вкладки ▸ При смене вкладки
