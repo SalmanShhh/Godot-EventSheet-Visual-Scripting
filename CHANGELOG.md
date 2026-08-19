@@ -15,7 +15,7 @@
   only: the connect line keeps its muted `connects Button On Pressed` note, the file keeps its one
   line, and the byte round-trip is untouched.
 - **A whole scene opens as one sheet.** Right-click a `.tscn` in the FileSystem ▸ **Open as Event
-  Sheet** (or pick it from Sheet ▸ Open…, or drag it onto empty canvas) and the layout reads in one
+  Sheet** (or pick it from Sheet ▸ Open…, or drag it onto the empty space of a reading) and the layout reads in one
   place: the scene's own bar (`⇥ Level1.tscn  a  Node2D  4 scripts`), then every script the scene
   uses, in tree order, each under its own object bar (`⇥ HUD  a  CanvasLayer  · hud.gd`) with the rows
   the opened-script reading already produces beneath it. A script sitting on a CHILD node finally sees

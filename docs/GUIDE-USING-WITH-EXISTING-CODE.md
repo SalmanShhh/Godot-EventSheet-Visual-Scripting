@@ -522,7 +522,8 @@ is instantiated to answer a question.
 
 An event sheet belongs to a layout; a Godot scene has several scripts. Right-click a `.tscn` in the
 FileSystem and choose **Open as Event Sheet** (it is also in Sheet ▸ Open…, and you can drag a `.tscn`
-onto empty canvas) to read the whole layout at once: the scene's own bar
+onto the empty space of a reading, where a dropped scene has nothing else it could mean) to read the
+whole layout at once: the scene's own bar
 (`⇥ Level1.tscn  a  Node2D  4 scripts`), then every script the scene uses, in tree order, each under
 its own object bar (`⇥ HUD  a  CanvasLayer  · hud.gd`, with `(x3)` when the same script sits on three
 nodes) and the rows that script reads as beneath it. Signals the Godot editor wired in the scene file
