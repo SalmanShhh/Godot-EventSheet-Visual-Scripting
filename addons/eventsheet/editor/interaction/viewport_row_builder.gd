@@ -7750,6 +7750,9 @@ func _pattern_chip_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	var sheet: EventSheetResource = _viewport._sheet
 	if sheet == null or event_row.event_uid.is_empty():
 		return spans
+	# Asked for rather than assumed: this pass and the file-level walk both claim, and nothing fixes
+	# their order against every clear of the registry.
+	EventSheetViewportReadingRows.ensure_claims(sheet)
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_row.event_uid):
 		if not EventSheetPatternVocabulary.is_marked(str((claim as Dictionary).get("pattern", ""))):

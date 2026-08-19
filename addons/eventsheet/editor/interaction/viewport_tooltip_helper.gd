@@ -223,6 +223,7 @@ static func pattern_chip_tooltip(pattern: String) -> String:
 static func pattern_evidence_line(sheet: EventSheetResource, event_uid: String) -> String:
 	if sheet == null or event_uid.is_empty():
 		return ""
+	EventSheetViewportReadingRows.ensure_claims(sheet)
 	var lines: PackedStringArray = PackedStringArray()
 	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_uid):
 		if not EventSheetPatternVocabulary.is_marked(str((claim as Dictionary).get("pattern", ""))):

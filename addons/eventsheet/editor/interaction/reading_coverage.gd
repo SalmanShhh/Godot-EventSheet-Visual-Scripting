@@ -92,6 +92,7 @@ static func chip_text(sheet: EventSheetResource) -> String:
 static func pattern_chip_text(sheet: EventSheetResource) -> String:
 	# Counted over the MARKED patterns only, so the number matches the ⟡ chips a reader can go and
 	# find: a pattern the sheet does not mark is one they would hunt for and never see.
+	EventSheetViewportReadingRows.ensure_claims(sheet)
 	var marked: Dictionary = {}
 	var behaviors: Dictionary = {}
 	for claim: Variant in EventSheetPatternFacts.claims(sheet):

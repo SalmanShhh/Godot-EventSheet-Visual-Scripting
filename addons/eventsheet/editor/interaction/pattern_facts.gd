@@ -33,12 +33,20 @@ const PATTERN_IDS: PackedStringArray = [
 ##  replace the shape), ace_ids: PackedStringArray (the sheet ACEs the pattern is made of)}.
 static var _claims: Dictionary = {}
 
+## The sheets whose FILE-LEVEL readings have already had their say since the last clear. A claim is
+## made by two different passes - the one walk over the file's lines, and the row builder's own span
+## pass - and they do not run in a fixed order relative to every clear. Recording that the first has
+## run lets anything reading the registry ask for it on demand instead of trusting an ordering, so a
+## marker can never go missing because a clear landed between the two.
+static var _stated: Dictionary = {}
+
 
 ## Forget every claim for a sheet. The row builder calls this at the start of a rebuild.
 static func clear(sheet: EventSheetResource) -> void:
 	if sheet == null:
 		return
 	_claims.erase(sheet.get_instance_id())
+	_stated.erase(sheet.get_instance_id())
 
 
 ## Record that a reading recognised a pattern. Unknown pattern ids are refused loudly in the editor
@@ -62,6 +70,17 @@ static func claim(sheet: EventSheetResource, pattern: String, row_uid: String, e
 		"pattern": pattern, "row_uid": row_uid, "event_uid": event_uid, "evidence": evidence,
 		"words": words, "adoptable": adoptable, "ace_ids": ace_ids
 	})
+
+
+## Whether the file-level readings have stated this sheet's patterns since the last clear.
+static func has_stated(sheet: EventSheetResource) -> bool:
+	return sheet != null and _stated.has(sheet.get_instance_id())
+
+
+## Record that they have. Called by the walk itself, never by a consumer.
+static func mark_stated(sheet: EventSheetResource) -> void:
+	if sheet != null:
+		_stated[sheet.get_instance_id()] = true
 
 
 ## Every claim for a sheet, in the order they were made. Empty when nothing claimed.

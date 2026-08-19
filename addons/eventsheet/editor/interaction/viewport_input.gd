@@ -59,6 +59,7 @@ func _pattern_events(sheet: EventSheetResource) -> Array[EventRow]:
 	var found: Array[EventRow] = []
 	if sheet == null:
 		return found
+	EventSheetViewportReadingRows.ensure_claims(sheet)
 	var wanted: Dictionary = {}
 	for claim: Variant in EventSheetPatternFacts.claims(sheet):
 		wanted[str((claim as Dictionary).get("row_uid", ""))] = true

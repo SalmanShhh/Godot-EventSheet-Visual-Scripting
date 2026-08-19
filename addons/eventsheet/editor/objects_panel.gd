@@ -486,6 +486,7 @@ func _add_could_adopt_line(parent_item: TreeItem, section_id: String, label: Str
 		return
 	if label != EventSheetViewportReadingRows.script_object_name(_sheet):
 		return
+	EventSheetViewportReadingRows.ensure_claims(_sheet)
 	var names: PackedStringArray = PackedStringArray()
 	var seen: Dictionary = {}
 	for claim: Variant in EventSheetPatternFacts.claims(_sheet):
