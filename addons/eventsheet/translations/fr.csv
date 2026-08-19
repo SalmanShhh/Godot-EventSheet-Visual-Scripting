@@ -2409,3 +2409,7 @@ On gamepad connected / disconnected,Quand une manette est connectée / déconnec
 On %s clicked,Quand %s est cliqué
 repeat forever,répéter indéfiniment
 repeat {count} times,répéter {count} fois
+button,bouton
+in the Inspector,dans l'Inspecteur
+calls,appelle
+Add Inspector Button…,Ajouter un bouton d'Inspecteur…

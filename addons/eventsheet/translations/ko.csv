@@ -2409,3 +2409,7 @@ On gamepad connected / disconnected,게임패드 연결 / 해제 시
 On %s clicked,%s 클릭 시
 repeat forever,계속 반복
 repeat {count} times,{count}회 반복
+button,버튼
+in the Inspector,인스펙터에 표시
+calls,호출
+Add Inspector Button…,인스펙터 버튼 추가…

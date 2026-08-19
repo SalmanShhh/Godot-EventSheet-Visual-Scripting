@@ -32,6 +32,18 @@
   guide the index does not list, or lists without a description. `tests/module_guides_test.gd` reads
   the reference tables under their new headings, keyed on a set that also accepts a table headed by
   its kind - 333 rows in the addon guides had drifted out of that sweep unnoticed.
+### Added - an Inspector button is a setting row, and a menu item away
+
+- **`@export_tool_button("Bake", "Bake") var bake = _bake` opens as a setting row**, not as a Script
+  block: `button Bake  in the Inspector · calls Bake`. The button's own label leads the row, the type
+  chip says what it is, and there is no value shown at all - `= _bake` is which function it runs,
+  which the note says in words. The lift is byte-gated like every other export family, and it is the
+  one emitted WITHOUT a `: Type`, because that is how Godot spells a button; both the one-argument
+  and the two-argument spelling re-emit exactly as they were written.
+- **Add Inspector Button… on the canvas menu** writes the `@export_tool_button` line and the empty
+  function it calls, in one undo step. It says so when the sheet is not a Tool sheet, since that is
+  what makes the button run while you are editing.
+
 ### Changed - a setter that names a node reads on that node
 
 - **`n.position = n.position.snapped(Vector2(8, 8))` inside a For each reads

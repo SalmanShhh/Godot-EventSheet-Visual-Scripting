@@ -39,11 +39,18 @@ const COLOUR_WORDS: Dictionary = {
 ## Empty strings mean "leave the row's own reading alone" - the type chip, the value and the muted
 ## note all keep whatever they already said.
 static func facts(variable: LocalVariable) -> Dictionary:
-	var found: Dictionary = {"type_word": "", "value_text": "", "note": "", "swatch": null}
+	var found: Dictionary = {
+		"type_word": "", "value_text": "", "note": "", "swatch": null,
+		# R32 - a button has no value to show: `= _bake` is which function it calls, which the note
+		# says in words. `name_text` overrides the name the row leads with for the same reason: the
+		# button's own label is what the Inspector shows on it.
+		"hide_value": false, "name_text": ""
+	}
 	if variable == null:
 		return found
 	var attributes: Dictionary = variable.attributes if variable.attributes is Dictionary else {}
 	var hint: String = variable.export_hint.strip_edges()
+	_apply_tool_button(found, variable, attributes)
 	_apply_range(found, variable, attributes, hint)
 	_apply_choices(found, variable, attributes)
 	_apply_file(found, attributes, hint)
@@ -52,6 +59,25 @@ static func facts(variable: LocalVariable) -> Dictionary:
 	_apply_node_path(found, variable, attributes)
 	_apply_colour(found, variable)
 	return found
+
+
+## R32. An Inspector button is the smallest editor tool there is - one line - and it reads as one:
+## `button Bake  in the Inspector · calls Bake`. The row leads with the button's own label rather
+## than the variable name behind it, and shows no value at all, because `= _bake` is not a setting a
+## reader tunes - it is which function the button calls, which the note says in words.
+static func _apply_tool_button(found: Dictionary, variable: LocalVariable, attributes: Dictionary) -> void:
+	if not (attributes.get("tool_button") is Dictionary):
+		return
+	var button: Dictionary = attributes["tool_button"] as Dictionary
+	found["type_word"] = EventSheetL10n.translate("button")
+	found["hide_value"] = true
+	var label: String = str(button.get("label", "")).strip_edges()
+	if not label.is_empty():
+		found["name_text"] = label
+	var called: String = str(variable.default_value).strip_edges().trim_prefix("_").capitalize()
+	found["note"] = EventSheetL10n.translate("in the Inspector") if called.is_empty() \
+		else "%s · %s %s" % [EventSheetL10n.translate("in the Inspector"),
+			EventSheetL10n.translate("calls"), called]
 
 
 ## `@export_range(0, 20, 0.5)` reads "0 to 20, step 0.5"; a 0-to-1 range is a PERCENT, which is how

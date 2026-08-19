@@ -74,6 +74,54 @@ func _apply_extract_function() -> void:
 		return
 	callback.call(entered)
 
+# ── Add Inspector button prompt (one field: what the button says) ──
+var _inspector_button_dialog: ConfirmationDialog = null
+var _inspector_button_edit: LineEdit = null
+
+
+## R32. The smallest editor tool there is: a button in the Inspector that runs one function. Prompts
+## for what the button should SAY, then hands the label to the caller, which writes the
+## `@export_tool_button` line and the empty function it calls in one undo step.
+func prompt_inspector_button(callback: Callable) -> void:
+	if _inspector_button_dialog == null:
+		_inspector_button_dialog = ConfirmationDialog.new()
+		_inspector_button_dialog.title = "Add Inspector Button"
+		_inspector_button_dialog.ok_button_text = "Add"
+		_inspector_button_dialog.min_size = Vector2i(400, 0)
+		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		box.add_child(EventSheetPopupUI.hint_label("A button in the Inspector that runs one function while you are editing the scene. You get the button and an empty function to fill in; the sheet has to be a Tool sheet for it to run."))
+		_inspector_button_edit = LineEdit.new()
+		_inspector_button_edit.placeholder_text = "Bake"
+		_inspector_button_edit.text_submitted.connect(func(_text: String) -> void:
+			_apply_inspector_button()
+			_inspector_button_dialog.hide()
+		)
+		box.add_child(EventSheetPopupUI.form_row("Button says", _inspector_button_edit))
+		_inspector_button_dialog.add_child(EventSheetPopupUI.margined(box))
+		_inspector_button_dialog.confirmed.connect(_apply_inspector_button)
+		_dock.add_child(_inspector_button_dialog)
+	_inspector_button_callback = callback
+	_inspector_button_edit.text = "Bake"
+	_inspector_button_dialog.popup_centered()
+	_inspector_button_edit.grab_focus()
+	_inspector_button_edit.select_all()
+
+
+var _inspector_button_callback: Callable = Callable()
+
+
+## One-shot apply, for the same reason the extract prompt is one-shot: `confirmed` and
+## `text_submitted` both fire when the user presses Enter.
+func _apply_inspector_button() -> void:
+	if not _inspector_button_callback.is_valid():
+		return
+	var entered: String = _inspector_button_edit.text.strip_edges()
+	var callback: Callable = _inspector_button_callback
+	_inspector_button_callback = Callable()
+	if entered.is_empty():
+		return
+	callback.call(entered)
+
 # ── Conditional Breakpoint prompt (one field: a boolean guard expression) ──
 var _breakpoint_condition_dialog: AcceptDialog = null
 var _breakpoint_condition_edit: LineEdit = null

@@ -2409,3 +2409,7 @@ On gamepad connected / disconnected,При подключении / отключ
 On %s clicked,При щелчке по %s
 repeat forever,повторять бесконечно
 repeat {count} times,повторить {count} раз
+button,кнопка
+in the Inspector,в инспекторе
+calls,вызывает
+Add Inspector Button…,Добавить кнопку инспектора…

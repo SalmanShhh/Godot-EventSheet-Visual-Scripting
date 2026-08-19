@@ -109,6 +109,8 @@ const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
 const EMPTY_MENU_INSERT_SNIPPET := 4
+## R32. An Inspector button and the empty function it calls, written in one step.
+const EMPTY_MENU_ADD_INSPECTOR_BUTTON := 5
 # The "New Function" submenu on the empty-space menu. Its items open the function dialog pre-set:
 # a plain (unpublished) helper, or a published Action / Condition / Expression.
 const NEW_FUNCTION_MENU_PLAIN := 0
@@ -3823,8 +3825,32 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 			_on_add_condition_requested()
 		EMPTY_MENU_ADD_VARIABLE:
 			_on_add_global_variable_requested()
+		EMPTY_MENU_ADD_INSPECTOR_BUTTON:
+			_quick_prompts.prompt_inspector_button(add_inspector_button)
 		EMPTY_MENU_INSERT_SNIPPET:
 			_open_insert_snippet()
+
+
+## R32. The `@export_tool_button` line and the empty function it calls, in ONE undo step. The button
+## is a labelled function, which is the shape the sheet already emits for one - so nothing new is
+## written to the file and the line round-trips exactly as an authored button always has.
+func add_inspector_button(label: String) -> bool:
+	var button_label: String = label.strip_edges()
+	if button_label.is_empty() or _current_sheet == null:
+		return false
+	var function_name: String = _unique_extracted_function_name(_current_sheet, button_label.to_snake_case())
+	var changed: bool = _perform_undoable_sheet_edit("Add Inspector Button", func() -> bool:
+		var event_function: EventFunction = EventFunction.new()
+		event_function.function_name = function_name
+		event_function.tool_button_label = button_label
+		_current_sheet.functions.append(event_function)
+		return true)
+	if changed:
+		var note: String = "Added the Inspector button \"%s\" and the function it calls." % button_label
+		if not _current_sheet.tool_mode:
+			note += "  (turn on Tool in the Sheet Type dialog for it to run in the editor.)"
+		_mark_dirty(note)
+	return changed
 
 
 ## The "New Function ▸" submenu: a plain helper, or a published Action / Condition / Expression - each

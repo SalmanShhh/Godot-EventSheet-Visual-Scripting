@@ -5564,7 +5564,12 @@ func _build_variable_row(
 					"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color
 				}, true)
 			),
-			_make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, variable_meta.merged({"editable": false}, true))
+			# R32 - a button's own label is what the Inspector puts ON it, so that is the word the row
+			# leads with; every other setting leads with its name, as it always did.
+			_make_span(
+				str(facts.get("name_text", "")).strip_edges() if not str(facts.get("name_text", "")).strip_edges().is_empty() \
+					else (var_name if not var_name.is_empty() else "(unnamed)"),
+				SemanticSpan.SpanType.OBJECT, variable_meta.merged({"editable": false}, true))
 		]
 	else:
 		row_data.spans = [
@@ -5657,7 +5662,11 @@ func _build_variable_row(
 				)
 			)
 		)
-	row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)))
+	# R32 - a setting with nothing to tune shows nothing to tune: an Inspector button's `= _bake` is
+	# which function it calls, and the muted note beside it already says so in words.
+	var hide_value: bool = reading and bool(facts.get("hide_value", false))
+	if not hide_value:
+		row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)))
 	# An expression default (`State.PATROL`, `Vector2.ZERO`, a walrus var's verbatim `100`) is
 	# CODE stored as text - quoting it would misread it as a string literal.
 	var value_text: String = str(default_value) if bool(options.get("expression_default", false)) else _format_variable_value(default_value)
@@ -5675,9 +5684,10 @@ func _build_variable_row(
 	# follows keeps its first character.
 	if facts.get("swatch") is Color:
 		value_meta["swatch_color"] = facts["swatch"] as Color
-	row_data.spans.append(
-		_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta)
-	)
+	if not hide_value:
+		row_data.spans.append(
+			_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta)
+		)
 	# The limits and the choices, muted, straight after the value - the same slot the Inspector puts
 	# them in, and ahead of the knob's own sentence so the fact reads before the prose.
 	var hint_note: String = str(facts.get("note", "")).strip_edges()

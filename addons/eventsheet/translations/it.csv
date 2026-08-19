@@ -2409,3 +2409,7 @@ On gamepad connected / disconnected,Quando un gamepad viene collegato / scollega
 On %s clicked,Quando si fa clic su %s
 repeat forever,ripeti all'infinito
 repeat {count} times,ripeti {count} volte
+button,pulsante
+in the Inspector,nell'Inspector
+calls,chiama
+Add Inspector Button…,Aggiungi pulsante Inspector…

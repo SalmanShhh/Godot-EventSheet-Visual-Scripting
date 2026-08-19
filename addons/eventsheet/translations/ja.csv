@@ -2409,3 +2409,7 @@ On gamepad connected / disconnected,ゲームパッド接続 / 切断時
 On %s clicked,%s がクリックされたとき
 repeat forever,ずっと繰り返す
 repeat {count} times,{count} 回繰り返す
+button,ボタン
+in the Inspector,インスペクターに表示
+calls,呼び出す
+Add Inspector Button…,インスペクターボタンを追加…

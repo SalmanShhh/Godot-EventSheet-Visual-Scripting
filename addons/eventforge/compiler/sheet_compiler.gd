@@ -2884,6 +2884,15 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# String "placeholder" → @export_placeholder("hint") (grey hint text shown in the empty field).
 	elif local_var.exported and local_var.type_name == "String" and local_var.attributes is Dictionary and not str((local_var.attributes as Dictionary).get("placeholder", "")).strip_edges().is_empty() and not str((local_var.attributes as Dictionary).get("placeholder", "")).contains("\""):
 		var_line = "@export_placeholder(\"%s\") var %s: %s = %s" % [str((local_var.attributes as Dictionary).get("placeholder")).strip_edges(), local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	# R32. An Inspector button: `@export_tool_button("Bake", "Bake") var bake = _bake`. The one export
+	# family emitted WITHOUT a `: Type`, because the value is the function the button calls and Godot's
+	# own spelling annotates nothing. The arguments are the author's own, kept verbatim on the
+	# attribute, so a one-argument and a two-argument button both re-emit as they were written.
+	elif local_var.exported and local_var.attributes is Dictionary \
+			and (local_var.attributes as Dictionary).get("tool_button") is Dictionary:
+		var button: Dictionary = (local_var.attributes as Dictionary)["tool_button"] as Dictionary
+		var_line = "@export_tool_button(%s) var %s = %s" % [
+			str(button.get("args", "")), local_var.name, str(local_var.default_value)]
 	# Hinted export (@export_range / @export_file / @export_flags / …): the annotation is kept verbatim.
 	elif not local_var.export_hint.strip_edges().is_empty():
 		var hinted_default: String = str(local_var.default_value) if local_var.expression_default else _to_code_literal(local_var.default_value)

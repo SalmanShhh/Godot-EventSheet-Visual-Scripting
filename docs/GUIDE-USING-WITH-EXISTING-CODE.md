@@ -427,6 +427,12 @@ That is the order this section is in.
   percent; `@export_file("*.png")` reads `file` with its filter; `@export_dir` reads `folder`;
   `@export_multiline` reads `text  multiline`; a Color reads its swatch and its word; and
   `@export_flags(...)` reads `flags` with the names of the bits.
+- **An Inspector button reads as a setting row.** `@export_tool_button("Bake", "Bake") var bake =
+  _bake` opens as `button Bake  in the Inspector · calls Bake` instead of as a Script block: the
+  button's own label leads the row, and there is no value shown, because `= _bake` is which function
+  it runs rather than something a designer tunes. Both spellings of the annotation round-trip
+  exactly. Right-click the canvas and **Add Inspector Button…** writes the line and the empty
+  function it calls in one step.
 - **A setter that names a node reads on that node.** `n.position = n.position.snapped(Vector2(8,
   8))` inside a `for n in …` reads `n ▸ Set position to position snapped to 8, 8`: the object column
   says which node is being moved, the value drops the receiver it would only be repeating, and

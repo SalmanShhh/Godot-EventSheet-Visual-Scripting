@@ -469,6 +469,12 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	if lifted.default_value is String and not lifted.is_constant and not lifted.onready \
 			and line.contains("= %s" % str(lifted.default_value)) and not line.contains("\"%s\"" % str(lifted.default_value)):
 		lifted.expression_default = true
+	# R32. An Inspector button is a Callable knob, and Godot's own spelling for it carries no type
+	# annotation - the annotation names the button, the value names the function it calls. It is
+	# pulled into structured attributes BEFORE the gate below rather than after it, the way every
+	# other hint family is, because the generic hinted emission (`var bake: Variant = _bake`) could
+	# never pass that gate and the whole declaration used to stay a verbatim block.
+	_extract_tool_button(lifted)
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
 		# A typed default the parser turned into a real VALUE (`Vector2(24, 16)` becomes a Vector2)
 		# re-emits in canonical form (`Vector2(24.0, 16.0)`) - the same value, different bytes, so the
@@ -530,6 +536,22 @@ func _extract_exp_easing(lifted: LocalVariable, line: String) -> void:
 
 ## @export_placeholder("hint") round-trip: pull the quoted hint text into the structured `placeholder`
 ## attribute (the dialog's Placeholder field). Verify-gated like the others.
+## R32. `@export_tool_button("Bake", "Bake") var bake = _bake` into structured attributes: the
+## annotation's arguments verbatim (so emission reproduces the author's own spelling, icon or no
+## icon) plus the button's label, which is what the row shows. The caller's byte gate is the only
+## gate this needs - a hint whose arguments this cannot re-spell fails there and stays verbatim.
+func _extract_tool_button(lifted: LocalVariable) -> void:
+	var hint: String = lifted.export_hint.strip_edges()
+	if not hint.begins_with("@export_tool_button(") or not hint.ends_with(")"):
+		return
+	var arguments: String = hint.substr("@export_tool_button(".length())
+	arguments = arguments.substr(0, arguments.length() - 1)
+	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	attrs["tool_button"] = {"args": arguments, "label": _extract_first_quoted(hint)}
+	lifted.attributes = attrs
+	lifted.export_hint = ""
+
+
 func _extract_placeholder(lifted: LocalVariable, line: String) -> void:
 	if not lifted.export_hint.strip_edges().begins_with("@export_placeholder("):
 		return

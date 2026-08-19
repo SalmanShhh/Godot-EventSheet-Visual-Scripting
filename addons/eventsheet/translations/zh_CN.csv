@@ -2409,3 +2409,7 @@ On gamepad connected / disconnected,手柄连接 / 断开时
 On %s clicked,点击 %s 时
 repeat forever,一直重复
 repeat {count} times,重复 {count} 次
+button,按钮
+in the Inspector,在检查器中
+calls,调用
+Add Inspector Button…,添加检查器按钮…

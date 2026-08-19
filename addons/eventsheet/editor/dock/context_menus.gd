@@ -125,6 +125,10 @@ func build_all() -> void:
 	_dock._new_function_submenu.id_pressed.connect(_dock._on_new_function_submenu_id_pressed)
 	_dock._empty_space_context_menu.add_submenu_node_item("New Function", _dock._new_function_submenu)
 	_dock._empty_space_context_menu.add_item("Add New Variable", _dock.EMPTY_MENU_ADD_VARIABLE)
+	# R32 - the smallest editor tool there is, one menu item away: a button in the Inspector and the
+	# empty function it calls. It sits beside Add New Variable because that is what it adds - a knob,
+	# one you press instead of one you type into.
+	_dock._empty_space_context_menu.add_item("Add Inspector Button…", _dock.EMPTY_MENU_ADD_INSPECTOR_BUTTON)
 	_dock._empty_space_context_menu.add_separator()
 	# Inserting a saved snippet is "add to the sheet" - it belongs on the canvas menu,
 	# not buried in a row's More submenu.
