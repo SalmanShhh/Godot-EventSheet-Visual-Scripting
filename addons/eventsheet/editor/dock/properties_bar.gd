@@ -26,10 +26,15 @@ var _form: GridContainer = null
 # under the user's cursor. Never used to WRITE - the write re-fetches, because the undo funnel
 # replaces every resource on commit.
 var _shown_resource: Resource = null
+# The shared per-hint widget factory (ace_dialog/param_field_factory.gd) - the same builders the Edit
+# Parameter dialog uses, so a colour, an enum, a node reference or an input action edits in place
+# here exactly as it does there.
+var _field_factory: EventSheetParamFieldFactory = EventSheetParamFieldFactory.new()
 
 
 func init(dock: Control) -> void:
 	_dock = dock
+	_field_factory.init(dock)
 
 
 func is_open() -> bool:
@@ -108,21 +113,41 @@ func _show_ace(ace: Resource, view: EventSheetViewport) -> void:
 		label.text = str((descriptor as Dictionary).get("display_name", param_id))
 		label.tooltip_text = str((descriptor as Dictionary).get("description", ""))
 		_form.add_child(label)
-		_form.add_child(_build_field(ace, param_id, str(params.get(param_id, (descriptor as Dictionary).get("default_value", "")))))
+		_form.add_child(_build_field(ace, descriptor as Dictionary, str(params.get(param_id, (descriptor as Dictionary).get("default_value", "")))))
 	if definition != null and not definition.description.strip_edges().is_empty():
 		_form.add_child(EventSheetPopupUI.hint_label("Description", 90.0))
 		_form.add_child(EventSheetPopupUI.hint_label(definition.description, 190.0))
 
 
-## One parameter's field: Enter applies it, nothing else does, and an unchanged value is not an
-## edit. Anything the field cannot express stays a job for the Edit Parameter dialog.
-func _build_field(ace: Resource, param_id: String, value: String) -> Control:
-	var field: LineEdit = LineEdit.new()
-	field.text = value
-	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	field.tooltip_text = "Enter applies. One undo step, the same edit as the Edit Parameter dialog."
-	field.text_submitted.connect(func(text: String) -> void: _apply(ace, param_id, text))
-	return field
+## One parameter's field - the SAME widget the Edit Parameter dialog would give it, built through
+## the shared factory. So a colour is a swatch, an enum is a dropdown, a node reference has its
+## picker and an input action has the live Input Map list, right here in the bar; typing
+## `Color("#ff9b3c")` by hand into a plain text box is over.
+##
+## Each widget commits on its own "the user changed this" signal (Enter for a text field, the picker
+## closing for a colour, the choice for a dropdown), one undo step, exactly the edit the dialog
+## would have made. A widget with no such single moment - the physics-layer mask, which commits
+## through its own popup - stays a job for the dialog rather than being wired to a signal that means
+## something else.
+func _build_field(ace: Resource, descriptor: Dictionary, value: String) -> Control:
+	var param_id: String = str(descriptor.get("id", ""))
+	var built: Dictionary = _field_factory.build(descriptor, value)
+	var control: Control = built.get("control") as Control
+	var field: Control = built.get("field") as Control
+	if control == null:
+		control = LineEdit.new()
+		field = control
+		(control as LineEdit).text = value
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	control.tooltip_text = "Applies as you set it. One undo step, the same edit as the Edit Parameter dialog."
+	var change_signal: String = EventSheetParamFieldFactory.change_signal_of(field)
+	if not change_signal.is_empty() and field.has_signal(change_signal):
+		# The signal's own arguments are ignored on purpose: the value is read back out of the WIDGET
+		# through the factory, so every field kind commits through one conversion instead of each
+		# signal's own idea of what it just handed over.
+		field.connect(change_signal, func(_a: Variant = null, _b: Variant = null) -> void:
+			_apply(ace, param_id, _field_factory.value_of(field)))
+	return control
 
 
 func _apply(ace: Resource, param_id: String, text: String) -> void:

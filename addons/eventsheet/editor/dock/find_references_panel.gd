@@ -74,7 +74,7 @@ func _run_find_references() -> int:
 	if symbol.is_empty():
 		return 0
 	var total: int = 0
-	for entry: Dictionary in EventSheetFindReferences.find_in_project(symbol):
+	for entry: Dictionary in EventSheetFindReferences.find_in_project(symbol, EventSheetFindReferences.open_sheets_of(_dock)):
 		var sheet_path: String = str(entry.get("sheet", ""))
 		for reference: Dictionary in (entry.get("references", []) as Array):
 			var item: TreeItem = _find_refs_tree.create_item(root)
@@ -82,6 +82,9 @@ func _run_find_references() -> int:
 			item.set_text(1, "%s ×%d" % [str(reference.get("kind", "")), int(reference.get("count", 0))])
 			item.set_text(2, str(reference.get("preview", "")))
 			item.set_metadata(0, sheet_path)
+			# The ROW the hit sits on, so activating a result lands on it rather than on the top
+			# of the file - the same metadata the Find results bar carries.
+			item.set_metadata(1, reference.get("row", null))
 			total += int(reference.get("count", 0))
 	var summary: TreeItem = _find_refs_tree.create_item(root)
 	summary.set_text(0, "%d reference(s)" % total)

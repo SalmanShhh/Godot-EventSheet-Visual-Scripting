@@ -51,17 +51,145 @@ static func find_in_project_rows(symbol: String, extra_sheets: Dictionary = {}) 
 		seen[str(path)] = true
 		var open_references: Array = find_in_sheet(open_sheet, symbol)
 		if not open_references.is_empty():
+			stamp_source_lines(open_sheet, open_references)
 			found.append({"sheet": str(path), "count": _total_of(open_references), "references": open_references})
 	for path: String in EventSheetProjectFind.list_project_sheets():
 		if seen.has(path):
 			continue
+		seen[path] = true
 		var sheet: EventSheetResource = load(path) as EventSheetResource
 		if sheet == null:
 			continue
 		var references: Array = find_in_sheet(sheet, symbol)
 		if not references.is_empty():
+			stamp_source_lines(sheet, references)
+			found.append({"sheet": path, "count": _total_of(references), "references": references})
+	# The `.gd` sheets nobody has opened. `list_project_sheets()` only knows `.tres`, but `.gd` is the
+	# DEFAULT sheet format - so without this pass Find all references was blind to most of a real
+	# project and quietly answered "3 sheets" when the truth was thirty.
+	found.append_array(_find_in_unopened_scripts(symbol, seen))
+	return found
+
+
+## References in project `.gd` files that are not already accounted for. Two passes on purpose,
+## because the expensive half must only run where there is something to find:
+##
+##  1. a TEXT scan of every project script (a few milliseconds each, no `load`, no parse) drops every
+##     file that does not contain the symbol as a whole word - which is nearly all of them;
+##  2. only the survivors are imported, and only through the importer's RAW pass (`lift = false`).
+##     That is the same fast half the async open job runs first - tens of milliseconds against the
+##     seconds a full lift costs - and it is all this needs: a raw sheet still carries every line as
+##     a row, so the walk finds the symbol and a result still has a row to jump to.
+##
+## `seen` is updated in place, so a path counted here is never counted twice.
+static func _find_in_unopened_scripts(symbol: String, seen: Dictionary) -> Array:
+	var found: Array = []
+	var wanted: String = symbol.strip_edges()
+	if wanted.is_empty():
+		return found
+	var regex: RegEx = RegEx.create_from_string("\\b%s\\b" % _escape(wanted))
+	if regex == null:
+		return found
+	var importer: GDScriptImporter = GDScriptImporter.new()
+	for path: String in project_scripts():
+		if seen.has(path):
+			continue
+		var source: String = FileAccess.get_file_as_string(path)
+		if source.is_empty() or regex.search(source) == null:
+			continue
+		seen[path] = true
+		var sheet: EventSheetResource = importer.import_external(path, false)
+		if sheet == null:
+			continue
+		var references: Array = find_in_sheet(sheet, wanted)
+		if not references.is_empty():
+			stamp_source_lines(sheet, references)
 			found.append({"sheet": path, "count": _total_of(references), "references": references})
 	return found
+
+
+## Every `.gd` in the project that could be a sheet, sorted so two runs list the same files in the
+## same order. Plugin code and the import cache are skipped: `res://addons` is this plugin and other
+## people's plugins, and neither is a sheet the reader wrote.
+static func project_scripts(root: String = "res://") -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var directories: Array[String] = [root]
+	while not directories.is_empty():
+		var current: String = directories.pop_back()
+		if current.begins_with("res://addons"):
+			continue
+		var dir: DirAccess = DirAccess.open(current)
+		if dir == null:
+			continue
+		dir.list_dir_begin()
+		var entry: String = dir.get_next()
+		while not entry.is_empty():
+			var entry_path: String = current.path_join(entry)
+			if dir.current_is_dir():
+				if not entry.begins_with("."):
+					directories.append(entry_path)
+			elif entry.get_extension() == "gd":
+				found.append(entry_path)
+			entry = dir.get_next()
+		dir.list_dir_end()
+	found.sort()
+	return found
+
+
+## The sheets already open in tabs, as {path: EventSheetResource}. They are the LIVE version of their
+## files - a reference to something typed a second ago exists only in memory - so every project-wide
+## walk starts from them. One door, because the Find results bar and the Find references window
+## asking the same question two different ways is how they came to disagree in the first place.
+static func open_sheets_of(dock: Control) -> Dictionary:
+	var open_sheets: Dictionary = {}
+	if dock == null:
+		return open_sheets
+	for tab: Variant in dock._open_tabs:
+		if not (tab is Dictionary):
+			continue
+		var path: String = str((tab as Dictionary).get("path", ""))
+		var sheet: EventSheetResource = (tab as Dictionary).get("sheet") as EventSheetResource
+		if sheet == null:
+			continue
+		# A `.gd` opened as a sheet has no tab path - the file it came from is on the sheet itself.
+		if path.is_empty():
+			path = sheet.external_source_path
+		if not path.is_empty():
+			open_sheets[path] = sheet
+	if dock._current_sheet != null:
+		var current_path: String = dock._current_sheet_path
+		if current_path.is_empty():
+			current_path = dock._current_sheet.external_source_path
+		if not current_path.is_empty():
+			open_sheets[current_path] = dock._current_sheet
+	return open_sheets
+
+
+## Stamps each reference with the LINE its row emits at, so a cross-sheet jump can land on the exact
+## row after the sheet opens.
+##
+## The row resource itself cannot survive that jump: opening a sheet builds a brand new resource
+## tree, so the row found here and the row in the opened tab are different objects and matching by
+## identity would silently land on nothing. A line number survives, because an opened file re-emits
+## byte-identically - line N of what this sheet compiles to is line N of the file the reader will be
+## looking at - and the editor already knows how to select the row a line belongs to.
+##
+## One compile per sheet that actually has a hit, which is the only place the cost is worth paying.
+## Best effort throughout: a sheet that does not compile simply gets no line, and the jump falls back
+## to opening the sheet, which is what it did before.
+static func stamp_source_lines(sheet: EventSheetResource, references: Array) -> void:
+	if sheet == null or references.is_empty():
+		return
+	var source_map: Array = SheetCompiler.compile(sheet, "").get("source_map", []) as Array
+	if source_map.is_empty():
+		return
+	for reference: Dictionary in references:
+		var row: Variant = reference.get("row", null)
+		if not (row is Resource):
+			continue
+		var span: Vector2i = EventSheetLineRowMapper.range_for_resource(source_map, row as Resource)
+		if span.x > 0:
+			reference["line"] = span.x
 
 
 static func _total_of(references: Array) -> int:
@@ -72,19 +200,13 @@ static func _total_of(references: Array) -> int:
 
 
 ## Project-wide references: [{sheet, count, references}] for every sheet that uses `symbol`.
-static func find_in_project(symbol: String) -> Array:
-	var found: Array = []
-	for path: String in EventSheetProjectFind.list_project_sheets():
-		var sheet: EventSheetResource = load(path) as EventSheetResource
-		if sheet == null:
-			continue
-		var references: Array = find_in_sheet(sheet, symbol)
-		var total: int = 0
-		for reference: Dictionary in references:
-			total += int(reference.get("count", 0))
-		if total > 0:
-			found.append({"sheet": path, "count": total, "references": references})
-	return found
+## `extra_sheets` is {path: EventSheetResource} for the sheets already open in tabs, which are the
+## live versions of their files - a reference to something typed a second ago is only in memory.
+## Now a thin alias of find_in_project_rows: the two doors answered different questions about the
+## same project (one saw `.gd` files, the other did not), which is exactly the kind of difference
+## nobody discovers until a rename misses half its uses.
+static func find_in_project(symbol: String, extra_sheets: Dictionary = {}) -> Array:
+	return find_in_project_rows(symbol, extra_sheets)
 
 
 ## Where `symbol` is DEFINED in this sheet: {kind, found}. kind ∈ variable / function /

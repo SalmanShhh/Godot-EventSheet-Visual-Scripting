@@ -30,6 +30,11 @@ var _symbol: String = ""
 # selection rules (which would stop at a sheet heading).
 var _leaves: Array[TreeItem] = []
 var _cursor: int = -1
+# Where a cross-sheet jump is trying to land. Held across the open because opening a `.gd` finishes
+# asynchronously, and cleared as soon as it lands or the bar is refilled.
+var _pending_line: int = 0
+var _pending_path: String = ""
+var _landing_hook_registered: bool = false
 
 
 func init(dock: Control) -> void:
@@ -62,17 +67,7 @@ func close() -> void:
 
 ## Every reference to `symbol` across the open tabs and the project's sheets, grouped by sheet.
 func results_for(symbol: String) -> Array:
-	var open_sheets: Dictionary = {}
-	for tab: Variant in _dock._open_tabs:
-		if not (tab is Dictionary):
-			continue
-		var path: String = str((tab as Dictionary).get("path", ""))
-		var sheet: EventSheetResource = (tab as Dictionary).get("sheet") as EventSheetResource
-		if not path.is_empty() and sheet != null:
-			open_sheets[path] = sheet
-	if _dock._current_sheet != null and not _dock._current_sheet_path.is_empty():
-		open_sheets[_dock._current_sheet_path] = _dock._current_sheet
-	return EventSheetFindReferences.find_in_project_rows(symbol, open_sheets)
+	return EventSheetFindReferences.find_in_project_rows(symbol, EventSheetFindReferences.open_sheets_of(_dock))
 
 
 ## "7 in 2 sheets" - what the bar's heading says after the symbol.
@@ -88,9 +83,12 @@ func _summary(total: int) -> String:
 
 
 func _fill(grouped: Array) -> int:
+	_ensure_landing_hook()
 	tree.clear()
 	_leaves.clear()
 	_cursor = -1
+	_pending_line = 0
+	_pending_path = ""
 	var root: TreeItem = tree.create_item()
 	var total: int = 0
 	for entry: Dictionary in grouped:
@@ -104,11 +102,26 @@ func _fill(grouped: Array) -> int:
 			var row_resource: Variant = reference.get("row", null)
 			leaf.set_text(0, _event_label(row_resource))
 			leaf.set_text(1, str(reference.get("preview", "")))
-			leaf.set_metadata(0, {"sheet": sheet_path, "row": row_resource})
+			# `line` rides along beside `row`: the row resource works while the sheet is the one on
+			# screen, and the line is what survives a jump into another sheet (see _jump_to).
+			leaf.set_metadata(0, {"sheet": sheet_path, "row": row_resource, "line": int(reference.get("line", 0))})
 			_leaves.append(leaf)
 			total += int(reference.get("count", 0))
 	_heading.text = "FIND RESULTS · %s" % _summary(total)
 	return total
+
+
+## Registers the once-per-session hook that finishes a cross-sheet landing. A `.gd` opens in two
+## halves - the raw pass now, the lifted sheet when the worker finishes - and the tab is REPLACED in
+## between, so a landing done only at click time is undone a moment later. One permanent listener
+## rather than a per-jump one, because the lifecycle hooks have no unregister and a listener per
+## click would pile up for the life of the editor.
+func _ensure_landing_hook() -> void:
+	if _landing_hook_registered:
+		return
+	_landing_hook_registered = true
+	EventSheets.on_sheet_opened(func(_payload: Dictionary) -> void:
+		_land_pending())
 
 
 ## "event 12" for a row the open sheet numbers, "" for anything the margin does not number.
@@ -149,12 +162,40 @@ func _jump_to(leaf: TreeItem) -> void:
 		return
 	var sheet_path: String = str((metadata as Dictionary).get("sheet", ""))
 	var row_resource: Variant = (metadata as Dictionary).get("row", null)
+	var line: int = int((metadata as Dictionary).get("line", 0))
 	if not sheet_path.is_empty() and sheet_path != _dock._current_sheet_path:
 		_dock._navigate.record_current()
+		# Remembered BEFORE the open, because opening a `.gd` finishes on a worker thread: the raw
+		# pass lands the sheet now and the lifted one replaces it a moment later, and the landing has
+		# to survive that swap. `on_sheet_opened` fires for both.
+		_pending_line = line
+		_pending_path = sheet_path
 		_dock._navigate.open_or_focus(sheet_path)
+		_land_pending()
+		return
+	if line > 0:
+		# The row on screen, by the line it emits at - the same door Ctrl+G and the code panel use.
+		_dock.goto_generated_line(line)
 		return
 	if row_resource is Resource and _dock._active_view() != null:
 		_dock._active_view().reveal_resource(row_resource as Resource)
+
+
+## Lands on the remembered line, if the sheet it belongs to is the one now on screen. Called once
+## straight after the open (which is enough for a `.tres` and for a `.gd`'s raw pass) and again from
+## the sheet-opened hook when the lift swaps in the finished sheet.
+func _land_pending() -> void:
+	if _pending_line <= 0 or _pending_path.is_empty():
+		return
+	if _dock._current_sheet_path != _pending_path and _current_source_path() != _pending_path:
+		return
+	_dock.goto_generated_line(_pending_line)
+
+
+## The file behind the sheet on screen. A `.gd` opened as a sheet has no `_current_sheet_path` - the
+## file it came from is on the sheet itself - so both are asked before giving up on a landing.
+func _current_source_path() -> String:
+	return _dock._current_sheet.external_source_path if _dock._current_sheet != null else ""
 
 
 func _ensure_bar() -> void:
