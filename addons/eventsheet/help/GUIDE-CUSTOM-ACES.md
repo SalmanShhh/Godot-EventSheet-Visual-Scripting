@@ -342,6 +342,8 @@ same whether or not your script is `@tool`.
 | `@ace_tags(a,b)` | Add search tags. |
 | `@ace_requires(a, b)` (class-level) | Declare what the pack needs installed: bare class names (`StatSheetResource`), `autoload:Name`, or `pack:folder_name`. The Project Doctor warns when an in-use pack's requirement is missing - the finding is clickable and opens the pack. Sheet-built packs set it via the sheet's `addon_requires` field. |
 | `@ace_version(1.0.0)` / `@ace_author("Name")` / `@ace_help("https://...")` (class-level) | Pack identity metadata: the version joins the Addon Pack banner chip ("Addon Pack v1.0.0") and feeds future update tooling; author and help link document who made it and where its docs live. Sheet-built packs set them via `addon_version` / `addon_author` / `addon_help_url`; every bundled pack ships versioned. Don't hand-edit the version when you ship an update - **Sheet > Publish New Version…** bumps it Patch / Minor / Major and records your one-line change note as a doc comment beneath it, so the file accumulates its own changelog. |
+| `@ace_source("https://...")` (class-level) | Where this pack publishes from. The Addon manager's **Update** button and **Check for updates** have nowhere to look without it; a pack that names none simply says so. |
+| `@ace_inline_capable` (class-level) | Says this pack's shape can be written into an ordinary script rather than attached as a node. It is what makes "written into this script" selectable in the **Add behavior…** dialog: the pack's knobs become the script's own exported variables. Say it only for a small, self-contained shape (a cooldown, a wrap, a pin) - anything with its own per-frame work belongs in a node. |
 
 ### The param grammar: defaults, labels, and comparison
 

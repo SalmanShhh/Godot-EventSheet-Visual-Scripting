@@ -909,10 +909,49 @@ is instantiated to answer a question.
   this sheet uses that the scene does not have is flagged `⚠ not in Player.tscn` rather than listed
   like any other node, and hovering a count splits it into `2 conditions · 3 actions · 1 trigger`.
   Hover an entry to preview its rows, click to pin that highlight, double-click for Object properties,
-  right-click for **Add condition · Add action · Select in scene · Open its script as a sheet**, and
+  right-click for **Add condition · Add action · Add behavior… · Select in scene · Open its script as a sheet**, and
   drag one onto the sheet to start an event on it - dropping it in an existing event's action lane
   adds an action to that event instead. A script that is not on a scene yet says so, and says what to
   do about it.
+- **Add behavior… is one dialog for every pack.** Right-click an object in the Object bar and pick
+  **Add behavior…** (the head's Behaviors folder has the same "+"). The shelves down the top come
+  from the packs' own categories, the search reads a pack's name, its one-line pitch and its
+  folder ("jump" finds the platformer pack), and the card shows the pack's own `@export` knobs as
+  fields you fill in before it lands. **Where** offers *as a behavior node* - a node carrying the
+  pack's script under the object, which is how every pack works - and *written into this script*
+  for a pack that declares it can be (`## @ace_inline_capable`: the pack's knobs become the
+  script's own exported variables). After adding, the picker under the object lists the
+  behavior's conditions, actions and expressions, the head's Behaviors folder shows it, and the
+  Project Doctor checks the host the pack needs (a CharacterBody2D for the platformer pack).
+- **The installed packs are a list, not a folder.** **Tools ▸ Addon manager…** is a table over the
+  pack registry: pack, its version (read from its own `@ace_version`), an **enabled** tick, and
+  **Guide / Update / Publish…** per row. Switching a pack off takes its conditions, actions and
+  expressions out of the picker on the next refresh - its files stay where they are and the
+  sheets using it still open, and the Doctor names any sheet that still does. Under the table:
+  **Import from .zip…** and **Import from URL…** (an archive that would write outside
+  `eventsheet_addons/` is refused whole, before anything lands), **Check for updates** (which asks
+  every pack that names a published source with `## @ace_source(...)`), and the Asset Library door.
+- **The words are yours.** **Settings ▸ Words** is every word the sheet lets you choose, on one
+  page: an inheritance set, a scene, `_process`, an attached pack, a Godot group,
+  Array/Dictionary, `queue_free`, and the reader. Each row shows the word it reads as with
+  Familiar Words on and the word it reads as with it off, as a dropdown of the two defaults plus
+  any extra offered word (*Kind* for an inheritance set) plus **custom…** for a word you type.
+  Under the table, one event rendered in the words currently chosen, so the page never asks you
+  to imagine the result, and **Reset to defaults**. The choices are yours alone - they are stored
+  with the editor settings rather than in the project - so a Godot user and someone arriving from
+  another event-sheet editor can read the same sheet in different words.
+- **A finding with a one-step fix shows it.** In the Project Doctor, selecting a finding that has
+  a one-step answer draws a chip per answer: an unknown control offers *Add "dash" to the Input
+  Map* and *Pick an existing action…*, a variable read but never set offers *Declare it*, a pack
+  you switched off that a sheet still uses offers *Switch it back on*. Each applies through the
+  same operation the dock already owns, and the audit re-runs immediately, so the finding's
+  disappearance is proven rather than assumed.
+<img src="images/add-behavior.png" alt="The Add behavior dialog for Player: a scrolling row of category shelves above a search box, a list of pack cards each naming the pack and its one-line pitch, and on the right the selected pack's properties as editable fields above a Where dropdown reading as a behavior node." width="620">
+
+<img src="images/addon-manager.png" alt="The Addon manager: a table of installed packs with columns pack, version, enabled, what you can do and reads, each row showing the pack name over its eventsheet_addons folder, its version, a ticked enabled box and Guide, Update and Publish buttons, above Import from .zip, Import from URL, Check for updates and Find more, and the line 91 packs installed, 0 switched off." width="620">
+
+<img src="images/words-settings.png" alt="The Words page: a table headed what it names, with Familiar Words on, off, listing an inheritance set as Family or Base class, a scene as Layout or Scene, _process as Every tick, an attached pack as Behavior, a Godot group as Family (group) or Group, Array slash Dictionary as list slash table, queue_free as Destroy and the reader as Manual, above a live preview of one event and a Reset to defaults button." width="560">
+
 - **Objects wear their own picture.** When an object's scene has a Sprite2D / AnimatedSprite2D /
   TextureRect on or under its root, that texture becomes the object's mark - on the Include bar, in the
   Object bar, in the popup and on every object label - falling back to the class icon. The thumbnail

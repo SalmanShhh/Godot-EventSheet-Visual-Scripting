@@ -2615,5 +2615,32 @@ This block is the %s behavior - Adopt behavior?,这段其实就是 %s 行为 - �
 A pooled object is created here and nothing anywhere returns one to the pool.,这里创建了池中的对象，但任何地方都没有把对象还回池里。
 %s is set here but no event asks for it.,%s 在这里被设置，但没有事件询问它。
 A timer is started on entering this state and nothing stops it on leaving.,进入这个状态时启动了计时器，而离开时没有任何地方停止它。
-could adopt: %s,可采用：%s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,这个脚本手写了内置行为已经能做的事。右键点击带标记的事件即可看到会有什么变化。
+Words,用词
+Words…,用词…
+how the sheet talks,事件表的说法
+live preview,实时预览
+what it names,指的是什么
+with Familiar Words on,开启熟悉用词时
+Reset to defaults,恢复默认
+custom…,自定义…
+your word,你的用词
+Addon manager,扩展管理器
+Addon manager…,扩展管理器…
+installed packs,已安装的包
+pack,包
+what you can do,你可以做什么
+Import from .zip…,从 .zip 导入…
+Import from URL…,从网址导入…
+Check for updates,检查更新
+Find more (Asset Library),查找更多（资源库）
+user pack,自制包
+Import a pack from a .zip,从 .zip 导入一个包
+Import a pack from a URL,从网址导入一个包
+Add behavior,添加行为
+Add behavior…,添加行为…
+as a behavior node,作为行为节点
+written into this script,写进这个脚本
+This pack has no knobs to set.,这个包没有可调项。
+No pack here matches that.,没有匹配的包。
+Reading check,可读性检查
+Fix:,修复：

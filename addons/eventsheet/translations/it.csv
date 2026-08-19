@@ -2615,5 +2615,32 @@ This block is the %s behavior - Adopt behavior?,Questo blocco e il comportamento
 A pooled object is created here and nothing anywhere returns one to the pool.,Qui viene creato un oggetto dal pool e da nessuna parte ne viene restituito uno.
 %s is set here but no event asks for it.,%s viene impostato qui ma nessun evento lo chiede.
 A timer is started on entering this state and nothing stops it on leaving.,Entrando in questo stato parte un timer e nulla lo ferma all'uscita.
-could adopt: %s,adottabile: %s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,Questo script scrive a mano qualcosa che un comportamento incluso fa gia. Clic destro sull'evento segnato per vedere cosa cambierebbe.
+Words,Parole
+Words…,Parole…
+how the sheet talks,come parla il foglio
+live preview,anteprima dal vivo
+what it names,che cosa nomina
+with Familiar Words on,con Parole Familiari attive
+Reset to defaults,Ripristina i valori predefiniti
+custom…,personalizzato…
+your word,la tua parola
+Addon manager,Gestore dei componenti
+Addon manager…,Gestore dei componenti…
+installed packs,pacchetti installati
+pack,pacchetto
+what you can do,che cosa puoi fare
+Import from .zip…,Importa da .zip…
+Import from URL…,Importa da un URL…
+Check for updates,Cerca aggiornamenti
+Find more (Asset Library),Trovane altri (Asset Library)
+user pack,pacchetto tuo
+Import a pack from a .zip,Importa un pacchetto da un .zip
+Import a pack from a URL,Importa un pacchetto da un URL
+Add behavior,Aggiungi comportamento
+Add behavior…,Aggiungi comportamento…
+as a behavior node,come nodo di comportamento
+written into this script,scritto in questo script
+This pack has no knobs to set.,Questo pacchetto non ha regolazioni.
+No pack here matches that.,Nessun pacchetto corrisponde.
+Reading check,Controllo di lettura
+Fix:,Correggi:

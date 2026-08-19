@@ -2615,5 +2615,32 @@ This block is the %s behavior - Adopt behavior?,Dieser Block ist das Verhalten %
 A pooled object is created here and nothing anywhere returns one to the pool.,"Hier wird ein Pool-Objekt erzeugt, und nirgends wird eines zuruckgegeben."
 %s is set here but no event asks for it.,"%s wird hier gesetzt, aber kein Ereignis fragt danach."
 A timer is started on entering this state and nothing stops it on leaving.,"Beim Betreten dieses Zustands startet ein Timer, und beim Verlassen stoppt ihn nichts."
-could adopt: %s,ubernehmbar: %s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,"Dieses Skript schreibt von Hand, was ein mitgeliefertes Verhalten schon kann. Rechtsklick auf das markierte Ereignis zeigt, was sich andern wurde."
+Words,Wörter
+Words…,Wörter…
+how the sheet talks,wie das Blatt spricht
+live preview,Live-Vorschau
+what it names,was es benennt
+with Familiar Words on,mit Vertrauten Wörtern an
+Reset to defaults,Auf Standard zurücksetzen
+custom…,eigenes…
+your word,dein Wort
+Addon manager,Addon-Verwaltung
+Addon manager…,Addon-Verwaltung…
+installed packs,installierte Pakete
+pack,Paket
+what you can do,was du tun kannst
+Import from .zip…,Aus .zip importieren…
+Import from URL…,Von URL importieren…
+Check for updates,Nach Aktualisierungen suchen
+Find more (Asset Library),Mehr finden (Asset Library)
+user pack,eigenes Paket
+Import a pack from a .zip,Ein Paket aus einer .zip importieren
+Import a pack from a URL,Ein Paket von einer URL importieren
+Add behavior,Verhalten hinzufügen
+Add behavior…,Verhalten hinzufügen…
+as a behavior node,als Verhaltens-Node
+written into this script,in dieses Skript geschrieben
+This pack has no knobs to set.,Dieses Paket hat keine Regler.
+No pack here matches that.,Kein Paket passt dazu.
+Reading check,Lesbarkeitsprüfung
+Fix:,Beheben:

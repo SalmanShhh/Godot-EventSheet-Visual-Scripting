@@ -2615,5 +2615,32 @@ This block is the %s behavior - Adopt behavior?,Este bloque es el comportamiento
 A pooled object is created here and nothing anywhere returns one to the pool.,Aqui se crea un objeto del grupo y en ningun sitio se devuelve ninguno.
 %s is set here but no event asks for it.,%s se fija aqui pero ningun evento lo consulta.
 A timer is started on entering this state and nothing stops it on leaving.,Al entrar en este estado se inicia un temporizador y nada lo detiene al salir.
-could adopt: %s,se puede adoptar: %s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,Este script escribe a mano algo que ya hace un comportamiento incluido. Haz clic derecho en el evento marcado para ver que cambiaria.
+Words,Palabras
+Words…,Palabras…
+how the sheet talks,cómo habla la hoja
+live preview,vista previa en vivo
+what it names,qué nombra
+with Familiar Words on,con Palabras Familiares activadas
+Reset to defaults,Restablecer los valores por defecto
+custom…,personalizado…
+your word,tu palabra
+Addon manager,Gestor de complementos
+Addon manager…,Gestor de complementos…
+installed packs,paquetes instalados
+pack,paquete
+what you can do,qué puedes hacer
+Import from .zip…,Importar desde .zip…
+Import from URL…,Importar desde una URL…
+Check for updates,Buscar actualizaciones
+Find more (Asset Library),Buscar más (Asset Library)
+user pack,paquete propio
+Import a pack from a .zip,Importar un paquete desde un .zip
+Import a pack from a URL,Importar un paquete desde una URL
+Add behavior,Añadir comportamiento
+Add behavior…,Añadir comportamiento…
+as a behavior node,como nodo de comportamiento
+written into this script,escrito en este script
+This pack has no knobs to set.,Este paquete no tiene ajustes.
+No pack here matches that.,Ningún paquete coincide.
+Reading check,Comprobación de lectura
+Fix:,Arreglar:

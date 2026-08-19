@@ -60,7 +60,13 @@ func _build_body() -> Control:
 	page.custom_minimum_size = Vector2(720.0, 440.0)
 	_shelf_bar = HBoxContainer.new()
 	_shelf_bar.add_theme_constant_override("separation", 4)
-	page.add_child(_shelf_bar)
+	# A project with ninety packs has more shelves than fit: the bar scrolls sideways rather than
+	# widening the dialog to the sum of every category name.
+	var shelf_scroll: ScrollContainer = ScrollContainer.new()
+	shelf_scroll.custom_minimum_size = Vector2(700.0, 34.0)
+	shelf_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	shelf_scroll.add_child(_shelf_bar)
+	page.add_child(shelf_scroll)
 	_search = LineEdit.new()
 	_search.placeholder_text = "search"
 	_search.tooltip_text = "Reads every pack's name, its one-line pitch and its folder, so \"jump\" finds the platformer pack."

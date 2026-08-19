@@ -140,8 +140,8 @@ func _refresh_preview(familiar: bool) -> void:
 	var override_map: Dictionary = EventSheetWords.overrides()
 	var set_word: String = EventSheetWords.word_for("inheritance_set", familiar, override_map)
 	var destroy_word: String = EventSheetWords.word_for("destroy", familiar, override_map)
-	_preview_condition.text = "%s  System > For each  Enemy  %s" % ["(repeats)", set_word.to_lower()]
-	_preview_action.text = "Enemy > %s" % destroy_word
+	_preview_condition.text = "⟳  System ▸ For each  Enemy  %s" % set_word.to_lower()
+	_preview_action.text = "Enemy ▸ %s" % destroy_word
 
 
 func _on_choice(key: String, familiar: bool) -> void:

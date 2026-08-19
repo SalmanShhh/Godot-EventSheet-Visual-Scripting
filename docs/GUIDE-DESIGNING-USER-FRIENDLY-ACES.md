@@ -277,6 +277,39 @@ Same template underneath (`InputMap.action_set_deadzone({action}, {deadzone})`).
 now works: findable name, a description that names the situation, a dialog that opens usable
 with nothing typed, and a row that reads "set "move_left" deadzone to 0.2" - a sentence.
 
+## The reading check at publish
+
+Everything above is a rule you could forget. The reading check is the same rules asked
+automatically, at the moment a pack goes out.
+
+Open the pack as a sheet and choose **Sheet > Publish New Version...**. The dialog now carries a
+**Reading check** card: it takes everything the pack publishes and asks four questions of each.
+
+1. **Does it read as a sentence?** The words a reader sees must be words. `set_thing`,
+   `do_thing()` and `node.thing` are calls, not sentences; `Set health to {value}` is a sentence,
+   and a single plain word (`Prefab`, `Health`) is a fine name for an expression.
+2. **Are its parameters named?** Every parameter needs the words the row shows beside its field.
+   `arg`, `param` and the raw id repeated back are not names.
+3. **Does it carry a description?** One line saying what it does, so the picker can answer "when
+   would I use this?".
+4. **Does it avoid the words the sheet does not use about itself?** A published action is an
+   action, not a "verb" and not a "code card".
+
+The pack's demo sheet is checked too: it must open with every line as a row and no Script blocks
+left. A pack whose own demo still shows a wall of code has not made its own actions enough.
+
+Failures are listed with the fix rather than as a verdict:
+
+```
+Set Thing: the words a reader sees are a bare call, not a sentence - give it @ace_name("Set thing to {value}") - a sentence with its parameters in it
+Speed: the parameter "amount" is not named - give it @ace_param(amount, "Speed", ...) - the words the row shows beside the field
+```
+
+**Publishing is never blocked by it.** A check that stopped work would simply be routed around.
+The pack publishes, and carries its score ("reads 94%") in the Addon manager until it passes. The
+same check runs as a note in the Project Doctor over the packs in your project, and as a test over
+the packs that ship with the plugin - which is how all 91 of those keep passing it.
+
 ## Checklist before you ship
 
 - [ ] Read every display template aloud with real values substituted. Sentences?
@@ -290,3 +323,4 @@ with nothing typed, and a row that reads "set "move_left" deadzone to 0.2" - a s
 - [ ] Would you sign off on the emitted GDScript in a code review?
 - [ ] `EventSheets.verify_pack(...)` passes (parses + byte round-trips) and the suite is green.
 - [ ] Are you happy with the `ace_id` forever? It freezes at release.
+- [ ] Does the Reading check in Sheet > Publish New Version... list nothing?

@@ -2615,5 +2615,32 @@ This block is the %s behavior - Adopt behavior?,Ce bloc est le comportement %s -
 A pooled object is created here and nothing anywhere returns one to the pool.,Un objet de la reserve est cree ici et nulle part on n'en rend un.
 %s is set here but no event asks for it.,%s est defini ici mais aucun evenement ne le consulte.
 A timer is started on entering this state and nothing stops it on leaving.,Un minuteur demarre en entrant dans cet etat et rien ne l'arrete en sortant.
-could adopt: %s,adoptable : %s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,Ce script ecrit a la main ce qu'un comportement fourni fait deja. Clic droit sur l'evenement marque pour voir ce qui changerait.
+Words,Mots
+Words…,Mots…
+how the sheet talks,comment la feuille parle
+live preview,aperçu en direct
+what it names,ce que cela nomme
+with Familiar Words on,avec les Mots Familiers activés
+Reset to defaults,Rétablir les valeurs par défaut
+custom…,personnalisé…
+your word,votre mot
+Addon manager,Gestionnaire d'extensions
+Addon manager…,Gestionnaire d'extensions…
+installed packs,packs installés
+pack,pack
+what you can do,ce que vous pouvez faire
+Import from .zip…,Importer depuis un .zip…
+Import from URL…,Importer depuis une URL…
+Check for updates,Rechercher des mises à jour
+Find more (Asset Library),En trouver d'autres (Asset Library)
+user pack,pack personnel
+Import a pack from a .zip,Importer un pack depuis un .zip
+Import a pack from a URL,Importer un pack depuis une URL
+Add behavior,Ajouter un comportement
+Add behavior…,Ajouter un comportement…
+as a behavior node,comme nœud de comportement
+written into this script,écrit dans ce script
+This pack has no knobs to set.,Ce pack n'a aucun réglage.
+No pack here matches that.,Aucun pack ne correspond.
+Reading check,Contrôle de lecture
+Fix:,Corriger :

@@ -89,16 +89,22 @@ func refresh() -> void:
 		return
 	for child: Node in _table.get_children():
 		child.queue_free()
-	var header: HBoxContainer = HBoxContainer.new()
-	header.add_theme_constant_override("separation", 10)
-	header.add_child(_column(EventSheetPopupUI.small_caps_label("pack"), 300.0))
-	header.add_child(_column(EventSheetPopupUI.small_caps_label("version"), 120.0))
-	header.add_child(_column(EventSheetPopupUI.small_caps_label("enabled"), 70.0))
-	header.add_child(_column(EventSheetPopupUI.small_caps_label("what you can do"), 200.0))
-	_table.add_child(header)
+	# ONE grid rather than a row of HBoxes: a per-row box sizes to its own contents, so the
+	# version and the buttons drifted a few pixels on every second line.
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = 5
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 4)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_child(EventSheetPopupUI.small_caps_label("pack"))
+	grid.add_child(EventSheetPopupUI.small_caps_label("version"))
+	grid.add_child(EventSheetPopupUI.small_caps_label("enabled"))
+	grid.add_child(EventSheetPopupUI.small_caps_label("what you can do"))
+	grid.add_child(EventSheetPopupUI.small_caps_label("reads"))
+	_table.add_child(grid)
 	var packs: Array[Dictionary] = EventSheetPackCatalog.packs()
 	for pack: Dictionary in packs:
-		_table.add_child(_build_row(pack))
+		_add_row(grid, pack)
 	if packs.is_empty():
 		_table.add_child(EventSheetPopupUI.hint_label(
 			"No packs installed yet. Import one from a .zip or a URL, or find more in the Asset Library.", 640.0))
@@ -106,44 +112,47 @@ func refresh() -> void:
 		packs.size(), "" if packs.size() == 1 else "s", EventSheetPackCatalog.disabled_packs().size()])
 
 
-func _build_row(pack: Dictionary) -> Control:
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+func _add_row(grid: GridContainer, pack: Dictionary) -> void:
 	var name_box: VBoxContainer = VBoxContainer.new()
 	name_box.add_theme_constant_override("separation", 0)
+	name_box.custom_minimum_size = Vector2(225.0, 0.0)
 	var name_label: Label = Label.new()
 	name_label.text = str(pack.get("name", ""))
+	name_label.tooltip_text = str(pack.get("pitch", ""))
+	name_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	name_box.add_child(name_label)
 	var path_label: Label = Label.new()
 	path_label.text = "eventsheet_addons/%s" % str(pack.get("dir", ""))
 	path_label.modulate = Color(1.0, 1.0, 1.0, 0.6)
 	name_box.add_child(path_label)
-	row.add_child(_column(name_box, 300.0))
+	grid.add_child(name_box)
 	var version_label: Label = Label.new()
 	var version: String = str(pack.get("version", "")).strip_edges()
 	version_label.text = version if not version.is_empty() else "user pack"
-	row.add_child(_column(version_label, 120.0))
+	version_label.custom_minimum_size = Vector2(90.0, 0.0)
+	version_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	grid.add_child(version_label)
 	var enabled: CheckBox = CheckBox.new()
 	enabled.button_pressed = bool(pack.get("enabled", true))
 	enabled.tooltip_text = "Off takes this pack's conditions, actions and expressions out of the picker. The files stay, the sheets using them still open, and the Doctor says which ones do."
 	var pack_dir: String = str(pack.get("dir", ""))
 	enabled.toggled.connect(func(on: bool) -> void: _on_enabled_toggled(pack_dir, on))
-	row.add_child(_column(enabled, 70.0))
+	grid.add_child(enabled)
 	var buttons: HBoxContainer = HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 4)
-	if not str(pack.get("guide", "")).is_empty():
-		buttons.add_child(_action_button("Guide", "Opens this pack's guide in the Manual.",
-			func() -> void: _open_guide_for(pack_dir)))
+	buttons.add_child(_action_button("Guide", "Opens this pack's page in the Manual.",
+		func() -> void: _open_guide_for(pack_dir)))
 	buttons.add_child(_action_button("Update", "Asks this pack's published source whether a newer version is out.",
 		func() -> void: _on_check_one(pack)))
-	buttons.add_child(_action_button("Publish…", "Bumps this pack's version after the reading check.",
+	buttons.add_child(_action_button("Publish…", "Opens the pack so Publish New Version can run the reading check and bump the version.",
 		func() -> void: _on_publish(pack)))
-	row.add_child(_column(buttons, 220.0))
+	grid.add_child(buttons)
 	var reading: Label = Label.new()
 	reading.text = reading_badge_text(pack)
 	reading.modulate = Color(1.0, 1.0, 1.0, 0.7)
-	row.add_child(reading)
-	return row
+	reading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	reading.custom_minimum_size = Vector2(70.0, 0.0)
+	grid.add_child(reading)
 
 
 ## The score the manager shows beside a pack: "" once it reads, "reads 94%" until it does. Pure,
@@ -155,13 +164,6 @@ static func reading_badge_text(pack: Dictionary) -> String:
 	if int(percent) >= 100:
 		return ""
 	return "reads %d%%" % int(percent)
-
-
-func _column(content: Control, width: float) -> Control:
-	var box: MarginContainer = MarginContainer.new()
-	box.custom_minimum_size = Vector2(width, 0.0)
-	box.add_child(content)
-	return box
 
 
 func _on_enabled_toggled(pack_dir: String, enabled: bool) -> void:

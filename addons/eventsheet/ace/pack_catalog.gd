@@ -54,20 +54,36 @@ static func describe(pack_dir: String) -> Dictionary:
 	if script_path.is_empty():
 		return {}
 	var source: String = FileAccess.get_file_as_string(script_path)
+	# Only the CLASS-LEVEL annotations describe the pack. A member's own `## @ace_name(...)` a
+	# hundred lines down describes one action, and reading the first match in the whole file made
+	# every pack introduce itself as whichever action happened to be declared first.
+	var header: String = _class_header(source)
 	var guide: String = folder.path_join("guide.md")
 	return {
 		"dir": pack_dir,
 		"path": script_path,
-		"name": _display_name(source, pack_dir),
+		"name": _display_name(header, pack_dir),
 		"pitch": _pitch(source),
-		"category": _annotation_argument(source, "@ace_category"),
-		"version": _annotation_argument(source, "@ace_version"),
+		"category": _annotation_argument(header, "@ace_category"),
+		"version": _annotation_argument(header, "@ace_version"),
 		"enabled": true,
-		"inline_capable": source.contains("## %s" % INLINE_ANNOTATION),
-		"source": _annotation_argument(source, SOURCE_ANNOTATION),
-		"icon": _annotation_argument(source, "@ace_icon"),
+		"inline_capable": header.contains(INLINE_ANNOTATION),
+		"source": _annotation_argument(header, SOURCE_ANNOTATION),
+		"icon": _annotation_argument(header, "@ace_icon"),
 		"guide": guide if FileAccess.file_exists(guide) else "",
 	}
+
+
+## Everything above (and including) the `extends` line - the region where an annotation is about
+## the pack rather than about one of its members.
+static func _class_header(source: String) -> String:
+	var lines: PackedStringArray = source.split("\n")
+	var kept: PackedStringArray = PackedStringArray()
+	for line: String in lines:
+		kept.append(line)
+		if line.strip_edges().begins_with("extends "):
+			break
+	return "\n".join(kept)
 
 
 ## The pack's own script: <dir>/<dir>.gd when it exists (the scaffolder's shape), else the first
@@ -164,32 +180,38 @@ static func is_disabled_path(script_path: String) -> bool:
 # --- reading the pack's own words --------------------------------------------------------------
 
 
-static func _display_name(source: String, pack_dir: String) -> String:
-	var annotated: String = _annotation_argument(source, "@ace_name")
+## The pack's name: its own class-level @ace_name when it declares one, else its folder read as
+## words. The folder rather than the class_name, because a folder is what the reader named and a
+## class_name carries the plumbing ("SimpleHealthBehavior" for a pack called Health).
+static func _display_name(header: String, pack_dir: String) -> String:
+	var annotated: String = _annotation_argument(header, "@ace_name")
 	if not annotated.is_empty():
 		return annotated
-	var class_line: RegEx = RegEx.create_from_string("(?m)^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
-	var found: RegExMatch = class_line.search(source)
-	if found != null:
-		return _humanize(found.get_string(1))
 	return _humanize(pack_dir)
 
 
-## The one-line pitch: the pack's own @ace_description when it has one, else the first sentence
-## of its top doc comment. Never the whole comment - a card has one line.
+## The one-line pitch: the first sentence of the pack's own class doc comment - the `##` block
+## that sits directly under `extends`. Never the whole comment: a card has one line.
 static func _pitch(source: String) -> String:
-	var described: String = _annotation_argument(source, "@ace_description")
-	if not described.is_empty():
-		return described
-	for line: String in source.split("\n"):
+	var lines: PackedStringArray = source.split("\n")
+	var reached_class: bool = false
+	for line: String in lines:
 		var text: String = line.strip_edges()
-		if text.begins_with("## @") or text.begins_with("# @"):
+		if text.begins_with("extends "):
+			reached_class = true
 			continue
-		if text.begins_with("##"):
-			var body: String = text.substr(2).strip_edges()
-			if not body.is_empty():
-				var stop: int = body.find(". ")
-				return body if stop < 0 else body.substr(0, stop)
+		if not reached_class:
+			continue
+		if text.is_empty() or text.begins_with("@"):
+			continue
+		if not text.begins_with("##"):
+			break
+		var body: String = text.substr(2).strip_edges()
+		if body.begins_with("@"):
+			continue
+		if not body.is_empty():
+			var stop: int = body.find(". ")
+			return body if stop < 0 else body.substr(0, stop)
 	return ""
 
 

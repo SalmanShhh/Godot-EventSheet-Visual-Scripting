@@ -2615,5 +2615,32 @@ This block is the %s behavior - Adopt behavior?,이 묶음은 %s 비헤이비어
 A pooled object is created here and nothing anywhere returns one to the pool.,"여기서 풀의 오브젝트를 만들지만, 어디에서도 풀로 돌려주지 않습니다."
 %s is set here but no event asks for it.,"%s 은(는) 여기서 설정되지만, 그것을 묻는 이벤트가 없습니다."
 A timer is started on entering this state and nothing stops it on leaving.,"이 상태에 들어갈 때 타이머가 시작되지만, 나갈 때 멈추는 것이 없습니다."
-could adopt: %s,도입 가능: %s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,이 스크립트는 기본 제공 비헤이비어가 이미 하는 일을 직접 쓰고 있습니다. 표시된 이벤트를 오른쪽 클릭하면 무엇이 바뀌는지 볼 수 있습니다.
+Words,낱말
+Words…,낱말…
+how the sheet talks,시트가 말하는 방식
+live preview,실시간 미리보기
+what it names,무엇을 가리키는지
+with Familiar Words on,익숙한 낱말 켬
+Reset to defaults,기본값으로 되돌리기
+custom…,직접 입력…
+your word,직접 쓴 낱말
+Addon manager,애드온 관리
+Addon manager…,애드온 관리…
+installed packs,설치된 팩
+pack,팩
+what you can do,할 수 있는 일
+Import from .zip…,.zip에서 가져오기…
+Import from URL…,URL에서 가져오기…
+Check for updates,업데이트 확인
+Find more (Asset Library),더 찾기 (Asset Library)
+user pack,직접 만든 팩
+Import a pack from a .zip,.zip에서 팩 가져오기
+Import a pack from a URL,URL에서 팩 가져오기
+Add behavior,비헤이비어 추가
+Add behavior…,비헤이비어 추가…
+as a behavior node,비헤이비어 노드로
+written into this script,이 스크립트에 써 넣기
+This pack has no knobs to set.,이 팩에는 조절할 값이 없습니다.
+No pack here matches that.,일치하는 팩이 없습니다.
+Reading check,읽기 검사
+Fix:,고치기:
