@@ -61,6 +61,25 @@ Until the driver is configured, git just falls back to its default merge, so the
 
 Both sides are preserved in the merged sheet so nothing is lost - open it and keep the right one. Run the headless suite's `sheet_merge_test` for the exact behaviours that are guaranteed.
 
+### Resolving a conflict as events, not as marker lines
+
+A `.gd` sheet merges like any source code, which means a genuine same-line conflict comes back the
+way every source conflict does - `<<<<<<<`, `=======`, `>>>>>>>`. Opening such a file in EventSheets
+does not try to read it as one sheet, because it is not one: it is two. Instead the **conflict view**
+opens, showing the conflicted region as **OURS** and **THEIRS** columns of events side by side.
+
+- Events **both sides agree on are greyed** - there is nothing to decide about them.
+- Every differing event gets its own **Keep ours** / **Keep theirs** / **Keep both**.
+- The rest of the file is not shown here at all, because it is not in question.
+
+**Save resolved file** writes the file back with the markers gone and **every byte outside the
+conflicted region exactly as it was** - a file with one conflict in it never comes back with the rest
+of it reformatted. A region you do not answer keeps its markers, untouched, so a half-finished
+resolution is still a file you can come back to.
+
+The Project Doctor reports any file still holding markers as an **error**: it does not compile, and
+the worst moment to discover that is when the game will not start.
+
 ---
 
 ## 4. Use Cases
