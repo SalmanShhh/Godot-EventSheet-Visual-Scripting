@@ -73,14 +73,14 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | Construct 3 | Godot EventSheets / generated GDScript |
 |---|---|
 | Every tick | **Every Frame** trigger (`_process(delta)`) - but if you're checking for an *event* (a collision, a timer ending, a key press), prefer the matching **signal** trigger instead; see [Polling vs reacting](#4-polling-vs-reacting---the-biggest-shift-from-c3) |
-| On start of layout | `On Ready` trigger (`_ready()`) |
+| On start of layout | `On Ready` trigger (`_ready()`) - and when you OPEN a .gd file as a sheet it reads back under exactly this name: a `_ready` on the script the scene itself carries is **On start of layout**, a `_ready` on a script sitting on an object in the scene is that object's **On created**, and `_exit_tree` is **On end of layout** or **On destroyed** the same way round |
 | Compare variable | **Compare Variable** condition - variable, a labeled operator dropdown (`= (equal to)`, `>= (at least)`…), value; **Compare Values** for two arbitrary expressions. Or just type the condition: `health < 50` (plain GDScript) |
 | Set variable / Add to | `Set Variable` / `Add To Variable` actions, or `health += 10` in ƒx |
 | On collision / overlap | `On Body Entered` / `On Area Entered` (Area2D) - connections are generated |
 | Destroy | `Queue Free` |
 | Set position / angle | `Set Position` / `Set Rotation` (Node2D) |
 | Simulate control (Platform) | PlatformerMovement behavior ACEs (`Jump`, `Set Move Speed`, `Set Gravity Angle`) |
-| Wait | An `await`-flagged action, or `await get_tree().create_timer(1.0).timeout` in a block |
+| Wait | An `await`-flagged action, or `await get_tree().create_timer(1.0).timeout` in a block. An opened .gd reads the one-shot timer the same way: `get_tree().create_timer(2.0).timeout.connect(func(): explode())` reads **Wait 2 seconds then Call Explode** |
 | Pick by comparison / For each | **Pick filters**: right-click an event → "Add Pick Filter (For Each)…" - loops a node group/children/any iterable with a GDScript `where` predicate and first-N; compiles to a plain `for` loop |
 | Repeat / While | The same pick-filter dialog: the Collection dropdown has **Repeat N times** and **While (condition)** |
 | loopindex / loopindex("name") | Name the loop's **Loop index** field (convention: `loop_index`), then read the **Loop Index** expression; nested loops take distinct names and **Loop Index Of** reads an outer one - 0-based like C3, even over offset ranges |
