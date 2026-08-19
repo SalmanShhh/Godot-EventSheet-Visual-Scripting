@@ -19,6 +19,8 @@ before you write. Read this once; after that the gates will tell you when you sl
 
 ## Where docs live, and where they show up
 
+![The Welcome window's documentation link, which opens the guide in a browser at the installed version's tag](images/welcome-documentation-link.png)
+
 Every guide is a Markdown file under `docs/`. The same file is read in three places, and you write
 it once:
 
@@ -36,6 +38,16 @@ The editor reader does not read `docs/` directly. A build tool copies the guides
 Section [Regenerate before you commit](#regenerate-before-you-commit) covers the one command.
 
 ## The Manual: what a reader gets, and what it derives
+
+![A shipped guide drawn natively at a narrow width: headings on a real scale, tables and code cards, no browser](images/doc-guide-page.png)
+
+![The generated "what does this row do?" page for one row, built from the row itself](images/doc-explain-panel.png)
+
+![The Manual in a dock-width column beside a sheet, its prose still wrapping at the reading measure](images/doc-dock-beside-sheet.png)
+
+![The Manual searched: ranked results grouped by page, beside the open page with every hit wrapped](images/doc-search-results.png)
+
+![The same page after an in-page anchor jump, landed on the section heading the link named](images/doc-guide-anchor.png)
 
 The in-editor reader is called the **Manual**, and it has two halves. Your guides are one of them.
 The other is **reference**, and nobody writes it:
@@ -90,6 +102,8 @@ the page set the Manual's text size, and **Ctrl+F1** reopens the page you were l
 F1 stays "help for the selected item").
 
 ### The fixed shape of a reference page
+
+![A pack guide's reference section drawn from the live registry rather than from the Markdown under it](images/doc-ace-reference.png)
 
 Every reference page - object, module or behavior - prints the same five sections in the same
 order, so a reader's eye learns where to land once:
@@ -212,6 +226,10 @@ file. Cross-reference a sibling guide by name only when the reader would genuine
 next.
 
 ## Worked examples that draw themselves - the figure fences
+
+![A bare figure: its caption, the live rows underneath, and the Insert and Try it buttons](images/doc-figure.png)
+
+![A shipped guide whose worked examples render as live, insertable rows in the reader's own theme](images/doc-guide-figure.png)
 
 This is the part that makes writing docs here different. A fenced code block that holds a real
 event-sheet example is drawn in the editor as a **live sheet** - the real renderer, in the

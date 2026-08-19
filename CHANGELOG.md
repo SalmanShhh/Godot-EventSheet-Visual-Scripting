@@ -32,6 +32,24 @@
   guide the index does not list, or lists without a description. `tests/module_guides_test.gd` reads
   the reference tables under their new headings, keyed on a set that also accepts a table headed by
   its kind - 333 rows in the addon guides had drifted out of that sweep unnoticed.
+### Added - every screenshot in the docs is now shown by a guide
+
+- **Seventy-four pictures existed and illustrated nothing.** They were rendered for review, looked
+  at once, and never referenced, so they went stale in a folder nobody read - which is how four
+  generations of the same three figures piled up in there. Each one now sits under the paragraph
+  that describes what it shows: the Bookmarks panel, the Outline, the filter lens, cell walking,
+  number scrubbing, Select All Events Using This and Replace Object References beside their bullets;
+  the Manual's own pages, figures and search in the docs guide; the Drawing Canvas paste rows, the
+  Platform feature tags, the hit-count margin and the BBCode field in the modules they belong to.
+- **The nine opened-file figures were re-rendered against main first**, so what a reader sees is
+  what the editor draws today: the head gathers members in one **Instance variables** folder, a
+  published function reads `ƒ Functions ▸ On <name>` in the condition lane, and every variable row
+  is the one sentence - scope word, plain type word, name, value.
+- **A guide can no longer show a picture that is not there, and a picture can no longer hide.**
+  `tests/docs_integrity_test.gd` now walks the whole `.md` corpus and both image forms the guides
+  use, and fails on either an orphan or a broken embed. Four superseded generations of the opened-
+  script figures went with the harnesses that produced them.
+
 ### Changed - the shipped words say action, condition and expression
 
 - **Every row, tooltip and reference table that still said "verb" now says what it means.** On

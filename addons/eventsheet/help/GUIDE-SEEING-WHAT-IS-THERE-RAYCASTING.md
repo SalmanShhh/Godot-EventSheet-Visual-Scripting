@@ -22,6 +22,8 @@ Godot casts four different ways, and the picker has all four, in 2D and in 3D. T
 
 ## Which cast do I want?
 
+![The picker filtered to "raycast": the Raycast 2D, Raycast 3D and Overlap 3D entries under their category icons](images/raycast-vocabulary.png)
+
 | You want to… | Use | Why |
 | --- | --- | --- |
 | Check the same direction every frame from one object | **RayCast2D / RayCast3D node** | The physics server updates it for you. Cheapest option for a permanent probe. |

@@ -24,6 +24,8 @@ answers, in order, and falls back to one exported number when nothing does.
 
 ## Where this pack shines
 
+![A shop and a wave encounter as rows: Load Price Table and Buy beside Start Encounter and On Encounter Finished](../images/tooldev-content-packs.png)
+
 - **Shops and vendors** - a blacksmith with four items, two of them limited stock.
 - **Upgrade kiosks** - tiers that unlock one another as they are bought.
 - **Toll gates and fares** - pay to pass, refused with a readable reason when you cannot.

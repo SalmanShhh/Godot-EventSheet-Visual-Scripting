@@ -1,5 +1,7 @@
 # GDScript basics, as event sheet rows
 
+![An inner class read as a data-class block, with the Add Field dialog - Name, Type, Default - open over it](images/data-class-add-field.png)
+
 Everything on Godot's official GDScript basics page can be written - and read back - in the
 event sheet's condition/action lanes. This table is the receipt: each language feature, how it
 reads in a sheet, and how you author it. It states shipped facts only, and the test suite pins

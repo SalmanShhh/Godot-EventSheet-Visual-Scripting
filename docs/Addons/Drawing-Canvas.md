@@ -40,6 +40,8 @@ Every tick     -> Player | Drawing Canvas: Draw Line Of Sight
 
 ### Actions
 
+![The picker filtered to "Paste": the four Drawing Canvas paste rows offered like any other action](../images/paste-picker.png)
+
 | Action | Parameters | Description |
 |---|---|---|
 | Clear Canvas | (none) | Wipes the canvas (persistent mode wipes next frame, then keeps strokes again). |
@@ -314,6 +316,8 @@ last numbers before the color (rect takes a line width, ring/line take a width).
 line, ring, rect - share one dash rhythm, so they read as a set.
 
 ### 17. Flatten a layer of decor (performance bake)
+
+![The Draw Lab running: a gem layer baked onto the canvas at load, plus the stamp trail an orbiting comet leaves](../images/draw-lab-paste.png)
 
 Hundreds of individual grass, rock, and prop sprites are cheap to author but cost draw calls. A level-wide
 persistent canvas on a static root bakes the whole decor layer into ONE texture at load, then you free the
