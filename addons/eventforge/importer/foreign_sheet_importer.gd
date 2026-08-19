@@ -23,6 +23,11 @@ extends RefCounted
 ## for exactly this, so changing it changes a shipped finding - deprecate, never re-spell.
 const UNMAPPED_MARKER: String = "Not mapped on import:"
 
+## The tally line each unmapped row gets at the end of the file, as it is emitted. Counted rather
+## than the inline notes, because a row under a switched-off event writes no inline note at all -
+## the tally is the one place every unmapped row appears exactly once.
+const TALLY_PREFIX: String = "#   Not mapped on import:"
+
 ## The stable words a kept-verbatim parameter leaves behind.
 const FLAGGED_MARKER: String = "Check on import:"
 
@@ -171,11 +176,11 @@ static func import_sheet(sheet_json: Dictionary, object_map: Dictionary = {}, op
 	# that did not survive, including the ones that sat under a switched-off event.
 	if not (report["unmapped"] as Array).is_empty():
 		var log_lines: PackedStringArray = PackedStringArray([
-			"%s %d of %d rows. Each one is switched off; its original words are here." % [
-				UNMAPPED_MARKER, (report["unmapped"] as Array).size(), int(report["total"])],
+			"Rows this import could not spell - %d of %d. Each one is switched off; its original words are here." % [
+				(report["unmapped"] as Array).size(), int(report["total"])],
 		])
 		for entry: Dictionary in report["unmapped"] as Array:
-			log_lines.append("  %s - %s" % [entry["label"], entry["reason"]])
+			log_lines.append("  %s %s - %s" % [UNMAPPED_MARKER, entry["label"], entry["reason"]])
 		var log_row: CommentRow = CommentRow.new()
 		log_row.style = CommentRow.CommentStyle.TODO
 		log_row.text = "\n".join(log_lines)

@@ -84,6 +84,7 @@ static func run() -> Dictionary:
 	check_vocabulary_doc(findings)
 	check_pack_reading(findings)
 	check_disabled_pack_usage(sheet_paths, findings)
+	check_imported_rows(sheet_paths, findings)
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:
@@ -1770,6 +1771,27 @@ static func _function_list(names: PackedStringArray) -> String:
 	if called.size() == 1:
 		return called[0]
 	return "%s and %s" % [", ".join(called.slice(0, called.size() - 1)), called[called.size() - 1]]
+
+
+## Rows an import from another event-sheet editor could not spell. The importer switches each one
+## off and writes its original words into the file, so the words are still there for a reader - but
+## nobody reads a file top to bottom looking for them. This finds them and says how many.
+##
+## Info tier: an imported project is a work in progress, not a broken one.
+static func check_imported_rows(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_scripts():
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if not source.contains(EventSheetForeignImporter.TALLY_PREFIX):
+			continue
+		var pending: int = 0
+		for line: String in source.split("
+"):
+			if line.begins_with(EventSheetForeignImporter.TALLY_PREFIX):
+				pending += 1
+		_add(findings, "info", "imported-row", script_path,
+			"%s from an imported event sheet still switched off, with the original words beside %s. Each one needs the row that says the same thing here, or the shipped behaviour the note names. Delete the note once the row is back." % [
+				("%d rows" % pending) if pending > 1 else "1 row",
+				"them" if pending > 1 else "it"])
 
 
 static func check_vocabulary_doc(findings: Array[Dictionary]) -> void:
