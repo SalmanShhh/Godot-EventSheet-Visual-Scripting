@@ -298,12 +298,22 @@ func _draw_collapsed_summary(control: Control, row_rect: Rect2, row_data: EventR
 		return
 	# The summary follows the row's FIRST line: a header that stacks (a verb row with input
 	# chips) keeps its summary beside the line that names it, not floating past the last one.
+	# The line is found by the spans' own line_index, not by matching their y: a BADGE is inset
+	# vertically inside its column, so a row that LEADS with one (a trigger, a function's
+	# `ƒ Functions ▸ On <name>`) matched nothing but the badge and drew the summary straight over
+	# the object name that followed it.
 	var first_line_top: float = row_data.spans[0].rect.position.y
 	var first_line_height: float = row_data.spans[0].rect.size.y
 	var text_end: float = row_data.spans[0].rect.end.x
 	for span: SemanticSpan in row_data.spans:
-		if is_equal_approx(span.rect.position.y, first_line_top):
-			text_end = maxf(text_end, span.rect.end.x)
+		if span == null:
+			continue
+		var line_index: int = int((span.metadata as Dictionary).get("line_index", 0)) if span.metadata is Dictionary else 0
+		if line_index != 0:
+			continue
+		first_line_top = minf(first_line_top, span.rect.position.y)
+		first_line_height = maxf(first_line_height, span.rect.size.y)
+		text_end = maxf(text_end, span.rect.end.x)
 	var start_x: float = text_end + EventSheetPalette.scaled_f(SUMMARY_GAP)
 	var max_width: float = row_rect.end.x - EventSheetPalette.scaled_f(SUMMARY_RIGHT_INSET) - start_x
 	if max_width <= EventSheetPalette.scaled_f(SUMMARY_GAP):
