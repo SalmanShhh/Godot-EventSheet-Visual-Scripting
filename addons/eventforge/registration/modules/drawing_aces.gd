@@ -88,4 +88,4 @@ static func _gap() -> ACEParam:
 
 
 static func section_descriptions() -> Dictionary:
-	return {CAT: "Draw shapes, ribbons, and prefabs onto any node's 2D canvas - the pickable form of the Drawing Canvas verbs, backed by the shared CanvasSurface runtime. Persistent strokes or per-frame telegraphs; the live texture feeds sprites, UI, materials, or a 3D Decal."}
+	return {CAT: "Draw shapes, ribbons, and prefabs onto any node's 2D canvas - the pickable form of the Drawing Canvas pack's actions, backed by the shared CanvasSurface runtime. Persistent strokes or per-frame telegraphs; the live texture feeds sprites, UI, materials, or a 3D Decal."}

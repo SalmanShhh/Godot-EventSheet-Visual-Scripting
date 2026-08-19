@@ -285,8 +285,8 @@ static func reference_columns(grouped: Dictionary) -> PackedStringArray:
 	for group: String in GROUP_ORDER:
 		for entry: Variant in (grouped.get(group, []) as Array):
 			if not str((entry as Dictionary).get("note", "")).strip_edges().is_empty():
-				return PackedStringArray(["Verb", "Parameters", "What it does"])
-	return PackedStringArray(["Verb", "Parameters"])
+				return PackedStringArray(["Name", "Parameters", "What it does"])
+	return PackedStringArray(["Name", "Parameters"])
 
 
 ## The section as page blocks: the heading the guide already had (so its anchor still resolves),

@@ -1469,7 +1469,7 @@ Wait Succeeded,等待成功
 wait [b]{wait_name}[/b] succeeded,等待 [b]{wait_name}[/b] 成功
 The name the wait row used.,那一行等待所使用的名字。
 Wait Timed Out,等待超时
-"True when the named wait gave up instead of finishing - the recovery branch for a load that never reported in. The same timeout also reports on verb_failed, so another event can handle it as On Failure Of.",当指定名字的等待是放弃而不是完成时为真 - 一次永远没有回报的加载的恢复分支。同一次超时也会在 verb_failed 上报告，所以另一个事件可以用“当动词失败时”来处理它。
+"True when the named wait gave up instead of finishing - the recovery branch for a load that never reported in. The same timeout also reports on verb_failed, so another event can handle it as On Failure Of.",当指定名字的等待是放弃而不是完成时为真 - 一次永远没有回报的加载的恢复分支。同一次超时也会在 verb_failed 上报告，所以另一个事件可以用“当动作失败时”来处理它。
 wait [b]{wait_name}[/b] timed out,等待 [b]{wait_name}[/b] 超时
 First To Finish,最先完成
 "Which signal a Wait For Any Of was watching finished first, written as ""Node.signal"" (the node's name, a dot, the signal's name), or empty text when it timed out. The node is part of the answer on purpose: a race between $Player.died and $Boss.died is two signals with the same name, and only the owner tells them apart. Compare it in a condition cell to branch on the winner.","一个“等待任一”所监视的信号中哪一个最先完成，写作 ""Node.signal""（节点名、一个点、信号名），超时时则为空文本。节点是答案的一部分，这是有意的：$Player.died 和 $Boss.died 之间的竞速是两个同名信号，只有拥有者才能把它们区分开。在条件单元格里比较它，就能按赢家分支。"
@@ -1491,7 +1491,7 @@ Stop Retrying,停止重试
 stop retrying [b]{retry_name}[/b],停止重试 [b]{retry_name}[/b]
 The name the Retry Up To N Times row uses.,上面那行“最多重试 N 次”所使用的名字。
 Retries Exhausted,重试次数用尽
-"True when the retry loop above ran out of tries without a Stop Retrying - the give-up branch. Put it in a sibling row directly beneath the retry loop, using the same name; a retry that has never run is not exhausted, so nothing fires before the loop does. Reading it clears the record, so the next run starts clean. When the retry WAITS between tries (Wait Before Next Try) the loop is still running while the rows beneath it are reached, so report that give-up with Report Failure on the last attempt and handle it in an On Failure Of event instead.",当上面的重试循环用完了所有次数却没有遇到“停止重试”时为真 - 放弃分支。把它放在重试循环正下方的同级行里，用同一个名字；从未运行过的重试不算用尽，所以循环发生之前不会有东西触发。读取它会清掉这条记录，于是下一次运行从干净的状态开始。当重试在两次尝试之间等待（“下次尝试前等待”）时，下面的行被走到时循环仍在运行，所以请在最后一次尝试上用“报告失败”来报告这次放弃，并改在“当动词失败时”事件里处理它。
+"True when the retry loop above ran out of tries without a Stop Retrying - the give-up branch. Put it in a sibling row directly beneath the retry loop, using the same name; a retry that has never run is not exhausted, so nothing fires before the loop does. Reading it clears the record, so the next run starts clean. When the retry WAITS between tries (Wait Before Next Try) the loop is still running while the rows beneath it are reached, so report that give-up with Report Failure on the last attempt and handle it in an On Failure Of event instead.",当上面的重试循环用完了所有次数却没有遇到“停止重试”时为真 - 放弃分支。把它放在重试循环正下方的同级行里，用同一个名字；从未运行过的重试不算用尽，所以循环发生之前不会有东西触发。读取它会清掉这条记录，于是下一次运行从干净的状态开始。当重试在两次尝试之间等待（“下次尝试前等待”）时，下面的行被走到时循环仍在运行，所以请在最后一次尝试上用“报告失败”来报告这次放弃，并改在“当动作失败时”事件里处理它。
 retries for [b]{retry_name}[/b] exhausted,[b]{retry_name}[/b] 的重试次数已用尽
 Wait Before Next Try,下次尝试前等待
 "Pauses before the next attempt, waiting longer each time when you set a growth above 1 - the polite way to retry a disk or a slow source. It suspends this event like Wait does, so pair the retry with Once At A Time when the trigger can fire again mid-retry.",在下一次尝试前暂停，当你把增长设为大于 1 时每次等得更久 - 重试磁盘或慢速数据源时礼貌的做法。它像“等待”一样挂起这个事件，所以当触发器可能在重试中途再次触发时，请给重试搭配“同一时间只运行一次”。
@@ -1511,7 +1511,7 @@ Trail name - any label you also use in the trail expressions.,轨迹名称 - 任
 Keep,保留
 How many recent values to hold (older ones drop off the front).,保留最近多少个值（更早的会从前面掉出去）。
 Trail Values,轨迹的值
-"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.",把整条轨迹作为数组返回，最旧的在前 - 喂给图表、表格或数组动词。
+"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array action.",把整条轨迹作为数组返回，最旧的在前 - 喂给图表、表格或数组动作。
 trail [b]{trail}[/b] values,轨迹 [b]{trail}[/b] 的值
 "Trail name, matching a Remember In Trail action.",轨迹名称，与某个“记入轨迹”动作相匹配。
 Lowest In Trail,轨迹最小值
@@ -1638,26 +1638,26 @@ On scene spawned {spawn_name} ( {node} ),当场景生成时 {spawn_name} ( {node
 The name the Spawn Scene As row gave this spawn.,那一行“生成场景为”给这次生成起的名字。
 Node,节点
 "The node that was just spawned, carried by the signal itself.",刚刚生成的那个节点，由信号本身携带。
-On Failure Of,当动词失败时
-"Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","当一个动词报告它拒绝执行时运行。动词名和原因会以 verb_id 和 reason 的形式送到这一行上，于是恢复逻辑住在它自己的事件里 - 在它下面加一个条件就能只处理某一个动词。需要一行 verb_failed(verb_id: String, reason: String) 的“声明信号”行 - 没有它事件表仍能编译，但没有任何东西连接这个事件，所以它永远不会运行。项目 Doctor 会标记这一点。"
+On Failure Of,当动作失败时
+"Runs when an action reports that it refused. The action's name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one action only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","当一个动作报告它拒绝执行时运行。动作名和原因会以 verb_id 和 reason 的形式送到这一行上，于是恢复逻辑住在它自己的事件里 - 在它下面加一个条件就能只处理某一个动作。需要一行 verb_failed(verb_id: String, reason: String) 的“声明信号”行 - 没有它事件表仍能编译，但没有任何东西连接这个事件，所以它永远不会运行。项目 Doctor 会标记这一点。"
 On failure of {verb_id} ( {reason} ),当 {verb_id} 失败时 ( {reason} )
 Verb,动词
-Which verb refused - the name the Report Failure row used.,哪个动词拒绝了 - “报告失败”行所使用的那个名字。
+Which action refused - the name the Report Failure row used.,哪个动作拒绝了 - “报告失败”行所使用的那个名字。
 Reason,原因
 "Why it refused, carried by the signal itself.",它为什么拒绝，由信号本身携带。
-On Success Of,当动词成功时
-"Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.",当一个动词报告它完成时运行。动词名会以 verb_id 的形式送到这一行上。需要一行 verb_succeeded(verb_id: String) 的“声明信号”行 - 没有它事件表仍能编译，但没有任何东西连接这个事件，所以它永远不会运行。项目 Doctor 会标记这一点。
+On Success Of,当动作成功时
+"Runs when an action reports that it finished. The action's name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.",当一个动作报告它完成时运行。动作名会以 verb_id 的形式送到这一行上。需要一行 verb_succeeded(verb_id: String) 的“声明信号”行 - 没有它事件表仍能编译，但没有任何东西连接这个事件，所以它永远不会运行。项目 Doctor 会标记这一点。
 On success of {verb_id},当 {verb_id} 成功时
-Which verb finished - the name the Report Success row used.,哪个动词完成了 - “报告成功”行所使用的那个名字。
+Which action finished - the name the Report Success row used.,哪个动作完成了 - “报告成功”行所使用的那个名字。
 Report Failure,报告失败
-"Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.",宣告一个动词拒绝了执行，于是针对那个动词的每个“当动词失败时”事件都会运行。在你自己发布的动词内部使用它，或者在一次发现了空资源、空结果的检查之后使用。
+"Announces that an action refused, so every On Failure Of event for that action runs. Use it inside an action you publish yourself, or after a check that found a null resource or an empty result.",宣告一个动作拒绝了执行，于是针对那个动作的每个“当动作失败时”事件都会运行。在你自己发布的动作内部使用它，或者在一次发现了空资源、空结果的检查之后使用。
 Report failure of [b]{verb}[/b]: [b]{reason}[/b],报告 [b]{verb}[/b] 失败：[b]{reason}[/b]
-Name of the verb that refused - the same name the On Failure Of row picks.,拒绝执行的那个动词的名字 - 与“当动词失败时”行所选的名字相同。
+Name of the action that refused - the same name the On Failure Of row picks.,拒绝执行的那个动作的名字 - 与“当动作失败时”行所选的名字相同。
 Plain words a player or a log line can read.,玩家或日志行读得懂的大白话。
 Report Success,报告成功
-"Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.",宣告一个动词完成了，于是针对那个动词的每个“当动词成功时”事件都会运行。“报告失败”的确认版孪生兄弟。
+"Announces that an action finished, so every On Success Of event for that action runs. The confirmation twin of Report Failure.",宣告一个动作完成了，于是针对那个动作的每个“当动作成功时”事件都会运行。“报告失败”的确认版孪生兄弟。
 Report success of [b]{verb}[/b],报告 [b]{verb}[/b] 成功
-Name of the verb that finished - the same name the On Success Of row picks.,完成了的那个动词的名字 - 与“当动词成功时”行所选的名字相同。
+Name of the action that finished - the same name the On Success Of row picks.,完成了的那个动作的名字 - 与“当动作成功时”行所选的名字相同。
 At Most Every,最多每隔
 "Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.",不论被走到多少次，都让这个事件最多每隔若干秒运行一次。搜索框、昂贵的读数，或者一帧里落下的四十个命中音效的限流器。
 at most every [b]{seconds}[/b]s,最多每 [b]{seconds}[/b] 秒一次
@@ -2034,13 +2034,13 @@ See also,另见
 Opens this entry.,打开该条目。
 Add example events,添加示例事件
 Show GDScript,显示 GDScript
-Shows the line this verb compiles to.,显示该项编译成的代码行。
-Opens the guide this verb is documented in.,打开记载该项的指南。
+Shows the line this row compiles to.,显示该项编译成的代码行。
+Opens the guide this row is documented in.,打开记载该项的指南。
 "Puts this row into the open sheet at the caret, as one undo step.",在打开的表中光标处插入此行，作为一次撤销步骤。
 "Puts the illustrated rows into the open sheet at the caret, as one undo step.",在打开的表中光标处插入示意行，作为一次撤销步骤。
 Nothing in the Manual mentions that,手册中没有相关内容
 Selected the event that uses it.,已选中用到它的事件。
-That verb is not used in this sheet.,该项未在本表中使用。
+That row is not used in this sheet.,该项未在本表中使用。
 Press F1 for the Manual's page on the marks.,按 F1 打开手册中关于记号的页面。
 Opens the next page in this part of the Manual.,打开手册本部分的下一页。
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.",选中内容后按 F1 查看它的帮助，或从手册目录中选择页面。
@@ -2398,7 +2398,7 @@ Headings on a Manual page. Clear = follow the editor's own text colour.,手册�
 The highlight behind a search hit inside a page.,页面内搜索命中处背后的高亮。
 The pill on the contents entry for the page you are reading. Clear = the editor's accent.,你正在阅读的页面在目录中的药丸标签。透明 = 编辑器的强调色。
 The word on that pill.,该药丸标签上的文字。
-The note above a verb its pack has deprecated.,扩展包已弃用的动词上方的提示文字。
+The note above a row its pack has deprecated.,扩展包已弃用的行上方的提示文字。
 The rule under a table's header row on a page.,页面中表格表头行下方的分隔线。
 The strip down the left of the sheet that carries the event numbers.,事件表左侧承载事件编号的竖条。
 The event numbers themselves.,事件编号本身。

@@ -90,7 +90,7 @@ static func registrar_stub(definition: ACEDefinition) -> String:
 	_append_state_note(definition, notes)
 	_append_node_scope_note(definition, notes)
 	if bool(definition.metadata.get("looping", false)):
-		notes.append("# LOOPING: the registrar has no looping verb. Keep \"## @ace_looping(%s)\" as a comment" % str(definition.metadata.get("looping_iterator", "item")))
+		notes.append("# LOOPING: the registrar has no looping action. Keep \"## @ace_looping(%s)\" as a comment" % str(definition.metadata.get("looping_iterator", "item")))
 		notes.append("# annotation above the method; it also forces the CONDITION kind.")
 	var chain: Array[String] = ["\treg.%s(\"%s\")" % [_type_keyword(definition.ace_type), _member_name(definition)]]
 	if not definition.display_name.is_empty():

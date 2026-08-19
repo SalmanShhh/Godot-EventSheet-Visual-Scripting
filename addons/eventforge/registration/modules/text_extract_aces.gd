@@ -116,7 +116,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"(func(__json: JSON) -> String: return \"\" if __json.parse({text}) == OK else \"line %d: %s\" % [__json.get_error_line() + 1, __json.get_error_message()]).call(JSON.new())", "",
 		[F.make_param("text", "String", "\"{}\"", "Text", "The JSON text to check - a file you read, a paste, a server reply.", "expression")],
 		JSON_CAT, "why {text} is not valid JSON")
-		.described("Why this JSON failed to parse, with the line: \"line 4: Expected ':'\". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.").featured())
+		.described("Why this JSON failed to parse, with the line: \"line 4: Expected ':'\". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this expression's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.").featured())
 
 	# One list of records, the columns that must hold numbers, and the FIRST cell that does not.
 	# The rows are bound once by the lambda, so the argument is evaluated a single time no matter how

@@ -50,7 +50,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 			F.make_param("message", "String", "\"hello\"", "Message", "Value/expression to write to the console.", "expression"),
 			_level_param(),
 		], "Debug", "log {message}")
-		.described("Writes a message to the console as a Message, Warning, Error, or Rich text - one verb for all four.").rich_text_when("level", "print_rich"))
+		.described("Writes a message to the console as a Message, Warning, Error, or Rich text - one action for all four.").rich_text_when("level", "print_rich"))
 
 	# Conditional log - write only when a test holds, without wrapping it in its own event row.
 	descriptors.append(F.make_descriptor("Core", "ConsoleLogIf", "Log If", ACEDescriptor.ACEType.ACTION,

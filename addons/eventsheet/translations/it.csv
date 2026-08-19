@@ -1511,7 +1511,7 @@ Trail name - any label you also use in the trail expressions.,Nome della scia - 
 Keep,Tieni
 How many recent values to hold (older ones drop off the front).,Quanti valori recenti conservare (i più vecchi cadono dalla testa).
 Trail Values,Valori della scia
-"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.","Restituisce tutta la scia come array, dal più vecchio - dallo a un grafico, a una tabella, o a un verbo su array."
+"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array action.","Restituisce tutta la scia come array, dal più vecchio - dallo a un grafico, a una tabella, o a un azione su array."
 trail [b]{trail}[/b] values,valori della scia [b]{trail}[/b]
 "Trail name, matching a Remember In Trail action.","Nome della scia, che combacia con un'azione Ricorda nella scia."
 Lowest In Trail,Minimo nella scia
@@ -1639,25 +1639,25 @@ The name the Spawn Scene As row gave this spawn.,Il nome che la riga Genera scen
 Node,Nodo
 "The node that was just spawned, carried by the signal itself.","Il nodo appena generato, portato dal segnale stesso."
 On Failure Of,Al fallimento di
-"Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Viene eseguito quando un verbo segnala di aver rifiutato. Il nome del verbo e il motivo arrivano sulla riga come verb_id e reason, così il recupero vive in un evento suo - aggiungici sotto una condizione per gestire un solo verbo. Richiede una riga Dichiara segnale per verb_failed(verb_id: String, reason: String) - senza di essa il foglio compila lo stesso, ma nulla collega questo evento, quindi non viene mai eseguito. Il Dottore del progetto lo segnala."
+"Runs when an action reports that it refused. The action's name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one action only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Viene eseguito quando un'azione segnala di aver rifiutato. Il nome dell'azione e il motivo arrivano sulla riga come verb_id e reason, così il recupero vive in un evento suo - aggiungici sotto una condizione per gestire una sola azione. Richiede una riga Dichiara segnale per verb_failed(verb_id: String, reason: String) - senza di essa il foglio compila lo stesso, ma nulla collega questo evento, quindi non viene mai eseguito. Il Dottore del progetto lo segnala."
 On failure of {verb_id} ( {reason} ),Al fallimento di {verb_id} ( {reason} )
 Verb,Verbo
-Which verb refused - the name the Report Failure row used.,Quale verbo ha rifiutato - il nome usato dalla riga Segnala fallimento.
+Which action refused - the name the Report Failure row used.,Quale azione ha rifiutato - il nome usato dalla riga Segnala fallimento.
 Reason,Motivo
 "Why it refused, carried by the signal itself.","Perché ha rifiutato, portato dal segnale stesso."
 On Success Of,Al successo di
-"Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Viene eseguito quando un verbo segnala di aver finito. Il nome del verbo arriva sulla riga come verb_id. Richiede una riga Dichiara segnale per verb_succeeded(verb_id: String) - senza di essa il foglio compila lo stesso, ma nulla collega questo evento, quindi non viene mai eseguito. Il Dottore del progetto lo segnala."
+"Runs when an action reports that it finished. The action's name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Viene eseguito quando un'azione segnala di aver finito. Il nome dell'azione arriva sulla riga come verb_id. Richiede una riga Dichiara segnale per verb_succeeded(verb_id: String) - senza di essa il foglio compila lo stesso, ma nulla collega questo evento, quindi non viene mai eseguito. Il Dottore del progetto lo segnala."
 On success of {verb_id},Al successo di {verb_id}
-Which verb finished - the name the Report Success row used.,Quale verbo ha finito - il nome usato dalla riga Segnala successo.
+Which action finished - the name the Report Success row used.,Quale azione ha finito - il nome usato dalla riga Segnala successo.
 Report Failure,Segnala fallimento
-"Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.","Annuncia che un verbo ha rifiutato, così ogni evento Al fallimento di per quel verbo viene eseguito. Usalo dentro un verbo che pubblichi tu, o dopo un controllo che ha trovato una risorsa nulla o un risultato vuoto."
+"Announces that an action refused, so every On Failure Of event for that action runs. Use it inside an action you publish yourself, or after a check that found a null resource or an empty result.","Annuncia che un'azione ha rifiutato, così ogni evento Al fallimento di per quell'azione viene eseguito. Usalo dentro un'azione che pubblichi tu, o dopo un controllo che ha trovato una risorsa nulla o un risultato vuoto."
 Report failure of [b]{verb}[/b]: [b]{reason}[/b],Segnala il fallimento di [b]{verb}[/b]: [b]{reason}[/b]
-Name of the verb that refused - the same name the On Failure Of row picks.,Nome del verbo che ha rifiutato - lo stesso nome che la riga Al fallimento di raccoglie.
+Name of the action that refused - the same name the On Failure Of row picks.,Nome dell'azione che ha rifiutato - lo stesso nome che la riga Al fallimento di raccoglie.
 Plain words a player or a log line can read.,Parole semplici che un giocatore o una riga di log possono leggere.
 Report Success,Segnala successo
-"Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.","Annuncia che un verbo ha finito, così ogni evento Al successo di per quel verbo viene eseguito. Il gemello di conferma di Segnala fallimento."
+"Announces that an action finished, so every On Success Of event for that action runs. The confirmation twin of Report Failure.","Annuncia che un'azione ha finito, così ogni evento Al successo di per quell'azione viene eseguito. Il gemello di conferma di Segnala fallimento."
 Report success of [b]{verb}[/b],Segnala il successo di [b]{verb}[/b]
-Name of the verb that finished - the same name the On Success Of row picks.,Nome del verbo che ha finito - lo stesso nome che la riga Al successo di raccoglie.
+Name of the action that finished - the same name the On Success Of row picks.,Nome dell'azione che ha finito - lo stesso nome che la riga Al successo di raccoglie.
 At Most Every,Al massimo ogni
 "Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.","Fa sì che questo evento venga eseguito al massimo una volta ogni tot secondi, per quanto spesso venga raggiunto. Il limite di frequenza per una casella di ricerca, una lettura costosa, o quaranta suoni di colpo che atterrano in un frame."
 at most every [b]{seconds}[/b]s,al massimo ogni [b]{seconds}[/b]s
@@ -2034,13 +2034,13 @@ See also,Vedi anche
 Opens this entry.,Apre questa voce.
 Add example events,Aggiungi eventi di esempio
 Show GDScript,Mostra GDScript
-Shows the line this verb compiles to.,Mostra la riga in cui questo termine viene compilato.
-Opens the guide this verb is documented in.,Apre la guida in cui questo termine è documentato.
+Shows the line this row compiles to.,Mostra la riga in cui questo termine viene compilato.
+Opens the guide this row is documented in.,Apre la guida in cui questo termine è documentato.
 "Puts this row into the open sheet at the caret, as one undo step.","Inserisce questa riga nel foglio aperto al cursore, come un solo passo di annullamento."
 "Puts the illustrated rows into the open sheet at the caret, as one undo step.","Inserisce le righe illustrate nel foglio aperto al cursore, come un solo passo di annullamento."
 Nothing in the Manual mentions that,Nel manuale non se ne parla
 Selected the event that uses it.,Selezionato l'evento che lo usa.
-That verb is not used in this sheet.,Quel termine non è usato in questo foglio.
+That row is not used in this sheet.,Quel termine non è usato in questo foglio.
 Press F1 for the Manual's page on the marks.,Premi F1 per la pagina del manuale sui segni.
 Opens the next page in this part of the Manual.,Apre la pagina successiva di questa parte del manuale.
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Premi F1 con qualcosa selezionato per l'aiuto su di esso, oppure scegli una pagina dall'indice del manuale."
@@ -2398,7 +2398,7 @@ Headings on a Manual page. Clear = follow the editor's own text colour.,I titoli
 The highlight behind a search hit inside a page.,L'evidenziazione dietro un risultato di ricerca dentro una pagina.
 The pill on the contents entry for the page you are reading. Clear = the editor's accent.,La pillola sulla voce dell'indice della pagina che stai leggendo. Trasparente = il colore di accento dell'editor.
 The word on that pill.,La parola su quella pillola.
-The note above a verb its pack has deprecated.,La nota sopra un verbo che il suo pacchetto ha deprecato.
+The note above a row its pack has deprecated.,La nota sopra una riga che il suo pacchetto ha deprecato.
 The rule under a table's header row on a page.,La linea sotto la riga di intestazione di una tabella su una pagina.
 The strip down the left of the sheet that carries the event numbers.,La striscia a sinistra del foglio che porta i numeri di evento.
 The event numbers themselves.,I numeri di evento stessi.

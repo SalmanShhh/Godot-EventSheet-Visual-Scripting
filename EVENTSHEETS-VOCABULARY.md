@@ -2225,8 +2225,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 ## Built-in vocabulary
 
-Every verb the picker offers with no pack enabled, grouped by the module that
-authors it. Deprecated verbs are marked - they still compile, but the picker hides them.
+Every action, condition and expression the picker offers with no pack enabled,
+grouped by the module that authors it. Deprecated ones are marked - they still
+compile, but the picker hides them.
 
 ### Animation Player (`res://addons/eventforge/registration/modules/animation_player_aces.gd`)
 Animation control vocabulary (drive an AnimationPlayer from events).
@@ -2637,7 +2638,7 @@ Systems vocabulary (composition / ECS-lite queries over groups).
 Console vocabulary (browser/console-style logging).
 
 #### Actions
-- **Log** (`message: String, level: String`) - Writes a message to the console as a Message, Warning, Error, or Rich text - one verb for all four.
+- **Log** (`message: String, level: String`) - Writes a message to the console as a Message, Warning, Error, or Rich text - one action for all four.
 - **Log If** (`condition: String, message: String, level: String`) - Writes a message to the console only when a condition is true - as a Message, Warning, or Error.
 - **Log (Debug Builds Only)** (`message: String, level: String`) - Writes to the console only in debug builds - the line is skipped entirely in an exported release game.
 - **Log Value** (`label: String, value: String, level: String`) - Prints a value tagged with a name, e.g. "health = 80", so debug lines are easy to tell apart.
@@ -2832,7 +2833,7 @@ Developer helper vocabulary (the everyday dev tools).
 - **Remove Metadata** (`target: String, name: String`) - Deletes a stored metadata value from an object by its key.
 
 #### Expressions
-- **Trail Values** (`trail: String`) - Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.
+- **Trail Values** (`trail: String`) - Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array action.
 - **Lowest In Trail** (`trail: String`) - The smallest value recorded in a trail, which is the spike a per-frame watch blinked past. An empty trail reads as INF.
 - **Highest In Trail** (`trail: String`) - The largest value recorded in a trail. An empty trail reads as -INF.
 - **Average In Trail** (`trail: String`) - The mean of every number recorded in a trail - a rolling average that is as useful in gameplay as in debugging. An empty trail reads as 0.
@@ -3084,7 +3085,7 @@ Input management vocabulary (define + rebind + read controls).
 - **Rebind Action To Key** (`action: String, physical_keycode: int`) - Clears an action's keys and binds it to a single key - the whole key-rebinding step in one action.
 - **Remove Input Action** (`action: String`) - Removes a runtime input action entirely (the partner of Add Input Action).
 - **Rebind Action To Mouse Button** (`action: String, button: String`) - Clears an action's bindings and binds it to a mouse button - the whole rebind step in one action.
-- **Rebind Action To Gamepad Button** (`action: String, button: String`) - Clears an action's bindings and binds it to a gamepad button - keyboard, mouse, and gamepad rebinding all have a one-step verb.
+- **Rebind Action To Gamepad Button** (`action: String, button: String`) - Clears an action's bindings and binds it to a gamepad button - keyboard, mouse, and gamepad rebinding all have a one-step action.
 - **Set Action Deadzone** (`action: String, deadzone: String`) - How far a stick must move before the action counts - the drift-vs-responsiveness slider every controller options menu needs.
 - **Restore Default Bindings** - Throws away every runtime rebind and reloads the Input Map exactly as set in Project Settings - the Reset to Defaults button.
 
@@ -3271,7 +3272,7 @@ turning nodes on and off, and pausing them
 - **Keep Node Running While Paused** (`target: String`) - Exempts a node from the game pause, so it keeps running while everything else is frozen. This is how a pause menu, its music, and its animations stay alive.
 - **Pause Node With The Game** (`target: String`) - Makes a node stop when the game pauses, regardless of what its parent does. The normal behaviour, stated explicitly.
 - **Run Node Only While Paused** (`target: String`) - Runs a node ONLY while the game is paused and never otherwise - a pause overlay that should not tick during play.
-- **Set Node Process Mode** (`mode: String, target: String`) - Sets how a node reacts to the game pause, picking any of the five modes directly. The Pause / Unpause / Keep Running verbs are shorthands for the common three.
+- **Set Node Process Mode** (`mode: String, target: String`) - Sets how a node reacts to the game pause, picking any of the five modes directly. The Pause / Unpause / Keep Running actions are shorthands for the common three.
 - **Set Node Per-Frame Processing** (`on: String, target: String`) - Turns just the every-frame work on or off, leaving physics and input alone. Cheaper than deactivating when only the per-frame cost is the problem.
 - **Set Node Physics Processing** (`on: String, target: String`) - Turns just the physics-step work on or off. Movement usually lives here, so this stops a body moving without hiding it.
 - **Set Node Input Handling** (`on: String, target: String`) - Turns a node's input handling on or off, so it stops responding to the player while still running everything else.
@@ -3596,8 +3597,8 @@ System (event-sheet System parity)
 
 #### Triggers
 - **On Scene Spawned** (`spawn_name: String, node: Node`) - Runs when a Spawn Scene As row spawns something. The name and the new node arrive on the row as spawn_name and node, so a reaction can configure or announce the node without asking what was spawned last - correct even when one loop spawns six things in a frame. Needs a Signal row for scene_spawned(spawn_name: String, node: Node) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.
-- **On Failure Of** (`verb_id: String, reason: String`) - Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.
-- **On Success Of** (`verb_id: String`) - Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.
+- **On Failure Of** (`verb_id: String, reason: String`) - Runs when an action reports that it refused. The action's name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one action only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.
+- **On Success Of** (`verb_id: String`) - Runs when an action reports that it finished. The action's name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.
 
 #### Conditions
 - **Is Within Angle** (`angle: String, within: String, target: String`) - True when two angles are close, taking wrap-around into account (350 is within 20 of 10).
@@ -3655,8 +3656,8 @@ System (event-sheet System parity)
 - **Clear Material** (`target: String`) - Removes any material from this node, returning it to default drawing.
 - **Forget First Time** (`key: String`) - Resets an Only Once Ever memory so it fires again - for testing, or for New Game+. Rows already running this session keep their cached answer until the next run.
 - **Spawn Scene As** (`path: String, spawn_name: String, values: String, parent: String, position: String`) - Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Spawned. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.
-- **Report Failure** (`verb: String, reason: String`) - Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.
-- **Report Success** (`verb: String`) - Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.
+- **Report Failure** (`verb: String, reason: String`) - Announces that an action refused, so every On Failure Of event for that action runs. Use it inside an action you publish yourself, or after a check that found a null resource or an empty result.
+- **Report Success** (`verb: String`) - Announces that an action finished, so every On Success Of event for that action runs. The confirmation twin of Report Failure.
 - **Poke** (`poke_name: String`) - Marks that something just happened, by name. Poke on every keystroke or every change, then let Has Been Quiet For notice when it stops.
 - **Clear Poke** (`poke_name: String`) - Forgets a poke so Has Been Quiet For stops firing. Clear it right after acting on the quiet, the same way you consume a buffered press.
 - **Forget Once For** (`node: String, label: String`) - Clears an Only Once Per Node / Per Name memory so the row fires again for that node. Drop it in an Object Pool's reset seam and a recycled instance initialises like a fresh one.
@@ -3748,7 +3749,7 @@ reading a part out of a line, and saying what went wrong.
 - **Text Between** (`text: String, open: String, close: String`) - The part between two markers: Text Between("Ada [angry]: hi", "[", "]") is "angry". Empty when the opening marker is missing, and the rest of the text when the closing one is.
 - **Number In Text** (`text: String`) - The first number found anywhere in the text, whole or decimal: "Chapter 3" gives 3, "v1.25-beta" gives 1.25. You get 0 when there is no number at all, and you never write a pattern.
 - **Split Keeping Quotes** (`text: String, separator: String`) - Splits text on a separator but keeps anything inside "double quotes" together as one piece, and drops the quotes: give "iron sword" 2 is three pieces, not four. Empty pieces are skipped, so runs of separators never produce blanks.
-- **Explain JSON Problem** (`text: String`) - Why this JSON failed to parse, with the line: "line 4: Expected ':'". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.
+- **Explain JSON Problem** (`text: String`) - Why this JSON failed to parse, with the line: "line 4: Expected ':'". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this expression's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.
 - **Explain Table Problem** (`records: String, columns: String`) - The first cell of a table that should be a number and is not, said out loud: "row 12, column "price": "abc" is not a number". Rows are counted from 1 over the rows you hold - Table From File has already used up the header line, so row 12 is line 13 of the file. A row that is not a record at all is reported too. Empty when every listed column checks out.
 - **Missing Fields** (`record: String, fields: String`) - The listed fields that are missing or left blank, comma-separated, and empty when the record is complete. Blank means nothing there: null, empty text, an empty list or an empty record - a 0 is a real value and is never reported.
 
@@ -3765,7 +3766,7 @@ the drawn side of text: direction, glyph coverage, and fit in PIXELS.
 #### Actions
 - **Mirror Layout For Language** (`target: String`) - Makes this control - and everything under it - lay itself out from the game's language: containers, anchors and margins mirror for a right-to-left language, and flip back the moment the language changes again. One row on your UI root usually covers the whole game.
 - **Add Font Fallback** (`font: Font, fallback: Font`) - Any character the main font cannot draw is drawn by this one instead, so a Japanese, Russian or emoji-carrying build stops rendering empty boxes while your Latin text keeps the face you chose. Adding the same fallback twice does nothing, so this is safe to run on every load and after every language change.
-- **Use Font** (`font: Font, slot: String, target: String`) - Gives ONE control its own font, without a theme resource: a per-language display face, a monospace font so the column verbs line up, a bigger face for a heading. Run it again with another font and the new one wins.
+- **Use Font** (`font: Font, slot: String, target: String`) - Gives ONE control its own font, without a theme resource: a per-language display face, a monospace font so the column actions line up, a bigger face for a heading. Run it again with another font and the new one wins.
 - **Fit Text To Label** (`suffix: String, target: String`) - Backs this control's text up until it MEASURES inside the control, and marks the cut. Whole words first (the Shorten To Whole Words rule), falling back to cutting mid-word when one long word is all there is, and cutting with no marker at all when the control is too narrow to hold even the ending - so the result is never just the ending and never wider than the control. It cuts the TRANSLATED line, and remembers the string it was given in the node's "fit_source_text" meta, so running it again after a language switch re-fits the whole sentence instead of trimming its own leftovers - and a line that now fits is put back in full, still translating itself. Needs a control that cannot grow (Clip Text, a Text Overrun Behavior, or a fixed-size container); one free to widen never overflows in the first place.
 
 #### Expressions
@@ -3815,6 +3816,7 @@ Editor Tools vocabulary (build @tool / EditorScript sheets by events).
 
 #### Triggers
 - **On Project Export** - Runs while a project export is starting, before the files are written - the place to stamp a build number, bake a data file, or strip debug content.
+- **On File Imported** - Runs just after Godot finishes importing assets - the paths that landed arrive as `paths`. The place to rename what a designer dropped in, check an atlas for the wrong settings, or write a manifest.
 
 #### Conditions
 - **Resource Exists** (`path: String`) - True when a resource file already exists at the given path.
@@ -3865,7 +3867,7 @@ Translation vocabulary (localisation the Godot way).
 - **Set Text (follows language)** (`key: String, target: String`) - Sets the text AND remembers which key it came from, so one Refresh row re-applies it when the language switches. Godot only re-renders text a Control still HOLDS as its source string; the moment a sheet looks a key up and assigns the result, that node stops following - this is the fix. The key is kept in the node's "follows_language_key" meta and the node joins the "follows_language" group. Plain keys only: for a sentence with values in it use Set Text (translated pattern) and re-run it from a function.
 - **Refresh Text That Follows Language** - Re-applies every remembered key in the current language. One row under On Language Changed and every label written by Set Text (follows language) switches in place - no scene reload, no per-label wiring. Nodes are found through the "follows_language" group, so a node you tagged yourself is refreshed too.
 - **Keep This Text Untranslated** (`target: String`) - Stops Godot auto-translating this Control and everything under it - for text that is DATA, not writing: a player's name, chat, a save-slot label, a mod's item name, a debug overlay. Without it a save named "Play" turns into "Jouer" the moment a catalog happens to contain that word.
-- **Set Text (counted)** (`singular: String, plural: String, count: String, target: String`) - Sets this Label to the counted sentence in one row: the language picks the form and the number is filled in. The same verb as Counted Text without an expression to nest, down to keeping both forms' %d - a form that lost its %d comes back unfilled rather than erroring. Re-run it under On Language Changed so the line follows a live switch.
+- **Set Text (counted)** (`singular: String, plural: String, count: String, target: String`) - Sets this Label to the counted sentence in one row: the language picks the form and the number is filled in. The same action as Counted Text without an expression to nest, down to keeping both forms' %d - a form that lost its %d comes back unfilled rather than erroring. Re-run it under On Language Changed so the line follows a live switch.
 - **Test With Fake Translation** (`on: bool`) - Turns Godot's pseudolocalization on: every translatable string comes back accented and bracketed ("Ready" reads "[Ready]" with accents on every letter), so text that stays PLAIN is text you never marked. Length expansion is a separate Project Settings knob under Internationalization > Pseudolocalization - turn it up and a layout that overflows here will overflow in German. Gate it on a debug build.
 
 #### Expressions

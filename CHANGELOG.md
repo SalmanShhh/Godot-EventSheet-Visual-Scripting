@@ -32,6 +32,30 @@
   guide the index does not list, or lists without a description. `tests/module_guides_test.gd` reads
   the reference tables under their new headings, keyed on a set that also accepts a table headed by
   its kind - 333 rows in the addon guides had drifted out of that sweep unnoticed.
+### Changed - the shipped words say action, condition and expression
+
+- **Every row, tooltip and reference table that still said "verb" now says what it means.** On
+  Failure Of and On Success Of read **`Which action refused`** and **`Which action finished`**, their
+  parameter is labelled **Action**, and Report Failure / Report Success announce that *an action*
+  refused or finished. Nine more shipped descriptions lost the word the same way (Log, Trail Values,
+  Rebind Action To Gamepad Button, Set Node Process Mode, Give Control Its Own Font, Explain JSON
+  Problem, Set Counted Text, and the Drawing Canvas section). The Manual's reference tables head
+  their first column **Name**, its two buttons say **`Shows the line this row compiles to`** and
+  **`Opens the guide this row is documented in`**, and a row the sheet does not use reports
+  **`That row is not used in this sheet.`**
+- Every one of these is translated in all nine shipped languages, so a German reader gets
+  `Welche Aktion abgelehnt hat` rather than `Welches Verb abgelehnt hat`. The signal, parameter and
+  ACE identifiers behind them (`verb_failed`, `verb_id`, `ReportFailure`) are frozen public API and
+  are untouched - the compiled GDScript is byte-identical.
+
+### Fixed - two guide lines that described something the vocabulary does not ship
+
+- The variables guide said "Toggle and Toggle Boolean emit the same line"; the two rows really ship
+  as **Toggle boolean** and **Toggle Boolean**, differing in one capital letter, and the guide now
+  names them the way the picker does.
+- The testing guide's worked example asserted that "the behavior exposes its verbs"; it reads
+  **its actions** now, like every other line around it.
+
 ### Fixed - the editor stops answering for a project that has changed
 
 - **A scene saved, added or re-pointed mid-session is seen straight away.** The index that knows

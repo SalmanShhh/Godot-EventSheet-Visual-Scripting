@@ -457,8 +457,8 @@ static func table_columns(grouped: Dictionary, group: String = "") -> PackedStri
 	if group == GROUP_PROPERTIES:
 		return PackedStringArray(["Mark", "Property", "Default", "What it does"]) if noted \
 			else PackedStringArray(["Mark", "Property", "Default"])
-	return PackedStringArray(["Mark", "Verb", "Parameters", "What it does"]) if noted \
-		else PackedStringArray(["Mark", "Verb", "Parameters"])
+	return PackedStringArray(["Mark", "Name", "Parameters", "What it does"]) if noted \
+		else PackedStringArray(["Mark", "Name", "Parameters"])
 
 
 ## One group's rows as table cells, led by the group's own mark. A row that knows its own doc id

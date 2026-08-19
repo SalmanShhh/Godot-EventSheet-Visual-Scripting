@@ -477,12 +477,12 @@ func _entry_actions_block(definition: ACEDefinition) -> Control:
 			func() -> void:
 				if EventSheetDocFigure.insert_definition(definition, "Add Example Events"):
 					snippet_inserted.emit()))
-	row.add_child(_small_button("Show GDScript", "Shows the line this verb compiles to.",
+	row.add_child(_small_button("Show GDScript", "Shows the line this row compiles to.",
 		func() -> void: _toggle_gdscript(definition)))
 	var guide_doc: String = EventSheetDocExplain.doc_id_for_pack(
 		EventSheets.addon_pack_directory(definition.provider_id))
 	if not guide_doc.is_empty():
-		row.add_child(_small_button("Open guide", "Opens the guide this verb is documented in.",
+		row.add_child(_small_button("Open guide", "Opens the guide this row is documented in.",
 			func() -> void: doc_requested.emit(guide_doc)))
 	_gdscript_card = _wrapped_label("")
 	_gdscript_card.visible = false

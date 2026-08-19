@@ -1511,7 +1511,7 @@ Trail name - any label you also use in the trail expressions.,"Имя следа
 Keep,Хранить
 How many recent values to hold (older ones drop off the front).,Сколько последних значений держать (старые сходят спереди).
 Trail Values,Значения следа
-"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.","Возвращает весь след массивом, от самого старого - подайте его в график, таблицу или глагол работы с массивом."
+"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array action.","Возвращает весь след массивом, от самого старого - подайте его в график, таблицу или действие работы с массивом."
 trail [b]{trail}[/b] values,значения следа [b]{trail}[/b]
 "Trail name, matching a Remember In Trail action.","Имя следа, совпадающее с действием Записать в след."
 Lowest In Trail,Минимум в следе
@@ -1639,25 +1639,25 @@ The name the Spawn Scene As row gave this spawn.,"Имя, которое стр�
 Node,Узел
 "The node that was just spawned, carried by the signal itself.","Узел, который только что породили; приходит вместе с самим сигналом."
 On Failure Of,При отказе
-"Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Выполняется, когда глагол сообщает, что он отказался. Имя глагола и причина приходят в строку как verb_id и reason, поэтому восстановление живёт в собственном событии - добавьте под ним условие, чтобы обрабатывать только один глагол. Нужна строка Объявить сигнал для verb_failed(verb_id: String, reason: String) - без неё лист всё равно компилируется, но событие ни к чему не подключено, поэтому никогда не выполняется. Doctor проекта на это указывает."
+"Runs when an action reports that it refused. The action's name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one action only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Выполняется, когда действие сообщает, что оно отказалось. Имя действия и причина приходят в строку как verb_id и reason, поэтому восстановление живёт в собственном событии - добавьте под ним условие, чтобы обрабатывать только одно действие. Нужна строка Объявить сигнал для verb_failed(verb_id: String, reason: String) - без неё лист всё равно компилируется, но событие ни к чему не подключено, поэтому никогда не выполняется. Doctor проекта на это указывает."
 On failure of {verb_id} ( {reason} ),При отказе {verb_id} ( {reason} )
 Verb,Глагол
-Which verb refused - the name the Report Failure row used.,"Какой глагол отказался - имя, которое использовала строка Сообщить об отказе."
+Which action refused - the name the Report Failure row used.,"Какое действие отказалось - имя, которое использовала строка Сообщить об отказе."
 Reason,Причина
 "Why it refused, carried by the signal itself.",Почему он отказался; приходит вместе с самим сигналом.
 On Success Of,При успехе
-"Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Выполняется, когда глагол сообщает, что он завершился. Имя глагола приходит в строку как verb_id. Нужна строка Объявить сигнал для verb_succeeded(verb_id: String) - без неё лист всё равно компилируется, но событие ни к чему не подключено, поэтому никогда не выполняется. Doctor проекта на это указывает."
+"Runs when an action reports that it finished. The action's name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","Выполняется, когда действие сообщает, что оно завершилось. Имя действия приходит в строку как verb_id. Нужна строка Объявить сигнал для verb_succeeded(verb_id: String) - без неё лист всё равно компилируется, но событие ни к чему не подключено, поэтому никогда не выполняется. Doctor проекта на это указывает."
 On success of {verb_id},При успехе {verb_id}
-Which verb finished - the name the Report Success row used.,"Какой глагол завершился - имя, которое использовала строка Сообщить об успехе."
+Which action finished - the name the Report Success row used.,"Какое действие завершилось - имя, которое использовала строка Сообщить об успехе."
 Report Failure,Сообщить об отказе
-"Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.","Объявляет, что глагол отказался, поэтому выполняется каждое событие При отказе для этого глагола. Используйте внутри глагола, который публикуете сами, или после проверки, нашедшей null-ресурс либо пустой результат."
+"Announces that an action refused, so every On Failure Of event for that action runs. Use it inside an action you publish yourself, or after a check that found a null resource or an empty result.","Объявляет, что действие отказалось, поэтому выполняется каждое событие При отказе для этого действия. Используйте внутри действия, которое публикуете сами, или после проверки, нашедшей null-ресурс либо пустой результат."
 Report failure of [b]{verb}[/b]: [b]{reason}[/b],Сообщить об отказе [b]{verb}[/b]: [b]{reason}[/b]
-Name of the verb that refused - the same name the On Failure Of row picks.,"Имя глагола, который отказался - то же имя, которое подхватывает строка При отказе."
+Name of the action that refused - the same name the On Failure Of row picks.,"Имя действия, которое отказалось - то же имя, которое подхватывает строка При отказе."
 Plain words a player or a log line can read.,"Простые слова, которые может прочитать игрок или строка лога."
 Report Success,Сообщить об успехе
-"Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.","Объявляет, что глагол завершился, поэтому выполняется каждое событие При успехе для этого глагола. Подтверждающий близнец Сообщить об отказе."
+"Announces that an action finished, so every On Success Of event for that action runs. The confirmation twin of Report Failure.","Объявляет, что действие завершилось, поэтому выполняется каждое событие При успехе для этого действия. Подтверждающий близнец Сообщить об отказе."
 Report success of [b]{verb}[/b],Сообщить об успехе [b]{verb}[/b]
-Name of the verb that finished - the same name the On Success Of row picks.,"Имя глагола, который завершился - то же имя, которое подхватывает строка При успехе."
+Name of the action that finished - the same name the On Success Of row picks.,"Имя действия, которое завершилось - то же имя, которое подхватывает строка При успехе."
 At Most Every,Не чаще чем раз в
 "Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.","Позволяет этому событию выполняться не чаще одного раза в столько-то секунд, как бы часто до него ни доходили. Ограничитель частоты для строки поиска, дорогого показателя или сорока звуков попадания, пришедшихся на один кадр."
 at most every [b]{seconds}[/b]s,не чаще чем раз в [b]{seconds}[/b] с
@@ -2034,13 +2034,13 @@ See also,См. также
 Opens this entry.,Открывает эту запись.
 Add example events,Добавить события примера
 Show GDScript,Показать GDScript
-Shows the line this verb compiles to.,"Показывает строку, в которую это компилируется."
-Opens the guide this verb is documented in.,"Открывает руководство, где это описано."
+Shows the line this row compiles to.,"Показывает строку, в которую это компилируется."
+Opens the guide this row is documented in.,"Открывает руководство, где это описано."
 "Puts this row into the open sheet at the caret, as one undo step.",Вставляет эту строку в открытый лист у курсора одним шагом отмены.
 "Puts the illustrated rows into the open sheet at the caret, as one undo step.",Вставляет показанные строки в открытый лист у курсора одним шагом отмены.
 Nothing in the Manual mentions that,В руководстве об этом ничего нет
 Selected the event that uses it.,"Выбрано событие, где он используется."
-That verb is not used in this sheet.,Это не используется в данном листе.
+That row is not used in this sheet.,Это не используется в данном листе.
 Press F1 for the Manual's page on the marks.,"Нажмите F1, чтобы открыть страницу руководства о пометках."
 Opens the next page in this part of the Manual.,Открывает следующую страницу этой части руководства.
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Нажмите F1, выбрав что-нибудь, чтобы получить справку по нему, или выберите страницу в содержании руководства."
@@ -2398,7 +2398,7 @@ Headings on a Manual page. Clear = follow the editor's own text colour.,Заго
 The highlight behind a search hit inside a page.,Подсветка за найденным совпадением внутри страницы.
 The pill on the contents entry for the page you are reading. Clear = the editor's accent.,"Плашка на пункте оглавления для страницы, которую вы читаете. Прозрачный = акцентный цвет редактора."
 The word on that pill.,Надпись на этой плашке.
-The note above a verb its pack has deprecated.,"Примечание над глаголом, который его пакет объявил устаревшим."
+The note above a row its pack has deprecated.,"Примечание над строкой, которую его пакет объявил устаревшей."
 The rule under a table's header row on a page.,Линия под строкой заголовка таблицы на странице.
 The strip down the left of the sheet that carries the event numbers.,"Полоса вдоль левого края листа, которая несёт номера событий."
 The event numbers themselves.,Сами номера событий.

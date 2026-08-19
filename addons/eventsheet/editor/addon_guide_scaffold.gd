@@ -113,7 +113,7 @@ static func generate(script_path: String) -> String:
 	out.append("")
 	var sentences: Array = styled_sentences(source)
 	if not sentences.is_empty():
-		out.append("On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:")
+		out.append("On the canvas these actions read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:")
 		out.append("")
 		for sentence: String in sentences:
 			out.append("- %s" % sentence)
@@ -143,7 +143,7 @@ static func generate(script_path: String) -> String:
 	out.append("Other use cases:")
 	out.append("")
 	for i: int in range(OTHER_USE_CASE_COUNT):
-		out.append("- **(One-liner use case %d.)** (a sentence on how the verbs combine for it)" % (i + 1))
+		out.append("- **(One-liner use case %d.)** (a sentence on how the rows combine for it)" % (i + 1))
 	out.append("")
 	out.append("## Tips and common mistakes")
 	out.append("")
@@ -217,7 +217,7 @@ static func _table(out: PackedStringArray, title: String, rows: Array) -> void:
 	if rows.is_empty():
 		out.append("(none)")
 	else:
-		out.append("| Verb | Parameters | Notes |")
+		out.append("| Name | Parameters | Notes |")
 		out.append("|---|---|---|")
 		for row: String in rows:
 			out.append(row)
@@ -228,11 +228,11 @@ static func _self_section(out: PackedStringArray, script: Script, pack_class: St
 	out.append("## Reading it from expressions - the Self section")
 	out.append("")
 	out.append("Type `self` in any ƒx field and **Self ▸ Behaviours** lists this pack's knobs and value")
-	out.append("verbs as ready-to-insert chains once the behaviour is attached:")
+	out.append("expressions as ready-to-insert chains once the behaviour is attached:")
 	out.append("")
 	var entries: Array = EventSheetSelfExpressions.pack_entries_from_script(script, pack_class, false)
 	if entries.is_empty():
-		out.append("(this pack publishes no knobs or value verbs)")
+		out.append("(this pack publishes no knobs or value expressions)")
 	for entry: Dictionary in entries.slice(0, 2):
 		out.append("- `%s` inserts the **%s** entry straight into any expression" % [
 			str(entry.get("fragment")), str(entry.get("label")).split(" · ")[0]])
