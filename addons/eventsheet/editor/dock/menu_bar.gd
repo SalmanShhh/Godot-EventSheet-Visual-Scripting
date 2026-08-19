@@ -44,6 +44,11 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(7),
 		"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency - proof you can leave the addon anytime."
 	)
+	sheet_popup.add_item("Import event sheet…", 17)
+	sheet_popup.set_item_tooltip(
+		sheet_popup.get_item_index(17),
+		"Bring a sheet over from another event-sheet editor. Pick the project it saved or one exported sheet, say which node each object became, and see exactly what came across - every row the vocabulary knows becomes the row that says the same thing, and every row it does not arrives switched off with its own words beside it. Nothing is written until you choose Save as…"
+	)
 	sheet_popup.add_item("Save as Text…", 16)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(16),
@@ -117,6 +122,7 @@ func build(root: Node) -> void:
 			11: _dock._open_inspector_designer()
 			12: _dock._starter._new_sheet_from_template(10)
 			13: _dock._new_resource_wizard.open()
+			17: _dock._import_sheet_wizard.open()
 			16: _dock._save_sheet_as_text_requested()
 			17: _dock._shared_sheets.open_new_shared_sheet()
 	)

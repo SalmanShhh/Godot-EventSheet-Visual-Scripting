@@ -131,13 +131,68 @@ static func _collect_object_names(events: Array, seen: Dictionary) -> void:
 ## The mapping table the wizard shows before anything is imported: one row per object the sheet
 ## mentions, pre-filled with the kind the project said it was and a node name that matches.
 static func default_object_map(sheet_json: Dictionary, project_objects: Dictionary = {}) -> Dictionary:
+	var guessed: Dictionary = guess_object_kinds(sheet_json)
 	var out: Dictionary = {}
 	for object_name: String in object_names(sheet_json):
 		out[object_name] = {
-			"kind": str(project_objects.get(object_name, "Object")),
+			"kind": str(project_objects.get(object_name, guessed.get(object_name, "Object"))),
 			"node": "$%s" % object_name,
 		}
 	return out
+
+
+## What each object probably is, from the rows the sheet uses it with. A single exported sheet
+## carries no object types (those live in their own files), so without this every object would
+## arrive as the generic kind and half its rows would be refused for no good reason.
+##
+## Derived from the mapping table itself rather than a list kept by hand: an object used with a row
+## only sprites have IS a sprite, and adding a row to the table teaches this at the same moment.
+static func guess_object_kinds(sheet_json: Dictionary) -> Dictionary:
+	var by_id: Dictionary = {}
+	for key: String in EventSheetForeignACEMap.ROWS:
+		var parts: PackedStringArray = key.split("/", true, 1)
+		if parts.size() != 2 or parts[0] == "Object" or EventSheetForeignACEMap.SYSTEM_OBJECT_KINDS.has(parts[0]):
+			continue
+		if not by_id.has(parts[1]):
+			by_id[parts[1]] = []
+		(by_id[parts[1]] as Array).append(parts[0])
+	var votes: Dictionary = {}
+	_collect_kind_votes(sheet_json.get("events", []) as Array, by_id, votes)
+	var out: Dictionary = {}
+	for object_name: String in votes:
+		var best: String = ""
+		var best_count: int = 0
+		var counts: Dictionary = votes[object_name] as Dictionary
+		var kinds: Array = counts.keys()
+		kinds.sort()
+		for kind: String in kinds:
+			if int(counts[kind]) > best_count:
+				best = kind
+				best_count = int(counts[kind])
+		if not best.is_empty():
+			out[object_name] = best
+	return out
+
+
+static func _collect_kind_votes(events: Array, by_id: Dictionary, votes: Dictionary) -> void:
+	for entry: Variant in events:
+		if not (entry is Dictionary):
+			continue
+		var event: Dictionary = entry as Dictionary
+		for cell: Variant in (event.get("conditions", []) as Array) + (event.get("actions", []) as Array):
+			if not (cell is Dictionary):
+				continue
+			var object_name: String = str((cell as Dictionary).get("objectClass", "")).strip_edges()
+			if object_name.is_empty() or EventSheetForeignACEMap.SYSTEM_OBJECT_KINDS.has(object_name):
+				continue
+			var row_id: String = EventSheetForeignACEMap.normalize_id(str((cell as Dictionary).get("id", "")))
+			if not by_id.has(row_id):
+				continue
+			if not votes.has(object_name):
+				votes[object_name] = {}
+			for kind: String in by_id[row_id] as Array:
+				(votes[object_name] as Dictionary)[kind] = int((votes[object_name] as Dictionary).get(kind, 0)) + 1
+		_collect_kind_votes(event.get("children", []) as Array, by_id, votes)
 
 
 ## The whole import as one pure function: an exported sheet plus the object mapping in, a sheet and

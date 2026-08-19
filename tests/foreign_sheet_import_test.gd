@@ -59,6 +59,7 @@ static func run() -> bool:
 		output.contains("set-blend-mode\n"), false) and all_passed
 
 	all_passed = _roundtrip(sheet) and all_passed
+	all_passed = _wizard() and all_passed
 	all_passed = _vocabulary_is_real() and all_passed
 	all_passed = _expressions() and all_passed
 	return all_passed
@@ -78,6 +79,27 @@ static func _roundtrip(sheet: EventSheetResource) -> bool:
 	var written: String = FileAccess.get_file_as_string(path)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	return _check("the written .gd re-opens and re-emits byte-identically", str(again["output"]) == written, true)
+
+
+## The wizard walked with no window: pick a file, read the object table it built, look at the
+## report. What the reader sees before saving is the same import the tests above pinned.
+static func _wizard() -> bool:
+	var passed: bool = true
+	var host: Control = Control.new()
+	var wizard: EventSheetImportSheetWizard = EventSheetImportSheetWizard.new()
+	wizard.init(host)
+	wizard.open()
+	passed = _check("the wizard reads the exported sheet", wizard.load_source(FIXTURE), "") and passed
+	passed = _check("the wizard lists the sheet's objects", str(wizard.object_map().keys()),
+		"[\"Enemy\", \"Player\", \"ScoreLabel\"]") and passed
+	passed = _check("the wizard's report leads with the count",
+		wizard.report_text().begins_with("[b]14 of 17 rows mapped (82%)[/b]"), true) and passed
+	passed = _check("the wizard names what it could not spell",
+		wizard.report_text().contains("Switched off: [b]Enemy ▸ set-blend-mode[/b]"), true) and passed
+	passed = _check("a file that is not an exported sheet is refused",
+		wizard.load_source("res://tests/fixtures/nothing_here.json"), "That file does not exist.") and passed
+	host.free()
+	return passed
 
 
 ## Every ace_id and every parameter id the map names is one the registry really ships. A renamed
