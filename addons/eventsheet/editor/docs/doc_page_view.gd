@@ -56,6 +56,10 @@ signal link_activated(target: String)
 ## Emitted after a figure's Insert landed its rows in the reader's sheet, so a host can say so.
 signal snippet_inserted()
 
+## Emitted when a figure on this page asks for its example in a scratch sheet. A page cannot open a
+## tab any more than it can run a button's action - it names what it wants and the host does it.
+signal scratch_requested(example_name: String, sheet: EventSheetResource)
+
 ## Emitted when the reader presses a button a derived page carries ("Write this guide"). The page
 ## names the action and its argument; running it is the host's business.
 signal action_requested(action: String, argument: String)
@@ -84,9 +88,14 @@ var _owner_section: Dictionary = {}
 ## back finds it as they left it - for the session, never on disk: this is a reading position, not
 ## a preference.
 static var _fold_state: Dictionary = {}
+## The reader's own text size for the Manual, as a multiplier on whatever body size the page would
+## otherwise use. Independent of the editor's help font size on purpose: a reader who wants big
+## documentation text does not necessarily want a big Script editor.
+var _text_scale: float = 1.0
 
 
 func _init() -> void:
+	_text_scale = EventSheetDocFeedback.text_scale()
 	_page_width = EventSheetPalette.scaled_f(PAGE_MIN_WIDTH)
 	add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
 	custom_minimum_size = Vector2(_page_width, 0.0)
@@ -471,9 +480,22 @@ func _heading(block: Dictionary) -> Control:
 	return label
 
 
+## The reader's text size for this page. The caller redraws the page afterwards - every font size on
+## it was baked into a theme override while it was being built, and there is no way to re-ask a
+## label for a size it has already been told.
+func set_text_scale(scale: float) -> void:
+	_text_scale = EventSheetDocFeedback.clamped_scale(scale)
+
+
 ## The body font size the whole page's scale hangs off: the editor's help font size setting when
-## it exists (the reader's own choice), else the "doc" font's default size, else 16.
+## it exists (the reader's own choice), else the "doc" font's default size, else 16, and all of it
+## multiplied by the reader's own A- / A+ choice for the Manual.
 func _body_font_size() -> int:
+	return maxi(int(round(float(_base_font_size()) * _text_scale)), 8)
+
+
+## The size before the reader's own Manual text size is applied to it.
+func _base_font_size() -> int:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		var editor_interface: Object = Engine.get_singleton("EditorInterface")
 		if editor_interface != null and editor_interface.has_method("get_editor_settings"):
@@ -635,6 +657,10 @@ func _figure(body: String, caption: String) -> Control:
 	figure.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	figure.set_caption(caption)
 	figure.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
+	figure.scratch_requested.connect(func(example_name: String, example: EventSheetResource) -> void:
+		# A figure's caption is the nearest heading above it, and an UNCAPTIONED one has nothing to
+		# name its tab with - so the page it sits on names it instead.
+		scratch_requested.emit(example_name if not example_name.is_empty() else _doc_title, example))
 	if not figure.show_sheet(sheet):
 		figure.queue_free()
 		return null

@@ -68,6 +68,10 @@ const KIND_ICONS := {
 ## margins instead.
 const READING_MAX_WIDTH := 720.0
 
+## The action an untranslated page's note carries: open the folder a translated page would go in.
+## Named here because this is the one place that name means something.
+const ACTION_TRANSLATIONS := "open_translations"
+
 ## The one doc-id scheme this surface does not draw itself: the engine's own class reference,
 ## which the editor already has a renderer for.
 const ENGINE_SCHEME := "engine:"
@@ -83,6 +87,19 @@ signal link_activated(target: String)
 
 ## Emitted after a figure's Insert lands rows in the sheet.
 signal snippet_inserted()
+
+## Emitted when an example asks to be opened in a scratch sheet of its own. The Manual does not own
+## the tab strip, so it names what it wants and its host opens it.
+signal scratch_requested(example_name: String, sheet: EventSheetResource)
+
+## Emitted when a tutorial step names a control the reader should use, so the host can make the real
+## one pulse. The label is the control's own text, which is how it is resolved - there is no map of
+## keys to buttons for anybody to keep up to date.
+signal control_highlight_requested(control_label: String)
+
+## Emitted when the reader presses Esc, which means "give the sheet back its focus". The Manual has
+## no idea where the sheet is; its host does.
+signal focus_returned()
 
 ## Emitted when a reference entry asks to be taken to one of the rows of the open sheet that
 ## already use its verb. The host owns the sheet, so the host does the revealing.
@@ -127,6 +144,12 @@ var _reading_margin: MarginContainer = null
 ## The verb a search result named, keyed by the tree row, so Ctrl+Enter adds THAT verb without
 ## asking the vocabulary again.
 var _result_definitions: Dictionary = {}
+## The foot of the page: the reader answering it back, and the two text-size buttons.
+var _helpful_prompt: Label = null
+var _helpful_yes: Button = null
+var _helpful_no: Button = null
+var _report_button: Button = null
+var _text_size_label: Label = null
 
 
 func _init() -> void:
@@ -178,6 +201,8 @@ func _init() -> void:
 	_page.doc_requested.connect(func(doc_id: String, anchor: String) -> void: show_doc(doc_id, anchor))
 	_page.link_activated.connect(func(target: String) -> void: link_activated.emit(target))
 	_page.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
+	_page.scratch_requested.connect(func(example_name: String, example: EventSheetResource) -> void:
+		scratch_requested.emit(example_name, example))
 	_page.action_requested.connect(_on_page_action)
 	# A page is BUILT before it is laid out, so the bearing taken while building it has no positions
 	# to read. Its own layout is what says there are some, and a fold opening or closing re-fires it.
@@ -185,6 +210,8 @@ func _init() -> void:
 	_panel = EventSheetDocPanel.new()
 	_panel.link_activated.connect(func(target: String) -> void: link_activated.emit(target))
 	_panel.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
+	_panel.scratch_requested.connect(func(example_name: String, example: EventSheetResource) -> void:
+		scratch_requested.emit(example_name, example))
 	_panel.doc_requested.connect(func(doc_id: String) -> void: show_doc(doc_id))
 	_panel.row_requested.connect(func(provider_id: String, ace_id: String, index: int) -> void:
 		row_requested.emit(provider_id, ace_id, index))
@@ -225,6 +252,7 @@ func _init() -> void:
 	_mini_nav_strip.add_child(_mini_nav)
 	host.add_child(_mini_nav_strip)
 	host.add_child(_scroll)
+	host.add_child(_build_page_foot())
 	_split.add_child(host)
 	_scroll.get_v_scroll_bar().value_changed.connect(_on_page_scrolled)
 	_build_tree()
@@ -276,6 +304,104 @@ func _build_chrome() -> HBoxContainer:
 	row.add_child(_bookmark_button)
 	_refresh_chrome()
 	return row
+
+
+## The foot of every page: the reader answering it back. Pinned BELOW the scroll rather than added
+## to the page's own blocks, so it is reachable from a long guide without scrolling to the end of it
+## - and so a derived page (a reference table, the glossary) gets it for free.
+##
+## Nothing here sends anything. The two answers are written on this machine and read by nobody; the
+## report button OPENS the tracker in the reader's browser with the page named in the title, and the
+## reader types and submits it themselves.
+func _build_page_foot() -> HBoxContainer:
+	var foot: HBoxContainer = HBoxContainer.new()
+	foot.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	_helpful_prompt = Label.new()
+	_helpful_prompt.text = EventSheetDocFeedback.PROMPT
+	_helpful_prompt.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	_helpful_prompt.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	foot.add_child(_helpful_prompt)
+	_helpful_yes = _foot_button(EventSheetDocFeedback.YES_LABEL,
+		"Kept on this machine. Nothing is sent anywhere.",
+		func() -> void: _answer_helpful(EventSheetDocFeedback.YES))
+	foot.add_child(_helpful_yes)
+	_helpful_no = _foot_button(EventSheetDocFeedback.NO_LABEL,
+		"Kept on this machine. Nothing is sent anywhere.",
+		func() -> void: _answer_helpful(EventSheetDocFeedback.NO))
+	foot.add_child(_helpful_no)
+	_report_button = _foot_button(EventSheetDocFeedback.REPORT_LABEL,
+		"Opens the project's issue tracker in your browser, with this page's name already in the title. It opens a page - it never sends one.",
+		_on_report_pressed)
+	foot.add_child(_report_button)
+	var spacer: Control = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	foot.add_child(spacer)
+	foot.add_child(_foot_button(EventSheetDocFeedback.SMALLER_LABEL, "Smaller text in the Manual.",
+		func() -> void: _step_text_size(-1)))
+	_text_size_label = Label.new()
+	_text_size_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	_text_size_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	foot.add_child(_text_size_label)
+	foot.add_child(_foot_button(EventSheetDocFeedback.LARGER_LABEL, "Larger text in the Manual.",
+		func() -> void: _step_text_size(1)))
+	return foot
+
+
+## A small flat word button, the shape the whole foot is made of.
+func _foot_button(label: String, tooltip: String, action: Callable) -> Button:
+	var button: Button = Button.new()
+	button.flat = true
+	button.text = label
+	button.tooltip_text = tooltip
+	button.focus_mode = Control.FOCUS_NONE
+	button.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	button.pressed.connect(action)
+	return button
+
+
+## Records the reader's answer and shows it. Pressing the same button again clears it, which is the
+## only way to take back a "No" pressed by accident.
+func _answer_helpful(answer: int) -> void:
+	_refresh_page_foot(EventSheetDocFeedback.set_helpful(_current_id, answer))
+
+
+## The foot, re-read off the page on screen: which answer this page carries, and the text size.
+func _refresh_page_foot(answer: int = -2) -> void:
+	if _helpful_prompt == null:
+		return
+	var now: int = EventSheetDocFeedback.helpful(_current_id) if answer == -2 else answer
+	var line: String = EventSheetDocFeedback.answer_line(now)
+	_helpful_prompt.text = EventSheetDocFeedback.PROMPT if line.is_empty() else line
+	_helpful_prompt.tooltip_text = _helpful_prompt.text
+	var accent: Color = EventSheetPopupUI.accent_color()
+	var muted: Color = EventSheetPalette.TEXT_MUTED
+	_helpful_yes.add_theme_color_override("font_color",
+		accent if now == EventSheetDocFeedback.YES else muted)
+	_helpful_no.add_theme_color_override("font_color",
+		accent if now == EventSheetDocFeedback.NO else muted)
+	_text_size_label.text = EventSheetDocFeedback.scale_label(EventSheetDocFeedback.text_scale())
+
+
+## A- / A+: remembers the size and redraws the page, because every font size on a built page was
+## baked into a theme override while it was being built.
+func _step_text_size(steps: int) -> void:
+	var next: float = EventSheetDocFeedback.stepped_scale(EventSheetDocFeedback.text_scale(), steps)
+	EventSheetDocFeedback.set_text_scale(next)
+	_page.set_text_scale(next)
+	_refresh_page_foot()
+	if not _current_id.is_empty():
+		_open(_current_id, "", false)
+
+
+## "Report a problem": the tracker, in the reader's browser, with the page already named. It opens;
+## it never submits.
+func _on_report_pressed() -> void:
+	var url: String = EventSheetDocFeedback.report_url(EventSheets.DOCS_REPO_URL, current_title(),
+		_current_id)
+	if url.is_empty():
+		return
+	OS.shell_open(url)
+	link_activated.emit(url)
 
 
 ## One step back through the pages read this session. The HISTORY moves first and the navigation
@@ -370,18 +496,42 @@ func _refresh_chrome() -> void:
 	var kept: bool = EventSheetDocHistory.is_bookmarked(_current_id)
 	_bookmark_button.set_pressed_no_signal(kept)
 	_bookmark_button.text = "★" if kept else "☆"
+	_refresh_page_foot()
 
 
-## Alt+Left / Alt+Right anywhere inside the surface. Taken as UNHANDLED input, so a reader typing
-## in the search box keeps their own text-cursor keys.
+## The keys a reader reaches for inside a manual: Alt+Left / Alt+Right for the trail, "/" for the
+## search box, and Esc to hand the focus back to the sheet.
+##
+## Taken as UNHANDLED input, which is what makes "/" safe: a reader TYPING a slash into the search
+## box (or any other field) has already consumed the key by the time it would reach here, so the
+## shortcut can be a bare character without eating anybody's punctuation.
 func _unhandled_key_input(event: InputEvent) -> void:
 	var key: InputEventKey = event as InputEventKey
-	if key == null or not key.pressed or not key.alt_pressed:
+	if key == null or not key.pressed:
 		return
-	if key.keycode == KEY_LEFT and go_back():
+	if key.alt_pressed:
+		if key.keycode == KEY_LEFT and go_back():
+			accept_event()
+		elif key.keycode == KEY_RIGHT and go_forward():
+			accept_event()
+		return
+	if key.ctrl_pressed or key.shift_pressed or key.meta_pressed:
+		return
+	if key.keycode == KEY_SLASH:
+		focus_search()
 		accept_event()
-	elif key.keycode == KEY_RIGHT and go_forward():
+	elif key.keycode == KEY_ESCAPE:
+		focus_returned.emit()
 		accept_event()
+
+
+## Puts the caret in the search box and selects whatever is in it, so the next keystroke replaces
+## the last search rather than extending it.
+func focus_search() -> void:
+	if _search == null:
+		return
+	_search.grab_focus()
+	_search.select_all()
 
 
 ## Holds the prose to a readable measure. The margin is the room the host has BEYOND a comfortable
@@ -398,6 +548,19 @@ func _apply_reading_width() -> void:
 ## The one-click offers a derived page carries. The page names the action; this is the one place
 ## that name means something.
 func _on_page_action(action: String, argument: String) -> void:
+	match action:
+		EventSheetDocTutorials.ACTION_START, EventSheetDocTutorials.ACTION_BACK, \
+		EventSheetDocTutorials.ACTION_SKIP, EventSheetDocTutorials.ACTION_NEXT:
+			_on_tutorial_action(action, argument)
+			return
+		ACTION_TRANSLATIONS:
+			# The FOLDER, in the reader's own file manager. There is no web form here and no upload:
+			# a translated page is a Markdown file beside the English one, and this shows them where.
+			var folder: String = EventSheetDocLocale.translations_dir()
+			if not folder.is_empty():
+				OS.shell_open(ProjectSettings.globalize_path(folder))
+				link_activated.emit(folder)
+			return
 	if action != "write_guide" or argument.strip_edges().is_empty():
 		return
 	var written: String = EventSheetAddonGuideScaffold.write_guide_for_pack(argument)
@@ -409,6 +572,46 @@ func _on_page_action(action: String, argument: String) -> void:
 	EventSheetDocSearch.reload()
 	link_activated.emit(written)
 	show_doc(_current_id)
+
+
+## Walking a tutorial: Start opens a scratch sheet and the first card, Back and Next move a step,
+## Skip goes back to the list. Every one of them REMEMBERS where the reader got to before it draws,
+## so closing the editor mid-tutorial and coming back lands on the same card.
+##
+## Next is never gated on the step's own check - a reader who did the thing their own way, or who
+## simply wants to read ahead, must not be trapped by a check that has not noticed.
+func _on_tutorial_action(action: String, tutorial_id: String) -> void:
+	var id: String = tutorial_id.strip_edges()
+	if id.is_empty():
+		return
+	if action == EventSheetDocTutorials.ACTION_SKIP:
+		show_doc(EventSheetDocTutorials.LIST_DOC_ID)
+		return
+	var at: int = EventSheetDocTutorials.step_reached(id)
+	match action:
+		EventSheetDocTutorials.ACTION_START:
+			# A tutorial runs on a sheet nobody minds losing. The host opens it; a Manual that could
+			# not reach a tab strip still walks the steps on whatever sheet is already open.
+			scratch_requested.emit(str(EventSheetDocTutorials.tutorial(id).get("title", "")), null)
+		EventSheetDocTutorials.ACTION_BACK:
+			at = EventSheetDocTutorials.moved_step(id, at, -1)
+		EventSheetDocTutorials.ACTION_NEXT:
+			if EventSheetDocTutorials.is_last_step(id, at):
+				EventSheetDocTutorials.remember_step(id, at)
+				show_doc(EventSheetDocTutorials.LIST_DOC_ID)
+				return
+			at = EventSheetDocTutorials.moved_step(id, at, 1)
+	EventSheetDocTutorials.remember_step(id, at)
+	show_doc(EventSheetDocTutorials.doc_id(id))
+	_pulse_step_control(id, at)
+
+
+## Asks the host to make the step's named control pulse. Silent for a step that names none - a step
+## the reader only has to read has nothing to point at.
+func _pulse_step_control(tutorial_id: String, index: int) -> void:
+	var control: String = str(EventSheetDocTutorials.step(tutorial_id, index).get("control", "")).strip_edges()
+	if not control.is_empty():
+		control_highlight_requested.emit(control)
 
 
 ## The strip under the guide list: the two ways OUT of this surface, as small flat icon buttons -
@@ -641,6 +844,13 @@ func _show_reference(doc_id: String, kind: String, name: String, anchor: String)
 	if not _query.is_empty():
 		_page.expand_all()
 	_build_mini_nav()
+	# Opening What's new is what takes the dot off the Manual button. Recorded HERE rather than on
+	# the click that opened it, because a reader who got here from a link, from Recent or from a
+	# restored layout has read it just as much as one who pressed the tree row.
+	if kind == EventSheetDocReference.KIND_WHATS_NEW:
+		EventSheetDocWhatsNew.mark_seen(EventSheets.docs_version())
+	if kind == EventSheetDocReference.KIND_TUTORIAL:
+		_pulse_step_control(name, EventSheetDocTutorials.step_reached(name))
 	_mark_active_item(_items_by_id.get(doc_id, null) as TreeItem)
 	# A glossary term is a chapter of the glossary page, so "reference:glossary/pick" lands ON pick.
 	var wanted: String = anchor.strip_edges()
@@ -823,8 +1033,21 @@ func _show_home() -> bool:
 ## with the search term wrapped where it appears. Both passes are pure functions over the block
 ## list, so the parser stays a parser and neither pass can leak into the next page.
 func _blocks_for(page_id: String) -> Array[Dictionary]:
+	# The reader's own language first, page by page: their locale's copy when it ships, and the
+	# English page with a one-line note when it does not. The note goes just under the title, for
+	# the same reason the missing-guide stub does - a reader deciding whether to trust what they are
+	# reading is deciding it now, not after nine screens.
+	var locale: String = EventSheetDocLocale.locale()
+	var shown: String = EventSheetDocLocale.page_for(page_id, locale, EventSheetDocLibrary.page_ids())
 	var blocks: Array[Dictionary] = EventSheetDocAceReference.replace_section(
-		EventSheetDocLibrary.page_blocks(page_id), page_id)
+		EventSheetDocLibrary.page_blocks(shown), page_id)
+	var note: Dictionary = EventSheetDocLocale.note_block(shown, locale)
+	if not note.is_empty():
+		var at: int = mini(1, blocks.size())
+		blocks.insert(at, note)
+		blocks.insert(at + 1, {"kind": "button", "label": EventSheetDocLocale.note_text(),
+			"tooltip": EventSheetDocLocale.note_tooltip(locale),
+			"action": ACTION_TRANSLATIONS, "argument": locale})
 	if not _query.is_empty():
 		blocks = EventSheetDocSearch.highlight_blocks(blocks, _query)
 	# Where the reading continues. Only inside a group that HAS a next page, so the last guide of a
@@ -894,9 +1117,34 @@ func _build_results(query: String) -> void:
 		if definition != null:
 			_result_definitions[item] = definition
 	if results.is_empty():
+		_add_glossary_redirect(root, query)
 		var empty: TreeItem = _tree.create_item(root)
 		empty.set_text(0, "Nothing in the Manual mentions that")
 		empty.set_selectable(0, false)
+
+
+## "Looking for layout? Here it is called Scene" - ABOVE the empty list, never instead of it.
+##
+## A search that finds nothing has two very different causes, and only one of them is the reader's
+## fault: a word this editor does not have, and a word this editor spells differently. The glossary
+## already knows which, so it says so before the reader concludes the feature is missing. Two rows:
+## the page for the word this editor uses, and the glossary itself.
+func _add_glossary_redirect(root: TreeItem, query: String) -> void:
+	var redirect: Dictionary = EventSheetDocGlossary.redirect_for(query)
+	if redirect.is_empty():
+		return
+	var term_id: String = EventSheetDocReference.doc_id(EventSheetDocReference.KIND_GLOSSARY,
+		str(redirect.get("key", "")))
+	var hint: TreeItem = _tree.create_item(root)
+	hint.set_text(0, str(redirect.get("line", "")))
+	hint.set_tooltip_text(0, "Opens the page for the word this editor uses.")
+	hint.set_custom_color(0, EventSheetPopupUI.accent_color())
+	hint.set_metadata(0, {"doc_id": term_id, "anchor": str(redirect.get("key", ""))})
+	var glossary: TreeItem = _tree.create_item(root)
+	glossary.set_text(0, EventSheetDocGlossary.PAGE_TITLE)
+	glossary.set_tooltip_text(0, "Every word that is spelled differently here.")
+	glossary.set_metadata(0, {"doc_id": EventSheetDocReference.doc_id(
+		EventSheetDocReference.KIND_GLOSSARY, ""), "anchor": ""})
 
 
 ## One result row, as the reader reads it: the kind it is, then what it is called, then where it
@@ -946,15 +1194,18 @@ func _build_tree() -> void:
 	_build_reference_tree(root)
 
 
-## The Manual's own first pages: what the marks on a sheet mean, and the words another event-sheet
-## editor spells differently. Both are generated, and both go FIRST - they are what a reader who
-## has never opened this before needs before any guide.
+## The Manual's own first pages: the tutorials you do, what the marks on a sheet mean, the words
+## another event-sheet editor spells differently, and what changed in this build. All four are
+## generated, and they go FIRST - they are what a reader who has never opened this before needs
+## before any guide.
 func _build_manual_group(root: TreeItem) -> void:
 	var manual: TreeItem = _tree.create_item(root)
 	_style_group_row(manual, EventSheetDocReference.MANUAL_TITLE)
-	# The legend leads, because it answers the question a reader has before they have a question:
-	# what are those marks on my rows.
-	for kind: String in [EventSheetDocReference.KIND_LEGEND, EventSheetDocReference.KIND_GLOSSARY]:
+	# The tutorials lead, because doing one answers every question the pages below would be
+	# answering in prose. Then the legend - what are those marks on my rows - then the words from
+	# another editor, then what changed.
+	for kind: String in [EventSheetDocReference.KIND_TUTORIALS, EventSheetDocReference.KIND_LEGEND,
+			EventSheetDocReference.KIND_GLOSSARY, EventSheetDocReference.KIND_WHATS_NEW]:
 		_add_reference_row(manual, kind, "")
 
 
