@@ -99,7 +99,23 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 
 ![The event trace pulse at three intensities: just fired, mid-fade, and almost gone](images/live-pulse.png)
 
-When something misbehaves, you have four tools - no `print()` required.
+![The Debugger window's Inspect tab: the objects this sheet talks about on the left with their reported values, and the picked instance's variables on the right, editable, with its behaviors' own values under them](images/debugger-inspect.png)
+
+**One window, four tabs.** **View ▸ Debugger** opens everything below in one place, with the four
+names you are probably looking for: **Inspect** (every object this sheet talks about, its running
+instances, and that instance's variables - editable straight into the running game - beside its
+behaviors' own values), **Watch** (the same watch list the Live Values window keeps, not a second
+one), **Profile** (time per event, busiest first) and **Breakpoints** (the F9 rows, with
+enable / disable / jump, and where the run is paused right now). Every tab is a view over a stream
+you arm from Tools, and an empty tab says which one to turn on rather than showing a table of
+zeroes.
+
+A word about the Profile numbers, because a profiler that lies is worse than none: a fire is timed
+by how long it ran before the *next* event started in the same frame - its **self time**, so a
+parent event is charged only for the part before its first sub-event. The last event of a frame has
+no successor in that frame, so it is **counted but not timed** and reads `-` rather than `0.00`.
+
+When something misbehaves, you have five tools - no `print()` required.
 
 - **Check the sheet first.** Tools ▸ **Check Sheet for Errors** lints every ƒx expression and
   GDScript block; a bad one gets a **red marker on its row** and the editor jumps to it (hover the
@@ -111,6 +127,18 @@ When something misbehaves, you have four tools - no `print()` required.
   you can *edit* them live to test branches). The **Watch** box in that window evaluates any
   expression over those variables each frame - e.g. `health <= 0` or `score + lives` - so you can
   see a condition flip in real time without adding a label.
+![The runtime-error strip under a sheet: a dot, the failure re-said as the row said it, and Jump to event, Explain and Godot's words beside it](images/friendly-runtime-error.png)
+
+- **Errors in the sheet's words.** When the running game hits a runtime error on a line one of
+  your rows emitted, the sheet says it again the way the row said it - a strip under the canvas
+  reads `player.gd · event 12 · Enemy ▸ Call Hit: target is empty (nothing was picked before this
+  action)`, and the same two lines land in the Output panel. **Jump to event** lands on the row,
+  **Explain** opens the Manual page behind that kind of failure (picking and existence for an
+  empty target, lists for a position that is not there), and **Godot's words** shows the engine's
+  own message unchanged - it is never hidden, because it is what every search and every issue
+  tracker speaks. A message the table does not recognise is repeated verbatim rather than guessed
+  at. You can also paste any error or stack-trace line straight into the command palette
+  (Ctrl+P): it jumps to the row *and* re-says the message there.
 - **Event Trace.** Tools ▸ Event Trace highlights the rows whose events *fire* during a debug run
   (a cyan PULSE: full glow the instant an event fires, fading over half a second, held bright while it keeps firing) - so "is this event even running?" AND "what just fired?" are answered at a glance. It
   rides the Live Values stream, so turn that on too.

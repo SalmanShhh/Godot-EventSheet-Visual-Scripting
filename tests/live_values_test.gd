@@ -188,11 +188,19 @@ static func run() -> bool:
 	all_passed = _check("event trace declares the fired buffer", trace_output.contains("var __eventsheets_fired: PackedStringArray"), true) and all_passed
 	all_passed = _check("event trace appends the firing event uid", trace_output.contains("__eventsheets_fired.append(\"evt_trace_1\")"), true) and all_passed
 	all_passed = _check("event trace streams + clears the buffer", trace_output.contains("eventsheets:fired_events") and trace_output.contains("__eventsheets_fired.clear()"), true) and all_passed
+	# The trace's WHEN, beside its WHAT: one stamp per recorded fire, a frame ruler at the top of
+	# every frame (unthrottled - it marks frames, not windows), and both streamed with the fires.
+	all_passed = _check("event trace declares the stamp + frame buffers", trace_output.contains("var __eventsheets_timed: PackedInt64Array") and trace_output.contains("var __eventsheets_frames: PackedInt32Array"), true) and all_passed
+	all_passed = _check("event trace stamps every recorded fire", trace_output.contains("__eventsheets_timed.append(Time.get_ticks_usec())"), true) and all_passed
+	all_passed = _check("event trace marks the top of every frame", trace_output.contains("__eventsheets_frames.append(__eventsheets_fired.size())"), true) and all_passed
+	all_passed = _check("event trace streams + clears the timings", trace_output.contains("eventsheets:event_times") and trace_output.contains("__eventsheets_timed.clear()"), true) and all_passed
 	var trace_script: GDScript = GDScript.new()
 	trace_script.source_code = trace_output
 	all_passed = _check("event-trace output parses", trace_script.reload(true) == OK, true) and all_passed
 	trace_sheet.emit_event_trace = false
-	all_passed = _check("event trace off leaves no instrumentation", str(SheetCompiler.compile(trace_sheet, "user://eventsheets_notrace.gd").get("output", "")).contains("__eventsheets_fired"), false) and all_passed
+	var untraced: String = str(SheetCompiler.compile(trace_sheet, "user://eventsheets_notrace.gd").get("output", ""))
+	all_passed = _check("event trace off leaves no instrumentation", untraced.contains("__eventsheets_fired"), false) and all_passed
+	all_passed = _check("and no timings either", untraced.contains("__eventsheets_timed") or untraced.contains("__eventsheets_frames"), false) and all_passed
 	all_passed = _check("parse_fired turns the payload into uids", Array(EventSheetLiveValuesDebugger.parse_fired(["a", "b"])), ["a", "b"]) and all_passed
 
 	# Regression: the event trace must work WITHOUT live values (the member + send used to be gated

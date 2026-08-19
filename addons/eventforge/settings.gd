@@ -24,6 +24,8 @@ const DEFINITIONS: Array[Dictionary] = [
 		"doc": "When ON, selecting a liftable .gd script opens it straight into the Event Sheets workspace as a read-only events preview (instead of the script editor). OFF by default; right-click → \"Open as Event Sheet\" always works regardless."},
 	{"name": "eventsheets/editor/show_scene_events", "default": false, "type": TYPE_BOOL,
 		"doc": "Mark nodes whose script is a sheet with a small ⌗ and their event count - in the Scene dock, and beside the node in the 2D editor. Hover names the triggers. OFF by default: a badge on every node is noise."},
+	{"name": "eventsheets/editor/follow_scene_selection", "default": true, "type": TYPE_BOOL,
+		"doc": "Keep the Scene dock and the sheet on one selection: picking a node highlights it on the Object bar and offers to filter the sheet's events to it, and picking a row selects the node that row is about. Turn it off to work on one row while clicking around a scene."},
 	{"name": "eventsheets/project/vocabulary_doc_path", "default": "res://EVENTSHEETS-VOCABULARY.md", "type": TYPE_STRING,
 		"hint": PROPERTY_HINT_FILE, "hint_string": "*.md",
 		"doc": "Where Tools → Vocabulary Doc writes the generated project reference."},

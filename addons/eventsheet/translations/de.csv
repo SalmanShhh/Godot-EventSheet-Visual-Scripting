@@ -3084,3 +3084,19 @@ Is not overlapping at offset {offset} (a solid),Überlappt nicht bei Versatz {of
 on layer,auf Ebene
 overlapping,überlappend
 For each,Für jedes
+"Behaviors, by the name you know","Verhalten, unter dem Namen, den du kennst"
+Jump to event,Zum Ereignis springen
+Explain,Erklären
+Godot's words,Godots Wortlaut
+Show events,Ereignisse anzeigen
+Follow Scene Selection,Szenenauswahl folgen
+Filter events to %s,Ereignisse auf %s filtern
+Debugger,Debugger
+Debugger…,Debugger…
+Inspect,Untersuchen
+Watch,Beobachten
+Breakpoints,Haltepunkte
+Instance values,Instanzwerte
+Per fire,Pro Auslösung
+Share of run,Anteil am Lauf
+Fires,Auslösungen

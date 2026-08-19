@@ -310,6 +310,8 @@ const KIND_LABELS := {
 ## is what the reader is usually after; a couple of rows is a pointer, ten is a wall.
 const MAX_ENGINE_HITS := 4
 const MAX_GLOSSARY_HITS := 4
+## The same budget for the behavior index: a pointer, never a wall.
+const MAX_BEHAVIOR_INDEX_HITS := 4
 
 
 ## The whole Manual, searched. Each row is {kind, title, subtitle, doc_id, anchor, definition,
@@ -327,6 +329,7 @@ static func search_all(query: String, sheet: EventSheetResource = null, limit: i
 	results.append_array(_engine_hits(wanted))
 	results.append_array(_glossary_hits(wanted))
 	results.append_array(_godot_word_hits(query))
+	results.append_array(_behavior_index_hits(wanted))
 	results.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a["score"]) != int(b["score"]):
 			return int(a["score"]) < int(b["score"])
@@ -495,6 +498,26 @@ static func _godot_word_hits(query: String) -> Array[Dictionary]:
 			"anchor": "", "definition": null, "used": 0,
 			"score": SCORE_TITLE_PREFIX,
 		})
+## The behaviors another event-sheet editor's user arrives holding the names of. Tagged with the
+## SAME "glossary" kind as the words above, deliberately: to the reader typing "8 Direction" both
+## lists are answering one question - "what is this called here?" - and splitting them into two
+## result groups would only ask them to know which half their word lived in.
+static func _behavior_index_hits(wanted: String) -> Array[Dictionary]:
+	var hits: Array[Dictionary] = []
+	if wanted.strip_edges().is_empty():
+		return hits
+	for behavior: Dictionary in EventSheetDocBehaviorIndex.find(wanted):
+		var name_text: String = str(behavior.get("name", ""))
+		hits.append({
+			"kind": "glossary", "title": "\"%s\" - the behavior here" % name_text,
+			"subtitle": str(behavior.get("here", "")),
+			"doc_id": EventSheetDocReference.doc_id(EventSheetDocReference.KIND_BEHAVIOR_INDEX,
+				str(behavior.get("key", ""))),
+			"anchor": str(behavior.get("key", "")), "definition": null, "used": 0,
+			"score": match_score(name_text.to_lower(), wanted),
+		})
+		if hits.size() >= MAX_BEHAVIOR_INDEX_HITS:
+			break
 	return hits
 
 

@@ -854,7 +854,8 @@ func _show_reference(doc_id: String, kind: String, name: String, anchor: String)
 	_mark_active_item(_items_by_id.get(doc_id, null) as TreeItem)
 	# A glossary term is a chapter of the glossary page, so "reference:glossary/pick" lands ON pick.
 	var wanted: String = anchor.strip_edges()
-	if wanted.is_empty() and kind == EventSheetDocReference.KIND_GLOSSARY:
+	if wanted.is_empty() and kind in [EventSheetDocReference.KIND_GLOSSARY,
+			EventSheetDocReference.KIND_BEHAVIOR_INDEX]:
 		wanted = name.strip_edges()
 	if not wanted.is_empty():
 		_page.jump_to_anchor(wanted)
@@ -1208,9 +1209,10 @@ func _build_manual_group(root: TreeItem) -> void:
 	_style_group_row(manual, EventSheetDocReference.MANUAL_TITLE)
 	# The tutorials lead, because doing one answers every question the pages below would be
 	# answering in prose. Then the legend - what are those marks on my rows - then the words from
-	# another editor, then what changed.
+	# another editor, then the behaviors by the names they are known by, then what changed.
 	for kind: String in [EventSheetDocReference.KIND_TUTORIALS, EventSheetDocReference.KIND_LEGEND,
 			EventSheetDocReference.KIND_GLOSSARY, EventSheetDocReference.KIND_DICTIONARY,
+			EventSheetDocReference.KIND_BEHAVIOR_INDEX,
 			EventSheetDocReference.KIND_WHATS_NEW]:
 		_add_reference_row(manual, kind, "")
 

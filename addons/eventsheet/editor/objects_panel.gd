@@ -221,6 +221,53 @@ func highlighted_object() -> String:
 	return _highlighted
 
 
+## Highlights one object FROM OUTSIDE - the Scene dock's selection landing on a node this sheet
+## talks about. Deliberately silent: it moves the bar's own pin and its tree cursor and emits
+## nothing, because the reader clicked in another dock and did not ask this one to filter, add a
+## row or open anything. Passing "" clears the pin. An object this sheet does not talk about
+## leaves the bar exactly as it was, rather than clearing a pin the reader set on purpose.
+func highlight_object(label: String) -> void:
+	var wanted: String = label.strip_edges()
+	if wanted.is_empty():
+		_highlighted = ""
+		_sync_tree_highlight()
+		return
+	for entry: Variant in _entries:
+		if str((entry as Dictionary).get("label", "")) != wanted:
+			continue
+		_highlighted = wanted
+		_sync_tree_highlight()
+		return
+
+
+## True only while highlight_object() is moving the tree cursor itself. TreeItem.select() emits
+## item_selected exactly as a reader's click does, and that handler TOGGLES the pin - so without
+## this the follow would set the pin and then immediately clear it again.
+var _syncing_highlight: bool = false
+
+
+## Puts the tree cursor on the pinned object, without going through the selection handler that a
+## reader's own click goes through (that one toggles the pin, which would undo what we just set).
+func _sync_tree_highlight() -> void:
+	if tree == null or tree.get_root() == null:
+		return
+	_syncing_highlight = true
+	var item: TreeItem = tree.get_root().get_first_child()
+	while item != null:
+		var child: TreeItem = item.get_first_child()
+		while child != null:
+			var meta: Variant = child.get_metadata(0)
+			if meta is Dictionary and str((meta as Dictionary).get("label", "")) == _highlighted:
+				child.select(0)
+				tree.scroll_to_item(child)
+				_syncing_highlight = false
+				return
+			child = child.get_next()
+		item = item.get_next()
+	tree.deselect_all()
+	_syncing_highlight = false
+
+
 ## Rebuilds the bar from a sheet. Safe to call on every sheet change - both halves are reads (the
 ## census of the sheet's own rows, and the .tscn as text), and nothing here is cached across sheets.
 func set_sheet(sheet: EventSheetResource) -> void:
@@ -646,6 +693,10 @@ func _add_entry_item(parent_item: TreeItem, entry: Dictionary, is_missing: bool)
 ## selection is dropped on the second click - a bar row that stays lit while nothing is filtered
 ## would be a lie about the state of the sheet.
 func _on_item_selected() -> void:
+	# The follow moving the cursor itself is not the reader clicking anything, and the toggle below
+	# would undo the pin it was just asked to set.
+	if _syncing_highlight:
+		return
 	# A right-click selects the entry under the pointer before the menu opens, and that selection is
 	# not the reader asking to pin anything - it is them asking what they can do with it.
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):

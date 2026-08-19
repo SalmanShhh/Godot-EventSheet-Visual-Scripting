@@ -300,6 +300,19 @@ static func set_status(text: String, is_error: bool = false) -> void:
 		_dock._set_status(text, is_error)
 
 
+## Reports a runtime error from a running game in the SHEET's words: the source map says which row
+## the failing generated line came from, and the row's own reading says what it was trying to do,
+## so "Attempt to call function 'hit' in base 'null instance'" is said again as
+## "player.gd · event 12 · Enemy ▸ Call Hit: target is empty (nothing was picked before this
+## action)" - on the strip under the sheet and in the Output panel, with Jump to event, Explain and
+## Godot's own message beside it. Returns the report ({sentence, translated, said, why, explain,
+## original}), or an empty Dictionary when no dock is open.
+static func report_runtime_error(message: String, script_path: String, line: int = 0) -> Dictionary:
+	if not _dock_alive():
+		return {}
+	return _dock.report_runtime_error(message, script_path, line)
+
+
 ## Rebuilds the editor's rows from the current sheet (after out-of-funnel changes;
 ## prefer edit(), which refreshes for you).
 static func refresh() -> void:

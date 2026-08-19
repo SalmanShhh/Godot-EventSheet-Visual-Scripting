@@ -387,6 +387,12 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("var __live_values_timer: float = 0.0")
 		if _emit_event_trace_flag:
 			lines.append("var __eventsheets_fired: PackedStringArray = PackedStringArray()")
+			# The trace's WHEN: one microsecond stamp beside every recorded fire, and the fire-count
+			# at the top of each frame. The editor reads a fire's self time as the gap to the NEXT
+			# fire in the SAME frame - which is why the frame ruler exists, and why the last fire of
+			# a frame is left unmeasured rather than charged the frame's idle time.
+			lines.append("var __eventsheets_timed: PackedInt64Array = PackedInt64Array()")
+			lines.append("var __eventsheets_frames: PackedInt32Array = PackedInt32Array()")
 
 	# Lane B composition (has-a): owned helper instances for the declared addon classes.
 	if not sheet.uses_addons.is_empty():
@@ -495,6 +501,12 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	if not _throttle_process_emitted and (not _live_values_payload.is_empty() or _emit_event_trace_flag):
 		lines.append("")
 		lines.append("func _process(delta: float) -> void:")
+		# The trace's frame ruler: how many fires had happened by the top of THIS frame.
+		# Unthrottled on purpose - it marks every frame, not every streamed window, and
+		# without it a gap between two frames is indistinguishable from a slow event.
+		if _emit_event_trace_flag:
+			lines.append("\tif EngineDebugger.is_active():")
+			lines.append("\t\t__eventsheets_frames.append(__eventsheets_fired.size())")
 		lines.append("\t__live_values_timer += delta")
 		lines.append("\tif __live_values_timer >= 0.25 and EngineDebugger.is_active():")
 		lines.append("\t\t__live_values_timer = 0.0")
@@ -503,6 +515,9 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		if _emit_event_trace_flag:
 			lines.append("\t\tEngineDebugger.send_message(\"eventsheets:fired_events\", __eventsheets_fired)")
 			lines.append("\t\t__eventsheets_fired.clear()")
+			lines.append("\t\tEngineDebugger.send_message(\"eventsheets:event_times\", [__eventsheets_timed, __eventsheets_frames, Time.get_ticks_usec()])")
+			lines.append("\t\t__eventsheets_timed.clear()")
+			lines.append("\t\t__eventsheets_frames.clear()")
 		_throttle_process_emitted = true
 		_live_values_payload = ""
 
@@ -1444,6 +1459,12 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			_live_values_receiver_pending = false
 		if function_name == "_process" and not _throttle_process_emitted and (not _live_values_payload.is_empty() or _emit_event_trace_flag):
 			# Live-values stream and/or the event trace: throttled, debug-session-only, before user logic.
+			# The trace's frame ruler: how many fires had happened by the top of THIS frame.
+			# Unthrottled on purpose - it marks every frame, not every streamed window, and
+			# without it a gap between two frames is indistinguishable from a slow event.
+			if _emit_event_trace_flag:
+				lines.append("\tif EngineDebugger.is_active():")
+				lines.append("\t\t__eventsheets_frames.append(__eventsheets_fired.size())")
 			lines.append("\t__live_values_timer += delta")
 			lines.append("\tif __live_values_timer >= 0.25 and EngineDebugger.is_active():")
 			lines.append("\t\t__live_values_timer = 0.0")
@@ -1452,6 +1473,9 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			if _emit_event_trace_flag:
 				lines.append("\t\tEngineDebugger.send_message(\"eventsheets:fired_events\", __eventsheets_fired)")
 				lines.append("\t\t__eventsheets_fired.clear()")
+				lines.append("\t\tEngineDebugger.send_message(\"eventsheets:event_times\", [__eventsheets_timed, __eventsheets_frames, Time.get_ticks_usec()])")
+				lines.append("\t\t__eventsheets_timed.clear()")
+				lines.append("\t\t__eventsheets_frames.clear()")
 			had_body = true
 			_throttle_process_emitted = true
 			_live_values_payload = ""
@@ -1699,6 +1723,7 @@ static func _emit_event_body(
 		var body_indent: String = "\t".repeat(body_depth)
 		if _emit_event_trace_flag:
 			lines.append("%s__eventsheets_fired.append(\"%s\")" % [body_indent, event_row.event_uid])
+			lines.append("%s__eventsheets_timed.append(Time.get_ticks_usec())" % body_indent)
 			had_body = true
 		if _emit_breakpoints_flag and event_row.debug_break:
 			var break_condition: String = event_row.debug_break_condition.strip_edges()

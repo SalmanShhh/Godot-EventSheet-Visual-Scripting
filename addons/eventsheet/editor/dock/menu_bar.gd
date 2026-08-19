@@ -735,6 +735,32 @@ func build(root: Node) -> void:
 		view_popup.set_item_checked(view_popup.get_item_index(9803), wanted)
 		_dock._set_status(EventSheetL10n.translate("Events in the scene: on") if wanted
 			else EventSheetL10n.translate("Events in the scene: off")))
+	# ── Follow Scene Selection (appended block - keep together) ────────────────────────────────
+	# The Scene dock and the sheet on one selection. Ticked by default, because that is what the
+	# reader who came from an editor where the layout and the sheet were one surface expects; the
+	# item exists because somebody working on one row while clicking around a scene reasonably
+	# wants it off. Backed by the project setting, so the choice survives the session. Id 9801 is
+	# clear of every block above.
+	view_popup.add_check_item("Follow Scene Selection", 9801)
+	view_popup.set_item_checked(view_popup.get_item_index(9801),
+		EventSheetSceneSelectionLink.follow_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(9801),
+		"Keep the Scene dock and the sheet on one selection: picking a node highlights it on the Object bar and offers to filter the sheet's events to it, and picking a row selects the node that row is about. Right-click a node in the Scene dock for Show events.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 9801:
+			_dock._toggle_follow_scene_selection(view_popup))
+	# ── Debugger (appended block - keep together) ──────────────────────────────────────────────
+	# One window over four seams that already shipped: Inspect (the Live Values stream, per object),
+	# Watch (the same watch list this dock already keeps), Profile (the Event Trace timings) and
+	# Breakpoints (the F9 rows). It sits on View rather than on Tools because it SHOWS rather than
+	# switches - the three Tools toggles that arm the streams stay exactly where they were. Id 9802
+	# is clear of every block above.
+	view_popup.add_item("Debugger…", 9802)
+	view_popup.set_item_tooltip(view_popup.get_item_index(9802),
+		"One window with four tabs: Inspect (every object's live values, editable), Watch, Profile (time per event) and Breakpoints. Needs a debug run - Tools ▸ Live Values and Tools ▸ Event Trace arm the streams it reads.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 9802:
+			_dock.open_debugger())
 
 
 ## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes

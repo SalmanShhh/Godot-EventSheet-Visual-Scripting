@@ -3084,3 +3084,19 @@ Is not overlapping at offset {offset} (a solid),在偏移 {offset} 处未重叠�
 on layer,位于层
 overlapping,重叠的
 For each,对每个
+"Behaviors, by the name you know",按你熟悉的名字查行为
+Jump to event,跳到事件
+Explain,说明
+Godot's words,Godot 的原文
+Show events,显示事件
+Follow Scene Selection,跟随场景选择
+Filter events to %s,只显示关于 %s 的事件
+Debugger,调试器
+Debugger…,调试器…
+Inspect,查看
+Watch,监视
+Breakpoints,断点
+Instance values,实例的值
+Per fire,每次触发
+Share of run,占本次运行的比例
+Fires,触发次数

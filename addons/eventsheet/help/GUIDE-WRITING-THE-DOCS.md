@@ -54,7 +54,7 @@ The other is **reference**, and nobody writes it:
 
 | Part of the Manual | Where its pages come from |
 |---|---|
-| The Manual (first pages) | the tutorials, the icon legend, the glossary for readers coming from another event-sheet editor, and What's new - all four generated from the plugin's own tables |
+| The Manual (first pages) | the tutorials, the icon legend, the glossary for readers coming from another event-sheet editor, the behavior index ("Behaviors, by the name you know"), and What's new - all five generated from the plugin's own tables |
 | The guide groups | the Markdown you write, grouped exactly as `docs/README.md` groups it |
 | System reference | one page per picker category, listing every condition, action and expression the builtin vocabulary files under it |
 | Behavior reference | one page per behavior pack, listing the same for that pack |
@@ -71,6 +71,15 @@ That matters when you write a guide, in three ways:
   the Manual picks up as that pack's page immediately. Fill it in from there.
 - **Links to pages that do not exist are drawn muted, never dead**, and a reference page carries no
   "read this online" link at all, because there is no repo file behind it.
+- **The behavior index is a table, not a page you edit.** "Behaviors, by the name you know" is
+  authored as one Dictionary per behavior in
+  `addons/eventsheet/editor/docs/doc_behavior_index.gd` - the name a reader arrives holding, what
+  the thing is here (the shipped pack, or the Godot node that already did the job), and what a
+  hand-written version of it reads like on a sheet. Each row links to the pack's own reference
+  page, and every row is searchable from the one Manual box under the same *glossary* heading the
+  word list uses, because "what is 8 Direction called here?" and "what is a layout called here?"
+  are the same question. Adding a behavior is adding an entry to that array; the page, the
+  anchors, the search rows and the pack links all follow from it.
 
 ![A behavior reference page: the breadcrumb reads Manual, Behavior reference, Quest; the page is titled Quest with a line saying it lists the conditions, actions and expressions Quest publishes, an Open the guide link, and one table per kind](images/manual-reference-page.png)
 

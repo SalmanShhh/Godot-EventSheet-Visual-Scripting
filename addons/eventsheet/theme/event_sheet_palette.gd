@@ -53,6 +53,13 @@ const COLOR_LANE_CONDITIONS = Color(0.30, 0.56, 0.82, 0.08)
 const COLOR_LANE_ACTIONS = Color(0.25, 0.66, 0.56, 0.06)
 const COLOR_LANE_DIVIDER = Color("#2f3641")
 const COLOR_BREAKPOINT = Color("#f26d7d")
+## The runtime-error strip: a failure in the RUNNING game, re-said as the sheet said it. Warmer
+## than the breakpoint red on purpose - a breakpoint is a place you chose, this is a thing that
+## went wrong.
+const COLOR_RUNTIME_ERROR = Color("#ff8a5c")
+## The Debugger window's accent: the busiest rows of the Profile tab, and the marks that say a
+## number came from a run rather than from the sheet.
+const COLOR_DEBUGGER_ACCENT = Color("#4fd6ff")
 const COLOR_BOOKMARK = Color("#e8c558")
 const COLOR_DISABLED = Color(0.0, 0.0, 0.0, 0.35)
 const COLOR_GROUP_BG = Color("#222139")

@@ -1111,6 +1111,15 @@ is instantiated to answer a question.
 
 <img src="images/words-settings.png" alt="The Words page: a table headed what it names, with Familiar Words on, off, listing an inheritance set as Family or Base class, a scene as Layout or Scene, _process as Every tick, an attached pack as Behavior, a Godot group as Family (group) or Group, Array slash Dictionary as list slash table, queue_free as Destroy and the reader as Manual, above a live preview of one event and a Reset to defaults button." width="560">
 
+- **The Scene dock and the sheet share one selection.** Pick a node in the Scene dock and its entry
+  lights up on the Object bar, with the status line offering `Filter events to Enemy` - an offer,
+  not a filter, because you clicked in another dock and did not ask this one to hide anything. Pick
+  a row on the sheet and the node that row is about is selected in the Scene dock and in the 2D
+  view. Right-click a node in the Scene dock for **Show events**, which opens its script as a sheet
+  *and* filters to it. The follow is two-way and never fights itself (each side recognises the echo
+  of a selection it caused); turn it off with **View ▸ Follow Scene Selection**, or with the
+  `eventsheets/editor/follow_scene_selection` project setting, when you want to work on one row
+  while clicking around a scene.
 - **Objects wear their own picture.** When an object's scene has a Sprite2D / AnimatedSprite2D /
   TextureRect on or under its root, that texture becomes the object's mark - on the Include bar, in the
   Object bar, in the popup and on every object label - falling back to the class icon. The thumbnail

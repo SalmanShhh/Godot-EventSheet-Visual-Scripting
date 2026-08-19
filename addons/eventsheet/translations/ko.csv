@@ -3084,3 +3084,19 @@ Is not overlapping at offset {offset} (a solid),간격 {offset} 에서 겹치지
 on layer,레이어
 overlapping,에 겹친
 For each,각
+"Behaviors, by the name you know",익숙한 이름으로 찾는 비헤이비어
+Jump to event,이벤트로 이동
+Explain,설명
+Godot's words,Godot의 원문
+Show events,이벤트 보기
+Follow Scene Selection,씬 선택 따라가기
+Filter events to %s,이벤트를 %s(으)로 좁히기
+Debugger,디버거
+Debugger…,디버거…
+Inspect,살펴보기
+Watch,감시
+Breakpoints,중단점
+Instance values,인스턴스 값
+Per fire,발생당
+Share of run,실행 중 비중
+Fires,발생 횟수

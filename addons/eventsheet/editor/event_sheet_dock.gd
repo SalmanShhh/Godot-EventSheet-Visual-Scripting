@@ -433,6 +433,10 @@ func _ready() -> void:
 	if Engine.is_editor_hint() and ProjectSettings.has_signal("settings_changed") \
 			and not ProjectSettings.is_connected("settings_changed", _on_project_settings_changed):
 		ProjectSettings.connect("settings_changed", _on_project_settings_changed)
+	# The Scene dock's selection is the other half of the two-way link, and following it needs the
+	# editor's own EditorSelection - which only exists in the editor.
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		_ensure_scene_link().init_selection(EditorInterface.get_selection())
 	_build_ui()
 	_ensure_editor_dialogs_initialized()
 	_refresh_ace_registry()
@@ -1072,6 +1076,10 @@ func _notification(what: int) -> void:
 		_release_ace_sources()
 		# A .gd still opening: join its worker before the job (and its Thread) is freed with us.
 		_sheet_io._abandon_open_job()
+		# The Scene dock outlives this dock: a selection_changed connection left behind would call
+		# into a freed Control on the reader's very next click there.
+		if _scene_link != null:
+			_scene_link.teardown()
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		# GDScript-backed sheets: refocusing the editor is the moment external edits (the
 		# script editor, another tool, git) usually land - offer to reload from disk. This is also
@@ -2894,6 +2902,42 @@ func set_live_values_debugger(debugger: EventSheetLiveValuesDebugger) -> void:
 ## reader is most likely to hit, since you stop the game and THEN ask why.
 func _on_debug_session_ended() -> void:
 	_ensure_live_values_panel().clear_live_values()
+	if _debugger_window != null:
+		_debugger_window.clear_live_values()
+
+
+# ── The Debugger window (Inspect · Watch · Profile · Breakpoints) ───────────────────────
+## One window over four seams that already shipped. Built the first time it is asked for and kept
+## afterwards, like every other detached window here.
+var _debugger_window: EventSheetDebuggerWindow = null
+
+
+func _ensure_debugger_window() -> EventSheetDebuggerWindow:
+	if _debugger_window == null:
+		_debugger_window = EventSheetDebuggerWindow.new(self)
+	return _debugger_window
+
+
+## View ▸ Debugger, and the sheet's Debug-layout gesture. `tab` names which tab to land on, so
+## arming the debugger and running can open straight onto Profile while the menu opens it where the
+## reader left it.
+func open_debugger(tab: String = "") -> void:
+	_ensure_debugger_window().open(tab)
+
+
+## Event-trace timings sink (wired by the plugin): the stamps beside the fires reported a moment
+## ago. Kept beside the hit counts, which are the other half of the same tally - the fired-events
+## message always arrives first, so the uids of THIS window are the ones just counted.
+func update_event_times(window: Dictionary) -> void:
+	EventSheetTraceTimings.note_window(_last_fired_uids, window.get("stamps", PackedInt64Array()),
+		window.get("markers", PackedInt32Array()), int(window.get("flush", 0)))
+	if _debugger_window != null:
+		_debugger_window.refresh()
+
+
+## The uids of the last streamed trace window, held for exactly as long as it takes the timings
+## message that belongs to them to arrive (the same flush sends both, fires first).
+var _last_fired_uids: PackedStringArray = PackedStringArray()
 
 
 func _toggle_live_values() -> void:
@@ -2906,6 +2950,8 @@ func _ensure_live_values_window() -> void:
 
 func update_live_values(values: Dictionary) -> void:
 	_ensure_live_values_panel().update_values(values)
+	if _debugger_window != null:
+		_debugger_window.update_values(values)
 
 
 ## Paused-at-row sink (wired by the plugin): the running game announced it is pausing at a sheet
@@ -2924,8 +2970,150 @@ func reveal_paused_row(uid: String) -> void:
 		var view: EventSheetViewport = _active_view()
 		if view != null:
 			view.reveal_resource(paused_event)
+		_paused_row_uid = uid
 		_set_status("⏸ Paused at this row (sheet breakpoint).")
 		return
+
+
+## ── The runtime-error strip (a failure in the running game, re-said as the row said it) ────────
+##
+## The engine reports a crash in the vocabulary of the file it crashed in. The sheet knows the
+## other half: the source map says which row that generated line came from, and the row's own
+## reading says what it was trying to do. So the failure is said once more as the row said it -
+## "player.gd · event 12 · Enemy ▸ Call Hit: target is empty (nothing was picked before this
+## action)" - in the Output panel and on the strip under the sheet, with Jump to event, Explain,
+## and Godot's own words one button away. Nothing is hidden and nothing is invented: a message the
+## table does not recognise is repeated verbatim and gets no Explain.
+var _runtime_error_strip: HBoxContainer = null
+var _runtime_error_label: Label = null
+var _runtime_error_jump_button: Button = null
+var _runtime_error_explain_button: Button = null
+## The last report, as EventSheetRuntimeErrorWords.report() built it, plus the row it resolved to.
+var _runtime_error_report: Dictionary = {}
+## The event the running game announced it is paused at, kept rather than only revealed: the
+## debugger's Breakpoints tab shows WHERE the pause is, and a reveal that was already scrolled past
+## answers nothing.
+var _paused_row_uid: String = ""
+
+
+## One runtime error from the running game (or pasted by the reader) -> the sheet's words. Returns
+## the report so a caller - and the suite - can read what was said without looking at a Control.
+func report_runtime_error(message: String, script_path: String, line: int = 0) -> Dictionary:
+	var located: Dictionary = _locate_runtime_error_row(script_path, line)
+	var report: Dictionary = EventSheetRuntimeErrorWords.report(message, script_path,
+		int(located.get("event_number", 0)), str(located.get("reading", "")))
+	report["row_resource"] = located.get("resource")
+	report["line"] = line
+	_runtime_error_report = report
+	for output_line: String in EventSheetRuntimeErrorWords.output_lines(report):
+		print(output_line)
+	_set_status(str(report.get("sentence", "")), true)
+	if _runtime_error_strip != null and _runtime_error_label != null:
+		_runtime_error_label.text = str(report.get("sentence", ""))
+		_runtime_error_label.tooltip_text = str(report.get("original", ""))
+		_runtime_error_strip.visible = true
+	if _runtime_error_jump_button != null:
+		_runtime_error_jump_button.disabled = report.get("row_resource") == null
+	if _runtime_error_explain_button != null:
+		_runtime_error_explain_button.disabled = not EventSheetRuntimeErrorWords.can_explain(report)
+	return report
+
+
+## The row a generated line belongs to, as {resource, event_number, reading}. Empty parts rather
+## than a refusal: a failure in a file this tab is not showing still gets its sentence, it just has
+## less of an address in front of it.
+func _locate_runtime_error_row(script_path: String, line: int) -> Dictionary:
+	var located: Dictionary = {"resource": null, "event_number": 0, "reading": ""}
+	var view: EventSheetViewport = _active_view()
+	if view == null or line <= 0:
+		return located
+	var wanted: String = script_path.strip_edges()
+	if not wanted.is_empty() and not _current_sheet_path.is_empty() \
+			and wanted.get_file() != _current_sheet_path.get_file():
+		return located
+	for entry: Variant in EventSheetLineRowMapper.entries_for_line(_code_source_map, line):
+		var resource: Resource = instance_from_id(
+			int(str((entry as Dictionary).get("uid", "0")))) as Resource
+		if resource == null:
+			continue
+		for flat: Variant in view.get_flat_rows():
+			var row_data: EventRowData = (flat as Dictionary).get("row")
+			if row_data == null or row_data.source_resource != resource:
+				continue
+			located["resource"] = resource
+			located["event_number"] = row_data.event_number
+			located["reading"] = row_reading(row_data)
+			return located
+	return located
+
+
+## One row read back as the phrase the error sentence puts in front of the failure. The collapsed
+## block's summary is nearly this, but not quite: it keeps the "+ Add condition" / "+ Add action"
+## affordances, which are click targets rather than anything the row says, and an error message
+## reading "event 3 - + Add condition -> Subtract 1 from hp - + Add action: target is empty" says
+## the row's furniture back to the reader instead of the row.
+##
+## Static and pure over the row so the suite pins the words without a viewport.
+static func row_reading(row_data: EventRowData) -> String:
+	if row_data == null:
+		return ""
+	var conditions: PackedStringArray = PackedStringArray()
+	var actions: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		var text: String = span.text.strip_edges()
+		if text.is_empty() or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		var kind: String = str(metadata.get("kind", ""))
+		if kind == "add_condition" or kind == "add_action":
+			continue
+		match str(metadata.get("lane", "")):
+			"condition":
+				conditions.append(text)
+			"action":
+				actions.append(text)
+	if not conditions.is_empty() and not actions.is_empty():
+		return "%s ▸ %s" % [" - ".join(conditions), " - ".join(actions)]
+	if not conditions.is_empty():
+		return " - ".join(conditions)
+	return " - ".join(actions)
+
+
+## Jump to event: the deep-link that already existed, aimed at the row the failure came from.
+func _jump_to_runtime_error_row() -> void:
+	var resource: Variant = _runtime_error_report.get("row_resource")
+	var view: EventSheetViewport = _active_view()
+	if resource == null or view == null:
+		goto_generated_line(int(_runtime_error_report.get("line", 0)))
+		return
+	if not view.select_resource(resource as Resource):
+		view.reveal_resource(resource as Resource)
+
+
+## Explain: the Manual page that answers the question this failure raises - picking and existence
+## for an empty target, lists for a position that is not there, objects for a name nothing has.
+func _explain_runtime_error() -> void:
+	var page: String = str(_runtime_error_report.get("explain", "")).strip_edges()
+	if page.is_empty():
+		return
+	EventSheets.open_docs(page)
+
+
+## Godot's words: the original message, never hidden and never rewritten - it is what every search
+## and every issue tracker speaks.
+func _show_runtime_error_original() -> void:
+	var original: String = str(_runtime_error_report.get("original", "")).strip_edges()
+	if original.is_empty():
+		return
+	_set_status("%s: %s" % [EventSheetRuntimeErrorWords.GODOT_WORDS_LABEL, original], true)
+
+
+## The strip goes away when the reader dismisses it, and whenever a new run starts - a failure from
+## the last run stamped over this one would be answering a question nobody asked twice.
+func clear_runtime_error() -> void:
+	_runtime_error_report = {}
+	if _runtime_error_strip != null:
+		_runtime_error_strip.visible = false
 
 
 static func _find_event_by_uid(rows: Array, uid: String) -> EventRow:
@@ -2950,6 +3138,9 @@ func update_fired_events(uids: PackedStringArray) -> void:
 	# before it is deduped into the highlight. Counting always; DRAWING only when the reader
 	# ticks View > Row Hit Counts, or hovers one event number.
 	EventSheetTraceHitCounts.note_fired(uids)
+	# Held for the timings message of the same flush, which arrives right after this one and needs
+	# to know WHICH fires its stamps belong to.
+	_last_fired_uids = uids
 	for pane: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if pane != null:
 			pane.set_fired_events(uids)
@@ -3040,9 +3231,14 @@ func _toggle_row_hit_counts(view_popup: PopupMenu) -> void:
 ## again and watch" gesture - reset, trigger the thing, see exactly which rows moved).
 func _reset_row_hit_counts() -> void:
 	EventSheetTraceHitCounts.reset()
+	# The timings are the other half of the same tally: a profile kept from before the reset would
+	# be answering about the run the reader just said they were done with.
+	EventSheetTraceTimings.reset()
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
 			view.queue_redraw()
+	if _debugger_window != null:
+		_debugger_window.refresh()
 	_set_status("Hit counts reset - counting starts again from the next streamed window.")
 
 
@@ -4701,6 +4897,43 @@ func highlight_object_rows(object_label: String) -> void:
 	_apply_lens(wanted)
 
 
+## The Scene dock's "Show events", and the offer a scene selection makes: filter the sheet to one
+## object, without the toggle-off half. Separate from highlight_object_rows for exactly that
+## reason - arriving from another dock, "filter to this" must SET the filter, never clear a filter
+## that happens to already be on that object.
+func filter_events_to_object(object_label: String) -> void:
+	var wanted: String = object_label.strip_edges()
+	if _viewport == null or wanted.is_empty():
+		return
+	_apply_lens(wanted)
+	if _objects_panel != null:
+		_objects_panel.highlight_object(wanted)
+
+
+## ── The Scene dock and the sheet on one selection (the two-way link) ───────────────────────────
+## Built with the dock and torn down with it. The class holds the ping-pong guard; the dock only
+## owns the lifetime and the menu toggle.
+var _scene_link: EventSheetSceneSelectionLink = null
+
+
+func _ensure_scene_link() -> EventSheetSceneSelectionLink:
+	if _scene_link == null:
+		_scene_link = EventSheetSceneSelectionLink.new(self)
+	return _scene_link
+
+
+## View ▸ Follow Scene Selection. Writes the project setting (so the choice outlives the session)
+## and re-ticks the item from what the setting now says, rather than from what this code assumed.
+func _toggle_follow_scene_selection(view_popup: PopupMenu) -> void:
+	var now_on: bool = not EventSheetSceneSelectionLink.follow_enabled()
+	ProjectSettings.set_setting(EventSheetSceneSelectionLink.FOLLOW_SETTING, now_on)
+	ProjectSettings.save()
+	if view_popup != null:
+		view_popup.set_item_checked(view_popup.get_item_index(9801),
+			EventSheetSceneSelectionLink.follow_enabled())
+	_set_status("Follow Scene Selection %s." % ("ON" if now_on else "OFF"))
+
+
 ## Q12 - HOVER previews before a click pins: the object's rows glow while the pointer rests on its
 ## bar entry and forget the moment it leaves, so a reader can sweep the bar without committing to
 ## anything. A preview never touches the filter lens, which is what makes it a preview.
@@ -5200,6 +5433,9 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_refresh_variable_panel()
 	_update_code_panel_highlight()
 	_follow_selection_in_manual()
+	# The Scene dock's half of the two-way link: the node this row is about is selected there (and
+	# in the 2D view), so the two surfaces stay on one selection.
+	_ensure_scene_link().follow_row(_row_data)
 	if _exposed_node != null and _viewport != null:
 		_exposed_node.set_row_context(_active_view().get_selected_ace_resource())
 	_properties_bar.refresh()

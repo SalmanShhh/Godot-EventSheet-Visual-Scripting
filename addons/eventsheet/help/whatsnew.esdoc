@@ -532,6 +532,62 @@ moves, and no emitted GDScript is touched.
   live. Nothing is measured twice: every line is the panel's own measure. The Open Sheets panel
   hovers with the card's first line and the workspace a tab belongs to.
 
+### Added - one debugger, four tabs
+
+- **View ▸ Debugger.** Live Values, the Watch box, the Event Trace and F9 breakpoints were four
+  panels and toggles across two menus; they are now also one window with the four names a reader
+  arrives looking for. **Inspect**: every object this sheet talks about, its running instances, and
+  the picked one's variables - editable straight into the running game - beside its behaviors' own
+  values. **Watch**: the same list the Live Values window keeps, shared rather than duplicated.
+  **Profile**: time per event, busiest first, with each row's share of the run. **Breakpoints**:
+  the F9 rows with enable / disable / jump, and where the run is paused right now. Nothing is drawn
+  that no run has reported - an empty tab says which stream to arm instead of showing zeroes.
+- **The Event Trace now carries times.** A traced compile stamps one microsecond reading beside
+  every fire it records and marks, once per frame, how many fires had happened by the top of that
+  frame. An event's cost is its SELF time: how long it ran before the next event started in the
+  same frame, so a parent is charged only for the part before its first sub-event. The last event
+  of a frame has no successor there, so it is counted but not timed, and reads \"-\" rather than
+  \"0.00\" - the frame ruler is what makes that distinction possible at all. New theme token:
+  `debugger_accent_color`.
+
+### Added - the Scene dock and the sheet share one selection
+
+- **Two-way selection follow.** Picking a node in the Scene dock highlights its entry on the Object
+  bar and offers `Filter events to <node>` on the status line - an offer, never a silent filter.
+  Picking a row on the sheet selects the node that row is about, so the Scene dock and the 2D view
+  land where your eye already is. Each side recognises the echo of a selection it caused, so the
+  two never fight. **Show events** joins Attach Event Sheet and Connect Signal on a node's
+  right-click menu: it opens the node's script as a sheet and filters to it in one gesture. Turn
+  the follow off with **View ▸ Follow Scene Selection** or the new
+  `eventsheets/editor/follow_scene_selection` project setting.
+
+### Added - a runtime error is re-said in the sheet's words
+
+- **\"event 12 · target is empty\", not \"null instance\".** When the running game fails on a line one
+  of your rows emitted, the source map says which row and the row's own reading says what it was
+  trying to do, so the failure is said again as the row said it:
+  `player.gd · event 12 · Enemy ▸ Call Hit: target is empty (nothing was picked before this
+  action)` - on a strip under the canvas and in the Output panel. **Jump to event** lands on the
+  row, **Explain** opens the Manual page behind that kind of failure, and **Godot's words** shows
+  the engine's own message unchanged: it is never hidden, because it is what every search and
+  every issue tracker speaks. The table covers an empty target, a list position that is not there,
+  an action the object does not have, a divide by zero and a name nothing carries; anything else
+  is repeated verbatim rather than guessed at. Pasting an error line into the command palette now
+  re-says it on the row it jumps to, and `EventSheets.report_runtime_error()` opens the same path
+  to any tool. New theme token: `runtime_error_color`.
+
+### Added - the Manual answers a behavior name
+
+- **\"Behaviors, by the name you know\".** A new first page of the Manual, keyed by the behavior
+  names a reader arrives holding rather than by anything in this repo: 8 Direction, Bullet, Turret,
+  Move To, Pin, Wrap, Bound to layout, Rotate, Fade, Flash, Sine, Line of sight, Drag & Drop,
+  Anchor, Solid, Jump-thru, Platform, Pathfinding, Tween, Timer, Persist, No save, Scroll To,
+  Physics, Car, Orbit, Tile movement, Custom movement, Shadow caster, Shadow light. Each row
+  answers twice - what the thing IS here (the shipped pack, linked to its own reference page, or
+  the Godot node that already does the job and needs nothing attached), and what a HAND-WRITTEN
+  version of it reads like on a sheet. Searchable from the one Manual box under the same
+  *glossary* heading the word list uses, at `reference:behaviors` and `reference:behaviors/<name>`.
+
 ### Added - an opened script's PATTERNS read as the events they are
 
 The batches before this one made single statements read as the sheet's sentences. These are the
