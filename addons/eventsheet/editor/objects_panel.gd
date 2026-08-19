@@ -65,6 +65,7 @@ var _scene_name: String = ""
 var _section_folds: Dictionary = {"used": false, "scene": true, "globals": true}
 var _menu: PopupMenu = null
 var _menu_label: String = ""
+var _class_map: Dictionary = {}
 
 
 func _init() -> void:
@@ -104,10 +105,14 @@ func _init() -> void:
 	tree.set_column_expand(1, false)
 	tree.set_column_custom_minimum_width(1, int(EventSheetPalette.scaled_f(58.0)))
 	tree.allow_reselect = true
+	# Without this a right-click selects nothing, and the context menu would open on whatever was
+	# selected last rather than on the entry under the pointer.
+	tree.allow_rmb_select = true
 	tree.item_selected.connect(_on_item_selected)
 	tree.item_activated.connect(_on_item_activated)
 	tree.item_mouse_selected.connect(_on_item_mouse_selected)
 	tree.gui_input.connect(_on_tree_gui_input)
+	tree.item_collapsed.connect(_on_section_collapsed)
 	tree.mouse_exited.connect(func() -> void: object_previewed.emit(""))
 	# The bar hands the canvas a payload and forgets about it; the canvas decides what dropping an
 	# object THERE means (a new event, or an action on the row it landed on).
@@ -331,6 +336,8 @@ func _rebuild_tree() -> void:
 	var scene_path: String = ViewportRowBuilder.scene_using_script(_source_path).get("scene_path", "") \
 		if not _source_path.is_empty() else ""
 	var missing: PackedStringArray = missing_labels(_entries, str(scene_path))
+	# Hoisted: the class map is a read of the whole sheet, and it is the same answer for every entry.
+	_class_map = EventSheetViewportReadingRows.object_class_map(_sheet)
 	var shown: int = 0
 	for section_entry: Variant in sections_for(_entries, _scene_only, _scene_name):
 		var section: Dictionary = section_entry
@@ -382,8 +389,7 @@ func _add_entry_item(parent_item: TreeItem, entry: Dictionary, is_missing: bool)
 	item.set_text(0, ("⚠ %s" % entry_text(entry)) if is_missing else entry_text(entry))
 	item.set_tooltip_text(0, (EventSheetL10n.translate("not in %s") % _scene_name) if is_missing
 		else entry_tooltip(entry))
-	var icon: Texture2D = EventSheetViewportReadingRows.object_icon(
-		entry, EventSheetViewportReadingRows.object_class_map(_sheet), _source_path)
+	var icon: Texture2D = EventSheetViewportReadingRows.object_icon(entry, _class_map, _source_path)
 	if icon != null:
 		item.set_icon(0, icon)
 	var rows: int = int(entry.get("rows", 0))
@@ -401,6 +407,10 @@ func _add_entry_item(parent_item: TreeItem, entry: Dictionary, is_missing: bool)
 ## selection is dropped on the second click - a bar row that stays lit while nothing is filtered
 ## would be a lie about the state of the sheet.
 func _on_item_selected() -> void:
+	# A right-click selects the entry under the pointer before the menu opens, and that selection is
+	# not the reader asking to pin anything - it is them asking what they can do with it.
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		return
 	var label: String = _selected_label()
 	if label.is_empty():
 		return
@@ -428,7 +438,25 @@ func _on_item_mouse_selected(_position: Vector2, mouse_button_index: int) -> voi
 	_menu.popup(Rect2i(Vector2i(get_screen_transform() * get_local_mouse_position()), Vector2i.ZERO))
 
 
+## Folding a section is remembered for the session, so a reader who opens ALSO IN THE SCENE and works
+## through it does not have to open it again on every sheet change.
+func _on_section_collapsed(item: TreeItem) -> void:
+	var metadata: Variant = item.get_metadata(0)
+	if metadata is Dictionary and (metadata as Dictionary).has("section"):
+		_section_folds[str((metadata as Dictionary)["section"])] = item.collapsed
+
+
 func _on_tree_gui_input(event: InputEvent) -> void:
+	# Esc clears the pin. The bar never EDITS the scene, so Delete and the rest are deliberately
+	# nothing at all here.
+	if event is InputEventKey and (event as InputEventKey).pressed \
+			and (event as InputEventKey).keycode == KEY_ESCAPE and not _highlighted.is_empty():
+		var pinned: String = _highlighted
+		_highlighted = ""
+		tree.deselect_all()
+		object_activated.emit(pinned)
+		accept_event()
+		return
 	if not (event is InputEventMouseMotion):
 		return
 	var hovered: TreeItem = tree.get_item_at_position((event as InputEventMouseMotion).position)
