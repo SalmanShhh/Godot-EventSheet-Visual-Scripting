@@ -2691,3 +2691,70 @@ Learn,学ぶ
 Show this page when nothing is open,何も開いていないときにこのページを表示
 Nothing here yet.,まだ何もありません。
 Another event-sheet editor,別のイベントシートエディタ
+Arrange by,並び替え
+Saved Views,保存したビュー
+Save Current View…,現在のビューを保存…
+Forget %s,%s を削除
+File order,ファイル順
+1 event,イベント 1 件
+Reading in file order.,ファイル順で読んでいます。
+Arranged by %s. The file is unchanged.,%s で並び替えました。ファイルは変わりません。
+No saved view by that name.,その名前のビューはありません。
+View: %s,ビュー: %s
+Save View,ビューを保存
+Name this way of reading the sheet…,このシートの読み方に名前を付けます…
+Saved the view %s.,ビュー %s を保存しました。
+A view needs a name.,ビューには名前が必要です。
+Forgot the view %s.,ビュー %s を削除しました。
+Add common events…,よく使うイベントを追加…
+Duplicate events for…,イベントを複製する対象…
+On clicked,クリックされたとき
+On toggled,切り替えられたとき
+On timer,タイマーが切れたとき
+On hit,ヒットしたとき
+On died,死んだとき
+No common events are known for %s.,%s の一般的なイベントは分かりません。
+Added %s.,%s を追加しました。
+Duplicate Events For,イベントを複製する対象
+Name at least one object to duplicate for.,複製する対象を少なくとも一つ指定してください。
+No events name %s.,%s に触れているイベントはありません。
+Duplicated %d event(s).,イベントを %d 件複製しました。
+Show Events in the Scene,シーンにイベントを表示
+Events in the scene: on,シーンのイベント: オン
+Events in the scene: off,シーンのイベント: オフ
+Workspaces,ワークスペース
+No workspaces yet,ワークスペースはまだありません
+Open its sheets,そのシートをまとめて開く
+That scene has no sheets to open.,そのシーンに開けるシートはありません。
+That workspace has nothing left to open.,そのワークスペースには開けるものが残っていません。
+Forgot the workspace %s.,ワークスペース %s を削除しました。
+Workspace %s: %d sheet(s).,ワークスペース %s: シート %d 件。
+Export,書き出し
+Image (PNG)…,画像 (PNG)…
+PDF…,PDF…
+Markdown with figures…,図付き Markdown…
+Open a sheet first.,先にシートを開いてください。
+Rendering the sheet…,シートを描画しています…
+The sheet could not be rendered here.,ここではシートを描画できませんでした。
+Could not write %s.,%s を書き出せませんでした。
+Exported %d page(s) to %s.,%d ページを %s に書き出しました。
+Exported %s with %d figure(s).,%s を図 %d 件付きで書き出しました。
+Exported the sheet to %s.,シートを %s に書き出しました。
+Export the sheet as a PDF,シートを PDF として書き出す
+Export the sheet as an image,シートを画像として書き出す
+Export the sheet as Markdown with figures,シートを図付き Markdown として書き出す
+Health…,健康状態…
+reads as events %d%%,%d%% がイベントとして読める
+%d patterns,パターン %d 件
+%d adoptable,%d 件は置き換え可能
+Doctor %d errors,ドクター: エラー %d 件
+%d notes,注意 %d 件
+tests: none yet,テスト: まだありません
+tests: %d Test Sheets,テスト: テストシート %d 件
+last run green,前回は成功
+last run failed,前回は失敗
+never run,未実行
+unused: nothing,未使用: なし
+unused: 1 thing,未使用: 1 件
+unused: %d things,未使用: %d 件
+Sheet Health,シートの健康状態

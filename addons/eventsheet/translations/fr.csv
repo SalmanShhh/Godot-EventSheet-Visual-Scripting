@@ -2691,3 +2691,70 @@ Learn,Apprendre
 Show this page when nothing is open,Afficher cette page quand rien n'est ouvert
 Nothing here yet.,Rien ici pour l'instant.
 Another event-sheet editor,Un autre éditeur de feuilles d'événements
+Arrange by,Organiser par
+Saved Views,Vues enregistrées
+Save Current View…,Enregistrer la vue actuelle…
+Forget %s,Oublier %s
+File order,Ordre du fichier
+1 event,1 événement
+Reading in file order.,Lecture dans l'ordre du fichier.
+Arranged by %s. The file is unchanged.,Organisé par %s. Le fichier est inchangé.
+No saved view by that name.,Aucune vue enregistrée sous ce nom.
+View: %s,Vue : %s
+Save View,Enregistrer la vue
+Name this way of reading the sheet…,Nommez cette façon de lire la feuille…
+Saved the view %s.,Vue %s enregistrée.
+A view needs a name.,Une vue a besoin d'un nom.
+Forgot the view %s.,Vue %s oubliée.
+Add common events…,Ajouter les événements habituels…
+Duplicate events for…,Dupliquer les événements pour…
+On clicked,Au clic
+On toggled,Au basculement
+On timer,À la fin du minuteur
+On hit,Quand touché
+On died,À la mort
+No common events are known for %s.,Aucun événement habituel connu pour %s.
+Added %s.,%s ajouté.
+Duplicate Events For,Dupliquer les événements pour
+Name at least one object to duplicate for.,Nommez au moins un objet pour lequel dupliquer.
+No events name %s.,Aucun événement ne nomme %s.
+Duplicated %d event(s).,%d événement(s) dupliqué(s).
+Show Events in the Scene,Afficher les événements dans la scène
+Events in the scene: on,Événements dans la scène : activés
+Events in the scene: off,Événements dans la scène : désactivés
+Workspaces,Espaces de travail
+No workspaces yet,Aucun espace de travail pour l'instant
+Open its sheets,Ouvrir ses feuilles
+That scene has no sheets to open.,Cette scène n'a aucune feuille à ouvrir.
+That workspace has nothing left to open.,Cet espace de travail n'a plus rien à ouvrir.
+Forgot the workspace %s.,Espace de travail %s oublié.
+Workspace %s: %d sheet(s).,Espace de travail %s : %d feuille(s).
+Export,Exporter
+Image (PNG)…,Image (PNG)…
+PDF…,PDF…
+Markdown with figures…,Markdown avec figures…
+Open a sheet first.,Ouvrez d'abord une feuille.
+Rendering the sheet…,Rendu de la feuille…
+The sheet could not be rendered here.,La feuille n'a pas pu être rendue ici.
+Could not write %s.,Impossible d'écrire %s.
+Exported %d page(s) to %s.,%d page(s) exportée(s) vers %s.
+Exported %s with %d figure(s).,%s exporté avec %d figure(s).
+Exported the sheet to %s.,Feuille exportée vers %s.
+Export the sheet as a PDF,Exporter la feuille en PDF
+Export the sheet as an image,Exporter la feuille en image
+Export the sheet as Markdown with figures,Exporter la feuille en Markdown avec figures
+Health…,État…
+reads as events %d%%,se lit comme des événements à %d%%
+%d patterns,%d motifs
+%d adoptable,%d adoptables
+Doctor %d errors,Docteur : %d erreurs
+%d notes,%d remarques
+tests: none yet,tests : aucun pour l'instant
+tests: %d Test Sheets,tests : %d feuilles de test
+last run green,dernier passage au vert
+last run failed,dernier passage en échec
+never run,jamais exécutés
+unused: nothing,inutilisé : rien
+unused: 1 thing,inutilisé : 1 chose
+unused: %d things,inutilisé : %d choses
+Sheet Health,État de la feuille

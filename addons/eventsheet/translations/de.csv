@@ -2691,3 +2691,70 @@ Learn,Lernen
 Show this page when nothing is open,"Diese Seite zeigen, wenn nichts geöffnet ist"
 Nothing here yet.,Hier ist noch nichts.
 Another event-sheet editor,Ein anderer Ereignisblatt-Editor
+Arrange by,Anordnen nach
+Saved Views,Gespeicherte Ansichten
+Save Current View…,Aktuelle Ansicht speichern…
+Forget %s,%s vergessen
+File order,Dateireihenfolge
+1 event,1 Ereignis
+Reading in file order.,Wird in Dateireihenfolge gelesen.
+Arranged by %s. The file is unchanged.,Nach %s angeordnet. Die Datei bleibt unverändert.
+No saved view by that name.,Keine gespeicherte Ansicht mit diesem Namen.
+View: %s,Ansicht: %s
+Save View,Ansicht speichern
+Name this way of reading the sheet…,"Benenne diese Art, das Blatt zu lesen…"
+Saved the view %s.,Ansicht %s gespeichert.
+A view needs a name.,Eine Ansicht braucht einen Namen.
+Forgot the view %s.,Ansicht %s vergessen.
+Add common events…,Übliche Ereignisse hinzufügen…
+Duplicate events for…,Ereignisse duplizieren für…
+On clicked,Bei Klick
+On toggled,Bei Umschalten
+On timer,Bei Timer
+On hit,Bei Treffer
+On died,Bei Tod
+No common events are known for %s.,Für %s sind keine üblichen Ereignisse bekannt.
+Added %s.,%s hinzugefügt.
+Duplicate Events For,Ereignisse duplizieren für
+Name at least one object to duplicate for.,"Nenne mindestens ein Objekt, für das dupliziert wird."
+No events name %s.,Keine Ereignisse nennen %s.
+Duplicated %d event(s).,%d Ereignis(se) dupliziert.
+Show Events in the Scene,Ereignisse in der Szene zeigen
+Events in the scene: on,Ereignisse in der Szene: an
+Events in the scene: off,Ereignisse in der Szene: aus
+Workspaces,Arbeitsbereiche
+No workspaces yet,Noch keine Arbeitsbereiche
+Open its sheets,Seine Blätter öffnen
+That scene has no sheets to open.,Diese Szene hat keine Blätter zum Öffnen.
+That workspace has nothing left to open.,In diesem Arbeitsbereich gibt es nichts mehr zu öffnen.
+Forgot the workspace %s.,Arbeitsbereich %s vergessen.
+Workspace %s: %d sheet(s).,Arbeitsbereich %s: %d Blatt/Blätter.
+Export,Exportieren
+Image (PNG)…,Bild (PNG)…
+PDF…,PDF…
+Markdown with figures…,Markdown mit Abbildungen…
+Open a sheet first.,Öffne zuerst ein Blatt.
+Rendering the sheet…,Das Blatt wird gezeichnet…
+The sheet could not be rendered here.,Das Blatt konnte hier nicht gezeichnet werden.
+Could not write %s.,%s konnte nicht geschrieben werden.
+Exported %d page(s) to %s.,%d Seite(n) nach %s exportiert.
+Exported %s with %d figure(s).,%s mit %d Abbildung(en) exportiert.
+Exported the sheet to %s.,Blatt nach %s exportiert.
+Export the sheet as a PDF,Das Blatt als PDF exportieren
+Export the sheet as an image,Das Blatt als Bild exportieren
+Export the sheet as Markdown with figures,Das Blatt als Markdown mit Abbildungen exportieren
+Health…,Zustand…
+reads as events %d%%,liest sich zu %d%% als Ereignisse
+%d patterns,%d Muster
+%d adoptable,%d übernehmbar
+Doctor %d errors,Doktor: %d Fehler
+%d notes,%d Hinweise
+tests: none yet,Tests: noch keine
+tests: %d Test Sheets,Tests: %d Testblätter
+last run green,letzter Lauf grün
+last run failed,letzter Lauf fehlgeschlagen
+never run,nie gelaufen
+unused: nothing,ungenutzt: nichts
+unused: 1 thing,ungenutzt: 1 Sache
+unused: %d things,ungenutzt: %d Sachen
+Sheet Health,Blattzustand

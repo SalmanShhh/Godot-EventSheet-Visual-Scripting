@@ -2691,3 +2691,70 @@ Learn,Aprender
 Show this page when nothing is open,Mostrar esta página cuando no hay nada abierto
 Nothing here yet.,Aquí todavía no hay nada.
 Another event-sheet editor,Otro editor de hojas de eventos
+Arrange by,Ordenar por
+Saved Views,Vistas guardadas
+Save Current View…,Guardar la vista actual…
+Forget %s,Olvidar %s
+File order,Orden del archivo
+1 event,1 evento
+Reading in file order.,Leyendo en el orden del archivo.
+Arranged by %s. The file is unchanged.,Ordenado por %s. El archivo no cambia.
+No saved view by that name.,No hay ninguna vista guardada con ese nombre.
+View: %s,Vista: %s
+Save View,Guardar la vista
+Name this way of reading the sheet…,Da un nombre a esta forma de leer la hoja…
+Saved the view %s.,Vista %s guardada.
+A view needs a name.,Una vista necesita un nombre.
+Forgot the view %s.,Vista %s olvidada.
+Add common events…,Añadir los eventos habituales…
+Duplicate events for…,Duplicar los eventos para…
+On clicked,Al hacer clic
+On toggled,Al alternar
+On timer,Al terminar el temporizador
+On hit,Al recibir un golpe
+On died,Al morir
+No common events are known for %s.,No se conocen eventos habituales para %s.
+Added %s.,Se añadió %s.
+Duplicate Events For,Duplicar los eventos para
+Name at least one object to duplicate for.,Indica al menos un objeto para el que duplicar.
+No events name %s.,Ningún evento menciona %s.
+Duplicated %d event(s).,Se duplicaron %d evento(s).
+Show Events in the Scene,Mostrar los eventos en la escena
+Events in the scene: on,Eventos en la escena: activado
+Events in the scene: off,Eventos en la escena: desactivado
+Workspaces,Espacios de trabajo
+No workspaces yet,Aún no hay espacios de trabajo
+Open its sheets,Abrir sus hojas
+That scene has no sheets to open.,Esa escena no tiene hojas que abrir.
+That workspace has nothing left to open.,Ese espacio de trabajo ya no tiene nada que abrir.
+Forgot the workspace %s.,Espacio de trabajo %s olvidado.
+Workspace %s: %d sheet(s).,Espacio de trabajo %s: %d hoja(s).
+Export,Exportar
+Image (PNG)…,Imagen (PNG)…
+PDF…,PDF…
+Markdown with figures…,Markdown con figuras…
+Open a sheet first.,Abre primero una hoja.
+Rendering the sheet…,Dibujando la hoja…
+The sheet could not be rendered here.,Aquí no se pudo dibujar la hoja.
+Could not write %s.,No se pudo escribir %s.
+Exported %d page(s) to %s.,Se exportaron %d página(s) a %s.
+Exported %s with %d figure(s).,Se exportó %s con %d figura(s).
+Exported the sheet to %s.,Se exportó la hoja a %s.
+Export the sheet as a PDF,Exportar la hoja como PDF
+Export the sheet as an image,Exportar la hoja como imagen
+Export the sheet as Markdown with figures,Exportar la hoja como Markdown con figuras
+Health…,Estado…
+reads as events %d%%,se lee como eventos al %d%%
+%d patterns,%d patrones
+%d adoptable,%d adoptables
+Doctor %d errors,Doctor: %d errores
+%d notes,%d notas
+tests: none yet,pruebas: aún ninguna
+tests: %d Test Sheets,pruebas: %d hojas de prueba
+last run green,última ejecución en verde
+last run failed,la última ejecución falló
+never run,nunca se han ejecutado
+unused: nothing,sin usar: nada
+unused: 1 thing,sin usar: 1 cosa
+unused: %d things,sin usar: %d cosas
+Sheet Health,Estado de la hoja
