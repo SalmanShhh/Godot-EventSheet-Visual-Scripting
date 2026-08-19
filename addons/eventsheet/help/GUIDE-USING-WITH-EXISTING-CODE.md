@@ -1141,6 +1141,8 @@ for, spelled out in Godot's own vocabulary. The reading names them, and the file
   `Create object Enemy on layer FX at spawn (as e)   rotation = angle`, whatever order those lines were
   written in.
 
+<img src="images/opened-script-behaviors.png" alt="A hand-written CharacterBody2D script opened as a sheet: the head lists sight_range, the ray, the drag flag and its grab offset; a tick event reads Drag and Drop is dragging then Follow the cursor keeping the grab offset; a second reads Is overlapping at offset (0, 1) (a solid); and the functions read Return CharacterBody2D has line of sight to t within Sight Range, Start dragging, Drop, Jump-thru Set enabled, Solid Set disabled, Solid On layer 1, Set noise type to Perlin, Set seed to level-1 and Set drop to choose weighted." width="760">
+
 None of this is a guess. Each reading rests on a fact the file *states* - the local really is a
 `RayCast2D`, the boolean really is raised beside the grab offset, the local really was filled from the
 system clock - and with the fact absent every line keeps the ordinary reading it has today. Each event
