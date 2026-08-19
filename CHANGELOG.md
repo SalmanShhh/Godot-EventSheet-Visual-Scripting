@@ -91,6 +91,60 @@ lands in a path that already existed.
   and preview moves to F4. Everything stays rebindable afterwards, and the picker reads the LIVE
   bindings - rebind one key by hand and it honestly says `Godot EventSheets` again.
 
+### Added - WORKING with a sheet: arranging it, starting it, finding it, exporting it
+
+The reading batches made an opened file read as events. These are the things you then DO with that
+sheet, and every one of them is display-only or additive: no reading changes, no byte round-trip
+moves, and no emitted GDScript is touched.
+
+- **The same sheet, four readings of its order.** `View ▸ Arrange by ▾` re-groups the sheet's own
+  events under one header per **Object**, per **Trigger**, or per **Group**, and **File order**
+  gives the untouched reading back. The events array keeps its order, the file is never rewritten,
+  and every event keeps its number - numbers come from the sheet, not from the row list the
+  arrangement re-orders. Headers read in the ROWS' own words (`On created`, `Every tick
+  (physics)`), the breadcrumb names the header you are scrolled inside, and the Outline becomes
+  that arrangement, each entry still jumping to the event it stands for.
+- **A way of reading, named.** `View ▸ Saved Views` keeps an arrangement, the filter and the
+  reading lenses together under a name, and puts all three back in one click. A saved view naming
+  an arrangement a later build does not have reads as file order rather than as nothing.
+- **An object knows the events it usually gets.** Object bar ▸ right-click ▸ **Add common events…**
+  adds the starter set for that object's class: a `CharacterBody2D` gets `On created`, `Every tick
+  (physics)`, `On hit` and `On died`; a `Button` gets `On clicked`; a `Timer` gets `On timer`; an
+  `Area2D` gets `On collision with`; an attached behaviour pack adds its own triggers. Each event
+  arrives with an empty action lane, which is the sheet's own `+ Add action` placeholder. A starter
+  naming a signal the class does not have makes the sheet DECLARE that signal, so the trigger it
+  reads is one the file really has. The sets are derived - a class nobody curated offers its own
+  signals, and a subclass inherits the nearest curated set.
+- **The same events, for another object.** **Duplicate events for…** copies every event that names
+  one object, once per object you list, with the reference swapped on each copy - Replace object in
+  a batch, in one undo step, leaving the originals untouched.
+- **The scene says which of its nodes have events.** `View ▸ Show Events in the Scene` marks every
+  node whose script is a sheet with a small `⌗` and its event count - at the right edge of its
+  Scene-dock row, and beside the node in the 2D editor - with its triggers on hover (`On created ·
+  Every tick · On collision with`). Nodes with no events are unmarked and the whole overlay is off
+  by default. The count is the script's TRIGGERS, because that is what a sheet's top-level events
+  are: a lifecycle or tick handler, and any handler something connects a signal to. A plain
+  function is never counted, and nothing is opened or compiled to answer - a scene of fifty nodes
+  costs a read per script.
+- **A scene opens as one workspace.** Right-click a scene in the FileSystem ▸ **Open its sheets**
+  opens the whole layout (the scene-as-sheet) and every script in it, in the scene's own tree
+  order, as one tab group named after the scene - and remembers it. `Sheet ▸ Workspaces` lists what
+  is remembered, opens one again, or forgets it; tabs stay individually closable and say which
+  group they belong to on hover.
+- **A sheet exports as a picture.** `Sheet ▸ Export ▸ Image (PNG)… / PDF… / Markdown with figures…`
+  writes the CANVAS as it is being read - the current theme, density, arrangement and lenses, with
+  the event numbers on - so an exported sheet and the sheet on screen can never be two readings of
+  one file. The canvas is virtualized, so the whole sheet is captured a screenful at a time and
+  stitched. PDF is that picture split into pages, written by hand with no library (the pixels ride
+  as a Flate-compressed RGB image), and the last page is what was left, never a padded one.
+  Markdown is the plain listing the sheet already writes plus a figure per group.
+- **One card says how a sheet is doing.** `Sheet ▸ Health…`: how much of it reads as events, its
+  patterns and how many of them a shipped behavior could take over, what the Doctor says about THIS
+  sheet, its Test Sheets and how they last went, and how much of it nothing uses. Clicking a line
+  opens the panel that owns it, so the card stays a summary rather than a sixth place where things
+  live. Nothing is measured twice: every line is the panel's own measure. The Open Sheets panel
+  hovers with the card's first line and the workspace a tab belongs to.
+
 ### Added - an opened script's PATTERNS read as the events they are
 
 The batches before this one made single statements read as the sheet's sentences. These are the
