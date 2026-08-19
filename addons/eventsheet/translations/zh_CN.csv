@@ -2312,3 +2312,18 @@ size Y,大小 Y
 position,位置
 Wait for tween to finish,等待补间结束
 %s is not visible here,%s 在这里不可见
+Tween {property} to {value} over {duration}s,将 {property} 在 {duration} 秒内补间到 {value}
+Run now,立即运行
+Reload,重新加载
+Output,输出
+no output yet,暂无输出
+Enable plugin,启用插件
+What this tool printed,该工具打印的内容
+Nothing yet. Press Run now and this fills with what the tool printed.,暂时为空。按下“立即运行”，工具打印的内容会显示在这里。
+Editor Plugin,编辑器插件
+Import Tool,导入工具
+Export Hook,导出钩子
+"Editor Plugin (dock, menu item, object type)",编辑器插件（停靠面板、菜单项、对象类型）
+Import Tool (runs on import),导入工具（导入时运行）
+Export Hook (runs on export),导出钩子（导出时运行）
+Run this editor tool now,立即运行该编辑器工具

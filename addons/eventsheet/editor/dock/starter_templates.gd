@@ -58,6 +58,9 @@ func _build_template_menu_items() -> void:
 	_template_menu.add_item("Custom Resource (data + logic)", 9)
 	_template_menu.add_separator("Editor Tools - run inside the editor")
 	_template_menu.add_item("Editor Tool (one-click chore)", 10)
+	_template_menu.add_item("Editor Plugin (dock, menu item, object type)", 12)
+	_template_menu.add_item("Import Tool (runs on import)", 13)
+	_template_menu.add_item("Export Hook (runs on export)", 14)
 	_project_template_paths = EventSheetTemplates.list_templates()
 	if not _project_template_paths.is_empty():
 		_template_menu.add_separator("Project templates")
@@ -174,6 +177,92 @@ static func _build_editor_tool_starter() -> EventSheetResource:
 	return sheet
 
 
+## R33 - an EDITOR PLUGIN starter. Where the Editor Tool starter above is a chore you press Run on,
+## a plugin is something the editor SWITCHES ON: it arrives with the pair of events that shape says
+## (add the Tools menu item when the plugin is enabled, take it away again when it is disabled) plus
+## the function the menu item calls, so the very first compile is a plugin that already works.
+static func _build_editor_plugin_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "EditorPlugin"
+	sheet.tool_mode = true
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Editor Plugin[/b] - the editor switches this on and off, and while it is on it adds things to the editor itself: a Tools menu item, a dock, an object type, an Inspector button. Everything On plugin enabled adds, On plugin disabled must take away again.\nSheet Type… ▸ Editor Plugin has a tick for each of those, and the Include bar has Enable plugin."
+	sheet.events.append(about)
+	var enabled: EventRow = EventRow.new()
+	enabled.trigger_provider_id = "Core"
+	enabled.trigger_id = "OnPluginEnabled"
+	var add_item: ACEAction = ACEAction.new()
+	add_item.provider_id = "Core"
+	add_item.ace_id = "AddToolsMenuItem"
+	add_item.codegen_template = "add_tool_menu_item({title}, {handler})"
+	add_item.params = {"title": "\"Snap Selection\"", "handler": "_run_tool"}
+	enabled.actions.append(add_item)
+	sheet.events.append(enabled)
+	var disabled: EventRow = EventRow.new()
+	disabled.trigger_provider_id = "Core"
+	disabled.trigger_id = "OnPluginDisabled"
+	var remove_item: ACEAction = ACEAction.new()
+	remove_item.provider_id = "Core"
+	remove_item.ace_id = "RemoveToolsMenuItem"
+	remove_item.codegen_template = "remove_tool_menu_item({title})"
+	remove_item.params = {"title": "\"Snap Selection\""}
+	disabled.actions.append(remove_item)
+	sheet.events.append(disabled)
+	var run_tool: EventFunction = EventFunction.new()
+	run_tool.function_name = "_run_tool"
+	var run_body: RawCodeRow = RawCodeRow.new()
+	run_body.code = "for node: Node in EditorInterface.get_selection().get_selected_nodes():\n\tif node is Node2D:\n\t\t(node as Node2D).position = (node as Node2D).position.snapped(Vector2(16.0, 16.0))"
+	run_tool.events.append(run_body)
+	sheet.functions.append(run_tool)
+	return sheet
+
+
+## R33 - an IMPORT TOOL starter. One On File Imported event: the paths Godot just brought in arrive
+## as `paths`, and the body only reports what landed - a first tool should never silently rewrite a
+## designer's files, so the shape is "look at what arrived" and the editing is left to the reader.
+static func _build_import_tool_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "EditorScript"
+	sheet.tool_mode = true
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Import Tool[/b] - these events run just after Godot finishes importing files, with the paths that landed in [code]paths[/code]. Great for checking a texture's import settings, renaming what was dropped in, or keeping a manifest up to date.\nIt never runs in the game: the editor calls it, and an exported build simply never does."
+	sheet.events.append(about)
+	var imported: EventRow = EventRow.new()
+	imported.trigger_provider_id = "Core"
+	imported.trigger_id = "OnFileImported"
+	var body: RawCodeRow = RawCodeRow.new()
+	body.code = "for path: String in paths:\n\tif path.get_extension() == \"png\":\n\t\tprint(\"Imported image: %s\" % path)"
+	imported.actions.append(body)
+	sheet.events.append(imported)
+	return sheet
+
+
+## R33 - an EXPORT HOOK starter. The shipped On Project Export trigger with the smallest honest bake
+## step: write the version stamp, and only outside a debug build, so the two facts the exporter hands
+## a hook (`is_debug`, `features`) are both modelled the first time a reader sees the event.
+static func _build_export_hook_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "EditorScript"
+	sheet.tool_mode = true
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Export Hook[/b] - these events run as a project export begins, before the files are written. The place to stamp a build number, bake a data file, or strip debug content.\nKeep it synchronous: an export does not wait, so anything after an [code]await[/code] may miss the build."
+	sheet.events.append(about)
+	var exporting: EventRow = EventRow.new()
+	exporting.trigger_provider_id = "Core"
+	exporting.trigger_id = "OnProjectExport"
+	var not_debug: ACECondition = ACECondition.new()
+	not_debug.provider_id = "Core"
+	not_debug.ace_id = "ExportIsDebug"
+	not_debug.codegen_template = "is_debug"
+	not_debug.negated = true
+	exporting.conditions.append(not_debug)
+	var stamp: RawCodeRow = RawCodeRow.new()
+	stamp.code = "var config: ConfigFile = ConfigFile.new()\nconfig.set_value(\"build\", \"version\", ProjectSettings.get_setting(\"application/config/version\", \"0.0.0\"))\nconfig.save(\"res://build_stamp.cfg\")"
+	exporting.actions.append(stamp)
+	sheet.events.append(exporting)
+	return sheet
+
+
 ## A PLATFORMER starter: ui_left/ui_right run, ui_accept jumps. The classic first sheet.
 static func _build_platformer_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -251,6 +340,9 @@ static func build_starter(template_id: int) -> EventSheetResource:
 		9: return _build_custom_resource_starter()
 		10: return _build_editor_tool_starter()
 		11: return _build_system_starter()
+		12: return _build_editor_plugin_starter()
+		13: return _build_import_tool_starter()
+		14: return _build_export_hook_starter()
 		_: return EventSheetResource.new()  # 0 Blank (and any other id) -> a minimal editable sheet
 
 
@@ -265,6 +357,9 @@ static func create_new_starters() -> Array[Dictionary]:
 		{"id": 8, "label": "Behavior Component"},
 		{"id": 9, "label": "Custom Resource"},
 		{"id": 10, "label": "Editor Tool"},
+		{"id": 12, "label": "Editor Plugin"},
+		{"id": 13, "label": "Import Tool"},
+		{"id": 14, "label": "Export Hook"},
 	]
 	# Extension starters (EventSheets.register_starter) append after the built-ins, ids 1000+.
 	var registered: Array[Dictionary] = EventSheets.registered_starters()
@@ -304,6 +399,12 @@ func _new_sheet_from_template(template_id: int) -> void:
 			sheet = _build_editor_tool_starter()
 		11:
 			sheet = _build_system_starter()
+		12:
+			sheet = _build_editor_plugin_starter()
+		13:
+			sheet = _build_import_tool_starter()
+		14:
+			sheet = _build_export_hook_starter()
 		6:
 			sheet.host_class = "CharacterBody3D"
 			var note6: CommentRow = CommentRow.new()

@@ -76,8 +76,11 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 		# Test preset: a plain Node script whose job is asserting. It forces its host like Autoload
 		# does, and the compiler adds the test_started signal On Test Start hangs off.
 		_dock._current_sheet.test_mode = type_index == 6
-		# Editor Tool preset: an EditorScript with @tool - pair with On Editor Run.
-		_dock._current_sheet.tool_mode = tool_enabled or type_index == 3
+		# Editor Tool preset: an EditorScript with @tool - pair with On Editor Run. R33 added three more
+		# tool types (Editor plugin / Import tool / Export hook); every one of them is a @tool script,
+		# and the ONE table below says which host each is forced to, so the dialog's preview line and
+		# this apply can never disagree about what a type ships as.
+		_dock._current_sheet.tool_mode = tool_enabled or EventSheetSheetTypeDialog.TOOL_TYPE_HOSTS.has(type_index)
 		_dock._current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
 		_dock._current_sheet.custom_class_icon = icon_path.strip_edges() if type_index != 0 else ""
 		# Family rides with the named-type identity: a plain sheet has no class to form a group from, so
@@ -109,8 +112,8 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 			# A test runs as a node in a tree; the host row is hidden, so the field's stale text
 			# must not slip through here the way it must not for Autoload above.
 			_dock._current_sheet.host_class = "Node"
-		elif type_index == 3:
-			_dock._current_sheet.host_class = "EditorScript"
+		elif EventSheetSheetTypeDialog.TOOL_TYPE_HOSTS.has(type_index):
+			_dock._current_sheet.host_class = str(EventSheetSheetTypeDialog.TOOL_TYPE_HOSTS[type_index])
 		elif type_index == 5:
 			# Custom Resource: the host must BE a data-asset class. Keep the user's Resource
 			# subclass (AudioStream, a project class typed by hand); anything node-ish falls

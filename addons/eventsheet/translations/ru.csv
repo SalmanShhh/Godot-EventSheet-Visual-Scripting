@@ -2312,3 +2312,18 @@ size Y,размер Y
 position,позиция
 Wait for tween to finish,Ждать окончания твина
 %s is not visible here,%s здесь не виден
+Tween {property} to {value} over {duration}s,Плавно менять {property} до {value} за {duration}с
+Run now,Запустить сейчас
+Reload,Перезагрузить
+Output,Вывод
+no output yet,пока нет вывода
+Enable plugin,Включить плагин
+What this tool printed,Что напечатал этот инструмент
+Nothing yet. Press Run now and this fills with what the tool printed.,"Пока пусто. Нажмите «Запустить сейчас», и здесь появится вывод инструмента."
+Editor Plugin,Плагин редактора
+Import Tool,Инструмент импорта
+Export Hook,Перехват экспорта
+"Editor Plugin (dock, menu item, object type)","Плагин редактора (панель, пункт меню, тип объекта)"
+Import Tool (runs on import),Инструмент импорта (запускается при импорте)
+Export Hook (runs on export),Перехват экспорта (запускается при экспорте)
+Run this editor tool now,Запустить этот инструмент редактора

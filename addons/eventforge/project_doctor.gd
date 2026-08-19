@@ -644,6 +644,14 @@ static func check_editor_tool_safety(sheet_paths: PackedStringArray, findings: A
 		if output.contains("get_tree().get_nodes_in_group(") or output.contains("get_tree().call_group("):
 			_add(findings, "info", "editor-tool-scope", sheet_path,
 				"This editor tool reaches for nodes through get_tree(), which in the editor is the editor's own tree and not the layout you have open. Walk Editor.OpenLayout (the edited scene root) instead, or the tool will find nothing - or the wrong thing.")
+		# 1b. R33 - the same mistake one step subtler, and the one every first tool makes. A tool that
+		# CHANGES the scene while addressing nodes by path is addressing them against itself: an
+		# EditorScript or an EditorPlugin is not in the scene you have open, so `get_node("Player")`
+		# resolves in the editor's own tree (or nowhere at all) and the edit lands outside the layout.
+		# Reaching the edited scene root anywhere in the file is the opt-out, because that IS the fix.
+		if _touches_nodes_outside_open_layout(output):
+			_add(findings, "info", "editor-tool-outside-layout", sheet_path,
+				"This editor tool changes nodes it looked up by path, but never starts from the layout you have open - so in the editor those paths resolve against the editor itself and the change lands outside your scene (or nowhere). Start from Editor.OpenLayout (the edited scene root) and walk down from there.")
 		# 2. Destroying things while editing. A queue_free in the editor deletes from the OPEN scene,
 		# and without an undo step the only way back is to close the scene without saving.
 		if output.contains("queue_free()") and not output.contains("create_action("):
@@ -653,6 +661,23 @@ static func check_editor_tool_safety(sheet_paths: PackedStringArray, findings: A
 		if _ticks_without_editor_guard(output):
 			_add(findings, "info", "editor-tool-tick", sheet_path,
 				"This tool runs every tick in the editor, so it is running right now while you edit. Add a Preview in editor toggle - an exported true/false plus a Stop event when the sheet is in the editor and the toggle is off - so you can switch it off.")
+
+
+## R33. True when a compiled @tool script MUTATES the scene and reaches its nodes by path without
+## ever anchoring on the edited scene root. Both halves are required: looking things up by path is
+## perfectly fine in a tool that only reads, and mutating is fine once the walk starts from the open
+## layout - it is the combination that silently edits the wrong tree.
+static func _touches_nodes_outside_open_layout(output: String) -> bool:
+	if output.contains("get_edited_scene_root("):
+		return false
+	var mutates: bool = false
+	for mutator: String in _SCENE_MUTATORS:
+		if output.contains(mutator):
+			mutates = true
+			break
+	if not mutates:
+		return false
+	return output.contains("get_node(") or output.contains("get_node_or_null(")
 
 
 ## R32. True when a compiled @tool script has a per-frame handler and NO editor guard in it. The guard

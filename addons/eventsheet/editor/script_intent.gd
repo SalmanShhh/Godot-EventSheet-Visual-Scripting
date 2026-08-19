@@ -16,6 +16,7 @@ enum Intent {
 	EDITOR_TOOL,
 	CUSTOM_RESOURCE,
 	TEST,
+	EDITOR_PLUGIN,
 }
 
 
@@ -32,6 +33,11 @@ static func of_sheet(sheet: EventSheetResource) -> Intent:
 		return Intent.BEHAVIOUR
 	if sheet.tool_mode and sheet.host_class.strip_edges() == "EditorScript":
 		return Intent.EDITOR_TOOL
+	# R33. A @tool sheet hosted on EditorPlugin is not a chore you run - it is a plugin the editor
+	# switches on, which is a different set of events (enabled / disabled / dock / menu item) and a
+	# different Include bar. Checked after EditorScript so the two tool intents never overlap.
+	if sheet.tool_mode and sheet.host_class.strip_edges() == "EditorPlugin":
+		return Intent.EDITOR_PLUGIN
 	if is_resource_host(sheet.host_class):
 		return Intent.CUSTOM_RESOURCE
 	if not sheet.custom_class_name.strip_edges().is_empty():
@@ -59,6 +65,8 @@ static func display(intent: Intent) -> Dictionary:
 			return {"label": "Autoload", "glyph": "◎"}
 		Intent.EDITOR_TOOL:
 			return {"label": "Editor Tool", "glyph": "⚒"}
+		Intent.EDITOR_PLUGIN:
+			return {"label": "Editor Plugin", "glyph": "⚒"}
 		Intent.CUSTOM_RESOURCE:
 			return {"label": "Custom Resource", "glyph": "▣"}
 		Intent.CUSTOM_NODE:
@@ -101,6 +109,12 @@ static func empty_sheet_advice(sheet: EventSheetResource) -> Dictionary:
 				"heading": "Empty editor tool",
 				"primary": "Add an On Editor Run event - its actions execute when you run this script from the editor (File > Run).",
 				"tip": "Tip: great for batch renames, scene checks, and one-click project chores.",
+			}
+		Intent.EDITOR_PLUGIN:
+			return {
+				"heading": "Empty editor plugin",
+				"primary": "Add an On Plugin Enabled event - its actions run the moment the plugin is switched on, which is where a dock, a Tools menu item or an object type is added.",
+				"tip": "Tip: undo each of them in On Plugin Disabled, or the editor keeps a dock nobody owns.",
 			}
 		Intent.TEST:
 			return {

@@ -57,6 +57,35 @@
   `Tween {property} to {value} in {duration} seconds`, the same words the typed line reads.
 - Display only: the file keeps every line it had, and nothing here is emitted.
 
+### Added - the rest of the editor-tool family, and a Run button where you write the tool
+
+- **Sheet Type… ▸ Editor Plugin / Import Tool / Export Hook.** The dialog already knew *Editor
+  Tool* - the one-click chore you press Run on. It now knows the other three shapes a tool takes,
+  and each arrives as itself. **Editor Plugin** ships as an `EditorPlugin` with a tick each for **a
+  dock**, **a Tools menu item**, **a custom object type** and **an Inspector button**: tick what you
+  want and the sheet arrives with that pair of events already written - added when the plugin is
+  enabled, taken away again when it is disabled - so nothing is left half-registered. **Import Tool**
+  arrives with **On File Imported**, and **Export Hook** with the shipped **On Project Export**. All
+  four are in the New Sheet ▾ menu and in FileSystem ▸ Create New ▸ Event Sheet too.
+- **On File Imported.** A new trigger: Godot finishes importing, and the paths that landed arrive as
+  `paths` - the place to rename what a designer dropped in, check an atlas's import settings, or keep
+  a manifest current. It is built exactly like the export bake step, as a plain named function the
+  editor calls (`_on_files_imported`), which is also why an opened tool reads it straight back as
+  this event instead of stranding the handler as a block of code.
+- **Run now / Reload / Output / Enable plugin, on the tool's own Include bar.** A tool sheet is the
+  one sheet whose "play it" gesture is not Run Scene: an editor script is run from the script
+  editor's File ▸ Run and a plugin has to be ticked in Project Settings, both a room away from the
+  sheet you just wrote. **▶ Run now** (Ctrl+Shift+X) compiles and runs it right there; **↻ Reload**
+  re-reads the script and re-registers a live plugin without toggling anything in Project Settings;
+  **Output ▾** is the editor's Output filtered to what this tool printed on its last run; and
+  **Enable plugin** writes the `plugin.cfg` beside the compiled script and switches the plugin on, so
+  a plugin sheet is never a thing you have to go and finish somewhere else.
+- **Doctor: "this tool changes nodes outside the layout you have open".** The subtlest first-tool
+  mistake, and now its own finding: a tool that edits nodes it reached by path without ever starting
+  from the edited scene root is resolving those paths against the editor itself, so the change lands
+  outside your scene - or nowhere. Reading by path is left alone; so is any tool that anchors on the
+  open layout.
+
 ### Added - an object's variables are a table you edit, not a list you read
 
 - **Instance variables are edited where they are read.** Click an object's name on a row (or select

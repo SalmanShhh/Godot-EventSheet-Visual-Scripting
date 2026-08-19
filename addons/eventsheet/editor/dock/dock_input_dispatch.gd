@@ -280,6 +280,7 @@ func unhandled_key_input(event: InputEvent) -> void:
 		["invert_condition", true, _dock._on_invert_condition_key],
 		["replace_ace", true, _dock._on_replace_ace_key],
 		["project_search", false, _dock._open_project_find],
+		["run_editor_tool", false, _dock._editor_tool_bar.run_now],
 		["history_back", true, _dock._navigate.go_back],
 		["history_forward", true, _dock._navigate.go_forward],
 	]:

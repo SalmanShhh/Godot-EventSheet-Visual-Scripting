@@ -2312,3 +2312,18 @@ size Y,サイズ Y
 position,位置
 Wait for tween to finish,トゥイーンの終了を待つ
 %s is not visible here,%s はここでは見えません
+Tween {property} to {value} over {duration}s,{property} を {value} へ {duration}秒でトゥイーン
+Run now,今すぐ実行
+Reload,再読み込み
+Output,出力
+no output yet,まだ出力なし
+Enable plugin,プラグインを有効化
+What this tool printed,このツールが出力した内容
+Nothing yet. Press Run now and this fills with what the tool printed.,まだ何もありません。「今すぐ実行」を押すと、ツールの出力がここに表示されます。
+Editor Plugin,エディタープラグイン
+Import Tool,インポートツール
+Export Hook,エクスポートフック
+"Editor Plugin (dock, menu item, object type)",エディタープラグイン（ドック・メニュー項目・オブジェクト型）
+Import Tool (runs on import),インポートツール（インポート時に実行）
+Export Hook (runs on export),エクスポートフック（エクスポート時に実行）
+Run this editor tool now,このエディターツールを今すぐ実行

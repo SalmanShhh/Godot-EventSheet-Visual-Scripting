@@ -73,6 +73,32 @@ That is the whole loop: edit rows, save, File > Run, read the Output panel. Ever
 
 **Editor-only verbs stay in the editor.** The Editor Tools actions call `EditorInterface`, which only exists in the editor process. Keep them in Tool sheets; a gameplay sheet that needs to know where it is running can use the **Is In Editor** condition (`Engine.is_editor_hint()`) as a guard.
 
+### Run it from the sheet - the tool's own Include bar
+
+You do not have to leave the sheet to run a tool. A tool sheet's Include bar carries its own buttons, and they are the whole loop:
+
+| Button | What it does |
+| --- | --- |
+| **▶ Run now** | Compiles the sheet and calls `_run()` - the same entry point File > Run uses. The shortcut is **Ctrl+Shift+X**, rebindable under Tools ▸ Keyboard Shortcuts. |
+| **↻ Reload** | Re-reads the compiled script from disk. For a plugin that is already switched on, it also re-registers the plugin, so a change takes effect without toggling it off and on in Project Settings. |
+| **Output ▾** | The editor's Output panel, filtered to what this tool printed on its last Run now. It counts the lines, so the button itself tells you whether anything happened. |
+| **Enable plugin** | Only on an Editor Plugin sheet: writes the `plugin.cfg` Godot needs beside the compiled script and switches the plugin on. Pressing it twice does nothing the second time. |
+
+### The four tool types
+
+**Sheet Type…** offers four shapes, and each sheet arrives with the events its shape needs:
+
+| Type | Ships as | Runs when |
+| --- | --- | --- |
+| **Editor Tool** | `@tool extends EditorScript` | You press Run now (or File > Run). The one-click chore. |
+| **Editor Plugin** | `@tool extends EditorPlugin` | The editor switches it on. Tick **a dock**, **a Tools menu item**, **a custom object type** or **an Inspector button** in the dialog and the sheet arrives with each one added in **On Plugin Enabled** and removed again in **On Plugin Disabled**. |
+| **Import Tool** | `@tool extends EditorScript` | Godot finishes importing files. The paths that landed arrive as `paths` in **On File Imported**. |
+| **Export Hook** | `@tool extends EditorScript` | A project export begins, in **On Project Export**, with `is_debug` and the preset's `features`. |
+
+The two import/export types compile to a plain named function the editor calls (`_on_files_imported`, `_on_project_export`) rather than a signal connection. That is deliberate: a plain function has zero plugin dependency, and it is what lets an opened tool read back as the event that wrote it.
+
+**A plugin lives in its own folder.** Save an Editor Plugin sheet under `res://addons/<your_plugin>/` before pressing Enable plugin - a Godot plugin *is* a folder holding a script and a `plugin.cfg`, and Enable plugin writes the second half for you.
+
 ---
 
 ## 4. The vocabulary - Editor Tools ACEs

@@ -38,6 +38,7 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _exit_tree() -> void:": "OnExitTree",
 	"func _run() -> void:": "OnEditorRun",
 	"func _on_project_export(is_debug: bool, features: PackedStringArray) -> void:": "OnProjectExport",
+	"func _on_files_imported(paths: PackedStringArray) -> void:": "OnFileImported",
 	# R30 / R34. The editor's own callbacks. An opened plugin or gizmo script is one of the least
 	# readable files there is until these read as what the editor calls them for: an object was
 	# selected, the 2D overlay is being painted, input landed in the viewport, a gizmo is redrawing.

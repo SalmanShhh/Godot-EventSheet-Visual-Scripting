@@ -48,6 +48,9 @@ signal empty_space_double_clicked
 signal template_menu_requested
 ## Ctrl+Click on a cell the dock can resolve to a definition (see navigation_probe below).
 signal navigate_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
+## R33. A button on a tool sheet's Include bar was pressed (Run now / Reload / Output / Enable
+## plugin). The viewport never runs anything itself - it says which button, and the dock acts.
+signal editor_tool_action_requested(kind: String)
 signal drag_status_requested(message: String, is_error: bool)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 ## Emitted when a comment needs the dialog editor (multiline comment rows and action-cell

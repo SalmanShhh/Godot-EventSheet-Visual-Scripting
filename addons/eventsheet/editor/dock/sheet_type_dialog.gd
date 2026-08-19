@@ -30,6 +30,8 @@ var _sheet_type_includes_edit: LineEdit = null
 var _sheet_type_uses_edit: LineEdit = null
 var _sheet_type_requires_edit: LineEdit = null
 var _sheet_type_autoload_edit: LineEdit = null
+var _plugin_capabilities_box: VBoxContainer = null
+var _plugin_capability_checks: Dictionary = {}
 var _identity_card: PanelContainer = null
 var _ships_as: Label = null
 var _more_toggle: Button = null
@@ -50,6 +52,32 @@ const TYPE_HINTS: Array[String] = [
 	"One always-on instance the whole game can call by name.",
 	"A data asset type: each saved file of it is edited in the Inspector.",
 	"Claims about your game that a runner checks and reports pass/fail on.",
+	# R33. The three tool types that are not "a chore you press Run on". They share the Editor Tools
+	# vocabulary with index 3 and differ only in WHEN they run, which is what each line says first.
+	"A plugin the editor switches on: it adds a dock, a Tools menu item, an object type.",
+	"Runs when files are imported - fix up or check what just landed in the project.",
+	"Runs when the project is exported - stamp a build, bake a file, strip debug content.",
+]
+
+## The tool types whose host the sheet does not get to choose, and what each is forced to. Index 3
+## (Editor Tool) is here too: one table, so the dialog's preview line and the apply path cannot drift.
+## An Import tool and an Export hook are both EditorScripts - a plain named handler the editor calls -
+## while an Editor plugin is the engine's own EditorPlugin node.
+const TOOL_TYPE_HOSTS: Dictionary = {
+	3: "EditorScript",
+	7: "EditorPlugin",
+	8: "EditorScript",
+	9: "EditorScript",
+}
+
+## What ticking each Editor-plugin capability seeds into the sheet: the trigger the editor calls, the
+## action that adds the thing, and the action that takes it away again. Keyed by the checkbox order
+## the mockup fixed (dock, Tools menu item, custom object type, Inspector button).
+const PLUGIN_CAPABILITIES: Array[Dictionary] = [
+	{"key": "dock", "label": "a dock", "add": "AddEditorDock", "remove": "RemoveEditorDock"},
+	{"key": "menu_item", "label": "a Tools menu item", "add": "AddToolsMenuItem", "remove": "RemoveToolsMenuItem"},
+	{"key": "object_type", "label": "a custom object type", "add": "AddEditorObjectType", "remove": "RemoveEditorObjectType"},
+	{"key": "inspector", "label": "an Inspector button", "add": "AddEditorInspectorPlugin", "remove": "RemoveEditorInspectorPlugin"},
 ]
 
 ## The curated "what does this sheet control?" shortlist for the host Choose menu - friendly words
@@ -76,7 +104,9 @@ func open() -> void:
 	_ensure_sheet_type_dialog()
 	match EventSheetScriptIntent.of_sheet(_dock._current_sheet):
 		EventSheetScriptIntent.Intent.EDITOR_TOOL:
-			_sheet_type_option.select(3)
+			_sheet_type_option.select(editor_script_type_index(_dock._current_sheet))
+		EventSheetScriptIntent.Intent.EDITOR_PLUGIN:
+			_sheet_type_option.select(7)
 		EventSheetScriptIntent.Intent.BEHAVIOUR:
 			_sheet_type_option.select(2)
 		EventSheetScriptIntent.Intent.AUTOLOAD:
@@ -100,6 +130,8 @@ func open() -> void:
 	_sheet_type_uses_edit.text = ", ".join(PackedStringArray(_dock._current_sheet.uses_addons))
 	_sheet_type_requires_edit.text = ", ".join(PackedStringArray(_dock._current_sheet.requires_behaviors))
 	_sheet_type_autoload_edit.text = _dock._current_sheet.autoload_name
+	for key: String in _plugin_capability_checks:
+		(_plugin_capability_checks[key] as CheckBox).button_pressed = sheet_has_capability(_dock._current_sheet, key)
 	# Collapse the power fields on every open, so the first read is always the short form.
 	_set_more_expanded(false)
 	_refresh_type_ui()
@@ -114,6 +146,9 @@ static func field_visibility(type_index: int) -> Dictionary:
 	# A Test sheet is not a type anyone instantiates by name - it is a script a runner starts - so it
 	# hides the class-name/icon pair a Create Node entry needs while keeping the description (what
 	# this test covers) and forcing its own host, like Editor Tool and Autoload do.
+	# R33. The four tool types (3 / 7 / 8 / 9) force their own host, so the host row hides for them the
+	# way it does for Autoload and Test; the Editor-plugin capability ticks are the one row only index
+	# 7 shows, because they are the only choice an EditorPlugin sheet makes that a script cannot.
 	return {
 		"name": type_index != 0 and type_index != 6,
 		"icon": type_index != 0 and type_index != 6,
@@ -121,6 +156,7 @@ static func field_visibility(type_index: int) -> Dictionary:
 		"host": type_index in [0, 1, 2, 5],
 		"family": type_index in [1, 2],
 		"autoload": type_index == 4,
+		"plugin_capabilities": type_index == 7,
 	}
 
 
@@ -140,10 +176,10 @@ static func identity_preview(type_index: int, class_name_text: String, host_text
 		if class_name_value != own_class_name and _class_is_known(class_name_value):
 			return "x \"%s\" is already a class name - pick another." % class_name_value
 	var effective_host: String = host_value
-	if type_index == 6:
+	if TOOL_TYPE_HOSTS.has(type_index):
+		effective_host = str(TOOL_TYPE_HOSTS[type_index])
+	elif type_index == 6:
 		effective_host = "Node"
-	elif type_index == 3:
-		effective_host = "EditorScript"
 	elif type_index == 4:
 		effective_host = "Node"
 	elif type_index == 5 and not EventSheetScriptIntent.is_resource_host(effective_host):
@@ -156,6 +192,46 @@ static func identity_preview(type_index: int, class_name_text: String, host_text
 	if type_index == 4 and not autoload_name.strip_edges().is_empty():
 		preview += "  -  autoload \"%s\"" % autoload_name.strip_edges()
 	return "Ships as:  %s" % preview
+
+
+## R33. Which of the three EditorScript type indices a sheet already IS. All three compile to the
+## same `@tool extends EditorScript`; what tells them apart is the moment the editor calls them, so
+## the trigger the sheet carries is the honest answer. A tool with neither is the plain Editor Tool
+## (index 3) - the one you press Run on. Static + value-driven so a test pins it without a dialog.
+static func editor_script_type_index(sheet: EventSheetResource) -> int:
+	if sheet == null:
+		return 3
+	for entry: Variant in sheet.events:
+		var event: EventRow = entry as EventRow
+		if event == null:
+			continue
+		match event.trigger_id:
+			"OnFileImported":
+				return 8
+			"OnProjectExport":
+				return 9
+	return 3
+
+
+## True when the sheet already carries the ADD action for an Editor-plugin capability, so reopening
+## the Sheet Type dialog shows the ticks the sheet actually has and OK never seeds a second copy.
+static func sheet_has_capability(sheet: EventSheetResource, capability_key: String) -> bool:
+	if sheet == null:
+		return false
+	var add_id: String = ""
+	for capability: Dictionary in PLUGIN_CAPABILITIES:
+		if str(capability["key"]) == capability_key:
+			add_id = str(capability["add"])
+	if add_id.is_empty():
+		return false
+	for entry: Variant in sheet.events:
+		var event: EventRow = entry as EventRow
+		if event == null:
+			continue
+		for action: Variant in event.actions:
+			if action is ACEAction and (action as ACEAction).ace_id == add_id:
+				return true
+	return false
 
 
 ## True when the name is an engine class OR a project class_name (user scripts register globally).
@@ -253,6 +329,11 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_option.add_item("Autoload (always-on singleton)")  # extends Node; registered project-wide
 	_sheet_type_option.add_item("Custom Resource (data asset)")  # extends Resource; each .tres is designer-editable
 	_sheet_type_option.add_item("Test (asserts + verdict)")  # extends Node + signal test_started; run headlessly
+	# R33 - the rest of the tool family. Appended rather than filed next to index 3 because a type
+	# index is what a saved sheet round-trips through: renumbering the list would retype every sheet.
+	_sheet_type_option.add_item("Editor Plugin (dock, menu item, object type)")  # extends EditorPlugin
+	_sheet_type_option.add_item("Import Tool (runs on import)")  # EditorScript + On File Imported
+	_sheet_type_option.add_item("Export Hook (runs on export)")  # EditorScript + On Project Export
 	_sheet_type_option.item_selected.connect(func(_index: int) -> void: _refresh_type_ui())
 	form.add_child(_sheet_type_option)
 	_type_hint = EventSheetPopupUI.hint_label(TYPE_HINTS[0], 440.0)
@@ -296,6 +377,19 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_family_check = CheckBox.new()
 	_sheet_type_family_check.text = "Family - one rule can target every instance at once"
 	ident_box.add_child(_sheet_type_family_check)
+	# R33. What an Editor plugin ADDS to the editor. Ticking a box is the whole authoring gesture: on
+	# OK the sheet arrives with the pair of events that capability needs (add it when the plugin is
+	# enabled, take it away again when it is disabled). Seeding is additive and idempotent - a box
+	# whose actions are already on the sheet writes nothing, so reopening the dialog is safe.
+	_plugin_capabilities_box = VBoxContainer.new()
+	_plugin_capabilities_box.add_child(EventSheetPopupUI.hint_label(
+		"What this plugin adds to the editor. Each tick arrives as a pair of events: added when the plugin is enabled, removed when it is disabled.", 440.0))
+	for capability: Dictionary in PLUGIN_CAPABILITIES:
+		var check: CheckBox = CheckBox.new()
+		check.text = str(capability["label"])
+		_plugin_capabilities_box.add_child(check)
+		_plugin_capability_checks[str(capability["key"])] = check
+	ident_box.add_child(_plugin_capabilities_box)
 	# The live compiled-identity line: `class_name X extends Y`, or the first validation problem.
 	_ships_as = EventSheetPopupUI.hint_label("", 440.0)
 	ident_box.add_child(_ships_as)
@@ -341,6 +435,7 @@ func _refresh_type_ui() -> void:
 	_sheet_type_host_edit.get_parent().visible = bool(shown["host"])
 	_sheet_type_autoload_edit.get_parent().visible = bool(shown["autoload"])
 	_sheet_type_family_check.visible = bool(shown["family"])
+	_plugin_capabilities_box.visible = bool(shown["plugin_capabilities"])
 	match type_index:
 		2:
 			_host_label.text = "Acts on (parent)"
@@ -498,3 +593,60 @@ func _on_sheet_type_confirmed() -> void:
 		_sheet_type_description_edit.text,
 		_sheet_type_family_check.button_pressed
 	)
+	if _sheet_type_option.selected == 7:
+		_seed_plugin_capabilities()
+
+
+## Appends the events each newly-ticked Editor-plugin capability needs. Runs AFTER the type has been
+## applied, and re-reads _current_sheet rather than holding a reference across that edit: the undo
+## funnel commits by replacing resources with snapshot duplicates, so the sheet object from before is
+## already stale. Only capabilities the sheet does not have are written, so OK is safe to press twice.
+func _seed_plugin_capabilities() -> void:
+	var wanted: Array[Dictionary] = []
+	for capability: Dictionary in PLUGIN_CAPABILITIES:
+		var check: CheckBox = _plugin_capability_checks.get(str(capability["key"])) as CheckBox
+		if check != null and check.button_pressed and not sheet_has_capability(_dock._current_sheet, str(capability["key"])):
+			wanted.append(capability)
+	if wanted.is_empty():
+		return
+	var labels: PackedStringArray = PackedStringArray()
+	for capability: Dictionary in wanted:
+		labels.append(str(capability["label"]))
+	var added: bool = _dock._perform_undoable_sheet_edit("Add Plugin Capabilities", func() -> bool:
+		var enabled: EventRow = _ensure_plugin_lifecycle_event("OnPluginEnabled")
+		var disabled: EventRow = _ensure_plugin_lifecycle_event("OnPluginDisabled")
+		for capability: Dictionary in wanted:
+			var add_action: ACEAction = _build_capability_action(str(capability["add"]))
+			if add_action != null:
+				enabled.actions.append(add_action)
+			var remove_action: ACEAction = _build_capability_action(str(capability["remove"]))
+			if remove_action != null:
+				disabled.actions.append(remove_action)
+		return true
+	)
+	if added:
+		_dock._refresh_after_edit()
+		_dock._mark_dirty("Plugin now adds %s." % ", ".join(labels))
+
+
+## The sheet's On Plugin Enabled / On Plugin Disabled event, reused when it is already there so a
+## second capability joins the same event instead of opening a second one saying the same thing.
+func _ensure_plugin_lifecycle_event(trigger_id: String) -> EventRow:
+	for entry: Variant in _dock._current_sheet.events:
+		var event: EventRow = entry as EventRow
+		if event != null and event.trigger_id == trigger_id:
+			return event
+	var created: EventRow = EventRow.new()
+	created.trigger_provider_id = "Core"
+	created.trigger_id = trigger_id
+	_dock._current_sheet.events.append(created)
+	return created
+
+
+## One capability action, built through the SAME factory the picker uses, so a seeded row and a
+## hand-dropped one are the same row - parameter defaults, baked template and `{uid}` included.
+func _build_capability_action(ace_id: String) -> ACEAction:
+	var definition: ACEDefinition = _dock._find_definition("Core", ace_id)
+	if definition == null:
+		return null
+	return _dock._ace_apply._create_action_from_definition(definition, {})

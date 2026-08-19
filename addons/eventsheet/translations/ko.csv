@@ -2312,3 +2312,18 @@ size Y,크기 Y
 position,위치
 Wait for tween to finish,트윈이 끝날 때까지 대기
 %s is not visible here,%s은(는) 여기에서 보이지 않습니다
+Tween {property} to {value} over {duration}s,{property}을 {value}로 {duration}초 동안 트윈
+Run now,지금 실행
+Reload,다시 불러오기
+Output,출력
+no output yet,아직 출력 없음
+Enable plugin,플러그인 켜기
+What this tool printed,이 도구가 출력한 내용
+Nothing yet. Press Run now and this fills with what the tool printed.,아직 없습니다. 지금 실행을 누르면 도구가 출력한 내용이 여기에 채워집니다.
+Editor Plugin,에디터 플러그인
+Import Tool,가져오기 도구
+Export Hook,내보내기 훅
+"Editor Plugin (dock, menu item, object type)","에디터 플러그인 (독, 메뉴 항목, 객체 타입)"
+Import Tool (runs on import),가져오기 도구 (가져올 때 실행)
+Export Hook (runs on export),내보내기 훅 (내보낼 때 실행)
+Run this editor tool now,이 에디터 도구를 지금 실행

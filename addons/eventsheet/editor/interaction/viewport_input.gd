@@ -270,6 +270,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_walk_to_next_script_block()
 			_viewport.accept_event()
 			return
+		# R33. A tool sheet's own buttons, next to the coverage chip and read the same way: one click,
+		# one thing happens. The viewport only names the button - compiling and running belong to the
+		# dock, which owns the sheet's path and its status line.
+		if not event.double_click and str(metadata.get("kind", "")).begins_with("editor_tool_"):
+			_viewport.editor_tool_action_requested.emit(str(metadata.get("kind", "")))
+			_viewport.accept_event()
+			return
 		if bool(hit.get("fold", false)):
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport._toggle_row_fold(row_index)

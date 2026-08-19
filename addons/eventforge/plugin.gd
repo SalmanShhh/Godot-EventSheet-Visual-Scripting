@@ -27,6 +27,7 @@ const DRAWING_PREFAB_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawin
 const DRAWING_PREFAB_3D_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd"
 const BEHAVIOR_GIZMOS_PATH: String = "res://addons/eventsheet/editor/behavior_gizmos.gd"
 const EXPORT_TOOLS_PLUGIN_PATH: String = "res://addons/eventforge/editor/export_tools_plugin.gd"
+const IMPORT_TOOLS_PLUGIN_PATH: String = "res://addons/eventforge/editor/import_tools_plugin.gd"
 const DOC_DOCK_PATH: String = "res://addons/eventsheet/editor/docs/doc_dock.gd"
 
 var _event_sheet_editor: Control = null
@@ -34,6 +35,10 @@ var _export_integrity_plugin: EditorExportPlugin = null
 # The On Project Export bake step. Loaded by path (it has no class_name on purpose, so registering it
 # never widens the boot compile) and typed as the engine base class.
 var _export_tools_plugin: EditorExportPlugin = null
+# The On File Imported hook. Same reasoning as the bake step above: loaded by path, no class_name, so
+# registering it never widens the boot compile. Typed as Object because it is a plain RefCounted that
+# only listens to the editor's reimport signal.
+var _import_tools_plugin: Object = null
 var _live_values_debugger: EventSheetLiveValuesDebugger = null
 # Typed loosely on purpose (see the path consts above): their concrete class names must not
 # appear in this file, or their subtrees join the boot compile.
@@ -271,6 +276,11 @@ func _enter_tree() -> void:
 	# registration adds nothing to the boot compile.
 	_export_tools_plugin = load(EXPORT_TOOLS_PLUGIN_PATH).new()
 	add_export_plugin(_export_tools_plugin)
+	# The import reaction: Editor Tool sheets that declared the On File Imported trigger get their
+	# handler called with the paths Godot just (re)imported, so "fix up what a designer dropped in"
+	# is a sheet event instead of a chore. Loaded by path for the same boot-compile reason.
+	_import_tools_plugin = load(IMPORT_TOOLS_PLUGIN_PATH).new()
+	_import_tools_plugin.call("attach", EditorInterface.get_resource_filesystem())
 	# Live Values (debugging rung 2): capture the values frames debug-compiled sheets
 	# stream, and feed them to the workspace editor's Live Values window.
 	_live_values_debugger = EventSheetLiveValuesDebugger.new()
@@ -413,6 +423,9 @@ func _exit_tree() -> void:
 	if _export_tools_plugin != null:
 		remove_export_plugin(_export_tools_plugin)
 		_export_tools_plugin = null
+	if _import_tools_plugin != null:
+		_import_tools_plugin.call("detach")
+		_import_tools_plugin = null
 	if _live_values_debugger != null:
 		remove_debugger_plugin(_live_values_debugger)
 		_live_values_debugger = null

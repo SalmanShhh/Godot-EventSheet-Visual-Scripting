@@ -244,6 +244,7 @@ var _queries: EventSheetDockQueries = EventSheetDockQueries.new()  # dock/sheet_
 var _add_rows: EventSheetAddRowRequests = EventSheetAddRowRequests.new()
 var _extract_ops: EventSheetExtractOps = EventSheetExtractOps.new()  # extract-to-function / extract-to-include (dock/extract_ops.gd)  # dock/add_row_requests.gd  # code/provenance + open-sheets panel behavior (dock/code_panel_glue.gd)  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
 var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
+var _editor_tool_bar: EventSheetEditorToolBar = EventSheetEditorToolBar.new()  # R33: Run now / Reload / Output / Enable plugin on a tool sheet's Include bar (dock/editor_tool_bar.gd)
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
 var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
@@ -336,6 +337,7 @@ func _init() -> void:
 	EventSheets.register_palette_command("Save Studio", func() -> void: _open_save_studio())
 	EventSheets.register_palette_command("Translation Studio", func() -> void: _open_translation_studio(), "Translation")
 	_ace_apply.init(self)
+	_editor_tool_bar.init(self)
 	# Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning - tests exercise ops like
 	# _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.
 	_row_edit_ops.init(self)

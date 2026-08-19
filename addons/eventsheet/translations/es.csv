@@ -2312,3 +2312,18 @@ size Y,tamaño Y
 position,posición
 Wait for tween to finish,Esperar a que termine el tween
 %s is not visible here,%s no es visible aquí
+Tween {property} to {value} over {duration}s,Animar {property} a {value} en {duration}s
+Run now,Ejecutar ahora
+Reload,Recargar
+Output,Salida
+no output yet,aún sin salida
+Enable plugin,Activar complemento
+What this tool printed,Lo que imprimió esta herramienta
+Nothing yet. Press Run now and this fills with what the tool printed.,Nada todavía. Pulsa Ejecutar ahora y aquí aparecerá lo que imprima la herramienta.
+Editor Plugin,Complemento del editor
+Import Tool,Herramienta de importación
+Export Hook,Enganche de exportación
+"Editor Plugin (dock, menu item, object type)","Complemento del editor (panel, elemento de menú, tipo de objeto)"
+Import Tool (runs on import),Herramienta de importación (se ejecuta al importar)
+Export Hook (runs on export),Enganche de exportación (se ejecuta al exportar)
+Run this editor tool now,Ejecutar ahora esta herramienta del editor

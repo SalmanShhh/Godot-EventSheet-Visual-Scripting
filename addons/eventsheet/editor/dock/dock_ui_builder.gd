@@ -228,6 +228,7 @@ func build_ui() -> void:
 	_dock._viewport.span_edit_requested.connect(_dock._on_viewport_span_edit_requested)
 	_dock._viewport.navigate_requested.connect(_dock._navigate.navigate)
 	_dock._viewport.navigation_probe = _dock._navigate.can_navigate
+	_dock._viewport.editor_tool_action_requested.connect(_dock._editor_tool_bar.activate)
 	_dock._viewport.ace_edit_requested.connect(_dock._on_viewport_ace_edit_requested)
 	_dock._viewport.param_value_edit_requested.connect(_dock._on_param_value_edit_requested)
 	_dock._viewport.param_value_edit_at_rect_requested.connect(func(ace: Resource, param_id: String, current_text: String, anchor_screen: Rect2) -> void:

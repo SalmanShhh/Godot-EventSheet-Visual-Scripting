@@ -83,6 +83,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "ExportHasFeature", "Export Has Feature", ACEDescriptor.ACEType.CONDITION, "features.has({feature})", "", [F.make_param("feature", "String", "\"mobile\"", "Feature", "A feature tag of the export preset (mobile, web, windows, or one you added yourself).", "feature_tag")], CAT, "the export has feature {feature}")
 		.described("True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop."))
 
+	# ── The import reaction (R33). Deliberately shaped like the bake step above: a plain named
+	# handler the editor's import hook calls, so an opened tool reads it straight back as this event.
+	descriptors.append(F.make_descriptor("Core", "OnFileImported", "On File Imported", ACEDescriptor.ACEType.TRIGGER, "", "_on_files_imported", [], CAT, "On file imported")
+		.described("Runs just after Godot finishes importing assets - the paths that landed arrive as `paths`. The place to rename what a designer dropped in, check an atlas for the wrong settings, or write a manifest."))
+	# (There is deliberately no "Imported Paths" expression. `paths` is the handler's own argument, so
+	# a row carrying it only compiles inside On File Imported - and an expression that does not stand
+	# on its own is one the picker would offer everywhere and break everywhere else. Inside the event
+	# the identifier is simply there to write.)
+
 	return descriptors
 
 

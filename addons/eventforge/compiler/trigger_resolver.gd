@@ -73,6 +73,12 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# feature tags. Plain GDScript on both sides, so the emitted script keeps zero plugin
 			# dependency and simply does nothing when nobody calls it.
 			return _lifecycle("_on_project_export", "is_debug: bool, features: PackedStringArray")
+		"OnFileImported":
+			# The import reaction, built the same way and for the same reasons as the bake step above:
+			# not an engine virtual, but a plain named function the editor's import hook calls with the
+			# paths that just landed. A plain function is also what lets an opened tool read back - a
+			# connection spelled through EditorInterface would strand the whole handler as code.
+			return _lifecycle("_on_files_imported", "paths: PackedStringArray")
 		"OnPluginEnabled":
 			# R30. An EditorPlugin's `_enter_tree` is not "on created" - it is the moment the plugin was
 			# switched on, which is when a plugin hangs its dock and adds its menu items. Same function
@@ -180,7 +186,7 @@ static func tempo_class_for(trigger_id: String) -> String:
 		"OnDrawOver2DViewport", "OnDrawGizmo":
 			# A paint pass runs whenever the editor repaints that surface - the hot path of a tool.
 			return TEMPO_EVERY_TICK
-		"OnReady", "OnEditorRun", "OnProjectExport", "OnEnterTree", "OnExitTree", \
+		"OnReady", "OnEditorRun", "OnProjectExport", "OnFileImported", "OnEnterTree", "OnExitTree", \
 				"OnPluginEnabled", "OnPluginDisabled":
 			# The tree callbacks run once per lifetime of the object, like _ready does.
 			return TEMPO_ONCE

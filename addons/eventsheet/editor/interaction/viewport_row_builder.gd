@@ -702,11 +702,13 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 	if is_autoload(sheet):
 		spans.append_array(_autoload_include_spans(sheet))
 		spans.append_array(_reading_coverage_spans(sheet))
+		spans.append_array(_editor_tool_bar_spans(sheet))
 		row_data.spans = spans
 		return row_data
 	if not is_addon_pack(sheet):
 		spans.append_array(_script_include_spans(sheet))
 		spans.append_array(_reading_coverage_spans(sheet))
+		spans.append_array(_editor_tool_bar_spans(sheet))
 		row_data.spans = spans
 		return row_data
 	spans.append(_make_span(
@@ -728,8 +730,29 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 		}))
 		spans.append(_pack_include_chip(host_class))
 	spans.append_array(_reading_coverage_spans(sheet))
+	spans.append_array(_editor_tool_bar_spans(sheet))
 	row_data.spans = spans
 	return row_data
+
+
+## R33 - a tool sheet's own play button, on the bar where the writing happens. An editor script is
+## otherwise run from the script editor's File > Run and a plugin from Project Settings, both of them
+## a room away from the sheet; Run now / Reload / Output / Enable plugin close that loop. Every other
+## kind of sheet gets nothing here - a Run now that cannot run is worse than no Run now at all.
+func _editor_tool_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var script_path: String = sheet.external_source_path if sheet != null else ""
+	for button: Dictionary in EventSheetEditorToolBar.buttons_for(sheet, script_path):
+		spans.append(_make_span(str(button["text"]), SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+			"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+			"kind": str(button["kind"]),
+			"line_index": 0
+		}))
+	return spans
 
 
 ## P3 - the two things a reader wants to know about an opened file before reading a line of it: how
