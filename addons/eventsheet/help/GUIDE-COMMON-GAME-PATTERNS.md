@@ -252,6 +252,33 @@ owns it says which pattern it is, with the exact lines that made the sheet think
   `Functions ▸ Call the function stored in commands "equip"`. A lambda written over two lines keeps
   its Script block - a sentence may only stand for a shape it can see whole.
 
+## Effects, tilemaps and the camera
+
+![The effect, tilemap and camera rows an opened script reads as](images/pattern-effects-tilemap-camera.png)
+
+Three families of line nearly every 2D game writes, and the sheet has words for all three. They
+read the same whether you typed them into a `.gd` file or dropped them from the picker, and the
+event that owns one is marked as the pattern it is.
+
+- **Effects** (the Effects section of the picker, on any CanvasItem) - a ShaderMaterial parameter
+  IS an effect parameter. `Set effect parameter flash to 1`, the expression
+  `sprite's effect parameter "flash"`, `Set effect to outline`, `Remove effect`, and
+  `Tween effect parameter dissolve from 0 to 1 in 0.5 seconds` for the one tween shape an effect
+  has a sentence for. A hand-written `sprite.material.set_shader_parameter("flash", 1.0)` reads as
+  the first of those, and `tween.tween_method(func(v): mat.set_shader_parameter("dissolve", v),
+  0.0, 1.0, 0.5)` reads as the last one - one row, on the material it drives.
+- **Tilemaps** (the Tilemap section) - `Set tile at cell to 2, 0` with the layer and the tileset
+  said quietly after it, `Erase tile at cell`, and the three coordinate questions as the names you
+  type into a field: `TileAt(cell)`, `PositionToTile(position)`, `TileToPosition(cell)`. A tile's
+  own data is one condition, `tile at cell has solid set` - the guard and the lookup a script
+  spells over two lines. Both node generations read alike: the older node names its layer first,
+  and the reading says so behind the sentence.
+- **Camera** (the Camera section, on a Camera2D) - `Make current`, `Set zoom to 200%`,
+  `Set scroll limits 0 to 1920`, `Set smoothing on`, and `Scroll toward target at 5 (per second)`
+  for the lerp-follow every 2D game writes. A run of adjacent `limit_left` / `limit_right` /
+  `limit_top` / `limit_bottom` writes reads as ONE scroll-limits row; hover it to see every line
+  it stands for, and the file keeps all four exactly as they were.
+
 ## Where these live
 
 Everything above except the State Machine, Advanced Random, and HUD Kit sections is built into
