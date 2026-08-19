@@ -832,6 +832,8 @@ saves back byte for byte and the GDScript it compiles to is untouched.
   with the exact source lines as its evidence and - where one ships - the behavior that could
   replace the hand-written block.
 
+  ![A controller script read as an event sheet: a layout loaded in the background with its finished-loading condition, the movement math as Apply gravity / Accelerate / Limit speed / Move, the collision switches, a navigation agent's Find path to and Has arrived, and the multiplayer messages sent to everyone and to the host](images/opened-script-systems.png)
+
 ### The objects of an opened file - what they are, and where you find them
 
 A sheet says what a file DOES with its objects. These say what those objects ARE, and give you the bar

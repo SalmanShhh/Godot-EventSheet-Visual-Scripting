@@ -220,37 +220,43 @@ Ten more spellings of everyday game code, shipped the same way:
 - **Ramped** - the difficulty curve as a value (`Every Ramped(2, -0.3, 0.5) seconds` is a
   spawner that speeds up); `Start Ramp Clock` marks minute zero.
 
-## The same patterns, hand-written, opened as a sheet
+## A loading screen that shows progress
 
-You do not have to author a pattern from the picker for the sheet to know it is one. Open a script
-that already writes one of these shapes by hand and it reads as the same events, and the event that
-owns it says which pattern it is, with the exact lines that made the sheet think so.
+Godot can load the next layout on another thread while the current one keeps running. Written by
+hand that is four `ResourceLoader` calls, a status enum and an array passed by reference; as rows it
+is three sentences and one expression, and each of them writes exactly the line the reading
+recognises - so a loading screen you type and one you pick are the same bytes.
 
-- **A countdown.** `cooldown -= delta` in a tick, and `cooldown <= 0` asked somewhere, reads
-  `Count down cooldown (by dt)`, `cooldown has run out` and `Start cooldown for 0.5 seconds`. Both
-  halves are needed: a number that shrinks by a delta and is never asked about is a subtraction, and
-  the row keeps saying so. `max(0.0, x - delta)` and `move_toward(x, 0, delta)` read the same with
-  `(never below 0)` on the end.
-- **An object pool.** `var b = pool.pop_back() if not pool.is_empty() else BULLET.instantiate()`
-  followed by `add_child(b)` is one `System ▸ Create object Bullet [pooled]` row; `pool.push_back(b)`
-  is `b ▸ Return to pool`. Pooling is how the object is got hold of, not a different thing to do
-  with it, which is why the row is the ordinary Create object row with a chip.
-- **A sequence.** A function whose rows alternate `await get_tree().create_timer(N).timeout` and
-  actions wears a `sequence · 3 s` chip on its header, with the total of its waits. A wait on
-  something whose length nobody knows (an animation, a signal) adds `+ a wait` rather than a wrong
-  total.
-- **Saving.** ConfigFile lines read under **Local Storage**: `Set item player/score to score`,
-  `Local Storage.Item("player/score") (or 0)`, `Save`, `Load`, `has item player/score`, and
-  `cfg.load(path) != OK` reads `save file is missing`. The path is on hover.
-- **Existence.** `is_instance_valid(t)` is `t exists`, `target = null` is `Forget target`, and
-  `get_parent().remove_child(self)` is `Remove from layout (kept alive, not destroyed)` - which is
-  the answer to the first question anyone has about a removed object.
-- **Lists and tables.** `stats.get("hp", 100)` is `stats "hp" (or 100 when missing)`,
-  `items.slice(0, 3)` is `the first 3 of items`, a one-line `sort_custom` is
-  `Sort items by price (lowest first)`, a one-line `reduce` is `the sum of price over items`,
-  `items.has(sword)` is `items contains sword`, and `commands["equip"].call()` is
-  `Functions ▸ Call the function stored in commands "equip"`. A lambda written over two lines keeps
-  its Script block - a sentence may only stand for a shape it can see whole.
+1. On start of layout: **System ▸ Load layout `"res://levels/level_2.tscn"` in the background**.
+2. Every tick, feed the bar: **ProgressBar ▸ Set value to `System.LoadingProgress * 100`**. The
+   expression answers 0 to 1, so multiply by 100 for a percentage.
+3. Add a condition **System ▸ layout `"res://levels/level_2.tscn"` has finished loading**, and under
+   it **System ▸ Go to layout `"res://levels/level_2.tscn"`**. That switch reuses what was already
+   loaded, so there is no second load and no pause.
+
+Use the same path in all three rows - that is what ties them together. Open the file afterwards and
+it reads back as those three sentences, with the layout named the way the file is named.
+
+## Movement, multiplayer and paths in one vocabulary
+
+Three more shapes every Godot script makes now read - and are written - as the rows a behavior
+already has words for.
+
+- **Movement, on a `CharacterBody2D` or `CharacterBody3D`**: **Apply gravity**, **Accelerate x
+  toward … at … (per second)**, **Limit speed to …**, **Move (and slide along what it hits)**,
+  **Disable collisions with …**, **Ignore collisions with …**, **Set angle toward …** and **Rotate
+  toward … at … (per second)**. A plain node's `velocity` is just a variable, so none of these words
+  is claimed on one.
+- **Multiplayer**: mark a function as a message, then **Multiplayer ▸ Send `<message>` to everyone**
+  / **to the host** / **to one peer**, ask **Is host** or **Owns this object**, and read
+  **Multiplayer.MyID**. An `@rpc` function reads with its name in the condition lane and its mode
+  words muted beside it - *from any peer · runs here too · reliable*.
+- **Navigation**: **Find path to …**, **Move along path at …** and **Has arrived**. When the file
+  wires the avoidance callback, the move row says **(avoiding others)**.
+
+Where a shipped behavior could replace the hand-written block, the sheet says so: a body that
+applies gravity offers the Platformer pack, one that only steers offers Eight Direction, and a
+navigation block offers the pathfinding pack that matches its dimension.
 
 ## Where these live
 

@@ -6,40 +6,49 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
-### Added - an opened script's PATTERNS read as the events they are
+### Added - the Godot systems an opened script is built from read as the sheet's own rows
 
-The batches before this one made single statements read as the sheet's sentences. These are the
-shapes several lines make together, which no single line can decide, so the whole file is asked once
-per rebuild and every reading that recognises one states it in the pattern registry, on the event
-that owns it, with the exact source lines as evidence. Display only throughout: the file is
-untouched, and the byte round-trip and the emitted GDScript cannot move.
+- **Loading a layout in the background is three sentences, not six lines of `ResourceLoader`.**
+  `load_threaded_request(path)` reads **System ▸ Load layout Level 2 in the background**, the status
+  enum reads **System ▸ layout Level 2 has finished loading**, the progress array read by index reads
+  **System.LoadingProgress**, and a `change_scene_to_packed(load_threaded_get(path))` pair collapses
+  to **System ▸ Go to layout Level 2** - each under the event its line sits in, with the layout named
+  the way the file is named. All four are also authorable: **Load Layout In The Background**,
+  **Layout Has Finished Loading**, **Go To Loaded Layout** and the **Loading Progress** expression
+  write exactly the shape the reading recognises, so a written and a picked loading screen are the
+  same bytes.
+- **Movement math on a character body reads in the movement behaviors' words.** `velocity.y +=
+  gravity * delta` is **Apply gravity**, `move_toward` on one axis is **Accelerate x toward … at …
+  (per second)**, `limit_length` is **Limit speed to …**, `move_and_slide()` is **Move (and slide
+  along what it hits)**, `add_collision_exception_with` is **Ignore collisions with …**,
+  `lerp_angle` on the rotation is **Rotate toward … at … (per second)**, and
+  `c.get_collider().is_in_group(\"enemy\")` is **c ▸ collided object is in family enemy**. Claimed only
+  on `CharacterBody2D` / `CharacterBody3D` - a plain node's `velocity` is just a variable - and only
+  where the step is scaled by the frame time.
+- **New movement rows for the three steps that had none:** **Limit Speed**, **Ignore Collisions
+  With** and **Rotate Toward**.
+- **Godot's high-level multiplayer is an object.** A new **Multiplayer** vocabulary: **Send Message
+  To Everyone** / **To The Host** / **To One Peer**, **Is host**, **Owns this object** and the
+  **MyID** expression. An opened script reads `f.rpc(10)` as **Multiplayer ▸ Send Take Damage to
+  everyone** with the payload as named chips, `f.rpc_id(1, …)` as **to the host**,
+  `multiplayer.is_server()` as **Is host**, `is_multiplayer_authority()` as **Owns this object** and
+  `multiplayer.get_unique_id()` as **Multiplayer.MyID**.
+- **A navigation agent reads as the Pathfinding words.** `agent.target_position = p` is **Find path
+  to p**, the direction-to-the-next-waypoint step is **Move along path at speed**, with **(avoiding
+  others)** added when the file wires the avoidance callback, and `is_navigation_finished()` is
+  **Has arrived**. A new **Move Along Path** action writes the step; **Has Arrived** now says so on
+  the row instead of \"Arrived at destination\".
+- **The pattern registry is filled.** Every event holding one of these four shapes claims its
+  pattern with the exact source lines as evidence and, where one ships, the behavior that could
+  replace it (a body that applies gravity offers the Platformer pack, one that only steers offers
+  Eight Direction, a navigation block offers the matching pathfinding pack). The registry is cleared
+  and refilled at the top of each row build.
 
-- **A countdown reads as a countdown.** A number counted down by a per-frame delta AND asked about
-  against zero somewhere reads `Count down cooldown (by dt)`, `Start cooldown for 0.5 seconds`,
-  `cooldown has run out` and `invincible_for is running`. The clamped spellings
-  (`max(0.0, x - delta)`, `move_toward(x, 0, delta)`) say `(never below 0)`. Both halves are
-  required, so an ordinary subtraction stays a subtraction.
-- **Object pools read as Create object.** `pool.pop_back() if not pool.is_empty() else
-  BULLET.instantiate()` is one `System ▸ Create object Bullet [pooled]` row, either order of the
-  ternary, and `pool.push_back(b)` reads `b ▸ Return to pool (hidden, ticking off, back in pool)`.
-  The claim offers the shipped Object Pool behavior for a hand-rolled pool.
-- **A sequence of waits says so on its header.** A function whose rows alternate waiting and doing
-  wears a `sequence · 3 s + a wait` chip, with the total of its timer waits and a note when one of
-  them waits on something whose length nobody knows.
-- **Save and load idioms read as Local Storage.** The object is spelled in full, a section and a key
-  address the one item they address (`Set item player/score to score`, `Local Storage.Item(
-  \"player/score\") (or 0)`, `has item player/score`), and `cfg.load(path) != OK` asks what it is
-  really asking: `save file is missing`. `.json`, `.save` and `.dat` join `.cfg` and `.ini` as save
-  files; the extension is what says so, so `sprite.save(\"user://shot.png\")` is still an image.
-- **Existence and relations.** `is_instance_valid(t)` reads `t exists`, `target = null` reads
-  `Forget target`, and `get_parent().remove_child(self)` reads `Remove from layout (kept alive, not
-  destroyed)` - the answer to the first question a reader has about a removed object.
-- **The last list and table gaps.** `stats.get(\"hp\", 100)` reads `stats \"hp\" (or 100 when missing)`,
-  `items.slice(0, 3)` reads `the first 3 of items`, a one-line `reduce` that adds one member up
-  reads `the sum of price over items`, a one-line `sort_custom` reads `Sort items by price (lowest
-  first)`, `items.has(sword)` reads `items contains sword`, and `commands[\"equip\"].call()` reads
-  `Functions ▸ Call the function stored in commands \"equip\"`. A lambda written over two lines keeps
-  its Script block: a sentence may only stand for a shape it can see whole.
+### Changed
+
+- `set_collision_mask_value(n, false)` reads **Disable collisions with …** (was \"Set collision with
+  layer … off\"); the layers a body is ON keep the neutral wording, because joining a layer and
+  colliding with one are two different things.
 
 ### Changed - the documentation says what the sheet says
 
