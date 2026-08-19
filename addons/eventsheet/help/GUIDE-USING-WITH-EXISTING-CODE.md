@@ -512,6 +512,27 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   with the lambda's body as its rows, and the connect line keeps a muted `connects Timer On Timeout`
   note. One-line `if c: stmt` / `if c: return` / `else: stmt` lift as the same sub-events their
   indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
+- **A gamepad branch that names a device reads as one row.** `if event is InputEventJoypadButton and
+  event.pressed and event.device == 0 and event.button_index == JOY_BUTTON_A:` reads `Gamepad ▸ On
+  gamepad 0 button A pressed`, in the Gamepad object's own words, because the device index IS the
+  gamepad number. A branch that names no device keeps `On button A pressed`; a Keyboard branch keeps
+  its `event.device == 1` as an ordinary comparison, since a keyboard has no number in the sheet.
+- **A Timer node reads as the Timer behavior.** `$Timer.start(2.0)` reads `Start timer "Timer" for 2
+  seconds (once)`, `$Timer.stop()` reads `Stop timer "Timer"`, `not $Timer.is_stopped()` reads `Is
+  timer "Timer" running` (the bare spelling says stopped), and `$Timer.time_left` reads
+  `Timer.CurrentTime("Timer")`. The node's name is the tag and the object is the script's own object,
+  because the timer belongs to it. The `(once)` / `(regular)` mode is read off the file's own
+  `one_shot` line. A timer held in a variable has no tag to prove, so it keeps the plain call reading.
+- **A property's setter reads as a trigger, its getter as an expression.** A `set(v):` block fires
+  when the value is set, with the new value as its payload - which is exactly what a trigger is - so
+  it reads `➜ On hp set` with a `v` chip and its body as ordinary actions and sub-events, the first
+  step sitting beside the trigger. A `get:` block is a function that gives a value, so it reads as an
+  expression block whose body says `System ▸ Set return value to hp ≤ 0`. The variable row stays
+  above them both, still carrying the value, the type and the Inspector facts, and double-clicking it
+  still opens the Variable dialog. The accessor bodies read through the same lift a declared
+  handler's body goes through, so the same line says the same thing wherever it was written; a body
+  the lift cannot claim keeps the verbatim accessor block, and the file's bytes are untouched either
+  way. Right-click a sheet variable for **Add setter** / **Add getter** to write the shape yourself.
 - **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner
   writes input in Godot: `if Input.is_action_just_pressed("jump"):` inside `_process`. In an event
   sheet the same thing is a top-level trigger, so the row reads `⌨  Keyboard ▸ On "jump" pressed`
