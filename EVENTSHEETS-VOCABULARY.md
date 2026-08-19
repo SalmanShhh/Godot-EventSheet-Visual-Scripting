@@ -3825,7 +3825,7 @@ UI / menu vocabulary (Control / BaseButton / Range / LineEdit)
 - **Override Theme Color** (`name: String, color: String, target: String`) - Overrides one theme color on this control, like its font color.
 - **Set Button Disabled** (`disabled: String, target: String`) - Enables or disables a button so it can or can't be clicked.
 - **Set Button Pressed** (`pressed: String, target: String`) - Sets a toggle button's pressed state without firing its toggled event.
-- **Set Value** (`value: String, target: String`) - Sets a slider, progress bar, or spinbox to a specific value.
+- **Set Slider Value** (`value: String, target: String`) - Sets a slider, progress bar, or spinbox to a specific value.
 - **Set Max Value** (`max: String, target: String`) - Sets the maximum value of a slider, progress bar, or spinbox.
 - **Set Field Text** (`value: String, target: String`) - Sets the text shown in a single-line text field.
 - **Clear Field** (`target: String`) - Empties a single-line text field of all its text.

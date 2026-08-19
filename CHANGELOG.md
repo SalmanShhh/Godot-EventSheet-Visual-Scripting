@@ -104,6 +104,8 @@ reading already reads them, so what you pick is what you get:
   "Is alive set", and the negative form flips the word rather than adding a mark.
 - **The ids are frozen.** Only display names changed, so every sheet that already used them keeps
   working, and the glossary maps each older name to its new one.
+- A **Range**'s own *Set Value* (a slider, progress bar or spinbox) is now **Set Slider Value**, so
+  the two verbs are not both called the same thing and typing "set value" reaches the variable one.
 
 ### Changed - the Add variable dialog speaks the same sentence, and shows it
 

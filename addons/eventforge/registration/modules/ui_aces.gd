@@ -51,7 +51,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns the label text currently shown on the button."))
 
 	# ── Range (ProgressBar / Slider / SpinBox) - HUD bars + sliders ──
-	descriptors.append(F.make_descriptor("Core", "SetRangeValue", "Set Value", ACEDescriptor.ACEType.ACTION, "value = {value}", "", [F.make_param("value", "String", "0", "Value", "New value.", "expression")], "UI", "Set value to {value}", "Range")
+	descriptors.append(F.make_descriptor("Core", "SetRangeValue", "Set Slider Value", ACEDescriptor.ACEType.ACTION, "value = {value}", "", [F.make_param("value", "String", "0", "Value", "New value.", "expression")], "UI", "Set value to {value}", "Range")
 		.described("Sets a slider, progress bar, or spinbox to a specific value."))
 	descriptors.append(F.make_descriptor("Core", "SetRangeMax", "Set Max Value", ACEDescriptor.ACEType.ACTION, "max_value = {max}", "", [F.make_param("max", "String", "100", "Max", "Maximum value.", "expression")], "UI", "Set max value to {max}", "Range")
 		.described("Sets the maximum value of a slider, progress bar, or spinbox."))
