@@ -1857,16 +1857,16 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 @ace_category("State Machine") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
-- **On State Changed** (`previous: String, next: String`)
+- **On any state change** (`previous: String, next: String`)
 
 #### Conditions
-- **Is In State** (`state_name: String`) - True while the machine is in the given state.
+- **Current state is** (`state_name: String`) - True while the machine is in the given state.
 
 #### Actions
-- **Set State** (`next: String`) - Switches to the given state and fires On State Changed.
+- **Go to state** (`next: String`) - Switches to the given state and fires On any state change.
 
 #### Expressions
-- **Time In State** - How many seconds the machine has been in its current state.
+- **Time in state** - How many seconds the machine has been in its current state.
 
 ### StoryletsAddon (`res://eventsheet_addons/storylet_weaver/storylet_weaver_addon.gd`)
 @ace_tags(narrative, storylet) @ace_category("Storylets") @ace_version(1.3.0)

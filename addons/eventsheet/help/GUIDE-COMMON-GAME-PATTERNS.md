@@ -68,15 +68,16 @@ Runs is for "the high score should survive closing the game" and nothing heavier
 Attach the **State Machine** behavior pack and the pattern that usually needs an enum, a match
 statement, and transition bookkeeping becomes vocabulary:
 
-- **Set State** switches state (and only fires on a real change).
-- **Is In State** is the condition each behavior event sits behind.
-- **On State Changed** triggers with `previous` and `next` - your enter/exit hook.
-- **Time In State** tells how long the current state has been running: "flee for two seconds,
-  then go back" is `Time In State > 2` then `Set State previous_state`.
+- **Go to state** switches state (and only fires on a real change).
+- **Current state is** is the condition each behavior event sits behind.
+- **On any state change** triggers with `previous` and `next` - your enter/exit hook.
+- **Time in state** tells how long the current state has been running: "flee for two seconds,
+  then go back" is `Time in state > 2` then `Go to state previous_state`.
 - **previous_state** always holds where you came from.
 
 The shape that reads best: one named group for the machine, ONE **Every Physics Tick** event,
-each STATE as a sub-event under it (its condition renders as the `◆ State:` header), and each
+each STATE as a sub-event under it (its condition reads as the ◆ `Current state is "patrol"` header,
+the same words the behavior publishes, so a hand-rolled machine and the pack read alike), and each
 transition nested one level deeper with its own condition lane - so piling on more guards later
 ("and cooldown ready", "and player still visible") never means restructuring. The nesting is
 exactly the code's own indentation: the tick event is `_physics_process`, each state sub-event

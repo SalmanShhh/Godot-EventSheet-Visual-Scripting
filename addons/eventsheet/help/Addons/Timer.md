@@ -371,11 +371,11 @@ Pair a one-shot Timer with the State Machine pack for a readable boss telegraph:
 
 ```
 On Attack Chosen
-  -> Boss | StateMachineBehavior: Set State  "windup"
+  -> Boss | StateMachineBehavior: Go to state  "windup"
   -> Boss | Timer: Start Timer  1.2
 
 On Timer
-  -> Boss | StateMachineBehavior: Set State  "strike"
+  -> Boss | StateMachineBehavior: Go to state  "strike"
 
 On Boss Staggered
   -> Boss | Timer: Stop Timer

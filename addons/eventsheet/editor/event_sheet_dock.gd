@@ -1611,6 +1611,12 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
 	_ace_apply._on_ace_picker_selected(definition, context)
 
 
+## S27. The Add event dialog's "(none - runs every tick)" entry: a blank event, which is a real
+## event that runs every tick.
+func _on_picker_blank_event_selected(context: Dictionary) -> void:
+	_ace_apply.add_blank_event(context)
+
+
 func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionary) -> void:
 	_ace_apply._on_ace_params_back_requested(definition, context)
 

@@ -517,6 +517,9 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._ace_picker.set_tool_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.tool_mode)
 	_dock._variable_dlg.simple_mode_provider = func() -> bool: return _dock._simple_mode
 	_dock._ace_picker.ace_selected.connect(_dock._on_ace_picker_selected)
+	# S27 - the Add event dialog's first entry, "(none - runs every tick)": a real event with no
+	# condition of its own, made where the dialog was opened.
+	_dock._ace_picker.blank_event_selected.connect(_dock._on_picker_blank_event_selected)
 	# The figure's "read more" affordance, filled in: the label is DERIVED from the verb's pack
 	# (provider -> pack directory -> guide name), so a pack that ships tomorrow gets the button
 	# with no wiring, and a verb with no pack shows no button at all.

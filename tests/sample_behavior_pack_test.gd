@@ -100,9 +100,9 @@ static func run() -> bool:
 	all_passed = _check("Timer pack publishes the On Timer trigger",
 		on_timer != null and on_timer.display_name == "On Timer", true) and all_passed
 	all_passed = _check("Flash pack publishes Flash", flash_action != null, true) and all_passed
-	all_passed = _check("state machine Is In State publishes as a condition (method-call template)",
+	all_passed = _check("state machine Current state is publishes as a condition (method-call template)",
 		is_in_state != null and str(is_in_state.metadata.get("codegen_template", "")) == "{target}.is_in_state({state_name})", true) and all_passed
-	all_passed = _check("Is In State is typed as a condition",
+	all_passed = _check("Current state is is typed as a condition",
 		is_in_state != null and is_in_state.ace_type == ACEDefinition.ACEType.CONDITION, true) and all_passed
 	# Abilities pack: an action, a trigger, a condition (with its template), and the
 	# CurrentAbilityID expression (the Godot-suited reader the event-sheet original lacked).

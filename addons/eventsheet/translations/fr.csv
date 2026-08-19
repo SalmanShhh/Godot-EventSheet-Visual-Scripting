@@ -2459,3 +2459,11 @@ left,gauche
 right,droite
 top,haut
 bottom,bas
+(none - runs every tick),(aucune - s'exécute à chaque tick)
+An event with no condition of its own runs every tick.,Un évènement sans condition propre s'exécute à chaque tick.
+"An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","Un évènement sans condition propre s'exécute à chaque tick. Ajoute ses actions avec A, ou ajoute plus tard une condition pour le restreindre."
+Runs every tick,S'exécute à chaque tick
+runs every tick,s'exécute à chaque tick
+every tick,chaque tick
+Current state is,L'état actuel est
+"one named state at a time, switched by Go to state","un seul état nommé à la fois, changé par Aller à l'état"

@@ -2459,3 +2459,11 @@ left,左
 right,右
 top,上
 bottom,下
+(none - runs every tick),(なし - 毎ティック実行)
+An event with no condition of its own runs every tick.,自分の条件を持たないイベントは毎ティック実行されます。
+"An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.",自分の条件を持たないイベントは毎ティック実行されます。A でアクションを追加するか、後から条件を追加して絞り込めます。
+Runs every tick,毎ティック実行
+runs every tick,毎ティック実行
+every tick,毎ティック
+Current state is,現在の状態が
+"one named state at a time, switched by Go to state",常に 1 つの名前付き状態。状態へ移行 で切り替えます

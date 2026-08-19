@@ -2459,3 +2459,11 @@ left,왼쪽
 right,오른쪽
 top,위
 bottom,아래
+(none - runs every tick),(없음 - 매 틱 실행)
+An event with no condition of its own runs every tick.,자체 조건이 없는 이벤트는 매 틱 실행됩니다.
+"An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","자체 조건이 없는 이벤트는 매 틱 실행됩니다. A 로 액션을 추가하거나, 나중에 조건을 추가해 범위를 좁히세요."
+Runs every tick,매 틱 실행
+runs every tick,매 틱 실행
+every tick,매 틱
+Current state is,현재 상태가
+"one named state at a time, switched by Go to state","한 번에 하나의 이름 있는 상태, 상태로 이동 으로 전환"

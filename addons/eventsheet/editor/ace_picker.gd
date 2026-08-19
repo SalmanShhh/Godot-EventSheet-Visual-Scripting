@@ -28,6 +28,11 @@ signal guide_requested(definition: ACEDefinition)
 ## dialog only says which verb was asked about.
 signal help_requested(definition: ACEDefinition)
 
+## S27. Emitted when the reader takes the Add event dialog's first entry, "(none - runs every tick)".
+## A blank event is a real event with no condition of its own, so there is no definition to hand over -
+## only the context the dialog was opened with, which says where the new event goes.
+signal blank_event_selected(context: Dictionary)
+
 ## Recents (familiar ACEs surface first): last-used ACE ids, newest first. Persisted PER-USER and
 ## PER-PROJECT in a user:// file - NOT project.godot: recents change on every ACE use and would churn
 ## the version-controlled file constantly (Favorites live in ProjectSettings because they change rarely).
@@ -255,6 +260,9 @@ var _recent_list: Tree = null
 var _favorite_button: Button = null
 var _add_button: Button = null
 var _selected_definition: ACEDefinition = null
+## S27. True while the highlighted entry is the Add event dialog's "(none - runs every tick)" row,
+## which carries no definition of its own. Add / Enter commit a blank event while it is set.
+var _blank_event_highlighted: bool = false
 var _tree_context_menu: PopupMenu = null
 var _tree_context_definition: ACEDefinition = null
 var _hint: Label = null
@@ -1120,6 +1128,21 @@ func _refresh_tree() -> void:
 	var is_event_mode: bool = mode in ["new_event", "new_condition_event", "new_sub_condition_event"]
 	var filtering: bool = not query.is_empty()
 
+	_blank_event_highlighted = false
+	# ── S27 ──────────────────────────────────────────────────────────────────────────────────────
+	# A blank event is an event: it runs every tick. So the Add event dialog offers it FIRST, already
+	# highlighted, and Enter makes it - the reader who just wants "do this every frame" never has to
+	# hunt for a condition to satisfy the dialog. It only appears where a whole new TOP-LEVEL event is
+	# being made (a sub-event's blank form is Add blank sub-event, and appending to an existing event
+	# needs a real condition), and it survives a search that plainly means it.
+	var blank_item: TreeItem = null
+	if _blank_event_offered(mode, signals_only, query):
+		blank_item = _tree.create_item(root)
+		blank_item.set_text(0, EventSheetL10n.translate("(none - runs every tick)"))
+		blank_item.set_metadata(0, {"blank_event": true})
+		blank_item.set_tooltip_text(0, EventSheetL10n.translate(
+			"An event with no condition of its own runs every tick."))
+
 	var group_nodes: Dictionary = {}
 	# Pre-declare node-type sections for event creation so they appear in a stable order.
 	# While filtering, empty pre-declared sections are hidden (created on demand below).
@@ -1278,6 +1301,48 @@ func _refresh_tree() -> void:
 		while section != null:
 			section.collapsed = true
 			section = section.get_next()
+
+	# S27 - with nothing typed, the blank event is what Enter makes: it is the first entry and it
+	# starts selected, so "an event that runs every tick" costs one key.
+	if blank_item != null and not filtering:
+		blank_item.select(0)
+		_on_blank_event_highlighted()
+
+
+## S27. Whether the Add event dialog offers its blank first entry. Only for a whole new top-level
+## event, never for signals-only or the append modes, and while searching only when the query plainly
+## reaches for it.
+func _blank_event_offered(mode: String, signals_only: bool, query: String) -> bool:
+	if signals_only or mode != "new_event":
+		return false
+	var lowered: String = query.strip_edges().to_lower()
+	if lowered.is_empty():
+		return true
+	for word: String in ["none", "blank", "every tick", "tick", "every"]:
+		if word.begins_with(lowered) or word.contains(lowered):
+			return true
+	return false
+
+
+## S27. The blank entry is highlighted: the description panel says what it makes, and Add commits it.
+func _on_blank_event_highlighted() -> void:
+	_selected_definition = null
+	_blank_event_highlighted = true
+	_update_guide_button(null)
+	if _favorite_button != null:
+		_favorite_button.set_pressed_no_signal(false)
+	if _add_button != null:
+		_add_button.disabled = false
+	if _info_label != null:
+		_info_label.text = "[b]%s[/b]\n%s" % [
+			EventSheetL10n.translate("(none - runs every tick)"),
+			EventSheetL10n.translate("An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.")]
+
+
+## S27. Commits the blank first entry: a new event with no condition, where the dialog was opened.
+func _commit_blank_event() -> void:
+	close()
+	blank_event_selected.emit(_context.duplicate(true))
 
 
 func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> TreeItem:
@@ -1754,9 +1819,13 @@ func _on_item_selected_for_info() -> void:
 	# A section header carries a {"section": name} marker (not an ACE): show the group's description.
 	if selected != null:
 		var meta: Variant = selected.get_metadata(0)
+		if meta is Dictionary and (meta as Dictionary).has("blank_event"):
+			_on_blank_event_highlighted()
+			return
 		if meta is Dictionary and (meta as Dictionary).has("section"):
 			_show_section_info(selected, str((meta as Dictionary)["section"]))
 			return
+	_blank_event_highlighted = false
 	var definition: ACEDefinition = selected.get_metadata(0) as ACEDefinition if selected != null else null
 	# Picking in the main tree clears the side-pane highlight so there is one logical selection.
 	if definition != null:
@@ -2083,6 +2152,9 @@ func _on_item_activated() -> void:
 	# Double-clicking a section header must fold/unfold, not crash: headers carry a Dictionary
 	# marker, and casting a non-Object to an object type is a runtime error.
 	var item_meta: Variant = item.get_metadata(0) if item != null else null
+	if item_meta is Dictionary and (item_meta as Dictionary).has("blank_event"):
+		_commit_blank_event()
+		return
 	if item_meta is Dictionary and (item_meta as Dictionary).has("alias_index"):
 		_commit_alias(int((item_meta as Dictionary)["alias_index"]))
 		return
@@ -2335,6 +2407,10 @@ func _on_favorite_button_pressed() -> void:
 
 
 func _on_add_button_pressed() -> void:
+	# S27 - the blank first entry carries no definition, so Add / Enter commit it directly.
+	if _blank_event_highlighted and _selected_definition == null:
+		_commit_blank_event()
+		return
 	_commit_definition(_selected_definition)
 
 

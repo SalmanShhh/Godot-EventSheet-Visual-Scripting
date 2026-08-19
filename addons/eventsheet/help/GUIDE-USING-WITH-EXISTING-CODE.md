@@ -500,6 +500,22 @@ That is the order this section is in.
 
 #### Events - the shapes the file is made of
 
+- **A blank event runs every tick, and that is why the lane is empty.** A `_process` body that carries
+  no condition of its own reads as a BLANK top-level event: nothing at all in the condition lane,
+  because in an event sheet a blank event already means "every tick". Hover the row and it says
+  `Runs every tick`; the Explain panel says the same. `_physics_process` keeps one muted
+  `every tick (physics)` note, because blank alone cannot say WHICH tick. The moment such an event
+  grows a condition it goes back to saying **Every tick** in full, so the reading never hides a fact
+  that matters. Nothing is written to the file for any of this: a blank event compiles into
+  `_process(delta)` and re-reads as a blank event, byte for byte.
+
+  ![Three events: a blank one whose condition lane holds only "+ Add condition" and whose action sets a label every tick, a physics one reading a muted "every tick (physics)", and an every-tick event carrying a condition, which keeps its full "Every tick (draw)" words and its tempo badge](images/blank-events.png)
+
+  You can author one too. Press **E** and the Add event dialog's first entry is already selected -
+  **(none - runs every tick)** - so Enter makes the blank event and **A** fills its actions. Under a
+  parent, blank means something else and has its own gesture: **Add blank sub-event (B)** puts its
+  actions after the parent's, in order, with no `if` written at all.
+
 - **Every function reads as the trigger it is.** `ƒ  Functions ▸ On Jump`,
   `ƒ  Functions ▸ On Set Third Person  enabled`: the name and one chip per input sit in the CONDITION
   lane, because that lane answers "when does this run?" for every other event and a function's answer is
@@ -929,10 +945,15 @@ The lift does not require style-guide code. Beginner spellings round-trip byte-e
   that opens into one row per value.
 
 And a hand-written `enum` + `match` state machine opens READING like a state machine: the tick
-event's lane says "decides by state - 3 states below", each case is a `◆ State:` row whose plain
-statements read as sentences and actions, and each transition is a nested CONDITION row - the guard
-in plain words in the condition cell (`Can See Player`, with a small ƒ badge marking a computed
-check), the state change as its action. Branching never renders in the action lane.
+event's lane says "decides by state - 3 states below", each case is a ◆ `Current state is "patrol"`
+row whose plain statements read as sentences and actions, and each transition is a nested CONDITION
+row - the guard in plain words in the condition cell (`Can See Player`, with a small ƒ badge marking
+a computed check), the state change as its action. Branching never renders in the action lane.
+
+Those are the words the shipped **State Machine** behavior publishes too - **Go to state**,
+**Current state is**, **On any state change**, **Time in state** - so a machine you wrote by hand and
+a machine you attached read identically, and the event that asks the question claims the
+`state_machine` pattern (with the State Machine pack named as the behavior it could become).
 
 On real code the effect compounds. Here is the plugin's own semantic analyzer, whose annotation table is
 31 entries long:

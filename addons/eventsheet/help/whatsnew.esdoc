@@ -80,6 +80,42 @@ untouched, and the byte round-trip and the emitted GDScript cannot move.
   **Effects** section. Ids and emitted code are unchanged - only the names and the sections move,
   so a picked row and a typed line finally say the same thing.
 
+### Added - a blank event runs every tick
+
+- **A blank top-level event is a real event now, and it runs every tick.** An event with no trigger
+  picked used to compile to nothing at all (with a \"skipping event\" warning nobody read). It now
+  compiles exactly as an every-tick event does: its actions land in `_process(delta)`, and any
+  conditions it grew are checked there. A blank event and an **Every tick** event picked from the
+  list share the one handler, in sheet order. Nothing is stored on the row - blank stays blank on
+  disk - and no `if true:` is ever written.
+- **The Add event dialog opens on it.** Its first entry is **(none - runs every tick)**, already
+  selected, so Enter makes the blank event and **A** fills in its actions. The Ghost Row at top
+  level and an action applied with nothing selected already made exactly this row, and now that row
+  runs instead of compiling to nothing.
+- **A `_process` body with no condition of its own reads as that blank event.** The condition lane is
+  empty, because in an event sheet a blank event already means every tick; the hover and the Explain
+  panel say `Runs every tick` in words. `_physics_process` keeps one muted `every tick (physics)`
+  note, since blank alone cannot say which tick. An event that carries a condition keeps its full
+  **Every tick** words. Display only - byte-for-byte round-trip is untouched.
+- **The Doctor notices the surprise.** A blank event whose whole body is setting values gets a note:
+  \"This blank event runs every tick and only sets values - did you mean On start of layout?\"
+- **The blank reading claims the `blank_event` pattern** in the pattern registry, which the pattern
+  chip, its hover and the coverage counts read.
+
+### Changed - a state machine reads and is driven in one vocabulary
+
+- **The State Machine behavior speaks the words an event-sheet user reaches for.** **Set State** is
+  now **Go to state**, **Is In State** is **Current state is**, **On State Changed** is **On any
+  state change** and **Time In State** is **Time in state**. Display names only: the ace ids, the
+  emitted code and every sheet already using them are untouched.
+- **A hand-rolled state machine reads in those same words.** The ◆ state header a `match state:` case
+  renders as now says `Current state is \"patrol\"` rather than `State: patrol`, so an `enum` + `state`
+  machine written by hand and the attached behavior are indistinguishable on the canvas. The event
+  that asks the question claims the `state_machine` pattern, naming the State Machine behavior as the
+  thing a hand-rolled machine could become.
+- **The pattern registry is wired into the row build**: claims are cleared at the start of every
+  sweep and filled in by the readings that recognise a shape.
+
 ### Changed - the documentation says what the sheet says
 
 - **The whole documentation set speaks the sheet's vocabulary.** A picker entry is an **action**, a

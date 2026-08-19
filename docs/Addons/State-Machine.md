@@ -1,6 +1,6 @@
 # State Machine - One Named State Per Node, Clean Transitions
 
-State Machine is a Godot EventSheets behavior pack that gives a node a single, named "what am I doing right now" value and a clean way to switch it. You attach a `StateMachineBehavior` to any node - a player, an enemy, a door, a game manager - and that node now holds one **current state**, a plain String like `"idle"`, `"patrol"`, or `"open"`. There is no machine id to pass around: every Action, Condition, and Trigger targets the machine living on the node you drop it on. You set the current state with **Set State**, branch on it with the **Is In State** condition, and react to every switch with the **On State Changed** trigger, which hands you both the state you left and the state you entered. States are just names you invent, so the same tiny vocabulary drives a character's animation, an enemy's brain, a door's open/closed flip, or your whole game's menu/playing/paused flow. It replaces tangled "am I jumping AND not attacking AND..." boolean soup with one readable value and one place that changes it.
+State Machine is a Godot EventSheets behavior pack that gives a node a single, named "what am I doing right now" value and a clean way to switch it. You attach a `StateMachineBehavior` to any node - a player, an enemy, a door, a game manager - and that node now holds one **current state**, a plain String like `"idle"`, `"patrol"`, or `"open"`. There is no machine id to pass around: every Action, Condition, and Trigger targets the machine living on the node you drop it on. You set the current state with **Go to state**, branch on it with the **Current state is** condition, and react to every switch with the **On any state change** trigger, which hands you both the state you left and the state you entered. States are just names you invent, so the same tiny vocabulary drives a character's animation, an enemy's brain, a door's open/closed flip, or your whole game's menu/playing/paused flow. It replaces tangled "am I jumping AND not attacking AND..." boolean soup with one readable value and one place that changes it.
 
 ---
 
@@ -18,18 +18,18 @@ State Machine is a Godot EventSheets behavior pack that gives a node a single, n
 
 ## Where this pack shines
 
-- **Character animation states.** Give the player one machine that flips between `"idle"`, `"run"`, `"jump"`, and `"fall"`, then let a single On State Changed play the matching animation instead of scattering play calls everywhere.
-- **Enemy AI phases.** Model an enemy as `"patrol"` -> `"chase"` -> `"attack"` -> `"flee"`, branching each frame on Is In State rather than juggling a pile of booleans.
+- **Character animation states.** Give the player one machine that flips between `"idle"`, `"run"`, `"jump"`, and `"fall"`, then let a single On any state change play the matching animation instead of scattering play calls everywhere.
+- **Enemy AI phases.** Model an enemy as `"patrol"` -> `"chase"` -> `"attack"` -> `"flee"`, branching each frame on Current state is rather than juggling a pile of booleans.
 - **Game flow and screens.** Attach a machine to a game-manager node and drive `"menu"`, `"playing"`, `"paused"`, and `"game_over"` from one value, so every system asks the same question.
 - **Interactive objects.** Doors, chests, levers, and switches are two- or three-state machines (`"closed"` / `"open"`, `"locked"` / `"unlocked"`) that read cleanly and never end up half-open.
-- **Boss fight phases.** Escalate a boss through `"phase_1"`, `"phase_2"`, and `"enrage"`, and hang the phase-entry effects off On State Changed.
-- **Weapon and ability states.** A gun that cycles `"ready"`, `"firing"`, `"reloading"`, and `"empty"` gates input with Is In State so you never fire mid-reload.
+- **Boss fight phases.** Escalate a boss through `"phase_1"`, `"phase_2"`, and `"enrage"`, and hang the phase-entry effects off On any state change.
+- **Weapon and ability states.** A gun that cycles `"ready"`, `"firing"`, `"reloading"`, and `"empty"` gates input with Current state is so you never fire mid-reload.
 - **Traffic and environment cycles.** A stoplight rolling `"green"` -> `"yellow"` -> `"red"`, a day/night ticker, or a puzzle emitter all fit a single looping machine.
 - **Elevators and platforms.** Model an elevator as `"idle"`, `"moving_up"`, `"moving_down"`, and `"doors_open"` so it only ever does one thing at a time.
 - **Turn-based phase tracking.** A match manager that steps `"player_turn"`, `"enemy_turn"`, and `"resolving"` keeps whose-turn logic in one place.
-- **Quest and mission stages.** Track a quest through `"not_started"`, `"in_progress"`, and `"complete"` and let On State Changed fire the reward or update the log.
+- **Quest and mission stages.** Track a quest through `"not_started"`, `"in_progress"`, and `"complete"` and let On any state change fire the reward or update the log.
 - **Traps and hazards.** An `"armed"` -> `"triggered"` -> `"reset"` trap is trivial, and the change guard stops a trap from re-firing while already sprung.
-- **Pause and stun gating.** Wrap input and movement in an Is In State check so a stunned or paused actor simply stops reacting without you deleting anything.
+- **Pause and stun gating.** Wrap input and movement in an Current state is check so a stunned or paused actor simply stops reacting without you deleting anything.
 
 ---
 
@@ -37,21 +37,29 @@ State Machine is a Godot EventSheets behavior pack that gives a node a single, n
 
 The whole pack is three ACEs and one property. Learn these ideas and there is nothing left to learn.
 
-**The node is the machine.** You attach one `StateMachineBehavior` to a node, and that node now has exactly one current state. There is no machine id anywhere: Set State, Is In State, and On State Changed all act on the machine sitting on the node you place the row on. If a node needs its own independent state, give it its own behavior - one machine per node.
+**The names changed, the rows did not.** This pack now speaks the words an event-sheet user already
+reaches for: **Go to state** (was Set State), **Current state is** (was Is In State), **On any state
+change** (was On State Changed) and **Time in state** (was Time In State). Only the names in the
+picker changed - the ids, the emitted code and every sheet that already uses them are untouched, so
+nothing needs re-authoring. A hand-rolled state machine written directly in GDScript (an `enum` plus
+a `state` variable of it) reads in these same words when you open the script as a sheet, which is
+what makes the behavior and the hand-written machine indistinguishable on the canvas.
 
-**A state is just a name you invent.** A state is a String. There is no fixed list and nothing to declare up front - `"idle"`, `"patrol"`, `"open"`, `"phase_2"`, and `"cooking_the_soup"` are all equally valid. Pick short, consistent names and reuse them across your Set State and Is In State rows. A typo is the one thing that bites, because `"idle"` and `"Idle"` are different states.
+**The node is the machine.** You attach one `StateMachineBehavior` to a node, and that node now has exactly one current state. There is no machine id anywhere: Go to state, Current state is, and On any state change all act on the machine sitting on the node you place the row on. If a node needs its own independent state, give it its own behavior - one machine per node.
+
+**A state is just a name you invent.** A state is a String. There is no fixed list and nothing to declare up front - `"idle"`, `"patrol"`, `"open"`, `"phase_2"`, and `"cooking_the_soup"` are all equally valid. Pick short, consistent names and reuse them across your Go to state and Current state is rows. A typo is the one thing that bites, because `"idle"` and `"Idle"` are different states.
 
 **Only one state at a time.** The machine holds a single current value, so it is never in two states at once. That is the whole point: instead of tracking `is_jumping`, `is_attacking`, and `is_dead` as separate flags that can contradict each other, you track one value that can only be one thing.
 
-**Set State switches, and it guards against no-op changes.** **Set State** writes the new current state. Its key behavior is the built-in change guard: if you set the state to the value it already holds, nothing happens - the state does not "change" and On State Changed does not fire again. So you can safely call `Set State "run"` every single frame while running; only the first one, the real transition, fires the trigger. This is what keeps a walk animation from restarting 60 times a second.
+**Go to state switches, and it guards against no-op changes.** **Go to state** writes the new current state. Its key behavior is the built-in change guard: if you set the state to the value it already holds, nothing happens - the state does not "change" and On any state change does not fire again. So you can safely call `Go to state "run"` every single frame while running; only the first one, the real transition, fires the trigger. This is what keeps a walk animation from restarting 60 times a second.
 
-**Is In State reads the current state as a condition.** **Is In State** is true while the machine's current state equals the name you pass. This is your branch: gate movement behind `Is In State "run"`, gate attacks behind `Is In State "attack"`, freeze input behind `Is In State "stunned"`. Because only one state is active, these conditions are naturally mutually exclusive.
+**Current state is reads the current state as a condition.** **Current state is** is true while the machine's current state equals the name you pass. This is your branch: gate movement behind `Current state is "run"`, gate attacks behind `Current state is "attack"`, freeze input behind `Current state is "stunned"`. Because only one state is active, these conditions are naturally mutually exclusive.
 
-**On State Changed gives you both sides of the transition.** Every real change fires the **On State Changed** trigger with two values: `previous` (the state you just left) and `next` (the state you just entered). This is the single best place to put entry and exit effects - play the animation named `next`, stop the effect tied to `previous`, log the transition, or check "did we just leave `attack` for `flee`?". Because the change guard suppresses same-state sets, this trigger fires once per genuine transition, never on a repeat.
+**On any state change gives you both sides of the transition.** Every real change fires the **On any state change** trigger with two values: `previous` (the state you just left) and `next` (the state you just entered). This is the single best place to put entry and exit effects - play the animation named `next`, stop the effect tied to `previous`, log the transition, or check "did we just leave `attack` for `flee`?". Because the change guard suppresses same-state sets, this trigger fires once per genuine transition, never on a repeat.
 
-**The starting state is an Inspector property.** The machine's `state` property is exported and defaults to `"idle"`. Set it in the Inspector to choose where the machine begins, or override it in code with a `Set State` on ready. Whatever you pick is the value the machine holds before the first transition.
+**The starting state is an Inspector property.** The machine's `state` property is exported and defaults to `"idle"`. Set it in the Inspector to choose where the machine begins, or override it in code with a `Go to state` on ready. Whatever you pick is the value the machine holds before the first transition.
 
-**Transitions are not enforced - you decide the rules.** The pack does not hold a transition table, so any state can move to any other state. That is deliberate and flexible, but it means the "you can only go from `reloading` to `ready`" rules live in your sheet: guard a Set State with an Is In State (or a game condition) so a transition only happens when it should. The machine remembers the value; you own the rules around it.
+**Transitions are not enforced - you decide the rules.** The pack does not hold a transition table, so any state can move to any other state. That is deliberate and flexible, but it means the "you can only go from `reloading` to `ready`" rules live in your sheet: guard a Go to state with an Current state is (or a game condition) so a transition only happens when it should. The machine remembers the value; you own the rules around it.
 
 ---
 
@@ -61,24 +69,24 @@ The whole pack is three ACEs and one property. Learn these ideas and there is no
 
 **2. Set the starting state.** Select the behavior node and set the `state` property in the Inspector. It defaults to `"idle"`; change it to whatever your machine should begin in (for a door, maybe `"closed"`; for a game manager, `"menu"`).
 
-**3. Wire the three moves.** Switch with Set State, branch with Is In State, react with On State Changed. Here is a complete first machine - a player that flips between idle and run, with one animation hook that covers both:
+**3. Wire the three moves.** Switch with Go to state, branch with Current state is, react with On any state change. Here is a complete first machine - a player that flips between idle and run, with one animation hook that covers both:
 
 ```
 (Inspector) StateMachineBehavior.state = "idle"
 
 On Every Tick
   Condition: Player is moving
-  Condition: Player | StateMachineBehavior  Is In State  "idle"
-    -> Player | StateMachineBehavior: Set State  "run"
+  Condition: Player | StateMachineBehavior  Current state is  "idle"
+    -> Player | StateMachineBehavior: Go to state  "run"
   Condition: Player is not moving
-  Condition: Player | StateMachineBehavior  Is In State  "run"
-    -> Player | StateMachineBehavior: Set State  "idle"
+  Condition: Player | StateMachineBehavior  Current state is  "run"
+    -> Player | StateMachineBehavior: Go to state  "idle"
 
-On State Changed
+On any state change
   -> Player: play animation named  next
 ```
 
-Because Set State guards same-value writes, the animation in On State Changed plays exactly once per real switch, not every frame. The `next` value handed to the trigger is the state you just entered, so a single row drives both animations. Name your animations to match your state names and the hook stays this small as you add more states.
+Because Go to state guards same-value writes, the animation in On any state change plays exactly once per real switch, not every frame. The `next` value handed to the trigger is the state you just entered, so a single row drives both animations. Name your animations to match your state names and the hook stays this small as you add more states.
 
 ---
 
@@ -90,33 +98,33 @@ All rows live in the **State Machine** category and target the `StateMachineBeha
 
 | Action | Parameters | Description |
 |---|---|---|
-| Set State | `next` (String) | Switches the machine to the `next` state and fires On State Changed - but only when `next` differs from the current state, so setting the same state again is a safe no-op. |
+| Go to state | `next` (String) | Switches the machine to the `next` state and fires On any state change - but only when `next` differs from the current state, so setting the same state again is a safe no-op. |
 
 ### Conditions
 
 | Condition | Parameters | Description |
 |---|---|---|
-| Is In State | `state_name` (String) | True while the machine's current state equals `state_name`. Use it to branch behavior on the active state. |
+| Current state is | `state_name` (String) | True while the machine's current state equals `state_name`. Use it to branch behavior on the active state. |
 
 ### Expressions
 
-This pack ships no expression ACEs. To read the machine's current state, branch on it with the **Is In State** condition; to capture a switch as it happens, use the `previous` and `next` values handed to the **On State Changed** trigger.
+This pack ships no expression ACEs. To read the machine's current state, branch on it with the **Current state is** condition; to capture a switch as it happens, use the `previous` and `next` values handed to the **On any state change** trigger.
 
 | Expression | Parameters | Returns | Description |
 |---|---|---|---|
-| (none) | - | - | Read state with the Is In State condition; capture transitions with On State Changed's `previous` / `next`. |
+| (none) | - | - | Read state with the Current state is condition; capture transitions with On any state change's `previous` / `next`. |
 
 ### Triggers
 
 | Trigger | Parameters | Fires when |
 |---|---|---|
-| On State Changed | `previous` (String), `next` (String) | Set State actually changes the state. Carries the state you left (`previous`) and the state you entered (`next`); does not fire when the state is set to its current value. |
+| On any state change | `previous` (String), `next` (String) | Go to state actually changes the state. Carries the state you left (`previous`) and the state you entered (`next`); does not fire when the state is set to its current value. |
 
 ### Inspector properties
 
 | Property | Type | Default | What it does |
 |---|---|---|---|
-| `state` | String | `idle` | The machine's current state, and the value it starts in. Set it in the Inspector to choose the starting state; Set State overwrites it at runtime. |
+| `state` | String | `idle` | The machine's current state, and the value it starts in. Set it in the Inspector to choose the starting state; Go to state overwrites it at runtime. |
 
 ### Inspector properties are ACEs too
 
@@ -145,24 +153,24 @@ dock, the section grounds to that node's actual children before you even press R
 
 ## Use cases
 
-Each example targets the `StateMachineBehavior` on the named node. Set the starting state in the Inspector, switch with Set State, branch with Is In State, and react in On State Changed.
+Each example targets the `StateMachineBehavior` on the named node. Set the starting state in the Inspector, switch with Go to state, branch with Current state is, and react in On any state change.
 
 ### 1. Player movement states driving animation
 
-The classic use: one machine, and one On State Changed row that plays whatever animation matches the state you just entered.
+The classic use: one machine, and one On any state change row that plays whatever animation matches the state you just entered.
 
 ```
 On Every Tick
   Condition: Player is on floor
   Condition: move input is not zero
-    -> Player | StateMachineBehavior: Set State  "run"
+    -> Player | StateMachineBehavior: Go to state  "run"
   Condition: Player is on floor
   Condition: move input is zero
-    -> Player | StateMachineBehavior: Set State  "idle"
+    -> Player | StateMachineBehavior: Go to state  "idle"
   Condition: Player is not on floor
-    -> Player | StateMachineBehavior: Set State  "fall"
+    -> Player | StateMachineBehavior: Go to state  "fall"
 
-On State Changed
+On any state change
   -> Player: play animation named  next
 ```
 
@@ -170,24 +178,24 @@ Setting `"run"` every frame while running is harmless - the change guard means t
 
 ### 2. Enemy patrol, chase, and attack
 
-Model the enemy brain as three named states and gate each behavior behind Is In State.
+Model the enemy brain as three named states and gate each behavior behind Current state is.
 
 ```
 (Inspector) StateMachineBehavior.state = "patrol"
 
 On Every Tick
-  Condition: Enemy | StateMachineBehavior  Is In State  "patrol"
+  Condition: Enemy | StateMachineBehavior  Current state is  "patrol"
   Condition: Player within 300 px
-    -> Enemy | StateMachineBehavior: Set State  "chase"
-  Condition: Enemy | StateMachineBehavior  Is In State  "chase"
+    -> Enemy | StateMachineBehavior: Go to state  "chase"
+  Condition: Enemy | StateMachineBehavior  Current state is  "chase"
   Condition: Player within 60 px
-    -> Enemy | StateMachineBehavior: Set State  "attack"
-  Condition: Enemy | StateMachineBehavior  Is In State  "chase"
+    -> Enemy | StateMachineBehavior: Go to state  "attack"
+  Condition: Enemy | StateMachineBehavior  Current state is  "chase"
   Condition: Player beyond 400 px
-    -> Enemy | StateMachineBehavior: Set State  "patrol"
+    -> Enemy | StateMachineBehavior: Go to state  "patrol"
 ```
 
-Each Is In State branch is mutually exclusive because the machine only holds one state, so the enemy is never patrolling and attacking at the same time.
+Each Current state is branch is mutually exclusive because the machine only holds one state, so the enemy is never patrolling and attacking at the same time.
 
 ### 3. A door that opens and closes
 
@@ -197,15 +205,15 @@ A two-state machine is the cleanest way to model an interactive object.
 (Inspector) StateMachineBehavior.state = "closed"
 
 On Interact pressed
-  Condition: Door | StateMachineBehavior  Is In State  "closed"
-    -> Door | StateMachineBehavior: Set State  "open"
-  Condition: Door | StateMachineBehavior  Is In State  "open"
-    -> Door | StateMachineBehavior: Set State  "closed"
+  Condition: Door | StateMachineBehavior  Current state is  "closed"
+    -> Door | StateMachineBehavior: Go to state  "open"
+  Condition: Door | StateMachineBehavior  Current state is  "open"
+    -> Door | StateMachineBehavior: Go to state  "closed"
 
-On State Changed
-  Condition: Door | StateMachineBehavior  Is In State  "open"
+On any state change
+  Condition: Door | StateMachineBehavior  Current state is  "open"
     -> Door: play "open" animation
-  Condition: Door | StateMachineBehavior  Is In State  "closed"
+  Condition: Door | StateMachineBehavior  Current state is  "closed"
     -> Door: play "close" animation
 ```
 
@@ -219,56 +227,56 @@ Attach a machine to a persistent game-manager node and let every system read the
 (Inspector) StateMachineBehavior.state = "menu"
 
 On Play pressed
-  -> GameManager | StateMachineBehavior: Set State  "playing"
+  -> GameManager | StateMachineBehavior: Go to state  "playing"
 
 On Pause pressed
-  Condition: GameManager | StateMachineBehavior  Is In State  "playing"
-    -> GameManager | StateMachineBehavior: Set State  "paused"
+  Condition: GameManager | StateMachineBehavior  Current state is  "playing"
+    -> GameManager | StateMachineBehavior: Go to state  "paused"
 
-On State Changed
-  Condition: GameManager | StateMachineBehavior  Is In State  "paused"
+On any state change
+  Condition: GameManager | StateMachineBehavior  Current state is  "paused"
     -> get_tree(): set paused true
-  Condition: GameManager | StateMachineBehavior  Is In State  "playing"
+  Condition: GameManager | StateMachineBehavior  Current state is  "playing"
     -> get_tree(): set paused false
 ```
 
 One value answers "what screen are we on" for the HUD, the pause menu, spawners, and input - no duplicated flags to keep in sync.
 
-### 5. Pause gating with Is In State
+### 5. Pause gating with Current state is
 
 Instead of deleting or disabling systems, just refuse to act unless the game is playing.
 
 ```
 On Every Tick
-  Condition: GameManager | StateMachineBehavior  Is In State  "playing"
+  Condition: GameManager | StateMachineBehavior  Current state is  "playing"
     -> Player: read input and move
     -> Enemies: update AI
 ```
 
-Wrapping the update in a single Is In State check freezes everything the moment the state leaves `"playing"`, and resumes it untouched when it returns.
+Wrapping the update in a single Current state is check freezes everything the moment the state leaves `"playing"`, and resumes it untouched when it returns.
 
 ### 6. Boss fight phases by health
 
-Escalate a boss through named phases and put each phase's setup in On State Changed.
+Escalate a boss through named phases and put each phase's setup in On any state change.
 
 ```
 (Inspector) StateMachineBehavior.state = "phase_1"
 
 On Damaged
-  Condition: Boss | StateMachineBehavior  Is In State  "phase_1"
+  Condition: Boss | StateMachineBehavior  Current state is  "phase_1"
   Condition: Boss.hp / Boss.max_hp  <  0.5
-    -> Boss | StateMachineBehavior: Set State  "phase_2"
-  Condition: Boss | StateMachineBehavior  Is In State  "phase_2"
+    -> Boss | StateMachineBehavior: Go to state  "phase_2"
+  Condition: Boss | StateMachineBehavior  Current state is  "phase_2"
   Condition: Boss.hp / Boss.max_hp  <  0.2
-    -> Boss | StateMachineBehavior: Set State  "enrage"
+    -> Boss | StateMachineBehavior: Go to state  "enrage"
 
-On State Changed
-  Condition: Boss | StateMachineBehavior  Is In State  "enrage"
+On any state change
+  Condition: Boss | StateMachineBehavior  Current state is  "enrage"
     -> Boss: play roar
     -> Boss: speed up attacks
 ```
 
-The Is In State guard on each transition means the boss can only step forward one phase at a time, never skip or repeat.
+The Current state is guard on each transition means the boss can only step forward one phase at a time, never skip or repeat.
 
 ### 7. Weapon cycle: ready, firing, reloading, empty
 
@@ -278,16 +286,16 @@ Gate the trigger behind state so you can never fire mid-reload.
 (Inspector) StateMachineBehavior.state = "ready"
 
 On Fire pressed
-  Condition: Gun | StateMachineBehavior  Is In State  "ready"
+  Condition: Gun | StateMachineBehavior  Current state is  "ready"
   Condition: Gun.ammo  >  0
-    -> Gun | StateMachineBehavior: Set State  "firing"
+    -> Gun | StateMachineBehavior: Go to state  "firing"
 
 On Reload pressed
-  Condition: Gun | StateMachineBehavior  Is In State  "ready"
-    -> Gun | StateMachineBehavior: Set State  "reloading"
+  Condition: Gun | StateMachineBehavior  Current state is  "ready"
+    -> Gun | StateMachineBehavior: Go to state  "reloading"
 
-On State Changed
-  Condition: Gun | StateMachineBehavior  Is In State  "reloading"
+On any state change
+  Condition: Gun | StateMachineBehavior  Current state is  "reloading"
     -> Gun: play reload animation
 ```
 
@@ -301,14 +309,14 @@ A looping machine that advances on a timer, one step per tick.
 (Inspector) StateMachineBehavior.state = "green"
 
 On Timer timeout
-  Condition: Light | StateMachineBehavior  Is In State  "green"
-    -> Light | StateMachineBehavior: Set State  "yellow"
-  Condition: Light | StateMachineBehavior  Is In State  "yellow"
-    -> Light | StateMachineBehavior: Set State  "red"
-  Condition: Light | StateMachineBehavior  Is In State  "red"
-    -> Light | StateMachineBehavior: Set State  "green"
+  Condition: Light | StateMachineBehavior  Current state is  "green"
+    -> Light | StateMachineBehavior: Go to state  "yellow"
+  Condition: Light | StateMachineBehavior  Current state is  "yellow"
+    -> Light | StateMachineBehavior: Go to state  "red"
+  Condition: Light | StateMachineBehavior  Current state is  "red"
+    -> Light | StateMachineBehavior: Go to state  "green"
 
-On State Changed
+On any state change
   -> Light: show only the lamp named  next
 ```
 
@@ -322,14 +330,14 @@ Keep an elevator honest by letting it be exactly one thing at a time.
 (Inspector) StateMachineBehavior.state = "idle"
 
 On Call up pressed
-  Condition: Elevator | StateMachineBehavior  Is In State  "idle"
-    -> Elevator | StateMachineBehavior: Set State  "moving_up"
+  Condition: Elevator | StateMachineBehavior  Current state is  "idle"
+    -> Elevator | StateMachineBehavior: Go to state  "moving_up"
 
 On Reached top
-  -> Elevator | StateMachineBehavior: Set State  "doors_open"
+  -> Elevator | StateMachineBehavior: Go to state  "doors_open"
 
 On Every Tick
-  Condition: Elevator | StateMachineBehavior  Is In State  "moving_up"
+  Condition: Elevator | StateMachineBehavior  Current state is  "moving_up"
     -> Elevator: move toward top floor
 ```
 
@@ -343,26 +351,26 @@ The change guard shines here: a sprung trap will not re-trigger while already tr
 (Inspector) StateMachineBehavior.state = "armed"
 
 On Body entered
-  Condition: Trap | StateMachineBehavior  Is In State  "armed"
-    -> Trap | StateMachineBehavior: Set State  "triggered"
+  Condition: Trap | StateMachineBehavior  Current state is  "armed"
+    -> Trap | StateMachineBehavior: Go to state  "triggered"
 
-On State Changed
-  Condition: Trap | StateMachineBehavior  Is In State  "triggered"
+On any state change
+  Condition: Trap | StateMachineBehavior  Current state is  "triggered"
     -> Trap: deal damage
     -> Trap: start 3s reset timer
 
 On Reset timer timeout
-  -> Trap | StateMachineBehavior: Set State  "armed"
+  -> Trap | StateMachineBehavior: Go to state  "armed"
 ```
 
-Even if three bodies enter on the same frame, only the first `Set State "triggered"` changes the state and deals damage - the rest are no-ops.
+Even if three bodies enter on the same frame, only the first `Go to state "triggered"` changes the state and deals damage - the rest are no-ops.
 
 ### 11. Reacting to a specific transition with previous and next
 
-On State Changed hands you both sides, so you can react to an exact edge, not just the destination.
+On any state change hands you both sides, so you can react to an exact edge, not just the destination.
 
 ```
-On State Changed
+On any state change
   Condition: previous  ==  "chase"
   Condition: next  ==  "flee"
     -> Enemy: play "panic" barks
@@ -379,16 +387,16 @@ Step a match through turns and let the whole board read the current phase.
 (Inspector) StateMachineBehavior.state = "player_turn"
 
 On End turn pressed
-  Condition: Match | StateMachineBehavior  Is In State  "player_turn"
-    -> Match | StateMachineBehavior: Set State  "enemy_turn"
+  Condition: Match | StateMachineBehavior  Current state is  "player_turn"
+    -> Match | StateMachineBehavior: Go to state  "enemy_turn"
 
 On Enemy done
-  -> Match | StateMachineBehavior: Set State  "player_turn"
+  -> Match | StateMachineBehavior: Go to state  "player_turn"
 
 On Every Tick
-  Condition: Match | StateMachineBehavior  Is In State  "player_turn"
+  Condition: Match | StateMachineBehavior  Current state is  "player_turn"
     -> UI: enable the end-turn button
-  Condition: Match | StateMachineBehavior  Is In State  "enemy_turn"
+  Condition: Match | StateMachineBehavior  Current state is  "enemy_turn"
     -> UI: disable the end-turn button
 ```
 
@@ -402,40 +410,40 @@ Track a quest as a machine and hang the payoff off the entry transition.
 (Inspector) StateMachineBehavior.state = "not_started"
 
 On Talk to quest giver
-  Condition: Quest | StateMachineBehavior  Is In State  "not_started"
-    -> Quest | StateMachineBehavior: Set State  "in_progress"
+  Condition: Quest | StateMachineBehavior  Current state is  "not_started"
+    -> Quest | StateMachineBehavior: Go to state  "in_progress"
 
 On Item collected
-  Condition: Quest | StateMachineBehavior  Is In State  "in_progress"
+  Condition: Quest | StateMachineBehavior  Current state is  "in_progress"
   Condition: Player has all items
-    -> Quest | StateMachineBehavior: Set State  "complete"
+    -> Quest | StateMachineBehavior: Go to state  "complete"
 
-On State Changed
-  Condition: Quest | StateMachineBehavior  Is In State  "complete"
+On any state change
+  Condition: Quest | StateMachineBehavior  Current state is  "complete"
     -> Player: grant reward
     -> UI: mark quest done
 ```
 
-Because On State Changed only fires on the real switch to `"complete"`, the reward is granted exactly once.
+Because On any state change only fires on the real switch to `"complete"`, the reward is granted exactly once.
 
 ### 14. Stunned actor that ignores input
 
-A stun is just another state, and Is In State does the gating for free.
+A stun is just another state, and Current state is does the gating for free.
 
 ```
 On Hit by stun
-  -> Player | StateMachineBehavior: Set State  "stunned"
+  -> Player | StateMachineBehavior: Go to state  "stunned"
   -> Player: start 2s stun timer
 
 On Stun timer timeout
-  -> Player | StateMachineBehavior: Set State  "idle"
+  -> Player | StateMachineBehavior: Go to state  "idle"
 
 On Every Tick
-  Condition: Player | StateMachineBehavior  Is In State  "stunned"
+  Condition: Player | StateMachineBehavior  Current state is  "stunned"
     -> Player: do nothing (skip input and movement this frame)
 ```
 
-No flags, no "can I move" boolean - if the state is `"stunned"`, every action-gating Is In State elsewhere simply reads false.
+No flags, no "can I move" boolean - if the state is `"stunned"`, every action-gating Current state is elsewhere simply reads false.
 
 ### 15. Resume the interrupted state after a knockback
 
@@ -443,40 +451,40 @@ An interruption should return the actor to whatever it was doing before, not dum
 
 ```
 On Knocked Back
-  -> Enemy | StateMachineBehavior: Set State  "knockback"
+  -> Enemy | StateMachineBehavior: Go to state  "knockback"
 
-On State Changed
+On any state change
   Condition: next  ==  "knockback"
     -> Enemy: set resume_state = previous
 
 On Knockback timer timeout
-  -> Enemy | StateMachineBehavior: Set State  Enemy.resume_state
+  -> Enemy | StateMachineBehavior: Go to state  Enemy.resume_state
 ```
 
 The Timer pack's one-shot countdown is a natural fit for the knockback window.
 
 ### Other use cases
 
-**Utility brain mirror.** Pair with the UtilityBrain pack: copy the brain's chosen action into a state on each switch so animation and sound systems branch on Is In State without knowing anything about scoring.
+**Utility brain mirror.** Pair with the UtilityBrain pack: copy the brain's chosen action into a state on each switch so animation and sound systems branch on Current state is without knowing anything about scoring.
 
 **Cutscene lockout.** Set a `"cutscene"` state on the game manager and gate every input and AI row behind not being in it, so scripted scenes cannot be interrupted by stray gameplay.
 
-**Tutorial step tracking.** Walk a machine through `"step_1"`, `"step_2"`, and `"done"` as the player completes each task, and let On State Changed swap the hint text so the prompt always matches the stage.
+**Tutorial step tracking.** Walk a machine through `"step_1"`, `"step_2"`, and `"done"` as the player completes each task, and let On any state change swap the hint text so the prompt always matches the stage.
 
-**Crafting station lock.** Flip a workbench between `"idle"` and `"crafting"` so a second job cannot start while one is in progress - the Is In State guard is the whole queue.
+**Crafting station lock.** Flip a workbench between `"idle"` and `"crafting"` so a second job cannot start while one is in progress - the Current state is guard is the whole queue.
 
-**Weather cycle.** Advance `"clear"` to `"rain"` to `"storm"` on a timer and hang the particle, sound, and lighting swaps off On State Changed so each front rolls in exactly once.
+**Weather cycle.** Advance `"clear"` to `"rain"` to `"storm"` on a timer and hang the particle, sound, and lighting swaps off On any state change so each front rolls in exactly once.
 
 ---
 
 ## Tips and common mistakes
 
-- **The node is the machine - there is no machine id.** Every Set State, Is In State, and On State Changed acts on the `StateMachineBehavior` of the node it is placed on. If one node needs its own independent state, give it its own behavior. One machine, one node.
-- **State names are strings, so a typo is a silent bug.** `"idle"`, `"Idle"`, and `" idle"` are three different states. If a branch never fires or a transition never lands, check the spelling and casing on the Set State and Is In State rows first. Pick a consistent style (short, lowercase, snake_case) and reuse the exact same literals.
-- **Set State is safe to call every frame.** The built-in change guard means setting the state to the value it already holds does nothing and does not re-fire On State Changed. Lean on this - you do not need to wrap `Set State "run"` in an "am I already running" check; the machine handles it.
-- **Put entry and exit effects in On State Changed, not in the transition rows.** The trigger fires exactly once per real switch and gives you `previous` and `next`, so it is the natural home for playing an animation, spawning an effect, or logging. Scattering those into the Set State rows risks running them on frames where nothing actually changed.
-- **Transitions are not enforced - guard them yourself.** The pack lets any state move to any other. If a transition should only happen from a specific state, wrap the Set State in an `Is In State` for the state you are leaving. That one guard is how you turn "anything goes" into a real, rule-bound flow.
-- **Set the starting state in the Inspector.** The `state` property defaults to `"idle"`; change it to match your machine (a door starts `"closed"`, a manager starts `"menu"`). The value you pick is what the machine holds before the first transition, and it is what your first-frame Is In State checks will see.
-- **Only one state is active, so use that for mutual exclusion.** Because the machine can hold just one value, a set of Is In State branches is naturally exclusive - you never have to write "in run AND not in attack". Replace contradicting booleans (`is_jumping`, `is_attacking`) with one state and the impossible combinations disappear.
+- **The node is the machine - there is no machine id.** Every Go to state, Current state is, and On any state change acts on the `StateMachineBehavior` of the node it is placed on. If one node needs its own independent state, give it its own behavior. One machine, one node.
+- **State names are strings, so a typo is a silent bug.** `"idle"`, `"Idle"`, and `" idle"` are three different states. If a branch never fires or a transition never lands, check the spelling and casing on the Go to state and Current state is rows first. Pick a consistent style (short, lowercase, snake_case) and reuse the exact same literals.
+- **Go to state is safe to call every frame.** The built-in change guard means setting the state to the value it already holds does nothing and does not re-fire On any state change. Lean on this - you do not need to wrap `Go to state "run"` in an "am I already running" check; the machine handles it.
+- **Put entry and exit effects in On any state change, not in the transition rows.** The trigger fires exactly once per real switch and gives you `previous` and `next`, so it is the natural home for playing an animation, spawning an effect, or logging. Scattering those into the Go to state rows risks running them on frames where nothing actually changed.
+- **Transitions are not enforced - guard them yourself.** The pack lets any state move to any other. If a transition should only happen from a specific state, wrap the Go to state in an `Current state is` for the state you are leaving. That one guard is how you turn "anything goes" into a real, rule-bound flow.
+- **Set the starting state in the Inspector.** The `state` property defaults to `"idle"`; change it to match your machine (a door starts `"closed"`, a manager starts `"menu"`). The value you pick is what the machine holds before the first transition, and it is what your first-frame Current state is checks will see.
+- **Only one state is active, so use that for mutual exclusion.** Because the machine can hold just one value, a set of Current state is branches is naturally exclusive - you never have to write "in run AND not in attack". Replace contradicting booleans (`is_jumping`, `is_attacking`) with one state and the impossible combinations disappear.
 - **Read `previous` when the destination alone is not enough.** "Just entered flee" is `next == "flee"`; "entered flee specifically from chase" needs `previous == "chase"` too. Reach for `previous` whenever the reaction depends on where you came from, not just where you are going.
-- **This pack tracks state; it does not run behavior.** State Machine holds and switches the current value - it does not move, animate, or attack on its own. Pair Is In State with your gameplay rows to act on the state, and use On State Changed to fire the one-shot effects.
+- **This pack tracks state; it does not run behavior.** State Machine holds and switches the current value - it does not move, animate, or attack on its own. Pair Current state is with your gameplay rows to act on the state, and use On any state change to fire the one-shot effects.
