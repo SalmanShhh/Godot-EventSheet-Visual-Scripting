@@ -341,6 +341,13 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var systems: Dictionary = godot_systems_statement(text, context)
 	if not systems.is_empty():
 		return _with_indent(systems, indent)
+	# ── T1 / T2 / T3 / T4 ───────────────────────────────────────────────────────────────────────
+	# The hand-rolled behavior shapes, in the shipped behavior's own words. AFTER the readings above
+	# so nothing already settled moves, and BEFORE the arithmetic below, which would describe one
+	# line of a projectile correctly and the projectile not at all.
+	var shape: Dictionary = behavior_shape_statement(text, context)
+	if not shape.is_empty():
+		return _with_indent(shape, indent)
 	var compound: Dictionary = _compound_statement(text, context)
 	if not compound.is_empty():
 		return _with_indent(compound, indent)
@@ -367,6 +374,12 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var systems: Dictionary = godot_systems_condition(text, context)
 	if not systems.is_empty():
 		return systems
+	# ── T1 / T3 ─────────────────────────────────────────────────────────────────────────────────
+	# A projectile's distance travelled and a glide's arrival are ONE question each, and the readings
+	# below would describe them as the operator they happen to be written with.
+	var shape: Dictionary = behavior_shape_condition(text, context)
+	if not shape.is_empty():
+		return shape
 	var joined: Dictionary = joined_condition(text, context)
 	if not joined.is_empty():
 		return joined
@@ -6787,3 +6800,28 @@ static func media_condition(text: String, context: Dictionary) -> Dictionary:
 			and not _class_is_any(object_class, SPRITE_CLASSES):
 		return {}
 	return _with_pattern(_sentence(object_name, "Is playing", {}), "sound" if audio else "sprite_animation", bare)
+
+
+# ── T1 / T2 / T3 / T4: the hand-rolled BEHAVIOR shapes ────────────────────────────────────────────
+# A projectile, a turret, a glide, a spin, a wrap, a clamp, a pin and a fade are each a behavior that
+# already ships as a pack, and the pack's words are what the arithmetic is doing. The recognisers
+# live in their own file (EventSheetBehaviorShapes) because each is a SHAPE rather than a statement;
+# these three functions are the whole of their contact with the grammar, so nothing already settled
+# here can move and the readings can be pinned on their own.
+
+
+## The one sentence a behavior shape reads as, with the behavior's name as the row's chip. Public so
+## the shape readings can build a row exactly as the behaviour readings above do.
+static func behaviour_sentence_of(object_name: String, chip: String, template: String,
+		values: Dictionary) -> Dictionary:
+	return _behaviour_sentence(object_name, chip, template, values)
+
+
+## The behavior-shape reading of one STATEMENT, or {} when no shape claims it.
+static func behavior_shape_statement(text: String, context: Dictionary) -> Dictionary:
+	return EventSheetBehaviorShapes.statement(text, context)
+
+
+## The behavior-shape reading of one CONDITION, or {} when no shape claims it.
+static func behavior_shape_condition(text: String, context: Dictionary) -> Dictionary:
+	return EventSheetBehaviorShapes.condition(text, context)

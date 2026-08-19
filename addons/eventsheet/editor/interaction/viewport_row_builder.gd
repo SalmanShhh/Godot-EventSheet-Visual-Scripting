@@ -9840,9 +9840,9 @@ var _pending_patterns: Dictionary = {}
 ## What each pattern is CALLED, and which sheet rows author it - the one line a chip prints and the
 ## vocabulary a reader is sent to when they ask "how would I write this in the sheet?". Keyed by the
 ## registry's own frozen pattern ids; a pattern with no entry still claims, it just says nothing
-## extra. `adoptable` is deliberately absent for all three of these: no shipped behavior replaces a
-## shader parameter, a tilemap cell or a camera limit, and offering one that does not fit would be
-## worse than offering none.
+## extra. `adoptable` names the pack that could replace the hand-written shape, and is deliberately
+## absent for the first three: no shipped behavior replaces a shader parameter, a tilemap cell or a
+## camera limit, and offering one that does not fit would be worse than offering none.
 const PATTERN_VOCABULARY: Dictionary = {
 	"effects": {
 		"words": "Effects",
@@ -9881,6 +9881,51 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"adoptable": "juice",
 		"ace_ids": ["Core/CameraShakeOnce", "Core/Hitstop", "Core/BobY", "Core/FlashColour",
 			"Core/EaseSizeBack"]
+	},
+	# ── T1 / T2 / T3 / T4 ──────────────────────────────────────────────────────────────────────
+	# The hand-rolled behavior shapes. Every one of these DOES have a shipped pack behind it, so each
+	# carries an `adoptable`: attaching the behavior is the first thing to offer, and the free
+	# actions beside it are the second.
+	"bullet": {
+		"words": "Bullet movement written out by hand",
+		"adoptable": "bullet",
+		"ace_ids": ["Core/SetAngleOfMotion", "Core/StepAlongVelocity", "Core/AccelerateSpeed",
+			"Core/ApplyGravitySimple", "Core/BounceOffSolid", "Core/DistanceTravelled"]
+	},
+	"turret": {
+		"words": "A turret's target, turn and rate of fire",
+		"adoptable": "weapon_kit",
+		"ace_ids": ["Core/AcquireNearestInFamily", "Core/HasTarget", "Core/RotateToward"]
+	},
+	"move_to": {
+		"words": "Gliding to a point until it arrives",
+		"adoptable": "move_to",
+		"ace_ids": ["Core/GlideToward", "Core/HasArrived"]
+	},
+	"rotate": {
+		"words": "A constant spin",
+		"adoptable": "rotate",
+		"ace_ids": ["Core/RotateClockwise"]
+	},
+	"wrap": {
+		"words": "Wrapping around the layout edges",
+		"adoptable": "wrap",
+		"ace_ids": ["Core/WrapAroundLayout"]
+	},
+	"bound": {
+		"words": "Held inside the layout edges",
+		"adoptable": "bound_to",
+		"ace_ids": ["Core/BoundToLayout"]
+	},
+	"pin": {
+		"words": "One object's place copied from another's",
+		"adoptable": "pin",
+		"ace_ids": ["Core/PinToObject", "Core/PinAngleToObject"]
+	},
+	"fade": {
+		"words": "Fading out, then destroyed",
+		"adoptable": "fade",
+		"ace_ids": ["Core/FadeOutOverSeconds"]
 	}
 }
 
@@ -10111,6 +10156,58 @@ var _sentence_context_sheet: Resource = null
 var _sentence_context_cache: Dictionary = {}
 
 
+## T1 / T3. The lines the shipped rows a behavior shape gets LIFTED to stand for, so the shape can be
+## re-read off a picked row exactly as it is off a typed one. `{slot}` names the row's own params.
+## Only rows whose shape a behavior owns are listed: everything else keeps the reading it has.
+const BEHAVIOR_SHAPE_ACE_LINES: Dictionary = {
+	"MoveBy2D": "position += {offset}",
+	"SetVelocity2D": "velocity = {vel}",
+	"ApplyGravitySimple": "velocity.y += {gravity} * {delta_t}",
+	"SetProperty": "{target}.{property} = {value}"
+}
+
+## T1. The same for the one CONDITION a behavior shape is lifted to.
+const BEHAVIOR_SHAPE_CONDITION_LINES: Dictionary = {
+	"IsFartherThan": "{a}.distance_to({b}) > {distance}"
+}
+
+
+## T1 / T3. The behavior-shape reading of a LIFTED row, or {} when no shape claims it. The row's
+## params are put back into the line the row stands for and read through the shape grammar, which is
+## the same text a user who never let the importer touch the file would have.
+func behavior_shape_action_sentence(ace_id: String, params_dict: Dictionary,
+		context: Dictionary) -> Dictionary:
+	if not BEHAVIOR_SHAPE_ACE_LINES.has(ace_id):
+		return {}
+	var code: String = _behavior_shape_line(str(BEHAVIOR_SHAPE_ACE_LINES[ace_id]), params_dict)
+	return {} if code.is_empty() else EventSheetBehaviorShapes.statement(code, context)
+
+
+## T1. The behavior-shape reading of a lifted CONDITION row, or {} when no shape claims it.
+func behavior_shape_condition_sentence(ace_id: String, params_dict: Dictionary,
+		context: Dictionary) -> Dictionary:
+	if not BEHAVIOR_SHAPE_CONDITION_LINES.has(ace_id):
+		return {}
+	var code: String = _behavior_shape_line(str(BEHAVIOR_SHAPE_CONDITION_LINES[ace_id]), params_dict)
+	return {} if code.is_empty() else EventSheetBehaviorShapes.condition(code, context)
+
+
+## One line rebuilt from a row's params, or "" when a slot the line needs is empty - in which case
+## the row is not the shape, and guessing at the missing half would be worse than saying nothing.
+## A receiver-less write (`{target}` empty) loses its dot, which is the spelling the file itself has.
+func _behavior_shape_line(template: String, params_dict: Dictionary) -> String:
+	var code: String = template
+	for key: Variant in params_dict:
+		code = code.replace("{%s}" % str(key), str(params_dict[key]))
+	code = code.replace("{delta_t}", "delta")
+	# A write with no receiver is spelled without the dot, which is how the file itself has it.
+	if code.begins_with("."):
+		code = code.substr(1)
+	if code.contains("{"):
+		return ""
+	return code
+
+
 ## The shared-grammar reading of an ACE ACTION whose shape a hand-written line can also have, or {}
 ## when this row has no such twin. The point is symmetry: `Destroy`, `Signal On Jumped`, `Set hp to 0`
 ## must be one sentence, whether the row came out of the picker or out of the user's own .gd file.
@@ -10126,6 +10223,14 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		var declaration: Dictionary = promotion.get("declaration", {})
 		return EventSheetSentence.statement("%s = %s" % [
 			str(declaration.get("name", "")), str(declaration.get("raw_value", ""))], context)
+	# ── T1 / T3 lens hook ──────────────────────────────────────────────────────────────────────
+	# A line the importer claimed for a shipped row is still the behavior SHAPE it was, so the row
+	# reads in that behavior's words - but only when the shape actually claims it. A row no shape
+	# claims falls straight through to the reading it already had, which is why routing these three
+	# ace ids here cannot move anything that does not belong to a projectile or a glide.
+	var shaped: Dictionary = behavior_shape_action_sentence(action.ace_id, params_dict, context)
+	if not shaped.is_empty():
+		return shaped
 	match action.ace_id:
 		"SetVar":
 			return EventSheetSentence.statement("%s = %s" % [
@@ -10551,6 +10656,11 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 		return {}
 	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	var context: Dictionary = sentence_context()
+	# T1 - a distance the importer claimed for the Is Farther Than row is still the projectile's own
+	# question, when the file is a projectile. Every other row falls straight through.
+	var shaped: Dictionary = behavior_shape_condition_sentence(condition.ace_id, params_dict, context)
+	if not shaped.is_empty():
+		return shaped
 	match condition.ace_id:
 		"ExpressionIsTrue":
 			return EventSheetSentence.condition(str(params_dict.get("expr", "")), context)
