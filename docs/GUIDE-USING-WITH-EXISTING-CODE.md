@@ -427,6 +427,12 @@ That is the order this section is in.
   percent; `@export_file("*.png")` reads `file` with its filter; `@export_dir` reads `folder`;
   `@export_multiline` reads `text  multiline`; a Color reads its swatch and its word; and
   `@export_flags(...)` reads `flags` with the names of the bits.
+- **A setter that names a node reads on that node.** `n.position = n.position.snapped(Vector2(8,
+  8))` inside a `for n in …` reads `n ▸ Set position to position snapped to 8, 8`: the object column
+  says which node is being moved, the value drops the receiver it would only be repeating, and
+  `x.snapped(...)` reads as the grid it pulls the value onto - the same words the free-function
+  spelling `snapped(x, 8)` reads. A value reaching through a different object keeps every word of it
+  (`n ▸ Set position to other.position`).
 - **The cursor, the click and the gamepad cable read on the objects they belong to.** A handler
   wired to `mouse_entered` or `mouse_exited` reads `Mouse ▸ Cursor is over Player`, with the edge
   said quietly beside it - `(enters)` or `(leaves)` - and the object is the node the cursor is over.

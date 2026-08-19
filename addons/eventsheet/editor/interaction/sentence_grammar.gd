@@ -1459,7 +1459,11 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 	# The value's own words, when the SLOT says what kind of value it is: a 0..1 setting reads as a
 	# percentage, and a number written where an enum is expected reads as the member it names. Both
 	# are display only - the row still holds the number the file wrote.
-	var shown_value: String = expression_text(assigned, context)
+	# R30. `n.position = n.position.snapped(...)` says `n` twice - once in the object column, once at
+	# the head of the value - and the second one is noise: the row already said whose position this
+	# is. The receiver comes off the value when it is the SAME receiver the target names, so the row
+	# reads `n ▸ Set position to position snapped to 8, 8`.
+	var shown_value: String = expression_text(_without_repeated_receiver(assigned, target), context)
 	if is_fraction_member(target, str(split[1]), context) and assigned.strip_edges().is_valid_float():
 		shown_value = _percent_words(assigned, context)
 	else:
@@ -1470,6 +1474,30 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 		"name": [str(split[1]), "name"],
 		"value": [shown_value, "value"]
 	})
+
+
+## R30. The assigned value with the target's own receiver taken off the front of it, when the value
+## starts with exactly that receiver: the object column has already said `n`, so `n.position` in the
+## value is the row repeating itself. Only ever an identifier receiver a dotted target actually named -
+## a target with no receiver of its own drops nothing, and neither does a value that starts somewhere
+## else (`n.position = other.position` keeps the whole of `other.position`, which is the point).
+static func _without_repeated_receiver(assigned: String, target: String) -> String:
+	var target_text: String = target.strip_edges().trim_prefix("self.")
+	var dot_at: int = target_text.find(".")
+	if dot_at <= 0:
+		return assigned
+	var receiver: String = target_text.substr(0, dot_at)
+	if not is_identifier(receiver):
+		return assigned
+	var value: String = assigned.strip_edges()
+	var prefix: String = "%s." % receiver
+	if not value.begins_with(prefix):
+		return assigned
+	var rest: String = value.substr(prefix.length())
+	# The head of the rest must be a member name, so a value that merely STARTS with the receiver's
+	# letters (`n.x + n.y`) still drops only the one prefix it was asked to, and a value whose head
+	# is not a name at all is left whole.
+	return rest if is_identifier(rest.split(".")[0].split("(")[0].split("[")[0].split(" ")[0]) else assigned
 
 
 ## M40/M46. The assignments an event sheet writes as a verb rather than as a property write, and the
@@ -3862,7 +3890,22 @@ static func _shaped_receiver_idiom(receiver: String, method: String,
 	if method == "get_value" and arguments.size() == 3:
 		return _fill(translate("item {key} (default {fallback})"),
 			{"key": arguments[1], "fallback": arguments[2]})
+	# R30. `position.snapped(Vector2(8, 8))` is the grid a value is pulled onto, and a grid reads as
+	# its numbers: `position snapped to 8, 8`. The same words the free-function spelling
+	# `snapped(x, 8)` already reads, so the two never disagree. The vector prettifier has turned the
+	# argument into `(8, 8)` by the time this is asked, and the brackets only ever held it.
+	if method in ["snapped", "snappedf", "snappedi"] and arguments.size() == 1:
+		return "%s snapped to %s" % [receiver, _unwrapped_group(arguments[0])]
 	return ""
+
+
+## One pair of brackets that wraps the WHOLE text, taken off - `(8, 8)` is `8, 8`. Anything else is
+## returned as it came, including `(a) + (b)`, where the leading bracket closes long before the end.
+static func _unwrapped_group(text: String) -> String:
+	var body: String = text.strip_edges()
+	if not (body.begins_with("(") and body.ends_with(")")):
+		return body
+	return body.substr(1, body.length() - 2).strip_edges() if closing_paren(body, 0) == body.length() - 1 else body
 
 
 ## Top-level comma split of an argument list; empty for an empty list.

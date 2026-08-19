@@ -32,6 +32,19 @@
   guide the index does not list, or lists without a description. `tests/module_guides_test.gd` reads
   the reference tables under their new headings, keyed on a set that also accepts a table headed by
   its kind - 333 rows in the addon guides had drifted out of that sweep unnoticed.
+### Changed - a setter that names a node reads on that node
+
+- **`n.position = n.position.snapped(Vector2(8, 8))` inside a For each reads
+  `n ▸ Set position to position snapped to 8, 8`.** Three things had to be true for that one row:
+  the place setter now reads through the shared grammar, so the object column says which node is
+  being moved instead of the vocabulary's class name; the value drops the receiver when it is the
+  same one the target names, because the row has already said whose position this is; and
+  `x.snapped(...)` reads as the grid it pulls the value onto, in the same words the free-function
+  spelling `snapped(x, 8)` has always read.
+- A value that reaches through a DIFFERENT object keeps every word of it
+  (`n ▸ Set position to other.position`), and a setter with no receiver of its own drops nothing.
+  Display only - byte round-trip untouched.
+
 ### Changed - a tween chain written on one line reads as the step it takes
 
 - **`create_tween().set_loops(3).tween_property(self, "position", p, 0.5)` reads as its property

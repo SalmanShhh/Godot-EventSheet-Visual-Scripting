@@ -9647,6 +9647,13 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return _named_return_sentence(
 				EventSheetSentence.return_sentence(str(params_dict.get("value", "")), context),
 				str(params_dict.get("value", "")))
+		# R30. A node-scoped place setter names the node it moves - a loop variable, a local object -
+		# so the row reads on THAT object, in the same words the typed `n.position = …` line reads.
+		# Without this the row wore the vocabulary's class name ("Node2D") no matter which node it
+		# actually set, which is the one thing the object column exists to answer.
+		"SetPosition2D", "SetPosition3D":
+			return EventSheetSentence.statement("%s.position = %s" % [
+				_ace_target(params_dict), str(params_dict.get("pos", ""))], context)
 		"SetProperty":
 			return EventSheetSentence.statement("%s.%s = %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
