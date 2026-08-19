@@ -2056,3 +2056,5 @@ That verb is not used in this sheet.,Это не используется в д�
 Press F1 for the Manual's page on the marks.,"Нажмите F1, чтобы открыть страницу руководства о пометках."
 Opens the next page in this part of the Manual.,Открывает следующую страницу этой части руководства.
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Нажмите F1, выбрав что-нибудь, чтобы получить справку по нему, или выберите страницу в содержании руководства."
+Add these events,Добавить эти события
+"Puts these events into the open sheet at the caret, as one undo step.",Вставляет эти события в открытый лист у курсора одним шагом отмены.

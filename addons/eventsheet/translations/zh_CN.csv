@@ -2056,3 +2056,5 @@ That verb is not used in this sheet.,该项未在本表中使用。
 Press F1 for the Manual's page on the marks.,按 F1 打开手册中关于记号的页面。
 Opens the next page in this part of the Manual.,打开手册本部分的下一页。
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.",选中内容后按 F1 查看它的帮助，或从手册目录中选择页面。
+Add these events,添加这些事件
+"Puts these events into the open sheet at the caret, as one undo step.",在打开的表中光标处插入这些事件，作为一次撤销步骤。

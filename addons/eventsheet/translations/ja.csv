@@ -2056,3 +2056,5 @@ That verb is not used in this sheet.,この語はこのシートで使われて�
 Press F1 for the Manual's page on the marks.,F1 で記号についてのマニュアルページを開きます。
 Opens the next page in this part of the Manual.,マニュアルのこの部分の次のページを開きます。
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.",何かを選んで F1 を押すとその項目のヘルプが開きます。マニュアルの目次からページを選ぶこともできます。
+Add these events,これらのイベントを追加
+"Puts these events into the open sheet at the caret, as one undo step.",これらのイベントを開いているシートのカーソル位置に、1 回の取り消しで追加します。

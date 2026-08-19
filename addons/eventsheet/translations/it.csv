@@ -2056,3 +2056,5 @@ That verb is not used in this sheet.,Quel termine non è usato in questo foglio.
 Press F1 for the Manual's page on the marks.,Premi F1 per la pagina del manuale sui segni.
 Opens the next page in this part of the Manual.,Apre la pagina successiva di questa parte del manuale.
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Premi F1 con qualcosa selezionato per l'aiuto su di esso, oppure scegli una pagina dall'indice del manuale."
+Add these events,Aggiungi questi eventi
+"Puts these events into the open sheet at the caret, as one undo step.","Inserisce questi eventi nel foglio aperto al cursore, come un solo passo di annullamento."

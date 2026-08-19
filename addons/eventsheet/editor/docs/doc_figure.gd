@@ -48,6 +48,9 @@ var _sheet: EventSheetResource = null
 ## drag back and forth, a re-layout that changes nothing - costs no metrics rebuild at all.
 var _applied_width: float = -1.0
 var _width_pending: bool = false
+## The GDScript the figure's rows compile to, filled on the first hover and kept for the rest of
+## the figure's life (its rows never change).
+var _gdscript_hover: String = ""
 
 
 func _init() -> void:
@@ -82,8 +85,8 @@ func _init() -> void:
 	_guide_button.pressed.connect(func() -> void: guide_requested.emit())
 	buttons.add_child(_guide_button)
 	_insert_button = Button.new()
-	_insert_button.text = "Insert into my sheet"
-	_insert_button.tooltip_text = "Add these rows below the selection, as one undo step."
+	_insert_button.text = "Add these events"
+	_insert_button.tooltip_text = "Puts these events into the open sheet at the caret, as one undo step."
 	_insert_button.pressed.connect(_on_insert_pressed)
 	buttons.add_child(_insert_button)
 	_copy_button = Button.new()
@@ -156,7 +159,29 @@ func show_sheet(sheet: EventSheetResource) -> bool:
 	_sheet = sheet
 	_viewport.set_sheet(sheet)
 	visible = true
+	# An example is a real event, so it hovers like one: the exact GDScript, one hover away, the
+	# same promise the sheet itself makes. Compiled ON DEMAND and remembered - a page can carry a
+	# dozen figures, and compiling all of them to fill tooltips nobody may read is a page that
+	# stalls when it opens.
+	_gdscript_hover = ""
+	# Guarded: a host that re-shows a figure (the panel redraws its page on every width change)
+	# would otherwise connect the same one-shot twice and the second connect is an error.
+	if not _frame.mouse_entered.is_connected(_fill_gdscript_hover):
+		_frame.mouse_entered.connect(_fill_gdscript_hover, CONNECT_ONE_SHOT)
 	return true
+
+
+## The GDScript these rows compile to, put on the figure's own hover. Silent when the compiler
+## refuses the sheet: a figure with no tooltip reads as a figure, and a figure with an error in
+## its tooltip reads as a broken editor.
+func _fill_gdscript_hover() -> void:
+	if _sheet == null or not _gdscript_hover.is_empty():
+		return
+	var result: Dictionary = EventSheets.compile(_sheet)
+	_gdscript_hover = str(result.get("output", "")).strip_edges()
+	if _gdscript_hover.is_empty():
+		return
+	_frame.tooltip_text = _gdscript_hover
 
 
 ## The sheet currently illustrated, or null when the figure is empty.

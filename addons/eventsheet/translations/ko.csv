@@ -2056,3 +2056,5 @@ That verb is not used in this sheet.,이 항목은 이 시트에서 사용되지
 Press F1 for the Manual's page on the marks.,F1을 누르면 기호에 대한 설명서 페이지가 열립니다.
 Opens the next page in this part of the Manual.,설명서의 이 부분에서 다음 페이지를 엽니다.
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.",무언가를 선택한 뒤 F1을 누르면 그에 대한 도움말이 열립니다. 설명서 목차에서 페이지를 골라도 됩니다.
+Add these events,이 이벤트 추가
+"Puts these events into the open sheet at the caret, as one undo step.",이 이벤트들을 열린 시트의 캐럿 위치에 한 번의 실행 취소 단위로 넣습니다.
