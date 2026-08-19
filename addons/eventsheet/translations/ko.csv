@@ -1809,7 +1809,7 @@ Stop loop,루프 중단
 Add to group {group},그룹 {group}에 추가
 Remove from group {group},그룹 {group}에서 제거
 (group),(그룹)
-Tween {property} to {value} over {duration}s,{property}을 {value}로 {duration}초 동안 트윈
+Tween {property} to {value} in {duration} seconds,{property}을 {value}로 {duration}초 동안 트윈
 to,로
 is in group {group},그룹 {group}에 있음
 item,항목
@@ -2284,3 +2284,29 @@ Is timer {timer} stopped,타이머 {timer} 정지됨
 (regular),(반복)
 On gamepad %s button %s pressed,게임패드 %s 버튼 %s 을 눌렀을 때
 On gamepad %s button %s released,게임패드 %s 버튼 %s 을 놓았을 때
+Stop tween,트윈 정지
+Tween the next steps at the same time,다음 트윈 단계를 동시에
+Tween repeat forever,트윈 무한 반복
+Tween repeat {count} times,트윈 {count}회 반복
+Tween wait {seconds} seconds,트윈에서 {seconds}초 대기
+Tween then {action},트윈 후 {action}
+⏳ Wait for tween to finish,⏳ 트윈이 끝날 때까지 대기
+(after the previous),(앞의 것 다음에)
+(at the same time),(동시에)
+a new tween,새 트윈
+this step,이 단계
+ease = {curve},이징 = {curve}
+ease = {curve} in,이징 = {curve} 인
+ease = {curve} out,이징 = {curve} 아웃
+ease = {curve} in-out,이징 = {curve} 인-아웃
+ease = {curve} out-in,이징 = {curve} 아웃-인
+ease = in,이징 = 인
+ease = out,이징 = 아웃
+ease = in-out,이징 = 인-아웃
+ease = out-in,이징 = 아웃-인
+opacity,불투명도
+colour,색
+size,크기
+size X,크기 X
+size Y,크기 Y
+position,위치

@@ -46,6 +46,10 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# 0..1 settings the project marked as fractions (so `0.5` reads 50%). All plain walks of the
 	# sheet, cached with the rest of the context.
 	var declared: Dictionary = declared_type_map(sheet)
+	# ── R3 lens hook ───────────────────────────────────────────────────────────────────────────
+	# The tween chains the file writes, walked once in FILE order: which locals hold a tween, and
+	# which of their steps follow another one or run beside it.
+	var tweens: Dictionary = tween_chain_facts(sheet)
 	return {
 		"script_object": script_object_name(sheet),
 		"engine_properties": engine_property_set(sheet),
@@ -67,7 +71,13 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		# Which of the Timer behavior's two modes each timer tag runs in, so a Start timer row can
 		# say `(once)` / `(regular)`. The file itself is the only place that knows, and it says it
 		# on a line of its own - so the line is read once per rebuild rather than per row.
-		"timer_modes": timer_mode_map(sheet)
+		"timer_modes": timer_mode_map(sheet),
+		# ── R3 ────────────────────────────────────────────────────────────────────────────────
+		# Which locals hold a tween, and which of their steps follow another one. A tween chain is
+		# spread over several lines joined only by the local's name, so the rows that belong together
+		# are worked out once here rather than guessed at line by line.
+		"tween_locals": tweens.get("locals", {}),
+		"tween_notes": tweens.get("notes", {})
 	}
 
 
@@ -91,6 +101,149 @@ static func timer_mode_map(sheet: EventSheetResource) -> Dictionary:
 			continue
 		modes[tag] = value == "true"
 	return modes
+
+
+## R3. What the file says about its tween chains, as {"locals": {name: true}, "notes": {line: note}}.
+##
+## `locals` are the names declared from `create_tween()`; `notes` says `after` for a step that follows
+## another step of the same chain and `parallel` for one that runs beside the step before it. Only a
+## line the walk can read in FILE order earns a note, and a line whose exact text appears both as a
+## first step and as a later one earns none: the same words may not read two ways on one sheet.
+static func tween_chain_facts(sheet: EventSheetResource) -> Dictionary:
+	var locals: Dictionary = {}
+	var notes: Dictionary = {}
+	if sheet == null:
+		return {"locals": locals, "notes": notes}
+	# {local name: [has a step already, the next step runs beside the last one]}
+	var chains: Dictionary = {}
+	# {line: the note EVERY occurrence of it earned, or "" once two occurrences disagree}
+	var observed: Dictionary = {}
+	var disagreed: Dictionary = {}
+	for line: String in ordered_code_lines(sheet):
+		var text: String = EventSheetSentence.tween_note_key(line)
+		if text.is_empty():
+			continue
+		var declared: String = _tween_declared_local(text)
+		if not declared.is_empty():
+			locals[declared] = true
+			chains[declared] = [false, false]
+			continue
+		var parts: Dictionary = EventSheetSentence.tween_chain_parts(text, {"tween_locals": locals})
+		if parts.is_empty():
+			continue
+		var owner_name: String = str(parts.get("local", ""))
+		if owner_name.is_empty() or not chains.has(owner_name):
+			continue
+		var state: Array = chains[owner_name]
+		var method: String = str(parts.get("method", ""))
+		if method == "set_parallel":
+			state[1] = true
+			continue
+		if method == "kill" or method == "set_loops":
+			continue
+		var note: String = ""
+		if bool(state[1]):
+			note = "parallel"
+		elif bool(state[0]):
+			note = "after"
+		state[0] = true
+		if observed.has(text) and str(observed[text]) != note:
+			disagreed[text] = true
+		observed[text] = note
+	for text: String in observed:
+		var note: String = str(observed[text])
+		if note.is_empty() or disagreed.has(text):
+			continue
+		notes[text] = note
+	return {"locals": locals, "notes": notes}
+
+
+## R3. The local a `var t = create_tween()` line declares, or "" when the line declares nothing of
+## the sort. The walrus and the annotated spellings all answer the same name.
+static func _tween_declared_local(text: String) -> String:
+	if not text.begins_with("var "):
+		return ""
+	for separator: String in [" := ", " = "]:
+		var at: int = text.find(separator)
+		if at < 0:
+			continue
+		var value: String = text.substr(at + separator.length()).strip_edges()
+		if not EventSheetSentence.TWEEN_MAKERS.has(value):
+			return ""
+		var name_text: String = text.substr(4, at - 4).strip_edges()
+		var colon_at: int = name_text.find(":")
+		if colon_at >= 0:
+			name_text = name_text.substr(0, colon_at).strip_edges()
+		return name_text if EventSheetSentence.is_identifier(name_text) else ""
+	return ""
+
+
+## Every line of hand-written GDScript the sheet holds, in the order the FILE writes them - top level
+## first, then each function's body, each event's actions before its sub-events. The reversed walk
+## the fact maps use elsewhere cannot answer a question about what comes BEFORE what, which is the
+## only question a chain of steps asks.
+static func ordered_code_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if sheet == null:
+		return lines
+	for event_entry: Variant in sheet.events:
+		_append_ordered_lines(event_entry, lines, 0)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			for event_entry: Variant in (function_entry as EventFunction).events:
+				_append_ordered_lines(event_entry, lines, 0)
+	return _joined_continuation_lines(lines)
+
+
+## The same lines with every trailing-`\` run folded into the one statement it is, so a chain written
+## across three lines is one entry here exactly as it is one row on the canvas.
+static func _joined_continuation_lines(lines: PackedStringArray) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	var pending: String = ""
+	for line: String in lines:
+		var text: String = line.rstrip(" \t")
+		if not pending.is_empty():
+			text = pending + " " + text.strip_edges()
+			pending = ""
+		if text.ends_with("\\"):
+			pending = text.substr(0, text.length() - 1).rstrip(" \t")
+			continue
+		out.append(text)
+	if not pending.is_empty():
+		out.append(pending)
+	return out
+
+
+## One entry of the ordered walk. Depth-limited so a sheet that somehow nests into itself cannot
+## spin here.
+static func _append_ordered_lines(entry: Variant, lines: PackedStringArray, depth: int) -> void:
+	if depth > 64:
+		return
+	if entry is RawCodeRow:
+		lines.append_array((entry as RawCodeRow).code.split("\n"))
+		return
+	# A line the importer already claimed is not raw text any more, so the statement it stands for is
+	# rebuilt from the row - in exactly the spelling the row's own reading is built from, which is what
+	# keeps the two sides of the chain map agreeing on what "the same line" is.
+	if entry is ACEAction:
+		var params: Dictionary = (entry as ACEAction).params
+		if params.is_empty():
+			params = (entry as ACEAction).parameters
+		match (entry as ACEAction).ace_id:
+			"SetLocalVar", "SetLocalVarInferred":
+				lines.append("var %s = %s" % [str(params.get("name", "")), str(params.get("value", ""))])
+			"SetLocalVarTyped":
+				lines.append("var %s: %s = %s" % [
+					str(params.get("name", "")), str(params.get("var_type", "")), str(params.get("value", ""))])
+			"CallMethod":
+				lines.append("%s.%s(%s)" % [
+					str(params.get("target", "")), str(params.get("method", "")), str(params.get("args", ""))])
+		return
+	if entry is EventRow:
+		for action_entry: Variant in (entry as EventRow).actions:
+			_append_ordered_lines(action_entry, lines, depth + 1)
+		for sub_entry: Variant in (entry as EventRow).sub_events:
+			_append_ordered_lines(sub_entry, lines, depth + 1)
 
 
 ## Every line of hand-written GDScript the sheet still holds, from the top level down through event

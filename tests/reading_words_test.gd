@@ -88,7 +88,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set speed to rotation in degrees",
 	"System ▸ Set speed to speed snapped to 0.5",
 	"System ▸ Set lives to items' count",
-	"ReadingWordsPlayer ▸ Tween position to velocity over 0.3s",
+	"ReadingWordsPlayer ▸ Tween position to velocity in 0.3 seconds",
 	# M30 - groups read as families, and the PICKED group row says the same words
 	"enemies (group) ▸ Call Flee",
 	# M28 - payload chips and the two tick waits
@@ -198,7 +198,7 @@ static func _grammar_values() -> bool:
 		["n = len(items)", "System ▸ Set n to items' count"],
 		["m = items.size()", "System ▸ Set m to items' count"],
 		["create_tween().tween_property(host, \"position\", target, 0.3)",
-			"host ▸ Tween position to target over 0.3s"],
+			"host ▸ Tween position to target in 0.3 seconds"],
 		# M33 - the two loop steps
 		["break", "System ▸ Stop loop"],
 		["continue", "System ▸ Next"],

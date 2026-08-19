@@ -1809,7 +1809,7 @@ Stop loop,Ferma il ciclo
 Add to group {group},Aggiungi al gruppo {group}
 Remove from group {group},Rimuovi dal gruppo {group}
 (group),(gruppo)
-Tween {property} to {value} over {duration}s,Anima {property} a {value} in {duration}s
+Tween {property} to {value} in {duration} seconds,Anima {property} a {value} in {duration} secondi
 to,a
 is in group {group},è nel gruppo {group}
 item,elemento
@@ -2284,3 +2284,29 @@ Is timer {timer} stopped,Il timer {timer} e fermo
 (regular),(ripetuto)
 On gamepad %s button %s pressed,Alla pressione sul gamepad %s del tasto %s
 On gamepad %s button %s released,Al rilascio sul gamepad %s del tasto %s
+Stop tween,Ferma il tween
+Tween the next steps at the same time,I prossimi passi del tween insieme
+Tween repeat forever,Ripeti il tween all'infinito
+Tween repeat {count} times,Ripeti il tween {count} volte
+Tween wait {seconds} seconds,Il tween attende {seconds} secondi
+Tween then {action},Il tween poi {action}
+⏳ Wait for tween to finish,⏳ Attendi la fine del tween
+(after the previous),(dopo il precedente)
+(at the same time),(nello stesso momento)
+a new tween,un nuovo tween
+this step,questo passo
+ease = {curve},curva = {curve}
+ease = {curve} in,curva = {curve} entrata
+ease = {curve} out,curva = {curve} uscita
+ease = {curve} in-out,curva = {curve} entrata-uscita
+ease = {curve} out-in,curva = {curve} uscita-entrata
+ease = in,curva = entrata
+ease = out,curva = uscita
+ease = in-out,curva = entrata-uscita
+ease = out-in,curva = uscita-entrata
+opacity,opacità
+colour,colore
+size,dimensione
+size X,dimensione X
+size Y,dimensione Y
+position,posizione

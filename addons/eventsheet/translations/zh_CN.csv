@@ -1809,7 +1809,7 @@ Stop loop,跳出循环
 Add to group {group},加入组 {group}
 Remove from group {group},移出组 {group}
 (group),(组)
-Tween {property} to {value} over {duration}s,将 {property} 在 {duration} 秒内补间到 {value}
+Tween {property} to {value} in {duration} seconds,将 {property} 在 {duration} 秒内补间到 {value}
 to,为
 is in group {group},在组 {group} 中
 item,项
@@ -2284,3 +2284,29 @@ Is timer {timer} stopped,计时器 {timer} 已停止
 (regular),(重复)
 On gamepad %s button %s pressed,当手柄 %s 按下按键 %s 时
 On gamepad %s button %s released,当手柄 %s 松开按键 %s 时
+Stop tween,停止补间
+Tween the next steps at the same time,接下来的补间步骤同时进行
+Tween repeat forever,补间无限重复
+Tween repeat {count} times,补间重复 {count} 次
+Tween wait {seconds} seconds,补间等待 {seconds} 秒
+Tween then {action},补间之后 {action}
+⏳ Wait for tween to finish,⏳ 等待补间结束
+(after the previous),(在上一个之后)
+(at the same time),(同时)
+a new tween,一个新补间
+this step,这一步
+ease = {curve},缓动 = {curve}
+ease = {curve} in,缓动 = {curve} 渐入
+ease = {curve} out,缓动 = {curve} 渐出
+ease = {curve} in-out,缓动 = {curve} 渐入渐出
+ease = {curve} out-in,缓动 = {curve} 渐出渐入
+ease = in,缓动 = 渐入
+ease = out,缓动 = 渐出
+ease = in-out,缓动 = 渐入渐出
+ease = out-in,缓动 = 渐出渐入
+opacity,不透明度
+colour,颜色
+size,大小
+size X,大小 X
+size Y,大小 Y
+position,位置

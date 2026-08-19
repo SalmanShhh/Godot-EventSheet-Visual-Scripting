@@ -1809,7 +1809,7 @@ Stop loop,Schleife stoppen
 Add to group {group},Zu Gruppe {group} hinzufügen
 Remove from group {group},Aus Gruppe {group} entfernen
 (group),(Gruppe)
-Tween {property} to {value} over {duration}s,{property} auf {value} über {duration}s tweenen
+Tween {property} to {value} in {duration} seconds,{property} auf {value} in {duration} Sekunden tweenen
 to,auf
 is in group {group},ist in Gruppe {group}
 item,Element
@@ -2284,3 +2284,29 @@ Is timer {timer} stopped,Ist Timer {timer} gestoppt
 (regular),(regelmaessig)
 On gamepad %s button %s pressed,Bei Gamepad %s Taste %s gedrückt
 On gamepad %s button %s released,Bei Gamepad %s Taste %s losgelassen
+Stop tween,Tween stoppen
+Tween the next steps at the same time,Die nächsten Tween-Schritte gleichzeitig
+Tween repeat forever,Tween endlos wiederholen
+Tween repeat {count} times,Tween {count} mal wiederholen
+Tween wait {seconds} seconds,Tween {seconds} Sekunden warten
+Tween then {action},Tween danach {action}
+⏳ Wait for tween to finish,⏳ Auf das Ende des Tweens warten
+(after the previous),(nach dem vorherigen)
+(at the same time),(gleichzeitig)
+a new tween,ein neuer Tween
+this step,dieser Schritt
+ease = {curve},Kurve = {curve}
+ease = {curve} in,Kurve = {curve} rein
+ease = {curve} out,Kurve = {curve} raus
+ease = {curve} in-out,Kurve = {curve} rein-raus
+ease = {curve} out-in,Kurve = {curve} raus-rein
+ease = in,Kurve = rein
+ease = out,Kurve = raus
+ease = in-out,Kurve = rein-raus
+ease = out-in,Kurve = raus-rein
+opacity,Deckkraft
+colour,Farbe
+size,Größe
+size X,Größe X
+size Y,Größe Y
+position,Position

@@ -1809,7 +1809,7 @@ Stop loop,Arrêter la boucle
 Add to group {group},Ajouter au groupe {group}
 Remove from group {group},Retirer du groupe {group}
 (group),(groupe)
-Tween {property} to {value} over {duration}s,Animer {property} vers {value} en {duration}s
+Tween {property} to {value} in {duration} seconds,Animer {property} vers {value} en {duration} secondes
 to,à
 is in group {group},est dans le groupe {group}
 item,élément
@@ -2284,3 +2284,29 @@ Is timer {timer} stopped,Le minuteur {timer} est arrete
 (regular),(regulier)
 On gamepad %s button %s pressed,À l’appui sur la manette %s bouton %s
 On gamepad %s button %s released,Au relâchement sur la manette %s bouton %s
+Stop tween,Arrêter le tween
+Tween the next steps at the same time,Les étapes de tween suivantes en même temps
+Tween repeat forever,Répéter le tween indéfiniment
+Tween repeat {count} times,Répéter le tween {count} fois
+Tween wait {seconds} seconds,Le tween attend {seconds} secondes
+Tween then {action},Le tween ensuite {action}
+⏳ Wait for tween to finish,⏳ Attendre la fin du tween
+(after the previous),(après le précédent)
+(at the same time),(en même temps)
+a new tween,un nouveau tween
+this step,cette étape
+ease = {curve},courbe = {curve}
+ease = {curve} in,courbe = {curve} entrée
+ease = {curve} out,courbe = {curve} sortie
+ease = {curve} in-out,courbe = {curve} entrée-sortie
+ease = {curve} out-in,courbe = {curve} sortie-entrée
+ease = in,courbe = entrée
+ease = out,courbe = sortie
+ease = in-out,courbe = entrée-sortie
+ease = out-in,courbe = sortie-entrée
+opacity,opacité
+colour,couleur
+size,taille
+size X,taille X
+size Y,taille Y
+position,position

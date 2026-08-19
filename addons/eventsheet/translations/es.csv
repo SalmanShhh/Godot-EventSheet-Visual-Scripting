@@ -1809,7 +1809,7 @@ Stop loop,Detener bucle
 Add to group {group},Añadir al grupo {group}
 Remove from group {group},Quitar del grupo {group}
 (group),(grupo)
-Tween {property} to {value} over {duration}s,Animar {property} a {value} en {duration}s
+Tween {property} to {value} in {duration} seconds,Animar {property} a {value} en {duration} segundos
 to,a
 is in group {group},está en el grupo {group}
 item,elemento
@@ -2284,3 +2284,29 @@ Is timer {timer} stopped,El temporizador {timer} esta detenido
 (regular),(periodico)
 On gamepad %s button %s pressed,Al pulsar en el mando %s el botón %s
 On gamepad %s button %s released,Al soltar en el mando %s el botón %s
+Stop tween,Detener el tween
+Tween the next steps at the same time,Los siguientes pasos del tween a la vez
+Tween repeat forever,Repetir el tween siempre
+Tween repeat {count} times,Repetir el tween {count} veces
+Tween wait {seconds} seconds,El tween espera {seconds} segundos
+Tween then {action},El tween después {action}
+⏳ Wait for tween to finish,⏳ Esperar a que termine el tween
+(after the previous),(después del anterior)
+(at the same time),(a la vez)
+a new tween,un tween nuevo
+this step,este paso
+ease = {curve},curva = {curve}
+ease = {curve} in,curva = {curve} entrada
+ease = {curve} out,curva = {curve} salida
+ease = {curve} in-out,curva = {curve} entrada-salida
+ease = {curve} out-in,curva = {curve} salida-entrada
+ease = in,curva = entrada
+ease = out,curva = salida
+ease = in-out,curva = entrada-salida
+ease = out-in,curva = salida-entrada
+opacity,opacidad
+colour,color
+size,tamaño
+size X,tamaño X
+size Y,tamaño Y
+position,posición

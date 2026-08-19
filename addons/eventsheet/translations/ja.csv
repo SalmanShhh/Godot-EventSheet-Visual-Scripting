@@ -1809,7 +1809,7 @@ Stop loop,ループを抜ける
 Add to group {group},グループ {group} に追加
 Remove from group {group},グループ {group} から削除
 (group),(グループ)
-Tween {property} to {value} over {duration}s,{property} を {value} へ {duration}秒でトゥイーン
+Tween {property} to {value} in {duration} seconds,{property} を {value} へ {duration} 秒でトゥイーン
 to,へ
 is in group {group},グループ {group} にいる
 item,項目
@@ -2284,3 +2284,29 @@ Is timer {timer} stopped,タイマー {timer} が停止中
 (regular),(繰り返し)
 On gamepad %s button %s pressed,ゲームパッド %s のボタン %s を押したとき
 On gamepad %s button %s released,ゲームパッド %s のボタン %s を離したとき
+Stop tween,トゥイーンを停止
+Tween the next steps at the same time,次のトゥイーン手順を同時に
+Tween repeat forever,トゥイーンを繰り返す
+Tween repeat {count} times,トゥイーンを {count} 回繰り返す
+Tween wait {seconds} seconds,トゥイーンで {seconds} 秒待つ
+Tween then {action},トゥイーンの後に {action}
+⏳ Wait for tween to finish,⏳ トゥイーンの終了を待つ
+(after the previous),(前の後に)
+(at the same time),(同時に)
+a new tween,新しいトゥイーン
+this step,この手順
+ease = {curve},イージング = {curve}
+ease = {curve} in,イージング = {curve} イン
+ease = {curve} out,イージング = {curve} アウト
+ease = {curve} in-out,イージング = {curve} イン・アウト
+ease = {curve} out-in,イージング = {curve} アウト・イン
+ease = in,イージング = イン
+ease = out,イージング = アウト
+ease = in-out,イージング = イン・アウト
+ease = out-in,イージング = アウト・イン
+opacity,不透明度
+colour,色
+size,サイズ
+size X,サイズ X
+size Y,サイズ Y
+position,位置

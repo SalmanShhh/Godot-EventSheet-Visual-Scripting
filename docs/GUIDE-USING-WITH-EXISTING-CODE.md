@@ -505,7 +505,7 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   `d's "k"`, `arr[0]` reads `arr' item 0`; groups read as families (`enemies (group) ▸ Call Flee`,
   `For each e in group "enemies"`); loops read `Repeat 10 times`, `For "i" from 2 to 7`, `For each
   child`, `While`, `Stop loop`, `Next`; `randi_range(1, 6)` reads `random whole number 1 to 6`,
-  `tween_property` reads `Tween position to target over 0.3s`, `await x.opened` reads `⏳ Wait for signal
+  `tween_property` reads `Tween position to target in 0.3 seconds`, `await x.opened` reads `⏳ Wait for signal
   x On Opened`, `await get_tree().process_frame` reads `⏳ Wait one tick`. A signal emit shows its
   payload by the signal's own parameter names (`Signal On Damaged  amount = 3  source = attacker`). A
   lambda connected to a signal (`$Timer.timeout.connect(func(): ...)`) reads as the trigger event it is,
@@ -517,6 +517,19 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   gamepad 0 button A pressed`, in the Gamepad object's own words, because the device index IS the
   gamepad number. A branch that names no device keeps `On button A pressed`; a Keyboard branch keeps
   its `event.device == 1` as an ordinary comparison, since a keyboard has no number in the sheet.
+- **A tween chain reads as Tween actions, one action per row.** `var t = create_tween()` reads
+  `Local object t = a new tween`; each `t.tween_property(...)` under it reads
+  `Player ▸ Tween position to target in 0.5 seconds` on the object being tweened, with
+  `.set_trans(...)` / `.set_ease(...)` as an `ease = Sine out` chip. The second step and every one
+  after it says `(after the previous)`; once `t.set_parallel()` has been called they say `(at the
+  same time)` instead. `t.set_loops(3)` reads `Tween repeat 3 times`, `t.tween_interval(0.5)` reads
+  `Tween wait 0.5 seconds`, `t.tween_callback(queue_free)` reads `Tween then Destroy`, `t.kill()`
+  reads `Stop tween` and `await t.finished` reads `System ▸ ⏳ Wait for tween to finish`. The
+  property is the sheet's own word for it - `modulate:a` is **opacity**, `scale` is **size**,
+  `rotation` is the **angle** - and a property the table does not name keeps its own spelling. The
+  chain is joined by the local's name, walked in file order, so a receiver the file never declared
+  from `create_tween()` keeps its plain call reading rather than being given a Tween sentence. A
+  statement broken across lines with a trailing `\` reads as the one statement it is.
 - **A Timer node reads as the Timer behavior.** `$Timer.stop()` reads `Stop timer "Timer"`,
   `$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` while the line is still
   hand-written text (a line the importer already lifted keeps its shipped Start Timer row), `not $Timer.is_stopped()` reads `Is

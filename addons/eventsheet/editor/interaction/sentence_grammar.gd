@@ -279,6 +279,10 @@ enum VerbKind {
 ## the line declares a local variable, which the canvas draws as a declaration row rather than a
 ## sentence.
 static func statement(code: String, context: Dictionary = {}) -> Dictionary:
+	# R3. A line broken with a trailing `\` is ONE statement, and a chained tween is the shape that
+	# writes it that way most often. Joining first is what lets the rest of the grammar see it at all.
+	if code.contains("\n"):
+		code = join_continuations(code)
 	if code.contains("\n"):
 		return {}
 	var indent: int = code.length() - code.lstrip("\t").length()
@@ -768,6 +772,10 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var timer_value: String = timer_expression(trimmed)
 	if not timer_value.is_empty():
 		return timer_value
+	# R3 - the value a tween local is declared from is "a new tween", not a call to repeat back.
+	var tween_value: String = tween_expression(trimmed)
+	if not tween_value.is_empty():
+		return tween_value
 	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
 	# R7. The sheet's own expression names, before any other rewriting sees the Godot spellings they
 	# are matched against. Off unless the view asked for the Familiar Words glossary.
@@ -1196,6 +1204,10 @@ static func _await_statement(text: String, context: Dictionary = {}) -> Dictiona
 		return _sentence(OBJECT_SYSTEM, "⏳ Wait one tick", {})
 	if body == "get_tree().physics_frame":
 		return _sentence(OBJECT_SYSTEM, "⏳ Wait one physics tick", {})
+	# R3. Waiting on a tween is waiting for the animation to end, which is the whole thought - the
+	# local's name adds nothing a reader of the rows above does not already have.
+	if body.ends_with(".finished") and is_tween_local(body.substr(0, body.length() - 9), context):
+		return _sentence(OBJECT_SYSTEM, "⏳ Wait for tween to finish", {})
 	return _await_signal_statement(body, context)
 
 
@@ -2199,26 +2211,266 @@ static func _group_call_statement(text: String, context: Dictionary = {}) -> Dic
 	return {"object": object_label, "segments": segments}
 
 
-## M32. `create_tween().tween_property(host, "position", target, 0.3)` as the vocabulary's own Tween
-## Property sentence, so the typed line and the picked ACE read the same words.
+## R3. The words an event sheet uses for the thing a property is animated ALONG - a tween's own
+## property path spelled the way the sheet spells that property everywhere else.
+const TWEEN_PROPERTY_WORDS: Dictionary = {
+	"modulate:a": "opacity",
+	"self_modulate:a": "opacity",
+	"modulate": "colour",
+	"scale": "size",
+	"scale:x": "size X",
+	"scale:y": "size Y",
+	"rotation": "angle",
+	"rotation_degrees": "angle",
+	"global_position": "position"
+}
+
+## R3. The curve shape a `set_trans` names, in plain words.
+const TWEEN_TRANSITION_WORDS: Dictionary = {
+	"Tween.TRANS_LINEAR": "Linear",
+	"Tween.TRANS_SINE": "Sine",
+	"Tween.TRANS_QUAD": "Quad",
+	"Tween.TRANS_CUBIC": "Cubic",
+	"Tween.TRANS_QUART": "Quart",
+	"Tween.TRANS_QUINT": "Quint",
+	"Tween.TRANS_EXPO": "Expo",
+	"Tween.TRANS_ELASTIC": "Elastic",
+	"Tween.TRANS_CIRC": "Circ",
+	"Tween.TRANS_BACK": "Back",
+	"Tween.TRANS_BOUNCE": "Bounce",
+	"Tween.TRANS_SPRING": "Spring"
+}
+
+## R3. Which end of the curve a `set_ease` puts the slow part on. The word here PICKS the catalog
+## phrase (`ease = {curve} out`) rather than being shown on its own.
+const TWEEN_EASE_WORDS: Dictionary = {
+	"Tween.EASE_IN": "in",
+	"Tween.EASE_OUT": "out",
+	"Tween.EASE_IN_OUT": "in-out",
+	"Tween.EASE_OUT_IN": "out-in"
+}
+
+## R3. The two calls that hand back a brand new tween. A local holding one of these is the chain's
+## name, which is how the rows below it know they belong together.
+const TWEEN_MAKERS: Array[String] = [
+	"create_tween()", "get_tree().create_tween()", "self.create_tween()"
+]
+
+
+## R3 / M32. A tween chain reads as ONE Tween action per `tween_*` step, on the object being tweened,
+## in the sheet's own Tween words: `Player ▸ Tween position to target in 0.5 seconds` with the easing
+## as a chip and the sequencing said quietly. {} for anything that is not a step of a chain this file
+## can prove - a tween held somewhere the reading cannot see keeps its plain call reading.
 static func _tween_statement(text: String, context: Dictionary) -> Dictionary:
-	const TWEEN_HEAD := "create_tween().tween_property("
-	var body: String = text
-	if body.begins_with("self."):
-		body = body.substr(5)
-	if not body.begins_with(TWEEN_HEAD) or not body.ends_with(")"):
+	var parts: Dictionary = tween_chain_parts(text, context)
+	if parts.is_empty():
 		return {}
-	var arguments: PackedStringArray = _split_arguments(body.substr(TWEEN_HEAD.length(), body.length() - TWEEN_HEAD.length() - 1))
+	var method: String = str(parts.get("method", ""))
+	var arguments: PackedStringArray = parts.get("args", PackedStringArray())
+	var object_name: String = script_object(context)
+	match method:
+		"kill":
+			return _sentence(object_name, "Stop tween", {})
+		"set_parallel":
+			return _sentence(object_name, "Tween the next steps at the same time", {})
+		"set_loops":
+			if arguments.is_empty():
+				return _sentence(object_name, "Tween repeat forever", {})
+			return _sentence(object_name, "Tween repeat {count} times", {
+				"count": [expression_text(arguments[0], context), "value"]
+			})
+		"tween_interval":
+			if arguments.is_empty():
+				return {}
+			return _sentence(object_name, "Tween wait {seconds} seconds", {
+				"seconds": [expression_text(arguments[0], context), "value"]
+			})
+		"tween_callback":
+			if arguments.is_empty():
+				return {}
+			return _sentence(object_name, "Tween then {action}", {
+				"action": [tween_callback_words(arguments[0], context), "name"]
+			})
+		"tween_property":
+			return _tween_property_sentence(text, parts, context)
+	return {}
+
+
+## R3. The Tween Property row itself: the tweened object, the sheet's word for the property, the
+## value, the seconds, then the easing chip and the sequencing note the chain earned.
+static func _tween_property_sentence(text: String, parts: Dictionary, context: Dictionary) -> Dictionary:
+	var arguments: PackedStringArray = parts.get("args", PackedStringArray())
 	if arguments.size() < 4:
 		return {}
 	var object_name: String = arguments[0].strip_edges()
 	if object_name == "self" or object_name.is_empty():
 		object_name = script_object(context)
-	return _sentence(object_name, "Tween {property} to {value} over {duration}s", {
-		"property": [_unquote(arguments[1]), "name"],
+	else:
+		object_name = object_of_reference(object_name)
+	var reading: Dictionary = _sentence(object_name, "Tween {property} to {value} in {duration} seconds", {
+		"property": [tween_property_word(_unquote(arguments[1])), "name"],
 		"value": [expression_text(arguments[2], context), "value"],
 		"duration": [expression_text(arguments[3], context), "value"]
 	})
+	var easing: String = tween_easing_words(str(parts.get("modifiers", "")))
+	if not easing.is_empty():
+		(reading["segments"] as Array).append({"text": " ", "tone": "plain"})
+		(reading["segments"] as Array).append({"text": easing, "tone": "chip"})
+	var note: String = tween_sequence_note(text, context)
+	if not note.is_empty():
+		(reading["segments"] as Array).append({"text": " ", "tone": "plain"})
+		(reading["segments"] as Array).append({"text": note, "tone": "muted"})
+	return reading
+
+
+## R3. The step a tween line takes, as {local, method, args, modifiers}, or {} when the line is not a
+## step of a tween chain this file can prove. `local` is "" for the one-line `create_tween().…` form.
+##
+## The receiver must either MAKE a tween on the spot or be a local the file declared from one
+## (`tween_locals`): a tween reached through a field or a function result cannot prove it is a tween,
+## and a Tween sentence over something that is not one would be a confident lie.
+static func tween_chain_parts(text: String, context: Dictionary) -> Dictionary:
+	const STEPS: Array[String] = [
+		"tween_property", "tween_callback", "tween_interval", "set_loops", "set_parallel", "kill"
+	]
+	var body: String = text.strip_edges()
+	if not body.ends_with(")"):
+		return {}
+	for step: String in STEPS:
+		var marker: String = ".%s(" % step
+		var at: int = body.find(marker)
+		if at <= 0:
+			continue
+		var head: String = body.substr(0, at)
+		var local_name: String = ""
+		if not TWEEN_MAKERS.has(head):
+			if not is_tween_local(head, context):
+				continue
+			local_name = head
+		var open_at: int = at + marker.length() - 1
+		var close_at: int = closing_paren(body, open_at)
+		if close_at < 0:
+			continue
+		return {
+			"local": local_name,
+			"method": step,
+			"args": _split_arguments(body.substr(open_at + 1, close_at - open_at - 1)),
+			"modifiers": body.substr(close_at + 1)
+		}
+	return {}
+
+
+## R3. True when `name` is a local this file declared from `create_tween()`. The pre-pass that
+## collected them hands the set in on the context; without it nothing is claimed.
+static func is_tween_local(name: String, context: Dictionary) -> bool:
+	var locals: Variant = context.get("tween_locals", {})
+	if not (locals is Dictionary):
+		return false
+	return (locals as Dictionary).has(name.strip_edges())
+
+
+## R3. `ease = Sine out` from the `.set_trans(...).set_ease(...)` tail a tween step wears, "" when the
+## tail names neither. Only the constants the table knows are read: an easing computed at runtime is
+## not a fact a chip may state.
+static func tween_easing_words(modifiers: String) -> String:
+	var curve: String = str(TWEEN_TRANSITION_WORDS.get(_tween_modifier_argument(modifiers, "set_trans"), ""))
+	var end_word: String = str(TWEEN_EASE_WORDS.get(_tween_modifier_argument(modifiers, "set_ease"), ""))
+	# Each spelling is its own whole phrase in the catalog rather than a word glued to a word: a
+	# translator needs the sentence, and "out" on its own is not one.
+	if curve.is_empty() and end_word.is_empty():
+		return ""
+	if curve.is_empty():
+		return translate("ease = %s" % end_word)
+	if end_word.is_empty():
+		return _fill(translate("ease = {curve}"), {"curve": curve})
+	return _fill(translate("ease = {curve} %s" % end_word), {"curve": curve})
+
+
+## The single argument of `.<name>(...)` inside a chained tail, or "" when the tail has no such call.
+static func _tween_modifier_argument(modifiers: String, name: String) -> String:
+	var marker: String = ".%s(" % name
+	var at: int = modifiers.find(marker)
+	if at < 0:
+		return ""
+	var open_at: int = at + marker.length() - 1
+	var close_at: int = closing_paren(modifiers, open_at)
+	if close_at < 0:
+		return ""
+	return modifiers.substr(open_at + 1, close_at - open_at - 1).strip_edges()
+
+
+## R3. The sheet's word for the property a tween animates - `modulate:a` is opacity, `scale` is size,
+## `rotation` is the angle. Anything the table does not name keeps its own spelling.
+static func tween_property_word(path: String) -> String:
+	var bare: String = path.strip_edges()
+	return translate(str(TWEEN_PROPERTY_WORDS[bare])) if TWEEN_PROPERTY_WORDS.has(bare) else bare
+
+
+## R3. What `tween_callback(queue_free)` DOES, in the words the sheet uses for that step: the callable
+## reads as the action it names. A lambda has no name to give, so it reads as the sheet's own word for
+## a step written inline.
+static func tween_callback_words(callable_text: String, context: Dictionary) -> String:
+	var text: String = callable_text.strip_edges()
+	if text.begins_with("func("):
+		return translate("this step")
+	var called: Dictionary = _call_statement("%s()" % text, context) if is_simple_target(text) else {}
+	if not called.is_empty():
+		var words: String = ""
+		for segment: Variant in called.get("segments", []):
+			words += str((segment as Dictionary).get("text", ""))
+		var trimmed: String = words.strip_edges()
+		if not trimmed.is_empty():
+			return trimmed
+	return text
+
+
+## R3. `(after the previous)` / `(at the same time)` - where this step sits in its chain, when the
+## pre-pass over the file could say so for certain. "" otherwise, and the row claims nothing.
+static func tween_sequence_note(text: String, context: Dictionary) -> String:
+	var notes: Variant = context.get("tween_notes", {})
+	if not (notes is Dictionary):
+		return ""
+	var note: String = str((notes as Dictionary).get(tween_note_key(text), ""))
+	if note == "after":
+		return translate("(after the previous)")
+	if note == "parallel":
+		return translate("(at the same time)")
+	return ""
+
+
+## R3. One statement written across several lines with a trailing `\`, joined back into the one line
+## it is. The leading indent of the FIRST line is kept, so the row still sits where the file puts it;
+## everything a continuation adds is folded onto the end with a single space.
+static func join_continuations(code: String) -> String:
+	var lines: PackedStringArray = code.split("\n")
+	var joined: String = ""
+	for index: int in lines.size():
+		var line: String = lines[index]
+		if joined.is_empty():
+			joined = line.rstrip(" \t")
+		else:
+			joined += " " + line.strip_edges()
+		if not joined.ends_with("\\"):
+			# Only a run that is entirely continuations may join; anything else is left as it was.
+			return code if index < lines.size() - 1 else joined
+		joined = joined.substr(0, joined.length() - 1).rstrip(" \t")
+	return joined
+
+
+## R3. The key a tween step is looked up under in the chain map - the statement with its whitespace
+## settled, so the pre-pass over the file and the row being drawn agree on what "the same line" is.
+static func tween_note_key(text: String) -> String:
+	var settled: String = join_continuations(text) if text.contains("\n") else text
+	settled = settled.replace("\t", " ")
+	while settled.contains("  "):
+		settled = settled.replace("  ", " ")
+	return settled.strip_edges()
+
+
+## R3. "a new tween" for the calls that make one, "" for anything else. A local declared from one of
+## these reads `Local object t = a new tween` rather than repeating the GDScript call.
+static func tween_expression(text: String) -> String:
+	return translate("a new tween") if TWEEN_MAKERS.has(text.strip_edges()) else ""
 
 
 ## R9. The Timer behavior's own words for a Timer NODE. Every event sheet says `Start timer "tag" for
@@ -3251,6 +3503,9 @@ static func _inferred_type(value: String) -> String:
 	# R31. The editor's undo history, declared as what it is. A reader who sees "Local ur = ..." with no
 	# type cannot tell that `ur` is something they may call actions on; "Local object ur" says it.
 	if UNDO_HISTORY_CALLS.has(text):
+		return "Object"
+	# R3. A tween is an object a reader may call Tween steps on, so the local holding one says so.
+	if TWEEN_MAKERS.has(text):
 		return "Object"
 	return ""
 

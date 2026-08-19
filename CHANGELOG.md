@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added - a tween chain reads as Tween actions, one action per row
+
+- **`create_tween()` and the chain under it read as the sheet's own Tween words.** A juice line that
+  used to open as three raw calls on a local `t` and a naked `await` now reads as ordinary rows:
+  `Local object t = a new tween`, then `Player ▸ Tween position to target in 0.5 seconds` with
+  `ease = Sine out` as a chip, then `Player ▸ Tween opacity to 0 in 0.3 seconds (after the previous)`,
+  `Player ▸ Tween then Destroy` and `System ▸ ⏳ Wait for tween to finish`. `set_parallel()` makes the
+  steps after it say `(at the same time)`, `set_loops(3)` reads `Tween repeat 3 times`,
+  `tween_interval` reads `Tween wait X seconds` and `kill()` reads `Stop tween`.
+- **The property is spelled the way the sheet spells it everywhere else**: `modulate:a` is
+  **opacity**, `scale` is **size**, `rotation` is the **angle**, `global_position` is the
+  **position**. Anything the table does not name keeps its own spelling rather than being guessed at.
+- **The chain is joined by the local's name, in file order.** Which step follows which is worked out
+  once per rebuild by walking the file, not guessed at line by line - and a receiver that cannot
+  prove it holds a tween (a field, a function result) keeps its plain call reading rather than being
+  given a Tween sentence it has not earned. A statement written across lines with a trailing `\` is
+  read as the one statement it is, which is how most chains are actually written.
+- **Tween Property, picked or typed, is one sentence.** The shipped Tween Property action now reads
+  `Tween {property} to {value} in {duration} seconds`, the same words the typed line reads.
+- Display only: the file keeps every line it had, and nothing here is emitted.
+
 ### Added - an object's variables are a table you edit, not a list you read
 
 - **Instance variables are edited where they are read.** Click an object's name on a row (or select
