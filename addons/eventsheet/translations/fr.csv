@@ -2312,6 +2312,7 @@ size Y,taille Y
 position,position
 Wait for tween to finish,Attendre la fin du tween
 %s is not visible here,%s n'est pas visible ici
+%s is still used here,%s est encore utilisé ici
 Tween {property} to {value} over {duration}s,Animer {property} vers {value} en {duration}s
 Run now,Exécuter maintenant
 Reload,Recharger

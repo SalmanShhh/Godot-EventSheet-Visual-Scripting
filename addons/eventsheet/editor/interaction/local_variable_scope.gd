@@ -55,6 +55,10 @@ static func visible_locals(sheet: EventSheetResource, target_event: EventRow) ->
 ## The first name an action USES that this sheet declares as a local but that is not visible at
 ## `target_event`, or "" when every name it uses is in scope. The one name is what the refusal says,
 ## because a reader fixes one thing at a time.
+##
+## A name the dragged rows DECLARE is never refused here: a declaration takes its scope with it, and
+## moving one is the whole point of being able to drag a Local row. What a moved declaration can
+## break is the rows it leaves behind, which is the question `stranded_name` asks.
 static func out_of_scope_name(sheet: EventSheetResource, target_event: EventRow,
 		resources: Array) -> String:
 	if sheet == null or target_event == null or resources.is_empty():
@@ -62,12 +66,127 @@ static func out_of_scope_name(sheet: EventSheetResource, target_event: EventRow,
 	var declared: Dictionary = declared_locals(sheet)
 	if declared.is_empty():
 		return ""
+	var moving: Dictionary = declared_by(resources)
 	var visible: Dictionary = visible_locals(sheet, target_event)
 	for resource: Variant in resources:
 		for name_text: String in referenced_names(resource):
-			if declared.has(name_text) and not visible.has(name_text):
+			if declared.has(name_text) and not visible.has(name_text) and not moving.has(name_text):
 				return name_text
 	return ""
+
+
+## R41. The first local the drop would STRAND - a name the dragged rows declare that a row staying
+## behind still uses, from somewhere the declaration would no longer reach - or "" when the move is
+## safe. Moving a declaration is allowed to change what the sheet says; it is not allowed to leave a
+## use of the name with nothing to read.
+static func stranded_name(sheet: EventSheetResource, target_event: EventRow,
+		resources: Array) -> String:
+	if sheet == null or target_event == null or resources.is_empty():
+		return ""
+	var moving: Dictionary = declared_by(resources)
+	if moving.is_empty():
+		return ""
+	var reach: Dictionary = _scope_if_declared_at(sheet, target_event)
+	var staying: Dictionary = {}
+	for resource: Variant in resources:
+		staying[resource] = true
+	for name_text: String in moving:
+		if _name_used_outside(sheet, name_text, staying, reach):
+			return name_text
+	return ""
+
+
+## {name: true} for every local the dragged rows themselves declare.
+static func declared_by(resources: Array) -> Dictionary:
+	var names: Dictionary = {}
+	for resource: Variant in resources:
+		if resource is LocalVariable:
+			var variable_name: String = (resource as LocalVariable).name.strip_edges()
+			if not variable_name.is_empty():
+				names[variable_name] = true
+			continue
+		if resource is ACEAction and (resource as ACEAction).ace_id.begins_with("SetLocal"):
+			var action: ACEAction = resource as ACEAction
+			var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+			var action_name: String = str(params.get("name", "")).strip_edges()
+			if not action_name.is_empty():
+				names[action_name] = true
+			continue
+		if resource is RawCodeRow:
+			for line: String in (resource as RawCodeRow).code.split("\n"):
+				var declared_line: String = declared_name_of_line(line)
+				if not declared_line.is_empty():
+					names[declared_line] = true
+	return names
+
+
+## {EventRow instance id: true} for the events a local WOULD reach if it were declared on
+## `target_event` - that event, the ones after it in the same list, and every subtree under them.
+## The same rule `_scope_in_container` reads off the sheet, asked of a place rather than of a name.
+static func _scope_if_declared_at(sheet: EventSheetResource, target_event: EventRow) -> Dictionary:
+	var ids: Dictionary = {}
+	if sheet == null or target_event == null:
+		return ids
+	_reach_in_container(sheet.events, target_event, ids, 0)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			_reach_in_container((function_entry as EventFunction).events, target_event, ids, 0)
+	return ids
+
+
+static func _reach_in_container(container: Array, target_event: EventRow, ids: Dictionary,
+		depth: int) -> void:
+	if depth > 64:
+		return
+	var found_at: int = -1
+	for index in container.size():
+		var entry: Variant = container[index]
+		if not (entry is EventRow):
+			continue
+		if entry == target_event:
+			found_at = index
+		_reach_in_container((entry as EventRow).sub_events, target_event, ids, depth + 1)
+	if found_at < 0:
+		return
+	for index in range(found_at, container.size()):
+		if container[index] is EventRow:
+			_mark_subtree(container[index] as EventRow, ids, 0)
+
+
+## True when some row of the sheet that is NOT moving mentions `name` from an event the declaration
+## would no longer reach.
+static func _name_used_outside(sheet: EventSheetResource, name: String, moving: Dictionary,
+		reach: Dictionary) -> bool:
+	for event_entry: Variant in sheet.events:
+		if _uses_name(event_entry, name, moving, reach, 0):
+			return true
+	for function_entry: Variant in sheet.functions:
+		if not (function_entry is EventFunction):
+			continue
+		for event_entry: Variant in (function_entry as EventFunction).events:
+			if _uses_name(event_entry, name, moving, reach, 0):
+				return true
+	return false
+
+
+static func _uses_name(entry: Variant, name: String, moving: Dictionary, reach: Dictionary,
+		depth: int) -> bool:
+	if depth > 64 or not (entry is EventRow):
+		return false
+	var event_row: EventRow = entry as EventRow
+	if not reach.has(event_row.get_instance_id()):
+		var rows: Array = []
+		rows.append_array(event_row.conditions)
+		rows.append_array(event_row.actions)
+		for row_entry: Variant in rows:
+			if row_entry == null or moving.has(row_entry):
+				continue
+			if mentions_name(resource_text(row_entry), name):
+				return true
+	for child: Variant in event_row.sub_events:
+		if _uses_name(child, name, moving, reach, depth + 1):
+			return true
+	return false
 
 
 ## {EventRow instance id: true} for every event `name` can be USED in - the event that declares it
@@ -149,6 +268,14 @@ static func resource_text(resource: Variant) -> String:
 		for key: Variant in params:
 			parts.append(str(params[key]))
 		return " ".join(parts)
+	if resource is ACECondition:
+		var condition: ACECondition = resource as ACECondition
+		var condition_params: Dictionary = (condition.params if not condition.params.is_empty()
+			else condition.parameters)
+		var condition_parts: PackedStringArray = PackedStringArray()
+		for key: Variant in condition_params:
+			condition_parts.append(str(condition_params[key]))
+		return " ".join(condition_parts)
 	if resource is CommentRow:
 		return ""
 	return ""

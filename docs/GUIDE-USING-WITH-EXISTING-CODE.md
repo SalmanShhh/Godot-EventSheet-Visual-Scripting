@@ -440,7 +440,11 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   object, a list, a table, or a value whose type nothing states) keeps its whole declaration on the
   one row, because inventing a starting value nobody wrote would be a guess. Display only: the file
   keeps its line, and the row still addresses that statement - clicking, dragging and the row menu
-  reach the same line they always did.
+  reach the same line they always did. **Drag the Local row into another event** and the declaration
+  moves with it, rewritten where it lands through the same undo funnel every other row uses. Two
+  refusals guard the move, both in the red drop bubble: a row that uses a local may not leave the
+  scope that can see it (`dealt is not visible here`), and a local may not be dragged out from under
+  rows that still use it (`dealt is still used here`).
 - **A ternary is a sub-event, never a condition in an action cell.** An `if ... else` INSIDE a statement
   (`return wall_normal.x if host != null and host.is_on_wall() else 0.0`) reads the way a Construct sheet
   draws the same branch: a condition row on the left with the statement on the right, then an `Else` row

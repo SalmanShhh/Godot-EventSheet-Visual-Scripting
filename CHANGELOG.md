@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - a Local row can be dragged into another event, and says when it may not
+
+- **Dragging a Local row into another event moves the declaration.** It goes through the same undo
+  funnel every other row moves through, so the `var` line is rewritten where the row lands and the
+  file stays byte-exact either way. The name the row declares is no longer held against the drop -
+  a declaration takes its scope with it, which is the whole point of being able to move one.
+- **A move that would strand a use is refused before you let go**, in the same red bubble: drag
+  `dealt`'s declaration into another function while `dealt += 1` is still back there and the drop
+  reads **`dealt is still used here`**. The two refusals now cover both directions - a row that uses
+  a local may not leave its scope (`dealt is not visible here`), and a local may not leave the rows
+  that use it.
+
 ### Changed - a local declared inside an event reads at the top of that event
 
 - **A `var` line inside a body reads as the two rows an event sheet writes for a local.** The

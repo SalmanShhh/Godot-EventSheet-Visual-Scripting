@@ -2312,6 +2312,7 @@ size Y,크기 Y
 position,위치
 Wait for tween to finish,트윈이 끝날 때까지 대기
 %s is not visible here,%s은(는) 여기에서 보이지 않습니다
+%s is still used here,%s은(는) 여기에서 아직 사용됩니다
 Tween {property} to {value} over {duration}s,{property}을 {value}로 {duration}초 동안 트윈
 Run now,지금 실행
 Reload,다시 불러오기

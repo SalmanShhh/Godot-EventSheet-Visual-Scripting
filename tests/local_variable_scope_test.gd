@@ -60,6 +60,23 @@ static func run() -> bool:
 	ok = _check("a PICKED action is read through its parameters too",
 		EventSheetLocalScope.out_of_scope_name(sheet, stranger, [picked]), "dealt") and ok
 
+	# ── Moving the DECLARATION itself ──
+	# A Local row dragged into another event moves the declaration, so the name it declares is not
+	# held against it - what is held against it is a row left behind that still uses the name.
+	var declaration_row: ACEAction = _action_of(declaring, "SetLocalVar", "dealt")
+	ok = _check("the declaring row is found", declaration_row != null, true) and ok
+	ok = _check("moving a declaration is not refused for the name it declares",
+		EventSheetLocalScope.out_of_scope_name(sheet, stranger, [declaration_row]), "") and ok
+	ok = _check("but it is refused while a row left behind still uses it",
+		EventSheetLocalScope.stranded_name(sheet, stranger, [declaration_row]), "dealt") and ok
+	ok = _check("moving it inside its own reach strands nothing",
+		EventSheetLocalScope.stranded_name(sheet, declaring, [declaration_row]), "") and ok
+	var fresh: ACEAction = ACEAction.new()
+	fresh.ace_id = "SetLocalVar"
+	fresh.params = {"name": "fresh", "value": "0"}
+	ok = _check("a declaration nothing else uses may go anywhere",
+		EventSheetLocalScope.stranded_name(sheet, stranger, [fresh]), "") and ok
+
 	# ── The word test the highlight uses ──
 	ok = _check("a whole word matches",
 		EventSheetLocalScope.mentions_name("Subtract dealt from hp", "dealt"), true) and ok
@@ -89,7 +106,9 @@ static func run() -> bool:
 	view._drag_ace_entries = []
 
 	# Hovering the variable's name lights up its other uses, and only inside its own scope.
-	var hover_row_index: int = _row_index_for(view, declaring)
+	# The name lives on the DECLARATION row the event owns - an event sheet declares its locals at the
+	# top of the event, so that row, not the action lane, is where a cursor finds "dealt".
+	var hover_row_index: int = _declaration_row_index(view, declaring)
 	var hover_span_index: int = _span_index_with_text(view, hover_row_index, "dealt")
 	ok = _check("the declaration row shows the variable's name", hover_span_index >= 0, true) and ok
 	var matches: Dictionary = view._compute_hover_matches(hover_row_index, hover_span_index)
@@ -108,6 +127,19 @@ static func run() -> bool:
 static func _row_for(view: EventSheetViewport, event_row: EventRow) -> EventRowData:
 	var index: int = _row_index_for(view, event_row)
 	return null if index < 0 else (view.get_flat_rows()[index].get("row") as EventRowData)
+
+
+## The Local declaration row `event_row` owns - the row its `var` line reads as, at the top of the
+## event - or -1 when the event declares nothing.
+static func _declaration_row_index(view: EventSheetViewport, event_row: EventRow) -> int:
+	var rows: Array = view.get_flat_rows()
+	for index in rows.size():
+		var row_data: EventRowData = (rows[index] as Dictionary).get("row")
+		if row_data == null or row_data.source_resource != event_row:
+			continue
+		if row_data.row_uid.begins_with("local_declaration_"):
+			return index
+	return -1
 
 
 static func _row_index_for(view: EventSheetViewport, event_row: EventRow) -> int:
@@ -134,6 +166,19 @@ static func _span_index_with_text(view: EventSheetViewport, row_index: int, word
 
 
 ## The first event of the sheet holding an ACE action of `ace_id` that names `name`, or null.
+## The action of `event_row` that is `ace_id` and names `name` - the very resource a drag of that row
+## carries.
+static func _action_of(event_row: EventRow, ace_id: String, name: String) -> ACEAction:
+	if event_row == null:
+		return null
+	for action_entry: Variant in event_row.actions:
+		if not (action_entry is ACEAction) or (action_entry as ACEAction).ace_id != ace_id:
+			continue
+		if str((action_entry as ACEAction).params.get("name", "")) == name:
+			return action_entry as ACEAction
+	return null
+
+
 static func _event_with_action(sheet: EventSheetResource, ace_id: String, name: String) -> EventRow:
 	var pending: Array = []
 	pending.append_array(sheet.events)

@@ -3492,6 +3492,14 @@ func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictiona
 			"valid": false,
 			"message": EventSheetL10n.translate("%s is not visible here") % out_of_scope
 		}
+	# R41. The other half of the same promise: a Local row may be dragged into another event - that
+	# MOVES the declaration - but not out from under rows that still use the name.
+	var stranded: String = _stranded_drag_name(target_event)
+	if not stranded.is_empty():
+		return {
+			"valid": false,
+			"message": EventSheetL10n.translate("%s is still used here") % stranded
+		}
 	if lane != "condition":
 		return {"valid": true}
 	var trigger_entry_count: int = 0
@@ -3533,6 +3541,21 @@ func _out_of_scope_drag_name(target_event: EventRow) -> String:
 	if resources.is_empty():
 		return ""
 	return EventSheetLocalScope.out_of_scope_name(_sheet as EventSheetResource, target_event, resources)
+
+
+## R41. The local a moved DECLARATION would strand - a name the dragged rows declare that a row
+## staying behind still uses - or "" when nothing is left without it.
+func _stranded_drag_name(target_event: EventRow) -> String:
+	if _drag_ace_entries.is_empty() or _sheet == null:
+		return ""
+	var resources: Array = []
+	for entry in _drag_ace_entries:
+		var ace_resource: Resource = entry.get("ace_resource", null) as Resource
+		if ace_resource != null:
+			resources.append(ace_resource)
+	if resources.is_empty():
+		return ""
+	return EventSheetLocalScope.stranded_name(_sheet as EventSheetResource, target_event, resources)
 
 
 # ── Row metrics: thin delegates to ViewportRowMetrics. Internal callers and tests call these
