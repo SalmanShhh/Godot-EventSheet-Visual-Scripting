@@ -137,7 +137,7 @@ static func _census_lists_every_object() -> bool:
 	passed = _check("a behaviour says which pack it is",
 		str(notes.get("Health", "")), "$Health · Health · 1 row") and passed
 	passed = _check("an autoload says it is one",
-		str(notes.get("EventForgeBridge", "")), "autoload · 2 rows") and passed
+		str(notes.get("EventForgeBridge", "")), "autoload (global) · 2 rows") and passed
 	passed = _check("a group says it is one", str(notes.get("enemies", "")), "group · 1 row") and passed
 	passed = _check("a preloaded scene is an object too",
 		str(notes.get("HeadBullet", "")), "scene · 1 row") and passed
