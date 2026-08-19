@@ -2644,3 +2644,39 @@ This pack has no knobs to set.,이 팩에는 조절할 값이 없습니다.
 No pack here matches that.,일치하는 팩이 없습니다.
 Reading check,읽기 검사
 Fix:,고치기:
+Resolve Conflict,충돌 해결
+Ours and theirs,우리 것과 그들 것
+Save resolved file,해결된 파일 저장
+Events both sides agree on are greyed - there is nothing to decide about them. Pick one of the rest per event.,양쪽이 같은 이벤트는 회색입니다 - 결정할 것이 없습니다. 나머지는 이벤트마다 고르세요.
+both the same,둘 다 같음
+Keep ours,우리 것 유지
+Keep theirs,그들 것 유지
+Keep both,둘 다 유지
+Replay Recorder,리플레이 레코더
+Replay Recorder…,리플레이 레코더…
+⏺ Record,⏺ 녹화
+⏹ Stop,⏹ 정지
+Save as Test Sheet…,테스트 시트로 저장…
+Save as Test Sheet,테스트 시트로 저장
+The take,테이크
+Checkpoint,체크포인트
+Add checkpoint,체크포인트 추가
+Should be,기대값
+At frame,프레임
+"No take yet. Press Record, then run the game.",아직 테이크가 없습니다. 녹화를 누른 뒤 게임을 실행하세요.
+A checkpoint needs something to read.,체크포인트에는 읽을 대상이 필요합니다.
+New Shared Sheet,새 공유 시트
+New shared sheet…,새 공유 시트…
+Include Sheet,시트 포함
+Include sheet…,시트 포함…
+Called,이름
+Included,포함 방식
+as a base class,기반 클래스로
+as a helper,헬퍼로
+A shared sheet needs a name.,공유 시트에는 이름이 필요합니다.
+Save this sheet as a script first - an include is written into the file.,먼저 이 시트를 스크립트로 저장하세요 - 포함은 파일에 기록됩니다.
+Nothing is running - Apply to running game needs a game to apply to.,실행 중인 게임이 없습니다 - 적용하려면 실행 중인 게임이 필요합니다.
+⟳ Apply to running game (Ctrl+Alt+S),⟳ 실행 중인 게임에 적용 (Ctrl+Alt+S)
+⟳ Applies when the game resumes (paused at a row),⟳ 게임이 재개될 때 적용됩니다 (행에서 일시정지)
+Auto-apply while debugging,디버깅 중 자동 적용
+Ships as,생성 형태

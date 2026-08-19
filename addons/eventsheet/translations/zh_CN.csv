@@ -2644,3 +2644,39 @@ This pack has no knobs to set.,这个包没有可调项。
 No pack here matches that.,没有匹配的包。
 Reading check,可读性检查
 Fix:,修复：
+Resolve Conflict,解决冲突
+Ours and theirs,我方与对方
+Save resolved file,保存已解决的文件
+Events both sides agree on are greyed - there is nothing to decide about them. Pick one of the rest per event.,双方一致的事件显示为灰色 - 无需抉择。其余的逐个事件选择。
+both the same,两边相同
+Keep ours,保留我方
+Keep theirs,保留对方
+Keep both,两者都保留
+Replay Recorder,回放录制器
+Replay Recorder…,回放录制器…
+⏺ Record,⏺ 录制
+⏹ Stop,⏹ 停止
+Save as Test Sheet…,另存为测试表…
+Save as Test Sheet,另存为测试表
+The take,本次录制
+Checkpoint,检查点
+Add checkpoint,添加检查点
+Should be,应为
+At frame,在帧
+"No take yet. Press Record, then run the game.",尚无录制。按下录制，然后运行游戏。
+A checkpoint needs something to read.,检查点需要一个要读取的值。
+New Shared Sheet,新建共享表
+New shared sheet…,新建共享表…
+Include Sheet,包含表
+Include sheet…,包含表…
+Called,名称
+Included,包含方式
+as a base class,作为基类
+as a helper,作为助手
+A shared sheet needs a name.,共享表需要一个名称。
+Save this sheet as a script first - an include is written into the file.,请先将此表保存为脚本 - 包含关系写入文件中。
+Nothing is running - Apply to running game needs a game to apply to.,没有正在运行的游戏 - 应用到运行中的游戏需要一个运行中的游戏。
+⟳ Apply to running game (Ctrl+Alt+S),⟳ 应用到运行中的游戏 (Ctrl+Alt+S)
+⟳ Applies when the game resumes (paused at a row),⟳ 游戏继续时应用（在某行暂停）
+Auto-apply while debugging,调试时自动应用
+Ships as,生成为

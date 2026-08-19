@@ -48,6 +48,40 @@ What changed in the build you have installed (v0.17.0), in the words the release
   Named Scenes, Encounter Timeline, Priced Table, StatForge, Drawing Canvas, and Nav Agent 3D's
   description). Reworded to action; the packs are rebuilt and all 91 now pass the reading check.
 
+### Added - working WITH a sheet: the running game, a recorded play, a merge conflict, a shared sheet
+
+Four gestures that live one step outside the reading. Each keeps its decision in a plain module with
+no editor in it, so the window, the Doctor and the tests all read the same answer.
+
+- **Apply a sheet change to the game that is already running.** While a game runs, an edit to the
+  open sheet puts `⟳ Apply to running game (Ctrl+Alt+S)` on the status strip. Applying saves the
+  sheet and asks the running game to reload its script (the engine's own script hot-reload - the
+  state it keeps is the state you get), and the rows you changed pulse once on the canvas and in the
+  Event Trace. When a live reload cannot carry the change - a variable whose TYPE changed, a
+  function that was removed and may be running - the strip says which one and offers **Restart**
+  instead of half-applying. `View ▸ Auto-apply while debugging` makes every edit land on its own;
+  paused at a row, an edit applies on resume. Nothing appears at all unless a game is running.
+- **Record a play, keep it as a test.** `Tools ▸ Replay Recorder…`: ⏺ Record, play, ⏹ Stop, *Save as
+  Test Sheet…*. Every control the running game sees is captured with the frame it happened on and
+  reads as the row it becomes - `simulate control jump pressed at frame 12` - with checkpoints you
+  add (`expect hp = 90 at frame 300`). What is written is an ORDINARY Test sheet: readable,
+  editable, diffable, and replayed by the same runner as every other test, here or headlessly. Four
+  new Testing rows carry it: Wait Until Frame, Simulate Control Pressed / Released At Frame, and
+  Expect At Frame, whose failure names the frame it drifted on.
+- **Resolve a merge conflict as events.** Opening a `.gd` a merge left unresolved shows the
+  conflicted region as OURS / THEIRS columns of events side by side: the events both sides agree on
+  are greyed, the differing ones each get **Keep ours** / **Keep theirs** / **Keep both**. Save
+  writes the file with the markers gone and every byte outside the region exactly as it was; the
+  Doctor lists whatever is still unresolved.
+- **Shared event sheets: write common events once, include them in many scripts.**
+  `Sheet ▸ New shared sheet…` makes a script whose whole job is to be included, and asks the one
+  question that belongs to the shared sheet rather than to each includer: is it *as a base class*
+  (the including script extends it) or *as a helper* (the including script keeps one of it and
+  forwards its triggers to it - the sheet writes the forwarding rows)? `Add ▸ Include sheet…` then
+  wires any script to it with nothing left to ask. Changing the shared sheet changes every includer,
+  and the Doctor reports two includes that both handle the same trigger, because that clash is
+  invisible in the includer.
+
 ### Added - an opened script's PATTERNS read as the events they are
 
 The batches before this one made single statements read as the sheet's sentences. These are the

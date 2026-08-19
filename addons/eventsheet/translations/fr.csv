@@ -2644,3 +2644,39 @@ This pack has no knobs to set.,Ce pack n'a aucun réglage.
 No pack here matches that.,Aucun pack ne correspond.
 Reading check,Contrôle de lecture
 Fix:,Corriger :
+Resolve Conflict,Resoudre le conflit
+Ours and theirs,Les notres et les leurs
+Save resolved file,Enregistrer le fichier resolu
+Events both sides agree on are greyed - there is nothing to decide about them. Pick one of the rest per event.,"Les evenements sur lesquels les deux cotes s'accordent sont grises - rien a decider. Pour le reste, choisissez par evenement."
+both the same,identiques
+Keep ours,Garder les notres
+Keep theirs,Garder les leurs
+Keep both,Garder les deux
+Replay Recorder,Enregistreur de rejeu
+Replay Recorder…,Enregistreur de rejeu…
+⏺ Record,⏺ Enregistrer
+⏹ Stop,⏹ Arreter
+Save as Test Sheet…,Enregistrer comme feuille de test…
+Save as Test Sheet,Enregistrer comme feuille de test
+The take,La prise
+Checkpoint,Point de controle
+Add checkpoint,Ajouter un point de controle
+Should be,Devrait valoir
+At frame,A l'image
+"No take yet. Press Record, then run the game.","Aucune prise pour l'instant. Appuyez sur Enregistrer, puis lancez le jeu."
+A checkpoint needs something to read.,Un point de controle a besoin de quelque chose a lire.
+New Shared Sheet,Nouvelle feuille partagee
+New shared sheet…,Nouvelle feuille partagee…
+Include Sheet,Inclure une feuille
+Include sheet…,Inclure une feuille…
+Called,Nommee
+Included,Incluse
+as a base class,comme classe de base
+as a helper,comme assistant
+A shared sheet needs a name.,Une feuille partagee a besoin d'un nom.
+Save this sheet as a script first - an include is written into the file.,Enregistrez d'abord cette feuille comme script - l'inclusion est ecrite dans le fichier.
+Nothing is running - Apply to running game needs a game to apply to.,Rien ne tourne - Appliquer au jeu en cours a besoin d'un jeu en cours.
+⟳ Apply to running game (Ctrl+Alt+S),⟳ Appliquer au jeu en cours (Ctrl+Alt+S)
+⟳ Applies when the game resumes (paused at a row),⟳ S'appliquera a la reprise du jeu (en pause sur une ligne)
+Auto-apply while debugging,Appliquer automatiquement pendant le debogage
+Ships as,Genere comme

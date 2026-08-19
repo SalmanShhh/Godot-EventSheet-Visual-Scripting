@@ -2644,3 +2644,39 @@ This pack has no knobs to set.,Dieses Paket hat keine Regler.
 No pack here matches that.,Kein Paket passt dazu.
 Reading check,Lesbarkeitsprüfung
 Fix:,Beheben:
+Resolve Conflict,Konflikt aufloesen
+Ours and theirs,Unsere und ihre
+Save resolved file,Aufgeloeste Datei speichern
+Events both sides agree on are greyed - there is nothing to decide about them. Pick one of the rest per event.,"Ereignisse, in denen beide Seiten uebereinstimmen, sind ausgegraut - dazu gibt es nichts zu entscheiden. Beim Rest waehlst du pro Ereignis."
+both the same,beide gleich
+Keep ours,Unsere behalten
+Keep theirs,Ihre behalten
+Keep both,Beide behalten
+Replay Recorder,Wiedergabe-Rekorder
+Replay Recorder…,Wiedergabe-Rekorder…
+⏺ Record,⏺ Aufnehmen
+⏹ Stop,⏹ Stopp
+Save as Test Sheet…,Als Testblatt speichern…
+Save as Test Sheet,Als Testblatt speichern
+The take,Die Aufnahme
+Checkpoint,Pruefpunkt
+Add checkpoint,Pruefpunkt hinzufuegen
+Should be,Sollte sein
+At frame,Bei Frame
+"No take yet. Press Record, then run the game.",Noch keine Aufnahme. Druecke Aufnehmen und starte dann das Spiel.
+A checkpoint needs something to read.,Ein Pruefpunkt braucht etwas zum Auslesen.
+New Shared Sheet,Neues gemeinsames Blatt
+New shared sheet…,Neues gemeinsames Blatt…
+Include Sheet,Blatt einbinden
+Include sheet…,Blatt einbinden…
+Called,Genannt
+Included,Eingebunden
+as a base class,als Basisklasse
+as a helper,als Helfer
+A shared sheet needs a name.,Ein gemeinsames Blatt braucht einen Namen.
+Save this sheet as a script first - an include is written into the file.,Speichere dieses Blatt zuerst als Skript - eine Einbindung wird in die Datei geschrieben.
+Nothing is running - Apply to running game needs a game to apply to.,Es laeuft nichts - Auf laufendes Spiel anwenden braucht ein laufendes Spiel.
+⟳ Apply to running game (Ctrl+Alt+S),⟳ Auf laufendes Spiel anwenden (Strg+Alt+S)
+⟳ Applies when the game resumes (paused at a row),"⟳ Wird angewendet, wenn das Spiel fortfaehrt (an einer Zeile pausiert)"
+Auto-apply while debugging,Beim Debuggen automatisch anwenden
+Ships as,Wird ausgeliefert als

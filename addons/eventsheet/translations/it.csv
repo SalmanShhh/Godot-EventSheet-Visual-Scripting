@@ -2644,3 +2644,39 @@ This pack has no knobs to set.,Questo pacchetto non ha regolazioni.
 No pack here matches that.,Nessun pacchetto corrisponde.
 Reading check,Controllo di lettura
 Fix:,Correggi:
+Resolve Conflict,Risolvi conflitto
+Ours and theirs,I nostri e i loro
+Save resolved file,Salva il file risolto
+Events both sides agree on are greyed - there is nothing to decide about them. Pick one of the rest per event.,Gli eventi su cui entrambi i lati concordano sono in grigio: non c'e nulla da decidere. Per gli altri scegli evento per evento.
+both the same,uguali
+Keep ours,Tieni i nostri
+Keep theirs,Tieni i loro
+Keep both,Tieni entrambi
+Replay Recorder,Registratore di replay
+Replay Recorder…,Registratore di replay…
+⏺ Record,⏺ Registra
+⏹ Stop,⏹ Ferma
+Save as Test Sheet…,Salva come foglio di test…
+Save as Test Sheet,Salva come foglio di test
+The take,La ripresa
+Checkpoint,Punto di controllo
+Add checkpoint,Aggiungi punto di controllo
+Should be,Dovrebbe essere
+At frame,Al fotogramma
+"No take yet. Press Record, then run the game.","Nessuna ripresa. Premi Registra, poi avvia il gioco."
+A checkpoint needs something to read.,Un punto di controllo ha bisogno di qualcosa da leggere.
+New Shared Sheet,Nuovo foglio condiviso
+New shared sheet…,Nuovo foglio condiviso…
+Include Sheet,Includi foglio
+Include sheet…,Includi foglio…
+Called,Chiamato
+Included,Inclusa
+as a base class,come classe base
+as a helper,come helper
+A shared sheet needs a name.,Un foglio condiviso ha bisogno di un nome.
+Save this sheet as a script first - an include is written into the file.,Salva prima questo foglio come script: l'inclusione viene scritta nel file.
+Nothing is running - Apply to running game needs a game to apply to.,Non c'e nulla in esecuzione: applicare al gioco in corso richiede un gioco in corso.
+⟳ Apply to running game (Ctrl+Alt+S),⟳ Applica al gioco in corso (Ctrl+Alt+S)
+⟳ Applies when the game resumes (paused at a row),⟳ Verra applicato alla ripresa del gioco (in pausa su una riga)
+Auto-apply while debugging,Applica automaticamente durante il debug
+Ships as,Viene generato come
