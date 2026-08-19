@@ -587,8 +587,9 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		_emit_function_annotation_prefix(event_function, lines)
 		lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
 		var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
-		var function_had_body: bool = _emit_event_body(function_events, lines, source_map, 1, result["warnings"])
-		if not function_had_body:
+		var function_body_start: int = lines.size()
+		_emit_event_body(function_events, lines, source_map, 1, result["warnings"])
+		if not _has_statement(lines, function_body_start):
 			lines.append(_empty_function_stub(event_function))
 		source_map.append({"uid": str(event_function.get_instance_id()), "start": function_start, "end": lines.size(), "kind": "function"})
 
@@ -874,7 +875,9 @@ static func _emit_function_block(event_function: EventFunction, sheet: EventShee
 	_emit_function_annotation_prefix(event_function, lines)
 	lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
 	var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
-	if not _emit_event_body(function_events, lines, source_map, 1, result["warnings"]):
+	var function_body_start: int = lines.size()
+	_emit_event_body(function_events, lines, source_map, 1, result["warnings"])
+	if not _has_statement(lines, function_body_start):
 		lines.append(_empty_function_stub(event_function))
 	source_map.append({"uid": str(event_function.get_instance_id()), "start": function_start, "end": lines.size(), "kind": "function"})
 
@@ -923,7 +926,9 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 		lines.append("func %s(%s) -> %s:" % [function_name, args, returns])
 	if _emit_notification_match(events, lines, source_map, result["warnings"]):
 		return
-	if not _emit_event_body(events, lines, source_map, 1, result["warnings"]):
+	var handler_body_start: int = lines.size()
+	_emit_event_body(events, lines, source_map, 1, result["warnings"])
+	if not _has_statement(lines, handler_body_start):
 		lines.append("\tpass")
 
 
@@ -945,7 +950,9 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 	lines.append("\tmatch what:")
 	for case_index: int in range(events.size()):
 		lines.append("\t\t%s:" % constants[case_index])
-		if not _emit_event_body([events[case_index]], lines, source_map, 3, warnings):
+		var case_body_start: int = lines.size()
+		_emit_event_body([events[case_index]], lines, source_map, 3, warnings)
+		if not _has_statement(lines, case_body_start):
 			lines.append("\t\t\tpass")
 	return true
 
@@ -1449,6 +1456,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		else:
 			lines.append("func %s(%s) -> %s:" % [function_name, args, returns])
 		var had_body: bool = false
+		var handler_body_start: int = lines.size()
 		if function_name == "_ready" and _live_values_receiver_pending:
 			# Edit-back channel: the Live Values window's edits arrive as
 			# "eventsheets:set_value" messages (debug sessions only; one receiver per
@@ -1511,13 +1519,15 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 					had_body = true
 				else:
 					had_body = _emit_event_body([event_entry], lines, source_map, 1, result["warnings"]) or had_body
-		if not had_body:
+		if not _has_statement(lines, handler_body_start):
 			lines.append("\tpass")
 		# The split-out coroutines follow their dispatcher immediately, in event order.
 		for event_entry: Variant in split_events:
 			lines.append("")
 			lines.append("func _event_%s_async(delta: float) -> void:" % (event_entry as EventRow).event_uid)
-			if not _emit_event_body([event_entry], lines, source_map, 1, result["warnings"]):
+			var async_body_start: int = lines.size()
+			_emit_event_body([event_entry], lines, source_map, 1, result["warnings"])
+			if not _has_statement(lines, async_body_start):
 				lines.append("\tpass")
 
 
@@ -1862,7 +1872,7 @@ static func _emit_event_body(
 		# An if/elif/else block (or pick loop) whose body emitted nothing needs `pass` to
 		# stay valid GDScript (e.g. a condition-only event, or one whose actions all
 		# compiled to nothing).
-		if (emitted_block or emitted_pick_loop) and lines.size() == body_start_size:
+		if (emitted_block or emitted_pick_loop) and not _has_statement(lines, body_start_size):
 			lines.append(body_indent + "pass")
 			had_body = true
 		# A block the importer lifted from a ONE-LINE source (`if target == null: return`) folds its
@@ -1877,7 +1887,10 @@ static func _emit_event_body(
 			lines.remove_at(block_header_line + 1)
 		if lines.size() >= event_start_line:
 			source_map.append({"uid": str(event_row.get_instance_id()), "start": event_start_line, "end": lines.size(), "kind": "event"})
-		chain_open = emitted_block
+		# A bare `else:` ENDS the chain - nothing may follow it but a fresh `if`. Left open, a second
+		# Else sibling chained onto the first and wrote `else:` twice in a row, which is a file that
+		# does not parse. An `elif` keeps the chain open, because more may still follow it.
+		chain_open = emitted_block and not (wants_chain and condition_texts.is_empty())
 	return had_body
 
 
@@ -2264,6 +2277,20 @@ static func _param_option_text(option_value: Variant) -> String:
 	if label == key or label.is_empty() or label.contains(","):
 		return key_text
 	return "%s=%s" % [key_text, label]
+
+
+## True when the lines from `from_index` on carry at least one real STATEMENT, not just comments and
+## blanks. GDScript needs a statement after a `:` - a body of nothing but comment rows is a parse
+## error, so "did this body emit anything" has to be asked of the statements, never of the line
+## count. An imported sheet is exactly where this bites: a row nobody could spell keeps its original
+## words as a comment, and an event whose every action was such a row would otherwise write a
+## headed block with no body at all.
+static func _has_statement(lines: PackedStringArray, from_index: int) -> bool:
+	for index: int in range(max(from_index, 0), lines.size()):
+		var stripped: String = lines[index].strip_edges()
+		if not stripped.is_empty() and not stripped.begins_with("#"):
+			return true
+	return false
 
 
 ## The stub emitted for a function whose body has no rows yet ("published before implemented").
