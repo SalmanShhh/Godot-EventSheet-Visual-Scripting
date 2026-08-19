@@ -4755,6 +4755,10 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	row_data.line_count = _count_event_lines(event_row)
 	for local_variable_row in _build_local_variable_rows(event_row, indent + 1):
 		row_data.children.append(local_variable_row)
+	# R41 - a `var` line inside the body declares a local of this event, so it reads at the top of the
+	# event beside the ones the sheet itself owns, in file order among them.
+	for promoted_row: EventRowData in _build_promoted_local_rows(event_row, indent + 1):
+		row_data.children.append(promoted_row)
 	# M29 - a lambda handed to `connect` IS a trigger event; an event sheet has no lambdas, only triggers.
 	# Its reading sits with the actions (which is where the connect line sits) and above the real
 	# sub-events, because that is the order the file runs in.
@@ -5400,6 +5404,51 @@ func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[Event
 				}
 			)
 		)
+	return rows
+
+
+## R41. The Local rows an event's own Local Variable ACTIONS read as. An event sheet declares a local
+## at the TOP of the event that owns it, so a `var` line anywhere in the body draws there - in file
+## order among the locals - while the work the line does stays in the action lane where it sits.
+##
+## Purely a reading: the row addresses the very action it came from (its own `ace_index` on an
+## EventRow source, the same keying a ternary pair uses), so clicking, dragging and the row menu all
+## reach that one statement, and the sheet, the emitted GDScript and the byte round-trip never move.
+func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if event_row == null or not event_promotes_locals(event_row):
+		return rows
+	for action_index in event_row.actions.size():
+		var action: ACEAction = event_row.actions[action_index] as ACEAction
+		if action == null:
+			continue
+		var promotion: Dictionary = local_declaration_promotion(action)
+		if promotion.is_empty():
+			continue
+		var row_data := EventRowData.new()
+		row_data.indent = indent
+		row_data.row_type = EventRowData.RowType.SECTION
+		row_data.source_resource = event_row
+		row_data.row_uid = "local_declaration_%s_%d" % [
+			event_row.event_uid if not event_row.event_uid.is_empty() else str(event_row.get_instance_id()),
+			action_index
+		]
+		row_data.line_count = 1
+		row_data.disabled = not action.enabled
+		var built: Array = []
+		append_local_declaration_spans(built, promotion.get("declaration", {}), {
+			"lane": "action",
+			"kind": "action",
+			"ace_index": action_index,
+			"ace_enabled": action.enabled,
+			"line_index": 0
+		}, {})
+		var typed_spans: Array[SemanticSpan] = []
+		for span: Variant in built:
+			if span is SemanticSpan:
+				typed_spans.append(span as SemanticSpan)
+		row_data.spans = typed_spans
+		rows.append(row_data)
 	return rows
 
 
@@ -6946,19 +6995,30 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				action_line_index += 1
 				continue
 			if action_resource is ACEAction:
-				# A Local Variable row is a DECLARATION, not a step - the same row shape a hand-written
-				# `var` line gets, so a local reads alike whether it was picked or typed.
-				var local_declaration: Dictionary = grammar_action_declaration(action_resource as ACEAction)
-				if not local_declaration.is_empty():
-					append_local_declaration_spans(spans, local_declaration, {
-						"lane": "action",
-						"kind": "action",
-						"ace_index": action_index,
-						"ace_enabled": (action_resource as ACEAction).enabled,
-						"line_index": action_line_index
-					}, action_style_meta)
-					action_line_index += 1
+				# R41 - a Local Variable row is a DECLARATION, and an event sheet declares its locals at
+				# the TOP of the event that owns them, so the declaration is drawn there (see
+				# _build_promoted_local_rows) rather than in the action lane. What stays here is the work
+				# the line does: nothing when the value is already a value, and the Set action that fills
+				# the local in when it is not.
+				var promotion: Dictionary = local_declaration_promotion(action_resource as ACEAction)
+				if not event_promotes_locals(event_row):
+					promotion = {}
+				if not promotion.is_empty() and str(promotion.get("set_value", "")).is_empty():
 					continue
+				if promotion.is_empty():
+					# A declaration the promotion leaves alone (a branching value, whose pair reading
+					# draws it per arm) keeps the declaration row shape it always had.
+					var local_declaration: Dictionary = grammar_action_declaration(action_resource as ACEAction)
+					if not local_declaration.is_empty():
+						append_local_declaration_spans(spans, local_declaration, {
+							"lane": "action",
+							"kind": "action",
+							"ace_index": action_index,
+							"ace_enabled": (action_resource as ACEAction).enabled,
+							"line_index": action_line_index
+						}, action_style_meta)
+						action_line_index += 1
+						continue
 				spans.append(
 					_make_span(
 						_format_action_descriptor(action_resource as ACEAction),
@@ -7284,6 +7344,12 @@ func _count_event_lines(event_row: EventRow) -> int:
 	var action_count: int = 0
 	for action_resource in event_row.actions:
 		if action_resource is ACEAction:
+			# R41 mirrors the span pass: a local whose value is already a value draws no action line at
+			# all - its declaration is the row at the top of the event.
+			var promotion: Dictionary = local_declaration_promotion(action_resource as ACEAction)
+			if (not promotion.is_empty() and str(promotion.get("set_value", "")).is_empty()
+					and event_promotes_locals(event_row)):
+				continue
 			action_count += 1
 		elif action_resource is RawCodeRow:
 			# M29: a connected lambda collapses to ONE muted note line however many lines it spans,
@@ -9418,6 +9484,13 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		return {}
 	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var context: Dictionary = sentence_context()
+	# R41. A local whose starting value has to be worked out reads as the two rows an event sheet
+	# writes: the declaration at the top of the event, and - here - the Set that fills it in.
+	var promotion: Dictionary = local_declaration_promotion(action)
+	if not promotion.is_empty() and not str(promotion.get("set_value", "")).is_empty():
+		var declaration: Dictionary = promotion.get("declaration", {})
+		return EventSheetSentence.statement("%s = %s" % [
+			str(declaration.get("name", "")), str(declaration.get("raw_value", ""))], context)
 	match action.ace_id:
 		"SetVar":
 			return EventSheetSentence.statement("%s = %s" % [
@@ -9895,6 +9968,45 @@ func grammar_action_declaration(action: ACEAction) -> Dictionary:
 		"SetLocalConstInferred":
 			return EventSheetSentence.declaration("const %s := %s" % [name_text, value_text])
 	return {}
+
+
+## R41. True when this event's locals may read at the top of it. They may not when that would leave
+## the event with NOTHING to draw - an event whose whole content is one `var` line has no question to
+## ask and no other step to show, so lifting its declaration out would draw an empty band above the
+## row that carries it. Such an event keeps the declaration in its own lane, exactly where it was.
+func event_promotes_locals(event_row: EventRow) -> bool:
+	if event_row == null:
+		return false
+	if (event_row.trigger != null or not event_row.trigger_id.is_empty()
+			or not event_row.conditions.is_empty() or not event_row.pick_filters.is_empty()
+			or not event_row.with_node_target.strip_edges().is_empty()):
+		return true
+	for action_resource: Variant in event_row.actions:
+		if not (action_resource is ACEAction):
+			return true
+		var promotion: Dictionary = local_declaration_promotion(action_resource as ACEAction)
+		if promotion.is_empty() or not str(promotion.get("set_value", "")).is_empty():
+			return true
+	return false
+
+
+## R41. How a Local Variable row reads as the sheet's own shape: the declaration the event owns,
+## drawn at the top of that event, and the value the Set action beside it carries ("" when the
+## declaration is a plain starting value and no action is needed). {} when the row is not one of the
+## Local Variable family at all.
+func local_declaration_promotion(action: ACEAction) -> Dictionary:
+	var declaration: Dictionary = grammar_action_declaration(action)
+	if declaration.is_empty():
+		return {}
+	# A value that BRANCHES is already read as the sub-event pair it is (M23), which draws the
+	# declaration itself once per arm. Promoting it too would say the same thing three times.
+	var raw_value: String = str(declaration.get("raw_value", ""))
+	if raw_value.contains(" if ") and raw_value.contains(" else "):
+		return {}
+	var split: Dictionary = EventSheetSentence.declaration_rows(declaration)
+	var promoted: Dictionary = declaration.duplicate(true)
+	promoted["value"] = str(split.get("value", ""))
+	return {"declaration": promoted, "set_value": str(split.get("set_value", ""))}
 
 
 ## R9. The GDScript line a lifted Start Timer / Stop Timer row stands for, so the row reads through

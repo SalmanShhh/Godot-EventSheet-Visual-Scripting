@@ -423,13 +423,24 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   keeps the file's order.
 - **Statements without a verb read in Construct's row grammar - Object ▸ Verb values.** `System ▸ Subtract 1
   from jumps left`, `host ▸ Set velocity X to direction X * speed`, `host ▸ Destroy (at end of frame)`,
-  `FPSController ▸ Signal On Jumped`, `host ▸ exists` / `does not exist`, `Local number remaining = amount`
-  (a Local variable row you can also add from the picker), `⏳ Wait 0.5 seconds`, `Go to layout
+  `FPSController ▸ Signal On Jumped`, `host ▸ exists` / `does not exist`, `Local number remaining = 0`
+  with `System ▸ Set remaining to amount` beside the line it came from (a Local variable row you can
+  also add from the picker), `⏳ Wait 0.5 seconds`, `Go to layout
   Menu`, `Keyboard ▸ "jump" is down`, `push x moved toward 0 by push fade`, and inside a
   Condition verb `System ▸ Set return value to true` / inside an Expression verb `Set return value to
   jumps left` (Construct's own function-block action). The same sentence appears whether the row was typed
   in GDScript or picked from the palette - one grammar produces both - and the exact code is always on
   hover.
+- **A local declared inside a body reads at the top of the event that owns it.** An event sheet
+  declares a local at the top of its event and fills it in with an action, so a `var` line reads as
+  those rows: `var dealt: float = damage * 2` becomes `Local number dealt = 0` up with the event's
+  other locals, and `System ▸ Set dealt to damage * 2` where the line itself sits. A line whose value
+  is already a value - `var hits := 3` - needs no action and gets none; the declaration carries the
+  value and the action lane shows nothing for that line. A type with no starting value of its own (an
+  object, a list, a table, or a value whose type nothing states) keeps its whole declaration on the
+  one row, because inventing a starting value nobody wrote would be a guess. Display only: the file
+  keeps its line, and the row still addresses that statement - clicking, dragging and the row menu
+  reach the same line they always did.
 - **A ternary is a sub-event, never a condition in an action cell.** An `if ... else` INSIDE a statement
   (`return wall_normal.x if host != null and host.is_on_wall() else 0.0`) reads the way a Construct sheet
   draws the same branch: a condition row on the left with the statement on the right, then an `Else` row
@@ -463,9 +474,9 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   uses - `p2_jump` and `jump_2` - both read as `jump` on gamepad 1 and group under that pad.
 - **Handheld sensors read on the Touch object.** `Input.get_accelerometer()` reads `acceleration`,
   `get_gravity()` reads `gravity`, `get_gyroscope()` reads `rotation rate` and `get_magnetometer()` reads
-  `magnetic field`. A `var a = Input.get_accelerometer()` is a Local variable row followed by
-  `System ▸ Set a to acceleration` - one action per row, never a bare `Local a = ...` cell. They all
-  report 0 on desktop, and every one of them says so.
+  `magnetic field`. A `var a = Input.get_accelerometer()` is a Local variable row reading
+  `Local value a = acceleration` - never a bare `Local a = ...` cell. They all report 0 on desktop,
+  and every one of them says so.
 - **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
   as words (`_coyote_timer` -> `coyote timer`, a knob with its Inspector capitalisation), property chains
   read possessively (`host's velocity X`), NOT is the red ✕ in the icon column, the host and any `$Node` /

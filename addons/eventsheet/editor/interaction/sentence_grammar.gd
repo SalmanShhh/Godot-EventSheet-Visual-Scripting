@@ -757,6 +757,83 @@ static func declaration(code: String) -> Dictionary:
 	return parsed
 
 
+## R41. How a declaration reads as the sheet's own rows: an event sheet declares a local with a
+## starting value at the top of its event and fills it in with an action, so a `var` line whose value
+## has to be WORKED OUT reads as both - the Local row carrying the type's own starting value, and a
+## Set action carrying the work, where the line actually sits. A line whose value already IS a value
+## reads as the Local row alone, because nothing was worked out.
+##
+## {"value": what the Local row shows, "set_value": what the Set action shows ("" for no action)}.
+static func declaration_rows(declaration: Dictionary) -> Dictionary:
+	var shown: String = str(declaration.get("value", ""))
+	var plain: Dictionary = {"value": shown, "set_value": ""}
+	if declaration.is_empty() or bool(declaration.get("is_constant", false)):
+		return plain
+	var raw: String = str(declaration.get("raw_value", shown))
+	if declaration_value_is_literal(raw):
+		return plain
+	# A type with no starting value of its own (an object, a list, a plain "value") has nothing the
+	# Local row could show in place of the work, so the work stays on it.
+	var starting: String = _declaration_starting_value(str(declaration.get("type_word", "")))
+	if starting.is_empty():
+		return plain
+	return {"value": starting, "set_value": shown}
+
+
+## R41. True when a declaration's value is a VALUE a reader can see - a number, a piece of text,
+## true/false, a type's own constructor or constant - rather than something the event works out from
+## other names. Only a lowercase name (a variable, a parameter, a call) counts as work.
+static func declaration_value_is_literal(value_text: String) -> bool:
+	var text: String = value_text.strip_edges()
+	if text.is_empty():
+		return true
+	var index: int = 0
+	var previous: String = ""
+	while index < text.length():
+		var character: String = text[index]
+		if character == "\"" or character == "'":
+			index = _string_end(text, index) + 1
+			previous = "\""
+			continue
+		if not (character.is_valid_identifier() or character == "_"):
+			previous = character
+			index += 1
+			continue
+		var start: int = index
+		while index < text.length():
+			var next_character: String = text[index]
+			if next_character.is_valid_identifier() or next_character == "_" or next_character.is_valid_int():
+				index += 1
+				continue
+			break
+		var word: String = text.substr(start, index - start)
+		# A member read belongs to whatever is in front of the dot (`Color.RED` is the colour, not a
+		# name of its own), so only the head of a chain is asked about.
+		if previous != "." and not LITERAL_WORDS.has(word) and not word.is_valid_int():
+			if word.is_empty() or word[0] != word[0].to_upper() or word[0] == "_":
+				return false
+		previous = "." if index < text.length() and text[index] == "." else ""
+	return true
+
+
+## The words a declaration's value may use and still be a plain value.
+const LITERAL_WORDS: Array[String] = ["true", "false", "null", "not", "and", "or", "in", "is"]
+
+
+## R41. The starting value the sheet shows for a local of this type word, or "" when the type has no
+## starting value worth printing (an object, a list, a table, an unknown value).
+static func _declaration_starting_value(word: String) -> String:
+	if word == translate("number"):
+		return "0"
+	if word == translate("text"):
+		return "\"\""
+	if word == translate("true/false"):
+		return "false"
+	if word == translate("point"):
+		return "0, 0"
+	return ""
+
+
 ## A value expression with the Godot idioms replaced by their event-sheet reading and every type
 ## annotation dropped (M11 + M18). Returns the text unchanged when nothing is recognised.
 static func expression_text(text: String, context: Dictionary = {}) -> String:
@@ -1289,6 +1366,9 @@ static func _declaration_statement(text: String, keyword: String) -> Dictionary:
 		"type_word": type_word(declared_type),
 		"name": name_text,
 		"value": expression_text(value_text),
+		# R41 - the value exactly as the file wrote it, which is what decides whether the declaration
+		# is a starting value the Local row can carry on its own or a value the event has to work out.
+		"raw_value": value_text,
 		"segments": [
 			{"text": "%s %s" % [translate("Local"), type_word(declared_type)], "tone": "plain"},
 			{"text": " %s = " % name_text, "tone": "name"},

@@ -78,7 +78,10 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Add amount to coyote timer",
 	"System ▸ Set coyote timer to max(coyote timer - amount, 0)",
 	"host ▸ Set position X to amount * 2",
-	"Local number remaining = amount",
+	# R41 - a local whose value has to be worked out declares at the top of its event with the number's
+	# own starting value, and the work stays where the line is, as the Set action it is.
+	"Local number remaining = 0",
+	"System ▸ Set remaining to amount",
 	"System ▸ Set push x to push x moved toward 0 by remaining",
 	"System ▸ crouching is true",
 	"System ▸ Set push x to push x kept between -1 and 1",

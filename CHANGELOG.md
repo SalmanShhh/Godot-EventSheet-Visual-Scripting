@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed - a local declared inside an event reads at the top of that event
+
+- **A `var` line inside a body reads as the two rows an event sheet writes for a local.** The
+  declaration moves up to the top of the event that owns it, beside the locals the sheet declares
+  itself - `Local number dealt = 0` - and the work the line does stays where the line is, as the
+  action it is: `System ▸ Set dealt to damage * 2`. A line whose value is already a value
+  (`var hits := 3`) needs no action and gets none: the declaration carries it, and the action lane
+  shows nothing at all for that line. A type with no starting value of its own - an object, a list, a
+  table, a value whose type nothing states - keeps its whole declaration on the one row rather than
+  being given a starting value nobody wrote.
+- The row still addresses the statement it came from: clicking, dragging and the row menu reach that
+  one line, exactly as they did while it sat in the action lane. Display only - the file, the emitted
+  GDScript and the byte round-trip are untouched.
+
 ### Added - a local variable's scope is enforced, and shown
 
 - **An action dragged out of its variable's scope is refused, by name.** Drag a row that uses `dealt`
