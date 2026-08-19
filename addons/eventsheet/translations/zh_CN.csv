@@ -2131,3 +2131,5 @@ event %d,事件 %d
 event %d of %d,事件 %d / %d
 line %d,行 %d
 This is a read-only preview - press Edit Events to change the file.,这是只读预览 - 按“编辑事件”才能修改文件。
+Static %s,静态 %s
+shared by every %s,每个 %s 共享

@@ -2131,3 +2131,5 @@ event %d,이벤트 %d
 event %d of %d,이벤트 %d / %d
 line %d,줄 %d
 This is a read-only preview - press Edit Events to change the file.,읽기 전용 미리 보기입니다. 파일을 바꾸려면 이벤트 편집을 누르세요.
+Static %s,정적 %s
+shared by every %s,모든 %s 이(가) 공유

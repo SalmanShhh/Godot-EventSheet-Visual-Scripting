@@ -2131,3 +2131,5 @@ event %d,событие %d
 event %d of %d,событие %d из %d
 line %d,строка %d
 This is a read-only preview - press Edit Events to change the file.,"Это предварительный просмотр только для чтения - нажмите «Редактировать события», чтобы изменить файл."
+Static %s,Статическое %s
+shared by every %s,общее для каждого %s

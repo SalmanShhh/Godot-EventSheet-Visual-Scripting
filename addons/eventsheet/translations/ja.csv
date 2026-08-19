@@ -2131,3 +2131,5 @@ event %d,イベント %d
 event %d of %d,イベント %d / %d
 line %d,行 %d
 This is a read-only preview - press Edit Events to change the file.,これは読み取り専用のプレビューです。ファイルを変更するには「イベントを編集」を押してください。
+Static %s,静的 %s
+shared by every %s,すべての %s で共有

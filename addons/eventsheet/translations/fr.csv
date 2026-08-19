@@ -2131,3 +2131,5 @@ event %d,événement %d
 event %d of %d,événement %d sur %d
 line %d,ligne %d
 This is a read-only preview - press Edit Events to change the file.,Ceci est un aperçu en lecture seule - appuyez sur Modifier les événements pour changer le fichier.
+Static %s,Statique %s
+shared by every %s,partagé par chaque %s

@@ -2131,3 +2131,5 @@ event %d,Ereignis %d
 event %d of %d,Ereignis %d von %d
 line %d,Zeile %d
 This is a read-only preview - press Edit Events to change the file.,"Dies ist eine schreibgeschützte Vorschau - klicken Sie auf Ereignisse bearbeiten, um die Datei zu ändern."
+Static %s,Statisch %s
+shared by every %s,von jedem %s geteilt

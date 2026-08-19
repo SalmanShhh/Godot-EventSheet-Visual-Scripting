@@ -77,7 +77,52 @@ static func run() -> bool:
 	ok = _check("the un-lifted untyped static var round-trips byte-identically",
 		str(SheetCompiler.compile(untyped_imported, "user://sv_untyped.gd").get("output", "")) == untyped, true) and ok
 
+	ok = _reads_as_shared_by_every_object() and ok
 	return ok
+
+
+## A `static var` belongs to the CLASS, so the row says so: "Static number spawned = 0  shared by
+## every Player". Reading a static var as an ordinary variable hides the one thing about it that
+## matters - that every object of the type reads and writes the same value.
+static func _reads_as_shared_by_every_object() -> bool:
+	var ok: bool = true
+	var source: String = "@tool\nclass_name StaticReadingProbe\nextends Node\n\nstatic var spawned: int = 0\nvar hp: int = 3\n"
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	sheet.external_source_path = "user://static_reading_probe.gd"
+	sheet.read_only = true
+	var view: EventSheetViewport = EventSheetViewport.new()
+	view.set_ace_registry(EventSheetACERegistry.new())
+	view.set_sheet(sheet)
+	view.set_reading_mode(true)
+	var static_texts: PackedStringArray = PackedStringArray()
+	var plain_texts: PackedStringArray = PackedStringArray()
+	var walked: Array[EventRowData] = []
+	for entry: Dictionary in view.get_flat_rows():
+		_collect_rows(entry.get("row"), walked)
+	for row: EventRowData in walked:
+		if not (row.source_resource is LocalVariable):
+			continue
+		var texts: PackedStringArray = PackedStringArray()
+		for span: SemanticSpan in row.spans:
+			texts.append(span.text)
+		if (row.source_resource as LocalVariable).is_static:
+			static_texts = texts
+		else:
+			plain_texts = texts
+	ok = _check("a static var reads as Static, and says who shares it",
+		static_texts, PackedStringArray(["Static number", "spawned", "=", "0", "shared by every StaticReadingProbe"])) and ok
+	ok = _check("an ordinary variable is untouched by any of it",
+		plain_texts, PackedStringArray(["number", "hp", "=", "3"])) and ok
+	view.free()
+	return ok
+
+
+static func _collect_rows(row: Variant, into: Array[EventRowData]) -> void:
+	if not (row is EventRowData):
+		return
+	into.append(row as EventRowData)
+	for child: EventRowData in (row as EventRowData).children:
+		_collect_rows(child, into)
 
 
 static func _static_vars(sheet: EventSheetResource) -> Array:

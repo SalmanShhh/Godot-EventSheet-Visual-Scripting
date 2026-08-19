@@ -25,6 +25,34 @@
   that script as its own editable sheet. One script is read per frame behind the progress strip, so a
   big scene never freezes the editor.
 
+### Added - a `static var` reads as what it is
+
+`static var spawned: int = 0` used to read as an ordinary variable, hiding the one thing about it
+that matters. It now reads **Static number spawned = 0  shared by every Player** - the scope word
+leads the type chip, and the muted tail names the object that shares the value (the same name the
+Include bar gives the script: its `class_name`, else its scene root, else its file). On an authored
+sheet, where there is no type chip to carry the word, `static` reads as a badge beside `const`.
+
+### Changed - a function reads as the trigger it is: Functions ▸ On <name>
+
+The condition lane answers "when does this run?" on every other event. A function's answer is "when
+it is called" - so in Reading mode its name and its input chips now sit in that lane, as a trigger,
+instead of on a header bar above a row whose left cell was the one empty condition cell in the whole
+reading.
+
+- `ƒ  Functions ▸ On Add Look  x  y` in the condition lane, with the body's first step beside it on
+  the right (`Set yaw to ...`), and the rest of the body as sub-events under it. A step that asks a
+  question of its own stays a row of its own; a verb with an empty body keeps the whole row for its
+  chips.
+- The kind stays a word: a published **condition** or **expression** says so, quietly, beside the
+  name. An action says nothing extra, because "do these" is what every other event already means.
+- Everything the header had is unchanged: the kind tint, the properties popup on click, and Collapse
+  folding the whole function to that one row. Input chips read as the bare names the call passes in;
+  their types are in the properties popup, where the rest of the picker metadata already lives.
+- Re-pinned to the new reading: `opened_pack_reading_test` (the three verb headers and the helper
+  block) and `opened_pack_head_test` (the Add Look header, the two-lane split, and the whole-row
+  chip width, which now uses a verb with an empty right lane).
+
 ### Changed - the three event-shape commands, in the words the sheet reads them in
 
 Everything the sheet reads must be authorable in the same words: a beginner who reads "Or" has to be
