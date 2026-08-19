@@ -2229,6 +2229,21 @@ Every action, condition and expression the picker offers with no pack enabled,
 grouped by the module that authors it. Deprecated ones are marked - they still
 compile, but the picker hides them.
 
+### Ajax (`res://addons/eventforge/registration/modules/ajax_aces.gd`)
+the AJAX object (asking a server for something, and sending it something).
+
+#### Conditions
+- **Request Succeeded** (`result: String`) - True when the request reached the server and came back. Invert it for the early return every handler starts with.
+- **Status Is OK** (`code: String`) - True when the server answered 200. A request can succeed and still be answered with a 404.
+
+#### Actions
+- **Request** (`node: String, url: String`) - Asks a server for something. The answer arrives on the request node's completed signal, not on this row.
+- **Post** (`node: String, data: String, url: String`) - Sends something to a server. The answer arrives the same way a Request's does.
+- **Cancel Request** (`node: String`) - Stops a request that is still in flight. Safe to call when nothing is in flight.
+
+#### Expressions
+- **Last Data** (`body: String`) - The answer that just arrived, as text. Feed it to JSON Parse when the server speaks JSON.
+
 ### Animation Player (`res://addons/eventforge/registration/modules/animation_player_aces.gd`)
 Animation control vocabulary (drive an AnimationPlayer from events).
 
@@ -2291,6 +2306,9 @@ Audio (the Audio vocabulary, the Godot way).
 - **Set Sound** (`path: String, target: String`) - Puts a sound file into this player, ready to play.
 - **Set Bus** (`bus: String, target: String`) - Sends this player's sound out on a named bus, like SFX or Music.
 - **Set Volume (0 to 1)** (`level: String, target: String`) - Sets how loud this player is from a 0-to-1 level, with the decibel conversion done for you.
+- **Set Hearing Distance** (`value: float, target: String`) - Sets how far a positional sound carries. Past this distance it is silent.
+- **Set Falloff** (`value: float, target: String`) - Sets how quickly a positional sound fades as the listener moves away.
+- **Crossfade** (`from: String, to: String, amount: String`) - Fades one music player down while the other comes up, from one 0-to-1 number. Both players must already be playing.
 
 #### Expressions
 - **Playback Position** (`target: String`) - Gives the current playback time of this audio player, in seconds.
@@ -3139,6 +3157,19 @@ JSON (serialize, parse, validate, and save / load JSON files).
 - **To JSON Text (pretty)** (`value: String`) - Turns a value into neatly indented JSON text that's easy for humans to read.
 - **From JSON Text** (`text: String`) - Reads JSON text back into a usable value, returning nothing if the text is invalid.
 
+### Lighting (`res://addons/eventforge/registration/modules/lighting_aces.gd`)
+lights, layer tint and the world's ambient light.
+
+#### Actions
+- **Set Light Energy (2D)** (`node: String, value: float`) - Sets how bright a 2D light is. The row shows the fraction as a percentage.
+- **Set Light Colour (2D)** (`node: String, colour: Color`) - Sets the colour a 2D light casts.
+- **Set Light On/Off** (`node: String, on: bool`) - Switches a 2D light on or off. Different from hiding the node, which also hides its children.
+- **Set Shadows On/Off** (`node: String, on: bool`) - Turns a light's shadows on or off - the cheapest lighting switch there is.
+- **Set Light Energy (3D)** (`node: String, value: float`) - Sets how bright a 3D light is. The row shows the fraction as a percentage.
+- **Set Light Colour (3D)** (`node: String, colour: Color`) - Sets the colour a 3D light casts - the one knob that turns midday into sunset.
+- **Set Layer Tint** (`node: String, colour: Color`) - Tints a whole 2D layer at once - the one row that makes a level read as night.
+- **Set Ambient Light** (`node: String, value: float`) - Sets how much light a 3D scene has with no light shining on it.
+
 ### Locale Asset (`res://addons/eventforge/registration/modules/locale_asset_aces.gd`)
 the parts of a localised game that are NOT strings: files, voice, data cells.
 
@@ -3224,6 +3255,7 @@ Mesh vocabulary (build and swap 3D meshes from events).
 - **Make Camera Current (3D)** (`target: String`) - Switches the view to this 3D camera, making it the active one.
 - **Set Camera FOV** (`degrees: String, target: String`) - Sets a 3D camera's field of view in degrees (lower zooms in, higher widens).
 - **Force RayCast Update (3D)** (`target: String`) - Forces a RayCast3D to recheck immediately instead of waiting for the next frame.
+- **Mouse Look** (`relative: String, sensitivity: String, camera: String, limit: String`) - Turns the body left and right and the camera up and down from one pointer movement, keeping the camera from looking through the floor. Put it under a pointer-movement event.
 
 #### Expressions
 - **Get Position (3D)** (`target: String`) - Returns a 3D node's current world position as a Vector3.
@@ -3233,6 +3265,9 @@ Mesh vocabulary (build and swap 3D meshes from events).
 - **RayCast Hit Point (3D)** (`target: String`) - Returns the exact world point where a RayCast3D hits something.
 - **RayCast Hit Normal (3D)** (`target: String`) - Returns the surface direction at the point a RayCast3D hits.
 - **World Raycast Point (3D)** (`from: String, to: String, target: String`) - Returns the world point where a ray between two points first hits something.
+- **Forward Direction** (`node: String`) - The direction an object is facing, as a unit vector. Multiply it by a speed to move that way.
+- **Right Direction** (`node: String`) - The direction to an object's right, as a unit vector - what strafing moves along.
+- **Up Direction** (`node: String`) - The direction out of an object's own top, as a unit vector.
 
 ### Node (`res://addons/eventforge/registration/modules/node_aces.gd`)
 Node manipulation + picking (build, rearrange, and select scene-tree nodes).
@@ -3987,6 +4022,18 @@ Vibration vocabulary (rumble a gamepad, buzz a phone).
 
 #### Expressions
 - **Gamepad Vibration Strength** (`device: int`) - The current rumble strength of a gamepad as a Vector2 (weak, strong motor).
+
+### Video (`res://addons/eventforge/registration/modules/video_aces.gd`)
+the Video object (playing a film in the layout).
+
+#### Conditions
+- **Video Is Playing** (`node: String`) - True while the film is running - false when it is paused, stopped or finished.
+
+#### Actions
+- **Set Video** (`node: String, file: String`) - Loads a film into the player. The row names the file, not the folders in front of it.
+- **Play Video** (`node: String`) - Starts the film from where it stands.
+- **Pause Video** (`node: String, paused: bool`) - Holds the film on its current frame, or lets it run on again.
+- **Stop Video** (`node: String`) - Stops the film and rewinds it to the beginning.
 
 ### Window (`res://addons/eventforge/registration/modules/window_aces.gd`)
 Game Window vocabulary (control the OS window from events).
