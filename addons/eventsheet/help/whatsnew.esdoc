@@ -6,6 +6,255 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - a wired-up signal reads as the trigger calling that function, and a scene opens as one sheet
+
+- **A signal wired to ANOTHER object's function reads as the trigger calling it.**
+  `$Button.pressed.connect(player.reset)` reads `Button ▸ On pressed` with
+  `player ▸ Call Reset` beside it, and `$Timer.timeout.connect(spawner.spawn_wave.bind(3))` puts the
+  bound value in an ordinary parameter chip - `count = 3`, named by the callee's own parameter name,
+  whether that function belongs to the engine or to a class the project declared. The
+  `Callable(obj, \"method\")` spelling reads the same, and a `CONNECT_ONE_SHOT` connection wears the
+  sheet's own `Trigger once` chip. This is the third way real code wires a signal, after a handler
+  declared in the file and a lambda, and now all three read as the trigger event they are. Display
+  only: the connect line keeps its muted `connects Button On Pressed` note, the file keeps its one
+  line, and the byte round-trip is untouched.
+- **A whole scene opens as one sheet.** Right-click a `.tscn` in the FileSystem ▸ **Open as Event
+  Sheet** (or pick it from Sheet ▸ Open…, or drag it onto the empty space of a reading) and the layout reads in one
+  place: the scene's own bar (`⇥ Level1.tscn  a  Node2D  4 scripts`), then every script the scene
+  uses, in tree order, each under its own object bar (`⇥ HUD  a  CanvasLayer  · hud.gd`) with the rows
+  the opened-script reading already produces beneath it. A script sitting on a CHILD node finally sees
+  the wiring the scene file holds for it, so a handler the Godot editor connected reads as its trigger
+  wherever in the tree it lives. The view is read-only for good - a scene is many files at once and
+  none of them is the `.tscn`, so nothing is ever written to it; double-click an object bar to open
+  that script as its own editable sheet. One script is read per frame behind the progress strip, so a
+  big scene never freezes the editor.
+
+### Added - an Editor object, so a tool script reads like a sheet
+
+No other event-sheet editor lets you write tools for the editor itself; Godot does. The editor is now
+an object the way System is - it is opened, it is drawn on, it is given docks and menu items, and it
+answers questions about what is selected - so an opened `@tool` script reads in the editor's own
+words instead of as a pile of raw handlers and raw calls.
+
+- **The Editor object.** New vocabulary, filed under Editor Tools so the whole category now reads
+  under one object name: the triggers **On plugin enabled / disabled**, **On object selected**,
+  **On draw over 2D viewport**, **On 2D viewport input** and **On draw gizmo**, the actions
+  **Add / Remove Tools Menu Item**, **Add / Remove Dock**, **Add / Remove Object Type**,
+  **Add / Remove Inspector Plugin** and **Redraw Viewport Overlays**, and the **Editor Settings** and
+  **Undo History** expressions. Everything the shipped Editor Tools rows already did now wears
+  \"Editor\" in its object cell too.
+- **A plugin's `_enter_tree` is not \"on created\".** On an EditorPlugin sheet the two tree callbacks
+  read as the plugin being switched on and off, which is what they mean there. Same emitted function
+  either way, so nothing about the file moves.
+- **The editor's own expressions, named.** `Editor.SelectedObjects`, `Editor.OpenLayout`,
+  `Editor.Settings` and `Editor.UndoHistory` instead of the `EditorInterface` calls behind them - so a
+  tool's selection walk reads `System ▸ For each n in Editor.SelectedObjects`.
+- **Undo steps as actions on a variable.** `var ur = get_undo_redo()` declares as
+  `Local object ur = Editor.UndoHistory`, and every `ur.xxx(...)` line reads Object then Verb like
+  every other row: `ur ▸ Begin undoable action \"Align Left\"`,
+  `ur ▸ Add do step: set n's x to left`, `ur ▸ Add undo step: ...`, `ur ▸ Add do step: call Refresh`,
+  `ur ▸ Commit undoable action`. Godot's `\"position:x\"` addressing stays out of the sentence: the
+  object it belongs to is already named on the row.
+- **The chip that says what `@tool` means.** A per-frame event on a tool sheet wears an
+  **in the editor too** chip - it is already running, while you edit, before the game exists.
+- **The Editor object is scoped to tool sheets.** The picker offers it on a sheet that runs in the
+  editor and nowhere else, the way it scopes Functions to the open script.
+- **Three more Doctor notes on a tool:** reaching outside the open layout through `get_tree()`,
+  destroying while editing with no undo step, and ticking in the editor with no guard to switch it
+  off.
+
+Display only, as always: the byte round-trip of an opened `.gd` is unchanged and gated for an opened
+EditorPlugin and an opened EditorScript, and the exact GDScript is still one hover away.
+
+### Added - a `static var` reads as what it is
+
+`static var spawned: int = 0` used to read as an ordinary variable, hiding the one thing about it
+that matters. It now reads **Static number spawned = 0  shared by every Player** - the scope word
+leads the type chip, and the muted tail names the object that shares the value (the same name the
+Include bar gives the script: its `class_name`, else its scene root, else its file). On an authored
+sheet, where there is no type chip to carry the word, `static` reads as a badge beside `const`.
+
+### Changed - a function reads as the trigger it is: Functions ▸ On <name>
+
+The condition lane answers \"when does this run?\" on every other event. A function's answer is \"when
+it is called\" - so in Reading mode its name and its input chips now sit in that lane, as a trigger,
+instead of on a header bar above a row whose left cell was the one empty condition cell in the whole
+reading.
+
+- `ƒ  Functions ▸ On Add Look  x  y` in the condition lane, with the body's first step beside it on
+  the right (`Set yaw to ...`), and the rest of the body as sub-events under it. A step that asks a
+  question of its own stays a row of its own; a verb with an empty body keeps the whole row for its
+  chips.
+- The kind stays a word: a published **condition** or **expression** says so, quietly, beside the
+  name. An action says nothing extra, because \"do these\" is what every other event already means.
+- Everything the header had is unchanged: the kind tint, the properties popup on click, and Collapse
+  folding the whole function to that one row. Input chips read as the bare names the call passes in;
+  their types are in the properties popup, where the rest of the picker metadata already lives.
+- Re-pinned to the new reading: `opened_pack_reading_test` (the three verb headers and the helper
+  block) and `opened_pack_head_test` (the Add Look header, the two-lane split, and the whole-row
+  chip width, which now uses a verb with an empty right lane).
+
+### Changed - the three event-shape commands, in the words the sheet reads them in
+
+Everything the sheet reads must be authorable in the same words: a beginner who reads \"Or\" has to be
+able to type \"Or\". The three event-shape commands every event sheet has now say what the reading
+says, on the right-click menu and on the **Add** menu alike.
+
+- `Add Sub-Event` reads **Add blank sub-event (B)** (the key was already B), `Convert to OR Block` /
+  `Convert to AND Block` read **Make 'Or' block** / **Make 'And' block**, and `Make Else` /
+  `Make Else-If` read **Add 'Else'** / **Add 'Else If'** (clearing them reads `Clear 'Else'`).
+- All three are greyed while the sheet is a read-only preview, with the reason on the tooltip, so a
+  preview never looks like it will rewrite the file. Press **Edit Events** first.
+- On an opened `.gd`, Make 'Or' block rewrites that event's joined condition (`a and b` <-> `a or b`)
+  and leaves every other byte of the file alone - pinned both ways by a round-trip test.
+
+### Added - an event is named by its number, everywhere a row is named
+
+The left margin has numbered events for a while; now everything that points at a row says the same
+number, so two people reading the same file mean one row by \"event 12\".
+
+- **Go to event on Ctrl+G.** The dialog the Command Palette already had gets the key every event
+  sheet gives it, and the Keyboard Shortcuts dialog lists it with the other fixed structural keys.
+- **The status bar says where you are.** Selecting a row prints `event 4 of 61 · line 38` on the
+  right of the status bar - the sheet's own event number first, the line after it. A row the margin
+  does not number (a comment, a group bar, a variable) prints nothing rather than inventing an
+  address.
+- **Find results and Doctor findings print the number.** The Find bar's counter reads
+  `3 of 12 · event 4`, and a Project Doctor finding about one row reads `player.gd · event 4` in the
+  panel and `path (event 4)` in the headless driver. The numbering walk itself moved onto
+  `EventSheetResource`, so the Doctor - which never touches the editor - counts events exactly the
+  way the margin does.
+
+### Added - the sheet as text, a Find results bar, a Properties bar, and zoom
+
+Five things every event-sheet editor has, in the sheet's own words.
+
+- **Copy as text, and Save as text.** Ctrl+Shift+C copies the selection as the plain listing every
+  event-sheet community pastes into a forum post, an issue or a chat message: `+ ` in front of a
+  condition, `-> ` in front of an action, one extra indent per sub-event, in exactly the words the
+  canvas is showing under the current reading lenses - because every line is assembled from the
+  spans the canvas already drew, not from a second grammar. **Sheet ▸ Save as Text…** writes the
+  whole sheet the same way as Markdown, with the margin event numbers in a gutter. Read-only
+  output: the round trip lives in the `.gd`, so nothing pastes back in from here. (Ctrl+Shift+C is
+  now Copy as text; adding a condition keeps its primary key `C` and its Ctrl alternate moved to
+  Ctrl+Alt+C - both rebindable in Tools ▸ Keyboard Shortcuts.)
+- **Find all references, and a Find results bar.** Right-click a variable, function, object,
+  signal or behavior ▸ *Find all references* and the results open in a bar under the sheet,
+  grouped by sheet with each hit's event number. Clicking a result jumps to it, opening the sheet
+  when it is not the one on screen; F3 and Shift+F3 step forward and back; the bar stays until it
+  is closed. Matching is whole-symbol, so `hp` never finds `hp_max`, and the open tabs are
+  searched alongside the project's sheets.
+- **A Properties bar.** Beside the canvas, splitter-resizable like the Inspector: the selected
+  condition or action's parameters as fields edited in place (Enter applies, one undo step,
+  through the same edit path as the Edit Parameter dialog, so an opened `.gd` stays byte-exact for
+  every line the edit does not touch), a selected object's properties, a selected group's name and
+  enabled state. Hidden by default in Simple Mode; **View ▸ Properties Bar** brings it back. The
+  dialog stays for anyone who prefers it.
+- **Replace object knows which objects are close.** *Replace object…* (the rename refactor with a
+  scope) now offers the objects that have the same conditions and actions first - the same script,
+  then the same class - and any parameter that named an instance variable the new object does not
+  have is said in the status line and recorded as a Doctor finding, instead of quietly compiling
+  to a member that is not there.
+- **The sheet zooms.** Ctrl + mouse wheel, Ctrl + + / Ctrl + -, Ctrl + 0 for 100%, or the new pill
+  in the status bar: 50% to 200% in six steps, text, chips, icons and guide lines scaling
+  together. The zoom is remembered for the LAYOUT rather than for one file, so the next sheet
+  opens at the size you were reading at. Density (Comfortable / Compact) stays a separate choice.
+
+All of it is translated in the nine shipped languages.
+
+### Added - the Input Map is an object, and the controls vocabulary the sheet was missing
+
+The project-wide Input Map is the thing every input row is really about, and until now it was
+invisible from a sheet: to find out what \"jump\" was bound to you left the sheet and opened Project
+Settings. It is read now, in the sheet's own spelling, and the vocabulary around it grew the
+sentences a controls screen, a gamepad and a phone need.
+
+- **The Input Map, read.** Every action the project declares, with its bindings as the sheet spells
+  them (`Space`, `A button`, `Left stick`, `Left mouse button`), its deadzone as a percent the way
+  the Gamepad object shows its Analog deadzone, and which object its rows read on (keys are the
+  Keyboard's, buttons the Mouse's, sticks the Gamepad's, fingers the Touch object's). The engine's
+  own `ui_text_*` defaults are left out, because a list led by them buries the four actions a game is
+  actually about. Nothing is written on a read.
+- **Gamepads by number.** `p2_jump` and `jump_2` both read as `jump` on gamepad 1 - the two
+  conventions a local-multiplayer project uses, so those rows stop reading as four unrelated names.
+- **Analog in the Gamepad object's words.** `Compare axis Left analog X of gamepad 0 > 20` and its
+  either-way twin, `Is button down <control> (exact match)`, and the `axis of gamepad` /
+  `how hard <control> is held` expressions, all on the -100 to 100 and 0 to 100 scales the Gamepad
+  object has always shown (Godot counts the same travel from -1 to 1).
+- **Gamepads, touch and gestures.** `On gamepad 0 button A pressed` / `released` with the device
+  index read as the gamepad number, `Has gamepads`, `Vibrate gamepad 0 for 0.2 seconds`, and the
+  Touch object's `On drag` / `On pinch` / `On pan` with their `touch index`, `pinch factor` and
+  `pan delta` payloads, plus `Mouse ▸ On double-click`.
+- **Rebinding, one action per row.** `Wait for the next key or button into ev`,
+  `Clear the bindings of jump`, `Bind jump to ev`, `name of ev`, `Reset all bindings to the
+  project's`, `Has action dash`, `Set deadzone of steer to v`, and `Save bindings` / `Load bindings`
+  writing a plain settings file under `user://` the way Remember Between Runs does.
+- **Simulated input and the pointer.** `Simulate control jump pressed` / `released` (how an AI, a
+  replay or a tutorial drives the same code the player does), `Simulate input ev`,
+  `Stop this input here`, `key is a held-down repeat`, `Request pointer lock`,
+  `Set cursor visible` / `invisible`, `Keep cursor inside the window` and `Move cursor to`.
+- **Handheld sensors.** `acceleration`, `gravity`, `rotation rate` and `magnetic field` on the Touch
+  object, and `Compare acceleration X > 5` for tilt. They report 0 on desktop, and every one of them
+  says so.
+
+### Added - one sentence for a variable, everywhere it appears
+
+A variable used to read one way in the head, another way inside an event, and a third way in Object
+properties. Now there is exactly one sentence for one, and every surface prints it:
+**`<scope> <type> <name> = <value>`**.
+
+- **The scope word leads.** `Global number Score = 0`, `Instance boolean alive = true`,
+  `Local text name = \"\"`, `Constant number MAX_HP = 100`, `Static number spawned = 0` (which adds
+  `shared by every Player`, because that is the whole surprise a static holds), and
+  `Field number price = 0` on a Resource script. Godot has more scopes than an event sheet does;
+  these are the five words that cover all of them.
+- **The type is in plain words**: number, whole number, text, boolean, vector, color, list (of text,
+  of numbers, of objects), table, object or the class the author named, scene, any. Godot's own
+  spelling (`float`, `int`, `String`, `Array[String]`, `Dictionary`) is still one hover away. A
+  declared `int` reads \"whole number\" because the author said they wanted no fractions; an
+  undeclared `100` still reads \"number\", because nothing in that line said so.
+- **Inspector-editable variables wear an Inspector chip** instead of living in a folder of their own,
+  so the head's `Settings` and `Internal state` folders are now one **Instance variables** folder
+  with the Inspector ones first. One list, and the row says which is which.
+- **A colour is always a live swatch** beside its word (`white`) or its hex (`#ff9b3c`), on variable
+  rows as well as on action parameters, whether or not the line bothered to declare the type -
+  `var tint := Color.WHITE` is as much a colour as `var tint: Color = ...`. Clicking the swatch opens
+  the colour picker the sheet already had (wheel, hex, RGBA, named colours, the saved palette,
+  eyedropper), and the pick is written back **in the spelling the line already used**: `Color.RED`
+  stays a named constant, `Color(\"#ff9b3c\")` stays a hex string, `Color(1, 0.6, 0.2)` stays numbers
+  with the argument count it was written with. A colour edit moves the colour and not one byte more.
+
+### Changed - the five variable verbs and the two questions, by the names you would say
+
+The picker used to offer *Set Variable*, *Add Variable*, *Subtract From Variable* and *Toggle* under
+names nobody says out loud, and typing \"add to\" found the wrong thing. They are now named the way the
+reading already reads them, so what you pick is what you get:
+
+- **Set value**, **Add to**, **Subtract from** and **Toggle boolean**, plus the question
+  **Compare variable**. Setting and testing a boolean go through Set value and Compare variable -
+  a separate descriptor for them would carry a line byte-identical to those two, and the lifter
+  resolves an opened line by the line it emits, so a duplicate would quietly steal every
+  `muted = true` in the project.
+- A boolean condition reads as the plain sentence it is - `alive is true`, `muted is false` - never
+  \"Is alive set\", and the negative form flips the word rather than adding a mark.
+- **The ids are frozen.** Only display names changed, so every sheet that already used them keeps
+  working, and the glossary maps each older name to its new one.
+- A **Range**'s own *Set Value* (a slider, progress bar or spinbox) is now **Set Slider Value**, so
+  the two verbs are not both called the same thing and typing \"set value\" reaches the variable one.
+
+### Changed - the Add variable dialog speaks the same sentence, and shows it
+
+- **Scope chips first** (Instance / Local / Constant), in the sheet's own order, with what each one
+  means on hover. Pressing one moves the variable and everything below follows.
+- **The type list uses the reading's own words** - number, text, boolean - instead of Godot-flavoured
+  ones.
+- **A live preview of the exact row it will write**, in the one variable shape:
+  `Instance whole number  hp = 100`. The dialog's whole job is to write one row, so it shows that
+  row, composed through the same grammar the sheet composes its own rows with. The \"Ships as\" strip
+  is still there underneath for people who read code.
+
+All of it is translated in the nine shipped languages.
+
 ### Added - the Manual you do rather than read: tutorials, scratch sheets, one reference shape, and What's new
 
 The Manual gains the half every event-sheet editor opens with, and loses the two things a reader
