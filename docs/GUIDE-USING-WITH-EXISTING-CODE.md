@@ -458,6 +458,15 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   enums (`dir = 2` reads `Set dir to DOWN`). The number is still one hover away.
 <img src="images/batch6-reading.png" alt="A hand-written script opened as a sheet: an On Ready event whose actions read Push back, Push front, Insert at, Delete at, Delete key, Shuffle, Append, Set collision with layer Enemies on, Set process mode to Always, Set Y to 1,000,000, Set angle to π over 2 and Call Reset at end of frame, followed by two top-level Keyboard trigger events for jump pressed and fire released." width="720">
 
+- **A signal wired to another object's function reads as the trigger calling it.**
+  `$Button.pressed.connect(player.reset)` reads as the event it is - `Button ▸ On pressed` on the
+  left, `player ▸ Call Reset` on the right - and `$Timer.timeout.connect(spawner.spawn_wave.bind(3))`
+  puts the bound value in an ordinary parameter chip, `count = 3`, named by the callee's own
+  parameter name whether that function belongs to the engine or to one of your own classes. The
+  `Callable(obj, "method").bind(...)` spelling reads the same, and a `CONNECT_ONE_SHOT` connection
+  wears the sheet's `Trigger once`. That is the third way real code wires a signal - after a handler
+  declared in the file and a lambda - so all three now read as trigger events. The connect line keeps
+  its muted `connects Button On Pressed` note, and the file keeps its one line.
 - **A big file never freezes the editor.** The raw sheet paints within a frame under a progress strip
   (`Opening event_sheet_dock.gd - lifting functions 212 of 458 - 6.1 s`, a bar, and **Show as code
   instead**); the lift runs behind it, and the strip goes away when the last function lands.
@@ -507,6 +516,23 @@ is instantiated to answer a question.
 <img src="images/objects-rail.png" alt="The Object bar: a header naming the scene and the used/more counts, a filter box, an open USED IN THIS SHEET section listing Player, Sprite2D and Health with per-object row counts, and collapsed ALSO IN THE SCENE and GLOBALS AND FAMILIES sections." width="420">
 
 <img src="images/object-popup.png" alt="Object properties for Player: type CharacterBody2D, its instance variables, its functions with their inputs, its triggers, the Health behavior with the value the scene set on it, and its families, above Add condition, Add action and the three navigation buttons." width="560">
+
+### A whole scene, read in one place
+
+An event sheet belongs to a layout; a Godot scene has several scripts. Right-click a `.tscn` in the
+FileSystem and choose **Open as Event Sheet** (it is also in Sheet ▸ Open…, and you can drag a `.tscn`
+onto empty canvas) to read the whole layout at once: the scene's own bar
+(`⇥ Level1.tscn  a  Node2D  4 scripts`), then every script the scene uses, in tree order, each under
+its own object bar (`⇥ HUD  a  CanvasLayer  · hud.gd`, with `(x3)` when the same script sits on three
+nodes) and the rows that script reads as beneath it. Signals the Godot editor wired in the scene file
+read as triggers here too - including on a script sitting on a CHILD node, which on its own has no way
+of knowing what wired it.
+
+The scene view is read-only for good. A scene is many files at once and the `.tscn` is not one of
+them, so nothing is ever written back to it and there is no "Edit Events" to unlock: double-click an
+object bar and that script opens as its own editable sheet, exactly as opening it from the FileSystem
+would. A big scene never stalls the editor either - one script is read per frame behind the progress
+strip, so the bars are on screen immediately and the rows fill in under them.
 
 ### What stays code still reads as what it is
 

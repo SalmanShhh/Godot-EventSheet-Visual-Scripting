@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added - a wired-up signal reads as the trigger calling that function, and a scene opens as one sheet
+
+- **A signal wired to ANOTHER object's function reads as the trigger calling it.**
+  `$Button.pressed.connect(player.reset)` reads `Button ▸ On pressed` with
+  `player ▸ Call Reset` beside it, and `$Timer.timeout.connect(spawner.spawn_wave.bind(3))` puts the
+  bound value in an ordinary parameter chip - `count = 3`, named by the callee's own parameter name,
+  whether that function belongs to the engine or to a class the project declared. The
+  `Callable(obj, "method")` spelling reads the same, and a `CONNECT_ONE_SHOT` connection wears the
+  sheet's own `Trigger once` chip. This is the third way real code wires a signal, after a handler
+  declared in the file and a lambda, and now all three read as the trigger event they are. Display
+  only: the connect line keeps its muted `connects Button On Pressed` note, the file keeps its one
+  line, and the byte round-trip is untouched.
+- **A whole scene opens as one sheet.** Right-click a `.tscn` in the FileSystem ▸ **Open as Event
+  Sheet** (or pick it from Sheet ▸ Open…, or drag it onto empty canvas) and the layout reads in one
+  place: the scene's own bar (`⇥ Level1.tscn  a  Node2D  4 scripts`), then every script the scene
+  uses, in tree order, each under its own object bar (`⇥ HUD  a  CanvasLayer  · hud.gd`) with the rows
+  the opened-script reading already produces beneath it. A script sitting on a CHILD node finally sees
+  the wiring the scene file holds for it, so a handler the Godot editor connected reads as its trigger
+  wherever in the tree it lives. The view is read-only for good - a scene is many files at once and
+  none of them is the `.tscn`, so nothing is ever written to it; double-click an object bar to open
+  that script as its own editable sheet. One script is read per frame behind the progress strip, so a
+  big scene never freezes the editor.
+
 ### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words
 
 Four more families of everyday GDScript read as the rows they are. Display only: the file is

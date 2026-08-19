@@ -253,14 +253,14 @@ static func method_parameter_names(class_name_str: String, method_name: String) 
 	return names
 
 
-## P5. The names of a method's arguments when the method belongs to a class the PROJECT declared
-## rather than to the engine. A wired-up call names another object's own function far more often than
-## an engine one, and its chips are worth naming too ("count = 3" rather than a bare 3). Falls back to
-## the engine's answer first, so an engine class never pays for the project lookup; the answer is
-## cached per class and method, because the reading asks once per row per rebuild.
+## "<Class>|<method>" -> the parameter names, so the reading asks the project's class list once.
 static var _project_parameter_names: Dictionary = {}
 
 
+## P5. The names of a method's arguments when the method belongs to a class the PROJECT declared
+## rather than to the engine. A wired-up call names another object's own function far more often than
+## an engine one, and its chips are worth naming too ("count = 3" rather than a bare 3). The engine's
+## answer is asked for first, so an engine class never pays for the project lookup.
 static func project_method_parameter_names(class_name_str: String, method_name: String) -> PackedStringArray:
 	var engine_names: PackedStringArray = method_parameter_names(class_name_str, method_name)
 	if not engine_names.is_empty():
