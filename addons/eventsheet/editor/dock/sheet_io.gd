@@ -39,6 +39,11 @@ func _load_sheet_from_path(path: String) -> void:
 	# GDScript-backed sheets: any .gd opens losslessly (lifted rows + verbatim blocks); the
 	# file stays the single source of truth and Save compiles back to it.
 	if resolved_path.get_extension() == "gd":
+		# V10 - a file a merge left unresolved has no single reading to open: it holds two. The
+		# conflict view offers them side by side and picks per event; opening the file as a sheet
+		# would only show the marker lines as code.
+		if _open_conflict_view(resolved_path):
+			return
 		_begin_async_gd_open(resolved_path)
 		return
 	# P4 - a .tscn opens as the reading of the WHOLE layout: every script the scene uses, each under
@@ -56,6 +61,21 @@ func _load_sheet_from_path(path: String) -> void:
 		EventSheets._notify_lifecycle("opened", {"sheet": loaded, "path": resolved_path})
 		return
 	_dock._set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
+
+
+## The conflict view, built the first time a conflicted file is opened and kept afterwards. Loaded
+## by path so the editor's boot path never carries it. Returns true when the file really was
+## conflicted and the window took it.
+var _conflict_view: RefCounted = null
+
+
+func _open_conflict_view(path: String) -> bool:
+	if not EventSheetConflictRegions.has_conflicts(FileAccess.get_file_as_string(path)):
+		return false
+	if _conflict_view == null:
+		_conflict_view = load("res://addons/eventsheet/editor/dock/conflict_view_dialog.gd").new()
+		_conflict_view.init(_dock)
+	return bool(_conflict_view.open_path(path))
 
 
 ## Opens a .gd as a sheet WITHOUT freezing the editor.

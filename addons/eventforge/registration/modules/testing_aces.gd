@@ -36,6 +36,8 @@ const PENDING_META := "__ef_test_pending"
 const WATCH_META_PREFIX := "__ef_watch_"
 ## Prefix of the per-name key a loaded scene-under-test is remembered under.
 const SCENE_META_PREFIX := "__ef_scene_"
+## The frame a replay counts from - the frame the first frame-addressed row ran on.
+const REPLAY_FRAME_ZERO_META := "__ef_replay_frame0"
 
 
 static func get_descriptors() -> Array[ACEDescriptor]:
@@ -105,6 +107,33 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		F.make_param("as_name", "String", "\"P\"", "Named", "The short name the Load Scene Under Test row gave it.", "expression"),
 	], CAT, "scene [b]{as_name}[/b]")
 		.described("The node a Load Scene Under Test row loaded under this name, so later rows can read its position, call its methods, or watch its signals."))
+
+	# ── Frame-addressed rows: what a recorded play is written in ──
+	# A replay is a list of "this happened at this frame", so the frame is part of the row rather
+	# than a wait somebody has to remember to put in front of it. Frame 0 is the frame the FIRST of
+	# these rows ran on, recorded on the test node itself, so a replay says the same thing no matter
+	# how long the engine had been up when the runner reached it.
+	descriptors.append(F.make_descriptor("Core", "WaitUntilFrame", "Wait Until Frame", ACEDescriptor.ACEType.ACTION, _wait_until_frame_template(), "", [
+		F.make_param("frame", "String", "60", "Frame", "Which frame of this test to wait for. Frame 0 is the first frame a frame-addressed row ran on.", "expression"),
+	], CAT, "wait until frame [b]{frame}[/b]")
+		.described("Holds the test until the given frame of the run, so the rows after it happen at a time a recording can reproduce exactly."))
+	descriptors.append(F.make_descriptor("Core", "SimulateControlPressedAtFrame", "Simulate Control Pressed At Frame", ACEDescriptor.ACEType.ACTION, _at_frame_template("Input.action_press({action})"), "", [
+		F.make_param("action", "String", F.default_input_action(), "Control", "The control to press.", "input_action", F.input_action_options()),
+		F.make_param("frame", "String", "0", "At frame", "Which frame of this test to press it on.", "expression"),
+	], CAT, "simulate control [b]{action}[/b] pressed at frame [b]{frame}[/b]")
+		.described("Presses a control at a named frame of the run - one row of a recorded play."))
+	descriptors.append(F.make_descriptor("Core", "SimulateControlReleasedAtFrame", "Simulate Control Released At Frame", ACEDescriptor.ACEType.ACTION, _at_frame_template("Input.action_release({action})"), "", [
+		F.make_param("action", "String", F.default_input_action(), "Control", "The control to let go.", "input_action", F.input_action_options()),
+		F.make_param("frame", "String", "0", "At frame", "Which frame of this test to let it go on.", "expression"),
+	], CAT, "simulate control [b]{action}[/b] released at frame [b]{frame}[/b]")
+		.described("Lets a control go at a named frame of the run - one row of a recorded play."))
+	descriptors.append(F.make_descriptor("Core", "ExpectAtFrame", "Expect At Frame", ACEDescriptor.ACEType.ACTION, _expect_at_frame_template(), "", [
+		F.make_param("named", "String", "\"hp after the fall\"", "Named", "What this checkpoint is called in the report.", "expression"),
+		F.make_param("actual", "String", "0", "Got", "The value to read at that frame.", "expression"),
+		F.make_param("expected", "String", "0", "Expected", "The value it should be by then.", "expression"),
+		F.make_param("frame", "String", "60", "At frame", "Which frame of this test to check on.", "expression"),
+	], CAT, "expect [b]{actual}[/b] = [b]{expected}[/b] at frame [b]{frame}[/b]")
+		.described("A checkpoint in a recorded play: waits for the frame, then records a pass or a failure that names the frame it drifted on."))
 
 	return descriptors
 
@@ -223,6 +252,49 @@ static func _load_scene_template() -> String:
 		"\tadd_child(__under_node_{uid})",
 		"\tset_meta(&\"%s\" + str({as_name}).to_utf8_buffer().hex_encode(), __under_node_{uid})" % SCENE_META_PREFIX,
 	]))
+
+
+## The frame clock a replay is addressed in. Frame 0 is auto-vivified by the FIRST frame-addressed
+## row rather than by a setup row somebody could forget: a recording that lost its zero would replay
+## against the engine's uptime, which is a different run every time.
+static func _frame_clock_lines() -> PackedStringArray:
+	return PackedStringArray([
+		"if not has_meta(&\"%s\"):" % REPLAY_FRAME_ZERO_META,
+		"\tset_meta(&\"%s\", Engine.get_frames_drawn())" % REPLAY_FRAME_ZERO_META,
+		# Raised across the wait for the same reason the signal watches raise it: a row that is
+		# waiting records nothing, which otherwise reads exactly like a test with nothing left to say.
+		"set_meta(&\"%s\", int(get_meta(&\"%s\", 0)) + 1)" % [PENDING_META, PENDING_META],
+		"while Engine.get_frames_drawn() - int(get_meta(&\"%s\", 0)) < int({frame}):" % REPLAY_FRAME_ZERO_META,
+		"\tawait get_tree().process_frame",
+		"set_meta(&\"%s\", maxi(int(get_meta(&\"%s\", 0)) - 1, 0))" % [PENDING_META, PENDING_META],
+	])
+
+
+static func _wait_until_frame_template() -> String:
+	return "\n".join(_frame_clock_lines())
+
+
+## One line of a replay: hold for the frame, then do the thing.
+static func _at_frame_template(line: String) -> String:
+	var lines: PackedStringArray = _frame_clock_lines()
+	lines.append(line)
+	return "\n".join(lines)
+
+
+## A checkpoint: hold for the frame, then record the comparison with the FRAME in the failure
+## message. "expected 90, got 74" is not enough to reproduce a drift; "at frame 300" is.
+static func _expect_at_frame_template() -> String:
+	var lines: PackedStringArray = _frame_clock_lines()
+	lines.append_array(PackedStringArray([
+		"var __at_got_{uid}: Variant = {actual}",
+		"var __at_want_{uid}: Variant = {expected}",
+		"var __at_ok_{uid}: bool = __at_got_{uid} == __at_want_{uid}",
+		"var __at_why_{uid}: String = \"\" if __at_ok_{uid} else \"at frame %s expected %s, got %s\" % [str({frame}), str(__at_want_{uid}), str(__at_got_{uid})]",
+		_record_template("{named}", "__at_ok_{uid}", "__at_why_{uid}"),
+		"if not __at_ok_{uid}:",
+		"\tpush_error(\"[test] FAIL %s - %s\" % [str({named}), __at_why_{uid}])",
+	]))
+	return "\n".join(lines)
 
 
 static func _scene_under_test_template() -> String:

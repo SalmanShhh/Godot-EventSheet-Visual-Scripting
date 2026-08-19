@@ -100,6 +100,20 @@ so two claims in the same script keep separate locals.
 | Pass Test | Records a pass under this name and marks the test finished, so a runner stops waiting on it | a report append with `true`, then `set_meta(&"__ef_test_finished", true)` |
 | Fail Test | Records a failure with its reason and marks the test finished | a report append with `false` and the reason, then the same finished flag and a `push_error` |
 
+### Testing: a recorded play, addressed by frame
+
+These four are what `Tools ▸ Replay Recorder…` writes when you record a play and save it as a Test
+sheet, and they are ordinary rows you can also write by hand. Frame 0 is the frame the FIRST of them
+ran on, recorded on the test node itself, so a replay says the same thing however long the engine had
+been up when the runner reached it.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Wait Until Frame | Holds the test until the given frame of the run | `while Engine.get_frames_drawn() - int(get_meta(&"__ef_replay_frame0", 0)) < int({frame}): await get_tree().process_frame` |
+| Simulate Control Pressed At Frame | Presses a control at a named frame of the run | the frame wait above, then `Input.action_press({action})` |
+| Simulate Control Released At Frame | Lets a control go at a named frame of the run | the frame wait above, then `Input.action_release({action})` |
+| Expect At Frame | Waits for the frame, then records a pass or a failure that NAMES the frame it drifted on | the frame wait, then a report append whose message reads `at frame 300 expected 90, got 74` |
+
 ## Use cases
 
 **1. The first test in any project: a save round-trips.** Write the state, change it, load it back,

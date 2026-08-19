@@ -2691,3 +2691,39 @@ Learn,Обучение
 Show this page when nothing is open,"Показывать эту страницу, когда ничего не открыто"
 Nothing here yet.,Здесь пока пусто.
 Another event-sheet editor,Другой редактор листов событий
+Resolve Conflict,Разрешить конфликт
+Ours and theirs,Наши и их
+Save resolved file,Сохранить разрешённый файл
+Events both sides agree on are greyed - there is nothing to decide about them. Pick one of the rest per event.,"События, в которых обе стороны совпадают, показаны серым - решать нечего. Остальные выбираются по событию."
+both the same,одинаково
+Keep ours,Оставить наши
+Keep theirs,Оставить их
+Keep both,Оставить оба
+Replay Recorder,Запись повтора
+Replay Recorder…,Запись повтора…
+⏺ Record,⏺ Запись
+⏹ Stop,⏹ Стоп
+Save as Test Sheet…,Сохранить как тестовый лист…
+Save as Test Sheet,Сохранить как тестовый лист
+The take,Дубль
+Checkpoint,Контрольная точка
+Add checkpoint,Добавить контрольную точку
+Should be,Должно быть
+At frame,На кадре
+"No take yet. Press Record, then run the game.",Дубля пока нет. Нажмите Запись и запустите игру.
+A checkpoint needs something to read.,"Контрольной точке нужно, что читать."
+New Shared Sheet,Новый общий лист
+New shared sheet…,Новый общий лист…
+Include Sheet,Подключить лист
+Include sheet…,Подключить лист…
+Called,Название
+Included,Подключение
+as a base class,как базовый класс
+as a helper,как помощник
+A shared sheet needs a name.,Общему листу нужно имя.
+Save this sheet as a script first - an include is written into the file.,Сначала сохраните лист как скрипт - подключение записывается в файл.
+Nothing is running - Apply to running game needs a game to apply to.,Ничего не запущено - применению нужна работающая игра.
+⟳ Apply to running game (Ctrl+Alt+S),⟳ Применить к запущенной игре (Ctrl+Alt+S)
+⟳ Applies when the game resumes (paused at a row),⟳ Применится при возобновлении игры (пауза на строке)
+Auto-apply while debugging,Применять автоматически при отладке
+Ships as,Будет создан как

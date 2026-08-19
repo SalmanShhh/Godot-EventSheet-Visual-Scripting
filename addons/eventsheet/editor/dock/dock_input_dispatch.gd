@@ -260,6 +260,7 @@ func unhandled_key_input(event: InputEvent) -> void:
 		["add_variable_chord", true, _dock._on_add_global_variable_requested],
 		["add_event_chord", true, _dock._on_add_event_requested],
 		["duplicate", true, _dock._on_duplicate_requested],
+		["apply_to_running_game", false, _dock._live_edit_bar.apply],
 		["save_as", false, _dock._on_save_as_requested],
 		["save", false, _dock._on_save_requested],
 		["open", false, _dock._on_open_requested],

@@ -688,3 +688,61 @@ More use cases:
 - **The chip abbreviates; the tooltip does not.** `1k` in the margin is `fired 1,431 times` on hover.
 - **The panel explains conditions, not actions.** If every condition is true and the row still did not
   run, look at its trigger, or at an enclosing group that is switched off.
+
+## Editing the game while it runs
+
+Changing a number and seeing it in the running game is the jam loop, and the engine has always been
+able to reload a script into a live game. What was missing was a sheet that asks it to.
+
+While a game is running, an edit to the open sheet puts one thing on the status strip:
+
+```
+⟳ Apply to running game (Ctrl+Alt+S)
+```
+
+Pressing it saves the sheet - which writes its script - and asks the running game to reload that
+script. The rows you changed then **pulse once** on the canvas and in the Event Trace, so you can see
+exactly what you just changed land rather than wondering whether it did. Whatever instance state the
+engine keeps across a script reload is kept; nothing here promises more than that.
+
+Two changes a live reload cannot carry, and the strip says which one instead of half-applying:
+
+- **a variable whose TYPE changed** - the running instance is still holding a value of the old type;
+- **a function that was removed** - something may be standing inside it right now.
+
+In both cases the strip reads *"This change can't be applied to the running game: … Restart to pick
+it up."* and a **Restart** button appears beside it. Everything else - new variables, changed values,
+new and rewritten functions, new and rewritten events - reloads.
+
+`View ▸ Auto-apply while debugging` turns the ⟳ into no gesture at all: every edit lands the moment
+you make it, and a change that cannot be reloaded still stops and says so. Paused at a row (F9), an
+edit applies when the game resumes, and the strip says that rather than looking inert. With no game
+running, nothing appears at all: a button that can never do anything is worse than no button.
+
+## Recording a play as a test
+
+`Tools ▸ Replay Recorder…` turns the thing you just did into the cheapest regression net a small team
+has.
+
+1. **⏺ Record.** The open sheet is switched to a debug compile that reports every control the player
+   presses or releases, with the frame it happened on. Save and run.
+2. Play. The take fills in, in the sheet's own words: `simulate control jump pressed at frame 12`,
+   `simulate control jump released at frame 19`.
+3. **⏹ Stop**, then add the checkpoints you actually care about - *named*, what to *read*, what it
+   *should be*, and at which frame: `expect hp = 90 at frame 300`.
+4. **Save as Test Sheet…**
+
+What comes out is an **ordinary Test sheet**. It is readable, editable, diffable and reviewable, and
+it is replayed by the same runner that runs every other test - `Tools ▸ Run Tests…` here, or
+headlessly with the rest in CI. A checkpoint that fails names the frame it drifted on, because
+"expected 90, got 74" cannot be reproduced and "at frame 300" can.
+
+Four rows carry a recording, and you can write them by hand like any others: **Wait Until Frame**,
+**Simulate Control Pressed At Frame**, **Simulate Control Released At Frame** and **Expect At Frame**.
+Frame 0 is the frame the first of them ran on, so a replay says the same thing however long the
+engine had been up.
+
+Only controls are recorded, never raw device events: a mouse jiggle cannot be replayed, and a
+recording that quietly kept something it could never play back would be a recording that lies. The
+recording instrumentation is a debug compile like Live Values and the Event Trace, so the Project
+Doctor reminds you if it is still switched on in a committed script.

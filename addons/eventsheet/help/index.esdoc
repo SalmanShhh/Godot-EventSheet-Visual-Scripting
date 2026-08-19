@@ -19,7 +19,7 @@
 "ids": ["GUIDE-TRANSLATING-YOUR-GAME", "GUIDE-TRANSLATING-THE-EDITOR"],
 "title": "Localization"
 }, {
-"ids": ["GUIDE-USING-WITH-EXISTING-CODE", "GUIDE-VERSION-CONTROL", "GUIDE-THEMING", "GUIDE-UNINSTALL"],
+"ids": ["GUIDE-USING-WITH-EXISTING-CODE", "GUIDE-SHARING-EVENTS-BETWEEN-SCRIPTS", "GUIDE-VERSION-CONTROL", "GUIDE-THEMING", "GUIDE-UNINSTALL"],
 "title": "Working with your project"
 }, {
 "ids": ["GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR", "REFERENCE-GLOSSARY"],
@@ -139,6 +139,7 @@
 "GUIDE-RECIPES": "Recipes - Build Something, End to End",
 "GUIDE-SAVING-AND-LOADING": "Saving and Loading Your Game",
 "GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING": "Seeing What Is There (Raycasting)",
+"GUIDE-SHARING-EVENTS-BETWEEN-SCRIPTS": "Sharing Events Between Scripts",
 "GUIDE-THEMING": "EventSheet Theme + Editability Guide",
 "GUIDE-TRANSLATING-THE-EDITOR": "Translating the editor into your language",
 "GUIDE-TRANSLATING-YOUR-GAME": "Translating Your Game",

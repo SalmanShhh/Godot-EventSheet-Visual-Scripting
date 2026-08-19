@@ -79,6 +79,8 @@ static func run() -> Dictionary:
 	check_orphaned_provider_calls(sheet_paths, findings)
 	check_sheet_signal_declarations(sheet_paths, findings)
 	check_pattern_smells(sheet_paths, findings)
+	check_unresolved_conflicts(findings)
+	check_shared_sheet_includes(findings)
 	check_vocabulary_doc(findings)
 	check_pack_reading(findings)
 	check_disabled_pack_usage(sheet_paths, findings)
@@ -157,6 +159,8 @@ static func check_debug_residue(sheet_paths: PackedStringArray, findings: Array[
 			flags.append("live-values telemetry")
 		if sheet.emit_event_trace:
 			flags.append("event trace")
+		if sheet.emit_input_recording:
+			flags.append("replay recording")
 		if not flags.is_empty():
 			_add(findings, "warning", "debug-residue", sheet_path,
 				"Debug instrumentation (%s) is compiled into the committed script - turn it off (Debug menu) and re-save before shipping." % ", ".join(flags))
@@ -168,10 +172,12 @@ static func check_debug_residue(sheet_paths: PackedStringArray, findings: Array[
 static func strip_debug_flags(sheet: EventSheetResource) -> bool:
 	if sheet == null:
 		return false
-	var was_on: bool = sheet.emit_breakpoints or sheet.emit_live_values or sheet.emit_event_trace
+	var was_on: bool = sheet.emit_breakpoints or sheet.emit_live_values or sheet.emit_event_trace \
+		or sheet.emit_input_recording
 	sheet.emit_breakpoints = false
 	sheet.emit_live_values = false
 	sheet.emit_event_trace = false
+	sheet.emit_input_recording = false
 	return was_on
 
 
@@ -2129,6 +2135,45 @@ static func _script_member_names(script: GDScript) -> Dictionary:
 		for signal_info: Dictionary in ClassDB.class_get_signal_list(base_type, false):
 			names[str(signal_info.get("name", ""))] = true
 	return names
+
+
+## A file a merge left unresolved is an ERROR: it does not run, it does not compile, and the one
+## thing worse than finding it here is finding it when the game will not start. Read off the raw
+## source (a conflicted file has no model to load) and worded exactly as the conflict view offers
+## the choice, so the finding and the window that fixes it say the same thing.
+static func check_unresolved_conflicts(findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_scripts():
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if not EventSheetConflictRegions.has_conflicts(source):
+			continue
+		_add(findings, "error", "merge-conflict", script_path,
+			EventSheetConflictRegions.doctor_message(EventSheetConflictRegions.find(source), script_path.get_file()))
+
+
+## Two shared sheets included into one script that both handle the SAME trigger. Both run, in
+## include order, and the last one's answer is the one that lasts - which is invisible in the
+## includer, because neither handler is written there. Info, not a warning: it is occasionally what
+## someone meant, and a lint that accuses a working game gets switched off.
+static func check_shared_sheet_includes(findings: Array[Dictionary]) -> void:
+	var scripts: PackedStringArray = _project_scripts()
+	var shared_by_class: Dictionary = {}
+	var sources: Dictionary = {}
+	for script_path: String in scripts:
+		var source: String = FileAccess.get_file_as_string(script_path)
+		sources[script_path] = source
+		if not EventSheetSharedSheets.is_shared_sheet(source):
+			continue
+		var shared_class: String = EventSheetSharedSheets.class_name_of(source)
+		if not shared_class.is_empty():
+			shared_by_class[shared_class] = source
+	if shared_by_class.is_empty():
+		return
+	for script_path: String in scripts:
+		var source: String = str(sources[script_path])
+		if EventSheetSharedSheets.is_shared_sheet(source):
+			continue
+		for message: String in EventSheetSharedSheets.duplicate_trigger_messages(source, shared_by_class):
+			_add(findings, "info", "shared-sheet-includes", script_path, message)
 
 
 ## Every project GDScript, excluding addons/ (the plugin's own code is not a user's game).

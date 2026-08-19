@@ -23,6 +23,9 @@ signal session_ended()
 ## first node running the asked-for script (the Self section's LIVE grounding - real runtime
 ## names, including behaviours attached at runtime).
 signal children_report_received(report: Dictionary)
+## Replay recording: one control the running game saw go down or come up, with the engine frame it
+## happened on. [action, pressed, frame] - the three facts a replay row is written from.
+signal input_recorded(action: String, pressed: bool, frame: int)
 
 var _last_session_id: int = -1
 
@@ -61,6 +64,9 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 		return true
 	if message == "eventsheets:paused_row":
 		paused_row_received.emit(parse_paused(data))
+		return true
+	if message == "eventsheets:input" and data.size() >= 3:
+		input_recorded.emit(str(data[0]), bool(data[1]), int(data[2]))
 		return true
 	if message == "eventsheets:children_report":
 		children_report_received.emit(parse_children_report(data))
@@ -125,6 +131,24 @@ func send_set_value(variable_name: String, value: Variant) -> bool:
 	if session == null or not session.is_active():
 		return false
 	session.send_message("eventsheets:set_value", [variable_name, value])
+	return true
+
+
+## Live edit: asks the running game to reload the scripts that just changed on disk. This is the
+## engine's own script hot-reload - the same one Debug > Sync Script Changes performs when you save
+## a script by hand - so whatever instance state the engine keeps across a reload is kept here too,
+## and nothing is kept that it does not. False when no session is active, which is the honest answer
+## to "apply to the running game" when there is no running game.
+func send_reload_scripts(script_paths: PackedStringArray) -> bool:
+	if _last_session_id < 0 or script_paths.is_empty():
+		return false
+	var session: EditorDebuggerSession = get_session(_last_session_id)
+	if session == null or not session.is_active():
+		return false
+	var payload: Array = []
+	for script_path: String in script_paths:
+		payload.append(script_path)
+	session.send_message("reload_scripts", payload)
 	return true
 
 

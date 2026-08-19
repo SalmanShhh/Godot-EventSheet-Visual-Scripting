@@ -2691,3 +2691,39 @@ Learn,学ぶ
 Show this page when nothing is open,何も開いていないときにこのページを表示
 Nothing here yet.,まだ何もありません。
 Another event-sheet editor,別のイベントシートエディタ
+Resolve Conflict,コンフリクトを解決
+Ours and theirs,自分の側と相手の側
+Save resolved file,解決したファイルを保存
+Events both sides agree on are greyed - there is nothing to decide about them. Pick one of the rest per event.,両方が一致するイベントはグレー表示です - 決めることはありません。残りはイベントごとに選びます。
+both the same,どちらも同じ
+Keep ours,自分の側を残す
+Keep theirs,相手の側を残す
+Keep both,両方を残す
+Replay Recorder,リプレイレコーダー
+Replay Recorder…,リプレイレコーダー…
+⏺ Record,⏺ 録画
+⏹ Stop,⏹ 停止
+Save as Test Sheet…,テストシートとして保存…
+Save as Test Sheet,テストシートとして保存
+The take,テイク
+Checkpoint,チェックポイント
+Add checkpoint,チェックポイントを追加
+Should be,期待値
+At frame,フレーム
+"No take yet. Press Record, then run the game.",まだテイクがありません。録画を押してからゲームを実行してください。
+A checkpoint needs something to read.,チェックポイントには読み取る対象が必要です。
+New Shared Sheet,新しい共有シート
+New shared sheet…,新しい共有シート…
+Include Sheet,シートを取り込む
+Include sheet…,シートを取り込む…
+Called,名前
+Included,取り込み方
+as a base class,基底クラスとして
+as a helper,ヘルパーとして
+A shared sheet needs a name.,共有シートには名前が必要です。
+Save this sheet as a script first - an include is written into the file.,先にこのシートをスクリプトとして保存してください - 取り込みはファイルに書き込まれます。
+Nothing is running - Apply to running game needs a game to apply to.,実行中のゲームがありません - 適用には実行中のゲームが必要です。
+⟳ Apply to running game (Ctrl+Alt+S),⟳ 実行中のゲームに適用 (Ctrl+Alt+S)
+⟳ Applies when the game resumes (paused at a row),⟳ ゲーム再開時に適用されます (行で一時停止中)
+Auto-apply while debugging,デバッグ中は自動で適用
+Ships as,生成される形

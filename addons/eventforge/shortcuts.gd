@@ -50,6 +50,10 @@ const DEFAULTS: Dictionary = {
 	"run_editor_tool": "Ctrl+Shift+X",
 	"history_back": "Alt+Left",
 	"history_forward": "Alt+Right",
+	# Live edit (V8): save AND ask the running game to reload it. Deliberately a sibling of Save
+	# rather than a chord on it - it is a different promise, and it does nothing at all when there
+	# is no game running.
+	"apply_to_running_game": "Ctrl+Alt+S",
 	"save": "Ctrl+S",
 	"save_as": "Ctrl+Shift+S",
 	"open": "Ctrl+O",
@@ -94,6 +98,7 @@ const LABELS: Dictionary = {
 	"paste": "Paste rows",
 	"undo": "Undo",
 	"redo": "Redo",
+	"apply_to_running_game": "Apply to running game",
 	"save": "Save",
 	"save_as": "Save as…",
 	"open": "Open…",
@@ -112,6 +117,7 @@ const ORDER: Array = [
 	"preview_layout", "preview_project", "debug_layout",
 	"project_search", "run_editor_tool", "history_back", "history_forward",
 	"duplicate", "copy", "copy_as_text", "paste", "undo", "redo", "save", "save_as", "open",
+	"apply_to_running_game",
 	"add_event_chord", "add_condition_chord", "add_action_chord", "add_variable_chord",
 ]
 

@@ -541,6 +541,23 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("\tfor __child in node.get_children():")
 		lines.append("\t\t__eventsheets_collect_running(__child, script_path, matches)")
 
+	# Replay recording (debug compiles only): report every CONTROL the player presses or releases,
+	# with the frame it happened on, so the editor's replay recorder can write the play back as a
+	# Test sheet. Controls, never raw device events - a mouse jiggle cannot be replayed and "jump
+	# pressed on frame 12" can. Skipped without a word of complaint when the sheet already handles
+	# unhandled input itself: a second _unhandled_input would be a parse error, and a recording is
+	# never worth breaking someone's script for.
+	if sheet.emit_input_recording and not _handles_unhandled_input(lines):
+		lines.append("")
+		lines.append("## Replay recording receiver (debug sessions only).")
+		lines.append("func _unhandled_input(event: InputEvent) -> void:")
+		lines.append("\tif not EngineDebugger.is_active():")
+		lines.append("\t\treturn")
+		lines.append("\tfor __recorded_action: StringName in InputMap.get_actions():")
+		lines.append("\t\tif not event.is_action(__recorded_action):")
+		lines.append("\t\t\tcontinue")
+		lines.append("\t\tEngineDebugger.send_message(\"eventsheets:input\", [str(__recorded_action), event.is_action_pressed(__recorded_action), Engine.get_frames_drawn()])")
+
 	# Emit sheet functions as callable GDScript methods (after the trigger handlers).
 	for function_resource: Variant in all_functions:
 		if not (function_resource is EventFunction):
@@ -2467,6 +2484,15 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 ## (the live debugger-properties idea other event-sheet editors expose). Keys arrive namespaced
 ## "ChildName.key" and the Live Values panel groups them per behavior. Plain duck-typed GDScript: a
 ## pack opts in by defining the method, with zero plugin coupling (parity covenant intact).
+## True when the script being emitted already defines `_unhandled_input`, so the replay recorder's
+## receiver must stand aside rather than define it a second time.
+static func _handles_unhandled_input(lines: PackedStringArray) -> bool:
+	for line: String in lines:
+		if line.begins_with("func _unhandled_input("):
+			return true
+	return false
+
+
 static func _emit_live_values_send(lines: PackedStringArray) -> void:
 	lines.append("\t\tvar __live_frame: Array = [%s]" % _live_values_payload)
 	lines.append("\t\tfor __live_child in get_children():")

@@ -2691,3 +2691,39 @@ Learn,Aprender
 Show this page when nothing is open,Mostrar esta página cuando no hay nada abierto
 Nothing here yet.,Aquí todavía no hay nada.
 Another event-sheet editor,Otro editor de hojas de eventos
+Resolve Conflict,Resolver conflicto
+Ours and theirs,Los nuestros y los suyos
+Save resolved file,Guardar archivo resuelto
+Events both sides agree on are greyed - there is nothing to decide about them. Pick one of the rest per event.,Los eventos en los que ambos lados coinciden aparecen en gris: no hay nada que decidir. Elige uno por evento en el resto.
+both the same,iguales
+Keep ours,Conservar los nuestros
+Keep theirs,Conservar los suyos
+Keep both,Conservar ambos
+Replay Recorder,Grabador de repeticion
+Replay Recorder…,Grabador de repeticion…
+⏺ Record,⏺ Grabar
+⏹ Stop,⏹ Detener
+Save as Test Sheet…,Guardar como hoja de prueba…
+Save as Test Sheet,Guardar como hoja de prueba
+The take,La toma
+Checkpoint,Punto de control
+Add checkpoint,Anadir punto de control
+Should be,Deberia ser
+At frame,En el fotograma
+"No take yet. Press Record, then run the game.",Aun no hay toma. Pulsa Grabar y ejecuta el juego.
+A checkpoint needs something to read.,Un punto de control necesita algo que leer.
+New Shared Sheet,Nueva hoja compartida
+New shared sheet…,Nueva hoja compartida…
+Include Sheet,Incluir hoja
+Include sheet…,Incluir hoja…
+Called,Llamada
+Included,Incluida
+as a base class,como clase base
+as a helper,como asistente
+A shared sheet needs a name.,Una hoja compartida necesita un nombre.
+Save this sheet as a script first - an include is written into the file.,Guarda primero esta hoja como script: la inclusion se escribe en el archivo.
+Nothing is running - Apply to running game needs a game to apply to.,No hay nada en ejecucion: aplicar al juego en marcha necesita un juego en marcha.
+⟳ Apply to running game (Ctrl+Alt+S),⟳ Aplicar al juego en marcha (Ctrl+Alt+S)
+⟳ Applies when the game resumes (paused at a row),⟳ Se aplicara al reanudar el juego (pausado en una fila)
+Auto-apply while debugging,Aplicar automaticamente al depurar
+Ships as,Se genera como

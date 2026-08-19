@@ -42,6 +42,11 @@ extends Resource
 ## firing rows in real time. Debug compiles only; plain core-Godot API (EngineDebugger); off in
 ## normal compiles. Piggybacks on the Live Values _process, so it needs Live Values + variables.
 @export var emit_event_trace: bool = false
+## Replay recording (debugging rung 4): the compiled script reports every CONTROL the player presses
+## or releases to the editor, with the frame it happened on, so the replay recorder can write the
+## play back as a Test sheet. Debug compiles only; plain core-Godot API (EngineDebugger + InputMap),
+## and never emitted when the sheet already handles unhandled input itself.
+@export var emit_input_recording: bool = false
 ## When set, the generated script declares `class_name <this>` - the sheet then defines a
 ## custom node type that appears in Godot's Create Node dialog, exactly like a hand-written
 ## GDScript class. Must be unique across the project (Godot enforces this).
