@@ -59,9 +59,9 @@ static func run() -> bool:
 				all_passed = _check("%s lifts at least one function" % file_name, sheet.functions.size() > 0, true) and all_passed
 			var reopened: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
 			all_passed = _check("%s reopened sheet compiles back byte-identically" % file_name, reopened == source, true) and all_passed
-	all_passed = _check("the fleet was scanned (92 packs)", packs, 92) and all_passed
+	all_passed = _check("the fleet was scanned (93 packs)", packs, 93) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
-	all_passed = _check("fleet-wide declared verbs count matches the catalog (1277)", total_verbs, 1277) and all_passed
+	all_passed = _check("fleet-wide declared verbs count matches the catalog (1283)", total_verbs, 1283) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0

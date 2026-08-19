@@ -47,6 +47,56 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **Six shipped packs called their own actions \"verbs\"** in text a reader sees (Canvas Surface,
   Named Scenes, Encounter Timeline, Priced Table, StatForge, Drawing Canvas, and Nav Agent 3D's
   description). Reworded to action; the packs are rebuilt and all 91 now pass the reading check.
+### Added - a hand-rolled behavior reads with the behavior's own words
+
+A projectile, a turret, a glide to a point, a spin, a screen wrap, a clamp, a pin and a fade out are
+each a behavior that already ships as a pack - and the arithmetic a script writes them as IS that
+behavior. Those shapes now read in the pack's own vocabulary, claim their pattern on the event that
+owns them, and name the pack that could replace the hand-written lines. Display only: the file is
+untouched and the byte round-trip cannot move.
+
+- **A projectile reads as a Bullet.** `velocity = Vector2.RIGHT.rotated(rotation) * speed` (and its
+  `Vector2.from_angle` / `transform.x` spellings) reads `Bullet ▸ Set angle of motion to angle`,
+  `position += velocity * delta` and `move_and_collide(velocity * delta)` read `Bullet ▸ Move`,
+  `speed += accel * delta` reads `Bullet ▸ Set speed to speed accelerating by accel`,
+  `velocity.y += gravity * delta` reads `Bullet ▸ Set gravity to gravity`, `velocity.bounce(n)` reads
+  `Bullet ▸ Bounce off solids`, and `position.distance_to(start) > range_px` reads
+  `Bullet ▸ Distance travelled > range px`. The claim offers the shipped Bullet pack.
+- **A turret reads as a Turret.** The nearest-in-family loop (a `null` winner, a best-so-far started
+  at the range, a `for` over a group, a `< best` compare and the winner handed on) is claimed as
+  `Acquire nearest enemy within range px` with the loop's own lines as evidence and the Weapon Kit as
+  the pack to adopt; `if target:` reads `Turret ▸ Has target` and the `lerp_angle` toward the
+  target's angle reads `Turret ▸ Rotate toward target at turn rate`.
+- **A glide reads as Move To.** `position.move_toward(destination, speed * delta)` reads
+  `Move To ▸ Move toward destination at speed`, filling the destination reads
+  `Move To ▸ Move to position p at speed`, the flag beside it reads `Start moving` / `Is moving` /
+  `Stop`, and `position.distance_to(destination) < 1.0` reads `Move To ▸ Has arrived`.
+- **The five one-liners say which behavior they are.** `rotation_degrees += k * delta` reads
+  `Rotate ▸ Rotate clockwise at k (degrees per second)`, `wrapf` on a position axis reads
+  `Wrap ▸ Wrap around layout horizontally`, `position.clamp(min, max)` reads
+  `Bound To ▸ Bound to layout (inside …)`, `global_position = anchor.global_position + offset` and
+  the angle copy beside it read `Pin ▸ Pin to anchor (position · offset …)` / `(angle)`, and a tween
+  of `modulate:a` to nothing followed by `queue_free` reads
+  `Fade ▸ Fade out over 1 seconds (then destroy)`.
+- **Every ambiguous half is gated on a file fact.** `speed += accel * delta` only reads as a bullet's
+  acceleration in a file that also writes the angle-of-motion line and the step; a distance only
+  reads as distance travelled when the file declares the point it is measured from; a flag only reads
+  as a glide's state when the file both raises and lowers it. Anything else keeps the reading it had.
+- **A lifted row reads the same as the typed line.** The rows the importer claims these lines for -
+  Set Velocity, Move By, Apply Gravity, Set Position, a property write, Is Farther Than - are read
+  back through the shape, so an opened file says the same thing before and after the lift.
+- **The new Pin behavior pack.** `PinBehavior` sticks a Node2D to another object: **Pin To** (which
+  remembers the current gap as the offset), **Pin To At Offset**, **Set Pin Offset**, **Set Pin
+  Mode** (position / angle / both), **Unpin**, **Is Pinned**, and the `PinnedTo` / `PinOffsetX` /
+  `PinOffsetY` expressions. Health bars over heads, a hat on a player, a turret on a hull, a camera
+  rig on a boat. Guide: `docs/Addons/Pin.md`.
+- **Authoring parity.** New picker rows write EXACTLY the arithmetic the readings recognise, so a
+  dropped row and a typed line are the same bytes: **Set Angle Of Motion**, **Move**, **Bounce Off
+  Solids**, **Move Toward Position**, **Rotate Clockwise**, **Wrap Around Layout Horizontally /
+  Vertically**, **Bound To Layout**, **Pin To** and **Pin Angle To**. The four shapes a shipped row
+  already writes keep that row - **Add To Variable** for the acceleration, **Apply Gravity**,
+  **Distance To** and **Is Within Distance** - rather than gaining a duplicate. Where a pack covers
+  the whole shape, attaching it is still the first thing the pattern chip offers.
 
 ### Added - the project-level surfaces an event-sheet author reaches for
 
@@ -94,6 +144,167 @@ lands in a path that already existed.
   invert moves to X, collapse/expand lands on Ctrl+E, the Ctrl alternate for add-event steps aside,
   and preview moves to F4. Everything stays rebindable afterwards, and the picker reads the LIVE
   bindings - rebind one key by hand and it honestly says `Godot EventSheets` again.
+### Added - the long tail of an opened script reads in the sheet's words
+
+The lines a finished game writes and a first script does not: a request to a server, the lights a
+scene is lit with, the 3D words, work handed off the main thread, the signal steps that are actions
+rather than events, a call made by name, and the media a game plays. Every one of them already had a
+sentence somewhere on the sheet, and these readings say it. Display only: the file is untouched, and
+the byte round-trip and the emitted GDScript cannot move.
+
+- **HTTP and JSON read as the AJAX and JSON objects.** `http.request(url)` reads `AJAX ▸ Request
+  url`; the same call carrying the POST verb and a body reads `AJAX ▸ Post data to url`; `result !=
+  HTTPRequest.RESULT_SUCCESS` reads as the inverted `request succeeded`; `body.get_string_from_utf8()`
+  reads `AJAX.LastData`. `JSON.parse_string` and `JSON.stringify` are now spelled the way the sheet's
+  own JSON object spells them - `JSON.Parse(x)` and `JSON.ToString(x)`. A RUN of indexes is one
+  address: `data[\"scores\"][0][\"name\"]` reads `data's scores 0 name` (a single index keeps its
+  shipped sentence).
+- **Lights read as the Light rows.** A 2D or 3D light's `energy` / `light_energy` reads `Set light
+  energy to 50%`, its colour `Set light colour to orange`, its switch `Set light on` / `Set light
+  off`, and `shadow_enabled` `Set shadows on` / `off`. A `CanvasModulate` reads `System ▸ Set layer
+  tint`, and a world environment's ambient energy `System ▸ Set ambient light to 30%`.
+- **The 3D words.** `look_at(p, UP)` reads `Look at p` - the up vector is Godot's bookkeeping - and
+  an object's own axes read as directions: `-basis.z` is `Player's forward`, `basis.x` is `right`,
+  `basis.y` is `up`.
+- **Threads read as Run in the background.** `thread.start(bake.bind(level))` and
+  `WorkerThreadPool.add_task(...)` both read `System ▸ Run Bake in the background   level = level`,
+  the group spelling adds `64 times`, and every wait reads `⏳ Wait for it to finish`. The claim
+  offers the shipped Run In Background behavior for the hand-rolled threads.
+- **The signal steps that are actions.** `connect` reads `Wire On died to On Died` (with an `at end
+  of frame` chip for a deferred connection), `disconnect` reads `Unwire`, `is_connected` reads `On
+  died is wired to On Died`, and a variable the sheet typed `Signal` declares as a local signal and
+  fires as `System ▸ Fire sig`.
+- **A call made by name.** `call(\"heal\", 5)` and `callv(\"heal\", [5, self])` both read as the ordinary
+  `Functions ▸ Call Heal` row with its parameter chips, and the muted `by name` / `by name, with a
+  list` that says how it was reached. `Callable(self, \"heal\")` reads `the function Heal`.
+- **Media.** A `VideoStreamPlayer` is the sheet's Video object - `Set video to intro.ogv`, `Play`,
+  `Pause`, `Is playing` - and a positional player's `max_distance` / `attenuation` read `Set hearing
+  distance` / `Set falloff`.
+- **Two runs read as the one row they are.** The first-person block - turn the body, pitch the
+  camera, clamp the camera - is one `Mouse look` row with the file's own values muted beside it, and
+  two volume writes driven by one fraction are one `System ▸ Crossfade music a → music b by t`. The
+  lines stay exactly as they are in the file, on hover, under a double-click and in the bytes saved.
+- **The four new patterns are claimed** on the event that owns them (`ajax`, `lighting`, `fps_look`,
+  `background`), with the exact source lines as evidence and, for the two that a shipped behavior
+  does whole, the pack a reader could adopt instead.
+- **A function's header says the three things that change how it is called.** Parameter chips carry
+  their default (`amount = 10`, `source = empty`), a function that awaits wears a `⏳ waits` chip,
+  and a `static func` reads `shared` - the sheet's word for a function that belongs to the class
+  rather than to any one object. An `Array` input named `args` wears the `…` that says it swallows
+  however many values follow.
+
+### Added - the long tail is authorable in the same words
+
+Every reading above that names an object a sheet can act on now has picker rows that write exactly
+the shape the reading recognises, so a hand-written line and a picked row are the same bytes.
+
+- **The AJAX object** - Request, Post, Cancel Request, Request Succeeded, Status Is OK and Last Data,
+  with a module guide of its own.
+- **The Lighting rows** - light energy and colour in both node generations, the on-off pair, shadows,
+  a whole layer's tint and the world's ambient light.
+- **The Video object** - Set Video, Play, Pause, Stop and Is Playing, with a module guide of its own.
+- **Sound and 3D** - Set Hearing Distance, Set Falloff and Crossfade join the Audio rows; Mouse Look
+  and the Forward / Right / Up directions join the 3D rows.
+
+Background work deliberately gets no rows of its own: the Run In Background behavior does the whole
+shape - the thread, the wait and the done signal - so the offer a claim makes is the pack.
+
+### Added - the Doctor warns when background work touches the scene tree
+
+A function handed to a thread whose own rows reach the scene tree earns a warning, because Godot's
+nodes are not thread-safe and the failure is a crash that happens one run in twenty rather than
+every time. Narrow on purpose: a named function handed off, and that function's own body reaching
+the tree.
+
+### Added - working WITH a sheet: the running game, a recorded play, a merge conflict, a shared sheet
+
+Four gestures that live one step outside the reading. Each keeps its decision in a plain module with
+no editor in it, so the window, the Doctor and the tests all read the same answer.
+
+- **Apply a sheet change to the game that is already running.** While a game runs, an edit to the
+  open sheet puts `⟳ Apply to running game (Ctrl+Alt+S)` on the status strip. Applying saves the
+  sheet and asks the running game to reload its script (the engine's own script hot-reload - the
+  state it keeps is the state you get), and the rows you changed pulse once on the canvas and in the
+  Event Trace. When a live reload cannot carry the change - a variable whose TYPE changed, a
+  function that was removed and may be running - the strip says which one and offers **Restart**
+  instead of half-applying. `View ▸ Auto-apply while debugging` makes every edit land on its own;
+  paused at a row, an edit applies on resume. Nothing appears at all unless a game is running.
+- **Record a play, keep it as a test.** `Tools ▸ Replay Recorder…`: ⏺ Record, play, ⏹ Stop, *Save as
+  Test Sheet…*. Every control the running game sees is captured with the frame it happened on and
+  reads as the row it becomes - `simulate control jump pressed at frame 12` - with checkpoints you
+  add (`expect hp = 90 at frame 300`). What is written is an ORDINARY Test sheet: readable,
+  editable, diffable, and replayed by the same runner as every other test, here or headlessly. Four
+  new Testing rows carry it: Wait Until Frame, Simulate Control Pressed / Released At Frame, and
+  Expect At Frame, whose failure names the frame it drifted on.
+- **Resolve a merge conflict as events.** Opening a `.gd` a merge left unresolved shows the
+  conflicted region as OURS / THEIRS columns of events side by side: the events both sides agree on
+  are greyed, the differing ones each get **Keep ours** / **Keep theirs** / **Keep both**. Save
+  writes the file with the markers gone and every byte outside the region exactly as it was; the
+  Doctor lists whatever is still unresolved.
+- **Shared event sheets: write common events once, include them in many scripts.**
+  `Sheet ▸ New shared sheet…` makes a script whose whole job is to be included, and asks the one
+  question that belongs to the shared sheet rather than to each includer: is it *as a base class*
+  (the including script extends it) or *as a helper* (the including script keeps one of it and
+  forwards its triggers to it - the sheet writes the forwarding rows)? `Add ▸ Include sheet…` then
+  wires any script to it with nothing left to ask. Changing the shared sheet changes every includer,
+  and the Doctor reports two includes that both handle the same trigger, because that clash is
+  invisible in the includer.
+
+### Added - the Manual answers in GDScript as well as in the sheet's words
+
+- **Manual ▸ Dictionary: GDScript to events**, generated. Every Godot call, property and idiom the
+  reading recognises, alphabetically, with the sentence it reads as here, the object it belongs to
+  and where the reading comes from; the name links to the row's own page, where Show GDScript and
+  Add this row already live. It is baked at bundle time out of the reading's own idiom tables and
+  the vocabulary the build loads, and a suite gate regenerates it and compares the bytes - so the
+  page can never list a reading that does not exist, and a table edited without a rebake fails the
+  suite instead of shipping a lie.
+- **Coming from GDScript**, the mirror of the glossary. You already know Godot: here are the two
+  dozen words this editor reads your code in (`queue_free` is Destroy, `_process` is Every tick,
+  `await` is Wait for, `signal` is trigger, `@export` is an Instance variable in the Inspector),
+  why a row is exactly one statement, and the three ways to see the GDScript behind any row. A gate
+  holds the page honest: every call it names has to be one the generated dictionary really lists.
+- **The Manual's search answers Godot words.** Type `queue_free` into the Manual's search and the
+  glossary results say what it is called here, with the matched GDScript beside the name.
+
+### Added - the picker answers to the Godot call you already know
+
+- **Type the call, get the row.** The picker now searches the CODE as well as the words: every
+  identifier an action or condition's template calls or reads is indexed, so `queue_free` finds
+  Queue Free, `add_child` finds Add Child, `tween_property` finds Tween Property and `is_on_floor`
+  finds Is On Floor. The row the call is ABOUT leads - a template that is one call outranks one
+  that reaches the same call along the way - and the matched GDScript is written beside the name,
+  so the sheet's word and the call you typed are visibly one thing. The reading's own idiom tables
+  answer too, which is what keeps the picker and the reading from ever disagreeing about what a
+  call is called here.
+
+### Added - the sheet map: what talks to what, on one page
+
+- **View ▸ Sheet Map** draws the shape of a project's logic. Nodes are its sheets, scenes and
+  globals; lines are the four ways one reaches another - it CALLS a global, it SIGNALS (someone
+  raises it, someone else listens), it INCLUDES another script (`extends` / `preload`), or it
+  CHANGES LAYOUT to a scene. Click a sheet to open it, click a line to run the Find that explains
+  it (the signal's name, the global's name, the file's own name). Boxes lay themselves out in
+  columns by kind and can be dragged; where you put them is remembered per project in editor
+  metadata. The graph itself is DERIVED on every open and never written into the project.
+
+### Added - a place to live in a long sheet: the minimap and the History list
+
+- **A minimap down the right edge of the canvas** (View ▸ Minimap). One 1 to 2 px bar per row,
+  tinted by what the row IS - a trigger, an every-tick event, a function, a group, a comment, a
+  Script block, a disabled row - with the part of the sheet you are looking at drawn as a
+  translucent box you can drag, your bookmarks and the rows the sheet flagged as marks in the
+  margin, and groups as faint bands you hover to read the name of. Click anywhere in the column to
+  jump there. It is drawn from the rows the canvas already holds, so it costs one pass over them
+  and nothing at all while hidden; a sheet past 200 events shows it the first time it is opened,
+  and an explicit choice from the menu holds from then on. Its colours are theme tokens, derived
+  for every bundled theme from the sheet's own palette.
+- **A History panel in the sheet's own words** (View ▸ History). Every edit you have made to this
+  sheet, listed by the name the edit gave itself (\"Add Group\", \"Extract to Function\", \"Move
+  Variable Up\") with the event it landed on beside it, and \"(undone)\" on the steps waiting to be
+  redone. Click one to undo or redo back to it; hover one to see the rows it touched lit on the
+  canvas. The marker follows the sheet snapshots the undo funnel restores, so Ctrl+Z from anywhere,
+  the toolbar arrows and a click in the list all move the same place.
 
 ### Added - the behaviors a hand-rolled script writes, read with the behavior's own words
 
