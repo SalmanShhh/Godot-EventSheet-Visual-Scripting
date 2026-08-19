@@ -258,6 +258,25 @@ i18n (Godot translations).
 
 ## 8. Habits That Transfer Directly
 
+- **The Project bar is where you left it, under Godot's names or yours.** Turn it on with **View ▸
+  Project bar** (it is already on if you are in Simple mode or started from a template) and the
+  Object bar gains a *Project* tab listing the whole project by kind: Scenes, Scripts, Classes, Base
+  classes, Behaviors, Sounds, Files. With **View ▸ Familiar Words** on it reads *Layouts (scenes)*,
+  *Event sheets (scripts)*, *Object types (classes)*, *Families (base classes)* - both words always
+  on screen. It is read only: right-click *New scene / New script / New class / Extract base class /
+  Import sound* opens Godot's own dialogs, and double-clicking routes a layout to the 2D/3D editor, a
+  script to its sheet, an object type to Object properties, a behavior to its reference page. Drag a
+  class onto the canvas to start an event on it, a sound for a *Play sound* action, a scene for a *Go
+  to layout* action. The ✕ hides it again.
+- **Preview is on the sheet.** `▶ Preview layout`, `▶▶ Preview project` and `🐞 Debug layout` sit on
+  the toolbar; the keys underneath are Godot's F6 and F5, and while the game runs the first two say
+  `■ Stop` and `↻ Restart`. **Sheet ▸ Start page** is the start page you expect - templates by genre,
+  what you had open last, and the tutorials.
+- **Your keys, in one pick.** **Tools ▸ Keyboard Shortcuts ▸ Preset ▾ ▸ Another event-sheet editor**
+  rebinds only the handful that differ - X inverts, Ctrl+E collapses and expands, F4 previews - and
+  leaves E / S / C / A / G / Q / V / B exactly where your fingers already put them. Everything stays
+  rebindable, and *Reset all to defaults* comes back.
+
 - **Typing `Self.` still answers "what does my object know about itself"**: type `self` in any
   ƒx field (or open the ƒx Expressions dictionary) and a pinned **Self** section lists your
   variables, your host's common properties under their C3 names, your value-returning functions,

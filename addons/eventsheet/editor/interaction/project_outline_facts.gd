@@ -56,12 +56,19 @@ static func heading_for(kind: String, familiar_words: bool) -> String:
 		var chosen: String = _family_word(familiar_words)
 		if not chosen.is_empty():
 			return chosen
-	if godot_word == familiar_word:
+	# A section both editors call the same thing is not dressed up as a translation of itself.
+	if godot_word.to_lower() == familiar_word.to_lower():
 		return EventSheetL10n.translate(godot_word)
 	if familiar_words:
-		return "%s  (%s)" % [EventSheetL10n.translate(familiar_word).capitalize(),
+		return "%s  (%s)" % [_sentence_case(EventSheetL10n.translate(familiar_word)),
 			EventSheetL10n.translate(godot_word).to_lower()]
 	return "%s  (%s)" % [EventSheetL10n.translate(godot_word), EventSheetL10n.translate(familiar_word)]
+
+
+## First letter up, the rest left alone - a heading, not a title. `capitalize()` would make "event
+## sheets" read "Event Sheets", which is a product name shape and not how the sheet writes.
+static func _sentence_case(text: String) -> String:
+	return text if text.is_empty() else "%s%s" % [text.substr(0, 1).to_upper(), text.substr(1)]
 
 
 ## The project's own word for a base class, when the setting that owns it has shipped. "" otherwise,

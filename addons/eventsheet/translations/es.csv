@@ -2530,3 +2530,50 @@ Stop sound,Detener sonido
 "UI: focus, progress bars, dialogs and the mixer","UI: foco, barras de progreso, dialogos y el mezclador"
 "Sound: the file, its pitch, its bus, its volume and where it plays from","Sonido: el archivo, su tono, su bus, su volumen y desde donde suena"
 "Juice: shake, hitstop, bob, flash and the squash that eases back","Game feel: sacudida, hitstop, oscilacion, destello y el aplastamiento que vuelve"
+Project,Proyecto
+Project bar,Barra de proyecto
+Add toolbar,Barra de añadir
+Start page,Página de inicio
+Scenes,Escenas
+layouts,diseños
+Scripts,Scripts
+event sheets,hojas de eventos
+Classes,Clases
+object types,tipos de objeto
+Base classes,Clases base
+families,familias
+Sounds,Sonidos
+1 file,1 archivo
+%d files,%d archivos
+%d things,%d elementos
+filter the project...,filtrar el proyecto...
+Nothing here matches that.,Nada aquí coincide con eso.
+This project has no scenes or scripts yet.,Este proyecto aún no tiene escenas ni scripts.
+New scene…,Nueva escena…
+New script…,Nuevo script…
+New class…,Nueva clase…
+Extract base class…,Extraer clase base…
+Import sound…,Importar sonido…
+The last Project Doctor run had something to say about this one.,La última revisión del Doctor del proyecto tenía algo que decir sobre esto.
+Hide the Project bar for this project (View ▸ Project bar brings it back).,Ocultar la barra de proyecto en este proyecto (Ver ▸ Barra de proyecto la devuelve).
+"Everything in this project, by what it is. Nothing here changes a file - every entry opens something you already have.","Todo en este proyecto, por lo que es. Nada aquí cambia un archivo: cada entrada abre algo que ya tienes."
+▶ Preview layout,▶ Previsualizar diseño
+▶▶ Preview project,▶▶ Previsualizar proyecto
+🐞 Debug layout,🐞 Depurar diseño
+■ Stop,■ Detener
+↻ Restart,↻ Reiniciar
++ Event,+ Evento
++ Sub-event,+ Subevento
++ Condition,+ Condición
++ Action,+ Acción
++ Group,+ Grupo
++ Comment,+ Comentario
++ Variable,+ Variable
++ Function,+ Función
+Start a new event.,Empezar un evento nuevo.
+New from template,Nuevo desde plantilla
+Recent,Recientes
+Learn,Aprender
+Show this page when nothing is open,Mostrar esta página cuando no hay nada abierto
+Nothing here yet.,Aquí todavía no hay nada.
+Another event-sheet editor,Otro editor de hojas de eventos

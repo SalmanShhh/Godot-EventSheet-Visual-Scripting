@@ -2530,3 +2530,50 @@ Stop sound,Остановить звук
 "UI: focus, progress bars, dialogs and the mixer","Интерфейс: фокус, полосы прогресса, диалоги и микшер"
 "Sound: the file, its pitch, its bus, its volume and where it plays from","Звук: файл, высота тона, шина, громкость и позиция воспроизведения"
 "Juice: shake, hitstop, bob, flash and the squash that eases back","Ощущение игры: тряска, хитстоп, покачивание, вспышка и возврат сжатия"
+Project,Проект
+Project bar,Панель проекта
+Add toolbar,Панель добавления
+Start page,Стартовая страница
+Scenes,Сцены
+layouts,макеты
+Scripts,Скрипты
+event sheets,листы событий
+Classes,Классы
+object types,типы объектов
+Base classes,Базовые классы
+families,семейства
+Sounds,Звуки
+1 file,1 файл
+%d files,%d файлов
+%d things,%d элементов
+filter the project...,фильтр по проекту...
+Nothing here matches that.,Ничего не совпадает.
+This project has no scenes or scripts yet.,В этом проекте пока нет сцен или скриптов.
+New scene…,Новая сцена…
+New script…,Новый скрипт…
+New class…,Новый класс…
+Extract base class…,Выделить базовый класс…
+Import sound…,Импорт звука…
+The last Project Doctor run had something to say about this one.,Последний запуск Доктора проекта отметил этот файл.
+Hide the Project bar for this project (View ▸ Project bar brings it back).,Скрыть панель проекта для этого проекта (Вид ▸ Панель проекта вернёт её).
+"Everything in this project, by what it is. Nothing here changes a file - every entry opens something you already have.","Всё в этом проекте, по виду. Здесь ничего не меняется - каждая запись открывает то, что уже есть."
+▶ Preview layout,▶ Просмотр макета
+▶▶ Preview project,▶▶ Просмотр проекта
+🐞 Debug layout,🐞 Отладка макета
+■ Stop,■ Стоп
+↻ Restart,↻ Перезапуск
++ Event,+ Событие
++ Sub-event,+ Подсобытие
++ Condition,+ Условие
++ Action,+ Действие
++ Group,+ Группа
++ Comment,+ Комментарий
++ Variable,+ Переменная
++ Function,+ Функция
+Start a new event.,Начать новое событие.
+New from template,Новый по шаблону
+Recent,Недавние
+Learn,Обучение
+Show this page when nothing is open,"Показывать эту страницу, когда ничего не открыто"
+Nothing here yet.,Здесь пока пусто.
+Another event-sheet editor,Другой редактор листов событий

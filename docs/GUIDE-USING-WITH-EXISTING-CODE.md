@@ -22,7 +22,8 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
    [reads like](#what-an-opened-file-reads-like---event-sheet-grammar-not-annotated-code), its
    [objects](#the-objects-of-an-opened-file---what-they-are-and-where-you-find-them), a whole
    [scene](#a-whole-scene-read-in-one-place), [what stays code](#what-stays-code-still-reads-as-what-it-is)
-   and [beginner spellings](#beginner-spellings-and-the-reading-layer)
+   and [beginner spellings](#beginner-spellings-and-the-reading-layer), plus
+   [the Project bar](#the-project-bar---your-project-by-kind-not-by-folder)
 8. [When to Wrap Existing Code in Your Own ACEs](#8-when-to-wrap-existing-code-in-your-own-aces)
 9. [Use Cases](#9-use-cases)
 10. [Tips and Common Mistakes](#10-tips-and-common-mistakes)
@@ -1017,6 +1018,73 @@ On real code the effect compounds. Here is the plugin's own semantic analyzer, w
 31 entries long:
 
 <img src="images/block-views-real-file.png" alt="A real source file opened as a sheet: a folded Class setup strip, a one-row collapsed const KNOWN_ANNOTATIONS table reading 31 entries, and a function whose body is an Expression verb row with condition and action rows." width="720">
+
+---
+
+### The Project bar - your project by kind, not by folder
+
+Adopting an existing project starts with the same question every time: *where are my event sheets?*
+Godot's FileSystem dock answers "where does this file live"; it has no way to answer "what are the
+things in this project". The **Project bar** does, and it is a tab of the Object bar rather than a
+dock of its own:
+
+```
+PROJECT                        ⚙ ✕
+▾ Scenes  (layouts)
+    Main Menu    main_menu.tscn
+    Level 1      level_1.tscn
+▾ Scripts  (event sheets)
+    Player       player.gd · 82% reads as events, 3 script blocks
+    Game         autoload · game.gd
+▾ Classes  (object types)
+    Player · Enemy · Coin …
+▾ Base classes  (families)
+    Player       Slime · Bat
+▸ Behaviors     Health · Platformer · FSM …
+▸ Sounds        12
+▸ Files         art · data · shaders
+```
+
+The headings follow **View ▸ Familiar Words**: with the toggle off Godot's word leads and the other
+editor's is muted beside it, and with it on the two swap - so both words are always on screen and the
+one you think in comes first. A section both editors call the same thing (Sounds, Files) is not
+dressed up as a translation of itself.
+
+Four things a folder tree cannot show are what earn it the room:
+
+- **which scripts open as sheets, and how far the reading got.** The scripts you have open carry
+  their coverage line, so "which of these is still mostly code" is one glance.
+- **which classes the project declares and who extends whom.** `Player  Slime · Bat` is the whole
+  inheritance of your project, read as one line each. Only a class something else extends is a base
+  class.
+- **which behavior packs are installed.**
+- **the last Project Doctor run's findings**, as a `●` (error) or `▲` (warning) on the item itself.
+
+**It owns no action.** Right-click ▸ *New scene / New script / New class / Extract base class /
+Import sound* each open Godot's own dialog or one the plugin already has, so there is never a second
+way to do the same thing. Double-click routes: a scene opens in the 2D/3D editor and the sheet offers
+the whole-layout-as-one-sheet reading beside it; a script opens as a sheet or in Godot's script
+editor, whichever you set as your default; a class opens Object properties; a behavior opens its
+pack's reference page. Dragging one onto the canvas means what the sheet already understands - a
+class starts an event on it, a sound is a *Play sound* action, a scene is a *Go to layout* action.
+
+**It costs nothing until you open it.** Off by default and collapsed to a thin strip, built the first
+time it is actually shown, and refreshed on the same filesystem ping the rest of the editor listens
+to (and only while it is open). It turns itself on for a project in Simple mode, or one started from
+a template or from the migration guide; **View ▸ Project bar** toggles it by hand at any time and the
+✕ hides it for that project. Filter box on top, arrows and Enter to open, Esc back to the sheet.
+
+Three smaller surfaces come with it and are worth knowing on day one:
+
+- **Sheet ▸ Start page** - templates by genre with a one-line pitch, what you had open last, and the
+  tutorials, on one page. It opens by itself when nothing is open; a checkbox turns that half off.
+- **Preview on the sheet** - `▶ Preview layout` (F6), `▶▶ Preview project` (F5) and `🐞 Debug layout`
+  on the toolbar. While a game runs the first two become `■ Stop` and `↻ Restart`; Debug layout arms
+  Event Trace, Live Values and breakpoints first.
+- **View ▸ Add toolbar** - the eight Add gestures as buttons above the canvas, each naming its key on
+  hover, on by default in Simple mode. And **Keyboard Shortcuts ▸ Preset ▾** offers *Another
+  event-sheet editor*, which rebinds only the handful of keys that differ (invert to X, collapse and
+  expand to Ctrl+E, preview to F4) and leaves everything rebindable underneath.
 
 ---
 

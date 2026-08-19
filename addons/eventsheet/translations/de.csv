@@ -2530,3 +2530,50 @@ Stop sound,Sound stoppen
 "UI: focus, progress bars, dialogs and the mixer","UI: Fokus, Fortschrittsbalken, Dialoge und der Mischer"
 "Sound: the file, its pitch, its bus, its volume and where it plays from","Sound: die Datei, Tonhohe, Bus, Lautstarke und die Abspielposition"
 "Juice: shake, hitstop, bob, flash and the squash that eases back","Game Feel: Wackeln, Hitstop, Wippen, Blitz und die Stauchung, die zuruckfedert"
+Project,Projekt
+Project bar,Projektleiste
+Add toolbar,Hinzufügen-Leiste
+Start page,Startseite
+Scenes,Szenen
+layouts,Layouts
+Scripts,Skripte
+event sheets,Ereignisblätter
+Classes,Klassen
+object types,Objekttypen
+Base classes,Basisklassen
+families,Familien
+Sounds,Klänge
+1 file,1 Datei
+%d files,%d Dateien
+%d things,%d Einträge
+filter the project...,Projekt filtern...
+Nothing here matches that.,Hier passt nichts dazu.
+This project has no scenes or scripts yet.,Dieses Projekt hat noch keine Szenen oder Skripte.
+New scene…,Neue Szene…
+New script…,Neues Skript…
+New class…,Neue Klasse…
+Extract base class…,Basisklasse extrahieren…
+Import sound…,Klang importieren…
+The last Project Doctor run had something to say about this one.,Der letzte Projekt-Doktor-Lauf hatte dazu etwas zu sagen.
+Hide the Project bar for this project (View ▸ Project bar brings it back).,Projektleiste für dieses Projekt ausblenden (Ansicht ▸ Projektleiste holt sie zurück).
+"Everything in this project, by what it is. Nothing here changes a file - every entry opens something you already have.","Alles in diesem Projekt, nach seiner Art. Nichts hier ändert eine Datei - jeder Eintrag öffnet etwas, das du bereits hast."
+▶ Preview layout,▶ Layout testen
+▶▶ Preview project,▶▶ Projekt testen
+🐞 Debug layout,🐞 Layout debuggen
+■ Stop,■ Stopp
+↻ Restart,↻ Neu starten
++ Event,+ Ereignis
++ Sub-event,+ Unterereignis
++ Condition,+ Bedingung
++ Action,+ Aktion
++ Group,+ Gruppe
++ Comment,+ Kommentar
++ Variable,+ Variable
++ Function,+ Funktion
+Start a new event.,Ein neues Ereignis beginnen.
+New from template,Neu aus Vorlage
+Recent,Zuletzt
+Learn,Lernen
+Show this page when nothing is open,"Diese Seite zeigen, wenn nichts geöffnet ist"
+Nothing here yet.,Hier ist noch nichts.
+Another event-sheet editor,Ein anderer Ereignisblatt-Editor
