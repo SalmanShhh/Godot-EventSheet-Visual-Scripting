@@ -719,6 +719,27 @@ That is the order this section is in.
   because the timer belongs to it. The `(once)` / `(regular)` mode is read off the file's own
   `one_shot` line. A timer held in a variable has no tag to prove, so it keeps the plain call reading.
 
+- **A sprite, a sound and a game-feel line read as the object's own rows.** `sprite.flip_h = dir < 0`
+  reads `Set mirrored when dir < 0` (a mirror decided by a test says the test; a plain `= true` is
+  just `Set mirrored`), `flip_v = true` is `Set flipped`, `frame = 3` is `Set animation frame to 3`,
+  `speed_scale = 2.0` is `Set animation speed to 2`, and `texture = load("res://hero.png")` is
+  `Set image to hero.png`. An AnimationTree's `set("parameters/blend_position", dir)` is `Set blend
+  blend position to dir` and its `travel("Hurt")` is `Travel to animation state Hurt`, in either
+  spelling. On the audio side `stream = preload("res://jump.wav")` is `Set sound to jump.wav`,
+  `pitch_scale` is `Set pitch`, `bus = "SFX"` is `Set bus to SFX`, `volume_db = linear_to_db(0.5)` is
+  `Set volume to 50%` (the decibel conversion is Godot's business, not the reader's - a raw dB number
+  keeps its unit), `seek(12.0)` is `Seek to 12 seconds`, and both `is_playing()` and `playing` read
+  `Is playing`. `grab_focus()` is `Set focus`, `popup_centered()` is `Show dialog (centred)`, and
+  `AudioServer.set_bus_volume_db(0, linear_to_db(v))` is `Audio ▸ Set master volume to v (0 to 1)`.
+  Finally the game-feel snippets: a symmetric random camera offset is `Shake by s`, `base_y + sin(t *
+  3.0) * 8.0` is `Bob y` with `sine · magnitude 8 · 3 per second` as its note, and
+  `scale.lerp(Vector2.ONE, 10 * delta)` is `Ease size back to normal at 10`. Every one of these is
+  claimed only at its exact shape - a lopsided shake or a lerp to some other size keeps the property
+  write it is - and every one names the pattern it read as, which is what the event's pattern chip
+  and the Manual show.
+
+  ![A sprite, UI, sound and game-feel script opened as a sheet](images/reading-sprite-sound-juice.png)
+
 #### Input, gamepads and sensors
 
 - **The Input Map is an object, and the file says which controls it uses.** An opened script that names

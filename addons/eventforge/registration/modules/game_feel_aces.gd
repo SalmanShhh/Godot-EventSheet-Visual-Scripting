@@ -48,11 +48,6 @@ static func _add_sprite_descriptors(descriptors: Array[ACEDescriptor]) -> void:
 			F.make_param("path", "String", "\"res://icon.svg\"", "Image", "Image file to show.", "expression")
 		], "Animation", "Set image to {path}", "Sprite2D")
 		.described("Shows a different image on this sprite."))
-	descriptors.append(F.make_descriptor("Core", "TravelToAnimationState", "Travel To Animation State",
-		ACEDescriptor.ACEType.ACTION, "self[\"parameters/playback\"].travel({state})", "", [
-			F.make_param("state", "String", "\"Idle\"", "State", "State machine node to travel to.", "expression")
-		], "Animation", "Travel to animation state {state}", "AnimationTree")
-		.described("Moves this animation tree's state machine to another state, playing the transition."))
 	descriptors.append(F.make_descriptor("Core", "AnimationIsPlaying", "Is Playing",
 		ACEDescriptor.ACEType.CONDITION, "is_playing()", "", [], "Animation", "Is playing", "AnimationPlayer")
 		.described("True while this animation player is running an animation."))

@@ -39,7 +39,7 @@ of the battle:
 
 ## Core concepts
 
-- **The host is the node the row belongs to.** Play Animation is an AnimationPlayer action; Set Frame is
+- **The host is the node the row belongs to.** Play Animation is an AnimationPlayer action; Set Animation Frame is
   an AnimatedSprite2D action; Travel To State is an AnimationTree action. The picker only offers a row
   where its host makes sense, which is why two different conditions are both called
   **Is Animation Playing** - one asks an AnimationPlayer, one asks an AnimatedSprite2D.
@@ -60,7 +60,7 @@ of the battle:
 - **Queue is an end-of-clip hook, not a timer.** Queue Animation only fires when the running clip
   finishes. A looping clip never finishes.
 - **An AnimationTree is addressed through paths.** Travel To State and Is In State both go through
-  `get("parameters/playback")`; Set Tree Parameter and Tree Parameter take a full parameter path such as
+  `get("parameters/playback")`; Set Blend and Tree Parameter take a full parameter path such as
   `"parameters/TimeScale/scale"`.
 
 ## Reference tables
@@ -103,9 +103,12 @@ row's On node cell.
 |------|--------------|----------|
 | Play Sprite Animation | Plays a named animation on an animated sprite (e.g. run or jump). | `play(&{anim})` |
 | Stop Sprite Animation | Stops the animated sprite's current animation on the spot. | `stop()` |
-| Set Frame | Jumps the animated sprite to a specific frame number. | `frame = {frame}` |
+| Set Animation Frame | Jumps the animated sprite to a specific frame number. | `frame = {frame}` |
 | Set Mirrored | Mirrors the sprite horizontally, great for facing left or right. | `flip_h = {flipped}` |
 | Is Animation Playing | True while the animated sprite is currently playing an animation. | `is_playing()` |
+| Set Flipped | Turns the sprite upside down, or back the right way up. | `flip_v = {flipped}` |
+| Set Image | Shows a different image on the sprite. | `texture = load({path})` |
+| Is Playing (AnimationPlayer) | True while this animation player is running an animation. | `is_playing()` |
 | Current Animation | Returns the name of the animation the sprite is currently using. | `animation` |
 
 ### Object-level - name the object, not its player
@@ -128,8 +131,8 @@ with no player is a no-op rather than an error.
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | Set AnimationTree Active | Turns this AnimationTree's playback on or off. | `active = {active}` |
-| Travel To State | Travels the state machine to a named state. | `get("parameters/playback").travel({state})` |
-| Set Tree Parameter | Sets an AnimationTree parameter like a blend amount, condition or timescale. | `set({path}, {value})` |
+| Travel To State | Travels the state machine to a named state, and reads as *Travel to animation state "Hurt"*. | `get("parameters/playback").travel({state})` |
+| Set Blend | Sets an AnimationTree parameter like a blend amount, condition or timescale. | `set({path}, {value})` |
 | Is Tree Active | True when this AnimationTree is currently active and playing. | `active` |
 | Is In State | True when the state machine is sitting in the named state. | `get("parameters/playback").get_current_node() == {state}` |
 | Current State | Returns the state-machine node the tree is currently in. | `get("parameters/playback").get_current_node()` |
@@ -307,7 +310,7 @@ On jump pressed
     -> Travel To State  "jump"
 ```
 
-**18. Blend a tree parameter live.** Set Tree Parameter writes any path the tree exposes - a blend
+**18. Blend a tree parameter live.** Set Blend writes any path the tree exposes - a blend
 position, a timescale, a condition.
 
 ```gdscript
@@ -370,9 +373,9 @@ On boss defeated
 - **A missing player is silent, by design.** The "(in object)" templates are wrapped in an `if`, so
   nothing errors and nothing happens. If a row seems ignored, check that the object really contains a
   player of that type - Has Child Of Type is the quick test.
-- **Set Frame is overwritten by playback.** Setting a frame on a sprite that is still playing lasts
+- **Set Animation Frame is overwritten by playback.** Setting a frame on a sprite that is still playing lasts
   exactly one frame. Stop Sprite Animation first.
-- **Set Tree Parameter's path is inserted literally.** It is a plain text parameter, not an expression
+- **Set Blend's path is inserted literally.** It is a plain text parameter, not an expression
   field, so `parameters/Blend2/blend_amount` is typed exactly as the tree spells it. A wrong path fails
   quietly rather than erroring.
 - **Travel To State needs an active tree.** Is Tree Active is the guard; travelling into an inactive tree

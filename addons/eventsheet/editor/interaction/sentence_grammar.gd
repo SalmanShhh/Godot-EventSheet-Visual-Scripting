@@ -6423,7 +6423,7 @@ const PATTERN_WORDS: Dictionary = {
 const PATTERN_ACES: Dictionary = {
 	"sprite_animation": ["Core/SetFlipH", "Core/SetFlipV", "Core/SetSpriteFrame",
 		"Core/SetAnimationSpeed", "Core/SetSpriteTexture", "Core/SetAnimationBlend",
-		"Core/TravelToAnimationState"],
+		"Core/TravelToState"],
 	"ui": ["Core/GrabFocus", "Core/SetProgress", "Core/ShowDialog", "Core/SetMasterVolume"],
 	"sound": ["Core/AudioSetStream", "Core/AudioSetPitch", "Core/AudioSetBus",
 		"Core/AudioSetVolumeLevel", "Core/AudioSeek", "Core/AudioIsPlaying"],
@@ -6772,10 +6772,17 @@ static func _animation_parameter_name(argument: String) -> String:
 	return path.substr(path.rfind("/") + 1).replace("_", " ")
 
 
-## S11. The animation tree in `anim_tree["parameters/playback"]`, or "" when the receiver is anything
-## else - a `travel` on something that is not a state machine keeps its own reading.
+## S11. The animation tree in `anim_tree["parameters/playback"]` - or in the `get(...)` spelling the
+## sheet's own Travel To State row writes, where the tree is the object the row already acts on.
+## "self" when the script IS the tree, "" when the receiver is anything else: a `travel` on something
+## that is not a state machine keeps its own reading.
 static func _animation_playback_receiver(receiver: String) -> String:
 	var text: String = receiver.strip_edges()
+	const GET_TAIL := ".get(\"%s\")" % ANIMATION_PLAYBACK_PATH
+	if text == "get(\"%s\")" % ANIMATION_PLAYBACK_PATH:
+		return "self"
+	if text.ends_with(GET_TAIL):
+		return text.substr(0, text.length() - GET_TAIL.length())
 	var open_at: int = text.find("[")
 	if open_at <= 0 or not text.ends_with("]"):
 		return ""

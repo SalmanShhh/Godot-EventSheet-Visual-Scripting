@@ -540,7 +540,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# ── AnimationTree (event-sheet-style state machines / blends) ──
 	descriptors.append(F.make_descriptor("Core", "SetAnimationTreeActive", "Set AnimationTree Active", ACEDescriptor.ACEType.ACTION, "active = {active}", "", [F.make_param("active", "String", "true", "Active", "Enable the animation tree.", "", ["true", "false"])], "Animation", "Set tree active {active}", "AnimationTree")
 		.described("Turns this AnimationTree's playback on or off."))
-	descriptors.append(F.make_descriptor("Core", "TravelToState", "Travel To State", ACEDescriptor.ACEType.ACTION, "get(\"parameters/playback\").travel({state})", "", [F.make_param("state", "String", "\"idle\"", "State", "State-machine node to travel to.")], "Animation", "Travel to state {state}", "AnimationTree")
+	descriptors.append(F.make_descriptor("Core", "TravelToState", "Travel To State", ACEDescriptor.ACEType.ACTION, "get(\"parameters/playback\").travel({state})", "", [F.make_param("state", "String", "\"idle\"", "State", "State-machine node to travel to.")], "Animation", "Travel to animation state {state}", "AnimationTree")
 		.described("Tells the state machine to transition to the named animation state."))
 	descriptors.append(F.make_descriptor("Core", "SetTreeParam", "Set Blend", ACEDescriptor.ACEType.ACTION, "set({path}, {value})", "", [F.make_param("path", "String", "\"parameters/TimeScale/scale\"", "Param Path", "AnimationTree parameter path (blend amount / condition / timescale)."), F.make_param("value", "String", "1.0", "Value", "Value (number / Vector2 / bool).", "expression")], "Animation", "Set blend {path} to {value}", "AnimationTree")
 		.described("Sets an AnimationTree parameter like a blend amount, condition or timescale."))

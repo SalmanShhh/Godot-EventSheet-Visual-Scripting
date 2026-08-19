@@ -10264,6 +10264,64 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("%s.set(%s, %s)" % [
 				_ace_target(params_dict), str(params_dict.get("path", "")),
 				str(params_dict.get("value", ""))], context)
+
+		# ── S11 / S12 / S13 / S14 lens hook ─────────────────────────────────────────────────────
+		# The rows a hand-written sprite, UI, sound or juice line LIFTS to. Without these the reading
+		# would depend on whether the lifter happened to claim the line, which is the one thing the
+		# shared grammar exists to prevent: each hands the grammar the exact line the ACE compiles to.
+		"SetSpriteFrame":
+			return EventSheetSentence.statement("%s.frame = %s" % [
+				_ace_target(params_dict), str(params_dict.get("frame", ""))], context)
+		"SetAnimationSpeed":
+			return EventSheetSentence.statement("%s.speed_scale = %s" % [
+				_ace_target(params_dict), str(params_dict.get("scale", ""))], context)
+		"SetSpriteTexture":
+			return EventSheetSentence.statement("%s.texture = load(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("path", ""))], context)
+		"TravelToState":
+			return EventSheetSentence.statement("%s.get(\"parameters/playback\").travel(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("state", ""))], context)
+		"GrabFocus":
+			return EventSheetSentence.statement("%s.grab_focus()" % _ace_target(params_dict), context)
+		"ShowDialogCentred":
+			return EventSheetSentence.statement("%s.popup_centered()" % _ace_target(params_dict), context)
+		"SetMasterVolume":
+			return EventSheetSentence.statement("AudioServer.set_bus_volume_db(0, linear_to_db(%s))"
+				% str(params_dict.get("level", "")), context)
+		"AudioSetStream":
+			return EventSheetSentence.statement("%s.stream = load(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("path", ""))], context)
+		"AudioSetPitch":
+			return EventSheetSentence.statement("%s.pitch_scale = %s" % [
+				_ace_target(params_dict), str(params_dict.get("pitch", ""))], context)
+		"AudioSetBus":
+			return EventSheetSentence.statement("%s.bus = %s" % [
+				_ace_target(params_dict), str(params_dict.get("bus", ""))], context)
+		"AudioSetVolume":
+			return EventSheetSentence.statement("%s.volume_db = %s" % [
+				_ace_target(params_dict), str(params_dict.get("db", ""))], context)
+		"AudioSetVolumeLevel":
+			return EventSheetSentence.statement("%s.volume_db = linear_to_db(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("level", ""))], context)
+		"AudioSeek":
+			return EventSheetSentence.statement("%s.seek(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("seconds", ""))], context)
+		"SetCameraOffset":
+			return EventSheetSentence.statement("%s.offset = %s" % [
+				_ace_target(params_dict), str(params_dict.get("offset", ""))], context)
+		"CameraShakeOnce":
+			return EventSheetSentence.statement(
+				"%s.offset = Vector2(randf_range(-%s, %s), randf_range(-%s, %s))" % [
+					_ace_target(params_dict), str(params_dict.get("amount", "")),
+					str(params_dict.get("amount", "")), str(params_dict.get("amount", "")),
+					str(params_dict.get("amount", ""))], context)
+		"BobY":
+			return EventSheetSentence.statement("position.y = %s + sin(%s * %s) * %s" % [
+				str(params_dict.get("base", "")), str(params_dict.get("time", "")),
+				str(params_dict.get("frequency", "")), str(params_dict.get("magnitude", ""))], context)
+		"EaseSizeBack":
+			return EventSheetSentence.statement("scale = scale.lerp(Vector2.ONE, %s * delta)"
+				% str(params_dict.get("rate", "")), context)
 		"SubtractFromProperty":
 			return EventSheetSentence.statement("%s.%s -= %s" % [
 				str(params_dict.get("target", "self")), str(params_dict.get("property", "")),
