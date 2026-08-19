@@ -223,13 +223,17 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 			# Delete items would act on the sheet root, so its menu stays field-only.
 			return
 	elif is_event:
-		menu.add_item("Add Sub-Event", _dock.ROW_MENU_ADD_SUB_EVENT)
-		menu.add_item("Convert to OR Block", _dock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
+		# The three event-shape commands every event sheet has, in the words the sheet reads them
+		# in: everything the reading shows must be authorable in the same words, so a beginner who
+		# reads "Or" can also type "Or". All three are greyed while the sheet is a read-only
+		# preview (_configure_context_menu), because a preview never rewrites the file.
+		menu.add_item("Add blank sub-event (B)", _dock.ROW_MENU_ADD_SUB_EVENT)
+		menu.add_item("Make 'Or' block", _dock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
 		# The event-sheet Else block, top-level like the other event transforms (a reflex authors expect, so it is
 		# NOT gated behind Expert mode). Clicking again clears it; _configure_context_menu relabels to
-		# the live state ("Clear Else" / "Clear Else-If").
-		menu.add_item("Make Else", _dock.ROW_MENU_MAKE_ELSE)
-		menu.add_item("Make Else-If", _dock.ROW_MENU_MAKE_ELIF)
+		# the live state ("Clear 'Else'" / "Clear 'Else If'").
+		menu.add_item("Add 'Else'", _dock.ROW_MENU_MAKE_ELSE)
+		menu.add_item("Add 'Else If'", _dock.ROW_MENU_MAKE_ELIF)
 	elif is_group:
 		menu.add_item("Open / Close Group", _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
 		menu.add_item("Edit Description…", _dock.ROW_MENU_EDIT_GROUP_DESC)
@@ -413,20 +417,29 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				"Enable Condition" if _dock._context_ace_is_disabled() else "Disable Condition"
 			)
 	elif menu == _dock._row_context_menu:
+		# A read-only preview reads the file but never rewrites it, so the three event-shape
+		# commands are greyed there rather than silently doing nothing. Press Edit Events first.
+		var previewing: bool = _dock._current_sheet != null and _dock._current_sheet.read_only
+		var preview_reason: String = "This is a read-only preview - press Edit Events to change the file." if previewing else ""
 		var toggle_index: int = menu.get_item_index(_dock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
 		if toggle_index >= 0:
 			var selected_events: Array[EventRow] = _dock._get_selected_event_rows_from_context()
 			var has_events: bool = not selected_events.is_empty()
-			menu.set_item_disabled(toggle_index, not has_events)
+			menu.set_item_disabled(toggle_index, previewing or not has_events)
+			menu.set_item_tooltip(toggle_index, preview_reason)
 			if has_events:
 				menu.set_item_text(
 					toggle_index,
 					(
-						"Convert to AND Block"
+						"Make 'And' block"
 						if _dock._event_rows_use_or_mode(selected_events)
-						else "Convert to OR Block"
+						else "Make 'Or' block"
 					)
 				)
+		var blank_sub_index: int = menu.get_item_index(_dock.ROW_MENU_ADD_SUB_EVENT)
+		if blank_sub_index >= 0:
+			menu.set_item_disabled(blank_sub_index, previewing)
+			menu.set_item_tooltip(blank_sub_index, preview_reason)
 		# Make Else / Make Else-If relabel to the live state: when every selected event already carries
 		# that mode, the click clears it (the toggle in _set_context_else_mode), so say so.
 		var else_index: int = menu.get_item_index(_dock.ROW_MENU_MAKE_ELSE)
@@ -440,11 +453,13 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				all_else = all_else and else_event.else_mode == EventRow.ElseMode.ELSE
 				all_elif = all_elif and else_event.else_mode == EventRow.ElseMode.ELIF
 			if else_index >= 0:
-				menu.set_item_disabled(else_index, not has_else_events)
-				menu.set_item_text(else_index, "Clear Else" if all_else else "Make Else")
+				menu.set_item_disabled(else_index, previewing or not has_else_events)
+				menu.set_item_tooltip(else_index, preview_reason)
+				menu.set_item_text(else_index, "Clear 'Else'" if all_else else "Add 'Else'")
 			if elif_index >= 0:
-				menu.set_item_disabled(elif_index, not has_else_events)
-				menu.set_item_text(elif_index, "Clear Else-If" if all_elif else "Make Else-If")
+				menu.set_item_disabled(elif_index, previewing or not has_else_events)
+				menu.set_item_tooltip(elif_index, preview_reason)
+				menu.set_item_text(elif_index, "Clear 'Else If'" if all_elif else "Add 'Else If'")
 		var sub_condition_index: int = menu.get_item_index(_dock.ROW_MENU_ADD_SUB_CONDITION)
 		if sub_condition_index >= 0:
 			var context_event: EventRow = _dock._context_row.source_resource as EventRow if _dock._context_row != null else null

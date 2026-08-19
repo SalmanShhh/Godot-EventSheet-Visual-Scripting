@@ -12,7 +12,12 @@ extends SceneTree
 func _init() -> void:
 	var report: Dictionary = EventSheets.doctor()
 	for finding: Dictionary in (report.get("findings", []) as Array):
-		print("[%s] %s - %s" % [str(finding.get("severity")).to_upper(), str(finding.get("path")), str(finding.get("message"))])
+		# A finding about one row is addressed the way the sheet addresses it: "path (event 4)".
+		var event_number: int = int(finding.get("event", 0))
+		var where: String = str(finding.get("path"))
+		if event_number > 0:
+			where += " (event %d)" % event_number
+		print("[%s] %s - %s" % [str(finding.get("severity")).to_upper(), where, str(finding.get("message"))])
 	var errors: int = int(report.get("errors", 0))
 	var warnings: int = int(report.get("warnings", 0))
 	print("doctor: %d error(s), %d warning(s), %d note(s)" % [errors, warnings, int(report.get("infos", 0))])

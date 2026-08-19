@@ -452,14 +452,9 @@ Add GDScript Action,GDScript アクションを追加
 Add Match To Actions…,アクションに Match を追加…
 Add Pick Filter (For Each)…,ピックフィルターを追加 (For Each)…
 Add Sub-Condition,サブ条件を追加
-Add Sub-Event,サブイベントを追加
 Attach To Event Above,上のイベントにアタッチ
-Clear Else,Else をクリア
-Clear Else-If,Else-If をクリア
 Close Group,グループを閉じる
 Comment,コメント
-Convert to AND Block,AND ブロックに変換
-Convert to OR Block,OR ブロックに変換
 Copy as Text,テキストとしてコピー
 Cut,切り取り
 Delete,削除
@@ -478,8 +473,6 @@ Group,グループ
 Group Color…,グループの色…
 Group Selection into New Group,選択範囲を新しいグループにまとめる
 Insert,挿入
-Make Else,Else にする
-Make Else-If,Else-If にする
 More,その他
 Open / Close Group,グループを開く / 閉じる
 Open Group,グループを開く
@@ -562,8 +555,6 @@ Event Numbers,イベント番号
 Aligned Object Columns,オブジェクト列を揃える
 Outline…,アウトライン…
 Outline,アウトライン
-Go to Event,イベントへ移動
-Go to Event Number…,イベント番号へ移動…
 Bookmarks,ブックマーク
 ◂ Previous,◂ 前へ
 Next ▸,次へ ▸
@@ -2134,3 +2125,19 @@ Add do step: call {name},実行ステップを追加: {name} を呼び出す
 Add undo step: call {name},元に戻すステップを追加: {name} を呼び出す
 Add do step: keep {object},実行ステップを追加: {object} を保持する
 in the editor too,エディタでも実行
+Add blank sub-event (B),サブイベントを追加
+Clear 'Else',Else をクリア
+Clear 'Else If',Else-If をクリア
+Make 'And' block,AND ブロックに変換
+Make 'Or' block,OR ブロックに変換
+Add 'Else',Else にする
+Add 'Else If',Else-If にする
+Go to event,イベントへ移動
+Go to event… (Ctrl+G),イベントへ移動… (Ctrl+G)
+Event number,イベント番号
+event %d,イベント %d
+event %d of %d,イベント %d / %d
+line %d,行 %d
+This is a read-only preview - press Edit Events to change the file.,これは読み取り専用のプレビューです。ファイルを変更するには「イベントを編集」を押してください。
+Static %s,静的 %s
+shared by every %s,すべての %s で共有

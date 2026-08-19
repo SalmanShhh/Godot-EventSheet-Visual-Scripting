@@ -452,14 +452,9 @@ Add GDScript Action,Aggiungi azione GDScript
 Add Match To Actions…,Aggiungi un match alle azioni…
 Add Pick Filter (For Each)…,Aggiungi filtro di selezione (Per ogni)…
 Add Sub-Condition,Aggiungi sottocondizione
-Add Sub-Event,Aggiungi sottoevento
 Attach To Event Above,Collega all'evento sopra
-Clear Else,Rimuovi l'Altrimenti (Else)
-Clear Else-If,Rimuovi l'Altrimenti-Se (Else-If)
 Close Group,Chiudi il gruppo
 Comment,Commento
-Convert to AND Block,Converti in blocco E
-Convert to OR Block,Converti in blocco O
 Copy as Text,Copia come testo
 Cut,Taglia
 Delete,Elimina
@@ -478,8 +473,6 @@ Group,Gruppo
 Group Color…,Colore del gruppo…
 Group Selection into New Group,Raggruppa la selezione in un nuovo gruppo
 Insert,Inserisci
-Make Else,Trasforma in Altrimenti (Else)
-Make Else-If,Trasforma in Altrimenti-Se (Else-If)
 More,Altro
 Open / Close Group,Apri / Chiudi il gruppo
 Open Group,Apri il gruppo
@@ -562,8 +555,6 @@ Event Numbers,Numeri degli eventi
 Aligned Object Columns,Colonne oggetto allineate
 Outline…,Struttura…
 Outline,Struttura
-Go to Event,Vai all'evento
-Go to Event Number…,Vai al numero di evento…
 Bookmarks,Segnalibri
 ◂ Previous,◂ Precedente
 Next ▸,Successivo ▸
@@ -2134,3 +2125,19 @@ Add do step: call {name},Aggiungi passo esegui: chiama {name}
 Add undo step: call {name},Aggiungi passo annulla: chiama {name}
 Add do step: keep {object},Aggiungi passo esegui: mantieni {object}
 in the editor too,anche nell'editor
+Add blank sub-event (B),Aggiungi sottoevento
+Clear 'Else',Rimuovi l'Altrimenti (Else)
+Clear 'Else If',Rimuovi l'Altrimenti-Se (Else-If)
+Make 'And' block,Converti in blocco E
+Make 'Or' block,Converti in blocco O
+Add 'Else',Trasforma in Altrimenti (Else)
+Add 'Else If',Trasforma in Altrimenti-Se (Else-If)
+Go to event,Vai all'evento
+Go to event… (Ctrl+G),Vai all'evento… (Ctrl+G)
+Event number,Numero evento
+event %d,evento %d
+event %d of %d,evento %d di %d
+line %d,riga %d
+This is a read-only preview - press Edit Events to change the file.,Questa è un'anteprima di sola lettura: premi Modifica eventi per cambiare il file.
+Static %s,Statico %s
+shared by every %s,condiviso da ogni %s

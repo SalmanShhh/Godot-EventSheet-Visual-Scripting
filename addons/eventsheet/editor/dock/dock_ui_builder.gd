@@ -258,10 +258,23 @@ func build_ui() -> void:
 	_dock._viewport.empty_space_context_menu_requested.connect(_dock._on_viewport_empty_space_context_menu_requested)
 	_dock._viewport.set_external_span_edit_handler_enabled(true)
 
+	# The status bar: the transient message on the left, and on the right the address of the
+	# selected row in the sheet's own words - "event 4 of 61 · line 38". An event sheet names a
+	# row by its margin number, so the bar says the number first and the file line after it.
+	var status_bar: HBoxContainer = HBoxContainer.new()
+	status_bar.name = "EventSheetStatusBar"
+	status_bar.add_theme_constant_override("separation", 12)
 	_dock._status_label = Label.new()
 	_dock._status_label.name = "EventSheetStatus"
 	_dock._status_label.text = "Ready"
-	root.add_child(_dock._status_label)
+	_dock._status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	status_bar.add_child(_dock._status_label)
+	_dock._row_address_label = Label.new()
+	_dock._row_address_label.name = "EventSheetRowAddress"
+	_dock._row_address_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_dock._row_address_label.modulate = Color(1.0, 1.0, 1.0, 0.65)
+	status_bar.add_child(_dock._row_address_label)
+	root.add_child(status_bar)
 
 	_dock._exposed_node.name = "EventSheetExposedParams"
 	_dock.add_child(_dock._exposed_node)

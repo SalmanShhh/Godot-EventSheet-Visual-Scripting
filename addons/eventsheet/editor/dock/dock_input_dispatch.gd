@@ -289,6 +289,11 @@ func unhandled_key_input(event: InputEvent) -> void:
 		if key_event.keycode == KEY_P:
 			_dock._open_command_palette()
 			_dock.accept_event()
+		elif key_event.keycode == KEY_G:
+			# Ctrl+G: Go to event. The margin number is how two people name the same row, so
+			# jumping to one is grammar rather than a preference - fixed, like the zoom keys.
+			_dock._open_go_to_event_dialog()
+			_dock.accept_event()
 		elif key_event.keycode == KEY_Y:
 			_dock._on_redo_requested()
 			_dock.accept_event()

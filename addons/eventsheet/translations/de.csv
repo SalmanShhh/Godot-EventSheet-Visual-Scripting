@@ -452,14 +452,9 @@ Add GDScript Action,GDScript-Aktion hinzufügen
 Add Match To Actions…,Match zu Aktionen hinzufügen…
 Add Pick Filter (For Each)…,Auswahlfilter hinzufügen (Für jedes)…
 Add Sub-Condition,Unterbedingung hinzufügen
-Add Sub-Event,Unterereignis hinzufügen
 Attach To Event Above,An Ereignis darüber anhängen
-Clear Else,Sonst (Else) entfernen
-Clear Else-If,Sonst-Wenn (Else-If) entfernen
 Close Group,Gruppe schließen
 Comment,Kommentar
-Convert to AND Block,In UND-Block umwandeln
-Convert to OR Block,In ODER-Block umwandeln
 Copy as Text,Als Text kopieren
 Cut,Ausschneiden
 Delete,Löschen
@@ -478,8 +473,6 @@ Group,Gruppe
 Group Color…,Gruppenfarbe…
 Group Selection into New Group,Auswahl in neue Gruppe gruppieren
 Insert,Einfügen
-Make Else,Zu Sonst (Else) machen
-Make Else-If,Zu Sonst-Wenn (Else-If) machen
 More,Mehr
 Open / Close Group,Gruppe öffnen / schließen
 Open Group,Gruppe öffnen
@@ -562,8 +555,6 @@ Event Numbers,Ereignisnummern
 Aligned Object Columns,Ausgerichtete Objektspalten
 Outline…,Gliederung…
 Outline,Gliederung
-Go to Event,Gehe zu Ereignis
-Go to Event Number…,Gehe zu Ereignisnummer…
 Bookmarks,Lesezeichen
 ◂ Previous,◂ Zurück
 Next ▸,Weiter ▸
@@ -2134,3 +2125,19 @@ Add do step: call {name},Ausführen-Schritt hinzufügen: {name} aufrufen
 Add undo step: call {name},Rückgängig-Schritt hinzufügen: {name} aufrufen
 Add do step: keep {object},Ausführen-Schritt hinzufügen: {object} behalten
 in the editor too,auch im Editor
+Add blank sub-event (B),Unterereignis hinzufügen
+Clear 'Else',Sonst (Else) entfernen
+Clear 'Else If',Sonst-Wenn (Else-If) entfernen
+Make 'And' block,In UND-Block umwandeln
+Make 'Or' block,In ODER-Block umwandeln
+Add 'Else',Zu Sonst (Else) machen
+Add 'Else If',Zu Sonst-Wenn (Else-If) machen
+Go to event,Gehe zu Ereignis
+Go to event… (Ctrl+G),Gehe zu Ereignis… (Strg+G)
+Event number,Ereignisnummer
+event %d,Ereignis %d
+event %d of %d,Ereignis %d von %d
+line %d,Zeile %d
+This is a read-only preview - press Edit Events to change the file.,"Dies ist eine schreibgeschützte Vorschau - klicken Sie auf Ereignisse bearbeiten, um die Datei zu ändern."
+Static %s,Statisch %s
+shared by every %s,von jedem %s geteilt

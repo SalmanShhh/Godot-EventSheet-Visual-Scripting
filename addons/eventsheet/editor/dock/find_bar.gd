@@ -125,8 +125,16 @@ func _find_step(direction: int) -> void:
 			_dock._find_count_label.text = "no matches"
 		return
 	_dock._find_cursor = wrapi(_dock._find_cursor + direction, 0, _dock._find_resource_matches.size())
-	_dock._find_count_label.text = "%d of %d" % [_dock._find_cursor + 1, _dock._find_resource_matches.size()]
-	_dock._viewport.reveal_resource(_dock._find_resource_matches[_dock._find_cursor])
+	# A find result is named the way the margin names it: "3 of 12 · event 4". The number is the
+	# sheet's own event number, so a result can be quoted to someone else without a scroll position.
+	var match_resource: Resource = _dock._find_resource_matches[_dock._find_cursor]
+	var label: String = "%d of %d" % [_dock._find_cursor + 1, _dock._find_resource_matches.size()]
+	var match_event: int = EventSheetViewport.event_number_containing(
+		_dock._current_sheet.events if _dock._current_sheet != null else [], match_resource)
+	if match_event > 0:
+		label += " · " + EventSheetL10n.translate("event %d") % match_event
+	_dock._find_count_label.text = label
+	_dock._viewport.reveal_resource(match_resource)
 
 
 ## Replace All: substitutes the find text across comments, GDScript blocks, string

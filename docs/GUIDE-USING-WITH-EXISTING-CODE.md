@@ -364,12 +364,16 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   `number  jump_velocity = 4.5  Upward velocity applied on a jump` - type word, name, value, description. On
   an editable sheet the head keeps its Class setup strip and `@export` chips, because those are things you
   edit; the folders are for reading.
-- **Every function is a Function block.** `ƒ Jump`, `ƒ Set Third Person  [enabled true/false]`: the ƒ, the
-  name and one chip per input, nothing else on the row; the header's tint says whether it is an Action,
-  Condition or Expression. Click the header for the **ACE properties** popup - kind, category, inputs, what
-  it gives back, description, whether it is featured, its icon, the exact line it inserts, and the function
-  behind it - with Edit..., Open guide and Show in code. Unpublished helpers are the same blocks with their
-  doc as the right-hand caption, gathered under a closed **Helpers** folder.
+- **Every function reads as the trigger it is.** `ƒ  Functions ▸ On Jump`,
+  `ƒ  Functions ▸ On Set Third Person  enabled`: the name and one chip per input sit in the CONDITION
+  lane, because that lane answers "when does this run?" for every other event and a function's answer is
+  "when it is called". The body's first step reads beside it on the right, the rest of the body hangs
+  under it as sub-events, and Collapse folds the whole function back to that one row. The row's tint says
+  whether it is an Action, Condition or Expression, and a condition or expression also says its kind as a
+  quiet word next to the name. Click it for the **ACE properties** popup - kind, category, inputs (with
+  their types), what it gives back, description, whether it is featured, its icon, the exact line it
+  inserts, and the function behind it - with Edit..., Open guide and Show in code. Unpublished helpers are
+  the same blocks with their doc as the right-hand caption, gathered under a closed **Helpers** folder.
 - **Lifecycle handlers are triggers, wherever they sit in the file.** `_physics_process` is `Every Physics
   Tick`; an `_unhandled_input` that branches on the event type reads as one Construct trigger per branch -
   `Mouse ▸ On mouse moved` with `Mouse ▸ mouse is captured` under it, `Keyboard ▸ On Escape pressed` - and a
@@ -404,6 +408,27 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   of the sheet's own functions reads `Functions ▸ Call Add Look  x = mouse's ΔX  y = mouse's ΔY`, and code
   that could not lift is one folded card with a line count. **View > Humanized Names** turns the name lens
   on or off for editable sheets; nothing on the sheet is scaffolding until you press **Edit Events**.
+- **Every event has a number, and everything names it by that number.** The left margin counts events
+  down the sheet - sub-events included, groups descended into - and the count is stable, so folding a
+  group or filtering the sheet never renumbers anything. **Ctrl+G** opens *Go to event* and jumps to
+  one. The status bar says where you are in the same words - `event 4 of 61 · line 38` - and a
+  bookmark, the Find bar's counter (`3 of 12 · event 4`) and a Project Doctor finding
+  (`player.gd · event 4`) all print the same number, so "look at event 12" means one row to everybody
+  reading the file. The numbers are display-only: nothing about them touches the script.
+
+  ![An opened script: the event number in the left margin, a static variable reading "Static number spawned = 0 shared by every Player", a function reading as Functions - On Take Damage, and the status bar saying "event 1 of 1 - line 3"](images/opened-script-event-numbers.png)
+
+- **A `static var` says who shares it.** `static var spawned: int = 0` reads
+  `Static number  spawned = 0  shared by every Player` - the scope word leads the type chip, and the
+  muted tail names the object the value belongs to (the script's `class_name`, else its scene root,
+  else its file). One value on the class, not one per object, is exactly the thing a reader has to be
+  told; on an authored sheet the same fact reads as a `static` badge beside `const`.
+- **The shapes the sheet reads, you can also type.** Right-click an event for **Add blank sub-event
+  (B)**, **Make 'Or' block** (which reads **Make 'And' block** once the event is an Or block) and
+  **Add 'Else'** / **Add 'Else If'** - the same three commands sit on the **Add** menu. On an opened
+  `.gd`, Make 'Or' block rewrites that one event's joined condition (`a and b` becomes `a or b`) and
+  leaves every other byte alone. All three are greyed while the file is a read-only preview; press
+  **Edit Events** first.
 - **A plain script is an object.** Its Include bar names it (`class_name`, else its scene's root node,
   else the file) with its class icon and the scene it lives in; its engine properties read under that
   name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as

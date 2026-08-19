@@ -62,6 +62,65 @@ words instead of as a pile of raw handlers and raw calls.
 Display only, as always: the byte round-trip of an opened `.gd` is unchanged and gated for an opened
 EditorPlugin and an opened EditorScript, and the exact GDScript is still one hover away.
 
+### Added - a `static var` reads as what it is
+
+`static var spawned: int = 0` used to read as an ordinary variable, hiding the one thing about it
+that matters. It now reads **Static number spawned = 0  shared by every Player** - the scope word
+leads the type chip, and the muted tail names the object that shares the value (the same name the
+Include bar gives the script: its `class_name`, else its scene root, else its file). On an authored
+sheet, where there is no type chip to carry the word, `static` reads as a badge beside `const`.
+
+### Changed - a function reads as the trigger it is: Functions ▸ On <name>
+
+The condition lane answers "when does this run?" on every other event. A function's answer is "when
+it is called" - so in Reading mode its name and its input chips now sit in that lane, as a trigger,
+instead of on a header bar above a row whose left cell was the one empty condition cell in the whole
+reading.
+
+- `ƒ  Functions ▸ On Add Look  x  y` in the condition lane, with the body's first step beside it on
+  the right (`Set yaw to ...`), and the rest of the body as sub-events under it. A step that asks a
+  question of its own stays a row of its own; a verb with an empty body keeps the whole row for its
+  chips.
+- The kind stays a word: a published **condition** or **expression** says so, quietly, beside the
+  name. An action says nothing extra, because "do these" is what every other event already means.
+- Everything the header had is unchanged: the kind tint, the properties popup on click, and Collapse
+  folding the whole function to that one row. Input chips read as the bare names the call passes in;
+  their types are in the properties popup, where the rest of the picker metadata already lives.
+- Re-pinned to the new reading: `opened_pack_reading_test` (the three verb headers and the helper
+  block) and `opened_pack_head_test` (the Add Look header, the two-lane split, and the whole-row
+  chip width, which now uses a verb with an empty right lane).
+
+### Changed - the three event-shape commands, in the words the sheet reads them in
+
+Everything the sheet reads must be authorable in the same words: a beginner who reads "Or" has to be
+able to type "Or". The three event-shape commands every event sheet has now say what the reading
+says, on the right-click menu and on the **Add** menu alike.
+
+- `Add Sub-Event` reads **Add blank sub-event (B)** (the key was already B), `Convert to OR Block` /
+  `Convert to AND Block` read **Make 'Or' block** / **Make 'And' block**, and `Make Else` /
+  `Make Else-If` read **Add 'Else'** / **Add 'Else If'** (clearing them reads `Clear 'Else'`).
+- All three are greyed while the sheet is a read-only preview, with the reason on the tooltip, so a
+  preview never looks like it will rewrite the file. Press **Edit Events** first.
+- On an opened `.gd`, Make 'Or' block rewrites that event's joined condition (`a and b` <-> `a or b`)
+  and leaves every other byte of the file alone - pinned both ways by a round-trip test.
+
+### Added - an event is named by its number, everywhere a row is named
+
+The left margin has numbered events for a while; now everything that points at a row says the same
+number, so two people reading the same file mean one row by "event 12".
+
+- **Go to event on Ctrl+G.** The dialog the Command Palette already had gets the key every event
+  sheet gives it, and the Keyboard Shortcuts dialog lists it with the other fixed structural keys.
+- **The status bar says where you are.** Selecting a row prints `event 4 of 61 · line 38` on the
+  right of the status bar - the sheet's own event number first, the line after it. A row the margin
+  does not number (a comment, a group bar, a variable) prints nothing rather than inventing an
+  address.
+- **Find results and Doctor findings print the number.** The Find bar's counter reads
+  `3 of 12 · event 4`, and a Project Doctor finding about one row reads `player.gd · event 4` in the
+  panel and `path (event 4)` in the headless driver. The numbering walk itself moved onto
+  `EventSheetResource`, so the Doctor - which never touches the editor - counts events exactly the
+  way the margin does.
+
 ### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words
 
 Four more families of everyday GDScript read as the rows they are. Display only: the file is

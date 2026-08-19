@@ -452,14 +452,9 @@ Add GDScript Action,Добавить действие GDScript
 Add Match To Actions…,Добавить match в действия…
 Add Pick Filter (For Each)…,Добавить фильтр выбора (For Each)…
 Add Sub-Condition,Добавить под-условие
-Add Sub-Event,Добавить подсобытие
 Attach To Event Above,Присоединить к событию выше
-Clear Else,Убрать Else
-Clear Else-If,Убрать Else-If
 Close Group,Свернуть группу
 Comment,Комментарий
-Convert to AND Block,Преобразовать в блок AND
-Convert to OR Block,Преобразовать в блок OR
 Copy as Text,Копировать как текст
 Cut,Вырезать
 Delete,Удалить
@@ -478,8 +473,6 @@ Group,Группа
 Group Color…,Цвет группы…
 Group Selection into New Group,Сгруппировать выделенное в новую группу
 Insert,Вставка
-Make Else,Сделать Else
-Make Else-If,Сделать Else-If
 More,Ещё
 Open / Close Group,Развернуть / свернуть группу
 Open Group,Развернуть группу
@@ -562,8 +555,6 @@ Event Numbers,Номера событий
 Aligned Object Columns,Выровненные столбцы объектов
 Outline…,Структура…
 Outline,Структура
-Go to Event,Перейти к событию
-Go to Event Number…,Перейти к номеру события…
 Bookmarks,Закладки
 ◂ Previous,◂ Назад
 Next ▸,Вперёд ▸
@@ -2134,3 +2125,19 @@ Add do step: call {name},Добавить шаг выполнения: вызв�
 Add undo step: call {name},Добавить шаг отмены: вызвать {name}
 Add do step: keep {object},Добавить шаг выполнения: сохранить {object}
 in the editor too,также в редакторе
+Add blank sub-event (B),Добавить подсобытие
+Clear 'Else',Убрать Else
+Clear 'Else If',Убрать Else-If
+Make 'And' block,Преобразовать в блок AND
+Make 'Or' block,Преобразовать в блок OR
+Add 'Else',Сделать Else
+Add 'Else If',Сделать Else-If
+Go to event,Перейти к событию
+Go to event… (Ctrl+G),Перейти к событию… (Ctrl+G)
+Event number,Номер события
+event %d,событие %d
+event %d of %d,событие %d из %d
+line %d,строка %d
+This is a read-only preview - press Edit Events to change the file.,"Это предварительный просмотр только для чтения - нажмите «Редактировать события», чтобы изменить файл."
+Static %s,Статическое %s
+shared by every %s,общее для каждого %s

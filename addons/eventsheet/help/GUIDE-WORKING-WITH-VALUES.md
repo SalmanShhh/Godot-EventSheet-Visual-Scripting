@@ -54,7 +54,7 @@ On Ready
 ```
 
 **In the editor**: Add Condition › **Compare: Types** › **Is Nothing** - the folder where Value Is Of
-Type already lives. The opposite branch is either the shipped **Make Else** or Has Something picked
+Type already lives. The opposite branch is either the shipped **Add 'Else'** or Has Something picked
 directly.
 
 Nothing is spelled as the four empty values a sheet actually meets: **no value at all, empty text, an
@@ -326,7 +326,7 @@ On After Load
 
 **In the editor**: Add Condition › **Variables: Dictionary** › **Data Is Older Than Version**, then
 Add Action › **Variables: Dictionary** › **Rename Field** and **Stamp Data Version**. One older shape
-per branch reads well with the shipped **Make Else-If**.
+per branch reads well with the shipped **Add 'Else If'**.
 
 - **A record with NO version field counts as 0**, so the very first format upgrades too - and so does
   one whose version field is empty, is null, or holds a word rather than a number. That matters,

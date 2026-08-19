@@ -1262,6 +1262,7 @@ func _build_reading_variable_row(variable: LocalVariable, description: String, i
 		{
 			"is_constant": variable.is_constant,
 			"expression_default": variable.expression_default or variable.inferred_type or variable.onready,
+			"is_static": variable.is_static,
 			"source_resource": variable,
 			"row_uid": "variable_reading_%d" % variable.get_instance_id(),
 			"reading": true,
@@ -1800,13 +1801,15 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			maxf(_verb_tint_strength(), VERB_KIND_TINT_ALPHA)
 		)
 		row_data.spans = _build_verb_function_block_spans(event_function, role, display_name)
-		# The header is the whole block: with nothing in the right lane, the input chips get the WHOLE
-		# row instead of being squeezed into the condition track (at a narrow lane split, "y  number"
-		# clipped to "y  numb"). A helper's doc caption does live in the right lane, so that header
-		# keeps the two-lane split.
-		row_data.full_width_lanes = not _has_action_lane_span(row_data.spans)
 		_append_verb_body_rows(row_data, event_function, indent, display_name)
 		row_data.line_count = 1
+		# The name is a trigger cell now, so the body's first step belongs BESIDE it - the way every
+		# other event puts "when this happens" on the left and "do this" on the right. Without the
+		# merge the reading would carry the one empty condition cell in the whole sheet.
+		_merge_first_body_step_into_header(row_data)
+		# With something in the right lane the row is an ordinary two-lane event. Only a header that
+		# ended up with an empty right lane (an empty body) keeps the whole row for its chips.
+		row_data.full_width_lanes = not _has_action_lane_span(row_data.spans)
 		return row_data
 	var spans: Array[SemanticSpan] = [
 		_make_span(EventSheetL10n.translate(role.capitalize()), SemanticSpan.SpanType.KEYWORD, {
@@ -1950,27 +1953,29 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 			"line_index": 0
 		})
 	]
+	# The condition lane answers "when does this run?" on every other event; a function's answer is
+	# "when it is called", so the name reads there as the trigger it is - Functions ▸ On <name>.
 	var name_meta: Dictionary = {
 		"editable": false,
 		"kind": "define_function",
 		"lane": "condition",
 		"line_index": 0,
+		"chip": true,
+		"object_label": EventSheetL10n.translate("Functions"),
 		"text_color": name_color
 	}
 	var plain_name: String = display_name
 	if EventSheetBBCodeLite.has_markup(display_name):
 		plain_name = EventSheetBBCodeLite.strip(display_name)
 		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(display_name, name_color)
-	spans.append(_make_span(plain_name, SemanticSpan.SpanType.OBJECT, name_meta))
-	# The inputs, as an event sheet's own input chips - `enabled  true/false` - INLINE on the header line,
-	# because the header is the whole block: a reader takes in the verb and what it needs in one look.
+	spans.append(_make_span("%s %s" % [EventSheetL10n.translate("On"), plain_name],
+		SemanticSpan.SpanType.OBJECT, name_meta))
+	# The inputs, as an event sheet's own trigger payload chips - the names the call passes in, beside
+	# the trigger that receives them. Their TYPES live in the properties popup, one click away.
 	var chip_texts: PackedStringArray = PackedStringArray()
 	for param: Variant in event_function.params:
 		if param is ACEParam:
-			chip_texts.append("%s  %s" % [
-				friendly_param_label(param as ACEParam),
-				_define_param_type_word(param as ACEParam)
-			])
+			chip_texts.append(friendly_param_label(param as ACEParam))
 	if chip_texts.is_empty():
 		for legacy: String in event_function.parameters:
 			chip_texts.append(str(legacy).replace("_", " ").strip_edges())
@@ -1986,6 +1991,18 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 			"chip": true,
 			"line_index": 0
 		}.merged(chip_style, true)))
+	# The KIND stays a word, quietly, beside the name: a published condition or expression answers a
+	# question rather than doing something, and the tint alone never said which. An action verb says
+	# nothing extra - "do these" is what every other event already means.
+	if event_function.expose_as_ace and role != "action":
+		spans.append(_make_span(EventSheetL10n.translate(role), SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "define_function",
+			"lane": "condition",
+			"line_index": 0,
+			"natural_width": true,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}))
 	if not event_function.expose_as_ace:
 		var doc_line: String = helper_doc_line(event_function)
 		if not doc_line.is_empty():
@@ -2047,6 +2064,40 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 		# fold_nested_verb_rows re-collapses a verb that turns out to sit inside a group or a #region,
 		# where the enclosing block owns the fold.
 		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
+
+
+## Folds the body's FIRST step into the function's own row, so `Functions ▸ On Take Damage` reads with
+## `Player ▸ Subtract amount from hp` beside it instead of above an empty condition cell. Only an INERT
+## first step is folded in: an inert row has already dropped its resource (nothing addresses its
+## actions any more), so moving its drawn spans is purely a reading. A first step that still owns its
+## resource - an editable body, where clicking an action must reach that action - is left where it is,
+## and the function keeps the header form it had. Its own sub-events move up with it, so the branch
+## under the step still hangs off the step.
+func _merge_first_body_step_into_header(row_data: EventRowData) -> void:
+	if row_data.children.is_empty():
+		return
+	var first_step: EventRowData = row_data.children[0]
+	if first_step == null or first_step.row_type != EventRowData.RowType.EVENT:
+		return
+	if first_step.source_resource != null:
+		return  # a live body row: its actions must stay addressable where they are
+	var moved: Array[SemanticSpan] = []
+	for span: SemanticSpan in first_step.spans:
+		if span == null or not (span.metadata is Dictionary):
+			return  # an un-mergeable step: leave the block exactly as it was
+		if str((span.metadata as Dictionary).get("lane", "")) != "action":
+			return  # the step asks a question of its own - it is a row, not this row's right half
+		moved.append(span)
+	if moved.is_empty():
+		return
+	row_data.spans.append_array(moved)
+	row_data.line_count = maxi(row_data.line_count, first_step.line_count)
+	row_data.children.remove_at(0)
+	var reinserted: int = 0
+	for grandchild: EventRowData in first_step.children:
+		_shift_row_indent(grandchild, row_data.indent + 1 - grandchild.indent)
+		row_data.children.insert(reinserted, grandchild)
+		reinserted += 1
 
 
 ## Strips a row and its whole subtree of its editing identity so it renders but is inert - no selection,
@@ -4188,6 +4239,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 			"group": str((variable.attributes as Dictionary).get("group", "")) if variable.exported and variable.attributes is Dictionary else "",
 			"subgroup": str((variable.attributes as Dictionary).get("subgroup", "")) if variable.exported and variable.attributes is Dictionary else "",
 			"expression_default": variable.expression_default or variable.inferred_type or variable.onready,
+			"is_static": variable.is_static,
 			"source_resource": variable,
 			"row_uid": "variable_tree_%d" % variable.get_instance_id()
 		}
@@ -5061,6 +5113,12 @@ func _build_variable_row(
 			reading_type_word = hinted_type_word
 		if is_constant:
 			reading_type_word = EventSheetL10n.translate("constant %s") % reading_type_word
+		# A `static var` belongs to the CLASS, not to an instance: one value that every object of this
+		# type shares. That is a different thing from an instance variable and a reader has to be told
+		# which one they are looking at, so the scope word leads the chip and the row says out loud
+		# who shares it.
+		if bool(options.get("is_static", false)):
+			reading_type_word = EventSheetL10n.translate("Static %s") % reading_type_word
 		row_data.spans = [
 			_make_span(
 				reading_type_word,
@@ -5081,6 +5139,26 @@ func _build_variable_row(
 			_make_span(":", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)),
 			_make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, variable_meta.merged({"editable": false}, true))
 		]
+	# On an authored row the type chip is not there to carry the word, so `static` reads as a badge
+	# beside `const` - the two facts a reader needs about where a variable's value lives.
+	if bool(options.get("is_static", false)) and not reading:
+		row_data.spans.append(
+			_make_span(
+				"static",
+				SemanticSpan.SpanType.KEYWORD,
+				variable_meta.merged(
+					{
+						"editable": false,
+						"badge": true,
+						"badge_style": "const",
+						"badge_natural_width": true,
+						"badge_bg": EventSheetPalette.COLOR_CONST_BADGE_BG,
+						"badge_fg": EventSheetPalette.COLOR_CONST_BADGE_FG
+					},
+					true
+				)
+			)
+		)
 	if is_constant and not reading:
 		row_data.spans.append(
 			_make_span(
@@ -5173,6 +5251,19 @@ func _build_variable_row(
 				variable_meta.merged({"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true)
 			)
 		)
+	# A static variable says who shares it: one value on the CLASS, so every object of this type reads
+	# and writes the same one. Without the note "Static number spawned = 0" looks like an ordinary
+	# variable that happens to wear an extra word.
+	if bool(options.get("is_static", false)):
+		var owner_word: String = _static_owner_word()
+		if not owner_word.is_empty():
+			row_data.spans.append(
+				_make_span(
+					EventSheetL10n.translate("shared by every %s") % owner_word,
+					SemanticSpan.SpanType.COMMENT,
+					variable_meta.merged({"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true)
+				)
+			)
 	# The knob's own sentence, muted, trailing the value - the `##` doc comment the Inspector shows as
 	# its tooltip. A reader of an opened pack should never have to open the .gd to learn what a setting
 	# does. Reading shape only; an authored row keeps the tooltip in the variable dialog.
@@ -5186,6 +5277,24 @@ func _build_variable_row(
 			)
 		)
 	return row_data
+
+
+## What the sheet calls its own object, for the sentence a static variable ends with ("shared by every
+## Player"). The same three fallbacks the Include bar names the script with - the class name its author
+## gave it, else the scene root that carries it, else the file - so the two never disagree. "" when the
+## sheet has no object to name, which is when the note is dropped rather than left half-said.
+func _static_owner_word() -> String:
+	var sheet: EventSheetResource = _viewport._sheet
+	if sheet == null:
+		return ""
+	var object_name: String = sheet.custom_class_name.strip_edges()
+	if object_name.is_empty():
+		var source_path: String = str(sheet.external_source_path)
+		if not source_path.is_empty():
+			object_name = str(scene_using_script(source_path).get("root_name", ""))
+			if object_name.is_empty():
+				object_name = source_path.get_file().get_basename().capitalize()
+	return object_name
 
 
 ## The type word a variable READS with, which is not always the one it declares. `const SPEED := 300.0`

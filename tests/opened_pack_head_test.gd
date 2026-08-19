@@ -100,19 +100,25 @@ static func run() -> bool:
 	var reemitted: String = str(SheetCompiler.compile(sheet, PACK_PATH).get("output", ""))
 	ok = _check("the pack still re-emits byte-identically", reemitted == source, true) and ok
 
-	# ── The Function block header spans the whole row ──
+	# ── A verb reads as a trigger: its name in the condition lane, its first step beside it ──
 	var verb_header: EventRowData = _verb_row(rows, "define_fn_add_look")
-	ok = _check("a verb header reads as ƒ, its name and its inputs",
-		_texts(verb_header), "ƒ | Add Look | x  number | y  number") and ok
-	ok = _check("a header with an empty right lane spans both lanes",
-		verb_header != null and verb_header.full_width_lanes, true) and ok
-	# The chips are laid out against the ROW's right edge now, not the lane divider - at a 1152px
-	# canvas the second input chip used to be clipped to a stub by the condition lane's limit.
+	ok = _check("a verb reads as the trigger it is, with its first step beside it",
+		_texts(verb_header), "ƒ | On Add Look | x | y | Set yaw to wrapf(yaw - x * Mouse Sensitivity, -180, 180) | Set pitch to pitch - y * Mouse Sensitivity kept between Pitch Min and Pitch Max") and ok
+	ok = _check("a verb with a step in its right lane is an ordinary two-lane event",
+		verb_header != null and not verb_header.full_width_lanes, true) and ok
+	# A verb whose first step asks a question of its own keeps that step as a row - only a step that
+	# is pure right-lane content folds up beside the name - and with nothing on the right the chips
+	# still get the whole row rather than being squeezed into the condition track.
+	var guarded_verb: EventRowData = _verb_row(rows, "define_fn_do_jump")
+	ok = _check("a verb whose first step has a condition keeps that step as its own row",
+		_texts(guarded_verb), "ƒ | On Jump") and ok
+	ok = _check("a verb with an empty right lane still spans both lanes",
+		guarded_verb != null and guarded_verb.full_width_lanes, true) and ok
 	var canvas_width: float = 1152.0
 	var style_tokens: EventSheetEventStyle = view.get_event_style()
 	ok = _check("its chips get the whole row's width",
 		ViewportRowMetrics.condition_right_limit(
-			verb_header, canvas_width, view.get_lane_divider_x(canvas_width), float(style_tokens.condition_lane_padding)
+			guarded_verb, canvas_width, view.get_lane_divider_x(canvas_width), float(style_tokens.condition_lane_padding)
 		) > view.get_lane_divider_x(canvas_width), true) and ok
 	# A row that DOES use its right lane keeps the split - the trigger rows say "emits <signal>" there.
 	var trigger_row: EventRowData = triggers_bar.children[0] if triggers_bar != null and not triggers_bar.children.is_empty() else null

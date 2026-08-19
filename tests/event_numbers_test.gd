@@ -58,6 +58,42 @@ static func run() -> bool:
 	all_passed = _check("non-events stamp 0", int(stamped.get(comment, -1)), 0) and all_passed
 	viewport.free()
 
+	# ---- the walk is the MODEL's, so the Doctor names a row the way the margin does ----
+	all_passed = _check("the model walk agrees with the editor's",
+		int(EventSheetResource.event_numbers(sheet.events).get(nested.get_instance_id(), 0)), 3) and all_passed
+
+	# ---- naming the event that OWNS a row (Find results, Doctor findings) ----
+	var owned_action: ACEAction = ACEAction.new()
+	owned_action.provider_id = "Core"
+	owned_action.ace_id = "Destroy"
+	nested.actions.append(owned_action)
+	all_passed = _check("an action is named by the event that owns it",
+		EventSheetViewport.event_number_containing(sheet.events, owned_action), 3) and all_passed
+	all_passed = _check("the event itself is named by its own number",
+		EventSheetViewport.event_number_containing(sheet.events, parent_row), 2) and all_passed
+	all_passed = _check("a resource no event owns is 0",
+		EventSheetViewport.event_number_containing(sheet.events, ACEAction.new()), 0) and all_passed
+
+	# ---- the status bar's address sentence ----
+	var address_row: EventRowData = EventRowData.new()
+	address_row.event_number = 3
+	address_row.line_number = 38
+	all_passed = _check("the status bar says event N of M · line L",
+		EventSheetDock.row_address_text(address_row, sheet), "event 3 of 4 · line 38") and all_passed
+	var no_line_row: EventRowData = EventRowData.new()
+	no_line_row.event_number = 1
+	all_passed = _check("without a line it says only the event",
+		EventSheetDock.row_address_text(no_line_row, sheet), "event 1 of 4") and all_passed
+	all_passed = _check("a row the margin does not number says nothing",
+		EventSheetDock.row_address_text(EventRowData.new(), sheet), "") and all_passed
+
+	# ---- Ctrl+G is listed where the Keyboard Shortcuts dialog reads its fixed keys ----
+	var go_to_event_listed: bool = false
+	for entry: Variant in EventSheetDock.FIXED_KEYS:
+		if (entry as Array)[0] == "Ctrl + G":
+			go_to_event_listed = str((entry as Array)[1]) == "Go to event"
+	all_passed = _check("Ctrl+G is a documented fixed key", go_to_event_listed, true) and all_passed
+
 	return all_passed
 
 

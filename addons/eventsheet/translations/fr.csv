@@ -452,14 +452,9 @@ Add GDScript Action,Ajouter une action GDScript
 Add Match To Actions…,Ajouter un match aux actions…
 Add Pick Filter (For Each)…,Ajouter un filtre de sélection (Pour chaque)…
 Add Sub-Condition,Ajouter une sous-condition
-Add Sub-Event,Ajouter un sous-événement
 Attach To Event Above,Attacher à l'événement au-dessus
-Clear Else,Retirer le Sinon (Else)
-Clear Else-If,Retirer le Sinon-Si (Else-If)
 Close Group,Fermer le groupe
 Comment,Commentaire
-Convert to AND Block,Convertir en bloc ET
-Convert to OR Block,Convertir en bloc OU
 Copy as Text,Copier comme texte
 Cut,Couper
 Delete,Supprimer
@@ -478,8 +473,6 @@ Group,Groupe
 Group Color…,Couleur du groupe…
 Group Selection into New Group,Grouper la sélection dans un nouveau groupe
 Insert,Insérer
-Make Else,Transformer en Sinon (Else)
-Make Else-If,Transformer en Sinon-Si (Else-If)
 More,Plus
 Open / Close Group,Ouvrir / Fermer le groupe
 Open Group,Ouvrir le groupe
@@ -562,8 +555,6 @@ Event Numbers,Numéros d'événement
 Aligned Object Columns,Colonnes d'objet alignées
 Outline…,Plan…
 Outline,Plan
-Go to Event,Aller à l'événement
-Go to Event Number…,Aller au numéro d'événement…
 Bookmarks,Signets
 ◂ Previous,◂ Précédent
 Next ▸,Suivant ▸
@@ -2134,3 +2125,19 @@ Add do step: call {name},Ajouter une étape faire : appeler {name}
 Add undo step: call {name},Ajouter une étape annuler : appeler {name}
 Add do step: keep {object},Ajouter une étape faire : conserver {object}
 in the editor too,aussi dans l'éditeur
+Add blank sub-event (B),Ajouter un sous-événement
+Clear 'Else',Retirer le Sinon (Else)
+Clear 'Else If',Retirer le Sinon-Si (Else-If)
+Make 'And' block,Convertir en bloc ET
+Make 'Or' block,Convertir en bloc OU
+Add 'Else',Transformer en Sinon (Else)
+Add 'Else If',Transformer en Sinon-Si (Else-If)
+Go to event,Aller à l'événement
+Go to event… (Ctrl+G),Aller à l'événement… (Ctrl+G)
+Event number,Numéro d'événement
+event %d,événement %d
+event %d of %d,événement %d sur %d
+line %d,ligne %d
+This is a read-only preview - press Edit Events to change the file.,Ceci est un aperçu en lecture seule - appuyez sur Modifier les événements pour changer le fichier.
+Static %s,Statique %s
+shared by every %s,partagé par chaque %s

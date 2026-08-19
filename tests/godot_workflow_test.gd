@@ -387,7 +387,7 @@ static func run() -> bool:
 	var view_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetViewMenu", true, false) as MenuButton
 	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
 		sheet_menu != null and sheet_menu.get_popup().item_count == 19  # +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…
-		and add_menu != null and add_menu.get_popup().item_count == 6 + 1 + EventSheetBlockRegistry.addable_kinds().size()  # +separator +Code action, then +separator + one item per registered Custom Block kind
+		and add_menu != null and add_menu.get_popup().item_count == 10 + 1 + EventSheetBlockRegistry.addable_kinds().size()  # +separator +the three event-shape commands +separator +Code action, then +separator + one item per registered Custom Block kind
 		and edit_menu != null and edit_menu.get_popup().item_count == 10
 		and view_menu != null and view_menu.get_popup().item_count == 34, true) and all_passed  # +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words, +6: the collapse sweeps (separator + Collapse All + Expand All + Expand To Level 1/2/3)
 
@@ -645,7 +645,7 @@ static func run() -> bool:
 	var event_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("event menu is short and type-specific",
 		event_labels.size() <= 13  # +1: Cut joined Copy/Paste (event-sheet parity)
-		and event_labels.has("Add Sub-Event") and event_labels.has("Convert to OR Block")
+		and event_labels.has("Add blank sub-event (B)") and event_labels.has("Make 'Or' block")
 		and event_labels.has("Cut")
 		and event_labels.has("Insert") and event_labels.has("More") and event_labels.has("Delete")
 		and not event_labels.has("Group Color…") and not event_labels.has("Edit Comment…"), true) and all_passed
@@ -660,7 +660,7 @@ static func run() -> bool:
 	var group_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("group menu shows group items, hides event-only ones",
 		group_labels.has("Group Color…") and group_labels.has("Runtime Toggleable")
-		and not group_labels.has("Convert to OR Block") and not group_labels.has("Edit Comment…"), true) and all_passed
+		and not group_labels.has("Make 'Or' block") and not group_labels.has("Edit Comment…"), true) and all_passed
 	var comment_row: EventRowData = EventRowData.new()
 	comment_row.row_type = EventRowData.RowType.COMMENT
 	menu_editor._context_row = comment_row
@@ -668,7 +668,7 @@ static func run() -> bool:
 	var comment_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("comment menu shows comment items, hides group/event ones",
 		comment_labels.has("Edit Comment…") and comment_labels.has("Attach To Event Above")
-		and not comment_labels.has("Group Color…") and not comment_labels.has("Add Sub-Event"), true) and all_passed
+		and not comment_labels.has("Group Color…") and not comment_labels.has("Add blank sub-event (B)"), true) and all_passed
 	# The advanced/event-only authoring lives in More, not at the top.
 	menu_editor._context_row = event_row
 	menu_editor._build_row_more_submenu(true)

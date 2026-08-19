@@ -122,6 +122,8 @@ var _title_tab_label: Label = null
 var _title_path_label: Label = null
 var _title_dirty_dot: Label = null
 var _status_label: Label = null
+## The status bar's right half: "event 4 of 61 · line 38" for the selected row.
+var _row_address_label: Label = null
 var _theme_picker: OptionButton = null
 var _provider_dialog: Window = null
 var _provider_list: ItemList = null
@@ -1971,13 +1973,13 @@ func _open_go_to_event_dialog() -> void:
 		_set_status("Open a sheet first.", true)
 		return
 	var dialog: AcceptDialog = AcceptDialog.new()
-	dialog.title = "Go to Event"
+	dialog.title = "Go to event"
 	dialog.ok_button_text = "Go"
 	var number_edit: SpinBox = SpinBox.new()
 	number_edit.min_value = 1
 	number_edit.max_value = 99999
 	number_edit.value = 1
-	dialog.add_child(EventSheetPopupUI.titled_card("Event number", EventSheetPopupUI.form_row("Go to", number_edit)))
+	dialog.add_child(EventSheetPopupUI.titled_card("Event number", EventSheetPopupUI.form_row("Go to event", number_edit)))
 	dialog.confirmed.connect(func() -> void:
 		var target: EventRow = EventSheetViewport.event_by_number(_current_sheet.events, int(number_edit.value))
 		if target == null:
@@ -2928,6 +2930,7 @@ const FIXED_KEYS: Array = [
 	["Ctrl + F", "Find & Replace"],
 	["F3 / Shift+F3", "Find next / previous"],
 	["Ctrl + P", "Command Palette"],
+	["Ctrl + G", "Go to event"],
 	["F9 / Ctrl+B", "Toggle breakpoint"],
 	["Ctrl + M", "Toggle bookmark"],
 	["Ctrl + +  /  Ctrl + -", "Zoom in / out"],
@@ -4430,6 +4433,25 @@ func _on_add_blank_subevent_key() -> void:
 	_insert_child_event_for_context_row()
 
 
+## Add ▸ Make 'Or' block: the right-click command, driven from the SELECTION rather than a
+## right-clicked row, so the Add menu and the row menu do the same thing in the same words.
+## On an opened .gd this rewrites the event's joined condition (`a and b` <-> `a or b`) and
+## nothing else in the file - the mode is what the emitter joins the conditions with.
+func _make_or_block_from_selection() -> void:
+	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
+		_set_status("Select an event first - an 'Or' block joins that event's conditions.", true)
+		return
+	_toggle_context_condition_block()
+
+
+## Add ▸ Add 'Else': the same command as the row menu's, driven from the selection.
+func _make_else_from_selection() -> void:
+	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
+		_set_status("Select an event first - 'Else' runs when the event above it did not.", true)
+		return
+	_set_context_else_mode(EventRow.ElseMode.ELSE)
+
+
 ## S - add a picker-backed sub-event under the selected event (the event-sheet add-sub-event key).
 func _on_add_sub_condition_key() -> void:
 	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
@@ -4549,6 +4571,7 @@ func _open_template_menu() -> void:  # New-Sheet shortcut (id 0) + command palet
 
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
+	_update_row_address_status()
 	_refresh_variable_panel()
 	_update_code_panel_highlight()
 	_follow_selection_in_manual()
@@ -4735,6 +4758,32 @@ func _set_status(text: String, is_error: bool = false) -> void:
 		_status_fade_tween = create_tween()
 		_status_fade_tween.tween_interval(6.0)
 		_status_fade_tween.tween_property(_status_label, "modulate:a", 0.45, 1.5)
+
+
+## The right-hand half of the status bar: where the selected row sits, said the way an event
+## sheet says it - "event 4 of 61 · line 38". The number is the sheet's own margin number
+## (stable through folds and filters), the count is how many events the sheet has, and the line
+## is the file line the row came from (omitted on a sheet that has no file behind it). A row
+## that is not an event (a comment, a group bar, a variable) keeps the last event's address
+## empty rather than inventing one, so the bar never names a row the margin does not number.
+func _update_row_address_status() -> void:
+	if _row_address_label == null:
+		return
+	_row_address_label.text = row_address_text(
+		_viewport.get_selected_row_data() if _viewport != null else null,
+		_current_sheet)
+	_row_address_label.tooltip_text = _row_address_label.text
+
+
+## The status bar's address sentence for one row, as a pure function so tests can pin the words.
+static func row_address_text(row_data: EventRowData, sheet: EventSheetResource) -> String:
+	if row_data == null or sheet == null or row_data.event_number <= 0:
+		return ""
+	var total: int = EventSheetViewport.event_numbers_for(sheet.events).size()
+	var text: String = EventSheetL10n.translate("event %d of %d") % [row_data.event_number, total]
+	if row_data.line_number > 0:
+		text += " · " + EventSheetL10n.translate("line %d") % row_data.line_number
+	return text
 
 
 func _refresh_title_strip() -> void:
