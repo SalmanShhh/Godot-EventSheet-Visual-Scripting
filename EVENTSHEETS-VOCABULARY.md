@@ -2878,6 +2878,32 @@ Drawing (2D immediate-mode canvas, on any node).
 #### Expressions
 - **Canvas Texture** (`node: Node`) - A node's LIVE canvas texture - assign it to a TextureRect, a material, a particle, or a 3D Decal. Updates as the canvas draws.
 
+### Editor Object (`res://addons/eventforge/registration/modules/editor_object_aces.gd`)
+the Editor object (plugin lifecycle, docks, menu items, object types).
+
+#### Triggers
+- **On Plugin Enabled** - Runs when the plugin is switched on - at editor start, or the moment you tick it in Project Settings. This is where a plugin hangs its dock, adds its Tools menu item and teaches the editor its object types.
+- **On Plugin Disabled** - Runs when the plugin is switched off or the editor closes. Undo here everything On plugin enabled did, or the editor keeps a dock nobody owns.
+- **On Object Selected** - Runs when the user selects an object this plugin handles. The selected object arrives as `object`.
+- **On Draw Over 2D Viewport** - The editor's 2D overlay pass. Draw handles, guides or labels on top of the scene with the Drawing actions - the surface arrives as `overlay`.
+- **On 2D Viewport Input** - Input that lands in the editor's 2D viewport, before the viewport itself sees it. End the event with Stop This Input Here to keep the viewport from also acting on it.
+- **On Draw Gizmo** - A gizmo's own paint pass - what an EditorNode3DGizmo redraws when its node moves or changes.
+
+#### Actions
+- **Add Tools Menu Item** (`title: String, handler: Callable`) - Adds an item to the editor's Project > Tools menu. Remove it again on plugin disabled or the menu keeps a dead entry.
+- **Remove Tools Menu Item** (`title: String`) - Takes the plugin's item back out of Project > Tools.
+- **Add Dock** (`control: Control, slot: int`) - Hangs a Control in one of the editor's dock slots. Remove it on plugin disabled - a dock left behind survives the plugin.
+- **Remove Dock** (`control: Control`) - Takes a dock back out of the editor.
+- **Add Object Type** (`type_name: String, base: String, script: Script, icon: Texture2D`) - Teaches the editor a new object type, so it shows up in Create Node like a built-in one.
+- **Remove Object Type** (`type_name: String`) - Takes a custom object type back out of the Create Node dialog.
+- **Add Inspector Plugin** (`plugin: EditorInspectorPlugin`) - Registers a custom Inspector drawer, so your own fields appear in the Inspector.
+- **Remove Inspector Plugin** (`plugin: EditorInspectorPlugin`) - Takes a custom Inspector drawer back out.
+- **Redraw Viewport Overlays** - Asks the editor to run the overlay pass again, so On draw over 2D viewport repaints.
+
+#### Expressions
+- **Editor Settings** - The editor's own settings object - read a user's grid step, theme or font size from it.
+- **Undo History** - The editor's undo / redo history. Put it in a local object variable and add do / undo steps to it, so Ctrl+Z reverses what your tool changed.
+
 ### File (`res://addons/eventforge/registration/modules/file_aces.gd`)
 File management (read / write / JSON, plus directory + file operations).
 
