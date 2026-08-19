@@ -5885,3 +5885,146 @@ func _open_workspace_paths(name: String, paths: PackedStringArray) -> void:
 	_refresh_tab_bar()
 	_persist_session()
 	_set_status(EventSheetL10n.translate("Workspace %s: %d sheet(s).") % [name, opened])
+
+
+# ── V16. Export the sheet as a picture (appended block - keep together) ───────────────────────
+# Sheet ▸ Export ▸ Image (PNG) / PDF / Markdown with figures. The picture is the CANVAS, captured
+# as it is being read - current theme, density, arrangement, lenses, event numbers - so an exported
+# sheet and the sheet on screen can never be two different readings of the same file. The canvas is
+# virtualized (it only ever draws what is on screen), so the whole sheet is captured a screenful at
+# a time and stitched; everything that follows from that picture - the page split, the PDF, the
+# Markdown - is arithmetic and lives in EventSheetSheetExport.
+
+var _export_picture_dialog: EditorFileDialog = null
+var _export_picture_kind: String = "png"
+
+
+## Opens the save dialog for one export kind ("png", "pdf" or "md").
+func export_sheet_picture_requested(kind: String) -> void:
+	if _active_view() == null:
+		_set_status(EventSheetL10n.translate("Open a sheet first."), true)
+		return
+	_export_picture_kind = kind
+	if _export_picture_dialog == null:
+		_export_picture_dialog = EditorFileDialog.new()
+		_export_picture_dialog.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
+		_export_picture_dialog.access = EditorFileDialog.ACCESS_FILESYSTEM
+		_export_picture_dialog.file_selected.connect(_on_export_picture_path_chosen)
+		add_child(_export_picture_dialog)
+		EventSheetL10n.apply_to(_export_picture_dialog)
+	match kind:
+		"pdf":
+			_export_picture_dialog.filters = PackedStringArray(["*.pdf ; PDF"])
+			_export_picture_dialog.title = "Export the sheet as a PDF"
+		"md":
+			_export_picture_dialog.filters = PackedStringArray(["*.md ; Markdown"])
+			_export_picture_dialog.title = "Export the sheet as Markdown with figures"
+		_:
+			_export_picture_dialog.filters = PackedStringArray(["*.png ; PNG image"])
+			_export_picture_dialog.title = "Export the sheet as an image"
+	_export_picture_dialog.current_file = "%s.%s" % [_sheet_io._exported_script_basename(), kind]
+	_export_picture_dialog.popup_centered_ratio(0.6)
+
+
+func _on_export_picture_path_chosen(path: String) -> void:
+	_write_sheet_picture(path, _export_picture_kind)
+
+
+## Captures the sheet and writes it in the asked-for shape. A capture that could not happen (a
+## headless build, no window to draw in) says so rather than writing an empty file.
+func _write_sheet_picture(path: String, kind: String) -> void:
+	_set_status(EventSheetL10n.translate("Rendering the sheet…"))
+	var picture: Image = await capture_sheet_picture()
+	if picture == null:
+		_set_status(EventSheetL10n.translate("The sheet could not be rendered here."), true)
+		return
+	match kind:
+		"pdf":
+			var pages: Array = EventSheetSheetExport.split_pages(picture)
+			var bytes: PackedByteArray = EventSheetSheetExport.pdf_bytes(pages)
+			var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+			if file == null:
+				_set_status(EventSheetL10n.translate("Could not write %s.") % path, true)
+				return
+			file.store_buffer(bytes)
+			file.close()
+			_set_status(EventSheetL10n.translate("Exported %d page(s) to %s.") % [pages.size(), path])
+		"md":
+			var figures: Array = _write_sheet_figures(path, picture)
+			var text: String = EventSheetSheetExport.markdown_with_figures(
+				_active_view().get_row_tree(), _sheet_io._exported_script_basename(), figures)
+			var document: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+			if document == null:
+				_set_status(EventSheetL10n.translate("Could not write %s.") % path, true)
+				return
+			document.store_string(text)
+			document.close()
+			_set_status(EventSheetL10n.translate("Exported %s with %d figure(s).") % [path, figures.size()])
+		_:
+			if picture.save_png(path) != OK:
+				_set_status(EventSheetL10n.translate("Could not write %s.") % path, true)
+				return
+			_set_status(EventSheetL10n.translate("Exported the sheet to %s.") % path)
+
+
+## One figure per group, cropped out of the whole-sheet picture and written beside the document.
+## A sheet with no groups gets one figure of the whole thing, which is the honest answer to "a
+## figure per group" when the sheet IS one group.
+func _write_sheet_figures(document_path: String, picture: Image) -> Array:
+	var figures: Array = []
+	var view: EventSheetViewport = _active_view()
+	var bands: Array = view.group_row_bands() if view.has_method("group_row_bands") else []
+	if bands.is_empty():
+		bands = [{"title": _sheet_io._exported_script_basename(), "from": 0, "to": picture.get_height()}]
+	var folder: String = document_path.get_base_dir()
+	for band_index: int in bands.size():
+		var band: Dictionary = bands[band_index]
+		var from_y: int = clampi(int(band.get("from", 0)), 0, picture.get_height())
+		var to_y: int = clampi(int(band.get("to", 0)), from_y, picture.get_height())
+		if to_y - from_y <= 0:
+			continue
+		var title: String = str(band.get("title", ""))
+		var file_name: String = EventSheetSheetExport.figure_file_name(document_path, title, band_index)
+		var figure: Image = picture.get_region(Rect2i(0, from_y, picture.get_width(), to_y - from_y))
+		if figure.save_png("%s/%s" % [folder, file_name]) == OK:
+			figures.append({"title": title, "path": file_name})
+	return figures
+
+
+## The whole sheet as one tall picture: the canvas captured a screenful at a time and stitched,
+## because a virtualized canvas only ever draws what is on screen. Null when there is no window to
+## draw in (a headless build).
+func capture_sheet_picture() -> Image:
+	var view: EventSheetViewport = _active_view()
+	if view == null or DisplayServer.get_name() == "headless":
+		return null
+	var scroll: ScrollContainer = view._get_scroll_container()
+	var window: Viewport = get_viewport()
+	if scroll == null or window == null:
+		return null
+	var band: Rect2i = Rect2i(scroll.get_global_rect())
+	var total_height: int = maxi(int(scroll.get_v_scroll_bar().max_value), band.size.y)
+	if band.size.x <= 0 or band.size.y <= 0:
+		return null
+	var stitched: Image = Image.create_empty(band.size.x, total_height, false, Image.FORMAT_RGBA8)
+	var restore_to: int = scroll.scroll_vertical
+	var cursor: int = 0
+	while cursor < total_height:
+		scroll.scroll_vertical = cursor
+		await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		var screen: Image = window.get_texture().get_image()
+		var visible: Rect2i = band.intersection(Rect2i(Vector2i.ZERO, screen.get_size()))
+		if visible.size.x <= 0 or visible.size.y <= 0:
+			break
+		# The last band overlaps the one before it (the scroll simply stops), so only the part that
+		# has not been stitched yet is copied.
+		var taken: int = mini(visible.size.y, total_height - cursor)
+		var actual: int = scroll.scroll_vertical
+		stitched.blit_rect(screen,
+			Rect2i(visible.position, Vector2i(visible.size.x, taken)), Vector2i(0, actual))
+		if actual < cursor:
+			break
+		cursor = actual + taken
+	scroll.scroll_vertical = restore_to
+	return stitched

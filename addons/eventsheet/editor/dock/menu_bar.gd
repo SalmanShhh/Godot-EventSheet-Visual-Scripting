@@ -609,6 +609,25 @@ func build(root: Node) -> void:
 			_dock.delete_saved_view(names[id - 500])
 		elif id >= 100 and id - 100 < names.size():
 			_dock.apply_saved_view(names[id - 100]))
+	# ── V16: Sheet ▸ Export (appended block - keep together) ───────────────────────────────────
+	# The sheet as a picture, for a forum post, a design doc or a lesson: the canvas exactly as it is
+	# being read. Id 9811 is clear of the Sheet menu's own run; the submenu's ids are its own.
+	var export_menu: PopupMenu = PopupMenu.new()
+	export_menu.name = "EventSheetExportMenu"
+	sheet_popup.add_child(export_menu)
+	sheet_popup.add_submenu_item("Export", "EventSheetExportMenu", 9811)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9811),
+		"The whole sheet as a picture - the current theme, density, arrangement and lenses, with the event numbers on. PDF is that picture split into pages; Markdown is the plain listing with a figure per group.")
+	export_menu.add_item(EventSheetL10n.translate("Image (PNG)…"), 0)
+	export_menu.add_item(EventSheetL10n.translate("PDF…"), 1)
+	export_menu.add_item(EventSheetL10n.translate("Markdown with figures…"), 2)
+	export_menu.id_pressed.connect(func(id: int) -> void:
+		if id == 0:
+			_dock.export_sheet_picture_requested("png")
+		elif id == 1:
+			_dock.export_sheet_picture_requested("pdf")
+		elif id == 2:
+			_dock.export_sheet_picture_requested("md"))
 	# ── V15: Sheet ▸ Workspaces (appended block - keep together) ───────────────────────────────
 	# A scene's sheets, opened together and remembered under the scene's name. Rebuilt on open so a
 	# workspace made a second ago is already listed. Id 9810 is clear of the Sheet menu's own run.

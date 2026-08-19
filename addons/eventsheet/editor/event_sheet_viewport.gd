@@ -1551,6 +1551,30 @@ var _lens_hidden_count: int = 0
 var arrangement_mode: int = 0
 
 
+## V16 - where each top-level group (a real one, or an Arrange-by header) starts and ends on the
+## canvas: `[{"title": String, "from": int, "to": int}]` in canvas pixels, top to bottom. What "a
+## figure per group" means when a sheet is exported as Markdown. Empty when the sheet has no groups
+## at all, which is the caller's cue that the sheet IS one figure.
+func group_row_bands() -> Array:
+	var bands: Array = []
+	for row_index: int in _flat_rows.size():
+		var row_data: EventRowData = (_flat_rows[row_index] as Dictionary).get("row")
+		if row_data == null or row_data.indent != 0 or row_data.row_type != EventRowData.RowType.GROUP:
+			continue
+		var title: String = ""
+		if row_data.source_resource is EventGroup:
+			title = _group_name(row_data.source_resource as EventGroup)
+		else:
+			title = ViewportGroupBreadcrumb.header_title_of(row_data)
+		if title.is_empty():
+			continue
+		if not bands.is_empty():
+			(bands[bands.size() - 1] as Dictionary)["to"] = int(_row_metrics_helper.row_top(row_index))
+		bands.append({"title": title, "from": int(_row_metrics_helper.row_top(row_index)),
+			"to": int(_row_metrics_helper.total_height())})
+	return bands
+
+
 ## Re-reads the sheet under `mode` (an EventSheetArrangement mode). Display only: the sheet, the
 ## emitted GDScript and the byte round-trip are untouched, and the events keep their numbers.
 func set_arrangement_mode(mode: int) -> void:
