@@ -118,8 +118,17 @@ static func run() -> bool:
 	# ── Open as Event Sheet eligibility ───────────────────────────────────────────
 	all_passed = _check("sheet .tres files are openable",
 		EventSheetWorkflow.is_openable_as_sheet("res://tests/fixtures/compiler_golden_sheet.tres"), true) and all_passed
-	all_passed = _check("non-sheet .tres files are not",
-		EventSheetWorkflow.is_openable_as_sheet("res://demo/themes/dracula_theme.tres"), false) and all_passed
+	# V4 re-pin. A .tres that is not a SHEET may still be a DATA ASSET, and a data asset now opens
+	# as a table - one row per exported field, editable in place. A theme is exactly that, so what
+	# used to be the "not a sheet" case is now the "opens as a table" case. The refusal it was
+	# guarding is pinned below on a .tres that carries no script at all, which is the only .tres
+	# there is nothing to draw a table from.
+	all_passed = _check("a non-sheet .tres that is a data asset opens as a table",
+		EventSheetWorkflow.is_openable_as_sheet("res://demo/themes/dracula_theme.tres"), true) and all_passed
+	var plain_resource_path: String = "user://eventforge_plain_resource.tres"
+	ResourceSaver.save(Resource.new(), plain_resource_path)
+	all_passed = _check("a .tres with no fields of its own is not openable",
+		EventSheetWorkflow.is_openable_as_sheet(plain_resource_path), false) and all_passed
 	all_passed = _check("any .gd opens (GDScript-backed sheets)",
 		EventSheetWorkflow.is_openable_as_sheet("res://addons/eventforge/plugin.gd"), true) and all_passed
 	all_passed = _check("other extensions are not sheets",

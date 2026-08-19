@@ -242,11 +242,20 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 	var leaf_name: String = declared_class
 	if leaf_name.is_empty() and sheet != null and not str(sheet.external_source_path).is_empty():
 		leaf_name = str(sheet.external_source_path).get_file().get_basename()
+	# ── V4 ──────────────────────────────────────────────────────────────────────────────────────
+	# A script that extends a Resource is not an object in the scene: it is a DATA TYPE, and every
+	# .tres saved from it is one asset of that type. "Node ▸ Resource ▸" is the wrong ladder to walk
+	# a reader up (a data asset is not a node), so the bar says the two words instead and names the
+	# type the way a designer would say it out loud rather than in the identifier's own spelling.
+	var data_type: bool = EventSheetScriptIntent.is_resource_host(extends_target)
+	if data_type and not leaf_name.is_empty():
+		leaf_name = leaf_name.capitalize()
 	var crumbs: PackedStringArray = PackedStringArray()
-	if not extends_target.is_empty() and extends_target != "Node" and not extends_target.begins_with("\""):
-		crumbs.append("Node")
-	if not extends_target.is_empty():
-		crumbs.append(extends_target)
+	if not data_type:
+		if not extends_target.is_empty() and extends_target != "Node" and not extends_target.begins_with("\""):
+			crumbs.append("Node")
+		if not extends_target.is_empty():
+			crumbs.append(extends_target)
 	var crumb_prefix: String = " ▸ ".join(crumbs)
 	var badge_meta: Dictionary = {
 		"editable": false,
@@ -278,6 +287,9 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 			spans.append(_make_span(crumb_text, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffolding_strip", "text_color": _viewport._get_reading_style().muted_text_color}))
 		if not leaf_name.is_empty():
 			spans.append(_make_span(leaf_name, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffolding_strip", "text_color": _viewport._get_reading_style().primary_text_color}))
+	# V4 - the two words that say what this file is, in the chip slot the class ladder vacated.
+	if data_type:
+		spans.append(_pack_include_chip(EventSheetL10n.translate("data type")))
 	# R33 - a tool sheet's own buttons ride the identity strip too. This is the bar an opened editor
 	# script actually gets (the pack Include bar is for a pack), and a Run now that is not where the
 	# tool is written is a Run now nobody finds.

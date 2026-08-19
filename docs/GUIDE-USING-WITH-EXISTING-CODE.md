@@ -856,6 +856,10 @@ off one says whose it is (`stats.hp` is **stats's hp**), and `ResourceSaver.save
 Asset** and **Save Data Asset** in the picker's Files folder. A `.tres` also opens as a table sheet,
 and a folder of them as one grid - see the Custom Resources guide.
 
+![A Resource script's head: the identity bar reading "Enemy Stats Preview" with a "data type" chip instead of the Node class ladder, over its three exported fields](images/data-type-include-bar.png)
+
+![An opened script's data-asset rows: Set s to the data asset slime.tres, and Save data asset stats as slime.tres](images/data-asset-reading.png)
+
 The window is an object too, so the lines that drive it wear its name:
 
 | the GDScript | reads as |
@@ -873,6 +877,8 @@ The window is an object too, so the lines that drive it wear its name:
 Every one of these has a row that writes the same line: the **Game Window** folder in the picker
 holds the window verbs plus **Set Anti-aliasing**, **Save Image As**, **Screenshot** and **Rendered
 As An Image**. A sheet-authored options screen and a hand-written one are the same file.
+
+![An opened script's window rows: Window Set size to 1280 x 720, Set title, Set vsync on, then System Set max FPS and Set anti-aliasing, and a screenshot function below](images/window-render-reading.png)
 
 #### The reading lenses - names you can turn on and off
 
