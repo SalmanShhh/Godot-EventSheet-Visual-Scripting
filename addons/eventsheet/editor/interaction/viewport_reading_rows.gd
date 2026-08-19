@@ -1017,7 +1017,7 @@ static func leading_identifier(text: String) -> String:
 ##
 ## Derived, never a maintained table: packs are compiler output, and a new one appears by being
 ## dropped in a folder. Only each file's HEAD is read (class_name and the annotations all sit above
-## the first member), and the index is cached on the scanner's own file listing.
+## the first member).
 ##
 ## Held for the session and dropped when the filesystem changes, like the object and signal caches
 ## beside it. It USED to re-ask the scanner on every call, and the scanner re-stats every pack folder
