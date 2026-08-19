@@ -223,8 +223,11 @@ func _on_confirmed() -> void:
 		return
 	var target: Dictionary = _target_picker.get_item_metadata(_target_picker.selected)
 	if target.is_empty():
-		_dock._set_status("Create a global sheet first: New Sheet ▸ Autoload, then add the global to it.", true)
-		return
+		# "New global sheet…". The project has no autoload to write into yet (or the reader wants a
+		# second one), so make it here rather than sending them away to make it and come back.
+		target = _create_global_sheet(variable_name)
+		if target.is_empty():
+			return
 	var type_name: String = str(_type_picker.get_item_metadata(_type_picker.selected))
 	var value: Variant = VariableDialog._parse_default(type_name, _value_edit.text)
 	var path: String = str(target.get("path", ""))
@@ -242,6 +245,55 @@ func _on_confirmed() -> void:
 		_dock._mark_dirty("Added global variable %s to %s." % [variable_name, str(target.get("name", ""))])
 	else:
 		_dock._set_status("%s already declares %s." % [str(target.get("name", "")), variable_name], true)
+
+
+## Creates a fresh autoload sheet and registers it in the project's [autoload] list, returning the
+## {name, path} entry the rest of the confirm path expects (or {} when it could not be made).
+##
+## Nothing new is invented here: it builds the sheet the Autoload starter builds, saves it where a
+## Godot project keeps its globals, and registers it through the SAME _register_autoload_entry() the
+## Tools ▸ Register Autoload menu item uses - so a sheet made this way is indistinguishable from one
+## made by hand, and the autoload stays the single truth about where a global lives.
+##
+## The name is chosen rather than asked for, because the dialog's question is "what global do you
+## want", not "what shall the file be called" - and a second one lands as Globals2, Globals3, so the
+## gesture never fails on a name that is taken. Rename it later like any other sheet.
+func _create_global_sheet(for_variable: String) -> Dictionary:
+	var autoload_name: String = _fresh_global_name()
+	var path: String = "res://%s.gd" % autoload_name.to_snake_case()
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.autoload_mode = true
+	sheet.autoload_name = autoload_name
+	sheet.host_class = "Node"
+	sheet.custom_class_name = autoload_name
+	sheet.class_description = "Project-wide values every sheet can read and write by name."
+	sheet.external_source_path = path
+	var problem: String = _dock._register_autoload_entry(sheet, path)
+	if not problem.is_empty():
+		_dock._set_status(problem, true)
+		return {}
+	# The reading caches which names are autoloads; a global added a moment ago has to read as one.
+	EventSheetSentence.clear_autoload_cache()
+	if Engine.is_editor_hint():
+		EditorInterface.get_resource_filesystem().scan()
+	_dock._set_status("Made %s and registered it as an autoload - %s will live there." % [path.get_file(), for_variable])
+	return {"name": autoload_name, "path": path}
+
+
+## The first `Globals`, `Globals2`, `Globals3`… that is neither a registered autoload nor a file on
+## disk, so the gesture never fails on a name somebody already used.
+func _fresh_global_name() -> String:
+	var taken: Dictionary = {}
+	for entry: Dictionary in autoload_sheets():
+		taken[str(entry.get("name", ""))] = true
+	var attempt: int = 1
+	while attempt < 100:
+		var candidate: String = "Globals" if attempt == 1 else "Globals%d" % attempt
+		if not taken.has(candidate) and not ProjectSettings.has_setting("autoload/%s" % candidate) \
+				and not FileAccess.file_exists("res://%s.gd" % candidate.to_snake_case()):
+			return candidate
+		attempt += 1
+	return "Globals"
 
 
 ## Appends the global to the autoload sheet as an ordinary member variable - the same LocalVariable

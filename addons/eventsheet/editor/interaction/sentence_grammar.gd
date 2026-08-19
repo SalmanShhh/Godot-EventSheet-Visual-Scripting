@@ -3448,8 +3448,55 @@ static func _split_object(target: String, context: Dictionary) -> Array:
 	var object_name: String = head
 	if object_name == "self":
 		object_name = script_object(context)
+	# R40. Under Familiar Words a GLOBAL drops its autoload's name: `System ▸ Set Score to 10`, not
+	# `Game ▸ Set Score to 10`. In the sheet a global is just a value the whole project shares, and
+	# System is the object the sheet already files shared things under; which autoload happens to hold
+	# it is a Godot fact, not a reading. With Familiar Words off it stays `Game ▸ …`, because that is
+	# the honest spelling of what the line actually says.
+	var familiar_global: String = familiar_global_object(object_name, context)
+	if not familiar_global.is_empty():
+		return [familiar_global, _member_word(text.substr(dot_at + 1))]
 	# M47. `$Enemies/Boss` is the object `Boss` - the name a reader sees in the scene tree.
 	return [object_of_reference(object_name), _member_word(text.substr(dot_at + 1))]
+
+
+## R40. OBJECT_SYSTEM when `object_name` is one of the project's autoloads AND Familiar Words is on,
+## "" otherwise - the one question the prefix-free global reading asks, kept in its own function so
+## the rule is in a single place and reads as one sentence.
+##
+## The autoload list is cached because this is asked once per row of every sheet, and ProjectSettings
+## does not change on its own; the editor clears the cache (clear_autoload_cache) when it registers a
+## new one, which is the only moment inside a session that it can go stale.
+static func familiar_global_object(object_name: String, context: Dictionary) -> String:
+	if not bool(context.get("familiar_words", false)):
+		return ""
+	return OBJECT_SYSTEM if _autoload_names().has(object_name) else ""
+
+
+## Forgets the cached autoload list. Called when the editor registers a new autoload, so a global
+## added a moment ago reads as a global straight away.
+static func clear_autoload_cache() -> void:
+	_cached_autoload_names = {}
+	_autoload_cache_filled = false
+
+
+static var _cached_autoload_names: Dictionary = {}
+static var _autoload_cache_filled: bool = false
+
+
+static func _autoload_names() -> Dictionary:
+	if _autoload_cache_filled:
+		return _cached_autoload_names
+	_autoload_cache_filled = true
+	_cached_autoload_names = {}
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var setting: String = str(property_info.get("name", ""))
+		if not setting.begins_with("autoload/"):
+			continue
+		var singleton: String = setting.trim_prefix("autoload/").strip_edges()
+		if not singleton.is_empty():
+			_cached_autoload_names[singleton] = true
+	return _cached_autoload_names
 
 
 ## M43. The event-sheet word for a member of ANOTHER object - only the renamed ones. The axis rule

@@ -57,6 +57,51 @@
   `Tween {property} to {value} in {duration} seconds`, the same words the typed line reads.
 - Display only: the file keeps every line it had, and nothing here is emitted.
 
+### Added - packs say what they add to the editor
+
+- **A pack's Anatomy rail gains an EDITOR TOOLS section.** `Tools menu ▸ Snap Selection`, `dock:
+  Waypoints`, `object type: Waypoint` - what this pack adds to the editor itself, beside what it adds
+  to your game. The same list gives a pack's Include bar its `adds 1 Tools menu item, 1 dock` line
+  and the picker's pack card its own. It is **derived**, not declared: there is no manifest to keep
+  in step, and a pack that stops hanging a dock stops claiming one the moment it is rebuilt. Packs
+  that add nothing to the editor - nearly all of them - say nothing.
+- **Manual ▸ Tutorials ▸ "Make an editor tool with an event sheet".** Six steps from Sheet Type to
+  Run now, ending on turning the same sheet into a plugin. The Editor object's reference page already
+  derives in the fixed shape; it is now pinned rather than assumed.
+
+### Added - Find all references sees the whole project, and lands on the row
+
+- **The `.gd` sheets nobody has opened are searched too.** Find all references only ever walked
+  `.tres` files, but `.gd` is the default sheet format - so a project-wide search answered "3 sheets"
+  where the truth was thirty, and a rename built on it would have missed most of its uses. It now
+  sweeps the project's own `.gd` files in two passes: a text scan that never loads a file drops
+  everything without the symbol as a whole word, and only the survivors are read.
+- **A result in another sheet lands on the exact row.** It could not before: opening a sheet builds a
+  brand new resource tree, so the row the search found and the row in the opened tab were different
+  objects and the jump quietly stopped at the top of the file. Each result now carries the line its
+  row emits at, which survives the jump because an opened file re-emits byte-identically.
+
+### Added - the Properties bar edits parameters the way the dialog does
+
+- **Colours, dropdowns, node pickers and input actions edit in place.** Every per-hint widget was
+  reachable from exactly one place, the Edit Parameter dialog - so the Properties bar showed the same
+  parameters of the same row through one untyped text box, and setting a colour there meant typing
+  `Color("#ff9b3c")` by hand. Both now build their fields through one shared factory, so a value set
+  in the bar is the same literal the dialog would have written, in one undo step. The dialog is
+  unchanged and stays for anyone who prefers it.
+
+### Added - a global sheet you can make from the dialog that needs it
+
+- **"New global sheet…" now makes one.** Picking it in Add ▸ Global Variable… used to say "create a
+  global sheet first" and stop; it now creates the autoload sheet, registers it in the project's
+  autoloads through the same path Tools ▸ Register Autoload uses, and writes your global into it. The
+  autoload stays the single truth about where a global lives - nothing new is invented.
+- **Under Familiar Words a global reads without its autoload's name:** `System ▸ Set Score to 10`
+  rather than `Game ▸ Set Score to 10`. In the sheet a global is simply a value the whole project
+  shares, and System is where the sheet already files shared things; which autoload holds it is a
+  Godot fact, not a reading. With Familiar Words off it stays `Game ▸ …`, the honest spelling of what
+  the line says.
+
 ### Added - the rest of the editor-tool family, and a Run button where you write the tool
 
 - **Sheet Type… ▸ Editor Plugin / Import Tool / Export Hook.** The dialog already knew *Editor
