@@ -203,6 +203,9 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Movement": "Path2D",
 	# S10. Nothing derivable: "Multiplayer" is not a class, and the messages a peer sends are the
 	# nearest thing the editor draws to what these rows are about.
+	# T12. The Browser is not a class, so nothing derives it: the rows there leave the game (a link, the
+	# clipboard, the window mode), and the editor's own "this opens somewhere else" mark says that.
+	"Browser": "ExternalLink",
 	"Multiplayer": "Signals",
 	"Nodes": "Node",
 	"Overlap 2D": "Area2D",
