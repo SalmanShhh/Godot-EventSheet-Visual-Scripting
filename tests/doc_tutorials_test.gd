@@ -224,13 +224,13 @@ static func _test_reference_shape() -> bool:
 	}
 	all_passed = _check("a page with blurbs draws four columns",
 		" ".join(EventSheetDocReference.table_columns(grouped)),
-		"Mark Verb Parameters What it does") and all_passed
+		"Mark Name Parameters What it does") and all_passed
 	all_passed = _check("and its property table names its own two middle columns",
 		" ".join(EventSheetDocReference.table_columns(grouped, "Properties")),
 		"Mark Property Default What it does") and all_passed
 	var bare: Dictionary = {"Actions": [{"name": "Do It", "params": "", "note": ""}]}
 	all_passed = _check("a page without blurbs leaves the last column out",
-		" ".join(EventSheetDocReference.table_columns(bare)), "Mark Verb Parameters") and all_passed
+		" ".join(EventSheetDocReference.table_columns(bare)), "Mark Name Parameters") and all_passed
 	# The mark leads every row, and it is the sheet's own glyph for that kind.
 	var rows: Array = EventSheetDocReference.table_rows(
 		[{"name": "Is Dead", "params": "", "doc_id": "ace:P/is_dead"}], false,

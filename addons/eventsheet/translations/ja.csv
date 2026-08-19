@@ -959,7 +959,7 @@ Split Keeping Quotes,引用符を保って分割
 "The line to split - a console entry, a search box, a pasted cell.",分割する行 - コンソール入力、検索欄、貼り付けたセルなど。
 What separates the pieces OUTSIDE quotes.,引用符の「外側」で各部分を区切るもの。
 Explain JSON Problem,JSON の問題を説明
-"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","この JSON が読み取れなかった理由を行番号つきで返します: ""line 4: Expected ':'""。正しく読めたときは空になるので、空の結果が「問題なし」を意味します。ログに出せば不具合報告がそのまま書き上がります。分岐は JSON が有効 ではなく、この動詞自身の空かどうか (テキストが空白 の否定) で行ってください。あの条件は null という語だけのファイルを無効と読みますが、この動詞はそれについて何も言うことがないため、組み合わせると理由が空のエラーが記録されます。"
+"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this expression's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","この JSON が読み取れなかった理由を行番号つきで返します: ""line 4: Expected ':'""。正しく読めたときは空になるので、空の結果が「問題なし」を意味します。ログに出せば不具合報告がそのまま書き上がります。分岐は JSON が有効 ではなく、この式自身の空かどうか (テキストが空白 の否定) で行ってください。あの条件は null という語だけのファイルを無効と読みますが、この式はそれについて何も言うことがないため、組み合わせると理由が空のエラーが記録されます。"
 JSON,JSON
 why {text} is not valid JSON,{text} が有効な JSON でない理由
 "The JSON text to check - a file you read, a paste, a server reply.",検査する JSON テキスト - 読み込んだファイル、貼り付け、サーバーの応答など。

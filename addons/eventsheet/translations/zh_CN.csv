@@ -959,7 +959,7 @@ Split Keeping Quotes,拆分并保留引号内内容
 "The line to split - a console entry, a search box, a pasted cell.",要拆分的那一行 - 控制台输入、搜索框、粘贴过来的单元格。
 What separates the pieces OUTSIDE quotes.,在引号「之外」用什么分隔各段。
 Explain JSON Problem,解释 JSON 的问题
-"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","这段 JSON 为什么解析失败，并带上行号：""line 4: Expected ':'""。解析正常时为空，所以「空结果」就是一切正常。把它打进日志，缺陷报告等于自己写好了。请按「本动词自身是否为空」来分支（文本为空白 取反），而不要用 JSON 有效：那个条件把只写着 null 一个词的文件读作无效，而本动词对此无话可说，两者搭配就会记下一条没有原因的错误。"
+"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this expression's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","这段 JSON 为什么解析失败，并带上行号：""line 4: Expected ':'""。解析正常时为空，所以「空结果」就是一切正常。把它打进日志，缺陷报告等于自己写好了。请按「本表达式自身是否为空」来分支（文本为空白 取反），而不要用 JSON 有效：那个条件把只写着 null 一个词的文件读作无效，而本表达式对此无话可说，两者搭配就会记下一条没有原因的错误。"
 JSON,JSON
 why {text} is not valid JSON,{text} 为何不是有效的 JSON
 "The JSON text to check - a file you read, a paste, a server reply.",要检查的 JSON 文本 - 读进来的文件、粘贴的内容、服务器返回的响应。
