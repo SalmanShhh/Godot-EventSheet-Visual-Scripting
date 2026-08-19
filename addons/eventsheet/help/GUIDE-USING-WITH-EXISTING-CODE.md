@@ -793,6 +793,8 @@ That is the order this section is in.
   spellings of the plant count, the picked Add Child row and the plain call a hand-written script
   writes, and the row says whether the copy went next to the node or inside it.
 
+  ![A script of vector, colour, data-type and scene-tree lines opened as a sheet](images/reading-vectors-patterns-notes.png)
+
 - **A trailing `# note` is a note on that row.** `hp -= 1  # ouch` reads `Subtract 1 from hp
   💬 ouch`, muted, at the end of the row - which is where and how an event sheet writes a note about
   one step. Before this the comment rode into whichever value the lift put the end of the line in, so
@@ -811,6 +813,8 @@ That is the order this section is in.
   Outline (the jump list for the open sheet) grows a `To do` folder at the end with the same notes in
   it. Both are notes, never warnings: an unfinished thought is not a fault, it is a thing somebody
   meant to come back to.
+
+  ![A match with patterns, row notes and two counted loops opened as a sheet](images/reading-match-patterns-and-notes.png)
 
 #### Input, gamepads and sensors
 
