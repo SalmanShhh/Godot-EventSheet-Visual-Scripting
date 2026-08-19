@@ -380,6 +380,10 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var answered: Dictionary = web_condition(text, context)
 	if not answered.is_empty():
 		return answered
+	# U10. Whether a handler is wired up is a question about the SIGNAL, not about a call's result.
+	var connected: Dictionary = signal_wiring_condition(text, context)
+	if not connected.is_empty():
+		return connected
 	var joined: Dictionary = joined_condition(text, context)
 	if not joined.is_empty():
 		return joined
@@ -910,6 +914,15 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	# S10 - the peer id every networked script asks for, as the sheet's own Multiplayer expression.
 	if trimmed == "multiplayer.get_unique_id()":
 		return "%s.MyID" % OBJECT_MULTIPLAYER
+	# U8 - an object's own axes are directions, not arithmetic. Whole-expression only, ahead of the
+	# possessive pass which would otherwise spell out the transform a reader never has to think about.
+	var faced: String = basis_direction_words(trimmed, context)
+	if not faced.is_empty():
+		return faced
+	# U11 - a callable held in a value is the FUNCTION it names, said the way a Call row says it.
+	var held: String = callable_value_words(trimmed)
+	if not held.is_empty():
+		return held
 	# S8 - the progress array read by index, before the indexing pass could take `p[0]` apart. What
 	# the file holds is untouched; only the words change.
 	trimmed = loading_progress_words(trimmed, context)
@@ -1348,6 +1361,10 @@ static func type_word(type_name: String) -> String:
 			return translate("text")
 		"bool":
 			return translate("true/false")
+		# U10. A signal held in a variable is a signal, and the Local row says so - the sheet's own word
+		# for the thing, not Godot's type name.
+		"Signal":
+			return translate("signal")
 		"Vector2", "Vector2i", "Vector3", "Vector3i":
 			return translate("point")
 		"Color":
@@ -1730,6 +1747,11 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 	var lit: Dictionary = lighting_assignment(object_name, object_class, member, owner_text, assigned, context)
 	if not lit.is_empty():
 		return lit
+	# U12. A video's own film, and the two knobs that say how far a sound carries.
+	var played: Dictionary = long_tail_media_assignment(object_name, object_class, member, owner_text,
+		assigned, context)
+	if not played.is_empty():
+		return played
 	match member:
 		"visible":
 			if assigned != "true" and assigned != "false":
@@ -1900,10 +1922,14 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var media_step: Dictionary = media_call(call.duplicate().merged({"line": text}, true), context)
 	if not media_step.is_empty():
 		return media_step
-	# U6. A web request is the AJAX object's, whatever the node holding it is called.
-	var web_step: Dictionary = web_call(call.duplicate().merged({"line": text}, true), context)
-	if not web_step.is_empty():
-		return web_step
+	# ── U6 / U8 / U9 / U10 / U11 / U12 ──────────────────────────────────────────────────────────
+	# The long tail's call shapes, each recognised WHOLE: a web request, a face-that, work handed to a
+	# thread, the two signal steps that are actions, a signal held in a variable, a call made by name
+	# and a video player's verbs. Ahead of the generic Object ▸ Verb split, which would describe every
+	# one of them as the method it is written with.
+	var long_tail: Dictionary = long_tail_call(call, text, context)
+	if not long_tail.is_empty():
+		return long_tail
 	var engine_verb: Dictionary = _engine_verb_call(call, context)
 	if not engine_verb.is_empty():
 		return engine_verb
@@ -6842,6 +6868,10 @@ static func media_condition(text: String, context: Dictionary) -> Dictionary:
 	var object_name: String = _receiver_object(receiver, context)
 	var object_class: String = object_class_of(object_name, context)
 	var audio: bool = _class_is_any(object_class, AUDIO_CLASSES)
+	# U12. A video answers the same question, and it answers it under the Video object every one of
+	# its other rows belongs to.
+	if _class_is_any(object_class, VIDEO_CLASSES):
+		return _with_pattern(_sentence(OBJECT_VIDEO, "Is playing", {}), "ui", bare)
 	if not audio and not _class_is_any(object_class, ANIMATION_CLASSES) \
 			and not _class_is_any(object_class, SPRITE_CLASSES):
 		return {}
@@ -6973,3 +7003,439 @@ static func lighting_assignment(object_name: String, object_class: String, membe
 ## translated: it is the class name the engine uses, which is exactly what makes it useful here.
 static func _class_note(object_class: String) -> String:
 	return object_class.strip_edges()
+
+
+# ── U8 / U9 / U10 / U11 / U12 - 3D, background work, signals, functions, media ──────────────────
+#
+# The rest of the long tail. Every one of these is a line a finished game writes and a first script
+# does not, and every one of them already HAS a sentence somewhere on the sheet - the FPS Controller
+# pack's mouse look, Run In Background's one word for work handed off the main thread, the Wire /
+# Unwire pair for the signal steps that are actions rather than events, the Call row's own words for
+# a call made by name, and the Video object's verbs. The readings here say those sentences.
+
+
+## U8. The behavior whose words the mouse-look block is already written in, so a reader offered an
+## adoption is offered the pack that ships the shape rather than a rewrite of it.
+const FPS_LOOK_PACK := "fps_controller"
+
+## U8. The three directions an object's own axes point in, by the basis member each one is. `-z` is
+## forward because that is the way Godot's cameras face; the sheet says the direction, not the axis.
+const BASIS_DIRECTION_WORDS: Dictionary = {
+	"-basis.z": "forward", "basis.x": "right", "basis.y": "up"
+}
+
+## U8. The transforms a basis may be reached through. Both spellings name the same three directions.
+const BASIS_TRANSFORMS: PackedStringArray = ["global_transform", "transform"]
+
+## U9. The behavior whose sentence a hand-written thread is already written in.
+const BACKGROUND_PACK := "background_runner"
+
+## U9. The pool the engine keeps for short jobs, and the two waits that join a job back up.
+const WORKER_POOL := "WorkerThreadPool"
+const WORKER_WAITS: PackedStringArray = ["wait_for_task_completion", "wait_for_group_task_completion"]
+
+## U10. The connection flag whose whole meaning is WHEN the handler runs.
+const DEFERRED_CONNECT_FLAGS: PackedStringArray = ["CONNECT_DEFERRED", "Object.CONNECT_DEFERRED"]
+
+## U12. A video player is the sheet's Video object, whatever the node in the scene is called - the
+## same way every save row is Local Storage's whichever file it writes.
+const OBJECT_VIDEO := "Video"
+
+## U12. The class whose stream, play and finished are the Video object's.
+const VIDEO_CLASSES: PackedStringArray = ["VideoStreamPlayer"]
+
+## U12. The two classes a sound is heard FROM a place in, and the two knobs that say how far it
+## carries. A non-positional player has neither, which is why the pair is gated on the class.
+const POSITIONAL_AUDIO_CLASSES: PackedStringArray = ["AudioStreamPlayer2D", "AudioStreamPlayer3D"]
+
+
+## U8. `look_at(p, Vector3.UP)` - the one 3D call whose whole meaning is "face that". The up vector is
+## Godot's bookkeeping, not part of what the row says, and a place belongs to the object whose place
+## it is, so `target.global_position` reads as `target`.
+static func spatial_call(call: Dictionary, context: Dictionary) -> Dictionary:
+	if str(call.get("method", "")) != "look_at":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.is_empty() or args.size() > 2:
+		return {}
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	if not receiver.is_empty() and not is_simple_target(receiver):
+		return {}
+	var object_name: String = _receiver_object(receiver, context)
+	return _with_pattern(_sentence(object_name, "Look at {place}", {
+		"place": [_place_owner(args[0], context), "value"]}), "fps_look", str(call.get("line", "")),
+		FPS_LOOK_PACK)
+
+
+## U8. The object a PLACE belongs to: an event-sheet object has a position, so `target.global_position`
+## is just `target`. A place that is not an object's own keeps the expression it is.
+static func _place_owner(value: String, context: Dictionary) -> String:
+	var text: String = value.strip_edges()
+	for place: String in OWN_POSITION_NAMES:
+		var suffix: String = ".%s" % place
+		if not text.ends_with(suffix):
+			continue
+		var owner_text: String = text.substr(0, text.length() - suffix.length()).strip_edges()
+		if is_simple_target(owner_text):
+			return object_of_reference(owner_text)
+	return expression_text(text, context)
+
+
+## U8. `-global_transform.basis.z` as the direction it IS. Whole-expression only: a basis member in
+## the middle of a longer sum is arithmetic a reader follows as arithmetic, and renaming half of it
+## would leave a sentence nobody could check against the code.
+static func basis_direction_words(text: String, context: Dictionary) -> String:
+	var bare: String = text.strip_edges()
+	for suffix: String in BASIS_DIRECTION_WORDS.keys():
+		var tail: String = str(suffix)
+		var negated: bool = tail.begins_with("-")
+		var member: String = tail.trim_prefix("-")
+		var head: String = bare.substr(1).strip_edges() if negated and bare.begins_with("-") else bare
+		if negated != bare.begins_with("-"):
+			continue
+		var owner_text: String = _basis_owner(head, member)
+		if owner_text.is_empty():
+			continue
+		var object_name: String = script_object(context) if owner_text == "self" \
+			else object_of_reference(owner_text)
+		return "%s's %s" % [object_name, translate(str(BASIS_DIRECTION_WORDS[suffix]))]
+	return ""
+
+
+## U8. The object a `<owner>.<transform>.basis.<axis>` read belongs to - "self" when the script wrote
+## it about its own axes - or "" when the text is not that read at all.
+static func _basis_owner(text: String, member: String) -> String:
+	for transform: String in BASIS_TRANSFORMS:
+		var tail: String = "%s.%s" % [transform, member]
+		if text == tail:
+			return "self"
+		if text.ends_with(".%s" % tail):
+			var owner_text: String = text.substr(0, text.length() - tail.length() - 1).strip_edges()
+			if is_simple_target(owner_text):
+				return owner_text
+	if text == member:
+		return "self"
+	return ""
+
+
+## U9. The steps that hand work to a thread, and the ones that wait for it back. Both the plain Thread
+## spelling and the worker pool's read as the one sentence the Run In Background behavior publishes,
+## because what a reader needs to know is the same in both: which function left the main thread.
+static func background_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if receiver == WORKER_POOL:
+		if WORKER_WAITS.has(method) and args.size() <= 1:
+			return _with_pattern(_background_wait(), "background", text, BACKGROUND_PACK)
+		if method == "add_task" and args.size() >= 1:
+			return _background_run(args[0], "", context, text)
+		if method == "add_group_task" and args.size() >= 2:
+			return _background_run(args[0], args[1].strip_edges(), context, text)
+		return {}
+	if not is_identifier(receiver):
+		return {}
+	# `wait_to_finish` is a Thread's and nothing else's, so the name alone says what the row is.
+	if method == "wait_to_finish" and args.is_empty():
+		return _with_pattern(_background_wait(), "background", text, BACKGROUND_PACK)
+	# `start` is not: plenty of objects start. A bound callable is what says the argument is WORK
+	# rather than a number, so only that spelling is claimed on an ordinary receiver.
+	if method != "start" or args.size() != 1 or not args[0].contains(".bind("):
+		return {}
+	return _background_run(args[0], "", context, text)
+
+
+## U9. The one sentence for waiting on work that left the main thread, with the hourglass every wait
+## on the sheet already carries.
+static func _background_wait() -> Dictionary:
+	var reading: Dictionary = _sentence(OBJECT_SYSTEM, "Wait for it to finish", {})
+	(reading["segments"] as Array).insert(0, {"text": "⏳ ", "tone": "plain"})
+	return reading
+
+
+## U9. `Run <verb> in the background`, with the count a group job repeats and one chip per value the
+## job was handed. The chips are named by the CALLEE's own parameter names when the sheet knows them,
+## exactly as a signal's payload chips are.
+static func _background_run(callable_value: String, count: String, context: Dictionary,
+		line: String) -> Dictionary:
+	var bound: Dictionary = _bound_callable_parts(callable_value)
+	if bound.is_empty():
+		return {}
+	var function_name: String = str(bound.get("name", ""))
+	var reading: Dictionary = _sentence(OBJECT_SYSTEM, "Run {name} in the background",
+		{"name": [function_words(function_name), "name"]})
+	var segments: Array = reading.get("segments", [])
+	if not count.is_empty():
+		segments.append({"text": " ", "tone": "plain"})
+		segments.append({"text": expression_text(count, context), "tone": "value"})
+		segments.append({"text": " %s" % translate("times"), "tone": "plain"})
+	for chip: String in _bound_argument_chips(function_name, bound.get("args", PackedStringArray()), context):
+		segments.append({"text": "   ", "tone": "plain"})
+		segments.append({"text": chip, "tone": "chip"})
+	return _with_pattern(reading, "background", line, BACKGROUND_PACK)
+
+
+## A callable written as a function name, with or without the values bound to it, as
+## {"name", "args"} - or {} when the value is not a callable this grammar can name.
+static func _bound_callable_parts(value: String) -> Dictionary:
+	var text: String = value.strip_edges().trim_prefix("self.")
+	if is_identifier(text):
+		return {"name": text, "args": PackedStringArray()}
+	const BIND := ".bind("
+	if not text.ends_with(")"):
+		return {}
+	var bind_at: int = text.rfind(BIND)
+	if bind_at <= 0 or closing_paren(text, bind_at + BIND.length() - 1) != text.length() - 1:
+		return {}
+	var head: String = text.substr(0, bind_at).strip_edges().trim_prefix("self.")
+	if not is_identifier(head):
+		return {}
+	return {
+		"name": head,
+		"args": _split_arguments(
+			text.substr(bind_at + BIND.length(), text.length() - bind_at - BIND.length() - 1))
+	}
+
+
+## The chips a bound call shows: `amount = 5` where the sheet knows the callee's parameter names, and
+## the bare value where it does not. Never a guessed name - an unnamed chip is honest, a wrong one is not.
+static func _bound_argument_chips(function_name: String, args: PackedStringArray,
+		context: Dictionary) -> PackedStringArray:
+	var declared: Variant = (context.get("function_params", {}) as Dictionary).get(function_name, PackedStringArray())
+	var names: PackedStringArray = PackedStringArray()
+	if declared is PackedStringArray:
+		names = declared
+	elif declared is Array:
+		for entry: Variant in (declared as Array):
+			names.append(str(entry))
+	var chips: PackedStringArray = PackedStringArray()
+	for index: int in range(args.size()):
+		var shown: String = expression_text(args[index], context)
+		chips.append("%s = %s" % [names[index], shown] if index < names.size() else shown)
+	return chips
+
+
+## U10. Wiring a handler up and taking it down are ACTIONS, not events, and the sheet's word pair for
+## them is Wire / Unwire. A deferred connection says WHEN the handler runs as a chip, because that is
+## the whole of what the flag changes.
+static func signal_wiring_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	if method != "connect" and method != "disconnect":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.is_empty() or args.size() > 2:
+		return {}
+	var wired: Dictionary = _signal_reference(str(call.get("target", "")), context)
+	if wired.is_empty():
+		return {}
+	var handler: Dictionary = _bound_callable_parts(args[0])
+	if handler.is_empty():
+		return {}
+	var template: String = "Wire {signal} to {handler}" if method == "connect" \
+		else "Unwire {signal} from {handler}"
+	var reading: Dictionary = _sentence(str(wired.get("object", "")), template, {
+		"signal": [str(wired.get("trigger", "")), "name"],
+		"handler": [function_words(str(handler.get("name", ""))), "name"]
+	})
+	var segments: Array = reading.get("segments", [])
+	for chip: String in _bound_argument_chips(str(handler.get("name", "")),
+			handler.get("args", PackedStringArray()), context):
+		segments.append({"text": "   ", "tone": "plain"})
+		segments.append({"text": chip, "tone": "chip"})
+	if method == "connect" and args.size() == 2:
+		if not DEFERRED_CONNECT_FLAGS.has(args[1].strip_edges()):
+			return {}
+		segments.append({"text": "   ", "tone": "plain"})
+		segments.append({"text": translate("at end of frame"), "tone": "chip"})
+	return reading
+
+
+## U10. `died.is_connected(_on_died)` - the same words the Wire row uses, asked as a question.
+static func signal_wiring_condition(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "is_connected":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1:
+		return {}
+	var wired: Dictionary = _signal_reference(str(call.get("target", "")), context)
+	var handler: Dictionary = _bound_callable_parts(args[0])
+	if wired.is_empty() or handler.is_empty():
+		return {}
+	return _sentence(str(wired.get("object", "")), "{signal} is wired to {handler}", {
+		"signal": [str(wired.get("trigger", "")), "name"],
+		"handler": [function_words(str(handler.get("name", ""))), "name"]
+	})
+
+
+## U10. The signal a receiver names, as {"object", "trigger"} - the object it belongs to and the
+## trigger name a reader sees in the picker - or {} when the receiver does not name one.
+static func _signal_reference(receiver: String, context: Dictionary) -> Dictionary:
+	var text: String = receiver.strip_edges().trim_prefix("self.")
+	if text.is_empty():
+		return {}
+	var owner_text: String = ""
+	var signal_name: String = text
+	var dot_at: int = text.rfind(".")
+	if dot_at > 0:
+		owner_text = text.substr(0, dot_at).strip_edges()
+		signal_name = text.substr(dot_at + 1).strip_edges()
+		if not is_simple_target(owner_text):
+			return {}
+	if not is_identifier(signal_name):
+		return {}
+	var object_name: String = script_object(context) if owner_text.is_empty() \
+		else object_of_reference(owner_text)
+	return {"object": object_name, "trigger": trigger_name_of(signal_name, context)}
+
+
+## U10. `sig.emit(10)` where `sig` is a variable holding a signal: an event sheet FIRES the signal a
+## name holds, and the name is the whole of what it can say - which signal it is was decided wherever
+## the variable was filled in. Gated on the sheet's own declared type, never guessed.
+static func stored_signal_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "emit":
+		return {}
+	var holder: String = str(call.get("target", "")).strip_edges().trim_prefix("self.")
+	if not is_identifier(holder):
+		return {}
+	if str((context.get("variable_types", {}) as Dictionary).get(holder, "")) != "Signal":
+		return {}
+	var reading: Dictionary = _sentence(OBJECT_SYSTEM, "Fire {name}", {"name": [holder, "name"]})
+	var segments: Array = reading.get("segments", [])
+	for value: String in (call.get("args", PackedStringArray()) as PackedStringArray):
+		segments.append({"text": "   ", "tone": "plain"})
+		segments.append({"text": expression_text(value, context), "tone": "chip"})
+	return reading
+
+
+## U11. `call("heal", 5)` and `callv("heal", [5, self])` - the same Call row every other call reads
+## as, with the muted note that says how it was reached. Only a LITERAL name is claimed: a name worked
+## out at run time names no function this row could print.
+static func call_by_name_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	if method != "call" and method != "callv":
+		return {}
+	if not str(call.get("target", "")).strip_edges().trim_prefix("self.").is_empty():
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.is_empty() or not _is_string_literal(args[0]):
+		return {}
+	var function_name: String = _unquote(args[0].strip_edges().trim_prefix("&"))
+	if not is_identifier(function_name):
+		return {}
+	var values: PackedStringArray = PackedStringArray()
+	if method == "call":
+		values = args.slice(1)
+	elif args.size() == 2:
+		var listed: String = args[1].strip_edges()
+		if not listed.begins_with("[") or not listed.ends_with("]"):
+			return {}
+		values = _split_arguments(listed.substr(1, listed.length() - 2))
+	elif args.size() > 2:
+		return {}
+	var reading: Dictionary = _sentence(OBJECT_FUNCTIONS, "Call {name}",
+		{"name": [function_words(function_name), "name"]})
+	var segments: Array = reading.get("segments", [])
+	for chip: String in _bound_argument_chips(function_name, values, context):
+		segments.append({"text": "   ", "tone": "plain"})
+		segments.append({"text": chip, "tone": "chip"})
+	segments.append({"text": " %s" % translate(
+		"by name" if method == "call" else "by name, with a list"), "tone": "muted"})
+	return reading
+
+
+## U11. `Callable(self, "heal")` as the value it is - the function itself, under the name the sheet
+## calls it by. "" for every other spelling, which keeps the expression exactly as written.
+static func callable_value_words(text: String) -> String:
+	const HEAD := "Callable("
+	var bare: String = text.strip_edges()
+	if not bare.begins_with(HEAD) or not bare.ends_with(")"):
+		return ""
+	if closing_paren(bare, HEAD.length() - 1) != bare.length() - 1:
+		return ""
+	var args: PackedStringArray = _split_arguments(bare.substr(HEAD.length(), bare.length() - HEAD.length() - 1))
+	if args.size() != 2 or not _is_string_literal(args[1]):
+		return ""
+	var function_name: String = _unquote(args[1].strip_edges().trim_prefix("&"))
+	if not is_identifier(function_name):
+		return ""
+	return "%s %s" % [translate("the function"), function_words(function_name)]
+
+
+## U12. The video and positional-sound knobs, in the words their own objects publish. A video player
+## is the Video object; how far a sound carries is a hearing distance and how fast it fades is a
+## falloff, which are the two words a reader sets them by.
+static func long_tail_media_assignment(object_name: String, object_class: String, member: String,
+		owner_text: String, assigned: String, context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	var line: String = _member_line(owner_text, member, value)
+	if member == "stream" and _class_is_any(object_class, VIDEO_CLASSES):
+		var film: String = _asset_file_name(value)
+		if film.is_empty():
+			return {}
+		return _with_pattern(_sentence(OBJECT_VIDEO, "Set video to {file}", {"file": [film, "plain"]}),
+			"ui", line)
+	if not _class_is_any(object_class, POSITIONAL_AUDIO_CLASSES):
+		return {}
+	if member == "max_distance":
+		return _with_pattern(_sentence(object_name, "Set hearing distance to {value}",
+			{"value": [expression_text(value, context), "value"]}), "sound", line)
+	if member == "attenuation" or member == "unit_size":
+		return _with_pattern(_sentence(object_name, "Set falloff to {value}",
+			{"value": [expression_text(value, context), "value"]}), "sound", line)
+	return {}
+
+
+## U12. A video player's verbs, under the Video object every one of its rows belongs to.
+static func long_tail_media_call(call: Dictionary, context: Dictionary) -> Dictionary:
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if not args.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	if method != "play" and method != "pause" and method != "stop":
+		return {}
+	var object_name: String = _receiver_object(str(call.get("target", "")), context)
+	if not _class_is_any(object_class_of(object_name, context), VIDEO_CLASSES):
+		return {}
+	var verb: String = "Play"
+	if method == "pause":
+		verb = "Pause"
+	elif method == "stop":
+		verb = "Stop"
+	return _with_pattern(_sentence(OBJECT_VIDEO, verb, {}), "ui", str(call.get("line", "")))
+
+
+## The long tail's call readings in one place, tried in the order that recognises each whole shape
+## before a narrower one could claim half of it. {} when none of them says anything, which is what
+## keeps every other call exactly as it reads today.
+static func long_tail_call(call: Dictionary, text: String, context: Dictionary) -> Dictionary:
+	var traced: Dictionary = call.duplicate().merged({"line": text}, true)
+	var requested: Dictionary = web_call(traced, context)
+	if not requested.is_empty():
+		return requested
+	var faced: Dictionary = spatial_call(traced, context)
+	if not faced.is_empty():
+		return faced
+	var threaded: Dictionary = background_statement(text, context)
+	if not threaded.is_empty():
+		return threaded
+	var wired: Dictionary = signal_wiring_statement(text, context)
+	if not wired.is_empty():
+		return wired
+	var fired: Dictionary = stored_signal_statement(text, context)
+	if not fired.is_empty():
+		return fired
+	var named: Dictionary = call_by_name_statement(text, context)
+	if not named.is_empty():
+		return named
+	return long_tail_media_call(traced, context)
