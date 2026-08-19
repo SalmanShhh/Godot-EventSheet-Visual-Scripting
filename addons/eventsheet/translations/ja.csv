@@ -1934,7 +1934,6 @@ Open {file} for reading (as {handle}),{file} を読み込み用に開く ({handl
 Open {file} for reading and writing (as {handle}),{file} を読み書き用に開く ({handle} として)
 Set collision with layer {layer} {state},レイヤー {layer} との衝突を {state}
 Set collisions {state},衝突を {state}
-Set as active camera,アクティブなカメラにする
 Restart,再開
 Apply impulse {value},力積 {value} を加える
 Apply force {value},力 {value} を加える
@@ -2441,3 +2440,22 @@ a wait,待ち時間
 pooled,プール利用
 Return to pool,プールに戻す
 "hidden, ticking off, back in pool",非表示・停止してプールへ
+Set effect parameter {name} to {value},エフェクトパラメータ {name} を {value} にする
+Remove effect,エフェクトを外す
+Set effect to {name},エフェクトを {name} にする
+Tween effect parameter {name} from {from} to {to} in {seconds} seconds,エフェクトパラメータ {name} を {seconds} 秒で {from} から {to} へ変化
+{object}'s effect parameter {name},{object} のエフェクトパラメータ {name}
+Set tile at {cell} to {atlas},{cell} のタイルを {atlas} にする
+Erase tile at {cell},{cell} のタイルを消す
+layer {n},レイヤー {n}
+tileset {id},タイルセット {id}
+tile at {cell} has {name} set,{cell} のタイルに {name} が設定されている
+Make current,現在のものにする
+Set smoothing {state},スムージングを {state} にする
+Scroll toward {target} at {rate},{target} へ {rate} でスクロール
+(per second),(毎秒)
+Set scroll limits {left} to {right},スクロール範囲を {left} から {right} にする
+left,左
+right,右
+top,上
+bottom,下

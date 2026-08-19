@@ -113,7 +113,7 @@ static func run() -> bool:
 	color_script.source_code = "extends Node\nfunc _t() -> void:\n\tvar a: Color = (Color(1, 1, 1, 1)).lightened(0.2)\n\tvar b: Color = (Color(1, 1, 1, 1)).lerp(Color(1, 0, 0, 1), 0.5)\n\tvar c: Color = Color(Color(1, 1, 1, 1), 0.5)\n\tvar d: Color = Color.from_hsv(0.0, 1.0, 1.0, 1.0)\n\tprint(a, b, c, d)\n"
 	all_passed = _check("Color helper templates parse", color_script.reload() == OK, true) and all_passed
 	# Roadmap ACE batch (audit-driven): registry + category, and the trickier templates parse.
-	for r2: Array in [["DictHasAllKeys", "Variables: Dictionary"], ["CallAfterDelay", "Time"], ["TweenCallback", "Tween"], ["SetCameraLimits", "General Actions"], ["StringRepeat", "Variables: String"], ["SeedRandom", "Math & Random"], ["RandomizeSeed", "Math & Random"]]:
+	for r2: Array in [["DictHasAllKeys", "Variables: Dictionary"], ["CallAfterDelay", "Time"], ["TweenCallback", "Tween"], ["SetCameraLimits", "Camera"], ["StringRepeat", "Variables: String"], ["SeedRandom", "Math & Random"], ["RandomizeSeed", "Math & Random"]]:
 		var r2_id: String = str(r2[0])
 		all_passed = _check("%s registered" % r2_id, ids.has(r2_id), true) and all_passed
 		all_passed = _check("%s in %s" % [r2_id, str(r2[1])], str(categories.get(r2_id, "<missing>")), str(r2[1])) and all_passed

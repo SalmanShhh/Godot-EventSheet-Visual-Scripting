@@ -1934,7 +1934,6 @@ Open {file} for reading (as {handle}),Abrir {file} para lectura (como {handle})
 Open {file} for reading and writing (as {handle}),Abrir {file} para lectura y escritura (como {handle})
 Set collision with layer {layer} {state},Colisión con la capa {layer} {state}
 Set collisions {state},Colisiones {state}
-Set as active camera,Establecer como cámara activa
 Restart,Reiniciar
 Apply impulse {value},Aplicar impulso {value}
 Apply force {value},Aplicar fuerza {value}
@@ -2441,3 +2440,22 @@ a wait,una espera
 pooled,reutilizado
 Return to pool,Devolver al grupo
 "hidden, ticking off, back in pool","oculto, detenido, de vuelta en el grupo"
+Set effect parameter {name} to {value},Poner el parámetro de efecto {name} en {value}
+Remove effect,Quitar efecto
+Set effect to {name},Poner el efecto {name}
+Tween effect parameter {name} from {from} to {to} in {seconds} seconds,Interpolar el parámetro de efecto {name} de {from} a {to} en {seconds} segundos
+{object}'s effect parameter {name},parámetro de efecto {name} de {object}
+Set tile at {cell} to {atlas},Poner la casilla en {cell} como {atlas}
+Erase tile at {cell},Borrar la casilla en {cell}
+layer {n},capa {n}
+tileset {id},conjunto de casillas {id}
+tile at {cell} has {name} set,la casilla en {cell} tiene {name}
+Make current,Hacer actual
+Set smoothing {state},Poner el suavizado {state}
+Scroll toward {target} at {rate},Desplazarse hacia {target} a {rate}
+(per second),(por segundo)
+Set scroll limits {left} to {right},Poner los límites de desplazamiento de {left} a {right}
+left,izquierda
+right,derecha
+top,arriba
+bottom,abajo

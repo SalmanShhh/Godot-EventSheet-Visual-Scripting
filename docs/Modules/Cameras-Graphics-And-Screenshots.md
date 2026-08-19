@@ -5,8 +5,8 @@ is, how the frame is rendered, what the shaders are told, and how to save the re
 
 Four groups of rows share that job.
 
-- **The 2D camera** - **Make Camera Current**, **Set Camera Zoom**, **Set Camera Offset**,
-  **Set Camera Limits**. Plain `Camera2D` members, node-scoped, so any of them can act on another
+- **The 2D camera** - **Make Current**, **Set Zoom**, **Set Offset**,
+  **Set Scroll Limits**. Plain `Camera2D` members, node-scoped, so any of them can act on another
   camera through the optional **On node** parameter.
 - **The 3D field of view** - **Tween Camera FOV** eases the ACTIVE camera, **Adjust Camera FOV**
   nudges one camera relatively, **Camera FOV** reads it back.
@@ -43,12 +43,12 @@ Game Options and the Window guide.
 
 ## Core concepts
 
-- **The current camera is a property of the camera, not the world.** **Make Camera Current** promotes
+- **The current camera is a property of the camera, not the world.** **Make Current** promotes
   the camera it runs on (or the one named in **On node**) to be the view. There is no "camera off"
   action; you make a different one current instead.
 - **Zoom is a Vector2, and bigger means closer.** `Vector2(2, 2)` is a 2x zoom in. Non-uniform values
   stretch the view, which is occasionally a deliberate effect and usually a mistake.
-- **Camera limits are four numbers, written in one row.** **Set Camera Limits** emits four
+- **Camera limits are four numbers, written in one row.** **Set Scroll Limits** emits four
   assignments (`limit_left`, `limit_top`, `limit_right`, `limit_bottom`) as a single action.
 - **The FOV rows split by who they target.** **Tween Camera FOV** resolves
   `get_viewport().get_camera_3d()` at runtime, so it always eases the camera the player is looking
@@ -61,9 +61,9 @@ Game Options and the Window guide.
 - **Global shader parameters must be declared first.** **Set Global Shader Parameter** writes a
   uniform declared in Project Settings > Shader Globals. Every material that reads it updates at
   once. A name that was never declared is simply not there.
-- **A per-node shader parameter needs a material.** **Set Shader Parameter** and **Shader Parameter**
+- **A per-node shader parameter needs a material.** **Set Effect Parameter** and **Effect Parameter**
   call straight through `material`, so the node needs a `ShaderMaterial` assigned - use
-  **Set Material** if the sheet is the thing that assigns it.
+  **Set Effect** if the sheet is the thing that assigns it.
 - **A screenshot is the viewport's texture.** **Take Screenshot** grabs the current viewport image and
   writes a PNG, so it captures exactly what is on screen, HUD included.
 
@@ -72,14 +72,25 @@ Game Options and the Window guide.
 Multi-line templates are shown by their first line; the full emitted block appears in the matching
 use case below.
 
-### The 2D camera (picker section: General Actions, node type Camera2D)
+### The 2D camera (picker section: Camera, node type Camera2D)
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Make Camera Current | Makes this camera the one the player views the game through. | `{target.}make_current()` |
-| Set Camera Zoom | Sets how zoomed in or out the camera is (a Vector2). | `{target.}zoom = {zoom}` |
-| Set Camera Offset | Shifts the view away from the position the camera follows. | `{target.}offset = {offset}` |
-| Set Camera Limits | Sets the bounds the camera will not scroll past (Left, Top, Right, Bottom). | `{target.}limit_left = {left}` … (multi-line, use case 4) |
+| Make Current | Makes this camera the one the player views the game through. | `{target.}make_current()` |
+| Set Zoom | Sets how zoomed in or out the camera is (a Vector2). | `{target.}zoom = {zoom}` |
+| Set Offset | Shifts the view away from the position the camera follows. | `{target.}offset = {offset}` |
+| Set Scroll Limits | Sets the bounds the camera will not scroll past (Left, Top, Right, Bottom). | `{target.}limit_left = {left}` … (multi-line, use case 4) |
+| Set Smoothing | Turns the camera's smooth catch-up on or off. | `{target.}position_smoothing_enabled = {enabled}` |
+| Scroll Toward | Eases the camera toward another node, closing the gap at the given rate every second. | `{target.}global_position = {target.}global_position.lerp({toward}.global_position, {rate} * get_process_delta_time())` |
+
+An opened `.gd` file reads these same words back. `camera.make_current()` reads as **Make current**,
+`camera.zoom = Vector2(2, 2)` as **Set zoom to 200%**, `position_smoothing_enabled = true` as
+**Set smoothing on**, and the lerp-follow idiom
+(`camera.global_position = camera.global_position.lerp(target.global_position, 5 * delta)`) as
+**Scroll toward target at 5** with `(per second)` said quietly after it. A run of adjacent
+`limit_left` / `limit_right` / `limit_top` / `limit_bottom` writes reads as ONE
+**Set scroll limits 0 to 1920** row, with the edges it set named after the sentence and every line
+it stands for on the hover - the file keeps all four lines exactly as they were.
 
 ### Field of view (picker section: Camera)
 
@@ -118,16 +129,27 @@ The MSAA dropdowns offer `RenderingServer.VIEWPORT_MSAA_DISABLED`, `..._2X`, `..
 | Primitives Drawn (frame) | How many triangles, points and lines the last frame rendered. | `RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)` |
 | Video Memory Used | Video memory in use, in bytes. | `RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED)` |
 
-### Shaders and materials (picker sections: Rendering and General Actions)
+### Effects (picker sections: Effects and Rendering)
+
+An effect is a material worn by an object, and a shader uniform is one of that effect's parameters -
+so that is what these rows are called.
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Global Shader Parameter | Drives a uniform declared in Project Settings > Shader Globals; every material reading it updates. | `RenderingServer.global_shader_parameter_set({name}, {value})` |
 | Global Shader Parameter | Reads that global uniform's current value. | `RenderingServer.global_shader_parameter_get({name})` |
-| Set Shader Parameter | Feeds a value into one uniform on this node's material. | `{target.}material.set_shader_parameter(&{param}, {value})` |
-| Shader Parameter | The current value of a named uniform on this node's material. | `{target.}material.get_shader_parameter(&{param})` |
-| Set Material | Assigns a shader or canvas material to this node. | `{target.}material = {material}` |
-| Clear Material | Removes any material, returning the node to default drawing. | `{target.}material = null` |
+| Set Effect Parameter | Feeds a value into one of this object's effect parameters. | `{target.}material.set_shader_parameter(&{param}, {value})` |
+| Effect Parameter | The current value of one of this object's effect parameters. | `{target.}material.get_shader_parameter(&{param})` |
+| Tween Effect Parameter | Drives one of an effect's parameters from one value to another over time. | `create_tween().tween_method(func(v): {target.}material.set_shader_parameter(&{param}, v), {from}, {to}, {seconds})` |
+| Set Effect | Puts an effect on this object, changing how it draws. | `{target.}material = {material}` |
+| Remove Effect | Takes the effect off this object, returning it to how it normally draws. | `{target.}material = null` |
+
+An opened `.gd` file reads the same words: `sprite.material.set_shader_parameter("flash", 1.0)` is
+**Set effect parameter flash to 1**, `sprite.material = null` is **Remove effect**,
+`sprite.material = preload("res://outline.tres")` is **Set effect to outline**, and the
+tween-a-uniform idiom
+(`tween.tween_method(func(v): mat.set_shader_parameter("dissolve", v), 0.0, 1.0, 0.5)`) is ONE
+**Tween effect parameter dissolve from 0 to 1 in 0.5 seconds** row, on the material it drives.
 
 ### The screenshot (picker section: General Actions)
 
@@ -150,7 +172,7 @@ make_current()
 $CutsceneCamera.make_current()
 ```
 
-**3. Zoom in for a boss reveal.** **Set Camera Zoom** with a Vector2:
+**3. Zoom in for a boss reveal.** **Set Zoom** with a Vector2:
 
 ```gdscript
 $Camera2D.zoom = Vector2(1.6, 1.6)
@@ -158,7 +180,7 @@ $Camera2D.zoom = Vector2(1.6, 1.6)
 
 Zoom back out with `Vector2(1, 1)`.
 
-**4. Keep the camera inside the level.** One **Set Camera Limits** row emits all four bounds:
+**4. Keep the camera inside the level.** One **Set Scroll Limits** row emits all four bounds:
 
 ```gdscript
 limit_left = 0
@@ -167,7 +189,7 @@ limit_right = 3840
 limit_bottom = 1080
 ```
 
-**5. Lead the camera in the direction the player is moving**, with **Set Camera Offset** under a
+**5. Lead the camera in the direction the player is moving**, with **Set Offset** under a
 per-frame trigger:
 
 ```gdscript
@@ -282,7 +304,7 @@ RenderingServer.global_shader_parameter_set("wind_strength", 0.3 + sin(deg_to_ra
 current_wind = RenderingServer.global_shader_parameter_get("wind_strength")
 ```
 
-**19. A hit flash on one sprite.** **Set Shader Parameter** writes one uniform on the node's own
+**19. A hit flash on one sprite.** **Set Effect Parameter** writes one uniform on the node's own
 material:
 
 ```gdscript
@@ -291,7 +313,7 @@ material.set_shader_parameter(&"flash", 1.0)
 
 Follow it with a **Wait** and the same row at `0.0`.
 
-**20. Swap a material in and out.** **Set Material** assigns, **Clear Material** removes:
+**20. Swap a material in and out.** **Set Effect** assigns, **Remove Effect** removes:
 
 ```gdscript
 material = preload("res://materials/frozen.tres")
@@ -345,7 +367,7 @@ On photo key pressed
 
 ## Tips and common mistakes
 
-- **Make Camera Current has no opposite.** To leave a cutscene view, make the player's camera current
+- **Make Current has no opposite.** To leave a cutscene view, make the player's camera current
   again. Hiding or freeing the cutscene camera without doing that leaves the game looking through
   nothing in particular.
 - **Camera zoom is inverted from what people expect.** Larger numbers zoom IN. `Vector2(0.5, 0.5)`
@@ -358,7 +380,7 @@ On photo key pressed
   **Tween Camera FOV**, which resolves the active camera at runtime.
 - **Tween Camera FOV is not node-scoped either.** It always animates the camera the player is looking
   through. If two of these run at once they fight; guard the second one.
-- **The FOV rows are 3D only.** A 2D game's "zoom" is **Set Camera Zoom**.
+- **The FOV rows are 3D only.** A 2D game's "zoom" is **Set Zoom**.
 - **Rendering switches are viewport-scoped.** A row that runs inside a `SubViewport` changes that
   sub-viewport, not the game window. That is occasionally exactly what you want and is a confusing
   surprise otherwise.
@@ -372,9 +394,9 @@ On photo key pressed
   wireframe build.
 - **A global shader parameter must be declared before it can be set.** Project Settings > Shader
   Globals is where the name and its type live; setting an undeclared name does nothing visible.
-- **Set Shader Parameter needs a ShaderMaterial on the node.** With no material assigned, the emitted
+- **Set Effect Parameter needs a ShaderMaterial on the node.** With no material assigned, the emitted
   `material.set_shader_parameter(...)` has nothing to call. Assign one in the editor, or with
-  **Set Material** first.
+  **Set Effect** first.
 - **Clear Color is not a camera background.** It is the whole-game default background, so changing it
   affects every scene until it is changed back.
 - **Screenshots go to `user://`.** `res://` is read-only in an exported game. Also remember the shot

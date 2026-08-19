@@ -5916,6 +5916,14 @@ static func _owner_of(text: String) -> String:
 	return "" if dot_at < 0 else bare.substr(0, dot_at)
 
 
+## S18. The spellings of "this frame's slice of a second". The picked row writes the call because a
+## `delta` parameter is not in scope everywhere a row can be dropped; a typed line usually names the
+## parameter. Both mean the same thing, so both read the same.
+const PER_SECOND_NAMES: PackedStringArray = [
+	"delta", "_delta", "get_process_delta_time()", "get_physics_process_delta_time()"
+]
+
+
 ## S18. The rate out of `5 * delta` / `delta * 5`, or "" when the factor is not per-second at all.
 static func _per_second_factor(value: String) -> String:
 	var text: String = value.strip_edges()
@@ -5924,8 +5932,8 @@ static func _per_second_factor(value: String) -> String:
 		return ""
 	var left: String = text.substr(0, at).strip_edges()
 	var right: String = text.substr(at + 3).strip_edges()
-	if right == "delta" or right == "_delta":
+	if PER_SECOND_NAMES.has(right):
 		return left
-	if left == "delta" or left == "_delta":
+	if PER_SECOND_NAMES.has(left):
 		return right
 	return ""

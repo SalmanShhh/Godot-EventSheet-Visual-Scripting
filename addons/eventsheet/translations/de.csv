@@ -1934,7 +1934,6 @@ Open {file} for reading (as {handle}),{file} zum Lesen öffnen (als {handle})
 Open {file} for reading and writing (as {handle}),{file} zum Lesen und Schreiben öffnen (als {handle})
 Set collision with layer {layer} {state},Kollision mit Ebene {layer} {state}
 Set collisions {state},Kollisionen {state}
-Set as active camera,Als aktive Kamera setzen
 Restart,Neu starten
 Apply impulse {value},Impuls {value} anwenden
 Apply force {value},Kraft {value} anwenden
@@ -2441,3 +2440,22 @@ a wait,eine Wartezeit
 pooled,gepoolt
 Return to pool,In den Pool zurücklegen
 "hidden, ticking off, back in pool","versteckt, angehalten, zurück im Pool"
+Set effect parameter {name} to {value},Effektparameter {name} auf {value} setzen
+Remove effect,Effekt entfernen
+Set effect to {name},Effekt auf {name} setzen
+Tween effect parameter {name} from {from} to {to} in {seconds} seconds,Effektparameter {name} in {seconds} Sekunden von {from} auf {to} tweenen
+{object}'s effect parameter {name},Effektparameter {name} von {object}
+Set tile at {cell} to {atlas},Kachel bei {cell} auf {atlas} setzen
+Erase tile at {cell},Kachel bei {cell} löschen
+layer {n},Ebene {n}
+tileset {id},Kachelsatz {id}
+tile at {cell} has {name} set,Kachel bei {cell} hat {name} gesetzt
+Make current,Aktiv machen
+Set smoothing {state},Glättung {state}
+Scroll toward {target} at {rate},Zu {target} scrollen mit {rate}
+(per second),(pro Sekunde)
+Set scroll limits {left} to {right},Scrollgrenzen {left} bis {right} setzen
+left,links
+right,rechts
+top,oben
+bottom,unten

@@ -1934,7 +1934,6 @@ Open {file} for reading (as {handle}),Ouvrir {file} en lecture (comme {handle})
 Open {file} for reading and writing (as {handle}),Ouvrir {file} en lecture et écriture (comme {handle})
 Set collision with layer {layer} {state},Collision avec le calque {layer} {state}
 Set collisions {state},Collisions {state}
-Set as active camera,Définir comme caméra active
 Restart,Redémarrer
 Apply impulse {value},Appliquer l'impulsion {value}
 Apply force {value},Appliquer la force {value}
@@ -2441,3 +2440,22 @@ a wait,une attente
 pooled,recyclé
 Return to pool,Renvoyer au pool
 "hidden, ticking off, back in pool","caché, arrêté, de retour dans le pool"
+Set effect parameter {name} to {value},Définir le paramètre d'effet {name} sur {value}
+Remove effect,Retirer l'effet
+Set effect to {name},Définir l'effet sur {name}
+Tween effect parameter {name} from {from} to {to} in {seconds} seconds,Animer le paramètre d'effet {name} de {from} à {to} en {seconds} secondes
+{object}'s effect parameter {name},paramètre d'effet {name} de {object}
+Set tile at {cell} to {atlas},Définir la tuile en {cell} sur {atlas}
+Erase tile at {cell},Effacer la tuile en {cell}
+layer {n},couche {n}
+tileset {id},jeu de tuiles {id}
+tile at {cell} has {name} set,la tuile en {cell} a {name}
+Make current,Rendre active
+Set smoothing {state},Définir le lissage {state}
+Scroll toward {target} at {rate},Défiler vers {target} à {rate}
+(per second),(par seconde)
+Set scroll limits {left} to {right},Définir les limites de défilement de {left} à {right}
+left,gauche
+right,droite
+top,haut
+bottom,bas

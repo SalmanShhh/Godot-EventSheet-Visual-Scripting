@@ -1934,7 +1934,6 @@ Open {file} for reading (as {handle}),以读取方式打开 {file} (作为 {hand
 Open {file} for reading and writing (as {handle}),以读写方式打开 {file} (作为 {handle})
 Set collision with layer {layer} {state},与层 {layer} 的碰撞 {state}
 Set collisions {state},碰撞 {state}
-Set as active camera,设为当前摄像机
 Restart,重新开始
 Apply impulse {value},施加冲量 {value}
 Apply force {value},施加力 {value}
@@ -2441,3 +2440,22 @@ a wait,一次等待
 pooled,使用对象池
 Return to pool,放回对象池
 "hidden, ticking off, back in pool",隐藏、停止更新、放回池中
+Set effect parameter {name} to {value},将特效参数 {name} 设为 {value}
+Remove effect,移除特效
+Set effect to {name},将特效设为 {name}
+Tween effect parameter {name} from {from} to {to} in {seconds} seconds,在 {seconds} 秒内将特效参数 {name} 从 {from} 补间到 {to}
+{object}'s effect parameter {name},{object} 的特效参数 {name}
+Set tile at {cell} to {atlas},将 {cell} 处的图块设为 {atlas}
+Erase tile at {cell},擦除 {cell} 处的图块
+layer {n},图层 {n}
+tileset {id},图块集 {id}
+tile at {cell} has {name} set,{cell} 处的图块设置了 {name}
+Make current,设为当前
+Set smoothing {state},将平滑设为 {state}
+Scroll toward {target} at {rate},以 {rate} 向 {target} 滚动
+(per second),(每秒)
+Set scroll limits {left} to {right},将滚动范围设为 {left} 到 {right}
+left,左
+right,右
+top,上
+bottom,下

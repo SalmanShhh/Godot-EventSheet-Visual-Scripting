@@ -1934,7 +1934,6 @@ Open {file} for reading (as {handle}),Открыть {file} для чтения 
 Open {file} for reading and writing (as {handle}),Открыть {file} для чтения и записи (как {handle})
 Set collision with layer {layer} {state},Столкновение со слоем {layer} {state}
 Set collisions {state},Столкновения {state}
-Set as active camera,Сделать активной камерой
 Restart,Перезапустить
 Apply impulse {value},Применить импульс {value}
 Apply force {value},Применить силу {value}
@@ -2441,3 +2440,22 @@ a wait,ожидание
 pooled,из пула
 Return to pool,Вернуть в пул
 "hidden, ticking off, back in pool","скрыт, остановлен, снова в пуле"
+Set effect parameter {name} to {value},Задать параметр эффекта {name} = {value}
+Remove effect,Убрать эффект
+Set effect to {name},Задать эффект {name}
+Tween effect parameter {name} from {from} to {to} in {seconds} seconds,Плавно менять параметр эффекта {name} с {from} до {to} за {seconds} с
+{object}'s effect parameter {name},параметр эффекта {name} у {object}
+Set tile at {cell} to {atlas},Задать тайл в {cell} = {atlas}
+Erase tile at {cell},Стереть тайл в {cell}
+layer {n},слой {n}
+tileset {id},набор тайлов {id}
+tile at {cell} has {name} set,у тайла в {cell} задано {name}
+Make current,Сделать активной
+Set smoothing {state},Сглаживание {state}
+Scroll toward {target} at {rate},Прокручивать к {target} со скоростью {rate}
+(per second),(в секунду)
+Set scroll limits {left} to {right},Задать границы прокрутки {left} - {right}
+left,слева
+right,справа
+top,сверху
+bottom,снизу

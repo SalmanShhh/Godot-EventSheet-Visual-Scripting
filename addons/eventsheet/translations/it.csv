@@ -1934,7 +1934,6 @@ Open {file} for reading (as {handle}),Apri {file} in lettura (come {handle})
 Open {file} for reading and writing (as {handle}),Apri {file} in lettura e scrittura (come {handle})
 Set collision with layer {layer} {state},Collisione con il livello {layer} {state}
 Set collisions {state},Collisioni {state}
-Set as active camera,Imposta come camera attiva
 Restart,Riavvia
 Apply impulse {value},Applica impulso {value}
 Apply force {value},Applica forza {value}
@@ -2441,3 +2440,22 @@ a wait,un'attesa
 pooled,riutilizzato
 Return to pool,Rimetti nel pool
 "hidden, ticking off, back in pool","nascosto, fermo, di nuovo nel pool"
+Set effect parameter {name} to {value},Imposta il parametro effetto {name} su {value}
+Remove effect,Rimuovi effetto
+Set effect to {name},Imposta l'effetto su {name}
+Tween effect parameter {name} from {from} to {to} in {seconds} seconds,Anima il parametro effetto {name} da {from} a {to} in {seconds} secondi
+{object}'s effect parameter {name},parametro effetto {name} di {object}
+Set tile at {cell} to {atlas},Imposta la tessera in {cell} su {atlas}
+Erase tile at {cell},Cancella la tessera in {cell}
+layer {n},livello {n}
+tileset {id},set di tessere {id}
+tile at {cell} has {name} set,la tessera in {cell} ha {name}
+Make current,Rendi attiva
+Set smoothing {state},Imposta l'ammorbidimento {state}
+Scroll toward {target} at {rate},Scorri verso {target} a {rate}
+(per second),(al secondo)
+Set scroll limits {left} to {right},Imposta i limiti di scorrimento da {left} a {right}
+left,sinistra
+right,destra
+top,alto
+bottom,basso

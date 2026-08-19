@@ -113,8 +113,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True while the game window is in fullscreen mode - pair with Set Fullscreen Mode for a toggle."))
 
 	# Shader params (event-sheet effects -> Godot materials), date & time, platform info
-	descriptors.append(F.make_descriptor("Core", "SetShaderParameter", "Set Shader Parameter", ACEDescriptor.ACEType.ACTION, "material.set_shader_parameter(&{param}, {value})", "", [F.make_param("param", "String", "\"strength\"", "Parameter", "Shader uniform name."), F.make_param("value", "String", "1.0", "Value", "Value expression.", "expression")], "General Actions", "Set shader {param} to {value}", "CanvasItem")
-		.described("Feeds a value into a shader uniform to drive a visual effect at runtime."))
+	descriptors.append(F.make_descriptor("Core", "SetShaderParameter", "Set Effect Parameter", ACEDescriptor.ACEType.ACTION, "material.set_shader_parameter(&{param}, {value})", "", [F.make_param("param", "String", "\"strength\"", "Parameter", "The effect parameter's name."), F.make_param("value", "String", "1.0", "Value", "Value expression.", "expression")], "Effects", "Set effect parameter {param} to {value}", "CanvasItem")
+		.described("Feeds a value into one of an effect's parameters to drive it at runtime."))
 	descriptors.append(F.make_descriptor("Core", "GetDatetimeString", "Date & Time Text", ACEDescriptor.ACEType.EXPRESSION, "Time.get_datetime_string_from_system()", "", [], "Time", "datetime string")
 		.described("Gives the system's current date and time as readable text."))
 	descriptors.append(F.make_descriptor("Core", "GetUnixTime", "Unix Time", ACEDescriptor.ACEType.EXPRESSION, "Time.get_unix_time_from_system()", "", [], "Time", "unix time")
@@ -255,12 +255,16 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	# Shader materials (assign / swap / clear / read uniforms - completes the one-uniform
 	# SetShaderParameter above into a usable visual-effects surface).
-	descriptors.append(F.make_descriptor("Core", "SetShaderMaterial", "Set Material", ACEDescriptor.ACEType.ACTION, "material = {material}", "", [F.make_param("material", "String", "null", "Material", "ShaderMaterial / CanvasItemMaterial resource - e.g. preload(\"res://your_material.tres\") once that file exists. Defaults to null (no material).", "expression")], "Rendering", "Set material to {material}", "CanvasItem")
-		.described("Assigns a shader or canvas material to this node to change how it draws."))
-	descriptors.append(F.make_descriptor("Core", "ClearMaterial", "Clear Material", ACEDescriptor.ACEType.ACTION, "material = null", "", [], "Rendering", "Clear material", "CanvasItem")
-		.described("Removes any material from this node, returning it to default drawing."))
-	descriptors.append(F.make_descriptor("Core", "GetShaderParameter", "Shader Parameter", ACEDescriptor.ACEType.EXPRESSION, "material.get_shader_parameter(&{param})", "", [F.make_param("param", "String", "\"strength\"", "Parameter", "Shader uniform name.")], "Rendering", "shader param {param}", "CanvasItem")
-		.described("Gives the current value of a named shader uniform on this node."))
+	descriptors.append(F.make_descriptor("Core", "SetShaderMaterial", "Set Effect", ACEDescriptor.ACEType.ACTION, "material = {material}", "", [F.make_param("material", "String", "null", "Effect", "ShaderMaterial / CanvasItemMaterial resource - e.g. preload(\"res://your_material.tres\") once that file exists. Defaults to null (no effect).", "expression")], "Effects", "Set effect to {material}", "CanvasItem")
+		.described("Puts an effect on this object, changing how it draws."))
+	descriptors.append(F.make_descriptor("Core", "ClearMaterial", "Remove Effect", ACEDescriptor.ACEType.ACTION, "material = null", "", [], "Effects", "Remove effect", "CanvasItem")
+		.described("Takes the effect off this object, returning it to how it normally draws."))
+	descriptors.append(F.make_descriptor("Core", "GetShaderParameter", "Effect Parameter", ACEDescriptor.ACEType.EXPRESSION, "material.get_shader_parameter(&{param})", "", [F.make_param("param", "String", "\"strength\"", "Parameter", "The effect parameter's name.")], "Effects", "effect parameter {param}", "CanvasItem")
+		.described("Gives the current value of one of this object's effect parameters."))
+	# The one tween shape an effect has a sentence for: a parameter driven from one value to another
+	# over time, which is how a dissolve, a wipe and a hit flash are all written.
+	descriptors.append(F.make_descriptor("Core", "TweenEffectParameter", "Tween Effect Parameter", ACEDescriptor.ACEType.ACTION, "create_tween().tween_method(func(v): material.set_shader_parameter(&{param}, v), {from}, {to}, {seconds})", "", [F.make_param("param", "String", "\"dissolve\"", "Parameter", "The effect parameter's name."), F.make_param("from", "String", "0.0", "From", "Starting value.", "expression"), F.make_param("to", "String", "1.0", "To", "Ending value.", "expression"), F.make_param("seconds", "String", "0.5", "Seconds", "How long the change takes.", "expression")], "Effects", "Tween effect parameter {param} from {from} to {to} in {seconds} seconds", "CanvasItem")
+		.described("Drives one of an effect's parameters from one value to another over time."))
 
 
 	# Trigger Once, but across RUNS: the first true ever (per key, per machine) - tutorial hints

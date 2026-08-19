@@ -37,6 +37,45 @@ untouched, and the byte round-trip and the emitted GDScript cannot move.
   `Functions ▸ Call the function stored in commands "equip"`. A lambda written over two lines keeps
   its Script block: a sentence may only stand for a shape it can see whole.
 
+### Added - effects, tilemaps and the camera read (and are authored) in the sheet's words
+
+- **A ShaderMaterial parameter IS an effect parameter.** `sprite.material.set_shader_parameter(
+  "flash", 1.0)` reads as **sprite ▸ Set effect parameter flash to 1**, `get_shader_parameter
+  ("flash")` as the value **sprite's effect parameter "flash"**, `sprite.material = null` as
+  **Remove effect** and `sprite.material = preload("res://outline.tres")` as **Set effect to
+  outline**. The tween-a-uniform idiom - `tween.tween_method(func(v):
+  mat.set_shader_parameter("dissolve", v), 0.0, 1.0, 0.5)` - reads as ONE row, **mat ▸ Tween effect
+  parameter dissolve from 0 to 1 in 0.5 seconds**, on the material it drives. Authored from the
+  picker's new **Effects** section, whose rows write exactly those lines: Set Effect Parameter, the
+  Effect Parameter expression, Set Effect, Remove Effect and the new **Tween Effect Parameter**.
+- **A tilemap cell IS a tile at a cell.** `set_cell(0, cell, 1, Vector2i(2, 0))` reads as
+  **Set tile at cell to 2, 0** with `layer 0 · tileset 1` said quietly after it, `erase_cell` as
+  **Erase tile at cell**, and the three coordinate questions as the names a reader types:
+  `tilemap.TileAt(cell)`, `tilemap.PositionToTile(p)`, `tilemap.TileToPosition(c)`. A tile's own
+  data is ONE condition - **tile at cell has solid set** - whether the file writes the
+  `get_cell_tile_data` local and the `if data and data.get_custom_data("solid")` that follows it, or
+  the whole question in one expression. Both node generations read alike (the older node names its
+  layer first). The new **Tile Has Custom Data** condition authors the same question.
+- **The camera page.** **Make current**, **Set zoom to 200%**, **Set smoothing on** and
+  **Scroll toward target at 5 (per second)** for the lerp-follow idiom. A run of adjacent
+  `limit_left` / `limit_right` / `limit_top` / `limit_bottom` writes reads as ONE
+  **Set scroll limits 0 to 1920** row - the edges it set named after the sentence, every line it
+  stands for on the hover, and the file's own four lines untouched. New **Set Smoothing** and
+  **Scroll Toward** rows author the last two.
+- **The pattern registry is filled by the readings themselves.** Every reading above carries the
+  pattern it is an instance of; the row builder collects them while an event's spans are built and
+  claims them on the event that owns them, with the exact source lines as evidence. Nothing
+  re-derives a pattern, and a sheet nobody has scrolled to pays nothing for the answer.
+
+### Changed - the module names match the words the reading uses
+
+- The tilemap rows are **Set Tile**, **Erase Tile**, **Tile At**, **Position To Tile** and
+  **Tile To Position**; the camera rows are **Make Current**, **Set Zoom**, **Set Offset** and
+  **Set Scroll Limits**, all under a **Camera** picker section; the material rows are
+  **Set Effect Parameter**, **Effect Parameter**, **Set Effect** and **Remove Effect** under a new
+  **Effects** section. Ids and emitted code are unchanged - only the names and the sections move,
+  so a picked row and a typed line finally say the same thing.
+
 ### Changed - the documentation says what the sheet says
 
 - **The whole documentation set speaks the sheet's vocabulary.** A picker entry is an **action**, a

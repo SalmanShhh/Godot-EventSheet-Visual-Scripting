@@ -10028,6 +10028,12 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"SetCameraSmoothing":
 			return EventSheetSentence.statement("%s.position_smoothing_enabled = %s" % [
 				_ace_target(params_dict), str(params_dict.get("enabled", ""))], context)
+		"CameraScrollToward":
+			var camera_target: String = _ace_target(params_dict)
+			return EventSheetSentence.statement(
+				"%s.global_position = %s.global_position.lerp(%s.global_position, %s * get_process_delta_time())" % [
+					camera_target, camera_target, str(params_dict.get("toward", "")),
+					str(params_dict.get("rate", ""))], context)
 		"SetCameraZoom":
 			return EventSheetSentence.statement("%s.zoom = %s" % [
 				_ace_target(params_dict), str(params_dict.get("zoom", ""))], context)
