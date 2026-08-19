@@ -39,7 +39,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns a 3D character body's current velocity vector."))
 	descriptors.append(F.make_descriptor("Core", "ApplyCentralImpulse3D", "Apply Central Impulse (3D)", ACEDescriptor.ACEType.ACTION, "apply_central_impulse({impulse})", "", [F.make_param("impulse", "String", "Vector3(0, 0, 0)", "Impulse", "Impulse vector.", "expression")], "General Actions", "Apply impulse {impulse}", "RigidBody3D")
 		.described("Gives a 3D physics body a sudden push (e.g. a knockback or launch)."))
-	descriptors.append(F.make_descriptor("Core", "MakeCamera3DCurrent", "Make Camera Current (3D)", ACEDescriptor.ACEType.ACTION, "make_current()", "", [], "General Actions", "Make this camera current", "Camera3D")
+	descriptors.append(F.make_descriptor("Core", "MakeCamera3DCurrent", "Make Camera Current (3D)", ACEDescriptor.ACEType.ACTION, "make_current()", "", [], "General Actions", "Make current", "Camera3D")
 		.described("Switches the view to this 3D camera, making it the active one."))
 	descriptors.append(F.make_descriptor("Core", "SetCameraFov", "Set Camera FOV", ACEDescriptor.ACEType.ACTION, "fov = {degrees}", "", [F.make_param("degrees", "String", "75.0", "Degrees", "Field of view.", "expression")], "General Actions", "Set FOV to {degrees}", "Camera3D")
 		.described("Sets a 3D camera's field of view in degrees (lower zooms in, higher widens)."))

@@ -5080,6 +5080,10 @@ func _scroll_limit_note(sides: Dictionary) -> String:
 ## question with a guard in front of it - and the importer files the two halves as two conditions,
 ## because that is what the `and` says. Putting them back together is a pure view: the conditions
 ## themselves are untouched, so the line re-emits exactly as it came in.
+## The one thing a second condition must mention before the pair is worth reading as one question.
+const JOINED_CONDITION_MARK := ".get_custom_data("
+
+
 func _joined_condition_groups(conditions: Array) -> Dictionary:
 	var leads: Dictionary = {}
 	var consumed: Dictionary = {}
@@ -5087,7 +5091,9 @@ func _joined_condition_groups(conditions: Array) -> Dictionary:
 	while index < conditions.size() - 1:
 		var first: String = _condition_expression_of(conditions[index])
 		var second: String = _condition_expression_of(conditions[index + 1])
-		if first.is_empty() or second.is_empty():
+		# This pass runs on every event of every sheet, so the overwhelmingly common answer - "these
+		# two questions are not one question" - must cost a substring search, not a parse.
+		if first.is_empty() or not second.contains(JOINED_CONDITION_MARK):
 			index += 1
 			continue
 		var reading: Dictionary = EventSheetSentence.condition_pieces(
@@ -9438,8 +9444,11 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	var grammar: Dictionary = grammar_action_sentence(read_action)
 	if not grammar.is_empty():
 		# A picked row is an instance of a pattern exactly as a typed line is, and the registry must
-		# not care which way the row got onto the sheet.
-		_note_pattern(str(grammar.get("pattern", "")), ActionCodegen.generate_action(read_action))
+		# not care which way the row got onto the sheet. The row's code is generated only when there
+		# IS a pattern to be evidence for, which is the rare case.
+		var claimed_pattern: String = str(grammar.get("pattern", ""))
+		if not claimed_pattern.is_empty():
+			_note_pattern(claimed_pattern, ActionCodegen.generate_action(read_action))
 		grammar = _attributed_grammar(grammar, global_owner)
 		_pending_object_label = str(grammar.get("object", ""))
 		_pending_grammar_segments = grammar.get("segments", []) as Array
