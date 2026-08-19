@@ -7,8 +7,10 @@
 #   docs/*.md          ->  addons/eventsheet/help/<STEM>.md            id "GUIDE-RECIPES"
 #   docs/Addons/*.md   ->  addons/eventsheet/help/Addons/<STEM>.md     id "Addons/Quest"
 #   docs/Modules/*.md  ->  addons/eventsheet/help/Modules/<STEM>.md    id "Modules/Collections"
+#   docs/<locale>/*.md ->  addons/eventsheet/help/<locale>/<STEM>.md    id "fr/GUIDE-RECIPES"
 #   (derived)          ->  addons/eventsheet/help/index.esdoc
 #   (derived)          ->  addons/eventsheet/help/figures.esdoc
+#   (derived)          ->  addons/eventsheet/help/whatsnew.esdoc
 #
 # WHAT IT COSTS, measured rather than estimated, because the payload is the whole argument against
 # shipping a corpus at all: 147 pages, 3.2 MB - the top-level guides plus 72 addon guides plus the
@@ -49,6 +51,30 @@ const INDEX_SOURCE := "res://docs/README.md"
 ## listed: a directory that is not here is simply not part of the corpus (docs/internal/).
 const DOC_SETS := ["", "Addons", "Modules"]
 
+## The whole corpus, plus the TRANSLATED sets: every `docs/<locale>/` folder a translator has
+## started. Those are walked by directory the same way Addons/ and Modules/ are - a translated page
+## ships by existing - but they are deliberately kept out of the TREE grouping below: a French page
+## is not a fourth section of the Manual, it is the French copy of a page that is already in it, and
+## the reader is shown one or the other (see EventSheetDocLocale).
+static func doc_sets() -> Array:
+	var sets: Array = DOC_SETS.duplicate()
+	sets.append_array(locale_sets())
+	return sets
+
+
+## Every locale directory under docs/, sorted. Decided by SHAPE ("fr", "zh_CN") rather than by a
+## list of languages, so a translator who starts pt_BR needs no entry anywhere.
+static func locale_sets() -> Array:
+	var found: Array = []
+	if not DirAccess.dir_exists_absolute(SOURCE_ROOT):
+		return found
+	var names: PackedStringArray = DirAccess.get_directories_at(SOURCE_ROOT)
+	names.sort()
+	for name: String in names:
+		if EventSheetDocLocale.is_locale_prefix(name):
+			found.append(name)
+	return found
+
 
 func _init() -> void:
 	var check_only: bool = OS.get_cmdline_user_args().has("--check") or OS.get_cmdline_args().has("--check")
@@ -57,9 +83,12 @@ func _init() -> void:
 	var drifted: PackedStringArray = drifted_pages(pages)
 	if read_text(EventSheetDocLibrary.FIGURES_PATH) != figures_text(gates):
 		drifted.append("figures.esdoc")
+	if read_text(EventSheetDocWhatsNew.BUNDLE_PATH) != whats_new_text():
+		drifted.append("whatsnew.esdoc")
 	if not check_only:
 		write_bundle(pages)
 		write_text(EventSheetDocLibrary.FIGURES_PATH, figures_text(gates))
+		write_text(EventSheetDocWhatsNew.BUNDLE_PATH, whats_new_text())
 		drifted = PackedStringArray()
 	print("help: pages=%d drifted=%d" % [pages.size(), drifted.size()])
 	print("help: figure verdicts baked=%d drawable=%d" % [gates.size(), _drawable_count(gates)])
@@ -122,6 +151,16 @@ static func _drawable_count(gates: Dictionary) -> int:
 	return count
 
 
+## The What's-new page's exact bytes, extracted from the repository's own CHANGELOG. It is baked
+## here for the same reason the figure verdicts are: the CHANGELOG is not in the shipped plugin, so
+## the page has to travel inside the bundle - and it goes into its own file rather than into the
+## corpus, because a Markdown page in the help folder with no source under docs/ would be reported
+## as drift forever.
+static func whats_new_text() -> String:
+	return EventSheetDocWhatsNew.bundle_text(read_text(EventSheetDocWhatsNew.SOURCE_PATH),
+		EventSheets.docs_version())
+
+
 ## The figure file's exact bytes: the frozen header line, then the payload, built in sorted order.
 static func figures_text(gates: Dictionary) -> String:
 	return "%s\n%s\n" % [EventSheetDocLibrary.FIGURES_HEADER, var_to_str({"version": 1, "gates": gates})]
@@ -160,7 +199,7 @@ static func collect_pages() -> Dictionary:
 	var pages: Dictionary = {}
 	var ids: PackedStringArray = PackedStringArray()
 	var source_by_id: Dictionary = {}
-	for doc_set: String in DOC_SETS:
+	for doc_set: String in doc_sets():
 		var directory_path: String = SOURCE_ROOT if doc_set.is_empty() else SOURCE_ROOT.path_join(doc_set)
 		var directory: DirAccess = DirAccess.open(directory_path)
 		if directory == null:
@@ -198,7 +237,7 @@ static func drifted_pages(pages: Dictionary) -> PackedStringArray:
 ## Every id currently in the bundle, so a guide deleted from docs/ is deleted here too.
 static func bundled_ids() -> PackedStringArray:
 	var ids: PackedStringArray = PackedStringArray()
-	for doc_set: String in DOC_SETS:
+	for doc_set: String in doc_sets():
 		var directory_path: String = BUNDLE_ROOT if doc_set.is_empty() else BUNDLE_ROOT.path_join(doc_set)
 		var directory: DirAccess = DirAccess.open(directory_path)
 		if directory == null:
@@ -213,7 +252,7 @@ static func bundled_ids() -> PackedStringArray:
 
 static func write_bundle(pages: Dictionary) -> void:
 	DirAccess.make_dir_recursive_absolute(BUNDLE_ROOT)
-	for doc_set: String in DOC_SETS:
+	for doc_set: String in doc_sets():
 		if not doc_set.is_empty():
 			DirAccess.make_dir_recursive_absolute(BUNDLE_ROOT.path_join(doc_set))
 	for id: String in bundled_ids():
@@ -261,6 +300,11 @@ static func build_manifest(pages: Dictionary) -> Dictionary:
 			(existing["ids"] as Array).append_array(ids)
 	var unlisted: Array = []
 	for id: Variant in pages:
+		# A translated page is not a page the index forgot: it is the same page in another language,
+		# and the reader is shown it INSTEAD of the English one rather than beside it. It ships and
+		# it is titled; it simply never becomes a row of the tree.
+		if EventSheetDocLocale.locale_of(str(id)) != EventSheetDocLocale.BASE_LOCALE:
+			continue
 		if not grouped.has(str(id)):
 			unlisted.append(str(id))
 	if not unlisted.is_empty():
