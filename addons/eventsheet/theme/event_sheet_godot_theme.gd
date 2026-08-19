@@ -82,7 +82,10 @@ static func apply(
 	event_style.ace_expression_badge_background_color = _role_badge(EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG, base, light_editor)
 	event_style.verb_chip_background_color = base.lerp(dark_1, 0.4)
 	event_style.verb_chip_foreground_color = Color(font_color.r, font_color.g, font_color.b, 0.7)
-	return style
+	# The reading marks, the bars around the sheet and the Manual are derived from the tokens set
+	# above by the same rule every bundled preset uses - so the Godot-adaptive default tracks a light
+	# or dark editor all the way out to the chips, the stripes and the status strip.
+	return EventSheetThemeDerivation.fill_derived_tokens(style)
 
 
 ## A verb role's accent for a generated style: kept at its own hue, darkened on a light editor theme so

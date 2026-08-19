@@ -20,8 +20,8 @@ extends Resource
 # ── Chips and badges ──────────────────────────────────────────────────────────────────────────
 ## The neutral chip on an Include bar button (Run now / Reload / Output / Enable plugin), the
 ## coverage chip, and every other plain chip in a reading row.
-@export var chip_background_color: Color = EventSheetPalette.COLOR_CHIP_BG
-@export var chip_foreground_color: Color = EventSheetPalette.COLOR_CHIP_FG
+@export var plain_chip_background_color: Color = EventSheetPalette.COLOR_CHIP_BG
+@export var plain_chip_foreground_color: Color = EventSheetPalette.COLOR_CHIP_FG
 ## The picker-category chip ("Group › Subgroup" on a variable row, a pack's category).
 @export var category_chip_background_color: Color = EventSheetPalette.COLOR_CAT_CHIP_BG
 @export var category_chip_foreground_color: Color = EventSheetPalette.COLOR_CAT_CHIP_FG

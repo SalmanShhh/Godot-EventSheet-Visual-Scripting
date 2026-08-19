@@ -39,6 +39,10 @@ static func duplicate_style(base_style: EventSheetEditorStyle) -> EventSheetEdit
 		style.condition_style = EventSheetElementStyle.new()
 	if style.action_style == null:
 		style.action_style = EventSheetElementStyle.new()
+	# A preset saved before the reading / chrome / Manual tokens existed carries no sub-style for
+	# them; seeding here means every section of the form has something to edit, whatever the theme
+	# was written against.
+	style.ensure_defaults()
 	return style
 
 
@@ -238,6 +242,70 @@ const _TOKEN_DESCRIPTIONS := {
 	"badge_background_color": "Fill of the role badge on the chip.",
 	"badge_foreground_color": "Text colour of the role badge.",
 	"corner_radius": "Corner roundness of the chip, in pixels.",
+	# ── Reading marks ────────────────────────────────────────────────────────────────────────
+	"plain_chip_background_color": "The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.",
+	"plain_chip_foreground_color": "The word on those plain chips.",
+	"category_chip_background_color": "The chip that says where something sits in the picker (\"Group › Subgroup\").",
+	"category_chip_foreground_color": "The word on the picker-category chip.",
+	"inspector_chip_background_color": "The \"Inspector\" chip on a variable the game's designer can edit.",
+	"inspector_chip_foreground_color": "The word on the Inspector chip.",
+	"constant_badge_background_color": "The badge that says a variable is const or static.",
+	"constant_badge_foreground_color": "The word on the const / static badge.",
+	"setup_badge_background_color": "The dim badge on a setup strip - the ▣ and ⇥ marks that open an Include bar.",
+	"setup_badge_foreground_color": "The glyph on a setup badge.",
+	"code_badge_background_color": "The \"Script block\" pill on a row that kept its GDScript as it was written.",
+	"code_badge_foreground_color": "The words on the Script block pill.",
+	"lift_note_badge_background_color": "The \"⚠ code\" badge that asks you to look at a line the sheet could not read.",
+	"lift_note_badge_foreground_color": "The words on the ⚠ code badge.",
+	"or_badge_background_color": "The plate behind an OR badge, when the condition lane has nothing of its own to say.",
+	"or_badge_foreground_color": "The word on the OR badge.",
+	"tempo_every_tick_background_color": "The ⟳ badge on an event that runs every tick - a tween beat, a repeating timer.",
+	"tempo_every_tick_foreground_color": "The glyph on the every-tick badge.",
+	"tempo_input_background_color": "The ⌨ badge on an event a key or a button starts.",
+	"tempo_input_foreground_color": "The glyph on the input badge.",
+	"tempo_once_background_color": "The ▶ badge on an event that runs once.",
+	"tempo_once_foreground_color": "The glyph on the runs-once badge.",
+	"primary_text_color": "The main word of a row's sentence.",
+	"secondary_text_color": "The quieter half of a sentence.",
+	"muted_text_color": "The muted detail after it - an Include bar's file name, an INPUT row's keys, a head bar's subtitle.",
+	"string_value_color": "Text values inside a parameter (\"coin\"), so magic words are findable by colour.",
+	"boolean_value_color": "true and false inside a parameter.",
+	"error_text_color": "\"N errors - the game will not run this script\", and the words on a broken row.",
+	"error_stripe_color": "The red stripe and wash down a row the engine cannot parse.",
+	"firing_stripe_color": "The stripe that pulses on an event firing right now while the game runs.",
+	"disabled_row_color": "The scrim over a row that is switched off.",
+	"breakpoint_color": "The breakpoint dot in the event-number margin.",
+	"bookmark_color": "The bookmark pennant in the event-number margin.",
+	"event_number_rail_color": "The hairline down the right edge of the event-number margin.",
+	"indent_guide_color": "The faint stop that marks each level of indent.",
+	"tree_guide_color": "The stronger line from an event down to its sub-events - the one you follow with your eye.",
+	"drag_line_color": "The line that shows where a dragged row will land.",
+	"drag_refusal_color": "The red a drop turns when it is not allowed.",
+	"drag_bubble_refused_background_color": "The bubble that says why a drop was refused (\"dealt is not visible here\").",
+	"drag_bubble_background_color": "The same bubble when the drop is fine.",
+	"drag_bubble_text_color": "The words in that bubble.",
+	"color_swatch_border_color": "The outline around a colour value's swatch, so a pale colour still reads as a swatch.",
+	"name_highlight_strength": "How strongly every other use of a hovered variable lights up, inside that variable's own scope.",
+	# ── Bars around the sheet ────────────────────────────────────────────────────────────────
+	"object_bar_section_color": "The headings down the Object bar (SCENE, GLOBALS, INPUT) and the row count beside each entry.",
+	"object_bar_warning_color": "The ⚠ on an Object bar entry the sheet flagged - a node the scene lost, an action the Input Map does not have.",
+	"object_bar_hover_wash_color": "The wash over every row that uses the object you point at in the Object bar.",
+	"object_bar_grip_color": "The grab dots on the row under the mouse.",
+	"object_bar_grip_active_color": "Those dots once the pointer is in the grab zone.",
+	"status_text_color": "The message along the bottom of the dock.",
+	"status_error_color": "That message when something went wrong.",
+	"row_address_color": "The row address beside it (\"event 12 ▸ action 2\").",
+	"unsaved_dot_color": "The ● that says this sheet has edits you have not saved.",
+	"title_path_color": "The file path printed beside the sheet's name.",
+	# ── Manual pages ─────────────────────────────────────────────────────────────────────────
+	"page_muted_text_color": "Captions, breadcrumbs and the quiet words on a Manual page. Clear = follow the editor.",
+	"page_background_color": "The paper behind a Manual page. Leave it clear and the Manual sits on the editor's own background, the way it ships.",
+	"heading_color": "Headings on a Manual page. Clear = follow the editor's own text colour.",
+	"search_hit_color": "The highlight behind a search hit inside a page.",
+	"contents_active_background_color": "The pill on the contents entry for the page you are reading. Clear = the editor's accent.",
+	"contents_active_text_color": "The word on that pill.",
+	"note_color": "The note above a verb its pack has deprecated.",
+	"table_hairline_color": "The rule under a table's header row on a page.",
 }
 
 
@@ -393,6 +461,9 @@ func _rebuild_detail_form() -> void:
 	_build_section(_detail_form, "Sheet & rows (event style)", _working_style.event_style)
 	_build_section(_detail_form, "Condition cells", _working_style.condition_style)
 	_build_section(_detail_form, "Action cells", _working_style.action_style)
+	_build_section(_detail_form, "Reading marks - chips, badges, guides, stripes", _working_style.reading_style)
+	_build_section(_detail_form, "Bars around the sheet - Object bar, status strip, tab title", _working_style.chrome_style)
+	_build_section(_detail_form, "Manual pages", _working_style.manual_style)
 
 
 ## One labeled control per editable token, reflectively.

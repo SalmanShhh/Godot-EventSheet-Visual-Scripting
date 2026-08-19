@@ -26,7 +26,7 @@ extends Resource
 @export var heading_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 ## Captions, breadcrumbs, the "was this page helpful?" prompt and the text-size readout - every quiet
 ## word on a page.
-@export var muted_text_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var page_muted_text_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 ## The highlight behind a search hit inside a page.
 @export var search_hit_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 ## The contents entry for the page you are reading: a filled pill, and the word on it.
@@ -48,7 +48,7 @@ func resolve_heading(editor_heading: Color) -> Color:
 
 
 func resolve_muted(editor_muted: Color) -> Color:
-	return muted_text_color if has_opinion(muted_text_color) else editor_muted
+	return page_muted_text_color if has_opinion(page_muted_text_color) else editor_muted
 
 
 func resolve_search_hit(shipped_hit: Color) -> Color:

@@ -775,8 +775,8 @@ func _editor_tool_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": _viewport._get_reading_style().chip_background_color,
-			"badge_fg": _viewport._get_reading_style().chip_foreground_color,
+			"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
+			"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color,
 			"kind": str(button["kind"]),
 			"line_index": 0
 		}))
@@ -806,8 +806,8 @@ func _reading_coverage_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 		"editable": false,
 		"badge": true,
 		"badge_style": "scope",
-		"badge_bg": _viewport._get_reading_style().chip_background_color,
-		"badge_fg": _viewport._get_reading_style().chip_foreground_color,
+		"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
+		"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color,
 		"kind": "reading_coverage",
 		"line_index": 0
 	}))
@@ -974,8 +974,8 @@ func _scene_object_bar_spans(object_bar: Dictionary, event_style: EventSheetEven
 		spans.append(_make_span(node_type, SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": _viewport._get_reading_style().chip_background_color,
-			"badge_fg": _viewport._get_reading_style().chip_foreground_color
+			"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
+			"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color
 		}, true)))
 	var receipt: String = "· %s" % script_path.get_file()
 	var instances: int = int(object_bar.get("instances", 1))
@@ -1042,8 +1042,8 @@ func _build_base_script_include_bar_row(sheet: EventSheetResource) -> EventRowDa
 		_make_span(base_path.get_file(), SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": _viewport._get_reading_style().chip_background_color,
-			"badge_fg": _viewport._get_reading_style().chip_foreground_color
+			"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
+			"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color
 		}, true)),
 		_make_span(EventSheetL10n.translate("- open as a sheet"), SemanticSpan.SpanType.COMMENT,
 			open_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true))
@@ -1057,8 +1057,8 @@ func _pack_include_chip(text: String) -> SemanticSpan:
 		"editable": false,
 		"badge": true,
 		"badge_style": "scope",
-		"badge_bg": _viewport._get_reading_style().chip_background_color,
-		"badge_fg": _viewport._get_reading_style().chip_foreground_color,
+		"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
+		"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color,
 		"kind": "pack_include",
 		"line_index": 0
 	})
@@ -1663,7 +1663,7 @@ static func helper_doc_line(event_function: EventFunction) -> String:
 func _verb_chip_colors() -> Array:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	if event_style == null:
-		return [_viewport._get_reading_style().chip_background_color, _viewport._get_reading_style().chip_foreground_color]
+		return [_viewport._get_reading_style().plain_chip_background_color, _viewport._get_reading_style().plain_chip_foreground_color]
 	return [event_style.verb_chip_background_color, event_style.verb_chip_foreground_color]
 
 
@@ -3573,8 +3573,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
-				"badge_bg": _viewport._get_reading_style().chip_background_color,
-				"badge_fg": _viewport._get_reading_style().chip_foreground_color,
+				"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
+				"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color,
 				"kind": "raw_code",
 				"line_index": 0
 			}),
@@ -3716,8 +3716,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
-				"badge_bg": _viewport._get_reading_style().chip_background_color,
-				"badge_fg": _viewport._get_reading_style().chip_foreground_color,
+				"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
+				"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color,
 				"kind": "raw_code",
 				"line_index": 0
 			}))
@@ -5560,8 +5560,8 @@ func _build_variable_row(
 					"editable": false,
 					"badge": true,
 					"badge_style": "scope",
-					"badge_bg": _viewport._get_reading_style().chip_background_color,
-					"badge_fg": _viewport._get_reading_style().chip_foreground_color
+					"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
+					"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color
 				}, true)
 			),
 			_make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, variable_meta.merged({"editable": false}, true))
@@ -6144,8 +6144,8 @@ func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, a
 		base_meta.duplicate().merged({
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": _viewport._get_reading_style().chip_background_color,
-			"badge_fg": _viewport._get_reading_style().chip_foreground_color
+			"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
+			"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color
 		}, true).merged(action_style_meta, false)))
 	var runs: String = str(reading.get("runs", ""))
 	var tail: String = ""

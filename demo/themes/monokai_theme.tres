@@ -1,11 +1,14 @@
 [gd_resource type="Resource" script_class="EventSheetEditorStyle" format=3]
 
-[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="1_awl7g"]
-[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="2_41go4"]
-[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="3_cbrq7"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="1_icxfu"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_chrome_style.gd" id="2_ad3vu"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="3_q363u"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_manual_style.gd" id="4_ta6oj"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_reading_style.gd" id="5_24hqa"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="6_utq72"]
 
-[sub_resource type="Resource" id="Resource_icxfu"]
-script = ExtResource("1_awl7g")
+[sub_resource type="Resource" id="Resource_nian1"]
+script = ExtResource("1_icxfu")
 text_color = Color(0.6509804, 0.8862745, 0.18039216, 1)
 chip_background_color = Color(0.6509804, 0.8862745, 0.18039216, 0.08)
 chip_border_color = Color(0.6509804, 0.8862745, 0.18039216, 0.2)
@@ -13,8 +16,20 @@ chip_hover_color = Color(0.6509804, 0.8862745, 0.18039216, 0.3)
 badge_background_color = Color(0.24313726, 0.23921569, 0.19607843, 1)
 badge_foreground_color = Color(0.6509804, 0.8862745, 0.18039216, 1)
 
-[sub_resource type="Resource" id="Resource_ad3vu"]
-script = ExtResource("1_awl7g")
+[sub_resource type="Resource" id="Resource_hig3g"]
+script = ExtResource("2_ad3vu")
+object_bar_section_color = Color(0.53552943, 0.5423686, 0.53973335, 1)
+object_bar_hover_wash_color = Color(0.95, 0.96, 0.98, 0.07)
+object_bar_grip_color = Color(0.95, 0.96, 0.98, 0.28)
+object_bar_grip_active_color = Color(0.95, 0.96, 0.98, 0.62)
+status_text_color = Color(0.8862353, 0.89574903, 0.9122667, 1)
+status_error_color = Color(1, 0.33333334, 0.33333334, 1)
+row_address_color = Color(0.95, 0.96, 0.98, 0.65)
+unsaved_dot_color = Color(0.9098039, 0.7411765, 0.4509804, 1)
+title_path_color = Color(0.69494116, 0.7029961, 0.7090667, 1)
+
+[sub_resource type="Resource" id="Resource_g5je8"]
+script = ExtResource("1_icxfu")
 text_color = Color(0.4, 0.8509804, 0.9372549, 1)
 chip_background_color = Color(0.4, 0.8509804, 0.9372549, 0.08)
 chip_border_color = Color(0.4, 0.8509804, 0.9372549, 0.2)
@@ -22,17 +37,8 @@ chip_hover_color = Color(0.4, 0.8509804, 0.9372549, 0.3)
 badge_background_color = Color(0.24313726, 0.23921569, 0.19607843, 1)
 badge_foreground_color = Color(0.4, 0.8509804, 0.9372549, 1)
 
-[sub_resource type="Resource" id="Resource_q363u"]
-script = ExtResource("2_41go4")
-language_block_accent_color = Color(0.68235296, 0.5058824, 1.0, 1)
-ace_action_badge_background_color = Color(0.27780392, 0.16580392, 0.03403922, 1)
-ace_action_accent_color = Color(0.99215686, 0.59215686, 0.12156863, 1)
-ace_condition_badge_background_color = Color(0.18227451, 0.24815686, 0.0505098, 1)
-ace_condition_accent_color = Color(0.65098039, 0.88627451, 0.18039216, 1)
-ace_expression_badge_background_color = Color(0.19105882, 0.14164706, 0.28, 1)
-ace_expression_accent_color = Color(0.68235294, 0.50588235, 1, 1)
-verb_chip_background_color = Color(0.22219608, 0.22588236, 0.20007843, 1)
-verb_chip_foreground_color = Color(0.64823529, 0.63803922, 0.58960785, 1)
+[sub_resource type="Resource" id="Resource_xwxa4"]
+script = ExtResource("3_q363u")
 sheet_background_color = Color(0.15294118, 0.15686275, 0.13333334, 1)
 row_background_color = Color(0.15294118, 0.15686275, 0.13333334, 1)
 row_background_alt_color = Color(0.17254902, 0.1764706, 0.14901961, 1)
@@ -63,8 +69,62 @@ behavior_accent_color = Color(0.9764706, 0.14901961, 0.44705883, 1)
 group_corner_radius = 6
 region_corner_radius = 8
 
+[sub_resource type="Resource" id="Resource_8mijw"]
+script = ExtResource("4_ta6oj")
+heading_color = Color(0.8862353, 0.89574903, 0.9122667, 1)
+page_muted_text_color = Color(0.53552943, 0.5423686, 0.53973335, 1)
+note_color = Color(0.9098039, 0.7411765, 0.4509804, 1)
+table_hairline_color = Color(0.95, 0.96, 0.98, 0.16)
+
+[sub_resource type="Resource" id="Resource_s8o28"]
+script = ExtResource("5_24hqa")
+plain_chip_background_color = Color(0.24858823, 0.2532392, 0.23493335, 1)
+plain_chip_foreground_color = Color(0.6710294, 0.6789019, 0.68366665, 1)
+category_chip_background_color = Color(0.38352942, 0.15466668, 0.22117648, 1)
+category_chip_foreground_color = Color(0.8529412, 0.15019609, 0.39999998, 1)
+inspector_chip_background_color = Color(0.26411766, 0.4692157, 0.49509805, 1)
+inspector_chip_foreground_color = Color(0.38764706, 0.8162745, 0.89705884, 1)
+constant_badge_background_color = Color(0.30235296, 0.3756863, 0.14745098, 1)
+constant_badge_foreground_color = Color(0.6111373, 0.82792157, 0.17662746, 1)
+setup_badge_background_color = Color(0.21670589, 0.22111373, 0.20106667, 1)
+setup_badge_foreground_color = Color(0.51161766, 0.5182745, 0.51433337, 1)
+code_badge_background_color = Color(0.23264706, 0.23717648, 0.21800001, 1)
+code_badge_foreground_color = Color(0.59132355, 0.5985882, 0.59900004, 1)
+lift_note_badge_background_color = Color(0.19114119, 0.19266275, 0.14973333, 1)
+lift_note_badge_foreground_color = Color(0.9098039, 0.7411765, 0.4509804, 1)
+or_badge_background_color = Color(0.29641178, 0.30142745, 0.28573334, 1)
+or_badge_foreground_color = Color(0.7507353, 0.75921565, 0.7683333, 1)
+tempo_every_tick_background_color = Color(0.68235296, 0.55588233, 0.3382353, 1)
+tempo_every_tick_foreground_color = Color(0.08, 0.09, 0.11, 1)
+tempo_input_background_color = Color(0.3, 0.63823533, 0.7029412, 1)
+tempo_input_foreground_color = Color(0.08, 0.09, 0.11, 1)
+tempo_once_background_color = Color(0.732353, 0.111764714, 0.33529413, 1)
+tempo_once_foreground_color = Color(0.97, 0.97, 0.99, 1)
+primary_text_color = Color(0.8862353, 0.89574903, 0.9122667, 1)
+secondary_text_color = Color(0.69494116, 0.7029961, 0.7090667, 1)
+muted_text_color = Color(0.53552943, 0.5423686, 0.53973335, 1)
+string_value_color = Color(0.4, 0.8509804, 0.9372549, 1)
+boolean_value_color = Color(0.8529412, 0.15019609, 0.39999998, 1)
+error_text_color = Color(1, 0.33333334, 0.33333334, 1)
+firing_stripe_color = Color(0.49, 0.87333333, 0.94666666, 1)
+disabled_row_color = Color(0.95, 0.96, 0.98, 0.35)
+breakpoint_color = Color(1, 0.33333334, 0.33333334, 1)
+bookmark_color = Color(0.9098039, 0.7411765, 0.4509804, 1)
+event_number_rail_color = Color(0.11764706, 0.12156863, 0.10980392, 1)
+indent_guide_color = Color(0.95, 0.96, 0.98, 0.08)
+tree_guide_color = Color(0.95, 0.96, 0.98, 0.2)
+drag_line_color = Color(0.9764706, 0.14901961, 0.44705883, 0.95)
+drag_refusal_color = Color(1, 0.33333334, 0.33333334, 1)
+drag_bubble_refused_background_color = Color(0.53411764, 0.23627451, 0.22333333, 1)
+drag_bubble_background_color = Color(0.22960785, 0.22686276, 0.18666667, 1)
+drag_bubble_text_color = Color(0.91811764, 0.92787445, 0.9461333, 1)
+color_swatch_border_color = Color(0.95, 0.96, 0.98, 0.55)
+
 [resource]
-script = ExtResource("3_cbrq7")
-event_style = SubResource("Resource_q363u")
-condition_style = SubResource("Resource_ad3vu")
-action_style = SubResource("Resource_icxfu")
+script = ExtResource("6_utq72")
+event_style = SubResource("Resource_xwxa4")
+condition_style = SubResource("Resource_g5je8")
+action_style = SubResource("Resource_nian1")
+reading_style = SubResource("Resource_s8o28")
+chrome_style = SubResource("Resource_hig3g")
+manual_style = SubResource("Resource_8mijw")

@@ -123,4 +123,7 @@ func _build_style(palette: Dictionary) -> EventSheetEditorStyle:
 	style.event_style = event_style
 	style.condition_style = condition_style
 	style.action_style = action_style
-	return style
+	# The reading marks, the bars around the sheet and the Manual are derived from the tokens above
+	# rather than listed again per palette: one rule, so a new token reaches all six presets the day
+	# it ships instead of leaving them on EventForge's own dark marks.
+	return EventSheetThemeDerivation.fill_derived_tokens(style)
