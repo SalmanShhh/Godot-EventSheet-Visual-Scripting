@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - the picker answers to the Godot call you already know
+
+- **Type the call, get the row.** The picker now searches the CODE as well as the words: every
+  identifier an action or condition's template calls or reads is indexed, so `queue_free` finds
+  Queue Free, `add_child` finds Add Child, `tween_property` finds Tween Property and `is_on_floor`
+  finds Is On Floor. The row the call is ABOUT leads - a template that is one call outranks one
+  that reaches the same call along the way - and the matched GDScript is written beside the name,
+  so the sheet's word and the call you typed are visibly one thing. The reading's own idiom tables
+  answer too, which is what keeps the picker and the reading from ever disagreeing about what a
+  call is called here.
+
 ### Added - a place to live in a long sheet: the minimap and the History list
 
 - **A minimap down the right edge of the canvas** (View ▸ Minimap). One 1 to 2 px bar per row,
