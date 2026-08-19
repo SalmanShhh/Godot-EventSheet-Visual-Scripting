@@ -842,6 +842,44 @@ opened file says the same thing before and after the lift.
 
 ![The same file further down: Move toward destination at speed, Has arrived and Stop for the glide, then Rotate clockwise, Wrap around layout horizontally, Bound to layout, Pin to anchor by position and by angle, and Fade out over 1 seconds then destroy](images/opened-script-behaviors-one-liners.png)
 
+#### Data assets, and the window
+
+Two more families of line that a plain Godot script is full of.
+
+A script that `extends Resource` is not an object in the scene - it is a **data type**, and that is
+what its Include bar says, under the name a designer would use out loud (`enemy_stats.gd` opens as
+an `Enemy Stats`). Its `@export`s are **Field** rows rather than instance variables, because every
+`.tres` saved from it is one asset with those fields filled in. In the events, an asset reads as the
+asset: `load("res://data/slime.tres") as EnemyStats` is **the data asset slime.tres**, a field read
+off one says whose it is (`stats.hp` is **stats's hp**), and `ResourceSaver.save(stats, path)` is
+**System ▸ Save data asset stats as slime.tres**. The rows that write exactly those lines are **Data
+Asset** and **Save Data Asset** in the picker's Files folder. A `.tres` also opens as a table sheet,
+and a folder of them as one grid - see the Custom Resources guide.
+
+![A Resource script's head: the identity bar reading "Enemy Stats Preview" with a "data type" chip instead of the Node class ladder, over its three exported fields](images/data-type-include-bar.png)
+
+![An opened script's data-asset rows: Set s to the data asset slime.tres, and Save data asset stats as slime.tres](images/data-asset-reading.png)
+
+The window is an object too, so the lines that drive it wear its name:
+
+| the GDScript | reads as |
+| --- | --- |
+| `get_window().size = Vector2i(1280, 720)` | `Window ▸ Set size to 1280 × 720` |
+| `get_window().title = "My Game"` | `Window ▸ Set title to "My Game"` |
+| `get_window().mode = Window.MODE_FULLSCREEN` | `Window ▸ Set fullscreen on` |
+| `DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED)` | `Window ▸ Set vsync on` |
+| `Engine.max_fps = 60` | `System ▸ Set max FPS to 60` |
+| `get_viewport().msaa_2d = Viewport.MSAA_4X` | `System ▸ Set anti-aliasing to 4×` |
+| `get_viewport().get_texture().get_image()` | `a screenshot` |
+| `img.save_png("user://shot.png")` | `System ▸ Save image img as shot.png` |
+| `$SubViewport.get_texture()` | `SubViewport rendered as an image` |
+
+Every one of these has a row that writes the same line: the **Game Window** folder in the picker
+holds the window verbs plus **Set Anti-aliasing**, **Save Image As**, **Screenshot** and **Rendered
+As An Image**. A sheet-authored options screen and a hand-written one are the same file.
+
+![An opened script's window rows: Window Set size to 1280 x 720, Set title, Set vsync on, then System Set max FPS and Set anti-aliasing, and a screenshot function below](images/window-render-reading.png)
+
 #### The reading lenses - names you can turn on and off
 
 - **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
