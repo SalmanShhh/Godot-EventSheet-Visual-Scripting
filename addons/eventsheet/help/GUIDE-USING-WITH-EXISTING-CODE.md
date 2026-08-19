@@ -1122,6 +1122,32 @@ Those are the words the shipped **State Machine** behavior publishes too - **Go 
 a machine you attached read identically, and the event that asks the question claims the
 `state_machine` pattern (with the State Machine pack named as the behavior it could become).
 
+The machine itself is read as the behavior it is. An `enum` plus a variable of that enum started on
+one of its members is an FSM on the object, so the head's **Behaviors** folder grows one ordinary
+line - `FSM · Idle`, the behavior and the state it starts in - beside any behavior the scene mounts
+on the same object. Hovering that line names the plumbing it stands for: the enum, the state
+variable, the transition function, the enter and exit matches, and a `previous_state` when the file
+keeps one. Nothing else about the machine goes on the canvas, because a behavior does not put its
+plumbing on a sheet.
+
+The rows that drive it read as the behavior's own vocabulary:
+
+| the GDScript | reads as |
+| --- | --- |
+| `change_state(State.JUMP)` | `FSM ▸ Go to state "Jump"` |
+| `state = State.JUMP` | `FSM ▸ Go to state "Jump"` |
+| `state == State.JUMP` | `FSM ▸ Current state is "Jump"` |
+| `previous_state == State.DASH` | `FSM ▸ Previous state is "Dash"` |
+| `state in [State.IDLE, State.RUN]` | `FSM ▸ Current state in list "Idle", "Run"` |
+| `State.keys()[state]` | `Player.FSM.CurrentState` |
+
+A state's name reads as the word you would say out loud (`WALL_SLIDE` shows as `Wall Slide`); the
+enum's own spelling is the code's and stays on hover. The three functions are found by what they do
+rather than by their names - the transition is the one that assigns the state variable from one of
+its parameters, and the calls it makes on the state before and after that assignment are exit and
+enter - so a file spelling them `set_state` and `_on_enter` reads exactly the same. All display
+only: the file is untouched and it still re-emits byte for byte.
+
 On real code the effect compounds. Here is the plugin's own semantic analyzer, whose annotation table is
 31 entries long:
 

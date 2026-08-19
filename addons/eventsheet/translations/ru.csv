@@ -2466,6 +2466,12 @@ Runs every tick,Выполняется каждый тик
 runs every tick,выполняется каждый тик
 every tick,каждый тик
 Current state is,Текущее состояние -
+Go to state {state},Перейти в состояние {state}
+Current state is {state},Текущее состояние - {state}
+Previous state is {state},Предыдущее состояние - {state}
+Current state in list {states},Текущее состояние в списке {states}
+Previous state in list {states},Предыдущее состояние в списке {states}
+written into this script,записано в этот скрипт
 "one named state at a time, switched by Go to state","одно именованное состояние за раз, переключается через Перейти к состоянию"
 Load layout {path} in the background,Загрузить макет {path} в фоне
 layout {path} has finished loading,макет {path} загружен

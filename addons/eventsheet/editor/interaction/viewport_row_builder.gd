@@ -1114,9 +1114,18 @@ func _build_pack_about_row(sheet: EventSheetResource, fallback_text: String = ""
 func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	var bars: Array[EventRowData] = []
 	var facts: Dictionary = EventSheetObjectFacts.sheet_object_facts(sheet)
-	if facts.is_empty():
+	var behaviors: Array = facts.get("behaviors", []) if not facts.is_empty() else []
+	# ── S1 ─────────────────────────────────────────────────────────────────────────────────────
+	# A machine this file WRITES OUT is a behavior on the object exactly as a mounted pack node is,
+	# so it is one ordinary line here - "FSM · Idle" - and the enum, the state variable and the
+	# transition functions it stands for show on hover. Nothing else about the machine is added to
+	# the canvas, because a behavior does not put its plumbing on a sheet.
+	var written_machine: Array = _written_behaviors(sheet)
+	if not written_machine.is_empty():
+		behaviors = behaviors.duplicate()
+		behaviors.append_array(written_machine)
+	if behaviors.is_empty() and facts.is_empty():
 		return bars
-	var behaviors: Array = facts.get("behaviors", [])
 	if not behaviors.is_empty():
 		var names: PackedStringArray = PackedStringArray()
 		var members: Array[EventRowData] = []
@@ -1242,7 +1251,31 @@ func _input_action_detail(facts: Dictionary) -> String:
 
 ## One behavior's settings as the scene wrote them: `max hp = 50 · regen = 1`, "" when the scene left
 ## the pack on its defaults (which is worth saying by saying nothing).
+## S1. The behaviors this file WRITES OUT rather than mounts - today exactly one, the state machine an
+## enum plus a variable of it is. Shaped like a scene-mounted behavior so the Behaviors folder cannot
+## tell the two apart, which is the point: a hand-rolled machine and the shipped pack are one line
+## each, with the same name and the same starting state.
+func _written_behaviors(sheet: EventSheetResource) -> Array:
+	if sheet == null:
+		return []
+	var machine: Dictionary = EventSheetStateMachineFacts.facts(
+		EventSheetViewportReadingRows.ordered_code_lines(sheet))
+	if machine.is_empty():
+		return []
+	return [{
+		"name": EventSheetStateMachineFacts.head_line(machine),
+		"node": "",
+		"properties": [],
+		"written": EventSheetStateMachineFacts.plumbing_note(machine)
+	}]
+
+
 func _behavior_settings_text(behavior: Dictionary) -> String:
+	# S1. A behavior the file writes out says so, and says with what: an event sheet's own behaviors
+	# have settings, and this one has plumbing.
+	var written: String = str(behavior.get("written", "")).strip_edges()
+	if not written.is_empty():
+		return written
 	var parts: PackedStringArray = PackedStringArray()
 	for entry: Variant in behavior.get("properties", []):
 		var property: Dictionary = entry

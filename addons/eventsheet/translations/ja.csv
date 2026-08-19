@@ -2466,6 +2466,12 @@ Runs every tick,毎ティック実行
 runs every tick,毎ティック実行
 every tick,毎ティック
 Current state is,現在の状態が
+Go to state {state},状態 {state} へ移行
+Current state is {state},現在の状態が {state}
+Previous state is {state},直前の状態が {state}
+Current state in list {states},現在の状態がリスト {states} のいずれか
+Previous state in list {states},直前の状態がリスト {states} のいずれか
+written into this script,このスクリプトに書かれている
 "one named state at a time, switched by Go to state",常に 1 つの名前付き状態。状態へ移行 で切り替えます
 Load layout {path} in the background,レイアウト {path} をバックグラウンドで読み込む
 layout {path} has finished loading,レイアウト {path} の読み込みが完了した

@@ -2466,6 +2466,12 @@ Runs every tick,每个 tick 运行
 runs every tick,每个 tick 运行
 every tick,每个 tick
 Current state is,当前状态为
+Go to state {state},切换到状态 {state}
+Current state is {state},当前状态是 {state}
+Previous state is {state},上一个状态是 {state}
+Current state in list {states},当前状态在列表 {states} 中
+Previous state in list {states},上一个状态在列表 {states} 中
+written into this script,写在此脚本中
 "one named state at a time, switched by Go to state",同一时间只有一个命名状态，用 前往状态 切换
 Load layout {path} in the background,在后台加载布局 {path}
 layout {path} has finished loading,布局 {path} 已加载完成

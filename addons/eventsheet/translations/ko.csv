@@ -2466,6 +2466,12 @@ Runs every tick,매 틱 실행
 runs every tick,매 틱 실행
 every tick,매 틱
 Current state is,현재 상태가
+Go to state {state},상태 {state}(으)로 전환
+Current state is {state},현재 상태가 {state}
+Previous state is {state},이전 상태가 {state}
+Current state in list {states},현재 상태가 목록 {states} 중 하나
+Previous state in list {states},이전 상태가 목록 {states} 중 하나
+written into this script,이 스크립트에 작성됨
 "one named state at a time, switched by Go to state","한 번에 하나의 이름 있는 상태, 상태로 이동 으로 전환"
 Load layout {path} in the background,레이아웃 {path} 을(를) 백그라운드에서 불러오기
 layout {path} has finished loading,레이아웃 {path} 불러오기가 끝났다

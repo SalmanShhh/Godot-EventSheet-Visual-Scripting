@@ -2466,6 +2466,12 @@ Runs every tick,Läuft jeden Tick
 runs every tick,läuft jeden Tick
 every tick,jeder Tick
 Current state is,Aktueller Zustand ist
+Go to state {state},Gehe zu Zustand {state}
+Current state is {state},Aktueller Zustand ist {state}
+Previous state is {state},Vorheriger Zustand ist {state}
+Current state in list {states},Aktueller Zustand in Liste {states}
+Previous state in list {states},Vorheriger Zustand in Liste {states}
+written into this script,in dieses Skript geschrieben
 "one named state at a time, switched by Go to state","immer genau ein benannter Zustand, umgeschaltet mit Gehe zu Zustand"
 Load layout {path} in the background,Layout {path} im Hintergrund laden
 layout {path} has finished loading,Layout {path} ist fertig geladen
