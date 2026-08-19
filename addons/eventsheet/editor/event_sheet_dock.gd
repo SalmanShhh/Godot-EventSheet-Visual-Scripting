@@ -5723,4 +5723,111 @@ func _on_save_view_confirmed() -> void:
 ## Forgets a saved view.
 func delete_saved_view(name: String) -> void:
 	if EventSheetSavedViews.delete_view(name):
-		_set_status(EventSheetL10n.translate("Deleted the view %s.") % name)
+		_set_status(EventSheetL10n.translate("Forgot the view %s.") % name)
+
+
+# ── V13. Starter events per object, and the same events for another object (appended block) ───
+# Two gestures on the Object bar's right-click menu. Both are ordinary sheet edits through the one
+# undo funnel - the starters ADD events (a trigger each, and the sheet's own "+ Add action"
+# placeholder waiting under it), the duplicate COPIES the events an object already has and points
+# each copy at another object.
+
+
+## The class the sheet knows this object is, and the triggers any behaviour pack on it fires.
+func _object_starter_facts(object_label: String) -> Dictionary:
+	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var host_class: String = str(entry.get("class", "")).strip_edges()
+	if host_class.is_empty() and _current_sheet != null:
+		host_class = str(_current_sheet.host_class).strip_edges()
+	var pack_triggers: PackedStringArray = PackedStringArray()
+	var declared: Variant = entry.get("signals", PackedStringArray())
+	if declared is PackedStringArray:
+		pack_triggers = declared as PackedStringArray
+	elif declared is Array:
+		for name_entry: Variant in (declared as Array):
+			pack_triggers.append(str(name_entry))
+	return {"class": host_class, "pack_triggers": pack_triggers}
+
+
+## Adds the events this object's class is usually given - one event per starter trigger, with an
+## empty action lane, plus a declaration for any signal the starters name that the sheet does not
+## declare yet. One undo step.
+func add_common_events_for(object_label: String) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	var facts: Dictionary = _object_starter_facts(object_label)
+	var starters: Array = EventSheetStarterEvents.starters_for(str(facts.get("class", "")),
+		facts.get("pack_triggers", PackedStringArray()))
+	if starters.is_empty():
+		_set_status(EventSheetL10n.translate("No common events are known for %s.") % object_label, true)
+		return
+	var added: Dictionary = {"events": 0, "signals": 0}
+	var changed: bool = _perform_undoable_sheet_edit("Add Common Events", func() -> bool:
+		for declaration: Variant in EventSheetStarterEvents.missing_signal_rows(starters, _current_sheet):
+			_current_sheet.events.append(declaration)
+			added["signals"] = int(added["signals"]) + 1
+		for starter: Variant in starters:
+			_current_sheet.events.append(EventSheetStarterEvents.build_event(starter as Dictionary))
+			added["events"] = int(added["events"]) + 1
+		return int(added["events"]) > 0)
+	if not changed:
+		return
+	_refresh_after_edit()
+	var words: PackedStringArray = PackedStringArray()
+	for starter: Variant in starters:
+		words.append(str((starter as Dictionary).get("label", "")))
+	_mark_dirty(EventSheetL10n.translate("Added %s.") % ", ".join(words))
+
+
+var _duplicate_events_dialog: ConfirmationDialog = null
+var _duplicate_events_edit: LineEdit = null
+var _duplicate_events_source: String = ""
+
+
+## "Duplicate events for…": every event that names this object, copied once per object you list,
+## each copy pointing at that object instead. One undo step for the whole batch.
+func open_duplicate_events_dialog(object_label: String) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	if _duplicate_events_dialog == null:
+		_duplicate_events_dialog = ConfirmationDialog.new()
+		_duplicate_events_dialog.title = "Duplicate Events For"
+		_duplicate_events_edit = LineEdit.new()
+		_duplicate_events_edit.placeholder_text = "Enemy2, Enemy3"
+		_duplicate_events_edit.custom_minimum_size = Vector2(360.0, 0.0)
+		var body_box: VBoxContainer = EventSheetPopupUI.form_box()
+		body_box.add_child(_duplicate_events_edit)
+		_duplicate_events_dialog.add_child(EventSheetPopupUI.margined(body_box))
+		_duplicate_events_dialog.confirmed.connect(_on_duplicate_events_confirmed)
+		add_child(_duplicate_events_dialog)
+		EventSheetL10n.apply_to(_duplicate_events_dialog)
+	_duplicate_events_source = object_label
+	_duplicate_events_edit.text = ""
+	_duplicate_events_dialog.popup_centered(Vector2i(440, 120))
+
+
+func _on_duplicate_events_confirmed() -> void:
+	var targets: PackedStringArray = PackedStringArray()
+	for piece: String in _duplicate_events_edit.text.split(","):
+		var clean: String = piece.strip_edges()
+		if not clean.is_empty():
+			targets.append(clean)
+	if targets.is_empty():
+		_set_status(EventSheetL10n.translate("Name at least one object to duplicate for."), true)
+		return
+	var source: String = _duplicate_events_source
+	var made: Dictionary = {"count": 0}
+	var changed: bool = _perform_undoable_sheet_edit("Duplicate Events For", func() -> bool:
+		var source_reference: String = EventSheetDuplicateEvents.reference_for(_current_sheet, source)
+		for target: String in targets:
+			var copies: Array = EventSheetDuplicateEvents.copies_for(_current_sheet, source_reference, target)
+			for copy: Variant in copies:
+				_assign_fresh_event_uids(copy as Resource)
+				_current_sheet.events.append(copy)
+				made["count"] = int(made["count"]) + 1
+		return int(made["count"]) > 0)
+	if not changed:
+		_set_status(EventSheetL10n.translate("No events name %s.") % source, true)
+		return
+	_refresh_after_edit()
+	_mark_dirty(EventSheetL10n.translate("Duplicated %d event(s).") % int(made["count"]))
