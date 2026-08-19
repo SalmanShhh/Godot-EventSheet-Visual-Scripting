@@ -336,7 +336,7 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	if not picked.is_empty():
 		return _with_indent(picked, indent)
 	if keyword == "var" or keyword == "const":
-		return _with_indent(_declaration_statement(text, keyword), indent)
+		return _with_indent(_declaration_statement(text, keyword, context), indent)
 	# S4. A countdown is a shape several lines make together, so it is claimed ahead of the arithmetic
 	# and the plain Set, both of which would describe one line of it correctly and the pattern not at all.
 	var countdown: Dictionary = _countdown_statement(text, context)
@@ -831,12 +831,15 @@ static func return_sentence(returned: String, context: Dictionary) -> Dictionary
 
 ## The declaration a `var name: Type = value` line reads as: a type word chip, the name, and the
 ## starting value - never the annotation itself (M18). {} when the line is not a declaration.
-static func declaration(code: String) -> Dictionary:
+## `context` is the sheet's own, so a value naming the script's place ("the direction from Player to
+## target") reads with the object names the rest of the row uses; without one the value still reads,
+## it just falls back to System the way a context-free grammar call always has.
+static func declaration(code: String, context: Dictionary = {}) -> Dictionary:
 	var text: String = code.strip_edges()
 	var keyword: String = leading_word(text)
 	if keyword != "var" and keyword != "const":
 		return {}
-	var parsed: Dictionary = _declaration_statement(text, keyword)
+	var parsed: Dictionary = _declaration_statement(text, keyword, context)
 	return parsed
 
 
@@ -948,6 +951,11 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var held: String = callable_value_words(trimmed)
 	if not held.is_empty():
 		return held
+	# U1 - the direction between two points, decided by the whole expression rather than by any call
+	# inside it, so it is asked before the innermost-first pass takes the bracket group apart.
+	var vector_value: String = vector_colour_words(trimmed, context)
+	if not vector_value.is_empty():
+		return vector_value
 	# S8 - the progress array read by index, before the indexing pass could take `p[0]` apart. What
 	# the file holds is untouched; only the words change.
 	trimmed = loading_progress_words(trimmed, context)
@@ -1479,7 +1487,7 @@ static func _return_statement(text: String, context: Dictionary) -> Dictionary:
 
 
 ## `var name[: Type] = value`, `var name := value` and the `const` twins, as a declaration row.
-static func _declaration_statement(text: String, keyword: String) -> Dictionary:
+static func _declaration_statement(text: String, keyword: String, context: Dictionary = {}) -> Dictionary:
 	var rest: String = text.substr(keyword.length() + 1)
 	var walrus_at: int = top_level_index(rest, " := ")
 	var equals_at: int = top_level_index(rest, " = ")
@@ -1510,14 +1518,14 @@ static func _declaration_statement(text: String, keyword: String) -> Dictionary:
 		"is_constant": keyword == "const",
 		"type_word": type_word(declared_type),
 		"name": name_text,
-		"value": expression_text(value_text),
+		"value": expression_text(value_text, context),
 		# R41 - the value exactly as the file wrote it, which is what decides whether the declaration
 		# is a starting value the Local row can carry on its own or a value the event has to work out.
 		"raw_value": value_text,
 		"segments": [
 			{"text": "%s %s" % [translate("Local"), type_word(declared_type)], "tone": "plain"},
 			{"text": " %s = " % name_text, "tone": "name"},
-			{"text": expression_text(value_text), "tone": "value"}
+			{"text": expression_text(value_text, context), "tone": "value"}
 		]
 	}
 
@@ -1657,6 +1665,11 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 		return now_write
 	var split: Array = _split_object(target, context)
 	var object_name: String = str(split[0])
+	# U1. A colour eased toward another colour is ONE verb in the sheet's words, and the shape only
+	# means that when the line reads the very member it writes.
+	var eased_colour: Dictionary = colour_ease_statement(object_name, str(split[1]), assigned, context)
+	if not eased_colour.is_empty():
+		return eased_colour
 	# N8. A property every reader knows as a BEHAVIOUR knob - a body's velocity, a camera's zoom, an
 	# emitter's switch - reads in that behaviour's words, decided by the object's known class.
 	var behaviour: Dictionary = _behaviour_assignment(object_name, str(split[1]), assigned, target, context)
@@ -3928,6 +3941,9 @@ static func _idiom_for(head: String, arguments: PackedStringArray, context: Dict
 		return "%s %s" % [translate("translated"), arguments[0]]
 	if VECTOR_CONSTRUCTORS.has(head):
 		return "(%s)" % ", ".join(arguments)
+	# U1 - a colour built from its channels reads as the colour, with the alpha as opacity.
+	if head == "Color":
+		return colour_constructor_words(arguments)
 	if head == "move_toward" and arguments.size() == 3:
 		return _fill(translate("{from} moved toward {to} by {amount}"), {
 			"from": arguments[0], "to": arguments[1], "amount": arguments[2]
@@ -4432,6 +4448,11 @@ static func _slot_count(pattern: String) -> int:
 ## N6/N7. The receiver idioms whose reading is decided by the argument list.
 static func _shaped_receiver_idiom(receiver: String, method: String,
 		arguments: PackedStringArray) -> String:
+	# U1 - the vector and colour operations, ahead of the general tables: `normalized` and `length`
+	# both have entries there, and the words below are the ones a reader was promised.
+	var vector_colour: String = vector_colour_receiver_words(receiver, method, arguments)
+	if not vector_colour.is_empty():
+		return vector_colour
 	if method == "substr" and arguments.size() == 2:
 		if arguments[0].strip_edges() == "0":
 			return "left(%s, %s)" % [receiver, arguments[1]]
@@ -5202,7 +5223,36 @@ static func _angle_degrees(value: String) -> String:
 			return "%s°" % number_lens(arguments[0].strip_edges())
 	if text.is_valid_float():
 		return "%s°" % number_lens(String.num(rad_to_deg(text.to_float()), 4))
-	return ""
+	# U1. A quarter turn is written `PI / 2`, never `1.5708`, so the two constants a rotation is spelled
+	# with are resolved here as well. Only the plain forms - a constant on its own, or one multiplied or
+	# divided by a number - which is every way a fixed turn is actually written.
+	return _turn_constant_degrees(text)
+
+
+## U1. `PI`, `TAU / 4`, `-PI / 2`, `2 * PI` in degrees, or "" when the value is anything a reader
+## would not recognise as a fixed turn. Anything with a name in it is left as the expression it is:
+## `PI / sides` is not a number the row can show.
+static func _turn_constant_degrees(text: String) -> String:
+	const TURNS: Dictionary = {"PI": 180.0, "TAU": 360.0}
+	var body: String = text.strip_edges()
+	var sign_factor: float = 1.0
+	if body.begins_with("-"):
+		sign_factor = -1.0
+		body = body.substr(1).strip_edges()
+	for operator: String in [" / ", " * "]:
+		var at: int = top_level_index(body, operator)
+		if at < 0:
+			continue
+		var left: String = body.substr(0, at).strip_edges()
+		var right: String = body.substr(at + 3).strip_edges()
+		if TURNS.has(left) and right.is_valid_float() and right.to_float() != 0.0:
+			var turn: float = float(TURNS[left])
+			return "%s°" % number_lens(String.num(sign_factor * (turn / right.to_float()
+				if operator == " / " else turn * right.to_float()), 4))
+		if operator == " * " and TURNS.has(right) and left.is_valid_float():
+			return "%s°" % number_lens(String.num(sign_factor * float(TURNS[right]) * left.to_float(), 4))
+		return ""
+	return "%s°" % number_lens(String.num(sign_factor * float(TURNS[body]), 4)) if TURNS.has(body) else ""
 
 
 ## R4. The subject of an ANGLE question. `rotation` is that object's angle, and inside a sentence
@@ -7635,6 +7685,8 @@ static func long_tail_call(call: Dictionary, text: String, context: Dictionary) 
 	if not named.is_empty():
 		return named
 	return long_tail_media_call(traced, context)
+
+
 # ── T10 / T11 / T12 - the things AROUND objects: layers and Z order, text, the browser ───────────
 #
 # Three families of line every project writes ABOUT an object rather than about its behaviour: where
@@ -8083,3 +8135,154 @@ static func picking_statement(text: String, context: Dictionary) -> Dictionary:
 		return {}
 	_append_note(reading, "→ %s" % str(declared.get("name", "")).replace("_", " "))
 	return _patterned(reading, "picking")
+
+
+# ── U1: vectors and colours read as words ────────────────────────────────────────
+#
+# The two value types every game line touches. A beginner reads `normalized()` and `darkened(0.2)`
+# as code, so each operation gets the word an event sheet already has for it, and Godot's own
+# spelling stays one hover away on the row. Nothing here decides what is emitted: every shape below
+# is claimed exactly or not at all, and the value the row holds is untouched.
+
+
+## U1. The colour channels that name a colour anybody says out loud, so `Color(1, 0, 0, 0.5)` reads
+## "red at 50% opacity" rather than four numbers. Only the colours a reader would name are here; any
+## other mix keeps its channels, which is the honest answer.
+const COLOUR_CHANNEL_WORDS: Dictionary = {
+	"1, 0, 0": "red", "0, 1, 0": "green", "0, 0, 1": "blue",
+	"1, 1, 1": "white", "0, 0, 0": "black", "1, 1, 0": "yellow",
+	"0, 1, 1": "cyan", "1, 0, 1": "magenta"
+}
+
+## U1. The speeds an event sheet has ONE word for. `velocity.length()` is the speed - a reader asks
+## "how fast", never "how long is the velocity vector".
+const SPEED_RECEIVERS: PackedStringArray = ["velocity", "linear_velocity"]
+
+
+## U1. A whole vector or colour expression that has its own settled sentence, or "" when the text is
+## anything else. Asked BEFORE the general call rewriting, because the shape here is decided by the
+## expression as a whole - the innermost-first pass would have taken the bracket group apart first.
+static func vector_colour_words(text: String, context: Dictionary) -> String:
+	return _direction_between_words(text, context)
+
+
+## U1. `(a.position - b.position).normalized()` is the one thing every chase line means: the
+## direction from B to A. Claimed only when the bracket group is exactly one subtraction and the whole
+## expression is that group normalized, so `(a - b + c).normalized()` keeps its own code.
+static func _direction_between_words(text: String, context: Dictionary) -> String:
+	const TAIL := ").normalized()"
+	var trimmed: String = text.strip_edges()
+	if not trimmed.begins_with("(") or not trimmed.ends_with(TAIL):
+		return ""
+	if closing_paren(trimmed, 0) != trimmed.length() - TAIL.length():
+		return ""
+	var inner: String = trimmed.substr(1, trimmed.length() - TAIL.length() - 1)
+	var minus_at: int = top_level_index(inner, " - ")
+	if minus_at <= 0:
+		return ""
+	var to_point: String = inner.substr(0, minus_at).strip_edges()
+	var from_point: String = inner.substr(minus_at + 3).strip_edges()
+	if to_point.is_empty() or from_point.is_empty():
+		return ""
+	return _fill(translate("the direction from {from} to {to}"),
+		{"from": _point_object(from_point, context), "to": _point_object(to_point, context)})
+
+
+## U1. The vector and colour methods whose reading needs the receiver, in the words the sheet has for
+## each operation. "" for anything not claimed exactly, so the general tables still answer.
+static func vector_colour_receiver_words(receiver: String, method: String,
+		arguments: PackedStringArray) -> String:
+	match method:
+		"normalized":
+			if arguments.is_empty():
+				return _fill(translate("unit vector of {value}"), {"value": receiver})
+		"length":
+			if arguments.is_empty() and SPEED_RECEIVERS.has(receiver.trim_prefix("self.")):
+				return translate("the speed")
+		"dot":
+			if arguments.size() == 1:
+				return _fill(translate("how much {a} points along {b} (-1 to 1)"),
+					{"a": receiver, "b": arguments[0]})
+		"rotated":
+			if arguments.size() == 1:
+				# The innermost-first call pass has already read a `deg_to_rad(45)` argument as "45°",
+				# so a value that arrives in degrees is taken as it stands.
+				var degrees: String = arguments[0].strip_edges() if arguments[0].strip_edges().ends_with("°") \
+					else _angle_degrees(arguments[0])
+				if not degrees.is_empty():
+					return _fill(translate("{value} turned {angle}"),
+						{"value": receiver, "angle": degrees})
+		"darkened", "lightened":
+			if arguments.size() == 1 and arguments[0].strip_edges().is_valid_float():
+				var shade: String = translate("darker" if method == "darkened" else "lighter")
+				return "%s, %s %s" % [receiver, _percent_words(arguments[0], {}), shade]
+		"from_hsv":
+			if receiver == "Color":
+				return _colour_from_hsv_words(arguments)
+		"from_string":
+			if receiver == "Color" and arguments.size() >= 1:
+				return _fill(translate("colour from {value}"), {"value": arguments[0]})
+	return ""
+
+
+## U1. `Color.from_hsv(0.3, 1, 1)` as the colour it describes. Full brightness is what a reader
+## assumes, so only the channels that say something appear.
+static func _colour_from_hsv_words(arguments: PackedStringArray) -> String:
+	if arguments.size() < 1 or arguments.size() > 4:
+		return ""
+	for argument: String in arguments:
+		if not argument.strip_edges().is_valid_float():
+			return ""
+	var words: String = _fill(translate("colour from hue {hue}"),
+		{"hue": _percent_words(arguments[0], {})})
+	if arguments.size() >= 2:
+		words += ", " + (translate("full saturation") if arguments[1].strip_edges().to_float() >= 1.0
+			else _fill(translate("{amount} saturation"), {"amount": _percent_words(arguments[1], {})}))
+	if arguments.size() >= 3 and arguments[2].strip_edges().to_float() < 1.0:
+		words += ", " + _fill(translate("{amount} brightness"),
+			{"amount": _percent_words(arguments[2], {})})
+	return words
+
+
+## U1. `Color(1, 0, 0, 0.5)` as the colour anybody would say out loud, with its alpha as the opacity
+## percentage an event sheet writes. A mix nobody has a word for keeps its channels.
+static func colour_constructor_words(arguments: PackedStringArray) -> String:
+	if arguments.size() < 3 or arguments.size() > 4:
+		return ""
+	for argument: String in arguments:
+		if not argument.strip_edges().is_valid_float():
+			return ""
+	var channels: PackedStringArray = PackedStringArray()
+	for index: int in 3:
+		channels.append(number_lens(arguments[index].strip_edges()))
+	var key: String = ", ".join(channels)
+	var name_word: String = str(COLOUR_CHANNEL_WORDS.get(key, ""))
+	var words: String = translate(name_word) if not name_word.is_empty() else key
+	if arguments.size() == 4 and arguments[3].strip_edges().to_float() < 1.0:
+		words += " " + _fill(translate("at {amount} opacity"),
+			{"amount": _percent_words(arguments[3], {})})
+	return words
+
+
+## U1. `modulate = modulate.lerp(target, rate * delta)` is the one easing line every fade writes, and
+## an event sheet says it in one verb. {} unless the assignment eases the SAME member it reads, which
+## is what makes it an ease rather than a plain blend.
+static func colour_ease_statement(object_name: String, member: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	if member != "modulate" and member != "self_modulate":
+		return {}
+	var call: Dictionary = call_parts(assigned.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "lerp":
+		return {}
+	if str(call.get("target", "")).strip_edges().trim_prefix("self.") != member:
+		return {}
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	if arguments.size() != 2:
+		return {}
+	var rate: String = per_second_factor(arguments[1])
+	if rate.is_empty():
+		return {}
+	return _sentence(object_name, "Ease colour toward {colour} at {rate}", {
+		"colour": [expression_text(arguments[0], context), "value"],
+		"rate": [expression_text(rate, context), "value"]
+	})

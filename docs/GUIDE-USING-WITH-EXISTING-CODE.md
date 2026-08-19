@@ -744,6 +744,25 @@ That is the order this section is in.
 
   ![A sprite, UI, sound and game-feel script opened as a sheet](images/reading-sprite-sound-juice.png)
 
+- **Vectors read as the words a reader has for each operation.** `(target.position -
+  position).normalized()` is the one thing every chase line means, so it reads `the direction from
+  Player to target`; a bare `dir.normalized()` is `unit vector of dir`. `velocity.length()` is `the
+  speed` - any other length keeps `length of x`, which is the honest answer for a piece of text as
+  much as for a vector. `facing.dot(dir)` reads `how much facing points along dir (-1 to 1)`, because
+  the number is useless without the range it lives in. `dir.rotated(PI / 2)` reads `dir turned 90°`,
+  and so do the `TAU / 4`, `deg_to_rad(45)` and negative spellings of the same fixed turn; a turn by
+  something with a name in it (`PI / sides`) is not a number the row can show, so it keeps its code.
+  `angle_to` and the `UP` / `DOWN` / `ZERO` / `ONE` constants already read as words.
+
+- **Colours read as colours.** `Color.RED.darkened(0.2)` is `red, 20% darker` and `lightened` is its
+  twin; `Color(1, 0, 0, 0.5)` is `red at 50% opacity`; `Color.from_hsv(0.3, 1, 1)` is `colour from
+  hue 30%, full saturation`, with the brightness shown only when it is not full. A mix nobody has a
+  word for keeps its channels rather than being given a name it does not have. The swatch beside the
+  value is unchanged: it reads the value the row holds, not the words drawn next to it, so clicking
+  it still opens the picker on the real colour. And `modulate = modulate.lerp(Color.WHITE, 5 *
+  delta)` is one verb - `Ease colour toward white at 5` - claimed only when the line reads the very
+  member it writes, so an ordinary blend from somewhere else stays the Set it is.
+
 #### Input, gamepads and sensors
 
 - **The Input Map is an object, and the file says which controls it uses.** An opened script that names

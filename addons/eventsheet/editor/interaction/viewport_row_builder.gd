@@ -10501,6 +10501,15 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement(group_call, context)
 		"QueueFreeNode":
 			return EventSheetSentence.statement("%s.queue_free()" % str(params_dict.get("target", "self")), context)
+		# U1. A tint set from the tint itself is an EASE, and the grammar is the only place that can
+		# see it: the row holds one value, and only the shape of that value says it eases. Every other
+		# tint row keeps the descriptor's own words, which is why this returns {} unless it matches.
+		"SetModulate":
+			var tint_target: String = str(params_dict.get("target", "")).strip_edges()
+			return EventSheetSentence.colour_ease_statement(
+				EventSheetSentence.object_of_reference(tint_target) if not tint_target.is_empty()
+					else EventSheetSentence.script_object(context),
+				"modulate", str(params_dict.get("color", "")), context)
 		# ── Q6 / Q11 lens hook ────────────────────────────────────────────────────────────────
 		# Two rows whose words depend on something only the grammar can see. `erase` is spelled the
 		# same on a list and on a table but means two different steps, and the lifter cannot tell
@@ -11011,21 +11020,24 @@ func grammar_action_declaration(action: ACEAction) -> Dictionary:
 	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var name_text: String = str(params_dict.get("name", ""))
 	var value_text: String = str(params_dict.get("value", ""))
+	# U1. The sheet's own context, so a starting value that names a place ("the direction from Player
+	# to target") reads with the same object names every other row on this sheet uses.
+	var context: Dictionary = sentence_context()
 	match action.ace_id:
 		"SetLocalVar":
-			return EventSheetSentence.declaration("var %s = %s" % [name_text, value_text])
+			return EventSheetSentence.declaration("var %s = %s" % [name_text, value_text], context)
 		"SetLocalVarTyped":
 			return EventSheetSentence.declaration("var %s: %s = %s" % [
-				name_text, str(params_dict.get("var_type", "")), value_text])
+				name_text, str(params_dict.get("var_type", "")), value_text], context)
 		"SetLocalVarInferred":
-			return EventSheetSentence.declaration("var %s := %s" % [name_text, value_text])
+			return EventSheetSentence.declaration("var %s := %s" % [name_text, value_text], context)
 		"SetLocalConst":
-			return EventSheetSentence.declaration("const %s = %s" % [name_text, value_text])
+			return EventSheetSentence.declaration("const %s = %s" % [name_text, value_text], context)
 		"SetLocalConstTyped":
 			return EventSheetSentence.declaration("const %s: %s = %s" % [
-				name_text, str(params_dict.get("const_type", "")), value_text])
+				name_text, str(params_dict.get("const_type", "")), value_text], context)
 		"SetLocalConstInferred":
-			return EventSheetSentence.declaration("const %s := %s" % [name_text, value_text])
+			return EventSheetSentence.declaration("const %s := %s" % [name_text, value_text], context)
 	return {}
 
 
@@ -11462,7 +11474,18 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 ## and the inline editor put the author's own GDScript back in front of them, so an editable sheet
 ## keeps showing exactly what it will emit and only a reading softens the spelling.
 func _read_number_words(shown: String) -> String:
-	return EventSheetSentence.number_lens(shown) if _viewport.is_reading_mode() else shown
+	return _read_colour_words(EventSheetSentence.number_lens(shown)) if _viewport.is_reading_mode() else shown
+
+
+## U1. A colour param reads as the colour a person would say - "red, 20% darker", "red at 50%
+## opacity" - rather than as the Color call that built it. Only a value that IS a colour expression
+## goes through the grammar: everything else is the author's own GDScript and stays exactly as typed.
+func _read_colour_words(shown: String) -> String:
+	var text: String = shown.strip_edges()
+	if not (text.begins_with("Color(") or text.begins_with("Color.")):
+		return shown
+	var words: String = EventSheetSentence.expression_text(text, sentence_context())
+	return words if not words.is_empty() else shown
 
 
 func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescriptor, params_dict: Dictionary) -> String:

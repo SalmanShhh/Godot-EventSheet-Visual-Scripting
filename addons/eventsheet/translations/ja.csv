@@ -2856,3 +2856,17 @@ GLOBALS,グローバル
 extends it,これを継承
 the group has the same members,グループの構成は同じ
 what extends this object's class,このオブジェクトのクラスを継承するもの
+the direction from {from} to {to},{from} から {to} への向き
+unit vector of {value},{value} の単位ベクトル
+the speed,速さ
+how much {a} points along {b} (-1 to 1),{a} が {b} に沿う度合い (-1 から 1)
+{value} turned {angle},{value} を {angle} 回転
+darker,暗く
+lighter,明るく
+colour from {value},{value} からの色
+colour from hue {hue},色相 {hue} の色
+full saturation,彩度いっぱい
+{amount} saturation,彩度 {amount}
+{amount} brightness,明度 {amount}
+at {amount} opacity,不透明度 {amount}
+Ease colour toward {colour} at {rate},色を {colour} へ {rate} で寄せる

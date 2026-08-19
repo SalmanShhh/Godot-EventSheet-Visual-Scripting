@@ -2856,3 +2856,17 @@ GLOBALS,GLOBALE
 extends it,erweitert sie
 the group has the same members,die Gruppe hat dieselben Mitglieder
 what extends this object's class,was die Klasse dieses Objekts erweitert
+the direction from {from} to {to},die Richtung von {from} nach {to}
+unit vector of {value},Einheitsvektor von {value}
+the speed,das Tempo
+how much {a} points along {b} (-1 to 1),wie sehr {a} entlang {b} zeigt (-1 bis 1)
+{value} turned {angle},{value} um {angle} gedreht
+darker,dunkler
+lighter,heller
+colour from {value},Farbe aus {value}
+colour from hue {hue},Farbe mit Farbton {hue}
+full saturation,volle Sattigung
+{amount} saturation,{amount} Sattigung
+{amount} brightness,{amount} Helligkeit
+at {amount} opacity,mit {amount} Deckkraft
+Ease colour toward {colour} at {rate},Farbe mit {rate} zu {colour} uberblenden

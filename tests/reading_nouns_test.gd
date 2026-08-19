@@ -97,8 +97,11 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# M43 - angles, distances and directions
 	"ReadingNounsPlayer ▸ Set angle to 90",
 	"System ▸ Set reading to distance to boss",
-	"System ▸ Set reading to length of velocity",
-	"System ▸ Set dir to dir, normalized",
+	# U1 re-pinned these two: a velocity's length IS the speed, and a normalized vector is the unit
+	# vector of the one it came from - both said as an event sheet says them rather than as the method
+	# names they were.
+	"System ▸ Set reading to the speed",
+	"System ▸ Set dir to unit vector of dir",
 	# M44 - counting
 	"System ▸ Set hp to enemies (group) count",
 	# M45 - the system values
@@ -258,9 +261,11 @@ static func _measurement_values() -> bool:
 		["reading = global_position.distance_to(boss)", "System ▸ Set reading to distance to boss"],
 		["reading = a.distance_to(b)", "System ▸ Set reading to distance from a to b"],
 		["reading = position.angle_to_point(p)", "System ▸ Set reading to angle to p"],
-		["reading = velocity.length()", "System ▸ Set reading to length of velocity"],
-		["dir = dir.normalized()", "System ▸ Set dir to dir, normalized"],
-		["reading = dir.dot(velocity)", "System ▸ Set reading to dir · velocity"],
+		# U1 re-pinned all three: the words a reader has for each vector operation, in place of the
+		# method name and the mathematical sign the readings carried before.
+		["reading = velocity.length()", "System ▸ Set reading to the speed"],
+		["dir = dir.normalized()", "System ▸ Set dir to unit vector of dir"],
+		["reading = dir.dot(velocity)", "System ▸ Set reading to how much dir points along velocity (-1 to 1)"],
 		["hp = get_tree().get_nodes_in_group(\"enemies\").size()", "System ▸ Set hp to enemies (group) count"],
 		# The name lens spells the property as words on the canvas; the grammar keeps the member it read.
 		["hp = get_child_count()", "System ▸ Set hp to child_count"],

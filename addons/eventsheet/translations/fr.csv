@@ -2856,3 +2856,17 @@ GLOBALS,GLOBAUX
 extends it,en herite
 the group has the same members,le groupe a les memes membres
 what extends this object's class,ce qui herite de la classe de cet objet
+the direction from {from} to {to},la direction de {from} vers {to}
+unit vector of {value},vecteur unitaire de {value}
+the speed,la vitesse
+how much {a} points along {b} (-1 to 1),a quel point {a} pointe le long de {b} (-1 a 1)
+{value} turned {angle},{value} tourne de {angle}
+darker,plus sombre
+lighter,plus clair
+colour from {value},couleur depuis {value}
+colour from hue {hue},couleur de teinte {hue}
+full saturation,saturation maximale
+{amount} saturation,{amount} de saturation
+{amount} brightness,{amount} de luminosite
+at {amount} opacity,a {amount} d'opacite
+Ease colour toward {colour} at {rate},Adoucir la couleur vers {colour} a {rate}

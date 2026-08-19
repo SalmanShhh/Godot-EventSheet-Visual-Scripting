@@ -2856,3 +2856,17 @@ GLOBALS,ГЛОБАЛЬНЫЕ
 extends it,наследует его
 the group has the same members,в группе те же участники
 what extends this object's class,что наследует класс этого объекта
+the direction from {from} to {to},napravlenie ot {from} k {to}
+unit vector of {value},edinichnyy vektor {value}
+the speed,skorost
+how much {a} points along {b} (-1 to 1),naskolko {a} napravlen vdol {b} (ot -1 do 1)
+{value} turned {angle},"{value}, povernutyy na {angle}"
+darker,temnee
+lighter,svetlee
+colour from {value},tsvet iz {value}
+colour from hue {hue},tsvet s ottenkom {hue}
+full saturation,polnaya nasyshchennost
+{amount} saturation,nasyshchennost {amount}
+{amount} brightness,yarkost {amount}
+at {amount} opacity,s neprozrachnostyu {amount}
+Ease colour toward {colour} at {rate},Plavno svesti tsvet k {colour} so skorostyu {rate}

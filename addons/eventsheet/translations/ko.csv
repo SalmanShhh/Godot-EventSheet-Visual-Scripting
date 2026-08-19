@@ -2856,3 +2856,17 @@ GLOBALS,전역
 extends it,이를 상속함
 the group has the same members,그룹 구성원이 동일함
 what extends this object's class,이 오브젝트의 클래스를 상속하는 것
+the direction from {from} to {to},{from} 에서 {to} 로의 방향
+unit vector of {value},{value} 의 단위 벡터
+the speed,속도
+how much {a} points along {b} (-1 to 1),{a} 가 {b} 를 향하는 정도 (-1 에서 1)
+{value} turned {angle},{value} 를 {angle} 회전
+darker,더 어둡게
+lighter,더 밝게
+colour from {value},{value} 에서 만든 색
+colour from hue {hue},색조 {hue} 인 색
+full saturation,완전한 채도
+{amount} saturation,채도 {amount}
+{amount} brightness,밝기 {amount}
+at {amount} opacity,불투명도 {amount}
+Ease colour toward {colour} at {rate},색을 {colour} 쪽으로 {rate} 로 부드럽게

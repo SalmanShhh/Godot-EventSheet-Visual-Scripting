@@ -2856,3 +2856,17 @@ GLOBALS,GLOBALI
 extends it,la estende
 the group has the same members,il gruppo ha gli stessi membri
 what extends this object's class,cosa estende la classe di questo oggetto
+the direction from {from} to {to},la direzione da {from} a {to}
+unit vector of {value},vettore unitario di {value}
+the speed,la velocita
+how much {a} points along {b} (-1 to 1),quanto {a} punta lungo {b} (da -1 a 1)
+{value} turned {angle},{value} ruotato di {angle}
+darker,piu scuro
+lighter,piu chiaro
+colour from {value},colore da {value}
+colour from hue {hue},colore con tonalita {hue}
+full saturation,saturazione piena
+{amount} saturation,{amount} di saturazione
+{amount} brightness,{amount} di luminosita
+at {amount} opacity,al {amount} di opacita
+Ease colour toward {colour} at {rate},Sfuma il colore verso {colour} a {rate}

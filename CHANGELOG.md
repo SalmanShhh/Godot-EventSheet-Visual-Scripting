@@ -245,6 +245,28 @@ no editor in it, so the window, the Doctor and the tests all read the same answe
   wires any script to it with nothing left to ask. Changing the shared sheet changes every includer,
   and the Doctor reports two includes that both handle the same trigger, because that clash is
   invisible in the includer.
+### Added - vectors and colours read as words
+
+The two value types every game line touches. A beginner used to meet them as the Godot methods that
+built them; each operation now reads as the word an event sheet already has for it, with Godot's own
+spelling one hover away. Display only - the file is untouched and the byte round-trip cannot move.
+
+- **Vectors.** `(target.position - position).normalized()` reads `the direction from Player to
+  target`; a bare `normalized()` reads `unit vector of dir`; `velocity.length()` is `the speed` (any
+  other length stays `length of x`); `facing.dot(dir)` reads `how much facing points along dir
+  (-1 to 1)`; `dir.rotated(PI / 2)` reads `dir turned 90°`, and the `TAU`, `deg_to_rad` and negative
+  spellings of a fixed turn read the same way. `angle_to` and the `UP` / `DOWN` / `ZERO` constants
+  already read as words and are unchanged.
+- **Colours.** `Color.RED.darkened(0.2)` reads `red, 20% darker` (and `lightened` its twin),
+  `Color(1, 0, 0, 0.5)` reads `red at 50% opacity`, `Color.from_hsv(0.3, 1, 1)` reads `colour from
+  hue 30%, full saturation`, and `Color.from_string(...)` names what it was built from. A mix nobody
+  has a word for keeps its channels. The colour swatch is unchanged: it reads the value the row
+  holds, not the words beside it.
+- **`modulate = modulate.lerp(Color.WHITE, 5 * delta)`** is one verb - `Ease colour toward white at
+  5` - claimed only when the line reads the very member it writes, so an ordinary blend stays a Set.
+- A local's starting value now reads with the sheet's own object names (`the direction from Player to
+  target` rather than from `System`), because the declaration reading is handed the sheet context the
+  rest of the row already had.
 
 ### Added - the Manual answers in GDScript as well as in the sheet's words
 

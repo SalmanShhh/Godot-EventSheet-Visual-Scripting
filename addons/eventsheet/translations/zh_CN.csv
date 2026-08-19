@@ -2856,3 +2856,17 @@ GLOBALS,全局
 extends it,继承它
 the group has the same members,该组成员相同
 what extends this object's class,继承该对象类的内容
+the direction from {from} to {to},从 {from} 到 {to} 的方向
+unit vector of {value},{value} 的单位向量
+the speed,速度
+how much {a} points along {b} (-1 to 1),{a} 沿 {b} 的方向程度 (-1 到 1)
+{value} turned {angle},{value} 旋转 {angle}
+darker,更暗
+lighter,更亮
+colour from {value},来自 {value} 的颜色
+colour from hue {hue},色相 {hue} 的颜色
+full saturation,完全饱和
+{amount} saturation,饱和度 {amount}
+{amount} brightness,亮度 {amount}
+at {amount} opacity,不透明度 {amount}
+Ease colour toward {colour} at {rate},以 {rate} 将颜色渐变至 {colour}
