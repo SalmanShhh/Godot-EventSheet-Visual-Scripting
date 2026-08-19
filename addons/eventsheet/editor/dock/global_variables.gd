@@ -20,6 +20,9 @@ extends RefCounted
 ## What an autoload's script has to end in for the sheet to be able to write a variable into it.
 const SHEET_EXTENSIONS: PackedStringArray = ["gd", "tres"]
 
+## script path -> {"stamp": modified time, "declared": the scan}. See declared_globals.
+static var _declared_cache: Dictionary = {}
+
 
 ## Every autoload the project has registered that the sheet can open, in project order:
 ## [{"name": "Game", "path": "res://game.gd"}]. Walking ProjectSettings is cheap enough to do per
@@ -92,6 +95,14 @@ static func declared_globals(script_path: String) -> Array[Dictionary]:
 	var declared: Array[Dictionary] = []
 	if not FileAccess.file_exists(script_path):
 		return declared
+	# The row builder asks this once per autoload per REBUILD, so the read is keyed by the file's
+	# modified time: an autoload that has not been touched costs a stat, not a parse, and one that
+	# has is re-read on the very next rebuild. Never a plain cache - a stale global list would say
+	# "not declared on Game" about a variable the user just added.
+	var stamp: int = FileAccess.get_modified_time(script_path)
+	var cached: Variant = _declared_cache.get(script_path)
+	if cached is Dictionary and int((cached as Dictionary).get("stamp", -1)) == stamp:
+		return (cached as Dictionary).get("declared", declared)
 	var text: String = FileAccess.get_file_as_string(script_path)
 	var pattern: RegEx = RegEx.new()
 	pattern.compile("^(?:@export[^\\n]*\\n)?(?:static )?(?:var|const) +([A-Za-z_][A-Za-z0-9_]*) *(?::=|: *([A-Za-z0-9_\\[\\], ]+?) *=|=) *(.+)$")
@@ -107,6 +118,7 @@ static func declared_globals(script_path: String) -> Array[Dictionary]:
 			"type": found.get_string(2).strip_edges(),
 			"value": found.get_string(3).strip_edges()
 		})
+	_declared_cache[script_path] = {"stamp": stamp, "declared": declared}
 	return declared
 
 
