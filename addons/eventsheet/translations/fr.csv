@@ -3164,3 +3164,30 @@ starting {values},commencant par {values}
 {subject} is a table,{subject} est une table
 with {clauses},avec {clauses}
 has {key},a {key}
+Test,Test
+Command tool,Outil en ligne de commande
+Check {label}: {actual} = {expected},Vérifier {label} : {actual} = {expected}
+Finish with code {code},Terminer avec le code {code}
+Create {path},Créer {path}
+Write text to {path},Écrire le texte dans {path}
+For each file in folder,Pour chaque fichier du dossier
+Arguments,Arguments
+load {path} ignoring the cache,charger {path} en ignorant le cache
+the file's text,le texte du fichier
+test sheet,feuille de test
+checks,vérifications
+check,vérification
+command tool,outil en ligne de commande
+runs headless,s'exécute sans fenêtre
+pack recipe,recette de pack
+host,hôte
+class,classe
+category,catégorie
+builds,construit
+fixture,jeu d'essai
+Run,Exécuter
+Run with arguments…,Exécuter avec des arguments…
+Build pack,Construire le pack
+Open built pack,Ouvrir le pack construit
+run,exécuter
+"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.","Les mots qui suivraient -- sur la ligne de commande. Cet outil s'exécute sans fenêtre, dans une seconde copie de cet éditeur."

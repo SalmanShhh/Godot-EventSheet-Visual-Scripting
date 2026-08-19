@@ -850,3 +850,44 @@ Two rules the runner keeps, because a test suite that lies is worse than none:
 - **A test hangs until the timeout.** It never said it was finished. End it with **Pass Test** / **Fail Test**, or let it record its last claim and fall quiet - the runner stops on either.
 - **"a test sheet has to be a Node script".** The sheet's host was changed to something that is not a node (a Resource). A test runs in a tree; Test sheets force `extends Node`.
 - **The claims run before the scene is ready.** Put them after a wait: `Load Scene Under Test`, then **Wait Until** with a deadline (or a frame wait), then assert.
+
+## The files you build the project WITH, read as sheets
+
+Three kinds of file in a project are not the game and are not editor tools either: the tests, the
+command-line scripts, and - if you ship behavior packs - the recipes that build them. Each one now
+opens with a head that says what it is and a bar you can act from.
+
+**A test sheet.** A `.gd` under a `tests/` folder whose entry point is `static func run() -> bool`
+opens as a test: the head says `test sheet`, counts the checks it makes, and names the fixture it
+reads (double-click the fixture chip to open it beside the test). The idiom
+`passed = _check(label, actual, expected) and passed` reads as one **Check** row - the label, and
+the two values it compares - and **Run ▸** runs that one test headless, in a second copy of the
+editor you are already in, then marks each Check row ✓ or ✗ from what the run printed. The name of
+the variable the verdict is folded through is read out of the file, so `all_passed` works as well
+as `passed`.
+
+![A test sheet: the head says test sheet with the check count and a Run button, the entry point reads Test On run, and each check is its own Check row](images/test-sheet-rows.png)
+
+**A command tool.** `extends SceneTree` (or `MainLoop`) with an `_init` is a script the engine runs
+as its whole main loop. The head says `command tool · runs headless`, `_init` reads
+**Command tool ▸ On run**, and the steps such a file takes have words: `quit(1)` is
+**Finish with code 1**, `quit()` is **Finish**, `DirAccess.make_dir_recursive_absolute(p)` is
+**Folder ▸ Create p**, and a folder walk's `while not entry.is_empty()` is
+**For each file in folder**. `OS.get_cmdline_user_args()` reads as **Command tool.Arguments**, a
+`ResourceLoader.load` past the cache as **load p ignoring the cache**, and
+`FileAccess.get_file_as_string(p)` as **the file's text**. **Run with arguments… ▸** runs it
+headless with whatever would follow `--` on the command line; **Output ▾** shows what it printed.
+
+![A command tool: the head says command tool, runs headless, with Run with arguments and Output buttons, and _init reads as Command tool On run](images/command-tool-rows.png)
+
+**A pack recipe.** A `static func build()` under a `pack_builders` folder that fills an
+EventSheetResource and calls `save_pack` states what it makes on its bar - the host it attaches to,
+the class it ships as, its category, and the folder it builds into - because those are facts about
+the pack rather than steps the recipe takes. **Build pack ▸** runs that one recipe instead of all of
+them, and **Open built pack ▸** opens the `.gd` it emitted beside it.
+
+![A pack recipe: the head says pack recipe with the host, class and category it builds, plus Build pack and Open built pack buttons](images/pack-recipe-rows.png)
+
+Every one of these readings is display only. Opening one of these files and saving it untouched
+reproduces it byte for byte, and a game script that happens to call `quit()` or write
+`passed = ...` reads exactly as it did before - the readings are gated on what the whole file is.

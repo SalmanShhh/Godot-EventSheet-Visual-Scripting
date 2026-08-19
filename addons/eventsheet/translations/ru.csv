@@ -3164,3 +3164,30 @@ starting {values},nachinayushchiysya s {values}
 {subject} is a table,{subject} - tablitsa
 with {clauses},s {clauses}
 has {key},soderzhit {key}
+Test,Тест
+Command tool,Инструмент командной строки
+Check {label}: {actual} = {expected},Проверить {label}: {actual} = {expected}
+Finish with code {code},Завершить с кодом {code}
+Create {path},Создать {path}
+Write text to {path},Записать текст в {path}
+For each file in folder,Для каждого файла в папке
+Arguments,Аргументы
+load {path} ignoring the cache,"загрузить {path}, минуя кеш"
+the file's text,текст файла
+test sheet,лист тестов
+checks,проверок
+check,проверка
+command tool,инструмент командной строки
+runs headless,работает без окна
+pack recipe,рецепт набора
+host,носитель
+class,класс
+category,категория
+builds,собирает
+fixture,тестовый файл
+Run,Запустить
+Run with arguments…,Запустить с аргументами…
+Build pack,Собрать набор
+Open built pack,Открыть собранный набор
+run,запуск
+"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.","Слова, которые шли бы после -- в командной строке. Инструмент работает без окна, во второй копии этого редактора."

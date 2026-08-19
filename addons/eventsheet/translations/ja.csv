@@ -3164,3 +3164,30 @@ starting {values},先頭が {values}
 {subject} is a table,{subject} がテーブル
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
+Test,テスト
+Command tool,コマンドツール
+Check {label}: {actual} = {expected},確認 {label}: {actual} = {expected}
+Finish with code {code},コード {code} で終了
+Create {path},{path} を作成
+Write text to {path},{path} にテキストを書き込む
+For each file in folder,フォルダー内の各ファイルについて
+Arguments,引数
+load {path} ignoring the cache,キャッシュを無視して {path} を読み込む
+the file's text,そのファイルのテキスト
+test sheet,テストシート
+checks,件の確認
+check,件の確認
+command tool,コマンドツール
+runs headless,ウィンドウなしで実行
+pack recipe,パックのレシピ
+host,ホスト
+class,クラス
+category,カテゴリ
+builds,生成先
+fixture,テスト用ファイル
+Run,実行
+Run with arguments…,引数を指定して実行…
+Build pack,パックを生成
+Open built pack,生成されたパックを開く
+run,実行
+"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.",コマンドラインで -- の後に続く語です。このツールはウィンドウなしで、このエディターのもう一つのコピー上で実行されます。

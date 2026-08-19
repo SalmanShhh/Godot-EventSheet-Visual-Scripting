@@ -126,7 +126,23 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# and which local holds the clock the date fields are read out of. Every one of them is a whole-
 	# file question, so it is answered once here rather than guessed at line by line.
 	extras.merge(behavior_words_facts(sheet), true)
+	# ── W9 / W10 / W11 lens hook ───────────────────────────────────────────────────────────────
+	# What KIND of tooling file this is - a test, a command-line tool, a behavior pack's recipe - and
+	# the whole-file answers each of those readings needs: the names a test folds its verdict through,
+	# the locals a folder walk fills, the facts a recipe states about the pack it builds. A file that
+	# is none of the three adds nothing at all, which is every game script.
+	extras.merge(tool_file_facts(sheet), true)
 	return extras
+
+
+## W9 / W10 / W11. What this file is as a piece of TOOLING, or {} when it is not one. The path is what
+## tells a test from a helper and a recipe from a tool, so it is passed alongside the lines: the sheet
+## remembers the file it was opened from, and an unsaved sheet is in no folder and claims nothing.
+static func tool_file_facts(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	return EventSheetToolFiles.facts(
+		EventSheetToolFiles.lines_of_sheet(sheet), sheet.external_source_path)
 
 
 ## T10 / T8. What the FILE says about its drawing order and about the lists it picks from:

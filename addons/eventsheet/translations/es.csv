@@ -3164,3 +3164,30 @@ starting {values},que empieza por {values}
 {subject} is a table,{subject} es una tabla
 with {clauses},con {clauses}
 has {key},tiene {key}
+Test,Prueba
+Command tool,Herramienta de comandos
+Check {label}: {actual} = {expected},Comprobar {label}: {actual} = {expected}
+Finish with code {code},Terminar con el código {code}
+Create {path},Crear {path}
+Write text to {path},Escribir texto en {path}
+For each file in folder,Para cada archivo de la carpeta
+Arguments,Argumentos
+load {path} ignoring the cache,cargar {path} ignorando la caché
+the file's text,el texto del archivo
+test sheet,hoja de pruebas
+checks,comprobaciones
+check,comprobación
+command tool,herramienta de comandos
+runs headless,se ejecuta sin ventana
+pack recipe,receta de paquete
+host,anfitrión
+class,clase
+category,categoría
+builds,construye
+fixture,recurso de prueba
+Run,Ejecutar
+Run with arguments…,Ejecutar con argumentos…
+Build pack,Construir paquete
+Open built pack,Abrir el paquete construido
+run,ejecutar
+"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.","Las palabras que irían después de -- en la línea de comandos. Esta herramienta se ejecuta sin ventana, en una segunda copia de este editor."

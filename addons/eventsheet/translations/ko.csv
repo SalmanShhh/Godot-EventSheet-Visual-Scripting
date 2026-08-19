@@ -3164,3 +3164,30 @@ starting {values},{values} 로 시작
 {subject} is a table,{subject} 가 테이블
 with {clauses},{clauses} 인
 has {key},{key} 가 있는
+Test,테스트
+Command tool,명령 도구
+Check {label}: {actual} = {expected},확인 {label}: {actual} = {expected}
+Finish with code {code},코드 {code}(으)로 종료
+Create {path},{path} 만들기
+Write text to {path},{path}에 텍스트 쓰기
+For each file in folder,폴더의 각 파일마다
+Arguments,인자
+load {path} ignoring the cache,캐시를 무시하고 {path} 불러오기
+the file's text,그 파일의 텍스트
+test sheet,테스트 시트
+checks,개 확인
+check,개 확인
+command tool,명령 도구
+runs headless,창 없이 실행
+pack recipe,팩 레시피
+host,호스트
+class,클래스
+category,분류
+builds,생성
+fixture,테스트 자료
+Run,실행
+Run with arguments…,인자를 지정해 실행…
+Build pack,팩 생성
+Open built pack,생성된 팩 열기
+run,실행
+"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.",명령줄에서 -- 뒤에 오는 단어입니다. 이 도구는 이 편집기의 두 번째 사본에서 창 없이 실행됩니다.
