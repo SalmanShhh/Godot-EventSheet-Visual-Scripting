@@ -149,19 +149,19 @@ static func idiom_words(query: String) -> String:
 	if EventSheetSentence.MEMBER_WORDS.has(wanted):
 		return str(EventSheetSentence.MEMBER_WORDS[wanted])
 	if EventSheetSentence.PROCESS_SWITCH_WORDS.has(wanted):
-		return _plain_words(str(EventSheetSentence.PROCESS_SWITCH_WORDS[wanted]))
+		return plain_words(str(EventSheetSentence.PROCESS_SWITCH_WORDS[wanted]))
 	if EventSheetSentence.EXPRESSION_IDIOMS.has(wanted):
-		return _plain_words(str(EventSheetSentence.EXPRESSION_IDIOMS[wanted]))
+		return plain_words(str(EventSheetSentence.EXPRESSION_IDIOMS[wanted]))
 	if EventSheetSentence.RECEIVER_IDIOMS.has(wanted):
-		return _plain_words(str(EventSheetSentence.RECEIVER_IDIOMS[wanted]))
+		return plain_words(str(EventSheetSentence.RECEIVER_IDIOMS[wanted]))
 	if EventSheetSentence.LIST_STEPS.has(wanted):
-		return _plain_words(str(EventSheetSentence.LIST_STEPS[wanted]))
+		return plain_words(str(EventSheetSentence.LIST_STEPS[wanted]))
 	return ""
 
 
 ## An idiom template with its slots taken out, so what is left is the words a reader would search
 ## for: "Push back {value} to {name}" becomes "Push back to".
-static func _plain_words(template: String) -> String:
+static func plain_words(template: String) -> String:
 	var stripped: String = RegEx.create_from_string("\\{[^}]*\\}").sub(template, " ", true)
 	var words: PackedStringArray = PackedStringArray()
 	for word: String in stripped.split(" ", false):

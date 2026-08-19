@@ -86,10 +86,13 @@ func _init() -> void:
 		drifted.append("figures.esdoc")
 	if read_text(EventSheetDocWhatsNew.BUNDLE_PATH) != whats_new_text():
 		drifted.append("whatsnew.esdoc")
+	if read_text(EventSheetDocDictionary.BUNDLE_PATH) != dictionary_text():
+		drifted.append("dictionary.esdoc")
 	if not check_only:
 		write_bundle(pages)
 		write_text(EventSheetDocLibrary.FIGURES_PATH, figures_text(gates))
 		write_text(EventSheetDocWhatsNew.BUNDLE_PATH, whats_new_text())
+		write_text(EventSheetDocDictionary.BUNDLE_PATH, dictionary_text())
 		drifted = PackedStringArray()
 	print("help: pages=%d drifted=%d" % [pages.size(), drifted.size()])
 	print("help: figure verdicts baked=%d drawable=%d" % [gates.size(), _drawable_count(gates)])
@@ -160,6 +163,16 @@ static func _drawable_count(gates: Dictionary) -> int:
 static func whats_new_text() -> String:
 	return EventSheetDocWhatsNew.bundle_text(read_text(EventSheetDocWhatsNew.SOURCE_PATH),
 		EventSheets.docs_version())
+
+
+## The dictionary page's exact bytes (U22), generated from the reading's own idiom tables and the
+## vocabulary this build loads. It is baked here for the same reason What's new is: it is derived
+## from code rather than written under docs/, so it travels in its own file inside the bundle. The
+## registry is built here once, which is what lets the page name the row a call is about.
+static func dictionary_text() -> String:
+	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	registry.refresh_from_sources([], true)
+	return EventSheetDocDictionary.bundle_text(EventSheetDocDictionary.entries(registry))
 
 
 ## The figure file's exact bytes: the frozen header line, then the payload, built in sorted order.

@@ -326,6 +326,7 @@ static func search_all(query: String, sheet: EventSheetResource = null, limit: i
 	results.append_array(_reference_hits(wanted))
 	results.append_array(_engine_hits(wanted))
 	results.append_array(_glossary_hits(wanted))
+	results.append_array(_godot_word_hits(query))
 	results.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a["score"]) != int(b["score"]):
 			return int(a["score"]) < int(b["score"])
@@ -459,6 +460,41 @@ static func _glossary_hits(wanted: String) -> Array[Dictionary]:
 		})
 		if hits.size() >= MAX_GLOSSARY_HITS:
 			break
+	return hits
+
+
+## U20 - the glossary answers GODOT words too. A reader who types `queue_free` is asking the same
+## question the glossary answers for someone arriving from another event-sheet editor ("what is
+## this called here"), so the answer wears the same tag: the rows that write that call, named the
+## way the sheet names them, with the reading's own idiom words when a table names it as well.
+static func _godot_word_hits(query: String) -> Array[Dictionary]:
+	var hits: Array[Dictionary] = []
+	if not EventSheetCodeSearch.is_code_query(query):
+		return hits
+	var call: String = EventSheetCodeSearch.normalize(query)
+	for definition: ACEDefinition in EventSheetCodeSearch.matching_definitions(
+			EventSheets.all_verbs(), call):
+		hits.append({
+			"kind": "glossary",
+			"title": "\"%s\" - the same call here" % call,
+			"subtitle": "%s   %s" % [EventSheetL10n.translate(definition.display_name),
+				EventSheetCodeSearch.gdscript_hint(definition, call)],
+			"doc_id": EventSheetDocExplain.doc_id_for_definition(definition),
+			"anchor": "", "definition": definition, "used": 0,
+			"score": SCORE_TITLE_PREFIX,
+		})
+		if hits.size() >= MAX_GLOSSARY_HITS:
+			break
+	var words: String = EventSheetCodeSearch.idiom_words(call)
+	if not words.is_empty():
+		hits.append({
+			"kind": "glossary",
+			"title": "\"%s\" - the same call here" % call,
+			"subtitle": "the sheet reads it \"%s\"" % words,
+			"doc_id": EventSheetDocReference.doc_id(EventSheetDocReference.KIND_DICTIONARY, ""),
+			"anchor": "", "definition": null, "used": 0,
+			"score": SCORE_TITLE_PREFIX,
+		})
 	return hits
 
 

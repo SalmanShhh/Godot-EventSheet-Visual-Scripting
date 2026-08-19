@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - the Manual answers in GDScript as well as in the sheet's words
+
+- **Manual ▸ Dictionary: GDScript to events**, generated. Every Godot call, property and idiom the
+  reading recognises, alphabetically, with the sentence it reads as here, the object it belongs to
+  and where the reading comes from; the name links to the row's own page, where Show GDScript and
+  Add this row already live. It is baked at bundle time out of the reading's own idiom tables and
+  the vocabulary the build loads, and a suite gate regenerates it and compares the bytes - so the
+  page can never list a reading that does not exist, and a table edited without a rebake fails the
+  suite instead of shipping a lie.
+- **Coming from GDScript**, the mirror of the glossary. You already know Godot: here are the two
+  dozen words this editor reads your code in (`queue_free` is Destroy, `_process` is Every tick,
+  `await` is Wait for, `signal` is trigger, `@export` is an Instance variable in the Inspector),
+  why a row is exactly one statement, and the three ways to see the GDScript behind any row. A gate
+  holds the page honest: every call it names has to be one the generated dictionary really lists.
+- **The Manual's search answers Godot words.** Type `queue_free` into the Manual's search and the
+  glossary results say what it is called here, with the matched GDScript beside the name.
+
 ### Added - the picker answers to the Godot call you already know
 
 - **Type the call, get the row.** The picker now searches the CODE as well as the words: every

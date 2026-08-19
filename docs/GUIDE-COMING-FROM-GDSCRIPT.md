@@ -1,0 +1,84 @@
+# Coming from GDScript
+
+You already know Godot. You open a `.gd` file as a sheet, and it says **Destroy** where you wrote
+`queue_free()`, **Every tick** where you wrote `_process`, and **Wait for** where you wrote `await`.
+Nothing has been rewritten - the file on disk is byte for byte the file you saved - but the words on
+screen are the sheet's, and this page is the dictionary for them.
+
+It is the mirror of the glossary for people arriving from another event-sheet editor: same idea,
+opposite direction. Every entry below names the Godot word you know, the word this editor reads it
+as, and where to go to see the two side by side.
+
+> The full machine-generated list - every call, property and idiom the reading recognises, with the
+> row it maps to - is **Manual ▸ Dictionary: GDScript to events**. This page is the short version: the
+> two dozen words that account for most of the confusion.
+
+## The words
+
+| You wrote | The sheet reads it | Where to look |
+| --- | --- | --- |
+| `queue_free()` | Destroy / Queue Free | the object's own actions |
+| `_process(delta)` | Every tick | the event's own condition lane |
+| `_physics_process(delta)` | Every physics tick | the event's own condition lane |
+| `_ready()` | On start of layout | triggers |
+| `_input(event)` | the input conditions (Key Is Down, On Control Pressed) | Keyboard, Mouse, Gamepad |
+| `signal` | trigger | Triggers on any object's page |
+| `emit_signal(...)` / `x.emit()` | Emit Signal | Signals |
+| `connect(...)` | Connect Signal | Signals |
+| `await` | Wait for | System |
+| `await get_tree().create_timer(t).timeout` | Wait `t` seconds | System |
+| `match` | a chain of Else-if conditions, one case per sub-event | conditions |
+| `extends` | family / base class (the word follows View ▸ Familiar Words) | the Object bar |
+| `class_name` | the object's own name in the Object bar | the Object bar |
+| `@export var` | Instance variable · Inspector | Object properties |
+| `var` inside a function | Local variable, then a Set row | System |
+| `const` | Constant | System |
+| `add_to_group("x")` | Add To Group (Add to family with Familiar Words on) | Groups |
+| `is_in_group("x")` | Is In Group | Groups |
+| `get_tree().change_scene_to_file(...)` | Go To Layout | Scene |
+| `instantiate()` + `add_child(...)` | Create object | Nodes |
+| `is_on_floor()` | Is On Floor | General Conditions |
+| `is_on_wall()` | Is By Wall | Collisions |
+| `rotation_degrees` | angle | Object properties |
+| `create_tween().tween_property(...)` | Tween Property | Tween |
+| `set_process(false)` | Set Node Per-Frame Processing | Nodes: Activation |
+| `print(...)` | Log | Debug |
+
+## Three things that surprise people
+
+**A sheet row is one statement.** The reading is never denser than the code: one action per row, one
+event per idea. A `var speed = 200.0` inside a function is a Local variable row followed by
+`System ▸ Set speed to 200.0`, not a single cell with an assignment in it. If you count rows and
+count statements, the numbers match.
+
+**The condition lane is the `if`.** An event's left lane holds what has to be true; its right lane
+holds what then happens. A sub-event is a nested `if`, an Else row is the `else`, and an event with
+nothing in its condition lane runs every tick - which is exactly what a bare block of statements in
+`_process` does.
+
+**A boolean reads as a sentence.** `if alive:` is the condition `alive is true`, and `if not muted:`
+is `muted is false`. The variable is still the variable; only the way it is spelled changed.
+
+## Seeing the GDScript for any row
+
+Three ways, all of them one click:
+
+- **Show GDScript** on a row's page in the Manual prints exactly the code that row writes.
+- **View ▸ GDScript Panel** shows the whole sheet's generated code beside the sheet, live.
+- **Right-click a row ▸ Explain This Row** answers "what does this actually do" in one card, with
+  the code under it.
+
+## Finding a row by the call you know
+
+The picker searches the code as well as the words. Type `queue_free` into **Add action** and Queue
+Free answers with `queue_free()` written beside its name; `add_child` finds Add Child;
+`tween_property` finds Tween Property; `is_on_floor` finds Is On Floor. The Manual's search box
+answers the same way: type a Godot call and the glossary results say what it is called here.
+
+## Your own code is vocabulary too
+
+Nothing here asks you to stop writing GDScript. A class of your own appears in the picker with zero
+setup - its methods are actions, its yes-or-no methods are conditions, its signals are triggers, and
+its `@export`s are Object properties. A function you already wrote can be renamed for the sheet
+without touching your source. The full story is in
+[Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md).

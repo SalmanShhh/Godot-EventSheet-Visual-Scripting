@@ -2625,3 +2625,5 @@ History…,기록…
 History,기록
 "Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.",이 시트에 가한 모든 편집을 시트 자신의 말로 나열합니다. 하나를 클릭하면 거기까지 실행 취소하거나 다시 실행합니다.
 "No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.",아직 편집이 없습니다. 이 시트에 가한 변경은 시트 자신의 말로 여기에 나열됩니다.
+Dictionary: GDScript to events,사전: GDScript와 이벤트
+Coming from GDScript,GDScript에서 왔다면

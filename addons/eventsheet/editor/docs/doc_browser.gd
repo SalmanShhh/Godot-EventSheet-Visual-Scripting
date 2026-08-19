@@ -1210,7 +1210,8 @@ func _build_manual_group(root: TreeItem) -> void:
 	# answering in prose. Then the legend - what are those marks on my rows - then the words from
 	# another editor, then what changed.
 	for kind: String in [EventSheetDocReference.KIND_TUTORIALS, EventSheetDocReference.KIND_LEGEND,
-			EventSheetDocReference.KIND_GLOSSARY, EventSheetDocReference.KIND_WHATS_NEW]:
+			EventSheetDocReference.KIND_GLOSSARY, EventSheetDocReference.KIND_DICTIONARY,
+			EventSheetDocReference.KIND_WHATS_NEW]:
 		_add_reference_row(manual, kind, "")
 
 

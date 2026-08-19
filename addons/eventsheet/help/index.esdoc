@@ -19,7 +19,7 @@
 "ids": ["GUIDE-TRANSLATING-YOUR-GAME", "GUIDE-TRANSLATING-THE-EDITOR"],
 "title": "Localization"
 }, {
-"ids": ["GUIDE-USING-WITH-EXISTING-CODE", "GUIDE-VERSION-CONTROL", "GUIDE-THEMING", "GUIDE-UNINSTALL"],
+"ids": ["GUIDE-USING-WITH-EXISTING-CODE", "GUIDE-COMING-FROM-GDSCRIPT", "GUIDE-VERSION-CONTROL", "GUIDE-THEMING", "GUIDE-UNINSTALL"],
 "title": "Working with your project"
 }, {
 "ids": ["GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR", "REFERENCE-GLOSSARY"],
@@ -120,6 +120,7 @@
 "GUIDE-BLOCK-STYLES": "Block Styles - How To Read Every Row",
 "GUIDE-BUILDING-EDITOR-TOOLS": "Making Custom Editor Tools with Event Sheets",
 "GUIDE-BUILDING-ON-EVENTSHEETS": "Building on EventSheets",
+"GUIDE-COMING-FROM-GDSCRIPT": "Coming from GDScript",
 "GUIDE-COMMON-GAME-PATTERNS": "Common Game Patterns Without Code",
 "GUIDE-COMPOSITION-SYSTEMS": "Composition and systems (ECS-lite)",
 "GUIDE-CREATING-CUSTOM-MODULES": "Creating custom ACE modules",
