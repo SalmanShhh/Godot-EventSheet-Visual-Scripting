@@ -2407,3 +2407,5 @@ Cursor is over,Курсор над
 (leaves),(выходит)
 On gamepad connected / disconnected,При подключении / отключении геймпада
 On %s clicked,При щелчке по %s
+repeat forever,повторять бесконечно
+repeat {count} times,повторить {count} раз

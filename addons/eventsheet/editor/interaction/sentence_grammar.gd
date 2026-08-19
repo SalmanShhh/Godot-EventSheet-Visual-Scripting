@@ -2406,7 +2406,31 @@ static func _tween_property_sentence(text: String, parts: Dictionary, context: D
 	if not note.is_empty():
 		(reading["segments"] as Array).append({"text": " ", "tone": "plain"})
 		(reading["segments"] as Array).append({"text": note, "tone": "muted"})
+	# R3 - what the SAME line said about the chain before it got to this step. `create_tween()
+	# .set_loops(3).tween_property(...)` is one row, the property step, wearing `repeat 3 times`:
+	# the chain call is a setting on the step, not a row that swallows it.
+	for chain_note: String in tween_chain_notes(parts):
+		(reading["segments"] as Array).append({"text": " ", "tone": "plain"})
+		(reading["segments"] as Array).append({"text": chain_note, "tone": "muted"})
 	return reading
+
+
+## R3. The muted notes a step earned from the chain calls written BEFORE it on its own line:
+## `repeat 3 times` / `repeat forever` from `set_loops`, `(at the same time)` from `set_parallel`.
+## Empty for a step written on a line of its own, which is every chain that names its tween.
+static func tween_chain_notes(parts: Dictionary) -> PackedStringArray:
+	var notes: PackedStringArray = PackedStringArray()
+	if bool(parts.get("parallel", false)):
+		notes.append(translate("(at the same time)"))
+	if not bool(parts.get("loops_named", false)):
+		return notes
+	var count: String = str(parts.get("loops", "")).strip_edges()
+	if count.is_empty() or count == "0":
+		# `set_loops()` and `set_loops(0)` are both Godot's forever.
+		notes.append(translate("repeat forever"))
+	else:
+		notes.append(_fill(translate("repeat {count} times"), {"count": count}))
+	return notes
 
 
 ## R3. The step a tween line takes, as {local, method, args, modifiers}, or {} when the line is not a
@@ -2416,34 +2440,102 @@ static func _tween_property_sentence(text: String, parts: Dictionary, context: D
 ## (`tween_locals`): a tween reached through a field or a function result cannot prove it is a tween,
 ## and a Tween sentence over something that is not one would be a confident lie.
 static func tween_chain_parts(text: String, context: Dictionary) -> Dictionary:
-	const STEPS: Array[String] = [
-		"tween_property", "tween_callback", "tween_interval", "set_loops", "set_parallel", "kill"
-	]
+	# The calls that ARE a step - the row a reader gets one of. Everything else on the line is a
+	# setting ON that step (the easing tail) or on the chain around it (the two below).
+	const PRIMARY_STEPS: Array[String] = ["tween_property", "tween_callback", "tween_interval", "kill"]
+	## R3. The two calls that say something about the CHAIN rather than about one step of it. Written
+	## on their own line they are a row; written in the middle of a one-line chain they are a note on
+	## the step that follows, which is why the walk keeps them rather than reading them instead of it.
+	const CHAIN_STEPS: Array[String] = ["set_loops", "set_parallel"]
 	var body: String = text.strip_edges()
 	if not body.ends_with(")"):
 		return {}
-	for step: String in STEPS:
-		var marker: String = ".%s(" % step
-		var at: int = body.find(marker)
-		if at <= 0:
-			continue
-		var head: String = body.substr(0, at)
-		var local_name: String = ""
-		if not TWEEN_MAKERS.has(head):
-			if not is_tween_local(head, context):
-				continue
-			local_name = head
-		var open_at: int = at + marker.length() - 1
-		var close_at: int = closing_paren(body, open_at)
-		if close_at < 0:
+	var chain: Dictionary = _dotted_chain(body, context)
+	if chain.is_empty():
+		return {}
+	var calls: Array = chain.get("calls", [])
+	var local_name: String = str(chain.get("local", ""))
+	var loops: String = ""
+	var loops_named: bool = false
+	var parallel: bool = false
+	for call_index: int in calls.size():
+		var call: Dictionary = calls[call_index]
+		var name: String = str(call.get("name", ""))
+		if PRIMARY_STEPS.has(name):
+			return {
+				"local": local_name,
+				"method": name,
+				"args": _split_arguments(str(call.get("args", ""))),
+				"modifiers": body.substr(int(call.get("end", body.length()))),
+				"loops": loops,
+				"loops_named": loops_named,
+				"parallel": parallel
+			}
+		if name == "set_loops":
+			loops_named = true
+			var loop_arguments: PackedStringArray = _split_arguments(str(call.get("args", "")))
+			loops = loop_arguments[0] if not loop_arguments.is_empty() else ""
+		elif name == "set_parallel":
+			parallel = true
+	# No step of its own on this line: the chain call IS the row, exactly as it was before one-line
+	# chains were walked (`t.set_loops(3)` on its own line reads `Tween repeat 3 times`).
+	for call_index: int in calls.size():
+		var call: Dictionary = calls[call_index]
+		var name: String = str(call.get("name", ""))
+		if not CHAIN_STEPS.has(name):
 			continue
 		return {
 			"local": local_name,
-			"method": step,
-			"args": _split_arguments(body.substr(open_at + 1, close_at - open_at - 1)),
-			"modifiers": body.substr(close_at + 1)
+			"method": name,
+			"args": _split_arguments(str(call.get("args", ""))),
+			"modifiers": body.substr(int(call.get("end", body.length())))
 		}
 	return {}
+
+
+## R3. One line of dotted calls off a receiver this file can PROVE holds a tween, as
+## {"local", "calls": [{name, args, end}]}. `local` is "" for the `create_tween().…` form, which
+## makes its tween on the spot. {} when the receiver is not a proven tween or the line is not a
+## clean run of `.name(...)` calls - a Tween sentence over something that is not one would be a
+## confident lie, and half a parse is not a fact either.
+static func _dotted_chain(body: String, context: Dictionary) -> Dictionary:
+	var index: int = -1
+	var local_name: String = ""
+	for maker: String in TWEEN_MAKERS:
+		if body.begins_with(maker + "."):
+			index = maker.length()
+			break
+	if index < 0:
+		var dot_at: int = body.find(".")
+		if dot_at <= 0:
+			return {}
+		var head: String = body.substr(0, dot_at)
+		if not is_tween_local(head, context):
+			return {}
+		local_name = head
+		index = dot_at
+	var calls: Array = []
+	while index < body.length():
+		if body[index] != ".":
+			return {}
+		var open_at: int = body.find("(", index)
+		if open_at < 0:
+			return {}
+		var name: String = body.substr(index + 1, open_at - index - 1)
+		if not is_identifier(name):
+			return {}
+		var close_at: int = closing_paren(body, open_at)
+		if close_at < 0:
+			return {}
+		calls.append({
+			"name": name,
+			"args": body.substr(open_at + 1, close_at - open_at - 1),
+			"end": close_at + 1
+		})
+		index = close_at + 1
+	if calls.is_empty():
+		return {}
+	return {"local": local_name, "calls": calls}
 
 
 ## R3. True when `name` is a local this file declared from `create_tween()`. The pre-pass that

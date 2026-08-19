@@ -2407,3 +2407,5 @@ Cursor is over,光标位于
 (leaves),(离开)
 On gamepad connected / disconnected,手柄连接 / 断开时
 On %s clicked,点击 %s 时
+repeat forever,一直重复
+repeat {count} times,重复 {count} 次

@@ -2407,3 +2407,5 @@ Cursor is over,커서가 위에 있음
 (leaves),(나감)
 On gamepad connected / disconnected,게임패드 연결 / 해제 시
 On %s clicked,%s 클릭 시
+repeat forever,계속 반복
+repeat {count} times,{count}회 반복

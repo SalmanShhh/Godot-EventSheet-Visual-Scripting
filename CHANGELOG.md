@@ -32,6 +32,17 @@
   guide the index does not list, or lists without a description. `tests/module_guides_test.gd` reads
   the reference tables under their new headings, keyed on a set that also accepts a table headed by
   its kind - 333 rows in the addon guides had drifted out of that sweep unnoticed.
+### Changed - a tween chain written on one line reads as the step it takes
+
+- **`create_tween().set_loops(3).tween_property(self, "position", p, 0.5)` reads as its property
+  step**, not as the `set_loops` call it happens to start with:
+  `Tween position to p in 0.5 seconds  repeat 3 times`. The whole dotted chain on the line is walked
+  now, so the step is the row and the chain calls in front of it are muted notes on it -
+  `repeat 3 times` / `repeat forever` from `set_loops`, `(at the same time)` from `set_parallel` -
+  while the easing tail after it stays the chip it always was.
+- Chain calls written on a line of their OWN are unchanged: `t.set_loops(3)` there is still a row of
+  its own, because that is what the file says. Display only, byte round-trip untouched.
+
 ### Changed - the cursor, the click and the gamepad cable read on the objects they belong to
 
 - **`mouse_entered` / `mouse_exited` read as the Mouse's own sentence.** A handler wired to either

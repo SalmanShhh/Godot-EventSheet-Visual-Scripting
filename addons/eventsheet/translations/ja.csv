@@ -2407,3 +2407,5 @@ Cursor is over,カーソルが上にある
 (leaves),(出る)
 On gamepad connected / disconnected,ゲームパッド接続 / 切断時
 On %s clicked,%s がクリックされたとき
+repeat forever,ずっと繰り返す
+repeat {count} times,{count} 回繰り返す

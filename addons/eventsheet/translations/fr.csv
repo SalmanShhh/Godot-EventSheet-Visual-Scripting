@@ -2407,3 +2407,5 @@ Cursor is over,Le curseur est sur
 (leaves),(sort)
 On gamepad connected / disconnected,Quand une manette est connectée / déconnectée
 On %s clicked,Quand %s est cliqué
+repeat forever,répéter indéfiniment
+repeat {count} times,répéter {count} fois

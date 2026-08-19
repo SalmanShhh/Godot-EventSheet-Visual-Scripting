@@ -644,6 +644,12 @@ That is the order this section is in.
   from `create_tween()` keeps its plain call reading rather than being given a Tween sentence. A
   statement broken across lines with a trailing `\` reads as the one statement it is.
 
+  A chain written on ONE line reads as the step it takes rather than as the call it starts with:
+  `create_tween().set_loops(3).tween_property(self, "position", p, 0.5)` is
+  `Tween position to p in 0.5 seconds  repeat 3 times`. The whole dotted chain on the line is walked,
+  so the step is the row and the chain calls in front of it are muted notes on it - `repeat 3 times`
+  or `repeat forever` from `set_loops`, `(at the same time)` from `set_parallel`.
+
   ![A tween chain read as Tween actions, and a head whose Instance variables folder carries the accessor events](images/opened-script-tween-and-head-accessors.png)
 
 - **A Timer node reads as the Timer behavior.** `$Timer.stop()` reads `Stop timer "Timer"`,
