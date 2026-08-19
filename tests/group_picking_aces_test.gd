@@ -5,8 +5,8 @@
 # score). All three land as plain expressions, so they drop straight into a Set Variable row - this
 # test compiles such a sheet and pins the exact emitted GDScript.
 #
-# State machine: Set State now also records where it came from and when it arrived, which is what
-# lets Time In State answer "how long have I been dashing?" without any per-sheet bookkeeping.
+# State machine: Go to state now also records where it came from and when it arrived, which is what
+# lets Time in state answer "how long have I been dashing?" without any per-sheet bookkeeping.
 @tool
 class_name GroupPickingAcesTest
 extends RefCounted
@@ -52,18 +52,18 @@ static func run() -> bool:
 		output.contains("__n.get(\"hp\") < __acc.get(\"hp\")"), true) and all_passed
 	all_passed = _check("the compiled probe is valid GDScript", _parses(output), true) and all_passed
 
-	# --- State machine pack: the recorded previous state, the arrival stamp, and Time In State ---
+	# --- State machine pack: the recorded previous state, the arrival stamp, and Time in state ---
 	var pack_sheet: EventSheetResource = GDScriptImporter.new().import_external(STATE_MACHINE_PACK + ".gd")
 	all_passed = _check("state machine pack imports as a behavior", pack_sheet != null and pack_sheet.behavior_mode, true) and all_passed
 	if pack_sheet != null:
 		var pack_output: String = str(SheetCompiler.compile(pack_sheet, "user://state_machine_probe.gd").get("output", ""))
 		all_passed = _check("previous_state is declared", pack_output.contains("var previous_state: String = \"\""), true) and all_passed
 		all_passed = _check("the arrival stamp is declared", pack_output.contains("var _state_entered_ticks: int = 0"), true) and all_passed
-		all_passed = _check("Set State records where it came from", pack_output.contains("previous_state = previous"), true) and all_passed
-		all_passed = _check("Set State stamps the arrival time", pack_output.contains("_state_entered_ticks = Time.get_ticks_msec()"), true) and all_passed
-		all_passed = _check("Time In State returns seconds since that stamp",
+		all_passed = _check("Go to state records where it came from", pack_output.contains("previous_state = previous"), true) and all_passed
+		all_passed = _check("Go to state stamps the arrival time", pack_output.contains("_state_entered_ticks = Time.get_ticks_msec()"), true) and all_passed
+		all_passed = _check("Time in state returns seconds since that stamp",
 			pack_output.contains("return (float(Time.get_ticks_msec() - _state_entered_ticks) / 1000.0)"), true) and all_passed
-		all_passed = _check("Time In State publishes as an expression", pack_output.contains("## @ace_expression\n## @ace_name(\"Time In State\")"), true) and all_passed
+		all_passed = _check("Time in state publishes as an expression", pack_output.contains("## @ace_expression\n## @ace_name(\"Time in state\")"), true) and all_passed
 
 	# The shipped class really answers time_in_state at runtime (a fresh machine starts near zero).
 	var script: GDScript = load(STATE_MACHINE_PACK + ".gd")
@@ -72,8 +72,8 @@ static func run() -> bool:
 		var machine: Node = script.new()
 		all_passed = _check("a fresh machine reports its previous state as empty", str(machine.previous_state), "") and all_passed
 		machine.set_state("dash")
-		all_passed = _check("Set State records the state it left", str(machine.previous_state), "idle") and all_passed
-		all_passed = _check("Time In State is a non-negative number of seconds", machine.time_in_state() >= 0.0, true) and all_passed
+		all_passed = _check("Go to state records the state it left", str(machine.previous_state), "idle") and all_passed
+		all_passed = _check("Time in state is a non-negative number of seconds", machine.time_in_state() >= 0.0, true) and all_passed
 		machine.free()
 
 	return all_passed

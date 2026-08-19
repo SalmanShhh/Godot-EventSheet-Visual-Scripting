@@ -1857,16 +1857,16 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 @ace_category("State Machine") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
-- **On State Changed** (`previous: String, next: String`)
+- **On any state change** (`previous: String, next: String`)
 
 #### Conditions
-- **Is In State** (`state_name: String`) - True while the machine is in the given state.
+- **Current state is** (`state_name: String`) - True while the machine is in the given state.
 
 #### Actions
-- **Set State** (`next: String`) - Switches to the given state and fires On State Changed.
+- **Go to state** (`next: String`) - Switches to the given state and fires On any state change.
 
 #### Expressions
-- **Time In State** - How many seconds the machine has been in its current state.
+- **Time in state** - How many seconds the machine has been in its current state.
 
 ### StoryletsAddon (`res://eventsheet_addons/storylet_weaver/storylet_weaver_addon.gd`)
 @ace_tags(narrative, storylet) @ace_category("Storylets") @ace_version(1.3.0)
@@ -2717,6 +2717,7 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **On Input** - Runs on every input event the node receives, for catching keys, mouse, or touch.
 - **On Unhandled Input** - Runs on input no UI element consumed, ideal for gameplay controls that ignore menu clicks.
 - **On Unhandled Key Input** - Runs on keyboard input no UI element consumed - the keys-only sibling of On Unhandled Input, so mouse and gamepad traffic never wakes it.
+- **On Input On This Object** - Runs when input lands on this object's own collision shape - a click, a drag or a touch that hit it rather than the world behind it.
 - **On Timeout** - Runs when this Timer counts down to zero, e.g. ending a cooldown or spawn delay.
 - **On Animation Finished** (`anim_name: String`) - Runs when an animation finishes playing, e.g. chaining the next animation or action.
 - **On Tree Entered** - Runs when this node is added into the scene tree.

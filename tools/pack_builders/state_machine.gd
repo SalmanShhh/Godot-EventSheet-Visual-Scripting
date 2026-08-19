@@ -5,40 +5,40 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
 ## Minimal state machine, authored as ACE rows (the only RawCode is the unpublished save-state
-## seam) - including the Is In State
+## seam) - including the Current state is
 ## CONDITION, now a bool-returning sheet function (the three-way function expose: bool -> condition).
-## On State Changed is a trigger SignalRow.
+## On any state change is a trigger SignalRow.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "StateMachineBehavior"
-	sheet.class_description = "Gives a node one named \"what am I doing right now\" state and a clean way to switch it. Set State changes it, Is In State branches on it, and On State Changed fires on every switch with the state you left and the state you entered."
+	sheet.class_description = "Gives a node one named \"what am I doing right now\" state and a clean way to switch it. Go to state changes it, Current state is branches on it, and On any state change fires on every switch with the state you left and the state you entered."
 	sheet.addon_category = "State Machine"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"state": {"type": "String", "default": "idle", "exported": true, "description": "The machine's current state name; change it with Set State."},
+		"state": {"type": "String", "default": "idle", "exported": true, "description": "The machine's current state name; change it with Go to state."},
 		"previous_state": {"type": "String", "default": "", "exported": false},
 		"_state_entered_ticks": {"type": "int", "default": 0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "State machine behavior: Set State / Is In State from any sheet; On State Changed fires with (previous, next)."
+	about.text = "State machine behavior: Go to state / Current state is from any sheet; On any state change fires with (previous, next)."
 	sheet.events.append(about)
 
 	var changed_signal: SignalRow = SignalRow.new()
 	changed_signal.signal_name = "state_changed"
 	changed_signal.params = PackedStringArray(["previous: String", "next: String"])
 	changed_signal.trigger = true
-	changed_signal.ace_name = "On State Changed"
+	changed_signal.ace_name = "On any state change"
 	changed_signal.ace_category = "State Machine"
 	sheet.events.append(changed_signal)
 
-	# Is In State - a bool function publishes as a CONDITION (three-way function expose).
+	# Current state is - a bool function publishes as a CONDITION (three-way function expose).
 	var is_in_state: EventFunction = EventFunction.new()
 	is_in_state.function_name = "is_in_state"
 	is_in_state.return_type = TYPE_BOOL
 	is_in_state.expose_as_ace = true
-	is_in_state.ace_display_name = "Is In State"
+	is_in_state.ace_display_name = "Current state is"
 	is_in_state.ace_category = "State Machine"
 	is_in_state.description = "True while the machine is in the given state."
 	is_in_state.params.append(_param("state_name", "String"))
@@ -47,13 +47,13 @@ static func build() -> bool:
 	is_in_state.events.append(is_in_state_body)
 	sheet.functions.append(is_in_state)
 
-	# Set State - switch and fire On State Changed, but only on a real change.
+	# Go to state - switch and fire On any state change, but only on a real change.
 	var set_state: EventFunction = EventFunction.new()
 	set_state.function_name = "set_state"
 	set_state.expose_as_ace = true
-	set_state.ace_display_name = "Set State"
+	set_state.ace_display_name = "Go to state"
 	set_state.ace_category = "State Machine"
-	set_state.description = "Switches to the given state and fires On State Changed."
+	set_state.description = "Switches to the given state and fires On any state change."
 	set_state.params.append(_param("next", "String"))
 	var set_state_body: EventRow = EventRow.new()
 	set_state_body.conditions.append(_cond("ExpressionIsTrue", {"expr": "state != next"}))
@@ -66,12 +66,12 @@ static func build() -> bool:
 	set_state.events.append(set_state_body)
 	sheet.functions.append(set_state)
 
-	# Time In State - seconds since the last switch, from the clock stamped by Set State.
+	# Time in state - seconds since the last switch, from the clock stamped by Go to state.
 	var time_in_state: EventFunction = EventFunction.new()
 	time_in_state.function_name = "time_in_state"
 	time_in_state.return_type = TYPE_FLOAT
 	time_in_state.expose_as_ace = true
-	time_in_state.ace_display_name = "Time In State"
+	time_in_state.ace_display_name = "Time in state"
 	time_in_state.ace_category = "State Machine"
 	time_in_state.description = "How many seconds the machine has been in its current state."
 	var time_in_state_body: EventRow = EventRow.new()
@@ -84,7 +84,7 @@ static func build() -> bool:
 		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
 		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
 		"# The parameter is named data (not state) so it never shadows the state member.",
-		"# Loading assigns state directly - a restore must not fire On State Changed.",
+		"# Loading assigns state directly - a restore must not fire On any state change.",
 		"## @ace_hidden",
 		"func save_state() -> Dictionary:",
 		"\treturn {",
