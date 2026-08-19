@@ -372,11 +372,12 @@ say: an acceleration reads as a bullet's only in a file that also writes the ang
 the step, so a lone piece of arithmetic keeps the reading it had.
 
 All of them are authorable in the same words. The picker writes **Set Angle Of Motion**, **Move**,
-**Set Acceleration**, **Bounce Off Solids**, **Distance Travelled**, **Move Toward Position**, **Has
-Arrived**, **Rotate Clockwise**, **Wrap Around Layout Horizontally / Vertically**, **Bound To
-Layout**, **Pin To** and **Pin Angle To** as exactly the lines above, so a dropped row and a typed
-line are the same bytes. Where a pack covers the whole shape, attaching it is the tidier answer, and
-that is what the pattern chip offers first.
+**Bounce Off Solids**, **Move Toward Position**, **Rotate Clockwise**, **Wrap Around Layout
+Horizontally / Vertically**, **Bound To Layout**, **Pin To** and **Pin Angle To** as exactly the
+lines above, so a dropped row and a typed line are the same bytes; the four shapes a shipped row
+already writes keep that row (**Add To Variable** for the acceleration, **Apply Gravity**, **Distance
+To**, **Is Within Distance**) rather than gaining a duplicate. Where a pack covers the whole shape,
+attaching it is the tidier answer, and that is what the pattern chip offers first.
 
 ## Where these live
 
