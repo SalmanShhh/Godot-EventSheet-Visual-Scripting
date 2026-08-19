@@ -1107,6 +1107,10 @@ func _build_results(query: String) -> void:
 	_tree.clear()
 	var root: TreeItem = _tree.create_item()
 	var results: Array[Dictionary] = EventSheetDocSearch.search_all(query, EventSheets.current_sheet())
+	# ABOVE everything, including an empty list. A reader who typed a word from another editor is
+	# not looking for the rows that happen to mention it - they are asking what it is called here,
+	# and that answer is worth more than every hit under it.
+	_add_glossary_redirect(root, query)
 	for result: Dictionary in results:
 		var item: TreeItem = _tree.create_item(root)
 		item.set_text(0, result_row_text(result))
@@ -1117,18 +1121,19 @@ func _build_results(query: String) -> void:
 		if definition != null:
 			_result_definitions[item] = definition
 	if results.is_empty():
-		_add_glossary_redirect(root, query)
 		var empty: TreeItem = _tree.create_item(root)
 		empty.set_text(0, "Nothing in the Manual mentions that")
 		empty.set_selectable(0, false)
 
 
-## "Looking for layout? Here it is called Scene" - ABOVE the empty list, never instead of it.
+## "Looking for layout? Here it is called Scene" - the first row of the results, never instead of
+## them.
 ##
-## A search that finds nothing has two very different causes, and only one of them is the reader's
-## fault: a word this editor does not have, and a word this editor spells differently. The glossary
-## already knows which, so it says so before the reader concludes the feature is missing. Two rows:
-## the page for the word this editor uses, and the glossary itself.
+## A search for a word from another editor has two bad endings, and this line prevents both: an
+## empty list, which reads as "this editor cannot do that", and a list of rows that merely mention
+## the word, which buries the one thing the reader was actually asking. The glossary already knows
+## which words are renames, so it says so at the top. Two rows: the page for the word this editor
+## uses, and the glossary itself.
 func _add_glossary_redirect(root: TreeItem, query: String) -> void:
 	var redirect: Dictionary = EventSheetDocGlossary.redirect_for(query)
 	if redirect.is_empty():

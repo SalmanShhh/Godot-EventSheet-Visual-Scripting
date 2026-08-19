@@ -388,6 +388,8 @@ func _control_for(block: Dictionary) -> Control:
 			return _image_card(str(block.get("path", "")), str(block.get("alt", "")))
 		"button":
 			return _button_block(block)
+		"buttons":
+			return _button_row(block)
 		"next":
 			return _next_block(block)
 		"rule":
@@ -408,6 +410,26 @@ func _button_block(block: Dictionary) -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_BEGIN
 	row.add_child(button)
+	return row
+
+
+## SEVERAL offers on one line - Back, Skip and Next at the foot of a tutorial card. It is its own
+## block kind rather than three "button" blocks in a row, because three blocks are three rows: a
+## page is a vertical stack by construction, and a step card whose three answers were stacked read
+## as three separate decisions instead of one.
+func _button_row(block: Dictionary) -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_BEGIN
+	row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+	for entry: Variant in (block.get("items", []) as Array):
+		var item: Dictionary = entry as Dictionary
+		var button: Button = Button.new()
+		button.text = EventSheetL10n.translate(str(item.get("label", "")))
+		button.tooltip_text = EventSheetL10n.translate(str(item.get("tooltip", "")))
+		var action: String = str(item.get("action", ""))
+		var argument: String = str(item.get("argument", ""))
+		button.pressed.connect(func() -> void: action_requested.emit(action, argument))
+		row.add_child(button)
 	return row
 
 

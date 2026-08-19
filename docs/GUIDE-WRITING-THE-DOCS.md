@@ -83,6 +83,8 @@ Enter opens it, Ctrl+Enter adds it to the sheet at the caret. A search that find
 *Looking for layout? Here it is called Scene* first, when the word is one the glossary knows, so a
 reader never concludes a feature is missing because it is spelled differently here.
 
+![Searching the Manual for layout: the first result row, in the accent colour, reads Looking for layout? Here it is called Scene, the second is Coming from another event-sheet editor, and the ordinary tagged results follow under them](images/manual-search-hint.png)
+
 `/` focuses the search box, Esc gives the sheet its focus back, **A-** and **A+** at the foot of
 the page set the Manual's text size, and **Ctrl+F1** reopens the page you were last reading (plain
 F1 stays "help for the selected item").
@@ -94,6 +96,8 @@ order, so a reader's eye learns where to land once:
 
 **Properties · Conditions · Actions · Expressions · Triggers**
 
+![A behavior reference page in the fixed shape: the breadcrumb reads Manual, Behavior reference, Health; under the title and its lead line a Properties table lists destroy on death false, invulnerable false and max health 100.0, and a Conditions table follows with a diamond mark in front of every verb](images/manual-reference-shape.png)
+
 Each is one table of `Mark | Name | Parameters | What it does`, where the mark is the sheet's own
 glyph for that kind (`◆` condition, `➜` action, `ƒ` expression, `⟳` trigger). Properties are a
 behavior's designer knobs, read off the pack's own scripts with their defaults - so a knob renamed
@@ -101,6 +105,10 @@ in the pack renames on the page, and nobody writes that table either. The last c
 when at least one row on the page has something to say in it.
 
 ### Tutorials, and the scratch sheet examples run in
+
+![Manual, Tutorials: the tree lists Tutorials, What the marks on a sheet mean, Coming from another event-sheet editor and What's new; the page lists five tutorials, each with a lead line, a time estimate and a Start button](images/manual-tutorials.png)
+
+![One tutorial step card: the page is titled Your first event, a small-caps line reads YOUR FIRST EVENT, step 1 of 6, the step itself sits in a quote card, a line says the named control stays highlighted in the toolbar, and Back, Skip and Next sit on one row above the page foot](images/manual-tutorial-step.png)
 
 **Manual ▸ Tutorials** is the hands-on half: step cards that name a real control, make it pulse in
 the toolbar, and complete when the open sheet contains what the step asked for. They are authored
@@ -120,6 +128,8 @@ last release, and nothing older. It is extracted and baked into the bundle by th
 CHANGELOG itself does not ship with the plugin), so **editing the CHANGELOG means regenerating the
 bundle**, exactly as editing a guide does. A reader who has not opened the page since the plugin's
 version changed sees a dot on the Manual entry.
+
+![Manual, What's new: a chapter strip above the page reads UNRELEASED and 0.17.0, the page says what changed in the build you have installed, and the unreleased release notes are rendered under a foldable Unreleased chapter](images/manual-whats-new.png)
 
 ### Writing the Manual in another language
 

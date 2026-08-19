@@ -12,8 +12,8 @@ The Manual gains the half every event-sheet editor opens with, and loses the two
 kept having to leave it for.
 
 - **Tutorials, in the live editor, on a sheet nobody minds losing.** Manual ▸ Tutorials lists five:
-  *Your first event*, *Open your own script as a sheet*, *Add a behavior to an object*, *Make a
-  function and call it*, and *Coming from another event-sheet editor*. Each is a sequence of step
+  Your first event, Open your own script as a sheet, Add a behavior to an object, Make a function
+  and call it, and Coming from another event-sheet editor. Each is a sequence of step
   cards (\"Now add an action: press A or click Add Action ...\"), each step names a control the editor
   really has and makes the real one **pulse** in the toolbar until it is used, and a step completes
   on its own the moment the sheet contains what it asked for. Back / Skip / Next, and Next never

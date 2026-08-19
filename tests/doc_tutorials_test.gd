@@ -140,11 +140,14 @@ static func _test_walking_the_steps() -> bool:
 	var blocks: Array[Dictionary] = EventSheetDocTutorials.step_blocks("first-event", 2)
 	all_passed = _check("the card is titled by the tutorial",
 		str(blocks[0].get("text", "")), "Your first event") and all_passed
+	# One ROW of three, not three rows: a step card's three answers are one decision.
 	var actions: PackedStringArray = PackedStringArray()
 	for block: Dictionary in blocks:
-		if str(block.get("kind", "")) == "button":
-			actions.append(str(block.get("action", "")))
-	all_passed = _check("and carries Back, Skip and Next",
+		if str(block.get("kind", "")) != "buttons":
+			continue
+		for item: Variant in (block.get("items", []) as Array):
+			actions.append(str((item as Dictionary).get("action", "")))
+	all_passed = _check("and carries Back, Skip and Next on one row",
 		" ".join(actions), "tutorial_back tutorial_skip tutorial_next") and all_passed
 	all_passed = _check("a tutorial that does not exist draws nothing",
 		EventSheetDocTutorials.step_blocks("zz-no-such-tutorial").is_empty(), true) and all_passed

@@ -407,15 +407,16 @@ static func step_blocks(tutorial_id: String, index: int = -1) -> Array[Dictionar
 	if not str(current.get("check", "")).strip_edges().is_empty():
 		blocks.append({"kind": "paragraph", "bbcode":
 			"[i]This step completes on its own the moment the sheet contains it.[/i]"})
-	blocks.append({"kind": "button", "label": "◀ Back",
-		"tooltip": "The step before this one.", "action": ACTION_BACK, "argument": tutorial_id})
-	blocks.append({"kind": "button", "label": "Skip",
-		"tooltip": "Leaves the tutorial and goes back to the list.", "action": ACTION_SKIP,
-		"argument": tutorial_id})
-	blocks.append({"kind": "button",
-		"label": "Finish" if is_last_step(tutorial_id, at) else "Next ▶",
-		"tooltip": "The next step. Never waits for the check - a step you have already done your own way is a step you can walk past.",
-		"action": ACTION_NEXT, "argument": tutorial_id})
+	# One ROW of three, not three rows: a step card's three answers are one decision.
+	blocks.append({"kind": "buttons", "items": [
+		{"label": "◀ Back", "tooltip": "The step before this one.",
+			"action": ACTION_BACK, "argument": tutorial_id},
+		{"label": "Skip", "tooltip": "Leaves the tutorial and goes back to the list.",
+			"action": ACTION_SKIP, "argument": tutorial_id},
+		{"label": "Finish" if is_last_step(tutorial_id, at) else "Next ▶",
+			"tooltip": "The next step. Never waits for the check - a step you have already done your own way is a step you can walk past.",
+			"action": ACTION_NEXT, "argument": tutorial_id},
+	]})
 	return blocks
 
 
