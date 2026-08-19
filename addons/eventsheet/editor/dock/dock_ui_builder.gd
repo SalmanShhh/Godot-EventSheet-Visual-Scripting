@@ -111,7 +111,15 @@ func build_ui() -> void:
 	_dock._content_host.name = "EventSheetContentHost"
 	_dock._content_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dock._content_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_dock._content_host.add_child(_dock._scroll)
+	# The canvas and the Properties bar share a splitter, so the bar resizes like the Inspector.
+	# The code side panel later re-parents _scroll inside this split, which leaves the bar alone.
+	var properties_split: HSplitContainer = HSplitContainer.new()
+	properties_split.name = "EventSheetPropertiesSplit"
+	properties_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	properties_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	properties_split.add_child(_dock._scroll)
+	properties_split.add_child(_dock._properties_bar.build())
+	_dock._content_host.add_child(properties_split)
 	_dock._open_sheets_panel = EventSheetOpenSheetsDock.new()
 	_dock._open_sheets_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dock._open_sheets_panel.activate_requested.connect(_dock.activate_open_tab)

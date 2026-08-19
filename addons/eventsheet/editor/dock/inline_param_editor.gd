@@ -84,6 +84,23 @@ func _on_param_field_input(event: InputEvent) -> void:
 		_param_edit_field.accept_event()
 
 
+## THE one-parameter edit: writes `new_text` into the ACE's `params` in one undo step, and does
+## nothing at all when the value did not change - so a bare Enter never grows an undo step and
+## never unlocks a read-only .gd preview. The inline editor, the Properties bar and anything else
+## that edits a single parameter go through here, so they cannot disagree about what an edit is.
+## Returns true when the sheet actually changed; the caller reports it.
+func apply_param_value(target: Resource, key: String, new_text: String) -> bool:
+	if target == null or key.is_empty():
+		return false
+	return _dock._perform_undoable_sheet_edit("Edit Parameter", func() -> bool:
+		var params: Dictionary = target.get("params")
+		if str(params.get(key, "")) == new_text:
+			return false
+		params[key] = new_text
+		return true
+	)
+
+
 func _commit_inline_param_edit(apply_to_all_selected: bool = false) -> void:
 	if _param_edit_target == null or _param_edit_key.is_empty():
 		return
@@ -109,13 +126,7 @@ func _commit_inline_param_edit(apply_to_all_selected: bool = false) -> void:
 			return any
 		)
 	else:
-		changed = _dock._perform_undoable_sheet_edit("Edit Parameter", func() -> bool:
-			var params: Dictionary = target.get("params")
-			if str(params.get(key, "")) == new_text:
-				return false
-			params[key] = new_text
-			return true
-		)
+		changed = apply_param_value(target, key, new_text)
 	_param_edit_popup.hide()
 	if changed:
 		_dock._refresh_after_edit()

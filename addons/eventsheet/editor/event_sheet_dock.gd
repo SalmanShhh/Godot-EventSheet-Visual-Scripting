@@ -244,6 +244,7 @@ var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # 
 var _verb_properties: EventSheetVerbProperties = EventSheetVerbProperties.new()  # a published verb's header click: the ACE properties popup (kind, category, inputs, inserts) (dock/verb_properties_popup.gd)
 var _object_properties: EventSheetObjectProperties = EventSheetObjectProperties.new()  # a row's object-name click: the object popup (type, path, rows, signals) (dock/object_properties_popup.gd)
 var _find_results: EventSheetFindResultsBar = EventSheetFindResultsBar.new()  # Find all references: the results bar under the sheet, grouped by sheet with event numbers (dock/find_results_bar.gd)
+var _properties_bar: EventSheetPropertiesBar = EventSheetPropertiesBar.new()  # the selected condition/action/object/group as fields edited in place, beside the canvas (dock/properties_bar.gd)
 var _objects_panel: EventSheetObjectsPanel = null  # left-rail Objects section: every object the open file uses (editor/objects_panel.gd)
 var _ghost_row: EventSheetGhostRow = EventSheetGhostRow.new()  # zero-dialog add: E/C/A open a type-a-sentence popup at the selected row (dock/ghost_row.gd)
 var _navigate: EventSheetNavigate = EventSheetNavigate.new()  # Ctrl+Click go-to-definition: addon verbs open their behaviour as a sheet (dock/navigate.gd)
@@ -336,6 +337,7 @@ func _init() -> void:
 	_verb_properties.init(self)
 	_object_properties.init(self)
 	_find_results.init(self)
+	_properties_bar.init(self)
 	# Same rule as _preview_glue: _build_ui() calls _open_progress.build(), so the back-reference
 	# has to be wired before it (init() only stores _dock - nothing tree-bound).
 	_open_progress.init(self)
@@ -1425,6 +1427,17 @@ func _on_zoom_reset_requested() -> void:
 	_apply_sheet_zoom(1.0)
 
 
+## View ▸ Properties Bar: show/hide the bar beside the sheet and tick the menu to match.
+func _toggle_properties_bar(view_popup: PopupMenu) -> void:
+	var open: bool = not _properties_bar.is_open()
+	_properties_bar.set_open(open)
+	if view_popup != null:
+		var item_index: int = view_popup.get_item_index(41)
+		if item_index >= 0:
+			view_popup.set_item_checked(item_index, open)
+	_set_status("Properties bar %s." % ("shown" if open else "hidden"))
+
+
 # ── Clipboard / copy-paste → dock/clipboard.gd ──────────────────────────────────────
 # The copy/paste cluster (internal clipboard + portable snippets + raw-GDScript paste) lives in
 # EventSheetClipboard, which also OWNS the internal `_clipboard` state (no external reader). Thin
@@ -1995,6 +2008,9 @@ func set_simple_mode(enabled: bool) -> void:
 ## drop-to-code button hides, and the Add menu's code item disables with a pointer to the toggle.
 ## (The picker and the right-click menus apply their own gates when they open.)
 func _apply_simple_mode_gates() -> void:
+	# The Properties bar is an expert surface: a beginner's sheet is the sheet. View ▸ Properties
+	# Bar brings it back at any time.
+	_properties_bar.set_open(not _simple_mode)
 	if _add_code_button != null:
 		_add_code_button.visible = not _simple_mode
 	if _add_menu_popup != null:
@@ -4666,6 +4682,7 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_follow_selection_in_manual()
 	if _exposed_node != null and _viewport != null:
 		_exposed_node.set_row_context(_active_view().get_selected_ace_resource())
+	_properties_bar.refresh()
 
 
 func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String) -> void:
@@ -4813,6 +4830,7 @@ func _refresh_after_edit() -> void:
 	_refresh_code_panel()
 	_refresh_anatomy_panel()
 	_refresh_functions_list()
+	_properties_bar.refresh()
 
 
 # Live-reload binding to the active theme .tres → dock/theme_manager.gd. Called from _activate_tab /
