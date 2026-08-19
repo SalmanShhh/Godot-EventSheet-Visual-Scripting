@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Changed - the documentation says what the sheet says
+
+- **The whole documentation set speaks the sheet's vocabulary.** A picker entry is an **action**, a
+  **condition**, an **expression** or a **trigger**, and a published one is a **function**; the
+  guides still called all of them verbs. Swept across every top-level guide, all 37 module guides
+  and all 77 addon guides: prose reworded to the kind each sentence actually means, and the
+  `## Verb reference` section renamed `## Reference tables` with its own table-of-contents link in
+  lockstep. Reference tables are headed `Name` (an addon guide may head one by its kind).
+- **Stale names corrected in prose.** The reference tables had been updated when built-in names
+  changed; the paragraphs two screens above them had not. `Is On Wall` / `Is On Ceiling` are
+  **Is By Wall** / **Is Touching Ceiling**, `Change Scene` / `Reload Scene` are **Go To Layout** /
+  **Restart Layout**, and the Array rows read **Push Back** / **Push Front** / **Pop Back** /
+  **Delete At** / **Delete Value**. A pack that publishes its own `Reload Scene` or `Set Value`
+  keeps the name it publishes.
+- **Words with a new home:** a plain fenced block in a guide is a **code block** (the sheet's own
+  **Script block** had taken the other name), the in-editor reader is **the Manual**, a row or group
+  **collapses** and **expands** rather than folding, and the **Object bar** is the Object bar.
+- **The opened-file section of the interop guide reads in one order.** It had grown into a 300-line
+  flat list holding two side-by-side descriptions of how a function reads and an orphaned fragment
+  of the head paragraph between them. It now runs head, variables, events, rows, input, signals
+  wired elsewhere, then the lenses - every fact and figure kept - and no longer promises the
+  `Settings` / `Internal state` split that one **Instance variables** folder replaced.
+- **Facts that had drifted:** 93 behavior packs, not 91 (or 76, in `CLAUDE.md`); **Ctrl+Shift+C**
+  copies events as text rather than pasting them; the block-styles field guide gained the head bars
+  it was missing; the migration guide lost nine lines of duplicated table of contents; and the
+  interop guide documents the picker's **Functions** page, which shipped undocumented.
+- **Two gates so this stays true.** `tests/docs_integrity_test.gd` now reads `docs/` and fails on a
+  guide the index does not list, or lists without a description. `tests/module_guides_test.gd` reads
+  the reference tables under their new headings, keyed on a set that also accepts a table headed by
+  its kind - 333 rows in the addon guides had drifted out of that sweep unnoticed.
+
 ### Added - a Local row can be dragged into another event, and says when it may not
 
 - **Dragging a Local row into another event moves the declaration.** It goes through the same undo
