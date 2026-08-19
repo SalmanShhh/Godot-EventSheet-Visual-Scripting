@@ -117,7 +117,7 @@ static func _rows_from_registry(pack_dir: String) -> Dictionary:
 				grouped[group] = []
 			(grouped[group] as Array).append({
 				"name": EventSheetL10n.translate(definition.display_name),
-				"params": _definition_params(definition),
+				"params": definition_params(definition),
 				"note": EventSheetL10n.translate(str(definition.description).strip_edges()),
 			})
 	return grouped
@@ -409,7 +409,7 @@ static func _group_of(ace_type: int) -> String:
 
 ## A definition's parameters as "name: Type", handling both shapes the registry produces -
 ## authored ACEParam resources and the plain Dictionaries reflection builds.
-static func _definition_params(definition: ACEDefinition) -> String:
+static func definition_params(definition: ACEDefinition) -> String:
 	var parts: PackedStringArray = PackedStringArray()
 	for parameter: Variant in definition.parameters:
 		if parameter is ACEParam:

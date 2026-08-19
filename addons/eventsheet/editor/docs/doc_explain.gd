@@ -36,6 +36,7 @@ class_name EventSheetDocExplain
 extends RefCounted
 
 const SCHEME_ACE := "ace:"
+const SCHEME_REFERENCE := "reference:"
 const SCHEME_SECTION := "section:"
 const SCHEME_ADDON := "addon:"
 const SCHEME_GUIDE := "guide:"
@@ -61,12 +62,22 @@ const PACK_ROOT := "res://eventsheet_addons"
 static func resolve(doc_id: String) -> Dictionary:
 	var route: Dictionary = {
 		"valid": false, "scheme": "", "provider_id": "", "ace_id": "", "section": "", "pack": "",
-		"target": "", "page_id": "",
+		"target": "", "page_id": "", "reference_kind": "", "reference_name": "",
 	}
 	var id: String = doc_id.strip_edges()
 	if id.is_empty():
 		route["valid"] = true
 		route["scheme"] = "index"
+		return route
+	if id.begins_with(SCHEME_REFERENCE):
+		# A reference page is DERIVED from the vocabulary rather than read from the bundle, so it
+		# has no page_id and no online target: there is no repo file to send a reader to, and
+		# inventing one would be the dead-shipped-link this scheme exists to avoid.
+		var reference: Dictionary = EventSheetDocReference.parse(id)
+		route["scheme"] = "reference"
+		route["reference_kind"] = str(reference.get("kind", ""))
+		route["reference_name"] = str(reference.get("name", ""))
+		route["valid"] = EventSheetDocReference.has_page(id)
 		return route
 	if id.begins_with(SCHEME_ACE):
 		var rest: String = id.substr(SCHEME_ACE.length())

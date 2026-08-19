@@ -43,6 +43,12 @@
 class_name EventSheetDocMarkdown
 extends RefCounted
 
+## The doc-id prefixes a link inside a page may carry. The same frozen set the public open_docs
+## takes, so a page that links by id and a caller that opens one are speaking one language.
+const DOC_ID_SCHEMES: Array[String] = [
+	"ace:", "reference:", "guide:", "addon:", "module:", "section:", "engine:",
+]
+
 
 ## Parses a whole guide. `doc_id` is carried only so a caller can keep the blocks with their page;
 ## the parse itself never depends on it.
@@ -258,6 +264,7 @@ static func _has_markup(text: String) -> bool:
 ##   "anchor"    an in-page jump ("#slug")
 ##   "doc"       another guide, plus an optional anchor - the raw relative path, for the library
 ##               to turn into a doc id against the page it was written in
+##   "docid"     one of the Manual's own doc ids, for a page that is derived rather than written
 ##   "url"       an absolute http(s) address for the browser
 ##   "path"      anything else (a res:// path, a source file): text, never a link
 static func classify_link(target: String) -> Dictionary:
@@ -268,6 +275,12 @@ static func classify_link(target: String) -> Dictionary:
 		return {"kind": "url", "target": value, "anchor": ""}
 	if value.begins_with("res://") or value.begins_with("mailto:"):
 		return {"kind": "path", "target": value, "anchor": ""}
+	# A DOC ID rather than a file: the Manual's derived pages (a reference page's verb tables, the
+	# glossary's related terms) link by id, because there is no Markdown file behind them to point
+	# at. Checked before the ".md" test, so an id can never be mistaken for a path.
+	for scheme: String in DOC_ID_SCHEMES:
+		if value.begins_with(scheme):
+			return {"kind": "docid", "target": value, "anchor": ""}
 	var anchor: String = ""
 	var hash_index: int = value.find("#")
 	if hash_index >= 0:

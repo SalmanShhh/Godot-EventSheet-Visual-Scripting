@@ -276,6 +276,202 @@ static func _result(page: Dictionary, heading: Dictionary, score: int, order: in
 	}
 
 
+# ── One box over the whole Manual ─────────────────────────────────────────────────────────────
+#
+# The corpus search above answers "which PAGE talks about this". A reader typing into the Manual is
+# usually asking something narrower and more useful - "what is the thing called" - and the answer
+# is as often a condition, an action or a word from another editor's vocabulary as it is a page.
+# So one box searches all of it and TAGS what it found, in the Manual's own words: condition,
+# action, expression, guide, System reference, behavior reference, engine reference, glossary.
+#
+# Each row carries everything a caller needs to act without asking anything else - the doc id to
+# open, and (for a verb) the definition, so the result can draw the example rows inline and add
+# them to the sheet at the caret.
+
+
+## The result kinds, in the order a tie between two equally good matches is broken. Verbs first
+## because they are what a reader is usually naming, and the glossary last because it translates a
+## word rather than answering with one.
+const KIND_ORDER: Array[String] = [
+	"trigger", "condition", "action", "expression", "guide", "reference", "behavior", "engine",
+	"glossary",
+]
+
+## The words the result rows are tagged with, per kind. The Manual's own vocabulary: these are the
+## same words its tree uses, so a tag names a place the reader can go rather than a category only
+## this file knows about.
+const KIND_LABELS := {
+	"trigger": "trigger", "condition": "condition", "action": "action", "expression": "expression",
+	"guide": "guide", "reference": "System reference", "behavior": "behavior reference",
+	"engine": "engine reference", "glossary": "glossary",
+}
+
+## How many engine classes and glossary terms one query may offer. Both lists are long and neither
+## is what the reader is usually after; a couple of rows is a pointer, ten is a wall.
+const MAX_ENGINE_HITS := 4
+const MAX_GLOSSARY_HITS := 4
+
+
+## The whole Manual, searched. Each row is {kind, title, subtitle, doc_id, anchor, definition,
+## used, score}: `kind` is one of KIND_ORDER, `used` is how many events of `sheet` already use that
+## verb (0 for everything else), and `definition` is the ACEDefinition for a verb row so the
+## caller can draw its example and add it.
+static func search_all(query: String, sheet: EventSheetResource = null, limit: int = 30) -> Array[Dictionary]:
+	var wanted: String = query.strip_edges().to_lower()
+	var results: Array[Dictionary] = []
+	if wanted.is_empty():
+		return results
+	results.append_array(_vocabulary_hits(wanted, sheet))
+	results.append_array(_page_hits(query))
+	results.append_array(_reference_hits(wanted))
+	results.append_array(_engine_hits(wanted))
+	results.append_array(_glossary_hits(wanted))
+	results.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["score"]) != int(b["score"]):
+			return int(a["score"]) < int(b["score"])
+		var kind_a: int = KIND_ORDER.find(str(a["kind"]))
+		var kind_b: int = KIND_ORDER.find(str(b["kind"]))
+		if kind_a != kind_b:
+			return kind_a < kind_b
+		return str(a["title"]) < str(b["title"]))
+	if limit > 0 and results.size() > limit:
+		results.resize(limit)
+	return results
+
+
+## The word a result kind is tagged with. "" for a kind this build does not know, so a caller
+## draws no tag rather than an invented one.
+static func kind_label(kind: String) -> String:
+	return str(KIND_LABELS.get(kind.strip_edges(), ""))
+
+
+## The live vocabulary. Empty outside the editor, where there is no registry - which is exactly
+## when the corpus half of the search is the whole answer.
+static func _vocabulary_hits(wanted: String, sheet: EventSheetResource) -> Array[Dictionary]:
+	var hits: Array[Dictionary] = []
+	for definition: ACEDefinition in EventSheets.all_verbs():
+		var title: String = EventSheetL10n.translate(definition.display_name)
+		var score: int = match_score(title.to_lower(), wanted)
+		if score < 0:
+			continue
+		var pack_dir: String = EventSheets.addon_pack_directory(definition.provider_id)
+		var home: String = EventSheetDocReference.PACK_TREE_TITLE if not pack_dir.is_empty() \
+			else EventSheetDocReference.SECTION_TREE_TITLE
+		hits.append({
+			"kind": EventSheetDocExplain.type_label(definition.ace_type).to_lower(),
+			"title": title,
+			"subtitle": "%s ▸ %s" % [home, EventSheetDocExplain.category_of(definition)],
+			"doc_id": EventSheetDocExplain.doc_id_for_definition(definition),
+			"anchor": "",
+			"definition": definition,
+			"used": EventSheetDocUsage.count(sheet, definition.provider_id, definition.id),
+			"score": score,
+		})
+	return hits
+
+
+## The written corpus, tagged by what kind of page each hit lives on: a pack's guide reads as
+## behavior reference, a module's as System reference, and everything else as a guide.
+static func _page_hits(query: String) -> Array[Dictionary]:
+	var hits: Array[Dictionary] = []
+	for result: Dictionary in search(query):
+		var page_id: String = str(result.get("page_id", ""))
+		var heading: String = str(result.get("heading", ""))
+		var title: String = str(result.get("title", page_id))
+		hits.append({
+			"kind": _kind_for_page(page_id),
+			"title": title if heading.is_empty() else "%s ▸ %s" % [title, heading],
+			"subtitle": "",
+			"doc_id": str(result.get("doc_id", "")),
+			"anchor": str(result.get("anchor", "")),
+			"definition": null,
+			"used": 0,
+			"score": int(result.get("score", SCORE_BODY)),
+		})
+	return hits
+
+
+## The derived reference pages - one per category, one per behavior - so a reader typing a pack's
+## name lands on its reference even when it ships no written guide at all.
+static func _reference_hits(wanted: String) -> Array[Dictionary]:
+	var hits: Array[Dictionary] = []
+	for section: String in EventSheetDocReference.section_names():
+		var score: int = match_score(section.to_lower(), wanted)
+		if score >= 0:
+			hits.append(_reference_row("reference", section,
+				EventSheetDocReference.SECTION_TREE_TITLE,
+				EventSheetDocReference.doc_id(EventSheetDocReference.KIND_SECTION, section), score))
+	for pack_dir: String in EventSheetDocReference.pack_names():
+		var title: String = EventSheetDocReference.pack_title(pack_dir)
+		var score: int = match_score(title.to_lower(), wanted)
+		if score >= 0:
+			hits.append(_reference_row("behavior", title,
+				EventSheetDocReference.PACK_TREE_TITLE,
+				EventSheetDocReference.doc_id(EventSheetDocReference.KIND_PACK, pack_dir), score))
+	return hits
+
+
+static func _reference_row(kind: String, title: String, home: String, doc_id: String, score: int) -> Dictionary:
+	return {
+		"kind": kind, "title": title, "subtitle": home, "doc_id": doc_id, "anchor": "",
+		"definition": null, "used": 0, "score": score,
+	}
+
+
+## The engine's own class reference, one hop further out. Class NAMES only: a reader who types
+## "create_timer" is helped by being pointed at SceneTree, and walking every method of every class
+## on a keystroke is not a search box, it is a stall.
+static func _engine_hits(wanted: String) -> Array[Dictionary]:
+	var hits: Array[Dictionary] = []
+	if wanted.length() < 3:
+		return hits
+	for class_id: String in ClassDB.get_class_list():
+		var score: int = match_score(class_id.to_lower(), wanted)
+		# Substring and better only: a subsequence match against a thousand class names offers
+		# rows that share nothing with the query but their letters.
+		if score < 0 or score > 1:
+			continue
+		hits.append({
+			"kind": "engine", "title": class_id, "subtitle": "Godot class reference",
+			"doc_id": "engine:%s" % class_id, "anchor": "", "definition": null, "used": 0,
+			"score": score,
+		})
+		if hits.size() >= MAX_ENGINE_HITS:
+			break
+	return hits
+
+
+## The words another event-sheet editor spells differently.
+static func _glossary_hits(wanted: String) -> Array[Dictionary]:
+	var hits: Array[Dictionary] = []
+	for entry: Dictionary in EventSheetDocGlossary.find(wanted):
+		var term: String = str(entry.get("term", ""))
+		hits.append({
+			"kind": "glossary", "title": "\"%s\" - the same word here" % term.to_lower(),
+			"subtitle": str(entry.get("here", "")),
+			"doc_id": EventSheetDocReference.doc_id(EventSheetDocReference.KIND_GLOSSARY,
+				str(entry.get("key", ""))),
+			"anchor": str(entry.get("key", "")), "definition": null, "used": 0,
+			"score": match_score(term.to_lower(), wanted),
+		})
+		if hits.size() >= MAX_GLOSSARY_HITS:
+			break
+	return hits
+
+
+## Which result kind a shipped page belongs to, from its id alone - a pack's guide is behavior
+## reference, a module's is System reference, everything else is a guide. Spelled out here rather
+## than asked of the sidebar on purpose: the sidebar reads this file, and a class that read it back
+## would be a cycle.
+static func _kind_for_page(page_id: String) -> String:
+	var id: String = page_id.strip_edges()
+	if id.begins_with("%s/" % EventSheetDocLibrary.ADDONS_DIR) or id.begins_with("%s/" % EventSheetDocLibrary.PACKS_SET):
+		return "behavior"
+	if id.begins_with("%s/" % EventSheetDocLibrary.MODULES_DIR):
+		return "reference"
+	return "guide"
+
+
 # ── Highlighting ──────────────────────────────────────────────────────────────────────────────
 
 

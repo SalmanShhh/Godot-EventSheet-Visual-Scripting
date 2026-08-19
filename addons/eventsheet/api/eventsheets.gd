@@ -1951,6 +1951,21 @@ static func provider_verbs(provider_id: String) -> Array[ACEDefinition]:
 	return _dock._ace_registry.get_provider_definitions(provider_id)
 
 
+## Every verb the LIVE registry currently offers, as immutable ACEDefinitions. Editor-only like
+## provider_verbs: an empty array when no dock is open, so a headless caller falls back to a
+## script-level derivation rather than reporting a project with no vocabulary.
+##
+## This is what the Manual's reference pages are built from - one page per category, listing the
+## conditions, actions and expressions that category publishes - so the reference can never
+## disagree with the picker: it is the picker's own data.
+##
+## Treat the definitions as read-only - they are statically cached and shared across every tab.
+static func all_verbs() -> Array[ACEDefinition]:
+	if not _dock_alive():
+		return []
+	return _dock._ace_registry.get_all_definitions()
+
+
 ## Searches the documentation corpus - the shipped guides, plus every pack guide and project guide
 ## discovered on disk. Each result is a row that can be acted on directly:
 ##   {doc_id, page_id, title, heading, anchor, score}
