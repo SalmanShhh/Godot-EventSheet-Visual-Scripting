@@ -104,9 +104,9 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set hp to hp ^ 2",
 	"System ▸ Set wave to split(label, \",\")",
 	# N7 - saving, files and JSON under the three objects that own them
-	"Storage ▸ Set item \"score\" to hp (section \"save\")",
-	"Storage ▸ Set hp to item \"score\" (default 0)",
-	"Storage ▸ Save \"save.cfg\"",
+	"Local Storage ▸ Set item save/score to hp",
+	"System ▸ Set hp to Local Storage.Item(\"save/score\") (or 0)",
+	"Local Storage ▸ Save \"save.cfg\"",
 	"JSON ▸ Set label to inventory as text",
 	"JSON ▸ Set inventory to parsed label",
 	# N8 - the behaviour words, by the object's known class
@@ -204,11 +204,11 @@ static func _statement_values() -> bool:
 	for pair: Array in [
 		# N7 - saving, files and JSON
 		["config.set_value(\"save\", \"score\", score)",
-			"Storage ▸ Set item \"score\" to score (section \"save\")"],
-		["s = config.get_value(\"save\", \"score\", 0)", "Storage ▸ Set s to item \"score\" (default 0)"],
-		["s = config.get_value(\"save\", \"score\")", "Storage ▸ Set s to item \"score\""],
-		["config.save(\"user://save.cfg\")", "Storage ▸ Save \"save.cfg\""],
-		["config.load(\"user://saves/slot1.cfg\")", "Storage ▸ Load \"slot1.cfg\""],
+			"Local Storage ▸ Set item save/score to score"],
+		["s = config.get_value(\"save\", \"score\", 0)", "System ▸ Set s to Local Storage.Item(\"save/score\") (or 0)"],
+		["s = config.get_value(\"save\", \"score\")", "System ▸ Set s to Local Storage.Item(\"save/score\")"],
+		["config.save(\"user://save.cfg\")", "Local Storage ▸ Save \"save.cfg\""],
+		["config.load(\"user://saves/slot1.cfg\")", "Local Storage ▸ Load \"slot1.cfg\""],
 		["d = JSON.parse_string(text)", "JSON ▸ Set d to parsed text"],
 		["t = JSON.stringify(d)", "JSON ▸ Set t to d as text"],
 		["f = FileAccess.open(\"user://log.txt\", FileAccess.WRITE)",
@@ -265,7 +265,7 @@ static func _condition_values() -> bool:
 		["position.x <= 0", "Player ▸ X ≤ 0"],
 		["hp >= 10", " ▸ hp ≥ 10"],
 		# N7 - the storage and file questions
-		["config.has_section_key(\"save\", \"score\")", "Storage ▸ has item \"score\""],
+		["config.has_section_key(\"save\", \"score\")", "Local Storage ▸ has item save/score"],
 		["FileAccess.file_exists(\"user://logs/log.txt\")", "File ▸ \"log.txt\" exists"],
 		# N9 - the release, the two InputEvent spellings, and the raw device questions
 		["Input.is_action_just_released(\"jump\")", "Keyboard ▸ On \"jump\" released"],

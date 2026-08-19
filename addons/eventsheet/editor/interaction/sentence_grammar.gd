@@ -49,7 +49,9 @@ const OBJECT_TOUCH := "Touch"
 ## N7. Saving, files and JSON belong to three objects of their own - Local Storage, JSON and AJAX.
 ## Hand-written ConfigFile / JSON / FileAccess code reads under the same three names, so the rows a
 ## reader already recognises are the rows they see here.
-const OBJECT_STORAGE := "Storage"
+## S5. Spelled in full: Local Storage is the name the object goes by, and the shortened one sent a
+## reader looking for an object their sheet does not have.
+const OBJECT_STORAGE := "Local Storage"
 const OBJECT_JSON := "JSON"
 const OBJECT_FILE := "File"
 
@@ -2042,6 +2044,15 @@ static func _storage_statement(target: String, method: String, args: PackedStrin
 	if target.is_empty():
 		return {}
 	if method == "set_value" and args.size() == 3:
+		# S5. A section and a key together address ONE item, and an event sheet addresses an item by one
+		# name: `player/score`. Only when both are literals - a key worked out at run time keeps the two
+		# apart, because joining them would show a name the file never writes.
+		var addressed: String = storage_item_key(args[0], args[1])
+		if not addressed.is_empty():
+			return _sentence(OBJECT_STORAGE, "Set item {key} to {value}", {
+				"key": [addressed, "name"],
+				"value": [expression_text(args[2], context), "value"]
+			})
 		return _sentence(OBJECT_STORAGE, "Set item {key} to {value} (section {section})", {
 			"key": [expression_text(args[1], context), "value"],
 			"value": [expression_text(args[2], context), "value"],
@@ -2119,13 +2130,37 @@ static func _undo_member_word(property_value: String) -> String:
 	return bare.strip_edges()
 
 
-## True when a value is a literal path to a settings file - the only argument a bare `save` / `load`
+## S5. The one name a section and a key address together - `"player"` + `"score"` is the item
+## `player/score`. "" unless BOTH are literals, because a name assembled at run time is not a name
+## this reading may print.
+static func storage_item_key(section: String, key: String) -> String:
+	if not _is_string_literal(section) or not _is_string_literal(key):
+		return ""
+	var section_text: String = _unquote(section.strip_edges().trim_prefix("&"))
+	var key_text: String = _unquote(key.strip_edges().trim_prefix("&"))
+	if section_text.is_empty() or key_text.is_empty():
+		return ""
+	return "%s/%s" % [section_text, key_text]
+
+
+## The file extensions a saved game is written under. `save` and `load` are ordinary English and live
+## on plenty of other classes, so a literal path naming one of these is what says "this is storage".
+const STORAGE_EXTENSIONS: PackedStringArray = [".cfg", ".ini", ".json", ".save", ".dat"]
+
+
+## True when a value is a literal path to a save file - the only argument a bare `save` / `load`
 ## may have and still be honestly readable as storage.
 static func _is_config_path(value: String) -> bool:
 	if not _is_string_literal(value):
 		return false
 	var path: String = _unquote(value.strip_edges().trim_prefix("&")).to_lower()
-	return path.ends_with(".cfg") or path.ends_with(".ini")
+	# S5. The extension is what says "this is a save file", not the folder: `sprite.save(
+	# "user://shot.png")` writes an image and keeps its own reading, which is why a blanket `user://`
+	# rule would be exactly the confident lie this grammar refuses.
+	for extension: String in STORAGE_EXTENSIONS:
+		if path.ends_with(extension):
+			return true
+	return false
 
 
 ## N7. `var f = FileAccess.open("user://log.txt", FileAccess.WRITE)` as the open-the-file row: the verb
@@ -2185,8 +2220,9 @@ static func value_object(expression: String) -> String:
 		return OBJECT_JSON
 	if text.begins_with("FileAccess."):
 		return OBJECT_FILE
-	if top_level_index(text, ".get_value(") > 0:
-		return OBJECT_STORAGE
+	# S5. A saved value read back names Local Storage in the value itself (`Local Storage.Item("x")`),
+	# so the row belongs to whatever it is being PUT INTO - naming the same object twice on one row
+	# reads as two objects.
 	if text.begins_with("Input.get_action_strength(") or text.begins_with("Input.get_action_raw_strength("):
 		return OBJECT_GAMEPAD
 	# R29 - a sensor is the phone's, and the sheet's phone is the Touch object.
@@ -3195,11 +3231,34 @@ static func _editor_condition(text: String) -> Dictionary:
 ## it. The section is a GDScript filing detail the Storage object already implies, so only the key is
 ## in the sentence.
 static func _storage_condition(text: String, context: Dictionary) -> Dictionary:
+	# S5. `cfg.load("user://save.cfg") != OK` is how a Godot script asks whether there is a save file
+	# to read, and that IS the question - the error code is Godot's way of answering it, not something
+	# the row has to say. Both directions read, each in its own words, so neither needs a mark to
+	# decode.
+	for pair: Array in [[" != ", "save file is missing"], [" == ", "save file exists"]]:
+		var operator: String = str(pair[0])
+		var at: int = top_level_index(text, operator)
+		if at <= 0 or text.substr(at + operator.length()).strip_edges() != "OK":
+			continue
+		var loaded: Dictionary = call_parts(text.substr(0, at).strip_edges())
+		if str(loaded.get("method", "")) != "load":
+			continue
+		var loaded_args: PackedStringArray = loaded.get("args", PackedStringArray())
+		if loaded_args.size() != 1 or not _is_config_path(loaded_args[0]):
+			continue
+		var asked: Dictionary = _sentence(OBJECT_STORAGE, str(pair[1]), {})
+		(asked["segments"] as Array).append(
+			{"text": " (%s)" % file_name_value(loaded_args[0], context), "tone": "muted"})
+		return asked
 	var call: Dictionary = call_parts(text)
 	if call.is_empty():
 		return {}
 	var arguments: PackedStringArray = call.get("args", PackedStringArray())
 	if str(call.get("method", "")) == "has_section_key" and arguments.size() == 2:
+		# S5. Addressed as the one item it is, exactly as Set item and Item() address it.
+		var addressed: String = storage_item_key(arguments[0], arguments[1])
+		if not addressed.is_empty():
+			return _sentence(OBJECT_STORAGE, "has item {key}", {"key": [addressed, "name"]})
 		return _sentence(OBJECT_STORAGE, "has item {key}",
 			{"key": [expression_text(arguments[1], context), "value"]})
 	if text.begins_with("FileAccess.file_exists(") and arguments.size() == 1:
@@ -4139,11 +4198,16 @@ static func _shaped_receiver_idiom(receiver: String, method: String,
 		return "mid(%s, %s, %s)" % [receiver, arguments[0], arguments[1]]
 	# `cfg.get_value(section, key)` is the read-an-item-from-storage expression; the section is a
 	# GDScript filing detail the Storage object already implies, so only the KEY is in the sentence.
-	if method == "get_value" and arguments.size() == 2:
-		return _fill(translate("item {key}"), {"key": arguments[1]})
-	if method == "get_value" and arguments.size() == 3:
-		return _fill(translate("item {key} (default {fallback})"),
-			{"key": arguments[1], "fallback": arguments[2]})
+	# S5. Addressed as one item when the section and the key are both literals, the way the Set item row
+	# above addresses it, so the write and the read of one saved value name the same thing.
+	if method == "get_value" and arguments.size() >= 2 and arguments.size() <= 3:
+		var addressed: String = storage_item_key(arguments[0], arguments[1])
+		var item_name: String = "\"%s\"" % addressed if not addressed.is_empty() else arguments[1]
+		var read_back: String = _fill(translate("{object}.Item({key})"),
+			{"object": translate(OBJECT_STORAGE), "key": item_name})
+		if arguments.size() == 2:
+			return read_back
+		return "%s (%s)" % [read_back, _fill(translate("or {fallback}"), {"fallback": arguments[2]})]
 	# ── S7 ──────────────────────────────────────────────────────────────────────────────────────
 	# The three list and table READS an event sheet has words for and a Godot script writes as calls.
 	# `stats.get("hp", 100)` is the table entry with what to use when it is missing; `items.slice(0, 3)`

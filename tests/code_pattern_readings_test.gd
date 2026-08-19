@@ -21,6 +21,35 @@ static func run() -> bool:
 	ok = _claims() and ok
 	ok = _existence_sentences() and ok
 	ok = _list_and_table_sentences() and ok
+	ok = _local_storage_sentences() and ok
+	return ok
+
+
+## S5. Saving and loading, in the words a reader whose only storage rows were Set item / Item has.
+static func _local_storage_sentences() -> bool:
+	var ok: bool = true
+	var context: Dictionary = {"script_object": "Player"}
+	ok = _check("a section and a key address one item",
+		_reading(EventSheetSentence.statement("cfg.set_value(\"player\", \"score\", score)", context)),
+		"Local Storage ▸ Set item player/score to score") and ok
+	ok = _check("a key worked out at run time keeps the section apart",
+		_reading(EventSheetSentence.statement("cfg.set_value(\"player\", key, score)", context)),
+		"Local Storage ▸ Set item key to score (section \"player\")") and ok
+	ok = _check("reading one back names the item the same way",
+		_reading(EventSheetSentence.statement(
+			"score = cfg.get_value(\"player\", \"score\", 0)", context)),
+		"System ▸ Set score to Local Storage.Item(\"player/score\") (or 0)") and ok
+	ok = _check("a JSON save file is a save file too",
+		_reading(EventSheetSentence.statement("cfg.save(\"user://save.json\")", context)),
+		"Local Storage ▸ Save \"save.json\"") and ok
+	ok = _check("the error code asks whether there is a save file",
+		_reading(EventSheetSentence.condition("cfg.load(\"user://save.cfg\") != OK", context)),
+		"Local Storage ▸ save file is missing (\"save.cfg\")") and ok
+	ok = _check("and the other way round",
+		_reading(EventSheetSentence.condition("cfg.load(\"user://save.cfg\") == OK", context)),
+		"Local Storage ▸ save file exists (\"save.cfg\")") and ok
+	ok = _check("an image written to disk is not storage",
+		_reading(EventSheetSentence.statement("sprite.save(\"user://shot.png\")", context)), "") and ok
 	return ok
 
 
