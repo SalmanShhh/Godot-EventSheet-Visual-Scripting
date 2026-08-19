@@ -2,6 +2,8 @@
 
 Every guide and reference for Godot EventSheets, grouped by what you are trying to do. New here? Start with the [recipes](GUIDE-RECIPES.md). Looking for a bundled behavior pack? See the [addon guides index](Addons/README.md).
 
+Every page below also ships inside the editor: open **Tools > Manual**, or press **F1** with anything selected to land on the page for it. This index is the authoritative list - a suite check fails if a guide is missing from it.
+
 ## Learn by doing
 
 - [Recipes](GUIDE-RECIPES.md) - build a platformer, health, pickups, and debugging end to end.
@@ -17,7 +19,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 ## The Studios (in-editor authoring tools)
 
-- [Using the ACE Studio](GUIDE-USING-THE-ACE-STUDIO.md) - the "New Function" dialog: verb-kind cards, the live picker preview, the Ships-as signature, and publishing (parameters are edited from the verb row's cells, guards are condition rows in the body).
+- [Using the ACE Studio](GUIDE-USING-THE-ACE-STUDIO.md) - the "New Function" dialog: the action / condition / expression kind cards, the live picker preview, the Ships-as signature, and publishing (parameters are edited from the function row's cells, guards are condition rows in the body).
 - [Using the Save Studio](GUIDE-USING-THE-SAVE-STUDIO.md) - the save window: preview any format on disk, browse and export slots, and generate save support for your own scripts.
 
 ## Extend the plugin
@@ -49,7 +51,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 ## Working with your project
 
-- [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md) - how sheets call, and are called by, your GDScript; what a hand-written `.gd` actually looks like when you open it as a sheet (functions, condition/action rows, notes, Declare rows for data tables); your own classes appearing in the picker with zero setup, renaming or hiding those verbs without touching your source, and naming a raw call you already have.
+- [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md) - how sheets call, and are called by, your GDScript; what a hand-written `.gd` actually looks like when you open it as a sheet (functions, condition/action rows, notes, Declare rows for data tables); your own classes appearing in the picker with zero setup, renaming or hiding those actions and conditions without touching your source, and naming a raw call you already have.
 - [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md) - diffing, merging, and committing sheets.
 - [Theme and Editability](GUIDE-THEMING.md) - restyle the editor, or lock a sheet down for a team.
 - [Removing Godot EventSheets](GUIDE-UNINSTALL.md) - a clean, guided teardown that leaves your game running.
@@ -68,11 +70,12 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 ## Built-in vocabulary
 
-The per-verb reference for everything the picker already offers. The four "Working with…" and
+The entry-by-entry reference for everything the picker already offers. The four "Working with…" and
 "Seeing What Is There" guides above stay the narrative, learn-by-doing versions of their subjects;
-open a Modules guide when you want the full verb list, its parameters, and what each row ships as.
+open a Modules guide when you want the full list of actions, conditions and expressions, their
+parameters, and what each row ships as.
 
-- [Built-in Module Guides Index](Modules/README.md) - deep-dive guides for the ~1,090 verbs that ship in the picker before you enable a single pack.
+- [Built-in Module Guides Index](Modules/README.md) - deep-dive guides for the ~1,090 actions, conditions and expressions that ship in the picker before you enable a single pack.
 
 ## Addon packs
 
