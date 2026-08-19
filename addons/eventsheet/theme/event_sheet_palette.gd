@@ -84,7 +84,6 @@ const COLOR_CHIP_BG = Color("#2c313a")
 const COLOR_CHIP_FG = Color("#9aa1ad")
 const COLOR_CAT_CHIP_BG = Color("#34304f")
 const COLOR_CAT_CHIP_FG = Color("#b3a8dd")
-
 # ── Glance-device colours ─────────────────────────────────────────────────────────────────────
 # The banner manifest pills, the sheet-health chip, and the structural row badges all draw from
 # THIS one named surface - no per-file hex - so a future theme pass retunes the family in one place.

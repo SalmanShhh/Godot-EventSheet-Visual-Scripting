@@ -58,15 +58,16 @@ const EXTERNAL_LINK_GLYPH := "↗"
 ## are mapped in one place so a new block kind lands in a deliberate slot instead of at the end.
 const SECTION_FOR_BLOCK := {
 	"title": "title", "note": "note", "prose": "description", "ships_as": "syntax",
-	"params": "parameters", "figure": "preview", "usage": "usage", "see_also": "see_also",
+	"params": "parameters", "figure": "preview", "usage": "usage", "patterns": "patterns",
+	"see_also": "see_also",
 	"entry_actions": "actions", "about": "about", "link": "link",
 }
 
 ## THE READING ORDER, fixed for every reference page: what it is, what it does, what you type, what
 ## you fill in, what it looks like on the sheet, and where it comes from.
 const SECTION_ORDER: Array[String] = [
-	"title", "note", "description", "syntax", "parameters", "preview", "usage", "see_also",
-	"actions", "about", "link",
+	"title", "note", "description", "syntax", "parameters", "preview", "usage", "patterns",
+	"see_also", "actions", "about", "link",
 ]
 
 ## Emitted when the reader activates a read-more link. The panel opens it as well (that is the
@@ -255,6 +256,8 @@ func _section_control(section: String, by_section: Dictionary) -> Control:
 			return _figure_block(block.get("definition", null) as ACEDefinition)
 		"usage":
 			return _usage_block(str(block.get("provider_id", "")), str(block.get("ace_id", "")))
+		"patterns":
+			return _patterns_block(str(block.get("provider_id", "")), str(block.get("ace_id", "")))
 		"see_also":
 			return _see_also_block(block.get("items", []) as Array)
 		"actions":
@@ -434,6 +437,30 @@ func _usage_block(provider_id: String, ace_id: String) -> Control:
 				_usage_index = (_usage_index + 1) % used
 				row_requested.emit(provider_id, ace_id, _usage_index)))
 	return EventSheetPopupUI.panel_section(row)
+
+
+## S26 - the PATTERNS this verb is part of, as links to their pages. Derived from the claims on the
+## sheet that is open right now, exactly the way the usage count above is: a verb belongs to the
+## Cooldown pattern because a Cooldown claim in front of this reader lists it, and nothing here is
+## a hand-kept table that could go stale.
+func _patterns_block(provider_id: String, ace_id: String) -> Control:
+	var items: Array[Dictionary] = EventSheetPatternManual.patterns_using(
+		EventSheets.current_sheet(), provider_id, ace_id)
+	if items.is_empty():
+		return null
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	column.add_child(EventSheetPopupUI.small_caps_label("Patterns using this"))
+	var chips: HFlowContainer = HFlowContainer.new()
+	chips.add_theme_constant_override("h_separation", int(EventSheetPalette.scaled_f(4.0)))
+	chips.add_theme_constant_override("v_separation", int(EventSheetPalette.scaled_f(4.0)))
+	for item: Dictionary in items:
+		var doc_id: String = str(item.get("doc_id", ""))
+		chips.add_child(_small_button(str(item.get("title", "")),
+			"Opens this pattern's page, with the hand-written shape and the events beside it.",
+			func() -> void: doc_requested.emit(doc_id)))
+	column.add_child(chips)
+	return column
 
 
 ## The neighbours, as chips. A chip is a link, not a button: clicking one is navigating, and the

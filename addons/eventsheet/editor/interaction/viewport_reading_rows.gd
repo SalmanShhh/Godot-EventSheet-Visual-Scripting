@@ -109,6 +109,7 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 static func claim_patterns(sheet: EventSheetResource) -> void:
 	if sheet == null:
 		return
+	EventSheetPatternFacts.mark_stated(sheet)
 	var file_facts: Dictionary = EventSheetPatternReadings.facts(ordered_code_lines(sheet))
 	for event_entry: Variant in sheet.events:
 		if not (event_entry is EventRow):
@@ -126,6 +127,17 @@ static func claim_patterns(sheet: EventSheetResource) -> void:
 			_append_ordered_lines(owned, function_body, 0)
 		var function_uid: String = "function:%s" % event_function.function_name
 		_claim_body(sheet, function_uid, function_uid, function_body, file_facts)
+
+
+## The same walk, but only when it has not already run since the last clear - what anything READING
+## the registry calls before it reads. The two passes that claim (this one over the file's lines, the
+## row builder's own span pass) do not run in a fixed order relative to every clear, and a marker
+## that went missing because a clear landed between them would be a reading the sheet silently lost.
+## Idempotent and cheap: on the overwhelmingly common path it is one dictionary lookup.
+static func ensure_claims(sheet: EventSheetResource) -> void:
+	if sheet == null or EventSheetPatternFacts.has_stated(sheet):
+		return
+	claim_patterns(sheet)
 
 
 ## One owning row's claims, handed to the registry as they come back.

@@ -194,6 +194,47 @@ untouched, and the byte round-trip and the emitted GDScript cannot move.
   `Seek to 12 seconds`. A file name also survives the spelling lens whole - `jump.wav` was reading
   as `jump's wav`.
 
+### Added - the sheet names the pattern an event is, and offers the behavior that could replace it
+
+- **A pattern marker on the event that owns one.** A hand-written shape the reading recognises - a
+  number counted down every tick, a timer with the next step hung off it - now wears a muted
+  **⟡** chip naming it, in Simple mode too, because naming the pattern is the teaching moment and a
+  beginner is exactly who needs it. Only the event that OWNS the shape gets one; rows that merely
+  use its words get nothing. Hover says what the pattern is and offers the Manual, and a click
+  opens its page. The chip has its own theme token pair under **Reading marks**; leaving them clear
+  makes the chip follow the plain chip's plate and the muted text tone, so a preset saved before
+  patterns existed dresses it in its own palette.
+- **The evidence, on every row of a pattern-read event.** A pattern reading is a claim spanning
+  several lines, so unlike every other reading it cannot be checked by looking at one row. The
+  hover now says *read as the Cooldown pattern because:* and lists the exact source lines, produced
+  by the compiler's own emitters rather than paraphrased. **View ▸ Patterns** (on by default, saved
+  per project) turns the naming off so the sheet reads as its plain sentences again, and the row
+  menu's **Explain this reading** opens the pattern's Manual page.
+- **Adopt behavior: the preview-first swap of a hand-written pattern for the shipped one.**
+  Right-click a ⟡ event ▸ **Adopt behavior: <name>…** shows the events as they read now beside the
+  events as they would read, marks every changing row, and lists what was checked in a *keeps
+  working because* line. Adopt lands the rewrite in one undo step and touches only the rows the
+  preview listed, so every other line of the file re-emits byte-identically. It is refused with a
+  reason in the sheet's own words when the hand-written code does something the behavior cannot -
+  a countdown nothing restarts, a countdown compared to something other than zero, a countdown a
+  readout also reads. The first adapter turns the Cooldown pattern into the Cooldown verbs; the
+  adapter seam is one plan function and one apply function per behavior.
+- **The Manual's Common Game Patterns page shows both shapes side by side.** One section per
+  pattern: the hand-written GDScript on the left, the same text read as events on the right, drawn
+  by the real renderer. Both columns are the same bytes, so the page cannot show a shape the sheet
+  does not read. Insert puts the rows in your sheet, Try it opens them in a scratch sheet, and
+  Adopt behavior appears where one ships. **Add ▸ Pattern…** opens it, most common first.
+- **The Doctor learns the pattern smells.** A countdown that counts but never restarts, a pooled
+  object never returned, a state set but never asked about, a timer started on entering a state and
+  never stopped on leaving - each pointing at the event, none of them a compile error today. Plus
+  the quiet note *this block is the Cooldown behavior - Adopt behavior?*, which is how the swap
+  gets discovered; it appears only when the rewrite can actually run.
+- **Two more counts on the coverage chip** - *reads as events · 4 patterns · 2 adoptable* - read
+  straight off the same claims the ⟡ chips draw, and its click now walks the script blocks and then
+  those events. **Reference pages gain "Patterns using this"**, joined on the claims' own verb ids,
+  so nothing about it is hand-kept.
+- 83 new strings in all nine translation catalogs.
+
 ### Changed - the documentation says what the sheet says
 
 - **The whole documentation set speaks the sheet's vocabulary.** A picker entry is an **action**, a

@@ -2530,3 +2530,90 @@ Stop sound,停止声音
 "UI: focus, progress bars, dialogs and the mixer",界面：焦点、进度条、对话框和混音器
 "Sound: the file, its pitch, its bus, its volume and where it plays from",声音：文件、音高、总线、音量和播放位置
 "Juice: shake, hitstop, bob, flash and the squash that eases back",手感：抖动、顿帧、浮动、闪光和回弹的挤压
+could adopt: %s,可采用：%s
+This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,这个脚本手写了内置行为已经能做的事。右键点击带标记的事件即可看到会有什么变化。
+Cooldown,冷却
+UI,界面
+Sound,声音
+Juice,打击感
+Camera,摄像机
+Multiplayer,多人游戏
+Navigation,导航
+Effects,特效
+State Machine,状态机
+Platformer,平台跳跃
+State machine,状态机
+Object pool,对象池
+Wait sequence,等待序列
+Save / load,保存 / 读取
+Loading screen,加载画面
+Sprite animation,精灵动画
+Existence,存在检查
+Tilemap,瓦片地图
+ObjectPool,ObjectPool
+Save System,存档系统
+Scene Flow,场景流程
+Nav Agent,导航代理
+"a number counted down every tick, with something that happens when it reaches zero",每帧递减的数值，以及归零时发生的事
+"one value says what something is doing, and every event asks it first",一个值说明对象正在做什么，每个事件都先询问它
+objects are kept and reused instead of created and destroyed,对象被保留复用，而不是反复创建与销毁
+steps that run one after another with a wait between them,依次执行、之间带有等待的步骤
+values written to a file and read back the next time the game runs,写入文件、下次运行时再读回的值
+"gravity, acceleration, a speed limit and a move, every tick",每帧的重力、加速、限速与移动
+"something on screen follows a value, or is shown and hidden",屏幕上的东西跟随某个值，或被显示与隐藏
+"a sound is chosen, tuned and played",选择、调整并播放一个声音
+"a short push on position, scale, tint or time that makes a hit feel like one",对位置、缩放、色调或时间的短暂冲击，让打击有打击感
+"the view follows something, inside limits, at a zoom",视角在限制范围内、以某个缩放跟随目标
+something is checked for being there before it is used,使用之前先检查东西是否存在
+a scene is loaded in the background while a bar shows how far it got,场景在后台加载，进度条显示进展
+"messages sent to the host or to everyone, and who owns what",发给主机或所有人的消息，以及谁拥有什么
+"a frame, a speed, a mirrored look and an animation that is playing",帧、速度、镜像外观，以及正在播放的动画
+"a destination, the next waypoint toward it, and arriving",目的地、通往它的下一个路点，以及抵达
+"a shader parameter set, tweened or removed",着色器参数被设置、补间或移除
+tiles read and written by position,按位置读写瓦片
+"an event with no condition of its own, so it runs every tick",没有自己条件的事件，因此每帧都运行
+1 pattern,1 个模式
+%d patterns,%d 个模式
+%d adoptable,其中 %d 个可替换
+Open in the Manual,在手册中打开
+read as the %s pattern,读作 %s 模式
+read as the %s pattern because,读作 %s 模式的依据
+Hand-written,手写代码
+As events,作为事件
+Common Game Patterns,常见游戏模式
+"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet, or Try it to open them in a scratch sheet.",构成一款游戏的形态：左边是手写代码，右边是读作事件的样子。每个示例都是本编辑器真正能打开的文件：插入会把这些行放进你的表，试一试会在草稿表中打开它们。
+Adopt behavior,采用行为
+Adopt behavior: %s,采用行为：%s
+Adopt behavior: %s…,采用行为：%s…
+Explain this reading,解释这个读法
+Patterns,模式
+Pattern…,模式…
+Patterns using this,使用它的模式
+As it reads now,当前的读法
+After adopting,采用之后
+Keeps working because,仍然可用的理由
+Adopt,采用
+There is nothing here to adopt.,这里没有可采用的内容。
+This editor has no automatic rewrite for that behavior yet.,本编辑器还不能自动改写该行为。
+This event no longer counts anything down.,该事件已不再倒数任何内容。
+"Nothing ever puts %s back above zero, so there is no cooldown length for the behavior to use.",没有任何地方把 %s 重新设为大于零，因此行为没有可用的冷却时长。
+"No event asks whether %s has run out, so there is nothing for Cooldown Is Ready to replace.",没有事件询问 %s 是否已归零，因此没有可替换的内容。
+"%s is compared to %s, and the behavior only knows whether a cooldown is ready.",%s 与 %s 比较，而该行为只知道冷却是否就绪。
+"%s is also read by %s, which needs the number itself.",%s 还被 %s 读取，而那里需要的是数字本身。
+%s is used only by these events.,%s 只被这些事件使用。
+The behavior counts the same %s seconds the code did.,该行为计的是与代码相同的 %s 秒。
+Cooldown Is Ready becomes true at the moment the countdown reached zero.,冷却就绪会在倒数归零的那一刻变为真。
+(this event is no longer needed),（这个事件不再需要）
+%d event(s) change; every other line of the file stays exactly as it is.,将改变 %d 个事件；文件的其他每一行都保持原样。
+Adopted %s - the hand-written rows now use the shipped behavior.,已采用 %s：手写的行现在使用内置行为。
+Pick an event with a pattern marker first.,请先选择带有模式标记的事件。
+Pick an event with a behavior to adopt first.,请先选择一个有可采用行为的事件。
+"Patterns - an event that is a known shape says which one, and its hover says why.",模式 - 属于已知形态的事件会说明是哪一种，悬停会说明原因。
+Patterns off - every event reads as its own plain sentences.,模式已关闭 - 每个事件都读作它自己的朴素句子。
+This block is the %s behavior - Adopt behavior?,这段其实就是 %s 行为 - 要采用吗？
+%s counts down but never restarts - this event subtracts from it and nothing sets it above zero.,%s 一直递减却从不重启 - 这个事件在减它，而没有任何地方把它设回大于零。
+A pooled object is created here and nothing anywhere returns one to the pool.,这里创建了池中的对象，但任何地方都没有把对象还回池里。
+%s is set here but no event asks for it.,%s 在这里被设置，但没有事件询问它。
+A timer is started on entering this state and nothing stops it on leaving.,进入这个状态时启动了计时器，而离开时没有任何地方停止它。
+could adopt: %s,可采用：%s
+This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,这个脚本手写了内置行为已经能做的事。右键点击带标记的事件即可看到会有什么变化。

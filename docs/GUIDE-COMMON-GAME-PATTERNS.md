@@ -350,3 +350,65 @@ Everything above except the State Machine, Advanced Random, and HUD Kit sections
 every sheet - open the picker and browse System's Time, Run Context, Tween, and Nodes: Picking
 sections. The three packs install from the addon browser like any other behavior, and each is
 itself an event sheet: open it, read it, extend it.
+
+## When the sheet recognises a pattern you already wrote
+
+Everything above is about writing a pattern from the picker. The other direction is just as
+supported: open a hand-written `.gd` file as a sheet and the reading recognises the shapes it
+knows, then says so.
+
+![An opened cooldown script: the event that counts the number down wears a Cooldown marker, and the head bar says 1 pattern, 1 adoptable](images/pattern-chip.png)
+
+An event that IS a pattern wears a muted **⟡** chip naming it, at the end of its first condition
+line. Only the event that OWNS the shape gets one - the row that counts the number down, the
+function that hands an object out - never every row that mentions the same variable, because the
+chip is a name for the whole idea rather than a label on each of its parts.
+
+- **Hover the chip** for the one line that says what the pattern is, and the offer to open its
+  page in the Manual. **Click it** to open that page.
+- **Hover any row of the event** for the evidence: *read as the Cooldown pattern because:
+  `cooldown -= delta`, `cooldown <= 0.0`, `cooldown = 0.5`*. Those are the exact lines in your
+  file. A pattern reading is a claim spanning several lines, so it owes you the lines.
+- **View ▸ Patterns** turns the whole thing off. The sheet then reads as its own plain sentences,
+  which is how you check a claim you doubt.
+- The head bar's coverage chip grows two counts - *reads as events · 4 patterns · 2 adoptable* -
+  and clicking it walks the script blocks and then the ⟡ events, one per click.
+
+### Adopt behavior
+
+When a shipped behavior could do what the hand-written shape does, the event's right-click menu
+offers **Adopt behavior: <name>…**. It opens a preview first, never a change:
+
+- the events as they read now on the left, as they would read after adopting on the right,
+- every row that changes marked,
+- and a **keeps working because** line saying what was checked - that the variable is used only by
+  these events, that the behavior counts the same seconds the code did, that the condition becomes
+  true at the same moment.
+
+![The Adopt behavior preview: the events as they read now beside the events after adopting, with a keeps-working-because line](images/pattern-adopt-dialog.png)
+
+Press Adopt and the rewrite lands in one undo step. Every line of the file the plan did not list
+is untouched, so the rest of your script re-emits exactly as it was.
+
+Adopting is **refused with a reason** when your code does something the behavior cannot - a
+countdown nothing ever restarts has no length for the behavior to keep, a countdown compared to
+something other than zero needs a number the behavior does not have, and a countdown a readout
+also reads would lose its readout. A refusal is the feature working: the alternative is quietly
+rewriting your game into one that does less.
+
+### The Manual page, and the Doctor
+
+![The Common Game Patterns page: the hand-written GDScript on the left, the same file read as events on the right](images/pattern-manual-page.png)
+
+**Manual ▸ Common Game Patterns** shows every pattern as two columns - the hand-written GDScript
+on the left, the same text read as events on the right. The right column is drawn by the same
+renderer your sheet uses, from the same file the reading tests open, so the page cannot show you a
+shape the sheet does not actually read. Each one has Insert (put these rows in my sheet), Try it
+(open them in a scratch sheet), and Adopt behavior where one ships. **Add ▸ Pattern…** opens the
+same page, most common first.
+
+The Doctor knows the halves of every pattern it recognises, so it can spot the classic
+half-written ones: a countdown that never restarts, a pooled object never returned to the pool, a
+state set but never asked about, a timer started on entering a state and never stopped on leaving.
+Each finding points at the event. It also leaves a quiet note - *this block is the Cooldown
+behavior - Adopt behavior?* - which is how the swap above gets discovered in the first place.

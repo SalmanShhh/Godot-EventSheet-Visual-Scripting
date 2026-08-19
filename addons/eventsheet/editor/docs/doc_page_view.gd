@@ -266,6 +266,15 @@ static func estimated_lines(blocks: Array[Dictionary]) -> int:
 				lines += 2 + (block.get("lines", []) as Array).size()
 			"image":
 				lines += 4
+			"columns":
+				# Side-by-side, so the block is as tall as its TALLEST column, not their sum.
+				var tallest: int = 0
+				for entry: Variant in (block.get("columns", []) as Array):
+					var column_blocks: Array[Dictionary] = []
+					for child: Variant in (entry as Array):
+						column_blocks.append(child as Dictionary)
+					tallest = maxi(tallest, estimated_lines(column_blocks))
+				lines += tallest
 			"rule":
 				lines += 1
 	return lines
@@ -401,9 +410,39 @@ func _control_for(block: Dictionary) -> Control:
 			return _button_row(block)
 		"next":
 			return _next_block(block)
+		"columns":
+			return _columns_block(block)
 		"rule":
 			return HSeparator.new()
 	return null
+
+
+## TWO THINGS THE READER IS MEANT TO COMPARE, drawn beside each other instead of one under the
+## other: the Common Game Patterns page's hand-written shape and the events it reads as. A page is
+## a vertical stack by construction, and stacking a comparison is what makes a reader scroll
+## between the two halves of one thought.
+##
+## Each column is an ordinary block list rendered by this same dispatcher, so a column can hold
+## anything a page can - and a column that draws nothing is simply left out rather than reserving
+## an empty half.
+func _columns_block(block: Dictionary) -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(12.0)))
+	for entry: Variant in (block.get("columns", []) as Array):
+		var column: VBoxContainer = EventSheetPopupUI.form_box()
+		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		for child_entry: Variant in (entry as Array):
+			var child: Control = _control_for(child_entry as Dictionary)
+			if child != null:
+				column.add_child(child)
+		if column.get_child_count() == 0:
+			column.queue_free()
+			continue
+		row.add_child(column)
+	if row.get_child_count() == 0:
+		row.queue_free()
+		return null
+	return row
 
 
 ## A one-click offer a DERIVED page carries (the stub's "Write this guide"). A page cannot run

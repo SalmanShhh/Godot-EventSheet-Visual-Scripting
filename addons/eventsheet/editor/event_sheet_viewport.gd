@@ -310,6 +310,12 @@ var humanize_names_override: int = -1
 ## ever on because somebody asked for it in View ▾. Span builds read it, so flipping it rebuilds via
 ## set_sheet, exactly like show_object_icons.
 var familiar_words: bool = false
+## S24 - the Patterns lens: an event that a reading recognised as a known code pattern (a Cooldown,
+## an Object pool, a Wait sequence) wears a muted ⟡ chip naming it, and its hover says what the
+## evidence for that claim was. ON by default, because naming the pattern is the teaching moment and
+## a beginner is exactly who needs it; View ▾ turns it off so a doubter can read the plain statement
+## sentences underneath and compare. Span builds read it, so flipping it rebuilds via set_sheet.
+var patterns_lens: bool = true
 ## Event-sheet-style drag ghost: a faint label of the dragged content following the cursor.
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO
@@ -410,6 +416,12 @@ func humanize_names_enabled() -> bool:
 ## user the way the humanized-names lens does.
 func familiar_words_enabled() -> bool:
 	return familiar_words
+
+
+## S24 - whether this view names the patterns its readings claimed. The claims are made either way
+## (the Doctor, the coverage chip and the Manual read them); this is only whether the sheet SAYS so.
+func patterns_lens_enabled() -> bool:
+	return patterns_lens
 
 
 func set_sheet(sheet: EventSheetResource) -> void:
@@ -2153,8 +2165,12 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# The pattern registry lives exactly as long as one row build: the readings fill it as they go,
 	# and everything that talks ABOUT patterns (the chip on an event, its hover evidence, the
 	# coverage counts) reads what they claimed. Cleared here so a rebuild can never show a pattern
-	# the sheet no longer has.
+	# the sheet no longer has - and the file-level readings claim IMMEDIATELY after, in the same
+	# breath, because this is the last clear of a sweep. Claiming anywhere earlier (a cached context
+	# build, say, which by definition runs once and not per sweep) puts the claims BEFORE this line
+	# and the clear wipes every one of them, leaving only whatever the span pass claims later.
 	EventSheetPatternFacts.clear(sheet)
+	EventSheetViewportReadingRows.claim_patterns(sheet)
 	# P4 - a whole SCENE opened as one sheet: the scene's bar, then every script it uses under its own
 	# object bar, each read by this very function. A composite has no events of its own.
 	if EventSheetSceneSheet.is_scene_sheet(sheet):
@@ -3244,6 +3260,12 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var mark_help: String = _mark_tooltip(hit)
 	if not mark_help.is_empty():
 		return mark_help
+	# S19 - the ⟡ chip is a NAME, and a name on its own teaches nothing: hovering it says what the
+	# pattern is in one line and that the Manual has a page about it (which a click opens).
+	if kind == "pattern_chip":
+		var chip_help: String = ViewportTooltipHelper.pattern_chip_tooltip(str(metadata.get("pattern", "")))
+		if not chip_help.is_empty():
+			return chip_help
 	# A sentence or chip view over a raw statement keeps the CODE one hover away - the flat exit
 	# ramp in miniature. Resolved through the action index so the tooltip always shows the very
 	# line the row is, not a reconstruction of it.
@@ -3279,6 +3301,13 @@ func _get_tooltip(at_position: Vector2) -> String:
 			# LEAD the tooltip with the whole event read as one plain-English sentence
 			# (built from the same descriptors the cells draw), then the hovered cell's own description.
 			var sentence: String = _row_builder.row_sentence(row_data.source_resource as EventRow)
+			# S24 - a pattern reading is a claim spanning several lines, so every row of the event
+			# that owns one carries the evidence for it right under the sentence: which pattern, and
+			# the exact source lines that were the grounds for saying so.
+			var evidence_line: String = ViewportTooltipHelper.pattern_evidence_line(
+				_sheet, (row_data.source_resource as EventRow).event_uid) if patterns_lens_enabled() else ""
+			if not evidence_line.is_empty():
+				sentence = "%s\n%s" % [sentence, evidence_line] if not sentence.is_empty() else evidence_line
 			var sentence_prefix: String = "%s\n\n" % sentence if not sentence.is_empty() else ""
 			# M39 - a Create object cell stands for two or three statements. Hover shows all of them, so
 			# the shorter reading never costs the reader the ability to see what the file actually says.

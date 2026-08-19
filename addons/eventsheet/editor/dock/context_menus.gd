@@ -20,6 +20,12 @@ const ROW_MENU_WHY_DIDNT_FIRE := 9700
 ## The id for "Find all references", which rides four menus (variable / condition / action / the
 ## row's More ▸). Same rule as above: far outside every shared dispatcher's range.
 const ROW_MENU_FIND_ALL_REFERENCES := 9710
+
+## S20 / S24 - the two items an event that a reading claimed a PATTERN on gains: swap the
+## hand-written shape for the shipped behavior, and read why the sheet called it that. Same rule as
+## the ids above: far outside every shared dispatcher's range.
+const ROW_MENU_ADOPT_BEHAVIOR := 9720
+const ROW_MENU_EXPLAIN_READING := 9730
 const FIND_ALL_REFERENCES_TOOLTIP := "Every place this name is used, across the open sheets and the project - grouped by sheet, with event numbers. F3 / Shift+F3 step through them."
 
 var _dock: Control = null
@@ -169,6 +175,14 @@ func build_all() -> void:
 		menu.id_pressed.connect(func(id: int) -> void:
 			if id == ROW_MENU_FIND_ALL_REFERENCES:
 				_dock.open_find_all_references())
+	# ── The pattern items (appended block - keep together) ────────────────────────────────────
+	# Their own listener on the row menu, for the same reason as the two blocks above: 9720 / 9730
+	# are far outside every shared dispatcher's range, so these items cost it nothing.
+	_dock._row_context_menu.id_pressed.connect(func(id: int) -> void:
+		if id == ROW_MENU_EXPLAIN_READING:
+			_dock.explain_pattern_reading()
+		elif id == ROW_MENU_ADOPT_BEHAVIOR:
+			_dock.adopt_pattern_behavior())
 
 
 ## Rebuilds the row context menu for the clicked row: only the items that apply to its
@@ -320,6 +334,23 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	if is_event and why_row != null and not why_row.conditions.is_empty():
 		menu.add_separator()
 		menu.add_item("Why didn't this fire?", ROW_MENU_WHY_DIDNT_FIRE)
+	# ── The pattern items (appended block - keep together) ────────────────────────────────────
+	# An event a reading claimed a pattern on can say why it was read that way, and - when a shipped
+	# behavior could take the shape over and this build knows how - offer to do it, preview first.
+	var pattern_row: EventRow = row_data.source_resource as EventRow if row_data != null else null
+	if is_event and pattern_row != null and _dock._current_sheet != null:
+		var claims: Array = EventSheetPatternFacts.claims_for_row(_dock._current_sheet, pattern_row.event_uid)
+		if not claims.is_empty():
+			menu.add_separator()
+			menu.add_item("Explain this reading", ROW_MENU_EXPLAIN_READING)
+			for entry: Variant in claims:
+				if not EventSheetPatternAdopt.is_adoptable(entry as Dictionary):
+					continue
+				# Formatted here rather than left as a literal, because the behavior's NAME is part of
+				# the offer: an item reading "Adopt behavior:" with nothing after it says nothing.
+				menu.add_item(EventSheetL10n.translate("Adopt behavior: %s…") % EventSheetPatternVocabulary.pack_label(
+					EventSheetPatternAdopt.adoptable_of(entry as Dictionary)), ROW_MENU_ADOPT_BEHAVIOR)
+				break
 	# ── Refactor ▸ (appended block - keep together; dock/refactor_menu.gd) ─────────────────────
 	# The reverse gestures, grouped: Wrap in Condition…, Unwrap Event, Inline Everywhere and
 	# Remove, Duplicate as Variant…. Each lands ordinary rows in ONE undo step; an item that cannot

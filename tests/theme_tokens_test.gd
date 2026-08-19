@@ -74,6 +74,7 @@ static func run() -> bool:
 	# a preset, so it has to be a deliberate edit here rather than a silent one in the resource.
 	ok = _check("reading token names", _token_names(style.get_reading_style()), [
 		"plain_chip_background_color", "plain_chip_foreground_color",
+		"pattern_chip_background_color", "pattern_chip_foreground_color",
 		"category_chip_background_color", "category_chip_foreground_color",
 		"inspector_chip_background_color", "inspector_chip_foreground_color",
 		"constant_badge_background_color", "constant_badge_foreground_color",

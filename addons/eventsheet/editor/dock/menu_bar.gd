@@ -135,6 +135,13 @@ func build(root: Node) -> void:
 	add_popup.add_item("Make 'Or' block", 6)
 	add_popup.add_item("Add 'Else'", 7)
 	add_popup.add_separator()
+	# S23 - the shapes a game is made of, as events. The patterns the sheet can READ it can also
+	# WRITE, from the same fixtures: the list is the Manual's Common Game Patterns page, which draws
+	# each one as a real picture of its rows with an Insert that lands them in this sheet - most
+	# common first, so the ten a beginner wants are the ten they see.
+	add_popup.add_item("Pattern…", 9)
+	add_popup.set_item_tooltip(add_popup.get_item_index(9), "Insert a whole pattern - a cooldown, a wait sequence, a state machine - as events, picked from a page that draws each one.")
+	add_popup.add_separator()
 	add_popup.add_item("Code (GDScript) on Selected Event", 4)
 	# Custom Block API kinds (preloads, region markers, registered pack kinds): one item per
 	# registered kind, ids offset by 100 so the fixed ids above never collide.
@@ -159,6 +166,7 @@ func build(root: Node) -> void:
 			6: _dock._make_or_block_from_selection()
 			7: _dock._make_else_from_selection()
 			8: _dock._on_add_project_global_requested()
+			9: EventSheetPatternManual.open_page("")
 	)
 	# Kept as a reference so Simple Mode can gate the code item (id 4) live.
 	_dock._add_menu_popup = add_popup
@@ -221,6 +229,9 @@ func build(root: Node) -> void:
 	view_popup.add_check_item("Familiar Words", 21)
 	view_popup.set_item_checked(view_popup.get_item_index(21), _dock._familiar_words_enabled())
 	view_popup.set_item_tooltip(view_popup.get_item_index(21), "Read the few Godot nouns other event-sheet editors name differently in the familiar word: a scene is a layout, pausing is time scale 0, a CanvasLayer is a layer. The Godot word stays on hover. Off by default.")
+	view_popup.add_check_item("Patterns", 27)
+	view_popup.set_item_checked(view_popup.get_item_index(27), _dock._patterns_lens_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(27), "Name the shape an event is when a reading recognised one - a cooldown, an object pool, a wait sequence - with a marker chip whose hover shows the lines that were the evidence. On by default; off shows every event as its own plain sentences.")
 	view_popup.add_item("Outline…", 17)
 	view_popup.set_item_tooltip(view_popup.get_item_index(17), "Jump tree of the sheet's groups, regions, and published functions.")
 	view_popup.add_separator()
@@ -317,6 +328,7 @@ func build(root: Node) -> void:
 			19: _dock._toggle_compact_rows(view_popup)
 			20: _dock._toggle_humanized_names(view_popup)
 			21: _dock._toggle_familiar_words(view_popup)
+			27: _dock._toggle_patterns_lens(view_popup)
 			17: _dock._open_outline_panel()
 			11: _dock.set_simple_mode(not _dock._simple_mode)
 			12: _dock._toggle_mcp_server(view_popup)

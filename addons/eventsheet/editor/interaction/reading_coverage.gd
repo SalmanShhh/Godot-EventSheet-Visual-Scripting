@@ -71,10 +71,49 @@ static func chip_text(sheet: EventSheetResource) -> String:
 	var coverage: Dictionary = measure(sheet)
 	var blocks: int = int(coverage.get("block_rows", 0))
 	if blocks <= 0:
-		return EventSheetL10n.translate("reads as events")
+		var patterns_only: String = pattern_chip_text(sheet)
+		if patterns_only.is_empty():
+			return EventSheetL10n.translate("reads as events")
+		# The ▸ is the promise that a click goes somewhere, so it appears exactly when there is
+		# something to walk - here, the ⟡ events the counts are about.
+		return "%s%s ▸" % [EventSheetL10n.translate("reads as events"), patterns_only]
 	var blocks_text: String = EventSheetL10n.translate("1 script block") if blocks == 1 \
 		else EventSheetL10n.translate("%d script blocks") % blocks
-	return "%d%% %s · %s ▸" % [int(coverage.get("percent", 0)), EventSheetL10n.translate("reads as events"), blocks_text]
+	return "%d%% %s · %s%s ▸" % [int(coverage.get("percent", 0)),
+		EventSheetL10n.translate("reads as events"), blocks_text, pattern_chip_text(sheet)]
+
+
+## S25 - the two counts the chip grows once the readings have claimed something: how many DISTINCT
+## patterns this file is made of, and how many of those a shipped behavior could take over. "" when
+## nothing was claimed, because "0 patterns" is a number with nothing in it.
+##
+## Read straight off the claim registry, so the chip can only ever say what the ⟡ chips in the sheet
+## already say - the count and the marks are the same fact counted once.
+static func pattern_chip_text(sheet: EventSheetResource) -> String:
+	# Counted over the MARKED patterns only, so the number matches the ⟡ chips a reader can go and
+	# find: a pattern the sheet does not mark is one they would hunt for and never see.
+	EventSheetViewportReadingRows.ensure_claims(sheet)
+	var marked: Dictionary = {}
+	var behaviors: Dictionary = {}
+	for claim: Variant in EventSheetPatternFacts.claims(sheet):
+		var pattern: String = str((claim as Dictionary).get("pattern", ""))
+		if not EventSheetPatternVocabulary.is_marked(pattern):
+			continue
+		marked[pattern] = true
+		# The ADOPTABLE half asks the vocabulary rather than the claim's own field, so the number is
+		# the number of offers a reader will actually find: a reading that has not yet learned to
+		# name the behavior still leaves the pattern's own default standing.
+		if not EventSheetPatternVocabulary.adoptable_for(claim as Dictionary).is_empty():
+			behaviors[pattern] = true
+	var patterns: int = marked.size()
+	if patterns <= 0:
+		return ""
+	var patterns_text: String = EventSheetL10n.translate("1 pattern") if patterns == 1 \
+		else EventSheetL10n.translate("%d patterns") % patterns
+	var adoptable: int = behaviors.size()
+	if adoptable <= 0:
+		return " · %s" % patterns_text
+	return " · %s · %s" % [patterns_text, EventSheetL10n.translate("%d adoptable") % adoptable]
 
 
 ## The engine's own parse errors for this file, as the sheet's importer recorded them - [] when the

@@ -47,6 +47,10 @@ var _verb_kind_override: int = -1
 # (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
 var _region_occurrences: Dictionary = {}
 
+## S19 - the mark on the chip that names a pattern. Its own glyph, so a reader learns "⟡ means this
+## event is a known shape" once and then recognises it everywhere, the way ⟳ ➜ ƒ already work.
+const PATTERN_CHIP_MARK := "⟡"
+
 # Compiled once and shared: both of these run per row (or per action) on the paint path.
 static var _await_loop_regex: RegEx = null
 static var _super_call_regex: RegEx = null
@@ -7726,6 +7730,54 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				}
 			)
 		)
+	spans.append_array(_pattern_chip_spans(event_row))
+	return spans
+
+
+## S19 - the ⟡ chip that names the PATTERN this event is, when a reading claimed one on it. It sits
+## at the end of the FIRST condition line, after the trigger and its parameter chips, exactly where a
+## note about the whole event belongs; rows that merely USE a pattern's words get nothing, because
+## the claim names the one row that owns the shape.
+##
+## Everything here is read out of EventSheetPatternFacts - this draws claims, it never re-derives
+## one - so an event only says "Cooldown" if the reading that recognised it said so first, with its
+## evidence. Off when the Patterns lens is off, which is the doubter's switch back to the plain
+## statement sentences underneath.
+func _pattern_chip_spans(event_row: EventRow) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	if event_row == null or not _viewport.patterns_lens_enabled():
+		return spans
+	var sheet: EventSheetResource = _viewport._sheet
+	if sheet == null or event_row.event_uid.is_empty():
+		return spans
+	# Asked for rather than assumed: this pass and the file-level walk both claim, and nothing fixes
+	# their order against every clear of the registry.
+	EventSheetViewportReadingRows.ensure_claims(sheet)
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_row.event_uid):
+		if not EventSheetPatternVocabulary.is_marked(str((claim as Dictionary).get("pattern", ""))):
+			continue
+		# THE CHIP SAYS THE PATTERN'S NAME, not the claim's own sentence. A claim's `words` is the one
+		# line the hover shows ("counts cooldown down and asks whether it has run out"); a chip is a
+		# NAME, and a whole clause on a row would be a second sentence competing with the row's own.
+		var words: String = EventSheetPatternVocabulary.words(str((claim as Dictionary).get("pattern", "")))
+		if words.is_empty():
+			words = str((claim as Dictionary).get("words", ""))
+		if words.is_empty():
+			continue
+		spans.append(_make_span("%s %s" % [PATTERN_CHIP_MARK, EventSheetL10n.translate(words)],
+			SemanticSpan.SpanType.CONDITION, {
+				"editable": false,
+				"lane": "condition",
+				"kind": "pattern_chip",
+				"pattern": str((claim as Dictionary).get("pattern", "")),
+				"chip": true,
+				"hoverable": true,
+				"line_index": 0,
+				"natural_width": true,
+				"chip_bg": reading_style.resolved_pattern_chip_background(),
+				"text_color": reading_style.resolved_pattern_chip_foreground()
+			}))
 	return spans
 
 
@@ -10787,12 +10839,6 @@ func sentence_context() -> Dictionary:
 		# What only something able to ASK can answer: the script's own object name, its engine
 		# properties, and each signal's parameter names. Cached with the rest of the context.
 		context.merge(EventSheetViewportReadingRows.sentence_context_extras(sheet as EventSheetResource), true)
-		# ── Batch 8 ───────────────────────────────────────────────────────────────────────────
-		# The pattern registry is re-stated from scratch here, at the one point a rebuild works out
-		# what this sheet says: cleared first so a pattern the user just deleted cannot linger, then
-		# claimed on the rows that own them. Everything that talks ABOUT patterns reads these claims.
-		EventSheetPatternFacts.clear(sheet as EventSheetResource)
-		EventSheetViewportReadingRows.claim_patterns(sheet as EventSheetResource)
 	_sentence_context_sheet = sheet
 	_sentence_context_cache = context.duplicate()
 	context["verb_kind"] = _current_verb_kind()
