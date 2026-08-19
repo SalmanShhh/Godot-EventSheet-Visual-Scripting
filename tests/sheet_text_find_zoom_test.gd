@@ -151,6 +151,7 @@ static func _test_zoom_steps() -> bool:
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:
+		print("[PASS] sheet_text_find_zoom_test: %s" % label)
 		return true
-	print("  [FAIL] sheet_text_find_zoom_test: %s (got %s, expected %s)" % [label, str(actual), str(expected)])
+	print("[FAIL] sheet_text_find_zoom_test: %s (got %s, expected %s)" % [label, str(actual), str(expected)])
 	return false
