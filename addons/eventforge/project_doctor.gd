@@ -72,6 +72,8 @@ static func run() -> Dictionary:
 	check_missing_save_support(sheet_paths, findings)
 	check_save_key_symmetry(sheet_paths, findings)
 	check_editor_tool_undo(sheet_paths, findings)
+	check_unknown_input_actions(sheet_paths, findings)
+	check_unsaved_rebindings(sheet_paths, findings)
 	check_orphaned_provider_calls(sheet_paths, findings)
 	check_sheet_signal_declarations(sheet_paths, findings)
 	check_vocabulary_doc(findings)
@@ -1691,6 +1693,56 @@ static func _collect_usage_text(rows: Array, into: PackedStringArray) -> void:
 				if pick is PickFilter:
 					into.append((pick as PickFilter).collection_value + " " + (pick as PickFilter).predicate_expression)
 			_collect_usage_text(event.sub_events, into)
+
+
+## R23 - a control the project's scripts ask for that the Input Map does not have. `is_action_pressed("dash")`
+## when there is no `dash` is the typo every beginner makes: it compiles, it prints nothing, and the
+## key simply never works. The fix is one line in Project Settings, which is why the finding names it.
+##
+## This reads the project's `.gd` files as TEXT rather than the sheet model, because `.gd` is the
+## default sheet format while list_project_sheets() only finds `.tres` - a model-based check would
+## skip most real projects while looking like it works - and because a hand-written script that names
+## a missing control is exactly as broken as a generated one.
+static func check_unknown_input_actions(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for script_path: String in _list_files_with_extension("gd"):
+		var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
+		if file == null:
+			continue
+		var source: String = file.get_as_text()
+		file.close()
+		var missing: PackedStringArray = PackedStringArray()
+		for action_name: String in EventSheetInputMapFacts.action_names_in(source):
+			if not EventSheetInputMapFacts.has_action(action_name) \
+					and not ProjectSettings.has_setting("input/%s" % action_name) \
+					and not missing.has(action_name):
+				missing.append(action_name)
+		if missing.is_empty():
+			continue
+		_add(findings, "warning", "unknown-input-action", script_path,
+			"This script names %d control(s) the Input Map does not have (%s) - the key will never fire and nothing will say so. Add it in Project ▸ Input Map, or fix the spelling." % [
+				missing.size(), ", ".join(missing)])
+
+
+## R27 - bindings changed at runtime but never saved. A rebind screen that calls
+## `InputMap.action_add_event` without ever writing the result anywhere loses every remap the moment
+## the game closes, and the player has to do it again on every launch. The one thing every first
+## rebind screen forgets.
+static func check_unsaved_rebindings(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for script_path: String in _list_files_with_extension("gd"):
+		var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
+		if file == null:
+			continue
+		var source: String = file.get_as_text()
+		file.close()
+		if not (source.contains("InputMap.action_add_event") or source.contains("InputMap.action_erase_events")):
+			continue
+		# Anything that persists them counts: the sheet's own Save bindings, a ConfigFile, a save
+		# file, or the project's settings written back.
+		if source.contains("ConfigFile") or source.contains("save_settings") \
+				or source.contains("ProjectSettings.save") or source.contains("store_var"):
+			continue
+		_add(findings, "info", "unsaved-rebindings", script_path,
+			"This script changes control bindings at runtime but never saves them - every remap is lost when the game closes. Add Save bindings after the rebind and Load bindings on start-up.")
 
 
 static func _list_files_with_extension(extension: String) -> PackedStringArray:

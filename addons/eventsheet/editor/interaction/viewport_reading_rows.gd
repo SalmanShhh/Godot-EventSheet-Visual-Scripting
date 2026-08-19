@@ -1010,6 +1010,18 @@ static func _by_kind_order(left: Dictionary, right: Dictionary) -> bool:
 
 ## One text unit per TOP-LEVEL row: every line of code in that row's subtree, joined. The rail's
 ## "N rows" is a count of these, so a number in the rail is a number of things a reader can click.
+## Everything a sheet's rows stand for, as one block of GDScript-looking text - the same shape the
+## object census reads, exposed so any other scanner (which Input Map actions this file names, for
+## one) sees exactly what the census sees rather than growing a second, disagreeing walk.
+static func sheet_code_text(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return ""
+	var lines: PackedStringArray = PackedStringArray()
+	for entry: Variant in sheet.events:
+		_collect_code(entry, lines)
+	return "\n".join(lines)
+
+
 static func _row_units(sheet: EventSheetResource) -> Array:
 	var units: Array = []
 	for entry: Variant in sheet.events:

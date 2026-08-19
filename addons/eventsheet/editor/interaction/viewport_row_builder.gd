@@ -622,6 +622,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			triggers
 		))
 	head.append_array(_build_object_folder_rows(sheet))
+	head.append_array(_build_input_actions_bar_rows(sheet))
 	head.append_array(_build_knob_group_rows(sheet, knobs))
 	head.append_array(leftovers)
 	var output: Array[EventRowData] = []
@@ -1089,6 +1090,49 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 			],
 			family_rows))
 	return bars
+
+
+## R23 - the Input Map bar: which controls this script uses, and what each one is bound to. The
+## project-wide Input Map is what every input row in the file is really about, and until this bar a
+## reader had to leave the sheet and open Project Settings to find out what "jump" was.
+##
+## PURE VIEW, like every other head bar: null sources, folded by default, nothing added to
+## `sheet.events` and nothing emitted, so an opened file still re-emits byte for byte. A script that
+## names no control grows no bar.
+func _build_input_actions_bar_rows(sheet: EventSheetResource) -> Array[EventRowData]:
+	var bars: Array[EventRowData] = []
+	var actions: Array[Dictionary] = EventSheetInputMapFacts.actions_named_by(sheet)
+	if actions.is_empty():
+		return bars
+	var names: PackedStringArray = PackedStringArray()
+	var members: Array[EventRowData] = []
+	for index in range(actions.size()):
+		var facts: Dictionary = actions[index]
+		var action_name: String = str(facts.get("name", ""))
+		names.append(action_name)
+		members.append(_build_object_fact_row(
+			sheet, "input_action_%d" % index,
+			action_name if bool(facts.get("known", false)) else "⚠ %s" % action_name,
+			_input_action_detail(facts)))
+	var uses: String = EventSheetL10n.translate("this script uses 1 action") if actions.size() == 1 \
+		else EventSheetL10n.translate("this script uses %d actions") % actions.size()
+	bars.append(_build_head_group_row(
+		sheet, "input_actions", EventSheetL10n.translate("Input"),
+		"%s - %s - %s" % [uses, ", ".join(names), EventSheetL10n.translate("Project ▸ Input Map")],
+		members))
+	return bars
+
+
+## One control's muted line in the Input bar: what it is bound to, or what is wrong with it. An
+## action the project does not have is the typo every beginner makes, and saying so here is cheaper
+## than finding out at runtime that nothing happens.
+func _input_action_detail(facts: Dictionary) -> String:
+	if not bool(facts.get("known", false)):
+		return EventSheetL10n.translate("not in the Input Map")
+	var bindings: PackedStringArray = facts.get("bindings", PackedStringArray())
+	if bindings.is_empty():
+		return EventSheetL10n.translate("unbound")
+	return " · ".join(bindings)
 
 
 ## One behavior's settings as the scene wrote them: `max hp = 50 · regen = 1`, "" when the scene left

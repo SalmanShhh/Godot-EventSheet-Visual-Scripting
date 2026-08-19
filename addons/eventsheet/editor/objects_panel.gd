@@ -44,6 +44,11 @@ const _META_KEY: String = "eventsheets_objects_panel"
 ## knowing anything about this panel.
 const DRAG_TYPE: String = "eventsheet_object"
 
+## R23 - the INPUT section's own payload. An Input Map action is not an object, and dropping one on
+## the sheet means one specific thing (start an "On <action> pressed" event), so it travels under its
+## own name rather than pretending to be an object drop.
+const DRAG_TYPE_INPUT_ACTION: String = "eventsheet_input_action"
+
 ## The sort orders the header's ⇅ cycles through. Reading order (first appearance in the sheet) is
 ## the default because it is the order the reader just read.
 const SORT_ORDERS: PackedStringArray = ["reading", "count", "name"]
@@ -62,7 +67,8 @@ var _sort: String = "reading"
 var _sheet: EventSheetResource = null
 var _source_path: String = ""
 var _scene_name: String = ""
-var _section_folds: Dictionary = {"used": false, "scene": true, "globals": true}
+var _input_actions: Array = []
+var _section_folds: Dictionary = {"used": false, "scene": true, "input": false, "globals": true}
 var _menu: PopupMenu = null
 var _menu_label: String = ""
 var _class_map: Dictionary = {}
@@ -155,6 +161,8 @@ func set_sheet(sheet: EventSheetResource) -> void:
 	var scene: Dictionary = ViewportRowBuilder.scene_using_script(_source_path) if not _source_path.is_empty() else {}
 	_scene_name = str(scene.get("scene_path", "")).get_file()
 	_scene_only = scene_only_entries(_entries, str(scene.get("scene_path", "")))
+	EventSheetInputMapFacts.clear_cache()
+	_input_actions = EventSheetInputMapFacts.actions_named_by(sheet)
 	_rebuild_tree()
 	_refresh_header()
 
@@ -206,7 +214,8 @@ func scene_entries() -> Array:
 ##   [{"id", "title", "note", "entries": Array}]
 ## in the order they are drawn. Sections with nothing in them are still returned (the header says so);
 ## the tree simply does not build an empty one.
-static func sections_for(census: Array, scene_only: Array, scene_name: String) -> Array:
+static func sections_for(census: Array, scene_only: Array, scene_name: String,
+		input_actions: Array = []) -> Array:
 	var used: Array = []
 	var globals: Array = []
 	for entry: Variant in census:
@@ -223,8 +232,45 @@ static func sections_for(census: Array, scene_only: Array, scene_name: String) -
 			"note": EventSheetL10n.translate("drag one onto the sheet to use it") if not scene_name.is_empty() else "",
 			"entries": scene_only
 		},
+		# R23 - the controls this file names, with what each one is bound to. The Input Map is the
+		# object every input row is really about, and it was the one thing in the bar a reader had to
+		# leave the sheet to look up.
+		{
+			"id": "input",
+			"title": EventSheetL10n.translate("INPUT"),
+			"note": EventSheetL10n.translate("drag one onto the sheet to start an event"),
+			"entries": input_entries(input_actions)
+		},
 		{"id": "globals", "title": EventSheetL10n.translate("GLOBALS & FAMILIES"), "note": "", "entries": globals}
 	]
+
+
+## One Input Map action as a bar entry: its name, the object its rows read on, and its bindings as the
+## muted note. An action the project does not have keeps its name and says so instead of a binding,
+## which is the whole point of listing them here.
+static func input_entries(input_actions: Array) -> Array:
+	var entries: Array = []
+	for entry: Variant in input_actions:
+		var facts: Dictionary = entry
+		var bindings: PackedStringArray = facts.get("bindings", PackedStringArray())
+		var note: String = " · ".join(bindings)
+		if not bool(facts.get("known", false)):
+			note = EventSheetL10n.translate("not in the Input Map")
+		elif bindings.is_empty():
+			note = EventSheetL10n.translate("unbound")
+		entries.append({
+			"label": str(facts.get("name", "")),
+			"kind": "input_action",
+			"class": "",
+			"path": "",
+			"note": note,
+			"known": bool(facts.get("known", false)),
+			"object": str(facts.get("object", "")),
+			"rows": 0,
+			"verbs": PackedStringArray(),
+			"signals": PackedStringArray()
+		})
+	return entries
 
 
 ## One section's header line: its title, then its count and what it is FOR. USED carries no count -
@@ -292,7 +338,10 @@ static func missing_labels(census: Array, scene_path: String) -> PackedStringArr
 ## One entry's line: the object's name, then its muted note - what kind of thing it is, the class or
 ## path it resolves to, and how many rows use it.
 static func entry_text(entry: Dictionary) -> String:
-	var note: String = EventSheetViewportReadingRows.object_note(entry)
+	# An Input Map action carries its own note (its bindings), because "what is this bound to" is what
+	# a reader came to the INPUT section for, and no census count answers it.
+	var note: String = str(entry.get("note", "")) if str(entry.get("kind", "")) == "input_action" \
+		else EventSheetViewportReadingRows.object_note(entry)
 	var label: String = str(entry.get("label", ""))
 	return label if note.is_empty() else "%s  %s" % [label, note]
 
@@ -368,7 +417,7 @@ func _rebuild_tree() -> void:
 	# Hoisted: the class map is a read of the whole sheet, and it is the same answer for every entry.
 	_class_map = EventSheetViewportReadingRows.object_class_map(_sheet)
 	var shown: int = 0
-	for section_entry: Variant in sections_for(_entries, _scene_only, _scene_name):
+	for section_entry: Variant in sections_for(_entries, _scene_only, _scene_name, _input_actions):
 		var section: Dictionary = section_entry
 		var visible_entries: Array = []
 		for entry: Variant in sorted_entries(section.get("entries", []), _sort):
@@ -415,9 +464,17 @@ func _owner_label_of(entry: Dictionary) -> String:
 func _add_entry_item(parent_item: TreeItem, entry: Dictionary, is_missing: bool) -> TreeItem:
 	var item: TreeItem = tree.create_item(parent_item)
 	var label: String = str(entry.get("label", ""))
-	item.set_text(0, ("⚠ %s" % entry_text(entry)) if is_missing else entry_text(entry))
-	item.set_tooltip_text(0, (EventSheetL10n.translate("not in %s") % _scene_name) if is_missing
-		else entry_tooltip(entry))
+	# R23 - an action this script names that the project's Input Map does not have is the same kind of
+	# broken as a node that is not in the scene, and wears the same mark.
+	var unknown_action: bool = str(entry.get("kind", "")) == "input_action" \
+		and not bool(entry.get("known", false))
+	var flagged: bool = is_missing or unknown_action
+	item.set_text(0, ("⚠ %s" % entry_text(entry)) if flagged else entry_text(entry))
+	if unknown_action:
+		item.set_tooltip_text(0, EventSheetL10n.translate("\"%s\" is not in the Input Map") % label)
+	else:
+		item.set_tooltip_text(0, (EventSheetL10n.translate("not in %s") % _scene_name) if is_missing
+			else entry_tooltip(entry))
 	var icon: Texture2D = EventSheetViewportReadingRows.object_icon(entry, _class_map, _source_path)
 	if icon != null:
 		item.set_icon(0, icon)
@@ -428,7 +485,7 @@ func _add_entry_item(parent_item: TreeItem, entry: Dictionary, is_missing: bool)
 		item.set_custom_color(1, EventSheetPalette.TEXT_MUTED)
 		item.set_tooltip_text(1, count_tooltip(
 			EventSheetViewportReadingRows.object_usage_split(_sheet, label)))
-	item.set_metadata(0, {"label": label})
+	item.set_metadata(0, {"label": label, "kind": str(entry.get("kind", ""))})
 	return item
 
 
@@ -511,7 +568,16 @@ func _drag_payload_for(_at_position: Vector2) -> Variant:
 	var preview := Label.new()
 	preview.text = label
 	tree.set_drag_preview(preview)
-	return {"type": DRAG_TYPE, "label": label}
+	return {"type": DRAG_TYPE_INPUT_ACTION if _selected_kind() == "input_action" else DRAG_TYPE,
+		"label": label}
+
+
+## What kind of thing the selected entry is - an object, or one of the Input Map's actions.
+func _selected_kind() -> String:
+	var selected: TreeItem = tree.get_selected()
+	if selected == null or not (selected.get_metadata(0) is Dictionary):
+		return ""
+	return str((selected.get_metadata(0) as Dictionary).get("kind", ""))
 
 
 func _ensure_menu() -> void:

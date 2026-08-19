@@ -249,6 +249,51 @@ static func binding_object(event: InputEvent) -> String:
 	return OBJECT_KEYBOARD
 
 
+## Every Input Map action THIS sheet names, in the order it first names them, as
+##   {"name", "known": bool, "deadzone", "bindings", "devices", "object", "gamepad"}
+## An entry with `known` false is an action the script asks for that the project does not have - the
+## typo every beginner makes, and the whole of the ⚠ on the row and the Doctor's finding.
+static func actions_named_by(sheet: EventSheetResource) -> Array[Dictionary]:
+	var named: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	for action_name: String in action_names_in(EventSheetViewportReadingRows.sheet_code_text(sheet)):
+		if seen.has(action_name):
+			continue
+		seen[action_name] = true
+		var facts: Dictionary = action(action_name)
+		if facts.is_empty():
+			named.append({
+				"name": action_name, "known": false, "deadzone": 0.0,
+				"bindings": PackedStringArray(), "devices": PackedStringArray(),
+				"object": OBJECT_KEYBOARD, "gamepad": gamepad_number_of(action_name),
+			})
+			continue
+		facts["known"] = true
+		named.append(facts)
+	return named
+
+
+## The action names a block of GDScript asks for, in the order they appear. A name is only taken from
+## a line that is ALREADY about input - `Input.`, `InputMap.` or an `is_action…` call - so an ordinary
+## string a script happens to carry can never be mistaken for a control.
+static func action_names_in(code: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var literal := RegEx.new()
+	literal.compile("&?\"([^\"]+)\"")
+	for line: String in code.split("\n"):
+		if not (line.contains("Input.") or line.contains("InputMap.") or line.contains("is_action")
+				or line.contains(".is_action(")):
+			continue
+		for found_match: RegExMatch in literal.search_all(line):
+			var candidate: String = found_match.get_string(1)
+			# A path is never a control, and neither is an empty name.
+			if candidate.is_empty() or candidate.contains("/") or candidate.contains(":"):
+				continue
+			if not found.has(candidate):
+				found.append(candidate)
+	return found
+
+
 ## Adds an action to the project's Input Map and saves project.godot - the one write in this file,
 ## behind the picker's New action and the Doctor's Add it. Returns false when the action is already
 ## there or the name is empty, so a caller never reports having added what it did not.
