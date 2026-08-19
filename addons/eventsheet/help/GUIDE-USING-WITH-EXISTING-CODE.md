@@ -680,7 +680,7 @@ That is the order this section is in.
   to Center` - and so does a number written into a variable the sheet declared with one of its own
   enums (`dir = 2` reads `Set dir to DOWN`). The number is still one hover away.
 - **Physics layers and input actions by their PROJECT names.** `set_collision_layer_value(2, true)`
-  reads `Set collision with layer "Enemies" on` and `collision_layer = 5` reads `Set collision
+  reads `Solid ▸ On layer Enemies (layer 2)` and `collision_layer = 5` reads `Set collision
   layers to "World", "Player"`, from the names Project Settings holds; a layer the project never
   named keeps its number. The DEVICE an action is bound to picks its object too, so an action bound
   only to mouse buttons reads under `Mouse` and one bound only to a pad under `Gamepad`.
