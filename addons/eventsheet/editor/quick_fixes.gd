@@ -108,7 +108,12 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 				return {"ok": true, "message": "Name Raw Calls lists every raw call the vocabulary matches, with what it would become."}
 			return {"ok": false, "message": "Sheet ▸ Name Raw Calls… converts every raw call the vocabulary matches."}
 		"adopt_behavior":
-			return {"ok": false, "message": "Adopt behavior is not wired here yet - add %s through Object bar ▸ Add behavior… and the pattern becomes the pack's." % subject}
+			# The preview-first swap: the dialog shows the events as they read now beside how
+			# they would read, and says what it checked before offering it.
+			if dock != null and dock.has_method("adopt_pattern_behavior"):
+				dock.call("adopt_pattern_behavior")
+				return {"ok": true, "message": "Adopt behavior previews the swap before anything changes."}
+			return {"ok": false, "message": "Add %s through Object bar ▸ Add behavior… and the pattern becomes the pack's." % subject}
 		"add_missing_half":
 			return {"ok": false, "message": "The other half of this pattern is missing - the reading names which one."}
 		"declare_variable":
