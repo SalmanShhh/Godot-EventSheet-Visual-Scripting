@@ -135,6 +135,24 @@ const ENTRIES: Dictionary = {
 		"why": "an event with no condition of its own, so it runs every tick",
 		"adoptable": "",
 		"rank": 18
+	},
+	"physics": {
+		"words": "Physics",
+		"why": "a body's weight, surface and pushes, set and applied rather than moved by hand",
+		"adoptable": "",
+		"rank": 19
+	},
+	"path": {
+		"words": "Follow a path",
+		"why": "something travels a drawn route at a speed, and starts again at the end",
+		"adoptable": "follow_path",
+		"rank": 20
+	},
+	"text_format": {
+		"words": "Text and patterns",
+		"why": "text built from values, and a regular expression searched or replaced in it",
+		"adoptable": "",
+		"rank": 21
 	}
 }
 
@@ -150,7 +168,8 @@ const PACK_LABELS: Dictionary = {
 	"juice": "Juice",
 	"camera_kit": "Camera",
 	"scene_flow": "Scene Flow",
-	"nav_agent": "Nav Agent"
+	"nav_agent": "Nav Agent",
+	"follow_path": "Follow A Path"
 }
 
 
