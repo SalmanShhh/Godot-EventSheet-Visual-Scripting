@@ -87,6 +87,9 @@ extends Resource
 ## The breakpoint dot and the bookmark pennant in the event-number margin, and the hairline rail
 ## down its right edge.
 @export var breakpoint_color: Color = EventSheetPalette.COLOR_BREAKPOINT
+## The runtime-error strip under the sheet: the dot, the sentence, and the failure re-said in the
+## row's own words while the game is running.
+@export var runtime_error_color: Color = EventSheetPalette.COLOR_RUNTIME_ERROR
 @export var bookmark_color: Color = EventSheetPalette.COLOR_BOOKMARK
 @export var event_number_rail_color: Color = EventSheetPalette.COLOR_GUTTER_RAIL
 

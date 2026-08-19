@@ -2862,8 +2862,118 @@ func reveal_paused_row(uid: String) -> void:
 		var view: EventSheetViewport = _active_view()
 		if view != null:
 			view.reveal_resource(paused_event)
+		_paused_row_uid = uid
 		_set_status("⏸ Paused at this row (sheet breakpoint).")
 		return
+
+
+## ── The runtime-error strip (a failure in the running game, re-said as the row said it) ────────
+##
+## The engine reports a crash in the vocabulary of the file it crashed in. The sheet knows the
+## other half: the source map says which row that generated line came from, and the row's own
+## reading says what it was trying to do. So the failure is said once more as the row said it -
+## "player.gd · event 12 · Enemy ▸ Call Hit: target is empty (nothing was picked before this
+## action)" - in the Output panel and on the strip under the sheet, with Jump to event, Explain,
+## and Godot's own words one button away. Nothing is hidden and nothing is invented: a message the
+## table does not recognise is repeated verbatim and gets no Explain.
+var _runtime_error_strip: HBoxContainer = null
+var _runtime_error_label: Label = null
+var _runtime_error_jump_button: Button = null
+var _runtime_error_explain_button: Button = null
+## The last report, as EventSheetRuntimeErrorWords.report() built it, plus the row it resolved to.
+var _runtime_error_report: Dictionary = {}
+## The event the running game announced it is paused at, kept rather than only revealed: the
+## debugger's Breakpoints tab shows WHERE the pause is, and a reveal that was already scrolled past
+## answers nothing.
+var _paused_row_uid: String = ""
+
+
+## One runtime error from the running game (or pasted by the reader) -> the sheet's words. Returns
+## the report so a caller - and the suite - can read what was said without looking at a Control.
+func report_runtime_error(message: String, script_path: String, line: int = 0) -> Dictionary:
+	var located: Dictionary = _locate_runtime_error_row(script_path, line)
+	var report: Dictionary = EventSheetRuntimeErrorWords.report(message, script_path,
+		int(located.get("event_number", 0)), str(located.get("reading", "")))
+	report["row_resource"] = located.get("resource")
+	report["line"] = line
+	_runtime_error_report = report
+	for output_line: String in EventSheetRuntimeErrorWords.output_lines(report):
+		print(output_line)
+	_set_status(str(report.get("sentence", "")), true)
+	if _runtime_error_strip != null and _runtime_error_label != null:
+		_runtime_error_label.text = str(report.get("sentence", ""))
+		_runtime_error_label.tooltip_text = str(report.get("original", ""))
+		_runtime_error_strip.visible = true
+	if _runtime_error_jump_button != null:
+		_runtime_error_jump_button.disabled = report.get("row_resource") == null
+	if _runtime_error_explain_button != null:
+		_runtime_error_explain_button.disabled = not EventSheetRuntimeErrorWords.can_explain(report)
+	return report
+
+
+## The row a generated line belongs to, as {resource, event_number, reading}. Empty parts rather
+## than a refusal: a failure in a file this tab is not showing still gets its sentence, it just has
+## less of an address in front of it.
+func _locate_runtime_error_row(script_path: String, line: int) -> Dictionary:
+	var located: Dictionary = {"resource": null, "event_number": 0, "reading": ""}
+	var view: EventSheetViewport = _active_view()
+	if view == null or line <= 0:
+		return located
+	var wanted: String = script_path.strip_edges()
+	if not wanted.is_empty() and not _current_sheet_path.is_empty() \
+			and wanted.get_file() != _current_sheet_path.get_file():
+		return located
+	for entry: Variant in EventSheetLineRowMapper.entries_for_line(_code_source_map, line):
+		var resource: Resource = instance_from_id(
+			int(str((entry as Dictionary).get("uid", "0")))) as Resource
+		if resource == null:
+			continue
+		for flat: Variant in view.get_flat_rows():
+			var row_data: EventRowData = (flat as Dictionary).get("row")
+			if row_data == null or row_data.source_resource != resource:
+				continue
+			located["resource"] = resource
+			located["event_number"] = row_data.event_number
+			located["reading"] = view._folding.summary_piece(row_data)
+			return located
+	return located
+
+
+## Jump to event: the deep-link that already existed, aimed at the row the failure came from.
+func _jump_to_runtime_error_row() -> void:
+	var resource: Variant = _runtime_error_report.get("row_resource")
+	var view: EventSheetViewport = _active_view()
+	if resource == null or view == null:
+		goto_generated_line(int(_runtime_error_report.get("line", 0)))
+		return
+	if not view.select_resource(resource as Resource):
+		view.reveal_resource(resource as Resource)
+
+
+## Explain: the Manual page that answers the question this failure raises - picking and existence
+## for an empty target, lists for a position that is not there, objects for a name nothing has.
+func _explain_runtime_error() -> void:
+	var page: String = str(_runtime_error_report.get("explain", "")).strip_edges()
+	if page.is_empty():
+		return
+	EventSheets.open_docs(page)
+
+
+## Godot's words: the original message, never hidden and never rewritten - it is what every search
+## and every issue tracker speaks.
+func _show_runtime_error_original() -> void:
+	var original: String = str(_runtime_error_report.get("original", "")).strip_edges()
+	if original.is_empty():
+		return
+	_set_status("%s: %s" % [EventSheetRuntimeErrorWords.GODOT_WORDS_LABEL, original], true)
+
+
+## The strip goes away when the reader dismisses it, and whenever a new run starts - a failure from
+## the last run stamped over this one would be answering a question nobody asked twice.
+func clear_runtime_error() -> void:
+	_runtime_error_report = {}
+	if _runtime_error_strip != null:
+		_runtime_error_strip.visible = false
 
 
 static func _find_event_by_uid(rows: Array, uid: String) -> EventRow:

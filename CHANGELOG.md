@@ -91,6 +91,21 @@ lands in a path that already existed.
   and preview moves to F4. Everything stays rebindable afterwards, and the picker reads the LIVE
   bindings - rebind one key by hand and it honestly says `Godot EventSheets` again.
 
+### Added - a runtime error is re-said in the sheet's words
+
+- **"event 12 · target is empty", not "null instance".** When the running game fails on a line one
+  of your rows emitted, the source map says which row and the row's own reading says what it was
+  trying to do, so the failure is said again as the row said it:
+  `player.gd · event 12 · Enemy ▸ Call Hit: target is empty (nothing was picked before this
+  action)` - on a strip under the canvas and in the Output panel. **Jump to event** lands on the
+  row, **Explain** opens the Manual page behind that kind of failure, and **Godot's words** shows
+  the engine's own message unchanged: it is never hidden, because it is what every search and
+  every issue tracker speaks. The table covers an empty target, a list position that is not there,
+  an action the object does not have, a divide by zero and a name nothing carries; anything else
+  is repeated verbatim rather than guessed at. Pasting an error line into the command palette now
+  re-says it on the row it jumps to, and `EventSheets.report_runtime_error()` opens the same path
+  to any tool. New theme token: `runtime_error_color`.
+
 ### Added - the Manual answers a behavior name
 
 - **"Behaviors, by the name you know".** A new first page of the Manual, keyed by the behavior

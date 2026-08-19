@@ -279,6 +279,53 @@ func build_ui() -> void:
 
 	_dock._viewport.zoom_changed.connect(_dock._on_viewport_zoom_changed)
 
+	# The runtime-error strip, ABOVE the status line and hidden until something goes wrong: a
+	# failure in the running game, re-said as the row said it, with the two gestures the reader
+	# actually wants next - land on the row, and read the page about why it happens. Godot's own
+	# message sits on the third button rather than behind an expander, because it is what every
+	# search and every issue tracker speaks.
+	var error_strip: HBoxContainer = HBoxContainer.new()
+	error_strip.name = "EventSheetRuntimeErrorStrip"
+	error_strip.add_theme_constant_override("separation", 8)
+	error_strip.visible = false
+	_dock._runtime_error_strip = error_strip
+	var error_dot: Label = Label.new()
+	error_dot.name = "EventSheetRuntimeErrorDot"
+	error_dot.text = "●"
+	error_dot.modulate = EventSheetActiveTheme.reading().runtime_error_color
+	error_strip.add_child(error_dot)
+	_dock._runtime_error_label = Label.new()
+	_dock._runtime_error_label.name = "EventSheetRuntimeError"
+	_dock._runtime_error_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_dock._runtime_error_label.clip_text = true
+	_dock._runtime_error_label.modulate = EventSheetActiveTheme.reading().runtime_error_color
+	error_strip.add_child(_dock._runtime_error_label)
+	_dock._runtime_error_jump_button = Button.new()
+	_dock._runtime_error_jump_button.name = "EventSheetRuntimeErrorJump"
+	_dock._runtime_error_jump_button.text = "Jump to event"
+	_dock._runtime_error_jump_button.flat = true
+	_dock._runtime_error_jump_button.pressed.connect(_dock._jump_to_runtime_error_row)
+	error_strip.add_child(_dock._runtime_error_jump_button)
+	_dock._runtime_error_explain_button = Button.new()
+	_dock._runtime_error_explain_button.name = "EventSheetRuntimeErrorExplain"
+	_dock._runtime_error_explain_button.text = "Explain"
+	_dock._runtime_error_explain_button.flat = true
+	_dock._runtime_error_explain_button.pressed.connect(_dock._explain_runtime_error)
+	error_strip.add_child(_dock._runtime_error_explain_button)
+	var godot_words_button: Button = Button.new()
+	godot_words_button.name = "EventSheetRuntimeErrorOriginal"
+	godot_words_button.text = EventSheetRuntimeErrorWords.GODOT_WORDS_LABEL
+	godot_words_button.flat = true
+	godot_words_button.pressed.connect(_dock._show_runtime_error_original)
+	error_strip.add_child(godot_words_button)
+	var dismiss_button: Button = Button.new()
+	dismiss_button.name = "EventSheetRuntimeErrorDismiss"
+	dismiss_button.text = "✕"
+	dismiss_button.flat = true
+	dismiss_button.pressed.connect(_dock.clear_runtime_error)
+	error_strip.add_child(dismiss_button)
+	root.add_child(error_strip)
+
 	# The status strip: the transient message on the left, then the address of the selected row
 	# in the sheet's own words - "event 4 of 61 · line 38" - and the zoom pill pinned right. The
 	# label keeps its name and its dock member, so every _set_status caller and the tests are unmoved.

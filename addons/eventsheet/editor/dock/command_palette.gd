@@ -256,7 +256,11 @@ static func parse_error_location(text: String) -> Dictionary:
 	var found: RegExMatch = regex.search(text)
 	if found == null:
 		return {}
-	return {"path": found.get_string(1), "line": int(found.get_string(2))}
+	# The whole pasted text rides along as `message`: a stack-trace line copied from the Output
+	# panel carries the engine's own words as well as the location, and those words are what the
+	# sheet re-says on the row it just landed on.
+	return {"path": found.get_string(1), "line": int(found.get_string(2)),
+		"message": text.strip_edges()}
 
 
 ## The error-jump entry: opens the located .gd AS A SHEET and selects the row that emitted the line
@@ -264,10 +268,16 @@ static func parse_error_location(text: String) -> Dictionary:
 func _error_jump_matches(location: Dictionary) -> Array:
 	var path: String = str(location.get("path"))
 	var line: int = int(location.get("line"))
+	var message: String = str(location.get("message", ""))
 	return [{"title": "⚠ Jump to the row behind %s:%d" % [path.get_file(), line], "run": func() -> void:
 		_dock._navigate.record_current()  # an error jump is history too - Alt+Left returns
 		_dock._navigate.open_or_focus(path)
-		_dock.goto_generated_line(line)}]
+		_dock.goto_generated_line(line)
+		# The pasted line usually IS the engine's message, and the sheet can say it again in the
+		# row's own words now that the row is on screen. A paste that carried only a location says
+		# nothing new, so nothing is reported for it.
+		if not message.strip_edges().is_empty():
+			_dock.report_runtime_error(message, path, line)}]
 
 
 func _refresh_command_palette(query: String) -> void:
