@@ -65,4 +65,36 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		[F.make_param("value", "String", "3.14159", "Value", "Number to format.", "expression"), F.make_param("decimals", "String", "2", "Decimals", "Digits after the decimal point.", "expression")], "Text", "format {value} to {decimals} dp")
 		.described("Returns a number as text with a fixed number of decimal places, e.g. 3.14159 → \"3.14\"."))
 
+	# ── V6 - the same questions asked of a pattern you KEEP ──
+	# The verbs above compile the pattern afresh every time they run, which is what a one-off match
+	# wants. These four act on a pattern held in a variable of the sheet - the shape an opened script
+	# already reads as "Set pattern rx to …" / "first match of rx in text" - so a picked row and a
+	# hand-written one are the same bytes. Point "Pattern" at your own variable; the default builds a
+	# throwaway pattern so the row still runs the moment it is dropped.
+	descriptors.append(F.make_descriptor("Core", "SetTextPattern", "Set Pattern", ACEDescriptor.ACEType.ACTION,
+		"{holder}.compile({pattern})", "",
+		[_holder_param(), _pattern_param()], "Text: RegEx", "Set pattern {holder} to {pattern}")
+		.described("Gives a kept pattern variable the regular expression it should match from now on."))
+
+	descriptors.append(F.make_descriptor("Core", "MatchPattern", "Match Pattern", ACEDescriptor.ACEType.EXPRESSION,
+		"{holder}.search({text})", "",
+		[_holder_param(), _text_param()], "Text: RegEx", "first match of {holder} in {text}")
+		.described("Returns the first match a kept pattern finds in the text, or nothing when it finds none."))
+
+	descriptors.append(F.make_descriptor("Core", "AllMatches", "All Matches", ACEDescriptor.ACEType.EXPRESSION,
+		"{holder}.search_all({text})", "",
+		[_holder_param(), _text_param()], "Text: RegEx", "all matches of {holder} in {text}")
+		.described("Returns every match a kept pattern finds in the text, as a list."))
+
+	descriptors.append(F.make_descriptor("Core", "ReplaceMatches", "Replace Matches", ACEDescriptor.ACEType.EXPRESSION,
+		"{holder}.sub({text}, {replacement}, true)", "",
+		[_holder_param(), _text_param(), F.make_param("replacement", "String", "\"#\"", "Replacement", "Text to substitute for each match ($1, $2… reuse capture groups).", "expression")], "Text: RegEx", "replace matches of {holder} in {text} with {replacement}")
+		.described("Returns the text with every match of a kept pattern replaced."))
+
 	return descriptors
+
+
+## V6. The variable a kept pattern lives in. The default builds one on the spot so the row runs the
+## moment it is dropped; point it at a variable of your own sheet to keep the pattern between runs.
+static func _holder_param() -> ACEParam:
+	return F.make_param("holder", "String", "RegEx.create_from_string(\"[0-9]+\")", "Pattern", "The variable holding the pattern - the one Set Pattern filled.", "expression")

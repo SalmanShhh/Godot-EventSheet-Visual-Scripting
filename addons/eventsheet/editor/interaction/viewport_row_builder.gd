@@ -6261,9 +6261,27 @@ func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
 	if descriptor != null and not descriptor.display_name.strip_edges().is_empty():
 		return EventSheetL10n.translate(descriptor.display_name)
 	if trigger_id.begins_with("signal:"):
+		var signal_name: String = trigger_id.trim_prefix("signal:")
+		# V2. A form's own signals have object words in the sheet, exactly as its actions do: a text
+		# field's change belongs to Text input, a list's pick to List. Display only - the stored
+		# trigger_id is the frozen one, and a signal the table does not name reads as it always did.
+		if CONTROL_TRIGGER_WORDS.has(signal_name):
+			return EventSheetL10n.translate(str(CONTROL_TRIGGER_WORDS[signal_name]))
 		# A signal already NAMED on_* must not read "On On ..." - strip the prefix first.
-		return "On %s" % trigger_id.trim_prefix("signal:").trim_prefix("on_").capitalize()
+		return "On %s" % signal_name.trim_prefix("on_").capitalize()
 	return trigger_id
+
+
+## V2. The Control signals a form is wired with, under the object word each one belongs to. Only
+## signals that mean ONE thing on one kind of Control are here: `pressed` is every button's and is
+## already a published trigger, so it is deliberately absent.
+const CONTROL_TRIGGER_WORDS: Dictionary = {
+	"text_changed": "Text input ▸ On text changed",
+	"text_submitted": "Text input ▸ On submitted",
+	"item_selected": "List ▸ On item selected",
+	"file_selected": "File chooser ▸ On file chosen",
+	"tab_changed": "Tabs ▸ On tab changed"
+}
 
 
 ## Sets the tempo glyph + hue on a trigger-badge meta from the event's trigger_id, and returns the glyph.
@@ -10172,6 +10190,26 @@ const PATTERN_VOCABULARY: Dictionary = {
 			"Core/LeaveFullscreen", "Core/BrowserAlert", "Core/VibrateHandheld",
 			"Core/IsPlatform", "Core/IsOnWebPlatform", "Core/IsOnMobilePlatform",
 			"Core/IsOnDesktopPlatform"]
+	},
+	# V1 / V3 / V6. The last three gaps. Only the path walk has a behavior that replaces the shape
+	# outright, so only it carries an `adoptable`: a rigid body is what bodies ARE (the car pack is
+	# offered separately, on the car shape alone), and the text words are free actions.
+	"physics": {
+		"words": "Physics",
+		"ace_ids": ["Core/SetBodyMass", "Core/SetGravityScale", "Core/SetBodyFriction",
+			"Core/SetBodyElasticity", "Core/ApplyTorqueImpulse2D", "Core/SetBodyImmovable",
+			"Core/IsBodySleeping", "Core/SetLinearDamping", "Core/SetWorldGravity"]
+	},
+	"path": {
+		"words": "Follow a Path",
+		"adoptable": "follow_path",
+		"ace_ids": ["Core/MoveAlongPathAt", "Core/PathReachedEnd", "Core/PathGoToStart",
+			"Core/SetPathLooping", "Core/SetPathRotates"]
+	},
+	"text_format": {
+		"words": "Text and patterns",
+		"ace_ids": ["Core/SetTextPattern", "Core/MatchPattern", "Core/AllMatches",
+			"Core/ReplaceMatches"]
 	}
 }
 

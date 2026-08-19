@@ -40,4 +40,39 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "BreakJoint3D", "Break Joint (3D)", ACEDescriptor.ACEType.ACTION, "node_b = NodePath(\"\")", "", [], "Joints", "Break the joint", "Joint3D")
 		.described("Snaps a 3D joint apart by clearing its second body, releasing the connection."))
 
+	# ── The Physics behavior's own settings (V1) ──
+	# The words an opened rigid body already READS in, so a picked row and a hand-written line are the
+	# same bytes: mass, gravity scale, the material's friction and elasticity, the damping pair,
+	# immovable, the sleeping question, the spin, and an area's world gravity.
+	descriptors.append(F.make_descriptor("Core", "SetBodyMass", "Set Mass", ACEDescriptor.ACEType.ACTION, "mass = {mass}", "", [F.make_param("mass", "String", "1.0", "Mass", "How heavy the body is.", "expression")], "Physics", "Set mass to {mass}", "RigidBody2D")
+		.described("Sets how heavy a physics body is, so the same push moves it more or less."))
+	descriptors.append(F.make_descriptor("Core", "SetGravityScale", "Set Gravity Scale", ACEDescriptor.ACEType.ACTION, "gravity_scale = {scale}", "", [F.make_param("scale", "String", "1.0", "Scale", "The share of the world's gravity this body feels - 0 floats, 1 is normal.", "expression")], "Physics", "Set gravity scale to {scale}", "RigidBody2D")
+		.described("Sets how much of the world's gravity this body feels, from floating to extra heavy."))
+	descriptors.append(F.make_descriptor("Core", "SetBodyFriction", "Set Friction", ACEDescriptor.ACEType.ACTION, "physics_material_override.friction = {friction}", "", [F.make_param("friction", "String", "0.5", "Friction", "How much the surface grips - 0 is ice, 1 is rubber.", "expression")], "Physics", "Set friction to {friction}", "RigidBody2D")
+		.described("Sets how much this body's surface grips, from ice to rubber. Needs a physics material on the body."))
+	descriptors.append(F.make_descriptor("Core", "SetBodyElasticity", "Set Elasticity", ACEDescriptor.ACEType.ACTION, "physics_material_override.bounce = {elasticity}", "", [F.make_param("elasticity", "String", "0.0", "Elasticity", "How much of the impact comes back - 0 is a sandbag, 1 is a superball.", "expression")], "Physics", "Set elasticity to {elasticity}", "RigidBody2D")
+		.described("Sets how bouncy this body is, from a sandbag to a superball. Needs a physics material on the body."))
+	descriptors.append(F.make_descriptor("Core", "SetLinearDamping", "Set Linear Damping", ACEDescriptor.ACEType.ACTION, "linear_damp = {damping}", "", [F.make_param("damping", "String", "0.0", "Damping", "How quickly the body slows down on its own.", "expression")], "Physics", "Set linear damping to {damping}", "RigidBody2D")
+		.described("Sets how quickly a body loses speed on its own, like moving through water."))
+	descriptors.append(F.make_descriptor("Core", "SetAngularDamping", "Set Angular Damping", ACEDescriptor.ACEType.ACTION, "angular_damp = {damping}", "", [F.make_param("damping", "String", "0.0", "Damping", "How quickly the body stops spinning on its own.", "expression")], "Physics", "Set angular damping to {damping}", "RigidBody2D")
+		.described("Sets how quickly a body stops spinning on its own."))
+	descriptors.append(F.make_descriptor("Core", "SetBodyImmovable", "Set Immovable", ACEDescriptor.ACEType.ACTION, "freeze = {immovable}", "", [F.make_param("immovable", "String", "true", "Immovable", "Hold the body still?", "", ["true", "false"])], "Physics", "Set immovable {immovable}", "RigidBody2D")
+		.described("Holds a physics body still where it is, or lets it move again."))
+	descriptors.append(F.make_descriptor("Core", "IsBodySleeping", "Is Sleeping", ACEDescriptor.ACEType.CONDITION, "sleeping", "", [], "Physics", "Is sleeping", "RigidBody2D")
+		.described("True while a physics body has settled and stopped being simulated."))
+	descriptors.append(F.make_descriptor("Core", "ApplyTorque", "Apply Torque", ACEDescriptor.ACEType.ACTION, "apply_torque({torque})", "", [F.make_param("torque", "String", "0.0", "Torque", "Continuous spin applied this physics frame.", "expression")], "Physics", "Apply torque {torque}", "RigidBody2D")
+		.described("Applies a steady twist to a body each physics frame, spinning it up."))
+	descriptors.append(F.make_descriptor("Core", "ApplyImpulseAtOffset", "Apply Impulse At Offset", ACEDescriptor.ACEType.ACTION, "apply_impulse({impulse}, {offset})", "", [F.make_param("impulse", "String", "Vector2(0, 0)", "Impulse", "The instant push.", "expression"), F.make_param("offset", "String", "Vector2(0, 0)", "At offset", "Where on the body the push lands, from its centre.", "expression")], "Physics", "Apply impulse {impulse} at {offset}", "RigidBody2D")
+		.described("Pushes a body at a point away from its centre, so it spins as well as moves."))
+	descriptors.append(F.make_descriptor("Core", "SetWorldGravity", "Set World Gravity", ACEDescriptor.ACEType.ACTION, "gravity = {gravity}", "", [F.make_param("gravity", "String", "980.0", "Gravity", "How strongly this area pulls, in pixels per second squared.", "expression")], "Physics", "Set world gravity to {gravity}", "Area2D")
+		.described("Sets how strongly an area pulls the bodies inside it, for low-gravity rooms and updrafts."))
+
+	# ── The joints, named by what they DO (V1) ──
+	descriptors.append(F.make_descriptor("Core", "CreateRevoluteJoint", "Create Revolute Joint", ACEDescriptor.ACEType.ACTION, "add_child(PinJoint2D.new())", "", [], "Physics", "Create revolute joint")
+		.described("Adds a pin the two bodies turn around, like a hinge or an axle."))
+	descriptors.append(F.make_descriptor("Core", "CreateDistanceJoint", "Create Distance Joint", ACEDescriptor.ACEType.ACTION, "add_child(DampedSpringJoint2D.new())", "", [], "Physics", "Create distance joint")
+		.described("Adds a spring that holds two bodies a set distance apart, like a rope or a suspension arm."))
+	descriptors.append(F.make_descriptor("Core", "CreatePrismaticJoint", "Create Prismatic Joint", ACEDescriptor.ACEType.ACTION, "add_child(GrooveJoint2D.new())", "", [], "Physics", "Create prismatic joint")
+		.described("Adds a groove one body slides along, like a piston or a lift."))
+
 	return descriptors

@@ -78,4 +78,34 @@ max_value = {max}", "", [F.make_param("value", "String", "0", "Value", "How full
 	descriptors.append(F.make_descriptor("Core", "SetMasterVolume", "Set Master Volume", ACEDescriptor.ACEType.ACTION, "AudioServer.set_bus_volume_db(0, linear_to_db({level}))", "", [F.make_param("level", "String", "0.5", "Level", "0 = silent, 1 = full - the number a volume slider gives.", "expression")], "UI", "Set master volume to {level} (0 to 1)")
 		.described("Sets the overall game volume from a 0-to-1 slider value."))
 
+	# ── V2 - the object words a form has: Text input, List, Check box, File chooser, Tabs ──
+	# Every template below writes exactly the line the opened-script reading recognises, so a picked
+	# row and a hand-written one are the same bytes and read the same sentence.
+	descriptors.append(F.make_descriptor("Core", "SetTextInputPlaceholder", "Set Placeholder", ACEDescriptor.ACEType.ACTION, "placeholder_text = {value}", "", [F.make_param("value", "String", "\"\"", "Placeholder", "The grey hint shown while the field is empty.", "expression")], "UI", "Set placeholder to {value}", "LineEdit")
+		.described("Sets the grey hint text shown in an empty text field."))
+	descriptors.append(F.make_descriptor("Core", "ListAddItem", "Add Item", ACEDescriptor.ACEType.ACTION, "add_item({value})", "", [F.make_param("value", "String", "\"Item\"", "Item", "The text of the new entry.", "expression")], "UI", "Add item {value}", "ItemList")
+		.described("Adds one entry to the end of a list."))
+	descriptors.append(F.make_descriptor("Core", "ListRemoveItem", "Remove Item", ACEDescriptor.ACEType.ACTION, "remove_item({index})", "", [F.make_param("index", "String", "0", "Index", "Which entry to remove, counting from 0.", "expression")], "UI", "Remove item {index}", "ItemList")
+		.described("Removes one entry from a list by its position."))
+	descriptors.append(F.make_descriptor("Core", "ListSelectItem", "Select Item", ACEDescriptor.ACEType.ACTION, "select({index})", "", [F.make_param("index", "String", "0", "Index", "Which entry to highlight, counting from 0.", "expression")], "UI", "Select item {index}", "ItemList")
+		.described("Highlights one entry of a list as the chosen one."))
+	descriptors.append(F.make_descriptor("Core", "ListClear", "Clear List", ACEDescriptor.ACEType.ACTION, "clear()", "", [], "UI", "Clear", "ItemList")
+		.described("Empties a list of every entry."))
+	descriptors.append(F.make_descriptor("Core", "ListItemText", "Item Text", ACEDescriptor.ACEType.EXPRESSION, "get_item_text({index})", "", [F.make_param("index", "String", "0", "Index", "Which entry to read, counting from 0.", "expression")], "UI", "item text {index}", "ItemList")
+		.described("Returns the text of one entry of a list."))
+	descriptors.append(F.make_descriptor("Core", "CheckBoxIsChecked", "Is Checked", ACEDescriptor.ACEType.CONDITION, "button_pressed", "", [], "UI", "Is checked", "CheckBox")
+		.described("True while a check box is ticked."))
+	descriptors.append(F.make_descriptor("Core", "CheckBoxSetChecked", "Set Checked", ACEDescriptor.ACEType.ACTION, "button_pressed = {checked}", "", [F.make_param("checked", "String", "true", "Checked", "Tick the box?", "", ["true", "false"])], "UI", "Set checked {checked}", "CheckBox")
+		.described("Ticks or unticks a check box."))
+	descriptors.append(F.make_descriptor("Core", "OpenFileChooser", "Open File Chooser", ACEDescriptor.ACEType.ACTION, "popup_centered()", "", [], "UI", "Open", "FileDialog")
+		.described("Opens a file chooser in the middle of the screen."))
+	descriptors.append(F.make_descriptor("Core", "SwitchToTab", "Switch To Tab", ACEDescriptor.ACEType.ACTION, "current_tab = {index}", "", [F.make_param("index", "String", "0", "Tab", "Which tab to show, counting from 0.", "expression")], "UI", "Switch to tab {index}", "TabContainer")
+		.described("Shows one tab of a tabbed panel."))
+	descriptors.append(F.make_descriptor("Core", "SetFormattedText", "Set Formatted Text", ACEDescriptor.ACEType.ACTION, "text = {value}", "", [F.make_param("value", "String", "\"\"", "Text", "Text with [b]tags[/b] in it.", "expression")], "UI", "Set formatted text to {value}", "RichTextLabel")
+		.described("Replaces a rich text label's contents, tags and all."))
+	descriptors.append(F.make_descriptor("Core", "AppendFormattedText", "Append Formatted Text", ACEDescriptor.ACEType.ACTION, "append_text({value})", "", [F.make_param("value", "String", "\"\"", "Text", "Text with [b]tags[/b] in it.", "expression")], "UI", "Append formatted text {value}", "RichTextLabel")
+		.described("Adds text to the end of a rich text label without clearing it."))
+	descriptors.append(F.make_descriptor("Core", "SetTooltip", "Set Tooltip", ACEDescriptor.ACEType.ACTION, "tooltip_text = {value}", "", [F.make_param("value", "String", "\"\"", "Tooltip", "What the pointer shows when it rests here.", "expression")], "UI", "Set tooltip to {value}", "Control")
+		.described("Sets the little label the pointer shows when it rests on this control."))
+
 	return descriptors

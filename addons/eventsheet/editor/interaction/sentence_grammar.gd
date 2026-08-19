@@ -205,6 +205,9 @@ const RECEIVER_IDIOMS: Dictionary = {
 	# U6. The bytes a finished request hands back, read back as the AJAX object's own value: what the
 	# line actually names is the answer that just arrived, and that answer has a name on the sheet.
 	"get_string_from_utf8": "AJAX.LastData",
+	# V2 - the two things a List is asked, under the expression names the List object publishes
+	"get_item_text": "{receiver}.ItemText({0})",
+	"get_selected_id": "{receiver}.SelectedIndex",
 	# N9 - the analogue reads belong to the pad
 	"Input.get_action_strength": "strength of {0}",
 	"Input.get_action_raw_strength": "raw strength of {0}"
@@ -362,6 +365,13 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var shape: Dictionary = behavior_shape_statement(text, context)
 	if not shape.is_empty():
 		return _with_indent(shape, indent)
+	# ── V1 / V2 / V3 / V6 / V7 ──────────────────────────────────────────────────────────────────
+	# The last reading gaps: a rigid body's settings and pushes, a form's Controls, a path walk, the
+	# regular-expression words and the wait that freezes the game. Several of them are one idea
+	# written as arithmetic on a property, so they go ahead of the compound / assignment split too.
+	var gap: Dictionary = gap_statement(text, context)
+	if not gap.is_empty():
+		return _with_indent(gap, indent)
 	var compound: Dictionary = _compound_statement(text, context)
 	if not compound.is_empty():
 		return _with_indent(compound, indent)
@@ -409,6 +419,12 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var around_test: Dictionary = around_objects_condition(text, context)
 	if not around_test.is_empty():
 		return around_test
+	# V1 / V2 / V3. The three questions the last gaps ask - whether a body is asleep, whether a check
+	# box is checked, and whether a path walk has reached its end. Ahead of the range reading, which
+	# would describe the end of a path as a comparison against one.
+	var gap: Dictionary = gap_condition(text, context)
+	if not gap.is_empty():
+		return gap
 	var joined: Dictionary = joined_condition(text, context)
 	if not joined.is_empty():
 		return joined
@@ -951,6 +967,9 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	# S8 - the progress array read by index, before the indexing pass could take `p[0]` apart. What
 	# the file holds is untouched; only the words change.
 	trimmed = loading_progress_words(trimmed, context)
+	# V6 - the pattern searches and the named format, before the call rewriting could take either of
+	# them apart into the arguments they are written with.
+	trimmed = text_pattern_words(trimmed, context)
 	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
 	# R7. The sheet's own expression names, before any other rewriting sees the Godot spellings they
 	# are matched against. Off unless the view asked for the Familiar Words glossary.
@@ -1071,6 +1090,18 @@ static func _system_words(text: String) -> String:
 		out = out.replace("Time.get_ticks_msec() / 1000", translate("time"))
 		out = out.replace("Time.get_ticks_msec()", translate("time in ms"))
 	out = out.replace("Engine.get_frames_per_second()", translate("fps"))
+	# ── V7 ──────────────────────────────────────────────────────────────────────────────────────
+	# The rest of the numbers a profiling script reads. `tickcount` and `dt` are names a reader TYPES
+	# into an expression field, so like `fps` above they are whole spellings and unlike it they are
+	# not translated. The microsecond clock keeps its unit, because it is a different number from the
+	# one `time` names and a reader who mixed them up would be out by a million.
+	if out.contains("Engine.get_frames_drawn()"):
+		out = out.replace("Engine.get_frames_drawn()", "tickcount")
+	if out.contains("Time.get_ticks_usec()"):
+		out = out.replace("Time.get_ticks_usec()", translate("now (microseconds)"))
+	if out.contains("delta_time()"):
+		out = out.replace("get_physics_process_delta_time()", "dt")
+		out = out.replace("get_process_delta_time()", "dt")
 	return editor_words(out)
 
 
@@ -5739,6 +5770,10 @@ const FAMILIAR_EXPRESSION_PATTERNS: Array = [
 	["([A-Za-z_][A-Za-z0-9_.]*)\\.(?:length|size)\\(\\)", "len($1)"],
 	# the numbers a sheet reads by name
 	["Engine\\.get_process_frames\\(\\)", "tickcount"],
+	# V6 - the two text calls whose sheet spelling is a word rather than a method
+	["str\\(([A-Za-z_][A-Za-z0-9_.]*)\\)\\.pad_zeros\\(([0-9]+)\\)", "zeropad($1, $2)"],
+	["([A-Za-z_][A-Za-z0-9_.]*)\\.pad_zeros\\(([0-9]+)\\)", "zeropad($1, $2)"],
+	["([A-Za-z_][A-Za-z0-9_.]*)\\.capitalize\\(\\)", "capitalised $1"],
 	["randi_range\\(([^(),]+),\\s*([^(),]+)\\)", "random($1, $2)"],
 	["randf_range\\(([^(),]+),\\s*([^(),]+)\\)", "random($1, $2)"],
 	["randi\\(\\)\\s*%\\s*([A-Za-z_][A-Za-z0-9_.]*)", "random($1)"],
@@ -7635,6 +7670,8 @@ static func long_tail_call(call: Dictionary, text: String, context: Dictionary) 
 	if not named.is_empty():
 		return named
 	return long_tail_media_call(traced, context)
+
+
 # ── T10 / T11 / T12 - the things AROUND objects: layers and Z order, text, the browser ───────────
 #
 # Three families of line every project writes ABOUT an object rather than about its behaviour: where
@@ -8083,3 +8120,521 @@ static func picking_statement(text: String, context: Dictionary) -> Dictionary:
 		return {}
 	_append_note(reading, "→ %s" % str(declared.get("name", "")).replace("_", " "))
 	return _patterned(reading, "picking")
+
+
+# ── V1 / V2 / V3 / V6 / V7 - the last reading gaps batch eleven closed ──────────────────────────
+#
+# Five families of line a finished Godot game is full of and an event sheet already has words for:
+#
+#   V1  a RigidBody IS the Physics behavior - mass, gravity scale, the material's friction and
+#       elasticity, the four apply_* pushes, velocity, immovable, sleeping, damping, the joints and
+#       an Area's world gravity
+#   V2  the Controls a menu is made of, under the object words a form has: Text input, List,
+#       Check box, File chooser, Tabs, and the two formatted-text verbs
+#   V3  a PathFollow is the Follow a Path behavior - move along, has reached the end, go to start,
+#       looping and rotate with path
+#   V6  the text a HUD is written with: a format string as the sheet's join, `.format({})` with its
+#       names said out loud, and the regular-expression words
+#   V7  the numbers a profiling script reads by name, and the one wait that freezes the game
+#
+# Everything here is display only, every reading is claimed at its exact shape, and every one of
+# them carries the pattern it recognised so the registry hears about it without this file knowing
+# what a sheet is. A line these cannot say honestly keeps the property write or the call it is.
+
+## V6. Text and regular expressions are one object in the sheet's words, the way saving is Local
+## Storage's and the messages are Multiplayer's.
+const OBJECT_TEXT := "Text"
+
+## V1. The areas whose `gravity` is the world's, rather than a number of their own.
+const PHYSICS_AREA_CLASSES: PackedStringArray = ["Area2D", "Area3D"]
+
+## V1. The joint nodes named by what the joint DOES, in both node generations. A pin turns, a spring
+## holds a distance, a groove slides.
+const JOINT_KIND_WORDS: Dictionary = {
+	"PinJoint2D": "revolute", "PinJoint3D": "revolute", "HingeJoint3D": "revolute",
+	"DampedSpringJoint2D": "distance",
+	"GrooveJoint2D": "prismatic", "SliderJoint3D": "prismatic"
+}
+
+## V1. The rigid-body members with one settled Physics sentence each. `gravity_scale`, `freeze` and
+## the material knobs are shaped rather than templated, so they are not in the table.
+const PHYSICS_MEMBER_TEMPLATES: Dictionary = {
+	"mass": "Set mass to {value}",
+	"linear_damp": "Set linear damping to {value}",
+	"angular_damp": "Set angular damping to {value}"
+}
+
+## V1. The pushes an event sheet spells with an offset. The one-argument impulse and force are
+## already the Physics behavior's own words further up this file; these are the shapes that had none.
+const PHYSICS_PUSH_TEMPLATES: Dictionary = {
+	"apply_impulse": ["", "Apply impulse {value} at {offset}"],
+	"apply_force": ["", "Apply force {value} at {offset}"],
+	"apply_torque": ["Apply torque {value}", ""],
+	"apply_torque_impulse": ["Apply torque impulse {value}", ""]
+}
+
+## V3. The nodes that walk a path, and the resources that hold one.
+const PATH_FOLLOW_CLASSES: PackedStringArray = ["PathFollow2D", "PathFollow3D"]
+const PATH_CURVE_CLASSES: PackedStringArray = ["Curve2D", "Curve3D"]
+
+## V2. The Controls filed under each object word a form has. Matched through ClassDB, so a subclass
+## of any of them answers alike.
+const TEXT_INPUT_CLASSES: PackedStringArray = ["LineEdit", "TextEdit"]
+const LIST_CLASSES: PackedStringArray = ["ItemList", "OptionButton", "Tree"]
+const CHECK_CLASSES: PackedStringArray = ["CheckBox", "CheckButton"]
+const FILE_DIALOG_CLASSES: PackedStringArray = ["FileDialog"]
+const TABS_CLASSES: PackedStringArray = ["TabContainer", "TabBar"]
+const RICH_TEXT_CLASSES: PackedStringArray = ["RichTextLabel"]
+
+## V2. The list steps, in the words the List object publishes. `clear` is shaped (it takes nothing),
+## so it is not in the table.
+const LIST_CONTROL_TEMPLATES: Dictionary = {
+	"add_item": "Add item {value}",
+	"remove_item": "Remove item {value}",
+	"select": "Select item {value}"
+}
+
+## V7. The waits that stop the whole game while they run, and how many of one second each counts in.
+const BLOCKING_WAIT_CALLS: Dictionary = {"OS.delay_msec": 1000.0, "OS.delay_usec": 1000000.0}
+
+
+## The event-sheet reading of one statement in the five families above, or {} to let the rest of the
+## grammar carry on. Asked ahead of the compound / assignment / call split, because several of these
+## are one idea written as arithmetic on a property.
+static func gap_statement(text: String, context: Dictionary) -> Dictionary:
+	var waited: Dictionary = _blocking_wait_statement(text, context)
+	if not waited.is_empty():
+		return waited
+	var moved: Dictionary = _path_move_statement(text, context)
+	if not moved.is_empty():
+		return moved
+	var assign_at: int = top_level_index(text, " = ")
+	if assign_at > 0:
+		var target: String = text.substr(0, assign_at).strip_edges()
+		var assigned: String = text.substr(assign_at + 3).strip_edges()
+		if not is_simple_target(target) or assigned.is_empty():
+			return {}
+		return _gap_assignment(target, assigned, context)
+	return _gap_call(text, context)
+
+
+## The event-sheet reading of one QUESTION in the five families, or {} to let the rest carry on.
+static func gap_condition(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = text.strip_edges()
+	var reached: Dictionary = _path_end_condition(bare, context)
+	if not reached.is_empty():
+		return reached
+	var flag: String = bare.trim_prefix("self.")
+	var negated: bool = flag.begins_with("not ")
+	if negated:
+		flag = flag.substr(4).strip_edges().trim_prefix("self.")
+	if not is_simple_target(flag):
+		return {}
+	var dot_at: int = flag.rfind(".")
+	var member: String = flag if dot_at < 0 else flag.substr(dot_at + 1)
+	var owner_text: String = "" if dot_at < 0 else flag.substr(0, dot_at)
+	var object_name: String = _receiver_object(owner_text, context)
+	var object_class: String = object_class_of(object_name, context)
+	if _class_is_any(object_class, BODY_CLASSES):
+		if member == "sleeping":
+			return _with_pattern(_behaviour_sentence(object_name, "Physics",
+				"Is awake" if negated else "Is sleeping", {}), "physics", bare)
+		if member == "freeze":
+			return _with_pattern(_behaviour_sentence(object_name, "Physics",
+				"Is not immovable" if negated else "Is immovable", {}), "physics", bare)
+	if member == "button_pressed" and _class_is_any(object_class, CHECK_CLASSES):
+		return _with_pattern(_behaviour_sentence(object_name, "Check box",
+			"Is not checked" if negated else "Is checked", {}), "ui", bare)
+	return {}
+
+
+## V7. `OS.delay_msec(500)` is a wait every event sheet has a row for - and the one difference that
+## matters is said out loud, because a reader who has met the sheet's own Wait would never guess this
+## one stops the game dead while it counts.
+static func _blocking_wait_statement(text: String, context: Dictionary) -> Dictionary:
+	var trimmed: String = text.strip_edges()
+	for head: String in BLOCKING_WAIT_CALLS:
+		var opening: String = "%s(" % head
+		if not trimmed.begins_with(opening) or not trimmed.ends_with(")"):
+			continue
+		if closing_paren(trimmed, opening.length() - 1) != trimmed.length() - 1:
+			continue
+		var amount: String = trimmed.substr(opening.length(),
+			trimmed.length() - opening.length() - 1).strip_edges()
+		if amount.is_empty() or not amount.is_valid_float():
+			continue
+		var counted: String = String.num(
+			amount.to_float() / float(BLOCKING_WAIT_CALLS[head]), 6).rstrip("0").rstrip(".")
+		var seconds: String = number_lens("0" if counted.is_empty() else counted)
+		var waited: Dictionary = _sentence(OBJECT_SYSTEM, "Wait {seconds} seconds", {
+			"seconds": [seconds, "value"]})
+		(waited["segments"] as Array).append({
+			"text": " ⚠ %s" % translate("blocks the game"), "tone": "muted"})
+		return waited
+	return {}
+
+
+## V3. `follow.progress += speed * delta` is the whole of "move along this path at that speed", and
+## the sheet's Follow a Path behavior says exactly that. Only a step scaled by the frame time counts:
+## a jump of a fixed number of pixels is a jump, and calling it a speed would be wrong on every
+## machine that runs the game at another rate.
+static func _path_move_statement(text: String, context: Dictionary) -> Dictionary:
+	var trimmed: String = text.strip_edges()
+	var plus_at: int = top_level_index(trimmed, " += ")
+	if plus_at <= 0:
+		return {}
+	var target: String = trimmed.substr(0, plus_at).strip_edges().trim_prefix("self.")
+	var amount: String = trimmed.substr(plus_at + 4).strip_edges()
+	if not target.ends_with("progress") or amount.is_empty():
+		return {}
+	var owner_text: String = target.substr(0, maxi(target.length() - 8, 0)).trim_suffix(".")
+	if not _walks_a_path(owner_text, context):
+		return {}
+	var times_at: int = top_level_index(amount, " * ")
+	if times_at <= 0:
+		return {}
+	var speed: String = amount.substr(0, times_at).strip_edges()
+	if not EventSheetPatternReadings.is_delta_value(amount.substr(times_at + 3)):
+		return {}
+	return _with_pattern(_behaviour_sentence(script_object(context), "Follow a Path",
+		"Move along path at {speed}", {"speed": [expression_text(speed, context), "value"]}),
+		"path", trimmed, "follow_path")
+
+
+## V3. `follow.progress_ratio >= 1.0` is the one question a path walk asks. Only the far end counts -
+## a ratio compared against a half is a comparison, and the sheet has no word that would be true of it.
+static func _path_end_condition(text: String, context: Dictionary) -> Dictionary:
+	var parts: Array = _comparison_parts(text)
+	if parts.is_empty() or (str(parts[1]) != ">=" and str(parts[1]) != ">"):
+		return {}
+	var left: String = str(parts[0]).strip_edges().trim_prefix("self.")
+	var right: String = str(parts[2]).strip_edges().trim_suffix(":").strip_edges()
+	if not left.ends_with("progress_ratio") or not right.is_valid_float() or right.to_float() < 1.0:
+		return {}
+	var owner_text: String = left.substr(0, maxi(left.length() - 14, 0)).trim_suffix(".")
+	if not _walks_a_path(owner_text, context):
+		return {}
+	return _with_pattern(_behaviour_sentence(script_object(context), "Follow a Path",
+		"Has reached the end", {}), "path", text.strip_edges(), "follow_path")
+
+
+## True when a receiver is a path follower - the class the sheet knows it by, or the script's own
+## class when the line names no receiver at all.
+static func _walks_a_path(owner_text: String, context: Dictionary) -> bool:
+	return _class_is_any(object_class_of(_receiver_object(owner_text, context), context),
+		PATH_FOLLOW_CLASSES)
+
+
+## The property writes of the five families, or {} to keep the plain Set. Every arm is gated on the
+## object's KNOWN class (or on a local this file declared as a physics material), so a member name
+## that means something else on something else keeps its own reading.
+static func _gap_assignment(target: String, assigned: String, context: Dictionary) -> Dictionary:
+	var bare: String = target.strip_edges().trim_prefix("self.")
+	var dot_at: int = bare.rfind(".")
+	var member: String = bare if dot_at < 0 else bare.substr(dot_at + 1)
+	var owner_text: String = "" if dot_at < 0 else bare.substr(0, dot_at)
+	var object_name: String = _receiver_object(owner_text, context)
+	var object_class: String = object_class_of(object_name, context)
+	var line: String = _member_line(owner_text, member, assigned)
+	var physics: Dictionary = _physics_assignment(object_name, object_class, member, owner_text,
+		assigned, line, context)
+	if not physics.is_empty():
+		return physics
+	var walked: Dictionary = _path_assignment(object_class, member, assigned, line, context)
+	if not walked.is_empty():
+		return walked
+	return _control_assignment(object_name, object_class, member, assigned, line, context)
+
+
+## V1. The Physics behavior's settings, whichever half of the body they are written on: the body's
+## own members, and the two knobs that live on the physics material a `PhysicsMaterial.new()` put in
+## a variable of this file.
+static func _physics_assignment(object_name: String, object_class: String, member: String,
+		owner_text: String, assigned: String, line: String, context: Dictionary) -> Dictionary:
+	var materials: Dictionary = context.get("physics_materials", {})
+	# The slot the body keeps its material in is a material by name, whoever owns it - which is what
+	# the sheet's own Set friction row writes, so a picked row and a typed one read alike.
+	var material_slot: bool = owner_text == "physics_material_override" \
+		or owner_text.ends_with(".physics_material_override")
+	if not owner_text.is_empty() and (material_slot or materials.has(owner_text)):
+		# The material is the body's surface, so the row belongs to the object a reader can point at
+		# rather than to the variable that happens to hold the resource.
+		if member == "friction":
+			return _with_pattern(_behaviour_sentence(script_object(context), "Physics",
+				"Set friction to {value}", {"value": [expression_text(assigned, context), "value"]}),
+				"physics", line)
+		if member == "bounce":
+			return _with_pattern(_behaviour_sentence(script_object(context), "Physics",
+				"Set elasticity to {value}", {"value": [expression_text(assigned, context), "value"]}),
+				"physics", line)
+		return {}
+	if _class_is_any(object_class, PHYSICS_AREA_CLASSES) and member == "gravity":
+		return _with_pattern(_behaviour_sentence(object_name, "Physics", "Set world gravity to {value}",
+			{"value": [expression_text(assigned, context), "value"]}), "physics", line)
+	if not _class_is_any(object_class, BODY_CLASSES):
+		return {}
+	if PHYSICS_MEMBER_TEMPLATES.has(member):
+		return _with_pattern(_behaviour_sentence(object_name, "Physics",
+			str(PHYSICS_MEMBER_TEMPLATES[member]),
+			{"value": [expression_text(assigned, context), "value"]}), "physics", line)
+	match member:
+		"gravity_scale":
+			# The number as WRITTEN, not as a percentage of normal gravity: the sheet's own Set
+			# gravity scale row shows the value its field holds, and a line that read one way when it
+			# was typed and another when it was picked would be the drift these readings exist to
+			# prevent. 1 is normal gravity, 0 floats - which is what the row's own description says.
+			return _with_pattern(_behaviour_sentence(object_name, "Physics",
+				"Set gravity scale to {value}",
+				{"value": [expression_text(assigned, context), "value"]}), "physics", line)
+		"freeze":
+			if assigned != "true" and assigned != "false":
+				return {}
+			return _with_pattern(_behaviour_sentence(object_name, "Physics",
+				"Set immovable" if assigned == "true" else "Set movable", {}), "physics", line)
+		"physics_material_override":
+			return _with_pattern(_behaviour_sentence(object_name, "Physics",
+				"Use physics material {value}",
+				{"value": [expression_text(assigned, context), "value"]}), "physics", line)
+	return {}
+
+
+## V3. The two switches a path walk has, and the place along the path it is put back to.
+static func _path_assignment(object_class: String, member: String, assigned: String, line: String,
+		context: Dictionary) -> Dictionary:
+	if not _class_is_any(object_class, PATH_FOLLOW_CLASSES):
+		return {}
+	var object_name: String = script_object(context)
+	if member == "loop" or member == "rotates":
+		if assigned != "true" and assigned != "false":
+			return {}
+		var template: String = "Set looping {state}" if member == "loop" else "Set rotate with path {state}"
+		return _with_pattern(_behaviour_sentence(object_name, "Follow a Path", template,
+			{"state": [translate("on") if assigned == "true" else translate("off"), "name"]}),
+			"path", line, "follow_path")
+	if member != "progress":
+		return {}
+	if assigned.is_valid_float() and assigned.to_float() == 0.0:
+		return _with_pattern(_behaviour_sentence(object_name, "Follow a Path", "Go to start", {}),
+			"path", line, "follow_path")
+	return _with_pattern(_behaviour_sentence(object_name, "Follow a Path",
+		"Set distance along path to {value}",
+		{"value": [expression_text(assigned, context), "value"]}), "path", line, "follow_path")
+
+
+## V2. The property writes a form makes, under the object word each Control goes by. A tooltip is the
+## one that belongs to every Control there is, so it is asked last and without a class of its own.
+static func _control_assignment(object_name: String, object_class: String, member: String,
+		assigned: String, line: String, context: Dictionary) -> Dictionary:
+	var shown: String = expression_text(assigned, context)
+	if _class_is_any(object_class, TEXT_INPUT_CLASSES):
+		if member == "text":
+			return _with_pattern(_behaviour_sentence(object_name, "Text input", "Set text to {value}",
+				{"value": [shown, "value"]}), "ui", line)
+		if member == "placeholder_text":
+			return _with_pattern(_behaviour_sentence(object_name, "Text input",
+				"Set placeholder to {value}", {"value": [shown, "value"]}), "ui", line)
+	if member == "text" and _class_is_any(object_class, RICH_TEXT_CLASSES):
+		return _with_pattern(_sentence(object_name, "Set formatted text to {value}",
+			{"value": [shown, "value"]}), "ui", line)
+	if member == "current_tab" and _class_is_any(object_class, TABS_CLASSES):
+		return _with_pattern(_behaviour_sentence(object_name, "Tabs", "Switch to tab {value}",
+			{"value": [shown, "value"]}), "ui", line)
+	if member == "button_pressed" and _class_is_any(object_class, CHECK_CLASSES):
+		if assigned != "true" and assigned != "false":
+			return {}
+		return _with_pattern(_behaviour_sentence(object_name, "Check box",
+			"Set checked" if assigned == "true" else "Set unchecked", {}), "ui", line)
+	if member == "tooltip_text" and _class_is_any(object_class, PackedStringArray(["Control"])):
+		return _with_pattern(_sentence(object_name, "Set tooltip to {value}",
+			{"value": [shown, "value"]}), "ui", line)
+	return {}
+
+
+## The calls of the five families, or {} to keep the ordinary Object / Verb reading.
+static func _gap_call(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	var receiver: String = str(call.get("target", ""))
+	var line: String = text.strip_edges()
+	var joint: Dictionary = _joint_call(method, arguments, line, context)
+	if not joint.is_empty():
+		return joint
+	var object_name: String = _receiver_object(receiver, context)
+	var object_class: String = object_class_of(object_name, context)
+	var pushed: Dictionary = _physics_push_call(object_name, object_class, method, arguments, line,
+		context)
+	if not pushed.is_empty():
+		return pushed
+	if method == "add_point" and arguments.size() == 1 and _class_is_any(object_class, PATH_CURVE_CLASSES):
+		return _with_pattern(_behaviour_sentence(script_object(context), "Follow a Path",
+			"Add path point {value}", {"value": [expression_text(arguments[0], context), "value"]}),
+			"path", line, "follow_path")
+	var typed: Dictionary = _pattern_call(method, arguments, receiver, line, context)
+	if not typed.is_empty():
+		return typed
+	return _control_call(object_name, object_class, method, arguments, line, context)
+
+
+## V1. The pushes with an offset, and the two spins. The one-argument impulse and force are already
+## the Physics behavior's words further up this file, so claiming them again here would say the same
+## sentence twice with two chances to drift apart.
+static func _physics_push_call(object_name: String, object_class: String, method: String,
+		arguments: PackedStringArray, line: String, context: Dictionary) -> Dictionary:
+	if not PHYSICS_PUSH_TEMPLATES.has(method) or not _class_is_any(object_class, BODY_CLASSES):
+		return {}
+	var forms: Array = PHYSICS_PUSH_TEMPLATES[method]
+	if arguments.size() == 1 and not str(forms[0]).is_empty():
+		return _with_pattern(_behaviour_sentence(object_name, "Physics", str(forms[0]),
+			{"value": [expression_text(arguments[0], context), "value"]}), "physics", line)
+	if arguments.size() == 2 and not str(forms[1]).is_empty():
+		return _with_pattern(_behaviour_sentence(object_name, "Physics", str(forms[1]), {
+			"value": [expression_text(arguments[0], context), "value"],
+			"offset": [expression_text(arguments[1], context), "value"]}), "physics", line)
+	return {}
+
+
+## V1. `add_child(PinJoint2D.new())` is the sheet's Create joint action, named by what the joint does
+## rather than by the node class it is built from.
+static func _joint_call(method: String, arguments: PackedStringArray, line: String,
+		context: Dictionary) -> Dictionary:
+	if method != "add_child" or arguments.size() != 1:
+		return {}
+	var kind: String = joint_kind_words(arguments[0])
+	if kind.is_empty():
+		return {}
+	return _with_pattern(_sentence(script_object(context), "Create {kind} joint",
+		{"kind": [kind, "name"]}), "physics", line)
+
+
+## V1. The joint a `PinJoint2D.new()` builds, in the sheet's own word for it, or "" for anything else.
+static func joint_kind_words(value: String) -> String:
+	var text: String = value.strip_edges()
+	if not text.ends_with(".new()"):
+		return ""
+	var built: String = text.substr(0, text.length() - 6).strip_edges()
+	return translate(str(JOINT_KIND_WORDS[built])) if JOINT_KIND_WORDS.has(built) else ""
+
+
+## V6. `rx.compile("\\d+")` is the row that gives a pattern its pattern, and the sheet says so with
+## the regular expression spelled the way a reader wrote it rather than the way GDScript escapes it.
+static func _pattern_call(method: String, arguments: PackedStringArray, receiver: String,
+		line: String, context: Dictionary) -> Dictionary:
+	if method != "compile" or arguments.size() != 1:
+		return {}
+	var holder: String = receiver.strip_edges()
+	var patterns: Dictionary = context.get("pattern_variables", {})
+	if holder.is_empty() or not patterns.has(holder):
+		return {}
+	var written: Dictionary = _sentence(OBJECT_TEXT, "Set pattern {name} to {value}", {
+		"name": [holder, "name"],
+		"value": [pattern_literal_words(arguments[0]), "value"]})
+	(written["segments"] as Array).append({
+		"text": " %s" % translate("regular expression"), "tone": "muted"})
+	return _with_pattern(written, "text_format", line)
+
+
+## V6. A regular-expression literal as the reader typed it: GDScript needs `"\\d+"` to hold `\d+`,
+## and the doubled backslash is the language's, never part of the pattern. Anything that is not a
+## plain literal keeps whatever it is.
+static func pattern_literal_words(value: String) -> String:
+	var text: String = value.strip_edges()
+	if not _is_string_literal(text):
+		return text
+	return "\"%s\"" % _unquote(text).replace("\\\\", "\\")
+
+
+## V2. The verbs a form's Controls publish: the list steps, the two formatted-text ones, and opening
+## a file chooser.
+static func _control_call(object_name: String, object_class: String, method: String,
+		arguments: PackedStringArray, line: String, context: Dictionary) -> Dictionary:
+	if _class_is_any(object_class, LIST_CLASSES):
+		if LIST_CONTROL_TEMPLATES.has(method) and arguments.size() == 1:
+			return _with_pattern(_behaviour_sentence(object_name, "List",
+				str(LIST_CONTROL_TEMPLATES[method]),
+				{"value": [expression_text(arguments[0], context), "value"]}), "ui", line)
+		if method == "clear" and arguments.is_empty():
+			return _with_pattern(_behaviour_sentence(object_name, "List", "Clear", {}), "ui", line)
+	if method == "append_text" and arguments.size() == 1 and _class_is_any(object_class, RICH_TEXT_CLASSES):
+		return _with_pattern(_sentence(object_name, "Append formatted text {value}",
+			{"value": [expression_text(arguments[0], context), "value"]}), "ui", line)
+	if _class_is_any(object_class, FILE_DIALOG_CLASSES) and arguments.is_empty() \
+			and (method == "popup_centered" or method == "popup" or method == "show"):
+		return _with_pattern(_behaviour_sentence(object_name, "File chooser", "Open", {}), "ui", line)
+	return {}
+
+
+## V6. The text words a VALUE reads in: the named format, the pattern searches and the match itself.
+## Returns the text unchanged when nothing is recognised, which is how most values leave it.
+static func text_pattern_words(text: String, context: Dictionary) -> String:
+	var trimmed: String = text.strip_edges()
+	if trimmed == "RegEx.new()":
+		return translate("a pattern")
+	var out: String = _format_with_names(trimmed)
+	var matches: Dictionary = context.get("match_variables", {})
+	for holder: String in matches:
+		out = out.replace("%s.get_string()" % holder, translate("the match"))
+	var patterns: Dictionary = context.get("pattern_variables", {})
+	if patterns.is_empty():
+		return out
+	var call: Dictionary = call_parts(out)
+	if call.is_empty():
+		return out
+	var pattern_name: String = str(call.get("target", "")).strip_edges()
+	if not patterns.has(pattern_name):
+		return out
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	match str(call.get("method", "")):
+		"search":
+			if arguments.size() == 1:
+				return _fill(translate("first match of {pattern} in {text}"),
+					{"pattern": pattern_name, "text": arguments[0].strip_edges()})
+		"search_all":
+			if arguments.size() == 1:
+				return _fill(translate("all matches of {pattern} in {text}"),
+					{"pattern": pattern_name, "text": arguments[0].strip_edges()})
+		"sub":
+			if arguments.size() >= 2:
+				return _fill(translate("replace matches of {pattern} in {text} with {value}"), {
+					"pattern": pattern_name, "text": arguments[0].strip_edges(),
+					"value": arguments[1].strip_edges()})
+	return out
+
+
+## V6. `"{a} vs {b}".format({"a": p1, "b": p2})` with its names said out loud - the one format
+## spelling the numbered unroll further up this file cannot take apart, because its slots are words.
+## Claimed only when every key the call handed it is a slot the pattern names: a half-filled format
+## would show a reader a value under the wrong name.
+static func _format_with_names(text: String) -> String:
+	const HEAD := ".format("
+	var trimmed: String = text.strip_edges()
+	if not trimmed.ends_with(")") or not trimmed.contains(HEAD):
+		return text
+	var head_at: int = top_level_index(trimmed, HEAD)
+	if head_at <= 0 or closing_paren(trimmed, head_at + HEAD.length() - 1) != trimmed.length() - 1:
+		return text
+	var pattern: String = trimmed.substr(0, head_at).strip_edges()
+	if pattern.length() < 2 or not (pattern.begins_with("\"") and pattern.ends_with("\"")):
+		return text
+	var inner: String = trimmed.substr(head_at + HEAD.length(),
+		trimmed.length() - head_at - HEAD.length() - 1).strip_edges()
+	if not inner.begins_with("{") or not inner.ends_with("}"):
+		return text
+	var named: PackedStringArray = PackedStringArray()
+	var body: String = pattern.substr(1, pattern.length() - 2)
+	for entry: String in _split_arguments(inner.substr(1, inner.length() - 2)):
+		var colon_at: int = top_level_index(entry, ": ")
+		if colon_at <= 0:
+			return text
+		var key: String = entry.substr(0, colon_at).strip_edges()
+		if not _is_string_literal(key):
+			return text
+		var slot: String = _unquote(key)
+		if not body.contains("{%s}" % slot):
+			return text
+		named.append("%s = %s" % [slot, entry.substr(colon_at + 2).strip_edges()])
+	if named.is_empty():
+		return text
+	return "%s %s %s" % [pattern, translate("with"), ", ".join(named)]

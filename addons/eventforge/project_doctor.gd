@@ -82,6 +82,7 @@ static func run() -> Dictionary:
 	check_pattern_smells(sheet_paths, findings)
 	check_unresolved_conflicts(findings)
 	check_shared_sheet_includes(findings)
+	check_blocking_waits(sheet_paths, findings)
 	check_vocabulary_doc(findings)
 	check_pack_reading(findings)
 	check_disabled_pack_usage(sheet_paths, findings)
@@ -2313,6 +2314,46 @@ static func _project_scripts() -> PackedStringArray:
 ## `event_number` is the sheet's own margin number for the row the finding is about (0 when the
 ## finding is about a file rather than a row). It is what lets a finding be quoted the way the
 ## editor, the bookmarks and the Find results quote a row: "event 4".
+## V7. The one wait a beginner reaches for that does not do what its name promises. `OS.delay_msec`
+## and `OS.delay_usec` STOP the whole process while they count - no drawing, no input, no physics -
+## so a script that "waits half a second" this way freezes the game for half a second and then jumps.
+## The sheet's own Wait row is a coroutine and lets the frame finish, which is what everybody means.
+##
+## Decidable from the emitted code and never a false accusation: these two calls have exactly one
+## behaviour, and there is no honest reason for one inside a running game. A warning rather than an
+## error, because a headless tool script may legitimately block; one finding per script, naming the
+## row to reach for instead.
+static func check_blocking_waits(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_scripts():
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if source.is_empty():
+			continue
+		var blocking: PackedStringArray = blocking_wait_calls(source)
+		if blocking.is_empty():
+			continue
+		_add(findings, "warning", "blocking-wait", script_path,
+			"%s here %s the whole game while it counts - nothing draws, nothing takes input and physics does not step, so the game freezes and then jumps. Use the sheet's own Wait action instead (System > Wait), which lets the frame finish. Ignore this only in a tool or headless script that has no frame to hold up." % [
+				_quoted_sample(blocking), "stops" if blocking.size() == 1 else "stop"])
+
+
+## V7. Every blocking delay a source holds, as the call text, once each. Comment lines are set aside
+## the way every other source sweep here sets them aside.
+static func blocking_wait_calls(source: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for line: String in _without_comment_lines(source).split("\n"):
+		for head: String in ["OS.delay_msec(", "OS.delay_usec("]:
+			var at: int = line.find(head)
+			if at < 0:
+				continue
+			var close_at: int = line.find(")", at)
+			if close_at < 0:
+				continue
+			var call_text: String = line.substr(at, close_at - at + 1)
+			if not found.has(call_text):
+				found.append(call_text)
+	return found
+
+
 static func _add(findings: Array[Dictionary], severity: String, check: String, path: String, message: String, event_number: int = 0) -> void:
 	findings.append({"severity": severity, "check": check, "path": path, "message": message, "event": event_number})
 

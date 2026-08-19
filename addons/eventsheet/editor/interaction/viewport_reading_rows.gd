@@ -115,6 +115,11 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# line of its own, a line away from the number it qualifies, so the answer is gathered once here
 	# rather than guessed at per row.
 	extras.merge(around_objects_facts(sheet), true)
+	# ── V1 / V6 lens hook ──────────────────────────────────────────────────────────────────────
+	# The two kinds of variable whose CLASS is only ever stated where they are declared: the physics
+	# material a body's friction and elasticity are written on, and the regular expression a search
+	# is run with. Worked out once here for the same reason the tween chains are.
+	extras.merge(reading_gap_facts(sheet), true)
 	return extras
 
 
@@ -206,6 +211,54 @@ static func _declared_local_type(text: String) -> String:
 	var head: String = body.substr(0, assign_at).strip_edges()
 	var colon_at: int = head.find(":")
 	return "" if colon_at < 0 else head.substr(colon_at + 1).strip_edges()
+
+
+## V1 / V6. What the FILE says about the two kinds of variable batch eleven's readings need a class
+## for, as the fact maps the sentence grammar reads:
+##
+##   physics_materials  {name: true} - the variables a `PhysicsMaterial.new()` filled
+##   pattern_variables  {name: true} - the variables a `RegEx.new()` filled
+##   match_variables    {name: true} - the variables one of those patterns' `search` filled
+##
+## A name filled from something else as well is dropped from every map: the same word may not read
+## two ways on one sheet, exactly as the tween notes refuse a line that means two things.
+static func reading_gap_facts(sheet: EventSheetResource) -> Dictionary:
+	var materials: Dictionary = {}
+	var patterns: Dictionary = {}
+	var matches: Dictionary = {}
+	if sheet == null:
+		return {"physics_materials": materials, "pattern_variables": patterns,
+			"match_variables": matches}
+	for line: String in _systems_fact_lines(sheet):
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var declared: String = _declared_local_name(text)
+		if declared.is_empty():
+			continue
+		var value: String = _declared_local_value(text)
+		if value == "PhysicsMaterial.new()":
+			materials[declared] = true
+		elif value == "RegEx.new()":
+			patterns[declared] = true
+		elif _is_pattern_search(value, patterns):
+			matches[declared] = true
+		else:
+			# A name the file also fills from something else has no one class a reading could name.
+			materials.erase(declared)
+			patterns.erase(declared)
+			matches.erase(declared)
+	return {"physics_materials": materials, "pattern_variables": patterns,
+		"match_variables": matches}
+
+
+## V6. True when a value is `<a pattern this file declared>.search(...)` - the one call whose result
+## is the match the reading calls "the match".
+static func _is_pattern_search(value: String, patterns: Dictionary) -> bool:
+	var call: Dictionary = EventSheetSentence.call_parts(value.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "search":
+		return false
+	return patterns.has(str(call.get("target", "")).strip_edges())
 
 
 ## Batch 8. Re-state every pattern this sheet writes in the registry, on the row that OWNS it - the
