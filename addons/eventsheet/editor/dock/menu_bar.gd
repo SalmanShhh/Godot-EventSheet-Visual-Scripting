@@ -609,6 +609,21 @@ func build(root: Node) -> void:
 			_dock.delete_saved_view(names[id - 500])
 		elif id >= 100 and id - 100 < names.size():
 			_dock.apply_saved_view(names[id - 100]))
+	# ── V14: Show Events in the Scene (appended block - keep together) ─────────────────────────
+	# The events overlay's switch. It marks the SCENE, not the sheet, which is why it is one item
+	# rather than a lens - and it starts off. Id 9803 is clear of every block above.
+	view_popup.add_check_item("Show Events in the Scene", 9803)
+	view_popup.set_item_checked(view_popup.get_item_index(9803), EventSheetSceneEvents.is_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(9803),
+		"Mark every node whose script is a sheet with a small ⌗ and its event count - in the Scene dock, and beside the node in the 2D editor. Hover names its triggers. Nodes with no events are unmarked, and this is off by default.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id != 9803:
+			return
+		var wanted: bool = not EventSheetSceneEvents.is_enabled()
+		EventSheetSceneEvents.set_enabled(wanted)
+		view_popup.set_item_checked(view_popup.get_item_index(9803), wanted)
+		_dock._set_status(EventSheetL10n.translate("Events in the scene: on") if wanted
+			else EventSheetL10n.translate("Events in the scene: off")))
 
 
 ## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes

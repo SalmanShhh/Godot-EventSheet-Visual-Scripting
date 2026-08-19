@@ -26,6 +26,7 @@ const DRAWING_CANVAS_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawin
 const DRAWING_PREFAB_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_gizmo.gd"
 const DRAWING_PREFAB_3D_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd"
 const BEHAVIOR_GIZMOS_PATH: String = "res://addons/eventsheet/editor/behavior_gizmos.gd"
+const SCENE_EVENTS_OVERLAY_PATH: String = "res://addons/eventsheet/editor/scene_events_overlay.gd"
 const EXPORT_TOOLS_PLUGIN_PATH: String = "res://addons/eventforge/editor/export_tools_plugin.gd"
 const IMPORT_TOOLS_PLUGIN_PATH: String = "res://addons/eventforge/editor/import_tools_plugin.gd"
 const DOC_DOCK_PATH: String = "res://addons/eventsheet/editor/docs/doc_dock.gd"
@@ -54,6 +55,8 @@ var _drawing_prefab_gizmo: RefCounted = null
 var _drawing_prefab_3d_gizmo: RefCounted = null
 # Selection-driven behavior gizmos: a selected node's behaviors draw their editor_gizmo_draw overlays (loaded by path).
 var _behavior_gizmos: RefCounted = null
+## V14 - the events overlay (Scene dock + 2D editor badges). Inert until the setting turns it on.
+var _scene_events_overlay: RefCounted = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
 var _new_sheet_dialog: RefCounted = null
@@ -316,6 +319,11 @@ func _enter_tree() -> void:
 	# Selection-driven (never _handles), transient owner-less canvas - can't hijack the workspace.
 	_behavior_gizmos = load(BEHAVIOR_GIZMOS_PATH).new()
 	_behavior_gizmos.call("init", get_editor_interface())
+	# V14: the events overlay - a node whose script is a sheet wears a ⌗ and its event count in the
+	# Scene dock and beside it in the 2D editor, with its triggers on hover. Off until the setting
+	# says otherwise, so the scene editor stays exactly as the person editing the scene left it.
+	_scene_events_overlay = load(SCENE_EVENTS_OVERLAY_PATH).new()
+	_scene_events_overlay.call("init", get_editor_interface())
 	# Documentation, docked: the guides and the "what does this do?" reference beside the sheet, in a
 	# dock that persists in the editor layout and can be floated onto a second monitor. Registered
 	# here because add_dock takes an instance, and deliberately EMPTY until the reader first opens it -
@@ -408,6 +416,9 @@ func _exit_tree() -> void:
 	if _behavior_gizmos != null:
 		_behavior_gizmos.call("teardown")
 		_behavior_gizmos = null
+	if _scene_events_overlay != null:
+		_scene_events_overlay.call("teardown")
+		_scene_events_overlay = null
 	if _drawing_prefab_gizmo != null:
 		_drawing_prefab_gizmo.call("teardown")
 		_drawing_prefab_gizmo = null
