@@ -53,6 +53,59 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 	}
 
 
+## The patterns a BODY writes, given the whole file's facts, as an array of
+## {pattern, evidence, words, adoptable, ace_ids} ready to hand to the registry. `body` is the lines
+## of one owning unit - a trigger event, a tick event, a function - and `facts` is what `facts()`
+## answered for the whole file, because a countdown counted here may be asked about anywhere.
+##
+## The evidence is the exact source lines, never a paraphrase: the chip that shows it is showing the
+## reader why the row says what it says, and a paraphrase there would be a second reading to distrust.
+static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
+	var found: Array = []
+	var countdowns: Dictionary = file_facts.get("countdown_variables", {})
+	var pools: Dictionary = file_facts.get("pool_variables", {})
+	var countdown_evidence: PackedStringArray = PackedStringArray()
+	var countdown_names: PackedStringArray = PackedStringArray()
+	var pool_evidence: PackedStringArray = PackedStringArray()
+	var pool_names: PackedStringArray = PackedStringArray()
+	for line: String in body:
+		var text: String = line.strip_edges()
+		if text.is_empty():
+			continue
+		var step: Dictionary = countdown_step(text)
+		var counted: String = str(step.get("name", ""))
+		if not counted.is_empty() and countdowns.has(counted):
+			countdown_evidence.append(text)
+			if not countdown_names.has(counted):
+				countdown_names.append(counted)
+		var taken: Dictionary = pool_take_parts(text)
+		if not taken.is_empty():
+			pool_evidence.append(text)
+			var pool_name: String = str(taken.get("pool", ""))
+			if not pool_names.has(pool_name):
+				pool_names.append(pool_name)
+			continue
+		var returned: Dictionary = pool_return_step(text, pools)
+		if str(returned.get("kind", "")) == "return":
+			pool_evidence.append(text)
+			var back_to: String = str(returned.get("pool", ""))
+			if not pool_names.has(back_to):
+				pool_names.append(back_to)
+	if not countdown_evidence.is_empty():
+		found.append({
+			"pattern": "countdown", "evidence": countdown_evidence,
+			"words": "counts %s down and asks whether it has run out" % ", ".join(countdown_names),
+			"adoptable": "", "ace_ids": PackedStringArray(["Core/StartCooldown", "Core/CooldownReady"])
+		})
+	if not pool_evidence.is_empty():
+		found.append({
+			"pattern": "object_pool", "evidence": pool_evidence,
+			"words": "reuses objects from %s instead of making a new one" % ", ".join(pool_names),
+			"adoptable": "object_pool", "ace_ids": PackedStringArray()
+		})
+	return found
+
+
 ## S4. The numbers this file uses as countdowns: counted DOWN by a per-frame delta somewhere and
 ## compared against zero somewhere else. Both halves are required, so an ordinary subtraction stays a
 ## subtraction and a number merely compared to zero stays a comparison.

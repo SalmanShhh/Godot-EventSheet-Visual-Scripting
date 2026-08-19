@@ -88,6 +88,45 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	return extras
 
 
+## Batch 8. Re-state every pattern this sheet writes in the registry, on the row that OWNS it - the
+## trigger, tick event or function whose body holds the lines. Called once per rebuild, right after
+## the registry is cleared, so the chips, the hover evidence, Adopt behavior and the Doctor all read
+## one set of claims rather than each re-deriving the patterns for itself.
+##
+## A top-level event owns its own body and everything under it; a function owns its body and is
+## addressed as `function:<name>`, because a function has no uid of its own to name it by.
+static func claim_patterns(sheet: EventSheetResource) -> void:
+	if sheet == null:
+		return
+	var file_facts: Dictionary = EventSheetPatternReadings.facts(ordered_code_lines(sheet))
+	for event_entry: Variant in sheet.events:
+		if not (event_entry is EventRow):
+			continue
+		var event_row: EventRow = event_entry
+		var body: PackedStringArray = PackedStringArray()
+		_append_ordered_lines(event_row, body, 0)
+		_claim_body(sheet, event_row.event_uid, event_row.event_uid, body, file_facts)
+	for function_entry: Variant in sheet.functions:
+		if not (function_entry is EventFunction):
+			continue
+		var event_function: EventFunction = function_entry
+		var function_body: PackedStringArray = PackedStringArray()
+		for owned: Variant in event_function.events:
+			_append_ordered_lines(owned, function_body, 0)
+		var function_uid: String = "function:%s" % event_function.function_name
+		_claim_body(sheet, function_uid, function_uid, function_body, file_facts)
+
+
+## One owning row's claims, handed to the registry as they come back.
+static func _claim_body(sheet: EventSheetResource, row_uid: String, event_uid: String,
+		body: PackedStringArray, file_facts: Dictionary) -> void:
+	for entry: Variant in EventSheetPatternReadings.claims_in(body, file_facts):
+		var claim: Dictionary = entry
+		EventSheetPatternFacts.claim(sheet, str(claim.get("pattern", "")), row_uid, event_uid,
+			claim.get("evidence", PackedStringArray()), str(claim.get("words", "")),
+			str(claim.get("adoptable", "")), claim.get("ace_ids", PackedStringArray()))
+
+
 ## R9. {timer tag: true when it fires once} from the `$Timer.one_shot = true` lines the file holds.
 ## Only a plain `$Node` / `%Node` receiver and a literal `true` / `false` count: a mode assembled at
 ## runtime is not a fact the reading may claim. Empty whenever the file says nothing.

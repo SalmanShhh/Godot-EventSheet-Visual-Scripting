@@ -10195,6 +10195,12 @@ func sentence_context() -> Dictionary:
 		# What only something able to ASK can answer: the script's own object name, its engine
 		# properties, and each signal's parameter names. Cached with the rest of the context.
 		context.merge(EventSheetViewportReadingRows.sentence_context_extras(sheet as EventSheetResource), true)
+		# ── Batch 8 ───────────────────────────────────────────────────────────────────────────
+		# The pattern registry is re-stated from scratch here, at the one point a rebuild works out
+		# what this sheet says: cleared first so a pattern the user just deleted cannot linger, then
+		# claimed on the rows that own them. Everything that talks ABOUT patterns reads these claims.
+		EventSheetPatternFacts.clear(sheet as EventSheetResource)
+		EventSheetViewportReadingRows.claim_patterns(sheet as EventSheetResource)
 	_sentence_context_sheet = sheet
 	_sentence_context_cache = context.duplicate()
 	context["verb_kind"] = _current_verb_kind()

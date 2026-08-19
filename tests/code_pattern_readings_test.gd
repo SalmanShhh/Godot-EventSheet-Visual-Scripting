@@ -18,6 +18,42 @@ static func run() -> bool:
 	ok = _countdown_facts() and ok
 	ok = _countdown_sentences() and ok
 	ok = _pool_facts() and ok
+	ok = _claims() and ok
+	return ok
+
+
+## Every pattern reading claims its pattern on the row that owns it, with the source lines as
+## evidence and the shipped behavior when one could replace the hand-written shape.
+static func _claims() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var tick: EventRow = EventRow.new()
+	tick.event_uid = "tick-1"
+	var counted: RawCodeRow = RawCodeRow.new()
+	counted.code = "cooldown -= delta\nif cooldown <= 0:\n\tshoot()"
+	tick.actions.append(counted)
+	var spawn: EventRow = EventRow.new()
+	spawn.event_uid = "spawn-1"
+	var pooled: RawCodeRow = RawCodeRow.new()
+	pooled.code = "var b = pool.pop_back() if not pool.is_empty() else BULLET.instantiate()"
+	spawn.actions.append(pooled)
+	sheet.events.append(tick)
+	sheet.events.append(spawn)
+	EventSheetPatternFacts.clear(sheet)
+	EventSheetViewportReadingRows.claim_patterns(sheet)
+	var tick_claims: Array = EventSheetPatternFacts.claims_for_row(sheet, "tick-1")
+	ok = _check("the tick event owns one claim", tick_claims.size(), 1) and ok
+	if tick_claims.size() == 1:
+		var claim: Dictionary = tick_claims[0]
+		ok = _check("it is the countdown", claim.get("pattern", ""), "countdown") and ok
+		ok = _check("its evidence is the source line",
+			", ".join(claim.get("evidence", PackedStringArray())), "cooldown -= delta") and ok
+	var spawn_claims: Array = EventSheetPatternFacts.claims_for_row(sheet, "spawn-1")
+	ok = _check("the spawning event owns the pool claim", spawn_claims.size(), 1) and ok
+	if spawn_claims.size() == 1:
+		ok = _check("the shipped pool behavior is offered",
+			(spawn_claims[0] as Dictionary).get("adoptable", ""), "object_pool") and ok
+	EventSheetPatternFacts.clear(sheet)
 	return ok
 
 
