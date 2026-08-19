@@ -3,6 +3,17 @@ class_name ViewportHitTestHelper
 extends RefCounted
 
 
+## The rectangle a chip can be HIT in, which is never smaller than a target has to be even when
+## the chip drawn inside it is. A one-glyph chip is eight pixels wide on screen; a reader who
+## cannot place a pointer to the pixel still has to be able to press it. The drawing is untouched -
+## only the catchment grows, and it grows around the chip's own centre so nothing shifts.
+static func hit_rect(rect: Rect2) -> Rect2:
+	var width: float = maxf(rect.size.x, EventSheetAccessibility.MIN_CHIP_HIT_WIDTH)
+	var height: float = maxf(rect.size.y, EventSheetAccessibility.MIN_CHIP_HIT_HEIGHT)
+	return Rect2(rect.position - Vector2(width - rect.size.x, height - rect.size.y) * 0.5,
+		Vector2(width, height))
+
+
 static func hit_test_row(
 	position: Vector2,
 	row_index: int,
@@ -18,32 +29,40 @@ static func hit_test_row(
 	if fold_rect.size != Vector2.ZERO and fold_rect.has_point(position):
 		result["fold"] = true
 		return result
-	for span_index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[span_index]
-		if span == null or not span.rect.has_point(position):
-			continue
-		if span.hoverable:
-			result["span_index"] = span_index
-			result["lane"] = str(resolve_span_lane.call(span))
-			result["span_metadata"] = span.metadata if span.metadata is Dictionary else {}
-			return result
-		if span.metadata is Dictionary and (span.metadata as Dictionary).has("condition_index"):
-			var condition_span_index: int = int(
-				find_condition_span_index.call(
-					row_data,
-					int((span.metadata as Dictionary).get("condition_index", -1))
-				)
-			)
-			if condition_span_index >= 0:
-				var condition_span: SemanticSpan = row_data.spans[condition_span_index]
-				result["span_index"] = condition_span_index
-				result["lane"] = str(resolve_span_lane.call(condition_span))
-				result["span_metadata"] = (
-					condition_span.metadata
-					if condition_span.metadata is Dictionary
-					else {}
-				)
+	# Two passes, and the order matters: every chip is offered its OWN rectangle first, so a
+	# neighbour's enlarged catchment can never steal a press that landed squarely on a chip. Only
+	# once nothing was hit exactly does the second pass let a chip smaller than a target reach out
+	# into the dead space beside it.
+	for generous: bool in [false, true]:
+		for span_index in range(row_data.spans.size()):
+			var span: SemanticSpan = row_data.spans[span_index]
+			if span == null:
+				continue
+			var catchment: Rect2 = hit_rect(span.rect) if generous else span.rect
+			if not catchment.has_point(position):
+				continue
+			if span.hoverable:
+				result["span_index"] = span_index
+				result["lane"] = str(resolve_span_lane.call(span))
+				result["span_metadata"] = span.metadata if span.metadata is Dictionary else {}
 				return result
+			if span.metadata is Dictionary and (span.metadata as Dictionary).has("condition_index"):
+				var condition_span_index: int = int(
+					find_condition_span_index.call(
+						row_data,
+						int((span.metadata as Dictionary).get("condition_index", -1))
+					)
+				)
+				if condition_span_index >= 0:
+					var condition_span: SemanticSpan = row_data.spans[condition_span_index]
+					result["span_index"] = condition_span_index
+					result["lane"] = str(resolve_span_lane.call(condition_span))
+					result["span_metadata"] = (
+						condition_span.metadata
+						if condition_span.metadata is Dictionary
+						else {}
+					)
+					return result
 	var divider_x: float = float(layout.get("lane_divider_x", -1.0))
 	var lane_content_left: float = float(layout.get("gutter_rect", Rect2()).end.x)
 	if divider_x > 0.0:

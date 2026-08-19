@@ -55,7 +55,8 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 - [Coming from GDScript](GUIDE-COMING-FROM-GDSCRIPT.md) - you already know Godot: the two dozen words this editor reads your code in (`queue_free` is Destroy, `_process` is Every tick, `await` is Wait for, `signal` is trigger), why a row is one statement, and how to see the GDScript behind any row. The full generated list is Manual ▸ Dictionary: GDScript to events.
 - [Sharing Events Between Scripts](GUIDE-SHARING-EVENTS-BETWEEN-SCRIPTS.md) - shared event sheets: write common events once and include them in many scripts, as a base class or as a helper.
 - [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md) - diffing, merging, committing sheets, and resolving a merge conflict as events.
-- [Theme and Editability](GUIDE-THEMING.md) - restyle the editor, or lock a sheet down for a team.
+- [Theme and Editability](GUIDE-THEMING.md) - restyle the editor, lock a sheet down for a team, and the accessibility settings: reduced motion, dyslexia-friendly text, a reading font, and rows read aloud.
+- [Asking for Events in Plain Words](GUIDE-ASKING-FOR-EVENTS-IN-PLAIN-WORDS.md) - the optional Ask box: what is sent (exactly), what can come back, why the answer is rows rather than code, and how to turn it on or leave it off.
 - [Removing Godot EventSheets](GUIDE-UNINSTALL.md) - a clean, guided teardown that leaves your game running.
 
 ## Coming from Construct 3

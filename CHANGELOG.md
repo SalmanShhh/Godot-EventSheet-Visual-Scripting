@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+### Added - Ask, a tidiness sweep, and the reading said aloud
+
+- **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means
+  nothing leaves the machine: `eventsheets/ask/mode` starts at `off`, and an "on" with no endpoint
+  is still off. Turned on, the reader types a sentence and presses Ask; what goes out is the
+  sentence, the sheet's object census and the vocabulary this sheet can write, and nothing else.
+  The answer is asked for as a JSON list of rows in one fixed shape - `{object, ace_id, params}` -
+  never code, and every row is checked against the registry before it is shown: an `ace_id` this
+  project does not have is dropped and named, and so is a parameter the entry does not declare.
+  The proposal is a preview; it becomes rows only on **Add these events** or **Try in a scratch
+  sheet**. The endpoint, model and key are yours to choose - any HTTP endpoint that speaks the
+  common chat format, hosted or running on this machine. The HTTP call is an injected seam, so the
+  whole pipeline is pinned headless against a fake endpoint with no network at all.
+- **The Doctor's tidiness sweep.** Seven advisory notes about vocabulary that stopped earning its
+  line: a local variable declared and never read, a function nothing calls (published functions,
+  triggers and lifecycle hooks excepted), a declared trigger nothing fires, a required behavior no
+  row uses, an event switched off for a long time (how long, from git when git can say, otherwise
+  from the file's date and saying which), two events that read identically, and a literal typed
+  three times or more. The last one offers an **⚡ Extract 400 to a variable** quick-fix chip
+  through the same seam every other one-step Doctor answer uses: one click names the number and
+  every row that spelled it reads the name instead, undoably.
+- **The reading, for readers who do not read it the same way.** Every row's sentence is now the
+  canvas's accessible name, updated as the selection moves, and **View ▸ Speak This Row** says it
+  aloud through the platform's own voice. **View ▸ Object Properties** is the keyboard twin of
+  clicking an object's name in a cell, which a keyboard has no way to point at. **View ▸ Reduced Motion** stops every pulse and fade in
+  the editor (the operating system's own preference is honoured too). The Theme Editor grew a
+  **Reading Comfort** card: dyslexia-friendly text opens the letters and word spaces up, and a
+  reading-font field points the sheet at any `.ttf`/`.otf` already on the machine - no typeface is
+  bundled, so no font licence lands in anyone's project. A chip is never caught in a rectangle
+  smaller than a target, and the High Contrast preset now has a value for **every** theme token,
+  with a test that says so the next time one is added.
+
 ### Added - a place to live in: the words are a setting, the packs are a list, the fixes are one click
 
 - **Settings ▸ Words: every word the sheet lets you choose, on one page.** A row per choosable

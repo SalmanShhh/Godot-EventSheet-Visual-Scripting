@@ -139,6 +139,41 @@ display scale - a compact sheet on a HiDPI monitor stays crisp.
 
 <img src="images/compact-rows.png" alt="The same Health pack rows twice: Comfortable on the left, Compact on the right - the compact side fits more rows in the same height while every label stays the same text size." width="640">
 
+## Reading it another way (accessibility)
+
+The whole premise of an event sheet is that it reads. These settings keep that promise for readers
+the drawn canvas alone does not reach. All four are personal - editor metadata, per user and per
+project, never committed - so a way of reading follows you rather than arriving in a teammate's
+checkout.
+
+- **Every row's sentence is its accessible name.** The canvas hands the platform the selected row's
+  own sentence, updated as the selection moves, so a screen reader says exactly what the row says.
+  It is the same text the plain-text listing produces, assembled from the very spans the row was
+  drawn with, so eyes and ears are never given two different grammars for one row.
+- **View ▸ Speak This Row** reads the selected row aloud through the platform's own voice. On a
+  machine with no speech installed it says so instead of appearing to do nothing.
+- **View ▸ Object Properties** opens the object popup for the object the selected row names. That
+  popup is otherwise reached by clicking an object's name inside a cell, which a keyboard has no
+  way to point at - every hover-only or click-only piece of information wants a twin like this.
+  (The other one already existed: **F1** explains the selected row.)
+- **View ▸ Reduced Motion** stops every pulse and every fade in the editor. Nothing is lost -
+  a firing event still marks itself, a pointed-at button is still pointed at - it just arrives at
+  once instead of over a second. Your operating system's own "reduce animation" preference is
+  honoured too, so a reader who has already asked once never has to ask again here.
+- **Theme Editor ▸ Reading Comfort** holds two more. **Dyslexia-friendly text** opens the letters
+  and the word spaces up, which works with any font. **Reading font** points the sheet at any
+  `.ttf` or `.otf` already on your machine - OpenDyslexic and Atkinson Hyperlegible are the two
+  usually meant. **No typeface is bundled with the plugin**: shipping one would put a font licence
+  into every project for a preference most readers never turn on, so left blank the sheet keeps the
+  editor's own font and simply spaces it out.
+
+Two more things hold without a setting. A chip is never *caught* in a rectangle smaller than a
+target: a one-glyph chip is drawn the size it is drawn, but the area you can press it in is at
+least 24x18, claimed only from dead space (a press that lands squarely on any chip always belongs
+to that chip). And the bundled **High Contrast** preset is required by the suite to have a value
+for every theme token - a token added tomorrow that quietly kept the plugin's own dark default is
+exactly wrong on the one theme a reader may be depending on to see the sheet at all.
+
 ## Bringing an older preset forward
 
 A preset is a `.tres` written against the tokens that existed the day it was saved, so a

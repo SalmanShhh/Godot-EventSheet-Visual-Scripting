@@ -224,6 +224,7 @@ var _includes: EventSheetIncludeManager = EventSheetIncludeManager.new()  # Shee
 var _find_refs: EventSheetFindReferencesPanel = EventSheetFindReferencesPanel.new()  # Edit ▸ Find References… window (dock/find_references_panel.gd)
 var _pick: EventSheetPickFilterDialog = EventSheetPickFilterDialog.new()  # "For Each" pick-filter dialog (dock/pick_filter_dialog.gd)
 var _ai: EventSheetAIGenerateWindow = EventSheetAIGenerateWindow.new()  # Edit ▸ Generate from Description… window (dock/ai_generate_window.gd)
+var _ask: EventSheetAskWindow = EventSheetAskWindow.new()  # View ▸ Ask… proposed-events window (dock/ask_window.gd)
 var _sheet_type: EventSheetSheetTypeDialog = EventSheetSheetTypeDialog.new()  # Sheet ▸ Sheet Type… dialog shell (dock/sheet_type_dialog.gd)
 var _session: EventSheetSessionStore = EventSheetSessionStore.new()  # open-tabs restore across restarts (event_sheet_session_store.gd)
 var _shortcuts: EventSheetShortcutsDialog = EventSheetShortcutsDialog.new()  # Tools ▸ Keyboard Shortcuts editor (event_sheet_shortcuts_dialog.gd)
@@ -588,7 +589,11 @@ func pulse_control(control_label: String) -> bool:
 		if button == null or button.text.strip_edges() != wanted:
 			continue
 		# Three slow breaths of the editor's accent over the button, then back to itself. A Tween
-		# rather than a Timer so it finishes cleanly if the reader closes the dock mid-pulse.
+		# rather than a Timer so it finishes cleanly if the reader closes the dock mid-pulse. Under
+		# Reduced Motion the button is simply left alone: the caller still gets its true, and the
+		# thing being pointed at is still where it was.
+		if EventSheetAccessibility.reduced_motion():
+			return true
 		var tween: Tween = create_tween()
 		tween.set_loops(3)
 		tween.tween_property(button, "modulate", EventSheetPopupUI.accent_color().lightened(0.3), 0.45)
@@ -1361,6 +1366,45 @@ func _find_references_requested() -> void:
 ## Generate Events from a Description (AI) → dock/ai_generate_window.gd ──
 func _open_ai_generate() -> void:  # Edit menu
 	_ai.open()
+
+
+## Ask (View menu, id 42) → dock/ask_window.gd. Off until the project turns it on; the window
+## itself says so before a word is typed.
+func _open_ask() -> void:
+	_ask.open()
+
+
+## Reduced Motion (View menu, id 43). Nothing about the sheet changes except that it stops moving:
+## pulses land at full strength, fades land at their end value, and every row still says what it said.
+func _toggle_reduced_motion(view_popup: PopupMenu) -> void:
+	var enabled: bool = not EventSheetAccessibility.reduced_motion()
+	EventSheetAccessibility.set_reduced_motion(enabled)
+	if view_popup != null:
+		view_popup.set_item_checked(view_popup.get_item_index(43), enabled)
+	_set_status("Reduced motion is %s." % ("on" if enabled else "off"))
+
+
+## Speak This Row (View menu, id 44). The keyboard twin of reading the canvas: the selected row's
+## own sentence, said aloud through the platform's voice. Says so plainly when the machine has none.
+func _speak_selected_row() -> void:
+	var sentence: String = _viewport.accessible_name_for_selected_row() if _viewport != null else ""
+	if sentence.is_empty():
+		_set_status("Select a row first.", true)
+		return
+	if not EventSheetAccessibility.speak(sentence):
+		_set_status("This machine has no voice to read with: %s" % sentence, true)
+		return
+	_set_status(sentence)
+
+
+## Object Properties (View menu, id 45). Clicking a row's object name opens its popup; a keyboard
+## has no pointer, so the same popup opens from the selected row here.
+func _open_properties_for_selected_row() -> void:
+	var object_label: String = _viewport.object_label_for_selected_row() if _viewport != null else ""
+	if object_label.is_empty():
+		_set_status("Select a row that names an object first.", true)
+		return
+	open_object_properties(object_label)
 
 
 ## Manage Includes (browse/add/remove/reorder included library sheets) - see EventSheetIncludeManager.
@@ -5329,7 +5373,7 @@ func _set_status(text: String, is_error: bool = false) -> void:
 	if _status_fade_tween != null:
 		_status_fade_tween.kill()
 		_status_fade_tween = null
-	if not is_error and is_inside_tree():
+	if not is_error and is_inside_tree() and not EventSheetAccessibility.reduced_motion():
 		_status_fade_tween = create_tween()
 		_status_fade_tween.tween_interval(6.0)
 		_status_fade_tween.tween_property(_status_label, "modulate:a", 0.45, 1.5)

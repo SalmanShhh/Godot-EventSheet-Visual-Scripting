@@ -578,6 +578,7 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._find_refs.init(_dock)
 	_dock._pick.init(_dock)
 	_dock._ai.init(_dock)
+	_dock._ask.init(_dock)
 	_dock._sheet_type.init(_dock)
 	_dock._session.init(_dock)
 	_dock._shortcuts.init(_dock)

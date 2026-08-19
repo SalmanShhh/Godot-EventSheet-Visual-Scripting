@@ -2504,6 +2504,10 @@ func set_fired_events(uids: PackedStringArray) -> void:
 ## stopped one fades out over FIRING_FADE_SECONDS.
 func _decay_firing(delta: float) -> void:
 	var faded: Array = []
+	# Reduced Motion: a stopped event stops glowing on the same frame instead of over a second.
+	# The mark still appears while the event fires - it just never animates.
+	if EventSheetAccessibility.reduced_motion():
+		delta = FIRING_FADE_SECONDS
 	for uid: Variant in _fired_intensity:
 		var next_intensity: float = float(_fired_intensity[uid]) - delta / FIRING_FADE_SECONDS
 		if next_intensity <= 0.0:
@@ -2878,6 +2882,10 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
 	# so ensure its spans before selection consumers read them.
 	_ensure_event_spans(selected_row)
 	_selection_helper.sync_row_selection_flags(_flat_rows, _selected_row_uids)
+	# The canvas is one Control, so the only thing a screen reader can be told about it is what is
+	# focused right now. The row's own sentence is that thing: whatever the reader would have read
+	# on screen is what the platform is handed, updated as the selection moves.
+	accessibility_name = accessible_name_for_row(_selected_row_index)
 	selection_changed.emit(selected_row)
 	queue_redraw()
 
@@ -4204,7 +4212,11 @@ func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 
 func _get_font() -> Font:
 	var font: Font = get_theme_default_font()
-	return font if font != null else ThemeDB.fallback_font
+	if font == null:
+		font = ThemeDB.fallback_font
+	# The reader's own way of reading, applied last: a font they pointed the sheet at, and the
+	# open letter spacing of dyslexia-friendly text. Costs nothing when neither was asked for.
+	return EventSheetAccessibility.reading_font(font)
 
 
 func _get_font_size() -> int:
@@ -4501,3 +4513,43 @@ func _param_accepts_node_ref(ace: Variant, param_id: String) -> bool:
 		if parameter is ACEParam and (parameter as ACEParam).id == param_id:
 			return _node_ref_fits_param_type((parameter as ACEParam).type_name, (parameter as ACEParam).hint)
 	return true
+
+
+## The sentence a row reads as, on one line - what the platform is told this canvas is showing,
+## and what "Speak This Row" says aloud. The words are the CANVAS's words: the listing assembles
+## them from the very spans the row was drawn with, so a screen reader and a pair of eyes are
+## never given two different grammars for the same row.
+func accessible_name_for_row(row_index: int) -> String:
+	var row_data: EventRowData = _row_at(row_index)
+	if row_data == null:
+		return ""
+	_ensure_event_spans(row_data)
+	var parts: PackedStringArray = PackedStringArray()
+	for line: String in EventSheetTextListing.lines_for_rows([row_data]):
+		var trimmed: String = line.strip_edges()
+		if not trimmed.is_empty():
+			parts.append(trimmed)
+	return " ".join(parts)
+
+
+## The selected row's sentence, so a caller can say it aloud without reaching for row indices.
+func accessible_name_for_selected_row() -> String:
+	return accessible_name_for_row(_selected_row_index)
+
+
+## The object the selected row names, or "" when it names none. The object label is drawn inside a
+## cell rather than as its own span, so a pointer finds it by hit-testing its stamped bounds - and a
+## keyboard has no pointer. This reads the same stamped metadata, so the object popup a click opens
+## is reachable without one.
+func object_label_for_selected_row() -> String:
+	var row_data: EventRowData = _row_at(_selected_row_index)
+	if row_data == null:
+		return ""
+	_ensure_event_spans(row_data)
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var label: String = str((span.metadata as Dictionary).get("object_label", ""))
+		if not label.is_empty():
+			return label
+	return ""
