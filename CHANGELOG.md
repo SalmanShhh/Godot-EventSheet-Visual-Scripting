@@ -64,6 +64,18 @@
   owns the gap and the box, measured from the same two numbers the renderer draws them with, so the
   swatch sits beside its colour's word (`tint = ▪ white  #ffffff`) and can sit anywhere in a row.
 
+### Added - a Timer node reads as the sheet's Timer behavior
+
+- **`$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)`.** The Timer behavior's own
+  words, with the node's name as the tag and the script's own object as the object - the timer
+  belongs to it, exactly as a behavior does. `stop()` reads `Stop timer "Timer"`,
+  `not $Timer.is_stopped()` reads `Is timer "Timer" running` (and the bare spelling says stopped),
+  and `$Timer.time_left` reads `Timer.CurrentTime("Timer")`. The `(once)` / `(regular)` mode comes
+  from the file's own `one_shot` line, read once per rebuild, whether that line is still raw text or
+  already a row. A timer held in a variable cannot prove a tag, so it keeps the call reading it had
+  rather than borrowing one. Display only: the file keeps its lines and the byte round-trip is
+  untouched.
+
 ### Added - a property's setter reads as a trigger and its getter as an expression
 
 - **A `set(v):` block reads as an `On <name> set` trigger, a `get:` block as an expression.** A

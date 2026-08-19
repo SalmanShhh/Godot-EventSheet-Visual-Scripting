@@ -2273,3 +2273,12 @@ Add setter,セッターを追加
 Add getter,ゲッターを追加
 This variable already has one.,この変数にはすでにあります。
 Only a sheet variable can carry a setter or a getter.,シート変数のみセッターやゲッターを持てます。
+Start timer {timer},タイマー {timer} を開始
+Start timer {timer} {mode},タイマー {timer} を開始 {mode}
+Start timer {timer} for {seconds} seconds,タイマー {timer} を {seconds} 秒で開始
+Start timer {timer} for {seconds} seconds {mode},タイマー {timer} を {seconds} 秒で開始 {mode}
+Stop timer {timer},タイマー {timer} を停止
+Is timer {timer} running,タイマー {timer} が動作中
+Is timer {timer} stopped,タイマー {timer} が停止中
+(once),(1回)
+(regular),(繰り返し)

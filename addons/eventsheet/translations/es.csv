@@ -2273,3 +2273,12 @@ Add setter,Anadir asignador
 Add getter,Anadir lector
 This variable already has one.,Esta variable ya tiene uno.
 Only a sheet variable can carry a setter or a getter.,Solo una variable de hoja puede llevar un asignador o un lector.
+Start timer {timer},Iniciar temporizador {timer}
+Start timer {timer} {mode},Iniciar temporizador {timer} {mode}
+Start timer {timer} for {seconds} seconds,Iniciar temporizador {timer} durante {seconds} segundos
+Start timer {timer} for {seconds} seconds {mode},Iniciar temporizador {timer} durante {seconds} segundos {mode}
+Stop timer {timer},Detener temporizador {timer}
+Is timer {timer} running,El temporizador {timer} esta activo
+Is timer {timer} stopped,El temporizador {timer} esta detenido
+(once),(una vez)
+(regular),(periodico)

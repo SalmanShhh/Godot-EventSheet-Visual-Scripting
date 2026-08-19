@@ -2273,3 +2273,12 @@ Add setter,添加 setter
 Add getter,添加 getter
 This variable already has one.,该变量已经有一个了。
 Only a sheet variable can carry a setter or a getter.,只有工作表变量才能带 setter 或 getter。
+Start timer {timer},启动计时器 {timer}
+Start timer {timer} {mode},启动计时器 {timer} {mode}
+Start timer {timer} for {seconds} seconds,启动计时器 {timer} {seconds} 秒
+Start timer {timer} for {seconds} seconds {mode},启动计时器 {timer} {seconds} 秒 {mode}
+Stop timer {timer},停止计时器 {timer}
+Is timer {timer} running,计时器 {timer} 正在运行
+Is timer {timer} stopped,计时器 {timer} 已停止
+(once),(一次)
+(regular),(重复)

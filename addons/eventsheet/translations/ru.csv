@@ -2273,3 +2273,12 @@ Add setter,Добавить сеттер
 Add getter,Добавить геттер
 This variable already has one.,У этой переменной уже есть такой.
 Only a sheet variable can carry a setter or a getter.,Только переменная листа может иметь сеттер или геттер.
+Start timer {timer},Запустить таймер {timer}
+Start timer {timer} {mode},Запустить таймер {timer} {mode}
+Start timer {timer} for {seconds} seconds,Запустить таймер {timer} на {seconds} секунд
+Start timer {timer} for {seconds} seconds {mode},Запустить таймер {timer} на {seconds} секунд {mode}
+Stop timer {timer},Остановить таймер {timer}
+Is timer {timer} running,Таймер {timer} идёт
+Is timer {timer} stopped,Таймер {timer} остановлен
+(once),(один раз)
+(regular),(регулярно)

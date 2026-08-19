@@ -62,8 +62,69 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		# Whether this file is the scene's OWN script, which decides whether its `_ready` reads as the
 		# layout starting or as one object being created. Cached here with the rest of the context
 		# because the answer only changes when the opened sheet does.
-		"scene_root": is_scene_root_script(sheet)
+		"scene_root": is_scene_root_script(sheet),
+		# ── R9 ────────────────────────────────────────────────────────────────────────────────
+		# Which of the Timer behavior's two modes each timer tag runs in, so a Start timer row can
+		# say `(once)` / `(regular)`. The file itself is the only place that knows, and it says it
+		# on a line of its own - so the line is read once per rebuild rather than per row.
+		"timer_modes": timer_mode_map(sheet)
 	}
+
+
+## R9. {timer tag: true when it fires once} from the `$Timer.one_shot = true` lines the file holds.
+## Only a plain `$Node` / `%Node` receiver and a literal `true` / `false` count: a mode assembled at
+## runtime is not a fact the reading may claim. Empty whenever the file says nothing.
+static func timer_mode_map(sheet: EventSheetResource) -> Dictionary:
+	var modes: Dictionary = {}
+	if sheet == null:
+		return modes
+	for line: String in _sheet_code_lines(sheet):
+		var text: String = line.strip_edges()
+		var split_at: int = text.find(".one_shot = ")
+		if split_at <= 0:
+			continue
+		var value: String = text.substr(split_at + 12).strip_edges()
+		if value != "true" and value != "false":
+			continue
+		var tag: String = EventSheetSentence.timer_tag(text.substr(0, split_at))
+		if tag.is_empty():
+			continue
+		modes[tag] = value == "true"
+	return modes
+
+
+## Every line of hand-written GDScript the sheet still holds, from the top level down through event
+## bodies and function bodies. One shared walk so a reading that needs a fact from a NEIGHBOURING
+## line asks the sheet once per rebuild rather than once per row.
+static func _sheet_code_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	var pending: Array = []
+	pending.append_array(sheet.events)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			pending.append_array((function_entry as EventFunction).events)
+	var guard: int = 0
+	while not pending.is_empty() and guard < 20000:
+		guard += 1
+		var entry: Variant = pending.pop_back()
+		if entry is RawCodeRow:
+			lines.append_array((entry as RawCodeRow).code.split("\n"))
+			continue
+		# A line the importer already claimed is not raw text any more, so the assignment it stands for
+		# is rebuilt from the row - otherwise a fact stated in a LIFTED line would be invisible here.
+		if entry is ACEAction:
+			var params: Dictionary = (entry as ACEAction).params
+			match (entry as ACEAction).ace_id:
+				"SetProperty":
+					lines.append("%s.%s = %s" % [
+						str(params.get("target", "")), str(params.get("property", "")), str(params.get("value", ""))])
+				"SetOneShot":
+					lines.append("%s.one_shot = %s" % [str(params.get("target", "")), str(params.get("one_shot", ""))])
+			continue
+		if entry is EventRow:
+			pending.append_array((entry as EventRow).actions)
+			pending.append_array((entry as EventRow).sub_events)
+	return lines
 
 
 ## P9. True when the opened file is the script the SCENE ITSELF carries - the one on its root node.

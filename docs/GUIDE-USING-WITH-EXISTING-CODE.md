@@ -512,6 +512,12 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   with the lambda's body as its rows, and the connect line keeps a muted `connects Timer On Timeout`
   note. One-line `if c: stmt` / `if c: return` / `else: stmt` lift as the same sub-events their
   indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
+- **A Timer node reads as the Timer behavior.** `$Timer.start(2.0)` reads `Start timer "Timer" for 2
+  seconds (once)`, `$Timer.stop()` reads `Stop timer "Timer"`, `not $Timer.is_stopped()` reads `Is
+  timer "Timer" running` (the bare spelling says stopped), and `$Timer.time_left` reads
+  `Timer.CurrentTime("Timer")`. The node's name is the tag and the object is the script's own object,
+  because the timer belongs to it. The `(once)` / `(regular)` mode is read off the file's own
+  `one_shot` line. A timer held in a variable has no tag to prove, so it keeps the plain call reading.
 - **A property's setter reads as a trigger, its getter as an expression.** A `set(v):` block fires
   when the value is set, with the new value as its payload - which is exactly what a trigger is - so
   it reads `➜ On hp set` with a `v` chip and its body as ordinary actions and sub-events, the first

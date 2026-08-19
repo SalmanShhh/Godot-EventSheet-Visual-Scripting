@@ -2273,3 +2273,12 @@ Add setter,Setter hinzufügen
 Add getter,Getter hinzufügen
 This variable already has one.,Diese Variable hat bereits eine.
 Only a sheet variable can carry a setter or a getter.,Nur eine Blatt-Variable kann einen Setter oder Getter tragen.
+Start timer {timer},Timer {timer} starten
+Start timer {timer} {mode},Timer {timer} starten {mode}
+Start timer {timer} for {seconds} seconds,Timer {timer} fuer {seconds} Sekunden starten
+Start timer {timer} for {seconds} seconds {mode},Timer {timer} fuer {seconds} Sekunden starten {mode}
+Stop timer {timer},Timer {timer} stoppen
+Is timer {timer} running,Laeuft Timer {timer}
+Is timer {timer} stopped,Ist Timer {timer} gestoppt
+(once),(einmal)
+(regular),(regelmaessig)

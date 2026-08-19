@@ -2273,3 +2273,12 @@ Add setter,세터 추가
 Add getter,게터 추가
 This variable already has one.,이 변수에는 이미 있습니다.
 Only a sheet variable can carry a setter or a getter.,시트 변수만 세터나 게터를 가질 수 있습니다.
+Start timer {timer},타이머 {timer} 시작
+Start timer {timer} {mode},타이머 {timer} 시작 {mode}
+Start timer {timer} for {seconds} seconds,타이머 {timer} 를 {seconds} 초로 시작
+Start timer {timer} for {seconds} seconds {mode},타이머 {timer} 를 {seconds} 초로 시작 {mode}
+Stop timer {timer},타이머 {timer} 정지
+Is timer {timer} running,타이머 {timer} 실행 중
+Is timer {timer} stopped,타이머 {timer} 정지됨
+(once),(한 번)
+(regular),(반복)

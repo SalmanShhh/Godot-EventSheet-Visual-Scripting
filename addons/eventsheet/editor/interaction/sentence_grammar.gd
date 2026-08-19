@@ -392,6 +392,11 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var engine_test: Dictionary = _engine_property_condition(text, context)
 	if not engine_test.is_empty():
 		return engine_test
+	# R9. The Timer behavior's own question, ahead of the general existence/comparison readings (which
+	# would show `not $Timer.is_stopped()` as an operator rather than as the timer it is about).
+	var timer_test: Dictionary = _timer_condition(text, context)
+	if not timer_test.is_empty():
+		return timer_test
 	var existence: Dictionary = _existence_condition(text)
 	if not existence.is_empty():
 		return existence
@@ -759,6 +764,10 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var controls_value: String = controls_expression(trimmed)
 	if not controls_value.is_empty():
 		return controls_value
+	# R9 - a Timer node's clock is the Timer behavior's own expression, tag and all.
+	var timer_value: String = timer_expression(trimmed)
+	if not timer_value.is_empty():
+		return timer_value
 	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
 	# R7. The sheet's own expression names, before any other rewriting sees the Godot spellings they
 	# are matched against. Off unless the view asked for the Familiar Words glossary.
@@ -1500,6 +1509,11 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var tween: Dictionary = _tween_statement(text, context)
 	if not tween.is_empty():
 		return tween
+	# R9. A Timer node IS the sheet's Timer behavior, so its two verbs read as that behavior's own
+	# words before the generic Object ▸ Verb split can turn them into `Timer ▸ Start`.
+	var timer_step: Dictionary = _timer_statement(text, context)
+	if not timer_step.is_empty():
+		return timer_step
 	var call: Dictionary = call_parts(text)
 	if call.is_empty():
 		return {}
@@ -2205,6 +2219,96 @@ static func _tween_statement(text: String, context: Dictionary) -> Dictionary:
 		"value": [expression_text(arguments[2], context), "value"],
 		"duration": [expression_text(arguments[3], context), "value"]
 	})
+
+
+## R9. The Timer behavior's own words for a Timer NODE. Every event sheet says `Start timer "tag" for
+## X seconds (once / regular)` and `Stop timer "tag"`; Godot says the same thing with a child node and
+## two method calls, so the node's name is the tag and the object is the script's own object - the
+## timer belongs to it, exactly as a behavior does.
+##
+## {} for anything but a plain `$Node` / `%Node` receiver: a timer held in a variable cannot prove its
+## tag, and a reading that guesses one would be a confident lie. Those keep their call reading.
+static func _timer_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	if method != "start" and method != "stop":
+		return {}
+	var tag: String = timer_tag(str(call.get("target", "")))
+	if tag.is_empty():
+		return {}
+	var object_name: String = script_object(context)
+	if method == "stop":
+		return _sentence(object_name, "Stop timer {timer}", {"timer": ["\"%s\"" % tag, "value"]})
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	var values: Dictionary = {"timer": ["\"%s\"" % tag, "value"]}
+	var mode: String = timer_mode_words(tag, context)
+	if args.is_empty():
+		if mode.is_empty():
+			return _sentence(object_name, "Start timer {timer}", values)
+		values["mode"] = [mode, "muted"]
+		return _sentence(object_name, "Start timer {timer} {mode}", values)
+	values["seconds"] = [expression_text(args[0], context), "value"]
+	if mode.is_empty():
+		return _sentence(object_name, "Start timer {timer} for {seconds} seconds", values)
+	values["mode"] = [mode, "muted"]
+	return _sentence(object_name, "Start timer {timer} for {seconds} seconds {mode}", values)
+
+
+## R9. `$Timer.time_left` is the Timer behavior's clock: `Timer.CurrentTime("Timer")`. Claimed only
+## when the WHOLE value is that read on a named node, so nothing inside a larger sum is rewritten
+## halfway. "" when the value is something else.
+static func timer_expression(text: String) -> String:
+	var trimmed: String = text.strip_edges()
+	if not trimmed.ends_with(".time_left"):
+		return ""
+	var tag: String = timer_tag(trimmed.substr(0, trimmed.length() - 10))
+	if tag.is_empty():
+		return ""
+	return "Timer.CurrentTime(\"%s\")" % tag
+
+
+## R9. `$Timer.is_stopped()` asks the Timer behavior's own question. The sheet words it the way a
+## reader thinks about a timer - is it running - so the negated spelling, which is what scripts
+## actually write, reads positively and the bare one says stopped. "" for anything else.
+static func _timer_condition(text: String, context: Dictionary) -> Dictionary:
+	var trimmed: String = text.strip_edges()
+	var running: bool = trimmed.begins_with("not ")
+	if running:
+		trimmed = trimmed.substr(4).strip_edges()
+	if not trimmed.ends_with(".is_stopped()"):
+		return {}
+	var tag: String = timer_tag(trimmed.substr(0, trimmed.length() - 13))
+	if tag.is_empty():
+		return {}
+	var object_name: String = script_object(context)
+	var values: Dictionary = {"timer": ["\"%s\"" % tag, "value"]}
+	if running:
+		return _sentence(object_name, "Is timer {timer} running", values)
+	return _sentence(object_name, "Is timer {timer} stopped", values)
+
+
+## R9. The tag a Timer node reads under - its own name. Only a `$Path/To/Timer` or `%Unique` receiver
+## answers; "" for everything else, which is what keeps the reading honest.
+static func timer_tag(receiver: String) -> String:
+	var text: String = receiver.strip_edges()
+	if not (text.begins_with("$") or text.begins_with("%")):
+		return ""
+	var bare: String = text.substr(1).strip_edges().trim_prefix("\"").trim_suffix("\"")
+	var last: String = bare.get_file() if bare.contains("/") else bare
+	return last if is_identifier(last) else ""
+
+
+## R9. `(once)` / `(regular)` - which of the Timer behavior's two modes this tag runs in, when the
+## file (or the scene) said so. "" when nothing did, and the row simply does not claim a mode.
+static func timer_mode_words(tag: String, context: Dictionary) -> String:
+	var modes: Variant = context.get("timer_modes", {})
+	if not (modes is Dictionary):
+		return ""
+	if not (modes as Dictionary).has(tag):
+		return ""
+	return translate("(once)") if bool((modes as Dictionary)[tag]) else translate("(regular)")
 
 
 ## M25. The name of the object the script itself IS - its class_name, else the node or scene it sits
