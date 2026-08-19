@@ -221,37 +221,31 @@ Ten more spellings of everyday game code, shipped the same way:
 - **Ramped** - the difficulty curve as a value (`Every Ramped(2, -0.3, 0.5) seconds` is a
   spawner that speeds up); `Start Ramp Clock` marks minute zero.
 
-## The same patterns, hand-written, opened as a sheet
+## Sprites, UI, sound and game feel - the same words either way
 
-You do not have to author a pattern from the picker for the sheet to know it is one. Open a script
-that already writes one of these shapes by hand and it reads as the same events, and the event that
-owns it says which pattern it is, with the exact lines that made the sheet think so.
+![A sprite, UI, sound and game-feel script opened as a sheet: mirrored, animation frame, focus, master volume, sound, pitch, shake and bob](images/reading-sprite-sound-juice.png)
 
-- **A countdown.** `cooldown -= delta` in a tick, and `cooldown <= 0` asked somewhere, reads
-  `Count down cooldown (by dt)`, `cooldown has run out` and `Start cooldown for 0.5 seconds`. Both
-  halves are needed: a number that shrinks by a delta and is never asked about is a subtraction, and
-  the row keeps saying so. `max(0.0, x - delta)` and `move_toward(x, 0, delta)` read the same with
-  `(never below 0)` on the end.
-- **An object pool.** `var b = pool.pop_back() if not pool.is_empty() else BULLET.instantiate()`
-  followed by `add_child(b)` is one `System ▸ Create object Bullet [pooled]` row; `pool.push_back(b)`
-  is `b ▸ Return to pool`. Pooling is how the object is got hold of, not a different thing to do
-  with it, which is why the row is the ordinary Create object row with a chip.
-- **A sequence.** A function whose rows alternate `await get_tree().create_timer(N).timeout` and
-  actions wears a `sequence · 3 s` chip on its header, with the total of its waits. A wait on
-  something whose length nobody knows (an animation, a signal) adds `+ a wait` rather than a wrong
-  total.
-- **Saving.** ConfigFile lines read under **Local Storage**: `Set item player/score to score`,
-  `Local Storage.Item("player/score") (or 0)`, `Save`, `Load`, `has item player/score`, and
-  `cfg.load(path) != OK` reads `save file is missing`. The path is on hover.
-- **Existence.** `is_instance_valid(t)` is `t exists`, `target = null` is `Forget target`, and
-  `get_parent().remove_child(self)` is `Remove from layout (kept alive, not destroyed)` - which is
-  the answer to the first question anyone has about a removed object.
-- **Lists and tables.** `stats.get("hp", 100)` is `stats "hp" (or 100 when missing)`,
-  `items.slice(0, 3)` is `the first 3 of items`, a one-line `sort_custom` is
-  `Sort items by price (lowest first)`, a one-line `reduce` is `the sum of price over items`,
-  `items.has(sword)` is `items contains sword`, and `commands["equip"].call()` is
-  `Functions ▸ Call the function stored in commands "equip"`. A lambda written over two lines keeps
-  its Script block - a sentence may only stand for a shape it can see whole.
+These four families are most of what a small script actually does, and each of them now reads and
+is written in the same words:
+
+- **Sprites and animation** - `Set mirrored` (and `Set mirrored when dir < 0` when a test decides
+  it), `Set flipped`, `Set animation frame`, `Set animation speed`, `Set opacity`, `Set image`,
+  `Is playing`, plus an animation tree's `Set blend blend position` and
+  `Travel to animation state "Hurt"`.
+- **UI** - `Set focus`, `Set progress to hp of max hp` (the value and the maximum in one row),
+  `Show dialog (centred)`, `Set text to "Score: " & score`, `Set master volume to v (0 to 1)` and
+  `Pause the game`.
+- **Sound** - `Set sound to jump.wav`, `Set pitch`, `Set bus to SFX`, `Set volume to 50%` (the
+  decibel conversion is done for you and Godot's own line is one hover away), `Seek to 12 seconds`,
+  `Play sound` and `Is playing`.
+- **Game feel** - `Shake by 4`, `Hitstop for 0.05 seconds`, `Bob y (sine, magnitude 8, 3 per
+  second)`, `Flash red for 0.1 seconds` and `Ease size back to normal at 10 (per second)`. The
+  Juice, Sine and Flash behaviors ship exactly these words with state of their own, so attaching
+  one of them is the first option and these free actions are the second.
+
+A hand-written script that already does any of this reads as those rows the moment you open it,
+with the exact GDScript still on the hover - and the row the picker drops writes the same bytes
+back, so the two can never drift apart.
 
 ## Effects, tilemaps and the camera
 

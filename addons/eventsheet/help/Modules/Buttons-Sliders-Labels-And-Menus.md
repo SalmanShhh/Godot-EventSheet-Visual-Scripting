@@ -42,7 +42,7 @@ each widget or in one menu sheet.
   gamepad's accept button - one event covers all three. **On Toggled** is for check boxes and toggle
   buttons and carries a `toggled_on` argument you can branch on.
 - **Focus is what makes a menu playable without a mouse.** Something must have focus for keyboard and
-  gamepad navigation to work, so a menu that opens usually opens with a **Grab Focus** row.
+  gamepad navigation to work, so a menu that opens usually opens with a **Set Focus** row.
   **Focus Next** and **Focus Previous** walk the tab order, and **Set Focus Neighbor** overrides which
   control an arrow key reaches on one side.
 - **Range covers three widgets.** `HSlider`, `ProgressBar` and `SpinBox` all descend from `Range`, so
@@ -76,7 +76,10 @@ use case below.
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Grab Focus | Gives this control keyboard focus. | `{target.}grab_focus()` |
+| Set Focus | Gives this control keyboard focus. | `{target.}grab_focus()` |
+| Set Progress | Fills a bar to a value out of a maximum, both in one row. | `{target.}value = {value}` then `{target.}max_value = {max}` |
+| Show Dialog | Opens this dialog in the middle of the screen. | `{target.}popup_centered()` |
+| Set Master Volume | Sets the overall game volume from a 0-to-1 slider value. | `AudioServer.set_bus_volume_db(0, linear_to_db({level}))` |
 | Release Focus | Removes keyboard focus from this control. | `{target.}release_focus()` |
 | Focus Next | Moves focus to the next control in tab order. | `var __n_{uid} = find_next_valid_focus()` … (multi-line, use case 5) |
 | Focus Previous | Moves focus to the previous control in tab order. | `var __p_{uid} = find_prev_valid_focus()` … (multi-line) |
@@ -295,7 +298,7 @@ Every Frame
   Condition: Is Visible  (On node $PausePanel, inverted)
     -> Show  (On node $PausePanel)
     -> Set Game Paused  true
-    -> Grab Focus  (On node $PausePanel/Resume)
+    -> Set Focus  (On node $PausePanel/Resume)
 ```
 
 **23. Fade a whole panel out**, children included, with **Set Color Tint** and its alpha:
@@ -337,7 +340,7 @@ $PausePanel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 ## Tips and common mistakes
 
 - **A menu with nothing focused is dead on a gamepad.** Whenever a screen opens - and every time a
-  dialog closes - something must **Grab Focus**. This is the single most common reason a menu "works
+  dialog closes - something must **Set Focus**. This is the single most common reason a menu "works
   with the mouse but not the controller".
 - **Set Button Pressed is deliberately silent.** It does not fire **On Toggled**. If you actually want
   the handler to run, call the same actions yourself after setting the state.

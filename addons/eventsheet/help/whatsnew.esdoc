@@ -6,158 +6,44 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
-### Added - an opened script's PATTERNS read as the events they are
+### Added - sprites, UI, sound and game feel read (and are written) in the sheet's own words
 
-The batches before this one made single statements read as the sheet's sentences. These are the
-shapes several lines make together, which no single line can decide, so the whole file is asked once
-per rebuild and every reading that recognises one states it in the pattern registry, on the event
-that owns it, with the exact source lines as evidence. Display only throughout: the file is
-untouched, and the byte round-trip and the emitted GDScript cannot move.
+- **A sprite line reads as the sprite's own row.** `sprite.flip_h = dir < 0` is
+  `Set mirrored when dir < 0` (a mirror decided by a test says the test), `flip_v = true` is
+  `Set flipped`, `frame = 3` is `Set animation frame to 3`, `speed_scale = 2.0` is
+  `Set animation speed to 2`, and `texture = load(\"res://hero.png\")` is `Set image to hero.png`. An
+  AnimationTree's `set(\"parameters/blend_position\", dir)` is `Set blend blend position to dir`, its
+  `travel(\"Hurt\")` is `Travel to animation state Hurt` in either spelling, and `is_playing()` is
+  `Is playing`.
+- **UI patterns read as UI rows.** `grab_focus()` is `Set focus`, `popup_centered()` is
+  `Show dialog (centred)`, and the `AudioServer.set_bus_volume_db(0, linear_to_db(v))` idiom is
+  `Audio ▸ Set master volume to v (0 to 1)` - a named bus says its name.
+- **A sound reads as its player's rows.** `stream = preload(\"res://jump.wav\")` is
+  `Set sound to jump.wav`, `pitch_scale` is `Set pitch`, `bus = \"SFX\"` is `Set bus to SFX`,
+  `volume_db = linear_to_db(0.5)` is `Set volume to 50%` (a raw decibel number keeps its unit),
+  `seek(12.0)` is `Seek to 12 seconds`, and `playing` is `Is playing`. **`play()` now belongs to the
+  player it acts on** (`sfx ▸ Play sound`), so the four lines that set one sound up read under one
+  object instead of two.
+- **The five most copied game-feel snippets read as the behaviors' words.** A random camera offset is
+  `Shake by s`, a base-plus-sine is `Bob y (sine, magnitude 8, 3 per second)`, and a lerp back to
+  `Vector2.ONE` is `Ease size back to normal at 10 (per second)`. Each says the arithmetic as a muted
+  note and offers the Juice or Sine behavior that could replace it outright.
+- **Every one of these claims its pattern.** The pattern registry is cleared at the top of each row
+  build and filled by the readings as they go, so the chip, its evidence lines, Adopt behavior, the
+  Doctor's pattern smells and the coverage counts all read one place instead of re-deriving.
+- **And all of it is authorable in the same words.** New rows: `Set Flipped`, `Set Image`,
+  `Is Playing`, `Set Progress` (a value and its maximum in one row), `Show Dialog`,
+  `Set Master Volume`, `Set Sound`, `Set Bus`, `Set Volume` (0 to 1), and the game-feel five -
+  `Shake`, `Hitstop`, `Bob`, `Flash`, `Ease Size Back`. Each writes the exact shape the reading
+  recognises, so a sheet-authored pattern and a hand-written one are the same bytes.
 
-- **A countdown reads as a countdown.** A number counted down by a per-frame delta AND asked about
-  against zero somewhere reads `Count down cooldown (by dt)`, `Start cooldown for 0.5 seconds`,
-  `cooldown has run out` and `invincible_for is running`. The clamped spellings
-  (`max(0.0, x - delta)`, `move_toward(x, 0, delta)`) say `(never below 0)`. Both halves are
-  required, so an ordinary subtraction stays a subtraction.
-- **Object pools read as Create object.** `pool.pop_back() if not pool.is_empty() else
-  BULLET.instantiate()` is one `System ▸ Create object Bullet [pooled]` row, either order of the
-  ternary, and `pool.push_back(b)` reads `b ▸ Return to pool (hidden, ticking off, back in pool)`.
-  The claim offers the shipped Object Pool behavior for a hand-rolled pool.
-- **A sequence of waits says so on its header.** A function whose rows alternate waiting and doing
-  wears a `sequence · 3 s + a wait` chip, with the total of its timer waits and a note when one of
-  them waits on something whose length nobody knows.
-- **Save and load idioms read as Local Storage.** The object is spelled in full, a section and a key
-  address the one item they address (`Set item player/score to score`, `Local Storage.Item(
-  \"player/score\") (or 0)`, `has item player/score`), and `cfg.load(path) != OK` asks what it is
-  really asking: `save file is missing`. `.json`, `.save` and `.dat` join `.cfg` and `.ini` as save
-  files; the extension is what says so, so `sprite.save(\"user://shot.png\")` is still an image.
-- **Existence and relations.** `is_instance_valid(t)` reads `t exists`, `target = null` reads
-  `Forget target`, and `get_parent().remove_child(self)` reads `Remove from layout (kept alive, not
-  destroyed)` - the answer to the first question a reader has about a removed object.
-- **The last list and table gaps.** `stats.get(\"hp\", 100)` reads `stats \"hp\" (or 100 when missing)`,
-  `items.slice(0, 3)` reads `the first 3 of items`, a one-line `reduce` that adds one member up
-  reads `the sum of price over items`, a one-line `sort_custom` reads `Sort items by price (lowest
-  first)`, `items.has(sword)` reads `items contains sword`, and `commands[\"equip\"].call()` reads
-  `Functions ▸ Call the function stored in commands \"equip\"`. A lambda written over two lines keeps
-  its Script block: a sentence may only stand for a shape it can see whole.
-### Added - the Godot systems an opened script is built from read as the sheet's own rows
+### Changed - the picker says what the reading says
 
-- **Loading a layout in the background is three sentences, not six lines of `ResourceLoader`.**
-  `load_threaded_request(path)` reads **System ▸ Load layout Level 2 in the background**, the status
-  enum reads **System ▸ layout Level 2 has finished loading**, the progress array read by index reads
-  **System.LoadingProgress**, and a `change_scene_to_packed(load_threaded_get(path))` pair collapses
-  to **System ▸ Go to layout Level 2** - each under the event its line sits in, with the layout named
-  the way the file is named. All four are also authorable: **Load Layout In The Background**,
-  **Layout Has Finished Loading**, **Go To Loaded Layout** and the **Loading Progress** expression
-  write exactly the shape the reading recognises, so a written and a picked loading screen are the
-  same bytes.
-- **Movement math on a character body reads in the movement behaviors' words.** `velocity.y +=
-  gravity * delta` is **Apply gravity**, `move_toward` on one axis is **Accelerate x toward … at …
-  (per second)**, `limit_length` is **Limit speed to …**, `move_and_slide()` is **Move (and slide
-  along what it hits)**, `add_collision_exception_with` is **Ignore collisions with …**,
-  `lerp_angle` on the rotation is **Rotate toward … at … (per second)**, and
-  `c.get_collider().is_in_group(\"enemy\")` is **c ▸ collided object is in family enemy**. Claimed only
-  on `CharacterBody2D` / `CharacterBody3D` - a plain node's `velocity` is just a variable - and only
-  where the step is scaled by the frame time.
-- **New movement rows for the three steps that had none:** **Limit Speed**, **Ignore Collisions
-  With** and **Rotate Toward**.
-- **Godot's high-level multiplayer is an object.** A new **Multiplayer** vocabulary: **Send Message
-  To Everyone** / **To The Host** / **To One Peer**, **Is host**, **Owns this object** and the
-  **MyID** expression. An opened script reads `f.rpc(10)` as **Multiplayer ▸ Send Take Damage to
-  everyone** with the payload as named chips, `f.rpc_id(1, …)` as **to the host**,
-  `multiplayer.is_server()` as **Is host**, `is_multiplayer_authority()` as **Owns this object** and
-  `multiplayer.get_unique_id()` as **Multiplayer.MyID**.
-- **A navigation agent reads as the Pathfinding words.** `agent.target_position = p` is **Find path
-  to p**, the direction-to-the-next-waypoint step is **Move along path at speed**, with **(avoiding
-  others)** added when the file wires the avoidance callback, and `is_navigation_finished()` is
-  **Has arrived**. A new **Move Along Path** action writes the step; **Has Arrived** now says so on
-  the row instead of \"Arrived at destination\".
-- **The pattern registry is filled.** Every event holding one of these four shapes claims its
-  pattern with the exact source lines as evidence and, where one ships, the behavior that could
-  replace it (a body that applies gravity offers the Platformer pack, one that only steers offers
-  Eight Direction, a navigation block offers the matching pathfinding pack). The registry is cleared
-  and refilled at the top of each row build.
-
-### Changed
-
-- `set_collision_mask_value(n, false)` reads **Disable collisions with …** (was \"Set collision with
-  layer … off\"); the layers a body is ON keep the neutral wording, because joining a layer and
-  colliding with one are two different things.
-
-### Added - effects, tilemaps and the camera read (and are authored) in the sheet's words
-
-- **A ShaderMaterial parameter IS an effect parameter.** `sprite.material.set_shader_parameter(
-  \"flash\", 1.0)` reads as **sprite ▸ Set effect parameter flash to 1**, `get_shader_parameter
-  (\"flash\")` as the value **sprite's effect parameter \"flash\"**, `sprite.material = null` as
-  **Remove effect** and `sprite.material = preload(\"res://outline.tres\")` as **Set effect to
-  outline**. The tween-a-uniform idiom - `tween.tween_method(func(v):
-  mat.set_shader_parameter(\"dissolve\", v), 0.0, 1.0, 0.5)` - reads as ONE row, **mat ▸ Tween effect
-  parameter dissolve from 0 to 1 in 0.5 seconds**, on the material it drives. Authored from the
-  picker's new **Effects** section, whose rows write exactly those lines: Set Effect Parameter, the
-  Effect Parameter expression, Set Effect, Remove Effect and the new **Tween Effect Parameter**.
-- **A tilemap cell IS a tile at a cell.** `set_cell(0, cell, 1, Vector2i(2, 0))` reads as
-  **Set tile at cell to 2, 0** with `layer 0 · tileset 1` said quietly after it, `erase_cell` as
-  **Erase tile at cell**, and the three coordinate questions as the names a reader types:
-  `tilemap.TileAt(cell)`, `tilemap.PositionToTile(p)`, `tilemap.TileToPosition(c)`. A tile's own
-  data is ONE condition - **tile at cell has solid set** - whether the file writes the
-  `get_cell_tile_data` local and the `if data and data.get_custom_data(\"solid\")` that follows it, or
-  the whole question in one expression. Both node generations read alike (the older node names its
-  layer first). The new **Tile Has Custom Data** condition authors the same question.
-- **The camera page.** **Make current**, **Set zoom to 200%**, **Set smoothing on** and
-  **Scroll toward target at 5 (per second)** for the lerp-follow idiom. A run of adjacent
-  `limit_left` / `limit_right` / `limit_top` / `limit_bottom` writes reads as ONE
-  **Set scroll limits 0 to 1920** row - the edges it set named after the sentence, every line it
-  stands for on the hover, and the file's own four lines untouched. New **Set Smoothing** and
-  **Scroll Toward** rows author the last two.
-- **The pattern registry is filled by the readings themselves.** Every reading above carries the
-  pattern it is an instance of; the row builder collects them while an event's spans are built and
-  claims them on the event that owns them, with the exact source lines as evidence. Nothing
-  re-derives a pattern, and a sheet nobody has scrolled to pays nothing for the answer.
-
-### Changed - the module names match the words the reading uses
-
-- The tilemap rows are **Set Tile**, **Erase Tile**, **Tile At**, **Position To Tile** and
-  **Tile To Position**; the camera rows are **Make Current**, **Set Zoom**, **Set Offset** and
-  **Set Scroll Limits**, all under a **Camera** picker section; the material rows are
-  **Set Effect Parameter**, **Effect Parameter**, **Set Effect** and **Remove Effect** under a new
-  **Effects** section. Ids and emitted code are unchanged - only the names and the sections move,
-  so a picked row and a typed line finally say the same thing.
-
-### Added - a blank event runs every tick
-
-- **A blank top-level event is a real event now, and it runs every tick.** An event with no trigger
-  picked used to compile to nothing at all (with a \"skipping event\" warning nobody read). It now
-  compiles exactly as an every-tick event does: its actions land in `_process(delta)`, and any
-  conditions it grew are checked there. A blank event and an **Every tick** event picked from the
-  list share the one handler, in sheet order. Nothing is stored on the row - blank stays blank on
-  disk - and no `if true:` is ever written.
-- **The Add event dialog opens on it.** Its first entry is **(none - runs every tick)**, already
-  selected, so Enter makes the blank event and **A** fills in its actions. The Ghost Row at top
-  level and an action applied with nothing selected already made exactly this row, and now that row
-  runs instead of compiling to nothing.
-- **A `_process` body with no condition of its own reads as that blank event.** The condition lane is
-  empty, because in an event sheet a blank event already means every tick; the hover and the Explain
-  panel say `Runs every tick` in words. `_physics_process` keeps one muted `every tick (physics)`
-  note, since blank alone cannot say which tick. An event that carries a condition keeps its full
-  **Every tick** words. Display only - byte-for-byte round-trip is untouched.
-- **The Doctor notices the surprise.** A blank event whose whole body is setting values gets a note:
-  \"This blank event runs every tick and only sets values - did you mean On start of layout?\"
-- **The blank reading claims the `blank_event` pattern** in the pattern registry, which the pattern
-  chip, its hover and the coverage counts read.
-
-### Changed - a state machine reads and is driven in one vocabulary
-
-- **The State Machine behavior speaks the words an event-sheet user reaches for.** **Set State** is
-  now **Go to state**, **Is In State** is **Current state is**, **On State Changed** is **On any
-  state change** and **Time In State** is **Time in state**. Display names only: the ace ids, the
-  emitted code and every sheet already using them are untouched.
-- **A hand-rolled state machine reads in those same words.** The ◆ state header a `match state:` case
-  renders as now says `Current state is \"patrol\"` rather than `State: patrol`, so an `enum` + `state`
-  machine written by hand and the attached behavior are indistinguishable on the canvas. The event
-  that asks the question claims the `state_machine` pattern, naming the State Machine behavior as the
-  thing a hand-rolled machine could become.
-- **The pattern registry is wired into the row build**: claims are cleared at the start of every
-  sweep and filled in by the readings that recognise a shape.
+- Shipped display names renamed to the words the readings use (ace_ids and templates untouched):
+  **Set Frame** is `Set Animation Frame`, **Set Tree Parameter** is `Set Blend`, **Set Playback
+  Rate** is `Set Pitch`, **Grab Focus** is `Set Focus`, and `Seek to 12s` reads
+  `Seek to 12 seconds`. A file name also survives the spelling lens whole - `jump.wav` was reading
+  as `jump's wav`.
 
 ### Changed - the documentation says what the sheet says
 
