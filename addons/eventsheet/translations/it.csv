@@ -2024,3 +2024,42 @@ Expand All,Espandi tutto
 Expand To Level 1,Espandi fino al livello 1
 Expand To Level 2,Espandi fino al livello 2
 Expand To Level 3,Espandi fino al livello 3
+Manual,Manuale
+Manual…,Manuale…
+Search the Manual…,Cerca nel manuale…
+Show the Manual's contents.,Mostra l'indice del manuale.
+The pages you have read this session.,Le pagine lette in questa sessione.
+Bookmark this page.,Aggiunge questa pagina ai segnalibri.
+Back (Alt+Left).,Indietro (Alt+Sinistra).
+Forward (Alt+Right).,Avanti (Alt+Destra).
+Follow selection,Segui la selezione
+Shows help for whatever you select on the sheet. Clicking inside the Manual pauses this until you press it again.,Mostra l'aiuto per ciò che selezioni nel foglio. Un clic dentro il manuale mette in pausa finché non lo premi di nuovo.
+Following the selection.,Segue la selezione.
+Not following the selection.,Non segue la selezione.
+Paused following - press the pin to follow the selection again.,Inseguimento in pausa - premi lo spillo per seguire di nuovo la selezione.
+Write this guide,Scrivi questa guida
+"Writes the guide skeleton for this behavior from its own vocabulary, ready to fill in.","Scrive lo scheletro della guida di questo comportamento dal suo stesso vocabolario, pronto da completare."
+System reference,Riferimento di sistema
+Behavior reference,Riferimento dei comportamenti
+Object reference,Riferimento degli oggetti
+Coming from another event-sheet editor,Se arrivi da un altro editor di fogli eventi
+What the marks on a sheet mean,Cosa significano i segni su un foglio
+Go to first,Vai al primo
+Selects the first event of this sheet that uses it.,Seleziona il primo evento di questo foglio che lo usa.
+Selects the next event that uses it.,Seleziona l'evento successivo che lo usa.
+See also,Vedi anche
+Opens this entry.,Apre questa voce.
+Add example events,Aggiungi eventi di esempio
+Show GDScript,Mostra GDScript
+Shows the line this verb compiles to.,Mostra la riga in cui questo termine viene compilato.
+Opens the guide this verb is documented in.,Apre la guida in cui questo termine è documentato.
+"Puts this row into the open sheet at the caret, as one undo step.","Inserisce questa riga nel foglio aperto al cursore, come un solo passo di annullamento."
+"Puts the illustrated rows into the open sheet at the caret, as one undo step.","Inserisce le righe illustrate nel foglio aperto al cursore, come un solo passo di annullamento."
+Nothing in the Manual mentions that,Nel manuale non se ne parla
+Selected the event that uses it.,Selezionato l'evento che lo usa.
+That verb is not used in this sheet.,Quel termine non è usato in questo foglio.
+Press F1 for the Manual's page on the marks.,Premi F1 per la pagina del manuale sui segni.
+Opens the next page in this part of the Manual.,Apre la pagina successiva di questa parte del manuale.
+"Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Premi F1 con qualcosa selezionato per l'aiuto su di esso, oppure scegli una pagina dall'indice del manuale."
+Add these events,Aggiungi questi eventi
+"Puts these events into the open sheet at the caret, as one undo step.","Inserisce questi eventi nel foglio aperto al cursore, come un solo passo di annullamento."

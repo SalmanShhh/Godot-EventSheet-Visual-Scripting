@@ -472,6 +472,7 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._ace_picker.set_guide_label_provider(func(definition: ACEDefinition) -> String:
 		return EventSheetDocExplain.guide_label(definition.provider_id) if definition != null else "")
 	_dock._ace_picker.guide_requested.connect(_dock._on_picker_guide_requested)
+	_dock._ace_picker.help_requested.connect(_dock._on_picker_help_requested)
 	_dock._ace_params.init_dialog(_dock, _dock._ace_registry, _dock._collect_sheet_variable_names)
 	_dock._ace_params.set_lint_context_provider(func() -> EventSheetResource: return _dock._current_sheet)
 	_dock._ace_params.set_variable_creator(_dock._create_variable_quickfix)

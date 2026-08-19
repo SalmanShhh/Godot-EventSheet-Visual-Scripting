@@ -23,8 +23,8 @@ Every guide is a Markdown file under `docs/`. The same file is read in three pla
 it once:
 
 - **On GitHub**, at full fidelity - images, tables, everything.
-- **Inside the Godot editor** - Tools > Documentation..., F1 on a row, the `?` prefix in the
-  command palette, or the Documentation dock. The editor draws the Markdown natively: headings on
+- **Inside the Godot editor, in the Manual** - Tools > Manual..., F1, the `?` prefix in the
+  command palette, or the Manual dock. The editor draws the Markdown natively: headings on
   a real typographic scale, tables, code cards, links that stay in the editor. Images are not
   drawn (they show as an alt-text card with a "See this picture online" button), so write alt text
   as if it will be read.
@@ -34,6 +34,52 @@ it once:
 The editor reader does not read `docs/` directly. A build tool copies the guides into
 `addons/eventsheet/help/` and writes a manifest, and the suite fails if that bundle is stale.
 Section [Regenerate before you commit](#regenerate-before-you-commit) covers the one command.
+
+## The Manual: what a reader gets, and what it derives
+
+The in-editor reader is called the **Manual**, and it has two halves. Your guides are one of them.
+The other is **reference**, and nobody writes it:
+
+| Part of the Manual | Where its pages come from |
+|---|---|
+| The Manual (first pages) | the icon legend, and the glossary for readers coming from another event-sheet editor - both generated from the plugin's own tables |
+| The guide groups | the Markdown you write, grouped exactly as `docs/README.md` groups it |
+| System reference | one page per picker category, listing every condition, action and expression the builtin vocabulary files under it |
+| Behavior reference | one page per behavior pack, listing the same for that pack |
+
+![The Manual docked in a narrow column: the search box, a breadcrumb reading Manual then the page, back and forward arrows, Recent and a bookmark star, the icon legend page with its table of marks, and the footer reading Manual v0.17.0, shipped with the plugin, offline](images/manual-docked.png)
+
+That matters when you write a guide, in three ways:
+
+- **You never hand-write a verb table.** A pack guide's `## ACE reference` section is replaced at
+  render time by the live vocabulary, and the behavior reference page is built from it too.
+- **A pack with no guide is not a dead link.** Its behavior reference page opens with "No guide yet
+  for *Priced Tables* - its conditions, actions and expressions are listed below" and a
+  **Write this guide** button that writes the skeleton to `eventsheet_addons/<pack>/guide.md`, which
+  the Manual picks up as that pack's page immediately. Fill it in from there.
+- **Links to pages that do not exist are drawn muted, never dead**, and a reference page carries no
+  "read this online" link at all, because there is no repo file behind it.
+
+![A behavior reference page: the breadcrumb reads Manual, Behavior reference, Quest; the page is titled Quest with a line saying it lists the conditions, actions and expressions Quest publishes, an Open the guide link, and one table per group of verbs](images/manual-reference-page.png)
+
+The reader's own chrome sits around all of it: a breadcrumb starting at *Manual*, an on-this-page
+outline that tracks the scroll, back and forward (Alt+Left / Alt+Right), Recent, a bookmark star, a
+reading measure of about eighty characters, a scroll position remembered per page, and
+**Next: ...** at the foot of a guide - which is the next page of the group your guide is listed in,
+so where you put a page in `docs/README.md` decides what a reader reads after it.
+
+**F1 is "help for the selected item"**, not "open the manual": a condition or action row opens its
+entry, an object label opens that object's reference page, a group opens the Manual's page on
+groups, and a behavior's Include bar opens that behavior's reference. With the Manual docked,
+**Follow selection** does the same thing as you click around, and pauses the moment you click
+inside the Manual to read (press the pin again to resume).
+
+![Searching the Manual for "wait": the results list tags every row - glossary, System reference, engine reference, guide, behavior reference - and the glossary page is open beside it at the word wait, with the search term highlighted](images/manual-search.png)
+
+**One search box** covers all of it - conditions, actions, expressions, guides, System reference,
+behavior reference, the engine's class reference and the glossary - and tags every result with
+which of those it is. A verb result also says how many events of the open sheet already use it;
+Enter opens it, Ctrl+Enter adds it to the sheet at the caret.
 
 ## The three doc sets
 
@@ -207,7 +253,7 @@ reader.
    `All tests passed.`; a crashed test prints no `[FAIL]` at all. The docs tests that matter here
    are `doc_library_test` (bundle drift, links, anchors), `doc_figures_test` (every figure
    compiles), `module_guides_test` and the addon guide-path sweep (naming, shape, indexing).
-4. Open the page in the editor once - Tools > Documentation... - and look at it. A table with a
+4. Open the page in the editor once - Tools > Manual... - and look at it. A table with a
    pipe in a cell, a nested fence, or a heading that should have been a figure caption shows up
    there and nowhere else.
 5. If you changed a UI screenshot's subject, re-render it from its harness.

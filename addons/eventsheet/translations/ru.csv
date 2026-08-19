@@ -2024,3 +2024,42 @@ Expand All,Развернуть все
 Expand To Level 1,Развернуть до уровня 1
 Expand To Level 2,Развернуть до уровня 2
 Expand To Level 3,Развернуть до уровня 3
+Manual,Руководство
+Manual…,Руководство…
+Search the Manual…,Поиск в руководстве…
+Show the Manual's contents.,Показать содержание руководства.
+The pages you have read this session.,"Страницы, прочитанные в этом сеансе."
+Bookmark this page.,Добавить страницу в закладки.
+Back (Alt+Left).,Назад (Alt+Влево).
+Forward (Alt+Right).,Вперёд (Alt+Вправо).
+Follow selection,Следовать за выбором
+Shows help for whatever you select on the sheet. Clicking inside the Manual pauses this until you press it again.,"Показывает справку о том, что выбрано в листе. Щелчок внутри руководства приостанавливает это, пока вы не нажмёте снова."
+Following the selection.,Следует за выбором.
+Not following the selection.,Не следует за выбором.
+Paused following - press the pin to follow the selection again.,"Следование приостановлено - нажмите булавку, чтобы снова следовать за выбором."
+Write this guide,Написать это руководство
+"Writes the guide skeleton for this behavior from its own vocabulary, ready to fill in.",Пишет каркас руководства для этого поведения из его собственного словаря - остаётся заполнить.
+System reference,Справочник системы
+Behavior reference,Справочник поведений
+Object reference,Справочник объектов
+Coming from another event-sheet editor,Если вы перешли из другого редактора листов событий
+What the marks on a sheet mean,Что означают пометки в листе
+Go to first,К первому
+Selects the first event of this sheet that uses it.,"Выбирает первое событие этого листа, где он используется."
+Selects the next event that uses it.,"Выбирает следующее событие, где он используется."
+See also,См. также
+Opens this entry.,Открывает эту запись.
+Add example events,Добавить события примера
+Show GDScript,Показать GDScript
+Shows the line this verb compiles to.,"Показывает строку, в которую это компилируется."
+Opens the guide this verb is documented in.,"Открывает руководство, где это описано."
+"Puts this row into the open sheet at the caret, as one undo step.",Вставляет эту строку в открытый лист у курсора одним шагом отмены.
+"Puts the illustrated rows into the open sheet at the caret, as one undo step.",Вставляет показанные строки в открытый лист у курсора одним шагом отмены.
+Nothing in the Manual mentions that,В руководстве об этом ничего нет
+Selected the event that uses it.,"Выбрано событие, где он используется."
+That verb is not used in this sheet.,Это не используется в данном листе.
+Press F1 for the Manual's page on the marks.,"Нажмите F1, чтобы открыть страницу руководства о пометках."
+Opens the next page in this part of the Manual.,Открывает следующую страницу этой части руководства.
+"Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Нажмите F1, выбрав что-нибудь, чтобы получить справку по нему, или выберите страницу в содержании руководства."
+Add these events,Добавить эти события
+"Puts these events into the open sheet at the caret, as one undo step.",Вставляет эти события в открытый лист у курсора одним шагом отмены.

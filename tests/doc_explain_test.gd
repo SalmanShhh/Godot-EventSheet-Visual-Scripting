@@ -85,7 +85,7 @@ static func _test_page_shape() -> bool:
 	# because the whole point of the plan is that the page does not inherit the assembler's order.
 	all_passed = _check("a pack verb's page reads in the fixed order",
 		", ".join(EventSheetDocPanel.section_plan(blocks)),
-		"title, description, syntax, parameters, preview, about, link") and all_passed
+		"title, description, syntax, parameters, preview, usage, actions, about, link") and all_passed
 	var shuffled: Array[Dictionary] = []
 	for index: int in range(blocks.size()):
 		shuffled.append(blocks[blocks.size() - 1 - index])
@@ -275,8 +275,8 @@ static func _test_row_to_doc_id() -> bool:
 static func _test_entry_points() -> bool:
 	var all_passed: bool = true
 	var menu_code: String = _read(MENU_BAR_PATH)
-	all_passed = _check("Tools carries a Documentation entry", menu_code.contains("\"Documentation…\", 22"), true) and all_passed
-	all_passed = _check("the Documentation entry calls the one dock method",
+	all_passed = _check("Tools opens the Manual", menu_code.contains("\"Manual…\", 22"), true) and all_passed
+	all_passed = _check("the Manual entry calls the one dock method",
 		menu_code.contains("22: _dock.open_documentation()"), true) and all_passed
 	var input_code: String = _read(INPUT_DISPATCH_PATH)
 	all_passed = _check("F1 is handled", input_code.contains("KEY_F1"), true) and all_passed

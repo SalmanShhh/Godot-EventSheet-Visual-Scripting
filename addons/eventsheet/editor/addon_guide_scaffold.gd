@@ -12,6 +12,47 @@ const USE_CASE_COUNT: int = 15
 const OTHER_USE_CASE_COUNT: int = 5
 
 
+## Where packs live, and the file a pack ships its own guide as - the same name the reading
+## surface discovers a pack guide under, so a guide written here IS the pack's page from the next
+## moment on, with no registration anywhere.
+const PACKS_ROOT := "res://eventsheet_addons"
+const PACK_GUIDE_FILE := "guide.md"
+
+
+## Writes a pack's guide skeleton beside the pack, and answers with the file it wrote ("" when the
+## pack has no script to derive one from, or the file could not be written). The one-click behind
+## the Manual's "Write this guide": a behavior with no written guide is a page that lists its
+## vocabulary and offers this, rather than a dead link.
+##
+## An EXISTING guide is never overwritten - it is somebody's writing, and a scaffolder that could
+## replace it is one misclick away from deleting a day's work. The path comes back either way, so
+## the caller can open what is already there.
+static func write_guide_for_pack(pack_dir: String) -> String:
+	var directory: String = pack_dir.strip_edges().trim_suffix("/").get_file()
+	if directory.is_empty():
+		return ""
+	var guide_path: String = "%s/%s/%s" % [PACKS_ROOT, directory, PACK_GUIDE_FILE]
+	if FileAccess.file_exists(guide_path):
+		return guide_path
+	var markdown: String = ""
+	var file_names: PackedStringArray = DirAccess.get_files_at("%s/%s" % [PACKS_ROOT, directory])
+	file_names.sort()
+	for file_name: String in file_names:
+		if file_name.get_extension().to_lower() != "gd":
+			continue
+		markdown = generate("%s/%s/%s" % [PACKS_ROOT, directory, file_name])
+		if not markdown.strip_edges().is_empty():
+			break
+	if markdown.strip_edges().is_empty():
+		return ""
+	var file: FileAccess = FileAccess.open(guide_path, FileAccess.WRITE)
+	if file == null:
+		return ""
+	file.store_string(markdown)
+	file.close()
+	return guide_path
+
+
 ## The whole skeleton as markdown, "" when the script cannot be read (fail closed).
 static func generate(script_path: String) -> String:
 	var script: Script = load(script_path) as Script if ResourceLoader.exists(script_path) else null

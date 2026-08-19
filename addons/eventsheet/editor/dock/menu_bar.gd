@@ -344,7 +344,7 @@ func build(root: Node) -> void:
 	tools_popup.add_item("Welcome…", 13)
 	tools_popup.add_item("Start the Tour…", 17)
 	tools_popup.add_item("Keyboard Shortcuts", 16)
-	tools_popup.add_item("Documentation…", 22)
+	tools_popup.add_item("Manual…", 22)
 	tools_popup.add_item("Report an Issue…", 20)
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
@@ -372,7 +372,7 @@ func build(root: Node) -> void:
 			21: _dock._open_translation_studio()
 			14: _dock._run_diagnostics_action()
 	)
-	tools_popup.set_item_tooltip(tools_popup.get_item_index(22), "Explain the selected row's verb - what it does, what it ships as, and a live illustration you can insert. F1 opens the same page.")
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(22), "The Manual: the guides, and a reference page for every object and behavior. F1 opens help for whatever is selected.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(21), "The whole handoff to a translator in one window: sweep the project for the text your game shows, read the note each key travels with, merge a returned file and register the catalogs.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")

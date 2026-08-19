@@ -58,13 +58,15 @@ const EXTERNAL_LINK_GLYPH := "↗"
 ## are mapped in one place so a new block kind lands in a deliberate slot instead of at the end.
 const SECTION_FOR_BLOCK := {
 	"title": "title", "note": "note", "prose": "description", "ships_as": "syntax",
-	"params": "parameters", "figure": "preview", "about": "about", "link": "link",
+	"params": "parameters", "figure": "preview", "usage": "usage", "see_also": "see_also",
+	"entry_actions": "actions", "about": "about", "link": "link",
 }
 
 ## THE READING ORDER, fixed for every reference page: what it is, what it does, what you type, what
 ## you fill in, what it looks like on the sheet, and where it comes from.
 const SECTION_ORDER: Array[String] = [
-	"title", "note", "description", "syntax", "parameters", "preview", "about", "link",
+	"title", "note", "description", "syntax", "parameters", "preview", "usage", "see_also",
+	"actions", "about", "link",
 ]
 
 ## Emitted when the reader activates a read-more link. The panel opens it as well (that is the
@@ -74,6 +76,15 @@ signal link_activated(target: String)
 ## Emitted after a figure's Insert lands rows in the sheet, so a host can close or report.
 signal snippet_inserted()
 
+## Emitted when the reader asks to be taken to one of the rows of THIS sheet that already use the
+## verb on screen. `index` walks the list, so "go to first" is 0 and "next" is the one after the
+## one they were shown. The panel never touches the sheet itself - a host reveals the row.
+signal row_requested(provider_id: String, ace_id: String, index: int)
+
+## Emitted when the reader follows a "See also" chip, so a host navigates the way it does for any
+## other link.
+signal doc_requested(doc_id: String)
+
 var _doc_id: String = ""
 var _doc_title: String = ""
 var _empty_label: Label = null
@@ -82,6 +93,11 @@ var _page: VBoxContainer = null
 ## rather than the constant, because the same panel is hosted by a window and by a dock column.
 var _page_width: float = PAGE_WIDTH
 var _compact: bool = false
+## Which of the sheet's uses of this verb the reader was last taken to, so "next" walks the list
+## instead of showing them the same row twice.
+var _usage_index: int = -1
+## The Show GDScript card, hidden until it is asked for.
+var _gdscript_card: Label = null
 
 
 func _init() -> void:
@@ -137,7 +153,7 @@ func show_doc(doc_id: String) -> bool:
 		return false
 	match str(route.get("scheme", "")):
 		"index":
-			show_message("Right-click a row and choose \"What does this do?\", or press F1 with a row selected, to read about the verb it uses.")
+			show_message("Press F1 with something selected for help about it, or pick a page from the Manual's contents.")
 			_doc_id = ""
 			return true
 		"section":
@@ -233,6 +249,12 @@ func _section_control(section: String, by_section: Dictionary) -> Control:
 			return _parameters_column(block)
 		"preview":
 			return _figure_block(block.get("definition", null) as ACEDefinition)
+		"usage":
+			return _usage_block(str(block.get("provider_id", "")), str(block.get("ace_id", "")))
+		"see_also":
+			return _see_also_block(block.get("items", []) as Array)
+		"actions":
+			return _entry_actions_block(block.get("definition", null) as ACEDefinition)
 		"about":
 			return _about_block(block, by_section.get("link", {}) as Dictionary)
 		"link":
@@ -373,6 +395,123 @@ func _figure_block(definition: ACEDefinition) -> Control:
 	column.add_child(EventSheetPopupUI.small_caps_label("How this reads on the sheet"))
 	column.add_child(figure)
 	return column
+
+
+## "Used in this sheet: 2 events - go to first / next". The one thing a reference entry can say
+## that a written page never can, and the reason the count is taken HERE rather than baked into
+## the blocks: the blocks are assembled once per verb, and the sheet under them changes on every
+## edit.
+##
+## Null when the verb is not used here at all: an entry that says "used 0 times" is noise, and the
+## absence is already the answer.
+func _usage_block(provider_id: String, ace_id: String) -> Control:
+	var sheet: EventSheetResource = EventSheets.current_sheet()
+	var used: int = EventSheetDocUsage.count(sheet, provider_id, ace_id)
+	if used <= 0:
+		return null
+	_usage_index = -1
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+	var label: Label = Label.new()
+	label.text = EventSheetDocUsage.usage_sentence(used)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	row.add_child(_small_button("Go to first", "Selects the first event of this sheet that uses it.",
+		func() -> void:
+			_usage_index = 0
+			row_requested.emit(provider_id, ace_id, 0)))
+	if used > 1:
+		row.add_child(_small_button("Next", "Selects the next event that uses it.",
+			func() -> void:
+				_usage_index = (_usage_index + 1) % used
+				row_requested.emit(provider_id, ace_id, _usage_index)))
+	return EventSheetPopupUI.panel_section(row)
+
+
+## The neighbours, as chips. A chip is a link, not a button: clicking one is navigating, and the
+## host does the navigating so this panel keeps knowing nothing about where it is hosted.
+func _see_also_block(items: Array) -> Control:
+	if items.is_empty():
+		return null
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	column.add_child(EventSheetPopupUI.small_caps_label("See also"))
+	var chips: HFlowContainer = HFlowContainer.new()
+	chips.add_theme_constant_override("h_separation", int(EventSheetPalette.scaled_f(4.0)))
+	chips.add_theme_constant_override("v_separation", int(EventSheetPalette.scaled_f(4.0)))
+	for entry: Variant in items:
+		var item: Dictionary = entry as Dictionary
+		var doc_id: String = str(item.get("doc_id", ""))
+		chips.add_child(_small_button(str(item.get("title", "")), "Opens this entry.",
+			func() -> void: doc_requested.emit(doc_id)))
+	column.add_child(chips)
+	return column
+
+
+## The four things a reader does with an entry once they have read it, in the sheet's own words.
+## Every one of them runs a path that already exists - the public insert, the public doc router -
+## so an entry can never do something to a sheet that the editor itself cannot.
+func _entry_actions_block(definition: ACEDefinition) -> Control:
+	if definition == null:
+		return null
+	var row: HFlowContainer = HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", int(EventSheetPalette.scaled_f(4.0)))
+	row.add_theme_constant_override("v_separation", int(EventSheetPalette.scaled_f(4.0)))
+	var add_label: String = "Add condition" if definition.ace_type == ACEDefinition.ACEType.CONDITION \
+		else "Add action"
+	if definition.ace_type != ACEDefinition.ACEType.EXPRESSION:
+		row.add_child(_small_button(add_label, "Puts this row into the open sheet at the caret, as one undo step.",
+			func() -> void:
+				if EventSheetDocFigure.insert_definition(definition, add_label):
+					snippet_inserted.emit()))
+		row.add_child(_small_button("Add example events",
+			"Puts the illustrated rows into the open sheet at the caret, as one undo step.",
+			func() -> void:
+				if EventSheetDocFigure.insert_definition(definition, "Add Example Events"):
+					snippet_inserted.emit()))
+	row.add_child(_small_button("Show GDScript", "Shows the line this verb compiles to.",
+		func() -> void: _toggle_gdscript(definition)))
+	var guide_doc: String = EventSheetDocExplain.doc_id_for_pack(
+		EventSheets.addon_pack_directory(definition.provider_id))
+	if not guide_doc.is_empty():
+		row.add_child(_small_button("Open guide", "Opens the guide this verb is documented in.",
+			func() -> void: doc_requested.emit(guide_doc)))
+	_gdscript_card = _wrapped_label("")
+	_gdscript_card.visible = false
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	column.add_child(row)
+	column.add_child(_gdscript_card)
+	return column
+
+
+## Show GDScript: the exact line the verb ships as, plus the member it declares when it keeps state
+## between frames - which is the part the Syntax section alone does not show.
+func _toggle_gdscript(definition: ACEDefinition) -> void:
+	if _gdscript_card == null:
+		return
+	if _gdscript_card.visible:
+		_gdscript_card.visible = false
+		return
+	var lines: PackedStringArray = PackedStringArray()
+	var member: String = str(definition.metadata.get("member_template", "")).strip_edges()
+	if not member.is_empty():
+		lines.append(member)
+	lines.append(EventSheetDocExplain.ships_as(definition))
+	_gdscript_card.text = "\n".join(lines)
+	_gdscript_card.visible = true
+
+
+## A small flat button - the chip this surface uses for anything that is a choice rather than a
+## commitment.
+func _small_button(label: String, tooltip: String, action: Callable) -> Button:
+	var button: Button = Button.new()
+	button.text = EventSheetL10n.translate(label)
+	button.tooltip_text = EventSheetL10n.translate(tooltip)
+	button.flat = true
+	button.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+	button.pressed.connect(action)
+	return button
 
 
 ## Read more. The button prefers the DOC ID: once the guide corpus ships inside the plugin, the

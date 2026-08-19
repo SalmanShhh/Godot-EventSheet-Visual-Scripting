@@ -2996,6 +2996,12 @@ func _get_tooltip(at_position: Vector2) -> String:
 			return hit_count_hover
 	var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
 	var kind: String = str(metadata.get("kind", ""))
+	# A MARK explains itself. The glyphs a sheet puts on a row (runs every frame, trigger, calls a
+	# function, function, inverted, disabled) are the one thing a reader cannot look up by reading
+	# the row, so hovering one says what it means and where the whole legend lives.
+	var mark_help: String = _mark_tooltip(hit)
+	if not mark_help.is_empty():
+		return mark_help
 	# A sentence or chip view over a raw statement keeps the CODE one hover away - the flat exit
 	# ramp in miniature. Resolved through the action index so the tooltip always shows the very
 	# line the row is, not a reconstruction of it.
@@ -3095,6 +3101,23 @@ func _get_tooltip(at_position: Vector2) -> String:
 			tip += "\n⚠ Stayed as code: %s" % raw_block.lift_note
 		return tip
 	return tooltip_text
+
+
+## What a hovered mark means, or "" when the hovered span is not one. The text comes from the
+## Manual's own legend table, so the hover and the legend page can never say two different things.
+func _mark_tooltip(hit: Dictionary) -> String:
+	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	var span_index: int = int(hit.get("span_index", -1))
+	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+		return ""
+	var span: SemanticSpan = row_data.spans[span_index]
+	if span == null:
+		return ""
+	var help: String = EventSheetDocReference.mark_help(span.text)
+	if help.is_empty():
+		return ""
+	return "%s
+%s" % [help, EventSheetL10n.translate("Press F1 for the Manual's page on the marks.")]
 
 
 ## Render a hover tooltip's BBCode ([b]/[i]/[color]) when the text carries any - so an ACE/function

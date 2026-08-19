@@ -2024,3 +2024,42 @@ Expand All,모두 펼치기
 Expand To Level 1,레벨 1까지 펼치기
 Expand To Level 2,레벨 2까지 펼치기
 Expand To Level 3,레벨 3까지 펼치기
+Manual,설명서
+Manual…,설명서…
+Search the Manual…,설명서 검색…
+Show the Manual's contents.,설명서의 목차를 표시합니다.
+The pages you have read this session.,이번 세션에서 읽은 페이지입니다.
+Bookmark this page.,이 페이지를 북마크합니다.
+Back (Alt+Left).,뒤로 (Alt+왼쪽).
+Forward (Alt+Right).,앞으로 (Alt+오른쪽).
+Follow selection,선택 따라가기
+Shows help for whatever you select on the sheet. Clicking inside the Manual pauses this until you press it again.,시트에서 선택한 항목의 도움말을 표시합니다. 설명서 안을 클릭하면 다시 누를 때까지 일시 중지됩니다.
+Following the selection.,선택을 따라갑니다.
+Not following the selection.,선택을 따라가지 않습니다.
+Paused following - press the pin to follow the selection again.,따라가기를 일시 중지했습니다 - 핀을 누르면 다시 선택을 따라갑니다.
+Write this guide,이 가이드 작성
+"Writes the guide skeleton for this behavior from its own vocabulary, ready to fill in.",이 비헤이비어의 어휘로 가이드 뼈대를 작성합니다. 채워 넣기만 하면 됩니다.
+System reference,시스템 레퍼런스
+Behavior reference,비헤이비어 레퍼런스
+Object reference,오브젝트 레퍼런스
+Coming from another event-sheet editor,다른 이벤트 시트 편집기에서 오신 분께
+What the marks on a sheet mean,시트의 기호가 뜻하는 것
+Go to first,첫 번째로
+Selects the first event of this sheet that uses it.,이것을 사용하는 이 시트의 첫 이벤트를 선택합니다.
+Selects the next event that uses it.,이것을 사용하는 다음 이벤트를 선택합니다.
+See also,함께 보기
+Opens this entry.,이 항목을 엽니다.
+Add example events,예제 이벤트 추가
+Show GDScript,GDScript 보기
+Shows the line this verb compiles to.,이 항목이 컴파일되는 줄을 보여 줍니다.
+Opens the guide this verb is documented in.,이 항목이 설명된 가이드를 엽니다.
+"Puts this row into the open sheet at the caret, as one undo step.",이 행을 열린 시트의 캐럿 위치에 한 번의 실행 취소 단위로 넣습니다.
+"Puts the illustrated rows into the open sheet at the caret, as one undo step.",예시 행들을 열린 시트의 캐럿 위치에 한 번의 실행 취소 단위로 넣습니다.
+Nothing in the Manual mentions that,설명서에 해당 내용이 없습니다
+Selected the event that uses it.,이것을 사용하는 이벤트를 선택했습니다.
+That verb is not used in this sheet.,이 항목은 이 시트에서 사용되지 않습니다.
+Press F1 for the Manual's page on the marks.,F1을 누르면 기호에 대한 설명서 페이지가 열립니다.
+Opens the next page in this part of the Manual.,설명서의 이 부분에서 다음 페이지를 엽니다.
+"Press F1 with something selected for help about it, or pick a page from the Manual's contents.",무언가를 선택한 뒤 F1을 누르면 그에 대한 도움말이 열립니다. 설명서 목차에서 페이지를 골라도 됩니다.
+Add these events,이 이벤트 추가
+"Puts these events into the open sheet at the caret, as one undo step.",이 이벤트들을 열린 시트의 캐럿 위치에 한 번의 실행 취소 단위로 넣습니다.

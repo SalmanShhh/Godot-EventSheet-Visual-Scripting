@@ -2024,3 +2024,42 @@ Expand All,全部展开
 Expand To Level 1,展开到第 1 层
 Expand To Level 2,展开到第 2 层
 Expand To Level 3,展开到第 3 层
+Manual,手册
+Manual…,手册…
+Search the Manual…,搜索手册…
+Show the Manual's contents.,显示手册目录。
+The pages you have read this session.,本次会话中读过的页面。
+Bookmark this page.,为此页面添加书签。
+Back (Alt+Left).,后退 (Alt+左)。
+Forward (Alt+Right).,前进 (Alt+右)。
+Follow selection,跟随选择
+Shows help for whatever you select on the sheet. Clicking inside the Manual pauses this until you press it again.,显示你在表中所选内容的帮助。在手册内点击会暂停，直到再次按下为止。
+Following the selection.,正在跟随选择。
+Not following the selection.,未跟随选择。
+Paused following - press the pin to follow the selection again.,已暂停跟随 - 按下图钉可再次跟随选择。
+Write this guide,撰写本指南
+"Writes the guide skeleton for this behavior from its own vocabulary, ready to fill in.",根据该行为自身的词汇写出指南骨架，填空即可。
+System reference,系统参考
+Behavior reference,行为参考
+Object reference,对象参考
+Coming from another event-sheet editor,从其他事件表编辑器过来
+What the marks on a sheet mean,表中记号的含义
+Go to first,跳到第一个
+Selects the first event of this sheet that uses it.,选中本表中第一个用到它的事件。
+Selects the next event that uses it.,选中下一个用到它的事件。
+See also,另见
+Opens this entry.,打开该条目。
+Add example events,添加示例事件
+Show GDScript,显示 GDScript
+Shows the line this verb compiles to.,显示该项编译成的代码行。
+Opens the guide this verb is documented in.,打开记载该项的指南。
+"Puts this row into the open sheet at the caret, as one undo step.",在打开的表中光标处插入此行，作为一次撤销步骤。
+"Puts the illustrated rows into the open sheet at the caret, as one undo step.",在打开的表中光标处插入示意行，作为一次撤销步骤。
+Nothing in the Manual mentions that,手册中没有相关内容
+Selected the event that uses it.,已选中用到它的事件。
+That verb is not used in this sheet.,该项未在本表中使用。
+Press F1 for the Manual's page on the marks.,按 F1 打开手册中关于记号的页面。
+Opens the next page in this part of the Manual.,打开手册本部分的下一页。
+"Press F1 with something selected for help about it, or pick a page from the Manual's contents.",选中内容后按 F1 查看它的帮助，或从手册目录中选择页面。
+Add these events,添加这些事件
+"Puts these events into the open sheet at the caret, as one undo step.",在打开的表中光标处插入这些事件，作为一次撤销步骤。

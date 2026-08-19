@@ -56,6 +56,10 @@ signal link_activated(target: String)
 ## Emitted after a figure's Insert landed its rows in the reader's sheet, so a host can say so.
 signal snippet_inserted()
 
+## Emitted when the reader presses a button a derived page carries ("Write this guide"). The page
+## names the action and its argument; running it is the host's business.
+signal action_requested(action: String, argument: String)
+
 var _doc_id: String = ""
 var _doc_title: String = ""
 var _anchors: Dictionary = {}
@@ -373,9 +377,44 @@ func _control_for(block: Dictionary) -> Control:
 			return _code_or_figure(block)
 		"image":
 			return _image_card(str(block.get("path", "")), str(block.get("alt", "")))
+		"button":
+			return _button_block(block)
+		"next":
+			return _next_block(block)
 		"rule":
 			return HSeparator.new()
 	return null
+
+
+## A one-click offer a DERIVED page carries (the stub's "Write this guide"). A page cannot run
+## anything itself: it reports the action by NAME and the host decides what that name means, which
+## is what keeps this view host-agnostic.
+func _button_block(block: Dictionary) -> Control:
+	var button: Button = Button.new()
+	button.text = EventSheetL10n.translate(str(block.get("label", "")))
+	button.tooltip_text = EventSheetL10n.translate(str(block.get("tooltip", "")))
+	var action: String = str(block.get("action", ""))
+	var argument: String = str(block.get("argument", ""))
+	button.pressed.connect(func() -> void: action_requested.emit(action, argument))
+	var row: HBoxContainer = HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_BEGIN
+	row.add_child(button)
+	return row
+
+
+## "Next: ..." at the foot of a guide. The one piece of chrome that belongs INSIDE the page rather
+## than around it: it is where the reading continues, and a reader who has reached the bottom is
+## already looking at the bottom.
+func _next_block(block: Dictionary) -> Control:
+	var button: Button = Button.new()
+	button.flat = true
+	button.text = "Next: %s" % str(block.get("title", ""))
+	button.tooltip_text = "Opens the next page in this part of the Manual."
+	var doc_id: String = str(block.get("doc_id", ""))
+	button.pressed.connect(func() -> void: doc_requested.emit(doc_id, ""))
+	var box: VBoxContainer = EventSheetPopupUI.form_box()
+	box.add_child(button)
+	return EventSheetPopupUI.panel_section(box)
 
 
 ## A heading, registered under its slug so an in-page link can find it later. Headings follow a
@@ -724,6 +763,10 @@ func _on_meta_clicked(meta: Variant) -> void:
 	match str(link.get("kind", "")):
 		"anchor":
 			jump_to_anchor(str(link.get("anchor", "")))
+		"docid":
+			# A derived page (a reference table's verb, the glossary's related terms) links by id.
+			# It goes out the same signal a guide link does, so the host navigates one way.
+			doc_requested.emit(target, "")
 		"url":
 			OS.shell_open(target)
 			link_activated.emit(target)

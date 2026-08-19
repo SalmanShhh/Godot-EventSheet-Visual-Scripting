@@ -33,7 +33,7 @@ const DEFINITIONS: Array[Dictionary] = [
 		"doc": "Row snippets live here (Save Selection as Snippet… / Insert Snippet…)."},
 	{"name": "eventsheets/project/docs_dir", "default": "res://eventsheet_docs", "type": TYPE_STRING,
 		"hint": PROPERTY_HINT_DIR,
-		"doc": "Your project's own .md guides live here and join the Documentation window's tree (Tools ▸ Documentation…)."},
+		"doc": "Your project's own .md guides live here and join the Manual's tree (Tools ▸ Manual…)."},
 	{"name": "eventsheets/addons/composition_mode", "default": "allowed", "type": TYPE_STRING,
 		"hint": PROPERTY_HINT_ENUM, "hint_string": "allowed,off",
 		"doc": "Whether sheets may include other sheets (policy gates, never bytes)."},
