@@ -1,12 +1,15 @@
 extends Node2D
 
+
 class Stats:
 	var hp := 10
 	var atk := 2
 
+
 var target: Node2D = null
 var facing: Vector2 = Vector2(1, 0)
 var enemy: Node2D = null
+
 
 func _process(delta: float) -> void:
 	var dir = (target.position - position).normalized()

@@ -6,12 +6,14 @@ var event: Array = []
 var hp: int = 100
 var target: Vector2 = Vector2.ZERO
 
+
 ## Moves the player toward the cursor.
 func chase() -> void:
 	position = position.move_toward(target, 100.0)  # TODO tweak
 	hp -= 1  # ouch
 	# FIXME: this double-fires on respawn
 	died.emit()
+
 
 func handle(delta: float) -> void:
 	match event:
