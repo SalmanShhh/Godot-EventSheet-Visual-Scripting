@@ -2402,3 +2402,8 @@ The note above a verb its pack has deprecated.,"Der Hinweis über einem Verb, da
 The rule under a table's header row on a page.,Die Linie unter der Kopfzeile einer Tabelle auf einer Seite.
 The strip down the left of the sheet that carries the event numbers.,"Der Streifen links am Blatt, der die Ereignisnummern trägt."
 The event numbers themselves.,Die Ereignisnummern selbst.
+Cursor is over,Zeiger ist über
+(enters),(kommt herein)
+(leaves),(geht hinaus)
+On gamepad connected / disconnected,Bei Gamepad verbunden / getrennt
+On %s clicked,Bei Klick auf %s

@@ -6251,7 +6251,12 @@ func _await_loop_trigger_spans(seconds: String) -> Array[SemanticSpan]:
 
 
 ## The lifecycle handlers whose top-level branches read as the input triggers a player would name.
-const INPUT_HANDLER_TRIGGERS: Array[String] = ["OnInput", "OnUnhandledInput", "OnUnhandledKeyInput"]
+## R26 - `_input_event` is one of them: a clickable body branches on the event exactly as the three
+## whole-screen handlers do, and the only difference is that the input already landed on the object,
+## which is what its branch reading says.
+const INPUT_HANDLER_TRIGGERS: Array[String] = [
+	"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput", "OnInputEvent"
+]
 
 
 ## The object a trigger row belongs to. A signal-backed trigger belongs to the NODE that emits it -
@@ -6460,7 +6465,8 @@ func _input_branch_reading(event_row: EventRow) -> Dictionary:
 		else:
 			continue
 		atom["used"] = true
-	var sentence: String = _input_branch_sentence(event_class, edge, button, key, device)
+	var sentence: String = _input_branch_sentence(event_class, edge, button, key, device,
+		event_row.trigger_id == "OnInputEvent")
 	if sentence.is_empty():
 		return {}
 	# A condition drops off the lane only when the sentence absorbed ALL of its conjuncts; one that
@@ -6478,7 +6484,14 @@ func _input_branch_reading(event_row: EventRow) -> Dictionary:
 
 ## The one-line trigger sentence for a recognized branch ("" = not a shape we name).
 func _input_branch_sentence(event_class: String, edge: int, button: String, key: String,
-		device: String = "") -> String:
+		device: String = "", on_this_object: bool = false) -> String:
+	# R26 - the input already landed on this body, so a pressed-button branch of `_input_event` is
+	# the sheet's own "On <object> clicked" rather than a bare button press somewhere on the screen.
+	if on_this_object and event_class == "InputEventMouseButton" and edge > 0 \
+			and not button.begins_with("MOUSE_BUTTON_WHEEL_"):
+		var clicked_object: String = _script_object_name()
+		if not clicked_object.is_empty():
+			return EventSheetL10n.translate("On %s clicked") % clicked_object
 	match event_class:
 		"InputEventMouseMotion":
 			return EventSheetL10n.translate("On mouse moved")
@@ -6736,6 +6749,20 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		if not lifecycle_reading.is_empty():
 			trigger_words = str(lifecycle_reading.get("text", trigger_words))
 			trigger_object = str(lifecycle_reading.get("object", trigger_object))
+		# ── R25 / R26 lens hook ────────────────────────────────────────────────────────────────
+		# The cursor arriving at an object, and a gamepad being plugged in, are the Mouse's and the
+		# Gamepad's news - not the news of whichever node Godot happens to file the signal under. The
+		# object the cursor is over is the wired source when there is one, else the script's own.
+		var cursor_object: String = trigger_object
+		if event_row.trigger_source_path.strip_edges().is_empty() and not _script_object_name().is_empty():
+			cursor_object = _script_object_name()
+		var device_note: String = ""
+		var device_reading: Dictionary = EventSheetViewportReadingRows.input_signal_trigger_reading(
+			event_row.trigger_id, cursor_object)
+		if not device_reading.is_empty():
+			trigger_words = str(device_reading.get("text", trigger_words))
+			trigger_object = str(device_reading.get("object", trigger_object))
+			device_note = str(device_reading.get("note", ""))
 		if not timer_reading.is_empty():
 			# ONE cell, not a cell plus a note: a second span in the condition lane takes the object
 			# cell for itself and leaves the row's object unsaid. The Timer's name is the receipt for
@@ -6766,6 +6793,17 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				}.merged(condition_style_meta, true)
 			)
 		)
+		# R26 - which edge of the cursor pair this handler is, said quietly beside the words the two
+		# share. Muted, because the sentence is the same sentence either way.
+		if not device_note.is_empty():
+			spans.append(_make_span(device_note, SemanticSpan.SpanType.COMMENT, {
+				"lane": "condition",
+				"kind": "trigger",
+				"ace_index": 0,
+				"editable": false,
+				"line_index": condition_line_index,
+				"text_color": EventSheetPalette.TEXT_MUTED
+			}))
 		# A signal handler's PARAMETERS are the trigger's payload - the body that entered, the item
 		# that was picked up. An event sheet shows them as chips beside the trigger, so a reader knows
 		# what the event hands them without opening the code.

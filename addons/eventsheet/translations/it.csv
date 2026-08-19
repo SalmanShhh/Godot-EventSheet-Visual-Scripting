@@ -2402,3 +2402,8 @@ The note above a verb its pack has deprecated.,La nota sopra un verbo che il suo
 The rule under a table's header row on a page.,La linea sotto la riga di intestazione di una tabella su una pagina.
 The strip down the left of the sheet that carries the event numbers.,La striscia a sinistra del foglio che porta i numeri di evento.
 The event numbers themselves.,I numeri di evento stessi.
+Cursor is over,Il cursore è su
+(enters),(entra)
+(leaves),(esce)
+On gamepad connected / disconnected,Quando un gamepad viene collegato / scollegato
+On %s clicked,Quando si fa clic su %s

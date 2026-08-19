@@ -56,6 +56,10 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_unhandled_input", "event: InputEvent")
 		"OnUnhandledKeyInput":
 			return _lifecycle("_unhandled_key_input", "event: InputEvent")
+		"OnInputEvent":
+			# R26. Input that landed ON this body: the collision shape the click hit rides along, so
+			# the handler can tell which part of the object was picked.
+			return _lifecycle("_input_event", "viewport: Viewport, event: InputEvent, shape_idx: int")
 		"OnDraw":
 			# The object's own paint pass. Runs when the node is asked to redraw (`queue_redraw()`),
 			# which is why it classifies as a reaction rather than a per-frame tick below.
@@ -181,7 +185,7 @@ static func tempo_class_for(trigger_id: String) -> String:
 	match trigger_id:
 		"OnProcess", "OnPhysicsProcess", "OnPostTick", "OnPhysicsPostTick":
 			return TEMPO_EVERY_TICK
-		"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput", "On2DViewportInput":
+		"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput", "OnInputEvent", "On2DViewportInput":
 			return TEMPO_INPUT
 		"OnDrawOver2DViewport", "OnDrawGizmo":
 			# A paint pass runs whenever the editor repaints that surface - the hot path of a tool.

@@ -2402,3 +2402,8 @@ The note above a verb its pack has deprecated.,扩展包已弃用的动词上方
 The rule under a table's header row on a page.,页面中表格表头行下方的分隔线。
 The strip down the left of the sheet that carries the event numbers.,事件表左侧承载事件编号的竖条。
 The event numbers themselves.,事件编号本身。
+Cursor is over,光标位于
+(enters),(进入)
+(leaves),(离开)
+On gamepad connected / disconnected,手柄连接 / 断开时
+On %s clicked,点击 %s 时

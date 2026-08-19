@@ -427,6 +427,15 @@ That is the order this section is in.
   percent; `@export_file("*.png")` reads `file` with its filter; `@export_dir` reads `folder`;
   `@export_multiline` reads `text  multiline`; a Color reads its swatch and its word; and
   `@export_flags(...)` reads `flags` with the names of the bits.
+- **The cursor, the click and the gamepad cable read on the objects they belong to.** A handler
+  wired to `mouse_entered` or `mouse_exited` reads `Mouse ▸ Cursor is over Player`, with the edge
+  said quietly beside it - `(enters)` or `(leaves)` - and the object is the node the cursor is over.
+  A `_input_event(viewport, event, shape_idx)` on a clickable body is an input handler like `_input`
+  is: its `if event is InputEventMouseButton and event.pressed:` branch reads `Mouse ▸ On Player
+  clicked` with the branch's own rows under it, in both the typed and the untyped spelling. And
+  `Input.joy_connection_changed.connect(_on_pad)` with a `_on_pad(device, connected)` handler reads
+  `Gamepad ▸ On gamepad connected / disconnected`, with `device` and `connected` as the payload chips
+  that say which of the two just happened.
 - **A local variable's scope is enforced, and shown.** A local is visible from the event that
   declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
   action that uses `dealt` into an event that cannot see it and the drop refuses before you release,

@@ -606,6 +606,48 @@ static func notification_trigger_words(constant_name: String) -> String:
 	return "%s %s" % [EventSheetL10n.translate("On"), humanized]
 
 
+## R25/R26. The input signals whose words belong to a DEVICE rather than to the node that emitted
+## them: the cursor arriving at an object and leaving it, and a gamepad being plugged in or pulled
+## out. Godot files all three as ordinary signals, so today they read as "On Mouse Entered" under the
+## node - a name a reader has to translate back. The sheet already says `Cursor is over <object>` and
+## `On gamepad connected / disconnected`, so those are the words, on the device the reader would look
+## for them under.
+##
+## Returns {"object", "text", "note"} - `note` the muted half-word that says WHICH edge of the pair
+## this handler is - or {} when the trigger is not one of the three, which keeps today's reading.
+## `object_label` is the object the cursor is over; it is unused by the gamepad reading, which is
+## about the machine and not about any one node.
+static func input_signal_trigger_reading(trigger_id: String, object_label: String) -> Dictionary:
+	var signal_name: String = trigger_id.strip_edges().trim_prefix("signal:")
+	var over: String = object_label.strip_edges()
+	match signal_name:
+		"mouse_entered":
+			if over.is_empty():
+				return {}
+			return {
+				"object": EventSheetL10n.translate("Mouse"),
+				"text": "%s %s" % [EventSheetL10n.translate("Cursor is over"), over],
+				"note": EventSheetL10n.translate("(enters)")
+			}
+		"mouse_exited":
+			if over.is_empty():
+				return {}
+			return {
+				"object": EventSheetL10n.translate("Mouse"),
+				"text": "%s %s" % [EventSheetL10n.translate("Cursor is over"), over],
+				"note": EventSheetL10n.translate("(leaves)")
+			}
+		"joy_connection_changed":
+			# One signal, both edges: Godot hands the answer over as a parameter rather than raising
+			# two signals, so the row says both and the `connected` chip beside it says which.
+			return {
+				"object": EventSheetL10n.translate("Gamepad"),
+				"text": EventSheetL10n.translate("On gamepad connected / disconnected"),
+				"note": ""
+			}
+	return {}
+
+
 ## M41. An event sheet has one collision trigger and one for the overlap ending, where Godot has four
 ## signals (bodies and areas, entering and leaving). Keyed by the trigger id AND usable from the
 ## signal name, so a handler lifted from a `.connect(...)` line and one lifted from a declared

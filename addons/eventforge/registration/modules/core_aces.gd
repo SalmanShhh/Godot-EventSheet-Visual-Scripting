@@ -64,6 +64,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs on input no UI element consumed, ideal for gameplay controls that ignore menu clicks."))
 	descriptors.append(F.make_descriptor("Core", "OnUnhandledKeyInput", "On Unhandled Key Input", ACEDescriptor.ACEType.TRIGGER, "", "_unhandled_key_input", [], "Input", "On unhandled key input")
 		.described("Runs on keyboard input no UI element consumed - the keys-only sibling of On Unhandled Input, so mouse and gamepad traffic never wakes it."))
+	descriptors.append(F.make_descriptor("Core", "OnInputEvent", "On Input On This Object", ACEDescriptor.ACEType.TRIGGER, "", "_input_event", [], "Input", "On input on this object", "CollisionObject2D")
+		.described("Runs when input lands on this object's own collision shape - a click, a drag or a touch that hit it rather than the world behind it."))
 	descriptors.append(F.make_descriptor("Core", "OnTimeout", "On Timeout", ACEDescriptor.ACEType.TRIGGER, "", "timeout", [], "Signals / Scene / Input", "On timeout", "Timer")
 		.described("Runs when this Timer counts down to zero, e.g. ending a cooldown or spawn delay."))
 	descriptors.append(F.make_descriptor("Core", "OnAnimationFinished", "On Animation Finished", ACEDescriptor.ACEType.TRIGGER, "", "animation_finished", [F.make_param("anim_name", "String", "", "Animation", "Name of the animation that finished.")], "Signals / Scene / Input", "On animation finished {anim_name}", "AnimationPlayer")

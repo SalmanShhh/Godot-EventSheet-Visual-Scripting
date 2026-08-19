@@ -2402,3 +2402,8 @@ The note above a verb its pack has deprecated.,パックが非推奨にした動
 The rule under a table's header row on a page.,ページ内の表の見出し行の下に引かれる罫線。
 The strip down the left of the sheet that carries the event numbers.,シートの左側にあり、イベント番号を並べる帯。
 The event numbers themselves.,イベント番号そのもの。
+Cursor is over,カーソルが上にある
+(enters),(入る)
+(leaves),(出る)
+On gamepad connected / disconnected,ゲームパッド接続 / 切断時
+On %s clicked,%s がクリックされたとき

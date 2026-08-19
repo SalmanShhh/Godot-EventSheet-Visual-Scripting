@@ -32,6 +32,22 @@
   guide the index does not list, or lists without a description. `tests/module_guides_test.gd` reads
   the reference tables under their new headings, keyed on a set that also accepts a table headed by
   its kind - 333 rows in the addon guides had drifted out of that sweep unnoticed.
+### Changed - the cursor, the click and the gamepad cable read on the objects they belong to
+
+- **`mouse_entered` / `mouse_exited` read as the Mouse's own sentence.** A handler wired to either
+  signal - declared in the file or connected from the scene - reads `Mouse ▸ Cursor is over Player`
+  with the edge said quietly beside it: `(enters)` or `(leaves)`. The object is the node the cursor
+  is over (the wired source when there is one, else the script's own object), so the row answers
+  "over what?" without opening the code.
+- **`_input_event` on a clickable body reads as a click on that body.** The handler lifts to a
+  trigger like the other input handlers, and its `if event is InputEventMouseButton and
+  event.pressed:` branch reads `Mouse ▸ On Player clicked`, with the branch's own rows under it.
+  Both spellings lift - Godot's typed signature and the untyped `func _input_event(vp, event,
+  shape):` a beginner writes.
+- **`Input.joy_connection_changed.connect(...)` reads on the Gamepad.**
+  `Gamepad ▸ On gamepad connected / disconnected`, with the handler's `device` and `connected`
+  parameters as the payload chips beside it - one signal, both edges, and the chip says which.
+- All three are readings: the opened file still recompiles byte-identically.
 
 ### Added - a Local row can be dragged into another event, and says when it may not
 

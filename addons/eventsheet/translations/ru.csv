@@ -2402,3 +2402,8 @@ The note above a verb its pack has deprecated.,"Примечание над гл
 The rule under a table's header row on a page.,Линия под строкой заголовка таблицы на странице.
 The strip down the left of the sheet that carries the event numbers.,"Полоса вдоль левого края листа, которая несёт номера событий."
 The event numbers themselves.,Сами номера событий.
+Cursor is over,Курсор над
+(enters),(входит)
+(leaves),(выходит)
+On gamepad connected / disconnected,При подключении / отключении геймпада
+On %s clicked,При щелчке по %s

@@ -2402,3 +2402,8 @@ The note above a verb its pack has deprecated.,팩이 더 이상 권장하지 �
 The rule under a table's header row on a page.,페이지 안 표의 머리글 행 아래에 그어지는 선.
 The strip down the left of the sheet that carries the event numbers.,시트 왼쪽에서 이벤트 번호를 담고 있는 띠.
 The event numbers themselves.,이벤트 번호 자체.
+Cursor is over,커서가 위에 있음
+(enters),(들어옴)
+(leaves),(나감)
+On gamepad connected / disconnected,게임패드 연결 / 해제 시
+On %s clicked,%s 클릭 시

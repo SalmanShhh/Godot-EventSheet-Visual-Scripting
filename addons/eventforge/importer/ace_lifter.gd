@@ -28,6 +28,10 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _input(event: InputEvent) -> void:": "OnInput",
 	"func _unhandled_input(event: InputEvent) -> void:": "OnUnhandledInput",
 	"func _unhandled_key_input(event: InputEvent) -> void:": "OnUnhandledKeyInput",
+	# R26. The callback a clickable body gets when input lands ON it. It is an input handler like the
+	# three above - the body branches on the event exactly the same way - so it lifts to a trigger
+	# rather than staying the raw handler it used to be.
+	"func _input_event(viewport: Viewport, event: InputEvent, shape_idx: int) -> void:": "OnInputEvent",
 	# The tree + paint callbacks. They carry authored logic as often as `_ready` does, so they read as
 	# the object's own lifecycle triggers rather than as helper functions. `_enter_tree` is the one that
 	# needs a body check as well as a header one: the host-binding boilerplate every host-targeting pack
@@ -684,6 +688,7 @@ static func _is_engine_virtual_header(header: String) -> bool:
 	return function_name in [
 		"_init", "_static_init", "_ready", "_enter_tree", "_exit_tree", "_process", "_physics_process",
 		"_input", "_unhandled_input", "_unhandled_key_input", "_shortcut_input", "_gui_input",
+		"_input_event",
 		"_draw", "_notification", "_get_configuration_warnings", "_to_string",
 		"_get_property_list", "_validate_property", "_property_can_revert", "_property_get_revert",
 		"_integrate_forces", "_physics_process_internal",
@@ -1534,7 +1539,7 @@ static func _is_lifecycle_header(header: String) -> bool:
 
 
 static func _loose_lifecycle_match(header: String) -> RegExMatch:
-	var loose_regex: RegEx = RegEx.create_from_string("^func (_ready|_process|_physics_process|_input|_unhandled_input|_unhandled_key_input)\\((.*)\\)(?: -> void)?:$")
+	var loose_regex: RegEx = RegEx.create_from_string("^func (_ready|_process|_physics_process|_input|_unhandled_input|_unhandled_key_input|_input_event)\\((.*)\\)(?: -> void)?:$")
 	return loose_regex.search(header)
 
 
@@ -1632,7 +1637,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			var loose_map: Dictionary = {
 				"_ready": "OnReady", "_process": "OnProcess", "_physics_process": "OnPhysicsProcess",
 				"_input": "OnInput", "_unhandled_input": "OnUnhandledInput",
-				"_unhandled_key_input": "OnUnhandledKeyInput",
+				"_unhandled_key_input": "OnUnhandledKeyInput", "_input_event": "OnInputEvent",
 			}
 			trigger_id = str(loose_map[loose_lifecycle.get_string(1)])
 			source_header = function_lines[0]
