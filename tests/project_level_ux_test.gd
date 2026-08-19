@@ -123,6 +123,18 @@ static func _routes_and_drags() -> bool:
 		EventSheetProjectOutline.drag_intent_for((outline["scenes"] as Array)[0]), "go_to_layout") and all_passed
 	all_passed = _check("an entry the sheet has no gesture for refuses the drag",
 		EventSheetProjectOutline.drag_intent_for((outline["files"] as Array)[0]), "") and all_passed
+	# The canvas has to RECOGNISE the payload, or the whole gesture is a drag onto a surface that
+	# quietly ignores it. The Project bar's payload is deliberately its own type, so a class from the
+	# project can never be mistaken for an object the sheet already uses.
+	all_passed = _check("the canvas recognises the Project bar's payload",
+		EventSheetViewport.is_project_bar_drag({"type": EventSheetProjectBar.DRAG_TYPE,
+			"intent": "start_event", "label": "Player"}), true) and all_passed
+	all_passed = _check("and does not mistake it for an Object bar drop",
+		EventSheetViewport.is_object_bar_drag({"type": EventSheetProjectBar.DRAG_TYPE,
+			"intent": "start_event", "label": "Player"}), false) and all_passed
+	all_passed = _check("a payload with no intent is not a Project bar drop",
+		EventSheetViewport.is_project_bar_drag({"type": EventSheetProjectBar.DRAG_TYPE,
+			"label": "levels.json"}), false) and all_passed
 	return all_passed
 
 

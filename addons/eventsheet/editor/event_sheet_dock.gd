@@ -4517,6 +4517,32 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 	add_row_for_object(object_label, on_action_lane)
 
 
+## T13 - something dragged off the PROJECT bar and dropped on the canvas. The bar already decided what
+## dropping it MEANS (it refuses the drag for anything the sheet has no gesture for); this turns that
+## into the picker the reader would have opened by hand, with the object step already answered:
+##   a class or base class -> start an event on it
+##   a sound               -> a Play sound action
+##   a scene               -> a Go to layout action
+func apply_project_entry_drop(payload: Dictionary, target_event: Resource) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	if target_event != null and _active_view() != null:
+		_active_view().select_resource(target_event)
+	var label: String = str(payload.get("label", "")).strip_edges()
+	match str(payload.get("intent", "")):
+		"start_event":
+			# The class IS the object scope the picker groups its verbs by, so the entry's own name
+			# answers the object step outright.
+			_ace_picker.open("new_event", false, null, {"object_scope": label, "object_label": label})
+			_set_status("Starting an event on %s." % label)
+		"play_sound":
+			_quick_add("play sound %s" % str(payload.get("path", "")))
+			_set_status("Added a Play sound action for %s." % label)
+		"go_to_layout":
+			_quick_add("change scene %s" % str(payload.get("path", "")))
+			_set_status("Added a Go to layout action for %s." % label)
+
+
 ## R23 - an Input Map action dragged off the bar's INPUT section and dropped on the canvas. An action
 ## is not an object: there is exactly one thing a reader means by dropping "jump" on a sheet, so this
 ## writes that event outright instead of opening the picker. It lands after the event it was dropped
