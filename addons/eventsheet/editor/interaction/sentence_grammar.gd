@@ -8360,6 +8360,7 @@ static func scene_tree_words(text: String) -> String:
 					_fill(translate("the child named {name}"), {"name": found.get_string(2)})])
 	return out
 
+
 ## U5. A node addressed by its unique name IS that object, so the row says the object with the way it
 ## was addressed as the aside it is.
 ##
@@ -8397,6 +8398,52 @@ static func _unique_name_words(text: String) -> String:
 ## The scene-tree matchers, compiled once for the session like the grammar's others.
 static var _scene_node_regex: RegEx = null
 static var _find_child_regex: RegEx = null
+
+
+# ── U3: a note on a row ──────────────────────────────────────────────────────────
+#
+# A note on one action is how a sheet comments a single step, and a trailing `# ...` is how GDScript
+# writes exactly that. It was already in the file; showing it costs nothing and the bytes never move.
+
+
+## U3. The words a note carries when it is about work still to do. A comment line that opens with one
+## of these belongs to the statement under it and is worth counting; every other comment line is a
+## comment row of its own, which is what it has always been.
+const TASK_NOTE_MARKERS: PackedStringArray = ["TODO", "FIXME", "HACK", "NOTE"]
+
+
+## U3. One statement split from its trailing note, as [code, note]. The note is "" when the line has
+## none, and the code is returned untouched in that case.
+##
+## Quote-aware, because a `#` inside a string literal is content somebody typed. Whitespace before the
+## `#` is required for the same reason: `"#ff0000"` has already been skipped as a literal, but a bare
+## `#` glued to the end of an expression is not the shape a note is written in.
+static func trailing_comment(text: String) -> PackedStringArray:
+	if not text.contains("#"):
+		return PackedStringArray([text, ""])
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if character == "\"" or character == "'":
+			index = _string_end(text, index) + 1
+			continue
+		if character == "#" and index > 0 and text[index - 1] in [" ", "\t"]:
+			var code: String = text.substr(0, index).rstrip(" \t")
+			var note: String = text.substr(index + 1).strip_edges()
+			return PackedStringArray([text, ""]) if code.strip_edges().is_empty() or note.is_empty() \
+				else PackedStringArray([code, note])
+		index += 1
+	return PackedStringArray([text, ""])
+
+
+## U3. The marker a comment opens with ("TODO", "FIXME", …), or "" when it opens with none. The
+## marker may be followed by a colon or by nothing at all, which is how both spellings are written.
+static func task_note_marker(comment: String) -> String:
+	var text: String = comment.strip_edges().trim_prefix("#").strip_edges()
+	for marker: String in TASK_NOTE_MARKERS:
+		if text == marker or text.begins_with("%s " % marker) or text.begins_with("%s:" % marker):
+			return marker
+	return ""
 
 
 # ── U2: match PATTERNS read as the conditions they are ───────────────────────────

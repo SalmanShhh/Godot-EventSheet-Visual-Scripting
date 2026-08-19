@@ -744,6 +744,74 @@ That is the order this section is in.
 
   ![A sprite, UI, sound and game-feel script opened as a sheet](images/reading-sprite-sound-juice.png)
 
+- **Vectors read as the words a reader has for each operation.** `(target.position -
+  position).normalized()` is the one thing every chase line means, so it reads `the direction from
+  Player to target`; a bare `dir.normalized()` is `unit vector of dir`. `velocity.length()` is `the
+  speed` - any other length keeps `length of x`, which is the honest answer for a piece of text as
+  much as for a vector. `facing.dot(dir)` reads `how much facing points along dir (-1 to 1)`, because
+  the number is useless without the range it lives in. `dir.rotated(PI / 2)` reads `dir turned 90°`,
+  and so do the `TAU / 4`, `deg_to_rad(45)` and negative spellings of the same fixed turn; a turn by
+  something with a name in it (`PI / sides`) is not a number the row can show, so it keeps its code.
+  `angle_to` and the `UP` / `DOWN` / `ZERO` / `ONE` constants already read as words.
+
+- **Colours read as colours.** `Color.RED.darkened(0.2)` is `red, 20% darker` and `lightened` is its
+  twin; `Color(1, 0, 0, 0.5)` is `red at 50% opacity`; `Color.from_hsv(0.3, 1, 1)` is `colour from
+  hue 30%, full saturation`, with the brightness shown only when it is not full. A mix nobody has a
+  word for keeps its channels rather than being given a name it does not have. The swatch beside the
+  value is unchanged: it reads the value the row holds, not the words drawn next to it, so clicking
+  it still opens the picker on the real colour. And `modulate = modulate.lerp(Color.WHITE, 5 *
+  delta)` is one verb - `Ease colour toward white at 5` - claimed only when the line reads the very
+  member it writes, so an ordinary blend from somewhere else stays the Set it is.
+
+- **`match` patterns read as the conditions they are.** A match on plain values already reads as the
+  if / else-if / else chain a reader knows. The patterns that say something a plain value cannot join
+  the same chain now: `["move", var x, var y]` is `event is a list of 3 starting "move"` with `x` and
+  `y` as chips beside it, `{"type": "hit", "amount": var a}` is `event is a table with type = "hit"`
+  with `amount → a` as its chip, and `var other when other is String` is `event is text` with `other`
+  as its chip - the guard read through the ordinary condition grammar, with the bound name standing
+  for what it is bound to, because that is what it stands for. A bare `var other` and `_` are both the
+  Else they are. Strictness applies here as everywhere: a nested pattern, an open-ended `..`, or any
+  pattern with a call in it keeps the exact text it was written as.
+
+- **A loop that counts down or steps says which values the body sees.** `for i in range(10, 0, -1)`
+  is `For "i" from 10 down to 1` and `for i in range(0, 100, 10)` is `For "i" from 0 to 90 step 10`.
+  Godot's stop value is exclusive; the row shows the last value the body actually reaches, so the
+  arithmetic is done once rather than by every reader.
+
+- **A pure-data `class X:` is a Data type.** The bar in the head says `Data type AbilityData` and its
+  fields are the rows below, each editable in place. `Stats.new()` reads `a new Stats`,
+  `stats.duplicate()` reads `a copy of stats`, and `thing is Stats` reads `is a Stats`. An inner class
+  with methods in it keeps its read-only code block: a sentence may only stand for a shape it can see
+  whole.
+
+- **The scene tree in one word each.** `find_child("HUD")` is `the child named HUD`,
+  `get_tree().current_scene` is `the layout`, `get_tree().current_scene.get_node("Boss")` is `Boss in
+  the layout`, `%HealthBar` is `HealthBar` with a muted `unique name` beside it, and
+  `enemy.get_path()` is `enemy's path`. Copying a node already in the scene and planting the copy -
+  `var copy = enemy.duplicate()` then `get_parent().add_child(copy)` - is one row, `Clone object enemy
+  (→ copy, next to it)`; Create object stays what it is, which is making one out of a scene file. Both
+  spellings of the plant count, the picked Add Child row and the plain call a hand-written script
+  writes, and the row says whether the copy went next to the node or inside it.
+
+- **A trailing `# note` is a note on that row.** `hp -= 1  # ouch` reads `Subtract 1 from hp
+  💬 ouch`, muted, at the end of the row - which is where and how an event sheet writes a note about
+  one step. Before this the comment rode into whichever value the lift put the end of the line in, so
+  the row read "Subtract 1  # ouch from hp". The split is quote-aware: a `#` inside a string literal
+  is content somebody typed, and a `#` with nothing after it says nothing. A `## description` above a
+  function is still that function's description, drawn beside its name.
+
+- **A TODO / FIXME / HACK / NOTE written directly above a step belongs to that step.** It is how a
+  person writes a note about one action when the language has nowhere else to put it, so it reads
+  where a note reads. Every other comment line stays the comment row it has always been - a paragraph
+  above a run of steps is about the run, not about the first line of it. Both lines are still in the
+  file either way; nothing here changes a byte.
+
+- **Where the project's notes are listed.** Tools ▸ Project Doctor counts every task note in your own
+  scripts, one finding per line, naming the marker, the file and the line so you can jump to it. The
+  Outline (the jump list for the open sheet) grows a `To do` folder at the end with the same notes in
+  it. Both are notes, never warnings: an unfinished thought is not a fault, it is a thing somebody
+  meant to come back to.
+
 #### Input, gamepads and sensors
 
 - **The Input Map is an object, and the file says which controls it uses.** An opened script that names

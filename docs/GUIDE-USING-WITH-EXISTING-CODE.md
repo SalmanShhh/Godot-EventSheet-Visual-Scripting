@@ -793,6 +793,25 @@ That is the order this section is in.
   spellings of the plant count, the picked Add Child row and the plain call a hand-written script
   writes, and the row says whether the copy went next to the node or inside it.
 
+- **A trailing `# note` is a note on that row.** `hp -= 1  # ouch` reads `Subtract 1 from hp
+  💬 ouch`, muted, at the end of the row - which is where and how an event sheet writes a note about
+  one step. Before this the comment rode into whichever value the lift put the end of the line in, so
+  the row read "Subtract 1  # ouch from hp". The split is quote-aware: a `#` inside a string literal
+  is content somebody typed, and a `#` with nothing after it says nothing. A `## description` above a
+  function is still that function's description, drawn beside its name.
+
+- **A TODO / FIXME / HACK / NOTE written directly above a step belongs to that step.** It is how a
+  person writes a note about one action when the language has nowhere else to put it, so it reads
+  where a note reads. Every other comment line stays the comment row it has always been - a paragraph
+  above a run of steps is about the run, not about the first line of it. Both lines are still in the
+  file either way; nothing here changes a byte.
+
+- **Where the project's notes are listed.** Tools ▸ Project Doctor counts every task note in your own
+  scripts, one finding per line, naming the marker, the file and the line so you can jump to it. The
+  Outline (the jump list for the open sheet) grows a `To do` folder at the end with the same notes in
+  it. Both are notes, never warnings: an unfinished thought is not a fault, it is a thing somebody
+  meant to come back to.
+
 #### Input, gamepads and sensors
 
 - **The Input Map is an object, and the file says which controls it uses.** An opened script that names

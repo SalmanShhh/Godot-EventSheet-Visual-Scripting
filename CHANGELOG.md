@@ -323,6 +323,23 @@ spelling one hover away. Display only - the file is untouched and the byte round
   redone. Click one to undo or redo back to it; hover one to see the rows it touched lit on the
   canvas. The marker follows the sheet snapshots the undo funnel restores, so Ctrl+Z from anywhere,
   the toolbar arrows and a click in the list all move the same place.
+### Added - a note on a row, and the notes a project leaves itself
+
+- **A trailing `# note` reads as a note on its row.** `hp -= 1  # ouch` reads `Subtract 1 from hp
+  💬 ouch` instead of putting the comment inside the value it was lifted into ("Subtract 1  # ouch
+  from hp"). Every path a row is drawn through carries it: the sentence path, the picked-ACE path and
+  the local-declaration path, where the note also stopped the starting value being read as text.
+  Quote-aware, so a `#` inside a string literal (a colour, a hash in a label) is still content
+  somebody typed.
+- **A TODO / FIXME / HACK / NOTE line directly above a step is that step's note.** It is how a person
+  writes a note on one action when the language has nowhere else to put it. Every other comment line
+  stays the comment row it has always been: a paragraph above a run of steps is about the run.
+- **The Doctor counts them, and the Outline gathers them.** Each task note in the project's own
+  scripts is an `info` finding naming its marker, its file and its line, so the report can jump
+  straight to it; the Outline grows a `To do` folder at the end holding the same notes from the open
+  sheet. Both are lenses over comments already in the file - nothing is written, and the byte
+  round-trip is untouched.
+
 ### Added - match patterns, data types and the scene tree read as the sheet's own rows
 
 - **`match` patterns are conditions.** A match on plain values already read as the Else-if chain it is;

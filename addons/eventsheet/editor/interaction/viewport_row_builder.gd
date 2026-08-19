@@ -3144,13 +3144,21 @@ static func function_body_info(code: String) -> Dictionary:
 ## read through the SAME producer - a shape must say one thing whether it was typed or picked.
 ## Kept here as a thin forwarder so the classifiers around it keep one import surface.
 static func statement_sentence(code: String, context: Dictionary = {}) -> Dictionary:
+	# U3. A trailing `# note` is a note on this row, not part of the statement. Split off FIRST, so
+	# every reading below sees the line the way it would without one, and handed back on the result so
+	# the row can draw it where a sheet draws a note - at the end. The row itself is untouched.
+	var split: PackedStringArray = EventSheetSentence.trailing_comment(code)
+	var note: String = split[1]
+	var body: String = split[0]
 	# M28: the awaits an event sheet has words for, ahead of the grammar - a hand-written `await` that no
 	# ACE claimed (inside a lambda, inside a block that stayed code) reads the same as the lifted row
 	# beside it. Every other await falls straight through and keeps its GDScript.
-	var awaited: Dictionary = _raw_await_reading(code, context)
-	if not awaited.is_empty():
-		return awaited
-	return EventSheetSentence.statement(code, context)
+	var awaited: Dictionary = _raw_await_reading(body, context)
+	var reading: Dictionary = awaited if not awaited.is_empty() else EventSheetSentence.statement(body, context)
+	if not note.is_empty() and not reading.is_empty():
+		reading = reading.duplicate()
+		reading["note"] = note
+	return reading
 
 
 ## The M28 reading of a hand-written `await <expression>` line, indent and all, or {} when the shape
@@ -7649,8 +7657,15 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# U8 / U12 - the mouse-look trio and the two faders of a crossfade are one row each.
 		var look_groups: Dictionary = _mouse_look_groups(event_row.actions)
 		var fade_groups: Dictionary = _crossfade_groups(event_row.actions)
+		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
+		var task_notes: Dictionary = _task_note_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
+			if bool(task_notes.get("consumed", {}).get(action_index, false)):
+				continue
+			# One-shot, read and cleared by whichever formatter draws this action - the same discipline
+			# the object label and the grammar segments beside it already use.
+			_pending_attached_note = str((task_notes.get("notes", {}) as Dictionary).get(action_index, ""))
 			# A line the Create object row above already said. Skipped without advancing the line index,
 			# which is what turns three lines into one row.
 			if bool(create_groups.get("consumed", {}).get(action_index, false)):
@@ -9893,7 +9908,21 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	# Input-event words FIRST (casts stripped, `event.relative.x` -> mouse's ΔX), the name lens
 	# after: the lens sees `(event as InputEventMouseMotion).relative.x` as a chain around a
 	# cast and the cast stripper then hollowed the middle out ("eventrelative X").
+	# U3. A trailing `# note` rides into whichever param the lift put the end of the line in, where it
+	# would otherwise read as part of the value ("Subtract 1  # ouch from hp"). Split off the params
+	# this row is FORMATTED from - a throwaway copy, the row itself untouched - and drawn as the note
+	# it is, at the end.
+	var noted: Dictionary = _action_without_trailing_notes(action)
+	var row_note: String = str(noted.get("note", ""))
+	if not row_note.is_empty():
+		action = noted.get("action", action) as ACEAction
+	# ...and the note the comment line above this row left for it, when there was one.
+	var attached: String = _take_attached_note()
+	if not attached.is_empty():
+		row_note = attached if row_note.is_empty() else "%s · %s" % [attached, row_note]
 	var base_text: String = _reading_sentence(_humanized_input_event_text(_format_action_descriptor_base(action)))
+	if not row_note.is_empty():
+		base_text += "   💬 %s" % row_note
 	# Awaiting actions wear an hourglass (the GDevelop async-action cue): everything after
 	# this row in the SAME event waits for it, so the suspension point should be visible.
 	if action_awaits(action):
@@ -9902,6 +9931,73 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	if not ace_note.is_empty():
 		return "%s   ⊳ %s" % [base_text, ace_note]
 	return base_text
+
+
+## U3. The task notes an action lane carries, as {"consumed": {index: true}, "notes": {index: text}}.
+##
+## A comment written directly above a step, opening TODO / FIXME / HACK / NOTE, is about that step -
+## it is the way a person writes a note on one action when the language has nowhere else to put it.
+## So it reads as that step's note, exactly where a trailing `# note` reads. Every other comment line
+## stays the comment row it has always been: a paragraph above a run of steps is about the run.
+##
+## Only a ONE-LINE comment immediately above a step qualifies, and only when the step below it can
+## carry a note at all. The rows themselves are untouched, so the file still has both lines.
+func _task_note_groups(actions: Array) -> Dictionary:
+	var consumed: Dictionary = {}
+	var notes: Dictionary = {}
+	for index: int in range(actions.size() - 1):
+		var comment: CommentRow = actions[index] as CommentRow
+		if comment == null or not comment.enabled or comment.text.contains("\n"):
+			continue
+		if EventSheetSentence.task_note_marker(comment.text).is_empty():
+			continue
+		var carrier: Resource = actions[index + 1] as Resource
+		if not (carrier is ACEAction or carrier is RawCodeRow):
+			continue
+		consumed[index] = true
+		notes[index + 1] = comment.text.strip_edges().trim_prefix("#").strip_edges()
+	return {"consumed": consumed, "notes": notes}
+
+
+## U3. The note the action lane attached to the row being formatted, taken and cleared. One-shot, the
+## same discipline _pending_object_label uses: the loop writes it, the formatter reads it once.
+func _take_attached_note() -> String:
+	var note: String = _pending_attached_note
+	_pending_attached_note = ""
+	return note
+
+## The note one action carries from the comment line above it, until the formatter draws it.
+var _pending_attached_note: String = ""
+
+
+## U3. The row's params with any trailing `# note` split off them, as {"action", "note"} - or {} when
+## no param carries one. The copy is for DISPLAY only and never reaches the sheet: the row keeps the
+## exact text it was lifted from, so the note is still in the file and the bytes still come back.
+##
+## Only the LAST param may carry a note, because a trailing comment is the end of a line and only one
+## param can hold the end of a line. Claiming it anywhere else would take a `#` out of the middle of
+## somebody's value.
+func _action_without_trailing_notes(action: ACEAction) -> Dictionary:
+	if action == null:
+		return {}
+	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	if params_dict.is_empty():
+		return {}
+	var cleaned: Dictionary = {}
+	var note: String = ""
+	for key: Variant in params_dict:
+		var value: Variant = params_dict[key]
+		if not (value is String) or note != "":
+			cleaned[key] = value
+			continue
+		var split: PackedStringArray = EventSheetSentence.trailing_comment(str(value))
+		cleaned[key] = split[0]
+		note = split[1]
+	if note.is_empty():
+		return {}
+	var copy: ACEAction = action.duplicate()
+	copy.params = cleaned
+	return {"action": copy, "note": note}
 
 
 ## Whether an action suspends the handler: the awaited-call flags, an `await` anywhere in
@@ -10409,6 +10505,15 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	# pieces are touched (identifiers the builder already resolved), never a string literal and
 	# never a connective word, and the row's hover still shows the exact GDScript.
 	pieces = EventSheetViewportLenses.apply_to_pieces(pieces, _viewport.humanize_names_enabled(), _export_knob_names())
+	# U3. The row's own note, at the end of it, muted - which is where and how a sheet writes a note
+	# about one step. Appended AFTER the spelling lens, because a note is prose somebody wrote and
+	# nothing in it is a name for the lens to respell.
+	var row_note: String = str(sentence.get("note", ""))
+	var attached_note: String = _take_attached_note()
+	if not attached_note.is_empty():
+		row_note = attached_note if row_note.is_empty() else "%s · %s" % [attached_note, row_note]
+	if not row_note.is_empty():
+		pieces.append(["   💬 %s" % row_note, "muted"])
 	# ── M13 / M20 lens hook ────────────────────────────────────────────────────────────────────
 	# The object this statement acts on draws its Godot class icon, the way an event sheet shows
 	# an object's picture in every cell it appears in. Resolved from the RAW pieces (before the
@@ -10491,6 +10596,18 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 	value_meta["chip"] = true
 	value_meta["text_color"] = _viewport._get_event_style().value_highlight_color
 	spans.append(_make_span("= %s" % str(declaration.get("value", "")), SemanticSpan.SpanType.VALUE, value_meta.merged(style_meta, false)))
+	# U3. A `var x = 1  # note` carries its note the same way every other row does - at the end, muted -
+	# rather than inside the value, where it read as part of the starting value.
+	var declaration_note: String = str(declaration.get("note", ""))
+	if declaration_note.is_empty():
+		return
+	var note_meta: Dictionary = base_meta.duplicate()
+	note_meta["chip"] = true
+	note_meta["natural_width"] = true
+	note_meta["editable"] = false
+	note_meta["text_color"] = _viewport._get_reading_style().muted_text_color
+	spans.append(_make_span("💬 %s" % declaration_note, SemanticSpan.SpanType.COMMENT,
+		note_meta.merged(style_meta, false)))
 
 
 # One-shot object label recorded by a descriptor formatter when the row's shape names its own object
@@ -11126,11 +11243,27 @@ func grammar_action_declaration(action: ACEAction) -> Dictionary:
 		return {}
 	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var name_text: String = str(params_dict.get("name", ""))
-	var value_text: String = str(params_dict.get("value", ""))
+	# U3. A trailing `# note` is the row's note, not part of the starting value - split off here, and
+	# handed to the declaration spans to draw at the end of the row where a sheet draws a note.
+	var split: PackedStringArray = EventSheetSentence.trailing_comment(str(params_dict.get("value", "")))
+	var value_text: String = split[0]
+	var value_note: String = split[1]
 	# U1. The sheet's own context, so a starting value that names a place ("the direction from Player
 	# to target") reads with the same object names every other row on this sheet uses.
 	var context: Dictionary = sentence_context()
-	match action.ace_id:
+	var reading: Dictionary = _declaration_of(action.ace_id, name_text, value_text, params_dict, context)
+	if reading.is_empty() or value_note.is_empty():
+		return reading
+	reading = reading.duplicate()
+	reading["note"] = value_note
+	return reading
+
+
+## The declaration one Local Variable row spells, by its ace_id. Split out so the note handling above
+## reads as the one thing it is rather than being repeated down six branches.
+func _declaration_of(ace_id: String, name_text: String, value_text: String, params_dict: Dictionary,
+		context: Dictionary) -> Dictionary:
+	match ace_id:
 		"SetLocalVar":
 			return EventSheetSentence.declaration("var %s = %s" % [name_text, value_text], context)
 		"SetLocalVarTyped":

@@ -11,6 +11,7 @@ extends RefCounted
 const COLOR_GROUP := Color("#e0b070")     # amber - groups (the picker's section tint)
 const COLOR_REGION := Color("#7fb3d5")    # blue - region fences (the script editor's fold hue)
 const COLOR_FUNCTION := Color("#c79bf0")  # purple - published verbs (the picker's custom tint)
+const COLOR_TODO := Color("#8b91a3")      # muted - a note is quieter than the structure around it
 
 var _dock: Control = null
 
@@ -42,7 +43,52 @@ static func outline_entries(sheet: EventSheetResource) -> Array:
 				"kind": "function",
 				"parent": -1
 			})
+	_append_task_notes(sheet, entries)
 	return entries
+
+
+## U3. The sheet's own TODO / FIXME / HACK / NOTE comments, under one "To do" folder at the end.
+##
+## A note about work still to do is a place in the sheet somebody means to come back to, which is
+## exactly what this panel is for. Last, so the structural walk above it never moves; the folder
+## itself is only added when there is something in it.
+static func _append_task_notes(sheet: EventSheetResource, entries: Array) -> void:
+	var notes: Array = []
+	_collect_task_notes(sheet.events, notes)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			var event_function: EventFunction = function_entry
+			_collect_task_notes(event_function.events if not event_function.events.is_empty() else event_function.rows, notes)
+	if notes.is_empty():
+		return
+	entries.append({"label": "To do", "resource": null, "depth": 0, "kind": "todo_folder", "parent": -1})
+	var folder_index: int = entries.size() - 1
+	for note: Dictionary in notes:
+		entries.append({
+			"label": str(note.get("label", "")),
+			"resource": note.get("resource", null),
+			"depth": 1,
+			"kind": "todo",
+			"parent": folder_index
+		})
+
+
+## Every comment row in a walk whose text opens with a task marker, as {label, resource}. Comment
+## rows are the only thing looked at: a note lives in a comment, in the sheet as in the file.
+static func _collect_task_notes(rows: Array, notes: Array) -> void:
+	for entry: Variant in rows:
+		if entry is CommentRow:
+			var comment: CommentRow = entry
+			for line: String in comment.text.split("\n"):
+				if not EventSheetSentence.task_note_marker(line).is_empty():
+					notes.append({"label": line.strip_edges().trim_prefix("#").strip_edges(), "resource": comment})
+		elif entry is EventGroup:
+			var group: EventGroup = entry
+			_collect_task_notes(group.events if not group.events.is_empty() else group.rows, notes)
+		elif entry is EventRow:
+			var event: EventRow = entry
+			_collect_task_notes(event.actions, notes)
+			_collect_task_notes(event.sub_events, notes)
 
 
 static func _collect_outline(rows: Array, depth: int, parent_index: int, entries: Array) -> void:
@@ -130,6 +176,10 @@ static func _entry_prefix(kind: String) -> String:
 			return "# "
 		"function":
 			return "ƒ "
+		"todo_folder":
+			return "▸ "
+		"todo":
+			return "💬 "
 	return ""
 
 
@@ -141,6 +191,8 @@ static func _entry_color(kind: String) -> Color:
 			return COLOR_REGION
 		"function":
 			return COLOR_FUNCTION
+		"todo_folder", "todo":
+			return COLOR_TODO
 	return Color.WHITE
 
 
