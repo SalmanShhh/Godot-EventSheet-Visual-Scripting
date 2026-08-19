@@ -5625,3 +5625,102 @@ func _scene_node_for_object(object_label: String) -> Node:
 	if found == null:
 		found = edited_root.find_child(path.get_file(), true, false)
 	return found
+
+
+# ── V12. Arrange by, and saved views (appended block - keep together) ─────────────────────────
+# Display only from end to end: the arrangement re-groups the ROWS a view has built, never the
+# sheet, so the events array keeps its order, the emitted GDScript cannot move and the byte
+# round-trip is untouched. Every pane of the same sheet is arranged together, because "arranged by
+# Object" is a way of reading the sheet, not a property of one pane.
+
+
+## The arrangement the sheet is being read under right now (file order unless asked otherwise).
+func arrangement_mode() -> int:
+	var view: EventSheetViewport = _active_view()
+	return view.arrangement_mode if view != null else EventSheetArrangement.MODE_FILE_ORDER
+
+
+## Reads the sheet arranged by `mode`, in every open pane, and points the Outline at it too.
+func set_arrangement_mode(mode: int) -> void:
+	for view: Variant in _multi_view.all_views():
+		var pane: EventSheetViewport = view as EventSheetViewport
+		if pane != null:
+			pane.set_arrangement_mode(mode)
+	if _outline_panel != null:
+		_outline_panel.refresh()
+	if mode == EventSheetArrangement.MODE_FILE_ORDER:
+		_set_status(EventSheetL10n.translate("Reading in file order."))
+	else:
+		_set_status(EventSheetL10n.translate("Arranged by %s. The file is unchanged.") % EventSheetL10n.translate(EventSheetArrangement.mode_label(mode)))
+
+
+## The reading lenses a saved view remembers alongside the arrangement and the filter.
+func current_view_lenses() -> Dictionary:
+	var view: EventSheetViewport = _active_view()
+	return {
+		"humanized_names": _humanized_names_enabled(),
+		"familiar_words": _familiar_words_enabled(),
+		"compact_rows": _compact_rows_enabled(),
+		"event_numbers": view != null and view.show_event_numbers,
+		"object_icons": view != null and view.show_object_icons,
+	}
+
+
+## Puts a saved view back: its arrangement, its filter, and each lens it named.
+func apply_saved_view(name: String) -> void:
+	var blob: Dictionary = EventSheetSavedViews.view(name)
+	if blob.is_empty():
+		_set_status(EventSheetL10n.translate("No saved view by that name."), true)
+		return
+	set_arrangement_mode(EventSheetSavedViews.arrangement_of(blob))
+	_apply_lens(EventSheetSavedViews.filter_of(blob))
+	var lenses: Dictionary = EventSheetSavedViews.lenses_of(blob)
+	for pane_entry: Variant in _multi_view.all_views():
+		var pane: EventSheetViewport = pane_entry as EventSheetViewport
+		if pane == null:
+			continue
+		if lenses.has("event_numbers"):
+			pane.show_event_numbers = bool(lenses["event_numbers"])
+		if lenses.has("object_icons"):
+			pane.show_object_icons = bool(lenses["object_icons"])
+		pane.queue_redraw()
+	_set_status(EventSheetL10n.translate("View: %s") % name)
+
+
+var _save_view_dialog: ConfirmationDialog = null
+var _save_view_edit: LineEdit = null
+
+
+## Names the way the sheet is being read right now and keeps it in the View menu.
+func save_current_view_requested() -> void:
+	if _save_view_dialog == null:
+		_save_view_dialog = ConfirmationDialog.new()
+		_save_view_dialog.title = "Save View"
+		_save_view_edit = LineEdit.new()
+		_save_view_edit.placeholder_text = "Name this way of reading the sheet…"
+		_save_view_edit.custom_minimum_size = Vector2(360.0, 0.0)
+		var body_box: VBoxContainer = EventSheetPopupUI.form_box()
+		body_box.add_child(_save_view_edit)
+		_save_view_dialog.add_child(EventSheetPopupUI.margined(body_box))
+		_save_view_dialog.confirmed.connect(_on_save_view_confirmed)
+		add_child(_save_view_dialog)
+		EventSheetL10n.apply_to(_save_view_dialog)
+	_save_view_edit.text = ""
+	_save_view_dialog.popup_centered(Vector2i(420, 110))
+
+
+func _on_save_view_confirmed() -> void:
+	var name: String = _save_view_edit.text.strip_edges()
+	var view: EventSheetViewport = _active_view()
+	var blob: Dictionary = EventSheetSavedViews.describe(arrangement_mode(),
+		view.lens_query() if view != null else "", current_view_lenses())
+	if EventSheetSavedViews.save_view(name, blob):
+		_set_status(EventSheetL10n.translate("Saved the view %s.") % name)
+	else:
+		_set_status(EventSheetL10n.translate("A view needs a name."), true)
+
+
+## Forgets a saved view.
+func delete_saved_view(name: String) -> void:
+	if EventSheetSavedViews.delete_view(name):
+		_set_status(EventSheetL10n.translate("Deleted the view %s.") % name)

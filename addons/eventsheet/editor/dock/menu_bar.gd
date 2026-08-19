@@ -565,6 +565,50 @@ func build(root: Node) -> void:
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9701:
 			_open_run_tests())
+	# ── V12: Arrange by… + Saved Views (appended block - keep together) ────────────────────────
+	# Two submenus on View, wired the explicit way (a named child PopupMenu plus add_submenu_item
+	# with its OWN id) - never an id-less add_submenu_item. Both rebuild on open, so the
+	# arrangement radio always shows the live one and a view saved a second ago is already listed.
+	# Ids 9801/9802 are clear of every block above; each handler ignores the ids it does not own.
+	var arrange_menu: PopupMenu = PopupMenu.new()
+	arrange_menu.name = "EventSheetArrangeMenu"
+	view_popup.add_child(arrange_menu)
+	view_popup.add_submenu_item("Arrange by", "EventSheetArrangeMenu", 9801)
+	view_popup.set_item_tooltip(view_popup.get_item_index(9801),
+		"Read the same events re-grouped under headers - by the object they talk about, by the trigger they hang off, or by the group they sit in. Display only: the file is never reordered and every event keeps its number.")
+	arrange_menu.about_to_popup.connect(func() -> void:
+		arrange_menu.clear()
+		var active_mode: int = _dock.arrangement_mode()
+		for mode: int in EventSheetArrangement.MODE_IDS.size():
+			arrange_menu.add_radio_check_item(EventSheetL10n.translate(EventSheetArrangement.mode_label(mode)), mode)
+			arrange_menu.set_item_checked(mode, mode == active_mode))
+	arrange_menu.id_pressed.connect(func(mode: int) -> void: _dock.set_arrangement_mode(mode))
+	var views_menu: PopupMenu = PopupMenu.new()
+	views_menu.name = "EventSheetSavedViewsMenu"
+	view_popup.add_child(views_menu)
+	view_popup.add_submenu_item("Saved Views", "EventSheetSavedViewsMenu", 9802)
+	view_popup.set_item_tooltip(view_popup.get_item_index(9802),
+		"A named way of reading this sheet - its arrangement, its filter and its reading lenses saved together, and put back in one click.")
+	views_menu.about_to_popup.connect(func() -> void:
+		views_menu.clear()
+		views_menu.add_item(EventSheetL10n.translate("Save Current View…"), 0)
+		var names: PackedStringArray = EventSheetSavedViews.view_names()
+		if names.is_empty():
+			return
+		views_menu.add_separator()
+		for name_index: int in names.size():
+			views_menu.add_item(names[name_index], 100 + name_index)
+		views_menu.add_separator()
+		for name_index: int in names.size():
+			views_menu.add_item(EventSheetL10n.translate("Forget %s") % names[name_index], 500 + name_index))
+	views_menu.id_pressed.connect(func(id: int) -> void:
+		var names: PackedStringArray = EventSheetSavedViews.view_names()
+		if id == 0:
+			_dock.save_current_view_requested()
+		elif id >= 500 and id - 500 < names.size():
+			_dock.delete_saved_view(names[id - 500])
+		elif id >= 100 and id - 100 < names.size():
+			_dock.apply_saved_view(names[id - 100]))
 
 
 ## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes

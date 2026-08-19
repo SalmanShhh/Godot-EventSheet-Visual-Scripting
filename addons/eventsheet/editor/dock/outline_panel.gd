@@ -104,7 +104,12 @@ func refresh() -> void:
 		return
 	tree.clear()
 	var root: TreeItem = tree.create_item()
+	# V12: the Outline follows the arrangement - when the sheet is read by object / trigger / group,
+	# so is its jump tree.
+	var view: EventSheetViewport = _dock._active_view()
 	var entries: Array = outline_entries(_dock._current_sheet)
+	if view != null and view.arrangement_mode != EventSheetArrangement.MODE_FILE_ORDER:
+		entries = arranged_entries(_dock._current_sheet, view.get_row_tree(), view.arrangement_mode)
 	# Explicit parentage: each entry names its enclosing group's entry INDEX, so the tree
 	# mirrors the walk exactly (a depth-keyed map mis-nested entries reached through an
 	# EventRow's sub_events under whatever group happened to set that depth earlier).
@@ -152,3 +157,40 @@ func _on_entry_selected() -> void:
 	if target != null and _dock._viewport != null:
 		_dock._viewport.reveal_resource(target)
 		_dock._viewport.select_resource(target)
+
+
+## V12 - the Outline under an arrangement. When the sheet is being read Arranged By something, the
+## jump tree IS that arrangement: one entry per header, its events beneath it, each still jumping to
+## the event it stands for. `rows` are the view's built root rows and `mode` an EventSheetArrangement
+## mode; file order (or nothing to arrange) falls back to the structural walk. Pure, so tests pin it.
+static func arranged_entries(sheet: EventSheetResource, rows: Array, mode: int) -> Array:
+	if sheet == null or mode == EventSheetArrangement.MODE_FILE_ORDER:
+		return outline_entries(sheet)
+	var self_object: String = EventSheetArrangement.self_object_of(sheet)
+	var planned: Array = EventSheetArrangement.plan(rows, mode, self_object)
+	if planned.is_empty():
+		return outline_entries(sheet)
+	var entries: Array = []
+	for bucket: Variant in planned:
+		var header: Dictionary = bucket
+		var header_index: int = entries.size()
+		entries.append({
+			"label": str(header.get("header", "")),
+			"resource": null,
+			"depth": 0,
+			"kind": "group",
+			"parent": -1,
+		})
+		for member: Variant in (header.get("rows", []) as Array):
+			var row_data: EventRowData = member as EventRowData
+			if row_data == null or not (row_data.source_resource is EventRow):
+				continue
+			entries.append({
+				"label": EventSheetArrangement.event_label(
+					{"event": row_data.source_resource as EventRow}, mode, self_object),
+				"resource": row_data.source_resource,
+				"depth": 1,
+				"kind": "event",
+				"parent": header_index,
+			})
+	return entries

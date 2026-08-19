@@ -11379,3 +11379,56 @@ func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 		icon = ACEPickerDialog.editor_icon("Tools")
 	_ace_icon_cache[cache_key] = icon
 	return icon
+
+
+# ── V12 - Arrange by object / trigger / group (appended block - keep together) ─────────────────
+# The display-only re-grouping pass. It runs over the already-built root rows and re-emits them with
+# one synthetic header per bucket, exactly the way group_helper_verb_rows gathers helpers - the same
+# archetype, the same null source_resource, the same shared fold state. Nothing about the sheet
+# moves: the events array, the emitted GDScript and the byte round-trip are untouched, and every
+# event keeps its number because numbers are computed from sheet.events, not from this list.
+
+
+## Re-groups the sheet's own event rows under one header per bucket. `mode` is an
+## EventSheetArrangement mode; MODE_FILE_ORDER (and a null sheet) returns the rows untouched.
+func arrange_rows(rows: Array[EventRowData], sheet: EventSheetResource, mode: int) -> Array[EventRowData]:
+	if sheet == null or mode == EventSheetArrangement.MODE_FILE_ORDER:
+		return rows
+	var planned: Array = EventSheetArrangement.plan(rows, mode, EventSheetArrangement.self_object_of(sheet))
+	if planned.is_empty():
+		return rows
+	var kept: Array[EventRowData] = []
+	for row_data: EventRowData in rows:
+		if EventSheetArrangement.is_arrangeable(row_data) or EventSheetArrangement.is_group_row(row_data):
+			continue
+		kept.append(row_data)
+	var bucket_index: int = 0
+	for bucket: Variant in planned:
+		var entry: Dictionary = bucket
+		var members: Array[EventRowData] = []
+		for member: Variant in (entry.get("rows", []) as Array):
+			var member_row: EventRowData = member as EventRowData
+			if member_row == null:
+				continue
+			_shift_row_indent(member_row, 1 - member_row.indent)
+			members.append(member_row)
+		kept.append(_build_arrangement_header_row(sheet, mode, bucket_index,
+			str(entry.get("header", "")), members))
+		bucket_index += 1
+	return kept
+
+
+## One arrangement header: the head-folder archetype, titled with the bucket's own word and noting
+## how many events read under it. Null source (nothing to select, drag or delete - it is a lens, not
+## a resource) and its fold remembered per session through the shared fold state, keyed on a uid that
+## carries the mode so switching arrangements never inherits another one's folds.
+func _build_arrangement_header_row(sheet: EventSheetResource, mode: int, bucket_index: int,
+		title: String, members: Array[EventRowData]) -> EventRowData:
+	var subtitle: String = EventSheetL10n.translate("1 event")
+	if members.size() != 1:
+		subtitle = EventSheetL10n.translate("%d events") % members.size()
+	var row_data: EventRowData = _build_head_group_row(sheet,
+		"arrange_%s_%d" % [EventSheetArrangement.mode_id(mode), bucket_index],
+		title, subtitle, members)
+	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
+	return row_data
