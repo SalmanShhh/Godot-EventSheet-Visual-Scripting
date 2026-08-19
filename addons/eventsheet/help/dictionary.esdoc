@@ -22,6 +22,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_action` | [Add Input Action](ace:Core/InputAddAction) | Input | Vocabulary |
 | `add_child` | [Add Child](ace:Core/AddChild) | Nodes | Vocabulary |
 | `add_collision_exception_with` | [Ignore Collisions With](ace:Core/IgnoreCollisionsWith) | Movement | Vocabulary |
+| `add_command` | [Add Command](ace:Core/AddCommandPaletteCommand) | Editor Tools: Panels & menus | Vocabulary |
+| `add_control_to_bottom_panel` | [Add Bottom Panel](ace:Core/AddBottomPanel) | Editor Tools: Panels & menus | Vocabulary |
 | `add_control_to_dock` | [Add Dock](ace:Core/AddEditorDock) | Editor Tools | Vocabulary |
 | `add_custom_type` | [Add Object Type](ace:Core/AddEditorObjectType) | Editor Tools | Vocabulary |
 | `add_exception` | [Ignore Node In RayCast (2D)](ace:Core/RayCast2DAddException) | Raycast 2D | Vocabulary |
@@ -201,7 +203,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_actions` | [All Input Actions](ace:Core/InputActionsList) | Input | Vocabulary |
 | `get_as_text` | 's contents | Object | Object expressions |
 | `get_axis` | [Input Axis](ace:Core/GetInputAxis) | Input | Vocabulary |
-| `get_base_control` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
+| `get_base_control` | [Add Window](ace:Core/AddEditorWindow) | Editor Tools: Panels & menus | Vocabulary |
 | `get_basename` | [Localized File](ace:Core/LocalizedFile) | Translation | Vocabulary |
 | `get_bus_count` | [Bus Count](ace:Core/AudioBusCount) | Audio Server | Vocabulary |
 | `get_bus_index` | [Bus Exists](ace:Core/AudioBusExists) | Audio Server | Vocabulary |
@@ -224,6 +226,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_collision_layer_value` | [Is On Collision Layer](ace:Core/IsOnCollisionLayer) | Collisions | Vocabulary |
 | `get_collision_normal` | [RayCast Hit Normal (2D)](ace:Core/RayCast2DGetNormal) | Raycast 2D | Vocabulary |
 | `get_collision_point` | [RayCast Hit Point (2D)](ace:Core/RayCast2DGetPoint) | Raycast 2D | Vocabulary |
+| `get_command_palette` | [Add Command](ace:Core/AddCommandPaletteCommand) | Editor Tools: Panels & menus | Vocabulary |
 | `get_connected_joypads` | [Has Gamepads](ace:Core/GamepadHasAny) | Gamepad | Vocabulary |
 | `get_country_name` | [Country Name](ace:Core/CountryName) | Translation | Vocabulary |
 | `get_current_node` | [Is In State](ace:Core/IsInState) | Animation | Vocabulary |
@@ -235,14 +238,17 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_default_clear_color` | [Clear Color](ace:Core/RenderingGetClearColor) | Rendering | Vocabulary |
 | `get_directories_at` | [List Subdirectories](ace:Core/ListDirs) | Files: Directories | Vocabulary |
 | `get_edited_scene_root` | [Edited Scene Root](ace:Core/EditedSceneRoot) | Editor Tools | Vocabulary |
+| `get_editor_main_screen` | [Workspace Area](ace:Core/EditorMainScreen) | Editor Tools: Panels & menus | Vocabulary |
 | `get_editor_scale` | [Editor Scale](ace:Core/EditorUiScale) | Editor Tools | Vocabulary |
 | `get_editor_settings` | [Editor Settings](ace:Core/EditorSettingsObject) | Editor Tools | Vocabulary |
+| `get_editor_theme` | [Editor Icon](ace:Core/EditorIcon) | Editor Tools: Panels & menus | Vocabulary |
 | `get_error_line` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
 | `get_error_message` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
 | `get_extension` | [Localized File](ace:Core/LocalizedFile) | Translation | Vocabulary |
 | `get_file` | [Data Folder Problems](ace:Core/DataFolderProblems) | Files | Vocabulary |
 | `get_file_as_bytes` | [File Size (bytes)](ace:Core/GetFileSize) | Files | Vocabulary |
 | `get_file_as_string` | [Read Text File](ace:Core/ReadTextFile) | Files | Vocabulary |
+| `get_file_system_dock` | [Show In Project Bar](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
 | `get_files_at` | [List Files](ace:Core/ListFiles) | Files: Directories | Vocabulary |
 | `get_first_node_in_group` | [Get First Node In Group](ace:Core/GetFirstNodeInGroup) | Groups | Vocabulary |
 | `get_floor_normal` | [Floor Normal](ace:Core/GetFloorNormal) | Collisions | Vocabulary |
@@ -251,6 +257,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_global_mouse_position` | [Mouse Position (world)](ace:Core/GetMouseWorldPosition) | Mouse | Vocabulary |
 | `get_gravity` | [Gravity Direction](ace:Core/TouchGravity) | Touch | Vocabulary |
 | `get_gyroscope` | [Rotation Rate](ace:Core/TouchRotationRate) | Touch | Vocabulary |
+| `get_icon` | [Editor Icon](ace:Core/EditorIcon) | Editor Tools: Panels & menus | Vocabulary |
 | `get_image` | [Screenshot](ace:Core/WindowScreenshot) | Game Window | Vocabulary |
 | `get_index` | [Index In Parent](ace:Core/GetIndexInParent) | Nodes | Vocabulary |
 | `get_item_text` | [Item Text](ace:Core/ListItemText) | UI | Vocabulary |
@@ -297,11 +304,12 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_rendering_info` | [Draw Calls (frame)](ace:Core/RenderingDrawCallsInFrame) | Rendering | Vocabulary |
 | `get_resource_filesystem` | [Rescan Project Files](ace:Core/RescanProjectFiles) | Editor Tools | Vocabulary |
 | `get_root` | [For Each Node That Can](ace:Core/ForEachNodeThatCan) | Nodes: Picking | Vocabulary |
+| `get_script_editor` | [Open Script At Line](ace:Core/OpenScriptAtLine) | Editor Tools: Panels & menus | Vocabulary |
 | `get_section_keys` | [Load Bindings](ace:Core/InputLoadBindings) | Keyboard | Vocabulary |
 | `get_selected_id` | .SelectedIndex | Object | Object expressions |
 | `get_selected_nodes` | [Selected Nodes](ace:Core/EditorSelectedNodes) | Editor Tools | Vocabulary |
 | `get_selection` | [Selected Nodes](ace:Core/EditorSelectedNodes) | Editor Tools | Vocabulary |
-| `get_setting` | [Tiles](ace:Core/TilesUnit) | Math & Random | Vocabulary |
+| `get_setting` | [Project Setting](ace:Core/ProjectSetting) | Editor Tools: Project & preferences | Vocabulary |
 | `get_shader_parameter` | [Effect Parameter](ace:Core/GetShaderParameter) | Effects | Vocabulary |
 | `get_signal_list` | [Expect Signal](ace:Core/ExpectSignal) | Testing | Vocabulary |
 | `get_slice` | [Token At](ace:Core/TextTokenAt) | Text | Vocabulary |
@@ -340,6 +348,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `global_shader_parameter_get` | [Global Shader Parameter](ace:Core/RenderingGetGlobalShaderParam) | Rendering | Vocabulary |
 | `global_shader_parameter_set` | [Set Global Shader Parameter](ace:Core/RenderingSetGlobalShaderParam) | Rendering | Vocabulary |
 | `global_transform` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
+| `goto_line` | [Open Script At Line](ace:Core/OpenScriptAtLine) | Editor Tools: Panels & menus | Vocabulary |
 | `grab_focus` | [Set Focus](ace:Core/GrabFocus) | UI | Vocabulary |
 | `gravity` | [Set World Gravity](ace:Core/SetWorldGravity) | Physics | Vocabulary |
 | `gravity_scale` | [Set Gravity Scale](ace:Core/SetGravityScale) | Physics | Vocabulary |
@@ -495,6 +504,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `msaa_2d` | [Set Anti-aliasing](ace:Core/WindowSetAntiAliasing) | Game Window | Vocabulary |
 | `name` | [Set Node Name](ace:Core/SetNodeName) | Nodes | Vocabulary |
 | `naturalnocasecmp_to` | [Text Natural Order](ace:Core/TextNaturalOrder) | Compare: Text | Vocabulary |
+| `navigate_to_path` | [Show In Project Bar](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
 | `new` | [Make Gradient](ace:Core/MakeGradient) | Gradients & Curves | Vocabulary |
 | `node_b` | [Break Joint](ace:Core/BreakJoint) | Joints | Vocabulary |
 | `normalized` | [Normalized](ace:Core/VectorNormalized) | Variables: Vector | Vocabulary |
@@ -576,6 +586,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `remove_absolute` | [Delete File](ace:Core/DeleteFile) | Files | Vocabulary |
 | `remove_at` | [Delete At](ace:Core/ArrayRemoveAt) | Variables: Array | Vocabulary |
 | `remove_child` | [Remove Child](ace:Core/RemoveChild) | Nodes | Vocabulary |
+| `remove_control_from_bottom_panel` | [Remove Bottom Panel](ace:Core/RemoveBottomPanel) | Editor Tools: Panels & menus | Vocabulary |
 | `remove_control_from_docks` | [Remove Dock](ace:Core/RemoveEditorDock) | Editor Tools | Vocabulary |
 | `remove_custom_type` | [Remove Object Type](ace:Core/RemoveEditorObjectType) | Editor Tools | Vocabulary |
 | `remove_exception` | [Stop Ignoring Node In RayCast (2D)](ace:Core/RayCast2DRemoveException) | Raycast 2D | Vocabulary |
@@ -615,7 +626,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `s` | [Write Version Stamp](ace:Core/WriteVersionStamp) | Editor Tools | Vocabulary |
 | `sample` | [Sample Gradient](ace:Core/SampleGradient) | Gradients & Curves | Vocabulary |
 | `sample_baked` | [Sample Curve](ace:Core/SampleCurve) | Gradients & Curves | Vocabulary |
-| `save` | [Save Data Asset](ace:Core/SaveDataAsset) | Files | Vocabulary |
+| `save` | [Save Settings](ace:Core/SaveProjectSettings) | Editor Tools: Project & preferences | Vocabulary |
 | `save_png` | [Save Image As](ace:Core/WindowSaveImageAs) | Game Window | Vocabulary |
 | `save_scene` | [Save Current Scene](ace:Core/SaveEditedScene) | Editor Tools | Vocabulary |
 | `save_scene_as` | [Save Scene As](ace:Core/SaveEditedSceneAs) | Editor Tools | Vocabulary |
@@ -651,6 +662,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_focus_neighbor` | [Set Focus Neighbor](ace:Core/SetFocusNeighbor) | UI | Vocabulary |
 | `set_input_as_handled` | [Stop This Input Here](ace:Core/StopInputHere) | General Actions | Vocabulary |
 | `set_locale` | [Set Language](ace:Core/SetLocale) | Translation | Vocabulary |
+| `set_main_screen_editor` | [Switch To Workspace](ace:Core/SwitchToWorkspace) | Editor Tools: Panels & menus | Vocabulary |
 | `set_meta` | [Clear Measurements](ace:Core/ClearMeasurements) | Debug | Vocabulary |
 | `set_mouse_mode` | [Request Pointer Lock](ace:Core/MouseRequestPointerLock) | Mouse | Vocabulary |
 | `set_physics_process` | [Set Node Physics Processing](ace:Core/NodeSetPhysicsProcessing) | Nodes: Activation | Vocabulary |
@@ -661,6 +673,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_process_unhandled_key_input` | unhandled key input | System | How often it runs |
 | `set_pseudolocalization_enabled` | [Test With Fake Translation](ace:Core/TestWithFakeTranslation) | Translation | Vocabulary |
 | `set_ribbon_texture` | [Set Ribbon Texture](ace:Core/DrawSetRibbonTexture) | Drawing | Vocabulary |
+| `set_setting` | [Set Setting](ace:Core/SetProjectSetting) | Editor Tools: Project & preferences | Vocabulary |
 | `set_shader_parameter` | [Set Effect Parameter](ace:Core/SetShaderParameter) | Effects | Vocabulary |
 | `set_trans` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
 | `set_value` | [Save Setting](ace:Core/SaveSetting) | Utility: Settings | Vocabulary |

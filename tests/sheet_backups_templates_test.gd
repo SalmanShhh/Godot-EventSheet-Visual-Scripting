@@ -154,22 +154,25 @@ static func run() -> bool:
 		copy.resource_path.is_empty() and copy.custom_class_name == "BossFight"
 		and int((copy.variables.get("phase", {}) as Dictionary).get("default", -1)) == 1, true) and all_passed
 
-	# New… menu: 15 built-in starters (R33 added Editor Plugin / Import Tool / Export Hook to the
-	# Editor Tools section) + 6 intent section separators (the creation-time "what are you making?"
-	# ask, including the Systems/ECS-lite section) + the project-templates separator + 1 project
-	# template = 23 entries; adopting id 100 swaps the template copy in as an unsaved sheet.
+	# New… menu: 23 entries before W17 (15 built-in starters + 6 intent section separators + the
+	# project-templates separator + 1 project template). W17 folded the four flat Editor-Tools items
+	# into ONE "Editor Tool…" submenu that lists all fifteen shapes, so the top menu loses 4 and
+	# gains 1: 23 - 4 + 1 = 20. Adopting id 100 still swaps the template copy in as an unsaved sheet.
 	editor._starter._build_template_menu_items()
 	all_passed = _check("template menu lists built-ins and the project template",
-		editor._starter._template_menu.item_count == 23
+		editor._starter._template_menu.item_count == 23 - 4 + 1
 		and editor._starter._project_template_paths == PackedStringArray(["user://tpl_dir/boss_fight.tres"]), true) and all_passed
-	# The four tool starters are VALUES rather than a count, so a renamed entry names itself.
+	# The tool starters are VALUES rather than a count, so a renamed entry names itself. They now live
+	# in the submenu, which is where the mockup's "New Sheet ▸ Editor tool" list lives.
 	var tool_entries: PackedStringArray = PackedStringArray()
-	for menu_index: int in range(editor._starter._template_menu.item_count):
-		if editor._starter._template_menu.get_item_id(menu_index) in [10, 12, 13, 14]:
-			tool_entries.append(editor._starter._template_menu.get_item_text(menu_index))
-	all_passed = _check("the Editor Tools section offers all four tool shapes",
+	var shapes_menu: PopupMenu = editor._starter._build_editor_tool_menu()
+	for menu_index: int in range(shapes_menu.item_count):
+		if shapes_menu.get_item_id(menu_index) in [10, 12, 13, 14]:
+			tool_entries.append(shapes_menu.get_item_text(menu_index))
+	all_passed = _check("the Editor Tool submenu still leads with the four shipped shapes",
 		"|".join(tool_entries),
-		"Editor Tool (one-click chore)|Editor Plugin (dock, menu item, object type)|Import Tool (runs on import)|Export Hook (runs on export)") and all_passed
+		"One-click chore - run it yourself, from the sheet's bar|Editor plugin - the editor switches it on and off|Importer add-on - runs when files are imported|Export hook - runs when the project is exported") and all_passed
+	all_passed = _check("and offers all fifteen", shapes_menu.item_count, 15) and all_passed
 	editor._starter._new_sheet_from_template(100)
 	all_passed = _check("adopting a project template starts an unsaved copy",
 		editor._current_sheet.custom_class_name == "BossFight"

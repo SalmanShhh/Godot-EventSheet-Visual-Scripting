@@ -57,18 +57,29 @@ const TYPE_HINTS: Array[String] = [
 	"A plugin the editor switches on: it adds a dock, a Tools menu item, an object type.",
 	"Runs when files are imported - fix up or check what just landed in the project.",
 	"Runs when the project is exported - stamp a build, bake a file, strip debug content.",
+	# W17. The two remaining shapes. The add-on line names the six classes rather than the concept,
+	# because "add-on" alone tells a reader nothing about which one they are choosing.
+	"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.",
+	"A script the Godot binary runs headless from the command line, with arguments and an exit code.",
 ]
 
 ## The tool types whose host the sheet does not get to choose, and what each is forced to. Index 3
 ## (Editor Tool) is here too: one table, so the dialog's preview line and the apply path cannot drift.
 ## An Import tool and an Export hook are both EditorScripts - a plain named handler the editor calls -
 ## while an Editor plugin is the engine's own EditorPlugin node.
+## W17 appends index 11 (Command tool). Index 10 (Editor add-on) is deliberately absent: it is the
+## one tool type whose host the sheet DOES choose.
 const TOOL_TYPE_HOSTS: Dictionary = {
 	3: "EditorScript",
 	7: "EditorPlugin",
 	8: "EditorScript",
 	9: "EditorScript",
+	11: "SceneTree",
 }
+
+## W17. The type indices that are tool sheets - every one of them forces `@tool` on, whether or not
+## it also forces a host. Index 10 is here and not in TOOL_TYPE_HOSTS for exactly that reason.
+const TOOL_TYPE_INDICES: PackedInt32Array = [3, 7, 8, 9, 10, 11]
 
 ## What ticking each Editor-plugin capability seeds into the sheet: the trigger the editor calls, the
 ## action that adds the thing, and the action that takes it away again. Keyed by the checkbox order
@@ -107,6 +118,10 @@ func open() -> void:
 			_sheet_type_option.select(editor_script_type_index(_dock._current_sheet))
 		EventSheetScriptIntent.Intent.EDITOR_PLUGIN:
 			_sheet_type_option.select(7)
+		EventSheetScriptIntent.Intent.EDITOR_ADDON:
+			_sheet_type_option.select(10)
+		EventSheetScriptIntent.Intent.COMMAND_TOOL:
+			_sheet_type_option.select(11)
 		EventSheetScriptIntent.Intent.BEHAVIOUR:
 			_sheet_type_option.select(2)
 		EventSheetScriptIntent.Intent.AUTOLOAD:
@@ -153,7 +168,9 @@ static func field_visibility(type_index: int) -> Dictionary:
 		"name": type_index != 0 and type_index != 6,
 		"icon": type_index != 0 and type_index != 6,
 		"description": type_index != 0,
-		"host": type_index in [0, 1, 2, 5],
+		# W17. Index 10 (Editor add-on) joins the host-showing list: which of Godot's add-on classes it
+		# extends IS the choice that type makes, so hiding the field would hide the whole decision.
+		"host": type_index in [0, 1, 2, 5, 10],
 		"family": type_index in [1, 2],
 		"autoload": type_index == 4,
 		"plugin_capabilities": type_index == 7,
@@ -182,6 +199,10 @@ static func identity_preview(type_index: int, class_name_text: String, host_text
 		effective_host = "Node"
 	elif type_index == 4:
 		effective_host = "Node"
+	elif type_index == 10 and effective_host.is_empty():
+		# W17. An add-on with nothing typed yet is most often a Properties bar add-on, and a preview
+		# reading "extends Node" would be a lie about what the sheet will compile to.
+		effective_host = "EditorInspectorPlugin"
 	elif type_index == 5 and not EventSheetScriptIntent.is_resource_host(effective_host):
 		effective_host = "Resource"
 	elif effective_host.is_empty():
@@ -334,6 +355,11 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_option.add_item("Editor Plugin (dock, menu item, object type)")  # extends EditorPlugin
 	_sheet_type_option.add_item("Import Tool (runs on import)")  # EditorScript + On File Imported
 	_sheet_type_option.add_item("Export Hook (runs on export)")  # EditorScript + On Project Export
+	# W17 - the last two shapes Godot has. "Editor add-on" is the one type here that does NOT force a
+	# host: which add-on class it is (Properties bar, importer, thumbnail maker, debugger panel,
+	# context menu, view handle) is the whole choice, so the host field stays visible for it.
+	_sheet_type_option.add_item("Editor Add-on (Properties bar, importer, thumbnails…)")
+	_sheet_type_option.add_item("Command Tool (runs headless from the command line)")  # extends SceneTree
 	_sheet_type_option.item_selected.connect(func(_index: int) -> void: _refresh_type_ui())
 	form.add_child(_sheet_type_option)
 	_type_hint = EventSheetPopupUI.hint_label(TYPE_HINTS[0], 440.0)

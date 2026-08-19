@@ -17,7 +17,32 @@ enum Intent {
 	CUSTOM_RESOURCE,
 	TEST,
 	EDITOR_PLUGIN,
+	# W17. The editor extension classes that are neither a chore nor the plugin itself - the Properties
+	# bar add-on, the importer, the thumbnail maker, the debugger panel, the context menu. They are
+	# registered BY a plugin and their events are the callbacks the editor calls on them.
+	EDITOR_ADDON,
+	# W17. A script the Godot binary runs headless from the command line (`extends SceneTree`).
+	COMMAND_TOOL,
 }
+
+## W17. The editor extension classes an "Editor add-on" sheet can be hosted on. Every one of them is
+## a class a plugin hands to the editor with an add_*_plugin call, so none of them is the plugin. The
+## list is what tells the Sheet Type dialog to keep the host field VISIBLE for this intent: which of
+## the six it is, is the whole choice.
+const ADDON_HOSTS: PackedStringArray = [
+	"EditorInspectorPlugin",
+	"EditorImportPlugin",
+	"EditorExportPlugin",
+	"EditorDebuggerPlugin",
+	"EditorResourcePreviewGenerator",
+	"EditorContextMenuPlugin",
+	"EditorNode3DGizmoPlugin",
+	"EditorTranslationParserPlugin",
+	"EditorSyntaxHighlighter",
+]
+
+## W17. The two base classes Godot runs as a command-line program.
+const COMMAND_TOOL_HOSTS: PackedStringArray = ["SceneTree", "MainLoop"]
 
 
 ## Classifies a sheet. Order matters: the mode flags are explicit choices and win over the
@@ -38,6 +63,14 @@ static func of_sheet(sheet: EventSheetResource) -> Intent:
 	# different Include bar. Checked after EditorScript so the two tool intents never overlap.
 	if sheet.tool_mode and sheet.host_class.strip_edges() == "EditorPlugin":
 		return Intent.EDITOR_PLUGIN
+	# W17. The other editor shapes. Checked after the two above so the three tool intents never
+	# overlap, and BEFORE the resource/custom-node heuristics - an add-on always names a class, and
+	# without this an EditorInspectorPlugin sheet classified as "custom node" and lost its host the
+	# next time the Sheet Type dialog was confirmed.
+	if sheet.tool_mode and ADDON_HOSTS.has(sheet.host_class.strip_edges()):
+		return Intent.EDITOR_ADDON
+	if sheet.tool_mode and COMMAND_TOOL_HOSTS.has(sheet.host_class.strip_edges()):
+		return Intent.COMMAND_TOOL
 	if is_resource_host(sheet.host_class):
 		return Intent.CUSTOM_RESOURCE
 	if not sheet.custom_class_name.strip_edges().is_empty():
@@ -67,6 +100,10 @@ static func display(intent: Intent) -> Dictionary:
 			return {"label": "Editor Tool", "glyph": "⚒"}
 		Intent.EDITOR_PLUGIN:
 			return {"label": "Editor Plugin", "glyph": "⚒"}
+		Intent.EDITOR_ADDON:
+			return {"label": "Editor Add-on", "glyph": "⚒"}
+		Intent.COMMAND_TOOL:
+			return {"label": "Command Tool", "glyph": "⚒"}
 		Intent.CUSTOM_RESOURCE:
 			return {"label": "Custom Resource", "glyph": "▣"}
 		Intent.CUSTOM_NODE:
@@ -115,6 +152,18 @@ static func empty_sheet_advice(sheet: EventSheetResource) -> Dictionary:
 				"heading": "Empty editor plugin",
 				"primary": "Add an On Plugin Enabled event - its actions run the moment the plugin is switched on, which is where a dock, a Tools menu item or an object type is added.",
 				"tip": "Tip: undo each of them in On Plugin Disabled, or the editor keeps a dock nobody owns.",
+			}
+		Intent.EDITOR_ADDON:
+			return {
+				"heading": "Empty editor add-on",
+				"primary": "Add the callbacks the editor asks this add-on - can you handle this object, draw this property, make this thumbnail.",
+				"tip": "Tip: an add-on does nothing until a plugin hands it over. Make an Editor Plugin sheet too, and add it there on plugin enabled.",
+			}
+		Intent.COMMAND_TOOL:
+			return {
+				"heading": "Empty command tool",
+				"primary": "Add an On run event - its actions run when the Godot binary runs this script headless from the command line.",
+				"tip": "Tip: finish with an exit code, so whatever called it can tell success from failure.",
 			}
 		Intent.TEST:
 			return {

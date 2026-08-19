@@ -1393,6 +1393,12 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if source_path == "@tree":
 			# Global SceneTree signals (process_frame / physics_frame) - post-tick triggers connect here.
 			source_prefix = "get_tree()."
+		elif source_path == "@editor_files":
+			# W18. The editor's file watcher (filesystem_changed) - On project files changed connects here.
+			source_prefix = "EditorInterface.get_resource_filesystem()."
+		elif source_path == "@editor_preferences":
+			# W18. The user's Editor Settings (settings_changed) - On preferences changed connects here.
+			source_prefix = "EditorInterface.get_editor_settings()."
 		elif source_path == "@window":
 			# Root-window signals (close_requested) - the On Close Requested trigger connects here.
 			source_prefix = "get_window()."

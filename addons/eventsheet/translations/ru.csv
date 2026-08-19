@@ -3164,3 +3164,25 @@ starting {values},nachinayushchiysya s {values}
 {subject} is a table,{subject} - tablitsa
 with {clauses},s {clauses}
 has {key},soderzhit {key}
+Editor Tool…,Инструмент редактора…
+"One-click chore - run it yourself, from the sheet's bar",Задача в один клик - запускается вручную с панели листа
+Editor plugin - the editor switches it on and off,Плагин редактора - редактор включает и выключает его
+Importer add-on - runs when files are imported,Дополнение импорта - выполняется при импорте файлов
+Export hook - runs when the project is exported,Хук экспорта - выполняется при экспорте проекта
+Dock panel - a panel beside the Scene dock,Панель дока - панель рядом с доком сцены
+Bottom panel - beside Output and Debugger,Нижняя панель - рядом с Выводом и Отладчиком
+Tools menu item - Project > Tools > your entry,Пункт меню Инструменты - Проект > Инструменты > ваш пункт
+Properties bar add-on - buttons and editors in the Inspector,Дополнение панели свойств - кнопки и редакторы в инспекторе
+Context menu item - right-click in the Scene dock or Project bar,Пункт контекстного меню - правый клик в доке сцены или на панели проекта
+Layout view handle - draw over the 2D view,Манипулятор вида - рисование поверх 2D-вида
+Thumbnail maker - previews for a file type,Создатель миниатюр - предпросмотр для типа файла
+Debugger panel - a tab while the game runs,Панель отладчика - вкладка во время работы игры
+"Command tool - headless, run with arguments","Консольный инструмент - без интерфейса, запуск с аргументами"
+Test sheet - check rows and a verdict,Лист тестов - строки проверок и вердикт
+Object type - a node of your own in Create Node,Тип объекта - собственный узел в диалоге создания узла
+"Editor Add-on (Properties bar, importer, thumbnails…)","Дополнение редактора (панель свойств, импорт, миниатюры…)"
+Command Tool (runs headless from the command line),Консольный инструмент (запускается без интерфейса из командной строки)
+"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.","Часть, которую плагин передаёт редактору: дополнение панели свойств, импортер, создатель миниатюр, панель отладчика, контекстное меню или манипулятор вида."
+"A script the Godot binary runs headless from the command line, with arguments and an exit code.","Скрипт, который бинарник Godot запускает без интерфейса из командной строки, с аргументами и кодом выхода."
+The editor icon this name draws.,"Значок редактора, который рисует это имя."
+The words for building editor tools,Слова для создания инструментов редактора

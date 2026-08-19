@@ -325,6 +325,9 @@ func _ensure_hint_factories() -> void:
 			"physics_layer_2d": _create_physics_layer_2d_field,
 			"physics_layer_3d": _create_physics_layer_3d_field,
 			"feature_tag": _create_feature_tag_field,
+			"editor_icon": _create_editor_icon_field,
+			"editor_preference": _create_editor_preference_field,
+			"project_setting": _create_project_setting_field,
 		}
 
 
@@ -657,6 +660,104 @@ func _create_input_action_field(key: String, default_value: Variant) -> Control:
 	new_action.pressed.connect(func() -> void: _add_input_action(edit))
 	row.add_child(new_action)
 	return row
+
+
+## W18. The editor-icon field: type or pick a name out of the editor's own icon set, and see the
+## icon itself beside the field while you choose. Drawing it is the point - a tool author is picking
+## a PICTURE, and "Node2D" versus "Sprite2D" is a name only until you look at them.
+func _create_editor_icon_field(key: String, default_value: Variant) -> Control:
+	var row: Control = _create_autocomplete_field(key, editor_icon_choices(), default_value)
+	var edit: LineEdit = _fields.get(key) as LineEdit
+	if edit == null:
+		return row
+	var preview: TextureRect = TextureRect.new()
+	preview.custom_minimum_size = Vector2(EventSheetPalette.scaled(20), EventSheetPalette.scaled(20))
+	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	preview.tooltip_text = EventSheetL10n.translate("The editor icon this name draws.")
+	row.add_child(preview)
+	var refresh: Callable = func() -> void:
+		preview.texture = editor_icon_named(edit.text)
+	edit.text_changed.connect(func(_new_text: String) -> void: refresh.call())
+	refresh.call()
+	return row
+
+
+## Every icon name the editor's own theme carries, as the quoted literals the templates expect.
+## Empty whenever there is no editor around (a headless run, an embedder), so the field simply
+## degrades to a plain text box instead of erroring.
+static func editor_icon_choices() -> Array:
+	var theme: Theme = _editor_theme()
+	if theme == null:
+		return []
+	var choices: Array = []
+	for icon_name: StringName in theme.get_icon_list("EditorIcons"):
+		choices.append("\"%s\"" % String(icon_name))
+	choices.sort()
+	return choices
+
+
+## The texture one quoted (or bare) icon name stands for, or null when there is no editor theme or
+## no icon by that name - the preview simply stays blank rather than drawing a fallback that lies.
+static func editor_icon_named(raw_name: String) -> Texture2D:
+	var theme: Theme = _editor_theme()
+	if theme == null:
+		return null
+	var wanted: String = raw_name.strip_edges().trim_prefix("\"").trim_suffix("\"").strip_edges()
+	if wanted.is_empty() or not theme.has_icon(wanted, "EditorIcons"):
+		return null
+	return theme.get_icon(wanted, "EditorIcons")
+
+
+## The editor's theme, or null outside the editor. Reached through Engine rather than by naming
+## EditorInterface directly so this file still loads in a headless run and in an exported game.
+static func _editor_theme() -> Theme:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	var interface: Object = Engine.get_singleton("EditorInterface")
+	if interface == null or not interface.has_method("get_editor_theme"):
+		return null
+	return interface.call("get_editor_theme") as Theme
+
+
+## W18. The Editor Settings path field: every path the user's own preferences actually carry, so a
+## tool author picks a real one instead of guessing at Godot's docs.
+func _create_editor_preference_field(key: String, default_value: Variant) -> Control:
+	return _create_autocomplete_field(key, editor_preference_choices(), default_value)
+
+
+static func editor_preference_choices() -> Array:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return []
+	var interface: Object = Engine.get_singleton("EditorInterface")
+	if interface == null or not interface.has_method("get_editor_settings"):
+		return []
+	var settings: Object = interface.call("get_editor_settings")
+	if settings == null:
+		return []
+	var choices: Array = []
+	for property_info: Dictionary in settings.get_property_list():
+		var property_name: String = str(property_info.get("name", ""))
+		if property_name.contains("/") and not property_name.begins_with("_"):
+			choices.append("\"%s\"" % property_name)
+	choices.sort()
+	return choices
+
+
+## W18. The Project Settings path field. The input/* rows are left out: an action belongs in an
+## input_action field, which already offers them with the quotes and the New action… door.
+func _create_project_setting_field(key: String, default_value: Variant) -> Control:
+	return _create_autocomplete_field(key, project_setting_choices(), default_value)
+
+
+static func project_setting_choices() -> Array:
+	var choices: Array = []
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var property_name: String = str(property_info.get("name", ""))
+		if not property_name.contains("/") or property_name.begins_with("input/"):
+			continue
+		choices.append("\"%s\"" % property_name)
+	choices.sort()
+	return choices
 
 
 ## Says something back in the dialog's own hint line - the one place this form already reports what

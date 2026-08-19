@@ -1428,6 +1428,15 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"child_entered_tree": "OnChildEnteredTree"
 }
 
+## W18. Two editor signals that only mean what the Editor object says they mean when they came off
+## the editor's OWN objects. Keyed by the connect line's source FIRST and the signal second on
+## purpose: `settings_changed` is a name any project could give its own object, and a table keyed on
+## the bare signal would relabel every such handler in every game as "On preferences changed".
+const EDITOR_SOURCE_SIGNAL_TRIGGERS: Dictionary = {
+	"EditorInterface.get_resource_filesystem()": {"filesystem_changed": "OnProjectFilesChanged"},
+	"EditorInterface.get_editor_settings()": {"settings_changed": "OnPreferencesChanged"}
+}
+
 
 ## One `<something>.<signal>.connect(<handler>)` / `<something>.connect("<signal>", <handler>)` line
 ## -> {handler, signal, source, line}, or {} when the line is not a connect. Covers the shape
@@ -1436,7 +1445,10 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 ## reproduce the author's own spelling instead of the canonical one - the byte-verify is absolute,
 ## and rewriting a hand-written `$Hurtbox` connect as `get_node("Hurtbox")` would fail it.
 static func _parse_connect_line(line: String) -> Dictionary:
-	var source_pattern: String = "(?:(get_node\\(\"[^\"]+\"\\)|\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_]*)\\.)?"
+	# W18. The two editor objects a tool connects to are call chains, not identifiers, so they are
+	# spelled out rather than allowed as a general `x.y()` alternative - widening the pattern to any
+	# call chain would start claiming connect lines in every project that this reading has no words for.
+	var source_pattern: String = "(?:(EditorInterface\\.get_resource_filesystem\\(\\)|EditorInterface\\.get_editor_settings\\(\\)|get_node\\(\"[^\"]+\"\\)|\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_]*)\\.)?"
 	# Q7. The optional trailing CONNECT_* flags. Godot's own one-shot spelling is a second argument, and
 	# a handler wired with it is still exactly this shape - refusing the line only stranded the whole
 	# handler as a code block. The line rides along VERBATIM as before, so emission reproduces the
@@ -1681,7 +1693,14 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		# it is the payload the editor draws as chips beside the trigger row. The resolver only
 		# consults it for a `signal:` id, so recording it on a Core trigger changes no emission.
 		trigger_args = header_match.get_string(2)
-		if CORE_SIGNAL_TRIGGERS.has(signal_name):
+		var editor_signals: Dictionary = EDITOR_SOURCE_SIGNAL_TRIGGERS.get(trigger_source, {}) as Dictionary
+		if editor_signals.has(signal_name):
+			# W18. An editor signal off an editor object. The source is the editor itself rather than a
+			# node in the scene, so it is cleared here: the resolver knows where to reconnect it, and a
+			# leftover path would have emission reach for get_node("EditorInterface…").
+			trigger_id = str(editor_signals[signal_name])
+			trigger_source = ""
+		elif CORE_SIGNAL_TRIGGERS.has(signal_name):
 			trigger_id = str(CORE_SIGNAL_TRIGGERS[signal_name])
 		else:
 			trigger_id = "signal:%s" % signal_name

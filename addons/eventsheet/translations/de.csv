@@ -3164,3 +3164,25 @@ starting {values},beginnend mit {values}
 {subject} is a table,{subject} ist eine Tabelle
 with {clauses},mit {clauses}
 has {key},hat {key}
+Editor Tool…,Editor-Werkzeug…
+"One-click chore - run it yourself, from the sheet's bar","Ein-Klick-Aufgabe - selbst ausführen, über die Leiste des Blattes"
+Editor plugin - the editor switches it on and off,Editor-Plugin - der Editor schaltet es ein und aus
+Importer add-on - runs when files are imported,Importer-Erweiterung - läuft beim Importieren von Dateien
+Export hook - runs when the project is exported,Export-Hook - läuft beim Exportieren des Projekts
+Dock panel - a panel beside the Scene dock,Andockbereich - ein Panel neben dem Szenen-Dock
+Bottom panel - beside Output and Debugger,Unteres Panel - neben Ausgabe und Debugger
+Tools menu item - Project > Tools > your entry,Eintrag im Werkzeugmenü - Projekt > Werkzeuge > Ihr Eintrag
+Properties bar add-on - buttons and editors in the Inspector,Erweiterung der Eigenschaftsleiste - Schaltflächen und Editoren im Inspektor
+Context menu item - right-click in the Scene dock or Project bar,Kontextmenü-Eintrag - Rechtsklick im Szenen-Dock oder in der Projektleiste
+Layout view handle - draw over the 2D view,Ansichts-Griff im Layout - über die 2D-Ansicht zeichnen
+Thumbnail maker - previews for a file type,Vorschaubild-Ersteller - Vorschauen für einen Dateityp
+Debugger panel - a tab while the game runs,"Debugger-Panel - ein Tab, während das Spiel läuft"
+"Command tool - headless, run with arguments","Kommandozeilen-Werkzeug - headless, mit Argumenten ausführen"
+Test sheet - check rows and a verdict,Testblatt - Prüfzeilen und ein Urteil
+Object type - a node of your own in Create Node,Objekttyp - ein eigener Node im Node-erstellen-Dialog
+"Editor Add-on (Properties bar, importer, thumbnails…)","Editor-Erweiterung (Eigenschaftsleiste, Importer, Vorschaubilder…)"
+Command Tool (runs headless from the command line),Kommandozeilen-Werkzeug (läuft headless über die Kommandozeile)
+"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.","Ein Teil, das ein Plugin dem Editor übergibt: eine Erweiterung der Eigenschaftsleiste, ein Importer, ein Vorschaubild-Ersteller, ein Debugger-Panel, ein Kontextmenü oder ein Ansichts-Griff."
+"A script the Godot binary runs headless from the command line, with arguments and an exit code.","Ein Skript, das die Godot-Binärdatei headless über die Kommandozeile ausführt, mit Argumenten und einem Rückgabecode."
+The editor icon this name draws.,"Das Editor-Symbol, das dieser Name zeichnet."
+The words for building editor tools,Die Wörter für den Bau von Editor-Werkzeugen
