@@ -61,7 +61,7 @@ func build(root: Node) -> void:
 	# again per includer.
 	sheet_popup.add_item("New shared sheet…", 19)
 	sheet_popup.set_item_tooltip(
-		sheet_popup.get_item_index(17),
+		sheet_popup.get_item_index(19),
 		"Write events once and include them in many scripts. You choose here how it is wired: as a base class (the including script extends it) or as a helper (the including script keeps one of it and forwards its triggers to it)."
 	)
 	sheet_popup.add_item("Manage Includes…", 8)
@@ -283,9 +283,11 @@ func build(root: Node) -> void:
 	view_popup.set_item_tooltip(view_popup.get_item_index(27), "Name the shape an event is when a reading recognised one - a cooldown, an object pool, a wait sequence - with a marker chip whose hover shows the lines that were the evidence. On by default; off shows every event as its own plain sentences.")
 	view_popup.add_item("Outline…", 17)
 	view_popup.set_item_tooltip(view_popup.get_item_index(17), "Jump tree of the sheet's groups, regions, and published functions.")
-	view_popup.add_check_item("Minimap", 27)
-	view_popup.set_item_checked(view_popup.get_item_index(27), _dock._minimap_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(27), "A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.")
+	# Id 46, NOT 27: 27 is the Patterns lens four lines up. Sharing it left this item dead (a match
+	# takes its first arm) and wrote this tick and this tooltip onto Patterns instead.
+	view_popup.add_check_item("Minimap", 46)
+	view_popup.set_item_checked(view_popup.get_item_index(46), _dock._minimap_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(46), "A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.")
 	view_popup.add_item("Sheet Map…", 28)
 	view_popup.set_item_tooltip(view_popup.get_item_index(28), "Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.")
 	view_popup.add_item("History…", 29)
@@ -302,8 +304,7 @@ func build(root: Node) -> void:
 	view_popup.set_item_tooltip(view_popup.get_item_index(45), "Open the Object properties for the object the selected row names - the keyboard twin of clicking its name.")
 	view_popup.add_separator()
 	# Collapsing IS how a long sheet is browsed, so the sweeps live in the menu beside the
-	# Outline, not only on their shortcuts. Ids start at 22: 20 is already claimed twice above
-	# (Humanized Names and the Preview In Language submenu), so the next free run starts there.
+	# Outline, not only on their shortcuts.
 	view_popup.add_item("Collapse All", 22)
 	view_popup.set_item_tooltip(view_popup.get_item_index(22), "Collapse every event and function block down to its own line (Ctrl+Shift+[). A collapsed block keeps a muted one-line summary of what it holds.")
 	view_popup.add_item("Expand All", 23)
@@ -365,8 +366,9 @@ func build(root: Node) -> void:
 	preview_menu.name = "EventSheetPreviewLanguageMenu"
 	_dock._preview_language_menu = preview_menu
 	view_popup.add_child(preview_menu)
-	view_popup.add_submenu_item("Preview In Language", "EventSheetPreviewLanguageMenu", 20)
-	view_popup.set_item_tooltip(view_popup.get_item_index(20), "Read the sheet in one of your GAME's languages while you author it - the rows show the translation instead of tr(\"…\"). Your sheet is not touched, but Godot's Locale > Test setting is set (that is what makes the next Play run in it); pick \"As authored\" to clear it again.")
+	# Id 30, NOT 20: 20 is Humanized Names, and sharing it put this tooltip on that item.
+	view_popup.add_submenu_item("Preview In Language", "EventSheetPreviewLanguageMenu", 30)
+	view_popup.set_item_tooltip(view_popup.get_item_index(30), "Read the sheet in one of your GAME's languages while you author it - the rows show the translation instead of tr(\"…\"). Your sheet is not touched, but Godot's Locale > Test setting is set (that is what makes the next Play run in it); pick \"As authored\" to clear it again.")
 	view_popup.about_to_popup.connect(func() -> void: _dock._rebuild_preview_language_menu())
 	preview_menu.id_pressed.connect(func(preview_id: int) -> void:
 		var languages: PackedStringArray = _dock._preview_languages()
@@ -396,7 +398,7 @@ func build(root: Node) -> void:
 			21: _dock._toggle_familiar_words(view_popup)
 			27: _dock._toggle_patterns_lens(view_popup)
 			17: _dock._open_outline_panel()
-			27: _dock._toggle_minimap(view_popup)
+			46: _dock._toggle_minimap(view_popup)
 			28: _dock._open_sheet_map_panel()
 			29: _dock._open_history_panel()
 			42: _dock._open_ask()
@@ -631,12 +633,14 @@ func build(root: Node) -> void:
 	# Two submenus on View, wired the explicit way (a named child PopupMenu plus add_submenu_item
 	# with its OWN id) - never an id-less add_submenu_item. Both rebuild on open, so the
 	# arrangement radio always shows the live one and a view saved a second ago is already listed.
-	# Ids 9801/9802 are clear of every block above; each handler ignores the ids it does not own.
+	# Ids 9807/9802: "clear of every block above" was true of 9801/9802 when this block was written
+	# and false by the time three blocks had each claimed them, which is what menu_id_collision_test
+	# now catches. Every appended block picks the next number the View menu has never used.
 	var arrange_menu: PopupMenu = PopupMenu.new()
 	arrange_menu.name = "EventSheetArrangeMenu"
 	view_popup.add_child(arrange_menu)
-	view_popup.add_submenu_item("Arrange by", "EventSheetArrangeMenu", 9801)
-	view_popup.set_item_tooltip(view_popup.get_item_index(9801),
+	view_popup.add_submenu_item("Arrange by", "EventSheetArrangeMenu", 9807)
+	view_popup.set_item_tooltip(view_popup.get_item_index(9807),
 		"Read the same events re-grouped under headers - by the object they talk about, by the trigger they hang off, or by the group they sit in. Display only: the file is never reordered and every event keeps its number.")
 	arrange_menu.about_to_popup.connect(func() -> void:
 		arrange_menu.clear()
@@ -745,27 +749,29 @@ func build(root: Node) -> void:
 	# The Scene dock and the sheet on one selection. Ticked by default, because that is what the
 	# reader who came from an editor where the layout and the sheet were one surface expects; the
 	# item exists because somebody working on one row while clicking around a scene reasonably
-	# wants it off. Backed by the project setting, so the choice survives the session. Id 9801 is
-	# clear of every block above.
-	view_popup.add_check_item("Follow Scene Selection", 9801)
-	view_popup.set_item_checked(view_popup.get_item_index(9801),
+	# wants it off. Backed by the project setting, so the choice survives the session. Id 9805 is
+	# the next number the View menu has never used - 9801 is Auto-apply while debugging, and while
+	# this item shared it a click on either toggled BOTH settings.
+	view_popup.add_check_item("Follow Scene Selection", 9805)
+	view_popup.set_item_checked(view_popup.get_item_index(9805),
 		EventSheetSceneSelectionLink.follow_enabled())
-	view_popup.set_item_tooltip(view_popup.get_item_index(9801),
+	view_popup.set_item_tooltip(view_popup.get_item_index(9805),
 		"Keep the Scene dock and the sheet on one selection: picking a node highlights it on the Object bar and offers to filter the sheet's events to it, and picking a row selects the node that row is about. Right-click a node in the Scene dock for Show events.")
 	view_popup.id_pressed.connect(func(id: int) -> void:
-		if id == 9801:
+		if id == 9805:
 			_dock._toggle_follow_scene_selection(view_popup))
 	# ── Debugger (appended block - keep together) ──────────────────────────────────────────────
 	# One window over four seams that already shipped: Inspect (the Live Values stream, per object),
 	# Watch (the same watch list this dock already keeps), Profile (the Event Trace timings) and
 	# Breakpoints (the F9 rows). It sits on View rather than on Tools because it SHOWS rather than
-	# switches - the three Tools toggles that arm the streams stay exactly where they were. Id 9802
-	# is clear of every block above.
-	view_popup.add_item("Debugger…", 9802)
-	view_popup.set_item_tooltip(view_popup.get_item_index(9802),
+	# switches - the three Tools toggles that arm the streams stay exactly where they were. Id 9806
+	# is the next number the View menu has never used; 9802 is the Saved Views submenu, and sharing
+	# it wrote this tooltip onto Saved Views.
+	view_popup.add_item("Debugger…", 9806)
+	view_popup.set_item_tooltip(view_popup.get_item_index(9806),
 		"One window with four tabs: Inspect (every object's live values, editable), Watch, Profile (time per event) and Breakpoints. Needs a debug run - Tools ▸ Live Values and Tools ▸ Event Trace arm the streams it reads.")
 	view_popup.id_pressed.connect(func(id: int) -> void:
-		if id == 9802:
+		if id == 9806:
 			_dock.open_debugger())
 
 

@@ -4001,7 +4001,7 @@ func _toggle_minimap(view_popup: PopupMenu) -> void:
 		_minimap.visible = shown
 		_minimap.queue_redraw()
 	if view_popup != null:
-		var item_index: int = view_popup.get_item_index(27)
+		var item_index: int = view_popup.get_item_index(46)  # View ▸ Minimap (27 is the Patterns lens)
 		if item_index >= 0:
 			view_popup.set_item_checked(item_index, shown)
 	_set_status("Minimap on - the whole sheet down the right edge." if shown
@@ -4930,7 +4930,8 @@ func _toggle_follow_scene_selection(view_popup: PopupMenu) -> void:
 	ProjectSettings.set_setting(EventSheetSceneSelectionLink.FOLLOW_SETTING, now_on)
 	ProjectSettings.save()
 	if view_popup != null:
-		view_popup.set_item_checked(view_popup.get_item_index(9801),
+		# 9805 is View ▸ Follow Scene Selection; 9801 is Auto-apply while debugging.
+		view_popup.set_item_checked(view_popup.get_item_index(9805),
 			EventSheetSceneSelectionLink.follow_enabled())
 	_set_status("Follow Scene Selection %s." % ("ON" if now_on else "OFF"))
 
@@ -6204,6 +6205,11 @@ func open_duplicate_events_dialog(object_label: String) -> void:
 		EventSheetL10n.apply_to(_duplicate_events_dialog)
 	_duplicate_events_source = object_label
 	_duplicate_events_edit.text = ""
+	# The dialog is built once and reused, so the object it is about has to be written on it EVERY
+	# open. Without this it reads "Duplicate Events For" over an empty box, and a sheet with four
+	# objects gives the reader no way to tell which one's events are about to be copied.
+	_duplicate_events_dialog.title = "%s %s" % [
+		EventSheetL10n.translate("Duplicate Events For"), object_label]
 	_duplicate_events_dialog.popup_centered(Vector2i(440, 120))
 
 
@@ -6408,7 +6414,8 @@ func capture_sheet_picture() -> Image:
 		scroll.scroll_vertical = cursor
 		await get_tree().process_frame
 		await RenderingServer.frame_post_draw
-		var screen: Image = window.get_texture().get_image()
+		var screen: Image = EventSheetSheetExport.matched_to(window.get_texture().get_image(),
+			stitched.get_format())
 		var visible: Rect2i = band.intersection(Rect2i(Vector2i.ZERO, screen.get_size()))
 		if visible.size.x <= 0 or visible.size.y <= 0:
 			break
