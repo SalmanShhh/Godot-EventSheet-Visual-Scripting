@@ -41,9 +41,9 @@ extends Resource
 ## The amber "⚠ code" badge that flags a line the reader should look at.
 @export var lift_note_badge_background_color: Color = EventSheetPalette.COLOR_LIFT_NOTE_BADGE_BG
 @export var lift_note_badge_foreground_color: Color = EventSheetPalette.COLOR_LIFT_NOTE_BADGE_FG
-## The plate behind a negated condition's ✕ and behind an OR badge, in the badge column.
-@export var negated_badge_background_color: Color = Color(0.73, 0.20, 0.24, 0.95)
-@export var negated_badge_foreground_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+## The plate behind an OR badge in the badge column, when the condition lane's own badge pair has
+## nothing to say. (A negated condition's ✕ takes the event style's invert marker instead - one red,
+## one meaning, wherever a condition is turned around.)
 @export var or_badge_background_color: Color = Color(0.26, 0.29, 0.36, 0.95)
 @export var or_badge_foreground_color: Color = Color(0.82, 0.87, 0.95, 1.0)
 

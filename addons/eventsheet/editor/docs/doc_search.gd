@@ -555,6 +555,13 @@ static func _highlight_run(run: String, wanted: String) -> String:
 			out += run.substr(index)
 			break
 		out += run.substr(index, hit - index)
-		out += "[bgcolor=%s]%s[/bgcolor]" % [HIGHLIGHT_BGCOLOR, run.substr(hit, wanted.length())]
+		out += "[bgcolor=#%s]%s[/bgcolor]" % [_highlight_hex(), run.substr(hit, wanted.length())]
 		index = hit + wanted.length()
 	return out
+
+
+## The amber behind a search hit, as the hex BBCode wants. The Manual's theme token wins when the
+## reader picked a theme that has an opinion; otherwise the shipped amber stands.
+static func _highlight_hex() -> String:
+	var themed: Color = EventSheetActiveTheme.manual().resolve_search_hit(Color(HIGHLIGHT_BGCOLOR))
+	return themed.to_html(true)

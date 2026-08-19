@@ -5010,7 +5010,7 @@ func _set_status(text: String, is_error: bool = false) -> void:
 	# bar truncates long messages.
 	_status_label.text = ("⚠  %s" % text) if is_error else text
 	_status_label.tooltip_text = text
-	_status_label.modulate = Color(1.0, 0.48, 0.48) if is_error else Color(1.0, 1.0, 1.0)
+	_status_label.modulate = EventSheetActiveTheme.chrome().status_error_color if is_error else EventSheetActiveTheme.chrome().status_text_color
 	# Tiered presence: an error keeps its full-strength red until something replaces it, while an
 	# informational message fades to muted after a few seconds - a stale tip should never carry
 	# the same visual weight as fresh feedback (236 call sites share this one label).

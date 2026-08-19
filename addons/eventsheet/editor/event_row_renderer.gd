@@ -61,6 +61,17 @@ const HIT_CHIP_COLD_BORDER := Color(1.0, 1.0, 1.0, 0.09)
 const HIT_CHIP_COLD_TEXT := Color("#6f7580")
 const HIT_CHIP_COLD_RAIL := Color(1.0, 1.0, 1.0, 0.13)
 
+## The reading tokens a style-less draw falls back to (a headless measure, a preview with no style).
+## Built once and kept, because draw_row runs per row per frame and a fresh Resource each time would
+## allocate through the whole sheet.
+static var _fallback_reading: EventSheetReadingStyle = null
+
+
+static func _fallback_reading_style() -> EventSheetReadingStyle:
+	if _fallback_reading == null:
+		_fallback_reading = EventSheetReadingStyle.new()
+	return _fallback_reading
+
 
 ## The fixed object-name column width for a span's lane (0 = flow, the classic behavior).
 ## One resolver shared by the draw, the width measure, and the text-origin hit-test so the
@@ -456,6 +467,14 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		if event_style != null
 		else EventSheetPalette.COLOR_HOVER
 	)
+	# The marks that say what a row IS - the guides, the stripes, the drag bubble, the swatch
+	# outline, the disabled scrim. Resolved once per row and handed down, the same way the event
+	# style is, so no painter below has to know where a theme lives.
+	var reading_style: EventSheetReadingStyle = (
+		editor_style.get_reading_style()
+		if editor_style != null
+		else _fallback_reading_style()
+	)
 
 	# ── Gutter paint policy (structural, not paint-order): EVENT rows (and synthetic
 	# sub-rows) OWN a visible gutter cell, so their fills use row_fill_rect, which starts
@@ -472,7 +491,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	# The hit-count lens: resolved ONCE per row here, so _draw_gutter stays a painter. Empty
 	# string = draw the gutter exactly as before (lens off, no traced run, or not an event row).
 	var hit_uid: String = hit_chip_uid(show_hit_counts, is_event_row, str(layout.get("event_uid", "")))
-	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style, hit_uid)
+	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style, hit_uid, reading_style)
 	if row_data.row_type == EventRowData.RowType.GROUP:
 		var group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 		if row_data.source_resource is EventGroup:
@@ -505,7 +524,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	if not is_event_row and (breakpoint_enabled or row_data.bookmark_enabled):
 		# The full-bleed bar just covered the gutter - re-stamp only the MARKERS so a
 		# bookmarked comment / breakpointed group keeps its pennant and dot visible.
-		_draw_gutter_markers(control, gutter_rect, breakpoint_enabled, row_data.bookmark_enabled)
+		_draw_gutter_markers(control, gutter_rect, breakpoint_enabled, row_data.bookmark_enabled, reading_style)
 	# The event block's silhouette: the LEFT edge (condition lane) carries the full corner
 	# radius - the bottom-left always rounds - and the RIGHT edge (action lane) half of it,
 	# so blocks read as opening toward their actions. Radius 0 = the classic square look.
@@ -532,11 +551,11 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var border_width: float = maxf(row_fill_rect.size.x - float(block_radius + block_radius_right), 0.0)
 		control.draw_rect(Rect2(border_left, row_fill_rect.position.y, border_width, 1.0), block_border, true)
 		control.draw_rect(Rect2(border_left, row_fill_rect.end.y - 1.0, border_width, 1.0), block_border, true)
-	_draw_indent_guides(control, row_rect, row_data.indent)
+	_draw_indent_guides(control, row_rect, row_data.indent, reading_style.indent_guide_color)
 	# M15 - the tree connector from a parent event down to this sub-event, on top of the indent
 	# stops above. Draw-only: it reserves no width and is never measured, so it cannot move a
 	# glyph; the guide geometry itself lives in its own helper.
-	EventSheetViewportGuideLines.draw_guides(control, row_rect, row_data.indent, EventSheetPalette.COLOR_TREE_GUIDE)
+	EventSheetViewportGuideLines.draw_guides(control, row_rect, row_data.indent, reading_style.tree_guide_color)
 	if row_data.language_block:
 		# A LANGUAGE block (a data-class holder, a methods-class, a host binding, a lifted switch case...)
 		# reads as an event row but is not a regular ACE event: a quiet indigo left stripe + faint wash mark
@@ -562,7 +581,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	if not row_data.error_message.is_empty():
 		# Error → row deep-link: a red left stripe + faint wash flag the offending row (the
 		# message shows in the row tooltip). A fixed error red - not yet a theme token.
-		var error_stripe: Color = Color("#ff5555")
+		var error_stripe: Color = reading_style.error_stripe_color
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), error_stripe, true)
 		control.draw_rect(row_fill_rect, Color(error_stripe.r, error_stripe.g, error_stripe.b, 0.08), true)
 	if row_data.firing or row_data.firing_intensity > 0.0:
@@ -570,7 +589,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		# run), PULSING - the intensity decays after each fire so a one-shot reads as a fading
 		# flash while a sustained fire holds full glow (a bare firing flag paints at full).
 		var pulse: float = maxf(row_data.firing_intensity, 1.0 if row_data.firing and row_data.firing_intensity <= 0.0 else 0.0)
-		var firing_stripe: Color = Color("#4fd6ff")
+		var firing_stripe: Color = reading_style.firing_stripe_color
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, pulse), true)
 		control.draw_rect(row_fill_rect, Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, 0.10 * pulse), true)
 	if row_data.selected and not has_span_selection:
@@ -592,40 +611,41 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		soft_hover.a *= 0.4
 		control.draw_rect(row_rect, soft_hover, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
-	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices)
+	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices, reading_style)
 	_draw_collapsed_summary(control, row_rect, row_data, font, font_size)
 	if drag_rect.size != Vector2.ZERO:
 		if bool(layout.get("drag_rect_outline", false)):
 			# Group-fold drop: outline the whole target row (a filled row-sized rect would bury the
 			# text) with a soft tint, so the gesture reads "fold INTO this", not "insert here".
-			var group_fill: Color = EventSheetPalette.COLOR_DRAG_LINE
+			var group_fill: Color = reading_style.drag_line_color
 			group_fill.a *= 0.2
 			control.draw_rect(drag_rect, group_fill, true)
-			control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, false, 2.0)
+			control.draw_rect(drag_rect, reading_style.drag_line_color, false, 2.0)
 		else:
-			control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
+			control.draw_rect(drag_rect, reading_style.drag_line_color, true)
 			if drag_rect.size.y <= 4.0:
-				_draw_insert_marker_arrows(control, drag_rect, EventSheetPalette.COLOR_DRAG_LINE)
+				_draw_insert_marker_arrows(control, drag_rect, reading_style.drag_line_color)
 	if ace_drag_rect.size != Vector2.ZERO:
-		var ace_drag_color: Color = EventSheetPalette.COLOR_BREAKPOINT if ace_drag_error else EventSheetPalette.COLOR_DRAG_LINE
+		var ace_drag_color: Color = reading_style.drag_refusal_color if ace_drag_error else reading_style.drag_line_color
 		control.draw_rect(ace_drag_rect, ace_drag_color, ace_drag_rect.size.y <= 4.0, 2.0)
 		if ace_drag_rect.size.y <= 4.0:
 			_draw_insert_marker_arrows(control, ace_drag_rect, ace_drag_color)
 	if drag_feedback_rect.size != Vector2.ZERO and not drag_feedback_text.is_empty():
-		_draw_drag_feedback(control, drag_feedback_rect, drag_feedback_text, font, font_size, drag_feedback_error)
+		_draw_drag_feedback(control, drag_feedback_rect, drag_feedback_text, font, font_size, drag_feedback_error, reading_style)
 	if disabled:
-		control.draw_rect(row_rect, EventSheetPalette.COLOR_DISABLED, true)
+		control.draw_rect(row_rect, reading_style.disabled_row_color, true)
 	if not debug_text.is_empty():
 		_draw_debug_overlay(control, row_rect, font, font_size, debug_text)
 
 
-func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null, hit_uid: String = "") -> void:
+func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null, hit_uid: String = "", reading_style: EventSheetReadingStyle = null) -> void:
 	if gutter_rect.size == Vector2.ZERO:
 		return
+	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
 	var gutter_bg: Color = event_style.gutter_background_color if event_style != null else EventSheetPalette.COLOR_GUTTER_BG
 	var gutter_text: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
 	control.draw_rect(gutter_rect, gutter_bg, true)
-	control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), EventSheetPalette.COLOR_GUTTER_RAIL, true)
+	control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), reading.event_number_rail_color, true)
 	# The count chip stacks UNDER the number rather than beside it: this gutter is 20px wide, and a
 	# margin that grows when a debugger lens is switched on would reflow the whole sheet - the one
 	# thing the lens must never do. Only a run that has actually streamed draws anything.
@@ -639,7 +659,7 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 		_draw_text(control, Vector2(gutter_rect.position.x + 4.0, baseline_y), text, gutter_rect.size.x - 8.0, font, font_size - 1, gutter_text)
 	if stacked:
 		_draw_hit_count_chip(control, gutter_rect, hit_uid, font, font_size)
-	_draw_gutter_markers(control, gutter_rect, breakpoint_enabled, bookmark_enabled)
+	_draw_gutter_markers(control, gutter_rect, breakpoint_enabled, bookmark_enabled, reading)
 
 
 ## THE gate: which row gets a hit-count chip, and therefore whether ANY of this feature is
@@ -701,10 +721,11 @@ func _draw_hit_count_chip(control: Control, gutter_rect: Rect2, hit_uid: String,
 ## The breakpoint dot + bookmark pennant, separated so full-bleed rows (group/comment/
 ## section - whose bars cover the whole gutter) can re-stamp JUST the markers on top:
 ## a bookmarked comment or a breakpointed group must still show its indicator.
-func _draw_gutter_markers(control: Control, gutter_rect: Rect2, breakpoint_enabled: bool, bookmark_enabled: bool) -> void:
+func _draw_gutter_markers(control: Control, gutter_rect: Rect2, breakpoint_enabled: bool, bookmark_enabled: bool, reading_style: EventSheetReadingStyle = null) -> void:
+	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
 	if breakpoint_enabled:
 		var center: Vector2 = Vector2(gutter_rect.position.x + 7.0, gutter_rect.get_center().y)
-		control.draw_circle(center, 3.5, EventSheetPalette.COLOR_BREAKPOINT)
+		control.draw_circle(center, 3.5, reading.breakpoint_color)
 	if bookmark_enabled:
 		# Bookmark flag: a small right-pointing pennant at the gutter's right edge.
 		var flag_x: float = gutter_rect.end.x - 10.0
@@ -713,16 +734,16 @@ func _draw_gutter_markers(control: Control, gutter_rect: Rect2, breakpoint_enabl
 			Vector2(flag_x, flag_y - 4.0),
 			Vector2(flag_x + 7.0, flag_y),
 			Vector2(flag_x, flag_y + 4.0)
-		]), EventSheetPalette.COLOR_BOOKMARK)
+		]), reading.bookmark_color)
 
 
-func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int) -> void:
+func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int, guide_color: Color = EventSheetPalette.COLOR_GUIDE) -> void:
 	for level: int in range(depth):
 		var guide_x: float = row_rect.position.x + EventSheetPalette.GUTTER_WIDTH + float(level * INDENT_WIDTH) + 2.0
 		control.draw_line(
 			Vector2(guide_x, row_rect.position.y + 4.0),
 			Vector2(guide_x, row_rect.end.y - 4.0),
-			EventSheetPalette.COLOR_GUIDE,
+			guide_color,
 			1.0,
 			true
 		)
@@ -799,8 +820,10 @@ func _draw_spans(
 	event_style: EventSheetEventStyle = null,
 	selection_fill: Color = EventSheetPalette.COLOR_SELECTION,
 	hover_fill: Color = EventSheetPalette.COLOR_HOVER,
-	match_span_indices: Array = []
+	match_span_indices: Array = [],
+	reading_style: EventSheetReadingStyle = null
 ) -> void:
+	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
 	# Multi-line blocks (in-flow GDScript, action-lane comments) paint as ONE merged
 	# cell: union rects per block, background/hover/selection drawn once. The per-line
 	# spans remain the layout + hit-test truth - the merge is purely visual (user
@@ -879,7 +902,7 @@ func _draw_spans(
 			# the cursor's own hover, so the eye finds every one of them without the sheet lighting up.
 			var match_rect: Rect2 = block_unions[span_index] if in_block else span.rect
 			var match_fill: Color = hover_fill
-			match_fill.a = 0.34
+			match_fill.a = reading.name_highlight_strength
 			control.draw_rect(match_rect.grow(1.0), match_fill, true)
 			var match_edge: Color = hover_fill.lightened(SPAN_HOVER_OUTLINE_LIGHTEN)
 			match_edge.a = 0.65
@@ -1047,11 +1070,11 @@ func _draw_spans(
 									shifted_ranges.append(kept)
 						_draw_text_with_values(control, Vector2(segment_x, line_baseline_y), segment_text, shifted_ranges,
 							remaining, font, draw_font_size, segment_color, bbcode_value_color,
-							EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
+							reading.string_value_color, reading.boolean_value_color)
 						if bool(segment.get("bold", false)):
 							_draw_text_with_values(control, Vector2(segment_x + 0.7, line_baseline_y), segment_text, shifted_ranges,
 								remaining, font, draw_font_size, segment_color, bbcode_value_color,
-								EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
+								reading.string_value_color, reading.boolean_value_color)
 					segment_x += font.get_string_size(segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 		elif bool(metadata.get("comment_wrap", false)) and span_index != editing_span_index:
 			# Wrapped comment: draw from the top of the (multi-line-tall) cell so the whole
@@ -1064,7 +1087,7 @@ func _draw_spans(
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
 		else:
 			var value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
-			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color, EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
+			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color, reading.string_value_color, reading.boolean_value_color)
 		# The event-sheet parameter emphasis: every substituted parameter value re-draws 0.7px over -
 		# the same double-draw bold the BBCode cells use - in whatever colour that run already
 		# has, so the typed value tints never wash out.
@@ -1072,7 +1095,7 @@ func _draw_spans(
 			var emphasis_value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
 			_draw_param_emphasis(control, Vector2(text_x, baseline_y), draw_text, param_ranges, value_ranges,
 				text_width, font, draw_font_size, color, emphasis_value_color,
-				EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
+				reading.string_value_color, reading.boolean_value_color)
 		# Color params get a small swatch right after the text (event-sheet-style color preview).
 		var swatch: Variant = metadata.get("swatch_color")
 		if swatch is Color:
@@ -1080,7 +1103,7 @@ func _draw_spans(
 			var swatch_size: float = swatch_box_for(draw_font_size)
 			var swatch_rect: Rect2 = Rect2(text_x + swatch_advance + SWATCH_GAP, span.rect.position.y + (span.rect.size.y - swatch_size) * 0.5, swatch_size, swatch_size)
 			control.draw_rect(swatch_rect, swatch as Color, true)
-			control.draw_rect(swatch_rect, Color(0.0, 0.0, 0.0, 0.55), false, 1.0)
+			control.draw_rect(swatch_rect, reading.color_swatch_border_color, false, 1.0)
 			# Record where the swatch landed so a click can hit-test it and open the inline colour picker
 			# (no dialog) - the viewport reads span.metadata["swatch_rect"] in _handle_mouse_button.
 			span.metadata["swatch_rect"] = swatch_rect
@@ -1243,18 +1266,20 @@ func _draw_drag_feedback(
 	text: String,
 	font: Font,
 	font_size: int,
-	is_error: bool
+	is_error: bool,
+	reading_style: EventSheetReadingStyle = null
 ) -> void:
+	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = (
-		Color(0.45, 0.14, 0.17, 0.96)
+		reading.drag_bubble_refused_background_color
 		if is_error
-		else Color(0.17, 0.21, 0.28, 0.96)
+		else reading.drag_bubble_background_color
 	)
 	style.border_color = (
-		EventSheetPalette.COLOR_BREAKPOINT
+		reading.drag_refusal_color
 		if is_error
-		else EventSheetPalette.COLOR_DRAG_LINE
+		else reading.drag_line_color
 	)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(5)
@@ -1268,7 +1293,7 @@ func _draw_drag_feedback(
 		rect.size.x - 16.0,
 		font,
 		max(font_size - 1, 10),
-		Color(1.0, 1.0, 1.0, 0.96)
+		reading.drag_bubble_text_color
 	)
 
 

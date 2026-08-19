@@ -72,13 +72,13 @@ func build_ui() -> void:
 	_dock._title_dirty_dot = Label.new()
 	_dock._title_dirty_dot.name = "EventSheetTitleDirtyDot"
 	_dock._title_dirty_dot.text = "●"
-	_dock._title_dirty_dot.modulate = Color(0.99, 0.78, 0.30, 1.0)
+	_dock._title_dirty_dot.modulate = EventSheetActiveTheme.chrome().unsaved_dot_color
 	_dock._title_dirty_dot.visible = false
 	title_tab_content.add_child(_dock._title_dirty_dot)
 
 	_dock._title_path_label = Label.new()
 	_dock._title_path_label.name = "EventSheetTitlePath"
-	_dock._title_path_label.modulate = Color(0.72, 0.76, 0.84, 1.0)
+	_dock._title_path_label.modulate = EventSheetActiveTheme.chrome().title_path_color
 	_dock._title_path_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dock._title_path_label.clip_text = true
 	_dock._title_path_label.text = "Open or create a sheet to begin"
@@ -285,7 +285,7 @@ func build_ui() -> void:
 	_dock._row_address_label = Label.new()
 	_dock._row_address_label.name = "EventSheetRowAddress"
 	_dock._row_address_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_dock._row_address_label.modulate = Color(1.0, 1.0, 1.0, 0.65)
+	_dock._row_address_label.modulate = EventSheetActiveTheme.chrome().row_address_color
 	status_strip.add_child(_dock._row_address_label)
 	status_strip.add_child(_dock._build_zoom_pill())
 	root.add_child(status_strip)

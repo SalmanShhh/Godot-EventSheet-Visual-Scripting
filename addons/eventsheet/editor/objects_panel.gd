@@ -448,7 +448,7 @@ func _rebuild_tree() -> void:
 		section_item.set_text(0, section_line(section, visible_entries.size()))
 		section_item.set_selectable(0, false)
 		section_item.set_selectable(1, false)
-		section_item.set_custom_color(0, EventSheetPalette.TEXT_MUTED)
+		section_item.set_custom_color(0, EventSheetActiveTheme.chrome().object_bar_section_color)
 		section_item.set_metadata(0, {"section": str(section.get("id", ""))})
 		# A filter that is typing must not fight the folds: any section with a match opens while the
 		# box has text, and goes back to its remembered state when it is cleared.
@@ -468,7 +468,7 @@ func _rebuild_tree() -> void:
 		var empty_item: TreeItem = tree.create_item(root)
 		empty_item.set_text(0, empty_state_text(not _scene_name.is_empty()))
 		empty_item.set_selectable(0, false)
-		empty_item.set_custom_color(0, EventSheetPalette.TEXT_MUTED)
+		empty_item.set_custom_color(0, EventSheetActiveTheme.chrome().object_bar_section_color)
 		empty_item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
 
 
@@ -489,6 +489,10 @@ func _add_entry_item(parent_item: TreeItem, entry: Dictionary, is_missing: bool)
 		and not bool(entry.get("known", false))
 	var flagged: bool = is_missing or unknown_action
 	item.set_text(0, ("⚠ %s" % entry_text(entry)) if flagged else entry_text(entry))
+	if flagged:
+		# The ⚠ used to be a bare glyph in the row's own colour, which made a flagged entry read
+		# exactly like a fine one until you looked twice. It wears the theme's warning tone now.
+		item.set_custom_color(0, EventSheetActiveTheme.chrome().object_bar_warning_color)
 	if unknown_action:
 		item.set_tooltip_text(0, EventSheetL10n.translate("\"%s\" is not in the Input Map") % label)
 	elif str(entry.get("kind", "")) == "autoload" and not is_missing:
@@ -503,7 +507,7 @@ func _add_entry_item(parent_item: TreeItem, entry: Dictionary, is_missing: bool)
 	if rows > 0:
 		item.set_text(1, str(rows))
 		item.set_text_alignment(1, HORIZONTAL_ALIGNMENT_RIGHT)
-		item.set_custom_color(1, EventSheetPalette.TEXT_MUTED)
+		item.set_custom_color(1, EventSheetActiveTheme.chrome().object_bar_section_color)
 		item.set_tooltip_text(1, count_tooltip(
 			EventSheetViewportReadingRows.object_usage_split(_sheet, label)))
 	item.set_metadata(0, {"label": label, "kind": str(entry.get("kind", ""))})

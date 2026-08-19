@@ -293,7 +293,7 @@ func _title_block(text: String, badges: Variant) -> Control:
 ## its way out says so before the reader learns how to use it.
 func _note_block(text: String) -> Control:
 	var label: Label = _wrapped_label(text)
-	label.add_theme_color_override("font_color", Color(0.88, 0.7, 0.32))
+	label.add_theme_color_override("font_color", EventSheetActiveTheme.manual().resolve_note(Color(0.88, 0.7, 0.32)))
 	return EventSheetPopupUI.panel_section(label)
 
 

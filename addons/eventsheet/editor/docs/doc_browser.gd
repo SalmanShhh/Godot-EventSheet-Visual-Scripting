@@ -278,7 +278,7 @@ func _build_chrome() -> HBoxContainer:
 	_breadcrumb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_breadcrumb.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_breadcrumb.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-	_breadcrumb.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	_breadcrumb.add_theme_color_override("font_color", EventSheetActiveTheme.manual().resolve_muted(EventSheetPalette.TEXT_MUTED))
 	_breadcrumb.text = EventSheetDocReference.MANUAL_TITLE
 	row.add_child(_breadcrumb)
 	_back_button = _icon_button(["Back", "ArrowLeft"], "◀", "Back (Alt+Left).", go_back_pressed)
@@ -319,7 +319,7 @@ func _build_page_foot() -> HBoxContainer:
 	_helpful_prompt = Label.new()
 	_helpful_prompt.text = EventSheetDocFeedback.PROMPT
 	_helpful_prompt.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-	_helpful_prompt.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	_helpful_prompt.add_theme_color_override("font_color", EventSheetActiveTheme.manual().resolve_muted(EventSheetPalette.TEXT_MUTED))
 	foot.add_child(_helpful_prompt)
 	_helpful_yes = _foot_button(EventSheetDocFeedback.YES_LABEL,
 		"Kept on this machine. Nothing is sent anywhere.",
@@ -340,7 +340,7 @@ func _build_page_foot() -> HBoxContainer:
 		func() -> void: _step_text_size(-1)))
 	_text_size_label = Label.new()
 	_text_size_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-	_text_size_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	_text_size_label.add_theme_color_override("font_color", EventSheetActiveTheme.manual().resolve_muted(EventSheetPalette.TEXT_MUTED))
 	foot.add_child(_text_size_label)
 	foot.add_child(_foot_button(EventSheetDocFeedback.LARGER_LABEL, "Larger text in the Manual.",
 		func() -> void: _step_text_size(1)))
@@ -374,7 +374,7 @@ func _refresh_page_foot(answer: int = -2) -> void:
 	_helpful_prompt.text = EventSheetDocFeedback.PROMPT if line.is_empty() else line
 	_helpful_prompt.tooltip_text = _helpful_prompt.text
 	var accent: Color = EventSheetPopupUI.accent_color()
-	var muted: Color = EventSheetPalette.TEXT_MUTED
+	var muted: Color = EventSheetActiveTheme.manual().resolve_muted(EventSheetPalette.TEXT_MUTED)
 	_helpful_yes.add_theme_color_override("font_color",
 		accent if now == EventSheetDocFeedback.YES else muted)
 	_helpful_no.add_theme_color_override("font_color",
@@ -1011,7 +1011,7 @@ func _refresh_nav_highlight() -> void:
 func _highlight_nav(slug: String) -> void:
 	_nav_current = slug
 	var accent: Color = EventSheetPopupUI.accent_color()
-	var muted: Color = Color(0.86, 0.88, 0.92, 0.62)
+	var muted: Color = EventSheetActiveTheme.manual().resolve_muted(Color(0.86, 0.88, 0.92, 0.62))
 	for key: Variant in _nav_buttons:
 		var button: Button = _nav_buttons[key] as Button
 		if button == null:
@@ -1258,7 +1258,7 @@ func _style_group_row(item: TreeItem, title: String) -> void:
 	item.set_text(0, group_label(title))
 	item.set_selectable(0, false)
 	item.set_custom_font_size(0, EventSheetPalette.scaled(EventSheetPopupUI.SMALL_CAPS_FONT_SIZE))
-	item.set_custom_color(0, EventSheetPalette.TEXT_MUTED)
+	item.set_custom_color(0, EventSheetActiveTheme.manual().resolve_muted(EventSheetPalette.TEXT_MUTED))
 	var tracked: FontVariation = EventSheetPopupUI.small_caps_font(_tree.get_theme_font("font"))
 	if tracked != null:
 		item.set_custom_font(0, tracked)
@@ -1290,10 +1290,10 @@ func _mark_active_item(item: TreeItem) -> void:
 	if item == null:
 		return
 	var accent: Color = EventSheetPopupUI.accent_color()
-	item.set_custom_bg_color(0, accent, false)
+	item.set_custom_bg_color(0, EventSheetActiveTheme.manual().resolve_contents_active_background(accent), false)
 	# On a filled accent the row's own font colour can vanish. The editor's accent is a mid-to-light
 	# blue in both themes, so near-black reads on it either way.
-	item.set_custom_color(0, Color(0.08, 0.09, 0.11))
+	item.set_custom_color(0, EventSheetActiveTheme.manual().resolve_contents_active_text(Color(0.08, 0.09, 0.11)))
 
 
 func _select_tree_item(page_id: String) -> void:

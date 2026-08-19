@@ -102,6 +102,15 @@ func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 
+## A page paints its own paper only when the active theme asked for one. With no opinion (the
+## shipped default) nothing is drawn and the Manual sits on the editor's own background, exactly as
+## it always has - so this costs a themeless reader one alpha test per redraw and no pixels.
+func _draw() -> void:
+	var page_background: Color = EventSheetActiveTheme.manual().page_background_color
+	if EventSheetManualStyle.has_opinion(page_background):
+		draw_rect(Rect2(Vector2.ZERO, size), page_background, true)
+
+
 ## The scrolling host an in-page anchor jump moves. Without one, a jump resolves the heading and
 ## reports false rather than pretending it scrolled.
 func set_scroll_container(scroll: ScrollContainer) -> void:
@@ -542,6 +551,7 @@ func _heading_color(level: int) -> Color:
 			var theme: Theme = editor_interface.get_editor_theme()
 			if theme != null and theme.has_color("font_color", "Editor"):
 				base = theme.get_color("font_color", "Editor").lightened(0.15)
+	base = EventSheetActiveTheme.manual().resolve_heading(base)
 	return base if level <= 2 else base.darkened(0.08)
 
 
@@ -634,9 +644,9 @@ func _table(block: Dictionary) -> Control:
 	# page's one accent colour on a column name.
 	for column: int in range(columns):
 		label.push_cell()
-		label.set_cell_border_color(EventSheetPopupUI.TABLE_HAIRLINE)
+		label.set_cell_border_color(EventSheetActiveTheme.manual().resolve_table_hairline(EventSheetPopupUI.TABLE_HAIRLINE))
 		label.set_cell_padding(pad)
-		label.push_color(EventSheetPalette.TEXT_MUTED)
+		label.push_color(EventSheetActiveTheme.manual().resolve_muted(EventSheetPalette.TEXT_MUTED))
 		label.push_bold()
 		label.append_text(str(headers[column]).to_upper() if column < headers.size() else "")
 		label.pop()

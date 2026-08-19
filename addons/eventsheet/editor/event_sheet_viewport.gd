@@ -115,19 +115,18 @@ const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
 const FONT_SIZE := EventSheetPalette.FONT_SIZE
 const CONDITION_KEYWORD_METADATA := {"lane": "condition", "hoverable": false}
+# The OR and ✕ badges carry no colour of their own: the builder fills badge_bg / badge_fg from the
+# live theme (the condition lane's badge pair, the reading style's OR pair, and the event style's
+# invert marker for the ✕), so a preset dresses them like every other badge in the lane.
 const BADGE_OR_METADATA := {
 	"lane": "condition",
 	"hoverable": false,
-	"badge": true,
-	"badge_bg": Color(0.26, 0.29, 0.36, 0.95),
-	"badge_fg": Color(0.82, 0.87, 0.95, 1.0)
+	"badge": true
 }
 const BADGE_NEGATED_METADATA := {
 	"lane": "condition",
 	"hoverable": false,
-	"badge": true,
-	"badge_bg": Color(0.73, 0.20, 0.24, 0.95),
-	"badge_fg": Color(1.0, 1.0, 1.0, 1.0)
+	"badge": true
 }
 const BADGE_TRIGGER_METADATA := {
 	"lane": "condition",
@@ -1809,10 +1808,11 @@ func _draw() -> void:
 		# discoverable without being told. They brighten when the pointer is in the whole-event drag
 		# zone (the empty lane band, not on an ACE cell) - the cue that "grab here to move the event".
 		# Q12 - the Object bar's hover preview: a soft wash over the rows that object appears in.
+		var chrome_style: EventSheetChromeStyle = _get_chrome_style()
 		if not _object_preview.is_empty() and row_previews_object(row_data, _object_preview):
-			draw_rect(row_rect, Color(1.0, 1.0, 1.0, 0.07), true)
+			draw_rect(row_rect, chrome_style.object_bar_hover_wash_color, true)
 		if index == _hovered_row_index and not _flat_rows.is_empty():
-			var grip_color: Color = Color(1.0, 1.0, 1.0, 0.62 if _hover_is_drag_zone else 0.28)
+			var grip_color: Color = chrome_style.object_bar_grip_active_color if _hover_is_drag_zone else chrome_style.object_bar_grip_color
 			for dot_row in range(3):
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
 	_draw_variable_group_bubbles(width)

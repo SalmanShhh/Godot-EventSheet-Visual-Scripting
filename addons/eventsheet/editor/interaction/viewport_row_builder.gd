@@ -8430,8 +8430,8 @@ func _append_conjunct_condition_lines(branch_row: EventRowData, condition_text: 
 			continue
 		if or_block:
 			var or_meta: Dictionary = _viewport.BADGE_OR_METADATA.duplicate(true)
-			or_meta["badge_bg"] = condition_style_meta.get("badge_bg", _viewport.BADGE_OR_METADATA.get("badge_bg"))
-			or_meta["badge_fg"] = condition_style_meta.get("badge_fg", _viewport.BADGE_OR_METADATA.get("badge_fg"))
+			or_meta["badge_bg"] = condition_style_meta.get("badge_bg", _viewport._get_reading_style().or_badge_background_color)
+			or_meta["badge_fg"] = condition_style_meta.get("badge_fg", _viewport._get_reading_style().or_badge_foreground_color)
 			or_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 			or_meta["condition_index"] = -1
 			or_meta["line_index"] = line_index
@@ -8716,8 +8716,8 @@ func _append_condition_prefix_spans(
 		and displayed_condition_count > 1
 	):
 		var or_meta: Dictionary = _viewport.BADGE_OR_METADATA.duplicate(true)
-		or_meta["badge_bg"] = condition_style_meta.get("badge_bg", _viewport.BADGE_OR_METADATA.get("badge_bg"))
-		or_meta["badge_fg"] = condition_style_meta.get("badge_fg", _viewport.BADGE_OR_METADATA.get("badge_fg"))
+		or_meta["badge_bg"] = condition_style_meta.get("badge_bg", _viewport._get_reading_style().or_badge_background_color)
+		or_meta["badge_fg"] = condition_style_meta.get("badge_fg", _viewport._get_reading_style().or_badge_foreground_color)
 		or_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		or_meta["condition_index"] = condition_index
 		or_meta["line_index"] = line_index
