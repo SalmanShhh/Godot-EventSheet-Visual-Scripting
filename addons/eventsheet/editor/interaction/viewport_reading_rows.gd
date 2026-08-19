@@ -283,6 +283,15 @@ static func _append_ordered_lines(entry: Variant, lines: PackedStringArray, dept
 		if params.is_empty():
 			params = (entry as ACEAction).parameters
 		match (entry as ACEAction).ace_id:
+			# Batch 8 - the arithmetic and assignment steps a pattern is MADE of. Without these the
+			# lifted half of a countdown is invisible here, and the pattern that spans a lifted line
+			# and a raw one would never be seen at all.
+			"SetVar":
+				lines.append("%s = %s" % [str(params.get("var_name", "")), str(params.get("value", ""))])
+			"AddVar":
+				lines.append("%s += %s" % [str(params.get("var_name", "")), str(params.get("amount", ""))])
+			"SubtractVar":
+				lines.append("%s -= %s" % [str(params.get("var_name", "")), str(params.get("amount", ""))])
 			"SetLocalVar", "SetLocalVarInferred":
 				lines.append("var %s = %s" % [str(params.get("name", "")), str(params.get("value", ""))])
 			"SetLocalVarTyped":
@@ -293,6 +302,18 @@ static func _append_ordered_lines(entry: Variant, lines: PackedStringArray, dept
 					str(params.get("target", "")), str(params.get("method", "")), str(params.get("args", ""))])
 		return
 	if entry is EventRow:
+		# Batch 8 - a pattern's two halves often sit on opposite sides of one event: `cooldown -= delta`
+		# in the action lane and `cooldown <= 0` in the condition lane. A walk that saw only the actions
+		# could never put the two together, so a lifted comparison is rebuilt here too.
+		for condition_entry: Variant in (entry as EventRow).conditions:
+			var condition_row: ACECondition = condition_entry as ACECondition
+			if condition_row == null or condition_row.ace_id != "CompareVar":
+				continue
+			var condition_params: Dictionary = condition_row.params
+			if condition_params.is_empty():
+				condition_params = condition_row.parameters
+			lines.append("%s %s %s" % [str(condition_params.get("var_name", "")),
+				str(condition_params.get("op", "")), str(condition_params.get("value", ""))])
 		for action_entry: Variant in (entry as EventRow).actions:
 			_append_ordered_lines(action_entry, lines, depth + 1)
 		for sub_entry: Variant in (entry as EventRow).sub_events:
