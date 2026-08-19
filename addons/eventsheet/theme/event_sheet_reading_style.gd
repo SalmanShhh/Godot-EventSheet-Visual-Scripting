@@ -95,6 +95,11 @@ extends Resource
 @export var drag_bubble_background_color: Color = Color(0.17, 0.21, 0.28, 0.96)
 @export var drag_bubble_text_color: Color = Color(1.0, 1.0, 1.0, 0.96)
 
+## The band behind selected text while a cell is being edited.
+@export var text_selection_color: Color = Color(0.45, 0.62, 1.0, 0.3)
+## The plate a chip sits on when it brought no colour of its own.
+@export var default_chip_plate_color: Color = Color(1.0, 1.0, 1.0, 0.035)
+
 # ── Small marks ───────────────────────────────────────────────────────────────────────────────
 ## The outline stroked around a colour value's swatch, so a pale colour still reads as a swatch.
 @export var color_swatch_border_color: Color = Color(0.0, 0.0, 0.0, 0.55)

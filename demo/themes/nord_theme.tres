@@ -118,6 +118,8 @@ drag_refusal_color = Color(1, 0.33333334, 0.33333334, 1)
 drag_bubble_refused_background_color = Color(0.5492157, 0.26215687, 0.28803924, 1)
 drag_bubble_background_color = Color(0.2237255, 0.25058824, 0.3109804, 1)
 drag_bubble_text_color = Color(0.9192157, 0.9297568, 0.9508393, 1)
+text_selection_color = Color(0.5058824, 0.6313726, 0.75686276, 0.3)
+default_chip_plate_color = Color(0.95, 0.96, 0.98, 0.035)
 color_swatch_border_color = Color(0.95, 0.96, 0.98, 0.55)
 
 [resource]

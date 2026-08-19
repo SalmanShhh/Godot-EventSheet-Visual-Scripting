@@ -73,6 +73,16 @@ static func _fallback_reading_style() -> EventSheetReadingStyle:
 	return _fallback_reading
 
 
+## The same idea for the row shell tokens, so a style-less draw never has to spell a colour out.
+static var _fallback_event: EventSheetEventStyle = null
+
+
+static func _fallback_event_style() -> EventSheetEventStyle:
+	if _fallback_event == null:
+		_fallback_event = EventSheetEventStyle.new()
+	return _fallback_event
+
+
 ## The fixed object-name column width for a span's lane (0 = flow, the classic behavior).
 ## One resolver shared by the draw, the width measure, and the text-origin hit-test so the
 ## three can never disagree about where display text starts.
@@ -910,7 +920,7 @@ func _draw_spans(
 		elif span_index == hovered_span_index and not is_add_affordance:
 			if bool(metadata.get("chip", false)):
 				var hover_rect: Rect2 = block_unions[span_index] if in_block else span.rect
-				_draw_cell_hover(control, hover_rect, event_style.cell_hover_color if event_style != null else Color(1.0, 1.0, 1.0, 0.14))
+				_draw_cell_hover(control, hover_rect, event_style.cell_hover_color if event_style != null else _fallback_event_style().cell_hover_color)
 			else:
 				# Softened span hover (user call: highlighting strained the eyes).
 				var hover_bg: Color = hover_fill
@@ -1139,7 +1149,7 @@ func _draw_spans(
 				var select_w: float = font.get_string_size(draw_text.substr(select_from, select_to - select_from), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 				select_w = minf(select_w, maxf(span.rect.end.x - right_padding - select_x, 0.0))
 				if select_w > 0.0:
-					control.draw_rect(Rect2(select_x, span.rect.position.y + 3.0, select_w, span.rect.size.y - 6.0), Color(0.45, 0.62, 1.0, 0.3), true)
+					control.draw_rect(Rect2(select_x, span.rect.position.y + 3.0, select_w, span.rect.size.y - 6.0), reading.text_selection_color, true)
 			var prefix: String = draw_text.substr(0, clamp(editing_caret, 0, draw_text.length()))
 			var prefix_width: float = font.get_string_size(prefix, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 			var caret_x: float = min(text_x + prefix_width + 1.0, span.rect.end.x - right_padding)
@@ -1178,7 +1188,7 @@ func _draw_rounded_rect(control: Control, rect: Rect2, color: Color, top_left: i
 func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary, cell_radius: int = 4) -> void:
 	# Flat event-sheet/GDevelop-style cell with softly rounded corners (the radius is the
 	# theme's cell_corner_radius token; 0 = the classic square cell).
-	var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
+	var bg: Color = metadata.get("chip_bg", _fallback_reading_style().default_chip_plate_color)
 	_draw_rounded_rect(control, span.rect, bg, cell_radius, cell_radius, cell_radius, cell_radius)
 
 
@@ -1236,7 +1246,7 @@ func _draw_block_cell(control: Control, rect: Rect2, metadata: Dictionary) -> vo
 		control.draw_rect(rect, CODE_CELL_BG, true)
 		control.draw_rect(Rect2(rect.position.x, rect.position.y, 2.0, rect.size.y), CODE_CELL_STRIPE, true)
 		return
-	var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
+	var bg: Color = metadata.get("chip_bg", _fallback_reading_style().default_chip_plate_color)
 	control.draw_rect(rect, bg, true)
 
 

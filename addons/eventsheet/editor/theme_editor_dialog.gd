@@ -224,6 +224,8 @@ const _TOKEN_DESCRIPTIONS := {
 	"value_highlight_color": "Parameter values (numbers, strings) highlighted inside ACE text.",
 	"cell_hover_color": "Tint over a single condition/action cell under the mouse.",
 	"behavior_accent_color": "The soft-purple 'this is a behavior' accent (banner, region default).",
+	"gutter_background_color": "The strip down the left of the sheet that carries the event numbers.",
+	"gutter_text_color": "The event numbers themselves.",
 	"language_block_accent_color": "The stripe + wash on language blocks (a data class, a host binding, a switch case) so they read as code structure, not regular events.",
 	"event_corner_radius": "Corner roundness of the event block, in pixels (0 = square).",
 	"cell_corner_radius": "Corner roundness of individual condition/action cells.",
@@ -284,6 +286,8 @@ const _TOKEN_DESCRIPTIONS := {
 	"drag_bubble_refused_background_color": "The bubble that says why a drop was refused (\"dealt is not visible here\").",
 	"drag_bubble_background_color": "The same bubble when the drop is fine.",
 	"drag_bubble_text_color": "The words in that bubble.",
+	"text_selection_color": "The band behind selected text while you are editing a cell.",
+	"default_chip_plate_color": "The plate a chip sits on when it brought no colour of its own.",
 	"color_swatch_border_color": "The outline around a colour value's swatch, so a pale colour still reads as a swatch.",
 	"name_highlight_strength": "How strongly every other use of a hovered variable lights up, inside that variable's own scope.",
 	# ── Bars around the sheet ────────────────────────────────────────────────────────────────

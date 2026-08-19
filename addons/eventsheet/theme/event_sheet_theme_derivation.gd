@@ -30,7 +30,6 @@ static func fill_derived_tokens(style: EventSheetEditorStyle) -> EventSheetEdito
 	var manual: EventSheetManualStyle = style.get_manual_style()
 	var background: Color = event_style.row_background_color
 	var pale: bool = background.get_luminance() > 0.5
-	var text: Color = event_style.object_label_color
 	var accent: Color = event_style.group_accent_color
 	var surface: Color = event_style.group_fold_background_color
 	var ink: Color = _ink_for(background)
@@ -87,6 +86,8 @@ static func fill_derived_tokens(style: EventSheetEditorStyle) -> EventSheetEdito
 	reading.drag_bubble_background_color = background.lerp(surface, 0.85)
 	reading.drag_bubble_text_color = background.lerp(ink, 0.96)
 	reading.color_swatch_border_color = Color(ink.r, ink.g, ink.b, 0.55)
+	reading.text_selection_color = Color(accent.r, accent.g, accent.b, 0.30)
+	reading.default_chip_plate_color = Color(ink.r, ink.g, ink.b, 0.035)
 
 	# ── The bars around the sheet ──
 	chrome.object_bar_section_color = reading.muted_text_color
