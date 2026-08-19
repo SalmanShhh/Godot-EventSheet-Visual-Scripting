@@ -2940,12 +2940,15 @@ func _selection_span_metadata(row_data: EventRowData) -> Dictionary:
 	if row_data == null:
 		return {}
 	for span: SemanticSpan in row_data.spans:
-		if span == null:
+		# A span's metadata is a Variant and is routinely null, so it is asked what it IS before it
+		# is asked anything else.
+		if span == null or not (span.metadata is Dictionary):
 			continue
-		if not str(span.metadata.get("object_label", "")).strip_edges().is_empty():
-			return span.metadata
-		if str(span.metadata.get("kind", "")) == "pack_include":
-			return span.metadata
+		var metadata: Dictionary = span.metadata as Dictionary
+		if not str(metadata.get("object_label", "")).strip_edges().is_empty():
+			return metadata
+		if str(metadata.get("kind", "")) == "pack_include":
+			return metadata
 	return {}
 
 
@@ -2967,6 +2970,15 @@ func _follow_selection_in_manual() -> void:
 ## public "addon:<pack>" doc id rather than straight at a URL, so this caller needs no edit the
 ## day that id starts resolving to something other than a browser tab. The picker emits and
 ## never navigates itself.
+## The picker's per-entry "?". It opens the verb's entry in the Manual - docked and following when
+## the reader keeps it there, a window otherwise - and the picker stays open behind it, because the
+## reader was in the middle of choosing something.
+func _on_picker_help_requested(definition: ACEDefinition) -> void:
+	if definition == null:
+		return
+	open_documentation(EventSheetDocExplain.doc_id_for_definition(definition))
+
+
 func _on_picker_guide_requested(definition: ACEDefinition) -> void:
 	if definition == null:
 		return

@@ -72,6 +72,11 @@ const READING_MAX_WIDTH := 720.0
 ## which the editor already has a renderer for.
 const ENGINE_SCHEME := "engine:"
 
+## The guide list's width, and the wider one a list of RESULTS gets: a guide row is a name, a
+## result row is a sentence.
+const SIDEBAR_MIN_WIDTH := 210.0
+const RESULTS_MIN_WIDTH := 330.0
+
 ## Emitted when the browser opened something in the reader's browser instead of drawing it, so a
 ## host can say so in its status line.
 signal link_activated(target: String)
@@ -158,7 +163,7 @@ func _init() -> void:
 	add_child(_split)
 	_side = VBoxContainer.new()
 	_side.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
-	_side.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(210.0), 0.0)
+	_side.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(SIDEBAR_MIN_WIDTH), 0.0)
 	_tree = Tree.new()
 	_tree.hide_root = true
 	_tree.allow_reselect = true
@@ -842,11 +847,16 @@ func _blocks_for(page_id: String) -> Array[Dictionary]:
 func _on_search_changed(text: String) -> void:
 	_query = text.strip_edges()
 	if _query.is_empty():
+		_side.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(SIDEBAR_MIN_WIDTH), 0.0)
 		_build_tree()
 		_select_tree_item(str(EventSheetDocExplain.resolve(_current_id).get("page_id", "")))
 		_fold_contents()
 		return
 	_build_results(_query)
+	# A result row is a sentence - the kind, the name, and how much this sheet uses it - so the
+	# column that holds it is widened while results are on screen and given back to the guide names
+	# the moment the box is cleared.
+	_side.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(RESULTS_MIN_WIDTH), 0.0)
 	# Results the reader cannot see are not results: in compact mode a keystroke reveals the list
 	# it just filled, and picking a hit folds it away again.
 	if _compact:

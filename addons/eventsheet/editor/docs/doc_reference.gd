@@ -344,7 +344,9 @@ static func _section_lead(section_name: String) -> String:
 ## it either way - which is the half of a guide the reader came for.
 static func _pack_blocks(pack_dir: String) -> Array[Dictionary]:
 	var directory: String = pack_dir.strip_edges()
-	if directory.is_empty():
+	# A directory that is not installed draws NOTHING, not a stub: a stub says "this behavior has
+	# no guide yet", and a behavior that is not here has no guide to be missing.
+	if directory.is_empty() or not DirAccess.dir_exists_absolute("res://eventsheet_addons".path_join(directory)):
 		return []
 	var grouped: Dictionary = EventSheetDocAceReference.verb_rows(directory)
 	var guide_page: String = guide_page_for(KIND_PACK, directory)

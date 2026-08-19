@@ -397,14 +397,17 @@ static func _reference_hits(wanted: String) -> Array[Dictionary]:
 	var hits: Array[Dictionary] = []
 	for section: String in EventSheetDocReference.section_names():
 		var score: int = match_score(section.to_lower(), wanted)
-		if score >= 0:
+		# Substring and better only. A reference page is named after a category or a behavior, and a
+		# SUBSEQUENCE match against ninety of those answers "wait" with every name that happens to
+		# carry a w, an a, an i and a t in order - which buries the four rows the reader wanted.
+		if score >= 0 and score <= 1:
 			hits.append(_reference_row("reference", section,
 				EventSheetDocReference.SECTION_TREE_TITLE,
 				EventSheetDocReference.doc_id(EventSheetDocReference.KIND_SECTION, section), score))
 	for pack_dir: String in EventSheetDocReference.pack_names():
 		var title: String = EventSheetDocReference.pack_title(pack_dir)
 		var score: int = match_score(title.to_lower(), wanted)
-		if score >= 0:
+		if score >= 0 and score <= 1:
 			hits.append(_reference_row("behavior", title,
 				EventSheetDocReference.PACK_TREE_TITLE,
 				EventSheetDocReference.doc_id(EventSheetDocReference.KIND_PACK, pack_dir), score))

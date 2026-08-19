@@ -105,6 +105,47 @@ hover away.
   trigger event it is instead of stranding the whole handler as a code block. The connect line is
   re-emitted verbatim, flags and all.
 
+### Added - the Manual: docked beside the sheet, following what you select, and knowing your sheet
+
+The in-editor documentation is now the **Manual**, in every place a reader can see it (Tools ▸
+Manual…, the dock, the window), and it behaves like the manual an event-sheet editor has: it lives
+beside the sheet, it answers for whatever you are pointing at, and half of its pages are derived
+from the vocabulary rather than written by anybody.
+
+- **F1 is "help for the selected item."** A condition or action row opens its reference entry; an
+  object label opens that object's reference page (the engine's own class reference is one click
+  further, in the Script editor's help); a group opens the Manual's page on groups; a behavior's
+  Include bar opens that behavior's reference. Docked, **Follow selection** does it as you click
+  around, and pauses the moment you click inside the Manual to read - press the pin to resume.
+- **A reference page per object, category and behavior.** *System reference* has a page per picker
+  category, *Behavior reference* a page per pack, each listing its conditions, actions and
+  expressions from the vocabulary this editor loaded, with every verb linking to its entry. A
+  behavior with no written guide is not a dead link: its page says "No guide yet for *Priced
+  Tables* - its conditions, actions and expressions are listed below" and offers a one-click
+  **Write this guide**, which writes the skeleton beside the pack where the Manual picks it up.
+- **One search box over the whole Manual** - conditions, actions, expressions, guides, System
+  reference, behavior reference, the engine's class reference and the glossary - with every result
+  tagged by which of those it is. A verb result says how many events of the open sheet already use
+  it; Enter opens it and **Ctrl+Enter adds it to the sheet at the caret** as one undo step.
+- **Every reference entry knows THIS sheet**: *Used in this sheet: 2 events* with **go to first /
+  next** (which selects the event), **See also** for what sits beside it, and **Add action /
+  Add condition**, **Add example events**, **Show GDScript** and **Open guide**.
+- **A glossary for readers coming from another event-sheet editor** - pick, family, layout,
+  instance variable, wait, else, or block, trigger once, sub-event and the rest, each in this
+  editor's own words, searchable as the *glossary* kind.
+- **The chrome every reader reaches for**: a breadcrumb starting at *Manual*, the on-this-page
+  chapter strip, back / forward (**Alt+Left / Alt+Right**), **Recent**, a **bookmark** star, a
+  reading measure of about eighty characters, a scroll position remembered per page, and
+  **Next: ...** at the foot of a guide. Recents and bookmarks travel with the editor layout.
+- **Help where the hand already is**: every entry in the Add condition / Add action dialogs carries
+  a small **?** ("Help for this action") that opens its entry, hovering an entry shows a mini-page
+  (what it does, the line it ships as, and how much this sheet uses it), hovering a mark on a sheet
+  row (⟳ ◆ ➜ ƒ ✕ ⏸) says what the mark means, and the icon legend is the Manual's first page.
+- **The Manual says what it is**: its footer reads *Manual v&lt;version&gt; · shipped with the
+  plugin · offline*, so a reader can tell the pages match the build they installed.
+- New public API: `EventSheets.all_verbs()` (every verb the live registry offers) and
+  `EventSheets.reveal_verb_row()` (select the n-th event of the open sheet that uses a verb).
+
 ### Added - an opened script's questions, text, saving, behaviours, input and logging read as rows
 
 Six more families of everyday GDScript now read as the rows they are instead of as the code they are
@@ -1337,7 +1378,6 @@ italic CAPTIONS with their `#` marker dropped - a beginner reads the author's in
 the mechanics under it - across every open pane. View state only: toggle the pill off and the
 programmer look is back instantly, and no row is ever touched.
 
-
 ### Added - Sheet ▸ Name Raw Calls: give raw one-call code rows their real verb name
 
 A sheet accumulates escape-hatch rows - a call typed into a GDScript block, or a line the lifter
@@ -1367,7 +1407,6 @@ other run already gets), so the body lands as ordinary statement rows under the 
 Measured over 206 hand-written files: **0 of 25,974 code lines** still reach the plain
 GDScript-block rendering, from 88.1% when the adoption campaign started - with byte-exact
 round-trips on all 206 throughout.
-
 
 ### Added - a body dictionary is a "Declare" action with editable entry rows
 
@@ -5976,7 +6015,6 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   the Custom Resource + loader pattern, the missing-resource warning, and a recipe for making your own
   addon data-driven.
 
-
 - **Author a loot table as data, not events.** A new **LootTableResource** Custom Resource holds a
   table's drops as a `.tres` asset you fill in the Inspector (an item / weight / tags grid, plus optional
   pity), instead of building it with a string of Add Entry actions. Load it in one step: **LootBox
@@ -7055,7 +7093,6 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   traps, standing contracts, house rules); AGENTS.md's stale indentation-split claim fixed
   (the whole plugin is tabs, suite-enforced).
 
-
 ### Fixed - a silent block-registry init bug + cache hardening (from the dedicated hunt)
 
 - **A rescan-first registry touch silently lost the built-in block kinds** (enum, signal,
@@ -7079,7 +7116,6 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   script self-invalidates its entry - no manual invalidation to forget.
   (`tests/ace_registry_cache_test.gd`)
 
-
 ### Added - the Custom Block API is complete: edit seam + plugin-to-plugin registration
 
 - **Kinds own their editors.** `EventSheetBlockKind.edit(dock, block)` lets a kind open its own
@@ -7089,7 +7125,6 @@ a milestone progress bar that regressed after latching - each now pinned in the 
 - **Other plugins can register kinds in code**: `EventForgeBridgeRuntime.register_block_kind()`,
   the sibling of `register_script_as_provider`, for tools that cannot drop files into
   `eventsheet_addons/`. The Custom Blocks guide documents both.
-
 
 ### Fixed - three bugs from the adversarial code review
 
@@ -7101,7 +7136,6 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   `extends CharacterBody2D`.
 - **Clearing a variable group also clears its subgroup** - an orphaned `@export_subgroup`
   nested the members under whatever unrelated group came earlier in the Inspector.
-
 
 ### Added - the export-coverage tail: password/expression/link + flagged easing
 
@@ -7148,7 +7182,6 @@ a milestone progress bar that regressed after latching - each now pinned in the 
 - Fixed on the way: int-backed `@export_enum` was mis-parsed as a String combo (the variable
   then failed its byte gate and stayed a raw block), and expression defaults
   (`NodePath("")`) were re-quoted by the hinted/structured emission branches.
-
 
 ### Changed - the whole codebase follows the GDScript style guide, gated
 

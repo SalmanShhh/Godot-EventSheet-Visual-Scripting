@@ -2019,3 +2019,40 @@ Set {name} to {value} (at end of frame),{name} auf {value} setzen (am Frame-Ende
 Set collision layers to {layers},Kollisionsebenen auf {layers} setzen
 Set collides with {layers},Kollidiert mit {layers}
 Trigger once,Einmal auslösen
+Manual,Handbuch
+Manual…,Handbuch…
+Search the Manual…,Handbuch durchsuchen…
+Show the Manual's contents.,Das Inhaltsverzeichnis des Handbuchs anzeigen.
+The pages you have read this session.,Die in dieser Sitzung gelesenen Seiten.
+Bookmark this page.,Diese Seite als Lesezeichen setzen.
+Back (Alt+Left).,Zurück (Alt+Links).
+Forward (Alt+Right).,Vorwärts (Alt+Rechts).
+Follow selection,Auswahl folgen
+Shows help for whatever you select on the sheet. Clicking inside the Manual pauses this until you press it again.,"Zeigt Hilfe zu dem, was du im Blatt auswählst. Ein Klick im Handbuch pausiert das, bis du es erneut drückst."
+Following the selection.,Folgt der Auswahl.
+Not following the selection.,Folgt der Auswahl nicht.
+Paused following - press the pin to follow the selection again.,"Folgen pausiert - drücke die Nadel, um der Auswahl wieder zu folgen."
+Write this guide,Diese Anleitung schreiben
+"Writes the guide skeleton for this behavior from its own vocabulary, ready to fill in.","Schreibt das Gerüst der Anleitung für dieses Verhalten aus seinem eigenen Vokabular, bereit zum Ausfüllen."
+System reference,System-Referenz
+Behavior reference,Verhaltens-Referenz
+Object reference,Objekt-Referenz
+Coming from another event-sheet editor,Umstieg von einem anderen Event-Sheet-Editor
+What the marks on a sheet mean,Was die Markierungen in einem Blatt bedeuten
+Go to first,Zum ersten
+Selects the first event of this sheet that uses it.,"Wählt das erste Ereignis dieses Blattes aus, das es verwendet."
+Selects the next event that uses it.,"Wählt das nächste Ereignis aus, das es verwendet."
+See also,Siehe auch
+Opens this entry.,Öffnet diesen Eintrag.
+Add example events,Beispielereignisse hinzufügen
+Show GDScript,GDScript anzeigen
+Shows the line this verb compiles to.,"Zeigt die Zeile, zu der dieser Begriff kompiliert."
+Opens the guide this verb is documented in.,"Öffnet die Anleitung, in der dieser Begriff dokumentiert ist."
+"Puts this row into the open sheet at the caret, as one undo step.",Fügt diese Zeile an der Einfügemarke ins offene Blatt ein - als ein Undo-Schritt.
+"Puts the illustrated rows into the open sheet at the caret, as one undo step.",Fügt die gezeigten Zeilen an der Einfügemarke ins offene Blatt ein - als ein Undo-Schritt.
+Nothing in the Manual mentions that,Nichts im Handbuch erwähnt das
+Selected the event that uses it.,"Das Ereignis ausgewählt, das es verwendet."
+That verb is not used in this sheet.,Dieser Begriff wird in diesem Blatt nicht verwendet.
+Press F1 for the Manual's page on the marks.,F1 öffnet die Handbuchseite zu den Markierungen.
+Opens the next page in this part of the Manual.,Öffnet die nächste Seite in diesem Teil des Handbuchs.
+"Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Drücke F1 mit einer Auswahl, um Hilfe dazu zu bekommen, oder wähle eine Seite aus dem Inhaltsverzeichnis des Handbuchs."

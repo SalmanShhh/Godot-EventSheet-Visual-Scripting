@@ -24,6 +24,10 @@ signal ace_selected(definition: ACEDefinition, context: Dictionary)
 ## call, not the picker's.
 signal guide_requested(definition: ACEDefinition)
 
+## Emitted when the reader presses the "?" on an entry. The Manual is where that is answered; this
+## dialog only says which verb was asked about.
+signal help_requested(definition: ACEDefinition)
+
 ## Recents (familiar ACEs surface first): last-used ACE ids, newest first. Persisted PER-USER and
 ## PER-PROJECT in a user:// file - NOT project.godot: recents change on every ACE use and would churn
 ## the version-controlled file constantly (Favorites live in ProjectSettings because they change rarely).
@@ -403,6 +407,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_tree.item_activated.connect(_on_item_activated)
 	_tree.item_selected.connect(_on_item_selected_for_info)
 	_tree.gui_input.connect(_on_tree_gui_input)
+	_tree.button_clicked.connect(_on_tree_button_clicked)
 	split.add_child(_tree)
 	# Description panel (Create-Node style): the highlighted ACE's name, type + what it does.
 	# Fixed height + internal scrolling (NOT fit_content): inside a ConfirmationDialog the dialog
@@ -1162,6 +1167,7 @@ func _refresh_tree() -> void:
 			group_item.set_icon_max_width(0, 16)
 		item.set_tooltip_text(0, _item_tooltip(definition))
 		item.set_metadata(0, definition)
+		_add_help_button(item, definition)
 		if featured:
 			var __bold: Font = _bold_font()
 			if __bold != null:
@@ -1473,6 +1479,60 @@ func _item_label(definition: ACEDefinition) -> String:
 	return "%s  ·  %s" % [display_name, definition.provider_id.capitalize()]
 
 
+## The id every "?" on a row carries. One id, because there is one question a "?" asks.
+const HELP_BUTTON_ID := 1
+
+
+## The small "?" at the end of an entry - "Help for this action" - which opens the verb's entry in
+## the Manual without losing the reader's place in the picker.
+##
+## Silent when this editor build carries no help icon (and headless, where there is no theme at
+## all): Tree.add_button needs a texture, and a row with an invisible button is a click target
+## nobody can see. The hover mini-page below still answers, and so does F1.
+func _add_help_button(item: TreeItem, definition: ACEDefinition) -> void:
+	var icon: Texture2D = editor_icon_named("Help")
+	if icon == null or definition == null:
+		return
+	item.add_button(0, icon, HELP_BUTTON_ID, false,
+		EventSheetL10n.translate("Help for this %s") % _ace_type_label(definition.ace_type).to_lower())
+
+
+func _on_tree_button_clicked(item: TreeItem, _column: int, id: int, mouse_button_index: int) -> void:
+	if id != HELP_BUTTON_ID or mouse_button_index != MOUSE_BUTTON_LEFT or item == null:
+		return
+	var definition: ACEDefinition = item.get_metadata(0) as ACEDefinition
+	if definition != null:
+		help_requested.emit(definition)
+
+
+## An editor theme icon by name, or null outside the editor and for a name this build lacks.
+static func editor_icon_named(icon_name: String) -> Texture2D:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	var editor_interface: Object = Engine.get_singleton("EditorInterface")
+	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
+		return null
+	var theme: Theme = editor_interface.get_editor_theme()
+	if theme == null or not theme.has_icon(icon_name, "EditorIcons"):
+		return null
+	return theme.get_icon(icon_name, "EditorIcons")
+
+
+## The MINI-PAGE a row shows on hover: what it is and what it does, the line it ships as, and -
+## when this sheet already uses it - how often. Three facts, which is what a reader hovering a
+## row is deciding between two entries with; the whole entry is one "?" away.
+static func mini_page(definition: ACEDefinition, used: int) -> String:
+	if definition == null:
+		return ""
+	var lines: PackedStringArray = PackedStringArray()
+	var ships_as: String = EventSheetDocExplain.ships_as(definition)
+	if not ships_as.is_empty():
+		lines.append("→ %s" % ships_as)
+	if used > 0:
+		lines.append(EventSheetL10n.translate("Used %d× in this sheet") % used)
+	return "\n".join(lines)
+
+
 func _item_tooltip(definition: ACEDefinition) -> String:
 	var body: String = EventSheetL10n.translate(definition.description if not definition.description.is_empty() else definition.display_name)
 	var tip: String = "[%s]  %s" % [_ace_type_label(definition.ace_type), body]
@@ -1487,6 +1547,13 @@ func _item_tooltip(definition: ACEDefinition) -> String:
 	var provenance: String = EventSheetVocabularyCatalog.provenance_note(definition)
 	if not provenance.is_empty():
 		tip += "\n" + provenance
+	# The mini-page: the line it ships as, and how much the open sheet already uses it. It rides on
+	# the tooltip rather than on a popup of its own because a hover that opens a window is a hover
+	# that gets in the way of the arrow keys.
+	var mini: String = mini_page(definition,
+		EventSheetDocUsage.count(_sheet_for_functions(), definition.provider_id, definition.id))
+	if not mini.is_empty():
+		tip += "\n" + mini
 	return tip
 
 

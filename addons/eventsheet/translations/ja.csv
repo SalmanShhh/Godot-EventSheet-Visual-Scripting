@@ -2019,3 +2019,40 @@ Set {name} to {value} (at end of frame),{name} を {value} に設定 (フレー�
 Set collision layers to {layers},コリジョンレイヤーを {layers} に設定
 Set collides with {layers},{layers} と衝突する
 Trigger once,一度だけ
+Manual,マニュアル
+Manual…,マニュアル…
+Search the Manual…,マニュアルを検索…
+Show the Manual's contents.,マニュアルの目次を表示します。
+The pages you have read this session.,このセッションで読んだページです。
+Bookmark this page.,このページをブックマークします。
+Back (Alt+Left).,戻る (Alt+左)。
+Forward (Alt+Right).,進む (Alt+右)。
+Follow selection,選択に追従
+Shows help for whatever you select on the sheet. Clicking inside the Manual pauses this until you press it again.,シートで選択したものについてのヘルプを表示します。マニュアル内をクリックすると、もう一度押すまで一時停止します。
+Following the selection.,選択に追従しています。
+Not following the selection.,選択に追従していません。
+Paused following - press the pin to follow the selection again.,追従を一時停止しました - ピンを押すと再び選択に追従します。
+Write this guide,このガイドを書く
+"Writes the guide skeleton for this behavior from its own vocabulary, ready to fill in.",この振る舞いの語彙からガイドの骨組みを書き出します。あとは埋めるだけです。
+System reference,システムリファレンス
+Behavior reference,ビヘイビアリファレンス
+Object reference,オブジェクトリファレンス
+Coming from another event-sheet editor,他のイベントシートエディタから来た方へ
+What the marks on a sheet mean,シート上の記号の意味
+Go to first,最初へ
+Selects the first event of this sheet that uses it.,これを使っているこのシート最初のイベントを選択します。
+Selects the next event that uses it.,これを使っている次のイベントを選択します。
+See also,関連項目
+Opens this entry.,この項目を開きます。
+Add example events,サンプルイベントを追加
+Show GDScript,GDScript を表示
+Shows the line this verb compiles to.,この語がコンパイルされる行を表示します。
+Opens the guide this verb is documented in.,この語が説明されているガイドを開きます。
+"Puts this row into the open sheet at the caret, as one undo step.",この行を開いているシートのカーソル位置に、1 回の取り消しで追加します。
+"Puts the illustrated rows into the open sheet at the caret, as one undo step.",図のイベント行を開いているシートのカーソル位置に、1 回の取り消しで追加します。
+Nothing in the Manual mentions that,マニュアルにその記述はありません
+Selected the event that uses it.,これを使っているイベントを選択しました。
+That verb is not used in this sheet.,この語はこのシートで使われていません。
+Press F1 for the Manual's page on the marks.,F1 で記号についてのマニュアルページを開きます。
+Opens the next page in this part of the Manual.,マニュアルのこの部分の次のページを開きます。
+"Press F1 with something selected for help about it, or pick a page from the Manual's contents.",何かを選んで F1 を押すとその項目のヘルプが開きます。マニュアルの目次からページを選ぶこともできます。

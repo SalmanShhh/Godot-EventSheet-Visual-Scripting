@@ -2019,3 +2019,40 @@ Set {name} to {value} (at end of frame),Définir {name} sur {value} (en fin de f
 Set collision layers to {layers},Définir les calques de collision sur {layers}
 Set collides with {layers},Entre en collision avec {layers}
 Trigger once,Déclencher une fois
+Manual,Manuel
+Manual…,Manuel…
+Search the Manual…,Rechercher dans le manuel…
+Show the Manual's contents.,Affiche le sommaire du manuel.
+The pages you have read this session.,Les pages lues pendant cette session.
+Bookmark this page.,Ajoute cette page aux favoris.
+Back (Alt+Left).,Retour (Alt+Gauche).
+Forward (Alt+Right).,Suivant (Alt+Droite).
+Follow selection,Suivre la sélection
+Shows help for whatever you select on the sheet. Clicking inside the Manual pauses this until you press it again.,Affiche l'aide de ce que vous sélectionnez dans la feuille. Un clic dans le manuel met cela en pause jusqu'à ce que vous appuyiez de nouveau.
+Following the selection.,Suit la sélection.
+Not following the selection.,Ne suit pas la sélection.
+Paused following - press the pin to follow the selection again.,Suivi en pause - appuyez sur l'épingle pour suivre à nouveau la sélection.
+Write this guide,Écrire ce guide
+"Writes the guide skeleton for this behavior from its own vocabulary, ready to fill in.","Écrit le squelette du guide de ce comportement à partir de son propre vocabulaire, prêt à compléter."
+System reference,Référence système
+Behavior reference,Référence des comportements
+Object reference,Référence des objets
+Coming from another event-sheet editor,Vous venez d'un autre éditeur de feuilles d'événements
+What the marks on a sheet mean,Ce que signifient les marques d'une feuille
+Go to first,Aller au premier
+Selects the first event of this sheet that uses it.,Sélectionne le premier événement de cette feuille qui l'utilise.
+Selects the next event that uses it.,Sélectionne l'événement suivant qui l'utilise.
+See also,Voir aussi
+Opens this entry.,Ouvre cette entrée.
+Add example events,Ajouter les événements d'exemple
+Show GDScript,Afficher le GDScript
+Shows the line this verb compiles to.,Affiche la ligne vers laquelle ce terme se compile.
+Opens the guide this verb is documented in.,Ouvre le guide où ce terme est documenté.
+"Puts this row into the open sheet at the caret, as one undo step.","Insère cette ligne dans la feuille ouverte au curseur, en une seule étape d'annulation."
+"Puts the illustrated rows into the open sheet at the caret, as one undo step.","Insère les lignes illustrées dans la feuille ouverte au curseur, en une seule étape d'annulation."
+Nothing in the Manual mentions that,Rien dans le manuel ne mentionne cela
+Selected the event that uses it.,L'événement qui l'utilise est sélectionné.
+That verb is not used in this sheet.,Ce terme n'est pas utilisé dans cette feuille.
+Press F1 for the Manual's page on the marks.,Appuyez sur F1 pour la page du manuel sur les marques.
+Opens the next page in this part of the Manual.,Ouvre la page suivante de cette partie du manuel.
+"Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Appuyez sur F1 avec une sélection pour obtenir de l'aide à son sujet, ou choisissez une page dans le sommaire du manuel."
