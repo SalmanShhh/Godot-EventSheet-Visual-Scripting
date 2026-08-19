@@ -2695,3 +2695,6 @@ Another event-sheet editor,Другой редактор листов событ
 Jump to event,Перейти к событию
 Explain,Объяснить
 Godot's words,Формулировка Godot
+Show events,Показать события
+Follow Scene Selection,Следовать выбору в сцене
+Filter events to %s,Показать только события про %s

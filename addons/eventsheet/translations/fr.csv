@@ -2695,3 +2695,6 @@ Another event-sheet editor,Un autre éditeur de feuilles d'événements
 Jump to event,Aller à l'événement
 Explain,Expliquer
 Godot's words,Les mots de Godot
+Show events,Voir les événements
+Follow Scene Selection,Suivre la sélection de la scène
+Filter events to %s,Filtrer les événements sur %s

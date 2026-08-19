@@ -19,6 +19,7 @@ var attach_sheet: Callable = Callable()  # Callable(node: Node)
 var goto_row: Callable = Callable()      # Callable(script_path: String)
 var create_sheet: Callable = Callable()  # Callable(directory: String)
 var connect_signal: Callable = Callable()  # Callable(node: Node)
+var show_events: Callable = Callable()   # Callable(node: Node)
 
 
 func _popup_menu(paths: PackedStringArray) -> void:
@@ -29,6 +30,9 @@ func _popup_menu(paths: PackedStringArray) -> void:
 				# Wiring a signal into events, right where signals are wired: offered when
 				# the selected node's script pairs with (or is) a sheet.
 				add_context_menu_item("Connect Signal to Event Sheet...", _on_connect_signal_requested)
+				# The Scene dock's half of the two-way link: right-click a node and read the
+				# events that are about it, with the sheet already filtered to that object.
+				add_context_menu_item("Show events", _on_show_events_requested)
 		EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM:
 			# Right-clicking ANY .gd (or a sheet .tres) in the FileSystem offers "Open as Event Sheet" -
 			# a GDScript-backed sheet opens an arbitrary script losslessly. The Script glyph makes the item
@@ -114,6 +118,11 @@ func _on_attach_requested(targets: Variant) -> void:
 func _on_connect_signal_requested(targets: Variant) -> void:
 	if connect_signal.is_valid() and targets is Array and not (targets as Array).is_empty() and (targets as Array)[0] is Node:
 		connect_signal.call((targets as Array)[0])
+
+
+func _on_show_events_requested(targets: Variant) -> void:
+	if show_events.is_valid() and targets is Array and not (targets as Array).is_empty() and (targets as Array)[0] is Node:
+		show_events.call((targets as Array)[0])
 
 
 func _on_create_sheet_requested(targets: Variant) -> void:

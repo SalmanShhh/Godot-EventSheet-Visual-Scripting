@@ -429,6 +429,10 @@ func _ready() -> void:
 	if Engine.is_editor_hint() and ProjectSettings.has_signal("settings_changed") \
 			and not ProjectSettings.is_connected("settings_changed", _on_project_settings_changed):
 		ProjectSettings.connect("settings_changed", _on_project_settings_changed)
+	# The Scene dock's selection is the other half of the two-way link, and following it needs the
+	# editor's own EditorSelection - which only exists in the editor.
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		_ensure_scene_link().init_selection(EditorInterface.get_selection())
 	_build_ui()
 	_ensure_editor_dialogs_initialized()
 	_refresh_ace_registry()
@@ -1049,6 +1053,10 @@ func _notification(what: int) -> void:
 		_release_ace_sources()
 		# A .gd still opening: join its worker before the job (and its Thread) is freed with us.
 		_sheet_io._abandon_open_job()
+		# The Scene dock outlives this dock: a selection_changed connection left behind would call
+		# into a freed Control on the reader's very next click there.
+		if _scene_link != null:
+			_scene_link.teardown()
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		# GDScript-backed sheets: refocusing the editor is the moment external edits (the
 		# script editor, another tool, git) usually land - offer to reload from disk. This is also
@@ -4667,6 +4675,43 @@ func highlight_object_rows(object_label: String) -> void:
 	_apply_lens(wanted)
 
 
+## The Scene dock's "Show events", and the offer a scene selection makes: filter the sheet to one
+## object, without the toggle-off half. Separate from highlight_object_rows for exactly that
+## reason - arriving from another dock, "filter to this" must SET the filter, never clear a filter
+## that happens to already be on that object.
+func filter_events_to_object(object_label: String) -> void:
+	var wanted: String = object_label.strip_edges()
+	if _viewport == null or wanted.is_empty():
+		return
+	_apply_lens(wanted)
+	if _objects_panel != null:
+		_objects_panel.highlight_object(wanted)
+
+
+## ── The Scene dock and the sheet on one selection (the two-way link) ───────────────────────────
+## Built with the dock and torn down with it. The class holds the ping-pong guard; the dock only
+## owns the lifetime and the menu toggle.
+var _scene_link: EventSheetSceneSelectionLink = null
+
+
+func _ensure_scene_link() -> EventSheetSceneSelectionLink:
+	if _scene_link == null:
+		_scene_link = EventSheetSceneSelectionLink.new(self)
+	return _scene_link
+
+
+## View ▸ Follow Scene Selection. Writes the project setting (so the choice outlives the session)
+## and re-ticks the item from what the setting now says, rather than from what this code assumed.
+func _toggle_follow_scene_selection(view_popup: PopupMenu) -> void:
+	var now_on: bool = not EventSheetSceneSelectionLink.follow_enabled()
+	ProjectSettings.set_setting(EventSheetSceneSelectionLink.FOLLOW_SETTING, now_on)
+	ProjectSettings.save()
+	if view_popup != null:
+		view_popup.set_item_checked(view_popup.get_item_index(9801),
+			EventSheetSceneSelectionLink.follow_enabled())
+	_set_status("Follow Scene Selection %s." % ("ON" if now_on else "OFF"))
+
+
 ## Q12 - HOVER previews before a click pins: the object's rows glow while the pointer rests on its
 ## bar entry and forget the moment it leaves, so a reader can sweep the bar without committing to
 ## anything. A preview never touches the filter lens, which is what makes it a preview.
@@ -5166,6 +5211,9 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_refresh_variable_panel()
 	_update_code_panel_highlight()
 	_follow_selection_in_manual()
+	# The Scene dock's half of the two-way link: the node this row is about is selected there (and
+	# in the 2D view), so the two surfaces stay on one selection.
+	_ensure_scene_link().follow_row(_row_data)
 	if _exposed_node != null and _viewport != null:
 		_exposed_node.set_row_context(_active_view().get_selected_ace_resource())
 	_properties_bar.refresh()

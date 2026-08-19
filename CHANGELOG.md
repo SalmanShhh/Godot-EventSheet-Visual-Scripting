@@ -91,6 +91,17 @@ lands in a path that already existed.
   and preview moves to F4. Everything stays rebindable afterwards, and the picker reads the LIVE
   bindings - rebind one key by hand and it honestly says `Godot EventSheets` again.
 
+### Added - the Scene dock and the sheet share one selection
+
+- **Two-way selection follow.** Picking a node in the Scene dock highlights its entry on the Object
+  bar and offers `Filter events to <node>` on the status line - an offer, never a silent filter.
+  Picking a row on the sheet selects the node that row is about, so the Scene dock and the 2D view
+  land where your eye already is. Each side recognises the echo of a selection it caused, so the
+  two never fight. **Show events** joins Attach Event Sheet and Connect Signal on a node's
+  right-click menu: it opens the node's script as a sheet and filters to it in one gesture. Turn
+  the follow off with **View ▸ Follow Scene Selection** or the new
+  `eventsheets/editor/follow_scene_selection` project setting.
+
 ### Added - a runtime error is re-said in the sheet's words
 
 - **"event 12 · target is empty", not "null instance".** When the running game fails on a line one

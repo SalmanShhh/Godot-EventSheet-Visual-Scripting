@@ -188,6 +188,22 @@ func _connect_signal_from_node(node: Node) -> void:
 	_connect_signal_dialog.call("open", node, sheet_path, get_editor_interface().get_base_control())
 
 
+## Right-clicked node -> Show events: open the node's script AS A SHEET and filter its events to
+## that object, so the answer to "what is this node's logic?" is one gesture from the Scene dock.
+## A node with no script says so rather than opening an empty workspace.
+func _show_events_for_node(node: Node) -> void:
+	if node == null:
+		return
+	var node_script: Script = node.get_script() as Script
+	if node_script == null or node_script.resource_path.is_empty():
+		push_warning("[Godot EventSheets] %s has no script - use Attach Event Sheet first." % node.name)
+		return
+	var sheet_path: String = str(load(PROJECT_DOCTOR_PATH).sheet_for_script(node_script.resource_path))
+	_open_sheet_in_workspace(sheet_path if not sheet_path.is_empty() else node_script.resource_path)
+	if _event_sheet_editor != null and _event_sheet_editor.has_method("filter_events_to_object"):
+		_event_sheet_editor.call("filter_events_to_object", node.name)
+
+
 ## The FileSystem "Create New > Event Sheet..." entry: pop the name + starter dialog for the
 ## clicked folder. The dialog is parented to the editor's base control (always present), so it
 ## works even before the workspace editor has ever been built.
@@ -260,6 +276,7 @@ func _enter_tree() -> void:
 		menu.goto_row = _goto_sheet_row_from_script
 		menu.create_sheet = _create_sheet_in_directory
 		menu.connect_signal = _connect_signal_from_node
+		menu.show_events = _show_events_for_node
 		add_context_menu_plugin(slot, menu)
 		_context_menus.append(menu)
 	# Inspector: nodes whose script is sheet-generated get an "Edit Event Sheet" button.

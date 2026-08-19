@@ -2695,3 +2695,6 @@ Another event-sheet editor,別のイベントシートエディタ
 Jump to event,イベントへジャンプ
 Explain,解説
 Godot's words,Godot の原文
+Show events,イベントを表示
+Follow Scene Selection,シーンの選択に追従
+Filter events to %s,イベントを %s に絞り込む

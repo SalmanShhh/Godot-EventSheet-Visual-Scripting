@@ -2695,3 +2695,6 @@ Another event-sheet editor,另一款事件表编辑器
 Jump to event,跳到事件
 Explain,说明
 Godot's words,Godot 的原文
+Show events,显示事件
+Follow Scene Selection,跟随场景选择
+Filter events to %s,只显示关于 %s 的事件

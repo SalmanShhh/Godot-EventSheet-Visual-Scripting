@@ -2695,3 +2695,6 @@ Another event-sheet editor,다른 이벤트 시트 편집기
 Jump to event,이벤트로 이동
 Explain,설명
 Godot's words,Godot의 원문
+Show events,이벤트 보기
+Follow Scene Selection,씬 선택 따라가기
+Filter events to %s,이벤트를 %s(으)로 좁히기

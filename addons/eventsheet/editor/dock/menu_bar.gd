@@ -565,6 +565,20 @@ func build(root: Node) -> void:
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9701:
 			_open_run_tests())
+	# ── Follow Scene Selection (appended block - keep together) ────────────────────────────────
+	# The Scene dock and the sheet on one selection. Ticked by default, because that is what the
+	# reader who came from an editor where the layout and the sheet were one surface expects; the
+	# item exists because somebody working on one row while clicking around a scene reasonably
+	# wants it off. Backed by the project setting, so the choice survives the session. Id 9801 is
+	# clear of every block above.
+	view_popup.add_check_item("Follow Scene Selection", 9801)
+	view_popup.set_item_checked(view_popup.get_item_index(9801),
+		EventSheetSceneSelectionLink.follow_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(9801),
+		"Keep the Scene dock and the sheet on one selection: picking a node highlights it on the Object bar and offers to filter the sheet's events to it, and picking a row selects the node that row is about. Right-click a node in the Scene dock for Show events.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 9801:
+			_dock._toggle_follow_scene_selection(view_popup))
 
 
 ## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes
