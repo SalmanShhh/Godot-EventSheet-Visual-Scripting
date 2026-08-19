@@ -6919,10 +6919,18 @@ static func font_file_words(value: String, context: Dictionary) -> String:
 	return expression_text(text, context)
 
 
-## T11. The word an alignment constant is spelled with, or "" when the value is not one of them.
+## T11. The word an alignment is spelled with, or "" when the value is neither one of the constants
+## nor the number that names one. The plain number answers too, because that is how the Inspector
+## writes it back into a script and a reader means the same thing by both.
 static func _alignment_word(value: String, words: Dictionary) -> String:
 	var bare: String = unqualified_constant(value)
-	return translate(str(words[bare])) if words.has(bare) else ""
+	if words.has(bare):
+		return translate(str(words[bare]))
+	if not bare.is_valid_int():
+		return ""
+	var index: int = bare.to_int()
+	var spellings: Array = words.values()
+	return translate(str(spellings[index])) if index >= 0 and index < spellings.size() else ""
 
 
 ## T10. The muted aside a Set Z order row carries: whether the number the file wrote counts from the
