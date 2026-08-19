@@ -562,8 +562,8 @@ Event Numbers,이벤트 번호
 Aligned Object Columns,객체 열 정렬
 Outline…,개요…
 Outline,개요
-Go to Event,이벤트로 이동
-Go to Event Number…,이벤트 번호로 이동…
+Go to event,이벤트로 이동
+Go to event… (Ctrl+G),이벤트로 이동… (Ctrl+G)
 Bookmarks,북마크
 ◂ Previous,◂ 이전
 Next ▸,다음 ▸
@@ -2126,3 +2126,7 @@ not in %s,%s에 없음
 Nothing in this sheet names an object yet.,이 시트는 아직 어떤 오브젝트도 가리키지 않습니다.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,이 스크립트는 아직 씬에 올려져 있지 않습니다. 씬 독의 노드에 끌어다 놓으면 그 오브젝트가 여기에 나타납니다.
 {n} scripts,스크립트 {n}개
+Event number,이벤트 번호
+event %d,이벤트 %d
+event %d of %d,이벤트 %d / %d
+line %d,줄 %d

@@ -25,6 +25,23 @@
   that script as its own editable sheet. One script is read per frame behind the progress strip, so a
   big scene never freezes the editor.
 
+### Added - an event is named by its number, everywhere a row is named
+
+The left margin has numbered events for a while; now everything that points at a row says the same
+number, so two people reading the same file mean one row by "event 12".
+
+- **Go to event on Ctrl+G.** The dialog the Command Palette already had gets the key every event
+  sheet gives it, and the Keyboard Shortcuts dialog lists it with the other fixed structural keys.
+- **The status bar says where you are.** Selecting a row prints `event 4 of 61 · line 38` on the
+  right of the status bar - the sheet's own event number first, the line after it. A row the margin
+  does not number (a comment, a group bar, a variable) prints nothing rather than inventing an
+  address.
+- **Find results and Doctor findings print the number.** The Find bar's counter reads
+  `3 of 12 · event 4`, and a Project Doctor finding about one row reads `player.gd · event 4` in the
+  panel and `path (event 4)` in the headless driver. The numbering walk itself moved onto
+  `EventSheetResource`, so the Doctor - which never touches the editor - counts events exactly the
+  way the margin does.
+
 ### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words
 
 Four more families of everyday GDScript read as the rows they are. Display only: the file is

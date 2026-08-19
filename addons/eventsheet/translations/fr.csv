@@ -562,8 +562,8 @@ Event Numbers,Numéros d'événement
 Aligned Object Columns,Colonnes d'objet alignées
 Outline…,Plan…
 Outline,Plan
-Go to Event,Aller à l'événement
-Go to Event Number…,Aller au numéro d'événement…
+Go to event,Aller à l'événement
+Go to event… (Ctrl+G),Aller à l'événement… (Ctrl+G)
 Bookmarks,Signets
 ◂ Previous,◂ Précédent
 Next ▸,Suivant ▸
@@ -2126,3 +2126,7 @@ not in %s,absent de %s
 Nothing in this sheet names an object yet.,Rien dans cette feuille ne nomme encore d'objet.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,Ce script n'est encore sur aucune scène - déposez-le sur un nœud dans le dock Scène et ses objets apparaîtront ici.
 {n} scripts,{n} scripts
+Event number,Numéro d'événement
+event %d,événement %d
+event %d of %d,événement %d sur %d
+line %d,ligne %d

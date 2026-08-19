@@ -770,9 +770,10 @@ static func check_unbounded_loops(sheet_paths: PackedStringArray, findings: Arra
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null:
 			continue
+		var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events)
 		for entry: Variant in sheet.events:
 			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
-				_scan_unbounded_loops(entry as EventRow, sheet_path, threshold, findings)
+				_scan_unbounded_loops(entry as EventRow, sheet_path, threshold, findings, numbers)
 
 
 static func _is_per_frame_trigger(trigger_id: String) -> bool:
@@ -780,7 +781,7 @@ static func _is_per_frame_trigger(trigger_id: String) -> bool:
 
 
 ## Walks an event + its sub-events for unbounded, unbudgeted For Each loops with >= threshold actions.
-static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold: int, findings: Array[Dictionary]) -> void:
+static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold: int, findings: Array[Dictionary], numbers: Dictionary = {}) -> void:
 	for filter_entry: Variant in event.pick_filters:
 		if not (filter_entry is PickFilter):
 			continue
@@ -793,7 +794,8 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 			continue
 		if event.actions.size() >= threshold:
 			_add(findings, "info", "unbounded-loop", sheet_path,
-				"A per-frame For Each here loops over '%s' with %d actions, uncapped and unbudgeted - if it's slow, spread it across frames with the Time Slicer pack or a Budgeted For Each." % [pick.iterator_name, event.actions.size()])
+				"A per-frame For Each here loops over '%s' with %d actions, uncapped and unbudgeted - if it's slow, spread it across frames with the Time Slicer pack or a Budgeted For Each." % [pick.iterator_name, event.actions.size()],
+					int(numbers.get(event.get_instance_id(), 0)))
 			break
 	for sub: Variant in event.sub_events:
 		if sub is EventRow:
@@ -813,12 +815,13 @@ static func check_coroutine_in_per_frame_trigger(sheet_paths: PackedStringArray,
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null:
 			continue
+		var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events)
 		for entry: Variant in sheet.events:
 			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
-				_scan_coroutine_misuse(entry as EventRow, sheet_path, findings)
+				_scan_coroutine_misuse(entry as EventRow, sheet_path, findings, numbers)
 
 
-static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings: Array[Dictionary]) -> void:
+static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings: Array[Dictionary], numbers: Dictionary = {}) -> void:
 	# A Once At A Time gate makes the overlap impossible (the event skips itself while a
 	# previous run is still suspended), so the warning would be crying wolf - stay silent.
 	for condition: Variant in event.conditions:
@@ -832,11 +835,12 @@ static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings
 			flagged = "await"
 		if not flagged.is_empty():
 			_add(findings, "warning", "coroutine-in-per-frame", sheet_path,
-				"A coroutine action ('%s') runs under a per-frame trigger (On Process / On Physics Process). The next tick fires while the previous run may still be suspended, so the handler overlaps itself and double-processes. Move it to a one-shot trigger (On Ready / On Signal / a custom function), or use the Time Slicer pack." % flagged)
+				"A coroutine action ('%s') runs under a per-frame trigger (On Process / On Physics Process). The next tick fires while the previous run may still be suspended, so the handler overlaps itself and double-processes. Move it to a one-shot trigger (On Ready / On Signal / a custom function), or use the Time Slicer pack." % flagged,
+					int(numbers.get(event.get_instance_id(), 0)))
 			break
 	for sub: Variant in event.sub_events:
 		if sub is EventRow:
-			_scan_coroutine_misuse(sub as EventRow, sheet_path, findings)
+			_scan_coroutine_misuse(sub as EventRow, sheet_path, findings, numbers)
 
 
 ## Walks a sheet's rows collecting DISTINCT external node references (normalised: $path / %unique,
@@ -1930,5 +1934,8 @@ static func _project_scripts() -> PackedStringArray:
 	return scripts
 
 
-static func _add(findings: Array[Dictionary], severity: String, check: String, path: String, message: String) -> void:
-	findings.append({"severity": severity, "check": check, "path": path, "message": message})
+## `event_number` is the sheet's own margin number for the row the finding is about (0 when the
+## finding is about a file rather than a row). It is what lets a finding be quoted the way the
+## editor, the bookmarks and the Find results quote a row: "event 4".
+static func _add(findings: Array[Dictionary], severity: String, check: String, path: String, message: String, event_number: int = 0) -> void:
+	findings.append({"severity": severity, "check": check, "path": path, "message": message, "event": event_number})

@@ -130,3 +130,26 @@ func family_group() -> String:
 	if class_id.is_empty():
 		return ""
 	return "family_" + class_id.to_snake_case()
+
+
+## instance-id -> 1-based event number, walking the sheet the way an event sheet counts down its
+## left margin: every EventRow in order, descending into groups and sub-events. Groups, comments and
+## variable rows are not events, so they are not numbered. This is the ONE walk - the editor's
+## margin, "Go to event", bookmarks, Find results and the Doctor all name a row through it, so two
+## people looking at the same sheet always mean the same row by "event 4". Pure and static.
+static func event_numbers(entries: Array) -> Dictionary:
+	var numbers: Dictionary = {}
+	var counter: Dictionary = {"next": 1}
+	_number_events(entries, numbers, counter)
+	return numbers
+
+
+static func _number_events(entries: Array, numbers: Dictionary, counter: Dictionary) -> void:
+	for entry: Variant in entries:
+		if entry is EventRow:
+			numbers[(entry as EventRow).get_instance_id()] = int(counter["next"])
+			counter["next"] = int(counter["next"]) + 1
+			_number_events((entry as EventRow).sub_events, numbers, counter)
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_number_events(group.events if not group.events.is_empty() else group.rows, numbers, counter)

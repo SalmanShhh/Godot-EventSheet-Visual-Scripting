@@ -404,6 +404,13 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   of the sheet's own functions reads `Functions ▸ Call Add Look  x = mouse's ΔX  y = mouse's ΔY`, and code
   that could not lift is one folded card with a line count. **View > Humanized Names** turns the name lens
   on or off for editable sheets; nothing on the sheet is scaffolding until you press **Edit Events**.
+- **Every event has a number, and everything names it by that number.** The left margin counts events
+  down the sheet - sub-events included, groups descended into - and the count is stable, so folding a
+  group or filtering the sheet never renumbers anything. **Ctrl+G** opens *Go to event* and jumps to
+  one. The status bar says where you are in the same words - `event 4 of 61 · line 38` - and a
+  bookmark, the Find bar's counter (`3 of 12 · event 4`) and a Project Doctor finding
+  (`player.gd · event 4`) all print the same number, so "look at event 12" means one row to everybody
+  reading the file. The numbers are display-only: nothing about them touches the script.
 - **A plain script is an object.** Its Include bar names it (`class_name`, else its scene's root node,
   else the file) with its class icon and the scene it lives in; its engine properties read under that
   name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as

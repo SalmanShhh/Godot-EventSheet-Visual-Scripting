@@ -562,8 +562,8 @@ Event Numbers,事件编号
 Aligned Object Columns,对齐对象列
 Outline…,大纲…
 Outline,大纲
-Go to Event,跳转到事件
-Go to Event Number…,跳转到事件编号…
+Go to event,跳转到事件
+Go to event… (Ctrl+G),转到事件… (Ctrl+G)
 Bookmarks,书签
 ◂ Previous,◂ 上一个
 Next ▸,下一个 ▸
@@ -2126,3 +2126,7 @@ not in %s,不在 %s 中
 Nothing in this sheet names an object yet.,这张事件表还没有提到任何对象。
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,该脚本还没有放到任何场景上 - 在场景面板中把它拖到某个节点上，它的对象就会出现在这里。
 {n} scripts,{n} 个脚本
+Event number,事件编号
+event %d,事件 %d
+event %d of %d,事件 %d / %d
+line %d,行 %d

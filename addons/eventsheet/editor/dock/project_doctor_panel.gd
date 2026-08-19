@@ -98,7 +98,13 @@ func _run_project_doctor() -> void:
 		item.set_text(0, severity.to_upper())
 		item.set_custom_color(0, Color(0.92, 0.42, 0.42) if severity == "error"
 			else (Color(0.93, 0.78, 0.4) if severity == "warning" else Color(0.6, 0.72, 0.86)))
-		item.set_text(1, str(finding.get("path")).get_file())
+		# A finding about one row names it the way the margin, the bookmarks and the Find results
+		# name it - "player.gd · event 4" - so it can be quoted without a scroll position.
+		var where: String = str(finding.get("path")).get_file()
+		var finding_event: int = int(finding.get("event", 0))
+		if finding_event > 0:
+			where += " · " + EventSheetL10n.translate("event %d") % finding_event
+		item.set_text(1, where)
 		item.set_tooltip_text(1, str(finding.get("path")))
 		item.set_text(2, str(finding.get("message")))
 		item.set_metadata(0, str(finding.get("path", "")))

@@ -1381,22 +1381,10 @@ var show_hit_counts: bool = false
 
 ## instance-id -> 1-based event number, walking the sheet the way an event sheet counts: every
 ## EventRow in order, descending into groups and sub-events. Pure and static.
+## The walk itself lives on EventSheetResource, so the Project Doctor (which never touches the
+## editor) names a row exactly the way this margin does. This stays the editor's spelling of it.
 static func event_numbers_for(entries: Array) -> Dictionary:
-	var numbers: Dictionary = {}
-	var counter: Dictionary = {"next": 1}
-	_number_events(entries, numbers, counter)
-	return numbers
-
-
-static func _number_events(entries: Array, numbers: Dictionary, counter: Dictionary) -> void:
-	for entry: Variant in entries:
-		if entry is EventRow:
-			numbers[(entry as EventRow).get_instance_id()] = int(counter["next"])
-			counter["next"] = int(counter["next"]) + 1
-			_number_events((entry as EventRow).sub_events, numbers, counter)
-		elif entry is EventGroup:
-			var group: EventGroup = entry as EventGroup
-			_number_events(group.events if not group.events.is_empty() else group.rows, numbers, counter)
+	return EventSheetResource.event_numbers(entries)
 
 
 ## The EventRow carrying the given number ("Go to Event N"), or null.
@@ -1424,6 +1412,40 @@ static func _event_at_number(entries: Array, number: int, counter: Dictionary) -
 			if in_group != null:
 				return in_group
 	return null
+
+
+## The event number of the event that OWNS a resource - the event itself, or the event whose
+## conditions/actions/comment the resource is one of - so a bookmark, a Find result and a Doctor
+## finding can all name the row the way the margin does ("event 4"). 0 when nothing owns it.
+static func event_number_containing(entries: Array, target: Resource) -> int:
+	if target == null:
+		return 0
+	var numbers: Dictionary = event_numbers_for(entries)
+	if numbers.has(target.get_instance_id()):
+		return int(numbers[target.get_instance_id()])
+	return _event_number_owning(entries, target, numbers)
+
+
+static func _event_number_owning(entries: Array, target: Resource, numbers: Dictionary) -> int:
+	for entry: Variant in entries:
+		if entry is EventRow:
+			var event_row: EventRow = entry as EventRow
+			var owned: Array = []
+			owned.append_array(event_row.conditions)
+			owned.append_array(event_row.actions)
+			for candidate: Variant in owned:
+				if candidate == target:
+					return int(numbers.get(event_row.get_instance_id(), 0))
+			var in_subs: int = _event_number_owning(event_row.sub_events, target, numbers)
+			if in_subs > 0:
+				return in_subs
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			var in_group: int = _event_number_owning(
+				group.events if not group.events.is_empty() else group.rows, target, numbers)
+			if in_group > 0:
+				return in_group
+	return 0
 
 
 # ── Live filter lens (view-only; see _refresh_rows) ─────────────────────────────

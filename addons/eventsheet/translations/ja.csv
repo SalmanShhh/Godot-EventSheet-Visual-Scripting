@@ -562,8 +562,8 @@ Event Numbers,イベント番号
 Aligned Object Columns,オブジェクト列を揃える
 Outline…,アウトライン…
 Outline,アウトライン
-Go to Event,イベントへ移動
-Go to Event Number…,イベント番号へ移動…
+Go to event,イベントへ移動
+Go to event… (Ctrl+G),イベントへ移動… (Ctrl+G)
 Bookmarks,ブックマーク
 ◂ Previous,◂ 前へ
 Next ▸,次へ ▸
@@ -2126,3 +2126,7 @@ not in %s,%s にありません
 Nothing in this sheet names an object yet.,このシートはまだどのオブジェクトも指していません。
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,このスクリプトはまだシーンに置かれていません。シーンドックのノードにドロップすると、そのオブジェクトがここに表示されます。
 {n} scripts,{n} 個のスクリプト
+Event number,イベント番号
+event %d,イベント %d
+event %d of %d,イベント %d / %d
+line %d,行 %d
