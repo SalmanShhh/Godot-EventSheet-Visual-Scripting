@@ -41,6 +41,8 @@ readable line:
 
 ## Event rows - the workhorse
 
+![Dragging the boundary between the condition and action lanes: the guide line runs the whole sheet, not just the row](images/divider-guide.png)
+
 Two lanes: **conditions left, actions right**. The trigger leads the condition lane with its
 tempo badge; more conditions stack below it; actions list down the right. Sub-events indent one
 level per nesting - the canvas indent IS the code's tab. Actions read as sentences
@@ -49,6 +51,10 @@ does ("TreeItem ▸ Set Collapsed ( true )"). Every event is numbered down the l
 number is what a bookmark, the Find bar and a Doctor finding all print.
 
 ## Identity bars - what this sheet IS
+
+![The head at rest: the enum as one sentence, with the Class setup breadcrumb above it](images/prelude-blocks-closed.png)
+
+![The same head opened: one row per enum value with its number, and the Class setup facts listed out](images/prelude-blocks-open.png)
 
 Three definition blocks wear the accent band, a left accent edge, and half again the height of
 a content row, so they can never be mistaken for one:
@@ -117,6 +123,8 @@ because there every declared signal simply IS one of the file's triggers, with t
 as chips beside it. "internal" names a distinction only a behavior pack has.
 
 ## Function blocks - what this sheet can be asked to do
+
+![A pack's published rows: the role badge, one typed chip per input and the gives-back return, with no func signature anywhere](images/define-rows.png)
 
 A function reads as the trigger it is: `ƒ  Functions ▸ On Jump`, with the name and one chip per
 input in the CONDITION lane, because that lane answers "when does this run?" and a function's

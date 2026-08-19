@@ -105,6 +105,8 @@ The two import/export types compile to a plain named function the editor calls (
 
 ## 4. The vocabulary - Editor Tools ACEs
 
+![The three tool-authoring rows: render a scene to a file, preview a table's odds, and stamp or strip on project export](images/tooldev-editor-verbs.png)
+
 Open the picker inside an On Editor Run event and the **Editor Tools** category has the everyday editor-automation vocabulary. They compile to the exact plain Godot the editor exposes - `EditorInterface`, `ResourceSaver`, `DirAccess`, `Engine`, plus `SubViewport` / `RenderingServer` for Render Scene To Image, `RandomNumberGenerator` for Preview Table Rolls and `ConfigFile` for Write Version Stamp - with zero plugin references, so the generated script works in any Godot project.
 
 ### Trigger

@@ -190,6 +190,8 @@ GlobalUtils.ping(self)
 
 ## 4. React to a Signal Your Existing Code Emits
 
+![The Connect Signal to Event Sheet dialog: a searchable list of the node's own script signals and its native ones](images/connect-signal-dialog.png)
+
 Triggers are how a sheet *reacts*. To react to your own code, use the signal triggers - they connect by
 name, with no need for the emitter to know anything about EventSheets.
 
@@ -324,6 +326,8 @@ which you can select, disable and drag like any other.
 
 ### How long opening takes, and why the editor stays responsive
 
+![The "Opening <file>" strip mid-lift: the rows are already painted and the editor is still drawing frames](images/open-progress-strip.png)
+
 Opening a `.gd` runs two passes: a fast raw read that gives you rows and verbatim blocks, then the lift,
 which matches every line against the vocabulary and recompiles the sheet to check the bytes still match.
 The lift is the expensive half, so it runs on a worker thread with a progress strip and a **Show as code
@@ -379,6 +383,10 @@ That is the order this section is in.
   variable reads `Instance number  jump_velocity = 4.5  Upward velocity applied on a jump` - the one
   sentence below, plus the knob's own description. On an editable sheet the head keeps its Class setup
   strip and `@export` chips, because those are things you edit; the folders are for reading.
+
+  ![A behaviour pack's head: the Include bar reading "Addon Pack FPSController v1.0.0 behaves on a CharacterBody3D", the class description as a comment bar, then folded Triggers, Input and one folder per setting group](images/opened-pack-head.png)
+
+  ![The same head with its folders opened: every setting under Movement, Wall Tech and Instance variables of FPSController, each reading scope word, type word, name, value and its own description](images/opened-pack-head-open.png)
 - **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, the
   Include bar reads `⇥ Game  autoload (global) · game.gd` with the globe, its knobs read as one
   `Global variables` folder rather than the Instance variables one, and its triggers say
@@ -427,6 +435,8 @@ That is the order this section is in.
   percent; `@export_file("*.png")` reads `file` with its filter; `@export_dir` reads `folder`;
   `@export_multiline` reads `text  multiline`; a Color reads its swatch and its word; and
   `@export_flags(...)` reads `flags` with the names of the bits.
+
+  ![Three opened scripts stacked: one whose Include bar says "73% reads as events - 2 script blocks", one whose settings read as Movement and Look folders with every export hint family, and the same file opened as an autoload, whose head is one Global variables folder](images/opened-script-head5.png)
 - **A local variable's scope is enforced, and shown.** A local is visible from the event that
   declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
   action that uses `dealt` into an event that cannot see it and the drop refuses before you release,
@@ -450,6 +460,8 @@ That is the order this section is in.
   refusals guard the move, both in the red drop bubble: a row that uses a local may not leave the
   scope that can see it (`dealt is not visible here`), and a local may not be dragged out from under
   rows that still use it (`dealt is still used here`).
+
+  ![A function's rows with its locals underneath it - Local number dealt = 0, Local text label = "hurt", Local number shield = 5 - and System Set dealt to damage * 2 in the action lane](images/local-rows-at-the-top-of-their-event.png)
 - **A property's setter reads as a trigger, its getter as an expression.** A `set(v):` block fires
   when the value is set, with the new value as its payload - which is exactly what a trigger is - so
   it reads `➜ On hp set` with a `v` chip and its body as ordinary actions and sub-events, the first
@@ -476,6 +488,10 @@ That is the order this section is in.
   inserts, and the function behind it - with Edit..., Open guide and Show in code. Unpublished helpers are
   the same blocks with their doc as the right-hand caption, gathered under a closed **Helpers** folder.
 
+  ![A pack's published functions read as events: f Functions - On Can Stand Up with "condition" beside the name and Set return value in the action lane, and a closed Helpers folder reading "functions this pack uses inside itself - 7"](images/opened-pack-verbs.png)
+
+  ![The ACE properties popup for one published function: its kind, category, inputs with their types, what it gives back, its description, its icon, the exact line it inserts and the function behind it](images/ace-properties-popup.png)
+
   The picker knows about them too. Open **Add Event** on a `.gd` you opened as a sheet and its first
   page is **ƒ Functions - this script**, listing the file's own functions with the kind each one
   publishes as and the inputs it takes, its unpublished helpers behind a `+ Helpers (N)` fold, and
@@ -484,12 +500,18 @@ That is the order this section is in.
 
   ![The Add Event picker opened on a script's own functions: a Functions section headed "this script - 4" listing Award Points as an action taking amount number and Round Is Ready as a condition taking enabled true/false, a collapsed Helpers (2) entry, then a Your Project section listing the project's own classes](images/picker-functions-page.png)
 
+  ![The Change Type Everywhere dialog listing each row it will rewrite before the retype is committed](images/seam-change-type.png)
+
 - **Lifecycle handlers are triggers, wherever they sit in the file.** `_physics_process` is `Every Physics
   Tick`; an `_unhandled_input` that branches on the event type reads as one trigger per branch -
   `Mouse ▸ On mouse moved` with `Mouse ▸ mouse is captured` under it, `Keyboard ▸ On Escape pressed` - and a
   hand-written `_on_hurtbox_body_entered(body)` that `_ready` connects reads `Hurtbox ▸ On Body Entered
   [body]`. A handler that comes after the functions in the file lifts in place (an event anchor), so the
   sheet keeps the file's order.
+
+  ![An `_unhandled_input` read as one trigger event per branch: Mouse - On mouse moved with Mouse - mouse is captured under it, and Keyboard - On Escape pressed](images/opened-pack-input-triggers.png)
+
+  ![A script the engine refuses to compile, opened as a sheet: the Include bar says "3 errors - the game will not run this script" in red, two events wear a red margin mark, and the rest still reads normally](images/opened-script-structure5.png)
 - **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner
   writes input in Godot: `if Input.is_action_just_pressed("jump"):` inside `_process`. In an event
   sheet the same thing is a top-level trigger, so the row reads `⌨  Keyboard ▸ On "jump" pressed`
@@ -509,6 +531,8 @@ That is the order this section is in.
   double-click anywhere on it, the `Else` row included, opens that one line's editor. A ternary inside a
   `func(...)` lambda is left alone - its body is a scope of its own, so hoisting a branch out of it would
   move when that branch runs.
+
+  ![A ternary drawn as the sub-event pair an event sheet would show - the check, the value, then Else - selected as the one statement it is](images/ternary-editable.png)
 - **Every event has a number, and everything names it by that number.** The left margin counts events
   down the sheet - sub-events included, groups descended into - and the count is stable, so collapsing a
   group or filtering the sheet never renumbers anything. **Ctrl+G** opens *Go to event* and jumps to
@@ -541,6 +565,8 @@ That is the order this section is in.
   jumps left`. The same sentence appears whether the row was typed
   in GDScript or picked from the palette - one grammar produces both - and the exact code is always on
   hover.
+
+  ![Rows in the sheet's own grammar: a Keyboard trigger for "ui_accept" pressed, an OR block joining two conditions, and action rows reading System - Else, System - Subtract 1 from jumps left and f - Call Wall Jump](images/opened-pack-sentences.png)
 - **A plain script is an object.** Its Include bar names it (`class_name`, else its scene's root node,
   else the file) with its class icon and the scene it lives in; its engine properties read under that
   name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
@@ -559,6 +585,8 @@ That is the order this section is in.
   with the lambda's body as its rows, and the connect line keeps a muted `connects Timer On Timeout`
   note. One-line `if c: stmt` / `if c: return` / `else: stmt` lift as the same sub-events their
   indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
+
+  ![The lifecycle words on two scripts of one scene: the scene's own script reading On start of layout, On end of layout, On draw with its drawing rows and On close, and the script on a child node reading On created and On destroyed instead](images/opened-script-words5.png)
 - **Numbers read the way a person writes them.** `300.0` reads `300`, `0.50` reads `0.5`,
   `1_000_000` reads `1,000,000`, `1e3` reads `1000`, and the constants a reader recognises are named
   (`1.5707963` reads `π/2`; `τ`, `√2` and `√3` likewise, from a spelling long enough to mean them -
@@ -701,6 +729,8 @@ That is the order this section is in.
   of the sheet's own functions reads `Functions ▸ Call Add Look  x = mouse's ΔX  y = mouse's ΔY`, and code
   that could not lift is one collapsed card with a line count. **View > Humanized Names** turns the name
   lens on or off for editable sheets; nothing on the sheet is scaffolding until you press **Edit Events**.
+
+  ![The same pack read with the lenses off and on: raw member names and property chains on one side, humanized words on the other - coyote timer, host's velocity X, Wall Jump Enabled is true](images/opened-pack-lenses.png)
 - **Expression names, under Familiar Words.** With **View > Familiar Words** on, the values read under
   the names a sheet author types into an expression field: `a.position.distance_to(b.position)` reads
   `distance(a, b)`, `a.get_angle_to(b)` reads `angle(a, b)`, `s.to_lower()` / `s.to_upper()` read
