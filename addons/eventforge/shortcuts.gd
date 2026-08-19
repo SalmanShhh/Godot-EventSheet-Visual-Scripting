@@ -43,9 +43,12 @@ const DEFAULTS: Dictionary = {
 	"undo": "Ctrl+Z",
 	"redo": "Ctrl+Shift+Z",
 	"add_event_chord": "Ctrl+E",
-	"add_condition_chord": "Ctrl+Shift+C",
+	# Ctrl+Shift+C is Copy as text, the chord every event-sheet editor uses for it; adding a
+	# condition keeps its primary key (C) and moved its Ctrl alternate one modifier over.
+	"add_condition_chord": "Ctrl+Alt+C",
 	"add_action_chord": "Ctrl+Shift+A",
 	"add_variable_chord": "Ctrl+Shift+V",
+	"copy_as_text": "Ctrl+Shift+C",
 }
 
 ## Friendly labels for the Keyboard Shortcuts editor (the action ids are internal).
@@ -76,6 +79,7 @@ const LABELS: Dictionary = {
 	"add_condition_chord": "Add condition (Ctrl alternate)",
 	"add_action_chord": "Add action (Ctrl alternate)",
 	"add_variable_chord": "Add variable",
+	"copy_as_text": "Copy as text",
 }
 
 ## Display order for the editor (DEFAULTS key order isn't guaranteed stable).
@@ -83,7 +87,7 @@ const ORDER: Array = [
 	"add_event", "add_condition", "add_action", "add_comment", "add_group", "toggle_enabled",
 	"add_blank_subevent", "add_sub_condition", "add_variable", "invert_condition", "replace_ace",
 	"project_search", "history_back", "history_forward",
-	"duplicate", "copy", "paste", "undo", "redo", "save", "save_as", "open",
+	"duplicate", "copy", "copy_as_text", "paste", "undo", "redo", "save", "save_as", "open",
 	"add_event_chord", "add_condition_chord", "add_action_chord", "add_variable_chord",
 ]
 

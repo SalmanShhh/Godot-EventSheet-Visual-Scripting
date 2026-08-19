@@ -89,10 +89,13 @@ func _on_copy_requested() -> void:
 	_dock._set_status("Copied %d row(s) - shareable snippet placed on the clipboard." % top_level.size())
 
 
-## "Copy as Text": the selection (or clicked row) as READABLE text - the same plain-language
-## sentences the hover tooltips use for events, names/text for groups and comments, code
-## verbatim for GDScript blocks - onto the OS clipboard, ready for an issue, a design doc, or
-## a chat message. (Plain Copy already writes a machine-shareable snippet; this one is for humans.)
+## "Copy as text" (Ctrl+Shift+C): the selection as the PLAIN LISTING every event-sheet community
+## pastes into a forum post, an issue or a chat message - "+ " in front of a condition, "-> " in
+## front of an action, one extra indent per sub-event, in exactly the words the canvas is showing
+## under the current lenses. Read-only output; the round trip already lives in the .gd, so nothing
+## reads back in from here. (Plain Copy writes the machine-shareable snippet; this one is for
+## people.) A selected variable declaration keeps its canonical GDScript line, because a
+## declaration IS its own reading and stays pasteable.
 func _copy_selection_as_text() -> void:
 	var targets: Array = _top_level_selected_resources()
 	if targets.is_empty() and _dock._context_row != null and _dock._context_row.source_resource != null:
@@ -100,12 +103,27 @@ func _copy_selection_as_text() -> void:
 	if targets.is_empty():
 		_dock._set_status("Nothing selected to copy as text.", true)
 		return
-	var lines: PackedStringArray = PackedStringArray()
+	DisplayServer.clipboard_set(selection_listing(targets))
+	_dock._set_status("Copied %d row(s) as text." % targets.size())
+
+
+## The listing for a set of selected resources - separated from the clipboard so it is testable.
+func selection_listing(targets: Array) -> String:
+	var declarations: Array = []
+	var rows: Array = []
 	for target: Variant in targets:
-		if target is Resource:
-			_append_resource_text(target as Resource, lines, 0)
-	DisplayServer.clipboard_set("\n".join(lines))
-	_dock._set_status("Copied %d row(s) as readable text." % targets.size())
+		if target is LocalVariable:
+			declarations.append(target)
+		elif target is Resource:
+			rows.append(target)
+	var lines: PackedStringArray = PackedStringArray()
+	for declaration: Variant in declarations:
+		_append_resource_text(declaration as Resource, lines, 0)
+	var view: EventSheetViewport = _dock._active_view()
+	if view != null and not rows.is_empty():
+		var found: Dictionary = view.rows_for_resources(rows)
+		lines.append_array(EventSheetTextListing.lines_for_rows(found.get("rows", []), false, int(found.get("indent", 0))))
+	return "\n".join(lines)
 
 
 func _append_resource_text(resource_entry: Resource, lines: PackedStringArray, depth: int) -> void:

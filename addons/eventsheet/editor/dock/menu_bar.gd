@@ -44,6 +44,11 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(7),
 		"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency - proof you can leave the addon anytime."
 	)
+	sheet_popup.add_item("Save as Text…", 16)
+	sheet_popup.set_item_tooltip(
+		sheet_popup.get_item_index(16),
+		"Write the whole sheet as a plain listing in its own words - \"+ \" for a condition, \"-> \" for an action, indented by sub-event, event numbers on - ready to paste into an issue, a design doc or a chat."
+	)
 	sheet_popup.add_separator()
 	sheet_popup.add_item("Sheet Type…", 4)
 	sheet_popup.add_item("Manage Includes…", 8)
@@ -97,6 +102,7 @@ func build(root: Node) -> void:
 			11: _dock._open_inspector_designer()
 			12: _dock._starter._new_sheet_from_template(10)
 			13: _dock._new_resource_wizard.open()
+			16: _dock._save_sheet_as_text_requested()
 	)
 	_toolbar.add_child(sheet_menu)
 	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
