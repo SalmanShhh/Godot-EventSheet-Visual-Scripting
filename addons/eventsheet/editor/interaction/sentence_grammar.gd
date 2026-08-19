@@ -318,6 +318,11 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 		return _with_indent(opened_file, indent)
 	if keyword == "var" or keyword == "const":
 		return _with_indent(_declaration_statement(text, keyword), indent)
+	# S4. A countdown is a shape several lines make together, so it is claimed ahead of the arithmetic
+	# and the plain Set, both of which would describe one line of it correctly and the pattern not at all.
+	var countdown: Dictionary = _countdown_statement(text, context)
+	if not countdown.is_empty():
+		return _with_indent(countdown, indent)
 	var compound: Dictionary = _compound_statement(text, context)
 	if not compound.is_empty():
 		return _with_indent(compound, indent)
@@ -404,6 +409,11 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var existence: Dictionary = _existence_condition(text)
 	if not existence.is_empty():
 		return existence
+	# S4. A countdown's own two questions, ahead of the comparison reading that would show `cooldown ≤ 0`
+	# - true, and silent about the pattern the row is part of.
+	var countdown_test: Dictionary = _countdown_condition(text, context)
+	if not countdown_test.is_empty():
+		return countdown_test
 	var comparison: Dictionary = _comparison_condition(text)
 	if not comparison.is_empty():
 		return comparison
@@ -1381,6 +1391,66 @@ static func _declaration_statement(text: String, keyword: String) -> Dictionary:
 			{"text": expression_text(value_text), "tone": "value"}
 		]
 	}
+
+
+## S4. The countdown sentences, for a number this file counts down by a per-frame delta AND asks
+## about against zero somewhere - the two halves that make it a countdown rather than a subtraction.
+## Which numbers those are is a whole-file question, answered once per rebuild and handed in as
+## `countdown_variables`; with no such fact in the context nothing here fires and every line keeps the
+## arithmetic reading it has today.
+##
+##   cooldown -= delta                                  Player ▸ Count down cooldown (by dt)
+##   invincible_for = max(0.0, invincible_for - delta)   Player ▸ Count down invincible for (never below 0)
+##   cooldown = 0.5                                      Player ▸ Start cooldown for 0.5 seconds
+##
+## The object is the script's own, because a countdown is a piece of that object's state - the same
+## object the Start and the has-run-out question below name, so the three rows read as one idea.
+static func _countdown_statement(text: String, context: Dictionary) -> Dictionary:
+	var countdowns: Dictionary = context.get("countdown_variables", {})
+	if countdowns.is_empty():
+		return {}
+	var step: Dictionary = EventSheetPatternReadings.countdown_step(text)
+	if not step.is_empty() and countdowns.has(str(step.get("name", ""))):
+		var name_text: String = str(step.get("name", ""))
+		var note: String = str(step.get("note", ""))
+		if note.is_empty():
+			note = "by dt"
+		var counted: Dictionary = _sentence(script_object(context), "Count down {name}",
+			{"name": [_member_word(name_text), "name"]})
+		(counted["segments"] as Array).append({"text": " (%s)" % translate(note), "tone": "muted"})
+		return counted
+	# `cooldown = 0.5` on a countdown is the event-sheet Start: the number IS the seconds it runs for.
+	var equals_at: int = top_level_index(text, " = ")
+	if equals_at <= 0:
+		return {}
+	var target: String = text.substr(0, equals_at).strip_edges()
+	var seconds: String = text.substr(equals_at + 3).strip_edges()
+	if not countdowns.has(target) or not seconds.is_valid_float():
+		return {}
+	return _sentence(script_object(context), "Start {name} for {seconds} seconds", {
+		"name": [_member_word(target), "name"],
+		"seconds": [expression_text(seconds, context), "value"]
+	})
+
+
+## S4. The two questions a countdown answers. `x <= 0` is the event-sheet "has run out", `x > 0` is
+## "is running"; every other comparison against zero keeps its operator, because only these two are
+## the same question the Timer and Cooldown rows already ask.
+static func _countdown_condition(text: String, context: Dictionary) -> Dictionary:
+	var countdowns: Dictionary = context.get("countdown_variables", {})
+	if countdowns.is_empty():
+		return {}
+	for pair: Array in [[" <= ", "{name} has run out"], [" > ", "{name} is running"]]:
+		var operator: String = str(pair[0])
+		var at: int = top_level_index(text, operator)
+		if at <= 0:
+			continue
+		var target: String = text.substr(0, at).strip_edges()
+		var right: String = text.substr(at + operator.length()).strip_edges()
+		if not countdowns.has(target) or (right != "0" and right != "0.0"):
+			continue
+		return _sentence(script_object(context), str(pair[1]), {"name": [_member_word(target), "name"]})
+	return {}
 
 
 ## `hp -= 1` and friends - the arithmetic verb the operator IS. The spaced token is what keeps

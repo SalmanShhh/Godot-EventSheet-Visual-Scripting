@@ -50,7 +50,12 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# The tween chains the file writes, walked once in FILE order: which locals hold a tween, and
 	# which of their steps follow another one or run beside it.
 	var tweens: Dictionary = tween_chain_facts(sheet)
-	return {
+	# ── S2 / S4 lens hook ──────────────────────────────────────────────────────────────────────
+	# The PATTERNS this file writes - the numbers counted down by a delta and asked about against
+	# zero, the lists used as object pools. No single line can answer either question, so both are
+	# answered from one walk of the file here and handed to the grammar as ordinary context.
+	var patterns: Dictionary = EventSheetPatternReadings.facts(ordered_code_lines(sheet))
+	var extras: Dictionary = {
 		"script_object": script_object_name(sheet),
 		"engine_properties": engine_property_set(sheet),
 		"signal_params": signal_parameter_map(sheet),
@@ -79,6 +84,8 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		"tween_locals": tweens.get("locals", {}),
 		"tween_notes": tweens.get("notes", {})
 	}
+	extras.merge(patterns, true)
+	return extras
 
 
 ## R9. {timer tag: true when it fires once} from the `$Timer.one_shot = true` lines the file holds.
