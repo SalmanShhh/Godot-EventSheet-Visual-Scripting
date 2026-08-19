@@ -21,6 +21,9 @@ const SCOPE_LOCAL: String = "local"
 const SCOPE_CONSTANT: String = "constant"
 const SCOPE_STATIC: String = "static"
 const SCOPE_FIELD: String = "field"
+## W5 - the same `static var`, read in a class nothing is ever made of: there are no copies to share
+## it between, so the word says what it IS there, one value the whole editor reads and writes.
+const SCOPE_SHARED: String = "shared"
 
 ## The order the Add variable dialog offers them in - the sheet's own order, commonest first.
 const SCOPE_ORDER: PackedStringArray = [
@@ -63,6 +66,8 @@ static func scope_word(scope: String) -> String:
 			return EventSheetL10n.translate("Constant")
 		SCOPE_STATIC:
 			return EventSheetL10n.translate("Static")
+		SCOPE_SHARED:
+			return EventSheetL10n.translate("Shared")
 		SCOPE_FIELD:
 			return EventSheetL10n.translate("Field")
 	return ""

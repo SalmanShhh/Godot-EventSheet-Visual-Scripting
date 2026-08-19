@@ -99,6 +99,8 @@ const MARKS: Array[Dictionary] = [
 		"help": "The condition is true when the opposite is: read it as \"not\"."},
 	{"mark": "⏸", "name": "Disabled",
 		"help": "The row is kept in the sheet but compiles to nothing."},
+	{"mark": "↻", "name": "Calls itself",
+		"help": "This row hands over to the function it is inside: the same rows run again, one level in."},
 ]
 
 

@@ -387,6 +387,12 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var data_asset: Dictionary = data_asset_statement(text, context)
 	if not data_asset.is_empty():
 		return _with_indent(data_asset, indent)
+	# W16. A line that publishes a row of the vocabulary IS a Define row - the same row a pack author
+	# reads their own verbs as. Ahead of the call reading, which would spell out a nine-argument
+	# constructor nobody reads.
+	var published: Dictionary = vocabulary_define_statement(text, context)
+	if not published.is_empty():
+		return _with_indent(published, indent)
 	# ── T6 / T7 / T25 ───────────────────────────────────────────────────────────────────────────
 	# A drag, an anchor, a solid, a jump-thru and a seed are each ONE thought a file spells as a
 	# property write, so they go ahead of the assignment reading that would describe the property.
@@ -872,6 +878,10 @@ static func return_sentence(returned: String, context: Dictionary) -> Dictionary
 	if value.is_empty():
 		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Stop event", {})
 	var shown: String = expression_text(value, context)
+	# W4 - inside an edit handed to the undo funnel, the value going back is the ANSWER to "did this
+	# change anything": the funnel asks, the edit answers, and one undoable step is recorded or not.
+	if bool(context.get("answer_return", false)):
+		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Answer {value}", {"value": [shown, "value"]})
 	if verb_kind == VerbKind.CONDITION or verb_kind == VerbKind.EXPRESSION:
 		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Set return value to {value}", {"value": [shown, "value"]})
 	return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Return {value}", {"value": [shown, "value"]})
@@ -974,6 +984,12 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var trimmed: String = text.strip_edges()
 	if trimmed.is_empty():
 		return trimmed
+	# W3 - a value read through a helper's back-reference belongs to the OBJECT that reference names,
+	# and is said the way every other object's property is said. Ahead of everything, because the
+	# passes below would spell out a member nobody reading the sheet can see.
+	var through_helper: String = helper_member_words(trimmed, context)
+	if not through_helper.is_empty():
+		return through_helper
 	# R24 / R25 / R29 - a whole controls read (a stick, a gamepad's name, a sensor) is one settled
 	# phrase, ahead of the general call rewriting which would only take its arguments apart.
 	var controls_value: String = controls_expression(trimmed)
@@ -2211,6 +2227,11 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var storage_step: Dictionary = _storage_statement(target, method, args, context)
 	if not storage_step.is_empty():
 		return storage_step
+	# W4. The editor's own door onto the same history: an edit handed over as a label and a callback
+	# is ONE undoable step, and says so before the generic reading could describe the call.
+	var funnelled: Dictionary = undo_step_sentence(target, method, args, context)
+	if not funnelled.is_empty():
+		return funnelled
 	# R31. The undo/redo dance, on the variable that holds the history. Checked before the generic
 	# Object ▸ Verb fallback so "Add do step: set n's x to left" wins over "Add do property".
 	var undo_step: Dictionary = _undo_statement(target, method, args, context)
@@ -2412,11 +2433,18 @@ static func _debug_statement(target: String, method: String, args: PackedStringA
 		return {}
 	if args.size() == 1:
 		match method:
-			"push_error", "printerr":
+			# W5 - the three levels are three different acts, and only one of them is a log line.
+			# `printerr` writes to the output; `push_error` REPORTS a fault to the engine (it stops a
+			# tool run and shows up in the Debugger), and `push_warning` warns about one. Saying
+			# "log" for all three said the least true thing about the two that are not.
+			"printerr":
 				return _sentence(OBJECT_SYSTEM, "Log error {value}",
 					{"value": [expression_text(args[0], context), "value"]})
+			"push_error":
+				return _sentence(OBJECT_SYSTEM, "Report error {value}",
+					{"value": [expression_text(args[0], context), "value"]})
 			"push_warning":
-				return _sentence(OBJECT_SYSTEM, "Log warning {value}",
+				return _sentence(OBJECT_SYSTEM, "Warn {value}",
 					{"value": [expression_text(args[0], context), "value"]})
 			"print_rich":
 				return _sentence(OBJECT_SYSTEM, "Log {value}",
@@ -3459,7 +3487,10 @@ static func call_object(target: String, method: String, context: Dictionary) -> 
 		return OBJECT_SYSTEM if GLOBAL_FUNCTIONS.has(method) else script_object(context)
 	if receiver == "self":
 		return script_object(context)
-	return object_of_reference(receiver)
+	# W3 - a call made through a helper's back-reference is something the OBJECT does, and reads
+	# under the object's own name rather than under the member that holds it.
+	var helper: String = helper_object(receiver, context)
+	return helper if not helper.is_empty() else object_of_reference(receiver)
 
 
 ## The object label a node reference reads under: `$Path/To/Label` and `%HpBar` name their last
@@ -3914,7 +3945,101 @@ static func _receiver_object(receiver: String, context: Dictionary) -> String:
 	var text: String = receiver.strip_edges()
 	if text.is_empty() or text == "self":
 		return script_object(context)
-	return object_of_reference(text)
+	var helper: String = helper_object(text, context)
+	return helper if not helper.is_empty() else object_of_reference(text)
+
+
+# ── W3 / W4: a helper with a back-reference, and the one door every edit goes through ──────────
+
+
+## W3. The object a helper's stored back-reference names, "" when this file stores none or when the
+## receiver is something else. The fact itself is worked out once per file (a constructor that only
+## remembers what it was handed) and simply ridden here.
+static func helper_object(receiver: String, context: Dictionary) -> String:
+	var helper: Dictionary = context.get("helper_of", {}) if context.get("helper_of") is Dictionary else {}
+	if helper.is_empty():
+		return ""
+	return str(helper.get("object", "")) if receiver.strip_edges() == str(helper.get("member", "")) else ""
+
+
+## W3. `_dock._current_sheet` as `Dock.CurrentSheet` - the object's own property, in the spelling
+## every other object property is written in. "" when the text is not a read through the reference,
+## which is the common case and the reason this is a dot test before anything else.
+static func helper_member_words(text: String, context: Dictionary) -> String:
+	var at: int = text.find(".")
+	if at <= 0:
+		return ""
+	var object_name: String = helper_object(text.substr(0, at), context)
+	if object_name.is_empty():
+		return ""
+	var member: String = text.substr(at + 1).strip_edges()
+	if not is_identifier(member):
+		return ""
+	return "%s.%s" % [object_name, member_property_words(member)]
+
+
+## The property spelling of a member name: no leading underscore (which says private, not something
+## a reader has to read) and the words joined up, the way an object's properties are named.
+static func member_property_words(member: String) -> String:
+	var spelled: String = ""
+	for word: String in member.strip_edges().lstrip("_").split("_", false):
+		spelled += word.substr(0, 1).to_upper() + word.substr(1)
+	return spelled
+
+
+## W16. One published vocabulary row, read as the Define row it is: the kind and the name, then the
+## receipts (the id it is addressed by, its category, the values it takes) and the line it writes.
+## {} for every line that publishes nothing, which is nearly every line ever written.
+static func vocabulary_define_statement(text: String, context: Dictionary = {}) -> Dictionary:
+	var published: Array = EventSheetEditorSourceFacts.vocabulary_rows(PackedStringArray([text]))
+	if published.size() != 1:
+		return {}
+	var row: Dictionary = published[0] as Dictionary
+	# A module names its category once, at the top, and writes that NAME on every row. Only the whole
+	# file can say what the name holds, so the file's own reading of this row wins when it has one.
+	for entry: Variant in (context.get("vocabulary_rows", []) as Array):
+		if str((entry as Dictionary).get("id", "")) == str(row.get("id", "")):
+			row = entry as Dictionary
+			break
+	return vocabulary_define_sentence(row)
+
+
+## The sentence one published row reads as, shared by the single-line reading above and by the rows
+## a module writes across several lines - so a verb says the same thing however it was spelled.
+static func vocabulary_define_sentence(row: Dictionary) -> Dictionary:
+	var lead: PackedStringArray = EventSheetEditorSourceFacts.define_lead_parts(row)
+	if lead.size() < 2 or lead[1].strip_edges().is_empty():
+		return {}
+	# A publish spread over several lines states its name and its template BELOW the line that opens
+	# it, so the opening line alone knows only an id. Half a Define row would say less than the code
+	# it replaced, so the block keeps its own text instead.
+	if str(row.get("name", "")).strip_edges().is_empty() and str(row.get("template", "")).strip_edges().is_empty():
+		return {}
+	var segments: Array = [
+		{"text": "%s %s " % [translate("Define"), translate(lead[0])], "tone": "plain"},
+		{"text": lead[1], "tone": "name"}
+	]
+	var detail: String = EventSheetEditorSourceFacts.define_detail(row, translate("category"), translate("input"))
+	if not detail.is_empty():
+		segments.append({"text": "   %s" % detail, "tone": "muted"})
+	var template: String = str(row.get("template", "")).strip_edges()
+	if not template.is_empty():
+		segments.append({"text": "   %s %s" % [translate("Writes"), template], "tone": "value"})
+	return {"object": EventSheetEditorSourceFacts.row_provider(row), "segments": segments}
+
+
+## W4. The mutation funnel: a label and the edit itself, handed over together. The row says what the
+## step is CALLED, because that label is the word the user will see in Undo - and the edit hangs
+## under it. {} when the call is not the funnel, or when it was handed no label to show.
+static func undo_step_sentence(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	if not EventSheetEditorSourceFacts.FUNNEL_METHODS.has(method) or args.is_empty():
+		return {}
+	var label: String = args[0].strip_edges()
+	if not (label.begins_with("\"") or label.begins_with("'")):
+		return {}
+	return _sentence(_receiver_object(target, context), "Edit sheet undoably {label}",
+		{"label": ["\"%s\"" % _unquote(label), "value"]})
 
 
 ## M40/M41. The engine class an object label is known to be - the sheet's own object map first (an

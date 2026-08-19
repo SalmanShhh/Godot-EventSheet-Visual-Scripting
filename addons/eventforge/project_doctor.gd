@@ -73,6 +73,7 @@ static func run() -> Dictionary:
 	check_missing_save_support(sheet_paths, findings)
 	check_save_key_symmetry(sheet_paths, findings)
 	check_editor_tool_undo(sheet_paths, findings)
+	check_sheet_edit_funnel(findings)
 	check_editor_tool_safety(sheet_paths, findings)
 	check_background_thread_safety(sheet_paths, findings)
 	check_unknown_input_actions(sheet_paths, findings)
@@ -638,6 +639,58 @@ static func check_editor_tool_undo(sheet_paths: PackedStringArray, findings: Arr
 			continue
 		_add(findings, "info", "editor-tool-undo", sheet_path,
 			"This editor tool changes the open scene (add/remove/reparent nodes) without registering undo, so Ctrl+Z can't take the change back. Wrap the edits in EditorInterface.get_editor_undo_redo() create_action/commit_action (ignore for one-off scripts you re-run freely).")
+
+
+## Where an editor's own helpers live - the folders swept for edits made around the funnel rather
+## than through it. Only ever read in the editor's OWN repo (see the gate in the check below).
+const _HELPER_FOLDERS: PackedStringArray = [
+	"res://addons/eventsheet/editor/dock", "res://addons/eventsheet/editor/interaction"
+]
+
+## The spellings that change the sheet the user has open. Each one is a write through the LIVE
+## sheet, which is what makes it an edit rather than a row being assembled before it is applied.
+const _LIVE_SHEET_WRITES: PackedStringArray = [
+	"_current_sheet.events.append(", "_current_sheet.events.remove_at(", "_current_sheet.events.insert(",
+	"_current_sheet.events.clear(", "_current_sheet.functions.append(", "_current_sheet.functions.remove_at(",
+	"_current_sheet.variables["
+]
+
+
+## W4. The undo funnel is ONE door: every edit to the open sheet goes through it, and one that does
+## not is a change the user's Ctrl+Z cannot take back - the same fault the editor-tool check above
+## names, one level in. Advisory, never an error: a helper may legitimately write to a sheet it made
+## itself, and the note says which line to look at.
+##
+## Only ever runs in the editor's own repo. An ordinary game project has no helpers of this kind and
+## must see nothing.
+static func check_sheet_edit_funnel(findings: Array[Dictionary]) -> void:
+	if not EventSheetEditorSourceFacts.is_editor_project():
+		return
+	for folder: String in _HELPER_FOLDERS:
+		for file_name: String in DirAccess.get_files_at(folder):
+			if file_name.get_extension() != "gd":
+				continue
+			var path: String = folder.path_join(file_name)
+			var source: String = FileAccess.get_file_as_string(path)
+			if source.is_empty():
+				continue
+			var write: String = sheet_edit_outside_funnel(source)
+			if write.is_empty():
+				continue
+			_add(findings, "info", "sheet-edit-outside-funnel", path,
+				"This helper changes the open sheet directly (%s) instead of going through the one undoable-edit funnel, so the change is not one step the user can undo. Wrap it in the sheet-edit funnel." % write)
+
+
+## The write that goes around the funnel in one file's source, "" when there is none. Pure, so the
+## gate can pin the judgement without a folder full of files to judge.
+static func sheet_edit_outside_funnel(source: String) -> String:
+	for method: String in EventSheetEditorSourceFacts.FUNNEL_METHODS:
+		if source.contains("%s(" % method):
+			return ""
+	for write: String in _LIVE_SHEET_WRITES:
+		if source.contains(write):
+			return write.trim_suffix("(")
+	return ""
 
 
 ## R32 / R33. The three mistakes every FIRST editor tool makes, beside the undo one above. Each is a
