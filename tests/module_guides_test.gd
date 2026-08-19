@@ -20,9 +20,12 @@ const GUIDE_DIR := "res://docs/Modules"
 const GUIDE_INDEX := "res://docs/Modules/README.md"
 const DOCS_INDEX := "res://docs/README.md"
 
-## The reference tables are markdown tables whose first column header is exactly this. Anything
-## else in a guide (a comparison table, a parameter table) is not a verb list and is not swept.
-const VERB_COLUMN := "Verb"
+## The reference tables are markdown tables whose first column header is one of these. Anything
+## else in a guide (a comparison table, a parameter table) does not name vocabulary and is not
+## swept. `Name` is the current heading; `Verb`, `Action`, `Condition`, `Expression` and `Trigger`
+## are accepted so a guide that heads its tables by kind is checked just the same, and so a table
+## nobody has re-headed yet keeps its cover rather than silently dropping out of the sweep.
+const REFERENCE_COLUMNS := ["Name", "Verb", "Action", "Condition", "Expression", "Trigger"]
 
 
 static func run() -> bool:
@@ -154,8 +157,8 @@ static func _registry_display_names() -> Dictionary:
 	return names
 
 
-## The first column of every markdown table headed `| Verb | … |`, with bold and code decoration
-## stripped. A table with any other first header is not a verb reference and is skipped.
+## The first column of every markdown table headed by one of REFERENCE_COLUMNS, with bold and code
+## decoration stripped. A table with any other first header does not name vocabulary and is skipped.
 static func _reference_verbs(text: String) -> PackedStringArray:
 	var verbs: PackedStringArray = PackedStringArray()
 	var in_table: bool = false
@@ -165,7 +168,7 @@ static func _reference_verbs(text: String) -> PackedStringArray:
 			in_table = false
 			continue
 		var first_cell: String = stripped.trim_prefix("|").get_slice("|", 0).strip_edges()
-		if first_cell == VERB_COLUMN:
+		if REFERENCE_COLUMNS.has(first_cell):
 			in_table = true
 			continue
 		if not in_table:
