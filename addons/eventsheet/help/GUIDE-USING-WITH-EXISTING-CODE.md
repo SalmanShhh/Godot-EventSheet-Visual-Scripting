@@ -1076,9 +1076,10 @@ entry: the base on top, the scripts that extend it as its members, and the base'
 functions as what they share.
 
 **The word is a setting.** It is `Family` with Familiar Words on, `Base class` with it off, and
-`Kind` or anything else a project types into `eventsheets/words/inheritance_set` in Project Settings.
-One helper answers, and every user-facing use of the word goes through it, so the Object bar's
-section, the head bar's folder and the object page change together and can never drift apart.
+`Kind` or anything else you type on the Words page (Settings ▸ Words). One helper answers - it asks
+the Words registry for the word and adds the plural the headings need - and every user-facing use
+goes through it, so the Object bar's section, the head bar's folder and the object page change
+together and can never drift apart.
 
 Where a Godot group has the same name as the base, it is shown on the same line with a ✓ when its
 members are the set's. When they are not, that is worth saying out loud, and **Tools ▸ Project
