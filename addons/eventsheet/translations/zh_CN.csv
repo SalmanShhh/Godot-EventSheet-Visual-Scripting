@@ -2441,3 +2441,11 @@ a wait,一次等待
 pooled,使用对象池
 Return to pool,放回对象池
 "hidden, ticking off, back in pool",隐藏、停止更新、放回池中
+(none - runs every tick),(无 - 每个 tick 运行)
+An event with no condition of its own runs every tick.,没有自身条件的事件每个 tick 都会运行。
+"An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.",没有自身条件的事件每个 tick 都会运行。用 A 添加它的动作，或稍后添加条件来收窄它。
+Runs every tick,每个 tick 运行
+runs every tick,每个 tick 运行
+every tick,每个 tick
+Current state is,当前状态为
+"one named state at a time, switched by Go to state",同一时间只有一个命名状态，用 前往状态 切换

@@ -2441,3 +2441,11 @@ a wait,un'attesa
 pooled,riutilizzato
 Return to pool,Rimetti nel pool
 "hidden, ticking off, back in pool","nascosto, fermo, di nuovo nel pool"
+(none - runs every tick),(nessuna - viene eseguito a ogni tick)
+An event with no condition of its own runs every tick.,Un evento senza una condizione propria viene eseguito a ogni tick.
+"An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","Un evento senza una condizione propria viene eseguito a ogni tick. Aggiungi le sue azioni con A, oppure aggiungi in seguito una condizione per restringerlo."
+Runs every tick,Viene eseguito a ogni tick
+runs every tick,viene eseguito a ogni tick
+every tick,ogni tick
+Current state is,Lo stato attuale è
+"one named state at a time, switched by Go to state","un solo stato con nome alla volta, cambiato con Vai allo stato"

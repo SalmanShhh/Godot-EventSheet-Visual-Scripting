@@ -2441,3 +2441,11 @@ a wait,ожидание
 pooled,из пула
 Return to pool,Вернуть в пул
 "hidden, ticking off, back in pool","скрыт, остановлен, снова в пуле"
+(none - runs every tick),(нет - выполняется каждый тик)
+An event with no condition of its own runs every tick.,Событие без собственного условия выполняется каждый тик.
+"An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","Событие без собственного условия выполняется каждый тик. Добавьте его действия клавишей A или позже добавьте условие, чтобы сузить его."
+Runs every tick,Выполняется каждый тик
+runs every tick,выполняется каждый тик
+every tick,каждый тик
+Current state is,Текущее состояние -
+"one named state at a time, switched by Go to state","одно именованное состояние за раз, переключается через Перейти к состоянию"
