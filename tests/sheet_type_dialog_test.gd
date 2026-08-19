@@ -47,22 +47,33 @@ static func _test_field_visibility() -> bool:
 	var ok: bool = true
 	ok = _check("plain Event Sheet shows ONLY the host row",
 		EventSheetSheetTypeDialog.field_visibility(0),
-		{"name": false, "icon": false, "description": false, "host": true, "family": false, "autoload": false}) and ok
+		{"name": false, "icon": false, "description": false, "host": true, "family": false, "autoload": false, "plugin_capabilities": false}) and ok
 	ok = _check("Custom Node shows identity + host + family",
 		EventSheetSheetTypeDialog.field_visibility(1),
-		{"name": true, "icon": true, "description": true, "host": true, "family": true, "autoload": false}) and ok
+		{"name": true, "icon": true, "description": true, "host": true, "family": true, "autoload": false, "plugin_capabilities": false}) and ok
 	ok = _check("Behavior shows identity + host + family",
 		EventSheetSheetTypeDialog.field_visibility(2),
-		{"name": true, "icon": true, "description": true, "host": true, "family": true, "autoload": false}) and ok
+		{"name": true, "icon": true, "description": true, "host": true, "family": true, "autoload": false, "plugin_capabilities": false}) and ok
 	ok = _check("Editor Tool hides host (forced to EditorScript) + family",
 		EventSheetSheetTypeDialog.field_visibility(3),
-		{"name": true, "icon": true, "description": true, "host": false, "family": false, "autoload": false}) and ok
+		{"name": true, "icon": true, "description": true, "host": false, "family": false, "autoload": false, "plugin_capabilities": false}) and ok
 	ok = _check("Autoload hides host (forced to Node), shows the autoload name",
 		EventSheetSheetTypeDialog.field_visibility(4),
-		{"name": true, "icon": true, "description": true, "host": false, "family": false, "autoload": true}) and ok
+		{"name": true, "icon": true, "description": true, "host": false, "family": false, "autoload": true, "plugin_capabilities": false}) and ok
 	ok = _check("Custom Resource shows identity + host, hides family",
 		EventSheetSheetTypeDialog.field_visibility(5),
-		{"name": true, "icon": true, "description": true, "host": true, "family": false, "autoload": false}) and ok
+		{"name": true, "icon": true, "description": true, "host": true, "family": false, "autoload": false, "plugin_capabilities": false}) and ok
+	# R33 - the rest of the tool family. All three force their own host like Editor Tool does; only
+	# the Editor plugin has capabilities to tick, because only a plugin can add anything to the editor.
+	ok = _check("Editor Plugin hides host (forced to EditorPlugin), shows the capability ticks",
+		EventSheetSheetTypeDialog.field_visibility(7),
+		{"name": true, "icon": true, "description": true, "host": false, "family": false, "autoload": false, "plugin_capabilities": true}) and ok
+	ok = _check("Import Tool hides host (forced to EditorScript) and the ticks",
+		EventSheetSheetTypeDialog.field_visibility(8),
+		{"name": true, "icon": true, "description": true, "host": false, "family": false, "autoload": false, "plugin_capabilities": false}) and ok
+	ok = _check("Export Hook hides host (forced to EditorScript) and the ticks",
+		EventSheetSheetTypeDialog.field_visibility(9),
+		{"name": true, "icon": true, "description": true, "host": false, "family": false, "autoload": false, "plugin_capabilities": false}) and ok
 	return ok
 
 

@@ -2327,3 +2327,9 @@ Export Hook,Gancio di esportazione
 Import Tool (runs on import),Strumento di importazione (si avvia all'importazione)
 Export Hook (runs on export),Gancio di esportazione (si avvia all'esportazione)
 Run this editor tool now,Esegui ora questo strumento dell'editor
+adds,aggiunge
+Tools menu item,voce del menu Strumenti
+Tools menu,menu Strumenti
+dock,pannello
+object type,tipo di oggetto
+Editor Tools,Strumenti dell'editor

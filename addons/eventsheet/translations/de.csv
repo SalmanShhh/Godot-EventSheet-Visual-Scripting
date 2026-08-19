@@ -2327,3 +2327,9 @@ Export Hook,Export-Haken
 Import Tool (runs on import),Import-Werkzeug (läuft beim Import)
 Export Hook (runs on export),Export-Haken (läuft beim Export)
 Run this editor tool now,Dieses Editor-Werkzeug jetzt ausführen
+adds,fügt hinzu
+Tools menu item,Werkzeug-Menüeintrag
+Tools menu,Werkzeug-Menü
+dock,Dock
+object type,Objekttyp
+Editor Tools,Editor-Werkzeuge

@@ -2327,3 +2327,9 @@ Export Hook,Перехват экспорта
 Import Tool (runs on import),Инструмент импорта (запускается при импорте)
 Export Hook (runs on export),Перехват экспорта (запускается при экспорте)
 Run this editor tool now,Запустить этот инструмент редактора
+adds,добавляет
+Tools menu item,пункт меню «Инструменты»
+Tools menu,меню «Инструменты»
+dock,панель
+object type,тип объекта
+Editor Tools,Инструменты редактора

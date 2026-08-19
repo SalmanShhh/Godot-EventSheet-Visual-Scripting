@@ -30,11 +30,17 @@ static func run() -> bool:
 	return all_passed
 
 
-## The five tutorials the Manual opens with, and the shape of a step.
+## The six tutorials the Manual opens with, and the shape of a step.
 static func _test_tutorial_catalogue() -> bool:
 	var all_passed: bool = true
-	all_passed = _check("five tutorials ship",
-		EventSheetDocTutorials.tutorials().size(), 5) and all_passed
+	all_passed = _check("six tutorials ship",
+		EventSheetDocTutorials.tutorials().size(), 6) and all_passed
+	# R35. Writing a tool is something a beginner has to be able to FIND, not just be capable of.
+	all_passed = _check("the editor-tool tutorial is one of them",
+		str(EventSheetDocTutorials.tutorial("make-an-editor-tool").get("title", "")),
+		"Make an editor tool with an event sheet") and all_passed
+	all_passed = _check("it walks six steps",
+		EventSheetDocTutorials.step_count("make-an-editor-tool"), 6) and all_passed
 	all_passed = _check("the first one is the first event",
 		str(EventSheetDocTutorials.tutorial("first-event").get("title", "")),
 		"Your first event") and all_passed
@@ -157,7 +163,7 @@ static func _test_walking_the_steps() -> bool:
 	for block: Dictionary in list:
 		if str(block.get("kind", "")) == "heading" and int(block.get("level", 0)) == 2:
 			chapters += 1
-	all_passed = _check("the list has one chapter per tutorial", chapters, 5) and all_passed
+	all_passed = _check("the list has one chapter per tutorial", chapters, 6) and all_passed
 	all_passed = _check("the list lives at a frozen id",
 		EventSheetDocTutorials.LIST_DOC_ID, "reference:tutorials") and all_passed
 	all_passed = _check("and one tutorial at its own",

@@ -42,7 +42,7 @@ const ACTION_NEXT := "tutorial_next"
 const PROGRESS_SECTION := "eventsheets"
 const PROGRESS_KEY := "tutorial_progress"
 
-## The five tutorials, in reading order. `minutes` is the honest estimate the list prints beside
+## The six tutorials, in reading order. `minutes` is the honest estimate the list prints beside
 ## each one; `control` is the EXACT label of the toolbar control the step asks for, so the pulse
 ## resolves it by that label rather than through a map somebody has to keep up to date.
 const TUTORIALS: Array[Dictionary] = [
@@ -197,6 +197,44 @@ const TUTORIALS: Array[Dictionary] = [
 			{
 				"text": "And the one real difference: where a signal exists, react to it instead of asking every frame. Press E and look at the triggers - most of what needed Every Tick plus Trigger Once is a signal here.",
 				"control": "Add Event",
+				"check": "",
+			},
+		],
+	},
+	{
+		"id": "make-an-editor-tool",
+		"title": "Make an editor tool with an event sheet",
+		"minutes": 5,
+		"lead": "A tool is a sheet whose events run in the EDITOR, not in the game - a one-click chore, or a plugin that adds a dock and a Tools menu item. Same rows, same picker, a different moment.",
+		"steps": [
+			{
+				"text": "Choose the shape first: Sheet ▸ Sheet Type… ▸ Editor Tool. That is the chore you press Run on. (Editor Plugin, Import Tool and Export Hook are the same family - a plugin the editor switches on, a reaction to importing, and a step that runs as an export begins.)",
+				"control": "Sheet",
+				"check": "",
+			},
+			{
+				"text": "Add the event the editor calls: press E and pick On Editor Run. Every tool starts here, and nothing before it happens.",
+				"control": "Add Event",
+				"check": "sheet_has_event",
+			},
+			{
+				"text": "Now give it something to do. Press A and open the Editor Tools group - it only appears on a tool sheet, because those rows call the editor and cannot run in a game. Selected Nodes, Edited Scene Root, Select Node In Editor, Save Current Scene: the editor's own vocabulary.",
+				"control": "Add Action",
+				"check": "sheet_has_action",
+			},
+			{
+				"text": "Run it without leaving the sheet: press ▶ Run now on the Include bar (Ctrl+Shift+X). It compiles the sheet and runs the tool, then Output ▾ beside it holds whatever your tool printed.",
+				"control": "",
+				"check": "",
+			},
+			{
+				"text": "Two habits worth having from the first tool: start from the edited scene root rather than a node path (in the editor, a path resolves against the editor itself), and register an undo step around anything you change - Tools ▸ Project Doctor says so too if you forget.",
+				"control": "Tools",
+				"check": "",
+			},
+			{
+				"text": "To make it a plugin instead: Sheet Type… ▸ Editor Plugin, tick a dock or a Tools menu item, and the sheet arrives with those events already written. Save it under res://addons/your_plugin/ and press Enable plugin on the Include bar - that writes the plugin.cfg and switches it on.",
+				"control": "Sheet",
 				"check": "",
 			},
 		],

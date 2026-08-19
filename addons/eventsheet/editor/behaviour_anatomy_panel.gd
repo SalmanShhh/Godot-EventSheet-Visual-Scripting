@@ -30,6 +30,9 @@ const _ORGAN_ACCENTS: Dictionary = {
 	"actions": EventSheetPalette.COLOR_ACTION,
 	"conditions": EventSheetPalette.COLOR_CONDITION,
 	"expressions": EventSheetPalette.COLOR_EXPRESSION,
+	# R35. What the pack adds to the EDITOR rather than to the game - a different audience from every
+	# other organ, so it wears the trigger accent (the editor calls these, the way it calls a trigger).
+	"editor_tools": EventSheetPalette.COLOR_TRIGGER,
 	"uses": EventSheetPalette.TEXT_SECONDARY,
 }
 ## The pill drawn before an entry, per organ: [text, bg, fg]. Verb organs reuse the canvas's ACE
@@ -41,6 +44,7 @@ const _ORGAN_PILLS: Dictionary = {
 	"actions": ["A", Color("#463414"), Color("#f2c879")],
 	"conditions": ["?", Color("#123a30"), Color("#77d3b7")],
 	"expressions": ["ƒ", Color("#3a2247"), Color("#d7a6ea")],
+	"editor_tools": ["⚒", Color("#233b2b"), Color("#7fd494")],
 	"uses": ["↗", Color("#2c313a"), Color("#9aa1ad")],
 }
 # 1x design heights - _header_height()/_entry_height() apply the editor display scale, and the
@@ -211,7 +215,7 @@ var _last_sheet: EventSheetResource = null
 static func collect_anatomy(sheet: EventSheetResource) -> Array:
 	var organs: Dictionary = {
 		"properties": [], "state": [], "triggers": [],
-		"actions": [], "conditions": [], "expressions": [], "uses": [],
+		"actions": [], "conditions": [], "expressions": [], "editor_tools": [], "uses": [],
 	}
 	if sheet != null:
 		var names: Array = sheet.variables.keys()
@@ -238,6 +242,11 @@ static func collect_anatomy(sheet: EventSheetResource) -> Array:
 				label = event_function.function_name.capitalize()
 			(organs[ViewportRowBuilder.define_role_for(event_function) + "s"] as Array).append(
 				{"label": label, "resource": event_function})
+		# R35. What this sheet adds to the editor itself. Derived by the one census every surface
+		# shares (the Include bar and the picker's pack card read the same list), so a pack that stops
+		# hanging a dock stops claiming one the moment it is rebuilt.
+		for entry: Dictionary in EventSheetEditorToolCensus.from_sheet(sheet):
+			(organs["editor_tools"] as Array).append({"label": str(entry.get("label", ""))})
 		var provider_names: Array = providers.keys()
 		provider_names.sort()
 		for provider: Variant in provider_names:
@@ -250,6 +259,7 @@ static func collect_anatomy(sheet: EventSheetResource) -> Array:
 		{"id": "actions", "title": "Actions", "entries": organs["actions"]},
 		{"id": "conditions", "title": "Conditions", "entries": organs["conditions"]},
 		{"id": "expressions", "title": "Expressions", "entries": organs["expressions"]},
+		{"id": "editor_tools", "title": "Editor Tools", "entries": organs["editor_tools"]},
 		{"id": "uses", "title": "Uses", "entries": organs["uses"]},
 	]
 

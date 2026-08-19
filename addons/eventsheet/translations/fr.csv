@@ -2327,3 +2327,9 @@ Export Hook,Crochet d'export
 Import Tool (runs on import),Outil d'import (s'exécute à l'import)
 Export Hook (runs on export),Crochet d'export (s'exécute à l'export)
 Run this editor tool now,Exécuter cet outil d'éditeur maintenant
+adds,ajoute
+Tools menu item,entrée du menu Outils
+Tools menu,menu Outils
+dock,dock
+object type,type d'objet
+Editor Tools,Outils d'éditeur

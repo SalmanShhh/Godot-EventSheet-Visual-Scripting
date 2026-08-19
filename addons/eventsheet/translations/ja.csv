@@ -2327,3 +2327,9 @@ Export Hook,エクスポートフック
 Import Tool (runs on import),インポートツール（インポート時に実行）
 Export Hook (runs on export),エクスポートフック（エクスポート時に実行）
 Run this editor tool now,このエディターツールを今すぐ実行
+adds,追加:
+Tools menu item,ツールメニュー項目
+Tools menu,ツールメニュー
+dock,ドック
+object type,オブジェクト型
+Editor Tools,エディターツール

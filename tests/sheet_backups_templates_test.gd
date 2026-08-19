@@ -154,14 +154,22 @@ static func run() -> bool:
 		copy.resource_path.is_empty() and copy.custom_class_name == "BossFight"
 		and int((copy.variables.get("phase", {}) as Dictionary).get("default", -1)) == 1, true) and all_passed
 
-	# New… menu: 12 built-in starters + 6 intent section separators (the creation-time
-	# "what are you making?" ask, including the Systems/ECS-lite section) + the
-	# project-templates separator + 1 project template = 20 entries; adopting id 100 swaps
-	# the template copy in as an unsaved sheet.
+	# New… menu: 15 built-in starters (R33 added Editor Plugin / Import Tool / Export Hook to the
+	# Editor Tools section) + 6 intent section separators (the creation-time "what are you making?"
+	# ask, including the Systems/ECS-lite section) + the project-templates separator + 1 project
+	# template = 23 entries; adopting id 100 swaps the template copy in as an unsaved sheet.
 	editor._starter._build_template_menu_items()
 	all_passed = _check("template menu lists built-ins and the project template",
-		editor._starter._template_menu.item_count == 20
+		editor._starter._template_menu.item_count == 23
 		and editor._starter._project_template_paths == PackedStringArray(["user://tpl_dir/boss_fight.tres"]), true) and all_passed
+	# The four tool starters are VALUES rather than a count, so a renamed entry names itself.
+	var tool_entries: PackedStringArray = PackedStringArray()
+	for menu_index: int in range(editor._starter._template_menu.item_count):
+		if editor._starter._template_menu.get_item_id(menu_index) in [10, 12, 13, 14]:
+			tool_entries.append(editor._starter._template_menu.get_item_text(menu_index))
+	all_passed = _check("the Editor Tools section offers all four tool shapes",
+		"|".join(tool_entries),
+		"Editor Tool (one-click chore)|Editor Plugin (dock, menu item, object type)|Import Tool (runs on import)|Export Hook (runs on export)") and all_passed
 	editor._starter._new_sheet_from_template(100)
 	all_passed = _check("adopting a project template starts an unsaved copy",
 		editor._current_sheet.custom_class_name == "BossFight"

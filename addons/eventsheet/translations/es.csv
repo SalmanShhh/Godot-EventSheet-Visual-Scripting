@@ -2327,3 +2327,9 @@ Export Hook,Enganche de exportación
 Import Tool (runs on import),Herramienta de importación (se ejecuta al importar)
 Export Hook (runs on export),Enganche de exportación (se ejecuta al exportar)
 Run this editor tool now,Ejecutar ahora esta herramienta del editor
+adds,añade
+Tools menu item,elemento del menú Herramientas
+Tools menu,menú Herramientas
+dock,panel
+object type,tipo de objeto
+Editor Tools,Herramientas del editor

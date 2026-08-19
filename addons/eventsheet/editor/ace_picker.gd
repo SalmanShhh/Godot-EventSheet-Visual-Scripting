@@ -981,7 +981,16 @@ func _populate_object_cards() -> void:
 		if provider == "Core":
 			item.set_custom_color(0, GROUP_COLOR_NODE_TYPE)
 		item.set_text(0, label)
-		item.set_tooltip_text(0, "Browse %s's conditions, actions, and triggers." % label)
+		var tooltip: String = "Browse %s's conditions, actions, and triggers." % label
+		# R35. A pack can ship editor tooling as well as gameplay verbs, and until you installed it
+		# nothing said so. The census reads the pack's own emitted scripts, so the card cannot claim a
+		# dock the pack stopped hanging.
+		var adds: String = EventSheetEditorToolCensus.summary(
+			EventSheetEditorToolCensus.from_pack(EventSheets.addon_pack_directory(provider)))
+		if not adds.is_empty():
+			item.set_text(0, "%s  ·  %s" % [label, adds])
+			tooltip += "\n%s" % adds
+		item.set_tooltip_text(0, tooltip)
 		item.set_metadata(0, provider)
 		# Same icon discipline as the classic tree: the provider's own icon at 16px, never
 		# scaled up; System gets the Node glyph from the editor theme.

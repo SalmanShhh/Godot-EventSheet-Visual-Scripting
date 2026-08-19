@@ -2327,3 +2327,9 @@ Export Hook,导出钩子
 Import Tool (runs on import),导入工具（导入时运行）
 Export Hook (runs on export),导出钩子（导出时运行）
 Run this editor tool now,立即运行该编辑器工具
+adds,新增
+Tools menu item,工具菜单项
+Tools menu,工具菜单
+dock,停靠面板
+object type,对象类型
+Editor Tools,编辑器工具

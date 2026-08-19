@@ -729,6 +729,13 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
 		}))
 		spans.append(_pack_include_chip(host_class))
+	# R35. A pack that ships editor tooling says so on its own bar: `adds 1 Tools menu item, 1 dock`.
+	# Silent for the packs that add nothing, which is nearly all of them.
+	var tools_summary: String = EventSheetEditorToolCensus.summary(EventSheetEditorToolCensus.from_sheet(sheet))
+	if not tools_summary.is_empty():
+		spans.append(_make_span(tools_summary, SemanticSpan.SpanType.VALUE, {
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+		}))
 	spans.append_array(_reading_coverage_spans(sheet))
 	spans.append_array(_editor_tool_bar_spans(sheet))
 	row_data.spans = spans
