@@ -189,8 +189,16 @@ static func run() -> bool:
 	chord.keycode = KEY_C
 	chord.ctrl_pressed = true
 	chord.shift_pressed = true
+	# Ctrl+Shift+C is Copy as text (the chord every event-sheet editor uses for it); adding a
+	# condition keeps its primary key C and its Ctrl alternate is Ctrl+Alt+C.
 	all_passed = _check("chords never shadow their plain form",
-		EventSheetShortcuts.matches(chord, "add_condition_chord") and not EventSheetShortcuts.matches(chord, "copy"), true) and all_passed
+		EventSheetShortcuts.matches(chord, "copy_as_text") and not EventSheetShortcuts.matches(chord, "copy"), true) and all_passed
+	var condition_chord: InputEventKey = InputEventKey.new()
+	condition_chord.keycode = KEY_C
+	condition_chord.ctrl_pressed = true
+	condition_chord.alt_pressed = true
+	all_passed = _check("the Add condition alternate moved one modifier over",
+		EventSheetShortcuts.matches(condition_chord, "add_condition_chord"), true) and all_passed
 	EventSheetShortcuts.set_binding("duplicate", "Alt+D")
 	var rebound: InputEventKey = InputEventKey.new()
 	rebound.keycode = KEY_D

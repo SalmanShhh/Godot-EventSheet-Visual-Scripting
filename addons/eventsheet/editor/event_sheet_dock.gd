@@ -338,9 +338,6 @@ func _init() -> void:
 	_object_properties.init(self)
 	_find_results.init(self)
 	_properties_bar.init(self)
-	# Replace object records what the swap left naming a member the new object lacks; the Doctor
-	# reports it beside every other project finding.
-	EventSheetProjectDoctor.register_check("replace-object-members", EventSheetReplaceObject.doctor_check)
 	# Same rule as _preview_glue: _build_ui() calls _open_progress.build(), so the back-reference
 	# has to be wired before it (init() only stores _dock - nothing tree-bound).
 	_open_progress.init(self)
@@ -2459,6 +2456,12 @@ func _open_replace_object_dialog() -> void:
 			# Doctor rather than left to be discovered by a crash.
 			var missing: PackedStringArray = EventSheetReplaceObject.missing_members(targets, from_ref, to_ref, scene_root)
 			EventSheetReplaceObject.last_missing = {"from": from_ref, "to": to_ref, "members": missing, "path": _current_sheet_path}
+			# Registered only while there IS something to report, so a clean project never carries
+			# a check that can only answer "nothing".
+			if missing.is_empty():
+				EventSheetProjectDoctor.unregister_check("replace-object-members")
+			else:
+				EventSheetProjectDoctor.register_check("replace-object-members", EventSheetReplaceObject.doctor_check)
 			_refresh_after_edit()
 			var missing_note: String = "" if missing.is_empty() else " %s does not have %s - see the Doctor." % [to_ref, ", ".join(missing)]
 			_mark_dirty("Replaced %d reference(s): %s becomes %s.%s" % [int(counter["count"]), from_ref, to_ref, missing_note])
