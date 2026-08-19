@@ -367,6 +367,12 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var systems: Dictionary = godot_systems_condition(text, context)
 	if not systems.is_empty():
 		return systems
+	# ── T12 ─────────────────────────────────────────────────────────────────────────────────────
+	# What the game is running on, which is a comparison on paper and one settled question in the
+	# sheet's words - and the shipped Platform Info pack's words are the ones it uses.
+	var around_test: Dictionary = around_objects_condition(text, context)
+	if not around_test.is_empty():
+		return around_test
 	var joined: Dictionary = joined_condition(text, context)
 	if not joined.is_empty():
 		return joined
@@ -1570,6 +1576,13 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 	var behaviour: Dictionary = _behaviour_assignment(object_name, str(split[1]), assigned, target, context)
 	if not behaviour.is_empty():
 		return behaviour
+	# ── T10 / T11 ───────────────────────────────────────────────────────────────────────────────
+	# Where an object sits in the drawing order, and how its text is styled. Both would otherwise
+	# read as the engine property they are written with rather than as the one row an event sheet
+	# has for them, so they are asked ahead of the plain "Set <property> to <value>" below.
+	var around: Dictionary = around_objects_assignment(object_name, str(split[1]), assigned, context)
+	if not around.is_empty():
+		return around
 	# M45. The pointer is the event-sheet Mouse object for the same reason the stick is Keyboard's.
 	# Ahead of the service reading below, so the pointer keeps the object M45 gave it.
 	if object_name == OBJECT_SYSTEM and _system_words(assigned) != assigned and assigned.contains("mouse_position"):
@@ -1681,8 +1694,14 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 				return {}
 			var is_layer: bool = familiar_words and _class_is_any(object_class, PackedStringArray(["CanvasLayer"]))
 			var layer_label: String = "%s %s" % [object_name, translate("(layer)")] if is_layer else object_name
+			# T10. Turning a whole layer off is a LAYER row, whichever of the two spellings the
+			# glossary is showing, so both carry the pattern the drawing-order readings claim.
 			if is_layer:
-				return _sentence(layer_label, "Set layer visible" if assigned == "true" else "Set layer invisible", {})
+				return _patterned(_sentence(layer_label,
+					"Set layer visible" if assigned == "true" else "Set layer invisible", {}), "layers")
+			if _class_is_any(object_class, LAYER_CLASSES):
+				return _patterned(_sentence(object_name,
+					"Set visible" if assigned == "true" else "Set invisible", {}), "layers")
 			return _sentence(object_name, "Set visible" if assigned == "true" else "Set invisible", {})
 		"flip_h":
 			# S11. A mirror driven by a TEST is the same verb with its condition said out loud - a
@@ -1858,6 +1877,12 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var tile_step: Dictionary = _tilemap_call(method, args, target, context)
 	if not tile_step.is_empty():
 		return tile_step
+	# ── T10 / T11 / T12 ─────────────────────────────────────────────────────────────────────────
+	# The drawing order, the text styling and the browser / platform actions: three families whose
+	# calls the Object ▸ Verb chips below would spell as the engine method they are written with.
+	var around_step: Dictionary = around_objects_call(target, method, args, context)
+	if not around_step.is_empty():
+		return around_step
 	# M25/M26. `queue_free()` on ANY object is the event-sheet Destroy verb, including the script's
 	# own object - which is named, never `self`.
 	if method == "queue_free" and args.is_empty():
@@ -3793,6 +3818,10 @@ static func _idiom_for(head: String, arguments: PackedStringArray, context: Dict
 	# sheet's own name for it, written by the pass above - and the count spelling would undo it.
 	if head == "len" and arguments.size() == 1 and bool(context.get("familiar_words", false)):
 		return "len(%s)" % arguments[0]
+	# T11. `tr("HELLO")` is not a call a reader thinks about: the text is TRANSLATED, which is the
+	# word the sheet's own translation rows already use for it.
+	if (head == "tr" or head == "atr") and arguments.size() == 1:
+		return "%s %s" % [translate("translated"), arguments[0]]
 	if VECTOR_CONSTRUCTORS.has(head):
 		return "(%s)" % ", ".join(arguments)
 	if head == "move_toward" and arguments.size() == 3:
@@ -6383,6 +6412,8 @@ static func godot_systems_condition(text: String, context: Dictionary) -> Dictio
 	if not arrived.is_empty():
 		return arrived
 	return _collided_family_condition(text, context)
+
+
 # ── S11 / S12 / S13 / S14 - the sprite, UI, sound and juice words ───────────────────────────────
 #
 # Four families of line that most beginner scripts are made of, read in the words the sheet's own
@@ -6787,3 +6818,292 @@ static func media_condition(text: String, context: Dictionary) -> Dictionary:
 			and not _class_is_any(object_class, SPRITE_CLASSES):
 		return {}
 	return _with_pattern(_sentence(object_name, "Is playing", {}), "sound" if audio else "sprite_animation", bare)
+
+
+# ── T10 / T11 / T12 - the things AROUND objects: layers and Z order, text, the browser ───────────
+#
+# Three families of line every project writes ABOUT an object rather than about its behaviour: where
+# it sits in the drawing order, how its text is styled, and what it asks of the machine it runs on.
+# An event sheet has one settled row for each - Move to layer, Set font size, Go to URL - and Godot
+# spreads the same three over z_index / CanvasLayer, theme overrides / LabelSettings, and OS /
+# DisplayServer. Every reading below claims its exact shape, carries the pattern it is an instance
+# of, and is display-only: the file is untouched, so the byte round-trip cannot move.
+
+
+## T12. The two objects the platform words live under. An event sheet files "open a link" and "copy
+## text" under the Browser, and "what am I running on" under the platform information the shipped
+## Platform Info pack answers - which is where a reader looks for either of them.
+const OBJECT_BROWSER := "Browser"
+const OBJECT_PLATFORM := "Platform"
+
+## T10. The classes that ARE a layer. A CanvasLayer's `layer` number is a drawing order and its
+## `visible` switch turns a whole layer off; neither is true of a node that merely has the words.
+const LAYER_CLASSES: PackedStringArray = ["CanvasLayer"]
+
+## T11. The alignment constants, by the word an event sheet spells them with.
+const HORIZONTAL_ALIGNMENT_WORDS: Dictionary = {
+	"HORIZONTAL_ALIGNMENT_LEFT": "left", "HORIZONTAL_ALIGNMENT_CENTER": "centre",
+	"HORIZONTAL_ALIGNMENT_RIGHT": "right", "HORIZONTAL_ALIGNMENT_FILL": "justified"
+}
+
+## T11. The vertical alignment constants, by the same words.
+const VERTICAL_ALIGNMENT_WORDS: Dictionary = {
+	"VERTICAL_ALIGNMENT_TOP": "top", "VERTICAL_ALIGNMENT_CENTER": "middle",
+	"VERTICAL_ALIGNMENT_BOTTOM": "bottom", "VERTICAL_ALIGNMENT_FILL": "justified"
+}
+
+## T11. The theme colour slots an event sheet has a sentence for, as {slot: the row's words}. A slot
+## outside this table keeps the plain call: inventing a sentence for an unknown theme key would be
+## guessing at what the project's own theme calls it.
+const TEXT_COLOUR_SLOTS: Dictionary = {
+	"font_color": "Set font colour to {value}",
+	"font_outline_color": "Set outline colour to {value}",
+	"font_shadow_color": "Set shadow colour to {value}"
+}
+
+## T11. The LabelSettings members a Text row has words for, as {member: the row's words}. Written
+## through the settings resource (`label.label_settings.font`), which is the other way a project
+## styles a label.
+const LABEL_SETTINGS_MEMBERS: Dictionary = {
+	"label_settings.font": "Set font to {value}",
+	"label_settings.font_size": "Set font size to {value}",
+	"label_settings.font_color": "Set font colour to {value}",
+	"label_settings.outline_color": "Set outline colour to {value}"
+}
+
+## T12. The feature tags the shipped Platform Info pack has a whole condition for, in that pack's own
+## words - so a hand-written `OS.has_feature("web")` and the picked row read the same sentence.
+const PLATFORM_FEATURE_WORDS: Dictionary = {
+	"mobile": "Is on mobile", "pc": "Is on desktop", "web": "Is on web"
+}
+
+## T12. The window modes that ARE the fullscreen switch, in both of Godot's spellings.
+const FULLSCREEN_MODES: PackedStringArray = [
+	"WINDOW_MODE_FULLSCREEN", "WINDOW_MODE_EXCLUSIVE_FULLSCREEN"
+]
+
+
+## The constant a value names, without the class in front of it: a script writes `AUTOWRAP_WORD` and
+## a `@tool` script the qualified `TextServer.AUTOWRAP_WORD`, and both mean the same member.
+static func unqualified_constant(value: String) -> String:
+	var text: String = value.strip_edges()
+	var dot_at: int = text.rfind(".")
+	return text if dot_at < 0 else text.substr(dot_at + 1)
+
+
+## T10. The name of the layer a node is moved into: the last segment of a `$"../FX"` path, or the
+## variable that holds it. Never a guess - a value that is neither keeps the text it was written as.
+static func drawing_layer_name(value: String) -> String:
+	var text: String = value.strip_edges()
+	if text.begins_with("$") or text.begins_with("%"):
+		return object_of_reference(text)
+	return text
+
+
+## T11. The name a font is known by: the file it lives in, without the folder Godot files it under.
+## A value that is not a loaded file reads as itself, which is what a variable already is.
+static func font_file_words(value: String, context: Dictionary) -> String:
+	var text: String = value.strip_edges()
+	for head: String in ["preload(", "load("]:
+		if not text.begins_with(head) or not text.ends_with(")"):
+			continue
+		var inner: String = text.substr(head.length(), text.length() - head.length() - 1).strip_edges()
+		if _is_string_literal(inner):
+			return _unquote(inner).get_file()
+	return expression_text(text, context)
+
+
+## T11. The word an alignment constant is spelled with, or "" when the value is not one of them.
+static func _alignment_word(value: String, words: Dictionary) -> String:
+	var bare: String = unqualified_constant(value)
+	return translate(str(words[bare])) if words.has(bare) else ""
+
+
+## T10. The muted aside a Set Z order row carries: whether the number the file wrote counts from the
+## object's parent or from the layer. Only said when the FILE says it - `z_as_relative` is written on
+## a line of its own, so the answer is gathered once per rebuild and handed over as a fact.
+static func _z_order_note(object_name: String, context: Dictionary) -> String:
+	var relative: Dictionary = context.get("z_order_relative", {})
+	if not relative.has(object_name):
+		return ""
+	return "(%s)" % translate("relative" if bool(relative[object_name]) else "absolute")
+
+
+## T10. The reading of one layer / Z-order ASSIGNMENT, or {} when the property is neither.
+static func _layers_assignment(object_name: String, member: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	match member:
+		"z_index":
+			var reading: Dictionary = _patterned(_sentence(object_name, "Set Z order to {value}",
+				{"value": [expression_text(value, context), "value"]}), "layers")
+			_append_note(reading, _z_order_note(object_name, context))
+			return reading
+		"z_as_relative":
+			if value != "true" and value != "false":
+				return {}
+			return _patterned(_sentence(object_name, "Set Z order relative to the layer"
+				if value == "true" else "Set Z order absolute", {}), "layers")
+		"layer":
+			# Only on something that IS a layer: a plain node with a `layer` number of its own is
+			# holding a number, and reading that as a drawing order would be inventing one.
+			if not _class_is_any(object_class_of(object_name, context), LAYER_CLASSES):
+				return {}
+			return _patterned(_sentence(object_name, "Set layer order to {value}",
+				{"value": [expression_text(value, context), "value"]}), "layers")
+	return {}
+
+
+## T11. The reading of one text-styling ASSIGNMENT, or {} when the property is not one.
+static func _text_assignment(object_name: String, member: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	if LABEL_SETTINGS_MEMBERS.has(member):
+		var shown: String = font_file_words(value, context) if member == "label_settings.font" \
+			else expression_text(value, context)
+		return _patterned(_sentence(object_name, str(LABEL_SETTINGS_MEMBERS[member]),
+			{"value": [shown, "value"]}), "text")
+	match member:
+		"horizontal_alignment":
+			var horizontal: String = _alignment_word(value, HORIZONTAL_ALIGNMENT_WORDS)
+			if horizontal.is_empty():
+				return {}
+			return _patterned(_sentence(object_name, "Set horizontal alignment to {value}",
+				{"value": [horizontal, "name"]}), "text")
+		"vertical_alignment":
+			var vertical: String = _alignment_word(value, VERTICAL_ALIGNMENT_WORDS)
+			if vertical.is_empty():
+				return {}
+			return _patterned(_sentence(object_name, "Set vertical alignment to {value}",
+				{"value": [vertical, "name"]}), "text")
+		"autowrap_mode":
+			var wrap: String = unqualified_constant(value)
+			if not wrap.begins_with("AUTOWRAP_"):
+				return {}
+			return _patterned(_sentence(object_name, "Set word wrap off"
+				if wrap == "AUTOWRAP_OFF" else "Set word wrap on", {}), "text")
+	return {}
+
+
+## T10. The reading of one layer / Z-order CALL, or {} when the call is neither.
+static func _layers_call(object_name: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	if method == "move_to_front" and args.is_empty():
+		return _patterned(_sentence(object_name, "Move to top of layer", {}), "layers")
+	if method == "move_to_back" and args.is_empty():
+		return _patterned(_sentence(object_name, "Move to bottom of layer", {}), "layers")
+	# `reparent(node)` moves an object under another parent, and in a 2D scene that parent IS the
+	# layer it draws on. The optional second argument only says whether the world position is kept.
+	if method == "reparent" and (args.size() == 1 or args.size() == 2):
+		var into: String = drawing_layer_name(args[0])
+		if into.is_empty():
+			return {}
+		return _patterned(_sentence(object_name, "Move to layer {layer}",
+			{"layer": [into, "name"]}), "layers")
+	if method == "set_layer" and args.size() == 1 \
+			and _class_is_any(object_class_of(object_name, context), LAYER_CLASSES):
+		return _patterned(_sentence(object_name, "Set layer order to {value}",
+			{"value": [expression_text(args[0], context), "value"]}), "layers")
+	return {}
+
+
+## T11. The reading of one text-styling CALL, or {} when the call is not one. Only the two-argument
+## override shapes are claimed, which is the only form those methods have.
+static func _text_call(object_name: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	if args.size() != 2:
+		return {}
+	var slot: String = effect_parameter_name(args[0])
+	if method == "add_theme_font_size_override" and slot == "font_size":
+		return _patterned(_sentence(object_name, "Set font size to {value}",
+			{"value": [expression_text(args[1], context), "value"]}), "text")
+	if method == "add_theme_color_override" and TEXT_COLOUR_SLOTS.has(slot):
+		return _patterned(_sentence(object_name, str(TEXT_COLOUR_SLOTS[slot]),
+			{"value": [expression_text(args[1], context), "value"]}), "text")
+	if method == "add_theme_font_override" and slot == "font":
+		return _patterned(_sentence(object_name, "Set font to {value}",
+			{"value": [font_file_words(args[1], context), "value"]}), "text")
+	return {}
+
+
+## T12. The reading of one browser / platform CALL, or {} when the call is neither. The receiver is
+## the engine service the call is spelled on, so the row is filed under the OBJECT an event sheet
+## keeps the action under rather than under `OS` or `DisplayServer`.
+static func _platform_call(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	if target == "OS":
+		if method == "shell_open" and args.size() == 1:
+			return _patterned(_sentence(OBJECT_BROWSER, "Go to URL {url}",
+				{"url": [expression_text(args[0], context), "value"]}), "platform")
+		if method == "alert" and (args.size() == 1 or args.size() == 2):
+			return _patterned(_sentence(OBJECT_BROWSER, "Alert {message}",
+				{"message": [expression_text(args[0], context), "value"]}), "platform")
+	if target == "DisplayServer":
+		if method == "clipboard_set" and args.size() == 1:
+			return _patterned(_sentence(OBJECT_BROWSER, "Copy {value} to clipboard",
+				{"value": [expression_text(args[0], context), "value"]}), "platform")
+		if method == "window_set_mode" and (args.size() == 1 or args.size() == 2):
+			var mode: String = unqualified_constant(args[0])
+			if FULLSCREEN_MODES.has(mode):
+				return _patterned(_sentence(OBJECT_BROWSER, "Request fullscreen", {}), "platform")
+			if mode == "WINDOW_MODE_WINDOWED":
+				return _patterned(_sentence(OBJECT_BROWSER, "Leave fullscreen", {}), "platform")
+	if target == "Input" and method == "vibrate_handheld" and args.size() == 1:
+		return _patterned(_sentence(OBJECT_BROWSER, "Vibrate for {milliseconds} ms",
+			{"milliseconds": [expression_text(args[0], context), "value"]}), "platform")
+	return {}
+
+
+## T12. The reading of one platform QUESTION, or {} when the expression asks something else.
+static func _platform_condition(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if not call.is_empty() and str(call.get("target", "")) == "OS" \
+			and str(call.get("method", "")) == "has_feature":
+		var args: PackedStringArray = call.get("args", PackedStringArray())
+		if args.size() == 1 and _is_string_literal(args[0]):
+			var tag: String = _unquote(args[0])
+			# The editor tag is already the sheet's own "running in the editor" question, and that
+			# reading owns it: two sentences for one line would be one too many.
+			if tag == "editor":
+				return {}
+			if PLATFORM_FEATURE_WORDS.has(tag):
+				return _patterned(_sentence(OBJECT_PLATFORM,
+					str(PLATFORM_FEATURE_WORDS[tag]), {}), "platform")
+			return _patterned(_sentence(OBJECT_PLATFORM, "Has feature tag {tag}",
+				{"tag": [_quoted(args[0]), "value"]}), "platform")
+	var equals_at: int = top_level_index(text, " == ")
+	if equals_at <= 0:
+		return {}
+	var left: String = text.substr(0, equals_at).strip_edges()
+	var right: String = text.substr(equals_at + 4).strip_edges()
+	if left != "OS.get_name()" or not _is_string_literal(right):
+		return {}
+	return _patterned(_sentence(OBJECT_PLATFORM, "Is {platform}",
+		{"platform": [_unquote(right), "name"]}), "platform")
+
+
+## T10 / T11. The around-objects reading of one ASSIGNMENT, or {} when neither family claims it.
+static func around_objects_assignment(object_name: String, member: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	var layered: Dictionary = _layers_assignment(object_name, member, assigned, context)
+	if not layered.is_empty():
+		return layered
+	return _text_assignment(object_name, member, assigned, context)
+
+
+## T10 / T11 / T12. The around-objects reading of one CALL, or {} when no family claims it.
+static func around_objects_call(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	var platform: Dictionary = _platform_call(target, method, args, context)
+	if not platform.is_empty():
+		return platform
+	var object_name: String = _receiver_object(target, context)
+	var styled: Dictionary = _text_call(object_name, method, args, context)
+	if not styled.is_empty():
+		return styled
+	return _layers_call(object_name, method, args, context)
+
+
+## T12. The around-objects reading of one CONDITION, or {} when nothing claims it.
+static func around_objects_condition(text: String, context: Dictionary) -> Dictionary:
+	return _platform_condition(text, context)

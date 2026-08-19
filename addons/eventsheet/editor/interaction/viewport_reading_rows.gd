@@ -96,7 +96,46 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# navigation agent plus the waypoint local a path walk is written around. Worked out once here,
 	# for the same reason the tween chains are - a per-row guess could only see one line at a time.
 	extras.merge(godot_systems_facts(sheet), true)
+	# ── T10 lens hook ──────────────────────────────────────────────────────────────────────────
+	# Whether each object's Z order counts from its parent or from the layer. The file states it on a
+	# line of its own, a line away from the number it qualifies, so the answer is gathered once here
+	# rather than guessed at per row.
+	extras.merge(around_objects_facts(sheet), true)
 	return extras
+
+
+## T10. What the FILE says about its drawing order, as the one fact map the layer readings read:
+##
+##   z_order_relative  {object label: true when its Z order counts from the parent}
+##
+## Absent for an object the file never says it about, and every reading built on it then simply says
+## nothing extra - the row still shows the number the file wrote.
+static func around_objects_facts(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	var relative: Dictionary = {}
+	var own_object: String = script_object_name(sheet)
+	for line: String in ordered_code_lines(sheet):
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+		if assign_at <= 0:
+			continue
+		var target: String = text.substr(0, assign_at).strip_edges().trim_prefix("self.")
+		var value: String = text.substr(assign_at + 3).strip_edges()
+		if value != "true" and value != "false":
+			continue
+		if target == "z_as_relative":
+			relative[own_object] = value == "true"
+			continue
+		if not target.ends_with(".z_as_relative"):
+			continue
+		var receiver: String = target.substr(0, target.length() - 14).strip_edges()
+		if receiver.is_empty():
+			continue
+		relative[EventSheetSentence.object_of_reference(receiver)] = value == "true"
+	return {"z_order_relative": relative}
 
 
 ## Batch 8. Re-state every pattern this sheet writes in the registry, on the row that OWNS it - the
