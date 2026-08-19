@@ -2464,6 +2464,10 @@ An event with no condition of its own runs every tick.,Un évènement sans condi
 "An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","Un évènement sans condition propre s'exécute à chaque tick. Ajoute ses actions avec A, ou ajoute plus tard une condition pour le restreindre."
 Runs every tick,S'exécute à chaque tick
 runs every tick,s'exécute à chaque tick
+"follows its parent, in order","suit son événement parent, dans l'ordre"
+Keep As Every Tick,Garder en chaque tick
+Delete The Event,Supprimer l'événement
+"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?","C'était la dernière condition de l'événement. Un événement sans condition propre s'exécute à chaque tick - le garder ainsi, ou supprimer l'événement ?"
 every tick,chaque tick
 Current state is,L'état actuel est
 Go to state {state},Aller à l'état {state}

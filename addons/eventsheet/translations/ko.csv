@@ -2464,6 +2464,10 @@ An event with no condition of its own runs every tick.,자체 조건이 없는 �
 "An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","자체 조건이 없는 이벤트는 매 틱 실행됩니다. A 로 액션을 추가하거나, 나중에 조건을 추가해 범위를 좁히세요."
 Runs every tick,매 틱 실행
 runs every tick,매 틱 실행
+"follows its parent, in order",상위 이벤트를 순서대로 뒤따름
+Keep As Every Tick,매 틱으로 유지
+Delete The Event,이벤트 삭제
+"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?","방금 지운 것이 이 이벤트의 마지막 조건이었습니다. 자체 조건이 없는 이벤트는 매 틱 실행됩니다. 그대로 둘까요, 이벤트를 삭제할까요?"
 every tick,매 틱
 Current state is,현재 상태가
 Go to state {state},상태 {state}(으)로 전환

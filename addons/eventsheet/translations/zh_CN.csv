@@ -2464,6 +2464,10 @@ An event with no condition of its own runs every tick.,没有自身条件的事�
 "An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.",没有自身条件的事件每个 tick 都会运行。用 A 添加它的动作，或稍后添加条件来收窄它。
 Runs every tick,每个 tick 运行
 runs every tick,每个 tick 运行
+"follows its parent, in order",按顺序跟随其父事件
+Keep As Every Tick,保留为每帧
+Delete The Event,删除该事件
+"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?",那是该事件的最后一个条件。没有自身条件的事件会每帧运行 - 保持这样，还是删除该事件？
 every tick,每个 tick
 Current state is,当前状态为
 Go to state {state},切换到状态 {state}

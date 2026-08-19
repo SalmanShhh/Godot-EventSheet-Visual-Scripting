@@ -2464,6 +2464,10 @@ An event with no condition of its own runs every tick.,Событие без с�
 "An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","Событие без собственного условия выполняется каждый тик. Добавьте его действия клавишей A или позже добавьте условие, чтобы сузить его."
 Runs every tick,Выполняется каждый тик
 runs every tick,выполняется каждый тик
+"follows its parent, in order","следует за родительским событием, по порядку"
+Keep As Every Tick,Оставить как каждый тик
+Delete The Event,Удалить событие
+"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?",Это было последнее условие события. Событие без собственного условия выполняется каждый тик - оставить так или удалить событие?
 every tick,каждый тик
 Current state is,Текущее состояние -
 Go to state {state},Перейти в состояние {state}

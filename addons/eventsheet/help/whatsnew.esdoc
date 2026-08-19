@@ -386,6 +386,17 @@ untouched, and the byte round-trip and the emitted GDScript cannot move.
   **Every tick** words. Display only - byte-for-byte round-trip is untouched.
 - **The Doctor notices the surprise.** A blank event whose whole body is setting values gets a note:
   \"This blank event runs every tick and only sets values - did you mean On start of layout?\"
+- **A blank SUB-event no longer says \"Every Tick\" either.** Under a parent, blank means the other
+  half of the same rule - it simply follows its parent, in order - which is exactly what the
+  compiler already emits (plain statements after the parent's block, never an `if`). The condition
+  lane of a sub-event with no condition, trigger or Else of its own is now empty, the hover says
+  `follows its parent, in order`, and the row claims the `blank_event` pattern the way its top-level
+  sibling does. `+ Add condition` is still the way in.
+- **Taking an event's last condition off asks what you meant.** Removing it does not break the
+  event - it widens it, all the way to every tick - and a silent change of that size is the wrong
+  kind, so a top-level event that just lost its last condition says so and offers **Keep As Every
+  Tick** or **Delete The Event**. A sub-event asks nothing: blank under a parent is what taking the
+  condition off already said.
 - **The blank reading claims the `blank_event` pattern** in the pattern registry, which the pattern
   chip, its hover and the coverage counts read.
 

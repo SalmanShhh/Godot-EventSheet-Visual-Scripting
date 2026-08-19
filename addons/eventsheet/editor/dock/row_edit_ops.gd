@@ -44,6 +44,11 @@ extends RefCounted
 
 var _dock: Control = null
 
+## S27. The "keep as every tick?" prompt and the event it is about, addressed by uid because the undo
+## funnel replaces resources on every commit.
+var _every_tick_dialog: ConfirmationDialog = null
+var _every_tick_event_uid: String = ""
+
 
 func init(dock: Control) -> void:
 	_dock = dock
@@ -135,6 +140,9 @@ func _delete_context_ace() -> void:
 	var metadata: Dictionary = _dock._context_hit.get("span_metadata", {})
 	var ace_index: int = int(metadata.get("ace_index", -1))
 	var kind: String = str(metadata.get("kind", ""))
+	# Read the row's name for the S27 prompt BEFORE the edit: the commit replaces resources with
+	# snapshot duplicates, so the row below is not the row the sheet holds afterwards.
+	var event_uid: String = event_row.event_uid
 	var deleted: bool = _dock._perform_undoable_sheet_edit("Delete Cell", func() -> bool:
 		match kind:
 			"trigger":
@@ -153,6 +161,66 @@ func _delete_context_ace() -> void:
 	)
 	if deleted:
 		_dock._mark_dirty("Deleted the cell.")
+		if kind == "condition":
+			_prompt_keep_as_every_tick(event_uid)
+
+
+## S27. The event-sheet rule the other way round: an event with no condition of its own runs every
+## tick, so taking the LAST one off does not break the event - it widens it, all the way. That is a
+## real choice and a silent one is the wrong kind, so the row says what it just became and offers the
+## other reading of the gesture (the reader wanted the event gone, not widened).
+##
+## Only a TOP-LEVEL event asks. Under a parent, blank means "follows its parent, in order", which is
+## what taking the condition off already said, so there is nothing to decide.
+##
+## Addressed by UID, never by the resource the caller held: the undo funnel replaces resources with
+## snapshot duplicates on every commit, so the row that went into the edit is not the row the sheet
+## holds after it.
+func _prompt_keep_as_every_tick(event_uid: String) -> void:
+	var event_row: EventRow = _top_level_event_by_uid(event_uid)
+	if event_row == null or not event_row.conditions.is_empty():
+		return
+	if event_row.trigger != null or not event_row.trigger_id.strip_edges().is_empty():
+		return
+	_every_tick_event_uid = event_uid
+	if _every_tick_dialog == null:
+		_every_tick_dialog = ConfirmationDialog.new()
+		_every_tick_dialog.title = EventSheetL10n.translate("Every Tick")
+		_every_tick_dialog.ok_button_text = EventSheetL10n.translate("Keep As Every Tick")
+		_every_tick_dialog.cancel_button_text = EventSheetL10n.translate("Delete The Event")
+		_every_tick_dialog.canceled.connect(_delete_every_tick_event)
+		_dock.add_child(_every_tick_dialog)
+	_every_tick_dialog.dialog_text = EventSheetL10n.translate(
+		"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?")
+	_every_tick_dialog.popup_centered(Vector2i(460, 150))
+
+
+## The event the sheet holds under a uid, or null when it holds none at TOP LEVEL. Under a parent
+## there is nothing to ask, so a sub-event answers null here too.
+func _top_level_event_by_uid(event_uid: String) -> EventRow:
+	if _dock._current_sheet == null or event_uid.strip_edges().is_empty():
+		return null
+	for entry: Variant in _dock._current_sheet.events:
+		if entry is EventRow and (entry as EventRow).event_uid == event_uid:
+			return entry as EventRow
+	return null
+
+
+## The other half of the prompt: the reader meant the event to go, not to widen.
+func _delete_every_tick_event() -> void:
+	var uid: String = _every_tick_event_uid
+	_every_tick_event_uid = ""
+	if _top_level_event_by_uid(uid) == null:
+		return
+	var removed: bool = _dock._perform_undoable_sheet_edit("Delete Event", func() -> bool:
+		var doomed: EventRow = _top_level_event_by_uid(uid)
+		if doomed == null:
+			return false
+		_dock._current_sheet.events.erase(doomed)
+		return true
+	)
+	if removed:
+		_dock._mark_dirty("Deleted the event.")
 
 
 func _toggle_context_condition_inversion() -> void:
