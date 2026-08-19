@@ -149,6 +149,9 @@ verdict under the name you give it, which Wait Succeeded / Wait Timed Out read b
 | Set Time Scale | Speeds up or slows the whole game (1 normal, 0.5 slow motion, 0 paused) | `Engine.time_scale = {scale}` |
 | Time Scale | The current game speed | `Engine.time_scale` |
 | Game Time | Seconds elapsed since the game started | `(Time.get_ticks_msec() / 1000.0)` |
+| Seconds Have Passed Since | **Condition.** True once a stretch of time has gone by since a moment you stamped with Now | `(Time.get_ticks_msec() - {since} > {seconds} * 1000.0)` |
+| Now | The moment right now, by the game's own running clock | `Time.get_ticks_msec()` |
+| Now (Clock Time) | The moment right now by the system clock, in seconds - it keeps counting while the game is closed | `Time.get_unix_time_from_system()` |
 | FPS | The current frames per second | `Engine.get_frames_per_second()` |
 | Frame Count | How many frames have run since startup | `Engine.get_process_frames()` |
 | Set Max FPS | Caps how many frames per second the game renders (0 is uncapped) | `Engine.max_fps = int({fps})` |

@@ -94,6 +94,8 @@ use case below.
 | Set Fullscreen Mode | Picks a window mode from a dropdown (fullscreen, exclusive fullscreen, windowed, maximized). | `DisplayServer.window_set_mode({mode})` |
 | Set Window Size | Resizes the window, taking one Vector2i Size. | `DisplayServer.window_set_size({size})` |
 | Window Width | The current window width in pixels. | `DisplayServer.window_get_size().x` |
+| Viewport Width | How wide the visible layout is, in pixels. | `get_viewport_rect().size.x` |
+| Viewport Height | How tall the visible layout is, in pixels. | `get_viewport_rect().size.y` |
 | Window Height | The current window height in pixels. | `DisplayServer.window_get_size().y` |
 | Is Fullscreen | True while the window is in either fullscreen mode. | `(DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN or DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)` |
 

@@ -444,7 +444,7 @@ static func _condition_reading(part: String, context: Dictionary) -> Dictionary:
 		return not_empty
 	# R11. An event sheet has no "not on screen" either: the negation of that question IS its own
 	# condition, and a reader looking for the bullet-culling row wants to find it by name.
-	var outside: Dictionary = _outside_layout_reading(text, context)
+	var outside: Dictionary = outside_layout_reading(text, context)
 	if not outside.is_empty():
 		return outside
 	var negated: bool = false
@@ -4357,7 +4357,7 @@ static func _on_screen_condition(text: String, context: Dictionary) -> Dictionar
 ## R11. `not get_viewport_rect().has_point(position)` is not a mark on a reading: an event sheet has
 ## its own Is Outside Layout condition, and that is the row a reader wants to see. {} for anything
 ## else, which lets the general negation carry on drawing its ✕.
-static func _outside_layout_reading(text: String, context: Dictionary) -> Dictionary:
+static func outside_layout_reading(text: String, context: Dictionary) -> Dictionary:
 	if not text.begins_with("not "):
 		return {}
 	var on_screen: Dictionary = _on_screen_condition(stripped_parens(text.substr(4)), context)
@@ -4416,14 +4416,29 @@ static func familiar_expression_words(text: String, context: Dictionary) -> Stri
 	if not bool(context.get("familiar_words", false)) or text.is_empty():
 		return text
 	var out: String = text
-	for entry: Array in FAMILIAR_EXPRESSION_PATTERNS:
+	for entry: Array in _familiar_patterns():
 		if out.length() > 400:
 			break
-		var pattern: RegEx = RegEx.create_from_string(str(entry[0]))
-		if pattern == null:
-			continue
-		out = pattern.sub(out, str(entry[1]), true)
+		out = (entry[0] as RegEx).sub(out, str(entry[1]), true)
 	return _color_names(out)
+
+
+## The table compiled once for the whole session. A row is rewritten on every rebuild of every view
+## that has the glossary on, and compiling a dozen patterns per value would cost more than the whole
+## reading does. Filled by this function alone, so a half-built table can never be handed out.
+static var _compiled_familiar_patterns: Array = []
+
+
+static func _familiar_patterns() -> Array:
+	if not _compiled_familiar_patterns.is_empty():
+		return _compiled_familiar_patterns
+	var compiled: Array = []
+	for entry: Array in FAMILIAR_EXPRESSION_PATTERNS:
+		var pattern: RegEx = RegEx.create_from_string(str(entry[0]))
+		if pattern != null:
+			compiled.append([pattern, str(entry[1])])
+	_compiled_familiar_patterns = compiled
+	return _compiled_familiar_patterns
 
 
 ## R7. `Color.RED` as the colour a reader would say. Only Godot's own SCREAMING_CASE constants are

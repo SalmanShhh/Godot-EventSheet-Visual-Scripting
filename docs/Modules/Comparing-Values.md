@@ -69,6 +69,10 @@ compared, because the right question depends on the type:
 | Compare Variable | True when a sheet variable compares against a value with your chosen operator. | `{var_name} {op} {value}` |
 | Compare Values | True when two values compare with your chosen operator. | `{a} {op} {b}` |
 | Is Between Values | True when a value falls within a low and high range, bounds included. | `({min} <= {value} and {value} <= {max})` |
+| Is About | True when two decimal numbers are near enough to count as the same. | `is_equal_approx({a}, {b})` |
+| Is Inside Area | True when a point falls inside a rectangle - corner, then size. | `{area}.has_point({point})` |
+| Is Outside Layout | True when a point has left the visible layout on any side. | `not get_viewport_rect().has_point({point})` |
+| Is On-Screen | True while a point is inside the visible layout. | `get_viewport_rect().has_point({point})` |
 | Expression Is True | True when your own GDScript boolean expression is true - the advanced escape hatch. | `{expr}` |
 
 The **Operator** dropdown on Compare Variable and Compare Values is the same six everywhere in the

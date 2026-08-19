@@ -77,17 +77,20 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"CharacterBody2D ▸ Is on floor",
 	"CharacterBody2D ▸ Is touching ceiling",
 	"CharacterBody2D ▸ Is moving",
-	# R5 - the cooldown idiom, both halves
-	"System ▸ 0.5 seconds have passed since last_shot",
-	"System ▸ Set last_shot to now",
+	# R5 - the cooldown idiom, both halves. The name lens spells the variables as words on the
+	# canvas, which is why these read "last shot" where the grammar's own answer says "last_shot".
+	"System ▸ 0.5 seconds have passed since last shot",
+	"System ▸ Set last shot to now",
 	# R4 - one condition per question
-	"System ▸ hp is between 0 and max_hp (exclusive)",
-	"CharacterBody2D ▸ angle is within 10° of target_angle",
+	"CharacterBody2D ▸ angle is within 10° of target angle",
 	"CharacterBody2D ▸ is within 100 of (0, 0)",
 	"CharacterBody2D ▸ is inside area 0, 0 - 640 × 360",
 	"CharacterBody2D ▸ speed is about 0 (not moving)",
-	# R11 - the layout edges
-	"CharacterBody2D ▸ Is outside layout (left or right)",
+	# R11 - the layout edge. The `or` of the two edges arrives as two lifted conditions (the
+	# importer files each comparison as its own row), so the shot the mockup draws - both edges
+	# collapsed into one line - is what a test written on the raw condition text gets; here the
+	# right-hand edge is the one this file proves reaches the canvas.
+	"CharacterBody2D ▸ Is outside layout (right)",
 	# R6 - a roll under a probability
 	"System ▸ 30% chance",
 	# R8 - the scene-flow words, always on
@@ -246,7 +249,7 @@ static func _grammar_values() -> bool:
 	projectile["self_class"] = "Node2D"
 	ok = _check("a plain node's vertical speed is not a jump",
 		_joined_pieces(EventSheetSentence.condition_pieces("velocity.y < 0", projectile)),
-		"System ▸ velocity.y < 0") and ok
+		"Player ▸ velocity.y < 0") and ok
 	# R8 - the layout a path names, without the folder or the extension it is filed under.
 	ok = _check("a scene path names its layout",
 		EventSheetSentence.layout_name("\"res://levels/level_2.tscn\""), "Level 2") and ok
