@@ -3042,3 +3042,45 @@ unused: nothing,inutilisé : rien
 unused: 1 thing,inutilisé : 1 chose
 unused: %d things,inutilisé : %d choses
 Sheet Health,État de la feuille
+{object} has line of sight to {target},{object} a une ligne de vue vers {target}
+within,dans
+choose weighted,choisir pondéré
+Drag & Drop ▸ Start dragging,Glisser-déposer ▸ Commencer à glisser
+Drag & Drop ▸ Drop,Glisser-déposer ▸ Déposer
+Drag & Drop ▸ Remember the grab offset,Glisser-déposer ▸ Mémoriser le décalage de prise
+Drag & Drop ▸ Follow the cursor (keeping the grab offset),Glisser-déposer ▸ Suivre le curseur (décalage conservé)
+Drag & Drop ▸ Is dragging,Glisser-déposer ▸ Est en cours de glissement
+Drag & Drop ▸ Is not dragging,Glisser-déposer ▸ N'est pas en cours de glissement
+Anchor ▸ Anchor to {corner} (of the window),Ancrage ▸ Ancrer à {corner} (de la fenêtre)
+Anchor ▸ Set {side} anchor to {value},Ancrage ▸ Mettre l'ancrage {side} à {value}
+Anchor ▸ Set {side} margin to {value},Ancrage ▸ Mettre la marge {side} à {value}
+top left,en haut à gauche
+top right,en haut à droite
+bottom left,en bas à gauche
+bottom right,en bas à droite
+centre top,centre haut
+centre bottom,centre bas
+centre left,centre gauche
+centre right,centre droite
+full rect,rectangle entier
+left edge,bord gauche
+right edge,bord droit
+top edge,bord supérieur
+bottom edge,bord inférieur
+middle row,ligne du milieu
+middle column,colonne du milieu
+Jump-thru ▸ Set enabled (one-way: solid from above only),Traversable ▸ Activer (solide seulement par le dessus)
+Jump-thru ▸ Set disabled,Traversable ▸ Désactiver
+Solid ▸ Set disabled,Solide ▸ Désactiver
+Solid ▸ Set enabled,Solide ▸ Activer
+Solid ▸ On layer {layer},Solide ▸ Sur le calque {layer}
+Solid ▸ Not on layer {layer},Solide ▸ Hors du calque {layer}
+layer,calque
+Randomize seed,Graine aléatoire
+Set seed to {seed},Mettre la graine à {seed}
+Set noise type to {type},Mettre le type de bruit à {type}
+Is overlapping at offset {offset} (a solid),Chevauche au décalage {offset} (un solide)
+Is not overlapping at offset {offset} (a solid),Ne chevauche pas au décalage {offset} (un solide)
+on layer,sur le calque
+overlapping,chevauchant
+For each,Pour chaque

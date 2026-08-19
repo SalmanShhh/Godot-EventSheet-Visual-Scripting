@@ -3042,3 +3042,45 @@ unused: nothing,미사용: 없음
 unused: 1 thing,미사용: 1개
 unused: %d things,미사용: %d개
 Sheet Health,시트 상태
+{object} has line of sight to {target},{object} 이(가) {target} 을(를) 볼 수 있음
+within,이내
+choose weighted,가중 선택
+Drag & Drop ▸ Start dragging,끌어서 놓기 ▸ 끌기 시작
+Drag & Drop ▸ Drop,끌어서 놓기 ▸ 놓기
+Drag & Drop ▸ Remember the grab offset,끌어서 놓기 ▸ 잡은 간격 기억
+Drag & Drop ▸ Follow the cursor (keeping the grab offset),끌어서 놓기 ▸ 커서를 따라감 (간격 유지)
+Drag & Drop ▸ Is dragging,끌어서 놓기 ▸ 끄는 중
+Drag & Drop ▸ Is not dragging,끌어서 놓기 ▸ 끌지 않는 중
+Anchor ▸ Anchor to {corner} (of the window),앵커 ▸ 창의 {corner} 에 고정
+Anchor ▸ Set {side} anchor to {value},앵커 ▸ {side} 앵커를 {value} 로 설정
+Anchor ▸ Set {side} margin to {value},앵커 ▸ {side} 여백을 {value} 로 설정
+top left,왼쪽 위
+top right,오른쪽 위
+bottom left,왼쪽 아래
+bottom right,오른쪽 아래
+centre top,가운데 위
+centre bottom,가운데 아래
+centre left,가운데 왼쪽
+centre right,가운데 오른쪽
+full rect,전체 영역
+left edge,왼쪽 가장자리
+right edge,오른쪽 가장자리
+top edge,위쪽 가장자리
+bottom edge,아래쪽 가장자리
+middle row,가운데 행
+middle column,가운데 열
+Jump-thru ▸ Set enabled (one-way: solid from above only),점프 통과 ▸ 켜기 (위에서만 단단함)
+Jump-thru ▸ Set disabled,점프 통과 ▸ 끄기
+Solid ▸ Set disabled,단단함 ▸ 끄기
+Solid ▸ Set enabled,단단함 ▸ 켜기
+Solid ▸ On layer {layer},단단함 ▸ 레이어 {layer} 에 있음
+Solid ▸ Not on layer {layer},단단함 ▸ 레이어 {layer} 에 없음
+layer,레이어
+Randomize seed,시드 무작위로
+Set seed to {seed},시드를 {seed} 로 설정
+Set noise type to {type},노이즈 종류를 {type} 로 설정
+Is overlapping at offset {offset} (a solid),간격 {offset} 에서 겹침 (단단한 것)
+Is not overlapping at offset {offset} (a solid),간격 {offset} 에서 겹치지 않음 (단단한 것)
+on layer,레이어
+overlapping,에 겹친
+For each,각

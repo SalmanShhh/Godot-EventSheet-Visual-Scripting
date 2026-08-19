@@ -381,6 +381,12 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var data_asset: Dictionary = data_asset_statement(text, context)
 	if not data_asset.is_empty():
 		return _with_indent(data_asset, indent)
+	# ── T6 / T7 / T25 ───────────────────────────────────────────────────────────────────────────
+	# A drag, an anchor, a solid, a jump-thru and a seed are each ONE thought a file spells as a
+	# property write, so they go ahead of the assignment reading that would describe the property.
+	var behaviors: Dictionary = behavior_words_statement(text, context)
+	if not behaviors.is_empty():
+		return _with_indent(behaviors, indent)
 	var compound: Dictionary = _compound_statement(text, context)
 	if not compound.is_empty():
 		return _with_indent(compound, indent)
@@ -434,6 +440,12 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var gap: Dictionary = gap_condition(text, context)
 	if not gap.is_empty():
 		return gap
+	# ── T6 / T23 ────────────────────────────────────────────────────────────────────────────────
+	# The drag flag and the offset overlap, ahead of the bare-boolean and the general call readings,
+	# which would each describe the line rather than the question the behavior asks with it.
+	var behaviors: Dictionary = behavior_words_condition(text, context)
+	if not behaviors.is_empty():
+		return behaviors
 	var joined: Dictionary = joined_condition(text, context)
 	if not joined.is_empty():
 		return joined
@@ -991,6 +1003,10 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	# V6 - the pattern searches and the named format, before the call rewriting could take either of
 	# them apart into the arguments they are written with.
 	trimmed = text_pattern_words(trimmed, context)
+	# T5 / T25 / T26 - the line-of-sight test, a weighted draw, the noise and the date are each ONE
+	# expression with one settled name, claimed before the call and indexing passes below could take
+	# any of them apart. What the file holds is untouched; only the words change.
+	trimmed = behavior_expression_words(trimmed, context)
 	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
 	# R7. The sheet's own expression names, before any other rewriting sees the Godot spellings they
 	# are matched against. Off unless the view asked for the Familiar Words glossary.
@@ -5634,6 +5650,11 @@ static func _now_assignment(target: String, assigned: String, context: Dictionar
 	var clock: String = assigned.strip_edges()
 	if not CLOCK_CALLS.has(clock):
 		return {}
+	# T26. The wall clock now has a NAME of its own in the sheet - the Date object's `Now` - so the row
+	# says that rather than a word for it, and the whole Date family reads alike. The run clock keeps
+	# this sentence, because there is no Date expression for a number that restarts with the game.
+	if not bool(CLOCK_CALLS[clock]):
+		return {}
 	var split: Array = _split_object(target, context)
 	var values: Dictionary = {"name": [str(split[1]), "name"]}
 	if bool(CLOCK_CALLS[clock]):
@@ -9000,3 +9021,525 @@ static func _project_class_is_resource(class_name_str: String) -> bool:
 			return false
 		current = base
 	return false
+# ── Batch 9: the behaviors a hand-rolled script writes, in the behavior's own words ────────────────
+# T5 / T6 / T7 / T23 / T25 / T26. Each shape below is one a reader of event sheets already has a name
+# for - line of sight, dragging, an anchor, a solid, a jump-thru, an overlap at an offset, a weighted
+# choice, a seed, the date. The lines stay exactly as the file holds them; only the words change, and
+# every event holding one claims its pattern beside the source lines that are its evidence, so the
+# chip and the Manual read one set of facts rather than each re-deriving them.
+
+
+## T5. What a line-of-sight test is cast with. Matched through ClassDB, so a subclass answers alike.
+const SIGHT_RAY_CLASSES: PackedStringArray = ["RayCast2D", "RayCast3D"]
+
+## T6. The anchor presets an event sheet has a corner name for, by the constant a line writes. The
+## engine's own spelling is what a reader typed; the word beside it is where the thing ends up.
+const ANCHOR_PRESET_WORDS: Dictionary = {
+	"PRESET_TOP_LEFT": "top left", "PRESET_TOP_RIGHT": "top right",
+	"PRESET_BOTTOM_LEFT": "bottom left", "PRESET_BOTTOM_RIGHT": "bottom right",
+	"PRESET_CENTER_TOP": "centre top", "PRESET_CENTER_BOTTOM": "centre bottom",
+	"PRESET_CENTER_LEFT": "centre left", "PRESET_CENTER_RIGHT": "centre right",
+	"PRESET_CENTER": "centre", "PRESET_FULL_RECT": "full rect",
+	"PRESET_LEFT_WIDE": "left edge", "PRESET_RIGHT_WIDE": "right edge",
+	"PRESET_TOP_WIDE": "top edge", "PRESET_BOTTOM_WIDE": "bottom edge",
+	"PRESET_VCENTER_WIDE": "middle row", "PRESET_HCENTER_WIDE": "middle column"
+}
+
+## T6. The side each anchor and each margin property names, so a write reads as the edge it moves.
+const ANCHOR_SIDE_WORDS: Dictionary = {
+	"anchor_left": "left", "anchor_top": "top", "anchor_right": "right", "anchor_bottom": "bottom"
+}
+const MARGIN_SIDE_WORDS: Dictionary = {
+	"offset_left": "left", "offset_top": "top", "offset_right": "right", "offset_bottom": "bottom"
+}
+
+## T6. The object the drag rows and the anchor rows are filed under - the two behaviors a reader of
+## event sheets reaches for when a thing is picked up with the pointer or pinned to a corner.
+const BEHAVIOR_DRAG_DROP := "Drag & Drop"
+const BEHAVIOR_ANCHOR := "Anchor"
+## T7. What a body IS to the others. Neither is a pack: they are what a Godot body already does, and
+## naming them is the whole of the reading.
+const BEHAVIOR_SOLID := "Solid"
+const BEHAVIOR_JUMP_THRU := "Jump-thru"
+## T25. The object the seeds and the noise are filed under, in the shipped pack's own name.
+const OBJECT_ADVANCED_RANDOM := "Advanced Random"
+
+## T25. The noise a FastNoiseLite hands back, by the call that reads it. The number of dimensions is
+## the tail; the head is the noise TYPE, which the file states separately.
+const NOISE_CALL_DIMENSIONS: Dictionary = {
+	"get_noise_1d": "1d", "get_noise_2d": "2d", "get_noise_3d": "3d"
+}
+
+## T25. The noise types the Advanced Random object has a word for, by the constant a line writes. A
+## file that never states one is read with the plain `Noise` head, because Godot's own default is a
+## smoothed simplex and printing a name nobody wrote would be a guess.
+const NOISE_TYPE_WORDS: Dictionary = {
+	"TYPE_PERLIN": "Perlin", "TYPE_SIMPLEX": "Simplex", "TYPE_SIMPLEX_SMOOTH": "Simplex",
+	"TYPE_CELLULAR": "Cellular", "TYPE_VALUE": "Value", "TYPE_VALUE_CUBIC": "ValueCubic"
+}
+
+## T26. The Date object's whole-expression reads, by the `Time` call each is written as.
+## The field spellings come FIRST: a row picked out of the Date section writes the whole call with the
+## field on the end, and replacing the call alone would leave `Date.Now.hour` behind.
+const DATE_CALL_WORDS: Dictionary = {
+	"Time.get_datetime_dict_from_system().hour": "Date.Hour",
+	"Time.get_datetime_dict_from_system().minute": "Date.Minute",
+	"Time.get_datetime_dict_from_system().second": "Date.Second",
+	"Time.get_datetime_dict_from_system().year": "Date.Year",
+	"Time.get_datetime_dict_from_system().month": "Date.Month",
+	"Time.get_datetime_dict_from_system().day": "Date.Day",
+	"Time.get_datetime_dict_from_system().weekday": "Date.Weekday",
+	"Time.get_unix_time_from_system()": "Date.Now",
+	"Time.get_date_string_from_system()": "Date.Today",
+	"Time.get_time_string_from_system()": "Date.TimeString"
+}
+
+## T6. The three spellings of "where the pointer is", so a drag reads the same whichever one a file
+## happens to use.
+const MOUSE_POSITION_CALLS: PackedStringArray = [
+	"get_global_mouse_position()", "get_viewport().get_mouse_position()", "get_local_mouse_position()"
+]
+
+## T7. The shapes a body's Solid is made of.
+const COLLISION_SHAPE_CLASSES: PackedStringArray = [
+	"CollisionShape2D", "CollisionShape3D", "CollisionPolygon2D", "CollisionPolygon3D"
+]
+
+## T26. The fields of a datetime dictionary, as the Date object's own expressions. Only a local the
+## file filled FROM the system clock is read this way - `enemy.hour` is somebody's own property.
+const DATE_FIELD_WORDS: Dictionary = {
+	"hour": "Date.Hour", "minute": "Date.Minute", "second": "Date.Second",
+	"year": "Date.Year", "month": "Date.Month", "day": "Date.Day", "weekday": "Date.Weekday"
+}
+
+
+## T5 / T25 / T26. The whole-expression reads the Line of Sight, Advanced Random and Date words own,
+## applied to a VALUE before any other rewriting sees the Godot spellings they are matched against.
+## Returns the text unchanged when the file states none of the facts these words are built on.
+static func behavior_expression_words(text: String, context: Dictionary) -> String:
+	var out: String = _date_words(text, context)
+	out = _weighted_choice_words(out)
+	out = _noise_words(out, context)
+	return _line_of_sight_words(out, context)
+
+
+## T26. `Time.get_*_from_system()` and the fields read out of a datetime dictionary, in the Date
+## object's words.
+static func _date_words(text: String, context: Dictionary) -> String:
+	var out: String = text
+	for call_text: String in DATE_CALL_WORDS:
+		if out.contains(call_text):
+			out = out.replace(call_text, str(DATE_CALL_WORDS[call_text]))
+	var clocks: Dictionary = context.get("datetime_locals", {})
+	if clocks.is_empty() or not out.contains("."):
+		return out
+	for local_name: Variant in clocks:
+		for field: Variant in DATE_FIELD_WORDS:
+			out = replace_whole_token(out, "%s.%s" % [str(local_name), str(field)],
+				str(DATE_FIELD_WORDS[field]))
+	return out
+
+
+## T25. `["coin", "gem"][rng.rand_weighted([70, 20])]` - a list indexed by a weighted draw is ONE
+## thought, and an event sheet writes it as one: each choice with the weight that is its own. Claimed
+## only when both lists are literal and the same length, because a half-paired reading would show a
+## reader an odds table that is not the one the file states.
+static func _weighted_choice_words(text: String) -> String:
+	const DRAW := ".rand_weighted("
+	var whole: String = text.strip_edges()
+	if not whole.contains(DRAW) or not whole.begins_with("[") or not whole.ends_with("]"):
+		return text
+	var choices_end: int = closing_bracket(whole, 0)
+	if choices_end < 0 or whole.length() <= choices_end + 1 or whole[choices_end + 1] != "[":
+		return text
+	if closing_bracket(whole, choices_end + 1) != whole.length() - 1:
+		return text
+	var choices: PackedStringArray = split_top_level(whole.substr(1, choices_end - 1), ",")
+	var draw: String = whole.substr(choices_end + 2, whole.length() - choices_end - 3).strip_edges()
+	var weights_at: int = draw.find(DRAW)
+	if weights_at <= 0 or not draw.ends_with(")"):
+		return text
+	var inside: String = draw.substr(weights_at + DRAW.length(),
+		draw.length() - weights_at - DRAW.length() - 1).strip_edges()
+	if not inside.begins_with("[") or not inside.ends_with("]"):
+		return text
+	var weights: PackedStringArray = split_top_level(inside.substr(1, inside.length() - 2), ",")
+	if weights.size() != choices.size() or choices.is_empty():
+		return text
+	var pairs: PackedStringArray = PackedStringArray()
+	for index: int in choices.size():
+		pairs.append("%s %s" % [choices[index].strip_edges(), weights[index].strip_edges()])
+	return "%s(%s)" % [translate("choose weighted"), ", ".join(pairs)]
+
+
+## T25. `noise.get_noise_2d(x, y)` as the Advanced Random object's own expression, with the noise TYPE
+## in the name when the file states one. Only a local the file made a FastNoiseLite in is claimed.
+static func _noise_words(text: String, context: Dictionary) -> String:
+	var locals: Dictionary = context.get("noise_locals", {})
+	if locals.is_empty() or not text.contains(".get_noise_"):
+		return text
+	var out: String = text
+	var noise_type: String = str(context.get("noise_type", "")).strip_edges()
+	for local_name: Variant in locals:
+		for call_name: Variant in NOISE_CALL_DIMENSIONS:
+			var head: String = "%s.%s(" % [str(local_name), str(call_name)]
+			if not out.contains(head):
+				continue
+			out = out.replace(head, "AdvancedRandom.%s%s(" % [
+				noise_type if not noise_type.is_empty() else "Noise",
+				str(NOISE_CALL_DIMENSIONS[call_name])])
+	return out
+
+
+## T5. `not ray.is_colliding() or ray.get_collider() == t` - the whole test a hand-rolled line-of-sight
+## function ends with, as the ONE condition the Line of Sight behavior publishes. Only a ray the file
+## itself declared is claimed, and the range is named only when the file guards on one.
+static func _line_of_sight_words(text: String, context: Dictionary) -> String:
+	var rays: Dictionary = context.get("sight_rays", {})
+	if rays.is_empty() or not text.contains("is_colliding()"):
+		return text
+	var parts: PackedStringArray = split_top_level(text.strip_edges(), " or ")
+	if parts.size() != 2:
+		return text
+	const COLLIDING := ".is_colliding()"
+	var negated: String = parts[0].strip_edges()
+	if not negated.begins_with("not ") or not negated.ends_with(COLLIDING):
+		return text
+	var ray: String = negated.substr(4, negated.length() - 4 - COLLIDING.length()).strip_edges()
+	if not rays.has(ray):
+		return text
+	var hit: String = parts[1].strip_edges()
+	var hit_at: int = top_level_index(hit, " == ")
+	if hit_at < 0 or hit.substr(0, hit_at).strip_edges() != "%s.get_collider()" % ray:
+		return text
+	var words: String = translate("{object} has line of sight to {target}") \
+		.replace("{object}", script_object(context)) \
+		.replace("{target}", hit.substr(hit_at + 4).strip_edges())
+	var sight_range: String = str(context.get("sight_range", "")).strip_edges()
+	if sight_range.is_empty():
+		return words
+	return "%s (%s %s)" % [words, translate("within"), sight_range]
+
+
+## The index at which the bracketed group `text` opens at `open_at` closes, or -1 when it never does.
+## Quote-aware, so a `"]"` inside a literal never closes a list.
+static func closing_bracket(text: String, open_at: int) -> int:
+	var depth: int = 0
+	var quote: String = ""
+	for index: int in range(open_at, text.length()):
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == quote:
+				quote = ""
+			continue
+		if character == "\"" or character == "'":
+			quote = character
+			continue
+		if character == "[":
+			depth += 1
+		elif character == "]":
+			depth -= 1
+			if depth == 0:
+				return index
+	return -1
+
+
+## `needle` replaced by `replacement` wherever it stands as a WHOLE token - never inside a longer
+## name and never as the tail of a longer dotted path, which is what keeps `now.hour` a clock and
+## `tomorrow.now.hour` somebody else's property.
+static func replace_whole_token(text: String, needle: String, replacement: String) -> String:
+	if not text.contains(needle):
+		return text
+	var pattern: RegEx = RegEx.create_from_string(
+		"(?<![\\w.])%s(?![\\w])" % needle.replace(".", "\\."))
+	if pattern == null:
+		return text
+	return pattern.sub(text, replacement, true)
+
+
+## T6 / T7 / T25. The behaviors' reading of one STATEMENT, or {} when none of them claims it. Called
+## from `statement()` ahead of the compound / assignment / call split, because each shape below is a
+## whole thought that the general readings would each describe one property write of.
+static func behavior_words_statement(text: String, context: Dictionary) -> Dictionary:
+	var dragged: Dictionary = _drag_drop_statement(text, context)
+	if not dragged.is_empty():
+		return dragged
+	var anchored: Dictionary = _anchor_statement(text, context)
+	if not anchored.is_empty():
+		return anchored
+	var solid: Dictionary = _solid_statement(text, context)
+	if not solid.is_empty():
+		return solid
+	return _advanced_random_statement(text, context)
+
+
+## T5 / T6 / T23. The behaviors' reading of one CONDITION, or {} when none of them claims it.
+static func behavior_words_condition(text: String, context: Dictionary) -> Dictionary:
+	var dragging: Dictionary = _drag_drop_condition(text, context)
+	if not dragging.is_empty():
+		return dragging
+	return _overlap_offset_condition(text, context)
+
+
+## T6. The three steps a hand-rolled drag is written as: the flag going up, the grab offset being
+## remembered, and the follow that keeps it. Every one is claimed only for a name this file itself
+## proved is part of a drag, so an ordinary boolean is never dressed up as one.
+static func _drag_drop_statement(text: String, context: Dictionary) -> Dictionary:
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges().trim_prefix("self.")
+	var value: String = text.substr(at + 3).strip_edges()
+	var object_name: String = script_object(context)
+	var flags: Dictionary = context.get("drag_flags", {})
+	if flags.has(target):
+		if value == "true":
+			return _sentence(object_name, "%s ▸ Start dragging" % BEHAVIOR_DRAG_DROP, {})
+		if value == "false":
+			return _sentence(object_name, "%s ▸ Drop" % BEHAVIOR_DRAG_DROP, {})
+		return {}
+	var offsets: Dictionary = context.get("drag_offsets", {})
+	if offsets.has(target) and is_grab_offset_value(value):
+		return _sentence(object_name, "%s ▸ Remember the grab offset" % BEHAVIOR_DRAG_DROP, {})
+	if not OWN_POSITION_NAMES.has(target):
+		return {}
+	var plus_at: int = top_level_index(value, " + ")
+	if plus_at <= 0 or not MOUSE_POSITION_CALLS.has(value.substr(0, plus_at).strip_edges()):
+		return {}
+	if not offsets.has(value.substr(plus_at + 3).strip_edges()):
+		return {}
+	return _sentence(object_name,
+		"%s ▸ Follow the cursor (keeping the grab offset)" % BEHAVIOR_DRAG_DROP, {})
+
+
+## T6. True when a value IS the gap between where a thing is and where the pointer is - the one
+## number a drag has to remember for the thing not to jump under the cursor.
+static func is_grab_offset_value(value: String) -> bool:
+	var minus_at: int = top_level_index(value, " - ")
+	if minus_at <= 0:
+		return false
+	if not OWN_POSITION_NAMES.has(value.substr(0, minus_at).strip_edges()):
+		return false
+	return MOUSE_POSITION_CALLS.has(value.substr(minus_at + 3).strip_edges())
+
+
+## T6. `if dragging:` - with the file's own drag proved, the flag is the Drag & Drop behavior's own
+## question rather than a boolean nobody named.
+static func _drag_drop_condition(text: String, context: Dictionary) -> Dictionary:
+	var flags: Dictionary = context.get("drag_flags", {})
+	if flags.is_empty():
+		return {}
+	var bare: String = text.strip_edges().trim_prefix("self.")
+	if flags.has(bare):
+		return _sentence(script_object(context), "%s ▸ Is dragging" % BEHAVIOR_DRAG_DROP, {})
+	if bare.begins_with("not ") and flags.has(bare.substr(4).strip_edges()):
+		return _sentence(script_object(context), "%s ▸ Is not dragging" % BEHAVIOR_DRAG_DROP, {})
+	return {}
+
+
+## T6. Where a Control ends up when the window changes size, in the Anchor behavior's words: the
+## preset by the corner it names, and a single anchor or margin write by the edge it moves.
+static func _anchor_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if not call.is_empty():
+		var method: String = str(call.get("method", ""))
+		var arguments: PackedStringArray = call.get("args", PackedStringArray())
+		if method in ["set_anchors_preset", "set_anchors_and_offsets_preset"] and arguments.size() >= 1:
+			var preset: String = arguments[0].strip_edges()
+			var dot_at: int = preset.rfind(".")
+			if dot_at >= 0:
+				preset = preset.substr(dot_at + 1)
+			if not ANCHOR_PRESET_WORDS.has(preset):
+				return {}
+			return _sentence(_receiver_object(str(call.get("target", "")), context),
+				"%s ▸ Anchor to {corner} (of the window)" % BEHAVIOR_ANCHOR,
+				{"corner": [translate(str(ANCHOR_PRESET_WORDS[preset])), "value"]})
+		return {}
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges().trim_prefix("self.")
+	var value: String = expression_text(text.substr(at + 3).strip_edges(), context)
+	var member: String = target
+	var owner_name: String = ""
+	var dot_at: int = target.rfind(".")
+	if dot_at > 0:
+		owner_name = target.substr(0, dot_at)
+		member = target.substr(dot_at + 1)
+	var object_name: String = _receiver_object(owner_name, context)
+	if ANCHOR_SIDE_WORDS.has(member):
+		return _sentence(object_name, "%s ▸ Set {side} anchor to {value}" % BEHAVIOR_ANCHOR, {
+			"side": [translate(str(ANCHOR_SIDE_WORDS[member])), "value"],
+			"value": [value, "value"]
+		})
+	if MARGIN_SIDE_WORDS.has(member):
+		return _sentence(object_name, "%s ▸ Set {side} margin to {value}" % BEHAVIOR_ANCHOR, {
+			"side": [translate(str(MARGIN_SIDE_WORDS[member])), "value"],
+			"value": [value, "value"]
+		})
+	return {}
+
+
+## T7. What a body is to the others: a shape switched off is the Solid going away, a one-way shape is
+## the Jump-thru, and a collision layer is the layer the Solid is on. The rows belong to the OBJECT,
+## never to the collision shape hanging under it - the shape is Godot's filing, and a reader looks for
+## the platform.
+static func _solid_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if not call.is_empty():
+		var arguments: PackedStringArray = call.get("args", PackedStringArray())
+		if str(call.get("method", "")) != "set_collision_layer_value" or arguments.size() != 2:
+			return {}
+		var index_text: String = arguments[0].strip_edges()
+		var on: String = arguments[1].strip_edges()
+		if not index_text.is_valid_int() or (on != "true" and on != "false"):
+			return {}
+		var layer_words: String = solid_layer_words(index_text.to_int(), context)
+		var template: String = "%s ▸ On layer {layer}" % BEHAVIOR_SOLID if on == "true" \
+			else "%s ▸ Not on layer {layer}" % BEHAVIOR_SOLID
+		return _sentence(_receiver_object(str(call.get("target", "")), context), template,
+			{"layer": [layer_words, "value"]})
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges().trim_prefix("self.")
+	var value: String = text.substr(at + 3).strip_edges()
+	if value != "true" and value != "false":
+		return {}
+	var member: String = target
+	var owner_name: String = ""
+	var dot_at: int = target.rfind(".")
+	if dot_at > 0:
+		owner_name = target.substr(0, dot_at)
+		member = target.substr(dot_at + 1)
+	# The shape is a child of the thing the row is about, so the row says the thing. A shape reached
+	# through some OTHER object keeps that object's name, because then it is not this one's shape.
+	var object_name: String = script_object(context) if is_own_child_reference(owner_name) \
+		else _receiver_object(owner_name, context)
+	if member == "one_way_collision":
+		var jump_thru: String = "%s ▸ Set enabled (one-way: solid from above only)" % BEHAVIOR_JUMP_THRU \
+			if value == "true" else "%s ▸ Set disabled" % BEHAVIOR_JUMP_THRU
+		return _sentence(object_name, jump_thru, {})
+	if member != "disabled" or not is_collision_shape_reference(owner_name, context):
+		return {}
+	var solid: String = "%s ▸ Set disabled" % BEHAVIOR_SOLID if value == "true" \
+		else "%s ▸ Set enabled" % BEHAVIOR_SOLID
+	return _sentence(object_name, solid, {})
+
+
+## T7. True when a receiver names a node UNDER this script's own node - a `$Shape` path or nothing at
+## all. Those two are the file talking about itself; anything else names somebody else.
+static func is_own_child_reference(receiver: String) -> bool:
+	var text: String = receiver.strip_edges()
+	return text.is_empty() or text == "self" or text.begins_with("$") or text.begins_with("%")
+
+
+## T7. True when a receiver is a collision shape - its own class where the sheet knows one, else the
+## name a `$CollisionShape2D` path spells out. A plain `disabled` on anything else is an ordinary
+## property and reads as one.
+static func is_collision_shape_reference(receiver: String, context: Dictionary) -> bool:
+	var text: String = receiver.strip_edges()
+	if text.is_empty():
+		return false
+	var known: String = object_class_of(object_of_reference(text), context)
+	if not known.is_empty():
+		return _class_is_any(known, COLLISION_SHAPE_CLASSES)
+	for shape_class: String in COLLISION_SHAPE_CLASSES:
+		if text.contains(shape_class):
+			return true
+	return false
+
+
+## T7. The name the project gave a physics layer, with its number after it - `World (layer 1)`. A
+## project that never named the layer says the number alone, because inventing a name would be a
+## guess about somebody else's setup.
+static func solid_layer_words(index: int, context: Dictionary) -> String:
+	var dimension: String = "3d_physics" if str(context.get("self_class", "")).contains("3D") \
+		else "2d_physics"
+	var named: String = physics_layer_name(index, dimension)
+	if named.is_empty():
+		return str(index)
+	return "%s (%s %d)" % [named, translate("layer"), index]
+
+
+## T25. The seed rows the Advanced Random object publishes. `hash("level-1")` is Godot's way of
+## turning a name into a number, so the row shows the NAME, which is what the author chose.
+static func _advanced_random_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if not call.is_empty():
+		var method: String = str(call.get("method", ""))
+		var arguments: PackedStringArray = call.get("args", PackedStringArray())
+		if method == "randomize" and arguments.is_empty():
+			return _sentence(OBJECT_ADVANCED_RANDOM, "Randomize seed", {})
+		if method != "seed" or arguments.size() != 1 or not str(call.get("target", "")).is_empty():
+			return {}
+		return _sentence(OBJECT_ADVANCED_RANDOM, "Set seed to {seed}",
+			{"seed": [seed_words(arguments[0], context), "value"]})
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges().trim_prefix("self.")
+	var dot_at: int = target.rfind(".")
+	if dot_at <= 0:
+		return {}
+	var owner_name: String = target.substr(0, dot_at)
+	var member: String = target.substr(dot_at + 1)
+	if member == "noise_type" and (context.get("noise_locals", {}) as Dictionary).has(owner_name):
+		var constant_name: String = text.substr(at + 3).strip_edges()
+		var last_dot: int = constant_name.rfind(".")
+		if last_dot >= 0:
+			constant_name = constant_name.substr(last_dot + 1)
+		if not NOISE_TYPE_WORDS.has(constant_name):
+			return {}
+		return _sentence(OBJECT_ADVANCED_RANDOM, "Set noise type to {type}",
+			{"type": [str(NOISE_TYPE_WORDS[constant_name]), "value"]})
+	if member != "seed" or not (context.get("random_locals", {}) as Dictionary).has(owner_name):
+		return {}
+	return _sentence(OBJECT_ADVANCED_RANDOM, "Set seed to {seed}",
+		{"seed": [seed_words(text.substr(at + 3), context), "value"]})
+
+
+## T25. A seed value as the author wrote it: the name inside a `hash(...)` when there is one, because
+## that is the thing a reader recognises, and the plain value otherwise.
+static func seed_words(value: String, context: Dictionary) -> String:
+	var text: String = value.strip_edges()
+	if text.begins_with("hash(") and text.ends_with(")") and closing_paren(text, 4) == text.length() - 1:
+		return expression_text(text.substr(5, text.length() - 6), context)
+	return expression_text(text, context)
+
+
+## T23. `test_move(transform, Vector2(0, 1))` and the test-only `move_and_collide` twin - the "is
+## there ground just below me" question, in the words an event sheet asks it with. Only a TEST is
+## claimed: a `move_and_collide` that actually moves the body is a step, not a question.
+static func _overlap_offset_condition(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text.strip_edges().trim_prefix("not "))
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	var offset: String = ""
+	if method == "test_move" and arguments.size() >= 2:
+		offset = arguments[1].strip_edges()
+	elif method == "move_and_collide" and arguments.size() >= 2 and arguments[1].strip_edges() == "true":
+		offset = arguments[0].strip_edges()
+	if offset.is_empty():
+		return {}
+	var object_name: String = _receiver_object(str(call.get("target", "")), context)
+	var template: String = "Is not overlapping at offset {offset} (a solid)" \
+		if text.strip_edges().begins_with("not ") else "Is overlapping at offset {offset} (a solid)"
+	return _sentence(object_name, template, {"offset": [expression_text(offset, context), "value"]})
+
+
+## T23. The object a `for a in x.get_overlapping_areas()` loop is walking the overlaps OF, or "" when
+## the collection is anything else. What turns the loop's own row into `For each a overlapping Player`.
+static func overlap_collection_source(collection: String) -> String:
+	var text: String = collection.strip_edges()
+	for method: String in ["get_overlapping_areas", "get_overlapping_bodies"]:
+		var tail: String = ".%s()" % method
+		if not text.ends_with(tail):
+			continue
+		var owner_name: String = text.substr(0, text.length() - tail.length()).strip_edges()
+		if owner_name.is_empty():
+			return ""
+		return object_of_reference(owner_name)
+	return ""

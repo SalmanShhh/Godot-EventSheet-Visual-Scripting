@@ -159,7 +159,14 @@ verdict under the name you give it, which Wait Succeeded / Wait Timed Out read b
 | Set Max FPS | Caps how many frames per second the game renders (0 is uncapped) | `Engine.max_fps = int({fps})` |
 | Set Physics Rate | Changes how often physics steps per second (default 60) | `Engine.physics_ticks_per_second = int({fps})` |
 | Date & Time Text | The system's current date and time as readable text | `Time.get_datetime_string_from_system()` |
-| Unix Time | The current Unix timestamp in seconds | `Time.get_unix_time_from_system()` |
+| Date: Now | The current Unix timestamp in seconds - the wall clock, which keeps counting while the game is closed | `Time.get_unix_time_from_system()` |
+| Date: Hour | The hour on the system clock right now, 0 to 23 | `Time.get_datetime_dict_from_system().hour` |
+| Date: Minute | The minute on the system clock right now, 0 to 59 | `Time.get_datetime_dict_from_system().minute` |
+| Date: Second | The second on the system clock right now, 0 to 59 | `Time.get_datetime_dict_from_system().second` |
+| Date: Year | The year on the system calendar right now | `Time.get_datetime_dict_from_system().year` |
+| Date: Month | The month on the system calendar right now, 1 to 12 | `Time.get_datetime_dict_from_system().month` |
+| Date: Day | The day of the month right now, 1 to 31 | `Time.get_datetime_dict_from_system().day` |
+| Date: Weekday | Which day of the week it is, 0 for Sunday through 6 for Saturday | `Time.get_datetime_dict_from_system().weekday` |
 
 ### Time: turning a number into clock text
 
@@ -170,8 +177,8 @@ text a HUD shows - there is no need to hand-roll the division.
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | Format Time (mm:ss) | Turns a number of seconds into a tidy `mm:ss` string | `("%02d:%02d" % [int({seconds}) / 60, int({seconds}) % 60])` |
-| System Time String | The player's current clock time as text | `Time.get_time_string_from_system()` |
-| System Date String | The player's current calendar date as text | `Time.get_date_string_from_system()` |
+| Date: Time Text | The player's current clock time as text | `Time.get_time_string_from_system()` |
+| Date: Today | The player's current calendar date as text | `Time.get_date_string_from_system()` |
 
 ### Timer nodes
 
@@ -431,10 +438,10 @@ On game starts
 ```
 On game saved
   -> set save["saved_at"] = Date & Time Text()
-  -> set save["saved_unix"] = Unix Time()
+  -> set save["saved_unix"] = Date: Now()
 ```
 
-Unix Time is the one to compare against later (daily rewards, offline earnings); Date & Time Text is
+Date: Now is the one to compare against later (daily rewards, offline earnings); Date & Time Text is
 the one to show the player.
 
 **22. A heavy build loop that does not stutter.** Begin Frame Budget and Await If Over Budget must
@@ -658,7 +665,7 @@ On Failure Of  verb_id, reason
 
 **Traffic light cycle.** Three Every X Seconds rows at different intervals, or one Timer node restarted from its own timeout event with the next phase's duration.
 
-**Idle-game offline earnings.** Store Unix Time on quit, compare it against Unix Time on load, and pay out the elapsed seconds capped at whatever your economy can stand.
+**Idle-game offline earnings.** Store Date: Now on quit, compare it against Date: Now on load, and pay out the elapsed seconds capped at whatever your economy can stand.
 
 ## Tips and common mistakes
 

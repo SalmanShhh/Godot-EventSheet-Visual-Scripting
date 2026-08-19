@@ -89,7 +89,7 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 
 1. Global **Variable** `score : int = 0`.
 2. Give coins an `Area2D` in the `"coins"` group.
-3. Event: trigger **On Area Entered** (or condition **Overlaps Body**) → actions: *Add to
+3. Event: trigger **On Area Entered** (or condition **Is Overlapping Body**) → actions: *Add to
    variable* `score` by `1`, then *Queue Free* the coin.
 4. Show it: a `Label` + an event *Every Frame* → **Set Property** `text` = `"Score: %d" % score`.
 

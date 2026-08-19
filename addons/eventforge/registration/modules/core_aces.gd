@@ -262,9 +262,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# ── Time formatting (turn seconds into clock text; read the system clock) ──
 	descriptors.append(F.make_descriptor("Core", "FormatTime", "Format Time (mm:ss)", ACEDescriptor.ACEType.EXPRESSION, "(\"%02d:%02d\" % [int({seconds}) / 60, int({seconds}) % 60])", "", [F.make_param("seconds", "String", "0.0", "Seconds", "Total seconds to format.", "expression")], "Utility: Time", "format {seconds} as mm:ss")
 		.described("Turns a number of seconds into a tidy mm:ss string for timers and clocks."))
-	descriptors.append(F.make_descriptor("Core", "GetSystemTime", "System Time String", ACEDescriptor.ACEType.EXPRESSION, "Time.get_time_string_from_system()", "", [], "Utility: Time", "system time string")
+	# T26. Both belong to the Date object a reader of event sheets looks for, and both say the name a
+	# row shows them under. The ids and the templates are frozen; only the words changed.
+	descriptors.append(F.make_descriptor("Core", "GetSystemTime", "Date: Time Text", ACEDescriptor.ACEType.EXPRESSION, "Time.get_time_string_from_system()", "", [], "Utility: Time", "Date.TimeString")
 		.described("Returns the player's current clock time as a text string."))
-	descriptors.append(F.make_descriptor("Core", "GetSystemDate", "System Date String", ACEDescriptor.ACEType.EXPRESSION, "Time.get_date_string_from_system()", "", [], "Utility: Time", "system date string")
+	descriptors.append(F.make_descriptor("Core", "GetSystemDate", "Date: Today", ACEDescriptor.ACEType.EXPRESSION, "Time.get_date_string_from_system()", "", [], "Utility: Time", "Date.Today")
 		.described("Returns the player's current calendar date as a text string."))
 
 	# ── Nodes ──

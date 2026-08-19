@@ -120,6 +120,12 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# material a body's friction and elasticity are written on, and the regular expression a search
 	# is run with. Worked out once here for the same reason the tween chains are.
 	extras.merge(reading_gap_facts(sheet), true)
+	# ── T5 / T6 / T25 / T26 lens hook ──────────────────────────────────────────────────────────
+	# The behaviors a script hand-rolls: which local holds the sight ray, which boolean is the drag
+	# flag and which vector is its grab offset, which local holds the noise and the seeded random,
+	# and which local holds the clock the date fields are read out of. Every one of them is a whole-
+	# file question, so it is answered once here rather than guessed at line by line.
+	extras.merge(behavior_words_facts(sheet), true)
 	return extras
 
 
@@ -703,6 +709,323 @@ static func _is_nav_agent_value(value: String, declared: String, sheet: EventShe
 			return true
 	var known: String = str(object_class_map(sheet).get(declared, ""))
 	return EventSheetSentence.NAV_AGENT_CLASSES.has(known)
+
+
+## T5 / T6 / T25 / T26. What the FILE says about the behaviors it hand-rolls, as the fact maps the
+## sentence grammar reads:
+##
+##   sight_rays      {local: true} - the locals a raycast used for a sight test lives in
+##   sight_range     the one number a distance guard is measured against, "" when there is none
+##   drag_offsets    {local: true} - the vectors a grab offset is remembered in
+##   drag_flags      {local: true} - the booleans raised beside one of those, and lowered elsewhere
+##   noise_locals    {local: true}   noise_type  the Advanced Random word for the type the file set
+##   random_locals   {local: true} - the seeded generators
+##   datetime_locals {local: true} - the locals the system clock's fields are read out of
+##
+## Everything here is a plain walk of lines the sheet already holds, hand-written and lifted alike. A
+## fact the file does not state outright is simply absent, and every reading built on it declines to
+## fire, which is what keeps an ordinary boolean from being read as somebody's drag.
+static func behavior_words_facts(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	var sight_rays: Dictionary = {}
+	var drag_offsets: Dictionary = {}
+	var noise_locals: Dictionary = {}
+	var random_locals: Dictionary = {}
+	var datetime_locals: Dictionary = {}
+	var sight_range: String = ""
+	var noise_type: String = ""
+	# The boolean a drag raises is only a drag flag when the file ALSO lowers it and remembers a grab
+	# offset right beside it, so both halves are gathered first and matched up at the end.
+	var raised: Dictionary = {}
+	var lowered: Dictionary = {}
+	var offset_at: PackedInt32Array = PackedInt32Array()
+	var lines: PackedStringArray = behavior_code_lines(sheet)
+	for index: int in lines.size():
+		var text: String = lines[index].strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var noise_word: String = _noise_type_word(text)
+		if not noise_word.is_empty():
+			noise_type = noise_word
+		if sight_range.is_empty():
+			sight_range = _sight_range_name(text)
+		var declared: String = _declared_local_name(text)
+		if declared.is_empty():
+			continue
+		var value: String = _declared_local_value(text)
+		if _is_sight_ray_value(value, declared, sheet):
+			sight_rays[declared] = true
+		if value.begins_with("FastNoiseLite.new("):
+			noise_locals[declared] = true
+		if value.begins_with("RandomNumberGenerator.new("):
+			random_locals[declared] = true
+		if value == "Time.get_datetime_dict_from_system()":
+			datetime_locals[declared] = true
+		if EventSheetSentence.is_grab_offset_value(value):
+			drag_offsets[declared] = true
+			offset_at.append(index)
+		if value == "true":
+			raised[declared] = index
+		elif value == "false":
+			lowered[declared] = true
+	var drag_flags: Dictionary = {}
+	for flag_name: Variant in raised:
+		if not lowered.has(flag_name):
+			continue
+		for line_index: int in offset_at:
+			if absi(line_index - int(raised[flag_name])) <= 1:
+				drag_flags[flag_name] = true
+	return {
+		"sight_rays": sight_rays,
+		"sight_range": sight_range,
+		"drag_offsets": drag_offsets,
+		"drag_flags": drag_flags,
+		"noise_locals": noise_locals,
+		"noise_type": noise_type,
+		"random_locals": random_locals,
+		"datetime_locals": datetime_locals
+	}
+
+
+## T5 / T6 / T7 / T25 / T26. Every line the behavior facts and the behavior claims are read from, in
+## FILE order: the hand-written ones as they stand, and the rows the importer already lifted written
+## back out as the statement each stands for.
+##
+## A half-lifted file is the normal case - `rng.seed = hash("x")` becomes a Set property row while the
+## line beside it stays verbatim - so a walk that saw only one of the two would answer differently
+## depending on how much of the file happened to lift, which is exactly the drift these facts exist to
+## prevent. Order matters as well as content: the boolean a drag raises is only recognised BY sitting
+## beside the line that remembers the grab offset.
+static func behavior_code_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if sheet == null:
+		return lines
+	for entry: Variant in sheet.events:
+		_append_behavior_lines(entry, lines, 0)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			for event_entry: Variant in (entry as EventFunction).events:
+				_append_behavior_lines(event_entry, lines, 0)
+	return lines
+
+
+## One row unit of that walk. Depth-limited so a sheet that somehow nests into itself cannot spin.
+static func _append_behavior_lines(entry: Variant, lines: PackedStringArray, depth: int) -> void:
+	if depth > 64 or entry == null or not (entry is Resource):
+		return
+	if entry is RawCodeRow:
+		lines.append_array((entry as RawCodeRow).code.split("\n"))
+		return
+	if entry is LocalVariable:
+		var variable: LocalVariable = entry as LocalVariable
+		lines.append("var %s = %s" % [variable.name, str(variable.default_value)])
+		return
+	if entry is EventRow:
+		var event_row: EventRow = entry as EventRow
+		_append_behavior_lines(event_row.trigger, lines, depth + 1)
+		for local: Variant in event_row.local_variables:
+			_append_behavior_lines(local, lines, depth + 1)
+		for condition: Variant in event_row.conditions:
+			_append_behavior_lines(condition, lines, depth + 1)
+		for action: Variant in event_row.actions:
+			_append_behavior_lines(action, lines, depth + 1)
+		for sub_event: Variant in event_row.sub_events:
+			_append_behavior_lines(sub_event, lines, depth + 1)
+		return
+	var line: String = _lifted_row_line(entry as Resource)
+	if not line.is_empty():
+		lines.append(line)
+	# The head's own declarations are rows of a kind of their own, and a sheet may gain more of them.
+	# Anything that carries a name and a value therefore reads as the declaration it is, rather than
+	# being dropped for not being one of the shapes above.
+	if line.is_empty() and (entry as Resource).get("var_name") != null:
+		lines.append("var %s = %s" % [
+			str((entry as Resource).get("var_name")), str((entry as Resource).get("default_value"))])
+
+
+## The statement one LIFTED row stands for, in the spelling the row's own reading is built from - so
+## a fact and a claim answer the same whether the importer took the line or left it. "" when the row
+## has no such statement, which is the cue to leave it out rather than guess at one.
+static func _lifted_row_line(resource: Resource) -> String:
+	var params: Variant = resource.get("params")
+	if not (params is Dictionary) or (params as Dictionary).is_empty():
+		params = resource.get("parameters")
+	if not (params is Dictionary):
+		return ""
+	var values: Dictionary = params
+	var ace_id: String = str(resource.get("ace_id")).strip_edges()
+	var target: String = str(values.get("target", "")).strip_edges()
+	match ace_id:
+		"SetVar":
+			return "%s = %s" % [str(values.get("var_name", "")), str(values.get("value", ""))]
+		"SetLocalVar", "SetLocalVarInferred", "SetLocalVarTyped":
+			return "var %s = %s" % [str(values.get("name", "")), str(values.get("value", ""))]
+		"SetProperty":
+			return "%s.%s = %s" % [target, str(values.get("property", "")), str(values.get("value", ""))]
+		"SetButtonDisabled":
+			return "%s.disabled = %s" % [target, str(values.get("disabled", ""))]
+		"SetCollisionLayerBit":
+			return "set_collision_layer_value(%s, %s)" % [
+				str(values.get("layer", "")), str(values.get("enabled", ""))]
+		"RayCast2DForceUpdate", "RayCast3DForceUpdate":
+			return "%s.force_raycast_update()" % target
+		"IsFartherThan":
+			return "%s.distance_to(%s) > %s" % [
+				str(values.get("a", "")), str(values.get("b", "")), str(values.get("distance", ""))]
+		"ExpressionIsTrue":
+			return str(values.get("expr", ""))
+		"IsOverlappingAtOffset":
+			return "test_move(transform, %s)" % str(values.get("offset", ""))
+		"ReturnValue":
+			return "return %s" % str(values.get("value", ""))
+		"CallMethod":
+			return "%s.%s(%s)" % [target, str(values.get("method", "")), str(values.get("args", ""))]
+	return ""
+
+
+## T5. True when a declaration's value IS the ray a sight test is cast with - a node whose name says
+## so, one made outright, or a local the sheet already typed as one.
+static func _is_sight_ray_value(value: String, declared: String, sheet: EventSheetResource) -> bool:
+	for ray_class: String in EventSheetSentence.SIGHT_RAY_CLASSES:
+		if value.contains(ray_class):
+			return true
+	var known: String = str(object_class_map(sheet).get(declared, ""))
+	return EventSheetSentence.SIGHT_RAY_CLASSES.has(known)
+
+
+## T5. The number a `global_position.distance_to(t) > sight_range` guard is measured against, or ""
+## when the line is not that guard. Only a plain name is claimed: a computed range has no word a row
+## could honestly print after "within".
+static func _sight_range_name(text: String) -> String:
+	if not text.contains(".distance_to("):
+		return ""
+	for operator: String in [" > ", " >= "]:
+		var at: int = EventSheetSentence.top_level_index(text, operator)
+		if at < 0:
+			continue
+		var limit: String = text.substr(at + operator.length()).strip_edges().trim_suffix(":")
+		if EventSheetSentence.is_identifier(limit):
+			return limit
+	return ""
+
+
+## T25. The Advanced Random word for a `noise.noise_type = FastNoiseLite.TYPE_PERLIN` line, or "" for
+## every other line. A file that never states a type is read with the plain `Noise` head.
+static func _noise_type_word(text: String) -> String:
+	if not text.contains("noise_type") or not text.contains("FastNoiseLite."):
+		return ""
+	for constant_name: Variant in EventSheetSentence.NOISE_TYPE_WORDS:
+		if text.ends_with("FastNoiseLite.%s" % str(constant_name)):
+			return str(EventSheetSentence.NOISE_TYPE_WORDS[constant_name])
+	return ""
+
+
+## T5 / T6 / T7 / T22 / T23 / T25 / T26. The evidence each behavior pattern is recognised BY, as the
+## fragments a line of the event has to contain. Frozen alongside the pattern ids: a chip, a Doctor
+## smell and a Manual page all key on the same claim, so this may gain entries but never lose them.
+const BEHAVIOR_PATTERN_EVIDENCE: Dictionary = {
+	"line_of_sight": ["force_raycast_update()", ".is_colliding()", "intersect_ray(",
+		"target_position = to_local("],
+	"drag_drop": ["- get_global_mouse_position()", "get_global_mouse_position() +",
+		"- get_viewport().get_mouse_position()", "get_viewport().get_mouse_position() +"],
+	"anchor": ["set_anchors_preset(", "set_anchors_and_offsets_preset(", "anchor_left =",
+		"anchor_right =", "anchor_top =", "anchor_bottom ="],
+	"solid": ["set_collision_layer_value(", "CollisionShape2D.disabled",
+		"CollisionShape3D.disabled", "CollisionPolygon2D.disabled", "CollisionPolygon3D.disabled"],
+	"jumpthru": ["one_way_collision"],
+	"create_object": [".instantiate()"],
+	"overlap": ["overlaps_body(", "overlaps_area(", "get_overlapping_areas()",
+		"get_overlapping_bodies()", "test_move(", "move_and_collide("],
+	"advanced_random": ["rand_weighted(", ".seed = ", "FastNoiseLite", ".get_noise_"],
+	"date": ["get_datetime_dict_from_system()", "get_unix_time_from_system()",
+		"get_date_string_from_system()", "get_time_string_from_system()"]
+}
+
+## The one line the chip says for each behavior pattern - the sheet's own name for the shape.
+const BEHAVIOR_PATTERN_WORDS: Dictionary = {
+	"line_of_sight": "A sight test cast at a target",
+	"drag_drop": "Picking a thing up with the pointer",
+	"anchor": "Where a panel sits when the window resizes",
+	"solid": "What this body is to the others",
+	"jumpthru": "A platform you can jump up through",
+	"create_object": "Making an object and putting it somewhere",
+	"overlap": "Asking what is touching, and what is just below",
+	"advanced_random": "Seeded randomness and noise",
+	"date": "The clock and the calendar"
+}
+
+## The sheet ACEs each behavior pattern is made of - what the Manual's "Patterns using this" reads.
+const BEHAVIOR_PATTERN_ACES: Dictionary = {
+	"line_of_sight": ["RayCast2DForceUpdate", "RayCast3DForceUpdate", "IsFartherThan"],
+	"drag_drop": ["SetVar"],
+	"anchor": ["SetProperty", "CallMethod"],
+	"solid": ["SetCollisionLayerBit", "SetButtonDisabled"],
+	"jumpthru": ["SetProperty"],
+	"create_object": ["SetLocalVar", "AddChild"],
+	"overlap": ["ExpressionIsTrue", "OnCollision"],
+	"advanced_random": ["SetProperty", "SetVar"],
+	"date": ["SetLocalVarTyped", "SetVar", "GetUnixTime", "GetSystemDate", "GetSystemTime"]
+}
+
+
+## T5 / T6 / T7 / T22 / T23 / T25 / T26. Records which events of a sheet read as one of the behavior
+## patterns, with the exact source lines as evidence and - where one ships - the behavior that could
+## replace the hand-written shape. Called once at the top of a row build, after the registry has been
+## cleared; nothing here draws anything, because the chip and the hover read the claims back.
+static func claim_behavior_patterns(sheet: EventSheetResource) -> void:
+	if sheet == null:
+		return
+	var dimension_3d: bool = sheet.host_class.strip_edges().contains("3D")
+	for entry: Variant in sheet.events:
+		_claim_behaviors_in(sheet, entry, dimension_3d, 0)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			for event_entry: Variant in (entry as EventFunction).events:
+				_claim_behaviors_in(sheet, event_entry, dimension_3d, 0)
+
+
+## One event of the walk: the lines it holds decide which behaviors it owns, and its sub-events are
+## walked in turn so a shape spread over a parent and its children is claimed where it starts.
+static func _claim_behaviors_in(sheet: EventSheetResource, entry: Variant, dimension_3d: bool,
+		depth: int) -> void:
+	if depth > 64 or not (entry is EventRow):
+		return
+	var event_row: EventRow = entry as EventRow
+	# The event's own lines, hand-written and lifted alike - the same walk the facts read, so a claim
+	# and the words it is about can never disagree about what the event says.
+	var lines: PackedStringArray = PackedStringArray()
+	_append_behavior_lines(event_row, lines, 0)
+	for pattern: String in BEHAVIOR_PATTERN_EVIDENCE:
+		var evidence: PackedStringArray = PackedStringArray()
+		for line: String in lines:
+			for fragment: Variant in (BEHAVIOR_PATTERN_EVIDENCE[pattern] as Array):
+				if line.contains(str(fragment)) and not evidence.has(line.strip_edges()):
+					evidence.append(line.strip_edges())
+		if evidence.is_empty():
+			continue
+		EventSheetPatternFacts.claim(sheet, pattern, event_row.event_uid, event_row.event_uid,
+			evidence, str(BEHAVIOR_PATTERN_WORDS.get(pattern, "")),
+			_behavior_adoptable(pattern, dimension_3d),
+			PackedStringArray(BEHAVIOR_PATTERN_ACES.get(pattern, [])))
+	for sub_event: Variant in event_row.sub_events:
+		_claim_behaviors_in(sheet, sub_event, dimension_3d, depth + 1)
+
+
+## Which shipped behavior could replace a hand-rolled shape. Solid and Jump-thru are deliberately not
+## in the table: they are what a Godot body already IS, so there is nothing to adopt - and offering an
+## adoption nobody can take is exactly what an empty answer here prevents.
+static func _behavior_adoptable(pattern: String, dimension_3d: bool) -> String:
+	match pattern:
+		"line_of_sight":
+			return "line_of_sight_3d" if dimension_3d else "line_of_sight"
+		"drag_drop":
+			return "drag_drop"
+		"anchor":
+			return "anchor"
+		"advanced_random":
+			return "advanced_random"
+	return ""
 
 
 ## R9. {timer tag: true when it fires once} from the `$Timer.one_shot = true` lines the file holds.

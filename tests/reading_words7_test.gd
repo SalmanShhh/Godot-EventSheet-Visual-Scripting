@@ -155,7 +155,10 @@ static var CONDITION_READINGS: Dictionary = {
 ## The statements whose sentence this batch settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
 	"last_shot = Time.get_ticks_msec()": "Player ▸ Set last_shot to now",
-	"started = Time.get_unix_time_from_system()": "Player ▸ Set started to now (clock time)",
+	# T26 re-pin: the wall clock has a NAME of its own in the sheet now - the Date object's Now - so a
+	# variable filled from it says that, and the whole Date family reads alike. The game's own running
+	# clock above keeps "now", because no Date expression stands for a number that restarts with the game.
+	"started = Time.get_unix_time_from_system()": "Player ▸ Set started to Date.Now",
 	"get_tree().change_scene_to_file(\"res://levels/level_2.tscn\")": "System ▸ Go to layout Level 2",
 	"get_tree().reload_current_scene()": "System ▸ Restart layout",
 	"get_tree().paused = true": "System ▸ Pause the game",

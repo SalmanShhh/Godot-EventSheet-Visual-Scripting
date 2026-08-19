@@ -2290,6 +2290,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# re-deriving anything, and this is the one moment they are all keyed to.
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_godot_systems_patterns(sheet)
+	EventSheetViewportReadingRows.claim_behavior_patterns(sheet)
 	root_rows.append_array(_build_global_variable_rows(sheet))
 	# Blocks spec P1 - collapse the LEADING run of class scaffolding (prelude / annotations /
 	# host-binding) into one foldable "Class setup" strip, so an opened .gd reads as logic, not
