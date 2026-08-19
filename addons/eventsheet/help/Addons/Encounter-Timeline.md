@@ -112,7 +112,7 @@ which is where velocity, hit points and timers go back to their starting values.
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, exactly as the rows
+On the canvas these rows read as styled sentences - parameter values in **bold**, exactly as the rows
 draw them:
 
 - Load encounter **wave_3.tres**
@@ -130,7 +130,7 @@ draw them:
 | Start Encounter | (none) | Runs the plan from the top: clock at 0, tally at 0, each beat firing as its time arrives. |
 | Stop Encounter | (none) | Freezes it where it stands. Already-spawned nodes are left alone. |
 | Use Object Pool Node | node | Spawns through THIS pool instead of searching for the autoload. Pass nothing to go back. |
-| Skip To | seconds | Jumps the clock WITHOUT spawning what it passes - the debug verb for checking a late beat. |
+| Skip To | seconds | Jumps the clock WITHOUT spawning what it passes - the debug action for checking a late beat. |
 | Write Encounter Report | path | Saves the Encounter Report to a text file with plain file access (no editor needed). |
 
 ### Conditions

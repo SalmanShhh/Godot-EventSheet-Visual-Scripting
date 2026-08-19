@@ -78,7 +78,7 @@ Types: **Action** does something, **Condition** answers true/false (use it in an
 
 ### Scene lifecycle - open, save, and play the scene you are editing
 
-| Editor Tools verb | Type | What it does |
+| Name | Type | What it does |
 |-------------------|------|--------------|
 | **Open Scene In Editor** | Action | Opens a `.tscn` (parameter: **Scene Path**) as the current edited scene. |
 | **Save Current Scene** | Action | Saves the scene currently open in the editor. |
@@ -89,14 +89,14 @@ Types: **Action** does something, **Condition** answers true/false (use it in an
 
 ### Selection and inspector - drive what the editor is focused on
 
-| Editor Tools verb | Type | What it does |
+| Name | Type | What it does |
 |-------------------|------|--------------|
 | **Select Node In Editor** | Action | Clears the selection and selects a node (parameter: **Node**) in the Scene dock. |
 | **Inspect In Editor** | Action | Shows a node or resource (parameter: **Object**) in the Inspector dock. |
 
 ### Files and resources - write what a tool generates back to disk
 
-| Editor Tools verb | Type | What it does |
+| Name | Type | What it does |
 |-------------------|------|--------------|
 | **Save Resource To File** | Action | Writes a resource to disk (parameters: **Resource**, **Path**). |
 | **Make Sure Folder Exists** | Action | Creates a folder and any missing parents (parameter: **Folder**), so a tool can write into it. |
@@ -104,14 +104,14 @@ Types: **Action** does something, **Condition** answers true/false (use it in an
 
 ### Combined builders - three lines of scene-building in one row
 
-| Editor Tools verb | Type | What it does |
+| Name | Type | What it does |
 |-------------------|------|--------------|
 | **Add Node To Edited Scene** | Action | Adds a node (parameter: **Node**) under a **Parent** AND sets its `owner`, so it saves with the scene. |
 | **Save Node As Scene** | Action | Packs a node (parameter: **Node**) and its children into a `PackedScene` and saves it as a `.tscn` (parameter: **Path**). |
 
 ### Editor state - guards and queries a tool reads
 
-| Editor Tools verb | Type | What it does |
+| Name | Type | What it does |
 |-------------------|------|--------------|
 | **Is In Editor** | Condition | True when the script is running inside the editor (a `@tool` script), not the running game. |
 | **Edited Scene Root** | Expression | The root node of the scene currently open in the editor. |
@@ -120,18 +120,18 @@ Types: **Action** does something, **Condition** answers true/false (use it in an
 
 ### Rendering and data previews - the heavy chores, still one row
 
-| Editor Tools verb | Type | What it does |
+| Name | Type | What it does |
 |-------------------|------|--------------|
 | **Render Scene To Image** | Action | Instantiates a scene (parameter: **Scene**) into an off-screen `SubViewport` at **Width** x **Height**, lets it settle a frame, and saves what it shows to **Save To** as a PNG. |
 | **Preview Table Rolls** | Action | Rolls a weighted **Table** (a table resource, its path, or a plain value-to-weight Dictionary) **Rolls** times from a fixed **Seed**, and reports rolled percent vs weight-implied percent per entry. Optional **Save To** writes the report to a file. |
 
 **Render Scene To Image needs two things.** The scene must contain whatever is doing the looking - a `Camera2D`, a `Camera3D` plus a light, or just a `Control` layout - because the action photographs what that scene shows. And the editor must have a window: rendering is GPU work, and a headless run has no renderer, so the emitted code probes `DisplayServer` first and pushes a clear warning instead of saving a blank image. That check is part of the generated code, not the plugin, so a tool you hand to a teammate degrades the same way on their machine.
 
-**Preview Table Rolls is pure arithmetic**, which is why it is the one heavy verb that works everywhere, headless included. It reads both shipped weighted-table shapes (any resource exposing an `entries` list of value/weight rows) and a Dictionary you type inline, and it is seeded, so two runs of the same table give the same report - change a weight, re-run, and the diff is the balance change alone.
+**Preview Table Rolls is pure arithmetic**, which is why it is the one heavy action that works everywhere, headless included. It reads both shipped weighted-table shapes (any resource exposing an `entries` list of value/weight rows) and a Dictionary you type inline, and it is seeded, so two runs of the same table give the same report - change a weight, re-run, and the diff is the balance change alone.
 
 ### Project export - the bake step
 
-| Editor Tools verb | Type | What it does |
+| Name | Type | What it does |
 |-------------------|------|--------------|
 | **On Project Export** | Trigger | Fires as a project export starts, before the files are written. Compiles to `_on_project_export(is_debug: bool, features: PackedStringArray)`. |
 | **Write Version Stamp** | Action | Writes a `ConfigFile` build stamp to **Save To**: the **Version** string plus the date and time it was written. |
@@ -142,7 +142,7 @@ Types: **Action** does something, **Condition** answers true/false (use it in an
 
 **Determinism still applies.** The parity covenant says generated code may not vary between saves, so **Write Version Stamp** bakes no timestamp into the script - it asks the clock when the tool *runs*. That is also what you want: the stamp records when the build was made, not when you last edited the sheet.
 
-**Why Is In Editor matters.** The Editor Tools verbs call editor-only APIs. In a Tool sheet that is fine - it only ever runs in the editor. But if you sprinkle one of these into a `@tool` **node** script (a sheet that also runs in your game), guard it with **Is In Editor** so it does not try to touch `EditorInterface` in an exported build where that does not exist.
+**Why Is In Editor matters.** The Editor Tools actions, conditions and expressions call editor-only APIs. In a Tool sheet that is fine - it only ever runs in the editor. But if you sprinkle one of these into a `@tool` **node** script (a sheet that also runs in your game), guard it with **Is In Editor** so it does not try to touch `EditorInterface` in an exported build where that does not exist.
 
 ## 4. Interfacing with the EventSheets API
 
@@ -441,7 +441,7 @@ Three events, one sheet, and nothing in the game's own code knows any of it happ
 
 ## 6. Tips and Common Mistakes
 
-- **Editor Tools verbs only work in the editor.** They call `EditorInterface`, `ResourceSaver`, `DirAccess`, and `Engine`, which exist while you are building, not in an exported game. Keep them in a Tool sheet, or - if they live in a `@tool` node script that also runs at play time - guard them behind an **Is In Editor** condition so an exported build never touches editor-only APIs.
+- **Editor Tools rows only work in the editor.** They call `EditorInterface`, `ResourceSaver`, `DirAccess`, and `Engine`, which exist while you are building, not in an exported game. Keep them in a Tool sheet, or - if they live in a `@tool` node script that also runs at play time - guard them behind an **Is In Editor** condition so an exported build never touches editor-only APIs.
 - **A Tool sheet runs with File > Run, not by attaching it to a node.** It is an `EditorScript`. You run it from the Script editor (Ctrl+Shift+X); there is nothing to add to a scene.
 - **Do not forget `owner` if you hand-roll node creation.** A node added to the edited scene only saves with that scene if its `owner` is the edited scene root. **Add Node To Edited Scene** sets `owner` for you - that is the whole point of the combined builder. If you build nodes some other way and skip `owner`, they vanish on save.
 - **End file-writing tools with Rescan Project Files.** A file you wrote to `res://` will not appear in the FileSystem dock until the editor re-imports; **Rescan Project Files** does that.

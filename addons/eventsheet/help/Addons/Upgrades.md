@@ -81,7 +81,7 @@ That is the whole loop: define once, buy against your balance, and pay the recor
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Define upgrade **id**: base cost **base_cost** growing **cost_growth**x, max level **max_level**, **per_level** per level (**mode**)
 - Try purchase **id** with budget **budget**
@@ -134,7 +134,7 @@ Every id and tag below is a string. Costs, budgets, and effects are numbers. All
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$UpgradesAddon.cost_of(id)` inserts the **Cost Of** entry straight into any expression
 - `$UpgradesAddon.level_of(id)` inserts the **Level Of** entry straight into any expression

@@ -49,7 +49,7 @@ The behavior is small. Learn these ideas and everything in the ACE list is just 
 
 **Match rotation faces the travel direction.** With **match rotation** on, the behavior turns the host to point along the direction it is moving each frame - handy for an arrow, ship, or fish that should nose into its curved path. With it off, the node keeps whatever rotation it already had.
 
-**Two ways to change the same knob.** Each tunable has a friendly verb - **Set Orbit Center**, **Set Orbit Speed**, **Set Orbit Radii** - and, because the pack exposes its properties, an auto-generated **Set**, **Add To**, and **Subtract From** action plus a read-back expression per value (for example **Speed Degrees**). Use the friendly verbs to set a value outright; use **Add To** and **Subtract From** to nudge or ramp a value smoothly over time.
+**Two ways to change the same knob.** Each tunable has a friendly action - **Set Orbit Center**, **Set Orbit Speed**, **Set Orbit Radii** - and, because the pack exposes its properties, an auto-generated **Set**, **Add To**, and **Subtract From** action plus a read-back expression per value (for example **Speed Degrees**). Use the friendly actions to set a value outright; use **Add To** and **Subtract From** to nudge or ramp a value smoothly over time.
 
 ---
 
@@ -90,7 +90,7 @@ Radii of `120, 0` make a circle of radius 120; a speed of `60` sweeps 60 degrees
 
 ## ACE reference
 
-All ACEs live in the **Orbit** category and target the `OrbitBehavior` behavior on the node they are placed on. There is no orbiter-id parameter anywhere. The pack ships three friendly verbs and, because it exposes its properties, an auto-generated Set / Add To / Subtract From action and a read-back expression for each exported value.
+All ACEs live in the **Orbit** category and target the `OrbitBehavior` behavior on the node they are placed on. There is no orbiter-id parameter anywhere. The pack ships three friendly actions and, because it exposes its properties, an auto-generated Set / Add To / Subtract From action and a read-back expression for each exported value.
 
 ### Actions
 
@@ -150,7 +150,7 @@ All ACEs live in the **Orbit** category and target the `OrbitBehavior` behavior 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$OrbitBehavior.match_rotation` inserts the **Match Rotation** entry straight into any expression
 - `$OrbitBehavior.offset_angle_degrees` inserts the **Offset Angle Degrees** entry straight into any expression
@@ -360,6 +360,6 @@ Stepping both the speed and the primary radius makes the new sweep visibly bigge
 - **The offset angle only shows on an ellipse.** Tilting a perfect circle changes nothing you can see. Give the two radii different values first, then the offset angle skews the oval.
 - **Speed is degrees per second, and the sign is the direction.** Positive and negative spin opposite ways; `0` freezes the node on its current ring without snapping it back to center. Use Add To and Subtract From Speed Degrees to ramp between them smoothly.
 - **Match rotation owns the node's rotation.** While it is on, the behavior sets the host's rotation every frame to face its travel direction, so any rotation you set elsewhere gets overwritten. Turn it off if you want to control the facing yourself.
-- **Set Orbit Speed and Set Speed Degrees do the same thing.** The friendly verbs (Set Orbit Speed, Set Orbit Radii, Set Orbit Center) and the auto-generated property actions (Set Speed Degrees, Set Primary Radius, and so on) write the same values. Use whichever reads more clearly; reach for Add To / Subtract From when you want to nudge rather than replace.
+- **Set Orbit Speed and Set Speed Degrees do the same thing.** The friendly actions (Set Orbit Speed, Set Orbit Radii, Set Orbit Center) and the auto-generated property actions (Set Speed Degrees, Set Primary Radius, and so on) write the same values. Use whichever reads more clearly; reach for Add To / Subtract From when you want to nudge rather than replace.
 - **The parent must be a Node2D.** The behavior circles its parent node's position, so it needs a `Node2D` parent. A Control or plain Node parent makes it warn and do nothing; for 3D scenes, use the separate Orbit 3D pack instead.
 - **Set the shape before the node needs it.** Do your Set Orbit Radii / Set Orbit Speed in On Ready (or right at spawn) so the very first loop already looks right, then change values live from timers or stimuli.

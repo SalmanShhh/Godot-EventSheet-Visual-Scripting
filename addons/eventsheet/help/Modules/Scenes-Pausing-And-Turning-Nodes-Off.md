@@ -3,7 +3,7 @@
 Three jobs that look like one, and cause more confusion than any other corner of the builtin
 vocabulary:
 
-1. **Changing what is on screen** - Go To Scene, Restart Scene, Spawn Scene Instance, Quit Game.
+1. **Changing what is on screen** - Go To Layout, Restart Layout, Spawn Scene Instance, Quit Game.
 2. **Pausing the whole game** - Set Game Paused, and the per-node question of what "paused" means for
    each node.
 3. **Switching one node off** - which is a different question again, and has two honest answers
@@ -18,14 +18,14 @@ family stops being confusing.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
 - **Level flow** - a menu that goes to a level, a level that goes to the next one.
-- **Retry** - Restart Scene is the whole death-and-respawn loop for a small game.
+- **Retry** - Restart Layout is the whole death-and-respawn loop for a small game.
 - **Spawning** - a scene file dropped into the world at a position, with a rotation and a group.
 - **A pause menu that actually works** - the game freezes, the menu keeps running.
 - **Cutscenes** - freeze the actors, keep the camera and the dialogue alive.
@@ -37,8 +37,8 @@ family stops being confusing.
 
 ## Core concepts
 
-- **Changing scene replaces everything.** Go To Scene swaps the whole current scene for another file.
-  Nothing survives except autoloads. Restart Scene reloads exactly what is running now.
+- **Changing scene replaces everything.** Go To Layout swaps the whole current scene for another file.
+  Nothing survives except autoloads. Restart Layout reloads exactly what is running now.
 - **A spawn is a load plus an instantiate plus an add.** Spawn Scene Instance is the one-line form.
   Spawn Scene At also positions it. Spawn Scene (Full) also rotates it and optionally puts it in a
   group. All three add the copy as a child of the node the row runs on.
@@ -51,7 +51,7 @@ family stops being confusing.
   to false AND the process mode to Disabled, for the node and everything under it. Activate Node is
   the exact undo, restoring visibility and setting the mode back to Inherit.
 - **"Pause this node" and "deactivate this node" set the same property.** Pause Node also writes
-  Disabled - it just does not touch visibility. Pick the verb that says what you meant; a reader of
+  Disabled - it just does not touch visibility. Pick the action that says what you meant; a reader of
   the sheet will thank you.
 - **Node Is Running answers the WHOLE question.** It compiles to `can_process()`, which already takes
   both the node's mode and the game's pause state into account. Node Is Frozen By The Game Pause is
@@ -62,11 +62,11 @@ family stops being confusing.
 - **Process order is a number, and lower runs first.** Set Node Process Order and Set Node Physics
   Order are the fix for "my camera lags one frame behind the player".
 
-## Verb reference
+## Reference tables
 
 ### Scene flow
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Go To Layout | Switches the game to a different layout (a scene file) | `get_tree().change_scene_to_file({path})` |
 | Restart Layout | Restarts the current layout from scratch | `get_tree().reload_current_scene()` |
@@ -127,7 +127,7 @@ if "" != "": __spawn_figure.add_to_group("")
 
 ### Turning a whole node on and off
 
-| Verb | What it does | Ships as | On |
+| Name | What it does | Ships as | On |
 |------|--------------|----------|----|
 | Deactivate Node (2D) | Hides a node and stops it and its children running | `visible = false` then `process_mode = Node.PROCESS_MODE_DISABLED` | CanvasItem |
 | Activate Node (2D) | Shows it and starts it running again | `visible = true` then `process_mode = Node.PROCESS_MODE_INHERIT` | CanvasItem |
@@ -139,7 +139,7 @@ if "" != "": __spawn_figure.add_to_group("")
 
 ### Behaviour while the game is paused
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Pause Node | Freezes one node and its children, whatever the game is doing | `process_mode = Node.PROCESS_MODE_DISABLED` |
 | Unpause Node | Lets the node follow its parent again | `process_mode = Node.PROCESS_MODE_INHERIT` |
@@ -154,7 +154,7 @@ the game pause), Disabled (never runs).
 
 ### One callback at a time
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Node Per-Frame Processing | Turns just the every-frame work on or off | `set_process({on})` |
 | Set Node Physics Processing | Turns just the physics-step work on or off | `set_physics_process({on})` |
@@ -174,7 +174,7 @@ reparenting a node from inside a collision callback is the number one crash a ne
 switching a collision shape off mid-physics is the number one error message. Deferring is Godot's
 own answer to both, and these are that answer as vocabulary.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Do After This Frame | Runs one action once the frame's work is finished - the only safe moment to add, free or reparent a node | `(func(): {do}).call_deferred()` |
 | Set Property (after this frame) | Sets a property at the end of the frame instead of right now | `{target}.set_deferred({property}, {value})` |
@@ -582,19 +582,19 @@ func _on_wave_cleared() -> void:
   everything whose mode is Pausable, and Pausable is the default. Set the menu (and its music, and its
   animations) to Keep Node Running While Paused BEFORE you pause, or nothing in the menu will respond.
 - **Deactivate Node and Pause Node write the same property.** Deactivate also hides. If a node
-  disappears when you only meant to freeze it, you reached for the wrong verb.
+  disappears when you only meant to freeze it, you reached for the wrong action.
 - **Activate Node sets Inherit, not Pausable.** That is the correct undo of Deactivate for a node that
   was following its parent, which is almost all of them. A node you had deliberately set to Always
   will lose that setting.
 - **Deactivating takes the whole subtree with it.** Everything under the node stops too. That is
   usually the point, but it means you cannot leave one child ticking inside a deactivated parent
   except by giving that child the Always mode.
-- **Go To Scene destroys everything.** Variables held on nodes in the old scene are gone. Only
+- **Go To Layout destroys everything.** Variables held on nodes in the old scene are gone. Only
   autoloads survive, which is what they are for.
-- **Restart Scene reloads the scene FILE.** Anything you spawned or changed at runtime is not
+- **Restart Layout reloads the scene FILE.** Anything you spawned or changed at runtime is not
   remembered. That is what makes it a clean retry, and what makes it wrong for a mid-level checkpoint.
 - **Spawn adds the copy as a child of the row's node.** A bullet spawned from the gun inherits the
-  gun's transform. If it should not, spawn it under the level instead - the node-finding verbs in
+  gun's transform. If it should not, spawn it under the level instead - the node-finding rows in
   Finding And Rearranging Nodes cover getting there.
 - **Handle Quit Myself reads backwards on purpose.** The dropdown labels are "Intercept" and "Allow",
   and they insert `false` and `true` respectively, because the underlying flag is
@@ -602,12 +602,12 @@ func _on_wave_cleared() -> void:
 - **Handle Quit Myself is not itself a handler.** It only stops the instant quit. You still need a
   close-requested event that saves or confirms, and a Quit Game row at the end of it. Without one, the
   window simply stops closing.
-- **The per-callback verbs do not survive a mode change.** Setting the process mode to Disabled and
+- **The per-callback actions do not survive a mode change.** Setting the process mode to Disabled and
   back to Inherit does not restore a `set_process(false)` you did earlier. Track one or the other, not
   both, on the same node.
 - **`process_physics_priority`, not `physics_process_priority`.** The property reads the opposite way
-  round to its setter method. The verb spells it correctly; you only meet this if you hand-write it.
+  round to its setter method. The action spells it correctly; you only meet this if you hand-write it.
 - **Lower order numbers run FIRST.** The default is 0, so a node that must run after everything else
   wants a positive number, not a negative one.
 - **Node Is Ready is about _ready, not about being in the tree.** For "is it in the scene tree at
-  all", the Is Inside Tree verb in Finding And Rearranging Nodes is the one you want.
+  all", the Is Inside Tree condition in Finding And Rearranging Nodes is the one you want.

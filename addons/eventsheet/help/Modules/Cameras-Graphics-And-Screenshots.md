@@ -3,7 +3,7 @@
 Everything here is about what the player actually sees: which camera is looking, how wide its view
 is, how the frame is rendered, what the shaders are told, and how to save the result as a PNG.
 
-Four groups of verbs share that job.
+Four groups of rows share that job.
 
 - **The 2D camera** - **Make Camera Current**, **Set Camera Zoom**, **Set Camera Offset**,
   **Set Camera Limits**. Plain `Camera2D` members, node-scoped, so any of them can act on another
@@ -23,7 +23,7 @@ Game Options and the Window guide.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -45,17 +45,17 @@ Game Options and the Window guide.
 
 - **The current camera is a property of the camera, not the world.** **Make Camera Current** promotes
   the camera it runs on (or the one named in **On node**) to be the view. There is no "camera off"
-  verb; you make a different one current instead.
+  action; you make a different one current instead.
 - **Zoom is a Vector2, and bigger means closer.** `Vector2(2, 2)` is a 2x zoom in. Non-uniform values
   stretch the view, which is occasionally a deliberate effect and usually a mistake.
 - **Camera limits are four numbers, written in one row.** **Set Camera Limits** emits four
   assignments (`limit_left`, `limit_top`, `limit_right`, `limit_bottom`) as a single action.
-- **The FOV verbs split by who they target.** **Tween Camera FOV** resolves
+- **The FOV rows split by who they target.** **Tween Camera FOV** resolves
   `get_viewport().get_camera_3d()` at runtime, so it always eases the camera the player is looking
   through, and it does nothing (safely) when there is no camera. **Adjust Camera FOV** and
   **Camera FOV** are scoped to a `Camera3D` node instead. Both FOV writers clamp to the legal 1-179
   degrees, so a repeated zoom can never turn the camera inside out.
-- **Rendering switches are per-viewport.** Every MSAA / AA / scale / debug-draw / culling verb targets
+- **Rendering switches are per-viewport.** Every MSAA / AA / scale / debug-draw / culling action targets
   `get_viewport().get_viewport_rid()`, which is the viewport the row's node lives in. Applied from a
   normal game sheet, that is the main one.
 - **Global shader parameters must be declared first.** **Set Global Shader Parameter** writes a
@@ -67,14 +67,14 @@ Game Options and the Window guide.
 - **A screenshot is the viewport's texture.** **Take Screenshot** grabs the current viewport image and
   writes a PNG, so it captures exactly what is on screen, HUD included.
 
-## Verb reference
+## Reference tables
 
 Multi-line templates are shown by their first line; the full emitted block appears in the matching
 use case below.
 
 ### The 2D camera (picker section: General Actions, node type Camera2D)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Make Camera Current | Makes this camera the one the player views the game through. | `{target.}make_current()` |
 | Set Camera Zoom | Sets how zoomed in or out the camera is (a Vector2). | `{target.}zoom = {zoom}` |
@@ -83,7 +83,7 @@ use case below.
 
 ### Field of view (picker section: Camera)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Tween Camera FOV | Smoothly eases the ACTIVE 3D camera's field of view to a target over Seconds. | `var __fovcam_{uid} := get_viewport().get_camera_3d()` … (multi-line, use case 6) |
 | Adjust Camera FOV | Nudges a `Camera3D`'s field of view by a relative Change, clamped to 1-179. | `fov = clampf(fov + {delta}, 1.0, 179.0)` |
@@ -91,7 +91,7 @@ use case below.
 
 ### Quality switches (picker section: Rendering)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set MSAA (2D) | Multisample antialiasing for 2D on this viewport. | `RenderingServer.viewport_set_msaa_2d(get_viewport().get_viewport_rid(), {level})` |
 | Set MSAA (3D) | Multisample antialiasing for 3D on this viewport. | `RenderingServer.viewport_set_msaa_3d(get_viewport().get_viewport_rid(), {level})` |
@@ -111,7 +111,7 @@ The MSAA dropdowns offer `RenderingServer.VIEWPORT_MSAA_DISABLED`, `..._2X`, `..
 
 ### The perf HUD numbers (picker section: Rendering)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Draw Calls (frame) | How many draw calls the last frame issued. | `RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)` |
 | Objects Drawn (frame) | How many objects the last frame rendered after culling. | `RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)` |
@@ -120,7 +120,7 @@ The MSAA dropdowns offer `RenderingServer.VIEWPORT_MSAA_DISABLED`, `..._2X`, `..
 
 ### Shaders and materials (picker sections: Rendering and General Actions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Global Shader Parameter | Drives a uniform declared in Project Settings > Shader Globals; every material reading it updates. | `RenderingServer.global_shader_parameter_set({name}, {value})` |
 | Global Shader Parameter | Reads that global uniform's current value. | `RenderingServer.global_shader_parameter_get({name})` |
@@ -131,7 +131,7 @@ The MSAA dropdowns offer `RenderingServer.VIEWPORT_MSAA_DISABLED`, `..._2X`, `..
 
 ### The screenshot (picker section: General Actions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Take Screenshot | Saves what is on screen right now as a PNG. | `get_viewport().get_texture().get_image().save_png({path})` |
 
@@ -188,7 +188,7 @@ if __fovcam_c1 != null:
 
 Release fires the same row with the resting value (75) instead.
 
-**7. A speed-boost widen.** The same verb with a wider target and a longer duration:
+**7. A speed-boost widen.** The same action with a wider target and a longer duration:
 
 ```gdscript
 extends Node
@@ -358,14 +358,14 @@ On photo key pressed
   **Tween Camera FOV**, which resolves the active camera at runtime.
 - **Tween Camera FOV is not node-scoped either.** It always animates the camera the player is looking
   through. If two of these run at once they fight; guard the second one.
-- **The FOV verbs are 3D only.** A 2D game's "zoom" is **Set Camera Zoom**.
+- **The FOV rows are 3D only.** A 2D game's "zoom" is **Set Camera Zoom**.
 - **Rendering switches are viewport-scoped.** A row that runs inside a `SubViewport` changes that
   sub-viewport, not the game window. That is occasionally exactly what you want and is a confusing
   surprise otherwise.
 - **MSAA is not free, and it is not the same as FXAA.** MSAA costs performance and memory; FXAA is
   cheap and blurs. Offering both in the same options tab (and letting a player pick neither) is the
   usual answer.
-- **Occlusion culling needs project setup.** The verb toggles it on this viewport, but it only helps
+- **Occlusion culling needs project setup.** The action toggles it on this viewport, but it only helps
   when occlusion culling is enabled in Project Settings and occluders exist in the scene.
 - **A debug draw mode stays on** until something sets it back to
   `RenderingServer.VIEWPORT_DEBUG_DRAW_DISABLED`. Wire the hotkey as a toggle, or you will ship a

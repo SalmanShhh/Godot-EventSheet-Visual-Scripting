@@ -25,7 +25,7 @@ it once:
 - **On GitHub**, at full fidelity - images, tables, everything.
 - **Inside the Godot editor, in the Manual** - Tools > Manual..., F1, the `?` prefix in the
   command palette, or the Manual dock. The editor draws the Markdown natively: headings on
-  a real typographic scale, tables, code cards, links that stay in the editor. Images are not
+  a real typographic scale, tables, code blocks, links that stay in the editor. Images are not
   drawn (they show as an alt-text card with a "See this picture online" button), so write alt text
   as if it will be read.
 - **From a shipped plugin**, in the browser: `EventSheets.open_online_doc(path)` opens the page
@@ -51,7 +51,7 @@ The other is **reference**, and nobody writes it:
 
 That matters when you write a guide, in three ways:
 
-- **You never hand-write a verb table.** A pack guide's `## ACE reference` section is replaced at
+- **You never hand-write a reference table for a pack.** A pack guide's `## ACE reference` section is replaced at
   render time by the live vocabulary, and the behavior reference page is built from it too.
 - **A pack with no guide is not a dead link.** Its behavior reference page opens with "No guide yet
   for *Priced Tables* - its conditions, actions and expressions are listed below" and a
@@ -60,7 +60,7 @@ That matters when you write a guide, in three ways:
 - **Links to pages that do not exist are drawn muted, never dead**, and a reference page carries no
   "read this online" link at all, because there is no repo file behind it.
 
-![A behavior reference page: the breadcrumb reads Manual, Behavior reference, Quest; the page is titled Quest with a line saying it lists the conditions, actions and expressions Quest publishes, an Open the guide link, and one table per group of verbs](images/manual-reference-page.png)
+![A behavior reference page: the breadcrumb reads Manual, Behavior reference, Quest; the page is titled Quest with a line saying it lists the conditions, actions and expressions Quest publishes, an Open the guide link, and one table per kind](images/manual-reference-page.png)
 
 The reader's own chrome sits around all of it: a breadcrumb starting at *Manual*, an on-this-page
 outline that tracks the scroll, back and forward (Alt+Left / Alt+Right), Recent, a bookmark star, a
@@ -78,7 +78,7 @@ inside the Manual to read (press the pin again to resume).
 
 **One search box** covers all of it - conditions, actions, expressions, guides, System reference,
 behavior reference, the engine's class reference and the glossary - and tags every result with
-which of those it is. A verb result also says how many events of the open sheet already use it;
+which of those it is. A vocabulary result also says how many events of the open sheet already use it;
 Enter opens it, Ctrl+Enter adds it to the sheet at the caret. A search that finds **nothing** says
 *Looking for layout? Here it is called Scene* first, when the word is one the glossary knows, so a
 reader never concludes a feature is missing because it is spelled differently here.
@@ -96,7 +96,7 @@ order, so a reader's eye learns where to land once:
 
 **Properties · Conditions · Actions · Expressions · Triggers**
 
-![A behavior reference page in the fixed shape: the breadcrumb reads Manual, Behavior reference, Health; under the title and its lead line a Properties table lists destroy on death false, invulnerable false and max health 100.0, and a Conditions table follows with a diamond mark in front of every verb](images/manual-reference-shape.png)
+![A behavior reference page in the fixed shape: the breadcrumb reads Manual, Behavior reference, Health; under the title and its lead line a Properties table lists destroy on death false, invulnerable false and max health 100.0, and a Conditions table follows with a diamond mark in front of every condition](images/manual-reference-shape.png)
 
 Each is one table of `Mark | Name | Parameters | What it does`, where the mark is the sheet's own
 glyph for that kind (`◆` condition, `➜` action, `ƒ` expression, `⟳` trigger). Properties are a
@@ -158,9 +158,9 @@ Which set a new page belongs to:
 
 - Documenting a **behavior pack**: `docs/Addons/`. Companion resource and loader packs are
   documented inside their partner pack's guide, not as separate pages.
-- Documenting **builtin verbs** (a module under `addons/eventforge/registration/modules/`): the
+- Documenting **builtin vocabulary** (a module under `addons/eventforge/registration/modules/`): the
   module guide that already covers that family - see `docs/Modules/README.md` for the map. A new
-  module gets a new guide only if it is a genuinely new topic; usually the verbs join an existing
+  module gets a new guide only if it is a genuinely new topic; usually the new entries join an existing
   guide's reference table and use cases.
 - Anything else - a workflow, a concept, a migration - is a top-level guide, indexed by hand in
   `docs/README.md` under the group it belongs to.
@@ -189,11 +189,13 @@ The two directory sets follow one standard, and a test enforces the parts it can
 2. **Where this shines** - the situations it is the right tool for, as short bullets.
 3. **Core concepts** - the two to five ideas a reader must hold.
 4. **Setup** (addon guides) - how the pack attaches, its Inspector fields as a table.
-5. **Verb reference** - a table per category: `Verb | What it does | Ships as`. The "Ships as"
-   column is the codegen template, the one place GDScript is allowed in the prose. Every verb
-   name must be the REAL display name from the source - a test resolves each one against the
-   live registry and fails on a name that does not exist. For addon guides, the reader renders
-   this section from the live registry instead of the Markdown, so it can never drift.
+5. **Reference tables** - a table per category, headed `Name | What it does | Ships as` (an
+   addon guide may head its tables `Action` / `Condition` / `Expression` / `Trigger` instead,
+   when each table holds one kind). The "Ships as" column is the codegen template, the one place
+   GDScript is allowed in the prose. Every name in the first column must be the REAL display
+   name from the source - a test resolves each one against the live registry and fails on a name
+   that does not exist. For addon guides, the reader renders this section from the live registry
+   instead of the Markdown, so it can never drift.
 6. **Use cases** - **fifteen or more**, numbered, each a real situation with the rows written
    as row sentences (and as a figure fence where they are emitted code - next section). Not
    fifteen rewordings of the same use; a reviewer will flag padding.
@@ -203,7 +205,7 @@ The two directory sets follow one standard, and a test enforces the parts it can
    and from what bit you while writing.
 
 `docs/Addons/Quest.md` and `docs/Modules/Comparing-Values.md` are good models. For a new pack,
-`tools/scaffold_addon_guide.gd` emits this skeleton pre-filled with the pack's real verb tables.
+`tools/scaffold_addon_guide.gd` emits this skeleton pre-filled with the pack's real reference tables.
 
 Keep a guide self-contained: inline the information rather than sending the reader to another
 file. Cross-reference a sibling guide by name only when the reader would genuinely search there
@@ -219,15 +221,15 @@ step. You get this by writing the example as compilable rows, which you would do
 One recognizer decides per fence, in this order:
 
 1. ` ```eventsheet ` - the **authored** fence. Always a figure. If its body stops compiling, the
-   build fails with an error naming the fence - it never silently degrades to a code card. Use it
+   build fails with an error naming the fence - it never silently degrades to a code block. Use it
    when you want a figure the automatic rule would not pick, or when the example must never
    quietly rot.
 2. `<!-- no-figure -->` on the line above a fence - the **authored opt-out**. The fence stays a
-   code card forever. Use it for a `gdscript` fence that would pass the gate but reads better as
+   plain code block forever. Use it for a `gdscript` fence that would pass the gate but reads better as
    code (an API sample the reader copies into a file, say).
 3. ` ```gdscript ` that passes the gate - the **automatic** figure. This is what lights up
    existing guides with no authoring at all.
-4. Everything else - a code card.
+4. Everything else - a plain code block.
 
 The gate for the automatic layer, measured over every fence in the corpus and tuned from the
 numbers: the body must **round-trip** (lifting it and re-emitting reproduces the fence byte for
@@ -246,7 +248,7 @@ never forces converting an automatic figure into an authored one.
 The frozen grammar is exactly those three markers - the tag, `no-figure`, `caption`. Nothing
 else. Any richer option ships later as an additive marker, never as a change to these three.
 
-Every recognized figure is compiled by the suite (`tests/doc_figures_test.gd`), so a verb
+Every recognized figure is compiled by the suite (`tests/doc_figures_test.gd`), so an action
 renamed under a figure breaks a test instead of a guide. Figure verdicts are baked into the
 bundle at build time (a verdict costs a full import and compile), and the suite re-derives every
 one live and fails on disagreement.
@@ -256,11 +258,13 @@ one live and fails on disagreement.
 - **No em-dashes or en-dashes anywhere** in repo text. Write ` - ` (space, hyphen, space).
 - **No absolute personal paths** (`C:\Users\<who>\...`, `/home/<who>/`). A test sweeps every
   text file. Write a placeholder or an env var.
-- **Every guide is indexed.** Top-level guides by hand in `docs/README.md` under a group; addon
-  and module guides in their directory `README.md` and in `docs/README.md`. Unindexed guides
-  fail the shape test.
+- **Every guide is indexed.** Top-level guides by hand in `docs/README.md` under a group, each
+  with a one-line description of what the page is; addon and module guides in their directory
+  `README.md` and in `docs/README.md`. `tests/docs_integrity_test.gd` reads the folder and fails
+  on a `docs/*.md` the index does not list, or lists without a description; unindexed addon and
+  module guides fail the shape test.
 - **Code never references doc files** - the rule runs the other way too: a guide names menu
-  labels and verbs that exist. Do not invent a menu item; the fact-check pass compares against
+  labels, actions and conditions that exist. Do not invent a menu item; the fact-check pass compares against
   the real menus.
 - **Verb names are real.** Copy the display name from the module source or the pack builder,
   not from memory. The registry sweep fails on a name it cannot find.
@@ -284,7 +288,7 @@ too**, not only a guide edit.
 
 The second command must print `drifted=0`. `tests/doc_library_test.gd` runs the same
 comparison in the suite, so a forgotten regeneration fails the build rather than shipping stale
-docs. If you added verbs and their vocabulary should appear in the generated catalog
+docs. If you added actions, conditions or expressions and they should appear in the generated catalog
 (`EVENTSHEETS-VOCABULARY.md`), regenerate that too:
 
 ```
@@ -300,7 +304,7 @@ includes both steps.
 A pack that lives outside this repo ships its guide **with the pack**:
 `eventsheet_addons/<pack>/guide.md`. The reader discovers it the same way it discovers the pack's
 `translations.csv` - by being there - and lists it under Packs in the tree. The guide follows the
-addon-guide shape above; the verb reference section renders from the live registry, so a pack
+addon-guide shape above; the reference tables render from the live registry, so a pack
 author writes the prose and use cases and the table takes care of itself.
 
 A pack whose docs live elsewhere sets `addon_help_url` (or `@ace_help` on its script) to an
@@ -313,7 +317,7 @@ reader.
 
 ## The verification loop for a docs change
 
-1. Write or edit the guide. Copy verb names from source.
+1. Write or edit the guide. Copy display names from source.
 2. `godot --headless --path . --script tools/build_help_bundle.gd` and the `--check`.
 3. `godot --headless --path . --script tests/run_tests.gd` - and read the literal verdict line
    `All tests passed.`; a crashed test prints no `[FAIL]` at all. The docs tests that matter here
@@ -332,7 +336,7 @@ reader.
   Automatic figures need the compiled shape with its `extends` header, and must round-trip.
   Write ` ```eventsheet ` when you want to be sure - a failing authored fence tells you why.
 - **Fourteen use cases, or six "Other use cases".** The counts are exact and tested.
-- **A verb name from memory.** "Set Text (translated)" versus "Set Text (translated pattern)"
+- **A display name from memory.** "Set Text (translated)" versus "Set Text (translated pattern)"
   is a failed sweep. Grep the source.
 - **Forgetting the bundle.** The suite fails on `drifted=1` and names the page.
 - **A typographic dash in a range** (the long dash between two numbers). Write "0-1" with a plain hyphen, or "0 to 1". The sweep catches every long dash, including one quoted as an example - which is why this line does not show you one.

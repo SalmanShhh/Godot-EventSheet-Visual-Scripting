@@ -70,7 +70,7 @@ Typed knobs get a live Inspector **drawer** (direction dial, colour swatch, curv
 
 ## 5. Decide - Conditions
 
-- **Compare Variable**, **Expression Is True** (any boolean expression), **Is Valid** (null-safe), the **Array/Dictionary** conditions (*Is Empty*, *Contains*, *Has Key*), node conditions (*Is On Floor/Wall*), input (*Is Action Pressed*). Add several for AND, or switch the row to OR.
+- **Compare Variable**, **Expression Is True** (any boolean expression), **Is Valid** (null-safe), the **Array/Dictionary** conditions (*Is Empty*, *Contains*, *Has Key*), node conditions (*Is On Floor*, *Is By Wall*), input (*Is Action Pressed*). Add several for AND, or switch the row to OR.
 - **Else** - right-click a row → *Else* (or the chain keys) for if/else.
 
 ---
@@ -79,7 +79,7 @@ Typed knobs get a live Inspector **drawer** (direction dial, colour swatch, curv
 
 - **Set / Add Variable**, **Set Property** (`host.visible = ...`), **Call Method**, **Emit Signal**.
 - **Movement**: *Set Velocity (X/Y)*, *Apply Gravity*, *Accelerate Velocity Toward*, *Move And Slide*, *Read Input Axis Into*.
-- **Collections** (a full set - no GDScript needed): *Push Back*, *Pop Front/Back*, *Push Front*, *Insert*, *Erase*, *Find*, *Sort*, *Clear*; *Set Key*, *Get (with default)*, *Has Key*, *Keys/Values*.
+- **Collections** (a full set - no GDScript needed): *Push Back*, *Pop Front/Back*, *Push Front*, *Insert At*, *Delete Value*, *Find*, *Sort*, *Clear*; *Set Key*, *Get (with default)*, *Has Key*, *Keys/Values*.
 
 ---
 
@@ -99,7 +99,7 @@ Inside the loop body, **Current Loop Item** is the iterator; **Break Loop** / **
 
 ## 8. Reusable Logic - Functions
 
-Add a **Function** (a name and what kind of verb it is). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to. Its parameters are added afterwards from the Define block's own cells, not in the dialog. The "Using the ACE Studio" guide walks through it field by field.
+Add a **Function** (a name and which kind it is). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to. Its parameters are added afterwards from the Define block's own cells, not in the dialog. The "Using the ACE Studio" guide walks through it field by field.
 
 <img src="images/ace-studio.png" alt="The ACE Studio: Name, Doc comment and Inspector button rows, three cards headlining Action / Condition / Expression with a plain-language line each, a live picker preview of the published function with its Ships-as GDScript signature, and a plain Publish-to-the-picker checkbox." width="580">
 
@@ -109,22 +109,22 @@ Add a **Function** (a name and what kind of verb it is). The dialog is the **ACE
 
 Tick **"Publish to the picker"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary. The three details that decide how it reads there - its display name, description, and picker category - are edited inline on its own row (double-click the name, the caption above it, or the muted category chip), not in the dialog.
 
-Each published verb reads on the canvas the same way every other event row does: a two-lane row with the **kind badge and the verb's name on the left**, and on the right what it **hands back** - `gives back <type>` for a Condition or Expression, plus markers like `waits`, `static` or `internal`. The `## @ace_description(...)` you wrote sits directly above it as a caption. It is an ordinary event row, drawn like any other - the kind badge is the cue, not a colour wash. (If you WANT each kind colour-coded, `verb_row_tint_strength` in the theme editor turns the wash back on.)
+Each published function reads on the canvas the same way every other event row does: a two-lane row with the **kind badge and the function's name on the left**, and on the right what it **hands back** - `gives back <type>` for a Condition or Expression, plus markers like `waits`, `static` or `internal`. The `## @ace_description(...)` you wrote sits directly above it as a caption. It is an ordinary event row, drawn like any other - the kind badge is the cue, not a colour wash. (If you WANT each kind colour-coded, `verb_row_tint_strength` in the theme editor turns the wash back on.)
 
-A verb's parameters render as condition-style cells beneath its name: click one and you get a small **Edit Parameter** dialog holding just that input - its name, type, optional default and description - with `Edit the whole verb…` inside it if the verb itself is what you meant. `+ Add parameter` opens the same small dialog, blank. A verb's body is **open by default** (only a verb nested inside a group or a `#region` starts folded), and a body row with no conditions reads **Always** - it runs whenever the verb is called, which is why it does not say "Every Tick" like a sheet-level event would. Hover a verb to read its full declaration, including its category and each parameter's type, default and blurb.
+A function's parameters render as condition-style cells beneath its name: click one and you get a small **Edit Parameter** dialog holding just that input - its name, type, optional default and description - with `Edit the whole function…` inside it if the function itself is what you meant. `+ Add parameter` opens the same small dialog, blank. A function's body is **open by default** (only one nested inside a group or a `#region` starts collapsed), and a body row with no conditions reads **Always** - it runs whenever the function is called, which is why it does not say "Every Tick" like a sheet-level event would. Hover a function to read its full declaration, including its category and each parameter's type, default and blurb.
 
 <img src="images/published-verb-rows.png" alt="A published verb on the canvas: its description as a caption above it, the Action badge and name on the left with a clickable parameter cell per input (id: text, seconds: number, reset instantly: true/false), the featured star on the right, and its body open beneath as ordinary event rows starting from Always." width="580">
 
-Verbs appear in the order the file declares them - after the sheet's own events, exactly where the compiler writes them - so an opened pack reads top to bottom like its GDScript. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ:
+Functions appear in the order the file declares them - after the sheet's own events, exactly where the compiler writes them - so an opened pack reads top to bottom like its GDScript. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ:
 
 <img src="images/anatomy-panel.png" alt="The Anatomy panel: a behaviour's Properties, State, Triggers, and Actions listed as organs with role pills - the Health pack showing 3 knobs, 9 state values, 8 triggers, and 16 actions." width="340">
 
-Below the Anatomy panel, the fold-away **Picker preview** answers the question the census
-cannot: *how will my verbs actually read in the picker?* It renders every published entry
+Below the Anatomy panel, the collapsible **Picker preview** answers the question the census
+cannot: *how will my vocabulary actually read in the picker?* It renders every published entry
 live from the unsaved sheet - kind badge, display name, the featured star, the parameter
 list, the category - so a rename or a category change shows its picker face immediately,
 before you save. Exported variables appear once each, labelled with the get / set / add /
-subtract verbs they will publish, and a not-yet-lifted `## @ace_*` shell previews under its
+subtract rows they will publish, and a not-yet-lifted `## @ace_*` shell previews under its
 declared name too.
 
 <img src="images/picker-preview-panel.png" alt="The Picker preview panel expanded on the Health pack: 44 entries, each with its action pill, the featured star on Take Damage and Heal, the parameter list in parentheses, and the Health category chip." width="300">
@@ -169,9 +169,9 @@ Every Frame + For Each coin in range + Move Toward host: a complete magnet behav
 
 Author the patrol once (waypoints as exported variables), drop the behaviour under each enemy, and tune per-instance speed in the Inspector.
 
-### 3. Teach the team your verbs
+### 3. Teach the team your vocabulary
 
-A behaviour sheet's published functions become picker verbs project-wide via Teach a Verb - your "Flash Red" is now everyone's Flash Red.
+A behaviour sheet's published functions become picker entries project-wide via Teach a Verb - your "Flash Red" is now everyone's Flash Red.
 
 ### 4. A shared cooldown gate
 

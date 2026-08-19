@@ -91,7 +91,7 @@ All ACEs live in the **Weapon** category and target the `WeaponKit` behavior on 
 
 ### Actions
 
-The hand-picked weapon verbs:
+The hand-picked weapon actions:
 
 | Action | Parameters | Description |
 |---|---|---|
@@ -119,7 +119,7 @@ Because the pack exposes its whole surface, every exported property also gets ge
 | `auto_reload` | Set Auto Reload `value` (bool) | (bool - no Add / Subtract) |
 | `infinite_reserve` | Set Infinite Reserve `value` (bool) | (bool - no Add / Subtract) |
 
-Two shapes exist for a couple of these: the curated verb (`Set Magazine Size`, which clamps the size at 0) and the raw property setter (`Set Max Ammo`) both write the magazine size, and both `Set Fire Rate` and `Set Fire Mode` appear once as a verb and once as the property setter. Either works; the verbs are the friendlier read.
+Two shapes exist for a couple of these: the curated action (`Set Magazine Size`, which clamps the size at 0) and the raw property setter (`Set Max Ammo`) both write the magazine size, and both `Set Fire Rate` and `Set Fire Mode` appear once as a curated action and once as the property setter. Either works; the curated actions are the friendlier read.
 
 ### Conditions
 
@@ -182,7 +182,7 @@ Every exported property is also readable by its friendly name:
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$WeaponKit.auto_reload` inserts the **Auto Reload** entry straight into any expression
 - `$WeaponKit.burst_count` inserts the **Burst Count** entry straight into any expression
@@ -479,5 +479,5 @@ The turret fires until its mag empties, auto-reload kicks in, and On Reload Star
 - **Auto Reload is on by default.** With `auto_reload` on, running dry starts a reload on its own, so a manual Reload call may be redundant. If you want the player to always reload by hand, turn `auto_reload` off in the Inspector.
 - **Cancel Reload gains no ammo.** It aborts the timer and leaves the magazine exactly as it was. It only helps when there were still rounds loaded when the reload began - cancelling an empty-mag reload just leaves you empty.
 - **Fire modes 0 and 1 behave the same in code; the difference is how you call Fire.** Both fire one round per Fire call, paced by the cooldown. "Single" means you call Fire once per click; "auto" means you call it every frame the trigger is held. Only mode 2 (burst) changes what one Fire call does.
-- **There are two "Set Fire Rate" and two "Set Fire Mode" entries in the picker.** One is the curated verb, one is the raw property setter, and they do the same thing. `Set Magazine Size` (the verb, which clamps at 0) and `Set Max Ammo` (the property setter) likewise both set the magazine size. Pick either; the verbs read more clearly in a sheet.
+- **There are two "Set Fire Rate" and two "Set Fire Mode" entries in the picker.** One is the curated action, one is the raw property setter, and they do the same thing. `Set Magazine Size` (the curated action, which clamps at 0) and `Set Max Ammo` (the property setter) likewise both set the magazine size. Pick either; the curated actions read more clearly in a sheet.
 - **Read the progress expressions live, not once.** Reload Progress and Cooldown Progress change every frame, so wire them to a bar or reticle inside a per-tick event, not a one-off. Reload Progress reads 1 when no reload is running, which is the natural "full" resting state.

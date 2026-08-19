@@ -1,10 +1,10 @@
 # Working With Text
 
 **Working With Text** is the builtin vocabulary for cutting a string apart, searching it, testing it
-and turning it into (or out of) a number. It is four bodies of verbs that answer the same question at
-four levels of effort: the plain **Text** verbs (Left, Mid, Trim, Replace In Text, Text From Pattern),
-the **Variables: String** tests and conversions (Text Contains, Split Text, Text To Int, Pad Number),
-the **Text: RegEx** pattern verbs for when a fixed marker is not enough, and the no-pattern
+and turning it into (or out of) a number. It is four bodies of vocabulary that answer the same question
+at four levels of effort: the plain **Text** expressions (Left, Mid, Trim, Replace In Text, Text From
+Pattern), the **Variables: String** tests and conversions (Text Contains, Split Text, Text To Int, Pad
+Number), the **Text: RegEx** pattern rows for when a fixed marker is not enough, and the no-pattern
 **extraction** set (Text Before / Text After / Text Between / Number In Text / Split Keeping Quotes)
 that names the piece you want instead of the index arithmetic that computes it.
 
@@ -16,7 +16,7 @@ plugin reference in the emitted code - a row that reads "the part of line before
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -36,12 +36,12 @@ plugin reference in the emitted code - a row that reads "the part of line before
 ## Core concepts
 
 - **Expressions go in cells, actions go in rows.** Almost everything here is an EXPRESSION: a value
-  you drop into a parameter cell (a Label's text, another verb's argument, a comparison). Only a
-  handful of text verbs anywhere in the vocabulary are actions.
+  you drop into a parameter cell (a Label's text, another row's argument, a comparison). Only a
+  handful of text rows anywhere in the vocabulary are actions.
 - **Nothing here changes the text you gave it.** Godot strings are values, so Trim, Replace In Text
   and Uppercase all hand back a NEW string. Store the result somewhere or it is gone.
 - **Index-free first.** Text Before / Text After / Text Between exist so you never have to write
-  Find In Text and then Mid with an arithmetic offset. Reach for the index verbs only when the piece
+  Find In Text and then Mid with an arithmetic offset. Reach for the index expressions only when the piece
   you want is genuinely positional (the first three characters, the last four).
 - **A missing marker has a documented answer, not an error.** Text Before hands back the WHOLE text
   (with nothing to cut at, the part before the marker is everything). Text After hands back an EMPTY
@@ -55,14 +55,14 @@ plugin reference in the emitted code - a row that reads "the part of line before
   anywhere, an optional sign, a repeated group.
 - **Tokens are 0-based.** Token At with index 0 is the first column.
 
-## Verb reference
+## Reference tables
 
 On the canvas these read as sentences with the parameter values drawn in place, e.g.
 *the part of `line` between `[` and `]`*, *pad `score` to `6` digits*, *`name` contains `sword`*.
 
 ### Text (the plain string toolkit)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Text From Pattern | Fills `{name}` slots in a pattern from a record of values - the friendly way to mix words and numbers, no format codes. | `{pattern}.format({values})` |
 | Left | The first N characters. | `{text}.left({count})` |
@@ -82,7 +82,7 @@ On the canvas these read as sentences with the parameter values drawn in place, 
 
 ### Variables: String (tests, splits and conversions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Text Contains | CONDITION: the substring appears somewhere inside. | `{text}.contains({needle})` |
 | Text Begins With | CONDITION: the text starts with the prefix. | `{text}.begins_with({prefix})` |
@@ -95,7 +95,7 @@ On the canvas these read as sentences with the parameter values drawn in place, 
 
 ### Text (a duration as a clock)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | As Clock Time | Seconds as `mm:ss` - 90 reads `01:30`. A negative duration reads as zero. | `("%02d:%02d" % [int(maxf({seconds}, 0.0)) / 60, int(maxf({seconds}, 0.0)) % 60])` |
 
@@ -104,7 +104,7 @@ On the canvas these read as sentences with the parameter values drawn in place, 
 Every one of these compiles the pattern inline with `RegEx.create_from_string`, so there is no
 pre-built RegEx object to declare and nothing to keep in a variable.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Text Matches Regex | CONDITION: the pattern matches anywhere in the text. | `RegEx.create_from_string({pattern}).search({text}) != null` |
 | Regex Replace | The text with EVERY match replaced. `$1` / `$2` in the replacement reuse capture groups. | `RegEx.create_from_string({pattern}).sub({text}, {replacement}, true)` |
@@ -116,7 +116,7 @@ pre-built RegEx object to declare and nothing to keep in a variable.
 
 ### Text (extraction, in words)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Text Before | The part before the FIRST marker. Missing marker gives the whole text back, so nothing is silently lost. | `{text}.get_slice({marker}, 0)` |
 | Text After | Everything after the FIRST marker. Empty when the marker is not there. | `str((Array({text}.split({marker}, true, 1)) + [""])[1])` |
@@ -332,7 +332,7 @@ which rows stay visible, so the filter is case-blind for free.
 compare, whatever decoration ("v1.4-beta") the string carries around it.
 
 **Localised key hygiene.** Text Begins With `"UI_"` on every key your sheet feeds to a translation
-verb, logged when it fails, catches a hand-typed sentence that was never meant to be a key.
+row, logged when it fails, catches a hand-typed sentence that was never meant to be a key.
 
 **Import sanity check.** Regex Match Count of `"[0-9]+"` across a pasted block tells you at a glance
 whether a spreadsheet column arrived as numbers or as words, before you convert any of it.
@@ -359,10 +359,10 @@ whether a spreadsheet column arrived as numbers or as words, before you convert 
   the duration can pass an hour, use As Duration from the Making Text Readable On Screen vocabulary.
 - **Token indexes start at 0** and `Token At` past the end gives an empty string, not an error.
 - **Split Text hands back a PackedStringArray, not a plain list.** Most things accept it happily; if
-  a verb refuses it, the builtin List Or verb converts and defaults in one step.
+  a row refuses it, the builtin List Or expression converts and defaults in one step.
 - **A regex pattern lives in a string, so backslashes double.** `\d` is typed `"\\d"` in a cell. The
-  RegEx verbs default to `"[0-9]+"` for exactly this reason - it needs no escaping at all.
-- **The regex verbs compile their pattern every time they run.** That is what makes them one-liners
+  RegEx rows default to `"[0-9]+"` for exactly this reason - it needs no escaping at all.
+- **The regex rows compile their pattern every time they run.** That is what makes them one-liners
   with no setup, and it is fine in an event or a UI update. In a per-frame row over hundreds of
   items, do the match once and keep the answer in a variable.
 - **Regex First Match and Regex Capture Group answer "" on a miss** rather than erroring, so a failed

@@ -5,7 +5,7 @@ bag of small, reusable parts. "This thing is an enemy, and it is poisoned, and i
 a `PoisonedBurningEnemy` class. Event sheets already give you every piece you need to work this way
 without a separate framework - **groups are your components**, **a group is a set of entities**, and **a
 sheet that runs over a group each frame is a system**. This guide shows the pattern, the convenience
-verbs that make it read well, and - just as important - when NOT to reach for it.
+rows that make it read well, and - just as important - when NOT to reach for it.
 
 This is "ECS-lite", not a real Entity Component System. It is plain node iteration over groups, so it
 composes with everything else in the plugin and compiles to the exact Godot you would hand-write. It is
@@ -89,7 +89,7 @@ frame - see [section 8](#8-performance-the-honest-guidance).
 The **Systems** section in the ACE picker holds the composition building blocks. They all compile to
 plain `get_tree().get_nodes_in_group(...)` and `is_in_group(...)` - no plugin dependency:
 
-| Verb | Kind | What it gives you |
+| Name | Kind | What it gives you |
 |---|---|---|
 | **Entities In Group** | expression | every node in a group, as an array (loop with For Each) |
 | **Any Entity In Group** | condition | true if at least one entity of that type exists |
@@ -120,7 +120,7 @@ Groups also give you **decoupled messaging** - reacting to, or broadcasting to, 
 without holding a reference to any of them (the "your nodes are too connected" fix). Both directions read
 as one row and compile to plain GDScript:
 
-| Verb | Kind | What it does |
+| Name | Kind | What it does |
 |---|---|---|
 | **Connect Group Signal** | action | wire a handler to a signal on *every current member* of a group at once - "when any enemy fires `died`, run `_on_enemy_died`" - with no per-node reference. Idempotent (guarded by `is_connected`). |
 | **Call Method On Group (with value)** | action | the send direction that carries data: call a method with a value on every member (bare **Call Method On Group** carries none). |

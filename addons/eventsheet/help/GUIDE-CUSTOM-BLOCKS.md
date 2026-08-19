@@ -24,7 +24,7 @@ ACEs define what a row can *do* inside events. **Custom blocks** define new *kin
 
 ## 1. Scenarios Where Custom Blocks Excel
 
-- **A pack that ships data, not just verbs.** Your loot pack's ACEs read a drop table. A `my_pack.drop_table` block puts that table IN the sheet as an editable row instead of a raw GDScript dictionary.
+- **A pack that ships data, not just vocabulary.** Your loot pack's ACEs read a drop table. A `my_pack.drop_table` block puts that table IN the sheet as an editable row instead of a raw GDScript dictionary.
 - **Structure markers that survive the round-trip.** `#region Combat` fences from hand-written scripts open as first-class **Region** rows, stay editable, and write back byte-identically. Matched pairs FOLD like the script editor, draw a thin colored bubble around everything they cover (groups and every other block kind nest inside), glow while you drag a row into them, and carry an editable color + description.
 - **Resource shortcuts designers actually use.** A **Preload Resource** block (`const Sfx := preload("res://sfx/jump.ogg")`) is one dialog with two fields instead of a code block someone has to type correctly.
 - **Team conventions as rows.** A `## NOTE:` line is just a comment until a 30-line kind turns every one of them into a highlighted, searchable **Note** row (this exact kind ships as the living example).
@@ -232,7 +232,7 @@ The practical consequence: you cannot break a user's file with a bad kind. The w
 | Kind | `kind_id` | Emits | Notes |
 |------|-----------|-------|-------|
 | Preload Resource | `preload` | `const Name := preload("res://path")` in constant mode, or `var Name := load("res://path")` in dynamic mode | Schema kind; THREE fields (`name`, `path`, `mode`). It implements `display_spans()`, so the row reads `Name : Type ⟨preload⟩ = res://path` with no kind badge. |
-| Region | `region` | `#region Label` / `#endregion` (+ an optional `## @ace_region(#color, "description")` marker line above a styled opener) | Schema kind; fences are two independent single-line blocks. Matched pairs fold in the editor with a thin colored bubble around the range; the color and description edit in the fence's dialog. |
+| Region | `region` | `#region Label` / `#endregion` (+ an optional `## @ace_region(#color, "description")` marker line above a styled opener) | Schema kind; fences are two independent single-line blocks. Matched pairs collapse in the editor with a thin colored bubble around the range; the color and description edit in the fence's dialog. |
 | Enum row | `enum` | `enum Name { A, B }` | Resource kind over `EnumRow`; dedicated dialog; not in Add surfaces. |
 | Signal row | `signal` | `signal name(params)` | Resource kind over `SignalRow`; the trigger-annotation fold stays with the importer. |
 | Note (demo) | `demo.note` | `## NOTE: text` | The shipped pack-kind example (`eventsheet_addons/demo_note_block.gd`). |
@@ -563,7 +563,7 @@ func emit(block: CustomBlockRow) -> PackedStringArray:
 
 ### 26. A pack dependency stated on the sheet
 
-**Scenario:** a sheet only works when another pack is installed, and the failure a user sees today is a missing-verb error. A dependency block says so out loud, and reads back on open.
+**Scenario:** a sheet only works when another pack is installed, and the failure a user sees today is a missing-method error. A dependency block says so out loud, and reads back on open.
 
 ```gdscript
 func summary(block: CustomBlockRow) -> String:

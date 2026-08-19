@@ -1,6 +1,6 @@
 # Drawing Canvas - Draw Shapes, Trails, and Line of Sight from the Sheet
 
-A texture your event sheet draws onto with verbs: lines, circles, rings, rects, cones,
+A texture your event sheet draws onto with actions: lines, circles, rings, rects, cones,
 texture stamps, textured ribbons, and a raycast **line-of-sight fan** that hugs your walls.
 Two personalities in one behavior: **persistent** (strokes stay until you clear - paint,
 blood splats, skid marks) and **auto-clear** (redrawn every frame - attack telegraphs,
@@ -85,13 +85,13 @@ Every tick     -> Player | Drawing Canvas: Draw Line Of Sight
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$DrawingCanvas.canvas_width` inserts the **Canvas Width** entry straight into any expression
 - `$DrawingCanvas.canvas_height` inserts the **Canvas Height** entry straight into any expression
@@ -184,7 +184,7 @@ transient, never serialized into the scene, gone the instant you deselect.
 ### 6. Draw onto the 3D world
 
 Draw a target ring on the canvas, then `Spawn Canvas Decal` from the **Decal Painter** pack
-projects the live texture onto your 3D floor - the 2D verbs become 3D ground markings.
+projects the live texture onto your 3D floor - the 2D drawing actions become 3D ground markings.
 
 ### 7. The one-row shadow (simplest start)
 
@@ -245,7 +245,7 @@ Keep the canvas in auto-clear mode for a clean arc - a persistent ribbon smears.
 
 ### 12. Spray paint with a wash
 
-Persistent painting plus the cleanup verb: Clear Canvas is the bucket of water that wipes the
+Persistent painting plus the cleanup action: Clear Canvas is the bucket of water that wipes the
 wall and then keeps accumulating again.
 
 ```
@@ -310,7 +310,7 @@ Every tick
 ```
 
 Tint `place_color` red when the spot is blocked, green when it is clear. The dash length and gap are the
-last numbers before the color (rect takes a line width, ring/line take a width). All three dashed verbs -
+last numbers before the color (rect takes a line width, ring/line take a width). All three dashed actions -
 line, ring, rect - share one dash rhythm, so they read as a set.
 
 ### 17. Flatten a layer of decor (performance bake)

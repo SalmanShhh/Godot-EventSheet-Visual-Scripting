@@ -1,18 +1,18 @@
 # Setting And Changing Variables
 
 A variable is where a game keeps what it knows: score, health, ammo, a name, a flag, a meter that
-fills while a button is held. This guide covers the builtin verbs that hold and nudge a value - the
+fills while a button is held. This guide covers the builtin rows that hold and nudge a value - the
 plain arithmetic set, the eased and guarded forms, the fallbacks that make a loaded value safe to
 store, and the scratch locals and constants that live for one event only.
 
-These verbs are builtin. Each compiles to the exact GDScript line it names, so a sheet variable is a
-real member of the emitted script and a local really is a `var` inside the handler.
+This vocabulary is builtin. Each row compiles to the exact GDScript line it names, so a sheet variable
+is a real member of the emitted script and a local really is a `var` inside the handler.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -49,10 +49,10 @@ real member of the emitted script and a local really is a `var` inside the handl
 - **A zero is not missing.** **Number Or** keeps `0`, and **Value Or** keeps `0` and `""` alike. Only
   the emptiness of a text, a list or a record counts as nothing.
 - **Locals come in three shapes for a reason.** `var x = 1`, `var x: float = 1.0` and `var x := 1.0`
-  are three different GDScript lines, and each has its own verb so that reopening a hand-written script
-  lifts the line back to the row that wrote it, byte for byte.
+  are three different GDScript lines, and each has its own action so that reopening a hand-written
+  script lifts the line back to the row that wrote it, byte for byte.
 
-## Verb reference
+## Reference tables
 
 On the canvas these read as sentences, with the parameter values drawn in bold:
 
@@ -63,7 +63,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### Variables - the arithmetic set
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set value | Sets a **Variable** to a **Value** you give. | `{var_name} = {value}` |
 | Add to | Adds an **Amount** to a variable - score, health. | `{var_name} += {amount}` |
@@ -75,7 +75,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### Variables - the eased and guarded forms
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Move Toward (smooth) | Eases a **Variable** toward a **Toward** value at a **Speed**, frame-rate independently. Works on numbers, Vector2/Vector3 and Colors alike. | `{var_name} = lerp({var_name}, {target}, 1.0 - exp(-maxf({speed}, 0.0) * get_process_delta_time()))` |
 | Charge Toward | Fills a **Variable** while the event runs, reaching **Up To** after **Over Seconds**, clamped at the top. | `{var_name} = minf({var_name} + (maxf({maximum}, 0.0) / maxf({seconds}, 0.001)) * get_process_delta_time(), maxf({maximum}, 0.0))` |
@@ -85,7 +85,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### Variables - the missing-value fallbacks
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Number Or | The **Value** when it really is a number, or **Or** when it is missing, null, text, or anything else. A zero is kept. | `({value} if typeof({value}) in [TYPE_INT, TYPE_FLOAT] else {fallback})` |
 | Text Or | The **Value** when it really is text with something in it, or **Or** when it is missing, null, blank, or another kind. | `({value} if (typeof({value}) == TYPE_STRING and {value}) else {fallback})` |
@@ -95,7 +95,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### Helpers - locals and constants, scoped to one event
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Local Variable | Creates a temporary **Name** holding a **Value**, used only within this event. | `var {name} = {value}` |
 | Set Local Variable (typed) | The same with a fixed **Type** (float, int, bool, String, Vector2, Vector3). | `var {name}: {var_type} = {value}` |
@@ -172,7 +172,7 @@ Every Frame
 Around 8 feels like a firm camera follow. Because it uses the exponential form, the follow feels the
 same on a slow machine and a fast one.
 
-**8. Fade a colour, with the same verb.**
+**8. Fade a colour, with the same action.**
 
 ```
 Every Frame
@@ -299,7 +299,7 @@ Every Physics Tick
 A constant is folded once and cannot be reassigned by a later row, which is what makes it read as a
 tuning knob rather than as state.
 
-**20. Read a variable inside another verb's cell.**
+**20. Read a variable inside another row's cell.**
 
 ```
 Every Frame
@@ -324,8 +324,8 @@ than as the row's own subject.
 
 ## Tips and common mistakes
 
-- **Divide Variable by zero is still a division by zero.** The verb does not guard it. Test the divisor
-  first, or use an expression that clamps it.
+- **Divide Variable by zero is still a division by zero.** The action does not guard it. Test the
+  divisor first, or use an expression that clamps it.
 - **Modulo Variable is integer modulo.** `%=` on a float is a GDScript error. For decimals, use the
   **Float Modulo** expression instead.
 - **Move Toward (smooth) and Charge Toward want a per-frame trigger.** Both read

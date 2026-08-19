@@ -2,7 +2,7 @@
 
 Everything that makes a character move on screen without moving through space: playing a clip, stopping
 it, asking whether it is still going, scrubbing the play head, queueing what comes next, flipping a
-sprite to face the other way, and driving an AnimationTree state machine. These verbs are **builtin** -
+sprite to face the other way, and driving an AnimationTree state machine. These rows are **builtin** -
 they need no pack enabled and no behavior attached. They come from four vocabulary modules and land in
 the picker under **General Actions**, **General Conditions**, **General Expressions** and **Animation**,
 scoped to the node they belong to.
@@ -10,17 +10,17 @@ scoped to the node they belong to.
 There are three different ways to reach an animation here, and knowing which one you are holding is most
 of the battle:
 
-1. **Host-scoped verbs** - the row runs on the AnimationPlayer / AnimatedSprite2D / AnimationTree itself.
-2. **The same verbs with "On node" filled in** - every host-scoped verb gains an optional target, so one
+1. **Host-scoped rows** - the row runs on the AnimationPlayer / AnimatedSprite2D / AnimationTree itself.
+2. **The same rows with "On node" filled in** - every host-scoped row gains an optional target, so one
    row on any sheet can drive a player somewhere else.
-3. **The "(in object)" verbs** - you name the OBJECT and the row finds its player for you, so
+3. **The "(in object)" rows** - you name the OBJECT and the row finds its player for you, so
    "play walk on Player" needs no `$Rig/AnimationPlayer` path at all.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -39,15 +39,15 @@ of the battle:
 
 ## Core concepts
 
-- **The host is the node the verb belongs to.** Play Animation is an AnimationPlayer verb; Set Frame is
-  an AnimatedSprite2D verb; Travel To State is an AnimationTree verb. The picker only offers a verb where
-  its host makes sense, which is why two different verbs are both called **Is Animation Playing** - one
-  asks an AnimationPlayer, one asks an AnimatedSprite2D.
-- **"On node" is a free retarget.** Every host-scoped verb in this guide carries an optional **On node**
+- **The host is the node the row belongs to.** Play Animation is an AnimationPlayer action; Set Frame is
+  an AnimatedSprite2D action; Travel To State is an AnimationTree action. The picker only offers a row
+  where its host makes sense, which is why two different conditions are both called
+  **Is Animation Playing** - one asks an AnimationPlayer, one asks an AnimatedSprite2D.
+- **"On node" is a free retarget.** Every host-scoped row in this guide carries an optional **On node**
   parameter. Leave it blank and the row acts on the host, compiling to exactly the bare call shown in the
   Ships-as column. Fill it and the same call is prefixed with that node, so `speed_scale = 0.5` becomes
   `Boss.speed_scale = 0.5`. Nothing else changes.
-- **The "(in object)" verbs search instead of pointing.** They call
+- **The "(in object)" rows search instead of pointing.** They call
   `find_children("*", "AnimationPlayer", true, false)` beneath the object you name and use the first
   match. That is what buys you "no path", and it is also their whole risk profile: first match wins, and
   a missing player means the row quietly does nothing.
@@ -63,14 +63,14 @@ of the battle:
   `get("parameters/playback")`; Set Tree Parameter and Tree Parameter take a full parameter path such as
   `"parameters/TimeScale/scale"`.
 
-## Verb reference
+## Reference tables
 
 The **Ships as** column is the emitted GDScript with **On node** left blank. Filling On node prefixes
 that line with the node you picked.
 
 ### AnimationPlayer - play and stop
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Play Animation | Plays a named animation on an AnimationPlayer, e.g. for walking or attacking. | `play(&{anim_name})` |
 | Stop Animation | Stops the currently playing animation on the AnimationPlayer. | `stop()` |
@@ -79,7 +79,7 @@ that line with the node you picked.
 
 ### AnimationPlayer - steering the play head
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Animation Speed | Scales how fast every animation on this player runs. 0 freezes it in place. | `speed_scale = {scale}` |
 | Seek Animation | Jumps the play head to a time in seconds and updates the pose immediately. | `seek({time}, true)` |
@@ -94,12 +94,12 @@ that line with the node you picked.
 
 ### AnimatedSprite2D - sprite frames
 
-Two verbs here sound almost the same as the AnimationPlayer pair above, and they compile against
+Two expressions here sound almost the same as the AnimationPlayer pair above, and they compile against
 different node types. **Get Current Animation** reads an AnimationPlayer's `current_animation`;
 **Current Animation** reads an AnimatedSprite2D's `animation`. Pick the one whose node is in the
 row's On node cell.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Play Sprite Animation | Plays a named animation on an animated sprite (e.g. run or jump). | `play(&{anim})` |
 | Stop Sprite Animation | Stops the animated sprite's current animation on the spot. | `stop()` |
@@ -113,7 +113,7 @@ row's On node cell.
 These take a **Target** (the object) and find the player themselves. Each one is guarded, so a target
 with no player is a no-op rather than an error.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Play Animation (in object) | Plays a named animation by auto-finding the object's AnimationPlayer for you. | `var __ap_{uid} := {target}.find_children("*", "AnimationPlayer", true, false).pop_front() as AnimationPlayer` then `if __ap_{uid}: __ap_{uid}.play(&{anim})` |
 | Stop Animation (in object) | Stops the object's animation by auto-finding its AnimationPlayer. | the same lookup, then `__ap_{uid}.stop()` |
@@ -125,7 +125,7 @@ with no player is a no-op rather than an error.
 
 ### AnimationTree - state machines and blends
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set AnimationTree Active | Turns this AnimationTree's playback on or off. | `active = {active}` |
 | Travel To State | Travels the state machine to a named state. | `get("parameters/playback").travel({state})` |
@@ -350,7 +350,7 @@ On boss defeated
 
 ## Tips and common mistakes
 
-- **Two verbs share the name Is Animation Playing.** One is an AnimationPlayer condition, one is an
+- **Two conditions share the name Is Animation Playing.** One is an AnimationPlayer condition, one is an
   AnimatedSprite2D condition. Both emit `is_playing()`. The picker shows you the one your host supports,
   so the confusion only bites when you retarget with On node - point an AnimationPlayer condition at a
   sprite and you get the wrong node's answer, not an error.
@@ -364,7 +364,7 @@ On boss defeated
   select a clip without playing it, follow it with Pause Animation.
 - **Animation Length can be 0.** A player with nothing current returns 0, so a progress bar that divides
   by it produces an error or a NaN. Gate the row on Is Animation Playing.
-- **The "(in object)" verbs take the FIRST match in tree order.** A character scene with two
+- **The "(in object)" rows take the FIRST match in tree order.** A character scene with two
   AnimationPlayers (a rig and a UI flourish, say) will get whichever comes first in the subtree. Target
   the player directly with On node when the object has more than one.
 - **A missing player is silent, by design.** The "(in object)" templates are wrapped in an `if`, so

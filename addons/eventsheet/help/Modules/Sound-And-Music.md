@@ -11,18 +11,18 @@ Audio in EventSheets comes in three layers, and picking the right one is most of
    **Is Playing** and **Playback Position**. This is the layer music, looping ambience and anything
    you need to interrupt belongs on.
 3. **The mixing desk.** Buses are Godot's own idea of "all the SFX" or "all the music", and the
-   **Audio Server** verbs speak to them by name: volume, mute, solo, effect bypass, and the metering
+   **Audio Server** rows speak to them by name: volume, mute, solo, effect bypass, and the metering
    numbers a VU bar reads. An options menu talks in percent instead of decibels, and the
-   **Game Options** verbs cover that.
+   **Game Options** rows cover that.
 
-Every verb here compiles to plain Godot (`AudioStreamPlayer`, `AudioServer`, `linear_to_db`) with no
+Every row here compiles to plain Godot (`AudioStreamPlayer`, `AudioServer`, `linear_to_db`) with no
 plugin runtime behind it.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -47,27 +47,27 @@ plugin runtime behind it.
 - **"Last sound" means the last one THIS node played.** The one-shot is remembered as a meta value on
   the emitting node, so **Set Last Sound Playback Rate**, **Set Last Sound Volume** and
   **Stop Last Sound** always talk about the shot this sheet fired, never another node's.
-- **Buses are addressed by name, resolved at the call.** Every bus verb wraps
+- **Buses are addressed by name, resolved at the call.** Every bus row wraps
   `AudioServer.get_bus_index("Music")`. A name that is not in the bus layout resolves to -1, which is
-  silently ignored - so a typo is a verb that quietly does nothing. **Bus Exists** is the guard.
+  silently ignored - so a typo is a row that quietly does nothing. **Bus Exists** is the guard.
 - **Decibels are not percent.** 0 dB is full volume and -80 dB is silence, and the scale is
   logarithmic: half the dB is nowhere near half the loudness. A slider gives you a percent, so use
-  **Set Bus Volume (percent)** for sliders and the dB verbs for mixing decisions.
-- **Node-scoped verbs get an optional "On node".** Every player verb is scoped to
+  **Set Bus Volume (percent)** for sliders and the dB rows for mixing decisions.
+- **Node-scoped rows get an optional "On node".** Every player row is scoped to
   `AudioStreamPlayer`, and the builtin targetable pass adds an **On node** parameter to each. Leave
   it blank and the row acts on the node the sheet is on; fill it in (`$Music`) and the exact same row
   acts on that node instead.
 - **Effects are prepared in the editor and flipped from events.** Add a lowpass to a bus in the Audio
   panel, note its slot number, then **Set Bus Effect Enabled** toggles it at runtime.
 
-## Verb reference
+## Reference tables
 
 Multi-line templates are shown by their first line; the full emitted block appears in the matching
 use case below.
 
 ### One-shots (picker section: Audio)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Play Sound | Plays a sound file once on a chosen bus and volume, then cleans itself up. Remembers the shot as the last sound. | `var __sfx_{uid} = AudioStreamPlayer.new()` … (multi-line, use case 1) |
 | Play Sound At (2D) | Plays a sound at a world position so it gets louder or quieter with distance. Node2D only. | `var __sfx_{uid} = AudioStreamPlayer2D.new()` … (multi-line, use case 3) |
@@ -82,7 +82,7 @@ already `randf_range(0.9, 1.1)`.
 
 ### The player node (picker section: Audio, node type AudioStreamPlayer)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Play | Starts this player, optionally from a time in seconds. | `{target.}play({from})` |
 | Play Sound File | Loads an audio file into this player and starts it. | `{target.}stream = load({path})` + `{target.}play()` |
@@ -97,7 +97,7 @@ already `randf_range(0.9, 1.1)`.
 
 ### The same player, from the general sections (picker: General Actions / Conditions / Expressions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Play Sound | Plays the sound already assigned to an audio player, optionally from a second. | `{target.}play({from_position})` |
 | Stop Sound | Stops the sound currently playing on an audio player. | `{target.}stop()` |
@@ -105,13 +105,13 @@ already `randf_range(0.9, 1.1)`.
 | Is Playing | True while the audio player is playing a sound. | `{target.}playing` |
 | Playback Position | How many seconds into the sound the player currently is. | `{target.}get_playback_position()` |
 
-These five are the older, plainly-named siblings of the Audio-section verbs above and emit the same
-code. Two verbs really are called **Play Sound** and two really are called **Is Playing** - see the
-tips at the end for how to tell them apart in the picker.
+These five are the older, plainly-named siblings of the Audio-section rows above and emit the same
+code. Two actions really are called **Play Sound** and two conditions really are called
+**Is Playing** - see the tips at the end for how to tell them apart in the picker.
 
 ### Buses (picker sections: Audio and Audio Server)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Bus Volume | Sets a named bus's volume in decibels. | `AudioServer.set_bus_volume_db(AudioServer.get_bus_index({bus}), {db})` |
 | Mute Bus | Mutes or unmutes a named bus (Muted is a true / false dropdown). | `AudioServer.set_bus_mute(AudioServer.get_bus_index({bus}), {muted})` |
@@ -130,7 +130,7 @@ tips at the end for how to tell them apart in the picker.
 
 ### The options-menu forms (picker section: Game Options)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Master Volume (percent) | Sets the overall game volume from a 0-100 slider value. | `AudioServer.set_bus_volume_db(0, linear_to_db(clampf({percent} / 100.0, 0.0, 1.0)))` |
 | Set Bus Volume (percent) | Sets one bus's volume from a 0-100 slider value. | `AudioServer.set_bus_volume_db(AudioServer.get_bus_index({bus}), linear_to_db(clampf({percent} / 100.0, 0.0, 1.0)))` |
@@ -245,7 +245,7 @@ $Music.pitch_scale = 1.0 + progress * 0.3
 ```
 
 **11. Master, Music and SFX sliders.** Under an **On Signal** `value_changed` event (or simply every
-frame), one row per bus sets it from the slider's 0-100 value. Master uses the percent verb that goes straight to bus 0:
+frame), one row per bus sets it from the slider's 0-100 value. Master uses the percent action that goes straight to bus 0:
 
 ```gdscript
 AudioServer.set_bus_volume_db(0, linear_to_db(clampf($MasterSlider.value / 100.0, 0.0, 1.0)))
@@ -344,7 +344,7 @@ On Ready
 
 ## Tips and common mistakes
 
-- **Two different verbs are called "Play Sound".** The one in the **Audio** section builds a
+- **Two different actions are called "Play Sound".** The one in the **Audio** section builds a
   throwaway player from a file path. The one in **General Actions** is node-scoped to
   `AudioStreamPlayer` and plays the stream that node already holds. **Is Playing** and
   **Playback Position** are duplicated the same way (Audio versus General Conditions / General
@@ -352,13 +352,13 @@ On Ready
 - **A misspelled bus name does nothing, quietly.** `get_bus_index` answers -1 for an unknown bus and
   the AudioServer call is ignored. If a volume row seems dead, check the spelling against the Audio
   panel, or guard it with **Bus Exists**.
-- **The last-sound verbs only see THIS node's last shot.** The meta lives on the emitting node, so a
+- **The last-sound actions only see THIS node's last shot.** The meta lives on the emitting node, so a
   **Set Last Sound Volume** in a different sheet retunes a different sound (or nothing at all, which
   is a safe no-op because of the `is_instance_valid` guard).
 - **Put the last-sound row immediately after the Play Sound row.** Any other **Play Sound** in
   between - including one in a nested condition - moves the target.
 - **Stop Last Sound frees the player.** There is nothing to resume afterwards; if you need to pause
-  and continue, use a real `AudioStreamPlayer` node and the **Stop** / **Play** / **Seek** verbs.
+  and continue, use a real `AudioStreamPlayer` node and the **Stop** / **Play** / **Seek** actions.
 - **A one-shot cannot be looped or faded over time.** It is created, played and freed. Music,
   ambience and anything you want to fade belongs on a player node.
 - **Percent and decibels are not interchangeable.** Feeding a slider's 0-100 into **Set Bus Volume**

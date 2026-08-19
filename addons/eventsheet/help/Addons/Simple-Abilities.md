@@ -44,7 +44,7 @@ The model is small. Learn these seven ideas and the rest is just calling the rig
 
 **Stacks are charges that refill.** An ability can hold several charges (max stacks). Activating spends one charge; when charges are below the max, a cooldown timer runs and hands back one charge at a time. That is how "two dashes, then wait for each to come back" works with zero extra wiring. **Create Ability With Cooldown And Stacks** sets this up; **Add Stacks**, **Set Stacks**, and **Consume Ability Stack** adjust the count by hand.
 
-**Activate is the "use it" verb.** **Activate Ability** only succeeds if the ability is enabled and has at least one charge. On success it spends a charge, starts the regen cooldown if needed, and fires On Stack Consumed then On Ability Activated. If it is not ready, the call does nothing - so you can call it freely and let it self-gate, or guard it with the **Is Ability Ready** condition for feedback.
+**Activate is the "use it" action.** **Activate Ability** only succeeds if the ability is enabled and has at least one charge. On success it spends a charge, starts the regen cooldown if needed, and fires On Stack Consumed then On Ability Activated. If it is not ready, the call does nothing - so you can call it freely and let it self-gate, or guard it with the **Is Ability Ready** condition for feedback.
 
 **Temporary abilities auto-expire.** **Create Temporary Ability** grants an ability that removes itself after N seconds (calling it again refreshes the timer). **Remove Ability After Duration** schedules that expiry on an ability you already have. When the timer runs out the ability is deleted and On Ability Removed fires.
 
@@ -123,7 +123,7 @@ Each row of the resource becomes a live ability exactly as if you had called the
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Create ability **id** with **seconds** s cooldown, reset instantly **reset_instantly**
 - Activate ability **id**
@@ -218,7 +218,7 @@ All ACEs live in the **Abilities** category and target the `SimpleAbilitiesBehav
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ---
@@ -226,7 +226,7 @@ change while the game runs.
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$SimpleAbilitiesBehavior.ability_set` inserts the **Ability Set** entry straight into any expression
 - `$SimpleAbilitiesBehavior.cooldown_multiplier` inserts the **Cooldown Multiplier** entry straight into any expression

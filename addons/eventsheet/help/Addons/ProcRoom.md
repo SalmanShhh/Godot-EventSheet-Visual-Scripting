@@ -87,7 +87,7 @@ On Traversal Blocked
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Register room type **type_id**: weight **weight**, depths **min_depth** to **max_depth**, max **max_per_depth** per depth
 - Generate from seed **seed_text**: **depths** depths, max **max_rooms_per_depth** rooms each
@@ -156,7 +156,7 @@ All names below are the exact display names you will see in the picker. Because 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$ProcRoomAddon.graph_seed()` inserts the **Graph Seed** entry straight into any expression
 - `$ProcRoomAddon.total_rooms()` inserts the **Total Rooms** entry straight into any expression

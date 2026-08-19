@@ -79,7 +79,7 @@ Setting these in `On Ready` writes them before the first process frame, so the a
 
 ## ACE reference
 
-All ACEs live in the **Bullet 3D** category and target the `Bullet3DBehavior` behavior on the node they are placed on. There is no bullet-id parameter anywhere. The pack ships two friendly verbs (Launch Forward, Set Bullet 3D Speed) and, because it exposes its two properties, an auto-generated Set / Add To / Subtract From action and a read-back expression for each.
+All ACEs live in the **Bullet 3D** category and target the `Bullet3DBehavior` behavior on the node they are placed on. There is no bullet-id parameter anywhere. The pack ships two friendly actions (Launch Forward, Set Bullet 3D Speed) and, because it exposes its two properties, an auto-generated Set / Add To / Subtract From action and a read-back expression for each.
 
 ### Actions
 
@@ -155,7 +155,7 @@ Note: the behavior also tracks how far it has flown internally, but there is no 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$Bullet3DBehavior.enabled_movement` inserts the **Enabled Movement** entry straight into any expression
 - `$Bullet3DBehavior.gravity` inserts the **Gravity** entry straight into any expression
@@ -235,7 +235,7 @@ On Time Resume
   -> Bullet | Bullet3DBehavior: Set Bullet 3D Speed  60
 ```
 
-Set Bullet 3D Speed (not Set Speed) is the right verb here because it changes bullets already in the air.
+Set Bullet 3D Speed (not Set Speed) is the right action here because it changes bullets already in the air.
 
 ### 6. A heavy mortar with a steep drop
 

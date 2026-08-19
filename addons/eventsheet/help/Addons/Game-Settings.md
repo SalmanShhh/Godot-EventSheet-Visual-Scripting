@@ -38,7 +38,7 @@ one hand-wired control per setting.
 
 - **Declaring is the whole idea.** A setting exists because a row declared it: a name, a default, a
   kind, and for a Choice its options. That declaration is the only place the default is written.
-- **The name is the address.** Every other verb takes the setting's name. Keep them short and
+- **The name is the address.** Every other entry takes the setting's name. Keep them short and
   snake_cased (`master_volume`, `screen_shake`), the way you would name a variable.
 - **Reading falls back to the default.** **Setting Value** answers the value that was set or loaded,
   and the declared default when nothing was ever saved. That is why a fresh install is already
@@ -56,7 +56,7 @@ one hand-wired control per setting.
 ## Setup
 
 Enable the **Game Settings** pack. It registers the `Settings` autoload, so there is nothing to
-attach - the verbs are in the picker's **Settings** section from any sheet.
+attach - the vocabulary is in the picker's **Settings** section from any sheet.
 
 Then declare your settings once, load, and apply:
 
@@ -100,7 +100,7 @@ draw them:
 
 ### Actions
 
-| Verb | Parameters | What it does |
+| Name | Parameters | What it does |
 |------|------------|--------------|
 | Declare Setting | Setting Name, Default Value, Kind, Choices | Names a setting once. Declaring the same name again replaces the declaration and keeps any value already set. |
 | Set Setting | Setting Name, Value | Changes a declared setting and fires On Setting Changed. Setting the value it already holds does nothing; an undeclared name is refused with a warning. |
@@ -111,7 +111,7 @@ draw them:
 
 ### Conditions
 
-| Verb | Parameters | True when |
+| Name | Parameters | True when |
 |------|------------|-----------|
 | Changed Setting Is | Setting Name | The setting being announced is this one. It keeps answering after the announcement, so a reaction that waits can still branch when it resumes. |
 | Setting Is | Setting Name, Value | The setting currently holds this value. Usable anywhere, at any time. |
@@ -119,7 +119,7 @@ draw them:
 
 ### Expressions
 
-| Verb | Parameters | Gives |
+| Name | Parameters | Gives |
 |------|------------|-------|
 | Setting Value | Setting Name | The value in force: the one set or loaded, else the declared default. Nothing at all for an undeclared name. |
 | Setting Kind | Setting Name | `percent`, `toggle`, `choice`, `number` or `text` - what control a menu should build. |
@@ -129,7 +129,7 @@ draw them:
 
 ### Triggers
 
-| Verb | Payload | Fires when |
+| Name | Payload | Fires when |
 |------|---------|------------|
 | On Setting Changed | `setting_name`, `value` | A setting actually changes, and once per setting on Apply All Settings / Reset Settings To Defaults. |
 

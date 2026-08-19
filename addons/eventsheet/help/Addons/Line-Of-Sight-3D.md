@@ -135,7 +135,7 @@ These write to the sensor's exported knobs at runtime and are reflected from the
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$LOS3DBehavior.collision_mask` inserts the **Collision Mask** entry straight into any expression
 - `$LOS3DBehavior.cone_of_view_degrees` inserts the **Cone Of View Degrees** entry straight into any expression

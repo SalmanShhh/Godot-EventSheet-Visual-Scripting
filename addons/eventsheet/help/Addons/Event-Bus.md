@@ -6,7 +6,7 @@ sheet anywhere answers it with the **On Event** trigger and reads the channel an
 straight off the row, because the trigger is a real Godot signal and its arguments are the row's
 captured context.
 
-The verb nobody else has is **Wait For Event**: it suspends an event until a named message arrives
+The action nobody else has is **Wait For Event**: it suspends an event until a named message arrives
 or a give-up time passes, so a cutscene, a tutorial gate and a wave director stop needing a state
 variable each. Its outcome is read back by two ordinary conditions, never by a flag you have to
 remember to check.
@@ -53,13 +53,13 @@ remember to check.
 1. Open **Sheet > New Behaviour Addon…** and pick Event Bus, or use **Tools > Register Autoload** on
    `res://eventsheet_addons/event_bus/event_bus_addon.gd`. It registers as `EventBus`.
 2. Nothing else. There is no node to place and no wiring: every sheet in the project can reach the
-   verbs the moment the autoload exists.
+   vocabulary the moment the autoload exists.
 3. Agree on channel names with yourself early. `boss_defeated` and `money_changed` are good names;
    `event1` is not.
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, exactly as the
+On the canvas these rows read as styled sentences - parameter values in **bold**, exactly as the
 rows draw them:
 
 - Broadcast event **"boss_defeated"** with **{ "title": "The Warden", "xp": 500 }**

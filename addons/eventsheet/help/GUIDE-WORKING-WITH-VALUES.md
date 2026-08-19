@@ -77,7 +77,7 @@ Five expressions hand a value back only when it really is the kind of thing you 
 own default otherwise. One row replaces a guard row plus a conversion, and an untyped value can go
 straight into a typed variable.
 
-| Verb | Hands the value back when it is | Otherwise |
+| Name | Hands the value back when it is | Otherwise |
 | --- | --- | --- |
 | **Number Or** | an int or a float (a `0` counts) | your default |
 | **Text Or** | text with something in it | your default |
@@ -101,7 +101,7 @@ Three things to know:
 - **Number Or keeps a zero.** A score of `0` is a real number and passes through. Only Text Or, List
   Or and Record Or treat emptiness as a miss, and Value Or guards nothing but null - a `0`, a blank
   text and an empty list are all real values there.
-- **Pair them with Get Key (with default)**, do not replace it. That shipped verb covers a MISSING
+- **Pair them with Get Key (with default)**, do not replace it. That shipped expression covers a MISSING
   key; these cover a key that is present but holds the wrong shape. `Record Or(save.get("options"),
   {})` plus Get Key on the result means a whole missing settings block reads as defaults.
 - **Keep the value a plain read.** The guard re-reads the value expression in the emitted line, so
@@ -139,7 +139,7 @@ you already built moves.
 ## 4. Named parts of a pair, a colour, or a record
 
 `velocity.y` works, but it does not read as a sentence and it is not discoverable in a picker. Two
-verbs name the piece instead:
+rows name the piece instead:
 
 - **Part Of** reads one named part of a Vector2, a Vector3, a Color or a record.
 - **Set Part Of** writes one, and leaves the rest alone.
@@ -166,12 +166,12 @@ the part from the dropdown. The write side is Add Action › **Variables: Vector
 
 Four notes:
 
-- **One verb covers four types.** The emitted access is a subscript with a quoted key, which Godot
+- **One row covers four types.** The emitted access is a subscript with a quoted key, which Godot
   resolves as a component on Vector2 / Vector3 / Color and as a field on a Dictionary. That is why a
   saved `{"x": …, "y": …}` position needs no special case.
 - **Set Part Of on a record ADDS the field** when it is not there yet.
 - **Pick a part the value actually has.** For a record field that might be missing, the shipped
-  **Get Key (with default)** is the right verb, because it takes a fallback and Part Of does not.
+  **Get Key (with default)** is the right expression, because it takes a fallback and Part Of does not.
 - **The target of Set Part Of is a property field**, not a variables dropdown, because the headline
   targets are a node's own members (`velocity`, `modulate`, `position`) which a closed variables list
   cannot name at all. A sheet variable is typed into the same cell.
@@ -186,10 +186,10 @@ This is Godot's most expensive beginner trap, and it is worth stating plainly:
 > see - and in a `@tool` sheet, it writes back to disk.
 
 So the enemy that scales its stats on ready scales EVERY enemy, permanently, including the copy in
-your repository. Three verbs name the fix, and naming the deep-versus-shallow choice is the point -
+your repository. Three rows name the fix, and naming the deep-versus-shallow choice is the point -
 the trap bites precisely because nothing said which copy you were getting:
 
-| Verb | Copies | Reach for it when |
+| Name | Copies | Reach for it when |
 | --- | --- | --- |
 | **Copy Resource (Independent)** | the resource AND the resources inside it | a node is about to edit its own stats |
 | **Copy Resource (Share Sub-Resources)** | the outer fields only; inner resources stay shared | you WANT that sharing, deliberately |
@@ -223,10 +223,10 @@ so a preset slot nobody filled in is not a crash.
 ## 6. Pouring values from one object into another
 
 Set Property does ONE property per row, so a six-property mirror is six rows. Duplicate Node clones
-wholesale but cannot write onto a node that already exists. Four verbs cover the middle ground, and
+wholesale but cannot write onto a node that already exists. Four rows cover the middle ground, and
 all four address fields BY NAME:
 
-| Verb | Kind | Does |
+| Name | Kind | Does |
 | --- | --- | --- |
 | **Copy Values From** | Action | pours a named list of values off another object onto this one (blank list = every variable the source's script declares) |
 | **Fill Blanks From** | Action | writes a base's values ONLY into fields the target left empty |
@@ -249,9 +249,9 @@ Enemy   On Ready
 **In the editor**: Add Action › **Helpers** › **Copy Values From**. "Helpers" is the real category
 where Set Property and Get Property already live.
 
-The asymmetry between the three POURING verbs and the one COMPARISON is deliberate:
+The asymmetry between the three POURING actions and the one COMPARISON is deliberate:
 
-- The pouring verbs **skip a name the receiving side does not have**, which is exactly what lets one
+- The pouring actions **skip a name the receiving side does not have**, which is exactly what lets one
   preset serve several node types.
 - Matches Properties Of goes the other way: **a name the object under test does not have reads as NOT
   matching**, so a misspelled or renamed field shows up instead of quietly reporting "still in sync".
@@ -270,7 +270,7 @@ them.
 "Content lives in files" becomes vocabulary with four expressions, so a folder of `.tres` IS your item
 list, enemy roster, level manifest, card set, or the mod folder a player dropped things into:
 
-| Verb | Gives you |
+| Name | Gives you |
 | --- | --- |
 | **Resources In Folder** | every `.tres` / `.res` in a folder, loaded, as a list |
 | **Resource In Folder** | one of them by file name, or nothing when there is no such file |
@@ -308,7 +308,7 @@ loop row with the current entry available as `entry`.
 ## 8. Data that outlives the shape it was written in
 
 A save file written by last month's build, a downloaded payload, a mod manifest, a config, a `.tres`
-whose fields were renamed. Three verbs turn "old saves crash" into a visible, editable rule:
+whose fields were renamed. Three rows turn "old saves crash" into a visible, editable rule:
 
 ```
 On After Load
@@ -348,7 +348,7 @@ was re-labelling every hand-written `config["count"] = value` in your project as
 
 ### Any value in, one pasteable line out
 
-Four verbs turn any value into a compact tagged code and back again. Because the payload is a plain
+Four rows turn any value into a compact tagged code and back again. Because the payload is a plain
 Variant, the same four carry a run seed, a loadout, a colour preset, a whole save record, or a level
 layout:
 
@@ -387,7 +387,7 @@ decoder, and the engine logs a line each time it refuses.
 
 ### Reading the clipboard
 
-The shipped clipboard vocabulary is write-only plus one blind read. Four more verbs are the gates a
+The shipped clipboard vocabulary is write-only plus one blind read. Four more rows are the gates a
 paste box actually needs:
 
 ```
@@ -445,7 +445,7 @@ The other copy is the one that travels through TIME rather than between objects:
 now under a label, pour it back later. Preview-then-cancel in a settings panel, before-the-buff values
 for a temporary modifier, a camera pose stashed before a cutscene, undo in an in-game level editor.
 
-| Verb | Kind | Does |
+| Name | Kind | Does |
 | --- | --- | --- |
 | **Remember Value As** | Action | copies any value aside under a name |
 | **Restore Value Into** | Action | pours it back into a variable (left alone when nothing was remembered) |
@@ -489,7 +489,7 @@ Three neighbours read similarly and it is worth being clear which is which:
 
 ### Asking and defaulting (folders: Compare: Types, Variables, Compare: Text, Variables: String)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Is Nothing | Condition | an `in [null, "", [], {}]` test plus the packed-array clause |
 | Has Something | Condition | the same, negated |
@@ -505,14 +505,14 @@ Three neighbours read similarly and it is worth being clear which is which:
 
 ### Named parts (folder: Variables: Vector)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Part Of | Expression | `(value)["y"]` - a component on a Vector or Color, a field on a record |
 | Set Part Of | Action | `target["y"] = value` |
 
 ### Copying objects and data (folders: Helpers, Variables: Array, Variables: Dictionary, Nodes)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Copy Resource (Independent) | Expression | `resource.duplicate(true)`, guarded |
 | Copy Resource (Share Sub-Resources) | Expression | `resource.duplicate(false)`, guarded |
@@ -525,7 +525,7 @@ Three neighbours read similarly and it is worth being clear which is which:
 
 ### Data assets and migration (folders: Files, Variables: Dictionary)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Resources In Folder | Expression | the guarded folder walk, `.remap` trimmed, loaded, nulls dropped |
 | Resource In Folder | Expression | `load(folder/name.tres)` when `ResourceLoader.exists`, else null |
@@ -537,7 +537,7 @@ Three neighbours read similarly and it is worth being clear which is which:
 
 ### Copying out and back (folders: Utility: Window, Run Context)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Share Code For | Expression | the tag plus `Marshalls.variant_to_base64(value)` |
 | Copy Share Code To Clipboard | Action | the same, straight into `DisplayServer.clipboard_set` |

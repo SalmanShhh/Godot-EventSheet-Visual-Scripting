@@ -82,7 +82,7 @@ That is the whole loop: configure once, feed earnings, and reset when the gain i
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Track **amount** earned
 
@@ -130,7 +130,7 @@ Every name below is the exact display name from the pack. Amounts are numbers.
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$PrestigeAddon.prestige_gain()` inserts the **Prestige Gain** entry straight into any expression
 - `$PrestigeAddon.prestige_points()` inserts the **Prestige Points** entry straight into any expression

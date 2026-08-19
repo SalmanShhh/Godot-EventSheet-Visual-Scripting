@@ -20,13 +20,13 @@ Current additions on top of the model below:
   `cell_hover_color`, `invert_marker_color`, `gutter_background_color` and
   `gutter_text_color` (the left strip with its line and event numbers), and `behavior_accent_color` (the ⚙ behavior
   banner/tab accent).
-- **Published verbs** (a behaviour pack's own Actions / Conditions / Expressions) are tinted by which
-  KIND of verb they are, through nine tokens. Each role has an ACCENT and a BADGE background:
+- **Published functions** (a behaviour pack's own Actions / Conditions / Expressions) are tinted by which
+  KIND they are, through nine tokens. Each role has an ACCENT and a BADGE background:
   `ace_action_accent_color` / `ace_action_badge_background_color`, and the same pair for
   `ace_condition_*` and `ace_expression_*`. The accent is the one with reach - it drives that role's
-  badge text and the verb name's tint, so changing it re-skins the whole role.
+  badge text and the name's tint, so changing it re-skins the whole role.
   `verb_row_tint_strength` (0.0 - 0.4) additionally washes the WHOLE row - plus a left accent bar and
-  the description caption's band - in the role's colour. It ships at **0.0**: a published verb is an
+  the description caption's band - in the role's colour. It ships at **0.0**: a published function is an
   ordinary event row, and tinting every one of them turned a pack into a wall of coloured blocks.
   Raise it if you want the kinds colour-coded, higher on a pale sheet where a faint tint disappears. `verb_chip_background_color` and
   `verb_chip_foreground_color` paint the action-lane chips (`gives back <type>`, `waits`, `static`,

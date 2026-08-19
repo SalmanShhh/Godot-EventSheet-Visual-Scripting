@@ -3,7 +3,7 @@
 Nav Agent 3D makes Godot's 3D navigation usable from event rows with zero wiring: attach the
 `NavAgent3D` behavior under a `CharacterBody3D`, have a `NavigationRegion3D` in the scene, and
 call **Find Path To** - a `NavigationAgent3D` child is inserted and tuned for you, the route
-comes from the baked navmesh, and the agent moves. The verbs deliberately MIRROR the 2D
+comes from the baked navmesh, and the agent moves. The vocabulary deliberately MIRRORS the 2D
 **Platformer Pathfinding** pack (Find Path To / Find Path To Node / Stop Pathfinding, the
 Found/Failed/Complete trio, Has Path, `nearest`/`reach` modes) - learn one pack, know both.
 The dimensions just differ in tech: 2D platformers need a jump graph, 3D worlds are walkable
@@ -60,7 +60,7 @@ Press play. The agent routes to the player across the mesh and re-routes as they
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Find path to (**x**, **y**, **z**) mode **mode**
 
@@ -107,13 +107,13 @@ placed on.
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$NavAgent3D.agent_height` inserts the **Agent Height** entry straight into any expression
 - `$NavAgent3D.agent_radius` inserts the **Agent Radius** entry straight into any expression

@@ -2,14 +2,14 @@
 
 A list is the workhorse of game logic: the enemies on screen, the items in a bag, the scores in a run, the waypoints on a patrol. Godot calls them Arrays, and Godot EventSheets gives you the whole Array vocabulary as ordinary picker rows - 37 of them - so you can add, sort, search, slice and join a list without dropping into code.
 
-This guide covers all of it, with the focus on the part people reach for most and find hardest to discover: the **higher-order** verbs (**Filter**, **Map**, **Reduce**, **Any Match**, **All Match**) that run a small test or transform over every element at once, and the **typed-list** verbs for `Array[int]`-style containers.
+This guide covers all of it, with the focus on the part people reach for most and find hardest to discover: the **higher-order** rows (**Filter**, **Map**, **Reduce**, **Any Match**, **All Match**) that run a small test or transform over every element at once, and the **typed-list** rows for `Array[int]`-style containers.
 
 Everything here compiles to plain, readable GDScript with no plugin dependency at runtime. `list.filter(func(x): return x > 0)` is exactly what ships.
 
 ## Table of Contents
 
 1. [Making a list](#making-a-list)
-2. [The five higher-order verbs](#the-five-higher-order-verbs)
+2. [The five higher-order rows](#the-five-higher-order-rows)
 3. [Naming the element (and why it is a field)](#naming-the-element-and-why-it-is-a-field)
 4. [Typed lists](#typed-lists)
 5. [Full ACE reference](#full-ace-reference)
@@ -22,7 +22,7 @@ Everything here compiles to plain, readable GDScript with no plugin dependency a
 
 Add a variable and pick a list type: **Add > Global Variable** (or Local), then choose `Array` in the Type dropdown - or a typed container like `Array[int]`, `Array[float]`, `Array[String]` when every element is the same kind of thing.
 
-Every list verb starts with the same first field, **Array**, and its dropdown only offers list-typed variables in scope. A typed list qualifies wherever a plain `Array` is asked for, so an `Array[int]` can be filtered, sorted and joined like any other.
+Every list row starts with the same first field, **Array**, and its dropdown only offers list-typed variables in scope. A typed list qualifies wherever a plain `Array` is asked for, so an `Array[int]` can be filtered, sorted and joined like any other.
 
 ```
 On Ready
@@ -34,11 +34,11 @@ On Ready
 
 ---
 
-## The five higher-order verbs
+## The five higher-order rows
 
 These take a **small expression you write once** and apply it to every element. They are the difference between a five-row loop and a single readable row.
 
-| Verb | Kind | Answers | Emits |
+| Name | Kind | Answers | Emits |
 | --- | --- | --- | --- |
 | **Filter** | Expression | "which ones match?" | `scores.filter(func(x): return x > 10)` |
 | **Map** | Expression | "what does each become?" | `scores.map(func(x): return x * 2)` |
@@ -83,7 +83,7 @@ The test or transform goes in an `ƒx` field, so it is ordinary GDScript over on
 
 ## Naming the element (and why it is a field)
 
-Each of the five verbs has an **Element name** field, pre-filled with `x` (Reduce also has **Accumulator name**, pre-filled with `acc`). Most of the time you never touch it - you write `x > 10` and move on.
+Each of the five has an **Element name** field, pre-filled with `x` (Reduce also has **Accumulator name**, pre-filled with `acc`). Most of the time you never touch it - you write `x > 10` and move on.
 
 It is a field rather than a fixed word for one reason: if your sheet already has a variable called `x`, a baked-in name would quietly **shadow** it. Your row would compile without a warning and silently compare against the element instead of your variable. Renaming the element removes the collision:
 
@@ -98,9 +98,9 @@ Now `item` is the element and `x` is still your own variable. Rename it to whate
 
 ## Typed lists
 
-A typed list (`Array[int]`, `Array[String]`, `Array[Node]`) refuses elements of the wrong type, which turns a whole class of bug into an immediate error. Four verbs work with them at runtime:
+A typed list (`Array[int]`, `Array[String]`, `Array[Node]`) refuses elements of the wrong type, which turns a whole class of bug into an immediate error. Four rows work with them at runtime:
 
-| Verb | Kind | What it gives you |
+| Name | Kind | What it gives you |
 | --- | --- | --- |
 | **Is Typed** | Condition | True when the list is a typed container rather than a plain `Array`. |
 | **Element Type** | Expression | The element type as a `Variant.Type` value (`TYPE_INT`, `TYPE_STRING`, ...); `TYPE_NIL` (0) when untyped. |
@@ -311,7 +311,7 @@ Renaming the element to `enemy` keeps your `threat_floor` variable readable insi
 
 ## Tips and common mistakes
 
-- **Filter and Map hand back a NEW list; they never change the original.** Assign the result to a variable (or use it inline). The in-place verbs are the ones named like commands: Sort Array, Shuffle Array, Reverse Array, Fill Array.
+- **Filter and Map hand back a NEW list; they never change the original.** Assign the result to a variable (or use it inline). The in-place actions are the ones named like commands: Sort Array, Shuffle Array, Reverse Array, Fill Array.
 - **The element is named by a field, defaulting to `x`.** If your sheet already has a variable called `x`, rename the element - otherwise the element shadows your variable silently, with no warning from GDScript.
 - **An empty list answers Any Match with false and All Match with true.** "All of nothing passes" is standard, and it is usually what you want, but pair All Match with an `Array Is Empty` check when an empty list should not count as success.
 - **Reduce always needs a Starting value.** It is the accumulator before the first element: `0` to sum, `1` to multiply, `[]` to build a list, `-INF` to find a maximum over possibly-negative numbers.
@@ -319,4 +319,4 @@ Renaming the element to `enemy` keeps your `threat_floor` variable readable insi
 - **Assign converts, Push Back does not.** Pushing a float into an `Array[int]` is an error; **Assign (Type-Converting)** converts as it copies. A value that cannot convert leaves the destination empty and pushes an error.
 - **Index Of returns -1 when the value is absent**, so test `>= 0` rather than truthiness (`-1` is not falsy).
 - **Sort Array sorts in place and returns nothing.** Sort first, then read - do not expect a sorted copy back from it. Use Copy Array first when you need to keep the original order.
-- **A typed list still satisfies a plain `Array` field**, so every verb here works on `Array[int]` exactly as it does on `Array`.
+- **A typed list still satisfies a plain `Array` field**, so everything here works on `Array[int]` exactly as it does on `Array`.

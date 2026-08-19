@@ -3,7 +3,7 @@
 **Helpers** is the structured escape hatch: the vocabulary that reaches arbitrary GDScript without
 dropping the row into an opaque code block. Set any property on any object, call any method, read any
 value, evaluate any expression as a condition, build a callable or a lambda, and hand control back and
-forth with your own sheet functions. Alongside them sit the two **Behavior** verbs that name the node
+forth with your own sheet functions. Alongside them sit the two **Behavior** rows that name the node
 a behaviour is attached to.
 
 Every template here is a single direct GDScript line, so picking a helper compiles to exactly what you
@@ -14,7 +14,7 @@ block the editor cannot read.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -28,21 +28,21 @@ block the editor cannot read.
 - **Callables and lambdas** to hand to `sort()`, `map()`, `filter()`, a signal or a timer.
 - **Your own sheet functions** - call them, return from them, return a value from them.
 - **Behaviour sheets** - reading and guarding the host node the behaviour acts on.
-- **Prototyping** - reach something now with Run GDScript, replace it with a real verb later.
+- **Prototyping** - reach something now with Run GDScript, replace it with real vocabulary later.
 - **Reading a value the picker has no expression for**, without leaving the expression field.
 
 ## Core concepts
 
 - **A helper is generic on purpose.** `target`, `property`, `method` and `code` are free expressions,
   so one helper replaces a whole family of one-off code blocks.
-- **Prefer a specific verb when one exists.** Set Position, Play Animation, Clamp, the array and
-  dictionary verbs and the rest of the curated vocabulary read better and carry their own parameter
+- **Prefer a specific row when one exists.** Set Position, Play Animation, Clamp, the array and
+  dictionary rows and the rest of the curated vocabulary read better and carry their own parameter
   help. Helpers fill the gaps; they are not meant to shadow the menus.
 - **Helpers are registered last, and mostly kept out of the reverse index.** When the importer lifts
   hand-written GDScript back into rows, the most specific template wins. Only the statement catch-alls
   (Set Property and its compound-assign twins, Call Method, and the local variable and constant
   families) are admitted at all, at the lowest specificity, so a helper can never steal a line a real
-  verb describes better.
+  row describes better.
 - **A property is a bare identifier, not a string.** `modulate`, not `"modulate"`. That keeps the
   emitted code statically typed and fast.
 - **Run GDScript is exactly one statement.** For several lines, either use several rows or add a code
@@ -55,7 +55,7 @@ block the editor cannot read.
 - **Host is behaviour-only.** It emits the literal `host` variable that a behaviour sheet binds to its
   parent as it enters the tree, so the picker hides it on a plain event sheet.
 
-## Verb reference
+## Reference tables
 
 On the canvas these read as sentences, exactly as the rows draw them:
 
@@ -66,7 +66,7 @@ On the canvas these read as sentences, exactly as the rows draw them:
 
 ### Properties
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Property | Sets any property on any object. | `{target}.{property} = {value}` |
 | Add To Property | Changes a property relative to itself, upward. | `{target}.{property} += {value}` |
@@ -79,7 +79,7 @@ On the canvas these read as sentences, exactly as the rows draw them:
 
 ### Methods, nodes and resources
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Call Method | Calls a method and throws the result away. | `{target}.{method}({args})` |
 | Call Method (value) | Calls a method and uses what it returns. | `{target}.{method}({args})` |
@@ -88,7 +88,7 @@ On the canvas these read as sentences, exactly as the rows draw them:
 
 ### Raw GDScript, kept as a row
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Run GDScript | Runs one line of GDScript as an action. | `{code}` |
 | Evaluate GDScript | True when your own boolean expression is true. | `({code})` |
@@ -96,7 +96,7 @@ On the canvas these read as sentences, exactly as the rows draw them:
 
 ### Validity and type
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Is Valid | True when the object still exists and has not been freed. | `is_instance_valid({target})` |
 | Is Null | True when the value is null. | `{target} == null` |
@@ -104,14 +104,14 @@ On the canvas these read as sentences, exactly as the rows draw them:
 
 ### Text
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Format String | Builds a string by filling printf placeholders. | `{template} % [{args}]` |
 | Set Text (formatted) | Sets a node's `text` from a printf template in one row. | `{target}.text = {template} % [{args}]` |
 
 ### Callables and lambdas
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Callable of Method | A reference to a named method you can pass around, connect or call later. | `Callable({target}, "{method}")` |
 | Bind Arguments | Pre-fills a callable's arguments. | `{callable}.bind({args})` |
@@ -120,7 +120,7 @@ On the canvas these read as sentences, exactly as the rows draw them:
 
 ### Your own functions
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Call Function | Calls one of your sheet functions with arguments. | `{function_name}({args})` |
 | Return Value | Returns a value from the current function. | `return {value}` |
@@ -128,7 +128,7 @@ On the canvas these read as sentences, exactly as the rows draw them:
 
 ### The behaviour's host
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Host | The parent node this behaviour is attached to. | `host` |
 | Host Is Valid | True when the behaviour has a live host. | `is_instance_valid(host)` |
@@ -334,7 +334,7 @@ Every Physics Tick
 ```
 
 **26. Turn a prototype into vocabulary.** Reach the thing with Run GDScript or Call Method now, and
-when the same row appears a third time, publish it as a verb from the ACE Studio. The rows that used
+when the same row appears a third time, publish it as a function from the ACE Studio. The rows that used
 the helper keep working; the new ones read as a sentence.
 
 **27. Fill an expression field on any other row.** Every expression helper here (Get Property, Call
@@ -345,13 +345,13 @@ row's parameter, so a helper rarely needs a row of its own.
 
 **A shader parameter animated from a row.** Set Property on a material's `shader_parameter/strength` reaches something no menu will ever list, and Add To Property animates it per frame without a code block.
 
-**A third-party plugin's node driven from a sheet.** Call Method plus Get Property cover an entire foreign API with two verbs, so a plugin the vocabulary knows nothing about is still fully addressable.
+**A third-party plugin's node driven from a sheet.** Call Method plus Get Property cover an entire foreign API with two rows, so a plugin the vocabulary knows nothing about is still fully addressable.
 
 **A generic button bank.** One handler plus Bind Arguments gives every slot button its own index, replacing eight near-identical handlers with one row and one bind.
 
 **A safe polling loop.** Is Valid in front of every reference a long-lived event holds turns the classic "Nonexistent function in base Nil" crash into a branch that quietly does nothing that frame.
 
-**A debug overlay built from expressions.** Set Text (formatted) with Evaluate Expression arguments prints anything the engine exposes onto a label without adding a single named verb.
+**A debug overlay built from expressions.** Set Text (formatted) with Evaluate Expression arguments prints anything the engine exposes onto a label without adding a single named action.
 
 ## Tips and common mistakes
 
@@ -370,12 +370,12 @@ row's parameter, so a helper rarely needs a row of its own.
   constant in a code block.
 - **Format String's arguments must match its placeholders.** `"Score: %d" % [name]` raises at run
   time; count the `%` markers against the argument list.
-- **A single-line lambda ends at the end of the line.** Both lambda verbs emit `func(...): <one
+- **A single-line lambda ends at the end of the line.** Both lambda expressions emit `func(...): <one
   thing>` on one line, so anything you meant to be a second statement will be parsed as belonging to
   the surrounding expression instead. Keep them to one thing.
 - **A lambda's parameter list may be empty**, and often should be: a timer's `timeout` hands its
   handler no arguments, so `func(): ...` is the correct shape there.
-- **Prefer a specific verb where one exists.** Set Property on `position` works, but Set Position
+- **Prefer a specific action where one exists.** Set Property on `position` works, but Set Position
   reads better, carries its own help, and lifts back out of hand-written code more precisely.
 - **Is Valid and Is Null are not interchangeable.** `is_instance_valid(null)` is false, so Is Valid
   covers both cases on an object; Is Null is the right question for a value that may simply be unset.
@@ -383,7 +383,7 @@ row's parameter, so a helper rarely needs a row of its own.
   guard added, which is the point of the parity covenant.
 - **Return Value's type comes from the function.** Setting a return type on the function and returning
   something else fails to compile, and the row will not tell you which one is wrong.
-- **Host only exists on a behaviour sheet.** The two Behavior verbs emit the literal `host` variable,
+- **Host only exists on a behaviour sheet.** The two Behavior rows emit the literal `host` variable,
   which a plain event sheet does not have, which is why the picker hides them there.
 - **Guard the host, not just the first use.** The binding happens as the behaviour enters the tree, so
   a tick that runs before that, or after the host is freed, needs **Host Is Valid** in front of it.

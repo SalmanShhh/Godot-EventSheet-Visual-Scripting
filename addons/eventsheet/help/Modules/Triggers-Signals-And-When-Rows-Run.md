@@ -6,7 +6,7 @@ guide covers the builtin vocabulary that answers "when?" - the per-frame and lif
 scene-tree and Area signals, **On Signal** and **Emit Signal**, the runtime connect family, and the
 gates that turn "every tick" into "once".
 
-These verbs are builtin: they are in the picker from any sheet, with no pack to enable and nothing to
+These rows are builtin: they are in the picker from any sheet, with no pack to enable and nothing to
 attach. They compile to plain Godot callbacks and plain `signal.connect()` calls, with zero plugin
 runtime left in the output.
 
@@ -14,7 +14,7 @@ runtime left in the output.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -48,13 +48,13 @@ runtime left in the output.
 - **A condition can also be a gate.** **Trigger Once**, **Has Changed**, **Was Recently True**,
   **Once At A Time** and **Only Once Ever** are conditions, not triggers: they sit in the condition lane
   of an event that already has a trigger, and narrow "every tick" down to the tick you meant.
-- **An outcome is something that happens, so it is a trigger.** A verb that refuses announces it with
-  **Report Failure**, and **On Failure Of** heads the event that recovers - which may sit anywhere on
-  the sheet, far from the row that made the attempt. This is the shape the shipped packs already use
-  for On Save Failed and On Purchase Refused, shared so any verb can raise it.
+- **An outcome is something that happens, so it is a trigger.** An action that refuses announces it
+  with **Report Failure**, and **On Failure Of** heads the event that recovers - which may sit anywhere
+  on the sheet, far from the row that made the attempt. This is the shape the shipped packs already use
+  for On Save Failed and On Purchase Refused, shared so any action can raise it.
 - **A trigger's payload is the signal's own arguments.** `verb_failed(verb_id, reason)` puts both on
   the row, in scope as values. Nothing stores a "last failure" for you to fetch, which is also why
-  two failures in one frame can never be confused. Narrow the row to one verb with an ordinary
+  two failures in one frame can never be confused. Narrow the row to one action with an ordinary
   condition on `verb_id`, exactly as you would filter any other payload.
 - **Once per ROW and once per THING are different questions.** **Trigger Once** is per row instance,
   so inside a For Each it fires for the first item only. **Only Once Per Node**, **Only Once Per Name**
@@ -63,7 +63,7 @@ runtime left in the output.
   **On Signal** listens without knowing who emits. That pair is how two sheets talk without either one
   holding a path to the other.
 
-## Verb reference
+## Reference tables
 
 On the canvas these read as sentences, with the parameter values drawn in bold:
 
@@ -74,7 +74,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### Run Context - the triggers that mark out a frame
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | On Ready | Runs once when this node first enters the scene, ideal for setup and initial values. | the `_ready()` callback |
 | Every Frame | Runs every rendered frame, perfect for continuous movement, timers, or polling input. | the `_process(delta: float)` callback |
@@ -85,7 +85,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### Run Context - the gates that turn "every tick" into "once"
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Trigger Once | True only on the first tick each time the event's other conditions become true, and again after they have gone false. | `__trigger_once_{uid}()`, backed by a per-instance tick counter |
 | Has Changed | True on any tick where the watched **Value** differs from the tick before. | `__has_changed_{uid}({value})` |
@@ -102,7 +102,7 @@ Trigger Once is per ROW instance and Only Once Ever is per machine forever. Thes
 memory is keyed by the node, by a name, or by this scene load. At Most Every and Has Been Quiet For
 are the two rate limits - the leading edge and the trailing edge.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Only Once Per Node | True the first time this row is reached for each **Node**, and never again for that node. | `__once_node_{uid}({node}, str({label}))`, a helper over the node's own metadata |
 | Only Once Per Name | True the first time this row is reached for each **Name**, kept on this node. | `__once_name_{uid}(str({key}))` |
@@ -111,13 +111,13 @@ are the two rate limits - the leading edge and the trailing edge.
 | At Most Every | Lets this event run at most once every so many **Seconds**, however often it is reached. | `__throttle_{uid}(maxf({seconds}, 0.0))`, hoisted to the end of the condition chain |
 | Has Been Quiet For | True once a poked **Name** has stopped being poked for **Seconds**. | a comparison of `Time.get_ticks_msec()` against the `__ef_poke_{name}` stamp |
 
-### Run Context - outcomes: what happened to a verb
+### Run Context - outcomes: what happened to an action
 
 GDScript has no exceptions, so an outcome is announced rather than thrown. One signal per outcome
-carries the verb's name and the reason as its ARGUMENTS, which arrive on the trigger row as
+carries the action's name and the reason as its ARGUMENTS, which arrive on the trigger row as
 `verb_id` and `reason`. Declare the signal once with a Declare Signal row.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | On Failure Of | Runs when a verb reports that it refused; hands you **verb_id** and **reason**. | a handler connected to the sheet's `verb_failed(verb_id: String, reason: String)` |
 | On Success Of | Runs when a verb reports that it finished; hands you **verb_id**. | a handler connected to the sheet's `verb_succeeded(verb_id: String)` |
@@ -129,13 +129,13 @@ carries the verb's name and the reason as its ARGUMENTS, which arrive on the tri
 
 ### General Conditions
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Always | Always true, so its actions run every time the event is checked. | `true` |
 
 ### Signals / Scene / Input - the signal triggers
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | On Signal | Runs whenever the named signal fires. Takes **Signal Name** and an optional **Arguments** signature. | a handler connected to that signal |
 | On Body Entered | Runs when a physics body enters this 2D Area. Hands you **body**. | the `body_entered` signal of an Area2D |
@@ -154,7 +154,7 @@ carries the verb's name and the reason as its ARGUMENTS, which arrive on the tri
 
 ### Input triggers and tests
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | On Input | Runs on every input event the node receives. | the `_input(event: InputEvent)` callback |
 | On Unhandled Input | Runs on input no UI element consumed, ideal for gameplay controls that ignore menu clicks. | the `_unhandled_input(event: InputEvent)` callback |
@@ -164,7 +164,7 @@ carries the verb's name and the reason as its ARGUMENTS, which arrive on the tri
 
 ### Helpers - wiring signals at runtime
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Connect Signal | Wires a **Source**'s **Signal** to run a **Callable** whenever it fires. | `{source}.{signal}.connect({callable})` |
 | Connect Signal (if not already) | The same wiring, guarded, so re-running never stacks duplicate handlers. | `if not {source}.{signal}.is_connected({callable}):` then the connect |
@@ -392,8 +392,8 @@ On Unhandled Input
 If a Control consumed the click, this event never runs - which is what you want for a game that also
 has a HUD.
 
-**21. Recovery as its own event.** GDScript has no exceptions, so a verb that refuses has to announce
-it. Report Failure raises one shared signal, and On Failure Of heads the event that handles it - which
+**21. Recovery as its own event.** GDScript has no exceptions, so an action that refuses has to
+announce it. Report Failure raises one shared signal, and On Failure Of heads the event that handles it - which
 may sit anywhere on the sheet, far from where the attempt was made.
 
 ```
@@ -427,7 +427,7 @@ func _on_verb_failed(verb_id: String, reason: String) -> void:
 		print("Could not save: " + reason)
 ```
 
-**22. A verb you wrote this morning can refuse in the same words.** Report Failure is an ordinary
+**22. An action you wrote this morning can refuse in the same words.** Report Failure is an ordinary
 action, so any row of yours can raise the outcome instead of returning a null nobody checks.
 
 ```
@@ -534,10 +534,10 @@ On pool item reset  item
 - **The outcome signals are the sheet's own.** They fire on the node the sheet is attached to, so the
   handler belongs on that node's sheet. To reach another node, connect the signal there with the
   shipped Connect Signal, or route it through an autoload bus.
-- **Narrow the trigger with a condition, not a second signal.** One `verb_failed` carries every verb,
+- **Narrow the trigger with a condition, not a second signal.** One `verb_failed` carries every action,
   and the row that only cares about saving puts `verb_id = "save_game"` underneath. Two saves in one
   sheet stay unambiguous because the name is the payload.
-- **Trigger Once inside a For Each is almost always the wrong verb.** It is per row, so it fires for
+- **Trigger Once inside a For Each is almost always the wrong condition.** It is per row, so it fires for
   the first item and never for the rest. Only Once Per Node is the one that means "once per thing".
 - **Only Once Per Node keeps its memory ON the node**, so it survives reparenting and a pooled
   instance remembers it was already initialised. Clear it with Forget Once For in the pool's reset.
@@ -551,7 +551,7 @@ On pool item reset  item
   actually has a trigger and not just conditions.
 - **`delta` only exists where the callback provides it.** It is a real value under **Every Frame** and
   **Every Physics Tick**. Under **On Ready** or a signal trigger there is no `delta`, which is why the
-  gravity and acceleration verbs default their **Delta** parameter to `delta` and expect a per-frame
+  gravity and acceleration actions default their **Delta** parameter to `delta` and expect a per-frame
   trigger.
 - **Plain Connect Signal is not idempotent.** Running it twice connects twice and the handler fires
   twice. Prefer **Connect Signal (if not already)** anywhere the row can run more than once.

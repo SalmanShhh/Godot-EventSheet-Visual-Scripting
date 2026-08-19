@@ -9,7 +9,7 @@ For the design side - naming, parameters, and descriptions that read well in the
 
 If you want to add a whole *pack* (a behavior you attach to a node, or an autoload with state), that is
 a different tool - see [Building on EventSheets](GUIDE-BUILDING-ON-EVENTSHEETS.md). A module is for
-stateless verbs that bake to a line or two of plain Godot: "set the window title", "start a vibration",
+stateless vocabulary that bakes to a line or two of plain Godot: "set the window title", "start a vibration",
 "give me the move vector". If your idea needs to remember something between frames, it wants a pack.
 
 ## Table of Contents
@@ -101,7 +101,7 @@ The four ACE types:
 Chain these onto the descriptor to shape it:
 
 - `.described("Plain-language help shown in the info panel.")` - always add this.
-- `.featured()` - bold it and float it to the top of its category (for the one or two verbs a beginner reaches for first).
+- `.featured()` - bold it and float it to the top of its category (for the one or two rows a beginner reaches for first).
 - `.deprecated("Use X instead.", "Core::NewId")` - hide it from the picker but keep it compiling (see the freeze contract).
 
 ## 4. Parameters
@@ -260,9 +260,9 @@ ACE, so a future change to the template is caught.
 - **Every default must compile.** The compile gate is your friend; run it after each change.
 - **Pick unique, permanent `ace_id`s.** They are frozen forever once shipped - deprecate, never rename.
 - **Plain Godot only** in a template. If you are tempted to reference a plugin class, you want a pack, not a module.
-- **One clear verb per ACE.** If a template is getting long, it is probably a pack's job.
+- **One clear job per ACE.** If a template is getting long, it is probably a pack's job.
 - **Always call `.described(...)`.** The info panel and the picker search both use it.
-- **Feature sparingly.** `.featured()` is for the one or two verbs a beginner reaches for first, not every ACE.
+- **Feature sparingly.** `.featured()` is for the one or two rows a beginner reaches for first, not every ACE.
 - **Group sensibly.** Reuse an existing category name to join it, or make a new one and give it a `section_descriptions()` blurb.
 - **A new `class_name` needs a class-cache regen** (`--editor --headless --quit-after 3`, then revert `project.godot`) before the suite sees your module.
 - **Modules are stateless vocabulary.** If your ACEs target a stateful host that should survive a save, give that host script the save convention - `save_state() -> Dictionary` and `load_state(state)` - and the Save System persists it. **Tools > Save Studio > Add Save Support** generates the pair for you.

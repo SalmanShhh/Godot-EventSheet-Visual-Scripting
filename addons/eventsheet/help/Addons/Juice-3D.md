@@ -3,7 +3,7 @@
 Juice 3D is the 3D camera game-feel pack: trauma-based screenshake, weapon recoil that kicks up
 and re-centres, a walking head bob, continuous jitter, a held camera lean (roll), and FOV
 punch/zoom - all on the active `Camera3D`, which is found automatically. Attach the
-`Juice3DBehavior` under any node (your player is the natural home) and call the verbs from any
+`Juice3DBehavior` under any node (your player is the natural home) and call the actions from any
 sheet; there is no camera path to wire unless you want one.
 
 The design rule that makes it safe to use with a character controller: **every effect is an
@@ -13,7 +13,7 @@ adds the effects back on top. Your aim is never touched - a full-strength shake 
 mid-firefight still leaves the crosshair's true position under the controller's authority, and
 when the effects settle the camera is bit-for-bit back where its owner put it.
 
-The verbs mirror the 2D **Juice** pack (Shake / Recoil / Head Bob / Jitter are the same words),
+The vocabulary mirrors the 2D **Juice** pack (Shake / Recoil / Head Bob / Jitter are the same words),
 so what you learned there carries over.
 
 ---
@@ -49,14 +49,14 @@ so what you learned there carries over.
 
 1. Attach `eventsheet_addons/juice_3d/juice_3d_behavior.gd` under your player (or any node -
    Tools > Attach to Selected Node does it from the editor).
-2. Call verbs from any sheet: `Shake 0.4` on damage, `Recoil -90, 12`-style kicks on fire.
+2. Call actions from any sheet: `Shake 0.4` on damage, `Recoil -90, 12`-style kicks on fire.
    The active `Camera3D` is found automatically; `Use Camera` pins a specific one.
 3. It composes with the FPS Controller out of the box - both packs under the same player is the
    intended pairing.
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Shake at **strength**
 - Punch FOV by **amount**
@@ -130,7 +130,7 @@ placed on.
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ---
@@ -138,7 +138,7 @@ change while the game runs.
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$Juice3DBehavior.max_shake_degrees` inserts the **Max Shake Degrees** entry straight into any expression
 - `$Juice3DBehavior.max_shake_offset` inserts the **Max Shake Offset** entry straight into any expression
@@ -348,12 +348,12 @@ On Shake Stopped
   to wherever the player is ACTUALLY aiming - it never pushes bullets off target. If you want
   ballistic spread, apply it to the projectile, not the camera.
 - **Lean holds; punch recovers.** `Lean` stays until you lean back (it is a state), `FOV Punch`
-  and `Recoil` come back on their own (they are events). Pick the verb that matches what you
+  and `Recoil` come back on their own (they are events). Pick the action that matches what you
   mean.
 - **Zoom FOV To is absolute.** It sets the base field of view and leaves it - remember the row
   that zooms back out, or the player stays at 40 forever.
 - **Shake feel lives in the knobs.** `max_shake_degrees` is how violent a full-trauma shake
   looks, `shake_decay` is how fast it calms, `shake_frequency` is how nervous it feels. Tune
   those in the Inspector rather than scaling every Shake call.
-- **2D game?** Use the **Juice** pack instead - same verbs on the `Camera2D`, plus zoom, squash
+- **2D game?** Use the **Juice** pack instead - same vocabulary on the `Camera2D`, plus zoom, squash
   and stretch, slowmo, and hitstop.

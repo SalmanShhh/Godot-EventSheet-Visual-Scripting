@@ -8,14 +8,14 @@ guide covers the ways to AUTHOR custom ACEs, the schema and template language th
 they appear in the picker, and how to test them so they never fail silently. For the CRAFT side -
 naming, parameter design, descriptions, and picker UX that beginners can use first try - read
 [Designing user-friendly ACEs](GUIDE-DESIGNING-USER-FRIENDLY-ACES.md) alongside this one. For the
-in-editor, no-code way to author one verb from a dialog, see [Using the ACE Studio](GUIDE-USING-THE-ACE-STUDIO.md).
+in-editor, no-code way to author one function from a dialog, see [Using the ACE Studio](GUIDE-USING-THE-ACE-STUDIO.md).
 
 **Before you author anything, check whether you need to.** Your project's own `Node`-derived
 classes and autoloads are already pickable - they appear under **Your Project** on the
 picker's object page, with their methods classified as Actions, Conditions and Expressions,
 their properties as Set/Get pairs, and their signals as triggers. That costs nothing and
 needs no annotations, and you can rename or hide any of it from the picker's right-click
-menu. Author an ACE when you want a curated verb: a friendlier sentence than the method name,
+menu. Author an ACE when you want a curated row: a friendlier sentence than the method name,
 parameter widgets (a colour swatch, an input-action dropdown), a description, or a template
 that is more than a single call. See [Using EventSheets with your existing
 code](GUIDE-USING-WITH-EXISTING-CODE.md) for the zero-setup route.
@@ -237,8 +237,8 @@ You do not need a provider script at all to drive a class: the picker's
 running engine - its methods become Actions (void), Conditions (bool returns), and
 Expressions (other returns), its editor properties become Set/Get pairs, and its signals
 become triggers. This works for EVERY Godot class (including ones future Godot versions
-add) and for your own `class_name` scripts. Reflected verbs emit the same plain
-`member(...)` calls the curated vocabulary emits, curated verbs always win over their
+add) and for your own `class_name` scripts. Reflected rows emit the same plain
+`member(...)` calls the curated vocabulary emits, curated vocabulary always wins over its
 reflected twins, and Simple Mode hides the section (it is the expert deep end). Provider
 scripts remain the way to CURATE a vocabulary: friendly names, categories, dropdowns,
 custom templates.
@@ -294,7 +294,7 @@ Every method is typed, so the editor completes the whole vocabulary, hints argum
 and a typo is a compile error instead of an ignored comment. Registrar calls annotate
 EXISTING members (they do not create members) and merge onto comment annotations field by
 field - explicit registrar calls win, and both dialects produce identical definitions
-(test-pinned). The member verbs are `action` / `condition` / `expression` / `trigger` /
+(test-pinned). The member methods are `action` / `condition` / `expression` / `trigger` /
 `property` / `member` (no forced type); each returns a chainable builder with `name`,
 `category`, `description`, `icon`, `template`, `display`, `hidden`, `deprecated`, and
 `param(name, {"hint": ..., "options": [...], "autocomplete": [...], "desc": ...})`.
@@ -324,12 +324,12 @@ same whether or not your script is `@tool`.
 | Annotation | Effect |
 |------------|--------|
 | `@ace_hidden` | Hide this member from the picker entirely. |
-| `@ace_featured` | Highlight this member as an everyday verb: bold, floated to the top of its picker category. Reserve it for your pack's hero verbs - featuring everything features nothing. |
+| `@ace_featured` | Highlight this member as an everyday row: bold, floated to the top of its picker category. Reserve it for your pack's hero rows - featuring everything features nothing. |
 | `@ace_name(Text)` | Override the display name. |
 | `@ace_category(Text)` | Put the ACE in this picker category. |
 | `@ace_description(Text)` | The tooltip and help text. |
 | `@ace_action` / `@ace_condition` / `@ace_expression` / `@ace_trigger` | Force the ACE type instead of inferring it from the return type. |
-| `@ace_looping(iterator)` | A LOOPING condition: the method returns a collection (an Array of ids, nodes, anything iterable) and adding it to an event loops that event's actions once per item - your pack owns its own "For Each X" verb. The value names the loop variable actions read (`item` if omitted). Applies as a pick filter, so the loop lane, frame-spreading, and round-trip all work like a built-in For Each. |
+| `@ace_looping(iterator)` | A LOOPING condition: the method returns a collection (an Array of ids, nodes, anything iterable) and adding it to an event loops that event's actions once per item - your pack owns its own "For Each X" condition. The value names the loop variable actions read (`item` if omitted). Applies as a pick filter, so the loop lane, frame-spreading, and round-trip all work like a built-in For Each. |
 | `@ace_codegen_template(code)` | Replace the auto-generated call with your own GDScript (you own the whole template then). |
 | `@ace_display_template(text)` | Override the row/picker phrasing; `{param_id}` slots substitute live values. Substituted values draw **bold** automatically (the C3 emphasis), so you rarely need styling - but the template may carry BBCode-lite (`[b]`, `[i]`, `[color=...]`) for custom emphasis, which then supersedes the automatic one (typed value tints still apply). The bundled vocabulary uses the house grammar - `[b]` around value slots, `[i]` around node/object slots ("add `[i]{target}[/i]` to `[b]{group}[/b]`") - and the Health pack's authored sentences ("Heal `[b]{amount}[/b]` HP") show the pack-side pattern. Translation-safe: a marked template that misses the catalog retries its STRIPPED sentence as the key, so a locale translated before you added styling keeps its translation (shown plain, still auto-bolded). A user's literal `[b]` inside a param value is always data, never styling. |
 | `@ace_param(name, hint: h, default: v, options: a\|b, autocomplete: a\|b, desc: "text")` | Everything about one parameter in a single line: widget hint, the value the row shows the moment it is dropped, a fixed dropdown, editable suggestions, and a description. Options and suggestions split on `\|`; quote a desc that contains commas. See the [param grammar](#the-param-grammar-defaults-labels-and-comparison) below for `default:`, labeled options, and `hint: comparison`. |
@@ -425,8 +425,8 @@ dropdown), and **Is Dead** (condition). `_internal_recalc` stays private.
 
 **Sheet > Custom Actions...** opens the **Custom ACE Providers** window, the in-editor front end for
 everything above. Browsing to a `.gd` (press **Add...**) runs the same generation the registry runs, so
-its **What it publishes** table is what you will actually get: one row per verb, with **Publish**,
-**Kind**, **Verb**, **Category**, **Parameters**, and the exact code it **Emits**. Browsing previews
+its **What it publishes** table is what you will actually get: one row per entry, with **Publish**,
+**Kind**, **Name**, **Category**, **Parameters**, and the exact code it **Emits**. Browsing previews
 only - **Register This Script** is a second, deliberate click, so nothing joins the vocabulary unseen.
 
 The table is also an editing surface, which matters because raw reflection guesses from the signature
@@ -439,12 +439,12 @@ Action). Correct it in place, then press one of:
   `##` comments above a declaration are added or removed (never a signature or a body, which is why a
   wrong KIND is fixed with `@ace_condition` rather than by editing someone's function), the file is
   backed up first (**Tools > Sheet Backups**), and re-applying the same edits is a no-op.
-- **Parameters...** shapes the selected verb's inputs - a hint (including `comparison`), labeled
+- **Parameters...** shapes the selected member's inputs - a hint (including `comparison`), labeled
   `value=Label` options, and the starting value the row shows on drop. It records the spec; the next
   Curate Script writes it as `@ace_param(id, hint: ..., options: ..., default: ...)`.
-- **Keep Old Name...** is the fix for a verb you RENAMED. A rename changes the ace_id and orphans every
+- **Keep Old Name...** is the fix for a member you RENAMED. A rename changes the ace_id and orphans every
   row that used it, silently: the compiler prefers the template baked onto the row, so the sheet still
-  emits the old call, compiles clean, and fails when the player triggers it. Select the verb under its
+  emits the old call, compiles clean, and fails when the player triggers it. Select the member under its
   new name, type what it used to be called, and a deprecated forwarding shim of the old name is
   appended - existing rows resolve again, while the old name stays out of the picker. Nothing existing
   is edited. (The Project Doctor's **orphaned-verb** check reports the same failure across the project
@@ -761,7 +761,7 @@ The `hint` chooses the input widget in the parameter dialog. `expression` is by 
 | Hint | Widget shown | Use for |
 |------|--------------|---------|
 | *(empty)* | Plain text field (or a dropdown if `options` is set) | Literals and fixed dropdowns. |
-| `expression` | Text field with an `ƒx` button (Find Expressions - the floating Expressions dictionary; the same verbs also autocomplete as you type) | Any GDScript value or expression. The default choice. |
+| `expression` | Text field with an `ƒx` button (Find Expressions - the floating Expressions dictionary; the same expressions also autocomplete as you type) | Any GDScript value or expression. The default choice. |
 | `variable_reference` | Dropdown of sheet variables | A sheet variable name. |
 | `variable_reference:Array` (or `:Dictionary`, etc.) | Dropdown filtered to that variable type | A typed variable; only matching (or Variant) variables show. |
 | `color` | ColorPickerButton | A `Color`. |
@@ -868,25 +868,25 @@ kinds, worked examples, and the safety rules live in the dedicated
 
 ## 14. Use Cases
 
-### 1. A game-specific verb every sheet can use
+### 1. A game-specific action every sheet can use
 
 Your game has combo scoring. One annotated `award_combo(points: int, multiplier: float)` on an autoload provider and every sheet's picker offers **Award Combo** - no sheet ever re-implements the math.
 
 ### 2. Wrapping an SDK once
 
-Ads, analytics, or a store plugin: wrap its calls in one provider script (`show_rewarded_ad()`, `log_event(name)`) and designers use plain verbs while the SDK's API stays in one file you can swap.
+Ads, analytics, or a store plugin: wrap its calls in one provider script (`show_rewarded_ad()`, `log_event(name)`) and designers use plain actions while the SDK's API stays in one file you can swap.
 
 ### 3. A studio-standard effect with tuned defaults
 
 `screen_shake(strength: float = 8.0, seconds: float = 0.3)` with your tuned defaults becomes the ONE shake everyone uses - consistent feel, one place to retune.
 
-### 4. An economy singleton as safe verbs
+### 4. An economy singleton as safe rows
 
 An autoload `Economy` exposes `spend(amount)` / `earn(amount)` / `balance()`; sheets get Spend/Earn actions and a Balance expression, and nobody touches the save-file dictionary directly.
 
 ### 5. Guard rails around a dangerous call
 
-Instead of letting sheets call `queue_free()` on anything, expose `despawn_safely(node)` that unregisters, fades, and frees - the picker offers the safe verb, the risky one stays code.
+Instead of letting sheets call `queue_free()` on anything, expose `despawn_safely(node)` that unregisters, fades, and frees - the picker offers the safe action, the risky one stays code.
 
 ### 6. A hardware trigger
 
@@ -906,7 +906,7 @@ Your strings live in `tr()` keys. Expose `text_for(key: String)` as an expressio
 
 ### 10. A deprecation that never breaks the old levels
 
-You shipped `add_score(n)` in the demo, then the real game needed `award_score(n, source)`. Annotate the old method `## @ace_deprecated("Use Award Score instead")`: the twenty tutorial sheets that already call Add Score keep compiling untouched, while the picker only offers the newer verb to anyone building fresh content.
+You shipped `add_score(n)` in the demo, then the real game needed `award_score(n, source)`. Annotate the old method `## @ace_deprecated("Use Award Score instead")`: the twenty tutorial sheets that already call Add Score keep compiling untouched, while the picker only offers the newer action to anyone building fresh content.
 
 ### 11. A physics helper wrapped as one safe expression
 
@@ -921,7 +921,7 @@ Everyone on the team kept hand-writing the same raycast-from-mouse snippet sligh
   `## @ace_deprecated("Use <NewName> instead")`: it keeps compiling in sheets that already use it (so
   nothing breaks), but is hidden from the picker, flagged on hover, and warned at compile. An optional
   SECOND argument names the successor - `## @ace_deprecated("Renamed.", "method:begin_wave")` - so the
-  hover says where the verb went. (`@ace_hidden` only hides a member; use `@ace_deprecated` to retire one
+  hover says where the member went. (`@ace_hidden` only hides a member; use `@ace_deprecated` to retire one
   with a pointer to its successor.) Do not edit the shipped template.
 - **Renaming a provider function breaks sheets silently.** The member name IS the ace_id
   (`method:start_wave`), and the compiler prefers the template baked onto the row over any registry

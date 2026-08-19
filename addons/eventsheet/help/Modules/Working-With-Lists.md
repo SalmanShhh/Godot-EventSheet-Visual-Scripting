@@ -5,17 +5,17 @@ Arrays, and the loop rows that walk them.
 A list (Godot calls it an **Array**) is the workhorse of any game that has more than one of something: an
 inventory, a wave of enemies, a set of high scores, the lines of a file, a folder of item definitions.
 This guide covers the whole builtin Array vocabulary - the actions that change a list, the expressions
-that read one, the higher-order verbs that transform one, the typed-array queries, and the loop controls
-you use inside a For Each.
+that read one, the higher-order expressions that transform one, the typed-array queries, and the loop
+controls you use inside a For Each.
 
-Everything here is **builtin** - no addon, no autoload, no setup. In the picker the array verbs live under
-**Variables: Array** and the loop verbs under **Loops**.
+Everything here is **builtin** - no addon, no autoload, no setup. In the picker the array rows live under
+**Variables: Array** and the loop rows under **Loops**.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -33,14 +33,14 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 
 ## Core concepts
 
-- **The first cell is always the list.** Every Array verb takes a **var_name** parameter whose dropdown is
+- **The first cell is always the list.** Every Array row takes a **var_name** parameter whose dropdown is
   scoped to Array-typed sheet variables (a typed `Array[int]` qualifies too). Its default is `list`.
 - **Actions change the list in place; expressions read it.** Push Back, Sort Array and Shuffle Array modify
   the variable. Value At, Array Size and Filter hand you something back and leave the original alone.
   Pop Back and Pop Front are the odd pair: they are expressions, and they also remove the item.
 - **Indexes start at 0.** The first item is index 0, the last is `size - 1`, and Slice's To index is
   exclusive.
-- **A For Each is a condition, not an action.** The loop verbs sit in the event's loop lane as a pick
+- **A For Each is a condition, not an action.** The loop conditions sit in the event's loop lane as a pick
   filter, so the event's actions run once per item. That is where the loop index, frame-spreading and the
   byte-exact round-trip all come from.
 - **Each loop names its item.** The generic For Each reads `item` (that is what **Current Loop Item**
@@ -52,11 +52,11 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 - **Copy Array is shallow.** It copies the outer level only; lists and records nested inside are still
   shared with the original. **Deep Copy** copies right through.
 
-## Verb reference
+## Reference tables
 
 ### Changing a list (actions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Push Back | Adds a value to the end. | `{var_name}.append({value})` |
 | Insert At | Inserts a value at a position. | `{var_name}.insert({index}, {value})` |
@@ -74,7 +74,7 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 
 ### Asking about a list (conditions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Contains | True when the list holds the given value somewhere. | `{var_name}.has({value})` |
 | Array Is Empty | True when the list has no items at all. | `{var_name}.is_empty()` |
@@ -84,7 +84,7 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 
 ### Reading a list (expressions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Value At | The item at a position. | `{var_name}[{index}]` |
 | Array Size | How many items the list holds. | `{var_name}.size()` |
@@ -110,7 +110,7 @@ Each of these takes a small expression over the current element. You name the el
 **Element name** field - `x` unless you rename it - because a baked-in name would silently shadow a sheet
 variable of the same name, and GDScript gives no warning when it does.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Filter | A NEW list holding only the elements where the test is true. The original is unchanged. | `{var_name}.filter(func({element}): return {predicate})` |
 | Map | A NEW list with every element transformed by the expression. The original is unchanged. | `{var_name}.map(func({element}): return {expression})` |
@@ -122,7 +122,7 @@ the biggest.
 
 ### Loops
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | For Each Line In Text | **Looping condition.** Runs the event's actions once per LINE, skipping blank ones. CRLF and CR endings handled. Reads the current one as `line`. | `{text}.replace("\r\n", "\n").replace("\r", "\n").split("\n", false)` |
 | For Each Part In Text | **Looping condition.** Once per PIECE of the text, each trimmed, empty pieces skipped. Reads the current one as `part`. | `Array({text}.split({separator}, false)).map(func(__part): return __part.strip_edges()).filter(func(__part): return not __part.is_empty())` |
@@ -545,7 +545,7 @@ label, and Join To Text producing one credits line.
 - **Break Loop and Continue Loop must be inside a loop body.** They emit the bare `break` / `continue`
   keywords, so putting one outside a loop is a compile error, not a no-op.
 - **Current Loop Item reads the DEFAULT iterator, `item`.** If you renamed the loop's iterator, type the
-  new name in the cell instead - the verb has no knowledge of your rename.
+  new name in the cell instead - the expression has no knowledge of your rename.
 - **The loop counter is opt-in.** Loop Index emits the bare identifier `loop_index`, so it only works when
   the loop's **Loop index** field actually declares that name. For nested loops give each a distinct name
   and read the outer one with Loop Index Of.

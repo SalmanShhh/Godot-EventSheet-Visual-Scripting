@@ -158,7 +158,7 @@ The live wave output itself is not a picker expression. Read it straight off the
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$SineBehavior.active` inserts the **Active** entry straight into any expression
 - `$SineBehavior.magnitude` inserts the **Magnitude** entry straight into any expression

@@ -3,7 +3,7 @@
 How to design Actions, Conditions, and Expressions that non-programmers can find, understand,
 and use correctly on the first try. The craft here is the one Construct-style editors proved
 over a decade: the vocabulary IS the user interface. A sheet author never reads your
-implementation - they read your verb's name in the picker, your one-sentence description, your
+implementation - they read your row's name in the picker, your one-sentence description, your
 parameter labels, and the sentence the finished row renders as. Those four surfaces are the
 product; the GDScript behind them is plumbing.
 
@@ -16,7 +16,7 @@ everything below applies to both channels.
 
 1. [The four surfaces a user actually sees](#the-four-surfaces-a-user-actually-sees)
 2. [Rule zero: rows must read as sentences](#rule-zero-rows-must-read-as-sentences)
-3. [Naming verbs](#naming-verbs)
+3. [Naming your vocabulary](#naming-your-vocabulary)
 4. [Choosing the kind: action, condition, expression, trigger](#choosing-the-kind-action-condition-expression-trigger)
 5. [Parameters: few, labelled, defaulted, and picked - not typed](#parameters-few-labelled-defaulted-and-picked---not-typed)
 6. [Descriptions that answer "when would I use this?"](#descriptions-that-answer-when-would-i-use-this)
@@ -60,7 +60,7 @@ Bad:   deadzone                                  (which action? set to what?)
 Put the parameters INSIDE the sentence at the spot where a human would say them. If you cannot
 write the template as a sentence, the ACE is probably doing too many things - split it.
 
-## Naming verbs
+## Naming your vocabulary
 
 - **Actions start with a verb**: Set, Add, Start, Stop, Clear, Restore, Rebind, Shake, Capture.
   The pair matters: everything a user can Start they will look for a Stop for
@@ -101,8 +101,8 @@ Pick the kind by how the user THINKS about the moment, not by what the code does
   it when the friendly meaning needs an edge or a timer the user should not have to build.
 - **Fire-and-forget beats configure-then-run.** An action should complete a whole user
   intention in one row: "Rebind Action To Key" erases AND binds; "Zoom To Position" glides AND
-  frames. If using your feature takes three rows in a fixed order, fold them into one verb and
-  keep the granular verbs for experts.
+  frames. If using your feature takes three rows in a fixed order, fold them into one action and
+  keep the granular actions for experts.
 
 ## Parameters: few, labelled, defaulted, and picked - not typed
 
@@ -168,13 +168,13 @@ On Input event", "cosmetic - aim is untouched".
 
 ## Progressive disclosure: featured, hidden, sections, synonyms
 
-A useful pack has thirty verbs; a beginner needs five. The plugin gives you channels to serve
+A useful pack has thirty rows; a beginner needs five. The plugin gives you channels to serve
 both without hiding either:
 
-- **`.featured()`** (or `@ace_featured` on a pack function): the handful of verbs a first-time
-  user should meet - they render bold and float up the picker. Feature the verbs that
+- **`.featured()`** (or `@ace_featured` on a pack function): the handful of rows a first-time
+  user should meet - they render bold and float up the picker. Feature the rows that
   demonstrate the pack's point ("Rebind Action To Key", "Restore Default Bindings"), not the
-  plumbing. If you feature more than a quarter of your verbs, you have featured nothing.
+  plumbing. If you feature more than a quarter of your vocabulary, you have featured nothing.
 - **`@ace_hidden`**: internal helpers that must exist as functions but mean nothing to a sheet
   author (`_wave`, `_can_stand_up`). Hide them; a picker entry that cannot be used correctly
   is noise.
@@ -183,10 +183,10 @@ both without hiding either:
   selected. One sentence on what lives in the drawer: "Create and rebind controls, and read
   movement as a vector or axis."
 - **Quick-add synonyms** (`EventSheets.register_quick_add_synonyms`): the words users will
-  actually type. If your verb is "Shake" but people type "screen shake", "rumble", or
+  actually type. If your action is "Shake" but people type "screen shake", "rumble", or
   "earthquake", teach the search those phrases - discovery is part of the design.
 - **Tags** (`@ace_tags(camera, juice)`): searchable in the picker and filterable over MCP -
-  cheap cross-category discovery for verbs that belong to a theme.
+  cheap cross-category discovery for rows that belong to a theme.
 
 ## Behavior patterns worth copying
 
@@ -198,24 +198,24 @@ Patterns from the bundled packs that consistently make ACEs feel effortless:
 - **The finish trigger.** Every fire-and-forget effect emits "On X Finished" (zoom, squash,
   slowmo, lean). That one signal turns your action into a sequencing primitive - users chain
   beats reactively instead of guessing durations with timers.
-- **State verbs hold, event verbs recover.** "Lean" eases to an angle and STAYS (a state, the
+- **State actions hold, event actions recover.** "Lean" eases to an angle and STAYS (a state, the
   user leans back explicitly); "FOV Punch" kicks and returns by itself (an event). Decide which
-  one your verb is and say so in the description - mixing the two is the most common source of
+  one your action is and say so in the description - mixing the two is the most common source of
   "why is my camera stuck".
 - **Never-fails modes.** Where an operation can fail (no path to the target), offer the mode
   that degrades gracefully ("nearest" instead of "reach") and a trigger for the failure
   ("On Path Failed") - failure handling becomes a row, not a crash.
 - **Auto-find, allow override.** The Juice packs find the active camera themselves; "Use
   Camera" pins a specific one. Zero wiring for the 95% case, full control for the rest. Same
-  shape everywhere: sensible automatic behavior + one explicit override verb.
-- **Whole-step verbs.** "Rebind Action To Key" is erase + create + bind in one action, because
-  "rebind" is one THOUGHT. Ship the granular verbs too (Clear Action Bindings, Bind Event To
+  shape everywhere: sensible automatic behavior + one explicit override action.
+- **Whole-step actions.** "Rebind Action To Key" is erase + create + bind in one action, because
+  "rebind" is one THOUGHT. Ship the granular actions too (Clear Action Bindings, Bind Event To
   Action) for the experts building custom flows.
 - **Derive, don't ask.** The pathfinding design reads jump physics off the sibling movement
   behavior instead of asking the user to re-type numbers that already exist. If another node
-  already knows the answer, read it - and provide the override verb for unusual setups.
+  already knows the answer, read it - and provide the override action for unusual setups.
 - **Exported knobs are free ACEs.** On packs, every exported variable automatically publishes
-  Set / Add To / Subtract From / read verbs. Put feel-tuning (speeds, amplitudes, decay rates)
+  Set / Add To / Subtract From actions and a read expression. Put feel-tuning (speeds, amplitudes, decay rates)
   in exported knobs rather than parameters - the Inspector, the sheet, AND the picker all get
   them, in one declaration.
 
@@ -282,7 +282,7 @@ with nothing typed, and a row that reads "set "move_left" deadzone to 0.2" - a s
 - [ ] Does every param that CAN be picked use the matching hint / options / autocomplete?
 - [ ] Does every description answer "when would I use this?" without naming engine classes?
 - [ ] Start/Stop, Capture/Release, Set/read - are the pairs complete?
-- [ ] Are the 3-6 hero verbs `.featured()` and the internals `@ace_hidden`?
+- [ ] Are the 3-6 hero rows `.featured()` and the internals `@ace_hidden`?
 - [ ] Do fire-and-forget actions emit an On X Finished trigger?
 - [ ] Is the action safe to run twice in a row (guard inside the template if not)?
 - [ ] Would you sign off on the emitted GDScript in a code review?

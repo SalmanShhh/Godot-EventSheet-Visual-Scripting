@@ -1,7 +1,7 @@
 # Doing Math And Randomness
 
-Every number verb the plugin ships, in one place. These are **builtin** verbs - they need no addon, no
-autoload and no setup. Open the picker on any sheet and they are already there, under **Math & Random**,
+Every number action, condition and expression the plugin ships, in one place. This is **builtin**
+vocabulary - it needs no addon, no autoload and no setup. Open the picker on any sheet and they are already there, under **Math & Random**,
 **Helpers** and **Procedural**.
 
 Almost all of them are expressions: values you drop into a parameter cell rather than rows of their own.
@@ -17,7 +17,7 @@ your `.gd` file.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -40,7 +40,7 @@ your `.gd` file.
 
 - **Expressions go in cells, not in rows.** Clamp, Lerp, Random and their kin are values. You reach them
   from the ƒx picker on any parameter cell, and they nest: the Value of a Clamp can itself be a Lerp.
-- **Degrees or radians, pick deliberately.** Godot works in radians. The verbs whose names say
+- **Degrees or radians, pick deliberately.** Godot works in radians. The expressions whose names say
   *(degrees)* - Sin (degrees), Cos (degrees), Tan (degrees) - convert for you, and Is Within Angle and
   Is Clockwise From take degrees throughout. Everything else in the angle family (Angle Toward, Angle Of
   (atan2), Angle Difference, Rotate Toward (angle), Lerp Angle, Sine, Cosine, Tangent, Arc Tangent (y, x))
@@ -60,11 +60,11 @@ your `.gd` file.
 - **Progress Of is the inverse_lerp nobody finds.** Turning "current, empty, full" into 0-to-1 is the
   single most common number job in a game, and it already ships clamped.
 
-## Verb reference
+## Reference tables
 
 ### Ranges, blending and curves
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Clamp | Keeps a value within a min and max, clipping anything outside the range. | `clampf({value}, {min}, {max})` |
 | Clamp (float) | The same clamp, named as the decimal-typed one for ƒx expressions. | `clampf({value}, {min}, {max})` |
@@ -102,7 +102,7 @@ count from engine start.
 
 ### Angles
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Angle Toward | The angle from this node's position toward a target position (radians). Node2D only. | `position.angle_to_point({to})` |
 | Angle Of (atan2) | The angle of the direction (x, y), correct in all four quadrants. | `atan2({y}, {x})` |
@@ -125,7 +125,7 @@ count from engine start.
 
 ### Plain arithmetic
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Absolute Value | The number without its sign: abs(-5) is 5. Two versions ship. | `absf({value})` (Math & Random) / `abs({value})` (Helpers) |
 | Square Root | The square root of a number. Two versions ship. | `sqrt({value})` |
@@ -150,7 +150,7 @@ count from engine start.
 
 ### Randomness
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Random | A random decimal between two bounds. | `randf_range({from}, {to})` |
 | Random Integer | A random whole number between two bounds, both included. | `randi_range({from}, {to})` |
@@ -165,7 +165,7 @@ Every one takes a **Seed** (any text) and an **Index** (which value in the seque
 gives the same answer, with no generator state anywhere - so these work inside an Editor Tool sheet and
 while filling a Custom Resource, as well as at runtime.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Seeded Value | A stable pseudo-random decimal in 0 to 1 (excluding 1) for a seed and an index. | `(float(absi(hash(str({seed}) + "#" + str({index}))) % 1000000) / 1000000.0)` |
 | Seeded Int | A stable pseudo-random whole number between Min and Max, inclusive. | `({minimum} + absi(hash(str({seed}) + "#" + str({index}))) % maxi({maximum} - {minimum} + 1, 1))` |
@@ -180,7 +180,7 @@ spelling (a random angle plus a random radius) crowds points at the centre, beca
 circle hold more area than the inner ones, and the weighting that undoes that is baked in here so nobody
 has to remember it.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Random Point In Circle | An evenly spread random point inside a circle. | `({center} + Vector2.RIGHT.rotated(randf() * TAU) * (sqrt(randf()) * {radius}))` |
 | Random Point On Circle | A random point exactly on the rim, never inside it. | `({center} + Vector2.RIGHT.rotated(randf() * TAU) * {radius})` |
@@ -202,7 +202,7 @@ Build grids, inventory grids, puzzle boards, chunk keys and tower placement all 
 tilemap in sight. **Cell Distance** carries the same five-geometry dropdown as **Is Within Distance
 (choose metric)**, so there is one spelling of "how is distance counted" in the whole plugin.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Cell Of Point | Which grid cell a world position falls in. Negatives land in negative cells. | `Vector2i(floori({point}.x / maxf({cell_size}, 0.001)), floori({point}.y / maxf({cell_size}, 0.001)))` |
 | Center Of Cell | The world position at the middle of a cell - the exact partner of Cell Of Point. | `(Vector2({cell}) * {cell_size} + Vector2({cell_size}, {cell_size}) * 0.5)` |
@@ -222,7 +222,7 @@ Distance-weighted strength is the single most reused number in game code. The pl
 COLLECT everything in a blast - **Query Bodies In Circle**, **In Sphere** - and then every body took
 identical damage, because nothing said "less the further away".
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Falloff At Distance | 1 at the centre, 0 at the edge, with a Linear / Sharp (squared) / Smooth profile. Past the radius it is 0. | an indexed array of the three profiles |
 | Strength Toward | The same falloff between THIS node and another one, without spelling out either position. | `(clampf(1.0 - global_position.distance_to({node}.global_position) / maxf({radius}, 0.001), 0.0, 1.0))` |
@@ -489,7 +489,8 @@ if global_position.distance_to(player.global_position) <= (3 * float(ProjectSett
 ```
 
 Set `eventforge/tile_size` once in Project Settings and every distance in the game can be written the way
-a grid game thinks. (Is Within Distance itself is a comparison verb - see the Comparing Values guide.)
+a grid game thinks. (Is Within Distance itself is a comparison condition - see the Comparing Values
+guide.)
 
 **19. Guard maths on a loaded value.**
 
@@ -792,11 +793,11 @@ Ramp Clock resets the curve every time something actually drops.
 
 - **Random angle plus random radius is a bug, not a shortcut.** It puts half the points inside the inner
   half-radius, which holds a quarter of the area, so scatter visibly clumps at the centre. Every shape
-  verb here already does the sqrt (2D) or cube-root (3D) weighting that fixes it.
+  expression here already does the sqrt (2D) or cube-root (3D) weighting that fixes it.
 - **Jitter's amount must be the same KIND of value as the thing it nudges.** A number for a number, a
   Vector2 for a position, a Color for a tint. It also uses one random roll for the whole value, so a
-  jittered position moves along a line rather than into a disc - Random Point In Circle is the verb for a
-  disc.
+  jittered position moves along a line rather than into a disc - Random Point In Circle is the
+  expression for a disc.
 - **Cells count from 0,0 in the top-left.** A 20 by 12 board's last cell is 19,11, which is what Is Cell
   In Bounds is checking and the off-by-one it is there to stop.
 - **Cell Of Point floors, Snap Point To Grid rounds.** The first answers "which cell is this in" and the
@@ -814,7 +815,7 @@ Ramp Clock resets the curve every time something actually drops.
 - **For a hand-drawn blast profile, feed it into Sample Curve.** Falloff At Distance produces the 0-to-1
   value; the curve shapes it, and a designer draws the shape in the Inspector.
 - **Push Group Away From moves positions, not velocities.** It is a shove, not an impulse - for physics
-  bodies that should tumble, Apply Radial Impulse on the body is the honest verb.
+  bodies that should tumble, Apply Radial Impulse on the body is the honest action.
 
 - **Clamp and Wrap come in two flavours, and picking the wrong one is silent.** `clampf` and `wrapf`
   return decimals. Assigning one to a whole-number variable truncates it or trips the type checker. For
@@ -824,14 +825,14 @@ Ramp Clock resets the curve every time something actually drops.
 - **Radians unless the name says degrees.** Mixing the two is the commonest angle bug here. Angle Toward
   and Angle Of (atan2) hand back radians; Is Within Angle and Is Clockwise From want degrees; Sin/Cos/Tan
   (degrees) take degrees while Sine/Cosine/Tangent take radians.
-- **Angle Toward and Distance To are Node2D verbs and read this node's own `position`.** They are not
+- **Angle Toward and Distance To are Node2D expressions and read this node's own `position`.** They are not
   general two-point helpers. For two arbitrary points use Distance Between or Direction To from the
   vector vocabulary, or Is Within Distance as a condition.
 - **Never compare decimals with `=`.** Use Is Equal (approx) and Is Zero (approx). This is not
   fussiness - after any arithmetic at all, two numbers that "should" be equal usually are not.
 - **A seed stays pinned.** Seed Random and Set Random Seed change the whole game's randomness from that
   point on, not just the next roll. Call Randomize Seed when you want ordinary randomness back.
-- **The Procedural verbs are not affected by seeding at all.** They hash the Seed text and the Index
+- **The Procedural family is not affected by seeding at all.** They hash the Seed text and the Index
   directly, so Randomize Seed does nothing to them. That is the point: they are for content that must be
   identical every time, including in the editor.
 - **Seeded Pick returns nothing at all for an empty list.** Guard the list before you use the result, or

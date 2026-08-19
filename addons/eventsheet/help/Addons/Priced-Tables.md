@@ -112,7 +112,7 @@ two tables with two local numbers are two separate purses.
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, exactly as the rows
+On the canvas these rows read as styled sentences - parameter values in **bold**, exactly as the rows
 draw them:
 
 - Load price table **blacksmith.tres**

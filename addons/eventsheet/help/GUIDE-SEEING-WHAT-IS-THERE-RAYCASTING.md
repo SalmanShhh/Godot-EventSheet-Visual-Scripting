@@ -49,7 +49,7 @@ Arrows move, the cursor aims the beam. Six casts run every frame:
 | What you see | The cast | What it teaches |
 | --- | --- | --- |
 | Dim yellow line, bright when it lands | **RayCast2D node**, swept by Point RayCast At | A node-based ray, re-aimed every tick. The white stub at the impact is the surface normal. |
-| Cyan beam to the cursor | **Cast Ray Into** + the **Ray Result** verbs | ONE cast, then the point, the normal and the group test are read off the stored result. The orange ring means it hit something in the `targets` group. |
+| Cyan beam to the cursor | **Cast Ray Into** + the **Ray Result** expressions | ONE cast, then the point, the normal and the group test are read off the stored result. The orange ring means it hit something in the `targets` group. |
 | Dashed green circle + rings | **Query Bodies In Circle** | Everything within 130px, collected into a variable. |
 | White ring under the pointer | **Query Bodies Under Mouse** | The 2D click-to-select idiom: a point query at the cursor. |
 | Pink dashed probe | **Cast Circle Motion Into** | How far an 18px disc could slide before it jams. The ring is where it stops. |
@@ -69,7 +69,7 @@ Two details in that scene are worth stealing:
 - The camera **orbits** rather than being mouse-driven. A first-person controller captures the pointer, and a captured pointer has no screen position to project a picking ray through. If your own click-to-select never fires, check this first.
 - The beam drawn at the cursor is the **surface normal**, not the camera ray. You are looking straight down the camera ray, so drawing it renders as a stray line skidding over the floor.
 
-Both scenes are generated, and every cast in them is a real ACE row rather than hand-written code, so `raycast_lab.gd` and `raycast_lab_3d.gd` beside them are exactly what these verbs emit. Read either one next to its scene to see the whole vocabulary compiled.
+Both scenes are generated, and every cast in them is a real ACE row rather than hand-written code, so `raycast_lab.gd` and `raycast_lab_3d.gd` beside them are exactly what these rows emit. Read either one next to its scene to see the whole vocabulary compiled.
 
 ---
 
@@ -141,7 +141,7 @@ There are also single-shot expressions (**World Raycast Point**, **World Raycast
 
 ## Reading a stored result
 
-**Cast Ray Into** hands back the raw Dictionary Godot produced. The **Ray Result** verbs name its parts so you never have to know the keys:
+**Cast Ray Into** hands back the raw Dictionary Godot produced. The **Ray Result** rows name its parts so you never have to know the keys:
 
 ```
 On "fire" pressed
@@ -155,7 +155,7 @@ On "fire" pressed
       -> Call function  damage
 ```
 
-| Verb | Gives you |
+| Name | Gives you |
 | --- | --- |
 | **Ray Result Hit Something** | Whether the cast touched anything at all. |
 | **Ray Result Collider** | The object it hit. |
@@ -227,7 +227,7 @@ It needs a **current Camera3D**, and it needs the pointer to be **free**. A firs
 
 ### RayCast node (2D and 3D)
 
-| Verb | Kind | What it does |
+| Name | Kind | What it does |
 | --- | --- | --- |
 | **RayCast Is Colliding** | Condition | Hitting something right now. |
 | **RayCast Hits Group** | Condition | Hitting something in a group. |
@@ -251,7 +251,7 @@ It needs a **current Camera3D**, and it needs the pointer to be **free**. A firs
 
 ### ShapeCast node (2D and 3D)
 
-| Verb | Kind | What it does |
+| Name | Kind | What it does |
 | --- | --- | --- |
 | **ShapeCast Is Colliding** | Condition | The swept shape is touching something. |
 | **Point ShapeCast At** | Action | Aims the sweep and sets its length. |
@@ -268,7 +268,7 @@ It needs a **current Camera3D**, and it needs the pointer to be **free**. A firs
 
 ### World queries (2D and 3D)
 
-| Verb | Kind | What it does |
+| Name | Kind | What it does |
 | --- | --- | --- |
 | **Cast Ray Into** | Action | One ray, stored in a variable. From, to, mask, ignore list, detect-areas. |
 | **Cast Ray From Mouse Into** (3D) | Action | Camera-through-cursor ray, stored in a variable. |
@@ -329,4 +329,4 @@ It needs a **current Camera3D**, and it needs the pointer to be **free**. A firs
 - **Thin walls and fast objects need thickness.** If something occasionally passes through a wall, a ShapeCast or **Cast Sphere Motion Into** fixes what a hairline ray cannot.
 - **Check "hit something" before reading the collider.** A cleared ray has no collider, and calling a method on nothing crashes. **Ray Result Is In Group** already guards this for you.
 - **Volume queries are not free.** Cap them with Max Results, and prefer running them on an event rather than every tick when you can.
-- **The exception verbs need a physics object.** **Ignore Node In RayCast** takes a `CollisionObject2D` or `CollisionObject3D` - a plain Node will not compile.
+- **The exception actions need a physics object.** **Ignore Node In RayCast** takes a `CollisionObject2D` or `CollisionObject3D` - a plain Node will not compile.

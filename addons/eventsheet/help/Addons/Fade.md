@@ -33,7 +33,7 @@ stage so you can chain the next beat.
 
 - **It animates alpha.** The node's `modulate` alpha goes from 0 (invisible) to 1 (fully visible). The
   behavior works on a Node2D (a sprite) or a Control (UI), because both are CanvasItems.
-- **Two simple verbs, one sequence.** **Fade In** and **Fade Out** each run one direction over a
+- **Two simple actions, one sequence.** **Fade In** and **Fade Out** each run one direction over a
   duration. **Start Fade** runs the whole thing: fade in over `fade_in_time`, hold for `hold_time`, then
   fade out over `fade_out_time`.
 - **Fire and forget.** A fade is a tween under the hood; starting a new one cancels the old one, so
@@ -63,7 +63,7 @@ Because Free On Faded Out frees the node, you can skip the manual "destroy" step
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Fade in over **duration** s
 - Fade out over **duration** s
@@ -113,13 +113,13 @@ On the canvas these verbs read as styled sentences - parameter values in **bold*
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$FadeBehavior.fade_in_time` inserts the **Fade In Time** entry straight into any expression
 - `$FadeBehavior.hold_time` inserts the **Hold Time** entry straight into any expression

@@ -123,7 +123,7 @@ Two routes:
 
 - **A behavior pack:** build the logic as an event sheet, then **Export Addon…** publishes it
   through the same pipeline the bundled packs use - the exported `.gd` IS the pack (editable
-  sheet and runtime script in one), its verbs live in every picker.
+  sheet and runtime script in one), its vocabulary lives in every picker.
 - **Custom ACEs from a script:** drop a `.gd` into `res://eventsheet_addons/`. Its `class_name`
   becomes the provider; methods/exported vars become Actions/Conditions/Expressions; annotated
   signals become Triggers. One `@ace_param(id, default: 1.0, options: low=Slow|high=Fast, hint: comparison)`
@@ -132,7 +132,7 @@ Two routes:
   operator dropdown in one word. (`@ace_param_options` / `@ace_param_autocomplete` / `@ace_param_hint`
   remain as the single-purpose spellings.) It registers project-wide automatically.
 
-Prefer to see the vocabulary before committing to it? **Sheet ▸ Custom Actions…** previews every verb a
+Prefer to see the vocabulary before committing to it? **Sheet ▸ Custom Actions…** previews everything a
 script would publish, lets you fix the kind, name and category in the table, and writes those choices
 back into the file as `## @ace_*` comments (with a diff and a backup first).
 
@@ -460,8 +460,8 @@ Advanced knobs when a variable actually uses them; first run also offers a **Sim
 Two ways to stop repeating yourself.
 
 - **Extract-to-Function.** Select a run of actions you keep re-typing → **Extract to Function…** →
-  name it. The selection becomes one named, reusable **ƒ verb** you can call anywhere; the original
-  rows are replaced by the call. It's the "create an abstraction" gesture - a named verb, not a copy.
+  name it. The selection becomes one named, reusable **ƒ function** you can call anywhere; the original
+  rows are replaced by the call. It's the "create an abstraction" gesture - a named function, not a copy.
 - **Families.** When the same logic should run across *many* objects, set **Sheet Type → Family**:
   the sheet's events iterate over a whole **family** of nodes (family-scoped), so one sheet drives the
   group. The **Family Arena** showcase (`demo/showcase/family_arena/family_arena.tscn`) shows it end to end.
@@ -488,16 +488,16 @@ lands as **one undo step**, so a refactor is something you try, look at, and und
   actions travel in a row that is still off, or still pointed at that node, rather than quietly
   joining the parent and changing what your game does.
 - **Inline This Call** (on a **Call** row's own right-click menu, beside *Extract All Actions to
-  Function…*) replaces the call with the verb's own rows.
-- **Inline Everywhere and Remove** (on a verb's **Define** row) does that at every call site and then
-  deletes the verb, so a verb published too early can be un-published without leaving broken calls.
+  Function…*) replaces the call with the function's own rows.
+- **Inline Everywhere and Remove** (on a function's **Define** row) does that at every call site and then
+  deletes the function, so one published too early can be un-published without leaving broken calls.
 - **Duplicate as Variant…** copies the selection with names swapped.
 
 **What it refuses, and why.** A guard runs *after* the actions above it, so **Wrap** only takes the
 **last** run of actions; a gapped or mid-block selection would silently reorder your program, and is
 refused with that reason instead. **Unwrap** refuses on a top-level row (there is nothing above it to
 lift into), on a **For Each** sub-event (its rows would run once instead of per item), and on one
-whose **Else** sits below it. **Inline** refuses a verb whose body is not a plain run of actions, and
+whose **Else** sits below it. **Inline** refuses a function whose body is not a plain run of actions, and
 a call passing an expression such as `speed * 2` rather than a plain name. Every refusal appears as
 the disabled item's tooltip, so you read it before you click.
 
@@ -511,13 +511,13 @@ Use cases:
    *Health > 0* on the rows the stack trace named.
 4. **Take a guard back off.** A debug-only `if` you no longer need: Unwrap Event, and the rows return
    to the parent in the same order.
-5. **Undo a premature abstraction.** You extracted a verb, then found the shape was wrong. Inline
+5. **Undo a premature abstraction.** You extracted a function, then found the shape was wrong. Inline
    Everywhere and Remove folds it back and the sheet reads as it did before extraction.
 6. **Make one caller differ.** Inline This Call at that one site, edit the rows there, and the other
-   callers stay on the verb.
-7. **Flatten helper verbs before Export Addon Pack**, so the pack ships a flat, readable body.
-8. **Read a stranger's sheet.** Inline once to see what a verb actually does, then undo.
-9. **Un-publish a verb** without hunting down its call rows first.
+   callers stay on the function.
+7. **Flatten helper functions before Export Addon Pack**, so the pack ships a flat, readable body.
+8. **Read a stranger's sheet.** Inline once to see what a function actually does, then undo.
+9. **Un-publish a function** without hunting down its call rows first.
 10. **Recover from the extract refusal.** Extract-to-Function refuses when a captured local is not
     visible; wrap the run behind a condition instead and keep the shape you wanted.
 
@@ -561,7 +561,7 @@ that does not run.
 
 Use cases:
 
-16. **Any idiom you retype more than twice** that never earns a published verb.
+16. **Any idiom you retype more than twice** that never earns a published function.
 17. **Onboarding**, by shipping your project's house patterns so a newcomer cannot get the shape wrong.
 18. **Jam speed**, with a personal library of pickup, door, checkpoint and menu blocks.
 19. **Tutorials**, where a snippet with labelled blanks is a runnable teaching example.

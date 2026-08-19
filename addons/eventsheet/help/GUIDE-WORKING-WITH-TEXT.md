@@ -39,17 +39,17 @@ call, but it is still plain GDScript you could have typed, with nothing of this 
 
 ## 1. The map: which folder holds what
 
-Every verb below is in the picker today. The categories are real folder names, so you can go straight
+Every row below is in the picker today. The categories are real folder names, so you can go straight
 there instead of searching:
 
 | Folder | What lives there |
 | --- | --- |
-| **Text** | Fitting, formatting, alignment, casing, and the extraction verbs (Text Before / Between / After, Number In Text, Split Keeping Quotes). |
+| **Text** | Fitting, formatting, alignment, casing, and the extraction expressions (Text Before / Between / After, Number In Text, Split Keeping Quotes). |
 | **Compare: Text** | The questions: Text Is A Number, Text Is A Whole Number, Contains Any Of / All Of / None Of, alongside the shipped Text Contains and Text Is One Of. |
 | **Variables: String** | Number From Text and Whole Number From Text - the conversions that take a fallback. |
 | **Files: Tables** | Table From File, Table From Text, Column Of Table, Row Where. |
 | **Loops** | For Each Line In Text, For Each Part In Text, For Each Resource In Folder. |
-| **JSON** | Explain JSON Problem, beside the shipped JSON Is Valid and the parse verbs. |
+| **JSON** | Explain JSON Problem, beside the shipped JSON Is Valid and the parse expressions. |
 | **Variables: Dictionary** | Missing Fields - the "what is this record still lacking" report. |
 | **Translation** | Translated Text From Pattern and Set Text (translated pattern). |
 
@@ -81,7 +81,7 @@ Has Changed  current_objective
 **In the editor**: Add Action › General Actions › **Set Text**, then press **ƒx** on the Text field ›
 **Text** › **Shorten To Fit**. That is the same folder holding the shipped Left, Mid and Text Length.
 
-Three promises both verbs keep, so you never have to reason about the edges:
+Three promises both expressions keep, so you never have to reason about the edges:
 
 - Text that already fits comes back untouched, character for character.
 - The result never runs past the width you gave. A width too narrow to hold the ending cuts without
@@ -104,7 +104,7 @@ Compare Values   Text Length(profile_name) > 14
 A score of `1234567` is unreadable at a glance, `0.73` is not a percentage, and a run timer written as
 `mm:ss` says `"61:00"` an hour in.
 
-| Verb | Reads | Good for |
+| Name | Reads | Good for |
 | --- | --- | --- |
 | **With Thousands Separators** | `1234567` becomes `"1,234,567"` | scores, currency, damage totals |
 | **As Percent Text** | `0.73` becomes `"73%"` | health, completion, load progress |
@@ -137,7 +137,7 @@ require registering an autoload first.
 
 Three expressions pad text to a fixed width so rows read as a table instead of drifting:
 
-| Verb | Pads on | Result |
+| Name | Pads on | Result |
 | --- | --- | --- |
 | **Align Left** | the right | every row starts on the same edge |
 | **Align Right** | the left | numbers END on the same edge |
@@ -156,8 +156,8 @@ Two rules that decide whether this actually works:
 
 - **Give the Label a MONOSPACE theme font.** Padding counts characters, not pixels. In a proportional
   font `"iiii"` and `"WWWW"` are both four characters and visibly different widths, and the column
-  drifts no matter what these verbs do. Every one of their descriptions says so for the same reason.
-- **Text longer than the width is left alone.** These verbs never cut. Shorten it first (section 2),
+  drifts no matter what these expressions do. Every one of their descriptions says so for the same reason.
+- **Text longer than the width is left alone.** These expressions never cut. Shorten it first (section 2),
   then align it - `Align Left(Shorten To Fit(name, 16, "…"), 16, " ")` is the full recipe for a
   leaderboard cell.
 
@@ -170,7 +170,7 @@ dotted leader of a receipt or a contents page.
 
 A data-driven game is full of machine ids: `fire_sword`, `maxHealth`, `quest_rescue_cat`. Showing one
 to a player means either a second table mapping ids to labels (which drifts the first time somebody
-adds a row) or a verb.
+adds a row) or an expression.
 
 - **As Title Text** turns `"fire_sword"` into `"Fire Sword"` and `"maxHealth"` into `"Max Health"`.
 - **As Sentence Text** raises the FIRST letter only and leaves everything else exactly as it is, so
@@ -195,7 +195,7 @@ missing half of that family.
 A dialogue line reads `Ada [angry]: hi`. You want the speaker, the mood and the words, and you do not
 want to write index arithmetic or a regular expression to get them.
 
-| Verb | Gives you | On the example line |
+| Name | Gives you | On the example line |
 | --- | --- | --- |
 | **Text Before** | the part before the first marker | `Text Before(line, " [")` is `"Ada"` |
 | **Text Between** | the part between two markers | `Text Between(line, "[", "]")` is `"angry"` |
@@ -398,7 +398,7 @@ Loop the records and hand each one to a pack, converting the text columns as you
       -> Add Entry   "rare_pool", row["id"], 1
 ```
 
-Two reading verbs save you a loop when you only want one slice:
+Two reading expressions save you a loop when you only want one slice:
 
 - **Column Of Table**(items, "label") gives one whole column as a list, in row order - a dropdown's
   items, a weights list, a quick sum.
@@ -467,7 +467,7 @@ A malformed file produces nothing, and the crash happens three rows later in a r
 innocent. Three expressions name the failure where it happened, and they share one convention that
 makes them safe to branch on: **an EMPTY result means nothing is wrong.**
 
-| Verb | Answers | Example result |
+| Name | Answers | Example result |
 | --- | --- | --- |
 | **Explain JSON Problem** | why this JSON would not parse | `line 4: Expected ':'` |
 | **Explain Table Problem** | the first cell that should be a number and is not | `row 12, column "price": "abc" is not a number` |
@@ -535,7 +535,7 @@ field's **ƒx** › **Translation** › **Translated Text From Pattern**.
 
 ### Fitting and formatting (folder: Text)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Shorten To Fit | Expression | a length test, then `text.left(budget).strip_edges() + suffix` |
 | Shorten To Whole Words | Expression | the same, backing up to the last space first |
@@ -550,7 +550,7 @@ field's **ƒx** › **Translation** › **Translated Text From Pattern**.
 
 ### Extraction (folder: Text)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Text Before | Expression | `text.get_slice(marker, 0)` |
 | Text After | Expression | the split-once form, empty when the marker is missing |
@@ -560,7 +560,7 @@ field's **ƒx** › **Translation** › **Translated Text From Pattern**.
 
 ### Questions (folders: Compare: Text, Variables: String)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Text Is A Number | Condition | `str(text).strip_edges().is_valid_float()` |
 | Text Is A Whole Number | Condition | `str(text).strip_edges().is_valid_int()` |
@@ -572,7 +572,7 @@ field's **ƒx** › **Translation** › **Translated Text From Pattern**.
 
 ### Tables and loops (folders: Files: Tables, Loops)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Table From File | Expression | the header-row parse over `FileAccess.get_file_as_string(path)` |
 | Table From Text | Expression | the same parse over text you hold |
@@ -584,7 +584,7 @@ field's **ƒx** › **Translation** › **Translated Text From Pattern**.
 
 ### Reports (folders: JSON, Files: Tables, Variables: Dictionary)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Explain JSON Problem | Expression | a bound `JSON` instance, its error line and message |
 | Explain Table Problem | Expression | the first bad cell as a sentence, `""` when clean |
@@ -592,7 +592,7 @@ field's **ƒx** › **Translation** › **Translated Text From Pattern**.
 
 ### Translation (folder: Translation)
 
-| Verb | Kind | Emits |
+| Name | Kind | Emits |
 | --- | --- | --- |
 | Translated Text From Pattern | Expression | `tr(pattern).format(values)` |
 | Set Text (translated pattern) | Action | `text = tr(pattern).format(values)` |
@@ -695,7 +695,7 @@ down the left column, Align Right down the right).
   all return empty text when nothing is wrong, so the failure branch is a **Text Is Blank** with
   **Invert Condition** on it.
 - **Do not pair Explain JSON Problem with JSON Is Valid.** That condition reads a document holding
-  just the word `null` as invalid and this verb has nothing to say about it, so together they log an
+  just the word `null` as invalid and this expression has nothing to say about it, so together they log an
   error with a blank reason. Branch on the report's own emptiness.
 - **Translate first, fill second.** Wrapping Text From Pattern in Translate looks up a string that
   already has its values in it, which no catalog holds, so the text never translates. Use Translated
@@ -707,5 +707,5 @@ down the left column, Align Right down the right).
   "after" at all.
 - **Contains Any Of is case-sensitive and looks inside.** If you want whole-string equality against a
   list, that is the shipped **Text Is One Of**, which is a different question with a similar name.
-- **Keep the value expression a plain read.** Number From Text and the fallback verbs read their input
+- **Keep the value expression a plain read.** Number From Text and the fallback expressions read their input
   twice in the emitted line, so a method that consumes, deals or advances something would run twice.

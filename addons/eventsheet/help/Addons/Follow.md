@@ -94,7 +94,7 @@ Every ACE in a row acts on the `FollowBehavior` of the node named on the left (`
 
 ## ACE reference
 
-All ACEs live in the **Follow** category and target the `FollowBehavior` on the node the row is placed on. The six Inspector properties are exposed as get/set ACEs (and add/subtract for the numeric ones), plus the three authored verbs (Start Following, Follow Group, Stop Following) and the arrival trigger.
+All ACEs live in the **Follow** category and target the `FollowBehavior` on the node the row is placed on. The six Inspector properties are exposed as get/set ACEs (and add/subtract for the numeric ones), plus the three authored actions (Start Following, Follow Group, Stop Following) and the arrival trigger.
 
 ### Actions
 
@@ -141,7 +141,7 @@ All ACEs live in the **Follow** category and target the `FollowBehavior` on the 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$FollowBehavior.delay` inserts the **Delay** entry straight into any expression
 - `$FollowBehavior.follow_speed` inserts the **Follow Speed** entry straight into any expression

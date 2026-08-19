@@ -80,7 +80,7 @@ The Add Save Support tab generates the `save_state` / `load_state` seam for one 
 4. **The output panel, titled "Generated seam (paste into the script)".** The generated pair appears here.
 5. **Copy to Clipboard button.** Copies the generated code so you can paste it straight into your script.
 
-Once you paste the pair into your script, the Save System finds it automatically, either because the node is in the persist group or because a sheet calls the Save Node State verb on it. The two methods it generates are a solid, correct starting point, and because they are plain GDScript you are free to edit them afterwards.
+Once you paste the pair into your script, the Save System finds it automatically, either because the node is in the persist group or because a sheet calls the Save Node State action on it. The two methods it generates are a solid, correct starting point, and because they are plain GDScript you are free to edit them afterwards.
 
 ## 6. Doing it from code
 

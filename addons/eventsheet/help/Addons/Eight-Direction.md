@@ -110,7 +110,7 @@ Eight Direction defines no triggers of its own. React to movement with the built
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$EightDirectionMovement.ai_controlled` inserts the **Ai Controlled** entry straight into any expression
 - `$EightDirectionMovement.move_speed` inserts the **Move Speed** entry straight into any expression

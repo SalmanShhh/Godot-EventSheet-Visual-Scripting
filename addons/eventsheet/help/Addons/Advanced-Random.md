@@ -84,12 +84,12 @@ On enemy killed
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Set random seed to **seed_value**
 - Make shuffle bag **bag_name** from **items**
 
-Every verb below is exactly what the pack publishes. Parameter names and types are shown in order. Actions are called as `AdvancedRandom: <Action>  args`; expressions and conditions are read as `AdvancedRandom.<Name>(args)`.
+Every name below is exactly what the pack publishes. Parameter names and types are shown in order. Actions are called as `AdvancedRandom: <Action>  args`; expressions and conditions are read as `AdvancedRandom.<Name>(args)`.
 
 ### Actions
 
@@ -144,7 +144,7 @@ Advanced Random ships no triggers. It is a pure query-and-set toolkit: you *call
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ---
@@ -152,7 +152,7 @@ change while the game runs.
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$AdvancedRandomAddon.seed_on_start` inserts the **Seed On Start** entry straight into any expression
 - `$AdvancedRandomAddon.random_value()` inserts the **Random Value** entry straight into any expression
@@ -387,7 +387,7 @@ On chest opened
   -> Set variable  reward = AdvancedRandom.Pick From Table(preload("res://tables/chest.tres"))
 ```
 
-It draws through the same seeded generator as every other verb here, so a fixed seed still reproduces the whole run exactly. An empty table returns `""`. Variants are just other `.tres` files - a rare-chest table, a fishing table, a per-biome table - and a designer can retune the odds without opening a sheet.
+It draws through the same seeded generator as every other expression and condition here, so a fixed seed still reproduces the whole run exactly. An empty table returns `""`. Variants are just other `.tres` files - a rare-chest table, a fishing table, a per-biome table - and a designer can retune the odds without opening a sheet.
 
 ---
 

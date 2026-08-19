@@ -2,17 +2,17 @@
 
 The 3D half of the builtin vocabulary: move, turn, scale and drive a Node3D; run a CharacterBody3D with
 velocity and Move And Slide; push a RigidBody3D; switch cameras and set a field of view; and build
-geometry at runtime with the primitive mesh builders. Every verb wraps a native Godot 3D call, so the
-engine maintains the behaviour and the sheet only names it.
+geometry at runtime with the primitive mesh builders. Every row here wraps a native Godot 3D call, so
+the engine maintains the behaviour and the sheet only names it.
 
-These verbs are builtin - no pack to enable, nothing to attach. They compile to plain GDScript with no
+These rows are builtin - no pack to enable, nothing to attach. They compile to plain GDScript with no
 plugin reference left behind.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -33,7 +33,7 @@ plugin reference left behind.
 
 - **Y is up in 3D, and up is positive.** In 2D, negative Y is up. In 3D, `Vector3.UP` is `(0, 1, 0)`.
   Jump velocities are positive here.
-- **Rotation is in radians, unless the verb says degrees.** **Rotate (3D)** takes a **Radians** angle,
+- **Rotation is in radians, unless the action says degrees.** **Rotate (3D)** takes a **Radians** angle,
   which is usually `speed * delta`. **Set Rotation (3D, Degrees)** takes Euler degrees for the times
   you want to type numbers a human recognises.
 - **Move By (3D) is local, Set Position (3D) is not.** **Move By (3D)** compiles to `translate()`,
@@ -47,10 +47,10 @@ plugin reference left behind.
 - **The plain mesh members gain an "On node" target.** **Set Mesh Material**, **Clear Mesh**,
   **Has Mesh**, **Mesh Surface Count** and **Mesh Size** are single member operations, so they can be
   pointed at another node. The builders cannot.
-- **Node-scoped means picker-scoped.** Node3D verbs appear where a Node3D is in scope, CharacterBody3D
-  verbs where a CharacterBody3D is, and so on. A missing verb is nearly always a host-class mismatch.
+- **Node-scoped means picker-scoped.** Node3D rows appear where a Node3D is in scope, CharacterBody3D
+  rows where a CharacterBody3D is, and so on. A missing row is nearly always a host-class mismatch.
 
-## Verb reference
+## Reference tables
 
 On the canvas these read as sentences, with the parameter values drawn in bold:
 
@@ -61,7 +61,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### General Actions - transform and motion (Node3D)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Position (3D) | Teleports a 3D node to an exact world **Position**. | `position = {pos}` |
 | Move By (3D) | Nudges a 3D node by an **Offset** relative to its own facing. | `translate({offset})` |
@@ -72,7 +72,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### General Actions - bodies and cameras
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Move And Slide (3D) | Moves a CharacterBody3D by its velocity, sliding along walls and slopes. | `move_and_slide()` |
 | Set Velocity (3D) | Sets a CharacterBody3D's **Velocity** as a Vector3. | `velocity = {vel}` |
@@ -82,7 +82,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### General Conditions and Expressions
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Is On Floor (3D) | True when a CharacterBody3D is standing on the ground. | `is_on_floor()` |
 | Get Position (3D) | A Node3D's current position as a Vector3. | `position` |
@@ -90,13 +90,13 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### Input
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Input Vector | A movement direction built from four actions: **Left**, **Right**, **Up**, **Down**. | `Input.get_vector(&{left}, &{right}, &{up}, &{down})` |
 
 ### Mesh - the primitive builders (MeshInstance3D)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Make Box Mesh | Builds a box of the given **Size** (width, height, depth in metres) and shows it. | a `BoxMesh` built into a `{uid}` local, its `size` set, then assigned to `mesh` |
 | Make Sphere Mesh | Builds a sphere of the given **Radius** (its height is set to a full diameter). | a `SphereMesh` with `radius` and `height` set, then assigned to `mesh` |
@@ -108,7 +108,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### Mesh - material, clearing and readouts
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Mesh Material | Overrides the whole mesh's **Material** - one line to recolour or reskin. | `material_override = {material}` |
 | Clear Mesh | Removes the mesh so nothing draws. | `mesh = null` |
@@ -341,7 +341,7 @@ on an empty MeshInstance3D.
 - **The mesh builders are host-only.** Their templates are multi-line, so they never gain an "On node"
   parameter. To build a mesh on another node, put the row on a sheet attached to that node.
 - **Set Mesh Material overrides everything.** It writes `material_override`, which replaces the
-  material on every surface at once. For per-surface materials, that is not the verb you want.
+  material on every surface at once. For per-surface materials, that is not the action you want.
 - **Mesh Size is local, before scale.** It reads `get_aabb().size`, so a node scaled to 2x still
   reports its unscaled bounds. Multiply by the scale yourself if you need world size.
 - **A mesh alone is not a collider.** The builders make something visible, not something solid. A body

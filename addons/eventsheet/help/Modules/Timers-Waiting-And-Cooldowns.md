@@ -7,7 +7,7 @@ Everything in your game that is measured in seconds lives here. **Wait** pauses 
 value smoothly instead of instantly. And underneath all of it sit the engine's own clocks: game time,
 frame count, frames per second, time scale, and the wall-clock date.
 
-These verbs are builtin vocabulary, so they are in the picker from any sheet with nothing to enable
+These rows are builtin vocabulary, so they are in the picker from any sheet with nothing to enable
 and nothing to attach. They compile to plain Godot: `await get_tree().create_timer(...)`,
 `Engine.time_scale`, `create_tween()`, `set_meta`. There is no runtime library behind them.
 
@@ -15,7 +15,7 @@ and nothing to attach. They compile to plain Godot: `await get_tree().create_tim
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -67,10 +67,10 @@ and nothing to attach. They compile to plain Godot: `await get_tree().create_tim
 - **Time Scale bends everything.** It slows physics, process and the timers built on them at once.
   It is a whole-game knob, not a per-node one.
 - **A Timer node is a separate thing.** **Start Timer**, **Stop Timer**, **Is Timer Stopped** and
-  **Get Time Left** are node-scoped verbs on a `Timer` in your scene. They have nothing to do with
+  **Get Time Left** are node-scoped rows that work on a `Timer` in your scene. They have nothing to do with
   the named cooldowns above; use whichever suits the shape of the problem.
 
-## Verb reference
+## Reference tables
 
 Ships as is the template the row compiles to, so you can see exactly what lands in your `.gd`.
 Where a template carries `{uid}`, the editor bakes a short per-row id into the name when you drop the
@@ -78,7 +78,7 @@ row, so two Every X Seconds conditions in the same script keep separate accumula
 
 ### Time: waiting and scheduling
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Wait | Pauses this event for a number of seconds before continuing | `await get_tree().create_timer({seconds}).timeout` |
 | Wait For Signal | Pauses this event until a chosen signal fires, like a timer finishing | `await {signal_expression}` |
@@ -92,7 +92,7 @@ Wait pauses for a clock and Wait For Signal for one signal. These three wait for
 several signals, or for the FIRST of them - and because each can end either way, each stamps its
 verdict under the name you give it, which Wait Succeeded / Wait Timed Out read back on the next row.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Wait Until | Pauses this event until a check comes true, or until the give-up time passes | a `while not ({check})` loop with a deadline and `await get_tree().process_frame`, then a `set_meta` verdict |
 | Wait For All Of | Pauses until every signal in the list has fired at least once | a one-shot `connect` per signal (its own arguments unbound) up front, then a wait on the remaining count |
@@ -103,7 +103,7 @@ verdict under the name you give it, which Wait Succeeded / Wait Timed Out read b
 
 ### Loops: retrying until it works
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Retry Up To N Times | Runs this event's actions up to a number of attempts, so a nested Stop Retrying can end it | a loop row over a named `range()`, opening a three-state record, with `attempt` as its iterator |
 | Retry Attempt Number | Which try this is, counting from 1 | `({loop_var} + 1)`, reading the retry loop's own variable |
@@ -113,14 +113,14 @@ verdict under the name you give it, which Wait Succeeded / Wait Timed Out read b
 
 ### Time: the settle-down pair
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Poke | Marks by name that something just happened | `set_meta(&"__ef_poke_" + str({poke_name}), Time.get_ticks_msec())` |
 | Clear Poke | Forgets a poke so Has Been Quiet For stops firing | `set_meta(&"__ef_poke_" + str({poke_name}), 0)` |
 
 ### Time: repeating cadence
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Every X Seconds | True once each time the chosen number of seconds passes | `__every_{uid} >= maxf({seconds}, 0.001)` with a per-frame accumulator |
 | Every X To Y Seconds | True once each time a random wait between the two lengths passes, re-rolled each firing | `__everyr_{uid}(maxf({min_seconds}, 0.001), maxf({max_seconds}, 0.001))` |
@@ -128,7 +128,7 @@ verdict under the name you give it, which Wait Succeeded / Wait Timed Out read b
 
 ### Time: cooldowns
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Start Cooldown | Starts or restarts a named cooldown lasting the given seconds | `set_meta(&"__ef_cool_" + str({name}), Time.get_ticks_msec() + int(maxf({seconds}, 0.0) * 1000.0))` |
 | Cooldown Is Ready | True when the named cooldown has finished (one never started counts as ready) | `Time.get_ticks_msec() >= int(get_meta(&"__ef_cool_" + str({name}), 0))` |
@@ -136,7 +136,7 @@ verdict under the name you give it, which Wait Succeeded / Wait Timed Out read b
 
 ### Time: input buffering
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Buffer Press | Remembers a press for a fraction of a second so an early input still counts | `set_meta(&"__ef_buffer_" + str({name}), Time.get_ticks_msec() + int(maxf({seconds}, 0.0) * 1000.0))` |
 | Press Is Buffered | True while a recently buffered press is still valid | `Time.get_ticks_msec() <= int(get_meta(&"__ef_buffer_" + str({name}), 0))` |
@@ -144,7 +144,7 @@ verdict under the name you give it, which Wait Succeeded / Wait Timed Out read b
 
 ### Time: the engine's clocks
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Time Scale | Speeds up or slows the whole game (1 normal, 0.5 slow motion, 0 paused) | `Engine.time_scale = {scale}` |
 | Time Scale | The current game speed | `Engine.time_scale` |
@@ -165,7 +165,7 @@ These three are expressions, so they belong in a Label's text or anywhere else a
 Format Time (mm:ss) is the one that turns a cooldown's remaining seconds, or a run clock, into the
 text a HUD shows - there is no need to hand-roll the division.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Format Time (mm:ss) | Turns a number of seconds into a tidy `mm:ss` string | `("%02d:%02d" % [int({seconds}) / 60, int({seconds}) % 60])` |
 | System Time String | The player's current clock time as text | `Time.get_time_string_from_system()` |
@@ -175,7 +175,7 @@ text a HUD shows - there is no need to hand-roll the division.
 
 These four are node-scoped: they run on a `Timer` node you pick in the row's On node cell.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Start Timer | Starts the Timer, optionally overriding its duration (-1 uses its own wait_time) | `start({time})` |
 | Stop Timer | Stops the Timer without firing it | `stop()` |
@@ -184,7 +184,7 @@ These four are node-scoped: they run on a `Timer` node you pick in the row's On 
 
 ### Tween
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Tween Property | Animates a node's property to a target value over time with an easing curve | `create_tween().tween_property({target}, {property}, {value}, {duration}).set_trans({transition}).set_ease({ease})` |
 | Tween Callback | Waits a delay, then calls a method or function once | `create_tween().tween_callback({callable}).set_delay({delay})` |
@@ -194,7 +194,7 @@ In, Out and In-Out.
 
 ### Performance: the frame budget
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Await Next Frame | Pauses this event until the next game frame, to spread work out | `await get_tree().process_frame` |
 | Begin Frame Budget | Starts a per-frame millisecond budget for the loop that follows | `var __ace_budget_end := Time.get_ticks_usec() + int({ms} * 1000.0)` |
@@ -682,7 +682,7 @@ On Failure Of  verb_id, reason
   `create_timer` already ticking, which means a menu animation built on Wait will not run while
   paused. Tween nodes and `Timer` nodes have their own process-mode settings for exactly this.
 - **Time Scale is global.** There is no per-node version here. Slowing one enemy means moving that
-  enemy's own speed values, not this verb.
+  enemy's own speed values, not this action.
 - **Game Time includes the main menu.** It measures the process, not the run. Subtract a stored zero
   point, or use Start Ramp Clock for the ramp case.
 - **Ramped without Start Ramp Clock counts from engine start**, so a spawner that should begin at
@@ -690,14 +690,15 @@ On Failure Of  verb_id, reason
 - **Start Timer's -1 is not "no duration"** - it means "use the Timer node's own wait_time". Passing
   0 starts a timer that fires immediately.
 - **Get Time Left, Start Timer, Stop Timer and Is Timer Stopped need a Timer node.** They are
-  node-scoped verbs; pick the node in the row's On node cell. Pointing them at something that is not
+  node-scoped rows; pick the node in the row's On node cell. Pointing them at something that is not
   a Timer will not compile into working code.
 - **Tween Property takes a property PATH as text**, not a value: `"position"`, `"modulate:a"`,
   `"scale"`. A misspelled path fails at runtime, not at compile time.
 - **Each Tween Property row creates its own tween.** Two rows animating the same property at once
   will fight. Tween the node once, or stagger them with delays.
 - **Await If Over Budget only compiles inside a handler that ran Begin Frame Budget**, because it
-  reads the `__ace_budget_end` local that verb declares. Split across two events, it will not build.
+  reads the `__ace_budget_end` local that Begin Frame Budget declares. Split across two events, it
+  will not build.
 - **Frame budgeting belongs in a one-shot trigger.** Inside a re-firing Every Frame trigger, overlapping
   suspended runs duplicate the work they were spreading out. The Time Slicer pack is the easy path if
   you want spreading without minding this yourself.

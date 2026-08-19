@@ -34,7 +34,7 @@ keyboard Player, a chasing agent, and the debug path line visible.
   PlatformerMovement's `jump_velocity`, `gravity`, and `move_speed` - retune the movement feel
   and the pathfinder's idea of "reachable" retunes itself.
 - **Movement stays yours.** Pathfinding never moves the body: it steers the movement pack
-  through a two-variable intent seam (`ai_controlled` + `ai_move_axis`) plus its `jump()` verb.
+  through a two-variable intent seam (`ai_controlled` + `ai_move_axis`) plus its `jump()` action.
   Wall slide, coyote time, acceleration - every movement feature keeps working under AI drive.
 - **Manual mode for custom drivers.** Turn Set Auto Control off and the paths still compute -
   read Path Move Axis / Path Wants Jump / Current Waypoint X/Y and drive an animation state
@@ -121,7 +121,7 @@ Press play. The agent routes to the player and re-routes every second as the pla
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Build nav graph from *tilemap*
 - Find path to (**x**, **y**) mode **mode**
@@ -195,13 +195,13 @@ they are placed on.
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$PlatformerPathfinding.arrive_distance` inserts the **Arrive Distance** entry straight into any expression
 - `$PlatformerPathfinding.auto_control` inserts the **Auto Control** entry straight into any expression
@@ -364,7 +364,7 @@ Every tick
 
 ### 13. The coward
 
-There is no flee verb, and you do not need one: path to a made-up point away from the player and
+There is no flee action, and you do not need one: path to a made-up point away from the player and
 `nearest` mode snaps it onto the graph.
 
 ```
@@ -452,5 +452,5 @@ On Next Level Ready
   has no concept of a jump, so it cannot express "leap this gap, climb that ledge" - which is
   the whole problem in a side-view platformer. This pack builds its own jump graph from your
   tiles instead. For 3D worlds (where walking really does get you everywhere the bake allows),
-  use the **Nav Agent 3D** pack - it wraps Godot's navmesh behind the SAME verb names, so
+  use the **Nav Agent 3D** pack - it wraps Godot's navmesh behind the SAME names, so
   nothing new to learn.

@@ -3,12 +3,13 @@
 Answers "what is this game running on?" from plain event rows: which OS and device, the screen's
 size, DPI, refresh rate and safe area, touch support, the player's locale, the GPU, and the CPU -
 so your sheets can switch control schemes, scale UI, and pick quality presets per platform. It is
-the Construct Platform Info idea, shaped to what Godot actually exposes. Every verb is a direct
-engine query (no caching, no state), and the pack itself is an event sheet - open it and extend it.
+the Construct Platform Info idea, shaped to what Godot actually exposes. Every condition and
+expression is a direct engine query (no caching, no state), and the pack itself is an event sheet -
+open it and extend it.
 
 **Setup**: register `eventsheet_addons/platform_info/platform_info_addon.gd` as an autoload named
-`PlatformInfo` (Project Settings > Globals), or let the Doctor's autoload check nudge you. Every
-verb then appears in the picker under **Platform Info**.
+`PlatformInfo` (Project Settings > Globals), or let the Doctor's autoload check nudge you. The whole
+vocabulary then appears in the picker under **Platform Info**.
 
 ## The vocabulary
 
@@ -24,7 +25,7 @@ Bottom Inset / Right Inset**, **GPU Name / GPU Vendor / Rendering Method**,
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$PlatformInfoAddon.os_name()` inserts the **Os Name** entry straight into any expression
 - `$PlatformInfoAddon.os_version()` inserts the **Os Version** entry straight into any expression
