@@ -462,7 +462,9 @@ func _rebuild_tree() -> void:
 			var owner_label: String = _owner_label_of(record)
 			if by_label.has(owner_label):
 				parent_item = by_label[owner_label]
-			by_label[label] = _add_entry_item(parent_item, record, Array(missing).has(label))
+			var entry_item: TreeItem = _add_entry_item(parent_item, record, Array(missing).has(label))
+			by_label[label] = entry_item
+			_add_could_adopt_line(entry_item, str(section.get("id", "")), label)
 			shown += 1
 	if shown == 0:
 		var empty_item: TreeItem = tree.create_item(root)
@@ -470,6 +472,40 @@ func _rebuild_tree() -> void:
 		empty_item.set_selectable(0, false)
 		empty_item.set_custom_color(0, EventSheetActiveTheme.chrome().object_bar_section_color)
 		empty_item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
+
+
+## S25 - the muted "could adopt: X, Y" line under an object whose script the readings recognised a
+## replaceable pattern in. One line, under the object it is about, so a reader meets the offer where
+## they are already looking instead of only inside a right-click menu.
+##
+## Only under the sheet's OWN object, because a claim is a fact about THIS file - and only for
+## behaviors this build can actually swap in, since an offer that cannot be taken up is worse than
+## no offer at all.
+func _add_could_adopt_line(parent_item: TreeItem, section_id: String, label: String) -> void:
+	if parent_item == null or section_id != "used" or _sheet == null:
+		return
+	if label != EventSheetViewportReadingRows.script_object_name(_sheet):
+		return
+	var names: PackedStringArray = PackedStringArray()
+	var seen: Dictionary = {}
+	for claim: Variant in EventSheetPatternFacts.claims(_sheet):
+		if not EventSheetPatternAdopt.is_adoptable(claim as Dictionary):
+			continue
+		var pack: String = EventSheetPatternVocabulary.pack_label(str((claim as Dictionary).get("adoptable", "")))
+		if pack.is_empty() or seen.has(pack):
+			continue
+		seen[pack] = true
+		names.append(pack)
+	if names.is_empty():
+		return
+	var line: TreeItem = tree.create_item(parent_item)
+	line.set_text(0, EventSheetL10n.translate("could adopt: %s") % ", ".join(names))
+	line.set_selectable(0, false)
+	line.set_selectable(1, false)
+	line.set_custom_color(0, EventSheetActiveTheme.chrome().object_bar_section_color)
+	line.set_tooltip_text(0, EventSheetL10n.translate(
+		"This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change."))
+	line.set_metadata(0, {"could_adopt": true})
 
 
 ## Which object an entry sits UNDER, so the bar reads like the object dialog: a behavior belongs to

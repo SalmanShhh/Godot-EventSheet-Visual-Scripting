@@ -2615,3 +2615,5 @@ This block is the %s behavior - Adopt behavior?,이 묶음은 %s 비헤이비어
 A pooled object is created here and nothing anywhere returns one to the pool.,"여기서 풀의 오브젝트를 만들지만, 어디에서도 풀로 돌려주지 않습니다."
 %s is set here but no event asks for it.,"%s 은(는) 여기서 설정되지만, 그것을 묻는 이벤트가 없습니다."
 A timer is started on entering this state and nothing stops it on leaving.,"이 상태에 들어갈 때 타이머가 시작되지만, 나갈 때 멈추는 것이 없습니다."
+could adopt: %s,도입 가능: %s
+This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,이 스크립트는 기본 제공 비헤이비어가 이미 하는 일을 직접 쓰고 있습니다. 표시된 이벤트를 오른쪽 클릭하면 무엇이 바뀌는지 볼 수 있습니다.

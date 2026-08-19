@@ -2615,3 +2615,5 @@ This block is the %s behavior - Adopt behavior?,このかたまりは %s ビヘ�
 A pooled object is created here and nothing anywhere returns one to the pool.,ここでプールのオブジェクトが作られますが、どこでもプールに返していません。
 %s is set here but no event asks for it.,%s はここで設定されますが、それを尋ねるイベントがありません。
 A timer is started on entering this state and nothing stops it on leaving.,この状態に入るときタイマーが始まりますが、出るときに止めるものがありません。
+could adopt: %s,採用可能: %s
+This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,このスクリプトは、同梱のビヘイビアが既にできることを手書きしています。印の付いたイベントを右クリックすると、何が変わるか見られます。

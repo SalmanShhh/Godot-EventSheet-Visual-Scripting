@@ -2615,3 +2615,5 @@ This block is the %s behavior - Adopt behavior?,Dieser Block ist das Verhalten %
 A pooled object is created here and nothing anywhere returns one to the pool.,"Hier wird ein Pool-Objekt erzeugt, und nirgends wird eines zuruckgegeben."
 %s is set here but no event asks for it.,"%s wird hier gesetzt, aber kein Ereignis fragt danach."
 A timer is started on entering this state and nothing stops it on leaving.,"Beim Betreten dieses Zustands startet ein Timer, und beim Verlassen stoppt ihn nichts."
+could adopt: %s,ubernehmbar: %s
+This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,"Dieses Skript schreibt von Hand, was ein mitgeliefertes Verhalten schon kann. Rechtsklick auf das markierte Ereignis zeigt, was sich andern wurde."

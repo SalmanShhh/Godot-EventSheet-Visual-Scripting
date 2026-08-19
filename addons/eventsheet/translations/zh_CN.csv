@@ -2615,3 +2615,5 @@ This block is the %s behavior - Adopt behavior?,这段其实就是 %s 行为 - �
 A pooled object is created here and nothing anywhere returns one to the pool.,这里创建了池中的对象，但任何地方都没有把对象还回池里。
 %s is set here but no event asks for it.,%s 在这里被设置，但没有事件询问它。
 A timer is started on entering this state and nothing stops it on leaving.,进入这个状态时启动了计时器，而离开时没有任何地方停止它。
+could adopt: %s,可采用：%s
+This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,这个脚本手写了内置行为已经能做的事。右键点击带标记的事件即可看到会有什么变化。
