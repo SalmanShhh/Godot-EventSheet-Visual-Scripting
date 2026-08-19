@@ -166,6 +166,23 @@ A whole game leans on a handful of these at once. A typical roguelike:
 The result is the data-driven promise: content scales by adding rows, not events, and the people tuning
 the game never have to open a script.
 
+## Balancing a folder: the table sheet
+
+Everything above makes content a folder of `.tres` files. Balancing that folder in the Inspector
+means clicking twelve files in turn and holding eleven numbers in your head, so the sheet opens the
+folder as a **grid** instead: right-click it in the FileSystem dock and choose **Open as Event
+Sheet**. One row per asset, one column per field, editable in place. A single `.tres` opens the same
+way as a one-asset table - one row per field.
+
+The words carry over into the events: `load("res://data/slime.tres")` reads **the data asset
+slime.tres**, `stats.hp` reads **stats's hp**, and `ResourceSaver.save(stats, path)` reads
+**System ▸ Save data asset stats as slime.tres**. The rows that write those exact lines are
+**Data Asset** and **Save Data Asset** in the picker's Files folder, so a sheet-authored balance
+tool and a hand-written one are the same file.
+
+A new row writes a new `.tres`; deleting a row deletes the file behind a confirm that names it. And
+opening the grid is safe: a save with nothing edited does not touch a single byte.
+
 ## Tips
 
 - **Reach for a resource when you have more than two or three of something** (enemies, items, levels).

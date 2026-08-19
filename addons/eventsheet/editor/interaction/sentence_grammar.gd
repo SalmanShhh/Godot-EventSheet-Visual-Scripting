@@ -372,6 +372,15 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var gap: Dictionary = gap_statement(text, context)
 	if not gap.is_empty():
 		return _with_indent(gap, indent)
+	# ── V4 / V5 ─────────────────────────────────────────────────────────────────────────────────
+	# The window / render lines and the data-asset lines, each recognised WHOLE: every one of them is
+	# a property write or a call that the readings below would describe as the Godot spelling it is.
+	var windowed: Dictionary = window_statement(text, context)
+	if not windowed.is_empty():
+		return _with_indent(windowed, indent)
+	var data_asset: Dictionary = data_asset_statement(text, context)
+	if not data_asset.is_empty():
+		return _with_indent(data_asset, indent)
 	var compound: Dictionary = _compound_statement(text, context)
 	if not compound.is_empty():
 		return _with_indent(compound, indent)
@@ -964,6 +973,18 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var held: String = callable_value_words(trimmed)
 	if not held.is_empty():
 		return held
+	# ── V4 / V5 ─────────────────────────────────────────────────────────────────────────────────
+	# A picture and a data asset are each ONE settled phrase, so they are answered before the call
+	# rewriting takes the chain that fetches them apart into members that say nothing.
+	var rendered: String = render_expression(trimmed)
+	if not rendered.is_empty():
+		return rendered
+	var asset: String = data_asset_expression(trimmed)
+	if not asset.is_empty():
+		return asset
+	var field: String = data_field_words(trimmed, context)
+	if not field.is_empty():
+		return field
 	# S8 - the progress array read by index, before the indexing pass could take `p[0]` apart. What
 	# the file holds is untouched; only the words change.
 	trimmed = loading_progress_words(trimmed, context)
@@ -1435,6 +1456,10 @@ static func type_word(type_name: String) -> String:
 			# R31. Not a value - a THING you go on to call actions on, which is the whole point of
 			# saying so on the row that declares it.
 			return translate("object")
+		"Image", "Texture", "Texture2D", "ViewportTexture", "ImageTexture":
+			# V5. A screenshot and a rendered viewport are both a PICTURE to a reader. Which of
+			# Godot's two spellings holds it is a fact about the API, not about the row.
+			return translate("image")
 	return bare
 
 
@@ -4264,6 +4289,18 @@ static func _inferred_type(value: String) -> String:
 	# R3. A tween is an object a reader may call Tween steps on, so the local holding one says so.
 	if TWEEN_MAKERS.has(text):
 		return "Object"
+	# ── V4 / V5 ─────────────────────────────────────────────────────────────────────────────────
+	# A picture, a rendered viewport, and a data asset the line itself named the type of. All three
+	# are declarations whose type is written plainly in the value, which is the whole test here.
+	if SCREENSHOT_EXPRESSIONS.has(text):
+		return "Image"
+	if text.ends_with(".get_texture()"):
+		return "Texture2D"
+	var as_at: int = top_level_index(text, " as ")
+	if as_at > 0 and not data_asset_expression(text).is_empty():
+		var cast: String = text.substr(as_at + 4).strip_edges()
+		if is_identifier(cast):
+			return cast
 	return ""
 
 
@@ -8638,3 +8675,328 @@ static func _format_with_names(text: String) -> String:
 	if named.is_empty():
 		return text
 	return "%s %s %s" % [pattern, translate("with"), ", ".join(named)]
+# ── V4 / V5 - the data-asset words and the window / render / screenshot words ───────────────────
+#
+# Two more families of line a plain Godot script is made of, read in words the sheet already
+# publishes: the Files section of the Resources vocabulary says "data asset", and the Game Window
+# vocabulary says fullscreen / vsync / max FPS. Both are display only - nothing here reaches
+# emission, and a line whose exact shape is not one of these keeps the property write or the call it
+# already reads as.
+
+## V5. The object every window row belongs to. Its own noun, because a window is a thing a game has
+## rather than a service the System object performs.
+const OBJECT_WINDOW := "Window"
+
+## V5. What each window mode says as a fullscreen switch. The two fullscreen spellings are one
+## question with one extra fact; the two size spellings are their own verbs.
+const WINDOW_MODE_WORDS: Dictionary = {
+	"Window.MODE_FULLSCREEN": "Set fullscreen on",
+	"Window.MODE_EXCLUSIVE_FULLSCREEN": "Set fullscreen on (exclusive)",
+	"Window.MODE_WINDOWED": "Set fullscreen off",
+	"Window.MODE_MAXIMIZED": "Maximize",
+	"Window.MODE_MINIMIZED": "Minimize"
+}
+
+## V5. The vsync modes, as the on/off an options menu offers.
+const WINDOW_VSYNC_WORDS: Dictionary = {
+	"DisplayServer.VSYNC_DISABLED": "Set vsync off",
+	"DisplayServer.VSYNC_ENABLED": "Set vsync on",
+	"DisplayServer.VSYNC_ADAPTIVE": "Set vsync on (adaptive)",
+	"DisplayServer.VSYNC_MAILBOX": "Set vsync on (mailbox)"
+}
+
+## V5. The anti-aliasing levels in the words a settings screen offers, by the constant the line
+## writes. Both the viewport spelling and the rendering-server spelling of each level.
+const ANTI_ALIASING_WORDS: Dictionary = {
+	"Viewport.MSAA_DISABLED": "off",
+	"Viewport.MSAA_2X": "2×",
+	"Viewport.MSAA_4X": "4×",
+	"Viewport.MSAA_8X": "8×",
+	"RenderingServer.VIEWPORT_MSAA_DISABLED": "off",
+	"RenderingServer.VIEWPORT_MSAA_2X": "2×",
+	"RenderingServer.VIEWPORT_MSAA_4X": "4×",
+	"RenderingServer.VIEWPORT_MSAA_8X": "8×"
+}
+
+## V5. The two members that carry an anti-aliasing level on a viewport.
+const ANTI_ALIASING_MEMBERS: PackedStringArray = ["msaa_2d", "msaa_3d"]
+
+## V5. The image-writing calls. `save_png` is the one every screenshot line uses; the others are the
+## same step with another file format on the end of it.
+const IMAGE_SAVE_METHODS: PackedStringArray = ["save_png", "save_jpg", "save_webp", "save_exr"]
+
+## V5. The whole expression a screenshot IS, in the two spellings a script writes it in. Matched
+## before any other rewriting sees it, because every pass below would take the chain apart into
+## members that answer nothing.
+const SCREENSHOT_EXPRESSIONS: PackedStringArray = [
+	"get_viewport().get_texture().get_image()",
+	"get_window().get_texture().get_image()"
+]
+
+## V4. The file extensions a data asset is saved under.
+const DATA_ASSET_EXTENSIONS: PackedStringArray = ["tres", "res"]
+
+
+## V5. The window, render and screenshot reading of one STATEMENT, or {} when the line is none of
+## them. Every shape is claimed WHOLE or not at all:
+##
+##   get_window().size = Vector2i(1280, 720)     Window ▸ Set size to 1280 × 720
+##   get_window().title = "My Game"              Window ▸ Set title to "My Game"
+##   get_window().mode = Window.MODE_FULLSCREEN  Window ▸ Set fullscreen on
+##   DisplayServer.window_set_vsync_mode(...)    Window ▸ Set vsync on
+##   Engine.max_fps = 60                         System ▸ Set max FPS to 60
+##   get_viewport().msaa_2d = Viewport.MSAA_4X   System ▸ Set anti-aliasing to 4×
+##   img.save_png("user://shot.png")             System ▸ Save image img as shot.png
+static func window_statement(text: String, context: Dictionary) -> Dictionary:
+	var line: String = text.strip_edges()
+	var vsync: Dictionary = _vsync_statement(line)
+	if not vsync.is_empty():
+		return vsync
+	var saved: Dictionary = _image_save_statement(line, context)
+	if not saved.is_empty():
+		return saved
+	var assign_at: int = top_level_index(line, " = ")
+	if assign_at <= 0:
+		return {}
+	var target: String = line.substr(0, assign_at).strip_edges()
+	var value: String = line.substr(assign_at + 3).strip_edges()
+	if target == "Engine.max_fps":
+		return _with_pattern(_sentence(OBJECT_SYSTEM, "Set max FPS to {value}",
+			{"value": [expression_text(value, context), "value"]}), "window", line)
+	var member: String = _window_member(target)
+	if not member.is_empty():
+		return _window_member_statement(member, value, line, context)
+	var viewport_member: String = _viewport_member(target)
+	if ANTI_ALIASING_MEMBERS.has(viewport_member) and ANTI_ALIASING_WORDS.has(value):
+		return _with_pattern(_sentence(OBJECT_SYSTEM, "Set anti-aliasing to {value}",
+			{"value": [translate(str(ANTI_ALIASING_WORDS[value])), "value"]}), "window", line)
+	return {}
+
+
+## V5. One `get_window().<member> = <value>` line, in the Game Window vocabulary's own words.
+static func _window_member_statement(member: String, value: String, line: String,
+		context: Dictionary) -> Dictionary:
+	if member == "mode":
+		if not WINDOW_MODE_WORDS.has(value):
+			return {}
+		return _with_pattern(_sentence(OBJECT_WINDOW, str(WINDOW_MODE_WORDS[value]), {}), "window", line)
+	if member == "size":
+		var pair: String = _dimension_pair(value)
+		if pair.is_empty():
+			return {}
+		return _with_pattern(_sentence(OBJECT_WINDOW, "Set size to {value}",
+			{"value": [pair, "value"]}), "window", line)
+	if member == "title":
+		return _with_pattern(_sentence(OBJECT_WINDOW, "Set title to {value}",
+			{"value": [expression_text(value, context), "value"]}), "window", line)
+	if member == "position":
+		return _with_pattern(_sentence(OBJECT_WINDOW, "Set position to {value}",
+			{"value": [expression_text(value, context), "value"]}), "window", line)
+	if member == "always_on_top":
+		return _with_pattern(_sentence(OBJECT_WINDOW, "Set always on top to {value}",
+			{"value": [expression_text(value, context), "value"]}), "window", line)
+	return {}
+
+
+## V5. `Vector2i(1280, 720)` as the size a reader says out loud. "" when the value is anything else,
+## which keeps the plain reading rather than promising a size the line does not spell.
+static func _dimension_pair(value: String) -> String:
+	var call: Dictionary = call_parts(value.strip_edges())
+	if call.is_empty() or not str(call.get("target", "")).is_empty():
+		return ""
+	if not VECTOR_CONSTRUCTORS.has(str(call.get("method", ""))):
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 2:
+		return ""
+	return "%s × %s" % [args[0].strip_edges(), args[1].strip_edges()]
+
+
+## V5. The member a `get_window().x` / `get_tree().root.x` target names, or "" when the target is not
+## a window property at all.
+static func _window_member(target: String) -> String:
+	for head: String in ["get_window().", "get_tree().root."]:
+		if target.begins_with(head):
+			var member: String = target.substr(head.length())
+			return member if is_identifier(member) else ""
+	return ""
+
+
+## V5. The member a `get_viewport().x` target names, or "" for anything else.
+static func _viewport_member(target: String) -> String:
+	const HEAD := "get_viewport()."
+	if not target.begins_with(HEAD):
+		return ""
+	var member: String = target.substr(HEAD.length())
+	return member if is_identifier(member) else ""
+
+
+## V5. `DisplayServer.window_set_vsync_mode(...)` in the on/off an options menu offers. Both the bare
+## constant a hand-written line passes and the `A if flag else B` the Set VSync action writes.
+static func _vsync_statement(line: String) -> Dictionary:
+	const HEAD := "DisplayServer.window_set_vsync_mode("
+	if not line.begins_with(HEAD) or not line.ends_with(")"):
+		return {}
+	var inner: String = line.substr(HEAD.length(), line.length() - HEAD.length() - 1).strip_edges()
+	var first_comma: int = top_level_index(inner, ", ")
+	if first_comma > 0:
+		inner = inner.substr(0, first_comma).strip_edges()
+	if WINDOW_VSYNC_WORDS.has(inner):
+		return _with_pattern(_sentence(OBJECT_WINDOW, str(WINDOW_VSYNC_WORDS[inner]), {}), "window", line)
+	# The picked row writes the switch as a ternary. Read as the toggle it is, with the flag named.
+	var branches: Array = value_branches(inner)
+	if branches.size() != 2:
+		return {}
+	var when_true: String = str((branches[0] as Dictionary).get("code", "")).strip_edges()
+	var when_false: String = str((branches[1] as Dictionary).get("code", "")).strip_edges()
+	var flag: String = str((branches[0] as Dictionary).get("condition", "")).strip_edges()
+	if when_true != "DisplayServer.VSYNC_ENABLED" or when_false != "DisplayServer.VSYNC_DISABLED":
+		return {}
+	if flag == "true":
+		return _with_pattern(_sentence(OBJECT_WINDOW, "Set vsync on", {}), "window", line)
+	if flag == "false":
+		return _with_pattern(_sentence(OBJECT_WINDOW, "Set vsync off", {}), "window", line)
+	return _with_pattern(_sentence(OBJECT_WINDOW, "Set vsync to {value}",
+		{"value": [flag, "value"]}), "window", line)
+
+
+## V5. `img.save_png("user://shot.png")` - the step that writes a picture to a file, with the file
+## named the way every other file row names one.
+static func _image_save_statement(line: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(line)
+	if call.is_empty():
+		return {}
+	if not IMAGE_SAVE_METHODS.has(str(call.get("method", ""))):
+		return {}
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	if not is_identifier(receiver):
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() < 1:
+		return {}
+	return _with_pattern(_sentence(OBJECT_SYSTEM, "Save image {name} as {value}", {
+		"name": [receiver, "name"],
+		"value": [bare_file_name(args[0], context), "value"]
+	}), "window", line)
+
+
+## V5 / V4. A path literal as just its file name, unquoted - what a row means when it says WHERE
+## something went. Anything that is not a plain literal keeps its own expression reading.
+static func bare_file_name(path_value: String, context: Dictionary) -> String:
+	if not _is_string_literal(path_value):
+		return expression_text(path_value, context)
+	var path: String = _unquote(path_value.strip_edges())
+	var slash_at: int = path.rfind("/")
+	return path.substr(slash_at + 1) if slash_at >= 0 else path
+
+
+## V5. The whole-expression readings of the render family: a screenshot, and one SubViewport's
+## picture. "" when the text is neither, so every other expression is rewritten exactly as before.
+static func render_expression(text: String) -> String:
+	var trimmed: String = text.strip_edges()
+	if SCREENSHOT_EXPRESSIONS.has(trimmed):
+		return translate("a screenshot")
+	const TAIL := ".get_texture()"
+	if not trimmed.ends_with(TAIL):
+		return ""
+	var source: String = trimmed.substr(0, trimmed.length() - TAIL.length()).strip_edges()
+	if source.begins_with("$"):
+		source = source.substr(1)
+		var slash_at: int = source.rfind("/")
+		if slash_at >= 0:
+			source = source.substr(slash_at + 1)
+	if not is_identifier(source):
+		return ""
+	return "%s %s" % [source, translate("rendered as an image")]
+
+
+## V4. The data-asset reading of one STATEMENT, or {} when the line is not one:
+##
+##   ResourceSaver.save(stats, "res://data/slime.tres")   System ▸ Save data asset stats as slime.tres
+static func data_asset_statement(text: String, context: Dictionary) -> Dictionary:
+	var line: String = text.strip_edges()
+	var call: Dictionary = call_parts(line)
+	if call.is_empty() or str(call.get("target", "")) != "ResourceSaver" \
+			or str(call.get("method", "")) != "save":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() < 2:
+		return {}
+	return _with_pattern(_sentence(OBJECT_SYSTEM, "Save data asset {name} as {value}", {
+		"name": [expression_text(args[0], context), "name"],
+		"value": [bare_file_name(args[1], context), "value"]
+	}), "data_asset", line)
+
+
+## V4. `load("res://data/slime.tres") as EnemyStats` - the whole value, as the asset it fetches.
+## "" for a load of anything that is not a data asset (a scene, a texture, an expression), which
+## keeps the call reading those already have.
+static func data_asset_expression(text: String) -> String:
+	var trimmed: String = text.strip_edges()
+	# `X as Type` is the same value with a promise about it; the promise is the row's chip, never
+	# part of what the row says.
+	var as_at: int = top_level_index(trimmed, " as ")
+	if as_at > 0:
+		trimmed = trimmed.substr(0, as_at).strip_edges()
+	var call: Dictionary = call_parts(trimmed)
+	if call.is_empty() or not str(call.get("target", "")).is_empty():
+		return ""
+	var head: String = str(call.get("method", ""))
+	if head != "load" and head != "preload":
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1 or not _is_string_literal(args[0]):
+		return ""
+	var path: String = _unquote(args[0].strip_edges())
+	if not DATA_ASSET_EXTENSIONS.has(path.get_extension()):
+		return ""
+	return "%s %s" % [translate("the data asset"), path.get_file()]
+
+
+## V4. `stats.hp` where `stats` is a field holding a data asset - the possessive an event sheet says
+## a record's field with. "" when the receiver is not a declared data asset, so an ordinary member
+## read keeps the chain it is.
+static func data_field_words(text: String, context: Dictionary) -> String:
+	var trimmed: String = text.strip_edges()
+	var dot_at: int = trimmed.find(".")
+	if dot_at <= 0:
+		return ""
+	var receiver: String = trimmed.substr(0, dot_at)
+	var field: String = trimmed.substr(dot_at + 1)
+	if not is_identifier(receiver) or not is_identifier(field):
+		return ""
+	if not is_data_asset_type(_declared_type_of(receiver, context)):
+		return ""
+	return "%s's %s" % [receiver, field]
+
+
+## V4. True when a declared type IS a data asset - Resource itself, any engine Resource subclass, or
+## a project class the class list says extends one. A name nobody declared is not one.
+static func is_data_asset_type(type_name: String) -> bool:
+	var bare: String = type_name.strip_edges()
+	if bare.is_empty():
+		return false
+	if bare == "Resource":
+		return true
+	if ClassDB.class_exists(bare):
+		return ClassDB.is_parent_class(bare, "Resource")
+	return _project_class_is_resource(bare)
+
+
+## V4. Whether one of the PROJECT's own `class_name` scripts extends a Resource, walked through the
+## global class list Godot already keeps (so no script is loaded to answer it). The walk follows the
+## chain of project classes until it reaches an engine class, and gives up on a cycle.
+static func _project_class_is_resource(class_name_str: String) -> bool:
+	var bases: Dictionary = {}
+	for entry: Variant in ProjectSettings.get_global_class_list():
+		var described: Dictionary = entry
+		bases[str(described.get("class", ""))] = str(described.get("base", ""))
+	var current: String = class_name_str
+	for _step: int in range(32):
+		if not bases.has(current):
+			return ClassDB.class_exists(current) and ClassDB.is_parent_class(current, "Resource")
+		var base: String = str(bases[current])
+		if base.is_empty() or base == current:
+			return false
+		current = base
+	return false

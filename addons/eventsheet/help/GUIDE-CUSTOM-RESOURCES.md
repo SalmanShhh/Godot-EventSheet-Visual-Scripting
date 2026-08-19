@@ -183,6 +183,25 @@ Once your sheet compiles, the class is registered and the asset production line 
 
 Because `.tres` files are plain text, they play nicely with version control: a balance patch that changes three weights is a three-line diff, reviewable at a glance.
 
+### Editing a whole folder as one table
+
+The Inspector edits one asset at a time, which is exactly the wrong shape for balancing. So a `.tres`
+opens as a **table sheet** instead: right-click it in the FileSystem dock and choose **Open as Event
+Sheet**, or pick it from **Sheet ▸ Open…**. The sheet is one row per field - `hp`, `speed`, `drops` -
+with the value editable in place through the same editors an event row's parameters use. The tab is
+named after the asset, and it is not a read-only preview: what you type goes back to the file.
+
+Right-click the **folder** instead and every asset of that type opens as ONE grid - a row per asset,
+a column per field, so twelve enemies are twelve lines you can read down. A new row writes a new
+`.tres` beside the others; deleting a row deletes the file, behind a confirm that names it. A folder
+holding more than one type is not a table and does not offer the entry, because a column half the
+rows do not have would be a lie about the data.
+
+The one promise the view rests on: **opening a table and saving it with nothing edited leaves every
+byte where it was.** Writes go through `ResourceSaver` - the same writer the Inspector uses - and a
+value that already equals what is on disk is not written at all, so looking at a designer's folder
+never turns into a diff.
+
 Two habits that pay off:
 
 - **Name assets after their role**, not their contents: `goblin_loot.tres` beats `table_2.tres` forever.

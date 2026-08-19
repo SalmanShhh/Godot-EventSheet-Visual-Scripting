@@ -2942,3 +2942,38 @@ Extract to variable,Вынести в переменную
 Variable name,Имя переменной
 Fix selected,Исправить выбранное
 Object Properties,Свойства объекта
+Set max FPS to {value},Задать макс. FPS {value}
+Set anti-aliasing to {value},Задать сглаживание {value}
+Set fullscreen on,Включить полный экран
+Set fullscreen on (exclusive),Включить полный экран (эксклюзивный)
+Set fullscreen off,Выключить полный экран
+Maximize,Развернуть
+Minimize,Свернуть
+Set title to {value},Задать заголовок {value}
+Set position to {value},Задать позицию {value}
+Set always on top to {value},Задать поверх всех окон {value}
+Set vsync on,Включить вертикальную синхронизацию
+Set vsync off,Выключить вертикальную синхронизацию
+Set vsync on (adaptive),Включить вертикальную синхронизацию (адаптивную)
+Set vsync on (mailbox),Включить вертикальную синхронизацию (mailbox)
+Set vsync to {value},Задать вертикальную синхронизацию {value}
+Save image {name} as {value},Сохранить изображение {name} как {value}
+Save data asset {name} as {value},Сохранить ресурс данных {name} как {value}
+a screenshot,снимок экрана
+rendered as an image,отрисованный как изображение
+the data asset,ресурс данных
+data type,тип данных
+image,изображение
+2×,2×
+4×,4×
+8×,8×
+Data Asset,Ресурс данных
+the data asset [b]{path}[/b],ресурс данных [b]{path}[/b]
+"Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.","Получает один ресурс данных по пути - значения, заполненные в инспекторе, готовые к чтению по полям."
+The .tres to fetch.,"Файл .tres, который нужно получить."
+Save Data Asset,Сохранить ресурс данных
+Save data asset [b]{resource}[/b] as [b]{path}[/b],Сохранить ресурс данных [b]{resource}[/b] как [b]{path}[/b]
+Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://.,Записывает ресурс данных обратно в файл. Редакторный инструмент так создаёт или массово правит контент; работающая игра должна писать в user://.
+Asset,Ресурс
+The data asset to write out.,"Ресурс данных, который нужно записать."
+Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,Куда записать. Запись в res:// работает только в редакторе; работающая игра пишет в user://.

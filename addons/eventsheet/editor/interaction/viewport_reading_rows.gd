@@ -498,6 +498,18 @@ const SYSTEMS_PATTERN_EVIDENCE: Dictionary = {
 	"navigation": [
 		"target_position =", "get_next_path_position()", "is_navigation_finished()",
 		"velocity_computed"
+	],
+	# V4. A data asset is loaded, saved or re-read by name. `.tres")` is the strongest single mark a
+	# line carries - it is the file extension a data asset has, quoted, which no other shape writes.
+	"data_asset": [
+		"ResourceSaver.save(", ".tres\")", ".res\")", "ResourceLoader.exists(",
+		"ResourceLoader.load("
+	],
+	# V5. The window, the frame cap, the anti-aliasing level, and the two lines a screenshot is made
+	# of. Every fragment is the exact Godot spelling the reading above is claimed at.
+	"window": [
+		"get_window().", "DisplayServer.window_set_", "Engine.max_fps", "msaa_2d", "msaa_3d",
+		"get_texture().get_image()", ".save_png(", ".save_jpg("
 	]
 }
 
@@ -506,7 +518,9 @@ const SYSTEMS_PATTERN_WORDS: Dictionary = {
 	"background_loading": "Loading a layout in the background",
 	"movement": "Movement math a behavior already has words for",
 	"multiplayer": "Messages sent between peers",
-	"navigation": "Following a path a navigation agent worked out"
+	"navigation": "Following a path a navigation agent worked out",
+	"data_asset": "Values kept in data assets rather than in the file",
+	"window": "Window, render and screenshot settings"
 }
 
 ## The sheet ACEs each pattern is made of - what Adopt behavior would write, and what the Manual's
@@ -518,7 +532,12 @@ const SYSTEMS_PATTERN_ACES: Dictionary = {
 		"MoveAndSlide", "IgnoreCollisionsWith", "SetCollisionMaskBit", "RotateToward"],
 	"multiplayer": ["SendMessageToEveryone", "SendMessageToHost", "SendMessageToPeer", "IsHost",
 		"OwnsThisObject", "MyPeerId"],
-	"navigation": ["SetNavTarget", "MoveAlongPath", "IsNavFinished", "GetNextPathPosition"]
+	"navigation": ["SetNavTarget", "MoveAlongPath", "IsNavFinished", "GetNextPathPosition"],
+	"data_asset": ["DataAsset", "SaveDataAsset", "ReloadDataAsset", "ResourcesInFolder",
+		"ResourceInFolder", "LoadResourceOrDefault"],
+	"window": ["WindowSetSize", "WindowGoFullscreen", "WindowGoWindowed", "WindowSetVSync",
+		"WindowSetMaxFps", "WindowSetAntiAliasing", "WindowScreenshot", "WindowSaveImageAs",
+		"WindowViewportImage"]
 }
 
 

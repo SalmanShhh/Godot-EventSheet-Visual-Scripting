@@ -95,6 +95,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Fetches one data asset out of a folder by its file name, or nothing at all when there is no such file - no red error."))
 	descriptors.append(F.make_descriptor("Core", "LoadResourceOrDefault", "Load Resource Or Default", ACEDescriptor.ACEType.EXPRESSION, "(load({path}) if ResourceLoader.exists({path}) else {fallback})", "", [F.make_param("path", "String", "\"res://data/item.tres\"", "Path", "Full path to the resource or scene to load.", "expression"), F.make_param("fallback", "String", "null", "Fallback", "What to use instead when the file is not there (a preloaded default, or null).", "expression")], CAT_FILES, "load [b]{path}[/b] or [i]{fallback}[/i]")
 		.described("Loads a file and hands back your fallback when it is missing, so a deleted or mod-supplied file never crashes the game."))
+	# ── V4. The two plainest data-asset steps, in the shape a hand-written file writes them ──
+	# Deliberately NOT guarded: these two write the exact `load(path)` / `ResourceSaver.save(r, path)`
+	# a script writes by hand, so a picked row and a typed line are the same bytes and read the same
+	# sentence. Load Resource Or Default beside them is the forgiving version for content that may
+	# be missing.
+	descriptors.append(F.make_descriptor("Core", "DataAsset", "Data Asset", ACEDescriptor.ACEType.EXPRESSION, "load({path})", "", [F.make_param("path", "String", "\"res://data/item.tres\"", "File", "The .tres to fetch.", "expression")], CAT_FILES, "the data asset [b]{path}[/b]")
+		.described("Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.").featured())
+	descriptors.append(F.make_descriptor("Core", "SaveDataAsset", "Save Data Asset", ACEDescriptor.ACEType.ACTION, "ResourceSaver.save({resource}, {path})", "", [F.make_param("resource", "String", "null", "Asset", "The data asset to write out.", "expression"), F.make_param("path", "String", "\"res://data/item.tres\"", "As", "Where to write it. Writing under res:// only works in the editor; a running game writes to user://.", "expression")], CAT_FILES, "Save data asset [b]{resource}[/b] as [b]{path}[/b]")
+		.described("Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://."))
 	descriptors.append(F.make_descriptor("Core", "CountResourcesInFolder", "Count Of Resources In", ACEDescriptor.ACEType.EXPRESSION, "Array(DirAccess.get_files_at({folder}) if DirAccess.dir_exists_absolute({folder}) else PackedStringArray()).filter(func(__f): return __f.trim_suffix(\".remap\").get_extension() in [\"tres\", \"res\"]).size()", "", [F.make_param("folder", "String", "\"res://data/items\"", "Folder", "Folder to count data assets in (not recursive).", "expression")], CAT_FILES, "count of resources in [b]{folder}[/b]")
 		.described("How many data assets a folder holds, counted without loading any of them - zero if the folder is missing."))
 

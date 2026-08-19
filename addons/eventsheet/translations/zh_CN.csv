@@ -2942,3 +2942,38 @@ Extract to variable,提取为变量
 Variable name,变量名
 Fix selected,修复所选
 Object Properties,对象属性
+Set max FPS to {value},将最大帧率设为 {value}
+Set anti-aliasing to {value},将抗锯齿设为 {value}
+Set fullscreen on,开启全屏
+Set fullscreen on (exclusive),开启全屏（独占）
+Set fullscreen off,关闭全屏
+Maximize,最大化
+Minimize,最小化
+Set title to {value},将标题设为 {value}
+Set position to {value},将位置设为 {value}
+Set always on top to {value},将置顶设为 {value}
+Set vsync on,开启垂直同步
+Set vsync off,关闭垂直同步
+Set vsync on (adaptive),开启垂直同步（自适应）
+Set vsync on (mailbox),开启垂直同步（邮箱）
+Set vsync to {value},将垂直同步设为 {value}
+Save image {name} as {value},将图像 {name} 保存为 {value}
+Save data asset {name} as {value},将数据资源 {name} 保存为 {value}
+a screenshot,一张截图
+rendered as an image,渲染为图像
+the data asset,数据资源
+data type,数据类型
+image,图像
+2×,2×
+4×,4×
+8×,8×
+Data Asset,数据资源
+the data asset [b]{path}[/b],数据资源 [b]{path}[/b]
+"Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.",按路径取回一个数据资源 - 设计师在检查器里填好的值，可直接逐字段读取。
+The .tres to fetch.,要取回的 .tres 文件。
+Save Data Asset,保存数据资源
+Save data asset [b]{resource}[/b] as [b]{path}[/b],将数据资源 [b]{resource}[/b] 保存为 [b]{path}[/b]
+Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://.,把数据资源写回文件。编辑器工具用它生成或批量修改内容；运行中的游戏应写到 user:// 下。
+Asset,资源
+The data asset to write out.,要写出的数据资源。
+Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,写到哪里。写入 res:// 只在编辑器中有效；运行中的游戏写入 user://。

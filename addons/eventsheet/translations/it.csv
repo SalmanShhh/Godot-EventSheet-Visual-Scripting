@@ -2942,3 +2942,38 @@ Extract to variable,Estrai in una variabile
 Variable name,Nome della variabile
 Fix selected,Correggi il selezionato
 Object Properties,Proprietà dell'oggetto
+Set max FPS to {value},Imposta FPS max a {value}
+Set anti-aliasing to {value},Imposta anti-aliasing a {value}
+Set fullscreen on,Attiva schermo intero
+Set fullscreen on (exclusive),Attiva schermo intero (esclusivo)
+Set fullscreen off,Disattiva schermo intero
+Maximize,Ingrandisci
+Minimize,Riduci a icona
+Set title to {value},Imposta titolo a {value}
+Set position to {value},Imposta posizione a {value}
+Set always on top to {value},Imposta sempre in primo piano a {value}
+Set vsync on,Attiva sincronia verticale
+Set vsync off,Disattiva sincronia verticale
+Set vsync on (adaptive),Attiva sincronia verticale (adattiva)
+Set vsync on (mailbox),Attiva sincronia verticale (mailbox)
+Set vsync to {value},Imposta sincronia verticale a {value}
+Save image {name} as {value},Salva immagine {name} come {value}
+Save data asset {name} as {value},Salva risorsa dati {name} come {value}
+a screenshot,una schermata
+rendered as an image,renderizzato come immagine
+the data asset,la risorsa dati
+data type,tipo di dati
+image,immagine
+2×,2×
+4×,4×
+8×,8×
+Data Asset,Risorsa dati
+the data asset [b]{path}[/b],la risorsa dati [b]{path}[/b]
+"Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.","Recupera una risorsa dati dal suo percorso - i valori compilati nell'Inspector, pronti da leggere campo per campo."
+The .tres to fetch.,Il .tres da recuperare.
+Save Data Asset,Salva risorsa dati
+Save data asset [b]{resource}[/b] as [b]{path}[/b],Salva risorsa dati [b]{resource}[/b] come [b]{path}[/b]
+Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://.,Riscrive una risorsa dati su file. Uno strumento dell'editor lo usa per generare o modificare contenuti in blocco; un gioco in esecuzione deve scrivere sotto user://.
+Asset,Risorsa
+The data asset to write out.,La risorsa dati da scrivere.
+Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,Dove scriverlo. Scrivere sotto res:// funziona solo nell'editor; un gioco in esecuzione scrive in user://.

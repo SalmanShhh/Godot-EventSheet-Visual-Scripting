@@ -2942,3 +2942,38 @@ Extract to variable,変数に切り出す
 Variable name,変数名
 Fix selected,選択したものを修正
 Object Properties,オブジェクトのプロパティ
+Set max FPS to {value},最大FPSを {value} にする
+Set anti-aliasing to {value},アンチエイリアスを {value} にする
+Set fullscreen on,フルスクリーンをオンにする
+Set fullscreen on (exclusive),フルスクリーンをオンにする（専有）
+Set fullscreen off,フルスクリーンをオフにする
+Maximize,最大化
+Minimize,最小化
+Set title to {value},タイトルを {value} にする
+Set position to {value},位置を {value} にする
+Set always on top to {value},常に手前に表示を {value} にする
+Set vsync on,垂直同期をオンにする
+Set vsync off,垂直同期をオフにする
+Set vsync on (adaptive),垂直同期をオンにする（適応）
+Set vsync on (mailbox),垂直同期をオンにする（メールボックス）
+Set vsync to {value},垂直同期を {value} にする
+Save image {name} as {value},画像 {name} を {value} として保存
+Save data asset {name} as {value},データアセット {name} を {value} として保存
+a screenshot,スクリーンショット
+rendered as an image,を画像としてレンダリング
+the data asset,データアセット
+data type,データ型
+image,画像
+2×,2×
+4×,4×
+8×,8×
+Data Asset,データアセット
+the data asset [b]{path}[/b],データアセット [b]{path}[/b]
+"Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.",パスからデータアセットを1つ取得します。インスペクターで入力された値がそのまま読み取れます。
+The .tres to fetch.,取得する .tres ファイル。
+Save Data Asset,データアセットを保存
+Save data asset [b]{resource}[/b] as [b]{path}[/b],データアセット [b]{resource}[/b] を [b]{path}[/b] として保存
+Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://.,データアセットをファイルに書き戻します。エディタツールがコンテンツの生成や一括編集に使います。実行中のゲームは user:// 以下に書いてください。
+Asset,アセット
+The data asset to write out.,書き出すデータアセット。
+Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,書き込む場所。res:// 以下への書き込みはエディタでのみ動作し、実行中のゲームは user:// に書きます。
