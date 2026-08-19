@@ -399,8 +399,10 @@ func _ensure_dialog() -> void:
 	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var form: VBoxContainer = VBoxContainer.new()
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Quick Style (whole-palette recolour) on top, then the per-token detail form below it.
+	# Quick Style (whole-palette recolour) on top, then how the letters are SHAPED, then the
+	# per-token detail form below both.
 	_build_quick_style(form)
+	_build_reading_comfort(form)
 	_detail_form = VBoxContainer.new()
 	_detail_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	form.add_child(_detail_form)
@@ -447,6 +449,36 @@ func _build_quick_style(form: VBoxContainer) -> void:
 
 
 ## One labelled colour picker, returned so Quick Style can read it back on Generate.
+## How the letters are shaped, as opposed to what colour they are. Two settings, both personal
+## rather than part of the theme file: they follow the reader from project to project instead of
+## arriving in a teammate's checkout inside a saved preset.
+##
+## No typeface is bundled with the plugin - shipping one would put a font licence into everyone's
+## project for a preference most readers will not turn on. Left empty, the sheet keeps the
+## editor's own font and simply opens the spacing up, which is most of what helps; readers who
+## already have a dyslexia-friendly face installed (OpenDyslexic and Atkinson Hyperlegible are
+## the two usually meant) point the field at it.
+func _build_reading_comfort(form: VBoxContainer) -> void:
+	var box: VBoxContainer = EventSheetPopupUI.form_box()
+	box.add_child(EventSheetPopupUI.hint_label("Personal, not part of the theme file - these follow you, not the project."))
+	var dyslexia_check: CheckBox = CheckBox.new()
+	dyslexia_check.text = "Dyslexia-friendly text"
+	dyslexia_check.tooltip_text = "Opens the letters and the word spaces up. Works with any font."
+	dyslexia_check.button_pressed = EventSheetAccessibility.dyslexia_friendly_text()
+	dyslexia_check.toggled.connect(func(pressed: bool) -> void:
+		EventSheetAccessibility.set_dyslexia_friendly_text(pressed)
+		_apply_to_sheet())
+	box.add_child(dyslexia_check)
+	var font_edit: LineEdit = LineEdit.new()
+	font_edit.placeholder_text = "res://… .ttf or .otf - blank keeps the editor's own font"
+	font_edit.text = EventSheetAccessibility.reading_font_path()
+	font_edit.text_submitted.connect(func(path: String) -> void:
+		EventSheetAccessibility.set_reading_font_path(path)
+		_apply_to_sheet())
+	box.add_child(EventSheetPopupUI.form_row("Reading font", font_edit))
+	form.add_child(EventSheetPopupUI.titled_card("Reading Comfort", box))
+
+
 func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Color) -> ColorPickerButton:
 	var row: HBoxContainer = HBoxContainer.new()
 	var label: Label = Label.new()
