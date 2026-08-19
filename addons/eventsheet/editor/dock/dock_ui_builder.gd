@@ -173,6 +173,8 @@ func build_ui() -> void:
 	_dock._objects_panel.object_scene_selection_requested.connect(func(object_label: String) -> void:
 		_dock.select_object_in_scene(str(EventSheetObjectProperties.find_entry(
 			_dock._current_sheet, object_label).get("path", object_label))))
+	_dock._objects_panel.object_behavior_requested.connect(func(object_label: String) -> void:
+		_dock.open_add_behavior_dialog(object_label))
 	_dock._objects_panel.object_script_requested.connect(func(object_label: String) -> void:
 		_dock.open_object_file_as_sheet(EventSheetObjectFacts.script_path_for_entry(
 			EventSheetObjectProperties.find_entry(_dock._current_sheet, object_label),

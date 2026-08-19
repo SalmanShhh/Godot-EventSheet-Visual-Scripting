@@ -34,6 +34,8 @@ signal object_row_requested(object_label: String, as_action: bool)
 
 ## Right-click > Select in scene.
 signal object_scene_selection_requested(object_label: String)
+## Object bar ▸ right-click ▸ Add behavior…: the one gesture that adds ANY pack to this object.
+signal object_behavior_requested(object_label: String)
 
 ## Right-click > Open its script as a sheet.
 signal object_script_requested(object_label: String)
@@ -650,6 +652,8 @@ func _ensure_menu() -> void:
 	_menu.add_item(EventSheetL10n.translate("Add condition"), 0)
 	_menu.add_item(EventSheetL10n.translate("Add action"), 1)
 	_menu.add_separator()
+	_menu.add_item(EventSheetL10n.translate("Add behavior…"), 4)
+	_menu.add_separator()
 	_menu.add_item(EventSheetL10n.translate("Select in scene"), 2)
 	_menu.add_item(EventSheetL10n.translate("Open its script as a sheet"), 3)
 	_menu.id_pressed.connect(_on_menu_id)
@@ -666,6 +670,8 @@ func _on_menu_id(id: int) -> void:
 			object_scene_selection_requested.emit(_menu_label)
 		3:
 			object_script_requested.emit(_menu_label)
+		4:
+			object_behavior_requested.emit(_menu_label)
 
 
 func _on_filter_changed(text: String) -> void:

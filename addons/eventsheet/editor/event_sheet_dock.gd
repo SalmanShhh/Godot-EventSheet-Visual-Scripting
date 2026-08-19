@@ -5456,3 +5456,86 @@ func _resource_contains_descendant(source: Resource, candidate: Resource) -> boo
 			if _resource_contains_descendant(child, candidate):
 				return true
 	return false
+
+
+# ── Settings ▸ Words, Tools ▸ Addon manager, Object bar ▸ Add behavior… ────────────────────────
+# Three windows over the same idea: the vocabulary is a choice, the installed packs are a list,
+# and adding a pack to an object is one gesture. Each is built on first open and kept, because
+# a session that never opens one should pay nothing for it.
+var _words_settings_dialog: EventSheetWordsSettingsDialog = null
+var _addon_manager_dialog: EventSheetAddonManagerDialog = null
+var _add_behavior_dialog: EventSheetAddBehaviorDialog = null
+
+
+## Settings ▸ Words: every choosable word on one page. A change is baked into row TEXT at build
+## time, so every open view is rebuilt rather than redrawn.
+func open_words_settings() -> void:
+	if _words_settings_dialog == null:
+		_words_settings_dialog = EventSheetWordsSettingsDialog.new()
+		_words_settings_dialog.words_changed.connect(_on_words_changed)
+		add_child(_words_settings_dialog)
+	_words_settings_dialog.refresh()
+	_words_settings_dialog.popup_centered(Vector2i(680, 560))
+
+
+func _on_words_changed() -> void:
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.set_sheet(_current_sheet)
+
+
+## Tools ▸ Addon manager: the installed packs, their versions, and the switch.
+func open_addon_manager() -> void:
+	if _addon_manager_dialog == null:
+		_addon_manager_dialog = EventSheetAddonManagerDialog.new()
+		_addon_manager_dialog.configure(
+			func() -> void: _refresh_ace_registry(),
+			func(page_id: String) -> void: open_documentation(page_id),
+			func(script_path: String) -> void: EventSheets.open_sheet(script_path))
+		add_child(_addon_manager_dialog)
+	_addon_manager_dialog.refresh()
+	_addon_manager_dialog.popup_centered(Vector2i(760, 500))
+
+
+## Object bar ▸ right-click an object ▸ Add behavior…: every pack, in one dialog.
+func open_add_behavior_dialog(object_label: String) -> void:
+	if _add_behavior_dialog == null:
+		_add_behavior_dialog = EventSheetAddBehaviorDialog.new()
+		_add_behavior_dialog.configure(_apply_add_behavior)
+		add_child(_add_behavior_dialog)
+	_add_behavior_dialog.open_for(object_label)
+
+
+## The Add button's landing: the node path goes into the open scene, the inline path goes through
+## the undo funnel like every other sheet edit.
+func _apply_add_behavior(pack: Dictionary, values: Dictionary, inline: bool, object_label: String) -> void:
+	if inline:
+		var written: Dictionary = {}
+		var ok: bool = _perform_undoable_sheet_edit("Add behavior %s" % str(pack.get("name", "")), func() -> bool:
+			written = EventSheetAddBehavior.write_into_sheet(pack, _current_sheet, values)
+			return bool(written.get("ok", false)))
+		_set_status(str(written.get("message", "Nothing was written.")), not ok)
+		return
+	var host: Node = _scene_node_for_object(object_label)
+	var result: Dictionary = EventSheetAddBehavior.attach_node(pack, host, values)
+	if bool(result.get("ok", false)) and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.mark_scene_as_unsaved()
+	_refresh_ace_registry()
+	_set_status(str(result.get("message", "")), not bool(result.get("ok", false)))
+
+
+## The node an Object bar label stands for in the open scene, or null when the scene is not open.
+func _scene_node_for_object(object_label: String) -> Node:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	var edited_root: Node = EditorInterface.get_edited_scene_root()
+	if edited_root == null:
+		return null
+	var path: String = str(EventSheetObjectProperties.find_entry(
+		_current_sheet, object_label).get("path", object_label)).strip_edges().trim_prefix("$").trim_prefix("%")
+	if path.is_empty():
+		return null
+	var found: Node = edited_root.get_node_or_null(NodePath(path))
+	if found == null:
+		found = edited_root.find_child(path.get_file(), true, false)
+	return found
