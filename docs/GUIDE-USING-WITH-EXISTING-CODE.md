@@ -415,6 +415,9 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   bookmark, the Find bar's counter (`3 of 12 · event 4`) and a Project Doctor finding
   (`player.gd · event 4`) all print the same number, so "look at event 12" means one row to everybody
   reading the file. The numbers are display-only: nothing about them touches the script.
+
+  ![An opened script: the event number in the left margin, a static variable reading "Static number spawned = 0 shared by every Player", a function reading as Functions - On Take Damage, and the status bar saying "event 1 of 1 - line 3"](images/opened-script-event-numbers.png)
+
 - **A `static var` says who shares it.** `static var spawned: int = 0` reads
   `Static number  spawned = 0  shared by every Player` - the scope word leads the type chip, and the
   muted tail names the object the value belongs to (the script's `class_name`, else its scene root,
