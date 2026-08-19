@@ -26,6 +26,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_custom_type` | [Add Object Type](ace:Core/AddEditorObjectType) | Editor Tools | Vocabulary |
 | `add_exception` | [Ignore Node In RayCast (2D)](ace:Core/RayCast2DAddException) | Raycast 2D | Vocabulary |
 | `add_inspector_plugin` | [Add Inspector Plugin](ace:Core/AddEditorInspectorPlugin) | Editor Tools | Vocabulary |
+| `add_item` | [Add Item](ace:Core/ListAddItem) | UI | Vocabulary |
 | `add_node` | [Select Node In Editor](ace:Core/SelectNodeInEditor) | Editor Tools | Vocabulary |
 | `add_theme_color_override` | [Set Font Colour](ace:Core/SetFontColour) | Text | Vocabulary |
 | `add_theme_font_override` | [Set Font](ace:Core/SetFontFile) | Text | Vocabulary |
@@ -42,13 +43,16 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `angle` | [Vector Angle](ace:Core/VectorAngle) | Variables: Vector | Vocabulary |
 | `angle_difference` | [Angle Difference](ace:Core/AngleDifference) | Math & Random | Vocabulary |
 | `angle_to_point` | [Angle Toward](ace:Core/AngleToPoint) | Math & Random | Vocabulary |
+| `angular_damp` | [Set Angular Damping](ace:Core/SetAngularDamping) | Physics | Vocabulary |
 | `animation` | [Current Animation](ace:Core/GetSpriteAnimation) | General Expressions | Vocabulary |
 | `any` | [Any Match](ace:Core/ArrayAny) | Variables: Array | Vocabulary |
 | `append` | [Push Back](ace:Core/ArrayAppend) | Variables: Array | Vocabulary |
 | `append_array` | [Append Array](ace:Core/ArrayAppendArray) | Variables: Array | Vocabulary |
+| `append_text` | [Append Formatted Text](ace:Core/AppendFormattedText) | UI | Vocabulary |
 | `apply_central_force` | [Apply Central Force](ace:Core/ApplyCentralForce2D) | General Actions | Vocabulary |
 | `apply_central_impulse` | [Apply Central Impulse](ace:Core/ApplyCentralImpulse) | General Actions | Vocabulary |
-| `apply_impulse` | [Apply Radial Impulse](ace:Core/ApplyRadialImpulse) | Movement | Vocabulary |
+| `apply_impulse` | [Apply Impulse At Offset](ace:Core/ApplyImpulseAtOffset) | Physics | Vocabulary |
+| `apply_torque` | [Apply Torque](ace:Core/ApplyTorque) | Physics | Vocabulary |
 | `apply_torque_impulse` | [Apply Torque Impulse](ace:Core/ApplyTorqueImpulse2D) | General Actions | Vocabulary |
 | `area_set_param` | [Set World Gravity (2D)](ace:Core/PhysicsSetGravity2D) | Physics Server | Vocabulary |
 | `as_text` | [Key Name](ace:Core/InputKeyNameOf) | Keyboard | Vocabulary |
@@ -100,6 +104,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `collision_mask` | [Set RayCast Mask (2D)](ace:Core/RayCast2DSetMask) | Raycast 2D | Vocabulary |
 | `color` | [Set Light Colour (2D)](ace:Core/SetLightColour) | Lighting | Vocabulary |
 | `compare_locales` | [Language Matches](ace:Core/LanguageMatches) | Translation | Vocabulary |
+| `compile` | [Set Pattern](ace:Core/SetTextPattern) | Text: RegEx | Vocabulary |
 | `cone` | [Draw Cone](ace:Core/DrawCone) | Drawing | Vocabulary |
 | `configure` | [Configure Canvas](ace:Core/DrawConfigure) | Drawing | Vocabulary |
 | `connect` | [Connect Signal](ace:Core/ConnectSignal) | Helpers | Vocabulary |
@@ -115,6 +120,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `current_animation_length` | [Animation Length](ace:Core/AnimationLength) | Animation | Vocabulary |
 | `current_animation_position` | [Animation Position](ace:Core/AnimationPosition) | Animation | Vocabulary |
 | `current_scene` | [Current Scene Root](ace:Core/GetSceneRoot) | Nodes | Vocabulary |
+| `current_tab` | [Switch To Tab](ace:Core/SwitchToTab) | UI | Vocabulary |
 | `damping` | [Set Spring Damping](ace:Core/SetDampedSpringDamping) | Joints | Vocabulary |
 | `darkened` | [Darken Color](ace:Core/ColorDarken) | Color | Vocabulary |
 | `dashed_line` | [Draw Dashed Line](ace:Core/DrawDashedLine) | Drawing | Vocabulary |
@@ -182,6 +188,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `fov` | [Camera FOV](ace:Core/GetCameraFov) | Camera | Vocabulary |
 | `frame` | [Set Animation Frame](ace:Core/SetSpriteFrame) | General Actions | Vocabulary |
 | `frame_post_draw` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
+| `freeze` | [Set Immovable](ace:Core/SetBodyImmovable) | Physics | Vocabulary |
+| `friction` | [Set Friction](ace:Core/SetBodyFriction) | Physics | Vocabulary |
 | `from_hsv` | [Color From HSV](ace:Core/ColorFromHSV) | Color | Vocabulary |
 | `front` | [Pick Bottom](ace:Core/PickBottom) | Nodes: Picking | Vocabulary |
 | `func` | [Lambda (returns a value)](ace:Core/LambdaValue) | Helpers | Vocabulary |
@@ -243,6 +251,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_gyroscope` | [Rotation Rate](ace:Core/TouchRotationRate) | Touch | Vocabulary |
 | `get_image` | [Take Screenshot](ace:Core/TakeScreenshot) | General Actions | Vocabulary |
 | `get_index` | [Index In Parent](ace:Core/GetIndexInParent) | Nodes | Vocabulary |
+| `get_item_text` | [Item Text](ace:Core/ListItemText) | UI | Vocabulary |
 | `get_joy_axis` | [Compare Axis](ace:Core/GamepadCompareAxis) | Gamepad | Vocabulary |
 | `get_joy_name` | [Gamepad Name](ace:Core/GamepadName) | Gamepad | Vocabulary |
 | `get_joy_vibration_strength` | [Gamepad Vibration Strength](ace:Core/VibrationJoyStrength) | Vibration | Vocabulary |
@@ -287,6 +296,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_resource_filesystem` | [Rescan Project Files](ace:Core/RescanProjectFiles) | Editor Tools | Vocabulary |
 | `get_root` | [For Each Node That Can](ace:Core/ForEachNodeThatCan) | Nodes: Picking | Vocabulary |
 | `get_section_keys` | [Load Bindings](ace:Core/InputLoadBindings) | Keyboard | Vocabulary |
+| `get_selected_id` | .SelectedIndex | Object | Object expressions |
 | `get_selected_nodes` | [Selected Nodes](ace:Core/EditorSelectedNodes) | Editor Tools | Vocabulary |
 | `get_selection` | [Selected Nodes](ace:Core/EditorSelectedNodes) | Editor Tools | Vocabulary |
 | `get_setting` | [Tiles](ace:Core/TilesUnit) | Math & Random | Vocabulary |
@@ -329,6 +339,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `global_shader_parameter_set` | [Set Global Shader Parameter](ace:Core/RenderingSetGlobalShaderParam) | Rendering | Vocabulary |
 | `global_transform` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
 | `grab_focus` | [Set Focus](ace:Core/GrabFocus) | UI | Vocabulary |
+| `gravity` | [Set World Gravity](ace:Core/SetWorldGravity) | Physics | Vocabulary |
+| `gravity_scale` | [Set Gravity Scale](ace:Core/SetGravityScale) | Physics | Vocabulary |
 | `grow` | [Is Point On Screen](ace:Core/IsPointOnScreen) | Math & Random | Vocabulary |
 | `has` | [Has Key](ace:Core/DictHasKey) | Variables: Dictionary | Vocabulary |
 | `has_action` | [Has Action](ace:Core/InputHasActionNamed) | Keyboard | Vocabulary |
@@ -431,6 +443,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `limit_top` | [Set Scroll Limits](ace:Core/SetCameraLimits) | Camera | Vocabulary |
 | `line` | [Draw Line](ace:Core/DrawLine) | Drawing | Vocabulary |
 | `line_of_sight` | [Draw Line Of Sight](ace:Core/DrawLineOfSight) | Drawing | Vocabulary |
+| `linear_damp` | [Set Linear Damping](ace:Core/SetLinearDamping) | Physics | Vocabulary |
 | `linear_to_db` | [Set Volume (0 to 1)](ace:Core/AudioSetVolumeLevel) | Audio | Vocabulary |
 | `linear_velocity` | [Get Linear Velocity](ace:Core/GetLinearVelocity2D) | General Expressions | Vocabulary |
 | `load` | [Load Resource](ace:Core/LoadResource) | Helpers | Vocabulary |
@@ -440,12 +453,14 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `load_threaded_request` | [Load Layout In The Background](ace:Core/LoadLayoutInBackground) | Scene | Vocabulary |
 | `local_to_map` | [Position To Tile](ace:Core/TileMapLocalToMap) | Tilemap | Vocabulary |
 | `look_at` | [Look At](ace:Core/LookAt3D) | General Actions | Vocabulary |
+| `loop` | [Set Looping](ace:Core/SetPathLooping) | Follow a Path | Vocabulary |
 | `lpad` | [Align Right](ace:Core/AlignRight) | Text | Vocabulary |
 | `make_current` | [Make Current](ace:Core/MakeCameraCurrent) | Camera | Vocabulary |
 | `make_dir_recursive_absolute` | [Make Directory](ace:Core/MakeDir) | Files: Directories | Vocabulary |
 | `map` | [Map](ace:Core/ArrayMap) | Variables: Array | Vocabulary |
 | `map_to_local` | [Tile To Position](ace:Core/TileMapMapToLocal) | Tilemap | Vocabulary |
 | `margin` | [Set ShapeCast Margin (2D)](ace:Core/ShapeCast2DSetMargin) | Raycast 2D | Vocabulary |
+| `mass` | [Set Mass](ace:Core/SetBodyMass) | Physics | Vocabulary |
 | `match` | [Text Matches Pattern](ace:Core/TextMatchesPattern) | Compare: Text | Vocabulary |
 | `material` | [Set Effect](ace:Core/SetShaderMaterial) | Effects | Vocabulary |
 | `material_override` | [Set Mesh Material](ace:Core/SetMeshMaterial) | Mesh | Vocabulary |
@@ -499,10 +514,12 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `pause` | [Pause Animation](ace:Core/PauseAnimation) | Animation | Vocabulary |
 | `paused` | [Pause Video](ace:Core/VideoSetPaused) | Video | Vocabulary |
 | `physical_keycode` | [On Key Released (event)](ace:Core/KeyEventReleased) | Keyboard | Vocabulary |
+| `physics_material_override` | [Set Friction](ace:Core/SetBodyFriction) | Physics | Vocabulary |
 | `physics_ticks_per_second` | [Set Physics Rate](ace:Core/SetPhysicsRate) | Time | Vocabulary |
 | `pick_random` | [Pick Random](ace:Core/ArrayPickRandom) | Variables: Array | Vocabulary |
 | `pingpong` | [Ping-Pong](ace:Core/PingPong) | Math & Random | Vocabulary |
 | `pitch_scale` | [Set Pitch](ace:Core/AudioSetPitch) | Audio | Vocabulary |
+| `placeholder_text` | [Set Placeholder](ace:Core/SetTextInputPlaceholder) | UI | Vocabulary |
 | `play` | [Play](ace:Core/AudioPlay) | Audio | Vocabulary |
 | `play_current_scene` | [Play Current Scene](ace:Core/PlayCurrentScene) | Editor Tools | Vocabulary |
 | `playback_speed_scale` | [Set Audio Playback Speed](ace:Core/AudioSetPlaybackSpeed) | Audio Server | Vocabulary |
@@ -523,6 +540,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `process_mode` | [Set Node Process Mode](ace:Core/NodeSetProcessMode) | Nodes: Activation | Vocabulary |
 | `process_physics_priority` | [Set Node Physics Order](ace:Core/NodeSetPhysicsProcessPriority) | Nodes: Activation | Vocabulary |
 | `process_priority` | [Set Node Process Order](ace:Core/NodeSetProcessPriority) | Nodes: Activation | Vocabulary |
+| `progress` | [Go To Start](ace:Core/PathGoToStart) | Follow a Path | Vocabulary |
+| `progress_ratio` | [Has Reached The End](ace:Core/PathReachedEnd) | Follow a Path | Vocabulary |
 | `project_position` | [Wrap Inside The View (3D)](ace:Core/WrapInsideView3D) | Movement | Vocabulary |
 | `project_ray_normal` | [Mouse Ray Direction (3D)](ace:Core/MouseRayDirection) | Mouse | Vocabulary |
 | `project_ray_origin` | [Mouse Ray Origin (3D)](ace:Core/MouseRayOrigin) | Mouse | Vocabulary |
@@ -556,6 +575,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `remove_exception` | [Stop Ignoring Node In RayCast (2D)](ace:Core/RayCast2DRemoveException) | Raycast 2D | Vocabulary |
 | `remove_from_group` | [Remove From Group](ace:Core/RemoveFromGroup) | Groups | Vocabulary |
 | `remove_inspector_plugin` | [Remove Inspector Plugin](ace:Core/RemoveEditorInspectorPlugin) | Editor Tools | Vocabulary |
+| `remove_item` | [Remove Item](ace:Core/ListRemoveItem) | UI | Vocabulary |
 | `remove_meta` | [Remove Metadata](ace:Core/RemoveMeta) | Metadata | Vocabulary |
 | `remove_tool_menu_item` | [Remove Tools Menu Item](ace:Core/RemoveToolsMenuItem) | Editor Tools | Vocabulary |
 | `rename_absolute` | [Move / Rename File](ace:Core/MoveFile) | Files | Vocabulary |
@@ -577,6 +597,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `rotate_x` | [Mouse Look](ace:Core/MouseLook) | Native 3D | Vocabulary |
 | `rotate_y` | [Mouse Look](ace:Core/MouseLook) | Native 3D | Vocabulary |
 | `rotated` | [Rotated](ace:Core/VectorRotated) | Variables: Vector | Vocabulary |
+| `rotates` | [Set Rotate With Path](ace:Core/SetPathRotates) | Follow a Path | Vocabulary |
 | `rotation` | [Pin Angle To](ace:Core/PinAngleToObject) | Pin | Vocabulary |
 | `rotation_degrees` | [Rotate Clockwise](ace:Core/RotateClockwise) | Layout Edges | Vocabulary |
 | `round` | [Round](ace:Core/RoundValue) | Helpers | Vocabulary |
@@ -595,11 +616,12 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `scale` | [Set Scale (3D)](ace:Core/SetScale3D) | General Actions | Vocabulary |
 | `scan` | [Rescan Project Files](ace:Core/RescanProjectFiles) | Editor Tools | Vocabulary |
 | `screen_get_size` | [Screen Size](ace:Core/GetScreenSize) | Utility: Window | Vocabulary |
-| `search` | [Text Matches Regex](ace:Core/RegexMatches) | Text: RegEx | Vocabulary |
-| `search_all` | [Regex Match Count](ace:Core/RegexMatchCount) | Text: RegEx | Vocabulary |
+| `search` | [Match Pattern](ace:Core/MatchPattern) | Text: RegEx | Vocabulary |
+| `search_all` | [All Matches](ace:Core/AllMatches) | Text: RegEx | Vocabulary |
 | `seed` | [Seed Random](ace:Core/SeedRandom) | Math & Random | Vocabulary |
 | `seek` | [Seek](ace:Core/AudioSeek) | Audio | Vocabulary |
 | `seek_end` | [Append To File](ace:Core/AppendTextFile) | Files | Vocabulary |
+| `select` | [Select Item](ace:Core/ListSelectItem) | UI | Vocabulary |
 | `self_modulate` | [Set Self Tint](ace:Core/SetSelfModulate) | General Actions | Vocabulary |
 | `set` | [Set Blend](ace:Core/SetTreeParam) | Animation | Vocabulary |
 | `set_anchors_and_offsets_preset` | [Set Anchors Preset](ace:Core/SetAnchorsPreset) | UI | Vocabulary |
@@ -644,6 +666,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `signi` | [Compare Result](ace:Core/CompareResult) | Compare: Numbers | Vocabulary |
 | `sin` | [Sine](ace:Core/SinValue) | Helpers | Vocabulary |
 | `size` | [Dictionary Size](ace:Core/DictSize) | Variables: Dictionary | Vocabulary |
+| `sleeping` | [Is Sleeping](ace:Core/IsBodySleeping) | Physics | Vocabulary |
 | `slice` | [Slice](ace:Core/ArraySlice) | Variables: Array | Vocabulary |
 | `slide` | [Slide Along Surface](ace:Core/SlideAlongSurface) | Movement | Vocabulary |
 | `smoothstep` | [Smoothstep](ace:Core/Smoothstep) | Math & Random | Vocabulary |
@@ -672,7 +695,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `stream` | [Set Sound](ace:Core/AudioSetStream) | Audio | Vocabulary |
 | `stringify` | [To JSON Text](ace:Core/JsonStringify) | JSON | Vocabulary |
 | `strip_edges` | [Trim](ace:Core/TextTrim) | Text | Vocabulary |
-| `sub` | [Regex Replace](ace:Core/RegexReplace) | Text: RegEx | Vocabulary |
+| `sub` | [Replace Matches](ace:Core/ReplaceMatches) | Text: RegEx | Vocabulary |
 | `substr` | [Mid](ace:Core/TextMid) | Text | Vocabulary |
 | `tan` | [Tangent](ace:Core/TanValue) | Helpers | Vocabulary |
 | `target_position` | [Find Path To](ace:Core/SetNavTarget) | General Actions | Vocabulary |
@@ -687,6 +710,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `to_lower` | [Text Equals (ignore case)](ace:Core/TextEqualsIgnoreCase) | Compare: Text | Vocabulary |
 | `to_upper` | [Uppercase](ace:Core/TextUpper) | Text | Vocabulary |
 | `to_utf8_buffer` | [First To Finish](ace:Core/FirstToFinish) | Run Context | Vocabulary |
+| `tooltip_text` | [Set Tooltip](ace:Core/SetTooltip) | UI | Vocabulary |
 | `top_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
 | `tr` | [Translated](ace:Core/TranslatedText) | Text | Vocabulary |
 | `tr_n` | [Translate Plural](ace:Core/TranslatePlural) | Translation | Vocabulary |
