@@ -2001,3 +2001,21 @@ On close,Beim Schließen
 On paused,Bei Pause
 On unpaused,Bei Fortsetzen
 On notification,Bei Benachrichtigung
+Push back {value} to {name},{value} hinten an {name} anfügen
+Push front {value} to {name},{value} vorne an {name} anfügen
+Pop back of {name},Letztes aus {name} entnehmen
+Pop front of {name},Erstes aus {name} entnehmen
+Clear {name},{name} leeren
+Sort {name},{name} sortieren
+Shuffle {name},{name} mischen
+Reverse {name},{name} umkehren
+Insert {value} at {index} in {name},{value} an {index} in {name} einfügen
+Delete at {index} in {name},An {index} in {name} löschen
+Delete value {value} from {name},Wert {value} aus {name} löschen
+Delete key {value} from {name},Schlüssel {value} aus {name} löschen
+Append {value} to {name},{value} an {name} anhängen
+Call {name} (at end of frame),{name} aufrufen (am Frame-Ende)
+Set {name} to {value} (at end of frame),{name} auf {value} setzen (am Frame-Ende)
+Set collision layers to {layers},Kollisionsebenen auf {layers} setzen
+Set collides with {layers},Kollidiert mit {layers}
+Trigger once,Einmal auslösen

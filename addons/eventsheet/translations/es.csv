@@ -2001,3 +2001,21 @@ On close,Al cerrar
 On paused,Al pausar
 On unpaused,Al reanudar
 On notification,Al recibir aviso
+Push back {value} to {name},Añadir {value} al final de {name}
+Push front {value} to {name},Insertar {value} al inicio de {name}
+Pop back of {name},Sacar el último de {name}
+Pop front of {name},Sacar el primero de {name}
+Clear {name},Vaciar {name}
+Sort {name},Ordenar {name}
+Shuffle {name},Barajar {name}
+Reverse {name},Invertir {name}
+Insert {value} at {index} in {name},Insertar {value} en {index} de {name}
+Delete at {index} in {name},Eliminar en {index} de {name}
+Delete value {value} from {name},Eliminar el valor {value} de {name}
+Delete key {value} from {name},Eliminar la clave {value} de {name}
+Append {value} to {name},Añadir {value} a {name}
+Call {name} (at end of frame),Llamar a {name} (al final del fotograma)
+Set {name} to {value} (at end of frame),Establecer {name} a {value} (al final del fotograma)
+Set collision layers to {layers},Establecer las capas de colisión a {layers}
+Set collides with {layers},Colisiona con {layers}
+Trigger once,Disparar una vez

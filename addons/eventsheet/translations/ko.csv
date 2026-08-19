@@ -2001,3 +2001,21 @@ On close,닫을 때
 On paused,일시정지 시
 On unpaused,일시정지 해제 시
 On notification,알림 시
+Push back {value} to {name},{value}을(를) {name} 뒤에 추가
+Push front {value} to {name},{value}을(를) {name} 앞에 추가
+Pop back of {name},{name}의 마지막 항목 꺼내기
+Pop front of {name},{name}의 첫 항목 꺼내기
+Clear {name},{name} 비우기
+Sort {name},{name} 정렬
+Shuffle {name},{name} 섞기
+Reverse {name},{name} 뒤집기
+Insert {value} at {index} in {name},{value}을(를) {name}의 {index}에 삽입
+Delete at {index} in {name},{name}의 {index} 삭제
+Delete value {value} from {name},{name}에서 값 {value} 삭제
+Delete key {value} from {name},{name}에서 키 {value} 삭제
+Append {value} to {name},{name}에 {value} 덧붙이기
+Call {name} (at end of frame),{name} 호출 (프레임 끝에)
+Set {name} to {value} (at end of frame),{name}을(를) {value}(으)로 설정 (프레임 끝에)
+Set collision layers to {layers},충돌 레이어를 {layers}(으)로 설정
+Set collides with {layers},{layers}와(과) 충돌
+Trigger once,한 번만

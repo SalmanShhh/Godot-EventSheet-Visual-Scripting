@@ -2001,3 +2001,21 @@ On close,閉じるとき
 On paused,一時停止時
 On unpaused,一時停止解除時
 On notification,通知時
+Push back {value} to {name},{value} を {name} の末尾に追加
+Push front {value} to {name},{value} を {name} の先頭に追加
+Pop back of {name},{name} の末尾を取り出す
+Pop front of {name},{name} の先頭を取り出す
+Clear {name},{name} を空にする
+Sort {name},{name} を並べ替える
+Shuffle {name},{name} をシャッフル
+Reverse {name},{name} を逆順にする
+Insert {value} at {index} in {name},{value} を {name} の {index} に挿入
+Delete at {index} in {name},{name} の {index} を削除
+Delete value {value} from {name},{name} から値 {value} を削除
+Delete key {value} from {name},{name} からキー {value} を削除
+Append {value} to {name},{value} を {name} に追記
+Call {name} (at end of frame),{name} を呼び出す (フレーム終了時)
+Set {name} to {value} (at end of frame),{name} を {value} に設定 (フレーム終了時)
+Set collision layers to {layers},コリジョンレイヤーを {layers} に設定
+Set collides with {layers},{layers} と衝突する
+Trigger once,一度だけ

@@ -2001,3 +2001,21 @@ On close,À la fermeture
 On paused,À la pause
 On unpaused,À la reprise de la pause
 On notification,À la notification
+Push back {value} to {name},Empiler {value} à la fin de {name}
+Push front {value} to {name},Insérer {value} au début de {name}
+Pop back of {name},Retirer le dernier de {name}
+Pop front of {name},Retirer le premier de {name}
+Clear {name},Vider {name}
+Sort {name},Trier {name}
+Shuffle {name},Mélanger {name}
+Reverse {name},Inverser {name}
+Insert {value} at {index} in {name},Insérer {value} à {index} dans {name}
+Delete at {index} in {name},Supprimer à {index} dans {name}
+Delete value {value} from {name},Supprimer la valeur {value} de {name}
+Delete key {value} from {name},Supprimer la clé {value} de {name}
+Append {value} to {name},Ajouter {value} à la fin de {name}
+Call {name} (at end of frame),Appeler {name} (en fin de frame)
+Set {name} to {value} (at end of frame),Définir {name} sur {value} (en fin de frame)
+Set collision layers to {layers},Définir les calques de collision sur {layers}
+Set collides with {layers},Entre en collision avec {layers}
+Trigger once,Déclencher une fois

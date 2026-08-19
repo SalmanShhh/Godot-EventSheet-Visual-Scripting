@@ -614,9 +614,12 @@ static func input_action_sentence(action_value: String, just_pressed: bool) -> D
 	var shown: String = strip_action_name(action_value)
 	if shown.is_empty():
 		return {}
+	# Q8. The DEVICE the project bound the action to picks the object, so the object column tells the
+	# truth about where the input comes from. An unbound or unknown action stays with Keyboard.
+	var device: String = input_action_object(action_value)
 	if just_pressed:
-		return _sentence(OBJECT_KEYBOARD, "On {action} pressed", {"action": [shown, "value"]})
-	return _sentence(OBJECT_KEYBOARD, "{action} is down", {"action": [shown, "value"]})
+		return _sentence(device, "On {action} pressed", {"action": [shown, "value"]})
+	return _sentence(device, "{action} is down", {"action": [shown, "value"]})
 
 
 ## The reading of a signal emit: the PUBLISHED trigger name when the sheet declares one, so the row
@@ -1204,6 +1207,11 @@ static func _compound_statement(text: String, context: Dictionary) -> Dictionary
 		}
 		match operator:
 			" += ":
+				# Q6. Text is not arithmetic: `label += "!"` puts the text ON THE END, which is the
+				# Append the Text module already ships. Decided by the sheet's declared type first,
+				# then by the value being a literal piece of text, so a number keeps "Add".
+				if _declared_type_of(target, context) == "String" or _is_string_literal(amount):
+					return _sentence(str(split[0]), "Append {value} to {name}", values)
 				return _sentence(str(split[0]), "Add {value} to {name}", values)
 			" -= ":
 				return _sentence(str(split[0]), "Subtract {value} from {name}", values)
@@ -1248,9 +1256,20 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 		var service: String = value_object(assigned)
 		if not service.is_empty():
 			object_name = service
+	# ── Q5 / Q11 ────────────────────────────────────────────────────────────────────────────────
+	# The value's own words, when the SLOT says what kind of value it is: a 0..1 setting reads as a
+	# percentage, and a number written where an enum is expected reads as the member it names. Both
+	# are display only - the row still holds the number the file wrote.
+	var shown_value: String = expression_text(assigned, context)
+	if is_fraction_member(target, str(split[1]), context) and assigned.strip_edges().is_valid_float():
+		shown_value = _percent_words(assigned, context)
+	else:
+		var member_name: String = enum_value_words(object_name, target, str(split[1]), assigned, context)
+		if not member_name.is_empty():
+			shown_value = member_name
 	return _sentence(object_name, "Set {name} to {value}", {
 		"name": [str(split[1]), "name"],
-		"value": [expression_text(assigned, context), "value"]
+		"value": [shown_value, "value"]
 	})
 
 
@@ -1422,6 +1441,15 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 		return _sentence(object_name, "Destroy (at end of frame)", {})
 	if method == "emit":
 		return signal_sentence(target, ", ".join(args), context)
+	# ── Q6 / Q7 ─────────────────────────────────────────────────────────────────────────────────
+	# The list and table steps in the sheet's own verbs, and the deferred family - which reads as the
+	# step it is with the delay said out loud, exactly as `queue_free()` already does above.
+	var list_step: Dictionary = _list_statement(target, method, args, context)
+	if not list_step.is_empty():
+		return list_step
+	var deferred_step: Dictionary = _deferred_statement(target, method, args, context)
+	if not deferred_step.is_empty():
+		return deferred_step
 	# ── N7 / N8 / N11 ───────────────────────────────────────────────────────────────────────────
 	# The three families of call with settled rows of their own. Checked here, at the end of the
 	# curated shapes, so an unrecognised call still falls through to M26's Object ▸ Verb chips.
@@ -1521,6 +1549,77 @@ static func _wait_body_segments(handed: String, context: Dictionary) -> Array:
 		called.append({"text": "   ", "tone": "plain"})
 		called.append({"text": expression_text(value, context), "tone": "value"})
 	return called
+
+
+## Q6. A list or table step in the sheet's own words, or {} when the call is not one. Claimed only on a
+## BARE variable name: `items.append(x)` is a list step, `config.clear()` is a call on an object whose
+## own verbs read better, and only a plain identifier can be the one the List module means.
+##
+##   items.append(x)            System ▸ Push back x to items
+##   items.insert(2, x)         System ▸ Insert x at 2 in items
+##   items.remove_at(0)         System ▸ Delete at 0 in items
+##   items.erase(x)             System ▸ Delete value x from items
+##   inventory.erase("potion")  System ▸ Delete key "potion" from inventory
+##
+## `erase` is the one shape the method name cannot settle - Array and Dictionary spell two different
+## steps with it - so the sheet's own declared type decides, and a table says "key".
+static func _list_statement(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	var receiver: String = target.strip_edges()
+	if not is_identifier(receiver) or is_engine_property(receiver, context):
+		return {}
+	var split: Array = _split_object(receiver, context)
+	var values: Dictionary = {"name": [str(split[1]), "name"]}
+	if LIST_STEPS.has(method) and args.is_empty():
+		return _sentence(str(split[0]), str(LIST_STEPS[method]), values)
+	if LIST_STEPS.has(method) and args.size() == 1 and str(LIST_STEPS[method]).contains("{value}"):
+		values["value"] = [expression_text(args[0], context), "value"]
+		return _sentence(str(split[0]), str(LIST_STEPS[method]), values)
+	if method == "insert" and args.size() == 2:
+		values["value"] = [expression_text(args[1], context), "value"]
+		values["index"] = [expression_text(args[0], context), "value"]
+		return _sentence(str(split[0]), "Insert {value} at {index} in {name}", values)
+	if method == "remove_at" and args.size() == 1:
+		values["index"] = [expression_text(args[0], context), "value"]
+		return _sentence(str(split[0]), "Delete at {index} in {name}", values)
+	if method == "erase" and args.size() == 1:
+		values["value"] = [expression_text(args[0], context), "value"]
+		if LIST_TYPES.has(_declared_type_of(receiver, context)):
+			return _sentence(str(split[0]), "Delete value {value} from {name}", values)
+		return _sentence(str(split[0]), "Delete key {value} from {name}", values)
+	return {}
+
+
+## Q6/Q11. The type the SHEET declared for one of its own variables, or "" when it declared none. The
+## caller hands the map in, because only something able to walk the sheet knows what it says.
+static func _declared_type_of(variable_name: String, context: Dictionary) -> String:
+	return str((context.get("variable_types", {}) as Dictionary).get(variable_name.strip_edges(), ""))
+
+
+## Q7. The deferred family, read as the step it is with the delay said out loud - the same words
+## `queue_free()` already reads in, because it is the same postponement.
+##
+##   host.call_deferred("reset")          host ▸ Call Reset (at end of frame)
+##   host.set_deferred("visible", true)   host ▸ Set visible to true (at end of frame)
+##   reset.call_deferred()                Player ▸ Call Reset (at end of frame)
+static func _deferred_statement(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	var receiver: String = target.strip_edges()
+	var object_name: String = script_object(context) if receiver.is_empty() or receiver == "self" else object_of_reference(receiver)
+	if method == "call_deferred" and args.size() == 1 and _is_string_literal(args[0]):
+		return _sentence(object_name, "Call {name} (at end of frame)",
+			{"name": [verb_words(_unquote(args[0])), "name"]})
+	if method == "set_deferred" and args.size() == 2 and _is_string_literal(args[0]):
+		return _sentence(object_name, "Set {name} to {value} (at end of frame)", {
+			"name": [engine_member_name(_unquote(args[0])), "name"],
+			"value": [expression_text(args[1], context), "value"]
+		})
+	# `reset.call_deferred()` defers a CALLABLE - the receiver is the function, not an object, so the
+	# row belongs to the script's own object the way a plain call to the same function does.
+	if method == "call_deferred" and args.is_empty() and is_identifier(receiver):
+		return _sentence(script_object(context), "Call {name} (at end of frame)",
+			{"name": [verb_words(receiver), "name"]})
+	return {}
 
 
 ## N11. The Log verb is the debug word everyone knows, and Godot's print family is the same three
@@ -1672,8 +1771,16 @@ static func _behaviour_call(object_name: String, method: String, args: PackedStr
 		var switch: String = args[1].strip_edges()
 		if switch != "true" and switch != "false":
 			return {}
+		# Q8. The PROJECT named its layers, so the row says the name; a layer the project never named
+		# keeps its number, which is all anyone could honestly call it.
+		var layer_shown: String = expression_text(args[0], context)
+		if args[0].strip_edges().is_valid_int():
+			var layer_name: String = physics_layer_name(
+				args[0].strip_edges().to_int(), physics_dimension_of(object_name, context))
+			if not layer_name.is_empty():
+				layer_shown = "\"%s\"" % layer_name
 		return _sentence(object_name, "Set collision with layer {layer} {state}", {
-			"layer": [expression_text(args[0], context), "value"],
+			"layer": [layer_shown, "value"],
 			"state": [translate("on") if switch == "true" else translate("off"), "name"]
 		})
 	if not BEHAVIOUR_METHODS.has(method):
@@ -1707,6 +1814,14 @@ static func _behaviour_assignment(object_name: String, member: String, assigned:
 	var value: String = assigned.strip_edges()
 	if (member == "collision_layer" or member == "collision_mask") and value == "0":
 		return _sentence(object_name, "Set collisions {state}", {"state": [translate("off"), "name"]})
+	# Q8. A mask written as a number is a set of the project's OWN layers, and their names are what a
+	# reader can act on. A mask naming nothing the project named keeps the plain number reading.
+	if (member == "collision_layer" or member == "collision_mask") and value.is_valid_int():
+		var named_layers: String = physics_layer_words(
+			value.to_int(), physics_dimension_of(object_name, context))
+		if not named_layers.is_empty():
+			var template: String = "Set collision layers to {layers}" if member == "collision_layer" else "Set collides with {layers}"
+			return _sentence(object_name, template, {"layers": [named_layers, "value"]})
 	if not BEHAVIOUR_MEMBERS.has(member):
 		return {}
 	var known_class: String = object_class_of(
@@ -2484,7 +2599,8 @@ static func input_phase_sentence(action_value: String, pressed: bool, this_event
 	var template: String = "On {action} pressed" if pressed else "On {action} released"
 	if this_event:
 		template = "On {action} pressed (this event)" if pressed else "On {action} released (this event)"
-	return _sentence(OBJECT_KEYBOARD, template, {"action": [shown, "value"]})
+	# Q8. Same device rule as the live-state reading above: the project's own bindings choose the object.
+	return _sentence(input_action_object(action_value), template, {"action": [shown, "value"]})
 
 
 ## N9. `KEY_X` / `MOUSE_BUTTON_LEFT` as the key or button a reader would say. Only a bare engine
@@ -2606,11 +2722,10 @@ static func _idiom_for(head: String, arguments: PackedStringArray) -> String:
 
 
 ## `1.0` reads `1`: a trailing `.0` is a GDScript type cue, never part of the number a reader means.
+## Q5 widened this from the one `.0` case to every literal a person writes differently from GDScript -
+## padding zeros, grouped thousands, exponents and the famous constants - in one walk of the text.
 static func _tidy_numbers(text: String) -> String:
-	var regex: RegEx = RegEx.create_from_string("(?<![\\w.])(\\d+)\\.0(?![\\d\\w])")
-	if regex == null:
-		return text
-	return regex.sub(text, "$1", true)
+	return number_lens(text)
 
 
 # ── Small scanners (shared with the viewport's own statement classifiers) ────────
@@ -2983,3 +3098,359 @@ static func _split_arguments(inner: String) -> PackedStringArray:
 		index += 1
 	out.append(inner.substr(start).strip_edges())
 	return out
+
+
+# ── Q5 / Q6 / Q7 / Q8 / Q11 - the reading words batch six added ─────────────────
+#
+# Five readings that all share one rule: the FILE never moves. Every function below answers with
+# words for a value the row already holds, so the byte round-trip and the emitted GDScript are the
+# same before and after. Kept in one block, apart from the shapes above, because each of them is a
+# lens over a value rather than a new statement shape.
+#
+#   Q5  numbers        300.0 -> 300, 1_000_000 -> 1,000,000, 1e3 -> 1000, 1.5707963 -> π/2
+#   Q6  lists and text items.append(x) -> Push back x to items - the List module's own sentence
+#   Q7  deferred       call_deferred("reset") -> Call Reset (at end of frame)
+#   Q8  project names  layer 2 -> "Enemies", and an action's device chooses its object
+#   Q11 enums          process_mode = 3 -> Set process mode to Always
+
+
+## Q5. The constants a reader recognises on sight, as [value, words]. Every entry is checked for a
+## near-EXACT hit against a long spelling, so nothing here can claim a number that merely looks close.
+const NUMBER_CONSTANTS: Array = [
+	[TAU, "τ"], [PI, "π"], [PI / 2.0, "π/2"], [PI / 3.0, "π/3"], [PI / 4.0, "π/4"],
+	[1.4142135623730951, "√2"], [1.7320508075688772, "√3"]
+]
+## Q5. How close a written number must be to a constant before it reads as one, and how many decimals
+## it must carry. `3.14` stays 3.14: two decimals is a number somebody chose, not an attempt at π.
+const CONSTANT_TOLERANCE: float = 1e-6
+const CONSTANT_MIN_DECIMALS: int = 5
+## Q5. Below this an integer keeps its digits: 1000 is a number a reader reads at a glance, and
+## grouping the short ones would put separators into years, ids and sizes for nothing.
+const GROUPING_FROM: int = 10000
+## Q5. What separates the groups of three.
+const THOUSANDS_SEPARATOR := ","
+
+## Q5. The 0..1 members the ENGINE treats as a fraction. Anything else is opted in by the project's
+## own `@export_range(0, 1)`, which the caller hands in as `percent_members`.
+const FRACTION_MEMBERS: PackedStringArray = ["modulate.a", "self_modulate.a"]
+
+## Q6. The list steps that have one settled sentence in the List module, keyed by the Godot method.
+## The sentence is the module ACE's own display text word for word - a typed line and the picked row
+## must read the same, which is the whole point of one grammar.
+const LIST_STEPS: Dictionary = {
+	"append": "Push back {value} to {name}",
+	"push_back": "Push back {value} to {name}",
+	"push_front": "Push front {value} to {name}",
+	"pop_back": "Pop back of {name}",
+	"pop_front": "Pop front of {name}",
+	"clear": "Clear {name}",
+	"sort": "Sort {name}",
+	"shuffle": "Shuffle {name}",
+	"reverse": "Reverse {name}"
+}
+
+## Q6. The declared types that make `erase` a LIST step ("Delete value") rather than a table one
+## ("Delete key"). A table is the default because a picked Delete Key row carries no declaration to
+## read, and a list says so with its own type.
+const LIST_TYPES: PackedStringArray = [
+	"Array", "PackedStringArray", "PackedInt32Array", "PackedInt64Array",
+	"PackedFloat32Array", "PackedFloat64Array", "PackedVector2Array", "PackedVector3Array",
+	"PackedColorArray", "PackedByteArray"
+]
+
+## Q8. The two physics dimensions, and the project-settings key their layer names live under.
+const PHYSICS_DIMENSION_2D := "2d_physics"
+const PHYSICS_DIMENSION_3D := "3d_physics"
+## Q8. The classes whose collision knobs are the 3D ones. Everything else reads the 2D names, which is
+## what a 2D project wants and what an unknown class can honestly say.
+const PHYSICS_3D_CLASSES: PackedStringArray = ["Node3D"]
+
+
+## Q5. One numeric literal in the words a person writes it in, or "" when the text is not one or is
+## already written that way.
+##
+##   300.0      300          a trailing `.0` is a GDScript type cue
+##   0.50       0.5          a trailing zero is padding
+##   1_000_000  1,000,000    thousands grouped, from five digits up
+##   1e3        1000         an exponent is a spelling, not a quantity
+##   1.5707963  π/2          the constants a reader recognises
+##
+## Display only, and deliberately narrow: a literal that is none of these comes back "".
+static func number_words(literal: String) -> String:
+	var text: String = literal.strip_edges()
+	if text.is_empty():
+		return ""
+	var sign_text: String = ""
+	if text.begins_with("-") or text.begins_with("+"):
+		sign_text = "-" if text.begins_with("-") else ""
+		text = text.substr(1)
+	var bare: String = text.replace("_", "")
+	if bare.is_empty() or not bare[0].is_valid_int():
+		return ""
+	# A hex or binary literal is a BIT PATTERN. Rewriting one as a decimal would hide the very thing
+	# its spelling was chosen to show.
+	if bare.begins_with("0x") or bare.begins_with("0b"):
+		return ""
+	var digits: String = bare
+	if bare.to_lower().contains("e"):
+		# An exponent spells a quantity the long way round; a value too big to write out keeps it, and
+		# so does one with a fraction, which the long spelling would only make harder to read.
+		# Checked before the validity gate below, because `is_valid_float` does not accept `1e3`.
+		var value: float = bare.to_float()
+		if value == 0.0 or absf(value) >= 1e15 or value != floorf(value):
+			return ""
+		digits = String.num_int64(int(value))
+		if absi(digits.to_int()) >= GROUPING_FROM:
+			digits = _grouped_digits(digits)
+		return "%s%s" % [sign_text, digits]
+	if not bare.is_valid_float() and not bare.is_valid_int():
+		return ""
+	var named: String = _constant_number_words(bare)
+	if not named.is_empty():
+		return "%s%s" % [sign_text, named]
+	if digits.contains("."):
+		digits = digits.rstrip("0")
+		if digits.ends_with("."):
+			digits = digits.substr(0, digits.length() - 1)
+		if digits.is_empty():
+			digits = "0"
+	var whole: String = digits
+	var fraction: String = ""
+	var point_at: int = digits.find(".")
+	if point_at >= 0:
+		whole = digits.substr(0, point_at)
+		fraction = digits.substr(point_at)
+	if whole.is_valid_int() and absi(whole.to_int()) >= GROUPING_FROM:
+		whole = _grouped_digits(whole)
+	var shown: String = "%s%s%s" % [sign_text, whole, fraction]
+	return "" if shown == literal.strip_edges() else shown
+
+
+## Q5. The constant a long decimal is spelling out, or "" when it is not spelling one. The decimal
+## count gate is what keeps a short, deliberate number from claiming a constant it never meant.
+static func _constant_number_words(bare: String) -> String:
+	var point_at: int = bare.find(".")
+	if point_at < 0 or bare.length() - point_at - 1 < CONSTANT_MIN_DECIMALS:
+		return ""
+	var value: float = bare.to_float()
+	for entry: Array in NUMBER_CONSTANTS:
+		if absf(value - float(entry[0])) <= CONSTANT_TOLERANCE:
+			return str(entry[1])
+	return ""
+
+
+## Q5. `1000000` -> `1,000,000`. The separator is a glyph rather than a word, so it stays out of the
+## translation catalog for the same reason π and ≥ do: a catalog row holds a SENTENCE, and a single
+## punctuation mark keyed on itself is a row no translator can read.
+static func _grouped_digits(whole: String) -> String:
+	var separator: String = THOUSANDS_SEPARATOR
+	var out: String = ""
+	var counted: int = 0
+	for index: int in range(whole.length() - 1, -1, -1):
+		if counted > 0 and counted % 3 == 0:
+			out = separator + out
+		out = whole[index] + out
+		counted += 1
+	return out
+
+
+## Q5. Rewrites every numeric literal OUTSIDE a string with the words a person writes it in. Walks the
+## text rather than running a regex over it, because `"res://a/1000000.png"` inside quotes and the
+## `2` of a `sprite2` identifier both have to come through untouched.
+static func number_lens(text: String) -> String:
+	var out: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if character == "\"" or character == "'":
+			var end_at: int = _string_end(text, index)
+			out += text.substr(index, end_at - index + 1)
+			index = end_at + 1
+			continue
+		if not character.is_valid_int():
+			out += character
+			index += 1
+			continue
+		# A digit that follows a name character or a dot belongs to something else - `sprite2`, a
+		# member chain, a version string - and is not a literal this lens may touch.
+		var previous: String = "" if out.is_empty() else out[out.length() - 1]
+		var literal_start: bool = previous.is_empty() or not (
+			previous.is_valid_identifier() or previous.is_valid_int() or previous == "." or previous == "_")
+		var end_index: int = index
+		while end_index < text.length() and _is_number_character(text, end_index):
+			end_index += 1
+		var literal: String = text.substr(index, end_index - index)
+		if literal_start:
+			var shown: String = number_words(literal)
+			out += shown if not shown.is_empty() else literal
+		else:
+			out += literal
+		index = end_index
+	return out
+
+
+## Q5. Whether the character at `at` still belongs to a numeric literal - digits, the underscore
+## separator, a decimal point, and the `e` of an exponent with its sign.
+static func _is_number_character(text: String, at: int) -> bool:
+	var character: String = text[at]
+	if character.is_valid_int() or character == "_":
+		return true
+	if character == ".":
+		return at + 1 < text.length() and text[at + 1].is_valid_int()
+	if character == "e" or character == "E":
+		if at + 1 >= text.length():
+			return false
+		var next_character: String = text[at + 1]
+		if next_character.is_valid_int():
+			return true
+		return (next_character == "-" or next_character == "+") and at + 2 < text.length() and text[at + 2].is_valid_int()
+	if (character == "-" or character == "+") and at > 0:
+		return (text[at - 1] == "e" or text[at - 1] == "E") and at + 1 < text.length() and text[at + 1].is_valid_int()
+	return false
+
+
+## Q5. True when this member is a 0..1 slot the sheet shows as a percentage - one the engine treats as
+## a fraction, or one the project's own `@export_range(0, 1)` marked as one.
+static func is_fraction_member(chain: String, member: String, context: Dictionary) -> bool:
+	if FRACTION_MEMBERS.has(chain.strip_edges().trim_prefix("self.")):
+		return true
+	return (context.get("percent_members", {}) as Dictionary).has(member.strip_edges())
+
+
+## Q11. The enum member a number stands for, or "" when nothing says it stands for one.
+##
+##   process_mode = 3     Always     (the ENGINE's own enum hint for the property)
+##   dir = 2              LEFT       (a variable the sheet declared with a script enum as its type)
+##
+## Both sides are handed in through `context` by the caller, which is the only side able to ask
+## ClassDB and to walk the sheet.
+static func enum_value_words(object_name: String, target: String, member: String, value: String,
+		context: Dictionary) -> String:
+	var number: String = value.strip_edges()
+	if not number.is_valid_int():
+		return ""
+	var index: int = number.to_int()
+	var bare_member: String = member.strip_edges()
+	var bare_target: String = target.strip_edges().trim_prefix("self.")
+	# The ENGINE's enum. On the script's OWN object the member must be one the engine really reports
+	# (a sheet variable that happens to share a property's name is the sheet's, not the node's); on
+	# another object the class it is known to be answers instead.
+	var owned_by_self: bool = bare_target == bare_member
+	if not owned_by_self or is_engine_property(bare_member, context):
+		var hint_string: String = engine_enum_hint(object_class_of(object_name, context), bare_member)
+		if not hint_string.is_empty():
+			var named: String = enum_hint_member(hint_string, index)
+			if not named.is_empty():
+				return named
+	# The SHEET's own enum, when the variable was declared with one as its type.
+	var declared: Dictionary = context.get("variable_enum_types", {})
+	var enum_name: String = str(declared.get(bare_member, ""))
+	if enum_name.is_empty():
+		return ""
+	var members: Dictionary = (context.get("enum_values", {}) as Dictionary).get(enum_name, {})
+	return str(members.get(index, ""))
+
+
+## Q11. The enum hint string the ENGINE reports for one property of one class, or "" when the property
+## is not an enum (or the class is not one ClassDB knows). Cached per class: a row builder asks this of
+## every assignment it draws, and the property list of a Node subclass is hundreds of entries long.
+static var _enum_hint_cache: Dictionary = {}
+
+
+static func engine_enum_hint(class_name_str: String, property_name: String) -> String:
+	var bare: String = class_name_str.strip_edges()
+	if bare.is_empty() or property_name.strip_edges().is_empty() or not ClassDB.class_exists(bare):
+		return ""
+	if not _enum_hint_cache.has(bare):
+		var hints: Dictionary = {}
+		for entry: Dictionary in ClassDB.class_get_property_list(bare):
+			if int(entry.get("hint", 0)) != PROPERTY_HINT_ENUM:
+				continue
+			var found: String = str(entry.get("name", ""))
+			if not found.is_empty():
+				hints[found] = str(entry.get("hint_string", ""))
+		_enum_hint_cache[bare] = hints
+	return str((_enum_hint_cache[bare] as Dictionary).get(property_name.strip_edges(), ""))
+
+
+## Q11. The member an engine enum hint string names for `index`, or "" when it names none. Godot writes
+## the hint as `Inherit,Pausable,When Paused,Always,Disabled`, and an entry may pin its own number
+## (`Nearest:1`), so the position is only the answer while nothing said otherwise.
+static func enum_hint_member(hint_string: String, index: int) -> String:
+	var next_value: int = 0
+	for entry: String in hint_string.split(",", false):
+		var text: String = entry.strip_edges()
+		if text.is_empty():
+			continue
+		var colon_at: int = text.rfind(":")
+		var member: String = text
+		if colon_at > 0 and text.substr(colon_at + 1).strip_edges().is_valid_int():
+			member = text.substr(0, colon_at).strip_edges()
+			next_value = text.substr(colon_at + 1).strip_edges().to_int()
+		if next_value == index:
+			return member
+		next_value += 1
+	return ""
+
+
+## Q8. The project's name for one physics layer (`layer_names/2d_physics/layer_2`), or "" when the
+## project never named it. Read live rather than cached: a layer renamed in Project Settings a minute
+## ago must read by its new name without an editor restart.
+static func physics_layer_name(layer_number: int, dimension: String) -> String:
+	if layer_number < 1 or layer_number > 32:
+		return ""
+	return str(ProjectSettings.get_setting(
+		"layer_names/%s/layer_%d" % [dimension, layer_number], "")).strip_edges()
+
+
+## Q8. Every layer a MASK holds, in the project's own words, as `"World", "Player"` - or "" when the
+## mask names no layer the project named. A mask mixing named and anonymous layers still reads, with
+## the unnamed ones by their number, because hiding half a mask would be worse than mixing.
+static func physics_layer_words(mask: int, dimension: String) -> String:
+	if mask <= 0:
+		return ""
+	var named_any: bool = false
+	var parts: PackedStringArray = PackedStringArray()
+	for bit: int in 32:
+		if not bool((mask >> bit) & 1):
+			continue
+		var layer_name: String = physics_layer_name(bit + 1, dimension)
+		if layer_name.is_empty():
+			parts.append(str(bit + 1))
+			continue
+		named_any = true
+		parts.append("\"%s\"" % layer_name)
+	return ", ".join(parts) if named_any else ""
+
+
+## Q8. Which set of layer names an object's collision knobs read from - a 3D node names 3D layers.
+static func physics_dimension_of(object_name: String, context: Dictionary) -> String:
+	var known_class: String = object_class_of(object_name, context)
+	return PHYSICS_DIMENSION_3D if _class_is_any(known_class, PHYSICS_3D_CLASSES) else PHYSICS_DIMENSION_2D
+
+
+## Q8. The event-sheet object an input action belongs to, decided by the DEVICES the project bound it
+## to: mouse buttons only make it a Mouse row, gamepad only a Gamepad row, anything else Keyboard.
+## The object column then tells the truth about where the input comes from.
+static func input_action_object(action_value: String) -> String:
+	var bare: String = _unquote(action_value.strip_edges().trim_prefix("&"))
+	if bare.is_empty():
+		return OBJECT_KEYBOARD
+	var setting: Variant = ProjectSettings.get_setting("input/%s" % bare, null)
+	if not (setting is Dictionary):
+		return OBJECT_KEYBOARD
+	var events: Variant = (setting as Dictionary).get("events", null)
+	if not (events is Array) or (events as Array).is_empty():
+		return OBJECT_KEYBOARD
+	var mouse_only: bool = true
+	var pad_only: bool = true
+	for event: Variant in (events as Array):
+		var is_mouse: bool = event is InputEventMouseButton
+		var is_pad: bool = event is InputEventJoypadButton or event is InputEventJoypadMotion
+		mouse_only = mouse_only and is_mouse
+		pad_only = pad_only and is_pad
+	if mouse_only:
+		return OBJECT_MOUSE
+	if pad_only:
+		return OBJECT_GAMEPAD
+	return OBJECT_KEYBOARD

@@ -4982,6 +4982,61 @@ func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
 ## SIGNAL keeps the shipped green ➜ from the event style - the common case stays
 ## byte-identical; every-tick (⟳) / input (⌨) / once (▶) get their own fill so how OFTEN an event runs
 ## reads at a distance. Shared by both trigger-badge paths (authored ACECondition + lifted trigger_id).
+# ── Q3 - a trigger-shaped poll at the top of a tick handler IS the trigger ──────────────────────
+#
+# This is how a beginner writes input in Godot: poll `is_action_just_pressed` inside `_process`. In an
+# event sheet the same thing is a top-level trigger, so the row loses the "Every tick" words and its
+# condition leads instead. Display only - the event, its resources and the emitted GDScript are the
+# ones the file already holds, which is why this needs no reading-mode gate and no byte guard: it is
+# one span fewer on a row that is otherwise untouched.
+#
+# Deliberately narrow. Only the EDGE polls count: `is_action_pressed` asks whether a key is HELD,
+# which is a condition every tick and not a trigger, and reading it as one would say the event fires
+# once when it fires continuously. An event doing anything of its own - a second condition, a loop, a
+# local variable, an Else arm - keeps the tick reading, because there the handler really is a handler.
+
+## The tick handlers whose single edge-poll condition reads as the trigger it is.
+const INPUT_TRIGGER_TICKS: PackedStringArray = ["OnProcess", "OnPhysicsProcess"]
+## The published conditions that ARE an edge, plus the two expressions a hand-written poll lifts to.
+const INPUT_TRIGGER_ACES: PackedStringArray = ["IsActionJustPressed", "IsActionJustReleased"]
+const INPUT_TRIGGER_CALLS: PackedStringArray = [
+	"Input.is_action_just_pressed(", "Input.is_action_just_released("
+]
+
+
+## Q7. True when the connect line that wired this handler asked for a ONE-SHOT connection - the
+## sheet's own Trigger once. Read off the verbatim line the lift kept, so nothing here can move a byte.
+static func is_one_shot_handler(event_row: EventRow) -> bool:
+	if event_row == null:
+		return false
+	return str(event_row.get_meta("__source_connect_line", "")).contains("CONNECT_ONE_SHOT")
+
+
+## True when this event is a tick handler whose ONE condition is a just-pressed / just-released poll.
+static func is_input_trigger_tick(event_row: EventRow) -> bool:
+	if event_row == null or not INPUT_TRIGGER_TICKS.has(event_row.trigger_id):
+		return false
+	if event_row.trigger != null or event_row.conditions.size() != 1:
+		return false
+	if not event_row.local_variables.is_empty() or not event_row.pick_filters.is_empty():
+		return false
+	var condition: ACECondition = event_row.conditions[0] as ACECondition
+	if condition == null or not condition.enabled:
+		return false
+	if INPUT_TRIGGER_ACES.has(condition.ace_id):
+		return true
+	if condition.ace_id != "ExpressionIsTrue":
+		return false
+	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	var expression: String = str(params.get("expr", "")).strip_edges()
+	if not expression.ends_with(")"):
+		return false
+	for head: String in INPUT_TRIGGER_CALLS:
+		if expression.begins_with(head):
+			return true
+	return false
+
+
 func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, trigger_id: String) -> String:
 	var tempo: String = TriggerResolver.tempo_class_for(trigger_id)
 	meta["tempo"] = tempo
@@ -5665,6 +5720,21 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 		condition_line_index += 1
+	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and is_input_trigger_tick(event_row):
+		# ── Q3 ──────────────────────────────────────────────────────────────────────────────────
+		# A just-pressed / just-released poll at the top of a tick handler IS a trigger, and an event
+		# sheet draws it as one - never as a check under Every tick. The tick words go away because
+		# the condition below already says when the event runs; the badge stays, wearing the input
+		# tempo, so the row still reads as the trigger it is. Nothing is added or removed here: this
+		# is the SAME event row with one span fewer, so the file cannot move.
+		var poll_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+		poll_badge_meta["tempo"] = TriggerResolver.TEMPO_INPUT
+		poll_badge_meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_INPUT_BG
+		poll_badge_meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_INPUT_FG
+		poll_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+		poll_badge_meta["line_index"] = condition_line_index
+		poll_badge_meta["badge_style"] = "trigger"
+		spans.append(_make_span("⌨", SemanticSpan.SpanType.KEYWORD, poll_badge_meta))
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and not event_row.trigger_id.is_empty():
 		var trigger_id_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		# Same tempo badge on the lifted / lifecycle path (trigger_id with no authored ACECondition) -
@@ -5732,6 +5802,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var handler_payload: PackedStringArray = _handler_payload_chips(event_row)
 		for payload_index in range(handler_payload.size()):
 			spans.append(_trigger_payload_span(handler_payload[payload_index], payload_index, condition_line_index))
+		# ── Q7 ──────────────────────────────────────────────────────────────────────────────────
+		# A one-shot connection fires ONCE, which is the sheet's own Trigger once - so it reads as
+		# that, on a chip beside the trigger. Read off the connect line the lift kept verbatim, so
+		# the file is untouched and the flag is re-emitted exactly as it was written.
+		if is_one_shot_handler(event_row):
+			spans.append(_trigger_payload_span(
+				EventSheetL10n.translate("Trigger once"), handler_payload.size(), condition_line_index))
 		condition_line_index += 1
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
 		var inline_trigger: ACECondition = event_row.conditions[inline_trigger_condition_index]
@@ -6277,7 +6354,10 @@ func _count_event_lines(event_row: EventRow) -> int:
 	)
 	if not input_reading.is_empty():
 		condition_lines += 1
-	elif has_trigger and event_row.else_mode == EventRow.ElseMode.NONE:
+	elif has_trigger and event_row.else_mode == EventRow.ElseMode.NONE and not is_input_trigger_tick(event_row):
+		# Q3 mirrors the span pass here too: a tick handler whose one condition is an edge poll draws
+		# the badge on the CONDITION's line rather than a tick line of its own, so it is one line
+		# shorter. Any lazy measure reads this count, not the spans, so the two must agree exactly.
 		condition_lines += 1
 	for condition_index in range(event_row.conditions.size()):
 		if condition_index == inline_trigger_index or input_consumed.has(condition_index):
@@ -8154,6 +8234,12 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"SetVar":
 			return EventSheetSentence.statement("%s = %s" % [
 				str(params_dict.get("var_name", "")), str(params_dict.get("value", ""))], context)
+		# Q6. Adding to TEXT puts the value on the end, which is the Append the Text module ships and
+		# not the arithmetic "Add". Only the grammar can tell the two apart, because only it knows what
+		# the sheet declared the variable to be.
+		"AddVar":
+			return EventSheetSentence.statement("%s += %s" % [
+				str(params_dict.get("var_name", "")), str(params_dict.get("amount", ""))], context)
 		"EmitSignal":
 			return EventSheetSentence.signal_sentence(
 				str(params_dict.get("signal_name", "")), str(params_dict.get("args", "")), context)
@@ -8197,6 +8283,19 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement(group_call, context)
 		"QueueFreeNode":
 			return EventSheetSentence.statement("%s.queue_free()" % str(params_dict.get("target", "self")), context)
+		# ── Q6 / Q11 lens hook ────────────────────────────────────────────────────────────────
+		# Two rows whose words depend on something only the grammar can see. `erase` is spelled the
+		# same on a list and on a table but means two different steps, and the lifter cannot tell
+		# which; the grammar reads the sheet's own declared type and says "value" or "key". A process
+		# mode written as a NUMBER is an enum member, and the grammar knows the engine's names for it.
+		"DictDeleteKey":
+			return EventSheetSentence.statement("%s.erase(%s)" % [
+				str(params_dict.get("var_name", "")), str(params_dict.get("key", ""))], context)
+		"NodeSetProcessMode":
+			var mode_target: String = str(params_dict.get("target", "")).strip_edges()
+			return EventSheetSentence.statement("%sprocess_mode = %s" % [
+				"" if mode_target.is_empty() else "%s." % mode_target,
+				str(params_dict.get("mode", ""))], context)
 		"ChangeScene":
 			return EventSheetSentence.statement(
 				"get_tree().change_scene_to_file(%s)" % str(params_dict.get("path", "")), context)
@@ -8927,6 +9026,14 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 ## compiled output never translate. Handles both shapes (registry ACEDefinition metadata
 ## templates and builtin ACEDescriptor display text); English or a missing key pass through,
 ## so this is byte-identical to format_display until a catalog provides the template.
+## Q5. One picked row's value in the words a person writes the number in - `300.0` as 300, `1e3` as
+## 1000, a million with its thousands grouped. READING only, and deliberately so: the params dialog
+## and the inline editor put the author's own GDScript back in front of them, so an editable sheet
+## keeps showing exactly what it will emit and only a reading softens the spelling.
+func _read_number_words(shown: String) -> String:
+	return EventSheetSentence.number_lens(shown) if _viewport.is_reading_mode() else shown
+
+
 func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescriptor, params_dict: Dictionary) -> String:
 	if definition != null:
 		var template: String = _resolve_template(str(definition.metadata.get("display_template", definition.display_name)))
@@ -8951,6 +9058,7 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 			# ("Jouer") instead of the literal tr("Play"). The identity when no preview is active, so
 			# this is byte-identical to the row you author until someone asks to see another language.
 			shown = EventSheetGameCatalog.preview_param(shown)
+			shown = _read_number_words(shown)
 			replacements.append(["{%d}" % index, shown])
 			replacements.append(["{%s}" % key, shown])
 		var substituted: Dictionary = substitute_display_tracking(template, replacements)
@@ -8970,8 +9078,8 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		if param_key.is_empty():
 			continue
 		var param_value: Variant = params_dict.get(param_key, param.get_initial_value())
-		var param_shown: String = EventSheetGameCatalog.preview_param(
-			_translated_option_label(param.display_value(param_value), str(param_value)))
+		var param_shown: String = _read_number_words(EventSheetGameCatalog.preview_param(
+			_translated_option_label(param.display_value(param_value), str(param_value))))
 		descriptor_replacements.append(["{%d}" % i, param_shown])
 		descriptor_replacements.append(["{%s}" % param_key, param_shown])
 	var descriptor_substituted: Dictionary = substitute_display_tracking(descriptor_template, descriptor_replacements)

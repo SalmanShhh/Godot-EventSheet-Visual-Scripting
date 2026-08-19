@@ -60,6 +60,51 @@ gates are unchanged and green. These are the two hot paths, measured on this rep
   (the structural invariant that makes it fast, checkable on any machine at any load) plus a generous
   wall budget on a real pack open as the backstop, and `run_perf.gd` now runs the boot lint too.
 
+### Added - an opened script's polls, numbers, lists, delays, project names and enums read as rows
+
+Six more shapes every real Godot script is full of. All six are lenses over values the row already
+holds: the file is untouched, the byte round-trip is unchanged, and the exact GDScript is still one
+hover away.
+
+- **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner writes
+  input in Godot - `if Input.is_action_just_pressed("jump"):` inside `_process`. That reads as the
+  top-level `Keyboard ▸ On "jump" pressed` an event sheet would draw, and the `Every tick` words go
+  away, because the poll already says when the event runs. Only the EDGE polls count: a held
+  `is_action_pressed` is a check every tick, so its handler keeps the tick reading.
+- **Numbers read the way a person writes them.** `300.0` reads 300, `0.50` reads 0.5, `1_000_000`
+  reads 1,000,000, `1e3` reads 1000, and the constants a reader knows are named (`1.5707963` reads
+  π/2, and τ, √2 and √3 likewise, from a spelling long enough to mean them). A 0..1 setting the
+  project marked with `@export_range(0, 1)` reads as a percentage. Reading only - the literal in the
+  file, and the value the params dialog puts in front of you, never move.
+- **Lists, tables and text in the sheet's own verbs.** `items.append(x)` reads `Push back x to items`,
+  and `push_front` / `pop_back` / `insert` / `remove_at` / `erase` / `clear` / `sort` / `shuffle` /
+  `reverse` / `dict.erase(k)` read as the List and Record modules' own rows. `label += "!"` reads
+  `Append "!" to label` rather than as arithmetic, because adding to text puts it on the end.
+- **Deferred work says the delay out loud.** `call_deferred("reset")` reads `Call Reset (at end of
+  frame)`, `set_deferred("visible", true)` reads `Set visible to true (at end of frame)`, and
+  `reset.call_deferred()` reads the same - the words `queue_free()` already read in. A handler wired
+  with `CONNECT_ONE_SHOT` wears the sheet's own `Trigger once` chip on its trigger.
+- **Physics layers and input actions by their PROJECT names.** `set_collision_layer_value(2, true)`
+  reads `Set collision with layer "Enemies" on` and `collision_layer = 5` reads `Set collision layers
+  to "World", "Player"`, from the names Project Settings holds; a layer the project never named keeps
+  its number. And the DEVICE an action is bound to picks its object, so an action bound only to mouse
+  buttons reads under Mouse and one bound only to a pad reads under Gamepad.
+- **Enum values in the sheet's words.** A number written where an engine enum is expected reads as the
+  member it names - `process_mode = 3` reads `Set process mode to Always`, `texture_filter = 1` reads
+  `Set texture filter to Nearest` - and so does a number written into a variable the sheet declared
+  with one of its own enums (`dir = 2` reads `Set dir to LEFT`).
+
+### Changed
+
+- The Array verbs are named the way the sheet's own rows read them: **Append** is **Push Back**,
+  **Push To Front** is **Push Front**, **Remove At** is **Delete At**, **Erase Value** is **Delete
+  Value**, **Pop Last** is **Pop Back** and **Pop First** is **Pop Front**. Every `ace_id` and every
+  `codegen_template` is unchanged, so existing sheets and emitted code are untouched; only the words
+  in the picker, the rows and the guides moved.
+- A handler wired with connection flags (`connect(_on_hit, CONNECT_ONE_SHOT)`) now lifts to the
+  trigger event it is instead of stranding the whole handler as a code block. The connect line is
+  re-emitted verbatim, flags and all.
+
 ### Added - an opened script's questions, text, saving, behaviours, input and logging read as rows
 
 Six more families of everyday GDScript now read as the rows they are instead of as the code they are

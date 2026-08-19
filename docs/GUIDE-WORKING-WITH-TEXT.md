@@ -441,7 +441,7 @@ On Ready
     -> Add   Align Left(who, 16, " ") + "\n"   to board
 
     For Each Part In Text   Text After(line, ","), ";"
-      -> Append   part   to all_tags
+      -> Push Back   part   to all_tags
 
   For Each Resource In Folder   "res://data/items"
     -> Load From Resource   entry

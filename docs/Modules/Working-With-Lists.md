@@ -22,9 +22,9 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 ## Where this shines
 
 - **Inventories** - add, remove, count, check, sort.
-- **Queues and stacks** - Push To Front and Pop First make a queue; Append and Pop Last make a stack.
+- **Queues and stacks** - Push Front and Pop Front make a queue; Push Back and Pop Back make a stack.
 - **Spawn tables and loot** - Pick Random over a weighted list.
-- **Shuffled decks** - Shuffle Array once, then Pop Last to deal.
+- **Shuffled decks** - Shuffle Array once, then Pop Back to deal.
 - **Leaderboards** - Sort Array, Reverse Array, Slice to the top ten.
 - **Filtering a list without a loop** - Filter, Map, Reduce, Any Match, All Match.
 - **Walking a file** - For Each Line In Text over a text blob, with no split step.
@@ -35,9 +35,9 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 
 - **The first cell is always the list.** Every Array verb takes a **var_name** parameter whose dropdown is
   scoped to Array-typed sheet variables (a typed `Array[int]` qualifies too). Its default is `list`.
-- **Actions change the list in place; expressions read it.** Append, Sort Array and Shuffle Array modify
+- **Actions change the list in place; expressions read it.** Push Back, Sort Array and Shuffle Array modify
   the variable. Value At, Array Size and Filter hand you something back and leave the original alone.
-  Pop Last and Pop First are the odd pair: they are expressions, and they also remove the item.
+  Pop Back and Pop Front are the odd pair: they are expressions, and they also remove the item.
 - **Indexes start at 0.** The first item is index 0, the last is `size - 1`, and Slice's To index is
   exclusive.
 - **A For Each is a condition, not an action.** The loop verbs sit in the event's loop lane as a pick
@@ -58,15 +58,15 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 
 | Verb | What it does | Ships as |
 |------|--------------|----------|
-| Append | Adds a value to the end. | `{var_name}.append({value})` |
+| Push Back | Adds a value to the end. | `{var_name}.append({value})` |
 | Insert At | Inserts a value at a position. | `{var_name}.insert({index}, {value})` |
-| Remove At | Removes the item at a position. | `{var_name}.remove_at({index})` |
-| Erase Value | Removes the FIRST item matching a value. | `{var_name}.erase({value})` |
+| Delete At | Removes the item at a position. | `{var_name}.remove_at({index})` |
+| Delete Value | Removes the FIRST item matching a value. | `{var_name}.erase({value})` |
 | Clear Array | Empties the list. | `{var_name}.clear()` |
 | Sort Array | Sorts into ascending order, in place. | `{var_name}.sort()` |
 | Shuffle Array | Randomly reorders, in place. | `{var_name}.shuffle()` |
 | Reverse Array | Flips the order, in place. | `{var_name}.reverse()` |
-| Push To Front | Inserts a value at the start, shifting the rest along. | `{var_name}.push_front({value})` |
+| Push Front | Inserts a value at the start, shifting the rest along. | `{var_name}.push_front({value})` |
 | Append Array | Adds every item of another list onto the end of this one. | `{var_name}.append_array({other})` |
 | Resize Array | Changes the length, adding empty slots or trimming items. | `{var_name}.resize({size})` |
 | Fill Array | Sets every slot to the same value. | `{var_name}.fill({value})` |
@@ -93,8 +93,8 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 | Last Item | The last item. | `{var_name}.back()` |
 | Index Of | The position of a value, or -1 when it is missing. | `{var_name}.find({value})` |
 | Count Of | How many times a value appears. | `{var_name}.count({value})` |
-| Pop Last | Removes AND returns the last item. | `{var_name}.pop_back()` |
-| Pop First | Removes AND returns the first item. | `{var_name}.pop_front()` |
+| Pop Back | Removes AND returns the last item. | `{var_name}.pop_back()` |
+| Pop Front | Removes AND returns the first item. | `{var_name}.pop_front()` |
 | Slice | A sub-section between two indexes (To is exclusive). | `{var_name}.slice({from}, {to})` |
 | Join To Text | Joins a list of strings into one piece of text with a separator. | `{separator}.join({var_name})` |
 | Array Max | The largest value in the list. | `{var_name}.max()` |
@@ -146,7 +146,7 @@ handing you a null the first `entry.field` would trip over.
 
 ```
 On item picked up
-  -> Append  item_id  to  inventory
+  -> Push Back  item_id  to  inventory
 ```
 
 ```gdscript
@@ -157,15 +157,15 @@ inventory.append(item_id)
 
 ```
 On drop pressed
-  -> Erase Value  item_id  from  inventory
+  -> Delete Value  item_id  from  inventory
 ```
 
 ```gdscript
 inventory.erase(item_id)
 ```
 
-**Erase Value** removes the first match by value; **Remove At** removes by position. If the list can hold
-duplicates and you meant "this exact one", you want Remove At with an index you already know.
+**Delete Value** removes the first match by value; **Delete At** removes by position. If the list can hold
+duplicates and you meant "this exact one", you want Delete At with an index you already know.
 
 **3. Do I have the key?**
 
@@ -198,7 +198,7 @@ On round started
   -> Shuffle Array  draw_pile
 
 On card drawn
-  -> Set Current Card to  Pop Last (draw_pile)
+  -> Set Current Card to  Pop Back (draw_pile)
 ```
 
 ```gdscript
@@ -207,18 +207,18 @@ draw_pile.shuffle()
 current_card = draw_pile.pop_back()
 ```
 
-**Pop Last** removes and returns in one go, which is exactly a deal. Guard it with **Array Is Empty**
+**Pop Back** removes and returns in one go, which is exactly a deal. Guard it with **Array Is Empty**
 first, or reshuffle when the pile runs out.
 
 **6. A queue of spawn orders.**
 
 ```
 On order received
-  -> Append  order  to  spawn_queue
+  -> Push Back  order  to  spawn_queue
 
 Every 1.0 seconds
   Condition: spawn_queue is empty  (inverted)
-    -> Set Next to  Pop First (spawn_queue)
+    -> Set Next to  Pop Front (spawn_queue)
     -> spawn Next
 ```
 
@@ -231,13 +231,13 @@ if not spawn_queue.is_empty():
 	next = spawn_queue.pop_front()
 ```
 
-Append plus **Pop First** is a queue (first in, first out). Append plus Pop Last is a stack.
+Push Back plus **Pop Front** is a queue (first in, first out). Push Back plus Pop Back is a stack.
 
 **7. A leaderboard's top ten.**
 
 ```
 On score submitted
-  -> Append  score  to  scores
+  -> Push Back  score  to  scores
   -> Sort Array  scores
   -> Reverse Array  scores
   -> Set Top Ten to  Slice (scores, 0, 10)
@@ -348,7 +348,7 @@ if objectives.all(func(x): return x.complete):
 
 ```
 For Each Line In Text  FileAccess.get_file_as_string("res://data/names.txt")
-  -> Append  line  to  name_pool
+  -> Push Back  line  to  name_pool
 ```
 
 ```gdscript
@@ -363,7 +363,7 @@ return - the bug that makes a hand-rolled split fail only on one person's machin
 
 ```
 For Each Part In Text  card.tags  split by  ","
-  -> Append  part  to  active_tags
+  -> Push Back  part  to  active_tags
 ```
 
 ```gdscript
@@ -378,7 +378,7 @@ Each piece arrives trimmed and empty pieces are skipped, so `"sword; shield;; bo
 ```
 On Ready
   For Each Resource In Folder  "res://data/items"
-    -> Append  entry  to  all_items
+    -> Push Back  entry  to  all_items
 ```
 
 ```gdscript
@@ -505,7 +505,7 @@ grid.fill(0)
 
 ### Other use cases
 
-**A recently-played list capped at five.** Push To Front the new entry, then Resize Array to 5 - the
+**A recently-played list capped at five.** Push Front the new entry, then Resize Array to 5 - the
 oldest falls off the end with no index arithmetic at all.
 
 **Damage numbers pooled by index.** Fill Array with nulls at startup, then Index Of a null to find the
@@ -526,7 +526,7 @@ label, and Join To Text producing one credits line.
   **Deep Copy** whenever the items are themselves lists or records.
 - **Sort Array is ascending and in place.** It changes the variable and returns nothing. Reverse Array
   after it for descending; Copy Array first if you need the original order too.
-- **Pop Last and Pop First on an empty list.** They are expressions that also mutate, and popping an empty
+- **Pop Back and Pop Front on an empty list.** They are expressions that also mutate, and popping an empty
   list gives nothing back. Guard with **Array Is Empty** first.
 - **Value At is not bounds-checked.** An index past the end errors at runtime. Compare against **Array
   Size** first, or use First Item / Last Item where those are what you meant.

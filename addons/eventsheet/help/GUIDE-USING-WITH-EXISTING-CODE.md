@@ -405,6 +405,40 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   with the lambda's body as its rows, and the connect line keeps a muted `connects Timer On Timeout`
   note. One-line `if c: stmt` / `if c: return` / `else: stmt` lift as the same sub-events their
   indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
+- **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner
+  writes input in Godot: `if Input.is_action_just_pressed("jump"):` inside `_process`. In an event
+  sheet the same thing is a top-level trigger, so the row reads `⌨  Keyboard ▸ On "jump" pressed`
+  with the block's body as its actions, and the `Every tick` words go away - the poll already says
+  when the event runs. Only the EDGE polls count: a held `Input.is_action_pressed("hold")` is a
+  check every tick, so its handler keeps `Every tick (physics)` with the check under it.
+- **Numbers read the way a person writes them.** `300.0` reads `300`, `0.50` reads `0.5`,
+  `1_000_000` reads `1,000,000`, `1e3` reads `1000`, and the constants a reader recognises are named
+  (`1.5707963` reads `π/2`; `τ`, `√2` and `√3` likewise, from a spelling long enough to mean them -
+  `3.14` stays `3.14`). A 0..1 setting the project marked `@export_range(0, 1)` reads as a
+  percentage (`Set opacity to 50%`). A reading only: the literal in the file never moves, and the
+  params dialog still puts the author's own GDScript in front of you.
+- **Lists, tables and text in the sheet's own verbs.** `items.append(x)` reads `Push back x to
+  items`, and `push_front` / `pop_back` / `insert` / `remove_at` / `erase` / `clear` / `sort` /
+  `shuffle` / `reverse` read as `Push front`, `Pop back of`, `Insert x at 2 in`, `Delete at 0 in`,
+  `Delete value x from`, `Clear`, `Sort`, `Shuffle` and `Reverse` - the same rows the List module
+  ships, word for word. `inventory.erase("potion")` on a declared `Dictionary` reads `Delete key
+  "potion" from inventory`, and `label += "!"` reads `Append "!" to label` rather than as
+  arithmetic, because adding to text puts it on the end.
+- **Deferred work says the delay out loud.** `call_deferred("reset")` reads `Call Reset (at end of
+  frame)`, `set_deferred("visible", true)` reads `Set visible to true (at end of frame)`, and
+  `reset.call_deferred()` reads the same - the words `queue_free()` already reads in. A handler the
+  file wired with `connect(_on_beat_timeout, CONNECT_ONE_SHOT)` opens as its trigger event with a
+  `Trigger once` chip beside it, and the connect line is re-emitted verbatim, flags and all.
+- **Physics layers and input actions by their PROJECT names.** `set_collision_layer_value(2, true)`
+  reads `Set collision with layer "Enemies" on` and `collision_layer = 5` reads `Set collision
+  layers to "World", "Player"`, from the names Project Settings holds; a layer the project never
+  named keeps its number. The DEVICE an action is bound to picks its object too, so an action bound
+  only to mouse buttons reads under `Mouse` and one bound only to a pad under `Gamepad`.
+- **Enum values in the sheet's words.** A number written where an engine enum is expected reads as
+  the member it names - `process_mode = 3` reads `Set process mode to Always`, `texture_filter = 1`
+  reads `Set texture filter to Nearest`, `horizontal_alignment = 1` reads `Set horizontal alignment
+  to Center` - and so does a number written into a variable the sheet declared with one of its own
+  enums (`dir = 2` reads `Set dir to DOWN`). The number is still one hover away.
 - **A big file never freezes the editor.** The raw sheet paints within a frame under a progress strip
   (`Opening event_sheet_dock.gd - lifting functions 212 of 458 - 6.1 s`, a bar, and **Show as code
   instead**); the lift runs behind it, and the strip goes away when the last function lands.

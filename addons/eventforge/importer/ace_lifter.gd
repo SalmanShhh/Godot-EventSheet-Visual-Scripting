@@ -1396,8 +1396,13 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 ## and rewriting a hand-written `$Hurtbox` connect as `get_node("Hurtbox")` would fail it.
 static func _parse_connect_line(line: String) -> Dictionary:
 	var source_pattern: String = "(?:(get_node\\(\"[^\"]+\"\\)|\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_]*)\\.)?"
-	var member_regex: RegEx = RegEx.create_from_string("^\\t+" + source_pattern + "([A-Za-z_][A-Za-z0-9_]*)\\.connect\\(([A-Za-z_][A-Za-z0-9_]*)\\)$")
-	var string_regex: RegEx = RegEx.create_from_string("^\\t+" + source_pattern + "connect\\(\"([A-Za-z_][A-Za-z0-9_]*)\", *([A-Za-z_][A-Za-z0-9_]*)\\)$")
+	# Q7. The optional trailing CONNECT_* flags. Godot's own one-shot spelling is a second argument, and
+	# a handler wired with it is still exactly this shape - refusing the line only stranded the whole
+	# handler as a code block. The line rides along VERBATIM as before, so emission reproduces the
+	# flags without the compiler ever having to understand them.
+	var flags_pattern: String = "(?:, *((?:Object\\.)?CONNECT_[A-Z_]+(?: *\\| *(?:Object\\.)?CONNECT_[A-Z_]+)*))?"
+	var member_regex: RegEx = RegEx.create_from_string("^\\t+" + source_pattern + "([A-Za-z_][A-Za-z0-9_]*)\\.connect\\(([A-Za-z_][A-Za-z0-9_]*)" + flags_pattern + "\\)$")
+	var string_regex: RegEx = RegEx.create_from_string("^\\t+" + source_pattern + "connect\\(\"([A-Za-z_][A-Za-z0-9_]*)\", *([A-Za-z_][A-Za-z0-9_]*)" + flags_pattern + "\\)$")
 	var line_match: RegExMatch = member_regex.search(line)
 	if line_match == null:
 		line_match = string_regex.search(line)
@@ -1412,6 +1417,7 @@ static func _parse_connect_line(line: String) -> Dictionary:
 		"handler": line_match.get_string(3),
 		"signal": line_match.get_string(2),
 		"source": source,
+		"flags": line_match.get_string(4),
 		"line": line,
 	}
 

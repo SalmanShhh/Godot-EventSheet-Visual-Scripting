@@ -27,9 +27,9 @@ Every list verb starts with the same first field, **Array**, and its dropdown on
 ```
 On Ready
   -> Set Variable   scores = []
-  -> Append         "scores", 10
-  -> Append         "scores", 25
-  -> Append         "scores", 7
+  -> Push Back      "scores", 10
+  -> Push Back      "scores", 25
+  -> Push Back      "scores", 7
 ```
 
 ---
@@ -130,11 +130,11 @@ Every name is exactly what appears in the picker. The first parameter is always 
 
 | Action | Parameters | What it does |
 | --- | --- | --- |
-| **Append** | `value` | Adds a value to the end. |
-| **Push To Front** | `value` | Adds a value to the start. |
+| **Push Back** | `value` | Adds a value to the end. |
+| **Push Front** | `value` | Adds a value to the start. |
 | **Insert At** | `index`, `value` | Inserts a value at a position. |
-| **Remove At** | `index` | Removes whatever is at a position. |
-| **Erase Value** | `value` | Removes the first element equal to this value. |
+| **Delete At** | `index` | Removes whatever is at a position. |
+| **Delete Value** | `value` | Removes the first element equal to this value. |
 | **Clear Array** | (none) | Empties the list. |
 | **Sort Array** | (none) | Sorts in place, ascending. |
 | **Shuffle Array** | (none) | Randomises the order in place. |
@@ -164,7 +164,7 @@ Every name is exactly what appears in the picker. The first parameter is always 
 | **Pick Random** | (none) | A random element. |
 | **Index Of** | `value` | The position of the first match, or -1. |
 | **Count Of** | `value` | How many elements equal this value. |
-| **Pop Last** / **Pop First** | (none) | Removes AND returns the last / first element. |
+| **Pop Back** / **Pop Front** | (none) | Removes AND returns the last / first element. |
 | **Slice** | `from`, `to` | A new list with the elements in that range. |
 | **Copy Array** | (none) | A duplicate of the list. |
 | **Join To Text** | `separator` | The elements joined into one string. |
@@ -236,7 +236,7 @@ On shop opened
 ```
 On use next item
   Array Is Empty  "bag"  is false
-    -> Set Variable  item = Pop First("bag")
+    -> Set Variable  item = Pop Front("bag")
     -> Use item      item
 ```
 
@@ -271,7 +271,7 @@ On merge loot
   -> Set Variable  unique = []
   For Each  "incoming"
     Contains  "unique", item  is false
-      -> Append  "unique", item
+      -> Push Back  "unique", item
 ```
 
 ### 13. Everything within range
@@ -294,7 +294,7 @@ On save loaded
 
 ```
 On waypoint reached
-  -> Append    "route", Pop First("route")
+  -> Push Back "route", Pop Front("route")
   -> Move to   First Item("route")
 ```
 
@@ -315,8 +315,8 @@ Renaming the element to `enemy` keeps your `threat_floor` variable readable insi
 - **The element is named by a field, defaulting to `x`.** If your sheet already has a variable called `x`, rename the element - otherwise the element shadows your variable silently, with no warning from GDScript.
 - **An empty list answers Any Match with false and All Match with true.** "All of nothing passes" is standard, and it is usually what you want, but pair All Match with an `Array Is Empty` check when an empty list should not count as success.
 - **Reduce always needs a Starting value.** It is the accumulator before the first element: `0` to sum, `1` to multiply, `[]` to build a list, `-INF` to find a maximum over possibly-negative numbers.
-- **Pop Last / Pop First remove as well as return.** Reading one twice gives you two different elements. Use First Item / Last Item when you only want to look.
-- **Assign converts, Append does not.** Pushing a float into an `Array[int]` is an error; **Assign (Type-Converting)** converts as it copies. A value that cannot convert leaves the destination empty and pushes an error.
+- **Pop Back / Pop Front remove as well as return.** Reading one twice gives you two different elements. Use First Item / Last Item when you only want to look.
+- **Assign converts, Push Back does not.** Pushing a float into an `Array[int]` is an error; **Assign (Type-Converting)** converts as it copies. A value that cannot convert leaves the destination empty and pushes an error.
 - **Index Of returns -1 when the value is absent**, so test `>= 0` rather than truthiness (`-1` is not falsy).
 - **Sort Array sorts in place and returns nothing.** Sort first, then read - do not expect a sorted copy back from it. Use Copy Array first when you need to keep the original order.
 - **A typed list still satisfies a plain `Array` field**, so every verb here works on `Array[int]` exactly as it does on `Array`.

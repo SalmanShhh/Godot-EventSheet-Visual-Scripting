@@ -696,7 +696,7 @@ a minesweeper, six for a hex strategy board.
 ```
 Loops: For Each  ( Neighbours Of Cell ( start_cell, 4 sides ) )
   Math: Is Cell In Bounds  ( item, board_size )
-    -> Collections: Append  item  to  frontier
+    -> Collections: Push Back  item  to  frontier
 ```
 
 **36. A laser's tile path.**

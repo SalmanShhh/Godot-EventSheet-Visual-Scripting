@@ -39,12 +39,23 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# every object label (so `play` can tell an animation from a sound). Both are plain walks of the
 	# sheet, cached with the rest of the context.
 	var enums: Dictionary = enum_member_map(sheet)
+	# ── Q5 / Q6 / Q11 lens hook ────────────────────────────────────────────────────────────────
+	# What the sheet's own DECLARATIONS say about a value's kind: the type of each variable (so
+	# `inventory.erase(k)` can say "key" where `items.erase(v)` says "value"), the variables typed
+	# with one of the sheet's enums plus each enum's numbering (so `dir = 2` reads LEFT), and the
+	# 0..1 settings the project marked as fractions (so `0.5` reads 50%). All plain walks of the
+	# sheet, cached with the rest of the context.
+	var declared: Dictionary = declared_type_map(sheet)
 	return {
 		"script_object": script_object_name(sheet),
 		"engine_properties": engine_property_set(sheet),
 		"signal_params": signal_parameter_map(sheet),
 		"enum_members": enums.get("members", {}),
 		"enum_names": enums.get("names", {}),
+		"enum_values": enums.get("values", {}),
+		"variable_types": declared.get("types", {}),
+		"variable_enum_types": declared.get("enum_types", {}),
+		"percent_members": declared.get("percent_members", {}),
 		"object_classes": object_class_map(sheet),
 		"self_class": sheet.host_class.strip_edges(),
 		# ── P9 ────────────────────────────────────────────────────────────────────────────────
@@ -67,27 +78,84 @@ static func is_scene_root_script(sheet: EventSheetResource) -> bool:
 	return not ViewportRowBuilder.scene_using_script(source_path).is_empty()
 
 
+## Q5/Q6/Q11. What the sheet's variable declarations say about their values, as three maps:
+##
+##   "types"           {name: declared type word}     - "Array", "Dictionary", "String", "Direction"
+##   "enum_types"      {name: enum name}              - only the ones typed with an enum THIS sheet declares
+##   "percent_members" {name: true}                   - the ones an `@export_range(0, 1)` marked as a fraction
+##
+## Nothing is guessed: a variable with no declared type appears in none of them, and the readings
+## that depend on these fall back to the plain words they already had.
+static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
+	var types: Dictionary = {}
+	var enum_types: Dictionary = {}
+	var percent_members: Dictionary = {}
+	if sheet == null:
+		return {"types": types, "enum_types": enum_types, "percent_members": percent_members}
+	var enum_names: Dictionary = (enum_member_map(sheet).get("names", {}) as Dictionary)
+	for entry: Variant in sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable == null or variable.name.strip_edges().is_empty():
+			continue
+		var declared_type: String = variable.type_name.strip_edges()
+		if not declared_type.is_empty() and declared_type != "Variant":
+			types[variable.name] = declared_type
+			if enum_names.has(declared_type):
+				enum_types[variable.name] = declared_type
+		if _is_fraction_range(variable.export_hint):
+			percent_members[variable.name] = true
+	return {"types": types, "enum_types": enum_types, "percent_members": percent_members}
+
+
+## Q5. True when an export hint says the value runs from 0 to 1 - the range the engine itself treats
+## as a fraction (alpha, volume, a blend weight), and the one an event sheet shows as a percentage.
+## Matched on the two numbers only, so `@export_range(0, 1, 0.01)` and `@export_range(0.0, 1.0)` both
+## count and `@export_range(0, 100)` does not.
+static func _is_fraction_range(export_hint: String) -> bool:
+	var text: String = export_hint.strip_edges()
+	if not text.begins_with("@export_range(") or not text.ends_with(")"):
+		return false
+	var parts: PackedStringArray = text.substr(14, text.length() - 15).split(",", false)
+	if parts.size() < 2:
+		return false
+	return parts[0].strip_edges().to_float() == 0.0 and parts[1].strip_edges().to_float() == 1.0
+
+
 ## M38. The sheet's enums, as {"names": {EnumName: true}, "members": {MEMBER: how many enums declare
 ## it}}. The count is what decides whether a member may drop its enum name: `State.PATROL` reads
 ## `PATROL` only while no other enum on the sheet has a `PATROL` of its own.
+## Q11 added a third map, "values": {EnumName: {number: MEMBER}}, so a number written into a variable
+## typed with one of these enums can read as the member it names. GDScript's own numbering rule is
+## followed exactly - members count up from 0 and an explicit `= n` restarts the count at n.
 static func enum_member_map(sheet: EventSheetResource) -> Dictionary:
 	var names: Dictionary = {}
 	var members: Dictionary = {}
+	var values: Dictionary = {}
 	if sheet == null:
-		return {"names": names, "members": members}
+		return {"names": names, "members": members, "values": values}
 	for entry: Variant in sheet.events:
 		var enum_row: EnumRow = entry as EnumRow
 		if enum_row == null or enum_row.enum_name.strip_edges().is_empty():
 			continue
 		names[enum_row.enum_name.strip_edges()] = true
+		var numbered: Dictionary = {}
+		var next_value: int = 0
 		for value: String in enum_row.members:
 			# A value may carry its number ("PATROL = 0"); the NAME is its head.
 			var member: String = value.strip_edges()
 			if member.contains("="):
+				var written: String = member.substr(member.find("=") + 1).strip_edges()
 				member = member.substr(0, member.find("=")).strip_edges()
-			if not member.is_empty():
-				members[member] = int(members.get(member, 0)) + 1
-	return {"names": names, "members": members}
+				if written.is_valid_int():
+					next_value = written.to_int()
+			if member.is_empty():
+				continue
+			members[member] = int(members.get(member, 0)) + 1
+			if not numbered.has(next_value):
+				numbered[next_value] = member
+			next_value += 1
+		values[enum_row.enum_name.strip_edges()] = numbered
+	return {"names": names, "members": members, "values": values}
 
 
 ## M25. The name a script's own object goes by: its `class_name` first, then the class it extends -

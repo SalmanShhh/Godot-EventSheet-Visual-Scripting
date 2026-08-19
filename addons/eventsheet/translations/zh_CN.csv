@@ -2001,3 +2001,21 @@ On close,关闭时
 On paused,暂停时
 On unpaused,取消暂停时
 On notification,通知时
+Push back {value} to {name},将 {value} 追加到 {name} 末尾
+Push front {value} to {name},将 {value} 插入 {name} 开头
+Pop back of {name},取出 {name} 的最后一项
+Pop front of {name},取出 {name} 的第一项
+Clear {name},清空 {name}
+Sort {name},排序 {name}
+Shuffle {name},打乱 {name}
+Reverse {name},反转 {name}
+Insert {value} at {index} in {name},在 {name} 的 {index} 处插入 {value}
+Delete at {index} in {name},删除 {name} 的 {index} 处
+Delete value {value} from {name},从 {name} 删除值 {value}
+Delete key {value} from {name},从 {name} 删除键 {value}
+Append {value} to {name},将 {value} 追加到 {name}
+Call {name} (at end of frame),调用 {name}（帧结束时）
+Set {name} to {value} (at end of frame),将 {name} 设为 {value}（帧结束时）
+Set collision layers to {layers},将碰撞层设为 {layers}
+Set collides with {layers},与 {layers} 碰撞
+Trigger once,仅触发一次

@@ -425,7 +425,7 @@ On lever pulled
   -> LootBox: Roll Times  "reel", 3
 
 On Roll Result
-  -> Append LootBox.Roll Item() to symbols
+  -> Push Back LootBox.Roll Item() to symbols
 
 On Roll Complete
   [ if symbols[0] == symbols[1] and symbols[1] == symbols[2] ]
@@ -449,7 +449,7 @@ On shop opened
   -> LootBox: Roll Times  "merchant_stock", 5
 
 On Roll Result
-  -> Append LootBox.Roll Item() to stock
+  -> Push Back LootBox.Roll Item() to stock
 
 On Roll Complete
   -> Display shop shelves from stock
