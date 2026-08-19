@@ -25,6 +25,41 @@
   that script as its own editable sheet. One script is read per frame behind the progress strip, so a
   big scene never freezes the editor.
 
+### Added - the Input Map is an object, and the controls vocabulary the sheet was missing
+
+The project-wide Input Map is the thing every input row is really about, and until now it was
+invisible from a sheet: to find out what "jump" was bound to you left the sheet and opened Project
+Settings. It is read now, in the sheet's own spelling, and the vocabulary around it grew the
+sentences a controls screen, a gamepad and a phone need.
+
+- **The Input Map, read.** Every action the project declares, with its bindings as the sheet spells
+  them (`Space`, `A button`, `Left stick`, `Left mouse button`), its deadzone as a percent the way
+  the Gamepad object shows its Analog deadzone, and which object its rows read on (keys are the
+  Keyboard's, buttons the Mouse's, sticks the Gamepad's, fingers the Touch object's). The engine's
+  own `ui_text_*` defaults are left out, because a list led by them buries the four actions a game is
+  actually about. Nothing is written on a read.
+- **Gamepads by number.** `p2_jump` and `jump_2` both read as `jump` on gamepad 1 - the two
+  conventions a local-multiplayer project uses, so those rows stop reading as four unrelated names.
+- **Analog in the Gamepad object's words.** `Compare axis Left analog X of gamepad 0 > 20` and its
+  either-way twin, `Is button down <control> (exact match)`, and the `axis of gamepad` /
+  `how hard <control> is held` expressions, all on the -100 to 100 and 0 to 100 scales the Gamepad
+  object has always shown (Godot counts the same travel from -1 to 1).
+- **Gamepads, touch and gestures.** `On gamepad 0 button A pressed` / `released` with the device
+  index read as the gamepad number, `Has gamepads`, `Vibrate gamepad 0 for 0.2 seconds`, and the
+  Touch object's `On drag` / `On pinch` / `On pan` with their `touch index`, `pinch factor` and
+  `pan delta` payloads, plus `Mouse ▸ On double-click`.
+- **Rebinding, one action per row.** `Wait for the next key or button into ev`,
+  `Clear the bindings of jump`, `Bind jump to ev`, `name of ev`, `Reset all bindings to the
+  project's`, `Has action dash`, `Set deadzone of steer to v`, and `Save bindings` / `Load bindings`
+  writing a plain settings file under `user://` the way Remember Between Runs does.
+- **Simulated input and the pointer.** `Simulate control jump pressed` / `released` (how an AI, a
+  replay or a tutorial drives the same code the player does), `Simulate input ev`,
+  `Stop this input here`, `key is a held-down repeat`, `Request pointer lock`,
+  `Set cursor visible` / `invisible`, `Keep cursor inside the window` and `Move cursor to`.
+- **Handheld sensors.** `acceleration`, `gravity`, `rotation rate` and `magnetic field` on the Touch
+  object, and `Compare acceleration X > 5` for tilt. They report 0 on desktop, and every one of them
+  says so.
+
 ### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words
 
 Four more families of everyday GDScript read as the rows they are. Display only: the file is

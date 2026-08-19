@@ -2637,6 +2637,55 @@ Console vocabulary (browser/console-style logging).
 #### Expressions
 - **To Text** (`value: String`) - Turns any value (numbers, vectors, arrays…) into readable text for a log message.
 
+### Controls (`res://addons/eventforge/registration/modules/controls_aces.gd`)
+Controls (R23-R29): analog, gamepads by number, touch and gestures,
+
+#### Conditions
+- **Compare Axis** (`axis: String, device: String, comparison: String, value: String`) - How far a stick or trigger is pushed, on the -100 to 100 scale the Gamepad object shows.
+- **Compare Axis (either way)** (`axis: String, device: String, comparison: String, value: String`) - The same check ignoring which way the stick went - pushed this far in either direction.
+- **Is Button Down** (`action: String`) - True while the control is held, counting only a binding that matches exactly - the way a menu tells one stick direction from another.
+- **On Gamepad Button Pressed** (`device: String, button: String`) - True the moment a named gamepad's button goes down, used inside an input event - the local-multiplayer check.
+- **On Gamepad Button Released** (`device: String, button: String`) - True the moment a named gamepad's button is let go, used inside an input event.
+- **Has Gamepads** - True while at least one gamepad is plugged in - switch the control hints, offer the join screen.
+- **On Drag** - True while a finger is moving across the screen, used inside an input event.
+- **On Pinch** - True on a two-finger pinch or spread, used inside an input event - zoom the map.
+- **On Pan** - True on a two-finger pan (or a trackpad scroll), used inside an input event.
+- **On Double-Click** - True on the second click of a double-click, used inside an input event - open the item, rename the file.
+- **Has Action** (`action: String`) - True when the Input Map knows this control - guard a row that names one the project might not have.
+- **Key Is A Held-Down Repeat** - True when this key event is the operating system repeating a held key rather than a fresh press.
+- **Compare Acceleration** (`sensor_axis: String, comparison: String, value: String`) - Tilt as a condition - X above zero is tilted to the right, Y is tilted forward. Reports 0 on desktop.
+
+#### Actions
+- **Vibrate Gamepad For** (`device: String, weak: String, strong: String, seconds: String`) - Rumbles one numbered gamepad for a moment - the sheet's phrasing for the thing every hit and every pickup wants.
+- **Wait For The Next Key Or Button** (`name: String`) - Pauses this event until the player presses anything, and remembers what it was - the first step of every rebind screen.
+- **Clear The Bindings Of** (`action: String`) - Takes every key and button off a control, so the next Bind is the only one left.
+- **Bind Control To** (`action: String, event: String`) - Binds a key or a button to a control - the second step of a rebind screen.
+- **Reset All Bindings** - Throws away every rebind and puts the project's own Input Map back - the Reset button.
+- **Set Deadzone Of** (`action: String, deadzone: String`) - How far a stick must move before the control counts - the drift slider a controller options screen needs.
+- **Save Bindings** (`path: String`) - Writes every control's bindings to a plain settings file under user://, so a rebind survives a restart.
+- **Load Bindings** (`path: String`) - Puts saved bindings back on start-up. Does nothing when there is no saved file, so a first run keeps the project's own.
+- **Simulate Control Pressed** (`action: String`) - Presses a control as though the player had - how an AI, a replay or a tutorial drives the same code the player does.
+- **Simulate Control Released** (`action: String`) - Lets go of a control that Simulate Control Pressed is holding.
+- **Simulate Input** (`event: String`) - Feeds a whole key, button or touch into the game as if it had just happened.
+- **Stop This Input Here** (`target: String`) - Nothing after this event sees the key or the click - the click was for this and nothing else.
+- **Request Pointer Lock** - Hides the cursor and locks it to the window, so mouse motion drives looking around.
+- **Set Cursor Visible** - Gives the cursor back - pause menus, dialogs, quitting to the map.
+- **Set Cursor Invisible** - Hides the cursor while leaving it free to move - a game that draws its own crosshair.
+- **Keep Cursor Inside The Window** - The cursor stays visible but cannot leave the window - strategy games on two monitors.
+- **Move Cursor To** (`position: String`) - Teleports the pointer - snap it to a menu item, re-centre it after a cutscene.
+
+#### Expressions
+- **Axis Of Gamepad** (`device: String, axis: String`) - How far a stick is pushed, -100 to 100 (Godot counts the same travel from -1 to 1).
+- **Button Of Gamepad** (`action: String`) - How hard a trigger or a control is held, 0 to 100 (Godot counts the same pull from 0 to 1).
+- **Touch Index** - Which finger this touch event is about, counting from 0 - multi-touch controls tell them apart by it.
+- **Pinch Factor** - How much the pinch grew or shrank this event - multiply the zoom by it.
+- **Pan Delta** - How far the two-finger pan moved this event, as a Vector2.
+- **Key Name** (`event: String`) - The readable name of a key or button ("Space", "A button") - show it next to each row of a rebind screen.
+- **Acceleration** - How the device is being moved right now, gravity included, as x, y, z. Reports 0 on desktop.
+- **Gravity Direction** - Which way is down for the device, as x, y, z - how it is being held. Reports 0 on desktop.
+- **Rotation Rate** - How fast the device is being turned, as x, y, z (the gyroscope). Reports 0 on desktop.
+- **Magnetic Field** - The magnetic field around the device, as x, y, z (the compass). Reports 0 on desktop.
+
 ### Core (`res://addons/eventforge/registration/modules/core_aces.gd`)
 Core vocabulary (the Phase-1 surface, fully migrated).
 
