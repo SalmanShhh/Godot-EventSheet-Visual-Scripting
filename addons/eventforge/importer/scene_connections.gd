@@ -33,6 +33,13 @@ static var _cache: Dictionary = {}
 static var _scene_paths: PackedStringArray = PackedStringArray()
 static var _scene_paths_scanned: bool = false
 
+## P4. The ONE scene a read is about, while a whole scene is being opened as a sheet. Inside a scene
+## view the question is a different one: not "what does this script's own scene say about it" but
+## "what does THIS scene wire to this script", and the script may sit on any node rather than only on
+## the root. Empty the rest of the time, which is every ordinary open - so a script opened on its own
+## gets exactly the answer it always got.
+static var scene_scope: String = ""
+
 
 ## The scene-wired signal handlers of one script, keyed by handler function name. Empty for a script no
 ## scene root uses, and for a project with no scenes at all.
@@ -40,15 +47,20 @@ static func for_script(script_path: String) -> Dictionary:
 	var path: String = script_path.strip_edges()
 	if path.is_empty() or not path.begins_with("res://"):
 		return {}
-	if _cache.has(path):
-		return _cache[path]
+	var key: String = "%s|%s" % [scene_scope, path]
+	if _cache.has(key):
+		return _cache[key]
+	if not scene_scope.is_empty():
+		var scoped: Dictionary = _connections_in_scene(scene_scope, path)
+		_cache[key] = scoped
+		return scoped
 	var found: Dictionary = {}
 	for scene_path: String in _all_scene_paths():
 		var text: String = FileAccess.get_file_as_string(scene_path)
 		if text.is_empty() or not text.contains(path):
 			continue
 		found.merge(_connections_of(scene_path, text, path), true)
-	_cache[path] = found
+	_cache[key] = found
 	return found
 
 
@@ -119,6 +131,86 @@ static func _connections_of(scene_path: String, text: String, script_path: Strin
 			"source": source,
 			"source_class": str(node_classes.get(source, "")) if not source.is_empty() else "",
 			# No connect line exists in the script, and none may be emitted into it.
+			"line": "",
+			"scene": true,
+			"scene_path": scene_path,
+		}
+	return connections
+
+
+## P4. Every node of one scene, in the order the scene file writes them (which is tree order), as
+## [{name, path, type, script_path}]. The scene view is built from this, and so is the scoped
+## connection read below - both need to know which node carries which script.
+static func nodes_of_scene(scene_path: String) -> Array:
+	var nodes: Array = []
+	var text: String = FileAccess.get_file_as_string(scene_path)
+	if text.is_empty():
+		return nodes
+	var resource_paths: Dictionary = {}
+	var lines: PackedStringArray = text.split("\n")
+	for line: String in lines:
+		if line.begins_with("[ext_resource "):
+			resource_paths[_attribute(line, "id")] = _attribute(line, "path")
+	var current: Dictionary = {}
+	for line: String in lines:
+		if line.begins_with("[node "):
+			var node_name: String = _attribute(line, "name")
+			if node_name.is_empty():
+				current = {}
+				continue
+			var parent: String = _attribute(line, "parent")
+			var node_path: String = "."
+			if not parent.is_empty():
+				node_path = node_name if parent == "." else "%s/%s" % [parent, node_name]
+			current = {
+				"name": node_name,
+				"path": node_path,
+				"type": _attribute(line, "type"),
+				"script_path": ""
+			}
+			nodes.append(current)
+			continue
+		if current.is_empty() or not line.begins_with("script = ExtResource("):
+			continue
+		current["script_path"] = str(resource_paths.get(line.get_slice("\"", 1), ""))
+	return nodes
+
+
+## P4. The connections ONE scene wires to ONE script, wherever in the scene that script sits. Same
+## shape as the root-only read above, and the same rule about the file: the connect line lives in the
+## .tscn, so nothing is claimed for emission and nothing is ever written back.
+static func _connections_in_scene(scene_path: String, script_path: String) -> Dictionary:
+	var connections: Dictionary = {}
+	var nodes: Array = nodes_of_scene(scene_path)
+	if nodes.is_empty():
+		return connections
+	var targets: Dictionary = {}
+	var types: Dictionary = {}
+	for entry: Variant in nodes:
+		var node: Dictionary = entry
+		types[str(node.get("path", ""))] = str(node.get("type", ""))
+		if str(node.get("script_path", "")) == script_path:
+			targets[str(node.get("path", ""))] = str(node.get("name", ""))
+	if targets.is_empty():
+		return connections
+	for line: String in FileAccess.get_file_as_string(scene_path).split("\n"):
+		if not line.begins_with("[connection "):
+			continue
+		var to_path: String = _attribute(line, "to")
+		if not targets.has(to_path):
+			continue
+		var handler: String = _attribute(line, "method")
+		var signal_name: String = _attribute(line, "signal")
+		if handler.is_empty() or signal_name.is_empty():
+			continue
+		var from_path: String = _attribute(line, "from")
+		# A node emitting its own signal has no separate source object to name.
+		var source: String = "" if from_path == to_path or from_path == "." else from_path.get_file()
+		connections[handler] = {
+			"handler": handler,
+			"signal": signal_name,
+			"source": source,
+			"source_class": str(types.get(from_path, "")) if not source.is_empty() else "",
 			"line": "",
 			"scene": true,
 			"scene_path": scene_path,

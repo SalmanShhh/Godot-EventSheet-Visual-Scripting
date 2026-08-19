@@ -790,6 +790,50 @@ func _autoload_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	return spans
 
 
+## P4 - the scene's own bar, at the top of a scene view: `⇥ Level1.tscn  a  Node2D  4 scripts`. Inert
+## (there is nothing to edit on it) and wearing the same accent band a script's Include bar wears,
+## because it is the same kind of thing one level up: the identity of what you are reading.
+func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = 0
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "scene_bar_%d" % sheet.get_instance_id()
+	row_data.height_scale = 1.5
+	var accent: Color = _viewport._get_event_style().behavior_accent_color
+	row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.22)
+	var root_type: String = EventSheetSceneSheet.root_type_of(sheet)
+	var badge_meta: Dictionary = {
+		"editable": false,
+		"badge": true,
+		"badge_style": "trigger",
+		"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
+		"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
+		"kind": "pack_include",
+		"line_index": 0
+	}
+	var root_icon: Texture2D = ACEPickerDialog.editor_icon(root_type) if not root_type.is_empty() else null
+	if root_icon != null:
+		badge_meta["badge_icon"] = root_icon
+	var spans: Array[SemanticSpan] = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, badge_meta)]
+	spans.append(_make_span(EventSheetSceneSheet.scene_path_of(sheet).get_file(), SemanticSpan.SpanType.OBJECT, {
+		"editable": false, "kind": "pack_include", "line_index": 0,
+		"text_color": _viewport._get_event_style().object_label_color
+	}))
+	if not root_type.is_empty():
+		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE, {
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+		}))
+		spans.append(_pack_include_chip(root_type))
+	var scripts: int = EventSheetSceneSheet.members_of(sheet).size()
+	spans.append(_make_span(EventSheetL10n.translate("{n} scripts").replace("{n}", str(scripts)),
+		SemanticSpan.SpanType.COMMENT, {
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+		}))
+	row_data.spans = spans
+	return row_data
+
+
 ## "Addon Pack" is a CLAIM, so only a file that actually is one makes it: a declared @ace_version, or a
 ## script living in the addon folder. Any other opened .gd is somebody's game script, and calling it a
 ## pack would teach a beginner the wrong word for what they are looking at.
@@ -809,6 +853,12 @@ static func is_addon_pack(sheet: EventSheetResource) -> bool:
 func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var source_path: String = str(sheet.external_source_path)
+	# P4 - inside a scene view this bar is the OBJECT bar of the node carrying the script, so it says
+	# what the scene tree says ("HUD a CanvasLayer") and skips the scene receipt: the whole sheet is
+	# that one scene already. Double-click opens the script as its own sheet.
+	var object_bar: Dictionary = EventSheetSceneSheet.object_bar_of(sheet)
+	if not object_bar.is_empty():
+		return _scene_object_bar_spans(object_bar, event_style)
 	var scene: Dictionary = scene_using_script(source_path) if not source_path.is_empty() else {}
 	var object_name: String = sheet.custom_class_name.strip_edges()
 	if object_name.is_empty():
@@ -846,6 +896,40 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 		spans.append(_make_span(" ".join(receipts), SemanticSpan.SpanType.COMMENT, {
 			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
 		}))
+	return spans
+
+
+## P4 - one node's object bar inside a scene view: the node's own name, the class it is, the file its
+## script lives in, and "(x3)" when the same script sits on more than one node of this scene. Every
+## span carries the script path, so a double-click anywhere on the bar opens that file as its own
+## sheet - which is where editing happens, because a scene view never writes anything.
+func _scene_object_bar_spans(object_bar: Dictionary, event_style: EventSheetEventStyle) -> Array[SemanticSpan]:
+	var script_path: String = str(object_bar.get("script_path", ""))
+	var open_meta: Dictionary = {
+		"editable": false,
+		"kind": "scene_object_open",
+		"include_path": script_path,
+		"line_index": 0
+	}
+	var spans: Array[SemanticSpan] = []
+	spans.append(_make_span(str(object_bar.get("node", "")), SemanticSpan.SpanType.OBJECT,
+		open_meta.duplicate().merged({"text_color": event_style.object_label_color}, true)))
+	var node_type: String = str(object_bar.get("type", ""))
+	if not node_type.is_empty():
+		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE,
+			open_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true)))
+		spans.append(_make_span(node_type, SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+			"badge_fg": EventSheetPalette.COLOR_CHIP_FG
+		}, true)))
+	var receipt: String = "· %s" % script_path.get_file()
+	var instances: int = int(object_bar.get("instances", 1))
+	if instances > 1:
+		receipt += " (x%d)" % instances
+	spans.append(_make_span(receipt, SemanticSpan.SpanType.COMMENT,
+		open_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true)))
 	return spans
 
 
@@ -4275,6 +4359,10 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	# sub-events, because that is the order the file runs in.
 	for connect_row: EventRowData in _build_connect_lambda_rows(event_row, row_data.row_uid, indent + 1):
 		row_data.children.append(connect_row)
+	# P5 - a connect handed ANOTHER object's function is the same thought with the work already
+	# written elsewhere: the trigger on the left, the call it makes on the right.
+	for connect_call_row: EventRowData in _build_connect_call_rows(event_row, row_data.row_uid, indent + 1):
+		row_data.children.append(connect_call_row)
 	for child in event_row.sub_events:
 		var child_row: EventRowData = _viewport._build_row_from_resource(child, indent + 1)
 		if child_row != null:
@@ -6312,6 +6400,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			# below it as the trigger event it is. Nothing is hidden - the note names the object and
 			# the signal, and double-click still opens the exact GDScript.
 			var connect_parts: Dictionary = connect_lambda_parts(connect_statement_of(action_resource))
+			if connect_parts.is_empty():
+				# P5 - the wired-up call reads below as the trigger it is, so its line reads as the
+				# same muted note the lambda's line already keeps.
+				connect_parts = _connect_call_note(action_resource)
 			if not connect_parts.is_empty():
 				spans.append(_make_span(_connect_note_text(connect_parts), SemanticSpan.SpanType.VALUE, {
 					"lane": "action",
@@ -6688,6 +6780,9 @@ func _count_event_lines(event_row: EventRow) -> int:
 			var raw_code: String = (action_resource as RawCodeRow).code
 			if not connect_lambda_parts(connect_statement_of(action_resource)).is_empty():
 				action_count += 1
+			elif not _connect_call_note(action_resource).is_empty():
+				# P5 - the wired-up call's line is one muted note too, for the same reason.
+				action_count += 1
 			else:
 				action_count += maxi(raw_code.split("\n").size(), 1)
 		elif action_resource is CollectionDeclRow:
@@ -7039,6 +7134,242 @@ func _mark_connect_reading(row_data: EventRowData, event_row: EventRow, anchor: 
 	row_data.ternary_action_index = action_index
 	for child: EventRowData in row_data.children:
 		_mark_connect_reading(child, event_row, anchor, action_index)
+
+
+# ── P5: a signal wired to ANOTHER object's function reads as the trigger calling it ─────────────
+#
+# `$Button.pressed.connect(player.reset)` and `$Timer.timeout.connect(spawner.spawn_wave.bind(3))`
+# are the third way real code wires a signal, after a handler declared in this file and a lambda.
+# The handler is not in this file at all, so there is nothing to lift - and the rows the thought
+# deserves are ones the sheet already draws: the trigger event on the left, the call on the right,
+# the bound values as ordinary parameter chips.
+#
+# A reading, like its two siblings: the file keeps its one line, that line keeps its muted note, and
+# nothing here is ever emitted.
+
+
+## The GDScript a connect-to-a-callable action stands for, whichever shape the open lifted it into.
+## "" for a connect handed a lambda (that one reads as its own trigger with a body) and for a line
+## that is not a connect at all - the substring test first, because that is the common case.
+static func connect_call_statement_of(action_resource: Variant) -> String:
+	if action_resource is RawCodeRow:
+		var code: String = (action_resource as RawCodeRow).code
+		if not code.contains(".connect(") or code.contains(".connect(func("):
+			return ""
+		return code
+	if not (action_resource is ACEAction):
+		return ""
+	var action: ACEAction = action_resource as ACEAction
+	if action.ace_id != "CallMethod":
+		return ""
+	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	var method: String = str(params_dict.get("method", ""))
+	var arguments: String = str(params_dict.get("args", ""))
+	if not method.ends_with("connect") or arguments.begins_with("func("):
+		return ""
+	return "%s.%s(%s)" % [str(params_dict.get("target", "")), method, arguments]
+
+
+## Splits `$Timer.timeout.connect(spawner.spawn_wave.bind(3), CONNECT_ONE_SHOT)` into
+## {object, trigger, target, method, args, one_shot}. {} for anything else - including a connect
+## handed a bare function name of this file, which already reads as the trigger event it is where
+## that function is written.
+static func connect_call_parts(code: String) -> Dictionary:
+	var text: String = code.strip_edges()
+	if text.is_empty() or text.contains("\n"):
+		return {}
+	var marker: int = text.find(".connect(")
+	if marker <= 0:
+		return {}
+	var head: String = text.substr(0, marker)
+	var dot_at: int = head.rfind(".")
+	if dot_at <= 0:
+		return {}
+	var signal_bare: String = head.substr(dot_at + 1)
+	if not EventSheetSentence.is_identifier(signal_bare):
+		return {}
+	var object_word: String = _await_object_word(head.substr(0, dot_at))
+	if object_word.is_empty():
+		return {}
+	var open_at: int = marker + 8  # the "(" of `.connect(`
+	if _matching_paren(text, open_at) != text.length() - 1:
+		return {}
+	var arguments: PackedStringArray = split_top_level_arguments(
+		text.substr(open_at + 1, text.length() - open_at - 2))
+	if arguments.is_empty():
+		return {}
+	var callable_parts: Dictionary = connect_callable_parts(arguments[0])
+	if callable_parts.is_empty():
+		return {}
+	var one_shot: bool = false
+	for flag_index: int in range(1, arguments.size()):
+		if arguments[flag_index].contains("CONNECT_ONE_SHOT"):
+			one_shot = true
+	var collision_words: String = EventSheetViewportReadingRows.collision_trigger_words(signal_bare)
+	return {
+		"object": object_word,
+		"trigger": collision_words if not collision_words.is_empty() else "On %s" % signal_bare.capitalize(),
+		"target": str(callable_parts.get("target", "")),
+		"method": str(callable_parts.get("method", "")),
+		"args": callable_parts.get("args", PackedStringArray()),
+		"one_shot": one_shot
+	}
+
+
+## The callable handed to `connect`, as {target, method, args}: `player.reset`,
+## `spawner.spawn_wave.bind(3)` and `Callable(spawner, "spawn_wave").bind(3)` all answer the same
+## thing. {} for a lambda and for a bare name, which names a function of THIS file.
+static func connect_callable_parts(expression: String) -> Dictionary:
+	var text: String = expression.strip_edges()
+	if text.is_empty() or text.begins_with("func("):
+		return {}
+	var bound: PackedStringArray = PackedStringArray()
+	var bind_at: int = text.rfind(".bind(")
+	if bind_at > 0:
+		var bind_open: int = bind_at + 5
+		if _matching_paren(text, bind_open) != text.length() - 1:
+			return {}
+		bound = split_top_level_arguments(text.substr(bind_open + 1, text.length() - bind_open - 2))
+		text = text.substr(0, bind_at)
+	if text.begins_with("Callable(") and text.ends_with(")"):
+		var made: PackedStringArray = split_top_level_arguments(text.substr(9, text.length() - 10))
+		if made.size() != 2:
+			return {}
+		var quoted: String = made[1].strip_edges().trim_prefix("&")
+		if not (quoted.begins_with("\"") and quoted.ends_with("\"")):
+			return {}
+		var named: String = quoted.trim_prefix("\"").trim_suffix("\"")
+		var made_target: String = _await_object_word(made[0])
+		if made_target.is_empty() or not EventSheetSentence.is_identifier(named):
+			return {}
+		return {"target": made_target, "method": named, "args": bound}
+	var method_at: int = text.rfind(".")
+	if method_at <= 0:
+		return {}
+	var bare_method: String = text.substr(method_at + 1)
+	if not EventSheetSentence.is_identifier(bare_method):
+		return {}
+	var target_word: String = _await_object_word(text.substr(0, method_at))
+	if target_word.is_empty():
+		return {}
+	return {"target": target_word, "method": bare_method, "args": bound}
+
+
+## An argument list split on its TOP-LEVEL commas, quote- and bracket-aware, so a bound string with a
+## comma in it and a nested call both stay one argument.
+static func split_top_level_arguments(text: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if text.strip_edges().is_empty():
+		return out
+	var depth: int = 0
+	var in_string: bool = false
+	var quote: String = ""
+	var current: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if in_string:
+			if character == "\\" and index + 1 < text.length():
+				current += character + text[index + 1]
+				index += 2
+				continue
+			if character == quote:
+				in_string = false
+		elif character == "\"" or character == "'":
+			in_string = true
+			quote = character
+		elif character in ["(", "[", "{"]:
+			depth += 1
+		elif character in [")", "]", "}"]:
+			depth -= 1
+		elif character == "," and depth == 0:
+			out.append(current.strip_edges())
+			current = ""
+			index += 1
+			continue
+		current += character
+		index += 1
+	out.append(current.strip_edges())
+	return out
+
+
+## "connects Button On Pressed" for a wired-up call, the same muted note a connected lambda's line
+## keeps - the wiring stays written down where the file writes it.
+func _connect_call_note(action_resource: Variant) -> Dictionary:
+	if not _viewport.is_reading_mode():
+		return {}
+	return connect_call_parts(connect_call_statement_of(action_resource))
+
+
+## One row per connect-to-a-callable in this event: the trigger event, with the call it makes in the
+## action lane. Pure view - every row stands for the ONE connect statement the file holds, which is
+## why it carries that statement's anchor uid.
+func _build_connect_call_rows(event_row: EventRow, anchor_base: String, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if event_row == null or not _viewport.is_reading_mode():
+		return rows
+	for action_index in range(event_row.actions.size()):
+		var parts: Dictionary = connect_call_parts(connect_call_statement_of(event_row.actions[action_index]))
+		if parts.is_empty():
+			continue
+		var anchor: String = "%s_connectcall%d" % [anchor_base, action_index]
+		rows.append(_build_connect_call_row(event_row, parts, anchor, indent, action_index))
+	return rows
+
+
+## The trigger event and the call it makes, on ONE row: the sheet's own two lanes say the whole
+## thought. The bound values are ordinary parameter chips, named by the callee's own parameter names
+## whenever the project or the engine declares them.
+func _build_connect_call_row(event_row: EventRow, parts: Dictionary, anchor: String, indent: int,
+		action_index: int) -> EventRowData:
+	var trigger_parts: Dictionary = parts.duplicate()
+	trigger_parts["args"] = PackedStringArray()
+	var row_data: EventRowData = _build_connect_trigger_row(event_row, trigger_parts, anchor, indent, action_index)
+	if bool(parts.get("one_shot", false)):
+		# A one-shot connection fires once, which is the sheet's own Trigger once.
+		row_data.spans.append(_trigger_payload_span(EventSheetL10n.translate("Trigger once"), 0, 0))
+	var target_label: String = str(parts.get("target", ""))
+	if target_label == "self":
+		target_label = _script_object_name()
+	var method_name: String = str(parts.get("method", ""))
+	var parameter_names: PackedStringArray = EventSheetViewportReadingRows.project_method_parameter_names(
+		EventSheetViewportReadingRows.class_of_object(target_label, _reading_class_map()), method_name)
+	var pieces: Array = [
+		[EventSheetL10n.translate("Call") + " ", "plain"],
+		[EventSheetViewportLenses.function_display_name(method_name, ""), "name"]
+	]
+	var bound: PackedStringArray = parts.get("args", PackedStringArray()) as PackedStringArray
+	for bound_index: int in range(bound.size()):
+		var parameter_name: String = parameter_names[bound_index] if bound_index < parameter_names.size() else ""
+		pieces.append(["   ", "plain"])
+		pieces.append([EventSheetViewportLenses.call_argument_chip(
+			parameter_name, bound[bound_index], _viewport.humanize_names_enabled()), "value"])
+	var action_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var sentence_text: String = ""
+	var sentence_segments: Array[Dictionary] = []
+	for piece: Array in pieces:
+		var text: String = str(piece[0])
+		sentence_text += text
+		sentence_segments.append({
+			"text": text,
+			"color": EventSheetPalette.TEXT_PRIMARY if str(piece[1]) == "name" else null,
+			"bold": str(piece[1]) == "name",
+			"italic": false
+		})
+	row_data.spans.append(_make_span(sentence_text, SemanticSpan.SpanType.VALUE, {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": true,
+		"chip": true,
+		"editable": false,
+		"code_cell": false,
+		"line_index": 0,
+		"object_label": target_label,
+		"bbcode_segments": sentence_segments,
+		"object_icon": _reading_class_icon_for(target_label)
+	}.merged(action_style_meta, false)))
+	return row_data
 
 
 # ── M23: a ternary reads as a sub-event pair, never a condition in an action cell ───────────────

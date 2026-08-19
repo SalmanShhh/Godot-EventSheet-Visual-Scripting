@@ -33,11 +33,12 @@ static func create_sheet_for_node(node: Node, directory: String) -> Dictionary:
 	return {"ok": true, "message": "Event sheet attached to %s - it opens in the EventSheet workspace." % node.name, "sheet_path": str(result.get("sheet_path"))}
 
 
-## What the "Open as Event Sheet" context entries accept: sheet .tres files and any
-## .gd (GDScript-backed sheets open arbitrary scripts losslessly).
+## What the "Open as Event Sheet" context entries accept: sheet .tres files, any .gd (GDScript-backed
+## sheets open arbitrary scripts losslessly), and a .tscn, which opens as the read-only reading of
+## the whole scene - every script it uses, under its own object bar.
 static func is_openable_as_sheet(path: String) -> bool:
 	var extension: String = path.get_extension().to_lower()
-	if extension == "gd":
+	if extension == "gd" or extension == "tscn":
 		return true
 	if extension == "tres":
 		return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE) is EventSheetResource

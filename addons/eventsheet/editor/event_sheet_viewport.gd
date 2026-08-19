@@ -2042,6 +2042,10 @@ func _refresh_rows() -> void:
 
 func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	var root_rows: Array[EventRowData] = []
+	# P4 - a whole SCENE opened as one sheet: the scene's bar, then every script it uses under its own
+	# object bar, each read by this very function. A composite has no events of its own.
+	if EventSheetSceneSheet.is_scene_sheet(sheet):
+		return _build_scene_sheet_rows(sheet)
 	# Per-sweep class-uid counters: same-named class blocks suffix "-2"/"-3" in build order.
 	# Reset HERE (not lazily) so the suffixes stay stable across rebuilds.
 	_row_builder._class_uid_counts.clear()
@@ -2130,6 +2134,39 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	if show_add_event_footers and not (sheet != null and sheet.read_only):
 		root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
 	return root_rows
+
+
+## P4. The whole layout in one place: the scene's own bar, then one script's reading after another in
+## tree order. Each member is read by the ordinary path, with `_sheet` pointed at it for the duration
+## so every lens (the object map, the sheet's own functions) answers about the script being read
+## rather than about the composite. Row uids are prefixed per member, because two scripts may well
+## hold same-named blocks and a fold is remembered by uid.
+func _build_scene_sheet_rows(sheet: EventSheetResource) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	rows.append(_row_builder.build_scene_bar_row(sheet))
+	var outer_sheet: EventSheetResource = _sheet
+	var member_index: int = 0
+	for entry: Variant in EventSheetSceneSheet.members_of(sheet):
+		var member: Dictionary = entry
+		var member_sheet: EventSheetResource = member.get("sheet") as EventSheetResource
+		if member_sheet == null:
+			continue
+		_sheet = member_sheet
+		var member_rows: Array[EventRowData] = _build_rows_from_sheet(member_sheet)
+		_sheet = outer_sheet
+		_prefix_scene_row_uids(member_rows, "scene%d_" % member_index)
+		rows.append_array(member_rows)
+		member_index += 1
+	return rows
+
+
+## Makes one member's row uids its own, children included.
+func _prefix_scene_row_uids(rows: Array[EventRowData], prefix: String) -> void:
+	for row_data: EventRowData in rows:
+		row_data.row_uid = prefix + row_data.row_uid
+		if not row_data.ternary_anchor_uid.is_empty():
+			row_data.ternary_anchor_uid = prefix + row_data.ternary_anchor_uid
+		_prefix_scene_row_uids(row_data.children, prefix)
 
 
 ## A synthetic, foldable header that collapses a run of class-scaffolding rows (its children) into one

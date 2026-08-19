@@ -242,6 +242,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# its own path, and the dock's navigation probe already knows how to reach it, so this is the
 		# same jump Ctrl+Click makes anywhere else - just without the modifier, because the bar offers
 		# it in words.
+		# P4 - an object bar inside a scene view: a DOUBLE-click opens that node's script as its own
+		# sheet, which is where editing happens. A scene view never writes anything itself, so this is
+		# the gesture that leads out of it.
+		if event.double_click and str(metadata.get("kind", "")) == "scene_object_open" and _viewport.navigation_probe.is_valid() and bool(_viewport.navigation_probe.call(row_data, metadata)):
+			_viewport.navigate_requested.emit(row_data, span_index, metadata)
+			_viewport.accept_event()
+			return
 		if not event.double_click and str(metadata.get("kind", "")) == "include_open" and _viewport.navigation_probe.is_valid() and bool(_viewport.navigation_probe.call(row_data, metadata)):
 			_viewport.navigate_requested.emit(row_data, span_index, metadata)
 			_viewport.accept_event()

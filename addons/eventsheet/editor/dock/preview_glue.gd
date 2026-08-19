@@ -92,6 +92,15 @@ func _refresh_preview_banner() -> void:
 	_dock._preview_banner.visible = is_preview
 	if not is_preview or _dock._preview_label == null:
 		return
+	# P4 - a scene read as one sheet has no single file to write back to, so there is nothing to
+	# unlock: the banner says what this is and where editing happens instead. The buttons that offer
+	# a file go away with it.
+	var scene_view: bool = EventSheetSceneSheet.is_scene_sheet(_dock._current_sheet)
+	for button: Node in _dock._preview_banner.find_children("", "Button", true, false):
+		(button as Button).visible = not scene_view
+	if scene_view:
+		_dock._preview_label.text = "👁  Reading %s - every script this scene uses, in tree order. Double-click an object bar to open that script and edit it." % EventSheetSceneSheet.scene_path_of(_dock._current_sheet).get_file()
+		return
 	var source_name: String = _dock._current_sheet.external_source_path.get_file()
 	if source_name.is_empty():
 		source_name = "this sheet"

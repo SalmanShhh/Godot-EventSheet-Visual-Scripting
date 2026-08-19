@@ -22,6 +22,9 @@ var _open_job_path: String = ""
 ## (the same file can legitimately be open in two tabs, so the path alone is not an identity).
 var _open_job_raw: EventSheetResource = null
 var _open_polling: bool = false
+## P4 - the scene being read one script per frame, and whether that read is still running.
+var _scene_sheet: EventSheetResource = null
+var _scene_polling: bool = false
 
 
 func init(dock: Control) -> void:
@@ -37,6 +40,11 @@ func _load_sheet_from_path(path: String) -> void:
 	# file stays the single source of truth and Save compiles back to it.
 	if resolved_path.get_extension() == "gd":
 		_begin_async_gd_open(resolved_path)
+		return
+	# P4 - a .tscn opens as the reading of the WHOLE layout: every script the scene uses, each under
+	# its own object bar. Read only for good, and the scene file is never written to.
+	if resolved_path.get_extension() == "tscn":
+		_open_scene_as_sheet(resolved_path)
 		return
 	var loaded: Resource = ResourceLoader.load(resolved_path)
 	if loaded is EventSheetResource:
@@ -98,6 +106,72 @@ func _begin_async_gd_open(resolved_path: String) -> void:
 		return
 	_dock.get_tree().process_frame.connect(_poll_open_job)
 	_open_polling = true
+
+
+## P4. Opens a .tscn as the reading of the whole layout, WITHOUT freezing the editor: the scene's bar
+## and one object bar per script paint at once, then one script is read per frame behind the progress
+## strip. A scene with twenty scripts is twenty short reads rather than one long stall.
+##
+## The composite is read only for good: it has no single file to compile back to, so Save refuses it
+## and the preview banner offers no unlock. Editing happens per script, by opening that file.
+func _open_scene_as_sheet(resolved_path: String) -> void:
+	_abandon_open_job()
+	_stop_scene_polling()
+	var sheet: EventSheetResource = EventSheetSceneSheet.build_shell(resolved_path)
+	if sheet == null:
+		_dock._set_status("Open failed: could not read %s." % resolved_path.get_file(), true)
+		return
+	_scene_sheet = sheet
+	_dock.setup(sheet)
+	_dock._current_sheet_path = resolved_path
+	_dock._dirty = false
+	_dock._refresh_title_strip()
+	_dock._clear_undo_history()
+	_dock._refresh_preview_banner()
+	_dock._set_status("Opening %s - reading every script the scene uses…" % resolved_path.get_file())
+	if not _dock.is_inside_tree():
+		# No tree (a headless test driving the dock directly): there are no frames to spread over.
+		while EventSheetSceneSheet.load_next_member(sheet):
+			pass
+		_dock._viewport.set_sheet(sheet)
+		return
+	if _dock._open_progress != null:
+		_dock._open_progress.cancel_requested_callback = _stop_scene_polling
+		_dock._open_progress.show_for(resolved_path)
+	_dock.get_tree().process_frame.connect(_poll_scene_open)
+	_scene_polling = true
+
+
+## One script per frame, with the strip counting them down.
+func _poll_scene_open() -> void:
+	if _scene_sheet == null:
+		_stop_scene_polling()
+		return
+	var more: bool = EventSheetSceneSheet.load_next_member(_scene_sheet)
+	# The rows are rebuilt as each script lands, so the sheet fills in front of the reader.
+	if _dock._current_sheet == _scene_sheet:
+		_dock._viewport.set_sheet(_scene_sheet)
+	var pending: int = EventSheetSceneSheet.pending_members(_scene_sheet)
+	if _dock._open_progress != null:
+		var total: int = EventSheetSceneSheet.members_of(_scene_sheet).size()
+		_dock._open_progress.update("Reading %s - script %d of %d" % [
+			EventSheetSceneSheet.scene_path_of(_scene_sheet).get_file(), total - pending, total],
+			float(total - pending) / float(maxi(total, 1)))
+	if more or pending > 0:
+		return
+	_stop_scene_polling()
+	_dock._set_status("Opened %s - reading only. Double-click an object bar to edit that script." %
+		EventSheetSceneSheet.scene_path_of(_scene_sheet).get_file())
+
+
+func _stop_scene_polling() -> void:
+	if not _scene_polling:
+		return
+	_scene_polling = false
+	if _dock.is_inside_tree() and _dock.get_tree().process_frame.is_connected(_poll_scene_open):
+		_dock.get_tree().process_frame.disconnect(_poll_scene_open)
+	if _dock._open_progress != null:
+		_dock._open_progress.hide_strip()
 
 
 ## Per-frame poll: republish the worker's counters, and collect the sheet once it lands.
@@ -263,6 +337,12 @@ func _on_save_requested() -> void:
 		return
 	# Read-only preview never writes back over the source file. The user opts in with
 	# "Edit Events" (then this becomes a normal GDScript-backed save), or forks via Save As.
+	# P4 - a scene read as one sheet is many files at once, and the .tscn is not one of them: there is
+	# nothing here to save, so say where the editing happens instead.
+	if EventSheetSceneSheet.is_scene_sheet(_dock._current_sheet):
+		_dock._set_status("%s is a reading of the whole scene - double-click an object bar to open that script and save there." %
+			EventSheetSceneSheet.scene_path_of(_dock._current_sheet).get_file(), true)
+		return
 	if _dock._current_sheet.read_only:
 		var source_name: String = _dock._current_sheet.external_source_path.get_file()
 		_dock._set_status("You're viewing %s - click \"Edit Events\" in the banner to edit and save it, or use Save As… to keep a separate copy." % source_name, true)

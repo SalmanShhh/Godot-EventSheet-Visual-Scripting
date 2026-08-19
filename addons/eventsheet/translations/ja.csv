@@ -2125,3 +2125,4 @@ not in %s,%s にありません
 "Sort by reading order, by count or by name.",読み順・件数・名前で並べ替えます。
 Nothing in this sheet names an object yet.,このシートはまだどのオブジェクトも指していません。
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,このスクリプトはまだシーンに置かれていません。シーンドックのノードにドロップすると、そのオブジェクトがここに表示されます。
+{n} scripts,{n} 個のスクリプト

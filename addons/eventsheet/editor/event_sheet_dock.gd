@@ -4,7 +4,7 @@ extends Control
 
 # .gd is listed first so it is the default format for New Sheet / Save As - a sheet is just plain
 # GDScript (no .tres needed). .tres/.res stay available (e.g. library sheets used via Includes).
-const EVENT_SHEET_FILTERS: Array[String] = ["*.gd ; GDScript EventSheet", "*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
+const EVENT_SHEET_FILTERS: Array[String] = ["*.gd ; GDScript EventSheet", "*.tscn ; Scene (read only)", "*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
 ## "Teach a Verb" persistence: sheets shared project-wide list their compiled .gd here
 ## (a PackedStringArray in project settings), and the provider scan appends them - so a
 ## taught verb survives sessions, unlike the bridge's in-memory registrations.
@@ -3961,6 +3961,12 @@ func _apply_property_drop(target_event: Resource, node_reference: String, proper
 ## always compile, so an action that assigns to a variable auto-declares it, and a preload
 ## const can never redefine an existing top-level name (deduped by path, suffixed on clash).
 func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -> void:
+	# P4 - ONE scene dropped on empty space opens that scene as a sheet: there is no row it could
+	# join, and "read this scene" is what a reader dragging a .tscn onto the sheet means. Dropped on a
+	# row it still builds the action it always did, because there the drop names a target.
+	if target_event == null and asset_paths.size() == 1 and asset_paths[0].get_extension().to_lower() == "tscn":
+		_load_sheet_from_path(asset_paths[0])
+		return
 	if not _ensure_sheet_for_editing():
 		return
 	var counters: Dictionary = {"added": 0}
@@ -4749,6 +4755,10 @@ func _refresh_title_strip() -> void:
 static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String) -> String:
 	if sheet == null:
 		return "No Sheet Loaded"
+	# P4 - a scene opened as one sheet is named after the SCENE, extension and all: it is not one
+	# script's tab, and the file name is the thing the reader picked in the FileSystem.
+	if EventSheetSceneSheet.is_scene_sheet(sheet):
+		return EventSheetSceneSheet.scene_path_of(sheet).get_file()
 	var resolved_path: String = _resolve_sheet_path(sheet, explicit_path)
 	if resolved_path.is_empty():
 		return "Untitled EventSheet"

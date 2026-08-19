@@ -253,6 +253,42 @@ static func method_parameter_names(class_name_str: String, method_name: String) 
 	return names
 
 
+## P5. The names of a method's arguments when the method belongs to a class the PROJECT declared
+## rather than to the engine. A wired-up call names another object's own function far more often than
+## an engine one, and its chips are worth naming too ("count = 3" rather than a bare 3). Falls back to
+## the engine's answer first, so an engine class never pays for the project lookup; the answer is
+## cached per class and method, because the reading asks once per row per rebuild.
+static var _project_parameter_names: Dictionary = {}
+
+
+static func project_method_parameter_names(class_name_str: String, method_name: String) -> PackedStringArray:
+	var engine_names: PackedStringArray = method_parameter_names(class_name_str, method_name)
+	if not engine_names.is_empty():
+		return engine_names
+	var bare_class: String = class_name_str.strip_edges()
+	if bare_class.is_empty() or method_name.strip_edges().is_empty():
+		return PackedStringArray()
+	var key: String = "%s|%s" % [bare_class, method_name]
+	if _project_parameter_names.has(key):
+		return _project_parameter_names[key]
+	var names: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) != bare_class:
+			continue
+		var script: Script = load(str(entry.get("path", ""))) as Script
+		if script == null:
+			break
+		for method_info: Dictionary in script.get_script_method_list():
+			if str(method_info.get("name", "")) != method_name:
+				continue
+			for argument: Variant in (method_info.get("args", []) as Array):
+				names.append(str((argument as Dictionary).get("name", "")))
+			break
+		break
+	_project_parameter_names[key] = names
+	return names
+
+
 ## M26. The class a call's object is, for the parameter-name lookup: whatever the sheet's own object
 ## map knows, else the object label itself when it IS a class name (`$Sprite2D` names its class).
 static func class_of_object(object_label: String, class_map: Dictionary) -> String:
