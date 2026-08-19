@@ -31,11 +31,57 @@ Current additions on top of the model below:
   `internal`, featured); the quieter chips are mixed from that pair. All nine bundled presets set
   them, so copy one as a starting point rather than beginning from the palette defaults.
 
+## What a theme reaches now
+
+Until recently a theme stopped at the row shells and the chips in them. Everything the
+"an opened script reads like an event sheet" work added - the chips on an Include bar, the
+coverage chip, the badge that says how often an event runs, the Script block and ⚠ code
+badges, the Inspector chip on a variable, the guide lines, the stripe down a broken row,
+the bubble that refuses a drop, the Object bar, the status strip, the Manual's pages - was
+painted from fixed constants. A pale preset kept the plugin's own dark marks on white
+paper, and the Theme Editor could not show them at all.
+
+Three token groups now cover all of it, and they appear in the Theme Editor as their own
+sections:
+
+- **Reading marks - chips, badges, guides, stripes** (`EventSheetReadingStyle`): the plain
+  chip and its word, the picker-category chip, the Inspector chip, the const/static badge,
+  the setup and Script block and ⚠ code badges, the OR badge, the ⟳ / ⌨ / ▶ badges that say
+  how often an event runs, the three text tones, the tints on text and true/false values,
+  the error and live-fire stripes, the disabled scrim, the breakpoint dot, the bookmark
+  pennant, the event-number margin's rail, the indent stops and the tree connector, the drop
+  line and the refusal bubble, the swatch outline, the text-selection band, and how strongly
+  a hovered variable lights up its other uses.
+- **Bars around the sheet - Object bar, status strip, tab title** (`EventSheetChromeStyle`):
+  the Object bar's section headings, its ⚠ on a flagged entry, the wash it throws over the
+  rows that use the object you point at and the grab dots on them, the status message and the
+  red it turns, the row address, the unsaved ●, and the file path beside a sheet's name.
+- **Manual pages** (`EventSheetManualStyle`): the page's paper, its headings, its quiet words,
+  the highlight behind a search hit, the contents pill for the page you are on, a deprecation
+  note, and the rule under a table's header.
+
+![The Theme Editor's token form scrolled to its new groups: Bars around the sheet, with the Object bar's wash and grips, the status message and the red it turns, the unsaved dot and the file path - and Manual pages below it, where a token left clear means "follow the editor"](images/theme-editor-new-groups.png)
+
+Every Manual token starts with **no opinion** (alpha zero), which means "follow the editor".
+A reader who never picks a theme keeps help that looks like the rest of their Godot editor;
+give a token an alpha and it takes over.
+
+Two surfaces stayed as they were on purpose. A negated condition's ✕ already had its own
+token (`invert_marker_color`) - one red for "this condition is turned around", wherever it
+appears. And the debugger's hit-count chips in the event-number margin are lens chrome
+rather than sheet paint: they are drawn over whatever the row is and deliberately do not
+follow the theme.
+
 ## Core model
 
 - `EventSheetEditorStyle` (`.tres`) is the active installable theme package.
 - `EventSheetEventStyle` owns sheet/event/group/comment/interaction tokens.
 - `EventSheetElementStyle` owns condition/action entry tokens.
+- `EventSheetReadingStyle`, `EventSheetChromeStyle` and `EventSheetManualStyle` own the three
+  groups above.
+- The chrome outside the canvas (the Object bar, the status strip, the Manual) has no path
+  back to a sheet, so it reads the active theme through `EventSheetActiveTheme`: the dock
+  publishes the style whenever it changes, a panel reads the tokens when it paints.
 - The theme tokens above are the single source of truth: the live editor paints every row
   from them via the renderer (there are no per-row scenes to edit).
 
@@ -88,6 +134,24 @@ committed), independent of whichever theme is active, and it composes with the e
 display scale - a compact sheet on a HiDPI monitor stays crisp.
 
 <img src="images/compact-rows.png" alt="The same Health pack rows twice: Comfortable on the left, Compact on the right - the compact side fits more rows in the same height while every label stays the same text size." width="640">
+
+## Bringing an older preset forward
+
+A preset is a `.tres` written against the tokens that existed the day it was saved, so a
+new token family would leave it on the plugin's defaults. One shared rule
+(`EventSheetThemeDerivation`) derives every new token from the tokens a theme already sets -
+its row background, its ink, its lane colours, its accent - and three callers use it: the
+bundled-preset builder, the Godot-adaptive default, and a maintenance pass over every
+bundled `.tres`:
+
+```
+"$GODOT" --headless --path . --script tools/backfill_theme_tokens.gd
+```
+
+It is idempotent, so run it again after any token addition. Your own preset picks the new
+tokens up the same way: load it, run the pass, save. A preset with a real opinion about a
+token simply sets it afterwards - the rule only decides what "no opinion" looks like, and
+it decides it in your palette rather than in EventForge's.
 
 ## Theme token spec
 

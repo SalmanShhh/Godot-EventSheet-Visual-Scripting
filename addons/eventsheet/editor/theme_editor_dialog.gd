@@ -32,7 +32,17 @@ func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
 
 ## Deep-duplicates a style so live edits never touch the original resource.
 static func duplicate_style(base_style: EventSheetEditorStyle) -> EventSheetEditorStyle:
-	var style: EventSheetEditorStyle = base_style.duplicate(true) if base_style != null else EventSheetEditorStyle.new()
+	# With no theme assigned, the sheet is painted by the editor-matched default - so that, and not
+	# a bare resource, is what the workbench has to open on. Otherwise the preview shows a look the
+	# user is not looking at, and every token that ships with no opinion (all of the Manual's) opens
+	# as an empty swatch, which reads as broken rather than as "follow the editor".
+	var style: EventSheetEditorStyle = (
+		base_style.duplicate(true)
+		if base_style != null
+		else EventSheetThemeDerivation.fill_derived_tokens(
+			EventSheetGodotTheme.adapt_to_editor(EventSheetEditorStyle.new())
+		)
+	)
 	if style.event_style == null:
 		style.event_style = EventSheetEventStyle.new()
 	if style.condition_style == null:

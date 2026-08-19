@@ -63,6 +63,39 @@ the byte round-trip and the pack drift gate all cover it, and `tests/lift_perf_t
 twice - once structurally (the index is handed out by reference; a matcher is the same object on the
 second call) and once as a generous wall budget.
 
+### Added - the Theme Editor caught up with everything the sheet learned to draw
+
+- **The marks that say what a row IS are themeable.** Every chip, badge and stripe the reading
+  work added was painted from a fixed constant: the chips on an Include bar, the coverage chip,
+  the ⟳ / ⌨ / ▶ badges that say how often an event runs, the Script block and ⚠ code badges,
+  the Inspector chip on a variable, the indent stops and the tree connector, the red stripe down
+  a row the engine cannot parse, the bubble that refuses a drop, the outline round a colour
+  swatch. They are now a token group of their own - **Reading marks** in the Theme Editor - and
+  a theme reaches every one of them.
+- **The bars around the sheet, too.** The Object bar's section headings and the wash it throws
+  over the rows that use the object you point at, the status message and the red it turns, the
+  row address, the unsaved ● and the file path beside a sheet's name, all in a **Bars around the
+  sheet** group. A panel outside the canvas has no path back to a sheet, so the dock publishes
+  the active theme and each bar reads its tokens when it paints.
+- **The ⚠ on a flagged Object bar entry is finally coloured.** A node the scene lost and an input
+  action the project does not have wore a bare glyph in the same colour as a fine entry, so the
+  mark only registered if you looked twice. It takes the theme's warning tone now.
+- **The Manual is themeable, and still editor-native by default.** Page paper, headings, quiet
+  words, the highlight behind a search hit, the contents pill for the page you are reading, a
+  deprecation note and the rule under a table each have a token - every one of them starting with
+  **no opinion**, meaning "follow the running editor". A reader who never picks a theme sees no
+  change; a theme that sets one takes over.
+- **Every bundled preset dresses the new marks in its own palette.** One shared rule derives the
+  new tokens from the tokens a theme already sets, so Dracula, Nord, Gruvbox, Monokai, Solarized
+  Light, Catppuccin Mocha, High Contrast, Soft Light, Designer Template, Mockup Slate and the
+  Godot-adaptive default all got values that fit them - a pale preset ends up with pale chips
+  instead of EventForge's dark ones on white paper. `tools/backfill_theme_tokens.gd` re-runs the
+  rule over every bundled theme, so the next token family reaches them the day it ships.
+- **A gate so this cannot happen again.** `theme_tokens_test` pins every token by name, requires
+  the Theme Editor to describe each one in the sheet's own words, proves a saved theme carries
+  them back, checks all ten presets have an opinion - and lints the three painters so the next
+  mark cannot arrive as one more literal colour.
+
 ### Added - a local variable's scope is enforced, and shown
 
 - **An action dragged out of its variable's scope is refused, by name.** Drag a row that uses `dealt`
