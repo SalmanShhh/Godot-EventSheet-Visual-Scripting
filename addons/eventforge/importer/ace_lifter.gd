@@ -102,6 +102,9 @@ static var scene_source_path: String = ""
 ## set and handed out by reference. Keyed on the descriptor count so a rescan that publishes new ACEs
 ## rebuilds it.
 static var _cached_reverse_entries: Array = []
+## The loop-index prelude probe, compiled once (see _parse_body). Built on the main thread by
+## warm_registries' reverse-index pass before the worker ever reads it.
+static var _loop_index_probe: RegEx = null
 static var _cached_reverse_count: int = -1
 
 ## Member names the file being lifted declares with an OBJECT type ({name: true}) - `var host: Node`,
@@ -1848,9 +1851,12 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		# the loop index counter. All three lines must match or the var stays an ordinary statement.
 		var loop_index_lift: String = ""
 		if at_this_depth and index + 2 < lines.size():
-			var index_probe: RegEx = RegEx.new()
-			index_probe.compile("^var ([A-Za-z_][A-Za-z0-9_]*): int = -1$")
-			var index_match: RegExMatch = index_probe.search(rest)
+			# Compiled once: this sits inside the statement loop, so it is asked of every line of
+			# every function the lift walks.
+			if _loop_index_probe == null:
+				_loop_index_probe = RegEx.new()
+				_loop_index_probe.compile("^var ([A-Za-z_][A-Za-z0-9_]*): int = -1$")
+			var index_match: RegExMatch = _loop_index_probe.search(rest)
 			if index_match != null:
 				var candidate_name: String = index_match.get_string(1)
 				var header_line: String = lines[index + 1]
@@ -2747,6 +2753,15 @@ static func _stamp_body_blanks(resource: Resource, blank_box: Array) -> void:
 ## single line was ~80% of the time an open took. Entries are read-only by contract - _match_entry
 ## only reads them, and nothing anywhere assigns into an entry - so sharing one Array is safe,
 ## including with the import worker thread (the job warms this on the main thread before starting).
+## Builds the lift's compiled-once matchers on the CALLING thread. The open job calls this from the
+## main thread before starting the worker, so the worker only ever reads them - the same discipline
+## the reverse index above follows, and for the same reason.
+static func warm_matchers() -> void:
+	if _loop_index_probe == null:
+		_loop_index_probe = RegEx.new()
+		_loop_index_probe.compile("^var ([A-Za-z_][A-Za-z0-9_]*): int = -1$")
+
+
 static func _build_reverse_entries() -> Array:
 	var descriptors: Array = ACERegistry.get_all_descriptors()
 	if _cached_reverse_count == descriptors.size() and not _cached_reverse_entries.is_empty():

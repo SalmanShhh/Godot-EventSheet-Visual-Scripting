@@ -193,6 +193,11 @@ var _hovered_row_index: int = -1
 var _hovered_span_index: int = -1
 ## R41. {row index: [span indices]} - every use of the local variable under the cursor, in its scope.
 var _hover_match_spans: Dictionary = {}
+## Bumped by every row rebuild. The hover answer is a function of (row, span, these rows), so this is
+## what lets a repeat of the same hover be recognised as already answered - see _set_hover_state.
+var _rows_revision: int = 0
+## The (row, span, revision) the current _hover_match_spans was computed for.
+var _hover_match_key: Vector3i = Vector3i(-1, -1, -1)
 var _hover_is_drag_zone: bool = false  # pointer over an event's empty lane band (the move-cursor grab zone)
 var _editing_row_index: int = -1
 var _editing_span_index: int = -1
@@ -2043,6 +2048,8 @@ func _handle_editing_key(event: InputEventKey) -> void:
 func _refresh_rows() -> void:
 	# Spans are rebuilt below; a param cursor into the old spans would dangle.
 	_param_cursor = {}
+	# New rows, so every answer keyed to the old ones (the hover highlight) is stale by definition.
+	_rows_revision += 1
 	# A figure's measured width is a property of its rows, so it dies with them - and the settle
 	# restarts from the narrow probe, or new rows would only ever be measured against the width
 	# the OLD rows happened to need.
@@ -2885,6 +2892,15 @@ func _sync_row_selection_flags() -> void:
 
 
 func _set_hover_state(row_index: int, span_index: int) -> void:
+	# A mouse-motion event fires many times per second while the pointer sits inside one cell, and
+	# every one of them used to re-answer "where else is this local used?" - a walk of the whole sheet
+	# per candidate name, then a scan of every span of every row in scope. The answer depends on
+	# nothing but the cell and the rows themselves, so a repeat of the same cell over the same rows is
+	# already answered. A rebuild bumps the revision, so an edit never leaves a stale highlight.
+	var key: Vector3i = Vector3i(row_index, span_index, _rows_revision)
+	if key == _hover_match_key:
+		return
+	_hover_match_key = key
 	_hovered_row_index = row_index
 	_hovered_span_index = span_index
 	_hover_match_spans = _compute_hover_matches(row_index, span_index)

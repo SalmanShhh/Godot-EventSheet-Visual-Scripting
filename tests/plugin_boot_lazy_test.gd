@@ -83,7 +83,30 @@ const FORBIDDEN := {
 	"res://addons/eventsheet/editor/live_values_debugger.gd": [
 		"EventSheetTraceHitCounts", "EventSheetWhyPanel", "EventSheetViewport",
 	],
+	# The import hook is attached in _enter_tree like the export ones, so it is a boot file too. It
+	# deliberately carries no class_name and names no plugin class; without a row here, nothing said so.
+	"res://addons/eventforge/editor/import_tools_plugin.gd": [
+		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetViewport",
+	],
 }
+
+## Every boot file, and the READING classes none of them may name.
+##
+## The reading layer is the plugin's heaviest subtree - the row builder, the grammar and the fact
+## scanners between them reach the registry, the importer and the whole viewport - and it grew a lot
+## of new entry points. Any ONE of these names in a boot file compiles all of it into every editor
+## start, exactly the way the compiler crept back in through a drawer helper once already. They are
+## listed separately from FORBIDDEN only so one list covers every boot file at once.
+const READING_SUBTREE := [
+	"EventSheetViewportReadingRows", "ViewportRowBuilder", "EventSheetSentence",
+	"EventSheetObjectFacts", "EventSheetSignalFanout", "EventSheetInputMapFacts",
+	"EventSheetEditorToolCensus", "EventSheetSettingFacts", "EventSheetLocalScope",
+	"EventSheetVariableSentence", "EventSheetReadingCoverage", "EventSheetObjectThumbnails",
+	"EventSheetPropertiesBar", "EventSheetFindResultsBar", "EventSheetTextListing",
+	"EventSheetEditorToolBar", "EventSheetGlobalVariables", "EventSheetInstanceVariableTable",
+	"EventSheetReplaceObject", "EventSheetParamFieldFactory",
+	"EventSheetSceneSheet", "EventSheetParseErrors",
+]
 
 ## Every path a deferred feature is reached through - each must exist, or the feature breaks at
 ## runtime on the exact click that needs it, with the whole suite green.
@@ -125,6 +148,13 @@ static func run() -> bool:
 		for identifier: String in (FORBIDDEN[path] as Array):
 			all_passed = _check("%s never names %s in code" % [path.get_file(), identifier],
 				code.contains(identifier), false) and all_passed
+
+	# 1b. The same lint for the reading subtree, over every boot file.
+	for boot_path: String in FORBIDDEN:
+		var boot_code: String = _code_only(boot_path)
+		for reading_class: String in READING_SUBTREE:
+			all_passed = _check("%s never names %s in code" % [boot_path.get_file(), reading_class],
+				boot_code.contains(reading_class), false) and all_passed
 
 	# 2. The lazy targets exist and the load-by-path dispatch works.
 	for lazy_path: String in LAZY_PATHS:

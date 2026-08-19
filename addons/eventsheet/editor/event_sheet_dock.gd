@@ -436,6 +436,7 @@ func _on_translations_maybe_changed() -> void:
 	# The behaviour-pack index is the same kind of read - the heads of every pack file - so it is
 	# dropped with them; a pack dropped into the project appears on the next row that asks.
 	EventSheetViewportReadingRows.clear_pack_index()
+	EventSheetEditorToolCensus.clear_cache()
 	if EventSheetL10n.reload_if_changed():
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:
