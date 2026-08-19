@@ -922,13 +922,33 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 		object_name = str(scene.get("root_name", ""))
 	if object_name.is_empty():
 		object_name = source_path.get_file().get_basename()
+	var base_class: String = sheet.host_class.strip_edges()
+	# ── V4 ──────────────────────────────────────────────────────────────────────────────────────
+	# A script that extends a Resource is not an object in the scene: it is a DATA TYPE, and every
+	# .tres saved from it is one asset of that type. The bar says that in those words, and names the
+	# type the way a designer would say it out loud rather than in the identifier's own spelling.
+	var data_type: bool = EventSheetScriptIntent.is_resource_host(base_class)
 	var spans: Array[SemanticSpan] = []
 	if not object_name.is_empty():
-		spans.append(_make_span(object_name, SemanticSpan.SpanType.OBJECT, {
-			"editable": false, "kind": "pack_include", "line_index": 0,
-			"text_color": event_style.object_label_color
-		}))
-	var base_class: String = sheet.host_class.strip_edges()
+		spans.append(_make_span(
+			object_name.capitalize() if data_type else object_name,
+			SemanticSpan.SpanType.OBJECT, {
+				"editable": false, "kind": "pack_include", "line_index": 0,
+				"text_color": event_style.object_label_color
+			}))
+	if data_type:
+		spans.append(_pack_include_chip(EventSheetL10n.translate("data type")))
+		if bool(sheet.tool_mode):
+			spans.append(_pack_include_chip(EventSheetL10n.translate("runs in editor")))
+		var asset_receipts: PackedStringArray = PackedStringArray()
+		if not source_path.is_empty():
+			asset_receipts.append("· %s" % source_path.get_file())
+		if not asset_receipts.is_empty():
+			spans.append(_make_span(" ".join(asset_receipts), SemanticSpan.SpanType.COMMENT, {
+				"editable": false, "kind": "pack_include", "line_index": 0,
+				"text_color": _viewport._get_reading_style().muted_text_color
+			}))
+		return spans
 	# `extends "res://enemy.gd"` is a FILE, not a class: quoting a path into the identity chip reads as
 	# noise, and the Include bar directly below already names that file (N12).
 	if base_class.begins_with("\"") or base_class.begins_with("'"):
@@ -6785,6 +6805,20 @@ const INPUT_DEVICE_OBJECTS: Array[String] = ["Mouse", "Keyboard", "Gamepad", "To
 const EDITOR_TOOLS_CATEGORY := "Editor Tools"
 const EDITOR_OBJECT := "Editor"
 
+## V5. The window is an object too - it is resized, retitled, made fullscreen, and asked whether it
+## is. An OVERRIDE list rather than the whole Game Window category, because that category also holds
+## the frame cap and the render settings, which an event sheet says as System (the reading says the
+## same: `Engine.max_fps` is a System row, `get_window().size` is a Window one). Every id here is one
+## whose typed line the sentence grammar puts on the Window object, so a picked row and a
+## hand-written line wear the same object label.
+const WINDOW_OBJECT := "Window"
+const WINDOW_ACE_IDS: PackedStringArray = [
+	"WindowGoFullscreen", "WindowGoWindowed", "WindowGoExclusive", "WindowToggleFullscreen",
+	"WindowSetSize", "WindowSetPosition", "WindowCenter", "WindowSetVSync",
+	"WindowSetAlwaysOnTop", "WindowMinimize", "WindowMaximize", "WindowIsFullscreen",
+	"SetWindowTitle"
+]
+
 ## `event is <class>` -> the event-sheet module that owns the trigger the branch reads as.
 const INPUT_EVENT_MODULES: Dictionary = {
 	"InputEventMouseMotion": "Mouse",
@@ -9488,6 +9522,8 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 			return input_descriptor.category
 		if input_descriptor != null and input_descriptor.category == EDITOR_TOOLS_CATEGORY:
 			return EDITOR_OBJECT
+		if WINDOW_ACE_IDS.has(ace_id):
+			return WINDOW_OBJECT
 		return "System"
 	return provider_id
 

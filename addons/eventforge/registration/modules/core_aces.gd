@@ -238,7 +238,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Reads a saved value from a config file into a variable, with a fallback default."))
 
 	# ── Window / screen / mouse / clipboard ──
-	descriptors.append(F.make_descriptor("Core", "SetWindowTitle", "Set Window Title", ACEDescriptor.ACEType.ACTION, "get_window().title = {title}", "", [F.make_param("title", "String", "\"My Game\"", "Title", "Window title bar text.", "expression")], "Utility: Window", "set window title to {title}")
+	descriptors.append(F.make_descriptor("Core", "SetWindowTitle", "Set Window Title", ACEDescriptor.ACEType.ACTION, "get_window().title = {title}", "", [F.make_param("title", "String", "\"My Game\"", "Title", "Window title bar text.", "expression")], "Utility: Window", "Set title to {title}")
 		.described("Changes the text shown in the game window's title bar."))
 	descriptors.append(F.make_descriptor("Core", "GetWindowSize", "Window Size", ACEDescriptor.ACEType.EXPRESSION, "get_window().size", "", [], "Utility: Window", "window size")
 		.described("Returns the game window's current size in pixels."))

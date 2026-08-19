@@ -41,7 +41,17 @@ static func is_openable_as_sheet(path: String) -> bool:
 	if extension == "gd" or extension == "tscn":
 		return true
 	if extension == "tres":
-		return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE) is EventSheetResource
+		if ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE) is EventSheetResource:
+			return true
+		# V4. A .tres that is a DATA ASSET opens too - as a table, one row per field. Loaded through
+		# the same static core the table view uses, so the menu entry and the view never disagree
+		# about what is openable.
+		return EventSheetDataTable.is_data_asset(path)
+	# V4. A FOLDER of data assets of one type opens as ONE grid - a row per asset, a column per
+	# field. Anything else about a folder (mixed types, no assets) is not a table, and offering to
+	# open it as one would promise a grid nobody could draw.
+	if extension.is_empty() and DirAccess.dir_exists_absolute(path):
+		return EventSheetDataTable.is_one_type_folder(path)
 	return false
 
 
