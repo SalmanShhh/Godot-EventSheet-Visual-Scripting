@@ -119,11 +119,15 @@ reads as these rows already, which is usually the fastest way to see what it ask
 
 ### Other use cases
 
-- **A daily-reward check** that asks the server what day it is, so changing the device clock does not help.
-- **A community leaderboard filter** that posts a country code and reads only that country's rows.
-- **A crash reporter** that posts the last few log lines when the game restarts after a bad exit.
-- **A feature flag** that lets you turn an unfinished mode off in a live build without patching.
-- **A tiny content pack** fetched as JSON and used to add levels between releases.
+**A daily-reward check** that asks the server what day it is, so changing the device clock does not help.
+
+**A community leaderboard filter** that posts a country code and reads only that country's rows.
+
+**A crash reporter** that posts the last few log lines when the game restarts after a bad exit.
+
+**A feature flag** that lets you turn an unfinished mode off in a live build without patching.
+
+**A tiny content pack** fetched as JSON and used to add levels between releases.
 
 ## Tips and common mistakes
 

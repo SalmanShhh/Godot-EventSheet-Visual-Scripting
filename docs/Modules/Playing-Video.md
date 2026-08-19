@@ -113,11 +113,15 @@ reads as these rows, which is the quickest way to see what it plays and when.
 
 ### Other use cases
 
-- **A results-screen replay** stitched from clips chosen by how the run went.
-- **A seasonal title background** swapped by date without touching a single other row.
-- **An in-game television** playing a loop on a quad in a 3D scene.
-- **A "what's new" clip** shown once per version, remembered like a patch note.
-- **A recorded credits roll**, which is far cheaper to make than an animated one.
+**A results-screen replay** stitched from clips chosen by how the run went.
+
+**A seasonal title background** swapped by date without touching a single other row.
+
+**An in-game television** playing a loop on a quad in a 3D scene.
+
+**A "what's new" clip** shown once per version, remembered like a patch note.
+
+**A recorded credits roll**, which is far cheaper to make than an animated one.
 
 ## Tips and common mistakes
 
