@@ -302,14 +302,21 @@ i18n (Godot translations).
 - **Right-click a name > Find all references** opens the **Find results** bar under the sheet:
   every place that variable, function, object, signal or behavior is used, grouped by sheet with
   each hit's event number. Clicking a result jumps to it (opening the sheet when it is not the
-  one on screen), F3 and Shift+F3 step forward and back, and the bar stays until you close it
-  with ✕. Matching is whole-symbol, so `hp` never finds `hp_max`.
+  one on screen, and landing on the exact row once it has), F3 and Shift+F3 step forward and back,
+  and the bar stays until you close it with ✕. Matching is whole-symbol, so `hp` never finds
+  `hp_max`, and the search reaches the `.gd` sheets you have never opened as well as the ones you
+  have - a project-wide answer really is project-wide.
 - **The Properties bar is where you edit without leaving the row.** It sits to the right of the
   canvas, splitter-resizable like the Inspector, and shows whatever is selected: a condition or
-  action's parameters as fields (Enter applies, one undo step, the same edit as the Edit
-  Parameter dialog, so an opened `.gd` stays byte-exact for every line you did not touch), an
-  object's properties, a group's name and enabled state. Simple Mode starts it hidden; **View >
-  Properties Bar** brings it back. The dialog stays for anyone who prefers it.
+  action's parameters, an object's properties, a group's name and enabled state. Each parameter
+  gets the same field the Edit Parameter dialog would give it - a colour is a swatch you click, a
+  fixed choice is a dropdown, a node reference has its picker, an input action has the live Input
+  Map list, a number has a spinner - so nothing has to be typed as GDScript by hand. Setting a
+  value is one undo step and exactly the edit the dialog would have made, so an opened `.gd` stays
+  byte-exact for every line you did not touch. Simple Mode starts it hidden; **View > Properties
+  Bar** brings it back. The dialog stays for anyone who prefers it.
+
+  ![The Properties bar's fields: a colour swatch, an easing dropdown, an input-action list, a number spinner, a tick and a translatable text field](images/properties-bar-fields.png)
 - **The sheet zooms like a code editor**: Ctrl + mouse wheel, Ctrl + + / Ctrl + -, Ctrl + 0 for
   100%, or the pill in the status bar - 50% to 200% in six steps, with text, chips, icons and
   guide lines scaling together. The zoom is remembered for the layout, not for one file, so the
