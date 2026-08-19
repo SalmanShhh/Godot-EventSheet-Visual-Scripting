@@ -75,9 +75,11 @@
 
 ### Added - a Timer node reads as the sheet's Timer behavior
 
-- **`$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)`.** The Timer behavior's own
-  words, with the node's name as the tag and the script's own object as the object - the timer
-  belongs to it, exactly as a behavior does. `stop()` reads `Stop timer "Timer"`,
+- **`$Timer.stop()` reads `Stop timer "Timer"`.** The Timer behavior's own words, with the node's
+  name as the tag and the script's own object as the object - the timer belongs to it, exactly as a
+  behavior does. `$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` wherever the
+  line is still hand-written text (a line the importer already claimed keeps the shipped Start Timer
+  row it lifted to),
   `not $Timer.is_stopped()` reads `Is timer "Timer" running` (and the bare spelling says stopped),
   and `$Timer.time_left` reads `Timer.CurrentTime("Timer")`. The `(once)` / `(regular)` mode comes
   from the file's own `one_shot` line, read once per rebuild, whether that line is still raw text or

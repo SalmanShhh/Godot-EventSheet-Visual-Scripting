@@ -517,8 +517,9 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   gamepad 0 button A pressed`, in the Gamepad object's own words, because the device index IS the
   gamepad number. A branch that names no device keeps `On button A pressed`; a Keyboard branch keeps
   its `event.device == 1` as an ordinary comparison, since a keyboard has no number in the sheet.
-- **A Timer node reads as the Timer behavior.** `$Timer.start(2.0)` reads `Start timer "Timer" for 2
-  seconds (once)`, `$Timer.stop()` reads `Stop timer "Timer"`, `not $Timer.is_stopped()` reads `Is
+- **A Timer node reads as the Timer behavior.** `$Timer.stop()` reads `Stop timer "Timer"`,
+  `$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` while the line is still
+  hand-written text (a line the importer already lifted keeps its shipped Start Timer row), `not $Timer.is_stopped()` reads `Is
   timer "Timer" running` (the bare spelling says stopped), and `$Timer.time_left` reads
   `Timer.CurrentTime("Timer")`. The node's name is the tag and the object is the script's own object,
   because the timer belongs to it. The `(once)` / `(regular)` mode is read off the file's own
