@@ -55,13 +55,14 @@ the same in the picker and in the reading, so what you pick is what you read.
 | **Add to** | `score += 10` | Add Variable |
 | **Subtract from** | `hp -= dmg` | Subtract From Variable |
 | **Toggle boolean** | `alive = not alive` | Toggle |
-| **Set boolean** | `muted = true` | (done with Set Variable) |
 | **Compare variable** | `if hp <= 0:` | Compare Variable |
-| **Boolean is true / is false** | `if alive:` / `if not muted:` | Is boolean set |
 
-A boolean condition reads as the plain sentence `alive is true` / `muted is false`, never as
-"Is alive set", and inverting one flips the word rather than adding a mark. The ids behind all of
-them are frozen: only the names you see and where they sit in the picker changed, so every sheet
-that already used them keeps working.
+Setting a boolean is **Set value** with `true` or `false`; asking about one is **Compare variable**.
+They have no entries of their own because their emitted line would be byte-identical, and an opened
+file is read back by the line it holds.
+
+A boolean condition still reads as the plain sentence `alive is true` / `muted is false`, never as
+"Is alive set". The ids behind all of these are frozen: only the names you see changed, so every
+sheet that already used them keeps working.
 
 See also the [C3 migration guide](GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md) (every C3 plugin/behavior mapped) and the [recipes](GUIDE-RECIPES.md) (build something end to end).

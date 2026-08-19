@@ -2675,7 +2675,6 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Is On Floor** - True when this 2D character body is standing on the ground, used to gate jumping.
 - **Has Group Member** (`group: String`) - True when this node belongs to the named group, for tagging and identifying objects.
 - **Compare variable** (`var_name: String, op: String, value: String`) - True when a variable compares against a value as you specify, for branching on game state.
-- **Boolean is true / is false** (`var_name: String, value: String`) - True when a boolean variable holds the value you pick - the plain "alive is true" / "muted is false" question.
 - **Is Timer Stopped** (`target: String`) - True when the Timer is not currently running.
 - **Is Animation Playing** (`target: String`) - True while the AnimationPlayer is playing an animation.
 - **RayCast Is Colliding (2D)** (`target: String`) - True when the RayCast2D is currently hitting something in its path.
@@ -2685,7 +2684,6 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Set value** (`var_name: String, value: String`) - Sets a variable to a value you give, the basic way to store game state.
 - **Add to** (`var_name: String, amount: String`) - Adds an amount to a variable, e.g. increasing score or health.
 - **Subtract from** (`var_name: String, amount: String`) - Subtracts an amount from a variable, e.g. spending money or taking damage.
-- **Set boolean** (`var_name: String, value: String`) - Sets a true/false variable to true or false - the flag half of Set value.
 - **Multiply Variable** (`var_name: String, amount: String`) - Multiplies a variable by a factor, e.g. scaling speed or applying a bonus.
 - **Divide Variable** (`var_name: String, amount: String`) - Divides a variable by a value, e.g. halving a stat.
 - **Modulo Variable** (`var_name: String, amount: String`) - Replaces a variable with its remainder over a value, e.g. cycling an index that must stay in range.

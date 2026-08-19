@@ -95,9 +95,11 @@ The picker used to offer *Set Variable*, *Add Variable*, *Subtract From Variable
 names nobody says out loud, and typing "add to" found the wrong thing. They are now named the way the
 reading already reads them, so what you pick is what you get:
 
-- **Set value**, **Add to**, **Subtract from**, **Toggle boolean** and **Set boolean** (new - the flag
-  half of Set value, so searching for it finds it), and the two questions **Compare variable** and
-  **Boolean is true / is false** (new).
+- **Set value**, **Add to**, **Subtract from** and **Toggle boolean**, plus the question
+  **Compare variable**. Setting and testing a boolean go through Set value and Compare variable -
+  a separate descriptor for them would carry a line byte-identical to those two, and the lifter
+  resolves an opened line by the line it emits, so a duplicate would quietly steal every
+  `muted = true` in the project.
 - A boolean condition reads as the plain sentence it is - `alive is true`, `muted is false` - never
   "Is alive set", and the negative form flips the word rather than adding a mark.
 - **The ids are frozen.** Only display names changed, so every sheet that already used them keeps

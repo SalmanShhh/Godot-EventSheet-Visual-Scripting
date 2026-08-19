@@ -198,7 +198,7 @@ and read the name it hands you.
 On Animation Finished
   Condition: anim_name = "attack"
     -> Play Animation  "idle"
-    -> Set Variable  can_act = true
+    -> Set value  can_act = true
 ```
 
 **7. A hit-pause on an exact frame.** Pause holds the pose; Play resumes from where it stopped, which

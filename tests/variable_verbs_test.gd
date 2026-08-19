@@ -2,8 +2,12 @@
 # that speaks the same sentence).
 #
 # The picker's entries and the reading are named IDENTICALLY, so the round trip is word-exact and
-# not merely byte-exact. The ids behind them are frozen - only display names and placement moved -
-# which is what this pins: id -> name, and the boolean sentences the reading produces.
+# not merely byte-exact. The ids behind them are frozen - only display names moved - which is what
+# this pins: id -> name, the line each still emits, and the boolean sentences the reading produces.
+#
+# Setting and testing a boolean go through Set value and Compare variable: a separate descriptor for
+# them would carry a template byte-identical to those two, and the lifter resolves a line BY its
+# template, so a duplicate silently steals every `muted = true` and every `i == 1` in the project.
 @tool
 class_name VariableVerbsTest
 extends RefCounted
@@ -17,12 +21,10 @@ static func run() -> bool:
 	ok = _check("Add to", _display_name("AddVar"), "Add to") and ok
 	ok = _check("Subtract from", _display_name("SubtractVar"), "Subtract from") and ok
 	ok = _check("Toggle boolean", _display_name("ToggleVar"), "Toggle boolean") and ok
-	ok = _check("Set boolean", _display_name("SetBoolVar"), "Set boolean") and ok
 	ok = _check("Compare variable", _display_name("CompareVar"), "Compare variable") and ok
-	ok = _check("Boolean is true / is false", _display_name("BoolVarIsTrue"), "Boolean is true / is false") and ok
 
 	# ── They all still live under one picker section ──
-	for ace_id: String in ["SetVar", "AddVar", "SubtractVar", "ToggleVar", "SetBoolVar", "CompareVar", "BoolVarIsTrue"]:
+	for ace_id: String in ["SetVar", "AddVar", "SubtractVar", "ToggleVar", "CompareVar"]:
 		ok = _check("%s is filed under Variables" % ace_id, _category(ace_id), "Variables") and ok
 
 	# ── The ids and the lines they emit are the frozen half ──
@@ -30,8 +32,6 @@ static func run() -> bool:
 	ok = _check("Add to still emits +=", _template("AddVar"), "{var_name} += {amount}") and ok
 	ok = _check("Subtract from still emits -=", _template("SubtractVar"), "{var_name} -= {amount}") and ok
 	ok = _check("Toggle boolean still emits the flip", _template("ToggleVar"), "{var_name} = not {var_name}") and ok
-	ok = _check("Set boolean writes the flag", _template("SetBoolVar"), "{var_name} = {value}") and ok
-	ok = _check("Boolean is true / is false asks the flag", _template("BoolVarIsTrue"), "{var_name} == {value}") and ok
 
 	# ── The reading: a boolean condition is a plain sentence, never "Is alive set" ──
 	var context: Dictionary = {"self_object": "Player"}

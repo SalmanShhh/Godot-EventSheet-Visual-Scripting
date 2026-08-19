@@ -178,7 +178,7 @@ honest:
 Every Frame
   Condition: Has Focus  (On node $NameField)
   Condition: On Action Just Pressed  "ui_accept"
-    -> Set Variable  player_name = Field Text (On node $NameField)
+    -> Set value  player_name = Field Text (On node $NameField)
 ```
 
 **8. A toggle button that reports itself.** **On Toggled** carries `toggled_on`, so one event covers

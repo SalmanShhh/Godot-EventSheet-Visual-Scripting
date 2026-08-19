@@ -249,7 +249,7 @@ saved_fullscreen = __cfg_b2.get_value("video", "fullscreen", false)
 ```
 On Ready
   -> Load Setting Into Variable  saved_fullscreen  ("video" / "fullscreen", default false)
-  Condition: Compare Variable  saved_fullscreen == true
+  Condition: Compare variable  saved_fullscreen == true
     -> Go Fullscreen
 ```
 

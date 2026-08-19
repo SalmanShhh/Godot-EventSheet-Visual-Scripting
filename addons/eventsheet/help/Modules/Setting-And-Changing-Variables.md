@@ -31,10 +31,10 @@ real member of the emitted script and a local really is a `var` inside the handl
 
 ## Core concepts
 
-- **A sheet variable is a member of the script.** Set Variable writes it, Get Variable reads it, and it
+- **A sheet variable is a member of the script.** Set value writes it, Get Variable reads it, and it
   survives between events and between frames. A LOCAL variable, by contrast, exists only for the body
   of the event that declared it.
-- **The compound forms are not sugar.** **Add Variable** emits `+=`, **Multiply Variable** emits `*=`.
+- **The compound forms are not sugar.** **Add to** emits `+=`, **Multiply Variable** emits `*=`.
   They exist so that changing a value relative to itself stays a row rather than falling back to a raw
   GDScript block.
 - **Move Toward (smooth) is frame-rate independent.** It uses the exponential damping form, so the same
@@ -65,9 +65,9 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 | Verb | What it does | Ships as |
 |------|--------------|----------|
-| Set Variable | Sets a **Variable** to a **Value** you give. | `{var_name} = {value}` |
-| Add Variable | Adds an **Amount** to a variable - score, health. | `{var_name} += {amount}` |
-| Subtract From Variable | Subtracts an **Amount** - spending money, taking damage. | `{var_name} -= {amount}` |
+| Set value | Sets a **Variable** to a **Value** you give. | `{var_name} = {value}` |
+| Add to | Adds an **Amount** to a variable - score, health. | `{var_name} += {amount}` |
+| Subtract from | Subtracts an **Amount** - spending money, taking damage. | `{var_name} -= {amount}` |
 | Multiply Variable | Multiplies a variable by a **Factor**. | `{var_name} *= {amount}` |
 | Divide Variable | Divides a variable by a **Divisor**. | `{var_name} /= {amount}` |
 | Modulo Variable | Replaces a variable with its remainder over a **Divisor**, for cycling an index. | `{var_name} %= {amount}` |
@@ -79,8 +79,8 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 |------|--------------|----------|
 | Move Toward (smooth) | Eases a **Variable** toward a **Toward** value at a **Speed**, frame-rate independently. Works on numbers, Vector2/Vector3 and Colors alike. | `{var_name} = lerp({var_name}, {target}, 1.0 - exp(-maxf({speed}, 0.0) * get_process_delta_time()))` |
 | Charge Toward | Fills a **Variable** while the event runs, reaching **Up To** after **Over Seconds**, clamped at the top. | `{var_name} = minf({var_name} + (maxf({maximum}, 0.0) / maxf({seconds}, 0.001)) * get_process_delta_time(), maxf({maximum}, 0.0))` |
-| Toggle | Flips a true/false **Variable** to its opposite. | `{var_name} = not {var_name}` |
-| Toggle Boolean | The Helpers twin of Toggle, for a boolean variable. | `{var_name} = not {var_name}` |
+| Toggle boolean | Flips a true/false **Variable** to its opposite. | `{var_name} = not {var_name}` |
+| Toggle Boolean | The Helpers twin of Toggle boolean, for a boolean variable. | `{var_name} = not {var_name}` |
 | Value If (one of two values) | Picks **If true** or **If false** depending on a **Condition**, all in one cell. | `({true_value} if {condition} else {false_value})` |
 
 ### Variables - the missing-value fallbacks
@@ -110,16 +110,16 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ```
 On Ready
-  -> Set Variable   score = 0
-  -> Set Variable   health = 100
-  -> Set Variable   has_key = false
+  -> Set value   score = 0
+  -> Set value   health = 100
+  -> Set value   has_key = false
 ```
 
 **2. Count a pickup.**
 
 ```
 On Body Entered ( body )
-  -> Add Variable   score += 10
+  -> Add to   score += 10
 ```
 
 ```gdscript
@@ -130,7 +130,7 @@ score += 10
 
 ```
 On hit ( amount )
-  -> Subtract From Variable   health -= amount
+  -> Subtract from   health -= amount
 ```
 
 **4. A double-score power-up, and its end.**
@@ -147,7 +147,7 @@ On powerup expired
 
 ```
 On Action Just Pressed  "ui_down"
-  -> Add Variable   menu_index += 1
+  -> Add to   menu_index += 1
   -> Modulo Variable   menu_index %= 4
 ```
 
@@ -191,7 +191,7 @@ Every Frame
 
 On Action Just Released  "fire"
   -> Call Function   fire_with(power)
-  -> Set Variable   power = 0
+  -> Set value   power = 0
 ```
 
 The meter clamps itself at 100 however long the button is held, so the release event just reads the
@@ -217,7 +217,7 @@ Every Physics Tick
 
 ```
 On Ready
-  -> Set Variable   score = Number Or ( save.get("score", null), 0 )
+  -> Set value   score = Number Or ( save.get("score", null), 0 )
 ```
 
 A saved `0` is kept as a real score - only a missing, null or non-numeric value falls through to the
@@ -227,7 +227,7 @@ default.
 
 ```
 On Ready
-  -> Set Variable   player_name = Text Or ( save.get("name", null), "Player" )
+  -> Set value   player_name = Text Or ( save.get("name", null), "Player" )
 ```
 
 A blank name counts as nothing here, which is exactly the behaviour a name field wants.
@@ -236,7 +236,7 @@ A blank name counts as nothing here, which is exactly the behaviour a name field
 
 ```
 On Ready
-  -> Set Variable   inventory = List Or ( loaded.get("items", null), [] )
+  -> Set value   inventory = List Or ( loaded.get("items", null), [] )
 
 For Each  item  in  inventory
   -> Call Function   add_to_bag(item)
@@ -249,8 +249,8 @@ never does.
 
 ```
 On Ready
-  -> Set Variable   settings = Record Or ( loaded.get("audio", null), {} )
-  -> Set Variable   music_volume = Number Or ( settings.get("music", null), 0.8 )
+  -> Set value   settings = Record Or ( loaded.get("audio", null), {} )
+  -> Set value   music_volume = Number Or ( settings.get("music", null), 0.8 )
 ```
 
 A missing block reads as defaults all the way down, with no guard rows.
@@ -259,7 +259,7 @@ A missing block reads as defaults all the way down, with no guard rows.
 
 ```
 On Ready
-  -> Set Variable   target = Value Or ( Nearest Node In Group("enemies"), null )
+  -> Set value   target = Value Or ( Nearest Node In Group("enemies"), null )
 ```
 
 **Value Or** guards null and nothing else, which is right for a lookup that either finds something or
@@ -303,7 +303,7 @@ tuning knob rather than as state.
 
 ```
 Every Frame
-  Condition: Compare Variable   health < 25
+  Condition: Compare variable   health < 25
     -> Set Color Tint   Color(1, 0.4, 0.4, 1)
 ```
 
@@ -312,7 +312,7 @@ than as the row's own subject.
 
 ### Other use cases
 
-**Combo counters.** Add Variable on each hit plus Set Variable back to zero on a miss makes a combo meter from two rows, with Move Toward (smooth) driving the on-screen number so it catches up rather than jumping.
+**Combo counters.** Add to on each hit plus Set value back to zero on a miss makes a combo meter from two rows, with Move Toward (smooth) driving the on-screen number so it catches up rather than jumping.
 
 **Difficulty flags from settings.** Number Or over a loaded difficulty value, with a sane default, means a corrupted or hand-edited settings file can never start the game in an unplayable state.
 
@@ -320,7 +320,7 @@ than as the row's own subject.
 
 **Toggleable debug overlays.** Toggle on a boolean, read by a visibility row, turns any debug view into one keypress with no state machine.
 
-**Wrapping palettes.** Add Variable then Modulo Variable over a colour list length cycles a theme colour on each press and never runs past the end of the list.
+**Wrapping palettes.** Add to then Modulo Variable over a colour list length cycles a theme colour on each press and never runs past the end of the list.
 
 ## Tips and common mistakes
 
@@ -347,7 +347,7 @@ than as the row's own subject.
 - **A local is scoped to its event.** Declaring `temp` in one event and reading it in another does not
   work; that is what a sheet variable is for.
 - **Do not declare the same local twice in one event.** Two **Set Local Variable** rows with the same
-  **Name** in one body is a redeclaration error. The second one should be a **Set Variable** row, or a
+  **Name** in one body is a redeclaration error. The second one should be a **Set value** row, or a
   different name.
 - **A constant must be constant.** **Set Local Constant** emits `const`, so its **Value** has to be
   computable at compile time. A node lookup or a `delta` in there will not compile - use a local
