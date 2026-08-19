@@ -107,8 +107,10 @@ static func _scene_sheet_rows() -> bool:
 	var texts: PackedStringArray = _row_texts(view)
 	ok = _check("the scene's own bar comes first", texts[0] if texts.size() > 0 else "",
 		"⇥ | opened_scene_level.tscn | a | Node2D | 3 scripts") and ok
+	# The bar is the script's own Include bar wearing the NODE's name, so it keeps everything that bar
+	# already says about a file - the reading-coverage chip included.
 	ok = _check("each script sits under its object bar, named by its NODE",
-		_first_containing(texts, "| HUD |"), "⇥ | HUD | a | CanvasLayer | · opened_scene_hud.gd") and ok
+		_first_containing(texts, "| HUD |"), "⇥ | HUD | a | CanvasLayer | · opened_scene_hud.gd | reads as events") and ok
 	# The wiring the SCENE file holds, on a script that is not the scene root: before this, a child
 	# node's handler had no way of knowing what wired it.
 	ok = _check("a child node's scene wiring reads as its trigger",
