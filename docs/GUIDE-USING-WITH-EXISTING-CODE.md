@@ -749,6 +749,31 @@ That is the order this section is in.
 
 <img src="images/wired-call-rows.png" alt="A script whose _ready wires three signals: the connect lines read as muted connects notes, and under them three trigger events read StartButton On Pressed with player Call Reset, WaveTimer On Timeout with hud Call Show Wave count = 3, and a one-shot WaveTimer On Timeout carrying a Trigger once chip with count = 9." width="720">
 
+#### Patterns - the shapes several lines make together
+
+Some things a script says are not in any one line. A `-=` on its own is arithmetic; the same `-=` by
+a per-frame delta, on a number the file asks about against zero, is a countdown. So the whole file is
+read once when the rows are built, and the events that turn out to BE a known pattern say so.
+
+- **Both halves are always required.** A countdown must be counted down by a delta AND compared to
+  zero; a pool must be drained behind an `is_empty()` guard AND have an `instantiate()` fallback; a
+  sequence needs two waits AND something to do between them. One half alone keeps the ordinary
+  reading, because a pattern that is almost right is worse than the code it replaced.
+- **The evidence is the source lines, never a paraphrase.** Every pattern an event claims carries the
+  exact lines that made the sheet think so, so the reason a row says what it says is one hover away.
+- **A shipped behavior is offered where one exists.** A hand-rolled object pool names the Object Pool
+  behavior in its claim, so the sheet can offer to swap the hand-written shape for the pack.
+- **What reads as a pattern today:** countdowns (`Count down x`, `Start x for N seconds`, `x has run
+  out`, `x is running`), object pools (`Create object … [pooled]`, `Return to pool`), wait sequences
+  (a `sequence · N s` chip on the function's header), saving and loading (**Local Storage**: `Set
+  item player/score to score`, `Local Storage.Item("player/score")`, `Save`, `Load`, `save file is
+  missing`), existence and relations (`t exists`, `Forget target`, `Remove from layout`), and the
+  list and table reads (`the first 3 of items`, `the sum of price over items`, `Sort items by price`,
+  `items contains sword`, `stats "hp" (or 100 when missing)`).
+
+All of it is display only. Nothing a pattern reading decides changes a row, so an opened file still
+saves back byte for byte and the GDScript it compiles to is untouched.
+
 #### The reading lenses - names you can turn on and off
 
 - **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
