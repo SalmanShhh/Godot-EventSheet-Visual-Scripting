@@ -431,6 +431,8 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   jumps left` (Construct's own function-block action). The same sentence appears whether the row was typed
   in GDScript or picked from the palette - one grammar produces both - and the exact code is always on
   hover.
+![A function's rows with its locals underneath it - Local number dealt = 0, Local text label = "hurt", Local number shield = 5 - and System Set dealt to damage * 2 in the action lane](images/local-rows-at-the-top-of-their-event.png)
+
 - **A local declared inside a body reads at the top of the event that owns it.** An event sheet
   declares a local at the top of its event and fills it in with an action, so a `var` line reads as
   those rows: `var dealt: float = damage * 2` becomes `Local number dealt = 0` up with the event's
