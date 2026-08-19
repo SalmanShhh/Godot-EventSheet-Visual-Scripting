@@ -48,6 +48,53 @@ What changed in the build you have installed (v0.17.0), in the words the release
   Named Scenes, Encounter Timeline, Priced Table, StatForge, Drawing Canvas, and Nav Agent 3D's
   description). Reworded to action; the packs are rebuilt and all 91 now pass the reading check.
 
+### Added - the project-level surfaces an event-sheet author reaches for
+
+Five surfaces that are about the PROJECT rather than about one sheet. None of them adds a second way
+to do anything: each one is a view over something the editor already has, and every gesture on them
+lands in a path that already existed.
+
+- **The Project bar: the project by KIND, as a tab of the Object bar.** Scenes, Scripts, Classes,
+  Base classes, Behaviors, Sounds and Files, derived from the same recursive scan the translation
+  sweep uses plus the vocabulary scanner - no project file of its own, no registry, nothing to keep
+  in step. Godot's FileSystem dock shows folders; this shows what the things ARE. The headings follow
+  View ▸ Familiar Words: `Scenes  (layouts)` with the toggle off, `Layouts  (scenes)` with it on, and
+  a section both editors call the same thing (Sounds) is not dressed up as a translation of itself.
+  What a folder tree cannot show is what earns it the room: which classes the project declares and
+  who extends whom (`Player  Slime`), which behavior packs are installed, the last Project Doctor
+  run's findings as a badge per item, and - on the scripts you have open - how much of each already
+  reads as events.
+- **It owns no action.** Right-click New scene / New script / New class / Extract base class /
+  Import sound each open Godot's own dialog or the plugin's existing one. Double-click routes: a
+  scene to the 2D/3D editor with the whole-layout-as-one-sheet reading offered beside it, a script to
+  a sheet or to Godot's script editor per your default, a class to Object properties, a behavior to
+  its pack's reference page. Dragging one onto the canvas means what the sheet already understands: a
+  class starts an event on it, a sound is a Play sound action, a scene is a Go to layout action.
+- **And it costs nothing until you open it.** Off by default, collapsed to a thin strip, built lazily
+  on first show, refreshed on the same `filesystem_changed` ping everything else listens to (and only
+  while it is open), with a filter box, arrows, Enter and Esc. It turns itself on for a project in
+  Simple mode or one that started from a template or the migration path; View ▸ Project bar toggles
+  it by hand and the ✕ hides it for that project. Two theme tokens of its own.
+- **The Start page.** Three columns - New from template (the shipped starters and the playable
+  showcases, by genre, each with a one-line pitch), Recent, and Learn (the tutorials and What's new) -
+  plus a checkbox for the startup half. It opens when the workspace has no sheet in it, and from
+  Sheet ▸ Start page whenever you want it back.
+- **Preview on the sheet.** `▶ Preview layout` (F6), `▶▶ Preview project` (F5) and `🐞 Debug layout`
+  on the sheet toolbar, routed to the editor's own run commands. While a game is running the first
+  two relabel themselves `■ Stop` and `↻ Restart`, so the strip never claims it will do something it
+  will not; Debug layout arms Event Trace, Live Values and breakpoints before it runs.
+- **A beginner toolbar.** The eight Add gestures - Event, Sub-event, Condition, Action, Group,
+  Comment, Variable, Function - as buttons above the canvas, with the Preview buttons after them.
+  Each names the key it stands in for on hover, so the strip teaches the shortcut and makes itself
+  unnecessary. On in Simple mode, off otherwise, and View ▸ Add toolbar decides either way. Adding a
+  function is now a rebindable key of its own (F).
+- **A shortcuts preset.** Keyboard Shortcuts ▸ Preset ▾ offers `Godot EventSheets` or `Another
+  event-sheet editor`. The preset is a table applied through the same per-user store the dialog
+  already writes, and it rebinds only what differs (E / S / C / A / G / Q / V / B already match):
+  invert moves to X, collapse/expand lands on Ctrl+E, the Ctrl alternate for add-event steps aside,
+  and preview moves to F4. Everything stays rebindable afterwards, and the picker reads the LIVE
+  bindings - rebind one key by hand and it honestly says `Godot EventSheets` again.
+
 ### Added - one debugger, four tabs
 
 - **View ▸ Debugger.** Live Values, the Watch box, the Event Trace and F9 breakpoints were four
@@ -103,53 +150,6 @@ What changed in the build you have installed (v0.17.0), in the words the release
   the Godot node that already does the job and needs nothing attached), and what a HAND-WRITTEN
   version of it reads like on a sheet. Searchable from the one Manual box under the same
   *glossary* heading the word list uses, at `reference:behaviors` and `reference:behaviors/<name>`.
-
-### Added - the project-level surfaces an event-sheet author reaches for
-
-Five surfaces that are about the PROJECT rather than about one sheet. None of them adds a second way
-to do anything: each one is a view over something the editor already has, and every gesture on them
-lands in a path that already existed.
-
-- **The Project bar: the project by KIND, as a tab of the Object bar.** Scenes, Scripts, Classes,
-  Base classes, Behaviors, Sounds and Files, derived from the same recursive scan the translation
-  sweep uses plus the vocabulary scanner - no project file of its own, no registry, nothing to keep
-  in step. Godot's FileSystem dock shows folders; this shows what the things ARE. The headings follow
-  View ▸ Familiar Words: `Scenes  (layouts)` with the toggle off, `Layouts  (scenes)` with it on, and
-  a section both editors call the same thing (Sounds) is not dressed up as a translation of itself.
-  What a folder tree cannot show is what earns it the room: which classes the project declares and
-  who extends whom (`Player  Slime`), which behavior packs are installed, the last Project Doctor
-  run's findings as a badge per item, and - on the scripts you have open - how much of each already
-  reads as events.
-- **It owns no action.** Right-click New scene / New script / New class / Extract base class /
-  Import sound each open Godot's own dialog or the plugin's existing one. Double-click routes: a
-  scene to the 2D/3D editor with the whole-layout-as-one-sheet reading offered beside it, a script to
-  a sheet or to Godot's script editor per your default, a class to Object properties, a behavior to
-  its pack's reference page. Dragging one onto the canvas means what the sheet already understands: a
-  class starts an event on it, a sound is a Play sound action, a scene is a Go to layout action.
-- **And it costs nothing until you open it.** Off by default, collapsed to a thin strip, built lazily
-  on first show, refreshed on the same `filesystem_changed` ping everything else listens to (and only
-  while it is open), with a filter box, arrows, Enter and Esc. It turns itself on for a project in
-  Simple mode or one that started from a template or the migration path; View ▸ Project bar toggles
-  it by hand and the ✕ hides it for that project. Two theme tokens of its own.
-- **The Start page.** Three columns - New from template (the shipped starters and the playable
-  showcases, by genre, each with a one-line pitch), Recent, and Learn (the tutorials and What's new) -
-  plus a checkbox for the startup half. It opens when the workspace has no sheet in it, and from
-  Sheet ▸ Start page whenever you want it back.
-- **Preview on the sheet.** `▶ Preview layout` (F6), `▶▶ Preview project` (F5) and `🐞 Debug layout`
-  on the sheet toolbar, routed to the editor's own run commands. While a game is running the first
-  two relabel themselves `■ Stop` and `↻ Restart`, so the strip never claims it will do something it
-  will not; Debug layout arms Event Trace, Live Values and breakpoints before it runs.
-- **A beginner toolbar.** The eight Add gestures - Event, Sub-event, Condition, Action, Group,
-  Comment, Variable, Function - as buttons above the canvas, with the Preview buttons after them.
-  Each names the key it stands in for on hover, so the strip teaches the shortcut and makes itself
-  unnecessary. On in Simple mode, off otherwise, and View ▸ Add toolbar decides either way. Adding a
-  function is now a rebindable key of its own (F).
-- **A shortcuts preset.** Keyboard Shortcuts ▸ Preset ▾ offers `Godot EventSheets` or `Another
-  event-sheet editor`. The preset is a table applied through the same per-user store the dialog
-  already writes, and it rebinds only what differs (E / S / C / A / G / Q / V / B already match):
-  invert moves to X, collapse/expand lands on Ctrl+E, the Ctrl alternate for add-event steps aside,
-  and preview moves to F4. Everything stays rebindable afterwards, and the picker reads the LIVE
-  bindings - rebind one key by hand and it honestly says `Godot EventSheets` again.
 
 ### Added - an opened script's PATTERNS read as the events they are
 
