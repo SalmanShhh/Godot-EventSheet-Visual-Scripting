@@ -5139,12 +5139,16 @@ func _append_scroll_limit_spans(spans: Array, limits: Dictionary, action_index: 
 		"raw_action": true,
 		"code_cell": false,
 		"line_index": line_index,
-		"object_label": str(limits.get("object", "")),
-		"compiled_lines": int(limits.get("line_count", 1)),
-		"create_object_indices": limits.get("indices", [])
+		"object_label": str(limits.get("object", ""))
 	}
+	# Only the SENTENCE carries the "stands for N lines" mark and the lines behind it; repeating them
+	# on the note would draw the same chip twice on one row.
 	spans.append(_make_span(str(limits.get("text", "")), SemanticSpan.SpanType.ACTION,
-		base.duplicate().merged({"natural_width": true}, true).merged(action_style_meta, true)))
+		base.duplicate().merged({
+			"natural_width": true,
+			"compiled_lines": int(limits.get("line_count", 1)),
+			"create_object_indices": limits.get("indices", [])
+		}, true).merged(action_style_meta, true)))
 	# The note carries no object label: the row already said whose camera this is.
 	spans.append(_make_span(" %s" % str(limits.get("note", "")), SemanticSpan.SpanType.VALUE,
 		base.duplicate().merged({

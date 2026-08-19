@@ -2412,10 +2412,12 @@ Collections (rich variables)
 - **Stop Sprite Animation** (`target: String`) - Stops the animated sprite's current animation on the spot.
 - **Set Frame** (`frame: String, target: String`) - Jumps the animated sprite to a specific frame number.
 - **Set Mirrored** (`flipped: String, target: String`) - Mirrors the sprite horizontally, great for facing left or right.
-- **Make Camera Current** (`target: String`) - Makes this camera the active one the player views the game through.
-- **Set Camera Zoom** (`zoom: String, target: String`) - Sets how zoomed in or out the camera is.
-- **Set Camera Offset** (`offset: String, target: String`) - Shifts the camera view away from the position it follows.
-- **Set Camera Limits** (`left: String, top: String, right: String, bottom: String, target: String`) - Sets the boundaries the camera won't scroll past, keeping it inside the level.
+- **Make Current** (`target: String`) - Makes this camera the active one the player views the game through.
+- **Set Zoom** (`zoom: String, target: String`) - Sets how zoomed in or out the camera is.
+- **Set Offset** (`offset: String, target: String`) - Shifts the camera view away from the position it follows.
+- **Set Scroll Limits** (`left: String, top: String, right: String, bottom: String, target: String`) - Sets the boundaries the camera won't scroll past, keeping it inside the level.
+- **Set Smoothing** (`enabled: String, target: String`) - Turns the camera's smooth catch-up on or off, so it eases toward what it follows instead of snapping.
+- **Scroll Toward** (`toward: String, rate: String`) - Eases the camera toward another node, closing the gap at the given rate every second.
 - **Set Text** (`value: String, target: String`) - Sets the text shown on a label, like a score or message.
 - **Append Text** (`value: String, target: String`) - Adds more text onto the end of a label's existing text.
 - **Find Path To** (`position: String, target: String`) - Tells a navigation agent to pathfind toward a world position, for AI movement.
@@ -2717,6 +2719,7 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **On Input** - Runs on every input event the node receives, for catching keys, mouse, or touch.
 - **On Unhandled Input** - Runs on input no UI element consumed, ideal for gameplay controls that ignore menu clicks.
 - **On Unhandled Key Input** - Runs on keyboard input no UI element consumed - the keys-only sibling of On Unhandled Input, so mouse and gamepad traffic never wakes it.
+- **On Input On This Object** - Runs when input lands on this object's own collision shape - a click, a drag or a touch that hit it rather than the world behind it.
 - **On Timeout** - Runs when this Timer counts down to zero, e.g. ending a cooldown or spawn delay.
 - **On Animation Finished** (`anim_name: String`) - Runs when an animation finishes playing, e.g. chaining the next animation or action.
 - **On Tree Entered** - Runs when this node is added into the scene tree.
@@ -3645,15 +3648,16 @@ System (event-sheet System parity)
 - **Set Max FPS** (`fps: String`) - Caps how many frames per second the game renders - save battery or steady the pace.
 - **Set Physics Rate** (`fps: String`) - Changes how often physics steps per second (default 60).
 - **Set Random Seed** (`seed: String`) - Pins the global randomness so a run replays identically - daily challenges, replays, tests.
-- **Set Shader Parameter** (`param: String, value: String, target: String`) - Feeds a value into a shader uniform to drive a visual effect at runtime.
+- **Set Effect Parameter** (`param: String, value: String, target: String`) - Feeds a value into one of an effect's parameters to drive it at runtime.
 - **Start Cooldown** (`name: String, seconds: String`) - Starts (or restarts) a named cooldown that lasts the given number of seconds.
 - **Buffer Press** (`name: String, seconds: String`) - Remembers a press for a fraction of a second, so an input made slightly too early still counts. Record it when the button goes down, check Press Is Buffered where the act happens, then Clear Buffer.
 - **Clear Buffer** (`name: String`) - Forgets a buffered press. Consume the buffer right after acting on it so one press never fires twice.
 - **Spawn Scene At** (`path: String, position: String`) - Loads a scene and drops a copy into the world at a position.
 - **Spawn Scene (Full)** (`path: String, position: String, rotation: String, group: String`) - Spawns a scene copy with position, rotation and an optional group in one step.
 - **Set Group Active** (`group: String, active: String`) - Turns a runtime-toggleable group on or off to enable or disable its behaviour.
-- **Set Material** (`material: String, target: String`) - Assigns a shader or canvas material to this node to change how it draws.
-- **Clear Material** (`target: String`) - Removes any material from this node, returning it to default drawing.
+- **Set Effect** (`material: String, target: String`) - Puts an effect on this object, changing how it draws.
+- **Remove Effect** (`target: String`) - Takes the effect off this object, returning it to how it normally draws.
+- **Tween Effect Parameter** (`param: String, from: String, to: String, seconds: String, target: String`) - Drives one of an effect's parameters from one value to another over time.
 - **Forget First Time** (`key: String`) - Resets an Only Once Ever memory so it fires again - for testing, or for New Game+. Rows already running this session keep their cached answer until the next run.
 - **Spawn Scene As** (`path: String, spawn_name: String, values: String, parent: String, position: String`) - Spawns a scene under a name, sets a record of values on it before it enters the tree, and remembers it under that name so every later row can say The Spawned. If the sheet declares a scene_spawned(spawn_name, node) signal, this fires it with both, so another event can react to the new node without ever asking what was spawned last.
 - **Report Failure** (`verb: String, reason: String`) - Announces that an action refused, so every On Failure Of event for that action runs. Use it inside an action you publish yourself, or after a check that found a null resource or an empty result.
@@ -3701,7 +3705,7 @@ System (event-sheet System parity)
 - **Now (Clock Time)** - The moment right now by the system clock, in seconds. Unlike Now, this keeps counting while the game is closed - which is what a daily reward or an idle-earnings sum needs.
 - **Viewport Width** (`target: String`) - How wide the visible layout is, in pixels - the right edge to spawn at, wrap around, or clamp to.
 - **Viewport Height** (`target: String`) - How tall the visible layout is, in pixels - the bottom edge to spawn at, wrap around, or clamp to.
-- **Shader Parameter** (`param: String, target: String`) - Gives the current value of a named shader uniform on this node.
+- **Effect Parameter** (`param: String, target: String`) - Gives the current value of one of this object's effect parameters.
 - **The Spawned** (`spawn_name: String`) - The node a Spawn Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.
 
 ### Table (`res://addons/eventforge/registration/modules/table_aces.gd`)
@@ -3796,20 +3800,21 @@ DISPLAY text: making a value readable before it reaches a Label.
 Tilemaps (TileMapLayer, Godot 4.3+)
 
 #### Conditions
+- **Tile Has Custom Data** (`coords: String, name: String, target: String`) - True when the tile at a cell carries the named custom data - how a tileset marks walls, water or ladders.
 - **Cell Is Empty** (`coords: String, target: String`) - True when the chosen tilemap cell has no tile in it.
 - **Cell Has Tile** (`coords: String, target: String`) - True when the chosen tilemap cell actually has a tile placed.
 
 #### Actions
-- **Set Cell** (`coords: String, source_id: String, atlas_coords: String, target: String`) - Paints a tile at a grid cell using a tile source and atlas position.
-- **Erase Cell** (`coords: String, target: String`) - Clears the tile at a single grid cell, leaving it empty.
+- **Set Tile** (`coords: String, source_id: String, atlas_coords: String, target: String`) - Paints a tile at a grid cell, choosing which tileset and which tile of it to use.
+- **Erase Tile** (`coords: String, target: String`) - Clears the tile at a single grid cell, leaving it empty.
 - **Clear Tilemap** (`target: String`) - Wipes every tile from the tilemap layer, leaving it blank.
 
 #### Expressions
-- **Cell Source Id** (`coords: String, target: String`) - Returns the tile source ID at a cell, or -1 when empty.
+- **Tile At** (`coords: String, target: String`) - Returns which tileset the tile at a cell came from, or -1 when the cell is empty.
 - **Cell Atlas Coords** (`coords: String, target: String`) - Returns which tile in the atlas sits at the given cell.
 - **Used Cells Count** (`target: String`) - Returns how many cells in the tilemap currently hold a tile.
-- **Local To Map** (`pos: String, target: String`) - Converts a pixel position into the cell coordinates that contain it.
-- **Map To Local** (`coords: String, target: String`) - Converts cell coordinates into the pixel position at that cell's center.
+- **Position To Tile** (`pos: String, target: String`) - Converts a pixel position into the cell coordinates that contain it.
+- **Tile To Position** (`coords: String, target: String`) - Converts cell coordinates into the pixel position at that cell's center.
 
 ### Tooling (`res://addons/eventforge/registration/modules/tooling_aces.gd`)
 Editor Tools vocabulary (build @tool / EditorScript sheets by events).

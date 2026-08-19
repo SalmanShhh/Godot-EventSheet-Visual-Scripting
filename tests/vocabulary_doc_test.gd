@@ -69,7 +69,7 @@ static func run() -> bool:
 	all_passed = _check("a module section carries its title, summary and verbs",
 		tilemap.contains("### Tilemap (`res://addons/eventforge/registration/modules/tilemap_aces.gd`)")
 		and tilemap.contains("Tilemaps (TileMapLayer, Godot 4.3+)")
-		and tilemap.contains("#### Actions") and tilemap.contains("- **Set Cell**"), true) and all_passed
+		and tilemap.contains("#### Actions") and tilemap.contains("- **Set Tile**"), true) and all_passed
 	all_passed = _check("verbs are listed with the SHIPPED parameters, not the authored ones",
 		tilemap.contains("target: String"), true) and all_passed
 	all_passed = _check("every module file is covered",

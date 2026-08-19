@@ -197,7 +197,7 @@ has to remember it.
 
 ### Grid maths (no TileMap required)
 
-Cell coordinates used to exist only if you owned a TileMapLayer, because **Local To Map** is its method.
+Cell coordinates used to exist only if you owned a TileMapLayer, because **Position To Tile** is its method.
 Build grids, inventory grids, puzzle boards, chunk keys and tower placement all reason in cells with no
 tilemap in sight. **Cell Distance** carries the same five-geometry dropdown as **Is Within Distance
 (choose metric)**, so there is one spelling of "how is distance counted" in the whole plugin.
@@ -715,7 +715,7 @@ On Fire Laser
 ```
 On Room Placed
   Loops: For Each  ( Cells In Rectangle ( room_corner, room_size ) )
-    -> Tilemap: Set Cell  item,  floor_tile
+    -> Tilemap: Set Tile  item,  floor_tile
 ```
 
 **38. Explosion damage that respects distance.**
