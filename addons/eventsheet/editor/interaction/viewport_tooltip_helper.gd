@@ -225,6 +225,8 @@ static func pattern_evidence_line(sheet: EventSheetResource, event_uid: String) 
 		return ""
 	var lines: PackedStringArray = PackedStringArray()
 	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_uid):
+		if not EventSheetPatternVocabulary.is_marked(str((claim as Dictionary).get("pattern", ""))):
+			continue
 		var words: String = EventSheetPatternVocabulary.words(str((claim as Dictionary).get("pattern", "")))
 		if words.is_empty():
 			words = str((claim as Dictionary).get("words", ""))

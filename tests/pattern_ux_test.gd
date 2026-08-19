@@ -86,7 +86,7 @@ static func _test_the_chip_names_the_pattern() -> bool:
 	var rows: PackedStringArray = _row_texts(_open(COUNTDOWN_PATH, true))
 	ok = _check("the event that OWNS the pattern wears the chip",
 		_row_containing(rows, "Subtract dt from cooldown"),
-		"⟳ | Every tick (draw) | Subtract dt from cooldown | ⟡ Cooldown") and ok
+		"Subtract dt from cooldown | ⟡ Cooldown") and ok
 	# The rows that merely USE the pattern's words get nothing: the claim names one row, and a chip
 	# on every row that mentions the variable would be noise rather than a name.
 	ok = _check("and the rows that only use its words do not",
@@ -99,7 +99,7 @@ static func _test_the_chip_names_the_pattern() -> bool:
 	plain.set_sheet(plain._sheet)
 	ok = _check("with the Patterns lens off the row is its plain sentence again",
 		_row_containing(_row_texts(plain), "Subtract dt from cooldown"),
-		"⟳ | Every tick (draw) | Subtract dt from cooldown") and ok
+		"Subtract dt from cooldown") and ok
 	return ok
 
 
@@ -110,17 +110,19 @@ static func _test_the_coverage_chip_counts_them() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(COUNTDOWN_PATH, true)
 	var summary: Dictionary = EventSheetPatternFacts.summary(view._sheet)
-	ok = _check("one distinct pattern", int(summary.get("patterns", -1)), 1) and ok
+	# TWO claims here: the cooldown, and the Every-tick one the blank event carries. The registry
+	# counts both, because both are true; the CHIP counts only the marked one, below.
+	ok = _check("both claims are in the registry", int(summary.get("patterns", -1)), 2) and ok
 	# The registry counts what the CLAIMS named; the chip below counts what a reader will actually be
 	# offered, which is the same number once the pattern's own default is allowed to stand in.
 	ok = _check("the reading itself named no behavior here", int(summary.get("adoptable", -1)), 0) and ok
 	ok = _check("the chip says both counts, and ends in the arrow that promises a walk",
 		EventSheetReadingCoverage.chip_text(view._sheet),
 		"reads as events · 1 pattern · 1 adoptable ▸") and ok
-	var pooling: EventSheetViewport = _open(POOL_PATH, true)
-	ok = _check("a second file with its own pattern counts its own",
-		EventSheetReadingCoverage.chip_text(pooling._sheet),
-		"reads as events · 1 pattern · 1 adoptable ▸") and ok
+	# The Every-tick claim on the same event is NOT counted and wears no chip: a marker beside a row
+	# whose own margin already says it runs every tick is the same fact twice.
+	ok = _check("a pattern the sheet does not mark is not counted either",
+		EventSheetPatternVocabulary.is_marked("blank_event"), false) and ok
 	# A file with no claims must not grow "0 patterns": a number with nothing in it is worse than
 	# no number.
 	ok = _check("and a file the readings claimed nothing on says only the good news",

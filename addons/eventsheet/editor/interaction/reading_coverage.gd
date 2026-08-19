@@ -90,19 +90,25 @@ static func chip_text(sheet: EventSheetResource) -> String:
 ## Read straight off the claim registry, so the chip can only ever say what the ⟡ chips in the sheet
 ## already say - the count and the marks are the same fact counted once.
 static func pattern_chip_text(sheet: EventSheetResource) -> String:
-	var summary: Dictionary = EventSheetPatternFacts.summary(sheet)
-	var patterns: int = int(summary.get("patterns", 0))
+	# Counted over the MARKED patterns only, so the number matches the ⟡ chips a reader can go and
+	# find: a pattern the sheet does not mark is one they would hunt for and never see.
+	var marked: Dictionary = {}
+	var behaviors: Dictionary = {}
+	for claim: Variant in EventSheetPatternFacts.claims(sheet):
+		var pattern: String = str((claim as Dictionary).get("pattern", ""))
+		if not EventSheetPatternVocabulary.is_marked(pattern):
+			continue
+		marked[pattern] = true
+		# The ADOPTABLE half asks the vocabulary rather than the claim's own field, so the number is
+		# the number of offers a reader will actually find: a reading that has not yet learned to
+		# name the behavior still leaves the pattern's own default standing.
+		if not EventSheetPatternVocabulary.adoptable_for(claim as Dictionary).is_empty():
+			behaviors[pattern] = true
+	var patterns: int = marked.size()
 	if patterns <= 0:
 		return ""
 	var patterns_text: String = EventSheetL10n.translate("1 pattern") if patterns == 1 \
 		else EventSheetL10n.translate("%d patterns") % patterns
-	# The ADOPTABLE half is counted through the vocabulary rather than off the claim's own field, so
-	# the number here is the number of offers a reader will actually find in the sheet: a reading
-	# that has not yet learned to name the behavior still leaves the pattern's own default standing.
-	var behaviors: Dictionary = {}
-	for claim: Variant in EventSheetPatternFacts.claims(sheet):
-		if not EventSheetPatternVocabulary.adoptable_for(claim as Dictionary).is_empty():
-			behaviors[str((claim as Dictionary).get("pattern", ""))] = true
 	var adoptable: int = behaviors.size()
 	if adoptable <= 0:
 		return " · %s" % patterns_text

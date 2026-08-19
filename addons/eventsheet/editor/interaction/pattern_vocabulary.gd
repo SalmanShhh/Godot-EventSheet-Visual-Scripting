@@ -154,6 +154,20 @@ const PACK_LABELS: Dictionary = {
 }
 
 
+## The patterns that are a property of ONE ROW rather than a shape spanning several, and which the
+## row therefore already states in its own words. They are claimed like any other (the Doctor and the
+## Manual want them), but they wear no ⟡ chip and are not counted on the coverage chip: a marker
+## saying "Every tick" beside an event whose own margin says it runs every tick is not a name a
+## reader learns anything from, it is the same fact twice.
+const UNMARKED_PATTERNS: PackedStringArray = ["blank_event"]
+
+
+## Whether a pattern is one the sheet MARKS - the shapes a reader could not have seen by looking at
+## one row, which is the whole reason a marker exists.
+static func is_marked(pattern: String) -> bool:
+	return not UNMARKED_PATTERNS.has(pattern)
+
+
 ## The pattern's name in the reader's language, or "" when the id is not one this table knows.
 static func words(pattern: String) -> String:
 	if not ENTRIES.has(pattern):

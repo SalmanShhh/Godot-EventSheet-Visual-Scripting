@@ -7752,6 +7752,8 @@ func _pattern_chip_spans(event_row: EventRow) -> Array[SemanticSpan]:
 		return spans
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_row.event_uid):
+		if not EventSheetPatternVocabulary.is_marked(str((claim as Dictionary).get("pattern", ""))):
+			continue
 		# THE CHIP SAYS THE PATTERN'S NAME, not the claim's own sentence. A claim's `words` is the one
 		# line the hover shows ("counts cooldown down and asks whether it has run out"); a chip is a
 		# NAME, and a whole clause on a row would be a second sentence competing with the row's own.
@@ -10834,12 +10836,6 @@ func sentence_context() -> Dictionary:
 		# What only something able to ASK can answer: the script's own object name, its engine
 		# properties, and each signal's parameter names. Cached with the rest of the context.
 		context.merge(EventSheetViewportReadingRows.sentence_context_extras(sheet as EventSheetResource), true)
-		# ── Batch 8 ───────────────────────────────────────────────────────────────────────────
-		# The pattern registry is re-stated from scratch here, at the one point a rebuild works out
-		# what this sheet says: cleared first so a pattern the user just deleted cannot linger, then
-		# claimed on the rows that own them. Everything that talks ABOUT patterns reads these claims.
-		EventSheetPatternFacts.clear(sheet as EventSheetResource)
-		EventSheetViewportReadingRows.claim_patterns(sheet as EventSheetResource)
 	_sentence_context_sheet = sheet
 	_sentence_context_cache = context.duplicate()
 	context["verb_kind"] = _current_verb_kind()
