@@ -20,6 +20,8 @@ var _proposal_label: RichTextLabel = null
 var _add_button: Button = null
 var _scratch_button: Button = null
 var _mode_label: Label = null
+## Built on the first live call and kept: the one socket this plugin ever opens.
+var _http: HTTPRequest = null
 ## The checked rows the last reply proposed. Empty until a reply arrives; emptied by Discard.
 var _proposal: Array = []
 
@@ -99,10 +101,45 @@ func _ask_pressed() -> void:
 	var definitions: Array = registry.get_all_definitions() if registry != null else []
 	var answer: Dictionary = EventSheetAsk.ask(_prompt_edit.text, _dock._current_sheet, definitions)
 	if not bool(answer.get("sent", false)):
-		_proposal_label.text = str(answer.get("error", ""))
-		_set_proposal([])
+		if not str(answer.get("error", "")).is_empty():
+			_proposal_label.text = str(answer.get("error", ""))
+			_set_proposal([])
+			return
+		# Ask is on and the request is built, but nothing was injected to carry it - so this is the
+		# live call. It waits, which is why it lives in the window and not in the static seam.
+		_send_live(answer.get("request", {}) as Dictionary, definitions)
 		return
-	var checked: Dictionary = EventSheetAsk.validate(str(answer.get("reply", "")), definitions)
+	_show_answer(str(answer.get("reply", "")), definitions)
+
+
+## The live call: one POST of the request EventSheetAsk built, to the endpoint the reader chose.
+## Deliberately the only place in the plugin that opens a socket, and it is only ever reached from
+## the Ask button.
+func _send_live(request: Dictionary, definitions: Array) -> void:
+	if _http == null:
+		_http = HTTPRequest.new()
+		_dock.add_child(_http)
+	_proposal_label.text = "Asking %s…" % EventSheetAsk.endpoint()
+	_set_proposal([])
+	var error: int = _http.request(EventSheetAsk.endpoint(), EventSheetAsk.request_headers(),
+		HTTPClient.METHOD_POST, JSON.stringify(request))
+	if error != OK:
+		_proposal_label.text = "Could not reach %s (error %d). Nothing was sent." \
+			% [EventSheetAsk.endpoint(), error]
+		return
+	var result: Array = await _http.request_completed
+	var status: int = int(result[1])
+	var body: String = (result[3] as PackedByteArray).get_string_from_utf8()
+	if status < 200 or status >= 300:
+		_proposal_label.text = "%s answered %d:\n%s" % [EventSheetAsk.endpoint(), status, body]
+		return
+	_show_answer(EventSheetAsk.reply_text_from_body(body), definitions)
+
+
+## One reply, checked and shown. Shared by the injected seam and the live call so a test and a real
+## endpoint land in exactly the same place.
+func _show_answer(reply: String, definitions: Array) -> void:
+	var checked: Dictionary = EventSheetAsk.validate(reply, definitions)
 	if not str(checked.get("error", "")).is_empty():
 		_proposal_label.text = str(checked.get("error"))
 		_set_proposal([])

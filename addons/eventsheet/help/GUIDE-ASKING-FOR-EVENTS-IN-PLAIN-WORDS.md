@@ -65,6 +65,10 @@ Everything lives in **Project Settings ▸ EventSheets ▸ Ask**:
 | `model` | The model name that endpoint expects. |
 | `api_key` | Your own key for that endpoint, when it wants one. A local endpoint usually does not. |
 
+Pressing **Ask** makes one HTTP POST to that endpoint, carrying the request described above and
+your key as a bearer header when you gave one. That call is the only socket this plugin ever opens,
+and it is only ever reached from that button.
+
 Two things to know:
 
 - **A mode with no endpoint is still off.** There is nothing to send to, so Ask refuses rather than

@@ -40,6 +40,7 @@ static func _test_off_sends_nothing() -> bool:
 	ok = _check("nothing is sent while Ask is off", bool(answer.get("sent")), false) and ok
 	ok = _check("the transport was never reached", reached.size(), 0) and ok
 	ok = _check("and it says why", str(answer.get("error")).begins_with("Ask is off."), true) and ok
+	ok = _check("no request was even built while off", answer.has("request"), false) and ok
 	# On, but with nowhere to ask, is still off - there is nothing to send to.
 	ProjectSettings.set_setting(EventSheetAsk.SETTING_MODE, EventSheetAsk.MODE_LOCAL)
 	ProjectSettings.set_setting(EventSheetAsk.SETTING_ENDPOINT, "")
@@ -89,6 +90,14 @@ static func _test_validation() -> bool:
 	ok = _check("an unknown entry is named as dropped",
 		str(checked.get("dropped")),
 		"[\"colour on Core::Jump - not a parameter it takes\", \"Core::Teleport - this project has no such entry\"]") and ok
+	# The reply text is dug out of the common chat wrapper, and an endpoint that simply answers with
+	# the JSON is taken at its word. Neither is trusted - both go through validate next.
+	ok = _check("the answer is unwrapped from the common chat shape",
+		EventSheetAsk.reply_text_from_body(
+			"{\"choices\": [{\"message\": {\"role\": \"assistant\", \"content\": \"{\\\"rows\\\": []}\"}}]}"),
+		"{\"rows\": []}") and ok
+	ok = _check("a bare answer is taken as it stands",
+		EventSheetAsk.reply_text_from_body("{\"rows\": []}"), "{\"rows\": []}") and ok
 	var broken: Dictionary = EventSheetAsk.validate("sorry, I cannot do that", _definitions())
 	ok = _check("an answer that is not rows proposes nothing",
 		(broken.get("rows") as Array).size(), 0) and ok

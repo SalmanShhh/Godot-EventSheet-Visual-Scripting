@@ -175,9 +175,33 @@ static func ask(sentence: String, sheet: EventSheetResource, definitions: Array)
 			"Ask is off. Turn it on in Project Settings ▸ EventSheets ▸ Ask and give it an endpoint."}
 	var request: Dictionary = build_request(sentence, sheet, definitions)
 	if not transport.is_valid():
-		return {"sent": false, "reply": "", "error":
-			"Ask has no way to reach %s from the editor yet - nothing was sent." % endpoint()}
-	return {"sent": true, "reply": str(transport.call(request)), "error": ""}
+		# No injected transport: the caller owns the live call (it needs a scene tree and a wait,
+		# neither of which belongs in a static seam). The request is handed back already built.
+		return {"sent": false, "reply": "", "error": "", "request": request}
+	return {"sent": true, "reply": str(transport.call(request)), "error": "", "request": request}
+
+
+## The headers a live call carries: JSON in, and the reader's own key when they gave one. A local
+## endpoint usually wants no key, so an empty one adds no header rather than an empty one.
+static func request_headers() -> PackedStringArray:
+	var headers: PackedStringArray = PackedStringArray(["Content-Type: application/json"])
+	if not api_key().is_empty():
+		headers.append("Authorization: Bearer %s" % api_key())
+	return headers
+
+
+## The answer text inside a reply body. An endpoint that speaks the common chat format wraps it in
+## choices[0].message.content; one that simply answers with the JSON is taken at its word. Either
+## way what comes out goes through `validate` next, so neither shape is trusted.
+static func reply_text_from_body(body: String) -> String:
+	var parsed: Variant = JSON.parse_string(body)
+	if parsed is Dictionary and (parsed as Dictionary).get("choices") is Array:
+		var choices: Array = (parsed as Dictionary)["choices"]
+		if not choices.is_empty() and choices[0] is Dictionary:
+			var message: Variant = (choices[0] as Dictionary).get("message", {})
+			if message is Dictionary:
+				return str((message as Dictionary).get("content", ""))
+	return body
 
 
 # ── Checking the answer ──────────────────────────────────────────────────────────────────────
