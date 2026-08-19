@@ -2644,3 +2644,50 @@ This pack has no knobs to set.,이 팩에는 조절할 값이 없습니다.
 No pack here matches that.,일치하는 팩이 없습니다.
 Reading check,읽기 검사
 Fix:,고치기:
+Project,프로젝트
+Project bar,프로젝트 바
+Add toolbar,추가 도구 모음
+Start page,시작 페이지
+Scenes,씬
+layouts,레이아웃
+Scripts,스크립트
+event sheets,이벤트 시트
+Classes,클래스
+object types,오브젝트 종류
+Base classes,기본 클래스
+families,패밀리
+Sounds,사운드
+1 file,파일 1개
+%d files,파일 %d개
+%d things,%d개
+filter the project...,프로젝트 필터...
+Nothing here matches that.,일치하는 항목이 없습니다.
+This project has no scenes or scripts yet.,이 프로젝트에는 아직 씬이나 스크립트가 없습니다.
+New scene…,새 씬…
+New script…,새 스크립트…
+New class…,새 클래스…
+Extract base class…,기본 클래스 추출…
+Import sound…,사운드 가져오기…
+The last Project Doctor run had something to say about this one.,마지막 프로젝트 닥터 실행에서 지적된 항목입니다.
+Hide the Project bar for this project (View ▸ Project bar brings it back).,이 프로젝트에서 프로젝트 바를 숨깁니다 (보기 ▸ 프로젝트 바로 되돌립니다).
+"Everything in this project, by what it is. Nothing here changes a file - every entry opens something you already have.",이 프로젝트의 모든 것을 종류별로. 여기서 파일은 바뀌지 않습니다 - 모든 항목은 이미 가진 것을 열 뿐입니다.
+▶ Preview layout,▶ 레이아웃 미리보기
+▶▶ Preview project,▶▶ 프로젝트 미리보기
+🐞 Debug layout,🐞 레이아웃 디버그
+■ Stop,■ 정지
+↻ Restart,↻ 다시 시작
++ Event,+ 이벤트
++ Sub-event,+ 하위 이벤트
++ Condition,+ 조건
++ Action,+ 액션
++ Group,+ 그룹
++ Comment,+ 주석
++ Variable,+ 변수
++ Function,+ 함수
+Start a new event.,새 이벤트를 시작합니다.
+New from template,템플릿에서 새로 만들기
+Recent,최근
+Learn,배우기
+Show this page when nothing is open,아무것도 열려 있지 않을 때 이 페이지 표시
+Nothing here yet.,아직 아무것도 없습니다.
+Another event-sheet editor,다른 이벤트 시트 편집기

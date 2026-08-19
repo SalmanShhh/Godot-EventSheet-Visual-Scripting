@@ -234,6 +234,12 @@ var _command_palette: EventSheetCommandPalette = EventSheetCommandPalette.new() 
 var _sheet_diff: EventSheetSheetDiff = EventSheetSheetDiff.new()  # "What Changed Since Save" - rows a save would touch (dock/sheet_diff.gd)
 var _variable_grouping: EventSheetVariableGrouping = EventSheetVariableGrouping.new()  # drag-onto-variable folders + rename popup (dock/variable_grouping.gd)
 var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + grouped Sheet/Add/Edit/View/Tools menus + theme picker + quick-add (dock/menu_bar.gd)
+var _project_bar_glue: EventSheetProjectBarGlue = EventSheetProjectBarGlue.new()  # T13 the Project bar (the Object bar's other tab): when it shows, and where each entry goes (dock/project_bar_glue.gd)
+var _run_controls: EventSheetRunControls = EventSheetRunControls.new()  # T15 Preview layout / Preview project / Debug layout, routed to the editor's own run commands (dock/run_controls.gd)
+var _beginner_toolbar: EventSheetBeginnerToolbar = EventSheetBeginnerToolbar.new()  # T18 the eight Add gestures as buttons above the canvas, on in Simple mode (dock/beginner_toolbar.gd)
+## T14 the Start page. Loaded BY PATH on first open: it names the Manual's tutorials, and the dock is
+## constructed at every editor boot - naming it here would pull the whole help corpus into that boot.
+var _start_page: RefCounted = null
 var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # right-click context menus: condition/action/row/variable/empty-space build + per-click configure (dock/context_menus.gd)
 var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
@@ -347,6 +353,12 @@ func _init() -> void:
 	# Preview-glue helper MUST be wired before _build_ui(): _build_ui calls
 	# _preview_glue.build_preview_banner(), which assigns _preview_banner/_preview_label back on the dock.
 	_preview_glue.init(self)
+	# T13 / T15 / T18 - all three are reached from _build_ui() (the View items, the Preview buttons
+	# and the beginner strip), so their back-references have to be wired before it. init() only
+	# stores _dock; nothing here builds or scans anything.
+	_project_bar_glue.init(self)
+	_run_controls.init(self)
+	_beginner_toolbar.init(self)
 	_verb_properties.init(self)
 	_object_properties.init(self)
 	_instance_variables.init(self)
@@ -447,6 +459,9 @@ func _on_translations_maybe_changed() -> void:
 	# dropped with them; a pack dropped into the project appears on the next row that asks.
 	EventSheetViewportReadingRows.clear_pack_index()
 	EventSheetEditorToolCensus.clear_cache()
+	# T13 - the Project bar keeps no watcher of its own: it listens to exactly this ping, and only
+	# when it is open, so a hidden bar costs nothing on a filesystem change.
+	_project_bar_glue.on_filesystem_changed()
 	# The project-wide scene index (which .tscn a script is the ROOT of) is what names an object on a
 	# row, a sheet title and a thumbnail, and it was built ONCE per session: a scene saved, added or
 	# re-pointed mid-session went on reading as the object it used to be until a restart.
@@ -2120,6 +2135,10 @@ func _apply_simple_mode_gates() -> void:
 	# The Properties bar is an expert surface: a beginner's sheet is the sheet. View ▸ Properties
 	# Bar brings it back at any time.
 	_properties_bar.set_open(not _simple_mode)
+	# T13 / T18 - Simple mode is the audience flag, so it is what decides these two by default. An
+	# explicit View-menu choice still wins; these only re-resolve the "nobody said" case.
+	_project_bar_glue.apply_visibility()
+	_beginner_toolbar.apply_visibility()
 	if _add_code_button != null:
 		_add_code_button.visible = not _simple_mode
 	if _add_menu_popup != null:
@@ -2345,6 +2364,9 @@ func _apply_familiar_words_pref() -> void:
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
 			view.familiar_words = stored
+	# T13 - the Project bar's headings follow the same toggle the rows do, so the reader never sees
+	# one surface using Godot's word while the other uses theirs.
+	_project_bar_glue.refresh_reading_prefs()
 
 
 func _toggle_familiar_words(view_popup: PopupMenu) -> void:
@@ -2362,6 +2384,7 @@ func _toggle_familiar_words(view_popup: PopupMenu) -> void:
 		var item_index: int = view_popup.get_item_index(21)
 		if item_index >= 0:
 			view_popup.set_item_checked(item_index, familiar)
+	_project_bar_glue.refresh_reading_prefs()
 	_set_status("Familiar words - layout, time scale, layer; the Godot word is on hover." if familiar
 		else "Godot words - scenes, pausing and CanvasLayers read by their Godot names.")
 
@@ -2890,6 +2913,43 @@ func _toggle_event_trace() -> void:
 ## The View menu id the Row Hit Counts check item is registered under (menu_bar.gd), kept here
 ## so the toggle and the tick can never drift onto two different items.
 const HIT_COUNTS_VIEW_ID := 9601
+
+## The View-menu ids the Project bar (T13) and the beginner Add toolbar (T18) are registered under,
+## kept beside the one above for the same reason: the toggle and the tick must never drift apart.
+const PROJECT_BAR_VIEW_ID := 9603
+const ADD_TOOLBAR_VIEW_ID := 9604
+
+
+# ── T13 / T14 / T15 / T18: the project-level surfaces ─────────────────────────────────────────
+## View ▸ Project bar. The bar is a TAB of the Object bar, not a dock of its own.
+func _toggle_project_bar() -> void:
+	_project_bar_glue.set_shown(_project_bar_glue.bar() == null)
+
+
+## View ▸ Add toolbar - the eight Add gestures as buttons above the canvas.
+func _toggle_add_toolbar() -> void:
+	var strip: Control = _beginner_toolbar_strip()
+	_beginner_toolbar.set_shown(strip == null or not strip.visible)
+
+
+func _beginner_toolbar_strip() -> Control:
+	return find_child("EventSheetBeginnerToolbar", true, false) as Control
+
+
+## Collapse or expand the selected block - the same fold Left / Right do, on one rebindable key so
+## the "Another event-sheet editor" preset can put it where that editor's authors expect it.
+func _toggle_selected_collapse() -> void:
+	var view: EventSheetViewport = _active_view()
+	if view != null:
+		view._toggle_row_fold(view._selected_row_index)
+
+
+## Sheet ▸ Start page. Loaded by path so the editor's boot never carries the help corpus.
+func _open_start_page() -> void:
+	if _start_page == null:
+		_start_page = load("res://addons/eventsheet/editor/dock/start_page.gd").new()
+		_start_page.init(self)
+	_start_page.open()
 
 
 ## View > Row Hit Counts: the gutter chip that says how many times each event fired since Run.
@@ -4535,6 +4595,32 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 	if target_event != null and _active_view() != null:
 		_active_view().select_resource(target_event)
 	add_row_for_object(object_label, on_action_lane)
+
+
+## T13 - something dragged off the PROJECT bar and dropped on the canvas. The bar already decided what
+## dropping it MEANS (it refuses the drag for anything the sheet has no gesture for); this turns that
+## into the picker the reader would have opened by hand, with the object step already answered:
+##   a class or base class -> start an event on it
+##   a sound               -> a Play sound action
+##   a scene               -> a Go to layout action
+func apply_project_entry_drop(payload: Dictionary, target_event: Resource) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	if target_event != null and _active_view() != null:
+		_active_view().select_resource(target_event)
+	var label: String = str(payload.get("label", "")).strip_edges()
+	match str(payload.get("intent", "")):
+		"start_event":
+			# The class IS the object scope the picker groups its verbs by, so the entry's own name
+			# answers the object step outright.
+			_ace_picker.open("new_event", false, null, {"object_scope": label, "object_label": label})
+			_set_status("Starting an event on %s." % label)
+		"play_sound":
+			_quick_add("play sound %s" % str(payload.get("path", "")))
+			_set_status("Added a Play sound action for %s." % label)
+		"go_to_layout":
+			_quick_add("change scene %s" % str(payload.get("path", "")))
+			_set_status("Added a Go to layout action for %s." % label)
 
 
 ## R23 - an Input Map action dragged off the bar's INPUT section and dropped on the canvas. An action

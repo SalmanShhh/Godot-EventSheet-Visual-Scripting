@@ -51,7 +51,7 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 
 ## Working with your project
 
-- [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md) - how sheets call, and are called by, your GDScript; what a hand-written `.gd` actually looks like when you open it as a sheet (functions, condition/action rows, notes, Declare rows for data tables); your own classes appearing in the picker with zero setup, renaming or hiding those actions and conditions without touching your source, and naming a raw call you already have.
+- [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md) - how sheets call, and are called by, your GDScript; what a hand-written `.gd` actually looks like when you open it as a sheet (functions, condition/action rows, notes, Declare rows for data tables); your own classes appearing in the picker with zero setup, renaming or hiding those actions and conditions without touching your source, and naming a raw call you already have. Also the **Project bar** - your project read by kind (scenes, scripts, classes, base classes, behaviors, sounds, files) as a tab of the Object bar, with the class hierarchy, sheet coverage and Doctor badges a folder tree cannot show - plus the Start page, the Preview buttons and the Add toolbar.
 - [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md) - diffing, merging, and committing sheets.
 - [Theme and Editability](GUIDE-THEMING.md) - restyle the editor, or lock a sheet down for a team.
 - [Removing Godot EventSheets](GUIDE-UNINSTALL.md) - a clean, guided teardown that leaves your game running.

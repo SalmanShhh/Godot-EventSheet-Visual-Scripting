@@ -2644,3 +2644,50 @@ This pack has no knobs to set.,Questo pacchetto non ha regolazioni.
 No pack here matches that.,Nessun pacchetto corrisponde.
 Reading check,Controllo di lettura
 Fix:,Correggi:
+Project,Progetto
+Project bar,Barra progetto
+Add toolbar,Barra Aggiungi
+Start page,Pagina iniziale
+Scenes,Scene
+layouts,layout
+Scripts,Script
+event sheets,fogli eventi
+Classes,Classi
+object types,tipi di oggetto
+Base classes,Classi base
+families,famiglie
+Sounds,Suoni
+1 file,1 file
+%d files,%d file
+%d things,%d elementi
+filter the project...,filtra il progetto...
+Nothing here matches that.,Nulla qui corrisponde.
+This project has no scenes or scripts yet.,Questo progetto non ha ancora scene o script.
+New scene…,Nuova scena…
+New script…,Nuovo script…
+New class…,Nuova classe…
+Extract base class…,Estrai classe base…
+Import sound…,Importa suono…
+The last Project Doctor run had something to say about this one.,L'ultima esecuzione del Dottore di progetto aveva qualcosa da dire su questo.
+Hide the Project bar for this project (View ▸ Project bar brings it back).,Nascondi la barra progetto per questo progetto (Vista ▸ Barra progetto la riporta).
+"Everything in this project, by what it is. Nothing here changes a file - every entry opens something you already have.","Tutto in questo progetto, per che cosa è. Nulla qui modifica un file: ogni voce apre qualcosa che hai già."
+▶ Preview layout,▶ Anteprima layout
+▶▶ Preview project,▶▶ Anteprima progetto
+🐞 Debug layout,🐞 Debug layout
+■ Stop,■ Ferma
+↻ Restart,↻ Riavvia
++ Event,+ Evento
++ Sub-event,+ Sotto-evento
++ Condition,+ Condizione
++ Action,+ Azione
++ Group,+ Gruppo
++ Comment,+ Commento
++ Variable,+ Variabile
++ Function,+ Funzione
+Start a new event.,Inizia un nuovo evento.
+New from template,Nuovo da modello
+Recent,Recenti
+Learn,Impara
+Show this page when nothing is open,Mostra questa pagina quando non c'è nulla di aperto
+Nothing here yet.,Qui non c'è ancora nulla.
+Another event-sheet editor,Un altro editor di fogli eventi

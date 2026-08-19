@@ -12,6 +12,7 @@ var _dock: Control = null
 var _shortcuts_dialog: AcceptDialog = null
 var _shortcuts_list: VBoxContainer = null
 var _shortcuts_capturing_action: String = ""
+var _preset_picker: OptionButton = null
 
 
 func init(dock: Control) -> void:
@@ -33,6 +34,22 @@ func open() -> void:
 		# Width-bound so the autowrap label can't report a runaway min height and balloon the dialog.
 		intro.custom_minimum_size = Vector2(500.0, 0.0)
 		outer.add_child(intro)
+		# T19 - Preset ▾. A whole keyboard in one pick, for an author whose fingers already know
+		# another event-sheet editor's keys. The preset only rebinds what DIFFERS, and every key it
+		# touches stays rebindable underneath.
+		_preset_picker = OptionButton.new()
+		_preset_picker.name = "EventSheetShortcutPreset"
+		_preset_picker.tooltip_text = "Pick a whole set of keys at once. Only the keys that differ are rebound - everything stays rebindable afterwards, and Reset all to defaults comes back here."
+		for preset_index: int in EventSheetShortcuts.PRESET_ORDER.size():
+			_preset_picker.add_item(
+				EventSheetShortcuts.preset_label_for(str(EventSheetShortcuts.PRESET_ORDER[preset_index])),
+				preset_index)
+		_preset_picker.item_selected.connect(func(index: int) -> void:
+			if index < 0 or index >= EventSheetShortcuts.PRESET_ORDER.size():
+				return
+			EventSheetShortcuts.apply_preset(str(EventSheetShortcuts.PRESET_ORDER[index]))
+			_refresh_shortcuts_editor())
+		outer.add_child(EventSheetPopupUI.form_row("Preset", _preset_picker))
 		var scroll: ScrollContainer = ScrollContainer.new()
 		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		scroll.custom_minimum_size = Vector2(0.0, 460.0)
@@ -59,6 +76,11 @@ func _refresh_shortcuts_editor() -> void:
 	if _shortcuts_list == null:
 		return
 	_shortcuts_capturing_action = ""
+	# The picker follows the LIVE bindings, so rebinding one key by hand honestly drops the dialog
+	# back to "Godot EventSheets" rather than claiming a preset that is no longer in force.
+	if _preset_picker != null:
+		var active: int = EventSheetShortcuts.PRESET_ORDER.find(EventSheetShortcuts.active_preset())
+		_preset_picker.select(active if active >= 0 else 0)
 	for child: Node in _shortcuts_list.get_children():
 		child.queue_free()
 	for action: String in EventSheetShortcuts.ORDER:

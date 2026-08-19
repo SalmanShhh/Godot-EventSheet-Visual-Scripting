@@ -97,6 +97,8 @@ static func run() -> bool:
 	ok = _check("chrome token names", _token_names(style.get_chrome_style()), [
 		"object_bar_section_color", "object_bar_warning_color", "object_bar_hover_wash_color",
 		"object_bar_grip_color", "object_bar_grip_active_color",
+		# T13 - the Project bar is the Object bar's other tab, so its two tokens sit with them.
+		"project_bar_heading_color", "project_bar_note_color",
 		"status_text_color", "status_error_color", "row_address_color",
 		"unsaved_dot_color", "title_path_color",
 	]) and ok

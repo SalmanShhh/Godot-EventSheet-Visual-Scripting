@@ -84,8 +84,15 @@ func build(root: Node) -> void:
 	sheet_popup.add_separator()
 	sheet_popup.add_item("Name Raw Calls…", 15)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(15), "Sweep this sheet for raw one-call code rows and name each one that matches an action you already have - engine classes, your own scripts, installed packs. Each conversion is kept only when it compiles to the exact same line; anything ambiguous is left alone.")
+	sheet_popup.add_separator()
+	# T14 - the Start page. It opens by itself when the workspace has nothing in it; this is how a
+	# reader gets back to it afterwards.
+	sheet_popup.add_item("Start page", 17)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(17),
+		"Templates by genre, what you had open last, and the tutorials - on one page.")
 	sheet_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
+			17: _dock._open_start_page()
 			0: _dock._open_template_menu()
 			1: _dock._on_open_requested()
 			2: _dock._on_save_requested()
@@ -107,6 +114,15 @@ func build(root: Node) -> void:
 	_toolbar.add_child(sheet_menu)
 	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
 	_add_toolbar_button(_toolbar, "Run Scene", _dock._run_from_sheet, "Save, then play the scene that uses this sheet's script.", "Play")
+	# T15 - Preview on the SHEET. The keys stay Godot's (F6 / F5) and the names are the ones an
+	# author coming from another event-sheet editor reaches for; while a game runs the first two
+	# relabel themselves Stop / Restart, so the strip never claims it will do something it will not.
+	for preview_entry: Variant in EventSheetRunControls.BUTTONS:
+		var preview: Array = preview_entry
+		var preview_id: String = str(preview[0])
+		_dock._run_controls.adopt(preview_id, _add_toolbar_button(_toolbar,
+			str(preview[1]), func() -> void: _dock._run_controls.activate(preview_id), str(preview[2])))
+	_dock._run_controls.refresh()
 	_add_toolbar_separator(_toolbar)
 	# The core reflexes stay one click (E / C / A on the keyboard).
 	_add_toolbar_button(_toolbar, "Add Event", _dock._on_add_event_requested, "Add an event (E).", "Add")
@@ -210,6 +226,20 @@ func build(root: Node) -> void:
 	view_popup.set_item_checked(view_popup.get_item_index(11), _dock._simple_mode)
 	view_popup.add_separator()
 	view_popup.add_item("GDScript Panel (toggle)", 0)
+	# T13 / T18 - the two project-level surfaces a beginner (or a migrating author) gets by default
+	# and everyone else turns on by hand. Both are off unless Simple mode or a template start asked
+	# for them, and both remember the choice per project.
+	view_popup.add_check_item("Project bar", _dock.PROJECT_BAR_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(_dock.PROJECT_BAR_VIEW_ID),
+		"The project by KIND - scenes, scripts, classes, base classes, behaviors, sounds, files - as a tab of the Object bar. Read only: every entry opens something you already have.")
+	view_popup.add_check_item("Add toolbar", _dock.ADD_TOOLBAR_VIEW_ID)
+	view_popup.set_item_tooltip(view_popup.get_item_index(_dock.ADD_TOOLBAR_VIEW_ID),
+		"The eight ways to add something, as buttons above the canvas, each naming its key on hover. On in Simple mode.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == _dock.PROJECT_BAR_VIEW_ID:
+			_dock._toggle_project_bar()
+		elif id == _dock.ADD_TOOLBAR_VIEW_ID:
+			_dock._toggle_add_toolbar())
 	view_popup.add_check_item("Open Sheets Panel", 13)
 	view_popup.set_item_checked(view_popup.get_item_index(13), bool(_dock._read_open_sheets_panel_prefs().get("shown", true)))
 	view_popup.add_check_item("Add-Event Rows", 9)

@@ -84,6 +84,11 @@ func build_ui() -> void:
 	_dock._title_path_label.text = "Open or create a sheet to begin"
 	_dock._title_strip.add_child(_dock._title_path_label)
 
+	# T18 - the beginner Add toolbar sits directly above the canvas (not up in the menu strip): on
+	# day one, the buttons have to be beside the thing they add to. Hidden until Simple mode or
+	# View ▸ Add toolbar asks for it, so an expert's sheet is unchanged.
+	_dock._beginner_toolbar.build(root, _dock._run_controls)
+
 	# Pinned Conditions/Actions column header, above the scrolling sheet (bound to the
 	# viewport once it exists). Kept outside the scroll so the scroll still has a single child.
 	_dock._identity_banner = SheetIdentityBanner.new()
@@ -220,6 +225,8 @@ func build_ui() -> void:
 	_dock._viewport.asset_dropped.connect(_dock._apply_asset_drop)
 	_dock._viewport.object_bar_dropped.connect(_dock.apply_object_bar_drop)
 	_dock._viewport.input_action_dropped.connect(_dock.apply_input_action_drop)
+	# T13 - the Project bar's own drop: what it means travels in the payload, and the dock writes it.
+	_dock._viewport.project_entry_dropped.connect(_dock.apply_project_entry_drop)
 	# Q10 - a thumbnail the editor's preview cache renders after the row was drawn: redraw once when
 	# it lands, so the picture appears rather than waiting for the next thing to move.
 	EventSheetObjectThumbnails.set_arrival_handler(func() -> void:
@@ -304,6 +311,11 @@ func build_ui() -> void:
 	_dock._context_menus.build_all()
 	_dock._build_preview_window()
 	_dock._build_theme_file_dialog()
+	# T13 / T18 - both surfaces exist now (the View items above, the strip below the menus), so the
+	# "should this project have them" rule can finally be resolved. It could not run inside the menu
+	# build: the strip was not there yet, and a rule that runs against half a UI silently does nothing.
+	_dock._project_bar_glue.apply_visibility()
+	_dock._beginner_toolbar.apply_visibility()
 
 
 func build_provider_dialog() -> void:

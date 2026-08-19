@@ -308,6 +308,8 @@ const _TOKEN_DESCRIPTIONS := {
 	"object_bar_hover_wash_color": "The wash over every row that uses the object you point at in the Object bar.",
 	"object_bar_grip_color": "The grab dots on the row under the mouse.",
 	"object_bar_grip_active_color": "Those dots once the pointer is in the grab zone.",
+	"project_bar_heading_color": "The by-kind headings down the Project bar (Scenes, Scripts, Classes, Base classes).",
+	"project_bar_note_color": "The quiet note beside a Project bar entry - its file, who extends it, how much of it reads as events.",
 	"status_text_color": "The message along the bottom of the dock.",
 	"status_error_color": "That message when something went wrong.",
 	"row_address_color": "The row address beside it (\"event 12 ▸ action 2\").",

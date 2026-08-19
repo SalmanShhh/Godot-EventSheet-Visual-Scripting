@@ -2644,3 +2644,50 @@ This pack has no knobs to set.,Ce pack n'a aucun réglage.
 No pack here matches that.,Aucun pack ne correspond.
 Reading check,Contrôle de lecture
 Fix:,Corriger :
+Project,Projet
+Project bar,Barre de projet
+Add toolbar,Barre d'ajout
+Start page,Page de démarrage
+Scenes,Scènes
+layouts,dispositions
+Scripts,Scripts
+event sheets,feuilles d'événements
+Classes,Classes
+object types,types d'objet
+Base classes,Classes de base
+families,familles
+Sounds,Sons
+1 file,1 fichier
+%d files,%d fichiers
+%d things,%d éléments
+filter the project...,filtrer le projet...
+Nothing here matches that.,Rien ici ne correspond.
+This project has no scenes or scripts yet.,Ce projet n'a encore ni scènes ni scripts.
+New scene…,Nouvelle scène…
+New script…,Nouveau script…
+New class…,Nouvelle classe…
+Extract base class…,Extraire la classe de base…
+Import sound…,Importer un son…
+The last Project Doctor run had something to say about this one.,Le dernier passage du Docteur de projet avait quelque chose à dire là-dessus.
+Hide the Project bar for this project (View ▸ Project bar brings it back).,Masquer la barre de projet pour ce projet (Affichage ▸ Barre de projet la ramène).
+"Everything in this project, by what it is. Nothing here changes a file - every entry opens something you already have.","Tout dans ce projet, par nature. Rien ici ne modifie un fichier - chaque entrée ouvre quelque chose que vous avez déjà."
+▶ Preview layout,▶ Aperçu de la disposition
+▶▶ Preview project,▶▶ Aperçu du projet
+🐞 Debug layout,🐞 Déboguer la disposition
+■ Stop,■ Arrêter
+↻ Restart,↻ Redémarrer
++ Event,+ Événement
++ Sub-event,+ Sous-événement
++ Condition,+ Condition
++ Action,+ Action
++ Group,+ Groupe
++ Comment,+ Commentaire
++ Variable,+ Variable
++ Function,+ Fonction
+Start a new event.,Commencer un nouvel événement.
+New from template,Nouveau depuis un modèle
+Recent,Récents
+Learn,Apprendre
+Show this page when nothing is open,Afficher cette page quand rien n'est ouvert
+Nothing here yet.,Rien ici pour l'instant.
+Another event-sheet editor,Un autre éditeur de feuilles d'événements

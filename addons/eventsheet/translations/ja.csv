@@ -2644,3 +2644,50 @@ This pack has no knobs to set.,このパックに設定はありません。
 No pack here matches that.,一致するパックはありません。
 Reading check,読みやすさチェック
 Fix:,直す:
+Project,プロジェクト
+Project bar,プロジェクトバー
+Add toolbar,追加ツールバー
+Start page,スタートページ
+Scenes,シーン
+layouts,レイアウト
+Scripts,スクリプト
+event sheets,イベントシート
+Classes,クラス
+object types,オブジェクト型
+Base classes,基底クラス
+families,ファミリー
+Sounds,サウンド
+1 file,1 ファイル
+%d files,%d ファイル
+%d things,%d 件
+filter the project...,プロジェクトを絞り込む...
+Nothing here matches that.,一致するものはありません。
+This project has no scenes or scripts yet.,このプロジェクトにはまだシーンもスクリプトもありません。
+New scene…,新しいシーン…
+New script…,新しいスクリプト…
+New class…,新しいクラス…
+Extract base class…,基底クラスを抽出…
+Import sound…,サウンドをインポート…
+The last Project Doctor run had something to say about this one.,前回のプロジェクトドクターの実行で指摘があります。
+Hide the Project bar for this project (View ▸ Project bar brings it back).,このプロジェクトでプロジェクトバーを隠します（表示 ▸ プロジェクトバーで戻ります）。
+"Everything in this project, by what it is. Nothing here changes a file - every entry opens something you already have.",このプロジェクトのすべてを、その正体ごとに。ここでファイルは変わりません - どの項目もすでにあるものを開くだけです。
+▶ Preview layout,▶ レイアウトをプレビュー
+▶▶ Preview project,▶▶ プロジェクトをプレビュー
+🐞 Debug layout,🐞 レイアウトをデバッグ
+■ Stop,■ 停止
+↻ Restart,↻ 再起動
++ Event,+ イベント
++ Sub-event,+ サブイベント
++ Condition,+ 条件
++ Action,+ アクション
++ Group,+ グループ
++ Comment,+ コメント
++ Variable,+ 変数
++ Function,+ 関数
+Start a new event.,新しいイベントを始めます。
+New from template,テンプレートから新規作成
+Recent,最近
+Learn,学ぶ
+Show this page when nothing is open,何も開いていないときにこのページを表示
+Nothing here yet.,まだ何もありません。
+Another event-sheet editor,別のイベントシートエディタ

@@ -2644,3 +2644,50 @@ This pack has no knobs to set.,这个包没有可调项。
 No pack here matches that.,没有匹配的包。
 Reading check,可读性检查
 Fix:,修复：
+Project,项目
+Project bar,项目栏
+Add toolbar,添加工具栏
+Start page,起始页
+Scenes,场景
+layouts,布局
+Scripts,脚本
+event sheets,事件表
+Classes,类
+object types,对象类型
+Base classes,基类
+families,家族
+Sounds,声音
+1 file,1 个文件
+%d files,%d 个文件
+%d things,%d 项
+filter the project...,筛选项目...
+Nothing here matches that.,没有匹配项。
+This project has no scenes or scripts yet.,此项目还没有场景或脚本。
+New scene…,新建场景…
+New script…,新建脚本…
+New class…,新建类…
+Extract base class…,提取基类…
+Import sound…,导入声音…
+The last Project Doctor run had something to say about this one.,上次项目医生运行时对此有提示。
+Hide the Project bar for this project (View ▸ Project bar brings it back).,为此项目隐藏项目栏（视图 ▸ 项目栏可恢复）。
+"Everything in this project, by what it is. Nothing here changes a file - every entry opens something you already have.",本项目中的一切，按其种类排列。这里不会改动任何文件 - 每一项都只是打开你已有的东西。
+▶ Preview layout,▶ 预览布局
+▶▶ Preview project,▶▶ 预览项目
+🐞 Debug layout,🐞 调试布局
+■ Stop,■ 停止
+↻ Restart,↻ 重新开始
++ Event,+ 事件
++ Sub-event,+ 子事件
++ Condition,+ 条件
++ Action,+ 动作
++ Group,+ 分组
++ Comment,+ 注释
++ Variable,+ 变量
++ Function,+ 函数
+Start a new event.,开始一个新事件。
+New from template,从模板新建
+Recent,最近
+Learn,学习
+Show this page when nothing is open,无内容打开时显示此页
+Nothing here yet.,这里还没有内容。
+Another event-sheet editor,另一款事件表编辑器
