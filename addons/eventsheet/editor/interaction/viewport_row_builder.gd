@@ -1137,6 +1137,9 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 	var order: PackedStringArray = PackedStringArray()
 	var buckets: Dictionary = {}
 	var internal: Array[EventRowData] = []
+	# How many Inspector-editable rows already lead the one folder - the insert point that keeps them
+	# first without re-sorting a list whose order is otherwise the file's.
+	var exported_count: int = 0
 	for entry: Variant in knobs:
 		var record: Dictionary = entry as Dictionary
 		var variable: LocalVariable = record.get("variable")
@@ -1146,12 +1149,18 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 			internal.append(record.get("row") as EventRowData)
 			continue
 		var row_data: EventRowData = _build_reading_variable_row(variable, str(record.get("description", "")), 1)
-		if not variable.exported:
-			internal.append(row_data)
-			continue
 		var group_name: String = str(record.get("group", "")).strip_edges()
-		if group_name.is_empty():
-			group_name = EventSheetL10n.translate("Settings")
+		if not variable.exported or group_name.is_empty():
+			# R37 - one folder, not two. A variable is Inspector-editable or it is not, and the row
+			# now says so with its own chip, so a Settings / Internal state split would only be
+			# telling a reader twice what the chip already tells them once. The Inspector ones lead,
+			# because those are the ones a designer came to look at.
+			if variable.exported:
+				internal.insert(exported_count, row_data)
+				exported_count += 1
+			else:
+				internal.append(row_data)
+			continue
 		if not buckets.has(group_name):
 			buckets[group_name] = [] as Array[EventRowData]
 			order.append(group_name)
@@ -1167,14 +1176,14 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 			members
 		))
 	if not internal.is_empty():
-		var internal_subtitle: String = EventSheetL10n.translate("values the pack keeps for itself - %d") \
-			if is_addon_pack(sheet) \
-			else EventSheetL10n.translate("values this script keeps for itself - %d")
+		var object_name: String = EventSheetViewportReadingRows.script_object_name(sheet)
+		var subtitle: String = "%d" % internal.size() if object_name.is_empty() \
+			else EventSheetL10n.translate("of %s") % object_name
 		bars.append(_build_head_group_row(
 			sheet,
 			"pack_internal_state",
-			EventSheetL10n.translate("Internal state"),
-			internal_subtitle % internal.size(),
+			EventSheetL10n.translate("Instance variables"),
+			subtitle,
 			internal
 		))
 	return bars
@@ -1266,12 +1275,41 @@ func _build_reading_variable_row(variable: LocalVariable, description: String, i
 			"row_uid": "variable_reading_%d" % variable.get_instance_id(),
 			"reading": true,
 			"description": description,
+			# R37 - the scope word that leads the row, and the Inspector chip that replaced the
+			# Settings folder. Both are facts the variable already carries; nothing is re-parsed.
+			"reading_scope": _member_scope_key(variable),
+			"exported": variable.exported,
+			"scope_note": _member_scope_note(variable),
 			# P7 - the Inspector facts this knob carries: its range and step, its choices, the filter
 			# on the file it picks, its colour. Read from what the importer already stored, so the row
 			# says what the Inspector would say about the same variable.
 			"facts": EventSheetSettingFacts.facts(variable)
 		}
 	)
+
+
+## R37 - the scope word a MEMBER variable of this sheet reads with: Constant, Static, Global on an
+## autoload, Field on a Resource script, Instance otherwise.
+func _member_scope_key(variable: LocalVariable) -> String:
+	var sheet: EventSheetResource = _viewport._sheet
+	return EventSheetVariableSentence.member_scope(
+		variable.is_constant,
+		variable.is_static,
+		sheet != null and is_autoload(sheet),
+		sheet != null and EventSheetVariableSentence.is_resource_host(sheet.host_class)
+	)
+
+
+## The one fact a scope adds that its word does not already say: a `static var` is ONE value for
+## every copy of the object, which is the whole reason anybody reaches for it (and the whole way it
+## surprises a reader who expected one per object). "" for every other scope.
+func _member_scope_note(variable: LocalVariable) -> String:
+	if not variable.is_static:
+		return ""
+	var object_name: String = EventSheetViewportReadingRows.script_object_name(_viewport._sheet)
+	if object_name.is_empty():
+		return EventSheetL10n.translate("shared by every copy")
+	return EventSheetL10n.translate("shared by every %s") % object_name
 
 
 ## The EventFunction a FunctionAnchorRow names, or null when the sheet carries no such verb (the
@@ -1528,14 +1566,21 @@ static func friendly_type_word(type_name: String) -> String:
 	match type_name.strip_edges():
 		"String", "StringName":
 			return EventSheetL10n.translate("text")
-		"int", "float":
+		"float":
 			return EventSheetL10n.translate("number")
+		"int":
+			# R37 - a declared `int` is the one number that REFUSES a fraction, and that is the whole
+			# fact a reader needs about it. An undeclared `100` still reads "number": nothing in the
+			# line said the author cared, and "whole number" would be putting words in their mouth.
+			return EventSheetL10n.translate("whole number")
 		"bool":
-			return EventSheetL10n.translate("true/false")
-		"Vector2", "Vector3":
-			return EventSheetL10n.translate("point")
+			return EventSheetL10n.translate("boolean")
+		"Vector2", "Vector3", "Vector4":
+			return EventSheetL10n.translate("vector")
 		"Color":
 			return EventSheetL10n.translate("color")
+		"PackedScene":
+			return EventSheetL10n.translate("scene")
 		"Array":
 			return EventSheetL10n.translate("list")
 		"Dictionary":
@@ -1562,7 +1607,7 @@ static func friendly_type_word(type_name: String) -> String:
 			# and the tooltip say; on a row it is the KIND of thing that matters. Derived from ClassDB
 			# rather than a list, so a class the engine adds tomorrow reads right with no edit here.
 			if ClassDB.class_exists(bare_type) and ClassDB.is_parent_class(bare_type, "Node"):
-				return EventSheetL10n.translate("node")
+				return EventSheetL10n.translate("object")
 			# A Resource subclass keeps its class name: `StatSheet` IS the noun the author chose, and
 			# "resource" would tell a reader strictly less than the name already does.
 			return bare_type
@@ -1600,9 +1645,9 @@ static func _plural_type_word(type_name: String) -> String:
 		"int", "float":
 			return EventSheetL10n.translate("numbers")
 		"bool":
-			return EventSheetL10n.translate("true/false values")
+			return EventSheetL10n.translate("booleans")
 		"Vector2", "Vector3", "Vector4":
-			return EventSheetL10n.translate("points")
+			return EventSheetL10n.translate("vectors")
 		"Color":
 			return EventSheetL10n.translate("colors")
 		"Dictionary":
@@ -1610,7 +1655,7 @@ static func _plural_type_word(type_name: String) -> String:
 		_:
 			var bare_type: String = type_name.strip_edges()
 			if ClassDB.class_exists(bare_type) and ClassDB.is_parent_class(bare_type, "Node"):
-				return EventSheetL10n.translate("nodes")
+				return EventSheetL10n.translate("objects")
 			return bare_type
 
 
@@ -5059,8 +5104,14 @@ func _build_variable_row(
 		var hinted_type_word: String = str(facts.get("type_word", "")).strip_edges()
 		if not hinted_type_word.is_empty():
 			reading_type_word = hinted_type_word
-		if is_constant:
-			reading_type_word = EventSheetL10n.translate("constant %s") % reading_type_word
+		# R37 - one sentence for a variable: the SCOPE word leads, then the type in plain words.
+		# "Instance number speed = 200", "Constant number MAX_HP = 100", "Static number spawned = 0".
+		# A caller that settles no scope (a row the head does not own) keeps the bare type word.
+		var reading_scope: String = str(options.get("reading_scope", ""))
+		if reading_scope.is_empty() and is_constant:
+			reading_scope = EventSheetVariableSentence.SCOPE_CONSTANT
+		variable_meta["variable_scope_word"] = reading_scope
+		reading_type_word = EventSheetVariableSentence.chip_text(reading_scope, reading_type_word)
 		row_data.spans = [
 			_make_span(
 				reading_type_word,
@@ -5098,12 +5149,13 @@ func _build_variable_row(
 				)
 			)
 		)
-	# Inspector tag: a variable exposed via @export gets a blue "@export" pill, so it's obvious at a glance
-	# while scrolling which sheet variables show up in the Godot Inspector vs. stay internal to the sheet.
+	# Inspector tag: a variable a designer can edit gets a small "Inspector" chip, so it's obvious at a
+	# glance while scrolling which variables show up in the Godot Inspector vs. stay internal. R37 - the
+	# chip is what replaced the separate Settings folder: one list, the Inspector ones first.
 	if bool(options.get("exported", false)):
 		row_data.spans.append(
 			_make_span(
-				"@export",
+				EventSheetL10n.translate("Inspector"),
 				SemanticSpan.SpanType.KEYWORD,
 				variable_meta.merged(
 					{
@@ -5173,6 +5225,17 @@ func _build_variable_row(
 				variable_meta.merged({"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true)
 			)
 		)
+	# What the SCOPE adds that its word does not say on its own ("shared by every Player"), muted,
+	# in the same slot the limits use - a fact about the variable, ahead of its prose.
+	var scope_note: String = str(options.get("scope_note", "")).strip_edges()
+	if not scope_note.is_empty():
+		row_data.spans.append(
+			_make_span(
+				scope_note,
+				SemanticSpan.SpanType.COMMENT,
+				variable_meta.merged({"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true)
+			)
+		)
 	# The knob's own sentence, muted, trailing the value - the `##` doc comment the Inspector shows as
 	# its tooltip. A reader of an opened pack should never have to open the .gd to learn what a setting
 	# does. Reading shape only; an authored row keeps the tooltip in the variable dialog.
@@ -5210,7 +5273,9 @@ static func _inferred_type_word(default_value: Variant, expression_default: bool
 			TYPE_STRING, TYPE_STRING_NAME:
 				return friendly_type_word("String")
 			TYPE_INT, TYPE_FLOAT:
-				return friendly_type_word("int")
+				# An undeclared number reads "number" whichever literal it was: nothing in
+				# `var hp := 100` says the author refused fractions, and "whole number" would.
+				return friendly_type_word("float")
 			TYPE_BOOL:
 				return friendly_type_word("bool")
 			TYPE_ARRAY:

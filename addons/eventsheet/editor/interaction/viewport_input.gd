@@ -216,6 +216,16 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# Click the inline colour swatch -> open the colour picker directly (no params dialog). The
 		# renderer stored the swatch's drawn rect in span.metadata; if the click landed inside
 		# it and the cell's ACE has a Color param, hand off to the dock's picker popup.
+		# R37 - the same swatch, the same picker, on a VARIABLE row. A colour is a colour wherever it
+		# is written; the write-back keeps the spelling the line already used.
+		if row_data != null and metadata.get("swatch_color") is Color and metadata.get("swatch_rect") is Rect2 \
+				and (metadata["swatch_rect"] as Rect2).has_point(local_position) \
+				and str(metadata.get("kind", "")) == "variable" and row_data.source_resource is LocalVariable:
+			_viewport.color_swatch_edit_requested.emit(
+				row_data.source_resource, "", metadata["swatch_color"] as Color
+			)
+			_viewport.accept_event()
+			return
 		if row_data != null and metadata.get("swatch_color") is Color and metadata.get("swatch_rect") is Rect2 \
 				and (metadata["swatch_rect"] as Rect2).has_point(local_position) and row_data.source_resource is EventRow:
 			var swatch_kind: String = str(metadata.get("kind", ""))

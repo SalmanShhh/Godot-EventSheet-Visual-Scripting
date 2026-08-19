@@ -2134,3 +2134,17 @@ Add do step: call {name},실행 단계 추가: {name} 호출
 Add undo step: call {name},되돌리기 단계 추가: {name} 호출
 Add do step: keep {object},실행 단계 추가: {object} 유지
 in the editor too,에디터에서도 실행
+Global,전역
+Instance,인스턴스
+Constant,상수
+Static,정적
+whole number,정수
+boolean,참/거짓
+vector,벡터
+booleans,참/거짓 값
+vectors,벡터
+objects,오브젝트
+Inspector,인스펙터
+of %s,%s의
+shared by every %s,모든 %s가 공유
+shared by every copy,모든 복사본이 공유

@@ -2134,3 +2134,17 @@ Add do step: call {name},Aggiungi passo esegui: chiama {name}
 Add undo step: call {name},Aggiungi passo annulla: chiama {name}
 Add do step: keep {object},Aggiungi passo esegui: mantieni {object}
 in the editor too,anche nell'editor
+Global,Globale
+Instance,Istanza
+Constant,Costante
+Static,Statica
+whole number,numero intero
+boolean,booleano
+vector,vettore
+booleans,booleani
+vectors,vettori
+objects,oggetti
+Inspector,Ispettore
+of %s,di %s
+shared by every %s,condivisa da ogni %s
+shared by every copy,condivisa da ogni copia

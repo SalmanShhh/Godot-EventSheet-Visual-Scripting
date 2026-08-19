@@ -2134,3 +2134,17 @@ Add do step: call {name},添加执行步骤：调用 {name}
 Add undo step: call {name},添加撤销步骤：调用 {name}
 Add do step: keep {object},添加执行步骤：保留 {object}
 in the editor too,在编辑器中也运行
+Global,全局
+Instance,实例
+Constant,常量
+Static,静态
+whole number,整数
+boolean,布尔值
+vector,向量
+booleans,布尔值
+vectors,向量
+objects,对象
+Inspector,检查器
+of %s,属于 %s
+shared by every %s,所有 %s 共享
+shared by every copy,所有副本共享

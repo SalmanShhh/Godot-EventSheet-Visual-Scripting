@@ -2134,3 +2134,17 @@ Add do step: call {name},実行ステップを追加: {name} を呼び出す
 Add undo step: call {name},元に戻すステップを追加: {name} を呼び出す
 Add do step: keep {object},実行ステップを追加: {object} を保持する
 in the editor too,エディタでも実行
+Global,グローバル
+Instance,インスタンス
+Constant,定数
+Static,スタティック
+whole number,整数
+boolean,真偽値
+vector,ベクトル
+booleans,真偽値
+vectors,ベクトル
+objects,オブジェクト
+Inspector,インスペクター
+of %s,%s の
+shared by every %s,すべての %s で共有
+shared by every copy,すべてのコピーで共有

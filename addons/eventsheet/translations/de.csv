@@ -2134,3 +2134,17 @@ Add do step: call {name},Ausführen-Schritt hinzufügen: {name} aufrufen
 Add undo step: call {name},Rückgängig-Schritt hinzufügen: {name} aufrufen
 Add do step: keep {object},Ausführen-Schritt hinzufügen: {object} behalten
 in the editor too,auch im Editor
+Global,Global
+Instance,Instanz
+Constant,Konstante
+Static,Statisch
+whole number,ganze Zahl
+boolean,Wahrheitswert
+vector,Vektor
+booleans,Wahrheitswerte
+vectors,Vektoren
+objects,Objekte
+Inspector,Inspektor
+of %s,von %s
+shared by every %s,von jedem %s geteilt
+shared by every copy,von jeder Kopie geteilt

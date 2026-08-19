@@ -2134,3 +2134,17 @@ Add do step: call {name},Добавить шаг выполнения: вызв�
 Add undo step: call {name},Добавить шаг отмены: вызвать {name}
 Add do step: keep {object},Добавить шаг выполнения: сохранить {object}
 in the editor too,также в редакторе
+Global,Глобальная
+Instance,Экземпляр
+Constant,Константа
+Static,Статическая
+whole number,целое число
+boolean,логическое
+vector,вектор
+booleans,логические
+vectors,векторы
+objects,объекты
+Inspector,Инспектор
+of %s,объекта %s
+shared by every %s,общая для всех %s
+shared by every copy,общая для всех копий

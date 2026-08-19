@@ -273,7 +273,12 @@ func on_color_swatch_edit_requested(ace: Resource, param_id: String, current_col
 
 
 func _commit_color_swatch_edit(new_color: Color) -> void:
-	if _color_swatch_target == null or _color_swatch_key.is_empty():
+	if _color_swatch_target == null:
+		return
+	if _color_swatch_target is LocalVariable:
+		_commit_variable_color_edit(_color_swatch_target as LocalVariable, new_color)
+		return
+	if _color_swatch_key.is_empty():
 		return
 	var target: Resource = _color_swatch_target
 	var key: String = _color_swatch_key
@@ -288,6 +293,51 @@ func _commit_color_swatch_edit(new_color: Color) -> void:
 	if changed:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Colour updated.")
+
+
+## R37 - the same picker, committed onto a VARIABLE row. Two things make this different from a
+## param: the value is written back IN THE SPELLING THE LINE ALREADY USED (`Color.RED` stays a named
+## constant, `Color("#ff9b3c")` stays a hex string, `Color(1, 0.6, 0.2)` stays numbers), so a colour
+## edit moves the colour and not one byte more; and the variable is re-found BY NAME inside the edit,
+## because the undo funnel's commit replaces every resource with a snapshot duplicate.
+func _commit_variable_color_edit(variable: LocalVariable, new_color: Color) -> void:
+	var target_name: String = variable.name
+	var new_text: String = EventSheetVariableSentence.color_literal_in_spelling(
+		new_color, str(variable.default_value)
+	)
+	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Colour", func() -> bool:
+		var live: LocalVariable = find_variable_by_name(_dock._current_sheet, target_name)
+		if live == null or str(live.default_value) == new_text:
+			return false
+		live.default_value = new_text
+		live.expression_default = true
+		return true
+	)
+	if changed:
+		_dock._refresh_after_edit()
+		_dock._mark_dirty("Colour updated.")
+
+
+## The LocalVariable a sheet declares under this name, at any depth, or null. Name-addressed on
+## purpose: a resource reference cannot survive the undo funnel's snapshot swap.
+static func find_variable_by_name(sheet: EventSheetResource, variable_name: String) -> LocalVariable:
+	if sheet == null or variable_name.is_empty():
+		return null
+	return _find_variable_in(sheet.events, variable_name)
+
+
+static func _find_variable_in(entries: Array, variable_name: String) -> LocalVariable:
+	for entry: Variant in entries:
+		if entry is LocalVariable and (entry as LocalVariable).name == variable_name:
+			return entry as LocalVariable
+		if entry is EventRow:
+			for local: Variant in (entry as EventRow).local_variables:
+				if local is LocalVariable and (local as LocalVariable).name == variable_name:
+					return local as LocalVariable
+			var nested: LocalVariable = _find_variable_in((entry as EventRow).sub_events, variable_name)
+			if nested != null:
+				return nested
+	return null
 
 
 ## A scene node was dropped onto a condition/action param value - set that param to the node reference

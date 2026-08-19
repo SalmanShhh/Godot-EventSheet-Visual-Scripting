@@ -2134,3 +2134,17 @@ Add do step: call {name},Ajouter une étape faire : appeler {name}
 Add undo step: call {name},Ajouter une étape annuler : appeler {name}
 Add do step: keep {object},Ajouter une étape faire : conserver {object}
 in the editor too,aussi dans l'éditeur
+Global,Global
+Instance,Instance
+Constant,Constante
+Static,Statique
+whole number,nombre entier
+boolean,booléen
+vector,vecteur
+booleans,booléens
+vectors,vecteurs
+objects,objets
+Inspector,Inspecteur
+of %s,de %s
+shared by every %s,partagée par chaque %s
+shared by every copy,partagée par chaque copie
