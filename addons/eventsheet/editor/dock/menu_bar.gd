@@ -51,6 +51,14 @@ func build(root: Node) -> void:
 	)
 	sheet_popup.add_separator()
 	sheet_popup.add_item("Sheet Type…", 4)
+	# V11 - a shared sheet is a script whose whole job is to be included. The wiring question
+	# ("as a base class" / "as a helper") is asked ONCE, when the shared sheet is made, and never
+	# again per includer.
+	sheet_popup.add_item("New shared sheet…", 17)
+	sheet_popup.set_item_tooltip(
+		sheet_popup.get_item_index(17),
+		"Write events once and include them in many scripts. You choose here how it is wired: as a base class (the including script extends it) or as a helper (the including script keeps one of it and forwards its triggers to it)."
+	)
 	sheet_popup.add_item("Manage Includes…", 8)
 	sheet_popup.add_item("Custom Actions…", 5)
 	sheet_popup.add_item("New Behaviour Addon…", 9)
@@ -103,6 +111,7 @@ func build(root: Node) -> void:
 			12: _dock._starter._new_sheet_from_template(10)
 			13: _dock._new_resource_wizard.open()
 			16: _dock._save_sheet_as_text_requested()
+			17: _dock._shared_sheets.open_new_shared_sheet()
 	)
 	_toolbar.add_child(sheet_menu)
 	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
@@ -128,6 +137,9 @@ func build(root: Node) -> void:
 	add_popup.add_item("Local Variable…", 2)
 	add_popup.add_item("Global Variable… (V)", 8)
 	add_popup.add_item("Function…", 3)
+	# V11 - the other half of the shared-sheet gesture. How it is wired was decided by the shared
+	# sheet itself, so this asks nothing: pick the sheet, and the rows that wire it are written.
+	add_popup.add_item("Include sheet…", 10)
 	add_popup.add_separator()
 	# The three event-shape commands, on the Add menu as well as the right-click menu: the sheet
 	# reads Or blocks, blank sub-events and Else, so all three must be typeable in the same words.
@@ -167,6 +179,7 @@ func build(root: Node) -> void:
 			7: _dock._make_else_from_selection()
 			8: _dock._on_add_project_global_requested()
 			9: EventSheetPatternManual.open_page("")
+			10: _dock._shared_sheets.open_include_sheet()
 	)
 	# Kept as a reference so Simple Mode can gate the code item (id 4) live.
 	_dock._add_menu_popup = add_popup
@@ -529,6 +542,25 @@ func build(root: Node) -> void:
 	# tells you nothing, this one runs every Test sheet in the project and says what each claim
 	# said. The window is the whole output - no row is marked, ever. Id 9701 is clear of every
 	# block above; a separate id_pressed handler keeps this block trivially mergeable.
+	# ── Live edit + the replay recorder (appended block - keep together) ───────────────────────
+	# V8's toggle sits with the other view choices because it is one: whether an edit made while the
+	# game runs lands on its own or waits for the ⟳ on the status strip. V9's window sits beside Run
+	# Tests… because what it writes IS a Test sheet. Ids 9801/9802 are clear of every block above.
+	view_popup.add_check_item("Auto-apply while debugging", 9801)
+	view_popup.set_item_checked(view_popup.get_item_index(9801), EventSheetLiveEdit.auto_apply_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(9801),
+		"While a game is running, every edit is applied to it the moment you make it, instead of waiting for ⟳ Apply to running game (Ctrl+Alt+S). A change a live reload cannot carry still stops and says so.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id != 9801:
+			return
+		EventSheetLiveEdit.set_auto_apply_enabled(not EventSheetLiveEdit.auto_apply_enabled())
+		view_popup.set_item_checked(view_popup.get_item_index(9801), EventSheetLiveEdit.auto_apply_enabled()))
+	tools_popup.add_item("Replay Recorder…", 9802)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(9802),
+		"Record a play and keep it as a test: every control the running game sees is captured with its frame, and Stop writes it as an ordinary Test sheet you can read, edit and replay - here or headlessly.")
+	tools_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 9802:
+			_open_replay_recorder())
 	tools_popup.add_item("Run Tests…", 9701)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(9701),
 		"Run every Test sheet in the project and show what each claim said - pass, fail, and why. The same run happens headlessly with: godot --headless --script tools/run_test_sheets.gd. Nothing is drawn on your sheets.")
@@ -555,6 +587,18 @@ func _collapse_sweep(level: int) -> void:
 ## The Run Tests… window, built the first time it is asked for and kept afterwards. Loaded by path
 ## so the editor's boot path never carries it (the boot-lazy gate) and nothing here names the class.
 var _test_report_panel: RefCounted = null
+
+
+## The Replay Recorder window, built the first time it is asked for and kept afterwards. Loaded by
+## path so the editor's boot path never carries it.
+var _replay_recorder_panel: RefCounted = null
+
+
+func _open_replay_recorder() -> void:
+	if _replay_recorder_panel == null:
+		_replay_recorder_panel = load("res://addons/eventsheet/editor/dock/replay_recorder_panel.gd").new()
+		_replay_recorder_panel.init(_dock)
+	_replay_recorder_panel.open()
 
 
 func _open_run_tests() -> void:

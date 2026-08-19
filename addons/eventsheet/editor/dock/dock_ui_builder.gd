@@ -288,6 +288,11 @@ func build_ui() -> void:
 	_dock._row_address_label.name = "EventSheetRowAddress"
 	_dock._row_address_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_dock._row_address_label.modulate = EventSheetActiveTheme.chrome().row_address_color
+	# Live edit (V8): the ⟳ offer sits between the message and the address, hidden unless a game is
+	# running and this sheet has an unapplied edit - a button that can never do anything is worse
+	# than no button.
+	_dock._live_edit_bar.init(_dock)
+	_dock._live_edit_bar.build(status_strip)
 	status_strip.add_child(_dock._row_address_label)
 	status_strip.add_child(_dock._build_zoom_pill())
 	root.add_child(status_strip)
@@ -561,6 +566,7 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._context_menus.init(_dock)
 	_dock._external_watcher.init(_dock)
 	_dock._sheet_io.init(_dock)
+	_dock._shared_sheets.init(_dock)
 	_dock._ace_apply.init(_dock)
 	_dock._row_edit_ops.init(_dock)
 	_dock._preview_glue.init(_dock)

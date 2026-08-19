@@ -237,6 +237,8 @@ var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + grou
 var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # right-click context menus: condition/action/row/variable/empty-space build + per-click configure (dock/context_menus.gd)
 var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
+var _live_edit_bar: EventSheetLiveEditBar = EventSheetLiveEditBar.new()  # ⟳ Apply to running game on the status strip (dock/live_edit_bar.gd)
+var _shared_sheets: EventSheetSharedSheetDialogs = EventSheetSharedSheetDialogs.new()  # New shared sheet… + Include sheet… (dock/shared_sheet_dialogs.gd)
 var _ui_builder: EventSheetDockUIBuilder = EventSheetDockUIBuilder.new()
 var _input_dispatch: EventSheetDockInputDispatch = EventSheetDockInputDispatch.new()
 var _code_panel_glue: EventSheetCodePanelGlue = EventSheetCodePanelGlue.new()
@@ -5134,6 +5136,11 @@ func _mark_dirty(message: String) -> void:
 	_dirty = true
 	_refresh_title_strip()
 	_set_status("%s%s" % [message, " *" if _dirty else ""])
+	# Live edit (V8): an edit made while a game is running is one keystroke from being in it. The
+	# offer re-words itself here rather than on a timer, so it is never stale and never guessed at.
+	_live_edit_bar.refresh()
+	if EventSheetLiveEdit.is_running() and EventSheetLiveEdit.auto_apply_enabled():
+		_live_edit_bar.apply()
 
 
 func _set_status(text: String, is_error: bool = false) -> void:
