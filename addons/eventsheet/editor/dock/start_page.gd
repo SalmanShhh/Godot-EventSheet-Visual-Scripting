@@ -154,7 +154,7 @@ func _build() -> void:
 	_window.size = Vector2i(EventSheetPalette.scaled(900), EventSheetPalette.scaled(520))
 	_window.close_requested.connect(func() -> void: _window.hide())
 	var outer: VBoxContainer = EventSheetPopupUI.form_box()
-	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_columns_row = HBoxContainer.new()
 	_columns_row.add_theme_constant_override("separation", 12)
 	_columns_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -165,12 +165,20 @@ func _build() -> void:
 	_startup_check.button_pressed = opens_on_startup()
 	_startup_check.toggled.connect(func(on: bool) -> void: _set_opens_on_startup(on))
 	outer.add_child(_startup_check)
-	_window.add_child(EventSheetPopupUI.margined(outer))
+	# The margin wrapper is what the window holds, so IT is the thing that has to fill the window.
+	# Anchoring the box INSIDE a wrapper that does not fill left all three columns collapsed to their
+	# titles in the top-left corner - the page opened, and it opened empty.
+	var margined: MarginContainer = EventSheetPopupUI.margined(outer)
+	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_window.add_child(margined)
 	_dock.add_child(_window)
 
 
 func _fill() -> void:
+	# Removed as well as freed: queue_free lands at the end of the frame, so a plain queue_free would
+	# leave the second open showing six columns for one frame before settling back to three.
 	for child: Node in _columns_row.get_children():
+		_columns_row.remove_child(child)
 		child.queue_free()
 	var recents: Array = _dock.get_open_sheets_state().get("recent", [])
 	for column: Variant in columns(EventSheetStarterTemplates.create_new_starters(),
@@ -192,7 +200,12 @@ func _fill() -> void:
 			list.add_child(empty)
 		scroll.add_child(list)
 		box.add_child(scroll)
-		_columns_row.add_child(EventSheetPopupUI.titled_card(str(section.get("title", "")), box))
+		var card: PanelContainer = EventSheetPopupUI.titled_card(str(section.get("title", "")), box)
+		# Without these the three cards shrink to their titles: an HBoxContainer hands out no space
+		# a child did not ask for.
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_columns_row.add_child(card)
 
 
 func _entry_card(entry: Dictionary) -> Control:

@@ -13,6 +13,7 @@ static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _test_listing() and all_passed
 	all_passed = _test_markdown() and all_passed
+	all_passed = _test_declaration_row_punctuation() and all_passed
 	all_passed = _test_find_references_carry_their_row() and all_passed
 	all_passed = _test_find_results_summary() and all_passed
 	all_passed = _test_properties_heading() and all_passed
@@ -69,6 +70,28 @@ static func _test_markdown() -> bool:
 	passed = _check("the second event prints its number in the gutter",
 		markdown.contains("2         + CompareVariable"), true) and passed
 	passed = _check("the listing is fenced", markdown.ends_with("\n```\n"), true) and passed
+	return passed
+
+
+## The listing puts a colon after the object it is about - but a declaration row already carries its
+## own ":" as its next word, and writing both read "player: : Player = $Player" in Save as Text and
+## in the Markdown export. The row's own punctuation wins, so the listing says what the canvas says.
+static func _test_declaration_row_punctuation() -> bool:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(
+		"res://tests/fixtures/opened_scene_level.gd")
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport.set_sheet(sheet)
+	var listing: String = EventSheetTextListing.text_for_rows(viewport.get_row_tree(), false)
+	viewport.free()
+	var declaration: String = ""
+	for line: String in listing.split("\n"):
+		if line.strip_edges().begins_with("player"):
+			declaration = line.strip_edges()
+			break
+	var passed: bool = _check("a declaration row reads with one colon, not two",
+		declaration, "player : OpenedScenePlayer = $Player")
+	passed = _check("and no line in the listing doubles the separator",
+		listing.contains(": :"), false) and passed
 	return passed
 
 
