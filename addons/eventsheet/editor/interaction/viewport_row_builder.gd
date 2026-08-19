@@ -5025,32 +5025,70 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 ## {index: true}}. A group is a local declaration (or assignment) of `<scene>.instantiate()`, the
 ## `add_child` / `add_sibling` that plants it, and - only when it comes straight after - the first
 ## line that puts it somewhere.
-func _create_object_groups(actions: Array) -> Dictionary:
+func _create_object_groups(actions: Array, locals: Array = []) -> Dictionary:
 	var leads: Dictionary = {}
 	var consumed: Dictionary = {}
 	# Refreshed HERE, before anything reads it: the sentence below ADDS the new object's own name to the
 	# class map, and a refresh triggered later (by the icon lookup on the very span being built) would
 	# rebuild the map from the sheet and drop it again.
 	_reset_lens_caches_if_stale()
+	# T22. The `var e = Scene.instantiate()` line reads as the event's own Local row rather than as an
+	# action, so the alias and the scene it was made from are looked up there too. The Local row stays
+	# where it is: what collapses is everything the file then DOES to the new object.
+	var spawned: Dictionary = _spawned_locals(locals)
 	var index: int = 0
-	while index < actions.size() - 1:
+	while index < actions.size():
 		var spawn: Dictionary = _instantiate_action_parts(actions[index])
-		if spawn.is_empty() or not _plants_node(actions[index + 1], str(spawn.get("alias", ""))):
+		var cursor: int = index + 1
+		if spawn.is_empty():
+			var alias_here: String = _spawn_member_alias(actions[index], spawned)
+			if alias_here.is_empty():
+				index += 1
+				continue
+			spawn = spawned[alias_here]
+			cursor = index
+		# ── T22 ─────────────────────────────────────────────────────────────────────────────────
+		# The run is everything the file does to the new object before it does anything else: the
+		# layer it is added to, where it is put, and the properties set on the way in. They are
+		# written in whatever order the author liked - the plant often comes AFTER the position -
+		# so the run is walked rather than counted, and it is only a Create object when the plant
+		# is somewhere in it.
+		var alias: String = str(spawn.get("alias", ""))
+		var last: int = cursor - 1
+		var layer: String = ""
+		var planted: bool = false
+		var position_text: String = ""
+		var extras: PackedStringArray = PackedStringArray()
+		while cursor < actions.size():
+			var parent: String = _plant_parent(actions[cursor], alias)
+			if not parent.is_empty() and not planted:
+				planted = true
+				layer = parent
+				last = cursor
+				cursor += 1
+				continue
+			var placement: String = _placement_value(actions[cursor], alias)
+			if not placement.is_empty() and position_text.is_empty():
+				position_text = placement
+				last = cursor
+				cursor += 1
+				continue
+			var extra: String = _created_property_words(actions[cursor], alias)
+			if extra.is_empty():
+				break
+			extras.append(extra)
+			last = cursor
+			cursor += 1
+		if not planted:
 			index += 1
 			continue
-		var last: int = index + 1
-		var position_text: String = ""
-		if last + 1 < actions.size():
-			position_text = _placement_value(actions[last + 1], str(spawn.get("alias", "")))
-			if not position_text.is_empty():
-				last += 1
 		var indices: Array[int] = []
 		for member_index: int in range(index, last + 1):
 			indices.append(member_index)
 		leads[index] = {
-			"text": _create_object_text(str(spawn.get("source", "")), str(spawn.get("alias", "")),
-				position_text, bool(spawn.get("copy", false)), bool(spawn.get("pooled", false))),
-			"alias": str(spawn.get("alias", "")),
+			"text": _create_object_text(str(spawn.get("source", "")), alias, position_text,
+				bool(spawn.get("copy", false)), bool(spawn.get("pooled", false)), layer, extras),
+			"alias": alias,
 			"line_count": last - index + 1,
 			"indices": indices,
 		}
@@ -5372,13 +5410,87 @@ func _instantiate_action_parts(action_resource: Variant) -> Dictionary:
 ## True when the action is the `add_child(b)` / `add_sibling(b)` (on this node or on a named parent)
 ## that puts the freshly made object into the tree.
 func _plants_node(action_resource: Variant, alias: String) -> bool:
+	return not _plant_parent(action_resource, alias).is_empty()
+
+
+## T22. {alias: {alias, source, copy}} for every LOCAL of this event that was filled from a scene -
+## the `var e = Scene.instantiate()` row an event sheet draws at the top of its event. Empty when the
+## event declares no such local, which is what keeps the run below from claiming anything.
+func _spawned_locals(locals: Array) -> Dictionary:
+	var spawned: Dictionary = {}
+	for entry: Variant in locals:
+		var local: LocalVariable = entry as LocalVariable
+		if local == null:
+			continue
+		var alias: String = local.name.strip_edges()
+		var value: String = str(local.default_value).strip_edges()
+		if alias.is_empty() or not EventSheetSentence.is_identifier(alias):
+			continue
+		for suffix: String in [".instantiate()", ".duplicate()"]:
+			if not value.ends_with(suffix):
+				continue
+			var source: String = value.substr(0, value.length() - suffix.length()).strip_edges()
+			if source.is_empty() or not _is_identifier_path(source):
+				continue
+			spawned[alias] = {"alias": alias, "source": source, "copy": suffix == ".duplicate()"}
+	return spawned
+
+
+## T22. The spawned local an action is ABOUT - the plant, the placement or a property set on it - or
+## "" when the action has nothing to do with one. What lets a run start at the first line after the
+## Local row rather than at the declaration itself.
+func _spawn_member_alias(action_resource: Variant, spawned: Dictionary) -> String:
+	for alias: Variant in spawned:
+		var name_text: String = str(alias)
+		if not _plant_parent(action_resource, name_text).is_empty():
+			return name_text
+		if not _placement_value(action_resource, name_text).is_empty():
+			return name_text
+		if not _created_property_words(action_resource, name_text).is_empty():
+			return name_text
+	return ""
+
+
+## T22. WHERE the freshly made object was planted, as the event-sheet layer it went onto: the node an
+## `$FX.add_child(b)` names, or "here" for a plant on the script's own node. "" when the action is not
+## the plant at all, which is what the run above tests for.
+func _plant_parent(action_resource: Variant, alias: String) -> String:
 	var action: ACEAction = action_resource as ACEAction
 	if action == null or not action.enabled or alias.is_empty():
-		return false
-	if not (action.ace_id.contains("AddChild") or action.ace_id.contains("AddSibling")):
-		return false
+		return ""
 	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
-	return str(params.get("node", params.get("child", ""))).strip_edges() == alias
+	var planted: String = ""
+	if action.ace_id.contains("AddChild") or action.ace_id.contains("AddSibling"):
+		planted = str(params.get("node", params.get("child", ""))).strip_edges()
+	elif action.ace_id == "CallMethod" and str(params.get("method", "")) in ["add_child", "add_sibling"]:
+		# The importer files a plain `$FX.add_child(e)` as a call, so the run has to recognise it in
+		# that spelling too - otherwise a Create object would collapse or not depending on which row
+		# the line happened to lift to, which is the drift the shared reading exists to prevent.
+		planted = str(params.get("args", "")).strip_edges()
+	if planted != alias or alias.is_empty():
+		return ""
+	var parent: String = str(params.get("target", params.get("parent", ""))).strip_edges()
+	if parent.is_empty() or parent == "self":
+		return "here"
+	return EventSheetSentence.object_of_reference(parent)
+
+
+## T22. A `b.angle = 90` that comes with the spawn, as the `angle = 90` chip the Create object row
+## says it with. "" for anything that is not a property of the new object, which ends the run.
+func _created_property_words(action_resource: Variant, alias: String) -> String:
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled or alias.is_empty():
+		return ""
+	if not action.ace_id.contains("SetProperty"):
+		return ""
+	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	if str(params.get("target", "")).strip_edges() != alias:
+		return ""
+	var property_name: String = str(params.get("property", "")).strip_edges()
+	if property_name.is_empty():
+		return ""
+	return "%s = %s" % [property_name.replace("_", " "),
+		_reading_sentence(EventSheetSentence.expression_text(str(params.get("value", ""))))]
 
 
 ## The value of a `b.global_position = P` / `b.position = P` that immediately follows, or "" when the
@@ -5403,7 +5515,7 @@ func _placement_value(action_resource: Variant, alias: String) -> String:
 ## ROOT node - whenever the source is a preloaded scene this sheet declares; otherwise the variable's
 ## own name, which is the honest answer when nothing else is known.
 func _create_object_text(source: String, alias: String, position_text: String, copy: bool,
-		pooled: bool = false) -> String:
+		pooled: bool = false, layer: String = "", extras: PackedStringArray = PackedStringArray()) -> String:
 	var shown: String = source
 	var resolved: Dictionary = _lens_scene_vars.get(source, {}) as Dictionary
 	if not resolved.is_empty() and not str(resolved.get("name", "")).is_empty():
@@ -5416,6 +5528,10 @@ func _create_object_text(source: String, alias: String, position_text: String, c
 	if copy:
 		shown = "(%s %s)" % [EventSheetL10n.translate("copy of"), shown]
 	var text: String = "%s %s" % [EventSheetL10n.translate("Create object"), shown]
+	# T22. The node the object was added to IS the layer an event sheet makes things on, so the row
+	# says which one. A plant on the script's own node adds nothing a reader does not already have.
+	if not layer.is_empty() and layer != "here":
+		text += " %s %s" % [EventSheetL10n.translate("on layer"), layer]
 	if not position_text.is_empty():
 		# Through the shared value lens, so the place a thing is made reads exactly as it would in any
 		# other cell - `Vector2(10, 20)` is a point, and an event sheet writes a point as `(10, 20)`.
@@ -5426,6 +5542,10 @@ func _create_object_text(source: String, alias: String, position_text: String, c
 	# waiting, and a new object is made when none is.
 	if pooled:
 		text += " [%s]" % EventSheetL10n.translate("pooled")
+	# T22. The properties the file sets on the way in ride along as chips, because setting them is
+	# part of making the thing rather than a separate step a reader has to follow.
+	for extra: String in extras:
+		text += "   %s" % extra
 	return text
 
 
@@ -7504,7 +7624,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	if not event_row.actions.is_empty():
 		# M39 - the instantiate + add_child (+ first position) run is an event sheet's single Create object.
 		# Worked out once for the whole lane, because a group is recognised by what FOLLOWS its lead.
-		var create_groups: Dictionary = _create_object_groups(event_row.actions)
+		var create_groups: Dictionary = _create_object_groups(
+			event_row.actions, event_row.local_variables)
 		# S18 - the run of limit_* writes a camera's bounds are spelled as is one scroll-limits row.
 		var limit_groups: Dictionary = _scroll_limit_groups(event_row.actions)
 		# U8 / U12 - the mouse-look trio and the two faders of a crossfade are one row each.
@@ -9448,6 +9569,14 @@ func _format_pick_filter(pick: PickFilter) -> String:
 	if iterator.is_empty():
 		iterator = "item"
 	var collection: String = _pick_collection_words(pick)
+	# ── T23 lens hook ──────────────────────────────────────────────────────────────────────────
+	# A loop over what an area is touching is the sheet's own "For each ... overlapping ..." row -
+	# the same words the Is overlapping condition beside it uses, rather than the engine call that
+	# hands the list back.
+	var overlapped: String = EventSheetSentence.overlap_collection_source(collection)
+	if not overlapped.is_empty():
+		return "%s %s %s %s" % [EventSheetL10n.translate("For each"), iterator,
+			EventSheetL10n.translate("overlapping"), overlapped]
 	var source_text: String = collection
 	match pick.collection_kind:
 		PickFilter.CollectionKind.GROUP:

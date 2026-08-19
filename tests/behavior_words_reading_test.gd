@@ -33,6 +33,8 @@ const SOURCE: String = """extends CharacterBody2D
 
 @onready var ray: RayCast2D = $RayCast2D
 @export var sight_range: float = 400.0
+@export var enemy_scene: PackedScene
+var loaded: bool = false
 var dragging: bool = false
 var grab_offset: Vector2 = Vector2.ZERO
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -75,6 +77,20 @@ func roll() -> void:
 	hp = now.hour
 	stamp = Time.get_unix_time_from_system()
 	day = Time.get_date_string_from_system()
+
+func spawn(spawn_point: Node2D, angle: float) -> void:
+	var e = enemy_scene.instantiate()
+	e.global_position = spawn_point.global_position
+	$FX.add_child(e)
+	e.rotation = angle
+
+func sweep() -> void:
+	for a in $Area2D.get_overlapping_areas():
+		hp += 1
+
+func load_all() -> void:
+	while not loaded:
+		await get_tree().process_frame
 """
 
 ## The statements whose sentence this parcel settles, as "object ▸ sentence".
@@ -155,7 +171,12 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"Advanced Random ▸ Set seed to \"level-1\"",
 	"Advanced Random ▸ Set noise type to Perlin",
 	"System ▸ Set drop to choose weighted(\"coin\" 70, \"gem\" 20, \"nothing\" 10)",
-	"System ▸ Return CharacterBody2D has line of sight to t (within Sight Range)"
+	"System ▸ Return CharacterBody2D has line of sight to t (within Sight Range)",
+	# T22 - the instantiate, the layer it went onto, where it was put and the property set on the way
+	# in are ONE row; the Local row that holds the new object stays where the event declares it.
+	"System ▸ Create object enemy_scene on layer FX at spawn point's global position (as e)   rotation = angle",
+	# T23 - a loop over what an area is touching
+	"System ▸ For each a overlapping Area2D"
 ])
 
 
