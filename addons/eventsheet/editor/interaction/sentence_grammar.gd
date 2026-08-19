@@ -814,6 +814,26 @@ static func _system_words(text: String) -> String:
 		out = out.replace("Time.get_ticks_msec() / 1000", translate("time"))
 		out = out.replace("Time.get_ticks_msec()", translate("time in ms"))
 	out = out.replace("Engine.get_frames_per_second()", translate("fps"))
+	return editor_words(out)
+
+
+## R30. The four things a tool script asks the EDITOR for, in the Editor object's own names. Whole
+## spellings again, and deliberately dotted (`Editor.SelectedObjects`) because that is how an event
+## sheet writes an object's expression - the same shape as `Mouse.X` or `System.Time`, so a reader who
+## has met one has met all four. The names are identifiers a reader types into an expression field, so
+## like `max` and `min` above they are NOT translated.
+##
+## Public because a loop row shows its collection WITHOUT the rest of the value lens (a loop over a
+## group already reads as a group), and `for n in Editor.SelectedObjects` is the one line of a tool
+## that must not read as engine plumbing.
+static func editor_words(text: String) -> String:
+	if not text.contains("Editor") and not text.contains("get_undo_redo()"):
+		return text
+	var out: String = text
+	out = out.replace("EditorInterface.get_selection().get_selected_nodes()", "Editor.SelectedObjects")
+	out = out.replace("EditorInterface.get_edited_scene_root()", "Editor.OpenLayout")
+	out = out.replace("EditorInterface.get_editor_settings()", "Editor.Settings")
+	out = out.replace("get_undo_redo()", "Editor.UndoHistory")
 	return out
 
 
@@ -1078,6 +1098,10 @@ static func type_word(type_name: String) -> String:
 			return translate("table")
 		"Variant":
 			return translate("value")
+		"Object":
+			# R31. Not a value - a THING you go on to call actions on, which is the whole point of
+			# saying so on the row that declares it.
+			return translate("object")
 	return bare
 
 
@@ -1456,6 +1480,11 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var storage_step: Dictionary = _storage_statement(target, method, args, context)
 	if not storage_step.is_empty():
 		return storage_step
+	# R31. The undo/redo dance, on the variable that holds the history. Checked before the generic
+	# Object ▸ Verb fallback so "Add do step: set n's x to left" wins over "Add do property".
+	var undo_step: Dictionary = _undo_statement(target, method, args, context)
+	if not undo_step.is_empty():
+		return undo_step
 	# A behaviour step on the script's OWN object belongs to that object by name, never to System: a
 	# collision switch is something the node does, the way every other row about it reads.
 	var acting_object: String = script_object(context) if target.is_empty() or target == "self" else object_name
@@ -1674,6 +1703,67 @@ static func _storage_statement(target: String, method: String, args: PackedStrin
 	if method == "save":
 		return _sentence(OBJECT_STORAGE, "Save {file}", {"file": [file_name_value(args[0], context), "value"]})
 	return _sentence(OBJECT_STORAGE, "Load {file}", {"file": [file_name_value(args[0], context), "value"]})
+
+
+## R31. The two spellings that hand a tool the editor's undo history. Both read as one thing, so a
+## reader never has to know that `get_undo_redo()` (on a plugin) and the EditorInterface spelling
+## (anywhere else) are the same object.
+const UNDO_HISTORY_CALLS: PackedStringArray = [
+	"get_undo_redo()", "EditorInterface.get_editor_undo_redo()"
+]
+
+## R31. Every step of the undo/redo dance, as an action ON the variable that holds the history -
+## Object then Verb, exactly like every other row about an object. The history is an ordinary local
+## object variable, so `ur` is the object cell and the step is the sentence; a reader who can read
+## `Player ▸ Set position` can read `ur ▸ Add do step: set n's x to left` without learning anything new.
+##
+## Only these seven method names are claimed, and only with the argument counts the engine defines, so
+## a user's own `commit_action()` on something else keeps its plain reading. The property PATH reads as
+## its last segment (`"position:x"` is `x`): the rest is Godot's addressing, and the object is already
+## named in the sentence. A method name reads as the sheet's word for that function (`_refresh` is
+## `Refresh`), the same words a Call row uses.
+static func _undo_statement(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	if target.is_empty() or not is_simple_target(target):
+		return {}
+	match method:
+		"create_action":
+			if args.size() >= 1:
+				return _sentence(target, "Begin undoable action {name}",
+					{"name": [_quoted(args[0]), "value"]})
+		"commit_action":
+			if args.size() <= 1:
+				return _sentence(target, "Commit undoable action", {})
+		"add_do_property", "add_undo_property":
+			if args.size() == 3:
+				var step: String = "Add do step: set {object}'s {member} to {value}" if method == "add_do_property" \
+					else "Add undo step: set {object}'s {member} to {value}"
+				return _sentence(target, step, {
+					"object": [expression_text(args[0], context), "object"],
+					"member": [_undo_member_word(args[1]), "name"],
+					"value": [expression_text(args[2], context), "value"]
+				})
+		"add_do_method", "add_undo_method":
+			if args.size() >= 2:
+				var call_step: String = "Add do step: call {name}" if method == "add_do_method" \
+					else "Add undo step: call {name}"
+				return _sentence(target, call_step,
+					{"name": [function_words(_unquote(args[1])), "name"]})
+		"add_do_reference":
+			if args.size() == 1:
+				return _sentence(target, "Add do step: keep {object}",
+					{"object": [expression_text(args[0], context), "object"]})
+	return {}
+
+
+## R31. The readable half of a property path an undo step addresses: `"position:x"` is `x`,
+## `"modulate"` is `modulate`. Godot's `:` sub-path addressing is filing, not something the row says.
+static func _undo_member_word(property_value: String) -> String:
+	var bare: String = _unquote(property_value)
+	var colon_at: int = bare.rfind(":")
+	if colon_at >= 0:
+		bare = bare.substr(colon_at + 1)
+	return bare.strip_edges()
 
 
 ## True when a value is a literal path to a settings file - the only argument a bare `save` / `load`
@@ -2944,6 +3034,10 @@ static func _inferred_type(value: String) -> String:
 	for constructor: String in VECTOR_CONSTRUCTORS:
 		if text.begins_with("%s(" % constructor) or text.begins_with("%s." % constructor):
 			return constructor
+	# R31. The editor's undo history, declared as what it is. A reader who sees "Local ur = ..." with no
+	# type cannot tell that `ur` is something they may call actions on; "Local object ur" says it.
+	if UNDO_HISTORY_CALLS.has(text):
+		return "Object"
 	return ""
 
 

@@ -37,8 +37,31 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _enter_tree() -> void:": "OnEnterTree",
 	"func _exit_tree() -> void:": "OnExitTree",
 	"func _run() -> void:": "OnEditorRun",
-	"func _on_project_export(is_debug: bool, features: PackedStringArray) -> void:": "OnProjectExport"
+	"func _on_project_export(is_debug: bool, features: PackedStringArray) -> void:": "OnProjectExport",
+	# R30 / R34. The editor's own callbacks. An opened plugin or gizmo script is one of the least
+	# readable files there is until these read as what the editor calls them for: an object was
+	# selected, the 2D overlay is being painted, input landed in the viewport, a gizmo is redrawing.
+	"func _edit(object: Object) -> void:": "OnEditorObjectSelected",
+	"func _forward_canvas_draw_over_viewport(overlay: Control) -> void:": "OnDrawOver2DViewport",
+	"func _forward_canvas_gui_input(event: InputEvent) -> bool:": "On2DViewportInput",
+	"func _redraw() -> void:": "OnDrawGizmo"
 }
+
+## R30. The two tree callbacks that mean something DIFFERENT on an EditorPlugin: `_enter_tree` is not
+## "on created" there, it is the moment the plugin was switched on. Keyed on the trigger the header
+## table already resolved, so the rename is a display-level re-pin and the emitted function is the
+## same one either way (see TriggerResolver).
+const PLUGIN_LIFECYCLE_TRIGGERS: Dictionary = {
+	"OnEnterTree": "OnPluginEnabled",
+	"OnExitTree": "OnPluginDisabled"
+}
+
+## The class the file being lifted extends, as the importer read it off the `extends` line. Set by
+## _attempt_lift_body around each lift and read by exactly one question: is this an EditorPlugin, so
+## that `_enter_tree` reads as On plugin enabled rather than On created. Display-level attribution
+## only - both trigger ids resolve to the same emitted `_enter_tree`, so a stale value cannot move a
+## single byte of what the file compiles to.
+static var _lift_host_class: String = ""
 
 ## ACEs whose template reads its TRIGGER'S OWN ARGUMENTS rather than the host, mapped to the trigger
 ## that supplies them. Such a template only compiles inside that handler, so it may only lift there:
@@ -174,6 +197,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# The file's own object-typed members, read before any line is matched: they are what tells
 	# `candidate == host` apart from `i == 1` (see _is_object_expression).
 	_object_reference_names = _object_names_from_source(source)
+	_lift_host_class = str(sheet.host_class).strip_edges()
 	# The trailing run: function blocks, their @ace annotation blocks, blank separators,
 	# and a final top-level comment block - EventForge's emission layout in row form.
 	var first_run_index: int = sheet.events.size()
@@ -1616,6 +1640,9 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			# emit the function a second time and fail the byte-verify - reverting the WHOLE file to
 			# code blocks. Left raw, it keeps reading as the one-line "Host binding" row it already is.
 			return {"ok": false}
+		# R30. On an EditorPlugin the same two callbacks are the plugin being switched on and off.
+		if _lift_host_class == "EditorPlugin" and PLUGIN_LIFECYCLE_TRIGGERS.has(trigger_id):
+			trigger_id = str(PLUGIN_LIFECYCLE_TRIGGERS[trigger_id])
 		if function_lines[0].begins_with("func _ready()"):
 			# Skip the connect lines the map above CLAIMED; what remains is the OnReady body. Only
 			# claimed lines are skipped: a connect the map could not read would otherwise vanish from

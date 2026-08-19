@@ -881,12 +881,13 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 		return
 	var source_header: String = str((events[0] as EventRow).get_meta("__source_trigger_header", ""))
 	var args: String = str(signature.get("args", ""))
+	var returns: String = str(signature.get("return_type", "void"))
 	if not source_header.is_empty():
 		lines.append(source_header)
 	elif args.is_empty():
-		lines.append("func %s() -> void:" % function_name)
+		lines.append("func %s() -> %s:" % [function_name, returns])
 	else:
-		lines.append("func %s(%s) -> void:" % [function_name, args])
+		lines.append("func %s(%s) -> %s:" % [function_name, args, returns])
 	if _emit_notification_match(events, lines, source_map, result["warnings"]):
 		return
 	if not _emit_event_body(events, lines, source_map, 1, result["warnings"]):
@@ -1405,12 +1406,13 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		# `func _physics_process(delta):` - untyped param, no return arrow) re-emits that exact
 		# header. Stamped at lift time; the whole-file byte gate verifies it like everything else.
 		var source_header: String = str((events[0] as EventRow).get_meta("__source_trigger_header", "")) if events[0] is EventRow else ""
+		var returns: String = str(signature.get("return_type", "void"))
 		if not source_header.is_empty():
 			lines.append(source_header)
 		elif args.is_empty():
-			lines.append("func %s() -> void:" % function_name)
+			lines.append("func %s() -> %s:" % [function_name, returns])
 		else:
-			lines.append("func %s(%s) -> void:" % [function_name, args])
+			lines.append("func %s(%s) -> %s:" % [function_name, args, returns])
 		var had_body: bool = false
 		if function_name == "_ready" and _live_values_receiver_pending:
 			# Edit-back channel: the Live Values window's edits arrive as

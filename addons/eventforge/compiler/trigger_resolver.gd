@@ -73,6 +73,24 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# feature tags. Plain GDScript on both sides, so the emitted script keeps zero plugin
 			# dependency and simply does nothing when nobody calls it.
 			return _lifecycle("_on_project_export", "is_debug: bool, features: PackedStringArray")
+		"OnPluginEnabled":
+			# R30. An EditorPlugin's `_enter_tree` is not "on created" - it is the moment the plugin was
+			# switched on, which is when a plugin hangs its dock and adds its menu items. Same function
+			# as OnEnterTree, a different name because a reader of a plugin looks for a different idea.
+			return _lifecycle("_enter_tree", "")
+		"OnPluginDisabled":
+			return _lifecycle("_exit_tree", "")
+		"OnEditorObjectSelected":
+			return _lifecycle("_edit", "object: Object")
+		"OnDrawOver2DViewport":
+			return _lifecycle("_forward_canvas_draw_over_viewport", "overlay: Control")
+		"On2DViewportInput":
+			# The one editor virtual that ANSWERS: true means this plugin consumed the input and the
+			# viewport must not also act on it. The handler therefore carries a `bool` return type, and
+			# an event that never returns would not parse - which is why the starter ends with a return.
+			return _lifecycle("_forward_canvas_gui_input", "event: InputEvent", "bool")
+		"OnDrawGizmo":
+			return _lifecycle("_redraw", "")
 		"OnTestStart":
 			# A Test sheet's start. Signal-backed on the sheet itself: the sheet declares
 			# `signal test_started(test_name: String)` (the compiler emits it for a test sheet) and a
@@ -157,17 +175,24 @@ static func tempo_class_for(trigger_id: String) -> String:
 	match trigger_id:
 		"OnProcess", "OnPhysicsProcess", "OnPostTick", "OnPhysicsPostTick":
 			return TEMPO_EVERY_TICK
-		"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput":
+		"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput", "On2DViewportInput":
 			return TEMPO_INPUT
-		"OnReady", "OnEditorRun", "OnProjectExport", "OnEnterTree", "OnExitTree":
+		"OnDrawOver2DViewport", "OnDrawGizmo":
+			# A paint pass runs whenever the editor repaints that surface - the hot path of a tool.
+			return TEMPO_EVERY_TICK
+		"OnReady", "OnEditorRun", "OnProjectExport", "OnEnterTree", "OnExitTree", \
+				"OnPluginEnabled", "OnPluginDisabled":
 			# The tree callbacks run once per lifetime of the object, like _ready does.
 			return TEMPO_ONCE
 		_:
 			return TEMPO_SIGNAL
 
 
-static func _lifecycle(function_name: String, args: String) -> Dictionary:
-	return {"function_name": function_name, "args": args, "signal_name": "", "source_path": ""}
+## `return_type` is the emitted `-> T`. It is "void" for every engine callback that answers nothing,
+## which is all of them but the editor's viewport-input hook, so callers that never ask still get the
+## header they always got.
+static func _lifecycle(function_name: String, args: String, return_type: String = "void") -> Dictionary:
+	return {"function_name": function_name, "args": args, "signal_name": "", "source_path": "", "return_type": return_type}
 
 
 static func _signal_backed(function_name: String, args: String, signal_name: String, source_path: String) -> Dictionary:

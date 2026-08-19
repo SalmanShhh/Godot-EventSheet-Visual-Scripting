@@ -5811,6 +5811,12 @@ func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
 ## wears the device name in its object cell (Mouse, Keyboard, Gamepad, Touch).
 const INPUT_DEVICE_OBJECTS: Array[String] = ["Mouse", "Keyboard", "Gamepad", "Touch"]
 
+## R30. The editor is an object too - it is opened, it is drawn on, it is given docks and menu items,
+## and it answers questions about what is selected. Its whole vocabulary is filed under one category,
+## so a row of that category wears "Editor" in its object cell exactly as a Mouse row wears "Mouse".
+const EDITOR_TOOLS_CATEGORY := "Editor Tools"
+const EDITOR_OBJECT := "Editor"
+
 ## `event is <class>` -> the event-sheet module that owns the trigger the branch reads as.
 const INPUT_EVENT_MODULES: Dictionary = {
 	"InputEventMouseMotion": "Mouse",
@@ -6299,7 +6305,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var loop_reading: Dictionary = {}
 		if pick.predicate_expression.strip_edges().is_empty() and pick.pick_first_n <= 0:
 			loop_reading = EventSheetViewportReadingRows.loop_words(
-				pick.collection_kind, pick.iterator_name, _pick_collection_text(pick))
+				pick.collection_kind, pick.iterator_name, _pick_collection_words(pick))
 		var loop_object: String = str(loop_reading.get("object", ""))
 		spans.append(
 			_make_span(
@@ -8156,13 +8162,18 @@ func _pick_collection_text(pick: PickFilter) -> String:
 	return collection if not collection.is_empty() else pick.source_expression.strip_edges()
 
 
+## R30. The collection a loop walks, with the editor's own expressions named: a tool's
+## `for n in EditorInterface.get_selection().get_selected_nodes()` is a For each over
+## Editor.SelectedObjects, and reading it as the engine call spells out plumbing nobody wrote.
+func _pick_collection_words(pick: PickFilter) -> String:
+	return EventSheetSentence.editor_words(_pick_collection_text(pick))
+
+
 func _format_pick_filter(pick: PickFilter) -> String:
 	var iterator: String = pick.iterator_name.strip_edges()
 	if iterator.is_empty():
 		iterator = "item"
-	var collection: String = pick.collection_value.strip_edges()
-	if collection.is_empty():
-		collection = pick.source_expression.strip_edges()
+	var collection: String = _pick_collection_words(pick)
 	var source_text: String = collection
 	match pick.collection_kind:
 		PickFilter.CollectionKind.GROUP:
@@ -8201,6 +8212,8 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 		var input_descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
 		if input_descriptor != null and INPUT_DEVICE_OBJECTS.has(input_descriptor.category):
 			return input_descriptor.category
+		if input_descriptor != null and input_descriptor.category == EDITOR_TOOLS_CATEGORY:
+			return EDITOR_OBJECT
 		return "System"
 	return provider_id
 
