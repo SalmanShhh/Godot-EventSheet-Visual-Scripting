@@ -72,11 +72,27 @@ var _section_folds: Dictionary = {"used": false, "scene": true, "input": false, 
 var _menu: PopupMenu = null
 var _menu_label: String = ""
 var _class_map: Dictionary = {}
+# T13 - the Project bar rides in this bar as its OTHER TAB rather than as a second dock. The strip
+# only appears once one is handed over, so a project that never turns it on sees the bar it always
+# had, with nothing extra on it.
+var _tab_row: HBoxContainer = null
+var _objects_tab: Button = null
+var _project_tab: Button = null
+var _project_bar: Control = null
+var _active_tab: String = "objects"
 
 
 func _init() -> void:
 	name = "Objects"
 	custom_minimum_size = Vector2(EventSheetPalette.scaled_f(180.0), 0.0)
+	_tab_row = HBoxContainer.new()
+	_tab_row.name = "EventSheetObjectBarTabs"
+	_tab_row.visible = false
+	_objects_tab = _make_tab_button(EventSheetL10n.translate("Objects"), "objects")
+	_project_tab = _make_tab_button(EventSheetL10n.translate("Project"), "project")
+	_tab_row.add_child(_objects_tab)
+	_tab_row.add_child(_project_tab)
+	add_child(_tab_row)
 	_header_button = Button.new()
 	_header_button.flat = true
 	_header_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -135,16 +151,61 @@ func _init() -> void:
 ## collapsing shrinks the panel back to its one-line header.
 func set_expanded(expanded: bool) -> void:
 	_expanded = expanded
-	tree.visible = expanded
-	filter_edit.visible = expanded
-	_sort_button.visible = expanded
 	size_flags_vertical = Control.SIZE_EXPAND_FILL if expanded else Control.SIZE_SHRINK_BEGIN
+	_apply_active_tab()
 	_refresh_header()
 	_save_prefs()
 
 
 func is_expanded() -> bool:
 	return _expanded
+
+
+func _make_tab_button(label: String, tab_id: String) -> Button:
+	var button := Button.new()
+	button.flat = true
+	button.toggle_mode = true
+	button.text = label
+	button.pressed.connect(func() -> void: set_active_tab(tab_id))
+	return button
+
+
+## T13 - hands this bar its Project tab. Passing null takes the tab away again (View ▸ Project bar
+## off, or the ✕), and the bar falls back to the Objects tab it has always had.
+func set_project_bar(bar: Control) -> void:
+	if _project_bar != null and _project_bar.get_parent() == self:
+		remove_child(_project_bar)
+	_project_bar = bar
+	if _project_bar != null and _project_bar.get_parent() == null:
+		add_child(_project_bar)
+	_tab_row.visible = _project_bar != null
+	if _project_bar == null:
+		_active_tab = "objects"
+	_apply_active_tab()
+
+
+## Which tab of the bar is showing - "objects" or "project".
+func active_tab() -> String:
+	return _active_tab
+
+
+func set_active_tab(tab_id: String) -> void:
+	if _project_bar == null:
+		tab_id = "objects"
+	_active_tab = tab_id
+	_apply_active_tab()
+
+
+func _apply_active_tab() -> void:
+	var on_objects: bool = _active_tab != "project"
+	_objects_tab.set_pressed_no_signal(on_objects)
+	_project_tab.set_pressed_no_signal(not on_objects)
+	_header_button.get_parent().visible = on_objects
+	tree.visible = on_objects and _expanded
+	filter_edit.visible = on_objects and _expanded
+	_sort_button.visible = on_objects and _expanded
+	if _project_bar != null:
+		_project_bar.visible = not on_objects
 
 
 ## Which object's rows are currently highlighted, or "" when none are.

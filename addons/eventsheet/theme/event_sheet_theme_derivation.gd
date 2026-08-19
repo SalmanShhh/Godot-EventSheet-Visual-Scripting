@@ -95,6 +95,8 @@ static func fill_derived_tokens(style: EventSheetEditorStyle) -> EventSheetEdito
 	chrome.object_bar_hover_wash_color = Color(ink.r, ink.g, ink.b, 0.07)
 	chrome.object_bar_grip_color = Color(ink.r, ink.g, ink.b, 0.28)
 	chrome.object_bar_grip_active_color = Color(ink.r, ink.g, ink.b, 0.62)
+	chrome.project_bar_heading_color = reading.muted_text_color
+	chrome.project_bar_note_color = reading.muted_text_color
 	chrome.status_text_color = reading.primary_text_color
 	chrome.status_error_color = flag_red
 	chrome.row_address_color = Color(ink.r, ink.g, ink.b, 0.65)

@@ -370,6 +370,9 @@ static func create_new_starters() -> Array[Dictionary]:
 
 ## Builds a fresh sheet from a starter template and adopts it (unsaved; Save As to keep).
 func _new_sheet_from_template(template_id: int) -> void:
+	# T13 - a project that started from a template is one of the two ways a reader says "give me the
+	# familiar surfaces" without being asked, so the Project bar turns itself on for it.
+	EventSheetProjectBarGlue.mark_started_from_template()
 	if template_id >= 100:
 		var template_index: int = template_id - 100
 		if template_index >= _project_template_paths.size():

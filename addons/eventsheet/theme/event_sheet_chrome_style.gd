@@ -28,6 +28,12 @@ extends Resource
 ## The stronger version of both while the pointer sits in the drag zone.
 @export var object_bar_grip_active_color: Color = Color(1.0, 1.0, 1.0, 0.62)
 
+# ── The Project bar (the Object bar's other tab) ──────────────────────────────────────────────
+## The by-kind headings down the Project bar (Scenes, Scripts, Classes, Base classes ...), and the
+## muted note beside each entry (the file it came from, who extends it, how much reads as events).
+@export var project_bar_heading_color: Color = EventSheetPalette.TEXT_MUTED
+@export var project_bar_note_color: Color = EventSheetPalette.TEXT_MUTED
+
 # ── The status strip ──────────────────────────────────────────────────────────────────────────
 ## The message along the bottom of the dock, and the red it turns when something went wrong.
 @export var status_text_color: Color = Color(1.0, 1.0, 1.0, 1.0)

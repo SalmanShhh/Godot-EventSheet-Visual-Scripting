@@ -32,6 +32,17 @@ const DEFAULTS: Dictionary = {
 	"add_variable": "V",
 	"invert_condition": "I",
 	"replace_ace": "R",
+	# F opens the Function dialog: a function is the eighth thing an author adds, and the beginner
+	# toolbar names this key on its own button.
+	"add_function": "F",
+	# Collapse / expand the selected block. Unbound by default - Left / Right already do it and are
+	# grammar - but it exists so the "another event-sheet editor" preset can put it on Ctrl+E.
+	"toggle_collapse": "",
+	# The three Preview gestures (T15). Godot's own run keys, so the sheet's buttons and the editor's
+	# play bar never disagree about what F5 means.
+	"preview_layout": "F6",
+	"preview_project": "F5",
+	"debug_layout": "",
 	"project_search": "Ctrl+Shift+F",
 	# R33. Run an editor tool from its own sheet. Ctrl+Shift+X because X is the "execute" chord every
 	# script editor uses, and a tool sheet is the only sheet where "run" means something other than
@@ -67,6 +78,11 @@ const LABELS: Dictionary = {
 	"add_blank_subevent": "Add blank sub-event",
 	"add_sub_condition": "Add sub-event (picker)",
 	"add_variable": "Add global variable",
+	"add_function": "Add function",
+	"toggle_collapse": "Collapse / expand the selected block",
+	"preview_layout": "Preview layout (run this sheet's scene)",
+	"preview_project": "Preview project (run the main scene)",
+	"debug_layout": "Debug layout (run with the sheet's debugger armed)",
 	"invert_condition": "Invert selected condition",
 	"project_search": "Search all sheets",
 	"run_editor_tool": "Run this editor tool now",
@@ -91,7 +107,9 @@ const LABELS: Dictionary = {
 ## Display order for the editor (DEFAULTS key order isn't guaranteed stable).
 const ORDER: Array = [
 	"add_event", "add_condition", "add_action", "add_comment", "add_group", "toggle_enabled",
-	"add_blank_subevent", "add_sub_condition", "add_variable", "invert_condition", "replace_ace",
+	"add_blank_subevent", "add_sub_condition", "add_variable", "add_function", "invert_condition",
+	"replace_ace", "toggle_collapse",
+	"preview_layout", "preview_project", "debug_layout",
 	"project_search", "run_editor_tool", "history_back", "history_forward",
 	"duplicate", "copy", "copy_as_text", "paste", "undo", "redo", "save", "save_as", "open",
 	"add_event_chord", "add_condition_chord", "add_action_chord", "add_variable_chord",
@@ -100,6 +118,81 @@ const ORDER: Array = [
 
 static func label_for(action: String) -> String:
 	return str(LABELS.get(action, action.capitalize()))
+
+# ── Presets (T19) ─────────────────────────────────────────────────────────────────────────────
+#
+# Muscle memory is the cheapest thing to honour. The keys are already MOSTLY the same as the ones an
+# author coming from another event-sheet editor has in their fingers - E / S / C / A / G / Q / V / B
+# all match already - so a preset is a small table of the handful that DIFFER, applied through the
+# same per-user override store the Keyboard Shortcuts dialog writes. Nothing is locked: every key in
+# a preset stays rebindable afterwards, and "Reset all to defaults" comes back here.
+#
+# The preset ids are the shipped identity of a preset and are frozen; the tables may grow.
+
+const PRESET_DEFAULT: String = "eventsheets"
+const PRESET_ANOTHER_EDITOR: String = "another_editor"
+
+## preset id -> {action: binding}. The default preset is empty: it IS the DEFAULTS table.
+const PRESETS: Dictionary = {
+	PRESET_DEFAULT: {},
+	PRESET_ANOTHER_EDITOR: {
+		"invert_condition": "X",
+		"toggle_collapse": "Ctrl+E",
+		# Ctrl+E is collapse/expand in the other editor, so the Ctrl alternate for "add event" steps
+		# aside. E still adds an event, which is the key that matters.
+		"add_event_chord": "",
+		"preview_layout": "F4",
+		"preview_project": "F5",
+	},
+}
+
+## What the Preset ▾ offers, in menu order.
+const PRESET_ORDER: Array = [PRESET_DEFAULT, PRESET_ANOTHER_EDITOR]
+
+const PRESET_LABELS: Dictionary = {
+	PRESET_DEFAULT: "Godot EventSheets",
+	PRESET_ANOTHER_EDITOR: "Another event-sheet editor",
+}
+
+
+static func preset_label_for(preset_id: String) -> String:
+	return str(PRESET_LABELS.get(preset_id, preset_id))
+
+
+## The bindings a preset asks for. Empty for the default preset - which is the point: the default is
+## whatever DEFAULTS says, so a preset never has to be kept in step with it.
+static func preset_bindings(preset_id: String) -> Dictionary:
+	var table: Variant = PRESETS.get(preset_id, {})
+	return (table as Dictionary).duplicate() if table is Dictionary else {}
+
+
+## Applies a preset: the default one clears every override, any other one resets first and then
+## writes only what it changes, so a preset can never leave a stale key from the one before it.
+static func apply_preset(preset_id: String) -> void:
+	if not PRESETS.has(preset_id):
+		return
+	reset_all()
+	var bindings: Dictionary = preset_bindings(preset_id)
+	for action: Variant in bindings:
+		set_binding(str(action), str(bindings[action]))
+
+
+## Which preset the live bindings match - the one whose every entry is in force, or the default when
+## none does. Derived rather than trusted, so a hand-rebound key honestly reads as "Godot EventSheets"
+## again the moment it stops matching.
+static func active_preset() -> String:
+	for preset_id: Variant in PRESET_ORDER:
+		var bindings: Dictionary = preset_bindings(str(preset_id))
+		if bindings.is_empty():
+			continue
+		var matched: bool = true
+		for action: Variant in bindings:
+			if binding_for(str(action)) != str(bindings[action]):
+				matched = false
+				break
+		if matched:
+			return str(preset_id)
+	return PRESET_DEFAULT
 
 # Per-user overrides cached in memory - the key handler probes ~18 actions per keystroke, so binding
 # lookups must never touch disk. Loaded once; writes update the cache and the file together.
@@ -139,14 +232,13 @@ static func binding_for(action: String) -> String:
 	return str(DEFAULTS.get(action, ""))
 
 
-## Persist a new binding ("Ctrl+S") for an action. An empty binding clears the shortcut (the action
-## stays reachable via any alternate binding / menu). Saves the per-user file in the editor.
+## Persist a new binding ("Ctrl+S") for an action. An empty binding is an explicit "no key" - the
+## action stays reachable from its menu and from any alternate binding, and it is NOT the same as
+## resetting (reset() puts the DEFAULTS key back). Recording an empty override rather than erasing it
+## is what lets a preset take a key away from one action to give it to another.
 static func set_binding(action: String, binding: String) -> void:
 	_load_overrides()
-	if binding.strip_edges().is_empty():
-		_overrides.erase(action)
-	else:
-		_overrides[action] = binding
+	_overrides[action] = binding.strip_edges()
 	_save_overrides()
 
 

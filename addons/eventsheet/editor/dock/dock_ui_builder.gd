@@ -84,6 +84,11 @@ func build_ui() -> void:
 	_dock._title_path_label.text = "Open or create a sheet to begin"
 	_dock._title_strip.add_child(_dock._title_path_label)
 
+	# T18 - the beginner Add toolbar sits directly above the canvas (not up in the menu strip): on
+	# day one, the buttons have to be beside the thing they add to. Hidden until Simple mode or
+	# View ▸ Add toolbar asks for it, so an expert's sheet is unchanged.
+	_dock._beginner_toolbar.build(root, _dock._run_controls)
+
 	# Pinned Conditions/Actions column header, above the scrolling sheet (bound to the
 	# viewport once it exists). Kept outside the scroll so the scroll still has a single child.
 	_dock._identity_banner = SheetIdentityBanner.new()
@@ -302,6 +307,11 @@ func build_ui() -> void:
 	_dock._context_menus.build_all()
 	_dock._build_preview_window()
 	_dock._build_theme_file_dialog()
+	# T13 / T18 - both surfaces exist now (the View items above, the strip below the menus), so the
+	# "should this project have them" rule can finally be resolved. It could not run inside the menu
+	# build: the strip was not there yet, and a rule that runs against half a UI silently does nothing.
+	_dock._project_bar_glue.apply_visibility()
+	_dock._beginner_toolbar.apply_visibility()
 
 
 func build_provider_dialog() -> void:
