@@ -199,7 +199,7 @@ static func build_panel(entry: Dictionary, scene_name: String = "", class_map: D
 	trailing.text = EventSheetL10n.translate("object")
 	trailing.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	trailing.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	trailing.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	trailing.add_theme_color_override("font_color", EventSheetActiveTheme.reading().muted_text_color)
 	title_row.add_child(trailing)
 	column.add_child(title_row)
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
@@ -285,7 +285,7 @@ static func _chip_field(row: Dictionary) -> Control:
 	if not note_text.is_empty():
 		var muted := Label.new()
 		muted.text = note_text
-		muted.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+		muted.add_theme_color_override("font_color", EventSheetActiveTheme.reading().muted_text_color)
 		flow.add_child(muted)
 	return flow
 

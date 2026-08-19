@@ -333,8 +333,10 @@ func draw_drag_ghost(font: Font, font_size: int) -> void:
 		_viewport._drag_pointer_position + Vector2(14.0, 10.0),
 		Vector2(min(text_width, 280.0) + 14.0, font.get_height(ghost_font_size) + 6.0)
 	)
-	_viewport.draw_rect(ghost_rect, Color(0.12, 0.14, 0.18, 0.62), true)
-	_viewport.draw_rect(ghost_rect, Color(1.0, 1.0, 1.0, 0.18), false, 1.0)
+	var reading: EventSheetReadingStyle = _viewport._get_reading_style()
+	var ghost_fill: Color = reading.drag_bubble_background_color
+	_viewport.draw_rect(ghost_rect, Color(ghost_fill.r, ghost_fill.g, ghost_fill.b, 0.62), true)
+	_viewport.draw_rect(ghost_rect, Color(reading.drag_bubble_text_color.r, reading.drag_bubble_text_color.g, reading.drag_bubble_text_color.b, 0.18), false, 1.0)
 	_viewport.draw_string(
 		font,
 		Vector2(ghost_rect.position.x + 7.0, ghost_rect.position.y + 3.0 + font.get_ascent(ghost_font_size)),
@@ -342,5 +344,5 @@ func draw_drag_ghost(font: Font, font_size: int) -> void:
 		HORIZONTAL_ALIGNMENT_LEFT,
 		ghost_rect.size.x - 14.0,
 		ghost_font_size,
-		Color(1.0, 1.0, 1.0, 0.66)
+		Color(reading.drag_bubble_text_color.r, reading.drag_bubble_text_color.g, reading.drag_bubble_text_color.b, 0.66)
 	)
