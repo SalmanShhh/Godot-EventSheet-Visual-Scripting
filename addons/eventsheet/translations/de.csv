@@ -2615,5 +2615,13 @@ This block is the %s behavior - Adopt behavior?,Dieser Block ist das Verhalten %
 A pooled object is created here and nothing anywhere returns one to the pool.,"Hier wird ein Pool-Objekt erzeugt, und nirgends wird eines zuruckgegeben."
 %s is set here but no event asks for it.,"%s wird hier gesetzt, aber kein Ereignis fragt danach."
 A timer is started on entering this state and nothing stops it on leaving.,"Beim Betreten dieses Zustands startet ein Timer, und beim Verlassen stoppt ihn nichts."
-could adopt: %s,ubernehmbar: %s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,"Dieses Skript schreibt von Hand, was ein mitgeliefertes Verhalten schon kann. Rechtsklick auf das markierte Ereignis zeigt, was sich andern wurde."
+Minimap,Minimap
+"A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.","Ein Bild des ganzen Blatts am rechten Rand: ein Balken je Ereignis, eingefärbt nach seiner Art, der gerade sichtbare Teil als verschiebbarer Kasten und deine Lesezeichen am Rand. Ab 200 Ereignissen standardmäßig an."
+Minimap on - the whole sheet down the right edge.,Minimap an - das ganze Blatt am rechten Rand.
+Minimap off.,Minimap aus.
+Sheet Map…,Blattkarte…
+"Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.","Welche Blätter, Szenen und Globals einander aufrufen, per Signal erreichen und einbinden - die Form der Projektlogik auf einer Seite."
+History…,Verlauf…
+History,Verlauf
+"Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.","Jede Änderung an diesem Blatt, in den Worten des Blatts. Klicke eine an, um bis dorthin rückgängig zu machen oder zu wiederholen."
+"No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.","Noch keine Änderungen. Jede Änderung an diesem Blatt erscheint hier, in den Worten des Blatts."

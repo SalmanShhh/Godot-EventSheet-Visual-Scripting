@@ -2615,5 +2615,13 @@ This block is the %s behavior - Adopt behavior?,Questo blocco e il comportamento
 A pooled object is created here and nothing anywhere returns one to the pool.,Qui viene creato un oggetto dal pool e da nessuna parte ne viene restituito uno.
 %s is set here but no event asks for it.,%s viene impostato qui ma nessun evento lo chiede.
 A timer is started on entering this state and nothing stops it on leaving.,Entrando in questo stato parte un timer e nulla lo ferma all'uscita.
-could adopt: %s,adottabile: %s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,Questo script scrive a mano qualcosa che un comportamento incluso fa gia. Clic destro sull'evento segnato per vedere cosa cambierebbe.
+Minimap,Minimappa
+"A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.","Un'immagine dell'intero foglio sul bordo destro: una barra per evento colorata in base a cosa è, la parte che stai guardando come un riquadro trascinabile e i tuoi segnalibri nel margine. Attivo di default oltre i 200 eventi."
+Minimap on - the whole sheet down the right edge.,Minimappa attiva: l'intero foglio sul bordo destro.
+Minimap off.,Minimappa disattivata.
+Sheet Map…,Mappa dei fogli…
+"Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.","Quali fogli, scene e globali chiamano, segnalano e includono quali: la forma della logica del progetto in una pagina."
+History…,Cronologia…
+History,Cronologia
+"Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.","Ogni modifica fatta a questo foglio, nelle parole del foglio stesso. Fai clic su una per annullare o ripristinare fino a lì."
+"No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.","Ancora nessuna modifica. Ogni cambiamento a questo foglio compare qui, nelle parole del foglio stesso."

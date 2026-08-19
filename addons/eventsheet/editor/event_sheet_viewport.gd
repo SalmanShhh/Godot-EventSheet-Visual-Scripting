@@ -538,6 +538,53 @@ func get_total_row_count() -> int:
 	return _flat_rows.size()
 
 
+## U18 - the row uids one history step touched, washed while the pointer rests on that step in the
+## History panel. Display-only: nothing here changes a row, a resource or a byte.
+func set_row_highlight(uids: PackedStringArray) -> void:
+	_row_highlight.clear()
+	for uid: String in uids:
+		_row_highlight[uid] = true
+	queue_redraw()
+
+
+func clear_row_highlight() -> void:
+	if _row_highlight.is_empty():
+		return
+	_row_highlight.clear()
+	queue_redraw()
+
+
+## U16 - the geometry the minimap column draws from. It paints the SAME rows the canvas holds, so
+## it reads them here instead of duplicating the flattened list (get_flat_rows deep-copies, which a
+## per-frame column must never do). Index-checked, so a stale column cannot crash a rebuild.
+func get_row_data(index: int) -> EventRowData:
+	return _row_at(index)
+
+
+func get_row_top(index: int) -> float:
+	return _get_row_top(index)
+
+
+func get_row_height(index: int) -> float:
+	return _get_row_height(index)
+
+
+## The height of the window onto the sheet (the scroll container's, not the canvas's), and where
+## that window currently sits. The minimap draws one as a box over the other and drags it.
+func get_visible_height() -> float:
+	return _get_viewport_height()
+
+
+func get_scroll_offset() -> int:
+	return _get_scroll_offset()
+
+
+func set_scroll_offset(value: int) -> void:
+	var scroll: ScrollContainer = _get_scroll_container()
+	if scroll != null:
+		scroll.scroll_vertical = value
+
+
 ## Returns the x of the condition/action lane divider for a canvas of the given logical
 ## width. Shared by row layout and the pinned column header so they stay aligned.
 func get_lane_divider_x(width: float) -> float:
@@ -765,6 +812,11 @@ func _get_chrome_style() -> EventSheetChromeStyle:
 	if _editor_style == null:
 		_editor_style = EventSheetEditorStyle.new()
 	return _editor_style.get_chrome_style()
+
+
+## Active chrome tokens (for surfaces outside the renderer, e.g. the minimap column).
+func get_chrome_style() -> EventSheetChromeStyle:
+	return _get_chrome_style()
 
 
 func _get_condition_style() -> EventSheetElementStyle:
@@ -1558,6 +1610,8 @@ func clear_lens() -> void:
 # Hovering an object in the bar makes its events glow softly; nothing is hidden and nothing sticks,
 # which is the whole difference between a preview and the pinned filter a click applies.
 var _object_preview: String = ""
+# U18: row uids the hovered History step touched. Display-only, cleared when the pointer leaves.
+var _row_highlight: Dictionary = {}
 
 
 func set_object_preview(object_label: String) -> void:
@@ -1822,6 +1876,9 @@ func _draw() -> void:
 		# Q12 - the Object bar's hover preview: a soft wash over the rows that object appears in.
 		var chrome_style: EventSheetChromeStyle = _get_chrome_style()
 		if not _object_preview.is_empty() and row_previews_object(row_data, _object_preview):
+			draw_rect(row_rect, chrome_style.object_bar_hover_wash_color, true)
+		# U18 - the rows one history step touched, lit while the pointer rests on that step.
+		if not _row_highlight.is_empty() and _row_highlight.has(row_data.statement_uid()):
 			draw_rect(row_rect, chrome_style.object_bar_hover_wash_color, true)
 		if index == _hovered_row_index and not _flat_rows.is_empty():
 			var grip_color: Color = chrome_style.object_bar_grip_active_color if _hover_is_drag_zone else chrome_style.object_bar_grip_color

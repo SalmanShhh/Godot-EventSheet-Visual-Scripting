@@ -2615,5 +2615,13 @@ This block is the %s behavior - Adopt behavior?,Ce bloc est le comportement %s -
 A pooled object is created here and nothing anywhere returns one to the pool.,Un objet de la reserve est cree ici et nulle part on n'en rend un.
 %s is set here but no event asks for it.,%s est defini ici mais aucun evenement ne le consulte.
 A timer is started on entering this state and nothing stops it on leaving.,Un minuteur demarre en entrant dans cet etat et rien ne l'arrete en sortant.
-could adopt: %s,adoptable : %s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,Ce script ecrit a la main ce qu'un comportement fourni fait deja. Clic droit sur l'evenement marque pour voir ce qui changerait.
+Minimap,Minicarte
+"A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.","Une image de toute la feuille sur le bord droit : une barre par événement teintée selon sa nature, la partie visible sous forme de cadre déplaçable et vos signets dans la marge. Activé par défaut au-delà de 200 événements."
+Minimap on - the whole sheet down the right edge.,Minicarte activée : toute la feuille sur le bord droit.
+Minimap off.,Minicarte désactivée.
+Sheet Map…,Carte des feuilles…
+"Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.","Quelles feuilles, scènes et globales s'appellent, s'envoient des signaux et s'incluent : la forme de la logique du projet sur une page."
+History…,Historique…
+History,Historique
+"Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.","Chaque modification apportée à cette feuille, dans les mots de la feuille. Cliquez sur une étape pour annuler ou rétablir jusque-là."
+"No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.","Aucune modification pour l'instant. Chaque changement apporté à cette feuille apparaîtra ici, dans les mots de la feuille."

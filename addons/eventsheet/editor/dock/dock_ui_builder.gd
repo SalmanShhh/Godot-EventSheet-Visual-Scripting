@@ -117,7 +117,19 @@ func build_ui() -> void:
 	properties_split.name = "EventSheetPropertiesSplit"
 	properties_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	properties_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	properties_split.add_child(_dock._scroll)
+	# The minimap sits beside the canvas in a row of its own, so the code panel's later re-parent of
+	# _scroll (which moves whatever is at _scroll's index) leaves the column exactly where it is.
+	var canvas_row: HBoxContainer = HBoxContainer.new()
+	canvas_row.name = "EventSheetCanvasRow"
+	canvas_row.add_theme_constant_override("separation", 0)
+	canvas_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	canvas_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	canvas_row.add_child(_dock._scroll)
+	_dock._minimap = EventSheetMinimap.new()
+	_dock._minimap.name = "EventSheetMinimap"
+	_dock._minimap.visible = false
+	canvas_row.add_child(_dock._minimap)
+	properties_split.add_child(canvas_row)
 	properties_split.add_child(_dock._properties_bar.build())
 	_dock._content_host.add_child(properties_split)
 	_dock._open_sheets_panel = EventSheetOpenSheetsDock.new()

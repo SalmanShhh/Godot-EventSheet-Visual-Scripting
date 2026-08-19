@@ -162,6 +162,7 @@ var _anatomy_panel: BehaviourAnatomyPanel = null
 var _picker_preview_panel: EventSheetPickerPreviewPanel = null  # left rail, under Open Sheets (behaviour_anatomy_panel.gd)
 var _functions_panel: EventSheetFunctionsPanel = null  # left rail, dockable fold-expand Functions overview (functions_panel.gd)
 const _OPEN_SHEETS_PANEL_META: String = "eventsheets_open_sheets_panel"  # editor metadata: {shown, collapsed}
+var _minimap: EventSheetMinimap = null  # the thin picture-of-the-sheet column at the canvas's right edge (dock/minimap.gd)
 var _column_header: SheetColumnHeader = null
 var _identity_banner: SheetIdentityBanner = null
 var _preview_banner: PanelContainer = null
@@ -508,6 +509,7 @@ func _activate_tab(index: int) -> void:
 	_clear_undo_history()
 	_refresh_ace_registry()
 	_viewport.set_sheet(_current_sheet)
+	_apply_minimap_pref()
 	_sync_split_sheet()
 	_refresh_anatomy_panel()
 	_refresh_functions_list()
@@ -3635,6 +3637,60 @@ func _ensure_bookmarks_panel() -> EventSheetBookmarksPanel:
 		_bookmarks_panel = EventSheetBookmarksPanel.new(self)
 	return _bookmarks_panel
 
+# ── U16 the minimap column - drawn by dock/minimap.gd ────────────────────────────────
+# Three states, two of them the user's: AUTO (nothing stored, the default) shows the column on a
+# sheet long enough to need one and hides it on a short one, and an explicit choice, once made,
+# holds for every sheet and persists per-project per-user (editor metadata, never repo state).
+const MINIMAP_AUTO := -1
+const _MINIMAP_META: String = "minimap"
+
+
+## Whether the column should be on RIGHT NOW: the user's choice if they made one, else the sheet's
+## own length. Pure over the count, so the auto rule is pinned without an editor.
+static func minimap_shown_for(choice: int, event_count: int) -> bool:
+	if choice == MINIMAP_AUTO:
+		return event_count > EventSheetMinimap.AUTO_SHOW_EVENT_COUNT
+	return choice == 1
+
+
+func _minimap_choice() -> int:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return int(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", _MINIMAP_META, MINIMAP_AUTO))
+	return MINIMAP_AUTO
+
+
+func _minimap_enabled() -> bool:
+	var event_count: int = _viewport.get_total_row_count() if _viewport != null else 0
+	return minimap_shown_for(_minimap_choice(), event_count)
+
+
+## Re-decides the column's visibility after a sheet is opened or rebuilt. Hidden costs nothing:
+## a hidden Control never draws, and the column holds no state of its own.
+func _apply_minimap_pref() -> void:
+	if _minimap == null:
+		return
+	_minimap.set_source(_viewport)
+	_minimap.visible = _minimap_enabled()
+	if _minimap.visible:
+		_minimap.queue_redraw()
+
+
+func _toggle_minimap(view_popup: PopupMenu) -> void:
+	var shown: bool = not _minimap_enabled()
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", _MINIMAP_META, 1 if shown else 0)
+	if _minimap != null:
+		_minimap.set_source(_viewport)
+		_minimap.visible = shown
+		_minimap.queue_redraw()
+	if view_popup != null:
+		var item_index: int = view_popup.get_item_index(27)
+		if item_index >= 0:
+			view_popup.set_item_checked(item_index, shown)
+	_set_status("Minimap on - the whole sheet down the right edge." if shown
+		else "Minimap off.")
+
+
 # ── Outline panel - extracted to dock/outline_panel.gd ───────────────────────────────
 var _outline_panel: EventSheetOutlinePanel = null
 
@@ -3647,6 +3703,20 @@ func _ensure_outline_panel() -> EventSheetOutlinePanel:
 
 func _open_outline_panel() -> void:
 	_ensure_outline_panel().open()
+
+
+# ── U18 History panel - extracted to dock/history_panel.gd ───────────────────────────
+var _history_panel: EventSheetHistoryPanel = null
+
+
+func _ensure_history_panel() -> EventSheetHistoryPanel:
+	if _history_panel == null:
+		_history_panel = EventSheetHistoryPanel.new(self)
+	return _history_panel
+
+
+func _open_history_panel() -> void:
+	_ensure_history_panel().open()
 
 
 var _outline_tree: Tree:
@@ -5121,6 +5191,7 @@ func _refresh_after_edit() -> void:
 	_refresh_anatomy_panel()
 	_refresh_functions_list()
 	_properties_bar.refresh()
+	_apply_minimap_pref()
 
 
 # Live-reload binding to the active theme .tres → dock/theme_manager.gd. Called from _activate_tab /
@@ -5405,6 +5476,8 @@ func _capture_sheet_snapshot() -> EventSheetResource:
 func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 	if snapshot == null:
 		return
+	# U18 - the History marker follows the snapshot, so Ctrl+Z from anywhere moves it too.
+	_ensure_history_panel().note_restored(snapshot)
 	_current_sheet = snapshot.duplicate(true)
 	if not _current_sheet_path.is_empty():
 		_current_sheet.take_over_path(_current_sheet_path)
@@ -5433,11 +5506,23 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> b
 	_undo_redo_adapter.add_do_method(self, "_restore_sheet_snapshot", [after])
 	_undo_redo_adapter.add_undo_method(self, "_restore_sheet_snapshot", [before])
 	_undo_redo_adapter.commit_action()
+	# U18 - the same step, written into the History panel's log in the name the edit gave itself.
+	_ensure_history_panel().record(action_name, before, after, _selected_event_number())
 	return true
+
+
+## The event number the edit was made on, 0 when nothing was selected. It is what turns a bare
+## "Add Group" in the History list into "Add Group   event 12".
+func _selected_event_number() -> int:
+	if _viewport == null:
+		return 0
+	var row_data: EventRowData = _viewport.get_row_data(_viewport.get_selected_row_index())
+	return row_data.event_number if row_data != null else 0
 
 
 func _clear_undo_history() -> void:
 	_undo_redo_adapter.clear_history()
+	_ensure_history_panel().clear()
 
 
 func _resource_contains_descendant(source: Resource, candidate: Resource) -> bool:

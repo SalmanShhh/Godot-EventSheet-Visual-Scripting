@@ -234,6 +234,13 @@ func build(root: Node) -> void:
 	view_popup.set_item_tooltip(view_popup.get_item_index(27), "Name the shape an event is when a reading recognised one - a cooldown, an object pool, a wait sequence - with a marker chip whose hover shows the lines that were the evidence. On by default; off shows every event as its own plain sentences.")
 	view_popup.add_item("Outline…", 17)
 	view_popup.set_item_tooltip(view_popup.get_item_index(17), "Jump tree of the sheet's groups, regions, and published functions.")
+	view_popup.add_check_item("Minimap", 27)
+	view_popup.set_item_checked(view_popup.get_item_index(27), _dock._minimap_enabled())
+	view_popup.set_item_tooltip(view_popup.get_item_index(27), "A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.")
+	view_popup.add_item("Sheet Map…", 28)
+	view_popup.set_item_tooltip(view_popup.get_item_index(28), "Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.")
+	view_popup.add_item("History…", 29)
+	view_popup.set_item_tooltip(view_popup.get_item_index(29), "Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.")
 	view_popup.add_separator()
 	# Collapsing IS how a long sheet is browsed, so the sweeps live in the menu beside the
 	# Outline, not only on their shortcuts. Ids start at 22: 20 is already claimed twice above
@@ -330,6 +337,9 @@ func build(root: Node) -> void:
 			21: _dock._toggle_familiar_words(view_popup)
 			27: _dock._toggle_patterns_lens(view_popup)
 			17: _dock._open_outline_panel()
+			27: _dock._toggle_minimap(view_popup)
+			28: _dock._open_sheet_map_panel()
+			29: _dock._open_history_panel()
 			11: _dock.set_simple_mode(not _dock._simple_mode)
 			12: _dock._toggle_mcp_server(view_popup)
 			13: _dock._toggle_open_sheets_panel(view_popup)

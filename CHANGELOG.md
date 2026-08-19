@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added - a place to live in a long sheet: the minimap and the History list
+
+- **A minimap down the right edge of the canvas** (View ▸ Minimap). One 1 to 2 px bar per row,
+  tinted by what the row IS - a trigger, an every-tick event, a function, a group, a comment, a
+  Script block, a disabled row - with the part of the sheet you are looking at drawn as a
+  translucent box you can drag, your bookmarks and the rows the sheet flagged as marks in the
+  margin, and groups as faint bands you hover to read the name of. Click anywhere in the column to
+  jump there. It is drawn from the rows the canvas already holds, so it costs one pass over them
+  and nothing at all while hidden; a sheet past 200 events shows it the first time it is opened,
+  and an explicit choice from the menu holds from then on. Its colours are theme tokens, derived
+  for every bundled theme from the sheet's own palette.
+- **A History panel in the sheet's own words** (View ▸ History). Every edit you have made to this
+  sheet, listed by the name the edit gave itself ("Add Group", "Extract to Function", "Move
+  Variable Up") with the event it landed on beside it, and "(undone)" on the steps waiting to be
+  redone. Click one to undo or redo back to it; hover one to see the rows it touched lit on the
+  canvas. The marker follows the sheet snapshots the undo funnel restores, so Ctrl+Z from anywhere,
+  the toolbar arrows and a click in the list all move the same place.
+
 ### Added - an opened script's PATTERNS read as the events they are
 
 The batches before this one made single statements read as the sheet's sentences. These are the

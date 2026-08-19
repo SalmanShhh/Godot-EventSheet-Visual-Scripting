@@ -2615,5 +2615,13 @@ This block is the %s behavior - Adopt behavior?,这段其实就是 %s 行为 - �
 A pooled object is created here and nothing anywhere returns one to the pool.,这里创建了池中的对象，但任何地方都没有把对象还回池里。
 %s is set here but no event asks for it.,%s 在这里被设置，但没有事件询问它。
 A timer is started on entering this state and nothing stops it on leaving.,进入这个状态时启动了计时器，而离开时没有任何地方停止它。
-could adopt: %s,可采用：%s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,这个脚本手写了内置行为已经能做的事。右键点击带标记的事件即可看到会有什么变化。
+Minimap,缩略图
+"A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.",在右边缘呈现整张表的缩略图：每个事件一条按类型着色的条，当前查看的范围是可拖动的方框，书签显示在边栏。事件超过 200 个时默认开启。
+Minimap on - the whole sheet down the right edge.,缩略图已开启 - 整张表显示在右边缘。
+Minimap off.,缩略图已关闭。
+Sheet Map…,表关系图…
+"Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.",哪些表、场景和全局互相调用、发信号、彼此包含 - 一页看清项目逻辑的形状。
+History…,历史…
+History,历史
+"Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.",你对这张表做过的每一次修改，用表自己的话写出来。点击其中一项即可撤销或重做到那一步。
+"No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.",还没有修改。你对这张表做的每一次改动都会用表自己的话列在这里。

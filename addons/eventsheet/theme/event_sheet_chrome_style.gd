@@ -39,3 +39,28 @@ extends Resource
 ## The ● that says this sheet has unsaved edits, and the file path printed beside its name.
 @export var unsaved_dot_color: Color = Color(0.99, 0.78, 0.30, 1.0)
 @export var title_path_color: Color = Color(0.72, 0.76, 0.84, 1.0)
+
+# ── The minimap ───────────────────────────────────────────────────────────────────────────────
+## The thin column down the right edge of a long sheet: one bar per event, tinted by what the
+## event IS, with the part of the sheet you are looking at drawn as a box over them. It frames the
+## canvas rather than painting a row, so its colours live here with the rest of the chrome.
+@export var minimap_background_color: Color = Color(0.0, 0.0, 0.0, 0.16)
+## The translucent box over the rows currently on screen, and the line around it.
+@export var minimap_window_color: Color = Color(1.0, 1.0, 1.0, 0.10)
+@export var minimap_window_border_color: Color = Color(1.0, 1.0, 1.0, 0.34)
+## One tint per kind of event, so the shape of a sheet reads without any text.
+@export var minimap_trigger_color: Color = Color(0.98, 0.76, 0.36, 1.0)
+@export var minimap_tick_color: Color = Color(0.55, 0.78, 0.98, 1.0)
+@export var minimap_function_color: Color = Color(0.78, 0.61, 0.94, 1.0)
+@export var minimap_group_color: Color = Color(0.88, 0.69, 0.44, 1.0)
+@export var minimap_comment_color: Color = Color(0.56, 0.80, 0.56, 1.0)
+@export var minimap_script_color: Color = Color(0.66, 0.72, 0.82, 1.0)
+@export var minimap_event_color: Color = Color(1.0, 1.0, 1.0, 0.42)
+## A disabled event keeps its place in the picture but stops asking to be read.
+@export var minimap_disabled_color: Color = Color(1.0, 1.0, 1.0, 0.16)
+## The marks beside the bars: a bookmark, and a row the Doctor flagged.
+@export var minimap_bookmark_color: Color = Color(0.42, 0.72, 0.99, 1.0)
+@export var minimap_finding_color: Color = Color(1.0, 0.48, 0.48, 1.0)
+## The band a group paints down the column, and the name written on it.
+@export var minimap_band_color: Color = Color(1.0, 1.0, 1.0, 0.05)
+@export var minimap_band_text_color: Color = Color(1.0, 1.0, 1.0, 0.55)

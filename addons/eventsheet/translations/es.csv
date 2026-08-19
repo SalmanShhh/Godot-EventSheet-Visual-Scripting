@@ -2615,5 +2615,13 @@ This block is the %s behavior - Adopt behavior?,Este bloque es el comportamiento
 A pooled object is created here and nothing anywhere returns one to the pool.,Aqui se crea un objeto del grupo y en ningun sitio se devuelve ninguno.
 %s is set here but no event asks for it.,%s se fija aqui pero ningun evento lo consulta.
 A timer is started on entering this state and nothing stops it on leaving.,Al entrar en este estado se inicia un temporizador y nada lo detiene al salir.
-could adopt: %s,se puede adoptar: %s
-This script hand-writes something a shipped behavior already does. Right-click the marked event to see what would change.,Este script escribe a mano algo que ya hace un comportamiento incluido. Haz clic derecho en el evento marcado para ver que cambiaria.
+Minimap,Minimapa
+"A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.","Una imagen de toda la hoja en el borde derecho: una barra por evento teñida según lo que es, la parte que estás viendo como una caja que puedes arrastrar y tus marcadores en el margen. Activado por defecto a partir de 200 eventos."
+Minimap on - the whole sheet down the right edge.,Minimapa activado: toda la hoja en el borde derecho.
+Minimap off.,Minimapa desactivado.
+Sheet Map…,Mapa de hojas…
+"Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.","Qué hojas, escenas y globales llaman, señalan e incluyen a cuáles: la forma de la lógica del proyecto en una sola página."
+History…,Historial…
+History,Historial
+"Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.","Cada cambio que has hecho en esta hoja, en las palabras de la propia hoja. Haz clic en uno para deshacer o rehacer hasta ahí."
+"No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.","Todavía no hay cambios. Cada cambio que hagas en esta hoja aparecerá aquí, en las palabras de la propia hoja."
