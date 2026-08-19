@@ -38,10 +38,11 @@ const KIND_TUTORIALS := "tutorials"
 const KIND_TUTORIAL := "tutorial"
 const KIND_PATTERNS := "patterns"
 const KIND_PATTERN := "pattern"
+const KIND_DICTIONARY := "dictionary"
 
 ## The kinds a "reference:" id may name, so an unknown one fails loudly instead of drawing blank.
 const KINDS: Array[String] = [KIND_SECTION, KIND_PACK, KIND_CLASS, KIND_GLOSSARY, KIND_LEGEND,
-	KIND_WHATS_NEW, KIND_TUTORIALS, KIND_TUTORIAL, KIND_PATTERNS, KIND_PATTERN]
+	KIND_WHATS_NEW, KIND_TUTORIALS, KIND_TUTORIAL, KIND_PATTERNS, KIND_PATTERN, KIND_DICTIONARY]
 
 ## What the reading surface is called, everywhere the reader can see it. An event sheet's
 ## documentation is its Manual, and every crumb trail starts here.
@@ -129,7 +130,7 @@ static func has_page(doc_id_text: String) -> bool:
 		return false
 	var name: String = str(route.get("name", ""))
 	match str(route.get("kind", "")):
-		KIND_LEGEND, KIND_WHATS_NEW, KIND_TUTORIALS, KIND_PATTERNS:
+		KIND_LEGEND, KIND_WHATS_NEW, KIND_TUTORIALS, KIND_PATTERNS, KIND_DICTIONARY:
 			return true
 		KIND_PATTERN:
 			return not EventSheetPatternVocabulary.fixture_source(name).is_empty()
@@ -153,6 +154,8 @@ static func title_for(kind: String, name: String) -> String:
 			return "What the marks on a sheet mean"
 		KIND_WHATS_NEW:
 			return EventSheetDocWhatsNew.PAGE_TITLE
+		KIND_DICTIONARY:
+			return EventSheetDocDictionary.PAGE_TITLE
 		KIND_TUTORIALS:
 			return EventSheetDocTutorials.PAGE_TITLE
 		KIND_PATTERNS:
@@ -229,6 +232,8 @@ static func breadcrumb(doc_id_text: String, title: String) -> PackedStringArray:
 				crumbs.append(TUTORIALS_TREE_TITLE)
 			KIND_PATTERNS, KIND_PATTERN:
 				crumbs.append(EventSheetPatternManual.PAGE_TITLE)
+			KIND_DICTIONARY:
+				crumbs.append(EventSheetDocDictionary.PAGE_TITLE)
 	elif id.begins_with("ace:"):
 		crumbs.append(SECTION_TREE_TITLE if EventSheets.addon_pack_directory(
 			id.substr(4).get_slice("/", 0)).is_empty() else PACK_TREE_TITLE)
@@ -365,6 +370,8 @@ static func blocks_for(kind: String, name: String) -> Array[Dictionary]:
 			return legend_blocks()
 		KIND_WHATS_NEW:
 			return EventSheetDocWhatsNew.blocks()
+		KIND_DICTIONARY:
+			return EventSheetDocDictionary.blocks()
 		KIND_TUTORIALS:
 			return EventSheetDocTutorials.list_blocks()
 		KIND_PATTERNS:

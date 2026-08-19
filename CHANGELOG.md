@@ -246,6 +246,62 @@ no editor in it, so the window, the Doctor and the tests all read the same answe
   and the Doctor reports two includes that both handle the same trigger, because that clash is
   invisible in the includer.
 
+### Added - the Manual answers in GDScript as well as in the sheet's words
+
+- **Manual ▸ Dictionary: GDScript to events**, generated. Every Godot call, property and idiom the
+  reading recognises, alphabetically, with the sentence it reads as here, the object it belongs to
+  and where the reading comes from; the name links to the row's own page, where Show GDScript and
+  Add this row already live. It is baked at bundle time out of the reading's own idiom tables and
+  the vocabulary the build loads, and a suite gate regenerates it and compares the bytes - so the
+  page can never list a reading that does not exist, and a table edited without a rebake fails the
+  suite instead of shipping a lie.
+- **Coming from GDScript**, the mirror of the glossary. You already know Godot: here are the two
+  dozen words this editor reads your code in (`queue_free` is Destroy, `_process` is Every tick,
+  `await` is Wait for, `signal` is trigger, `@export` is an Instance variable in the Inspector),
+  why a row is exactly one statement, and the three ways to see the GDScript behind any row. A gate
+  holds the page honest: every call it names has to be one the generated dictionary really lists.
+- **The Manual's search answers Godot words.** Type `queue_free` into the Manual's search and the
+  glossary results say what it is called here, with the matched GDScript beside the name.
+
+### Added - the picker answers to the Godot call you already know
+
+- **Type the call, get the row.** The picker now searches the CODE as well as the words: every
+  identifier an action or condition's template calls or reads is indexed, so `queue_free` finds
+  Queue Free, `add_child` finds Add Child, `tween_property` finds Tween Property and `is_on_floor`
+  finds Is On Floor. The row the call is ABOUT leads - a template that is one call outranks one
+  that reaches the same call along the way - and the matched GDScript is written beside the name,
+  so the sheet's word and the call you typed are visibly one thing. The reading's own idiom tables
+  answer too, which is what keeps the picker and the reading from ever disagreeing about what a
+  call is called here.
+
+### Added - the sheet map: what talks to what, on one page
+
+- **View ▸ Sheet Map** draws the shape of a project's logic. Nodes are its sheets, scenes and
+  globals; lines are the four ways one reaches another - it CALLS a global, it SIGNALS (someone
+  raises it, someone else listens), it INCLUDES another script (`extends` / `preload`), or it
+  CHANGES LAYOUT to a scene. Click a sheet to open it, click a line to run the Find that explains
+  it (the signal's name, the global's name, the file's own name). Boxes lay themselves out in
+  columns by kind and can be dragged; where you put them is remembered per project in editor
+  metadata. The graph itself is DERIVED on every open and never written into the project.
+
+### Added - a place to live in a long sheet: the minimap and the History list
+
+- **A minimap down the right edge of the canvas** (View ▸ Minimap). One 1 to 2 px bar per row,
+  tinted by what the row IS - a trigger, an every-tick event, a function, a group, a comment, a
+  Script block, a disabled row - with the part of the sheet you are looking at drawn as a
+  translucent box you can drag, your bookmarks and the rows the sheet flagged as marks in the
+  margin, and groups as faint bands you hover to read the name of. Click anywhere in the column to
+  jump there. It is drawn from the rows the canvas already holds, so it costs one pass over them
+  and nothing at all while hidden; a sheet past 200 events shows it the first time it is opened,
+  and an explicit choice from the menu holds from then on. Its colours are theme tokens, derived
+  for every bundled theme from the sheet's own palette.
+- **A History panel in the sheet's own words** (View ▸ History). Every edit you have made to this
+  sheet, listed by the name the edit gave itself ("Add Group", "Extract to Function", "Move
+  Variable Up") with the event it landed on beside it, and "(undone)" on the steps waiting to be
+  redone. Click one to undo or redo back to it; hover one to see the rows it touched lit on the
+  canvas. The marker follows the sheet snapshots the undo funnel restores, so Ctrl+Z from anywhere,
+  the toolbar arrows and a click in the list all move the same place.
+
 ### Added - an opened script's PATTERNS read as the events they are
 
 The batches before this one made single statements read as the sheet's sentences. These are the

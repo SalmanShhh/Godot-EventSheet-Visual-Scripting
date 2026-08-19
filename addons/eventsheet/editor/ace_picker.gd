@@ -1167,6 +1167,21 @@ func _refresh_tree() -> void:
 		for extra_definition: ACEDefinition in _registry.search(synonym_query):
 			if not definitions.has(extra_definition):
 				definitions.append(extra_definition)
+	# U23 - the other direction: a Godot user types the CALL they know. Every row whose template
+	# writes that call answers, and so does the row the reading's idiom tables name for it, so
+	# `queue_free` lands on Destroy and `is_on_floor` on Is on floor. The GDScript is written beside
+	# the name below, which is what makes the two names visibly the same thing.
+	_code_query = query if EventSheetCodeSearch.is_code_query(query) else ""
+	if not _code_query.is_empty():
+		for candidate: ACEDefinition in EventSheetCodeSearch.matching_definitions(
+				_registry.get_all_definitions(), _code_query):
+			if not definitions.has(candidate):
+				definitions.append(candidate)
+		var idiom_query: String = EventSheetCodeSearch.idiom_words(_code_query)
+		if not idiom_query.is_empty():
+			for idiom_definition: ACEDefinition in _registry.search(idiom_query):
+				if not definitions.has(idiom_definition):
+					definitions.append(idiom_definition)
 	# "All of <host class>": the sheet's own class reflected on demand from ClassDB,
 	# so ANY engine class is browsable vocabulary even without curated coverage
 	# (and future Godot classes work the day they ship). Search filters by display
@@ -1629,10 +1644,21 @@ func _category_of(definition: ACEDefinition) -> String:
 	return category if not category.is_empty() else "General"
 
 
+## U23 - the Godot call the current search was typed as, "" for an ordinary word search. Held for
+## one tree rebuild so the matched rows can write that call beside their names.
+var _code_query: String = ""
+
+
 func _item_label(definition: ACEDefinition) -> String:
 	# Display names route through the plugin l10n layer (a pass-through in English), so a pack
 	# that ships a translation CSV gets localised picker rows for free. Ids never translate.
 	var display_name: String = EventSheetL10n.translate(definition.display_name)
+	# The GDScript beside the name, on the rows a code search found: the proof that the sheet's
+	# word and the call the reader typed are the same row. Never translated - it is code.
+	if not _code_query.is_empty():
+		var hint: String = EventSheetCodeSearch.gdscript_hint(definition, _code_query)
+		if not hint.is_empty():
+			display_name = "%s  ·  %s" % [display_name, hint]
 	if definition.provider_id.is_empty() or definition.provider_id == "Core":
 		return display_name
 	# Title-case the pack suffix for display ("weapon_kit" -> "Weapon Kit"): raw snake_case ids

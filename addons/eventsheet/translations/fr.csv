@@ -2798,3 +2798,17 @@ look up/down on,haut/bas sur
 clamped,limité
 Crossfade {from} → {to} by {amount},Fondu {from} → {to} selon {amount}
 shared,partagée
+Minimap,Minicarte
+"A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.","Une image de toute la feuille sur le bord droit : une barre par événement teintée selon sa nature, la partie visible sous forme de cadre déplaçable et vos signets dans la marge. Activé par défaut au-delà de 200 événements."
+Minimap on - the whole sheet down the right edge.,Minicarte activée : toute la feuille sur le bord droit.
+Minimap off.,Minicarte désactivée.
+Sheet Map…,Carte des feuilles…
+"Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.","Quelles feuilles, scènes et globales s'appellent, s'envoient des signaux et s'incluent : la forme de la logique du projet sur une page."
+History…,Historique…
+History,Historique
+"Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.","Chaque modification apportée à cette feuille, dans les mots de la feuille. Cliquez sur une étape pour annuler ou rétablir jusque-là."
+"No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.","Aucune modification pour l'instant. Chaque changement apporté à cette feuille apparaîtra ici, dans les mots de la feuille."
+Dictionary: GDScript to events,Dictionnaire : GDScript vers les événements
+Coming from GDScript,Vous venez de GDScript
+Sheet map,Carte des feuilles
+Click a sheet to open it. Click a line to find every place it comes from.,Cliquez sur une feuille pour l'ouvrir. Cliquez sur une ligne pour trouver tous les endroits d'où elle vient.

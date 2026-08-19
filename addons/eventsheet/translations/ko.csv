@@ -2798,3 +2798,17 @@ look up/down on,위/아래는
 clamped,제한
 Crossfade {from} → {to} by {amount},{amount} 로 {from} → {to} 교차 페이드
 shared,공유
+Minimap,미니맵
+"A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.","시트 전체를 오른쪽 가장자리에 그린 그림입니다. 이벤트마다 종류별 색의 막대가 하나씩 있고, 지금 보고 있는 범위는 끌 수 있는 상자로, 북마크는 여백에 표시됩니다. 이벤트가 200개를 넘으면 기본으로 켜집니다."
+Minimap on - the whole sheet down the right edge.,미니맵 켬 - 시트 전체가 오른쪽 가장자리에 보입니다.
+Minimap off.,미니맵 끔.
+Sheet Map…,시트 맵…
+"Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.","어떤 시트·씬·전역이 어떤 것을 호출하고, 시그널을 보내고, 포함하는지 - 프로젝트 로직의 모양을 한 페이지에."
+History…,기록…
+History,기록
+"Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.",이 시트에 가한 모든 편집을 시트 자신의 말로 나열합니다. 하나를 클릭하면 거기까지 실행 취소하거나 다시 실행합니다.
+"No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.",아직 편집이 없습니다. 이 시트에 가한 변경은 시트 자신의 말로 여기에 나열됩니다.
+Dictionary: GDScript to events,사전: GDScript와 이벤트
+Coming from GDScript,GDScript에서 왔다면
+Sheet map,시트 맵
+Click a sheet to open it. Click a line to find every place it comes from.,시트를 클릭하면 열립니다. 선을 클릭하면 그것이 오는 모든 곳을 찾습니다.

@@ -1,0 +1,732 @@
+[eventsheet-dictionary v1]
+{
+"markdown": "# Dictionary: GDScript to events
+
+Every Godot call, property and idiom this editor's reading recognises, in alphabetical order, with the sentence it reads as here and where that reading comes from. The page is generated from the reading's own tables and the vocabulary this build loaded, so it can never list a reading that does not exist.
+
+The **Reads as** name links to the row's own page, where Show GDScript prints the code it writes and Add this row drops it into the sheet you have open. Searching this page by an object's name (Sprite, Timer, Input) is how you filter it to one object.
+
+| GDScript | Reads as | Object | Where the reading comes from |
+| --- | --- | --- | --- |
+| `abs` | [Absolute Value](ace:Core/AbsValue) | Helpers | Vocabulary |
+| `absf` | [Values Are Near](ace:Core/ValuesAreNear) | Compare: Numbers | Vocabulary |
+| `absi` | [Seeded Int](ace:Core/SeededInt) | Procedural | Vocabulary |
+| `acos` | [Random Direction (3D)](ace:Core/RandomDirection3D) | Math & Random | Vocabulary |
+| `action_add_event` | [Bind Control To](ace:Core/InputBindTo) | Keyboard | Vocabulary |
+| `action_erase_events` | [Clear The Bindings Of](ace:Core/InputClearBindings) | Keyboard | Vocabulary |
+| `action_get_events` | [Action Is Bound](ace:Core/ActionHasEvents) | InputMap | Vocabulary |
+| `action_press` | [Simulate Control Pressed](ace:Core/SimulateControlPressed) | General Actions | Vocabulary |
+| `action_release` | [Simulate Control Released](ace:Core/SimulateControlReleased) | General Actions | Vocabulary |
+| `action_set_deadzone` | [Set Deadzone Of](ace:Core/GamepadSetDeadzoneOf) | Gamepad | Vocabulary |
+| `active` | [Set AnimationTree Active](ace:Core/SetAnimationTreeActive) | Animation | Vocabulary |
+| `add_action` | [Add Input Action](ace:Core/InputAddAction) | Input | Vocabulary |
+| `add_child` | [Add Child](ace:Core/AddChild) | Nodes | Vocabulary |
+| `add_collision_exception_with` | [Ignore Collisions With](ace:Core/IgnoreCollisionsWith) | Movement | Vocabulary |
+| `add_control_to_dock` | [Add Dock](ace:Core/AddEditorDock) | Editor Tools | Vocabulary |
+| `add_custom_type` | [Add Object Type](ace:Core/AddEditorObjectType) | Editor Tools | Vocabulary |
+| `add_exception` | [Ignore Node In RayCast (2D)](ace:Core/RayCast2DAddException) | Raycast 2D | Vocabulary |
+| `add_inspector_plugin` | [Add Inspector Plugin](ace:Core/AddEditorInspectorPlugin) | Editor Tools | Vocabulary |
+| `add_node` | [Select Node In Editor](ace:Core/SelectNodeInEditor) | Editor Tools | Vocabulary |
+| `add_theme_color_override` | [Override Theme Color](ace:Core/SetThemeColorOverride) | UI | Vocabulary |
+| `add_theme_font_override` | [Use Font](ace:Core/UseFont) | UI | Vocabulary |
+| `add_to_group` | [Add To Group](ace:Core/AddToGroup) | Groups | Vocabulary |
+| `add_tool_menu_item` | [Add Tools Menu Item](ace:Core/AddToolsMenuItem) | Editor Tools | Vocabulary |
+| `affine_inverse` | [Screen Point To World](ace:Core/ScreenPointToWorld) | Math & Random | Vocabulary |
+| `all` | [All Match](ace:Core/ArrayAll) | Variables: Array | Vocabulary |
+| `always_on_top` | [Set Always On Top](ace:Core/WindowSetAlwaysOnTop) | Game Window | Vocabulary |
+| `ambient_light_energy` | [Set Ambient Light](ace:Core/SetAmbientLight) | Lighting | Vocabulary |
+| `amount` | [Amount](ace:Core/GetParticleAmount) | Particles | Vocabulary |
+| `and` | [Pull Group Toward](ace:Core/PullGroupToward) | Movement | Vocabulary |
+| `angle` | [Vector Angle](ace:Core/VectorAngle) | Variables: Vector | Vocabulary |
+| `angle_difference` | [Angle Difference](ace:Core/AngleDifference) | Math & Random | Vocabulary |
+| `angle_to_point` | [Angle Toward](ace:Core/AngleToPoint) | Math & Random | Vocabulary |
+| `animation` | [Current Animation](ace:Core/GetSpriteAnimation) | General Expressions | Vocabulary |
+| `any` | [Any Match](ace:Core/ArrayAny) | Variables: Array | Vocabulary |
+| `append` | [Push Back](ace:Core/ArrayAppend) | Variables: Array | Vocabulary |
+| `append_array` | [Append Array](ace:Core/ArrayAppendArray) | Variables: Array | Vocabulary |
+| `apply_central_force` | [Apply Central Force](ace:Core/ApplyCentralForce2D) | General Actions | Vocabulary |
+| `apply_central_impulse` | [Apply Central Impulse](ace:Core/ApplyCentralImpulse) | General Actions | Vocabulary |
+| `apply_impulse` | [Apply Radial Impulse](ace:Core/ApplyRadialImpulse) | Movement | Vocabulary |
+| `apply_torque_impulse` | [Apply Torque Impulse](ace:Core/ApplyTorqueImpulse2D) | General Actions | Vocabulary |
+| `area_set_param` | [Set World Gravity (2D)](ace:Core/PhysicsSetGravity2D) | Physics Server | Vocabulary |
+| `as_text` | [Key Name](ace:Core/InputKeyNameOf) | Keyboard | Vocabulary |
+| `assert` | [Assert](ace:Core/Assert) | Debug | Vocabulary |
+| `assign` | [Assign (Type-Converting)](ace:Core/ArrayAssign) | Variables: Array | Vocabulary |
+| `atan2` | [Angle Of (atan2)](ace:Core/Atan2) | Math & Random | Vocabulary |
+| `atr` | [Text Overflows](ace:Core/TextOverflows) | Text | Vocabulary |
+| `attenuation` | [Set Falloff](ace:Core/AudioSetFalloff) | Audio | Vocabulary |
+| `auto_clear` | [Is Auto Clear](ace:Core/DrawIsAutoClear) | Drawing | Vocabulary |
+| `auto_translate_mode` | [Keep This Text Untranslated](ace:Core/KeepTextUntranslated) | Translation | Vocabulary |
+| `back` | [Last Item](ace:Core/ArrayBack) | Variables: Array | Vocabulary |
+| `base64_to_variant` | [Value From Share Code](ace:Core/ValueFromShareCode) | Utility: Window | Vocabulary |
+| `basis` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
+| `begins_with` | [Text Begins With](ace:Core/StringBeginsWith) | Variables: String | Vocabulary |
+| `bind` | [Bind Arguments](ace:Core/CallableBind) | Helpers | Vocabulary |
+| `bool` | [Was Recently True](ace:Core/WasRecentlyTrue) | Run Context | Vocabulary |
+| `bottom_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
+| `bounce` | [Bounce Off Solids](ace:Core/BounceOffSolid) | Bullet | Vocabulary |
+| `bus` | [Set Bus](ace:Core/AudioSetBus) | Audio | Vocabulary |
+| `button_index` | [On Mouse Button Pressed (event)](ace:Core/MouseButtonEventPressed) | Mouse | Vocabulary |
+| `button_pressed` | [Is Button Pressed](ace:Core/IsButtonPressed) | UI | Vocabulary |
+| `call` | [Loading Progress](ace:Core/LoadingProgress) | Scene | Vocabulary |
+| `call_deferred` | [Do After This Frame](ace:Core/DoAfterFrame) | Time | Vocabulary |
+| `call_group` | [Call Method On Group](ace:Core/CallGroup) | Groups | Vocabulary |
+| `can_process` | [Node Is Running](ace:Core/NodeIsActive) | Nodes: Activation | Vocabulary |
+| `cancel_request` | [Cancel Request](ace:Core/AjaxCancel) | AJAX | Vocabulary |
+| `capitalize` | [As Title Text](ace:Core/AsTitleText) | Text | Vocabulary |
+| `casecmp_to` | [Text Sorts Before](ace:Core/TextSortsBefore) | Compare: Text | Vocabulary |
+| `cast_motion` | [Cast Circle Motion Into (2D)](ace:Core/CastCircleMotion2D) | Raycast 2D | Vocabulary |
+| `ceil` | [Ceil](ace:Core/CeilValue) | Helpers | Vocabulary |
+| `cfg` | [Has Saved Settings](ace:Core/OptionsHasSavedSettings) | Game Options | Vocabulary |
+| `change_scene_to_file` | [Go To Layout](ace:Core/ChangeScene) | Scene | Vocabulary |
+| `change_scene_to_packed` | [Go To Loaded Layout](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
+| `circle` | [Draw Circle](ace:Core/DrawCircle) | Drawing | Vocabulary |
+| `clamp` | [Bound To Layout](ace:Core/BoundToLayout) | Layout Edges | Vocabulary |
+| `clampf` | [Adjust Camera FOV](ace:Core/AdjustCameraFov) | Camera | Vocabulary |
+| `clampi` | [Clamp (int)](ace:Core/ClampIntValue) | Helpers | Vocabulary |
+| `clear` | [Clear Dictionary](ace:Core/DictClear) | Variables: Dictionary | Vocabulary |
+| `clear_exceptions` | [Clear RayCast Exceptions (2D)](ace:Core/RayCast2DClearExceptions) | Raycast 2D | Vocabulary |
+| `clipboard_get` | [Clipboard Text Is](ace:Core/ClipboardTextIs) | Utility: Window | Vocabulary |
+| `clipboard_get_image` | [Clipboard Image](ace:Core/ClipboardImage) | Utility: Window | Vocabulary |
+| `clipboard_has` | [Clipboard Has Text](ace:Core/ClipboardHasText) | Utility: Window | Vocabulary |
+| `clipboard_has_image` | [Clipboard Has Image](ace:Core/ClipboardHasImage) | Utility: Window | Vocabulary |
+| `clipboard_set` | [Set Clipboard Text](ace:Core/SetClipboard) | Utility: Window | Vocabulary |
+| `close` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
+| `collide_with_areas` | [RayCast Detects Areas (2D)](ace:Core/RayCast2DSetHitAreas) | Raycast 2D | Vocabulary |
+| `collide_with_bodies` | [RayCast Detects Bodies (2D)](ace:Core/RayCast2DSetHitBodies) | Raycast 2D | Vocabulary |
+| `collision_mask` | [Set RayCast Mask (2D)](ace:Core/RayCast2DSetMask) | Raycast 2D | Vocabulary |
+| `color` | [Set Light Colour (2D)](ace:Core/SetLightColour) | Lighting | Vocabulary |
+| `compare_locales` | [Language Matches](ace:Core/LanguageMatches) | Translation | Vocabulary |
+| `cone` | [Draw Cone](ace:Core/DrawCone) | Drawing | Vocabulary |
+| `configure` | [Configure Canvas](ace:Core/DrawConfigure) | Drawing | Vocabulary |
+| `connect` | [Connect Signal](ace:Core/ConnectSignal) | Helpers | Vocabulary |
+| `contains` | [Text Contains](ace:Core/StringContains) | Variables: String | Vocabulary |
+| `copy_absolute` | [Copy File](ace:Core/CopyFile) | Files | Vocabulary |
+| `cos` | [Cosine](ace:Core/CosValue) | Helpers | Vocabulary |
+| `count` | [Count Of](ace:Core/ArrayCount) | Variables: Array | Vocabulary |
+| `create` | [Cast Ray Into (2D)](ace:Core/CastRayInto2D) | Raycast 2D | Vocabulary |
+| `create_from_string` | [Text Matches Regex](ace:Core/RegexMatches) | Text: RegEx | Vocabulary |
+| `create_timer` | [Wait](ace:Core/Wait) | Time | Vocabulary |
+| `create_tween` | [Tween Callback](ace:Core/TweenCallback) | Tween | Vocabulary |
+| `current_animation` | [Set Current Animation](ace:Core/SetAnimationTime) | Animation | Vocabulary |
+| `current_animation_length` | [Animation Length](ace:Core/AnimationLength) | Animation | Vocabulary |
+| `current_animation_position` | [Animation Position](ace:Core/AnimationPosition) | Animation | Vocabulary |
+| `current_scene` | [Current Scene Root](ace:Core/GetSceneRoot) | Nodes | Vocabulary |
+| `damping` | [Set Spring Damping](ace:Core/SetDampedSpringDamping) | Joints | Vocabulary |
+| `darkened` | [Darken Color](ace:Core/ColorDarken) | Color | Vocabulary |
+| `dashed_line` | [Draw Dashed Line](ace:Core/DrawDashedLine) | Drawing | Vocabulary |
+| `dashed_rect` | [Draw Dashed Rect](ace:Core/DrawDashedRect) | Drawing | Vocabulary |
+| `dashed_ring` | [Draw Dashed Ring](ace:Core/DrawDashedRing) | Drawing | Vocabulary |
+| `db_to_linear` | [Bus Volume (percent)](ace:Core/OptionsGetBusPercent) | Game Options | Vocabulary |
+| `deg_to_rad` | [Degrees To Radians](ace:Core/DegToRad) | Math & Random | Vocabulary |
+| `delta` | [Pan Delta](ace:Core/TouchPanDelta) | Touch | Vocabulary |
+| `device` | [On Gamepad Button Pressed](ace:Core/GamepadEventButtonPressed) | Gamepad | Vocabulary |
+| `dir_exists_absolute` | [Directory Exists](ace:Core/DirExists) | Files: Directories | Vocabulary |
+| `direct_space_state` | [World Raycast Hits? (2D)](ace:Core/WorldRaycastHit2D) | Raycast 2D | Vocabulary |
+| `direction_to` | [Direction To](ace:Core/VectorDirectionTo) | Variables: Vector | Vocabulary |
+| `disable_collision` | [Set Disable Collision](ace:Core/SetJointDisableCollision) | Joints | Vocabulary |
+| `disabled` | [Is Button Disabled](ace:Core/IsButtonDisabled) | UI | Vocabulary |
+| `disconnect` | [Disconnect Signal](ace:Core/DisconnectSignal) | Helpers | Vocabulary |
+| `distance_squared_to` | [Look At (flat)](ace:Core/LookAtFlat) | Movement | Vocabulary |
+| `distance_to` | [Distance To](ace:Core/DistanceTo) | Math & Random | Vocabulary |
+| `distance_to_target` | [Distance To Target](ace:Core/GetNavDistance) | General Expressions | Vocabulary |
+| `dot` | [Dot Product](ace:Core/VectorDot) | Variables: Vector | Vocabulary |
+| `double_click` | [On Double-Click](ace:Core/MouseDoubleClickEvent) | Mouse | Vocabulary |
+| `duplicate` | [Copy Array](ace:Core/ArrayDuplicate) | Variables: Array | Vocabulary |
+| `ease` | [Ease](ace:Core/EaseValue) | Helpers | Vocabulary |
+| `echo` | [On Key Pressed (event)](ace:Core/KeyEventPressed) | Keyboard | Vocabulary |
+| `else` | [As Duration](ace:Core/AsDuration) | Text | Vocabulary |
+| `emit` | [Emit Signal](ace:Core/EmitSignal) | Signals / Scene / Input | Vocabulary |
+| `emit_signal` | [Report Failure](ace:Core/ReportFailure) | Run Context | Vocabulary |
+| `emitting` | [Set Emitting](ace:Core/SetEmitting) | Particles | Vocabulary |
+| `enabled` | [Set Light On/Off](ace:Core/SetLightEnabled) | Lighting | Vocabulary |
+| `ends_with` | [Text Ends With](ace:Core/StringEndsWith) | Variables: String | Vocabulary |
+| `energy` | [Set Light Energy (2D)](ace:Core/SetLightEnergy) | Lighting | Vocabulary |
+| `environment` | [Set Ambient Light](ace:Core/SetAmbientLight) | Lighting | Vocabulary |
+| `erase` | [Delete Key](ace:Core/DictDeleteKey) | Variables: Dictionary | Vocabulary |
+| `erase_action` | [Remove Input Action](ace:Core/InputRemoveAction) | Input | Vocabulary |
+| `erase_cell` | [Erase Tile](ace:Core/TileMapEraseCell) | Tilemap | Vocabulary |
+| `error_string` | [Write Version Stamp](ace:Core/WriteVersionStamp) | Editor Tools | Vocabulary |
+| `exclude_parent` | [RayCast Ignores Its Parent (2D)](ace:Core/RayCast2DSetExcludeParent) | Raycast 2D | Vocabulary |
+| `exists` | [Resource Exists](ace:Core/ResourceFileExists) | Editor Tools | Vocabulary |
+| `exp` | [Exponential](ace:Core/MathExp) | Math & Random | Vocabulary |
+| `factor` | [Pinch Factor](ace:Core/TouchPinchFactor) | Touch | Vocabulary |
+| `fallbacks` | [Add Font Fallback](ace:Core/AddFontFallback) | UI | Vocabulary |
+| `file_exists` | [File Exists](ace:Core/FileExists) | Files | Vocabulary |
+| `fill` | [Fill Array](ace:Core/ArrayFill) | Variables: Array | Vocabulary |
+| `filter` | [Filter](ace:Core/ArrayFilter) | Variables: Array | Vocabulary |
+| `find` | [Index Of](ace:Core/ArrayFind) | Variables: Array | Vocabulary |
+| `find_child` | [Find Child (by name)](ace:Core/FindChild) | Nodes | Vocabulary |
+| `find_children` | [Find Children (by name)](ace:Core/FindChildrenByPattern) | Nodes: Picking | Vocabulary |
+| `find_keycode_from_string` | [Keycode From Name](ace:Core/KeycodeFromName) | Keyboard | Vocabulary |
+| `find_next_valid_focus` | [Focus Next](ace:Core/FocusNext) | UI | Vocabulary |
+| `find_prev_valid_focus` | [Focus Previous](ace:Core/FocusPrevious) | UI | Vocabulary |
+| `find_world_2d` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
+| `find_world_3d` | [Set Physics Active (3D)](ace:Core/PhysicsSetSpaceActive3D) | Physics Server | Vocabulary |
+| `finished` | [Play Sound At (2D)](ace:Core/PlaySoundAt) | Audio | Vocabulary |
+| `flip_h` | [Set Mirrored](ace:Core/SetFlipH) | General Actions | Vocabulary |
+| `flip_v` | [Set Flipped](ace:Core/SetFlipV) | Animation | Vocabulary |
+| `float` | [To Decimal](ace:Core/ToDecimal) | Math & Random | Vocabulary |
+| `floor` | [Floor](ace:Core/FloorValue) | Helpers | Vocabulary |
+| `floori` | [Cell Of Point](ace:Core/CellOfPoint) | Math & Random | Vocabulary |
+| `fmod` | [Float Modulo](ace:Core/FmodValue) | Helpers | Vocabulary |
+| `fms` | [Log Measurements](ace:Core/LogMeasurements) | Debug | Vocabulary |
+| `for_node` | [Configure Canvas](ace:Core/DrawConfigure) | Drawing | Vocabulary |
+| `force_raycast_update` | [Force RayCast Update (2D)](ace:Core/RayCast2DForceUpdate) | Raycast 2D | Vocabulary |
+| `force_shapecast_update` | [Force ShapeCast Update (2D)](ace:Core/ShapeCast2DForceUpdate) | Raycast 2D | Vocabulary |
+| `format` | [Text From Pattern](ace:Core/TextFromPattern) | Text | Vocabulary |
+| `format_number` | [Number In Local Digits](ace:Core/NumberInLocalDigits) | Translation | Vocabulary |
+| `fov` | [Camera FOV](ace:Core/GetCameraFov) | Camera | Vocabulary |
+| `frame` | [Set Animation Frame](ace:Core/SetSpriteFrame) | General Actions | Vocabulary |
+| `frame_post_draw` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
+| `from_hsv` | [Color From HSV](ace:Core/ColorFromHSV) | Color | Vocabulary |
+| `front` | [First Item](ace:Core/ArrayFront) | Variables: Array | Vocabulary |
+| `func` | [Lambda (returns a value)](ace:Core/LambdaValue) | Helpers | Vocabulary |
+| `get` | [Get Key (with default)](ace:Core/DictGet) | Variables: Dictionary | Vocabulary |
+| `get_aabb` | [Mesh Size](ace:Core/MeshSize) | Mesh | Vocabulary |
+| `get_accelerometer` | [Acceleration](ace:Core/TouchAcceleration) | Touch | Vocabulary |
+| `get_action_strength` | [Action Strength](ace:Core/GetActionStrength) | Input | Vocabulary |
+| `get_actions` | [All Input Actions](ace:Core/InputActionsList) | Input | Vocabulary |
+| `get_as_text` | 's contents | Object | Object expressions |
+| `get_axis` | [Input Axis](ace:Core/GetInputAxis) | Input | Vocabulary |
+| `get_base_control` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
+| `get_basename` | [Localized File](ace:Core/LocalizedFile) | Translation | Vocabulary |
+| `get_bus_count` | [Bus Count](ace:Core/AudioBusCount) | Audio Server | Vocabulary |
+| `get_bus_index` | [Bus Exists](ace:Core/AudioBusExists) | Audio Server | Vocabulary |
+| `get_bus_peak_volume_left_db` | [Bus Peak Volume (dB)](ace:Core/AudioBusPeakDb) | Audio Server | Vocabulary |
+| `get_bus_volume_db` | [Bus Volume](ace:Core/GetBusVolume) | Audio | Vocabulary |
+| `get_camera_3d` | [Is Behind Camera (3D)](ace:Core/IsBehindCamera3D) | Math & Random | Vocabulary |
+| `get_canvas_transform` | [World Point To Screen](ace:Core/WorldPointToScreen) | Math & Random | Vocabulary |
+| `get_cell_atlas_coords` | [Cell Atlas Coords](ace:Core/TileMapGetCellAtlasCoords) | Tilemap | Vocabulary |
+| `get_cell_source_id` | [Cell Is Empty](ace:Core/TileMapCellIsEmpty) | Tilemap | Vocabulary |
+| `get_cell_tile_data` | [Tile Has Custom Data](ace:Core/TileMapTileHasCustomData) | Tilemap | Vocabulary |
+| `get_child` | [Get Child (by index)](ace:Core/GetChild) | Nodes | Vocabulary |
+| `get_child_count` | [Get Child Count](ace:Core/GetChildCount) | Nodes | Vocabulary |
+| `get_children` | [Get Children](ace:Core/GetChildren) | Nodes: Picking | Vocabulary |
+| `get_closest_collision_safe_fraction` | [ShapeCast Safe Fraction (2D)](ace:Core/ShapeCast2DSafeFraction) | Raycast 2D | Vocabulary |
+| `get_closest_collision_unsafe_fraction` | [ShapeCast Unsafe Fraction (2D)](ace:Core/ShapeCast2DUnsafeFraction) | Raycast 2D | Vocabulary |
+| `get_collider` | [RayCast Collider (2D)](ace:Core/RayCast2DGetCollider) | Raycast 2D | Vocabulary |
+| `get_collider_shape` | [RayCast Hit Shape Index (2D)](ace:Core/RayCast2DColliderShape) | Raycast 2D | Vocabulary |
+| `get_collision_count` | [ShapeCast Hit Count (2D)](ace:Core/ShapeCast2DCount) | Raycast 2D | Vocabulary |
+| `get_collision_face_index` | [RayCast Hit Face Index (3D)](ace:Core/RayCast3DFaceIndex) | Raycast 3D | Vocabulary |
+| `get_collision_layer_value` | [Is On Collision Layer](ace:Core/IsOnCollisionLayer) | Collisions | Vocabulary |
+| `get_collision_normal` | [RayCast Hit Normal (2D)](ace:Core/RayCast2DGetNormal) | Raycast 2D | Vocabulary |
+| `get_collision_point` | [RayCast Hit Point (2D)](ace:Core/RayCast2DGetPoint) | Raycast 2D | Vocabulary |
+| `get_connected_joypads` | [Has Gamepads](ace:Core/GamepadHasAny) | Gamepad | Vocabulary |
+| `get_country_name` | [Country Name](ace:Core/CountryName) | Translation | Vocabulary |
+| `get_current_node` | [Is In State](ace:Core/IsInState) | Animation | Vocabulary |
+| `get_custom_data` | [Tile Has Custom Data](ace:Core/TileMapTileHasCustomData) | Tilemap | Vocabulary |
+| `get_date_string_from_system` | [System Date String](ace:Core/GetSystemDate) | Utility: Time | Vocabulary |
+| `get_datetime_dict_from_unix_time` | [Date Parts](ace:Core/DateParts) | Translation | Vocabulary |
+| `get_datetime_string_from_system` | [Date & Time Text](ace:Core/GetDatetimeString) | Time | Vocabulary |
+| `get_default_clear_color` | [Clear Color](ace:Core/RenderingGetClearColor) | Rendering | Vocabulary |
+| `get_directories_at` | [List Subdirectories](ace:Core/ListDirs) | Files: Directories | Vocabulary |
+| `get_edited_scene_root` | [Edited Scene Root](ace:Core/EditedSceneRoot) | Editor Tools | Vocabulary |
+| `get_editor_scale` | [Editor Scale](ace:Core/EditorUiScale) | Editor Tools | Vocabulary |
+| `get_editor_settings` | [Editor Settings](ace:Core/EditorSettingsObject) | Editor Tools | Vocabulary |
+| `get_error_line` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
+| `get_error_message` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
+| `get_extension` | [Localized File](ace:Core/LocalizedFile) | Translation | Vocabulary |
+| `get_file` | [Data Folder Problems](ace:Core/DataFolderProblems) | Files | Vocabulary |
+| `get_file_as_bytes` | [File Size (bytes)](ace:Core/GetFileSize) | Files | Vocabulary |
+| `get_file_as_string` | [Read Text File](ace:Core/ReadTextFile) | Files | Vocabulary |
+| `get_files_at` | [List Files](ace:Core/ListFiles) | Files: Directories | Vocabulary |
+| `get_first_node_in_group` | [Get First Node In Group](ace:Core/GetFirstNodeInGroup) | Groups | Vocabulary |
+| `get_floor_normal` | [Floor Normal](ace:Core/GetFloorNormal) | Collisions | Vocabulary |
+| `get_frames_drawn` | [Wait Until Frame](ace:Core/WaitUntilFrame) | Testing | Vocabulary |
+| `get_frames_per_second` | [FPS](ace:Core/GetFps) | Time | Vocabulary |
+| `get_global_mouse_position` | [Mouse Position (world)](ace:Core/GetMouseWorldPosition) | Mouse | Vocabulary |
+| `get_gravity` | [Gravity Direction](ace:Core/TouchGravity) | Touch | Vocabulary |
+| `get_gyroscope` | [Rotation Rate](ace:Core/TouchRotationRate) | Touch | Vocabulary |
+| `get_image` | [Take Screenshot](ace:Core/TakeScreenshot) | General Actions | Vocabulary |
+| `get_index` | [Index In Parent](ace:Core/GetIndexInParent) | Nodes | Vocabulary |
+| `get_joy_axis` | [Compare Axis](ace:Core/GamepadCompareAxis) | Gamepad | Vocabulary |
+| `get_joy_name` | [Gamepad Name](ace:Core/GamepadName) | Gamepad | Vocabulary |
+| `get_joy_vibration_strength` | [Gamepad Vibration Strength](ace:Core/VibrationJoyStrength) | Vibration | Vocabulary |
+| `get_keycode_string` | [Key Name](ace:Core/KeyName) | Keyboard | Vocabulary |
+| `get_last_mouse_velocity` | [Mouse Velocity](ace:Core/GetMouseVelocity) | Mouse | Vocabulary |
+| `get_last_slide_collision` | [Last Slide Collider](ace:Core/GetLastSlideCollider) | Collisions | Vocabulary |
+| `get_length` | [Voice Line Length](ace:Core/VoiceLineLength) | Translation: Voice | Vocabulary |
+| `get_loaded_locales` | [For Each Language](ace:Core/ForEachLanguage) | Loops | Vocabulary |
+| `get_local_mouse_position` | [Mouse Position (local)](ace:Core/MouseLocalPosition) | Mouse | Vocabulary |
+| `get_locale` | [Current Language](ace:Core/GetLocale) | Translation | Vocabulary |
+| `get_locale_name` | [Current Language Name](ace:Core/CurrentLanguageName) | Translation | Vocabulary |
+| `get_magnetometer` | [Magnetic Field](ace:Core/TouchMagneticField) | Touch | Vocabulary |
+| `get_message` | [Language Has Text For](ace:Core/LanguageHasTextFor) | Translation | Vocabulary |
+| `get_meta` | [Get Metadata](ace:Core/GetMeta) | Metadata | Vocabulary |
+| `get_modified_time` | [Watch Data File](ace:Core/WatchDataFile) | Files | Vocabulary |
+| `get_monitor` | [Performance Monitor](ace:Core/GetPerfMonitor) | Utility: Debug | Vocabulary |
+| `get_mouse_position` | [Mouse Position (screen)](ace:Core/GetMouseScreenPosition) | Mouse | Vocabulary |
+| `get_multiline_string_size` | [Wrapped Text Height](ace:Core/WrappedTextHeight) | Text | Vocabulary |
+| `get_name` | [OS Name](ace:Core/GetOSName) | Platform | Vocabulary |
+| `get_next_path_position` | [Next Path Position](ace:Core/GetNextPathPosition) | General Expressions | Vocabulary |
+| `get_node` | [Get Node](ace:Core/GetNode) | Helpers | Vocabulary |
+| `get_node_count_in_group` | [Count Nodes In Group](ace:Core/GetNodeCountInGroup) | Groups | Vocabulary |
+| `get_node_or_null` | [Get Node Or Null](ace:Core/GetNodeOrNull) | Nodes | Vocabulary |
+| `get_nodes_in_group` | [Entities In Group](ace:Core/NodesInGroup) | Systems | Vocabulary |
+| `get_normal` | [Last Slide Normal](ace:Core/GetLastSlideNormal) | Collisions | Vocabulary |
+| `get_object` | [Wait For All Of](ace:Core/WaitForAllOf) | Time | Vocabulary |
+| `get_output_latency` | [Audio Output Latency](ace:Core/AudioOutputLatency) | Audio Server | Vocabulary |
+| `get_overlapping_areas` | [Overlapping Areas](ace:Core/GetOverlappingAreas) | Collisions | Vocabulary |
+| `get_overlapping_bodies` | [Overlapping Bodies](ace:Core/GetOverlappingBodies) | Collisions | Vocabulary |
+| `get_parent` | [Get Parent](ace:Core/GetParent) | Nodes | Vocabulary |
+| `get_path` | [Node Path](ace:Core/GetNodePath) | Nodes | Vocabulary |
+| `get_percent_sign` | [Percent Sign](ace:Core/PercentSign) | Translation | Vocabulary |
+| `get_physics_interpolation_fraction` | [Physics Interpolation Fraction](ace:Core/PhysicsInterpolationFraction) | Physics Server | Vocabulary |
+| `get_playback_position` | [Playback Position](ace:Core/AudioGetPosition) | Audio | Vocabulary |
+| `get_primary_interface` | [Language Reads Right To Left](ace:Core/LanguageIsRightToLeft) | Translation | Vocabulary |
+| `get_process_delta_time` | [Frame Took Longer Than](ace:Core/FrameOverBudget) | Debug | Vocabulary |
+| `get_process_frames` | [Frame Count](ace:Core/GetFrameCount) | Time | Vocabulary |
+| `get_process_info` | [Active Bodies (2D)](ace:Core/PhysicsActiveObjects2D) | Physics Server | Vocabulary |
+| `get_property_list` | [Apply Preset To Node](ace:Core/ApplyPresetToNode) | Helpers | Vocabulary |
+| `get_rendering_device` | [Uses Modern Renderer](ace:Core/RenderingUsesModernRenderer) | Rendering | Vocabulary |
+| `get_rendering_info` | [Draw Calls (frame)](ace:Core/RenderingDrawCallsInFrame) | Rendering | Vocabulary |
+| `get_resource_filesystem` | [Rescan Project Files](ace:Core/RescanProjectFiles) | Editor Tools | Vocabulary |
+| `get_root` | [For Each Node That Can](ace:Core/ForEachNodeThatCan) | Nodes: Picking | Vocabulary |
+| `get_section_keys` | [Load Bindings](ace:Core/InputLoadBindings) | Keyboard | Vocabulary |
+| `get_selected_nodes` | [Selected Nodes](ace:Core/EditorSelectedNodes) | Editor Tools | Vocabulary |
+| `get_selection` | [Selected Nodes](ace:Core/EditorSelectedNodes) | Editor Tools | Vocabulary |
+| `get_setting` | [Tiles](ace:Core/TilesUnit) | Math & Random | Vocabulary |
+| `get_shader_parameter` | [Effect Parameter](ace:Core/GetShaderParameter) | Effects | Vocabulary |
+| `get_signal_list` | [Expect Signal](ace:Core/ExpectSignal) | Testing | Vocabulary |
+| `get_slice` | [Token At](ace:Core/TextTokenAt) | Text | Vocabulary |
+| `get_slice_count` | [Token Count](ace:Core/TextTokenCount) | Text | Vocabulary |
+| `get_slide_collision_count` | [Slide Collision Count](ace:Core/GetSlideCount) | Collisions | Vocabulary |
+| `get_static_memory_usage` | [Static Memory (bytes)](ace:Core/GetStaticMemory) | Utility: Debug | Vocabulary |
+| `get_string` | [Regex All Matches](ace:Core/RegexAllMatches) | Text: RegEx | Vocabulary |
+| `get_string_from_utf8` | [Last Data](ace:Core/AjaxLastData) | AJAX | Vocabulary |
+| `get_string_size` | [Text Fits In Width](ace:Core/TextFitsInWidth) | Text | Vocabulary |
+| `get_surface_count` | [Mesh Surface Count](ace:Core/MeshSurfaceCount) | Mesh | Vocabulary |
+| `get_texture` | [Take Screenshot](ace:Core/TakeScreenshot) | General Actions | Vocabulary |
+| `get_theme_font` | [Font Of This Control](ace:Core/ControlFont) | UI | Vocabulary |
+| `get_theme_font_size` | [Text Overflows](ace:Core/TextOverflows) | Text | Vocabulary |
+| `get_ticks_msec` | [Game Time](ace:Core/GetGameTime) | Time | Vocabulary |
+| `get_ticks_usec` | [Begin Frame Budget](ace:Core/BeginFrameBudget) | Performance | Vocabulary |
+| `get_time_string_from_system` | [System Time String](ace:Core/GetSystemTime) | Utility: Time | Vocabulary |
+| `get_translation_object` | [Language Has Text For](ace:Core/LanguageHasTextFor) | Translation | Vocabulary |
+| `get_tree` | [Await Next Frame](ace:Core/AwaitNextFrame) | Performance | Vocabulary |
+| `get_typed_builtin` | [Element Type](ace:Core/ArrayTypedBuiltin) | Variables: Array | Vocabulary |
+| `get_typed_class_name` | [Element Class](ace:Core/ArrayTypedClassName) | Variables: Array | Vocabulary |
+| `get_undo_redo` | [Undo History](ace:Core/EditorUndoHistory) | Editor Tools | Vocabulary |
+| `get_unique_id` | [My ID](ace:Core/MyPeerId) | Multiplayer | Vocabulary |
+| `get_unix_time_from_system` | [Unix Time](ace:Core/GetUnixTime) | Time | Vocabulary |
+| `get_used_cells` | [Used Cells Count](ace:Core/TileMapUsedCellsCount) | Tilemap | Vocabulary |
+| `get_value` | [Load Setting Into Variable](ace:Core/LoadSettingInto) | Utility: Settings | Vocabulary |
+| `get_vector` | [Move Vector](ace:Core/InputMoveVector) | Input | Vocabulary |
+| `get_viewport` | [Stop This Input Here](ace:Core/StopInputHere) | General Actions | Vocabulary |
+| `get_viewport_rect` | [Is Outside Layout](ace:Core/IsOutsideLayout) | General Conditions | Vocabulary |
+| `get_viewport_rid` | [Set MSAA (2D)](ace:Core/RenderingSetMsaa2D) | Rendering | Vocabulary |
+| `get_visible_rect` | [Visible World Rect](ace:Core/VisibleWorldRect) | Math & Random | Vocabulary |
+| `get_wall_normal` | [Wall Normal](ace:Core/GetWallNormal) | Collisions | Vocabulary |
+| `get_window` | [Wait For The Next Key Or Button](ace:Core/InputWaitForNextKey) | Keyboard | Vocabulary |
+| `get_world_2d` | [World Raycast Hits? (2D)](ace:Core/WorldRaycastHit2D) | Raycast 2D | Vocabulary |
+| `get_world_3d` | [World Raycast Hits? (3D)](ace:Core/WorldRaycastHit3D) | Raycast 3D | Vocabulary |
+| `global_position` | [Pin To](ace:Core/PinToObject) | Pin | Vocabulary |
+| `global_shader_parameter_get` | [Global Shader Parameter](ace:Core/RenderingGetGlobalShaderParam) | Rendering | Vocabulary |
+| `global_shader_parameter_set` | [Set Global Shader Parameter](ace:Core/RenderingSetGlobalShaderParam) | Rendering | Vocabulary |
+| `global_transform` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
+| `grab_focus` | [Set Focus](ace:Core/GrabFocus) | UI | Vocabulary |
+| `grow` | [Is Point On Screen](ace:Core/IsPointOnScreen) | Math & Random | Vocabulary |
+| `has` | [Has Key](ace:Core/DictHasKey) | Variables: Dictionary | Vocabulary |
+| `has_action` | [Has Action](ace:Core/InputHasActionNamed) | Keyboard | Vocabulary |
+| `has_all` | [Has All Keys](ace:Core/DictHasAllKeys) | Variables: Dictionary | Vocabulary |
+| `has_animation` | [Has Animation](ace:Core/HasAnimation) | Animation | Vocabulary |
+| `has_char` | [Font Can Show](ace:Core/FontCanShow) | UI | Vocabulary |
+| `has_feature` | [Platform Has Feature](ace:Core/HasOSFeature) | Platform | Vocabulary |
+| `has_focus` | [Has Focus](ace:Core/HasFocus) | UI | Vocabulary |
+| `has_meta` | [Has Metadata](ace:Core/HasMeta) | Metadata | Vocabulary |
+| `has_method` | [Object Has Method](ace:Core/ObjectHasMethod) | Compare: Objects | Vocabulary |
+| `has_node` | [Has Node](ace:Core/HasNode) | Nodes | Vocabulary |
+| `has_overlapping_areas` | [Has Overlapping Areas](ace:Core/HasOverlappingAreas) | Collisions | Vocabulary |
+| `has_overlapping_bodies` | [Has Overlapping Bodies](ace:Core/HasOverlappingBodies) | Collisions | Vocabulary |
+| `has_point` | [Is Inside Area](ace:Core/IsInsideArea) | General Conditions | Vocabulary |
+| `has_signal` | [Report Failure](ace:Core/ReportFailure) | Run Context | Vocabulary |
+| `has_translation_for_locale` | [Language Is Available](ace:Core/LanguageIsAvailable) | Translation | Vocabulary |
+| `hash` | [Seeded Value](ace:Core/SeededValue) | Procedural | Vocabulary |
+| `height` | [Make Sphere Mesh](ace:Core/SetSphereMesh) | Mesh | Vocabulary |
+| `hex_encode` | [First To Finish](ace:Core/FirstToFinish) | Run Context | Vocabulary |
+| `hide` | [Hide](ace:Core/HideNode) | General Actions | Vocabulary |
+| `hit_back_faces` | [RayCast Hits Back Faces (3D)](ace:Core/RayCast3DSetHitBackFaces) | Raycast 3D | Vocabulary |
+| `hit_from_inside` | [RayCast Hits From Inside (2D)](ace:Core/RayCast2DSetHitFromInside) | Raycast 2D | Vocabulary |
+| `html` | [Color From Hex](ace:Core/ColorFromHex) | Color | Vocabulary |
+| `if` | [Text Or](ace:Core/TextOr) | Variables | Vocabulary |
+| `in` | [Log Measurements](ace:Core/LogMeasurements) | Debug | Vocabulary |
+| `index` | [Touch Index](ace:Core/TouchIndexOf) | Touch | Vocabulary |
+| `inner_radius` | [Make Torus Mesh](ace:Core/SetTorusMesh) | Mesh | Vocabulary |
+| `insert` | [Insert At](ace:Core/ArrayInsert) | Variables: Array | Vocabulary |
+| `inspect_object` | [Inspect In Editor](ace:Core/InspectInEditor) | Editor Tools | Vocabulary |
+| `instantiate` | [Spawn Scene Instance](ace:Core/SpawnScene) | Scene | Vocabulary |
+| `int` | [Is Even](ace:Core/IsEven) | Compare: Numbers | Vocabulary |
+| `intersect_point` | [Query Bodies At Point (2D)](ace:Core/QueryBodiesAtPoint2D) | Overlap 2D | Vocabulary |
+| `intersect_ray` | [World Raycast Hits? (2D)](ace:Core/WorldRaycastHit2D) | Raycast 2D | Vocabulary |
+| `intersect_shape` | [Query Bodies In Circle (2D)](ace:Core/QueryBodiesInCircle2D) | Overlap 2D | Vocabulary |
+| `inverse_lerp` | [Inverse Lerp](ace:Core/InverseLerp) | Math & Random | Vocabulary |
+| `inverted` | [Invert Color](ace:Core/ColorInverted) | Color | Vocabulary |
+| `is_action` | [Event Matches Action](ace:Core/EventMatchesAction) | InputMap | Vocabulary |
+| `is_action_just_pressed` | [On Action Just Pressed](ace:Core/IsActionJustPressed) | Input | Vocabulary |
+| `is_action_just_released` | [On Action Just Released](ace:Core/IsActionJustReleased) | Input | Vocabulary |
+| `is_action_pressed` | [Is Action Pressed](ace:Core/IsActionPressed) | Input | Vocabulary |
+| `is_ancestor_of` | [Is Ancestor Of](ace:Core/IsAncestorOf) | Nodes | Vocabulary |
+| `is_anything_pressed` | [Anything Is Pressed](ace:Core/IsAnythingPressed) | Keyboard | Vocabulary |
+| `is_bus_effect_enabled` | [Is Bus Effect Enabled](ace:Core/AudioIsBusEffectEnabled) | Audio Server | Vocabulary |
+| `is_bus_mute` | [Is Bus Muted](ace:Core/OptionsIsBusMuted) | Game Options | Vocabulary |
+| `is_class` | [Object Is Class](ace:Core/ObjectIsClass) | Compare: Types | Vocabulary |
+| `is_colliding` | [RayCast Is Colliding (2D)](ace:Core/RayCast2DIsColliding) | Raycast 2D | Vocabulary |
+| `is_connected` | [Signal Is Connected](ace:Core/IsSignalConnected) | Helpers | Vocabulary |
+| `is_debug_build` | [Log (Debug Builds Only)](ace:Core/ConsoleDebugLog) | Debug | Vocabulary |
+| `is_echo` | [Key Is A Held-Down Repeat](ace:Core/KeyEventIsRepeat) | Keyboard | Vocabulary |
+| `is_editor_hint` | [Is In Editor](ace:Core/IsInEditor) | Editor Tools | Vocabulary |
+| `is_empty` | [Dictionary Is Empty](ace:Core/DictIsEmpty) | Variables: Dictionary | Vocabulary |
+| `is_equal_approx` | [Is Equal (approx)](ace:Core/IsEqualApprox) | Math & Random | Vocabulary |
+| `is_in_group` | [Is In Group](ace:Core/IsInGroup) | Groups | Vocabulary |
+| `is_inside_tree` | [Is Inside Tree](ace:Core/IsInsideTree) | Nodes | Vocabulary |
+| `is_instance_valid` | [Object Still Exists](ace:Core/IsValidInstance) | Compare: Objects | Vocabulary |
+| `is_joy_button_pressed` | [Gamepad Button Is Down](ace:Core/JoyButtonDown) | Gamepad | Vocabulary |
+| `is_joy_known` | [Gamepad Is Recognized](ace:Core/GamepadIsKnown) | Gamepad | Vocabulary |
+| `is_layout_rtl` | [Layout Is Mirrored](ace:Core/LayoutIsMirrored) | Translation | Vocabulary |
+| `is_locale_right_to_left` | [Language Reads Right To Left](ace:Core/LanguageIsRightToLeft) | Translation | Vocabulary |
+| `is_mouse_button_pressed` | [Mouse Button Is Down](ace:Core/MouseButtonDown) | Mouse | Vocabulary |
+| `is_multiplayer_authority` | [Owns This Object](ace:Core/OwnsThisObject) | Multiplayer | Vocabulary |
+| `is_nan` | [Is NaN](ace:Core/IsNaNValue) | Math & Random | Vocabulary |
+| `is_navigation_finished` | [Has Arrived](ace:Core/IsNavFinished) | General Conditions | Vocabulary |
+| `is_node_ready` | [Node Is Ready](ace:Core/NodeIsReady) | Nodes: Activation | Vocabulary |
+| `is_on_ceiling` | [Is Touching Ceiling](ace:Core/IsOnCeiling) | Collisions | Vocabulary |
+| `is_on_floor` | [Is On Floor](ace:Core/IsOnFloor) | General Conditions | Vocabulary |
+| `is_on_wall` | [Is By Wall](ace:Core/IsOnWall) | Collisions | Vocabulary |
+| `is_physical_key_pressed` | [Key Is Down](ace:Core/KeyIsDown) | Keyboard | Vocabulary |
+| `is_physics_processing` | [Node Is Physics Processing](ace:Core/NodeIsPhysicsProcessing) | Nodes: Activation | Vocabulary |
+| `is_playing` | [Is Playing](ace:Core/AnimationIsPlaying) | Animation | Vocabulary |
+| `is_position_behind` | [Is Behind Camera (3D)](ace:Core/IsBehindCamera3D) | Math & Random | Vocabulary |
+| `is_processing` | [Node Is Processing Per Frame](ace:Core/NodeIsProcessing) | Nodes: Activation | Vocabulary |
+| `is_processing_input` | [Node Is Handling Input](ace:Core/NodeIsProcessingInput) | Nodes: Activation | Vocabulary |
+| `is_server` | [Is Host](ace:Core/IsHost) | Multiplayer | Vocabulary |
+| `is_stopped` | [Is Timer Stopped](ace:Core/IsTimerStopped) | General Conditions | Vocabulary |
+| `is_touchscreen_available` | [Touchscreen Available](ace:Core/IsTouchscreen) | Touch | Vocabulary |
+| `is_typed` | [Is Typed](ace:Core/ArrayIsTyped) | Variables: Array | Vocabulary |
+| `is_valid_float` | [Text Is A Number](ace:Core/TextIsANumber) | Compare: Text | Vocabulary |
+| `is_valid_int` | [Text Is A Whole Number](ace:Core/TextIsAWholeNumber) | Compare: Text | Vocabulary |
+| `is_zero_approx` | [Is Zero (approx)](ace:Core/IsZeroApprox) | Math & Random | Vocabulary |
+| `join` | [Join To Text](ace:Core/ArrayJoin) | Variables: Array | Vocabulary |
+| `keys` | [Dictionary Keys](ace:Core/DictKeys) | Variables: Dictionary | Vocabulary |
+| `layout_direction` | [Mirror Layout For Language](ace:Core/MirrorLayoutForLanguage) | Translation | Vocabulary |
+| `left` | [Left](ace:Core/TextLeft) | Text | Vocabulary |
+| `len` | ' count | System | Expressions |
+| `length` | [Vector Length](ace:Core/VectorLength) | Variables: Vector | Vocabulary |
+| `length_squared` | [Face Along Velocity](ace:Core/FaceAlongVelocity) | Movement | Vocabulary |
+| `lerp` | [Lerp Color](ace:Core/ColorLerp) | Color | Vocabulary |
+| `lerp_angle` | [Lerp Angle](ace:Core/LerpAngle) | Math & Random | Vocabulary |
+| `lerpf` | [Lerp](ace:Core/LerpValue) | Math & Random | Vocabulary |
+| `light_color` | [Set Light Colour (3D)](ace:Core/SetLightColour3D) | Lighting | Vocabulary |
+| `light_energy` | [Set Light Energy (3D)](ace:Core/SetLightEnergy3D) | Lighting | Vocabulary |
+| `lightened` | [Lighten Color](ace:Core/ColorLighten) | Color | Vocabulary |
+| `limit_bottom` | [Set Scroll Limits](ace:Core/SetCameraLimits) | Camera | Vocabulary |
+| `limit_left` | [Set Scroll Limits](ace:Core/SetCameraLimits) | Camera | Vocabulary |
+| `limit_length` | [Clamp Length](ace:Core/VectorLimitLength) | Variables: Vector | Vocabulary |
+| `limit_right` | [Set Scroll Limits](ace:Core/SetCameraLimits) | Camera | Vocabulary |
+| `limit_top` | [Set Scroll Limits](ace:Core/SetCameraLimits) | Camera | Vocabulary |
+| `line` | [Draw Line](ace:Core/DrawLine) | Drawing | Vocabulary |
+| `line_of_sight` | [Draw Line Of Sight](ace:Core/DrawLineOfSight) | Drawing | Vocabulary |
+| `linear_to_db` | [Set Volume (0 to 1)](ace:Core/AudioSetVolumeLevel) | Audio | Vocabulary |
+| `linear_velocity` | [Get Linear Velocity](ace:Core/GetLinearVelocity2D) | General Expressions | Vocabulary |
+| `load` | [Load Resource](ace:Core/LoadResource) | Helpers | Vocabulary |
+| `load_from_project_settings` | [Reset All Bindings](ace:Core/InputResetBindings) | Keyboard | Vocabulary |
+| `load_threaded_get` | [Go To Loaded Layout](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
+| `load_threaded_get_status` | [Layout Has Finished Loading](ace:Core/LayoutFinishedLoading) | Scene | Vocabulary |
+| `load_threaded_request` | [Load Layout In The Background](ace:Core/LoadLayoutInBackground) | Scene | Vocabulary |
+| `local_to_map` | [Position To Tile](ace:Core/TileMapLocalToMap) | Tilemap | Vocabulary |
+| `look_at` | [Look At](ace:Core/LookAt3D) | General Actions | Vocabulary |
+| `lpad` | [Align Right](ace:Core/AlignRight) | Text | Vocabulary |
+| `make_current` | [Make Current](ace:Core/MakeCameraCurrent) | Camera | Vocabulary |
+| `make_dir_recursive_absolute` | [Make Directory](ace:Core/MakeDir) | Files: Directories | Vocabulary |
+| `map` | [Map](ace:Core/ArrayMap) | Variables: Array | Vocabulary |
+| `map_to_local` | [Tile To Position](ace:Core/TileMapMapToLocal) | Tilemap | Vocabulary |
+| `margin` | [Set ShapeCast Margin (2D)](ace:Core/ShapeCast2DSetMargin) | Raycast 2D | Vocabulary |
+| `match` | [Text Matches Pattern](ace:Core/TextMatchesPattern) | Compare: Text | Vocabulary |
+| `material` | [Set Effect](ace:Core/SetShaderMaterial) | Effects | Vocabulary |
+| `material_override` | [Set Mesh Material](ace:Core/SetMeshMaterial) | Mesh | Vocabulary |
+| `max` | [Max](ace:Core/MaxValue) | Helpers | Vocabulary |
+| `max_distance` | [Set Hearing Distance](ace:Core/AudioSetHearingDistance) | Audio | Vocabulary |
+| `max_fps` | [Max FPS](ace:Core/WindowMaxFps) | Game Window | Vocabulary |
+| `max_results` | [Set ShapeCast Max Results (2D)](ace:Core/ShapeCast2DSetMaxResults) | Raycast 2D | Vocabulary |
+| `max_value` | [Set Max Value](ace:Core/SetRangeMax) | UI | Vocabulary |
+| `maxf` | [Every X Seconds](ace:Core/EveryXSeconds) | Time | Vocabulary |
+| `maxi` | [Repeat With Delay](ace:Core/RepeatWithDelay) | Time | Vocabulary |
+| `merge` | [Merge Dictionary](ace:Core/DictMerge) | Variables: Dictionary | Vocabulary |
+| `merged` | [Translated Text With Words](ace:Core/TranslatedTextWithWords) | Translation | Vocabulary |
+| `mesh` | [Clear Mesh](ace:Core/ClearMesh) | Mesh | Vocabulary |
+| `min` | [Min](ace:Core/MinValue) | Helpers | Vocabulary |
+| `minf` | [Charge Toward](ace:Core/ChargeToward) | Variables | Vocabulary |
+| `mini` | min( , ) | System | Expressions |
+| `mode` | [Go Fullscreen](ace:Core/WindowGoFullscreen) | Game Window | Vocabulary |
+| `modulate` | [Set Color Tint](ace:Core/SetModulate) | General Actions | Vocabulary |
+| `monitoring` | [Get Monitoring](ace:Core/GetMonitoring) | General Expressions | Vocabulary |
+| `motion` | [Cast Circle Motion Into (2D)](ace:Core/CastCircleMotion2D) | Raycast 2D | Vocabulary |
+| `mouse_mode` | [Set Mouse Mode](ace:Core/SetMouseMode) | Mouse | Vocabulary |
+| `move_and_slide` | [Move And Slide](ace:Core/MoveAndSlide) | General Actions | Vocabulary |
+| `move_child` | [Move Child To Index](ace:Core/MoveChild) | Nodes | Vocabulary |
+| `move_to_center` | [Center Window](ace:Core/WindowCenter) | Game Window | Vocabulary |
+| `move_toward` | [Move Toward](ace:Core/MoveTowardValue) | Helpers | Vocabulary |
+| `name` | [Set Node Name](ace:Core/SetNodeName) | Nodes | Vocabulary |
+| `naturalnocasecmp_to` | [Text Natural Order](ace:Core/TextNaturalOrder) | Compare: Text | Vocabulary |
+| `new` | [Make Gradient](ace:Core/MakeGradient) | Gradients & Curves | Vocabulary |
+| `node_b` | [Break Joint](ace:Core/BreakJoint) | Joints | Vocabulary |
+| `normalized` | [Normalized](ace:Core/VectorNormalized) | Variables: Vector | Vocabulary |
+| `not` | [Has Something](ace:Core/HasSomething) | Compare: Types | Vocabulary |
+| `num` | [Format Decimals](ace:Core/FormatDecimals) | Text | Vocabulary |
+| `offset` | [Set Offset](ace:Core/SetCameraOffset) | Camera | Vocabulary |
+| `one_shot` | [Set One-Shot](ace:Core/SetOneShot) | Particles | Vocabulary |
+| `open` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
+| `open_scene_from_path` | [Open Scene In Editor](ace:Core/OpenSceneInEditor) | Editor Tools | Vocabulary |
+| `or` | [Is Nothing](ace:Core/IsNothing) | Compare: Types | Vocabulary |
+| `outer_radius` | [Make Torus Mesh](ace:Core/SetTorusMesh) | Mesh | Vocabulary |
+| `overlaps_area` | [Overlaps Area](ace:Core/OverlapsArea) | Collisions | Vocabulary |
+| `overlaps_body` | [Overlaps Body](ace:Core/OverlapsBody) | Collisions | Vocabulary |
+| `own_world_3d` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
+| `owner` | [Get Scene Owner](ace:Core/GetOwner) | Nodes | Vocabulary |
+| `pack` | [Save Node As Scene](ace:Core/SaveNodeAsScene) | Editor Tools | Vocabulary |
+| `pad_zeros` | [Pad Number](ace:Core/StringPadZeros) | Variables: String | Vocabulary |
+| `parse` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
+| `parse_input_event` | [Simulate Input](ace:Core/SimulateInputEvent) | General Actions | Vocabulary |
+| `parse_number` | [Number From Local Digits](ace:Core/NumberFromLocalDigits) | Translation | Vocabulary |
+| `parse_string` | [From JSON Text](ace:Core/JsonParse) | JSON | Vocabulary |
+| `path_join` | [Resource In Folder](ace:Core/ResourceInFolder) | Files | Vocabulary |
+| `pause` | [Pause Animation](ace:Core/PauseAnimation) | Animation | Vocabulary |
+| `paused` | [Pause Video](ace:Core/VideoSetPaused) | Video | Vocabulary |
+| `physical_keycode` | [On Key Released (event)](ace:Core/KeyEventReleased) | Keyboard | Vocabulary |
+| `physics_ticks_per_second` | [Set Physics Rate](ace:Core/SetPhysicsRate) | Time | Vocabulary |
+| `pick_random` | [Pick Random](ace:Core/ArrayPickRandom) | Variables: Array | Vocabulary |
+| `pingpong` | [Ping-Pong](ace:Core/PingPong) | Math & Random | Vocabulary |
+| `pitch_scale` | [Set Pitch](ace:Core/AudioSetPitch) | Audio | Vocabulary |
+| `play` | [Play](ace:Core/AudioPlay) | Audio | Vocabulary |
+| `play_current_scene` | [Play Current Scene](ace:Core/PlayCurrentScene) | Editor Tools | Vocabulary |
+| `playback_speed_scale` | [Set Audio Playback Speed](ace:Core/AudioSetPlaybackSpeed) | Audio Server | Vocabulary |
+| `playing` | [Is Playing](ace:Core/AudioIsPlaying) | Audio | Vocabulary |
+| `pop_back` | [Pop Back](ace:Core/ArrayPopBack) | Variables: Array | Vocabulary |
+| `pop_front` | [Pop Front](ace:Core/ArrayPopFront) | Variables: Array | Vocabulary |
+| `popup_centered` | [Show Dialog](ace:Core/ShowDialogCentred) | UI | Vocabulary |
+| `position` | [Get Position](ace:Core/GetPosition2D) | General Expressions | Vocabulary |
+| `position_smoothing_enabled` | [Set Smoothing](ace:Core/SetCameraSmoothing) | Camera | Vocabulary |
+| `posmod` | [Positive Modulo](ace:Core/PosMod) | Math & Random | Vocabulary |
+| `pow` | [Power](ace:Core/MathPow) | Math & Random | Vocabulary |
+| `prefab` | [Draw Prefab](ace:Core/DrawPrefabAce) | Drawing | Vocabulary |
+| `pressed` | [On Touch (event)](ace:Core/TouchEventPressed) | Touch | Vocabulary |
+| `print` | [Print](ace:Core/Print) | Debug | Vocabulary |
+| `print_rich` | [Print Rich (BBCode)](ace:Core/PrintRich) | Debug | Vocabulary |
+| `print_tree_pretty` | [Print Scene Tree](ace:Core/PrintTree) | Debug | Vocabulary |
+| `process_frame` | [Await Next Frame](ace:Core/AwaitNextFrame) | Performance | Vocabulary |
+| `process_mode` | [Set Node Process Mode](ace:Core/NodeSetProcessMode) | Nodes: Activation | Vocabulary |
+| `process_physics_priority` | [Set Node Physics Order](ace:Core/NodeSetPhysicsProcessPriority) | Nodes: Activation | Vocabulary |
+| `process_priority` | [Set Node Process Order](ace:Core/NodeSetProcessPriority) | Nodes: Activation | Vocabulary |
+| `project_position` | [Wrap Inside The View (3D)](ace:Core/WrapInsideView3D) | Movement | Vocabulary |
+| `project_ray_normal` | [Mouse Ray Direction (3D)](ace:Core/MouseRayDirection) | Mouse | Vocabulary |
+| `project_ray_origin` | [Mouse Ray Origin (3D)](ace:Core/MouseRayOrigin) | Mouse | Vocabulary |
+| `push_back` | Push back to | Array | Lists |
+| `push_error` | [Push Error](ace:Core/PushError) | Debug | Vocabulary |
+| `push_front` | [Push Front](ace:Core/ArrayPushFront) | Variables: Array | Vocabulary |
+| `push_warning` | [Push Warning](ace:Core/PushWarning) | Debug | Vocabulary |
+| `queue` | [Queue Animation](ace:Core/QueueAnimation) | Animation | Vocabulary |
+| `queue_free` | [Queue Free](ace:Core/QueueFree) | General Actions | Vocabulary |
+| `quit` | [Quit Game](ace:Core/QuitGame) | Scene | Vocabulary |
+| `rad_to_deg` | [Radians To Degrees](ace:Core/RadToDeg) | Math & Random | Vocabulary |
+| `radius` | [Make Sphere Mesh](ace:Core/SetSphereMesh) | Mesh | Vocabulary |
+| `randf` | [Chance](ace:Core/Chance) | Math & Random | Vocabulary |
+| `randf_range` | [Random](ace:Core/RandomRange) | Math & Random | Vocabulary |
+| `randi` | [Random Point On Screen Edge](ace:Core/RandomPointOnScreenEdge) | Math & Random | Vocabulary |
+| `randi_range` | [Random Integer](ace:Core/RandomInt) | Math & Random | Vocabulary |
+| `randomize` | [Randomize Seed](ace:Core/RandomizeSeed) | Math & Random | Vocabulary |
+| `range` | [Cells In Rectangle](ace:Core/CellsInRectangle) | Math & Random | Vocabulary |
+| `ratio` | [Value Ratio](ace:Core/GetRangeRatio) | UI | Vocabulary |
+| `rect` | [Draw Rect](ace:Core/DrawRect) | Drawing | Vocabulary |
+| `reduce` | [Reduce](ace:Core/ArrayReduce) | Variables: Array | Vocabulary |
+| `relative` | [Mouse Move Delta (event)](ace:Core/MouseMotionDelta) | Mouse | Vocabulary |
+| `release_focus` | [Release Focus](ace:Core/ReleaseFocus) | UI | Vocabulary |
+| `reload_current_scene` | [Restart Layout](ace:Core/ReloadScene) | Scene | Vocabulary |
+| `remap` | [Remap Range](ace:Core/RemapValue) | Helpers | Vocabulary |
+| `remove_absolute` | [Delete File](ace:Core/DeleteFile) | Files | Vocabulary |
+| `remove_at` | [Delete At](ace:Core/ArrayRemoveAt) | Variables: Array | Vocabulary |
+| `remove_child` | [Remove Child](ace:Core/RemoveChild) | Nodes | Vocabulary |
+| `remove_control_from_docks` | [Remove Dock](ace:Core/RemoveEditorDock) | Editor Tools | Vocabulary |
+| `remove_custom_type` | [Remove Object Type](ace:Core/RemoveEditorObjectType) | Editor Tools | Vocabulary |
+| `remove_exception` | [Stop Ignoring Node In RayCast (2D)](ace:Core/RayCast2DRemoveException) | Raycast 2D | Vocabulary |
+| `remove_from_group` | [Remove From Group](ace:Core/RemoveFromGroup) | Groups | Vocabulary |
+| `remove_inspector_plugin` | [Remove Inspector Plugin](ace:Core/RemoveEditorInspectorPlugin) | Editor Tools | Vocabulary |
+| `remove_meta` | [Remove Metadata](ace:Core/RemoveMeta) | Metadata | Vocabulary |
+| `remove_tool_menu_item` | [Remove Tools Menu Item](ace:Core/RemoveToolsMenuItem) | Editor Tools | Vocabulary |
+| `rename_absolute` | [Move / Rename File](ace:Core/MoveFile) | Files | Vocabulary |
+| `render_target_update_mode` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
+| `reparent` | [Reparent To](ace:Core/ReparentNode) | Utility: Nodes | Vocabulary |
+| `repeat` | [Repeat Text](ace:Core/StringRepeat) | Variables: String | Vocabulary |
+| `replace` | [Replace In Text](ace:Core/TextReplace) | Text | Vocabulary |
+| `request` | [Request](ace:Core/AjaxRequest) | AJAX | Vocabulary |
+| `res` | [For Each Resource In Folder](ace:Core/ForEachResourceInFolder) | Loops | Vocabulary |
+| `resize` | [Resize Array](ace:Core/ArrayResize) | Variables: Array | Vocabulary |
+| `rest_length` | [Set Spring Rest Length](ace:Core/SetDampedSpringLength) | Joints | Vocabulary |
+| `restart` | [Restart / Burst](ace:Core/RestartParticles) | Particles | Vocabulary |
+| `return` | [Translated Column Of Table](ace:Core/TranslatedColumn) | Translation | Vocabulary |
+| `reverse` | [Reverse Array](ace:Core/ArrayReverse) | Variables: Array | Vocabulary |
+| `right` | [Right](ace:Core/TextRight) | Text | Vocabulary |
+| `ring` | [Draw Ring](ace:Core/DrawRing) | Drawing | Vocabulary |
+| `rotate` | [Rotate (3D)](ace:Core/RotateNode3D) | General Actions | Vocabulary |
+| `rotate_toward` | [Rotate Toward (angle)](ace:Core/RotateTowardAngle) | Math & Random | Vocabulary |
+| `rotate_x` | [Mouse Look](ace:Core/MouseLook) | Native 3D | Vocabulary |
+| `rotate_y` | [Mouse Look](ace:Core/MouseLook) | Native 3D | Vocabulary |
+| `rotated` | [Rotated](ace:Core/VectorRotated) | Variables: Vector | Vocabulary |
+| `rotation` | [Pin Angle To](ace:Core/PinAngleToObject) | Pin | Vocabulary |
+| `rotation_degrees` | [Rotate Clockwise](ace:Core/RotateClockwise) | Layout Edges | Vocabulary |
+| `round` | [Round](ace:Core/RoundValue) | Helpers | Vocabulary |
+| `roundi` | [Cells In Line](ace:Core/CellsInLine) | Math & Random | Vocabulary |
+| `rpad` | [Align Left](ace:Core/AlignLeft) | Text | Vocabulary |
+| `rpc` | [Send Message To Everyone](ace:Core/SendMessageToEveryone) | Multiplayer | Vocabulary |
+| `rpc_id` | [Send Message To The Host](ace:Core/SendMessageToHost) | Multiplayer | Vocabulary |
+| `rsplit` | [Shorten To Whole Words](ace:Core/ShortenToWholeWords) | Text | Vocabulary |
+| `s` | [Write Version Stamp](ace:Core/WriteVersionStamp) | Editor Tools | Vocabulary |
+| `sample` | [Sample Gradient](ace:Core/SampleGradient) | Gradients & Curves | Vocabulary |
+| `sample_baked` | [Sample Curve](ace:Core/SampleCurve) | Gradients & Curves | Vocabulary |
+| `save` | [Save Resource To File](ace:Core/SaveResourceToFile) | Editor Tools | Vocabulary |
+| `save_png` | [Take Screenshot](ace:Core/TakeScreenshot) | General Actions | Vocabulary |
+| `save_scene` | [Save Current Scene](ace:Core/SaveEditedScene) | Editor Tools | Vocabulary |
+| `save_scene_as` | [Save Scene As](ace:Core/SaveEditedSceneAs) | Editor Tools | Vocabulary |
+| `scale` | [Set Scale (3D)](ace:Core/SetScale3D) | General Actions | Vocabulary |
+| `scan` | [Rescan Project Files](ace:Core/RescanProjectFiles) | Editor Tools | Vocabulary |
+| `screen_get_size` | [Screen Size](ace:Core/GetScreenSize) | Utility: Window | Vocabulary |
+| `search` | [Text Matches Regex](ace:Core/RegexMatches) | Text: RegEx | Vocabulary |
+| `search_all` | [Regex Match Count](ace:Core/RegexMatchCount) | Text: RegEx | Vocabulary |
+| `seed` | [Seed Random](ace:Core/SeedRandom) | Math & Random | Vocabulary |
+| `seek` | [Seek](ace:Core/AudioSeek) | Audio | Vocabulary |
+| `seek_end` | [Append To File](ace:Core/AppendTextFile) | Files | Vocabulary |
+| `self_modulate` | [Set Self Tint](ace:Core/SetSelfModulate) | General Actions | Vocabulary |
+| `set` | [Set Blend](ace:Core/SetTreeParam) | Animation | Vocabulary |
+| `set_anchors_and_offsets_preset` | [Set Anchors Preset](ace:Core/SetAnchorsPreset) | UI | Vocabulary |
+| `set_auto_accept_quit` | [Handle Quit Myself](ace:Core/HandleQuitRequest) | Scene | Vocabulary |
+| `set_auto_clear` | [Set Auto Clear](ace:Core/DrawSetAutoClear) | Drawing | Vocabulary |
+| `set_bus_bypass_effects` | [Set Bus Effects Bypassed](ace:Core/AudioSetBusBypass) | Audio Server | Vocabulary |
+| `set_bus_effect_enabled` | [Set Bus Effect Enabled](ace:Core/AudioSetBusEffectEnabled) | Audio Server | Vocabulary |
+| `set_bus_mute` | [Mute Bus](ace:Core/SetBusMute) | Audio | Vocabulary |
+| `set_bus_solo` | [Set Bus Solo](ace:Core/AudioSetBusSolo) | Audio Server | Vocabulary |
+| `set_bus_volume_db` | [Set Bus Volume](ace:Core/SetBusVolume) | Audio | Vocabulary |
+| `set_cell` | [Set Tile](ace:Core/TileMapSetCell) | Tilemap | Vocabulary |
+| `set_collision_layer_value` | [Set Collision Layer Bit](ace:Core/SetCollisionLayerBit) | Collisions | Vocabulary |
+| `set_collision_mask_value` | [Set Collision Mask Bit](ace:Core/SetCollisionMaskBit) | Collisions | Vocabulary |
+| `set_color` | [Make Gradient](ace:Core/MakeGradient) | Gradients & Curves | Vocabulary |
+| `set_custom_mouse_cursor` | [Clear Custom Cursor](ace:Core/ClearCustomCursor) | Mouse | Vocabulary |
+| `set_default_clear_color` | [Set Clear Color](ace:Core/RenderingSetClearColor) | Rendering | Vocabulary |
+| `set_deferred` | [Enable Collision Shape](ace:Core/EnableCollisionShape) | Collisions | Vocabulary |
+| `set_delay` | [Tween Callback](ace:Core/TweenCallback) | Tween | Vocabulary |
+| `set_ease` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
+| `set_focus_neighbor` | [Set Focus Neighbor](ace:Core/SetFocusNeighbor) | UI | Vocabulary |
+| `set_input_as_handled` | [Stop This Input Here](ace:Core/StopInputHere) | General Actions | Vocabulary |
+| `set_locale` | [Set Language](ace:Core/SetLocale) | Translation | Vocabulary |
+| `set_meta` | [Clear Measurements](ace:Core/ClearMeasurements) | Debug | Vocabulary |
+| `set_mouse_mode` | [Request Pointer Lock](ace:Core/MouseRequestPointerLock) | Mouse | Vocabulary |
+| `set_physics_process` | [Set Node Physics Processing](ace:Core/NodeSetPhysicsProcessing) | Nodes: Activation | Vocabulary |
+| `set_pressed_no_signal` | [Set Button Pressed](ace:Core/SetButtonPressedState) | UI | Vocabulary |
+| `set_process` | [Set Node Per-Frame Processing](ace:Core/NodeSetProcessing) | Nodes: Activation | Vocabulary |
+| `set_process_input` | [Set Node Input Handling](ace:Core/NodeSetInputProcessing) | Nodes: Activation | Vocabulary |
+| `set_process_unhandled_input` | [Set Node Unhandled Input Handling](ace:Core/NodeSetUnhandledInputProcessing) | Nodes: Activation | Vocabulary |
+| `set_process_unhandled_key_input` | unhandled key input | System | How often it runs |
+| `set_pseudolocalization_enabled` | [Test With Fake Translation](ace:Core/TestWithFakeTranslation) | Translation | Vocabulary |
+| `set_ribbon_texture` | [Set Ribbon Texture](ace:Core/DrawSetRibbonTexture) | Drawing | Vocabulary |
+| `set_shader_parameter` | [Set Effect Parameter](ace:Core/SetShaderParameter) | Effects | Vocabulary |
+| `set_trans` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
+| `set_value` | [Save Setting](ace:Core/SaveSetting) | Utility: Settings | Vocabulary |
+| `shadow_enabled` | [Set Shadows On/Off](ace:Core/SetLightShadows) | Lighting | Vocabulary |
+| `shape` | [Query Bodies In Circle (2D)](ace:Core/QueryBodiesInCircle2D) | Overlap 2D | Vocabulary |
+| `show` | [Show](ace:Core/ShowNode) | General Actions | Vocabulary |
+| `shuffle` | [Shuffle Array](ace:Core/ArrayShuffle) | Variables: Array | Vocabulary |
+| `sign` | [Sign](ace:Core/SignValue) | Helpers | Vocabulary |
+| `signi` | [Compare Result](ace:Core/CompareResult) | Compare: Numbers | Vocabulary |
+| `sin` | [Sine](ace:Core/SinValue) | Helpers | Vocabulary |
+| `size` | [Dictionary Size](ace:Core/DictSize) | Variables: Dictionary | Vocabulary |
+| `slice` | [Slice](ace:Core/ArraySlice) | Variables: Array | Vocabulary |
+| `slide` | [Slide Along Surface](ace:Core/SlideAlongSurface) | Movement | Vocabulary |
+| `smoothstep` | [Smoothstep](ace:Core/Smoothstep) | Math & Random | Vocabulary |
+| `snapped` | [Snap Point To Grid](ace:Core/SnapPointToGrid) | Math & Random | Vocabulary |
+| `snappedf` | [Snap To Step](ace:Core/Snapped) | Math & Random | Vocabulary |
+| `snappedi` | snapped to | System | Expressions |
+| `softness` | [Set Pin Softness](ace:Core/SetPinJointSoftness) | Joints | Vocabulary |
+| `sort` | [Sort Array](ace:Core/ArraySort) | Variables: Array | Vocabulary |
+| `space` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
+| `space_set_active` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
+| `speed_scale` | [Set Animation Speed](ace:Core/SetAnimationSpeed) | Animation | Vocabulary |
+| `split` | [Split Text](ace:Core/StringSplit) | Variables: String | Vocabulary |
+| `sqrt` | [Square Root](ace:Core/MathSqrt) | Math & Random | Vocabulary |
+| `stamp` | [Draw Stamp](ace:Core/DrawStamp) | Drawing | Vocabulary |
+| `start` | [Start Timer](ace:Core/StartTimer) | General Actions | Vocabulary |
+| `start_joy_vibration` | [Vibrate Gamepad For](ace:Core/GamepadVibrateFor) | Gamepad | Vocabulary |
+| `start_ribbon` | [Start Ribbon](ace:Core/DrawStartRibbon) | Drawing | Vocabulary |
+| `stiffness` | [Set Spring Stiffness](ace:Core/SetDampedSpringStiffness) | Joints | Vocabulary |
+| `stop` | [Stop](ace:Core/AudioStop) | Audio | Vocabulary |
+| `stop_joy_vibration` | [Stop Gamepad Vibration](ace:Core/VibrationStopJoy) | Vibration | Vocabulary |
+| `stop_playing_scene` | [Stop Playing](ace:Core/StopPlayingScene) | Editor Tools | Vocabulary |
+| `stop_ribbon` | [Stop Ribbon](ace:Core/DrawStopRibbon) | Drawing | Vocabulary |
+| `store_line` | [Save Trail To CSV](ace:Core/SaveTrailCsv) | Debug | Vocabulary |
+| `store_string` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
+| `str` | [Retries Exhausted](ace:Core/RetriesExhausted) | Loops | Vocabulary |
+| `stream` | [Set Sound](ace:Core/AudioSetStream) | Audio | Vocabulary |
+| `stringify` | [To JSON Text](ace:Core/JsonStringify) | JSON | Vocabulary |
+| `strip_edges` | [Trim](ace:Core/TextTrim) | Text | Vocabulary |
+| `sub` | [Regex Replace](ace:Core/RegexReplace) | Text: RegEx | Vocabulary |
+| `substr` | [Mid](ace:Core/TextMid) | Text | Vocabulary |
+| `tan` | [Tangent](ace:Core/TanValue) | Helpers | Vocabulary |
+| `target_position` | [Find Path To](ace:Core/SetNavTarget) | General Actions | Vocabulary |
+| `text` | [Get Text](ace:Core/GetLabelText) | General Expressions | Vocabulary |
+| `texture` | [Set Image](ace:Core/SetSpriteTexture) | Animation | Vocabulary |
+| `time_left` | [Get Time Left](ace:Core/GetTimerTimeLeft) | General Expressions | Vocabulary |
+| `time_scale` | [Time Scale](ace:Core/GetTimeScale) | Time | Vocabulary |
+| `timeout` | [Wait](ace:Core/Wait) | Time | Vocabulary |
+| `title` | [Set Window Title](ace:Core/SetWindowTitle) | Utility: Window | Vocabulary |
+| `to_float` | [Text To Float](ace:Core/StringToFloat) | Variables: String | Vocabulary |
+| `to_int` | [Text To Int](ace:Core/StringToInt) | Variables: String | Vocabulary |
+| `to_lower` | [Text Equals (ignore case)](ace:Core/TextEqualsIgnoreCase) | Compare: Text | Vocabulary |
+| `to_upper` | [Uppercase](ace:Core/TextUpper) | Text | Vocabulary |
+| `to_utf8_buffer` | [First To Finish](ace:Core/FirstToFinish) | Run Context | Vocabulary |
+| `top_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
+| `tr` | [Translate](ace:Core/Translate) | Translation | Vocabulary |
+| `tr_n` | [Translate Plural](ace:Core/TranslatePlural) | Translation | Vocabulary |
+| `transform` | [Query Bodies In Circle (2D)](ace:Core/QueryBodiesInCircle2D) | Overlap 2D | Vocabulary |
+| `translate` | [Move By (3D)](ace:Core/TranslateNode3D) | General Actions | Vocabulary |
+| `transparent_bg` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
+| `travel` | [Travel To State](ace:Core/TravelToState) | Animation | Vocabulary |
+| `tres` | [Resource In Folder](ace:Core/ResourceInFolder) | Files | Vocabulary |
+| `trim_prefix` | [Value From Share Code](ace:Core/ValueFromShareCode) | Utility: Window | Vocabulary |
+| `trim_suffix` | [Count Of Resources In](ace:Core/CountResourcesInFolder) | Files | Vocabulary |
+| `tween_callback` | [Tween Callback](ace:Core/TweenCallback) | Tween | Vocabulary |
+| `tween_method` | [Tween Effect Parameter](ace:Core/TweenEffectParameter) | Effects | Vocabulary |
+| `tween_property` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
+| `type_string` | [Value Type Name](ace:Core/ValueTypeName) | Compare: Types | Vocabulary |
+| `typeof` | [Number Or](ace:Core/NumberOr) | Variables | Vocabulary |
+| `unbind` | [Expect Signal](ace:Core/ExpectSignal) | Testing | Vocabulary |
+| `unicode_at` | [Font Can Show](ace:Core/FontCanShow) | UI | Vocabulary |
+| `unproject_position` | [Project To Screen (3D)](ace:Core/ProjectToScreen3D) | Math & Random | Vocabulary |
+| `update_overlays` | [Redraw Viewport Overlays](ace:Core/UpdateViewportOverlays) | Editor Tools | Vocabulary |
+| `value` | [Value](ace:Core/GetRangeValue) | UI | Vocabulary |
+| `values` | [Dictionary Values](ace:Core/DictValues) | Variables: Dictionary | Vocabulary |
+| `var_to_str` | [To Text](ace:Core/Stringify) | Debug | Vocabulary |
+| `variant_to_base64` | [Share Code For](ace:Core/ShareCodeFor) | Utility: Window | Vocabulary |
+| `velocity` | [Get Velocity](ace:Core/GetVelocity2D) | General Expressions | Vocabulary |
+| `vibrate_handheld` | [Vibrate Phone](ace:Core/VibrationHandheld) | Vibration | Vocabulary |
+| `viewport_set_debug_draw` | [Set Debug Draw Mode](ace:Core/RenderingSetDebugDraw) | Rendering | Vocabulary |
+| `viewport_set_msaa_2d` | [Set MSAA (2D)](ace:Core/RenderingSetMsaa2D) | Rendering | Vocabulary |
+| `viewport_set_msaa_3d` | [Set MSAA (3D)](ace:Core/RenderingSetMsaa3D) | Rendering | Vocabulary |
+| `viewport_set_scaling_3d_scale` | [Set 3D Resolution Scale](ace:Core/RenderingSetScaling3DScale) | Rendering | Vocabulary |
+| `viewport_set_screen_space_aa` | [Set Screen-Space AA](ace:Core/RenderingSetScreenSpaceAA) | Rendering | Vocabulary |
+| `viewport_set_use_debanding` | [Set Debanding](ace:Core/RenderingSetDebanding) | Rendering | Vocabulary |
+| `viewport_set_use_occlusion_culling` | [Set Occlusion Culling](ace:Core/RenderingSetOcclusionCulling) | Rendering | Vocabulary |
+| `visible` | [Is Visible](ace:Core/IsVisible) | General Conditions | Vocabulary |
+| `volume_db` | [Set Volume](ace:Core/AudioSetVolume) | Audio | Vocabulary |
+| `warp_mouse` | [Move Cursor To](ace:Core/MouseMoveCursorTo) | Mouse | Vocabulary |
+| `window_get_mode` | [Is Fullscreen](ace:Core/IsFullscreen) | Display | Vocabulary |
+| `window_get_size` | [Window Width](ace:Core/GetWindowWidth) | Display | Vocabulary |
+| `window_input` | [Wait For The Next Key Or Button](ace:Core/InputWaitForNextKey) | Keyboard | Vocabulary |
+| `window_set_mode` | [Set Fullscreen Mode](ace:Core/SetFullscreen) | Display | Vocabulary |
+| `window_set_size` | [Set Window Size](ace:Core/SetWindowSize) | Display | Vocabulary |
+| `window_set_vsync_mode` | [Set VSync Enabled](ace:Core/WindowSetVSync) | Game Window | Vocabulary |
+| `wrapf` | [Is Between Angles](ace:Core/IsBetweenAngles) | Math & Random | Vocabulary |
+| `wrapi` | [Wrap (int)](ace:Core/WrapIntValue) | Helpers | Vocabulary |
+| `x` | [Is Cell In Bounds](ace:Core/IsCellInBounds) | Math & Random | Vocabulary |
+| `y` | [Is Jumping](ace:Core/IsJumping) | Collisions | Vocabulary |
+| `z` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
+| `zoom` | [Set Zoom](ace:Core/SetCameraZoom) | Camera | Vocabulary |
+",
+"version": 1
+}

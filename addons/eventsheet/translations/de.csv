@@ -2798,3 +2798,17 @@ look up/down on,hoch/runter an
 clamped,begrenzt
 Crossfade {from} → {to} by {amount},{from} → {to} überblenden mit {amount}
 shared,geteilt
+Minimap,Minimap
+"A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.","Ein Bild des ganzen Blatts am rechten Rand: ein Balken je Ereignis, eingefärbt nach seiner Art, der gerade sichtbare Teil als verschiebbarer Kasten und deine Lesezeichen am Rand. Ab 200 Ereignissen standardmäßig an."
+Minimap on - the whole sheet down the right edge.,Minimap an - das ganze Blatt am rechten Rand.
+Minimap off.,Minimap aus.
+Sheet Map…,Blattkarte…
+"Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.","Welche Blätter, Szenen und Globals einander aufrufen, per Signal erreichen und einbinden - die Form der Projektlogik auf einer Seite."
+History…,Verlauf…
+History,Verlauf
+"Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.","Jede Änderung an diesem Blatt, in den Worten des Blatts. Klicke eine an, um bis dorthin rückgängig zu machen oder zu wiederholen."
+"No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.","Noch keine Änderungen. Jede Änderung an diesem Blatt erscheint hier, in den Worten des Blatts."
+Dictionary: GDScript to events,Wörterbuch: GDScript zu Ereignissen
+Coming from GDScript,Du kommst von GDScript
+Sheet map,Blattkarte
+Click a sheet to open it. Click a line to find every place it comes from.,"Klicke ein Blatt an, um es zu öffnen. Klicke eine Linie an, um jede Stelle zu finden, von der sie kommt."

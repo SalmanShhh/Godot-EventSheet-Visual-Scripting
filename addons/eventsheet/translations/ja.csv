@@ -2798,3 +2798,17 @@ look up/down on,上下は
 clamped,制限
 Crossfade {from} → {to} by {amount},{amount} で {from} → {to} をクロスフェード
 shared,共有
+Minimap,ミニマップ
+"A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.",シート全体を右端に描いた図です。イベントごとに 1 本のバーが種類ごとの色で並び、いま見ている範囲はドラッグできる枠で示され、ブックマークは余白に出ます。200 イベントを超えると既定でオンになります。
+Minimap on - the whole sheet down the right edge.,ミニマップ オン - シート全体が右端に出ます。
+Minimap off.,ミニマップ オフ。
+Sheet Map…,シートマップ…
+"Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.",どのシート・シーン・グローバルが、どれを呼び、どれにシグナルを送り、どれを取り込んでいるか。プロジェクトのロジックの形を 1 ページで見せます。
+History…,履歴…
+History,履歴
+"Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.",このシートに加えたすべての編集を、シート自身の言葉で並べます。クリックするとそこまで元に戻す/やり直しができます。
+"No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.",まだ編集はありません。このシートへの変更は、シート自身の言葉でここに並びます。
+Dictionary: GDScript to events,対訳表: GDScript とイベント
+Coming from GDScript,GDScript から来た人へ
+Sheet map,シートマップ
+Click a sheet to open it. Click a line to find every place it comes from.,シートをクリックすると開きます。線をクリックすると、その出どころをすべて探します。

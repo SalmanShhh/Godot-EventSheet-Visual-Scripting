@@ -24,6 +24,9 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
    [scene](#a-whole-scene-read-in-one-place), [what stays code](#what-stays-code-still-reads-as-what-it-is)
    and [beginner spellings](#beginner-spellings-and-the-reading-layer), plus
    [the Project bar](#the-project-bar---your-project-by-kind-not-by-folder)
+
+   and [beginner spellings](#beginner-spellings-and-the-reading-layer)
+7b. [Living in a Big Project: the Minimap, the Sheet Map and the History List](#7b-living-in-a-big-project-the-minimap-the-sheet-map-and-the-history-list)
 8. [When to Wrap Existing Code in Your Own ACEs](#8-when-to-wrap-existing-code-in-your-own-aces)
 9. [Use Cases](#9-use-cases)
 10. [Tips and Common Mistakes](#10-tips-and-common-mistakes)
@@ -1197,6 +1200,40 @@ Three smaller surfaces come with it and are worth knowing on day one:
   expand to Ctrl+E, preview to F4) and leaves everything rebindable underneath.
 
 ![The Add toolbar above the canvas: + Event, + Sub-event, + Condition, + Action, + Group, + Comment, + Variable, + Function, then a separator and the three Preview buttons](images/beginner-toolbar.png)
+
+## 7b. Living in a Big Project: the Minimap, the Sheet Map and the History List
+
+An adopted project is not one file. Three views in the **View** menu are for the size of it.
+
+**View ▸ Minimap** puts a picture of the whole sheet down the right edge of the canvas: one thin bar
+per row, tinted by what that row is - a trigger, an every-tick event, a function, a group, a
+comment, a Script block, a disabled row. The part you are looking at is a translucent box you can
+drag; your bookmarks and any row the sheet flagged show as marks in the margin; groups paint faint
+bands you can hover to read the name of. Click anywhere in the column to jump there. A sheet past
+200 events shows it the first time you open it, and your own choice from the menu holds after that.
+
+<img src="images/minimap-column.png" alt="A long sheet with the minimap column down its right edge: bars tinted per row kind, the visible window drawn as a translucent box, and a bookmark mark in the margin." width="720">
+
+**View ▸ Sheet Map** answers "what talks to what". Nodes are the project's sheets, scenes and
+globals; lines are the four ways one reaches another - a call into a global, a signal one raises and
+another listens for, an include (`extends` or `preload`), and a layout change. Click a node to open
+that sheet; click a line to run the Find that explains it. Drag the boxes into an arrangement that
+suits your project - it is remembered - and note that the graph itself is derived every time it
+opens, so nothing about it is stored in your project.
+
+<img src="images/sheet-map.png" alt="The Sheet map window: globals, sheets and scenes as boxes in three columns, joined by call, signal, include and layout lines." width="720">
+
+**View ▸ History** lists every edit you have made to the open sheet, in the name the edit gave
+itself - "Add Group", "Extract to Function", "Move Variable Up" - with the event it landed on beside
+it, and "(undone)" on the steps waiting to be redone. Click one to undo or redo back to it. The
+marker follows the sheet itself, so Ctrl+Z from anywhere and a click in this list move the same
+place.
+
+If you already know Godot and it is the WORDS that are new rather than the size, the two pages for
+that are **Manual ▸ Coming from GDScript** (the two dozen words that account for most of the
+confusion) and **Manual ▸ Dictionary: GDScript to events** (the generated full list - every call the
+reading recognises, with the row it maps to). The picker answers the same way: type `queue_free`
+into Add action and Queue Free comes back with `queue_free()` written beside its name.
 
 ---
 

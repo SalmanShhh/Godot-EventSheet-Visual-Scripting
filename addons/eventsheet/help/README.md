@@ -52,6 +52,7 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 ## Working with your project
 
 - [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md) - how sheets call, and are called by, your GDScript; what a hand-written `.gd` actually looks like when you open it as a sheet (functions, condition/action rows, notes, Declare rows for data tables); your own classes appearing in the picker with zero setup, renaming or hiding those actions and conditions without touching your source, and naming a raw call you already have.
+- [Coming from GDScript](GUIDE-COMING-FROM-GDSCRIPT.md) - you already know Godot: the two dozen words this editor reads your code in (`queue_free` is Destroy, `_process` is Every tick, `await` is Wait for, `signal` is trigger), why a row is one statement, and how to see the GDScript behind any row. The full generated list is Manual ▸ Dictionary: GDScript to events.
 - [Sharing Events Between Scripts](GUIDE-SHARING-EVENTS-BETWEEN-SCRIPTS.md) - shared event sheets: write common events once and include them in many scripts, as a base class or as a helper.
 - [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md) - diffing, merging, committing sheets, and resolving a merge conflict as events.
 - [Theme and Editability](GUIDE-THEMING.md) - restyle the editor, or lock a sheet down for a team.

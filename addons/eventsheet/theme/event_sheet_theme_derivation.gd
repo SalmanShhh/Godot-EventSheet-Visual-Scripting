@@ -103,6 +103,23 @@ static func fill_derived_tokens(style: EventSheetEditorStyle) -> EventSheetEdito
 	chrome.unsaved_dot_color = _warning_for(background)
 	chrome.title_path_color = reading.secondary_text_color
 
+	# ── The minimap: the sheet's own tints, one per kind of event, over a sunken column ──
+	chrome.minimap_background_color = Color(ink.r, ink.g, ink.b, 0.16 if pale else 0.10)
+	chrome.minimap_window_color = Color(ink.r, ink.g, ink.b, 0.10)
+	chrome.minimap_window_border_color = Color(accent.r, accent.g, accent.b, 0.75)
+	chrome.minimap_trigger_color = _warning_for(background)
+	chrome.minimap_tick_color = event_style.column_header_conditions_color
+	chrome.minimap_function_color = event_style.column_header_actions_color
+	chrome.minimap_group_color = accent
+	chrome.minimap_comment_color = event_style.comment_row_background_color.lerp(ink, 0.35)
+	chrome.minimap_script_color = background.lerp(ink, 0.55)
+	chrome.minimap_event_color = Color(ink.r, ink.g, ink.b, 0.42)
+	chrome.minimap_disabled_color = Color(ink.r, ink.g, ink.b, 0.16)
+	chrome.minimap_bookmark_color = reading.bookmark_color
+	chrome.minimap_finding_color = flag_red
+	chrome.minimap_band_color = Color(ink.r, ink.g, ink.b, 0.05)
+	chrome.minimap_band_text_color = Color(ink.r, ink.g, ink.b, 0.55)
+
 	# ── The Manual: headings and quiet words follow the theme; the rest keeps no opinion, so a
 	# reader who never opens the Theme Editor still gets help that matches their editor ──
 	manual.heading_color = reading.primary_text_color

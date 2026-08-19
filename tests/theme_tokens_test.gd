@@ -101,6 +101,12 @@ static func run() -> bool:
 		"project_bar_heading_color", "project_bar_note_color",
 		"status_text_color", "status_error_color", "row_address_color",
 		"unsaved_dot_color", "title_path_color",
+		"minimap_background_color", "minimap_window_color", "minimap_window_border_color",
+		"minimap_trigger_color", "minimap_tick_color", "minimap_function_color",
+		"minimap_group_color", "minimap_comment_color", "minimap_script_color",
+		"minimap_event_color", "minimap_disabled_color",
+		"minimap_bookmark_color", "minimap_finding_color",
+		"minimap_band_color", "minimap_band_text_color",
 	]) and ok
 	ok = _check("Manual token names", _token_names(style.get_manual_style()), [
 		"page_background_color", "heading_color", "page_muted_text_color", "search_hit_color",

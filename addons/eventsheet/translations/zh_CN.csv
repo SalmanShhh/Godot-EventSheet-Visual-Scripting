@@ -2798,3 +2798,17 @@ look up/down on,上下看
 clamped,限制
 Crossfade {from} → {to} by {amount},按 {amount} 将 {from} → {to} 交叉淡入淡出
 shared,共享
+Minimap,缩略图
+"A picture of the whole sheet down the right edge: one bar per event tinted by what it is, the part you are looking at as a box you can drag, and your bookmarks in the margin. On by default once a sheet passes 200 events.",在右边缘呈现整张表的缩略图：每个事件一条按类型着色的条，当前查看的范围是可拖动的方框，书签显示在边栏。事件超过 200 个时默认开启。
+Minimap on - the whole sheet down the right edge.,缩略图已开启 - 整张表显示在右边缘。
+Minimap off.,缩略图已关闭。
+Sheet Map…,表关系图…
+"Which sheets, scenes and globals call, signal and include which - the shape of the project's logic on one page.",哪些表、场景和全局互相调用、发信号、彼此包含 - 一页看清项目逻辑的形状。
+History…,历史…
+History,历史
+"Every edit you have made to this sheet, in the sheet's own words. Click one to undo or redo back to it.",你对这张表做过的每一次修改，用表自己的话写出来。点击其中一项即可撤销或重做到那一步。
+"No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.",还没有修改。你对这张表做的每一次改动都会用表自己的话列在这里。
+Dictionary: GDScript to events,对照词典：GDScript 与事件
+Coming from GDScript,从 GDScript 过来
+Sheet map,表关系图
+Click a sheet to open it. Click a line to find every place it comes from.,点击一张表即可打开。点击一条连线，找出它的每一个来源。
