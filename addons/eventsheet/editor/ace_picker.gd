@@ -525,7 +525,18 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	for key in extra_context.keys():
 		_context[key] = extra_context[key]
 	_object_filter_provider = ""
-	if bool(_context.get("object_first", false)) and not signals_only and mode in ["new_event", "new_condition_event", "new_sub_condition_event"]:
+	# Q1/Q12 - "Add condition on Player" opens the picker ALREADY on Player: the object step of the
+	# two-step pick is answered, so the dialog opens at the verbs for that object rather than at the
+	# object cards the caller has just chosen from.
+	var scoped_object: String = str(_context.get("object_scope", "")).strip_edges()
+	if not scoped_object.is_empty():
+		_object_filter_provider = scoped_object
+		if _objects_back != null:
+			_objects_back.text = "◂ %s · %s" % [
+				EventSheetL10n.translate("All objects"), str(_context.get("object_label", scoped_object))
+			]
+		_show_classic(true)
+	elif bool(_context.get("object_first", false)) and not signals_only and mode in ["new_event", "new_condition_event", "new_sub_condition_event"]:
 		_show_objects_page()
 	else:
 		_show_classic(false)

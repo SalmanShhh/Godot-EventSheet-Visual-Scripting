@@ -4077,6 +4077,37 @@ func highlight_object_rows(object_label: String) -> void:
 	_apply_lens(wanted)
 
 
+## Q1/Q12 - Add condition / Add action for ONE object: the picker opens with the object step already
+## answered, so the row lands on that object instead of on whatever the reader picks next. The scope
+## is the object's CLASS, because that is what the picker's verbs are grouped by.
+func add_row_for_object(object_label: String, as_action: bool) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var context: Dictionary = {
+		"object_scope": str(entry.get("class", "")).strip_edges(),
+		"object_label": object_label
+	}
+	var selected_resource: Resource = _active_view().get_selected_context().get("source_resource", null)
+	if as_action:
+		_ace_picker.open("append_action" if selected_resource is EventRow else "new_event",
+			false, selected_resource, context)
+		return
+	_ace_picker.open("append_condition" if selected_resource is EventRow else "new_condition_event",
+		false, selected_resource, context)
+
+
+## Q1 - open the file that says what an object IS, as a sheet. Goes through the same navigation the
+## Include bar's "open as a sheet" uses, so Alt+Left walks back the way a reader expects.
+func open_object_file_as_sheet(script_path: String) -> void:
+	var path: String = script_path.strip_edges()
+	if path.is_empty():
+		_set_status("This object has no script of its own to open.", true)
+		return
+	_navigate.record_current()
+	_navigate.open_or_focus(path)
+
+
 ## N10 - reveal an object in the Godot scene dock. Only meaningful while the scene holding it is the
 ## one open in the editor, which is why the popup's button is disabled otherwise; this still guards,
 ## because a scene can be closed between the popup opening and the button being pressed.

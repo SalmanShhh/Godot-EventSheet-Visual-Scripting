@@ -1239,9 +1239,16 @@ static func object_note(entry: Dictionary) -> String:
 	return " · ".join(parts)
 
 
-## The icon one census entry draws: its class picture for a node, the globe for an autoload, and
-## nothing for a group (which is a name, not a thing with a picture).
-static func object_icon(entry: Dictionary, class_map: Dictionary) -> Texture2D:
+## The icon one census entry draws: its own SPRITE when the object's scene has one (Q10), else its
+## class picture for a node, the globe for an autoload, and nothing for a group (which is a name, not
+## a thing with a picture).
+##
+## `sheet_source_path` is the open file; without it (a caller that has no sheet to hand) the answer
+## is the class icon exactly as before, which is also what a headless run gets.
+static func object_icon(entry: Dictionary, class_map: Dictionary, sheet_source_path: String = "") -> Texture2D:
+	var picture: Texture2D = EventSheetObjectThumbnails.thumbnail_for(entry, sheet_source_path)
+	if picture != null:
+		return picture
 	if str(entry.get("kind", "")) == "autoload":
 		return autoload_icon()
 	var class_name_str: String = str(entry.get("class", "")).strip_edges()
