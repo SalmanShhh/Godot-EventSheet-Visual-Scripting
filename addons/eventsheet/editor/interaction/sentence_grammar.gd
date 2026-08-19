@@ -6409,6 +6409,29 @@ const ANIMATION_PLAYBACK_PATH := "parameters/playback"
 const JUICE_OWN_POSITION: PackedStringArray = ["position", "global_position"]
 
 
+## The one line each of these patterns says about itself, which is what the event's pattern chip shows
+## on hover. Keyed by the registry's own frozen pattern ids.
+const PATTERN_WORDS: Dictionary = {
+	"sprite_animation": "Sprite and animation: mirrored, frame, speed, opacity and the animation tree",
+	"ui": "UI: focus, progress bars, dialogs and the mixer",
+	"sound": "Sound: the file, its pitch, its bus, its volume and where it plays from",
+	"juice": "Juice: shake, hitstop, bob, flash and the squash that eases back"
+}
+
+## The sheet vocabulary each pattern is made of, so the Manual and the coverage chip can say which
+## rows write the shape the reading recognised.
+const PATTERN_ACES: Dictionary = {
+	"sprite_animation": ["Core/SetFlipH", "Core/SetFlipV", "Core/SetSpriteFrame",
+		"Core/SetAnimationSpeed", "Core/SetSpriteTexture", "Core/SetAnimationBlend",
+		"Core/TravelToAnimationState"],
+	"ui": ["Core/GrabFocus", "Core/SetProgress", "Core/ShowDialog", "Core/SetMasterVolume"],
+	"sound": ["Core/AudioSetStream", "Core/AudioSetPitch", "Core/AudioSetBus",
+		"Core/AudioSetVolumeLevel", "Core/AudioSeek", "Core/AudioIsPlaying"],
+	"juice": ["Core/CameraShakeOnce", "Core/Hitstop", "Core/BobY", "Core/FlashColour",
+		"Core/EaseSizeBack"]
+}
+
+
 ## The reading with the pattern it recognised attached, for the row builder to claim. Display only:
 ## nothing here reaches emission, and an empty reading is returned untouched.
 static func _with_pattern(reading: Dictionary, pattern: String, evidence: String,
@@ -6418,6 +6441,8 @@ static func _with_pattern(reading: Dictionary, pattern: String, evidence: String
 	reading["pattern"] = pattern
 	reading["evidence"] = PackedStringArray([evidence.strip_edges()])
 	reading["adoptable"] = adoptable
+	reading["words"] = translate(str(PATTERN_WORDS.get(pattern, "")))
+	reading["pattern_aces"] = PackedStringArray(PATTERN_ACES.get(pattern, []) as Array)
 	return reading
 
 
@@ -6450,15 +6475,17 @@ static func media_assignment(object_name: String, object_class: String, member: 
 				var image: String = _asset_file_name(value)
 				if image.is_empty():
 					return {}
+				# The file name is CONTENT, not a name the spelling lens may respell: `jump.wav` read
+				# through the name lens once came out as "jump's wav".
 				return _with_pattern(_sentence(object_name, "Set image to {file}", {
-					"file": [image, "value"]}), "sprite_animation", line)
+					"file": [image, "plain"]}), "sprite_animation", line)
 		"stream":
 			if audio:
 				var sound: String = _asset_file_name(value)
 				if sound.is_empty():
 					return {}
 				return _with_pattern(_sentence(object_name, "Set sound to {file}", {
-					"file": [sound, "value"]}), "sound", line)
+					"file": [sound, "plain"]}), "sound", line)
 		"pitch_scale":
 			if audio:
 				return _with_pattern(_sentence(object_name, "Set pitch to {value}", {

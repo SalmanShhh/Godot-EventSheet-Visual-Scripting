@@ -208,10 +208,31 @@ static func humanize_expression(expression: String, knob_names: Dictionary = {})
 	return output
 
 
+## S11 / S13. The file types an image, a sound or a scene is named by, so a file name survives the
+## spelling lens whole. Curated on purpose: only the extensions a game project actually ships, so a
+## real property chain can never be mistaken for a file.
+const ASSET_FILE_TYPES: PackedStringArray = [
+	"png", "jpg", "jpeg", "webp", "svg", "bmp", "exr", "hdr", "ktx",
+	"wav", "ogg", "mp3", "tscn", "scn", "tres", "res", "gd", "json", "csv", "ttf", "otf"
+]
+
+
+## True when a token is a file name (`jump.wav`) rather than a property chain (`player.health`).
+static func is_asset_file_name(token: String) -> bool:
+	var dot_at: int = token.rfind(".")
+	if dot_at <= 0 or dot_at == token.length() - 1:
+		return false
+	return ASSET_FILE_TYPES.has(token.substr(dot_at + 1).to_lower())
+
+
 ## One token of humanize_expression: a chain reads possessively, a rewritable name reads as
 ## words, and everything else (numbers, float literals, reserved words, CONSTANTS) is untouched.
 static func _humanized_token(token: String, knob_names: Dictionary) -> String:
 	if token.is_empty():
+		return token
+	# S11 / S13. A FILE is not a chain: `jump.wav` is one thing with a name, and reading it
+	# possessively ("jump's wav") turns the one word a reader recognises into two they do not.
+	if is_asset_file_name(token):
 		return token
 	if token.contains("."):
 		return possessive_chain(token)
@@ -299,6 +320,8 @@ static func humanize_sentence(text: String, knob_names: Dictionary = {}) -> Stri
 ## names - a property chain, a snake_case identifier, or a knob this sheet exports.
 static func _sentence_token(token: String, knob_names: Dictionary) -> String:
 	if token.is_empty():
+		return token
+	if is_asset_file_name(token):
 		return token
 	if token.contains("."):
 		return possessive_chain(token)
