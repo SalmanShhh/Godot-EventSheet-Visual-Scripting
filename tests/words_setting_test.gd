@@ -53,10 +53,19 @@ static func run() -> bool:
 	all_passed = _check("an unknown key hands back the key rather than an empty label",
 		EventSheetWords.word_for("not_a_word", true, {}), "not_a_word") and all_passed
 
-	# The page's own order and labels - what a reader sees down the left column.
+	# The page's own order and labels - what a reader sees down the left column. The eight GAME words
+	# lead, unchanged; W21 appended the twenty-four editor-building ones after them, which is the
+	# order the mockup fixed (the plugin, then its surfaces, then its shapes, then the code idioms).
+	var game_words: Array[String] = ["inheritance_set", "layout", "every_tick", "behavior",
+		"group", "collection", "destroy", "manual"]
+	var expected_keys: Array[String] = game_words.duplicate()
+	expected_keys.append_array(EventSheetWords.EDITOR_KEYS)
 	all_passed = _check("the page lists every word in the approved order",
-		EventSheetWords.keys(),
-		["inheritance_set", "layout", "every_tick", "behavior", "group", "collection", "destroy", "manual"]) and all_passed
+		EventSheetWords.keys(), expected_keys) and all_passed
+	all_passed = _check("the game words still lead it",
+		EventSheetWords.keys().slice(0, 8), game_words) and all_passed
+	all_passed = _check("and the editor words follow, starting with the plugin itself",
+		EventSheetWords.keys()[8], "editor_plugin") and all_passed
 	all_passed = _check("each row says what it names",
 		EventSheetWords.names_what("group"), "a Godot group") and all_passed
 	all_passed = _check("the state's store name is the one already written to disk",
