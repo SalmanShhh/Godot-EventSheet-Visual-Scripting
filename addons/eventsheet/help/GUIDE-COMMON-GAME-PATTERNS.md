@@ -357,6 +357,8 @@ Everything above is about writing a pattern from the picker. The other direction
 supported: open a hand-written `.gd` file as a sheet and the reading recognises the shapes it
 knows, then says so.
 
+![An opened cooldown script: the event that counts the number down wears a Cooldown marker, and the head bar says 1 pattern, 1 adoptable](images/pattern-chip.png)
+
 An event that IS a pattern wears a muted **⟡** chip naming it, at the end of its first condition
 line. Only the event that OWNS the shape gets one - the row that counts the number down, the
 function that hands an object out - never every row that mentions the same variable, because the
@@ -383,6 +385,8 @@ offers **Adopt behavior: <name>…**. It opens a preview first, never a change:
   these events, that the behavior counts the same seconds the code did, that the condition becomes
   true at the same moment.
 
+![The Adopt behavior preview: the events as they read now beside the events after adopting, with a keeps-working-because line](images/pattern-adopt-dialog.png)
+
 Press Adopt and the rewrite lands in one undo step. Every line of the file the plan did not list
 is untouched, so the rest of your script re-emits exactly as it was.
 
@@ -393,6 +397,8 @@ also reads would lose its readout. A refusal is the feature working: the alterna
 rewriting your game into one that does less.
 
 ### The Manual page, and the Doctor
+
+![The Common Game Patterns page: the hand-written GDScript on the left, the same file read as events on the right](images/pattern-manual-page.png)
 
 **Manual ▸ Common Game Patterns** shows every pattern as two columns - the hand-written GDScript
 on the left, the same text read as events on the right. The right column is drawn by the same

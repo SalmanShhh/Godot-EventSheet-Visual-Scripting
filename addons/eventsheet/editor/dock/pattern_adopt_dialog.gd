@@ -21,8 +21,8 @@ const CHANGED_MARK := "●"
 var _dock: Node = null
 var _dialog: AcceptDialog = null
 var _summary_label: Label = null
-var _before_list: ItemList = null
-var _after_list: ItemList = null
+var _before_list: Label = null
+var _after_list: Label = null
 var _checks_label: Label = null
 var _claim: Dictionary = {}
 
@@ -59,6 +59,17 @@ static func preview_lines(plan: Dictionary) -> PackedStringArray:
 	return lines
 
 
+## One half of the comparison: a wrapping, selectable label with room for a few rows, so a long
+## sentence reads as a sentence instead of being cut off at the column edge.
+func _column_label() -> Label:
+	var label: Label = Label.new()
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(280.0), EventSheetPalette.scaled_f(140.0))
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	return label
+
+
 func _build_dialog() -> void:
 	if _dialog != null:
 		return
@@ -69,16 +80,17 @@ func _build_dialog() -> void:
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
+	# The two halves sit side by side because they are meant to be COMPARED, and each is a wrapping
+	# label rather than a list: a row's sentence is a sentence, and a list would clip it to a word.
 	var columns: HBoxContainer = HBoxContainer.new()
 	columns.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
-	_before_list = ItemList.new()
-	_before_list.custom_minimum_size = Vector2(0.0, 220.0)
-	_before_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_after_list = ItemList.new()
-	_after_list.custom_minimum_size = Vector2(0.0, 220.0)
-	_after_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	columns.add_child(EventSheetPopupUI.titled_card("As it reads now", _before_list))
-	columns.add_child(EventSheetPopupUI.titled_card("After adopting", _after_list))
+	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_before_list = _column_label()
+	_after_list = _column_label()
+	for card: Control in [EventSheetPopupUI.titled_card("As it reads now", _before_list),
+			EventSheetPopupUI.titled_card("After adopting", _after_list)]:
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		columns.add_child(card)
 	content.add_child(columns)
 	_checks_label = EventSheetPopupUI.hint_label("")
 	content.add_child(EventSheetPopupUI.titled_card("Keeps working because", _checks_label))
@@ -90,8 +102,8 @@ func _build_dialog() -> void:
 ## Draw one plan. A refusal fills the summary and empties everything else, and the button is
 ## disabled - there is nothing to press it for.
 func _fill(current: Dictionary) -> void:
-	_before_list.clear()
-	_after_list.clear()
+	_before_list.text = ""
+	_after_list.text = ""
 	var ok: bool = bool(current.get("ok", false))
 	_dialog.get_ok_button().disabled = not ok
 	if not ok:
@@ -103,10 +115,16 @@ func _fill(current: Dictionary) -> void:
 		% current.get("before", PackedStringArray()).size()
 	var before: PackedStringArray = current.get("before", PackedStringArray())
 	var after: PackedStringArray = current.get("after", PackedStringArray())
+	var before_lines: PackedStringArray = PackedStringArray()
+	var after_lines: PackedStringArray = PackedStringArray()
 	for index: int in before.size():
 		var mark: String = CHANGED_MARK if changed.has(index) else " "
-		_before_list.add_item("%s %s" % [mark, before[index]])
-		_after_list.add_item("%s %s" % [mark, after[index] if index < after.size() else ""])
+		before_lines.append("%s %s" % [mark, before[index]])
+		after_lines.append("%s %s" % [mark, after[index] if index < after.size() else ""])
+	_before_list.text = "
+".join(before_lines)
+	_after_list.text = "
+".join(after_lines)
 	var checks: PackedStringArray = current.get("checks", PackedStringArray())
 	_checks_label.text = "\n".join(checks)
 
