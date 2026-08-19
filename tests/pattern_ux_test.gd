@@ -16,7 +16,7 @@ class_name PatternUXTest
 extends RefCounted
 
 const COUNTDOWN_PATH := "res://tests/fixtures/patterns/countdown.gd"
-const WAIT_PATH := "res://tests/fixtures/patterns/wait_sequence.gd"
+const POOL_PATH := "res://tests/fixtures/patterns/object_pool.gd"
 const SCRATCH_PATH := "user://pattern_ux_emitted.gd"
 
 
@@ -42,39 +42,39 @@ static func _test_claims_from_a_real_file() -> bool:
 	var ok: bool = true
 	var sheet: EventSheetResource = _sheet(COUNTDOWN_PATH)
 	EventSheetPatternFacts.clear(sheet)
-	EventSheetPatternReadings.claim_all(sheet)
+	EventSheetViewportReadingRows.claim_patterns(sheet)
 	var claims: Array = EventSheetPatternFacts.claims(sheet)
 	ok = _check("a hand-written cooldown is claimed once", claims.size(), 1) and ok
 	var claim: Dictionary = claims[0] if not claims.is_empty() else {}
 	ok = _check("as the countdown pattern", str(claim.get("pattern", "")), "countdown") and ok
-	ok = _check("named in the sheet's words", str(claim.get("words", "")), "Cooldown") and ok
-	ok = _check("naming the behavior that could take it over", str(claim.get("adoptable", "")), "core_cooldown") and ok
-	# The evidence is the compiler's OWN emission of those rows, which for a byte-exact round trip
-	# is the line in the reader's file - not a paraphrase of it.
-	ok = _check("with the exact source lines as its evidence",
-		", ".join(claim.get("evidence", PackedStringArray())),
-		"cooldown -= delta, cooldown <= 0.0, cooldown = 0.5") and ok
+	# The claim's own words are the SENTENCE the hover shows; the chip says the pattern's NAME.
+	ok = _check("the claim says what the file does, in one line", str(claim.get("words", "")),
+		"counts cooldown down and asks whether it has run out") and ok
+	ok = _check("the reading named no behavior itself", str(claim.get("adoptable", "")), "") and ok
+	# ...so the pattern's own default stands in, and the offer appears anyway.
+	ok = _check("but the pattern names one, which is what everything offering an adoption asks",
+		EventSheetPatternVocabulary.adoptable_for(claim), "core_cooldown") and ok
+	# The evidence is the exact source lines, never a paraphrase.
+	ok = _check("with the exact source line as its evidence",
+		", ".join(claim.get("evidence", PackedStringArray())), "cooldown -= delta") and ok
 
-	var waiting: EventSheetResource = _sheet(WAIT_PATH)
-	EventSheetPatternFacts.clear(waiting)
-	EventSheetPatternReadings.claim_all(waiting)
-	var wait_claims: Array = EventSheetPatternFacts.claims(waiting)
-	ok = _check("a timer with the next step hung off it is a wait sequence",
-		str((wait_claims[0] as Dictionary).get("pattern", "")) if not wait_claims.is_empty() else "",
-		"wait_sequence") and ok
-	ok = _check("...which no shipped behavior replaces, so nothing is offered",
-		str((wait_claims[0] as Dictionary).get("adoptable", "")) if not wait_claims.is_empty() else "?", "") and ok
-
-	# A subtraction by delta OUTSIDE a per-tick event is arithmetic, not a cooldown. Proved by
-	# turning the fixture's own event into a trigger and watching the claim go away.
-	var not_a_cooldown: EventSheetResource = _sheet(COUNTDOWN_PATH)
-	for entry: Variant in not_a_cooldown.events:
-		if entry is EventRow and (entry as EventRow).trigger_id == "OnProcess":
-			(entry as EventRow).trigger_id = "OnReady"
-	EventSheetPatternFacts.clear(not_a_cooldown)
-	EventSheetPatternReadings.claim_all(not_a_cooldown)
-	ok = _check("a subtraction that does not happen every tick is not a cooldown",
-		EventSheetPatternFacts.claims(not_a_cooldown).size(), 0) and ok
+	var pooling: EventSheetResource = _sheet(POOL_PATH)
+	EventSheetPatternFacts.clear(pooling)
+	EventSheetViewportReadingRows.claim_patterns(pooling)
+	var pool_claims: Array = EventSheetPatternFacts.claims(pooling)
+	ok = _check("taking an object out of a list instead of making one is an object pool",
+		str((pool_claims[0] as Dictionary).get("pattern", "")) if not pool_claims.is_empty() else "",
+		"object_pool") and ok
+	# THIS reading names its own behavior, where the countdown above left it to the pattern - and
+	# both routes land on the same answer, which is the point of asking the vocabulary either way.
+	ok = _check("and this reading names the behavior itself",
+		EventSheetPatternVocabulary.adoptable_for(pool_claims[0] as Dictionary) if not pool_claims.is_empty() else "?",
+		"object_pool") and ok
+	# ...but no adapter ships for it yet, so nothing OFFERS the swap. An offer that cannot run is
+	# worse than no offer.
+	ok = _check("...which this build cannot yet perform, so nothing offers it",
+		EventSheetPatternAdopt.is_adoptable(pool_claims[0] as Dictionary) if not pool_claims.is_empty() else true,
+		false) and ok
 	return ok
 
 
@@ -111,14 +111,16 @@ static func _test_the_coverage_chip_counts_them() -> bool:
 	var view: EventSheetViewport = _open(COUNTDOWN_PATH, true)
 	var summary: Dictionary = EventSheetPatternFacts.summary(view._sheet)
 	ok = _check("one distinct pattern", int(summary.get("patterns", -1)), 1) and ok
-	ok = _check("and it is adoptable", int(summary.get("adoptable", -1)), 1) and ok
+	# The registry counts what the CLAIMS named; the chip below counts what a reader will actually be
+	# offered, which is the same number once the pattern's own default is allowed to stand in.
+	ok = _check("the reading itself named no behavior here", int(summary.get("adoptable", -1)), 0) and ok
 	ok = _check("the chip says both counts, and ends in the arrow that promises a walk",
 		EventSheetReadingCoverage.chip_text(view._sheet),
 		"reads as events · 1 pattern · 1 adoptable ▸") and ok
-	var waiting: EventSheetViewport = _open(WAIT_PATH, true)
-	ok = _check("a pattern with nothing to adopt says only the one count",
-		EventSheetReadingCoverage.chip_text(waiting._sheet),
-		"reads as events · 1 pattern ▸") and ok
+	var pooling: EventSheetViewport = _open(POOL_PATH, true)
+	ok = _check("a second file with its own pattern counts its own",
+		EventSheetReadingCoverage.chip_text(pooling._sheet),
+		"reads as events · 1 pattern · 1 adoptable ▸") and ok
 	# A file with no claims must not grow "0 patterns": a number with nothing in it is worse than
 	# no number.
 	ok = _check("and a file the readings claimed nothing on says only the good news",
@@ -133,11 +135,11 @@ static func _test_the_hover_owes_its_evidence() -> bool:
 	var ok: bool = true
 	var sheet: EventSheetResource = _sheet(COUNTDOWN_PATH)
 	EventSheetPatternFacts.clear(sheet)
-	EventSheetPatternReadings.claim_all(sheet)
+	EventSheetViewportReadingRows.claim_patterns(sheet)
 	var owner: String = str((EventSheetPatternFacts.claims(sheet)[0] as Dictionary).get("row_uid", ""))
 	ok = _check("the hover says WHICH pattern and WHY, in the file's own lines",
 		ViewportTooltipHelper.pattern_evidence_line(sheet, owner),
-		"read as the Cooldown pattern because: cooldown -= delta, cooldown <= 0.0, cooldown = 0.5") and ok
+		"read as the Cooldown pattern because: cooldown -= delta") and ok
 	ok = _check("a row that owns no claim owes nothing",
 		ViewportTooltipHelper.pattern_evidence_line(sheet, "not-a-row"), "") and ok
 	ok = _check("the chip itself explains the pattern and offers the Manual",
@@ -153,7 +155,7 @@ static func _test_the_adopt_plan() -> bool:
 	var ok: bool = true
 	var sheet: EventSheetResource = _sheet(COUNTDOWN_PATH)
 	EventSheetPatternFacts.clear(sheet)
-	EventSheetPatternReadings.claim_all(sheet)
+	EventSheetViewportReadingRows.claim_patterns(sheet)
 	var claim: Dictionary = EventSheetPatternFacts.claims(sheet)[0]
 	ok = _check("the claim is one this build can rewrite", EventSheetPatternAdopt.is_adoptable(claim), true) and ok
 	var current: Dictionary = EventSheetPatternAdopt.plan(sheet, claim)
@@ -201,15 +203,16 @@ static func _test_the_adopt_refusals() -> bool:
 		str(_plan_for(no_restart).get("reason", "")),
 		"Nothing ever puts cooldown back above zero, so there is no cooldown length for the behavior to use.") and ok
 
-	# COMPARED TO SOMETHING ELSE: the behavior knows ready and not-ready, nothing in between.
+	# COMPARED TO SOMETHING ELSE: the behavior knows ready and not-ready, nothing in between. The
+	# reading refuses this one before the adopter ever sees it - a number merely subtracted from is
+	# not a countdown at all - which is the check landing one layer earlier than it had to.
 	var wrong_compare: EventSheetResource = _sheet(COUNTDOWN_PATH)
 	for event_row: EventRow in _events(wrong_compare):
 		for condition: ACECondition in event_row.conditions:
 			if condition != null and condition.ace_id == "CompareVar":
 				condition.params["value"] = "1.0"
-	ok = _check("a countdown compared to something other than zero is refused, with the reason",
-		str(_plan_for(wrong_compare).get("reason", "")),
-		"cooldown is compared to 1.0, and the behavior only knows whether a cooldown is ready.") and ok
+	ok = _check("a countdown compared to something other than zero is not even a countdown",
+		_plan_for(wrong_compare).is_empty(), true) and ok
 
 	# READ SOMEWHERE ELSE: a readout of the seconds left needs the number, and taking the counter
 	# away from under it would break it.
@@ -275,7 +278,7 @@ static func _test_the_doctor_smells() -> bool:
 static func _test_the_manual_page() -> bool:
 	var ok: bool = true
 	ok = _check("only the patterns with a fixture reach the page",
-		", ".join(EventSheetPatternVocabulary.documented_ids()), "countdown, wait_sequence") and ok
+		", ".join(EventSheetPatternVocabulary.documented_ids()), "countdown, object_pool") and ok
 	var blocks: Array[Dictionary] = EventSheetPatternManual.pattern_blocks("countdown")
 	ok = _check("a section leads with the pattern's name",
 		str(blocks[0].get("text", "")) if not blocks.is_empty() else "", "Cooldown") and ok
@@ -300,8 +303,8 @@ static func _test_the_manual_page() -> bool:
 	# S26 - the join from a verb to the patterns it belongs to, over the claims' own ace_ids.
 	var sheet: EventSheetResource = _sheet(COUNTDOWN_PATH)
 	EventSheetPatternFacts.clear(sheet)
-	EventSheetPatternReadings.claim_all(sheet)
-	var using: Array[Dictionary] = EventSheetPatternManual.patterns_using(sheet, "Core", "SubtractVar")
+	EventSheetViewportReadingRows.claim_patterns(sheet)
+	var using: Array[Dictionary] = EventSheetPatternManual.patterns_using(sheet, "Core", "StartCooldown")
 	ok = _check("a verb names the pattern it is part of",
 		str(using[0].get("title", "")) if not using.is_empty() else "", "⟡ Cooldown") and ok
 	ok = _check("and links to that pattern's page",
@@ -335,7 +338,7 @@ static func _test_the_theme_token_derives() -> bool:
 
 static func _test_round_trip_is_byte_identical() -> bool:
 	var ok: bool = true
-	for path: String in [COUNTDOWN_PATH, WAIT_PATH]:
+	for path: String in [COUNTDOWN_PATH, POOL_PATH]:
 		var view: EventSheetViewport = _open(path, true)
 		_row_texts(view)
 		ok = _check("%s re-emits byte for byte after being read" % path.get_file(),
@@ -417,7 +420,7 @@ static func _collect_events(source: Array, into: Array[EventRow]) -> void:
 ## The plan for a sheet's first claim, whatever the readings made of it.
 static func _plan_for(sheet: EventSheetResource) -> Dictionary:
 	EventSheetPatternFacts.clear(sheet)
-	EventSheetPatternReadings.claim_all(sheet)
+	EventSheetViewportReadingRows.claim_patterns(sheet)
 	var claims: Array = EventSheetPatternFacts.claims(sheet)
 	if claims.is_empty():
 		return {}

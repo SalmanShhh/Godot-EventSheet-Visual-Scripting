@@ -271,6 +271,28 @@ renamed under a figure breaks a test instead of a guide. Figure verdicts are bak
 bundle at build time (a verdict costs a full import and compile), and the suite re-derives every
 one live and fails on disagreement.
 
+## The Common Game Patterns page draws itself from fixtures
+
+One Manual page is not written at all. **Common Game Patterns** (`reference:patterns`, one section
+per pattern at `reference:pattern/<pattern id>`) is generated from the files under
+`tests/fixtures/patterns/`, one per pattern id in `EventSheetPatternFacts.PATTERN_IDS`:
+
+- the LEFT column is that file printed verbatim,
+- the RIGHT column is the very same text handed to the renderer as an `eventsheet` figure.
+
+Because both columns are the same bytes, the page cannot show a shape the sheet does not read: a
+reading that broke would make the figure refuse to draw, and the reading test over the same
+fixture would already have failed. `Add - Pattern...` opens the same page, and `Adopt behavior`
+appears on the sections whose pattern names a shipped behavior.
+
+**To add a pattern to the page**, write `tests/fixtures/patterns/<pattern id>.gd` holding the
+smallest complete example of the shape - a whole openable script, passing the style gate like
+every other file under `tests/` - and give the id a row in `EventSheetPatternVocabulary.ENTRIES`
+(its name, its one-line why, the behavior that could replace it, and how common it is). A pattern
+with an entry but no fixture simply has no section, which is the honest answer for a shape nothing
+reads yet. Nothing else is edited: the page, the Add menu and the reference pages' "Patterns using
+this" all list the same fixtures.
+
 ## House rules the suite enforces
 
 - **No em-dashes or en-dashes anywhere** in repo text. Write ` - ` (space, hyphen, space).

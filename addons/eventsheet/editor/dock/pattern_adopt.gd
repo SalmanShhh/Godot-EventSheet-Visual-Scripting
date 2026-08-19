@@ -39,10 +39,17 @@ class_name EventSheetPatternAdopt
 extends RefCounted
 
 
-## Whether a claim can be offered an Adopt item at all - it names a behavior AND this build has an
-## adapter for it. Cheap enough for a context menu build; the real answer comes from `plan`.
+## Whether a claim can be offered an Adopt item at all - a behavior could take the shape over AND
+## this build has an adapter for it. Cheap enough for a context menu build; the real answer comes
+## from `plan`.
 static func is_adoptable(claim: Dictionary) -> bool:
-	return ADAPTERS.has(str(claim.get("adoptable", "")))
+	return ADAPTERS.has(adoptable_of(claim))
+
+
+## The behavior a claim could be swapped for - the vocabulary's answer, so the count on the coverage
+## chip, the line in the Object bar and the item in the row menu are all the same fact.
+static func adoptable_of(claim: Dictionary) -> String:
+	return EventSheetPatternVocabulary.adoptable_for(claim)
 
 
 ## The adoptable ids this build can actually rewrite. A claim may name a behavior that has no
@@ -59,7 +66,7 @@ const ADAPTERS: PackedStringArray = ["core_cooldown"]
 static func plan(sheet: EventSheetResource, claim: Dictionary) -> Dictionary:
 	if sheet == null or claim.is_empty():
 		return _refusal("", EventSheetL10n.translate("There is nothing here to adopt."))
-	var adoptable: String = str(claim.get("adoptable", ""))
+	var adoptable: String = adoptable_of(claim)
 	match adoptable:
 		"core_cooldown":
 			return _plan_core_cooldown(sheet, claim)
@@ -76,7 +83,7 @@ static func plan(sheet: EventSheetResource, claim: Dictionary) -> Dictionary:
 static func apply(sheet: EventSheetResource, claim: Dictionary) -> int:
 	if not bool(plan(sheet, claim).get("ok", false)):
 		return 0
-	match str(claim.get("adoptable", "")):
+	match adoptable_of(claim):
 		"core_cooldown":
 			return _apply_core_cooldown(sheet, claim)
 	return 0
@@ -179,14 +186,31 @@ static func _apply_core_cooldown(sheet: EventSheetResource, claim: Dictionary) -
 
 ## The variable the claim's event counts down, re-found on the LIVE sheet (a claim carries a row uid,
 ## not a resource, exactly so that it survives an undo funnel replacing every resource).
+##
+## The claim's own event is asked FIRST and the rest of the sheet second, because a claim may be
+## owned by a row whose body holds the subtraction rather than the row that performs it - a
+## top-level event standing for everything under it, or a function addressed by name rather than by
+## uid. Both answers name the same variable when there is one countdown, which is the shape this
+## adapter is for; with several, the claim's own event decides.
 static func _counted_variable(sheet: EventSheetResource, claim: Dictionary) -> String:
 	var wanted: String = str(claim.get("row_uid", ""))
 	for event_row: EventRow in _all_events(sheet):
 		if event_row.event_uid != wanted:
 			continue
-		for action: Variant in event_row.actions:
-			if action is ACEAction and (action as ACEAction).ace_id == "SubtractVar":
-				return str((action as ACEAction).params.get("var_name", ""))
+		var owned: String = _countdown_in(event_row)
+		if not owned.is_empty():
+			return owned
+	for event_row: EventRow in _all_events(sheet):
+		var found: String = _countdown_in(event_row)
+		if not found.is_empty():
+			return found
+	return ""
+
+
+static func _countdown_in(event_row: EventRow) -> String:
+	for action: Variant in event_row.actions:
+		if action is ACEAction and (action as ACEAction).ace_id == "SubtractVar":
+			return str((action as ACEAction).params.get("var_name", ""))
 	return ""
 
 

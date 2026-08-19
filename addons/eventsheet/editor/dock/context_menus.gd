@@ -349,7 +349,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 				# Formatted here rather than left as a literal, because the behavior's NAME is part of
 				# the offer: an item reading "Adopt behavior:" with nothing after it says nothing.
 				menu.add_item(EventSheetL10n.translate("Adopt behavior: %s…") % EventSheetPatternVocabulary.pack_label(
-					str((entry as Dictionary).get("adoptable", ""))), ROW_MENU_ADOPT_BEHAVIOR)
+					EventSheetPatternAdopt.adoptable_of(entry as Dictionary)), ROW_MENU_ADOPT_BEHAVIOR)
 				break
 	# ── Refactor ▸ (appended block - keep together; dock/refactor_menu.gd) ─────────────────────
 	# The reverse gestures, grouped: Wrap in Condition…, Unwrap Event, Inline Everywhere and

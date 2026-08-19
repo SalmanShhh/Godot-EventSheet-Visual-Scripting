@@ -491,7 +491,8 @@ func _add_could_adopt_line(parent_item: TreeItem, section_id: String, label: Str
 	for claim: Variant in EventSheetPatternFacts.claims(_sheet):
 		if not EventSheetPatternAdopt.is_adoptable(claim as Dictionary):
 			continue
-		var pack: String = EventSheetPatternVocabulary.pack_label(str((claim as Dictionary).get("adoptable", "")))
+		var pack: String = EventSheetPatternVocabulary.pack_label(
+			EventSheetPatternAdopt.adoptable_of(claim as Dictionary))
 		if pack.is_empty() or seen.has(pack):
 			continue
 		seen[pack] = true

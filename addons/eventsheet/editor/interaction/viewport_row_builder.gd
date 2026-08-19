@@ -7752,9 +7752,12 @@ func _pattern_chip_spans(event_row: EventRow) -> Array[SemanticSpan]:
 		return spans
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_row.event_uid):
-		var words: String = str((claim as Dictionary).get("words", ""))
+		# THE CHIP SAYS THE PATTERN'S NAME, not the claim's own sentence. A claim's `words` is the one
+		# line the hover shows ("counts cooldown down and asks whether it has run out"); a chip is a
+		# NAME, and a whole clause on a row would be a second sentence competing with the row's own.
+		var words: String = EventSheetPatternVocabulary.words(str((claim as Dictionary).get("pattern", "")))
 		if words.is_empty():
-			words = EventSheetPatternVocabulary.words(str((claim as Dictionary).get("pattern", "")))
+			words = str((claim as Dictionary).get("words", ""))
 		if words.is_empty():
 			continue
 		spans.append(_make_span("%s %s" % [PATTERN_CHIP_MARK, EventSheetL10n.translate(words)],

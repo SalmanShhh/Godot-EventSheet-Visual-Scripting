@@ -96,7 +96,14 @@ static func pattern_chip_text(sheet: EventSheetResource) -> String:
 		return ""
 	var patterns_text: String = EventSheetL10n.translate("1 pattern") if patterns == 1 \
 		else EventSheetL10n.translate("%d patterns") % patterns
-	var adoptable: int = int(summary.get("adoptable", 0))
+	# The ADOPTABLE half is counted through the vocabulary rather than off the claim's own field, so
+	# the number here is the number of offers a reader will actually find in the sheet: a reading
+	# that has not yet learned to name the behavior still leaves the pattern's own default standing.
+	var behaviors: Dictionary = {}
+	for claim: Variant in EventSheetPatternFacts.claims(sheet):
+		if not EventSheetPatternVocabulary.adoptable_for(claim as Dictionary).is_empty():
+			behaviors[str((claim as Dictionary).get("pattern", ""))] = true
+	var adoptable: int = behaviors.size()
 	if adoptable <= 0:
 		return " · %s" % patterns_text
 	return " · %s · %s" % [patterns_text, EventSheetL10n.translate("%d adoptable") % adoptable]

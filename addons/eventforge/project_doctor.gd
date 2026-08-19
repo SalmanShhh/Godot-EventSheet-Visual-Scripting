@@ -2133,7 +2133,7 @@ static func scan_pattern_smells(sheet: EventSheetResource, sheet_path: String,
 	if sheet == null:
 		return
 	EventSheetPatternFacts.clear(sheet)
-	EventSheetPatternReadings.claim_all(sheet)
+	EventSheetViewportReadingRows.claim_patterns(sheet)
 	var claims: Array = EventSheetPatternFacts.claims(sheet)
 	if claims.is_empty():
 		return
@@ -2159,7 +2159,7 @@ static func scan_pattern_smells(sheet: EventSheetResource, sheet_path: String,
 				and bool(EventSheetPatternAdopt.plan(sheet, claim).get("ok", false)):
 			_add(findings, "info", "pattern-is-a-behavior", sheet_path,
 				"This block is the %s behavior - Adopt behavior?" % EventSheetPatternVocabulary.pack_label(
-					str(claim.get("adoptable", ""))), number)
+					EventSheetPatternAdopt.adoptable_of(claim)), number)
 
 
 ## A countdown that counts but never restarts: it reaches zero once and stays there, so whatever it

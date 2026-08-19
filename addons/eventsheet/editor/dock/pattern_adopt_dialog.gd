@@ -117,7 +117,7 @@ func confirm() -> void:
 	var claim: Dictionary = _claim
 	# Named BEFORE the edit: afterwards the shape is gone, so a plan derived then would rightly
 	# refuse and have nothing to name.
-	var pack: String = EventSheetPatternVocabulary.pack_label(str(claim.get("adoptable", "")))
+	var pack: String = EventSheetPatternVocabulary.pack_label(EventSheetPatternAdopt.adoptable_of(claim))
 	var changed: bool = _dock._perform_undoable_sheet_edit(
 		EventSheetL10n.translate("Adopt behavior"),
 		func() -> bool: return EventSheetPatternAdopt.apply(_dock._current_sheet, claim) > 0)

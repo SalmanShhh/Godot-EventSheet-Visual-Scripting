@@ -169,12 +169,25 @@ static func why(pattern: String) -> String:
 
 
 ## The shipped behavior a hand-written instance of this pattern could be swapped for, "" for none.
-## The CLAIM's own `adoptable` wins wherever a claim is in hand - a reading knows whether the shape
-## it actually saw is adoptable, and this is only the default for a pattern with no claim yet.
+## This is the PATTERN's default; `adoptable_for` is what anything holding a claim should ask.
 static func adoptable(pattern: String) -> String:
 	if not ENTRIES.has(pattern):
 		return ""
 	return str((ENTRIES[pattern] as Dictionary).get("adoptable", ""))
+
+
+## The behavior a CLAIM could be swapped for. The claim's own answer wins, because a reading knows
+## whether the shape it actually saw is replaceable; when it did not say, the pattern's default
+## stands in, so a shipped behavior is still offered while the reading that recognises the shape
+## catches up to naming it. "" when neither has one.
+##
+## Everything that offers, counts or lists an adoption asks THIS - the row menu, the Object bar, the
+## coverage chip, the Doctor's note - so the offer and the count can never disagree.
+static func adoptable_for(claim: Dictionary) -> String:
+	var named: String = str(claim.get("adoptable", ""))
+	if not named.is_empty():
+		return named
+	return adoptable(str(claim.get("pattern", "")))
 
 
 ## What to call a behavior in a sentence about adopting it.
