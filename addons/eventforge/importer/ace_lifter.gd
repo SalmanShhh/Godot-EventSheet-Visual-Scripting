@@ -65,10 +65,10 @@ static var cancel_requested: bool = false
 static var scene_source_path: String = ""
 
 
-## The reverse index, kept for callers that ask for a lift OUTSIDE an import - the editor's M29
-## reading of a connected lambda rebuilds one on every canvas rebuild, and building the index from
-## the whole descriptor set each time would put a registry walk on the paint path. Keyed on the
-## descriptor count so a rescan that publishes new ACEs rebuilds it.
+## The reverse index, shared by every caller that needs one (see _build_reverse_entries). Composing it
+## compiles one RegEx per descriptor template - hundreds of them - so it is built once per descriptor
+## set and handed out by reference. Keyed on the descriptor count so a rescan that publishes new ACEs
+## rebuilds it.
 static var _cached_reverse_entries: Array = []
 static var _cached_reverse_count: int = -1
 
@@ -105,12 +105,8 @@ static func lift_body_rows(body_lines: PackedStringArray, object_names: PackedSt
 	_object_reference_names = {}
 	for name: String in object_names:
 		_object_reference_names[name] = true
-	var descriptors: Array = ACERegistry.get_all_descriptors()
-	if _cached_reverse_count != descriptors.size():
-		_cached_reverse_entries = _build_reverse_entries()
-		_cached_reverse_count = descriptors.size()
 	var parsed: Dictionary = _parse_body(
-		body_lines, 0, 0, "", "", "", "", _cached_reverse_entries, true, false, "")
+		body_lines, 0, 0, "", "", "", "", _build_reverse_entries(), true, false, "")
 	if not bool(parsed.get("ok", false)):
 		return []
 	return parsed.get("rows", []) as Array
@@ -2630,11 +2626,28 @@ static func _stamp_body_blanks(resource: Resource, blank_box: Array) -> void:
 
 
 ## Reverse index over builtin descriptors: template → anchored regex with named captures.
+## The reverse index every lift pass matches lines against, built once per descriptor set and then
+## handed out BY REFERENCE. Composing it compiles a RegEx for every reversible descriptor template
+## (hundreds), which is why it is memoized rather than rebuilt: the per-function lift path used to
+## call this once per function, so opening a file with N functions paid N full index builds and that
+## single line was ~80% of the time an open took. Entries are read-only by contract - _match_entry
+## only reads them, and nothing anywhere assigns into an entry - so sharing one Array is safe,
+## including with the import worker thread (the job warms this on the main thread before starting).
 static func _build_reverse_entries() -> Array:
+	var descriptors: Array = ACERegistry.get_all_descriptors()
+	if _cached_reverse_count == descriptors.size() and not _cached_reverse_entries.is_empty():
+		return _cached_reverse_entries
+	var built: Array = _compose_reverse_entries(descriptors)
+	_cached_reverse_entries = built
+	_cached_reverse_count = descriptors.size()
+	return built
+
+
+static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 	var entries: Array = []
 	var brace_regex: RegEx = RegEx.new()
 	brace_regex.compile("\\{[^}]*\\}")
-	for descriptor: ACEDescriptor in ACERegistry.get_all_descriptors():
+	for descriptor: ACEDescriptor in all_descriptors:
 		var template: String = descriptor.codegen_template.strip_edges()
 		if template.is_empty() or template.contains("{,"):
 			continue  # optional-segment templates are not reversible (v1)
