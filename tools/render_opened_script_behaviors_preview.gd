@@ -65,13 +65,21 @@ func _show() -> void:
 
 func _on_frame() -> void:
 	_frames += 1
-	if _frames < 12:
+	# Two shots, because a window only renders what fits on the screen and these readings are two
+	# screens tall: the projectile and the turret first, then the five one-liners.
+	if _frames == 12:
+		_shoot("Set angle of motion", "res://docs/images/opened-script-behaviors.png")
+		# The canvas is anchored full-rect, so pulling its top edge up scrolls it without a container.
+		_view.offset_top = -_row_top("Rotate clockwise") + 40.0
 		return
-	var image: Image = root.get_texture().get_image()
-	var scale: float = float(image.get_width()) / maxf(float(root.size.x), 1.0)
-	# The shot starts at the first EVENT: the head of an opened file is a dozen rows before it, and
-	# the head has its own picture earlier in the guide.
-	var top: float = 0.0
+	if _frames < 24:
+		return
+	_shoot("Rotate clockwise", "res://docs/images/opened-script-behaviors-one-liners.png")
+	quit(0)
+
+
+## The y of the first row whose words contain `needle`, in canvas coordinates.
+func _row_top(needle: String) -> float:
 	for index in range(_view._flat_rows.size()):
 		var row_data: EventRowData = (_view._flat_rows[index] as Dictionary).get("row")
 		if row_data == null:
@@ -79,17 +87,26 @@ func _on_frame() -> void:
 		var head: String = ""
 		for span: SemanticSpan in row_data.spans:
 			head += span.text
-		if head.contains("Set angle of motion"):
-			top = _view._row_metrics_helper.row_top(maxi(index - 2, 0))
-			break
-	var start: int = clampi(int(top * scale) - 6, 0, image.get_height() - 1)
+		if head.contains(needle):
+			return _view._row_metrics_helper.row_top(maxi(index - 1, 0))
+	return 0.0
+
+
+## Saves the window from the row that names `needle` down to the last row that rendered.
+func _shoot(needle: String, path: String) -> void:
+	var image: Image = root.get_texture().get_image()
+	var scale: float = float(image.get_width()) / maxf(float(root.size.x), 1.0)
+	var top: float = maxf(_row_top(needle) + _view.offset_top - 24.0, 0.0)
+	var start: int = clampi(int(top * scale), 0, image.get_height() - 1)
+	# Stop at the last row rather than at the bottom of the window, so the picture has no dead space.
 	var content: float = 0.0
 	for index in range(_view._flat_rows.size()):
-		content = maxf(content, _view._row_metrics_helper.row_top(index) + _view._row_metrics_helper.row_height(index))
-	var height: int = clampi(int(content * scale) + 4 - start, 1, image.get_height() - start)
-	image.get_region(Rect2i(0, start, image.get_width(), height)).save_png("res://docs/images/opened-script-behaviors.png")
-	print("[preview] opened script behaviors %dx%d from %d" % [image.get_width(), height, start])
-	quit(0)
+		content = maxf(content,
+			_view._row_metrics_helper.row_top(index) + _view._row_metrics_helper.row_height(index))
+	var bottom: int = clampi(int((content + _view.offset_top) * scale) + 6, start + 1, image.get_height())
+	var height: int = bottom - start
+	image.get_region(Rect2i(0, start, image.get_width(), height)).save_png(path)
+	print("[preview] %s %dx%d from %d" % [path.get_file(), image.get_width(), height, start])
 
 
 ## Prints what the sheet actually READS as, so a run doubles as a text check.

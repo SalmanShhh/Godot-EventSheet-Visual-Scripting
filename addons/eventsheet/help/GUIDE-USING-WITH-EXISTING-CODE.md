@@ -837,6 +837,10 @@ the point it is measured from, and a flag only reads as a glide's state when the
 lowers it. And a line the importer lifted to a shipped row is read back through the same shape, so an
 opened file says the same thing before and after the lift.
 
+![A projectile script read as an event sheet: Set speed to speed accelerating by accel, Set angle of motion to angle, Set gravity to gravity and Move under one tick event, with Distance travelled greater than range px as the condition that destroys it](images/opened-script-behaviors.png)
+
+![The same file further down: Move toward destination at speed, Has arrived and Stop for the glide, then Rotate clockwise, Wrap around layout horizontally, Bound to layout, Pin to anchor by position and by angle, and Fade out over 1 seconds then destroy](images/opened-script-behaviors-one-liners.png)
+
 #### The reading lenses - names you can turn on and off
 
 - **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
