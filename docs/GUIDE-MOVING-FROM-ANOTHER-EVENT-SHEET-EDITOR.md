@@ -19,15 +19,6 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 11. [Use Cases](#11-use-cases)
 12. [Tips and Common Mistakes](#12-tips-and-common-mistakes)
 
----the-biggest-shift-from-c3)
-5. [Data Plugins (Dictionary, Array, JSON, XML)](#6-data-plugins-dictionary-array-json-xml)
-6. [Behaviors and Plugins - The Three Lanes](#7-behaviors-and-plugins---the-three-lanes)
-7. [Habits That Transfer Directly](#8-habits-that-transfer-directly)
-8. [Habits to Relearn (the Godot Way Is Better Here)](#9-habits-to-relearn-the-godot-way-is-better-here)
-9. [Importing C3 Projects Directly - A Permanent Non-Goal](#10-importing-c3-projects-directly---a-permanent-non-goal)
-10. [Use Cases](#11-use-cases)
-11. [Tips and Common Mistakes](#12-tips-and-common-mistakes)
-
 ---
 
 ## 1. Scenarios Where This Guide Helps
@@ -293,7 +284,7 @@ i18n (Godot translations).
   margin event number.
 - **Ctrl+F has a Filter toggle** (the C3 live-filter reflex): the sheet collapses to only
   the events matching the search, the status line counts what's hidden, Esc restores.
-- **Ctrl+Shift+C pastes events as text.** The selection copies as the plain listing every
+- **Ctrl+Shift+C copies events as text.** The selection copies as the plain listing every
   event-sheet community posts - `+ ` in front of a condition, `-> ` in front of an action, one
   extra indent per sub-event, in exactly the words the canvas is showing under your reading
   lenses. **Sheet > Save as Text…** writes the whole sheet the same way as Markdown, with the

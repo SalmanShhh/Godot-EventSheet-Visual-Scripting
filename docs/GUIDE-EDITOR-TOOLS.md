@@ -297,8 +297,8 @@ A typical validator body, as rows:
 ```
 Function: validate_max_health  (returns String)
   Condition: max_health <= 0
-    -> Return  "Max health must be positive."
-  -> Return  ""
+    -> Set return value to  "Max health must be positive."
+  -> Set return value to  ""
 ```
 
 ---
@@ -552,8 +552,8 @@ Stop bad data at the door instead of debugging it at runtime. Call `EventSheets.
 ```
 Function: validate_spawn_interval  (returns String)
   Condition: spawn_interval <= 0.0
-    -> Return  "Spawn interval must be greater than zero."
-  -> Return  ""
+    -> Set return value to  "Spawn interval must be greater than zero."
+  -> Set return value to  ""
 ```
 
 While anyone edits `spawn_interval` in the Inspector, the message appears live above the field the moment the value goes non-positive, and vanishes when it is fixed.
@@ -565,8 +565,8 @@ A boss sheet that is broken without its phase table should say so in the Inspect
 ```
 Function: validate_phase_table  (returns String)
   Condition: phase_table != null and phase_table.phases.is_empty()
-    -> Return  "Phase table has no phases."
-  -> Return  ""
+    -> Set return value to  "Phase table has no phases."
+  -> Set return value to  ""
 ```
 
 Required covers "empty"; validate covers "filled in wrong".

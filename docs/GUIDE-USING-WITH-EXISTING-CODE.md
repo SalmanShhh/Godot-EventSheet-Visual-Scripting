@@ -469,7 +469,7 @@ That is the order this section is in.
   `ƒ  Functions ▸ On Set Third Person  enabled`: the name and one chip per input sit in the CONDITION
   lane, because that lane answers "when does this run?" for every other event and a function's answer is
   "when it is called". The body's first step reads beside it on the right, the rest of the body hangs
-  under it as sub-events, and Collapse folds the whole function back to that one row. The row's tint says
+  under it as sub-events, and Collapse takes the whole function back to that one row. The row's tint says
   whether it is an Action, Condition or Expression, and a condition or expression also says its kind as a
   quiet word next to the name. Click it for the **ACE properties** popup - kind, category, inputs (with
   their types), what it gives back, description, whether it is featured, its icon, the exact line it
@@ -736,7 +736,7 @@ is instantiated to answer a question.
 - **The object this file IS answers with an editable variable table.** For that one object - the
   thing the open script declares, not the nodes it merely names - the **Instance variables** row
   becomes a table you work in: **Name**, **Type** (a dropdown of the sheet's own type words),
-  **Initial value**, an **Inspector** tick, and **✎ ✕**. ✎ folds a description field open under the
+  **Initial value**, an **Inspector** tick, and **✎ ✕**. ✎ opens a description field under the
   variable; ✕ deletes it; **+ Add instance variable** opens the Add variable dialog on the Instance
   scope. Renaming in the Name field is **Rename Everywhere** and picking a new type is **Change Type
   Everywhere**, because a name and a type are used by rows all over the sheet. The same table sits on
