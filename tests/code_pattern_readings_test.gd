@@ -19,6 +19,63 @@ static func run() -> bool:
 	ok = _countdown_sentences() and ok
 	ok = _pool_facts() and ok
 	ok = _claims() and ok
+	ok = _existence_sentences() and ok
+	ok = _list_and_table_sentences() and ok
+	return ok
+
+
+## S6. The sentences the sheet has for identity and family.
+static func _existence_sentences() -> bool:
+	var ok: bool = true
+	var context: Dictionary = {"script_object": "Player", "variable_types": {"items": "Array"}}
+	ok = _check("a careful null check still asks whether it exists",
+		_reading(EventSheetSentence.condition("is_instance_valid(t)", context)), "t ▸ exists") and ok
+	ok = _check("letting go of a reference is Forget",
+		_reading(EventSheetSentence.statement("target = null", context)), "Player ▸ Forget target") and ok
+	ok = _check("a property cleared to null is still a Set",
+		_reading(EventSheetSentence.statement("sprite.texture = null", context)),
+		"sprite ▸ Set texture to null") and ok
+	ok = _check("leaving the layout is not being destroyed",
+		_reading(EventSheetSentence.statement("get_parent().remove_child(self)", context)),
+		"Player ▸ Remove from layout (kept alive, not destroyed)") and ok
+	return ok
+
+
+## S7. The list and table shapes that read as calls today.
+static func _list_and_table_sentences() -> bool:
+	var ok: bool = true
+	var context: Dictionary = {"script_object": "Player", "variable_types": {"items": "Array"}}
+	ok = _check("a table read says what stands in when the key is missing",
+		_reading(EventSheetSentence.statement("hp = stats.get(\"hp\", 100)", context)),
+		"System ▸ Set hp to stats \"hp\" (or 100 when missing)") and ok
+	ok = _check("the head of a list reads as the first few of it",
+		_reading(EventSheetSentence.statement("top = items.slice(0, 3)", context)),
+		"System ▸ Set top to the first 3 of items") and ok
+	ok = _check("a one-line reduce that adds one member up is a total",
+		_reading(EventSheetSentence.statement(
+			"total = items.reduce(func(acc, i): return acc + i.price, 0)", context)),
+		"System ▸ Set total to the sum of price over items") and ok
+	ok = _check("sorting by a member says which way it goes",
+		_reading(EventSheetSentence.statement(
+			"items.sort_custom(func(a, b): return a.price < b.price)", context)),
+		"System ▸ Sort items by price (lowest first)") and ok
+	ok = _check("the other direction says so too",
+		_reading(EventSheetSentence.statement(
+			"items.sort_custom(func(a, b): return a.price > b.price)", context)),
+		"System ▸ Sort items by price (highest first)") and ok
+	ok = _check("a list asked whether it holds something contains it",
+		_reading(EventSheetSentence.condition("items.has(sword)", context)),
+		"System ▸ items contains sword") and ok
+	ok = _check("a table asked the same question is asked about its keys",
+		_reading(EventSheetSentence.condition("stats.has(\"hp\")", context)),
+		"System ▸ stats has key \"hp\"") and ok
+	ok = _check("a function held in a table is called by the entry that holds it",
+		_reading(EventSheetSentence.statement("commands[\"equip\"].call()", context)),
+		"Functions ▸ Call the function stored in commands \"equip\" (a table of functions)") and ok
+	ok = _check("a lambda written over two lines keeps its own code",
+		EventSheetSentence.sorted_member("func(a, b):\n\treturn a.price < b.price").is_empty(), true) and ok
+	ok = _check("comparing two different members is not a Sort by",
+		EventSheetSentence.sorted_member("func(a, b): return a.price < b.weight").is_empty(), true) and ok
 	return ok
 
 

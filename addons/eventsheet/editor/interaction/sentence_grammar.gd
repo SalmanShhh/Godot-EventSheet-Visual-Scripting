@@ -323,6 +323,11 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var countdown: Dictionary = _countdown_statement(text, context)
 	if not countdown.is_empty():
 		return _with_indent(countdown, indent)
+	# S6. Letting go of a reference is its own event-sheet step, and reads as one rather than as a Set
+	# to a value nobody puts anywhere.
+	var forgotten: Dictionary = _forget_statement(text, context)
+	if not forgotten.is_empty():
+		return _with_indent(forgotten, indent)
 	var compound: Dictionary = _compound_statement(text, context)
 	if not compound.is_empty():
 		return _with_indent(compound, indent)
@@ -1433,6 +1438,19 @@ static func _countdown_statement(text: String, context: Dictionary) -> Dictionar
 	})
 
 
+## S6. `target = null` is the event-sheet Forget: the object is not destroyed, this row simply stops
+## holding on to it. Only a plain name of this file's own is claimed, because `sprite.texture = null`
+## is a property being cleared, which is a Set and reads as one.
+static func _forget_statement(text: String, context: Dictionary) -> Dictionary:
+	var equals_at: int = top_level_index(text, " = ")
+	if equals_at <= 0 or text.substr(equals_at + 3).strip_edges() != "null":
+		return {}
+	var target: String = text.substr(0, equals_at).strip_edges()
+	if not is_identifier(target) or is_engine_property(target, context):
+		return {}
+	return _sentence(script_object(context), "Forget {name}", {"name": [_member_word(target), "name"]})
+
+
 ## S4. The two questions a countdown answers. `x <= 0` is the event-sheet "has run out", `x > 0` is
 ## "is running"; every other comparison against zero keeps its operator, because only these two are
 ## the same question the Timer and Cooldown rows already ask.
@@ -1674,6 +1692,35 @@ static func _uniform_scale_factor(value: String) -> String:
 	return _percent_words(axes[0], {})
 
 
+## The object every Call row belongs to, whichever function it names.
+const OBJECT_FUNCTIONS := "Functions"
+
+
+## S7. `commands["equip"].call()` and `commands["equip"].call(arg)` - a table of functions, called by
+## the key that holds one. Claimed only for a plain table name indexed by ONE entry: a longer chain is
+## an object's member and reads as one. {} for anything else, so an ordinary `.call()` keeps its code.
+static func _stored_function_call(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty() or str(call.get("method", "")) != "call":
+		return {}
+	var entry: String = str(call.get("target", "")).strip_edges()
+	if not entry.ends_with("]"):
+		return {}
+	var open_at: int = entry.find("[")
+	if open_at <= 0:
+		return {}
+	var table: String = entry.substr(0, open_at).strip_edges()
+	var key: String = entry.substr(open_at + 1, entry.length() - open_at - 2).strip_edges()
+	if not is_identifier(table) or key.is_empty() or key.contains("["):
+		return {}
+	var stored: Dictionary = _sentence(OBJECT_FUNCTIONS, "Call the function stored in {table} {key}", {
+		"table": [table, "name"],
+		"key": [expression_text(key, context), "value"]
+	})
+	(stored["segments"] as Array).append({"text": " (%s)" % translate("a table of functions"), "tone": "muted"})
+	return stored
+
+
 ## The call shapes with a settled sentence: destroy, emit, change scene. Anything else is left to the
 ## caller's own Object / Verb / parameters rendering.
 static func _call_statement(text: String, context: Dictionary) -> Dictionary:
@@ -1687,6 +1734,14 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 			# action the sheet's own Scene Flow rows carry, so it is always on, and the layout is named
 			# the way the reader named the file. The whole path stays one hover away on the row.
 			return _sentence(OBJECT_SYSTEM, "Go to layout {path}", {"path": [layout_name(scene_path), "value"]})
+	# S6. `get_parent().remove_child(self)` takes an object OUT of the layout without destroying it -
+	# a different thing from Destroy, and the sheet has a different word for it. Said out loud, because
+	# the reader's first question about a removed object is whether it is still alive.
+	if text == "get_parent().remove_child(self)":
+		var removed: Dictionary = _sentence(script_object(context), "Remove from layout", {})
+		(removed["segments"] as Array).append(
+			{"text": " (%s)" % translate("kept alive, not destroyed"), "tone": "muted"})
+		return removed
 	# R8. Godot reloads the current scene; an event sheet restarts the layout.
 	if text == "get_tree().reload_current_scene()":
 		return _sentence(OBJECT_SYSTEM, "Restart layout", {})
@@ -1699,6 +1754,12 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var wait_then: Dictionary = _wait_then_statement(text, context)
 	if not wait_then.is_empty():
 		return wait_then
+	# S7. `commands["equip"].call()` runs whatever function that table entry holds. The receiver is an
+	# entry, not an object, so nothing below could name it - and the row belongs to Functions, which is
+	# where every other Call row lives.
+	var stored_call: Dictionary = _stored_function_call(text, context)
+	if not stored_call.is_empty():
+		return stored_call
 	var group_call: Dictionary = _group_call_statement(text, context)
 	if not group_call.is_empty():
 		return group_call
@@ -1891,6 +1952,17 @@ static func _list_statement(target: String, method: String, args: PackedStringAr
 	if method == "remove_at" and args.size() == 1:
 		values["index"] = [expression_text(args[0], context), "value"]
 		return _sentence(str(split[0]), "Delete at {index} in {name}", values)
+	# S7. `items.sort_custom(func(a, b): return a.price < b.price)` is the event-sheet Sort by, with the
+	# direction said in words rather than left as an operator to decode. Only a one-line lambda
+	# comparing the SAME member of both items is claimed; anything else keeps its own code.
+	if method == "sort_custom" and args.size() == 1:
+		var sorted_by: Dictionary = sorted_member(args[0])
+		if not sorted_by.is_empty():
+			values["member"] = [str(sorted_by.get("member", "")), "value"]
+			var order: String = "lowest first" if bool(sorted_by.get("lowest", true)) else "highest first"
+			var sorted_row: Dictionary = _sentence(str(split[0]), "Sort {name} by {member}", values)
+			(sorted_row["segments"] as Array).append({"text": " (%s)" % translate(order), "tone": "muted"})
+			return sorted_row
 	if method == "erase" and args.size() == 1:
 		values["value"] = [expression_text(args[0], context), "value"]
 		if LIST_TYPES.has(_declared_type_of(receiver, context)):
@@ -2948,6 +3020,13 @@ static func object_of_reference(reference: String) -> String:
 
 ## `host == null` / `host != null` as the event-sheet existence condition.
 static func _existence_condition(text: String) -> Dictionary:
+	# S6. `is_instance_valid(target)` asks exactly what `target != null` asks, only more carefully, so
+	# it reads in the same word. One argument only: the call takes no other shape.
+	var call: Dictionary = call_parts(text)
+	if str(call.get("method", "")) == "is_instance_valid" and str(call.get("target", "")).is_empty():
+		var checked: PackedStringArray = call.get("args", PackedStringArray())
+		if checked.size() == 1 and is_simple_target(checked[0].strip_edges()):
+			return _sentence(object_of_reference(checked[0].strip_edges()), "exists", {})
 	for operator: String in [" == ", " != "]:
 		var at: int = top_level_index(text, operator)
 		if at < 0:
@@ -3029,6 +3108,23 @@ static func _type_condition(text: String, context: Dictionary) -> Dictionary:
 ## LITERAL list on the right is "is one of", a quoted key on the left is a table lookup, and anything
 ## else is a list being asked whether it contains a value.
 static func _membership_condition(text: String, context: Dictionary) -> Dictionary:
+	# S7. `items.has(sword)` asks the same question `sword in items` asks, so it reads the same words -
+	# a reader should never have to know that a list answers to two spellings of one question. The
+	# receiver must be a plain name of this file: `get_tree().has(x)` is not a list.
+	var call: Dictionary = call_parts(text)
+	if str(call.get("method", "")) == "has":
+		var holder: String = str(call.get("target", "")).strip_edges()
+		var wanted: PackedStringArray = call.get("args", PackedStringArray())
+		if is_identifier(holder) and wanted.size() == 1 and not is_engine_property(holder, context):
+			if LIST_TYPES.has(_declared_type_of(holder, context)):
+				return _sentence(OBJECT_SYSTEM, "{list} contains {value}", {
+					"list": [holder, "name"],
+					"value": [expression_text(wanted[0], context), "value"]
+				})
+			return _sentence(OBJECT_SYSTEM, "{table} has key {key}", {
+				"table": [holder, "name"],
+				"key": [expression_text(wanted[0], context), "value"]
+			})
 	var at: int = top_level_index(text, " in ")
 	if at <= 0:
 		return {}
@@ -3944,6 +4040,88 @@ static func _receiver_idiom(chain: String, arguments: PackedStringArray) -> Stri
 	return "" if filled.contains("{") else filled
 
 
+## S7. The two parameters and the body of a ONE-LINE lambda, as [first, second, body], or [] for
+## anything else. A lambda written over two lines keeps its Script block: a sentence may only stand
+## for a shape it can see whole.
+static func one_line_lambda(text: String) -> Array:
+	var body: String = text.strip_edges()
+	if not body.begins_with("func(") or body.contains("\n"):
+		return []
+	var close_at: int = closing_paren(body, 4)
+	if close_at < 0:
+		return []
+	var names: PackedStringArray = split_top_level(body.substr(5, close_at - 5), ", ")
+	if names.size() != 2 or not is_identifier(names[0]) or not is_identifier(names[1]):
+		return []
+	var rest: String = body.substr(close_at + 1).strip_edges()
+	if not rest.begins_with(":"):
+		return []
+	rest = rest.substr(1).strip_edges()
+	if not rest.begins_with("return "):
+		return []
+	return [names[0], names[1], rest.substr(7).strip_edges()]
+
+
+## S7. The member a one-line `reduce` adds up - `func(acc, i): return acc + i.price` totals `price`.
+## Either order of the sum is read, because both are written. "" when the body adds anything else.
+static func _summed_member(text: String) -> String:
+	var parts: Array = one_line_lambda(text)
+	if parts.is_empty():
+		return ""
+	var running: String = str(parts[0])
+	var item: String = str(parts[1])
+	var body: String = str(parts[2])
+	var plus_at: int = top_level_index(body, " + ")
+	if plus_at <= 0:
+		return ""
+	var left: String = body.substr(0, plus_at).strip_edges()
+	var right: String = body.substr(plus_at + 3).strip_edges()
+	var member: String = ""
+	if left == running:
+		member = right
+	elif right == running:
+		member = left
+	else:
+		return ""
+	var prefix: String = "%s." % item
+	if not member.begins_with(prefix):
+		return ""
+	var name_text: String = member.substr(prefix.length())
+	return name_text if is_identifier(name_text) else ""
+
+
+## S7. What a one-line `sort_custom` sorts by, as {member, lowest} - `func(a, b): return a.price <
+## b.price` sorts by `price`, lowest first. {} when the two sides do not compare the SAME member of
+## the two items, which is the only shape that can honestly be read as "sort by".
+static func sorted_member(text: String) -> Dictionary:
+	var parts: Array = one_line_lambda(text)
+	if parts.is_empty():
+		return {}
+	var first: String = str(parts[0])
+	var second: String = str(parts[1])
+	var body: String = str(parts[2])
+	for operator: String in [" < ", " > "]:
+		var at: int = top_level_index(body, operator)
+		if at <= 0:
+			continue
+		var left: String = body.substr(0, at).strip_edges()
+		var right: String = body.substr(at + operator.length()).strip_edges()
+		var member: String = _member_of(left, first)
+		if member.is_empty() or member != _member_of(right, second):
+			return {}
+		return {"member": member, "lowest": operator == " < "}
+	return {}
+
+
+## `a.price` read against the item name `a` -> `price`; anything else -> "".
+static func _member_of(text: String, item: String) -> String:
+	var prefix: String = "%s." % item
+	if not text.begins_with(prefix):
+		return ""
+	var name_text: String = text.substr(prefix.length())
+	return name_text if is_identifier(name_text) else ""
+
+
 ## How many `{N}` argument slots a pattern names, so an idiom can never quietly drop an argument.
 static func _slot_count(pattern: String) -> int:
 	var found: int = 0
@@ -3966,6 +4144,22 @@ static func _shaped_receiver_idiom(receiver: String, method: String,
 	if method == "get_value" and arguments.size() == 3:
 		return _fill(translate("item {key} (default {fallback})"),
 			{"key": arguments[1], "fallback": arguments[2]})
+	# ── S7 ──────────────────────────────────────────────────────────────────────────────────────
+	# The three list and table READS an event sheet has words for and a Godot script writes as calls.
+	# `stats.get("hp", 100)` is the table entry with what to use when it is missing; `items.slice(0, 3)`
+	# is the first few of a list; a one-line `reduce` that adds one member up is a total. Each is
+	# claimed only in the exact shape shown, so anything richer keeps its own code.
+	if method == "get" and arguments.size() == 2:
+		return _fill(translate("{table} {key} (or {fallback} when missing)"),
+			{"table": receiver, "key": arguments[0], "fallback": arguments[1]})
+	if method == "slice" and arguments.size() == 2 and arguments[0].strip_edges() == "0":
+		return _fill(translate("the first {count} of {list}"),
+			{"count": arguments[1], "list": receiver})
+	if method == "reduce" and arguments.size() == 2 and arguments[1].strip_edges() in ["0", "0.0"]:
+		var summed: String = _summed_member(arguments[0])
+		if not summed.is_empty():
+			return _fill(translate("the sum of {member} over {list}"),
+				{"member": summed, "list": receiver})
 	# R30. `position.snapped(Vector2(8, 8))` is the grid a value is pulled onto, and a grid reads as
 	# its numbers: `position snapped to 8, 8`. The same words the free-function spelling
 	# `snapped(x, 8)` already reads, so the two never disagree. The vector prettifier has turned the
