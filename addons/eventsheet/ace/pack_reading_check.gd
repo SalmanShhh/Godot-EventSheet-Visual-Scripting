@@ -53,7 +53,8 @@ static func check_definition(definition: ACEDefinition) -> Array[Dictionary]:
 			continue
 		var parameter_dict: Dictionary = parameter
 		var parameter_id: String = str(parameter_dict.get("id", "")).strip_edges()
-		var parameter_name: String = str(parameter_dict.get("name", "")).strip_edges()
+		var parameter_name: String = str(parameter_dict.get("display_name",
+			parameter_dict.get("name", ""))).strip_edges()
 		if _is_unnamed(parameter_name, parameter_id):
 			problems.append(_problem(definition, label,
 				"the parameter \"%s\" is not named" % (parameter_id if not parameter_id.is_empty() else parameter_name),
@@ -134,6 +135,49 @@ static func combine(definition_result: Dictionary, demo_result: Dictionary) -> D
 	}
 
 
+## Everything one pack script publishes, reflected the same way the picker reflects it. Empty
+## when the script cannot be instantiated (an abstract base, a Resource host with no default).
+static func definitions_for_script(script_path: String) -> Array[ACEDefinition]:
+	var empty: Array[ACEDefinition] = []
+	if script_path.strip_edges().is_empty() or not ResourceLoader.exists(script_path):
+		return empty
+	var resource: Resource = load(script_path)
+	if not (resource is Script) or not (resource as Script).can_instantiate():
+		return empty
+	var instance: Variant = (resource as Script).new()
+	if not (instance is Object):
+		return empty
+	return EventSheetACEGenerator.new().generate_from_object(instance as Object)
+
+
+## The whole verdict for one pack script: what it publishes, checked. The Publish dialog, the
+## Doctor check and the shipped-pack gate all call THIS, so the three can never disagree.
+##
+## Cached on the file's own mtime + byte length, the same key the ACE registry uses: reflecting a
+## pack means instantiating it and walking every member, and the Doctor asks about every installed
+## pack on every run. The cache is what keeps that a once-per-change cost rather than a per-run one.
+static func check_script(script_path: String) -> Dictionary:
+	var key: String = "%s|%d|%d" % [script_path,
+		FileAccess.get_modified_time(script_path), _file_length(script_path)]
+	if _script_cache.has(key):
+		return (_script_cache[key] as Dictionary).duplicate(true)
+	var result: Dictionary = combine(check_definitions(definitions_for_script(script_path)), {})
+	_script_cache[key] = result
+	return result.duplicate(true)
+
+
+static var _script_cache: Dictionary = {}
+
+
+static func _file_length(script_path: String) -> int:
+	var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
+	if file == null:
+		return 0
+	var length: int = file.get_length()
+	file.close()
+	return length
+
+
 ## The one line the Publish dialog and the Addon manager both show.
 static func summary_text(result: Dictionary) -> String:
 	if bool(result.get("reads", false)):
@@ -175,12 +219,11 @@ static func _is_bare_call(shown: String) -> bool:
 	words = words.strip_edges()
 	if words.is_empty():
 		return true
-	# A call reads as one identifier (dots allowed) optionally followed by brackets and commas.
-	var call_pattern: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_.]*\\s*\\(?[,\\s]*\\)?$")
-	if call_pattern.search(words) != null:
-		return true
-	# Snake case with no spaces at all is the other shape a bare member takes.
-	return not words.contains(" ") and words.contains("_")
+	# One word IS a sentence for an expression ("Prefab", "Health"). What is not a sentence is one
+	# word that still looks like code: a snake_case member, a dotted path, or a call's brackets.
+	if words.contains(" "):
+		return false
+	return words.contains("_") or words.contains("(") or words.contains(".")
 
 
 ## True when a parameter's name says nothing a reader could not have guessed from its id.

@@ -194,7 +194,7 @@ func scene_argument_number(key: String = "attempt", fallback: float = 0.0) -> fl
 ## @ace_expression
 ## @ace_name("Path Of Named Scene")
 ## @ace_category("Scenes")
-## @ace_description("The res:// path registered under a name, or "" when the name is unknown. The escape hatch for a verb that still wants a path, e.g. the Scene Flow pack's Fade To Scene.")
+## @ace_description("The res:// path registered under a name, or "" when the name is unknown. The escape hatch for an action that still wants a path, e.g. the Scene Flow pack's Fade To Scene.")
 ## @ace_icon("res://eventsheet_addons/named_scenes/icon.svg")
 ## @ace_codegen_template("NamedScenes.path_of_named_scene({scene_name})")
 func path_of_named_scene(scene_name: String = "arena") -> String:

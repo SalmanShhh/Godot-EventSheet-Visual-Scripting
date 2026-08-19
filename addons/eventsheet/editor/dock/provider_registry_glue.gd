@@ -497,6 +497,8 @@ var _version_dialog: ConfirmationDialog = null
 var _version_bump: OptionButton = null
 var _version_note: LineEdit = null
 var _version_preview: Label = null
+var _reading_summary: Label = null
+var _reading_failures: ItemList = null
 
 
 ## Sheet > Publish New Version...: the pack versioning ritual - pick patch/minor/major, write a
@@ -528,12 +530,26 @@ func open_publish_version_dialog() -> void:
 			"Stored as a doc comment under @ace_version, so the pack's history reads in its own file."))
 		_version_preview = Label.new()
 		form.add_child(_version_preview)
+		# The reading check. Publishing is never blocked by it - a check that stopped work would
+		# just be routed around - but the pack carries its score in the Addon manager until it
+		# passes, and every failure is listed here with the fix rather than as a verdict.
+		_reading_summary = Label.new()
+		_reading_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_reading_summary.custom_minimum_size = Vector2(430.0, 0.0)
+		_reading_failures = ItemList.new()
+		_reading_failures.custom_minimum_size = Vector2(430.0, 110.0)
+		_reading_failures.auto_height = false
+		var reading_box: VBoxContainer = EventSheetPopupUI.form_box()
+		reading_box.add_child(_reading_summary)
+		reading_box.add_child(_reading_failures)
+		form.add_child(EventSheetPopupUI.titled_card("Reading check", reading_box))
 		_version_dialog.add_child(EventSheetPopupUI.margined(form))
 		_version_dialog.confirmed.connect(_apply_version_bump)
 		_dock.add_child(_version_dialog)
 	_version_note.text = ""
 	_refresh_version_preview()
-	_version_dialog.popup_centered(Vector2i(460, 240))
+	_refresh_reading_check(sheet_path)
+	_version_dialog.popup_centered(Vector2i(520, 470))
 	_version_note.grab_focus()
 
 
@@ -544,6 +560,23 @@ func _refresh_version_preview() -> void:
 	var bump: String = ["patch", "minor", "major"][_version_bump.selected if _version_bump.selected >= 0 else 0]
 	var preview: Dictionary = EventSheetACEAnnotationWriter.bump_version(source, bump, "preview")
 	_version_preview.text = "%s  ->  %s" % [str(preview.get("old_version")), str(preview.get("new_version"))]
+
+
+## Runs the reading check on what this pack publishes plus the sheet in front of us as its demo,
+## and lists every failure with its fix. The score is stored on the sheet's own metadata so the
+## Addon manager can show "reads 94%" without re-reflecting every pack.
+func _refresh_reading_check(sheet_path: String) -> void:
+	if _reading_summary == null or _reading_failures == null:
+		return
+	var definitions: Dictionary = EventSheetPackReadingCheck.check_definitions(
+		EventSheetPackReadingCheck.definitions_for_script(sheet_path))
+	var demo: Dictionary = EventSheetPackReadingCheck.check_demo_sheet(_dock._current_sheet, sheet_path)
+	var result: Dictionary = EventSheetPackReadingCheck.combine(definitions, demo)
+	_reading_summary.text = EventSheetPackReadingCheck.summary_text(result)
+	_reading_failures.clear()
+	for failure: Dictionary in result.get("failures", []):
+		_reading_failures.add_item(EventSheetPackReadingCheck.failure_line(failure))
+	_reading_failures.visible = not _reading_failures.item_count == 0
 
 
 func _apply_version_bump() -> void:

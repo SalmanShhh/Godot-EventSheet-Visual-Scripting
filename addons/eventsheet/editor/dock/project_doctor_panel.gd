@@ -21,13 +21,48 @@ var _doctor_tree: Tree = null
 var _fix_button: Button = null
 
 
-## Enables the Fix button only when the selected finding carries a fix Callable.
+var _quick_fix_bar: HBoxContainer = null
+
+
+## Enables the Fix button only when the selected finding carries a fix Callable, and redraws the
+## quick-fix chips for whatever is selected now.
 func _refresh_fix_button() -> void:
+	_refresh_quick_fixes()
 	if _fix_button == null:
 		return
 	var item: TreeItem = _doctor_tree.get_selected()
 	var finding: Variant = item.get_metadata(1) if item != null else null
 	_fix_button.disabled = not (finding is Dictionary and (finding as Dictionary).get("fix") is Callable)
+
+
+## The one-step fixes for the selected finding, as chips. A finding with a one-click fix is a
+## finding people act on; every chip here applies an operation the dock already has, and the
+## check re-runs straight after so its disappearance is proven rather than assumed.
+func _refresh_quick_fixes() -> void:
+	if _quick_fix_bar == null:
+		return
+	for child: Node in _quick_fix_bar.get_children():
+		child.queue_free()
+	var item: TreeItem = _doctor_tree.get_selected()
+	var finding: Variant = item.get_metadata(1) if item != null else null
+	if not (finding is Dictionary):
+		_quick_fix_bar.visible = false
+		return
+	var offered: Array[Dictionary] = EventSheetQuickFixes.fixes_for(finding as Dictionary)
+	_quick_fix_bar.visible = not offered.is_empty()
+	for offer: Dictionary in offered:
+		var chip: Button = Button.new()
+		chip.text = "%s %s" % [EventSheetL10n.translate("Fix:"), str(offer.get("label", ""))]
+		chip.tooltip_text = "Applies this fix through undo, then re-runs the check."
+		var fix_id: String = str(offer.get("id", ""))
+		chip.pressed.connect(func() -> void: _apply_quick_fix(fix_id, finding as Dictionary))
+		_quick_fix_bar.add_child(chip)
+
+
+func _apply_quick_fix(fix_id: String, finding: Dictionary) -> void:
+	var result: Dictionary = EventSheetQuickFixes.apply(fix_id, finding, {"dock": _dock})
+	_dock._set_status(str(result.get("message", "")), not bool(result.get("ok", false)))
+	_run_project_doctor()
 
 
 func _run_selected_fix() -> void:
@@ -79,6 +114,10 @@ func open() -> void:
 		_fix_button.pressed.connect(_run_selected_fix)
 		buttons.add_child(_fix_button)
 		box.add_child(buttons)
+		_quick_fix_bar = HBoxContainer.new()
+		_quick_fix_bar.add_theme_constant_override("separation", 6)
+		_quick_fix_bar.visible = false
+		box.add_child(_quick_fix_bar)
 		_doctor_tree.item_selected.connect(_refresh_fix_button)
 		_doctor_window.add_child(body)
 		_dock.add_child(_doctor_window)

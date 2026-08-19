@@ -5,7 +5,7 @@
 @icon("res://eventsheet_addons/drawing_canvas/icon.svg")
 class_name DrawingCanvas
 extends Node
-## A texture your event sheet draws onto with verbs: lines, circles, rings, rects, cones, stamps, textured ribbons, and a raycast line-of-sight fan. Strokes can persist until cleared or auto-clear every frame, and the live texture is an expression you can feed to a TextureRect, shader, particle, or 3D Decal.
+## A texture your event sheet draws onto with actions: lines, circles, rings, rects, cones, stamps, textured ribbons, and a raycast line-of-sight fan. Strokes can persist until cleared or auto-clear every frame, and the live texture is an expression you can feed to a TextureRect, shader, particle, or 3D Decal.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null
@@ -20,7 +20,7 @@ func _enter_tree() -> void:
 @export var canvas_width: int = 512
 ## Canvas texture height in pixels.
 @export var canvas_height: int = 512
-## On: the canvas clears itself every frame - re-issue draw verbs each tick (vision
+## On: the canvas clears itself every frame - re-issue draw actions each tick (vision
 ## cones, telegraphs). Off: strokes accumulate until Clear Canvas (paint, splats).
 @export var auto_clear: bool = false
 ## How draw coordinates are read: world = scene positions (the canvas is centered on
@@ -247,4 +247,4 @@ func paste_layer_on_screen(layer: Node) -> void:
 func paste_layer_in_box(layer: Node, x: float, y: float, width: float, height: float) -> void:
 	CanvasSurface.for_node(host).paste_layer_in_box(layer, x, y, width, height)
 
-# Drawing Canvas behavior (event-sheet parity): a texture your sheet draws onto with verbs - lines, circles, rings, rects, cones, texture stamps, textured ribbons, and a raycast LINE OF SIGHT fan. Persistent mode keeps strokes until Clear Canvas (paint, blood splats, skid marks); Auto Clear redraws every frame (attack telegraphs, vision cones). Canvas Texture exposes the live texture for materials, UI, or a 3D Decal. The drawing plumbing lives in the shared CanvasSurface runtime; this pack is a thin event sheet - extend it by editing it.
+# Drawing Canvas behavior (event-sheet parity): a texture your sheet draws onto with actions - lines, circles, rings, rects, cones, texture stamps, textured ribbons, and a raycast LINE OF SIGHT fan. Persistent mode keeps strokes until Clear Canvas (paint, blood splats, skid marks); Auto Clear redraws every frame (attack telegraphs, vision cones). Canvas Texture exposes the live texture for materials, UI, or a 3D Decal. The drawing plumbing lives in the shared CanvasSurface runtime; this pack is a thin event sheet - extend it by editing it.

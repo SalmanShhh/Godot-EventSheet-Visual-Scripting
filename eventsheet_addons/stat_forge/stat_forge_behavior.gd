@@ -188,7 +188,7 @@ func stat_is_at_least(stat: String, value: float) -> bool:
 
 ## @ace_action
 ## @ace_name("Add Buff")
-## @ace_description("The one verb that runs the whole system: a named buff targeting a stat with a value and a mode (add / multiply / override - highest override wins). Tags are comma-separated labels for bulk ops, source names who applied it, duration in seconds expires it (0 = permanent). Re-adding an id REPLACES that buff.")
+## @ace_description("The one action that runs the whole system: a named buff targeting a stat with a value and a mode (add / multiply / override - highest override wins). Tags are comma-separated labels for bulk ops, source names who applied it, duration in seconds expires it (0 = permanent). Re-adding an id REPLACES that buff.")
 ## @ace_param_options(mode add=Add to the stat, multiply=Multiply the stat, override=Override the stat)
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.add_buff({buff_id}, {stat}, {value}, {mode}, {tags}, {source}, {duration})")
@@ -420,4 +420,4 @@ func load_state(state: Dictionary) -> void:
 	# on the first change after a load.
 	_last_totals = (state.get("last_totals", {}) as Dictionary).duplicate(true)
 
-# StatForge behavior: stats as a per-node buff stack. Add Buff targets a stat with a value and a mode - add / multiply / override (highest override wins) - with optional TAGS, a SOURCE, and a DURATION that expires on its own. Stat Total computes (base + adds) * multipliers, clamped or wrapped by the overflow knobs. Remove by id, tag, or source; pause and refresh timers; threshold rules fire On Threshold Crossed when a stat crosses a value. Load whole loadouts from a StatSheetResource (.tres). Two verbs run an RPG stat; the rest scales with your game. This pack is an event sheet - extend it by editing it.
+# StatForge behavior: stats as a per-node buff stack. Add Buff targets a stat with a value and a mode - add / multiply / override (highest override wins) - with optional TAGS, a SOURCE, and a DURATION that expires on its own. Stat Total computes (base + adds) * multipliers, clamped or wrapped by the overflow knobs. Remove by id, tag, or source; pause and refresh timers; threshold rules fire On Threshold Crossed when a stat crosses a value. Load whole loadouts from a StatSheetResource (.tres). Two actions run an RPG stat; the rest scales with your game. This pack is an event sheet - extend it by editing it.

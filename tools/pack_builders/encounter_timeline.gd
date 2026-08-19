@@ -293,7 +293,7 @@ static func build() -> bool:
 		"Use object pool node [i]{node}[/i]")
 
 	Lib.append_function(sheet, "skip_to", "Skip To", "Encounter Timeline",
-		"Jumps the clock to a time WITHOUT spawning anything it passes - the debug verb for checking a late beat, or for a director that fast-forwards a tutorial the player already knows. Beats before that time are marked as played.",
+		"Jumps the clock to a time WITHOUT spawning anything it passes - the debug action for checking a late beat, or for a director that fast-forwards a tutorial the player already knows. Beats before that time are marked as played.",
 		[["seconds", "float"]],
 		"\n".join(PackedStringArray([
 			"_clock = maxf(seconds, 0.0)",

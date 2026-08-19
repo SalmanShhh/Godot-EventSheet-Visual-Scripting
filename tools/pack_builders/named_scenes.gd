@@ -146,14 +146,14 @@ static func build() -> bool:
 		"return str(_handoff.get(key, fallback))", TYPE_STRING)
 	Lib.number(sheet, "scene_argument_number", "Scene Argument Number", "Scenes", "A carried value as a number - an attempt count, a difficulty, a starting score. Answers the fallback when nothing was carried under that key.", [["key", "String"], ["fallback", "float"]],
 		"return float(_handoff.get(key, fallback))", TYPE_FLOAT)
-	Lib.number(sheet, "path_of_named_scene", "Path Of Named Scene", "Scenes", "The res:// path registered under a name, or \"\" when the name is unknown. The escape hatch for a verb that still wants a path, e.g. the Scene Flow pack's Fade To Scene.", [["scene_name", "String"]],
+	Lib.number(sheet, "path_of_named_scene", "Path Of Named Scene", "Scenes", "The res:// path registered under a name, or \"\" when the name is unknown. The escape hatch for an action that still wants a path, e.g. the Scene Flow pack's Fade To Scene.", [["scene_name", "String"]],
 		"return str(_registry.get(scene_name, \"\"))", TYPE_STRING)
 	Lib.number(sheet, "current_scene_name", "Current Scene Name", "Scenes", "The name of the scene running right now, or \"\" before the first one was announced. Stabler than a path: save it, show it in a debug corner, key a music track off it.", [],
 		"return _current_name", TYPE_STRING)
 	Lib.number(sheet, "registered_scene_names", "Registered Scene Names", "Scenes", "Every registered name, sorted. A level-select screen builds itself from this instead of from a list somebody has to keep in step.", [],
 		"var names: Array = _registry.keys()\nnames.sort()\nreturn names", TYPE_ARRAY)
 
-	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
+	# Save-state seam - deliberately unpublished; the Save System provides the user-facing actions.
 	var persistence: RawCodeRow = RawCodeRow.new()
 	persistence.code = "\n".join(PackedStringArray([
 		"# Save-state seam: the Save System walks any node in its persist group (or targeted by",

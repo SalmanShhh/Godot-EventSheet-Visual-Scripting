@@ -237,7 +237,7 @@ func use_wallet_node(node: Node) -> void:
 ## @ace_action
 ## @ace_name("Set Local Wallet")
 ## @ace_category("Priced Tables")
-## @ace_description("Sets the fallback purse - the number this table spends from when no wallet node and no CurrencyLedger autoload answer. It is deliberately the ONLY money verb here: as soon as your game has a real economy, install one and this number stops being consulted.")
+## @ace_description("Sets the fallback purse - the number this table spends from when no wallet node and no CurrencyLedger autoload answer. It is deliberately the ONLY money action here: as soon as your game has a real economy, install one and this number stops being consulted.")
 ## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
 ## @ace_codegen_template("$PricedTableBehavior.set_local_wallet({amount})")
 func set_local_wallet(amount: float) -> void:

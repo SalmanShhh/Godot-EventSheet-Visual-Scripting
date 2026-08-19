@@ -4,7 +4,7 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
-## DrawingCanvas: an event-sheet-parity drawing surface - a texture the sheet draws onto with verbs
+## DrawingCanvas: an event-sheet-parity drawing surface - a texture the sheet draws onto with actions
 ## (lines, circles, cones, stamps, ribbons, line-of-sight fans). All the engine plumbing (the offscreen
 ## SubViewport, the command queue, coordinate mapping, the self-updating ribbons) now lives in the shared
 ## CanvasSurface runtime pack, so THIS behaviour is thin: each verb is a one-line call to the surface, and
@@ -16,12 +16,12 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "DrawingCanvas"
-	sheet.class_description = "A texture your event sheet draws onto with verbs: lines, circles, rings, rects, cones, stamps, textured ribbons, and a raycast line-of-sight fan. Strokes can persist until cleared or auto-clear every frame, and the live texture is an expression you can feed to a TextureRect, shader, particle, or 3D Decal."
+	sheet.class_description = "A texture your event sheet draws onto with actions: lines, circles, rings, rects, cones, stamps, textured ribbons, and a raycast line-of-sight fan. Strokes can persist until cleared or auto-clear every frame, and the live texture is an expression you can feed to a TextureRect, shader, particle, or 3D Decal."
 	sheet.addon_category = "Drawing Canvas"
 	sheet.addon_tags = PackedStringArray(["drawing", "visual"])
 	sheet.addon_requires = PackedStringArray(["CanvasSurface", "DrawingPrefabResource"])
 	var about: CommentRow = CommentRow.new()
-	about.text = "Drawing Canvas behavior (event-sheet parity): a texture your sheet draws onto with verbs - lines, circles, rings, rects, cones, texture stamps, textured ribbons, and a raycast LINE OF SIGHT fan. Persistent mode keeps strokes until Clear Canvas (paint, blood splats, skid marks); Auto Clear redraws every frame (attack telegraphs, vision cones). Canvas Texture exposes the live texture for materials, UI, or a 3D Decal. The drawing plumbing lives in the shared CanvasSurface runtime; this pack is a thin event sheet - extend it by editing it."
+	about.text = "Drawing Canvas behavior (event-sheet parity): a texture your sheet draws onto with actions - lines, circles, rings, rects, cones, texture stamps, textured ribbons, and a raycast LINE OF SIGHT fan. Persistent mode keeps strokes until Clear Canvas (paint, blood splats, skid marks); Auto Clear redraws every frame (attack telegraphs, vision cones). Canvas Texture exposes the live texture for materials, UI, or a 3D Decal. The drawing plumbing lives in the shared CanvasSurface runtime; this pack is a thin event sheet - extend it by editing it."
 	sheet.events.append(about)
 
 	# Designer knobs + the one hidden helper that fetches this host's shared drawing surface. All the
@@ -33,7 +33,7 @@ static func build() -> bool:
 		"@export var canvas_width: int = 512",
 		"## Canvas texture height in pixels.",
 		"@export var canvas_height: int = 512",
-		"## On: the canvas clears itself every frame - re-issue draw verbs each tick (vision",
+		"## On: the canvas clears itself every frame - re-issue draw actions each tick (vision",
 		"## cones, telegraphs). Off: strokes accumulate until Clear Canvas (paint, splats).",
 		"@export var auto_clear: bool = false",
 		"## How draw coordinates are read: world = scene positions (the canvas is centered on",

@@ -9,7 +9,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## one mode (add / multiply / override), optionally for a duration. Reading the computed
 ## value is always one expression: Stat Total("speed"). Tags and sources group buffs for
 ## bulk operations, threshold rules fire when a stat crosses a value, and a StatSheetResource
-## loads whole loadouts as .tres data. Complexity scales: two verbs run an RPG stat; the
+## loads whole loadouts as .tres data. Complexity scales: two actions run an RPG stat; the
 ## rest is there when you need it.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -21,7 +21,7 @@ static func build() -> bool:
 	sheet.addon_tags = PackedStringArray(["stats", "rpg", "data"])
 	sheet.addon_requires = PackedStringArray(["StatSheetResource"])
 	var about: CommentRow = CommentRow.new()
-	about.text = "StatForge behavior: stats as a per-node buff stack. Add Buff targets a stat with a value and a mode - add / multiply / override (highest override wins) - with optional TAGS, a SOURCE, and a DURATION that expires on its own. Stat Total computes (base + adds) * multipliers, clamped or wrapped by the overflow knobs. Remove by id, tag, or source; pause and refresh timers; threshold rules fire On Threshold Crossed when a stat crosses a value. Load whole loadouts from a StatSheetResource (.tres). Two verbs run an RPG stat; the rest scales with your game. This pack is an event sheet - extend it by editing it."
+	about.text = "StatForge behavior: stats as a per-node buff stack. Add Buff targets a stat with a value and a mode - add / multiply / override (highest override wins) - with optional TAGS, a SOURCE, and a DURATION that expires on its own. Stat Total computes (base + adds) * multipliers, clamped or wrapped by the overflow knobs. Remove by id, tag, or source; pause and refresh timers; threshold rules fire On Threshold Crossed when a stat crosses a value. Load whole loadouts from a StatSheetResource (.tres). Two actions run an RPG stat; the rest scales with your game. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)
 
 	var block: RawCodeRow = RawCodeRow.new()
@@ -178,7 +178,7 @@ static func build() -> bool:
 	# The verb surface, annotated raw block (typed params + option combos).
 	var verbs: RawCodeRow = RawCodeRow.new()
 	verbs.code = "\n".join(PackedStringArray([
-		"## The one verb that runs the whole system: a named buff targeting a stat with a",
+		"## The one action that runs the whole system: a named buff targeting a stat with a",
 		"## value and a mode (add / multiply / override - highest override wins). Tags are",
 		"## comma-separated labels for bulk ops, source names who applied it, duration in",
 		"## seconds expires it (0 = permanent). Re-adding an id REPLACES that buff.",

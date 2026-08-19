@@ -80,6 +80,8 @@ static func run() -> Dictionary:
 	check_sheet_signal_declarations(sheet_paths, findings)
 	check_pattern_smells(sheet_paths, findings)
 	check_vocabulary_doc(findings)
+	check_pack_reading(findings)
+	check_disabled_pack_usage(sheet_paths, findings)
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:
@@ -1837,6 +1839,9 @@ static func check_unknown_input_actions(_sheet_paths: PackedStringArray, finding
 		_add(findings, "warning", "unknown-input-action", script_path,
 			"This script names %d control(s) the Input Map does not have (%s) - the key will never fire and nothing will say so. Add it in Project ▸ Input Map, or fix the spelling." % [
 				missing.size(), ", ".join(missing)])
+		# The control's own name, so the quick fix on the row can add it without reading the
+		# message back out of English.
+		findings[findings.size() - 1]["subject"] = missing[0]
 
 
 ## R27 - bindings changed at runtime but never saved. A rebind screen that calls
@@ -1859,6 +1864,58 @@ static func check_unsaved_rebindings(_sheet_paths: PackedStringArray, findings: 
 			continue
 		_add(findings, "info", "unsaved-rebindings", script_path,
 			"This script changes control bindings at runtime but never saves them - every remap is lost when the game closes. Add Save bindings after the rebind and Load bindings on start-up.")
+
+
+## The reading check, as a Doctor check on this project's own packs. Same rule as the Publish
+## dialog and the shipped-pack gate, because it is the same function: a pack whose published
+## conditions, actions or expressions do not read as sentences is named here with the fix, and
+## carries its score until it passes. A note, never an error - a pack that does not read still
+## works, it just does not keep the promise the sheet makes about itself.
+static func check_pack_reading(findings: Array[Dictionary]) -> void:
+	for pack: Dictionary in EventSheetPackCatalog.packs():
+		var script_path: String = str(pack.get("path", ""))
+		if script_path.is_empty():
+			continue
+		var result: Dictionary = EventSheetPackReadingCheck.check_script(script_path)
+		if bool(result.get("reads", false)):
+			continue
+		var failures: Array = result.get("failures", [])
+		var first: String = "" if failures.is_empty() else EventSheetPackReadingCheck.failure_line(failures[0])
+		_add(findings, "info", "pack-reading", script_path,
+			"%s reads %d%% - %d thing(s) do not read as sentences. First: %s" % [
+				str(pack.get("name", "")), int(result.get("percent", 0)), failures.size(), first])
+		findings[findings.size() - 1]["subject"] = str(pack.get("dir", ""))
+
+
+## A sheet still using a pack that was switched off in the Addon manager. Its actions have left
+## the picker, so the row can no longer be edited in the sheet's own words - which is worth
+## saying out loud rather than leaving as a row that quietly stopped offering anything.
+static func check_disabled_pack_usage(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var disabled: PackedStringArray = EventSheetPackCatalog.disabled_packs()
+	if disabled.is_empty():
+		return
+	for pack_dir: String in disabled:
+		var pack: Dictionary = EventSheetPackCatalog.describe(pack_dir)
+		if pack.is_empty():
+			continue
+		var identifier: String = str(pack.get("path", "")).get_file().get_basename()
+		var users: PackedStringArray = PackedStringArray()
+		for script_path: String in _list_files_with_extension("gd"):
+			if script_path.begins_with("res://eventsheet_addons/"):
+				continue
+			var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
+			if file == null:
+				continue
+			var source: String = file.get_as_text()
+			file.close()
+			if source.contains(identifier) and not users.has(script_path):
+				users.append(script_path)
+		if users.is_empty():
+			continue
+		_add(findings, "warning", "disabled-pack-in-use", users[0],
+			"%s is switched off in the Addon manager, but %d sheet(s) still use it - its actions have left the picker, so those rows can no longer be edited in the sheet's own words. Switch it back on, or replace the rows." % [
+				str(pack.get("name", pack_dir)), users.size()])
+		findings[findings.size() - 1]["subject"] = pack_dir
 
 
 static func _list_files_with_extension(extension: String) -> PackedStringArray:

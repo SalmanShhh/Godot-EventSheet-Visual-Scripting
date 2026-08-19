@@ -204,7 +204,7 @@ func use_pool_node(node: Node) -> void:
 ## @ace_action
 ## @ace_name("Skip To")
 ## @ace_category("Encounter Timeline")
-## @ace_description("Jumps the clock to a time WITHOUT spawning anything it passes - the debug verb for checking a late beat, or for a director that fast-forwards a tutorial the player already knows. Beats before that time are marked as played.")
+## @ace_description("Jumps the clock to a time WITHOUT spawning anything it passes - the debug action for checking a late beat, or for a director that fast-forwards a tutorial the player already knows. Beats before that time are marked as played.")
 ## @ace_display_template("Skip to [b]{seconds}[/b]s")
 ## @ace_icon("res://eventsheet_addons/encounter_timeline/icon.svg")
 ## @ace_codegen_template("$EncounterTimelineBehavior.skip_to({seconds})")

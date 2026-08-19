@@ -295,7 +295,7 @@ static func build() -> bool:
 		"Use wallet node [i]{node}[/i]")
 
 	Lib.append_function(sheet, "set_local_wallet", "Set Local Wallet", "Priced Tables",
-		"Sets the fallback purse - the number this table spends from when no wallet node and no CurrencyLedger autoload answer. It is deliberately the ONLY money verb here: as soon as your game has a real economy, install one and this number stops being consulted.",
+		"Sets the fallback purse - the number this table spends from when no wallet node and no CurrencyLedger autoload answer. It is deliberately the ONLY money action here: as soon as your game has a real economy, install one and this number stops being consulted.",
 		[["amount", "float"]],
 		"local_wallet = amount")
 

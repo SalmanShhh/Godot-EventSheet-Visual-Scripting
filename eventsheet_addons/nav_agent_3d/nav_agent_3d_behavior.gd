@@ -5,7 +5,7 @@
 @icon("res://eventsheet_addons/nav_agent_3d/icon.svg")
 class_name NavAgent3D
 extends Node
-## Navmesh pathfinding for 3D with zero wiring: attach under a CharacterBody3D, keep a NavigationRegion3D in the scene, and call Find Path To - a NavigationAgent3D child is inserted and tuned for you and the agent walks the baked navmesh. The verbs mirror the 2D Platformer Pathfinding pack, so learning one pack teaches both.
+## Navmesh pathfinding for 3D with zero wiring: attach under a CharacterBody3D, keep a NavigationRegion3D in the scene, and call Find Path To - a NavigationAgent3D child is inserted and tuned for you and the agent walks the baked navmesh. The actions mirror the 2D Platformer Pathfinding pack, so learning one pack teaches both.
 
 ## The node this behavior acts on (its parent). Required host: CharacterBody3D.
 var host: CharacterBody3D = null
@@ -292,4 +292,4 @@ func _on_agent_waypoint(_details: Dictionary) -> void:
 func _on_safe_velocity(safe_velocity: Vector3) -> void:
 	_safe_velocity = safe_velocity
 
-# 3D pathfinding on Godot's navmesh, sheet-shaped: attach under a CharacterBody3D inside a scene with a NavigationRegion3D and call Find Path To - a NavigationAgent3D child is inserted for you. The verbs mirror the 2D Platformer Pathfinding pack, auto-control drives the FPS Controller through the universal AI seam (or the body itself when no driver exists), and slopes come free from the navmesh bake.
+# 3D pathfinding on Godot's navmesh, sheet-shaped: attach under a CharacterBody3D inside a scene with a NavigationRegion3D and call Find Path To - a NavigationAgent3D child is inserted for you. The actions mirror the 2D Platformer Pathfinding pack, auto-control drives the FPS Controller through the universal AI seam (or the body itself when no driver exists), and slopes come free from the navmesh bake.

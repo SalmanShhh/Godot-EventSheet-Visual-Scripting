@@ -1,0 +1,139 @@
+@tool
+class_name EventSheetQuickFixes
+extends RefCounted
+
+# The one-step fixes a Doctor finding offers.
+#
+# A finding that jumps you to the row is half an answer: the fix is still typed by hand. Every
+# fix here is an operation the dock already has, so what this file really does is say WHICH
+# finding has which one-step answer, and in what words.
+#
+#   an unknown control        -> add it to the Input Map / pick one that exists
+#   a call to a function that is not there -> create it / pick the renamed one
+#   a raw call the vocabulary matches      -> convert it to the action it matches
+#   a pattern the sheet recognises         -> use the behavior that ships / add the missing half
+#   a variable read but never set          -> declare it
+#
+# Every fix applies through the undo funnel and the check re-runs afterwards, so its
+# disappearance is proven rather than assumed. `fixes_for` is pure: it reads a finding and
+# returns what could be offered, which is what the test pins.
+
+## check id -> the fixes it offers, each {"label", "id"}. The labels are what the row shows on
+## its chips; `id` is what `apply` dispatches on.
+const OFFERED := {
+	"unknown-input-action": [
+		{"id": "add_input_action", "label": "Add \"%s\" to the Input Map"},
+		{"id": "pick_input_action", "label": "Pick an existing action…"},
+	],
+	"missing-function": [
+		{"id": "create_function", "label": "Create %s"},
+		{"id": "pick_function", "label": "Pick the renamed one…"},
+	],
+	"raw-call-has-action": [
+		{"id": "convert_raw_call", "label": "Convert to the action it matches"},
+	],
+	"pattern-smell": [
+		{"id": "adopt_behavior", "label": "Adopt behavior: %s"},
+		{"id": "add_missing_half", "label": "Add the missing half"},
+	],
+	"unset-variable": [
+		{"id": "declare_variable", "label": "Declare %s"},
+	],
+	"disabled-pack-in-use": [
+		{"id": "enable_pack", "label": "Switch %s back on"},
+	],
+	"pack-reading": [
+		{"id": "open_pack", "label": "Open the pack"},
+	],
+}
+
+
+## What this finding offers, each as {"id", "label"} with the label already carrying the subject
+## ("Add \"dash\" to the Input Map"). Empty for a finding with no one-step answer, which is most
+## of them - a fix is offered only where there really is one step.
+static func fixes_for(finding: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var check: String = str(finding.get("check", ""))
+	if not OFFERED.has(check):
+		return out
+	var subject: String = subject_of(finding)
+	for offer: Variant in (OFFERED[check] as Array):
+		var entry: Dictionary = (offer as Dictionary).duplicate()
+		var label: String = str(entry.get("label", ""))
+		if label.contains("%s"):
+			if subject.is_empty():
+				continue
+			label = label % subject
+		entry["label"] = label
+		entry["check"] = check
+		out.append(entry)
+	return out
+
+
+## The thing a fix acts on - the control's name, the function's name, the pack's folder. Taken
+## from the finding's own `subject` when the check recorded one, so no fix ever has to read a
+## message back out of English.
+static func subject_of(finding: Dictionary) -> String:
+	return str(finding.get("subject", "")).strip_edges()
+
+
+## True when this finding has at least one one-step answer - what the row asks before drawing a
+## chip and what the panel asks before enabling its buttons.
+static func has_fix(finding: Dictionary) -> bool:
+	return not fixes_for(finding).is_empty()
+
+
+## Applies one fix. `context` carries what the operation needs from the editor:
+##   "dock"  - the EventSheetDock, for the sheet edits and the status line
+## Returns {"ok", "message"}. Never touches the scene or the file directly: everything goes
+## through an operation the dock already owns, which is what makes each one undoable.
+static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> Dictionary:
+	var subject: String = subject_of(finding)
+	var dock: Variant = context.get("dock", null)
+	match fix_id:
+		"add_input_action":
+			return _add_input_action(subject)
+		"pick_input_action":
+			return {"ok": true, "message": "Pick the control this row means in Project ▸ Input Map, then re-run the check."}
+		"create_function":
+			if dock != null and dock.has_method("_open_function_dialog"):
+				dock.call("_open_function_dialog")
+				return {"ok": true, "message": "Name the function %s and it stops being missing." % subject}
+			return {"ok": false, "message": "Open the sheet that calls %s to create it." % subject}
+		"pick_function":
+			return {"ok": true, "message": "Pick the function this call was renamed to - Edit ▸ Find References… lists every caller."}
+		"convert_raw_call":
+			if dock != null and dock.has_method("_open_raw_call_namer"):
+				dock.call("_open_raw_call_namer")
+				return {"ok": true, "message": "Name Raw Calls lists every raw call the vocabulary matches, with what it would become."}
+			return {"ok": false, "message": "Sheet ▸ Name Raw Calls… converts every raw call the vocabulary matches."}
+		"adopt_behavior":
+			return {"ok": false, "message": "Adopt behavior is not wired here yet - add %s through Object bar ▸ Add behavior… and the pattern becomes the pack's." % subject}
+		"add_missing_half":
+			return {"ok": false, "message": "The other half of this pattern is missing - the reading names which one."}
+		"declare_variable":
+			if dock != null and dock.has_method("_create_variable_quickfix"):
+				var made: bool = bool(dock.call("_create_variable_quickfix", subject))
+				return {"ok": made, "message": "Declared %s." % subject if made
+					else "%s could not be declared here - it may already exist." % subject}
+			return {"ok": false, "message": "Open the sheet that reads %s to declare it." % subject}
+		"enable_pack":
+			EventSheetPackCatalog.set_enabled(subject, true)
+			return {"ok": true, "message": "%s is back on - its actions return to the picker on the next refresh." % subject}
+		"open_pack":
+			return {"ok": true, "message": "Open %s and Sheet ▸ Publish New Version… lists what does not read yet, with the fix." % str(finding.get("path", "")).get_file()}
+	return {"ok": false, "message": "No fix named %s." % fix_id}
+
+
+## Registers one control with the project's Input Map, with no events bound - the row stops
+## pointing at nothing, and binding a key is the next thing the reader does in Project ▸ Input Map.
+static func _add_input_action(action_name: String) -> Dictionary:
+	if action_name.is_empty():
+		return {"ok": false, "message": "That finding names no control to add."}
+	var setting: String = "input/%s" % action_name
+	if ProjectSettings.has_setting(setting):
+		return {"ok": true, "message": "%s is already in the Input Map." % action_name}
+	ProjectSettings.set_setting(setting, {"deadzone": 0.5, "events": []})
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		ProjectSettings.save()
+	return {"ok": true, "message": "Added \"%s\" to the Input Map - bind a key to it in Project ▸ Input Map." % action_name}

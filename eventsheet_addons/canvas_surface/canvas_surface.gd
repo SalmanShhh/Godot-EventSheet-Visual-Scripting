@@ -314,13 +314,13 @@ func paste_node(node: Node) -> void:
 	if not command.is_empty():
 		_push(command)
 
-## Bakes a node's visual at an EXPLICIT spot (x, y read the same way as the other draw verbs), scaled
+## Bakes a node's visual at an EXPLICIT spot (x, y read the same way as the other draw actions), scaled
 ## and rotated - decouples the stamp from the node's own transform (paste an off-screen template).
 func paste_node_at(node: Node, x: float, y: float, scale_factor: float, rotation_deg: float) -> void:
 	# --- Paste: bake a live node's visual (or a whole layer's) onto the canvas as a decal. Texture-bearing
 	# CanvasItems (Sprite2D, AnimatedSprite2D, TextureRect, or anything exposing a `texture`) stamp at their
 	# exact world transform - rotation, scale, flip, region/frame and modulate preserved. Non-destructive: the
-	# original node stays, so pair with a Destroy/Hide verb to truly flatten a layer for performance. ---
+	# original node stays, so pair with a Destroy/Hide action to truly flatten a layer for performance. ---
 	if not (node is Node2D):
 		return
 	var placed: Transform2D = Transform2D(deg_to_rad(rotation_deg), Vector2.ONE * maxf(scale_factor, 0.01), 0.0, Vector2(x, y))
