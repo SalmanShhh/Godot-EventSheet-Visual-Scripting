@@ -54,6 +54,9 @@ const OBJECT_TOUCH := "Touch"
 const OBJECT_STORAGE := "Local Storage"
 const OBJECT_JSON := "JSON"
 const OBJECT_FILE := "File"
+## U6. A web request and its answer are one object in the sheet's words, exactly as saving is Local
+## Storage's and a message is Multiplayer's.
+const OBJECT_AJAX := "AJAX"
 ## S10. Godot's high-level networking is one object in the sheet's words - the one the messages, the
 ## host question and the peer id all read under, exactly as Storage owns the save rows above.
 const OBJECT_MULTIPLAYER := "Multiplayer"
@@ -193,10 +196,15 @@ const RECEIVER_IDIOMS: Dictionary = {
 	"begins_with": "{receiver} starts with {0}",
 	"ends_with": "{receiver} ends with {0}",
 	"contains": "{receiver} contains {0}",
-	# N7 - the JSON object's two verbs, and a file handle's whole contents
-	"JSON.parse_string": "parsed {0}",
-	"JSON.stringify": "{0} as text",
+	# N7 / U6 - the JSON object's two verbs, and a file handle's whole contents. The two JSON verbs are
+	# spelled the way the sheet's own JSON object spells them, so a typed line and the picked row read
+	# alike and a reader who knows one knows the other.
+	"JSON.parse_string": "JSON.Parse({0})",
+	"JSON.stringify": "JSON.ToString({0})",
 	"get_as_text": "{receiver}'s contents",
+	# U6. The bytes a finished request hands back, read back as the AJAX object's own value: what the
+	# line actually names is the answer that just arrived, and that answer has a name on the sheet.
+	"get_string_from_utf8": "AJAX.LastData",
 	# N9 - the analogue reads belong to the pad
 	"Input.get_action_strength": "strength of {0}",
 	"Input.get_action_raw_strength": "raw strength of {0}"
@@ -367,6 +375,11 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var systems: Dictionary = godot_systems_condition(text, context)
 	if not systems.is_empty():
 		return systems
+	# U6. Whether the request came back is the AJAX object's own question, before the comparison
+	# reading below could describe it as the constant it is written against.
+	var answered: Dictionary = web_condition(text, context)
+	if not answered.is_empty():
+		return answered
 	var joined: Dictionary = joined_condition(text, context)
 	if not joined.is_empty():
 		return joined
@@ -1274,6 +1287,15 @@ static func _rewrite_indexing(text: String) -> String:
 			out += character
 			index += 1
 			continue
+		# U6. A RUN of indexes - `data["scores"][0]["name"]` - is one address into one table, and an
+		# event sheet says an address the way it says every other chain: the head owns it and the steps
+		# follow. Read step by step it comes out as three possessions of three different things, which
+		# is exactly the reading a beginner cannot follow.
+		var nested: Dictionary = _nested_index_run(text, index)
+		if not nested.is_empty():
+			out += str(nested.get("text", ""))
+			index = int(nested.get("end", close_at + 1))
+			continue
 		var key: String = _rewrite_indexing(text.substr(index + 1, close_at - index - 1)).strip_edges()
 		if key.is_empty():
 			out += text.substr(index, close_at - index + 1)
@@ -1283,6 +1305,34 @@ static func _rewrite_indexing(text: String) -> String:
 			out += "' %s %s" % [translate("item"), key]
 		index = close_at + 1
 	return out
+
+
+## U6. The run of two or more indexes starting at `open_at`, as {"text", "end"} - the possessive
+## address it reads as and where the run stopped - or {} when there is no run to read.
+##
+## Every step must be a LITERAL: a key worked out at run time is a value the row has to show as the
+## expression it is, and folding it into an address would print a name the file never writes. A single
+## index is left alone, because M31's `inventory's "potion"` is already the sentence for that.
+static func _nested_index_run(text: String, open_at: int) -> Dictionary:
+	var steps: PackedStringArray = PackedStringArray()
+	var cursor: int = open_at
+	while cursor < text.length() and text[cursor] == "[":
+		var close_at: int = closing_paren(text, cursor)
+		if close_at < 0:
+			return {}
+		var key: String = text.substr(cursor + 1, close_at - cursor - 1).strip_edges()
+		if key.is_empty():
+			return {}
+		if _is_string_literal(key):
+			steps.append(_unquote(key.trim_prefix("&")))
+		elif key.is_valid_int():
+			steps.append(key)
+		else:
+			return {}
+		cursor = close_at + 1
+	if steps.size() < 2:
+		return {}
+	return {"text": "'s %s" % " ".join(steps), "end": cursor}
 
 
 ## The friendly type word for a declared type, matching the word the picker and the parameter chips
@@ -1675,6 +1725,11 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 	var media: Dictionary = media_assignment(object_name, object_class, member, owner_text, assigned, context)
 	if not media.is_empty():
 		return media
+	# U7. The light knobs, ahead of the arms below for the same reason: `color` on a light and `color`
+	# on anything else are two different rows, and the class is what tells them apart.
+	var lit: Dictionary = lighting_assignment(object_name, object_class, member, owner_text, assigned, context)
+	if not lit.is_empty():
+		return lit
 	match member:
 		"visible":
 			if assigned != "true" and assigned != "false":
@@ -1845,6 +1900,10 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var media_step: Dictionary = media_call(call.duplicate().merged({"line": text}, true), context)
 	if not media_step.is_empty():
 		return media_step
+	# U6. A web request is the AJAX object's, whatever the node holding it is called.
+	var web_step: Dictionary = web_call(call.duplicate().merged({"line": text}, true), context)
+	if not web_step.is_empty():
+		return web_step
 	var engine_verb: Dictionary = _engine_verb_call(call, context)
 	if not engine_verb.is_empty():
 		return engine_verb
@@ -6787,3 +6846,130 @@ static func media_condition(text: String, context: Dictionary) -> Dictionary:
 			and not _class_is_any(object_class, SPRITE_CLASSES):
 		return {}
 	return _with_pattern(_sentence(object_name, "Is playing", {}), "sound" if audio else "sprite_animation", bare)
+
+
+# ── U6 / U7 - web requests and lights ───────────────────────────────────────────────────────────
+#
+# Two families of line a finished game has and a first script does not: a request to a server, and
+# the lights a scene is lit with. Each reads in the words the sheet's own objects publish - the AJAX
+# and JSON objects a reader coming from another event-sheet editor already knows, and the Light
+# rows - and each claims the pattern it is an instance of.
+#
+# Same strictness as every reading above: the exact shape or nothing. `request` and `energy` are
+# ordinary words that live on plenty of other classes, so both families are gated on the receiver's
+# KNOWN class and a line whose object the sheet cannot name keeps the property write it is.
+
+
+## U6. The node class whose `request` is a web request.
+const HTTP_CLASSES: PackedStringArray = ["HTTPRequest"]
+
+## U6. Both spellings of the POST verb a request's method argument may be written with.
+const HTTP_POST_METHODS: PackedStringArray = ["HTTPClient.METHOD_POST", "METHOD_POST"]
+
+## U6. Both spellings of the constant a finished request's result is compared against.
+const HTTP_SUCCESS_CONSTANTS: PackedStringArray = ["HTTPRequest.RESULT_SUCCESS", "RESULT_SUCCESS"]
+
+
+## U6. The two AJAX steps: `http.request(url)` asks a server for something, and the same call carrying
+## the POST verb and a body sends something to it. What a post SENDS is what a reader wants first and
+## where it goes second, which is why the two have different sentences rather than one with a note.
+static func web_call(call: Dictionary, context: Dictionary) -> Dictionary:
+	var method: String = str(call.get("method", ""))
+	if method != "request" and method != "request_raw":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.is_empty():
+		return {}
+	var object_name: String = _receiver_object(str(call.get("target", "")), context)
+	if not _class_is_any(object_class_of(object_name, context), HTTP_CLASSES):
+		return {}
+	var line: String = str(call.get("line", ""))
+	var url: String = expression_text(args[0], context)
+	if args.size() < 3:
+		return _with_pattern(_sentence(OBJECT_AJAX, "Request {url}", {"url": [url, "value"]}), "ajax", line)
+	# A request that names a verb reads as a post only when the verb IS post. Any other verb is a shape
+	# this reading has no sentence for, so the line keeps the call it is rather than being renamed.
+	if not HTTP_POST_METHODS.has(args[2].strip_edges()):
+		return {}
+	if args.size() < 4:
+		return _with_pattern(_sentence(OBJECT_AJAX, "Post to {url}", {"url": [url, "value"]}), "ajax", line)
+	return _with_pattern(_sentence(OBJECT_AJAX, "Post {data} to {url}", {
+		"data": [expression_text(args[3], context), "value"],
+		"url": [url, "value"]
+	}), "ajax", line)
+
+
+## U6. `result != HTTPRequest.RESULT_SUCCESS` is the sheet's request-succeeded question asked the
+## other way round, so it reads as that question with `not` in front of it - which the canvas draws as
+## the ✕ every inverted condition already carries. Only a bare name on the left is claimed: a result
+## worked out from something else is not the answer this question is about.
+static func web_condition(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = text.strip_edges()
+	for operator: String in [" == ", " != "]:
+		var at: int = top_level_index(bare, operator)
+		if at <= 0:
+			continue
+		if not HTTP_SUCCESS_CONSTANTS.has(bare.substr(at + operator.length()).strip_edges()):
+			continue
+		if not is_identifier(bare.substr(0, at).strip_edges()):
+			continue
+		var asked: Dictionary = _sentence(OBJECT_AJAX, "request succeeded", {})
+		if operator == " == ":
+			return _with_pattern(asked, "ajax", bare)
+		var negated: Array = [{"text": "%s " % translate("not"), "tone": "plain"}]
+		negated.append_array(asked.get("segments", []) as Array)
+		return _with_pattern({"object": OBJECT_AJAX, "segments": negated}, "ajax", bare)
+	return {}
+
+
+## U7. The classes whose knobs read as the sheet's Light rows, in both node generations.
+const LIGHT_CLASSES: PackedStringArray = ["Light2D", "Light3D"]
+
+## U7. The two spellings each light knob has: a 2D light says `energy` and `color`, a 3D one says
+## `light_energy` and `light_color`, and both mean the one row.
+const LIGHT_ENERGY_MEMBERS: PackedStringArray = ["energy", "light_energy"]
+const LIGHT_COLOUR_MEMBERS: PackedStringArray = ["color", "light_color"]
+
+## U7. The class a whole layer's tint is written on, and the environment member the world's ambient
+## light is. Neither belongs to a light anybody can point at, so both read under System.
+const LAYER_TINT_CLASSES: PackedStringArray = ["CanvasModulate"]
+const AMBIENT_LIGHT_MEMBER := "ambient_light_energy"
+
+
+## U7. The light knobs, in the words the sheet's own Light rows publish. Brightness is a percentage,
+## because that is how a reader sets it and how every other 0-to-1 setting on the sheet already reads.
+static func lighting_assignment(object_name: String, object_class: String, member: String,
+		owner_text: String, assigned: String, context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	var line: String = _member_line(owner_text, member, value)
+	# A whole layer's tint and the world's ambient light are settings of the LAYOUT, so they read
+	# under System exactly as the other layout rows do, with Godot's own spelling one hover away.
+	if member == "color" and _class_is_any(object_class, LAYER_TINT_CLASSES):
+		var tint: Dictionary = _sentence(OBJECT_SYSTEM, "Set layer tint to {value}",
+			{"value": [expression_text(value, context), "value"]})
+		(tint["segments"] as Array).append({"text": " %s" % _class_note(object_class), "tone": "muted"})
+		return _with_pattern(tint, "lighting", line)
+	if member == AMBIENT_LIGHT_MEMBER and owner_text.ends_with("environment"):
+		return _with_pattern(_sentence(OBJECT_SYSTEM, "Set ambient light to {value}",
+			{"value": [_percent_words(value, context), "value"]}), "lighting", line)
+	if not _class_is_any(object_class, LIGHT_CLASSES):
+		return {}
+	if LIGHT_ENERGY_MEMBERS.has(member):
+		return _with_pattern(_sentence(object_name, "Set light energy to {value}",
+			{"value": [_percent_words(value, context), "value"]}), "lighting", line)
+	if LIGHT_COLOUR_MEMBERS.has(member):
+		return _with_pattern(_sentence(object_name, "Set light colour to {value}",
+			{"value": [expression_text(value, context), "value"]}), "lighting", line)
+	if member == "enabled" and (value == "true" or value == "false"):
+		return _with_pattern(_sentence(object_name,
+			"Set light on" if value == "true" else "Set light off", {}), "lighting", line)
+	if member == "shadow_enabled" and (value == "true" or value == "false"):
+		return _with_pattern(_sentence(object_name,
+			"Set shadows on" if value == "true" else "Set shadows off", {}), "lighting", line)
+	return {}
+
+
+## Godot's own spelling for a row whose sentence renamed it, said quietly after the words. Never
+## translated: it is the class name the engine uses, which is exactly what makes it useful here.
+static func _class_note(object_class: String) -> String:
+	return object_class.strip_edges()
