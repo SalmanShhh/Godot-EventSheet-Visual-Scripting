@@ -105,6 +105,44 @@ hover away.
   trigger event it is instead of stranding the whole handler as a code block. The connect line is
   re-emitted verbatim, flags and all.
 
+### Added - an opened file says how much of it reads as events, what its settings are limited to, and whether it is the project's global
+
+- **A reading-coverage chip on the Include bar.** An opened `.gd` now says the one thing a reader
+  wants before reading a line of it: `96% reads as events · 3 script blocks ▸`. Clicking it walks
+  the script blocks, one per click, so the parts that did NOT arrive as rows are a click away rather
+  than a scroll away. A file that lifted completely just says `reads as events` - a share and a zero
+  would be a sentence with nothing in it. The measure is ONE shared static
+  (`EventSheetReadingCoverage`), and it is the same one the corpus gate measures with, so the chip and
+  the test can never disagree about the same file. When the engine reported parse errors for the
+  file, the bar also says `N errors - the game will not run this script`, in red.
+- **Setting rows show their Inspector facts.** A knob's limits and choices read on its row, the way an
+  event sheet's properties panel shows them: `@export_range(0, 20, 0.5)` reads
+  `number speed = 5  0 to 20, step 0.5`; `@export_enum("Walk", "Run", "Fly")` reads as a `combo` chip
+  showing the LABEL rather than the number (`mode = Walk  Walk / Run / Fly`); a 0-to-1 range reads as
+  a percent (`50%`); `@export_file("*.png")` reads `file portrait = ""  *.png`; `@export_dir` reads
+  `folder`; `@export_multiline` reads `text` with a `multiline` note; a Color reads its swatch and its
+  word (`tint = white`); `@export_node_path` reads `node path`; and `@export_flags(...)` reads `flags`
+  with the names of the bits. Read from the hint families the importer already stores structurally, so
+  nothing new is parsed and nothing is written back.
+- **An autoload opens as the project's Globals sheet.** When the opened file IS a project autoload,
+  its Include bar reads `⇥ Game  autoload (global) · game.gd` with the globe, its Settings and
+  Internal state folders collapse into ONE `Global variables` folder (on a global there is nothing for
+  a second folder to mean), its Triggers bar says `this global fires - N`, and the Objects rail names
+  it the same way - the words every other sheet's `Game (global) ▸ …` rows already use for it.
+
+### Changed - the editor describes itself in the sheet's words
+
+One sweep of user-facing strings, so the chrome around the readings says what the readings say.
+`code card` / `code block` / `GDScript block` became **script block** wherever it means a block that
+could not lift - the folded card on the canvas, the Add menu, the code dialog, the Loose Ends entries,
+the lint and open status lines, the compiler's own warnings. `fold` / `unfold` became **collapse** /
+**expand** in the palette commands, the shortcut sheet, the theme editor and the group status line.
+And user-facing **verb** became `action`, `condition`, `expression` or `function` as each case
+deserved - the Loose Ends heading, the Repeated Rows dialog, the inline and refactor messages, the
+picker's own right-click menu, the publish-and-teach flow. Identifiers, ids and tests keep their
+names; `Teach a Verb` keeps its name too (it is the feature's), and only its description changed.
+Every renamed key moved in lockstep across all nine translation catalogs.
+
 ### Added - an opened script's questions, text, saving, behaviours, input and logging read as rows
 
 Six more families of everyday GDScript now read as the rows they are instead of as the code they are
