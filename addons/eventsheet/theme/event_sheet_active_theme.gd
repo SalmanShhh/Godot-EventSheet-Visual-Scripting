@@ -26,12 +26,17 @@ static func publish(style: EventSheetEditorStyle) -> void:
 	_active = style
 
 
-## The style the chrome should paint from - the published one, or the bundled default.
+## The style the chrome should paint from - the published one, or the default the sheet itself falls
+## back to. That default is the EDITOR-MATCHED one, not a bare resource: a sheet with no theme takes
+## its colours from the running Godot editor, and a status strip that ignored that would be the one
+## dark thing on a light editor. Outside the editor (headless tests, a game build that shipped the
+## addons folder) the adaptation is a no-op and the bundled tokens stand. Built once, because a
+## painter asks for this on every redraw.
 static func active() -> EventSheetEditorStyle:
 	if _active != null:
 		return _active
 	if _fallback == null:
-		_fallback = EventSheetEditorStyle.new()
+		_fallback = EventSheetGodotTheme.adapt_to_editor(EventSheetEditorStyle.new())
 	return _fallback
 
 
