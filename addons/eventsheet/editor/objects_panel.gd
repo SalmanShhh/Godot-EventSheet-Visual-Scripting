@@ -193,6 +193,16 @@ static func sections_for(census: Array, scene_only: Array, scene_name: String) -
 	]
 
 
+## One section's header line: its title, then its count and what it is FOR. USED carries no count -
+## the header above the bar already says how many are used, and the entries are right there.
+static func section_line(section: Dictionary, shown: int) -> String:
+	if str(section.get("id", "")) == "used":
+		return str(section.get("title", ""))
+	var note: String = str(section.get("note", ""))
+	var counted: String = "%s  (%d)" % [str(section.get("title", "")), shown]
+	return counted if note.is_empty() else "%s - %s" % [counted, note]
+
+
 ## What the SCENE has that the sheet does not use yet: at most the direct children of the root plus
 ## anything carrying a script, so the section stays a bar and never becomes a second Scene dock.
 static func scene_only_entries(census: Array, scene_path: String) -> Array:
@@ -331,14 +341,7 @@ func _rebuild_tree() -> void:
 		if visible_entries.is_empty():
 			continue
 		var section_item: TreeItem = tree.create_item(root)
-		section_item.set_text(0, "%s%s" % [
-			str(section.get("title", "")),
-			"  (%d)" % visible_entries.size() if str(section.get("id", "")) != "used" else ""
-		])
-		var note: String = str(section.get("note", ""))
-		if not note.is_empty():
-			section_item.set_text(1, "")
-			section_item.set_tooltip_text(0, note)
+		section_item.set_text(0, section_line(section, visible_entries.size()))
 		section_item.set_selectable(0, false)
 		section_item.set_selectable(1, false)
 		section_item.set_custom_color(0, EventSheetPalette.TEXT_MUTED)

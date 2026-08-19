@@ -209,6 +209,11 @@ func build_ui() -> void:
 	_dock._viewport.ace_preview_requested.connect(_dock._on_ace_preview_requested)
 	_dock._viewport.asset_dropped.connect(_dock._apply_asset_drop)
 	_dock._viewport.object_bar_dropped.connect(_dock.apply_object_bar_drop)
+	# Q10 - a thumbnail the editor's preview cache renders after the row was drawn: redraw once when
+	# it lands, so the picture appears rather than waiting for the next thing to move.
+	EventSheetObjectThumbnails.set_arrival_handler(func() -> void:
+		if _dock._viewport != null:
+			_dock._viewport.queue_redraw())
 	_dock._viewport.property_dropped.connect(_dock._apply_property_drop)
 	_dock._viewport.ace_picker_requested.connect(_dock._on_viewport_ace_picker_requested)
 	_dock._viewport.span_edit_requested.connect(_dock._on_viewport_span_edit_requested)

@@ -411,6 +411,12 @@ func _ready() -> void:
 ## Editor filesystem ping: cheap fingerprint check inside; only a REAL translation-folder
 ## change reloads catalogs and re-translates the live UI (and redraws the canvas-drawn strings).
 func _on_translations_maybe_changed() -> void:
+	# Q1/Q9/Q10 - the object facts, the signal fan-out and the thumbnails are all reads of files that
+	# just changed, so they are dropped here rather than kept for a session that has outlived them.
+	# Each rebuilds lazily on the next question, which costs one scan and never a wrong answer.
+	EventSheetObjectFacts.clear_cache()
+	EventSheetSignalFanout.clear_cache()
+	EventSheetObjectThumbnails.clear_cache()
 	if EventSheetL10n.reload_if_changed():
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:

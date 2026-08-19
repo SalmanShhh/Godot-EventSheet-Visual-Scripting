@@ -239,6 +239,13 @@ static func _object_bar_sections() -> bool:
 		"USED IN THIS SHEET: Player · Sprite2D · Boss"
 		+ " | ALSO IN THE SCENE: Camera2D"
 		+ " | GLOBALS & FAMILIES: Game · enemies") and passed
+	passed = _check("the used section is its title and nothing else",
+		EventSheetObjectsPanel.section_line(sections[0], 3), "USED IN THIS SHEET") and passed
+	passed = _check("the scene section counts what is left and says what to do with it",
+		EventSheetObjectsPanel.section_line(sections[1], 1),
+		"ALSO IN THE SCENE  (1) - drag one onto the sheet to use it") and passed
+	passed = _check("the globals section just counts",
+		EventSheetObjectsPanel.section_line(sections[2], 2), "GLOBALS & FAMILIES  (2)") and passed
 	# A name that resolves to nothing at runtime is the one thing in the bar a reader must not
 	# scroll past, so it is flagged rather than listed like any other node.
 	passed = _check("an object the scene does not have is flagged",
