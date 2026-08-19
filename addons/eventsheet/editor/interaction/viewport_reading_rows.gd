@@ -1099,6 +1099,44 @@ static func _tally_usage(order: Array, by_label: Dictionary, units: Array) -> vo
 		by_label[str(entry.get("label", ""))] = entry
 
 
+## Q12 - one object's usage split the way the sheet is split: {"conditions", "actions", "triggers"}.
+## The Object bar's count says how many ROWS use the object, and hovering it says what those rows ARE,
+## which is the difference between "Player is busy here" and "Player is checked here".
+##
+## Counted off the same text the census counts off, so a hand-written line and the lifted row beside
+## it are counted alike.
+static func object_usage_split(sheet: EventSheetResource, object_label: String) -> Dictionary:
+	var split: Dictionary = {"conditions": 0, "actions": 0, "triggers": 0}
+	var label: String = object_label.strip_edges()
+	if sheet == null or label.is_empty():
+		return split
+	_split_rows(sheet.events, label, split)
+	return split
+
+
+static func _split_rows(rows: Array, label: String, split: Dictionary) -> void:
+	for entry: Variant in rows:
+		var event_row: EventRow = entry as EventRow
+		if event_row == null:
+			continue
+		if not event_row.trigger_id.is_empty():
+			var trigger_code: PackedStringArray = PackedStringArray()
+			_collect_ace_code(event_row, trigger_code)
+			if _mentions("\n".join(trigger_code), label):
+				split["triggers"] = int(split["triggers"]) + 1
+		for condition: Variant in event_row.conditions:
+			var condition_code: PackedStringArray = PackedStringArray()
+			_collect_ace_code(condition, condition_code)
+			if _mentions("\n".join(condition_code), label):
+				split["conditions"] = int(split["conditions"]) + 1
+		for action: Variant in event_row.actions:
+			var action_code: PackedStringArray = PackedStringArray()
+			_collect_ace_code(action, action_code)
+			if _mentions("\n".join(action_code), label):
+				split["actions"] = int(split["actions"]) + 1
+		_split_rows(event_row.sub_events, label, split)
+
+
 ## The verbs and signals one object is used with, in the order the code introduces them. A member
 ## followed by `(` is a verb; one connected or awaited is a signal.
 static func _collect_members(code: String, label: String, entry: Dictionary) -> void:
@@ -1242,9 +1280,16 @@ static func object_note(entry: Dictionary) -> String:
 	return " · ".join(parts)
 
 
-## The icon one census entry draws: its class picture for a node, the globe for an autoload, and
-## nothing for a group (which is a name, not a thing with a picture).
-static func object_icon(entry: Dictionary, class_map: Dictionary) -> Texture2D:
+## The icon one census entry draws: its own SPRITE when the object's scene has one (Q10), else its
+## class picture for a node, the globe for an autoload, and nothing for a group (which is a name, not
+## a thing with a picture).
+##
+## `sheet_source_path` is the open file; without it (a caller that has no sheet to hand) the answer
+## is the class icon exactly as before, which is also what a headless run gets.
+static func object_icon(entry: Dictionary, class_map: Dictionary, sheet_source_path: String = "") -> Texture2D:
+	var picture: Texture2D = EventSheetObjectThumbnails.thumbnail_for(entry, sheet_source_path)
+	if picture != null:
+		return picture
 	if str(entry.get("kind", "")) == "autoload":
 		return autoload_icon()
 	var class_name_str: String = str(entry.get("class", "")).strip_edges()

@@ -2090,3 +2090,38 @@ transparent,прозрачный
 autoload (global),автозагрузка (глобально)
 Global variables,Глобальные переменные
 this global fires - %d,этот глобал вызывает - %d
+On %s,При %s
+Instance variables,Переменные экземпляра
+Behaviors,Поведения
+Families,Семейства
+(groups),(группы)
+Add condition,Добавить условие
+Add action,Добавить действие
+Open %s as sheet,Открыть %s как лист
+Open its script as a sheet,Открыть его скрипт как лист
+1 listener,1 слушатель
+%d listeners,Слушателей: %d
+emitted in %s,вызывается в %s
+(+%d more),(и ещё %d)
+on this object,на этом объекте
+this object belongs to,этот объект принадлежит
+addon pack,пакет дополнения
+global,глобальный
+All objects,Все объекты
+USED IN THIS SHEET,ИСПОЛЬЗУЕТСЯ В ЭТОМ ЛИСТЕ
+ALSO IN THE SCENE,ТАКЖЕ В СЦЕНЕ
+GLOBALS & FAMILIES,ГЛОБАЛЬНЫЕ И СЕМЕЙСТВА
+filter objects...,фильтр объектов...
+drag one onto the sheet to use it,"перетащите на лист, чтобы использовать"
+not in %s,нет в %s
+1 condition,1 условие
+%d conditions,Условий: %d
+1 action,1 действие
+%d actions,Действий: %d
+1 trigger,1 триггер
+%d triggers,Триггеров: %d
+%d used,используется: %d
+%d more,ещё %d
+"Sort by reading order, by count or by name.","Сортировка по порядку чтения, по количеству или по имени."
+Nothing in this sheet names an object yet.,Пока ничто в этом листе не называет объект.
+This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,"Этот скрипт ещё не на сцене - перетащите его на узел в доке «Сцена», и его объекты появятся здесь."

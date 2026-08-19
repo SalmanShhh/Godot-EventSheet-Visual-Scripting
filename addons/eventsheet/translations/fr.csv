@@ -2090,3 +2090,38 @@ transparent,transparent
 autoload (global),autoload (global)
 Global variables,Variables globales
 this global fires - %d,ce global déclenche - %d
+On %s,Sur %s
+Instance variables,Variables d'instance
+Behaviors,Comportements
+Families,Familles
+(groups),(groupes)
+Add condition,Ajouter une condition
+Add action,Ajouter une action
+Open %s as sheet,Ouvrir %s comme feuille
+Open its script as a sheet,Ouvrir son script comme feuille
+1 listener,1 auditeur
+%d listeners,%d auditeurs
+emitted in %s,émis dans %s
+(+%d more),(+%d de plus)
+on this object,sur cet objet
+this object belongs to,cet objet appartient à
+addon pack,pack d'extension
+global,global
+All objects,Tous les objets
+USED IN THIS SHEET,UTILISÉS DANS CETTE FEUILLE
+ALSO IN THE SCENE,AUSSI DANS LA SCÈNE
+GLOBALS & FAMILIES,GLOBAUX ET FAMILLES
+filter objects...,filtrer les objets...
+drag one onto the sheet to use it,faites-en glisser un sur la feuille pour l'utiliser
+not in %s,absent de %s
+1 condition,1 condition
+%d conditions,%d conditions
+1 action,1 action
+%d actions,%d actions
+1 trigger,1 déclencheur
+%d triggers,%d déclencheurs
+%d used,%d utilisés
+%d more,%d de plus
+"Sort by reading order, by count or by name.","Trier par ordre de lecture, par nombre ou par nom."
+Nothing in this sheet names an object yet.,Rien dans cette feuille ne nomme encore d'objet.
+This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,Ce script n'est encore sur aucune scène - déposez-le sur un nœud dans le dock Scène et ses objets apparaîtront ici.

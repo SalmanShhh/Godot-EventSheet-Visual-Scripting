@@ -2090,3 +2090,38 @@ transparent,透明
 autoload (global),オートロード (グローバル)
 Global variables,グローバル変数
 this global fires - %d,このグローバルが発火 - %d
+On %s,%s したとき
+Instance variables,インスタンス変数
+Behaviors,ビヘイビア
+Families,ファミリー
+(groups),(グループ)
+Add condition,条件を追加
+Add action,アクションを追加
+Open %s as sheet,%s をシートとして開く
+Open its script as a sheet,そのスクリプトをシートとして開く
+1 listener,リスナー 1 件
+%d listeners,リスナー %d 件
+emitted in %s,%s で発行
+(+%d more),(他 %d 件)
+on this object,このオブジェクト上
+this object belongs to,このオブジェクトの所属
+addon pack,アドオンパック
+global,グローバル
+All objects,すべてのオブジェクト
+USED IN THIS SHEET,このシートで使用中
+ALSO IN THE SCENE,シーン内のその他
+GLOBALS & FAMILIES,グローバルとファミリー
+filter objects...,オブジェクトを絞り込む...
+drag one onto the sheet to use it,シートにドラッグすると使えます
+not in %s,%s にありません
+1 condition,条件 1 件
+%d conditions,条件 %d 件
+1 action,アクション 1 件
+%d actions,アクション %d 件
+1 trigger,トリガー 1 件
+%d triggers,トリガー %d 件
+%d used,使用中 %d 件
+%d more,他 %d 件
+"Sort by reading order, by count or by name.",読み順・件数・名前で並べ替えます。
+Nothing in this sheet names an object yet.,このシートはまだどのオブジェクトも指していません。
+This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,このスクリプトはまだシーンに置かれていません。シーンドックのノードにドロップすると、そのオブジェクトがここに表示されます。

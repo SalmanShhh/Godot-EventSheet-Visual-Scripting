@@ -411,6 +411,12 @@ func _ready() -> void:
 ## Editor filesystem ping: cheap fingerprint check inside; only a REAL translation-folder
 ## change reloads catalogs and re-translates the live UI (and redraws the canvas-drawn strings).
 func _on_translations_maybe_changed() -> void:
+	# Q1/Q9/Q10 - the object facts, the signal fan-out and the thumbnails are all reads of files that
+	# just changed, so they are dropped here rather than kept for a session that has outlived them.
+	# Each rebuilds lazily on the next question, which costs one scan and never a wrong answer.
+	EventSheetObjectFacts.clear_cache()
+	EventSheetSignalFanout.clear_cache()
+	EventSheetObjectThumbnails.clear_cache()
 	if EventSheetL10n.reload_if_changed():
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:
@@ -503,8 +509,28 @@ func _refresh_tab_bar() -> void:
 		return
 	_suppress_tab_signal = true
 	_tab_bar.clear_tabs()
+	# Q4 - a tab is named for what the sheet is ABOUT, with the object's own picture; the FILE it is
+	# stored in rides on the tooltip, which is where a storage detail belongs.
+	var name_counts: Dictionary = {}
 	for tab: Dictionary in _open_tabs:
-		_tab_bar.add_tab(_format_tab_title(tab.get("sheet"), str(tab.get("path", "")), bool(tab.get("dirty", false))))
+		var counted: String = str(EventSheetObjectFacts.sheet_object_title(
+			tab.get("sheet"), str(tab.get("path", ""))).get("name", ""))
+		name_counts[counted] = int(name_counts.get(counted, 0)) + 1
+	for tab_index in range(_open_tabs.size()):
+		var tab: Dictionary = _open_tabs[tab_index]
+		var path: String = str(tab.get("path", ""))
+		var sheet: EventSheetResource = tab.get("sheet")
+		var title: Dictionary = EventSheetObjectFacts.sheet_object_title(sheet, path)
+		var shown: String = _format_tab_title(sheet, path, bool(tab.get("dirty", false)))
+		# Two objects with one name get the file added, because a pair of identical tabs is worse
+		# than a long one.
+		if int(name_counts.get(str(title.get("name", "")), 0)) > 1:
+			shown = "%s · %s" % [shown, str(title.get("file", path)).get_file()]
+		_tab_bar.add_tab(shown)
+		_tab_bar.set_tab_tooltip(tab_index, _tab_tooltip(title, path))
+		var mark: Texture2D = _tab_icon(title)
+		if mark != null:
+			_tab_bar.set_tab_icon(tab_index, mark)
 	if _active_tab_index >= 0 and _active_tab_index < _tab_bar.get_tab_count():
 		_tab_bar.current_tab = _active_tab_index
 	_tab_bar.visible = _open_tabs.size() >= 1
@@ -573,6 +599,28 @@ func reopen_sheet_path(path: String) -> void:
 	# dead "recently closed" entry behind. A successful load re-emits via _refresh_tab_bar.
 	open_tabs_changed.emit()
 	_load_sheet_from_path(path)
+
+
+## Q4 - the file behind a tab, plus the note that says what kind of sheet it is ("addon pack",
+## "global"). The hover is where a reader asks "which file is this, again?".
+static func _tab_tooltip(title: Dictionary, path: String) -> String:
+	var file_path: String = str(title.get("file", "")).strip_edges()
+	if file_path.is_empty():
+		file_path = path
+	var note: String = str(title.get("note", ""))
+	if file_path.is_empty():
+		return note
+	return file_path if note.is_empty() else "%s · %s" % [file_path, note]
+
+
+## Q4/Q10 - the tab's mark: the object's own sprite when its scene has one, else its class icon.
+static func _tab_icon(title: Dictionary) -> Texture2D:
+	var icon_class: String = str(title.get("icon_class", ""))
+	var picture: Texture2D = EventSheetObjectThumbnails.thumbnail_for(
+		{"kind": "script", "label": str(title.get("name", ""))}, str(title.get("file", "")))
+	if picture != null:
+		return picture
+	return ACEPickerDialog.editor_icon(icon_class) if not icon_class.is_empty() else null
 
 
 func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> String:
@@ -4072,9 +4120,60 @@ func highlight_object_rows(object_label: String) -> void:
 	if _viewport.lens_active() and _viewport.lens_query() == wanted:
 		_apply_lens("")
 		if _objects_panel != null:
-			_objects_panel.list.deselect_all()
+			_objects_panel.tree.deselect_all()
 		return
 	_apply_lens(wanted)
+
+
+## Q12 - HOVER previews before a click pins: the object's rows glow while the pointer rests on its
+## bar entry and forget the moment it leaves, so a reader can sweep the bar without committing to
+## anything. A preview never touches the filter lens, which is what makes it a preview.
+func preview_object_rows(object_label: String) -> void:
+	if _viewport == null:
+		return
+	_viewport.set_object_preview(object_label.strip_edges())
+
+
+## Q1/Q12 - Add condition / Add action for ONE object: the picker opens with the object step already
+## answered, so the row lands on that object instead of on whatever the reader picks next. The scope
+## is the object's CLASS, because that is what the picker's verbs are grouped by.
+func add_row_for_object(object_label: String, as_action: bool) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var context: Dictionary = {
+		"object_scope": str(entry.get("class", "")).strip_edges(),
+		"object_label": object_label
+	}
+	var selected_resource: Resource = _active_view().get_selected_context().get("source_resource", null)
+	if as_action:
+		_ace_picker.open("append_action" if selected_resource is EventRow else "new_event",
+			false, selected_resource, context)
+		return
+	_ace_picker.open("append_condition" if selected_resource is EventRow else "new_condition_event",
+		false, selected_resource, context)
+
+
+## Q12 - an object dragged off the Object bar and dropped on the canvas: the sheet's way of "start
+## using an object". The drop selects where it lands, then opens the picker already scoped to that
+## object - Add action when it landed in an event's action lane, Add condition anywhere else.
+func apply_object_bar_drop(object_label: String, target_event: Resource, on_action_lane: bool) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	if target_event != null and _active_view() != null:
+		_active_view().select_resource(target_event)
+	add_row_for_object(object_label, on_action_lane)
+
+
+## Q1 - open the file that says what an object IS, as a sheet. Goes through the same navigation the
+## Include bar's "open as a sheet" uses, so Alt+Left walks back the way a reader expects.
+func open_object_file_as_sheet(script_path: String) -> void:
+	var path: String = script_path.strip_edges()
+	if path.is_empty():
+		_set_status("This object has no script of its own to open.", true)
+		return
+	_navigate.record_current()
+	_navigate.open_or_focus(path)
 
 
 ## N10 - reveal an object in the Godot scene dock. Only meaningful while the scene holding it is the
@@ -4644,13 +4743,17 @@ func _refresh_title_strip() -> void:
 	_refresh_preview_banner()
 
 
+## Q4 - a sheet is named for the OBJECT it is about, not for the file it is stored in: the tab, the
+## Open Sheets list, the window title and the recents all read "Player" where they read "player.gd".
+## The file is still one hover away (_tab_tooltip / _format_sheet_path_hint).
 static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String) -> String:
 	if sheet == null:
 		return "No Sheet Loaded"
 	var resolved_path: String = _resolve_sheet_path(sheet, explicit_path)
 	if resolved_path.is_empty():
 		return "Untitled EventSheet"
-	return resolved_path.get_file().get_basename()
+	var object_name: String = str(EventSheetObjectFacts.sheet_object_title(sheet, resolved_path).get("name", ""))
+	return object_name if not object_name.is_empty() else resolved_path.get_file().get_basename()
 
 
 static func _format_sheet_path_hint(sheet: EventSheetResource, explicit_path: String) -> String:

@@ -234,6 +234,41 @@ picker's own right-click menu, the publish-and-teach flow. Identifiers, ids and 
 names; `Teach a Verb` keeps its name too (it is the feature's), and only its description changed.
 Every renamed key moved in lockstep across all nine translation catalogs.
 
+### Added - objects: what they are, where their picture is, who listens, and a bar to find them in
+
+The sheet already said what a file DOES with its objects. Six changes now say what those objects ARE,
+and give the bar you reach for them from. Display only, again: no line of an opened file moves, and
+the byte round-trip is unchanged.
+
+- **Object properties say what the object IS.** The popup an object label opens gains its instance
+  variables, its functions (one that answers yes-or-no is marked `condition`), its triggers, the
+  behaviors mounted on it with what the scene set on each (`Health  max health = 50.0`), and the
+  families it belongs to - with the Godot word `(groups)` riding along once, muted. Two new buttons
+  start using it - **Add condition** and **Add action**, both opening the picker already scoped to
+  that object - and a third opens the file that says what it is, as a sheet. Read from the object's
+  own script and from the scene it is placed in, both as text: nothing is instantiated.
+- **The head shows the object's Behaviors and Families.** Two folded folders in an opened script's
+  head, before the settings, from the same two sources.
+- **Tabs and titles name the object, not the file.** A tab reads `Player` with the object's picture,
+  a pack reads by its pack name, an autoload reads as a global; the file name sits on the tooltip,
+  and two objects with one name get the file added.
+- **Signals say who listens.** An emit wears a muted `→ HUD, Level (2 listeners)`; a handler wears
+  `← emitted in player.gd: Take Damage`. Both are click-to-jump, both come from one project-wide
+  index of `.connect` lines, `emit` sites and `.tscn` `[connection]` rows, built once per session.
+- **Sprite thumbnails as the object's mark.** When an object's scene has a Sprite2D / TextureRect at
+  the top, its texture becomes the object's picture on the Include bar, the Object bar, the Object
+  properties popup and every object label - from the editor's own preview cache, so nothing new is
+  rendered and headless stays icon-only.
+- **The Object bar.** Three sections in the order a reader wants them: USED IN THIS SHEET with
+  per-object counts and behaviors nested under the object they ride on, ALSO IN THE SCENE collapsed,
+  GLOBALS & FAMILIES collapsed. Plus a filter box (Enter on a single match pins it), a sort toggle
+  (reading order / count / name, remembered), an object the scene does not have flagged `⚠`, and a
+  count whose hover splits into `2 conditions · 3 actions · 1 trigger`. Five gestures: hover previews
+  an object's rows, click pins that highlight, double-click opens Object properties, right-click
+  offers Add condition / Add action / Select in scene / Open its script as a sheet, and dragging an
+  object onto the sheet starts an event on it (dropping it in an event's action lane adds an action
+  instead).
+
 ### Added - an opened script's questions, text, saving, behaviours, input and logging read as rows
 
 Six more families of everyday GDScript now read as the rows they are instead of as the code they are

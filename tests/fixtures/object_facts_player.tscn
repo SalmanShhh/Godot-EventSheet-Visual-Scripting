@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/object_facts_player.gd" id="1_player"]
+[ext_resource type="Script" path="res://eventsheet_addons/health/health_behavior.gd" id="2_health"]
+[ext_resource type="Texture2D" path="res://eventsheet_addons/behavior.svg" id="3_mark"]
+
+[node name="Player" type="CharacterBody2D" groups=["player", "damageable"]]
+script = ExtResource("1_player")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("3_mark")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 50.0
+
+[node name="Camera2D" type="Camera2D" parent="."]

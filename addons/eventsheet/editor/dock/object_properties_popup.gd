@@ -22,11 +22,13 @@ extends RefCounted
 ## an object answers, and so the panel builder has one loop instead of five hand-placed rows.
 ## Each entry: {"label": String, "value": String, "form": String} - form is "text" (a plain value)
 ## or "code" (a monospace card).
-static func property_rows(entry: Dictionary, scene_name: String = "") -> Array[Dictionary]:
+static func property_rows(entry: Dictionary, scene_name: String = "",
+		source_path: String = "") -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	if entry.is_empty():
 		return rows
 	rows.append({"label": EventSheetL10n.translate("Type"), "value": type_summary(entry), "form": "text"})
+	rows.append_array(identity_rows(entry, source_path))
 	var path: String = path_summary(entry, scene_name)
 	if not path.is_empty():
 		rows.append({"label": EventSheetL10n.translate("Path"), "value": path, "form": "code"})
@@ -35,6 +37,95 @@ static func property_rows(entry: Dictionary, scene_name: String = "") -> Array[D
 	if not signals_used.is_empty():
 		rows.append({"label": EventSheetL10n.translate("Signals used"), "value": signals_used, "form": "text"})
 	return rows
+
+
+## Q1 - what the object IS, as opposed to what this file does with it: the instance variables it
+## carries, the functions and triggers it offers, the behaviors mounted on it and the families it
+## belongs to. Each row is a chip list, in the order a reader asks for them; a row with nothing in it
+## is not built, because "Behaviors: none" is a line on nearly every object.
+##
+## The families row carries the muted Godot word as its note - a Godot group IS the sheet's family,
+## and a reader who knows only one of the two words needs the bridge exactly once.
+static func identity_rows(entry: Dictionary, source_path: String) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if entry.is_empty():
+		return rows
+	var facts: Dictionary = EventSheetObjectFacts.facts_for_entry(entry, source_path)
+	_append_chip_row(rows, EventSheetL10n.translate("Instance variables"),
+		_named_chips(facts.get("variables", [])))
+	_append_chip_row(rows, EventSheetL10n.translate("Functions"),
+		_signature_chips(facts.get("functions", []), EventSheetL10n.translate("condition")))
+	_append_chip_row(rows, EventSheetL10n.translate("Triggers"),
+		_signature_chips(facts.get("triggers", []), ""))
+	_append_chip_row(rows, EventSheetL10n.translate("Behaviors"), _behavior_chips(facts.get("behaviors", [])))
+	var families: Array = _family_chips(facts.get("families", PackedStringArray()))
+	if not families.is_empty():
+		rows.append({
+			"label": EventSheetL10n.translate("Families"),
+			"value": _chip_text(families),
+			"form": "chips",
+			"chips": families,
+			"note": EventSheetL10n.translate("(groups)")
+		})
+	return rows
+
+
+static func _append_chip_row(rows: Array[Dictionary], label: String, chips: Array) -> void:
+	if chips.is_empty():
+		return
+	rows.append({"label": label, "value": _chip_text(chips), "form": "chips", "chips": chips, "note": ""})
+
+
+## `{"text", "note"}` per chip - the note is the muted half a chip carries (a parameter list, a
+## behavior's setting, the word "condition").
+static func _named_chips(named: Array) -> Array:
+	var chips: Array = []
+	for item: Variant in named:
+		chips.append({"text": str((item as Dictionary).get("name", "")), "note": ""})
+	return chips
+
+
+## A function or trigger chip: its display name, with its parameter names as the muted note. A
+## function that answers yes-or-no is a CONDITION on the sheet, and says so.
+static func _signature_chips(declared: Array, condition_word: String) -> Array:
+	var chips: Array = []
+	for item: Variant in declared:
+		var declaration: Dictionary = item
+		var note: String = " ".join(PackedStringArray(declaration.get("params", PackedStringArray())))
+		if not condition_word.is_empty() and bool(declaration.get("condition", false)):
+			note = condition_word if note.is_empty() else "%s · %s" % [note, condition_word]
+		chips.append({"text": str(declaration.get("display", "")), "note": note})
+	return chips
+
+
+## A behavior chip: the pack's name, with what the scene set on it as the note.
+static func _behavior_chips(behaviors: Array) -> Array:
+	var chips: Array = []
+	for item: Variant in behaviors:
+		var behavior: Dictionary = item
+		var settings: PackedStringArray = PackedStringArray()
+		for property_entry: Variant in behavior.get("properties", []):
+			var property: Dictionary = property_entry
+			settings.append("%s = %s" % [str(property.get("name", "")), str(property.get("value", ""))])
+		chips.append({"text": str(behavior.get("name", "")), "note": " · ".join(settings)})
+	return chips
+
+
+static func _family_chips(families: PackedStringArray) -> Array:
+	var chips: Array = []
+	for family: String in families:
+		chips.append({"text": family, "note": ""})
+	return chips
+
+
+## One chip row read back as plain text, so a test pins what the row says without walking Controls.
+static func _chip_text(chips: Array) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for item: Variant in chips:
+		var chip: Dictionary = item
+		var note: String = str(chip.get("note", ""))
+		parts.append(str(chip.get("text", "")) if note.is_empty() else "%s (%s)" % [str(chip.get("text", "")), note])
+	return " · ".join(parts)
 
 
 ## What the object IS: its class when the file declares one, otherwise the kind of thing it is. A
@@ -83,7 +174,9 @@ static func signals_summary(entry: Dictionary) -> String:
 ## `on_highlight` / `on_select` / `on_code` are optional - a button with no handler is not built.
 static func build_panel(entry: Dictionary, scene_name: String = "", class_map: Dictionary = {},
 		on_highlight: Callable = Callable(), on_select: Callable = Callable(),
-		on_code: Callable = Callable()) -> Control:
+		on_code: Callable = Callable(), source_path: String = "",
+		on_add_condition: Callable = Callable(), on_add_action: Callable = Callable(),
+		on_open_sheet: Callable = Callable()) -> Control:
 	var column: VBoxContainer = EventSheetPopupUI.form_box()
 	column.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(360.0), 0.0)
 	if entry.is_empty():
@@ -92,7 +185,7 @@ static func build_panel(entry: Dictionary, scene_name: String = "", class_map: D
 		return EventSheetPopupUI.margined(column)
 	var title_row: HBoxContainer = HBoxContainer.new()
 	title_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
-	var icon: Texture2D = EventSheetViewportReadingRows.object_icon(entry, class_map)
+	var icon: Texture2D = EventSheetViewportReadingRows.object_icon(entry, class_map, source_path)
 	if icon != null:
 		var picture: TextureRect = TextureRect.new()
 		picture.texture = icon
@@ -110,9 +203,21 @@ static func build_panel(entry: Dictionary, scene_name: String = "", class_map: D
 	title_row.add_child(trailing)
 	column.add_child(title_row)
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
-	for row: Dictionary in property_rows(entry, scene_name):
+	for row: Dictionary in property_rows(entry, scene_name, source_path):
 		form.add_child(EventSheetPopupUI.form_row(str(row.get("label", "")), _field_for(row)))
 	column.add_child(EventSheetPopupUI.panel_section(form))
+	# Q1 - the two ways to START using the object, first: the popup is where a reader who just learned
+	# what an object offers reaches for it, and both open the picker already scoped to this object.
+	var authoring: HBoxContainer = HBoxContainer.new()
+	authoring.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+	_add_button(authoring, EventSheetL10n.translate("Add condition"), on_add_condition, true)
+	_add_button(authoring, EventSheetL10n.translate("Add action"), on_add_action, true)
+	var own_file: String = str(EventSheetObjectFacts.facts_for_entry(entry, source_path).get("script_path", ""))
+	if not own_file.is_empty() and own_file != source_path:
+		_add_button(authoring, EventSheetL10n.translate("Open %s as sheet") % own_file.get_file(),
+			on_open_sheet, true)
+	if authoring.get_child_count() > 0:
+		column.add_child(authoring)
 	var buttons: HBoxContainer = HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
 	_add_button(buttons, EventSheetL10n.translate("Highlight rows"), on_highlight, true)
@@ -137,13 +242,38 @@ static func can_select_in_scene(entry: Dictionary, scene_name: String) -> bool:
 ## One property row's field control, by its declared form.
 static func _field_for(row: Dictionary) -> Control:
 	var value: String = str(row.get("value", ""))
-	if str(row.get("form", "text")) == "code":
+	var form: String = str(row.get("form", "text"))
+	if form == "code":
 		return EventSheetPopupUI.code_card(value, EventSheetPalette.scaled_f(240.0))
+	if form == "chips":
+		return _chip_field(row)
 	var label: Label = Label.new()
 	label.text = value
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(240.0), 0.0)
 	return label
+
+
+## A chip row's field: one badge per name, wrapping, with the row's muted note (the Godot word behind
+## "Families") trailing. Built from the shared badge helper, so a chip here wears the same look as a
+## chip on a row.
+static func _chip_field(row: Dictionary) -> Control:
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", int(EventSheetPalette.scaled_f(4.0)))
+	flow.add_theme_constant_override("v_separation", int(EventSheetPalette.scaled_f(4.0)))
+	flow.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(240.0), 0.0)
+	for item: Variant in row.get("chips", []):
+		var chip: Dictionary = item
+		var note: String = str(chip.get("note", ""))
+		var text: String = str(chip.get("text", ""))
+		flow.add_child(EventSheetPopupUI.metadata_badge(text if note.is_empty() else "%s  %s" % [text, note]))
+	var note_text: String = str(row.get("note", ""))
+	if not note_text.is_empty():
+		var muted := Label.new()
+		muted.text = note_text
+		muted.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+		flow.add_child(muted)
+	return flow
 
 
 static func _add_button(host: HBoxContainer, text: String, handler: Callable, enabled: bool) -> void:
@@ -185,11 +315,17 @@ func open_for(object_label: String) -> void:
 		_popup.remove_child(child)
 		child.queue_free()
 	var label: String = str(entry.get("label", object_label))
+	var source_path: String = str(sheet.get("external_source_path")) if sheet != null else ""
+	var own_file: String = str(EventSheetObjectFacts.facts_for_entry(entry, source_path).get("script_path", ""))
 	_popup.add_child(build_panel(
 		entry, scene_name_for(sheet), EventSheetViewportReadingRows.object_class_map(sheet),
 		func() -> void: _run_and_close(func() -> void: _dock.highlight_object_rows(label)),
 		func() -> void: _run_and_close(func() -> void: _dock.select_object_in_scene(str(entry.get("path", "")))),
-		func() -> void: _run_and_close(func() -> void: _dock.show_object_in_code(label))
+		func() -> void: _run_and_close(func() -> void: _dock.show_object_in_code(label)),
+		source_path,
+		func() -> void: _run_and_close(func() -> void: _dock.add_row_for_object(label, false)),
+		func() -> void: _run_and_close(func() -> void: _dock.add_row_for_object(label, true)),
+		func() -> void: _run_and_close(func() -> void: _dock.open_object_file_as_sheet(own_file))
 	))
 	_popup.reset_size()
 	_popup.popup(Rect2i(Vector2i(_dock.get_screen_transform() * _dock.get_local_mouse_position()), Vector2i.ZERO))

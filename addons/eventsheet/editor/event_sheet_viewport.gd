@@ -9,6 +9,11 @@ signal variable_group_rename_requested(group_name: String)
 signal rows_drop_requested(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool)
 signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinition])
 signal asset_dropped(target_event: Resource, asset_paths: PackedStringArray)
+
+## Q12 - an object was dragged off the Object bar onto the canvas. `on_action_lane` says the drop
+## landed in an existing event's action lane, which is what turns "start an event on it" into "do
+## something to it here".
+signal object_bar_dropped(object_label: String, target_event: Resource, on_action_lane: bool)
 signal ace_picker_requested(row_data: EventRowData, lane: String)
 signal span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String)
 signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
@@ -1437,6 +1442,37 @@ func clear_lens() -> void:
 	set_lens("")
 
 
+# ── Q12. The Object bar's hover preview (view-only, never the lens) ───────────────────────────
+# Hovering an object in the bar makes its events glow softly; nothing is hidden and nothing sticks,
+# which is the whole difference between a preview and the pinned filter a click applies.
+var _object_preview: String = ""
+
+
+func set_object_preview(object_label: String) -> void:
+	var wanted: String = object_label.strip_edges()
+	if wanted == _object_preview:
+		return
+	_object_preview = wanted
+	queue_redraw()
+
+
+func object_preview() -> String:
+	return _object_preview
+
+
+## True when a row's own cells name the previewed object - matched on the OBJECT COLUMN, so a row
+## about Player glows and a row that merely mentions the word does not.
+static func row_previews_object(row_data: EventRowData, object_label: String) -> bool:
+	if row_data == null or object_label.is_empty():
+		return false
+	for span: SemanticSpan in row_data.spans:
+		if not (span.metadata is Dictionary):
+			continue
+		if str((span.metadata as Dictionary).get("object_label", "")) == object_label:
+			return true
+	return false
+
+
 func lens_active() -> bool:
 	return not _lens_query.is_empty()
 
@@ -1671,6 +1707,9 @@ func _draw() -> void:
 		# Drag-handle affordance: grip dots on the hovered row's left edge so reordering is
 		# discoverable without being told. They brighten when the pointer is in the whole-event drag
 		# zone (the empty lane band, not on an ACE cell) - the cue that "grab here to move the event".
+		# Q12 - the Object bar's hover preview: a soft wash over the rows that object appears in.
+		if not _object_preview.is_empty() and row_previews_object(row_data, _object_preview):
+			draw_rect(row_rect, Color(1.0, 1.0, 1.0, 0.07), true)
 		if index == _hovered_row_index and not _flat_rows.is_empty():
 			var grip_color: Color = Color(1.0, 1.0, 1.0, 0.62 if _hover_is_drag_zone else 0.28)
 			for dot_row in range(3):
@@ -3852,6 +3891,11 @@ func _get_scroll_width() -> float:
 
 
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
+	# Q12 - an object dragged off the Object bar is welcome anywhere on the canvas: that drag IS how
+	# an event sheet starts using an object, and where it lands decides whether it opens Add condition
+	# (empty canvas or an event's own band) or Add action (an existing event's action lane).
+	if is_object_bar_drag(data):
+		return true
 	# A scene-tree node dragged ONTO a condition/action param VALUE → fill that param with the node
 	# reference, but only when the param can hold one (not a plain number/bool cell), so the cursor reads
 	# as droppable exactly where the drop will land somewhere sensible.
@@ -3867,6 +3911,17 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
+	# Q12 - an object dropped from the Object bar. Landing on an existing event's ACTION lane means
+	# "do something to it here"; landing anywhere else means "start an event on it".
+	if is_object_bar_drag(data):
+		var object_row_index: int = _find_row_index_at_y(at_position.y)
+		var object_row: EventRowData = _row_at(object_row_index) if object_row_index >= 0 else null
+		var in_action_lane: bool = object_row != null \
+			and _to_logical_position(at_position).x > size.x * 0.5 \
+			and object_row.source_resource is EventRow
+		object_bar_dropped.emit(str((data as Dictionary).get("label", "")),
+			object_row.source_resource if object_row != null else null, in_action_lane)
+		return
 	# Scene-tree node dropped on a param value: set that param to the node reference (prefers %unique-names
 	# via the same converter the params dialog uses), no dialog - the deep-node-friendly gesture.
 	if _is_node_path_drag(data):
@@ -3910,6 +3965,15 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if source_objects[0] is Node:
 		source_label = (source_objects[0] as Node).name
 	ace_preview_requested.emit(source_label, definitions)
+
+
+## True for the Object bar's own drag payload ({type: "eventsheet_object", label}).
+static func is_object_bar_drag(data: Variant) -> bool:
+	if not (data is Dictionary):
+		return false
+	var payload: Dictionary = data
+	return str(payload.get("type", "")) == EventSheetObjectsPanel.DRAG_TYPE \
+		and not str(payload.get("label", "")).strip_edges().is_empty()
 
 
 ## True for Godot's Inspector property drag ({type: "obj_property", object, property})

@@ -150,9 +150,25 @@ func build_ui() -> void:
 	# scene: every node, behaviour, global, group and scene the open file uses, derived from its own
 	# rows. Clicking one highlights its rows through the viewport's filter lens; clicking it again
 	# clears, which is why the dock (not the panel) owns what "highlight" means.
+	# Q12 - and the five gestures the bar offers: hover previews, click pins, double-click opens the
+	# object's properties, right-click adds a row scoped to it or jumps to it, and dragging one onto
+	# the canvas starts an event on it.
 	_dock._objects_panel = EventSheetObjectsPanel.new()
 	_dock._objects_panel.object_activated.connect(func(object_label: String) -> void:
 		_dock.highlight_object_rows(object_label))
+	_dock._objects_panel.object_previewed.connect(func(object_label: String) -> void:
+		_dock.preview_object_rows(object_label))
+	_dock._objects_panel.object_properties_requested.connect(func(object_label: String) -> void:
+		_dock.open_object_properties(object_label))
+	_dock._objects_panel.object_row_requested.connect(func(object_label: String, as_action: bool) -> void:
+		_dock.add_row_for_object(object_label, as_action))
+	_dock._objects_panel.object_scene_selection_requested.connect(func(object_label: String) -> void:
+		_dock.select_object_in_scene(str(EventSheetObjectProperties.find_entry(
+			_dock._current_sheet, object_label).get("path", object_label))))
+	_dock._objects_panel.object_script_requested.connect(func(object_label: String) -> void:
+		_dock.open_object_file_as_sheet(EventSheetObjectFacts.script_path_for_entry(
+			EventSheetObjectProperties.find_entry(_dock._current_sheet, object_label),
+			str(_dock._current_sheet.get("external_source_path")) if _dock._current_sheet != null else "")))
 	var left_rail: VBoxContainer = VBoxContainer.new()
 	left_rail.name = "EventSheetLeftRail"
 	left_rail.add_theme_constant_override("separation", 8)
@@ -192,6 +208,12 @@ func build_ui() -> void:
 	_dock._viewport.rows_drop_requested.connect(_dock._on_rows_drop_requested)
 	_dock._viewport.ace_preview_requested.connect(_dock._on_ace_preview_requested)
 	_dock._viewport.asset_dropped.connect(_dock._apply_asset_drop)
+	_dock._viewport.object_bar_dropped.connect(_dock.apply_object_bar_drop)
+	# Q10 - a thumbnail the editor's preview cache renders after the row was drawn: redraw once when
+	# it lands, so the picture appears rather than waiting for the next thing to move.
+	EventSheetObjectThumbnails.set_arrival_handler(func() -> void:
+		if _dock._viewport != null:
+			_dock._viewport.queue_redraw())
 	_dock._viewport.property_dropped.connect(_dock._apply_property_drop)
 	_dock._viewport.ace_picker_requested.connect(_dock._on_viewport_ace_picker_requested)
 	_dock._viewport.span_edit_requested.connect(_dock._on_viewport_span_edit_requested)
