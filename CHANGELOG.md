@@ -64,6 +64,15 @@
   owns the gap and the box, measured from the same two numbers the renderer draws them with, so the
   swatch sits beside its colour's word (`tint = ▪ white  #ffffff`) and can sit anywhere in a row.
 
+### Added - a gamepad branch that names a device reads as one row
+
+- **`if event is InputEventJoypadButton and event.pressed and event.device == 0 and
+  event.button_index == JOY_BUTTON_A:` reads `Gamepad ▸ On gamepad 0 button A pressed`** - one row,
+  not four condition cells. The device index IS the gamepad number, exactly as the Gamepad object
+  counts them from 0. A branch that names no device keeps the plain `On button A pressed` it had, and
+  a keyboard branch does NOT absorb its device test: a keyboard has no number in the sheet, so
+  `event.device == 1` there stays the comparison it is.
+
 ### Added - a Timer node reads as the sheet's Timer behavior
 
 - **`$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)`.** The Timer behavior's own

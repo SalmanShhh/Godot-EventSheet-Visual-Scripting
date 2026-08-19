@@ -2282,3 +2282,5 @@ Is timer {timer} running,Le minuteur {timer} tourne
 Is timer {timer} stopped,Le minuteur {timer} est arrete
 (once),(une fois)
 (regular),(regulier)
+On gamepad %s button %s pressed,À l’appui sur la manette %s bouton %s
+On gamepad %s button %s released,Au relâchement sur la manette %s bouton %s

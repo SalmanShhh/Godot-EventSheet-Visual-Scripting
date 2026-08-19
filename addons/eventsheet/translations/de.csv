@@ -2282,3 +2282,5 @@ Is timer {timer} running,Laeuft Timer {timer}
 Is timer {timer} stopped,Ist Timer {timer} gestoppt
 (once),(einmal)
 (regular),(regelmaessig)
+On gamepad %s button %s pressed,Bei Gamepad %s Taste %s gedrückt
+On gamepad %s button %s released,Bei Gamepad %s Taste %s losgelassen

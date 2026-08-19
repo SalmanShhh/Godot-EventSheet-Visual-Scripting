@@ -2282,3 +2282,5 @@ Is timer {timer} running,El temporizador {timer} esta activo
 Is timer {timer} stopped,El temporizador {timer} esta detenido
 (once),(una vez)
 (regular),(periodico)
+On gamepad %s button %s pressed,Al pulsar en el mando %s el botón %s
+On gamepad %s button %s released,Al soltar en el mando %s el botón %s

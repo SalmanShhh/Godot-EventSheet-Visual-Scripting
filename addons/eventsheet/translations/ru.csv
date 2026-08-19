@@ -2282,3 +2282,5 @@ Is timer {timer} running,Таймер {timer} идёт
 Is timer {timer} stopped,Таймер {timer} остановлен
 (once),(один раз)
 (regular),(регулярно)
+On gamepad %s button %s pressed,На геймпаде %s нажата кнопка %s
+On gamepad %s button %s released,На геймпаде %s отпущена кнопка %s

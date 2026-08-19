@@ -2282,3 +2282,5 @@ Is timer {timer} running,타이머 {timer} 실행 중
 Is timer {timer} stopped,타이머 {timer} 정지됨
 (once),(한 번)
 (regular),(반복)
+On gamepad %s button %s pressed,게임패드 %s 버튼 %s 을 눌렀을 때
+On gamepad %s button %s released,게임패드 %s 버튼 %s 을 놓았을 때

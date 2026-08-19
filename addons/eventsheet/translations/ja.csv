@@ -2282,3 +2282,5 @@ Is timer {timer} running,タイマー {timer} が動作中
 Is timer {timer} stopped,タイマー {timer} が停止中
 (once),(1回)
 (regular),(繰り返し)
+On gamepad %s button %s pressed,ゲームパッド %s のボタン %s を押したとき
+On gamepad %s button %s released,ゲームパッド %s のボタン %s を離したとき

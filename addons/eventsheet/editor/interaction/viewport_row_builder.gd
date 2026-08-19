@@ -6301,6 +6301,7 @@ func _input_branch_reading(event_row: EventRow) -> Dictionary:
 	var edge: int = 0
 	var button: String = ""
 	var key: String = ""
+	var device: String = ""
 	for atom: Dictionary in atoms:
 		if bool(atom["used"]):
 			continue
@@ -6317,10 +6318,15 @@ func _input_branch_reading(event_row: EventRow) -> Dictionary:
 			key = text.trim_prefix("event.keycode == ")
 		elif text.begins_with("event.physical_keycode == "):
 			key = text.trim_prefix("event.physical_keycode == ")
+		elif text.begins_with("event.device == ") and event_class == "InputEventJoypadButton":
+			# The device index IS the gamepad number, exactly as the Gamepad object counts them from 0.
+			# Only on a gamepad branch: a keyboard has no number in the sheet, so `event.device == 1`
+			# there stays the comparison it is rather than borrowing a word that means nothing.
+			device = text.trim_prefix("event.device == ")
 		else:
 			continue
 		atom["used"] = true
-	var sentence: String = _input_branch_sentence(event_class, edge, button, key)
+	var sentence: String = _input_branch_sentence(event_class, edge, button, key, device)
 	if sentence.is_empty():
 		return {}
 	# A condition drops off the lane only when the sentence absorbed ALL of its conjuncts; one that
@@ -6337,7 +6343,8 @@ func _input_branch_reading(event_row: EventRow) -> Dictionary:
 
 
 ## The one-line trigger sentence for a recognized branch ("" = not a shape we name).
-func _input_branch_sentence(event_class: String, edge: int, button: String, key: String) -> String:
+func _input_branch_sentence(event_class: String, edge: int, button: String, key: String,
+		device: String = "") -> String:
 	match event_class:
 		"InputEventMouseMotion":
 			return EventSheetL10n.translate("On mouse moved")
@@ -6360,7 +6367,13 @@ func _input_branch_sentence(event_class: String, edge: int, button: String, key:
 		"InputEventJoypadButton":
 			if edge == 0 or button.is_empty():
 				return ""
-			return EventSheetL10n.translate("On button %s pressed" if edge > 0 else "On button %s released") % button.trim_prefix("JOY_BUTTON_").capitalize()
+			var button_word: String = button.trim_prefix("JOY_BUTTON_").capitalize()
+			# R25 - a branch that named a device says which gamepad, in the Gamepad object's own words.
+			if not device.is_empty():
+				return EventSheetL10n.translate(
+					"On gamepad %s button %s pressed" if edge > 0 else "On gamepad %s button %s released"
+				) % [device, button_word]
+			return EventSheetL10n.translate("On button %s pressed" if edge > 0 else "On button %s released") % button_word
 	return ""
 
 

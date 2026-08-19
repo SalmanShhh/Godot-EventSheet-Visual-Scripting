@@ -2282,3 +2282,5 @@ Is timer {timer} running,计时器 {timer} 正在运行
 Is timer {timer} stopped,计时器 {timer} 已停止
 (once),(一次)
 (regular),(重复)
+On gamepad %s button %s pressed,当手柄 %s 按下按键 %s 时
+On gamepad %s button %s released,当手柄 %s 松开按键 %s 时

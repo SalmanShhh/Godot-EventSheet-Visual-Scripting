@@ -512,6 +512,11 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   with the lambda's body as its rows, and the connect line keeps a muted `connects Timer On Timeout`
   note. One-line `if c: stmt` / `if c: return` / `else: stmt` lift as the same sub-events their
   indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
+- **A gamepad branch that names a device reads as one row.** `if event is InputEventJoypadButton and
+  event.pressed and event.device == 0 and event.button_index == JOY_BUTTON_A:` reads `Gamepad ▸ On
+  gamepad 0 button A pressed`, in the Gamepad object's own words, because the device index IS the
+  gamepad number. A branch that names no device keeps `On button A pressed`; a Keyboard branch keeps
+  its `event.device == 1` as an ordinary comparison, since a keyboard has no number in the sheet.
 - **A Timer node reads as the Timer behavior.** `$Timer.start(2.0)` reads `Start timer "Timer" for 2
   seconds (once)`, `$Timer.stop()` reads `Stop timer "Timer"`, `not $Timer.is_stopped()` reads `Is
   timer "Timer" running` (the bare spelling says stopped), and `$Timer.time_left` reads

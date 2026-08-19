@@ -2282,3 +2282,5 @@ Is timer {timer} running,Il timer {timer} e in corso
 Is timer {timer} stopped,Il timer {timer} e fermo
 (once),(una volta)
 (regular),(ripetuto)
+On gamepad %s button %s pressed,Alla pressione sul gamepad %s del tasto %s
+On gamepad %s button %s released,Al rilascio sul gamepad %s del tasto %s
