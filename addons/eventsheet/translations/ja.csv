@@ -2823,3 +2823,13 @@ image,画像
 2×,2×
 4×,4×
 8×,8×
+Data Asset,データアセット
+the data asset [b]{path}[/b],データアセット [b]{path}[/b]
+"Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.",パスからデータアセットを1つ取得します。インスペクターで入力された値がそのまま読み取れます。
+The .tres to fetch.,取得する .tres ファイル。
+Save Data Asset,データアセットを保存
+Save data asset [b]{resource}[/b] as [b]{path}[/b],データアセット [b]{resource}[/b] を [b]{path}[/b] として保存
+Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://.,データアセットをファイルに書き戻します。エディタツールがコンテンツの生成や一括編集に使います。実行中のゲームは user:// 以下に書いてください。
+Asset,アセット
+The data asset to write out.,書き出すデータアセット。
+Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,書き込む場所。res:// 以下への書き込みはエディタでのみ動作し、実行中のゲームは user:// に書きます。

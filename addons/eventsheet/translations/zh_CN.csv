@@ -2823,3 +2823,13 @@ image,图像
 2×,2×
 4×,4×
 8×,8×
+Data Asset,数据资源
+the data asset [b]{path}[/b],数据资源 [b]{path}[/b]
+"Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.",按路径取回一个数据资源 - 设计师在检查器里填好的值，可直接逐字段读取。
+The .tres to fetch.,要取回的 .tres 文件。
+Save Data Asset,保存数据资源
+Save data asset [b]{resource}[/b] as [b]{path}[/b],将数据资源 [b]{resource}[/b] 保存为 [b]{path}[/b]
+Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://.,把数据资源写回文件。编辑器工具用它生成或批量修改内容；运行中的游戏应写到 user:// 下。
+Asset,资源
+The data asset to write out.,要写出的数据资源。
+Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,写到哪里。写入 res:// 只在编辑器中有效；运行中的游戏写入 user://。

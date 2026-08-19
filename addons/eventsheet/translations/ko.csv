@@ -2823,3 +2823,13 @@ image,이미지
 2×,2×
 4×,4×
 8×,8×
+Data Asset,데이터 에셋
+the data asset [b]{path}[/b],데이터 에셋 [b]{path}[/b]
+"Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.",경로로 데이터 에셋 하나를 가져옵니다. 인스펙터에서 채운 값을 바로 필드별로 읽을 수 있습니다.
+The .tres to fetch.,가져올 .tres 파일.
+Save Data Asset,데이터 에셋 저장
+Save data asset [b]{resource}[/b] as [b]{path}[/b],데이터 에셋 [b]{resource}[/b]을(를) [b]{path}[/b](으)로 저장
+Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://.,데이터 에셋을 파일로 다시 씁니다. 에디터 도구가 콘텐츠를 만들거나 일괄 편집할 때 씁니다. 실행 중인 게임은 user:// 아래에 써야 합니다.
+Asset,에셋
+The data asset to write out.,내보낼 데이터 에셋.
+Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,"어디에 쓸지. res:// 아래 쓰기는 에디터에서만 동작하며, 실행 중인 게임은 user://에 씁니다."

@@ -2823,3 +2823,13 @@ image,изображение
 2×,2×
 4×,4×
 8×,8×
+Data Asset,Ресурс данных
+the data asset [b]{path}[/b],ресурс данных [b]{path}[/b]
+"Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.","Получает один ресурс данных по пути - значения, заполненные в инспекторе, готовые к чтению по полям."
+The .tres to fetch.,"Файл .tres, который нужно получить."
+Save Data Asset,Сохранить ресурс данных
+Save data asset [b]{resource}[/b] as [b]{path}[/b],Сохранить ресурс данных [b]{resource}[/b] как [b]{path}[/b]
+Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://.,Записывает ресурс данных обратно в файл. Редакторный инструмент так создаёт или массово правит контент; работающая игра должна писать в user://.
+Asset,Ресурс
+The data asset to write out.,"Ресурс данных, который нужно записать."
+Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,Куда записать. Запись в res:// работает только в редакторе; работающая игра пишет в user://.

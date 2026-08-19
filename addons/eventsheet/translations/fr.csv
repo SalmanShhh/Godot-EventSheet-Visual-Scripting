@@ -2823,3 +2823,13 @@ image,image
 2×,2×
 4×,4×
 8×,8×
+Data Asset,Ressource de données
+the data asset [b]{path}[/b],la ressource de données [b]{path}[/b]
+"Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.","Récupère une ressource de données par son chemin - les valeurs saisies dans l'Inspecteur, prêtes à lire champ par champ."
+The .tres to fetch.,Le .tres à récupérer.
+Save Data Asset,Enregistrer la ressource de données
+Save data asset [b]{resource}[/b] as [b]{path}[/b],Enregistrer la ressource de données [b]{resource}[/b] sous [b]{path}[/b]
+Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://.,Réécrit une ressource de données dans un fichier. Un outil d'éditeur s'en sert pour générer ou modifier du contenu en masse ; un jeu en cours doit écrire sous user://.
+Asset,Ressource
+The data asset to write out.,La ressource de données à écrire.
+Where to write it. Writing under res:// only works in the editor; a running game writes to user://.,Où l'écrire. Écrire sous res:// ne fonctionne que dans l'éditeur ; un jeu en cours écrit dans user://.
