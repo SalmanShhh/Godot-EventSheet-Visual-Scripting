@@ -619,6 +619,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			fires_subtitle % triggers.size(),
 			triggers
 		))
+	head.append_array(_build_object_folder_rows(sheet))
 	head.append_array(_build_knob_group_rows(sheet, knobs))
 	head.append_array(leftovers)
 	var output: Array[EventRowData] = []
@@ -882,6 +883,85 @@ func _build_pack_about_row(sheet: EventSheetResource, fallback_text: String = ""
 	for span: SemanticSpan in row_data.spans:
 		if span.metadata is Dictionary:
 			(span.metadata as Dictionary)["editable"] = false
+	return row_data
+
+
+## Q2 - the two folders an event sheet's object carries, before its settings: the BEHAVIORS mounted on
+## it and the FAMILIES it belongs to. Both are facts about the object rather than lines of the file, so
+## they come from where Godot keeps them - pack nodes in the scene the script is the root of, and that
+## root's persistent groups plus the file's own `add_to_group` lines.
+##
+## PURE VIEW, like every other head bar: null sources, folded by default, nothing added to `sheet.events`
+## and nothing emitted, so an opened file still re-emits byte for byte. Empty folders are not built - an
+## object with no behaviors should not grow a bar telling it so.
+func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]:
+	var bars: Array[EventRowData] = []
+	var facts: Dictionary = EventSheetObjectFacts.sheet_object_facts(sheet)
+	if facts.is_empty():
+		return bars
+	var behaviors: Array = facts.get("behaviors", [])
+	if not behaviors.is_empty():
+		var names: PackedStringArray = PackedStringArray()
+		var members: Array[EventRowData] = []
+		for index in range(behaviors.size()):
+			var behavior: Dictionary = behaviors[index]
+			names.append(str(behavior.get("name", "")))
+			members.append(_build_object_fact_row(
+				sheet, "object_behavior_%d" % index,
+				str(behavior.get("name", "")), _behavior_settings_text(behavior)))
+		bars.append(_build_head_group_row(
+			sheet, "object_behaviors", EventSheetL10n.translate("Behaviors"),
+			"%s - %s" % [EventSheetL10n.translate("on this object"), " · ".join(names)],
+			members))
+	var families: PackedStringArray = PackedStringArray(facts.get("families", PackedStringArray()))
+	if not families.is_empty():
+		var family_rows: Array[EventRowData] = []
+		for index in range(families.size()):
+			family_rows.append(_build_object_fact_row(
+				sheet, "object_family_%d" % index, families[index], ""))
+		# The Godot word rides along ONCE, muted: a group IS the sheet's family, and a reader who knows
+		# only Godot's half of that pair needs the bridge here and nowhere else.
+		bars.append(_build_head_group_row(
+			sheet, "object_families", EventSheetL10n.translate("Families"),
+			"%s - %s %s" % [
+				EventSheetL10n.translate("this object belongs to"), ", ".join(families),
+				EventSheetL10n.translate("(groups)")
+			],
+			family_rows))
+	return bars
+
+
+## One behavior's settings as the scene wrote them: `max hp = 50 · regen = 1`, "" when the scene left
+## the pack on its defaults (which is worth saying by saying nothing).
+func _behavior_settings_text(behavior: Dictionary) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for entry: Variant in behavior.get("properties", []):
+		var property: Dictionary = entry
+		parts.append("%s = %s" % [str(property.get("name", "")), str(property.get("value", ""))])
+	return " · ".join(parts)
+
+
+## A leaf row inside one of the object folders: the thing's name, then what is set on it, muted.
+func _build_object_fact_row(sheet: EventSheetResource, uid_suffix: String, title: String,
+		detail: String) -> EventRowData:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var row_data := EventRowData.new()
+	row_data.indent = 1
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "%s_%d" % [uid_suffix, sheet.get_instance_id()]
+	var spans: Array[SemanticSpan] = [
+		_make_span(title, SemanticSpan.SpanType.OBJECT, {
+			"editable": false, "kind": "object_fact", "line_index": 0,
+			"text_color": event_style.object_label_color
+		})
+	]
+	if not detail.is_empty():
+		spans.append(_make_span(detail, SemanticSpan.SpanType.COMMENT, {
+			"editable": false, "kind": "object_fact", "line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}))
+	row_data.spans = spans
 	return row_data
 
 
@@ -5411,6 +5491,89 @@ func _scene_trigger_icon(event_row: EventRow) -> Texture2D:
 	return ACEPickerDialog.editor_icon(source_class)
 
 
+# ── Q9. Signals: who listens, and where it comes from ─────────────────────────────────────────
+# A signal row is half a sentence on its own: an emit says something was announced and stops, a
+# handler says something was heard and stops. The other half lives in a different file every time,
+# which is a question an event-sheet reader never has to ask, because there the wiring IS the sheet.
+# So both halves are drawn as a muted note on the row, derived from ONE project-wide index
+# (signal_fanout.gd) built once per session. Display-only: nothing here changes a row or a byte.
+
+
+## The signal an action RAISES, "" for every other action.
+static func emitted_signal_name(action: ACEAction) -> String:
+	if action == null or not (action.provider_id.is_empty() or action.provider_id == "Core"):
+		return ""
+	if action.ace_id != "EmitSignal":
+		return ""
+	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	return str(params_dict.get("signal_name", "")).strip_edges().trim_prefix("\"").trim_suffix("\"")
+
+
+## The signal a trigger id stands for, "" when the trigger is not signal-backed. Both spellings the
+## lifter records resolve: a custom signal keeps its name behind `signal:`, a core one was mapped to
+## a published trigger id and is mapped back through the same table.
+static func signal_name_of_trigger(trigger_id: String) -> String:
+	var declared: String = trigger_id.strip_edges()
+	if declared.is_empty():
+		return ""
+	if declared.begins_with("signal:"):
+		return declared.trim_prefix("signal:")
+	for signal_name: String in EventSheetACELifter.CORE_SIGNAL_TRIGGERS:
+		if str(EventSheetACELifter.CORE_SIGNAL_TRIGGERS[signal_name]) == declared:
+			return signal_name
+	return ""
+
+
+## Q9 - the muted `-> HUD, Level (2 listeners)` an emit wears. Nothing is appended when nothing in
+## the project listens, because a note saying "nobody" on every internal signal is noise.
+func _append_signal_fanout_span(spans: Array[SemanticSpan], action: ACEAction, action_index: int,
+		line_index: int) -> void:
+	var signal_name: String = emitted_signal_name(action)
+	if signal_name.is_empty():
+		return
+	var note: String = EventSheetSignalFanout.listeners_note(signal_name)
+	if note.is_empty():
+		return
+	spans.append(_make_span(note, SemanticSpan.SpanType.COMMENT,
+		_fanout_metadata("action", action_index, line_index, signal_name, true)))
+
+
+## Q9 - the muted `<- emitted in player.gd: Take Damage` a handler wears.
+func _append_signal_source_span(spans: Array[SemanticSpan], event_row: EventRow, line_index: int) -> void:
+	if event_row == null:
+		return
+	var signal_name: String = signal_name_of_trigger(event_row.trigger_id)
+	if signal_name.is_empty():
+		return
+	var note: String = EventSheetSignalFanout.raised_note(signal_name)
+	if note.is_empty():
+		return
+	spans.append(_make_span(note, SemanticSpan.SpanType.COMMENT,
+		_fanout_metadata("condition", 0, line_index, signal_name, false)))
+
+
+## The metadata a fan-out note carries. `include_path` is what makes the note CLICK-TO-JUMP: the
+## canvas already opens a span carrying one as a sheet, so the note reuses that seam rather than
+## inventing a second way to travel.
+func _fanout_metadata(lane: String, ace_index: int, line_index: int, signal_name: String,
+		from_emit: bool) -> Dictionary:
+	var target: Dictionary = EventSheetSignalFanout.jump_target(signal_name, from_emit)
+	# Only a SCRIPT can be opened as a sheet - a connection recovered from a .tscn has nowhere for a
+	# click to land, so that note stays a note.
+	if str(target.get("path", "")).get_extension().to_lower() != "gd":
+		target = {}
+	return {
+		"lane": lane,
+		"kind": "include_open" if not target.is_empty() else "signal_fanout",
+		"ace_index": ace_index,
+		"line_index": line_index,
+		"editable": false,
+		"signal_name": signal_name,
+		"include_path": str(target.get("path", "")),
+		"text_color": EventSheetPalette.TEXT_MUTED
+	}
+
+
 ## The payload chips for a signal-backed trigger: one per handler parameter, named the way the
 ## handler names it ("body: Node2D" -> "body"). Empty for every trigger that hands nothing over.
 func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
@@ -5809,6 +5972,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		if is_one_shot_handler(event_row):
 			spans.append(_trigger_payload_span(
 				EventSheetL10n.translate("Trigger once"), handler_payload.size(), condition_line_index))
+		# Q9 - and last on the line, muted: where this signal is actually raised.
+		_append_signal_source_span(spans, event_row, condition_line_index)
 		condition_line_index += 1
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
 		var inline_trigger: ACECondition = event_row.conditions[inline_trigger_condition_index]
@@ -6078,6 +6243,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 						}.merged(action_style_meta, true)
 					)
 				)
+				_append_signal_fanout_span(spans, action_resource as ACEAction, action_index, action_line_index)
 				action_line_index += 1
 			elif action_resource is MatchRow:
 				# match statement (the switch): header + branch lines as action cells sharing one ace_index;

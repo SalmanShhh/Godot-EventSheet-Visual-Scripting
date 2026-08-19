@@ -398,6 +398,56 @@ static func facts_for_entry(entry: Dictionary, sheet_source_path: String) -> Dic
 	}
 
 
+## Q4 - what a sheet is ABOUT, for the places that name it: the tab, the Open Sheets list, the window
+## title and the recents. Returns {"name", "note", "icon_class", "file"}.
+##
+## The name is the one the Include bar already shows, resolved by the same ladder so a tab and the head
+## bar under it can never disagree: a pack's own display name, else the `class_name`, else the ROOT NODE
+## of the scene the script drives, else the file name (which is where a file name belongs - last).
+static func sheet_object_title(sheet: EventSheetResource, explicit_path: String) -> Dictionary:
+	var file_path: String = explicit_path.strip_edges()
+	if sheet == null:
+		return {"name": file_path.get_file().get_basename(), "note": "", "icon_class": "", "file": file_path}
+	var source_path: String = str(sheet.get("external_source_path")).strip_edges()
+	if source_path.is_empty():
+		source_path = file_path
+	var declared: String = sheet.custom_class_name.strip_edges()
+	var note: String = ""
+	var name_text: String = ""
+	var pack: String = str(EventSheetViewportReadingRows.behaviour_pack_index().get(declared, "")) \
+		if not declared.is_empty() else ""
+	if not pack.is_empty():
+		name_text = pack
+		note = EventSheetL10n.translate("addon pack")
+	elif is_global_script(source_path):
+		name_text = declared if not declared.is_empty() else source_path.get_file().get_basename().to_pascal_case()
+		note = EventSheetL10n.translate("global")
+	elif not declared.is_empty():
+		name_text = declared
+	else:
+		name_text = str(ViewportRowBuilder.scene_using_script(source_path).get("root_name", ""))
+	if name_text.is_empty():
+		name_text = (source_path if not source_path.is_empty() else file_path).get_file().get_basename()
+	return {
+		"name": name_text,
+		"note": note,
+		"icon_class": sheet.host_class.strip_edges(),
+		"file": source_path if not source_path.is_empty() else file_path
+	}
+
+
+## True when a script is one of the project's autoload singletons - a sheet about a GLOBAL, which is
+## what an event sheet calls an object every layout can reach.
+static func is_global_script(script_path: String) -> bool:
+	if script_path.strip_edges().is_empty():
+		return false
+	var autoloads: Dictionary = EventSheetViewportReadingRows.autoload_singletons()
+	for singleton: String in autoloads:
+		if str(autoloads[singleton]) == script_path:
+			return true
+	return false
+
+
 ## The texture one NAMED node of a scene carries, "" when that node has none (or is not there). What
 ## lets a `$Sprite2D` row wear its own picture rather than the scene's (Q10).
 static func picture_of_node(scene_path: String, node_name: String) -> String:
