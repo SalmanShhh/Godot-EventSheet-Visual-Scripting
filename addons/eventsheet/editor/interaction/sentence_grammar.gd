@@ -2544,6 +2544,12 @@ static func _dotted_chain(body: String, context: Dictionary) -> Dictionary:
 		index = dot_at
 	var calls: Array = []
 	while index < body.length():
+		# A statement written across lines with a trailing `\` joins with a SPACE before the next
+		# call, so the walk steps over whitespace between the links of the chain.
+		while index < body.length() and (body[index] == " " or body[index] == "\t"):
+			index += 1
+		if index >= body.length():
+			break
 		if body[index] != ".":
 			return {}
 		var open_at: int = body.find("(", index)

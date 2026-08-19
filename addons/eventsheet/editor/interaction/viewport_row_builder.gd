@@ -6803,17 +6803,6 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				}.merged(condition_style_meta, true)
 			)
 		)
-		# R26 - which edge of the cursor pair this handler is, said quietly beside the words the two
-		# share. Muted, because the sentence is the same sentence either way.
-		if not device_note.is_empty():
-			spans.append(_make_span(device_note, SemanticSpan.SpanType.COMMENT, {
-				"lane": "condition",
-				"kind": "trigger",
-				"ace_index": 0,
-				"editable": false,
-				"line_index": condition_line_index,
-				"text_color": EventSheetPalette.TEXT_MUTED
-			}))
 		# A signal handler's PARAMETERS are the trigger's payload - the body that entered, the item
 		# that was picked up. An event sheet shows them as chips beside the trigger, so a reader knows
 		# what the event hands them without opening the code.
@@ -6836,6 +6825,11 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			spans.append(_trigger_payload_span(
 				EventSheetL10n.translate("in the editor too"),
 				handler_payload.size() + 1, condition_line_index))
+		# R26 - which edge of the cursor pair this handler is, on a chip beside the words the two
+		# share, in the slot the payload chips use. Quiet, because the sentence is the same sentence
+		# either way, and a chip rather than a bare note because this lane lays chips out.
+		if not device_note.is_empty():
+			spans.append(_trigger_payload_span(device_note, handler_payload.size() + 2, condition_line_index))
 		# Q9 - and last on the line, muted: where this signal is actually raised.
 		_append_signal_source_span(spans, event_row, condition_line_index)
 		condition_line_index += 1

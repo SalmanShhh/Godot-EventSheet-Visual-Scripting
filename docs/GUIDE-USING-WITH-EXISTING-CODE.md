@@ -448,6 +448,8 @@ That is the order this section is in.
   `Input.joy_connection_changed.connect(_on_pad)` with a `_on_pad(device, connected)` handler reads
   `Gamepad ▸ On gamepad connected / disconnected`, with `device` and `connected` as the payload chips
   that say which of the two just happened.
+
+  ![A clickable, tweened, snap-to-grid script read as an event sheet: the Inspector button as a setting row, a one-line tween chain, the cursor and the click on the Mouse, the gamepad cable on the Gamepad, and a snap setter on the loop's own object](images/opened-script-batch7.png)
 - **A local variable's scope is enforced, and shown.** A local is visible from the event that
   declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
   action that uses `dealt` into an event that cannot see it and the drop refuses before you release,
