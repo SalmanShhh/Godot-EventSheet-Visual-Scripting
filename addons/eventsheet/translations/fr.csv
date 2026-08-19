@@ -2019,3 +2019,8 @@ Set {name} to {value} (at end of frame),Définir {name} sur {value} (en fin de f
 Set collision layers to {layers},Définir les calques de collision sur {layers}
 Set collides with {layers},Entre en collision avec {layers}
 Trigger once,Déclencher une fois
+Collapse All,Tout replier
+Expand All,Tout déplier
+Expand To Level 1,Déplier jusqu'au niveau 1
+Expand To Level 2,Déplier jusqu'au niveau 2
+Expand To Level 3,Déplier jusqu'au niveau 3

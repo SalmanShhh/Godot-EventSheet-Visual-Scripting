@@ -105,6 +105,25 @@ hover away.
   trigger event it is instead of stranding the whole handler as a code block. The connect line is
   re-emitted verbatim, flags and all.
 
+### Added - collapse and expand the whole sheet, remembered per file
+
+A long sheet is browsed by collapsing, so collapsing is now a whole-sheet gesture with the sheet's own
+words on it - collapse and expand, never fold.
+
+- **Ctrl+Shift+[ collapses every event and function block; Ctrl+Shift+] expands them all.** The keys
+  used to reach only the region CONTAINING the selection; that scope was never lost, because plain
+  Left and Right already collapse and expand the selected row.
+- **View > Collapse All / Expand All / Expand To Level 1, 2, 3** (and the same five in the Command
+  Palette). "Expand to level N" reads the sheet down to a depth: everything shallower stays expanded,
+  everything at that depth or deeper is collapsed.
+- **How deep a file was left is remembered for that file** - per-project editor state beside the
+  region folds, so the `.gd` is untouched. What is stored is the LEVEL, not a list of rows: a row's
+  identity embeds a live instance id and means nothing in the next session, while "this file reads to
+  level 2" means the same thing every time it is opened.
+- **A collapsed block keeps saying what it holds**: a muted one-line summary trails its header naming
+  its first rows ("host does not exist -> Stop event - Set coyote timer to 0 - …"), so collapsing
+  never hides what a block is for. Draw-only - it reserves no width and is never measured.
+
 ### Added - a script that does not compile shows WHICH rows are broken
 
 An event sheet marks a broken event red with the reason. An opened `.gd` now does the same: the rows

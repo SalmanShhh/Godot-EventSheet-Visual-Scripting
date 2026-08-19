@@ -2019,3 +2019,8 @@ Set {name} to {value} (at end of frame),{name} を {value} に設定 (フレー�
 Set collision layers to {layers},コリジョンレイヤーを {layers} に設定
 Set collides with {layers},{layers} と衝突する
 Trigger once,一度だけ
+Collapse All,すべて折りたたむ
+Expand All,すべて展開
+Expand To Level 1,レベル1まで展開
+Expand To Level 2,レベル2まで展開
+Expand To Level 3,レベル3まで展開

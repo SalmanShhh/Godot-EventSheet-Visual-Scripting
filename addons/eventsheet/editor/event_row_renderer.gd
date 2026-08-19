@@ -275,6 +275,54 @@ func _draw_text_with_values(
 		_draw_text(control, Vector2(x, baseline.y), tail, limit - x, font, font_size, base_color)
 
 
+# ── The collapsed row's one-line summary ──────────────────────────────────────────────────────
+# A sheet is browsed by collapsing, so a collapsed block that shows nothing about what it holds
+# has hidden the very thing you collapsed it to find. Each collapsed row therefore trails a
+# muted phrase naming its first rows. It is DRAW-ONLY: it reserves no width, is never measured
+# and is never hit-tested, so it cannot move a single glyph of the row it follows.
+
+## The gap between the row's own text and its summary, and the margin kept clear at the right
+## edge. 1x-authored metrics - scaled for the running editor like all other chrome.
+const SUMMARY_GAP := 10.0
+const SUMMARY_RIGHT_INSET := 8.0
+const SUMMARY_ALPHA := 0.75
+
+
+func _draw_collapsed_summary(control: Control, row_rect: Rect2, row_data: EventRowData, font: Font, font_size: int) -> void:
+	if not row_data.folded or row_data.children.is_empty() or font == null:
+		return
+	if not control.has_method("collapsed_row_summary"):
+		return
+	var summary: String = str(control.collapsed_row_summary(row_data))
+	if summary.is_empty() or row_data.spans.is_empty():
+		return
+	# The summary follows the row's FIRST line: a header that stacks (a verb row with input
+	# chips) keeps its summary beside the line that names it, not floating past the last one.
+	var first_line_top: float = row_data.spans[0].rect.position.y
+	var first_line_height: float = row_data.spans[0].rect.size.y
+	var text_end: float = row_data.spans[0].rect.end.x
+	for span: SemanticSpan in row_data.spans:
+		if is_equal_approx(span.rect.position.y, first_line_top):
+			text_end = maxf(text_end, span.rect.end.x)
+	var start_x: float = text_end + EventSheetPalette.scaled_f(SUMMARY_GAP)
+	var max_width: float = row_rect.end.x - EventSheetPalette.scaled_f(SUMMARY_RIGHT_INSET) - start_x
+	if max_width <= EventSheetPalette.scaled_f(SUMMARY_GAP):
+		return
+	var baseline := Vector2(
+		start_x,
+		first_line_top + (first_line_height * ROW_VERTICAL_CENTER_RATIO) + (font_size * FONT_BASELINE_OFFSET_RATIO)
+	)
+	_draw_text(
+		control,
+		baseline,
+		_elide(summary, max_width, font, font_size),
+		max_width,
+		font,
+		font_size,
+		Color(TEXT_MUTED.r, TEXT_MUTED.g, TEXT_MUTED.b, SUMMARY_ALPHA)
+	)
+
+
 ## Draws text crisply under the viewport's zoom: the canvas transform scales geometry, but
 ## glyphs scaled that way blur (zoom in) or alias (zoom out). This rasterizes the text at its
 ## final physical pixel size in identity space instead, then restores the zoom transform.
@@ -512,6 +560,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, soft_hover, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill)
+	_draw_collapsed_summary(control, row_rect, row_data, font, font_size)
 	if drag_rect.size != Vector2.ZERO:
 		if bool(layout.get("drag_rect_outline", false)):
 			# Group-fold drop: outline the whole target row (a filled row-sized rect would bury the

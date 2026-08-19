@@ -2019,3 +2019,8 @@ Set {name} to {value} (at end of frame),{name}을(를) {value}(으)로 설정 (�
 Set collision layers to {layers},충돌 레이어를 {layers}(으)로 설정
 Set collides with {layers},{layers}와(과) 충돌
 Trigger once,한 번만
+Collapse All,모두 접기
+Expand All,모두 펼치기
+Expand To Level 1,레벨 1까지 펼치기
+Expand To Level 2,레벨 2까지 펼치기
+Expand To Level 3,레벨 3까지 펼치기

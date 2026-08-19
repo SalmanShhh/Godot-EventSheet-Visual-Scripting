@@ -513,27 +513,17 @@ func handle_key(event: InputEventKey) -> void:
 		_viewport.ensure_selection_visible()
 		_viewport.accept_event()
 	elif event.keycode == KEY_BRACKETLEFT and event.ctrl_pressed and event.shift_pressed:
-		# Ctrl+Shift+[ folds the REGION containing the selection (script-editor muscle
-		# memory); the selection lands on the opener so it never vanishes into the fold.
-		var fold_region_index: int = _viewport._enclosing_region_flat_index(_viewport._selected_row_index)
-		if fold_region_index >= 0:
-			var fold_region: EventRowData = _viewport._row_at(fold_region_index)
-			fold_region.folded = true
-			_viewport._fold_state[fold_region.row_uid] = true
-			_viewport._select_row(fold_region_index, -1)
-			_viewport._refresh_rows()
-			_viewport._persist_region_folds()
-			_viewport.accept_event()
+		# Ctrl+Shift+[ collapses the WHOLE sheet - every event and function block, not only
+		# the regions. A sheet is browsed by collapsing, so the whole-sheet sweep is what the
+		# gesture is worth. Collapsing one block is still one keystroke: plain Left collapses
+		# the selected row (left_key_folds / right_key_unfolds on the viewport), which is
+		# where the region-scoped gesture this used to run now lives.
+		_viewport.collapse_all()
+		_viewport.accept_event()
 	elif event.keycode == KEY_BRACKETRIGHT and event.ctrl_pressed and event.shift_pressed:
-		# Ctrl+Shift+] unfolds the selected/containing region.
-		var unfold_region_index: int = _viewport._enclosing_region_flat_index(_viewport._selected_row_index)
-		if unfold_region_index >= 0:
-			var unfold_region: EventRowData = _viewport._row_at(unfold_region_index)
-			unfold_region.folded = false
-			_viewport._fold_state[unfold_region.row_uid] = false
-			_viewport._refresh_rows()
-			_viewport._persist_region_folds()
-			_viewport.accept_event()
+		# Ctrl+Shift+] expands the whole sheet again (plain Right expands one row).
+		_viewport.expand_all()
+		_viewport.accept_event()
 	elif event.keycode == KEY_LEFT and not event.alt_pressed:
 		# Plain Left folds; Alt+Left is the dock's jump-history Back and must pass through.
 		# With a cell focused OR nothing to fold, Left walks the cell focus instead

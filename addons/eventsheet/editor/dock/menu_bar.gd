@@ -204,6 +204,20 @@ func build(root: Node) -> void:
 	view_popup.add_item("Outline…", 17)
 	view_popup.set_item_tooltip(view_popup.get_item_index(17), "Jump tree of the sheet's groups, regions, and published functions.")
 	view_popup.add_separator()
+	# Collapsing IS how a long sheet is browsed, so the sweeps live in the menu beside the
+	# Outline, not only on their shortcuts. Ids start at 22: 20 is already claimed twice above
+	# (Humanized Names and the Preview In Language submenu), so the next free run starts there.
+	view_popup.add_item("Collapse All", 22)
+	view_popup.set_item_tooltip(view_popup.get_item_index(22), "Collapse every event and function block down to its own line (Ctrl+Shift+[). A collapsed block keeps a muted one-line summary of what it holds.")
+	view_popup.add_item("Expand All", 23)
+	view_popup.set_item_tooltip(view_popup.get_item_index(23), "Expand every block again (Ctrl+Shift+]).")
+	view_popup.add_item("Expand To Level 1", 24)
+	view_popup.add_item("Expand To Level 2", 25)
+	view_popup.add_item("Expand To Level 3", 26)
+	for level_id: int in [24, 25, 26]:
+		view_popup.set_item_tooltip(view_popup.get_item_index(level_id),
+			"Read the sheet down to this depth: everything shallower stays expanded, everything at this depth or deeper is collapsed. How deep you left a file is remembered for that file.")
+	view_popup.add_separator()
 	view_popup.add_item("Split View (toggle)", 1)
 	view_popup.add_item("Detached View (toggle)", 2)
 	view_popup.add_item("Link Views (toggle)", 3)
@@ -280,6 +294,11 @@ func build(root: Node) -> void:
 			11: _dock.set_simple_mode(not _dock._simple_mode)
 			12: _dock._toggle_mcp_server(view_popup)
 			13: _dock._toggle_open_sheets_panel(view_popup)
+			22: _collapse_sweep(0)
+			23: _collapse_sweep(-1)
+			24: _collapse_sweep(1)
+			25: _collapse_sweep(2)
+			26: _collapse_sweep(3)
 	)
 	# Toggles say what they toggle on hover (user call: hovering a toggle should
 	# explain it).
@@ -450,6 +469,21 @@ func build(root: Node) -> void:
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9701:
 			_open_run_tests())
+
+
+## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes
+## each keep their own collapse state). `level` 0 collapses everything, -1 expands
+## everything, and anything above 0 reads the sheet down to that depth.
+func _collapse_sweep(level: int) -> void:
+	var view: EventSheetViewport = _dock._active_view()
+	if view == null:
+		return
+	if level < 0:
+		view.expand_all()
+	elif level == 0:
+		view.collapse_all()
+	else:
+		view.expand_to_level(level)
 
 
 ## The Run Tests… window, built the first time it is asked for and kept afterwards. Loaded by path

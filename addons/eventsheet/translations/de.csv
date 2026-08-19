@@ -2019,3 +2019,8 @@ Set {name} to {value} (at end of frame),{name} auf {value} setzen (am Frame-Ende
 Set collision layers to {layers},Kollisionsebenen auf {layers} setzen
 Set collides with {layers},Kollidiert mit {layers}
 Trigger once,Einmal auslösen
+Collapse All,Alles einklappen
+Expand All,Alles ausklappen
+Expand To Level 1,Bis Ebene 1 ausklappen
+Expand To Level 2,Bis Ebene 2 ausklappen
+Expand To Level 3,Bis Ebene 3 ausklappen

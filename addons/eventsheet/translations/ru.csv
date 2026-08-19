@@ -2019,3 +2019,8 @@ Set {name} to {value} (at end of frame),Задать {name} = {value} (в кон
 Set collision layers to {layers},Задать слои столкновений: {layers}
 Set collides with {layers},Сталкивается с {layers}
 Trigger once,Сработать один раз
+Collapse All,Свернуть все
+Expand All,Развернуть все
+Expand To Level 1,Развернуть до уровня 1
+Expand To Level 2,Развернуть до уровня 2
+Expand To Level 3,Развернуть до уровня 3

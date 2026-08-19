@@ -391,9 +391,16 @@ func familiar_words_enabled() -> bool:
 func set_sheet(sheet: EventSheetResource) -> void:
 	_sheet = sheet
 	_load_persisted_region_folds()
+	_load_persisted_collapse_level()
 	_editor_style = _resolve_editor_style(sheet)
 	_update_layout_style_signature(_get_font_size())
 	_refresh_rows()
+	# The remembered collapse level is re-applied ONCE per file, right after its rows first
+	# exist. Re-applying it on every set_sheet would undo every fold the user opened by hand
+	# the moment anything else re-seated the same sheet.
+	if persisted_collapse_level > 0 and _applied_collapse_sheet != sheet:
+		_applied_collapse_sheet = sheet
+		_folding.apply_collapse_level(persisted_collapse_level)
 
 
 ## True when the user has opted a specific verb (by function name) into body editing on an opened pack.
@@ -426,8 +433,43 @@ func toggle_function_body_editable(function_name: String) -> void:
 var persisted_region_folds: Dictionary = {}
 
 
+## How deep this file was last read at ("expanded to level N"); 0 = fully expanded, the
+## default. A LEVEL rather than a list of rows because row uids embed live instance ids and
+## therefore name nothing at all in the next session, while a depth means the same thing
+## every time the file is opened.
+var persisted_collapse_level: int = 0
+## The sheet the remembered level has already been applied to, so reopening the file applies
+## it once instead of re-collapsing rows the user has since opened by hand.
+var _applied_collapse_sheet: EventSheetResource = null
+
+
 func _load_persisted_region_folds() -> void:
 	_folding.load_persisted_region_folds()
+
+
+func _load_persisted_collapse_level() -> void:
+	_folding.load_persisted_collapse_level()
+
+
+## Collapse every row that holds other rows (Ctrl+Shift+[).
+func collapse_all() -> void:
+	_folding.set_all_folds(true)
+
+
+## Expand every row (Ctrl+Shift+]).
+func expand_all() -> void:
+	_folding.set_all_folds(false)
+
+
+## Expand down to `level` and collapse everything at or below it (View > Expand To Level).
+func expand_to_level(level: int) -> void:
+	_folding.expand_to_level(level)
+
+
+## The muted one-line summary a collapsed row wears after its own text; "" for any row that
+## is not collapsed. Called by the renderer through this control.
+func collapsed_row_summary(row_data: EventRowData) -> String:
+	return _folding.collapsed_summary(row_data)
 
 
 func _persist_region_folds() -> void:

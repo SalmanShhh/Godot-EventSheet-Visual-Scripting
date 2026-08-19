@@ -7,6 +7,9 @@ extends RefCounted
 #
 #   - toggling one row's fold (the arrow / Left-Right keys / fold-by-uid),
 #   - the Fold All / Unfold All sweeps (Command Palette; optionally groups too),
+#   - the whole-sheet Collapse All / Expand All / Expand To Level sweeps and the one-line
+#     summary a collapsed row wears (the sheet is browsed by collapsing, so a collapsed
+#     block must still say what it holds),
 #   - resolving the innermost region CONTAINING a row (Ctrl+Shift+bracket keys),
 #   - counting a row's currently-visible descendants (bubble ranges, fold targets),
 #   - region fold persistence: per-project editor metadata keyed by the sheet's path
@@ -73,6 +76,50 @@ func _set_folds_in(rows: Array[EventRowData], folded: bool, include_groups: bool
 			row_data.folded = folded
 			_viewport._fold_state[row_data.row_uid] = folded
 		_set_folds_in(row_data.children, folded, include_groups)
+
+
+## Collapses or expands EVERY row that holds other rows - the whole-sheet Collapse All /
+## Expand All (Ctrl+Shift+[ / Ctrl+Shift+], View menu, Command Palette). Unlike
+## set_region_folds this asks nothing about the KIND of row: an event block, a group, a
+## region and a published verb all collapse, because "collapse the sheet" means the sheet.
+## The level is remembered per file (collapse all is level 1; expand all forgets it).
+func set_all_folds(folded: bool) -> void:
+	_apply_level_to(_viewport._root_rows, 1 if folded else 0, 1)
+	_viewport._refresh_rows()
+	persist_region_folds()
+	persist_collapse_level(1 if folded else 0)
+
+
+## View > Expand To Level N: every row shallower than `level` is expanded and everything at
+## `level` or deeper is collapsed (root rows are level 1). Level 1 is therefore exactly
+## Collapse All, and a level deeper than the sheet expands all of it.
+func expand_to_level(level: int) -> void:
+	var clamped: int = maxi(level, 1)
+	_apply_level_to(_viewport._root_rows, clamped, 1)
+	_viewport._refresh_rows()
+	persist_region_folds()
+	persist_collapse_level(clamped)
+
+
+## Re-applies a remembered level when a file is reopened. Same walk, but it neither
+## persists (nothing changed to remember) nor clamps a 0 up to 1 - level 0 means "this file
+## has no remembered collapse", and re-collapsing it would be the opposite of that.
+func apply_collapse_level(level: int) -> void:
+	if level <= 0:
+		return
+	_apply_level_to(_viewport._root_rows, level, 1)
+	_viewport._refresh_rows()
+
+
+## `level` 0 expands everything; otherwise a row is collapsed exactly when its own depth
+## reaches `level`. Rows without children are left alone (folding one means nothing).
+func _apply_level_to(rows: Array[EventRowData], level: int, depth: int) -> void:
+	for row_data: EventRowData in rows:
+		if not row_data.children.is_empty():
+			var folded: bool = level > 0 and depth >= level
+			row_data.folded = folded
+			_viewport._fold_state[row_data.row_uid] = folded
+		_apply_level_to(row_data.children, level, depth + 1)
 
 
 ## The flat index of the innermost paired region whose visible range contains
@@ -159,3 +206,108 @@ func _collect_region_folds(rows: Array[EventRowData], snapshot: Dictionary) -> v
 		if row_data.folded and row_data.has_meta("region_fold_key"):
 			snapshot[str(row_data.get_meta("region_fold_key"))] = true
 		_collect_region_folds(row_data.children, snapshot)
+
+
+# ── Collapse-level persistence (a sibling of the region folds, same metadata section) ──────────
+# What is remembered is the LEVEL, not the list of collapsed rows, and that is deliberate:
+# a row's uid embeds the live instance id of the resource behind it, so it names nothing at
+# all in the next session, while "this file reads to level 2" means the same thing every
+# time the file is opened. Only a level put in force by Collapse All / Expand All / Expand
+# To Level is stored; absent (or 0) means the file opens fully expanded, exactly as before.
+
+
+func load_persisted_collapse_level() -> void:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return
+	var settings: EditorSettings = EditorInterface.get_editor_settings()
+	var sheet_key: String = sheet_persist_key()
+	if settings == null or sheet_key.is_empty():
+		return
+	var all_levels: Dictionary = settings.get_project_metadata("eventsheets", "collapse_state", {})
+	_viewport.persisted_collapse_level = int(all_levels.get(sheet_key, 0))
+
+
+func persist_collapse_level(level: int) -> void:
+	# The viewport field is written FIRST, outside the editor guard: it is plain view state,
+	# and a headless run (the suite) must still be able to read back what it just asked for.
+	_viewport.persisted_collapse_level = maxi(level, 0)
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return
+	var settings: EditorSettings = EditorInterface.get_editor_settings()
+	var sheet_key: String = sheet_persist_key()
+	if settings == null or sheet_key.is_empty():
+		return
+	var all_levels: Dictionary = settings.get_project_metadata("eventsheets", "collapse_state", {})
+	if level <= 0:
+		all_levels.erase(sheet_key)
+	else:
+		all_levels[sheet_key] = level
+	settings.set_project_metadata("eventsheets", "collapse_state", all_levels)
+
+
+# ── The one-line summary a collapsed row wears ─────────────────────────────────────────────────
+# An event sheet is browsed by collapsing, so a collapsed block that says nothing about what
+# it holds has hidden the very thing you collapsed it to find. Each collapsed row therefore
+# reads its first rows back in the sheet's own words, muted, after its own text.
+
+## How many of a collapsed row's rows the summary names before it trails off.
+const SUMMARY_ROW_LIMIT := 3
+
+
+## The summary line for a collapsed row, or "" for a row that is not collapsed (or holds
+## nothing). Cached on the row itself: rows are rebuilt from scratch whenever the sheet
+## changes, so the cache cannot go stale - it dies with the row that carries it.
+func collapsed_summary(row_data: EventRowData) -> String:
+	if row_data == null or not row_data.folded or row_data.children.is_empty():
+		return ""
+	if row_data.has_meta("collapse_summary"):
+		return str(row_data.get_meta("collapse_summary"))
+	var pieces: PackedStringArray = PackedStringArray()
+	var more: bool = false
+	for child: EventRowData in row_data.children:
+		var piece: String = summary_piece(child)
+		if piece.is_empty():
+			continue
+		if pieces.size() >= SUMMARY_ROW_LIMIT:
+			more = true
+			break
+		pieces.append(piece)
+	var summary: String = " - ".join(pieces)
+	if more and not summary.is_empty():
+		summary += " - …"
+	row_data.set_meta("collapse_summary", summary)
+	return summary
+
+
+## One held row read back as one phrase: "condition -> action" where the row has both lanes,
+## the side it has where it has only one, and its own plain text otherwise (a comment, a
+## group bar, a block of code). The "+ Add event" affordance rows are furniture, not
+## content, and are skipped. Returns "" for a row with nothing to say.
+func summary_piece(row_data: EventRowData) -> String:
+	if row_data == null or row_data.row_uid.begins_with("add_event_footer"):
+		return ""
+	if row_data.row_type == EventRowData.RowType.EVENT and row_data.spans.is_empty():
+		_viewport._ensure_event_spans(row_data)
+	var conditions: PackedStringArray = PackedStringArray()
+	var actions: PackedStringArray = PackedStringArray()
+	var plain: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		var text: String = span.text.strip_edges()
+		if text.is_empty():
+			continue
+		var lane: String = ""
+		if span.metadata is Dictionary:
+			lane = str((span.metadata as Dictionary).get("lane", ""))
+		if lane == "condition":
+			conditions.append(text)
+		elif lane == "action":
+			actions.append(text)
+		else:
+			plain.append(text)
+	if not conditions.is_empty() and not actions.is_empty():
+		return "%s -> %s" % [" - ".join(conditions), " - ".join(actions)]
+	if not conditions.is_empty():
+		return " - ".join(conditions)
+	if not actions.is_empty():
+		return " - ".join(actions)
+	return " ".join(plain)

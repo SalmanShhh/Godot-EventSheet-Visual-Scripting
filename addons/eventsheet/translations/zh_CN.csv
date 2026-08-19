@@ -2019,3 +2019,8 @@ Set {name} to {value} (at end of frame),将 {name} 设为 {value}（帧结束时
 Set collision layers to {layers},将碰撞层设为 {layers}
 Set collides with {layers},与 {layers} 碰撞
 Trigger once,仅触发一次
+Collapse All,全部折叠
+Expand All,全部展开
+Expand To Level 1,展开到第 1 层
+Expand To Level 2,展开到第 2 层
+Expand To Level 3,展开到第 3 层
