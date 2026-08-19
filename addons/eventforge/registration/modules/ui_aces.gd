@@ -21,7 +21,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs when a toggle button is switched on or off."))
 
 	# ── Focus navigation (Control) ──
-	descriptors.append(F.make_descriptor("Core", "GrabFocus", "Grab Focus", ACEDescriptor.ACEType.ACTION, "grab_focus()", "", [], "UI", "Grab focus", "Control")
+	descriptors.append(F.make_descriptor("Core", "GrabFocus", "Set Focus", ACEDescriptor.ACEType.ACTION, "grab_focus()", "", [], "UI", "Set focus", "Control")
 		.described("Gives this control keyboard focus, so input goes to it next."))
 	descriptors.append(F.make_descriptor("Core", "ReleaseFocus", "Release Focus", ACEDescriptor.ACEType.ACTION, "release_focus()", "", [], "UI", "Release focus", "Control")
 		.described("Removes keyboard focus from this control."))

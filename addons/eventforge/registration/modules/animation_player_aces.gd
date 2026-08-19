@@ -19,7 +19,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── Actions ──
-	descriptors.append(F.make_descriptor("Core", "SetAnimationSpeed", "Set Animation Speed", ACEDescriptor.ACEType.ACTION, "speed_scale = {scale}", "", [F.make_param("scale", "float", "1.0", "Speed", "1 = normal, 0.5 = half speed, 2 = double, 0 = paused.", "expression")], CAT, "set animation speed to {scale}", "AnimationPlayer")
+	descriptors.append(F.make_descriptor("Core", "SetAnimationSpeed", "Set Animation Speed", ACEDescriptor.ACEType.ACTION, "speed_scale = {scale}", "", [F.make_param("scale", "float", "1.0", "Speed", "1 = normal, 0.5 = half speed, 2 = double, 0 = paused.", "expression")], CAT, "Set animation speed to {scale}", "AnimationPlayer")
 		.described("Scales how fast every animation on this player runs - slow-mo a death, speed up a fast-forward. 0 freezes it in place."))
 	descriptors.append(F.make_descriptor("Core", "SeekAnimation", "Seek Animation", ACEDescriptor.ACEType.ACTION, "seek({time}, true)", "", [F.make_param("time", "float", "0.0", "Time", "Seconds from the animation's start to jump to.", "expression")], CAT, "seek animation to {time}s", "AnimationPlayer")
 		.described("Jumps the play head to a time in seconds (and updates the pose immediately) - scrub, restart from a beat, or sync to another clock."))

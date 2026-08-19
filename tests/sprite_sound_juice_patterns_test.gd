@@ -90,7 +90,91 @@ static func run() -> bool:
 	ok = _opened_file_reads() and ok
 	ok = _patterns_claimed() and ok
 	ok = _round_trip() and ok
+	ok = _picked_matches_typed() and ok
+	ok = _picked_writes_the_read_shape() and ok
 	return ok
+
+
+## Gate 4 - a row dropped from the PICKER reads exactly what the same shape typed by hand reads.
+static func _picked_matches_typed() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.custom_class_name = "SpriteSoundJuiceReader"
+	sheet.host_class = "Node2D"
+	sheet.events.append(_onready_object("sprite", "Sprite2D", "$Sprite2D"))
+	sheet.events.append(_onready_object("sfx", "AudioStreamPlayer", "$Sfx"))
+	sheet.events.append(_onready_object("camera", "Camera2D", "$Camera2D"))
+	sheet.events.append(_onready_object("resume_button", "Button", "$ResumeButton"))
+	var event_row: EventRow = EventRow.new()
+	event_row.trigger_id = "OnReady"
+	event_row.actions.append(_action("SetSpriteFrame", {"target": "sprite", "frame": "3"}))
+	event_row.actions.append(_action("SetSpriteTexture", {"target": "sprite", "path": "\"res://hero.png\""}))
+	event_row.actions.append(_action("AudioSetStream", {"target": "sfx", "path": "\"res://jump.wav\""}))
+	event_row.actions.append(_action("AudioSetBus", {"target": "sfx", "bus": "\"SFX\""}))
+	event_row.actions.append(_action("AudioSetVolumeLevel", {"target": "sfx", "level": "0.5"}))
+	event_row.actions.append(_action("AudioSeek", {"target": "sfx", "seconds": "12.0"}))
+	event_row.actions.append(_action("GrabFocus", {"target": "resume_button"}))
+	event_row.actions.append(_action("SetMasterVolume", {"level": "0.5"}))
+	event_row.actions.append(_action("CameraShakeOnce", {"target": "camera", "amount": "4.0"}))
+	event_row.actions.append(_action("EaseSizeBack", {"rate": "10.0"}))
+	sheet.events.append(event_row)
+	var readings: PackedStringArray = _render(sheet)
+	for expected: String in [
+		"sprite ▸ Set animation frame to 3",
+		"sprite ▸ Set image to hero.png",
+		"sfx ▸ Set sound to jump.wav",
+		"sfx ▸ Set bus to SFX",
+		"sfx ▸ Set volume to 50%",
+		"sfx ▸ Seek to 12 seconds",
+		"resume_button ▸ Set focus",
+		"Audio ▸ Set master volume to 50%",
+		"camera ▸ Shake by 4 random offset this tick",
+		"SpriteSoundJuiceReader ▸ Ease size back to normal at 10 per second"
+	]:
+		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok
+	return ok
+
+
+## Gate 5 - and what the picked row WRITES is the shape the reading recognises, so a sheet-authored
+## pattern and a hand-written one are the same bytes.
+static func _picked_writes_the_read_shape() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.custom_class_name = "SpriteSoundJuiceWriter"
+	sheet.host_class = "Node2D"
+	var event_row: EventRow = EventRow.new()
+	event_row.trigger_id = "OnReady"
+	event_row.actions.append(_action("CameraShakeOnce", {"target": "camera", "amount": "4.0"}))
+	event_row.actions.append(_action("AudioSetVolumeLevel", {"target": "music", "level": "0.5"}))
+	event_row.actions.append(_action("SetMasterVolume", {"level": "0.5"}))
+	event_row.actions.append(_action("ShowDialogCentred", {"target": "game_over"}))
+	sheet.events.append(event_row)
+	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_sprite_sound_juice_written.gd").get("output", ""))
+	for expected: String in [
+		"camera.offset = Vector2(randf_range(-4.0, 4.0), randf_range(-4.0, 4.0))",
+		"music.volume_db = linear_to_db(0.5)",
+		"AudioServer.set_bus_volume_db(0, linear_to_db(0.5))",
+		"game_over.popup_centered()"
+	]:
+		ok = _check("the picked row writes \"%s\"" % expected, output.contains(expected), true) and ok
+	return ok
+
+
+static func _onready_object(variable_name: String, type_name: String, value: String) -> LocalVariable:
+	var variable: LocalVariable = LocalVariable.new()
+	variable.name = variable_name
+	variable.type_name = type_name
+	variable.default_value = value
+	variable.onready = true
+	return variable
+
+
+static func _action(ace_id: String, params: Dictionary) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = ace_id
+	action.params = params
+	return action
 
 
 ## Gate 1 - the canvas says every one of these.
