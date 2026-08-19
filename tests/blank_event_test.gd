@@ -105,6 +105,21 @@ static func run() -> bool:
 	all_passed = _check("every other trigger reads exactly as before",
 		EventSheetViewportReadingRows.blank_tick_reading("OnReady", false).is_empty(), true) and all_passed
 
+	# S27. The READING of a blank SUB-event: an empty lane, because "Every Tick" under a parent would
+	# be a plain lie about when its rows run. Built through a real viewport over the sheet above, so
+	# the gate that decides it (the row is held UNDER another one) is the one the editor uses.
+	var nested_viewport: EventSheetViewport = EventSheetViewport.new()
+	nested_viewport._sheet = nested_sheet
+	all_passed = _check("a blank sub-event says nothing in the condition lane",
+		_has_span_text(nested_viewport._build_event_spans(blank_sub), "Every Tick"), false) and all_passed
+	all_passed = _check("the sub-event with a condition keeps its own words",
+		_has_span_text(nested_viewport._build_event_spans(guarded), "Every Tick"), false) and all_passed
+	all_passed = _check("a row the sheet does not hold under anything keeps the placeholder",
+		_has_span_text(nested_viewport._build_event_spans(EventRow.new()), "Every Tick"), true) and all_passed
+	all_passed = _check("and the hover says which blank rule this one is",
+		EventSheetViewportReadingRows.BLANK_SUB_EVENT_HOVER, "follows its parent, in order") and all_passed
+	nested_viewport.free()
+
 	# The Doctor's note: a blank event that only sets values is almost always meant to run once.
 	var setup_event: EventRow = EventRow.new()
 	var set_action: ACEAction = ACEAction.new()
@@ -138,6 +153,14 @@ static func _action(template: String) -> ACEAction:
 	action.ace_id = template
 	action.codegen_template = template
 	return action
+
+
+## True when any of a row's spans carries the given text - what a reader would see in its cells.
+static func _has_span_text(spans: Array[SemanticSpan], text: String) -> bool:
+	for span: SemanticSpan in spans:
+		if span != null and span.text.contains(text):
+			return true
+	return false
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

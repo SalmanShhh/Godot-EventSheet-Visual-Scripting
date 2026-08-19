@@ -811,6 +811,17 @@ untouched, and the byte round-trip and the emitted GDScript cannot move.
   **Every tick** words. Display only - byte-for-byte round-trip is untouched.
 - **The Doctor notices the surprise.** A blank event whose whole body is setting values gets a note:
   "This blank event runs every tick and only sets values - did you mean On start of layout?"
+- **A blank SUB-event no longer says "Every Tick" either.** Under a parent, blank means the other
+  half of the same rule - it simply follows its parent, in order - which is exactly what the
+  compiler already emits (plain statements after the parent's block, never an `if`). The condition
+  lane of a sub-event with no condition, trigger or Else of its own is now empty, the hover says
+  `follows its parent, in order`, and the row claims the `blank_event` pattern the way its top-level
+  sibling does. `+ Add condition` is still the way in.
+- **Taking an event's last condition off asks what you meant.** Removing it does not break the
+  event - it widens it, all the way to every tick - and a silent change of that size is the wrong
+  kind, so a top-level event that just lost its last condition says so and offers **Keep As Every
+  Tick** or **Delete The Event**. A sub-event asks nothing: blank under a parent is what taking the
+  condition off already said.
 - **The blank reading claims the `blank_event` pattern** in the pattern registry, which the pattern
   chip, its hover and the coverage counts read.
 
@@ -825,6 +836,26 @@ untouched, and the byte round-trip and the emitted GDScript cannot move.
   machine written by hand and the attached behavior are indistinguishable on the canvas. The event
   that asks the question claims the `state_machine` pattern, naming the State Machine behavior as the
   thing a hand-rolled machine could become.
+- **An enum plus a variable of it IS a behavior, and the head says so in one line.** A file that
+  declares `enum State { IDLE, RUN, JUMP }` and starts a variable on one of its members grows a
+  single `FSM · Idle` line in the head's Behaviors folder, beside any behavior the scene mounts;
+  hovering it names the plumbing that one line stands for (the enum, the state variable, the
+  transition function, the enter and exit matches and a `previous_state`). Nothing else about the
+  machine is added to the canvas, because a behavior does not put its plumbing on a sheet.
+- **The machine's own rows read as the behavior's actions, questions and expressions.**
+  `change_state(State.JUMP)` and `state = State.JUMP` both read `FSM ▸ Go to state "Jump"`;
+  `state == State.JUMP` reads `FSM ▸ Current state is "Jump"`, `previous_state == State.DASH` reads
+  `FSM ▸ Previous state is "Dash"`, `state in [State.IDLE, State.RUN]` reads
+  `FSM ▸ Current state in list "Idle", "Run"` (and the previous-state form likewise), and
+  `State.keys()[state]` reads `Player.FSM.CurrentState`. `WALL_SLIDE` shows as `Wall Slide` - the
+  enum's own spelling is the code's, and it stays on hover.
+- **The transition, enter and exit functions are found by what they DO**, not by their names: the
+  transition is the function that assigns the state variable from one of its parameters, and the
+  calls it makes on the state before and after that assignment are exit and enter. A file spelling
+  them `set_state` / `_on_enter` reads exactly the same.
+- **Every event that turns the machine or asks about it claims the `state_machine` pattern**, with
+  the declarations the FSM line stands for as its evidence and the State Machine behavior named as
+  what a hand-rolled machine could become.
 - **The pattern registry is wired into the row build**: claims are cleared at the start of every
   sweep and filled in by the readings that recognise a shape.
 

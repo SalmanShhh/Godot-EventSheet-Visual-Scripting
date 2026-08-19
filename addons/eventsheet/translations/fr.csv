@@ -2464,8 +2464,18 @@ An event with no condition of its own runs every tick.,Un évènement sans condi
 "An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","Un évènement sans condition propre s'exécute à chaque tick. Ajoute ses actions avec A, ou ajoute plus tard une condition pour le restreindre."
 Runs every tick,S'exécute à chaque tick
 runs every tick,s'exécute à chaque tick
+"follows its parent, in order","suit son événement parent, dans l'ordre"
+Keep As Every Tick,Garder en chaque tick
+Delete The Event,Supprimer l'événement
+"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?","C'était la dernière condition de l'événement. Un événement sans condition propre s'exécute à chaque tick - le garder ainsi, ou supprimer l'événement ?"
 every tick,chaque tick
 Current state is,L'état actuel est
+Go to state {state},Aller à l'état {state}
+Current state is {state},L'état actuel est {state}
+Previous state is {state},L'état précédent est {state}
+Current state in list {states},L'état actuel est dans la liste {states}
+Previous state in list {states},L'état précédent est dans la liste {states}
+written into this script,écrit dans ce script
 "one named state at a time, switched by Go to state","un seul état nommé à la fois, changé par Aller à l'état"
 Load layout {path} in the background,Charger la scène {path} en arrière-plan
 layout {path} has finished loading,la scène {path} a fini de charger
@@ -2639,7 +2649,6 @@ Import a pack from a URL,Importer un pack depuis une URL
 Add behavior,Ajouter un comportement
 Add behavior…,Ajouter un comportement…
 as a behavior node,comme nœud de comportement
-written into this script,écrit dans ce script
 This pack has no knobs to set.,Ce pack n'a aucun réglage.
 No pack here matches that.,Aucun pack ne correspond.
 Reading check,Contrôle de lecture

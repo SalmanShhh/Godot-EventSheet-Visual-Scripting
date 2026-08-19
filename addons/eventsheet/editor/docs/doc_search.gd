@@ -498,6 +498,9 @@ static func _godot_word_hits(query: String) -> Array[Dictionary]:
 			"anchor": "", "definition": null, "used": 0,
 			"score": SCORE_TITLE_PREFIX,
 		})
+	return hits
+
+
 ## The behaviors another event-sheet editor's user arrives holding the names of. Tagged with the
 ## SAME "glossary" kind as the words above, deliberately: to the reader typing "8 Direction" both
 ## lists are answering one question - "what is this called here?" - and splitting them into two

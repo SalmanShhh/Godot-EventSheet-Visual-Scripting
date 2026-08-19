@@ -43,13 +43,20 @@ const POOL_RETURN_METHODS: PackedStringArray = ["push_back", "push_front", "appe
 ##
 ##   "countdown_variables" {name: how it stays above zero, "" for a plain `-= delta`}
 ##   "pool_variables"      {name: true}   - the lists used as object pools
+##   "state_machine"       the FSM this file writes out, {} when it writes none (S1)
 ##
 ## Takes the file's lines rather than the sheet, so nothing here has to know what a sheet is: the
 ## caller already walks the rows once for the other fact maps and hands the same lines to all of them.
 static func facts(lines: PackedStringArray) -> Dictionary:
+	var machine: Dictionary = EventSheetStateMachineFacts.facts(lines)
+	if not machine.is_empty():
+		# The declarations the one FSM line stands for ride along with the facts, so the claim can
+		# show them as its evidence without a second walk over the file.
+		machine["evidence"] = EventSheetStateMachineFacts.evidence(lines, machine)
 	return {
 		"countdown_variables": countdown_variables(lines),
-		"pool_variables": pool_variables(lines)
+		"pool_variables": pool_variables(lines),
+		"state_machine": machine
 	}
 
 
@@ -177,6 +184,9 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 			"words": "reuses objects from %s instead of making a new one" % ", ".join(pool_names),
 			"adoptable": "object_pool", "ace_ids": PackedStringArray()
 		})
+	var machine_claim: Dictionary = state_machine_claim(body, file_facts)
+	if not machine_claim.is_empty():
+		found.append(machine_claim)
 	return found
 
 
@@ -231,6 +241,46 @@ static func nearest_pick(body: PackedStringArray) -> Dictionary:
 	return {
 		"evidence": evidence, "farthest": farthest,
 		"words": "picks the farthest one by distance" if farthest else "picks the nearest one by distance"
+	}
+
+
+## S1. The shipped behavior a hand-rolled state machine could be replaced by. Named here rather than
+## guessed at from a row, so the chip, Adopt behavior and the Doctor all offer the same one.
+const STATE_MACHINE_PACK: String = "StateMachineBehavior"
+
+
+## S1. The state-machine claim a BODY makes, or {} when its lines never turn the machine or ask about
+## it. A machine is a fact about the FILE, but the claim belongs on the event that drives it: an
+## enum nobody switches on is a list of names, and marking every event of the file would say nothing.
+static func state_machine_claim(body: PackedStringArray, file_facts: Dictionary) -> Dictionary:
+	var machine: Dictionary = file_facts.get("state_machine", {})
+	if machine.is_empty():
+		return {}
+	var current: String = str(machine.get("variable", ""))
+	var previous: String = str(machine.get("previous", ""))
+	var transition: String = str(machine.get("transition", ""))
+	var used: bool = false
+	for line: String in body:
+		var text: String = line.strip_edges()
+		if text.is_empty():
+			continue
+		if not transition.is_empty() and text.contains("%s(" % transition):
+			used = true
+			break
+		for word: String in [current, previous]:
+			if word.is_empty():
+				continue
+			if text.begins_with("%s " % word) or text.contains(" %s " % word) or text.contains("[%s]" % word):
+				used = true
+				break
+		if used:
+			break
+	if not used:
+		return {}
+	return {
+		"pattern": "state_machine", "evidence": machine.get("evidence", PackedStringArray()),
+		"words": "one named state at a time, switched by Go to state",
+		"adoptable": STATE_MACHINE_PACK, "ace_ids": PackedStringArray()
 	}
 
 

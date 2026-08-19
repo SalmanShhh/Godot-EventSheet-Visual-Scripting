@@ -340,6 +340,12 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 		return _with_indent(picked, indent)
 	if keyword == "var" or keyword == "const":
 		return _with_indent(_declaration_statement(text, keyword), indent)
+	# S1. Switching state is the FSM behavior's one action, and it is written two ways - through the
+	# transition function, or straight onto the variable. Ahead of the assignment and the call
+	# readings, either of which would describe the spelling instead of the step.
+	var switched: Dictionary = _state_machine_statement(text, context)
+	if not switched.is_empty():
+		return _with_indent(switched, indent)
 	# S4. A countdown is a shape several lines make together, so it is claimed ahead of the arithmetic
 	# and the plain Set, both of which would describe one line of it correctly and the pattern not at all.
 	var countdown: Dictionary = _countdown_statement(text, context)
@@ -446,6 +452,11 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var behaviors: Dictionary = behavior_words_condition(text, context)
 	if not behaviors.is_empty():
 		return behaviors
+	# S1. Which state the machine is in is the FSM behavior's own question, and the comparison and
+	# membership readings below would both answer a narrower one - `state = 2`, `state is in a list`.
+	var machine_test: Dictionary = _state_machine_condition(text, context)
+	if not machine_test.is_empty():
+		return machine_test
 	var joined: Dictionary = joined_condition(text, context)
 	if not joined.is_empty():
 		return joined
@@ -997,6 +1008,10 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var field: String = data_field_words(trimmed, context)
 	if not field.is_empty():
 		return field
+	# S1 - the state read back out as a word, which is the FSM behavior's own expression.
+	var state_value: String = state_machine_expression(trimmed, context)
+	if not state_value.is_empty():
+		return state_value
 	# S8 - the progress array read by index, before the indexing pass could take `p[0]` apart. What
 	# the file holds is untouched; only the words change.
 	trimmed = loading_progress_words(trimmed, context)
@@ -1632,6 +1647,92 @@ static func _countdown_statement(text: String, context: Dictionary) -> Dictionar
 		"name": [_member_word(target), "name"],
 		"seconds": [expression_text(seconds, context), "value"]
 	})
+
+
+## S1. The chip a hand-rolled state machine's rows wear. The behavior the sheet has for this shape is
+## called FSM, and a row that switches state belongs to it whether the machine is a mounted pack or
+## an enum this file writes out - which is the whole point of reading one as the other.
+const STATE_MACHINE_CHIP := "FSM"
+
+
+## S1. Switching state, the two ways a Godot script writes it: through the transition function
+## (`change_state(State.JUMP)`) or straight onto the variable (`state = State.JUMP`). Both are the
+## FSM behavior's one action, so both read as it. A call that carries anything other than one of this
+## machine's own states is not a transition and keeps its own reading.
+static func _state_machine_statement(text: String, context: Dictionary) -> Dictionary:
+	var machine: Dictionary = context.get("state_machine", {})
+	if machine.is_empty():
+		return {}
+	var named: String = ""
+	var call: Dictionary = call_parts(text)
+	if not call.is_empty() and str(call.get("target", "")).is_empty() \
+			and str(call.get("method", "")) == str(machine.get("transition", "")):
+		var args: PackedStringArray = call.get("args", PackedStringArray())
+		if args.size() == 1:
+			named = EventSheetStateMachineFacts.state_of(args[0], machine)
+	if named.is_empty():
+		var equals_at: int = top_level_index(text, " = ")
+		if equals_at <= 0 or text.substr(0, equals_at).strip_edges() != str(machine.get("variable", "")):
+			return {}
+		named = EventSheetStateMachineFacts.state_of(text.substr(equals_at + 3), machine)
+	if named.is_empty():
+		return {}
+	return _behaviour_sentence(script_object(context), STATE_MACHINE_CHIP, "Go to state {state}",
+		{"state": ["\"%s\"" % named, "value"]})
+
+
+## S1. The two questions a machine answers, each in one name and in a list: which state it is in now,
+## and which one it was in before. `state == State.JUMP` and `state in [State.IDLE, State.RUN]` are
+## the comparison and the membership a general reading would show; the FSM behavior asks them by name.
+static func _state_machine_condition(text: String, context: Dictionary) -> Dictionary:
+	var machine: Dictionary = context.get("state_machine", {})
+	if machine.is_empty():
+		return {}
+	var current: String = str(machine.get("variable", ""))
+	var previous: String = str(machine.get("previous", ""))
+	var equals_at: int = top_level_index(text, " == ")
+	if equals_at > 0:
+		var asked: String = text.substr(0, equals_at).strip_edges()
+		var named: String = EventSheetStateMachineFacts.state_of(text.substr(equals_at + 4), machine)
+		if named.is_empty() or not (asked == current or (asked == previous and not previous.is_empty())):
+			return {}
+		return _behaviour_sentence(script_object(context), STATE_MACHINE_CHIP,
+			"Current state is {state}" if asked == current else "Previous state is {state}",
+			{"state": ["\"%s\"" % named, "value"]})
+	var in_at: int = top_level_index(text, " in ")
+	if in_at <= 0:
+		return {}
+	var subject: String = text.substr(0, in_at).strip_edges()
+	if not (subject == current or (subject == previous and not previous.is_empty())):
+		return {}
+	var listed: PackedStringArray = EventSheetStateMachineFacts.states_of_list(
+		text.substr(in_at + 4), machine)
+	if listed.is_empty():
+		return {}
+	var quoted: PackedStringArray = PackedStringArray()
+	for named_state: String in listed:
+		quoted.append("\"%s\"" % named_state)
+	return _behaviour_sentence(script_object(context), STATE_MACHINE_CHIP,
+		"Current state in list {states}" if subject == current else "Previous state in list {states}",
+		{"states": [", ".join(quoted), "value"]})
+
+
+## S1. The state read back out as a WORD - `State.keys()[state]`, the line every debug label holds -
+## as the FSM behavior's own expression. "" when the value is anything else.
+static func state_machine_expression(text: String, context: Dictionary) -> String:
+	var machine: Dictionary = context.get("state_machine", {})
+	if machine.is_empty():
+		return ""
+	var keys_call: String = "%s.keys()[" % str(machine.get("enum_name", ""))
+	if not text.begins_with(keys_call) or not text.ends_with("]"):
+		return ""
+	var asked: String = text.substr(keys_call.length(), text.length() - keys_call.length() - 1).strip_edges()
+	var previous: String = str(machine.get("previous", ""))
+	if asked == str(machine.get("variable", "")):
+		return "%s.%s.CurrentState" % [script_object(context), STATE_MACHINE_CHIP]
+	if not previous.is_empty() and asked == previous:
+		return "%s.%s.PreviousState" % [script_object(context), STATE_MACHINE_CHIP]
+	return ""
 
 
 ## S6. `target = null` is the event-sheet Forget: the object is not destroyed, this row simply stops

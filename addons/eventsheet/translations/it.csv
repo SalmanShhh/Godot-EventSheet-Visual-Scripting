@@ -2464,8 +2464,18 @@ An event with no condition of its own runs every tick.,Un evento senza una condi
 "An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","Un evento senza una condizione propria viene eseguito a ogni tick. Aggiungi le sue azioni con A, oppure aggiungi in seguito una condizione per restringerlo."
 Runs every tick,Viene eseguito a ogni tick
 runs every tick,viene eseguito a ogni tick
+"follows its parent, in order","segue il suo evento padre, in ordine"
+Keep As Every Tick,Mantieni come ogni tick
+Delete The Event,Elimina l'evento
+"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?",Quella era l'ultima condizione dell'evento. Un evento senza una condizione propria viene eseguito a ogni tick: mantenerlo così o eliminare l'evento?
 every tick,ogni tick
 Current state is,Lo stato attuale è
+Go to state {state},Vai allo stato {state}
+Current state is {state},Lo stato attuale è {state}
+Previous state is {state},Lo stato precedente è {state}
+Current state in list {states},Lo stato attuale è nell'elenco {states}
+Previous state in list {states},Lo stato precedente è nell'elenco {states}
+written into this script,scritto in questo script
 "one named state at a time, switched by Go to state","un solo stato con nome alla volta, cambiato con Vai allo stato"
 Load layout {path} in the background,Carica layout {path} in background
 layout {path} has finished loading,il layout {path} ha finito di caricarsi
@@ -2639,7 +2649,6 @@ Import a pack from a URL,Importa un pacchetto da un URL
 Add behavior,Aggiungi comportamento
 Add behavior…,Aggiungi comportamento…
 as a behavior node,come nodo di comportamento
-written into this script,scritto in questo script
 This pack has no knobs to set.,Questo pacchetto non ha regolazioni.
 No pack here matches that.,Nessun pacchetto corrisponde.
 Reading check,Controllo di lettura

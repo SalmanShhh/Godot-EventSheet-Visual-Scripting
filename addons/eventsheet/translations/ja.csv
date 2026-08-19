@@ -2464,8 +2464,18 @@ An event with no condition of its own runs every tick.,自分の条件を持た�
 "An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.",自分の条件を持たないイベントは毎ティック実行されます。A でアクションを追加するか、後から条件を追加して絞り込めます。
 Runs every tick,毎ティック実行
 runs every tick,毎ティック実行
+"follows its parent, in order",親イベントに続いて、順番に実行
+Keep As Every Tick,毎ティックのまま残す
+Delete The Event,イベントを削除
+"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?",これがこのイベントの最後の条件でした。条件を持たないイベントは毎ティック実行されます。このまま残しますか、イベントを削除しますか?
 every tick,毎ティック
 Current state is,現在の状態が
+Go to state {state},状態 {state} へ移行
+Current state is {state},現在の状態が {state}
+Previous state is {state},直前の状態が {state}
+Current state in list {states},現在の状態がリスト {states} のいずれか
+Previous state in list {states},直前の状態がリスト {states} のいずれか
+written into this script,このスクリプトに書かれている
 "one named state at a time, switched by Go to state",常に 1 つの名前付き状態。状態へ移行 で切り替えます
 Load layout {path} in the background,レイアウト {path} をバックグラウンドで読み込む
 layout {path} has finished loading,レイアウト {path} の読み込みが完了した
@@ -2639,7 +2649,6 @@ Import a pack from a URL,URL からパックを取り込む
 Add behavior,ビヘイビアを追加
 Add behavior…,ビヘイビアを追加…
 as a behavior node,ビヘイビアノードとして
-written into this script,このスクリプトに書き込む
 This pack has no knobs to set.,このパックに設定はありません。
 No pack here matches that.,一致するパックはありません。
 Reading check,読みやすさチェック

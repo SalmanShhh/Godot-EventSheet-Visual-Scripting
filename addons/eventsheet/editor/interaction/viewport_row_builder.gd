@@ -1146,9 +1146,18 @@ func _build_pack_about_row(sheet: EventSheetResource, fallback_text: String = ""
 func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	var bars: Array[EventRowData] = []
 	var facts: Dictionary = EventSheetObjectFacts.sheet_object_facts(sheet)
-	if facts.is_empty():
+	var behaviors: Array = facts.get("behaviors", []) if not facts.is_empty() else []
+	# ── S1 ─────────────────────────────────────────────────────────────────────────────────────
+	# A machine this file WRITES OUT is a behavior on the object exactly as a mounted pack node is,
+	# so it is one ordinary line here - "FSM · Idle" - and the enum, the state variable and the
+	# transition functions it stands for show on hover. Nothing else about the machine is added to
+	# the canvas, because a behavior does not put its plumbing on a sheet.
+	var written_machine: Array = _written_behaviors(sheet)
+	if not written_machine.is_empty():
+		behaviors = behaviors.duplicate()
+		behaviors.append_array(written_machine)
+	if behaviors.is_empty() and facts.is_empty():
 		return bars
-	var behaviors: Array = facts.get("behaviors", [])
 	if not behaviors.is_empty():
 		var names: PackedStringArray = PackedStringArray()
 		var members: Array[EventRowData] = []
@@ -1306,7 +1315,31 @@ func _input_action_detail(facts: Dictionary) -> String:
 
 ## One behavior's settings as the scene wrote them: `max hp = 50 · regen = 1`, "" when the scene left
 ## the pack on its defaults (which is worth saying by saying nothing).
+## S1. The behaviors this file WRITES OUT rather than mounts - today exactly one, the state machine an
+## enum plus a variable of it is. Shaped like a scene-mounted behavior so the Behaviors folder cannot
+## tell the two apart, which is the point: a hand-rolled machine and the shipped pack are one line
+## each, with the same name and the same starting state.
+func _written_behaviors(sheet: EventSheetResource) -> Array:
+	if sheet == null:
+		return []
+	var machine: Dictionary = EventSheetStateMachineFacts.facts(
+		EventSheetViewportReadingRows.ordered_code_lines(sheet))
+	if machine.is_empty():
+		return []
+	return [{
+		"name": EventSheetStateMachineFacts.head_line(machine),
+		"node": "",
+		"properties": [],
+		"written": EventSheetStateMachineFacts.plumbing_note(machine)
+	}]
+
+
 func _behavior_settings_text(behavior: Dictionary) -> String:
+	# S1. A behavior the file writes out says so, and says with what: an event sheet's own behaviors
+	# have settings, and this one has plumbing.
+	var written: String = str(behavior.get("written", "")).strip_edges()
+	if not written.is_empty():
+		return written
 	var parts: PackedStringArray = PackedStringArray()
 	for entry: Variant in behavior.get("properties", []):
 		var property: Dictionary = entry
@@ -7277,6 +7310,67 @@ func _blank_tick_reading(event_row: EventRow) -> Dictionary:
 	return reading
 
 
+## S27. True when the sheet holds this event UNDER another one - which is what makes blank mean
+## "follows its parent" rather than "every tick". Walks the sheet's own events and its functions'
+## bodies, so a sub-event of a function reads the same as one on the canvas.
+func _is_sub_event(event_row: EventRow, container: Variant = null, depth: int = 0) -> bool:
+	if event_row == null or depth > 64:
+		return false
+	var search: Array = []
+	if container is Array:
+		search = container as Array
+	else:
+		var sheet: EventSheetResource = _viewport._sheet
+		if sheet == null:
+			return false
+		search = sheet.events.duplicate()
+		for entry: Variant in sheet.functions:
+			if entry is EventFunction:
+				search.append_array((entry as EventFunction).events)
+	for entry: Variant in search:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			var members: Array = group.events if not group.events.is_empty() else group.rows
+			if _is_sub_event(event_row, members, depth + 1):
+				return true
+			continue
+		if not (entry is EventRow):
+			continue
+		var parent: EventRow = entry as EventRow
+		for child: Variant in parent.sub_events:
+			if child == event_row:
+				return true
+		if _is_sub_event(event_row, parent.sub_events, depth + 1):
+			return true
+	return false
+
+
+## S27. True when an event is a blank SUB-event - no condition, no trigger, no Else, under a parent.
+## An event sheet's own rule for that shape is "follows its parent, in order", which is exactly what
+## the compiler already emits (plain statements after the parent's block, no `if` at all), so the
+## reading owes it an EMPTY condition lane rather than the "Every Tick" placeholder a top-level event
+## earns. Claims the blank_event pattern on the row for the same reason the top-level reading does:
+## the chip and the Explain panel both need to say which of the two blank rules this row is.
+func _blank_sub_event(event_row: EventRow) -> bool:
+	if event_row == null or not event_row.conditions.is_empty():
+		return false
+	if event_row.else_mode != EventRow.ElseMode.NONE:
+		return false
+	if event_row.trigger != null or not event_row.trigger_id.strip_edges().is_empty():
+		return false
+	if not event_row.pick_filters.is_empty() or not event_row.with_node_target.strip_edges().is_empty():
+		return false
+	# Under a parent IN THIS SHEET, and nowhere else: a row built outside a sheet (a preview, a test,
+	# a figure) is not a sub-event of anything, and reading it as one would take the placeholder away
+	# from the one row that still earns it.
+	if _viewport == null or not _is_sub_event(event_row):
+		return false
+	EventSheetPatternFacts.claim(_viewport._sheet, "blank_event", event_row.event_uid,
+		event_row.event_uid, PackedStringArray(),
+		EventSheetL10n.translate(EventSheetViewportReadingRows.BLANK_SUB_EVENT_HOVER))
+	return true
+
+
 ## S27. The Patterns reading toggle: with it off, the tick triggers keep their explicit Every tick
 ## words. Defaults to on when the dock has not published a preference (tests, figure renders).
 func _patterns_reading_on() -> bool:
@@ -7666,6 +7760,11 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# hover says it in words); "+ Add condition" below is still the way in. Inside a verb body the
 	# placeholder is "Always" and stays, because there it is the truth.
 	if not in_verb_body and not _blank_tick_reading(event_row).is_empty():
+		always_placeholder_suppressed = true
+	# S27 - and a blank SUB-event is the other half of the same rule: it follows its parent, in order.
+	# "Every Tick" under a parent would say the rows below run every frame, which is not what they do,
+	# so the lane stays empty and the hover says what blank means here.
+	if _blank_sub_event(event_row):
 		always_placeholder_suppressed = true
 	if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE and not always_placeholder_suppressed:
 		# An event with no conditions reads as "every tick"; render it as a real cell (not bare

@@ -1531,6 +1531,11 @@ const BLANK_TICK_TRIGGER_IDS: PackedStringArray = ["OnProcess", "OnPhysicsProces
 ## What the margin hover and the Explain panel say about a blank top-level event.
 const BLANK_EVENT_HOVER: String = "runs every tick"
 
+## S27. And about a blank SUB-event, which means the other half of the same rule: it simply follows
+## the event above it, in order. Nothing is skipped and nothing is decided - which is exactly why the
+## lane is empty, and why writing "Every Tick" there would be a plain lie about when its rows run.
+const BLANK_SUB_EVENT_HOVER: String = "follows its parent, in order"
+
 
 ## S27. Whether a top-level event reads as a blank one, and what (if anything) its condition lane
 ## still says. `patterns_on` is the Patterns reading toggle: with it off, the tick trigger keeps its

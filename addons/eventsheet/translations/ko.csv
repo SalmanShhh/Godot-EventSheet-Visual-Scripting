@@ -2464,8 +2464,18 @@ An event with no condition of its own runs every tick.,자체 조건이 없는 �
 "An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","자체 조건이 없는 이벤트는 매 틱 실행됩니다. A 로 액션을 추가하거나, 나중에 조건을 추가해 범위를 좁히세요."
 Runs every tick,매 틱 실행
 runs every tick,매 틱 실행
+"follows its parent, in order",상위 이벤트를 순서대로 뒤따름
+Keep As Every Tick,매 틱으로 유지
+Delete The Event,이벤트 삭제
+"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?","방금 지운 것이 이 이벤트의 마지막 조건이었습니다. 자체 조건이 없는 이벤트는 매 틱 실행됩니다. 그대로 둘까요, 이벤트를 삭제할까요?"
 every tick,매 틱
 Current state is,현재 상태가
+Go to state {state},상태 {state}(으)로 전환
+Current state is {state},현재 상태가 {state}
+Previous state is {state},이전 상태가 {state}
+Current state in list {states},현재 상태가 목록 {states} 중 하나
+Previous state in list {states},이전 상태가 목록 {states} 중 하나
+written into this script,이 스크립트에 작성됨
 "one named state at a time, switched by Go to state","한 번에 하나의 이름 있는 상태, 상태로 이동 으로 전환"
 Load layout {path} in the background,레이아웃 {path} 을(를) 백그라운드에서 불러오기
 layout {path} has finished loading,레이아웃 {path} 불러오기가 끝났다
@@ -2639,7 +2649,6 @@ Import a pack from a URL,URL에서 팩 가져오기
 Add behavior,비헤이비어 추가
 Add behavior…,비헤이비어 추가…
 as a behavior node,비헤이비어 노드로
-written into this script,이 스크립트에 써 넣기
 This pack has no knobs to set.,이 팩에는 조절할 값이 없습니다.
 No pack here matches that.,일치하는 팩이 없습니다.
 Reading check,읽기 검사

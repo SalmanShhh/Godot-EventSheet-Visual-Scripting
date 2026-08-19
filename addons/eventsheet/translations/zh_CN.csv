@@ -2464,8 +2464,18 @@ An event with no condition of its own runs every tick.,没有自身条件的事�
 "An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.",没有自身条件的事件每个 tick 都会运行。用 A 添加它的动作，或稍后添加条件来收窄它。
 Runs every tick,每个 tick 运行
 runs every tick,每个 tick 运行
+"follows its parent, in order",按顺序跟随其父事件
+Keep As Every Tick,保留为每帧
+Delete The Event,删除该事件
+"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?",那是该事件的最后一个条件。没有自身条件的事件会每帧运行 - 保持这样，还是删除该事件？
 every tick,每个 tick
 Current state is,当前状态为
+Go to state {state},切换到状态 {state}
+Current state is {state},当前状态是 {state}
+Previous state is {state},上一个状态是 {state}
+Current state in list {states},当前状态在列表 {states} 中
+Previous state in list {states},上一个状态在列表 {states} 中
+written into this script,写在此脚本中
 "one named state at a time, switched by Go to state",同一时间只有一个命名状态，用 前往状态 切换
 Load layout {path} in the background,在后台加载布局 {path}
 layout {path} has finished loading,布局 {path} 已加载完成
@@ -2639,7 +2649,6 @@ Import a pack from a URL,从网址导入一个包
 Add behavior,添加行为
 Add behavior…,添加行为…
 as a behavior node,作为行为节点
-written into this script,写进这个脚本
 This pack has no knobs to set.,这个包没有可调项。
 No pack here matches that.,没有匹配的包。
 Reading check,可读性检查

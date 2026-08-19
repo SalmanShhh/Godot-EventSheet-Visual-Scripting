@@ -2464,8 +2464,18 @@ An event with no condition of its own runs every tick.,Un evento sin condición 
 "An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.","Un evento sin condición propia se ejecuta cada tick. Añade sus acciones con A, o añade después una condición para acotarlo."
 Runs every tick,Se ejecuta cada tick
 runs every tick,se ejecuta cada tick
+"follows its parent, in order","sigue a su evento padre, en orden"
+Keep As Every Tick,Mantener como cada tick
+Delete The Event,Eliminar el evento
+"That was the event's last condition. An event with no condition of its own runs every tick - keep it that way, or delete the event?",Esa era la última condición del evento. Un evento sin condición propia se ejecuta cada tick: ¿mantenerlo así o eliminar el evento?
 every tick,cada tick
 Current state is,El estado actual es
+Go to state {state},Ir al estado {state}
+Current state is {state},El estado actual es {state}
+Previous state is {state},El estado anterior es {state}
+Current state in list {states},El estado actual está en la lista {states}
+Previous state in list {states},El estado anterior está en la lista {states}
+written into this script,escrito en este script
 "one named state at a time, switched by Go to state","un solo estado con nombre a la vez, cambiado con Ir al estado"
 Load layout {path} in the background,Cargar diseño {path} en segundo plano
 layout {path} has finished loading,el diseño {path} ha terminado de cargarse
@@ -2639,7 +2649,6 @@ Import a pack from a URL,Importar un paquete desde una URL
 Add behavior,Añadir comportamiento
 Add behavior…,Añadir comportamiento…
 as a behavior node,como nodo de comportamiento
-written into this script,escrito en este script
 This pack has no knobs to set.,Este paquete no tiene ajustes.
 No pack here matches that.,Ningún paquete coincide.
 Reading check,Comprobación de lectura
