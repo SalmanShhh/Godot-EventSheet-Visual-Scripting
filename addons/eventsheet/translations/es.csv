@@ -2134,3 +2134,33 @@ Add do step: call {name},Añadir paso de hacer: llamar a {name}
 Add undo step: call {name},Añadir paso de deshacer: llamar a {name}
 Add do step: keep {object},Añadir paso de hacer: conservar {object}
 in the editor too,también en el editor
+{value} is between {low} and {high},{value} está entre {low} y {high}
+(exclusive),(exclusivo)
+(exclusive top),(sin el máximo)
+(exclusive bottom),(sin el mínimo)
+{value} is between angles {low} and {high},{value} está entre los ángulos {low} y {high}
+{value} is within {limit} of {target},{value} está a menos de {limit} de {target}
+{value} is clockwise from {other},{value} está en sentido horario desde {other}
+is within {distance} of {other},está a menos de {distance} de {other}
+{value} is within {distance} of {other},{value} está a menos de {distance} de {other}
+is inside area {area},está dentro del área {area}
+{value} is inside area {area},{value} está dentro del área {area}
+{value} is about {other},{value} es aproximadamente {other}
+{value} is about {other} (not moving),{value} es aproximadamente {other} (no se mueve)
+{seconds} seconds have passed since {since},han pasado {seconds} segundos desde {since}
+{seconds} seconds have passed since {since} (clock time),han pasado {seconds} segundos desde {since} (hora del sistema)
+Set {name} to now,Poner {name} en ahora
+Set {name} to now (clock time),Poner {name} en ahora (hora del sistema)
+Is outside layout,Está fuera del layout
+Is on-screen,Está en pantalla
+(left),(izquierda)
+(right),(derecha)
+(top),(arriba)
+(bottom),(abajo)
+(left or right),(izquierda o derecha)
+(top or bottom),(arriba o abajo)
+Is moving,Se está moviendo
+Is touching ceiling,Toca el techo
+Pause the game,Pausar el juego
+Unpause,Reanudar
+Quit game,Salir del juego

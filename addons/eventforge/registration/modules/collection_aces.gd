@@ -182,12 +182,20 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "TweenCallback", "Tween Callback", ACEDescriptor.ACEType.ACTION, "create_tween().tween_callback({callable}).set_delay({delay})", "", [F.make_param("callable", "String", "queue_free", "Callable", "Method/Callable to invoke after the delay (e.g. a node method or a lambda).", "expression"), F.make_param("delay", "String", "1.0", "Delay", "Seconds before the call fires.", "expression")], "Tween", "Call {callable} after {delay}s")
 		.described("Waits a delay, then calls a method or function once (handy for timed events)."))
 	# Scene flow (System: layouts -> Godot scenes)
-	descriptors.append(F.make_descriptor("Core", "ChangeScene", "Go To Scene", ACEDescriptor.ACEType.ACTION, "get_tree().change_scene_to_file({path})", "", [F.make_param("path", "String", "\"res://main.tscn\"", "Scene", "Scene file to switch to.", "expression")], "Scene", "Go to scene {path}")
-		.described("Switches the game to a different scene file, replacing the current one."))
-	descriptors.append(F.make_descriptor("Core", "ReloadScene", "Restart Scene", ACEDescriptor.ACEType.ACTION, "get_tree().reload_current_scene()", "", [], "Scene", "Restart the current scene")
-		.described("Restarts the current scene from scratch, useful for retrying a level."))
-	descriptors.append(F.make_descriptor("Core", "QuitGame", "Quit Game", ACEDescriptor.ACEType.ACTION, "get_tree().quit()", "", [], "Scene", "Quit the game")
+	# R8. The scene-flow rows carry the sheet's own action names - layout, restart, quit - and an
+	# opened .gd file reads these very lines back in the same words, so the two can never drift.
+	descriptors.append(F.make_descriptor("Core", "ChangeScene", "Go To Layout", ACEDescriptor.ACEType.ACTION, "get_tree().change_scene_to_file({path})", "", [F.make_param("path", "String", "\"res://main.tscn\"", "Layout", "Scene file to switch to.", "expression")], "Scene", "Go to layout {path}")
+		.described("Switches the game to a different layout (a scene file), replacing the current one."))
+	descriptors.append(F.make_descriptor("Core", "ReloadScene", "Restart Layout", ACEDescriptor.ACEType.ACTION, "get_tree().reload_current_scene()", "", [], "Scene", "Restart layout")
+		.described("Restarts the current layout from scratch, useful for retrying a level."))
+	descriptors.append(F.make_descriptor("Core", "QuitGame", "Quit Game", ACEDescriptor.ACEType.ACTION, "get_tree().quit()", "", [], "Scene", "Quit game")
 		.described("Closes the game and exits to desktop."))
+	# The two halves of the pause switch, each as its own row: an author reaches for "pause", not for
+	# "set paused to true", and the reading of the same line says exactly this.
+	descriptors.append(F.make_descriptor("Core", "PauseGame", "Pause The Game", ACEDescriptor.ACEType.ACTION, "get_tree().paused = true", "", [], "Scene", "Pause the game")
+		.described("Freezes the whole game. Nodes set to Always (or a pause menu's Process Mode) keep running, which is how the menu on top stays alive."))
+	descriptors.append(F.make_descriptor("Core", "UnpauseGame", "Unpause", ACEDescriptor.ACEType.ACTION, "get_tree().paused = false", "", [], "Scene", "Unpause")
+		.described("Lets the game run again after Pause The Game."))
 	# Pairs with the On Close Requested trigger: by default the window's X quits instantly, so set this in
 	# On Ready to "Intercept" and the close waits for your On Close Requested handler (save / confirm), which
 	# then calls Quit Game explicitly. The friendly dropdown shows "Intercept"/"Allow" but inserts false/true.

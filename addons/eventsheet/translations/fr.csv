@@ -2134,3 +2134,33 @@ Add do step: call {name},Ajouter une étape faire : appeler {name}
 Add undo step: call {name},Ajouter une étape annuler : appeler {name}
 Add do step: keep {object},Ajouter une étape faire : conserver {object}
 in the editor too,aussi dans l'éditeur
+{value} is between {low} and {high},{value} est entre {low} et {high}
+(exclusive),(exclus)
+(exclusive top),(borne haute exclue)
+(exclusive bottom),(borne basse exclue)
+{value} is between angles {low} and {high},{value} est entre les angles {low} et {high}
+{value} is within {limit} of {target},{value} est à moins de {limit} de {target}
+{value} is clockwise from {other},{value} est dans le sens horaire depuis {other}
+is within {distance} of {other},est à moins de {distance} de {other}
+{value} is within {distance} of {other},{value} est à moins de {distance} de {other}
+is inside area {area},est dans la zone {area}
+{value} is inside area {area},{value} est dans la zone {area}
+{value} is about {other},{value} vaut environ {other}
+{value} is about {other} (not moving),{value} vaut environ {other} (immobile)
+{seconds} seconds have passed since {since},{seconds} secondes se sont écoulées depuis {since}
+{seconds} seconds have passed since {since} (clock time),{seconds} secondes se sont écoulées depuis {since} (heure système)
+Set {name} to now,Définir {name} sur maintenant
+Set {name} to now (clock time),Définir {name} sur maintenant (heure système)
+Is outside layout,Est hors du layout
+Is on-screen,Est à l'écran
+(left),(à gauche)
+(right),(à droite)
+(top),(en haut)
+(bottom),(en bas)
+(left or right),(à gauche ou à droite)
+(top or bottom),(en haut ou en bas)
+Is moving,Se déplace
+Is touching ceiling,Touche le plafond
+Pause the game,Mettre le jeu en pause
+Unpause,Reprendre
+Quit game,Quitter le jeu

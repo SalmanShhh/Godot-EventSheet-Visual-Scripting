@@ -2134,3 +2134,33 @@ Add do step: call {name},Добавить шаг выполнения: вызв�
 Add undo step: call {name},Добавить шаг отмены: вызвать {name}
 Add do step: keep {object},Добавить шаг выполнения: сохранить {object}
 in the editor too,также в редакторе
+{value} is between {low} and {high},{value} между {low} и {high}
+(exclusive),(не включая)
+(exclusive top),(без верхней границы)
+(exclusive bottom),(без нижней границы)
+{value} is between angles {low} and {high},{value} между углами {low} и {high}
+{value} is within {limit} of {target},{value} в пределах {limit} от {target}
+{value} is clockwise from {other},{value} по часовой стрелке от {other}
+is within {distance} of {other},в пределах {distance} от {other}
+{value} is within {distance} of {other},{value} в пределах {distance} от {other}
+is inside area {area},внутри области {area}
+{value} is inside area {area},{value} внутри области {area}
+{value} is about {other},{value} примерно равно {other}
+{value} is about {other} (not moving),{value} примерно равно {other} (не движется)
+{seconds} seconds have passed since {since},прошло {seconds} секунд с {since}
+{seconds} seconds have passed since {since} (clock time),прошло {seconds} секунд с {since} (системное время)
+Set {name} to now,Задать {name} как сейчас
+Set {name} to now (clock time),Задать {name} как сейчас (системное время)
+Is outside layout,За пределами макета
+Is on-screen,На экране
+(left),(слева)
+(right),(справа)
+(top),(сверху)
+(bottom),(снизу)
+(left or right),(слева или справа)
+(top or bottom),(сверху или снизу)
+Is moving,Движется
+Is touching ceiling,Касается потолка
+Pause the game,Поставить игру на паузу
+Unpause,Снять паузу
+Quit game,Выйти из игры

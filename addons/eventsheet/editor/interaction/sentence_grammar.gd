@@ -300,6 +300,16 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var text: String = node_lookup_text(expression.strip_edges())
 	if text.is_empty():
 		return {}
+	# ── R4 / R5 / R11 ───────────────────────────────────────────────────────────────────────────
+	# The questions that span MORE than one operator - a range, an angle window, a distance, an area,
+	# an approximate equality, an elapsed-time check, the layout edges - before any reading that would
+	# stop at the first operator it found and describe half of one.
+	var joined: Dictionary = joined_condition(text, context)
+	if not joined.is_empty():
+		return joined
+	var settled: Dictionary = single_condition(text, context)
+	if not settled.is_empty():
+		return settled
 	var self_object: String = str(context.get("self_object", OBJECT_SYSTEM))
 	# `if crouching:` - a bare flag is the event-sheet "is boolean set" condition. An engine flag of the
 	# script's own object (`visible`) belongs to that object instead (M25).
@@ -384,6 +394,15 @@ static func condition_pieces(expression: String, context: Dictionary = {}) -> Di
 	var text: String = expression.strip_edges()
 	while text.begins_with("(") and closing_paren(text, 0) == text.length() - 1:
 		text = text.substr(1, text.length() - 2).strip_edges()
+	# R4 / R11. A range and a pair of layout edges are ONE question written as two terms, so they are
+	# claimed before the run is split - after the split each half would read as its own comparison.
+	var whole: Dictionary = joined_condition(text, context)
+	if not whole.is_empty():
+		var whole_pieces: Array = []
+		for segment: Variant in (whole.get("segments", []) as Array):
+			var whole_segment: Dictionary = segment
+			whole_pieces.append([str(whole_segment.get("text", "")), str(whole_segment.get("tone", "plain"))])
+		return {"object": str(whole.get("object", "")), "pieces": whole_pieces}
 	# One connective only. A mixed `a and b or c` has a precedence a flat run of words would misstate,
 	# so it is left whole and reads as the expression it is.
 	var connective: String = ""
@@ -423,6 +442,11 @@ static func _condition_reading(part: String, context: Dictionary) -> Dictionary:
 	var not_empty: Dictionary = _not_empty_reading(text, context)
 	if not not_empty.is_empty():
 		return not_empty
+	# R11. An event sheet has no "not on screen" either: the negation of that question IS its own
+	# condition, and a reader looking for the bullet-culling row wants to find it by name.
+	var outside: Dictionary = _outside_layout_reading(text, context)
+	if not outside.is_empty():
+		return outside
 	var negated: bool = false
 	if text.begins_with("not ") and not is_identifier(text.substr(4).strip_edges()):
 		negated = true
@@ -702,13 +726,16 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	if trimmed.is_empty():
 		return trimmed
 	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
+	# R7. The sheet's own expression names, before any other rewriting sees the Godot spellings they
+	# are matched against. Off unless the view asked for the Familiar Words glossary.
+	without_cast = familiar_expression_words(without_cast, context)
 	# M31 before the call rewriting: a join is decided by the WHOLE expression's shape (is any part of
 	# it text?), which the innermost-first call pass would have already taken apart.
 	# A whole value wrapped in `str(...)` is the same value: an event sheet shows numbers in text without
 	# a conversion, so the conversion is a GDScript chore rather than part of what the row says.
 	var joined: String = _rewrite_format(_rewrite_dot_format(_string_call_value(without_cast)))
 	joined = _rewrite_join(joined)
-	var rewritten: String = _rewrite_calls(joined)
+	var rewritten: String = _rewrite_calls(joined, context)
 	rewritten = _rewrite_indexing(rewritten)
 	# N5 last, so no earlier pass ever has to recognise a glyph it did not write.
 	return comparison_symbols(constant_words(_rewrite_delta(_tidy_numbers(rewritten)), context))
@@ -801,8 +828,10 @@ static func _rewrite_dot_format(text: String) -> String:
 static func _system_words(text: String) -> String:
 	var out: String = _group_count_words(text)
 	if out.contains("get_viewport_rect()"):
-		out = out.replace("get_viewport_rect().size.x", translate("viewport width"))
-		out = out.replace("get_viewport_rect().size.y", translate("viewport height"))
+		# R11. ViewportWidth and ViewportHeight are the sheet's own EXPRESSION names - words a reader
+		# types into an expression field - so they are not translated, exactly as `max` is not.
+		out = out.replace("get_viewport_rect().size.x", "ViewportWidth")
+		out = out.replace("get_viewport_rect().size.y", "ViewportHeight")
 	if out.contains("mouse_position"):
 		out = out.replace("get_viewport().get_mouse_position()", translate("mouse position"))
 		out = out.replace("get_global_mouse_position()", translate("mouse position"))
@@ -1263,6 +1292,11 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 		return engine_verb
 	if not is_simple_target(target):
 		return {}
+	# R5. Writing the clock into a variable is the sheet's "Set ... to now" - the other half of the
+	# cooldown idiom whose question reads "X seconds have passed since".
+	var now_write: Dictionary = _now_assignment(target, assigned, context)
+	if not now_write.is_empty():
+		return now_write
 	var split: Array = _split_object(target, context)
 	var object_name: String = str(split[0])
 	# N8. A property every reader knows as a BEHAVIOUR knob - a body's velocity, a camera's zoom, an
@@ -1309,14 +1343,15 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 static func _engine_verb_assignment(target: String, assigned: String, context: Dictionary) -> Dictionary:
 	var familiar_words: bool = bool(context.get("familiar_words", false))
 	var bare_target: String = target.strip_edges().trim_prefix("self.")
-	# M46. Godot pauses the tree; an event sheet sets the time scale, and 0 IS the pause.
-	if familiar_words and bare_target == "get_tree().paused":
+	# R8. Pausing and the game speed are two different actions in the sheet's words, and both are
+	# always on: these are the names the shipped rows already carry, not a friendlier spelling.
+	if bare_target == "get_tree().paused":
 		if assigned == "true":
-			return _sentence(OBJECT_SYSTEM, "Set time scale to 0 (pause)", {})
+			return _sentence(OBJECT_SYSTEM, "Pause the game", {})
 		if assigned == "false":
-			return _sentence(OBJECT_SYSTEM, "Set time scale to 1", {})
+			return _sentence(OBJECT_SYSTEM, "Unpause", {})
 		return {}
-	if familiar_words and bare_target == "Engine.time_scale":
+	if bare_target == "Engine.time_scale":
 		return _sentence(OBJECT_SYSTEM, "Set time scale to {value}", {"value": [expression_text(assigned, context), "value"]})
 	if not is_simple_target(bare_target):
 		return {}
@@ -1409,15 +1444,16 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	if text.begins_with(SCENE_HEAD) and text.ends_with(")"):
 		var scene_path: String = text.substr(SCENE_HEAD.length(), text.length() - SCENE_HEAD.length() - 1)
 		if not scene_path.strip_edges().is_empty():
-			# M46. An event sheet calls a scene a LAYOUT, and names it without its folder or its extension.
-			if bool(context.get("familiar_words", false)):
-				return _sentence(OBJECT_SYSTEM, "Go to layout {path}", {
-					"path": ["\"%s\"" % _unquote(scene_path).get_file().get_basename(), "value"]})
-			# The path stays a quoted string, so a reader (and the name lens) sees content, not a name.
-			return _sentence(OBJECT_SYSTEM, "Go to scene {path}", {"path": ["\"%s\"" % _unquote(scene_path), "value"]})
-	# M46. Godot reloads the current scene; an event sheet restarts the layout.
-	if bool(context.get("familiar_words", false)) and text == "get_tree().reload_current_scene()":
+			# R8. Go to layout is not a friendlier spelling of Godot's call - it IS the name of the
+			# action the sheet's own Scene Flow rows carry, so it is always on, and the layout is named
+			# the way the reader named the file. The whole path stays one hover away on the row.
+			return _sentence(OBJECT_SYSTEM, "Go to layout {path}", {"path": [layout_name(scene_path), "value"]})
+	# R8. Godot reloads the current scene; an event sheet restarts the layout.
+	if text == "get_tree().reload_current_scene()":
 		return _sentence(OBJECT_SYSTEM, "Restart layout", {})
+	# R8. Leaving the game is one action with one name, whichever way the script spells the call.
+	if text == "get_tree().quit()" or text == "get_tree().quit(0)":
+		return _sentence(OBJECT_SYSTEM, "Quit game", {})
 	# ── P6 ──────────────────────────────────────────────────────────────────────────────────────
 	# The one-shot timer and its callback, ahead of every other call shape: the receiver is itself a
 	# call, so nothing below could name it, and the sheet already has the "wait, then" this line is.
@@ -2450,10 +2486,11 @@ static func _engine_property_condition(text: String, context: Dictionary) -> Dic
 ## M41. The movement questions an event-sheet Platform behaviour asks. `is_on_wall` and `is_on_ceiling`
 ## get the event-sheet words (a wall is beside you, a ceiling above you); `is_on_floor` already reads
 ## the same in both engines. The Godot phrase stays one hover away on the row.
+## R10 renamed the ceiling: an event sheet says TOUCHING a ceiling, which is what a head bump is.
 const BODY_STATE_WORDS: Dictionary = {
 	"is_on_floor": "Is on floor",
 	"is_on_wall": "Is by wall",
-	"is_on_ceiling": "Is by ceiling"
+	"is_on_ceiling": "Is touching ceiling"
 }
 
 
@@ -2464,7 +2501,14 @@ static func _body_state_condition(text: String, context: Dictionary) -> Dictiona
 	var method: String = str(call.get("method", ""))
 	if not BODY_STATE_WORDS.has(method):
 		return {}
-	return _sentence(_receiver_object(str(call.get("target", "")), context), str(BODY_STATE_WORDS[method]), {})
+	var object_name: String = _receiver_object(str(call.get("target", "")), context)
+	# R10. The platform words belong to a BODY. A known engine class that is not one keeps the plain
+	# reading; an unknown class (a `class_name` of the project's own) still gets the words, because
+	# these three questions exist nowhere else in Godot.
+	var body_class: String = object_class_of(object_name, context)
+	if ClassDB.class_exists(body_class) and not _class_is_any(body_class, CHARACTER_BODY_CLASSES):
+		return {}
+	return _sentence(object_name, str(BODY_STATE_WORDS[method]), {})
 
 
 ## M41. `hurtbox.overlaps_body(player)` and the "is anything touching me" pair, as the one event-sheet
@@ -2483,23 +2527,38 @@ static func _overlap_condition(text: String, context: Dictionary) -> Dictionary:
 	return {}
 
 
-## M41. `velocity.y < 0` is the event-sheet "Is jumping" - but ONLY on a 2D body, where Y grows downward.
-## In 3D the same test means the opposite, so the reading is refused there and the comparison stands.
+## M41/R10. `velocity.y < 0` is the event-sheet "Is jumping" and `velocity.x != 0` its "Is moving" -
+## but only on a BODY. A projectile's vertical speed is not a jump, so a known class that is not a
+## CharacterBody keeps the comparison it wrote.
+##
+## The words follow the AXIS, never the sign: in 2D Y grows downward, so a negative vertical speed is
+## going up, and in 3D the very same test means falling.
 static func _movement_condition(text: String, context: Dictionary) -> Dictionary:
-	for operator: String in [" < ", " > "]:
+	for operator: String in [" != ", " < ", " > "]:
 		var at: int = top_level_index(text, operator)
 		if at < 0:
 			continue
 		if text.substr(at + operator.length()).strip_edges() != "0":
 			return {}
 		var subject: String = text.substr(0, at).strip_edges().trim_prefix("self.")
-		if not subject.ends_with("velocity.y"):
+		var member: String = ""
+		for candidate: String in ["velocity.y", "velocity.x"]:
+			if subject.ends_with(candidate):
+				member = candidate
+		if member.is_empty():
 			return {}
-		var owner_name: String = subject.substr(0, maxi(subject.length() - "velocity.y".length() - 1, 0))
-		if object_class_of(_receiver_object(owner_name, context), context) != "CharacterBody2D":
+		var owner_name: String = subject.substr(0, maxi(subject.length() - member.length() - 1, 0))
+		var object_name: String = _receiver_object(owner_name, context)
+		var body_class: String = object_class_of(object_name, context)
+		if not _class_is_any(body_class, CHARACTER_BODY_CLASSES):
 			return {}
-		return _sentence(_receiver_object(owner_name, context),
-			"Is jumping" if operator == " < " else "Is falling", {})
+		if member == "velocity.x":
+			return _sentence(object_name, "Is moving", {}) if operator == " != " else {}
+		if operator == " != ":
+			return {}
+		var y_grows_up: bool = _class_is_any(body_class, PackedStringArray(["CharacterBody3D"]))
+		var going_up: bool = (operator == " > ") if y_grows_up else (operator == " < ")
+		return _sentence(object_name, "Is jumping" if going_up else "Is falling", {})
 	return {}
 
 
@@ -2739,7 +2798,7 @@ static func _drop_casts(text: String) -> String:
 
 
 ## Rewrites every recognised call in `text`, innermost first, leaving anything unrecognised alone.
-static func _rewrite_calls(text: String) -> String:
+static func _rewrite_calls(text: String, context: Dictionary = {}) -> String:
 	var out: String = ""
 	var index: int = 0
 	while index < text.length():
@@ -2757,7 +2816,7 @@ static func _rewrite_calls(text: String) -> String:
 		if close_at < 0:
 			out += text.substr(index)
 			break
-		var inner: String = _rewrite_calls(text.substr(index + 1, close_at - index - 1))
+		var inner: String = _rewrite_calls(text.substr(index + 1, close_at - index - 1), context)
 		var head: String = _trailing_identifier(out)
 		var arguments: PackedStringArray = _split_arguments(inner)
 		# M32. The receiver-aware table first: `arr.size()` and `Input.get_vector(...)` say something
@@ -2768,7 +2827,7 @@ static func _rewrite_calls(text: String) -> String:
 			out = out.substr(0, out.length() - chain.length()) + receiver_reading
 			index = close_at + 1
 			continue
-		var replacement: String = _idiom_for(head, arguments)
+		var replacement: String = _idiom_for(head, arguments, context)
 		if replacement.is_empty():
 			# A bare group holding a cast - `(child as CollisionShape3D).shape` - loses both the cast
 			# and the brackets that only existed to hold it.
@@ -2781,9 +2840,13 @@ static func _rewrite_calls(text: String) -> String:
 
 
 ## The event-sheet reading of one call, or "" when the head is not in the curated table.
-static func _idiom_for(head: String, arguments: PackedStringArray) -> String:
+static func _idiom_for(head: String, arguments: PackedStringArray, context: Dictionary = {}) -> String:
 	if head.is_empty():
 		return ""
+	# R7. Under the Familiar Words glossary the length question is already answered - `len(x)` is the
+	# sheet's own name for it, written by the pass above - and the count spelling would undo it.
+	if head == "len" and arguments.size() == 1 and bool(context.get("familiar_words", false)):
+		return "len(%s)" % arguments[0]
 	if VECTOR_CONSTRUCTORS.has(head):
 		return "(%s)" % ", ".join(arguments)
 	if head == "move_toward" and arguments.size() == 3:
@@ -3552,3 +3615,827 @@ static func input_action_object(action_value: String) -> String:
 	if pad_only:
 		return OBJECT_GAMEPAD
 	return OBJECT_KEYBOARD
+
+
+# ── R4 / R5 / R7 / R10 / R11 - the reading words batch seven added ──────────────
+#
+# Seven readings that share one rule with every batch before them: the FILE never moves. Each
+# function below answers with words for values the row already holds, so the byte round-trip and the
+# emitted GDScript are the same before and after. Kept in one block, apart from the shapes above,
+# because each is a QUESTION spanning more than the one operator a general comparison reading would
+# stop at.
+#
+#   R4  ranges     x >= 0 and x <= width                     x is between 0 and width
+#       angles     abs(angle_difference(a, b)) < deg_to_rad(10)  a is within 10° of b
+#       distance   position.distance_to(t) < 100             is within 100 of t
+#       areas      Rect2(0, 0, 640, 360).has_point(position) is inside area 0, 0 - 640 × 360
+#       about      is_equal_approx(speed, 0.0)               speed is about 0
+#   R5  elapsed    Time.get_ticks_msec() - t > 500           0.5 seconds have passed since t
+#               and its write            t = Time.get_ticks_msec()   Set t to now
+#   R7  names      the sheet's own expression names, under Familiar Words only
+#   R11 bounds     position.x < 0 or position.x > <width>    Is outside layout (left or right)
+
+
+## R10. The classes the platform words belong to. A projectile's `velocity.y < 0` is not "jumping",
+## and a plain Node2D has no floor to stand on.
+const CHARACTER_BODY_CLASSES: PackedStringArray = ["CharacterBody2D", "CharacterBody3D"]
+
+## R4. The comparisons a range is built out of, longest spelling first so `>=` is never read as `>`.
+const RANGE_OPERATORS: PackedStringArray = [" >= ", " <= ", " > ", " < "]
+
+## R5. The two clocks a script reads "now" from, and whether the number they hand back is in
+## milliseconds. Both read as the same sentence; the wall clock says so, because it survives a
+## restart and the run clock does not.
+const CLOCK_CALLS: Dictionary = {
+	"Time.get_ticks_msec()": true,
+	"Time.get_unix_time_from_system()": false
+}
+
+## R11. The two spellings of "the rectangle the player can see", so an edge test reads the same
+## whichever one the script happens to use.
+const VIEWPORT_RECTS: PackedStringArray = [
+	"get_viewport_rect()", "get_viewport().get_visible_rect()", "get_window().get_visible_rect()"
+]
+
+
+## R4 / R11. The readings that span a WHOLE run of terms - a range is two comparisons joined by
+## `and`, an off-screen test is two edges joined by `or` - claimed before the run is ever split into
+## conjuncts. {} when the expression is not one of them, which is the caller's cue to carry on.
+static func joined_condition(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = stripped_parens(text)
+	# The angle window first: both of its terms wrap the SAME value, which the plain range reading
+	# would happily claim and then print the wrapping arithmetic as the thing being asked about.
+	var angles: Dictionary = _between_angles_condition(bare, context)
+	if not angles.is_empty():
+		return angles
+	var between: Dictionary = _between_condition(bare, context)
+	if not between.is_empty():
+		return between
+	return _layout_bounds_condition(bare, context)
+
+
+## R4 / R5 / R11. The readings a SINGLE term settles: an angle window, a distance, an area, an
+## approximate equality, an elapsed-time check and the on-screen question.
+static func single_condition(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = stripped_parens(text)
+	var within_angle: Dictionary = _within_angle_condition(bare, context)
+	if not within_angle.is_empty():
+		return within_angle
+	var clockwise: Dictionary = _clockwise_condition(bare, context)
+	if not clockwise.is_empty():
+		return clockwise
+	var distance: Dictionary = _within_distance_condition(bare, context)
+	if not distance.is_empty():
+		return distance
+	var area: Dictionary = _inside_area_condition(bare, context)
+	if not area.is_empty():
+		return area
+	var about: Dictionary = _about_condition(bare, context)
+	if not about.is_empty():
+		return about
+	var elapsed: Dictionary = _elapsed_condition(bare, context)
+	if not elapsed.is_empty():
+		return elapsed
+	return _on_screen_condition(bare, context)
+
+
+## An expression with the brackets that only wrap the WHOLE of it removed.
+static func stripped_parens(text: String) -> String:
+	var out: String = text.strip_edges()
+	while out.begins_with("(") and closing_paren(out, 0) == out.length() - 1:
+		out = out.substr(1, out.length() - 2).strip_edges()
+	return out
+
+
+## ONE comparison as [left, operator, right] - the operator without its spaces - or [] when the text
+## is not exactly one. Only the four ordering operators are claimed: `==` and `!=` are questions the
+## readings above already answer.
+static func _comparison_parts(text: String) -> Array:
+	for operator: String in RANGE_OPERATORS:
+		var at: int = top_level_index(text, operator)
+		if at <= 0:
+			continue
+		var left: String = text.substr(0, at).strip_edges()
+		var right: String = text.substr(at + operator.length()).strip_edges()
+		if left.is_empty() or right.is_empty():
+			return []
+		return [left, operator.strip_edges(), right]
+	return []
+
+
+## R4. The object, the word and the tone a SUBJECT reads under. An engine property or a member chain
+## belongs to the object that owns it and reads as a name; a variable the sheet declares belongs to
+## the script's own object; anything else is a value, and the row files under System the way the
+## sheet's own Compare row does.
+static func _subject_words(subject: String, context: Dictionary) -> Array:
+	var text: String = subject.strip_edges().trim_prefix("self.")
+	if not is_simple_target(text):
+		return [OBJECT_SYSTEM, expression_text(text, context), "value"]
+	var head: String = text.split(".", false)[0] if text.contains(".") else text
+	if is_engine_property(head, context) or text.contains("."):
+		var split: Array = _split_object(text, context)
+		return [str(split[0]), str(split[1]), "name"]
+	var declared: Dictionary = context.get("variable_types", {})
+	if declared.has(text):
+		return [str(context.get("self_object", OBJECT_SYSTEM)), text, "name"]
+	return [OBJECT_SYSTEM, text, "value"]
+
+
+## R4. The event-sheet Is Between Values condition, in all four spellings a script writes it: both
+## operand orders, strict or not, and the `in range(a, b)` form whose top bound is one less than the
+## number written. The note says which end is exclusive, because a range that quietly drops its top
+## value is the oldest off-by-one in games.
+static func _between_condition(text: String, context: Dictionary) -> Dictionary:
+	var counted: Dictionary = _range_membership(text, context)
+	if not counted.is_empty():
+		return counted
+	if top_level_index(text, " or ") >= 0 or top_level_index(text, " and ") < 0:
+		return {}
+	var parts: PackedStringArray = split_top_level(text, " and ")
+	if parts.size() != 2:
+		return {}
+	var first: Array = _comparison_parts(stripped_parens(parts[0]))
+	var second: Array = _comparison_parts(stripped_parens(parts[1]))
+	if first.is_empty() or second.is_empty():
+		return {}
+	var subject: String = _shared_subject(first, second)
+	if subject.is_empty():
+		return {}
+	var lower: Array = _bound_of(first, subject, true)
+	var upper: Array = _bound_of(second, subject, false)
+	if lower.is_empty() or upper.is_empty():
+		# The two terms may be written the other way round: `x <= width and x >= 0` asks the same thing.
+		lower = _bound_of(second, subject, true)
+		upper = _bound_of(first, subject, false)
+	if lower.is_empty() or upper.is_empty():
+		return {}
+	return _range_sentence(subject, str(lower[0]), str(upper[0]), bool(lower[1]), bool(upper[1]), context)
+
+
+## R4. `level in range(3, 6)` is a range whose top is 5: Godot's range STOPS before its second
+## number, and a reading that showed 6 would name a value the branch never accepts.
+static func _range_membership(text: String, context: Dictionary) -> Dictionary:
+	var at: int = top_level_index(text, " in ")
+	if at <= 0:
+		return {}
+	var subject: String = text.substr(0, at).strip_edges()
+	var call: Dictionary = call_parts(text.substr(at + 4).strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "range":
+		return {}
+	if not str(call.get("target", "")).is_empty():
+		return {}
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	if arguments.size() != 2 or subject.is_empty():
+		return {}
+	return _range_sentence(subject, arguments[0].strip_edges(), _one_less(arguments[1]), false, false, context)
+
+
+## The number one below a bound: the literal itself when the file wrote one, and the arithmetic
+## otherwise, so the reading never invents a value the code does not hold.
+static func _one_less(value: String) -> String:
+	var text: String = value.strip_edges()
+	if text.is_valid_int():
+		return str(text.to_int() - 1)
+	return "%s - 1" % text
+
+
+## R4. The value BOTH terms of a range ask about. Compared as written: a range is two questions about
+## one name, and two different spellings of the same value are two different questions to a reader.
+static func _shared_subject(first: Array, second: Array) -> String:
+	for candidate: String in [str(first[0]), str(first[2])]:
+		if candidate == str(second[0]) or candidate == str(second[2]):
+			return candidate
+	return ""
+
+
+## R4. One term of a range as [bound, strict], or [] when it is not the end asked for. A term with
+## the subject on the RIGHT asks the same question with the operator flipped (`0 < hp` IS `hp > 0`).
+static func _bound_of(parts: Array, subject: String, lower_end: bool) -> Array:
+	var operator: String = str(parts[1])
+	var bound: String = ""
+	if str(parts[0]) == subject:
+		bound = str(parts[2])
+	elif str(parts[2]) == subject:
+		bound = str(parts[0])
+		operator = {">": "<", ">=": "<=", "<": ">", "<=": ">="}.get(operator, "")
+	else:
+		return []
+	var asks_lower: bool = operator == ">" or operator == ">="
+	if asks_lower != lower_end:
+		return []
+	return [bound, operator == ">" or operator == "<"]
+
+
+## R4. The finished Is Between reading, with the note that says which end the branch leaves out.
+static func _range_sentence(subject: String, low: String, high: String, strict_low: bool,
+		strict_high: bool, context: Dictionary) -> Dictionary:
+	var words: Array = _subject_words(subject, context)
+	var reading: Dictionary = _sentence(str(words[0]), "{value} is between {low} and {high}", {
+		"value": [str(words[1]), str(words[2])],
+		"low": [expression_text(low, context), "value"],
+		"high": [expression_text(high, context), "value"]
+	})
+	var note: String = _range_note(strict_low, strict_high)
+	if not note.is_empty():
+		(reading["segments"] as Array).append({"text": " %s" % note, "tone": "plain"})
+	return reading
+
+
+## R4. Which end of a range the branch does not accept, in the sheet's words. "" when both ends count,
+## which is the shape most rows are and the one that needs no note at all.
+static func _range_note(strict_low: bool, strict_high: bool) -> String:
+	if strict_low and strict_high:
+		return translate("(exclusive)")
+	if strict_high:
+		return translate("(exclusive top)")
+	if strict_low:
+		return translate("(exclusive bottom)")
+	return ""
+
+
+## R4. An angle as the DEGREES a reader thinks in. `deg_to_rad(10)` is exactly ten degrees, and a
+## bare radian literal is converted; the radians the file holds stay one hover away on the row.
+## "" when the value is neither, which refuses the whole angle reading rather than guess at it.
+static func _angle_degrees(value: String) -> String:
+	var text: String = value.strip_edges()
+	var call: Dictionary = call_parts(text)
+	if not call.is_empty() and str(call.get("method", "")) == "deg_to_rad":
+		var arguments: PackedStringArray = call.get("args", PackedStringArray())
+		if arguments.size() == 1 and not arguments[0].strip_edges().is_empty():
+			return "%s°" % number_lens(arguments[0].strip_edges())
+	if text.is_valid_float():
+		return "%s°" % number_lens(String.num(rad_to_deg(text.to_float()), 4))
+	return ""
+
+
+## R4. The subject of an ANGLE question. `rotation` is that object's angle, and inside a sentence
+## that already says degrees the radians warning the general member word carries would be noise.
+static func _angle_subject_words(subject: String, context: Dictionary) -> Array:
+	var words: Array = _subject_words(subject, context)
+	var bare: String = subject.strip_edges().trim_prefix("self.")
+	if bare == "rotation" or bare == "rotation_degrees" or bare.ends_with(".rotation") or bare.ends_with(".rotation_degrees"):
+		words[1] = translate("angle")
+		words[2] = "name"
+	return words
+
+
+## R4. `abs(angle_difference(rotation, target_angle)) < deg_to_rad(10)` - the event-sheet Is Within
+## Angle condition, which is how a reader asks "am I facing it yet". Both of Godot's absolute-value
+## spellings count, and the limit must be an angle the reading can honestly show in degrees.
+static func _within_angle_condition(text: String, context: Dictionary) -> Dictionary:
+	var parts: Array = _comparison_parts(text)
+	if parts.is_empty() or not (str(parts[1]) == "<" or str(parts[1]) == "<="):
+		return {}
+	var outer: Dictionary = call_parts(str(parts[0]))
+	if outer.is_empty() or not (str(outer.get("method", "")) in ["abs", "absf"]):
+		return {}
+	var outer_arguments: PackedStringArray = outer.get("args", PackedStringArray())
+	if outer_arguments.size() != 1:
+		return {}
+	var inner: Dictionary = call_parts(outer_arguments[0].strip_edges())
+	if inner.is_empty() or str(inner.get("method", "")) != "angle_difference":
+		return {}
+	var pair: PackedStringArray = inner.get("args", PackedStringArray())
+	if pair.size() != 2:
+		return {}
+	var limit: String = _angle_degrees(str(parts[2]))
+	if limit.is_empty():
+		return {}
+	var words: Array = _angle_subject_words(pair[0], context)
+	return _sentence(str(words[0]), "{value} is within {limit} of {target}", {
+		"value": [str(words[1]), str(words[2])],
+		"limit": [limit, "value"],
+		"target": [expression_text(pair[1], context), "value"]
+	})
+
+
+## R4. `wrapf(a, 0, TAU) > deg_to_rad(30) and wrapf(a, 0, TAU) < deg_to_rad(60)` - one angle window,
+## in degrees. The `fmod` spelling of the same wrap counts, and both terms must wrap the SAME value:
+## two different angles compared to two bounds is two questions, not a window.
+static func _between_angles_condition(text: String, context: Dictionary) -> Dictionary:
+	if top_level_index(text, " and ") < 0:
+		return {}
+	var parts: PackedStringArray = split_top_level(text, " and ")
+	if parts.size() != 2:
+		return {}
+	var first: Array = _comparison_parts(stripped_parens(parts[0]))
+	var second: Array = _comparison_parts(stripped_parens(parts[1]))
+	if first.is_empty() or second.is_empty():
+		return {}
+	if str(first[1]) == "<" or str(first[1]) == "<=":
+		var swap: Array = first
+		first = second
+		second = swap
+	if not (str(first[1]) == ">" or str(first[1]) == ">="):
+		return {}
+	if not (str(second[1]) == "<" or str(second[1]) == "<="):
+		return {}
+	var subject: String = _wrapped_angle_subject(str(first[0]))
+	if subject.is_empty() or subject != _wrapped_angle_subject(str(second[0])):
+		return {}
+	var low: String = _angle_degrees(str(first[2]))
+	var high: String = _angle_degrees(str(second[2]))
+	if low.is_empty() or high.is_empty():
+		return {}
+	var words: Array = _angle_subject_words(subject, context)
+	return _sentence(str(words[0]), "{value} is between angles {low} and {high}", {
+		"value": [str(words[1]), str(words[2])],
+		"low": [low, "value"],
+		"high": [high, "value"]
+	})
+
+
+## R4. The angle a `wrapf(a, 0, TAU)` / `fmod(a, TAU)` term is really asking about, or "" when the
+## term is not one of those wraps. Wrapping is the GDScript chore of keeping an angle in one turn;
+## the QUESTION is about the angle itself.
+static func _wrapped_angle_subject(text: String) -> String:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or not str(call.get("target", "")).is_empty():
+		return ""
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	var method: String = str(call.get("method", ""))
+	if (method == "wrapf" or method == "wrapi") and arguments.size() == 3:
+		return arguments[0].strip_edges()
+	if (method == "fmod" or method == "fposmod") and arguments.size() == 2:
+		return arguments[0].strip_edges()
+	return ""
+
+
+## R4. `angle_difference(a, b) > 0` - which side of an angle another one is on, in the sheet's words.
+## The first angle named is the subject, exactly as the row reads.
+static func _clockwise_condition(text: String, context: Dictionary) -> Dictionary:
+	var parts: Array = _comparison_parts(text)
+	if parts.is_empty() or not (str(parts[1]) == ">" or str(parts[1]) == ">="):
+		return {}
+	if not str(parts[2]).strip_edges().is_valid_float() or str(parts[2]).strip_edges().to_float() != 0.0:
+		return {}
+	var call: Dictionary = call_parts(str(parts[0]))
+	if call.is_empty() or str(call.get("method", "")) != "angle_difference":
+		return {}
+	var pair: PackedStringArray = call.get("args", PackedStringArray())
+	if pair.size() != 2:
+		return {}
+	var words: Array = _angle_subject_words(pair[0], context)
+	return _sentence(str(words[0]), "{value} is clockwise from {other}", {
+		"value": [str(words[1]), str(words[2])],
+		"other": [expression_text(pair[1], context), "value"]
+	})
+
+
+## R4. `position.distance_to(target) < 100` - the event-sheet Is Within condition. The squared
+## spelling asks the same question (it is the same test without the square root), so it reads the
+## same, but only when the radius it compares against is honestly the radius squared.
+static func _within_distance_condition(text: String, context: Dictionary) -> Dictionary:
+	var parts: Array = _comparison_parts(text)
+	if parts.is_empty() or not (str(parts[1]) == "<" or str(parts[1]) == "<="):
+		return {}
+	var call: Dictionary = call_parts(str(parts[0]))
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	if arguments.size() != 1:
+		return {}
+	var radius: String = ""
+	if method == "distance_to":
+		radius = str(parts[2])
+	elif method == "distance_squared_to":
+		radius = _square_root_of(str(parts[2]))
+	if radius.is_empty():
+		return {}
+	var receiver: String = str(call.get("target", "")).strip_edges().trim_prefix("self.")
+	var values: Dictionary = {
+		"distance": [expression_text(radius, context), "value"],
+		"other": [expression_text(arguments[0], context), "value"]
+	}
+	# A distance measured FROM an object's own place is that object's distance, and the row names it
+	# in the object column rather than saying "position" in the middle of the sentence.
+	for own_place: String in OWN_POSITION_NAMES:
+		if receiver != own_place and not receiver.ends_with(".%s" % own_place):
+			continue
+		var owner_text: String = "" if receiver == own_place else receiver.substr(0, receiver.length() - own_place.length() - 1)
+		return _sentence(_receiver_object(owner_text, context), "is within {distance} of {other}", values)
+	var words: Array = _subject_words(receiver, context)
+	values["value"] = [str(words[1]), str(words[2])]
+	return _sentence(str(words[0]), "{value} is within {distance} of {other}", values)
+
+
+## R4. The radius behind a SQUARED distance test: `r * r` is r, and a literal square is its own root
+## when the root is a whole number. "" for anything else, which keeps the comparison as written
+## rather than printing a radius nobody wrote.
+static func _square_root_of(value: String) -> String:
+	var text: String = stripped_parens(value)
+	var at: int = top_level_index(text, " * ")
+	if at > 0:
+		var left: String = text.substr(0, at).strip_edges()
+		var right: String = text.substr(at + 3).strip_edges()
+		return left if left == right else ""
+	if not text.is_valid_float():
+		return ""
+	var root: float = sqrt(text.to_float())
+	return str(int(root)) if is_equal_approx(root, float(int(root))) else ""
+
+
+## R4. `Rect2(0, 0, 640, 360).has_point(position)` and `zone.overlaps_point(position)` - the
+## event-sheet Is Inside Area condition, with the rectangle drawn the way a reader reads a rectangle
+## (corner, then size) rather than as the constructor it is.
+static func _inside_area_condition(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = _tail_call(text)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	if arguments.size() != 1 or not (method == "has_point" or method == "overlaps_point"):
+		return {}
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	var area: String = ""
+	if method == "has_point":
+		area = _area_words(receiver)
+	elif is_simple_target(receiver):
+		area = object_of_reference(receiver)
+	if area.is_empty():
+		return {}
+	var point: String = arguments[0].strip_edges().trim_prefix("self.")
+	var values: Dictionary = {"area": [area, "value"]}
+	for own_place: String in OWN_POSITION_NAMES:
+		if point != own_place and not point.ends_with(".%s" % own_place):
+			continue
+		var owner_text: String = "" if point == own_place else point.substr(0, point.length() - own_place.length() - 1)
+		return _sentence(_receiver_object(owner_text, context), "is inside area {area}", values)
+	var words: Array = _subject_words(point, context)
+	values["value"] = [str(words[1]), str(words[2])]
+	return _sentence(str(words[0]), "{value} is inside area {area}", values)
+
+
+## R4. A rectangle or a box as the reader's own shorthand: `Rect2(0, 0, 640, 360)` is the corner and
+## then the size, `0, 0 - 640 × 360`. "" when the receiver is not one of those constructors, because
+## a computed rectangle has no corners a row could print.
+static func _area_words(receiver: String) -> String:
+	var call: Dictionary = call_parts(receiver.strip_edges())
+	if call.is_empty() or not str(call.get("target", "")).is_empty():
+		return ""
+	var kind: String = str(call.get("method", ""))
+	if not (kind == "Rect2" or kind == "Rect2i" or kind == "AABB"):
+		return ""
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	var shown: PackedStringArray = PackedStringArray()
+	for argument: String in arguments:
+		shown.append(number_lens(argument.strip_edges()))
+	if shown.size() == 2:
+		return "%s - %s" % [shown[0], shown[1]]
+	if shown.size() == 4:
+		return "%s, %s - %s × %s" % [shown[0], shown[1], shown[2], shown[3]]
+	if shown.size() == 6:
+		return "%s, %s, %s - %s × %s × %s" % [shown[0], shown[1], shown[2], shown[3], shown[4], shown[5]]
+	return ""
+
+
+## R4. The three ways a script asks "are these near enough": Godot's two approximate comparisons and
+## the hand-written epsilon. All of them read as the sheet's `is about`, because a reader who wrote
+## any of them meant exactly that.
+static func _about_condition(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if not call.is_empty():
+		var method: String = str(call.get("method", ""))
+		var receiver: String = str(call.get("target", "")).strip_edges()
+		var arguments: PackedStringArray = call.get("args", PackedStringArray())
+		if method == "is_equal_approx" and receiver.is_empty() and arguments.size() == 2:
+			return _about_sentence(arguments[0], arguments[1], context)
+		if method == "is_equal_approx" and not receiver.is_empty() and arguments.size() == 1:
+			return _about_sentence(receiver, arguments[0], context)
+		if method == "is_zero_approx" and receiver.is_empty() and arguments.size() == 1:
+			return _about_sentence(arguments[0], "0", context)
+	var parts: Array = _comparison_parts(text)
+	if parts.is_empty() or str(parts[1]) != "<":
+		return {}
+	var epsilon: String = str(parts[2]).strip_edges()
+	# A tolerance is a SMALL number by definition. A bigger one is a real comparison the reader means
+	# as a comparison, and the sheet's Is Within condition already reads that.
+	if not epsilon.is_valid_float() or absf(epsilon.to_float()) >= 0.1:
+		return {}
+	var difference: Dictionary = call_parts(str(parts[0]))
+	if difference.is_empty() or not (str(difference.get("method", "")) in ["abs", "absf"]):
+		return {}
+	var inner: PackedStringArray = difference.get("args", PackedStringArray())
+	if inner.size() != 1:
+		return {}
+	var subtraction: String = stripped_parens(inner[0])
+	var minus_at: int = top_level_index(subtraction, " - ")
+	if minus_at <= 0:
+		return {}
+	return _about_sentence(subtraction.substr(0, minus_at), subtraction.substr(minus_at + 3), context)
+
+
+## R4. The finished `is about` reading. A body's speed gets the extra half-sentence it deserves:
+## `is_zero_approx(velocity.length())` is the question "has it stopped", and saying so costs nothing.
+static func _about_sentence(subject: String, other: String, context: Dictionary) -> Dictionary:
+	var bare: String = subject.strip_edges().trim_prefix("self.")
+	var speed_call: Dictionary = call_parts(bare)
+	var is_speed: bool = false
+	var words: Array = []
+	if not speed_call.is_empty() and str(speed_call.get("method", "")) == "length":
+		var receiver: String = str(speed_call.get("target", "")).strip_edges().trim_prefix("self.")
+		if receiver == "velocity" or receiver.ends_with(".velocity"):
+			is_speed = true
+			var owner_text: String = "" if receiver == "velocity" else receiver.substr(0, receiver.length() - "velocity".length() - 1)
+			words = [_receiver_object(owner_text, context), translate("speed"), "name"]
+	if words.is_empty():
+		words = _subject_words(bare, context)
+	var values: Dictionary = {
+		"value": [str(words[1]), str(words[2])],
+		"other": [expression_text(other, context), "value"]
+	}
+	if is_speed:
+		return _sentence(str(words[0]), "{value} is about {other} (not moving)", values)
+	return _sentence(str(words[0]), "{value} is about {other}", values)
+
+
+## The receiver / method / arguments split of a call whose RECEIVER may itself be a call:
+## `Rect2(0, 0, 640, 360).has_point(position)` is one `has_point` on a rectangle, which `call_parts`
+## refuses because it wants a plain receiver. {} when the text is not a call on something.
+static func _tail_call(text: String) -> Dictionary:
+	var trimmed: String = text.strip_edges()
+	if not trimmed.ends_with(")"):
+		return {}
+	var depth: int = 0
+	var index: int = trimmed.length() - 1
+	var open_at: int = -1
+	while index >= 0:
+		var character: String = trimmed[index]
+		if character == ")":
+			depth += 1
+		elif character == "(":
+			depth -= 1
+			if depth == 0:
+				open_at = index
+				break
+		index -= 1
+	if open_at <= 0:
+		return {}
+	var head: String = trimmed.substr(0, open_at).strip_edges()
+	var dot_at: int = head.rfind(".")
+	if dot_at < 0:
+		return {}
+	var method: String = head.substr(dot_at + 1).strip_edges()
+	if not is_identifier(method):
+		return {}
+	return {
+		"target": head.substr(0, dot_at).strip_edges(),
+		"method": method,
+		"args": _split_arguments(trimmed.substr(open_at + 1, trimmed.length() - open_at - 2))
+	}
+
+
+## R5. `Time.get_ticks_msec() - last_shot > 500` - the cooldown-by-timestamp every jam script has,
+## as the sheet's own "X seconds have passed since". Milliseconds become seconds, so nobody has to
+## know what a tick is or do the division in their head; the wall-clock spelling says so, because
+## that number keeps counting while the game is closed.
+static func _elapsed_condition(text: String, context: Dictionary) -> Dictionary:
+	var parts: Array = _comparison_parts(text)
+	if parts.is_empty() or not (str(parts[1]) == ">" or str(parts[1]) == ">="):
+		return {}
+	var difference: String = stripped_parens(str(parts[0]))
+	var minus_at: int = top_level_index(difference, " - ")
+	if minus_at <= 0:
+		return {}
+	var clock: String = difference.substr(0, minus_at).strip_edges()
+	if not CLOCK_CALLS.has(clock):
+		return {}
+	var since: String = difference.substr(minus_at + 3).strip_edges()
+	var amount: String = str(parts[2]).strip_edges()
+	if since.is_empty() or amount.is_empty():
+		return {}
+	var in_milliseconds: bool = bool(CLOCK_CALLS[clock])
+	var seconds: String = amount
+	if in_milliseconds:
+		# Only a literal is divided. Turning `cooldown_ms` into "cooldown ms / 1000 seconds" would be a
+		# sentence about arithmetic, which is exactly what this reading exists to remove.
+		if not amount.is_valid_float():
+			return {}
+		seconds = number_lens(String.num(amount.to_float() / 1000.0, 4))
+	var words: Array = _subject_words(since, context)
+	var values: Dictionary = {
+		"seconds": [seconds, "value"],
+		"since": [str(words[1]), str(words[2])]
+	}
+	if in_milliseconds:
+		return _sentence(OBJECT_SYSTEM, "{seconds} seconds have passed since {since}", values)
+	return _sentence(OBJECT_SYSTEM, "{seconds} seconds have passed since {since} (clock time)", values)
+
+
+## R5. `last_shot = Time.get_ticks_msec()` - writing the clock into a variable is the sheet's
+## "Set ... to now". {} for every other value, which keeps the plain Set the caller already reads.
+static func _now_assignment(target: String, assigned: String, context: Dictionary) -> Dictionary:
+	var clock: String = assigned.strip_edges()
+	if not CLOCK_CALLS.has(clock):
+		return {}
+	var split: Array = _split_object(target, context)
+	var values: Dictionary = {"name": [str(split[1]), "name"]}
+	if bool(CLOCK_CALLS[clock]):
+		return _sentence(str(split[0]), "Set {name} to now", values)
+	return _sentence(str(split[0]), "Set {name} to now (clock time)", values)
+
+
+## R8. The LAYOUT a scene path names, as the reader named the file: `res://levels/level_2.tscn` is
+## `Level 2`. The folder and the extension are Godot's filing, never part of what the row does, and
+## the whole path stays one hover away. A path that is not a literal keeps whatever it is.
+static func layout_name(scene_path: String) -> String:
+	var text: String = scene_path.strip_edges()
+	if not _is_string_literal(text):
+		return text
+	var file_name: String = _unquote(text.trim_prefix("&")).get_file().get_basename()
+	return file_name.capitalize() if not file_name.is_empty() else text
+
+
+## R11. `position.x < 0 or position.x > get_viewport_rect().size.x` - the event-sheet Is Outside
+## Layout condition. Two edges of the same axis collapse into the one question they ask together, and
+## a single edge says which side it watches, because "outside on the left" is a different bug from
+## "outside on the right".
+static func _layout_bounds_condition(text: String, context: Dictionary) -> Dictionary:
+	var parts: PackedStringArray = PackedStringArray([text])
+	if top_level_index(text, " or ") >= 0:
+		parts = split_top_level(text, " or ")
+	if parts.size() > 2 or top_level_index(text, " and ") >= 0:
+		return {}
+	var edges: Array = []
+	for part: String in parts:
+		var edge: Dictionary = _layout_edge(stripped_parens(part), context)
+		if edge.is_empty():
+			return {}
+		edges.append(edge)
+	var first: Dictionary = edges[0]
+	var note: String = _edge_note(str(first["axis"]), str(first["side"]))
+	if edges.size() == 2:
+		var second: Dictionary = edges[1]
+		if str(second["object"]) != str(first["object"]) or str(second["axis"]) != str(first["axis"]):
+			return {}
+		if str(second["side"]) == str(first["side"]):
+			return {}
+		note = _edge_note(str(first["axis"]), "both")
+	var reading: Dictionary = _sentence(str(first["object"]), "Is outside layout", {})
+	if not note.is_empty():
+		(reading["segments"] as Array).append({"text": " %s" % note, "tone": "plain"})
+	return reading
+
+
+## R11. ONE edge test as {object, axis, side}, or {} when the term is not one. Only a comparison of an
+## object's own place against 0 or against the viewport's matching side is claimed: a test against
+## some other number is a comparison the reader means as a comparison.
+static func _layout_edge(text: String, context: Dictionary) -> Dictionary:
+	var parts: Array = _comparison_parts(text)
+	if parts.is_empty():
+		return {}
+	var place: String = str(parts[0]).strip_edges().trim_prefix("self.")
+	var dot_at: int = place.rfind(".")
+	if dot_at <= 0:
+		return {}
+	var axis: String = place.substr(dot_at + 1).to_lower()
+	if not (axis == "x" or axis == "y"):
+		return {}
+	var chain: String = place.substr(0, dot_at)
+	var owner_text: String = ""
+	var is_place: bool = false
+	for own_place: String in OWN_POSITION_NAMES:
+		if chain == own_place:
+			is_place = true
+		elif chain.ends_with(".%s" % own_place):
+			is_place = true
+			owner_text = chain.substr(0, chain.length() - own_place.length() - 1)
+	if not is_place:
+		return {}
+	var operator: String = str(parts[1])
+	var bound: String = str(parts[2]).strip_edges()
+	# Strictly PAST the edge, both ways. `position.x <= 0` accepts the pixel column the edge itself is,
+	# which is a comparison the author meant as a comparison, and reading it as "outside" would be a
+	# sentence about a place the object still occupies.
+	var side: String = ""
+	if operator == "<" and bound.is_valid_float() and bound.to_float() == 0.0:
+		side = "low"
+	elif operator == ">" and _is_viewport_extent(bound, axis):
+		side = "high"
+	if side.is_empty():
+		return {}
+	return {"object": _receiver_object(owner_text, context), "axis": axis, "side": side}
+
+
+## R11. True when a bound IS the layout's own width or height. The system-words lens has usually
+## already renamed the call by the time a reading sees it, so both spellings are accepted.
+static func _is_viewport_extent(bound: String, axis: String) -> bool:
+	var text: String = bound.strip_edges()
+	var named: String = "ViewportWidth" if axis == "x" else "ViewportHeight"
+	if text == named:
+		return true
+	for rect: String in VIEWPORT_RECTS:
+		if text == "%s.size.%s" % [rect, axis] or text == "%s.end.%s" % [rect, axis]:
+			return true
+	return false
+
+
+## R11. Which side of the layout an edge watches, in the sheet's words.
+static func _edge_note(axis: String, side: String) -> String:
+	if axis == "x":
+		if side == "both":
+			return translate("(left or right)")
+		return translate("(left)") if side == "low" else translate("(right)")
+	if side == "both":
+		return translate("(top or bottom)")
+	return translate("(top)") if side == "low" else translate("(bottom)")
+
+
+## R11. `get_viewport().get_visible_rect().has_point(global_position)` - the event-sheet Is On-Screen
+## condition, which is the question a culling or a spawn guard is really asking.
+static func _on_screen_condition(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = _tail_call(text)
+	if call.is_empty() or str(call.get("method", "")) != "has_point":
+		return {}
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	if arguments.size() != 1 or not VIEWPORT_RECTS.has(str(call.get("target", "")).strip_edges()):
+		return {}
+	return _sentence(_point_object(arguments[0], context), "Is on-screen", {})
+
+
+## R11. `not get_viewport_rect().has_point(position)` is not a mark on a reading: an event sheet has
+## its own Is Outside Layout condition, and that is the row a reader wants to see. {} for anything
+## else, which lets the general negation carry on drawing its ✕.
+static func _outside_layout_reading(text: String, context: Dictionary) -> Dictionary:
+	if not text.begins_with("not "):
+		return {}
+	var on_screen: Dictionary = _on_screen_condition(stripped_parens(text.substr(4)), context)
+	if on_screen.is_empty():
+		return {}
+	return _sentence(str(on_screen.get("object", "")), "Is outside layout", {})
+
+
+## The object a POINT belongs to: the script's own object for its own place, the named object for
+## somebody else's, and System for a point that is nobody's in particular.
+static func _point_object(point: String, context: Dictionary) -> String:
+	var text: String = point.strip_edges().trim_prefix("self.")
+	for own_place: String in OWN_POSITION_NAMES:
+		if text == own_place:
+			return script_object(context)
+		if text.ends_with(".%s" % own_place):
+			return _receiver_object(text.substr(0, text.length() - own_place.length() - 1), context)
+	return str(_subject_words(text, context)[0])
+
+
+## R7. The sheet's own EXPRESSION NAMES - the words a reader types into an expression field - for the
+## view that has the Familiar Words glossary on. Godot's spelling stays one hover away on the row,
+## and with the glossary off nothing here runs at all.
+##
+## Nothing in this table is translated, for the same reason `max` and `min` are not: these are
+## identifiers a reader TYPES, and a translated identifier is one nobody can type. Each entry is one
+## exact shape with one exact name, and a shape that does not match exactly is left as the code it is.
+##
+## `lerp`, `clamp`, `abs`, `floor`, `ceil`, `round`, `sqrt`, `min` and `max` are deliberately absent:
+## the two vocabularies spell those the same, so there is nothing to rename.
+const FAMILIAR_EXPRESSION_PATTERNS: Array = [
+	# distance(a, b) / angle(a, b) - measured between two OBJECTS, which is how a sheet asks it
+	["([A-Za-z_][A-Za-z0-9_.]*)\\.(?:global_)?position\\.distance_to\\(([A-Za-z_][A-Za-z0-9_.]*)\\.(?:global_)?position\\)", "distance($1, $2)"],
+	["([A-Za-z_][A-Za-z0-9_.]*)\\.get_angle_to\\(([A-Za-z_][A-Za-z0-9_.]*)\\.(?:global_)?position\\)", "angle($1, $2)"],
+	["([A-Za-z_][A-Za-z0-9_.]*)\\.get_angle_to\\(([A-Za-z_][A-Za-z0-9_.]*)\\)", "angle($1, $2)"],
+	# text: tokenat before split's own reading, left before mid (a substr from 0 IS left)
+	["([A-Za-z_][A-Za-z0-9_.]*)\\.split\\((\"[^\"]*\")\\)\\[([^\\[\\]]+)\\]", "tokenat($1, $3, $2)"],
+	["\"%0([0-9]+)d\"\\s*%\\s*([A-Za-z_][A-Za-z0-9_.]*)", "zeropad($2, $1)"],
+	["([A-Za-z_][A-Za-z0-9_.]*)\\.substr\\(0,\\s*([^(),]+)\\)", "left($1, $2)"],
+	["([A-Za-z_][A-Za-z0-9_.]*)\\.substr\\(([^(),]+),\\s*([^(),]+)\\)", "mid($1, $2, $3)"],
+	# len(x) - the answer to the length question, for text and for lists alike (R7 settles it)
+	["([A-Za-z_][A-Za-z0-9_.]*)\\.(?:length|size)\\(\\)", "len($1)"],
+	# the numbers a sheet reads by name
+	["Engine\\.get_process_frames\\(\\)", "tickcount"],
+	["randi_range\\(([^(),]+),\\s*([^(),]+)\\)", "random($1, $2)"],
+	["randf_range\\(([^(),]+),\\s*([^(),]+)\\)", "random($1, $2)"],
+	["randi\\(\\)\\s*%\\s*([A-Za-z_][A-Za-z0-9_.]*)", "random($1)"],
+	["\\[([^\\[\\]()]*)\\]\\.pick_random\\(\\)", "choose($1)"]
+]
+
+
+## R7 / R6. A value expression in the sheet's own expression names. Returns the text unchanged with
+## the Familiar Words glossary off, which is how it ships, so the reading costs nothing until a
+## reader asks for it.
+static func familiar_expression_words(text: String, context: Dictionary) -> String:
+	if not bool(context.get("familiar_words", false)) or text.is_empty():
+		return text
+	var out: String = text
+	for entry: Array in FAMILIAR_EXPRESSION_PATTERNS:
+		if out.length() > 400:
+			break
+		var pattern: RegEx = RegEx.create_from_string(str(entry[0]))
+		if pattern == null:
+			continue
+		out = pattern.sub(out, str(entry[1]), true)
+	return _color_names(out)
+
+
+## R7. `Color.RED` as the colour a reader would say. Only Godot's own SCREAMING_CASE constants are
+## renamed, and only under the glossary - everywhere else the constant is one exact spelling somebody
+## typed.
+static func _color_names(text: String) -> String:
+	if not text.contains("Color."):
+		return text
+	var pattern: RegEx = RegEx.create_from_string("Color\\.([A-Z][A-Z0-9_]*)")
+	if pattern == null:
+		return text
+	var out: String = text
+	for found: RegExMatch in pattern.search_all(text):
+		out = out.replace(found.get_string(0), found.get_string(1).capitalize().to_lower())
+	return out

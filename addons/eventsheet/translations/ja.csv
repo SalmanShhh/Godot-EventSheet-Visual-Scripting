@@ -2134,3 +2134,33 @@ Add do step: call {name},実行ステップを追加: {name} を呼び出す
 Add undo step: call {name},元に戻すステップを追加: {name} を呼び出す
 Add do step: keep {object},実行ステップを追加: {object} を保持する
 in the editor too,エディタでも実行
+{value} is between {low} and {high},{value} が {low} から {high} の間
+(exclusive),(両端を含まない)
+(exclusive top),(上限を含まない)
+(exclusive bottom),(下限を含まない)
+{value} is between angles {low} and {high},{value} が角度 {low} から {high} の間
+{value} is within {limit} of {target},{value} が {target} から {limit} 以内
+{value} is clockwise from {other},{value} が {other} から時計回り
+is within {distance} of {other},{other} から {distance} 以内
+{value} is within {distance} of {other},{value} が {other} から {distance} 以内
+is inside area {area},領域 {area} の中にいる
+{value} is inside area {area},{value} が領域 {area} の中
+{value} is about {other},{value} がおよそ {other}
+{value} is about {other} (not moving),{value} がおよそ {other} (静止)
+{seconds} seconds have passed since {since},{since} から {seconds} 秒が経過
+{seconds} seconds have passed since {since} (clock time),{since} から {seconds} 秒が経過 (時計時刻)
+Set {name} to now,{name} を現在時刻にする
+Set {name} to now (clock time),{name} を現在時刻にする (時計時刻)
+Is outside layout,レイアウトの外にいる
+Is on-screen,画面内にいる
+(left),(左)
+(right),(右)
+(top),(上)
+(bottom),(下)
+(left or right),(左または右)
+(top or bottom),(上または下)
+Is moving,移動している
+Is touching ceiling,天井に触れている
+Pause the game,ゲームを一時停止
+Unpause,一時停止を解除
+Quit game,ゲームを終了

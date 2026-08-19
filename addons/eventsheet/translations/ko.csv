@@ -2134,3 +2134,33 @@ Add do step: call {name},실행 단계 추가: {name} 호출
 Add undo step: call {name},되돌리기 단계 추가: {name} 호출
 Add do step: keep {object},실행 단계 추가: {object} 유지
 in the editor too,에디터에서도 실행
+{value} is between {low} and {high},{value} 이(가) {low} 와(과) {high} 사이
+(exclusive),(양 끝 제외)
+(exclusive top),(위쪽 제외)
+(exclusive bottom),(아래쪽 제외)
+{value} is between angles {low} and {high},{value} 이(가) 각도 {low} 와(과) {high} 사이
+{value} is within {limit} of {target},{value} 이(가) {target} 에서 {limit} 이내
+{value} is clockwise from {other},{value} 이(가) {other} 에서 시계 방향
+is within {distance} of {other},{other} 에서 {distance} 이내
+{value} is within {distance} of {other},{value} 이(가) {other} 에서 {distance} 이내
+is inside area {area},영역 {area} 안에 있음
+{value} is inside area {area},{value} 이(가) 영역 {area} 안에 있음
+{value} is about {other},{value} 이(가) 약 {other}
+{value} is about {other} (not moving),{value} 이(가) 약 {other} (정지)
+{seconds} seconds have passed since {since},{since} 이후 {seconds} 초 경과
+{seconds} seconds have passed since {since} (clock time),{since} 이후 {seconds} 초 경과 (시계 시각)
+Set {name} to now,{name} 을(를) 지금으로 설정
+Set {name} to now (clock time),{name} 을(를) 지금으로 설정 (시계 시각)
+Is outside layout,레이아웃 밖에 있음
+Is on-screen,화면 안에 있음
+(left),(왼쪽)
+(right),(오른쪽)
+(top),(위)
+(bottom),(아래)
+(left or right),(왼쪽 또는 오른쪽)
+(top or bottom),(위 또는 아래)
+Is moving,움직이는 중
+Is touching ceiling,천장에 닿음
+Pause the game,게임 일시정지
+Unpause,일시정지 해제
+Quit game,게임 종료
