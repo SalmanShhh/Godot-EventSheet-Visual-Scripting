@@ -65,7 +65,7 @@ static func _check_ui_words() -> bool:
 	var passed: bool = _pin("grabbing focus is setting it",
 		_reading("resume_button.grab_focus()"), "resume_button ▸ Set focus")
 	passed = _pin("a centred popup is a dialog",
-		_reading("game_over.popup_centered()"), "game_over ▸ Show dialog (centred)") and passed
+		_reading("game_over.popup_centered()"), "game_over ▸ Open centered") and passed
 	passed = _pin("the master bus reads as the master volume, 0 to 1",
 		_reading("AudioServer.set_bus_volume_db(0, linear_to_db(v))"),
 		"Audio ▸ Set master volume to v (0 to 1)") and passed

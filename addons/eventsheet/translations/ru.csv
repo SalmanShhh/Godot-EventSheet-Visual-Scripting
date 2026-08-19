@@ -3164,3 +3164,42 @@ starting {values},nachinayushchiysya s {values}
 {subject} is a table,{subject} - tablitsa
 with {clauses},s {clauses}
 has {key},soderzhit {key}
+Consume input,Поглотить ввод
+"Draw text {text} at {at}, size {size}, {colour}","Нарисовать текст {text} в {at}, размер {size}, {colour}"
+"Draw text {text} at {at}, size {size}","Нарисовать текст {text} в {at}, размер {size}"
+Draw image {image} at {at},Нарисовать изображение {image} в {at}
+"Draw line along {points}, {colour}","Нарисовать линию вдоль {points}, {colour}"
+"Draw line along {points}, {colour} width {width}","Нарисовать линию вдоль {points}, {colour} толщина {width}"
+"Draw ring at {at}, radius {radius}, {colour}","Нарисовать кольцо в {at}, радиус {radius}, {colour}"
+"Draw ring at {at}, radius {radius}, {colour} width {width}","Нарисовать кольцо в {at}, радиус {radius}, {colour} толщина {width}"
+"Draw line {from} to {to}, {colour} width {width}","Нарисовать линию из {from} в {to}, {colour} толщина {width}"
+"Draw rectangle {at} size {size}, {colour}","Нарисовать прямоугольник в {at}, размер {size}, {colour}"
+(outline),(контур)
+Set style {slot} to {value},Установить стиль {slot} в {value}
+Theme.Colour({name}),Тема.Цвет({name})
+Open centered,Открыть по центру
+Confirm dialog,Диалог подтверждения
+Accept dialog,Диалог сообщения
+Window,Окно
+Popup,Всплывающее окно
+Popup menu,Всплывающее меню
+Popup panel,Всплывающая панель
+Button,Кнопка
+Tree,Дерево
+Colour picker,Выбор цвета
+Add titled card {title},Добавить карточку с заголовком {title}
+Add section {title},Добавить раздел {title}
+Add form row {title} {value},Добавить строку формы {title} {value}
+On %s button clicked,При щелчке %s кнопкой
+(on %s),(на %s)
+Mouse.Position,Мышь.Позиция
+Painting the canvas by hand,Рисование холста вручную
+"shapes and text painted every draw pass, and a redraw asked for when something moves","фигуры и текст, рисуемые каждый проход, и запрос перерисовки, когда что-то сдвинулось"
+A dialog built in code,"Диалог, собранный в коде"
+"a window made, filled with rows, wired to its two answers and opened","окно создаётся, заполняется строками, связывается с двумя ответами и открывается"
+A menu and the items it answers,"Меню и пункты, на которые оно отвечает"
+"items declared once with an id each, and one handler answering the id that was chosen","пункты объявлены один раз, каждый со своим id, и один обработчик отвечает на выбранный id"
+Drawing Canvas,Холст рисования
+On Input On This Element,При вводе на этом элементе
+On input on this element,При вводе на этом элементе
+"Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.","Выполняется, когда ввод попадает на этот элемент интерфейса - щелчок, перетаскивание или клавиша, пока он в фокусе. Заканчивайте Поглотить ввод, если ничто за ним не должно тоже реагировать."

@@ -3164,3 +3164,42 @@ starting {values},commencant par {values}
 {subject} is a table,{subject} est une table
 with {clauses},avec {clauses}
 has {key},a {key}
+Consume input,Consommer l'entree
+"Draw text {text} at {at}, size {size}, {colour}","Dessiner le texte {text} en {at}, taille {size}, {colour}"
+"Draw text {text} at {at}, size {size}","Dessiner le texte {text} en {at}, taille {size}"
+Draw image {image} at {at},Dessiner l'image {image} en {at}
+"Draw line along {points}, {colour}","Dessiner une ligne le long de {points}, {colour}"
+"Draw line along {points}, {colour} width {width}","Dessiner une ligne le long de {points}, {colour} epaisseur {width}"
+"Draw ring at {at}, radius {radius}, {colour}","Dessiner un anneau en {at}, rayon {radius}, {colour}"
+"Draw ring at {at}, radius {radius}, {colour} width {width}","Dessiner un anneau en {at}, rayon {radius}, {colour} epaisseur {width}"
+"Draw line {from} to {to}, {colour} width {width}","Dessiner une ligne de {from} a {to}, {colour} epaisseur {width}"
+"Draw rectangle {at} size {size}, {colour}","Dessiner un rectangle en {at}, taille {size}, {colour}"
+(outline),(contour)
+Set style {slot} to {value},Definir le style {slot} sur {value}
+Theme.Colour({name}),Theme.Couleur({name})
+Open centered,Ouvrir au centre
+Confirm dialog,Boite de confirmation
+Accept dialog,Boite de message
+Window,Fenetre
+Popup,Popup
+Popup menu,Menu contextuel
+Popup panel,Panneau contextuel
+Button,Bouton
+Tree,Arborescence
+Colour picker,Selecteur de couleur
+Add titled card {title},Ajouter une carte titree {title}
+Add section {title},Ajouter une section {title}
+Add form row {title} {value},Ajouter une ligne de formulaire {title} {value}
+On %s button clicked,Au clic du bouton %s
+(on %s),(sur %s)
+Mouse.Position,Souris.Position
+Painting the canvas by hand,Peindre la surface a la main
+"shapes and text painted every draw pass, and a redraw asked for when something moves","des formes et du texte peints a chaque passe de dessin, et un redessin demande quand quelque chose bouge"
+A dialog built in code,Une boite de dialogue construite en code
+"a window made, filled with rows, wired to its two answers and opened","une fenetre creee, remplie de lignes, reliee a ses deux reponses et ouverte"
+A menu and the items it answers,Un menu et les elements auxquels il repond
+"items declared once with an id each, and one handler answering the id that was chosen","des elements declares une fois avec un id chacun, et un gestionnaire qui repond a l'id choisi"
+Drawing Canvas,Surface de dessin
+On Input On This Element,A l'entree sur cet element
+On input on this element,A l'entree sur cet element
+"Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.","S'execute quand une entree atteint cet element d'interface - un clic, un glissement ou une touche pendant qu'il a le focus. Se termine par Consommer l'entree quand rien derriere ne doit reagir aussi."

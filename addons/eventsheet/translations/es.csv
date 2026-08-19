@@ -3164,3 +3164,42 @@ starting {values},que empieza por {values}
 {subject} is a table,{subject} es una tabla
 with {clauses},con {clauses}
 has {key},tiene {key}
+Consume input,Consumir entrada
+"Draw text {text} at {at}, size {size}, {colour}","Dibujar texto {text} en {at}, tamano {size}, {colour}"
+"Draw text {text} at {at}, size {size}","Dibujar texto {text} en {at}, tamano {size}"
+Draw image {image} at {at},Dibujar imagen {image} en {at}
+"Draw line along {points}, {colour}","Dibujar linea a lo largo de {points}, {colour}"
+"Draw line along {points}, {colour} width {width}","Dibujar linea a lo largo de {points}, {colour} grosor {width}"
+"Draw ring at {at}, radius {radius}, {colour}","Dibujar anillo en {at}, radio {radius}, {colour}"
+"Draw ring at {at}, radius {radius}, {colour} width {width}","Dibujar anillo en {at}, radio {radius}, {colour} grosor {width}"
+"Draw line {from} to {to}, {colour} width {width}","Dibujar linea de {from} a {to}, {colour} grosor {width}"
+"Draw rectangle {at} size {size}, {colour}","Dibujar rectangulo en {at}, tamano {size}, {colour}"
+(outline),(contorno)
+Set style {slot} to {value},Poner estilo {slot} en {value}
+Theme.Colour({name}),Estilo.Color({name})
+Open centered,Abrir centrado
+Confirm dialog,Dialogo de confirmacion
+Accept dialog,Dialogo de aviso
+Window,Ventana
+Popup,Emergente
+Popup menu,Menu emergente
+Popup panel,Panel emergente
+Button,Boton
+Tree,Arbol
+Colour picker,Selector de color
+Add titled card {title},Anadir tarjeta titulada {title}
+Add section {title},Anadir seccion {title}
+Add form row {title} {value},Anadir fila de formulario {title} {value}
+On %s button clicked,Al hacer clic con el boton %s
+(on %s),(en %s)
+Mouse.Position,Raton.Posicion
+Painting the canvas by hand,Pintar el lienzo a mano
+"shapes and text painted every draw pass, and a redraw asked for when something moves","formas y texto pintados en cada pase de dibujo, y un redibujado solicitado cuando algo se mueve"
+A dialog built in code,Un dialogo construido en codigo
+"a window made, filled with rows, wired to its two answers and opened","una ventana creada, llena de filas, conectada a sus dos respuestas y abierta"
+A menu and the items it answers,Un menu y los elementos a los que responde
+"items declared once with an id each, and one handler answering the id that was chosen","elementos declarados una vez con un id cada uno, y un manejador que responde al id elegido"
+Drawing Canvas,Lienzo de dibujo
+On Input On This Element,Al recibir entrada en este elemento
+On input on this element,Al recibir entrada en este elemento
+"Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.","Se ejecuta cuando una entrada llega a este elemento de la interfaz - un clic, un arrastre o una tecla mientras tiene el foco. Termina con Consumir entrada cuando nada detras deba reaccionar tambien."

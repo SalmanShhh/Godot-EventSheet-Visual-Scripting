@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Added - a tool's own UI reads: the dialogs it builds and the canvas it paints
+
+- **A Control built in code reads as the thing it builds.** `ConfirmationDialog.new()` is now
+  *a new Confirm dialog*, and so are the Accept dialog, the Window, the Button, the Check box, the
+  Text input, the List, the Tabs, the Tree, the File chooser, the Colour picker and the Popup menu -
+  the sheet's own names for Controls, which it already used when a line SET one. `popup_centered()`
+  reads *Open centered*, `popup()` reads *Open*, and `hide()` on a window reads *Close* rather than
+  a visibility flag. The plugin's own popup builders read as the verbs they publish, filed under the
+  thing they add to: *dialog - Add titled card "..."*, *card - Add section "..."*, *card - Add form
+  row "Event" label*.
+- **A hand-painted canvas reads in the Drawing words at every arity.** `draw_line` with a thickness
+  behind the colour, `draw_rect` and `draw_circle` with a fill flag (*(outline)* when it is off), a
+  `draw_rect` whose `Rect2(corner, size)` is written inline (*Draw rectangle (0, 0) size size*),
+  `draw_string` with its size and colour, plus `draw_texture` (*Draw image*), `draw_polyline`
+  (*Draw line along*) and `draw_arc` (*Draw ring*). `accept_event()` reads *Consume input*,
+  `get_theme_color("row_color", "EventSheet")` reads *Theme.Colour("row_color")*, and
+  `add_theme_stylebox_override("normal", box)` reads *Set style "normal" to box*.
+- **A Control's own `_gui_input` is an input handler like the others.** It lifts to a trigger, so its
+  branches read as the Mouse and Keyboard triggers `_unhandled_input` already reads as - scoped to
+  the object the input landed on (*On left button clicked (on Viewport)*) - and `event.position`
+  reads as *Mouse.Position*. **On Input On This Element** joins the picker for Controls.
+- Two new pattern claims for what the readings recognise: *Painting the canvas by hand* (adoptable as
+  the Drawing Canvas pack only where the host is a 2D node) and *A dialog built in code*.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

@@ -733,7 +733,7 @@ That is the order this section is in.
   `pitch_scale` is `Set pitch`, `bus = "SFX"` is `Set bus to SFX`, `volume_db = linear_to_db(0.5)` is
   `Set volume to 50%` (the decibel conversion is Godot's business, not the reader's - a raw dB number
   keeps its unit), `seek(12.0)` is `Seek to 12 seconds`, and both `is_playing()` and `playing` read
-  `Is playing`. `grab_focus()` is `Set focus`, `popup_centered()` is `Show dialog (centred)`, and
+  `Is playing`. `grab_focus()` is `Set focus`, `popup_centered()` is `Open centered`, and
   `AudioServer.set_bus_volume_db(0, linear_to_db(v))` is `Audio ▸ Set master volume to v (0 to 1)`.
   Finally the game-feel snippets: a symmetric random camera offset is `Shake by s`, `base_y + sin(t *
   3.0) * 8.0` is `Bob y` with `sine · magnitude 8 · 3 per second` as its note, and
@@ -743,6 +743,24 @@ That is the order this section is in.
   and the Manual show.
 
   ![A sprite, UI, sound and game-feel script opened as a sheet](images/reading-sprite-sound-juice.png)
+
+- **A Control built in code reads as the thing it builds, and a hand-painted canvas in the Drawing
+  words.** `ConfirmationDialog.new()` is `a new Confirm dialog`, and so are the Accept dialog, the
+  Window, the Button, the Check box, the Text input, the List, the Tabs, the Tree, the File chooser,
+  the Colour picker and the Popup menu. `popup()` is `Open`, `popup_centered()` is `Open centered`,
+  and `hide()` on a window is `Close` rather than a visibility flag. The plugin's own popup builders
+  read as the verbs they publish, filed under the thing they add to: `dialog ▸ Add titled card
+  "Last condition removed"`, `card ▸ Add section "Fields"`, `card ▸ Add form row "Event" label`.
+  On the canvas side, `draw_line` with a thickness, `draw_rect` and `draw_circle` with a fill flag
+  (`(outline)` when it is off), a `draw_rect` whose `Rect2(corner, size)` is written inline, and
+  `draw_string` with its size and colour all read with every argument said out loud, and
+  `draw_texture` / `draw_polyline` / `draw_arc` are `Draw image` / `Draw line along` / `Draw ring`.
+  `accept_event()` is `Consume input`, `get_theme_color("row_color", "EventSheet")` is
+  `Theme.Colour("row_color")`, and `add_theme_stylebox_override("normal", box)` is `Set style
+  "normal" to box`. A Control's own `_gui_input` is an input handler like `_unhandled_input`, so its
+  branches read as the Mouse and Keyboard triggers, scoped to the object the input landed on.
+
+  ![A tool's dialog-building and canvas-painting code opened as a sheet](images/opened-script-canvas-dialog.png)
 
 - **Vectors read as the words a reader has for each operation.** `(target.position -
   position).normalized()` is the one thing every chase line means, so it reads `the direction from

@@ -999,6 +999,11 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var held: String = callable_value_words(trimmed)
 	if not held.is_empty():
 		return held
+	# W8 - a colour fetched from the project's Theme is one settled phrase, ahead of the general call
+	# rewriting which would only spell the lookup back out as a call.
+	var themed: String = theme_lookup_words(trimmed)
+	if not themed.is_empty():
+		return themed
 	# U1 - the direction between two points, decided by the whole expression rather than by any call
 	# inside it, so it is asked before the innermost-first pass takes the bracket group apart.
 	var vector_value: String = vector_colour_words(trimmed, context)
@@ -2782,6 +2787,11 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 	match method:
 		"hide":
 			if arguments.is_empty():
+				# W7. A window is not made invisible, it is closed - and closing is what the two
+				# lines around it (the close-requested trigger, the reopen) are about.
+				if _class_is_any(object_class, WINDOW_CLASSES):
+					return _with_pattern(_sentence(object_name, "Close", {}), "dialog",
+						str(call.get("line", "")))
 				return _sentence(object_name, "Set invisible", {})
 		"show":
 			if arguments.is_empty():
@@ -2826,9 +2836,14 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 		"queue_redraw":
 			if arguments.is_empty():
 				return _sentence(object_name, "Redraw", {})
+		# W8. A Control that has handled the input says so, and the sheet's word for that is the one
+		# the input vocabulary already uses for "nothing else sees this".
+		"accept_event":
+			if arguments.is_empty():
+				return _sentence(object_name, "Consume input", {})
 	var drawn: Dictionary = _draw_call(object_name, method, arguments, context)
 	if not drawn.is_empty():
-		return drawn
+		return _patterned(drawn, "custom_draw")
 	# ── P6 ──────────────────────────────────────────────────────────────────────────────────────
 	# Switching a callback on or off is the sheet's own group activation, said about a tick.
 	var switched: Dictionary = _process_switch_call(object_name, method, arguments)
@@ -2849,23 +2864,146 @@ static func _draw_call(object_name: String, method: String, arguments: PackedStr
 					"from": [expression_text(arguments[0], context), "value"],
 					"to": [expression_text(arguments[1], context), "value"],
 					"colour": [expression_text(arguments[2], context), "value"]})
+			# W8. A thickness behind the colour is part of what the reader sees on screen, so the
+			# sentence says it rather than declining the whole line.
+			if arguments.size() == 4:
+				return _sentence(object_name, "Draw line {from} to {to}, {colour} width {width}", {
+					"from": [expression_text(arguments[0], context), "value"],
+					"to": [expression_text(arguments[1], context), "value"],
+					"colour": [expression_text(arguments[2], context), "value"],
+					"width": [expression_text(arguments[3], context), "value"]})
 		"draw_rect":
 			if arguments.size() == 2:
+				# W8. A rectangle built inline out of a corner and a size is two facts the reader
+				# acts on, and `Rect2(Vector2.ZERO, size)` hands them back the constructor instead.
+				var corner_and_size: PackedStringArray = _rect_parts(arguments[0])
+				if corner_and_size.size() == 2:
+					return _sentence(object_name, "Draw rectangle {at} size {size}, {colour}", {
+						"at": [expression_text(corner_and_size[0], context), "value"],
+						"size": [expression_text(corner_and_size[1], context), "value"],
+						"colour": [expression_text(arguments[1], context), "value"]})
 				return _sentence(object_name, "Draw rectangle {rect}, {colour}", {
 					"rect": [expression_text(arguments[0], context), "value"],
 					"colour": [expression_text(arguments[1], context), "value"]})
+			if arguments.size() == 3:
+				return _filled_shape_sentence(_sentence(object_name, "Draw rectangle {rect}, {colour}", {
+					"rect": [expression_text(arguments[0], context), "value"],
+					"colour": [expression_text(arguments[1], context), "value"]}), arguments[2])
 		"draw_circle":
 			if arguments.size() == 3:
 				return _sentence(object_name, "Draw circle at {at}, radius {radius}, {colour}", {
 					"at": [expression_text(arguments[0], context), "value"],
 					"radius": [expression_text(arguments[1], context), "value"],
 					"colour": [expression_text(arguments[2], context), "value"]})
+			if arguments.size() == 4:
+				return _filled_shape_sentence(_sentence(object_name, "Draw circle at {at}, radius {radius}, {colour}", {
+					"at": [expression_text(arguments[0], context), "value"],
+					"radius": [expression_text(arguments[1], context), "value"],
+					"colour": [expression_text(arguments[2], context), "value"]}), arguments[3])
 		"draw_string":
+			# W8. Godot's own order is (font, position, text, alignment, width, font size, colour).
+			# The size and the colour are the two a reader acts on, so they join the sentence the
+			# moment the call passes them; the alignment and the wrap width stay plumbing.
+			if arguments.size() >= 7:
+				return _sentence(object_name, "Draw text {text} at {at}, size {size}, {colour}", {
+					"text": [expression_text(arguments[2], context), "value"],
+					"at": [expression_text(arguments[1], context), "value"],
+					"size": [expression_text(arguments[5], context), "value"],
+					"colour": [expression_text(arguments[6], context), "value"]})
+			if arguments.size() == 6:
+				return _sentence(object_name, "Draw text {text} at {at}, size {size}", {
+					"text": [expression_text(arguments[2], context), "value"],
+					"at": [expression_text(arguments[1], context), "value"],
+					"size": [expression_text(arguments[5], context), "value"]})
 			if arguments.size() >= 3:
 				return _sentence(object_name, "Draw text {text} at {at}", {
 					"text": [expression_text(arguments[2], context), "value"],
 					"at": [expression_text(arguments[1], context), "value"]})
+		# ── W8 ──────────────────────────────────────────────────────────────────────────────────────
+		# The rest of the canvas verbs, in the same words the Drawing pack publishes them under. An
+		# image is Draw image, a run of points is one line along them, and an arc is the pack's ring.
+		"draw_texture":
+			if arguments.size() == 2 or arguments.size() == 3:
+				return _sentence(object_name, "Draw image {image} at {at}", {
+					"image": [expression_text(arguments[0], context), "value"],
+					"at": [expression_text(arguments[1], context), "value"]})
+		"draw_polyline":
+			if arguments.size() == 2:
+				return _sentence(object_name, "Draw line along {points}, {colour}", {
+					"points": [expression_text(arguments[0], context), "value"],
+					"colour": [expression_text(arguments[1], context), "value"]})
+			if arguments.size() == 3:
+				return _sentence(object_name, "Draw line along {points}, {colour} width {width}", {
+					"points": [expression_text(arguments[0], context), "value"],
+					"colour": [expression_text(arguments[1], context), "value"],
+					"width": [expression_text(arguments[2], context), "value"]})
+		"draw_arc":
+			# (centre, radius, start angle, end angle, point count, colour[, width]). The point count
+			# is how smooth the curve is drawn, not what it is, so it stays out of the sentence.
+			if arguments.size() == 6:
+				return _sentence(object_name, "Draw ring at {at}, radius {radius}, {colour}", {
+					"at": [expression_text(arguments[0], context), "value"],
+					"radius": [expression_text(arguments[1], context), "value"],
+					"colour": [expression_text(arguments[5], context), "value"]})
+			if arguments.size() == 7:
+				return _sentence(object_name, "Draw ring at {at}, radius {radius}, {colour} width {width}", {
+					"at": [expression_text(arguments[0], context), "value"],
+					"radius": [expression_text(arguments[1], context), "value"],
+					"colour": [expression_text(arguments[5], context), "value"],
+					"width": [expression_text(arguments[6], context), "value"]})
 	return {}
+
+
+## W8. `Rect2(corner, size)` split into its two halves, or an empty list when the argument is not a
+## two-part Rect2 literal (a rect held in a variable stays the one name it already has).
+static func _rect_parts(argument: String) -> PackedStringArray:
+	var trimmed: String = argument.strip_edges()
+	if not trimmed.begins_with("Rect2(") or not trimmed.ends_with(")"):
+		return PackedStringArray()
+	var parts: PackedStringArray = _split_arguments(
+		trimmed.substr("Rect2(".length(), trimmed.length() - "Rect2(".length() - 1))
+	return parts if parts.size() == 2 else PackedStringArray()
+
+
+## W8. The fill flag a shape call can carry last. `true` is what the shape already says, so it adds
+## nothing; `false` is the difference between a filled box and an outline, and the reader has to see
+## it. Anything that is not one of the two literals declines - a variable there could be either, and
+## a sentence that guessed would be wrong half the time.
+static func _filled_shape_sentence(reading: Dictionary, filled: String) -> Dictionary:
+	var flag: String = filled.strip_edges()
+	if flag == "true":
+		return reading
+	if flag != "false":
+		return {}
+	(reading["segments"] as Array).append({"text": " ", "tone": "plain"})
+	(reading["segments"] as Array).append({"text": translate("(outline)"), "tone": "muted"})
+	return reading
+
+
+## W8. `add_theme_stylebox_override("normal", box)` - a Control's look for one of its states, said as
+## the style it is. The slot keeps its quotes because it is the engine's own name for the state and a
+## reader searching for it in the theme editor searches for exactly that word.
+static func _theme_style_call(object_name: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	if method != "add_theme_stylebox_override" or args.size() != 2 or not _is_string_literal(args[0]):
+		return {}
+	return _sentence(object_name, "Set style {slot} to {value}", {
+		"slot": [args[0].strip_edges(), "name"],
+		"value": [expression_text(args[1], context), "value"]})
+
+
+## W8. `get_theme_color("row_color", "EventSheet")` - a colour looked up in the project's Theme, said
+## as the Theme object owning it. The theme TYPE is which control's entry it came from, which the
+## reader picking the colour out of the row does not need; the name is the whole answer.
+static func theme_lookup_words(text: String) -> String:
+	var trimmed: String = text.strip_edges()
+	if not trimmed.begins_with("get_theme_color(") or not trimmed.ends_with(")"):
+		return ""
+	var args: PackedStringArray = _split_arguments(
+		trimmed.substr("get_theme_color(".length(), trimmed.length() - "get_theme_color(".length() - 1))
+	if args.is_empty() or args.size() > 2 or not _is_string_literal(args[0]):
+		return ""
+	return _fill(translate("Theme.Colour({name})"), {"name": args[0].strip_edges()})
 
 
 ## P6. `set_physics_process(false)` -> "Set Every tick (physics) deactivated". Only the two literals
@@ -7073,10 +7211,13 @@ static func media_call(call: Dictionary, context: Dictionary) -> Dictionary:
 		"grab_focus":
 			if arguments.is_empty():
 				return _with_pattern(_sentence(object_name, "Set focus", {}), "ui", line)
+		# W7. A dialog is opened, and where it lands is part of the same one action - "Open centered"
+		# is the whole sentence rather than a verb with a muted aside hung off it.
 		"popup_centered", "popup_centered_ratio", "popup_centered_clamped":
-			var dialog: Dictionary = _sentence(object_name, "Show dialog", {})
-			(dialog["segments"] as Array).append({"text": " %s" % translate("(centred)"), "tone": "muted"})
-			return _with_pattern(dialog, "ui", line)
+			return _with_pattern(_sentence(object_name, "Open centered", {}), "dialog", line)
+		"popup":
+			if arguments.size() <= 1:
+				return _with_pattern(_sentence(object_name, "Open", {}), "dialog", line)
 		"seek":
 			if arguments.size() == 1 and _class_is_any(object_class, AUDIO_CLASSES):
 				return _with_pattern(_sentence(object_name, "Seek to {seconds} seconds", {
@@ -7867,6 +8008,12 @@ static func _one_minus_of(value: String) -> String:
 ## keeps every other call exactly as it reads today.
 static func long_tail_call(call: Dictionary, text: String, context: Dictionary) -> Dictionary:
 	var traced: Dictionary = call.duplicate().merged({"line": text}, true)
+	# W7 - the popup builders are asked first: they are a static call on a named class, which every
+	# later reading would only ever spell back out as "Call titled card" on a class nobody picked.
+	var built: Dictionary = popup_ui_call(str(call.get("target", "")), str(call.get("method", "")),
+		call.get("args", PackedStringArray()), context)
+	if not built.is_empty():
+		return built
 	var requested: Dictionary = web_call(traced, context)
 	if not requested.is_empty():
 		return requested
@@ -8179,6 +8326,9 @@ static func around_objects_call(target: String, method: String, args: PackedStri
 			and args[0].strip_edges() == "self" and args[1].strip_edges() == "0":
 		return _patterned(_sentence(script_object(context), "Move to bottom of layer", {}), "layers")
 	var object_name: String = _receiver_object(target, context)
+	var restyled: Dictionary = _theme_style_call(object_name, method, args, context)
+	if not restyled.is_empty():
+		return restyled
 	var styled: Dictionary = _text_call(object_name, method, args, context)
 	if not styled.is_empty():
 		return styled
@@ -8412,6 +8562,79 @@ const LIST_CONTROL_TEMPLATES: Dictionary = {
 
 ## V7. The waits that stop the whole game while they run, and how many of one second each counts in.
 const BLOCKING_WAIT_CALLS: Dictionary = {"OS.delay_msec": 1000.0, "OS.delay_usec": 1000000.0}
+
+# ── W7 ──────────────────────────────────────────────────────────────────────────────────────────
+# A tool builds most of its UI in code, and `ConfirmationDialog.new()` is the first line of every one
+# of those runs. The sheet already has a name for each of these Controls - the V2 tables gave the
+# List, the Text input, the Check box their words when a line SETS one - and a Local row that says
+# "a new ConfirmationDialog" hands the reader the engine's class name for a thing the rest of the
+# sheet calls a Confirm dialog. One table, so both halves say it the same way.
+const CONTROL_NOUNS: Dictionary = {
+	"ConfirmationDialog": "Confirm dialog",
+	"AcceptDialog": "Accept dialog",
+	"Window": "Window",
+	"Popup": "Popup",
+	"PopupMenu": "Popup menu",
+	"PopupPanel": "Popup panel",
+	"Button": "Button",
+	"CheckBox": "Check box",
+	"CheckButton": "Check box",
+	"LineEdit": "Text input",
+	"TextEdit": "Text input",
+	"ItemList": "List",
+	"OptionButton": "List",
+	"Tree": "Tree",
+	"TabContainer": "Tabs",
+	"TabBar": "Tabs",
+	"FileDialog": "File chooser",
+	"ColorPicker": "Colour picker",
+	"ColorPickerButton": "Colour picker"
+}
+
+## W7. The Window family, whose `hide()` is a close rather than a visibility flag.
+const WINDOW_CLASSES: PackedStringArray = ["Window", "AcceptDialog", "ConfirmationDialog",
+	"FileDialog", "Popup", "PopupMenu", "PopupPanel"]
+
+## W7. The plugin's own popup builders, and the verb each one publishes. A static helper's functions
+## read as that helper's verbs (the N-batch rule), and these three are what every dialog in the
+## editor is made of - a card with a title, a section inside it, and a labelled row of fields. The
+## FIRST argument is the thing being added to, so the row is filed under that object rather than
+## under the helper class nobody in the sheet has heard of.
+const POPUP_UI_BUILDERS: Dictionary = {
+	"titled_card": "Add titled card {title}",
+	"panel_section": "Add section {title}",
+	"form_row": "Add form row {title} {value}"
+}
+const POPUP_UI_CLASS := "EventSheetPopupUI"
+
+
+## W7. `ConfirmationDialog.new()` -> "a new Confirm dialog", or "" when the class is not one the
+## sheet has its own word for (which keeps the plain `a new <class>` reading the U-batch gives).
+static func control_noun(class_name_text: String) -> String:
+	var trimmed: String = class_name_text.strip_edges()
+	if not CONTROL_NOUNS.has(trimmed):
+		return ""
+	return translate(str(CONTROL_NOUNS[trimmed]))
+
+
+## W7. `EventSheetPopupUI.form_row(card, "Event", label)` -> `card ▸ Add form row "Event" label`, or
+## {} when the call is not one of the three builders (or is written without the thing it adds to).
+static func popup_ui_call(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	if target.strip_edges() != POPUP_UI_CLASS or not POPUP_UI_BUILDERS.has(method) or args.is_empty():
+		return {}
+	var object_name: String = _receiver_object(args[0].strip_edges(), context)
+	var values: Dictionary = {}
+	if method == "form_row":
+		if args.size() != 3:
+			return {}
+		values["title"] = [expression_text(args[1], context), "value"]
+		values["value"] = [expression_text(args[2], context), "value"]
+	else:
+		if args.size() != 2:
+			return {}
+		values["title"] = [expression_text(args[1], context), "value"]
+	return _patterned(_sentence(object_name, str(POPUP_UI_BUILDERS[method]), values), "dialog")
 
 
 ## The event-sheet reading of one statement in the five families above, or {} to let the rest of the
@@ -9868,6 +10091,10 @@ static func data_scene_receiver_words(receiver: String, method: String,
 		# because `handler.new()` on a variable is a call whose result nobody can name.
 		"new":
 			if arguments.is_empty() and is_identifier(receiver) and receiver == receiver.capitalize().replace(" ", ""):
+				# W7. A Control the sheet has its own name for is made by that name.
+				var noun: String = control_noun(receiver)
+				if not noun.is_empty():
+					return _fill(translate("a new {type}"), {"type": noun})
 				return _fill(translate("a new {type}"), {"type": receiver})
 		# U4. A copy is a copy whether it is a resource, a node or a list. `duplicate(true)` is the
 		# deep copy, which is still a copy - the flag is Godot's business, not the row's.

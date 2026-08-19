@@ -169,9 +169,10 @@ static func _refusals() -> bool:
 	# reads as the wiring it is and never as the wait it is not.
 	ok = _check("a plain signal connect is a wiring, not a wait",
 		_read("$Timer.timeout.connect(explode)"), "Timer ▸ Wire On Timeout to Explode") and ok
-	# A line whose colour argument has a width behind it would have to drop the width to read.
-	ok = _check("a drawn line with a width is refused",
-		_read("draw_line(a, b, Color.RED, 4.0)"), "") and ok
+	# W8 gave the width its own place in the sentence, so the line that used to be refused now reads
+	# with the thickness said out loud rather than quietly dropped.
+	ok = _check("a drawn line with a width says the width",
+		_read("draw_line(a, b, Color.RED, 4.0)"), "Player ▸ Draw line a to b, red width 4") and ok
 	# Three arguments is a different verb (`play(name, speed, from_end)`), not this sentence.
 	ok = _check("a three-argument play is refused",
 		_read("sprite.play(\"run\", 2.0, true)"), "") and ok

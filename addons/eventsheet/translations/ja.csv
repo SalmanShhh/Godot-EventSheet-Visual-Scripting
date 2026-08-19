@@ -3164,3 +3164,42 @@ starting {values},先頭が {values}
 {subject} is a table,{subject} がテーブル
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
+Consume input,入力を消費
+"Draw text {text} at {at}, size {size}, {colour}",テキスト {text} を {at} に描画、サイズ {size}、{colour}
+"Draw text {text} at {at}, size {size}",テキスト {text} を {at} に描画、サイズ {size}
+Draw image {image} at {at},画像 {image} を {at} に描画
+"Draw line along {points}, {colour}",{points} に沿って線を描画、{colour}
+"Draw line along {points}, {colour} width {width}",{points} に沿って線を描画、{colour} 太さ {width}
+"Draw ring at {at}, radius {radius}, {colour}",{at} にリングを描画、半径 {radius}、{colour}
+"Draw ring at {at}, radius {radius}, {colour} width {width}",{at} にリングを描画、半径 {radius}、{colour} 太さ {width}
+"Draw line {from} to {to}, {colour} width {width}",{from} から {to} へ線を描画、{colour} 太さ {width}
+"Draw rectangle {at} size {size}, {colour}",{at} に矩形を描画、サイズ {size}、{colour}
+(outline),(輪郭)
+Set style {slot} to {value},スタイル {slot} を {value} に設定
+Theme.Colour({name}),テーマ.色({name})
+Open centered,中央に開く
+Confirm dialog,確認ダイアログ
+Accept dialog,通知ダイアログ
+Window,ウィンドウ
+Popup,ポップアップ
+Popup menu,ポップアップメニュー
+Popup panel,ポップアップパネル
+Button,ボタン
+Tree,ツリー
+Colour picker,カラーピッカー
+Add titled card {title},見出しカード {title} を追加
+Add section {title},セクション {title} を追加
+Add form row {title} {value},フォーム行 {title} {value} を追加
+On %s button clicked,%s ボタンがクリックされたとき
+(on %s),(%s の上で)
+Mouse.Position,マウス.位置
+Painting the canvas by hand,手描きでキャンバスを描く
+"shapes and text painted every draw pass, and a redraw asked for when something moves",描画パスごとに図形と文字を描き、何かが動いたら再描画を要求する
+A dialog built in code,コードで組み立てたダイアログ
+"a window made, filled with rows, wired to its two answers and opened",ウィンドウを作り、行を並べ、二つの答えにつないで開く
+A menu and the items it answers,メニューと、それが応答する項目
+"items declared once with an id each, and one handler answering the id that was chosen",項目を id 付きで一度だけ宣言し、選ばれた id に一つのハンドラが応答する
+Drawing Canvas,描画キャンバス
+On Input On This Element,この要素への入力時
+On input on this element,この要素への入力時
+"Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.",この UI 要素に入力が届いたときに実行されます - クリック、ドラッグ、フォーカス中のキー。背後の要素に反応させたくないときは入力を消費で終えます。

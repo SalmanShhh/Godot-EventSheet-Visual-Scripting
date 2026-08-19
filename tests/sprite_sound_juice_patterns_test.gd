@@ -77,7 +77,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"music ▸ Seek to 12 seconds",
 	# S12 - the UI words
 	"resume_button ▸ Set focus",
-	"game_over ▸ Show dialog (centred)",
+	"game_over ▸ Open centered",
 	"Audio ▸ Set master volume to 50%",
 	# S14 - the juice words
 	"camera ▸ Shake by s random offset this tick",

@@ -153,6 +153,24 @@ const ENTRIES: Dictionary = {
 		"why": "text built from values, and a regular expression searched or replaced in it",
 		"adoptable": "",
 		"rank": 21
+	},
+	"custom_draw": {
+		"words": "Painting the canvas by hand",
+		"why": "shapes and text painted every draw pass, and a redraw asked for when something moves",
+		"adoptable": "drawing_canvas",
+		"rank": 22
+	},
+	"dialog": {
+		"words": "A dialog built in code",
+		"why": "a window made, filled with rows, wired to its two answers and opened",
+		"adoptable": "",
+		"rank": 23
+	},
+	"menu": {
+		"words": "A menu and the items it answers",
+		"why": "items declared once with an id each, and one handler answering the id that was chosen",
+		"adoptable": "",
+		"rank": 24
 	}
 }
 
@@ -169,7 +187,8 @@ const PACK_LABELS: Dictionary = {
 	"camera_kit": "Camera",
 	"scene_flow": "Scene Flow",
 	"nav_agent": "Nav Agent",
-	"follow_path": "Follow A Path"
+	"follow_path": "Follow A Path",
+	"drawing_canvas": "Drawing Canvas"
 }
 
 

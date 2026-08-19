@@ -7010,8 +7010,12 @@ func _await_loop_trigger_spans(seconds: String) -> Array[SemanticSpan]:
 ## whole-screen handlers do, and the only difference is that the input already landed on the object,
 ## which is what its branch reading says.
 const INPUT_HANDLER_TRIGGERS: Array[String] = [
-	"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput", "OnInputEvent"
+	"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput", "OnInputEvent", "OnControlInput"
 ]
+
+## W8. The handlers whose input already landed on THIS object, so their branches say which object
+## they landed on rather than reading as a press somewhere on the screen.
+const SCOPED_INPUT_HANDLER_TRIGGERS: Array[String] = ["OnInputEvent", "OnControlInput"]
 
 
 ## The object a trigger row belongs to. A signal-backed trigger belongs to the NODE that emits it -
@@ -7236,10 +7240,22 @@ func _input_branch_reading(event_row: EventRow) -> Dictionary:
 		else:
 			continue
 		atom["used"] = true
-	var sentence: String = _input_branch_sentence(event_class, edge, button, key, device,
-		event_row.trigger_id == "OnInputEvent")
+	var sentence: String = ""
+	# W8. A Control's own handler names the BUTTON, not the object: the object is said once, in the
+	# scope that follows, and a canvas that answers three buttons would otherwise read as three
+	# identical "On Viewport clicked" triggers.
+	if event_row.trigger_id == "OnControlInput" and event_class == "InputEventMouseButton" \
+			and edge > 0 and not button.is_empty() and not button.begins_with("MOUSE_BUTTON_WHEEL_"):
+		sentence = EventSheetL10n.translate("On %s button clicked") % _mouse_button_word(button)
+	else:
+		sentence = _input_branch_sentence(event_class, edge, button, key, device,
+			event_row.trigger_id == "OnInputEvent")
 	if sentence.is_empty():
 		return {}
+	if SCOPED_INPUT_HANDLER_TRIGGERS.has(event_row.trigger_id) and event_row.trigger_id != "OnInputEvent":
+		var scope_object: String = _script_object_name()
+		if not scope_object.is_empty():
+			sentence += " " + (EventSheetL10n.translate("(on %s)") % scope_object)
 	# A condition drops off the lane only when the sentence absorbed ALL of its conjuncts; one that
 	# carried an extra test (a captured-cursor check, a game-state guard) still reads on its own row.
 	var used_per_condition: Dictionary = {}
@@ -7315,6 +7331,10 @@ func _humanized_input_event_text(text: String) -> String:
 	if not text.contains("event"):
 		return text
 	var humanized: String = _strip_event_casts(text)
+	# W8. Where the pointer was when the event arrived is the Mouse object's own expression - the
+	# same value a picked row would print, so a typed handler and a dropped one read alike.
+	humanized = humanized.replace("event.global_position", EventSheetL10n.translate("Mouse.Position"))
+	humanized = humanized.replace("event.position", EventSheetL10n.translate("Mouse.Position"))
 	humanized = humanized.replace("event.relative.x", EventSheetL10n.translate("mouse's ΔX"))
 	humanized = humanized.replace("event.relative.y", EventSheetL10n.translate("mouse's ΔY"))
 	return humanized.replace("event.relative", EventSheetL10n.translate("mouse's Δ"))
@@ -10701,8 +10721,29 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"words": "Text and patterns",
 		"ace_ids": ["Core/SetTextPattern", "Core/MatchPattern", "Core/AllMatches",
 			"Core/ReplaceMatches"]
+	},
+	# W8. Painting a canvas by hand. Adoptable only on a Node2D host - the Drawing Canvas pack draws
+	# onto a node's 2D canvas, so offering it on a Control would be an adoption that cannot happen.
+	"custom_draw": {
+		"words": "Painting the canvas by hand",
+		"adoptable": "drawing_canvas",
+		"ace_ids": ["Core/DrawLine", "Core/DrawRect", "Core/DrawCircle", "Core/DrawRing"]
+	},
+	# W7. A window or dialog built in code, configured and opened.
+	"dialog": {
+		"words": "A dialog built in code",
+		"ace_ids": []
+	},
+	# W6. A menu whose items are declared once and answered by their ids.
+	"menu": {
+		"words": "A menu and the items it answers",
+		"ace_ids": []
 	}
 }
+
+## W8. The host classes the Drawing Canvas pack can actually be attached to. A `_draw` body on a
+## Control paints the same way but has no pack to adopt, so the chip offers none.
+const CUSTOM_DRAW_ADOPTABLE_HOSTS: PackedStringArray = ["Node2D", "Sprite2D", "Polygon2D", "Line2D"]
 
 
 ## Records that a reading recognised `pattern` on the line it was given. Called by the readings while
@@ -10719,6 +10760,22 @@ func _note_pattern(pattern: String, evidence: String) -> void:
 	_pending_patterns[pattern] = lines
 
 
+## The pack a claim may offer to adopt, which for most patterns is whatever the vocabulary table
+## says. W8 is the exception: hand-drawing is the same shape on any canvas, but only a 2D node has a
+## pack that could take it over, so a `_draw` body on a Control claims the pattern and offers nothing.
+func _pattern_adoptable(pattern: String, listed: String) -> String:
+	if pattern != "custom_draw" or listed.is_empty():
+		return listed
+	var sheet: EventSheetResource = _viewport._sheet
+	var host: String = "" if sheet == null else sheet.host_class.strip_edges()
+	if host.is_empty() or not ClassDB.class_exists(host):
+		return ""
+	for adoptable_host: String in CUSTOM_DRAW_ADOPTABLE_HOSTS:
+		if host == adoptable_host or ClassDB.is_parent_class(host, adoptable_host):
+			return listed
+	return ""
+
+
 ## Hands every pattern the readings just recognised to the registry, on the row that owns it.
 func _claim_pending_patterns(row_data: EventRowData) -> void:
 	if _pending_patterns.is_empty():
@@ -10731,7 +10788,7 @@ func _claim_pending_patterns(row_data: EventRowData) -> void:
 			ace_ids.append(str(ace_id))
 		EventSheetPatternFacts.claim(sheet, pattern, row_data.row_uid, row_data.row_uid,
 			_pending_patterns[pattern], str(vocabulary.get("words", "")),
-			str(vocabulary.get("adoptable", "")), ace_ids)
+			_pattern_adoptable(pattern, str(vocabulary.get("adoptable", ""))), ace_ids)
 	_pending_patterns = {}
 
 
