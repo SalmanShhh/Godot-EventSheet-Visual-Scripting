@@ -59,12 +59,19 @@ sections:
 - **Bars around the sheet - Object bar, status strip, tab title** (`EventSheetChromeStyle`):
   the Object bar's section headings, its ⚠ on a flagged entry, the wash it throws over the
   rows that use the object you point at and the grab dots on them, the status message and the
-  red it turns, the row address, the unsaved ●, and the file path beside a sheet's name.
+  red it turns, the row address, the unsaved ●, and the file path beside a sheet's name. The
+  Project bar's by-kind headings and its quiet note sit here too, and so does the whole minimap
+  column down the right of a long sheet: its sunken ground, the box over the part you are looking
+  at, one tint per kind of event (trigger, every-tick, function, group, comment, script block, the
+  rest, and a disabled row), the marks for a bookmark and a flagged row, and the band a group
+  paints from its own row to its last.
 - **Manual pages** (`EventSheetManualStyle`): the page's paper, its headings, its quiet words,
   the highlight behind a search hit, the contents pill for the page you are on, a deprecation
   note, and the rule under a table's header.
 
 ![The Theme Editor's token form scrolled to its new groups: Bars around the sheet, with the Object bar's wash and grips, the status message and the red it turns, the unsaved dot and the file path - and Manual pages below it, where a token left clear means "follow the editor"](images/theme-editor-new-groups.png)
+
+![The Theme Editor open on the Dracula preset, scrolled to the Bars around the sheet card: the Object bar's rows, the Project bar's heading and note, the status strip, and the minimap column's tints - each swatch carrying Dracula's own palette rather than the plugin's default](images/theme-editor-token-rows.png)
 
 Every Manual token starts with **no opinion** (alpha zero), which means "follow the editor".
 A reader who never picks a theme keeps help that looks like the rest of their Godot editor;
@@ -174,6 +181,12 @@ to that chip). And the bundled **High Contrast** preset is required by the suite
 for every theme token - a token added tomorrow that quietly kept the plugin's own dark default is
 exactly wrong on the one theme a reader may be depending on to see the sheet at all.
 
+Every other bundled preset is held to the same promise, in the two halves a preset is made of. The
+sheet and its cells are authored: each preset's own file has to state every colour there. The
+reading marks, the bars around the sheet and the Manual are derived: each preset either states them
+or carries exactly what the shared rule below derives for it, so a new colour reaches all ten
+presets the day it ships instead of leaving nine of them in someone else's palette.
+
 ## Bringing an older preset forward
 
 A preset is a `.tres` written against the tokens that existed the day it was saved, so a
@@ -188,9 +201,9 @@ bundled `.tres`:
 ```
 
 It is idempotent, so run it again after any token addition. Your own preset picks the new
-tokens up the same way: load it, run the pass, save. A preset with a real opinion about a
-token simply sets it afterwards - the rule only decides what "no opinion" looks like, and
-it decides it in your palette rather than in EventForge's.
+tokens up the same way: load it, run the pass, save. The pass fills only tokens your file
+never stated - the rule decides what "no opinion" looks like, and it decides it in your
+palette rather than in EventForge's, while every value you did write is left alone.
 
 ## Theme token spec
 

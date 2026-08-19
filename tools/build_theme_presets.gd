@@ -115,6 +115,13 @@ func _build_style(palette: Dictionary) -> EventSheetEditorStyle:
 	event_style.ace_expression_badge_background_color = bg.lerp(signature, 0.28)
 	event_style.verb_chip_background_color = surface
 	event_style.verb_chip_foreground_color = fg
+	# The event-number margin and the ✗ on an inverted condition sit OUTSIDE the lanes, so a preset
+	# that skips them keeps EventForge's own near-black rail and its own red on a palette that asked
+	# for neither. The margin is the sheet sunk a step, its numbers are the palette's comment tone,
+	# and the ✗ is a red pulled a fifth of the way toward the palette's signature so it belongs here.
+	event_style.gutter_background_color = bg.darkened(0.18) if dark else bg.darkened(0.06)
+	event_style.gutter_text_color = comment
+	event_style.invert_marker_color = Color("#e05c5c").lerp(signature, 0.20)
 
 	var condition_style: EventSheetElementStyle = EventSheetElementStyle.new()
 	condition_style.text_color = cool

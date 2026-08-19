@@ -39,19 +39,32 @@ static func _test_high_contrast_covers_every_token() -> bool:
 	ok = _check("the High Contrast preset loads", preset != null, true) and ok
 	if preset == null:
 		return ok
-	var source: String = FileAccess.get_file_as_string(HIGH_CONTRAST_PATH)
+	# A .tres omits a property it never set, so the FILE - not the loaded resource - is what proves
+	# the preset had an opinion. A token that is absent here is a token the reader gets in
+	# EventForge's own dark, on a theme they chose to be able to see at all.
+	#
+	# Read block by block, and anchored: a whole-file search for "badge_background_color = " is also
+	# answered by "group_badge_background_color = ", which is how this sweep once reported the action
+	# cells' badge as dressed while it was still wearing the plugin's own grey.
+	var stated_by_script: Dictionary = {}
+	for block: Dictionary in EventSheetThemePresets.stated_tokens(HIGH_CONTRAST_PATH):
+		var script_name: String = str(block.get("script"))
+		var seen: Array = stated_by_script.get(script_name, [] as Array)
+		for stated_name: String in block.get("tokens", []):
+			if not seen.has(stated_name):
+				seen.append(stated_name)
+		stated_by_script[script_name] = seen
 	var missing: Array[String] = []
 	for section: Resource in [preset, preset.get_event_style(), preset.get_condition_style(),
 			preset.get_action_style(), preset.get_reading_style(), preset.get_chrome_style(),
 			preset.get_manual_style()]:
 		if section == null:
 			continue
+		var section_script: Script = section.get_script() as Script
+		var stated: Array = stated_by_script.get(section_script.resource_path.get_file(), [] as Array)
 		for token: Dictionary in EventSheetThemeEditor.editable_tokens(section):
 			var token_name: String = str(token.get("name"))
-			# A .tres omits a property it never set, so the FILE - not the loaded resource - is
-			# what proves the preset had an opinion. A token that is absent here is a token the
-			# reader gets in EventForge's own dark, on a theme they chose to be able to see at all.
-			if not source.contains("%s = " % token_name):
+			if not stated.has(token_name):
 				missing.append(token_name)
 	ok = _check("High Contrast has a value for every theme token (missing: %s)" % str(missing),
 		missing, [] as Array[String]) and ok

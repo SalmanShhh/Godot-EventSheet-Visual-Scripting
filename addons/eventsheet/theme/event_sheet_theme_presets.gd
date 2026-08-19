@@ -37,6 +37,58 @@ static func list_presets() -> Array[Dictionary]:
 	return presets
 
 
+## Which tokens a preset FILE actually states, block by block.
+##
+## A `.tres` omits every property whose value equals the script default, so the loaded resource
+## cannot tell "this theme chose that colour" from "this theme never heard of that token". The file
+## can, and that difference is the whole question when a new token ships: a preset that never stated
+## it is wearing the plugin's own dark default, which is exactly wrong on a pale theme.
+##
+## Returns one entry per resource block, in file order:
+##   [{"script": "event_sheet_reading_style.gd", "tokens": ["primary_text_color", ...]}, ...]
+## The condition and action styles share one script, so they arrive as two entries with the same
+## script name - callers that care which is which read them in file order.
+##
+## Matching is per block and anchored at the start of the line, deliberately: a whole-file substring
+## search for "text_color = " is also satisfied by "comment_text_color = ", which is how a coverage
+## sweep can report a token as covered that no preset ever set.
+static func stated_tokens(preset_path: String) -> Array[Dictionary]:
+	var blocks: Array[Dictionary] = []
+	var script_by_id: Dictionary = {}
+	var current: Dictionary = {}
+	for raw_line: String in FileAccess.get_file_as_string(preset_path).split("\n"):
+		var line: String = raw_line.strip_edges(true, false)
+		if line.begins_with("[ext_resource"):
+			var path_value: String = _quoted_value(line, "path=\"")
+			var id_value: String = _quoted_value(line, "id=\"")
+			if not id_value.is_empty():
+				script_by_id[id_value] = path_value.get_file()
+			continue
+		if line.begins_with("[sub_resource") or line.begins_with("[resource]"):
+			current = {"script": "", "tokens": [] as Array[String]}
+			blocks.append(current)
+			continue
+		if current.is_empty() or not line.contains(" = "):
+			continue
+		var token_name: String = line.get_slice(" = ", 0)
+		if token_name == "script":
+			current["script"] = str(script_by_id.get(_quoted_value(line, "ExtResource(\""), ""))
+			continue
+		var tokens: Array[String] = current["tokens"]
+		tokens.append(token_name)
+	return blocks
+
+
+## The text between a marker's quote and the next one ("" when the marker is absent).
+static func _quoted_value(line: String, marker: String) -> String:
+	var start: int = line.find(marker)
+	if start < 0:
+		return ""
+	start += marker.length()
+	var end: int = line.find("\"", start)
+	return line.substr(start, end - start) if end > start else ""
+
+
 ## Turns "gruvbox_dark_theme.tres" into "Gruvbox Dark".
 static func _humanize(file_name: String) -> String:
 	var base: String = file_name.get_basename()

@@ -108,6 +108,17 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ### Changed
 
+- **Every bundled theme now has an opinion about every colour, not just High Contrast.** The nine
+  other presets had drifted up to fifty tokens behind the sheet: the minimap column, the Project
+  bar, the debugger accent, the runtime-error strip, the event-number margin and the ✗ on an
+  inverted condition were all still painted in EventForge's own dark on a Nord, a Gruvbox or a
+  Solarized Light sheet. The generated presets learned the margin and the ✗ from their own palette,
+  the three hand-written ones and Mockup Slate state the sheet colours they had been leaving to the
+  defaults, and the shared derivation rule fills the rest for all ten. **`tools/backfill_theme_tokens.gd`
+  no longer overwrites a stated token** - it fills only what a preset never had an opinion about,
+  which is what saves High Contrast's hand-picked minimap hues from being flattened into the general
+  rule. A new `theme_presets_coverage_test` holds all ten to the same promise from now on, and the
+  Theme Editor no longer opens an empty card for a section with nothing in it to edit.
 - **Six shipped packs called their own actions \"verbs\"** in text a reader sees (Canvas Surface,
   Named Scenes, Encounter Timeline, Priced Table, StatForge, Drawing Canvas, and Nav Agent 3D's
   description). Reworded to action; the packs are rebuilt and all 91 now pass the reading check.

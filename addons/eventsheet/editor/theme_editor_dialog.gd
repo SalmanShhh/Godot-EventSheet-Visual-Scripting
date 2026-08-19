@@ -536,9 +536,15 @@ func _rebuild_detail_form() -> void:
 
 ## One labeled control per editable token, reflectively.
 func _build_section(form: VBoxContainer, title: String, style_resource: Resource) -> void:
+	# A section with nothing to edit is not shown at all. The top-level style carries only the
+	# sub-styles themselves, so its card came up empty under a heading that promised hover and
+	# selection colours - a designer reasonably read that as "the tokens failed to load".
+	var section_tokens: Array[Dictionary] = editable_tokens(style_resource)
+	if section_tokens.is_empty():
+		return
 	# Each style section is a themed inset card with an accent header (matches the picker's panels).
 	var section_box: VBoxContainer = EventSheetPopupUI.form_box()
-	for token: Dictionary in editable_tokens(style_resource):
+	for token: Dictionary in section_tokens:
 		var token_name: String = str(token.get("name"))
 		var description: String = _token_description(token_name)
 		var row: HBoxContainer = HBoxContainer.new()
