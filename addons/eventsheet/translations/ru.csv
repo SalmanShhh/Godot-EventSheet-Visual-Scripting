@@ -2126,3 +2126,11 @@ not in %s,нет в %s
 Nothing in this sheet names an object yet.,Пока ничто в этом листе не называет объект.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,"Этот скрипт ещё не на сцене - перетащите его на узел в доке «Сцена», и его объекты появятся здесь."
 {n} scripts,{n} скриптов
+Begin undoable action {name},Начать отменяемое действие {name}
+Commit undoable action,Зафиксировать отменяемое действие
+Add do step: set {object}'s {member} to {value},Добавить шаг выполнения: установить {member} объекта {object} в {value}
+Add undo step: set {object}'s {member} to {value},Добавить шаг отмены: установить {member} объекта {object} в {value}
+Add do step: call {name},Добавить шаг выполнения: вызвать {name}
+Add undo step: call {name},Добавить шаг отмены: вызвать {name}
+Add do step: keep {object},Добавить шаг выполнения: сохранить {object}
+in the editor too,также в редакторе

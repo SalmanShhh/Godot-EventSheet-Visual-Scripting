@@ -2126,3 +2126,11 @@ not in %s,nicht in %s
 Nothing in this sheet names an object yet.,Noch nennt nichts in diesem Blatt ein Objekt.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,"Dieses Skript liegt noch auf keiner Szene - ziehen Sie es im Szenen-Dock auf einen Node, dann erscheinen seine Objekte hier."
 {n} scripts,{n} Skripte
+Begin undoable action {name},Rückgängig-Aktion {name} beginnen
+Commit undoable action,Rückgängig-Aktion abschließen
+Add do step: set {object}'s {member} to {value},Ausführen-Schritt hinzufügen: {member} von {object} auf {value} setzen
+Add undo step: set {object}'s {member} to {value},Rückgängig-Schritt hinzufügen: {member} von {object} auf {value} setzen
+Add do step: call {name},Ausführen-Schritt hinzufügen: {name} aufrufen
+Add undo step: call {name},Rückgängig-Schritt hinzufügen: {name} aufrufen
+Add do step: keep {object},Ausführen-Schritt hinzufügen: {object} behalten
+in the editor too,auch im Editor

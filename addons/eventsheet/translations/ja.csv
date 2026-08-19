@@ -2126,3 +2126,11 @@ not in %s,%s にありません
 Nothing in this sheet names an object yet.,このシートはまだどのオブジェクトも指していません。
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,このスクリプトはまだシーンに置かれていません。シーンドックのノードにドロップすると、そのオブジェクトがここに表示されます。
 {n} scripts,{n} 個のスクリプト
+Begin undoable action {name},元に戻せる操作 {name} を開始
+Commit undoable action,元に戻せる操作を確定
+Add do step: set {object}'s {member} to {value},実行ステップを追加: {object} の {member} を {value} にする
+Add undo step: set {object}'s {member} to {value},元に戻すステップを追加: {object} の {member} を {value} にする
+Add do step: call {name},実行ステップを追加: {name} を呼び出す
+Add undo step: call {name},元に戻すステップを追加: {name} を呼び出す
+Add do step: keep {object},実行ステップを追加: {object} を保持する
+in the editor too,エディタでも実行

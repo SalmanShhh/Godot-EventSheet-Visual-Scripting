@@ -2126,3 +2126,11 @@ not in %s,不在 %s 中
 Nothing in this sheet names an object yet.,这张事件表还没有提到任何对象。
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,该脚本还没有放到任何场景上 - 在场景面板中把它拖到某个节点上，它的对象就会出现在这里。
 {n} scripts,{n} 个脚本
+Begin undoable action {name},开始可撤销操作 {name}
+Commit undoable action,提交可撤销操作
+Add do step: set {object}'s {member} to {value},添加执行步骤：把 {object} 的 {member} 设为 {value}
+Add undo step: set {object}'s {member} to {value},添加撤销步骤：把 {object} 的 {member} 设为 {value}
+Add do step: call {name},添加执行步骤：调用 {name}
+Add undo step: call {name},添加撤销步骤：调用 {name}
+Add do step: keep {object},添加执行步骤：保留 {object}
+in the editor too,在编辑器中也运行

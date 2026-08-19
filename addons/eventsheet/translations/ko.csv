@@ -2126,3 +2126,11 @@ not in %s,%s에 없음
 Nothing in this sheet names an object yet.,이 시트는 아직 어떤 오브젝트도 가리키지 않습니다.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,이 스크립트는 아직 씬에 올려져 있지 않습니다. 씬 독의 노드에 끌어다 놓으면 그 오브젝트가 여기에 나타납니다.
 {n} scripts,스크립트 {n}개
+Begin undoable action {name},되돌릴 수 있는 작업 {name} 시작
+Commit undoable action,되돌릴 수 있는 작업 확정
+Add do step: set {object}'s {member} to {value},실행 단계 추가: {object}의 {member}를 {value}로 설정
+Add undo step: set {object}'s {member} to {value},되돌리기 단계 추가: {object}의 {member}를 {value}로 설정
+Add do step: call {name},실행 단계 추가: {name} 호출
+Add undo step: call {name},되돌리기 단계 추가: {name} 호출
+Add do step: keep {object},실행 단계 추가: {object} 유지
+in the editor too,에디터에서도 실행

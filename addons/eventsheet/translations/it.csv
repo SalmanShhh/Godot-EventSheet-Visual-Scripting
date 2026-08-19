@@ -2126,3 +2126,11 @@ not in %s,non è in %s
 Nothing in this sheet names an object yet.,Niente in questo foglio nomina ancora un oggetto.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,Questo script non è ancora su una scena - trascinalo su un nodo nel pannello Scena e i suoi oggetti compariranno qui.
 {n} scripts,{n} script
+Begin undoable action {name},Avvia azione annullabile {name}
+Commit undoable action,Conferma azione annullabile
+Add do step: set {object}'s {member} to {value},Aggiungi passo esegui: imposta {member} di {object} su {value}
+Add undo step: set {object}'s {member} to {value},Aggiungi passo annulla: imposta {member} di {object} su {value}
+Add do step: call {name},Aggiungi passo esegui: chiama {name}
+Add undo step: call {name},Aggiungi passo annulla: chiama {name}
+Add do step: keep {object},Aggiungi passo esegui: mantieni {object}
+in the editor too,anche nell'editor

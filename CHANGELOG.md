@@ -24,6 +24,42 @@
   none of them is the `.tscn`, so nothing is ever written to it; double-click an object bar to open
   that script as its own editable sheet. One script is read per frame behind the progress strip, so a
   big scene never freezes the editor.
+### Added - an Editor object, so a tool script reads like a sheet
+
+No other event-sheet editor lets you write tools for the editor itself; Godot does. The editor is now
+an object the way System is - it is opened, it is drawn on, it is given docks and menu items, and it
+answers questions about what is selected - so an opened `@tool` script reads in the editor's own
+words instead of as a pile of raw handlers and raw calls.
+
+- **The Editor object.** New vocabulary, filed under Editor Tools so the whole category now reads
+  under one object name: the triggers **On plugin enabled / disabled**, **On object selected**,
+  **On draw over 2D viewport**, **On 2D viewport input** and **On draw gizmo**, the actions
+  **Add / Remove Tools Menu Item**, **Add / Remove Dock**, **Add / Remove Object Type**,
+  **Add / Remove Inspector Plugin** and **Redraw Viewport Overlays**, and the **Editor Settings** and
+  **Undo History** expressions. Everything the shipped Editor Tools rows already did now wears
+  "Editor" in its object cell too.
+- **A plugin's `_enter_tree` is not "on created".** On an EditorPlugin sheet the two tree callbacks
+  read as the plugin being switched on and off, which is what they mean there. Same emitted function
+  either way, so nothing about the file moves.
+- **The editor's own expressions, named.** `Editor.SelectedObjects`, `Editor.OpenLayout`,
+  `Editor.Settings` and `Editor.UndoHistory` instead of the `EditorInterface` calls behind them - so a
+  tool's selection walk reads `System ▸ For each n in Editor.SelectedObjects`.
+- **Undo steps as actions on a variable.** `var ur = get_undo_redo()` declares as
+  `Local object ur = Editor.UndoHistory`, and every `ur.xxx(...)` line reads Object then Verb like
+  every other row: `ur ▸ Begin undoable action "Align Left"`,
+  `ur ▸ Add do step: set n's x to left`, `ur ▸ Add undo step: ...`, `ur ▸ Add do step: call Refresh`,
+  `ur ▸ Commit undoable action`. Godot's `"position:x"` addressing stays out of the sentence: the
+  object it belongs to is already named on the row.
+- **The chip that says what `@tool` means.** A per-frame event on a tool sheet wears an
+  **in the editor too** chip - it is already running, while you edit, before the game exists.
+- **The Editor object is scoped to tool sheets.** The picker offers it on a sheet that runs in the
+  editor and nowhere else, the way it scopes Functions to the open script.
+- **Three more Doctor notes on a tool:** reaching outside the open layout through `get_tree()`,
+  destroying while editing with no undo step, and ticking in the editor with no guard to switch it
+  off.
+
+Display only, as always: the byte round-trip of an opened `.gd` is unchanged and gated for an opened
+EditorPlugin and an opened EditorScript, and the exact GDScript is still one hover away.
 
 ### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words
 
