@@ -2698,3 +2698,12 @@ Godot's words,Формулировка Godot
 Show events,Показать события
 Follow Scene Selection,Следовать выбору в сцене
 Filter events to %s,Показать только события про %s
+Debugger,Отладчик
+Debugger…,Отладчик…
+Inspect,Осмотр
+Watch,Наблюдение
+Breakpoints,Точки останова
+Instance values,Значения экземпляра
+Per fire,За одно срабатывание
+Share of run,Доля прогона
+Fires,Срабатываний

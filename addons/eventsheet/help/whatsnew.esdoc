@@ -6,6 +6,24 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - one debugger, four tabs
+
+- **View ▸ Debugger.** Live Values, the Watch box, the Event Trace and F9 breakpoints were four
+  panels and toggles across two menus; they are now also one window with the four names a reader
+  arrives looking for. **Inspect**: every object this sheet talks about, its running instances, and
+  the picked one's variables - editable straight into the running game - beside its behaviors' own
+  values. **Watch**: the same list the Live Values window keeps, shared rather than duplicated.
+  **Profile**: time per event, busiest first, with each row's share of the run. **Breakpoints**:
+  the F9 rows with enable / disable / jump, and where the run is paused right now. Nothing is drawn
+  that no run has reported - an empty tab says which stream to arm instead of showing zeroes.
+- **The Event Trace now carries times.** A traced compile stamps one microsecond reading beside
+  every fire it records and marks, once per frame, how many fires had happened by the top of that
+  frame. An event's cost is its SELF time: how long it ran before the next event started in the
+  same frame, so a parent is charged only for the part before its first sub-event. The last event
+  of a frame has no successor there, so it is counted but not timed, and reads \"-\" rather than
+  \"0.00\" - the frame ruler is what makes that distinction possible at all. New theme token:
+  `debugger_accent_color`.
+
 ### Added - the Scene dock and the sheet share one selection
 
 - **Two-way selection follow.** Picking a node in the Scene dock highlights its entry on the Object

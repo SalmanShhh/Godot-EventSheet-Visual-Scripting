@@ -290,6 +290,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"disabled_row_color": "The scrim over a row that is switched off.",
 	"breakpoint_color": "The breakpoint dot in the event-number margin.",
 	"runtime_error_color": "The strip under the sheet that says what just went wrong in the running game, in the row's own words.",
+	"debugger_accent_color": "The Debugger window's accent - the busiest rows of its Profile tab.",
 	"bookmark_color": "The bookmark pennant in the event-number margin.",
 	"event_number_rail_color": "The hairline down the right edge of the event-number margin.",
 	"indent_guide_color": "The faint stop that marks each level of indent.",

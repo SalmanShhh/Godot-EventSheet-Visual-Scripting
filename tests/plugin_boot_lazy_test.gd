@@ -81,7 +81,8 @@ const FORBIDDEN := {
 	# before the workspace opens), so it is a boot file too: the hit-count store it resets on every
 	# new Run is reached by path, never named.
 	"res://addons/eventsheet/editor/live_values_debugger.gd": [
-		"EventSheetTraceHitCounts", "EventSheetWhyPanel", "EventSheetViewport",
+		"EventSheetTraceHitCounts", "EventSheetTraceTimings", "EventSheetWhyPanel",
+		"EventSheetViewport",
 	],
 	# The import hook is attached in _enter_tree like the export ones, so it is a boot file too. It
 	# deliberately carries no class_name and names no plugin class; without a row here, nothing said so.

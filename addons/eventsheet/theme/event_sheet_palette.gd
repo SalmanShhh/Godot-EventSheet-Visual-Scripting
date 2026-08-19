@@ -57,6 +57,9 @@ const COLOR_BREAKPOINT = Color("#f26d7d")
 ## than the breakpoint red on purpose - a breakpoint is a place you chose, this is a thing that
 ## went wrong.
 const COLOR_RUNTIME_ERROR = Color("#ff8a5c")
+## The Debugger window's accent: the busiest rows of the Profile tab, and the marks that say a
+## number came from a run rather than from the sheet.
+const COLOR_DEBUGGER_ACCENT = Color("#4fd6ff")
 const COLOR_BOOKMARK = Color("#e8c558")
 const COLOR_DISABLED = Color(0.0, 0.0, 0.0, 0.35)
 const COLOR_GROUP_BG = Color("#222139")

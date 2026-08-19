@@ -2698,3 +2698,12 @@ Godot's words,Godot 的原文
 Show events,显示事件
 Follow Scene Selection,跟随场景选择
 Filter events to %s,只显示关于 %s 的事件
+Debugger,调试器
+Debugger…,调试器…
+Inspect,查看
+Watch,监视
+Breakpoints,断点
+Instance values,实例的值
+Per fire,每次触发
+Share of run,占本次运行的比例
+Fires,触发次数

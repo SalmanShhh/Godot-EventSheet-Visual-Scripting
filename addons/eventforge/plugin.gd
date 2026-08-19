@@ -379,6 +379,8 @@ func _ensure_editor() -> void:
 		_live_values_debugger.values_received.connect(editor.update_live_values)
 	if _live_values_debugger != null and editor.has_method("update_fired_events"):
 		_live_values_debugger.fired_events_received.connect(editor.update_fired_events)
+	if _live_values_debugger != null and editor.has_method("update_event_times"):
+		_live_values_debugger.event_times_received.connect(editor.update_event_times)
 	if _live_values_debugger != null and editor.has_method("reveal_paused_row"):
 		_live_values_debugger.paused_row_received.connect(editor.reveal_paused_row)
 	if _live_values_debugger != null and editor.has_method("set_live_values_debugger"):

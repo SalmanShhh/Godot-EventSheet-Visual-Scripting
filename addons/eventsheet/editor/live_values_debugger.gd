@@ -11,6 +11,10 @@ signal values_received(values: Dictionary)
 ## Emitted whenever a running game streams the set of event UIDs that fired since the last tick
 ## (debugging rung 3 - live event trace). The editor highlights those rows.
 signal fired_events_received(uids: PackedStringArray)
+## Emitted whenever a running game streams the TIMES beside the fires it just reported (the
+## Profile tab's numbers): {stamps, markers, flush} - one microsecond stamp per fire, the fire-count
+## at the top of each frame in the window, and the moment the window was sent.
+signal event_times_received(window: Dictionary)
 ## Emitted when the running game is about to pause at a sheet breakpoint: the generated code
 ## announces its row uid right before the `breakpoint` statement (core debugger messages never reach
 ## editor plugins, so the code reports its own location), and the editor reveals that row.
@@ -40,6 +44,10 @@ func _setup_session(session_id: int) -> void:
 	var counts: GDScript = load("res://addons/eventsheet/editor/trace_hit_counts.gd")
 	if counts != null:
 		counts.reset()
+	# The timings are the other half of the same tally and belong to the same Run.
+	var timings: GDScript = load("res://addons/eventsheet/editor/trace_timings.gd")
+	if timings != null:
+		timings.reset()
 	var session: EditorDebuggerSession = get_session(session_id)
 	if session != null and not session.stopped.is_connected(_on_session_stopped):
 		session.stopped.connect(_on_session_stopped)
@@ -59,6 +67,9 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 	if message == "eventsheets:fired_events":
 		fired_events_received.emit(parse_fired(data))
 		return true
+	if message == "eventsheets:event_times":
+		event_times_received.emit(parse_event_times(data))
+		return true
 	if message == "eventsheets:paused_row":
 		paused_row_received.emit(parse_paused(data))
 		return true
@@ -73,6 +84,30 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 ## without an editor (EditorDebuggerPlugin cannot be instantiated headless).
 static func parse_paused(data: Array) -> String:
 	return str(data[0]) if data.size() > 0 else ""
+
+
+## The event-times payload: [stamps, markers, flush_usec] -> {stamps, markers, flush}. Each part
+## is defaulted rather than required, so a debug compile from before the timings existed - or a
+## truncated message - degrades to "calls, no times" instead of erroring mid-session. Static like
+## the other parsers so tests drive it without an editor.
+static func parse_event_times(data: Array) -> Dictionary:
+	var stamps: PackedInt64Array = PackedInt64Array()
+	var markers: PackedInt32Array = PackedInt32Array()
+	if data.size() > 0 and data[0] is Array:
+		for stamp: Variant in (data[0] as Array):
+			stamps.append(int(stamp))
+	elif data.size() > 0 and data[0] is PackedInt64Array:
+		stamps = data[0]
+	if data.size() > 1 and data[1] is Array:
+		for marker: Variant in (data[1] as Array):
+			markers.append(int(marker))
+	elif data.size() > 1 and data[1] is PackedInt32Array:
+		markers = data[1]
+	return {
+		"stamps": stamps,
+		"markers": markers,
+		"flush": int(data[2]) if data.size() > 2 else 0,
+	}
 
 
 ## The fired-events payload is the PackedStringArray of event UIDs (received as an Array).

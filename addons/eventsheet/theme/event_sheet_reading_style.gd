@@ -90,6 +90,8 @@ extends Resource
 ## The runtime-error strip under the sheet: the dot, the sentence, and the failure re-said in the
 ## row's own words while the game is running.
 @export var runtime_error_color: Color = EventSheetPalette.COLOR_RUNTIME_ERROR
+## The Debugger window's accent: the busiest rows of its Profile tab.
+@export var debugger_accent_color: Color = EventSheetPalette.COLOR_DEBUGGER_ACCENT
 @export var bookmark_color: Color = EventSheetPalette.COLOR_BOOKMARK
 @export var event_number_rail_color: Color = EventSheetPalette.COLOR_GUTTER_RAIL
 

@@ -75,6 +75,7 @@ static func fill_derived_tokens(style: EventSheetEditorStyle) -> EventSheetEdito
 	reading.disabled_row_color = Color(ink.r, ink.g, ink.b, 0.35)
 	reading.breakpoint_color = flag_red
 	reading.runtime_error_color = _warning_for(background).lerp(flag_red, 0.5)
+	reading.debugger_accent_color = reading.firing_stripe_color
 	reading.bookmark_color = _warning_for(background)
 	reading.event_number_rail_color = event_style.row_border_color
 

@@ -2698,3 +2698,12 @@ Godot's words,Godot の原文
 Show events,イベントを表示
 Follow Scene Selection,シーンの選択に追従
 Filter events to %s,イベントを %s に絞り込む
+Debugger,デバッガ
+Debugger…,デバッガ…
+Inspect,インスペクト
+Watch,ウォッチ
+Breakpoints,ブレークポイント
+Instance values,インスタンスの値
+Per fire,1 回あたり
+Share of run,実行全体に占める割合
+Fires,発火回数

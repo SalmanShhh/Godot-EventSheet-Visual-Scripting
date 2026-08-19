@@ -579,6 +579,18 @@ func build(root: Node) -> void:
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9801:
 			_dock._toggle_follow_scene_selection(view_popup))
+	# ── Debugger (appended block - keep together) ──────────────────────────────────────────────
+	# One window over four seams that already shipped: Inspect (the Live Values stream, per object),
+	# Watch (the same watch list this dock already keeps), Profile (the Event Trace timings) and
+	# Breakpoints (the F9 rows). It sits on View rather than on Tools because it SHOWS rather than
+	# switches - the three Tools toggles that arm the streams stay exactly where they were. Id 9802
+	# is clear of every block above.
+	view_popup.add_item("Debugger…", 9802)
+	view_popup.set_item_tooltip(view_popup.get_item_index(9802),
+		"One window with four tabs: Inspect (every object's live values, editable), Watch, Profile (time per event) and Breakpoints. Needs a debug run - Tools ▸ Live Values and Tools ▸ Event Trace arm the streams it reads.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 9802:
+			_dock.open_debugger())
 
 
 ## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes

@@ -226,17 +226,35 @@ func _fill_live_value_item(item: TreeItem, value: Variant) -> void:
 		item.set_editable(1, true)
 
 
+## The watch list, shared. The Debugger window's Watch tab and this window are two views of ONE
+## list on purpose: two lists that quietly disagree about what is being watched is exactly the bug
+## a reader would never think to look for.
+func watches() -> Array[String]:
+	return _watches.duplicate()
+
+
+## Adds an expression from anywhere (this window's box, or the Debugger's). Duplicates and blanks
+## are dropped rather than added twice.
+func add_watch(expression: String) -> void:
+	var wanted: String = expression.strip_edges()
+	if wanted.is_empty() or _watches.has(wanted):
+		return
+	_watches.append(wanted)
+	_refresh_watches(_last_values)
+
+
+func remove_watch(expression: String) -> void:
+	if _watches.has(expression):
+		_watches.erase(expression)
+		_refresh_watches(_last_values)
+
+
 ## Adds the input expression to the watch list and re-evaluates against the latest frame.
 func _add_watch_from_input() -> void:
 	if watch_input == null:
 		return
-	var expression: String = watch_input.text.strip_edges()
-	if expression.is_empty() or _watches.has(expression):
-		watch_input.clear()
-		return
-	_watches.append(expression)
+	add_watch(watch_input.text)
 	watch_input.clear()
-	_refresh_watches(_last_values)
 
 
 ## Double-click a watch row to remove it.
@@ -247,9 +265,8 @@ func _remove_selected_watch() -> void:
 	if selected == null:
 		return
 	var expression: Variant = selected.get_metadata(0)
-	if expression is String and _watches.has(expression):
-		_watches.erase(expression)
-		_refresh_watches(_last_values)
+	if expression is String:
+		remove_watch(expression as String)
 
 
 ## The run ended: the last streamed frame is history now, not live. Anything that reads

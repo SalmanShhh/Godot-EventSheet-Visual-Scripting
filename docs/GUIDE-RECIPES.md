@@ -99,6 +99,20 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 
 ![The event trace pulse at three intensities: just fired, mid-fade, and almost gone](images/live-pulse.png)
 
+**One window, four tabs.** **View ▸ Debugger** opens everything below in one place, with the four
+names you are probably looking for: **Inspect** (every object this sheet talks about, its running
+instances, and that instance's variables - editable straight into the running game - beside its
+behaviors' own values), **Watch** (the same watch list the Live Values window keeps, not a second
+one), **Profile** (time per event, busiest first) and **Breakpoints** (the F9 rows, with
+enable / disable / jump, and where the run is paused right now). Every tab is a view over a stream
+you arm from Tools, and an empty tab says which one to turn on rather than showing a table of
+zeroes.
+
+A word about the Profile numbers, because a profiler that lies is worse than none: a fire is timed
+by how long it ran before the *next* event started in the same frame - its **self time**, so a
+parent event is charged only for the part before its first sub-event. The last event of a frame has
+no successor in that frame, so it is **counted but not timed** and reads `-` rather than `0.00`.
+
 When something misbehaves, you have five tools - no `print()` required.
 
 - **Check the sheet first.** Tools ▸ **Check Sheet for Errors** lints every ƒx expression and

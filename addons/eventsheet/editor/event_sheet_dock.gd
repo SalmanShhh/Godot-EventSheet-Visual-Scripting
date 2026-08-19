@@ -2840,6 +2840,42 @@ func set_live_values_debugger(debugger: EventSheetLiveValuesDebugger) -> void:
 ## reader is most likely to hit, since you stop the game and THEN ask why.
 func _on_debug_session_ended() -> void:
 	_ensure_live_values_panel().clear_live_values()
+	if _debugger_window != null:
+		_debugger_window.clear_live_values()
+
+
+# ── The Debugger window (Inspect · Watch · Profile · Breakpoints) ───────────────────────
+## One window over four seams that already shipped. Built the first time it is asked for and kept
+## afterwards, like every other detached window here.
+var _debugger_window: EventSheetDebuggerWindow = null
+
+
+func _ensure_debugger_window() -> EventSheetDebuggerWindow:
+	if _debugger_window == null:
+		_debugger_window = EventSheetDebuggerWindow.new(self)
+	return _debugger_window
+
+
+## View ▸ Debugger, and the sheet's Debug-layout gesture. `tab` names which tab to land on, so
+## arming the debugger and running can open straight onto Profile while the menu opens it where the
+## reader left it.
+func open_debugger(tab: String = "") -> void:
+	_ensure_debugger_window().open(tab)
+
+
+## Event-trace timings sink (wired by the plugin): the stamps beside the fires reported a moment
+## ago. Kept beside the hit counts, which are the other half of the same tally - the fired-events
+## message always arrives first, so the uids of THIS window are the ones just counted.
+func update_event_times(window: Dictionary) -> void:
+	EventSheetTraceTimings.note_window(_last_fired_uids, window.get("stamps", PackedInt64Array()),
+		window.get("markers", PackedInt32Array()), int(window.get("flush", 0)))
+	if _debugger_window != null:
+		_debugger_window.refresh()
+
+
+## The uids of the last streamed trace window, held for exactly as long as it takes the timings
+## message that belongs to them to arrive (the same flush sends both, fires first).
+var _last_fired_uids: PackedStringArray = PackedStringArray()
 
 
 func _toggle_live_values() -> void:
@@ -2852,6 +2888,8 @@ func _ensure_live_values_window() -> void:
 
 func update_live_values(values: Dictionary) -> void:
 	_ensure_live_values_panel().update_values(values)
+	if _debugger_window != null:
+		_debugger_window.update_values(values)
 
 
 ## Paused-at-row sink (wired by the plugin): the running game announced it is pausing at a sheet
@@ -3006,6 +3044,9 @@ func update_fired_events(uids: PackedStringArray) -> void:
 	# before it is deduped into the highlight. Counting always; DRAWING only when the reader
 	# ticks View > Row Hit Counts, or hovers one event number.
 	EventSheetTraceHitCounts.note_fired(uids)
+	# Held for the timings message of the same flush, which arrives right after this one and needs
+	# to know WHICH fires its stamps belong to.
+	_last_fired_uids = uids
 	for pane: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if pane != null:
 			pane.set_fired_events(uids)
@@ -3096,9 +3137,14 @@ func _toggle_row_hit_counts(view_popup: PopupMenu) -> void:
 ## again and watch" gesture - reset, trigger the thing, see exactly which rows moved).
 func _reset_row_hit_counts() -> void:
 	EventSheetTraceHitCounts.reset()
+	# The timings are the other half of the same tally: a profile kept from before the reset would
+	# be answering about the run the reader just said they were done with.
+	EventSheetTraceTimings.reset()
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
 			view.queue_redraw()
+	if _debugger_window != null:
+		_debugger_window.refresh()
 	_set_status("Hit counts reset - counting starts again from the next streamed window.")
 
 
