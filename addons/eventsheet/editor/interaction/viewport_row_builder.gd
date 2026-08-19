@@ -10008,7 +10008,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 	"fps_look": {
 		"words": "First-person look",
 		"adoptable": "fps_controller",
-		"ace_ids": ["Core/MouseLook", "Core/LookAt3D", "Core/ObjectDirection"]
+		"ace_ids": ["Core/MouseLook", "Core/LookAt3D", "Core/ObjectForward"]
 	},
 	"background": {
 		"words": "Background work",

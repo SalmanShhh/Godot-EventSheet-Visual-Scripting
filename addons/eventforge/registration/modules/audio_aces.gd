@@ -131,4 +131,21 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"Audio", "Set volume to {level} (0 to 1)", "AudioStreamPlayer")
 		.described("Sets how loud this player is from a 0-to-1 level, with the decibel conversion done for you."))
 
+	# ── U12 - a sound heard FROM a place, and the two faders a music change is made of ──
+	descriptors.append(F.make_descriptor("Core", "AudioSetHearingDistance", "Set Hearing Distance", ACEDescriptor.ACEType.ACTION,
+		"max_distance = {value}", "", [F.make_param("value", "float", "600.0", "Distance", "How far away the sound can still be heard at all.", "expression")],
+		"Audio", "Set hearing distance to {value}", "AudioStreamPlayer2D")
+		.described("Sets how far a positional sound carries. Past this distance it is silent."))
+	descriptors.append(F.make_descriptor("Core", "AudioSetFalloff", "Set Falloff", ACEDescriptor.ACEType.ACTION,
+		"attenuation = {value}", "", [F.make_param("value", "float", "1.0", "Falloff", "How fast the sound fades with distance: 1 is even, higher drops off sooner.", "expression")],
+		"Audio", "Set falloff to {value}", "AudioStreamPlayer2D")
+		.described("Sets how quickly a positional sound fades as the listener moves away."))
+	descriptors.append(F.make_descriptor("Core", "AudioCrossfade", "Crossfade", ACEDescriptor.ACEType.ACTION,
+		"{from}.volume_db = linear_to_db(1.0 - {amount})\n{to}.volume_db = linear_to_db({amount})", "",
+		[F.make_param("from", "String", "$MusicA", "From", "The player fading out.", "expression"),
+			F.make_param("to", "String", "$MusicB", "To", "The player fading in.", "expression"),
+			F.make_param("amount", "String", "0.5", "Amount", "0 is all the first track, 1 is all the second - drive it from a timer.", "expression")],
+		"Audio", "Crossfade {from} → {to} by {amount}")
+		.described("Fades one music player down while the other comes up, from one 0-to-1 number. Both players must already be playing.").featured())
+
 	return descriptors
