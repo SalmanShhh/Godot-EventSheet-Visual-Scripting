@@ -2268,3 +2268,8 @@ One value the whole project shares - lives on an autoload.,"Ein Wert, den das ga
 Set boolean,Wahrheitswert setzen
 Boolean is true / is false,Wahrheitswert ist wahr / ist falsch
 "%s, with the boolean half already filled in.","%s, mit dem Wahrheitswert-Teil bereits ausgefüllt."
+On %s set,Wenn %s gesetzt wird
+Add setter,Setter hinzufügen
+Add getter,Getter hinzufügen
+This variable already has one.,Diese Variable hat bereits eine.
+Only a sheet variable can carry a setter or a getter.,Nur eine Blatt-Variable kann einen Setter oder Getter tragen.

@@ -2268,3 +2268,8 @@ One value the whole project shares - lives on an autoload.,Un valore condiviso d
 Set boolean,Imposta booleano
 Boolean is true / is false,Il booleano è vero / è falso
 "%s, with the boolean half already filled in.","%s, con la metà booleana già compilata."
+On %s set,Quando %s viene impostato
+Add setter,Aggiungi setter
+Add getter,Aggiungi getter
+This variable already has one.,Questa variabile ne ha gia uno.
+Only a sheet variable can carry a setter or a getter.,Solo una variabile del foglio puo avere un setter o un getter.

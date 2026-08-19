@@ -1,11 +1,14 @@
 # EventForge - a GDScript PROPERTY (a `var …:` declaration with `set(value):` and/or `get:` accessor
 # blocks - https://school.gdquest.com/glossary/setter_getter) reads as a first-class variable row with its
 # accessors, instead of a code wall. It maps onto the condition/action model: the variable identity IS the
-# row, and each accessor folds under it as a condition/action child (`set(value)` / `get` in the condition
-# cell, its body as actions). Emit: the declaration gains a `:` suffix and the accessor blocks emit beneath
-# it (canonical set-then-get). The lift is byte-gated - a property whose re-emission does not reproduce the
-# source (odd spacing, getter-before-setter) stays a verbatim block. Pins: emit, both-accessors and
-# one-accessor round-trips, the language-block rendering with accessor children, and a degrade case.
+# row, and each accessor reads as the event it is under it - a `set(v):` block fires when the value is set,
+# so it reads `On <name> set` with a `v` payload chip and its body as actions and sub-events; a `get:` block
+# gives a value, so it reads as an expression block whose body says "Set return value to …". Emit: the
+# declaration gains a `:` suffix and the accessor blocks emit beneath it (canonical set-then-get). The lift
+# is byte-gated - a property whose re-emission does not reproduce the source (odd spacing,
+# getter-before-setter) stays a verbatim block, and an accessor body the reading cannot lift keeps the
+# verbatim accessor block. Pins: emit, both-accessors and one-accessor round-trips, the event rendering of
+# both accessors, and two degrade cases.
 @tool
 class_name PropertyAccessorLiftTest
 extends RefCounted
@@ -56,13 +59,30 @@ static func run() -> bool:
 			prop_row = row_data
 	ok = _check("the property renders as a variable row with children", prop_row != null, true) and ok
 	if prop_row != null:
-		ok = _check("the property row is flagged a language block", prop_row.language_block, true) and ok
-		ok = _check("it has a set and a get accessor child", prop_row.children.size(), 2) and ok
-		ok = _check("the set accessor reads in the condition cell",
-			_lane_text(prop_row.children[0], "condition"), "set(value)") and ok
-		ok = _check("the get accessor reads in the condition cell",
-			_lane_text(prop_row.children[1], "condition"), "get") and ok
-		ok = _check("an accessor child is inert (source null)", prop_row.children[0].source_resource == null, true) and ok
+		# R2 - the accessors are EVENTS now, not a code block: the setter is the trigger it is, the
+		# getter the expression it is, and the variable row above them keeps the value and the type.
+		ok = _check("the property row is no longer a code block", prop_row.language_block, false) and ok
+		ok = _check("it has a setter event and a getter event", prop_row.children.size(), 2) and ok
+		ok = _check("the setter reads as an On <name> set trigger",
+			_span_text(prop_row.children[0], "trigger"), "On health set") and ok
+		ok = _check("the setter carries the new value as a payload chip",
+			_span_text(prop_row.children[0], "trigger_payload"), "value") and ok
+		ok = _check("the setter's first step reads beside the trigger",
+			_lane_text(prop_row.children[0], "action"), "Set health to value kept between 0 and 100") and ok
+		ok = _check("the getter reads with the property's name",
+			_span_text(prop_row.children[1], "property_getter"), "health") and ok
+		ok = _check("the getter's body sets the return value",
+			_lane_text(prop_row.children[1].children[0], "action"), "Set return value to health") and ok
+		ok = _check("an accessor row is inert (source null)", prop_row.children[0].source_resource == null, true) and ok
+
+	# ── A body the reading cannot lift keeps the verbatim accessor block it always had ──
+	var odd_body: EventSheetResource = GDScriptImporter.new().import_external_source(
+		"extends Node\n\nvar tint: Color = Color.WHITE:\n\tset(value):\n\t\ttint = value\n\t\tmaterial.set_shader_parameter(&\"tint\", value)\n")
+	ok = _check("an unliftable accessor body still imports", _find_var(odd_body, "tint") != null, true) and ok
+	odd_body.external_source_path = "user://prop_odd_body.gd"
+	ok = _check("an unliftable accessor body still round-trips byte-identically",
+		str(SheetCompiler.compile(odd_body, "user://prop_odd_body.gd").get("output", "")),
+		"extends Node\n\nvar tint: Color = Color.WHITE:\n\tset(value):\n\t\ttint = value\n\t\tmaterial.set_shader_parameter(&\"tint\", value)\n") and ok
 
 	# ── Degrade: a getter-before-setter (non-canonical order) does NOT lift as a structured property - the
 	# accessor bodies stay a verbatim block (no setter_body/getter_body recovered) and it round-trips. ──
@@ -86,6 +106,23 @@ static func run() -> bool:
 		SheetCompiler._emit_tree_variable_line(authored).contains("set(value):") and SheetCompiler._emit_tree_variable_line(authored).contains("get:"), true) and ok
 	EventSheetVariablesManager._apply_property_accessors(authored, {})
 	ok = _check("clearing the bodies removes the accessors", authored.has_property_accessors(), false) and ok
+
+	# ── R2 authoring: "Add setter" / "Add getter" on the variable row's menu write exactly the
+	# GDScript the reading takes back apart. ──
+	var plain: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node\n\nvar score: int = 0\n")
+	var author_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	author_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	author_dock.setup(plain)
+	author_dock._variables._context_variable = {
+		"scope": "tree", "name": "score", "resource": _find_var(author_dock._current_sheet, "score")
+	}
+	author_dock._variables._add_context_variable_accessor("setter")
+	author_dock._variables._add_context_variable_accessor("getter")
+	var written: LocalVariable = _find_var(author_dock._current_sheet, "score")
+	ok = _check("Add setter / Add getter write the accessor blocks",
+		SheetCompiler._emit_tree_variable_line(written) if written != null else "<none>",
+		"var score: int = 0:\n\tset(value):\n\t\tscore = value\n\tget:\n\t\treturn score") and ok
+	author_dock.free()
 
 	dock.free()
 	return ok
@@ -127,6 +164,13 @@ static func _find_var(sheet: EventSheetResource, name: String) -> LocalVariable:
 static func _lane_text(row: EventRowData, lane: String) -> String:
 	for span: SemanticSpan in row.spans:
 		if span.metadata is Dictionary and str((span.metadata as Dictionary).get("lane")) == lane:
+			return str(span.text)
+	return "<none>"
+
+
+static func _span_text(row: EventRowData, kind: String) -> String:
+	for span: SemanticSpan in row.spans:
+		if span.metadata is Dictionary and str((span.metadata as Dictionary).get("kind")) == kind:
 			return str(span.text)
 	return "<none>"
 

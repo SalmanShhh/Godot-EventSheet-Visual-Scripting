@@ -64,6 +64,22 @@
   owns the gap and the box, measured from the same two numbers the renderer draws them with, so the
   swatch sits beside its colour's word (`tint = ▪ white  #ffffff`) and can sit anywhere in a row.
 
+### Added - a property's setter reads as a trigger and its getter as an expression
+
+- **A `set(v):` block reads as an `On <name> set` trigger, a `get:` block as an expression.** A
+  setter is exactly a trigger - it fires when the value is set, with the new value as its payload -
+  so a property now reads `➜ On hp set` with a `v` chip and its body as ordinary actions and
+  sub-events, the first step beside the trigger the way every other trigger reading draws it. A
+  getter is a function that gives a value, so it reads as an expression block whose body says
+  `Set return value to hp ≤ 0`. The variable row stays above them both, keeping the value, the type
+  and the Inspector facts. The bodies read through the SAME lift a declared handler's body goes
+  through, so a line says the same thing wherever it was written; a body the lift cannot claim keeps
+  the verbatim accessor block it always had, and the file's bytes are never touched either way.
+- **"Add setter" / "Add getter" on a sheet variable's menu.** They write exactly that GDScript -
+  `set(value):` with `score = value`, `get:` with `return score` - so the shape appears as the rows
+  above and the work goes in under it. Disabled on a local, on a constant, and on a variable that
+  already has that accessor, with the reason on the item.
+
 ### Added - a wired-up signal reads as the trigger calling that function, and a scene opens as one sheet
 
 - **A signal wired to ANOTHER object's function reads as the trigger calling it.**

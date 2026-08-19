@@ -93,6 +93,11 @@ func build_all() -> void:
 	_dock._variable_context_menu.add_item("Toggle Constant", _dock.VARIABLE_MENU_TOGGLE_CONST)
 	_dock._variable_context_menu.add_item("Remember Between Runs", _dock.VARIABLE_MENU_REMEMBER)
 	_dock._variable_context_menu.add_item("Group Under a Heading…", _dock.VARIABLE_MENU_GROUP)
+	# R2 - the two accessor events. A setter fires when the value is set, so it reads as a trigger;
+	# a getter gives a value, so it reads as an expression. Enabled only on a sheet-level (tree)
+	# variable that does not already have that accessor.
+	_dock._variable_context_menu.add_item("Add setter", _dock.VARIABLE_MENU_ADD_SETTER)
+	_dock._variable_context_menu.add_item("Add getter", _dock.VARIABLE_MENU_ADD_GETTER)
 	# The spreadsheet round trip - enabled only on a GRID variable (one with the table drawer);
 	# _configure_context_menu disables them with the reason on every other variable.
 	_dock._variable_context_menu.add_item("Export Grid to CSV…", _dock.VARIABLE_MENU_GRID_EXPORT)
@@ -520,6 +525,22 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				menu.set_item_disabled(grid_index, not grid_variable)
 				menu.set_item_tooltip(grid_index, "" if grid_variable
 					else "Only a grid variable (one shown as a table in the Inspector) has columns to line up in a spreadsheet.")
+		# R2 - an accessor belongs to a sheet-level variable that does not already have one. A local
+		# lives and dies with its event, and a constant never changes, so neither can take an accessor.
+		var accessor_variable: LocalVariable = _dock._variables._context_variable.get("resource", null) if has_variable else null
+		var accessor_scope: bool = accessor_variable != null and not accessor_variable.is_constant
+		accessor_scope = accessor_scope and str(_dock._variables._context_variable.get("scope", "")) == "tree"
+		for accessor: Array in [[_dock.VARIABLE_MENU_ADD_SETTER, "setter"], [_dock.VARIABLE_MENU_ADD_GETTER, "getter"]]:
+			var accessor_index: int = menu.get_item_index(int(accessor[0]))
+			if accessor_index < 0:
+				continue
+			var body: String = ""
+			if accessor_variable != null:
+				body = accessor_variable.setter_body if str(accessor[1]) == "setter" else accessor_variable.getter_body
+			var already: bool = not body.strip_edges().is_empty()
+			menu.set_item_disabled(accessor_index, not accessor_scope or already)
+			menu.set_item_tooltip(accessor_index, "This variable already has one." if already and accessor_scope
+				else ("" if accessor_scope else "Only a sheet variable can carry a setter or a getter."))
 		var const_index: int = menu.get_item_index(_dock.VARIABLE_MENU_TOGGLE_CONST)
 		if const_index >= 0:
 			var supports_const: bool = has_variable and bool(_dock._variables._context_variable.get("supports_const", false))

@@ -101,6 +101,10 @@ const VARIABLE_MENU_GRID_IMPORT := 9
 ## keys,en catalog, one row per key) written by the same codec (dock/grid_csv_dialog.gd).
 const VARIABLE_MENU_TEXT_EXPORT := 10
 const VARIABLE_MENU_TEXT_IMPORT := 11
+## R2 - the two accessor events a property can have. "Add setter" writes the `set(value):` block that
+## reads as an `On <name> set` trigger, "Add getter" the `get:` block that reads as an expression.
+const VARIABLE_MENU_ADD_SETTER := 12
+const VARIABLE_MENU_ADD_GETTER := 13
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3

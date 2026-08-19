@@ -108,6 +108,55 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_dock._grid_csv_dialog.open("translate_export", _context_variable)
 		_dock.VARIABLE_MENU_TEXT_IMPORT:
 			_dock._grid_csv_dialog.open("translate_import", _context_variable)
+		_dock.VARIABLE_MENU_ADD_SETTER:
+			_add_context_variable_accessor("setter")
+		_dock.VARIABLE_MENU_ADD_GETTER:
+			_add_context_variable_accessor("getter")
+
+
+## R2. "Add setter" / "Add getter" on a sheet variable's menu. Writes exactly the GDScript the reading
+## takes back apart: `set(value):` with `<name> = value` (which reads as the `On <name> set` trigger and
+## one `Set <name> to value` action), or `get:` with `return <name>` (which reads as the expression block
+## and its `Set return value to <name>`). The starting body is the do-nothing one on purpose - it is the
+## shape, and the rows under it are where the actual work gets added.
+func _add_context_variable_accessor(accessor: String) -> void:
+	if _context_variable.is_empty():
+		return
+	if str(_context_variable.get("scope", "")) != "tree":
+		_dock._set_status("Only a sheet variable can carry a setter or a getter.", true)
+		return
+	var var_name: String = str(_context_variable.get("name", ""))
+	var changed: bool = _dock._perform_undoable_sheet_edit(
+		"Add Setter" if accessor == "setter" else "Add Getter",
+		func() -> bool:
+			# Re-fetched from the LIVE sheet: the undo funnel replaces resources with snapshot
+			# duplicates, so the resource the menu was opened on is not the one to write to.
+			var live: LocalVariable = _resolve_tree_variable(var_name)
+			if live == null or live.is_constant:
+				return false
+			if accessor == "setter":
+				if not live.setter_body.strip_edges().is_empty():
+					return false
+				live.setter_param = "value"
+				live.setter_body = "%s = value" % var_name
+				return true
+			if not live.getter_body.strip_edges().is_empty():
+				return false
+			live.getter_body = "return %s" % var_name
+			return true
+	)
+	if changed:
+		_dock._mark_dirty("Added a %s to %s." % [accessor, var_name])
+
+
+## The sheet-level variable a name belongs to, fetched from the live sheet.
+func _resolve_tree_variable(var_name: String) -> LocalVariable:
+	if _dock._current_sheet == null:
+		return null
+	for entry: Variant in _dock._current_sheet.events:
+		if entry is LocalVariable and (entry as LocalVariable).name == var_name:
+			return entry as LocalVariable
+	return null
 
 
 ## "Group Under a Heading..." routes the multi-selection (or just the clicked row)

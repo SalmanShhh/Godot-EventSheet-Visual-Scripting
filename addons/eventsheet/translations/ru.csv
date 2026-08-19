@@ -2268,3 +2268,8 @@ One value the whole project shares - lives on an autoload.,Одно значен
 Set boolean,Задать логическое
 Boolean is true / is false,Логическое истинно / ложно
 "%s, with the boolean half already filled in.","%s, с уже заполненной логической частью."
+On %s set,При установке %s
+Add setter,Добавить сеттер
+Add getter,Добавить геттер
+This variable already has one.,У этой переменной уже есть такой.
+Only a sheet variable can carry a setter or a getter.,Только переменная листа может иметь сеттер или геттер.

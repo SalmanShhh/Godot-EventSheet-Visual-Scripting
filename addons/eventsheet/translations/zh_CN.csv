@@ -2268,3 +2268,8 @@ One value the whole project shares - lives on an autoload.,整个项目共享的
 Set boolean,设置布尔值
 Boolean is true / is false,布尔值为真 / 为假
 "%s, with the boolean half already filled in.",%s，布尔值那一半已经填好。
+On %s set,当 %s 被设置时
+Add setter,添加 setter
+Add getter,添加 getter
+This variable already has one.,该变量已经有一个了。
+Only a sheet variable can carry a setter or a getter.,只有工作表变量才能带 setter 或 getter。

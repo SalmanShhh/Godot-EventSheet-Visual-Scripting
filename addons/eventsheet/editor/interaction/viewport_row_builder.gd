@@ -4387,14 +4387,175 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 	# and each accessor folds under it as a condition/action child (`set(value)` / `get` in the condition
 	# cell, its body lines as actions). Double-click the variable row still opens the Variable dialog.
 	if variable.has_property_accessors():
-		row_data.language_block = true
 		var param: String = variable.setter_param.strip_edges() if not variable.setter_param.strip_edges().is_empty() else "value"
-		if not variable.setter_body.strip_edges().is_empty():
-			row_data.children.append(_build_property_accessor_row(variable, "set(%s)" % param, variable.setter_body, indent + 1, "set"))
-		if not variable.getter_body.strip_edges().is_empty():
-			row_data.children.append(_build_property_accessor_row(variable, "get", variable.getter_body, indent + 1, "get"))
+		# R2 - the accessors read as EVENTS first: a setter is a trigger, a getter an expression. Only
+		# when a body does not lift cleanly do they fall back to the verbatim language block below.
+		var read_rows: Array[EventRowData] = _build_property_accessor_reading(variable, param, indent + 1)
+		if not read_rows.is_empty():
+			row_data.children.append_array(read_rows)
+		else:
+			row_data.language_block = true
+			if not variable.setter_body.strip_edges().is_empty():
+				row_data.children.append(_build_property_accessor_row(variable, "set(%s)" % param, variable.setter_body, indent + 1, "set"))
+			if not variable.getter_body.strip_edges().is_empty():
+				row_data.children.append(_build_property_accessor_row(variable, "get", variable.getter_body, indent + 1, "get"))
 		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
 	return row_data
+
+
+## R2. A property's accessors, read as the events they are instead of as code under the variable row.
+## A `set(v):` block is exactly a trigger - it fires when the value is set, with the new value as its
+## payload - so it reads `➜ <Object> On <name> set` with a `v` chip and its body as ordinary action
+## rows and sub-events. A `get:` block is a function that gives a value, so it reads as an expression
+## block whose body ends in `System ▸ Set return value to …`. The variable row stays above them both.
+##
+## Pure view: the bodies are read through the SAME lift a declared handler's body goes through, the
+## rows are inert (nothing addresses them, so nothing can write through them), and the file keeps its
+## accessor text untouched - the byte round-trip never sees this. [] when either body does not lift,
+## and the caller keeps the verbatim block it always had.
+func _build_property_accessor_reading(variable: LocalVariable, param: String, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	var object_name: String = _script_object_name()
+	if object_name.strip_edges().is_empty():
+		object_name = EventSheetSentence.OBJECT_SYSTEM
+	if not variable.setter_body.strip_edges().is_empty():
+		var setter_row: EventRowData = _build_property_setter_row(variable, object_name, param, indent)
+		if setter_row == null:
+			return []
+		rows.append(setter_row)
+	if not variable.getter_body.strip_edges().is_empty():
+		var getter_row: EventRowData = _build_property_getter_row(variable, object_name, indent)
+		if getter_row == null:
+			return []
+		rows.append(getter_row)
+	return rows
+
+
+## The setter's trigger row: the ➜ badge, `<Object> On <name> set`, and one payload chip for the
+## parameter the new value arrives in. Its first step folds into the row beside the trigger, the way
+## every other trigger reading does. null when the body does not lift.
+func _build_property_setter_row(variable: LocalVariable, object_name: String, param: String,
+		indent: int) -> EventRowData:
+	var row := EventRowData.new()
+	row.indent = indent
+	row.row_type = EventRowData.RowType.EVENT
+	row.row_uid = "property_setter_%d" % variable.get_instance_id()
+	row.line_count = 1
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+	var badge_glyph: String = _apply_trigger_tempo(badge_meta, _viewport._get_event_style(), "")
+	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+	badge_meta["line_index"] = 0
+	badge_meta["badge_style"] = "trigger"
+	row.spans.append(_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta))
+	row.spans.append(_make_span(EventSheetL10n.translate("On %s set") % variable.name.replace("_", " "),
+		SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "trigger",
+			"ace_index": -1,
+			"chip": true,
+			"editable": false,
+			"hoverable": false,
+			"line_index": 0,
+			"object_label": object_name
+		}.merged(condition_style_meta, true)))
+	row.spans.append(_trigger_payload_span(param.replace("_", " "), 0, 0))
+	if not _append_property_body_rows(row, variable.setter_body, indent, row.row_uid,
+			EventSheetSentence.VerbKind.ACTION):
+		return null
+	_merge_first_body_step_into_header(row)
+	return row
+
+
+## The getter's expression row: the ƒ badge, the property's name, and the muted kind word beside it -
+## the same header an expression function reads with. Its body says `Set return value to …`, so the
+## step is left where it is rather than folded into the header. null when the body does not lift.
+func _build_property_getter_row(variable: LocalVariable, object_name: String, indent: int) -> EventRowData:
+	var row := EventRowData.new()
+	row.indent = indent
+	row.row_type = EventRowData.RowType.EVENT
+	row.row_uid = "property_getter_%d" % variable.get_instance_id()
+	row.line_count = 1
+	var badge_colors: Array = _define_role_colors("expression")
+	row.spans.append(_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
+		"editable": false,
+		"badge": true,
+		"badge_style": "scope",
+		"badge_bg": badge_colors[0],
+		"badge_fg": badge_colors[1],
+		"lane": "condition",
+		"line_index": 0
+	}))
+	row.spans.append(_make_span(variable.name.replace("_", " "), SemanticSpan.SpanType.OBJECT, {
+		"editable": false,
+		"kind": "property_getter",
+		"lane": "condition",
+		"line_index": 0,
+		"chip": true,
+		"object_label": object_name,
+		"text_color": _define_role_name_color("expression")
+	}))
+	row.spans.append(_make_span(EventSheetL10n.translate("expression"), SemanticSpan.SpanType.COMMENT, {
+		"editable": false,
+		"lane": "condition",
+		"line_index": 0,
+		"natural_width": true,
+		"text_color": EventSheetPalette.TEXT_MUTED
+	}))
+	if not _append_property_body_rows(row, variable.getter_body, indent, row.row_uid,
+			EventSheetSentence.VerbKind.EXPRESSION):
+		return null
+	return row
+
+
+## Lifts one accessor body into inert reading rows under `row`. False when a line does not lift, which
+## is what sends the whole property back to its verbatim block - a half-read accessor would be a lie.
+func _append_property_body_rows(row: EventRowData, body: String, indent: int, uid_base: String,
+		verb_kind: int) -> bool:
+	var body_lines: PackedStringArray = PackedStringArray()
+	for line: String in body.split("\n"):
+		body_lines.append(line)
+	var lifted: Array = EventSheetACELifter.lift_body_rows(body_lines, _sheet_object_variable_names())
+	if lifted.is_empty():
+		return false
+	var index: int = 0
+	for body_event: Variant in lifted:
+		if not (body_event is EventRow):
+			return false
+		var body_row: EventRowData = _build_event_row(body_event as EventRow, indent + 1)
+		if body_row == null:
+			return false
+		# Marked BEFORE the spans are resolved: a `return` inside a getter answers with a value, and
+		# only the verb kind recorded here tells the grammar to say "Set return value to".
+		_mark_verb_body(body_row, verb_kind)
+		_mark_property_reading(body_row, "%s_%d" % [uid_base, index])
+		row.children.append(body_row)
+		index += 1
+	return true
+
+
+## Stamps a lifted accessor body row (and everything under it) as a pure READING: its cells are
+## resolved while the lifted stand-in is still what it points at, the offers to edit a row it does not
+## have are dropped, and its resource is released so no mutation can reach the property's text.
+func _mark_property_reading(row_data: EventRowData, uid: String) -> void:
+	if row_data == null:
+		return
+	_ensure_event_spans(row_data)
+	var kept: Array[SemanticSpan] = []
+	var lines: int = 1
+	for span: SemanticSpan in row_data.spans:
+		if bool(span.metadata.get("placeholder", false)):
+			continue
+		if str(span.metadata.get("kind", "")) in ["add_action", "add_condition"]:
+			continue
+		kept.append(span)
+		lines = maxi(lines, int(span.metadata.get("line_index", 0)) + 1)
+	row_data.spans = kept
+	row_data.line_count = lines
+	row_data.source_resource = null
+	row_data.row_uid = uid
+	for child_index in range(row_data.children.size()):
+		_mark_property_reading(row_data.children[child_index], "%s_%d" % [uid, child_index])
 
 
 ## One accessor of a property variable (`set(value)` / `get`) as a read-only condition/action row: the

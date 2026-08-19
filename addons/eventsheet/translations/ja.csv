@@ -2268,3 +2268,8 @@ One value the whole project shares - lives on an autoload.,プロジェクト全
 Set boolean,真偽値を設定
 Boolean is true / is false,真偽値が true / false
 "%s, with the boolean half already filled in.",%s。真偽値の側はすでに入力済みです。
+On %s set,%s が設定されたとき
+Add setter,セッターを追加
+Add getter,ゲッターを追加
+This variable already has one.,この変数にはすでにあります。
+Only a sheet variable can carry a setter or a getter.,シート変数のみセッターやゲッターを持てます。

@@ -2268,3 +2268,8 @@ One value the whole project shares - lives on an autoload.,프로젝트 전체�
 Set boolean,불리언 설정
 Boolean is true / is false,불리언이 참 / 거짓
 "%s, with the boolean half already filled in.",%s. 불리언 부분은 이미 채워져 있습니다.
+On %s set,%s 설정 시
+Add setter,세터 추가
+Add getter,게터 추가
+This variable already has one.,이 변수에는 이미 있습니다.
+Only a sheet variable can carry a setter or a getter.,시트 변수만 세터나 게터를 가질 수 있습니다.
