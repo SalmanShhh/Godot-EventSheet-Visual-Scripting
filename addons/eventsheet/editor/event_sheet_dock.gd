@@ -4433,6 +4433,25 @@ func _on_add_blank_subevent_key() -> void:
 	_insert_child_event_for_context_row()
 
 
+## Add ▸ Make 'Or' block: the right-click command, driven from the SELECTION rather than a
+## right-clicked row, so the Add menu and the row menu do the same thing in the same words.
+## On an opened .gd this rewrites the event's joined condition (`a and b` <-> `a or b`) and
+## nothing else in the file - the mode is what the emitter joins the conditions with.
+func _make_or_block_from_selection() -> void:
+	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
+		_set_status("Select an event first - an 'Or' block joins that event's conditions.", true)
+		return
+	_toggle_context_condition_block()
+
+
+## Add ▸ Add 'Else': the same command as the row menu's, driven from the selection.
+func _make_else_from_selection() -> void:
+	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
+		_set_status("Select an event first - 'Else' runs when the event above it did not.", true)
+		return
+	_set_context_else_mode(EventRow.ElseMode.ELSE)
+
+
 ## S - add a picker-backed sub-event under the selected event (the event-sheet add-sub-event key).
 func _on_add_sub_condition_key() -> void:
 	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):

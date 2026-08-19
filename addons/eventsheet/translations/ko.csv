@@ -452,14 +452,14 @@ Add GDScript Action,GDScript 액션 추가
 Add Match To Actions…,액션에 match 추가…
 Add Pick Filter (For Each)…,선택 필터 추가 (각각에 대해)…
 Add Sub-Condition,하위 조건 추가
-Add Sub-Event,하위 이벤트 추가
+Add blank sub-event (B),하위 이벤트 추가
 Attach To Event Above,위 이벤트에 붙이기
-Clear Else,Else 제거
-Clear Else-If,Else-If 제거
+Clear 'Else',Else 제거
+Clear 'Else If',Else-If 제거
 Close Group,그룹 닫기
 Comment,주석
-Convert to AND Block,AND 블록으로 변환
-Convert to OR Block,OR 블록으로 변환
+Make 'And' block,AND 블록으로 변환
+Make 'Or' block,OR 블록으로 변환
 Copy as Text,텍스트로 복사
 Cut,잘라내기
 Delete,삭제
@@ -478,8 +478,8 @@ Group,그룹
 Group Color…,그룹 색상…
 Group Selection into New Group,선택 항목을 새 그룹으로 묶기
 Insert,삽입
-Make Else,Else로 만들기
-Make Else-If,Else-If로 만들기
+Add 'Else',Else로 만들기
+Add 'Else If',Else-If로 만들기
 More,더 보기
 Open / Close Group,그룹 열기 / 닫기
 Open Group,그룹 열기
@@ -2130,3 +2130,4 @@ Event number,이벤트 번호
 event %d,이벤트 %d
 event %d of %d,이벤트 %d / %d
 line %d,줄 %d
+This is a read-only preview - press Edit Events to change the file.,읽기 전용 미리 보기입니다. 파일을 바꾸려면 이벤트 편집을 누르세요.

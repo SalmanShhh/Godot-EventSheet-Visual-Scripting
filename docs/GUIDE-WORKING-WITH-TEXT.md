@@ -287,7 +287,7 @@ LineEdit "Amount"   On Text Submitted
 
 **In the editor**: Add Condition › **Compare: Text** › **Text Is A Number** (the folder where Text Is
 Blank lives), then **ƒx** on the value field › **Variables: String** › **Number From Text**. The
-failure branch is the shipped **Make Else** on the row menu.
+failure branch is the shipped **Add 'Else'** on the row menu.
 
 `"12.5"` is not a whole number, so Whole Number From Text lands on the fallback rather than quietly
 becoming `12`. When you want that rounding, use Number From Text and round the result yourself.

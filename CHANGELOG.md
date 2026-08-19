@@ -25,6 +25,20 @@
   that script as its own editable sheet. One script is read per frame behind the progress strip, so a
   big scene never freezes the editor.
 
+### Changed - the three event-shape commands, in the words the sheet reads them in
+
+Everything the sheet reads must be authorable in the same words: a beginner who reads "Or" has to be
+able to type "Or". The three event-shape commands every event sheet has now say what the reading
+says, on the right-click menu and on the **Add** menu alike.
+
+- `Add Sub-Event` reads **Add blank sub-event (B)** (the key was already B), `Convert to OR Block` /
+  `Convert to AND Block` read **Make 'Or' block** / **Make 'And' block**, and `Make Else` /
+  `Make Else-If` read **Add 'Else'** / **Add 'Else If'** (clearing them reads `Clear 'Else'`).
+- All three are greyed while the sheet is a read-only preview, with the reason on the tooltip, so a
+  preview never looks like it will rewrite the file. Press **Edit Events** first.
+- On an opened `.gd`, Make 'Or' block rewrites that event's joined condition (`a and b` <-> `a or b`)
+  and leaves every other byte of the file alone - pinned both ways by a round-trip test.
+
 ### Added - an event is named by its number, everywhere a row is named
 
 The left margin has numbered events for a while; now everything that points at a row says the same

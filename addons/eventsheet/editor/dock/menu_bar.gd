@@ -119,6 +119,12 @@ func build(root: Node) -> void:
 	add_popup.add_item("Local Variable…", 2)
 	add_popup.add_item("Function…", 3)
 	add_popup.add_separator()
+	# The three event-shape commands, on the Add menu as well as the right-click menu: the sheet
+	# reads Or blocks, blank sub-events and Else, so all three must be typeable in the same words.
+	add_popup.add_item("Add blank sub-event (B)", 5)
+	add_popup.add_item("Make 'Or' block", 6)
+	add_popup.add_item("Add 'Else'", 7)
+	add_popup.add_separator()
 	add_popup.add_item("Code (GDScript) on Selected Event", 4)
 	# Custom Block API kinds (preloads, region markers, registered pack kinds): one item per
 	# registered kind, ids offset by 100 so the fixed ids above never collide.
@@ -139,6 +145,9 @@ func build(root: Node) -> void:
 			2: _dock._on_add_local_variable_requested()
 			3: _dock._open_function_dialog()
 			4: _dock._on_add_gdscript_action_requested()
+			5: _dock._on_add_blank_subevent_key()
+			6: _dock._make_or_block_from_selection()
+			7: _dock._make_else_from_selection()
 	)
 	# Kept as a reference so Simple Mode can gate the code item (id 4) live.
 	_dock._add_menu_popup = add_popup

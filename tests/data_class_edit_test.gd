@@ -109,7 +109,7 @@ static func run() -> bool:
 	dock._context_hit = {}
 	dock._build_row_context_menu(class_row)
 	ok = _check("the holder row's menu leads with Add Field", _menu_has(dock._row_context_menu, "Add Field…"), true) and ok
-	ok = _check("the holder row's menu is not the generic event menu", _menu_has(dock._row_context_menu, "Add Sub-Event"), false) and ok
+	ok = _check("the holder row's menu is not the generic event menu", _menu_has(dock._row_context_menu, "Add blank sub-event (B)"), false) and ok
 	var field_row: EventRowData = class_row.children[0]
 	dock._context_row = field_row
 	dock._context_hit = {"span_metadata": {"kind": "data_class_field", "raw_row": class_row.source_resource, "field_index": 0}}
@@ -125,7 +125,7 @@ static func run() -> bool:
 	dock._context_hit = {}
 	dock._build_row_context_menu(field_row)
 	ok = _check("dead-space on a field row still offers Remove Field", _menu_has(dock._row_context_menu, "Remove Field"), true) and ok
-	ok = _check("dead-space on a field row never shows the event menu", _menu_has(dock._row_context_menu, "Add Sub-Event"), false) and ok
+	ok = _check("dead-space on a field row never shows the event menu", _menu_has(dock._row_context_menu, "Add blank sub-event (B)"), false) and ok
 
 	# ---- structured Add/Remove Field (the add-action gesture, for data classes) ----
 	var base_code: String = "class Stats:\n\tvar hp: int = 10\n\tvar armor: float"

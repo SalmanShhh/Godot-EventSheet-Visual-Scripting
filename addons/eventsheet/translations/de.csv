@@ -452,14 +452,14 @@ Add GDScript Action,GDScript-Aktion hinzufügen
 Add Match To Actions…,Match zu Aktionen hinzufügen…
 Add Pick Filter (For Each)…,Auswahlfilter hinzufügen (Für jedes)…
 Add Sub-Condition,Unterbedingung hinzufügen
-Add Sub-Event,Unterereignis hinzufügen
+Add blank sub-event (B),Unterereignis hinzufügen
 Attach To Event Above,An Ereignis darüber anhängen
-Clear Else,Sonst (Else) entfernen
-Clear Else-If,Sonst-Wenn (Else-If) entfernen
+Clear 'Else',Sonst (Else) entfernen
+Clear 'Else If',Sonst-Wenn (Else-If) entfernen
 Close Group,Gruppe schließen
 Comment,Kommentar
-Convert to AND Block,In UND-Block umwandeln
-Convert to OR Block,In ODER-Block umwandeln
+Make 'And' block,In UND-Block umwandeln
+Make 'Or' block,In ODER-Block umwandeln
 Copy as Text,Als Text kopieren
 Cut,Ausschneiden
 Delete,Löschen
@@ -478,8 +478,8 @@ Group,Gruppe
 Group Color…,Gruppenfarbe…
 Group Selection into New Group,Auswahl in neue Gruppe gruppieren
 Insert,Einfügen
-Make Else,Zu Sonst (Else) machen
-Make Else-If,Zu Sonst-Wenn (Else-If) machen
+Add 'Else',Zu Sonst (Else) machen
+Add 'Else If',Zu Sonst-Wenn (Else-If) machen
 More,Mehr
 Open / Close Group,Gruppe öffnen / schließen
 Open Group,Gruppe öffnen
@@ -2130,3 +2130,4 @@ Event number,Ereignisnummer
 event %d,Ereignis %d
 event %d of %d,Ereignis %d von %d
 line %d,Zeile %d
+This is a read-only preview - press Edit Events to change the file.,"Dies ist eine schreibgeschützte Vorschau - klicken Sie auf Ereignisse bearbeiten, um die Datei zu ändern."

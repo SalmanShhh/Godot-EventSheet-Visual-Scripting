@@ -1,5 +1,5 @@
 # Godot EventSheets - event-sheet interaction features:
-#   - OR / AND condition blocks (right-click an event → "Convert to OR Block"): conditions join with
+#   - OR / AND condition blocks (right-click an event → "Make 'Or' block"): conditions join with
 #     `or` instead of `and`.
 #   - Condition inversion (right-click a condition → "Invert Condition"): compiles to `not (…)`.
 #   - A TRIGGER can't be inverted (no "not On X"); the menu disables Invert for triggers - and the

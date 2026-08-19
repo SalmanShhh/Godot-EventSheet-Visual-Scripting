@@ -452,14 +452,14 @@ Add GDScript Action,Добавить действие GDScript
 Add Match To Actions…,Добавить match в действия…
 Add Pick Filter (For Each)…,Добавить фильтр выбора (For Each)…
 Add Sub-Condition,Добавить под-условие
-Add Sub-Event,Добавить подсобытие
+Add blank sub-event (B),Добавить подсобытие
 Attach To Event Above,Присоединить к событию выше
-Clear Else,Убрать Else
-Clear Else-If,Убрать Else-If
+Clear 'Else',Убрать Else
+Clear 'Else If',Убрать Else-If
 Close Group,Свернуть группу
 Comment,Комментарий
-Convert to AND Block,Преобразовать в блок AND
-Convert to OR Block,Преобразовать в блок OR
+Make 'And' block,Преобразовать в блок AND
+Make 'Or' block,Преобразовать в блок OR
 Copy as Text,Копировать как текст
 Cut,Вырезать
 Delete,Удалить
@@ -478,8 +478,8 @@ Group,Группа
 Group Color…,Цвет группы…
 Group Selection into New Group,Сгруппировать выделенное в новую группу
 Insert,Вставка
-Make Else,Сделать Else
-Make Else-If,Сделать Else-If
+Add 'Else',Сделать Else
+Add 'Else If',Сделать Else-If
 More,Ещё
 Open / Close Group,Развернуть / свернуть группу
 Open Group,Развернуть группу
@@ -2130,3 +2130,4 @@ Event number,Номер события
 event %d,событие %d
 event %d of %d,событие %d из %d
 line %d,строка %d
+This is a read-only preview - press Edit Events to change the file.,"Это предварительный просмотр только для чтения - нажмите «Редактировать события», чтобы изменить файл."

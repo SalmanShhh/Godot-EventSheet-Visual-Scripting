@@ -1,6 +1,6 @@
 # EventForge - the event-sheet Else block is a first-class, DISCOVERABLE gesture: right-clicking an event
-# offers "Make Else" / "Make Else-If" top-level (Simple Mode included - an event-sheet reflex, not an expert
-# feature), the labels flip to "Clear Else" / "Clear Else-If" when the selection already carries that mode
+# offers "Add 'Else'" / "Add 'Else If'" top-level (Simple Mode included - an event-sheet reflex, not an expert
+# feature), the labels flip to "Clear 'Else'" / "Clear 'Else If'" when the selection already carries that mode
 # (the click toggles it off), and the whole flow compiles to a real `else:` / `elif:` chain that reads back
 # with the "Else" badge. Pins: menu presence in SIMPLE mode, the live-state relabel, the toggle behavior
 # through the menu handler, and the compile round-trip of a menu-made Else.
@@ -58,8 +58,8 @@ static func run() -> bool:
 	ok = _check("Make Else sets the row's else_mode", else_event.else_mode, EventRow.ElseMode.ELSE) and ok
 	dock._build_row_context_menu(else_row)
 	dock._configure_context_menu(dock._row_context_menu)
-	ok = _check("the label flips to Clear Else on an else row", _item_text(dock, dock.ROW_MENU_MAKE_ELSE), "Clear Else") and ok
-	ok = _check("the sibling stays Make Else-If", _item_text(dock, dock.ROW_MENU_MAKE_ELIF), "Make Else-If") and ok
+	ok = _check("the label flips to Clear 'Else' on an else row", _item_text(dock, dock.ROW_MENU_MAKE_ELSE), "Clear 'Else'") and ok
+	ok = _check("the sibling stays Add 'Else If'", _item_text(dock, dock.ROW_MENU_MAKE_ELIF), "Add 'Else If'") and ok
 
 	# ── The compiled output is a real else: chain, and it reads back with the Else badge ──
 	var source: String = str(SheetCompiler.compile(dock.get_current_sheet(), "user://else_menu.gd").get("output", ""))

@@ -390,7 +390,7 @@ static func run() -> bool:
     dock._on_action_context_menu_id_pressed(EventSheetDock.ACTION_MENU_TOGGLE_ENABLED)
     all_passed = _check("action context menu toggles enabled state", (((dock.get_current_sheet().events[0] as EventRow).actions[0]) as ACEAction).enabled, false) and all_passed
     # The row context menu is rebuilt per right-click (empty until built). For an EVENT
-    # row the built menu is [0]="Add Sub-Event", [1]="Convert to AND/OR Block".
+    # row the built menu is [0]="Add blank sub-event (B)", [1]="Make 'Or'/'And' block".
     dock._build_row_context_menu(dock_viewport.get_flat_rows()[0].get("row"))
     all_passed = _check("or block toggle is second row menu item", dock._row_context_menu.get_item_id(1), EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK) and all_passed
     # Event-sheet-parity items: Cut sits with Copy/Paste; the Insert submenu leads with Event Above.

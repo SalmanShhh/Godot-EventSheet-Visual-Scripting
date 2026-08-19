@@ -452,14 +452,14 @@ Add GDScript Action,添加 GDScript 动作
 Add Match To Actions…,向动作添加 match…
 Add Pick Filter (For Each)…,添加筛选条件（For Each）…
 Add Sub-Condition,添加子条件
-Add Sub-Event,添加子事件
+Add blank sub-event (B),添加子事件
 Attach To Event Above,附加到上方事件
-Clear Else,移除“否则”
-Clear Else-If,移除“否则如果”
+Clear 'Else',移除“否则”
+Clear 'Else If',移除“否则如果”
 Close Group,折叠分组
 Comment,注释
-Convert to AND Block,转换为 AND 块
-Convert to OR Block,转换为 OR 块
+Make 'And' block,转换为 AND 块
+Make 'Or' block,转换为 OR 块
 Copy as Text,复制为文本
 Cut,剪切
 Delete,删除
@@ -478,8 +478,8 @@ Group,分组
 Group Color…,分组颜色…
 Group Selection into New Group,将所选内容归入新分组
 Insert,插入
-Make Else,设为“否则”
-Make Else-If,设为“否则如果”
+Add 'Else',设为“否则”
+Add 'Else If',设为“否则如果”
 More,更多
 Open / Close Group,展开 / 折叠分组
 Open Group,展开分组
@@ -2130,3 +2130,4 @@ Event number,事件编号
 event %d,事件 %d
 event %d of %d,事件 %d / %d
 line %d,行 %d
+This is a read-only preview - press Edit Events to change the file.,这是只读预览 - 按“编辑事件”才能修改文件。

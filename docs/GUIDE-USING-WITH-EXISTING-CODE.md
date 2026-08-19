@@ -411,6 +411,12 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   bookmark, the Find bar's counter (`3 of 12 · event 4`) and a Project Doctor finding
   (`player.gd · event 4`) all print the same number, so "look at event 12" means one row to everybody
   reading the file. The numbers are display-only: nothing about them touches the script.
+- **The shapes the sheet reads, you can also type.** Right-click an event for **Add blank sub-event
+  (B)**, **Make 'Or' block** (which reads **Make 'And' block** once the event is an Or block) and
+  **Add 'Else'** / **Add 'Else If'** - the same three commands sit on the **Add** menu. On an opened
+  `.gd`, Make 'Or' block rewrites that one event's joined condition (`a and b` becomes `a or b`) and
+  leaves every other byte alone. All three are greyed while the file is a read-only preview; press
+  **Edit Events** first.
 - **A plain script is an object.** Its Include bar names it (`class_name`, else its scene's root node,
   else the file) with its class icon and the scene it lives in; its engine properties read under that
   name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
