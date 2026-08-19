@@ -24,7 +24,8 @@
   once and every row that spelled it reads the name instead.
 - **The reading, for readers who do not read it the same way.** Every row's sentence is now the
   canvas's accessible name, updated as the selection moves, and **View ▸ Speak This Row** says it
-  aloud through the platform's own voice. **View ▸ Reduced Motion** stops every pulse and fade in
+  aloud through the platform's own voice. **View ▸ Object Properties** is the keyboard twin of
+  clicking an object's name in a cell, which a keyboard has no way to point at. **View ▸ Reduced Motion** stops every pulse and fade in
   the editor (the operating system's own preference is honoured too). The Theme Editor grew a
   **Reading Comfort** card: dyslexia-friendly text opens the letters and word spaces up, and a
   reading-font field points the sheet at any `.ttf`/`.otf` already on the machine - no typeface is

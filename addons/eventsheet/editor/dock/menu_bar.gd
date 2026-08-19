@@ -292,6 +292,8 @@ func build(root: Node) -> void:
 	view_popup.set_item_tooltip(view_popup.get_item_index(43), "No pulses and no fades anywhere in the editor. Everything still says what it said - it just says it at once.")
 	view_popup.add_item("Speak This Row", 44)
 	view_popup.set_item_tooltip(view_popup.get_item_index(44), "Read the selected row's sentence aloud - the same words the row is drawn with.")
+	view_popup.add_item("Object Properties", 45)
+	view_popup.set_item_tooltip(view_popup.get_item_index(45), "Open the Object properties for the object the selected row names - the keyboard twin of clicking its name.")
 	view_popup.add_separator()
 	# Collapsing IS how a long sheet is browsed, so the sweeps live in the menu beside the
 	# Outline, not only on their shortcuts. Ids start at 22: 20 is already claimed twice above
@@ -394,6 +396,7 @@ func build(root: Node) -> void:
 			42: _dock._open_ask()
 			43: _dock._toggle_reduced_motion(view_popup)
 			44: _dock._speak_selected_row()
+			45: _dock._open_properties_for_selected_row()
 			11: _dock.set_simple_mode(not _dock._simple_mode)
 			12: _dock._toggle_mcp_server(view_popup)
 			13: _dock._toggle_open_sheets_panel(view_popup)

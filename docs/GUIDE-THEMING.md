@@ -152,6 +152,10 @@ checkout.
   drawn with, so eyes and ears are never given two different grammars for one row.
 - **View ▸ Speak This Row** reads the selected row aloud through the platform's own voice. On a
   machine with no speech installed it says so instead of appearing to do nothing.
+- **View ▸ Object Properties** opens the object popup for the object the selected row names. That
+  popup is otherwise reached by clicking an object's name inside a cell, which a keyboard has no
+  way to point at - every hover-only or click-only piece of information wants a twin like this.
+  (The other one already existed: **F1** explains the selected row.)
 - **View ▸ Reduced Motion** stops every pulse and every fade in the editor. Nothing is lost -
   a firing event still marks itself, a pointed-at button is still pointed at - it just arrives at
   once instead of over a second. Your operating system's own "reduce animation" preference is

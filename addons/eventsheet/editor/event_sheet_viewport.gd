@@ -4535,3 +4535,21 @@ func accessible_name_for_row(row_index: int) -> String:
 ## The selected row's sentence, so a caller can say it aloud without reaching for row indices.
 func accessible_name_for_selected_row() -> String:
 	return accessible_name_for_row(_selected_row_index)
+
+
+## The object the selected row names, or "" when it names none. The object label is drawn inside a
+## cell rather than as its own span, so a pointer finds it by hit-testing its stamped bounds - and a
+## keyboard has no pointer. This reads the same stamped metadata, so the object popup a click opens
+## is reachable without one.
+func object_label_for_selected_row() -> String:
+	var row_data: EventRowData = _row_at(_selected_row_index)
+	if row_data == null:
+		return ""
+	_ensure_event_spans(row_data)
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var label: String = str((span.metadata as Dictionary).get("object_label", ""))
+		if not label.is_empty():
+			return label
+	return ""

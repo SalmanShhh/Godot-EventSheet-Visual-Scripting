@@ -1397,6 +1397,16 @@ func _speak_selected_row() -> void:
 	_set_status(sentence)
 
 
+## Object Properties (View menu, id 45). Clicking a row's object name opens its popup; a keyboard
+## has no pointer, so the same popup opens from the selected row here.
+func _open_properties_for_selected_row() -> void:
+	var object_label: String = _viewport.object_label_for_selected_row() if _viewport != null else ""
+	if object_label.is_empty():
+		_set_status("Select a row that names an object first.", true)
+		return
+	open_object_properties(object_label)
+
+
 ## Manage Includes (browse/add/remove/reorder included library sheets) - see EventSheetIncludeManager.
 func _open_include_manager() -> void:
 	_includes.open()
