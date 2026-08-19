@@ -3467,8 +3467,23 @@ Particles (GPUParticles2D / CPUParticles2D)
 #### Expressions
 - **Amount** (`target: String`) - Returns how many particles the emitter is set to spawn.
 
+### Path Follow (`res://addons/eventforge/registration/modules/path_follow_aces.gd`)
+Follow a Path (PathFollow2D / PathFollow3D)
+
+#### Conditions
+- **Has Reached The End** (`target: String`) - True once this follower has travelled the whole route.
+
+#### Actions
+- **Move Along Path** (`speed: String, target: String`) - Walks this follower along its route at a steady speed, whatever the frame rate.
+- **Go To Start** (`target: String`) - Sends this follower back to the beginning of its route.
+- **Set Looping** (`looping: String, target: String`) - Decides whether a follower that reaches the end starts again at the beginning.
+- **Set Rotate With Path** (`rotating: String, target: String`) - Decides whether a follower turns to face the way its route is heading.
+
 ### Physics (`res://addons/eventforge/registration/modules/physics_aces.gd`)
 Physics joints (Joint2D / Joint3D)
+
+#### Conditions
+- **Is Sleeping** (`target: String`) - True while a physics body has settled and stopped being simulated.
 
 #### Actions
 - **Set Joint Body A** (`target: String`) - Sets the first physics body a joint connects to.
@@ -3482,6 +3497,19 @@ Physics joints (Joint2D / Joint3D)
 - **Set Joint Body A (3D)** (`target: String`) - Picks the first 3D body a joint connects, wiring up what it links to.
 - **Set Joint Body B (3D)** (`target: String`) - Picks the second 3D body a joint connects, completing the link.
 - **Break Joint (3D)** (`target: String`) - Snaps a 3D joint apart by clearing its second body, releasing the connection.
+- **Set Mass** (`mass: String, target: String`) - Sets how heavy a physics body is, so the same push moves it more or less.
+- **Set Gravity Scale** (`scale: String, target: String`) - Sets how much of the world's gravity this body feels, from floating to extra heavy.
+- **Set Friction** (`friction: String, target: String`) - Sets how much this body's surface grips, from ice to rubber. Needs a physics material on the body.
+- **Set Elasticity** (`elasticity: String, target: String`) - Sets how bouncy this body is, from a sandbag to a superball. Needs a physics material on the body.
+- **Set Linear Damping** (`damping: String, target: String`) - Sets how quickly a body loses speed on its own, like moving through water.
+- **Set Angular Damping** (`damping: String, target: String`) - Sets how quickly a body stops spinning on its own.
+- **Set Immovable** (`immovable: String, target: String`) - Holds a physics body still where it is, or lets it move again.
+- **Apply Torque** (`torque: String, target: String`) - Applies a steady twist to a body each physics frame, spinning it up.
+- **Apply Impulse At Offset** (`impulse: String, offset: String, target: String`) - Pushes a body at a point away from its centre, so it spins as well as moves.
+- **Set World Gravity** (`gravity: String, target: String`) - Sets how strongly an area pulls the bodies inside it, for low-gravity rooms and updrafts.
+- **Create Revolute Joint** - Adds a pin the two bodies turn around, like a hinge or an axle.
+- **Create Distance Joint** - Adds a spring that holds two bodies a set distance apart, like a rope or a suspension arm.
+- **Create Prismatic Joint** - Adds a groove one body slides along, like a piston or a lift.
 
 ### Physics Server (`res://addons/eventforge/registration/modules/physics_server_aces.gd`)
 Physics Server vocabulary (world-level physics from events).
@@ -3618,6 +3646,9 @@ RegEx text matching (the Regex* verbs event-sheet authors expect, Godot-native).
 #### Conditions
 - **Text Matches Regex** (`pattern: String, text: String`) - True when the text matches the regular expression anywhere (e.g. "^[0-9]+$" tests for digits only).
 
+#### Actions
+- **Set Pattern** (`holder: String, pattern: String`) - Gives a kept pattern variable the regular expression it should match from now on.
+
 #### Expressions
 - **Regex Replace** (`pattern: String, text: String, replacement: String`) - Returns the text with EVERY match of the pattern replaced. Use $1/$2 in the replacement to reuse capture groups.
 - **Regex First Match** (`pattern: String, text: String`) - Returns the first substring that matches the pattern, or an empty string when there's no match (never errors).
@@ -3625,6 +3656,9 @@ RegEx text matching (the Regex* verbs event-sheet authors expect, Godot-native).
 - **Regex All Matches** (`pattern: String, text: String`) - Returns an array of every substring that matches the pattern (an empty array if none).
 - **Regex Capture Group** (`pattern: String, text: String, group: String`) - Returns capture group N from the first match - the text inside the Nth pair of parentheses - or empty if none.
 - **Format Decimals** (`value: String, decimals: String`) - Returns a number as text with a fixed number of decimal places, e.g. 3.14159 → "3.14".
+- **Match Pattern** (`holder: String, text: String`) - Returns the first match a kept pattern finds in the text, or nothing when it finds none.
+- **All Matches** (`holder: String, text: String`) - Returns every match a kept pattern finds in the text, as a list.
+- **Replace Matches** (`holder: String, text: String, replacement: String`) - Returns the text with every match of a kept pattern replaced.
 
 ### Rendering (`res://addons/eventforge/registration/modules/rendering_aces.gd`)
 Rendering vocabulary (the RenderingServer from events).
@@ -4063,6 +4097,7 @@ UI / menu vocabulary (Control / BaseButton / Range / LineEdit)
 - **Has Focus** (`target: String`) - True when this control currently holds keyboard focus.
 - **Is Button Pressed** (`target: String`) - True while this button is currently pressed or toggled on.
 - **Is Button Disabled** (`target: String`) - True when this button is disabled and can't be clicked.
+- **Is Checked** (`target: String`) - True while a check box is ticked.
 
 #### Actions
 - **Set Focus** (`target: String`) - Gives this control keyboard focus, so input goes to it next.
@@ -4081,12 +4116,23 @@ UI / menu vocabulary (Control / BaseButton / Range / LineEdit)
 - **Set Progress** (`value: String, max: String, target: String`) - Fills a progress bar to a value out of a maximum, both in one row.
 - **Show Dialog** (`target: String`) - Opens this dialog in the middle of the screen.
 - **Set Master Volume** (`level: String`) - Sets the overall game volume from a 0-to-1 slider value.
+- **Set Placeholder** (`value: String, target: String`) - Sets the grey hint text shown in an empty text field.
+- **Add Item** (`value: String, target: String`) - Adds one entry to the end of a list.
+- **Remove Item** (`index: String, target: String`) - Removes one entry from a list by its position.
+- **Select Item** (`index: String, target: String`) - Highlights one entry of a list as the chosen one.
+- **Clear List** (`target: String`) - Empties a list of every entry.
+- **Set Checked** (`checked: String, target: String`) - Ticks or unticks a check box.
+- **Open File Chooser** (`target: String`) - Opens a file chooser in the middle of the screen.
+- **Switch To Tab** (`index: String, target: String`) - Shows one tab of a tabbed panel.
+- **Append Formatted Text** (`value: String, target: String`) - Adds text to the end of a rich text label without clearing it.
+- **Set Tooltip** (`value: String, target: String`) - Sets the little label the pointer shows when it rests on this control.
 
 #### Expressions
 - **Button Text** (`target: String`) - Returns the label text currently shown on the button.
 - **Value** (`target: String`) - Returns the current value of a slider, progress bar, or spinbox.
 - **Value Ratio** (`target: String`) - Returns the value as a 0-to-1 ratio, handy for filling bars.
 - **Field Text** (`target: String`) - Returns whatever text the player has typed into the field.
+- **Item Text** (`index: String, target: String`) - Returns the text of one entry of a list.
 
 ### Vibration (`res://addons/eventforge/registration/modules/vibration_aces.gd`)
 Vibration vocabulary (rumble a gamepad, buzz a phone).
