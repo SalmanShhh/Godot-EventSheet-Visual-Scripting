@@ -83,6 +83,10 @@ signal delete_requested()
 signal find_requested()
 ## Emitted on F3 / Shift+F3 - the dock steps through find matches.
 signal find_step_requested(direction: int)
+## The sheet was zoomed (Ctrl+wheel, Ctrl+= / Ctrl+-, Ctrl+0, or the status-bar pill). The dock
+## carries the new factor to every other open view, the pill and the remembered preference, because
+## zoom belongs to the LAYOUT and not to one view.
+signal zoom_changed(factor: float)
 ## Emitted when the user finishes dragging the conditions/actions lane divider.
 signal lane_ratio_changed(ratio: float)
 ## An object-column resize finished (lane is "condition" or "action"; width 0 restores flow).
@@ -129,9 +133,11 @@ const BADGE_EXTRA_WIDTH := 12.0
 const CHIP_EXTRA_WIDTH := 16.0
 const CHIP_GAP := 8.0
 const ACE_DRAG_KINDS := ["trigger", "condition", "action"]
-const MIN_ZOOM_FACTOR := 0.6
-const MAX_ZOOM_FACTOR := 1.8
-const ZOOM_STEP := 0.1
+# Sheet zoom runs 50% to 200% in the six steps the status-bar pill offers; the levels and the
+# remembered value live on the palette, beside row density, because the zoom belongs to the LAYOUT
+# (every open sheet at once) and not to any one view.
+const MIN_ZOOM_FACTOR := EventSheetPalette.MIN_SHEET_ZOOM
+const MAX_ZOOM_FACTOR := EventSheetPalette.MAX_SHEET_ZOOM
 const DROP_ZONE_INSIDE_TOP := 0.33
 const DROP_ZONE_INSIDE_BOTTOM := 0.67
 const DROP_ZONE_AFTER_THRESHOLD := 0.5
@@ -543,6 +549,45 @@ func get_flat_rows() -> Array[Dictionary]:
 	return _flat_rows.duplicate(true)
 
 
+## Every built row of the sheet with its spans ready, folded subtrees included - the source the
+## plain-text listing (Copy as text / Save as text) reads, because a listing of half a sheet
+## would be a listing of nothing. Not a copy: the live rows, so nobody may mutate them.
+func get_row_tree() -> Array[EventRowData]:
+	for row_data: EventRowData in _root_rows:
+		_ensure_spans_deep(row_data)
+	return _root_rows
+
+
+## The built rows standing for `resources`, in sheet order, each with its whole subtree - what
+## "copy the selection as text" copies. Returns {"rows": Array[EventRowData], "indent": int}: the
+## shallowest indent found, so the listing starts flush left wherever the selection sat.
+func rows_for_resources(resources: Array) -> Dictionary:
+	var found: Array[EventRowData] = []
+	var shallowest: int = 0
+	var first: bool = true
+	for row_data: EventRowData in get_row_tree():
+		_collect_rows_for_resources(row_data, resources, found)
+	for row_data: EventRowData in found:
+		if first or row_data.indent < shallowest:
+			shallowest = row_data.indent
+			first = false
+	return {"rows": found, "indent": shallowest}
+
+
+func _collect_rows_for_resources(row_data: EventRowData, resources: Array, into: Array[EventRowData]) -> void:
+	if row_data.source_resource != null and resources.has(row_data.source_resource):
+		into.append(row_data)
+		return  # its subtree travels with it
+	for child: EventRowData in row_data.children:
+		_collect_rows_for_resources(child, resources, into)
+
+
+func _ensure_spans_deep(row_data: EventRowData) -> void:
+	_ensure_event_spans(row_data)
+	for child: EventRowData in row_data.children:
+		_ensure_spans_deep(child)
+
+
 func get_selected_row_data() -> EventRowData:
 	return _row_at(_selected_row_index)
 
@@ -942,14 +987,20 @@ func set_zoom_factor(value: float) -> void:
 	_zoom_factor = clamped_value
 	_update_canvas_min_size()
 	queue_redraw()
+	zoom_changed.emit(_zoom_factor)
 
 
 func zoom_in(anchor_position: Vector2 = Vector2(-1.0, -1.0)) -> void:
-	_apply_zoom_delta(ZOOM_STEP, anchor_position)
+	_apply_zoom_delta(1, anchor_position)
 
 
 func zoom_out(anchor_position: Vector2 = Vector2(-1.0, -1.0)) -> void:
-	_apply_zoom_delta(-ZOOM_STEP, anchor_position)
+	_apply_zoom_delta(-1, anchor_position)
+
+
+## Back to 100% (Ctrl+0), the reading the sheet is authored at.
+func zoom_reset() -> void:
+	set_zoom_factor(1.0)
 
 
 func toggle_row_fold_by_uid(row_uid: String) -> bool:
@@ -2623,10 +2674,11 @@ func _update_figure_min_size() -> void:
 		set_size(target_size)
 
 
-func _apply_zoom_delta(delta: float, anchor_position: Vector2) -> void:
+## `direction` +1 zooms one step in, -1 one step out, keeping the point under the mouse still.
+func _apply_zoom_delta(direction: int, anchor_position: Vector2) -> void:
 	var scroll: ScrollContainer = _get_scroll_container()
 	var old_zoom: float = _zoom_factor
-	set_zoom_factor(_zoom_factor + delta)
+	set_zoom_factor(EventSheetPalette.step_sheet_zoom(_zoom_factor, direction))
 	if scroll == null or is_equal_approx(old_zoom, _zoom_factor):
 		return
 	if anchor_position.x < 0.0 or anchor_position.y < 0.0:

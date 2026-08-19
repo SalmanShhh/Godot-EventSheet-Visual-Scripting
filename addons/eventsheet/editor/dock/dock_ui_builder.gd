@@ -258,10 +258,21 @@ func build_ui() -> void:
 	_dock._viewport.empty_space_context_menu_requested.connect(_dock._on_viewport_empty_space_context_menu_requested)
 	_dock._viewport.set_external_span_edit_handler_enabled(true)
 
+	_dock._viewport.zoom_changed.connect(_dock._on_viewport_zoom_changed)
+
+	# The status strip: the message on the left, the zoom pill pinned right. The label keeps its
+	# name and its dock member, so every _set_status caller and the tests that read it are unmoved.
+	var status_strip: HBoxContainer = HBoxContainer.new()
+	status_strip.name = "EventSheetStatusStrip"
+	status_strip.add_theme_constant_override("separation", 8)
 	_dock._status_label = Label.new()
 	_dock._status_label.name = "EventSheetStatus"
 	_dock._status_label.text = "Ready"
-	root.add_child(_dock._status_label)
+	_dock._status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_dock._status_label.clip_text = true
+	status_strip.add_child(_dock._status_label)
+	status_strip.add_child(_dock._build_zoom_pill())
+	root.add_child(status_strip)
 
 	_dock._exposed_node.name = "EventSheetExposedParams"
 	_dock.add_child(_dock._exposed_node)

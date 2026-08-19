@@ -203,6 +203,47 @@ static func row_density() -> float:
 	return _row_density
 
 
+# ── Sheet zoom ────────────────────────────────────────────────────────────────────────────────
+# The user's own multiplier on top of the editor display scale: 50% to 200%, six steps, applied to
+# the sheet CANVAS only (text, chips, icons and guide lines scale together) and never to the
+# surrounding editor chrome - zooming a sheet must not resize the toolbar. It is remembered per
+# LAYOUT, not per file: one zoom for every open sheet, so switching tabs never resizes the page
+# under you. Density (Comfortable / Compact) stays a separate choice - it trades whitespace for
+# rows, this one changes how big everything is drawn.
+const SHEET_ZOOM_LEVELS: Array[float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+const MIN_SHEET_ZOOM := 0.5
+const MAX_SHEET_ZOOM := 2.0
+
+static var _sheet_zoom: float = 1.0
+
+
+static func set_sheet_zoom(factor: float) -> void:
+	_sheet_zoom = clampf(factor, MIN_SHEET_ZOOM, MAX_SHEET_ZOOM)
+
+
+static func sheet_zoom() -> float:
+	return _sheet_zoom
+
+
+## The zoom step next to `factor`: `direction` +1 zooms in, -1 zooms out, and both stop at the
+## ends rather than wrapping. A factor between two steps snaps to the next one in that direction.
+static func step_sheet_zoom(factor: float, direction: int) -> float:
+	if direction > 0:
+		for level: float in SHEET_ZOOM_LEVELS:
+			if level > factor + 0.001:
+				return level
+		return MAX_SHEET_ZOOM
+	for index: int in range(SHEET_ZOOM_LEVELS.size() - 1, -1, -1):
+		if SHEET_ZOOM_LEVELS[index] < factor - 0.001:
+			return SHEET_ZOOM_LEVELS[index]
+	return MIN_SHEET_ZOOM
+
+
+## "125%" - what the status-bar zoom pill says.
+static func sheet_zoom_label(factor: float) -> String:
+	return "%d%%" % int(round(factor * 100.0))
+
+
 static func clamp_font_size(value: int) -> int:
 	return max(value, MIN_FONT_SIZE)
 
