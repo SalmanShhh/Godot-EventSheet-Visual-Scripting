@@ -2168,3 +2168,21 @@ axis {axis} of gamepad {device},手柄 {device} 的轴 {axis}
 name of gamepad {device},手柄 {device} 的名称
 gamepad {device} is recognized,手柄 {device} 已识别
 Is button down {action} (exact match),按钮 {action} 按下（完全匹配）
+Global,全局
+Instance,实例
+Constant,常量
+Static,静态
+whole number,整数
+boolean,布尔值
+vector,向量
+booleans,布尔值
+vectors,向量
+objects,对象
+Inspector,检查器
+of %s,属于 %s
+shared by every copy,所有副本共享
+Scope,作用域
+The row you will get,你将得到的行
+One per object - every copy of this object keeps its own.,每个对象一份 - 该对象的每个副本各自持有。
+Lives inside one event and is gone when it ends.,只存在于一个事件内，事件结束就消失。
+Set once and never changes while the game runs.,设定一次，游戏运行期间不再改变。

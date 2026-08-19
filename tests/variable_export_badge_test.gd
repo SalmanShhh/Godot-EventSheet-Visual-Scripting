@@ -1,6 +1,6 @@
-# Godot EventSheets - the "@export" badge on variable rows.
+# Godot EventSheets - the "Inspector" badge on variable rows.
 #
-# A sheet variable exposed to the Godot Inspector (@export) gets a blue "@export" pill on its row, so it's
+# A sheet variable exposed to the Godot Inspector (@export) gets a blue "Inspector" pill on its row, so it's
 # obvious at a glance - while scrolling a sheet - which variables show in the Inspector vs. stay internal.
 # The badge tracks the same default the compiler uses (exported unless explicitly false).
 @tool
@@ -19,7 +19,7 @@ static func run() -> bool:
 	}
 	var rows: Array = viewport._build_global_variable_rows(sheet)
 
-	all_passed = _check("an exported variable shows the @export badge",
+	all_passed = _check("an exported variable shows the Inspector chip",
 		_row_has_export_badge(rows, "health"), true) and all_passed
 	all_passed = _check("a non-exported variable has no @export badge",
 		_row_has_export_badge(rows, "internal_clock"), false) and all_passed
@@ -28,7 +28,7 @@ static func run() -> bool:
 	return all_passed
 
 
-## True when the variable row named `var_name` carries an "@export" badge span.
+## True when the variable row named `var_name` carries an "Inspector" badge span.
 static func _row_has_export_badge(rows: Array, var_name: String) -> bool:
 	for row: Variant in rows:
 		if not (row is EventRowData):
@@ -40,7 +40,7 @@ static func _row_has_export_badge(rows: Array, var_name: String) -> bool:
 			var meta: Dictionary = (span as SemanticSpan).metadata if (span as SemanticSpan).metadata is Dictionary else {}
 			if text == var_name:
 				is_target = true
-			if text == "@export" and bool(meta.get("badge", false)):
+			if text == "Inspector" and bool(meta.get("badge", false)):
 				has_badge = true
 		if is_target:
 			return has_badge

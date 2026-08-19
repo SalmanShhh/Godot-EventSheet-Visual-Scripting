@@ -2,7 +2,7 @@
 
 The condition rows that ask a question an operator cannot.
 
-**Compare Variable** and **Compare Values** already cover `a = b`, `a < b` and the rest, for anything that
+**Compare variable** and **Compare Values** already cover `a = b`, `a < b` and the rest, for anything that
 compares with a plain operator. This guide is the rest of the question: comparisons that need a method, a
 tolerance, or a type test, and that you would otherwise have to write as an ƒx expression.
 
@@ -66,12 +66,12 @@ compared, because the right question depends on the type:
 
 | Verb | What it does | Ships as |
 |------|--------------|----------|
-| Compare Variable | True when a sheet variable compares against a value with your chosen operator. | `{var_name} {op} {value}` |
+| Compare variable | True when a sheet variable compares against a value with your chosen operator. | `{var_name} {op} {value}` |
 | Compare Values | True when two values compare with your chosen operator. | `{a} {op} {b}` |
 | Is Between Values | True when a value falls within a low and high range, bounds included. | `({min} <= {value} and {value} <= {max})` |
 | Expression Is True | True when your own GDScript boolean expression is true - the advanced escape hatch. | `{expr}` |
 
-The **Operator** dropdown on Compare Variable and Compare Values is the same six everywhere in the
+The **Operator** dropdown on Compare variable and Compare Values is the same six everywhere in the
 plugin: `=` (equal to), `!=` (not equal to), `<` (less than), `<=` (at most), `>` (greater than),
 `>=` (at least).
 

@@ -126,7 +126,7 @@ static func run() -> bool:
 	panel.free()
 
 	# Plain-word types: a Node class is one word to a reader, a list is a list.
-	ok = _check("a Node class reads as 'node'", ViewportRowBuilder.friendly_type_word("Sprite2D"), "node") and ok
+	ok = _check("a Node class reads as 'object'", ViewportRowBuilder.friendly_type_word("Sprite2D"), "object") and ok
 	ok = _check("an Array reads as 'list'", ViewportRowBuilder.friendly_type_word("Array"), "list") and ok
 	ok = _check("a Dictionary reads as 'table'", ViewportRowBuilder.friendly_type_word("Dictionary"), "table") and ok
 	ok = _check("an unknown class keeps its own name", ViewportRowBuilder.friendly_type_word("HealthPool"), "HealthPool") and ok

@@ -12,11 +12,27 @@ signal variable_confirmed(name: String, type_name: String, default_value: Varian
 
 var _dialog: ConfirmationDialog = null
 var _scope_label: Label = null
+## R42 - the Scope chip row, and the chip per scope key (the sheet's own order).
+var _scope_chip_row: HBoxContainer = null
+var _scope_chips: Dictionary = {}
+## R42 - the live preview of the EXACT row this dialog will write, in the R37 shape.
+var _row_preview_label: Label = null
+
+## The scopes the dialog can write. Static is read on an opened script but not offered here yet,
+## because a shared-by-every-copy variable is a decision with consequences a dialog cannot show.
+const CHOOSABLE_SCOPES: PackedStringArray = ["instance", "local", "constant"]
+
+## What each scope word means, in one line, for the chip's hover.
+const SCOPE_HINTS: Dictionary = {
+	"instance": "One per object - every copy of this object keeps its own.",
+	"local": "Lives inside one event and is gone when it ends.",
+	"constant": "Set once and never changes while the game runs."
+}
 var _name_edit: LineEdit = null
 var _name_warning: Label = null
 var _sheet_provider: Callable = Callable()
 var _type_option: OptionButton = null
-# "Whole numbers only" - shown only when the friendly "Number" type is selected; ticked stores int,
+# "Whole numbers only" - shown only when the friendly "number" type is selected; ticked stores int,
 # unticked stores float. The dialog's display is friendly; the stored type stays a real Godot type.
 var _whole_numbers_check: CheckBox = null
 var _whole_numbers_row: HBoxContainer = null
@@ -36,6 +52,9 @@ var _onready_type_edit: LineEdit = null
 var _const_help: Label = null
 var _type_help: Label = null
 var _scope: String = "global"
+## R42 - the MEMBER spelling the dialog opened with ("global" or "tree"), so the Instance chip can
+## put a variable back exactly where it came from after a trip through Local.
+var _member_scope: String = "global"
 var _context: Dictionary = {}
 var _default_help: Label = null
 var _options_edit: LineEdit = null
@@ -117,9 +136,9 @@ const TYPE_OPTIONS: PackedStringArray = [
 ## Plain-language hover hints for the Type dropdown, in everyday terms (the three common kinds are a
 ## number, text, and yes/no). The stored type name is unchanged - these are on-demand explanations, not renames.
 const TYPE_HINTS: Dictionary = {
-	"Number": "A number - a count, score, position, speed… Tick \"Whole numbers only\" for integers.",
-	"Text": "Text - words, names, messages.",
-	"Yes-No": "A yes/no, on/off switch (true / false).",
+	"number": "A number - a count, score, position, speed… Tick \"Whole numbers only\" for a whole number.",
+	"text": "Text - words, names, messages.",
+	"boolean": "A true / false switch - on or off.",
 	"int": "A whole number, no decimals (for a count or score).",
 	"float": "A number that can have decimals - the everyday number type.",
 	"bool": "Yes / no, on / off (true / false).",
@@ -163,7 +182,25 @@ func init_dialog(parent_node: Node) -> void:
 	form.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dialog.add_child(EventSheetPopupUI.margined(form))
 
+	# R42 - the scope reads as CHIPS, first, in the sheet's own order. The dialog's job is to write
+	# one row, and the row starts with its scope word, so that is what the dialog asks for first.
+	_scope_chip_row = HBoxContainer.new()
+	var scope_caption: Label = Label.new()
+	scope_caption.text = "Scope"
+	scope_caption.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
+	_scope_chip_row.add_child(scope_caption)
+	for scope_key: String in CHOOSABLE_SCOPES:
+		var chip: Button = Button.new()
+		chip.toggle_mode = true
+		chip.focus_mode = Control.FOCUS_NONE
+		chip.text = EventSheetVariableSentence.scope_word(scope_key)
+		chip.tooltip_text = str(SCOPE_HINTS.get(scope_key, ""))
+		chip.pressed.connect(_on_scope_chip_pressed.bind(scope_key))
+		_scope_chip_row.add_child(chip)
+		_scope_chips[scope_key] = chip
+	form.add_child(_scope_chip_row)
 	_scope_label = Label.new()
+	_scope_label.visible = false
 	form.add_child(_scope_label)
 
 	var name_row: HBoxContainer = HBoxContainer.new()
@@ -195,12 +232,12 @@ func init_dialog(parent_node: Node) -> void:
 	# Friendly labels first (Number / Text / Yes-No), then a separator, then the advanced Godot types
 	# under their own names. Only the DISPLAY changes - _selected_stored_type() always returns a real
 	# Godot type (int/float/String/bool/…), so the stored type_name and the .gd round-trip are unchanged.
-	for friendly: String in ["Number", "Text", "Yes-No"]:
+	for friendly: String in ["number", "text", "boolean"]:
 		_type_option.add_item(friendly)
 		_type_option.set_item_tooltip(_type_option.item_count - 1, str(TYPE_HINTS[friendly]))
 	_type_option.add_separator("Advanced types")
 	for option: String in TYPE_OPTIONS:
-		# int / float collapse into "Number" + a "Whole numbers only" tick; bool → Yes-No; String → Text.
+		# int / float collapse into "number" + a "Whole numbers only" tick; bool → boolean; String → text.
 		if option == "int" or option == "float" or option == "bool" or option == "String":
 			continue
 		_type_option.add_item(option)
@@ -225,7 +262,7 @@ func init_dialog(parent_node: Node) -> void:
 	type_row.add_child(_onready_type_edit)
 	form.add_child(type_row)
 
-	# "Whole numbers only" - the int/float distinction, surfaced only when "Number" is the chosen type.
+	# "Whole numbers only" - the int/float distinction, surfaced only when "number" is the chosen type.
 	_whole_numbers_row = HBoxContainer.new()
 	var whole_spacer: Control = Control.new()
 	whole_spacer.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
@@ -537,6 +574,19 @@ func init_dialog(parent_node: Node) -> void:
 	_type_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
 	form.add_child(_type_help)
 
+	# R42 - the exact row this dialog will write, live as you type. It sits last, where the eye
+	# lands after the fields, and it is the row the sheet will actually show.
+	var preview_box: VBoxContainer = VBoxContainer.new()
+	preview_box.add_child(EventSheetPopupUI.section_header("The row you will get"))
+	_row_preview_label = Label.new()
+	_row_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	preview_box.add_child(_row_preview_label)
+	form.add_child(EventSheetPopupUI.panel_section(preview_box))
+	_default_edit.text_changed.connect(func(_t: String) -> void: _refresh_ships_as())
+	_const_check.toggled.connect(func(_on: bool) -> void:
+		refresh_scope_chips()
+		_refresh_ships_as())
+
 
 ## A 130px-label + expanding-field row, matching the main form's columns, so the optional
 ## Inspector fields line up with Name/Type/Default above instead of running full-width.
@@ -554,11 +604,11 @@ func _selected_stored_type() -> String:
 		return "int"
 	var label: String = _type_option.get_item_text(_type_option.selected)
 	match label:
-		"Number":
+		"number":
 			return "int" if _whole_numbers_check != null and _whole_numbers_check.button_pressed else "float"
-		"Text":
+		"text":
 			return "String"
-		"Yes-No":
+		"boolean":
 			return "bool"
 		_:
 			return label
@@ -570,17 +620,17 @@ func _select_stored_type(type_name: String) -> void:
 	var target: String = type_name
 	match type_name:
 		"int":
-			target = "Number"
+			target = "number"
 			if _whole_numbers_check != null:
 				_whole_numbers_check.button_pressed = true
 		"float":
-			target = "Number"
+			target = "number"
 			if _whole_numbers_check != null:
 				_whole_numbers_check.button_pressed = false
 		"String":
-			target = "Text"
+			target = "text"
 		"bool":
-			target = "Yes-No"
+			target = "boolean"
 	for index: int in range(_type_option.item_count):
 		if _type_option.get_item_text(index) == target:
 			_type_option.select(index)
@@ -588,12 +638,12 @@ func _select_stored_type(type_name: String) -> void:
 	_refresh_whole_numbers_row()
 
 
-## Shows the "Whole numbers only" tick only while the friendly "Number" type is selected.
+## Shows the "Whole numbers only" tick only while the friendly "number" type is selected.
 func _refresh_whole_numbers_row() -> void:
 	if _whole_numbers_row == null:
 		return
 	var label: String = _type_option.get_item_text(_type_option.selected) if _type_option != null and _type_option.selected >= 0 else ""
-	_whole_numbers_row.visible = label == "Number"
+	_whole_numbers_row.visible = label == "number"
 
 
 ## ── Structured data editor (Array/Dictionary "Edit items…") ──────────────────
@@ -807,6 +857,8 @@ func open_for_edit(
 		push_error("VariableDialog.open() called before init_dialog().")
 		return
 	_scope = scope
+	if scope != "local":
+		_member_scope = scope
 	_context = context.duplicate(true)
 	_scope_label.text = "Scope: %s" % scope.capitalize()
 	_dialog.title = title
@@ -927,6 +979,9 @@ func open_for_edit(
 	_type_option.disabled = lock_type
 	_type_help.visible = lock_type
 	_type_help.text = "Type is locked because this variable is already in use."
+	# R42 - the chips and the row preview open agreeing with everything above.
+	refresh_scope_chips()
+	_refresh_ships_as()
 	if _dialog.is_inside_tree():
 		_dialog.popup_centered(Vector2i(468, 248))
 		# Land focus on the Name field so creating/editing a variable is keyboard-first (parity with
@@ -1437,9 +1492,97 @@ static func _look_labels_text(entries: Array) -> String:
 	return ", ".join(parts)
 
 
+## R42 - the scope word the chips are showing right now: `const` wins, then a local, then the
+## member scope the dialog was opened in.
+func current_scope_word() -> String:
+	if _const_check != null and _const_check.button_pressed:
+		return EventSheetVariableSentence.SCOPE_CONSTANT
+	if _scope == "local":
+		return EventSheetVariableSentence.SCOPE_LOCAL
+	return EventSheetVariableSentence.SCOPE_INSTANCE
+
+
+## Pressing a scope chip. Constant is orthogonal to WHERE the variable is stored, so it only sets
+## the const flag; Instance and Local move the storage, and clear it.
+func _on_scope_chip_pressed(scope_key: String) -> void:
+	match scope_key:
+		EventSheetVariableSentence.SCOPE_CONSTANT:
+			if _const_check != null:
+				_const_check.button_pressed = true
+		EventSheetVariableSentence.SCOPE_LOCAL:
+			_scope = "local"
+			if _const_check != null:
+				_const_check.button_pressed = false
+		_:
+			# Back to a member of the object. The dialog remembers which member spelling it opened
+			# with (a sheet variable or a row-placed one) so switching away and back is a no-op.
+			_scope = _member_scope if _member_scope != "local" else "global"
+			if _const_check != null:
+				_const_check.button_pressed = false
+	_apply_scope_gating()
+	refresh_scope_chips()
+	_refresh_ships_as()
+
+
+## Lights the chip that matches the current scope, and dims the rest.
+func refresh_scope_chips() -> void:
+	var active: String = current_scope_word()
+	for scope_key: String in _scope_chips:
+		var chip: Button = _scope_chips[scope_key]
+		chip.button_pressed = scope_key == active
+
+
+## The one thing the storage scope changes elsewhere in the form: a local variable is private to
+## the script body, so it can never be an Inspector property.
+func _apply_scope_gating() -> void:
+	if _exported_check == null:
+		return
+	var is_local: bool = _scope == "local"
+	if is_local:
+		_exported_check.button_pressed = false
+	_exported_check.disabled = is_local
+	if _onready_check != null:
+		_onready_check.visible = not is_local
+	_update_attr_gating()
+
+
+## R42 - the EXACT row this dialog will write, in the R37 shape, live as you type:
+## `Instance number  hp = 100`. The dialog's whole job is to write one row, so showing that row is
+## the preview a beginner needs - and it is composed through the same grammar the sheet composes
+## its own rows with, so the dialog, the head and the events can never disagree.
+func row_preview_text() -> String:
+	var stored_type: String = _selected_stored_type()
+	var type_word: String = ViewportRowBuilder.friendly_type_word(stored_type)
+	var shown_name: String = "value"
+	if _name_edit != null and not _name_edit.text.strip_edges().is_empty():
+		shown_name = _name_edit.text.strip_edges()
+	var value_text: String = _default_edit.text.strip_edges() if _default_edit != null else ""
+	if value_text.is_empty():
+		value_text = _default_placeholder_for(stored_type)
+	return "%s  %s = %s" % [
+		EventSheetVariableSentence.chip_text(current_scope_word(), type_word), shown_name, value_text
+	]
+
+
+## What a value field left empty will actually hold, said the way the row will say it.
+func _default_placeholder_for(stored_type: String) -> String:
+	match stored_type:
+		"String":
+			return "\"\""
+		"bool":
+			return "false"
+		"Array", "Dictionary":
+			return EventSheetL10n.translate("empty")
+	if stored_type.begins_with("Array") or stored_type.begins_with("Dictionary"):
+		return EventSheetL10n.translate("empty")
+	return "0"
+
+
 ## "Ships as:" - renders the EXACT annotation the current choices compile to, using the
 ## compiler's own prefix builder as the single source of truth (the ACE Studio pattern).
 func _refresh_ships_as() -> void:
+	if _row_preview_label != null:
+		_row_preview_label.text = row_preview_text()
 	if _ships_as_label == null:
 		return
 	var type_name: String = _selected_stored_type()

@@ -14,7 +14,7 @@ A one-page Rosetta Stone. If you come from **Construct 3**, read the left column
 | Plugin / Behavior ACEs | engine API | **ACE** (Action / Condition / Expression) | The vocabulary you pick from. 920+ builtin, plus your addons. |
 | Trigger (e.g. *On start of layout*) | signal / `_ready` / `_process` | **Trigger** | The green "On …" row that starts an event (On Ready, Every Frame, On Pressed, On Input, signals…). |
 | Behavior (Platformer, 8-Direction…) | a script/node component | **Behavior pack** | A reusable event-sheet pack you attach as a child node. 76 bundled. |
-| Instance variable | member `var` | **Variable** (global) | Compiles to a class member (`var` / `@export var`). Tick **@export** for a designer knob (an **@export badge** shows on the row + in the Inspector); organize knobs with **`@export_group` / `@export_subgroup`** ("Group › Subgroup" chips); typed vars get live Inspector **drawers**. Lossless `.gd` round-trip. |
+| Instance variable | member `var` | **Variable** (global) | Compiles to a class member (`var` / `@export var`). Tick **Editable in the Inspector** for a designer knob (an **Inspector chip** shows on the row + in the Inspector); organize knobs with **`@export_group` / `@export_subgroup`** ("Group › Subgroup" chips); typed vars get live Inspector **drawers**. Lossless `.gd` round-trip. |
 | Local variable | local `var` | **Local variable** | Scoped to one event body. |
 | Family | (no direct equal) | **Family** / Group / Include | Declare a sheet as a **Family** for family-scoped iteration (see the **Family Arena** showcase). Groups organize rows; Includes are shared library sheets. |
 | Layout | Scene (`.tscn`) | Scene | Use Godot scenes directly. |
@@ -43,5 +43,26 @@ A one-page Rosetta Stone. If you come from **Construct 3**, read the left column
 | **Forwarding shim** | A deprecated stand-in function of a verb's OLD name, appended by **Keep Old Name…** after you rename the real one. Renaming a member changes the verb's identity, and every sheet already holds the old call *text*, so only a real member of the old name can keep those sheets working. The shim just forwards, and is hidden from the picker so it can't be added to new work. |
 | **Orphaned verb** | A row (or a compiled line) calling a provider member that no longer exists - the one failure here that compiles green and only breaks when the game runs it. The **Project Doctor**'s `orphaned-verb` check reads the emitted calls and flags them, and stays silent unless it can prove the member is absent from the script's own API, its inheritance chain, and its engine base class. |
 | **Self section** | The pinned first group of the ƒx **Expressions dictionary** - C3's `Self.` reflex. Type `self` in any ƒx field and it scopes to what this sheet's object knows about itself: **Variables** (bare names), **Properties** (the C3 commons under both spellings - `X · position.x`, `Opacity · modulate.a`, host-gated so a 3D body gets no scalar Angle), **Functions** (value-returning ones, as ready calls), a **Host** group in behaviour mode (`host.position.x`), and **Behaviours** - attached packs' knobs and value verbs as `$PackName.member` chains whose node token stays selected for retargeting. A **Robust behaviour lookups** toggle swaps chains to `get_node_or_null("Name")` (default ON for sheets that spawn), selecting your node in the Scene dock grounds the group to its actual children, and while **Live Values** streams the group reads the RUNNING instance - behaviours attached at runtime included, under their real names. Everything inserts plain GDScript; no `Self` token ever reaches your code. |
+
+## The variable verbs, and their older names
+
+The sheet changes a variable with five verbs and asks about one with two conditions. They are named
+the same in the picker and in the reading, so what you pick is what you read.
+
+| The verb | What it writes | Older name here |
+| --- | --- | --- |
+| **Set value** | `hp = 100` | Set Variable |
+| **Add to** | `score += 10` | Add Variable |
+| **Subtract from** | `hp -= dmg` | Subtract From Variable |
+| **Toggle boolean** | `alive = not alive` | Toggle |
+| **Compare variable** | `if hp <= 0:` | Compare Variable |
+
+Setting a boolean is **Set value** with `true` or `false`; asking about one is **Compare variable**.
+They have no entries of their own because their emitted line would be byte-identical, and an opened
+file is read back by the line it holds.
+
+A boolean condition still reads as the plain sentence `alive is true` / `muted is false`, never as
+"Is alive set". The ids behind all of these are frozen: only the names you see changed, so every
+sheet that already used them keeps working.
 
 See also the [C3 migration guide](GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md) (every C3 plugin/behavior mapped) and the [recipes](GUIDE-RECIPES.md) (build something end to end).

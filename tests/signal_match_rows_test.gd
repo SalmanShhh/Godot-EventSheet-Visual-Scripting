@@ -134,7 +134,7 @@ static func run() -> bool:
 	all_passed = _check("signal row badges its kind with the glyph", Array(signal_texts).has("➜"), true) and all_passed
 	all_passed = _check("signal row names the signal", Array(signal_texts).has("hit"), true) and all_passed
 	all_passed = _check("signal parameter reads as a typed cell",
-		Array(signal_texts).has("number") and Array(signal_labels).has("damage"), true) and all_passed
+		Array(signal_texts).has("whole number") and Array(signal_labels).has("damage"), true) and all_passed
 	all_passed = _check("a plain signal publishes nothing", Array(signal_texts).has("internal"), true) and all_passed
 	all_passed = _check("the hover carries the real declaration",
 		ViewportTooltipHelper.signal_declaration_tooltip(hit), "signal hit(damage: int)") and all_passed

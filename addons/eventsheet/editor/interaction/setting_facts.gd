@@ -175,13 +175,36 @@ static func _apply_node_path(found: Dictionary, variable: LocalVariable, attribu
 ## A colour shows itself. The swatch is the fact; the word beside it is a courtesy for the handful of
 ## colours anybody names out loud, and every other colour keeps the numbers it was written with.
 static func _apply_colour(found: Dictionary, variable: LocalVariable) -> void:
-	if variable.type_name.strip_edges() != "Color":
+	# R37 - a colour is ALWAYS a swatch, whether or not the line bothered to declare the type:
+	# `var tint := Color.WHITE` is as much a colour as `var tint: Color = ...`, and the swatch is the
+	# half of the row a reader actually uses.
+	if variable.type_name.strip_edges() != "Color" and not is_colour_literal(str(variable.default_value)):
 		return
 	var colour: Color = _colour_of(variable)
 	found["swatch"] = colour
+	# The word for the colours anybody says out loud, else the hex - never raw floats. The hex trails
+	# a named colour as its muted note, because "#ffffff" is the thing you paste somewhere else.
 	var word: String = colour_word(colour)
-	if not word.is_empty():
-		found["value_text"] = word
+	if word.is_empty():
+		found["value_text"] = colour_hex(colour)
+		return
+	found["value_text"] = word
+	if found["note"] == "":
+		found["note"] = colour_hex(colour)
+
+
+## `#rrggbb`, or `#rrggbbaa` when the colour is not fully opaque - the spelling everybody pastes.
+static func colour_hex(colour: Color) -> String:
+	return "#%s" % (colour.to_html(false) if is_equal_approx(colour.a, 1.0) else colour.to_html(true))
+
+
+## True when a value was WRITTEN as a colour - `Color.RED`, `Color(1, 0.6, 0.2)`, `Color("#ff9b3c")`.
+static func is_colour_literal(value_text: String) -> bool:
+	var text: String = value_text.strip_edges()
+	# `Color.from_hsv(...)` is a CALL, not the colour word red - a swatch for it would be a guess.
+	if text.begins_with("Color.") and not text.contains("("):
+		return true
+	return text.begins_with("Color(")
 
 
 ## The colour a variable holds, whichever way it was written - a real Color value, a `Color.RED`

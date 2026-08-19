@@ -290,7 +290,7 @@ Every Frame
 ```
 Every Frame
   Condition: Is Within Distance (choose metric)   of = $Player, distance = 300.0, measured as = Horizontal only
-    -> Set Variable  chasing = true
+    -> Set value  chasing = true
 ```
 
 The **Measured As** dropdown is what makes one condition fit a platformer, a roguelike (Grid steps) and

@@ -62,7 +62,7 @@ func _build_dialog() -> void:
 	_type_option = OptionButton.new()
 	# The variable dialog's own list: the three everyday types first, then the advanced Godot ones
 	# (int/float collapse into Number + the tick below, bool into Yes-No, String into Text).
-	for friendly: String in ["Number", "Text", "Yes-No"]:
+	for friendly: String in ["number", "text", "boolean"]:
 		_type_option.add_item(friendly)
 		_type_option.set_item_tooltip(_type_option.item_count - 1, str(VariableDialog.TYPE_HINTS[friendly]))
 	_type_option.add_separator("Advanced types")
@@ -72,7 +72,7 @@ func _build_dialog() -> void:
 		_type_option.add_item(option)
 		if VariableDialog.TYPE_HINTS.has(option):
 			_type_option.set_item_tooltip(_type_option.item_count - 1, str(VariableDialog.TYPE_HINTS[option]))
-	# The tick belongs to "Number" alone, so picking a type from the dropdown has to show or hide it -
+	# The tick belongs to "number" alone, so picking a type from the dropdown has to show or hide it -
 	# without this the only UI route to a numeric type leaves the tick hidden and `int` unreachable.
 	_type_option.item_selected.connect(func(_index: int) -> void:
 		refresh_whole_numbers_row()
@@ -96,17 +96,17 @@ func _build_dialog() -> void:
 	_dock.add_child(_dialog)
 
 
-## The stored Godot type the dropdown currently means ("Number" + the tick -> int).
+## The stored Godot type the dropdown currently means ("number" + the tick -> int).
 func selected_type() -> String:
 	if _type_option == null or _type_option.selected < 0:
 		return "Variant"
 	var label: String = _type_option.get_item_text(_type_option.selected)
 	match label:
-		"Number":
+		"number":
 			return "int" if _whole_numbers_check != null and _whole_numbers_check.button_pressed else "float"
-		"Text":
+		"text":
 			return "String"
-		"Yes-No":
+		"boolean":
 			return "bool"
 	return label
 
@@ -118,11 +118,11 @@ func select_type(type_name: String) -> void:
 	var wanted: String = type_name
 	match type_name:
 		"int", "float":
-			wanted = "Number"
+			wanted = "number"
 		"String":
-			wanted = "Text"
+			wanted = "text"
 		"bool":
-			wanted = "Yes-No"
+			wanted = "boolean"
 	for index: int in range(_type_option.item_count):
 		if _type_option.get_item_text(index) == wanted:
 			_type_option.select(index)
@@ -132,12 +132,12 @@ func select_type(type_name: String) -> void:
 	refresh_whole_numbers_row()
 
 
-## Shows the whole-numbers tick only under "Number" - it is the one thing that tells int from float,
+## Shows the whole-numbers tick only under "number" - it is the one thing that tells int from float,
 ## and it has to follow the dropdown however the dropdown was changed (opened at a type, or picked).
 func refresh_whole_numbers_row() -> void:
 	if _whole_numbers_check == null or _type_option == null:
 		return
-	_whole_numbers_check.visible = _type_option.selected >= 0 and _type_option.get_item_text(_type_option.selected) == "Number"
+	_whole_numbers_check.visible = _type_option.selected >= 0 and _type_option.get_item_text(_type_option.selected) == "number"
 
 
 ## The preview, exactly as the list shows it: the declaration line, then one line per rewritten

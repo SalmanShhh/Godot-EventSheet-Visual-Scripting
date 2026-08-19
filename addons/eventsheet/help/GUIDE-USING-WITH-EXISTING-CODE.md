@@ -347,6 +347,25 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   just says `reads as events`. The number is measured by the same code the corpus gate measures with,
   so the chip and the test can never disagree about the same file. When the engine reported parse
   errors, the bar also says `N errors - the game will not run this script`, in red.
+![An opened script's head: one Instance variables folder holding every member, each row reading scope word, plain type word, name, value - Instance number speed = 200 with an Inspector chip, Constant number MAX_HP = 100, Static number spawned = 0 shared by every Player, Instance color tint = white with its live swatch](images/variable-sentence-head.png)
+
+- **Every variable reads as one sentence - `<scope> <type> <name> = <value>`.** The scope word leads:
+  `Instance number speed = 200`, `Instance boolean alive = true`, `Constant number MAX_HP = 100`,
+  `Static number spawned = 0` (which adds `shared by every Player`), `Local text name = ""` inside an
+  event, `Global number Score = 0` on an autoload and `Field number price = 0` on a Resource script.
+  The type is in plain words - number, whole number, text, boolean, vector, color, `list of text`,
+  table, object or the class the author named, scene, any - with Godot's own spelling (`float`, `int`,
+  `String`, `Array[String]`, `Dictionary`) one hover away. A declared `int` reads "whole number"
+  because the author said they wanted no fractions; an undeclared `100` still reads "number". Variables
+  a designer can edit wear a small **Inspector** chip, and the head gathers them all in one
+  **Instance variables** folder with those first, rather than a Settings / Internal state split.
+- **A colour is always a live swatch.** `var tint := Color.WHITE` reads `Instance color tint =`
+  swatch `white  #ffffff`; a colour nobody has a word for reads its hex. Click the swatch, anywhere
+  it appears - a variable row, an action's colour parameter, the Add variable dialog - and the sheet's
+  colour picker opens right there (wheel, hex, RGBA, named colours, your saved palette, eyedropper).
+  What you pick is written back **in the spelling the line already used**: `Color.RED` stays a named
+  constant, `Color("#ff9b3c")` stays a hex string, `Color(1, 0.6, 0.2)` stays numbers. The colour
+  moves; nothing else in the file does.
 - **A setting row shows what the Inspector would show.** `@export_range(0, 20, 0.5)` reads
   `number  speed = 5  0 to 20, step 0.5`; `@export_enum("Walk", "Run", "Fly")` reads as a `combo` chip
   showing the label rather than the number (`mode = Walk  Walk / Run / Fly`); a 0-to-1 range reads as a
@@ -355,7 +374,7 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   `@export_flags(...)` reads `flags` with the names of the bits.
 - **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, the
   Include bar reads `⇥ Game  autoload (global) · game.gd` with the globe, its knobs read as one
-  `Global variables` folder rather than a Settings / Internal state split, and its triggers say
+  `Global variables` folder rather than the Instance variables one, and its triggers say
   `this global fires - N`. The Objects rail names it the same way.
 - **The head is one Include bar, the description once, and folded folders.** `⇥ Addon Pack  FPSController
   v1.0.0  behaves on a  CharacterBody3D`, the class description as a comment bar, then a `Triggers this pack
@@ -374,6 +393,17 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   their types), what it gives back, description, whether it is featured, its icon, the exact line it
   inserts, and the function behind it - with Edit..., Open guide and Show in code. Unpublished helpers are
   the same blocks with their doc as the right-hand caption, gathered under a closed **Helpers** folder.
+
+  plus `Instance variables  of FPSController` for everything the groups did not claim. Inside a folder
+  a variable reads `Instance number  jump_velocity = 4.5  Upward velocity applied on a jump` - the one
+  sentence above, plus the knob's own description. On an editable sheet the head keeps its Class setup
+  strip, because that is something you edit; the folders are for reading.
+- **Every function is a Function block.** `ƒ Jump`, `ƒ Set Third Person  [enabled true/false]`: the ƒ, the
+  name and one chip per input, nothing else on the row; the header's tint says whether it is an Action,
+  Condition or Expression. Click the header for the **ACE properties** popup - kind, category, inputs, what
+  it gives back, description, whether it is featured, its icon, the exact line it inserts, and the function
+  behind it - with Edit..., Open guide and Show in code. Unpublished helpers are the same blocks with their
+  doc as the right-hand caption, gathered under a closed **Helpers** folder.
 - **Lifecycle handlers are triggers, wherever they sit in the file.** `_physics_process` is `Every Physics
   Tick`; an `_unhandled_input` that branches on the event type reads as one Construct trigger per branch -
   `Mouse ▸ On mouse moved` with `Mouse ▸ mouse is captured` under it, `Keyboard ▸ On Escape pressed` - and a

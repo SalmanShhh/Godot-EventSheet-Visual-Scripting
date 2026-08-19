@@ -65,7 +65,7 @@ static func run() -> bool:
 	# ── 3. The group bars, in file order, closed ──
 	ok = _check("the head bars read in file order",
 		_head_bar_titles(rows),
-		"Triggers | AI Driver | Camera | Crouch & Slide | Jump | Look | Movement | Wall Tech | Internal state") and ok
+		"Triggers | AI Driver | Camera | Crouch & Slide | Jump | Look | Movement | Wall Tech | Instance variables") and ok
 	var triggers_bar: EventRowData = _bar_titled(rows, "Triggers")
 	ok = _check("the Triggers bar says what it holds", _texts(triggers_bar), "Triggers | this pack fires - 11") and ok
 	ok = _check("its children are the pack's trigger rows", triggers_bar.children.size() if triggers_bar != null else -1, 11) and ok
@@ -76,9 +76,9 @@ static func run() -> bool:
 	ok = _check("a settings bar counts its knobs", _texts(jump_bar), "Jump | 3 settings") and ok
 	ok = _check("a settings bar is CLOSED on a preview", jump_bar != null and jump_bar.folded, true) and ok
 	ok = _check("its knobs are hidden while it is closed", _has_variable_row(rows, "jump_velocity"), false) and ok
-	var internal_bar: EventRowData = _bar_titled(rows, "Internal state")
-	ok = _check("the private state reads as the pack's own",
-		_texts(internal_bar), "Internal state | values the pack keeps for itself - 21") and ok
+	var internal_bar: EventRowData = _bar_titled(rows, "Instance variables")
+	ok = _check("the one variable folder gathers what the groups did not",
+		_texts(internal_bar), "Instance variables | of FPSController") and ok
 	# The grouping rule Godot itself uses: an @export_group runs until the next one, so the knobs
 	# declared after it belong to it even though only the first one carries the attribute.
 	var camera_bar: EventRowData = _bar_titled(rows, "Camera")
@@ -91,7 +91,7 @@ static func run() -> bool:
 	var knob: EventRowData = _variable_row(rows, "jump_velocity")
 	ok = _check("a knob reads type-word, name, value, description",
 		_texts(knob),
-		"number | jump_velocity | = | 4.5 | Upward velocity applied on a jump (and on a wall jump).") and ok
+		"Instance number | jump_velocity | Inspector | = | 4.5 | Upward velocity applied on a jump (and on a wall jump).") and ok
 	ok = _check("a knob keeps its LocalVariable (the row is a lens, not a copy)",
 		knob != null and knob.source_resource is LocalVariable, true) and ok
 	ok = _check("the @export chip is gone from the row", _texts(knob).contains("@export"), false) and ok
@@ -156,8 +156,8 @@ static func _test_a_plain_script_is_not_called_a_pack() -> bool:
 	# M34 - and it does not wear the word "Script" either: the bar names the OBJECT the script drives
 	# and the class it is, which is what a reader is actually looking at.
 	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | Patrol | a | Node | reads as events") and ok
-	ok = _check("its exported knob lands in the Settings bar",
-		_texts(_bar_titled(view.get_flat_rows(), "Settings")), "Settings | 1 setting") and ok
+	ok = _check("its exported knob lands in the one variable folder",
+		_texts(_bar_titled(view.get_flat_rows(), "Instance variables")), "Instance variables | of Patrol") and ok
 	view.free()
 	return ok
 

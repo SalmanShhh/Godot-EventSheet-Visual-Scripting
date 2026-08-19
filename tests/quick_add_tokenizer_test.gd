@@ -38,8 +38,8 @@ static func run() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	var quoted: Dictionary = editor._quick_match("set variable greeting \"hello world\"")
-	ok = _check("quoted e2e matches Set Variable",
+	var quoted: Dictionary = editor._quick_match("set value greeting \"hello world\"")
+	ok = _check("quoted e2e matches Set value (and not a slider's)",
 		not quoted.is_empty() and (quoted.get("definition") as ACEDefinition).id == "SetVar", true) and ok
 	if not quoted.is_empty():
 		var params: Dictionary = quoted.get("params", {})

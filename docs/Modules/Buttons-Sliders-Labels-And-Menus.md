@@ -46,7 +46,7 @@ each widget or in one menu sheet.
   **Focus Next** and **Focus Previous** walk the tab order, and **Set Focus Neighbor** overrides which
   control an arrow key reaches on one side.
 - **Range covers three widgets.** `HSlider`, `ProgressBar` and `SpinBox` all descend from `Range`, so
-  **Set Value**, **Set Max Value**, **Value** and **Value Ratio** work on all of them. **Value Ratio**
+  **Set Slider Value**, **Set Max Value**, **Value** and **Value Ratio** work on all of them. **Value Ratio**
   is the 0-1 form a bar's fill or an alpha wants.
 - **Set Button Pressed does not fire On Toggled.** It emits `set_pressed_no_signal(...)` on purpose,
   so writing a checkbox's state from your own settings-loading code cannot start an event loop where
@@ -104,7 +104,7 @@ use case below.
 
 | Verb | What it does | Ships as |
 |------|--------------|----------|
-| Set Value | Sets a slider, progress bar or spinbox to a value. | `{target.}value = {value}` |
+| Set Slider Value | Sets a slider, progress bar or spinbox to a value. | `{target.}value = {value}` |
 | Set Max Value | Sets its maximum. | `{target.}max_value = {max}` |
 | Value | Its current value. | `{target.}value` |
 | Value Ratio | Its value as a 0-to-1 ratio. | `{target.}ratio` |
@@ -178,7 +178,7 @@ honest:
 Every Frame
   Condition: Has Focus  (On node $NameField)
   Condition: On Action Just Pressed  "ui_accept"
-    -> Set Variable  player_name = Field Text (On node $NameField)
+    -> Set value  player_name = Field Text (On node $NameField)
 ```
 
 **8. A toggle button that reports itself.** **On Toggled** carries `toggled_on`, so one event covers
@@ -226,7 +226,7 @@ On Ready
 $ConfirmLabel.text = str("Really " + $ActionButton.text + "?")
 ```
 
-**14. A health bar.** **Set Max Value** once on ready, **Set Value** whenever health changes:
+**14. A health bar.** **Set Max Value** once on ready, **Set Slider Value** whenever health changes:
 
 ```gdscript
 $HealthBar.max_value = 100
@@ -360,7 +360,7 @@ $PausePanel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 - **Value and Value Ratio are not interchangeable.** **Value** is in the bar's own units (0-100 by
   default); **Value Ratio** is always 0-1. Feeding a raw value into something that expects a ratio is
   how bars end up permanently full.
-- **Set Max Value after Set Value can clamp your value away.** Set the maximum first (usually once on
+- **Set Max Value after Set Slider Value can clamp your value away.** Set the maximum first (usually once on
   ready), then the value.
 - **Tint is inherited.** **Set Color Tint** on a panel dims every child, including its labels. When
   you meant only the panel's own background, use **Set Self Tint**.

@@ -2423,7 +2423,7 @@ Collections (rich variables)
 - **Seed Random** (`value: String`) - Sets the random seed so the same number gives a repeatable random sequence.
 - **Randomize Seed** - Reseeds randomness from the clock so each playthrough differs.
 - **Move Toward (smooth)** (`var_name: String, target: String, speed: String`) - Eases a variable smoothly toward a target instead of snapping to it. Works on numbers, Vector2/Vector3 and Colors alike (lerp is generic). It is frame-rate independent - the exponential form behaves the same at 30 and 144 fps.
-- **Toggle** (`var_name: String`) - Flips a true/false variable to its opposite - on becomes off, off becomes on.
+- **Toggle boolean** (`var_name: String`) - Flips a true/false variable to its opposite - on becomes off, off becomes on.
 - **Charge Toward** (`var_name: String, maximum: String, seconds: String`) - Fills a variable while the event runs, reaching the maximum after the given seconds - a hold-to-charge meter. Put it under a while-held input condition; it clamps itself at the top, and the release event just reads the value.
 - **Reverse Array** (`var_name: String`) - Flips the array so its items run in the opposite order.
 - **Push Front** (`var_name: String, value: String`) - Inserts a value at the start of the array, shifting the rest along.
@@ -2723,16 +2723,16 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Always** - Always true, so its actions run every time the event is checked.
 - **Is On Floor** - True when this 2D character body is standing on the ground, used to gate jumping.
 - **Has Group Member** (`group: String`) - True when this node belongs to the named group, for tagging and identifying objects.
-- **Compare Variable** (`var_name: String, op: String, value: String`) - True when a variable compares against a value as you specify, for branching on game state.
+- **Compare variable** (`var_name: String, op: String, value: String`) - True when a variable compares against a value as you specify, for branching on game state.
 - **Is Timer Stopped** (`target: String`) - True when the Timer is not currently running.
 - **Is Animation Playing** (`target: String`) - True while the AnimationPlayer is playing an animation.
 - **RayCast Is Colliding (2D)** (`target: String`) - True when the RayCast2D is currently hitting something in its path.
 - **World Raycast Hits? (2D)** (`from: String, to: String`) - True when a ray drawn between two points hits any physics object.
 
 #### Actions
-- **Set Variable** (`var_name: String, value: String`) - Sets a variable to a value you give, the basic way to store game state.
-- **Add Variable** (`var_name: String, amount: String`) - Adds an amount to a variable, e.g. increasing score or health.
-- **Subtract From Variable** (`var_name: String, amount: String`) - Subtracts an amount from a variable, e.g. spending money or taking damage.
+- **Set value** (`var_name: String, value: String`) - Sets a variable to a value you give, the basic way to store game state.
+- **Add to** (`var_name: String, amount: String`) - Adds an amount to a variable, e.g. increasing score or health.
+- **Subtract from** (`var_name: String, amount: String`) - Subtracts an amount from a variable, e.g. spending money or taking damage.
 - **Multiply Variable** (`var_name: String, amount: String`) - Multiplies a variable by a factor, e.g. scaling speed or applying a bonus.
 - **Divide Variable** (`var_name: String, amount: String`) - Divides a variable by a value, e.g. halving a stat.
 - **Modulo Variable** (`var_name: String, amount: String`) - Replaces a variable with its remainder over a value, e.g. cycling an index that must stay in range.
@@ -3900,7 +3900,7 @@ UI / menu vocabulary (Control / BaseButton / Range / LineEdit)
 - **Override Theme Color** (`name: String, color: String, target: String`) - Overrides one theme color on this control, like its font color.
 - **Set Button Disabled** (`disabled: String, target: String`) - Enables or disables a button so it can or can't be clicked.
 - **Set Button Pressed** (`pressed: String, target: String`) - Sets a toggle button's pressed state without firing its toggled event.
-- **Set Value** (`value: String, target: String`) - Sets a slider, progress bar, or spinbox to a specific value.
+- **Set Slider Value** (`value: String, target: String`) - Sets a slider, progress bar, or spinbox to a specific value.
 - **Set Max Value** (`max: String, target: String`) - Sets the maximum value of a slider, progress bar, or spinbox.
 - **Set Field Text** (`value: String, target: String`) - Sets the text shown in a single-line text field.
 - **Clear Field** (`target: String`) - Empties a single-line text field of all its text.

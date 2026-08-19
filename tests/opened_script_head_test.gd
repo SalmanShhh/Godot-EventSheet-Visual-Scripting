@@ -65,14 +65,14 @@ static func _test_a_script_with_a_class_name() -> bool:
 		_texts(about).begins_with("A hand-written game script - not a behavior pack"), true) and ok
 
 	ok = _check("the head bars read in file order",
-		_head_bar_titles(rows), "Triggers | Movement | Internal state") and ok
+		_head_bar_titles(rows), "Triggers | Movement | Instance variables") and ok
 	ok = _check("the Triggers bar says a SCRIPT fires them",
 		_texts(_bar_titled(rows, "Triggers")), "Triggers | this script fires - 3") and ok
 	ok = _test_signals_read_as_triggers(view) and ok
 	ok = _check("the @export_group is the settings bar",
 		_texts(_bar_titled(rows, "Movement")), "Movement | 2 settings") and ok
-	ok = _check("the private state is the script's own",
-		_texts(_bar_titled(rows, "Internal state")), "Internal state | values this script keeps for itself - 7") and ok
+	ok = _check("the one variable folder names the object it belongs to",
+		_texts(_bar_titled(rows, "Instance variables")), "Instance variables | of PlayerAvatar") and ok
 	view.free()
 	return ok
 
@@ -142,8 +142,8 @@ static func _test_a_script_no_scene_uses() -> bool:
 static func _test_type_words() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(PLAYER_PATH)
-	var internal_bar: EventRowData = _bar_titled(view.get_flat_rows(), "Internal state")
-	ok = _check("the Internal state bar was found", internal_bar != null, true) and ok
+	var internal_bar: EventRowData = _bar_titled(view.get_flat_rows(), "Instance variables")
+	ok = _check("the Instance variables bar was found", internal_bar != null, true) and ok
 	if internal_bar == null:
 		view.free()
 		return false
@@ -153,38 +153,38 @@ static func _test_type_words() -> bool:
 	ok = _check("a const preload reads as an Object row",
 		read[0] if read.size() > 0 else "", "Object | PAD_SCENE | = | SpawnerPad | scene · opened_script_head_pad.tscn") and ok
 	ok = _check("a constant says so in its type chip, and 300.0 reads 300",
-		read[1] if read.size() > 1 else "", "constant number | MAX_SPEED | = | 300") and ok
+		read[1] if read.size() > 1 else "", "Constant number | MAX_SPEED | = | 300") and ok
 	ok = _check("a typed var holding a preload reads as an Object row too",
 		read[2] if read.size() > 2 else "", "Object | bullet_scene | = | Bullet | scene · head_bullet.tscn") and ok
 	ok = _check("Array[String] says what it holds, and [] reads empty",
-		read[3] if read.size() > 3 else "", "list of text | names | = | empty") and ok
+		read[3] if read.size() > 3 else "", "Instance list of text | names | = | empty") and ok
 	ok = _check("Array[int] says what it holds",
-		read[4] if read.size() > 4 else "", "list of numbers | scores | = | empty") and ok
+		read[4] if read.size() > 4 else "", "Instance list of numbers | scores | = | empty") and ok
 	ok = _check("a Dictionary is a table, and {} reads empty",
-		read[5] if read.size() > 5 else "", "table | inventory | = | empty") and ok
+		read[5] if read.size() > 5 else "", "Instance table | inventory | = | empty") and ok
 	ok = _check("a plain float knob is unchanged",
-		read[6] if read.size() > 6 else "", "number | _cooldown | = | 0") and ok
+		read[6] if read.size() > 6 else "", "Instance number | _cooldown | = | 0") and ok
 
 	# The knob rows keep their doc comment, exactly as a pack's do.
 	var movement_bar: EventRowData = _bar_titled(view.get_flat_rows(), "Movement")
 	ok = _check("an @export knob reads type-word, name, value, description",
 		_texts(movement_bar.children[0]) if movement_bar != null and not movement_bar.children.is_empty() else "",
-		"number | move_speed | = | 180 | How fast the avatar walks, in pixels per second.") and ok
+		"Instance number | move_speed | Inspector | = | 180 | How fast the avatar walks, in pixels per second.") and ok
 
 	# The vocabulary itself, at the seam the verb chips share - the readings that already shipped must
 	# not have moved, and the collection words must be derived from the element type rather than listed.
 	ok = _check("text is still text", ViewportRowBuilder.friendly_type_word("String"), "text") and ok
-	ok = _check("int is still number", ViewportRowBuilder.friendly_type_word("int"), "number") and ok
+	ok = _check("a declared int is a whole number", ViewportRowBuilder.friendly_type_word("int"), "whole number") and ok
 	ok = _check("a bare Array is still a list", ViewportRowBuilder.friendly_type_word("Array"), "list") and ok
-	ok = _check("a Node class is still node", ViewportRowBuilder.friendly_type_word("Node2D"), "node") and ok
+	ok = _check("a Node class is an object", ViewportRowBuilder.friendly_type_word("Node2D"), "object") and ok
 	ok = _check("PackedStringArray reads like Array[String]",
 		ViewportRowBuilder.friendly_type_word("PackedStringArray"), "list of text") and ok
-	ok = _check("PackedVector2Array holds points",
-		ViewportRowBuilder.friendly_type_word("PackedVector2Array"), "list of points") and ok
+	ok = _check("PackedVector2Array holds vectors",
+		ViewportRowBuilder.friendly_type_word("PackedVector2Array"), "list of vectors") and ok
 	ok = _check("a Callable is a function", ViewportRowBuilder.friendly_type_word("Callable"), "function") and ok
 	ok = _check("a Signal is a signal", ViewportRowBuilder.friendly_type_word("Signal"), "signal") and ok
-	ok = _check("an Array of nodes holds nodes",
-		ViewportRowBuilder.friendly_type_word("Array[Node2D]"), "list of nodes") and ok
+	ok = _check("an Array of objects holds objects",
+		ViewportRowBuilder.friendly_type_word("Array[Node2D]"), "list of objects") and ok
 	# A Resource subclass keeps the author's own noun - "resource" would say strictly less.
 	ok = _check("a Resource subclass keeps its class name",
 		ViewportRowBuilder.friendly_type_word("EventSheetResource"), "EventSheetResource") and ok

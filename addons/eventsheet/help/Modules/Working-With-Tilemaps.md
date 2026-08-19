@@ -109,7 +109,7 @@ first, then convert.
 
 ```
 Every Frame
-  -> Set Variable  hovered_cell = Local To Map( to_local(get_global_mouse_position()) )
+  -> Set value  hovered_cell = Local To Map( to_local(get_global_mouse_position()) )
 ```
 
 **4. Snap a placement preview to the grid.** Map To Local hands back the centre of the cell, which is
@@ -136,7 +136,7 @@ On build pressed
 On dig pressed
   Condition: Cell Has Tile  hovered_cell
     -> Erase Cell  hovered_cell
-    -> Add Variable  ore += 1
+    -> Add to  ore += 1
 ```
 
 **7. Swap one tile for another.** A closed door becomes an open door: same cell, different atlas
@@ -153,7 +153,7 @@ is how "is this water?" is answered without a second data structure.
 ```
 On player entered cell
   Condition: Cell Atlas Coords(player_cell) = Vector2i(0, 3)
-    -> Set Variable  in_water = true
+    -> Set value  in_water = true
 ```
 
 **9. Tell layers apart with Cell Source Id.** With two tile sources in one TileSet (terrain and props,

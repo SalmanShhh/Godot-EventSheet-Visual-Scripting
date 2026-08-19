@@ -651,7 +651,7 @@ func _ready() -> void:
 
 ```
 On Mouse Button Pressed
-  -> Variables: Set Variable  hover_cell,  Cell Of Point ( Mouse Position (world), 64 )
+  -> Variables: Set value  hover_cell,  Cell Of Point ( Mouse Position (world), 64 )
 ```
 
 **32. A build ghost that snaps to the grid.**

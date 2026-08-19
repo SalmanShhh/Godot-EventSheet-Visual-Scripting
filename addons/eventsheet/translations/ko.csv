@@ -2168,3 +2168,21 @@ axis {axis} of gamepad {device},게임패드 {device}의 축 {axis}
 name of gamepad {device},게임패드 {device}의 이름
 gamepad {device} is recognized,게임패드 {device}가 인식됨
 Is button down {action} (exact match),버튼 {action} 눌림 (정확히 일치)
+Global,전역
+Instance,인스턴스
+Constant,상수
+Static,정적
+whole number,정수
+boolean,참/거짓
+vector,벡터
+booleans,참/거짓 값
+vectors,벡터
+objects,오브젝트
+Inspector,인스펙터
+of %s,%s의
+shared by every copy,모든 복사본이 공유
+Scope,범위
+The row you will get,만들어질 행
+One per object - every copy of this object keeps its own.,오브젝트마다 하나 - 이 오브젝트의 복사본은 각자의 값을 가집니다.
+Lives inside one event and is gone when it ends.,한 이벤트 안에서만 살아 있고 끝나면 사라집니다.
+Set once and never changes while the game runs.,한 번 정하면 게임이 도는 동안 바뀌지 않습니다.

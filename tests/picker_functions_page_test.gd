@@ -59,7 +59,7 @@ static func _test_the_page(sheet: EventSheetResource) -> bool:
 		str(content.get("helpers_header", "")), "+ Helpers (2)") and passed
 	passed = _check("the published verbs lead, each with its kind and its parameter chip",
 		_labels(content.get("published", [])),
-		"Award Points   action   amount number | Round Is Ready   condition   enabled true/false") and passed
+		"Award Points   action   amount number | Round Is Ready   condition   enabled boolean") and passed
 	passed = _check("the helpers follow, each saying it is not published as an ACE",
 		_labels(content.get("helpers", [])),
 		"Reset Score   action · not published | Doubled Score   expression · not published") and passed

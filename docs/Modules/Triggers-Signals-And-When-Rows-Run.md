@@ -181,8 +181,8 @@ carries the verb's name and the reason as its ARGUMENTS, which arrive on the tri
 
 ```
 On Ready
-  -> Set Variable  health = 100
-  -> Set Variable  score = 0
+  -> Set value  health = 100
+  -> Set value  score = 0
 ```
 
 **2. Move something every frame, using the frame's own delta.**
@@ -242,7 +242,7 @@ Declare the signal itself in the sheet's signal block, then any sheet can listen
 
 ```
 On Signal  "died"  ( amount: int )
-  -> Add Variable  score += amount
+  -> Add to  score += amount
 ```
 
 The **Arguments** field is the signature the handler receives. Leave it empty for a signal that carries
@@ -350,7 +350,7 @@ effect on the next run, because rows already running keep their cached answer fo
 ```
 Every Frame
   Condition: On Group Emptied   "enemies"
-    -> Add Variable  wave += 1
+    -> Add to  wave += 1
     -> Call Function  spawn_wave(wave)
 ```
 

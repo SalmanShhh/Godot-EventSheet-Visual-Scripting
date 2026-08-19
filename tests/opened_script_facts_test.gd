@@ -122,31 +122,31 @@ static func _test_setting_facts() -> bool:
 		return false
 	ok = _check("a range says its limits and its step",
 		_texts(movement.children[0]),
-		"number | speed | = | 5 | 0 to 20, step 0.5 | How fast it walks, in pixels per second.") and ok
+		"Instance number | speed | Inspector | = | 5 | 0 to 20, step 0.5 | How fast it walks, in pixels per second.") and ok
 	ok = _check("a fixed set of choices is a combo, reading its label instead of its number",
-		_texts(movement.children[1]), "combo | mode | = | Walk | Walk / Run / Fly") and ok
+		_texts(movement.children[1]), "Instance combo | mode | Inspector | = | Walk | Walk / Run / Fly") and ok
 	ok = _check("a 0-to-1 range reads as a percent",
-		_texts(movement.children[2]), "number | grip | = | 50%") and ok
+		_texts(movement.children[2]), "Instance number | grip | Inspector | = | 50%") and ok
 	ok = _check("a file knob says it is a file, and what it accepts",
-		_texts(look.children[0]), "file | portrait | = | \"\" | *.png") and ok
+		_texts(look.children[0]), "Instance file | portrait | Inspector | = | \"\" | *.png") and ok
 	ok = _check("a directory knob says folder",
-		_texts(look.children[1]), "folder | shot_folder | = | \"\"") and ok
+		_texts(look.children[1]), "Instance folder | shot_folder | Inspector | = | \"\"") and ok
 	ok = _check("a multiline text knob says so",
-		_texts(look.children[2]), "text | intro_text | = | \"\" | multiline") and ok
+		_texts(look.children[2]), "Instance text | intro_text | Inspector | = | \"\" | multiline") and ok
 	ok = _check("a colour reads as its word",
-		_texts(look.children[3]), "color | tint | = | white") and ok
+		_texts(look.children[3]), "Instance color | tint | Inspector | = | white | #ffffff") and ok
 	ok = _check("and it carries the swatch that IS the fact",
 		_swatch(look.children[3]), Color.WHITE) and ok
 	ok = _check("a bit field says flags, and names the bits",
-		_texts(look.children[4]), "flags | elements | = | 0 | Fire / Water / Wind") and ok
+		_texts(look.children[4]), "Instance flags | elements | Inspector | = | 0 | Fire / Water / Wind") and ok
 
 	# The facts themselves, at the seam - so a caller other than the row builder reads the same.
 	var colour_variable := LocalVariable.new()
 	colour_variable.type_name = "Color"
 	colour_variable.default_value = "Color(0.2, 0.4, 0.3, 1)"
 	colour_variable.expression_default = true
-	ok = _check("a colour nobody has a word for keeps its numbers",
-		str(EventSheetSettingFacts.facts(colour_variable).get("value_text", "")), "") and ok
+	ok = _check("a colour nobody has a word for reads as its hex",
+		str(EventSheetSettingFacts.facts(colour_variable).get("value_text", "")), "#33664d") and ok
 	ok = _check("black is a word", EventSheetSettingFacts.colour_word(Color.BLACK), "black") and ok
 	ok = _check("and an odd green is not", EventSheetSettingFacts.colour_word(Color(0.31, 0.44, 0.29)), "") and ok
 	view.free()
@@ -166,8 +166,8 @@ static func _test_autoload_head() -> bool:
 	var globals: EventRowData = _bar_titled(rows, "Global variables")
 	ok = _check("its knobs read as ONE Global variables folder", globals != null, true) and ok
 	ok = _check("holding every one of them", globals.children.size() if globals != null else -1, 8) and ok
-	ok = _check("and the Settings / Internal state split is gone",
-		_bar_titled(rows, "Movement") == null and _bar_titled(rows, "Internal state") == null, true) and ok
+	ok = _check("and the per-group / Instance variables split is gone",
+		_bar_titled(rows, "Movement") == null and _bar_titled(rows, "Instance variables") == null, true) and ok
 	view.free()
 
 	var firing: EventSheetViewport = _open(PLAYER_PATH, true)

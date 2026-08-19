@@ -2168,3 +2168,21 @@ axis {axis} of gamepad {device},ось {axis} геймпада {device}
 name of gamepad {device},имя геймпада {device}
 gamepad {device} is recognized,геймпад {device} распознан
 Is button down {action} (exact match),Кнопка {action} нажата (точное совпадение)
+Global,Глобальная
+Instance,Экземпляр
+Constant,Константа
+Static,Статическая
+whole number,целое число
+boolean,логическое
+vector,вектор
+booleans,логические
+vectors,векторы
+objects,объекты
+Inspector,Инспектор
+of %s,объекта %s
+shared by every copy,общая для всех копий
+Scope,Область
+The row you will get,"Строка, которая получится"
+One per object - every copy of this object keeps its own.,По одной на объект - у каждой копии своя.
+Lives inside one event and is gone when it ends.,Живёт внутри одного события и исчезает вместе с ним.
+Set once and never changes while the game runs.,Задаётся один раз и не меняется во время игры.

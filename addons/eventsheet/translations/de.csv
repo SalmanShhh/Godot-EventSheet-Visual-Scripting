@@ -2168,3 +2168,21 @@ axis {axis} of gamepad {device},Achse {axis} von Gamepad {device}
 name of gamepad {device},Name von Gamepad {device}
 gamepad {device} is recognized,Gamepad {device} ist erkannt
 Is button down {action} (exact match),Taste {action} gedrückt (exakte Übereinstimmung)
+Global,Global
+Instance,Instanz
+Constant,Konstante
+Static,Statisch
+whole number,ganze Zahl
+boolean,Wahrheitswert
+vector,Vektor
+booleans,Wahrheitswerte
+vectors,Vektoren
+objects,Objekte
+Inspector,Inspektor
+of %s,von %s
+shared by every copy,von jeder Kopie geteilt
+Scope,Geltungsbereich
+The row you will get,"Die Zeile, die du bekommst"
+One per object - every copy of this object keeps its own.,Eine pro Objekt - jede Kopie dieses Objekts hat ihre eigene.
+Lives inside one event and is gone when it ends.,Lebt in einem Ereignis und ist danach weg.
+Set once and never changes while the game runs.,Einmal gesetzt und ändert sich im laufenden Spiel nie.
