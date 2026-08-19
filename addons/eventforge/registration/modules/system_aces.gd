@@ -117,8 +117,26 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Feeds a value into one of an effect's parameters to drive it at runtime."))
 	descriptors.append(F.make_descriptor("Core", "GetDatetimeString", "Date & Time Text", ACEDescriptor.ACEType.EXPRESSION, "Time.get_datetime_string_from_system()", "", [], "Time", "datetime string")
 		.described("Gives the system's current date and time as readable text."))
-	descriptors.append(F.make_descriptor("Core", "GetUnixTime", "Unix Time", ACEDescriptor.ACEType.EXPRESSION, "Time.get_unix_time_from_system()", "", [], "Time", "unix time")
+	descriptors.append(F.make_descriptor("Core", "GetUnixTime", "Date: Now", ACEDescriptor.ACEType.EXPRESSION, "Time.get_unix_time_from_system()", "", [], "Time", "Date.Now")
 		.described("Gives the current Unix timestamp in seconds, useful for saving real-world time."))
+	# ── T26: the Date object ─────────────────────────────────────────────────────────────────────
+	# The calendar and the wall clock, one expression per field, so a clock label is written the way
+	# it reads: `Date.Hour & ":" & Date.Minute`. Each one asks the system clock afresh, which is what
+	# a row that shows the time needs; a whole timestamp to compare against is Date.Now.
+	descriptors.append(F.make_descriptor("Core", "DateHour", "Date: Hour", ACEDescriptor.ACEType.EXPRESSION, "Time.get_datetime_dict_from_system().hour", "", [], "Time", "Date.Hour")
+		.described("The hour on the system clock right now, 0 to 23."))
+	descriptors.append(F.make_descriptor("Core", "DateMinute", "Date: Minute", ACEDescriptor.ACEType.EXPRESSION, "Time.get_datetime_dict_from_system().minute", "", [], "Time", "Date.Minute")
+		.described("The minute on the system clock right now, 0 to 59."))
+	descriptors.append(F.make_descriptor("Core", "DateSecond", "Date: Second", ACEDescriptor.ACEType.EXPRESSION, "Time.get_datetime_dict_from_system().second", "", [], "Time", "Date.Second")
+		.described("The second on the system clock right now, 0 to 59."))
+	descriptors.append(F.make_descriptor("Core", "DateYear", "Date: Year", ACEDescriptor.ACEType.EXPRESSION, "Time.get_datetime_dict_from_system().year", "", [], "Time", "Date.Year")
+		.described("The year on the system calendar right now."))
+	descriptors.append(F.make_descriptor("Core", "DateMonth", "Date: Month", ACEDescriptor.ACEType.EXPRESSION, "Time.get_datetime_dict_from_system().month", "", [], "Time", "Date.Month")
+		.described("The month on the system calendar right now, 1 to 12."))
+	descriptors.append(F.make_descriptor("Core", "DateDay", "Date: Day", ACEDescriptor.ACEType.EXPRESSION, "Time.get_datetime_dict_from_system().day", "", [], "Time", "Date.Day")
+		.described("The day of the month on the system calendar right now, 1 to 31."))
+	descriptors.append(F.make_descriptor("Core", "DateWeekday", "Date: Weekday", ACEDescriptor.ACEType.EXPRESSION, "Time.get_datetime_dict_from_system().weekday", "", [], "Time", "Date.Weekday")
+		.described("Which day of the week it is right now, 0 for Sunday through 6 for Saturday - what a daily-reward or weekend-bonus row asks."))
 	descriptors.append(F.make_descriptor("Core", "GetOSName", "OS Name", ACEDescriptor.ACEType.EXPRESSION, "OS.get_name()", "", [], "Platform", "os name")
 		.described("Gives the name of the operating system the game is running on."))
 	# Feature tags upgraded from a fixed 8-entry dropdown to an editable suggest combo: the
@@ -225,7 +243,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True once a stretch of time has gone by since a moment you stamped with Now - the cooldown every shooting, dashing or spawning row needs, without a timer node.").featured())
 	descriptors.append(F.make_descriptor("Core", "TimeNow", "Now", ACEDescriptor.ACEType.EXPRESSION, "Time.get_ticks_msec()", "", [], "Time", "now")
 		.described("The moment right now, as the game's own running clock. Store it in a variable and ask Seconds Have Passed Since about it later. It restarts with the game."))
-	descriptors.append(F.make_descriptor("Core", "ClockTimeNow", "Now (Clock Time)", ACEDescriptor.ACEType.EXPRESSION, "Time.get_unix_time_from_system()", "", [], "Time", "now (clock time)")
+	descriptors.append(F.make_descriptor("Core", "ClockTimeNow", "Date: Now (Clock Time)", ACEDescriptor.ACEType.EXPRESSION, "Time.get_unix_time_from_system()", "", [], "Time", "Date.Now")
 		.described("The moment right now by the system clock, in seconds. Unlike Now, this keeps counting while the game is closed - which is what a daily reward or an idle-earnings sum needs."))
 	descriptors.append(F.make_descriptor("Core", "Chance", "Chance", ACEDescriptor.ACEType.CONDITION, "randf() < {percent} / 100.0", "", [F.make_param("percent", "String", "30", "Percent", "Chance from 0 to 100.", "expression")], "Math & Random", "{percent}% chance")
 		.described("True for the given share of the times it is asked - a 30% chance is true roughly three times in ten. The roll is fresh every time the row runs.").featured())

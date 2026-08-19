@@ -43,10 +43,17 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns the surface direction from the character's last collision."))
 
 	# ── Area2D: overlap tests + lists (the common "am I touching X" queries) ──
-	descriptors.append(F.make_descriptor("Core", "OverlapsBody", "Overlaps Body", ACEDescriptor.ACEType.CONDITION, "overlaps_body({body})", "", [F.make_param("body", "String", "get_tree().get_first_node_in_group(\"player\")", "Body", "The body to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression")], "Collisions", "overlaps body {body}", "Area2D")
+	# T23. The overlap questions say what the sheet's own rows say, so a picked row and the hand-written
+	# `overlaps_body(x)` beside it read one sentence. The ids and the templates are frozen; only the
+	# words a reader sees changed.
+	descriptors.append(F.make_descriptor("Core", "OverlapsBody", "Is Overlapping Body", ACEDescriptor.ACEType.CONDITION, "overlaps_body({body})", "", [F.make_param("body", "String", "get_tree().get_first_node_in_group(\"player\")", "Body", "The body to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression")], "Collisions", "is overlapping {body}", "Area2D")
 		.described("True when this Area2D is overlapping the given physics body."))
-	descriptors.append(F.make_descriptor("Core", "OverlapsArea", "Overlaps Area", ACEDescriptor.ACEType.CONDITION, "overlaps_area({area})", "", [F.make_param("area", "String", "get_tree().get_first_node_in_group(\"triggers\")", "Area", "The area to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression")], "Collisions", "overlaps area {area}", "Area2D")
+	descriptors.append(F.make_descriptor("Core", "OverlapsArea", "Is Overlapping Area", ACEDescriptor.ACEType.CONDITION, "overlaps_area({area})", "", [F.make_param("area", "String", "get_tree().get_first_node_in_group(\"triggers\")", "Area", "The area to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression")], "Collisions", "is overlapping {area}", "Area2D")
 		.described("True when this Area2D is overlapping the given other area."))
+	# T23. The platformer's own question: "is there ground just below me?" is a MOVE that is never
+	# made - the body is asked where it would end up one pixel down, and nothing moves either way.
+	descriptors.append(F.make_descriptor("Core", "IsOverlappingAtOffset", "Is Overlapping At Offset", ACEDescriptor.ACEType.CONDITION, "test_move(transform, {offset})", "", [F.make_param("offset", "String", "Vector2(0, 1)", "Offset", "How far to look, from where the object is now - (0, 1) is one pixel down, which is the ground check.", "expression")], "Collisions", "is overlapping at offset {offset} (a solid)", "PhysicsBody2D")
+		.described("True when this body WOULD hit something solid if it moved by the offset - the ground check every platformer needs, and nothing actually moves.").featured())
 	descriptors.append(F.make_descriptor("Core", "HasOverlappingBodies", "Has Overlapping Bodies", ACEDescriptor.ACEType.CONDITION, "has_overlapping_bodies()", "", [], "Collisions", "has overlapping bodies", "Area2D")
 		.described("True when this Area2D currently overlaps any physics body."))
 	descriptors.append(F.make_descriptor("Core", "HasOverlappingAreas", "Has Overlapping Areas", ACEDescriptor.ACEType.CONDITION, "has_overlapping_areas()", "", [], "Collisions", "has overlapping areas", "Area2D")

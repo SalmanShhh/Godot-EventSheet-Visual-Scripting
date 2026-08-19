@@ -7679,7 +7679,16 @@ const NOISE_TYPE_WORDS: Dictionary = {
 }
 
 ## T26. The Date object's whole-expression reads, by the `Time` call each is written as.
+## The field spellings come FIRST: a row picked out of the Date section writes the whole call with the
+## field on the end, and replacing the call alone would leave `Date.Now.hour` behind.
 const DATE_CALL_WORDS: Dictionary = {
+	"Time.get_datetime_dict_from_system().hour": "Date.Hour",
+	"Time.get_datetime_dict_from_system().minute": "Date.Minute",
+	"Time.get_datetime_dict_from_system().second": "Date.Second",
+	"Time.get_datetime_dict_from_system().year": "Date.Year",
+	"Time.get_datetime_dict_from_system().month": "Date.Month",
+	"Time.get_datetime_dict_from_system().day": "Date.Day",
+	"Time.get_datetime_dict_from_system().weekday": "Date.Weekday",
 	"Time.get_unix_time_from_system()": "Date.Now",
 	"Time.get_date_string_from_system()": "Date.Today",
 	"Time.get_time_string_from_system()": "Date.TimeString"
