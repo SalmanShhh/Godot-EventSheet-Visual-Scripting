@@ -3100,3 +3100,24 @@ Instance values,Valeurs de l'instance
 Per fire,Par déclenchement
 Share of run,Part de l'exécution
 Fires,Déclenchements
+Import event sheet…,Importer une feuille d'événements…
+Import event sheet,Importer une feuille d'événements
+"Bring a sheet over from another event-sheet editor. Pick the project it saved or one exported sheet, say which node each object became, and see exactly what came across - every row the vocabulary knows becomes the row that says the same thing, and every row it does not arrives switched off with its own words beside it. Nothing is written until you choose Save as…","Reprend une feuille depuis un autre éditeur de feuilles d'événements. Choisis le projet qu'il a enregistré ou une feuille exportée, indique en quel nœud chaque objet est devenu, et vois exactement ce qui est passé : chaque ligne dont ce vocabulaire connaît le mot devient la ligne qui dit la même chose, et chaque autre arrive désactivée avec ses propres mots à côté. Rien n'est écrit tant que tu ne choisis pas Enregistrer sous…"
+"Brings a sheet over from another event-sheet editor. Pick the project it saved (a zip of JSON) or a single exported event sheet. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it, and is counted below. Nothing is written until you choose Save as…","Reprend une feuille depuis un autre éditeur de feuilles d'événements. Choisis le projet qu'il a enregistré (un zip de JSON) ou une seule feuille exportée. Chaque condition, action et expression dont ce vocabulaire connaît le mot devient la ligne qui dit la même chose ; tout le reste arrive désactivé avec ses propres mots à côté, et est compté ci-dessous. Rien n'est écrit tant que tu ne choisis pas Enregistrer sous…"
+Which file?,Quel fichier ?
+"The exported project, or one exported event sheet","Le projet exporté, ou une feuille d'événements exportée"
+Browse…,Parcourir…
+Which node is which object?,Quel nœud est quel objet ?
+"One line per object the sheet talks to. The node is written into the rows as-is, so $Player means the child called Player; leave it empty and the rows act on the sheet's own node and the object name is kept in the report.","Une ligne par objet auquel la feuille parle. Le nœud est écrit tel quel dans les lignes, donc $Player désigne l'enfant appelé Player ; laisse-le vide et les lignes agissent sur le nœud de la feuille, le nom de l'objet restant dans le rapport."
+What it reads like,Ce que ça donne à lire
+What came across,Ce qui est passé
+Save as…,Enregistrer sous…
+Pick the exported project or sheet,Choisis le projet ou la feuille exportés
+Save the imported sheet as,Enregistrer la feuille importée sous
+Pick a file to see what comes across.,Choisis un fichier pour voir ce qui passe.
+Pick a file first.,Choisis d'abord un fichier.
+That file could not be opened as a project archive.,Ce fichier n'a pas pu être ouvert comme archive de projet.
+No event sheets were found in that archive.,Aucune feuille d'événements n'a été trouvée dans cette archive.
+That file does not exist.,Ce fichier n'existe pas.
+That file is not an exported event sheet.,Ce fichier n'est pas une feuille d'événements exportée.
+Nothing has been imported yet.,Rien n'a encore été importé.

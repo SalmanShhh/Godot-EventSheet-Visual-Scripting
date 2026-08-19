@@ -15,7 +15,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 7. [Behaviors and Plugins - The Three Lanes](#7-behaviors-and-plugins---the-three-lanes)
 8. [Habits That Transfer Directly](#8-habits-that-transfer-directly)
 9. [Habits to Relearn (the Godot Way Is Better Here)](#9-habits-to-relearn-the-godot-way-is-better-here)
-10. [Importing C3 Projects Directly - A Permanent Non-Goal](#10-importing-c3-projects-directly---a-permanent-non-goal)
+10. [Importing a C3 Event Sheet](#10-importing-a-c3-event-sheet)
 11. [Use Cases](#11-use-cases)
 12. [Tips and Common Mistakes](#12-tips-and-common-mistakes)
 
@@ -29,7 +29,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 - **Your events all start with "Every tick".** The single biggest mental shift from C3 is reacting to signals instead of polling; [section 4](#4-polling-vs-reacting---the-biggest-shift-from-c3) gives you the rule of thumb.
 - **You expect events to run top to bottom, and includes to run where the include line sits.** Inside a sheet you get exactly that; between triggers, between nodes, and for includes the answer changes - [section 5](#5-when-does-my-code-run---top-to-bottom-and-where-that-stops) draws the three boundaries.
 - **You relied on the Dictionary / Array / JSON data plugins.** They're first-class variable types here, with their own picker groups - no addon needed.
-- **You're waiting for a `.c3p` importer.** Don't - it's a deliberate, permanent non-goal, and [section 10](#10-importing-c3-projects-directly---a-permanent-non-goal) explains why and what the supported path is.
+- **You have a `.c3p` and want the events, not a rebuild.** [Section 10](#10-importing-a-c3-event-sheet) is the importer: what it reads, what becomes which row, and what it says about the rows it cannot spell.
 
 ---
 
@@ -518,19 +518,101 @@ i18n (Godot translations).
 
 ---
 
-## 10. Importing C3 Projects Directly - A Permanent Non-Goal
+## 10. Importing a C3 Event Sheet
 
-There is deliberately **no `.c3p` / C3-clipboard importer**, and there won't be one:
-Construct's internal event JSON is proprietary and unversioned - it churns with C3
-releases, so an importer would silently rot between updates and break exactly when
-users trust it most. Maintaining that treadmill is not sustainable.
+**Sheet ▸ Import event sheet…** reads a sheet straight out of a C3 project and turns it into
+an ordinary EventSheets `.gd`. It is honest rather than magic: every condition, action and
+expression whose word this vocabulary already has becomes the row that says the same thing, and
+everything else arrives **switched off with its own words beside it** and counted. You see the
+result and the exact count before a single byte is written.
 
-The supported migration path is the one this guide documents: the **vocabulary map**
-(C3 phrases work in the picker), **behaviors with C3-parity capabilities**, and
-**text snippets** for moving events between EventSheets projects. Porting a project is
-a sheet-by-sheet rebuild - faster than it sounds, because the grammar is the same.
+![The Import event sheet wizard: the file, the sheet inside it, the object table, the imported sheet in its own words, and the report saying how many rows came across](images/import-event-sheet-wizard.png)
 
----
+### What it reads
+
+C3 saves a project as a zip (`.c3p`) of JSON: a `.c3proj` naming the project, then
+`eventSheets/<name>.json`, `layouts/<name>.json`, `objectTypes/<name>.json` and
+`families/<name>.json`. An event sheet file is `{"name": …, "events": [...]}` and every entry is
+tagged by its `eventType`: `block` (with `conditions`, `actions` and nested `children`), `group`,
+`comment`, `variable`, `include`, `function-block` and `script`. Each condition or action carries
+`objectClass`, `id`, `parameters`, and sometimes `behavior-type`, `isInverted`, `isOr` or
+`disabled`. Point the wizard at the whole `.c3p`, or at a single exported sheet `.json`.
+
+The archive is only ever **read**. Nothing is written back into it, ever.
+
+### The four questions
+
+1. **Which file.** A project archive lists every sheet inside it; a single `.json` is just itself.
+2. **Which sheet.** One at a time, so you can review each one.
+3. **Which node is which object.** A table with one line per object the sheet talks to. The kind is
+   pre-filled - from the project's own object types when you imported an archive, otherwise guessed
+   from the rows the object is used with (an object told to *set animation* is a sprite). The node
+   text is written into the rows as-is, so `$Player` means the child called Player. Leave it empty
+   and the rows act on the sheet's own node.
+4. **What it reads like.** The imported sheet in its own words, plus the report.
+
+Then **Save as…** writes a new `.gd` through the ordinary compiler. It re-opens byte-identically,
+like every other sheet.
+
+### What comes across
+
+| In C3 | Here |
+| --- | --- |
+| Event block | An event: conditions on the left, actions on the right |
+| Sub-events (`children`) | Sub-events under their parent |
+| `isElse` | An **Else** row |
+| `isOr` on a condition | The event's conditions become an **Or** block |
+| `isInverted` | The condition is inverted |
+| A top-level event with no trigger | **Every frame** - which is what a top-level event means in C3 |
+| Group | A group, with its title and description |
+| Comment | A comment row |
+| Global / local variable | A variable row, typed from the value it started with |
+| Function block | A function: its name in the condition lane, its parameters as chips |
+| Include | A note in the report, and a note row - import that sheet too, then add it under Manage Includes |
+| Keyboard / Mouse / Touch events | The matching input condition on the input trigger |
+| System, Sprite, Text, Audio, Array, Dictionary, JSON, Functions rows | The row that says the same thing |
+| Instance variables (compare / set / add / subtract / toggle) | The variable rows of the same names |
+
+Expressions are translated by name, and the table is the exact inverse of the one the reading layer
+uses to *show* you C3 words: `random(1, 6)` becomes `randf_range(1, 6)`, `choose(a, b)` becomes
+`[a, b].pick_random()`, `len(x)` becomes `x.length()`, `distance(a, b)` and `angle(a, b)` become the
+calls behind them, `zeropad`, `left`, `mid`, `tokenat` and `tickcount` likewise. `lerp`, `clamp`,
+`abs`, `floor`, `ceil`, `round`, `sqrt`, `min` and `max` are spelled the same in both, so they are
+left alone. `Sprite.X` becomes the mapped node's `position.x`, and key names like `Space` or
+`Left arrow` become `KEY_SPACE` and `KEY_LEFT`.
+
+### What does not, and what it says instead
+
+Nothing is silently approximated. A row that cannot be spelled arrives switched off, its original
+words are written into the file, and the report names it with a reason:
+
+- **A behaviour a shipped pack covers.** Bullet, Platform, 8-Direction, Timer, Tween, Sine, Fade,
+  Flash, Line of Sight, Drag & Drop, Pin-style movement, Bound to Layout, Local Storage and the rest
+  are behaviour *packs* here, not free actions. The report names the pack: "The shipped Platformer
+  Movement behaviour covers this - attach it and add the row from its own words."
+- **A row with no word here yet** ("No row here spells this yet").
+- **A JavaScript block.** It is not GDScript; the report says so and the code is kept as a comment.
+- **AJAX and multiplayer.** No pack ships these yet.
+
+A row that *did* map but whose parameter could not be translated is kept as written and **flagged**
+in the report, so you know exactly which values still need a human. Every value the wizard could not
+translate is listed; nothing that translated cleanly is listed.
+
+At the end of the generated file there is one tally listing every row that did not come across,
+including the ones that sat under a switched-off event and therefore wrote nothing of their own. The
+project health check (Tools ▸ Project Doctor) counts that tally and reminds you they are still there.
+
+### Known limits
+
+- The report counts **rows**, meaning every condition, action, comment, variable, include and
+  function. A group is scaffolding, not a row, so it is not counted.
+- A layout name, an object-to-create name and an audio file name are kept as written: point them at
+  the scene or the imported sound they became.
+- C3's picking (an event narrowing which instances the actions apply to) has no direct twin. Rows
+  arrive scoped to the node you mapped; where a C3 event picked a *set* of instances, use a group
+  and the picking rows.
+- The format is C3's own and moves with its releases. When a row id changes, the importer stops
+  recognising that row and says so in the report - it never guesses.
 
 ## 11. Use Cases
 

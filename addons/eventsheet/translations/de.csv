@@ -3100,3 +3100,24 @@ Instance values,Instanzwerte
 Per fire,Pro Auslösung
 Share of run,Anteil am Lauf
 Fires,Auslösungen
+Import event sheet…,Ereignisblatt importieren…
+Import event sheet,Ereignisblatt importieren
+"Bring a sheet over from another event-sheet editor. Pick the project it saved or one exported sheet, say which node each object became, and see exactly what came across - every row the vocabulary knows becomes the row that says the same thing, and every row it does not arrives switched off with its own words beside it. Nothing is written until you choose Save as…","Holt ein Blatt aus einem anderen Ereignisblatt-Editor herüber. Wähle das Projekt, das er gespeichert hat, oder ein einzelnes exportiertes Blatt, sage, welcher Knoten aus jedem Objekt geworden ist, und sieh genau, was angekommen ist - jede Zeile, deren Wort dieses Vokabular kennt, wird zur Zeile, die dasselbe sagt, und jede andere kommt abgeschaltet mit ihren eigenen Worten daneben an. Nichts wird geschrieben, bis du Speichern unter… wählst."
+"Brings a sheet over from another event-sheet editor. Pick the project it saved (a zip of JSON) or a single exported event sheet. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it, and is counted below. Nothing is written until you choose Save as…","Holt ein Blatt aus einem anderen Ereignisblatt-Editor herüber. Wähle das Projekt, das er gespeichert hat (ein Zip aus JSON), oder ein einzelnes exportiertes Ereignisblatt. Jede Bedingung, Aktion und jeder Ausdruck, deren Wort dieses Vokabular kennt, wird zur Zeile, die dasselbe sagt; alles andere kommt abgeschaltet mit seinen eigenen Worten daneben an und wird unten gezählt. Nichts wird geschrieben, bis du Speichern unter… wählst."
+Which file?,Welche Datei?
+"The exported project, or one exported event sheet",Das exportierte Projekt oder ein exportiertes Ereignisblatt
+Browse…,Durchsuchen…
+Which node is which object?,Welcher Knoten ist welches Objekt?
+"One line per object the sheet talks to. The node is written into the rows as-is, so $Player means the child called Player; leave it empty and the rows act on the sheet's own node and the object name is kept in the report.","Eine Zeile pro Objekt, mit dem das Blatt spricht. Der Knoten wird unverändert in die Zeilen geschrieben, $Player meint also das Kind namens Player; lässt du ihn leer, wirken die Zeilen auf den eigenen Knoten des Blatts und der Objektname bleibt im Bericht."
+What it reads like,Wie es sich liest
+What came across,Was angekommen ist
+Save as…,Speichern unter…
+Pick the exported project or sheet,Wähle das exportierte Projekt oder Blatt
+Save the imported sheet as,Importiertes Blatt speichern unter
+Pick a file to see what comes across.,"Wähle eine Datei, um zu sehen, was ankommt."
+Pick a file first.,Wähle zuerst eine Datei.
+That file could not be opened as a project archive.,Diese Datei ließ sich nicht als Projektarchiv öffnen.
+No event sheets were found in that archive.,In diesem Archiv wurden keine Ereignisblätter gefunden.
+That file does not exist.,Diese Datei gibt es nicht.
+That file is not an exported event sheet.,Diese Datei ist kein exportiertes Ereignisblatt.
+Nothing has been imported yet.,Es wurde noch nichts importiert.

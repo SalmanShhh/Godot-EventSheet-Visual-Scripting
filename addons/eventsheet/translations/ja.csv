@@ -3100,3 +3100,24 @@ Instance values,インスタンスの値
 Per fire,1 回あたり
 Share of run,実行全体に占める割合
 Fires,発火回数
+Import event sheet…,イベントシートをインポート…
+Import event sheet,イベントシートをインポート
+"Bring a sheet over from another event-sheet editor. Pick the project it saved or one exported sheet, say which node each object became, and see exactly what came across - every row the vocabulary knows becomes the row that says the same thing, and every row it does not arrives switched off with its own words beside it. Nothing is written until you choose Save as…",他のイベントシートエディタからシートを持ち込みます。保存されたプロジェクトか、書き出されたシートを選び、各オブジェクトがどのノードになったかを指定すると、何が取り込まれたかがそのまま見えます。語彙にある行は同じ意味の行になり、ない行は元の言葉を添えて無効のまま届きます。名前を付けて保存… を選ぶまで何も書き込まれません。
+"Brings a sheet over from another event-sheet editor. Pick the project it saved (a zip of JSON) or a single exported event sheet. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it, and is counted below. Nothing is written until you choose Save as…",他のイベントシートエディタからシートを持ち込みます。保存されたプロジェクト（JSON の zip）か、書き出されたイベントシートを選んでください。語彙にある条件・アクション・式は同じ意味の行になり、それ以外は元の言葉を添えて無効のまま届き、下で数えられます。名前を付けて保存… を選ぶまで何も書き込まれません。
+Which file?,どのファイル？
+"The exported project, or one exported event sheet",書き出されたプロジェクト、またはイベントシート 1 つ
+Browse…,参照…
+Which node is which object?,どのノードがどのオブジェクト？
+"One line per object the sheet talks to. The node is written into the rows as-is, so $Player means the child called Player; leave it empty and the rows act on the sheet's own node and the object name is kept in the report.",シートが話しかけるオブジェクトごとに 1 行。ノードはそのまま行に書き込まれるので、$Player は Player という子を意味します。空のままにすると行はシート自身のノードに作用し、オブジェクト名はレポートに残ります。
+What it reads like,どう読めるか
+What came across,何が取り込まれたか
+Save as…,名前を付けて保存…
+Pick the exported project or sheet,書き出されたプロジェクトかシートを選ぶ
+Save the imported sheet as,インポートしたシートの保存先
+Pick a file to see what comes across.,ファイルを選ぶと、何が取り込まれるかが見えます。
+Pick a file first.,まずファイルを選んでください。
+That file could not be opened as a project archive.,そのファイルはプロジェクトアーカイブとして開けませんでした。
+No event sheets were found in that archive.,そのアーカイブにイベントシートは見つかりませんでした。
+That file does not exist.,そのファイルは存在しません。
+That file is not an exported event sheet.,そのファイルは書き出されたイベントシートではありません。
+Nothing has been imported yet.,まだ何もインポートされていません。

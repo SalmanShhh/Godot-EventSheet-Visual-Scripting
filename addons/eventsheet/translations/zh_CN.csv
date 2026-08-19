@@ -3100,3 +3100,24 @@ Instance values,实例的值
 Per fire,每次触发
 Share of run,占本次运行的比例
 Fires,触发次数
+Import event sheet…,导入事件表…
+Import event sheet,导入事件表
+"Bring a sheet over from another event-sheet editor. Pick the project it saved or one exported sheet, say which node each object became, and see exactly what came across - every row the vocabulary knows becomes the row that says the same thing, and every row it does not arrives switched off with its own words beside it. Nothing is written until you choose Save as…",从另一个事件表编辑器把一张表搬过来。选中它保存的工程或单张导出的表，说明每个对象变成了哪个节点，就能看到到底搬过来了什么：词汇认得的行会变成说同一件事的行，认不得的则以关闭状态到达，旁边附上它原来的话。在你选择“另存为…”之前不会写入任何东西。
+"Brings a sheet over from another event-sheet editor. Pick the project it saved (a zip of JSON) or a single exported event sheet. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it, and is counted below. Nothing is written until you choose Save as…",从另一个事件表编辑器把一张表搬过来。选中它保存的工程（一个 JSON 的 zip）或单张导出的事件表。词汇认得的每个条件、动作和表达式都会变成说同一件事的行；其余的以关闭状态到达，旁边附上它原来的话，并在下方计数。在你选择“另存为…”之前不会写入任何东西。
+Which file?,哪个文件？
+"The exported project, or one exported event sheet",导出的工程，或单张导出的事件表
+Browse…,浏览…
+Which node is which object?,哪个节点对应哪个对象？
+"One line per object the sheet talks to. The node is written into the rows as-is, so $Player means the child called Player; leave it empty and the rows act on the sheet's own node and the object name is kept in the report.",表所对话的每个对象占一行。节点会原样写入行中，所以 $Player 指名为 Player 的子节点；留空则这些行作用于表自己的节点，对象名会保留在报告里。
+What it reads like,读起来是什么样
+What came across,搬过来了什么
+Save as…,另存为…
+Pick the exported project or sheet,选择导出的工程或表
+Save the imported sheet as,将导入的表另存为
+Pick a file to see what comes across.,选一个文件，看看能搬过来什么。
+Pick a file first.,先选一个文件。
+That file could not be opened as a project archive.,那个文件无法作为工程压缩包打开。
+No event sheets were found in that archive.,在那个压缩包里没找到事件表。
+That file does not exist.,那个文件不存在。
+That file is not an exported event sheet.,那个文件不是导出的事件表。
+Nothing has been imported yet.,还没有导入任何东西。
