@@ -17,10 +17,20 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── CharacterBody2D: slide results (valid after Move And Slide) ──
-	descriptors.append(F.make_descriptor("Core", "IsOnWall", "Is On Wall", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_wall()", "", [], "Collisions", "Is on wall", "CharacterBody2D")
+	# R10. The display words are the sheet's own platform words, which is also what an opened script
+	# reads them as - one wording for the row whether it was picked here or typed in a .gd file.
+	descriptors.append(F.make_descriptor("Core", "IsOnWall", "Is By Wall", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_wall()", "", [], "Collisions", "Is by wall", "CharacterBody2D")
 		.described("True when this 2D character is pressing against a wall."))
-	descriptors.append(F.make_descriptor("Core", "IsOnCeiling", "Is On Ceiling", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_ceiling()", "", [], "Collisions", "Is on ceiling", "CharacterBody2D")
+	descriptors.append(F.make_descriptor("Core", "IsOnCeiling", "Is Touching Ceiling", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_ceiling()", "", [], "Collisions", "Is touching ceiling", "CharacterBody2D")
 		.described("True when this 2D character is touching a ceiling above."))
+	# The three questions every platformer asks about its own speed. Written as the comparisons they
+	# are, so the row and a hand-written line are the same line - and read back as these same words.
+	descriptors.append(F.make_descriptor("Core", "IsJumping", "Is Jumping", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.y < 0", "", [], "Collisions", "Is jumping", "CharacterBody2D")
+		.described("True while this 2D character is moving upward - the rising half of a jump. In 2D, Y grows downward, so going up is a NEGATIVE vertical speed."))
+	descriptors.append(F.make_descriptor("Core", "IsFalling", "Is Falling", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.y > 0", "", [], "Collisions", "Is falling", "CharacterBody2D")
+		.described("True while this 2D character is moving downward - the falling half of a jump, or walking off a ledge."))
+	descriptors.append(F.make_descriptor("Core", "IsMoving", "Is Moving", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.x != 0", "", [], "Collisions", "Is moving", "CharacterBody2D")
+		.described("True while this 2D character has any sideways speed - the walk-or-idle question an animation state usually asks."))
 	descriptors.append(F.make_descriptor("Core", "GetWallNormal", "Wall Normal", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_wall_normal()", "", [], "Collisions", "wall normal", "CharacterBody2D")
 		.described("Returns the direction the touched wall is facing, for wall-jumps or sliding."))
 	descriptors.append(F.make_descriptor("Core", "GetFloorNormal", "Floor Normal", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_floor_normal()", "", [], "Collisions", "floor normal", "CharacterBody2D")
@@ -61,10 +71,18 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Switches this collision shape off, safely, so it stops colliding."))
 
 	# ── 3D parity (CharacterBody3D slide + Area3D overlap) ──
-	descriptors.append(F.make_descriptor("Core", "IsOnWall3D", "Is On Wall (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_wall()", "", [], "Collisions", "Is on wall", "CharacterBody3D")
+	descriptors.append(F.make_descriptor("Core", "IsOnWall3D", "Is By Wall (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_wall()", "", [], "Collisions", "Is by wall", "CharacterBody3D")
 		.described("True when this 3D character is pressing against a wall."))
-	descriptors.append(F.make_descriptor("Core", "IsOnCeiling3D", "Is On Ceiling (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_ceiling()", "", [], "Collisions", "Is on ceiling", "CharacterBody3D")
+	descriptors.append(F.make_descriptor("Core", "IsOnCeiling3D", "Is Touching Ceiling (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_ceiling()", "", [], "Collisions", "Is touching ceiling", "CharacterBody3D")
 		.described("True when this 3D character is touching a ceiling above."))
+	# R10 in 3D, where Y grows UPWARD: the same two questions ask the opposite sign, and the words
+	# follow the axis rather than the sign, exactly as the reading of an opened 3D script does.
+	descriptors.append(F.make_descriptor("Core", "IsJumping3D", "Is Jumping (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.y > 0", "", [], "Collisions", "Is jumping", "CharacterBody3D")
+		.described("True while this 3D character is moving upward. In 3D, Y grows upward, so going up is a POSITIVE vertical speed - the opposite sign from the 2D question."))
+	descriptors.append(F.make_descriptor("Core", "IsFalling3D", "Is Falling (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.y < 0", "", [], "Collisions", "Is falling", "CharacterBody3D")
+		.described("True while this 3D character is moving downward."))
+	descriptors.append(F.make_descriptor("Core", "IsMoving3D", "Is Moving (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.x != 0", "", [], "Collisions", "Is moving", "CharacterBody3D")
+		.described("True while this 3D character has any speed along X - the walk-or-idle question for a side-on 3D mover."))
 	descriptors.append(F.make_descriptor("Core", "GetWallNormal3D", "Wall Normal (3D)", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_wall_normal()", "", [], "Collisions", "wall normal", "CharacterBody3D")
 		.described("Fires with the direction a 3D body just bumped into a wall, useful for wall-jumps or ricochets."))
 	descriptors.append(F.make_descriptor("Core", "GetFloorNormal3D", "Floor Normal (3D)", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_floor_normal()", "", [], "Collisions", "floor normal", "CharacterBody3D")

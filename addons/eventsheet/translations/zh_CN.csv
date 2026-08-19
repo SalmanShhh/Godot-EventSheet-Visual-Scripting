@@ -2186,3 +2186,33 @@ The row you will get,你将得到的行
 One per object - every copy of this object keeps its own.,每个对象一份 - 该对象的每个副本各自持有。
 Lives inside one event and is gone when it ends.,只存在于一个事件内，事件结束就消失。
 Set once and never changes while the game runs.,设定一次，游戏运行期间不再改变。
+{value} is between {low} and {high},{value} 在 {low} 和 {high} 之间
+(exclusive),(不含两端)
+(exclusive top),(不含上限)
+(exclusive bottom),(不含下限)
+{value} is between angles {low} and {high},{value} 在角度 {low} 和 {high} 之间
+{value} is within {limit} of {target},{value} 在 {target} 的 {limit} 以内
+{value} is clockwise from {other},{value} 在 {other} 的顺时针方向
+is within {distance} of {other},在 {other} 的 {distance} 以内
+{value} is within {distance} of {other},{value} 在 {other} 的 {distance} 以内
+is inside area {area},在区域 {area} 内
+{value} is inside area {area},{value} 在区域 {area} 内
+{value} is about {other},{value} 约等于 {other}
+{value} is about {other} (not moving),{value} 约等于 {other} (静止)
+{seconds} seconds have passed since {since},自 {since} 起已过 {seconds} 秒
+{seconds} seconds have passed since {since} (clock time),自 {since} 起已过 {seconds} 秒 (系统时间)
+Set {name} to now,将 {name} 设为现在
+Set {name} to now (clock time),将 {name} 设为现在 (系统时间)
+Is outside layout,在布局之外
+Is on-screen,在屏幕上
+(left),(左)
+(right),(右)
+(top),(上)
+(bottom),(下)
+(left or right),(左或右)
+(top or bottom),(上或下)
+Is moving,正在移动
+Is touching ceiling,触碰天花板
+Pause the game,暂停游戏
+Unpause,取消暂停
+Quit game,退出游戏

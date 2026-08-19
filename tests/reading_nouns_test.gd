@@ -102,12 +102,12 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# M44 - counting
 	"System ▸ Set hp to enemies (group) count",
 	# M45 - the system values
-	"System ▸ Set reading to viewport width",
+	"System ▸ Set reading to ViewportWidth",
 	"Mouse ▸ Set dir to mouse position",
 	"System ▸ Set reading to time",
 	"System ▸ Set reading to fps",
-	# M46 off by default - the Godot nouns stand
-	"System ▸ Go to scene \"res://scenes/menu.tscn\"",
+	# R8 - the layout words are the action's own name, so they are on whatever the glossary says
+	"System ▸ Go to layout Menu",
 	# M47 - a node lookup IS the object it names, and an "or null" one says it may not be there
 	"Boss ▸ Subtract 10 from hp",
 	"$HUD/Score",
@@ -264,12 +264,14 @@ static func _measurement_values() -> bool:
 		["hp = get_tree().get_nodes_in_group(\"enemies\").size()", "System ▸ Set hp to enemies (group) count"],
 		# The name lens spells the property as words on the canvas; the grammar keeps the member it read.
 		["hp = get_child_count()", "System ▸ Set hp to child_count"],
-		["reading = get_viewport_rect().size.x", "System ▸ Set reading to viewport width"],
-		["reading = get_viewport_rect().size.y", "System ▸ Set reading to viewport height"],
+		# R11 renamed these two to the sheet's own expression names, which a reader TYPES.
+		["reading = get_viewport_rect().size.x", "System ▸ Set reading to ViewportWidth"],
+		["reading = get_viewport_rect().size.y", "System ▸ Set reading to ViewportHeight"],
 		["dir = get_viewport().get_mouse_position()", "Mouse ▸ Set dir to mouse position"],
 		["dir = get_global_mouse_position()", "Mouse ▸ Set dir to mouse position"],
 		["reading = Time.get_ticks_msec() / 1000.0", "System ▸ Set reading to time"],
-		["reading = Time.get_ticks_msec()", "System ▸ Set reading to time in ms"],
+		# R5 - writing the clock into a variable is the sheet's "Set ... to now".
+		["reading = Time.get_ticks_msec()", "System ▸ Set reading to now"],
 		["reading = Engine.get_frames_per_second()", "System ▸ Set reading to fps"]
 	]:
 		ok = _check("\"%s\" reads \"%s\"" % [str(pair[0]), str(pair[1])], _read(str(pair[0])), str(pair[1])) and ok
@@ -282,7 +284,7 @@ static func _condition_values() -> bool:
 	for pair: Array in [
 		["is_on_wall()", "Player ▸ Is by wall"],
 		["is_on_floor()", "Player ▸ Is on floor"],
-		["is_on_ceiling()", "Player ▸ Is by ceiling"],
+		["is_on_ceiling()", "Player ▸ Is touching ceiling"],
 		["velocity.y < 0", "Player ▸ Is jumping"],
 		["velocity.y > 0", "Player ▸ Is falling"],
 		["hud.overlaps_body(boss)", "hud ▸ Is overlapping boss"],
@@ -295,12 +297,15 @@ static func _condition_values() -> bool:
 	]:
 		ok = _check("condition \"%s\" reads \"%s\"" % [str(pair[0]), str(pair[1])],
 			_read_condition(str(pair[0])), str(pair[1])) and ok
-	# M41 - the vertical-speed reading is 2D only: in 3D the same test means the opposite.
+	# M41/R10 - the vertical words follow the AXIS, not the sign: in 3D, where Y grows upward, the
+	# very same test means the opposite, and the reading says the opposite word.
 	var in_3d: Dictionary = CONTEXT.duplicate(true)
 	in_3d["self_class"] = "CharacterBody3D"
 	(in_3d["object_classes"] as Dictionary)["Player"] = "CharacterBody3D"
-	ok = _check("a 3D body's vertical speed is NOT read as jumping",
-		_read_condition("velocity.y < 0", in_3d).contains("Is jumping"), false) and ok
+	ok = _check("a 3D body sinking reads as falling",
+		_read_condition("velocity.y < 0", in_3d), "Player ▸ Is falling") and ok
+	ok = _check("a 3D body rising reads as jumping",
+		_read_condition("velocity.y > 0", in_3d), "Player ▸ Is jumping") and ok
 	# M44 - the non-empty twin, which reads as the count rather than as a NOT mark
 	var pieces: Array = (EventSheetSentence.condition_pieces("not items.is_empty()", CONTEXT).get("pieces", []) as Array)
 	var joined: String = ""
@@ -315,13 +320,16 @@ static func _familiar_words() -> bool:
 	var ok: bool = true
 	var familiar: Dictionary = CONTEXT.duplicate(true)
 	familiar["familiar_words"] = true
+	# R8 moved the scene-flow words OUT of the glossary: they are the shipped rows' own action names,
+	# so they read the same either way, and only the layer noun is still a glossary word.
 	for entry: Array in [
 		["get_tree().change_scene_to_file(\"res://scenes/menu.tscn\")",
-			"System ▸ Go to scene \"res://scenes/menu.tscn\"", "System ▸ Go to layout \"menu\""],
-		["get_tree().reload_current_scene()", "", "System ▸ Restart layout"],
-		["get_tree().paused = true", "", "System ▸ Set time scale to 0 (pause)"],
-		["get_tree().paused = false", "", "System ▸ Set time scale to 1"],
-		["Engine.time_scale = 0.5", "Engine ▸ Set time_scale to 0.5", "System ▸ Set time scale to 0.5"],
+			"System ▸ Go to layout Menu", "System ▸ Go to layout Menu"],
+		["get_tree().reload_current_scene()", "System ▸ Restart layout", "System ▸ Restart layout"],
+		["get_tree().paused = true", "System ▸ Pause the game", "System ▸ Pause the game"],
+		["get_tree().paused = false", "System ▸ Unpause", "System ▸ Unpause"],
+		["Engine.time_scale = 0.5", "System ▸ Set time scale to 0.5", "System ▸ Set time scale to 0.5"],
+		["get_tree().quit()", "System ▸ Quit game", "System ▸ Quit game"],
 		["hud.visible = false", "hud ▸ Set invisible", "hud (layer) ▸ Set layer invisible"]
 	]:
 		ok = _check("with the glossary off \"%s\" reads \"%s\"" % [str(entry[0]), str(entry[1])],
@@ -348,11 +356,11 @@ static func _toggle_defaults_off() -> bool:
 	plain.free()
 	var readings: PackedStringArray = _render(_import(), true)
 	for expected: String in [
-		"System ▸ Go to layout \"menu\"",
+		"System ▸ Go to layout Menu",
 		"hud (layer) ▸ Set layer invisible"
 	]:
 		ok = _check("with the glossary on the opened row reads \"%s\"" % expected, readings.has(expected), true) and ok
-	ok = _check("with the glossary on the Godot scene wording is gone",
+	ok = _check("the Godot scene wording is gone",
 		readings.has("System ▸ Go to scene \"res://scenes/menu.tscn\""), false) and ok
 	return ok
 

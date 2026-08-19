@@ -2186,3 +2186,33 @@ The row you will get,La riga che otterrai
 One per object - every copy of this object keeps its own.,Una per oggetto - ogni copia di questo oggetto ha la sua.
 Lives inside one event and is gone when it ends.,Vive dentro un evento e sparisce quando finisce.
 Set once and never changes while the game runs.,Impostata una volta e mai cambiata mentre il gioco gira.
+{value} is between {low} and {high},{value} è tra {low} e {high}
+(exclusive),(esclusi)
+(exclusive top),(estremo alto escluso)
+(exclusive bottom),(estremo basso escluso)
+{value} is between angles {low} and {high},{value} è tra gli angoli {low} e {high}
+{value} is within {limit} of {target},{value} è entro {limit} da {target}
+{value} is clockwise from {other},{value} è in senso orario rispetto a {other}
+is within {distance} of {other},è entro {distance} da {other}
+{value} is within {distance} of {other},{value} è entro {distance} da {other}
+is inside area {area},è dentro l'area {area}
+{value} is inside area {area},{value} è dentro l'area {area}
+{value} is about {other},{value} è circa {other}
+{value} is about {other} (not moving),{value} è circa {other} (fermo)
+{seconds} seconds have passed since {since},sono passati {seconds} secondi da {since}
+{seconds} seconds have passed since {since} (clock time),sono passati {seconds} secondi da {since} (ora di sistema)
+Set {name} to now,Imposta {name} su adesso
+Set {name} to now (clock time),Imposta {name} su adesso (ora di sistema)
+Is outside layout,È fuori dal layout
+Is on-screen,È sullo schermo
+(left),(a sinistra)
+(right),(a destra)
+(top),(in alto)
+(bottom),(in basso)
+(left or right),(a sinistra o a destra)
+(top or bottom),(in alto o in basso)
+Is moving,Si sta muovendo
+Is touching ceiling,Tocca il soffitto
+Pause the game,Metti in pausa il gioco
+Unpause,Riprendi
+Quit game,Esci dal gioco

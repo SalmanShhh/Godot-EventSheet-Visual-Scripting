@@ -8033,6 +8033,20 @@ func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: S
 ## the source does not.
 func _append_conjunct_condition_lines(branch_row: EventRowData, condition_text: String,
 		first_line: int, condition_style_meta: Dictionary) -> void:
+	# ── R4 / R11 lens hook ─────────────────────────────────────────────────────────────────────
+	# Some questions are ONE question written as two terms: a range (`x >= 0 and x <= width`), an
+	# angle window, a pair of layout edges (`x < 0 or x > width`). The sheet has one condition for
+	# each of those, so they are claimed BEFORE the run is split - after the split each half would
+	# stack as its own comparison and say twice what the author asked once.
+	var whole: Dictionary = EventSheetSentence.joined_condition(condition_text, sentence_context())
+	if not whole.is_empty():
+		var whole_pieces: Array = []
+		for segment: Variant in (whole.get("segments", []) as Array):
+			var whole_segment: Dictionary = segment
+			whole_pieces.append([str(whole_segment.get("text", "")), str(whole_segment.get("tone", "plain"))])
+		_append_one_condition_line(branch_row, str(whole.get("object", "")), whole_pieces,
+			first_line, condition_style_meta)
+		return
 	var terms: PackedStringArray = EventSheetSentence.split_top_level(condition_text, " or ")
 	var or_block: bool = terms.size() > 1
 	if not or_block:
@@ -8061,28 +8075,37 @@ func _append_conjunct_condition_lines(branch_row: EventRowData, condition_text: 
 		var reading: Dictionary = EventSheetSentence.condition_pieces(read_term, sentence_context())
 		var condition_object: String = str(global_term.get("object", "")) if not global_term.is_empty() \
 			else str(reading.get("object", ""))
-		var pieces: Array = EventSheetViewportLenses.apply_to_pieces(
-			reading.get("pieces", []) as Array, _viewport.humanize_names_enabled(), _export_knob_names())
-		var condition_cell: Dictionary = _tone_segments(pieces)
-		branch_row.spans.append(_make_span(str(condition_cell.get("text", "")), SemanticSpan.SpanType.CONDITION, {
-			"lane": "condition",
-			# "condition" is what makes the cell FILL its lane and wrap like every other condition cell
-			# (the layout gates both on this kind) - so a long branch test grows the row instead of
-			# clipping. There is no ACECondition behind it, so the index is -1 and the cell is inert:
-			# nothing may index the event's condition list from a reading the grammar invented.
-			"kind": "condition",
-			"ace_index": -1,
-			"chip": true,
-			"editable": false,
-			"hoverable": false,
-			"line_index": line_index,
-			"object_label": condition_object,
-			"object_icon": EventSheetViewportReadingRows.autoload_icon() if not global_term.is_empty() \
-				and _viewport.show_object_icons else null,
-			"bbcode_segments": condition_cell.get("segments", [])
-		}.merged(condition_style_meta, true)))
+		_append_one_condition_line(branch_row, condition_object, reading.get("pieces", []) as Array,
+			line_index, condition_style_meta, not global_term.is_empty())
 		line_index += 1
 	branch_row.line_count = maxi(branch_row.line_count, line_index)
+
+
+## ONE condition line of a branch row, from the grammar's [[text, tone], ...] pieces. Shared by the
+## conjunct path and the whole-run readings above it, so a line says the same thing and behaves the
+## same way however the reading was claimed.
+func _append_one_condition_line(branch_row: EventRowData, condition_object: String, pieces: Array,
+		line_index: int, condition_style_meta: Dictionary, global_object: bool = false) -> void:
+	var spelled: Array = EventSheetViewportLenses.apply_to_pieces(
+		pieces, _viewport.humanize_names_enabled(), _export_knob_names())
+	var condition_cell: Dictionary = _tone_segments(spelled)
+	branch_row.spans.append(_make_span(str(condition_cell.get("text", "")), SemanticSpan.SpanType.CONDITION, {
+		"lane": "condition",
+		# "condition" is what makes the cell FILL its lane and wrap like every other condition cell
+		# (the layout gates both on this kind) - so a long branch test grows the row instead of
+		# clipping. There is no ACECondition behind it, so the index is -1 and the cell is inert:
+		# nothing may index the event's condition list from a reading the grammar invented.
+		"kind": "condition",
+		"ace_index": -1,
+		"chip": true,
+		"editable": false,
+		"hoverable": false,
+		"line_index": line_index,
+		"object_label": condition_object,
+		"object_icon": EventSheetViewportReadingRows.autoload_icon() if global_object \
+			and _viewport.show_object_icons else null,
+		"bbcode_segments": condition_cell.get("segments", [])
+	}.merged(condition_style_meta, true)))
 
 
 ## The branch's ACTION cell: the whole action re-read with this arm's value in place of the ternary,
@@ -9502,12 +9525,56 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 		"ArrayIsEmpty", "DictIsEmpty":
 			# M44 - an event sheet has no "is empty": emptiness IS a count of zero.
 			return EventSheetSentence.condition("%s.is_empty()" % str(params_dict.get("var_name", "")), context)
+		# ── R4 / R5 / R10 / R11 lens hook ────────────────────────────────────────────────────────
+		# The batch-seven questions, so a row picked from the dialog and the same line typed by hand
+		# say the same sentence. Each one hands the grammar the very code the row compiles to.
+		"IsBetween":
+			return EventSheetSentence.condition("%s <= %s and %s <= %s" % [
+				str(params_dict.get("min", "")), str(params_dict.get("value", "")),
+				str(params_dict.get("value", "")), str(params_dict.get("max", ""))], context)
+		"IsAbout":
+			return EventSheetSentence.condition("is_equal_approx(%s, %s)" % [
+				str(params_dict.get("a", "")), str(params_dict.get("b", ""))], context)
+		"IsZeroApprox":
+			return EventSheetSentence.condition("is_zero_approx(%s)" % str(params_dict.get("value", "")), context)
+		"IsWithinDistance":
+			return EventSheetSentence.condition("%s.distance_to(%s) < %s" % [
+				str(params_dict.get("a", "")), str(params_dict.get("b", "")),
+				str(params_dict.get("distance", ""))], context)
+		"IsInsideArea":
+			return EventSheetSentence.condition("%s.has_point(%s)" % [
+				str(params_dict.get("area", "")), str(params_dict.get("point", ""))], context)
+		"IsOnScreen":
+			return EventSheetSentence.condition("get_viewport_rect().has_point(%s)" % str(
+				params_dict.get("point", "")), context)
+		"IsOutsideLayout":
+			return EventSheetSentence.outside_layout_reading("not get_viewport_rect().has_point(%s)" % str(
+				params_dict.get("point", "")), context)
+		"IsJumping", "IsFalling", "IsMoving", "IsJumping3D", "IsFalling3D", "IsMoving3D":
+			return EventSheetSentence.condition("%s.%s" % [_ace_target(params_dict),
+				_body_speed_test(condition.ace_id)], context)
 		"IsNegative", "IsPositive":
 			# Claimed ONLY for the shape an event sheet has a word for (a 2D body's vertical speed); every
 			# other number keeps the vocabulary's own "is negative" reading.
 			return EventSheetSentence.movement_words(str(params_dict.get("value", "")),
 				"<" if condition.ace_id == "IsNegative" else ">", context)
 	return {}
+
+
+## R10. The speed test one of the six body rows compiles to. The 3D rows ask the opposite sign of the
+## vertical question, because Y grows upward there - and the grammar turns each back into the same
+## word the 2D row reads, which is the whole point of asking it this way.
+func _body_speed_test(ace_id: String) -> String:
+	match ace_id:
+		"IsJumping":
+			return "velocity.y < 0"
+		"IsFalling":
+			return "velocity.y > 0"
+		"IsJumping3D":
+			return "velocity.y > 0"
+		"IsFalling3D":
+			return "velocity.y < 0"
+	return "velocity.x != 0"
 
 
 ## The node a picked row acts on: the "On node" parameter a node-scoped ACE carries, or `self` for a

@@ -413,8 +413,8 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
 - **Statements without a verb read in Construct's row grammar - Object ▸ Verb values.** `System ▸ Subtract 1
   from jumps left`, `host ▸ Set velocity X to direction X * speed`, `host ▸ Destroy (at end of frame)`,
   `FPSController ▸ Signal On Jumped`, `host ▸ exists` / `does not exist`, `Local number remaining = amount`
-  (a Local variable row you can also add from the picker), `⏳ Wait 0.5 seconds`, `Go to scene
-  "res://menu.tscn"`, `Keyboard ▸ "jump" is down`, `push x moved toward 0 by push fade`, and inside a
+  (a Local variable row you can also add from the picker), `⏳ Wait 0.5 seconds`, `Go to layout
+  Menu`, `Keyboard ▸ "jump" is down`, `push x moved toward 0 by push fade`, and inside a
   Condition verb `System ▸ Set return value to true` / inside an Expression verb `Set return value to
   jumps left` (Construct's own function-block action). The same sentence appears whether the row was typed
   in GDScript or picked from the palette - one grammar produces both - and the exact code is always on
@@ -513,6 +513,48 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   `3.14` stays `3.14`). A 0..1 setting the project marked `@export_range(0, 1)` reads as a
   percentage (`Set opacity to 50%`). A reading only: the literal in the file never moves, and the
   params dialog still puts the author's own GDScript in front of you.
+- **Ranges, angles, distances, areas and "about" are ONE condition each.** `x >= 0 and x <= width`,
+  `0 < hp and hp < max_hp`, `level in range(3, 6)` and the inverted `not (t >= 0.2 and t <= 0.8)` all
+  read as one `is between` row - the ✕ carrying the inversion - and a strict end says which one it is
+  (`(exclusive)`, `(exclusive top)`, `(exclusive bottom)`). `in range(3, 6)` reads `between 3 and 5`,
+  because Godot's range stops before its second number. The same idea covers every kind of value the
+  sheet already has a word for: `abs(angle_difference(rotation, target)) < deg_to_rad(10)` reads
+  `angle is within 10° of target`, a wrapped angle between two bounds reads `is between angles 30° and
+  60°`, `angle_difference(a, b) > 0` reads `is clockwise from`, `position.distance_to(t) < 100` reads
+  `is within 100 of t`, `Rect2(0, 0, 640, 360).has_point(position)` reads `is inside area 0, 0 - 640 ×
+  360`, and `is_equal_approx` / `is_zero_approx` / `abs(a - b) < 0.001` read `is about` (a body's
+  `is_zero_approx(velocity.length())` reads `speed is about 0 (not moving)`). Angles are shown in
+  degrees, with the radians the file holds on hover. Every one of them is also in the Add condition
+  dialog, writing back exactly the line it reads.
+- **The cooldown idiom, in seconds.** `Time.get_ticks_msec() - last_shot > 500` reads `System ▸ 0.5
+  seconds have passed since last shot`, and `last_shot = Time.get_ticks_msec()` reads `Set last shot
+  to now`; the wall-clock spelling adds `(clock time)`, because that number keeps counting while the
+  game is closed. Nobody has to know what a tick is or do the division.
+- **Platform words, and the layout bounds.** On a CharacterBody, `is_on_floor()` / `is_on_wall()` /
+  `is_on_ceiling()` read `Is on floor` / `Is by wall` / `Is touching ceiling`, and `velocity.y` /
+  `velocity.x` against zero read `Is jumping` / `Is falling` / `Is moving` - the vertical words follow
+  the AXIS rather than the sign, so a 3D body reads correctly too, and a plain node's vertical speed
+  keeps its comparison (a projectile is not jumping). `position.x < 0 or position.x >` the viewport's
+  width reads `Is outside layout (left or right)`, a single edge says which side, and
+  `get_viewport_rect().has_point(p)` reads `Is on-screen` - its negation reads `Is outside layout`.
+  `get_viewport_rect().size.x` / `.y` read as `ViewportWidth` / `ViewportHeight`.
+- **Layout, pause and time-scale words, always on.**
+  `get_tree().change_scene_to_file("res://levels/level_2.tscn")` reads `System ▸ Go to layout Level 2`
+  with the file path on hover, `reload_current_scene()` reads `Restart layout`, `get_tree().paused`
+  reads `Pause the game` / `Unpause`, `Engine.time_scale = 0.5` reads `Set time scale to 0.5`, and
+  `get_tree().quit()` reads `Quit game`. These are never behind the Familiar Words toggle: they are
+  the names the shipped scene-flow rows already carry.
+- **Expression names, under Familiar Words.** With **View > Familiar Words** on, the values read under
+  the names a sheet author types into an expression field: `a.position.distance_to(b.position)` reads
+  `distance(a, b)`, `a.get_angle_to(b)` reads `angle(a, b)`, `s.to_lower()` / `s.to_upper()` read
+  `lowercase(s)` / `uppercase(s)`, `s.substr(0, 3)` and `s.right(2)` read `left(s, 3)` and
+  `right(s, 2)`, `s.find("x")` reads `find(s, "x")`, `s.split(",")[i]` reads `tokenat(s, i, ",")`,
+  `"%03d" % n` reads `zeropad(n, 3)`, `s.length()` and `arr.size()` both read `len(x)`,
+  `Engine.get_process_frames()` reads `tickcount`, `randi_range(1, 6)` and `randf_range(0.5, 2)` read
+  `random(a, b)`, `randi() % n` reads `random(n)`, and `[Color.RED, Color.BLUE].pick_random()` reads
+  `choose(red, blue)`. `lerp`, `clamp`, `abs`, `min`, `max` and friends are unchanged - both
+  vocabularies spell them the same. With the glossary off, `s.length()` reads `length of s` as it
+  always has; Godot's spelling is on hover either way.
 - **Lists, tables and text in the sheet's own verbs.** `items.append(x)` reads `Push back x to
   items`, and `push_front` / `pop_back` / `insert` / `remove_at` / `erase` / `clear` / `sort` /
   `shuffle` / `reverse` read as `Push front`, `Pop back of`, `Insert x at 2 in`, `Delete at 0 in`,

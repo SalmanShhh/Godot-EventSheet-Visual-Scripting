@@ -68,8 +68,10 @@ family stops being confusing.
 
 | Verb | What it does | Ships as |
 |------|--------------|----------|
-| Go To Scene | Switches the game to a different scene file | `get_tree().change_scene_to_file({path})` |
-| Restart Scene | Restarts the current scene from scratch | `get_tree().reload_current_scene()` |
+| Go To Layout | Switches the game to a different layout (a scene file) | `get_tree().change_scene_to_file({path})` |
+| Restart Layout | Restarts the current layout from scratch | `get_tree().reload_current_scene()` |
+| Pause The Game | Freezes the whole game | `get_tree().paused = true` |
+| Unpause | Lets the game run again | `get_tree().paused = false` |
 | Quit Game | Closes the game and exits to desktop | `get_tree().quit()` |
 | Handle Quit Myself | Stops the window's X from quitting instantly | `get_tree().set_auto_accept_quit({mode})` |
 | Spawn Scene Instance | Loads a scene file and adds an instance as a child | `add_child(load({path}).instantiate())` |

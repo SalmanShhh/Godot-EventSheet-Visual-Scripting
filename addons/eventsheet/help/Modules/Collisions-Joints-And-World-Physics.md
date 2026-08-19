@@ -74,8 +74,11 @@ picker under the node type in the last column.
 
 | Verb | What it does | Ships as |
 |------|--------------|----------|
-| Is On Wall | True when this 2D character is pressing against a wall | `{host.}is_on_wall()` |
-| Is On Ceiling | True when this 2D character is touching a ceiling above | `{host.}is_on_ceiling()` |
+| Is By Wall | True when this 2D character is pressing against a wall | `{host.}is_on_wall()` |
+| Is Touching Ceiling | True when this 2D character is touching a ceiling above | `{host.}is_on_ceiling()` |
+| Is Jumping | True while this 2D character is moving upward | `{host.}velocity.y < 0` |
+| Is Falling | True while this 2D character is moving downward | `{host.}velocity.y > 0` |
+| Is Moving | True while this 2D character has any sideways speed | `{host.}velocity.x != 0` |
 | Wall Normal | The direction the touched wall is facing | `{host.}get_wall_normal()` |
 | Floor Normal | The direction the floor is facing, useful on slopes | `{host.}get_floor_normal()` |
 | Slide Collision Count | How many things the character hit during its last move | `get_slide_collision_count()` |
@@ -86,8 +89,11 @@ picker under the node type in the last column.
 
 | Verb | What it does | Ships as |
 |------|--------------|----------|
-| Is On Wall (3D) | True when this 3D character is pressing against a wall | `{host.}is_on_wall()` |
-| Is On Ceiling (3D) | True when this 3D character is touching a ceiling above | `{host.}is_on_ceiling()` |
+| Is By Wall (3D) | True when this 3D character is pressing against a wall | `{host.}is_on_wall()` |
+| Is Touching Ceiling (3D) | True when this 3D character is touching a ceiling above | `{host.}is_on_ceiling()` |
+| Is Jumping (3D) | True while this 3D character is moving upward (Y grows upward in 3D) | `{host.}velocity.y > 0` |
+| Is Falling (3D) | True while this 3D character is moving downward | `{host.}velocity.y < 0` |
+| Is Moving (3D) | True while this 3D character has any speed along X | `{host.}velocity.x != 0` |
 | Wall Normal (3D) | The direction of the wall a 3D body bumped into | `{host.}get_wall_normal()` |
 | Floor Normal (3D) | The slope direction of the floor a 3D body stands on | `{host.}get_floor_normal()` |
 

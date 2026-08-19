@@ -2186,3 +2186,33 @@ The row you will get,"Die Zeile, die du bekommst"
 One per object - every copy of this object keeps its own.,Eine pro Objekt - jede Kopie dieses Objekts hat ihre eigene.
 Lives inside one event and is gone when it ends.,Lebt in einem Ereignis und ist danach weg.
 Set once and never changes while the game runs.,Einmal gesetzt und ändert sich im laufenden Spiel nie.
+{value} is between {low} and {high},{value} liegt zwischen {low} und {high}
+(exclusive),(exklusiv)
+(exclusive top),(oben exklusiv)
+(exclusive bottom),(unten exklusiv)
+{value} is between angles {low} and {high},{value} liegt zwischen den Winkeln {low} und {high}
+{value} is within {limit} of {target},{value} liegt innerhalb von {limit} um {target}
+{value} is clockwise from {other},{value} liegt im Uhrzeigersinn von {other}
+is within {distance} of {other},ist innerhalb von {distance} um {other}
+{value} is within {distance} of {other},{value} ist innerhalb von {distance} um {other}
+is inside area {area},ist im Bereich {area}
+{value} is inside area {area},{value} liegt im Bereich {area}
+{value} is about {other},{value} ist ungefähr {other}
+{value} is about {other} (not moving),{value} ist ungefähr {other} (steht still)
+{seconds} seconds have passed since {since},{seconds} Sekunden sind seit {since} vergangen
+{seconds} seconds have passed since {since} (clock time),{seconds} Sekunden sind seit {since} vergangen (Uhrzeit)
+Set {name} to now,{name} auf jetzt setzen
+Set {name} to now (clock time),{name} auf jetzt setzen (Uhrzeit)
+Is outside layout,Ist außerhalb des Layouts
+Is on-screen,Ist auf dem Bildschirm
+(left),(links)
+(right),(rechts)
+(top),(oben)
+(bottom),(unten)
+(left or right),(links oder rechts)
+(top or bottom),(oben oder unten)
+Is moving,Bewegt sich
+Is touching ceiling,Berührt die Decke
+Pause the game,Spiel pausieren
+Unpause,Pause aufheben
+Quit game,Spiel beenden

@@ -90,7 +90,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"host ▸ Destroy (at end of frame)",
 	"System ▸ Signal On Jumped",
 	"System ▸ ⏳ Wait 0.5 seconds",
-	"System ▸ Go to scene \"res://menu.tscn\"",
+	"System ▸ Go to layout Menu",
 	"host ▸ exists",
 	"System ▸ Set return value to true",
 	"System ▸ Set return value to false",

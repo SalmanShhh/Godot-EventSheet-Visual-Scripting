@@ -2396,9 +2396,11 @@ Collections (rich variables)
 - **Read Input Axis Into** (`name: String, negative: String, positive: String`) - Reads a left/right input axis into a local variable for this event.
 - **Tween Property** (`target: String, property: String, value: String, duration: String, transition: String, ease: String`) - Smoothly animates a node's property to a target value over time with an easing curve.
 - **Tween Callback** (`callable: String, delay: String`) - Waits a delay, then calls a method or function once (handy for timed events).
-- **Go To Scene** (`path: String`) - Switches the game to a different scene file, replacing the current one.
-- **Restart Scene** - Restarts the current scene from scratch, useful for retrying a level.
+- **Go To Layout** (`path: String`) - Switches the game to a different layout (a scene file), replacing the current one.
+- **Restart Layout** - Restarts the current layout from scratch, useful for retrying a level.
 - **Quit Game** - Closes the game and exits to desktop.
+- **Pause The Game** - Freezes the whole game. Nodes set to Always (or a pause menu's Process Mode) keep running, which is how the menu on top stays alive.
+- **Unpause** - Lets the game run again after Pause The Game.
 - **Handle Quit Myself** (`mode: String`) - Stops the window's close button from quitting instantly, so On Close Requested can run first (save progress, pop a confirm dialog) and you quit explicitly with Quit Game. Choose "Allow" to restore Godot's default immediate quit.
 - **Set Game Paused** (`paused: String`) - Pauses or resumes the whole game by toggling the scene tree's pause state.
 - **Spawn Scene Instance** (`path: String`) - Loads a scene file and adds an instance of it as a child (spawning objects).
@@ -2533,15 +2535,21 @@ Collections (rich variables)
 Collision vocabulary (the "Helper ACEs for collisions").
 
 #### Conditions
-- **Is On Wall** - True when this 2D character is pressing against a wall.
-- **Is On Ceiling** - True when this 2D character is touching a ceiling above.
+- **Is By Wall** - True when this 2D character is pressing against a wall.
+- **Is Touching Ceiling** - True when this 2D character is touching a ceiling above.
+- **Is Jumping** - True while this 2D character is moving upward - the rising half of a jump. In 2D, Y grows downward, so going up is a NEGATIVE vertical speed.
+- **Is Falling** - True while this 2D character is moving downward - the falling half of a jump, or walking off a ledge.
+- **Is Moving** - True while this 2D character has any sideways speed - the walk-or-idle question an animation state usually asks.
 - **Overlaps Body** (`body: String, target: String`) - True when this Area2D is overlapping the given physics body.
 - **Overlaps Area** (`area: String, target: String`) - True when this Area2D is overlapping the given other area.
 - **Has Overlapping Bodies** (`target: String`) - True when this Area2D currently overlaps any physics body.
 - **Has Overlapping Areas** (`target: String`) - True when this Area2D currently overlaps any other area.
 - **Is On Collision Layer** (`layer: String, target: String`) - True when this object occupies the given collision layer.
-- **Is On Wall (3D)** - True when this 3D character is pressing against a wall.
-- **Is On Ceiling (3D)** - True when this 3D character is touching a ceiling above.
+- **Is By Wall (3D)** - True when this 3D character is pressing against a wall.
+- **Is Touching Ceiling (3D)** - True when this 3D character is touching a ceiling above.
+- **Is Jumping (3D)** - True while this 3D character is moving upward. In 3D, Y grows upward, so going up is a POSITIVE vertical speed - the opposite sign from the 2D question.
+- **Is Falling (3D)** - True while this 3D character is moving downward.
+- **Is Moving (3D)** - True while this 3D character has any speed along X - the walk-or-idle question for a side-on 3D mover.
 - **Has Overlapping Bodies (3D)** (`target: String`) - True when this 3D Area is currently overlapping at least one physics body.
 
 #### Actions
@@ -3611,6 +3619,13 @@ System (event-sheet System parity)
 - **Once At A Time** - Skips the event while a previous run is still going. A run that awaits (Wait, Wait For Signal) counts as still going until it finishes - so a per-frame event with a Wait runs one copy at a time instead of stacking a new one every frame.
 - **Compare Values** (`a: String, op: String, b: String`) - True when two values match your chosen comparison, like equal, greater or less than.
 - **Is Between Values** (`value: String, min: String, max: String`) - True when a value falls within a low and high range, bounds included.
+- **Is Between Angles** (`angle: String, low: String, high: String`) - True when an angle falls inside a window of directions - a firing arc, a sight cone, a slope band. The angle is wrapped into one turn first, so 370 counts as 10.
+- **Is About** (`a: String, b: String`) - True when two decimal numbers are near enough to count as the same. Any arithmetic leaves a tiny remainder, so this is the comparison you want wherever == would be a coin flip.
+- **Seconds Have Passed Since** (`seconds: String, since: String`) - True once a stretch of time has gone by since a moment you stamped with Now - the cooldown every shooting, dashing or spawning row needs, without a timer node.
+- **Chance** (`percent: String`) - True for the given share of the times it is asked - a 30% chance is true roughly three times in ten. The roll is fresh every time the row runs.
+- **Is Outside Layout** (`point: String`) - True when a point has left the visible layout on any side - the bullet-culling and stray-enemy question, in one row instead of four edge comparisons.
+- **Is On-Screen** (`point: String, target: String`) - True while a point is inside the visible layout - the guard that keeps off-screen things from doing expensive work.
+- **Is Inside Area** (`area: String, point: String`) - True when a point falls inside a rectangle - a zone, a safe area, a spawn band - without needing an Area2D node in the scene.
 - **Expression Is True** (`expr: String`) - True when your custom GDScript expression evaluates to true; an escape hatch for advanced checks.
 - **Is Group Active** (`group: String`) - True when the named runtime group is currently switched on.
 - **Only Once Ever** (`key: String`) - True exactly once, ever - even across closing the game. Show a tutorial hint the first time and never again; Forget First Time resets it for testing (takes effect next run).
@@ -3681,6 +3696,10 @@ System (event-sheet System parity)
 - **Unix Time** - Gives the current Unix timestamp in seconds, useful for saving real-world time.
 - **OS Name** - Gives the name of the operating system the game is running on.
 - **Cooldown Time Left** (`name: String`) - Gives the seconds left on a named cooldown, or 0 when it is ready - handy for a HUD readout.
+- **Now** - The moment right now, as the game's own running clock. Store it in a variable and ask Seconds Have Passed Since about it later. It restarts with the game.
+- **Now (Clock Time)** - The moment right now by the system clock, in seconds. Unlike Now, this keeps counting while the game is closed - which is what a daily reward or an idle-earnings sum needs.
+- **Viewport Width** (`target: String`) - How wide the visible layout is, in pixels - the right edge to spawn at, wrap around, or clamp to.
+- **Viewport Height** (`target: String`) - How tall the visible layout is, in pixels - the bottom edge to spawn at, wrap around, or clamp to.
 - **Shader Parameter** (`param: String, target: String`) - Gives the current value of a named shader uniform on this node.
 - **The Spawned** (`spawn_name: String`) - The node a Spawn Scene As row made under this name, or nothing at all when it was never spawned or has since been freed - so a row that reaches for a dead boss gets nothing instead of a crash.
 

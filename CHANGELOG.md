@@ -249,6 +249,55 @@ reading already reads them, so what you pick is what you get:
   row, composed through the same grammar the sheet composes its own rows with. The "Ships as" strip
   is still there underneath for people who read code.
 
+### Added - ranges, angles, distances, areas, elapsed time and the layout words
+
+The questions a script asks with operators now read as ONE condition each, in the sheet's own name for
+it, and every one of them can also be picked from the Add condition dialog and writes back exactly the
+line it reads. Display only, as always: the file is untouched, the byte round-trip is unchanged, and
+the exact GDScript stays one hover away.
+
+- **Is between values, in all four spellings.** `x >= 0 and x <= width`, `0 < hp and hp < max_hp`,
+  `level in range(3, 6)` and the inverted `not (t >= 0.2 and t <= 0.8)` all read as one
+  `is between` row. A strict end says so - `(exclusive)`, `(exclusive top)`, `(exclusive bottom)` -
+  and `in range(3, 6)` reads `between 3 and 5`, because Godot's range stops before its second number.
+- **The same idea for every kind of value the sheet already has a word for.**
+  `abs(angle_difference(rotation, target)) < deg_to_rad(10)` reads `angle is within 10° of target`,
+  `wrapf(a, 0, TAU)` between two bounds reads `a is between angles 30° and 60°` (the `fmod` spelling
+  too), `angle_difference(a, b) > 0` reads `a is clockwise from b`, `position.distance_to(t) < 100`
+  reads `is within 100 of t` (and the squared spelling with it), `Rect2(0, 0, 640, 360).has_point(p)`
+  reads `is inside area 0, 0 - 640 × 360`, and `is_equal_approx` / `is_zero_approx` /
+  `abs(a - b) < 0.001` all read `is about`. Angles are shown in degrees, with the radians the file
+  holds one hover away.
+- **The cooldown-by-timestamp idiom.** `Time.get_ticks_msec() - last_shot > 500` reads
+  `System ▸ 0.5 seconds have passed since last shot`, and `last_shot = Time.get_ticks_msec()` reads
+  `Set last shot to now`. The wall-clock spelling says `(clock time)`, because that number keeps
+  counting while the game is closed.
+- **The platform words, on a body.** `is_on_floor()` / `is_on_wall()` / `is_on_ceiling()` read
+  `Is on floor` / `Is by wall` / `Is touching ceiling`, and `velocity.y` / `velocity.x` against zero
+  read `Is jumping` / `Is falling` / `Is moving`. Claimed only on a CharacterBody, and the vertical
+  words follow the AXIS rather than the sign, so a 3D body reads correctly too.
+- **The layout bounds and the screen.** `position.x < 0 or position.x > <viewport width>` reads
+  `Is outside layout (left or right)`, a single edge says which side it watches, and
+  `get_viewport_rect().has_point(p)` reads `Is on-screen` (its negation reads `Is outside layout`).
+  `get_viewport_rect().size.x` / `.y` read as the `ViewportWidth` / `ViewportHeight` expressions.
+- **Layout, pause and time-scale words, always on.** `change_scene_to_file("res://levels/level_2.tscn")`
+  reads `Go to layout Level 2` (the file path on hover), `reload_current_scene()` reads
+  `Restart layout`, `get_tree().paused` reads `Pause the game` / `Unpause`, `Engine.time_scale` reads
+  `Set time scale to X`, and `get_tree().quit()` reads `Quit game`. These are not a friendlier
+  spelling of Godot's calls - they are the names the shipped rows already carry.
+- **The expression names, under Familiar Words.** With the glossary on, `a.position.distance_to(
+  b.position)` reads `distance(a, b)`, `a.get_angle_to(b)` reads `angle(a, b)`, `s.split(",")[i]`
+  reads `tokenat(s, i, ",")`, `"%03d" % n` reads `zeropad(n, 3)`, `Engine.get_process_frames()` reads
+  `tickcount`, `randi_range(1, 6)` reads `random(1, 6)`, `[Color.RED, Color.BLUE].pick_random()`
+  reads `choose(red, blue)`, and `randi() % n` reads `random(n)`. This also settles the length
+  question: `len(x)` under Familiar Words, `length of x` otherwise.
+- **All of it is authorable.** New rows: Is Between Angles, Is About, Seconds Have Passed Since, Now,
+  Now (Clock Time), Chance, Viewport Width, Viewport Height, Is Outside Layout, Is On-Screen,
+  Is Inside Area, and the CharacterBody trio Is Jumping / Is Falling / Is Moving in 2D and 3D, plus
+  Pause The Game and Unpause. The scene-flow and platform rows were renamed to the words the reading
+  uses (Go To Layout, Restart Layout, Is By Wall, Is Touching Ceiling); their ace_ids and emitted code
+  are unchanged.
+
 All of it is translated in the nine shipped languages.
 
 ### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words

@@ -120,6 +120,8 @@ count from engine start.
 | Tangent | The tangent of an angle in radians. | `tan({value})` |
 | Is Within Angle | **Condition.** True when two angles are close, taking wrap-around into account (350 is within 20 of 10). Degrees. | `absf(rad_to_deg(angle_difference(deg_to_rad({angle}), deg_to_rad({target})))) <= {within}` |
 | Is Clockwise From | **Condition.** True when the shortest turn from the reference angle to this one is clockwise. Degrees. | `angle_difference(deg_to_rad({from}), deg_to_rad({angle})) >= 0.0` |
+| Is Between Angles | **Condition.** True when an angle falls inside a window of directions - a firing arc, a sight cone. Degrees. | `(wrapf({angle}, 0.0, 360.0) >= {low} and wrapf({angle}, 0.0, 360.0) <= {high})` |
+| Chance | **Condition.** True for the given share of the times it is asked - 30% is true roughly three times in ten. | `randf() < {percent} / 100.0` |
 
 ### Plain arithmetic
 
