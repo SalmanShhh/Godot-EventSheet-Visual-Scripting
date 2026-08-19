@@ -7097,6 +7097,12 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# draws one: "Always" is a placeholder that invites a condition, and a view that accepts none
 	# must not invite.
 	var always_placeholder_suppressed: bool = in_verb_body and _scaffolding_suppressed()
+	# S27 - a blank TOP-LEVEL event already says it runs every tick by saying nothing, so writing
+	# "Every Tick" into its lane would be the reading talking over itself. The lane stays empty (the
+	# hover says it in words); "+ Add condition" below is still the way in. Inside a verb body the
+	# placeholder is "Always" and stays, because there it is the truth.
+	if not in_verb_body and not _blank_tick_reading(event_row).is_empty():
+		always_placeholder_suppressed = true
 	if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE and not always_placeholder_suppressed:
 		# An event with no conditions reads as "every tick"; render it as a real cell (not bare
 		# text) so the condition lane still shows a clear, clickable empty event block.

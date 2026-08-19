@@ -46,7 +46,9 @@ untouched, and the byte round-trip and the emitted GDScript cannot move.
   list share the one handler, in sheet order. Nothing is stored on the row - blank stays blank on
   disk - and no `if true:` is ever written.
 - **The Add event dialog opens on it.** Its first entry is **(none - runs every tick)**, already
-  selected, so Enter makes the blank event and **A** fills in its actions.
+  selected, so Enter makes the blank event and **A** fills in its actions. The Ghost Row at top
+  level and an action applied with nothing selected already made exactly this row, and now that row
+  runs instead of compiling to nothing.
 - **A `_process` body with no condition of its own reads as that blank event.** The condition lane is
   empty, because in an event sheet a blank event already means every tick; the hover and the Explain
   panel say `Runs every tick` in words. `_physics_process` keeps one muted `every tick (physics)`

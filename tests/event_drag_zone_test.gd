@@ -27,14 +27,10 @@ static func run() -> bool:
 	sheet.host_class = "Node2D"
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = "Core"
-	event.trigger_id = "OnProcess"
-	# S27 - a tick event with no condition of its own reads as a BLANK event (empty condition lane,
-	# no trigger words to click). This test is about hit-testing the trigger TEXT against the empty
-	# band below it, so the event carries a condition and keeps its full Every tick reading.
-	var guard: ACECondition = ACECondition.new()
-	guard.provider_id = "Core"
-	guard.ace_id = "Always"
-	event.conditions.append(guard)
+	# S27 - a TICK event with no condition of its own reads as a BLANK event: an empty condition
+	# lane with no trigger words to click. This test is about hit-testing the trigger TEXT against
+	# the empty band below it, so the fixture uses a lifecycle trigger, which always draws its words.
+	event.trigger_id = "OnReady"
 	for i in range(3):
 		var raw: RawCodeRow = RawCodeRow.new()
 		raw.code = "print(%d)" % i

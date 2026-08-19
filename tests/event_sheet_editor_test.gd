@@ -481,7 +481,9 @@ static func run() -> bool:
     dock.setup(empty_condition_sheet)
     dock_viewport = dock.get_viewport_control()
     var empty_condition_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
-    all_passed = _check("events without authored conditions render Every Tick fallback text", _row_contains_text(empty_condition_row, "Every Tick"), true) and all_passed
+    # S27 - a top-level event with no conditions reads BLANK (the empty lane is the reading); the
+    # "Every Tick" placeholder now only stands where it is not already implied.
+    all_passed = _check("events without authored conditions read blank, not Every Tick", _row_contains_text(empty_condition_row, "Every Tick"), false) and all_passed
 
     var else_mode_sheet := EventSheetResource.new()
     var else_event := EventRow.new()
