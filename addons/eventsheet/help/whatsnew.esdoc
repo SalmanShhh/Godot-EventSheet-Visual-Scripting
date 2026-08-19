@@ -6,6 +6,61 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - a local variable's scope is enforced, and shown
+
+- **An action dragged out of its variable's scope is refused, by name.** Drag a row that uses `dealt`
+  into an event that cannot see `dealt` and the drop turns red before you release, saying
+  **`dealt is not visible here`** - the same red bubble, tooltip and status line every other refused
+  drop uses. A local is visible from the event that declares it to the end of the body it was
+  declared in, subtrees included, and nowhere else; a function body opens as a run of sibling events,
+  so \"the rest of the body\" is what the scope has to mean. An action that uses no local of this sheet
+  is never refused.
+- **Hover a variable's name and every other use of it lights up** - only inside that variable's own
+  scope, so the highlight is also a picture of how far the name reaches. Members, globals, keywords
+  and plain words match nothing: those mean something outside this event, and lighting them up would
+  claim a scope they do not have.
+
+  ![Hovering a local variable's name highlights every use of it in its scope](docs/images/local-variable-uses-highlight.png)
+
+### Fixed - a property's accessor events show in the head too
+
+- **`On hp set` and the getter block now appear in the head's Instance variables folder.** A script
+  whose head groups its variables renders them by another path, and that path listed the variable
+  without its accessors - so a reader who opened the folder to find out what `hp` IS found the value
+  and the type but not the trigger that fires when it changes. Both routes now hang the same accessor
+  events under the same variable row, addressed apart so folding one does not fold the other.
+
+### Fixed - a lifted Start Timer row says what the typed line says
+
+- **`$Timer.start(2.0)` reads `Start timer \"Timer\" for 2 seconds (once)` after the importer has
+  claimed it too.** The shipped Start Timer / Stop Timer rows are now routed back through the same
+  timer sentence a hand-written line reads through - the node path is the tag, the mode comes off the
+  file's own `one_shot` line, and the descriptor's `-1` (\"use the Timer's own wait time\") is the
+  no-seconds spelling. Until now an opened file read one way before the lift and another after it, so
+  a real project never matched the guide. A row acting on the host itself has no node path to name
+  and keeps the shipped format rather than inventing a tag.
+
+### Added - a tween chain reads as Tween actions, one action per row
+
+- **`create_tween()` and the chain under it read as the sheet's own Tween words.** A juice line that
+  used to open as three raw calls on a local `t` and a naked `await` now reads as ordinary rows:
+  `Local object t = a new tween`, then `Player ▸ Tween position to target in 0.5 seconds` with
+  `ease = Sine out` as a chip, then `Player ▸ Tween opacity to 0 in 0.3 seconds (after the previous)`,
+  `Player ▸ Tween then Destroy` and `System ▸ ⏳ Wait for tween to finish`. `set_parallel()` makes the
+  steps after it say `(at the same time)`, `set_loops(3)` reads `Tween repeat 3 times`,
+  `tween_interval` reads `Tween wait X seconds` and `kill()` reads `Stop tween`.
+- **The property is spelled the way the sheet spells it everywhere else**: `modulate:a` is
+  **opacity**, `scale` is **size**, `rotation` is the **angle**, `global_position` is the
+  **position**. Anything the table does not name keeps its own spelling rather than being guessed at.
+- **The chain is joined by the local's name, in file order.** Which step follows which is worked out
+  once per rebuild by walking the file, not guessed at line by line - and a receiver that cannot
+  prove it holds a tween (a field, a function result) keeps its plain call reading rather than being
+  given a Tween sentence it has not earned. A statement written across lines with a trailing `\\` is
+  read as the one statement it is, which is how most chains are actually written.
+- **Tween Property, picked or typed, is one sentence.** The shipped Tween Property action now reads
+  `Tween {property} to {value} in {duration} seconds`, the same words the typed line reads.
+- Display only: the file keeps every line it had, and nothing here is emitted.
+
 ### Added - an object's variables are a table you edit, not a list you read
 
 - **Instance variables are edited where they are read.** Click an object's name on a row (or select
