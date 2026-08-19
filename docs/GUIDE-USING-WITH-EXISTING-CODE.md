@@ -13,12 +13,16 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
 ## Table of Contents
 
 1. [Scenarios Where This Page Helps](#1-scenarios-where-this-page-helps)
-2. [The Interop Map](#2-the-interop-map)
+2. [The Interop Map](#2-the-interop-map) - and [Your Own Classes Are Already Vocabulary](#2b-your-own-classes-are-already-vocabulary)
 3. [Call Your Existing Code from a Sheet](#3-call-your-existing-code-from-a-sheet)
 4. [React to a Signal Your Existing Code Emits](#4-react-to-a-signal-your-existing-code-emits)
 5. [Putting a Sheet on a Node - Two Modes](#5-putting-a-sheet-on-a-node---two-modes)
 6. [Call a Sheet from Your Existing Code](#6-call-a-sheet-from-your-existing-code)
-7. [Adopting an Existing Project: Reverse-Lift](#7-adopting-an-existing-project-reverse-lift)
+7. [Adopting an Existing Project: Reverse-Lift](#7-adopting-an-existing-project-reverse-lift) - what an opened file
+   [reads like](#what-an-opened-file-reads-like---event-sheet-grammar-not-annotated-code), its
+   [objects](#the-objects-of-an-opened-file---what-they-are-and-where-you-find-them), a whole
+   [scene](#a-whole-scene-read-in-one-place), [what stays code](#what-stays-code-still-reads-as-what-it-is)
+   and [beginner spellings](#beginner-spellings-and-the-reading-layer)
 8. [When to Wrap Existing Code in Your Own ACEs](#8-when-to-wrap-existing-code-in-your-own-aces)
 9. [Use Cases](#9-use-cases)
 10. [Tips and Common Mistakes](#10-tips-and-common-mistakes)
@@ -32,7 +36,7 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
 - **Your code emits signals** and a sheet should react to them by name, with no changes on the emitting side.
 - **Your GDScript needs to call INTO a sheet** - read its exports, call its functions, await its signals like any class.
 - **You are migrating an existing codebase** and want your current `.gd` files to open as editable sheets (reverse-lift), not be rewritten.
-- **One system gets reached constantly** and deserves first-class vocabulary - the last section covers when wrapping pays off, and the wizard that previews, curates and renames the verbs your own script publishes.
+- **One system gets reached constantly** and deserves first-class vocabulary - the last section covers when wrapping pays off, and the wizard that previews, curates and renames the entries your own script publishes.
 - **You just want your own classes in the picker** with no annotations and no wrapper - see section 2b.
 
 ## 2. The Interop Map
@@ -54,7 +58,7 @@ autoloads your game declares.
 
 <img src="images/interop-your-project.png" alt="The Add Event picker's object page: a System card, a collapsed Objects and Behaviors section, and a Your Project section listing the game's own classes - AutoACESample, CarouselOfJuice, Enemy, FamilyArena and more." width="620">
 
-Pick one and the tree scopes to its verbs: methods that return
+Pick one and the tree scopes to what it publishes: methods that return
 nothing are Actions, methods returning `bool` are Conditions, anything else is an Expression,
 its editor properties become Set/Get pairs, and its signals become triggers. Each emits the
 plain call you would have written by hand:
@@ -73,10 +77,10 @@ inside the editor, and it updates when you edit a script rather than at the next
 **What is listed, and what is not.** Only classes that ultimately derive from `Node` earn a
 card: those are the things a sheet acts on. Data `Resource`s, `RefCounted` helpers, tool
 scripts and test classes are deliberately excluded - you would never pick an *action* on
-them, and listing everything would bury the verbs you actually want. They stay reachable
+them, and listing everything would bury the entries you actually want. They stay reachable
 where they belong, in expressions and the Self section. A script that already publishes as a
 provider - it lives in `eventsheet_addons/`, or you taught it explicitly - is skipped too: its
-verbs already reach the picker with your own names, kinds and hidden marks, so reflecting it
+entries already reach the picker with your own names, kinds and hidden marks, so reflecting it
 again would list everything twice.
 
 To include a folder of scripts without a `class_name`, add it to the
@@ -85,7 +89,7 @@ file name.
 
 ### Making them read the way you want
 
-Right-click any of these verbs in the picker:
+Right-click any of these entries in the picker:
 
 - **Rename this entry…** / **Set its category…** - fix a name that reads badly in a row.
 - **Hide this entry** / **Hide everything from `<Class>`** - trim what you never use. A hidden
@@ -94,7 +98,7 @@ Right-click any of these verbs in the picker:
 
 These are stored in `res://eventsheet_vocabulary.tres`, **never written into your script**,
 and they change presentation only - ids and emitted calls are untouched. Delete that file and
-every verb returns to its inferred name with no sheet affected. If you would rather your
+every entry returns to its inferred name with no sheet affected. If you would rather your
 script describe itself (so a teammate reading the file sees the same vocabulary), call
 `EventSheets.bake_overrides(script_path, class_name)` to write them in as `## @ace_*`
 comments; the file is backed up first and only comment lines are ever added.
@@ -106,8 +110,8 @@ inferred from the script, not curated"*, or *"renamed by you"* once you have ref
 
 A row that came in as a bare **Call Method** - typed by hand, or lifted from existing
 GDScript - can usually be named. Right-click it and, when it matches exactly one of your
-verbs, the menu offers **Convert to Inventory ▸ Add Item**. Converting gives the row that
-verb's proper parameter fields and emits exactly the same code as before.
+own actions, the menu offers **Convert to Inventory ▸ Add Item**. Converting gives the row
+that action's proper parameter fields and emits exactly the same code as before.
 
 The offer appears only when the match is certain: the target must be a plain reference (not
 `get_node("Inventory")` or `bags[0]`), and the argument count must match exactly, so a
@@ -305,7 +309,7 @@ for the picture - opened as a sheet:
 <img src="images/interop-opened-gd.png" alt="A hand-written GDScript file opened as an event sheet: a collapsed Class setup strip, an Expression verb named Parse with a source parameter and a gives back Dictionary badge, then condition and action rows including a For each raw_line loop with nested sub-events." width="720">
 
 Note what the file became: the header comment, `@tool`, `class_name` and `extends` fold into one **Class
-setup** strip; the function becomes a real verb row with a named parameter and a return badge; and its body
+setup** strip; the function becomes a real function row with a named parameter and a return badge; and its body
 becomes conditions and actions, including the `for` loop as a condition with its own sub-events. What still
 has no structured equivalent stays an in-flow GDScript block - honest, editable, and byte-for-byte
 unchanged when you save.
@@ -341,7 +345,7 @@ Godot reports a filesystem change - so a script you edit outside the editor, or 
 the project, shows up on the next row that asks:
 
 - **The behaviour-pack index** (which pack a name belongs to, so `[Platform]` can sit between an
-  object and its verb). Rebuilding the rows of a 320-row pack asks for it a couple of hundred times;
+  object and what it does). Rebuilding the rows of a 320-row pack asks for it a couple of hundred times;
   holding it is what took that rebuild from 1.7 seconds to 0.27.
 - **The object facts and the signal fan-out** (what a script or scene IS, and who listens to a signal).
   Each is one pass over the project's files, paid on the first question of the session.
@@ -353,9 +357,13 @@ the boot path may NAME a class from the reading layer or the compiler: naming a 
 its whole dependency tree the moment the script loads, and the boot files reach those by path at call
 time instead. `tests/plugin_boot_lazy_test.gd` enforces it.
 
-### What an opened file reads like - Construct grammar, not annotated code
+### What an opened file reads like - event-sheet grammar, not annotated code
 
-Open a behaviour pack or any script as a sheet and it reads the way a Construct sheet does, top to bottom:
+Open a behaviour pack or any script as a sheet and it reads the way an event sheet does, top to
+bottom: a head that says what the file IS, then variables, then events, then the rows inside them.
+That is the order this section is in.
+
+#### The head - what this file is
 
 - **The Include bar says how much of the file reads as events.** A chip at the end of it -
   `96% reads as events · 3 script blocks ▸` - is the share of the file that arrived as rows, and how
@@ -364,6 +372,31 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   just says `reads as events`. The number is measured by the same code the corpus gate measures with,
   so the chip and the test can never disagree about the same file. When the engine reported parse
   errors, the bar also says `N errors - the game will not run this script`, in red.
+- **The head is one Include bar, the description once, and folded folders.** `⇥ Addon Pack  FPSController
+  v1.0.0  behaves on a  CharacterBody3D`, the class description as a comment bar, then a `Triggers this pack
+  fires - 11` folder, one folder per `@export_group` (`Jump - 3 settings`, `Movement - 3 settings`, ...),
+  and `Instance variables  of FPSController` for everything the groups did not claim. Inside a folder a
+  variable reads `Instance number  jump_velocity = 4.5  Upward velocity applied on a jump` - the one
+  sentence below, plus the knob's own description. On an editable sheet the head keeps its Class setup
+  strip and `@export` chips, because those are things you edit; the folders are for reading.
+- **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, the
+  Include bar reads `⇥ Game  autoload (global) · game.gd` with the globe, its knobs read as one
+  `Global variables` folder rather than the Instance variables one, and its triggers say
+  `this global fires - N`. The Object bar names it the same way.
+- **A global is declared once and listed where it is used.** Any sheet that reads or writes one of
+  the project's globals grows a folded `▸ Global variables used here` folder in its head - `Score ·
+  Lives  (from Game)` - and each entry opens to what it is declared as and where: `whole number
+  Score = 0 · Game`. A name the autoload does not actually declare says `not declared on Game`,
+  because a global that resolves to nothing at runtime otherwise reads exactly like one that works.
+  To make one, **Add ▸ Global Variable…** (or just **V**) works on any sheet at all: name it, pick
+  its type in plain words, give it a value, choose which autoload holds it, and the row you will get
+  is previewed live. The autoload is opened as a sheet and the variable added there in one undo
+  step - the autoload stays the single place a global lives, so there is no second variable system
+  to keep in sync. In the Object bar, an autoload under **GLOBALS & FAMILIES** hovers with what it
+  holds (`Score = 0 · Lives = 3`), read straight off its file even if nobody has opened it.
+
+#### Variables - one sentence each
+
 ![An opened script's head: one Instance variables folder holding every member, each row reading scope word, plain type word, name, value - Instance number speed = 200 with an Inspector chip, Constant number MAX_HP = 100, Static number spawned = 0 shared by every Player, Instance color tint = white with its live swatch](images/variable-sentence-head.png)
 
 - **Every variable reads as one sentence - `<scope> <type> <name> = <value>`.** The scope word leads:
@@ -376,6 +409,11 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   because the author said they wanted no fractions; an undeclared `100` still reads "number". Variables
   a designer can edit wear a small **Inspector** chip, and the head gathers them all in one
   **Instance variables** folder with those first, rather than a Settings / Internal state split.
+- **A `static var` says who shares it.** `static var spawned: int = 0` reads
+  `Static number  spawned = 0  shared by every Player` - the scope word leads the type chip, and the
+  muted tail names the object the value belongs to (the script's `class_name`, else its scene root,
+  else its file). One value on the class, not one per object, is exactly the thing a reader has to be
+  told; on an authored sheet the same fact reads as a `static` badge beside `const`.
 - **A colour is always a live swatch.** `var tint := Color.WHITE` reads `Instance color tint =`
   swatch `white  #ffffff`; a colour nobody has a word for reads its hex. Click the swatch, anywhere
   it appears - a variable row, an action's colour parameter, the Add variable dialog - and the sheet's
@@ -389,66 +427,14 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   percent; `@export_file("*.png")` reads `file` with its filter; `@export_dir` reads `folder`;
   `@export_multiline` reads `text  multiline`; a Color reads its swatch and its word; and
   `@export_flags(...)` reads `flags` with the names of the bits.
-- **A global is declared once and listed where it is used.** Any sheet that reads or writes one of
-  the project's globals grows a folded `▸ Global variables used here` folder in its head - `Score ·
-  Lives  (from Game)` - and each entry opens to what it is declared as and where: `whole number
-  Score = 0 · Game`. A name the autoload does not actually declare says `not declared on Game`,
-  because a global that resolves to nothing at runtime otherwise reads exactly like one that works.
-  To make one, **Add ▸ Global Variable…** (or just **V**) works on any sheet at all: name it, pick
-  its type in plain words, give it a value, choose which autoload holds it, and the row you will get
-  is previewed live. The autoload is opened as a sheet and the variable added there in one undo
-  step - the autoload stays the single place a global lives, so there is no second variable system
-  to keep in sync. In the Object bar, an autoload under **GLOBALS & FAMILIES** hovers with what it
-  holds (`Score = 0 · Lives = 3`), read straight off its file even if nobody has opened it.
-- **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, the
-  Include bar reads `⇥ Game  autoload (global) · game.gd` with the globe, its knobs read as one
-  `Global variables` folder rather than the Instance variables one, and its triggers say
-  `this global fires - N`. The Objects rail names it the same way.
-- **The head is one Include bar, the description once, and folded folders.** `⇥ Addon Pack  FPSController
-  v1.0.0  behaves on a  CharacterBody3D`, the class description as a comment bar, then a `Triggers this pack
-  fires - 11` folder and one folder per `@export_group` (`Jump - 3 settings`, `Movement - 3 settings`, ...)
-  plus `Internal state` for the private variables. Inside a folder a variable reads
-  `number  jump_velocity = 4.5  Upward velocity applied on a jump` - type word, name, value, description. On
-  an editable sheet the head keeps its Class setup strip and `@export` chips, because those are things you
-  edit; the folders are for reading.
-- **Every function reads as the trigger it is.** `ƒ  Functions ▸ On Jump`,
-  `ƒ  Functions ▸ On Set Third Person  enabled`: the name and one chip per input sit in the CONDITION
-  lane, because that lane answers "when does this run?" for every other event and a function's answer is
-  "when it is called". The body's first step reads beside it on the right, the rest of the body hangs
-  under it as sub-events, and Collapse folds the whole function back to that one row. The row's tint says
-  whether it is an Action, Condition or Expression, and a condition or expression also says its kind as a
-  quiet word next to the name. Click it for the **ACE properties** popup - kind, category, inputs (with
-  their types), what it gives back, description, whether it is featured, its icon, the exact line it
-  inserts, and the function behind it - with Edit..., Open guide and Show in code. Unpublished helpers are
-  the same blocks with their doc as the right-hand caption, gathered under a closed **Helpers** folder.
+- **A local variable's scope is enforced, and shown.** A local is visible from the event that
+  declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
+  action that uses `dealt` into an event that cannot see it and the drop refuses before you release,
+  in red: **`dealt is not visible here`**. Hover the variable's name and every other use of it inside
+  that scope lights up, so the highlight doubles as a picture of how far the name reaches. Members,
+  globals and keywords match nothing - they mean something outside this event.
 
-  plus `Instance variables  of FPSController` for everything the groups did not claim. Inside a folder
-  a variable reads `Instance number  jump_velocity = 4.5  Upward velocity applied on a jump` - the one
-  sentence above, plus the knob's own description. On an editable sheet the head keeps its Class setup
-  strip, because that is something you edit; the folders are for reading.
-- **Every function is a Function block.** `ƒ Jump`, `ƒ Set Third Person  [enabled true/false]`: the ƒ, the
-  name and one chip per input, nothing else on the row; the header's tint says whether it is an Action,
-  Condition or Expression. Click the header for the **ACE properties** popup - kind, category, inputs, what
-  it gives back, description, whether it is featured, its icon, the exact line it inserts, and the function
-  behind it - with Edit..., Open guide and Show in code. Unpublished helpers are the same blocks with their
-  doc as the right-hand caption, gathered under a closed **Helpers** folder.
-- **Lifecycle handlers are triggers, wherever they sit in the file.** `_physics_process` is `Every Physics
-  Tick`; an `_unhandled_input` that branches on the event type reads as one Construct trigger per branch -
-  `Mouse ▸ On mouse moved` with `Mouse ▸ mouse is captured` under it, `Keyboard ▸ On Escape pressed` - and a
-  hand-written `_on_hurtbox_body_entered(body)` that `_ready` connects reads `Hurtbox ▸ On Body Entered
-  [body]`. A handler that comes after the verbs in the file lifts in place (an event anchor), so the sheet
-  keeps the file's order.
-- **Statements without a verb read in Construct's row grammar - Object ▸ Verb values.** `System ▸ Subtract 1
-  from jumps left`, `host ▸ Set velocity X to direction X * speed`, `host ▸ Destroy (at end of frame)`,
-  `FPSController ▸ Signal On Jumped`, `host ▸ exists` / `does not exist`, `Local number remaining = 0`
-  with `System ▸ Set remaining to amount` beside the line it came from (a Local variable row you can
-  also add from the picker), `⏳ Wait 0.5 seconds`, `Go to layout
-  Menu`, `Keyboard ▸ "jump" is down`, `push x moved toward 0 by push fade`, and inside a
-  Condition verb `System ▸ Set return value to true` / inside an Expression verb `Set return value to
-  jumps left` (Construct's own function-block action). The same sentence appears whether the row was typed
-  in GDScript or picked from the palette - one grammar produces both - and the exact code is always on
-  hover.
-![A function's rows with its locals underneath it - Local number dealt = 0, Local text label = "hurt", Local number shield = 5 - and System Set dealt to damage * 2 in the action lane](images/local-rows-at-the-top-of-their-event.png)
+  ![Hovering a local variable's name highlights every use of it in its scope](images/local-variable-uses-highlight.png)
 
 - **A local declared inside a body reads at the top of the event that owns it.** An event sheet
   declares a local at the top of its event and fills it in with an action, so a `var` line reads as
@@ -464,127 +450,6 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   refusals guard the move, both in the red drop bubble: a row that uses a local may not leave the
   scope that can see it (`dealt is not visible here`), and a local may not be dragged out from under
   rows that still use it (`dealt is still used here`).
-- **A ternary is a sub-event, never a condition in an action cell.** An `if ... else` INSIDE a statement
-  (`return wall_normal.x if host != null and host.is_on_wall() else 0.0`) reads the way a Construct sheet
-  draws the same branch: a condition row on the left with the statement on the right, then an `Else` row
-  with the other value. A nested ternary chains the way Construct writes an else-if: an `Else` on the
-  row's first condition line with that arm's own test stacked under it, and a plain `Else` on the last
-  arm - so no two arms read as though both could fire. A second independent ternary nests its own pair. This is true on every sheet, authored ones included - reading and editing look the
-  same. Display only: the file keeps its one line, hover shows the exact GDScript, and the pair behaves
-  as the ONE statement it reads - clicking any of its rows selects the statement and highlights the whole
-  pair, dragging any of them moves the statement (nothing drops between the pair's rows), and a
-  double-click anywhere on it, the `Else` row included, opens that one line's editor. A ternary inside a
-  `func(...)` lambda is left alone - its body is a scope of its own, so hoisting a branch out of it would
-  move when that branch runs.
-- **The Input Map is an object, and the file says which controls it uses.** An opened script that names
-  any control grows an **Input** head bar - `this script uses 4 actions - jump, move left, move right,
-  fire - Project ▸ Input Map` - and one line per control inside it saying what that control is bound to
-  in the sheet's own spelling: `jump  Space · A button · Up`, `fire  Left mouse button · Right trigger`.
-  The Object bar carries the same list in an **INPUT** section. Bindings come from `project.godot`, and
-  nothing is written on a read. A control the script names that the Input Map does not have wears a ⚠ in
-  both places and gets a Doctor warning naming the fix - that is the typo every beginner makes, and until
-  now it compiled, printed nothing, and simply never fired. Drag a control off the bar onto the canvas
-  and the sheet writes its `On <action> pressed` event.
-- **Analog reads in the Gamepad object's words.** `Input.get_joy_axis(0, JOY_AXIS_LEFT_X)` reads
-  `axis Left analog X of gamepad 0`, `Input.get_joy_name(0)` reads `name of gamepad 0`, and
-  `Input.get_connected_joypads().size()` reads `gamepad count`. The stick names are the Gamepad object's
-  own (Left analog X / Y, Right analog X / Y, Left trigger, Right trigger), so a typed line and a picked
-  row say the same thing, and the exact-match spelling `Input.is_action_pressed("accelerate", true)`
-  reads `Is button down "accelerate" (exact match)` rather than leaving a bare `true` on the row.
-- **Gamepads by number, and the per-player conventions.** `event.device == 1` inside a joypad-button
-  branch is the gamepad NUMBER the sheet already counts from 0, so a local-multiplayer script reads
-  `On gamepad 1 button A pressed` instead of arithmetic. The two naming conventions a two-player project
-  uses - `p2_jump` and `jump_2` - both read as `jump` on gamepad 1 and group under that pad.
-- **Handheld sensors read on the Touch object.** `Input.get_accelerometer()` reads `acceleration`,
-  `get_gravity()` reads `gravity`, `get_gyroscope()` reads `rotation rate` and `get_magnetometer()` reads
-  `magnetic field`. A `var a = Input.get_accelerometer()` is a Local variable row reading
-  `Local value a = acceleration` - never a bare `Local a = ...` cell. They all report 0 on desktop,
-  and every one of them says so.
-- **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
-  as words (`_coyote_timer` -> `coyote timer`, a knob with its Inspector capitalisation), property chains
-  read possessively (`host's velocity X`), NOT is the red ✕ in the icon column, the host and any `$Node` /
-  `%Node` / `@onready` reference show their class icon, sub-events hang off tree guide lines, a call to one
-  of the sheet's own functions reads `Functions ▸ Call Add Look  x = mouse's ΔX  y = mouse's ΔY`, and code
-  that could not lift is one folded card with a line count. **View > Humanized Names** turns the name lens
-  on or off for editable sheets; nothing on the sheet is scaffolding until you press **Edit Events**.
-- **Every event has a number, and everything names it by that number.** The left margin counts events
-  down the sheet - sub-events included, groups descended into - and the count is stable, so folding a
-  group or filtering the sheet never renumbers anything. **Ctrl+G** opens *Go to event* and jumps to
-  one. The status bar says where you are in the same words - `event 4 of 61 · line 38` - and a
-  bookmark, the Find bar's counter (`3 of 12 · event 4`) and a Project Doctor finding
-  (`player.gd · event 4`) all print the same number, so "look at event 12" means one row to everybody
-  reading the file. The numbers are display-only: nothing about them touches the script.
-
-  ![An opened script: the event number in the left margin, a static variable reading "Static number spawned = 0 shared by every Player", a function reading as Functions - On Take Damage, and the status bar saying "event 1 of 1 - line 3"](images/opened-script-event-numbers.png)
-
-- **A `static var` says who shares it.** `static var spawned: int = 0` reads
-  `Static number  spawned = 0  shared by every Player` - the scope word leads the type chip, and the
-  muted tail names the object the value belongs to (the script's `class_name`, else its scene root,
-  else its file). One value on the class, not one per object, is exactly the thing a reader has to be
-  told; on an authored sheet the same fact reads as a `static` badge beside `const`.
-- **The shapes the sheet reads, you can also type.** Right-click an event for **Add blank sub-event
-  (B)**, **Make 'Or' block** (which reads **Make 'And' block** once the event is an Or block) and
-  **Add 'Else'** / **Add 'Else If'** - the same three commands sit on the **Add** menu. On an opened
-  `.gd`, Make 'Or' block rewrites that one event's joined condition (`a and b` becomes `a or b`) and
-  leaves every other byte alone. All three are greyed while the file is a read-only preview; press
-  **Edit Events** first.
-- **A plain script is an object.** Its Include bar names it (`class_name`, else its scene's root node,
-  else the file) with its class icon and the scene it lives in; its engine properties read under that
-  name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
-  System (`System ▸ Print "ready"`). Any method call reads `Object ▸ Verb args` with the argument names
-  Godot itself declares (`Sprite2D ▸ Play  name = "run"`), a node path by its last segment with its icon,
-  `queue_free()` as Destroy. `delta` reads `dt`; the tick triggers read `Every tick (physics)` /
-  `Every tick (draw)`. `and` never sits inside a condition cell - each conjunct is its own condition
-  line, and `or` is the OR block. `"Score: %d" % score` reads `"Score: " & score`, `d["k"]` reads
-  `d's "k"`, `arr[0]` reads `arr' item 0`; groups read as families (`enemies (group) ▸ Call Flee`,
-  `For each e in group "enemies"`); loops read `Repeat 10 times`, `For "i" from 2 to 7`, `For each
-  child`, `While`, `Stop loop`, `Next`; `randi_range(1, 6)` reads `random whole number 1 to 6`,
-  `tween_property` reads `Tween position to target in 0.3 seconds`, `await x.opened` reads `⏳ Wait for signal
-  x On Opened`, `await get_tree().process_frame` reads `⏳ Wait one tick`. A signal emit shows its
-  payload by the signal's own parameter names (`Signal On Damaged  amount = 3  source = attacker`). A
-  lambda connected to a signal (`$Timer.timeout.connect(func(): ...)`) reads as the trigger event it is,
-  with the lambda's body as its rows, and the connect line keeps a muted `connects Timer On Timeout`
-  note. One-line `if c: stmt` / `if c: return` / `else: stmt` lift as the same sub-events their
-  indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
-- **A gamepad branch that names a device reads as one row.** `if event is InputEventJoypadButton and
-  event.pressed and event.device == 0 and event.button_index == JOY_BUTTON_A:` reads `Gamepad ▸ On
-  gamepad 0 button A pressed`, in the Gamepad object's own words, because the device index IS the
-  gamepad number. A branch that names no device keeps `On button A pressed`; a Keyboard branch keeps
-  its `event.device == 1` as an ordinary comparison, since a keyboard has no number in the sheet.
-- **A local variable's scope is enforced, and shown.** A local is visible from the event that
-  declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
-  action that uses `dealt` into an event that cannot see it and the drop refuses before you release,
-  in red: **`dealt is not visible here`**. Hover the variable's name and every other use of it inside
-  that scope lights up, so the highlight doubles as a picture of how far the name reaches. Members,
-  globals and keywords match nothing - they mean something outside this event.
-
-  ![Hovering a local variable's name highlights every use of it in its scope](images/local-variable-uses-highlight.png)
-
-- **A tween chain reads as Tween actions, one action per row.** `var t = create_tween()` reads
-  `Local object t = a new tween`; each `t.tween_property(...)` under it reads
-  `Player ▸ Tween position to target in 0.5 seconds` on the object being tweened, with
-  `.set_trans(...)` / `.set_ease(...)` as an `ease = Sine out` chip. The second step and every one
-  after it says `(after the previous)`; once `t.set_parallel()` has been called they say `(at the
-  same time)` instead. `t.set_loops(3)` reads `Tween repeat 3 times`, `t.tween_interval(0.5)` reads
-  `Tween wait 0.5 seconds`, `t.tween_callback(queue_free)` reads `Tween then Destroy`, `t.kill()`
-  reads `Stop tween` and `await t.finished` reads `System ▸ ⏳ Wait for tween to finish`.
-
-  ![A tween chain read as Tween actions, and a head whose Instance variables folder carries the accessor events](images/opened-script-tween-and-head-accessors.png)
-
-  The
-  property is the sheet's own word for it - `modulate:a` is **opacity**, `scale` is **size**,
-  `rotation` is the **angle** - and a property the table does not name keeps its own spelling. The
-  chain is joined by the local's name, walked in file order, so a receiver the file never declared
-  from `create_tween()` keeps its plain call reading rather than being given a Tween sentence. A
-  statement broken across lines with a trailing `\` reads as the one statement it is.
-- **A Timer node reads as the Timer behavior.** `$Timer.stop()` reads `Stop timer "Timer"`,
-  `$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` - whether the line is still
-  hand-written text or the importer has already claimed it as the shipped Start Timer action, since
-  the lifted row is routed back through the same sentence, `not $Timer.is_stopped()` reads `Is
-  timer "Timer" running` (the bare spelling says stopped), and `$Timer.time_left` reads
-  `Timer.CurrentTime("Timer")`. The node's name is the tag and the object is the script's own object,
-  because the timer belongs to it. The `(once)` / `(regular)` mode is read off the file's own
-  `one_shot` line. A timer held in a variable has no tag to prove, so it keeps the plain call reading.
 - **A property's setter reads as a trigger, its getter as an expression.** A `set(v):` block fires
   when the value is set, with the new value as its payload - which is exactly what a trigger is - so
   it reads `➜ On hp set` with a `v` chip and its body as ordinary actions and sub-events, the first
@@ -597,12 +462,94 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   way. Right-click a sheet variable for **Add setter** / **Add getter** to write the shape yourself.
   The accessor events show wherever the variable is listed - down the event tree and inside the
   head's **Instance variables** folder, which is where a reader goes to find out what a variable IS.
+
+#### Events - the shapes the file is made of
+
+- **Every function reads as the trigger it is.** `ƒ  Functions ▸ On Jump`,
+  `ƒ  Functions ▸ On Set Third Person  enabled`: the name and one chip per input sit in the CONDITION
+  lane, because that lane answers "when does this run?" for every other event and a function's answer is
+  "when it is called". The body's first step reads beside it on the right, the rest of the body hangs
+  under it as sub-events, and Collapse folds the whole function back to that one row. The row's tint says
+  whether it is an Action, Condition or Expression, and a condition or expression also says its kind as a
+  quiet word next to the name. Click it for the **ACE properties** popup - kind, category, inputs (with
+  their types), what it gives back, description, whether it is featured, its icon, the exact line it
+  inserts, and the function behind it - with Edit..., Open guide and Show in code. Unpublished helpers are
+  the same blocks with their doc as the right-hand caption, gathered under a closed **Helpers** folder.
+- **Lifecycle handlers are triggers, wherever they sit in the file.** `_physics_process` is `Every Physics
+  Tick`; an `_unhandled_input` that branches on the event type reads as one trigger per branch -
+  `Mouse ▸ On mouse moved` with `Mouse ▸ mouse is captured` under it, `Keyboard ▸ On Escape pressed` - and a
+  hand-written `_on_hurtbox_body_entered(body)` that `_ready` connects reads `Hurtbox ▸ On Body Entered
+  [body]`. A handler that comes after the functions in the file lifts in place (an event anchor), so the
+  sheet keeps the file's order.
 - **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner
   writes input in Godot: `if Input.is_action_just_pressed("jump"):` inside `_process`. In an event
   sheet the same thing is a top-level trigger, so the row reads `⌨  Keyboard ▸ On "jump" pressed`
   with the block's body as its actions, and the `Every tick` words go away - the poll already says
   when the event runs. Only the EDGE polls count: a held `Input.is_action_pressed("hold")` is a
   check every tick, so its handler keeps `Every tick (physics)` with the check under it.
+- **A ternary is a sub-event, never a condition in an action cell.** An `if ... else` INSIDE a statement
+  (`return wall_normal.x if host != null and host.is_on_wall() else 0.0`) reads the way an event sheet
+  draws the same branch: a condition row on the left with the statement on the right, then an `Else` row
+  with the other value. A nested ternary chains the way an else-if is written: an `Else` on the
+  row's first condition line with that arm's own test stacked under it, and a plain `Else` on the last
+  arm - so no two arms read as though both could fire. A second independent ternary nests its own pair.
+  This is true on every sheet, authored ones included - reading and editing look the
+  same. Display only: the file keeps its one line, hover shows the exact GDScript, and the pair behaves
+  as the ONE statement it reads - clicking any of its rows selects the statement and highlights the whole
+  pair, dragging any of them moves the statement (nothing drops between the pair's rows), and a
+  double-click anywhere on it, the `Else` row included, opens that one line's editor. A ternary inside a
+  `func(...)` lambda is left alone - its body is a scope of its own, so hoisting a branch out of it would
+  move when that branch runs.
+- **Every event has a number, and everything names it by that number.** The left margin counts events
+  down the sheet - sub-events included, groups descended into - and the count is stable, so collapsing a
+  group or filtering the sheet never renumbers anything. **Ctrl+G** opens *Go to event* and jumps to
+  one. The status bar says where you are in the same words - `event 4 of 61 · line 38` - and a
+  bookmark, the Find bar's counter (`3 of 12 · event 4`) and a Project Doctor finding
+  (`player.gd · event 4`) all print the same number, so "look at event 12" means one row to everybody
+  reading the file. The numbers are display-only: nothing about them touches the script.
+
+  ![An opened script: the event number in the left margin, a static variable reading "Static number spawned = 0 shared by every Player", a function reading as Functions - On Take Damage, and the status bar saying "event 1 of 1 - line 3"](images/opened-script-event-numbers.png)
+
+- **The shapes the sheet reads, you can also type.** Right-click an event for **Add blank sub-event
+  (B)**, **Make 'Or' block** (which reads **Make 'And' block** once the event is an Or block) and
+  **Add 'Else'** / **Add 'Else If'** - the same three commands sit on the **Add** menu. On an opened
+  `.gd`, Make 'Or' block rewrites that one event's joined condition (`a and b` becomes `a or b`) and
+  leaves every other byte alone. All three are greyed while the file is a read-only preview; press
+  **Edit Events** first.
+- **A big file never freezes the editor.** The raw sheet paints within a frame under a progress strip
+  (`Opening event_sheet_dock.gd - lifting functions 212 of 458 - 6.1 s`, a bar, and **Show as code
+  instead**); the lift runs behind it, and the strip goes away when the last function lands.
+
+#### Rows - what one statement reads as
+
+- **A statement with no matching action reads in the row grammar - Object ▸ what it does ▸ values.**
+  `System ▸ Subtract 1 from jumps left`,
+  `host ▸ Set velocity X to direction X * speed`, `host ▸ Destroy (at end of frame)`,
+  `FPSController ▸ Signal On Jumped`, `host ▸ exists` / `does not exist`, `Local number remaining = amount`
+  (a Local variable row you can also add from the picker), `⏳ Wait 0.5 seconds`, `Go to layout
+  Menu`, `Keyboard ▸ "jump" is down`, `push x moved toward 0 by push fade`, and inside a
+  condition function `System ▸ Set return value to true` / inside an expression function `Set return value to
+  jumps left`. The same sentence appears whether the row was typed
+  in GDScript or picked from the palette - one grammar produces both - and the exact code is always on
+  hover.
+- **A plain script is an object.** Its Include bar names it (`class_name`, else its scene's root node,
+  else the file) with its class icon and the scene it lives in; its engine properties read under that
+  name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
+  System (`System ▸ Print "ready"`). Any method call reads `Object ▸ what it does ▸ args` with the argument
+  names Godot itself declares (`Sprite2D ▸ Play  name = "run"`), a node path by its last segment with its
+  icon, `queue_free()` as Destroy. `delta` reads `dt`; the tick triggers read `Every tick (physics)` /
+  `Every tick (draw)`. `and` never sits inside a condition cell - each conjunct is its own condition
+  line, and `or` is the OR block. `"Score: %d" % score` reads `"Score: " & score`, `d["k"]` reads
+  `d's "k"`, `arr[0]` reads `arr' item 0`; groups read as families (`enemies (group) ▸ Call Flee`,
+  `For each e in group "enemies"`); loops read `Repeat 10 times`, `For "i" from 2 to 7`, `For each
+  child`, `While`, `Stop loop`, `Next`; `randi_range(1, 6)` reads `random whole number 1 to 6`,
+  `tween_property` reads `Tween position to target in 0.3 seconds`, `await x.opened` reads `⏳ Wait for signal
+  x On Opened`, `await get_tree().process_frame` reads `⏳ Wait one tick`. A signal emit shows its
+  payload by the signal's own parameter names (`Signal On Damaged  amount = 3  source = attacker`). A
+  lambda connected to a signal (`$Timer.timeout.connect(func(): ...)`) reads as the trigger event it is,
+  with the lambda's body as its rows, and the connect line keeps a muted `connects Timer On Timeout`
+  note. One-line `if c: stmt` / `if c: return` / `else: stmt` lift as the same sub-events their
+  indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
 - **Numbers read the way a person writes them.** `300.0` reads `300`, `0.50` reads `0.5`,
   `1_000_000` reads `1,000,000`, `1e3` reads `1000`, and the constants a reader recognises are named
   (`1.5707963` reads `π/2`; `τ`, `√2` and `√3` likewise, from a spelling long enough to mean them -
@@ -640,6 +587,111 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   reads `Pause the game` / `Unpause`, `Engine.time_scale = 0.5` reads `Set time scale to 0.5`, and
   `get_tree().quit()` reads `Quit game`. These are never behind the Familiar Words toggle: they are
   the names the shipped scene-flow rows already carry.
+- **Lists, tables and text in the sheet's own words.** `items.append(x)` reads `Push back x to
+  items`, and `push_front` / `pop_back` / `insert` / `remove_at` / `erase` / `clear` / `sort` /
+  `shuffle` / `reverse` read as `Push front`, `Pop back of`, `Insert x at 2 in`, `Delete at 0 in`,
+  `Delete value x from`, `Clear`, `Sort`, `Shuffle` and `Reverse` - the same rows the List module
+  ships, word for word. `inventory.erase("potion")` on a declared `Dictionary` reads `Delete key
+  "potion" from inventory`, and `label += "!"` reads `Append "!" to label` rather than as
+  arithmetic, because adding to text puts it on the end.
+- **Enum values in the sheet's words.** A number written where an engine enum is expected reads as
+  the member it names - `process_mode = 3` reads `Set process mode to Always`, `texture_filter = 1`
+  reads `Set texture filter to Nearest`, `horizontal_alignment = 1` reads `Set horizontal alignment
+  to Center` - and so does a number written into a variable the sheet declared with one of its own
+  enums (`dir = 2` reads `Set dir to DOWN`). The number is still one hover away.
+- **Physics layers and input actions by their PROJECT names.** `set_collision_layer_value(2, true)`
+  reads `Set collision with layer "Enemies" on` and `collision_layer = 5` reads `Set collision
+  layers to "World", "Player"`, from the names Project Settings holds; a layer the project never
+  named keeps its number. The DEVICE an action is bound to picks its object too, so an action bound
+  only to mouse buttons reads under `Mouse` and one bound only to a pad under `Gamepad`.
+
+<img src="images/batch6-reading.png" alt="A hand-written script opened as a sheet: an On Ready event whose actions read Push back, Push front, Insert at, Delete at, Delete key, Shuffle, Append, Set collision with layer Enemies on, Set process mode to Always, Set Y to 1,000,000, Set angle to π over 2 and Call Reset at end of frame, followed by two top-level Keyboard trigger events for jump pressed and fire released." width="720">
+
+- **Deferred work says the delay out loud.** `call_deferred("reset")` reads `Call Reset (at end of
+  frame)`, `set_deferred("visible", true)` reads `Set visible to true (at end of frame)`, and
+  `reset.call_deferred()` reads the same - the words `queue_free()` already reads in. A handler the
+  file wired with `connect(_on_beat_timeout, CONNECT_ONE_SHOT)` opens as its trigger event with a
+  `Trigger once` chip beside it, and the connect line is re-emitted verbatim, flags and all.
+- **A tween chain reads as Tween actions, one action per row.** `var t = create_tween()` reads
+  `Local object t = a new tween`; each `t.tween_property(...)` under it reads
+  `Player ▸ Tween position to target in 0.5 seconds` on the object being tweened, with
+  `.set_trans(...)` / `.set_ease(...)` as an `ease = Sine out` chip. The second step and every one
+  after it says `(after the previous)`; once `t.set_parallel()` has been called they say `(at the
+  same time)` instead. `t.set_loops(3)` reads `Tween repeat 3 times`, `t.tween_interval(0.5)` reads
+  `Tween wait 0.5 seconds`, `t.tween_callback(queue_free)` reads `Tween then Destroy`, `t.kill()`
+  reads `Stop tween` and `await t.finished` reads `System ▸ ⏳ Wait for tween to finish`. The
+  property is the sheet's own word for it - `modulate:a` is **opacity**, `scale` is **size**,
+  `rotation` is the **angle** - and a property the table does not name keeps its own spelling. The
+  chain is joined by the local's name, walked in file order, so a receiver the file never declared
+  from `create_tween()` keeps its plain call reading rather than being given a Tween sentence. A
+  statement broken across lines with a trailing `\` reads as the one statement it is.
+
+  ![A tween chain read as Tween actions, and a head whose Instance variables folder carries the accessor events](images/opened-script-tween-and-head-accessors.png)
+
+- **A Timer node reads as the Timer behavior.** `$Timer.stop()` reads `Stop timer "Timer"`,
+  `$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` - whether the line is still
+  hand-written text or the importer has already claimed it as the shipped Start Timer action, since
+  the lifted row is routed back through the same sentence, `not $Timer.is_stopped()` reads `Is
+  timer "Timer" running` (the bare spelling says stopped), and `$Timer.time_left` reads
+  `Timer.CurrentTime("Timer")`. The node's name is the tag and the object is the script's own object,
+  because the timer belongs to it. The `(once)` / `(regular)` mode is read off the file's own
+  `one_shot` line. A timer held in a variable has no tag to prove, so it keeps the plain call reading.
+
+#### Input, gamepads and sensors
+
+- **The Input Map is an object, and the file says which controls it uses.** An opened script that names
+  any control grows an **Input** head bar - `this script uses 4 actions - jump, move left, move right,
+  fire - Project ▸ Input Map` - and one line per control inside it saying what that control is bound to
+  in the sheet's own spelling: `jump  Space · A button · Up`, `fire  Left mouse button · Right trigger`.
+  The Object bar carries the same list in an **INPUT** section. Bindings come from `project.godot`, and
+  nothing is written on a read. A control the script names that the Input Map does not have wears a ⚠ in
+  both places and gets a Doctor warning naming the fix - that is the typo every beginner makes, and until
+  now it compiled, printed nothing, and simply never fired. Drag a control off the bar onto the canvas
+  and the sheet writes its `On <action> pressed` event.
+- **Analog reads in the Gamepad object's words.** `Input.get_joy_axis(0, JOY_AXIS_LEFT_X)` reads
+  `axis Left analog X of gamepad 0`, `Input.get_joy_name(0)` reads `name of gamepad 0`, and
+  `Input.get_connected_joypads().size()` reads `gamepad count`. The stick names are the Gamepad object's
+  own (Left analog X / Y, Right analog X / Y, Left trigger, Right trigger), so a typed line and a picked
+  row say the same thing, and the exact-match spelling `Input.is_action_pressed("accelerate", true)`
+  reads `Is button down "accelerate" (exact match)` rather than leaving a bare `true` on the row.
+- **Gamepads by number, and the per-player conventions.** `event.device == 1` inside a joypad-button
+  branch is the gamepad NUMBER the sheet already counts from 0, so a local-multiplayer script reads
+  `On gamepad 1 button A pressed` instead of arithmetic. The two naming conventions a two-player project
+  uses - `p2_jump` and `jump_2` - both read as `jump` on gamepad 1 and group under that pad.
+- **A gamepad branch that names a device reads as one row.** `if event is InputEventJoypadButton and
+  event.pressed and event.device == 0 and event.button_index == JOY_BUTTON_A:` reads `Gamepad ▸ On
+  gamepad 0 button A pressed`, in the Gamepad object's own words, because the device index IS the
+  gamepad number. A branch that names no device keeps `On button A pressed`; a Keyboard branch keeps
+  its `event.device == 1` as an ordinary comparison, since a keyboard has no number in the sheet.
+- **Handheld sensors read on the Touch object.** `Input.get_accelerometer()` reads `acceleration`,
+  `get_gravity()` reads `gravity`, `get_gyroscope()` reads `rotation rate` and `get_magnetometer()` reads
+  `magnetic field`. A `var a = Input.get_accelerometer()` is a Local variable row followed by
+  `System ▸ Set a to acceleration` - one action per row, never a bare `Local a = ...` cell. They all
+  report 0 on desktop, and every one of them says so.
+
+#### Signals wired somewhere else
+
+- **A signal wired to another object's function reads as the trigger calling it.**
+  `$Button.pressed.connect(player.reset)` reads as the event it is - `Button ▸ On pressed` on the
+  left, `player ▸ Call Reset` on the right - and `$Timer.timeout.connect(spawner.spawn_wave.bind(3))`
+  puts the bound value in an ordinary parameter chip, `count = 3`, named by the callee's own
+  parameter name whether that function belongs to the engine or to one of your own classes. The
+  `Callable(obj, "method").bind(...)` spelling reads the same, and a `CONNECT_ONE_SHOT` connection
+  wears the sheet's `Trigger once`. That is the third way real code wires a signal - after a handler
+  declared in the file and a lambda - so all three now read as trigger events. The connect line keeps
+  its muted `connects Button On Pressed` note, and the file keeps its one line.
+
+<img src="images/wired-call-rows.png" alt="A script whose _ready wires three signals: the connect lines read as muted connects notes, and under them three trigger events read StartButton On Pressed with player Call Reset, WaveTimer On Timeout with hud Call Show Wave count = 3, and a one-shot WaveTimer On Timeout carrying a Trigger once chip with count = 9." width="720">
+
+#### The reading lenses - names you can turn on and off
+
+- **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
+  as words (`_coyote_timer` -> `coyote timer`, a knob with its Inspector capitalisation), property chains
+  read possessively (`host's velocity X`), NOT is the red ✕ in the icon column, the host and any `$Node` /
+  `%Node` / `@onready` reference show their class icon, sub-events hang off tree guide lines, a call to one
+  of the sheet's own functions reads `Functions ▸ Call Add Look  x = mouse's ΔX  y = mouse's ΔY`, and code
+  that could not lift is one collapsed card with a line count. **View > Humanized Names** turns the name
+  lens on or off for editable sheets; nothing on the sheet is scaffolding until you press **Edit Events**.
 - **Expression names, under Familiar Words.** With **View > Familiar Words** on, the values read under
   the names a sheet author types into an expression field: `a.position.distance_to(b.position)` reads
   `distance(a, b)`, `a.get_angle_to(b)` reads `angle(a, b)`, `s.to_lower()` / `s.to_upper()` read
@@ -651,43 +703,6 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   `choose(red, blue)`. `lerp`, `clamp`, `abs`, `min`, `max` and friends are unchanged - both
   vocabularies spell them the same. With the glossary off, `s.length()` reads `length of s` as it
   always has; Godot's spelling is on hover either way.
-- **Lists, tables and text in the sheet's own verbs.** `items.append(x)` reads `Push back x to
-  items`, and `push_front` / `pop_back` / `insert` / `remove_at` / `erase` / `clear` / `sort` /
-  `shuffle` / `reverse` read as `Push front`, `Pop back of`, `Insert x at 2 in`, `Delete at 0 in`,
-  `Delete value x from`, `Clear`, `Sort`, `Shuffle` and `Reverse` - the same rows the List module
-  ships, word for word. `inventory.erase("potion")` on a declared `Dictionary` reads `Delete key
-  "potion" from inventory`, and `label += "!"` reads `Append "!" to label` rather than as
-  arithmetic, because adding to text puts it on the end.
-- **Deferred work says the delay out loud.** `call_deferred("reset")` reads `Call Reset (at end of
-  frame)`, `set_deferred("visible", true)` reads `Set visible to true (at end of frame)`, and
-  `reset.call_deferred()` reads the same - the words `queue_free()` already reads in. A handler the
-  file wired with `connect(_on_beat_timeout, CONNECT_ONE_SHOT)` opens as its trigger event with a
-  `Trigger once` chip beside it, and the connect line is re-emitted verbatim, flags and all.
-- **Physics layers and input actions by their PROJECT names.** `set_collision_layer_value(2, true)`
-  reads `Set collision with layer "Enemies" on` and `collision_layer = 5` reads `Set collision
-  layers to "World", "Player"`, from the names Project Settings holds; a layer the project never
-  named keeps its number. The DEVICE an action is bound to picks its object too, so an action bound
-  only to mouse buttons reads under `Mouse` and one bound only to a pad under `Gamepad`.
-- **Enum values in the sheet's words.** A number written where an engine enum is expected reads as
-  the member it names - `process_mode = 3` reads `Set process mode to Always`, `texture_filter = 1`
-  reads `Set texture filter to Nearest`, `horizontal_alignment = 1` reads `Set horizontal alignment
-  to Center` - and so does a number written into a variable the sheet declared with one of its own
-  enums (`dir = 2` reads `Set dir to DOWN`). The number is still one hover away.
-<img src="images/batch6-reading.png" alt="A hand-written script opened as a sheet: an On Ready event whose actions read Push back, Push front, Insert at, Delete at, Delete key, Shuffle, Append, Set collision with layer Enemies on, Set process mode to Always, Set Y to 1,000,000, Set angle to π over 2 and Call Reset at end of frame, followed by two top-level Keyboard trigger events for jump pressed and fire released." width="720">
-
-- **A signal wired to another object's function reads as the trigger calling it.**
-  `$Button.pressed.connect(player.reset)` reads as the event it is - `Button ▸ On pressed` on the
-  left, `player ▸ Call Reset` on the right - and `$Timer.timeout.connect(spawner.spawn_wave.bind(3))`
-  puts the bound value in an ordinary parameter chip, `count = 3`, named by the callee's own
-  parameter name whether that function belongs to the engine or to one of your own classes. The
-  `Callable(obj, "method").bind(...)` spelling reads the same, and a `CONNECT_ONE_SHOT` connection
-  wears the sheet's `Trigger once`. That is the third way real code wires a signal - after a handler
-  declared in the file and a lambda - so all three now read as trigger events. The connect line keeps
-  its muted `connects Button On Pressed` note, and the file keeps its one line.
-<img src="images/wired-call-rows.png" alt="A script whose _ready wires three signals: the connect lines read as muted connects notes, and under them three trigger events read StartButton On Pressed with player Call Reset, WaveTimer On Timeout with hud Call Show Wave count = 3, and a one-shot WaveTimer On Timeout carrying a Trigger once chip with count = 9." width="720">
-- **A big file never freezes the editor.** The raw sheet paints within a frame under a progress strip
-  (`Opening event_sheet_dock.gd - lifting functions 212 of 458 - 6.1 s`, a bar, and **Show as code
-  instead**); the lift runs behind it, and the strip goes away when the last function lands.
 
 ### The objects of an opened file - what they are, and where you find them
 
@@ -822,7 +837,7 @@ The lift does not require style-guide code. Beginner spellings round-trip byte-e
 
 And a hand-written `enum` + `match` state machine opens READING like a state machine: the tick
 event's lane says "decides by state - 3 states below", each case is a `◆ State:` row whose plain
-statements read as sentences and verbs, and each transition is a nested CONDITION row - the guard
+statements read as sentences and actions, and each transition is a nested CONDITION row - the guard
 in plain words in the condition cell (`Can See Player`, with a small ƒ badge marking a computed
 check), the state change as its action. Branching never renders in the action lane.
 
@@ -851,8 +866,8 @@ For a stateless helper (scoring, inventory math) use plain `## @ace_expose_all` 
 
 You never have to hand-write those annotations and hope. **Sheet ▸ Custom Actions…** opens the
 **Custom ACE Providers** window: press **Add…** to browse to a `.gd` (or click one already registered),
-and the **What it publishes** table lists one row per verb it would generate - *Publish*, *Kind*,
-*Verb*, *Category*, *Parameters*, and *Emits* (the exact GDScript that row compiles to). Browsing only
+and the **What it publishes** table lists one row per entry it would generate - *Publish*, *Kind*,
+*Name*, *Category*, *Parameters*, and *Emits* (the exact GDScript that row compiles to). Browsing only
 previews; **Register This Script** is a second, deliberate click, so a script never joins the
 vocabulary unseen.
 
@@ -863,15 +878,15 @@ Condition. Correct it in the table, then use one of the three actions beside it:
 - **Curate Script…** writes your edits back into the file as `## @ace_*` comment lines. It shows you
   the exact lines first, backs the file up before writing (Tools ▸ Sheet Backups restores it), and
   re-applying the same edits is a no-op rather than a second copy of the block. **Only `##` comments
-  are added** - no signature and no body is ever touched, which is why a verb's lane is corrected with
+  are added** - no signature and no body is ever touched, which is why an entry's lane is corrected with
   `@ace_condition` instead of bolting `-> bool` onto your function.
-- **Parameters…** shapes the selected verb's parameters: a *Hint* (`comparison` is the whole labeled
+- **Parameters…** shapes the selected entry's parameters: a *Hint* (`comparison` is the whole labeled
   operator dropdown in one word), *Options* written as `value=Label` separated by `|`, and a *Starting
   value* - what the row shows the moment it is dropped. These land as
   `## @ace_param(id, hint: …, options: …, default: …)`.
-- **Keep Old Name…** is for after you rename a function. A rename changes the verb's identity and
+- **Keep Old Name…** is for after you rename a function. A rename changes the entry's identity and
   orphans every row that used it - *silently*, because each row carries the old call baked in, so the
-  sheet still compiles clean and only breaks at game runtime. Select the verb under its new name, type
+  sheet still compiles clean and only breaks at game runtime. Select the entry under its new name, type
   what it used to be called, and a deprecated stand-in of the old name is appended that forwards to the
   new one. Nothing existing is edited, and the old name is hidden from the picker so it cannot be added
   to new work.
