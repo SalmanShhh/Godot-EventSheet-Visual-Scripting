@@ -6675,9 +6675,13 @@ func _wraps_whole_expression(text: String) -> bool:
 ## and a continuation row - three views of ONE unchanged EventRow, each drawing its own slice.
 ## S27. True when this row is one of the sheet's OWN events rather than a sub-event of another. A
 ## blank row means "runs every tick" only up here; under a parent, blank means "then, in order".
-func _is_top_level_event(event_row: EventRow, rows: Array = []) -> bool:
-	var search: Array = rows
-	if search.is_empty():
+## `rows` is null on the outer call and the group's own list on a nested one - never an "empty means
+## start over" default, which on a sheet holding an EMPTY group would recurse forever.
+func _is_top_level_event(event_row: EventRow, rows: Variant = null) -> bool:
+	var search: Array = []
+	if rows is Array:
+		search = rows as Array
+	else:
 		var sheet: EventSheetResource = _viewport._sheet
 		if sheet == null or event_row == null:
 			return false
