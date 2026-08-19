@@ -572,6 +572,9 @@ func ensure_editor_dialogs_initialized() -> void:
 	# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
 	_dock._variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _dock._current_sheet)
 	_dock._variable_dlg.variable_confirmed.connect(_dock._on_variable_dialog_confirmed)
+	# R42 - the Global chip hands the gesture to the Add global variable dialog, which writes into an
+	# autoload rather than into this file.
+	_dock._variable_dlg.global_scope_requested.connect(_dock._on_add_project_global_requested)
 	# Sheet enums feed the variable dialog's one-click combo fill.
 	_dock._variable_dlg.set_enum_provider(func() -> Array:
 		var sheet_enums: Array = []

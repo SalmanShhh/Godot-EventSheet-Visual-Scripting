@@ -246,6 +246,7 @@ var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # 
 var _verb_properties: EventSheetVerbProperties = EventSheetVerbProperties.new()  # a published verb's header click: the ACE properties popup (kind, category, inputs, inserts) (dock/verb_properties_popup.gd)
 var _object_properties: EventSheetObjectProperties = EventSheetObjectProperties.new()  # a row's object-name click: the object popup (type, path, rows, signals) (dock/object_properties_popup.gd)
 var _instance_variables: EventSheetInstanceVariableTable = EventSheetInstanceVariableTable.new()  # the object's variables as an editable table on Object properties and the Properties bar (dock/instance_variable_table.gd)
+var _global_variables: EventSheetGlobalVariables = EventSheetGlobalVariables.new()  # Add ▸ Global variable…: one value the project shares, written into an autoload (dock/global_variables.gd)
 var _find_results: EventSheetFindResultsBar = EventSheetFindResultsBar.new()  # Find all references: the results bar under the sheet, grouped by sheet with event numbers (dock/find_results_bar.gd)
 var _properties_bar: EventSheetPropertiesBar = EventSheetPropertiesBar.new()  # the selected condition/action/object/group as fields edited in place, beside the canvas (dock/properties_bar.gd)
 var _objects_panel: EventSheetObjectsPanel = null  # left-rail Objects section: every object the open file uses (editor/objects_panel.gd)
@@ -340,6 +341,7 @@ func _init() -> void:
 	_verb_properties.init(self)
 	_object_properties.init(self)
 	_instance_variables.init(self)
+	_global_variables.init(self)
 	_find_results.init(self)
 	_properties_bar.init(self)
 	# Same rule as _preview_glue: _build_ui() calls _open_progress.build(), so the back-reference
@@ -1946,12 +1948,16 @@ static func _tree_group_attributes(source: Dictionary) -> Dictionary:  # variabl
 	return EventSheetVariablesManager._tree_group_attributes(source)
 
 
-func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary = {}, is_constant: bool = false, exported: bool = true, combo_options: PackedStringArray = PackedStringArray(), attributes: Dictionary = {}, onready: bool = false) -> void:  # _variable_dlg.variable_confirmed
-	_variables._on_variable_dialog_confirmed(var_name, type_name, default_value, scope, context, is_constant, exported, combo_options, attributes, onready)
+func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary = {}, is_constant: bool = false, exported: bool = true, combo_options: PackedStringArray = PackedStringArray(), attributes: Dictionary = {}, onready: bool = false, is_static: bool = false) -> void:  # _variable_dlg.variable_confirmed
+	_variables._on_variable_dialog_confirmed(var_name, type_name, default_value, scope, context, is_constant, exported, combo_options, attributes, onready, is_static)
 
 
 func _on_add_global_variable_requested() -> void:
 	_variables._on_add_global_variable_requested()
+
+
+func _on_add_project_global_requested() -> void:  # Add ▸ Global Variable… (V)
+	_global_variables.open()
 
 
 func _on_add_local_variable_requested() -> void:

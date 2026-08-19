@@ -372,6 +372,17 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   percent; `@export_file("*.png")` reads `file` with its filter; `@export_dir` reads `folder`;
   `@export_multiline` reads `text  multiline`; a Color reads its swatch and its word; and
   `@export_flags(...)` reads `flags` with the names of the bits.
+- **A global is declared once and listed where it is used.** Any sheet that reads or writes one of
+  the project's globals grows a folded `▸ Global variables used here` folder in its head - `Score ·
+  Lives  (from Game)` - and each entry opens to what it is declared as and where: `whole number
+  Score = 0 · Game`. A name the autoload does not actually declare says `not declared on Game`,
+  because a global that resolves to nothing at runtime otherwise reads exactly like one that works.
+  To make one, **Add ▸ Global Variable…** (or just **V**) works on any sheet at all: name it, pick
+  its type in plain words, give it a value, choose which autoload holds it, and the row you will get
+  is previewed live. The autoload is opened as a sheet and the variable added there in one undo
+  step - the autoload stays the single place a global lives, so there is no second variable system
+  to keep in sync. In the Object bar, an autoload under **GLOBALS & FAMILIES** hovers with what it
+  holds (`Score = 0 · Lives = 3`), read straight off its file even if nobody has opened it.
 - **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, the
   Include bar reads `⇥ Game  autoload (global) · game.gd` with the globe, its knobs read as one
   `Global variables` folder rather than the Instance variables one, and its triggers say
@@ -611,6 +622,16 @@ is instantiated to answer a question.
   read `On Died`, `On Hit  body`), **Behaviors** and **Families**. Two buttons start using it -
   **Add condition** and **Add action**, both opening the picker already scoped to that object - and
   **Open enemy.gd as sheet** jumps to the file that says what it is.
+- **The object this file IS answers with an editable variable table.** For that one object - the
+  thing the open script declares, not the nodes it merely names - the **Instance variables** row
+  becomes a table you work in: **Name**, **Type** (a dropdown of the sheet's own type words),
+  **Initial value**, an **Inspector** tick, and **✎ ✕**. ✎ folds a description field open under the
+  variable; ✕ deletes it; **+ Add instance variable** opens the Add variable dialog on the Instance
+  scope. Renaming in the Name field is **Rename Everywhere** and picking a new type is **Change Type
+  Everywhere**, because a name and a type are used by rows all over the sheet. The same table sits on
+  the Properties bar whenever that object is selected, so a run of variables can be added, retyped
+  and described without opening anything. Every edit writes the same `var` / `@export var` line the
+  Add variable dialog writes, in one undo step, and leaves every other line of the file untouched.
 - **The Object bar is a list you glance at, filter, and drag from.** Three sections: **USED IN THIS
   SHEET** open, with a per-object count and behaviors nested under the object they ride on; **ALSO IN
   THE SCENE** collapsed (the rest of the scene, one line away, no counts because there are none); and

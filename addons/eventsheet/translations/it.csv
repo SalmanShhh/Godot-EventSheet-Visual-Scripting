@@ -2250,3 +2250,21 @@ Editable in the Inspector (a designer property).,Modificabile nell'Ispettore (un
 Describe this variable,Descrivi questa variabile
 Delete this variable,Elimina questa variabile
 Add variable,Aggiungi variabile
+Add global variable,Aggiungi variabile globale
+Write into,Scrivi in
+New global sheet…,Nuovo foglio globale…
+A global lives on an autoload - one file the whole project can read.,Una variabile globale vive su un autoload: un file che tutto il progetto può leggere.
+Global variables used here,Variabili globali usate qui
+%s  (from %s),%s  (da %s)
+not declared on %s,non dichiarata su %s
+New action…,Nuova azione…
+"Add this name to the project's Input Map, then bind it in Project ▸ Input Map.","Aggiunge questo nome alla mappa di input del progetto, poi assegnalo in Progetto ▸ Mappa di input."
+"Type the name of the control first, then New action…","Scrivi prima il nome del comando, poi Nuova azione…"
+"""%s"" is already in the Input Map.","""%s"" è già nella mappa di input."
+"""%s"" could not be added to the Input Map.","Non è stato possibile aggiungere ""%s"" alla mappa di input."
+"Added ""%s"" - bind it in Project ▸ Input Map.","""%s"" aggiunta: assegnala in Progetto ▸ Mappa di input."
+One value the whole project shares - lives on an autoload.,Un valore condiviso da tutto il progetto: vive su un autoload.
+"One value shared by every copy of this object, not one each.","Un valore condiviso da tutte le copie di questo oggetto, non uno ciascuna."
+Set boolean,Imposta booleano
+Boolean is true / is false,Il booleano è vero / è falso
+"%s, with the boolean half already filled in.","%s, con la metà booleana già compilata."

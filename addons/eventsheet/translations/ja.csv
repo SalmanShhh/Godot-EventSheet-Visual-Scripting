@@ -2250,3 +2250,21 @@ Editable in the Inspector (a designer property).,インスペクターで編集�
 Describe this variable,この変数を説明する
 Delete this variable,この変数を削除
 Add variable,変数を追加
+Add global variable,グローバル変数を追加
+Write into,書き込み先
+New global sheet…,新しいグローバルシート…
+A global lives on an autoload - one file the whole project can read.,グローバル変数はオートロードに置かれます。プロジェクト全体から読めるファイルです。
+Global variables used here,ここで使われているグローバル変数
+%s  (from %s),%s  (%s から)
+not declared on %s,%s で宣言されていません
+New action…,新しいアクション…
+"Add this name to the project's Input Map, then bind it in Project ▸ Input Map.",この名前をプロジェクトの入力マップに追加します。割り当ては プロジェクト ▸ 入力マップ で行います。
+"Type the name of the control first, then New action…",先に操作の名前を入力してから、新しいアクション… を押してください。
+"""%s"" is already in the Input Map.","""%s"" はすでに入力マップにあります。"
+"""%s"" could not be added to the Input Map.","""%s"" を入力マップに追加できませんでした。"
+"Added ""%s"" - bind it in Project ▸ Input Map.","""%s"" を追加しました。プロジェクト ▸ 入力マップ で割り当ててください。"
+One value the whole project shares - lives on an autoload.,プロジェクト全体で共有される 1 つの値。オートロードに置かれます。
+"One value shared by every copy of this object, not one each.",このオブジェクトのすべてのコピーで共有される 1 つの値 (各自 1 つではありません)。
+Set boolean,真偽値を設定
+Boolean is true / is false,真偽値が true / false
+"%s, with the boolean half already filled in.",%s。真偽値の側はすでに入力済みです。

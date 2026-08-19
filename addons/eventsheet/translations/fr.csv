@@ -2250,3 +2250,21 @@ Editable in the Inspector (a designer property).,Modifiable dans l'Inspecteur (u
 Describe this variable,Décrire cette variable
 Delete this variable,Supprimer cette variable
 Add variable,Ajouter une variable
+Add global variable,Ajouter une variable globale
+Write into,Écrire dans
+New global sheet…,Nouvelle feuille globale…
+A global lives on an autoload - one file the whole project can read.,Une variable globale vit sur un autoload - un fichier que tout le projet peut lire.
+Global variables used here,Variables globales utilisées ici
+%s  (from %s),%s  (de %s)
+not declared on %s,non déclarée sur %s
+New action…,Nouvelle action…
+"Add this name to the project's Input Map, then bind it in Project ▸ Input Map.","Ajoute ce nom à la carte d'entrées du projet, puis associe-le dans Projet ▸ Carte d'entrées."
+"Type the name of the control first, then New action…","Tapez d'abord le nom de la commande, puis Nouvelle action…"
+"""%s"" is already in the Input Map.","""%s"" est déjà dans la carte d'entrées."
+"""%s"" could not be added to the Input Map.","""%s"" n'a pas pu être ajouté à la carte d'entrées."
+"Added ""%s"" - bind it in Project ▸ Input Map.","""%s"" ajoutée - associez-la dans Projet ▸ Carte d'entrées."
+One value the whole project shares - lives on an autoload.,Une valeur partagée par tout le projet - elle vit sur un autoload.
+"One value shared by every copy of this object, not one each.","Une valeur partagée par toutes les copies de cet objet, pas une par copie."
+Set boolean,Définir le booléen
+Boolean is true / is false,Le booléen est vrai / est faux
+"%s, with the boolean half already filled in.","%s, avec la moitié booléenne déjà remplie."

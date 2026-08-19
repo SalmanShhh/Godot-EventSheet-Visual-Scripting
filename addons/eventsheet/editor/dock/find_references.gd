@@ -132,6 +132,17 @@ static func _scan_definitions(rows: Array, name: String, into: Dictionary) -> vo
 			_scan_definitions((row as EventRow).sub_events, name, into)
 
 
+## Every findable text fragment of a sheet, tagged with its surface - the one walker anything that
+## has to ask "what does this file actually SAY" shares, so a new question cannot be asked of a
+## different set of rows than Find all references answers from.
+static func text_fragments(sheet: EventSheetResource) -> Array:
+	var fragments: Array = []
+	if sheet == null:
+		return fragments
+	_collect(sheet.events, fragments)
+	return fragments
+
+
 ## Findable text fragments tagged with their surface. Parallels project_find's collector but
 ## keeps the surface kind so references read "in a param" vs "in a comment".
 static func _collect(rows: Array, into: Array) -> void:

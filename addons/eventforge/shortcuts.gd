@@ -26,8 +26,9 @@ const DEFAULTS: Dictionary = {
 	# S matches the event-sheet keyboard grammar's add-sub-event key: picker-backed sub-condition
 	# under the selection.
 	"add_sub_condition": "S",
-	# V is one of the add-variable keys event-sheet authors already have in their fingers (the
-	# Ctrl+Shift+V chord remains as well).
+	# V is the add-GLOBAL-variable key event-sheet authors already have in their fingers - a global
+	# belongs to the project, so V works on any sheet at all. The Ctrl+Shift+V chord adds an instance
+	# variable, the member of the object this file is.
 	"add_variable": "V",
 	"invert_condition": "I",
 	"replace_ace": "R",
@@ -61,7 +62,7 @@ const LABELS: Dictionary = {
 	"toggle_enabled": "Toggle enabled / disabled",
 	"add_blank_subevent": "Add blank sub-event",
 	"add_sub_condition": "Add sub-event (picker)",
-	"add_variable": "Add variable",
+	"add_variable": "Add global variable",
 	"invert_condition": "Invert selected condition",
 	"project_search": "Search all sheets",
 	"replace_ace": "Replace selected trigger / condition / action",
@@ -78,7 +79,7 @@ const LABELS: Dictionary = {
 	"add_event_chord": "Add event (Ctrl alternate)",
 	"add_condition_chord": "Add condition (Ctrl alternate)",
 	"add_action_chord": "Add action (Ctrl alternate)",
-	"add_variable_chord": "Add variable",
+	"add_variable_chord": "Add instance variable",
 	"copy_as_text": "Copy as text",
 }
 

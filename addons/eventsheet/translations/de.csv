@@ -2250,3 +2250,21 @@ Editable in the Inspector (a designer property).,Im Inspektor bearbeitbar (eine 
 Describe this variable,Diese Variable beschreiben
 Delete this variable,Diese Variable löschen
 Add variable,Variable hinzufügen
+Add global variable,Globale Variable hinzufügen
+Write into,Schreiben in
+New global sheet…,Neues globales Blatt…
+A global lives on an autoload - one file the whole project can read.,"Eine globale Variable lebt auf einem Autoload - einer Datei, die das ganze Projekt lesen kann."
+Global variables used here,Hier verwendete globale Variablen
+%s  (from %s),%s  (aus %s)
+not declared on %s,nicht auf %s deklariert
+New action…,Neue Aktion…
+"Add this name to the project's Input Map, then bind it in Project ▸ Input Map.",Diesen Namen zur Eingabezuordnung des Projekts hinzufügen und dann unter Projekt ▸ Eingabezuordnung belegen.
+"Type the name of the control first, then New action…","Erst den Namen der Steuerung eingeben, dann Neue Aktion…"
+"""%s"" is already in the Input Map.","""%s"" ist bereits in der Eingabezuordnung."
+"""%s"" could not be added to the Input Map.","""%s"" konnte nicht zur Eingabezuordnung hinzugefügt werden."
+"Added ""%s"" - bind it in Project ▸ Input Map.","""%s"" hinzugefügt - unter Projekt ▸ Eingabezuordnung belegen."
+One value the whole project shares - lives on an autoload.,"Ein Wert, den das ganze Projekt teilt - lebt auf einem Autoload."
+"One value shared by every copy of this object, not one each.","Ein Wert, den sich alle Kopien dieses Objekts teilen - nicht je einer."
+Set boolean,Wahrheitswert setzen
+Boolean is true / is false,Wahrheitswert ist wahr / ist falsch
+"%s, with the boolean half already filled in.","%s, mit dem Wahrheitswert-Teil bereits ausgefüllt."

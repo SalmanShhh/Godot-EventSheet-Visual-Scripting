@@ -121,8 +121,12 @@ func build(root: Node) -> void:
 	add_menu.flat = false
 	var add_popup: PopupMenu = add_menu.get_popup()
 	add_popup.add_item("Signal Event…", 0)
-	add_popup.add_item("Global Variable…", 1)
+	# R37/R40 - the sheet's own members are INSTANCE variables of the object the file is; a GLOBAL is
+	# one value the whole project shares, and lives on an autoload. Two different things, so two
+	# items, each named the thing it makes.
+	add_popup.add_item("Instance Variable…", 1)
 	add_popup.add_item("Local Variable…", 2)
+	add_popup.add_item("Global Variable… (V)", 8)
 	add_popup.add_item("Function…", 3)
 	add_popup.add_separator()
 	# The three event-shape commands, on the Add menu as well as the right-click menu: the sheet
@@ -154,6 +158,7 @@ func build(root: Node) -> void:
 			5: _dock._on_add_blank_subevent_key()
 			6: _dock._make_or_block_from_selection()
 			7: _dock._make_else_from_selection()
+			8: _dock._on_add_project_global_requested()
 	)
 	# Kept as a reference so Simple Mode can gate the code item (id 4) live.
 	_dock._add_menu_popup = add_popup

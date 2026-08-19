@@ -2250,3 +2250,21 @@ Editable in the Inspector (a designer property).,인스펙터에서 편집 가�
 Describe this variable,이 변수 설명하기
 Delete this variable,이 변수 삭제
 Add variable,변수 추가
+Add global variable,전역 변수 추가
+Write into,기록할 곳
+New global sheet…,새 전역 시트…
+A global lives on an autoload - one file the whole project can read.,전역 변수는 오토로드에 있습니다. 프로젝트 전체가 읽을 수 있는 파일입니다.
+Global variables used here,여기서 쓰이는 전역 변수
+%s  (from %s),%s  (%s 에서)
+not declared on %s,%s 에 선언되지 않음
+New action…,새 액션…
+"Add this name to the project's Input Map, then bind it in Project ▸ Input Map.",이 이름을 프로젝트 입력 맵에 추가합니다. 바인딩은 프로젝트 ▸ 입력 맵 에서 하세요.
+"Type the name of the control first, then New action…",먼저 조작 이름을 입력한 뒤 새 액션… 을 누르세요.
+"""%s"" is already in the Input Map.","""%s"" 은(는) 이미 입력 맵에 있습니다."
+"""%s"" could not be added to the Input Map.","""%s"" 을(를) 입력 맵에 추가하지 못했습니다."
+"Added ""%s"" - bind it in Project ▸ Input Map.","""%s"" 을(를) 추가했습니다. 프로젝트 ▸ 입력 맵 에서 바인딩하세요."
+One value the whole project shares - lives on an autoload.,프로젝트 전체가 공유하는 하나의 값. 오토로드에 있습니다.
+"One value shared by every copy of this object, not one each.",이 오브젝트의 모든 사본이 공유하는 하나의 값 (각자 하나가 아닙니다).
+Set boolean,불리언 설정
+Boolean is true / is false,불리언이 참 / 거짓
+"%s, with the boolean half already filled in.",%s. 불리언 부분은 이미 채워져 있습니다.

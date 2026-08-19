@@ -629,6 +629,35 @@ func _build_hint_text(mode: String, signals_only: bool) -> String:
 
 ## Event-sheet phrase → Godot search-term bridge, so event-sheet users typing their old vocabulary
 ## still find the right ACE (e.g. "on start of layout" finds _ready-based triggers).
+## R38 - the five variable verbs and the two questions, by the names everyone who has used an event
+## sheet already says. Two of them are not descriptors of their own: "Set boolean" IS Set value with
+## the value already filled in, and "Boolean is true / is false" IS Compare variable with `== true`.
+## Minting a descriptor for each would put two templates in the lifter that match the same line -
+## a previous attempt at exactly that stole every `muted = true` line from Set value - so they are
+## ALIAS ROWS instead: the same frozen ace_id, the same emitted code, a different name in the picker
+## and a form that opens already answering the boolean half of the question.
+const VARIABLE_ALIASES: Array[Dictionary] = [
+	{
+		"display": "Set boolean",
+		"provider": "Core",
+		"ace_id": "SetVar",
+		"prefill": {"value": "true"},
+		"search": "set boolean toggle true false flag"
+	},
+	{
+		"display": "Boolean is true / is false",
+		"provider": "Core",
+		"ace_id": "CompareVar",
+		"prefill": {"op": "==", "value": "true"},
+		"search": "boolean is true is false flag alive muted"
+	}
+]
+
+## The prefill the alias row that was activated wants merged into the params dialog. Held for the
+## single hop between the click and _commit_definition, and cleared there - an alias must never
+## leave a value stuck on the ordinary row that shares its descriptor.
+var _pending_alias_prefill: Dictionary = {}
+
 const SEARCH_SYNONYMS := {
 	"on start of layout": "ready",
 	"start of layout": "ready",
@@ -645,6 +674,11 @@ const SEARCH_SYNONYMS := {
 	"is overlapping": "overlap",
 	"set position": "position",
 	"compare variable": "variable",
+	# R38 - the two alias names, so the quick-add bar finds the descriptor they stand for even
+	# though neither is a descriptor of its own.
+	"set boolean": "set value",
+	"boolean is true": "compare variable",
+	"boolean is false": "compare variable",
 	"wait": "timer",
 	"go to layout": "scene",
 	"goto layout": "scene",
@@ -1215,6 +1249,8 @@ func _refresh_tree() -> void:
 			var __bold: Font = _bold_font()
 			if __bold != null:
 				item.set_custom_font(0, __bold)
+
+	_add_alias_rows(root, group_nodes, mode, signals_only, query)
 
 	# No-match guidance: a blank tree leaves a newcomer stuck wondering if the picker is broken.
 	# Nudge the vocabulary bridge (plain phrases find Godot equivalents) instead of silence.
@@ -2038,7 +2074,56 @@ func _on_item_activated() -> void:
 	# Double-clicking a section header must fold/unfold, not crash: headers carry a Dictionary
 	# marker, and casting a non-Object to an object type is a runtime error.
 	var item_meta: Variant = item.get_metadata(0) if item != null else null
+	if item_meta is Dictionary and (item_meta as Dictionary).has("alias_index"):
+		_commit_alias(int((item_meta as Dictionary)["alias_index"]))
+		return
 	_commit_definition(item_meta if item_meta is ACEDefinition else null)
+
+
+## R38 - the alias rows, in the section their descriptor already lives in, right after it. Only
+## shown when the query matches them (or nothing is typed), and only in a mode that would take the
+## descriptor anyway - an alias must never offer a condition where only actions can go.
+func _add_alias_rows(root: TreeItem, group_nodes: Dictionary, mode: String, signals_only: bool,
+		query: String) -> void:
+	var lowered: String = query.strip_edges().to_lower()
+	for alias_index: int in range(VARIABLE_ALIASES.size()):
+		var alias: Dictionary = VARIABLE_ALIASES[alias_index]
+		if not lowered.is_empty() and not str(alias.get("search", "")).contains(lowered) \
+				and not str(alias.get("display", "")).to_lower().contains(lowered):
+			continue
+		var definition: ACEDefinition = _alias_definition(alias)
+		if definition == null or not _is_allowed_for_mode(definition, mode, signals_only):
+			continue
+		var group_item: TreeItem = _resolve_group_item(root, group_nodes, _category_of(definition), false)
+		var item: TreeItem = _tree.create_item(group_item)
+		item.set_text(0, EventSheetL10n.translate(str(alias.get("display", ""))))
+		var item_icon: Texture2D = resolve_definition_icon(definition)
+		if item_icon != null:
+			item.set_icon(0, item_icon)
+			item.set_icon_max_width(0, 16)
+		# The tooltip says what it IS, because two names for one row is exactly the thing a reader
+		# will otherwise wonder about the first time they meet it.
+		item.set_tooltip_text(0, EventSheetL10n.translate("%s, with the boolean half already filled in.")
+			% definition.display_name)
+		item.set_metadata(0, {"alias_index": alias_index})
+
+
+## The shipped descriptor an alias row stands for, or null when the provider is not loaded.
+func _alias_definition(alias: Dictionary) -> ACEDefinition:
+	if _registry == null:
+		return null
+	return _registry.find_definition(str(alias.get("provider", "")), str(alias.get("ace_id", "")))
+
+
+func _commit_alias(alias_index: int) -> void:
+	if alias_index < 0 or alias_index >= VARIABLE_ALIASES.size():
+		return
+	var alias: Dictionary = VARIABLE_ALIASES[alias_index]
+	var definition: ACEDefinition = _alias_definition(alias)
+	if definition == null:
+		return
+	_pending_alias_prefill = (alias.get("prefill", {}) as Dictionary).duplicate()
+	_commit_definition(definition)
 
 
 ## A compact single-column Tree for the ⭐ Favorites / ★ Recent side panes (Create-Node style).
@@ -2267,6 +2352,14 @@ func _commit_definition(definition: ACEDefinition) -> void:
 		var initial_values: Dictionary = context.get("existing_params", {})
 		initial_values["function_name"] = target_function
 		context["existing_params"] = initial_values
+	# R38 - an alias row is the same descriptor with the boolean half of the form already answered.
+	# Taken (and cleared) here rather than stamped on the definition, because ACEDefinitions are
+	# shared across every tab for the session and must never carry one row's values.
+	if not _pending_alias_prefill.is_empty():
+		var alias_values: Dictionary = context.get("existing_params", {})
+		alias_values.merge(_pending_alias_prefill, true)
+		context["existing_params"] = alias_values
+		_pending_alias_prefill = {}
 	ace_selected.emit(definition, context)
 
 

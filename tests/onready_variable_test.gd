@@ -26,7 +26,7 @@ static func _test_dialog_onready_typed_freetext() -> bool:
 	var parent: Node = Node.new()
 	dlg.init_dialog(parent)
 	dlg.set_sheet_provider(func() -> Variant: return null)
-	dlg.variable_confirmed.connect(func(_n: String, type_name: String, _d: Variant, _s: String, _c: Dictionary, _ic: bool, _ex: bool, _o: PackedStringArray, _a: Dictionary, _r: bool) -> void:
+	dlg.variable_confirmed.connect(func(_n: String, type_name: String, _d: Variant, _s: String, _c: Dictionary, _ic: bool, _ex: bool, _o: PackedStringArray, _a: Dictionary, _r: bool, _st: bool) -> void:
 		captured["type"] = type_name
 	)
 	dlg.open_for_edit("tree", {}, "hp", "int", "", false, "Add Variable")
@@ -74,7 +74,7 @@ static func _test_dialog_onready_type_safety() -> bool:
 	var parent_new: Node = Node.new()
 	dlg_new.init_dialog(parent_new)
 	dlg_new.set_sheet_provider(func() -> Variant: return null)
-	dlg_new.variable_confirmed.connect(func(_n: String, type_name: String, default_value: Variant, _s: String, _c: Dictionary, is_constant: bool, exported: bool, _o: PackedStringArray, _a: Dictionary, onready: bool) -> void:
+	dlg_new.variable_confirmed.connect(func(_n: String, type_name: String, default_value: Variant, _s: String, _c: Dictionary, is_constant: bool, exported: bool, _o: PackedStringArray, _a: Dictionary, onready: bool, _st: bool) -> void:
 		new_captured["type"] = type_name
 		new_captured["default"] = default_value
 		new_captured["const"] = is_constant
@@ -102,7 +102,7 @@ static func _test_dialog_onready_type_safety() -> bool:
 	var parent_edit: Node = Node.new()
 	dlg_edit.init_dialog(parent_edit)
 	dlg_edit.set_sheet_provider(func() -> Variant: return null)
-	dlg_edit.variable_confirmed.connect(func(_n: String, type_name: String, _d: Variant, _s: String, _c: Dictionary, _ic: bool, _ex: bool, _o: PackedStringArray, _a: Dictionary, _onready: bool) -> void:
+	dlg_edit.variable_confirmed.connect(func(_n: String, type_name: String, _d: Variant, _s: String, _c: Dictionary, _ic: bool, _ex: bool, _o: PackedStringArray, _a: Dictionary, _onready: bool, _st: bool) -> void:
 		edit_captured["type"] = type_name
 	)
 	dlg_edit.open_for_edit("tree", {"editing": true, "variable_resource": existing}, "sprite", "Sprite2D", "$Sprite2D", false, "Edit Variable", false, false, true)
@@ -117,7 +117,7 @@ static func _test_dialog_onready_type_safety() -> bool:
 	var parent_blank: Node = Node.new()
 	dlg_blank.init_dialog(parent_blank)
 	dlg_blank.set_sheet_provider(func() -> Variant: return null)
-	dlg_blank.variable_confirmed.connect(func(_n: String, _t: String, _d: Variant, _s: String, _c: Dictionary, _ic: bool, _ex: bool, _o: PackedStringArray, _a: Dictionary, _r: bool) -> void:
+	dlg_blank.variable_confirmed.connect(func(_n: String, _t: String, _d: Variant, _s: String, _c: Dictionary, _ic: bool, _ex: bool, _o: PackedStringArray, _a: Dictionary, _r: bool, _st: bool) -> void:
 		blank_committed[0] = true
 	)
 	dlg_blank.open_for_edit("tree", {}, "thing", "int", "", false, "Add Variable")

@@ -182,7 +182,8 @@ func _on_variable_dialog_confirmed(
 	exported: bool = true,
 	combo_options: PackedStringArray = PackedStringArray(),
 	attributes: Dictionary = {},
-	onready: bool = false
+	onready: bool = false,
+	is_static: bool = false
 ) -> void:
 	# Guardrail (event-sheet-style): auto-correct what's fixable, block what isn't - BEFORE commit.
 	var sanitized_name: String = EventSheetIdentifierRules.sanitize(var_name)
@@ -223,6 +224,7 @@ func _on_variable_dialog_confirmed(
 				existing.exported = exported
 				existing.attributes = _tree_group_attributes(attributes)
 				existing.onready = onready
+				existing.is_static = is_static and not resolved_constant
 				_apply_property_accessors(existing, attributes)
 				message["text"] = "Updated variable %s." % var_name
 				return true
@@ -235,6 +237,7 @@ func _on_variable_dialog_confirmed(
 			tree_var.exported = exported
 			tree_var.attributes = _tree_group_attributes(attributes)
 			tree_var.onready = onready
+			tree_var.is_static = is_static and not resolved_constant
 			_apply_property_accessors(tree_var, attributes)
 			var anchor: Variant = context.get("insert_below", null)
 			if anchor is Resource:
@@ -283,6 +286,7 @@ func _on_variable_dialog_confirmed(
 		local_var.type = _dock._type_from_name(type_name)
 		local_var.default_value = default_value
 		local_var.is_constant = resolved_constant
+		local_var.is_static = is_static and not resolved_constant
 		message["text"] = "%s local variable %s." % [action_verb, var_name]
 		return true
 	)
@@ -316,6 +320,7 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 			"type": tree_var.type_name,
 			"default": tree_var.default_value,
 			"is_constant": tree_var.is_constant,
+			"is_static": tree_var.is_static,
 			"exported": tree_var.exported,
 			# The Inspector attributes ride along so the menu can tell a GRID variable (the table
 			# drawer) from a plain one - the CSV round trip is offered only where there are columns.
@@ -405,7 +410,8 @@ func _edit_context_variable() -> void:
 			"Edit Variable",
 			tree_var.is_constant,
 			tree_var.exported,
-			tree_var.onready
+			tree_var.onready,
+			tree_var.is_static
 		)
 		return
 	if scope == "local":

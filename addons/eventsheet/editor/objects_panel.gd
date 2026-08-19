@@ -355,6 +355,25 @@ static func entry_tooltip(entry: Dictionary) -> String:
 	return " · ".join(verbs)
 
 
+## R40 - an autoload's hover under GLOBALS says what it HOLDS, with the values: `Score = 0 ·
+## Lives = 3 · PlayerName = ""`. The verbs an autoload is used with are the least interesting thing
+## about it; the numbers the whole project shares are the answer a reader came for. Read straight off
+## the autoload's file, so it works for one nobody has opened. Falls back to the ordinary hover when
+## the file declares nothing readable.
+static func globals_tooltip(entry: Dictionary) -> String:
+	var singleton: String = str(entry.get("label", "")).strip_edges()
+	var path: String = ""
+	for autoload: Dictionary in EventSheetGlobalVariables.autoload_sheets():
+		if str(autoload.get("name", "")) == singleton:
+			path = str(autoload.get("path", ""))
+	if path.is_empty():
+		return entry_tooltip(entry)
+	var parts: PackedStringArray = PackedStringArray()
+	for declared: Dictionary in EventSheetGlobalVariables.declared_globals(path):
+		parts.append("%s = %s" % [str(declared.get("name", "")), str(declared.get("value", ""))])
+	return " · ".join(parts) if not parts.is_empty() else entry_tooltip(entry)
+
+
 ## The count cell's hover: what those rows ARE. `2 conditions · 3 actions · 1 trigger`.
 static func count_tooltip(split: Dictionary) -> String:
 	var parts: PackedStringArray = PackedStringArray()
@@ -472,6 +491,8 @@ func _add_entry_item(parent_item: TreeItem, entry: Dictionary, is_missing: bool)
 	item.set_text(0, ("⚠ %s" % entry_text(entry)) if flagged else entry_text(entry))
 	if unknown_action:
 		item.set_tooltip_text(0, EventSheetL10n.translate("\"%s\" is not in the Input Map") % label)
+	elif str(entry.get("kind", "")) == "autoload" and not is_missing:
+		item.set_tooltip_text(0, globals_tooltip(entry))
 	else:
 		item.set_tooltip_text(0, (EventSheetL10n.translate("not in %s") % _scene_name) if is_missing
 			else entry_tooltip(entry))

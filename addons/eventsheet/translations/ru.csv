@@ -2250,3 +2250,21 @@ Editable in the Inspector (a designer property).,Редактируется в �
 Describe this variable,Описать эту переменную
 Delete this variable,Удалить эту переменную
 Add variable,Добавить переменную
+Add global variable,Добавить глобальную переменную
+Write into,Записать в
+New global sheet…,Новый глобальный лист…
+A global lives on an autoload - one file the whole project can read.,"Глобальная переменная живёт в автозагрузке - одном файле, который читает весь проект."
+Global variables used here,"Глобальные переменные, используемые здесь"
+%s  (from %s),%s  (из %s)
+not declared on %s,не объявлена в %s
+New action…,Новое действие…
+"Add this name to the project's Input Map, then bind it in Project ▸ Input Map.",Добавляет это имя в список действий проекта; привязку задайте в Проект ▸ Список действий.
+"Type the name of the control first, then New action…","Сначала введите имя управления, затем Новое действие…"
+"""%s"" is already in the Input Map.","""%s"" уже есть в списке действий."
+"""%s"" could not be added to the Input Map.","Не удалось добавить ""%s"" в список действий."
+"Added ""%s"" - bind it in Project ▸ Input Map.","""%s"" добавлено - задайте привязку в Проект ▸ Список действий."
+One value the whole project shares - lives on an autoload.,Одно значение на весь проект - живёт в автозагрузке.
+"One value shared by every copy of this object, not one each.","Одно значение на все копии этого объекта, а не по одному у каждой."
+Set boolean,Задать логическое
+Boolean is true / is false,Логическое истинно / ложно
+"%s, with the boolean half already filled in.","%s, с уже заполненной логической частью."

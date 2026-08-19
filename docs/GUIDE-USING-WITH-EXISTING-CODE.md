@@ -372,6 +372,17 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   percent; `@export_file("*.png")` reads `file` with its filter; `@export_dir` reads `folder`;
   `@export_multiline` reads `text  multiline`; a Color reads its swatch and its word; and
   `@export_flags(...)` reads `flags` with the names of the bits.
+- **A global is declared once and listed where it is used.** Any sheet that reads or writes one of
+  the project's globals grows a folded `▸ Global variables used here` folder in its head - `Score ·
+  Lives  (from Game)` - and each entry opens to what it is declared as and where: `whole number
+  Score = 0 · Game`. A name the autoload does not actually declare says `not declared on Game`,
+  because a global that resolves to nothing at runtime otherwise reads exactly like one that works.
+  To make one, **Add ▸ Global Variable…** (or just **V**) works on any sheet at all: name it, pick
+  its type in plain words, give it a value, choose which autoload holds it, and the row you will get
+  is previewed live. The autoload is opened as a sheet and the variable added there in one undo
+  step - the autoload stays the single place a global lives, so there is no second variable system
+  to keep in sync. In the Object bar, an autoload under **GLOBALS & FAMILIES** hovers with what it
+  holds (`Score = 0 · Lives = 3`), read straight off its file even if nobody has opened it.
 - **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, the
   Include bar reads `⇥ Game  autoload (global) · game.gd` with the globe, its knobs read as one
   `Global variables` folder rather than the Instance variables one, and its triggers say

@@ -641,8 +641,48 @@ static func group_choices(scene_root: Node) -> Array:
 ## enumerated from the PROJECT'S Input Map when the dialog builds - NOT the snapshot baked into
 ## the definition at registry-refresh time, so actions added in Project Settings a minute ago
 ## appear without an editor restart. Free text stays allowed (expressions, variables).
+## R23 - and a "New action…" button beside it, because the moment a control is missing is the moment
+## you are typing its name into this very field. It writes the action into project.godot through the
+## Input Map's own facts (deadzone + an empty binding list - binding it is the Input Map's job) and
+## refreshes the picker, so the name the row is about exists before the row does.
 func _create_input_action_field(key: String, default_value: Variant) -> Control:
-	return _create_autocomplete_field(key, input_action_choices(), default_value)
+	var row: Control = _create_autocomplete_field(key, input_action_choices(), default_value)
+	var edit: LineEdit = _fields.get(key) as LineEdit
+	if edit == null:
+		return row
+	var new_action: Button = Button.new()
+	new_action.text = EventSheetL10n.translate("New action…")
+	new_action.tooltip_text = EventSheetL10n.translate(
+		"Add this name to the project's Input Map, then bind it in Project ▸ Input Map.")
+	new_action.pressed.connect(func() -> void: _add_input_action(edit))
+	row.add_child(new_action)
+	return row
+
+
+## Says something back in the dialog's own hint line - the one place this form already reports what
+## it thinks, so a New action… result does not need a surface of its own.
+func _say(message: String) -> void:
+	if _hint != null:
+		_hint.text = message
+
+
+## Creates the action the field currently names. Refuses an empty or already-registered name rather
+## than reporting a success that changed nothing; on success the field is normalised to the quoted
+## literal the codegen templates expect, so the row is correct the instant it is added.
+func _add_input_action(edit: LineEdit) -> void:
+	var wanted: String = edit.text.strip_edges().trim_prefix("\"").trim_suffix("\"").strip_edges()
+	if wanted.is_empty():
+		_say(EventSheetL10n.translate("Type the name of the control first, then New action…"))
+		return
+	if EventSheetInputMapFacts.has_action(wanted):
+		_say(EventSheetL10n.translate("\"%s\" is already in the Input Map.") % wanted)
+		return
+	if not EventSheetInputMapFacts.add_action(wanted):
+		_say(EventSheetL10n.translate("\"%s\" could not be added to the Input Map.") % wanted)
+		return
+	EventSheetInputMapFacts.clear_cache()
+	edit.text = "\"%s\"" % wanted
+	_say(EventSheetL10n.translate("Added \"%s\" - bind it in Project ▸ Input Map.") % wanted)
 
 
 ## The project's input actions as the quoted string literals codegen templates expect

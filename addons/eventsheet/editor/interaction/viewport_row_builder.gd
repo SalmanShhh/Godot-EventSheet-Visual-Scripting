@@ -623,6 +623,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 		))
 	head.append_array(_build_object_folder_rows(sheet))
 	head.append_array(_build_input_actions_bar_rows(sheet))
+	head.append_array(_build_global_variables_bar_rows(sheet))
 	head.append_array(_build_knob_group_rows(sheet, knobs))
 	head.append_array(leftovers)
 	var output: Array[EventRowData] = []
@@ -1090,6 +1091,55 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 			],
 			family_rows))
 	return bars
+
+
+## R40 - the "Global variables used here" folder: which of the project's globals this file reads or
+## writes, and where they are declared. A global is declared once, on an autoload, and used
+## everywhere; until this folder the only way to see which ones a file touched was to read it.
+##
+## PURE VIEW, like every other head bar: null sources, folded by default, nothing added to
+## `sheet.events` and nothing emitted, so an opened file still re-emits byte for byte. A script that
+## touches no global grows no folder, and neither does the autoload that DECLARES them (its own
+## globals are already its head rows - listing them again as "used here" would say nothing).
+func _build_global_variables_bar_rows(sheet: EventSheetResource) -> Array[EventRowData]:
+	var bars: Array[EventRowData] = []
+	if sheet == null or not str(sheet.get("autoload_name")).strip_edges().is_empty():
+		return bars
+	var used: Array[Dictionary] = EventSheetGlobalVariables.used_here(sheet)
+	if used.is_empty():
+		return bars
+	var declared_by_source: Dictionary = {}
+	for entry: Dictionary in EventSheetGlobalVariables.autoload_sheets():
+		declared_by_source[str(entry.get("name", ""))] = EventSheetGlobalVariables.declared_globals(
+			str(entry.get("path", "")))
+	var members: Array[EventRowData] = []
+	for index in range(used.size()):
+		var source: String = str(used[index].get("autoload", ""))
+		var variable_name: String = str(used[index].get("name", ""))
+		var declared: Array = declared_by_source.get(source, [])
+		members.append(_build_object_fact_row(
+			sheet, "global_variable_%d" % index, variable_name,
+			_global_variable_detail(source, variable_name, declared)))
+	bars.append(_build_head_group_row(
+		sheet, "global_variables", EventSheetL10n.translate("Global variables used here"),
+		EventSheetGlobalVariables.used_here_note(used), members))
+	return bars
+
+
+## One global's muted line in the folder: what it is declared as, and on which autoload. A global
+## the autoload does not declare is the typo the reader wants told, the same way an unknown input
+## action is - a name that resolves to nothing at runtime looks identical to one that works.
+func _global_variable_detail(source: String, variable_name: String, declared: Array) -> String:
+	for entry: Variant in declared:
+		if str((entry as Dictionary).get("name", "")) != variable_name:
+			continue
+		var type_name: String = str((entry as Dictionary).get("type", "")).strip_edges()
+		var word: String = friendly_type_word(type_name) if not type_name.is_empty() else ""
+		var value: String = str((entry as Dictionary).get("value", "")).strip_edges()
+		if word.is_empty():
+			return "%s = %s · %s" % [variable_name, value, source]
+		return "%s %s = %s · %s" % [word, variable_name, value, source]
+	return EventSheetL10n.translate("not declared on %s") % source
 
 
 ## R23 - the Input Map bar: which controls this script uses, and what each one is bound to. The

@@ -16,6 +16,46 @@
   byte-exact for every line the edit did not touch. Until now Object properties listed the same
   variables as read-only chips and every change meant hunting the row on the sheet.
 
+### Added - a global variable, added from any sheet, listed where it is used
+
+- **Add ▸ Global Variable… (V), from any sheet at all.** Name, type in the sheet's own words, value,
+  and which autoload to write it into (the first one, unless you pick another) - with the row you
+  will get previewed live, in the same `Global number Score = 0` shape the sheet reads it with. The
+  writer does not poke at another file behind your back: it opens the autoload as a sheet, the way
+  the Include bar's "open as a sheet" opens anything, and adds the variable there through the
+  ordinary undo funnel. So the line that lands is the line the Add variable dialog would have
+  written, you see where your global went, and Ctrl+Z takes it back. The autoload stays the truth -
+  no second variable system, nothing magic for the compiler to invent.
+- **A folded `▸ Global variables used here` folder on any sheet that touches one.** `Score · Lives
+  (from Game)`, each one opening to what it is declared as and where: `whole number Score = 0 ·
+  Game`. A global the autoload does not actually declare says so, the same way an input action the
+  project does not have says so - a name that resolves to nothing at runtime otherwise looks exactly
+  like one that works. Pure view: nothing is added to the file and nothing is emitted.
+- **The Object bar's GLOBALS section hovers with the values.** An autoload used to hover with the
+  verbs this file uses it with; now it hovers with what it holds - `Score = 0 · Lives = 3 ·
+  PlayerName = ""` - read straight off its file, so it answers for an autoload nobody has opened.
+- **The Add variable dialog offers Global and Static too.** Five scope chips now, the sheet's own
+  order: Instance · Local · Global · Constant · Static. **Global** is a route rather than a scope -
+  pressing it hands the whole gesture to the Add global variable dialog, because a global belongs on
+  an autoload and a member that merely reads "Global" would have none of the reach. **Static** writes
+  a `static var`: one value on the class, shared by every copy of the object, which the sheet already
+  read as `Static number spawned = 0  shared by every Player` but could not previously create.
+- **`V` adds a global; `Ctrl+Shift+V` adds an instance variable.** Both stay rebindable in Tools ▸
+  Keyboard Shortcuts, and the Add menu names them the two different things they make.
+- **`New action…` beside the picker's control-name field.** The moment a control is missing is the
+  moment you are typing its name into that field, so the button is there: it writes the action into
+  the project's Input Map and normalises the field, and says to bind it in Project ▸ Input Map. It
+  refuses an empty name and one the project already has rather than reporting a success that changed
+  nothing.
+
+- **`Set boolean` and `Boolean is true / is false` in the picker.** Two of the sheet's seven
+  variable verbs are not separate things at all - setting a boolean IS Set value and asking about
+  one IS Compare variable - so they arrive as **alias rows**: the same frozen `ace_id`, the same
+  emitted line, the name you would actually say, and a form that opens with the boolean half already
+  answered (`= true`, `== true`). No new descriptor, deliberately: a second template matching the
+  same line would let it steal every `muted = true` in the file from Set value. Typing "set boolean"
+  or "boolean is true" into the quick-add bar finds them too.
+
 ### Fixed
 
 - **A colour swatch no longer paints over the word after it.** The swatch draws just past its span's

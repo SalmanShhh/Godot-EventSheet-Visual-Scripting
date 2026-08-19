@@ -395,7 +395,7 @@ static func run() -> bool:
 	var view_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetViewMenu", true, false) as MenuButton
 	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
 		sheet_menu != null and sheet_menu.get_popup().item_count == 20  # +Save as Text…, +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…
-		and add_menu != null and add_menu.get_popup().item_count == 10 + 1 + EventSheetBlockRegistry.addable_kinds().size()  # +separator +the three event-shape commands +separator +Code action, then +separator + one item per registered Custom Block kind
+		and add_menu != null and add_menu.get_popup().item_count == 11 + 1 + EventSheetBlockRegistry.addable_kinds().size()  # +separator +the three event-shape commands +separator +Code action, then +separator + one item per registered Custom Block kind; +1: Global Variable… beside Instance Variable…
 		and edit_menu != null and edit_menu.get_popup().item_count == 10
 		and view_menu != null and view_menu.get_popup().item_count == 36, true) and all_passed  # +1: Reset Zoom, +1: Properties Bar, +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words, +6: the collapse sweeps (separator + Collapse All + Expand All + Expand To Level 1/2/3)
 
@@ -621,7 +621,7 @@ static func run() -> bool:
 	leftover_dialog._refresh_contextual_rows()
 	leftover_dialog._default_edit.text = "\"hi\""
 	var captured_attrs: Array = [null]
-	leftover_dialog.variable_confirmed.connect(func(_n, _t, _d, _s, _c, _ic, _ex, _co, attrs, _r) -> void: captured_attrs[0] = attrs)
+	leftover_dialog.variable_confirmed.connect(func(_n, _t, _d, _s, _c, _ic, _ex, _co, attrs, _r, _st) -> void: captured_attrs[0] = attrs)
 	leftover_dialog._on_confirmed()
 	all_passed = _check("leftover numeric attributes are inert after switching type",
 		captured_attrs[0] is Dictionary and not (captured_attrs[0] as Dictionary).has("range")

@@ -2250,3 +2250,21 @@ Editable in the Inspector (a designer property).,可在检查器中编辑（设�
 Describe this variable,描述此变量
 Delete this variable,删除此变量
 Add variable,添加变量
+Add global variable,添加全局变量
+Write into,写入到
+New global sheet…,新建全局表…
+A global lives on an autoload - one file the whole project can read.,全局变量存放在自动加载中 - 整个项目都能读取的一个文件。
+Global variables used here,此处用到的全局变量
+%s  (from %s),%s  (来自 %s)
+not declared on %s,未在 %s 中声明
+New action…,新建动作…
+"Add this name to the project's Input Map, then bind it in Project ▸ Input Map.",把这个名称加入项目的输入映射，然后在 项目 ▸ 输入映射 中绑定。
+"Type the name of the control first, then New action…",先输入操作名称，再点 新建动作…
+"""%s"" is already in the Input Map.","""%s"" 已经在输入映射中。"
+"""%s"" could not be added to the Input Map.","无法把 ""%s"" 加入输入映射。"
+"Added ""%s"" - bind it in Project ▸ Input Map.","已添加 ""%s"" - 请在 项目 ▸ 输入映射 中绑定。"
+One value the whole project shares - lives on an autoload.,整个项目共享的一个值 - 存放在自动加载中。
+"One value shared by every copy of this object, not one each.",此对象的所有副本共享的一个值，而不是各有一个。
+Set boolean,设置布尔值
+Boolean is true / is false,布尔值为真 / 为假
+"%s, with the boolean half already filled in.",%s，布尔值那一半已经填好。

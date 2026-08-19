@@ -276,7 +276,7 @@ func unhandled_key_input(event: InputEvent) -> void:
 		["toggle_enabled", true, _dock._toggle_selected_enabled],
 		["add_blank_subevent", true, _dock._on_add_blank_subevent_key],
 		["add_sub_condition", true, _dock._on_add_sub_condition_key],
-		["add_variable", true, _dock._on_add_global_variable_requested],
+		["add_variable", true, _dock._on_add_project_global_requested],
 		["invert_condition", true, _dock._on_invert_condition_key],
 		["replace_ace", true, _dock._on_replace_ace_key],
 		["project_search", false, _dock._open_project_find],

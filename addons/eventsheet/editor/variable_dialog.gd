@@ -8,7 +8,11 @@ extends RefCounted
 ## Emitted when the user confirms variable creation or editing.
 ## scope is "global" or "local". exported = accessible outside the generated script
 ## (@export var) vs. private (var).
-signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool, options: PackedStringArray, attributes: Dictionary, onready: bool)
+signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool, options: PackedStringArray, attributes: Dictionary, onready: bool, is_static: bool)
+
+## R42 - the Global chip was pressed. A global lives on an autoload, not in this file, so the
+## dialog hands the gesture over rather than writing a member that only looks global.
+signal global_scope_requested()
 
 var _dialog: ConfirmationDialog = null
 var _scope_label: Label = null
@@ -17,16 +21,23 @@ var _scope_chip_row: HBoxContainer = null
 var _scope_chips: Dictionary = {}
 ## R42 - the live preview of the EXACT row this dialog will write, in the R37 shape.
 var _row_preview_label: Label = null
+## R42 - `static var`: one value on the CLASS, shared by every copy of the object. Orthogonal to
+## WHERE the variable is stored, exactly like Constant, so it is a flag rather than a scope - and
+## exclusive with Constant, because a `static const` is not a thing GDScript has.
+var _is_static: bool = false
 
-## The scopes the dialog can write. Static is read on an opened script but not offered here yet,
-## because a shared-by-every-copy variable is a decision with consequences a dialog cannot show.
-const CHOOSABLE_SCOPES: PackedStringArray = ["instance", "local", "constant"]
+## The scopes the dialog offers, in the sheet's own order. Global is a ROUTE rather than a scope the
+## dialog writes: a global lives on an autoload, so pressing it hands the whole gesture to the Add
+## global variable dialog instead of quietly writing a member that only looks global.
+const CHOOSABLE_SCOPES: PackedStringArray = ["instance", "local", "global", "constant", "static"]
 
 ## What each scope word means, in one line, for the chip's hover.
 const SCOPE_HINTS: Dictionary = {
 	"instance": "One per object - every copy of this object keeps its own.",
 	"local": "Lives inside one event and is gone when it ends.",
-	"constant": "Set once and never changes while the game runs."
+	"global": "One value the whole project shares - lives on an autoload.",
+	"constant": "Set once and never changes while the game runs.",
+	"static": "One value shared by every copy of this object, not one each."
 }
 var _name_edit: LineEdit = null
 var _name_warning: Label = null
@@ -851,11 +862,13 @@ func open_for_edit(
 	title: String = "Edit Variable",
 	is_constant: bool = false,
 	exported: bool = true,
-	onready: bool = false
+	onready: bool = false,
+	is_static: bool = false
 ) -> void:
 	if _dialog == null:
 		push_error("VariableDialog.open() called before init_dialog().")
 		return
+	_is_static = is_static and not is_constant
 	_scope = scope
 	if scope != "local":
 		_member_scope = scope
@@ -1027,7 +1040,7 @@ func _on_confirmed() -> void:
 		# type_name is _selected_stored_type() = the @onready free-text type: a node class the user typed
 		# (Sprite2D, Label…) or Variant (safe for any node ref). const/@export are false - the compiler
 		# emits only @onready var.
-		variable_confirmed.emit(var_name, type_name, onready_expr, _scope, _context.duplicate(true), false, false, PackedStringArray(), {}, true)
+		variable_confirmed.emit(var_name, type_name, onready_expr, _scope, _context.duplicate(true), false, false, PackedStringArray(), {}, true, false)
 		return
 	# Guardrail (event-sheet-style): an invalid collection literal never commits - the dialog
 	# reopens with the text intact so the user fixes or cancels deliberately.
@@ -1144,7 +1157,7 @@ func _on_confirmed() -> void:
 		attributes["setter_param"] = setter_param if not setter_param.is_empty() else "value"
 	if not getter_body.is_empty():
 		attributes["getter_body"] = getter_body
-	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes, false)
+	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes, false, _is_static and not is_constant)
 
 
 ## Returns the trimmed text from the name field.
@@ -1499,6 +1512,8 @@ func current_scope_word() -> String:
 		return EventSheetVariableSentence.SCOPE_CONSTANT
 	if _scope == "local":
 		return EventSheetVariableSentence.SCOPE_LOCAL
+	if _is_static:
+		return EventSheetVariableSentence.SCOPE_STATIC
 	return EventSheetVariableSentence.SCOPE_INSTANCE
 
 
@@ -1506,14 +1521,30 @@ func current_scope_word() -> String:
 ## the const flag; Instance and Local move the storage, and clear it.
 func _on_scope_chip_pressed(scope_key: String) -> void:
 	match scope_key:
+		EventSheetVariableSentence.SCOPE_GLOBAL:
+			# Not a scope this dialog can write: a global belongs to an autoload, and inventing a
+			# member here that reads "Global" would be a second variable system with none of the
+			# reach. Hand the whole gesture over instead, with nothing written on the way out.
+			refresh_scope_chips()
+			if _dialog != null:
+				_dialog.hide()
+			global_scope_requested.emit()
+			return
+		EventSheetVariableSentence.SCOPE_STATIC:
+			_is_static = true
+			if _const_check != null:
+				_const_check.button_pressed = false
 		EventSheetVariableSentence.SCOPE_CONSTANT:
+			_is_static = false
 			if _const_check != null:
 				_const_check.button_pressed = true
 		EventSheetVariableSentence.SCOPE_LOCAL:
 			_scope = "local"
+			_is_static = false
 			if _const_check != null:
 				_const_check.button_pressed = false
 		_:
+			_is_static = false
 			# Back to a member of the object. The dialog remembers which member spelling it opened
 			# with (a sheet variable or a row-placed one) so switching away and back is a no-op.
 			_scope = _member_scope if _member_scope != "local" else "global"
