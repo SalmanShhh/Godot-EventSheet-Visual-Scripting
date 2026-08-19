@@ -2063,3 +2063,38 @@ Opens the next page in this part of the Manual.,マニュアルのこの部分�
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.",何かを選んで F1 を押すとその項目のヘルプが開きます。マニュアルの目次からページを選ぶこともできます。
 Add these events,これらのイベントを追加
 "Puts these events into the open sheet at the caret, as one undo step.",これらのイベントを開いているシートのカーソル位置に、1 回の取り消しで追加します。
+On %s,%s したとき
+Instance variables,インスタンス変数
+Behaviors,ビヘイビア
+Families,ファミリー
+(groups),(グループ)
+Add condition,条件を追加
+Add action,アクションを追加
+Open %s as sheet,%s をシートとして開く
+Open its script as a sheet,そのスクリプトをシートとして開く
+1 listener,リスナー 1 件
+%d listeners,リスナー %d 件
+emitted in %s,%s で発行
+(+%d more),(他 %d 件)
+on this object,このオブジェクト上
+this object belongs to,このオブジェクトの所属
+addon pack,アドオンパック
+global,グローバル
+All objects,すべてのオブジェクト
+USED IN THIS SHEET,このシートで使用中
+ALSO IN THE SCENE,シーン内のその他
+GLOBALS & FAMILIES,グローバルとファミリー
+filter objects...,オブジェクトを絞り込む...
+drag one onto the sheet to use it,シートにドラッグすると使えます
+not in %s,%s にありません
+1 condition,条件 1 件
+%d conditions,条件 %d 件
+1 action,アクション 1 件
+%d actions,アクション %d 件
+1 trigger,トリガー 1 件
+%d triggers,トリガー %d 件
+%d used,使用中 %d 件
+%d more,他 %d 件
+"Sort by reading order, by count or by name.",読み順・件数・名前で並べ替えます。
+Nothing in this sheet names an object yet.,このシートはまだどのオブジェクトも指していません。
+This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,このスクリプトはまだシーンに置かれていません。シーンドックのノードにドロップすると、そのオブジェクトがここに表示されます。

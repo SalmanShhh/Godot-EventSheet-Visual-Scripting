@@ -60,7 +60,11 @@ static func emitters_of(signal_name: String) -> Array:
 ## The muted note an EMIT wears: `-> HUD, Level (2 listeners)`, "" when nothing listens. At most three
 ## names are spelled out - past that the count is the information and the list is noise.
 static func listeners_note(signal_name: String) -> String:
-	var found: Array = listeners_of(signal_name)
+	return listeners_note_for(listeners_of(signal_name))
+
+
+## The same note over an already-gathered list. Pure, so the wording is pinned without a project scan.
+static func listeners_note_for(found: Array) -> String:
 	if found.is_empty():
 		return ""
 	var names: PackedStringArray = PackedStringArray()
@@ -81,7 +85,11 @@ static func listeners_note(signal_name: String) -> String:
 ## The muted note a HANDLER wears: `<- emitted in player.gd: Take Damage`, "" when nothing in the
 ## project raises the signal (an engine signal, most often, which needs no note).
 static func raised_note(signal_name: String) -> String:
-	var found: Array = emitters_of(signal_name)
+	return raised_note_for(emitters_of(signal_name))
+
+
+## The same note over an already-gathered list. Pure, so the wording is pinned without a project scan.
+static func raised_note_for(found: Array) -> String:
 	if found.is_empty():
 		return ""
 	var first: Dictionary = found[0]
@@ -159,11 +167,11 @@ static func _index_script(path: String) -> void:
 		if stripped.begins_with("func "):
 			var bare: String = stripped.substr(5).get_slice("(", 0).strip_edges()
 			current_function = EventSheetViewportLenses.humanize_identifier(bare, true)
-		for connected: String in _connected_signals(stripped):
+		for connected: String in connected_signals_in(stripped):
 			_record(_listeners, connected, {
 				"label": label, "path": path, "line": line_number, "kind": "script"
 			})
-		for raised: String in _emitted_signals(stripped):
+		for raised: String in emitted_signals_in(stripped):
 			_record(_emitters, raised, {
 				"label": label, "path": path, "line": line_number, "function": current_function
 			})
@@ -193,7 +201,7 @@ static func _index_scene(path: String) -> void:
 
 
 ## The signals one line CONNECTS to, in both spellings GDScript allows.
-static func _connected_signals(stripped: String) -> PackedStringArray:
+static func connected_signals_in(stripped: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	# `connect("died", ...)` and `player.connect("died", ...)` are the same marker, so one sweep
 	# catches both spellings of the quoted form.
@@ -220,7 +228,7 @@ static func _connected_signals(stripped: String) -> PackedStringArray:
 
 
 ## The signals one line RAISES, in both spellings.
-static func _emitted_signals(stripped: String) -> PackedStringArray:
+static func emitted_signals_in(stripped: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	var legacy: int = stripped.find("emit_signal(\"")
 	if legacy >= 0:

@@ -445,6 +445,52 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   (`Opening event_sheet_dock.gd - lifting functions 212 of 458 - 6.1 s`, a bar, and **Show as code
   instead**); the lift runs behind it, and the strip goes away when the last function lands.
 
+### The objects of an opened file - what they are, and where you find them
+
+A sheet says what a file DOES with its objects. These say what those objects ARE, and give you the bar
+you reach for them from. All of it is derived from two places you already have - the object's own
+script, and the scene it is placed in, both read as text - so there is no list to maintain and nothing
+is instantiated to answer a question.
+
+- **The head carries the object's Behaviors and Families.** Two folded folders before the settings:
+  `▸ Behaviors  on this object - Health · FPS Controller` (the pack nodes mounted on the object in its
+  scene, each opening to what the scene set on it, `Health  max health = 50`) and
+  `▸ Families  this object belongs to - player, damageable (groups)`. A Godot group is the sheet's
+  family; the Godot word stays in the muted note and nowhere else.
+- **Object properties say what the object IS.** Click an object label (or double-click its entry in the
+  Object bar) and the popup adds, above what this sheet does with it: **Instance variables**,
+  **Functions** (a function that answers yes-or-no is marked `condition`), **Triggers** (its signals,
+  read `On Died`, `On Hit  body`), **Behaviors** and **Families**. Two buttons start using it -
+  **Add condition** and **Add action**, both opening the picker already scoped to that object - and
+  **Open enemy.gd as sheet** jumps to the file that says what it is.
+- **The Object bar is a list you glance at, filter, and drag from.** Three sections: **USED IN THIS
+  SHEET** open, with a per-object count and behaviors nested under the object they ride on; **ALSO IN
+  THE SCENE** collapsed (the rest of the scene, one line away, no counts because there are none); and
+  **GLOBALS & FAMILIES** collapsed. A filter box narrows as you type and Enter on a single match pins
+  it; the header's `⇅` switches between reading order, count and name and remembers which. An object
+  this sheet uses that the scene does not have is flagged `⚠ not in Player.tscn` rather than listed
+  like any other node, and hovering a count splits it into `2 conditions · 3 actions · 1 trigger`.
+  Hover an entry to preview its rows, click to pin that highlight, double-click for Object properties,
+  right-click for **Add condition · Add action · Select in scene · Open its script as a sheet**, and
+  drag one onto the sheet to start an event on it - dropping it in an existing event's action lane
+  adds an action to that event instead. A script that is not on a scene yet says so, and says what to
+  do about it.
+- **Objects wear their own picture.** When an object's scene has a Sprite2D / AnimatedSprite2D /
+  TextureRect on or under its root, that texture becomes the object's mark - on the Include bar, in the
+  Object bar, in the popup and on every object label - falling back to the class icon. The thumbnail
+  comes from the editor's own preview cache, so nothing new is rendered.
+- **Tabs and titles name the object, not the file.** A tab reads `Player` with that picture, a pack
+  reads by its pack name (`FPS Controller`), an autoload reads as a global. The file name sits on the
+  tooltip, where a storage detail belongs; two open objects with one name get the file added.
+- **Signals say who listens.** An emit wears a muted `→ HUD, Level (2 listeners)`; the handler on the
+  other end wears `← emitted in player.gd: Take Damage`. Both are click-to-jump. They come from one
+  project-wide index of `.connect` lines, `emit` sites and `.tscn` `[connection]` rows, built once per
+  session, so a note never costs a scan.
+
+<img src="images/objects-rail.png" alt="The Object bar: a header naming the scene and the used/more counts, a filter box, an open USED IN THIS SHEET section listing Player, Sprite2D and Health with per-object row counts, and collapsed ALSO IN THE SCENE and GLOBALS AND FAMILIES sections." width="420">
+
+<img src="images/object-popup.png" alt="Object properties for Player: type CharacterBody2D, its instance variables, its functions with their inputs, its triggers, the Health behavior with the value the scene set on it, and its families, above Add condition, Add action and the three navigation buttons." width="560">
+
 ### What stays code still reads as what it is
 
 Two kinds of block are no longer shown as code at all, because neither one is logic:

@@ -4114,9 +4114,18 @@ func highlight_object_rows(object_label: String) -> void:
 	if _viewport.lens_active() and _viewport.lens_query() == wanted:
 		_apply_lens("")
 		if _objects_panel != null:
-			_objects_panel.list.deselect_all()
+			_objects_panel.tree.deselect_all()
 		return
 	_apply_lens(wanted)
+
+
+## Q12 - HOVER previews before a click pins: the object's rows glow while the pointer rests on its
+## bar entry and forget the moment it leaves, so a reader can sweep the bar without committing to
+## anything. A preview never touches the filter lens, which is what makes it a preview.
+func preview_object_rows(object_label: String) -> void:
+	if _viewport == null:
+		return
+	_viewport.set_object_preview(object_label.strip_edges())
 
 
 ## Q1/Q12 - Add condition / Add action for ONE object: the picker opens with the object step already
@@ -4137,6 +4146,17 @@ func add_row_for_object(object_label: String, as_action: bool) -> void:
 		return
 	_ace_picker.open("append_condition" if selected_resource is EventRow else "new_condition_event",
 		false, selected_resource, context)
+
+
+## Q12 - an object dragged off the Object bar and dropped on the canvas: the sheet's way of "start
+## using an object". The drop selects where it lands, then opens the picker already scoped to that
+## object - Add action when it landed in an event's action lane, Add condition anywhere else.
+func apply_object_bar_drop(object_label: String, target_event: Resource, on_action_lane: bool) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	if target_event != null and _active_view() != null:
+		_active_view().select_resource(target_event)
+	add_row_for_object(object_label, on_action_lane)
 
 
 ## Q1 - open the file that says what an object IS, as a sheet. Goes through the same navigation the

@@ -2063,3 +2063,38 @@ Opens the next page in this part of the Manual.,打开手册本部分的下一�
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.",选中内容后按 F1 查看它的帮助，或从手册目录中选择页面。
 Add these events,添加这些事件
 "Puts these events into the open sheet at the caret, as one undo step.",在打开的表中光标处插入这些事件，作为一次撤销步骤。
+On %s,当 %s 时
+Instance variables,实例变量
+Behaviors,行为
+Families,家族
+(groups),(组)
+Add condition,添加条件
+Add action,添加动作
+Open %s as sheet,以事件表打开 %s
+Open its script as a sheet,以事件表打开其脚本
+1 listener,1 个监听者
+%d listeners,%d 个监听者
+emitted in %s,在 %s 中发出
+(+%d more),(另有 %d 处)
+on this object,在此对象上
+this object belongs to,此对象属于
+addon pack,插件包
+global,全局
+All objects,所有对象
+USED IN THIS SHEET,本事件表中使用
+ALSO IN THE SCENE,场景中的其他对象
+GLOBALS & FAMILIES,全局与家族
+filter objects...,筛选对象...
+drag one onto the sheet to use it,拖到事件表上即可使用
+not in %s,不在 %s 中
+1 condition,1 个条件
+%d conditions,%d 个条件
+1 action,1 个动作
+%d actions,%d 个动作
+1 trigger,1 个触发器
+%d triggers,%d 个触发器
+%d used,已用 %d 个
+%d more,另有 %d 个
+"Sort by reading order, by count or by name.",按阅读顺序、数量或名称排序。
+Nothing in this sheet names an object yet.,这张事件表还没有提到任何对象。
+This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,该脚本还没有放到任何场景上 - 在场景面板中把它拖到某个节点上，它的对象就会出现在这里。

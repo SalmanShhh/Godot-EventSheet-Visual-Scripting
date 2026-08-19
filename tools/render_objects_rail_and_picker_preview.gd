@@ -12,16 +12,21 @@
 @tool
 extends SceneTree
 
-const FIXTURE_PATH := "res://tests/fixtures/objects_reading_fixture.gd"
+## The Object bar and the Object properties popup are about an object IN A SCENE - its behaviors, its
+## families, the section of things the scene has that the sheet has not used yet - so both are shot
+## from the fixture that HAS one. The objects fixture is about the objects a file names, and is on no
+## scene, which would leave three of the bar's four answers blank.
+const FIXTURE_PATH := "res://tests/fixtures/object_facts_player.gd"
 ## The picker page needs a file that DECLARES verbs; the objects fixture is about the objects a file
 ## uses, and declares none. Two fixtures, because the two images are about two different things.
 const FUNCTIONS_FIXTURE_PATH := "res://tests/fixtures/picker_functions_fixture.gd"
 const BASE_COLOR := Color("#252525")
-const SCENE_NAME := "Player.tscn"
-## Which object's popup is shot - the behaviour, because it is the entry that exercises every row
-## the popup can answer with (a pack type, a node path, verbs, and both live buttons).
-const POPUP_OBJECT := "Health"
-const RAIL_WIDTH := 250.0
+const SCENE_NAME := "object_facts_player.tscn"
+## Which object's popup is shot - the sheet's OWN object, because it is the only entry that exercises
+## every row the popup can answer with: instance variables, functions, triggers, behaviors, families,
+## a scene to be selected in, and both authoring buttons.
+const POPUP_OBJECT := "ObjectFactsPlayer"
+const RAIL_WIDTH := 280.0
 
 var _shots: Array[Image] = []
 var _frames: int = 0
@@ -82,9 +87,12 @@ func _build_rail_stage() -> void:
 	root.add_child(_rail)
 	_rail.set_expanded(true)
 	_rail.set_sheet(_sheet)
-	print("[preview] Objects rail")
-	for entry: Dictionary in _rail.entries():
-		print("  rail: %s" % EventSheetObjectsPanel.entry_text(entry))
+	print("[preview] Object bar")
+	for section: Variant in EventSheetObjectsPanel.sections_for(
+			_rail.entries(), _rail.scene_entries(), SCENE_NAME):
+		print("  bar section: %s" % str((section as Dictionary).get("title", "")))
+		for entry: Variant in (section as Dictionary).get("entries", []):
+			print("    bar: %s" % EventSheetObjectsPanel.entry_text(entry as Dictionary))
 
 
 ## Stage 1b - the rows, with the whole window to lay out in.
@@ -119,7 +127,8 @@ func _build_popup_stage() -> void:
 	var entry: Dictionary = EventSheetObjectProperties.find_entry(_sheet, POPUP_OBJECT)
 	var panel: Control = EventSheetObjectProperties.build_panel(
 		entry, SCENE_NAME, EventSheetViewportReadingRows.object_class_map(_sheet),
-		func() -> void: pass, func() -> void: pass, func() -> void: pass
+		func() -> void: pass, func() -> void: pass, func() -> void: pass,
+		FIXTURE_PATH, func() -> void: pass, func() -> void: pass, func() -> void: pass
 	)
 	var card: PanelContainer = PanelContainer.new()
 	card.position = Vector2(60.0, 40.0)
@@ -127,7 +136,7 @@ func _build_popup_stage() -> void:
 	root.add_child(card)
 	_overlay = card
 	print("[preview] object popup for %s" % POPUP_OBJECT)
-	for row: Dictionary in EventSheetObjectProperties.property_rows(entry, SCENE_NAME):
+	for row: Dictionary in EventSheetObjectProperties.property_rows(entry, SCENE_NAME, FIXTURE_PATH):
 		print("  popup: %s = %s" % [str(row.get("label", "")), str(row.get("value", ""))])
 	print("  popup: Select in scene enabled = %s" % str(
 		EventSheetObjectProperties.can_select_in_scene(entry, SCENE_NAME)))

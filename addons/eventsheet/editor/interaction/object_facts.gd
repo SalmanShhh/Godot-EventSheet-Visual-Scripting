@@ -68,13 +68,16 @@ static func _read_script_facts(path: String) -> Dictionary:
 	if text.is_empty():
 		return facts
 	var seen_family: Dictionary = {}
+	# A PackedStringArray read back out of a Dictionary is a COPY, so families are collected in a
+	# local and put back at the end - appending to `facts["families"]` in place appends to nothing.
+	var families: PackedStringArray = PackedStringArray()
 	for line: String in text.split("\n"):
 		# `add_to_group("enemies")` can sit at any indent, so families are read from every line; the
 		# declarations below are top-level only, which is what "the object has" means.
 		var family: String = _group_argument(line)
 		if not family.is_empty() and not seen_family.has(family):
 			seen_family[family] = true
-			(facts["families"] as PackedStringArray).append(family)
+			families.append(family)
 		if line.begins_with("\t") or line.begins_with(" "):
 			continue
 		var stripped: String = line.strip_edges()
@@ -105,6 +108,7 @@ static func _read_script_facts(path: String) -> Dictionary:
 				"name": variable_name,
 				"display": EventSheetViewportLenses.humanize_identifier(variable_name)
 			})
+	facts["families"] = families
 	return facts
 
 
@@ -367,7 +371,9 @@ static func facts_for_entry(entry: Dictionary, sheet_source_path: String) -> Dic
 	var script_path: String = script_path_for_entry(entry, sheet_source_path)
 	var script: Dictionary = script_facts(script_path)
 	var behaviors: Array = []
-	var families: PackedStringArray = PackedStringArray(script.get("families", PackedStringArray()))
+	# Scene first, then the ones the code joins - the same order the head's Families folder uses, so
+	# the folder and the popup can never list one object's families two different ways.
+	var families: PackedStringArray = PackedStringArray()
 	var kind: String = str(entry.get("kind", ""))
 	var scene_path: String = ""
 	if kind == "scene":
@@ -388,6 +394,9 @@ static func facts_for_entry(entry: Dictionary, sheet_source_path: String) -> Dic
 			for group_name: String in PackedStringArray(child.get("groups", PackedStringArray())):
 				if not Array(families).has(group_name):
 					families.append(group_name)
+	for coded: String in PackedStringArray(script.get("families", PackedStringArray())):
+		if not Array(families).has(coded):
+			families.append(coded)
 	return {
 		"variables": script.get("variables", []),
 		"functions": script.get("functions", []),
@@ -472,16 +481,21 @@ static func _attribute(line: String, key: String) -> String:
 	return line.substr(start, end - start) if end > start else ""
 
 
-## `key=PackedStringArray("a", "b")` out of a .tscn header line - how the editor writes persistent
-## groups. Empty when the key is absent or holds nothing.
+## `key=["a", "b"]` out of a .tscn header line - how the editor writes persistent groups. The older
+## `key=PackedStringArray("a", "b")` spelling reads the same, so a scene saved by an earlier Godot
+## still answers. Empty when the key is absent or holds nothing.
 static func _string_array_value(line: String, key: String) -> PackedStringArray:
 	var marker: String = "%s=" % key
 	var start: int = line.find(marker)
 	if start < 0:
 		return PackedStringArray()
-	var open: int = line.find("(", start)
-	var close: int = line.find(")", open)
-	if open < 0 or close < open:
+	var bracket: int = line.find("[", start)
+	var parenthesis: int = line.find("(", start)
+	var open: int = bracket if (bracket >= 0 and (parenthesis < 0 or bracket < parenthesis)) else parenthesis
+	if open < 0:
+		return PackedStringArray()
+	var close: int = line.find("]" if open == bracket else ")", open)
+	if close < open:
 		return PackedStringArray()
 	var values: PackedStringArray = PackedStringArray()
 	for piece: String in line.substr(open + 1, close - open - 1).split(","):

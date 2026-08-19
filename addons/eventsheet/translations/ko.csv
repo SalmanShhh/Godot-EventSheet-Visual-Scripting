@@ -2063,3 +2063,38 @@ Opens the next page in this part of the Manual.,설명서의 이 부분에서 �
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.",무언가를 선택한 뒤 F1을 누르면 그에 대한 도움말이 열립니다. 설명서 목차에서 페이지를 골라도 됩니다.
 Add these events,이 이벤트 추가
 "Puts these events into the open sheet at the caret, as one undo step.",이 이벤트들을 열린 시트의 캐럿 위치에 한 번의 실행 취소 단위로 넣습니다.
+On %s,%s 시
+Instance variables,인스턴스 변수
+Behaviors,비헤이비어
+Families,패밀리
+(groups),(그룹)
+Add condition,조건 추가
+Add action,액션 추가
+Open %s as sheet,%s을(를) 시트로 열기
+Open its script as a sheet,해당 스크립트를 시트로 열기
+1 listener,리스너 1개
+%d listeners,리스너 %d개
+emitted in %s,%s에서 발생
+(+%d more),(외 %d개)
+on this object,이 오브젝트에
+this object belongs to,이 오브젝트가 속한 곳
+addon pack,애드온 팩
+global,전역
+All objects,모든 오브젝트
+USED IN THIS SHEET,이 시트에서 사용 중
+ALSO IN THE SCENE,씬에 있는 그 밖의 것
+GLOBALS & FAMILIES,전역 및 패밀리
+filter objects...,오브젝트 필터...
+drag one onto the sheet to use it,시트로 끌어다 놓으면 사용됩니다
+not in %s,%s에 없음
+1 condition,조건 1개
+%d conditions,조건 %d개
+1 action,액션 1개
+%d actions,액션 %d개
+1 trigger,트리거 1개
+%d triggers,트리거 %d개
+%d used,사용 중 %d개
+%d more,그 외 %d개
+"Sort by reading order, by count or by name.","읽는 순서, 개수, 이름순으로 정렬합니다."
+Nothing in this sheet names an object yet.,이 시트는 아직 어떤 오브젝트도 가리키지 않습니다.
+This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,이 스크립트는 아직 씬에 올려져 있지 않습니다. 씬 독의 노드에 끌어다 놓으면 그 오브젝트가 여기에 나타납니다.

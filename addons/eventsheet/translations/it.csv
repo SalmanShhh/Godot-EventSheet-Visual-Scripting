@@ -2063,3 +2063,38 @@ Opens the next page in this part of the Manual.,Apre la pagina successiva di que
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Premi F1 con qualcosa selezionato per l'aiuto su di esso, oppure scegli una pagina dall'indice del manuale."
 Add these events,Aggiungi questi eventi
 "Puts these events into the open sheet at the caret, as one undo step.","Inserisce questi eventi nel foglio aperto al cursore, come un solo passo di annullamento."
+On %s,Su %s
+Instance variables,Variabili di istanza
+Behaviors,Comportamenti
+Families,Famiglie
+(groups),(gruppi)
+Add condition,Aggiungi condizione
+Add action,Aggiungi azione
+Open %s as sheet,Apri %s come foglio
+Open its script as a sheet,Apri il suo script come foglio
+1 listener,1 ascoltatore
+%d listeners,%d ascoltatori
+emitted in %s,emesso in %s
+(+%d more),(+%d altri)
+on this object,su questo oggetto
+this object belongs to,questo oggetto appartiene a
+addon pack,pacchetto addon
+global,globale
+All objects,Tutti gli oggetti
+USED IN THIS SHEET,USATI IN QUESTO FOGLIO
+ALSO IN THE SCENE,ANCHE NELLA SCENA
+GLOBALS & FAMILIES,GLOBALI E FAMIGLIE
+filter objects...,filtra oggetti...
+drag one onto the sheet to use it,trascinane uno sul foglio per usarlo
+not in %s,non è in %s
+1 condition,1 condizione
+%d conditions,%d condizioni
+1 action,1 azione
+%d actions,%d azioni
+1 trigger,1 trigger
+%d triggers,%d trigger
+%d used,%d in uso
+%d more,%d altri
+"Sort by reading order, by count or by name.","Ordina per ordine di lettura, per numero o per nome."
+Nothing in this sheet names an object yet.,Niente in questo foglio nomina ancora un oggetto.
+This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,Questo script non è ancora su una scena - trascinalo su un nodo nel pannello Scena e i suoi oggetti compariranno qui.
