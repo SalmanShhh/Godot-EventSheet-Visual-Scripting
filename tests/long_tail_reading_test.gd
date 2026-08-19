@@ -155,7 +155,9 @@ static var EXPRESSION_READINGS: Dictionary = {
 	"-global_transform.basis.z": "Player's forward",
 	"global_transform.basis.x": "Player's right",
 	"cam.global_transform.basis.y": "cam's up",
-	"Callable(self, \"heal\")": "the function Heal",
+	# W13 re-pinned this from "the function Heal" to the ƒ chip: the condition lane already names
+	# every function with that mark, and a function held as a VALUE is the same thing.
+	"Callable(self, \"heal\")": "ƒ Heal",
 	# M31's single index is untouched: one index already had a sentence, and a run is a different one.
 	"inventory[\"potion\"]": "inventory's \"potion\""
 }

@@ -431,7 +431,8 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				return
 			# A collection-declaration entry VALUE edits in place, exactly like a param chip - checked
 			# before the generic action branch, which would otherwise try to resolve it as an ACE param.
-			if str(double_click_meta.get("edit_kind", "")).begins_with("decl_entry_line:"):
+			if str(double_click_meta.get("edit_kind", "")).begins_with("decl_entry_line:") \
+					or str(double_click_meta.get("edit_kind", "")).begins_with("literal_entry_line:"):
 				_viewport._begin_edit(row_index, span_index)
 				_viewport.accept_event()
 				return

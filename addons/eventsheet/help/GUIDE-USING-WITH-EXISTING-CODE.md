@@ -610,6 +610,32 @@ That is the order this section is in.
   hover.
 
   ![Rows in the sheet's own grammar: a Keyboard trigger for "ui_accept" pressed, an OR block joining two conditions, and action rows reading System - Else, System - Subtract 1 from jumps left and f - Call Wall Jump](images/opened-pack-sentences.png)
+- **A table or a list written across several lines is one row, and its entries are chips.** A
+  `{ ... }` or `[ ... ]` handed to `return`, to a signal, to `append`, to any call, or to a `var`
+  reads as ONE row: the statement's own sentence, the word **table** or **list** where the literal
+  sat, and each entry as a named chip - `span index = selected span index`, `mode = "replace"`. A
+  long one shows the first three and says how many are left, with the whole literal on hover; a
+  nested table nests inside its chip; and the bare `}` / `})` / `],` line that used to be a row of
+  its own is gone. Double-clicking a chip edits that entry in place and rewrites the one line it
+  came from. The file keeps every line it had.
+
+  ![Three rows reading a multi-line table: Functions On Selection Snapshot with System - Return, the word table and chips reading row index = row index and span index = span index; Functions On Request Replace with System - Push back, table, mode = "replace", path = path, to edits; and Functions On Column Widths declaring a list](images/literal-entry-chips.png)
+- **A function handed around as a value reads as a function.** A bare function name assigned or
+  passed reads as the **ƒ** chip the condition lane already names functions with, and so does
+  `Callable(self, "on_done")`. A `Callable` variable reads **Local function**; `on_done.call(result)`
+  reads `Call on done   result`; `on_done.is_valid()` reads `on done is set`; `call_deferred("f")`
+  reads `Call F (at end of frame)`; and a one-line `map` / `filter` lambda reads in the Array rows'
+  own words - `rows each one's name`, `rows those where ready`.
+
+  ![Rows reading functions as values: menu - Set open sheet to f Open Sheet In Workspace, System - Call Refresh after edit (at end of frame), a condition reading on done is set with System - Call on done result, and two Local value rows reading rows each one's name and rows those where ready](images/functions-as-values.png)
+- **A typed receiver is named by what it IS.** When the file declared a receiver's class, the object
+  column says that class in words with the plugin prefix dropped - a `var registry:
+  EventSheetACERegistry` reads **ACE registry**, a `var find_bar: EventSheetFindBar` reads **Find
+  bar** - with the variable's own name muted beside it. The variable name says which one; the class
+  says what it is, and for someone reading a plugin the second is the half they need first. Turn
+  Familiar Words off and the class reads exactly as the file declares it.
+
+  ![An Instance variables block declaring registry and find_bar, and below it a Functions On Refresh row whose object column reads ACE registry with the muted variable name beside it](images/typed-object-labels.png)
 - **A plain script is an object.** Its Include bar names it (`class_name`, else its scene's root node,
   else the file) with its class icon and the scene it lives in; its engine properties read under that
   name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as

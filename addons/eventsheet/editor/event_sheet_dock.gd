@@ -5454,6 +5454,15 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 		if entry_updated:
 			_mark_dirty("Updated entry.")
 		return
+	# W12 - the same edit for a table or list written as a VALUE, whose entries are still one
+	# verbatim row each: the chip rewrites that row's line and leaves every other line alone.
+	if edit_kind.begins_with("literal_entry_line:"):
+		var literal_updated: bool = _perform_undoable_sheet_edit("Edit Entry", func() -> bool:
+			return EventSheetValueLiteralRows.apply_entry_edit(row_data.source_resource, edit_kind, new_value)
+		)
+		if literal_updated:
+			_mark_dirty("Updated entry.")
+		return
 	var updated: bool = _perform_undoable_sheet_edit("Edit Row Text", func() -> bool:
 		match edit_kind:
 			"group_name":

@@ -32,6 +32,10 @@ extends RefCounted
 
 ## The object a receiver-less statement belongs to, matching the picker's own word for Core rows.
 const OBJECT_SYSTEM := "System"
+## W13. The mark a function reference wears wherever it is shown as a VALUE - the same ƒ the
+## condition lane wears on every `ƒ Functions ▸ On …` row. One constant, because the row builder,
+## the grammar and the tests all have to agree on the character.
+const FUNCTION_MARK := "ƒ "
 ## Input rows belong to the event-sheet Keyboard object, not to System.
 const OBJECT_KEYBOARD := "Keyboard"
 ## M45. The pointer is the event-sheet Mouse object, exactly as the stick is Keyboard's.
@@ -180,6 +184,9 @@ const RECEIVER_IDIOMS: Dictionary = {
 	"dot": "{receiver} · {0}",
 	# M44. Emptiness IS a count in an event sheet - there is no "is empty" condition, only "count = 0".
 	"is_empty": "{receiver}' count = 0",
+	# W13. A held function is either there or it is not, and "is set" is the question a reader is
+	# asking - `is_valid` is the API's word for the same thing.
+	"is_valid": "{receiver} is set",
 	# ── N6 - text under the SYSTEM EXPRESSION names a reader types into a field ──────────────────
 	# Deliberately NOT translated: `uppercase`, `left`, `mid`, `find`, `replace`, `trim` and `split`
 	# are identifiers a reader types, exactly like `max` and `min` above. The few word-shaped ones
@@ -999,6 +1006,17 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var held: String = callable_value_words(trimmed)
 	if not held.is_empty():
 		return held
+	# W13 - and so is a bare function name handed over as a value, which is how tool code passes a
+	# handler around. Asked before every rewriting below, because there is nothing in it to take
+	# apart: the whole expression is one name.
+	var referenced: String = function_reference_words(trimmed, context)
+	if not referenced.is_empty():
+		return referenced
+	# W13 - a one-line lambda handed to map / filter reads in the words the Array ACEs already use
+	# for the same work, so a lifted lambda and a picked row say the same thing.
+	var over_each: String = lambda_over_list_words(trimmed, context)
+	if not over_each.is_empty():
+		return over_each
 	# U1 - the direction between two points, decided by the whole expression rather than by any call
 	# inside it, so it is asked before the innermost-first pass takes the bracket group apart.
 	var vector_value: String = vector_colour_words(trimmed, context)
@@ -1483,6 +1501,10 @@ static func type_word(type_name: String) -> String:
 		# for the thing, not Godot's type name.
 		"Signal":
 			return translate("signal")
+		# W13. A callable held in a variable is a FUNCTION to the reader - something the row will go
+		# on to call - and "Local function" is the word the sheet already uses for one.
+		"Callable":
+			return translate("function")
 		"Vector2", "Vector2i", "Vector3", "Vector3i":
 			return translate("point")
 		"Color":
@@ -7643,6 +7665,27 @@ static func stored_signal_statement(text: String, context: Dictionary) -> Dictio
 	return reading
 
 
+## W13. `callback.call(result)` where `callback` is a variable holding a function: the row is a Call,
+## and the name the function arrived under is the whole of what it can say - which function it is was
+## decided wherever the variable was filled in. Gated on the sheet's own declared type, exactly as the
+## stored-signal reading above is, so `node.call("verb")` is never mistaken for one.
+static func stored_callable_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "call":
+		return {}
+	var holder: String = str(call.get("target", "")).strip_edges().trim_prefix("self.")
+	if not is_identifier(holder):
+		return {}
+	if str((context.get("variable_types", {}) as Dictionary).get(holder, "")) != "Callable":
+		return {}
+	var reading: Dictionary = _sentence(OBJECT_SYSTEM, "Call {name}", {"name": [holder, "name"]})
+	var segments: Array = reading.get("segments", [])
+	for value: String in (call.get("args", PackedStringArray()) as PackedStringArray):
+		segments.append({"text": "   ", "tone": "plain"})
+		segments.append({"text": expression_text(value, context), "tone": "chip"})
+	return reading
+
+
 ## U11. `call("heal", 5)` and `callv("heal", [5, self])` - the same Call row every other call reads
 ## as, with the muted note that says how it was reached. Only a LITERAL name is claimed: a name worked
 ## out at run time names no function this row could print.
@@ -7697,7 +7740,25 @@ static func callable_value_words(text: String) -> String:
 	var function_name: String = _unquote(args[1].strip_edges().trim_prefix("&"))
 	if not is_identifier(function_name):
 		return ""
-	return "%s %s" % [translate("the function"), function_words(function_name)]
+	# W13 - the ƒ mark is the sheet's own word for "a function, by name": it is what the condition
+	# lane wears on every `ƒ Functions ▸ On …` row, so a function held as a VALUE wears it too.
+	return "%s%s" % [FUNCTION_MARK, function_words(function_name)]
+
+
+## W13. A bare identifier used as a VALUE, when the sheet declares a function of that name: it is a
+## function REFERENCE (assigned to a knob, passed to a connect, stored in a table), and it reads as
+## the ƒ chip the condition lane already names functions with. "" for everything else, which is what
+## keeps an ordinary variable an ordinary variable.
+##
+## The names come from the sheet's own function map, which is the only honest source: guessing from
+## spelling would turn every `_snake_case` variable in the file into a function that does not exist.
+static func function_reference_words(text: String, context: Dictionary) -> String:
+	var bare: String = text.strip_edges()
+	if not is_identifier(bare):
+		return ""
+	if not (context.get("function_params", {}) as Dictionary).has(bare):
+		return ""
+	return "%s%s" % [FUNCTION_MARK, function_words(bare)]
 
 
 ## U12. The video and positional-sound knobs, in the words their own objects publish. A video player
@@ -7885,6 +7946,9 @@ static func long_tail_call(call: Dictionary, text: String, context: Dictionary) 
 	var named: Dictionary = call_by_name_statement(text, context)
 	if not named.is_empty():
 		return named
+	var held_call: Dictionary = stored_callable_statement(text, context)
+	if not held_call.is_empty():
+		return held_call
 	return long_tail_media_call(traced, context)
 
 
@@ -8223,6 +8287,43 @@ static func family_word_of(name_text: String) -> String:
 	if not is_identifier(bare):
 		return ""
 	return bare if bare == bare.capitalize().replace(" ", "") else function_words(bare)
+
+
+## W13. `rows.map(func(r): return r.name)` and `rows.filter(func(r): return r.ready)` as the words
+## the Array ACEs already publish for the same work: `rows each one's name` and `rows those where
+## ready`. The lambda's own parameter is a name only the lambda knows, so it is dropped - a reader
+## asked what the list becomes, not what the loop variable was called.
+##
+## Only the one-line, single-parameter, single-`return` shape is claimed. Anything with a body is a
+## second scope with its own branches, and no phrase can honestly stand for one. "" otherwise.
+static func lambda_over_list_words(text: String, context: Dictionary) -> String:
+	# A substring test first: this runs on every expression the grammar reads, and a line with no
+	# lambda in it has nothing here to find.
+	if not text.contains("func("):
+		return ""
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return ""
+	var method: String = str(call.get("method", ""))
+	if method != "map" and method != "filter":
+		return ""
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if receiver.is_empty() or args.size() != 1:
+		return ""
+	var lambda: Array = _one_argument_lambda(args[0])
+	if lambda.is_empty():
+		return ""
+	var body: String = str(lambda[1])
+	var prefix: String = "%s." % str(lambda[0])
+	if body.begins_with(prefix):
+		body = body.substr(prefix.length())
+	elif body.strip_edges() == str(lambda[0]):
+		body = ""
+	var words: String = translate("each one's") if method == "map" else translate("those where")
+	if body.is_empty():
+		return "%s %s" % [expression_text(receiver, context), translate("each one")]
+	return "%s %s %s" % [expression_text(receiver, context), words, expression_text(body, context)]
 
 
 ## T8. The family a list holds, from what the FILE said when the list was made: a list built from a

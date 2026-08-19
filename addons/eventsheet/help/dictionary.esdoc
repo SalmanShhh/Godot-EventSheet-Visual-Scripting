@@ -422,6 +422,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_stopped` | [Is Timer Stopped](ace:Core/IsTimerStopped) | General Conditions | Vocabulary |
 | `is_touchscreen_available` | [Touchscreen Available](ace:Core/IsTouchscreen) | Touch | Vocabulary |
 | `is_typed` | [Is Typed](ace:Core/ArrayIsTyped) | Variables: Array | Vocabulary |
+| `is_valid` | is set | Object | Object expressions |
 | `is_valid_float` | [Text Is A Number](ace:Core/TextIsANumber) | Compare: Text | Vocabulary |
 | `is_valid_int` | [Text Is A Whole Number](ace:Core/TextIsAWholeNumber) | Compare: Text | Vocabulary |
 | `is_zero_approx` | [Is Zero (approx)](ace:Core/IsZeroApprox) | Math & Random | Vocabulary |
