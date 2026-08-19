@@ -848,9 +848,12 @@ static func _fade_statement(text: String, context: Dictionary) -> Dictionary:
 	var local: String = str(step.get("local", ""))
 	if not (context.get("fade_locals", {}) as Dictionary).has(local):
 		return {}
-	var template: String = "Fade out over {seconds} seconds (then destroy)" \
-		if (context.get("fade_destroys", {}) as Dictionary).has(local) \
-		else "Fade out over {seconds} seconds"
+	# A fade is the alpha step AND the destroy that follows it. An alpha tween on its own is a tween -
+	# it already reads as one, in the tween chain's own words - and calling it the Fade behavior would
+	# promise a cleanup the chain does not do.
+	if not (context.get("fade_destroys", {}) as Dictionary).has(local):
+		return {}
+	var template: String = "Fade out over {seconds} seconds (then destroy)"
 	return _shape(EventSheetSentence.script_object(context), CHIP_FADE, "fade", template,
 		{"seconds": [EventSheetSentence.expression_text(str(step.get("seconds", "")), context), "value"]})
 

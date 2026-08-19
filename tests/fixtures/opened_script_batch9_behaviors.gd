@@ -19,6 +19,7 @@ var screen: Vector2 = Vector2(1152, 648)
 var anchor: Node2D
 var pin_offset: Vector2 = Vector2(0, -20)
 
+
 func _physics_process(delta: float) -> void:
 	speed += accel * delta
 	velocity = Vector2.RIGHT.rotated(rotation) * speed
@@ -26,6 +27,7 @@ func _physics_process(delta: float) -> void:
 	position += velocity * delta
 	if position.distance_to(start) > range_px:
 		queue_free()
+
 
 func aim(delta: float) -> void:
 	var nearest = null
@@ -39,9 +41,11 @@ func aim(delta: float) -> void:
 	if target:
 		rotation = lerp_angle(rotation, global_position.angle_to_point(target.global_position), turn_rate * delta)
 
+
 func go_to(p: Vector2) -> void:
 	destination = p
 	moving = true
+
 
 func glide(delta: float) -> void:
 	position = position.move_toward(destination, speed * delta)
@@ -49,12 +53,14 @@ func glide(delta: float) -> void:
 		moving = false
 		arrived.emit()
 
+
 func decorate(delta: float) -> void:
 	rotation_degrees += rotate_speed * delta
 	position.x = wrapf(position.x, 0.0, screen.x)
 	position = position.clamp(Vector2.ZERO, screen)
 	global_position = anchor.global_position + pin_offset
 	rotation = anchor.rotation
+
 
 func collect() -> void:
 	var tw: Tween = create_tween()
