@@ -2475,7 +2475,7 @@ Current state is {state},현재 상태가 {state}
 Previous state is {state},이전 상태가 {state}
 Current state in list {states},현재 상태가 목록 {states} 중 하나
 Previous state in list {states},이전 상태가 목록 {states} 중 하나
-written into this script,이 스크립트에 작성됨
+written into this script,이 스크립트에 써 넣기
 "one named state at a time, switched by Go to state","한 번에 하나의 이름 있는 상태, 상태로 이동 으로 전환"
 Load layout {path} in the background,레이아웃 {path} 을(를) 백그라운드에서 불러오기
 layout {path} has finished loading,레이아웃 {path} 불러오기가 끝났다
@@ -3130,3 +3130,37 @@ No event sheets were found in that archive.,그 압축 파일에서 이벤트 �
 That file does not exist.,그 파일은 없습니다.
 That file is not an exported event sheet.,그 파일은 내보낸 이벤트 시트가 아닙니다.
 Nothing has been imported yet.,아직 아무것도 가져오지 않았습니다.
+the direction from {from} to {to},{from} 에서 {to} 로의 방향
+unit vector of {value},{value} 의 단위 벡터
+the speed,속도
+how much {a} points along {b} (-1 to 1),{a} 가 {b} 를 향하는 정도 (-1 에서 1)
+{value} turned {angle},{value} 를 {angle} 회전
+darker,더 어둡게
+lighter,더 밝게
+colour from {value},{value} 에서 만든 색
+colour from hue {hue},색조 {hue} 인 색
+full saturation,완전한 채도
+{amount} saturation,채도 {amount}
+{amount} brightness,밝기 {amount}
+at {amount} opacity,불투명도 {amount}
+Ease colour toward {colour} at {rate},색을 {colour} 쪽으로 {rate} 로 부드럽게
+a new {type},새 {type}
+a copy of {value},{value} 의 복사본
+{object}'s path,{object} 의 경로
+{object}'s child named {name},{object} 의 자식 {name}
+the child named {name},{name} 라는 자식
+{name} in the layout,레이아웃의 {name}
+the layout,레이아웃
+unique name,고유 이름
+Clone object,오브젝트 복제
+next to it,그 옆에
+inside it,그 안에
+Data type,데이터 형
+based on,기반
+down to,까지 내려
+step,간격
+{subject} is a list of {count},{subject} 가 {count} 개짜리 목록
+starting {values},{values} 로 시작
+{subject} is a table,{subject} 가 테이블
+with {clauses},{clauses} 인
+has {key},{key} 가 있는

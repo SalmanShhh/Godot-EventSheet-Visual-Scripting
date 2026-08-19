@@ -88,6 +88,7 @@ static func run() -> Dictionary:
 	check_disabled_pack_usage(sheet_paths, findings)
 	check_family_group_agreement(findings)
 	check_imported_rows(sheet_paths, findings)
+	check_task_notes(findings)
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
 	EventSheetDoctorTidiness.check_tidiness(sheet_paths, findings)
@@ -2548,3 +2549,80 @@ static func _events_by_uid(sheet: EventSheetResource) -> Dictionary:
 		if not event_row.event_uid.is_empty():
 			found[event_row.event_uid] = event_row
 	return found
+
+
+# ── U3: the notes a project leaves itself ────────────────────────────────────────
+#
+# A TODO or a FIXME is how a project tracks itself, and until now it was invisible outside the code.
+# Each one is a NOTE - never a warning: an unfinished thought is not a fault, it is a thing somebody
+# meant to come back to, and the Doctor is where a person looks for the list of those.
+
+
+## The directories a project's OWN scripts are never in. `eventsheet_addons/` and the plugin itself
+## are shipped code (and `eventsheet_addons/` is compiler output besides), so their notes are not the
+## reader's to do; `.godot` is a cache.
+const _TASK_NOTE_SKIPPED_DIRS: PackedStringArray = ["addons", "eventsheet_addons"]
+
+
+## U3. Every TODO / FIXME / HACK / NOTE comment in the project's own scripts, one finding per line,
+## with the file and the line number so the report can jump straight to it.
+static func check_task_notes(findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_script_paths():
+		var handle: FileAccess = FileAccess.open(script_path, FileAccess.READ)
+		if handle == null:
+			continue
+		var lines: PackedStringArray = handle.get_as_text().split("\n")
+		handle.close()
+		for line_index: int in range(lines.size()):
+			var note: Dictionary = task_note_in(lines[line_index])
+			if note.is_empty():
+				continue
+			_add(findings, "info", "task-note", script_path,
+				"%s at line %d: %s" % [str(note.get("marker", "")), line_index + 1,
+					str(note.get("text", ""))], line_index + 1)
+
+
+## U3. The task note one line carries, as {"marker", "text"}, or {} when the line is not one.
+##
+## The `#` must open the comment part of the line, which is what a note IS - a `# TODO` written
+## inside a string literal is content somebody wrote, not a note about the code. Kept here rather
+## than in the reading grammar because the Doctor runs headless, with no editor around it.
+static func task_note_in(line: String) -> Dictionary:
+	var hash_at: int = line.find("#")
+	if hash_at < 0:
+		return {}
+	var before: String = line.substr(0, hash_at)
+	if before.count("\"") % 2 == 1 or before.count("'") % 2 == 1:
+		return {}
+	var comment: String = line.substr(hash_at + 1).strip_edges()
+	# `##` is a doc comment - what a thing IS, not a note about finishing it.
+	if comment.begins_with("#"):
+		comment = comment.substr(1).strip_edges()
+	for marker: String in ["TODO", "FIXME", "HACK", "NOTE"]:
+		if comment == marker or comment.begins_with("%s " % marker) or comment.begins_with("%s:" % marker):
+			return {"marker": marker, "text": comment}
+	return {}
+
+
+## Every .gd under res:// that belongs to the PROJECT rather than to a plugin or to generated output.
+static func _project_script_paths() -> PackedStringArray:
+	var script_paths: PackedStringArray = PackedStringArray()
+	var pending: PackedStringArray = PackedStringArray(["res://"])
+	while not pending.is_empty():
+		var directory_path: String = pending[pending.size() - 1]
+		pending.remove_at(pending.size() - 1)
+		var directory: DirAccess = DirAccess.open(directory_path)
+		if directory == null:
+			continue
+		directory.list_dir_begin()
+		var entry: String = directory.get_next()
+		while not entry.is_empty():
+			var full_path: String = directory_path.path_join(entry)
+			if directory.current_is_dir():
+				if not entry.begins_with(".") and not _TASK_NOTE_SKIPPED_DIRS.has(entry):
+					pending.append(full_path)
+			elif entry.ends_with(".gd"):
+				script_paths.append(full_path)
+			entry = directory.get_next()
+	script_paths.sort()  # deterministic, so the report never reorders between runs
+	return script_paths

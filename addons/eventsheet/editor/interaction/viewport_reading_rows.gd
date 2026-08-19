@@ -1699,6 +1699,13 @@ static func loop_words(kind: int, iterator_name: String, collection: String) -> 
 	match kind:
 		PickFilter.CollectionKind.REPEAT:
 			var bounds: PackedStringArray = EventSheetSentence.split_top_level(source, ", ")
+			# U2. The two loop shapes M28 left over: counting DOWN, and counting in steps. Both are
+			# `range(from, to, step)`, and both are For loops a reader already knows - what a reader
+			# needs is the last value the body actually sees, which is what the row says.
+			if bounds.size() == 3:
+				var stepped: String = _stepped_range_words(iterator, bounds)
+				if not stepped.is_empty():
+					return {"text": stepped, "object": ""}
 			if bounds.size() == 2:
 				# The event-sheet For loop is INCLUSIVE at both ends, and `range(2, 8)` stops at 7 - so the
 				# row says 7, which is the last value the loop body actually sees.
@@ -1734,6 +1741,33 @@ static func _children_receiver(expression: String) -> String:
 	if receiver.is_empty() or receiver.contains("(") or receiver.contains(" "):
 		return ""
 	return EventSheetSentence.object_of_reference(receiver)
+
+
+## U2. A three-argument `range(...)` as the For loop it is: `range(10, 0, -1)` counts down to 1,
+## `range(0, 100, 10)` steps to 90. Both ends are the values the BODY sees, which is what a reader is
+## looking for - Godot's exclusive stop is a language detail, and the row does the arithmetic once so
+## nobody has to do it every time they read the line. "" unless every bound is a plain whole number
+## and the step actually reaches the stop, because a row that guesses is worse than the code it read.
+static func _stepped_range_words(iterator: String, bounds: PackedStringArray) -> String:
+	for bound: String in bounds:
+		if not bound.strip_edges().is_valid_int():
+			return ""
+	var from_value: int = bounds[0].strip_edges().to_int()
+	var stop_value: int = bounds[1].strip_edges().to_int()
+	var step: int = bounds[2].strip_edges().to_int()
+	if step == 0 or (step > 0 and stop_value <= from_value) or (step < 0 and stop_value >= from_value):
+		return ""
+	# The last value the body sees: the final whole step that still stops short of the stop value.
+	var span: int = absi(stop_value - from_value)
+	var last_value: int = from_value + step * ((span - 1) / absi(step))
+	var head: String = "%s \"%s\" %s %d" % [EventSheetL10n.translate("For"), iterator,
+		EventSheetL10n.translate("from"), from_value]
+	if step < 0:
+		var down_text: String = "%s %s %d" % [head, EventSheetL10n.translate("down to"), last_value]
+		return down_text if step == -1 else "%s %s %d" % [down_text,
+			EventSheetL10n.translate("step"), absi(step)]
+	var up_text: String = "%s %s %d" % [head, EventSheetL10n.translate("to"), last_value]
+	return up_text if step == 1 else "%s %s %d" % [up_text, EventSheetL10n.translate("step"), step]
 
 
 ## `8` -> `7`, so a half-open Godot range reads as the inclusive event-sheet one. Empty when the bound

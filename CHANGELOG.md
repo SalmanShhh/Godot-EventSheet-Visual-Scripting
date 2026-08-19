@@ -352,6 +352,29 @@ cannot move.
   with a `⚠ blocks the game` note, and the Doctor says the same thing in words: that call stops the
   whole process while it counts, and the sheet's own Wait is the one everybody means.
 
+### Added - vectors and colours read as words
+
+The two value types every game line touches. A beginner used to meet them as the Godot methods that
+built them; each operation now reads as the word an event sheet already has for it, with Godot's own
+spelling one hover away. Display only - the file is untouched and the byte round-trip cannot move.
+
+- **Vectors.** `(target.position - position).normalized()` reads `the direction from Player to
+  target`; a bare `normalized()` reads `unit vector of dir`; `velocity.length()` is `the speed` (any
+  other length stays `length of x`); `facing.dot(dir)` reads `how much facing points along dir
+  (-1 to 1)`; `dir.rotated(PI / 2)` reads `dir turned 90°`, and the `TAU`, `deg_to_rad` and negative
+  spellings of a fixed turn read the same way. `angle_to` and the `UP` / `DOWN` / `ZERO` constants
+  already read as words and are unchanged.
+- **Colours.** `Color.RED.darkened(0.2)` reads `red, 20% darker` (and `lightened` its twin),
+  `Color(1, 0, 0, 0.5)` reads `red at 50% opacity`, `Color.from_hsv(0.3, 1, 1)` reads `colour from
+  hue 30%, full saturation`, and `Color.from_string(...)` names what it was built from. A mix nobody
+  has a word for keeps its channels. The colour swatch is unchanged: it reads the value the row
+  holds, not the words beside it.
+- **`modulate = modulate.lerp(Color.WHITE, 5 * delta)`** is one verb - `Ease colour toward white at
+  5` - claimed only when the line reads the very member it writes, so an ordinary blend stays a Set.
+- A local's starting value now reads with the sheet's own object names (`the direction from Player to
+  target` rather than from `System`), because the declaration reading is handed the sheet context the
+  rest of the row already had.
+
 ### Added - the Manual answers in GDScript as well as in the sheet's words
 
 - **Manual ▸ Dictionary: GDScript to events**, generated. Every Godot call, property and idiom the
@@ -407,6 +430,50 @@ cannot move.
   redone. Click one to undo or redo back to it; hover one to see the rows it touched lit on the
   canvas. The marker follows the sheet snapshots the undo funnel restores, so Ctrl+Z from anywhere,
   the toolbar arrows and a click in the list all move the same place.
+### Added - a note on a row, and the notes a project leaves itself
+
+- **A trailing `# note` reads as a note on its row.** `hp -= 1  # ouch` reads `Subtract 1 from hp
+  💬 ouch` instead of putting the comment inside the value it was lifted into ("Subtract 1  # ouch
+  from hp"). Every path a row is drawn through carries it: the sentence path, the picked-ACE path and
+  the local-declaration path, where the note also stopped the starting value being read as text.
+  Quote-aware, so a `#` inside a string literal (a colour, a hash in a label) is still content
+  somebody typed.
+- **A TODO / FIXME / HACK / NOTE line directly above a step is that step's note.** It is how a person
+  writes a note on one action when the language has nowhere else to put it. Every other comment line
+  stays the comment row it has always been: a paragraph above a run of steps is about the run.
+- **The Doctor counts them, and the Outline gathers them.** Each task note in the project's own
+  scripts is an `info` finding naming its marker, its file and its line, so the report can jump
+  straight to it; the Outline grows a `To do` folder at the end holding the same notes from the open
+  sheet. Both are lenses over comments already in the file - nothing is written, and the byte
+  round-trip is untouched.
+
+### Added - match patterns, data types and the scene tree read as the sheet's own rows
+
+- **`match` patterns are conditions.** A match on plain values already read as the Else-if chain it is;
+  the four patterns that say something a plain value cannot now join it. `["move", var x, var y]`
+  reads `event is a list of 3 starting "move"` with `x` and `y` as chips; `{"type": "hit", "amount":
+  var a}` reads `event is a table with type = "hit"` with `amount → a` as its chip; `var other when
+  other is String` reads `event is text` with `other` as its chip, the guard read through the ordinary
+  condition grammar with the bound name standing for what it is bound to; a bare `var other` and `_`
+  are both the Else they are. A nested pattern, an open-ended `..` or anything with a call in it keeps
+  the pattern text it was written as.
+- **A range that counts down or steps says so.** `range(10, 0, -1)` reads `For "i" from 10 down to 1`
+  and `range(0, 100, 10)` reads `For "i" from 0 to 90 step 10` - both ends the values the body
+  actually sees, so nobody has to redo Godot's exclusive-stop arithmetic in their head.
+- **A pure-data `class X:` is a Data type bar.** The header says what the thing IS (`Data type
+  AbilityData`) rather than repeating GDScript's keyword, and its fields stay the editable rows below.
+  `Stats.new()` reads `a new Stats`, `stats.duplicate()` reads `a copy of stats`, and `thing is Stats`
+  already read `is a Stats`.
+- **Scene-tree idioms are one word each.** `find_child("HUD")` is `the child named HUD`,
+  `get_tree().current_scene` is `the layout` (and `get_tree().current_scene.get_node("Boss")` is `Boss
+  in the layout`), `%HealthBar` is `HealthBar` with `unique name` beside it, and `enemy.get_path()` is
+  `enemy's path`. A `%` inside a string literal or after a bracket is still the format operator or a
+  remainder, and is left alone.
+- **Copying a node that is already in the scene is Clone object.** `var copy = enemy.duplicate()`
+  followed by `get_parent().add_child(copy)` is one row - `Clone object enemy (→ copy, next to it)` -
+  where it used to read `Create object (copy of enemy)`. Create object stays what it is: making one
+  out of a scene file. The plain call spelling counts as the plant, not just the picked Add Child row,
+  and the row says whether the copy went next to the node or inside it.
 
 ### Added - the things AROUND an object read, and are written, in the sheet's own words
 

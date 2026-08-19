@@ -3209,13 +3209,21 @@ static func function_body_info(code: String) -> Dictionary:
 ## read through the SAME producer - a shape must say one thing whether it was typed or picked.
 ## Kept here as a thin forwarder so the classifiers around it keep one import surface.
 static func statement_sentence(code: String, context: Dictionary = {}) -> Dictionary:
+	# U3. A trailing `# note` is a note on this row, not part of the statement. Split off FIRST, so
+	# every reading below sees the line the way it would without one, and handed back on the result so
+	# the row can draw it where a sheet draws a note - at the end. The row itself is untouched.
+	var split: PackedStringArray = EventSheetSentence.trailing_comment(code)
+	var note: String = split[1]
+	var body: String = split[0]
 	# M28: the awaits an event sheet has words for, ahead of the grammar - a hand-written `await` that no
 	# ACE claimed (inside a lambda, inside a block that stayed code) reads the same as the lifted row
 	# beside it. Every other await falls straight through and keeps its GDScript.
-	var awaited: Dictionary = _raw_await_reading(code, context)
-	if not awaited.is_empty():
-		return awaited
-	return EventSheetSentence.statement(code, context)
+	var awaited: Dictionary = _raw_await_reading(body, context)
+	var reading: Dictionary = awaited if not awaited.is_empty() else EventSheetSentence.statement(body, context)
+	if not note.is_empty() and not reading.is_empty():
+		reading = reading.duplicate()
+		reading["note"] = note
+	return reading
 
 
 ## The M28 reading of a hand-written `await <expression>` line, indent and all, or {} when the shape
@@ -4051,9 +4059,12 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var base: String = str(model.get("extends", ""))
-	var header_text: String = "class %s" % data_class_display_name
+	# U4. What a pure-data `class X:` IS, in the words a reader has for it: a data type this file
+	# declares, whose fields are the rows below. "class" is GDScript's spelling of the same thing and
+	# stays one double-click away, in the code the bar opens.
+	var header_text: String = "%s %s" % [EventSheetL10n.translate("Data type"), data_class_display_name]
 	if not base.is_empty():
-		header_text += " extends %s" % base
+		header_text += " %s %s" % [EventSheetL10n.translate("based on"), base]
 	var header_spans: Array[SemanticSpan] = [
 		_make_span(header_text, SemanticSpan.SpanType.OBJECT, {
 			"lane": "condition",
@@ -5155,11 +5166,18 @@ func _create_object_groups(actions: Array, locals: Array = []) -> Dictionary:
 		var layer: String = ""
 		var planted: bool = false
 		var position_text: String = ""
+		var placement_word: String = ""
 		var extras: PackedStringArray = PackedStringArray()
 		while cursor < actions.size():
 			var parent: String = _plant_parent(actions[cursor], alias)
+			if parent.is_empty() and not _plant_placement_word(actions[cursor], alias).is_empty():
+				# U5. The sibling spellings - `add_sibling(b)` and `get_parent().add_child(b)` - plant the
+				# object NEXT TO this node rather than inside a named layer, so the plant is recognised
+				# and the row says the placement word instead of a layer.
+				parent = "here"
 			if not parent.is_empty() and not planted:
 				planted = true
+				placement_word = _plant_placement_word(actions[cursor], alias)
 				layer = parent
 				last = cursor
 				cursor += 1
@@ -5184,7 +5202,7 @@ func _create_object_groups(actions: Array, locals: Array = []) -> Dictionary:
 			indices.append(member_index)
 		leads[index] = {
 			"text": _create_object_text(str(spawn.get("source", "")), alias, position_text,
-				bool(spawn.get("copy", false)), bool(spawn.get("pooled", false)), layer, extras),
+				bool(spawn.get("copy", false)), bool(spawn.get("pooled", false)), layer, extras, placement_word),
 			"alias": alias,
 			"line_count": last - index + 1,
 			"indices": indices,
@@ -5584,6 +5602,52 @@ func _created_property_words(action_resource: Variant, alias: String) -> String:
 		_reading_sentence(EventSheetSentence.expression_text(str(params.get("value", ""))))]
 
 
+## True when the action is the `add_child(b)` / `add_sibling(b)` (on this node or on a named parent)
+## that puts the freshly made object into the tree.
+func _plants_node(action_resource: Variant, alias: String) -> bool:
+	return not _plant_placement_word(action_resource, alias).is_empty()
+
+
+## U5. WHERE the freshly made object was planted, in the sheet's words - "next to it" for a sibling
+## (which `get_parent().add_child(b)` is, whatever it is spelled as) and "inside it" for a child of
+## this node. "" when the action is not the plant at all.
+##
+## Both spellings count: the picked Add Child row, and the plain `get_parent().add_child(b)` line a
+## hand-written script writes, which lifts to no ACE of its own. Only an EXACT one-argument call on
+## the alias is claimed - a plant with extra arguments is doing something the row cannot say.
+func _plant_placement_word(action_resource: Variant, alias: String) -> String:
+	if alias.is_empty():
+		return ""
+	var action: ACEAction = action_resource as ACEAction
+	if action != null:
+		if not action.enabled:
+			return ""
+		var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+		if action.ace_id.contains("AddSibling"):
+			return "next to it" if str(params.get("node", params.get("child", ""))).strip_edges() == alias else ""
+		if action.ace_id.contains("AddChild"):
+			return "inside it" if str(params.get("node", params.get("child", ""))).strip_edges() == alias else ""
+		if action.ace_id != "CallMethod":
+			return ""
+		return _plant_call_placement("%s.%s(%s)" % [str(params.get("target", "")),
+			str(params.get("method", "")), str(params.get("args", ""))], alias)
+	var raw: RawCodeRow = action_resource as RawCodeRow
+	if raw == null or not raw.enabled:
+		return ""
+	return _plant_call_placement(raw.code.strip_edges(), alias)
+
+
+## The placement word one CALL says, or "" when the line is not a plant of `alias`.
+func _plant_call_placement(code: String, alias: String) -> String:
+	var text: String = code.strip_edges()
+	if text.contains("\n"):
+		return ""
+	for entry: Array in [["get_parent().add_child(", "next to it"], ["add_sibling(", "next to it"],
+			["self.add_sibling(", "next to it"], ["add_child(", "inside it"], ["self.add_child(", "inside it"]]:
+		var head: String = str(entry[0])
+		if text.begins_with(head) and text == "%s%s)" % [head, alias]:
+			return str(entry[1])
+	return ""
 ## The value of a `b.global_position = P` / `b.position = P` that immediately follows, or "" when the
 ## next line is anything else. Only the FIRST placement joins the row: the ones after it are ordinary
 ## "set a property of the new object" actions, and an event sheet draws those separately too.
@@ -5606,7 +5670,8 @@ func _placement_value(action_resource: Variant, alias: String) -> String:
 ## ROOT node - whenever the source is a preloaded scene this sheet declares; otherwise the variable's
 ## own name, which is the honest answer when nothing else is known.
 func _create_object_text(source: String, alias: String, position_text: String, copy: bool,
-		pooled: bool = false, layer: String = "", extras: PackedStringArray = PackedStringArray()) -> String:
+		pooled: bool = false, layer: String = "", extras: PackedStringArray = PackedStringArray(),
+		placement_word: String = "") -> String:
 	var shown: String = source
 	var resolved: Dictionary = _lens_scene_vars.get(source, {}) as Dictionary
 	if not resolved.is_empty() and not str(resolved.get("name", "")).is_empty():
@@ -5616,8 +5681,20 @@ func _create_object_text(source: String, alias: String, position_text: String, c
 		var icon_class: String = str(resolved.get("icon_class", ""))
 		if not icon_class.is_empty() and not alias.is_empty():
 			_lens_class_map[alias] = icon_class
+	# U5. Copying a node that is ALREADY in the scene is Clone object; Create object is for making one
+	# out of a scene file (M39). Two different things a reader means, so two different words - and the
+	# clone says what it made and where it put it, which is the whole of what the two lines did.
 	if copy:
-		shown = "(%s %s)" % [EventSheetL10n.translate("copy of"), shown]
+		var clone_text: String = "%s %s" % [EventSheetL10n.translate("Clone object"), shown]
+		var asides: PackedStringArray = PackedStringArray()
+		if not alias.is_empty():
+			asides.append("→ %s" % alias)
+		if not placement_word.is_empty():
+			asides.append(EventSheetL10n.translate(placement_word))
+		if not position_text.is_empty():
+			asides.append("%s %s" % [EventSheetL10n.translate("at"),
+				_reading_sentence(EventSheetSentence.expression_text(position_text))])
+		return clone_text if asides.is_empty() else "%s (%s)" % [clone_text, ", ".join(asides)]
 	var text: String = "%s %s" % [EventSheetL10n.translate("Create object"), shown]
 	# T22. The node the object was added to IS the layer an event sheet makes things on, so the row
 	# says which one. A plant on the script's own node adds nothing a reader does not already have.
@@ -5690,9 +5767,17 @@ func _match_reads_as_else_if(match_row: MatchRow) -> bool:
 		return false
 	if match_row.match_expression.strip_edges().is_empty():
 		return false
+	var subject: String = match_row.match_expression.strip_edges()
+	var context: Dictionary = sentence_context()
 	for case_index: int in range(match_row.cases.size()):
 		var match_case: MatchCase = match_row.cases[case_index]
-		if match_case == null or not ViewportRowBuilder.is_plain_match_pattern(match_case.pattern):
+		if match_case == null:
+			return false
+		# U2. A pattern that BINDS a name, destructures a list or picks a table apart says something a
+		# plain value cannot - and now has words of its own, so those arms join the chain too. Anything
+		# neither reading claims still keeps the pattern text it was written as.
+		if not ViewportRowBuilder.is_plain_match_pattern(match_case.pattern) \
+				and EventSheetSentence.match_pattern_reading(subject, match_case.pattern, context).is_empty():
 			return false
 		# A `_` anywhere but last would mean the branches after it are dead; that is not a chain.
 		if str(match_case.pattern).strip_edges() == "_" and case_index != match_row.cases.size() - 1:
@@ -5708,6 +5793,11 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 	var spans: Array[SemanticSpan] = []
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var text: String = pattern.strip_edges()
+	# U2. A pattern that says something a plain value cannot draws its own sentence and its own chips.
+	var pattern_reading: Dictionary = {} if ViewportRowBuilder.is_plain_match_pattern(text) \
+		else EventSheetSentence.match_pattern_reading(subject, text, sentence_context())
+	if not pattern_reading.is_empty():
+		return _match_pattern_condition_spans(pattern_reading, chain_index, condition_style_meta)
 	if chain_index > 0 or text == "_":
 		spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
@@ -5732,6 +5822,47 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 	for carried: SemanticSpan in carrier.spans:
 		_say_equals_once(carried)
 		spans.append(carried)
+	return spans
+
+
+## U2. The condition cells of one PATTERN arm: the Else chip when the arm takes whatever is left, the
+## arm's own sentence otherwise, and the names it binds as chips after it. The chips sit on the same
+## line as the sentence, because what the pattern pulled out is part of what the pattern says.
+func _match_pattern_condition_spans(reading: Dictionary, chain_index: int,
+		condition_style_meta: Dictionary) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var sentence: String = str(reading.get("text", ""))
+	var is_else: bool = bool(reading.get("is_else", false))
+	var line_index: int = 0
+	if chain_index > 0 or is_else:
+		spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "else_keyword",
+			"chip": true,
+			"hoverable": false,
+			"line_index": 0,
+			"object_label": _object_label_for("Core", "")
+		}.merged(condition_style_meta, true)))
+		# An Else-if's test sits on the SECOND condition line, under the Else chip, exactly as the
+		# plain-value chain draws it.
+		line_index = 0 if is_else else 1
+	if not sentence.is_empty():
+		spans.append(_make_span(sentence, SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "match_pattern",
+			"editable": false,
+			"line_index": line_index,
+			"object_label": _object_label_for("Core", "")
+		}.merged(condition_style_meta, true)))
+	for chip_text: String in (reading.get("chips", PackedStringArray()) as PackedStringArray):
+		spans.append(_make_span(chip_text, SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "match_binding",
+			"editable": false,
+			"chip": true,
+			"hoverable": false,
+			"line_index": line_index
+		}.merged(condition_style_meta, true)))
 	return spans
 
 
@@ -7820,8 +7951,15 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# U8 / U12 - the mouse-look trio and the two faders of a crossfade are one row each.
 		var look_groups: Dictionary = _mouse_look_groups(event_row.actions)
 		var fade_groups: Dictionary = _crossfade_groups(event_row.actions)
+		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
+		var task_notes: Dictionary = _task_note_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
+			if bool(task_notes.get("consumed", {}).get(action_index, false)):
+				continue
+			# One-shot, read and cleared by whichever formatter draws this action - the same discipline
+			# the object label and the grammar segments beside it already use.
+			_pending_attached_note = str((task_notes.get("notes", {}) as Dictionary).get(action_index, ""))
 			# A line the Create object row above already said. Skipped without advancing the line index,
 			# which is what turns three lines into one row.
 			if bool(create_groups.get("consumed", {}).get(action_index, false)):
@@ -10074,7 +10212,21 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	# Input-event words FIRST (casts stripped, `event.relative.x` -> mouse's ΔX), the name lens
 	# after: the lens sees `(event as InputEventMouseMotion).relative.x` as a chain around a
 	# cast and the cast stripper then hollowed the middle out ("eventrelative X").
+	# U3. A trailing `# note` rides into whichever param the lift put the end of the line in, where it
+	# would otherwise read as part of the value ("Subtract 1  # ouch from hp"). Split off the params
+	# this row is FORMATTED from - a throwaway copy, the row itself untouched - and drawn as the note
+	# it is, at the end.
+	var noted: Dictionary = _action_without_trailing_notes(action)
+	var row_note: String = str(noted.get("note", ""))
+	if not row_note.is_empty():
+		action = noted.get("action", action) as ACEAction
+	# ...and the note the comment line above this row left for it, when there was one.
+	var attached: String = _take_attached_note()
+	if not attached.is_empty():
+		row_note = attached if row_note.is_empty() else "%s · %s" % [attached, row_note]
 	var base_text: String = _reading_sentence(_humanized_input_event_text(_format_action_descriptor_base(action)))
+	if not row_note.is_empty():
+		base_text += "   💬 %s" % row_note
 	# Awaiting actions wear an hourglass (the GDevelop async-action cue): everything after
 	# this row in the SAME event waits for it, so the suspension point should be visible.
 	if action_awaits(action):
@@ -10083,6 +10235,73 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	if not ace_note.is_empty():
 		return "%s   ⊳ %s" % [base_text, ace_note]
 	return base_text
+
+
+## U3. The task notes an action lane carries, as {"consumed": {index: true}, "notes": {index: text}}.
+##
+## A comment written directly above a step, opening TODO / FIXME / HACK / NOTE, is about that step -
+## it is the way a person writes a note on one action when the language has nowhere else to put it.
+## So it reads as that step's note, exactly where a trailing `# note` reads. Every other comment line
+## stays the comment row it has always been: a paragraph above a run of steps is about the run.
+##
+## Only a ONE-LINE comment immediately above a step qualifies, and only when the step below it can
+## carry a note at all. The rows themselves are untouched, so the file still has both lines.
+func _task_note_groups(actions: Array) -> Dictionary:
+	var consumed: Dictionary = {}
+	var notes: Dictionary = {}
+	for index: int in range(actions.size() - 1):
+		var comment: CommentRow = actions[index] as CommentRow
+		if comment == null or not comment.enabled or comment.text.contains("\n"):
+			continue
+		if EventSheetSentence.task_note_marker(comment.text).is_empty():
+			continue
+		var carrier: Resource = actions[index + 1] as Resource
+		if not (carrier is ACEAction or carrier is RawCodeRow):
+			continue
+		consumed[index] = true
+		notes[index + 1] = comment.text.strip_edges().trim_prefix("#").strip_edges()
+	return {"consumed": consumed, "notes": notes}
+
+
+## U3. The note the action lane attached to the row being formatted, taken and cleared. One-shot, the
+## same discipline _pending_object_label uses: the loop writes it, the formatter reads it once.
+func _take_attached_note() -> String:
+	var note: String = _pending_attached_note
+	_pending_attached_note = ""
+	return note
+
+## The note one action carries from the comment line above it, until the formatter draws it.
+var _pending_attached_note: String = ""
+
+
+## U3. The row's params with any trailing `# note` split off them, as {"action", "note"} - or {} when
+## no param carries one. The copy is for DISPLAY only and never reaches the sheet: the row keeps the
+## exact text it was lifted from, so the note is still in the file and the bytes still come back.
+##
+## Only the LAST param may carry a note, because a trailing comment is the end of a line and only one
+## param can hold the end of a line. Claiming it anywhere else would take a `#` out of the middle of
+## somebody's value.
+func _action_without_trailing_notes(action: ACEAction) -> Dictionary:
+	if action == null:
+		return {}
+	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	if params_dict.is_empty():
+		return {}
+	var cleaned: Dictionary = {}
+	var note: String = ""
+	for key: Variant in params_dict:
+		var value: Variant = params_dict[key]
+		if not (value is String) or note != "":
+			cleaned[key] = value
+			continue
+		var split: PackedStringArray = EventSheetSentence.trailing_comment(str(value))
+		cleaned[key] = split[0]
+		note = split[1]
+	if note.is_empty():
+		return {}
+	var copy: ACEAction = action.duplicate()
+	copy.params = cleaned
+	return {"action": copy, "note": note}
 
 
 ## Whether an action suspends the handler: the awaited-call flags, an `await` anywhere in
@@ -10610,6 +10829,15 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	# pieces are touched (identifiers the builder already resolved), never a string literal and
 	# never a connective word, and the row's hover still shows the exact GDScript.
 	pieces = EventSheetViewportLenses.apply_to_pieces(pieces, _viewport.humanize_names_enabled(), _export_knob_names())
+	# U3. The row's own note, at the end of it, muted - which is where and how a sheet writes a note
+	# about one step. Appended AFTER the spelling lens, because a note is prose somebody wrote and
+	# nothing in it is a name for the lens to respell.
+	var row_note: String = str(sentence.get("note", ""))
+	var attached_note: String = _take_attached_note()
+	if not attached_note.is_empty():
+		row_note = attached_note if row_note.is_empty() else "%s · %s" % [attached_note, row_note]
+	if not row_note.is_empty():
+		pieces.append(["   💬 %s" % row_note, "muted"])
 	# ── M13 / M20 lens hook ────────────────────────────────────────────────────────────────────
 	# The object this statement acts on draws its Godot class icon, the way an event sheet shows
 	# an object's picture in every cell it appears in. Resolved from the RAW pieces (before the
@@ -10692,6 +10920,18 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 	value_meta["chip"] = true
 	value_meta["text_color"] = _viewport._get_event_style().value_highlight_color
 	spans.append(_make_span("= %s" % str(declaration.get("value", "")), SemanticSpan.SpanType.VALUE, value_meta.merged(style_meta, false)))
+	# U3. A `var x = 1  # note` carries its note the same way every other row does - at the end, muted -
+	# rather than inside the value, where it read as part of the starting value.
+	var declaration_note: String = str(declaration.get("note", ""))
+	if declaration_note.is_empty():
+		return
+	var note_meta: Dictionary = base_meta.duplicate()
+	note_meta["chip"] = true
+	note_meta["natural_width"] = true
+	note_meta["editable"] = false
+	note_meta["text_color"] = _viewport._get_reading_style().muted_text_color
+	spans.append(_make_span("💬 %s" % declaration_note, SemanticSpan.SpanType.COMMENT,
+		note_meta.merged(style_meta, false)))
 
 
 # One-shot object label recorded by a descriptor formatter when the row's shape names its own object
@@ -10809,6 +11049,15 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement(group_call, context)
 		"QueueFreeNode":
 			return EventSheetSentence.statement("%s.queue_free()" % str(params_dict.get("target", "self")), context)
+		# U1. A tint set from the tint itself is an EASE, and the grammar is the only place that can
+		# see it: the row holds one value, and only the shape of that value says it eases. Every other
+		# tint row keeps the descriptor's own words, which is why this returns {} unless it matches.
+		"SetModulate":
+			var tint_target: String = str(params_dict.get("target", "")).strip_edges()
+			return EventSheetSentence.colour_ease_statement(
+				EventSheetSentence.object_of_reference(tint_target) if not tint_target.is_empty()
+					else EventSheetSentence.script_object(context),
+				"modulate", str(params_dict.get("color", "")), context)
 		# ── Q6 / Q11 lens hook ────────────────────────────────────────────────────────────────
 		# Two rows whose words depend on something only the grammar can see. `erase` is spelled the
 		# same on a list and on a table but means two different steps, and the lifter cannot tell
@@ -11336,22 +11585,41 @@ func grammar_action_declaration(action: ACEAction) -> Dictionary:
 		return {}
 	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var name_text: String = str(params_dict.get("name", ""))
-	var value_text: String = str(params_dict.get("value", ""))
-	match action.ace_id:
+	# U3. A trailing `# note` is the row's note, not part of the starting value - split off here, and
+	# handed to the declaration spans to draw at the end of the row where a sheet draws a note.
+	var split: PackedStringArray = EventSheetSentence.trailing_comment(str(params_dict.get("value", "")))
+	var value_text: String = split[0]
+	var value_note: String = split[1]
+	# U1. The sheet's own context, so a starting value that names a place ("the direction from Player
+	# to target") reads with the same object names every other row on this sheet uses.
+	var context: Dictionary = sentence_context()
+	var reading: Dictionary = _declaration_of(action.ace_id, name_text, value_text, params_dict, context)
+	if reading.is_empty() or value_note.is_empty():
+		return reading
+	reading = reading.duplicate()
+	reading["note"] = value_note
+	return reading
+
+
+## The declaration one Local Variable row spells, by its ace_id. Split out so the note handling above
+## reads as the one thing it is rather than being repeated down six branches.
+func _declaration_of(ace_id: String, name_text: String, value_text: String, params_dict: Dictionary,
+		context: Dictionary) -> Dictionary:
+	match ace_id:
 		"SetLocalVar":
-			return EventSheetSentence.declaration("var %s = %s" % [name_text, value_text])
+			return EventSheetSentence.declaration("var %s = %s" % [name_text, value_text], context)
 		"SetLocalVarTyped":
 			return EventSheetSentence.declaration("var %s: %s = %s" % [
-				name_text, str(params_dict.get("var_type", "")), value_text])
+				name_text, str(params_dict.get("var_type", "")), value_text], context)
 		"SetLocalVarInferred":
-			return EventSheetSentence.declaration("var %s := %s" % [name_text, value_text])
+			return EventSheetSentence.declaration("var %s := %s" % [name_text, value_text], context)
 		"SetLocalConst":
-			return EventSheetSentence.declaration("const %s = %s" % [name_text, value_text])
+			return EventSheetSentence.declaration("const %s = %s" % [name_text, value_text], context)
 		"SetLocalConstTyped":
 			return EventSheetSentence.declaration("const %s: %s = %s" % [
-				name_text, str(params_dict.get("const_type", "")), value_text])
+				name_text, str(params_dict.get("const_type", "")), value_text], context)
 		"SetLocalConstInferred":
-			return EventSheetSentence.declaration("const %s := %s" % [name_text, value_text])
+			return EventSheetSentence.declaration("const %s := %s" % [name_text, value_text], context)
 	return {}
 
 
@@ -11788,7 +12056,18 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 ## and the inline editor put the author's own GDScript back in front of them, so an editable sheet
 ## keeps showing exactly what it will emit and only a reading softens the spelling.
 func _read_number_words(shown: String) -> String:
-	return EventSheetSentence.number_lens(shown) if _viewport.is_reading_mode() else shown
+	return _read_colour_words(EventSheetSentence.number_lens(shown)) if _viewport.is_reading_mode() else shown
+
+
+## U1. A colour param reads as the colour a person would say - "red, 20% darker", "red at 50%
+## opacity" - rather than as the Color call that built it. Only a value that IS a colour expression
+## goes through the grammar: everything else is the author's own GDScript and stays exactly as typed.
+func _read_colour_words(shown: String) -> String:
+	var text: String = shown.strip_edges()
+	if not (text.begins_with("Color(") or text.begins_with("Color.")):
+		return shown
+	var words: String = EventSheetSentence.expression_text(text, sentence_context())
+	return words if not words.is_empty() else shown
 
 
 func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescriptor, params_dict: Dictionary) -> String:

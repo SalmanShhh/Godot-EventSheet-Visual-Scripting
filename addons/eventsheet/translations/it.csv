@@ -3130,3 +3130,37 @@ No event sheets were found in that archive.,In quell'archivio non sono stati tro
 That file does not exist.,Quel file non esiste.
 That file is not an exported event sheet.,Quel file non è un foglio eventi esportato.
 Nothing has been imported yet.,Non è ancora stato importato nulla.
+the direction from {from} to {to},la direzione da {from} a {to}
+unit vector of {value},vettore unitario di {value}
+the speed,la velocita
+how much {a} points along {b} (-1 to 1),quanto {a} punta lungo {b} (da -1 a 1)
+{value} turned {angle},{value} ruotato di {angle}
+darker,piu scuro
+lighter,piu chiaro
+colour from {value},colore da {value}
+colour from hue {hue},colore con tonalita {hue}
+full saturation,saturazione piena
+{amount} saturation,{amount} di saturazione
+{amount} brightness,{amount} di luminosita
+at {amount} opacity,al {amount} di opacita
+Ease colour toward {colour} at {rate},Sfuma il colore verso {colour} a {rate}
+a new {type},un nuovo {type}
+a copy of {value},una copia di {value}
+{object}'s path,il percorso di {object}
+{object}'s child named {name},il figlio di {object} chiamato {name}
+the child named {name},il figlio chiamato {name}
+{name} in the layout,{name} nel layout
+the layout,il layout
+unique name,nome univoco
+Clone object,Clona oggetto
+next to it,accanto
+inside it,al suo interno
+Data type,Tipo di dati
+based on,basato su
+down to,fino a
+step,passo
+{subject} is a list of {count},{subject} e un elenco di {count}
+starting {values},che inizia con {values}
+{subject} is a table,{subject} e una tabella
+with {clauses},con {clauses}
+has {key},ha {key}

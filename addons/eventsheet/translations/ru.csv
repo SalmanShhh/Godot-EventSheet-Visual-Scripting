@@ -2475,7 +2475,7 @@ Current state is {state},Текущее состояние - {state}
 Previous state is {state},Предыдущее состояние - {state}
 Current state in list {states},Текущее состояние в списке {states}
 Previous state in list {states},Предыдущее состояние в списке {states}
-written into this script,записано в этот скрипт
+written into this script,вписано в этот скрипт
 "one named state at a time, switched by Go to state","одно именованное состояние за раз, переключается через Перейти к состоянию"
 Load layout {path} in the background,Загрузить макет {path} в фоне
 layout {path} has finished loading,макет {path} загружен
@@ -3130,3 +3130,37 @@ No event sheets were found in that archive.,В этом архиве листо�
 That file does not exist.,Такого файла нет.
 That file is not an exported event sheet.,Этот файл не является экспортированным листом событий.
 Nothing has been imported yet.,Пока ничего не импортировано.
+the direction from {from} to {to},napravlenie ot {from} k {to}
+unit vector of {value},edinichnyy vektor {value}
+the speed,skorost
+how much {a} points along {b} (-1 to 1),naskolko {a} napravlen vdol {b} (ot -1 do 1)
+{value} turned {angle},"{value}, povernutyy na {angle}"
+darker,temnee
+lighter,svetlee
+colour from {value},tsvet iz {value}
+colour from hue {hue},tsvet s ottenkom {hue}
+full saturation,polnaya nasyshchennost
+{amount} saturation,nasyshchennost {amount}
+{amount} brightness,yarkost {amount}
+at {amount} opacity,s neprozrachnostyu {amount}
+Ease colour toward {colour} at {rate},Plavno svesti tsvet k {colour} so skorostyu {rate}
+a new {type},novyy {type}
+a copy of {value},kopiya {value}
+{object}'s path,put {object}
+{object}'s child named {name},dochernii uzel {name} u {object}
+the child named {name},dochernii uzel {name}
+{name} in the layout,{name} v makete
+the layout,maket
+unique name,unikalnoe imya
+Clone object,Klonirovat obekt
+next to it,ryadom s nim
+inside it,vnutri nego
+Data type,Tip dannykh
+based on,na osnove
+down to,vniz do
+step,shag
+{subject} is a list of {count},{subject} - spisok iz {count}
+starting {values},nachinayushchiysya s {values}
+{subject} is a table,{subject} - tablitsa
+with {clauses},s {clauses}
+has {key},soderzhit {key}

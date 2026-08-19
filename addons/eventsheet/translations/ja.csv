@@ -2475,7 +2475,7 @@ Current state is {state},現在の状態が {state}
 Previous state is {state},直前の状態が {state}
 Current state in list {states},現在の状態がリスト {states} のいずれか
 Previous state in list {states},直前の状態がリスト {states} のいずれか
-written into this script,このスクリプトに書かれている
+written into this script,このスクリプトに書き込む
 "one named state at a time, switched by Go to state",常に 1 つの名前付き状態。状態へ移行 で切り替えます
 Load layout {path} in the background,レイアウト {path} をバックグラウンドで読み込む
 layout {path} has finished loading,レイアウト {path} の読み込みが完了した
@@ -3130,3 +3130,37 @@ No event sheets were found in that archive.,そのアーカイブにイベント
 That file does not exist.,そのファイルは存在しません。
 That file is not an exported event sheet.,そのファイルは書き出されたイベントシートではありません。
 Nothing has been imported yet.,まだ何もインポートされていません。
+the direction from {from} to {to},{from} から {to} への向き
+unit vector of {value},{value} の単位ベクトル
+the speed,速さ
+how much {a} points along {b} (-1 to 1),{a} が {b} に沿う度合い (-1 から 1)
+{value} turned {angle},{value} を {angle} 回転
+darker,暗く
+lighter,明るく
+colour from {value},{value} からの色
+colour from hue {hue},色相 {hue} の色
+full saturation,彩度いっぱい
+{amount} saturation,彩度 {amount}
+{amount} brightness,明度 {amount}
+at {amount} opacity,不透明度 {amount}
+Ease colour toward {colour} at {rate},色を {colour} へ {rate} で寄せる
+a new {type},新しい {type}
+a copy of {value},{value} のコピー
+{object}'s path,{object} のパス
+{object}'s child named {name},{object} の子 {name}
+the child named {name},子 {name}
+{name} in the layout,レイアウト内の {name}
+the layout,レイアウト
+unique name,ユニーク名
+Clone object,オブジェクトを複製
+next to it,その隣に
+inside it,その中に
+Data type,データ型
+based on,基は
+down to,から
+step,刻み
+{subject} is a list of {count},{subject} が {count} 件のリスト
+starting {values},先頭が {values}
+{subject} is a table,{subject} がテーブル
+with {clauses},条件 {clauses}
+has {key},{key} を持つ

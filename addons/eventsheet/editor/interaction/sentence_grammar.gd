@@ -339,7 +339,7 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	if not picked.is_empty():
 		return _with_indent(picked, indent)
 	if keyword == "var" or keyword == "const":
-		return _with_indent(_declaration_statement(text, keyword), indent)
+		return _with_indent(_declaration_statement(text, keyword, context), indent)
 	# S1. Switching state is the FSM behavior's one action, and it is written two ways - through the
 	# transition function, or straight onto the variable. Ahead of the assignment and the call
 	# readings, either of which would describe the spelling instead of the step.
@@ -879,12 +879,15 @@ static func return_sentence(returned: String, context: Dictionary) -> Dictionary
 
 ## The declaration a `var name: Type = value` line reads as: a type word chip, the name, and the
 ## starting value - never the annotation itself (M18). {} when the line is not a declaration.
-static func declaration(code: String) -> Dictionary:
+## `context` is the sheet's own, so a value naming the script's place ("the direction from Player to
+## target") reads with the object names the rest of the row uses; without one the value still reads,
+## it just falls back to System the way a context-free grammar call always has.
+static func declaration(code: String, context: Dictionary = {}) -> Dictionary:
 	var text: String = code.strip_edges()
 	var keyword: String = leading_word(text)
 	if keyword != "var" and keyword != "const":
 		return {}
-	var parsed: Dictionary = _declaration_statement(text, keyword)
+	var parsed: Dictionary = _declaration_statement(text, keyword, context)
 	return parsed
 
 
@@ -996,6 +999,11 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var held: String = callable_value_words(trimmed)
 	if not held.is_empty():
 		return held
+	# U1 - the direction between two points, decided by the whole expression rather than by any call
+	# inside it, so it is asked before the innermost-first pass takes the bracket group apart.
+	var vector_value: String = vector_colour_words(trimmed, context)
+	if not vector_value.is_empty():
+		return vector_value
 	# ── V4 / V5 ─────────────────────────────────────────────────────────────────────────────────
 	# A picture and a data asset are each ONE settled phrase, so they are answered before the call
 	# rewriting takes the chain that fetches them apart into members that say nothing.
@@ -1022,7 +1030,9 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	# expression with one settled name, claimed before the call and indexing passes below could take
 	# any of them apart. What the file holds is untouched; only the words change.
 	trimmed = behavior_expression_words(trimmed, context)
-	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
+	# U5 - the scene-tree spellings, after the node-path pass has settled `get_node("X")` into `$X` so
+	# both ways of writing the same lookup read alike.
+	var without_cast: String = scene_tree_words(_drop_casts(_system_words(node_lookup_text(trimmed))))
 	# R7. The sheet's own expression names, before any other rewriting sees the Godot spellings they
 	# are matched against. Off unless the view asked for the Familiar Words glossary.
 	without_cast = familiar_expression_words(without_cast, context)
@@ -1566,7 +1576,7 @@ static func _return_statement(text: String, context: Dictionary) -> Dictionary:
 
 
 ## `var name[: Type] = value`, `var name := value` and the `const` twins, as a declaration row.
-static func _declaration_statement(text: String, keyword: String) -> Dictionary:
+static func _declaration_statement(text: String, keyword: String, context: Dictionary = {}) -> Dictionary:
 	var rest: String = text.substr(keyword.length() + 1)
 	var walrus_at: int = top_level_index(rest, " := ")
 	var equals_at: int = top_level_index(rest, " = ")
@@ -1597,14 +1607,14 @@ static func _declaration_statement(text: String, keyword: String) -> Dictionary:
 		"is_constant": keyword == "const",
 		"type_word": type_word(declared_type),
 		"name": name_text,
-		"value": expression_text(value_text),
+		"value": expression_text(value_text, context),
 		# R41 - the value exactly as the file wrote it, which is what decides whether the declaration
 		# is a starting value the Local row can carry on its own or a value the event has to work out.
 		"raw_value": value_text,
 		"segments": [
 			{"text": "%s %s" % [translate("Local"), type_word(declared_type)], "tone": "plain"},
 			{"text": " %s = " % name_text, "tone": "name"},
-			{"text": expression_text(value_text), "tone": "value"}
+			{"text": expression_text(value_text, context), "tone": "value"}
 		]
 	}
 
@@ -1830,6 +1840,11 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 		return now_write
 	var split: Array = _split_object(target, context)
 	var object_name: String = str(split[0])
+	# U1. A colour eased toward another colour is ONE verb in the sheet's words, and the shape only
+	# means that when the line reads the very member it writes.
+	var eased_colour: Dictionary = colour_ease_statement(object_name, str(split[1]), assigned, context)
+	if not eased_colour.is_empty():
+		return eased_colour
 	# N8. A property every reader knows as a BEHAVIOUR knob - a body's velocity, a camera's zoom, an
 	# emitter's switch - reads in that behaviour's words, decided by the object's known class.
 	var behaviour: Dictionary = _behaviour_assignment(object_name, str(split[1]), assigned, target, context)
@@ -4101,6 +4116,9 @@ static func _idiom_for(head: String, arguments: PackedStringArray, context: Dict
 		return "%s %s" % [translate("translated"), arguments[0]]
 	if VECTOR_CONSTRUCTORS.has(head):
 		return "(%s)" % ", ".join(arguments)
+	# U1 - a colour built from its channels reads as the colour, with the alpha as opacity.
+	if head == "Color":
+		return colour_constructor_words(arguments)
 	if head == "move_toward" and arguments.size() == 3:
 		return _fill(translate("{from} moved toward {to} by {amount}"), {
 			"from": arguments[0], "to": arguments[1], "amount": arguments[2]
@@ -4617,6 +4635,16 @@ static func _slot_count(pattern: String) -> int:
 ## N6/N7. The receiver idioms whose reading is decided by the argument list.
 static func _shaped_receiver_idiom(receiver: String, method: String,
 		arguments: PackedStringArray) -> String:
+	# U1 - the vector and colour operations, ahead of the general tables: `normalized` and `length`
+	# both have entries there, and the words below are the ones a reader was promised.
+	var vector_colour: String = vector_colour_receiver_words(receiver, method, arguments)
+	if not vector_colour.is_empty():
+		return vector_colour
+	# U4 / U5 - making a value and looking a node up, ahead of the `get_thing()` property rule below,
+	# which would otherwise read `enemy.get_path()` as the bare member `path`.
+	var data_scene: String = data_scene_receiver_words(receiver, method, arguments)
+	if not data_scene.is_empty():
+		return data_scene
 	if method == "substr" and arguments.size() == 2:
 		if arguments[0].strip_edges() == "0":
 			return "left(%s, %s)" % [receiver, arguments[1]]
@@ -5387,7 +5415,36 @@ static func _angle_degrees(value: String) -> String:
 			return "%s°" % number_lens(arguments[0].strip_edges())
 	if text.is_valid_float():
 		return "%s°" % number_lens(String.num(rad_to_deg(text.to_float()), 4))
-	return ""
+	# U1. A quarter turn is written `PI / 2`, never `1.5708`, so the two constants a rotation is spelled
+	# with are resolved here as well. Only the plain forms - a constant on its own, or one multiplied or
+	# divided by a number - which is every way a fixed turn is actually written.
+	return _turn_constant_degrees(text)
+
+
+## U1. `PI`, `TAU / 4`, `-PI / 2`, `2 * PI` in degrees, or "" when the value is anything a reader
+## would not recognise as a fixed turn. Anything with a name in it is left as the expression it is:
+## `PI / sides` is not a number the row can show.
+static func _turn_constant_degrees(text: String) -> String:
+	const TURNS: Dictionary = {"PI": 180.0, "TAU": 360.0}
+	var body: String = text.strip_edges()
+	var sign_factor: float = 1.0
+	if body.begins_with("-"):
+		sign_factor = -1.0
+		body = body.substr(1).strip_edges()
+	for operator: String in [" / ", " * "]:
+		var at: int = top_level_index(body, operator)
+		if at < 0:
+			continue
+		var left: String = body.substr(0, at).strip_edges()
+		var right: String = body.substr(at + 3).strip_edges()
+		if TURNS.has(left) and right.is_valid_float() and right.to_float() != 0.0:
+			var turn: float = float(TURNS[left])
+			return "%s°" % number_lens(String.num(sign_factor * (turn / right.to_float()
+				if operator == " / " else turn * right.to_float()), 4))
+		if operator == " * " and TURNS.has(right) and left.is_valid_float():
+			return "%s°" % number_lens(String.num(sign_factor * float(TURNS[right]) * left.to_float(), 4))
+		return ""
+	return "%s°" % number_lens(String.num(sign_factor * float(TURNS[body]), 4)) if TURNS.has(body) else ""
 
 
 ## R4. The subject of an ANGLE question. `rotation` is that object's angle, and inside a sentence
@@ -9644,3 +9701,506 @@ static func overlap_collection_source(collection: String) -> String:
 			return ""
 		return object_of_reference(owner_name)
 	return ""
+# ── U1: vectors and colours read as words ────────────────────────────────────────
+#
+# The two value types every game line touches. A beginner reads `normalized()` and `darkened(0.2)`
+# as code, so each operation gets the word an event sheet already has for it, and Godot's own
+# spelling stays one hover away on the row. Nothing here decides what is emitted: every shape below
+# is claimed exactly or not at all, and the value the row holds is untouched.
+
+
+## U1. The colour channels that name a colour anybody says out loud, so `Color(1, 0, 0, 0.5)` reads
+## "red at 50% opacity" rather than four numbers. Only the colours a reader would name are here; any
+## other mix keeps its channels, which is the honest answer.
+const COLOUR_CHANNEL_WORDS: Dictionary = {
+	"1, 0, 0": "red", "0, 1, 0": "green", "0, 0, 1": "blue",
+	"1, 1, 1": "white", "0, 0, 0": "black", "1, 1, 0": "yellow",
+	"0, 1, 1": "cyan", "1, 0, 1": "magenta"
+}
+
+## U1. The speeds an event sheet has ONE word for. `velocity.length()` is the speed - a reader asks
+## "how fast", never "how long is the velocity vector".
+const SPEED_RECEIVERS: PackedStringArray = ["velocity", "linear_velocity"]
+
+
+## U1. A whole vector or colour expression that has its own settled sentence, or "" when the text is
+## anything else. Asked BEFORE the general call rewriting, because the shape here is decided by the
+## expression as a whole - the innermost-first pass would have taken the bracket group apart first.
+static func vector_colour_words(text: String, context: Dictionary) -> String:
+	return _direction_between_words(text, context)
+
+
+## U1. `(a.position - b.position).normalized()` is the one thing every chase line means: the
+## direction from B to A. Claimed only when the bracket group is exactly one subtraction and the whole
+## expression is that group normalized, so `(a - b + c).normalized()` keeps its own code.
+static func _direction_between_words(text: String, context: Dictionary) -> String:
+	const TAIL := ").normalized()"
+	var trimmed: String = text.strip_edges()
+	if not trimmed.begins_with("(") or not trimmed.ends_with(TAIL):
+		return ""
+	if closing_paren(trimmed, 0) != trimmed.length() - TAIL.length():
+		return ""
+	var inner: String = trimmed.substr(1, trimmed.length() - TAIL.length() - 1)
+	var minus_at: int = top_level_index(inner, " - ")
+	if minus_at <= 0:
+		return ""
+	var to_point: String = inner.substr(0, minus_at).strip_edges()
+	var from_point: String = inner.substr(minus_at + 3).strip_edges()
+	if to_point.is_empty() or from_point.is_empty():
+		return ""
+	return _fill(translate("the direction from {from} to {to}"),
+		{"from": _point_object(from_point, context), "to": _point_object(to_point, context)})
+
+
+## U1. The vector and colour methods whose reading needs the receiver, in the words the sheet has for
+## each operation. "" for anything not claimed exactly, so the general tables still answer.
+static func vector_colour_receiver_words(receiver: String, method: String,
+		arguments: PackedStringArray) -> String:
+	match method:
+		"normalized":
+			if arguments.is_empty():
+				return _fill(translate("unit vector of {value}"), {"value": receiver})
+		"length":
+			if arguments.is_empty() and SPEED_RECEIVERS.has(receiver.trim_prefix("self.")):
+				return translate("the speed")
+		"dot":
+			if arguments.size() == 1:
+				return _fill(translate("how much {a} points along {b} (-1 to 1)"),
+					{"a": receiver, "b": arguments[0]})
+		"rotated":
+			if arguments.size() == 1:
+				# The innermost-first call pass has already read a `deg_to_rad(45)` argument as "45°",
+				# so a value that arrives in degrees is taken as it stands.
+				var degrees: String = arguments[0].strip_edges() if arguments[0].strip_edges().ends_with("°") \
+					else _angle_degrees(arguments[0])
+				if not degrees.is_empty():
+					return _fill(translate("{value} turned {angle}"),
+						{"value": receiver, "angle": degrees})
+		"darkened", "lightened":
+			if arguments.size() == 1 and arguments[0].strip_edges().is_valid_float():
+				var shade: String = translate("darker" if method == "darkened" else "lighter")
+				return "%s, %s %s" % [receiver, _percent_words(arguments[0], {}), shade]
+		"from_hsv":
+			if receiver == "Color":
+				return _colour_from_hsv_words(arguments)
+		"from_string":
+			if receiver == "Color" and arguments.size() >= 1:
+				return _fill(translate("colour from {value}"), {"value": arguments[0]})
+	return ""
+
+
+## U1. `Color.from_hsv(0.3, 1, 1)` as the colour it describes. Full brightness is what a reader
+## assumes, so only the channels that say something appear.
+static func _colour_from_hsv_words(arguments: PackedStringArray) -> String:
+	if arguments.size() < 1 or arguments.size() > 4:
+		return ""
+	for argument: String in arguments:
+		if not argument.strip_edges().is_valid_float():
+			return ""
+	var words: String = _fill(translate("colour from hue {hue}"),
+		{"hue": _percent_words(arguments[0], {})})
+	if arguments.size() >= 2:
+		words += ", " + (translate("full saturation") if arguments[1].strip_edges().to_float() >= 1.0
+			else _fill(translate("{amount} saturation"), {"amount": _percent_words(arguments[1], {})}))
+	if arguments.size() >= 3 and arguments[2].strip_edges().to_float() < 1.0:
+		words += ", " + _fill(translate("{amount} brightness"),
+			{"amount": _percent_words(arguments[2], {})})
+	return words
+
+
+## U1. `Color(1, 0, 0, 0.5)` as the colour anybody would say out loud, with its alpha as the opacity
+## percentage an event sheet writes. A mix nobody has a word for keeps its channels.
+static func colour_constructor_words(arguments: PackedStringArray) -> String:
+	if arguments.size() < 3 or arguments.size() > 4:
+		return ""
+	for argument: String in arguments:
+		if not argument.strip_edges().is_valid_float():
+			return ""
+	var channels: PackedStringArray = PackedStringArray()
+	for index: int in 3:
+		channels.append(number_lens(arguments[index].strip_edges()))
+	var key: String = ", ".join(channels)
+	var name_word: String = str(COLOUR_CHANNEL_WORDS.get(key, ""))
+	var words: String = translate(name_word) if not name_word.is_empty() else key
+	if arguments.size() == 4 and arguments[3].strip_edges().to_float() < 1.0:
+		words += " " + _fill(translate("at {amount} opacity"),
+			{"amount": _percent_words(arguments[3], {})})
+	return words
+
+
+## U1. `modulate = modulate.lerp(target, rate * delta)` is the one easing line every fade writes, and
+## an event sheet says it in one verb. {} unless the assignment eases the SAME member it reads, which
+## is what makes it an ease rather than a plain blend.
+static func colour_ease_statement(object_name: String, member: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	if member != "modulate" and member != "self_modulate":
+		return {}
+	var call: Dictionary = call_parts(assigned.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "lerp":
+		return {}
+	if str(call.get("target", "")).strip_edges().trim_prefix("self.") != member:
+		return {}
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	if arguments.size() != 2:
+		return {}
+	var rate: String = per_second_factor(arguments[1])
+	if rate.is_empty():
+		return {}
+	return _sentence(object_name, "Ease colour toward {colour} at {rate}", {
+		"colour": [expression_text(arguments[0], context), "value"],
+		"rate": [expression_text(rate, context), "value"]
+	})
+
+
+# ── U4 / U5: data types and the scene tree, in one word each ─────────────────────
+#
+# The idioms a Godot script reaches for when it makes a value or looks something up. Each is one word
+# in an event sheet, and every one of them was reading as the call it is. Display only, like the rest
+# of this file: nothing here decides what is emitted.
+
+
+## U4 / U5. The lookups and the makers whose reading needs the receiver. "" for anything not claimed
+## exactly, so the general tables above still answer.
+static func data_scene_receiver_words(receiver: String, method: String,
+		arguments: PackedStringArray) -> String:
+	match method:
+		# U4. `Stats.new()` makes one of a type the file declares; only a Type-cased name is claimed,
+		# because `handler.new()` on a variable is a call whose result nobody can name.
+		"new":
+			if arguments.is_empty() and is_identifier(receiver) and receiver == receiver.capitalize().replace(" ", ""):
+				return _fill(translate("a new {type}"), {"type": receiver})
+		# U4. A copy is a copy whether it is a resource, a node or a list. `duplicate(true)` is the
+		# deep copy, which is still a copy - the flag is Godot's business, not the row's.
+		"duplicate":
+			if arguments.is_empty() or (arguments.size() == 1 and arguments[0].strip_edges() in ["true", "false"]):
+				return _fill(translate("a copy of {value}"), {"value": receiver})
+		# U5. A node's path, said the way a sheet says whose it is.
+		"get_path":
+			if arguments.is_empty():
+				return _fill(translate("{object}'s path"), {"object": receiver})
+		# U5. `find_child("HUD")` is the child named HUD. Only a literal name is claimed: a computed
+		# one has nothing to show, and the search flags say how Godot looks rather than what it found.
+		"find_child":
+			if arguments.size() == 1 and _is_string_literal(arguments[0]):
+				return _fill(translate("{object}'s child named {name}"),
+					{"object": receiver, "name": _unquote(arguments[0])})
+	return ""
+
+
+## U5. The scene-tree spellings that are one word in an event sheet, on a whole value. Run after the
+## node-path pass, so a `get_node("Boss")` has already become `$Boss` and both spellings answer alike.
+static func scene_tree_words(text: String) -> String:
+	if not text.contains("current_scene") and not text.contains("find_child(") and not text.contains("%"):
+		return text
+	var out: String = text
+	if out.contains("%"):
+		out = _unique_name_words(out)
+	# The layout, and a node looked up inside it. The named form first: `the layout.$Boss` would read
+	# as plumbing, and "Boss in the layout" is what the row is actually about.
+	if out.contains("current_scene"):
+		if _scene_node_regex == null:
+			_scene_node_regex = RegEx.create_from_string(
+				"get_tree\\(\\)\\.current_scene\\.\\$([A-Za-z_][A-Za-z0-9_/]*)")
+		if _scene_node_regex != null:
+			for found: RegExMatch in _scene_node_regex.search_all(out):
+				out = out.replace(found.get_string(0), _fill(translate("{name} in the layout"),
+					{"name": found.get_string(1)}))
+		out = out.replace("get_tree().current_scene", translate("the layout"))
+	# A receiver-less `find_child("HUD")` is the script's own child, and the object column has already
+	# said whose - so the row says "the child named HUD" with nobody's name repeated in it.
+	if out.contains("find_child("):
+		if _find_child_regex == null:
+			_find_child_regex = RegEx.create_from_string("(^|[^A-Za-z0-9_.$])find_child\\(&?\"([^\"]+)\"\\)")
+		if _find_child_regex != null:
+			for found: RegExMatch in _find_child_regex.search_all(out):
+				out = out.replace(found.get_string(0), "%s%s" % [found.get_string(1),
+					_fill(translate("the child named {name}"), {"name": found.get_string(2)})])
+	return out
+
+
+## U5. A node addressed by its unique name IS that object, so the row says the object with the way it
+## was addressed as the aside it is.
+##
+## Quote-aware and value-start only, because `%` is three different things in GDScript: `%HealthBar`
+## is the node, `"%d"` inside a literal is a format specifier somebody wrote, and `a % b` is the
+## remainder. Only a `%` that begins a value and is followed straight away by a name is the node.
+static func _unique_name_words(text: String) -> String:
+	var out: String = ""
+	var index: int = 0
+	var value_start: bool = true
+	while index < text.length():
+		var character: String = text[index]
+		if character == "\"" or character == "'":
+			var quote_end: int = _string_end(text, index)
+			out += text.substr(index, quote_end - index + 1)
+			index = quote_end + 1
+			value_start = false
+			continue
+		if character == "%" and value_start and index + 1 < text.length() \
+				and (text[index + 1].is_valid_identifier() and not text[index + 1].is_valid_int()):
+			var name_end: int = index + 1
+			while name_end < text.length() and (text[name_end].is_valid_identifier() or text[name_end].is_valid_int()):
+				name_end += 1
+			out += "%s (%s)" % [text.substr(index + 1, name_end - index - 1), translate("unique name")]
+			index = name_end
+			value_start = false
+			continue
+		out += character
+		# A value may start at the beginning, after an operator, or after an opening bracket or comma.
+		value_start = character in [" ", "(", "[", ",", "=", "+", "-", "*", "/", ":"]
+		index += 1
+	return out
+
+
+## The scene-tree matchers, compiled once for the session like the grammar's others.
+static var _scene_node_regex: RegEx = null
+static var _find_child_regex: RegEx = null
+
+
+# ── U3: a note on a row ──────────────────────────────────────────────────────────
+#
+# A note on one action is how a sheet comments a single step, and a trailing `# ...` is how GDScript
+# writes exactly that. It was already in the file; showing it costs nothing and the bytes never move.
+
+
+## U3. The words a note carries when it is about work still to do. A comment line that opens with one
+## of these belongs to the statement under it and is worth counting; every other comment line is a
+## comment row of its own, which is what it has always been.
+const TASK_NOTE_MARKERS: PackedStringArray = ["TODO", "FIXME", "HACK", "NOTE"]
+
+
+## U3. One statement split from its trailing note, as [code, note]. The note is "" when the line has
+## none, and the code is returned untouched in that case.
+##
+## Quote-aware, because a `#` inside a string literal is content somebody typed. Whitespace before the
+## `#` is required for the same reason: `"#ff0000"` has already been skipped as a literal, but a bare
+## `#` glued to the end of an expression is not the shape a note is written in.
+static func trailing_comment(text: String) -> PackedStringArray:
+	if not text.contains("#"):
+		return PackedStringArray([text, ""])
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if character == "\"" or character == "'":
+			index = _string_end(text, index) + 1
+			continue
+		if character == "#" and index > 0 and text[index - 1] in [" ", "\t"]:
+			var code: String = text.substr(0, index).rstrip(" \t")
+			var note: String = text.substr(index + 1).strip_edges()
+			return PackedStringArray([text, ""]) if code.strip_edges().is_empty() or note.is_empty() \
+				else PackedStringArray([code, note])
+		index += 1
+	return PackedStringArray([text, ""])
+
+
+## U3. The marker a comment opens with ("TODO", "FIXME", …), or "" when it opens with none. The
+## marker may be followed by a colon or by nothing at all, which is how both spellings are written.
+static func task_note_marker(comment: String) -> String:
+	var text: String = comment.strip_edges().trim_prefix("#").strip_edges()
+	for marker: String in TASK_NOTE_MARKERS:
+		if text == marker or text.begins_with("%s " % marker) or text.begins_with("%s:" % marker):
+			return marker
+	return ""
+
+
+# ── U2: match PATTERNS read as the conditions they are ───────────────────────────
+#
+# Pattern matching is Godot's nicest control flow and a beginner's scariest cell. A match on plain
+# values already reads as the Else-if chain it is (M37); these are the four patterns that say
+# something a plain value cannot - a list of a certain shape, a table with certain entries, a name
+# bound to whatever arrived, and that name with a guard on it. Each reads as the question it asks,
+# with the names it binds as chips, and every arm keeps the exact bytes it was lifted from.
+
+
+## U2. One `match` arm as the condition it is, or {} when the pattern is not one this reading claims.
+##
+## Returns {"text": the condition sentence ("" for an Else), "chips": the names the arm binds,
+## "is_else": true when the arm matches whatever is left}. Strict on purpose: a nested pattern, an
+## open-ended `..`, or anything with a call in it keeps the pattern text it was written as.
+static func match_pattern_reading(subject: String, pattern: String, context: Dictionary) -> Dictionary:
+	var text: String = pattern.strip_edges()
+	var subject_words: String = subject.strip_edges()
+	if text.is_empty() or subject_words.is_empty():
+		return {}
+	if text == "_":
+		return {"text": "", "chips": PackedStringArray(), "is_else": true}
+	if text.begins_with("[") and text.ends_with("]"):
+		return _list_pattern_reading(subject_words, text.substr(1, text.length() - 2))
+	if text.begins_with("{") and text.ends_with("}"):
+		return _table_pattern_reading(subject_words, text.substr(1, text.length() - 2))
+	if text.begins_with("var "):
+		return _binding_pattern_reading(subject_words, text.substr(4), context)
+	return {}
+
+
+## U2. `["move", var x, var y]` - a list of a known length whose leading entries are known values.
+## The bound names are chips, because they are what the arm's actions may then use.
+static func _list_pattern_reading(subject: String, inner: String) -> Dictionary:
+	var terms: PackedStringArray = split_top_level(inner, ", ")
+	if terms.is_empty():
+		return {}
+	var leading: PackedStringArray = PackedStringArray()
+	var chips: PackedStringArray = PackedStringArray()
+	for term: String in terms:
+		var entry: String = term.strip_edges()
+		if entry.is_empty() or entry == "..":
+			return {}
+		if entry.begins_with("var "):
+			var bound: String = entry.substr(4).strip_edges()
+			if not is_identifier(bound):
+				return {}
+			chips.append(bound)
+			continue
+		# A known value AFTER a bound name has nothing to lead with, so the arm keeps its own text
+		# rather than being described as starting with something it does not start with.
+		if not chips.is_empty() or not _is_pattern_value(entry):
+			return {}
+		leading.append(entry)
+	var count_words: String = _fill(translate("{subject} is a list of {count}"),
+		{"subject": subject, "count": str(terms.size())})
+	if leading.is_empty():
+		return {"text": count_words, "chips": chips, "is_else": false}
+	return {
+		"text": "%s %s" % [count_words, _fill(translate("starting {values}"),
+			{"values": ", ".join(leading)})],
+		"chips": chips, "is_else": false
+	}
+
+
+## U2. `{"type": "hit", "amount": var a}` - a table with certain entries. An entry with a known value
+## is part of the question; an entry that binds a name is a chip reading `key → name`, because what
+## the arm gets out of the table is the other half of what the pattern says.
+static func _table_pattern_reading(subject: String, inner: String) -> Dictionary:
+	var entries: PackedStringArray = split_top_level(inner, ", ")
+	if entries.is_empty():
+		return {}
+	var clauses: PackedStringArray = PackedStringArray()
+	var chips: PackedStringArray = PackedStringArray()
+	for term: String in entries:
+		var entry: String = term.strip_edges()
+		if entry.is_empty() or entry == "..":
+			return {}
+		var colon_at: int = top_level_index(entry, ": ")
+		if colon_at < 0:
+			# A bare key asks only that the table HAS it, which is a question worth reading.
+			if not _is_pattern_value(entry):
+				return {}
+			clauses.append(_fill(translate("has {key}"), {"key": _pattern_key_words(entry)}))
+			continue
+		var key: String = entry.substr(0, colon_at).strip_edges()
+		var value: String = entry.substr(colon_at + 2).strip_edges()
+		if not _is_pattern_value(key):
+			return {}
+		if value.begins_with("var "):
+			var bound: String = value.substr(4).strip_edges()
+			if not is_identifier(bound):
+				return {}
+			chips.append("%s → %s" % [_pattern_key_words(key), bound])
+			continue
+		if not _is_pattern_value(value):
+			return {}
+		clauses.append("%s = %s" % [_pattern_key_words(key), value])
+	var table_words: String = _fill(translate("{subject} is a table"), {"subject": subject})
+	if clauses.is_empty():
+		return {"text": table_words, "chips": chips, "is_else": false}
+	return {
+		"text": "%s %s" % [table_words, _fill(translate("with {clauses}"),
+			{"clauses": (" %s " % translate("and")).join(clauses)})],
+		"chips": chips, "is_else": false
+	}
+
+
+## U2. `var other` and `var other when other is String`. A bare binding matches whatever is left, so
+## it reads as the Else it is with the name it binds beside it; a guard IS the question the arm asks,
+## read through the ordinary condition grammar with the bound name standing for the subject - which is
+## what it stands for.
+static func _binding_pattern_reading(subject: String, rest: String, context: Dictionary) -> Dictionary:
+	var body: String = rest.strip_edges()
+	var when_at: int = top_level_index(body, " when ")
+	if when_at < 0:
+		return {} if not is_identifier(body) else {
+			"text": "", "chips": PackedStringArray([body]), "is_else": true
+		}
+	var bound: String = body.substr(0, when_at).strip_edges()
+	var guard: String = body.substr(when_at + 6).strip_edges()
+	if not is_identifier(bound) or guard.is_empty():
+		return {}
+	var subject_guard: String = _with_subject(guard, bound, subject)
+	# A guard that asks only what KIND of value arrived reads as the sheet's own type words - `event is
+	# text`, not `event is a String` - because in a match arm the type IS the whole question.
+	var kind_at: int = top_level_index(subject_guard, " is ")
+	if kind_at > 0:
+		var kind_name: String = subject_guard.substr(kind_at + 4).strip_edges()
+		var kind_word: String = type_word(kind_name)
+		if is_identifier(kind_name) and not kind_word.is_empty() and kind_word != kind_name:
+			return {
+				"text": "%s %s %s" % [subject_guard.substr(0, kind_at).strip_edges(),
+					translate("is"), kind_word],
+				"chips": PackedStringArray([bound]), "is_else": false
+			}
+	var reading: Dictionary = condition_pieces(subject_guard, context)
+	var text: String = ""
+	for piece: Variant in (reading.get("pieces", []) as Array):
+		text += str((piece as Array)[0])
+	text = text.strip_edges()
+	if text.is_empty():
+		return {}
+	# The condition grammar hands the OBJECT back separately, for a column this arm has no room for -
+	# so the arm says it, exactly where a reader looks for the thing being asked about.
+	var object_label: String = str(reading.get("object", "")).strip_edges()
+	if not object_label.is_empty() and not text.begins_with(object_label):
+		text = "%s %s" % [object_label, text]
+	return {"text": text, "chips": PackedStringArray([bound]), "is_else": false}
+
+
+## U2. The guard with the bound name replaced by what it is bound TO, so `other is String` on a match
+## over `event` reads "event is text" - the row names the value a reader can see rather than a name
+## the pattern invented one line ago. Whole words only, and never inside a string literal.
+static func _with_subject(guard: String, bound: String, subject: String) -> String:
+	var out: String = ""
+	var index: int = 0
+	while index < guard.length():
+		var character: String = guard[index]
+		if character == "\"" or character == "'":
+			var quote_end: int = _string_end(guard, index)
+			out += guard.substr(index, quote_end - index + 1)
+			index = quote_end + 1
+			continue
+		if not (character.is_valid_identifier() and not character.is_valid_int()):
+			out += character
+			index += 1
+			continue
+		var word_end: int = index
+		while word_end < guard.length() and (guard[word_end].is_valid_identifier() or guard[word_end].is_valid_int()):
+			word_end += 1
+		var word: String = guard.substr(index, word_end - index)
+		var follows_dot: bool = index > 0 and guard[index - 1] == "."
+		out += subject if word == bound and not follows_dot else word
+		index = word_end
+	return out
+
+
+## U2. A value a pattern may test against: a piece of text, a number, true/false/null, or a named
+## constant. Anything with a call or an operator in it is doing work, and a pattern arm that does work
+## says more than the reading can.
+static func _is_pattern_value(text: String) -> bool:
+	var value: String = text.strip_edges()
+	if value.is_empty() or value.contains("(") or value.contains("[") or value.contains(".."):
+		return false
+	if _is_string_literal(value):
+		return true
+	if value.is_valid_float() or (value.begins_with("-") and value.substr(1).is_valid_float()):
+		return true
+	if value in ["true", "false", "null"]:
+		return true
+	for piece: String in value.split("."):
+		if not is_identifier(piece):
+			return false
+	return true
+
+
+## U2. A table key as a reader says it: `"type"` is the entry called type, and the quotes are GDScript
+## asking for a piece of text rather than anything the row is about.
+static func _pattern_key_words(key: String) -> String:
+	var text: String = key.strip_edges()
+	return _unquote(text) if _is_string_literal(text) else text

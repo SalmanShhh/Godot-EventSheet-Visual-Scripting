@@ -2475,7 +2475,7 @@ Current state is {state},当前状态是 {state}
 Previous state is {state},上一个状态是 {state}
 Current state in list {states},当前状态在列表 {states} 中
 Previous state in list {states},上一个状态在列表 {states} 中
-written into this script,写在此脚本中
+written into this script,写进这个脚本
 "one named state at a time, switched by Go to state",同一时间只有一个命名状态，用 前往状态 切换
 Load layout {path} in the background,在后台加载布局 {path}
 layout {path} has finished loading,布局 {path} 已加载完成
@@ -3130,3 +3130,37 @@ No event sheets were found in that archive.,在那个压缩包里没找到事件
 That file does not exist.,那个文件不存在。
 That file is not an exported event sheet.,那个文件不是导出的事件表。
 Nothing has been imported yet.,还没有导入任何东西。
+the direction from {from} to {to},从 {from} 到 {to} 的方向
+unit vector of {value},{value} 的单位向量
+the speed,速度
+how much {a} points along {b} (-1 to 1),{a} 沿 {b} 的方向程度 (-1 到 1)
+{value} turned {angle},{value} 旋转 {angle}
+darker,更暗
+lighter,更亮
+colour from {value},来自 {value} 的颜色
+colour from hue {hue},色相 {hue} 的颜色
+full saturation,完全饱和
+{amount} saturation,饱和度 {amount}
+{amount} brightness,亮度 {amount}
+at {amount} opacity,不透明度 {amount}
+Ease colour toward {colour} at {rate},以 {rate} 将颜色渐变至 {colour}
+a new {type},一个新的 {type}
+a copy of {value},{value} 的副本
+{object}'s path,{object} 的路径
+{object}'s child named {name},{object} 中名为 {name} 的子节点
+the child named {name},名为 {name} 的子节点
+{name} in the layout,布局中的 {name}
+the layout,布局
+unique name,唯一名称
+Clone object,克隆对象
+next to it,在它旁边
+inside it,在它里面
+Data type,数据类型
+based on,基于
+down to,递减到
+step,步长
+{subject} is a list of {count},{subject} 是 {count} 项的列表
+starting {values},以 {values} 开头
+{subject} is a table,{subject} 是一张表
+with {clauses},其中 {clauses}
+has {key},含有 {key}
