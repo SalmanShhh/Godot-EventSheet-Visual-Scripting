@@ -47,7 +47,7 @@ static func run() -> bool:
 	ok = _check("the sheet opens on the Include bar",
 		include_bar != null and include_bar.row_uid.begins_with("pack_include_bar_"), true) and ok
 	ok = _check("the Include bar reads as the pack's identity",
-		_texts(include_bar), "⇥ | Addon Pack | FPSController | v1.0.0 | behaves on a | CharacterBody3D | reads as events") and ok
+		_texts(include_bar), "⇥ | Addon Pack | FPSController | v1.0.0 | behaves on a | CharacterBody3D | reads as events · 1 pattern · 1 adoptable ▸") and ok
 	ok = _check("it wears the identity bar's presence",
 		include_bar != null and is_equal_approx(include_bar.height_scale, 1.5), true) and ok
 	ok = _check("the Class setup strip folded into it", _has_uid_prefix(rows, "scaffolding_strip_"), false) and ok
