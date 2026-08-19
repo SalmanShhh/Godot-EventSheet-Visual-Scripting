@@ -33,11 +33,13 @@ const PACKS_ROOT := "res://eventsheet_addons"
 ## The groups, in the order the guides already print them, keyed by ACEDefinition.ACEType.
 const GROUP_ORDER := ["Actions", "Conditions", "Expressions", "Triggers"]
 
-## The first header cell of a table that lists VERBS. The corpus writes these tables four ways
-## ("| Verb |", "| Action |", "| Condition |", "| Expression |"), and the same section also
-## carries an Inspector-properties table - so the head is what tells the advisory diff which rows
-## are verbs and which are knobs.
-const VERB_TABLE_HEADS := ["verb", "action", "condition", "expression", "trigger"]
+## The first header cell of a table that lists rows the picker offers. The corpus writes these
+## tables five ways ("| Name |", "| Verb |", "| Action |", "| Condition |", "| Expression |"), and
+## the same section also carries an Inspector-properties table - so the head is what tells the
+## advisory diff which lines are picker rows and which are knobs. "Name" is the head the derived
+## tables draw themselves, so it must be readable back or the diff sees an empty section; "Verb" is
+## the head the older shipped guides were written with and stays readable forever.
+const VERB_TABLE_HEADS := ["name", "verb", "action", "condition", "expression", "trigger"]
 
 ## The OTHER shape the corpus writes a verb table in: one table for the whole pack, with the kind
 ## in the first column and the name in the second ("| Kind | Name | Parameters | Description |").
@@ -285,8 +287,8 @@ static func reference_columns(grouped: Dictionary) -> PackedStringArray:
 	for group: String in GROUP_ORDER:
 		for entry: Variant in (grouped.get(group, []) as Array):
 			if not str((entry as Dictionary).get("note", "")).strip_edges().is_empty():
-				return PackedStringArray(["Verb", "Parameters", "What it does"])
-	return PackedStringArray(["Verb", "Parameters"])
+				return PackedStringArray(["Name", "Parameters", "What it does"])
+	return PackedStringArray(["Name", "Parameters"])
 
 
 ## The section as page blocks: the heading the guide already had (so its anchor still resolves),

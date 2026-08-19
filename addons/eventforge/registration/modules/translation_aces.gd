@@ -290,7 +290,7 @@ static func _counted_descriptors() -> Array[ACEDescriptor]:
 			_plural_param("\"%d apples\"", "The many-items form."),
 			_count_param("How many - picks the form AND fills the number in."),
 		], CAT, "set text to [b]{singular}[/b] / [b]{plural}[/b] for [b]{count}[/b]", "Label")
-		.described("Sets this Label to the counted sentence in one row: the language picks the form and the number is filled in. The same verb as Counted Text without an expression to nest, down to keeping both forms' %d - a form that lost its %d comes back unfilled rather than erroring. Re-run it under On Language Changed so the line follows a live switch."))
+		.described("Sets this Label to the counted sentence in one row: the language picks the form and the number is filled in. The same action as Counted Text without an expression to nest, down to keeping both forms' %d - a form that lost its %d comes back unfilled rather than erroring. Re-run it under On Language Changed so the line follows a live switch."))
 
 	return descriptors
 

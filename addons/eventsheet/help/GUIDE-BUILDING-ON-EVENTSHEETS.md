@@ -521,6 +521,8 @@ EventSheets.on_sheet_saved(func(payload: Dictionary) -> void:
 
 ### 17. Teach the canvas to accept your own asset type
 
+![The rows the built-in drop handlers build: a scene spawn, a sound, an image texture, a JSON load and a resource preload](images/asset-drop.png)
+
 **Scenario:** your studio authors dialogue as `.dlg` files. Dropping one on a sheet should build the row a writer would have added by hand, not make them go looking through the picker.
 
 ```gdscript
@@ -619,6 +621,8 @@ EventSheets.register_starter({
 The Callable runs fresh on every create, so two new sheets never share a resource instance.
 
 ### 23. Draw your behaviour's setup in the 2D viewport
+
+![A Bound To behaviour's gizmo drawn over the selected node: the solid bound rectangle and the dashed origin-reach line](images/behavior-gizmo.png)
 
 **Scenario:** a patrol behaviour has a radius nobody can see until the game runs. A gizmo draws it while the node is selected, so tuning happens in the editor.
 

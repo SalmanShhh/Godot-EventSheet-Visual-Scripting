@@ -99,6 +99,8 @@ Inside the loop body, **Current Loop Item** is the iterator; **Break Loop** / **
 
 ## 8. Reusable Logic - Functions
 
+![A published pack's identity banner carrying its Addon Pack v1.0.0 chip](images/pack-version-chip.png)
+
 Add a **Function** (a name and which kind it is). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to. Its parameters are added afterwards from the Define block's own cells, not in the dialog. The "Using the ACE Studio" guide walks through it field by field.
 
 <img src="images/ace-studio.png" alt="The ACE Studio: Name, Doc comment and Inspector button rows, three cards headlining Action / Condition / Expression with a plain-language line each, a live picker preview of the published function with its Ships-as GDScript signature, and a plain Publish-to-the-picker checkbox." width="580">

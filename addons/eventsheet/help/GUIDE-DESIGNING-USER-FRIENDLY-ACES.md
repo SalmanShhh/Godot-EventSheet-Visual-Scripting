@@ -168,6 +168,8 @@ On Input event", "cosmetic - aim is untouched".
 
 ## Progressive disclosure: featured, hidden, sections, synonyms
 
+![The picker's info panel: the row's description keeping its full height, with the guide link under it](images/ace-picker-figure.png)
+
 A useful pack has thirty rows; a beginner needs five. The plugin gives you channels to serve
 both without hiding either:
 

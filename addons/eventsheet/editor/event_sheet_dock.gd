@@ -409,6 +409,12 @@ func _ready() -> void:
 		if filesystem != null and filesystem.has_signal("filesystem_changed") \
 				and not filesystem.is_connected("filesystem_changed", _on_translations_maybe_changed):
 			filesystem.connect("filesystem_changed", _on_translations_maybe_changed)
+	# Project Settings is the OTHER way the facts behind a row change: adding an input action there
+	# never touches the filesystem scan, so without this the Object bar kept naming yesterday's
+	# actions until a restart.
+	if Engine.is_editor_hint() and ProjectSettings.has_signal("settings_changed") \
+			and not ProjectSettings.is_connected("settings_changed", _on_project_settings_changed):
+		ProjectSettings.connect("settings_changed", _on_project_settings_changed)
 	_build_ui()
 	_ensure_editor_dialogs_initialized()
 	_refresh_ace_registry()
@@ -439,10 +445,26 @@ func _on_translations_maybe_changed() -> void:
 	# dropped with them; a pack dropped into the project appears on the next row that asks.
 	EventSheetViewportReadingRows.clear_pack_index()
 	EventSheetEditorToolCensus.clear_cache()
+	# The project-wide scene index (which .tscn a script is the ROOT of) is what names an object on a
+	# row, a sheet title and a thumbnail, and it was built ONCE per session: a scene saved, added or
+	# re-pointed mid-session went on reading as the object it used to be until a restart.
+	ViewportRowBuilder.clear_scene_script_index()
+	# The Input Map is read out of project.godot as TEXT, so an action added in Project Settings (or
+	# by another tool writing the file) only lands here when the read is dropped. The editor rescans
+	# on both, so this hook covers the settings change as well as the file one.
+	EventSheetInputMapFacts.clear_cache()
 	if EventSheetL10n.reload_if_changed():
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:
 			_viewport.queue_redraw()
+
+
+## Project Settings changed: the Input Map lives there, and every row that names an action reads it.
+## Dropping the cached read is the whole fix - the next row that asks re-reads project.godot.
+func _on_project_settings_changed() -> void:
+	EventSheetInputMapFacts.clear_cache()
+	if _viewport != null:
+		_viewport.queue_redraw()
 
 
 func setup(sheet: EventSheetResource = null) -> void:

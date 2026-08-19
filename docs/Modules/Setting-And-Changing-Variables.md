@@ -352,6 +352,7 @@ than as the row's own subject.
 - **A constant must be constant.** **Set Local Constant** emits `const`, so its **Value** has to be
   computable at compile time. A node lookup or a `delta` in there will not compile - use a local
   variable instead.
-- **Toggle and Toggle Boolean emit the same line.** They exist in two places because one belongs to the
+- **Toggle boolean and Toggle Boolean emit the same line.** The two really do ship under names that
+  differ only in one capital letter. They exist in two places because one belongs to the
   Variables vocabulary and one to the generic Helpers escape hatch. Pick either; the output is
   identical.

@@ -113,6 +113,10 @@ The Mode dropdown on **Set Fullscreen Mode** offers exactly
 
 ### Knowing where the game is running (picker section: Platform)
 
+![The Platform Has Feature cell with its tag suggestions dropped down](../images/feature-tags.png)
+
+![Committing a feature tag no preset defines: the Add To Preset(s) or Keep As Is confirmation over the dialog](../images/feature-tag-nudge.png)
+
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | OS Name | The name of the operating system the game is running on, as text ("Windows", "Android", "Web"). | `OS.get_name()` |

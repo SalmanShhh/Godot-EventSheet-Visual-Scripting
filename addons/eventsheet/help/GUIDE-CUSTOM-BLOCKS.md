@@ -317,6 +317,8 @@ Note: fences are independent blocks on purpose; an unbalanced pair is a readabil
 
 ### 5. Preloads that designers manage
 
+![A const preload and a dynamic load reading variable-style - name, path and a mode pill - beside a real variable row](images/preload-row.png)
+
 **Scenario:** the sound designer swaps audio files without touching code.
 
 ```

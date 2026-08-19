@@ -120,7 +120,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 			F.make_param("font", "Font", "ThemeDB.fallback_font", "Font", "The font to draw this control's text with - usually load(\"res://fonts/your_font.ttf\").", "expression", [], _font_suggestions()),
 			_slot_param(),
 		], CAT_UI, "draw this control with [i]{font}[/i]", "Control")
-		.described("Gives ONE control its own font, without a theme resource: a per-language display face, a monospace font so the column verbs line up, a bigger face for a heading. Run it again with another font and the new one wins."))
+		.described("Gives ONE control its own font, without a theme resource: a per-language display face, a monospace font so the column actions line up, a bigger face for a heading. Run it again with another font and the new one wins."))
 
 	d.append(F.make_descriptor("Core", "ControlFont", "Font Of This Control", ACEDescriptor.ACEType.EXPRESSION,
 		"get_theme_font(&\"font\")", "", [],

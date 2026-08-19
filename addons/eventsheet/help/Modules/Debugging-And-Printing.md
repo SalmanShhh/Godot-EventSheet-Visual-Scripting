@@ -65,6 +65,10 @@ that chooses the stream, so one action covers Message, Warning, Error and Rich t
 
 ### Printing to a stream
 
+![Print Rich draws its BBCode as the effect in the row; a plain Print keeps the tags verbatim](../images/rich-param-cells.png)
+
+![The Message field as a BBCode editor: the B, I, U and S toolbar with the rendered preview live under it](../images/bbcode-param.png)
+
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | Print | Prints a value to the Output console, useful for debugging what's happening. | `print({value})` |
@@ -613,6 +617,10 @@ Tick **View > Row Hit Counts** and the same sheet grows a count in the **left ma
 cells are untouched; compare them line for line with the picture above:
 
 ![The same sheet with Row Hit Counts on](../images/hit-counts-on.png)
+
+![The left margin at four times life size with the lens off: nothing but the event number](../images/hit-counts-off-margin.png)
+
+![The same margin with Row Hit Counts on: the count chip stacked under the number](../images/hit-counts-on-margin.png)
 
 The margin says three things: a blue `x3`-style chip for a row that has fired, a **warm** chip for
 the busiest rows of the run, and a muted `x0` plus a **dim rail** down the edge for a row that has

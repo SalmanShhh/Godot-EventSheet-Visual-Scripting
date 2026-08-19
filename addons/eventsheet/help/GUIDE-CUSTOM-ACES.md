@@ -309,6 +309,8 @@ Two more ways to skip typing the dialect from memory:
 
 ### Annotations: refine the automatic mapping
 
+![An @ace_looping condition applied as a pick filter: the loop lane on the left and the per-item actions under it](images/looping-condition.png)
+
 Put `##` doc-comment lines with `@ace_*` directives directly above a member to override what
 reflection chooses. Annotations are case-sensitive and the content can be parenthesized or
 space-separated (`@ace_category(Combat)` and `@ace_category Combat` both work).

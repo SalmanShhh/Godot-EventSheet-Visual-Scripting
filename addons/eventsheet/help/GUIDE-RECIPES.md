@@ -45,6 +45,8 @@ Short, concrete walkthroughs that each build one real thing - a platformer chara
 
 ## 2. The Golden Loop
 
+![The starting sheet: genuinely empty, with the getting-started heading, its clickable shortcuts and a tip](images/blank-start.png)
+
 Every recipe below rides the same loop: **New sheet (a `.gd`) → set the host class → add events (pick
 Conditions + Actions) → save → set the `.gd` as your node's script → Run.** A sheet *is* just
 GDScript now (no `.tres` needed) - so "Open in Godot" edits the same file in the script editor, and
@@ -94,6 +96,8 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 ---
 
 ## 6. Debugging 101
+
+![The event trace pulse at three intensities: just fired, mid-fade, and almost gone](images/live-pulse.png)
 
 When something misbehaves, you have four tools - no `print()` required.
 

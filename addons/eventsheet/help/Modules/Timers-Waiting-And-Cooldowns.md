@@ -34,6 +34,8 @@ and nothing to attach. They compile to plain Godot: `await get_tree().create_tim
 
 ## Core concepts
 
+![An action chain with a Wait in it: the awaiting action wears the hourglass, its neighbours do not](../images/async-chip.png)
+
 - **Waiting suspends the event, scheduling does not.** **Wait**, **Wait For Signal**,
   **Repeat With Delay**, **Vanish, Respawn In** and **Await If Over Budget** all suspend the event
   they sit in: the rows below them run later. **Call After Delay** and **Tween Callback** schedule

@@ -61,6 +61,8 @@ trigger over polling".
 
 ## Reference tables
 
+![Add To Group's group picker open: the project's global groups and the edited scene's groups, as quoted literals](../images/group-reference-param.png)
+
 Group name parameters use the group picker, so the editor offers the groups your project already
 uses. Every `{target}` defaults to `self`.
 

@@ -434,7 +434,7 @@ func _on_row_requested(provider_id: String, ace_id: String, index: int) -> void:
 	if bool(api.call("reveal_verb_row", provider_id, ace_id, index)):
 		_set_status("Selected the event that uses it.")
 	else:
-		_set_status("That verb is not used in this sheet.")
+		_set_status("That row is not used in this sheet.")
 
 
 func _on_snippet_inserted() -> void:

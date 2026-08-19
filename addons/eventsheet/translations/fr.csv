@@ -959,7 +959,7 @@ Split Keeping Quotes,Découper en respectant les guillemets
 "The line to split - a console entry, a search box, a pasted cell.","La ligne à découper - une saisie de console, un champ de recherche, une cellule collée."
 What separates the pieces OUTSIDE quotes.,Ce qui sépare les morceaux HORS des guillemets.
 Explain JSON Problem,Expliquer le problème JSON
-"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","Pourquoi ce JSON n'a pas pu être analysé, avec la ligne : ""line 4: Expected ':'"". Vide lorsqu'il s'analyse correctement : un résultat vide EST donc le feu vert. Journalisez-le et le rapport de bug s'écrit tout seul. Branchez sur le vide de CE verbe (Le texte est vide, inversé) plutôt que sur JSON est valide : cette condition lit comme invalide un fichier ne contenant que le mot null, alors que ce verbe n'a rien à en dire ; les associer journalise donc une erreur sans motif."
+"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this expression's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","Pourquoi ce JSON n'a pas pu être analysé, avec la ligne : ""line 4: Expected ':'"". Vide lorsqu'il s'analyse correctement : un résultat vide EST donc le feu vert. Journalisez-le et le rapport de bug s'écrit tout seul. Branchez sur le vide de CETTE expression (Le texte est vide, inversé) plutôt que sur JSON est valide : cette condition lit comme invalide un fichier ne contenant que le mot null, alors que cette expression n'a rien à en dire ; les associer journalise donc une erreur sans motif."
 JSON,JSON
 why {text} is not valid JSON,pourquoi {text} n'est pas du JSON valide
 "The JSON text to check - a file you read, a paste, a server reply.","Le texte JSON à vérifier - un fichier lu, un collage, une réponse de serveur."
@@ -1511,7 +1511,7 @@ Trail name - any label you also use in the trail expressions.,Nom de la trace - 
 Keep,Garder
 How many recent values to hold (older ones drop off the front).,Combien de valeurs récentes conserver (les plus anciennes tombent par l'avant).
 Trail Values,Valeurs de la trace
-"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.","Renvoie toute la trace sous forme de tableau, la plus ancienne d'abord - donnez-la à un graphique, à une table ou à un verbe de tableau."
+"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array action.","Renvoie toute la trace sous forme de tableau, la plus ancienne d'abord - donnez-la à un graphique, à une table ou à un action de tableau."
 trail [b]{trail}[/b] values,valeurs de la trace [b]{trail}[/b]
 "Trail name, matching a Remember In Trail action.","Nom de la trace, correspondant à une action Mémoriser dans une trace."
 Lowest In Trail,Minimum de la trace
@@ -1639,25 +1639,25 @@ The name the Spawn Scene As row gave this spawn.,Le nom que la ligne Faire appar
 Node,Nœud
 "The node that was just spawned, carried by the signal itself.","Le nœud qui vient d'apparaître, porté par le signal lui-même."
 On Failure Of,En cas d'échec de
-"Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","S'exécute quand un verbe signale qu'il a refusé. Le nom du verbe et la raison arrivent sur la ligne sous les noms verb_id et reason, si bien que la récupération vit dans son propre événement - ajoutez une condition en dessous pour ne traiter qu'un seul verbe. Nécessite une ligne Déclarer un signal pour verb_failed(verb_id: String, reason: String) - sans elle la feuille compile toujours, mais rien ne connecte cet événement, donc il ne s'exécute jamais. Le Docteur du projet le signale."
+"Runs when an action reports that it refused. The action's name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one action only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","S'exécute quand une action signale qu'elle a refusé. Le nom de l'action et la raison arrivent sur la ligne sous les noms verb_id et reason, si bien que la récupération vit dans son propre événement - ajoutez une condition en dessous pour ne traiter qu'une seule action. Nécessite une ligne Déclarer un signal pour verb_failed(verb_id: String, reason: String) - sans elle la feuille compile toujours, mais rien ne connecte cet événement, donc il ne s'exécute jamais. Le Docteur du projet le signale."
 On failure of {verb_id} ( {reason} ),En cas d'échec de {verb_id} ( {reason} )
 Verb,Verbe
-Which verb refused - the name the Report Failure row used.,Quel verbe a refusé - le nom qu'a utilisé la ligne Signaler un échec.
+Which action refused - the name the Report Failure row used.,Quelle action a refusé - le nom qu'a utilisé la ligne Signaler un échec.
 Reason,Raison
 "Why it refused, carried by the signal itself.","Pourquoi il a refusé, porté par le signal lui-même."
 On Success Of,En cas de réussite de
-"Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","S'exécute quand un verbe signale qu'il a terminé. Le nom du verbe arrive sur la ligne sous le nom verb_id. Nécessite une ligne Déclarer un signal pour verb_succeeded(verb_id: String) - sans elle la feuille compile toujours, mais rien ne connecte cet événement, donc il ne s'exécute jamais. Le Docteur du projet le signale."
+"Runs when an action reports that it finished. The action's name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","S'exécute quand une action signale qu'elle a terminé. Le nom de l'action arrive sur la ligne sous le nom verb_id. Nécessite une ligne Déclarer un signal pour verb_succeeded(verb_id: String) - sans elle la feuille compile toujours, mais rien ne connecte cet événement, donc il ne s'exécute jamais. Le Docteur du projet le signale."
 On success of {verb_id},En cas de réussite de {verb_id}
-Which verb finished - the name the Report Success row used.,Quel verbe a terminé - le nom qu'a utilisé la ligne Signaler une réussite.
+Which action finished - the name the Report Success row used.,Quelle action a terminé - le nom qu'a utilisé la ligne Signaler une réussite.
 Report Failure,Signaler un échec
-"Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.","Annonce qu'un verbe a refusé, si bien que chaque événement En cas d'échec de pour ce verbe s'exécute. À utiliser à l'intérieur d'un verbe que vous publiez vous-même, ou après une vérification qui a trouvé une ressource nulle ou un résultat vide."
+"Announces that an action refused, so every On Failure Of event for that action runs. Use it inside an action you publish yourself, or after a check that found a null resource or an empty result.","Annonce qu'une action a refusé, si bien que chaque événement En cas d'échec de pour cette action s'exécute. À utiliser à l'intérieur d'une action que vous publiez vous-même, ou après une vérification qui a trouvé une ressource nulle ou un résultat vide."
 Report failure of [b]{verb}[/b]: [b]{reason}[/b],Signaler l'échec de [b]{verb}[/b] : [b]{reason}[/b]
-Name of the verb that refused - the same name the On Failure Of row picks.,Le nom du verbe qui a refusé - le même nom que sélectionne la ligne En cas d'échec de.
+Name of the action that refused - the same name the On Failure Of row picks.,Le nom de l'action qui a refusé - le même nom que sélectionne la ligne En cas d'échec de.
 Plain words a player or a log line can read.,Des mots simples qu'un joueur ou une ligne de journal peut lire.
 Report Success,Signaler une réussite
-"Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.","Annonce qu'un verbe a terminé, si bien que chaque événement En cas de réussite de pour ce verbe s'exécute. Le jumeau de confirmation de Signaler un échec."
+"Announces that an action finished, so every On Success Of event for that action runs. The confirmation twin of Report Failure.","Annonce qu'une action a terminé, si bien que chaque événement En cas de réussite de pour cette action s'exécute. Le jumeau de confirmation de Signaler un échec."
 Report success of [b]{verb}[/b],Signaler la réussite de [b]{verb}[/b]
-Name of the verb that finished - the same name the On Success Of row picks.,Le nom du verbe qui a terminé - le même nom que sélectionne la ligne En cas de réussite de.
+Name of the action that finished - the same name the On Success Of row picks.,Le nom de l'action qui a terminé - le même nom que sélectionne la ligne En cas de réussite de.
 At Most Every,Au plus toutes les
 "Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.","Laisse cet événement s'exécuter au plus une fois toutes les tant de secondes, quelle que soit la fréquence à laquelle il est atteint. La limite de débit pour un champ de recherche, un affichage coûteux, ou quarante sons d'impact qui tombent dans une seule frame."
 at most every [b]{seconds}[/b]s,au plus toutes les [b]{seconds}[/b]s
@@ -2034,13 +2034,13 @@ See also,Voir aussi
 Opens this entry.,Ouvre cette entrée.
 Add example events,Ajouter les événements d'exemple
 Show GDScript,Afficher le GDScript
-Shows the line this verb compiles to.,Affiche la ligne vers laquelle ce terme se compile.
-Opens the guide this verb is documented in.,Ouvre le guide où ce terme est documenté.
+Shows the line this row compiles to.,Affiche la ligne vers laquelle ce terme se compile.
+Opens the guide this row is documented in.,Ouvre le guide où ce terme est documenté.
 "Puts this row into the open sheet at the caret, as one undo step.","Insère cette ligne dans la feuille ouverte au curseur, en une seule étape d'annulation."
 "Puts the illustrated rows into the open sheet at the caret, as one undo step.","Insère les lignes illustrées dans la feuille ouverte au curseur, en une seule étape d'annulation."
 Nothing in the Manual mentions that,Rien dans le manuel ne mentionne cela
 Selected the event that uses it.,L'événement qui l'utilise est sélectionné.
-That verb is not used in this sheet.,Ce terme n'est pas utilisé dans cette feuille.
+That row is not used in this sheet.,Ce terme n'est pas utilisé dans cette feuille.
 Press F1 for the Manual's page on the marks.,Appuyez sur F1 pour la page du manuel sur les marques.
 Opens the next page in this part of the Manual.,Ouvre la page suivante de cette partie du manuel.
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Appuyez sur F1 avec une sélection pour obtenir de l'aide à son sujet, ou choisissez une page dans le sommaire du manuel."
@@ -2398,7 +2398,7 @@ Headings on a Manual page. Clear = follow the editor's own text colour.,Les titr
 The highlight behind a search hit inside a page.,La surbrillance derrière un résultat de recherche dans une page.
 The pill on the contents entry for the page you are reading. Clear = the editor's accent.,La pastille sur l'entrée de sommaire de la page en cours de lecture. Transparent = la couleur d'accent de l'éditeur.
 The word on that pill.,Le texte sur cette pastille.
-The note above a verb its pack has deprecated.,La note au-dessus d'un verbe que son pack a déprécié.
+The note above a row its pack has deprecated.,La note au-dessus d'une ligne que son pack a dépréciée.
 The rule under a table's header row on a page.,Le filet sous la ligne d'en-tête d'un tableau sur une page.
 The strip down the left of the sheet that carries the event numbers.,La bande à gauche de la feuille qui porte les numéros d'événement.
 The event numbers themselves.,Les numéros d'événement eux-mêmes.

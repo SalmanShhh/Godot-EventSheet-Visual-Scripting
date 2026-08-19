@@ -196,9 +196,9 @@ static func _run_looping() -> bool:
 		_line_starting_with(stub, "## @ace_looping"), "## @ace_looping(buff_id)") and all_passed
 	all_passed = _check("a looping condition returns its collection, not a bool",
 		_tail_lines(stub, 2), "func each_buff() -> Array:\n\treturn Array()") and all_passed
-	all_passed = _check("the registrar admits it has no looping verb",
+	all_passed = _check("the registrar admits it has no looping action",
 		_line_starting_with(EventSheetACEAnnotationStub.registrar_stub(definition), "# LOOPING:"),
-		"# LOOPING: the registrar has no looping verb. Keep \"## @ace_looping(buff_id)\" as a comment") and all_passed
+		"# LOOPING: the registrar has no looping action. Keep \"## @ace_looping(buff_id)\" as a comment") and all_passed
 	pack.free()
 	return all_passed
 

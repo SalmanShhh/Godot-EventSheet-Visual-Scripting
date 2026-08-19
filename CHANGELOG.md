@@ -85,6 +85,62 @@
   parameters as the payload chips beside it - one signal, both edges, and the chip says which.
 - All three are readings: the opened file still recompiles byte-identically.
 
+### Added - every screenshot in the docs is now shown by a guide
+
+- **Seventy-four pictures existed and illustrated nothing.** They were rendered for review, looked
+  at once, and never referenced, so they went stale in a folder nobody read - which is how four
+  generations of the same three figures piled up in there. Each one now sits under the paragraph
+  that describes what it shows: the Bookmarks panel, the Outline, the filter lens, cell walking,
+  number scrubbing, Select All Events Using This and Replace Object References beside their bullets;
+  the Manual's own pages, figures and search in the docs guide; the Drawing Canvas paste rows, the
+  Platform feature tags, the hit-count margin and the BBCode field in the modules they belong to.
+- **The nine opened-file figures were re-rendered against main first**, so what a reader sees is
+  what the editor draws today: the head gathers members in one **Instance variables** folder, a
+  published function reads `ƒ Functions ▸ On <name>` in the condition lane, and every variable row
+  is the one sentence - scope word, plain type word, name, value.
+- **A guide can no longer show a picture that is not there, and a picture can no longer hide.**
+  `tests/docs_integrity_test.gd` now walks the whole `.md` corpus and both image forms the guides
+  use, and fails on either an orphan or a broken embed. Four superseded generations of the opened-
+  script figures went with the harnesses that produced them.
+
+### Changed - the shipped words say action, condition and expression
+
+- **Every row, tooltip and reference table that still said "verb" now says what it means.** On
+  Failure Of and On Success Of read **`Which action refused`** and **`Which action finished`**, their
+  parameter is labelled **Action**, and Report Failure / Report Success announce that *an action*
+  refused or finished. Nine more shipped descriptions lost the word the same way (Log, Trail Values,
+  Rebind Action To Gamepad Button, Set Node Process Mode, Give Control Its Own Font, Explain JSON
+  Problem, Set Counted Text, and the Drawing Canvas section). The Manual's reference tables head
+  their first column **Name**, its two buttons say **`Shows the line this row compiles to`** and
+  **`Opens the guide this row is documented in`**, and a row the sheet does not use reports
+  **`That row is not used in this sheet.`**
+- Every one of these is translated in all nine shipped languages, so a German reader gets
+  `Welche Aktion abgelehnt hat` rather than `Welches Verb abgelehnt hat`. The signal, parameter and
+  ACE identifiers behind them (`verb_failed`, `verb_id`, `ReportFailure`) are frozen public API and
+  are untouched - the compiled GDScript is byte-identical.
+
+### Fixed - two guide lines that described something the vocabulary does not ship
+
+- The variables guide said "Toggle and Toggle Boolean emit the same line"; the two rows really ship
+  as **Toggle boolean** and **Toggle Boolean**, differing in one capital letter, and the guide now
+  names them the way the picker does.
+- The testing guide's worked example asserted that "the behavior exposes its verbs"; it reads
+  **its actions** now, like every other line around it.
+
+### Fixed - the editor stops answering for a project that has changed
+
+- **A scene saved, added or re-pointed mid-session is seen straight away.** The index that knows
+  which scene a script is the root of - what names the object on a row, the title of a sheet and the
+  thumbnail beside it - was built once and kept for the whole session, so a scene that gained,
+  lost or swapped its script went on reading as the object it used to be until the editor was
+  restarted. It is now dropped when the project's files change, beside the object, signal and
+  thumbnail caches it belongs with, and rebuilt by the next row that asks.
+- **An input action added in Project Settings appears without a restart.** The Input Map is read out
+  of `project.godot`, and that read was only dropped when a sheet was opened in the Object bar -
+  every other row that names an action kept yesterday's list. It is now dropped both when the
+  project's files change and when Project Settings itself changes, which is the only signal that
+  fires when an action is added there.
+
 ### Added - a Local row can be dragged into another event, and says when it may not
 
 - **Dragging a Local row into another event moves the declaration.** It goes through the same undo

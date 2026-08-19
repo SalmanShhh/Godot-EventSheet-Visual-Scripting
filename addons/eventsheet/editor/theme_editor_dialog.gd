@@ -318,7 +318,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"search_hit_color": "The highlight behind a search hit inside a page.",
 	"contents_active_background_color": "The pill on the contents entry for the page you are reading. Clear = the editor's accent.",
 	"contents_active_text_color": "The word on that pill.",
-	"note_color": "The note above a verb its pack has deprecated.",
+	"note_color": "The note above a row its pack has deprecated.",
 	"table_hairline_color": "The rule under a table's header row on a page.",
 }
 

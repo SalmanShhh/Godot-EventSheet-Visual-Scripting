@@ -959,7 +959,7 @@ Split Keeping Quotes,引用符を保って分割
 "The line to split - a console entry, a search box, a pasted cell.",分割する行 - コンソール入力、検索欄、貼り付けたセルなど。
 What separates the pieces OUTSIDE quotes.,引用符の「外側」で各部分を区切るもの。
 Explain JSON Problem,JSON の問題を説明
-"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","この JSON が読み取れなかった理由を行番号つきで返します: ""line 4: Expected ':'""。正しく読めたときは空になるので、空の結果が「問題なし」を意味します。ログに出せば不具合報告がそのまま書き上がります。分岐は JSON が有効 ではなく、この動詞自身の空かどうか (テキストが空白 の否定) で行ってください。あの条件は null という語だけのファイルを無効と読みますが、この動詞はそれについて何も言うことがないため、組み合わせると理由が空のエラーが記録されます。"
+"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this expression's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","この JSON が読み取れなかった理由を行番号つきで返します: ""line 4: Expected ':'""。正しく読めたときは空になるので、空の結果が「問題なし」を意味します。ログに出せば不具合報告がそのまま書き上がります。分岐は JSON が有効 ではなく、この式自身の空かどうか (テキストが空白 の否定) で行ってください。あの条件は null という語だけのファイルを無効と読みますが、この式はそれについて何も言うことがないため、組み合わせると理由が空のエラーが記録されます。"
 JSON,JSON
 why {text} is not valid JSON,{text} が有効な JSON でない理由
 "The JSON text to check - a file you read, a paste, a server reply.",検査する JSON テキスト - 読み込んだファイル、貼り付け、サーバーの応答など。
@@ -1511,7 +1511,7 @@ Trail name - any label you also use in the trail expressions.,履歴の名前 - 
 Keep,保持件数
 How many recent values to hold (older ones drop off the front).,直近の値を何件保持するか (古いものから順に落ちます)。
 Trail Values,履歴の値
-"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.",履歴全体を配列として、古い順に返します - 図、表、配列の動詞に渡せます。
+"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array action.",履歴全体を配列として、古い順に返します - 図、表、配列のアクションに渡せます。
 trail [b]{trail}[/b] values,履歴 [b]{trail}[/b] の値
 "Trail name, matching a Remember In Trail action.",履歴の名前。履歴に記録 のアクションと一致させます。
 Lowest In Trail,履歴の最小値
@@ -1639,25 +1639,25 @@ The name the Spawn Scene As row gave this spawn.,名前を付けてシーンを�
 Node,ノード
 "The node that was just spawned, carried by the signal itself.",たった今生成されたノード。シグナル自身が運びます。
 On Failure Of,失敗したとき
-"Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","動詞が拒否を報告したときに実行されます。動詞の名前と理由は行に verb_id と reason として届くので、復旧処理を独立したイベントに置けます - 1 つの動詞だけを扱うなら下に条件を足してください。verb_failed(verb_id: String, reason: String) の シグナルを宣言 行が必要です - 無くてもシートはコンパイルされますが、このイベントには何も接続されないため実行されません。プロジェクトドクターがそれを指摘します。"
+"Runs when an action reports that it refused. The action's name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one action only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","アクションが拒否を報告したときに実行されます。アクションの名前と理由は行に verb_id と reason として届くので、復旧処理を独立したイベントに置けます - 1 つのアクションだけを扱うなら下に条件を足してください。verb_failed(verb_id: String, reason: String) の シグナルを宣言 行が必要です - 無くてもシートはコンパイルされますが、このイベントには何も接続されないため実行されません。プロジェクトドクターがそれを指摘します。"
 On failure of {verb_id} ( {reason} ),{verb_id} が失敗したとき ( {reason} )
 Verb,動詞
-Which verb refused - the name the Report Failure row used.,どの動詞が拒否したか - 失敗を報告 の行が使った名前です。
+Which action refused - the name the Report Failure row used.,どのアクションが拒否したか - 失敗を報告 の行が使った名前です。
 Reason,理由
 "Why it refused, carried by the signal itself.",拒否した理由。シグナル自身が運びます。
 On Success Of,成功したとき
-"Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.",動詞が完了を報告したときに実行されます。動詞の名前は行に verb_id として届きます。verb_succeeded(verb_id: String) の シグナルを宣言 行が必要です - 無くてもシートはコンパイルされますが、このイベントには何も接続されないため実行されません。プロジェクトドクターがそれを指摘します。
+"Runs when an action reports that it finished. The action's name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.",アクションが完了を報告したときに実行されます。アクションの名前は行に verb_id として届きます。verb_succeeded(verb_id: String) の シグナルを宣言 行が必要です - 無くてもシートはコンパイルされますが、このイベントには何も接続されないため実行されません。プロジェクトドクターがそれを指摘します。
 On success of {verb_id},{verb_id} が成功したとき
-Which verb finished - the name the Report Success row used.,どの動詞が完了したか - 成功を報告 の行が使った名前です。
+Which action finished - the name the Report Success row used.,どのアクションが完了したか - 成功を報告 の行が使った名前です。
 Report Failure,失敗を報告
-"Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.",動詞が拒否したことを知らせるので、その動詞に対するすべての 失敗したとき のイベントが実行されます。自分で公開する動詞の中や、リソースが null だったり結果が空だったりした確認の後で使ってください。
+"Announces that an action refused, so every On Failure Of event for that action runs. Use it inside an action you publish yourself, or after a check that found a null resource or an empty result.",アクションが拒否したことを知らせるので、そのアクションに対するすべての 失敗したとき のイベントが実行されます。自分で公開するアクションの中や、リソースが null だったり結果が空だったりした確認の後で使ってください。
 Report failure of [b]{verb}[/b]: [b]{reason}[/b],[b]{verb}[/b] の失敗を報告: [b]{reason}[/b]
-Name of the verb that refused - the same name the On Failure Of row picks.,拒否した動詞の名前 - 失敗したとき の行が拾うのと同じ名前です。
+Name of the action that refused - the same name the On Failure Of row picks.,拒否したアクションの名前 - 失敗したとき の行が拾うのと同じ名前です。
 Plain words a player or a log line can read.,プレイヤーやログ行が読める平易な言葉。
 Report Success,成功を報告
-"Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.",動詞が完了したことを知らせるので、その動詞に対するすべての 成功したとき のイベントが実行されます。失敗を報告 の対になる確認です。
+"Announces that an action finished, so every On Success Of event for that action runs. The confirmation twin of Report Failure.",アクションが完了したことを知らせるので、そのアクションに対するすべての 成功したとき のイベントが実行されます。失敗を報告 の対になる確認です。
 Report success of [b]{verb}[/b],[b]{verb}[/b] の成功を報告
-Name of the verb that finished - the same name the On Success Of row picks.,完了した動詞の名前 - 成功したとき の行が拾うのと同じ名前です。
+Name of the action that finished - the same name the On Success Of row picks.,完了したアクションの名前 - 成功したとき の行が拾うのと同じ名前です。
 At Most Every,最短間隔
 "Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.",どれだけ頻繁に到達しても、このイベントを指定した秒数につき最大 1 回だけ実行させます。検索ボックス、重い表示、1 フレームに 40 個届くヒット音のレート制限に。
 at most every [b]{seconds}[/b]s,最短でも [b]{seconds}[/b] 秒ごと
@@ -2034,13 +2034,13 @@ See also,関連項目
 Opens this entry.,この項目を開きます。
 Add example events,サンプルイベントを追加
 Show GDScript,GDScript を表示
-Shows the line this verb compiles to.,この語がコンパイルされる行を表示します。
-Opens the guide this verb is documented in.,この語が説明されているガイドを開きます。
+Shows the line this row compiles to.,この語がコンパイルされる行を表示します。
+Opens the guide this row is documented in.,この語が説明されているガイドを開きます。
 "Puts this row into the open sheet at the caret, as one undo step.",この行を開いているシートのカーソル位置に、1 回の取り消しで追加します。
 "Puts the illustrated rows into the open sheet at the caret, as one undo step.",図のイベント行を開いているシートのカーソル位置に、1 回の取り消しで追加します。
 Nothing in the Manual mentions that,マニュアルにその記述はありません
 Selected the event that uses it.,これを使っているイベントを選択しました。
-That verb is not used in this sheet.,この語はこのシートで使われていません。
+That row is not used in this sheet.,この語はこのシートで使われていません。
 Press F1 for the Manual's page on the marks.,F1 で記号についてのマニュアルページを開きます。
 Opens the next page in this part of the Manual.,マニュアルのこの部分の次のページを開きます。
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.",何かを選んで F1 を押すとその項目のヘルプが開きます。マニュアルの目次からページを選ぶこともできます。
@@ -2398,7 +2398,7 @@ Headings on a Manual page. Clear = follow the editor's own text colour.,マニ�
 The highlight behind a search hit inside a page.,ページ内の検索ヒットの背後に付くハイライト。
 The pill on the contents entry for the page you are reading. Clear = the editor's accent.,いま読んでいるページの目次項目に付くピル。透明 = エディターのアクセント色。
 The word on that pill.,そのピルに載る文字。
-The note above a verb its pack has deprecated.,パックが非推奨にした動詞の上に出る注記。
+The note above a row its pack has deprecated.,パックが非推奨にした行の上に出る注記。
 The rule under a table's header row on a page.,ページ内の表の見出し行の下に引かれる罫線。
 The strip down the left of the sheet that carries the event numbers.,シートの左側にあり、イベント番号を並べる帯。
 The event numbers themselves.,イベント番号そのもの。

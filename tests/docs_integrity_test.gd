@@ -62,6 +62,7 @@ static func run() -> bool:
 		for needle in REQUIRED_DOCS[doc_path]:
 			passed = _check("doc content marker (%s): %s" % [doc_path.get_file(), needle], content.contains(needle), true) and passed
 	passed = _test_index_lists_every_guide() and passed
+	passed = _test_every_image_is_shown() and passed
 	return passed
 
 
@@ -100,6 +101,88 @@ static func _test_index_lists_every_guide() -> bool:
 	# The check can say no: a name that is not a guide must not be found in the index.
 	passed = _check("the lookup can say no", index.contains("(GUIDE-NO-SUCH-PAGE.md)"), false) and passed
 	return passed
+
+
+## Every screenshot in docs/images/ must be SHOWN by a guide, and every image a guide shows must
+## exist. A picture nobody looks at is worse than no picture: it goes stale silently, and the next
+## reader of the folder cannot tell which of two similar shots is the current one - which is exactly
+## how four generations of the same three figures piled up in there. Naming a file in prose (the
+## CHANGELOG says which harness writes which PNG) is not showing it, so only a real embed counts.
+static func _test_every_image_is_shown() -> bool:
+	var passed: bool = true
+	var shown: Dictionary = {}
+	var missing: Array[String] = []
+	for doc_path: String in _every_guide():
+		var body: String = FileAccess.get_file_as_string(doc_path)
+		for name: String in _images_embedded_in(body):
+			shown[name] = true
+			if not FileAccess.file_exists("res://docs/images/%s" % name) \
+					and not FileAccess.file_exists("res://docs/previews/%s" % name):
+				missing.append("%s -> %s" % [doc_path.get_file(), name])
+	var orphans: Array[String] = []
+	for name: String in _images_on_disk():
+		if not shown.has(name):
+			orphans.append(name)
+	orphans.sort()
+	missing.sort()
+	passed = _check("every image in docs/images/ is shown by a guide (orphans: %s)"
+		% ", ".join(orphans), orphans.size(), 0) and passed
+	passed = _check("every image a guide shows exists on disk (broken: %s)"
+		% ", ".join(missing), missing.size(), 0) and passed
+	return passed
+
+
+## Every guide the reader can open: the .md corpus under docs/ plus the README.
+static func _every_guide() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray(["res://README.md"])
+	_collect_markdown("res://docs", found)
+	return found
+
+
+static func _collect_markdown(directory_path: String, into: PackedStringArray) -> void:
+	var directory: DirAccess = DirAccess.open(directory_path)
+	if directory == null:
+		return
+	directory.list_dir_begin()
+	var entry: String = directory.get_next()
+	while not entry.is_empty():
+		var full_path: String = directory_path.path_join(entry)
+		if directory.current_is_dir():
+			_collect_markdown(full_path, into)
+		elif entry.get_extension().to_lower() == "md":
+			into.append(full_path)
+		entry = directory.get_next()
+	directory.list_dir_end()
+
+
+static func _images_on_disk() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var directory: DirAccess = DirAccess.open("res://docs/images")
+	if directory == null:
+		return found
+	for name: String in directory.get_files():
+		if name.get_extension().to_lower() == "png":
+			found.append(name)
+	return found
+
+
+## The image file names a page really EMBEDS: Markdown `![alt](path.png)` and the HTML
+## `<img src="path.png">` the corpus uses when a figure needs a width. Both forms ship in the
+## guides, so a check that knew only one would call half the corpus orphaned.
+static func _images_embedded_in(body: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for marker: String in ["](", "src=\""]:
+		var closer: String = ")" if marker == "](" else "\""
+		var at: int = body.find(marker)
+		while at >= 0:
+			var start: int = at + marker.length()
+			var end: int = body.find(closer, start)
+			if end > start:
+				var target: String = body.substr(start, end - start).strip_edges()
+				if target.to_lower().ends_with(".png"):
+					found.append(target.get_file())
+			at = body.find(marker, at + marker.length())
+	return found
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

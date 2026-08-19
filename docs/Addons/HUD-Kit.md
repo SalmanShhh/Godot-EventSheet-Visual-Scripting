@@ -189,6 +189,8 @@ On Ammo Changed
 
 ### 3. Main menu screen switching
 
+![The Menu Starter showcase running: a title, Start, Settings and Quit, every button routed through one trigger](../images/menu-starter.png)
+
 Lay out Play, Options, and Credits as sibling panels under one container. Switch Screen shows one and hides its siblings in a single call, so each tab button flips the whole screen.
 
 ```

@@ -276,14 +276,22 @@ i18n (Godot translations).
   condition in C3. Typing at any point drops into full search, so the fast path stays fast.
   The important difference to notice: what C3 calls an *object type* is here a **node with
   a behavior attached, or an autoload** - the dialog is quietly teaching you Godot's own API.
+
+  ![The picker's object-cards front page: System first, then every pack and autoload as its own card with its icon](images/object-first-add.png)
 - **Event numbers live in the margin**, flat and sequential through groups and sub-events,
   computed from the sheet - collapsing or filtering never renumbers, so "check event 34" in a
   forum reply stays meaningful. Jump to one with the command palette's *Go to Event Number*.
+
+  ![The margin counting 1 to 5 straight through a sub-event, so nesting never renumbers anything](images/event-numbers.png)
 - **The bookmarks bar is C3's**: Ctrl+M marks a row, F4 / Shift+F4 cycle, and Tools >
   Bookmarks… opens the Previous / Next / Clear All panel whose entries lead with their
   margin event number.
+
+  ![The Bookmarks panel: Previous, Next and Clear All above the marked events, each entry leading with its margin event number](images/bookmarks-panel.png)
 - **Ctrl+F has a Filter toggle** (the C3 live-filter reflex): the sheet collapses to only
   the events matching the search, the status line counts what's hidden, Esc restores.
+
+  ![Ctrl+F with Filter on: a five-event sheet collapsed to only the events that match "health"](images/filter-lens.png)
 - **Ctrl+Shift+C copies events as text.** The selection copies as the plain listing every
   event-sheet community posts - `+ ` in front of a condition, `-> ` in front of an action, one
   extra indent per sub-event, in exactly the words the canvas is showing under your reading
@@ -297,6 +305,10 @@ i18n (Godot translations).
   and the bar stays until you close it with ✕. Matching is whole-symbol, so `hp` never finds
   `hp_max`, and the search reaches the `.gd` sheets you have never opened as well as the ones you
   have - a project-wide answer really is project-wide.
+
+  ![The Replace Object References dialog, its From dropdown carrying only the references the selection really uses](images/replace-object.png)
+
+  ![The same dialog with the To field's suggestions open, offering the objects the sheet already names](images/replace-autocomplete.png)
 - **The Properties bar is where you edit without leaving the row.** It sits to the right of the
   canvas, splitter-resizable like the Inspector, and shows whatever is selected: a condition or
   action's parameters, an object's properties, a group's name and enabled state. Each parameter
@@ -306,6 +318,8 @@ i18n (Godot translations).
   value is one undo step and exactly the edit the dialog would have made, so an opened `.gd` stays
   byte-exact for every line you did not touch. Simple Mode starts it hidden; **View > Properties
   Bar** brings it back. The dialog stays for anyone who prefers it.
+
+  ![One parameters dialog editing every matching action at once, with the "applies to all N matching actions" line under the field](images/batch-param-edit.png)
 
   ![The Properties bar's fields: a colour swatch, an easing dropdown, an input-action list, a number spinner, a tick and a translatable text field](images/properties-bar-fields.png)
 - **The sheet zooms like a code editor**: Ctrl + mouse wheel, Ctrl + + / Ctrl + -, Ctrl + 0 for
@@ -321,8 +335,12 @@ i18n (Godot translations).
   parameter that named an instance variable the new object does not have - and
   *Edit Values Across Selection* opens one params dialog whose per-field "all" checkboxes
   decide what overwrites every instance and what stays per-instance - each as one undo step.
+
+  ![Select All Events Using This: the three events of five that share a Print action, selected together](images/select-all-matching.png)
 - **Arrows walk cells**: with a row selected, Left / Right step through its trigger,
   condition, and action cells, Enter edits the focused cell, Esc returns to the row.
+
+  ![Right-stepping the cell focus onto an event's second action, with the focused cell highlighted](images/cell-navigation.png)
 - **Drag a parameter's NAME sideways to scrub its number.** Speeds, damage, durations and
   angles are found by feel, and retyping them one guess at a time is the slowest loop in
   event-sheet authoring. Hold Shift for a fine pass or Ctrl for a coarse one. The step
@@ -331,8 +349,12 @@ i18n (Godot translations).
   so `health + 10` is never at risk - and it is the property name you drag, not the field,
   which leaves click-to-place-caret and drag-to-select alone (the same gesture as Godot's
   own Inspector).
+
+  ![The same parameters dialog before and after dragging the Speed label 200 pixels to the right: the value moved without a keystroke](images/number-scrubbing.png)
 - **View > Outline** is the sheet's method list - groups, `#region` fences, and published
   functions as a click-to-jump tree.
+
+  ![View then Outline: regions, nested groups and published functions as one click-to-jump tree](images/outline-panel.png)
 - **Your open tabs come back**: the session (tabs + active sheet) restores on editor
   restart, like C3 reopening your workspace.
 - Double-click empty space to add an event; right-click for context actions.
@@ -385,6 +407,8 @@ i18n (Godot translations).
 ---
 
 ## 9. Habits to Relearn (the Godot Way Is Better Here)
+
+![The Set Property rows an Inspector property drag builds, with the value the property has right now already filled in](images/property-drop.png)
 
 - **There is no runtime**: your sheet *is* GDScript after compiling. Read the generated
   script in the GDScript panel - selection highlights both ways. Performance equals

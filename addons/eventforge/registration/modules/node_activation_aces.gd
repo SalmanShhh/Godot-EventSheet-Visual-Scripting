@@ -69,7 +69,7 @@ static func _add_pausing(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "NodeOnlyWhenPaused", "Run Node Only While Paused", ACEDescriptor.ACEType.ACTION, "process_mode = Node.PROCESS_MODE_WHEN_PAUSED", "", [], CAT, "Run node only while paused", "Node")
 		.described("Runs a node ONLY while the game is paused and never otherwise - a pause overlay that should not tick during play."))
 	descriptors.append(F.make_descriptor("Core", "NodeSetProcessMode", "Set Node Process Mode", ACEDescriptor.ACEType.ACTION, "process_mode = {mode}", "", [F.make_param("mode", "String", "Node.PROCESS_MODE_INHERIT", "Mode", "How this node reacts to the game pause.", "", _mode_options())], CAT, "Set process mode to {mode}", "Node")
-		.described("Sets how a node reacts to the game pause, picking any of the five modes directly. The Pause / Unpause / Keep Running verbs are shorthands for the common three."))
+		.described("Sets how a node reacts to the game pause, picking any of the five modes directly. The Pause / Unpause / Keep Running actions are shorthands for the common three."))
 	descriptors.append(F.make_descriptor("Core", "NodeGetProcessMode", "Node Process Mode", ACEDescriptor.ACEType.EXPRESSION, "process_mode", "", [], CAT, "process mode", "Node")
 		.described("Returns a node's current process mode, as one of the Node.PROCESS_MODE_* values."))
 	descriptors.append(F.make_descriptor("Core", "NodeIsPausedByGame", "Node Is Frozen By The Game Pause", ACEDescriptor.ACEType.CONDITION, "(get_tree().paused and not can_process())", "", [], CAT, "Node is frozen by the game pause", "Node")

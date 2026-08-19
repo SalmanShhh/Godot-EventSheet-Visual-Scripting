@@ -959,7 +959,7 @@ Split Keeping Quotes,따옴표를 지키며 나누기
 "The line to split - a console entry, a search box, a pasted cell.","나눌 줄 - 콘솔 입력, 검색창, 붙여넣은 칸 등."
 What separates the pieces OUTSIDE quotes.,따옴표 '바깥' 에서 조각을 나누는 문자.
 Explain JSON Problem,JSON 문제 설명
-"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","이 JSON 이 왜 파싱에 실패했는지 줄 번호와 함께 알려 줍니다: ""line 4: Expected ':'"". 잘 파싱되면 빈 값이므로, 빈 결과가 곧 ""이상 없음"" 입니다. 로그로 남기면 버그 리포트가 저절로 써집니다. 분기는 JSON 이 유효함 이 아니라 이 동사 자신의 빈 여부(텍스트가 비어 있음 의 반대)로 하세요. 그 조건은 null 이라는 단어만 든 파일을 무효로 읽지만 이 동사는 그것에 대해 할 말이 없어서, 둘을 짝지으면 이유가 빈 오류가 기록됩니다."
+"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this expression's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","이 JSON 이 왜 파싱에 실패했는지 줄 번호와 함께 알려 줍니다: ""line 4: Expected ':'"". 잘 파싱되면 빈 값이므로, 빈 결과가 곧 ""이상 없음"" 입니다. 로그로 남기면 버그 리포트가 저절로 써집니다. 분기는 JSON 이 유효함 이 아니라 이 식 자신의 빈 여부(텍스트가 비어 있음 의 반대)로 하세요. 그 조건은 null 이라는 단어만 든 파일을 무효로 읽지만 이 식은 그것에 대해 할 말이 없어서, 둘을 짝지으면 이유가 빈 오류가 기록됩니다."
 JSON,JSON
 why {text} is not valid JSON,{text} 가 유효한 JSON 이 아닌 이유
 "The JSON text to check - a file you read, a paste, a server reply.","검사할 JSON 텍스트 - 읽어 온 파일, 붙여넣기, 서버 응답 등."
@@ -1511,7 +1511,7 @@ Trail name - any label you also use in the trail expressions.,기록 이름 - �
 Keep,보관 개수
 How many recent values to hold (older ones drop off the front).,최근 값을 몇 개나 들고 있을지 (오래된 것부터 앞에서 빠집니다).
 Trail Values,기록 값
-"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array verb.","기록 전체를 오래된 것부터 배열로 돌려줍니다 - 그래프나 표, 배열 동사에 넣으세요."
+"Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array action.","기록 전체를 오래된 것부터 배열로 돌려줍니다 - 그래프나 표, 배열 액션에 넣으세요."
 trail [b]{trail}[/b] values,기록 [b]{trail}[/b] 의 값
 "Trail name, matching a Remember In Trail action.","기록 이름이며, 기록에 남기기 액션과 맞춰야 합니다."
 Lowest In Trail,기록의 최솟값
@@ -1639,25 +1639,25 @@ The name the Spawn Scene As row gave this spawn.,이름 붙여 씬 생성 행이
 Node,노드
 "The node that was just spawned, carried by the signal itself.","방금 생성된 노드이며, 시그널 자체가 실어 나릅니다."
 On Failure Of,실패 시
-"Runs when a verb reports that it refused. The verb name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one verb only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","동사가 거절했다고 보고하면 실행됩니다. 동사 이름과 이유가 행에 verb_id 와 reason 으로 도착하므로 복구를 자기 이벤트 안에 둘 수 있습니다 - 아래에 조건을 붙이면 특정 동사 하나만 처리합니다. verb_failed(verb_id: String, reason: String) 에 대한 시그널 선언 행이 필요합니다 - 없어도 시트는 컴파일되지만 이 이벤트에 아무것도 연결되지 않아 절대 실행되지 않습니다. 프로젝트 Doctor 가 그 점을 알려 줍니다."
+"Runs when an action reports that it refused. The action's name and the reason arrive on the row as verb_id and reason, so recovery lives in its own event - add a condition under it to handle one action only. Needs a Declare Signal row for verb_failed(verb_id: String, reason: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.","액션이 거절했다고 보고하면 실행됩니다. 액션 이름과 이유가 행에 verb_id 와 reason 으로 도착하므로 복구를 자기 이벤트 안에 둘 수 있습니다 - 아래에 조건을 붙이면 특정 액션 하나만 처리합니다. verb_failed(verb_id: String, reason: String) 에 대한 시그널 선언 행이 필요합니다 - 없어도 시트는 컴파일되지만 이 이벤트에 아무것도 연결되지 않아 절대 실행되지 않습니다. 프로젝트 Doctor 가 그 점을 알려 줍니다."
 On failure of {verb_id} ( {reason} ),{verb_id} 실패 시 ( {reason} )
 Verb,동사
-Which verb refused - the name the Report Failure row used.,어느 동사가 거절했는지 - 실패 보고 행이 쓴 이름입니다.
+Which action refused - the name the Report Failure row used.,어느 액션가 거절했는지 - 실패 보고 행이 쓴 이름입니다.
 Reason,이유
 "Why it refused, carried by the signal itself.","왜 거절했는지이며, 시그널 자체가 실어 나릅니다."
 On Success Of,성공 시
-"Runs when a verb reports that it finished. The verb name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.",동사가 끝났다고 보고하면 실행됩니다. 동사 이름이 행에 verb_id 로 도착합니다. verb_succeeded(verb_id: String) 에 대한 시그널 선언 행이 필요합니다 - 없어도 시트는 컴파일되지만 이 이벤트에 아무것도 연결되지 않아 절대 실행되지 않습니다. 프로젝트 Doctor 가 그 점을 알려 줍니다.
+"Runs when an action reports that it finished. The action's name arrives on the row as verb_id. Needs a Declare Signal row for verb_succeeded(verb_id: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that.",액션이 끝났다고 보고하면 실행됩니다. 액션 이름이 행에 verb_id 로 도착합니다. verb_succeeded(verb_id: String) 에 대한 시그널 선언 행이 필요합니다 - 없어도 시트는 컴파일되지만 이 이벤트에 아무것도 연결되지 않아 절대 실행되지 않습니다. 프로젝트 Doctor 가 그 점을 알려 줍니다.
 On success of {verb_id},{verb_id} 성공 시
-Which verb finished - the name the Report Success row used.,어느 동사가 끝났는지 - 성공 보고 행이 쓴 이름입니다.
+Which action finished - the name the Report Success row used.,어느 액션가 끝났는지 - 성공 보고 행이 쓴 이름입니다.
 Report Failure,실패 보고
-"Announces that a verb refused, so every On Failure Of event for that verb runs. Use it inside a verb you publish yourself, or after a check that found a null resource or an empty result.","동사가 거절했음을 알려서 그 동사에 대한 모든 실패 시 이벤트가 실행되게 합니다. 직접 게시한 동사 안에서, 또는 null 리소스나 빈 결과를 발견한 검사 뒤에 쓰세요."
+"Announces that an action refused, so every On Failure Of event for that action runs. Use it inside an action you publish yourself, or after a check that found a null resource or an empty result.","액션가 거절했음을 알려서 그 액션에 대한 모든 실패 시 이벤트가 실행되게 합니다. 직접 게시한 액션 안에서, 또는 null 리소스나 빈 결과를 발견한 검사 뒤에 쓰세요."
 Report failure of [b]{verb}[/b]: [b]{reason}[/b],[b]{verb}[/b] 실패 보고: [b]{reason}[/b]
-Name of the verb that refused - the same name the On Failure Of row picks.,거절한 동사의 이름 - 실패 시 행이 고르는 것과 같은 이름입니다.
+Name of the action that refused - the same name the On Failure Of row picks.,거절한 액션의 이름 - 실패 시 행이 고르는 것과 같은 이름입니다.
 Plain words a player or a log line can read.,플레이어나 로그 줄이 읽을 수 있는 평범한 말.
 Report Success,성공 보고
-"Announces that a verb finished, so every On Success Of event for that verb runs. The confirmation twin of Report Failure.",동사가 끝났음을 알려서 그 동사에 대한 모든 성공 시 이벤트가 실행되게 합니다. 실패 보고 의 확인용 쌍둥이입니다.
+"Announces that an action finished, so every On Success Of event for that action runs. The confirmation twin of Report Failure.",액션가 끝났음을 알려서 그 액션에 대한 모든 성공 시 이벤트가 실행되게 합니다. 실패 보고 의 확인용 쌍둥이입니다.
 Report success of [b]{verb}[/b],[b]{verb}[/b] 성공 보고
-Name of the verb that finished - the same name the On Success Of row picks.,끝난 동사의 이름 - 성공 시 행이 고르는 것과 같은 이름입니다.
+Name of the action that finished - the same name the On Success Of row picks.,끝난 액션의 이름 - 성공 시 행이 고르는 것과 같은 이름입니다.
 At Most Every,최소 간격
 "Lets this event run at most once every so many seconds, however often it is reached. The rate limit for a search box, an expensive readout, or forty hit sounds landing in one frame.","아무리 자주 도달하더라도 이 이벤트가 몇 초에 한 번씩만 실행되게 합니다. 검색창, 비싼 표시, 한 프레임에 몰린 마흔 개의 타격음에 쓰는 속도 제한입니다."
 at most every [b]{seconds}[/b]s,최소 [b]{seconds}[/b]초 간격
@@ -2034,13 +2034,13 @@ See also,함께 보기
 Opens this entry.,이 항목을 엽니다.
 Add example events,예제 이벤트 추가
 Show GDScript,GDScript 보기
-Shows the line this verb compiles to.,이 항목이 컴파일되는 줄을 보여 줍니다.
-Opens the guide this verb is documented in.,이 항목이 설명된 가이드를 엽니다.
+Shows the line this row compiles to.,이 항목이 컴파일되는 줄을 보여 줍니다.
+Opens the guide this row is documented in.,이 항목이 설명된 가이드를 엽니다.
 "Puts this row into the open sheet at the caret, as one undo step.",이 행을 열린 시트의 캐럿 위치에 한 번의 실행 취소 단위로 넣습니다.
 "Puts the illustrated rows into the open sheet at the caret, as one undo step.",예시 행들을 열린 시트의 캐럿 위치에 한 번의 실행 취소 단위로 넣습니다.
 Nothing in the Manual mentions that,설명서에 해당 내용이 없습니다
 Selected the event that uses it.,이것을 사용하는 이벤트를 선택했습니다.
-That verb is not used in this sheet.,이 항목은 이 시트에서 사용되지 않습니다.
+That row is not used in this sheet.,이 항목은 이 시트에서 사용되지 않습니다.
 Press F1 for the Manual's page on the marks.,F1을 누르면 기호에 대한 설명서 페이지가 열립니다.
 Opens the next page in this part of the Manual.,설명서의 이 부분에서 다음 페이지를 엽니다.
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.",무언가를 선택한 뒤 F1을 누르면 그에 대한 도움말이 열립니다. 설명서 목차에서 페이지를 골라도 됩니다.
@@ -2398,7 +2398,7 @@ Headings on a Manual page. Clear = follow the editor's own text colour.,설명�
 The highlight behind a search hit inside a page.,페이지 안 검색 결과 뒤의 강조 표시.
 The pill on the contents entry for the page you are reading. Clear = the editor's accent.,지금 읽고 있는 페이지의 목차 항목에 붙는 알약 배지. 투명 = 에디터의 강조 색.
 The word on that pill.,그 알약 배지에 적히는 글자.
-The note above a verb its pack has deprecated.,팩이 더 이상 권장하지 않는 동사 위에 표시되는 안내문.
+The note above a row its pack has deprecated.,팩이 더 이상 권장하지 않는 행 위에 표시되는 안내문.
 The rule under a table's header row on a page.,페이지 안 표의 머리글 행 아래에 그어지는 선.
 The strip down the left of the sheet that carries the event numbers.,시트 왼쪽에서 이벤트 번호를 담고 있는 띠.
 The event numbers themselves.,이벤트 번호 자체.

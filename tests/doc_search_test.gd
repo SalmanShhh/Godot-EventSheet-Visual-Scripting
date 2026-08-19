@@ -241,13 +241,13 @@ static func _test_ace_reference() -> bool:
 	var silent: Dictionary = {"Actions": [{"name": "a", "params": "x", "note": ""}],
 		"Conditions": [{"name": "b", "params": "", "note": "   "}]}
 	all_passed = _check("a pack that documents nothing draws no description column",
-		", ".join(EventSheetDocAceReference.reference_columns(silent)), "Verb, Parameters") and all_passed
+		", ".join(EventSheetDocAceReference.reference_columns(silent)), "Name, Parameters") and all_passed
 	var spoken: Dictionary = {"Actions": [{"name": "a", "params": "x", "note": ""}],
 		"Expressions": [{"name": "c", "params": "", "note": "What it does."}]}
 	all_passed = _check("one documented verb anywhere on the page brings the column back",
-		", ".join(EventSheetDocAceReference.reference_columns(spoken)), "Verb, Parameters, What it does") and all_passed
+		", ".join(EventSheetDocAceReference.reference_columns(spoken)), "Name, Parameters, What it does") and all_passed
 	all_passed = _check("an empty page asks for no description column",
-		", ".join(EventSheetDocAceReference.reference_columns({})), "Verb, Parameters") and all_passed
+		", ".join(EventSheetDocAceReference.reference_columns({})), "Name, Parameters") and all_passed
 	# Every derived table on a page carries the SAME headers, and every row fills every one of them.
 	var derived: Array[Dictionary] = EventSheetDocAceReference.blocks_for_page("Addons/Quest")
 	var wanted: int = EventSheetDocAceReference.reference_columns(

@@ -108,7 +108,7 @@ func _ensure_built() -> void:
 	# same public reveal answers here.
 	_browser.row_requested.connect(func(provider_id: String, ace_id: String, index: int) -> void:
 		if not EventSheets.reveal_verb_row(provider_id, ace_id, index):
-			_dock._set_status("That verb is not used in this sheet."))
+			_dock._set_status("That row is not used in this sheet."))
 	var body: VBoxContainer = EventSheetPopupUI.form_box()
 	body.add_child(_browser)
 	var online_button: Button = Button.new()

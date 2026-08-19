@@ -135,6 +135,8 @@ This no-code path complements the other ways to add vocabulary. The **"Make a be
 
 ## 7. Publishing From a Script You Already Have
 
+![The Manage Providers table previewing an untyped script: one method moved into the Conditions lane, one member opted out](images/provider-curation.png)
+
 The ACE Studio authors a function out of event rows. When the logic already exists as GDScript - a score keeper, a wave manager, an inventory you wrote long before you met this plugin - the same result is one dialog away: **Sheet ▸ Custom Actions...**, which opens the **Custom ACE Providers** window.
 
 Press **Add...** to browse to the `.gd` (or click one already listed) and the **What it publishes** table shows one row per entry the script would contribute: **Publish**, **Kind**, **Name**, **Category**, **Parameters**, and the exact code it **Emits**. Looking registers nothing - **Register This Script** is a separate, deliberate click, so a script never joins the vocabulary unseen.

@@ -35,6 +35,8 @@ Current additions on top of the model below:
 
 ## What a theme reaches now
 
+![The event-number margin retinted through the style tokens, so the gutter follows the theme like everything else](images/themed-gutter.png)
+
 Until recently a theme stopped at the row shells and the chips in them. Everything the
 "an opened script reads like an event sheet" work added - the chips on an Include bar, the
 coverage chip, the badge that says how often an event runs, the Script block and ⚠ code

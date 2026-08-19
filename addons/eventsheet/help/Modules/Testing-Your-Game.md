@@ -199,7 +199,7 @@ the version that passed.
 
 ```
 On Test Start (test_name)
-  -> Assert That  "the behavior exposes its verbs"  ScreenShake.has_method("shake")
+  -> Assert That  "the behavior exposes its actions"  ScreenShake.has_method("shake")
   -> Assert Equal  "the default strength is unchanged"  ScreenShake.new().strength,  8.0
 ```
 

@@ -4362,11 +4362,19 @@ static var _script_scene_cache: Dictionary = {}
 static var _script_scene_scanned: bool = false
 
 
+## Drops the project-wide scene index, so the next question re-sweeps. The dock calls this when the
+## editor's filesystem changes: a scene added, renamed, or re-parented to another script changes the
+## answer, and an index kept for the whole session would go on naming the object it used to be.
+static func clear_scene_script_index() -> void:
+	_script_scene_cache.clear()
+	_script_scene_scanned = false
+
+
 ## The scene a script is attached to as its ROOT, as {scene_path, root_name} - what lets a script with
 ## no `class_name` still be named after the object it drives. {} when no scene in the project uses it
 ## that way. Built by ONE sweep of the project's .tscn files (a scene names its scripts in the
-## `[ext_resource]` lines at the very top, so only the head of each file is read) and cached for the
-## session, because the answer cannot change while the editor holds the file open.
+## `[ext_resource]` lines at the very top, so only the head of each file is read) and kept until the
+## filesystem changes, which is when the dock drops it.
 static func scene_using_script(script_path: String) -> Dictionary:
 	if not _script_scene_scanned:
 		_script_scene_scanned = true
