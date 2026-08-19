@@ -6673,6 +6673,66 @@ func _wraps_whole_expression(text: String) -> bool:
 ## `slice_from` / `slice_to` (half-open, -1 = to the end) and `hide_conditions` exist for M23: a
 ## statement carrying a ternary splits its event into a row of the actions before it, the branch rows,
 ## and a continuation row - three views of ONE unchanged EventRow, each drawing its own slice.
+## S27. True when this row is one of the sheet's OWN events rather than a sub-event of another. A
+## blank row means "runs every tick" only up here; under a parent, blank means "then, in order".
+func _is_top_level_event(event_row: EventRow, rows: Array = []) -> bool:
+	var search: Array = rows
+	if search.is_empty():
+		var sheet: EventSheetResource = _viewport._sheet
+		if sheet == null or event_row == null:
+			return false
+		search = sheet.events
+	for entry: Variant in search:
+		if entry == event_row:
+			return true
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			var members: Array = group.events if not group.events.is_empty() else group.rows
+			if _is_top_level_event(event_row, members):
+				return true
+	return false
+
+
+## S27. What a top-level event whose tick carries no condition of its own says in the condition lane -
+## {} when the row keeps its own trigger words, else {"note": String} ("" = say nothing at all). Also
+## the one place the blank-event pattern is claimed, so the chip, the hover and the Doctor all read
+## the same fact rather than each re-deriving it.
+func _blank_tick_reading(event_row: EventRow) -> Dictionary:
+	if event_row == null or not event_row.conditions.is_empty():
+		return {}
+	if event_row.else_mode != EventRow.ElseMode.NONE:
+		return {}
+	if event_row.trigger != null or not event_row.pick_filters.is_empty():
+		return {}
+	if not event_row.with_node_target.strip_edges().is_empty():
+		return {}
+	var reading: Dictionary = EventSheetViewportReadingRows.blank_tick_reading(
+		event_row.trigger_id, false, _patterns_reading_on())
+	if reading.is_empty():
+		return {}
+	if not _is_top_level_event(event_row):
+		return {}
+	var header: String = str(event_row.get_meta("__source_trigger_header", ""))
+	if header.is_empty():
+		var signature: Dictionary = TriggerResolver.resolve_trigger(event_row)
+		header = "func %s(%s) -> %s:" % [
+			str(signature.get("function_name", "_process")), str(signature.get("args", "")),
+			str(signature.get("return_type", "void"))]
+	EventSheetPatternFacts.claim(_viewport._sheet, "blank_event", event_row.event_uid,
+		event_row.event_uid, PackedStringArray([header]),
+		EventSheetL10n.translate(EventSheetViewportReadingRows.BLANK_EVENT_HOVER))
+	return reading
+
+
+## S27. The Patterns reading toggle: with it off, the tick triggers keep their explicit Every tick
+## words. Defaults to on when the dock has not published a preference (tests, figure renders).
+func _patterns_reading_on() -> bool:
+	var dock: Variant = _viewport.get("_dock") if _viewport != null else null
+	if dock == null or not (dock as Object).has_method("is_patterns_reading_on"):
+		return true
+	return bool((dock as Object).call("is_patterns_reading_on"))
+
+
 func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_from: int = 0,
 		slice_to: int = -1, hide_conditions: bool = false, slice_is_tail: bool = false) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
@@ -6690,6 +6750,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# generic "On unhandled input event" cell. Pure lens; the emitted handler is untouched.
 	var input_reading: Dictionary = _input_branch_reading(event_row)
 	var input_consumed: Dictionary = input_reading.get("consumed", {})
+	# S1 - an event that asks which state the object is in is a state machine's tick; it says so in
+	# the pattern registry, which is where the chip, its hover and Adopt behavior read it.
+	_claim_state_machine_pattern(event_row)
 	if not input_reading.is_empty():
 		var input_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		var input_glyph: String = _apply_trigger_tempo(input_badge_meta, event_style, event_row.trigger_id)
@@ -6774,6 +6837,32 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		poll_badge_meta["line_index"] = condition_line_index
 		poll_badge_meta["badge_style"] = "trigger"
 		spans.append(_make_span("⌨", SemanticSpan.SpanType.KEYWORD, poll_badge_meta))
+	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE \
+			and not _blank_tick_reading(event_row).is_empty():
+		# ── S27 ─────────────────────────────────────────────────────────────────────────────────
+		# A blank event at the top of a sheet runs every tick - that is what blank MEANS here, so an
+		# every-frame handler with no condition of its own says nothing in the condition lane and the
+		# empty lane is the reading (the hover and Explain say it in words). The physics tick keeps
+		# one muted note, because blank alone cannot say WHICH tick. Display only: the row still
+		# carries its trigger id and still compiles to exactly the handler it came from.
+		var blank_note: String = str(_blank_tick_reading(event_row).get("note", ""))
+		if not blank_note.is_empty():
+			spans.append(_make_span(blank_note, SemanticSpan.SpanType.COMMENT, {
+				"lane": "condition",
+				"kind": "trigger",
+				"ace_index": 0,
+				"editable": false,
+				"hoverable": false,
+				"line_index": condition_line_index
+			}.merged(condition_style_meta, true)))
+		# R32 - blank hides the tick words, never a fact a reader has to know: a per-frame event on a
+		# tool sheet ALSO runs while the scene is being edited, so that chip survives the blank
+		# reading and keeps its place on the line.
+		if _ticks_in_the_editor(event_row):
+			spans.append(_trigger_payload_span(
+				EventSheetL10n.translate("in the editor too"), 0, condition_line_index))
+		if not spans.is_empty():
+			condition_line_index += 1
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and not event_row.trigger_id.is_empty():
 		var trigger_id_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		# Same tempo badge on the lifted / lifecycle path (trigger_id with no authored ACECondition) -
@@ -8903,8 +8992,9 @@ func _ticks_in_the_editor(event_row: EventRow) -> bool:
 	if not bool(_viewport._sheet.get("tool_mode")):
 		return false
 	# The GAME ticks only. An Editor trigger already says it belongs to the editor in its own name, so
-	# a chip there would repeat the row rather than add to it.
-	return INPUT_TRIGGER_TICKS.has(event_row.trigger_id)
+	# a chip there would repeat the row rather than add to it. A BLANK event counts: it runs every
+	# tick, which is exactly the tempo this chip is about (S27).
+	return INPUT_TRIGGER_TICKS.has(TriggerResolver.effective_trigger_id(event_row))
 
 
 func _format_pick_filter(pick: PickFilter) -> String:
@@ -9047,6 +9137,35 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 ## True when this condition is the state-header shape (an is_in_state verb carrying a non-empty
 ## state value) - the span builder badges it with the ◆ diamond in the trigger-icon column and
 ## the descriptor formats it as "State: <name>".
+## S1. The shipped behavior a hand-rolled state machine could be replaced by. The pattern chip and
+## Adopt behavior read this off the claim rather than guessing from the row.
+const STATE_MACHINE_PACK_ID: String = "StateMachineBehavior"
+
+
+## S1. An event that asks which state the object is in IS a state machine's tick, so it claims the
+## pattern on itself - the state names it asks about are the evidence, and the shipped State Machine
+## behavior is what a hand-rolled machine could become. Called once per event build; the registry
+## keeps one claim per (pattern, row).
+func _claim_state_machine_pattern(event_row: EventRow) -> void:
+	if event_row == null or _viewport == null or _viewport._sheet == null:
+		return
+	var evidence: PackedStringArray = PackedStringArray()
+	var ace_ids: PackedStringArray = PackedStringArray()
+	for condition_entry: Variant in event_row.conditions:
+		if not (condition_entry is ACECondition) or not _is_state_header_condition(condition_entry as ACECondition):
+			continue
+		var state_condition: ACECondition = condition_entry as ACECondition
+		var state_params: Dictionary = state_condition.params if not state_condition.params.is_empty() else state_condition.parameters
+		evidence.append("match state: %s" % str(state_params.get("state_name", "")).strip_edges())
+		ace_ids.append(str(state_condition.ace_id))
+	if evidence.is_empty():
+		return
+	EventSheetPatternFacts.claim(_viewport._sheet, "state_machine", event_row.event_uid,
+		event_row.event_uid, evidence,
+		EventSheetL10n.translate("one named state at a time, switched by Go to state"),
+		STATE_MACHINE_PACK_ID, ace_ids)
+
+
 func _is_state_header_condition(condition: ACECondition) -> bool:
 	if condition == null or condition.ace_id != "method:is_in_state":
 		return false
@@ -9090,10 +9209,18 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 		return _joined_segments(grammar)
 	_pending_object_label = global_owner
 	if _is_state_header_condition(condition):
+		# ── S1 ──────────────────────────────────────────────────────────────────────────────────
+		# The words a state machine is asked in: "Current state is "Jump"". Anyone who has driven a
+		# state-machine behavior in an event sheet reaches for exactly that phrase, and the shipped
+		# State Machine pack now publishes it, so a hand-rolled machine and the behavior read alike.
+		# A quoted name shows in quotes; an expression (`previous_state`) shows verbatim, because
+		# quoting it would claim it was a literal name.
 		var state_value: String = str(params_dict.get("state_name", "")).strip_edges()
-		if state_value.length() >= 2 and state_value.begins_with("\"") and state_value.ends_with("\""):
+		var quoted: bool = state_value.length() >= 2 and state_value.begins_with("\"") and state_value.ends_with("\"")
+		if quoted:
 			state_value = state_value.substr(1, state_value.length() - 2)
-		return "%s: %s" % [EventSheetL10n.translate("State"), state_value]
+		return "%s %s" % [EventSheetL10n.translate("Current state is"),
+			"\"%s\"" % state_value if quoted else state_value]
 	var generated_definition: ACEDefinition = _viewport._find_definition(condition.provider_id, condition.ace_id)
 	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	if generated_definition == null and descriptor == null:
@@ -9297,6 +9424,10 @@ func _sentence_head(event_row: EventRow) -> String:
 		return "Else"
 	if event_row.else_mode == EventRow.ElseMode.ELIF:
 		return "Else if"
+	# S27 - a blank top-level event, and an every-frame handler carrying no condition of its own, are
+	# the same event: the empty condition lane says it runs every tick, and the hover says so in words.
+	if not _blank_tick_reading(event_row).is_empty():
+		return EventSheetL10n.translate("Runs every tick")
 	var trigger_text: String = _sentence_trigger(event_row)
 	return "When %s" % trigger_text if not trigger_text.is_empty() else ""
 

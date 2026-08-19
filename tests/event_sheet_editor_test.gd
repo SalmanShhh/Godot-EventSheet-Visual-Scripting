@@ -143,9 +143,21 @@ static func run() -> bool:
     var demo_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var first_demo_row: EventRowData = demo_rows[0].get("row")
     all_passed = _check("a loaded sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
-    # On Process is an every-tick trigger, so its tempo badge is ⟳, not the signal ➜. A signal trigger
-    # would render ➜; every-tick/input/once each get their own glyph.
-    all_passed = _check("every-tick rows render the tempo badge", _rows_contain_text(demo_rows, "⟳"), true) and all_passed
+    # S27 - an every-tick event with NO condition of its own reads as a BLANK event: the empty
+    # condition lane already means "runs every tick", so there are no trigger words and no tempo
+    # badge to draw. Give the same event a condition and the full Every tick reading is back, tempo
+    # badge included - which is the second half of this pin.
+    all_passed = _check("a conditionless every-tick row reads blank", _rows_contain_text(demo_rows, "⟳"), false) and all_passed
+    var guarded_tick: ACECondition = ACECondition.new()
+    guarded_tick.provider_id = "Core"
+    guarded_tick.ace_id = "Always"
+    seeded_tick.conditions.append(guarded_tick)
+    dock.setup(seeded)
+    all_passed = _check("an every-tick row that carries a condition renders the tempo badge",
+        _rows_contain_text(dock_viewport.get_flat_rows(), "⟳"), true) and all_passed
+    seeded_tick.conditions.clear()
+    dock.setup(seeded)
+    demo_rows = dock_viewport.get_flat_rows()
     # The events must COMPILE so the Generated GDScript panel matches the sheet: rows whose templates
     # emit nothing would leave the panel disagreeing with the events on screen.
     var demo_gd: String = str(SheetCompiler.compile(dock._current_sheet, "user://_demo_editor_verify.gd").get("output", ""))

@@ -1,6 +1,6 @@
 # The state-machine reading layer, all display-only views (rows and compiled output are gated
 # elsewhere):
-#   1. An Is In State condition renders as a "◆ State: <name>" header - keyed on the method
+#   1. A Current state is condition renders as a '◆ Current state is "<name>"' header - keyed on the method
 #      SHAPE (method:is_in_state + a state_name param), so any state-machine-like behavior gets
 #      the reading, not just the bundled pack.
 #   2. A lifted trigger id resolves its friendly name through the descriptor FALLBACK - the
@@ -24,11 +24,11 @@ static func run() -> bool:
 	in_state.provider_id = "StateMachineBehavior"
 	in_state.ace_id = "method:is_in_state"
 	in_state.params = {"state_name": "\"patrol\""}
-	ok = _check("Is In State reads as a state header", builder._format_condition_descriptor_base(in_state), "State: patrol") and ok
+	ok = _check("Current state is reads as a state header", builder._format_condition_descriptor_base(in_state), "Current state is \"patrol\"") and ok
 	in_state.params = {"state_name": "previous_state"}
-	ok = _check("an unquoted state expression shows verbatim", builder._format_condition_descriptor_base(in_state), "State: previous_state") and ok
+	ok = _check("an unquoted state expression shows verbatim", builder._format_condition_descriptor_base(in_state), "Current state is previous_state") and ok
 	in_state.params = {"state_name": ""}
-	ok = _check("an empty state falls through to normal formatting", builder._format_condition_descriptor_base(in_state).begins_with("State:"), false) and ok
+	ok = _check("an empty state falls through to normal formatting", builder._format_condition_descriptor_base(in_state).begins_with("Current state is"), false) and ok
 	in_state.params = {"state_name": "\"patrol\""}
 	var header_row: EventRow = EventRow.new()
 	header_row.conditions.append(in_state)
@@ -39,7 +39,7 @@ static func run() -> bool:
 		if span.text == "◆" and bool((span.metadata as Dictionary).get("badge", false)):
 			diamond_is_badge = true
 	ok = _check("the diamond renders as a badge span", diamond_is_badge, true) and ok
-	ok = _check("the diamond never rides inside the text", Array(header_texts).has("◆ State: patrol"), false) and ok
+	ok = _check("the diamond never rides inside the text", Array(header_texts).has("◆ Current state is \"patrol\""), false) and ok
 
 	# 1b. A reflected verb reads in WORDS in the condition lane too, not as its raw id. The
 	# action lane always had this registry-free fallback; the condition lane leaked

@@ -2070,6 +2070,11 @@ func _refresh_rows() -> void:
 	_figure_content_width = -1.0
 	if figure_mode:
 		_figure_logical_width = FIGURE_PROBE_WIDTH
+	# The pattern registry lives exactly as long as one row build: the readings that recognise a
+	# known code shape claim it as they go, and everything that talks ABOUT patterns reads those
+	# claims. Cleared here (the one place a whole sweep starts) so a claim can never outlive the
+	# rows it was made from - the recursive builds below fill it back in, member sheets included.
+	EventSheetPatternFacts.clear(_sheet)
 	_root_rows = _build_rows_from_sheet(_sheet)
 	_update_layout_style_signature(_get_font_size())
 	_group_breadcrumb.invalidate()

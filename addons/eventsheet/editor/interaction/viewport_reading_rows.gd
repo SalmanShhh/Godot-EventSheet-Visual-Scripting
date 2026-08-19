@@ -602,6 +602,34 @@ static func tick_trigger_words(trigger_id: String, display_text: String) -> Stri
 	return collision if not collision.is_empty() else display_text
 
 
+## S27. The tick triggers whose body carries no condition of its own read as a BLANK event, because
+## that is what a blank event means in an event sheet: it runs every tick. Nothing is written into
+## the condition lane for the every-frame tick - the empty lane IS the reading, and the hover says
+## it in words. The physics tick keeps one muted note, because blank alone cannot say WHICH tick.
+const BLANK_TICK_TRIGGER_IDS: PackedStringArray = ["OnProcess", "OnPhysicsProcess"]
+
+## What the margin hover and the Explain panel say about a blank top-level event.
+const BLANK_EVENT_HOVER: String = "runs every tick"
+
+
+## S27. Whether a top-level event reads as a blank one, and what (if anything) its condition lane
+## still says. `patterns_on` is the Patterns reading toggle: with it off, the tick trigger keeps its
+## explicit Every tick words for readers who want them.
+## Returns {} when the event keeps its own trigger words, else {"note": String} - "" for the
+## every-frame tick, the muted physics note for the physics tick.
+static func blank_tick_reading(trigger_id: String, has_conditions: bool, patterns_on: bool = true) -> Dictionary:
+	if not patterns_on or has_conditions:
+		return {}
+	if trigger_id.is_empty():
+		return {"note": ""}
+	if not BLANK_TICK_TRIGGER_IDS.has(trigger_id):
+		return {}
+	if trigger_id == "OnPhysicsProcess":
+		return {"note": "%s %s" % [
+			EventSheetL10n.translate("every tick"), EventSheetL10n.translate("(physics)")]}
+	return {"note": ""}
+
+
 ## P8. The notification a `_notification` branch reads as. Only the ones an event sheet already has a
 ## word for are named; every other notification humanizes, which says what happened without pretending
 ## the sheet has a trigger of its own for it.
