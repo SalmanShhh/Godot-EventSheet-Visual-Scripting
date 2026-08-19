@@ -250,6 +250,42 @@ no editor in it, so the window, the Doctor and the tests all read the same answe
   and the Doctor reports two includes that both handle the same trigger, because that clash is
   invisible in the includer.
 
+### Added - data assets, and the window / render / screenshot words
+
+- **A Resource script reads as a data type.** Its Include bar says `data type` and names the type
+  the way a designer says it out loud (`enemy_stats.gd` is an `Enemy Stats`), and its `@export`s
+  read as `Field` rows. A field read off one says whose field it is - `stats.hp` reads
+  `stats's hp` - and `load(\"res://data/slime.tres\") as EnemyStats` reads `the data asset
+  slime.tres`. `ResourceSaver.save(stats, path)` reads `System ▸ Save data asset stats as
+  slime.tres`. The event that holds them claims the `data_asset` pattern with the source lines as
+  evidence.
+- **Two rows author the same shapes.** `Data Asset` (an expression) writes `load(path)` and
+  `Save Data Asset` writes `ResourceSaver.save(resource, path)`, so a picked row and a typed line
+  are the same bytes and the same sentence.
+- **A .tres opens as a table, and a folder of them as one grid.** The model behind the table view
+  ships: the columns of a data type, one asset as a row of values, a whole folder as a grid, a new
+  row as a new asset, a deleted row behind a confirm that names the file. Edits go to disk through
+  ResourceSaver, and a save with nothing edited does not touch the file - opening a designer's
+  assets as a table leaves every byte where it was. `Open as Event Sheet` now offers a data-asset
+  .tres and a folder of one type.
+- **Window, render and screenshot lines read as rows.** `get_window().size / title / mode` read
+  `Window ▸ Set size to 1280 × 720 / Set title to \"My Game\" / Set fullscreen on`,
+  `DisplayServer.window_set_vsync_mode(...)` reads `Window ▸ Set vsync on` (both the bare constant
+  and the ternary the picked row writes), `Engine.max_fps` reads `System ▸ Set max FPS to 60`, and
+  `get_viewport().msaa_2d = Viewport.MSAA_4X` reads `System ▸ Set anti-aliasing to 4×`.
+  `get_viewport().get_texture().get_image()` is one phrase - `a screenshot` - `img.save_png(path)`
+  reads `System ▸ Save image img as shot.png`, and `$SubViewport.get_texture()` reads `SubViewport
+  rendered as an image`. The event claims the `window` pattern.
+- **Four more rows author the render half**: `Set Anti-aliasing`, `Save Image As`, `Screenshot` and
+  `Rendered As An Image`, each writing exactly the plain Godot line the reading recognises.
+
+### Changed
+
+- The Game Window rows wear the `Window` object rather than `System`, and say the same sentence the
+  typed line reads as (`Set size to 1280 × 720`, `Set fullscreen on`, `Set max FPS to 60`). The
+  frame cap and the render settings stay System rows, because that is what the reading says too.
+  Ids and codegen templates are unchanged.
+
 ### Added - an opened script's PATTERNS read as the events they are
 
 The batches before this one made single statements read as the sheet's sentences. These are the
