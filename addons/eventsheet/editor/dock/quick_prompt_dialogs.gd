@@ -48,7 +48,7 @@ func prompt_extract_function_name(callback: Callable) -> void:
 		)
 		box.add_child(EventSheetPopupUI.form_row("Name this action", _extract_function_name_edit))
 		var hint: Label = Label.new()
-		hint.text = "These actions become one reusable verb: call it anywhere, and it appears in the picker. Type a meaningful name (e.g. \"Apply Physics\")."
+		hint.text = "These actions become one reusable function: call it anywhere, and it appears in the picker. Type a meaningful name (e.g. \"Apply Physics\")."
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		hint.custom_minimum_size = Vector2(340.0, 0.0)
 		hint.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)

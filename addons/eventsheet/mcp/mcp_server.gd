@@ -382,7 +382,7 @@ func _tool_descriptors() -> Array:
 		},
 		{
 			"name": "lint_block",
-			"description": "Compile-check a GDScript block or statement list against a sheet's context (variables, enums, host class).",
+			"description": "Compile-check a script block or statement list against a sheet's context (variables, enums, host class).",
 			"inputSchema": {"type": "object", "properties": {"code": {"type": "string"}, "in_flow": {"type": "boolean", "description": "true = statements inside an event; false = class-level code"}, "sheet_path": {"type": "string"}}, "required": ["code"]}
 		},
 		{

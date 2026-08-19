@@ -314,10 +314,10 @@ func _init() -> void:
 	# the region fold commands register through it as living proof the extension point
 	# works - delete these four lines and only extensions lose their entries.
 	EventSheets._register_dock(self)
-	EventSheets.register_palette_command("Fold All Regions", func() -> void: _viewport.set_region_folds(true))
-	EventSheets.register_palette_command("Unfold All Regions", func() -> void: _viewport.set_region_folds(false))
-	EventSheets.register_palette_command("Fold Everything (regions + groups)", func() -> void: _viewport.set_region_folds(true, true))
-	EventSheets.register_palette_command("Unfold Everything", func() -> void: _viewport.set_region_folds(false, true))
+	EventSheets.register_palette_command("Collapse All Regions", func() -> void: _viewport.set_region_folds(true))
+	EventSheets.register_palette_command("Expand All Regions", func() -> void: _viewport.set_region_folds(false))
+	EventSheets.register_palette_command("Collapse Everything (regions + groups)", func() -> void: _viewport.set_region_folds(true, true))
+	EventSheets.register_palette_command("Expand Everything", func() -> void: _viewport.set_region_folds(false, true))
 	EventSheets.register_palette_command("Collapse All", func() -> void: _viewport.collapse_all())
 	EventSheets.register_palette_command("Expand All", func() -> void: _viewport.expand_all())
 	EventSheets.register_palette_command("Expand To Level 1", func() -> void: _viewport.expand_to_level(1))
@@ -1882,7 +1882,7 @@ func _apply_simple_mode_gates() -> void:
 		var code_index: int = _add_menu_popup.get_item_index(4)
 		if code_index >= 0:
 			_add_menu_popup.set_item_disabled(code_index, _simple_mode)
-			_add_menu_popup.set_item_tooltip(code_index, "Turn off Simple Mode (toolbar) to add GDScript blocks." if _simple_mode else "")
+			_add_menu_popup.set_item_tooltip(code_index, "Turn off Simple Mode (toolbar) to add script blocks." if _simple_mode else "")
 
 
 func _load_simple_mode_preference() -> void:
@@ -2277,7 +2277,7 @@ func _open_replace_object_dialog() -> void:
 	_replace_object_dialog.ok_button_text = "Replace"
 	var content: VBoxContainer = VBoxContainer.new()
 	content.add_theme_constant_override("separation", 8)
-	content.add_child(EventSheetPopupUI.hint_label("Every matching reference across the %d selected row(s) rewrites - params, With-Node scopes, pick filters, and GDScript blocks. Token-safe: $Enemy never touches $EnemySpawner." % targets.size(), 420.0))
+	content.add_child(EventSheetPopupUI.hint_label("Every matching reference across the %d selected row(s) rewrites - params, With-Node scopes, pick filters, and script blocks. Token-safe: $Enemy never touches $EnemySpawner." % targets.size(), 420.0))
 	var from_options: OptionButton = OptionButton.new()
 	for reference: String in references:
 		from_options.add_item(reference)
@@ -2864,7 +2864,7 @@ func _run_diagnostics_action() -> void:
 	if count > 0:
 		_set_status("%d row(s) need attention - jumped to the first (hover the red rows for details)." % count, true)
 	else:
-		_set_status("No issues found - every ƒx expression and GDScript block compiles.")
+		_set_status("No issues found - every ƒx expression and script block compiles.")
 
 ## Fixed structural keys (not rebindable - they're grammar, not preference): shown read-only in the
 ## Keyboard Shortcuts editor as [keys, action], for reference. The rebindable authoring keys come
@@ -2873,7 +2873,7 @@ const FIXED_KEYS: Array = [
 	["Enter / F2", "Edit the selected row"],
 	["Tab / Shift+Tab", "Nest / un-nest the event"],
 	["Alt + Up / Down", "Move the row up / down"],
-	["Left / Right", "Fold / unfold a group"],
+	["Left / Right", "Collapse / expand a group"],
 	["Up / Down", "Select previous / next row"],
 	["Shift + Up / Down", "Extend the row selection"],
 	["Delete", "Delete the selection"],
@@ -2909,7 +2909,7 @@ func open_documentation(doc_id: String = "", anchor: String = "") -> bool:
 	# say so and fall back to the index rather than leaving the reader on a stale page. The
 	# ANSWER is still false - the reader gets a page, but the caller asked whether THAT id is
 	# documented, and reporting the index as a hit is how a renamed guide ships unnoticed.
-	_set_status("No documentation for that row - its verb is not in this project's vocabulary.", true)
+	_set_status("No documentation for that row - what it uses is not in this project's vocabulary.", true)
 	_docs.open("")
 	return false
 
@@ -3617,7 +3617,7 @@ func _refresh_convert_to_verb_item() -> void:
 	_action_context_menu.add_item("Convert to %s ▸ %s" % [str(suggestion["provider_id"]),
 		str(suggestion["display_name"])], ACTION_MENU_CONVERT_TO_VERB)
 	_action_context_menu.set_item_tooltip(_action_context_menu.get_item_index(ACTION_MENU_CONVERT_TO_VERB),
-		"This raw call matches one of your project's verbs. Converting names the row and gives it that verb's parameter fields; the emitted code is unchanged.")
+		"This raw call matches one of your project's actions. Converting names the row and gives it that action's parameter fields; the emitted code is unchanged.")
 
 
 ## Option 2 of the collection-declaration work: entry verbs on the action menu, shown only

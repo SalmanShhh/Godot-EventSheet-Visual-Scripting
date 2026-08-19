@@ -49,7 +49,7 @@ static func steps() -> Array[Dictionary]:
 		},
 		{
 			"title": "Make it DO something",
-			"body": "Actions are the verbs - they run top to bottom whenever the conditions pass.",
+			"body": "Actions are what happens - they run top to bottom whenever the conditions pass.",
 			"task": "Click Add Action (or double-click the right lane) and pick Print Message, then type something friendly.",
 			"check": func(sheet: EventSheetResource) -> bool: return _sheet_has_action(sheet),
 		},

@@ -155,7 +155,7 @@ static func build_panel(event_function: EventFunction, sheet: EventSheetResource
 	var column: VBoxContainer = EventSheetPopupUI.form_box()
 	column.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(360.0), 0.0)
 	if event_function == null:
-		column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("This verb is no longer on the sheet.")))
+		column.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("This function is no longer on the sheet.")))
 		return EventSheetPopupUI.margined(column)
 	var role: String = ViewportRowBuilder.define_role_for(event_function)
 	var accent: Color = (ViewportRowBuilder.define_role_badge_colors(role) as Array)[1]

@@ -188,7 +188,7 @@ func build() -> void:
 	var body: VBoxContainer = EventSheetPopupUI.form_box()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	summary_label = EventSheetPopupUI.hint_label(
-		"Runs of actions that appear more than once. Pick one and make it a verb: it is extracted at the first place and called at the rest, in one undo step.", 460.0)
+		"Runs of actions that appear more than once. Pick one and make it a function: it is extracted at the first place and called at the rest, in one undo step.", 460.0)
 	body.add_child(summary_label)
 	tree = Tree.new()
 	tree.hide_root = true
@@ -206,8 +206,8 @@ func build() -> void:
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(card)
 	make_verb_button = Button.new()
-	make_verb_button.text = "Make a Verb…"
-	make_verb_button.tooltip_text = "Name this run: it becomes one reusable verb, extracted where it first appears and called everywhere else."
+	make_verb_button.text = "Make a Function…"
+	make_verb_button.tooltip_text = "Name this run: it becomes one reusable function, extracted where it first appears and called everywhere else."
 	make_verb_button.disabled = true
 	make_verb_button.pressed.connect(_on_make_verb_pressed)
 	body.add_child(make_verb_button)
@@ -245,7 +245,7 @@ func refresh() -> int:
 			child.set_metadata(0, run_index)
 	make_verb_button.disabled = true
 	summary_label.text = "No repeated runs - every action sequence on this sheet is written once." if _runs.is_empty() \
-		else "%d repeated run(s). Pick one and make it a verb: extracted where it first appears, called everywhere else, one undo step." % _runs.size()
+		else "%d repeated run(s). Pick one and make it a function: extracted where it first appears, called everywhere else, one undo step." % _runs.size()
 	return _runs.size()
 
 
@@ -289,7 +289,7 @@ func make_verb(run_index: int, raw_name: String) -> bool:
 		return false
 	var run: Dictionary = _runs[run_index]
 	if bool(run.get("needs_parameters", false)):
-		_dock._set_status("That run uses an event-local or a For-Each item, so the sites can't share one verb without parameters. Extract it at one site instead.", true)
+		_dock._set_status("That run uses an event-local or a For-Each item, so the sites can't share one function without parameters. Extract it at one site instead.", true)
 		return false
 	var occurrences: Array = run["occurrences"]
 	var length: int = int(run["length"])
@@ -303,7 +303,7 @@ func make_verb(run_index: int, raw_name: String) -> bool:
 		refresh()
 		_dock._set_status("The sheet changed since this list was built - it has been rescanned. Pick the run again.", true)
 		return false
-	var changed: bool = _dock._perform_undoable_sheet_edit("Make a Verb from Repeated Rows", func() -> bool:
+	var changed: bool = _dock._perform_undoable_sheet_edit("Make a Function from Repeated Rows", func() -> bool:
 		var first: Dictionary = occurrences[0]
 		var first_event: EventRow = first["event"] as EventRow
 		var first_start: int = int(first["start_index"])
@@ -341,7 +341,7 @@ func make_verb(run_index: int, raw_name: String) -> bool:
 	)
 	if changed:
 		_dock._refresh_functions_list()
-		_dock._mark_dirty("\"%s\" is a verb now - defined once, called at %d places." % [raw_name.strip_edges(), sites])
+		_dock._mark_dirty("\"%s\" is a function now - defined once, called at %d places." % [raw_name.strip_edges(), sites])
 		refresh()
 	else:
 		_dock._set_status("That run couldn't be extracted - open the first site and try Extract All Actions to Function there.", true)

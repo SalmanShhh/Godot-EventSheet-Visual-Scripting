@@ -876,7 +876,10 @@ const OBJECT_KIND_WORDS: Dictionary = {
 	"script": "this script",
 	"node": "node",
 	"behaviour": "behaviour",
-	"autoload": "autoload",
+	# P10 - the word "autoload" is Godot's; "(global)" is the sheet's, and it is the half that says
+	# what it MEANS. The same pair reads on the Include bar of an opened autoload and in every other
+	# sheet's `Game (global) ▸ …` row, so the rail, the head and the rows all name it identically.
+	"autoload": "autoload (global)",
 	"group": "group",
 	"scene": "scene"
 }

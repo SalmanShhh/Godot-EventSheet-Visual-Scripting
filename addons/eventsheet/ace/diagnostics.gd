@@ -86,7 +86,7 @@ static func _check_pick_filters(event: EventRow, sheet: EventSheetResource, diag
 static func _check_raw(raw: RawCodeRow, in_flow: bool, sheet: EventSheetResource, diagnostics: Array) -> void:
 	var verdict: Dictionary = EventSheetGDScriptLint.lint(raw.code, in_flow, sheet)
 	if not bool(verdict.get("ok", true)):
-		diagnostics.append(_make(raw, "GDScript block doesn't compile: %s" % str(verdict.get("error", "")), ""))
+		diagnostics.append(_make(raw, "Script block doesn't compile: %s" % str(verdict.get("error", "")), ""))
 
 
 ## A local variable whose name shadows a host-class member breaks the generated script (the

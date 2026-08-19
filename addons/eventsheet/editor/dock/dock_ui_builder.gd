@@ -322,7 +322,7 @@ func build_provider_dialog() -> void:
 	_dock._provider_preview_tree.column_titles_visible = true
 	_dock._provider_preview_tree.set_column_title(0, "Publish")
 	_dock._provider_preview_tree.set_column_title(1, "Kind")
-	_dock._provider_preview_tree.set_column_title(2, "Verb")
+	_dock._provider_preview_tree.set_column_title(2, "Name")
 	_dock._provider_preview_tree.set_column_title(3, "Category")
 	_dock._provider_preview_tree.set_column_title(4, "Parameters")
 	_dock._provider_preview_tree.set_column_title(5, "Emits")
@@ -347,7 +347,7 @@ func build_provider_dialog() -> void:
 	_dock._provider_register_button = Button.new()
 	_dock._provider_register_button.text = "Register This Script"
 	_dock._provider_register_button.visible = false
-	_dock._provider_register_button.tooltip_text = "Add the previewed script to this sheet's providers, so the verbs above join the picker."
+	_dock._provider_register_button.tooltip_text = "Add the previewed script to this sheet's providers, so the actions above join the picker."
 	_dock._provider_register_button.pressed.connect(_dock._on_provider_register_pressed)
 	preview_actions.add_child(_dock._provider_register_button)
 	_dock._provider_curate_button = Button.new()
@@ -359,7 +359,7 @@ func build_provider_dialog() -> void:
 	_dock._provider_params_button = Button.new()
 	_dock._provider_params_button.text = "Parameters…"
 	_dock._provider_params_button.visible = false
-	_dock._provider_params_button.tooltip_text = "Shape the selected verb's parameters: a hint (try 'comparison'), a fixed set of choices, and what the row shows the moment it is dropped."
+	_dock._provider_params_button.tooltip_text = "Shape the selected entry's parameters: a hint (try 'comparison'), a fixed set of choices, and what the row shows the moment it is dropped."
 	_dock._provider_params_button.pressed.connect(_dock._on_provider_params_pressed)
 	preview_actions.add_child(_dock._provider_params_button)
 	_dock._provider_shim_button = Button.new()
@@ -536,7 +536,7 @@ func ensure_raw_code_dialog() -> void:
 	if _dock._raw_code_dialog != null:
 		return
 	_dock._raw_code_dialog = ConfirmationDialog.new()
-	_dock._raw_code_dialog.title = "Edit GDScript Block"
+	_dock._raw_code_dialog.title = "Edit Script Block"
 	# Standard popup margins, consistent with the other plugin dialogs.
 	var layout_box: VBoxContainer = EventSheetPopupUI.form_box()
 	layout_box.custom_minimum_size = Vector2(640.0, 0.0)

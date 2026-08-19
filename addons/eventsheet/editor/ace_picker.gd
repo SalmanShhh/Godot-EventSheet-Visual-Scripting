@@ -1738,9 +1738,9 @@ func _open_tree_context_menu(definition: ACEDefinition) -> void:
 	# the catalog deliberately never overrules source (it would be an invisible second truth).
 	if not EventSheetVocabularyCatalog.provenance_of(definition).is_empty():
 		_tree_context_menu.add_separator()
-		_tree_context_menu.add_item("Rename this verb…", 3)
+		_tree_context_menu.add_item("Rename this entry…", 3)
 		_tree_context_menu.add_item("Set its category…", 4)
-		_tree_context_menu.add_item("Hide this verb", 5)
+		_tree_context_menu.add_item("Hide this entry", 5)
 		_tree_context_menu.add_item("Hide everything from %s" % definition.provider_id, 6)
 		if EventSheetVocabularyCatalog.provenance_of(definition) == "curated":
 			_tree_context_menu.add_item("Reset to the inferred name", 7)
@@ -1817,14 +1817,14 @@ func _on_tree_context_menu_pressed(item_id: int) -> void:
 			if _info_label != null:
 				_info_label.text = "Copied the registrar snippet for %s - paste it into a provider script.%s" % [definition.display_name, _stub_note_hint(registrar_stub)]
 		3:
-			_prompt_override(definition, "display_name", "Rename verb", definition.display_name)
+			_prompt_override(definition, "display_name", "Rename entry", definition.display_name)
 		4:
 			_prompt_override(definition, "category", "Set category", definition.category)
 		5:
 			EventSheetVocabularyCatalog.set_override(definition.provider_id, definition.id, {"hidden": true})
 			_refresh_tree()
 			if _info_label != null:
-				_info_label.text = "Hid %s - delete eventsheet_vocabulary.tres to restore every hidden verb." % definition.display_name
+				_info_label.text = "Hid %s - delete eventsheet_vocabulary.tres to restore every hidden entry." % definition.display_name
 		6:
 			EventSheetVocabularyCatalog.set_class_excluded(definition.provider_id, true)
 			_populate_object_cards()

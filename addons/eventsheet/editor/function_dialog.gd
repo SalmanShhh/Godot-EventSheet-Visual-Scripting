@@ -140,7 +140,7 @@ func init_dialog(parent_node: Node) -> void:
 		_value_type_option.add_item(str(entry.get("friendly")))
 	_value_type_option.item_selected.connect(func(_index: int) -> void: _refresh_studio())
 	_value_type_row = EventSheetPopupUI.form_row("What kind of value?", _value_type_option, EventSheetPopupUI.LABEL_MIN_WIDTH,
-		"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.")
+		"The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.")
 	form.add_child(_value_type_row)
 
 	# The live picker preview + "Ships as:" - only relevant when publishing ("what OTHER people see"),

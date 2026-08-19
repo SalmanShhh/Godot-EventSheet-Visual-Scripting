@@ -167,7 +167,7 @@ func _open_raw_code_block_in_godot() -> void:
 	var target: RawCodeRow = _dock._raw_code_target
 	var code: String = _dock._raw_code_edit.text
 	var source_path: String = _dock._current_sheet.external_source_path
-	_dock._perform_undoable_sheet_edit("Edit GDScript Block", func() -> bool:
+	_dock._perform_undoable_sheet_edit("Edit Script Block", func() -> bool:
 		if target.code == code:
 			return false
 		target.code = code

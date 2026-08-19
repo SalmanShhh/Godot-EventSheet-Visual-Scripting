@@ -625,7 +625,7 @@ Press **Compare** and you get two columns. On the left, rows of the open sheet t
 - **Unfinished events** - an event with conditions and no actions, the most common half-written shape there is.
 - **Disabled rows** - events, groups, comments, single actions and conditions that are turned off.
 - **Breakpoints left on** - the F9 flag you set during a bug hunt three weeks ago.
-- **Verbs nothing calls** - a published function no row (and no code block) ever calls.
+- **Functions nothing calls** - a published function no row (and no code block) ever calls.
 - **Rows the checker flags** - the same findings **Tools > Check Sheet for Errors** produces.
 
 Click an entry and the sheet jumps to that row and selects it.
@@ -638,16 +638,16 @@ Click an entry and the sheet jumps to that row and selects it.
 2. **The pre-release sweep.** Find the debug print you disabled instead of deleting, and the breakpoint you forgot.
 3. **Team handoff.** Open a colleague's sheet and read their TODOs first - that is where they knew something was wrong.
 4. **Jam triage on the last night.** Unfinished events tell you exactly which ideas are half-built, ranked by nothing but honesty.
-5. **Cleaning up after an extraction spree.** Verbs nothing calls are the ones you extracted and never wired up.
+5. **Cleaning up after an extraction spree.** Functions nothing calls are the ones you extracted and never wired up.
 6. **Teaching.** "Conditions and no actions" is the beginner shape; showing it in a list makes the missing half obvious.
 
 ### 10.3 Find Repeated Rows… - the repeats you stopped noticing
 
-![Find Repeated Rows: identical action runs across the sheet, ranked by rows saved, with Make a Verb](images/tools-find-repeated-rows.png)
+![Find Repeated Rows: identical action runs across the sheet, ranked by rows saved, with Make a Function](images/tools-find-repeated-rows.png)
 
 The abstraction lever already ships: right-click an event > **Extract All Actions to Function…** turns a run of actions into one named verb. What it cannot do is *notice*. **Tools > Find Repeated Rows…** scans the whole sheet for identical ordered runs of actions that appear twice or more, ranks them by rows saved, and lists each with the actions it contains.
 
-Pick one, press **Make a Verb…**, and name it. The run is extracted at the first place it appears - by the same extractor the right-click gesture uses - and every other occurrence is replaced with a Call to the new verb. One undo step for the lot: a half-applied refactor would be worse than none.
+Pick one, press **Make a Function…**, and name it. The run is extracted at the first place it appears - by the same extractor the right-click gesture uses - and every other occurrence is replaced with a Call to the new function. One undo step for the lot: a half-applied refactor would be worse than none.
 
 A run that leans on an event-local variable or a For Each item is listed and marked **needs parameters**, and the button stays off. Those sites cannot share one verb without arguments, and offering a one-click fix that fails would be worse than saying so.
 

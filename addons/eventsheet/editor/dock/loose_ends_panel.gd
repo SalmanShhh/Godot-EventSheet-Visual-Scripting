@@ -22,7 +22,7 @@ const KIND_ORDER: Array = [
 	{"id": "unfinished", "title": "Unfinished events"},
 	{"id": "disabled", "title": "Disabled rows"},
 	{"id": "breakpoint", "title": "Breakpoints left on"},
-	{"id": "orphan_verb", "title": "Verbs nothing calls"},
+	{"id": "orphan_verb", "title": "Functions nothing calls"},
 	{"id": "flagged", "title": "Rows the checker flags"},
 ]
 
@@ -92,9 +92,9 @@ static func _walk(rows: Array, counter: Dictionary, entries: Array) -> void:
 			var raw: RawCodeRow = row as RawCodeRow
 			for line: String in raw.code.split("\n"):
 				if not _marker_in(_comment_part(line)).is_empty():
-					entries.append(_entry("todo", line.strip_edges(), "in a code block %s" % _after_event(counter), raw))
+					entries.append(_entry("todo", line.strip_edges(), "in a script block %s" % _after_event(counter), raw))
 			if not raw.enabled:
-				entries.append(_entry("disabled", "A code block is turned off", _after_event(counter), raw))
+				entries.append(_entry("disabled", "A script block is turned off", _after_event(counter), raw))
 		elif row is EventRow:
 			var event: EventRow = row as EventRow
 			counter["event"] = int(counter["event"]) + 1
@@ -140,7 +140,7 @@ static func _orphan_verbs(sheet: EventSheetResource) -> Array:
 		if name.is_empty() or called.has(name) or code_text.contains(name):
 			continue
 		orphans.append(_entry("orphan_verb", "\"%s\" is never called" % name,
-			"published verb" if function.expose_as_ace else "function", function))
+			"published function" if function.expose_as_ace else "function", function))
 	return orphans
 
 

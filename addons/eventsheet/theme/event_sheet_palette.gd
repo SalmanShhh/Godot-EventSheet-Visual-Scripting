@@ -95,6 +95,7 @@ const COLOR_MANIFEST_EXPRESSIONS = Color("#d7a6ea")  # ƒx exposed expressions
 const COLOR_MANIFEST_KNOBS = Color("#9cc4ef")        # @ exported designer knobs
 const COLOR_HEALTH_OK = Color("#7fd494")             # "✓ no issues" chip
 const COLOR_HEALTH_WARN = Color("#e8bd73")           # "⚠ N flagged" chip
+const COLOR_ERROR_TEXT = Color("#ff6b6b")            # "N errors - the game will not run this script"
 const COLOR_BANNER_SEPARATOR = Color(0.62, 0.64, 0.68, 0.55)
 # Structural row badges: dim "setup"/scaffolding, the neutral section header, the brighter
 # "GDScript" code badge, and the amber "⚠ code" lift-note triage badge.

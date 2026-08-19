@@ -41,8 +41,6 @@ Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,Enre
 Add an event (E).,Ajoute un événement (E).
 Add a condition to the selected event (C).,Ajoute une condition à l'événement sélectionné (C).
 Add an action to the selected event (A).,Ajoute une action à l'événement sélectionné (A).
-Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,Ajoute un bloc GDScript à l'événement sélectionné - la porte de sortie délibérée vers le code. Ouvre immédiatement l'éditeur de code.
-"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","Vue pour débutants : masque les entrées avancées/code (blocs GDScript, sous-conditions, filtres, signaux/énumérations). Tout reste disponible une fois désactivé."
 "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.","Affiche/masque le panneau GDScript généré - la sortie compilée, honnête, de la feuille, côte à côte."
 Theme for this sheet (Load/Reload and the Theme Editor live in View),Thème de cette feuille (Charger/Recharger et l'éditeur de thème sont dans Affichage)
 "Quick add…  (e.g. every tick, heal 5)","Ajout rapide…  (ex. chaque tick, heal 5)"
@@ -82,7 +80,6 @@ Load Theme…,Charger un thème…
 Reload Theme,Recharger le thème
 Theme Editor…,Éditeur de thème…
 MCP Server (AI tools),Serveur MCP (outils IA)
-"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","Masque les entrées avancées/code (blocs GDScript, sous-conditions, filtres, match, signaux/énumérations) des menus contextuels. Tout reste disponible en mode expert."
 Show/hide the generated-GDScript panel beside the sheet.,Affiche/masque le panneau GDScript généré à côté de la feuille.
 "Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.",Affiche/masque les lignes « + Ajouter un événement… ». À désactiver pour une feuille plus calme.
 "Show/hide a second synchronized view of this sheet, side by side.","Affiche/masque une seconde vue synchronisée de cette feuille, côte à côte."
@@ -109,7 +106,6 @@ Start the Tour…,Commencer la visite…
 Keyboard Shortcuts,Raccourcis clavier
 Rename Everywhere…,Renommer partout…
 Change Type Everywhere…,Changer le type partout…
-Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,Analyse chaque expression ƒx et bloc GDScript ; signale les lignes fautives et saute à la première.
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,Bascule l'émission des points d'arrêt : les feuilles compilées en débogage s'arrêtent aux lignes marquées.
 Toggle Live Values: running sheets stream their variables here (editable).,Bascule les valeurs en direct : les feuilles en cours d'exécution diffusent leurs variables ici (modifiables).
 + Add action,+ Ajouter une action
@@ -340,7 +336,6 @@ Alternate group header background (zebra).,Arrière-plan alterné d'en-tête de 
 Apply To Current Sheet,Appliquer à la feuille actuelle
 Background of a group header row.,Arrière-plan d'une ligne d'en-tête de groupe.
 Background of the Conditions / Actions column header bar.,Arrière-plan de la barre d'en-tête des colonnes Conditions / Actions.
-Background of the fold triangle box on a group.,Arrière-plan de la boîte du triangle de repli sur un groupe.
 Badge Background Color,Couleur de fond du badge
 Badge Extra Width,Largeur supplémentaire du badge
 Badge Foreground Color,Couleur de premier plan du badge
@@ -479,7 +474,6 @@ Enum,Enum
 Event Above,Événement au-dessus
 Event Below,Événement en dessous
 Find Usages (project),Chercher les utilisations (projet)
-GDScript Block,Bloc GDScript
 Group,Groupe
 Group Color…,Couleur du groupe…
 Group Selection into New Group,Grouper la sélection dans un nouveau groupe
@@ -611,7 +605,6 @@ Edit Parameter,Modifier le paramètre
 Add Parameter,Ajouter un paramètre
 Apply,Appliquer
 Delete this parameter,Supprimer ce paramètre
-Edit the whole verb…,Modifier tout le verbe…
 e.g. amount,p. ex. amount
 leave empty to make it required,laisser vide pour le rendre obligatoire
 what this input is for,à quoi sert cette entrée
@@ -622,15 +615,12 @@ e.g. Re-bake  (empty = no button),p. ex. Recalculer  (vide = aucun bouton)
 "What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.","Le nom de ce verbe. Écrivez-le en mots simples : ""Take Damage"" devient take_damage dans le GDScript généré. Les autres lignes appellent le verbe par ce nom."
 Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,La documentation Godot de ce verbe. Elle est écrite au-dessus de la fonction sous forme de lignes ## et apparaît dans l'aide intégrée de l'éditeur et au survol du verbe. Facultatif.
 "Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.","Ajoute un bouton cliquable au panneau Inspector de ce nœud, portant le texte saisi ici. Un clic exécute ce verbe directement dans l'éditeur - pratique pour des corvées comme recalculer un niveau ou remplir des données de test. Laissez vide (le cas courant) et aucun bouton n'apparaît."
-"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.","Le type de valeur que ce verbe renvoie à qui le demande : un nombre, du texte, un vrai/faux, une position, etc. Choisissez celui qui correspond à ce que le verbe calcule."
 "One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.",Une ligne décrivant ce que fait ce verbe. Elle apparaît à côté du verbe dans le sélecteur : c'est donc ce que quelqu'un lit au moment de décider si c'est le bon verbe.
 "The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","Le nom lisible affiché dans le sélecteur à la place du nom de fonction : ""Deal Damage"" se lit mieux que deal_damage. Laissez vide pour le déduire du nom du verbe."
 "Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.",Dans quelle section du sélecteur ce verbe est rangé. Les verbes d'une même catégorie sont regroupés ; un pack met donc généralement tous les siens dans une seule - son propre nom convient bien.
-"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the verb's row, so plain words beat abbreviations.",Le nom de cette entrée. Il devient le nom du paramètre dans le GDScript généré et l'étiquette sur la ligne du verbe : les mots clairs valent mieux que les abréviations.
 "What kind of value this input accepts - a number (int / float), text (String), a true/false (bool), a position (Vector2 / Vector3), or Variant for anything at all.","Le type de valeur accepté par cette entrée : un nombre (int / float), du texte (String), un vrai/faux (bool), une position (Vector2 / Vector3), ou Variant pour absolument tout."
 "An optional starting value, so whoever uses the verb can skip this input. Written as GDScript (10, 1.5, ""idle"", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down.","Une valeur initiale facultative, pour que l'utilisateur du verbe puisse omettre cette entrée. Écrite en GDScript (10, 1.5, ""idle"", true). GDScript impose que les entrées AVEC valeur par défaut viennent en dernier : la remplir peut donc déplacer le paramètre vers le bas."
 "One line explaining this input. It shows in the picker beside the field, which is where somebody decides what to type into it.","Une ligne expliquant cette entrée. Elle apparaît dans le sélecteur à côté du champ, là où l'on décide quoi y saisir."
-Removes the input from the verb entirely. Anything already calling the verb loses the value it was passing here.,Supprime entièrement l'entrée du verbe. Tout ce qui appelle déjà le verbe perd la valeur qu'il transmettait ici.
 "Each parameter has a name, type, optional default value, and description.","Chaque paramètre a un nom, un type, une valeur par défaut facultative et une description."
 A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled).,Une expression booléenne GDScript - le corps ne s'exécute que si toutes sont vraies (p. ex. host.enabled).
 Publishes the verb into pickers as the chosen kind.,Publie le verbe dans les sélecteurs sous le type choisi.
@@ -660,7 +650,6 @@ Remember Between Runs,Mémoriser entre les sessions
 Add Entry…,Ajouter une entrée…
 Edit Entry…,Modifier l'entrée…
 Remove Entry,Supprimer l'entrée
-Lock Verb Body (read-only),Verrouiller le corps du verbe (lecture seule)
 State,État
 is one of,est l'un de
 or,ou
@@ -705,13 +694,10 @@ Fast (60),Rapide (60)
 First-Person Controller (3D),Contrôleur à la première personne (3D)
 GDScript iterable,Itérable GDScript
 Game State (Autoload),État du jeu (Autoload)
-Hide this verb,Masquer ce verbe
 Major - breaking changes,Majeure - changements incompatibles
-"Minor - new verbs, nothing breaks","Mineure - nouveaux verbes, rien ne casse"
 No actions or conditions were found on the dropped node.,Aucune action ni condition trouvée sur le nœud déposé.
 No sheets open,Aucune feuille ouverte
 Node group,Groupe de nœuds
-"Patch - fixes, no new verbs","Correctif - corrections, pas de nouveaux verbes"
 Pin / Unpin Favorite,Épingler / détacher le favori
 Platformer Starter,Base de jeu de plateforme
 Recently closed,Récemment fermées
@@ -726,7 +712,6 @@ bow,arc
 keep format,conserver le format
 potion,potion
 sword,épée
-Rename this verb…,Renommer ce verbe…
 Set its category…,Définir sa catégorie…
 timeline,chronologie
 steps,étapes
@@ -1743,7 +1728,6 @@ ACE properties,Propriétés ACE
 Edit…,Modifier…
 Open guide,Ouvrir le guide
 Show in code,Voir dans le code
-This verb is no longer on the sheet.,Ce verbe n'est plus sur la feuille.
 behaves on a,agit sur un
 Triggers,Déclencheurs
 this pack fires - %d,que ce pack déclenche - %d
@@ -2063,3 +2047,46 @@ Opens the next page in this part of the Manual.,Ouvre la page suivante de cette 
 "Press F1 with something selected for help about it, or pick a page from the Manual's contents.","Appuyez sur F1 avec une sélection pour obtenir de l'aide à son sujet, ou choisissez une page dans le sommaire du manuel."
 Add these events,Ajouter ces événements
 "Puts these events into the open sheet at the caret, as one undo step.","Insère ces événements dans la feuille ouverte au curseur, en une seule étape d'annulation."
+Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,Ajoute un bloc de script à l'événement sélectionné - la porte de sortie délibérée vers le code. Ouvre immédiatement l'éditeur de code.
+"Beginner-friendly view: hides the advanced/code entries (script blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","Vue pour débutants : masque les entrées avancées/code (blocs de script, sous-conditions, filtres, signaux/énumérations). Tout reste disponible une fois désactivé."
+"Hide the advanced/code entries (script blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","Masque les entrées avancées/code (blocs de script, sous-conditions, filtres, match, signaux/énumérations) des menus contextuels. Tout reste disponible en mode expert."
+Lint every ƒx expression + script block; flag the offending rows and jump to the first.,Analyse chaque expression ƒx et bloc de script ; signale les lignes fautives et saute à la première.
+Background of the collapse triangle box on a group.,Arrière-plan de la boîte du triangle de réduction sur un groupe.
+Script Block,Bloc de script
+Edit the whole function…,Modifier toute la fonction…
+"The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.","Le type de valeur que cette fonction renvoie à qui le demande : un nombre, du texte, un vrai/faux, une position, etc. Choisissez celui qui correspond à ce que la fonction calcule."
+"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the function's row, so plain words beat abbreviations.",Le nom de cette entrée. Il devient le nom du paramètre dans le GDScript généré et le libellé sur la ligne de la fonction : les mots clairs valent mieux que les abréviations.
+Removes the input from the function entirely. Anything already calling the function loses the value it was passing here.,Retire complètement l'entrée de la fonction. Tout ce qui appelle déjà la fonction perd la valeur qu'il passait ici.
+Lock Function Body (read-only),Verrouiller le corps de la fonction (lecture seule)
+Hide this entry,Masquer cette entrée
+"Minor - new actions, nothing breaks","Mineure - nouvelles actions, rien ne casse"
+"Patch - fixes, no new actions","Correctif - corrections, pas de nouvelles actions"
+Rename this entry…,Renommer cette entrée…
+This function is no longer on the sheet.,Cette fonction n'est plus dans la feuille.
+reads as events,se lit comme des événements
+1 script block,1 bloc de script
+%d script blocks,%d blocs de script
+1 error,1 erreur
+%d errors,%d erreurs
+the game will not run this script,le jeu n'exécutera pas ce script
+Script block,Bloc de script
+combo,combo
+file,fichier
+folder,dossier
+flags,indicateurs
+node path,chemin de nœud
+multiline,multiligne
+%s to %s,%s à %s
+"%s to %s, step %s","%s à %s, pas %s"
+white,blanc
+black,noir
+red,rouge
+green,vert
+blue,bleu
+yellow,jaune
+cyan,cyan
+magenta,magenta
+transparent,transparent
+autoload (global),autoload (global)
+Global variables,Variables globales
+this global fires - %d,ce global déclenche - %d

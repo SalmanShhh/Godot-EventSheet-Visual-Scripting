@@ -463,7 +463,7 @@ func _toggle_context_group_fold() -> void:
 	var context_group: EventGroup = _dock._context_row.source_resource as EventGroup
 	context_group.set_collapsed_state(not context_group.is_collapsed())
 	_dock._viewport.toggle_row_fold_by_uid(_dock._context_row.row_uid)
-	_dock._mark_dirty("Updated group fold state.")
+	_dock._mark_dirty("Updated group collapse state.")
 
 
 func _delete_context_row() -> void:

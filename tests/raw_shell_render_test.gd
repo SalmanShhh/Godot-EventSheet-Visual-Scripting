@@ -182,8 +182,8 @@ static func run() -> bool:
 		elif blank_rd.source_resource == code_row:
 			for code_span: SemanticSpan in blank_rd.spans:
 				code_span_texts.append(str(code_span.text))
-	ok = _check("a blank block has no GDScript badge", blank_span_texts.has("GDScript"), false) and ok
-	ok = _check("a genuine code block keeps the GDScript badge (explicit)", code_span_texts.has("GDScript"), true) and ok
+	ok = _check("a blank block has no script-block badge", blank_span_texts.has("Script block"), false) and ok
+	ok = _check("a genuine code block keeps the script-block badge (explicit)", code_span_texts.has("Script block"), true) and ok
 	blank_dock.free()
 
 	# ── #4 covenant: a genuine irreducible code block, opened from a .gd, stays an explicit RawCodeRow and

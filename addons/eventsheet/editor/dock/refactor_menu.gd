@@ -68,7 +68,7 @@ static func configure_submenu(dock: Control, row_data: EventRowData) -> bool:
 		var fold_problem: String = EventSheetInlineOps.inline_everywhere_refusal(dock._current_sheet, function)
 		submenu.set_item_disabled(submenu.item_count - 1, not fold_problem.is_empty())
 		submenu.set_item_tooltip(submenu.item_count - 1, fold_problem if not fold_problem.is_empty()
-			else "Put this verb's rows back at every call site, then remove the verb.")
+			else "Put this function's rows back at every call site, then remove the function.")
 	submenu.add_item("Duplicate as Variant…", MENU_DUPLICATE_VARIANT)
 	submenu.set_item_tooltip(submenu.item_count - 1, "Copy the selection with objects and variable names swapped, in one step.")
 	return submenu.item_count > 0

@@ -1,0 +1,179 @@
+# Godot EventSheets - how much of an opened file arrived as rows, and where the rest of it is.
+#
+# THE ONE NUMBER A READER WANTS ON OPENING a .gd as a sheet: what share of it reads as events, and a
+# way to walk the parts that did not. The parts that did not are SCRIPT BLOCKS - the sheet's own name
+# for embedded code - and they are exactly the lines the corpus gate counts when it asserts that
+# almost nothing of a real hand-written file still renders as a wall of code.
+#
+# WHY THIS IS ONE SHARED STATIC AND NOT TWO COUNTERS. The chip on the Include bar and
+# tests/handwritten_lift_gate_test.gd are answering the same question, and a second implementation of
+# it would drift the moment either side learned a new row shape - the gate would keep passing while
+# the chip told the reader a different number about the same file. So the walk lives here, both call
+# it, and the test pins that the two agree.
+#
+# The walk mirrors the RENDERER's dispatch order, not how rows happen to be stored: a single
+# statement draws as an ordinary action row and a literal entry as a chip, so neither is a script
+# block even though both are stored as verbatim code. A gate (or a chip) that measured storage would
+# go on reporting a clean file while the canvas filled up with code.
+@tool
+class_name EventSheetReadingCoverage
+extends RefCounted
+
+
+## The coverage of one sheet:
+##   {"block_lines", "block_rows", "read_lines", "total_lines", "percent"}
+## `block_lines` is the corpus gate's own measure; `block_rows` is how many separate script blocks
+## those lines sit in (the number the chip shows, because it is the number of places to go); and
+## `percent` is the share of lines that arrived as rows, floored - a file with even one script block
+## left never rounds up to 100%, because "100% reads as events, 1 script block" is a sentence a
+## reader would rightly call a lie.
+static func measure(sheet: EventSheetResource) -> Dictionary:
+	var tally: Dictionary = {"block_lines": 0, "block_rows": 0, "total_lines": 0}
+	if sheet == null:
+		return {"block_lines": 0, "block_rows": 0, "read_lines": 0, "total_lines": 0, "percent": 100}
+	_walk(sheet.events, true, tally)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			_walk((function_entry as EventFunction).events, false, tally)
+	var total: int = int(tally["total_lines"])
+	var blocks: int = int(tally["block_lines"])
+	var read: int = maxi(total - blocks, 0)
+	var percent: int = 100
+	if total > 0:
+		percent = int(floor(100.0 * float(read) / float(total)))
+	if int(tally["block_rows"]) > 0:
+		percent = mini(percent, 99)
+	return {
+		"block_lines": blocks,
+		"block_rows": int(tally["block_rows"]),
+		"read_lines": read,
+		"total_lines": total,
+		"percent": percent
+	}
+
+
+## The script blocks themselves, in file order - the walk targets the chip clicks through. Same
+## dispatch as `measure`, so the chip's count and the list it walks can never disagree.
+static func script_blocks(sheet: EventSheetResource) -> Array[RawCodeRow]:
+	var found: Array[RawCodeRow] = []
+	if sheet == null:
+		return found
+	_collect(sheet.events, true, found)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			_collect((function_entry as EventFunction).events, false, found)
+	return found
+
+
+## The chip's words. On a fully-lifted file it drops the number entirely and just says the good news;
+## otherwise it says the share and how many places the rest of it is in.
+static func chip_text(sheet: EventSheetResource) -> String:
+	var coverage: Dictionary = measure(sheet)
+	var blocks: int = int(coverage.get("block_rows", 0))
+	if blocks <= 0:
+		return EventSheetL10n.translate("reads as events")
+	var blocks_text: String = EventSheetL10n.translate("1 script block") if blocks == 1 \
+		else EventSheetL10n.translate("%d script blocks") % blocks
+	return "%d%% %s · %s ▸" % [int(coverage.get("percent", 0)), EventSheetL10n.translate("reads as events"), blocks_text]
+
+
+## The engine's own parse errors for this file, as the sheet's importer recorded them - [] when the
+## file compiles. Read defensively off sheet METADATA rather than a property, so a sheet built by
+## anything else (a test, the API) simply has none.
+static func parse_errors(sheet: EventSheetResource) -> Array:
+	if sheet == null or not sheet.has_meta("__parse_errors"):
+		return []
+	var recorded: Variant = sheet.get_meta("__parse_errors")
+	return recorded if recorded is Array else []
+
+
+## The red line the Include bar wears when the file does not compile: how many errors, and what that
+## costs. "" when there are none.
+static func parse_error_text(sheet: EventSheetResource) -> String:
+	var errors: Array = parse_errors(sheet)
+	if errors.is_empty():
+		return ""
+	var count_text: String = EventSheetL10n.translate("1 error") if errors.size() == 1 \
+		else EventSheetL10n.translate("%d errors") % errors.size()
+	return "%s - %s" % [count_text, EventSheetL10n.translate("the game will not run this script")]
+
+
+## Lines that reach the plain GDScript-block rendering: the corpus gate's measure, kept here so the
+## gate and the chip share one definition. `items` is a row list, `top_level` says whether it is the
+## sheet's own root list (where the Class setup strip folds instead of drawing).
+static func block_line_count(items: Array, top_level: bool) -> int:
+	var tally: Dictionary = {"block_lines": 0, "block_rows": 0, "total_lines": 0}
+	_walk(items, top_level, tally)
+	return int(tally["block_lines"])
+
+
+## True when a verbatim row falls through every structured view the canvas offers it.
+static func renders_as_block(raw: RawCodeRow, top_level: bool) -> bool:
+	if raw == null:
+		return false
+	var code_lines: PackedStringArray = raw.code.split("\n")
+	if ViewportRowBuilder.is_comment_only_block(code_lines) or ViewportRowBuilder.is_blank_block(code_lines):
+		return false
+	# A single statement renders as an ordinary action row, and a literal entry as an action chip -
+	# neither is the code-block treatment, so neither counts here.
+	if ViewportRowBuilder.is_literal_part(raw.code) or ViewportRowBuilder.is_single_statement(raw.code):
+		return false
+	if not ViewportRowBuilder.data_literal_info(raw.code).is_empty():
+		return false
+	if not ViewportRowBuilder.function_body_info(raw.code).is_empty():
+		return false
+	if not ViewportRowBuilder.define_shell_info(raw.code).is_empty():
+		return false
+	if top_level and EventSheetViewport.is_scaffolding_code(raw.code):
+		return false
+	return true
+
+
+## The one walk both numbers come from. `total_lines` counts what a reader is looking at, one line
+## per thing the file says: every non-blank line of a verbatim row, one per declaration, one per
+## condition or action, one for the event line itself. It is a reading of the sheet rather than a
+## re-read of the file, which is what keeps this cheap enough to run on every head build.
+static func _walk(items: Array, top_level: bool, tally: Dictionary) -> void:
+	for item: Variant in items:
+		if item is RawCodeRow:
+			var raw: RawCodeRow = item as RawCodeRow
+			var lines: int = 0
+			for line: String in raw.code.split("\n"):
+				if not line.strip_edges().is_empty():
+					lines += 1
+			tally["total_lines"] = int(tally["total_lines"]) + lines
+			if renders_as_block(raw, top_level):
+				tally["block_lines"] = int(tally["block_lines"]) + lines
+				tally["block_rows"] = int(tally["block_rows"]) + 1
+		elif item is EventRow:
+			var event: EventRow = item as EventRow
+			tally["total_lines"] = int(tally["total_lines"]) + 1 + event.conditions.size()
+			_walk(event.actions, false, tally)
+			_walk(event.sub_events, false, tally)
+		elif item is EventFunction:
+			tally["total_lines"] = int(tally["total_lines"]) + 1
+			_walk((item as EventFunction).events, false, tally)
+		elif item is EventGroup:
+			_walk((item as EventGroup).events, top_level, tally)
+		elif item is CommentRow:
+			var comment_lines: int = 0
+			for line: String in (item as CommentRow).text.split("\n"):
+				if not line.strip_edges().is_empty():
+					comment_lines += 1
+			tally["total_lines"] = int(tally["total_lines"]) + maxi(comment_lines, 1)
+		elif item != null:
+			tally["total_lines"] = int(tally["total_lines"]) + 1
+
+
+static func _collect(items: Array, top_level: bool, found: Array[RawCodeRow]) -> void:
+	for item: Variant in items:
+		if item is RawCodeRow:
+			if renders_as_block(item as RawCodeRow, top_level):
+				found.append(item as RawCodeRow)
+		elif item is EventRow:
+			_collect((item as EventRow).actions, false, found)
+			_collect((item as EventRow).sub_events, false, found)
+		elif item is EventFunction:
+			_collect((item as EventFunction).events, false, found)
+		elif item is EventGroup:
+			_collect((item as EventGroup).events, top_level, found)

@@ -24,8 +24,8 @@ static func run() -> bool:
 	if diagnostics.size() == 1:
 		all_passed = _check("diagnostic targets the bad block's instance id",
 			str((diagnostics[0] as Dictionary).get("uid", "")), str(bad_block.get_instance_id())) and all_passed
-		all_passed = _check("message names the GDScript block",
-			str((diagnostics[0] as Dictionary).get("message", "")).contains("GDScript block"), true) and all_passed
+		all_passed = _check("message names the script block",
+			str((diagnostics[0] as Dictionary).get("message", "")).contains("Script block"), true) and all_passed
 
 	# A sheet whose blocks all compile yields nothing.
 	var clean: EventSheetResource = EventSheetResource.new()

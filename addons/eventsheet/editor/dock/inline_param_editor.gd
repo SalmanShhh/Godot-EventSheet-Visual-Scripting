@@ -121,7 +121,7 @@ func _commit_inline_param_edit(apply_to_all_selected: bool = false) -> void:
 		_dock._refresh_after_edit()
 		var note: String = "Parameter updated."
 		if apply_to_all_selected:
-			note = "Set %s on %d matching verbs." % [key, int(updated["count"])]
+			note = "Set %s on %d matching rows." % [key, int(updated["count"])]
 		_dock._mark_dirty(note)
 
 

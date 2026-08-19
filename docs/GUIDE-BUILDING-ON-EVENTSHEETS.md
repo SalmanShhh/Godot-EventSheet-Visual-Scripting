@@ -703,4 +703,4 @@ The plugin's own API test (`tests/eventsheets_api_test.gd`) is a working templat
 - **Return `false` for no-ops.** An `edit()` mutation that changed nothing should say so, or the user gets an undo step that does nothing.
 - **Definitions are immutable.** `find_ace()` and `class_vocabulary()` hand you session-cached shared instances. Mutating one changes it for every tab; bake per-row changes into the row's own fields instead.
 - **`compile()` result key is `"output"`.** Reading `"source"` gets you an empty string that compares equal to other empty strings, which makes broken tests pass.
-- **Palette titles are the identity.** Re-registering a title replaces the old command, so a plugin reload never duplicates entries; pick titles that read like actions ("Fold All Regions").
+- **Palette titles are the identity.** Re-registering a title replaces the old command, so a plugin reload never duplicates entries; pick titles that read like actions ("Collapse All Regions").

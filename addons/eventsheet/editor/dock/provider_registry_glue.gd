@@ -61,7 +61,7 @@ func share_verbs_with_project() -> bool:
 			has_exposed = true
 			break
 	if not has_exposed:
-		_dock._set_status("No published verbs to teach yet - right-click an event and Extract All Actions to Function first.", true)
+		_dock._set_status("No published functions to teach yet - right-click an event and Extract All Actions to Function first.", true)
 		return false
 	var sheet_path: String = str(_dock._current_sheet_path)
 	if sheet_path.is_empty():
@@ -80,7 +80,7 @@ func share_verbs_with_project() -> bool:
 		if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 			ProjectSettings.save()
 	_dock._refresh_ace_registry()
-	_dock._set_status("Taught: %s's published verbs are now in every sheet's picker (node-targeted at $%s)." % [sheet.custom_class_name.strip_edges(), sheet.custom_class_name.strip_edges()])
+	_dock._set_status("Taught: %s's published functions are now in every sheet's picker (node-targeted at $%s)." % [sheet.custom_class_name.strip_edges(), sheet.custom_class_name.strip_edges()])
 	return true
 
 
@@ -201,14 +201,14 @@ func preview_provider_script(path: String, offer_register: bool) -> void:
 		item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
 		item.set_checked(0, true)
 		item.set_editable(0, true)
-		item.set_tooltip_text(0, "Unchecked writes `## @ace_hidden`, so this member stops publishing a verb.")
+		item.set_tooltip_text(0, "Unchecked writes `## @ace_hidden`, so this member stops publishing an action.")
 		# The kind dropdown is the point of curating: raw reflection reads an UNTYPED method as an
 		# Action, and this changes it by annotation - the signature is never rewritten.
 		item.set_cell_mode(1, TreeItem.CELL_MODE_RANGE)
 		item.set_text(1, ",".join(KIND_CHOICES))
 		item.set_range(1, maxf(0.0, float(KIND_CHOICES.find(str(row.get("kind_label", ""))))))
 		item.set_editable(1, true)
-		item.set_tooltip_text(1, "Which lane this verb belongs in. Changing it writes an annotation - your function signature is left alone.")
+		item.set_tooltip_text(1, "Which lane this belongs in. Changing it writes an annotation - your function signature is left alone.")
 		item.set_text(2, str(row.get("label", "")))
 		item.set_editable(2, true)
 		item.set_text(3, _category_of(scan, row))
@@ -312,7 +312,7 @@ func on_provider_params_pressed() -> void:
 		return
 	var item: TreeItem = _dock._provider_preview_tree.get_selected()
 	if item == null:
-		_dock._set_status("Select a verb first, then edit its parameters.")
+		_dock._set_status("Select an entry first, then edit its parameters.")
 		return
 	var row: Dictionary = item.get_metadata(0) as Dictionary
 	if row == null:
@@ -336,7 +336,7 @@ func _build_param_dialog(verb_label: String, param_ids: Array) -> void:
 			stale.queue_free()
 	_param_rows.clear()
 	var body: VBoxContainer = EventSheetPopupUI.form_box()
-	body.add_child(EventSheetPopupUI.hint_label("How each parameter should be filled in when someone drops this verb into a sheet.\nHint 'comparison' is the whole operator dropdown in one word. Options read as `value=Label`, separated by |."))
+	body.add_child(EventSheetPopupUI.hint_label("How each parameter should be filled in when someone drops this into a sheet.\nHint 'comparison' is the whole operator dropdown in one word. Options read as `value=Label`, separated by |."))
 	var existing: Dictionary = param_specs_for(_param_member)
 	for param_id: Variant in param_ids:
 		var id_text: String = str(param_id)
@@ -384,14 +384,14 @@ func _collect_param_dialog() -> void:
 ## Asks what the selected verb USED to be called, then shims it.
 func on_provider_shim_pressed() -> void:
 	if _dock._provider_preview_tree == null or _dock._provider_preview_tree.get_selected() == null:
-		_dock._set_status("Select the verb under its new name first.")
+		_dock._set_status("Select the function under its new name first.")
 		return
 	if _shim_dialog == null:
 		_shim_dialog = ConfirmationDialog.new()
 		_shim_dialog.title = "Keep the old name working"
 		_shim_dialog.ok_button_text = "Add Shim"
 		var body: VBoxContainer = EventSheetPopupUI.form_box()
-		body.add_child(EventSheetPopupUI.hint_label("Renaming a function changes the verb's identity, so sheets that already use it break - silently, because the old call is baked into each row and still compiles.\nName what this function used to be called and a deprecated stand-in is added that forwards to it. Nothing existing is edited."))
+		body.add_child(EventSheetPopupUI.hint_label("Renaming a function changes the action's identity, so sheets that already use it break - silently, because the old call is baked into each row and still compiles.\nName what this function used to be called and a deprecated stand-in is added that forwards to it. Nothing existing is edited."))
 		_shim_old_name = LineEdit.new()
 		_shim_old_name.placeholder_text = "the previous function name"
 		body.add_child(EventSheetPopupUI.form_row("Used to be", _shim_old_name))
@@ -412,7 +412,7 @@ func on_provider_keep_old_name(old_member: String) -> void:
 	var path: String = str(_dock._provider_preview_path)
 	var item: TreeItem = _dock._provider_preview_tree.get_selected() if _dock._provider_preview_tree != null else null
 	if path.strip_edges().is_empty() or item == null:
-		_dock._set_status("Select the verb under its new name first.", true)
+		_dock._set_status("Select the function under its new name first.", true)
 		return
 	var row: Dictionary = item.get_metadata(0) as Dictionary
 	if row == null or str(row.get("source", "")) != "method":
@@ -422,7 +422,7 @@ func on_provider_keep_old_name(old_member: String) -> void:
 	if not bool(result.get("ok", false)):
 		_dock._set_status(str(result.get("reason", "Could not add the shim.")), true)
 		return
-	_dock._set_status("Added a deprecated %s() that forwards to %s() - sheets using the old verb keep working, and it is hidden from the picker."
+	_dock._set_status("Added a deprecated %s() that forwards to %s() - sheets using the old action keep working, and it is hidden from the picker."
 		% [old_member, str(row.get("member", ""))])
 	preview_provider_script(path, false)
 
@@ -435,7 +435,7 @@ func on_provider_curate_pressed() -> void:
 		return
 	_curate_pending = collect_curation_edits()
 	if _curate_pending.is_empty():
-		_dock._set_status("Nothing to curate - change a Publish box, Kind, Verb or Category first.")
+		_dock._set_status("Nothing to curate - change a Publish box, Kind, Name or Category first.")
 		return
 	_ensure_curate_confirm()
 	_curate_diff.text = curation_diff_text(_curate_pending)
@@ -516,12 +516,12 @@ func open_publish_version_dialog() -> void:
 		_version_dialog.ok_button_text = "Publish"
 		var form: VBoxContainer = EventSheetPopupUI.form_box()
 		_version_bump = OptionButton.new()
-		_version_bump.add_item("Patch - fixes, no new verbs", 0)
-		_version_bump.add_item("Minor - new verbs, nothing breaks", 1)
+		_version_bump.add_item("Patch - fixes, no new actions", 0)
+		_version_bump.add_item("Minor - new actions, nothing breaks", 1)
 		_version_bump.add_item("Major - breaking changes", 2)
 		_version_bump.item_selected.connect(func(_index: int) -> void: _refresh_version_preview())
 		form.add_child(EventSheetPopupUI.form_row("Bump", _version_bump, EventSheetPopupUI.LABEL_MIN_WIDTH,
-			"Semantic versioning: patch for fixes, minor for additions, major when sheets using the old verbs must change."))
+			"Semantic versioning: patch for fixes, minor for additions, major when sheets using the old actions must change."))
 		_version_note = LineEdit.new()
 		_version_note.placeholder_text = "One line: what changed (recorded in the class docs)"
 		form.add_child(EventSheetPopupUI.form_row("Change note", _version_note, EventSheetPopupUI.LABEL_MIN_WIDTH,
@@ -595,4 +595,4 @@ func unteach_provider(path: String) -> void:
 		ProjectSettings.save()
 	_dock._refresh_ace_registry()
 	refresh_provider_list()
-	_dock._set_status("Un-taught %s - its verbs left the project-wide picker (the sheet itself is untouched)." % path.get_file())
+	_dock._set_status("Un-taught %s - its actions left the project-wide picker (the sheet itself is untouched)." % path.get_file())

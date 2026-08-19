@@ -87,8 +87,8 @@ file name.
 
 Right-click any of these verbs in the picker:
 
-- **Rename this verb…** / **Set its category…** - fix a name that reads badly in a row.
-- **Hide this verb** / **Hide everything from `<Class>`** - trim what you never use. A hidden
+- **Rename this entry…** / **Set its category…** - fix a name that reads badly in a row.
+- **Hide this entry** / **Hide everything from `<Class>`** - trim what you never use. A hidden
   class stays listed greyed out; select it to bring it back.
 - **Reset to the inferred name** - undo one refinement.
 
@@ -340,6 +340,23 @@ plugin deliberately loads its heavy parts on first use, so enabling it does not 
 
 Open a behaviour pack or any script as a sheet and it reads the way a Construct sheet does, top to bottom:
 
+- **The Include bar says how much of the file reads as events.** A chip at the end of it -
+  `96% reads as events · 3 script blocks ▸` - is the share of the file that arrived as rows, and how
+  many **script blocks** the rest of it sits in. Click it and it walks those blocks, one per click, so
+  the parts that stayed code are a click away rather than a scroll away. A file that lifted completely
+  just says `reads as events`. The number is measured by the same code the corpus gate measures with,
+  so the chip and the test can never disagree about the same file. When the engine reported parse
+  errors, the bar also says `N errors - the game will not run this script`, in red.
+- **A setting row shows what the Inspector would show.** `@export_range(0, 20, 0.5)` reads
+  `number  speed = 5  0 to 20, step 0.5`; `@export_enum("Walk", "Run", "Fly")` reads as a `combo` chip
+  showing the label rather than the number (`mode = Walk  Walk / Run / Fly`); a 0-to-1 range reads as a
+  percent; `@export_file("*.png")` reads `file` with its filter; `@export_dir` reads `folder`;
+  `@export_multiline` reads `text  multiline`; a Color reads its swatch and its word; and
+  `@export_flags(...)` reads `flags` with the names of the bits.
+- **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, the
+  Include bar reads `⇥ Game  autoload (global) · game.gd` with the globe, its knobs read as one
+  `Global variables` folder rather than a Settings / Internal state split, and its triggers say
+  `this global fires - N`. The Objects rail names it the same way.
 - **The head is one Include bar, the description once, and folded folders.** `⇥ Addon Pack  FPSController
   v1.0.0  behaves on a  CharacterBody3D`, the class description as a comment bar, then a `Triggers this pack
   fires - 11` folder and one folder per `@export_group` (`Jump - 3 settings`, `Movement - 3 settings`, ...)
