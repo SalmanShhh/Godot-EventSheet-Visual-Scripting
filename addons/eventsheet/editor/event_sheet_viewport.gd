@@ -310,6 +310,12 @@ var humanize_names_override: int = -1
 ## ever on because somebody asked for it in View ▾. Span builds read it, so flipping it rebuilds via
 ## set_sheet, exactly like show_object_icons.
 var familiar_words: bool = false
+## S24 - the Patterns lens: an event that a reading recognised as a known code pattern (a Cooldown,
+## an Object pool, a Wait sequence) wears a muted ⟡ chip naming it, and its hover says what the
+## evidence for that claim was. ON by default, because naming the pattern is the teaching moment and
+## a beginner is exactly who needs it; View ▾ turns it off so a doubter can read the plain statement
+## sentences underneath and compare. Span builds read it, so flipping it rebuilds via set_sheet.
+var patterns_lens: bool = true
 ## Event-sheet-style drag ghost: a faint label of the dragged content following the cursor.
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO
@@ -410,6 +416,12 @@ func humanize_names_enabled() -> bool:
 ## user the way the humanized-names lens does.
 func familiar_words_enabled() -> bool:
 	return familiar_words
+
+
+## S24 - whether this view names the patterns its readings claimed. The claims are made either way
+## (the Doctor, the coverage chip and the Manual read them); this is only whether the sheet SAYS so.
+func patterns_lens_enabled() -> bool:
+	return patterns_lens
 
 
 func set_sheet(sheet: EventSheetResource) -> void:

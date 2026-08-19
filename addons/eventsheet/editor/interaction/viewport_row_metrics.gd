@@ -205,6 +205,11 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 	}
 
 
+## The chip kinds that sit AFTER a condition cell on its own line and must therefore be given room
+## back out of it: a trigger's parameter chips, and the ⟡ chip that names the pattern the event is.
+const TRAILING_CHIP_KINDS: PackedStringArray = ["trigger_payload", "pattern_chip"]
+
+
 ## Width the payload chips trailing a trigger cell need on one condition line. A condition/trigger cell
 ## otherwise fills the lane to its right edge, which left a chip after it drawn as a sliver at the
 ## divider - so the cell gives exactly this much back and the chips sit beside it at their own size.
@@ -218,7 +223,7 @@ func condition_trailing_width(row_data: EventRowData, line_index: int, font: Fon
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
-		if str(metadata.get("kind", "")) != "trigger_payload":
+		if not TRAILING_CHIP_KINDS.has(str(metadata.get("kind", ""))):
 			continue
 		if int(metadata.get("line_index", 0)) != line_index:
 			continue

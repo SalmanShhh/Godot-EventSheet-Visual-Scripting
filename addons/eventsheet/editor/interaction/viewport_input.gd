@@ -30,19 +30,52 @@ func init(viewport: Control) -> void:
 	_viewport = viewport
 
 
-## P3 - the coverage chip's click: reveal the next script block of this file and select it, wrapping
-## round at the end. The chip says how many there are; this is how a reader goes and looks at them,
-## one click at a time, without leaving the sheet.
+## P3 / S25 - the coverage chip's click: reveal the next place the chip counted and select it,
+## wrapping round at the end. The chip says how many there are; this is how a reader goes and looks
+## at them, one click at a time, without leaving the sheet.
+##
+## The walk is every script block in file order and then every ⟡ event, which is exactly what the
+## chip's two halves count - a reader who keeps clicking sees each thing the chip mentioned once.
 func _walk_to_next_script_block() -> bool:
 	var sheet: EventSheetResource = _viewport._sheet
-	var blocks: Array[RawCodeRow] = EventSheetReadingCoverage.script_blocks(sheet)
-	if blocks.is_empty():
+	var stops: Array[Resource] = []
+	for block: RawCodeRow in EventSheetReadingCoverage.script_blocks(sheet):
+		stops.append(block)
+	for pattern_event: EventRow in _pattern_events(sheet):
+		stops.append(pattern_event)
+	if stops.is_empty():
 		return false
-	if _script_block_cursor >= blocks.size():
+	if _script_block_cursor >= stops.size():
 		_script_block_cursor = 0
-	var target: RawCodeRow = blocks[_script_block_cursor]
-	_script_block_cursor = (_script_block_cursor + 1) % blocks.size()
+	var target: Resource = stops[_script_block_cursor]
+	_script_block_cursor = (_script_block_cursor + 1) % stops.size()
 	return _viewport.reveal_resource(target)
+
+
+## S25 - the events that OWN a pattern claim, in sheet order and each one once, however many
+## patterns it was claimed for. Resolved from the registry's row uids against the live sheet, so a
+## claim left over from a shape that has since been edited away simply has nowhere to land.
+func _pattern_events(sheet: EventSheetResource) -> Array[EventRow]:
+	var found: Array[EventRow] = []
+	if sheet == null:
+		return found
+	var wanted: Dictionary = {}
+	for claim: Variant in EventSheetPatternFacts.claims(sheet):
+		wanted[str((claim as Dictionary).get("row_uid", ""))] = true
+	_collect_pattern_events(sheet.events, wanted, found)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			_collect_pattern_events((function_entry as EventFunction).events, wanted, found)
+	return found
+
+
+func _collect_pattern_events(events: Array, wanted: Dictionary, found: Array[EventRow]) -> void:
+	for entry: Variant in events:
+		if not (entry is EventRow):
+			continue
+		if wanted.has((entry as EventRow).event_uid):
+			found.append(entry as EventRow)
+		_collect_pattern_events((entry as EventRow).sub_events, wanted, found)
 
 
 ## Whether the pointer sits on a cell's colour swatch (the clickable box that opens the

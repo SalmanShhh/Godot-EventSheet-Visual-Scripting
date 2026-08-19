@@ -257,6 +257,8 @@ const _TOKEN_DESCRIPTIONS := {
 	# ── Reading marks ────────────────────────────────────────────────────────────────────────
 	"plain_chip_background_color": "The plain chip on an Include bar button (Run now, Reload, Output), the coverage chip, and every other neutral chip in a row.",
 	"plain_chip_foreground_color": "The word on those plain chips.",
+	"pattern_chip_background_color": "The ⟡ chip that names the pattern an event is (Cooldown, Object pool, Wait sequence). Leave it clear to follow the plain chip.",
+	"pattern_chip_foreground_color": "The words on the ⟡ pattern chip. Leave it clear to follow the muted text tone.",
 	"category_chip_background_color": "The chip that says where something sits in the picker (\"Group › Subgroup\").",
 	"category_chip_foreground_color": "The word on the picker-category chip.",
 	"inspector_chip_background_color": "The \"Inspector\" chip on a variable the game's designer can edit.",

@@ -71,10 +71,35 @@ static func chip_text(sheet: EventSheetResource) -> String:
 	var coverage: Dictionary = measure(sheet)
 	var blocks: int = int(coverage.get("block_rows", 0))
 	if blocks <= 0:
-		return EventSheetL10n.translate("reads as events")
+		var patterns_only: String = pattern_chip_text(sheet)
+		if patterns_only.is_empty():
+			return EventSheetL10n.translate("reads as events")
+		# The ▸ is the promise that a click goes somewhere, so it appears exactly when there is
+		# something to walk - here, the ⟡ events the counts are about.
+		return "%s%s ▸" % [EventSheetL10n.translate("reads as events"), patterns_only]
 	var blocks_text: String = EventSheetL10n.translate("1 script block") if blocks == 1 \
 		else EventSheetL10n.translate("%d script blocks") % blocks
-	return "%d%% %s · %s ▸" % [int(coverage.get("percent", 0)), EventSheetL10n.translate("reads as events"), blocks_text]
+	return "%d%% %s · %s%s ▸" % [int(coverage.get("percent", 0)),
+		EventSheetL10n.translate("reads as events"), blocks_text, pattern_chip_text(sheet)]
+
+
+## S25 - the two counts the chip grows once the readings have claimed something: how many DISTINCT
+## patterns this file is made of, and how many of those a shipped behavior could take over. "" when
+## nothing was claimed, because "0 patterns" is a number with nothing in it.
+##
+## Read straight off the claim registry, so the chip can only ever say what the ⟡ chips in the sheet
+## already say - the count and the marks are the same fact counted once.
+static func pattern_chip_text(sheet: EventSheetResource) -> String:
+	var summary: Dictionary = EventSheetPatternFacts.summary(sheet)
+	var patterns: int = int(summary.get("patterns", 0))
+	if patterns <= 0:
+		return ""
+	var patterns_text: String = EventSheetL10n.translate("1 pattern") if patterns == 1 \
+		else EventSheetL10n.translate("%d patterns") % patterns
+	var adoptable: int = int(summary.get("adoptable", 0))
+	if adoptable <= 0:
+		return " · %s" % patterns_text
+	return " · %s · %s" % [patterns_text, EventSheetL10n.translate("%d adoptable") % adoptable]
 
 
 ## The engine's own parse errors for this file, as the sheet's importer recorded them - [] when the

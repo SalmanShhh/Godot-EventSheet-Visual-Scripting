@@ -47,6 +47,10 @@ var _verb_kind_override: int = -1
 # (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
 var _region_occurrences: Dictionary = {}
 
+## S19 - the mark on the chip that names a pattern. Its own glyph, so a reader learns "⟡ means this
+## event is a known shape" once and then recognises it everywhere, the way ⟳ ➜ ƒ already work.
+const PATTERN_CHIP_MARK := "⟡"
+
 # Compiled once and shared: both of these run per row (or per action) on the paint path.
 static var _await_loop_regex: RegEx = null
 static var _super_call_regex: RegEx = null
@@ -7726,6 +7730,46 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				}
 			)
 		)
+	spans.append_array(_pattern_chip_spans(event_row))
+	return spans
+
+
+## S19 - the ⟡ chip that names the PATTERN this event is, when a reading claimed one on it. It sits
+## at the end of the FIRST condition line, after the trigger and its parameter chips, exactly where a
+## note about the whole event belongs; rows that merely USE a pattern's words get nothing, because
+## the claim names the one row that owns the shape.
+##
+## Everything here is read out of EventSheetPatternFacts - this draws claims, it never re-derives
+## one - so an event only says "Cooldown" if the reading that recognised it said so first, with its
+## evidence. Off when the Patterns lens is off, which is the doubter's switch back to the plain
+## statement sentences underneath.
+func _pattern_chip_spans(event_row: EventRow) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	if event_row == null or not _viewport.patterns_lens_enabled():
+		return spans
+	var sheet: EventSheetResource = _viewport._sheet
+	if sheet == null or event_row.event_uid.is_empty():
+		return spans
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_row.event_uid):
+		var words: String = str((claim as Dictionary).get("words", ""))
+		if words.is_empty():
+			words = EventSheetPatternVocabulary.words(str((claim as Dictionary).get("pattern", "")))
+		if words.is_empty():
+			continue
+		spans.append(_make_span("%s %s" % [PATTERN_CHIP_MARK, EventSheetL10n.translate(words)],
+			SemanticSpan.SpanType.CONDITION, {
+				"editable": false,
+				"lane": "condition",
+				"kind": "pattern_chip",
+				"pattern": str((claim as Dictionary).get("pattern", "")),
+				"chip": true,
+				"hoverable": true,
+				"line_index": 0,
+				"natural_width": true,
+				"chip_bg": reading_style.resolved_pattern_chip_background(),
+				"text_color": reading_style.resolved_pattern_chip_foreground()
+			}))
 	return spans
 
 
