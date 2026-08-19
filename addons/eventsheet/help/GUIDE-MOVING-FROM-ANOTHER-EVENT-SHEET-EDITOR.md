@@ -315,6 +315,8 @@ i18n (Godot translations).
   guide lines scaling together. The zoom is remembered for the layout, not for one file, so the
   next sheet opens at the size you were reading at. Row density (Comfortable / Compact) stays a
   separate choice: density trades whitespace for rows, zoom changes how big everything is drawn.
+![The Find results bar under the sheet, the Properties bar beside it, and the zoom pill in the status bar](images/sheet-bars.png)
+
 - **Right-click a cell > Select All Events Using This**, then retarget or retune the lot:
   *Replace object…* rewrites every `$Node` / `%Unique` / `self` token-safely - offering the
   objects that have the same conditions and actions first, and flagging in the Doctor any
