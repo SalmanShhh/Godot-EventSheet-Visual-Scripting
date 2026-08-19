@@ -9806,6 +9806,29 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"words": "Camera",
 		"ace_ids": ["Core/MakeCameraCurrent", "Core/SetCameraZoom", "Core/SetCameraLimits",
 			"Core/CameraScrollToward", "Core/SetCameraSmoothing"]
+	},
+	# S11 - S14. The four families most small scripts are made of. Only game feel has a behavior that
+	# replaces the hand-written shape outright, so only it carries an `adoptable`: the Juice pack does
+	# every one of these five with state of its own.
+	"sprite_animation": {
+		"words": "Sprites and animation",
+		"ace_ids": ["Core/SetFlipH", "Core/SetFlipV", "Core/SetSpriteFrame", "Core/SetAnimationSpeed",
+			"Core/SetSpriteTexture", "Core/SetTreeParam", "Core/TravelToState", "Core/AnimationIsPlaying"]
+	},
+	"ui": {
+		"words": "UI",
+		"ace_ids": ["Core/GrabFocus", "Core/SetProgress", "Core/ShowDialogCentred", "Core/SetMasterVolume"]
+	},
+	"sound": {
+		"words": "Sound",
+		"ace_ids": ["Core/AudioSetStream", "Core/AudioSetPitch", "Core/AudioSetBus",
+			"Core/AudioSetVolumeLevel", "Core/AudioSeek", "Core/AudioIsPlaying"]
+	},
+	"juice": {
+		"words": "Game feel",
+		"adoptable": "juice",
+		"ace_ids": ["Core/CameraShakeOnce", "Core/Hitstop", "Core/BobY", "Core/FlashColour",
+			"Core/EaseSizeBack"]
 	}
 }
 
@@ -9835,7 +9858,8 @@ func _claim_pending_patterns(row_data: EventRowData) -> void:
 		for ace_id: Variant in (vocabulary.get("ace_ids", []) as Array):
 			ace_ids.append(str(ace_id))
 		EventSheetPatternFacts.claim(sheet, pattern, row_data.row_uid, row_data.row_uid,
-			_pending_patterns[pattern], str(vocabulary.get("words", "")), "", ace_ids)
+			_pending_patterns[pattern], str(vocabulary.get("words", "")),
+			str(vocabulary.get("adoptable", "")), ace_ids)
 	_pending_patterns = {}
 
 

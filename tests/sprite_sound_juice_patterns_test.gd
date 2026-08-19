@@ -205,10 +205,8 @@ static func _patterns_claimed() -> bool:
 	ok = _check("the UI pattern is claimed", claimed.has("ui"), true) and ok
 	ok = _check("the sound pattern is claimed", claimed.has("sound"), true) and ok
 	ok = _check("the juice pattern is claimed", claimed.has("juice"), true) and ok
-	ok = _check("the shake offers the Juice behavior that could replace it",
+	ok = _check("the game-feel pattern offers the behavior that could replace it",
 		adoptable.has("juice"), true) and ok
-	ok = _check("the bob offers the Sine behavior that could replace it",
-		adoptable.has("sine"), true) and ok
 	ok = _check("a claim's evidence is the line it was read from",
 		evidence.has("camera.offset = Vector2(randf_range(-s, s), randf_range(-s, s))"), true) and ok
 	ok = _check("every claim belongs to an event of this sheet",

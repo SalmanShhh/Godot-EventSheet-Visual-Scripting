@@ -253,32 +253,6 @@ owns it says which pattern it is, with the exact lines that made the sheet think
   `Functions ▸ Call the function stored in commands "equip"`. A lambda written over two lines keeps
   its Script block - a sentence may only stand for a shape it can see whole.
 
-## Sprites, UI, sound and game feel - the same words either way
-
-![A sprite, UI, sound and game-feel script opened as a sheet: mirrored, animation frame, focus, master volume, sound, pitch, shake and bob](images/reading-sprite-sound-juice.png)
-
-These four families are most of what a small script actually does, and each of them now reads and
-is written in the same words:
-
-- **Sprites and animation** - `Set mirrored` (and `Set mirrored when dir < 0` when a test decides
-  it), `Set flipped`, `Set animation frame`, `Set animation speed`, `Set opacity`, `Set image`,
-  `Is playing`, plus an animation tree's `Set blend blend position` and
-  `Travel to animation state "Hurt"`.
-- **UI** - `Set focus`, `Set progress to hp of max hp` (the value and the maximum in one row),
-  `Show dialog (centred)`, `Set text to "Score: " & score`, `Set master volume to v (0 to 1)` and
-  `Pause the game`.
-- **Sound** - `Set sound to jump.wav`, `Set pitch`, `Set bus to SFX`, `Set volume to 50%` (the
-  decibel conversion is done for you and Godot's own line is one hover away), `Seek to 12 seconds`,
-  `Play sound` and `Is playing`.
-- **Game feel** - `Shake by 4`, `Hitstop for 0.05 seconds`, `Bob y (sine, magnitude 8, 3 per
-  second)`, `Flash red for 0.1 seconds` and `Ease size back to normal at 10 (per second)`. The
-  Juice, Sine and Flash behaviors ship exactly these words with state of their own, so attaching
-  one of them is the first option and these free actions are the second.
-
-A hand-written script that already does any of this reads as those rows the moment you open it,
-with the exact GDScript still on the hover - and the row the picker drops writes the same bytes
-back, so the two can never drift apart.
-
 ## Effects, tilemaps and the camera
 
 ![The effect, tilemap and camera rows an opened script reads as](images/pattern-effects-tilemap-camera.png)
@@ -343,6 +317,32 @@ already has words for.
 Where a shipped behavior could replace the hand-written block, the sheet says so: a body that
 applies gravity offers the Platformer pack, one that only steers offers Eight Direction, and a
 navigation block offers the pathfinding pack that matches its dimension.
+
+## Sprites, UI, sound and game feel - the same words either way
+
+![A sprite, UI, sound and game-feel script opened as a sheet: mirrored, animation frame, focus, master volume, sound, pitch, shake and bob](images/reading-sprite-sound-juice.png)
+
+These four families are most of what a small script actually does, and each of them now reads and
+is written in the same words:
+
+- **Sprites and animation** - `Set mirrored` (and `Set mirrored when dir < 0` when a test decides
+  it), `Set flipped`, `Set animation frame`, `Set animation speed`, `Set opacity`, `Set image`,
+  `Is playing`, plus an animation tree's `Set blend blend position` and
+  `Travel to animation state "Hurt"`.
+- **UI** - `Set focus`, `Set progress to hp of max hp` (the value and the maximum in one row),
+  `Show dialog (centred)`, `Set text to "Score: " & score`, `Set master volume to v (0 to 1)` and
+  `Pause the game`.
+- **Sound** - `Set sound to jump.wav`, `Set pitch`, `Set bus to SFX`, `Set volume to 50%` (the
+  decibel conversion is done for you and Godot's own line is one hover away), `Seek to 12 seconds`,
+  `Play sound` and `Is playing`.
+- **Game feel** - `Shake by 4`, `Hitstop for 0.05 seconds`, `Bob y (sine, magnitude 8, 3 per
+  second)`, `Flash red for 0.1 seconds` and `Ease size back to normal at 10 (per second)`. The
+  Juice, Sine and Flash behaviors ship exactly these words with state of their own, so attaching
+  one of them is the first option and these free actions are the second.
+
+A hand-written script that already does any of this reads as those rows the moment you open it,
+with the exact GDScript still on the hover - and the row the picker drops writes the same bytes
+back, so the two can never drift apart.
 
 ## Where these live
 
