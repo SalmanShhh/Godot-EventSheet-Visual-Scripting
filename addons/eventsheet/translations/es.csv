@@ -2441,3 +2441,30 @@ a wait,una espera
 pooled,reutilizado
 Return to pool,Devolver al grupo
 "hidden, ticking off, back in pool","oculto, detenido, de vuelta en el grupo"
+Load layout {path} in the background,Cargar diseño {path} en segundo plano
+layout {path} has finished loading,el diseño {path} ha terminado de cargarse
+Apply gravity {gravity} (per second),Aplicar gravedad {gravity} (por segundo)
+Accelerate {axis} toward {target} at {rate} (per second),Acelerar {axis} hacia {target} a {rate} (por segundo)
+Limit speed to {value},Limitar la velocidad a {value}
+Move (and slide along what it hits),Mover (y deslizarse por lo que toca)
+Disable collisions with {layer},Desactivar colisiones con {layer}
+Enable collisions with {layer},Activar colisiones con {layer}
+Ignore collisions with {other},Ignorar colisiones con {other}
+Rotate toward {target} at {rate} (per second),Girar hacia {target} a {rate} (por segundo)
+collided object is in family {name},el objeto golpeado está en la familia {name}
+Send {name} to everyone,Enviar {name} a todos
+Send {name} to the host,Enviar {name} al anfitrión
+Send {name} to {peer},Enviar {name} a {peer}
+Is host,Es el anfitrión
+Owns this object,Es dueño de este objeto
+from any peer,desde cualquier par
+from the owner,desde el dueño
+runs here too,también se ejecuta aquí
+remote only,solo remoto
+reliable,fiable
+unreliable,no fiable
+"unreliable, in order","no fiable, en orden"
+Find path to {target},Buscar camino hacia {target}
+Move along path at {speed},Avanzar por el camino a {speed}
+Move along path at {speed} (avoiding others),Avanzar por el camino a {speed} (esquivando a los demás)
+Has arrived,Ha llegado

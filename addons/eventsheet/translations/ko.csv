@@ -2441,3 +2441,30 @@ a wait,대기
 pooled,풀 사용
 Return to pool,풀로 되돌리기
 "hidden, ticking off, back in pool","숨김, 처리 중지, 풀로 복귀"
+Load layout {path} in the background,레이아웃 {path} 을(를) 백그라운드에서 불러오기
+layout {path} has finished loading,레이아웃 {path} 불러오기가 끝났다
+Apply gravity {gravity} (per second),중력 {gravity} 적용 (초당)
+Accelerate {axis} toward {target} at {rate} (per second),{axis} 을(를) {target} 쪽으로 {rate} 로 가속 (초당)
+Limit speed to {value},속도를 {value} 로 제한
+Move (and slide along what it hits),이동 (부딪힌 것을 따라 미끄러짐)
+Disable collisions with {layer},{layer} 와(과)의 충돌 끄기
+Enable collisions with {layer},{layer} 와(과)의 충돌 켜기
+Ignore collisions with {other},{other} 와(과)의 충돌 무시
+Rotate toward {target} at {rate} (per second),{target} 쪽으로 {rate} 로 회전 (초당)
+collided object is in family {name},부딪힌 개체가 패밀리 {name} 에 속함
+Send {name} to everyone,{name} 을(를) 모두에게 보내기
+Send {name} to the host,{name} 을(를) 호스트에게 보내기
+Send {name} to {peer},{name} 을(를) {peer} 에게 보내기
+Is host,호스트임
+Owns this object,이 개체를 소유함
+from any peer,모든 피어로부터
+from the owner,소유자로부터
+runs here too,여기서도 실행됨
+remote only,원격만
+reliable,신뢰성 있음
+unreliable,신뢰성 없음
+"unreliable, in order","신뢰성 없음, 순서 유지"
+Find path to {target},{target} 로 가는 경로 찾기
+Move along path at {speed},경로를 따라 {speed} 로 이동
+Move along path at {speed} (avoiding others),경로를 따라 {speed} 로 이동 (다른 것을 피하며)
+Has arrived,도착함

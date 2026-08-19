@@ -2441,3 +2441,30 @@ a wait,待ち時間
 pooled,プール利用
 Return to pool,プールに戻す
 "hidden, ticking off, back in pool",非表示・停止してプールへ
+Load layout {path} in the background,レイアウト {path} をバックグラウンドで読み込む
+layout {path} has finished loading,レイアウト {path} の読み込みが完了した
+Apply gravity {gravity} (per second),重力 {gravity} をかける (毎秒)
+Accelerate {axis} toward {target} at {rate} (per second),{axis} を {target} へ {rate} で加速 (毎秒)
+Limit speed to {value},速度を {value} までに制限
+Move (and slide along what it hits),移動する (当たったものに沿って滑る)
+Disable collisions with {layer},{layer} との衝突を無効にする
+Enable collisions with {layer},{layer} との衝突を有効にする
+Ignore collisions with {other},{other} との衝突を無視する
+Rotate toward {target} at {rate} (per second),{target} の方へ {rate} で回転 (毎秒)
+collided object is in family {name},衝突した相手はファミリー {name} に属する
+Send {name} to everyone,{name} を全員に送る
+Send {name} to the host,{name} をホストに送る
+Send {name} to {peer},{name} を {peer} に送る
+Is host,ホストである
+Owns this object,このオブジェクトを所有している
+from any peer,どのピアからでも
+from the owner,所有者から
+runs here too,ここでも実行される
+remote only,リモートのみ
+reliable,確実
+unreliable,非確実
+"unreliable, in order",非確実、順序どおり
+Find path to {target},{target} への経路を探す
+Move along path at {speed},経路に沿って {speed} で進む
+Move along path at {speed} (avoiding others),経路に沿って {speed} で進む (他をよけながら)
+Has arrived,到着した

@@ -6438,7 +6438,9 @@ func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
 
 ## Builtin categories that are OBJECTS in the event-sheet grammar, not part of System - a row of theirs
 ## wears the device name in its object cell (Mouse, Keyboard, Gamepad, Touch).
-const INPUT_DEVICE_OBJECTS: Array[String] = ["Mouse", "Keyboard", "Gamepad", "Touch"]
+## S10 adds Multiplayer to this list for the same reason: Godot's high-level networking is a thing a
+## sheet TALKS TO - it sends it messages, it asks it who the host is - so its rows wear its name.
+const INPUT_DEVICE_OBJECTS: Array[String] = ["Mouse", "Keyboard", "Gamepad", "Touch", "Multiplayer"]
 
 ## R30. The editor is an object too - it is opened, it is drawn on, it is given docks and menu items,
 ## and it answers questions about what is selected. Its whole vocabulary is filed under one category,

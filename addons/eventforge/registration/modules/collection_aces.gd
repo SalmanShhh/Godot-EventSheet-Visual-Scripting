@@ -250,12 +250,32 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# NavigationAgent2D (Pathfinding behavior)
 	descriptors.append(F.make_descriptor("Core", "SetNavTarget", "Find Path To", ACEDescriptor.ACEType.ACTION, "target_position = {position}", "", [F.make_param("position", "String", "Vector2(0, 0)", "Target", "World position to path toward.", "expression")], "General Actions", "Find path to {position}", "NavigationAgent2D")
 		.described("Tells a navigation agent to pathfind toward a world position, for AI movement."))
-	descriptors.append(F.make_descriptor("Core", "IsNavFinished", "Has Arrived", ACEDescriptor.ACEType.CONDITION, "is_navigation_finished()", "", [], "General Conditions", "Arrived at destination", "NavigationAgent2D")
+	descriptors.append(F.make_descriptor("Core", "IsNavFinished", "Has Arrived", ACEDescriptor.ACEType.CONDITION, "is_navigation_finished()", "", [], "General Conditions", "Has arrived", "NavigationAgent2D")
 		.described("True once the navigation agent has reached its target destination."))
 	descriptors.append(F.make_descriptor("Core", "GetNextPathPosition", "Next Path Position", ACEDescriptor.ACEType.EXPRESSION, "get_next_path_position()", "", [], "General Expressions", "next path position", "NavigationAgent2D")
 		.described("Returns the next point along the path the agent should move toward."))
+	# S15. The step a path walk is made of, as ONE row. Its template is exactly the line the reading
+	# recognises: the direction from where the body is to the next waypoint, at the given speed.
+	descriptors.append(F.make_descriptor("Core", "MoveAlongPath", "Move Along Path", ACEDescriptor.ACEType.ACTION, "velocity = global_position.direction_to({agent}.get_next_path_position()) * {speed}", "", [F.make_param("agent", "String", "self", "Agent", "The navigation agent working out the path.", "expression"), F.make_param("speed", "String", "120.0", "Speed", "How fast to travel along the path, in pixels per second.", "expression")], "Movement", "Move along path at {speed}", "CharacterBody2D")
+		.described("Steers the body toward the next point on the path its navigation agent worked out. Follow it with Move so the body actually travels."))
 	descriptors.append(F.make_descriptor("Core", "GetNavDistance", "Distance To Target", ACEDescriptor.ACEType.EXPRESSION, "distance_to_target()", "", [], "General Expressions", "distance to target", "NavigationAgent2D")
 		.described("Returns how far the agent still is from its navigation target."))
+	# S8. Loading a layout in the background. Three rows cover the whole idiom: the request, the
+	# question, and the switch once it is there - so nobody has to type the status enum again. The
+	# templates ARE the lines the reading recognises, which is what makes a written and a picked
+	# loading screen the same bytes.
+	descriptors.append(F.make_descriptor("Core", "LoadLayoutInBackground", "Load Layout In The Background", ACEDescriptor.ACEType.ACTION, "ResourceLoader.load_threaded_request({path})", "", [F.make_param("path", "String", "\"res://main.tscn\"", "Layout", "Scene file to start loading.", "expression")], "Scene", "Load layout {path} in the background")
+		.described("Starts loading a layout on another thread while the game keeps running, so a loading screen can show progress instead of freezing."))
+	descriptors.append(F.make_descriptor("Core", "LayoutFinishedLoading", "Layout Has Finished Loading", ACEDescriptor.ACEType.CONDITION, "ResourceLoader.load_threaded_get_status({path}) == ResourceLoader.THREAD_LOAD_LOADED", "", [F.make_param("path", "String", "\"res://main.tscn\"", "Layout", "The layout being loaded in the background.", "expression")], "Scene", "layout {path} has finished loading")
+		.described("True once a layout started with Load Layout In The Background is ready to switch to."))
+	descriptors.append(F.make_descriptor("Core", "GoToLoadedLayout", "Go To Loaded Layout", ACEDescriptor.ACEType.ACTION, "get_tree().change_scene_to_packed(ResourceLoader.load_threaded_get({path}))", "", [F.make_param("path", "String", "\"res://main.tscn\"", "Layout", "The layout that finished loading.", "expression")], "Scene", "Go to layout {path}")
+		.described("Switches to a layout that finished loading in the background, with no second load and no pause."))
+	# Godot reports progress through an array it FILLS, which no bare expression can hand back. The
+	# one-line lambda is what keeps this an expression a row can carry: the array goes in, the status
+	# call fills it (its enum is never negative, so the guard only sequences the two), and the share
+	# comes out. Every byte of it is plain GDScript with no plugin behind it.
+	descriptors.append(F.make_descriptor("Core", "LoadingProgress", "Loading Progress", ACEDescriptor.ACEType.EXPRESSION, "(func(__ef_p: Array) -> float: return float(__ef_p[0]) if ResourceLoader.load_threaded_get_status({path}, __ef_p) >= 0 and __ef_p.size() > 0 else 0.0).call([])", "", [F.make_param("path", "String", "\"res://main.tscn\"", "Layout", "The layout being loaded in the background.", "expression")], "Scene", "LoadingProgress")
+		.described("How far a background load has got, from 0 to 1 - multiply by 100 for a percentage bar."))
 	# Visibility / tint (CanvasItem)
 	descriptors.append(F.make_descriptor("Core", "ShowNode", "Show", ACEDescriptor.ACEType.ACTION, "show()", "", [], "General Actions", "Show", "CanvasItem")
 		.described("Makes a node visible on screen."))

@@ -2441,3 +2441,30 @@ a wait,une attente
 pooled,recyclé
 Return to pool,Renvoyer au pool
 "hidden, ticking off, back in pool","caché, arrêté, de retour dans le pool"
+Load layout {path} in the background,Charger la scène {path} en arrière-plan
+layout {path} has finished loading,la scène {path} a fini de charger
+Apply gravity {gravity} (per second),Appliquer la gravité {gravity} (par seconde)
+Accelerate {axis} toward {target} at {rate} (per second),Accélérer {axis} vers {target} à {rate} (par seconde)
+Limit speed to {value},Limiter la vitesse à {value}
+Move (and slide along what it hits),Déplacer (et glisser le long de ce qui est touché)
+Disable collisions with {layer},Désactiver les collisions avec {layer}
+Enable collisions with {layer},Activer les collisions avec {layer}
+Ignore collisions with {other},Ignorer les collisions avec {other}
+Rotate toward {target} at {rate} (per second),Tourner vers {target} à {rate} (par seconde)
+collided object is in family {name},l'objet touché est dans la famille {name}
+Send {name} to everyone,Envoyer {name} à tout le monde
+Send {name} to the host,Envoyer {name} à l'hôte
+Send {name} to {peer},Envoyer {name} à {peer}
+Is host,Est l'hôte
+Owns this object,Possède cet objet
+from any peer,depuis n'importe quel pair
+from the owner,depuis le propriétaire
+runs here too,s'exécute ici aussi
+remote only,à distance uniquement
+reliable,fiable
+unreliable,non fiable
+"unreliable, in order","non fiable, dans l'ordre"
+Find path to {target},Chercher un chemin vers {target}
+Move along path at {speed},Avancer sur le chemin à {speed}
+Move along path at {speed} (avoiding others),Avancer sur le chemin à {speed} (en évitant les autres)
+Has arrived,Est arrivé

@@ -2154,6 +2154,13 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	_row_builder._class_uid_counts.clear()
 	if sheet == null:
 		return root_rows
+	# ── The pattern registry ──────────────────────────────────────────────────────────────────
+	# Claims live exactly as long as one row build, so they are forgotten here and filled again as
+	# this sweep recognises them. Everything that talks ABOUT patterns - the chip on the owning
+	# event, the hover evidence, Adopt behavior, the Doctor's smells - reads the claims rather than
+	# re-deriving anything, and this is the one moment they are all keyed to.
+	EventSheetPatternFacts.clear(sheet)
+	EventSheetViewportReadingRows.claim_godot_systems_patterns(sheet)
 	root_rows.append_array(_build_global_variable_rows(sheet))
 	# Blocks spec P1 - collapse the LEADING run of class scaffolding (prelude / annotations /
 	# host-binding) into one foldable "Class setup" strip, so an opened .gd reads as logic, not

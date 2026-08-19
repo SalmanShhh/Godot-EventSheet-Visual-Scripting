@@ -54,6 +54,9 @@ const OBJECT_TOUCH := "Touch"
 const OBJECT_STORAGE := "Local Storage"
 const OBJECT_JSON := "JSON"
 const OBJECT_FILE := "File"
+## S10. Godot's high-level networking is one object in the sheet's words - the one the messages, the
+## host question and the peer id all read under, exactly as Storage owns the save rows above.
+const OBJECT_MULTIPLAYER := "Multiplayer"
 
 ## N8. The methods and properties that can carry behaviour words at all. Checked BEFORE the object's
 ## class is resolved, so an ordinary call or assignment - which is most of them - never pays for a
@@ -330,6 +333,14 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var forgotten: Dictionary = _forget_statement(text, context)
 	if not forgotten.is_empty():
 		return _with_indent(forgotten, indent)
+	# ── S8 / S9 / S10 / S15 ─────────────────────────────────────────────────────────────────────
+	# The four patterns whose lines several other readings would each claim half of: a background
+	# load is an assignment-free call, a movement step is arithmetic on `velocity`, a message is a
+	# call on a function name, and a path step is an assignment. Each is recognised WHOLE or not at
+	# all, so it goes ahead of the compound / assignment / call split below.
+	var systems: Dictionary = godot_systems_statement(text, context)
+	if not systems.is_empty():
+		return _with_indent(systems, indent)
 	var compound: Dictionary = _compound_statement(text, context)
 	if not compound.is_empty():
 		return _with_indent(compound, indent)
@@ -349,6 +360,13 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	# The questions that span MORE than one operator - a range, an angle window, a distance, an area,
 	# an approximate equality, an elapsed-time check, the layout edges - before any reading that would
 	# stop at the first operator it found and describe half of one.
+	# ── S8 / S9 / S10 / S15 ─────────────────────────────────────────────────────────────────────
+	# The four patterns' own questions, ahead of everything: each is a comparison or a predicate call
+	# that the general readings below would describe as the operator it is written with rather than as
+	# the one thing it asks.
+	var systems: Dictionary = godot_systems_condition(text, context)
+	if not systems.is_empty():
+		return systems
 	var joined: Dictionary = joined_condition(text, context)
 	if not joined.is_empty():
 		return joined
@@ -870,6 +888,12 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var tween_value: String = tween_expression(trimmed)
 	if not tween_value.is_empty():
 		return tween_value
+	# S10 - the peer id every networked script asks for, as the sheet's own Multiplayer expression.
+	if trimmed == "multiplayer.get_unique_id()":
+		return "%s.MyID" % OBJECT_MULTIPLAYER
+	# S8 - the progress array read by index, before the indexing pass could take `p[0]` apart. What
+	# the file holds is untouched; only the words change.
+	trimmed = loading_progress_words(trimmed, context)
 	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
 	# R7. The sheet's own expression names, before any other rewriting sees the Godot spellings they
 	# are matched against. Off unless the view asked for the Familiar Words glossary.
@@ -2275,6 +2299,12 @@ static func _behaviour_call(object_name: String, method: String, args: PackedStr
 				args[0].strip_edges().to_int(), physics_dimension_of(object_name, context))
 			if not layer_name.is_empty():
 				layer_shown = "\"%s\"" % layer_name
+		# S9. What the row DOES is switch a collision off, and the movement behaviors say exactly that.
+		# The layers a body is ON keep the neutral wording, because joining a layer and colliding with
+		# one are two different things and one sentence for both would say neither.
+		if method == "set_collision_mask_value":
+			var mask_template: String = "Enable collisions with {layer}" if switch == "true" else "Disable collisions with {layer}"
+			return _sentence(object_name, mask_template, {"layer": [layer_shown, "value"]})
 		return _sentence(object_name, "Set collision with layer {layer} {state}", {
 			"layer": [layer_shown, "value"],
 			"state": [translate("on") if switch == "true" else translate("off"), "name"]
@@ -5550,3 +5580,386 @@ static func _color_names(text: String) -> String:
 	for found: RegExMatch in pattern.search_all(text):
 		out = out.replace(found.get_string(0), found.get_string(1).capitalize().to_lower())
 	return out
+
+
+# ── S8 / S9 / S10 / S15 - the Godot systems patterns ────────────────────────────
+#
+# Four shapes a script makes out of SEVERAL lines together, each of which an event sheet already has
+# rows for: loading a layout in the background, the movement math a body block is built from, the
+# high-level multiplayer messages, and a navigation agent's path.
+#
+# What one line cannot know on its own - which local holds the progress array, which local holds a
+# nav agent, which function is a message - is gathered once per rebuild by the reading rows and
+# handed in through `context`, exactly as the tween chains and the timer modes already are. With
+# those facts absent every reading here simply does not fire, so the grammar stays usable on its own
+# and a sheet that says nothing about a pattern never reads as one.
+
+
+## S8. The four ResourceLoader spellings the background-loading idiom is made of, and the constant
+## that answers "is it there yet".
+const LOAD_REQUEST_HEAD := "ResourceLoader.load_threaded_request("
+const LOAD_GET_HEAD := "ResourceLoader.load_threaded_get("
+const LOAD_STATUS_HEAD := "ResourceLoader.load_threaded_get_status("
+const SCENE_PACKED_HEAD := "get_tree().change_scene_to_packed("
+const LOADED_CONSTANT := "ResourceLoader.THREAD_LOAD_LOADED"
+
+## S15. What a navigation agent IS. Matched through ClassDB, so a subclass of either answers alike.
+const NAV_AGENT_CLASSES: PackedStringArray = ["NavigationAgent2D", "NavigationAgent3D"]
+
+## S10. The two `@rpc` mode words that change what a message DOES, in the sheet's own phrasing. A
+## mode the annotation leaves out is Godot's default, which is what the muted note then says.
+const RPC_MODE_WORDS: Dictionary = {
+	"any_peer": "from any peer",
+	"authority": "from the owner",
+	"call_local": "runs here too",
+	"call_remote": "remote only",
+	"reliable": "reliable",
+	"unreliable": "unreliable",
+	"unreliable_ordered": "unreliable, in order"
+}
+
+
+## S8. The layout a background-load call names: a path literal is named the way the file is named,
+## a variable the sheet declared from a literal is followed to that literal, and anything else keeps
+## the expression it is - a reading may not invent a layout nobody can point at.
+static func loading_layout_name(value: String, context: Dictionary) -> String:
+	var text: String = value.strip_edges()
+	if _is_string_literal(text):
+		return layout_name(text)
+	var paths: Dictionary = context.get("loading_paths", {})
+	if paths.has(text):
+		return layout_name(str(paths[text]))
+	return expression_text(text, context)
+
+
+## S8. `ResourceLoader.load_threaded_request(path)` and the `change_scene_to_packed(load_threaded_get
+## (path))` pair, as the two System actions an event sheet writes for them.
+static func _background_loading_statement(text: String, context: Dictionary) -> Dictionary:
+	if text.begins_with(LOAD_REQUEST_HEAD) and text.ends_with(")"):
+		var requested: PackedStringArray = _split_arguments(
+			text.substr(LOAD_REQUEST_HEAD.length(), text.length() - LOAD_REQUEST_HEAD.length() - 1))
+		if requested.size() >= 1 and not requested[0].strip_edges().is_empty():
+			return _sentence(OBJECT_SYSTEM, "Load layout {path} in the background",
+				{"path": [loading_layout_name(requested[0], context), "value"]})
+	if text.begins_with(SCENE_PACKED_HEAD) and text.ends_with(")"):
+		var inner: String = text.substr(
+			SCENE_PACKED_HEAD.length(), text.length() - SCENE_PACKED_HEAD.length() - 1).strip_edges()
+		if inner.begins_with(LOAD_GET_HEAD) and inner.ends_with(")"):
+			var got: String = inner.substr(
+				LOAD_GET_HEAD.length(), inner.length() - LOAD_GET_HEAD.length() - 1).strip_edges()
+			if not got.is_empty():
+				return _sentence(OBJECT_SYSTEM, "Go to layout {path}",
+					{"path": [loading_layout_name(got, context), "value"]})
+	return {}
+
+
+## S8. `st == ResourceLoader.THREAD_LOAD_LOADED` - the question the whole status enum is asked for.
+## The path comes from the local the status was read into, so the row names the layout rather than
+## the variable somebody happened to call `st`.
+static func _background_loading_condition(text: String, context: Dictionary) -> Dictionary:
+	var equals_at: int = top_level_index(text, " == ")
+	if equals_at <= 0 or text.substr(equals_at + 4).strip_edges() != LOADED_CONSTANT:
+		return {}
+	var left: String = text.substr(0, equals_at).strip_edges()
+	var path_text: String = ""
+	var statuses: Dictionary = context.get("loading_status", {})
+	if statuses.has(left):
+		path_text = str(statuses[left])
+	elif left.begins_with(LOAD_STATUS_HEAD) and left.ends_with(")"):
+		var asked: PackedStringArray = _split_arguments(
+			left.substr(LOAD_STATUS_HEAD.length(), left.length() - LOAD_STATUS_HEAD.length() - 1))
+		if asked.size() >= 1:
+			path_text = asked[0]
+	if path_text.strip_edges().is_empty():
+		return {}
+	return _sentence(OBJECT_SYSTEM, "layout {path} has finished loading",
+		{"path": [loading_layout_name(path_text, context), "value"]})
+
+
+## S8. The progress array read by index, as the one expression an event sheet has for it. Claimed
+## only for a local the file itself passed to `load_threaded_get_status`, and never inside a string.
+static func loading_progress_words(text: String, context: Dictionary) -> String:
+	var progress: Dictionary = context.get("loading_progress", {})
+	if progress.is_empty() or not text.contains("[") or text.contains("\""):
+		return text
+	var out: String = text
+	for name_text: Variant in progress:
+		out = out.replace("%s[0]" % str(name_text), "System.LoadingProgress")
+	return out
+
+
+## S9. True when the script this row belongs to IS a character body - the only thing whose `velocity`
+## is the movement a behavior would own. A plain Node2D's `velocity` is just a variable somebody
+## declared, and reading it as gravity would be a guess.
+static func is_character_body(context: Dictionary) -> bool:
+	return _class_is_any(str(context.get("self_class", "")).strip_edges(), CHARACTER_BODY_CLASSES)
+
+
+## S9. The rate out of a `<rate> * delta` (or `delta * <rate>`) product - the per-second spelling of
+## every movement step. "" when the expression is not scaled by the frame time at all, which is what
+## keeps a plain `velocity.y += 10` from reading as gravity.
+static func per_second_factor(value: String) -> String:
+	var text: String = value.strip_edges()
+	while text.begins_with("(") and closing_paren(text, 0) == text.length() - 1:
+		text = text.substr(1, text.length() - 2).strip_edges()
+	var times_at: int = top_level_index(text, " * ")
+	if times_at <= 0:
+		return ""
+	var left: String = text.substr(0, times_at).strip_edges()
+	var right: String = text.substr(times_at + 3).strip_edges()
+	if right == "delta":
+		return left
+	if left == "delta":
+		return right
+	return ""
+
+
+## S9. The axis a `velocity.x` style target names, or "" when the target is not one axis of the
+## body's own velocity.
+static func velocity_axis(target: String) -> String:
+	var text: String = target.strip_edges().trim_prefix("self.")
+	if not text.begins_with("velocity."):
+		return ""
+	var axis: String = text.substr(9)
+	return axis if axis in ["x", "y", "z"] else ""
+
+
+## S9. The movement math a hand-rolled controller is made of, in the movement behaviors' own words.
+## Claimed only on a character body, and only where the whole shape is recognised: a `move_toward`
+## that accelerates something else, or a rotation eased toward an angle without the frame time, keeps
+## the code it is.
+static func _movement_statement(text: String, context: Dictionary) -> Dictionary:
+	if not is_character_body(context):
+		return {}
+	var object_name: String = script_object(context)
+	var grows_at: int = top_level_index(text, " += ")
+	if grows_at > 0:
+		var grown: String = text.substr(0, grows_at).strip_edges().trim_prefix("self.")
+		var pull: String = per_second_factor(text.substr(grows_at + 4))
+		if grown == "velocity.y" and not pull.is_empty():
+			return _sentence(object_name, "Apply gravity {gravity} (per second)",
+				{"gravity": [expression_text(pull, context), "value"]})
+	if text == "move_and_slide()" or text == "self.move_and_slide()":
+		return _sentence(object_name, "Move (and slide along what it hits)", {})
+	var call: Dictionary = call_parts(text)
+	if not call.is_empty() and str(call.get("method", "")) == "add_collision_exception_with":
+		var ignored: PackedStringArray = call.get("args", PackedStringArray())
+		if ignored.size() == 1 and str(call.get("target", "")).strip_edges() in ["", "self"]:
+			return _sentence(object_name, "Ignore collisions with {other}",
+				{"other": [expression_text(ignored[0], context), "value"]})
+	var assign_at: int = top_level_index(text, " = ")
+	if assign_at <= 0:
+		return {}
+	var target: String = text.substr(0, assign_at).strip_edges().trim_prefix("self.")
+	var value: String = text.substr(assign_at + 3).strip_edges()
+	var axis: String = velocity_axis(target)
+	if not axis.is_empty() and value.begins_with("move_toward(") and value.ends_with(")"):
+		var toward: PackedStringArray = _split_arguments(value.substr(12, value.length() - 13))
+		var rate: String = per_second_factor(toward[2]) if toward.size() == 3 else ""
+		if toward.size() == 3 and toward[0].strip_edges().trim_prefix("self.") == target and not rate.is_empty():
+			return _sentence(object_name, "Accelerate {axis} toward {target} at {rate} (per second)", {
+				"axis": [axis, "name"],
+				"target": [expression_text(toward[1], context), "value"],
+				"rate": [expression_text(rate, context), "value"]
+			})
+	if target == "velocity" and value.begins_with("velocity.limit_length(") and value.ends_with(")"):
+		var limit: String = value.substr(22, value.length() - 23).strip_edges()
+		if not limit.is_empty():
+			return _sentence(object_name, "Limit speed to {value}",
+				{"value": [expression_text(limit, context), "value"]})
+	if target == "rotation" and value.begins_with("lerp_angle(") and value.ends_with(")"):
+		var eased: PackedStringArray = _split_arguments(value.substr(11, value.length() - 12))
+		var turn_rate: String = per_second_factor(eased[2]) if eased.size() == 3 else ""
+		if eased.size() == 3 and eased[0].strip_edges().trim_prefix("self.") == "rotation" and not turn_rate.is_empty():
+			return _sentence(object_name, "Rotate toward {target} at {rate} (per second)", {
+				"target": [expression_text(eased[1], context), "value"],
+				"rate": [expression_text(turn_rate, context), "value"]
+			})
+	return {}
+
+
+## S9. `c.get_collider().is_in_group("enemy")` - what a slide collision HIT, asked in the sheet's
+## family words. The collision local is the object the row is about, exactly as the loop named it.
+static func _collided_family_condition(text: String, context: Dictionary) -> Dictionary:
+	const MIDDLE := ".get_collider().is_in_group("
+	var split_at: int = text.find(MIDDLE)
+	if split_at <= 0 or not text.ends_with(")"):
+		return {}
+	var receiver: String = text.substr(0, split_at).strip_edges()
+	if not is_identifier(receiver):
+		return {}
+	var group: String = text.substr(
+		split_at + MIDDLE.length(), text.length() - split_at - MIDDLE.length() - 1).strip_edges()
+	if not _is_string_literal(group):
+		return {}
+	return _sentence(receiver, "collided object is in family {name}",
+		{"name": [_unquote(group), "value"]})
+
+
+## S10. The published name of a message - the function name as the picker would publish it.
+static func message_name(function_name: String, context: Dictionary) -> String:
+	var published: Dictionary = context.get("message_names", {})
+	if published.has(function_name):
+		return str(published[function_name])
+	return function_words(function_name)
+
+
+## S10. The muted note an `@rpc(...)` annotation reads as: its mode words in the order the annotation
+## wrote them, separated the way the sheet separates a trigger's settings. "" when the annotation
+## names no mode, which is Godot's own default and says nothing a reader could act on.
+static func rpc_mode_words(annotation: String) -> String:
+	var text: String = annotation.strip_edges()
+	if not text.begins_with("@rpc"):
+		return ""
+	var open_at: int = text.find("(")
+	if open_at < 0 or not text.ends_with(")"):
+		return ""
+	var words: PackedStringArray = PackedStringArray()
+	for argument: String in _split_arguments(text.substr(open_at + 1, text.length() - open_at - 2)):
+		var mode: String = _unquote(argument.strip_edges())
+		if RPC_MODE_WORDS.has(mode):
+			words.append(translate(str(RPC_MODE_WORDS[mode])))
+	return " · ".join(words)
+
+
+## S10. `take_damage.rpc(10)` and its two addressed twins, as the Send rows an event sheet writes.
+## The payload rides as chips, named after the message's own parameters when the sheet knows them.
+static func _multiplayer_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	if method != "rpc" and method != "rpc_id":
+		return {}
+	var sent: String = str(call.get("target", "")).strip_edges()
+	if not is_identifier(sent):
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	var payload: PackedStringArray = args
+	var reading: Dictionary = {}
+	if method == "rpc_id":
+		if args.is_empty():
+			return {}
+		payload = args.slice(1)
+		var peer: String = args[0].strip_edges()
+		if peer == "1":
+			reading = _sentence(OBJECT_MULTIPLAYER, "Send {name} to the host",
+				{"name": [message_name(sent, context), "name"]})
+		else:
+			reading = _sentence(OBJECT_MULTIPLAYER, "Send {name} to {peer}", {
+				"name": [message_name(sent, context), "name"],
+				"peer": [expression_text(peer, context), "value"]
+			})
+	else:
+		reading = _sentence(OBJECT_MULTIPLAYER, "Send {name} to everyone",
+			{"name": [message_name(sent, context), "name"]})
+	var names: PackedStringArray = (context.get("message_params", {}) as Dictionary).get(
+		sent, PackedStringArray())
+	for index: int in payload.size():
+		var shown: String = expression_text(payload[index], context)
+		if index < names.size():
+			shown = "%s = %s" % [str(names[index]), shown]
+		(reading["segments"] as Array).append({"text": "   ", "tone": "plain"})
+		(reading["segments"] as Array).append({"text": shown, "tone": "chip"})
+	return reading
+
+
+## S10. The two questions Godot's high-level multiplayer answers, in the words the sheet's own
+## Multiplayer object uses for them.
+static func _multiplayer_condition(text: String, _context: Dictionary) -> Dictionary:
+	if text == "multiplayer.is_server()":
+		return _sentence(OBJECT_MULTIPLAYER, "Is host", {})
+	if text == "is_multiplayer_authority()" or text == "self.is_multiplayer_authority()":
+		return _sentence(OBJECT_MULTIPLAYER, "Owns this object", {})
+	return {}
+
+
+## S15. The place a nav target names. `player.global_position` is the object `player`, because the
+## row already says the path is going TO it.
+static func navigation_place(value: String, context: Dictionary) -> String:
+	var text: String = value.strip_edges()
+	for member: String in OWN_POSITION_NAMES:
+		var suffix: String = ".%s" % member
+		if text.ends_with(suffix) and is_identifier(text.substr(0, text.length() - suffix.length())):
+			return text.substr(0, text.length() - suffix.length())
+	return expression_text(text, context)
+
+
+## S15. A NavigationAgent on a body, in the Pathfinding words: the destination, the step toward the
+## next waypoint, and - when the file wires the avoidance callback - the note that says so.
+static func _navigation_statement(text: String, context: Dictionary) -> Dictionary:
+	var agents: Dictionary = context.get("nav_agents", {})
+	if agents.is_empty():
+		return {}
+	var assign_at: int = top_level_index(text, " = ")
+	if assign_at <= 0:
+		return {}
+	var object_name: String = script_object(context)
+	var target: String = text.substr(0, assign_at).strip_edges().trim_prefix("self.")
+	var value: String = text.substr(assign_at + 3).strip_edges()
+	var dot_at: int = target.find(".")
+	if dot_at > 0 and agents.has(target.substr(0, dot_at)) and target.substr(dot_at + 1) == "target_position":
+		return _sentence(object_name, "Find path to {target}",
+			{"target": [navigation_place(value, context), "value"]})
+	if target != "velocity":
+		return {}
+	# `global_position.direction_to(next) * speed` - the one step a path walk is made of. Claimed only
+	# when `next` is the waypoint the file itself read out of the agent.
+	var times_at: int = top_level_index(value, " * ")
+	if times_at <= 0:
+		return {}
+	var direction: String = value.substr(0, times_at).strip_edges()
+	var speed: String = value.substr(times_at + 3).strip_edges()
+	const TOWARD := ".direction_to("
+	var toward_at: int = direction.find(TOWARD)
+	if toward_at <= 0 or not direction.ends_with(")"):
+		return {}
+	if not OWN_POSITION_NAMES.has(direction.substr(0, toward_at).strip_edges()):
+		return {}
+	var waypoint: String = direction.substr(
+		toward_at + TOWARD.length(), direction.length() - toward_at - TOWARD.length() - 1).strip_edges()
+	if not (context.get("nav_waypoints", {}) as Dictionary).has(waypoint):
+		return {}
+	var template: String = "Move along path at {speed} (avoiding others)" if bool(
+		context.get("nav_avoidance", false)) else "Move along path at {speed}"
+	return _sentence(object_name, template, {"speed": [expression_text(speed, context), "value"]})
+
+
+## S15. `agent.is_navigation_finished()` - the Pathfinding behavior's own arrival question, about the
+## object that is walking rather than about the agent node that computed the path.
+static func _navigation_condition(text: String, context: Dictionary) -> Dictionary:
+	const TAIL := ".is_navigation_finished()"
+	if not text.ends_with(TAIL):
+		return {}
+	var agent: String = text.substr(0, text.length() - TAIL.length()).strip_edges()
+	if not (context.get("nav_agents", {}) as Dictionary).has(agent):
+		return {}
+	return _sentence(script_object(context), "Has arrived", {})
+
+
+## The Godot-systems reading of one STATEMENT, or {} when none of the four patterns claims it.
+static func godot_systems_statement(text: String, context: Dictionary) -> Dictionary:
+	var loading: Dictionary = _background_loading_statement(text, context)
+	if not loading.is_empty():
+		return loading
+	var message: Dictionary = _multiplayer_statement(text, context)
+	if not message.is_empty():
+		return message
+	var navigation: Dictionary = _navigation_statement(text, context)
+	if not navigation.is_empty():
+		return navigation
+	return _movement_statement(text, context)
+
+
+## The Godot-systems reading of one CONDITION, or {} when none of the four patterns claims it.
+static func godot_systems_condition(text: String, context: Dictionary) -> Dictionary:
+	var loaded: Dictionary = _background_loading_condition(text, context)
+	if not loaded.is_empty():
+		return loaded
+	var networked: Dictionary = _multiplayer_condition(text, context)
+	if not networked.is_empty():
+		return networked
+	var arrived: Dictionary = _navigation_condition(text, context)
+	if not arrived.is_empty():
+		return arrived
+	return _collided_family_condition(text, context)
