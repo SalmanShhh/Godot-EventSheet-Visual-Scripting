@@ -159,14 +159,91 @@ static var EXPECTED_ROW_READINGS: PackedStringArray = PackedStringArray([
 ])
 
 
+## T27. The authoring half: {ace_id: [the params it is dropped with, the sentence the line it writes
+## must read as]}. The gate below fills each descriptor's own TEMPLATE with those params and reads
+## the result, so a template that drifts away from the shape stops being recognised and fails here
+## rather than silently authoring a row that reads as arithmetic.
+static var AUTHORING_PARITY: Dictionary = {
+	"SetAngleOfMotion": [{"angle": "rotation", "speed": "speed"},
+		"Coin ▸ Bullet  Set angle of motion to angle"],
+	"StepAlongVelocity": [{"delta_t": "delta"}, "Coin ▸ Bullet  Move"],
+	"BounceOffSolid": [{"normal": "normal"}, "Coin ▸ Bullet  Bounce off solids"],
+	"GlideToward": [{"destination": "destination", "speed": "speed", "delta_t": "delta"},
+		"Coin ▸ Move To  Move toward destination at speed"],
+	"RotateClockwise": [{"degrees_per_second": "rotate_speed", "delta_t": "delta"},
+		"Coin ▸ Rotate  Rotate clockwise at rotate_speed (degrees per second)"],
+	"WrapAroundLayoutX": [{"low": "0.0", "high": "screen.x"},
+		"Coin ▸ Wrap  Wrap around layout horizontally"],
+	"WrapAroundLayoutY": [{"low": "0.0", "high": "screen.y"},
+		"Coin ▸ Wrap  Wrap around layout vertically"],
+	"BoundToLayout": [{"low": "Vector2.ZERO", "high": "screen"},
+		"Coin ▸ Bound To  Bound to layout (inside (0, 0) - screen)"],
+	"PinToObject": [{"anchor": "anchor", "offset": "pin_offset"},
+		"Coin ▸ Pin  Pin to anchor (position · offset pin_offset)"],
+	"PinAngleToObject": [{"anchor": "anchor"}, "Coin ▸ Pin  Pin to anchor (angle)"]
+}
+
+## T27. The shapes whose AUTHORING is a row that already shipped, so adding a second entry with the
+## same template would put two rows with one meaning in the picker and let the more specific one
+## quietly claim every line the general one was written for. The line each of those rows writes is
+## pinned here all the same, because the reading has to keep recognising it.
+static var SHIPPED_ROW_PARITY: Dictionary = {
+	# Add To Variable writes exactly this.
+	"speed += accel * delta": "Coin ▸ Bullet  Set speed to speed accelerating by accel",
+	# Apply Gravity writes exactly this.
+	"velocity.y += gravity * delta": "Coin ▸ Bullet  Set gravity to gravity"
+}
+
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _recogniser_values() and ok
 	ok = _refusals() and ok
+	ok = _authoring_parity() and ok
 	ok = _opened_rows() and ok
 	ok = _claims() and ok
 	ok = _round_trip() and ok
 	return ok
+
+
+## Gate one and a half: every picker entry writes EXACTLY the arithmetic the reading recognises, so
+## a row dropped from the picker and a line typed by hand are the same bytes and the same sentence.
+static func _authoring_parity() -> bool:
+	var ok: bool = true
+	var context: Dictionary = _context()
+	for ace_id: String in AUTHORING_PARITY:
+		var pair: Array = AUTHORING_PARITY[ace_id]
+		var code: String = _filled_template(ace_id, pair[0])
+		ok = _check("%s writes a line the reading knows" % ace_id, code.is_empty(), false) and ok
+		ok = _check("%s writes \"%s\"" % [ace_id, code],
+			_joined_segments(EventSheetSentence.statement(code, context)), str(pair[1])) and ok
+	for code: String in SHIPPED_ROW_PARITY:
+		ok = _check("a shipped row writes \"%s\"" % code,
+			_joined_segments(EventSheetSentence.statement(code, context)),
+			str(SHIPPED_ROW_PARITY[code])) and ok
+	# Is Within Distance writes the arrival question, and Distance To is the launch-point expression a
+	# range limit is compared against.
+	ok = _check("Is Within Distance writes the arrival question",
+		_joined_segments(EventSheetSentence.condition(
+			"position.distance_to(destination) <= 1.0", context)), "Coin ▸ Move To  Has arrived") and ok
+	ok = _check("Distance To writes the range question",
+		_joined_segments(EventSheetSentence.condition(
+			"position.distance_to(start) > range_px", context)),
+		"Coin ▸ Bullet  Distance travelled > range_px") and ok
+	return ok
+
+
+## One shipped descriptor's own codegen template with its slots filled, as a plain sheet emits it -
+## `{host.}` is empty outside a behavior, which is the spelling a hand-written file has.
+static func _filled_template(ace_id: String, params: Dictionary) -> String:
+	for descriptor: ACEDescriptor in EventForgeBehaviorShapeACEs.get_descriptors():
+		if descriptor.ace_id != ace_id:
+			continue
+		var code: String = descriptor.codegen_template.replace("{host.}", "")
+		for key: Variant in params:
+			code = code.replace("{%s}" % str(key), str(params[key]))
+		return "" if code.contains("{") else code
+	return ""
 
 
 ## Gate two: the whole path. A hand-written file opened as a sheet, walked row by row, so a reading

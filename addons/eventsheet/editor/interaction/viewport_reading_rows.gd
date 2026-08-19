@@ -704,25 +704,14 @@ static func _append_ordered_lines(entry: Variant, lines: PackedStringArray, dept
 			"CallMethod":
 				lines.append("%s.%s(%s)" % [
 					str(params.get("target", "")), str(params.get("method", "")), str(params.get("args", ""))])
-			# T1 / T3 - the steps a behavior shape is MADE of that the importer claims for a shipped
-			# row. Without them the file cannot tell that it is a projectile at all: the step and the
-			# gravity pull are exactly the two lines that say so, and a property write is how a glide
-			# is spelled once the lifter has had it.
-			"MoveBy2D":
-				lines.append("position += %s" % str(params.get("offset", "")))
-			"SetVelocity2D":
-				lines.append("velocity = %s" % str(params.get("vel", "")))
-			"SetPosition2D":
-				lines.append("position = %s" % str(params.get("pos", "")))
-			"ApplyGravitySimple":
-				lines.append("velocity.y += %s * %s" % [
-					str(params.get("gravity", "")), str(params.get("delta_t", "delta"))])
-			"SetProperty":
-				var owner_name: String = str(params.get("target", "")).strip_edges()
-				var member: String = str(params.get("property", "")).strip_edges()
-				if not member.is_empty():
-					lines.append("%s%s = %s" % ["%s." % owner_name if not owner_name.is_empty() else "",
-						member, str(params.get("value", ""))])
+			_:
+				# T1 / T3 / T4 - the steps a behavior shape is MADE of, whether the importer claimed a
+				# typed line for a shipped row or the picker wrote the row outright. Without them the
+				# file cannot tell that it is a projectile at all: the step and the gravity pull are
+				# exactly the two lines that say so.
+				var shaped: String = EventSheetBehaviorShapes.line_for((entry as ACEAction).ace_id, params)
+				if not shaped.is_empty():
+					lines.append(shaped)
 		return
 	if entry is EventRow:
 		# T2 - a `for` the importer lifted lives on a pick filter rather than in any text, so its header

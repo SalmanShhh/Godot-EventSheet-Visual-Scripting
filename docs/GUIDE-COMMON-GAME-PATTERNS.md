@@ -343,6 +343,40 @@ is written in the same words:
 A hand-written script that already does any of this reads as those rows the moment you open it,
 with the exact GDScript still on the hover - and the row the picker drops writes the same bytes
 back, so the two can never drift apart.
+## A hand-rolled behavior, in the behavior's own words
+
+Some of the most common shapes in any project are a behavior that already ships as a pack, written
+out by hand. Those now read as the behavior they are, so a jam script and a sheet that attached the
+pack say the same thing:
+
+- **A projectile is a Bullet.** `velocity = Vector2.RIGHT.rotated(rotation) * speed` reads **Set
+  angle of motion to angle**; `position += velocity * delta` (or `move_and_collide(velocity * delta)`)
+  reads **Move**; `speed += accel * delta` reads **Set speed to speed** *accelerating by accel*;
+  `velocity.y += gravity * delta` reads **Set gravity to gravity**; `velocity.bounce(n)` reads
+  **Bounce off solids**; and `position.distance_to(start) > range_px` reads **Distance travelled >
+  range px**.
+- **A turret is a Turret.** The nearest-in-family loop is claimed as **Acquire nearest enemy within
+  range px**, `if target:` reads **Has target**, and the `lerp_angle` toward the target reads
+  **Rotate toward target at turn rate**.
+- **A glide is Move To.** `position.move_toward(destination, speed * delta)` reads **Move toward
+  destination at speed**, the flag beside it reads **Start moving** / **Is moving** / **Stop**, and
+  the distance check reads **Has arrived**.
+- **Five one-liners name themselves.** **Rotate clockwise at k (degrees per second)**, **Wrap around
+  layout horizontally**, **Bound to layout (inside …)**, **Pin to anchor (position · offset …)** and
+  **Fade out over 1 seconds (then destroy)**.
+
+Each of these claims its pattern on the event that owns it, with the exact source lines as the
+evidence and the pack that could replace the shape - Bullet, Weapon Kit, Move To, Rotate, Wrap,
+Bound To, Pin, Fade. Every ambiguous half is gated on something only a real instance of the shape can
+say: an acceleration reads as a bullet's only in a file that also writes the angle-of-motion line and
+the step, so a lone piece of arithmetic keeps the reading it had.
+
+All of them are authorable in the same words. The picker writes **Set Angle Of Motion**, **Move**,
+**Set Acceleration**, **Bounce Off Solids**, **Distance Travelled**, **Move Toward Position**, **Has
+Arrived**, **Rotate Clockwise**, **Wrap Around Layout Horizontally / Vertically**, **Bound To
+Layout**, **Pin To** and **Pin Angle To** as exactly the lines above, so a dropped row and a typed
+line are the same bytes. Where a pack covers the whole shape, attaching it is the tidier answer, and
+that is what the pattern chip offers first.
 
 ## Where these live
 

@@ -1619,6 +1619,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"animation_player": "Animation-And-Sprites",
 	"array_functional": "Working-With-Lists",
 	"audio": "Sound-And-Music",
+	"behavior_shape": "Making-Things-Move-In-2D",
 	"audio_server": "Sound-And-Music",
 	"camera_fov": "Cameras-Graphics-And-Screenshots",
 	"clipboard": "Copying-Sharing-And-Remembering-Values",

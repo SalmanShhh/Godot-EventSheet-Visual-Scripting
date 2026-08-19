@@ -2644,3 +2644,34 @@ This pack has no knobs to set.,Ce pack n'a aucun réglage.
 No pack here matches that.,Aucun pack ne correspond.
 Reading check,Contrôle de lecture
 Fix:,Corriger :
+Set angle of motion to {angle},Définir l'angle de déplacement à {angle}
+Set speed to {speed},Définir la vitesse à {speed}
+accelerating by,en accélérant de
+Set gravity to {gravity},Définir la gravité à {gravity}
+Bounce off solids,Rebondir sur les obstacles
+Distance travelled {sign} {limit},Distance parcourue {sign} {limit}
+Rotate toward target at {rate},Tourner vers la cible à {rate}
+Has target,A une cible
+Move toward {destination} at {speed},Avancer vers {destination} à {speed}
+Move to position {point},Aller à la position {point}
+Move to position {point} at {speed},Aller à la position {point} à {speed}
+Start moving,Commencer à se déplacer
+Rotate clockwise at {rate} (degrees per second),Tourner dans le sens horaire à {rate} (degrés par seconde)
+Rotate clockwise at {rate} (radians per second),Tourner dans le sens horaire à {rate} (radians par seconde)
+Wrap around layout horizontally,Boucler horizontalement sur la mise en page
+Wrap around layout vertically,Boucler verticalement sur la mise en page
+Bound to layout (inside {low} - {high}),Rester dans la mise en page (entre {low} et {high})
+Pin to {anchor} (position),Fixer à {anchor} (position)
+Pin to {anchor} (position · offset {offset}),Fixer à {anchor} (position · décalage {offset})
+Pin to {anchor} (angle),Fixer à {anchor} (angle)
+Fade out over {seconds} seconds,Disparaître en {seconds} secondes
+Fade out over {seconds} seconds (then destroy),Disparaître en {seconds} secondes (puis détruire)
+Acquire nearest {family} within {range},Cibler le {family} le plus proche dans {range}
+Bullet,Projectile
+Turret,Tourelle
+Move To,Aller à
+Rotate,Rotation
+Wrap,Boucler
+Bound To,Limiter à
+Pin,Fixer
+Fade,Fondu

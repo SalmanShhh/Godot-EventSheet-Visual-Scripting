@@ -59,6 +59,61 @@ const COMPARISON_SIGNS: Dictionary = {" >= ": "≥", " <= ": "≤", " > ": ">", 
 ## it a fade would be a guess.
 const FADE_PROPERTY := "modulate:a"
 
+## T27. The line each shipped ACTION row stands for - both the rows the importer lifts a shape to and
+## the rows the picker writes it as. One table, read by the fact walk (so the file can tell it is a
+## projectile even when every line of it was claimed) and by the row builder (so a picked row reads in
+## the behavior's words). `{slot}` names the row's own params; `{host.}` and `{target}.` come off,
+## which is the spelling a plain sheet emits and a hand-written file has.
+const ACE_LINES: Dictionary = {
+	# The shipped rows a hand-written shape gets lifted to.
+	"MoveBy2D": "position += {offset}",
+	"SetVelocity2D": "velocity = {vel}",
+	"SetPosition2D": "position = {pos}",
+	"ApplyGravitySimple": "velocity.y += {gravity} * {delta_t}",
+	"SetProperty": "{target}.{property} = {value}",
+	# The rows the picker writes each shape as, whose templates ARE these lines.
+	"SetAngleOfMotion": "velocity = Vector2.RIGHT.rotated({angle}) * {speed}",
+	"StepAlongVelocity": "position += velocity * {delta_t}",
+	"AccelerateSpeed": "{speed_var} += {acceleration} * {delta_t}",
+	"BounceOffSolid": "velocity = velocity.bounce({normal})",
+	"GlideToward": "position = position.move_toward({destination}, {speed} * {delta_t})",
+	"RotateClockwise": "rotation_degrees += {degrees_per_second} * {delta_t}",
+	"WrapAroundLayoutX": "position.x = wrapf(position.x, {low}, {high})",
+	"WrapAroundLayoutY": "position.y = wrapf(position.y, {low}, {high})",
+	"BoundToLayout": "position = position.clamp({low}, {high})",
+	"PinToObject": "global_position = {anchor}.global_position + {offset}",
+	"PinAngleToObject": "rotation = {anchor}.rotation"
+}
+
+## T27. The same for the CONDITION rows a shape is asked with.
+const ACE_CONDITION_LINES: Dictionary = {
+	"IsFartherThan": "{a}.distance_to({b}) > {distance}",
+	"HasArrived": "position.distance_to({destination}) < {tolerance}"
+}
+
+
+## T27. The line a row stands for, with its params put back in, or "" when a slot the line needs was
+## never filled - in which case the row is not the shape, and guessing at the missing half would be
+## worse than saying nothing. Longer slot names substitute first, so `{speed_var}` is never eaten by
+## a `{speed}` that happens to share its opening.
+static func line_for(ace_id: String, params: Dictionary, conditions: bool = false) -> String:
+	var table: Dictionary = ACE_CONDITION_LINES if conditions else ACE_LINES
+	if not table.has(ace_id):
+		return ""
+	var code: String = str(table[ace_id])
+	var slots: PackedStringArray = PackedStringArray()
+	for key: Variant in params:
+		slots.append(str(key))
+	slots.sort()
+	slots.reverse()
+	for key: String in slots:
+		code = code.replace("{%s}" % key, str(params[key]))
+	code = code.replace("{delta_t}", "delta")
+	# A write with no receiver is spelled without the dot, which is how the file itself has it.
+	if code.begins_with("."):
+		code = code.substr(1)
+	return "" if code.contains("{") else code
+
 
 ## Everything the readings below need to know about the FILE, merged into the row builder's sentence
 ## context once per rebuild. No single line can answer any of these: whether the file is a bullet at
@@ -80,6 +135,7 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 	var move_destinations: Dictionary = {}
 	var move_speeds: Dictionary = {}
 	var pin_anchors: Dictionary = {}
+	var pin_angle_anchors: Dictionary = {}
 	for line: String in lines:
 		var text: String = line.strip_edges()
 		if text.is_empty() or text.begins_with("#"):
@@ -96,6 +152,9 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 		var pinned: Dictionary = pin_parts(text)
 		if not pinned.is_empty():
 			pin_anchors[str(pinned.get("anchor", ""))] = true
+		var turned: String = pin_angle_anchor(text)
+		if not turned.is_empty():
+			pin_angle_anchors[turned] = true
 	return {
 		"bullet_motion": stepped and not bullet_speeds.is_empty(),
 		"bullet_speeds": bullet_speeds,
@@ -104,6 +163,7 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 		"move_to_speeds": move_speeds,
 		"move_to_flags": move_to_flag_names(lines, move_destinations),
 		"pin_anchors": pin_anchors,
+		"pin_angle_anchors": pin_angle_anchors,
 		"fade_locals": fade_facts(lines).get("seconds", {}),
 		"fade_destroys": fade_facts(lines).get("destroys", {})
 	}
@@ -762,6 +822,11 @@ static func _pin_statement(object_name: String, text: String, context: Dictionar
 	if not pinned.is_empty():
 		var offset: String = str(pinned.get("offset", ""))
 		if offset.is_empty():
+			# A place copied with NO offset is only a pin when the file copies the anchor's angle too:
+			# on its own, `n.position = other.position` is one object put where another one is, and
+			# calling that a behavior would be a guess.
+			if not (context.get("pin_angle_anchors", {}) as Dictionary).has(str(pinned.get("anchor", ""))):
+				return {}
 			return _shape(object_name, CHIP_PIN, "pin", "Pin to {anchor} (position)",
 				{"anchor": [_member_words(str(pinned.get("anchor", ""))), "name"]})
 		return _shape(object_name, CHIP_PIN, "pin", "Pin to {anchor} (position · offset {offset})", {

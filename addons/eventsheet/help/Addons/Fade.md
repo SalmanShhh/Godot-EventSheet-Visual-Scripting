@@ -293,3 +293,20 @@ Leave Free On Faded Out off here, or the player sprite deletes itself on the fir
   before a fade.
 - **A Control fades from its own alpha too** - it works on UI, not just sprites.
 - **Hold Time is only used by Start Fade.** Plain Fade In and Fade Out do not hold.
+
+## Already written it by hand? It reads as this pack
+
+The three lines a fade-out is usually written as -
+
+```gdscript
+var tw = create_tween()
+tw.tween_property(self, "modulate:a", 0.0, 1.0)
+tw.tween_callback(queue_free)
+```
+
+- read as **Fade - Fade out over 1 seconds (then destroy)**. Only a fade to NOTHING counts: a tween
+to half opacity is a tween, and the *(then destroy)* is only said when the chain really does destroy
+the object.
+
+The event wears the pattern chip, whose Adopt behavior offers this pack - which adds the fade IN, the
+hold, **Is Fading**, the **Opacity** expression and the three triggers.

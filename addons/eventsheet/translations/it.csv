@@ -2644,3 +2644,34 @@ This pack has no knobs to set.,Questo pacchetto non ha regolazioni.
 No pack here matches that.,Nessun pacchetto corrisponde.
 Reading check,Controllo di lettura
 Fix:,Correggi:
+Set angle of motion to {angle},Imposta l'angolo di movimento a {angle}
+Set speed to {speed},Imposta la velocità a {speed}
+accelerating by,accelerando di
+Set gravity to {gravity},Imposta la gravità a {gravity}
+Bounce off solids,Rimbalza sugli ostacoli
+Distance travelled {sign} {limit},Distanza percorsa {sign} {limit}
+Rotate toward target at {rate},Ruota verso il bersaglio a {rate}
+Has target,Ha un bersaglio
+Move toward {destination} at {speed},Avanza verso {destination} a {speed}
+Move to position {point},Vai alla posizione {point}
+Move to position {point} at {speed},Vai alla posizione {point} a {speed}
+Start moving,Inizia a muoverti
+Rotate clockwise at {rate} (degrees per second),Ruota in senso orario a {rate} (gradi al secondo)
+Rotate clockwise at {rate} (radians per second),Ruota in senso orario a {rate} (radianti al secondo)
+Wrap around layout horizontally,Avvolgi il layout in orizzontale
+Wrap around layout vertically,Avvolgi il layout in verticale
+Bound to layout (inside {low} - {high}),Resta nel layout (tra {low} e {high})
+Pin to {anchor} (position),Aggancia a {anchor} (posizione)
+Pin to {anchor} (position · offset {offset}),Aggancia a {anchor} (posizione · scostamento {offset})
+Pin to {anchor} (angle),Aggancia a {anchor} (angolo)
+Fade out over {seconds} seconds,Dissolvi in {seconds} secondi
+Fade out over {seconds} seconds (then destroy),Dissolvi in {seconds} secondi (poi distruggi)
+Acquire nearest {family} within {range},Aggancia il {family} più vicino entro {range}
+Bullet,Proiettile
+Turret,Torretta
+Move To,Vai a
+Rotate,Ruota
+Wrap,Avvolgi
+Bound To,Limita a
+Pin,Aggancia
+Fade,Dissolvenza

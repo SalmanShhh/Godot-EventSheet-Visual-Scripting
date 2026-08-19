@@ -2644,3 +2644,34 @@ This pack has no knobs to set.,У этого пака нет настроек.
 No pack here matches that.,Подходящих паков нет.
 Reading check,Проверка чтения
 Fix:,Исправить:
+Set angle of motion to {angle},Задать угол движения {angle}
+Set speed to {speed},Задать скорость {speed}
+accelerating by,с ускорением
+Set gravity to {gravity},Задать гравитацию {gravity}
+Bounce off solids,Отскакивать от препятствий
+Distance travelled {sign} {limit},Пройденное расстояние {sign} {limit}
+Rotate toward target at {rate},Поворачивать к цели со скоростью {rate}
+Has target,Есть цель
+Move toward {destination} at {speed},Двигаться к {destination} со скоростью {speed}
+Move to position {point},Перейти к позиции {point}
+Move to position {point} at {speed},Перейти к позиции {point} со скоростью {speed}
+Start moving,Начать движение
+Rotate clockwise at {rate} (degrees per second),Вращать по часовой стрелке со скоростью {rate} (градусов в секунду)
+Rotate clockwise at {rate} (radians per second),Вращать по часовой стрелке со скоростью {rate} (радиан в секунду)
+Wrap around layout horizontally,Заворачивать по горизонтали макета
+Wrap around layout vertically,Заворачивать по вертикали макета
+Bound to layout (inside {low} - {high}),Держать в макете (внутри {low} - {high})
+Pin to {anchor} (position),Прикрепить к {anchor} (позиция)
+Pin to {anchor} (position · offset {offset}),Прикрепить к {anchor} (позиция · смещение {offset})
+Pin to {anchor} (angle),Прикрепить к {anchor} (угол)
+Fade out over {seconds} seconds,Исчезать за {seconds} секунд
+Fade out over {seconds} seconds (then destroy),Исчезать за {seconds} секунд (затем уничтожить)
+Acquire nearest {family} within {range},Захватить ближайший {family} в радиусе {range}
+Bullet,Снаряд
+Turret,Турель
+Move To,Двигаться к
+Rotate,Вращение
+Wrap,Заворачивание
+Bound To,Ограничение
+Pin,Прикрепление
+Fade,Затухание

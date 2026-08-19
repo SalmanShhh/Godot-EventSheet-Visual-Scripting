@@ -382,3 +382,22 @@ Add Waypoint keeps the in-progress route intact and tacks the new stop on at the
 - **Feed points, not nodes.** Move To Position and Add Waypoint take an `x` and a `y`. Pass a target's `global_position.x` and `global_position.y` (evaluated when you call the action) - the node then heads for that fixed point, it does not keep chasing a moving target on its own.
 - **To chase a moving target, re-issue the order.** Because the destination is a fixed point, call Move To Position again on a timer (or when the target moves) to keep the pursuer tracking a live target.
 - **Speed changes are live but shared.** Set Max Speed, Add To Max Speed, and Subtract From Max Speed all edit the one `max_speed` knob. When you use them for temporary fields or pads, pair each change with its exact opposite on exit so the base speed returns to where it started.
+
+## Already written it by hand? It reads as this pack
+
+A glide written out by hand reads in this pack's words before you attach anything:
+
+| The line in your script | The row it reads as |
+|---|---|
+| `position = position.move_toward(destination, speed * delta)` | Move To - Move toward destination at speed |
+| `destination = p` | Move To - Move to position p at speed |
+| `moving = true` / `moving = false` | Move To - Start moving / Stop |
+| `if moving:` | Move To - Is moving |
+| `position.distance_to(destination) < 1.0` | Move To - Has arrived |
+
+A `lerp` toward the point, or a `direction_to(point) * speed` added to the place, is the same
+sentence. The flag only reads as this behavior's state when the file both raises and lowers it, so an
+ordinary boolean stays an ordinary boolean.
+
+Prefer to keep the lines? The picker writes them: **Move Toward Position**, and the shipped **Is
+Within Distance** row for the arrival question.

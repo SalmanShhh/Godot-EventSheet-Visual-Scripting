@@ -78,6 +78,7 @@ Attach to a node to move it.
 - [Move To](Move-To.md) - move a node to a point or along a path.
 - [Follow Path](Follow-Path.md) - walk a drawn Path2D at a real speed, once, looping or ping-pong, with On Path Finished at the end.
 - [Follow](Follow.md) - chase or trail another node with easing.
+- [Pin](Pin.md) - stick one object to another: position, angle or both, with the offset remembered.
 - [Bullet](Bullet.md) - fire a node in a straight line at a speed and angle.
 - [Sine](Sine.md) - oscillate a property (position, size, angle) on a sine wave.
 - [Orbit](Orbit.md) - circle a node around a centre point.

@@ -811,6 +811,32 @@ read once when the rows are built, and the events that turn out to BE a known pa
 All of it is display only. Nothing a pattern reading decides changes a row, so an opened file still
 saves back byte for byte and the GDScript it compiles to is untouched.
 
+#### A hand-rolled behavior reads with the behavior's own words
+
+The most common shapes of all are a shipped behavior written out by hand, so those read in the
+behavior's vocabulary and their event claims the pack that could replace them:
+
+- **Bullet** - `velocity = Vector2.RIGHT.rotated(rotation) * speed` reads `Set angle of motion to
+  angle`, `position += velocity * delta` reads `Move`, `speed += accel * delta` reads `Set speed to
+  speed accelerating by accel`, `velocity.y += gravity * delta` reads `Set gravity to gravity`,
+  `velocity.bounce(n)` reads `Bounce off solids`, and `position.distance_to(start) > range_px` reads
+  `Distance travelled > range px`.
+- **Turret** - the nearest-in-family loop is claimed as `Acquire nearest enemy within range px` with
+  its own lines as evidence, `if target:` reads `Has target`, and the `lerp_angle` toward the target
+  reads `Rotate toward target at turn rate`.
+- **Move To** - `position.move_toward(destination, speed * delta)` reads `Move toward destination at
+  speed`, the flag beside it reads `Start moving` / `Is moving` / `Stop`, and the distance check
+  reads `Has arrived`.
+- **The one-liners** - `Rotate clockwise at k (degrees per second)`, `Wrap around layout
+  horizontally`, `Bound to layout (inside …)`, `Pin to anchor (position · offset …)` and `Fade out
+  over 1 seconds (then destroy)`.
+
+The same gating applies: an acceleration only reads as a bullet's in a file that ALSO writes the
+angle-of-motion line and the step, a distance only reads as distance travelled when the file declares
+the point it is measured from, and a flag only reads as a glide's state when the file both raises and
+lowers it. And a line the importer lifted to a shipped row is read back through the same shape, so an
+opened file says the same thing before and after the lift.
+
 #### The reading lenses - names you can turn on and off
 
 - **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read

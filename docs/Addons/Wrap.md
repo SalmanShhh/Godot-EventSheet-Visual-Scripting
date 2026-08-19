@@ -220,3 +220,11 @@ On Ready -> P1 | Wrap: Set Custom Wrap Bounds  0, 0, 576, 648
 - **Circle wraps ignore the per-axis toggles** - a circle has no left edge to switch off; the fully-outside test uses the larger half-size.
 - **Bound or Wrap, not both on one axis.** They fight: one clamps at the edge the other
   teleports across.
+
+## Already written it by hand? It reads as this pack
+
+`position.x = wrapf(position.x, 0, screen.x)` reads **Wrap - Wrap around layout horizontally**, and
+the `.y` twin reads *vertically*. `wrapi`, `wrap`, `fmod` and `fposmod` are the same sentence.
+
+The event wears the pattern chip, whose Adopt behavior offers this pack. Prefer the one line? The
+picker's **Wrap Around Layout Horizontally** / **Vertically** write exactly it.

@@ -9889,18 +9889,20 @@ const PATTERN_VOCABULARY: Dictionary = {
 	"bullet": {
 		"words": "Bullet movement written out by hand",
 		"adoptable": "bullet",
-		"ace_ids": ["Core/SetAngleOfMotion", "Core/StepAlongVelocity", "Core/AccelerateSpeed",
-			"Core/ApplyGravitySimple", "Core/BounceOffSolid", "Core/DistanceTravelled"]
+		"ace_ids": ["Core/SetAngleOfMotion", "Core/StepAlongVelocity", "Core/AddVar",
+			"Core/ApplyGravitySimple", "Core/BounceOffSolid", "Core/DistanceTo"]
 	},
+	# The acquire loop has no one-line free action to offer - the Weapon Kit is the whole answer -
+	# so the turret's vocabulary here is the turn, which does.
 	"turret": {
 		"words": "A turret's target, turn and rate of fire",
 		"adoptable": "weapon_kit",
-		"ace_ids": ["Core/AcquireNearestInFamily", "Core/HasTarget", "Core/RotateToward"]
+		"ace_ids": ["Core/RotateToward"]
 	},
 	"move_to": {
 		"words": "Gliding to a point until it arrives",
 		"adoptable": "move_to",
-		"ace_ids": ["Core/GlideToward", "Core/HasArrived"]
+		"ace_ids": ["Core/GlideToward", "Core/IsWithinDistance"]
 	},
 	"rotate": {
 		"words": "A constant spin",
@@ -9910,7 +9912,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 	"wrap": {
 		"words": "Wrapping around the layout edges",
 		"adoptable": "wrap",
-		"ace_ids": ["Core/WrapAroundLayout"]
+		"ace_ids": ["Core/WrapAroundLayoutX", "Core/WrapAroundLayoutY"]
 	},
 	"bound": {
 		"words": "Held inside the layout edges",
@@ -9922,10 +9924,12 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"adoptable": "pin",
 		"ace_ids": ["Core/PinToObject", "Core/PinAngleToObject"]
 	},
+	# A fade is a tween chain rather than one line, so the pack is the whole answer and there is no
+	# single free action to name beside it.
 	"fade": {
 		"words": "Fading out, then destroyed",
 		"adoptable": "fade",
-		"ace_ids": ["Core/FadeOutOverSeconds"]
+		"ace_ids": []
 	}
 }
 
@@ -10156,56 +10160,21 @@ var _sentence_context_sheet: Resource = null
 var _sentence_context_cache: Dictionary = {}
 
 
-## T1 / T3. The lines the shipped rows a behavior shape gets LIFTED to stand for, so the shape can be
-## re-read off a picked row exactly as it is off a typed one. `{slot}` names the row's own params.
-## Only rows whose shape a behavior owns are listed: everything else keeps the reading it has.
-const BEHAVIOR_SHAPE_ACE_LINES: Dictionary = {
-	"MoveBy2D": "position += {offset}",
-	"SetVelocity2D": "velocity = {vel}",
-	"ApplyGravitySimple": "velocity.y += {gravity} * {delta_t}",
-	"SetProperty": "{target}.{property} = {value}"
-}
-
-## T1. The same for the one CONDITION a behavior shape is lifted to.
-const BEHAVIOR_SHAPE_CONDITION_LINES: Dictionary = {
-	"IsFartherThan": "{a}.distance_to({b}) > {distance}"
-}
-
-
-## T1 / T3. The behavior-shape reading of a LIFTED row, or {} when no shape claims it. The row's
-## params are put back into the line the row stands for and read through the shape grammar, which is
-## the same text a user who never let the importer touch the file would have.
+## T1 / T3 / T4 / T27. The behavior-shape reading of a ROW - whether the importer lifted a typed line
+## into it or the picker wrote it. The row's params are put back into the line the row stands for and
+## read through the shape grammar, which is the same text a user who never let the importer touch the
+## file would have. {} when no shape claims it, and the row keeps the reading it already had.
 func behavior_shape_action_sentence(ace_id: String, params_dict: Dictionary,
 		context: Dictionary) -> Dictionary:
-	if not BEHAVIOR_SHAPE_ACE_LINES.has(ace_id):
-		return {}
-	var code: String = _behavior_shape_line(str(BEHAVIOR_SHAPE_ACE_LINES[ace_id]), params_dict)
+	var code: String = EventSheetBehaviorShapes.line_for(ace_id, params_dict)
 	return {} if code.is_empty() else EventSheetBehaviorShapes.statement(code, context)
 
 
-## T1. The behavior-shape reading of a lifted CONDITION row, or {} when no shape claims it.
+## T1 / T3. The same for a CONDITION row.
 func behavior_shape_condition_sentence(ace_id: String, params_dict: Dictionary,
 		context: Dictionary) -> Dictionary:
-	if not BEHAVIOR_SHAPE_CONDITION_LINES.has(ace_id):
-		return {}
-	var code: String = _behavior_shape_line(str(BEHAVIOR_SHAPE_CONDITION_LINES[ace_id]), params_dict)
+	var code: String = EventSheetBehaviorShapes.line_for(ace_id, params_dict, true)
 	return {} if code.is_empty() else EventSheetBehaviorShapes.condition(code, context)
-
-
-## One line rebuilt from a row's params, or "" when a slot the line needs is empty - in which case
-## the row is not the shape, and guessing at the missing half would be worse than saying nothing.
-## A receiver-less write (`{target}` empty) loses its dot, which is the spelling the file itself has.
-func _behavior_shape_line(template: String, params_dict: Dictionary) -> String:
-	var code: String = template
-	for key: Variant in params_dict:
-		code = code.replace("{%s}" % str(key), str(params_dict[key]))
-	code = code.replace("{delta_t}", "delta")
-	# A write with no receiver is spelled without the dot, which is how the file itself has it.
-	if code.begins_with("."):
-		code = code.substr(1)
-	if code.contains("{"):
-		return ""
-	return code
 
 
 ## The shared-grammar reading of an ACE ACTION whose shape a hand-written line can also have, or {}
