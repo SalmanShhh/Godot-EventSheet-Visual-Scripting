@@ -379,6 +379,7 @@ func build(root: Node) -> void:
 	# everything about one handoff in one window.
 	tools_popup.add_item("Translation Studio…", 21)
 	tools_popup.add_item("Lift Report…", 12)
+	tools_popup.add_item("Addon manager…", 23)
 	tools_popup.add_separator()
 	tools_popup.add_item("Welcome…", 13)
 	tools_popup.add_item("Start the Tour…", 17)
@@ -410,7 +411,9 @@ func build(root: Node) -> void:
 			20: _dock._report_issue()
 			21: _dock._open_translation_studio()
 			14: _dock._run_diagnostics_action()
+			23: _dock.open_addon_manager()
 	)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(23), "Every installed pack with its version: enable or disable one, read its guide, check for updates, import a pack from a .zip or a URL, or publish yours.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(22), "The Manual: the tutorials, the guides, and a reference page for every object and behavior. F1 opens help for whatever is selected; Ctrl+F1 reopens the page you were reading.")
 	# The dot: a reader who has not opened What's new since the plugin's version changed gets a mark
 	# on the Manual entry, and it comes off the moment they read it. Re-asked every time the menu
@@ -427,6 +430,20 @@ func build(root: Node) -> void:
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")
 	_toolbar.add_child(tools_menu)
+	# Settings ▾ - the choices that are the reader's, not the project's. Words is the first: the
+	# whole vocabulary the sheet lets you choose, on one page.
+	var settings_menu: MenuButton = MenuButton.new()
+	settings_menu.text = "Settings"
+	settings_menu.tooltip_text = "Your own choices, stored with the editor settings rather than the project."
+	settings_menu.flat = false
+	var settings_popup: PopupMenu = settings_menu.get_popup()
+	settings_popup.add_item("Words…", 0)
+	settings_popup.set_item_tooltip(settings_popup.get_item_index(0), "Every word the sheet lets you choose, on one page, with a live preview of an event in them.")
+	settings_popup.id_pressed.connect(func(id: int) -> void:
+		match id:
+			0: _dock.open_words_settings()
+	)
+	_toolbar.add_child(settings_menu)
 	_add_toolbar_separator(_toolbar)
 	# Simple Mode as a persistent, visible pill (not only a buried View-menu check): the audience
 	# flag should be one glance to read and one click to flip.

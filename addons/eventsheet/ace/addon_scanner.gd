@@ -26,6 +26,14 @@ static func list_addon_scripts() -> Array[String]:
 	var scripts: Array[String] = []
 	for root in ADDON_DIRS:
 		_collect_scripts(root, scripts)
+	# A pack switched off in the Addon manager leaves the scan entirely, which is what takes its
+	# actions out of the picker. Its files stay on disk and its sheets still open - only the
+	# vocabulary goes, and the Doctor names any sheet still using it.
+	var enabled_only: Array[String] = []
+	for script_path: String in scripts:
+		if not EventSheetPackCatalog.is_disabled_path(script_path):
+			enabled_only.append(script_path)
+	scripts = enabled_only
 	scripts.sort()
 	_listing_cache = scripts
 	_listing_cache_key = key
@@ -53,6 +61,10 @@ static func _listing_key() -> String:
 				parts.append("%s|%d" % [sub, FileAccess.get_modified_time(sub)])
 			entry = dir.get_next()
 		dir.list_dir_end()
+	# Switching a pack off changes the listing without touching a directory's mtime, so the
+	# disabled set is part of the key - otherwise the picker kept the pack's actions until the
+	# next unrelated file change.
+	parts.append("disabled|%s" % ",".join(EventSheetPackCatalog.disabled_packs()))
 	return "
 ".join(parts)
 
