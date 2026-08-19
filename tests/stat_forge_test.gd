@@ -113,7 +113,7 @@ static func run() -> bool:
 	all_passed = _check("doc-comment-first functions keep @ace_action",
 		emitted.contains("## @ace_name(\"Add Buff\")"), true) and all_passed
 	all_passed = _check("doc comments fold into @ace_description",
-		emitted.contains("## @ace_description(\"The one verb that runs the whole system"), true) and all_passed
+		emitted.contains("## @ace_description(\"The one action that runs the whole system"), true) and all_passed
 	# The dropdowns are labeled now: the token still drives the math, but the author reads English
 	# instead of guessing what "override" does to a stat before picking it.
 	all_passed = _check("param options survive emission (mode dropdown)",

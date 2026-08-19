@@ -104,6 +104,10 @@ func refresh() -> void:
 	_table.add_child(grid)
 	var packs: Array[Dictionary] = EventSheetPackCatalog.packs()
 	for pack: Dictionary in packs:
+		# The reading score is what the check promised the manager would show. It is cached on
+		# each pack file's own mtime, so the sweep costs once per change rather than once per open.
+		pack["reads_percent"] = int(EventSheetPackReadingCheck.check_script(
+			str(pack.get("path", ""))).get("percent", 100))
 		_add_row(grid, pack)
 	if packs.is_empty():
 		_table.add_child(EventSheetPopupUI.hint_label(
