@@ -150,6 +150,24 @@ static func unused_count(sheet: EventSheetResource) -> int:
 	return counted
 
 
+## The card's short form, for a place that lists MANY sheets and must not load any of them: the
+## file's own note, then how many events it has and how its tests last went. Text reads only - the
+## Project bar hovers with this, and the Start page's Recent list carries it as its second line.
+static func brief_for_path(path: String, note: String = "") -> String:
+	var lines: PackedStringArray = PackedStringArray()
+	if not note.strip_edges().is_empty():
+		lines.append(note.strip_edges())
+	var events: int = EventSheetSceneEvents.trigger_ids_of(path).size()
+	if events == 1:
+		lines.append(EventSheetL10n.translate("1 event"))
+	elif events > 1:
+		lines.append(EventSheetL10n.translate("%d events") % events)
+	var result: String = last_test_result(path)
+	if not result.is_empty():
+		lines.append(_result_words(result))
+	return "\n".join(lines)
+
+
 # ── the last run ──────────────────────────────────────────────────────────────────────────────
 
 

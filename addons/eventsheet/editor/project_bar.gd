@@ -192,7 +192,10 @@ func _add_entry_item(parent_item: TreeItem, entry: Dictionary) -> TreeItem:
 		item.set_tooltip_text(0, EventSheetL10n.translate(
 			"The last Project Doctor run had something to say about this one."))
 	else:
-		item.set_tooltip_text(0, str(entry.get("note", "")))
+		# V20 - the health card's short form on hover, where a sheet is picked. Text reads only:
+		# a bar listing a whole project must never load a sheet to hover one.
+		item.set_tooltip_text(0, EventSheetHealthCard.brief_for_path(
+			str(entry.get("path", "")), str(entry.get("note", ""))))
 	item.set_metadata(0, entry)
 	return item
 
