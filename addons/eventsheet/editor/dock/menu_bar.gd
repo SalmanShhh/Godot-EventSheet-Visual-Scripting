@@ -44,9 +44,9 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(7),
 		"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency - proof you can leave the addon anytime."
 	)
-	sheet_popup.add_item("Import event sheet…", 17)
+	sheet_popup.add_item("Import event sheet…", 18)
 	sheet_popup.set_item_tooltip(
-		sheet_popup.get_item_index(17),
+		sheet_popup.get_item_index(18),
 		"Bring a sheet over from another event-sheet editor. Pick the project it saved or one exported sheet, say which node each object became, and see exactly what came across - every row the vocabulary knows becomes the row that says the same thing, and every row it does not arrives switched off with its own words beside it. Nothing is written until you choose Save as…"
 	)
 	sheet_popup.add_item("Save as Text…", 16)
@@ -59,7 +59,7 @@ func build(root: Node) -> void:
 	# V11 - a shared sheet is a script whose whole job is to be included. The wiring question
 	# ("as a base class" / "as a helper") is asked ONCE, when the shared sheet is made, and never
 	# again per includer.
-	sheet_popup.add_item("New shared sheet…", 17)
+	sheet_popup.add_item("New shared sheet…", 19)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(17),
 		"Write events once and include them in many scripts. You choose here how it is wired: as a base class (the including script extends it) or as a helper (the including script keeps one of it and forwards its triggers to it)."
@@ -122,9 +122,9 @@ func build(root: Node) -> void:
 			11: _dock._open_inspector_designer()
 			12: _dock._starter._new_sheet_from_template(10)
 			13: _dock._new_resource_wizard.open()
-			17: _dock._import_sheet_wizard.open()
+			18: _dock._import_sheet_wizard.open()
 			16: _dock._save_sheet_as_text_requested()
-			17: _dock._shared_sheets.open_new_shared_sheet()
+			19: _dock._shared_sheets.open_new_shared_sheet()
 	)
 	_toolbar.add_child(sheet_menu)
 	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
