@@ -14,6 +14,10 @@ signal asset_dropped(target_event: Resource, asset_paths: PackedStringArray)
 ## landed in an existing event's action lane, which is what turns "start an event on it" into "do
 ## something to it here".
 signal object_bar_dropped(object_label: String, target_event: Resource, on_action_lane: bool)
+
+## R23 - an Input Map action dragged off the bar's INPUT section and dropped on the canvas: the sheet
+## starts an "On <action> pressed" event for it, after the event it landed on.
+signal input_action_dropped(action_name: String, target_event: Resource)
 signal ace_picker_requested(row_data: EventRowData, lane: String)
 signal span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String)
 signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
@@ -4005,7 +4009,7 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	# Q12 - an object dragged off the Object bar is welcome anywhere on the canvas: that drag IS how
 	# an event sheet starts using an object, and where it lands decides whether it opens Add condition
 	# (empty canvas or an event's own band) or Add action (an existing event's action lane).
-	if is_object_bar_drag(data):
+	if is_object_bar_drag(data) or is_input_action_drag(data):
 		return true
 	# A scene-tree node dragged ONTO a condition/action param VALUE → fill that param with the node
 	# reference, but only when the param can hold one (not a plain number/bool cell), so the cursor reads
@@ -4022,6 +4026,14 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
+	# R23 - an Input Map action dropped on the canvas starts the event it is for: "On <action>
+	# pressed". Where it lands only decides where the new event goes.
+	if is_input_action_drag(data):
+		var action_row_index: int = _find_row_index_at_y(at_position.y)
+		var action_row: EventRowData = _row_at(action_row_index) if action_row_index >= 0 else null
+		input_action_dropped.emit(str((data as Dictionary).get("label", "")),
+			action_row.source_resource if action_row != null else null)
+		return
 	# Q12 - an object dropped from the Object bar. Landing on an existing event's ACTION lane means
 	# "do something to it here"; landing anywhere else means "start an event on it".
 	if is_object_bar_drag(data):
@@ -4076,6 +4088,16 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if source_objects[0] is Node:
 		source_label = (source_objects[0] as Node).name
 	ace_preview_requested.emit(source_label, definitions)
+
+
+## True for an Input Map action dragged off the bar's INPUT section
+## ({type: "eventsheet_input_action", label}).
+static func is_input_action_drag(data: Variant) -> bool:
+	if not (data is Dictionary):
+		return false
+	var payload: Dictionary = data
+	return str(payload.get("type", "")) == EventSheetObjectsPanel.DRAG_TYPE_INPUT_ACTION \
+		and not str(payload.get("label", "")).strip_edges().is_empty()
 
 
 ## True for the Object bar's own drag payload ({type: "eventsheet_object", label}).

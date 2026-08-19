@@ -2149,3 +2149,22 @@ line %d,Zeile %d
 This is a read-only preview - press Edit Events to change the file.,"Dies ist eine schreibgeschützte Vorschau - klicken Sie auf Ereignisse bearbeiten, um die Datei zu ändern."
 Static %s,Statisch %s
 shared by every %s,von jedem %s geteilt
+INPUT,EINGABE
+drag one onto the sheet to start an event,"eine auf das Blatt ziehen, um ein Ereignis zu beginnen"
+not in the Input Map,nicht in der Eingabezuordnung
+unbound,nicht belegt
+"""%s"" is not in the Input Map","""%s"" ist nicht in der Eingabezuordnung"
+this script uses 1 action,dieses Skript nutzt 1 Aktion
+this script uses %d actions,dieses Skript nutzt %d Aktionen
+Project ▸ Input Map,Projekt ▸ Eingabezuordnung
+Input,Eingabe
+acceleration,Beschleunigung
+gravity,Schwerkraft
+rotation rate,Drehrate
+magnetic field,Magnetfeld
+gamepad count,Gamepad-Anzahl
+connected gamepads,verbundene Gamepads
+axis {axis} of gamepad {device},Achse {axis} von Gamepad {device}
+name of gamepad {device},Name von Gamepad {device}
+gamepad {device} is recognized,Gamepad {device} ist erkannt
+Is button down {action} (exact match),Taste {action} gedrückt (exakte Übereinstimmung)

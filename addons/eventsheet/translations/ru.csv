@@ -2149,3 +2149,22 @@ line %d,строка %d
 This is a read-only preview - press Edit Events to change the file.,"Это предварительный просмотр только для чтения - нажмите «Редактировать события», чтобы изменить файл."
 Static %s,Статическое %s
 shared by every %s,общее для каждого %s
+INPUT,ВВОД
+drag one onto the sheet to start an event,"перетащите на лист, чтобы начать событие"
+not in the Input Map,нет в карте ввода
+unbound,не назначено
+"""%s"" is not in the Input Map","""%s"" нет в карте ввода"
+this script uses 1 action,этот скрипт использует 1 действие
+this script uses %d actions,этот скрипт использует %d действий
+Project ▸ Input Map,Проект ▸ Карта ввода
+Input,Ввод
+acceleration,ускорение
+gravity,гравитация
+rotation rate,скорость вращения
+magnetic field,магнитное поле
+gamepad count,число геймпадов
+connected gamepads,подключённые геймпады
+axis {axis} of gamepad {device},ось {axis} геймпада {device}
+name of gamepad {device},имя геймпада {device}
+gamepad {device} is recognized,геймпад {device} распознан
+Is button down {action} (exact match),Кнопка {action} нажата (точное совпадение)

@@ -2149,3 +2149,22 @@ line %d,riga %d
 This is a read-only preview - press Edit Events to change the file.,Questa è un'anteprima di sola lettura: premi Modifica eventi per cambiare il file.
 Static %s,Statico %s
 shared by every %s,condiviso da ogni %s
+INPUT,INGRESSO
+drag one onto the sheet to start an event,trascinane una sul foglio per iniziare un evento
+not in the Input Map,non è nella mappa input
+unbound,non assegnato
+"""%s"" is not in the Input Map","""%s"" non è nella mappa input"
+this script uses 1 action,questo script usa 1 azione
+this script uses %d actions,questo script usa %d azioni
+Project ▸ Input Map,Progetto ▸ Mappa input
+Input,Ingresso
+acceleration,accelerazione
+gravity,gravità
+rotation rate,velocità di rotazione
+magnetic field,campo magnetico
+gamepad count,numero di gamepad
+connected gamepads,gamepad collegati
+axis {axis} of gamepad {device},asse {axis} del gamepad {device}
+name of gamepad {device},nome del gamepad {device}
+gamepad {device} is recognized,il gamepad {device} è riconosciuto
+Is button down {action} (exact match),Pulsante {action} premuto (corrispondenza esatta)

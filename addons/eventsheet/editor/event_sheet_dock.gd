@@ -4320,6 +4320,40 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 	add_row_for_object(object_label, on_action_lane)
 
 
+## R23 - an Input Map action dragged off the bar's INPUT section and dropped on the canvas. An action
+## is not an object: there is exactly one thing a reader means by dropping "jump" on a sheet, so this
+## writes that event outright instead of opening the picker. It lands after the event it was dropped
+## on, or at the end when it was dropped on empty canvas.
+func apply_input_action_drop(action_name: String, target_event: Resource) -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	var clean: String = action_name.strip_edges()
+	if clean.is_empty():
+		return
+	var changed: bool = _perform_undoable_sheet_edit("Add Input Action Event", func() -> bool:
+		return _insert_input_action_event(clean, target_event))
+	if changed:
+		_set_status("Added On %s pressed." % clean)
+
+
+## The event the drop writes: the sheet's own "On <action> pressed" condition, nothing else, so what
+## lands is exactly what the picker's Add condition would have produced.
+func _insert_input_action_event(action_name: String, target_event: Resource) -> bool:
+	var event_row: EventRow = EventRow.new()
+	var pressed: ACECondition = ACECondition.new()
+	pressed.provider_id = "Core"
+	pressed.ace_id = "IsActionJustPressed"
+	pressed.codegen_template = "Input.is_action_just_pressed(&{action})"
+	pressed.params = {"action": "\"%s\"" % action_name}
+	event_row.conditions.append(pressed)
+	var at: int = _current_sheet.events.find(target_event)
+	if at >= 0:
+		_current_sheet.events.insert(at + 1, event_row)
+	else:
+		_current_sheet.events.append(event_row)
+	return true
+
+
 ## Q1 - open the file that says what an object IS, as a sheet. Goes through the same navigation the
 ## Include bar's "open as a sheet" uses, so Alt+Left walks back the way a reader expects.
 func open_object_file_as_sheet(script_path: String) -> void:

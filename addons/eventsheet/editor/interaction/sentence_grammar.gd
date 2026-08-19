@@ -43,6 +43,9 @@ const OBJECT_AUDIO := "Audio"
 ## Same split the object bar draws, so a reader looks for the row under the object they associate
 ## with it.
 const OBJECT_GAMEPAD := "Gamepad"
+## R26 / R29. Fingers, gestures and the handheld sensors are the event-sheet Touch object's, the same
+## object its On touch start and Compare acceleration rows already live under.
+const OBJECT_TOUCH := "Touch"
 ## N7. Saving, files and JSON belong to three objects of their own - Local Storage, JSON and AJAX.
 ## Hand-written ConfigFile / JSON / FileAccess code reads under the same three names, so the rows a
 ## reader already recognises are the rows they see here.
@@ -192,6 +195,32 @@ const RECEIVER_IDIOMS: Dictionary = {
 	# N9 - the analogue reads belong to the pad
 	"Input.get_action_strength": "strength of {0}",
 	"Input.get_action_raw_strength": "raw strength of {0}"
+}
+
+## R24. The Gamepad object's axis names, by the constant a line writes. Used by the controls block at
+## the end of this file.
+const CONTROLS_AXIS_WORDS: Dictionary = {
+	"JOY_AXIS_LEFT_X": "Left analog X",
+	"JOY_AXIS_LEFT_Y": "Left analog Y",
+	"JOY_AXIS_RIGHT_X": "Right analog X",
+	"JOY_AXIS_RIGHT_Y": "Right analog Y",
+	"JOY_AXIS_TRIGGER_LEFT": "Left trigger",
+	"JOY_AXIS_TRIGGER_RIGHT": "Right trigger"
+}
+
+## R29. The four sensors a handheld device has, in the Touch object's words. They are whole
+## expressions with nothing to fill in, which is why they are a plain table rather than an idiom.
+const CONTROLS_SENSOR_WORDS: Dictionary = {
+	"Input.get_accelerometer()": "acceleration",
+	"Input.get_gravity()": "gravity",
+	"Input.get_gyroscope()": "rotation rate",
+	"Input.get_magnetometer()": "magnetic field"
+}
+
+## R25. The whole-expression reads about the gamepads themselves.
+const CONTROLS_GAMEPAD_WORDS: Dictionary = {
+	"Input.get_connected_joypads().size()": "gamepad count",
+	"Input.get_connected_joypads()": "connected gamepads"
 }
 
 ## M43. The measurements whose reading depends on WHERE they are measured from: `position.distance_to(b)`
@@ -701,6 +730,11 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var trimmed: String = text.strip_edges()
 	if trimmed.is_empty():
 		return trimmed
+	# R24 / R25 / R29 - a whole controls read (a stick, a gamepad's name, a sensor) is one settled
+	# phrase, ahead of the general call rewriting which would only take its arguments apart.
+	var controls_value: String = controls_expression(trimmed)
+	if not controls_value.is_empty():
+		return controls_value
 	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
 	# M31 before the call rewriting: a join is decided by the WHOLE expression's shape (is any part of
 	# it text?), which the innermost-first call pass would have already taken apart.
@@ -1837,6 +1871,13 @@ static func value_object(expression: String) -> String:
 		return OBJECT_STORAGE
 	if text.begins_with("Input.get_action_strength(") or text.begins_with("Input.get_action_raw_strength("):
 		return OBJECT_GAMEPAD
+	# R29 - a sensor is the phone's, and the sheet's phone is the Touch object.
+	if CONTROLS_SENSOR_WORDS.has(text):
+		return OBJECT_TOUCH
+	# R24 / R25 - the sticks and the pads themselves belong to the Gamepad object.
+	if text.begins_with("Input.get_joy_") or text.begins_with("Input.is_joy_") \
+			or text.begins_with("Input.get_connected_joypads"):
+		return OBJECT_GAMEPAD
 	if text.begins_with("Input."):
 		return OBJECT_KEYBOARD
 	return ""
@@ -2645,6 +2686,11 @@ static func _chance_condition(text: String) -> Dictionary:
 
 
 static func _input_condition(text: String) -> Dictionary:
+	# R24 - the exact-match spelling carries a second argument, so it is claimed before the one-argument
+	# reads below ever see it.
+	var controls: Dictionary = controls_condition(text)
+	if not controls.is_empty():
+		return controls
 	for method: String in ["is_action_pressed", "is_action_just_pressed"]:
 		var head: String = "Input.%s(" % method
 		if not text.begins_with(head) or not text.ends_with(")"):
@@ -3552,3 +3598,69 @@ static func input_action_object(action_value: String) -> String:
 	if pad_only:
 		return OBJECT_GAMEPAD
 	return OBJECT_KEYBOARD
+
+
+# ── R24-R29 - the controls block: analog, gamepads by number, sensors ────────────────────────────
+#
+# Everything here reads a value or a check the Gamepad and Touch objects already have a sentence for.
+# The rest of the input vocabulary (rebinding, simulated input, the pointer, the gesture branches)
+# reads through its own ACEs, whose templates are the exact bytes hand-written Godot writes - so the
+# importer lifts them and the row shows the sentence without a word of grammar here.
+#
+# Kept in one block, with its own tables, so it can be read and changed as one thing.
+
+
+## A value expression in the controls vocabulary, "" when it is not one. Whole-expression shapes only:
+## a fragment of a bigger sum is rewritten by the ordinary call pass, which already leaves what it
+## does not recognise alone.
+static func controls_expression(text: String) -> String:
+	var trimmed: String = text.strip_edges()
+	if CONTROLS_SENSOR_WORDS.has(trimmed):
+		return translate(str(CONTROLS_SENSOR_WORDS[trimmed]))
+	if CONTROLS_GAMEPAD_WORDS.has(trimmed):
+		return translate(str(CONTROLS_GAMEPAD_WORDS[trimmed]))
+	var call: Dictionary = call_parts(trimmed)
+	if call.is_empty() or str(call.get("target", "")) != "Input":
+		return ""
+	var method: String = str(call.get("method", ""))
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	# The stick read, in the Gamepad object's own words for the axis and with the device read as the
+	# gamepad number the sheet counts from 0.
+	if method == "get_joy_axis" and arguments.size() == 2:
+		var axis_words: String = controls_axis_words(arguments[1])
+		if axis_words.is_empty():
+			return ""
+		return _fill(translate("axis {axis} of gamepad {device}"),
+			{"axis": axis_words, "device": arguments[0].strip_edges()})
+	if method == "get_joy_name" and arguments.size() == 1:
+		return _fill(translate("name of gamepad {device}"), {"device": arguments[0].strip_edges()})
+	if method == "is_joy_known" and arguments.size() == 1:
+		return _fill(translate("gamepad {device} is recognized"), {"device": arguments[0].strip_edges()})
+	return ""
+
+
+## The Gamepad object's word for an axis constant, "" when the line names something computed (which
+## has no word to print).
+static func controls_axis_words(constant: String) -> String:
+	var bare: String = constant.strip_edges()
+	return str(CONTROLS_AXIS_WORDS.get(bare, "")) if CONTROLS_AXIS_WORDS.has(bare) else ""
+
+
+## The controls conditions the ordinary input reading does not claim. Today that is the exact-match
+## spelling: `Input.is_action_pressed("accelerate", true)` carries a second argument the input path
+## refuses, and the bare `true` is the one flag in this vocabulary that means nothing to a reader
+## until it is spelled out.
+static func controls_condition(text: String) -> Dictionary:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("target", "")) != "Input":
+		return {}
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	if str(call.get("method", "")) != "is_action_pressed" or arguments.size() != 2:
+		return {}
+	if arguments[1].strip_edges() != "true":
+		return {}
+	var shown: String = strip_action_name(arguments[0])
+	if shown.is_empty():
+		return {}
+	return _sentence(OBJECT_GAMEPAD, "Is button down {action} (exact match)",
+		{"action": [shown, "value"]})

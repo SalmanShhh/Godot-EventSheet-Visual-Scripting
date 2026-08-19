@@ -401,6 +401,30 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   double-click anywhere on it, the `Else` row included, opens that one line's editor. A ternary inside a
   `func(...)` lambda is left alone - its body is a scope of its own, so hoisting a branch out of it would
   move when that branch runs.
+- **The Input Map is an object, and the file says which controls it uses.** An opened script that names
+  any control grows an **Input** head bar - `this script uses 4 actions - jump, move left, move right,
+  fire - Project ▸ Input Map` - and one line per control inside it saying what that control is bound to
+  in the sheet's own spelling: `jump  Space · A button · Up`, `fire  Left mouse button · Right trigger`.
+  The Object bar carries the same list in an **INPUT** section. Bindings come from `project.godot`, and
+  nothing is written on a read. A control the script names that the Input Map does not have wears a ⚠ in
+  both places and gets a Doctor warning naming the fix - that is the typo every beginner makes, and until
+  now it compiled, printed nothing, and simply never fired. Drag a control off the bar onto the canvas
+  and the sheet writes its `On <action> pressed` event.
+- **Analog reads in the Gamepad object's words.** `Input.get_joy_axis(0, JOY_AXIS_LEFT_X)` reads
+  `axis Left analog X of gamepad 0`, `Input.get_joy_name(0)` reads `name of gamepad 0`, and
+  `Input.get_connected_joypads().size()` reads `gamepad count`. The stick names are the Gamepad object's
+  own (Left analog X / Y, Right analog X / Y, Left trigger, Right trigger), so a typed line and a picked
+  row say the same thing, and the exact-match spelling `Input.is_action_pressed("accelerate", true)`
+  reads `Is button down "accelerate" (exact match)` rather than leaving a bare `true` on the row.
+- **Gamepads by number, and the per-player conventions.** `event.device == 1` inside a joypad-button
+  branch is the gamepad NUMBER the sheet already counts from 0, so a local-multiplayer script reads
+  `On gamepad 1 button A pressed` instead of arithmetic. The two naming conventions a two-player project
+  uses - `p2_jump` and `jump_2` - both read as `jump` on gamepad 1 and group under that pad.
+- **Handheld sensors read on the Touch object.** `Input.get_accelerometer()` reads `acceleration`,
+  `get_gravity()` reads `gravity`, `get_gyroscope()` reads `rotation rate` and `get_magnetometer()` reads
+  `magnetic field`. A `var a = Input.get_accelerometer()` is a Local variable row followed by
+  `System ▸ Set a to acceleration` - one action per row, never a bare `Local a = ...` cell. They all
+  report 0 on desktop, and every one of them says so.
 - **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
   as words (`_coyote_timer` -> `coyote timer`, a knob with its Inspector capitalisation), property chains
   read possessively (`host's velocity X`), NOT is the red ✕ in the icon column, the host and any `$Node` /
@@ -542,6 +566,11 @@ is instantiated to answer a question.
 <img src="images/objects-rail.png" alt="The Object bar: a header naming the scene and the used/more counts, a filter box, an open USED IN THIS SHEET section listing Player, Sprite2D and Health with per-object row counts, and collapsed ALSO IN THE SCENE and GLOBALS AND FAMILIES sections." width="420">
 
 <img src="images/object-popup.png" alt="Object properties for Player: type CharacterBody2D, its instance variables, its functions with their inputs, its triggers, the Health behavior with the value the scene set on it, and its families, above Add condition, Add action and the three navigation buttons." width="560">
+
+The Object bar's **INPUT** section and the **Input** head bar, on a script that reads four controls -
+three the project has, and one it does not:
+
+<img src="images/input-object-bar.png" alt="The Object bar's INPUT section listing ui_left with the bindings Left and A, ui_right with Right and D, ui_accept with Enter and Kp Enter, and a warning-marked dash reading 'not in the Input Map'; beside it the sheet's Input head bar saying 'this script uses 4 actions - ui_left, ui_right, ui_accept, dash - Project, Input Map' followed by each control's bindings, and the rows below reading Keyboard On ui_accept pressed, Keyboard dash is down and Gamepad On button A pressed." width="900">
 
 ### A whole scene, read in one place
 
