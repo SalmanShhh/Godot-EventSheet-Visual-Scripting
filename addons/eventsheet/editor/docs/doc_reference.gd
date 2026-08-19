@@ -36,10 +36,12 @@ const KIND_LEGEND := "legend"
 const KIND_WHATS_NEW := "whatsnew"
 const KIND_TUTORIALS := "tutorials"
 const KIND_TUTORIAL := "tutorial"
+const KIND_PATTERNS := "patterns"
+const KIND_PATTERN := "pattern"
 
 ## The kinds a "reference:" id may name, so an unknown one fails loudly instead of drawing blank.
 const KINDS: Array[String] = [KIND_SECTION, KIND_PACK, KIND_CLASS, KIND_GLOSSARY, KIND_LEGEND,
-	KIND_WHATS_NEW, KIND_TUTORIALS, KIND_TUTORIAL]
+	KIND_WHATS_NEW, KIND_TUTORIALS, KIND_TUTORIAL, KIND_PATTERNS, KIND_PATTERN]
 
 ## What the reading surface is called, everywhere the reader can see it. An event sheet's
 ## documentation is its Manual, and every crumb trail starts here.
@@ -127,8 +129,10 @@ static func has_page(doc_id_text: String) -> bool:
 		return false
 	var name: String = str(route.get("name", ""))
 	match str(route.get("kind", "")):
-		KIND_LEGEND, KIND_WHATS_NEW, KIND_TUTORIALS:
+		KIND_LEGEND, KIND_WHATS_NEW, KIND_TUTORIALS, KIND_PATTERNS:
 			return true
+		KIND_PATTERN:
+			return not EventSheetPatternVocabulary.fixture_source(name).is_empty()
 		KIND_TUTORIAL:
 			return not EventSheetDocTutorials.tutorial(name).is_empty()
 		KIND_GLOSSARY:
@@ -151,6 +155,10 @@ static func title_for(kind: String, name: String) -> String:
 			return EventSheetDocWhatsNew.PAGE_TITLE
 		KIND_TUTORIALS:
 			return EventSheetDocTutorials.PAGE_TITLE
+		KIND_PATTERNS:
+			return EventSheetPatternManual.PAGE_TITLE
+		KIND_PATTERN:
+			return EventSheetPatternVocabulary.words(name)
 		KIND_TUTORIAL:
 			return str(EventSheetDocTutorials.tutorial(name).get("title", ""))
 		KIND_GLOSSARY:
@@ -219,6 +227,8 @@ static func breadcrumb(doc_id_text: String, title: String) -> PackedStringArray:
 				crumbs.append(EventSheetDocWhatsNew.PAGE_TITLE)
 			KIND_TUTORIALS, KIND_TUTORIAL:
 				crumbs.append(TUTORIALS_TREE_TITLE)
+			KIND_PATTERNS, KIND_PATTERN:
+				crumbs.append(EventSheetPatternManual.PAGE_TITLE)
 	elif id.begins_with("ace:"):
 		crumbs.append(SECTION_TREE_TITLE if EventSheets.addon_pack_directory(
 			id.substr(4).get_slice("/", 0)).is_empty() else PACK_TREE_TITLE)
@@ -357,6 +367,10 @@ static func blocks_for(kind: String, name: String) -> Array[Dictionary]:
 			return EventSheetDocWhatsNew.blocks()
 		KIND_TUTORIALS:
 			return EventSheetDocTutorials.list_blocks()
+		KIND_PATTERNS:
+			return EventSheetPatternManual.blocks()
+		KIND_PATTERN:
+			return EventSheetPatternManual.pattern_blocks(name)
 		KIND_TUTORIAL:
 			return EventSheetDocTutorials.step_blocks(name)
 		KIND_GLOSSARY:

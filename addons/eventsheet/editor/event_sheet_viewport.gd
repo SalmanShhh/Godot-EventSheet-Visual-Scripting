@@ -3256,6 +3256,12 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var mark_help: String = _mark_tooltip(hit)
 	if not mark_help.is_empty():
 		return mark_help
+	# S19 - the ⟡ chip is a NAME, and a name on its own teaches nothing: hovering it says what the
+	# pattern is in one line and that the Manual has a page about it (which a click opens).
+	if kind == "pattern_chip":
+		var chip_help: String = ViewportTooltipHelper.pattern_chip_tooltip(str(metadata.get("pattern", "")))
+		if not chip_help.is_empty():
+			return chip_help
 	# A sentence or chip view over a raw statement keeps the CODE one hover away - the flat exit
 	# ramp in miniature. Resolved through the action index so the tooltip always shows the very
 	# line the row is, not a reconstruction of it.
@@ -3291,6 +3297,13 @@ func _get_tooltip(at_position: Vector2) -> String:
 			# LEAD the tooltip with the whole event read as one plain-English sentence
 			# (built from the same descriptors the cells draw), then the hovered cell's own description.
 			var sentence: String = _row_builder.row_sentence(row_data.source_resource as EventRow)
+			# S24 - a pattern reading is a claim spanning several lines, so every row of the event
+			# that owns one carries the evidence for it right under the sentence: which pattern, and
+			# the exact source lines that were the grounds for saying so.
+			var evidence_line: String = ViewportTooltipHelper.pattern_evidence_line(
+				_sheet, (row_data.source_resource as EventRow).event_uid) if patterns_lens_enabled() else ""
+			if not evidence_line.is_empty():
+				sentence = "%s\n%s" % [sentence, evidence_line] if not sentence.is_empty() else evidence_line
 			var sentence_prefix: String = "%s\n\n" % sentence if not sentence.is_empty() else ""
 			# M39 - a Create object cell stands for two or three statements. Hover shows all of them, so
 			# the shorter reading never costs the reader the ability to see what the file actually says.

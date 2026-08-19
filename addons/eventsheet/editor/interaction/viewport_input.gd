@@ -303,6 +303,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_walk_to_next_script_block()
 			_viewport.accept_event()
 			return
+		# S19 - the ⟡ chip names a pattern; clicking it opens that pattern's page in the Manual, with
+		# the hand-written shape and the events shape side by side. The hover already promised this,
+		# so the click has to keep the promise.
+		if not event.double_click and str(metadata.get("kind", "")) == "pattern_chip":
+			EventSheetPatternManual.open_page(str(metadata.get("pattern", "")))
+			_viewport.accept_event()
+			return
 		# R33. A tool sheet's own buttons, next to the coverage chip and read the same way: one click,
 		# one thing happens. The viewport only names the button - compiling and running belong to the
 		# dock, which owns the sheet's path and its status line.

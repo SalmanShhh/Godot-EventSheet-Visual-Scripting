@@ -234,6 +234,10 @@ static func blocks_for_definition(definition: ACEDefinition) -> Array[Dictionary
 	# here. The counting itself is the panel's, because it needs the sheet that is open right now
 	# and this assembly is pure over the definition it was handed.
 	blocks.append({"kind": "usage", "provider_id": definition.provider_id, "ace_id": definition.id})
+	# S26 - and which PATTERNS this verb belongs to. The list is derived from the claims in front of
+	# the reader (the panel does the deriving, for the same reason it does the counting above), so a
+	# verb is named by a pattern precisely because a claim on their own sheet says it is.
+	blocks.append({"kind": "patterns", "provider_id": definition.provider_id, "ace_id": definition.id})
 	var siblings: Array[Dictionary] = see_also_for(definition)
 	if not siblings.is_empty():
 		blocks.append({"kind": "see_also", "items": siblings})

@@ -204,3 +204,40 @@ static func fill_codegen_template(template: String, params: Dictionary) -> Strin
 	for key in params.keys():
 		filled = filled.replace("{%s}" % str(key), str(params[key]))
 	return filled
+
+
+## S19 - what the ⟡ chip says when the pointer rests on it: the pattern's one-line why, and the
+## promise that the Manual has a page about it. Two lines, because a chip is a name and a name on
+## its own teaches nothing.
+static func pattern_chip_tooltip(pattern: String) -> String:
+	var why: String = EventSheetPatternVocabulary.why(pattern)
+	if why.is_empty():
+		return ""
+	return "%s\n%s" % [why, EventSheetL10n.translate("Open in the Manual")]
+
+
+## S24 - the EVIDENCE line a pattern-read row owes its reader: which pattern it was read as, and the
+## exact source lines that were the grounds for saying so. A pattern reading is a claim spanning
+## several lines, so unlike every other reading in this program it cannot be checked by looking at
+## the one row - this is how it pays that back. "" when the event owns no claim.
+static func pattern_evidence_line(sheet: EventSheetResource, event_uid: String) -> String:
+	if sheet == null or event_uid.is_empty():
+		return ""
+	var lines: PackedStringArray = PackedStringArray()
+	for claim: Variant in EventSheetPatternFacts.claims_for_row(sheet, event_uid):
+		var words: String = str((claim as Dictionary).get("words", ""))
+		if words.is_empty():
+			words = EventSheetPatternVocabulary.words(str((claim as Dictionary).get("pattern", "")))
+		if words.is_empty():
+			continue
+		var evidence: PackedStringArray = PackedStringArray()
+		for entry: Variant in (claim as Dictionary).get("evidence", PackedStringArray()):
+			if not str(entry).strip_edges().is_empty():
+				evidence.append(str(entry).strip_edges())
+		if evidence.is_empty():
+			lines.append(EventSheetL10n.translate("read as the %s pattern") % EventSheetL10n.translate(words))
+			continue
+		lines.append("%s: %s" % [
+			EventSheetL10n.translate("read as the %s pattern because") % EventSheetL10n.translate(words),
+			", ".join(evidence)])
+	return "\n".join(lines)
