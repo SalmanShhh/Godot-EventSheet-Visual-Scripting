@@ -6197,6 +6197,15 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		if is_one_shot_handler(event_row):
 			spans.append(_trigger_payload_span(
 				EventSheetL10n.translate("Trigger once"), handler_payload.size(), condition_line_index))
+		# ── R32 ─────────────────────────────────────────────────────────────────────────────────
+		# What `@tool` actually means, said on the row it surprises people on: a per-frame event on a
+		# tool sheet ALSO runs while you are editing the scene, before the game exists. One chip, on
+		# the tick triggers only, because that is the one tempo where "it is running right now" is
+		# something a reader has to know.
+		if _ticks_in_the_editor(event_row):
+			spans.append(_trigger_payload_span(
+				EventSheetL10n.translate("in the editor too"),
+				handler_payload.size() + 1, condition_line_index))
 		# Q9 - and last on the line, muted: where this signal is actually raised.
 		_append_signal_source_span(spans, event_row, condition_line_index)
 		condition_line_index += 1
@@ -8167,6 +8176,20 @@ func _pick_collection_text(pick: PickFilter) -> String:
 ## Editor.SelectedObjects, and reading it as the engine call spells out plumbing nobody wrote.
 func _pick_collection_words(pick: PickFilter) -> String:
 	return EventSheetSentence.editor_words(_pick_collection_text(pick))
+
+
+## R32. True when this event runs every frame AND the sheet is a @tool script - the one combination
+## where the event is already running while the reader looks at it. Static-ish by construction: it
+## asks the sheet for its tool flag and the trigger for its tempo, so a test can pin the same answer
+## the chip is drawn from.
+func _ticks_in_the_editor(event_row: EventRow) -> bool:
+	if event_row == null or _viewport == null or _viewport._sheet == null:
+		return false
+	if not bool(_viewport._sheet.get("tool_mode")):
+		return false
+	# The GAME ticks only. An Editor trigger already says it belongs to the editor in its own name, so
+	# a chip there would repeat the row rather than add to it.
+	return INPUT_TRIGGER_TICKS.has(event_row.trigger_id)
 
 
 func _format_pick_filter(pick: PickFilter) -> String:

@@ -72,6 +72,7 @@ static func run() -> Dictionary:
 	check_missing_save_support(sheet_paths, findings)
 	check_save_key_symmetry(sheet_paths, findings)
 	check_editor_tool_undo(sheet_paths, findings)
+	check_editor_tool_safety(sheet_paths, findings)
 	check_orphaned_provider_calls(sheet_paths, findings)
 	check_sheet_signal_declarations(sheet_paths, findings)
 	check_vocabulary_doc(findings)
@@ -617,6 +618,48 @@ static func check_editor_tool_undo(sheet_paths: PackedStringArray, findings: Arr
 			continue
 		_add(findings, "info", "editor-tool-undo", sheet_path,
 			"This editor tool changes the open scene (add/remove/reparent nodes) without registering undo, so Ctrl+Z can't take the change back. Wrap the edits in EditorInterface.get_editor_undo_redo() create_action/commit_action (ignore for one-off scripts you re-run freely).")
+
+
+## R32 / R33. The three mistakes every FIRST editor tool makes, beside the undo one above. Each is a
+## note, never an error: all three are legal Godot, and each is occasionally exactly what the author
+## meant - a tool that really does want to walk the whole project, a generator that really does want
+## to throw away what it made, a preview that really is supposed to animate while you edit.
+##
+## The reading is off the COMPILED output rather than the sheet, because that is where the shape
+## actually is: a sheet can reach the same lines through a Script block, a raw row or a picked verb,
+## and the check should say the same thing about all three.
+static func check_editor_tool_safety(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null or not sheet.tool_mode:
+			continue
+		var output_path: String = output_path_for(sheet_path)
+		if not FileAccess.file_exists(output_path):
+			continue  # the stale-output check owns the "not compiled yet" case
+		var output: String = FileAccess.get_file_as_string(output_path)
+		# 1. Reaching outside the layout the user has open. `get_tree()` in the editor process walks
+		# the EDITOR's own tree, not the scene being edited, which is almost never what was meant.
+		if output.contains("get_tree().get_nodes_in_group(") or output.contains("get_tree().call_group("):
+			_add(findings, "info", "editor-tool-scope", sheet_path,
+				"This editor tool reaches for nodes through get_tree(), which in the editor is the editor's own tree and not the layout you have open. Walk Editor.OpenLayout (the edited scene root) instead, or the tool will find nothing - or the wrong thing.")
+		# 2. Destroying things while editing. A queue_free in the editor deletes from the OPEN scene,
+		# and without an undo step the only way back is to close the scene without saving.
+		if output.contains("queue_free()") and not output.contains("create_action("):
+			_add(findings, "info", "editor-tool-destroy", sheet_path,
+				"This editor tool calls Destroy while running in the editor, so it deletes from the layout you have open. Register an undo step around it, or the only way back is closing the scene without saving.")
+		# 3. Ticking in the editor with no way to switch it off - the R32 guard.
+		if _ticks_without_editor_guard(output):
+			_add(findings, "info", "editor-tool-tick", sheet_path,
+				"This tool runs every tick in the editor, so it is running right now while you edit. Add a Preview in editor toggle - an exported true/false plus a Stop event when the sheet is in the editor and the toggle is off - so you can switch it off.")
+
+
+## R32. True when a compiled @tool script has a per-frame handler and NO editor guard in it. The guard
+## is the shipped pattern - `Engine.is_editor_hint()` reached in the same file - so a tool that already
+## checks where it is running is left alone whatever it does with the answer.
+static func _ticks_without_editor_guard(output: String) -> bool:
+	if not (output.contains("func _process(") or output.contains("func _physics_process(")):
+		return false
+	return not output.contains("Engine.is_editor_hint()") and not output.contains("OS.has_feature(\"editor\")")
 
 
 ## The sheet a generated script belongs to - the inverse of output_path_for.

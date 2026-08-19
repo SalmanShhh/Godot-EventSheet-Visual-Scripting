@@ -486,6 +486,8 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._ace_picker.set_simple_mode_provider(func() -> bool: return _dock._simple_mode)
 	_dock._ace_picker.set_reflect_class_provider(func() -> String: return _dock._current_sheet.host_class if _dock._current_sheet != null else "")
 	_dock._ace_picker.set_behavior_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.behavior_mode)
+	# R35. The Editor object is offered on a sheet that runs in the editor and nowhere else.
+	_dock._ace_picker.set_tool_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.tool_mode)
 	_dock._variable_dlg.simple_mode_provider = func() -> bool: return _dock._simple_mode
 	_dock._ace_picker.ace_selected.connect(_dock._on_ace_picker_selected)
 	# The figure's "read more" affordance, filled in: the label is DERIVED from the verb's pack

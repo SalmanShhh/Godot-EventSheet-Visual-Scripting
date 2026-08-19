@@ -454,6 +454,8 @@ var _simple_mode_provider: Callable = Callable()
 var _reflect_class_provider: Callable = Callable()
 ## Returns whether the current sheet is a behaviour (its `host` var exists); gates the host-only ACEs.
 var _behavior_mode_provider: Callable = Callable()
+## Returns whether the current sheet runs in the editor (`tool_mode`); gates the Editor object.
+var _tool_mode_provider: Callable = Callable()
 ## The node the dialog was attached to (the dock). Only read for the open sheet, never held onto.
 var _host_node: Node = null
 
@@ -473,10 +475,30 @@ func set_behavior_mode_provider(provider: Callable) -> void:
 	_behavior_mode_provider = provider
 
 
+## R35. The same shape for the Editor object: a `-> bool` that is true when the open sheet runs in the
+## editor at all (a Tool sheet, or any sheet with Tool ticked). Without a provider the gate is off, so
+## an embedder that never wires it keeps the vocabulary it always had.
+func set_tool_mode_provider(provider: Callable) -> void:
+	_tool_mode_provider = provider
+
+
 ## True when a definition is a behaviour-only host ACE that must NOT be offered on a non-behaviour sheet
 ## (it would emit an undefined `host`). Pure + static so the gate is unit-testable without a live picker.
 static func host_ace_hidden(provider_id: String, ace_id: String, is_behavior_sheet: bool) -> bool:
 	return not is_behavior_sheet and provider_id == "Core" and ace_id in ["BehaviorHost", "BehaviorHostValid"]
+
+
+## R35. The Editor object's whole category. Every one of those rows calls EditorInterface or an
+## EditorPlugin method, which exist only in the editor process - offered on a Player sheet they are
+## rows that cannot run, so the picker scopes the object to @tool sheets the way it scopes Functions
+## to the open script. Pure + static so the gate is unit-testable without a live picker.
+static func editor_ace_hidden(category: String, is_tool_sheet: bool) -> bool:
+	return not is_tool_sheet and category == EDITOR_TOOLS_CATEGORY
+
+
+## The one category the gate above reads. Named here rather than spelled at the call site because it
+## is also what the vocabulary files put on every Editor descriptor.
+const EDITOR_TOOLS_CATEGORY := "Editor Tools"
 
 
 ## Update the registry used for searching (e.g. after a hot-reload).
@@ -1116,6 +1138,16 @@ func _refresh_tree() -> void:
 		if not host_ace_hidden(str(host_candidate.provider_id), str(host_candidate.id), is_behavior_sheet):
 			host_filtered.append(host_candidate)
 	definitions = host_filtered
+	# R35. The Editor object, on the same chokepoint: its rows only run inside the editor, so they are
+	# offered on a @tool sheet and nowhere else. No provider wired = no gate, which is what keeps a
+	# headless build and an embedder's picker showing exactly what they showed before.
+	if _tool_mode_provider.is_valid():
+		var is_tool_sheet: bool = bool(_tool_mode_provider.call())
+		var tool_filtered: Array[ACEDefinition] = []
+		for tool_candidate: ACEDefinition in definitions:
+			if not editor_ace_hidden(str(tool_candidate.category), is_tool_sheet):
+				tool_filtered.append(tool_candidate)
+		definitions = tool_filtered
 	# Object-first scope: a picked object card narrows the tree to that provider's verbs
 	# (search still filters WITHIN the object, exactly the event-sheet second step).
 	if not _object_filter_provider.is_empty():
