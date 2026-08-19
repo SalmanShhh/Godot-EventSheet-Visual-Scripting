@@ -346,7 +346,9 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 			for entry: Variant in claims:
 				if not EventSheetPatternAdopt.is_adoptable(entry as Dictionary):
 					continue
-				menu.add_item("Adopt behavior: %s…" % EventSheetPatternVocabulary.pack_label(
+				# Formatted here rather than left as a literal, because the behavior's NAME is part of
+				# the offer: an item reading "Adopt behavior:" with nothing after it says nothing.
+				menu.add_item(EventSheetL10n.translate("Adopt behavior: %s…") % EventSheetPatternVocabulary.pack_label(
 					str((entry as Dictionary).get("adoptable", ""))), ROW_MENU_ADOPT_BEHAVIOR)
 				break
 	# ── Refactor ▸ (appended block - keep together; dock/refactor_menu.gd) ─────────────────────
