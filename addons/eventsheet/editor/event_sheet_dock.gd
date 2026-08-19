@@ -637,7 +637,13 @@ func _refresh_tab_bar() -> void:
 		if int(name_counts.get(str(title.get("name", "")), 0)) > 1:
 			shown = "%s · %s" % [shown, str(title.get("file", path)).get_file()]
 		_tab_bar.add_tab(shown)
-		_tab_bar.set_tab_tooltip(tab_index, _tab_tooltip(title, path))
+		# V15 - a tab opened as part of a scene workspace says which group it belongs to, where the
+		# rest of the storage details already live.
+		var group_note: String = str(tab.get("group", "")).strip_edges()
+		var tooltip: String = _tab_tooltip(title, path)
+		if not group_note.is_empty():
+			tooltip = "%s · %s" % [tooltip, group_note]
+		_tab_bar.set_tab_tooltip(tab_index, tooltip)
 		var mark: Texture2D = _tab_icon(title)
 		if mark != null:
 			_tab_bar.set_tab_icon(tab_index, mark)
@@ -5831,3 +5837,51 @@ func _on_duplicate_events_confirmed() -> void:
 		return
 	_refresh_after_edit()
 	_mark_dirty(EventSheetL10n.translate("Duplicated %d event(s).") % int(made["count"]))
+
+
+# ── V15. Scene workspaces (appended block - keep together) ────────────────────────────────────
+# The unit of work is the scene, so it opens as one: the scene-as-sheet plus every script in it, in
+# tree order, as a named tab group that is remembered. Tabs stay individually closable - a
+# workspace is a way of OPENING, never a cage - and nothing is written into the project.
+
+
+## Opens every sheet of one scene as a named tab group, and remembers the group.
+func open_scene_workspace(scene_path: String) -> void:
+	var name: String = EventSheetWorkspaces.remember_scene(scene_path)
+	if name.is_empty():
+		_set_status(EventSheetL10n.translate("That scene has no sheets to open."), true)
+		return
+	_open_workspace_paths(name, EventSheetWorkspaces.members_of_scene(scene_path))
+
+
+## Reopens a remembered workspace by name.
+func open_workspace(name: String) -> void:
+	var paths: PackedStringArray = EventSheetWorkspaces.paths_of(name)
+	if paths.is_empty():
+		_set_status(EventSheetL10n.translate("That workspace has nothing left to open."), true)
+		return
+	_open_workspace_paths(name, paths)
+
+
+## Forgets a remembered workspace (the sheets themselves are untouched).
+func forget_workspace(name: String) -> void:
+	if EventSheetWorkspaces.forget(name):
+		_set_status(EventSheetL10n.translate("Forgot the workspace %s.") % name)
+
+
+func _open_workspace_paths(name: String, paths: PackedStringArray) -> void:
+	var opened: int = 0
+	for path: String in paths:
+		if not FileAccess.file_exists(path):
+			continue
+		_load_sheet_from_path(path)
+		opened += 1
+	if opened == 0:
+		_set_status(EventSheetL10n.translate("That workspace has nothing left to open."), true)
+		return
+	for tab: Dictionary in _open_tabs:
+		if Array(paths).has(str(tab.get("path", ""))):
+			tab["group"] = name
+	_refresh_tab_bar()
+	_persist_session()
+	_set_status(EventSheetL10n.translate("Workspace %s: %d sheet(s).") % [name, opened])

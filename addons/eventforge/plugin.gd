@@ -144,6 +144,16 @@ func _open_sheet_in_workspace(path: String) -> void:
 	_event_sheet_editor.call("_load_sheet_from_path", path)
 
 
+## V15 - the FileSystem's "Open its sheets": a scene opens as one named tab group holding the
+## scene-as-sheet and every script in it, in tree order.
+func _open_scene_workspace(scene_path: String) -> void:
+	_ensure_editor()
+	if _event_sheet_editor == null or not _event_sheet_editor.has_method("open_scene_workspace"):
+		return
+	get_editor_interface().set_main_screen_editor(_get_plugin_name())
+	_event_sheet_editor.call("open_scene_workspace", scene_path)
+
+
 ## The script editor's "Go to Sheet Row": carries the caret line into the sheet's
 ## reverse provenance - errors and stack traces land on rows, not generated code.
 func _goto_sheet_row_from_script(script_path: String) -> void:
@@ -263,6 +273,7 @@ func _enter_tree() -> void:
 		menu.goto_row = _goto_sheet_row_from_script
 		menu.create_sheet = _create_sheet_in_directory
 		menu.connect_signal = _connect_signal_from_node
+		menu.open_workspace = _open_scene_workspace
 		add_context_menu_plugin(slot, menu)
 		_context_menus.append(menu)
 	# Inspector: nodes whose script is sheet-generated get an "Edit Event Sheet" button.

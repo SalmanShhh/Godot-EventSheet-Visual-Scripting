@@ -609,6 +609,33 @@ func build(root: Node) -> void:
 			_dock.delete_saved_view(names[id - 500])
 		elif id >= 100 and id - 100 < names.size():
 			_dock.apply_saved_view(names[id - 100]))
+	# ── V15: Sheet ▸ Workspaces (appended block - keep together) ───────────────────────────────
+	# A scene's sheets, opened together and remembered under the scene's name. Rebuilt on open so a
+	# workspace made a second ago is already listed. Id 9810 is clear of the Sheet menu's own run.
+	var workspaces_menu: PopupMenu = PopupMenu.new()
+	workspaces_menu.name = "EventSheetWorkspacesMenu"
+	sheet_popup.add_child(workspaces_menu)
+	sheet_popup.add_submenu_item("Workspaces", "EventSheetWorkspacesMenu", 9810)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(9810),
+		"A scene's sheets, open together: the whole layout plus every script in it, in tree order, as one named tab group. Right-click a scene in the FileSystem ▸ Open its sheets makes one; picking it here opens it again.")
+	workspaces_menu.about_to_popup.connect(func() -> void:
+		workspaces_menu.clear()
+		var names: PackedStringArray = EventSheetWorkspaces.workspace_names()
+		if names.is_empty():
+			workspaces_menu.add_item(EventSheetL10n.translate("No workspaces yet"), -1)
+			workspaces_menu.set_item_disabled(0, true)
+			return
+		for name_index: int in names.size():
+			workspaces_menu.add_item(names[name_index], 100 + name_index)
+		workspaces_menu.add_separator()
+		for name_index: int in names.size():
+			workspaces_menu.add_item(EventSheetL10n.translate("Forget %s") % names[name_index], 500 + name_index))
+	workspaces_menu.id_pressed.connect(func(id: int) -> void:
+		var names: PackedStringArray = EventSheetWorkspaces.workspace_names()
+		if id >= 500 and id - 500 < names.size():
+			_dock.forget_workspace(names[id - 500])
+		elif id >= 100 and id - 100 < names.size():
+			_dock.open_workspace(names[id - 100]))
 	# ── V14: Show Events in the Scene (appended block - keep together) ─────────────────────────
 	# The events overlay's switch. It marks the SCENE, not the sheet, which is why it is one item
 	# rather than a lens - and it starts off. Id 9803 is clear of every block above.
