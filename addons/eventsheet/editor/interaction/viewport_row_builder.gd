@@ -1691,6 +1691,33 @@ static func friendly_param_label(param: ACEParam) -> String:
 	return label.replace("_", " ").strip_edges()
 
 
+## U11. What ONE parameter chip on a function's header says: its friendly label, plus the value a
+## caller gets when it leaves the input out, plus the ellipsis that marks the one input which
+## swallows however many values follow it.
+##
+## A default is part of the SIGNATURE, not decoration: `Heal [amount = 10]` is the difference between
+## a verb a reader may call with nothing and one they may not, and it is the value the picker
+## pre-fills. `null` reads as the sheet's word for nothing, because that is the word every other row
+## on the sheet uses for it.
+static func verb_param_chip_text(param: ACEParam) -> String:
+	var label: String = friendly_param_label(param)
+	if _is_varargs_param(param):
+		return "%s …" % label
+	var fallback: String = str(param.default_value).strip_edges()
+	if fallback.is_empty():
+		return label
+	if fallback == "null":
+		fallback = EventSheetL10n.translate("empty")
+	return "%s = %s" % [label, fallback]
+
+
+## U11. True for the one parameter that stands for "and however many more" - a list-typed input the
+## author named `args`. Godot has no varargs in a script function, and this is the shape every script
+## that wants them writes, so it is the only one the ellipsis is claimed for.
+static func _is_varargs_param(param: ACEParam) -> bool:
+	return param.id.strip_edges() == "args" and param.type_name.strip_edges() == "Array"
+
+
 ## The auto verb line's parameter slice - each param's friendly label, comma-joined ("from x, from y,
 ## width, color"). Empty when the verb takes none. Falls back to the legacy `parameters` string alias
 ## when a lifted verb carries no ACEParam metadata.
@@ -2090,7 +2117,10 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	if event_function.is_async:
 		spans.append(_define_chip(EventSheetL10n.translate("waits"), chip_bg, chip_fg, 0))
 	if event_function.is_static:
-		spans.append(_define_chip(EventSheetL10n.translate("static"), chip_bg, muted, 0))
+		# U11. `static` is GDScript's word; the sheet's word for a function that belongs to the class
+		# rather than to any one object is `shared`, and the define row says the same word the reading
+		# does.
+		spans.append(_define_chip(EventSheetL10n.translate("shared"), chip_bg, muted, 0))
 	if not event_function.expose_as_ace:
 		spans.append(_define_chip(EventSheetL10n.translate("internal"), chip_bg, muted, 0))
 	if event_function.featured:
@@ -2173,7 +2203,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 	var chip_texts: PackedStringArray = PackedStringArray()
 	for param: Variant in event_function.params:
 		if param is ACEParam:
-			chip_texts.append(friendly_param_label(param as ACEParam))
+			chip_texts.append(verb_param_chip_text(param as ACEParam))
 	if chip_texts.is_empty():
 		for legacy: String in event_function.parameters:
 			chip_texts.append(str(legacy).replace("_", " ").strip_edges())
@@ -2194,6 +2224,27 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 	# nothing extra - "do these" is what every other event already means.
 	if event_function.expose_as_ace and role != "action":
 		spans.append(_make_span(EventSheetL10n.translate(role), SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "define_function",
+			"lane": "condition",
+			"line_index": 0,
+			"natural_width": true,
+			"text_color": _viewport._get_reading_style().muted_text_color
+		}))
+	# ── U11 ─────────────────────────────────────────────────────────────────────────────────────
+	# The two things about a function that change how it is CALLED, said on the header where the call
+	# is decided rather than found out inside the body. A function that waits cannot be called and
+	# left; a shared one belongs to the class rather than to any one object.
+	if event_function.is_async:
+		spans.append(_make_span("⏳ %s" % EventSheetL10n.translate("waits"),
+			SemanticSpan.SpanType.CONDITION, {
+				"editable": false,
+				"kind": "verb_param",
+				"chip": true,
+				"line_index": 0
+			}.merged(chip_style, true)))
+	if event_function.is_static:
+		spans.append(_make_span(EventSheetL10n.translate("shared"), SemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "define_function",
 			"lane": "condition",

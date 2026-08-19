@@ -2730,3 +2730,4 @@ turn by,回転量
 look up/down on,上下は
 clamped,制限
 Crossfade {from} → {to} by {amount},{amount} で {from} → {to} をクロスフェード
+shared,共有

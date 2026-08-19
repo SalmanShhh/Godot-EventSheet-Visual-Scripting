@@ -74,6 +74,7 @@ static func run() -> Dictionary:
 	check_save_key_symmetry(sheet_paths, findings)
 	check_editor_tool_undo(sheet_paths, findings)
 	check_editor_tool_safety(sheet_paths, findings)
+	check_background_thread_safety(sheet_paths, findings)
 	check_unknown_input_actions(sheet_paths, findings)
 	check_unsaved_rebindings(sheet_paths, findings)
 	check_orphaned_provider_calls(sheet_paths, findings)
@@ -665,6 +666,78 @@ static func check_editor_tool_safety(sheet_paths: PackedStringArray, findings: A
 		if _ticks_without_editor_guard(output):
 			_add(findings, "info", "editor-tool-tick", sheet_path,
 				"This tool runs every tick in the editor, so it is running right now while you edit. Add a Preview in editor toggle - an exported true/false plus a Stop event when the sheet is in the editor and the toggle is off - so you can switch it off.")
+
+
+## U9. The spellings that hand a function to a thread, and the group of them the reading calls
+## "Run in the background".
+const _BACKGROUND_HANDOFFS: PackedStringArray = [
+	".start(", "WorkerThreadPool.add_task(", "WorkerThreadPool.add_group_task("
+]
+
+## U9. The steps that reach the scene tree. None of them is safe off the main thread, and every one
+## of them is a step a reader would think nothing of - which is exactly why the note is worth making.
+const _SCENE_TOUCHES: PackedStringArray = [
+	"add_child(", "remove_child(", "queue_free()", "get_node(", "get_node_or_null(", "get_tree()",
+	"instantiate()", "emit_signal(", "get_parent()"
+]
+
+
+## U9. Work that has left the main thread must not touch the scene tree - Godot's nodes are not
+## thread-safe, and the failure is a crash that happens one run in twenty rather than an error.
+##
+## The check is deliberately narrow: a file that hands a NAMED function to a thread, and that
+## function's own body reaching the tree. A thread handed a lambda, or a function this walk cannot
+## find, says nothing at all, because a warning that fires on shapes it cannot see would be noise.
+static func check_background_thread_safety(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		var output_path: String = output_path_for(sheet_path)
+		if not FileAccess.file_exists(output_path):
+			continue  # the stale-output check owns the "not compiled yet" case
+		var output: String = FileAccess.get_file_as_string(output_path)
+		for function_name: String in _backgrounded_function_names(output):
+			if not _function_body_touches_tree(output, function_name):
+				continue
+			_add(findings, "warning", "background-thread-touches-tree", sheet_path,
+				"%s runs in the background, and its rows reach the scene tree. Nodes are not thread-safe: a crash from this happens one run in twenty rather than every time. Work out the answer in the background and let the main thread do the node steps - a signal fired when the work is done is the usual shape." % function_name)
+
+
+## U9. Every function name this file hands to a thread, from the `f.bind(...)` and bare-name
+## spellings both. Empty when the file starts no background work at all, which is the common case
+## and costs one substring search.
+static func _backgrounded_function_names(output: String) -> PackedStringArray:
+	var handed: PackedStringArray = PackedStringArray()
+	var starts_work: bool = false
+	for handoff: String in _BACKGROUND_HANDOFFS:
+		if output.contains(handoff):
+			starts_work = true
+			break
+	if not starts_work:
+		return handed
+	var found: Array[RegExMatch] = _cached_regex(
+		"(?:\\.start\\(|WorkerThreadPool\\.add_task\\(|WorkerThreadPool\\.add_group_task\\()(?:self\\.)?([A-Za-z_][A-Za-z0-9_]*)").search_all(output)
+	for entry: RegExMatch in found:
+		var name_text: String = entry.get_string(1)
+		if not handed.has(name_text):
+			handed.append(name_text)
+	return handed
+
+
+## U9. True when the named function's own body reaches the scene tree. The body is the lines from its
+## `func` header to the next top-level `func`, which is all a text walk can honestly claim.
+static func _function_body_touches_tree(output: String, function_name: String) -> bool:
+	var lines: PackedStringArray = output.split("\n")
+	var inside: bool = false
+	for line: String in lines:
+		var stripped: String = line.strip_edges()
+		if stripped.begins_with("func ") or stripped.begins_with("static func "):
+			inside = stripped.contains("func %s(" % function_name)
+			continue
+		if not inside or stripped.begins_with("#"):
+			continue
+		for touch: String in _SCENE_TOUCHES:
+			if stripped.contains(touch):
+				return true
+	return false
 
 
 ## R33. True when a compiled @tool script MUTATES the scene and reaches its nodes by path without

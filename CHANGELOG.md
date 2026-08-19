@@ -126,9 +126,39 @@ the byte round-trip and the emitted GDScript cannot move.
 - **Media.** A `VideoStreamPlayer` is the sheet's Video object - `Set video to intro.ogv`, `Play`,
   `Pause`, `Is playing` - and a positional player's `max_distance` / `attenuation` read `Set hearing
   distance` / `Set falloff`.
+- **Two runs read as the one row they are.** The first-person block - turn the body, pitch the
+  camera, clamp the camera - is one `Mouse look` row with the file's own values muted beside it, and
+  two volume writes driven by one fraction are one `System ▸ Crossfade music a → music b by t`. The
+  lines stay exactly as they are in the file, on hover, under a double-click and in the bytes saved.
 - **The four new patterns are claimed** on the event that owns them (`ajax`, `lighting`, `fps_look`,
   `background`), with the exact source lines as evidence and, for the two that a shipped behavior
   does whole, the pack a reader could adopt instead.
+- **A function's header says the three things that change how it is called.** Parameter chips carry
+  their default (`amount = 10`, `source = empty`), a function that awaits wears a `⏳ waits` chip,
+  and a `static func` reads `shared` - the sheet's word for a function that belongs to the class
+  rather than to any one object. An `Array` input named `args` wears the `…` that says it swallows
+  however many values follow.
+
+### Added - the long tail is authorable in the same words
+
+Every reading above that names an object a sheet can act on now has picker rows that write exactly
+the shape the reading recognises, so a hand-written line and a picked row are the same bytes.
+
+- **The AJAX object** - Request, Post, Cancel Request, Request Succeeded, Status Is OK and Last Data,
+  with a module guide of its own.
+- **The Lighting rows** - light energy and colour in both node generations, the on-off pair, shadows,
+  a whole layer's tint and the world's ambient light.
+- **The Video object** - Set Video, Play, Pause, Stop and Is Playing, with a module guide of its own.
+- **Sound and 3D** - Set Hearing Distance, Set Falloff and Crossfade join the Audio rows; Mouse Look
+  and the Forward / Right / Up directions join the 3D rows.
+- **Background work** - Run In Background and Wait For Background Work.
+
+### Added - the Doctor warns when background work touches the scene tree
+
+A function handed to a thread whose own rows reach the scene tree earns a warning, because Godot's
+nodes are not thread-safe and the failure is a crash that happens one run in twenty rather than
+every time. Narrow on purpose: a named function handed off, and that function's own body reaching
+the tree.
 
 ### Added - an opened script's PATTERNS read as the events they are
 
