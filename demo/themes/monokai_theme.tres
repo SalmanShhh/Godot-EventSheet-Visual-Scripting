@@ -66,6 +66,15 @@ object_label_color = Color(0.9019608, 0.85882354, 0.45490196, 1)
 value_highlight_color = Color(0.4, 0.8509804, 0.9372549, 1)
 cell_hover_color = Color(0.972549, 0.972549, 0.9490196, 0.12)
 behavior_accent_color = Color(0.9764706, 0.14901961, 0.44705883, 1)
+language_block_accent_color = Color(0.9764706, 0.14901961, 0.44705883, 1)
+ace_action_badge_background_color = Color(0.36266667, 0.3534118, 0.22337255, 1)
+ace_action_accent_color = Color(0.9019608, 0.85882354, 0.45490196, 1)
+ace_condition_badge_background_color = Color(0.22211766, 0.3512157, 0.3584314, 1)
+ace_condition_accent_color = Color(0.4, 0.8509804, 0.9372549, 1)
+ace_expression_badge_background_color = Color(0.38352942, 0.15466668, 0.22117648, 1)
+ace_expression_accent_color = Color(0.9764706, 0.14901961, 0.44705883, 1)
+verb_chip_background_color = Color(0.24313726, 0.23921569, 0.19607843, 1)
+verb_chip_foreground_color = Color(0.972549, 0.972549, 0.9490196, 1)
 group_corner_radius = 6
 region_corner_radius = 8
 

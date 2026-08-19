@@ -102,6 +102,19 @@ func _build_style(palette: Dictionary) -> EventSheetEditorStyle:
 	event_style.group_corner_radius = 6
 	event_style.region_corner_radius = 8
 	event_style.region_line_width = 1
+	# Language blocks and published verbs wear the PRESET'S own hues. Without this a regenerated
+	# preset silently falls back to EventForge's indigo and amber/teal/purple and stops looking like
+	# the theme it claims to be - which is exactly what happened the first time these were added by a
+	# one-shot backfill instead of by the builder.
+	event_style.language_block_accent_color = signature
+	event_style.ace_action_accent_color = yellow
+	event_style.ace_condition_accent_color = cool
+	event_style.ace_expression_accent_color = signature
+	event_style.ace_action_badge_background_color = bg.lerp(yellow, 0.28)
+	event_style.ace_condition_badge_background_color = bg.lerp(cool, 0.28)
+	event_style.ace_expression_badge_background_color = bg.lerp(signature, 0.28)
+	event_style.verb_chip_background_color = surface
+	event_style.verb_chip_foreground_color = fg
 
 	var condition_style: EventSheetElementStyle = EventSheetElementStyle.new()
 	condition_style.text_color = cool
