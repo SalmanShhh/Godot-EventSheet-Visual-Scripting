@@ -110,7 +110,9 @@ static var STATEMENT_READINGS: Dictionary = {
 	"lamp.enabled = true": "lamp ▸ Set light on",
 	"lamp.shadow_enabled = true": "lamp ▸ Set shadows on",
 	"lamp.shadow_enabled = false": "lamp ▸ Set shadows off",
-	"tint.color = Color(0.2, 0.2, 0.4)": "System ▸ Set layer tint to Color(0.2, 0.2, 0.4) CanvasModulate",
+	# U1 re-pinned this one: a colour built from its channels reads as the colour, and a mix nobody has
+	# a word for keeps the channels rather than repeating the Color call that built them.
+	"tint.color = Color(0.2, 0.2, 0.4)": "System ▸ Set layer tint to 0.2, 0.2, 0.4 CanvasModulate",
 	"$WorldEnvironment.environment.ambient_light_energy = 0.3": "System ▸ Set ambient light to 30%",
 	# U8 - facing something
 	"look_at(target.global_position, Vector3.UP)": "Player ▸ Look at target",
