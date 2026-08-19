@@ -288,8 +288,8 @@ words, same order, because both shells read the same runner.
 - **"No test sheets found."** The marker line is missing. Set the sheet's type to Test in
   Sheet > Sheet Type… and save, so the compiled `.gd` carries `## @ace_test_sheet`.
 - **"no claims were recorded".** The test started but nothing asserted: the rows sit under a
-  condition that never came true, or the event has no trigger at all (a bare event with no trigger
-  emits nothing).
+  condition that never came true, or they sit on a blank event (which runs every tick, not once at
+  the start - give it On Test Start).
 - **A test that hangs until the timeout** never said it was finished. End it with Pass Test or
   Fail Test, or let it record its last claim and fall quiet - the runner stops on either.
 - **Claims that run before the scene is ready.** Load Scene Under Test adds the node this frame;

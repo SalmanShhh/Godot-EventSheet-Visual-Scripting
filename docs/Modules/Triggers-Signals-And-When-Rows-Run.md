@@ -33,8 +33,11 @@ runtime left in the output.
 
 ## Core concepts
 
-- **The trigger is the event's turn.** A bare event with no trigger emits nothing. The trigger decides
-  which Godot function or signal handler the event's rows land in.
+- **The trigger is the event's turn.** It decides which Godot function or signal handler the event's
+  rows land in. A blank event - one with no trigger picked - runs **every tick**, exactly as an event
+  sheet has always meant blank: its actions compile into `_process(delta)`, and any conditions it
+  carries are checked there. The Add event dialog offers that as its first entry,
+  **(none - runs every tick)**, so pressing Enter makes one.
 - **Lifecycle triggers become callbacks.** **On Ready** becomes `_ready()`, **Every Frame** becomes
   `_process(delta)`, **Every Physics Tick** becomes `_physics_process(delta)`. That is why `delta` is a
   usable value inside those events and not inside **On Ready**.
@@ -547,8 +550,10 @@ On pool item reset  item
   reached; Trigger Once fires on the rising edge and never again until the conditions go false.
 - **Has Been Quiet For needs a per-frame trigger**, because it has to be asked repeatedly while
   nothing is happening. That is the whole point of a debounce, and no signal can back it.
-- **A bare event with no trigger emits nothing.** If a row seems to do nothing at all, check the event
-  actually has a trigger and not just conditions.
+- **A blank event runs every tick.** An event with no trigger picked is not a broken event: it
+  compiles into `_process(delta)`. If its rows fire far more often than you expected, that is why -
+  give it a trigger, or narrow it with conditions. The Doctor says so too when a blank event only
+  sets values ("did you mean On start of layout?").
 - **`delta` only exists where the callback provides it.** It is a real value under **Every Frame** and
   **Every Physics Tick**. Under **On Ready** or a signal trigger there is no `delta`, which is why the
   gravity and acceleration actions default their **Delta** parameter to `delta` and expect a per-frame

@@ -98,7 +98,7 @@ The oldest enemy AI there is: chase until the leash snaps, then walk back to the
 ```
 Every tick
   Condition: Guard | Is Beyond Home  300, Straight line
-    -> Guard | State Machine: Set State  "returning"
+    -> Guard | State Machine: Go to state  "returning"
 ```
 
 ### 2. Walking back to the post
@@ -108,9 +108,9 @@ delta.
 
 ```
 Every tick
-  Condition: Guard | State Machine: Is In State  "returning"
+  Condition: Guard | State Machine: Current state is  "returning"
     -> Guard | Home & Leash: Walk home at  80, delta
-On Arrived Home -> Guard | State Machine: Set State  "idle"
+On Arrived Home -> Guard | State Machine: Go to state  "idle"
 ```
 
 ### 3. The shopkeeper behind the counter

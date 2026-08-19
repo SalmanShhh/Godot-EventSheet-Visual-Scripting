@@ -403,11 +403,11 @@ Pair with the State Machine pack so animation, sound, and AI all read one named 
 ```
 Every frame
   Condition: Player | PlatformerMovement  Is Wall Sliding
-    -> Player | StateMachineBehavior: Set State  "wall_slide"
+    -> Player | StateMachineBehavior: Go to state  "wall_slide"
   Condition: Player | PlatformerMovement  Is Jumping
-    -> Player | StateMachineBehavior: Set State  "jump"
+    -> Player | StateMachineBehavior: Go to state  "jump"
   Condition: Player | PlatformerMovement  Is Falling
-    -> Player | StateMachineBehavior: Set State  "fall"
+    -> Player | StateMachineBehavior: Go to state  "fall"
 ```
 
 Setting the same state every frame is safe - the State Machine's change guard fires its transition trigger only on a real switch.
