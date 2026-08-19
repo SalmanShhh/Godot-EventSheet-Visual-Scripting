@@ -2413,31 +2413,31 @@ button,ボタン
 in the Inspector,インスペクターに表示
 calls,呼び出す
 Add Inspector Button…,インスペクターボタンを追加…
-Count down {name},
-by dt,
-never below 0,
-Start {name} for {seconds} seconds,
-{name} has run out,
-{name} is running,
-Forget {name},
-Remove from layout,
-"kept alive, not destroyed",
-{table} {key} (or {fallback} when missing),
-the first {count} of {list},
-the sum of {member} over {list},
-Sort {name} by {member},
-lowest first,
-highest first,
-Call the function stored in {table} {key},
-a table of functions,
-Set item {key} to {value},
-{object}.Item({key}),
-or {fallback},
-save file is missing,
-save file exists,
-Local Storage,
-sequence ·,
-a wait,
-pooled,
-Return to pool,
-"hidden, ticking off, back in pool",
+Count down {name},{name} をカウントダウン
+by dt,dt ずつ
+never below 0,0 未満にはならない
+Start {name} for {seconds} seconds,{name} を {seconds} 秒開始
+{name} has run out,{name} が切れた
+{name} is running,{name} が進行中
+Forget {name},{name} を忘れる
+Remove from layout,レイアウトから外す
+"kept alive, not destroyed",破棄されず生きたまま
+{table} {key} (or {fallback} when missing),{table} {key} (無い場合は {fallback})
+the first {count} of {list},{list} の最初の {count} 件
+the sum of {member} over {list},{list} の {member} の合計
+Sort {name} by {member},{name} を {member} で並べ替え
+lowest first,小さい順
+highest first,大きい順
+Call the function stored in {table} {key},{table} {key} に入っている関数を呼ぶ
+a table of functions,関数のテーブル
+Set item {key} to {value},項目 {key} を {value} に設定
+{object}.Item({key}),{object}.Item({key})
+or {fallback},または {fallback}
+save file is missing,セーブファイルが無い
+save file exists,セーブファイルがある
+Local Storage,ローカルストレージ
+sequence ·,シーケンス ·
+a wait,待ち時間
+pooled,プール利用
+Return to pool,プールに戻す
+"hidden, ticking off, back in pool",非表示・停止してプールへ

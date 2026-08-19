@@ -2413,31 +2413,31 @@ button,botón
 in the Inspector,en el Inspector
 calls,llama a
 Add Inspector Button…,Añadir botón del Inspector…
-Count down {name},
-by dt,
-never below 0,
-Start {name} for {seconds} seconds,
-{name} has run out,
-{name} is running,
-Forget {name},
-Remove from layout,
-"kept alive, not destroyed",
-{table} {key} (or {fallback} when missing),
-the first {count} of {list},
-the sum of {member} over {list},
-Sort {name} by {member},
-lowest first,
-highest first,
-Call the function stored in {table} {key},
-a table of functions,
-Set item {key} to {value},
-{object}.Item({key}),
-or {fallback},
-save file is missing,
-save file exists,
-Local Storage,
-sequence ·,
-a wait,
-pooled,
-Return to pool,
-"hidden, ticking off, back in pool",
+Count down {name},Descontar {name}
+by dt,en dt
+never below 0,nunca por debajo de 0
+Start {name} for {seconds} seconds,Iniciar {name} durante {seconds} segundos
+{name} has run out,{name} se ha agotado
+{name} is running,{name} está en marcha
+Forget {name},Olvidar {name}
+Remove from layout,Quitar del diseño
+"kept alive, not destroyed","sigue vivo, no destruido"
+{table} {key} (or {fallback} when missing),{table} {key} (o {fallback} si falta)
+the first {count} of {list},los primeros {count} de {list}
+the sum of {member} over {list},la suma de {member} en {list}
+Sort {name} by {member},Ordenar {name} por {member}
+lowest first,menor primero
+highest first,mayor primero
+Call the function stored in {table} {key},Llamar a la función guardada en {table} {key}
+a table of functions,una tabla de funciones
+Set item {key} to {value},Poner el elemento {key} en {value}
+{object}.Item({key}),{object}.Item({key})
+or {fallback},o {fallback}
+save file is missing,falta el archivo de guardado
+save file exists,el archivo de guardado existe
+Local Storage,Almacenamiento local
+sequence ·,secuencia ·
+a wait,una espera
+pooled,reutilizado
+Return to pool,Devolver al grupo
+"hidden, ticking off, back in pool","oculto, detenido, de vuelta en el grupo"

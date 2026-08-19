@@ -2413,31 +2413,31 @@ button,按钮
 in the Inspector,在检查器中
 calls,调用
 Add Inspector Button…,添加检查器按钮…
-Count down {name},
-by dt,
-never below 0,
-Start {name} for {seconds} seconds,
-{name} has run out,
-{name} is running,
-Forget {name},
-Remove from layout,
-"kept alive, not destroyed",
-{table} {key} (or {fallback} when missing),
-the first {count} of {list},
-the sum of {member} over {list},
-Sort {name} by {member},
-lowest first,
-highest first,
-Call the function stored in {table} {key},
-a table of functions,
-Set item {key} to {value},
-{object}.Item({key}),
-or {fallback},
-save file is missing,
-save file exists,
-Local Storage,
-sequence ·,
-a wait,
-pooled,
-Return to pool,
-"hidden, ticking off, back in pool",
+Count down {name},倒数 {name}
+by dt,按 dt
+never below 0,不会低于 0
+Start {name} for {seconds} seconds,开始 {name}，持续 {seconds} 秒
+{name} has run out,{name} 已用完
+{name} is running,{name} 正在进行
+Forget {name},忘记 {name}
+Remove from layout,从布局中移除
+"kept alive, not destroyed",仍然存在，未被销毁
+{table} {key} (or {fallback} when missing),{table} {key}（缺失时用 {fallback}）
+the first {count} of {list},{list} 的前 {count} 项
+the sum of {member} over {list},{list} 中 {member} 的总和
+Sort {name} by {member},按 {member} 排序 {name}
+lowest first,从小到大
+highest first,从大到小
+Call the function stored in {table} {key},调用存放在 {table} {key} 中的函数
+a table of functions,函数表
+Set item {key} to {value},将项目 {key} 设为 {value}
+{object}.Item({key}),{object}.Item({key})
+or {fallback},或 {fallback}
+save file is missing,存档文件不存在
+save file exists,存档文件存在
+Local Storage,本地存储
+sequence ·,序列 ·
+a wait,一次等待
+pooled,使用对象池
+Return to pool,放回对象池
+"hidden, ticking off, back in pool",隐藏、停止更新、放回池中

@@ -2413,31 +2413,31 @@ button,кнопка
 in the Inspector,в инспекторе
 calls,вызывает
 Add Inspector Button…,Добавить кнопку инспектора…
-Count down {name},
-by dt,
-never below 0,
-Start {name} for {seconds} seconds,
-{name} has run out,
-{name} is running,
-Forget {name},
-Remove from layout,
-"kept alive, not destroyed",
-{table} {key} (or {fallback} when missing),
-the first {count} of {list},
-the sum of {member} over {list},
-Sort {name} by {member},
-lowest first,
-highest first,
-Call the function stored in {table} {key},
-a table of functions,
-Set item {key} to {value},
-{object}.Item({key}),
-or {fallback},
-save file is missing,
-save file exists,
-Local Storage,
-sequence ·,
-a wait,
-pooled,
-Return to pool,
-"hidden, ticking off, back in pool",
+Count down {name},Отсчитывать {name}
+by dt,на dt
+never below 0,никогда ниже 0
+Start {name} for {seconds} seconds,Запустить {name} на {seconds} секунд
+{name} has run out,{name} истёк
+{name} is running,{name} идёт
+Forget {name},Забыть {name}
+Remove from layout,Убрать из макета
+"kept alive, not destroyed","остаётся живым, не уничтожен"
+{table} {key} (or {fallback} when missing),"{table} {key} (или {fallback}, если нет)"
+the first {count} of {list},первые {count} из {list}
+the sum of {member} over {list},сумма {member} по {list}
+Sort {name} by {member},Сортировать {name} по {member}
+lowest first,по возрастанию
+highest first,по убыванию
+Call the function stored in {table} {key},Вызвать функцию из {table} {key}
+a table of functions,таблица функций
+Set item {key} to {value},Задать элемент {key} равным {value}
+{object}.Item({key}),{object}.Item({key})
+or {fallback},или {fallback}
+save file is missing,файл сохранения отсутствует
+save file exists,файл сохранения есть
+Local Storage,Локальное хранилище
+sequence ·,последовательность ·
+a wait,ожидание
+pooled,из пула
+Return to pool,Вернуть в пул
+"hidden, ticking off, back in pool","скрыт, остановлен, снова в пуле"

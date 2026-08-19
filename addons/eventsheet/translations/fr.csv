@@ -2413,31 +2413,31 @@ button,bouton
 in the Inspector,dans l'Inspecteur
 calls,appelle
 Add Inspector Button…,Ajouter un bouton d'Inspecteur…
-Count down {name},
-by dt,
-never below 0,
-Start {name} for {seconds} seconds,
-{name} has run out,
-{name} is running,
-Forget {name},
-Remove from layout,
-"kept alive, not destroyed",
-{table} {key} (or {fallback} when missing),
-the first {count} of {list},
-the sum of {member} over {list},
-Sort {name} by {member},
-lowest first,
-highest first,
-Call the function stored in {table} {key},
-a table of functions,
-Set item {key} to {value},
-{object}.Item({key}),
-or {fallback},
-save file is missing,
-save file exists,
-Local Storage,
-sequence ·,
-a wait,
-pooled,
-Return to pool,
-"hidden, ticking off, back in pool",
+Count down {name},Décompter {name}
+by dt,de dt
+never below 0,jamais en dessous de 0
+Start {name} for {seconds} seconds,Démarrer {name} pendant {seconds} secondes
+{name} has run out,{name} est écoulé
+{name} is running,{name} est en cours
+Forget {name},Oublier {name}
+Remove from layout,Retirer de la disposition
+"kept alive, not destroyed","toujours vivant, pas détruit"
+{table} {key} (or {fallback} when missing),{table} {key} (ou {fallback} si absent)
+the first {count} of {list},les {count} premiers de {list}
+the sum of {member} over {list},la somme de {member} sur {list}
+Sort {name} by {member},Trier {name} par {member}
+lowest first,du plus petit au plus grand
+highest first,du plus grand au plus petit
+Call the function stored in {table} {key},Appeler la fonction stockée dans {table} {key}
+a table of functions,une table de fonctions
+Set item {key} to {value},Définir l'élément {key} sur {value}
+{object}.Item({key}),{object}.Item({key})
+or {fallback},ou {fallback}
+save file is missing,fichier de sauvegarde manquant
+save file exists,le fichier de sauvegarde existe
+Local Storage,Stockage local
+sequence ·,séquence ·
+a wait,une attente
+pooled,recyclé
+Return to pool,Renvoyer au pool
+"hidden, ticking off, back in pool","caché, arrêté, de retour dans le pool"

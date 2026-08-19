@@ -2413,31 +2413,31 @@ button,Schaltfläche
 in the Inspector,im Inspektor
 calls,ruft auf
 Add Inspector Button…,Inspektor-Schaltfläche hinzufügen…
-Count down {name},
-by dt,
-never below 0,
-Start {name} for {seconds} seconds,
-{name} has run out,
-{name} is running,
-Forget {name},
-Remove from layout,
-"kept alive, not destroyed",
-{table} {key} (or {fallback} when missing),
-the first {count} of {list},
-the sum of {member} over {list},
-Sort {name} by {member},
-lowest first,
-highest first,
-Call the function stored in {table} {key},
-a table of functions,
-Set item {key} to {value},
-{object}.Item({key}),
-or {fallback},
-save file is missing,
-save file exists,
-Local Storage,
-sequence ·,
-a wait,
-pooled,
-Return to pool,
-"hidden, ticking off, back in pool",
+Count down {name},{name} herunterzählen
+by dt,um dt
+never below 0,nie unter 0
+Start {name} for {seconds} seconds,{name} für {seconds} Sekunden starten
+{name} has run out,{name} ist abgelaufen
+{name} is running,{name} läuft
+Forget {name},{name} vergessen
+Remove from layout,Aus dem Layout entfernen
+"kept alive, not destroyed","bleibt am Leben, nicht zerstört"
+{table} {key} (or {fallback} when missing),"{table} {key} (oder {fallback}, wenn nicht vorhanden)"
+the first {count} of {list},die ersten {count} von {list}
+the sum of {member} over {list},die Summe von {member} über {list}
+Sort {name} by {member},{name} nach {member} sortieren
+lowest first,kleinste zuerst
+highest first,größte zuerst
+Call the function stored in {table} {key},Die in {table} {key} gespeicherte Funktion aufrufen
+a table of functions,eine Tabelle von Funktionen
+Set item {key} to {value},Eintrag {key} auf {value} setzen
+{object}.Item({key}),{object}.Item({key})
+or {fallback},oder {fallback}
+save file is missing,Spielstand fehlt
+save file exists,Spielstand vorhanden
+Local Storage,Lokaler Speicher
+sequence ·,Ablauf ·
+a wait,eine Wartezeit
+pooled,gepoolt
+Return to pool,In den Pool zurücklegen
+"hidden, ticking off, back in pool","versteckt, angehalten, zurück im Pool"

@@ -2413,31 +2413,31 @@ button,pulsante
 in the Inspector,nell'Inspector
 calls,chiama
 Add Inspector Button…,Aggiungi pulsante Inspector…
-Count down {name},
-by dt,
-never below 0,
-Start {name} for {seconds} seconds,
-{name} has run out,
-{name} is running,
-Forget {name},
-Remove from layout,
-"kept alive, not destroyed",
-{table} {key} (or {fallback} when missing),
-the first {count} of {list},
-the sum of {member} over {list},
-Sort {name} by {member},
-lowest first,
-highest first,
-Call the function stored in {table} {key},
-a table of functions,
-Set item {key} to {value},
-{object}.Item({key}),
-or {fallback},
-save file is missing,
-save file exists,
-Local Storage,
-sequence ·,
-a wait,
-pooled,
-Return to pool,
-"hidden, ticking off, back in pool",
+Count down {name},Conta alla rovescia {name}
+by dt,di dt
+never below 0,mai sotto 0
+Start {name} for {seconds} seconds,Avvia {name} per {seconds} secondi
+{name} has run out,{name} è scaduto
+{name} is running,{name} è in corso
+Forget {name},Dimentica {name}
+Remove from layout,Rimuovi dal layout
+"kept alive, not destroyed","resta vivo, non distrutto"
+{table} {key} (or {fallback} when missing),{table} {key} (o {fallback} se manca)
+the first {count} of {list},i primi {count} di {list}
+the sum of {member} over {list},la somma di {member} su {list}
+Sort {name} by {member},Ordina {name} per {member}
+lowest first,dal più basso
+highest first,dal più alto
+Call the function stored in {table} {key},Chiama la funzione salvata in {table} {key}
+a table of functions,una tabella di funzioni
+Set item {key} to {value},Imposta l'elemento {key} su {value}
+{object}.Item({key}),{object}.Item({key})
+or {fallback},oppure {fallback}
+save file is missing,file di salvataggio mancante
+save file exists,il file di salvataggio esiste
+Local Storage,Archiviazione locale
+sequence ·,sequenza ·
+a wait,un'attesa
+pooled,riutilizzato
+Return to pool,Rimetti nel pool
+"hidden, ticking off, back in pool","nascosto, fermo, di nuovo nel pool"
