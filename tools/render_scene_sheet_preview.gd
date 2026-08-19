@@ -7,11 +7,12 @@ extends SceneTree
 var _frames: int = 0
 var _stage: int = 0
 var _viewport: EventSheetViewport = null
+var _scroll: ScrollContainer = null
 
 
 func _init() -> void:
 	root.title = "Scene as a sheet"
-	root.size = Vector2i(1100, 520)
+	root.size = Vector2i(1400, 640)
 	var modern_base := Color("#252525")
 	var background: ColorRect = ColorRect.new()
 	background.color = modern_base.darkened(0.25)
@@ -19,8 +20,9 @@ func _init() -> void:
 	root.add_child(background)
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.position = Vector2(8, 8)
-	scroll.size = Vector2(1084, 504)
+	scroll.size = Vector2(1384, 624)
 	root.add_child(scroll)
+	_scroll = scroll
 	_viewport = EventSheetViewport.new()
 	_viewport.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -42,6 +44,10 @@ func _apply_sheet(sheet: EventSheetResource) -> void:
 
 func _on_frame() -> void:
 	_frames += 1
+	if _frames == 4 and _stage == 0:
+		# Past the scene bar's own head, so the shot shows what the scene view is FOR: one object bar
+		# after another, each with its script's rows under it.
+		_scroll.scroll_vertical = 0
 	if _frames < 8:
 		return
 	var img: Image = root.get_texture().get_image()

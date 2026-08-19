@@ -467,6 +467,7 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   wears the sheet's `Trigger once`. That is the third way real code wires a signal - after a handler
   declared in the file and a lambda - so all three now read as trigger events. The connect line keeps
   its muted `connects Button On Pressed` note, and the file keeps its one line.
+<img src="images/wired-call-rows.png" alt="A script whose _ready wires three signals: the connect lines read as muted connects notes, and under them three trigger events read StartButton On Pressed with player Call Reset, WaveTimer On Timeout with hud Call Show Wave count = 3, and a one-shot WaveTimer On Timeout carrying a Trigger once chip with count = 9." width="720">
 - **A big file never freezes the editor.** The raw sheet paints within a frame under a progress strip
   (`Opening event_sheet_dock.gd - lifting functions 212 of 458 - 6.1 s`, a bar, and **Show as code
   instead**); the lift runs behind it, and the strip goes away when the last function lands.
@@ -527,6 +528,8 @@ its own object bar (`⇥ HUD  a  CanvasLayer  · hud.gd`, with `(x3)` when the s
 nodes) and the rows that script reads as beneath it. Signals the Godot editor wired in the scene file
 read as triggers here too - including on a script sitting on a CHILD node, which on its own has no way
 of knowing what wired it.
+
+<img src="images/scene-as-a-sheet.png" alt="A scene opened as one sheet: a scene bar reading opened_scene_level.tscn a Node2D 3 scripts, then the Level object bar with the root script's rows under it, then the Player object bar with its own head and state folder." width="720">
 
 The scene view is read-only for good. A scene is many files at once and the `.tscn` is not one of
 them, so nothing is ever written back to it and there is no "Edit Events" to unlock: double-click an

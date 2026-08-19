@@ -3961,10 +3961,12 @@ func _apply_property_drop(target_event: Resource, node_reference: String, proper
 ## always compile, so an action that assigns to a variable auto-declares it, and a preload
 ## const can never redefine an existing top-level name (deduped by path, suffixed on clash).
 func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -> void:
-	# P4 - ONE scene dropped on empty space opens that scene as a sheet: there is no row it could
-	# join, and "read this scene" is what a reader dragging a .tscn onto the sheet means. Dropped on a
-	# row it still builds the action it always did, because there the drop names a target.
-	if target_event == null and asset_paths.size() == 1 and asset_paths[0].get_extension().to_lower() == "tscn":
+	# P4 - ONE scene dropped on the empty space of a READING opens that scene as a sheet. On an
+	# editable sheet a dropped scene means what it always meant (the action that creates it), and on a
+	# row it names that row's target; but a reading cannot take an action at all, so there the gesture
+	# can only mean "read this scene too".
+	if target_event == null and asset_paths.size() == 1 and asset_paths[0].get_extension().to_lower() == "tscn" \
+			and (_current_sheet == null or _current_sheet.read_only):
 		_load_sheet_from_path(asset_paths[0])
 		return
 	if not _ensure_sheet_for_editing():
