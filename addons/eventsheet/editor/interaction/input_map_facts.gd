@@ -102,6 +102,9 @@ const PLAYER_PREFIX := "p"
 const PLAYER_SUFFIX := "_"
 
 static var _cache: Dictionary = {}
+## The quoted-name matcher, compiled once (see action_names_in). Not part of _cache: it never
+## goes stale, so clear_cache() must not drop it.
+static var _literal_regex: RegEx = null
 
 
 ## Drops the cached read of project.godot. The editor calls this when the filesystem changes; tests
@@ -284,8 +287,12 @@ static func actions_named_by(sheet: EventSheetResource) -> Array[Dictionary]:
 ## string a script happens to carry can never be mistaken for a control.
 static func action_names_in(code: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	var literal := RegEx.new()
-	literal.compile("&?\"([^\"]+)\"")
+	# Compiled once: this runs over the whole sheet's code on every rebuild of the head bars, and
+	# once per script in the Doctor's sweep.
+	if _literal_regex == null:
+		_literal_regex = RegEx.new()
+		_literal_regex.compile("&?\"([^\"]+)\"")
+	var literal: RegEx = _literal_regex
 	for line: String in code.split("\n"):
 		if not (line.contains("Input.") or line.contains("InputMap.") or line.contains("is_action")
 				or line.contains(".is_action(")):

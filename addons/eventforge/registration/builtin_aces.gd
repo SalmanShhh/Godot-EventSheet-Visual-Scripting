@@ -10,6 +10,11 @@ extends RefCounted
 const COMPARISON_OPERATORS: Array[String] = EventForgeACEFactory.COMPARISON_OPERATORS
 const MODULES_DIR := "res://addons/eventforge/registration/modules/"
 
+## Compiled-once matchers for the node-scoped-target safety check (see _assignment_rhs_is_target_safe).
+## Built during the descriptor build, which the open path forces onto the main thread first.
+static var _placeholder_regex_cache: RegEx = null
+static var _member_word_regex_cache: Dictionary = {}
+
 
 ## Every built-in descriptor, auto-discovered from registration/modules/. Drop a module file there
 ## (a script with `static func get_descriptors() -> Array[ACEDescriptor]`) and its ACEs register on
@@ -112,12 +117,30 @@ static func _assignment_rhs_is_target_safe(line: String) -> bool:
 	var member: String = before.split(" ")[0].rstrip("+-*/%")  # drop a compound-assign operator
 	if member.is_empty():
 		return true
-	var placeholder_re: RegEx = RegEx.new()
-	placeholder_re.compile("\\{[^}]*\\}")
-	var rhs: String = placeholder_re.sub(line.substr(equals + 1), " ", true)
-	var word_re: RegEx = RegEx.new()
-	word_re.compile("\\b" + member + "\\b")
-	return word_re.search(rhs) == null
+	var rhs: String = _placeholder_regex().sub(line.substr(equals + 1), " ", true)
+	return _member_word_regex(member).search(rhs) == null
+
+
+## The `{param}` placeholder matcher, compiled once. This runs for every line of every node-scoped
+## template on the first descriptor build (thousands of calls), and compiling a RegEx per call was
+## most of that build's cost.
+static func _placeholder_regex() -> RegEx:
+	if _placeholder_regex_cache == null:
+		_placeholder_regex_cache = RegEx.new()
+		_placeholder_regex_cache.compile("\\{[^}]*\\}")
+	return _placeholder_regex_cache
+
+
+## A whole-word matcher for one member name, compiled once per distinct name. Member names repeat
+## heavily across templates (position, velocity, modulate...), so the cache hits almost every time.
+static func _member_word_regex(member: String) -> RegEx:
+	var cached: RegEx = _member_word_regex_cache.get(member, null)
+	if cached != null:
+		return cached
+	var built: RegEx = RegEx.new()
+	built.compile("\\b" + member + "\\b")
+	_member_word_regex_cache[member] = built
+	return built
 
 
 ## The module .gd files in a stable order: sorted alphabetically, with helper_aces.gd appended last.
