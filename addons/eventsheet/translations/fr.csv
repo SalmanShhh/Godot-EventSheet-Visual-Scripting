@@ -2870,3 +2870,23 @@ full saturation,saturation maximale
 {amount} brightness,{amount} de luminosite
 at {amount} opacity,a {amount} d'opacite
 Ease colour toward {colour} at {rate},Adoucir la couleur vers {colour} a {rate}
+a new {type},un nouveau {type}
+a copy of {value},une copie de {value}
+{object}'s path,le chemin de {object}
+{object}'s child named {name},l'enfant de {object} nomme {name}
+the child named {name},l'enfant nomme {name}
+{name} in the layout,{name} dans la mise en page
+the layout,la mise en page
+unique name,nom unique
+Clone object,Cloner l'objet
+next to it,a cote
+inside it,dedans
+Data type,Type de donnees
+based on,base sur
+down to,jusqu'a
+step,pas
+{subject} is a list of {count},{subject} est une liste de {count}
+starting {values},commencant par {values}
+{subject} is a table,{subject} est une table
+with {clauses},avec {clauses}
+has {key},a {key}

@@ -763,6 +763,36 @@ That is the order this section is in.
   delta)` is one verb - `Ease colour toward white at 5` - claimed only when the line reads the very
   member it writes, so an ordinary blend from somewhere else stays the Set it is.
 
+- **`match` patterns read as the conditions they are.** A match on plain values already reads as the
+  if / else-if / else chain a reader knows. The patterns that say something a plain value cannot join
+  the same chain now: `["move", var x, var y]` is `event is a list of 3 starting "move"` with `x` and
+  `y` as chips beside it, `{"type": "hit", "amount": var a}` is `event is a table with type = "hit"`
+  with `amount → a` as its chip, and `var other when other is String` is `event is text` with `other`
+  as its chip - the guard read through the ordinary condition grammar, with the bound name standing
+  for what it is bound to, because that is what it stands for. A bare `var other` and `_` are both the
+  Else they are. Strictness applies here as everywhere: a nested pattern, an open-ended `..`, or any
+  pattern with a call in it keeps the exact text it was written as.
+
+- **A loop that counts down or steps says which values the body sees.** `for i in range(10, 0, -1)`
+  is `For "i" from 10 down to 1` and `for i in range(0, 100, 10)` is `For "i" from 0 to 90 step 10`.
+  Godot's stop value is exclusive; the row shows the last value the body actually reaches, so the
+  arithmetic is done once rather than by every reader.
+
+- **A pure-data `class X:` is a Data type.** The bar in the head says `Data type AbilityData` and its
+  fields are the rows below, each editable in place. `Stats.new()` reads `a new Stats`,
+  `stats.duplicate()` reads `a copy of stats`, and `thing is Stats` reads `is a Stats`. An inner class
+  with methods in it keeps its read-only code block: a sentence may only stand for a shape it can see
+  whole.
+
+- **The scene tree in one word each.** `find_child("HUD")` is `the child named HUD`,
+  `get_tree().current_scene` is `the layout`, `get_tree().current_scene.get_node("Boss")` is `Boss in
+  the layout`, `%HealthBar` is `HealthBar` with a muted `unique name` beside it, and
+  `enemy.get_path()` is `enemy's path`. Copying a node already in the scene and planting the copy -
+  `var copy = enemy.duplicate()` then `get_parent().add_child(copy)` - is one row, `Clone object enemy
+  (→ copy, next to it)`; Create object stays what it is, which is making one out of a scene file. Both
+  spellings of the plant count, the picked Add Child row and the plain call a hand-written script
+  writes, and the row says whether the copy went next to the node or inside it.
+
 #### Input, gamepads and sensors
 
 - **The Input Map is an object, and the file says which controls it uses.** An opened script that names

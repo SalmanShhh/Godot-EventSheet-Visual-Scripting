@@ -2870,3 +2870,23 @@ full saturation,彩度いっぱい
 {amount} brightness,明度 {amount}
 at {amount} opacity,不透明度 {amount}
 Ease colour toward {colour} at {rate},色を {colour} へ {rate} で寄せる
+a new {type},新しい {type}
+a copy of {value},{value} のコピー
+{object}'s path,{object} のパス
+{object}'s child named {name},{object} の子 {name}
+the child named {name},子 {name}
+{name} in the layout,レイアウト内の {name}
+the layout,レイアウト
+unique name,ユニーク名
+Clone object,オブジェクトを複製
+next to it,その隣に
+inside it,その中に
+Data type,データ型
+based on,基は
+down to,から
+step,刻み
+{subject} is a list of {count},{subject} が {count} 件のリスト
+starting {values},先頭が {values}
+{subject} is a table,{subject} がテーブル
+with {clauses},条件 {clauses}
+has {key},{key} を持つ

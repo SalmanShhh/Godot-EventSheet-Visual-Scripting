@@ -68,10 +68,12 @@ static func run() -> bool:
 			class_row = row_data
 	ok = _check("the pack shows a data class row", class_row != null, true) and ok
 	ok = _check("it collapses to one header line", class_row.line_count if class_row != null else -1, 1) and ok
-	# The header reads like a regular event row (no dimmed "Data class" pill): the class declaration in the
-	# condition cell, its field count in the action cell.
-	ok = _check("the header shows the class in the condition cell",
-		class_row != null and str(class_row.spans[0].text) == "class AbilityData" and str((class_row.spans[0].metadata as Dictionary).get("lane")) == "condition", true) and ok
+	# The header reads like a regular event row (no dimmed "Data class" pill): what the class IS in the
+	# condition cell, its field count in the action cell. U4 re-pinned the words - a pure-data `class X:`
+	# is a data type this file declares, and "class" is GDScript's spelling of it, one double-click away
+	# in the code the bar opens.
+	ok = _check("the header shows the data type in the condition cell",
+		class_row != null and str(class_row.spans[0].text) == "Data type AbilityData" and str((class_row.spans[0].metadata as Dictionary).get("lane")) == "condition", true) and ok
 	ok = _check("the fields render as child rows", class_row.children.size() if class_row != null else -1, 10) and ok
 	# A field child reads like a variable row: name : type = default.
 	var first_field_row: EventRowData = class_row.children[0] if class_row != null and not class_row.children.is_empty() else null

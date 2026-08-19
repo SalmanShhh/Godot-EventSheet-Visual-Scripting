@@ -2870,3 +2870,23 @@ full saturation,완전한 채도
 {amount} brightness,밝기 {amount}
 at {amount} opacity,불투명도 {amount}
 Ease colour toward {colour} at {rate},색을 {colour} 쪽으로 {rate} 로 부드럽게
+a new {type},새 {type}
+a copy of {value},{value} 의 복사본
+{object}'s path,{object} 의 경로
+{object}'s child named {name},{object} 의 자식 {name}
+the child named {name},{name} 라는 자식
+{name} in the layout,레이아웃의 {name}
+the layout,레이아웃
+unique name,고유 이름
+Clone object,오브젝트 복제
+next to it,그 옆에
+inside it,그 안에
+Data type,데이터 형
+based on,기반
+down to,까지 내려
+step,간격
+{subject} is a list of {count},{subject} 가 {count} 개짜리 목록
+starting {values},{values} 로 시작
+{subject} is a table,{subject} 가 테이블
+with {clauses},{clauses} 인
+has {key},{key} 가 있는

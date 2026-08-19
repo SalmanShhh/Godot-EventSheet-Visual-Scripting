@@ -2870,3 +2870,23 @@ full saturation,polnaya nasyshchennost
 {amount} brightness,yarkost {amount}
 at {amount} opacity,s neprozrachnostyu {amount}
 Ease colour toward {colour} at {rate},Plavno svesti tsvet k {colour} so skorostyu {rate}
+a new {type},novyy {type}
+a copy of {value},kopiya {value}
+{object}'s path,put {object}
+{object}'s child named {name},dochernii uzel {name} u {object}
+the child named {name},dochernii uzel {name}
+{name} in the layout,{name} v makete
+the layout,maket
+unique name,unikalnoe imya
+Clone object,Klonirovat obekt
+next to it,ryadom s nim
+inside it,vnutri nego
+Data type,Tip dannykh
+based on,na osnove
+down to,vniz do
+step,shag
+{subject} is a list of {count},{subject} - spisok iz {count}
+starting {values},nachinayushchiysya s {values}
+{subject} is a table,{subject} - tablitsa
+with {clauses},s {clauses}
+has {key},soderzhit {key}

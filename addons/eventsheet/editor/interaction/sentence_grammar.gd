@@ -959,7 +959,9 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	# S8 - the progress array read by index, before the indexing pass could take `p[0]` apart. What
 	# the file holds is untouched; only the words change.
 	trimmed = loading_progress_words(trimmed, context)
-	var without_cast: String = _drop_casts(_system_words(node_lookup_text(trimmed)))
+	# U5 - the scene-tree spellings, after the node-path pass has settled `get_node("X")` into `$X` so
+	# both ways of writing the same lookup read alike.
+	var without_cast: String = scene_tree_words(_drop_casts(_system_words(node_lookup_text(trimmed))))
 	# R7. The sheet's own expression names, before any other rewriting sees the Godot spellings they
 	# are matched against. Off unless the view asked for the Familiar Words glossary.
 	without_cast = familiar_expression_words(without_cast, context)
@@ -4453,6 +4455,11 @@ static func _shaped_receiver_idiom(receiver: String, method: String,
 	var vector_colour: String = vector_colour_receiver_words(receiver, method, arguments)
 	if not vector_colour.is_empty():
 		return vector_colour
+	# U4 / U5 - making a value and looking a node up, ahead of the `get_thing()` property rule below,
+	# which would otherwise read `enemy.get_path()` as the bare member `path`.
+	var data_scene: String = data_scene_receiver_words(receiver, method, arguments)
+	if not data_scene.is_empty():
+		return data_scene
 	if method == "substr" and arguments.size() == 2:
 		if arguments[0].strip_edges() == "0":
 			return "left(%s, %s)" % [receiver, arguments[1]]
@@ -8286,3 +8293,310 @@ static func colour_ease_statement(object_name: String, member: String, assigned:
 		"colour": [expression_text(arguments[0], context), "value"],
 		"rate": [expression_text(rate, context), "value"]
 	})
+
+
+# ── U4 / U5: data types and the scene tree, in one word each ─────────────────────
+#
+# The idioms a Godot script reaches for when it makes a value or looks something up. Each is one word
+# in an event sheet, and every one of them was reading as the call it is. Display only, like the rest
+# of this file: nothing here decides what is emitted.
+
+
+## U4 / U5. The lookups and the makers whose reading needs the receiver. "" for anything not claimed
+## exactly, so the general tables above still answer.
+static func data_scene_receiver_words(receiver: String, method: String,
+		arguments: PackedStringArray) -> String:
+	match method:
+		# U4. `Stats.new()` makes one of a type the file declares; only a Type-cased name is claimed,
+		# because `handler.new()` on a variable is a call whose result nobody can name.
+		"new":
+			if arguments.is_empty() and is_identifier(receiver) and receiver == receiver.capitalize().replace(" ", ""):
+				return _fill(translate("a new {type}"), {"type": receiver})
+		# U4. A copy is a copy whether it is a resource, a node or a list. `duplicate(true)` is the
+		# deep copy, which is still a copy - the flag is Godot's business, not the row's.
+		"duplicate":
+			if arguments.is_empty() or (arguments.size() == 1 and arguments[0].strip_edges() in ["true", "false"]):
+				return _fill(translate("a copy of {value}"), {"value": receiver})
+		# U5. A node's path, said the way a sheet says whose it is.
+		"get_path":
+			if arguments.is_empty():
+				return _fill(translate("{object}'s path"), {"object": receiver})
+		# U5. `find_child("HUD")` is the child named HUD. Only a literal name is claimed: a computed
+		# one has nothing to show, and the search flags say how Godot looks rather than what it found.
+		"find_child":
+			if arguments.size() == 1 and _is_string_literal(arguments[0]):
+				return _fill(translate("{object}'s child named {name}"),
+					{"object": receiver, "name": _unquote(arguments[0])})
+	return ""
+
+
+## U5. The scene-tree spellings that are one word in an event sheet, on a whole value. Run after the
+## node-path pass, so a `get_node("Boss")` has already become `$Boss` and both spellings answer alike.
+static func scene_tree_words(text: String) -> String:
+	if not text.contains("current_scene") and not text.contains("find_child(") and not text.contains("%"):
+		return text
+	var out: String = text
+	if out.contains("%"):
+		out = _unique_name_words(out)
+	# The layout, and a node looked up inside it. The named form first: `the layout.$Boss` would read
+	# as plumbing, and "Boss in the layout" is what the row is actually about.
+	if out.contains("current_scene"):
+		if _scene_node_regex == null:
+			_scene_node_regex = RegEx.create_from_string(
+				"get_tree\\(\\)\\.current_scene\\.\\$([A-Za-z_][A-Za-z0-9_/]*)")
+		if _scene_node_regex != null:
+			for found: RegExMatch in _scene_node_regex.search_all(out):
+				out = out.replace(found.get_string(0), _fill(translate("{name} in the layout"),
+					{"name": found.get_string(1)}))
+		out = out.replace("get_tree().current_scene", translate("the layout"))
+	# A receiver-less `find_child("HUD")` is the script's own child, and the object column has already
+	# said whose - so the row says "the child named HUD" with nobody's name repeated in it.
+	if out.contains("find_child("):
+		if _find_child_regex == null:
+			_find_child_regex = RegEx.create_from_string("(^|[^A-Za-z0-9_.$])find_child\\(&?\"([^\"]+)\"\\)")
+		if _find_child_regex != null:
+			for found: RegExMatch in _find_child_regex.search_all(out):
+				out = out.replace(found.get_string(0), "%s%s" % [found.get_string(1),
+					_fill(translate("the child named {name}"), {"name": found.get_string(2)})])
+	return out
+
+## U5. A node addressed by its unique name IS that object, so the row says the object with the way it
+## was addressed as the aside it is.
+##
+## Quote-aware and value-start only, because `%` is three different things in GDScript: `%HealthBar`
+## is the node, `"%d"` inside a literal is a format specifier somebody wrote, and `a % b` is the
+## remainder. Only a `%` that begins a value and is followed straight away by a name is the node.
+static func _unique_name_words(text: String) -> String:
+	var out: String = ""
+	var index: int = 0
+	var value_start: bool = true
+	while index < text.length():
+		var character: String = text[index]
+		if character == "\"" or character == "'":
+			var quote_end: int = _string_end(text, index)
+			out += text.substr(index, quote_end - index + 1)
+			index = quote_end + 1
+			value_start = false
+			continue
+		if character == "%" and value_start and index + 1 < text.length() \
+				and (text[index + 1].is_valid_identifier() and not text[index + 1].is_valid_int()):
+			var name_end: int = index + 1
+			while name_end < text.length() and (text[name_end].is_valid_identifier() or text[name_end].is_valid_int()):
+				name_end += 1
+			out += "%s (%s)" % [text.substr(index + 1, name_end - index - 1), translate("unique name")]
+			index = name_end
+			value_start = false
+			continue
+		out += character
+		# A value may start at the beginning, after an operator, or after an opening bracket or comma.
+		value_start = character in [" ", "(", "[", ",", "=", "+", "-", "*", "/", ":"]
+		index += 1
+	return out
+
+
+## The scene-tree matchers, compiled once for the session like the grammar's others.
+static var _scene_node_regex: RegEx = null
+static var _find_child_regex: RegEx = null
+
+
+# ── U2: match PATTERNS read as the conditions they are ───────────────────────────
+#
+# Pattern matching is Godot's nicest control flow and a beginner's scariest cell. A match on plain
+# values already reads as the Else-if chain it is (M37); these are the four patterns that say
+# something a plain value cannot - a list of a certain shape, a table with certain entries, a name
+# bound to whatever arrived, and that name with a guard on it. Each reads as the question it asks,
+# with the names it binds as chips, and every arm keeps the exact bytes it was lifted from.
+
+
+## U2. One `match` arm as the condition it is, or {} when the pattern is not one this reading claims.
+##
+## Returns {"text": the condition sentence ("" for an Else), "chips": the names the arm binds,
+## "is_else": true when the arm matches whatever is left}. Strict on purpose: a nested pattern, an
+## open-ended `..`, or anything with a call in it keeps the pattern text it was written as.
+static func match_pattern_reading(subject: String, pattern: String, context: Dictionary) -> Dictionary:
+	var text: String = pattern.strip_edges()
+	var subject_words: String = subject.strip_edges()
+	if text.is_empty() or subject_words.is_empty():
+		return {}
+	if text == "_":
+		return {"text": "", "chips": PackedStringArray(), "is_else": true}
+	if text.begins_with("[") and text.ends_with("]"):
+		return _list_pattern_reading(subject_words, text.substr(1, text.length() - 2))
+	if text.begins_with("{") and text.ends_with("}"):
+		return _table_pattern_reading(subject_words, text.substr(1, text.length() - 2))
+	if text.begins_with("var "):
+		return _binding_pattern_reading(subject_words, text.substr(4), context)
+	return {}
+
+
+## U2. `["move", var x, var y]` - a list of a known length whose leading entries are known values.
+## The bound names are chips, because they are what the arm's actions may then use.
+static func _list_pattern_reading(subject: String, inner: String) -> Dictionary:
+	var terms: PackedStringArray = split_top_level(inner, ", ")
+	if terms.is_empty():
+		return {}
+	var leading: PackedStringArray = PackedStringArray()
+	var chips: PackedStringArray = PackedStringArray()
+	for term: String in terms:
+		var entry: String = term.strip_edges()
+		if entry.is_empty() or entry == "..":
+			return {}
+		if entry.begins_with("var "):
+			var bound: String = entry.substr(4).strip_edges()
+			if not is_identifier(bound):
+				return {}
+			chips.append(bound)
+			continue
+		# A known value AFTER a bound name has nothing to lead with, so the arm keeps its own text
+		# rather than being described as starting with something it does not start with.
+		if not chips.is_empty() or not _is_pattern_value(entry):
+			return {}
+		leading.append(entry)
+	var count_words: String = _fill(translate("{subject} is a list of {count}"),
+		{"subject": subject, "count": str(terms.size())})
+	if leading.is_empty():
+		return {"text": count_words, "chips": chips, "is_else": false}
+	return {
+		"text": "%s %s" % [count_words, _fill(translate("starting {values}"),
+			{"values": ", ".join(leading)})],
+		"chips": chips, "is_else": false
+	}
+
+
+## U2. `{"type": "hit", "amount": var a}` - a table with certain entries. An entry with a known value
+## is part of the question; an entry that binds a name is a chip reading `key → name`, because what
+## the arm gets out of the table is the other half of what the pattern says.
+static func _table_pattern_reading(subject: String, inner: String) -> Dictionary:
+	var entries: PackedStringArray = split_top_level(inner, ", ")
+	if entries.is_empty():
+		return {}
+	var clauses: PackedStringArray = PackedStringArray()
+	var chips: PackedStringArray = PackedStringArray()
+	for term: String in entries:
+		var entry: String = term.strip_edges()
+		if entry.is_empty() or entry == "..":
+			return {}
+		var colon_at: int = top_level_index(entry, ": ")
+		if colon_at < 0:
+			# A bare key asks only that the table HAS it, which is a question worth reading.
+			if not _is_pattern_value(entry):
+				return {}
+			clauses.append(_fill(translate("has {key}"), {"key": _pattern_key_words(entry)}))
+			continue
+		var key: String = entry.substr(0, colon_at).strip_edges()
+		var value: String = entry.substr(colon_at + 2).strip_edges()
+		if not _is_pattern_value(key):
+			return {}
+		if value.begins_with("var "):
+			var bound: String = value.substr(4).strip_edges()
+			if not is_identifier(bound):
+				return {}
+			chips.append("%s → %s" % [_pattern_key_words(key), bound])
+			continue
+		if not _is_pattern_value(value):
+			return {}
+		clauses.append("%s = %s" % [_pattern_key_words(key), value])
+	var table_words: String = _fill(translate("{subject} is a table"), {"subject": subject})
+	if clauses.is_empty():
+		return {"text": table_words, "chips": chips, "is_else": false}
+	return {
+		"text": "%s %s" % [table_words, _fill(translate("with {clauses}"),
+			{"clauses": (" %s " % translate("and")).join(clauses)})],
+		"chips": chips, "is_else": false
+	}
+
+
+## U2. `var other` and `var other when other is String`. A bare binding matches whatever is left, so
+## it reads as the Else it is with the name it binds beside it; a guard IS the question the arm asks,
+## read through the ordinary condition grammar with the bound name standing for the subject - which is
+## what it stands for.
+static func _binding_pattern_reading(subject: String, rest: String, context: Dictionary) -> Dictionary:
+	var body: String = rest.strip_edges()
+	var when_at: int = top_level_index(body, " when ")
+	if when_at < 0:
+		return {} if not is_identifier(body) else {
+			"text": "", "chips": PackedStringArray([body]), "is_else": true
+		}
+	var bound: String = body.substr(0, when_at).strip_edges()
+	var guard: String = body.substr(when_at + 6).strip_edges()
+	if not is_identifier(bound) or guard.is_empty():
+		return {}
+	var subject_guard: String = _with_subject(guard, bound, subject)
+	# A guard that asks only what KIND of value arrived reads as the sheet's own type words - `event is
+	# text`, not `event is a String` - because in a match arm the type IS the whole question.
+	var kind_at: int = top_level_index(subject_guard, " is ")
+	if kind_at > 0:
+		var kind_name: String = subject_guard.substr(kind_at + 4).strip_edges()
+		var kind_word: String = type_word(kind_name)
+		if is_identifier(kind_name) and not kind_word.is_empty() and kind_word != kind_name:
+			return {
+				"text": "%s %s %s" % [subject_guard.substr(0, kind_at).strip_edges(),
+					translate("is"), kind_word],
+				"chips": PackedStringArray([bound]), "is_else": false
+			}
+	var reading: Dictionary = condition_pieces(subject_guard, context)
+	var text: String = ""
+	for piece: Variant in (reading.get("pieces", []) as Array):
+		text += str((piece as Array)[0])
+	text = text.strip_edges()
+	if text.is_empty():
+		return {}
+	# The condition grammar hands the OBJECT back separately, for a column this arm has no room for -
+	# so the arm says it, exactly where a reader looks for the thing being asked about.
+	var object_label: String = str(reading.get("object", "")).strip_edges()
+	if not object_label.is_empty() and not text.begins_with(object_label):
+		text = "%s %s" % [object_label, text]
+	return {"text": text, "chips": PackedStringArray([bound]), "is_else": false}
+
+
+## U2. The guard with the bound name replaced by what it is bound TO, so `other is String` on a match
+## over `event` reads "event is text" - the row names the value a reader can see rather than a name
+## the pattern invented one line ago. Whole words only, and never inside a string literal.
+static func _with_subject(guard: String, bound: String, subject: String) -> String:
+	var out: String = ""
+	var index: int = 0
+	while index < guard.length():
+		var character: String = guard[index]
+		if character == "\"" or character == "'":
+			var quote_end: int = _string_end(guard, index)
+			out += guard.substr(index, quote_end - index + 1)
+			index = quote_end + 1
+			continue
+		if not (character.is_valid_identifier() and not character.is_valid_int()):
+			out += character
+			index += 1
+			continue
+		var word_end: int = index
+		while word_end < guard.length() and (guard[word_end].is_valid_identifier() or guard[word_end].is_valid_int()):
+			word_end += 1
+		var word: String = guard.substr(index, word_end - index)
+		var follows_dot: bool = index > 0 and guard[index - 1] == "."
+		out += subject if word == bound and not follows_dot else word
+		index = word_end
+	return out
+
+
+## U2. A value a pattern may test against: a piece of text, a number, true/false/null, or a named
+## constant. Anything with a call or an operator in it is doing work, and a pattern arm that does work
+## says more than the reading can.
+static func _is_pattern_value(text: String) -> bool:
+	var value: String = text.strip_edges()
+	if value.is_empty() or value.contains("(") or value.contains("[") or value.contains(".."):
+		return false
+	if _is_string_literal(value):
+		return true
+	if value.is_valid_float() or (value.begins_with("-") and value.substr(1).is_valid_float()):
+		return true
+	if value in ["true", "false", "null"]:
+		return true
+	for piece: String in value.split("."):
+		if not is_identifier(piece):
+			return false
+	return true
+
+
+## U2. A table key as a reader says it: `"type"` is the entry called type, and the quotes are GDScript
+## asking for a piece of text rather than anything the row is about.
+static func _pattern_key_words(key: String) -> String:
+	var text: String = key.strip_edges()
+	return _unquote(text) if _is_string_literal(text) else text

@@ -3986,9 +3986,12 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var base: String = str(model.get("extends", ""))
-	var header_text: String = "class %s" % data_class_display_name
+	# U4. What a pure-data `class X:` IS, in the words a reader has for it: a data type this file
+	# declares, whose fields are the rows below. "class" is GDScript's spelling of the same thing and
+	# stays one double-click away, in the code the bar opens.
+	var header_text: String = "%s %s" % [EventSheetL10n.translate("Data type"), data_class_display_name]
 	if not base.is_empty():
-		header_text += " extends %s" % base
+		header_text += " %s %s" % [EventSheetL10n.translate("based on"), base]
 	var header_spans: Array[SemanticSpan] = [
 		_make_span(header_text, SemanticSpan.SpanType.OBJECT, {
 			"lane": "condition",
@@ -5067,7 +5070,8 @@ func _create_object_groups(actions: Array) -> Dictionary:
 	var index: int = 0
 	while index < actions.size() - 1:
 		var spawn: Dictionary = _instantiate_action_parts(actions[index])
-		if spawn.is_empty() or not _plants_node(actions[index + 1], str(spawn.get("alias", ""))):
+		var placement_word: String = _plant_placement_word(actions[index + 1], str(spawn.get("alias", "")))
+		if spawn.is_empty() or placement_word.is_empty():
 			index += 1
 			continue
 		var last: int = index + 1
@@ -5081,7 +5085,8 @@ func _create_object_groups(actions: Array) -> Dictionary:
 			indices.append(member_index)
 		leads[index] = {
 			"text": _create_object_text(str(spawn.get("source", "")), str(spawn.get("alias", "")),
-				position_text, bool(spawn.get("copy", false)), bool(spawn.get("pooled", false))),
+				position_text, bool(spawn.get("copy", false)), bool(spawn.get("pooled", false)),
+				placement_word),
 			"alias": str(spawn.get("alias", "")),
 			"line_count": last - index + 1,
 			"indices": indices,
@@ -5404,13 +5409,49 @@ func _instantiate_action_parts(action_resource: Variant) -> Dictionary:
 ## True when the action is the `add_child(b)` / `add_sibling(b)` (on this node or on a named parent)
 ## that puts the freshly made object into the tree.
 func _plants_node(action_resource: Variant, alias: String) -> bool:
+	return not _plant_placement_word(action_resource, alias).is_empty()
+
+
+## U5. WHERE the freshly made object was planted, in the sheet's words - "next to it" for a sibling
+## (which `get_parent().add_child(b)` is, whatever it is spelled as) and "inside it" for a child of
+## this node. "" when the action is not the plant at all.
+##
+## Both spellings count: the picked Add Child row, and the plain `get_parent().add_child(b)` line a
+## hand-written script writes, which lifts to no ACE of its own. Only an EXACT one-argument call on
+## the alias is claimed - a plant with extra arguments is doing something the row cannot say.
+func _plant_placement_word(action_resource: Variant, alias: String) -> String:
+	if alias.is_empty():
+		return ""
 	var action: ACEAction = action_resource as ACEAction
-	if action == null or not action.enabled or alias.is_empty():
-		return false
-	if not (action.ace_id.contains("AddChild") or action.ace_id.contains("AddSibling")):
-		return false
-	var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
-	return str(params.get("node", params.get("child", ""))).strip_edges() == alias
+	if action != null:
+		if not action.enabled:
+			return ""
+		var params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+		if action.ace_id.contains("AddSibling"):
+			return "next to it" if str(params.get("node", params.get("child", ""))).strip_edges() == alias else ""
+		if action.ace_id.contains("AddChild"):
+			return "inside it" if str(params.get("node", params.get("child", ""))).strip_edges() == alias else ""
+		if action.ace_id != "CallMethod":
+			return ""
+		return _plant_call_placement("%s.%s(%s)" % [str(params.get("target", "")),
+			str(params.get("method", "")), str(params.get("args", ""))], alias)
+	var raw: RawCodeRow = action_resource as RawCodeRow
+	if raw == null or not raw.enabled:
+		return ""
+	return _plant_call_placement(raw.code.strip_edges(), alias)
+
+
+## The placement word one CALL says, or "" when the line is not a plant of `alias`.
+func _plant_call_placement(code: String, alias: String) -> String:
+	var text: String = code.strip_edges()
+	if text.contains("\n"):
+		return ""
+	for entry: Array in [["get_parent().add_child(", "next to it"], ["add_sibling(", "next to it"],
+			["self.add_sibling(", "next to it"], ["add_child(", "inside it"], ["self.add_child(", "inside it"]]:
+		var head: String = str(entry[0])
+		if text.begins_with(head) and text == "%s%s)" % [head, alias]:
+			return str(entry[1])
+	return ""
 
 
 ## The value of a `b.global_position = P` / `b.position = P` that immediately follows, or "" when the
@@ -5435,7 +5476,7 @@ func _placement_value(action_resource: Variant, alias: String) -> String:
 ## ROOT node - whenever the source is a preloaded scene this sheet declares; otherwise the variable's
 ## own name, which is the honest answer when nothing else is known.
 func _create_object_text(source: String, alias: String, position_text: String, copy: bool,
-		pooled: bool = false) -> String:
+		pooled: bool = false, placement_word: String = "") -> String:
 	var shown: String = source
 	var resolved: Dictionary = _lens_scene_vars.get(source, {}) as Dictionary
 	if not resolved.is_empty() and not str(resolved.get("name", "")).is_empty():
@@ -5445,8 +5486,20 @@ func _create_object_text(source: String, alias: String, position_text: String, c
 		var icon_class: String = str(resolved.get("icon_class", ""))
 		if not icon_class.is_empty() and not alias.is_empty():
 			_lens_class_map[alias] = icon_class
+	# U5. Copying a node that is ALREADY in the scene is Clone object; Create object is for making one
+	# out of a scene file (M39). Two different things a reader means, so two different words - and the
+	# clone says what it made and where it put it, which is the whole of what the two lines did.
 	if copy:
-		shown = "(%s %s)" % [EventSheetL10n.translate("copy of"), shown]
+		var clone_text: String = "%s %s" % [EventSheetL10n.translate("Clone object"), shown]
+		var asides: PackedStringArray = PackedStringArray()
+		if not alias.is_empty():
+			asides.append("→ %s" % alias)
+		if not placement_word.is_empty():
+			asides.append(EventSheetL10n.translate(placement_word))
+		if not position_text.is_empty():
+			asides.append("%s %s" % [EventSheetL10n.translate("at"),
+				_reading_sentence(EventSheetSentence.expression_text(position_text))])
+		return clone_text if asides.is_empty() else "%s (%s)" % [clone_text, ", ".join(asides)]
 	var text: String = "%s %s" % [EventSheetL10n.translate("Create object"), shown]
 	if not position_text.is_empty():
 		# Through the shared value lens, so the place a thing is made reads exactly as it would in any
@@ -5511,9 +5564,17 @@ func _match_reads_as_else_if(match_row: MatchRow) -> bool:
 		return false
 	if match_row.match_expression.strip_edges().is_empty():
 		return false
+	var subject: String = match_row.match_expression.strip_edges()
+	var context: Dictionary = sentence_context()
 	for case_index: int in range(match_row.cases.size()):
 		var match_case: MatchCase = match_row.cases[case_index]
-		if match_case == null or not ViewportRowBuilder.is_plain_match_pattern(match_case.pattern):
+		if match_case == null:
+			return false
+		# U2. A pattern that BINDS a name, destructures a list or picks a table apart says something a
+		# plain value cannot - and now has words of its own, so those arms join the chain too. Anything
+		# neither reading claims still keeps the pattern text it was written as.
+		if not ViewportRowBuilder.is_plain_match_pattern(match_case.pattern) \
+				and EventSheetSentence.match_pattern_reading(subject, match_case.pattern, context).is_empty():
 			return false
 		# A `_` anywhere but last would mean the branches after it are dead; that is not a chain.
 		if str(match_case.pattern).strip_edges() == "_" and case_index != match_row.cases.size() - 1:
@@ -5529,6 +5590,11 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 	var spans: Array[SemanticSpan] = []
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var text: String = pattern.strip_edges()
+	# U2. A pattern that says something a plain value cannot draws its own sentence and its own chips.
+	var pattern_reading: Dictionary = {} if ViewportRowBuilder.is_plain_match_pattern(text) \
+		else EventSheetSentence.match_pattern_reading(subject, text, sentence_context())
+	if not pattern_reading.is_empty():
+		return _match_pattern_condition_spans(pattern_reading, chain_index, condition_style_meta)
 	if chain_index > 0 or text == "_":
 		spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
 			"lane": "condition",
@@ -5553,6 +5619,47 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 	for carried: SemanticSpan in carrier.spans:
 		_say_equals_once(carried)
 		spans.append(carried)
+	return spans
+
+
+## U2. The condition cells of one PATTERN arm: the Else chip when the arm takes whatever is left, the
+## arm's own sentence otherwise, and the names it binds as chips after it. The chips sit on the same
+## line as the sentence, because what the pattern pulled out is part of what the pattern says.
+func _match_pattern_condition_spans(reading: Dictionary, chain_index: int,
+		condition_style_meta: Dictionary) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var sentence: String = str(reading.get("text", ""))
+	var is_else: bool = bool(reading.get("is_else", false))
+	var line_index: int = 0
+	if chain_index > 0 or is_else:
+		spans.append(_make_span(EventSheetL10n.translate("Else"), SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "else_keyword",
+			"chip": true,
+			"hoverable": false,
+			"line_index": 0,
+			"object_label": _object_label_for("Core", "")
+		}.merged(condition_style_meta, true)))
+		# An Else-if's test sits on the SECOND condition line, under the Else chip, exactly as the
+		# plain-value chain draws it.
+		line_index = 0 if is_else else 1
+	if not sentence.is_empty():
+		spans.append(_make_span(sentence, SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "match_pattern",
+			"editable": false,
+			"line_index": line_index,
+			"object_label": _object_label_for("Core", "")
+		}.merged(condition_style_meta, true)))
+	for chip_text: String in (reading.get("chips", PackedStringArray()) as PackedStringArray):
+		spans.append(_make_span(chip_text, SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "match_binding",
+			"editable": false,
+			"chip": true,
+			"hoverable": false,
+			"line_index": line_index
+		}.merged(condition_style_meta, true)))
 	return spans
 
 
