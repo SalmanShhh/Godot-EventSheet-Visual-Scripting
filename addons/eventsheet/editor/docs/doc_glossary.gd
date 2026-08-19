@@ -38,9 +38,23 @@ const TERMS: Array[Dictionary] = [
 	{
 		"key": "family",
 		"term": "Family",
-		"here": "Group. A sheet declared as a Family iterates every member, and Godot's own node groups do the same job one level down.",
-		"note": "",
+		"here": "A base class and the scripts that extend it, shown as one thing - and a group of the same name shown on the same line. The word is a setting: Family, Base class, Kind or your own, from Settings ▸ Words.",
+		"note": "The base's variables, functions and behaviors are what its members share, so adding one there adds it to all of them. The Doctor says when a group and the class it is named after have drifted apart.",
 		"related": ["pick", "object-type"],
+	},
+	{
+		"key": "layer",
+		"term": "Layer",
+		"here": "CanvasLayer, plus the Z order within one. Move to layer changes which layer; Set Z order sorts inside it; Move to top of layer reorders an object among its siblings without touching either.",
+		"note": "Layers beat Z order always: an object on a higher layer draws over everything on a lower one, whatever the numbers say.",
+		"related": ["object-type"],
+	},
+	{
+		"key": "browser",
+		"term": "Browser",
+		"here": "OS and DisplayServer, under the one name an event sheet keeps them under: Go to URL, Copy to clipboard, Request fullscreen, Alert.",
+		"note": "The questions - Is on web, Is on mobile, Is Android - read under Platform, in the shipped Platform Info pack's own words.",
+		"related": ["object-type"],
 	},
 	{
 		"key": "layout",

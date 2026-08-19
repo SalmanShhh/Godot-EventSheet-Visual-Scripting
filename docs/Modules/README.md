@@ -68,6 +68,7 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 - [Groups, Tags And Systems](Groups-Tags-And-Systems.md) - a group as a tag, as a set to count and total, and as a system you run one method over.
 - [Triggers, Signals And When Rows Run](Triggers-Signals-And-When-Rows-Run.md) - the lifecycle and per-frame triggers, scene-tree and Area signals, On Signal and Emit Signal, and the gates that turn "every tick" into "once".
 - [Multiplayer](Multiplayer.md) - messages one peer runs on the others, who is the host, who owns which object, and this peer's own id.
+- [Around Objects: Picking, Layers, Text And The Browser](Around-Objects.md) - which instances the rows are about, where an object draws, how its text is styled, and what the game asks of the machine it runs on.
 
 ## Look and sound
 

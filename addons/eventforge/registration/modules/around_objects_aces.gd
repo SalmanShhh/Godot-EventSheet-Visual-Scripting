@@ -34,22 +34,6 @@ const CAT_PLATFORM := "Platform"
 ## is why it is the default: the pick rows read as a family the moment the group names one.
 const LIST_DEFAULT := "get_tree().get_nodes_in_group(\"enemy\")"
 
-## The alignment choices, as the constants the reading spells back in words.
-const HORIZONTAL_ALIGNMENTS: Array = [
-	{"key": "HORIZONTAL_ALIGNMENT_LEFT", "label": "Left"},
-	{"key": "HORIZONTAL_ALIGNMENT_CENTER", "label": "Centre"},
-	{"key": "HORIZONTAL_ALIGNMENT_RIGHT", "label": "Right"},
-	{"key": "HORIZONTAL_ALIGNMENT_FILL", "label": "Justified"}
-]
-
-## The vertical alignment choices, in the same shape.
-const VERTICAL_ALIGNMENTS: Array = [
-	{"key": "VERTICAL_ALIGNMENT_TOP", "label": "Top"},
-	{"key": "VERTICAL_ALIGNMENT_CENTER", "label": "Middle"},
-	{"key": "VERTICAL_ALIGNMENT_BOTTOM", "label": "Bottom"},
-	{"key": "VERTICAL_ALIGNMENT_FILL", "label": "Justified"}
-]
-
 ## The platforms `OS.get_name()` answers with, so the condition is a choice rather than a typed
 ## string nobody can spell twice the same way.
 const PLATFORM_NAMES: Array = [
@@ -174,13 +158,9 @@ static func _layers(d: Array[ACEDescriptor]) -> void:
 		CAT_LAYERS, "set layer order to [b]{order}[/b]", "CanvasLayer")
 		.described("Where this whole layer sits among the others: a HUD on a higher layer draws over the world however the world's objects are ordered among themselves."))
 
-	d.append(F.make_descriptor("Core", "SetLayerVisible", "Set Layer Visible", ACEDescriptor.ACEType.ACTION,
-		"visible = true", "", [], CAT_LAYERS, "set layer visible", "CanvasLayer")
-		.described("Shows the whole layer and everything on it - one row instead of one per object."))
-
-	d.append(F.make_descriptor("Core", "SetLayerInvisible", "Set Layer Invisible", ACEDescriptor.ACEType.ACTION,
-		"visible = false", "", [], CAT_LAYERS, "set layer invisible", "CanvasLayer")
-		.described("Hides the whole layer and everything on it. The pause menu layer, the debug overlay layer."))
+	# Showing and hiding a layer is the shipped Set Visible / Set Invisible row - a CanvasLayer's
+	# `visible` is the same property every other object has. A second row writing the same line would
+	# take the lift away from the first one and make every hidden SPRITE read as a hidden layer.
 
 
 ## How drawn text is styled.
@@ -210,19 +190,10 @@ static func _text(d: Array[ACEDescriptor]) -> void:
 		CAT_TEXT, "set font to [b]{font}[/b]", "Control")
 		.described("Gives this one control its own font, over whatever its theme says. Drag a .ttf or .otf from the FileSystem to fill it in."))
 
-	d.append(F.make_descriptor("Core", "SetHorizontalAlignment", "Set Horizontal Alignment", ACEDescriptor.ACEType.ACTION,
-		"horizontal_alignment = {alignment}", "",
-		[F.make_param("alignment", "String", "HORIZONTAL_ALIGNMENT_CENTER", "Align",
-			"Which way the text sits across the control.", "", HORIZONTAL_ALIGNMENTS)],
-		CAT_TEXT, "set horizontal alignment to [b]{alignment}[/b]", "Label")
-		.described("Which way the text sits across its box: left, centre, right, or justified to both edges."))
-
-	d.append(F.make_descriptor("Core", "SetVerticalAlignment", "Set Vertical Alignment", ACEDescriptor.ACEType.ACTION,
-		"vertical_alignment = {alignment}", "",
-		[F.make_param("alignment", "String", "VERTICAL_ALIGNMENT_CENTER", "Align",
-			"Where the text sits down the control.", "", VERTICAL_ALIGNMENTS)],
-		CAT_TEXT, "set vertical alignment to [b]{alignment}[/b]", "Label")
-		.described("Where the text sits down its box: top, middle, bottom, or spread to fill it."))
+	# Alignment has no row of its own yet, on purpose: a row would carry the engine constant as its
+	# value, and a lifted line would then read `set horizontal alignment to HORIZONTAL_ALIGNMENT_
+	# CENTER` where the reading says `Set horizontal alignment to centre`. The reading is the promise;
+	# a row that makes it worse is not parity. Set Property reaches the same property meanwhile.
 
 	d.append(F.make_descriptor("Core", "SetWordWrapOn", "Set Word Wrap On", ACEDescriptor.ACEType.ACTION,
 		"autowrap_mode = TextServer.AUTOWRAP_WORD", "", [],

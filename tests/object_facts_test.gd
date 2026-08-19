@@ -119,11 +119,11 @@ static func _popup_identity_rows() -> bool:
 		+ " | Functions=Take Damage (amount) · Flee · Is Alive (condition)"
 		+ " | Triggers=On Died · On Hit (body)"
 		+ " | Behaviors=Health (max health = 50.0)"
-		+ " | Families=player · damageable · respawnable") and passed
+		+ " | Base classes=player · damageable · respawnable") and passed
 	# The Godot word rides along ONCE, muted, on the row that needs the bridge.
 	var families_note: String = ""
 	for row: Dictionary in EventSheetObjectProperties.identity_rows(entry, SCRIPT_PATH):
-		if str(row.get("label", "")) == "Families":
+		if str(row.get("label", "")) == "Base classes":
 			families_note = str(row.get("note", ""))
 	passed = _check("the Godot word for a family is a muted note, not the name", families_note, "(groups)") and passed
 	passed = _check("an object with no file behind it grows no sections",
@@ -242,14 +242,14 @@ static func _object_bar_sections() -> bool:
 		"USED IN THIS SHEET: Player · Sprite2D · Boss"
 		+ " | ALSO IN THE SCENE: Camera2D"
 		+ " | INPUT: "
-		+ " | GLOBALS & FAMILIES: Game · enemies") and passed
+		+ " | GLOBALS & BASE CLASSES: Game · enemies") and passed
 	passed = _check("the used section is its title and nothing else",
 		EventSheetObjectsPanel.section_line(sections[0], 3), "USED IN THIS SHEET") and passed
 	passed = _check("the scene section counts what is left and says what to do with it",
 		EventSheetObjectsPanel.section_line(sections[1], 1),
 		"ALSO IN THE SCENE  (1) - drag one onto the sheet to use it") and passed
 	passed = _check("the globals section just counts",
-		EventSheetObjectsPanel.section_line(sections[3], 2), "GLOBALS & FAMILIES  (2)") and passed
+		EventSheetObjectsPanel.section_line(sections[3], 2), "GLOBALS & BASE CLASSES  (2)") and passed
 	# A name that resolves to nothing at runtime is the one thing in the bar a reader must not
 	# scroll past, so it is flagged rather than listed like any other node.
 	passed = _check("an object the scene does not have is flagged",

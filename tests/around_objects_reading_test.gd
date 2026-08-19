@@ -125,7 +125,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ move to layer $\"../FX\"",
 	"System ▸ set layer order to 10",
 	"System ▸ set font size to 32",
-	"System ▸ set horizontal alignment to HORIZONTAL_ALIGNMENT_CENTER",
+	"label ▸ Set horizontal alignment to centre",
 	"System ▸ set word wrap on",
 	"System ▸ go to URL \"https://example.com\"",
 	"System ▸ copy code to clipboard",
