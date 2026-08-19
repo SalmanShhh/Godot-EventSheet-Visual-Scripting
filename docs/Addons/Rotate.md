@@ -239,3 +239,13 @@ On Ride End   -> Carousel | Rotate: Set Rotation Speed  0
 - **Speed is degrees, not radians.** 360 = one full turn per second.
 - **The editor preview reads the Inspector live** - change Speed while previewing and the
   spin retunes instantly. It restores the node's rotation when stopped.
+
+## Already written it by hand? It reads as this pack
+
+`rotation_degrees += rotate_speed * delta` reads **Rotate - Rotate clockwise at rotate speed (degrees
+per second)** the moment the file is opened as a sheet, and `rotation += k * delta` says the same
+with *(radians per second)*. A spin that is not scaled by the frame time is not a rate, so it keeps
+the addition it is.
+
+The event wears the pattern chip, whose Adopt behavior offers this pack. Prefer the one line? The
+picker's **Rotate Clockwise** writes exactly it.

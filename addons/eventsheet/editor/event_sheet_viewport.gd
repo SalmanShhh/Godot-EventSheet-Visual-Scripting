@@ -2175,6 +2175,10 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# and the clear wipes every one of them, leaving only whatever the span pass claims later.
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_patterns(sheet)
+	# T2. The nearest-in-family loop is a shape spread over a `for`, the compare inside it and the
+	# assignment after, so it is claimed from the file here for the same reason the readings above
+	# are: anywhere earlier and the clear on the line above would wipe it.
+	EventSheetViewportReadingRows.claim_behavior_shape_patterns(sheet)
 	# P4 - a whole SCENE opened as one sheet: the scene's bar, then every script it uses under its own
 	# object bar, each read by this very function. A composite has no events of its own.
 	if EventSheetSceneSheet.is_scene_sheet(sheet):

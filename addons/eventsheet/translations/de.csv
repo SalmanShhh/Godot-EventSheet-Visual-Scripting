@@ -2727,3 +2727,34 @@ Nothing is running - Apply to running game needs a game to apply to.,Es laeuft n
 ⟳ Applies when the game resumes (paused at a row),"⟳ Wird angewendet, wenn das Spiel fortfaehrt (an einer Zeile pausiert)"
 Auto-apply while debugging,Beim Debuggen automatisch anwenden
 Ships as,Wird ausgeliefert als
+Set angle of motion to {angle},Bewegungswinkel auf {angle} setzen
+Set speed to {speed},Tempo auf {speed} setzen
+accelerating by,beschleunigt um
+Set gravity to {gravity},Schwerkraft auf {gravity} setzen
+Bounce off solids,Von Hindernissen abprallen
+Distance travelled {sign} {limit},Zurückgelegte Strecke {sign} {limit}
+Rotate toward target at {rate},Mit {rate} zum Ziel drehen
+Has target,Hat ein Ziel
+Move toward {destination} at {speed},Mit {speed} auf {destination} zu bewegen
+Move to position {point},Zur Position {point} bewegen
+Move to position {point} at {speed},Mit {speed} zur Position {point} bewegen
+Start moving,Losbewegen
+Rotate clockwise at {rate} (degrees per second),Mit {rate} im Uhrzeigersinn drehen (Grad pro Sekunde)
+Rotate clockwise at {rate} (radians per second),Mit {rate} im Uhrzeigersinn drehen (Bogenmaß pro Sekunde)
+Wrap around layout horizontally,Waagerecht am Layout umbrechen
+Wrap around layout vertically,Senkrecht am Layout umbrechen
+Bound to layout (inside {low} - {high}),Im Layout halten (innerhalb {low} - {high})
+Pin to {anchor} (position),An {anchor} heften (Position)
+Pin to {anchor} (position · offset {offset}),An {anchor} heften (Position · Versatz {offset})
+Pin to {anchor} (angle),An {anchor} heften (Winkel)
+Fade out over {seconds} seconds,Über {seconds} Sekunden ausblenden
+Fade out over {seconds} seconds (then destroy),Über {seconds} Sekunden ausblenden (dann zerstören)
+Acquire nearest {family} within {range},Nächstes {family} innerhalb von {range} erfassen
+Bullet,Geschoss
+Turret,Geschützturm
+Move To,Bewegen zu
+Rotate,Drehen
+Wrap,Umbrechen
+Bound To,Begrenzen auf
+Pin,Heften
+Fade,Ausblenden

@@ -2727,3 +2727,34 @@ Nothing is running - Apply to running game needs a game to apply to.,没有正�
 ⟳ Applies when the game resumes (paused at a row),⟳ 游戏继续时应用（在某行暂停）
 Auto-apply while debugging,调试时自动应用
 Ships as,生成为
+Set angle of motion to {angle},将运动角度设为 {angle}
+Set speed to {speed},将速度设为 {speed}
+accelerating by,加速
+Set gravity to {gravity},将重力设为 {gravity}
+Bounce off solids,从实体上弹开
+Distance travelled {sign} {limit},已飞行距离 {sign} {limit}
+Rotate toward target at {rate},以 {rate} 转向目标
+Has target,有目标
+Move toward {destination} at {speed},以 {speed} 向 {destination} 移动
+Move to position {point},移动到位置 {point}
+Move to position {point} at {speed},以 {speed} 移动到位置 {point}
+Start moving,开始移动
+Rotate clockwise at {rate} (degrees per second),以 {rate} 顺时针旋转（度/秒）
+Rotate clockwise at {rate} (radians per second),以 {rate} 顺时针旋转（弧度/秒）
+Wrap around layout horizontally,在布局中水平环绕
+Wrap around layout vertically,在布局中垂直环绕
+Bound to layout (inside {low} - {high}),限制在布局内（{low} - {high} 之间）
+Pin to {anchor} (position),固定到 {anchor}（位置）
+Pin to {anchor} (position · offset {offset}),固定到 {anchor}（位置 · 偏移 {offset}）
+Pin to {anchor} (angle),固定到 {anchor}（角度）
+Fade out over {seconds} seconds,在 {seconds} 秒内淡出
+Fade out over {seconds} seconds (then destroy),在 {seconds} 秒内淡出（然后销毁）
+Acquire nearest {family} within {range},锁定 {range} 内最近的 {family}
+Bullet,子弹
+Turret,炮塔
+Move To,移动到
+Rotate,旋转
+Wrap,环绕
+Bound To,限制范围
+Pin,固定
+Fade,淡出

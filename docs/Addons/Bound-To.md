@@ -235,3 +235,12 @@ On Tutorial Done -> Player | Bound To: Set Bound Space  "screen"
   pack is for screen-space rules.
 - **Pair with Wrap, not both on one axis.** Bound clamps, Wrap teleports - one node should do
   one or the other per axis.
+
+## Already written it by hand? It reads as this pack
+
+`position = position.clamp(Vector2.ZERO, screen)` reads **Bound To - Bound to layout (inside (0, 0) -
+screen)** the moment the file is opened as a sheet.
+
+The event wears the pattern chip, whose Adopt behavior offers this pack - which adds the parts one
+line cannot have: the live camera rect, edge-versus-origin binding, **Is At Bound** and **On Hit
+Bound**. Prefer the one line? The picker's **Bound To Layout** writes exactly it.

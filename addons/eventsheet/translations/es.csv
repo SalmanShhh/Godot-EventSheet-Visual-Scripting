@@ -2727,3 +2727,34 @@ Nothing is running - Apply to running game needs a game to apply to.,No hay nada
 ⟳ Applies when the game resumes (paused at a row),⟳ Se aplicara al reanudar el juego (pausado en una fila)
 Auto-apply while debugging,Aplicar automaticamente al depurar
 Ships as,Se genera como
+Set angle of motion to {angle},Fijar el ángulo de movimiento en {angle}
+Set speed to {speed},Fijar la velocidad en {speed}
+accelerating by,acelerando en
+Set gravity to {gravity},Fijar la gravedad en {gravity}
+Bounce off solids,Rebotar en los sólidos
+Distance travelled {sign} {limit},Distancia recorrida {sign} {limit}
+Rotate toward target at {rate},Girar hacia el objetivo a {rate}
+Has target,Tiene objetivo
+Move toward {destination} at {speed},Avanzar hacia {destination} a {speed}
+Move to position {point},Ir a la posición {point}
+Move to position {point} at {speed},Ir a la posición {point} a {speed}
+Start moving,Empezar a moverse
+Rotate clockwise at {rate} (degrees per second),Girar en sentido horario a {rate} (grados por segundo)
+Rotate clockwise at {rate} (radians per second),Girar en sentido horario a {rate} (radianes por segundo)
+Wrap around layout horizontally,Envolver el diseño en horizontal
+Wrap around layout vertically,Envolver el diseño en vertical
+Bound to layout (inside {low} - {high}),Limitar al diseño (dentro de {low} - {high})
+Pin to {anchor} (position),Fijar a {anchor} (posición)
+Pin to {anchor} (position · offset {offset}),Fijar a {anchor} (posición · desfase {offset})
+Pin to {anchor} (angle),Fijar a {anchor} (ángulo)
+Fade out over {seconds} seconds,Desvanecer durante {seconds} segundos
+Fade out over {seconds} seconds (then destroy),Desvanecer durante {seconds} segundos (y destruir)
+Acquire nearest {family} within {range},Fijar el {family} más cercano dentro de {range}
+Bullet,Bala
+Turret,Torreta
+Move To,Mover a
+Rotate,Rotar
+Wrap,Envolver
+Bound To,Limitar a
+Pin,Fijar
+Fade,Desvanecer

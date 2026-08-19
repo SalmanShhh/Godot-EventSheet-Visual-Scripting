@@ -421,3 +421,25 @@ Freezing first keeps the shot from drifting while it dissolves, and the fade han
 - **Collision is not included - you handle hits.** The behavior only moves the node. Give the projectile its own Area2D or body to detect impacts, and destroy or pool it yourself; use `distance_travelled` or a lifetime timer to clean up shots that miss.
 - **`align_rotation` turns the whole host.** With it on, the node is rotated to face its heading every frame - great for arrows and missiles. If your art should not spin (a round ball, an already-oriented sprite), turn it off in the Inspector or with Set Align Rotation `false`.
 - **Freezing keeps the bullet alive.** Set Bullet Enabled `false` (or Set Enabled Movement `false`) only stops the motion - it does not hide or delete the projectile, and the bullet resumes with the same velocity when you enable it again.
+
+## Already written it by hand? It reads as this pack
+
+Open a projectile script as a sheet and the arithmetic reads in this pack's words before you attach
+anything:
+
+| The line in your script | The row it reads as |
+|---|---|
+| `velocity = Vector2.RIGHT.rotated(rotation) * speed` | Bullet - Set angle of motion to angle |
+| `speed += accel * delta` | Bullet - Set speed to speed *accelerating by accel* |
+| `velocity.y += gravity * delta` | Bullet - Set gravity to gravity |
+| `position += velocity * delta` | Bullet - Move |
+| `velocity = velocity.bounce(normal)` | Bullet - Bounce off solids |
+| `position.distance_to(start) > range_px` | Bullet - Distance travelled > range px |
+
+`Vector2.from_angle(rotation) * speed` and `transform.x * speed` are the same sentence, and
+`move_and_collide(velocity * delta)` is the same step. The event those rows sit under wears the
+pattern chip, whose Adopt behavior offers this pack.
+
+Prefer to keep the lines? The picker writes exactly them: **Set Angle Of Motion**, **Move**, **Bounce
+Off Solids**, plus the rows that already shipped for the other three - **Add To Variable** for the
+acceleration, **Apply Gravity**, and the **Distance To** expression.

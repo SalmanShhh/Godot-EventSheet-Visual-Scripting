@@ -135,6 +135,33 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 | Next Path Position | The next point along the path the agent should move toward. | `get_next_path_position()` |
 | Distance To Target | How far the agent still is from its navigation target. | `distance_to_target()` |
 
+### The behavior shapes - the one-liners a pack is made of
+
+Each of these writes EXACTLY the line the reading recognises, so a row dropped here and the same line
+typed into a `.gd` file are the same bytes and read the same sentence. Where a shipped pack covers the
+whole shape (Bullet, Move To, Rotate, Wrap, Bound To, Pin, Fade), attaching the pack is the tidier
+answer and the pattern chip offers it first; these rows are for when you want the one line and
+nothing else.
+
+Three of the shapes have no row of their own because one already ships and writes exactly the same
+line: **Add To Variable** is a projectile's acceleration (`speed += accel * delta`), **Apply Gravity**
+is its gravity, **Distance To** is how far it has flown, and **Is Within Distance** is a glide's
+arrival question. A second entry with the same template would put two rows with one meaning in the
+picker.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Angle Of Motion | Sends the object flying along an **Angle** at a **Speed**. | `{host.}velocity = Vector2.RIGHT.rotated({angle}) * {speed}` |
+| Move | Takes this frame's step along the current velocity. | `{host.}position += {host.}velocity * {delta_t}` |
+| Bounce Off Solids | Reflects the velocity off a surface **Normal**, so the shot ricochets. | `{host.}velocity = {host.}velocity.bounce({normal})` |
+| Move Toward Position | Glides this frame's share of the way toward a **Destination**. | `{host.}position = {host.}position.move_toward({destination}, {speed} * {delta_t})` |
+| Rotate Clockwise | Spins the object at **Degrees per second**. | `{host.}rotation_degrees += {degrees_per_second} * {delta_t}` |
+| Wrap Around Layout Horizontally | Off one side of the layout and back in the other. | `{host.}position.x = wrapf({host.}position.x, {low}, {high})` |
+| Wrap Around Layout Vertically | The same, top to bottom. | `{host.}position.y = wrapf({host.}position.y, {low}, {high})` |
+| Bound To Layout | Holds the object inside the layout's edges. | `{host.}position = {host.}position.clamp({low}, {high})` |
+| Pin To | Puts the object at another **Object**'s place, plus an **Offset**. | `{host.}global_position = {anchor}.global_position + {offset}` |
+| Pin Angle To | Turns the object to match another **Object**'s angle. | `{host.}rotation = {anchor}.rotation` |
+
 ## Use cases
 
 **1. Teleport something to an exact spot.**

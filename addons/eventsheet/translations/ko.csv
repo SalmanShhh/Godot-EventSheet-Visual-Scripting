@@ -2727,3 +2727,34 @@ Nothing is running - Apply to running game needs a game to apply to.,실행 중�
 ⟳ Applies when the game resumes (paused at a row),⟳ 게임이 재개될 때 적용됩니다 (행에서 일시정지)
 Auto-apply while debugging,디버깅 중 자동 적용
 Ships as,생성 형태
+Set angle of motion to {angle},이동 각도를 {angle}(으)로 설정
+Set speed to {speed},속도를 {speed}(으)로 설정
+accelerating by,가속량
+Set gravity to {gravity},중력을 {gravity}(으)로 설정
+Bounce off solids,단단한 물체에 튕기기
+Distance travelled {sign} {limit},이동 거리 {sign} {limit}
+Rotate toward target at {rate},{rate}(으)로 대상 쪽으로 회전
+Has target,대상이 있음
+Move toward {destination} at {speed},{speed}(으)로 {destination}(으)로 이동
+Move to position {point},위치 {point}(으)로 이동
+Move to position {point} at {speed},{speed}(으)로 위치 {point}(으)로 이동
+Start moving,이동 시작
+Rotate clockwise at {rate} (degrees per second),{rate}(으)로 시계 방향 회전 (초당 각도)
+Rotate clockwise at {rate} (radians per second),{rate}(으)로 시계 방향 회전 (초당 라디안)
+Wrap around layout horizontally,레이아웃을 가로로 감싸기
+Wrap around layout vertically,레이아웃을 세로로 감싸기
+Bound to layout (inside {low} - {high}),레이아웃 안으로 제한 ({low} - {high} 내부)
+Pin to {anchor} (position),{anchor}에 고정 (위치)
+Pin to {anchor} (position · offset {offset}),{anchor}에 고정 (위치 · 오프셋 {offset})
+Pin to {anchor} (angle),{anchor}에 고정 (각도)
+Fade out over {seconds} seconds,{seconds}초에 걸쳐 사라지기
+Fade out over {seconds} seconds (then destroy),{seconds}초에 걸쳐 사라진 뒤 파괴
+Acquire nearest {family} within {range},{range} 이내에서 가장 가까운 {family} 포착
+Bullet,총알
+Turret,포탑
+Move To,이동
+Rotate,회전
+Wrap,감싸기
+Bound To,범위 제한
+Pin,고정
+Fade,페이드

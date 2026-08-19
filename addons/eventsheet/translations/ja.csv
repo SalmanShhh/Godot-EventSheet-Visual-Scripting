@@ -2727,3 +2727,34 @@ Nothing is running - Apply to running game needs a game to apply to.,実行中�
 ⟳ Applies when the game resumes (paused at a row),⟳ ゲーム再開時に適用されます (行で一時停止中)
 Auto-apply while debugging,デバッグ中は自動で適用
 Ships as,生成される形
+Set angle of motion to {angle},移動角度を {angle} にする
+Set speed to {speed},速度を {speed} にする
+accelerating by,加速量
+Set gravity to {gravity},重力を {gravity} にする
+Bounce off solids,壁で跳ね返る
+Distance travelled {sign} {limit},移動距離 {sign} {limit}
+Rotate toward target at {rate},目標へ {rate} で回転
+Has target,目標を持っている
+Move toward {destination} at {speed},{destination} へ {speed} で移動
+Move to position {point},位置 {point} へ移動
+Move to position {point} at {speed},位置 {point} へ {speed} で移動
+Start moving,移動を開始
+Rotate clockwise at {rate} (degrees per second),時計回りに {rate} で回転 (度/秒)
+Rotate clockwise at {rate} (radians per second),時計回りに {rate} で回転 (ラジアン/秒)
+Wrap around layout horizontally,レイアウトを左右にラップ
+Wrap around layout vertically,レイアウトを上下にラップ
+Bound to layout (inside {low} - {high}),レイアウト内に制限 ({low} - {high} の内側)
+Pin to {anchor} (position),{anchor} に固定 (位置)
+Pin to {anchor} (position · offset {offset}),{anchor} に固定 (位置 · オフセット {offset})
+Pin to {anchor} (angle),{anchor} に固定 (角度)
+Fade out over {seconds} seconds,{seconds} 秒かけてフェードアウト
+Fade out over {seconds} seconds (then destroy),{seconds} 秒かけてフェードアウト (その後破棄)
+Acquire nearest {family} within {range},{range} 以内で最も近い {family} を捕捉
+Bullet,弾
+Turret,タレット
+Move To,移動先
+Rotate,回転
+Wrap,ラップ
+Bound To,範囲制限
+Pin,固定
+Fade,フェード

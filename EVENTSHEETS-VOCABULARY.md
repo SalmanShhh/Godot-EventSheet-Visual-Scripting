@@ -1299,6 +1299,23 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Collision Force** - Approximate impact speed of the latest collision (inside On Collided).
 - **Collision Angle** - Approximate impact direction in degrees (inside On Collided).
 
+### PinBehavior (`res://eventsheet_addons/pin/pin_behavior.gd`)
+@ace_tags(movement, attachment) @ace_category("Pin") @ace_version(1.0.0)
+
+#### Conditions
+- **Is Pinned** - True while the host is riding another object.
+
+#### Actions
+- **Pin To** (`target: Node2D`) - Sticks the host to an object, remembering how far apart the two are right now. From this frame on the host rides it.
+- **Pin To At Offset** (`target: Node2D, offset_x: float, offset_y: float`) - Sticks the host to an object at a chosen distance from it, in pixels, instead of wherever it happens to be standing.
+- **Set Pin Offset** (`offset_x: float, offset_y: float`) - Moves the host to a new distance from the object it is riding, in pixels.
+- **Unpin** - Lets go. The host stays exactly where it was and moves on its own again.
+- **Set Pin Mode** (`mode: String`) - Chooses what the host copies from its anchor.
+
+#### Expressions
+- **PinOffsetX** - How far the host sits from its anchor along X, in pixels.
+- **PinOffsetY** - How far the host sits from its anchor along Y, in pixels.
+
 ### PlatformInfoAddon (`res://eventsheet_addons/platform_info/platform_info_addon.gd`)
 @ace_tags(platform, device, screen, system) @ace_category("Platform Info") @ace_version(1.0.0)
 
@@ -2315,6 +2332,21 @@ Audio Server vocabulary (the mixing desk from events).
 - **Audio Playback Speed** - The current global playback speed scale.
 - **Bus Count** - How many buses the current layout has.
 - **Audio Output Latency** - The output latency in seconds - rhythm games subtract it when judging hits.
+
+### Behavior Shape (`res://addons/eventforge/registration/modules/behavior_shape_aces.gd`)
+the behavior SHAPES as free actions (T1 / T3 / T4).
+
+#### Actions
+- **Set Angle Of Motion** (`angle: String, speed: String`) - Sends the object flying along an angle at a speed - the one line a projectile's movement is.
+- **Move** (`delta_t: String`) - Takes this frame's step along the current velocity. The step a projectile makes every tick.
+- **Bounce Off Solids** (`normal: String`) - Reflects the current velocity off a surface, so the projectile ricochets instead of stopping.
+- **Move Toward Position** (`destination: String, speed: String, delta_t: String`) - Glides this frame's share of the way toward a point, never overshooting it.
+- **Rotate Clockwise** (`degrees_per_second: String, delta_t: String`) - Spins the object at a steady rate - a coin, a fan, a saw blade.
+- **Wrap Around Layout Horizontally** (`low: String, high: String`) - Sends the object off one side of the layout and back in the other - the arcade wrap.
+- **Wrap Around Layout Vertically** (`low: String, high: String`) - Sends the object off the top of the layout and back in at the bottom, or the other way round.
+- **Bound To Layout** (`low: String, high: String`) - Holds the object inside the layout's edges instead of letting it leave - the arcade fence.
+- **Pin To** (`anchor: String, offset: String`) - Puts the object at another object's place, offset by however far apart you want them.
+- **Pin Angle To** (`anchor: String`) - Turns the object to match another object's angle, so the two stay aligned.
 
 ### Camera Fov (`res://addons/eventforge/registration/modules/camera_fov_aces.gd`)
 Camera FOV vocabulary (field of view from events).
@@ -3778,6 +3810,10 @@ Testing vocabulary (a sheet that makes claims and reports pass/fail).
 - **Fail Test** (`named: String, reason: String`) - Records a failure with its reason and marks the test finished. The reason is what the report prints beside the name.
 - **Watch For Signal** (`signal_name: String, target: String, seconds: String`) - Waits until the signal fires or the time runs out, then records which happened. It states no verdict of its own: the next rows read it with Watch For Signal Succeeded / Watch For Signal Timed Out and decide what each outcome means.
 - **Load Scene Under Test** (`scene_path: String, as_name: String`) - Instantiates a scene, adds it under the test node so it really runs, and remembers it under a short name. A missing scene is recorded as a failure rather than crashing the test.
+- **Wait Until Frame** (`frame: String`) - Holds the test until the given frame of the run, so the rows after it happen at a time a recording can reproduce exactly.
+- **Simulate Control Pressed At Frame** (`action: String, frame: String`) - Presses a control at a named frame of the run - one row of a recorded play.
+- **Simulate Control Released At Frame** (`action: String, frame: String`) - Lets a control go at a named frame of the run - one row of a recorded play.
+- **Expect At Frame** (`named: String, actual: String, expected: String, frame: String`) - A checkpoint in a recorded play: waits for the frame, then records a pass or a failure that names the frame it drifted on.
 
 #### Expressions
 - **Scene Under Test** (`as_name: String`) - The node a Load Scene Under Test row loaded under this name, so later rows can read its position, call its methods, or watch its signals.

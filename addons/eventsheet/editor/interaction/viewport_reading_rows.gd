@@ -96,6 +96,13 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# navigation agent plus the waypoint local a path walk is written around. Worked out once here,
 	# for the same reason the tween chains are - a per-row guess could only see one line at a time.
 	extras.merge(godot_systems_facts(sheet), true)
+	# ── T1 / T2 / T3 / T4 lens hook ────────────────────────────────────────────────────────────
+	# What the FILE says about the hand-rolled behavior shapes it writes: whether it is a projectile
+	# at all, which variable a nearest-in-family loop fills, which point a glide aims at and which
+	# flag says it is running, which object a place is copied from, and which tween fades to nothing.
+	# Not one of those questions can be answered from a single line, so all of them are answered from
+	# one walk here and handed to the grammar as ordinary context.
+	extras.merge(EventSheetBehaviorShapes.facts(ordered_code_lines(sheet)), true)
 	return extras
 
 
@@ -148,6 +155,51 @@ static func _claim_body(sheet: EventSheetResource, row_uid: String, event_uid: S
 		EventSheetPatternFacts.claim(sheet, str(claim.get("pattern", "")), row_uid, event_uid,
 			claim.get("evidence", PackedStringArray()), str(claim.get("words", "")),
 			str(claim.get("adoptable", "")), claim.get("ace_ids", PackedStringArray()))
+
+
+## T2. The ACEs a turret is authored from, so the Manual's "Patterns using this" and Adopt behavior
+## know what the hand-rolled loop would be replaced BY. The pack is the first option; these are the
+## free actions the loop would otherwise be written as.
+const TURRET_ACE_IDS: PackedStringArray = [
+	"Core/AcquireNearestInFamily", "Core/HasTarget", "Core/RotateToward"
+]
+
+
+## T2. Records the nearest-in-family loop each event writes as the Turret behavior's Acquire target,
+## with the loop's own lines as the evidence and the Weapon Kit as the pack that could replace it.
+##
+## The loop is a SHAPE spread over a `for`, the compare inside it and the assignment after, so it is
+## claimed here rather than read as a row: the rows the loop is drawn as are unchanged, and the chip,
+## the hover evidence and Adopt behavior get the one sentence the shape is.
+static func claim_behavior_shape_patterns(sheet: EventSheetResource) -> void:
+	if sheet == null:
+		return
+	for entry: Variant in sheet.events:
+		if not (entry is EventRow):
+			continue
+		var event_row: EventRow = entry
+		var body: PackedStringArray = PackedStringArray()
+		_append_ordered_lines(event_row, body, 0)
+		_claim_turret_runs(sheet, event_row.event_uid, body)
+	for entry: Variant in sheet.functions:
+		if not (entry is EventFunction):
+			continue
+		var event_function: EventFunction = entry
+		var body: PackedStringArray = PackedStringArray()
+		for owned: Variant in event_function.events:
+			_append_ordered_lines(owned, body, 0)
+		_claim_turret_runs(sheet, "function:%s" % event_function.function_name, body)
+
+
+## One owning row's turret loops, handed to the registry in the Turret behavior's own words.
+static func _claim_turret_runs(sheet: EventSheetResource, row_uid: String,
+		body: PackedStringArray) -> void:
+	for run: Dictionary in EventSheetBehaviorShapes.nearest_in_family_runs(body):
+		var words: String = EventSheetL10n.translate("Acquire nearest {family} within {range}") \
+			.replace("{family}", str(run.get("family", ""))) \
+			.replace("{range}", str(run.get("range", "")).replace("_", " "))
+		EventSheetPatternFacts.claim(sheet, "turret", row_uid, row_uid,
+			run.get("evidence", PackedStringArray()), words, "weapon_kit", TURRET_ACE_IDS)
 
 
 ## S17. {local name: {object, cell}} for every `var data = <tilemap>.get_cell_tile_data(<cell>)` the
@@ -652,8 +704,27 @@ static func _append_ordered_lines(entry: Variant, lines: PackedStringArray, dept
 			"CallMethod":
 				lines.append("%s.%s(%s)" % [
 					str(params.get("target", "")), str(params.get("method", "")), str(params.get("args", ""))])
+			_:
+				# T1 / T3 / T4 - the steps a behavior shape is MADE of, whether the importer claimed a
+				# typed line for a shipped row or the picker wrote the row outright. Without them the
+				# file cannot tell that it is a projectile at all: the step and the gravity pull are
+				# exactly the two lines that say so.
+				var shaped: String = EventSheetBehaviorShapes.line_for((entry as ACEAction).ace_id, params)
+				if not shaped.is_empty():
+					lines.append(shaped)
 		return
 	if entry is EventRow:
+		# T2 - a `for` the importer lifted lives on a pick filter rather than in any text, so its header
+		# is rebuilt here like every other lifted line. The family a nearest-in-family loop searched is
+		# named on that one line and nowhere else, and a walk that could not see it would read the loop
+		# without ever knowing what it was looking through.
+		for filter_entry: Variant in (entry as EventRow).pick_filters:
+			var pick: PickFilter = filter_entry as PickFilter
+			if pick == null or pick.collection_kind != PickFilter.CollectionKind.EXPRESSION:
+				continue
+			if pick.iterator_name.strip_edges().is_empty():
+				continue
+			lines.append("for %s in %s:" % [pick.iterator_name, pick.collection_value])
 		# Batch 8 - a pattern's two halves often sit on opposite sides of one event: `cooldown -= delta`
 		# in the action lane and `cooldown <= 0` in the condition lane. A walk that saw only the actions
 		# could never put the two together, so a lifted comparison is rebuilt here too.
