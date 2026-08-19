@@ -524,7 +524,11 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   after it says `(after the previous)`; once `t.set_parallel()` has been called they say `(at the
   same time)` instead. `t.set_loops(3)` reads `Tween repeat 3 times`, `t.tween_interval(0.5)` reads
   `Tween wait 0.5 seconds`, `t.tween_callback(queue_free)` reads `Tween then Destroy`, `t.kill()`
-  reads `Stop tween` and `await t.finished` reads `System ▸ ⏳ Wait for tween to finish`. The
+  reads `Stop tween` and `await t.finished` reads `System ▸ ⏳ Wait for tween to finish`.
+
+  ![A tween chain read as Tween actions, and a head whose Instance variables folder carries the accessor events](images/opened-script-tween-and-head-accessors.png)
+
+  The
   property is the sheet's own word for it - `modulate:a` is **opacity**, `scale` is **size**,
   `rotation` is the **angle** - and a property the table does not name keeps its own spelling. The
   chain is joined by the local's name, walked in file order, so a receiver the file never declared
@@ -548,6 +552,8 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   handler's body goes through, so the same line says the same thing wherever it was written; a body
   the lift cannot claim keeps the verbatim accessor block, and the file's bytes are untouched either
   way. Right-click a sheet variable for **Add setter** / **Add getter** to write the shape yourself.
+  The accessor events show wherever the variable is listed - down the event tree and inside the
+  head's **Instance variables** folder, which is where a reader goes to find out what a variable IS.
 - **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner
   writes input in Godot: `if Input.is_action_just_pressed("jump"):` inside `_process`. In an event
   sheet the same thing is a top-level trigger, so the row reads `⌨  Keyboard ▸ On "jump" pressed`

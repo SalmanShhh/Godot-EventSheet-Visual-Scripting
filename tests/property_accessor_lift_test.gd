@@ -75,6 +75,36 @@ static func run() -> bool:
 			_lane_text(prop_row.children[1].children[0], "action"), "Set return value to health") and ok
 		ok = _check("an accessor row is inert (source null)", prop_row.children[0].source_resource == null, true) and ok
 
+	# ── The head's Instance variables folder shows the SAME accessor events ──
+	# A script whose head groups its variables renders them by another path, and a reader who opens
+	# the folder to find out what `hp` IS must find its On hp set there too.
+	var head_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+		"class_name HeadProbe\nextends Node\n\n@export var speed: float = 200.0\n\n"
+		+ "var hp: int = 100:\n\tset(value):\n\t\thp = clampi(value, 0, 100)\n\tget:\n\t\treturn hp\n")
+	# The head folders are the READ-ONLY preview's shape - that is where a pack's variables live.
+	head_sheet.read_only = true
+	var head_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	head_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	head_dock.setup(head_sheet)
+	var head_row: EventRowData = null
+	for entry: Dictionary in (head_dock._active_view() as EventSheetViewport).get_flat_rows():
+		var candidate: EventRowData = entry.get("row")
+		if candidate == null:
+			continue
+		head_row = _find_reading_variable_row(candidate)
+		if head_row != null:
+			break
+	ok = _check("the head lists the property as a variable row", head_row != null, true) and ok
+	if head_row != null:
+		ok = _check("the head's property row carries the accessor events", head_row.children.size(), 2) and ok
+		ok = _check("the head's setter reads as an On <name> set trigger",
+			_span_text(head_row.children[0], "trigger"), "On hp set") and ok
+		ok = _check("the head's getter reads with the property's name",
+			_span_text(head_row.children[1], "property_getter"), "hp") and ok
+		ok = _check("the head's accessor rows are addressed apart from the tree's",
+			str(head_row.children[0].row_uid).contains("variable_reading_"), true) and ok
+	head_dock.free()
+
 	# ── A body the reading cannot lift keeps the verbatim accessor block it always had ──
 	var odd_body: EventSheetResource = GDScriptImporter.new().import_external_source(
 		"extends Node\n\nvar tint: Color = Color.WHITE:\n\tset(value):\n\t\ttint = value\n\t\tmaterial.set_shader_parameter(&\"tint\", value)\n")
@@ -152,6 +182,20 @@ static func _first_prop_name(src: String) -> String:
 		if trimmed.begins_with("var ") or trimmed.begins_with("@export var "):
 			return body.split(":")[0].strip_edges()
 	return ""
+
+
+## The first head-path variable row with accessor children, anywhere under `row` - the head folders
+## are folded on a read-only preview, so the walk goes through the children rather than the flat list.
+static func _find_reading_variable_row(row: EventRowData) -> EventRowData:
+	if row == null:
+		return null
+	if str(row.row_uid).begins_with("variable_reading_") and not row.children.is_empty():
+		return row
+	for child: EventRowData in row.children:
+		var found: EventRowData = _find_reading_variable_row(child)
+		if found != null:
+			return found
+	return null
 
 
 static func _find_var(sheet: EventSheetResource, name: String) -> LocalVariable:

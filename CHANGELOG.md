@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed - a property's accessor events show in the head too
+
+- **`On hp set` and the getter block now appear in the head's Instance variables folder.** A script
+  whose head groups its variables renders them by another path, and that path listed the variable
+  without its accessors - so a reader who opened the folder to find out what `hp` IS found the value
+  and the type but not the trigger that fires when it changes. Both routes now hang the same accessor
+  events under the same variable row, addressed apart so folding one does not fold the other.
+
 ### Fixed - a lifted Start Timer row says what the typed line says
 
 - **`$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` after the importer has

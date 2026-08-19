@@ -1356,7 +1356,7 @@ func _build_reading_variable_row(variable: LocalVariable, description: String, i
 		)
 		if preload_row != null:
 			return preload_row
-	return _build_variable_row(
+	var reading_row: EventRowData = _build_variable_row(
 		"tree",
 		variable.name,
 		variable.type_name,
@@ -1381,6 +1381,10 @@ func _build_reading_variable_row(variable: LocalVariable, description: String, i
 			"facts": EventSheetSettingFacts.facts(variable)
 		}
 	)
+	# R2 - a property's accessor events belong wherever the variable is listed, and the head's
+	# Instance variables folder is where a reader goes to find out what a variable IS.
+	_attach_property_accessors(reading_row, variable, indent)
+	return reading_row
 
 
 ## R37 - the scope word a MEMBER variable of this sheet reads with: Constant, Static, Global on an
@@ -2977,7 +2981,7 @@ static func statement_sentence(code: String, context: Dictionary = {}) -> Dictio
 	# M28: the awaits an event sheet has words for, ahead of the grammar - a hand-written `await` that no
 	# ACE claimed (inside a lambda, inside a block that stayed code) reads the same as the lifted row
 	# beside it. Every other await falls straight through and keeps its GDScript.
-	var awaited: Dictionary = _raw_await_reading(code)
+	var awaited: Dictionary = _raw_await_reading(code, context)
 	if not awaited.is_empty():
 		return awaited
 	return EventSheetSentence.statement(code, context)
@@ -2985,14 +2989,14 @@ static func statement_sentence(code: String, context: Dictionary = {}) -> Dictio
 
 ## The M28 reading of a hand-written `await <expression>` line, indent and all, or {} when the shape
 ## is not one of the named ones.
-static func _raw_await_reading(code: String) -> Dictionary:
+static func _raw_await_reading(code: String, context: Dictionary = {}) -> Dictionary:
 	var indent: int = 0
 	while indent < code.length() and code[indent] == "\t":
 		indent += 1
 	var text: String = code.substr(indent).strip_edges()
 	if not text.begins_with("await "):
 		return {}
-	var reading: Dictionary = await_reading(text.substr(6), true)
+	var reading: Dictionary = await_reading(text.substr(6), true, context)
 	if reading.is_empty():
 		return {}
 	reading["indent"] = indent
@@ -4386,21 +4390,30 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 	# A PROPERTY (setter and/or getter): read it as a language block - the variable identity stays the row,
 	# and each accessor folds under it as a condition/action child (`set(value)` / `get` in the condition
 	# cell, its body lines as actions). Double-click the variable row still opens the Variable dialog.
-	if variable.has_property_accessors():
-		var param: String = variable.setter_param.strip_edges() if not variable.setter_param.strip_edges().is_empty() else "value"
-		# R2 - the accessors read as EVENTS first: a setter is a trigger, a getter an expression. Only
-		# when a body does not lift cleanly do they fall back to the verbatim language block below.
-		var read_rows: Array[EventRowData] = _build_property_accessor_reading(variable, param, indent + 1)
-		if not read_rows.is_empty():
-			row_data.children.append_array(read_rows)
-		else:
-			row_data.language_block = true
-			if not variable.setter_body.strip_edges().is_empty():
-				row_data.children.append(_build_property_accessor_row(variable, "set(%s)" % param, variable.setter_body, indent + 1, "set"))
-			if not variable.getter_body.strip_edges().is_empty():
-				row_data.children.append(_build_property_accessor_row(variable, "get", variable.getter_body, indent + 1, "get"))
-		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
+	_attach_property_accessors(row_data, variable, indent)
 	return row_data
+
+
+## R2. The accessor events (and the verbatim block they fall back to) hung under a variable row.
+## Shared by the event tree and by the head's Instance variables folder, because a property is the
+## same property wherever the sheet lists it - and a reader who opens the head to find out what `hp`
+## IS should find its `On hp set` there too, not only down in the tree.
+func _attach_property_accessors(row_data: EventRowData, variable: LocalVariable, indent: int) -> void:
+	if row_data == null or variable == null or not variable.has_property_accessors():
+		return
+	var param: String = variable.setter_param.strip_edges() if not variable.setter_param.strip_edges().is_empty() else "value"
+	# R2 - the accessors read as EVENTS first: a setter is a trigger, a getter an expression. Only
+	# when a body does not lift cleanly do they fall back to the verbatim language block below.
+	var read_rows: Array[EventRowData] = _build_property_accessor_reading(variable, param, indent + 1, row_data.row_uid)
+	if not read_rows.is_empty():
+		row_data.children.append_array(read_rows)
+	else:
+		row_data.language_block = true
+		if not variable.setter_body.strip_edges().is_empty():
+			row_data.children.append(_build_property_accessor_row(variable, "set(%s)" % param, variable.setter_body, indent + 1, "set"))
+		if not variable.getter_body.strip_edges().is_empty():
+			row_data.children.append(_build_property_accessor_row(variable, "get", variable.getter_body, indent + 1, "get"))
+	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
 
 
 ## R2. A property's accessors, read as the events they are instead of as code under the variable row.
@@ -4413,18 +4426,19 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 ## rows are inert (nothing addresses them, so nothing can write through them), and the file keeps its
 ## accessor text untouched - the byte round-trip never sees this. [] when either body does not lift,
 ## and the caller keeps the verbatim block it always had.
-func _build_property_accessor_reading(variable: LocalVariable, param: String, indent: int) -> Array[EventRowData]:
+func _build_property_accessor_reading(variable: LocalVariable, param: String, indent: int,
+		uid_base: String) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
 	var object_name: String = _script_object_name()
 	if object_name.strip_edges().is_empty():
 		object_name = EventSheetSentence.OBJECT_SYSTEM
 	if not variable.setter_body.strip_edges().is_empty():
-		var setter_row: EventRowData = _build_property_setter_row(variable, object_name, param, indent)
+		var setter_row: EventRowData = _build_property_setter_row(variable, object_name, param, indent, uid_base)
 		if setter_row == null:
 			return []
 		rows.append(setter_row)
 	if not variable.getter_body.strip_edges().is_empty():
-		var getter_row: EventRowData = _build_property_getter_row(variable, object_name, indent)
+		var getter_row: EventRowData = _build_property_getter_row(variable, object_name, indent, uid_base)
 		if getter_row == null:
 			return []
 		rows.append(getter_row)
@@ -4435,11 +4449,11 @@ func _build_property_accessor_reading(variable: LocalVariable, param: String, in
 ## parameter the new value arrives in. Its first step folds into the row beside the trigger, the way
 ## every other trigger reading does. null when the body does not lift.
 func _build_property_setter_row(variable: LocalVariable, object_name: String, param: String,
-		indent: int) -> EventRowData:
+		indent: int, uid_base: String) -> EventRowData:
 	var row := EventRowData.new()
 	row.indent = indent
 	row.row_type = EventRowData.RowType.EVENT
-	row.row_uid = "property_setter_%d" % variable.get_instance_id()
+	row.row_uid = "property_setter_%s" % uid_base
 	row.line_count = 1
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
@@ -4470,11 +4484,12 @@ func _build_property_setter_row(variable: LocalVariable, object_name: String, pa
 ## The getter's expression row: the ƒ badge, the property's name, and the muted kind word beside it -
 ## the same header an expression function reads with. Its body says `Set return value to …`, so the
 ## step is left where it is rather than folded into the header. null when the body does not lift.
-func _build_property_getter_row(variable: LocalVariable, object_name: String, indent: int) -> EventRowData:
+func _build_property_getter_row(variable: LocalVariable, object_name: String, indent: int,
+		uid_base: String) -> EventRowData:
 	var row := EventRowData.new()
 	row.indent = indent
 	row.row_type = EventRowData.RowType.EVENT
-	row.row_uid = "property_getter_%d" % variable.get_instance_id()
+	row.row_uid = "property_getter_%s" % uid_base
 	row.line_count = 1
 	var badge_colors: Array = _define_role_colors("expression")
 	row.spans.append(_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
@@ -9584,9 +9599,9 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("get_tree().create_timer(%s).timeout.connect(func(): %s)" % [
 				str(params_dict.get("seconds", "")), str(params_dict.get("do", ""))], context)
 		"AwaitNextFrame":
-			return await_reading("get_tree().process_frame", false)
+			return await_reading("get_tree().process_frame", false, context)
 		"AwaitSignal":
-			return await_reading(str(params_dict.get("signal_expression", "")), false)
+			return await_reading(str(params_dict.get("signal_expression", "")), false, context)
 	# Deliberately NOT claimed: Wait. Its own display template already says the grammar's words
 	# ("Wait {seconds} seconds") and the row wears the hourglass through the await chip, so leaving it
 	# on the ordinary path keeps the parameter emphasis its substitution earns.
@@ -9604,12 +9619,17 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 ##
 ## NOTE for merge: this lives here rather than in the sentence grammar only because the grammar file
 ## was being edited elsewhere at the time; its natural home is beside _await_statement().
-static func await_reading(expression: String, hourglass: bool) -> Dictionary:
+static func await_reading(expression: String, hourglass: bool, context: Dictionary = {}) -> Dictionary:
 	var text: String = expression.strip_edges()
 	if text == "get_tree().process_frame":
 		return _slot_sentence(EventSheetSentence.OBJECT_SYSTEM, "Wait one tick", {}, hourglass)
 	if text == "get_tree().physics_frame":
 		return _slot_sentence(EventSheetSentence.OBJECT_SYSTEM, "Wait one physics tick", {}, hourglass)
+	# R3 - waiting on a tween is waiting for the animation to end, which is the whole thought; the
+	# local's name adds nothing a reader of the Tween rows above it does not already have.
+	if text.ends_with(".finished") and EventSheetSentence.is_tween_local(
+			text.substr(0, text.length() - 9), context):
+		return _slot_sentence(EventSheetSentence.OBJECT_SYSTEM, "Wait for tween to finish", {}, hourglass)
 	# A call anywhere in the expression is not a signal reference: `create_timer(x).timeout` is the
 	# timer wait, which already reads as its own seconds sentence.
 	if text.contains("(") or text.contains(")"):
