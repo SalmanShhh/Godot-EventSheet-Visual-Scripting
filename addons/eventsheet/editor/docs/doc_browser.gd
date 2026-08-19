@@ -62,12 +62,26 @@ const KIND_ICONS := {
 	"project": ["Folder", "File", "TextFile"],
 }
 
+## The widest a line of prose is allowed to get, before display scaling: about eighty characters
+## at the editor's documentation font. A page that fills a floated Manual edge to edge is a page
+## whose lines the eye loses its place in, so the column stops growing and the room goes to the
+## margins instead.
+const READING_MAX_WIDTH := 720.0
+
+## The one doc-id scheme this surface does not draw itself: the engine's own class reference,
+## which the editor already has a renderer for.
+const ENGINE_SCHEME := "engine:"
+
 ## Emitted when the browser opened something in the reader's browser instead of drawing it, so a
 ## host can say so in its status line.
 signal link_activated(target: String)
 
 ## Emitted after a figure's Insert lands rows in the sheet.
 signal snippet_inserted()
+
+## Emitted when a reference entry asks to be taken to one of the rows of the open sheet that
+## already use its verb. The host owns the sheet, so the host does the revealing.
+signal row_requested(provider_id: String, ace_id: String, index: int)
 
 var _tree: Tree = null
 var _search: LineEdit = null
@@ -95,6 +109,22 @@ var _auto_compact: bool = false
 ## whether the page on screen is drawn with its hits wrapped - so navigating from a result keeps
 ## the highlight the reader searched for.
 var _query: String = ""
+## The chrome above the page: where the reader is, and the four things they reach for without
+## thinking.
+var _breadcrumb: Label = null
+var _back_button: Button = null
+var _forward_button: Button = null
+var _recent_button: MenuButton = null
+var _bookmark_button: Button = null
+## The page column's margins - how the prose is held to a readable measure in a host far wider
+## than one (a floated Manual, a second monitor).
+var _reading_margin: MarginContainer = null
+## The verb a search result named, keyed by the tree row, so Ctrl+Enter adds THAT verb without
+## asking the vocabulary again.
+var _result_definitions: Dictionary = {}
+## Set while the history itself is driving a navigation (a back, a forward), so the page being
+## left is not pushed back onto the stack it was just taken off.
+var _navigating_history: bool = false
 
 
 func _init() -> void:
@@ -108,18 +138,20 @@ func _init() -> void:
 	header.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
 	_contents_button = Button.new()
 	_contents_button.text = "Contents"
-	_contents_button.tooltip_text = "Show the list of guides."
+	_contents_button.tooltip_text = "Show the Manual's contents."
 	_contents_button.toggle_mode = true
 	_contents_button.visible = false
 	_contents_button.toggled.connect(_on_contents_toggled)
 	header.add_child(_contents_button)
 	_search = LineEdit.new()
-	_search.placeholder_text = "Search the guides…"
+	_search.placeholder_text = "Search the Manual…"
 	_search.clear_button_enabled = true
 	_search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_search.text_changed.connect(_on_search_changed)
+	_search.gui_input.connect(_on_search_gui_input)
 	header.add_child(_search)
 	add_child(header)
+	add_child(_build_chrome())
 
 	_split = HSplitContainer.new()
 	_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -144,12 +176,16 @@ func _init() -> void:
 	_page.doc_requested.connect(func(doc_id: String, anchor: String) -> void: show_doc(doc_id, anchor))
 	_page.link_activated.connect(func(target: String) -> void: link_activated.emit(target))
 	_page.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
+	_page.action_requested.connect(_on_page_action)
 	# A page is BUILT before it is laid out, so the bearing taken while building it has no positions
 	# to read. Its own layout is what says there are some, and a fold opening or closing re-fires it.
 	_page.resized.connect(_refresh_nav_highlight)
 	_panel = EventSheetDocPanel.new()
 	_panel.link_activated.connect(func(target: String) -> void: link_activated.emit(target))
 	_panel.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
+	_panel.doc_requested.connect(func(doc_id: String) -> void: show_doc(doc_id))
+	_panel.row_requested.connect(func(provider_id: String, ace_id: String, index: int) -> void:
+		row_requested.emit(provider_id, ace_id, index))
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
 	column.add_child(_panel)
@@ -162,7 +198,12 @@ func _init() -> void:
 	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_scroll.add_child(column)
+	# The prose is held to a readable measure by MARGINS rather than by a fixed column width: a
+	# fixed column clips the moment the host is narrower than it, while margins simply go to zero.
+	_reading_margin = MarginContainer.new()
+	_reading_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_reading_margin.add_child(column)
+	_scroll.add_child(_reading_margin)
 	_page.set_scroll_container(_scroll)
 	# The page host: the mini-nav pinned above the scroll rather than inside it, which is the whole
 	# point of it - a chapter list that scrolled away with the page would be a table of contents.
@@ -196,6 +237,176 @@ func _init() -> void:
 ## per session and cached - so calling it early only moves WHEN the reader pays for it.
 func _warm_search_index() -> void:
 	EventSheetDocSearch.index()
+
+
+## The chrome above the page: where the reader is, and the four things every reader reaches for
+## without thinking - back, forward, what they read recently, and what they kept.
+func _build_chrome() -> HBoxContainer:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	_breadcrumb = Label.new()
+	_breadcrumb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_breadcrumb.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_breadcrumb.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+	_breadcrumb.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	_breadcrumb.text = EventSheetDocReference.MANUAL_TITLE
+	row.add_child(_breadcrumb)
+	_back_button = _icon_button(["Back", "ArrowLeft"], "◀", "Back (Alt+Left).", go_back_pressed)
+	row.add_child(_back_button)
+	_forward_button = _icon_button(["Forward", "ArrowRight"], "▶", "Forward (Alt+Right).",
+		go_forward_pressed)
+	row.add_child(_forward_button)
+	_recent_button = MenuButton.new()
+	_recent_button.flat = true
+	_recent_button.text = "Recent"
+	_recent_button.tooltip_text = "The pages you have read this session."
+	_recent_button.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	_recent_button.about_to_popup.connect(_fill_recent_menu)
+	_recent_button.get_popup().id_pressed.connect(_on_recent_chosen)
+	row.add_child(_recent_button)
+	_bookmark_button = Button.new()
+	_bookmark_button.flat = true
+	_bookmark_button.toggle_mode = true
+	_bookmark_button.text = "☆"
+	_bookmark_button.tooltip_text = "Bookmark this page."
+	_bookmark_button.focus_mode = Control.FOCUS_NONE
+	_bookmark_button.pressed.connect(_on_bookmark_pressed)
+	row.add_child(_bookmark_button)
+	_refresh_chrome()
+	return row
+
+
+## One step back through the pages read this session. The HISTORY moves first and the navigation
+## follows, so a page that no longer ships leaves the reader where they were rather than nowhere.
+func go_back() -> bool:
+	var target: String = EventSheetDocHistory.go_back()
+	return false if target.is_empty() else _open(target, "", false)
+
+
+func go_forward() -> bool:
+	var target: String = EventSheetDocHistory.go_forward()
+	return false if target.is_empty() else _open(target, "", false)
+
+
+## The button halves, which take no argument and answer nothing - a Button.pressed Callable cannot
+## carry either.
+func go_back_pressed() -> void:
+	go_back()
+
+
+func go_forward_pressed() -> void:
+	go_forward()
+
+
+func _fill_recent_menu() -> void:
+	var popup: PopupMenu = _recent_button.get_popup()
+	popup.clear()
+	var recent: Array[String] = EventSheetDocHistory.recent()
+	var bookmarks: Array[String] = EventSheetDocHistory.bookmarks()
+	for index: int in range(recent.size()):
+		popup.add_item(title_for_doc(recent[index]), index)
+	if not bookmarks.is_empty():
+		popup.add_separator("Bookmarks")
+		for index: int in range(bookmarks.size()):
+			popup.add_item(title_for_doc(bookmarks[index]), recent.size() + index)
+	if popup.item_count == 0:
+		popup.add_item("Nothing read yet", -1)
+		popup.set_item_disabled(0, true)
+
+
+func _on_recent_chosen(id: int) -> void:
+	if id < 0:
+		return
+	var recent: Array[String] = EventSheetDocHistory.recent()
+	if id < recent.size():
+		show_doc(recent[id])
+		return
+	var bookmarks: Array[String] = EventSheetDocHistory.bookmarks()
+	var bookmark_index: int = id - recent.size()
+	if bookmark_index < bookmarks.size():
+		show_doc(bookmarks[bookmark_index])
+
+
+func _on_bookmark_pressed() -> void:
+	if _current_id.is_empty():
+		_bookmark_button.set_pressed_no_signal(false)
+		return
+	var kept: bool = EventSheetDocHistory.toggle_bookmark(_current_id)
+	_bookmark_button.set_pressed_no_signal(kept)
+	_bookmark_button.text = "★" if kept else "☆"
+
+
+## The name a doc id reads under, for a menu row and a crumb. Falls back to the id itself, so a
+## menu is never a list of blanks.
+func title_for_doc(doc_id: String) -> String:
+	var route: Dictionary = EventSheetDocExplain.resolve(doc_id)
+	if str(route.get("scheme", "")) == "reference":
+		return EventSheetDocReference.title_for(str(route.get("reference_kind", "")),
+			str(route.get("reference_name", "")))
+	var page_id: String = str(route.get("page_id", ""))
+	if not page_id.is_empty() and EventSheetDocLibrary.has_page(page_id):
+		return EventSheetDocLibrary.page_title(page_id)
+	if str(route.get("scheme", "")) == "ace":
+		var definition: ACEDefinition = EventSheets.find_ace(str(route.get("provider_id", "")),
+			str(route.get("ace_id", "")))
+		if definition != null:
+			return EventSheetL10n.translate(definition.display_name)
+	return doc_id
+
+
+## The chrome, re-read off the page on screen. One place, called after every navigation, so the
+## trail, the two arrows and the star can never describe a page the reader has left.
+func _refresh_chrome() -> void:
+	# The chrome is built BEFORE the two halves it describes (it sits above them), so the first
+	# call - the one that draws an empty trail - runs while there is no page to ask.
+	if _breadcrumb == null or _page == null:
+		return
+	_breadcrumb.text = " ▸ ".join(Array(EventSheetDocReference.breadcrumb(_current_id, current_title())))
+	_breadcrumb.tooltip_text = _breadcrumb.text
+	_back_button.disabled = not EventSheetDocHistory.can_go_back()
+	_forward_button.disabled = not EventSheetDocHistory.can_go_forward()
+	var kept: bool = EventSheetDocHistory.is_bookmarked(_current_id)
+	_bookmark_button.set_pressed_no_signal(kept)
+	_bookmark_button.text = "★" if kept else "☆"
+
+
+## Alt+Left / Alt+Right anywhere inside the surface. Taken as UNHANDLED input, so a reader typing
+## in the search box keeps their own text-cursor keys.
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key: InputEventKey = event as InputEventKey
+	if key == null or not key.pressed or not key.alt_pressed:
+		return
+	if key.keycode == KEY_LEFT and go_back():
+		accept_event()
+	elif key.keycode == KEY_RIGHT and go_forward():
+		accept_event()
+
+
+## Holds the prose to a readable measure. The margin is the room the host has BEYOND a comfortable
+## line, split evenly, and it is zero for a host that has none.
+func _apply_reading_width() -> void:
+	if _reading_margin == null or _scroll == null:
+		return
+	var slack: float = _scroll.size.x - EventSheetPalette.scaled_f(READING_MAX_WIDTH)
+	var margin: int = 0 if slack <= 0.0 else int(slack * 0.5)
+	_reading_margin.add_theme_constant_override("margin_left", margin)
+	_reading_margin.add_theme_constant_override("margin_right", margin)
+
+
+## The one-click offers a derived page carries. The page names the action; this is the one place
+## that name means something.
+func _on_page_action(action: String, argument: String) -> void:
+	if action != "write_guide" or argument.strip_edges().is_empty():
+		return
+	var written: String = EventSheetAddonGuideScaffold.write_guide_for_pack(argument)
+	if written.is_empty():
+		return
+	# The corpus just gained a page, so both caches that would otherwise still say it is missing
+	# are dropped before the page is drawn again - the stub becomes the guide in one click.
+	EventSheetDocLibrary.reload()
+	EventSheetDocSearch.reload()
+	link_activated.emit(written)
+	show_doc(_current_id)
 
 
 ## The strip under the guide list: the two ways OUT of this surface, as small flat icon buttons -
@@ -312,6 +523,7 @@ func set_auto_compact(enabled: bool) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_apply_auto_compact()
+		_apply_reading_width()
 
 
 func _apply_auto_compact() -> void:
@@ -377,7 +589,88 @@ func current_title() -> String:
 ## Opens `doc_id`, choosing the surface that can answer it. Returns false - and changes nothing -
 ## when the id names nothing real, so a caller reports the miss instead of showing a blank page.
 func show_doc(doc_id: String, anchor: String = "") -> bool:
+	return _open(doc_id, anchor, true)
+
+
+## The one navigation. `pushed` is false when the HISTORY drove it (a back, a forward), which is
+## the difference between moving through the stacks and adding to them.
+##
+## Where the reader had got to on the page they are LEAVING is remembered first, before anything
+## is drawn: after the navigation the old scroll offset belongs to a page that is no longer there.
+func _open(doc_id: String, anchor: String, pushed: bool) -> bool:
+	_remember_scroll()
+	_navigating_history = not pushed
+	var opened: bool = _route(doc_id, anchor)
+	_navigating_history = false
+	if opened:
+		if pushed:
+			# The page that ENDED UP on screen, not the id that was asked for: the index resolves to
+			# whichever guide the bundle actually leads with, and a history of "" is a history of
+			# nothing anybody can go back to.
+			EventSheetDocHistory.visit(_current_id)
+		_refresh_chrome()
+	return opened
+
+
+func _route(doc_id: String, anchor: String) -> bool:
+	# The engine's own class reference is not this surface's to draw - it is the editor's, and the
+	# editor draws it better. A reader who asked for a Godot class gets the Script editor's help.
+	if doc_id.strip_edges().begins_with(ENGINE_SCHEME):
+		return _open_engine_help(doc_id.strip_edges().substr(ENGINE_SCHEME.length()))
 	var route: Dictionary = EventSheetDocExplain.resolve(doc_id)
+	if str(route.get("scheme", "")) == "reference":
+		return _show_reference(doc_id, str(route.get("reference_kind", "")),
+			str(route.get("reference_name", "")), anchor)
+	return _show_routed(doc_id, anchor, route)
+
+
+## A DERIVED page: the reference for a category, a behavior or an object, the glossary, the icon
+## legend. Drawn by the page view like any guide, because it is a page - it simply was not written
+## by anybody.
+func _show_reference(doc_id: String, kind: String, name: String, anchor: String) -> bool:
+	var blocks: Array[Dictionary] = EventSheetDocReference.blocks_for(kind, name)
+	if blocks.is_empty():
+		return false
+	if not _query.is_empty():
+		blocks = EventSheetDocSearch.highlight_blocks(blocks, _query)
+	if not _page.show_blocks(blocks, doc_id):
+		return false
+	_current_id = doc_id
+	_panel.visible = false
+	_page.visible = true
+	if not _query.is_empty():
+		_page.expand_all()
+	_build_mini_nav()
+	_mark_active_item(_items_by_id.get(doc_id, null) as TreeItem)
+	# A glossary term is a chapter of the glossary page, so "reference:glossary/pick" lands ON pick.
+	var wanted: String = anchor.strip_edges()
+	if wanted.is_empty() and kind == EventSheetDocReference.KIND_GLOSSARY:
+		wanted = name.strip_edges()
+	if not wanted.is_empty():
+		_page.jump_to_anchor(wanted)
+	else:
+		_restore_scroll(doc_id)
+	return true
+
+
+## The editor's own class reference, one hop out of the Manual. Reported honestly: a build whose
+## script editor cannot be asked answers false rather than pretending it opened something.
+func _open_engine_help(class_id: String) -> bool:
+	var wanted: String = class_id.strip_edges()
+	if wanted.is_empty() or not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return false
+	var editor_interface: Object = Engine.get_singleton("EditorInterface")
+	if editor_interface == null or not editor_interface.has_method("get_script_editor"):
+		return false
+	var script_editor: Object = editor_interface.get_script_editor()
+	if script_editor == null or not script_editor.has_method("goto_help"):
+		return false
+	script_editor.call("goto_help", "class_name:%s" % wanted)
+	link_activated.emit(wanted)
+	return true
+
+
+func _show_routed(doc_id: String, anchor: String, route: Dictionary) -> bool:
 	if not bool(route.get("valid", false)):
 		return false
 	var page_id: String = str(route.get("page_id", ""))
@@ -409,9 +702,35 @@ func _show_page(page_id: String, anchor: String, doc_id: String) -> bool:
 	_select_tree_item(page_id)
 	if not anchor.strip_edges().is_empty():
 		_page.jump_to_anchor(anchor)
-	elif _scroll != null:
-		_scroll.scroll_vertical = 0
+	else:
+		_restore_scroll(doc_id)
 	return true
+
+
+## Where the reader had got to on the page they are leaving. Called BEFORE every navigation, so
+## coming back to a long guide lands in the paragraph they left rather than at its title.
+func _remember_scroll() -> void:
+	if _scroll == null or _current_id.is_empty() or not _page.visible:
+		return
+	EventSheetDocHistory.remember_scroll(_current_id, float(_scroll.scroll_vertical))
+
+
+## Puts a page back where the reader left it. Deferred by a frame for the same reason an anchor
+## jump is: a freshly built page has no layout yet, so its scroll range is still zero and an
+## immediate offset silently lands at the top.
+func _restore_scroll(doc_id: String) -> void:
+	if _scroll == null:
+		return
+	_scroll.scroll_vertical = 0
+	var offset: float = EventSheetDocHistory.scroll_for(doc_id)
+	if offset <= 0.0:
+		return
+	_apply_scroll.call_deferred(int(offset))
+
+
+func _apply_scroll(offset: int) -> void:
+	if _scroll != null:
+		_scroll.scroll_vertical = offset
 
 
 func _show_generated(doc_id: String) -> bool:
@@ -508,6 +827,12 @@ func _blocks_for(page_id: String) -> Array[Dictionary]:
 		EventSheetDocLibrary.page_blocks(page_id), page_id)
 	if not _query.is_empty():
 		blocks = EventSheetDocSearch.highlight_blocks(blocks, _query)
+	# Where the reading continues. Only inside a group that HAS a next page, so the last guide of a
+	# part ends rather than pointing at nothing.
+	var next_page: Dictionary = EventSheetDocReference.next_page_after(page_id)
+	if not next_page.is_empty():
+		blocks.append({"kind": "next", "title": str(next_page.get("title", "")),
+			"doc_id": str(next_page.get("doc_id", ""))})
 	return blocks
 
 
@@ -537,41 +862,56 @@ func search(query: String) -> void:
 	_on_search_changed(query)
 
 
-## The ranked results, grouped by page: one branch per page, one row per heading that matched.
-## Activating a row opens that page AT that heading, with the term still highlighted.
+## The ranked results - ONE box over the whole Manual, not over the guides alone. A hit can be a
+## condition, an action, an expression, a guide, a page of the System or behavior reference, a
+## Godot class or a word from another editor's vocabulary, and each row is TAGGED with which,
+## in the Manual's own words.
+##
+## A verb hit also says how many events of the open sheet already use it, because that is the
+## question a reader is really asking when they search for one they half remember.
+##
+## Enter opens the row. Ctrl+Enter ADDS it - see _add_selected_result.
 func _build_results(query: String) -> void:
 	_items_by_id.clear()
+	_result_definitions.clear()
 	# Every row is about to be freed, so the remembered active one must go with them.
 	_active_item = null
 	_tree.clear()
 	var root: TreeItem = _tree.create_item()
-	var branches: Dictionary = {}
-	var results: Array[Dictionary] = EventSheetDocSearch.search(query)
+	var results: Array[Dictionary] = EventSheetDocSearch.search_all(query, EventSheets.current_sheet())
 	for result: Dictionary in results:
-		var page_id: String = str(result.get("page_id", ""))
-		var branch: TreeItem = branches.get(page_id, null) as TreeItem
-		if branch == null:
-			branch = _tree.create_item(root)
-			branch.set_text(0, str(result.get("title", page_id)))
-			branch.set_tooltip_text(0, str(result.get("title", page_id)))
-			branch.set_metadata(0, {"doc_id": str(result.get("doc_id", "")), "anchor": ""})
-			_style_page_row(branch, page_id)
-			branches[page_id] = branch
-			_items_by_id[page_id] = branch
-		var heading: String = str(result.get("heading", ""))
-		if heading.is_empty():
-			continue
-		var item: TreeItem = _tree.create_item(branch)
-		item.set_text(0, heading)
-		item.set_tooltip_text(0, heading)
-		# A heading hit is a place INSIDE a page, so it reads quieter than the page it belongs to.
-		item.set_custom_font_size(0, EventSheetPalette.scaled(11))
-		item.set_custom_color(0, Color(0.86, 0.88, 0.92, 0.78))
-		item.set_metadata(0, {"doc_id": str(result.get("doc_id", "")), "anchor": str(result.get("anchor", ""))})
+		var item: TreeItem = _tree.create_item(root)
+		item.set_text(0, result_row_text(result))
+		item.set_tooltip_text(0, result_tooltip(result))
+		item.set_metadata(0, {"doc_id": str(result.get("doc_id", "")),
+			"anchor": str(result.get("anchor", ""))})
+		var definition: ACEDefinition = result.get("definition", null) as ACEDefinition
+		if definition != null:
+			_result_definitions[item] = definition
 	if results.is_empty():
 		var empty: TreeItem = _tree.create_item(root)
-		empty.set_text(0, "No guide mentions that")
+		empty.set_text(0, "Nothing in the Manual mentions that")
 		empty.set_selectable(0, false)
+
+
+## One result row, as the reader reads it: the kind it is, then what it is called, then where it
+## lives and how much this sheet already uses it. Pure and static, so the suite pins the sentence
+## rather than a screenshot of it.
+static func result_row_text(result: Dictionary) -> String:
+	var kind: String = EventSheetDocSearch.kind_label(str(result.get("kind", "")))
+	var title: String = str(result.get("title", ""))
+	var line: String = title if kind.is_empty() else "%s  ·  %s" % [kind, title]
+	var used: int = int(result.get("used", 0))
+	if used > 0:
+		line += "  ·  used %d× in this sheet" % used
+	return line
+
+
+## The rest of the row, on hover: where it sits in the Manual.
+static func result_tooltip(result: Dictionary) -> String:
+	var subtitle: String = str(result.get("subtitle", "")).strip_edges()
+	var title: String = str(result.get("title", ""))
+	return title if subtitle.is_empty() else "%s\n%s" % [title, subtitle]
 
 
 ## The tree, derived from the bundle's own grouping (which is itself derived from the docs index).
@@ -597,6 +937,52 @@ func _build_tree() -> void:
 			_style_page_row(item, id)
 			_items_by_id[id] = item
 		section.collapsed = _items_by_id.size() > 12
+	_build_reference_tree(root)
+
+
+## The half of the tree nothing wrote: the Manual's own first pages, a reference page per builtin
+## category, and one per behavior. Built from the vocabulary rather than from the bundle, so a pack
+## installed this morning has a page this morning.
+##
+## Both reference sections start COLLAPSED. They are long by nature (one row per category, one per
+## behavior), and a reader opening the Manual is looking for a guide far more often than for the
+## whole vocabulary laid out.
+func _build_reference_tree(root: TreeItem) -> void:
+	var manual: TreeItem = _tree.create_item(root)
+	_style_group_row(manual, EventSheetDocReference.MANUAL_TITLE)
+	for entry: Array in [
+		[EventSheetDocReference.KIND_LEGEND, ""],
+		[EventSheetDocReference.KIND_GLOSSARY, ""],
+	]:
+		_add_reference_row(manual, str(entry[0]), str(entry[1]))
+	var sections: PackedStringArray = EventSheetDocReference.section_names()
+	if not sections.is_empty():
+		var branch: TreeItem = _tree.create_item(root)
+		_style_group_row(branch, EventSheetDocReference.SECTION_TREE_TITLE)
+		branch.collapsed = true
+		for section: String in sections:
+			_add_reference_row(branch, EventSheetDocReference.KIND_SECTION, section)
+	var packs: PackedStringArray = EventSheetDocReference.pack_names()
+	if not packs.is_empty():
+		var branch: TreeItem = _tree.create_item(root)
+		_style_group_row(branch, EventSheetDocReference.PACK_TREE_TITLE)
+		branch.collapsed = true
+		for pack_dir: String in packs:
+			_add_reference_row(branch, EventSheetDocReference.KIND_PACK, pack_dir)
+
+
+## One derived-page row. Its metadata is the same {doc_id, anchor} pair a search result carries, so
+## the tree has one kind of row to activate rather than two.
+func _add_reference_row(parent: TreeItem, kind: String, name: String) -> void:
+	var doc_id: String = EventSheetDocReference.doc_id(kind, name)
+	var title: String = EventSheetDocReference.title_for(kind, name)
+	if doc_id.is_empty() or title.is_empty():
+		return
+	var item: TreeItem = _tree.create_item(parent)
+	item.set_text(0, title)
+	item.set_tooltip_text(0, title)
+	item.set_metadata(0, {"doc_id": doc_id, "anchor": ""})
+	_items_by_id[doc_id] = item
 
 
 ## A GROUP row: the small-caps label the whole surface names its sections with, and not selectable -
@@ -682,6 +1068,37 @@ func _on_tree_selected() -> void:
 	if not id.is_empty():
 		show_doc("guide:%s" % id)
 		_fold_contents()
+
+
+## Ctrl+Enter in the search box adds the highlighted verb to the open sheet instead of opening its
+## page - the gesture that turns looking something up into using it. Plain Enter opens, which is
+## what the list already does.
+func _on_search_gui_input(event: InputEvent) -> void:
+	var key: InputEventKey = event as InputEventKey
+	if key == null or not key.pressed or not key.ctrl_pressed:
+		return
+	if key.keycode != KEY_ENTER and key.keycode != KEY_KP_ENTER:
+		return
+	if _add_selected_result():
+		accept_event()
+
+
+## Adds the verb the highlighted result names, at the caret, as one undo step. False when the row
+## is not a verb (a guide has nothing to add) or there is no sheet open, so the caller can leave
+## the key to whoever wants it next.
+func _add_selected_result() -> bool:
+	var item: TreeItem = _tree.get_selected()
+	if item == null and _tree.get_root() != null:
+		# Nothing highlighted yet: the reader typed and pressed the key, so the best hit is what
+		# they meant - the same row Enter would have opened.
+		item = _tree.get_root().get_first_child()
+	var definition: ACEDefinition = _result_definitions.get(item, null) as ACEDefinition
+	if definition == null:
+		return false
+	if not EventSheetDocFigure.insert_definition(definition, "Add From The Manual"):
+		return false
+	snippet_inserted.emit()
+	return true
 
 
 ## In compact mode the reader picked a page, so the list has done its job: fold it away and give

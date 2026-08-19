@@ -208,6 +208,24 @@ func _on_copy_pressed() -> void:
 # ── Building a figure from vocabulary ─────────────────────────────────────────────────────────
 
 
+## Puts one verb into the reader's open sheet at the caret, as the row the picker would drop -
+## the "Add action" / "Add condition" every reference entry offers, and the Ctrl+Enter of the
+## Manual's search. Routed through the same public, guarded, one-undo-step insert path the figure's
+## own button uses, so there is one way rows reach a sheet rather than two.
+##
+## False when there is no sheet open, when the verb is an expression (a value inside a cell has no
+## row to add), or when the insert itself refuses - the caller says so rather than reporting a
+## silent success.
+static func insert_definition(definition: ACEDefinition, label: String = "Add From Manual") -> bool:
+	var sheet: EventSheetResource = sheet_for_definition(definition)
+	if sheet == null:
+		return false
+	var text: String = EventSheetSnippet.serialize_rows(sheet.events, sheet)
+	if text.is_empty():
+		return false
+	return EventSheets.insert_snippet(text, label)
+
+
 ## A one-row sheet showing `definition` exactly as the picker would drop it: every parameter at
 ## its resolved default, the codegen template baked, and a stable {uid} so the same verb always
 ## produces the same figure (the dock bakes a fresh uid at APPLY time; a figure is not an apply).

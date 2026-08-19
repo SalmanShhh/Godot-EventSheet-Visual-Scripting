@@ -229,6 +229,15 @@ static func blocks_for_definition(definition: ACEDefinition) -> Array[Dictionary
 	# The figure is the one thing neither the row hover nor a static page can carry: the verb
 	# drawn by the real renderer, exactly as dropping it would look, with an Insert button.
 	blocks.append({"kind": "figure", "definition": definition})
+	# Everything below the illustration is about THIS reader's sheet rather than about the verb:
+	# where they already use it, what sits beside it, and the four things they can do with it from
+	# here. The counting itself is the panel's, because it needs the sheet that is open right now
+	# and this assembly is pure over the definition it was handed.
+	blocks.append({"kind": "usage", "provider_id": definition.provider_id, "ace_id": definition.id})
+	var siblings: Array[Dictionary] = see_also_for(definition)
+	if not siblings.is_empty():
+		blocks.append({"kind": "see_also", "items": siblings})
+	blocks.append({"kind": "entry_actions", "definition": definition})
 	var section_blurb: String = EventSheetSectionInfo.description_for(category_of(definition))
 	if section_blurb.is_empty():
 		section_blurb = str(definition.metadata.get("provider_description", "")).strip_edges()
@@ -251,6 +260,46 @@ static func blocks_for_definition(definition: ACEDefinition) -> Array[Dictionary
 			"doc_id": doc_id_for_pack(EventSheets.addon_pack_directory(definition.provider_id)),
 		})
 	return blocks
+
+
+## How many siblings an entry offers. Four is a line of chips; a dozen is a second reference page
+## the reader did not ask for.
+const MAX_SEE_ALSO := 4
+
+
+## What sits beside a verb: the rest of its own category, nearest kind first, as {title, doc_id}.
+## "See also" is the question a reference entry cannot answer by talking about itself - a reader
+## who found Wait For Signal usually wants to know that Wait Until exists.
+##
+## Empty outside the editor, where there is no registry to ask, which is exactly the case where an
+## entry has no neighbours to offer anyway.
+static func see_also_for(definition: ACEDefinition) -> Array[Dictionary]:
+	var siblings: Array[Dictionary] = []
+	if definition == null:
+		return siblings
+	var category: String = category_of(definition)
+	var same_kind: Array[Dictionary] = []
+	var other_kind: Array[Dictionary] = []
+	for other: ACEDefinition in EventSheets.all_verbs():
+		if other == null or other.id == definition.id or category_of(other) != category:
+			continue
+		var entry: Dictionary = {
+			"title": EventSheetL10n.translate(other.display_name),
+			"doc_id": doc_id_for_definition(other),
+		}
+		if other.ace_type == definition.ace_type:
+			same_kind.append(entry)
+		else:
+			other_kind.append(entry)
+	same_kind.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a["title"]) < str(b["title"]))
+	other_kind.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a["title"]) < str(b["title"]))
+	siblings.append_array(same_kind)
+	siblings.append_array(other_kind)
+	if siblings.size() > MAX_SEE_ALSO:
+		siblings.resize(MAX_SEE_ALSO)
+	return siblings
 
 
 ## The doc id for a pack directory ("quest" -> "addon:quest"), or "" for no pack.
