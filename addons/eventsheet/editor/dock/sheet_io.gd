@@ -405,6 +405,9 @@ func _on_save_as_requested() -> void:
 	dialog.filters = PackedStringArray(_dock.EVENT_SHEET_FILTERS)
 	dialog.current_path = _build_initial_save_path()
 	dialog.file_selected.connect(func(path: String) -> void:
+		# A scratch sheet that gets a path stops being one: it is a file of the user's project now,
+		# and it must close with the same "you have unsaved changes" guard as any other tab.
+		EventSheetDocScratch.claim_saved(_dock._current_sheet)
 		_save_sheet_to_path(path)
 		dialog.call_deferred("queue_free")
 	)

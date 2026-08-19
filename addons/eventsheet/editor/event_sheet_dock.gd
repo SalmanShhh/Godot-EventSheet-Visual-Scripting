@@ -489,6 +489,55 @@ func _activate_tab(index: int) -> void:
 	_persist_session()
 
 
+## Opens `sheet` as a SCRATCH tab - the sandbox the Manual's examples and tutorials run in. It is an
+## ordinary in-memory sheet with no path, which is what gives it every property the reader was
+## promised without a single special case: nothing writes it, the session store skips it (it only
+## records tabs that have a path), and closing it asks nothing.
+##
+## A null sheet opens an empty one, which is what a tutorial wants: somewhere to press the buttons.
+## Reading mode is turned OFF, because a scratch sheet is for authoring rather than for reading.
+func open_scratch_sheet(example_name: String, sheet: EventSheetResource = null) -> bool:
+	var scratch: EventSheetResource = sheet
+	if scratch == null:
+		scratch = EventSheetStarterTemplates.build_starter(0)
+	if scratch == null:
+		return false
+	scratch.read_only = false
+	EventSheetDocScratch.mark(scratch, example_name)
+	_sync_active_tab_state()
+	_open_tabs.append({"sheet": scratch, "path": "", "dirty": false})
+	_activate_tab(_open_tabs.size() - 1)
+	if is_simple_mode():
+		set_simple_mode(false)
+	_set_status("Scratch sheet - in memory only, never written to your project unless you Save As.")
+	return true
+
+
+## Makes a real toolbar control pulse, so a tutorial step that says "click Add Action" points at the
+## button rather than describing where it is.
+##
+## Resolved by the control's own LABEL rather than through a map of keys to buttons, and that is the
+## whole design: the tutorial names the words the reader can see, the toolbar already carries those
+## words, and there is no third list for either of them to fall out of step with. False when this
+## toolbar carries no such control, so a caller can say so instead of pulsing nothing.
+func pulse_control(control_label: String) -> bool:
+	var wanted: String = control_label.strip_edges()
+	if wanted.is_empty() or _toolbar == null:
+		return false
+	for child: Node in _toolbar.get_children():
+		var button: Button = child as Button
+		if button == null or button.text.strip_edges() != wanted:
+			continue
+		# Three slow breaths of the editor's accent over the button, then back to itself. A Tween
+		# rather than a Timer so it finishes cleanly if the reader closes the dock mid-pulse.
+		var tween: Tween = create_tween()
+		tween.set_loops(3)
+		tween.tween_property(button, "modulate", EventSheetPopupUI.accent_color().lightened(0.3), 0.45)
+		tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.45)
+		return true
+	return false
+
+
 ## Persists the live active-tab state (_current_sheet/path/dirty) back into _open_tabs.
 func _sync_active_tab_state() -> void:
 	if _active_tab_index < 0 or _active_tab_index >= _open_tabs.size():
@@ -630,6 +679,11 @@ static func _tab_icon(title: Dictionary) -> Texture2D:
 
 
 func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> String:
+	# A scratch sheet from the Manual is named for the EXAMPLE it holds, not for the object it
+	# would compile to: it has no file, it is never saved, and "Scratch - Wait For Signal" is the
+	# only thing about it a reader needs to recognise in a tab strip.
+	if EventSheetDocScratch.is_scratch(sheet):
+		return EventSheetDocScratch.tab_title(EventSheetDocScratch.example_name(sheet))
 	var title: String = _format_sheet_title(sheet, path)
 	# Sheet-type badges: ⚙ behavior, ◆ custom node (event-sheet users expect typed tabs).
 	if sheet != null and sheet.behavior_mode:
@@ -647,8 +701,11 @@ func _on_tab_selected(index: int) -> void:
 func _on_tab_close_pressed(index: int) -> void:
 	if _suppress_tab_signal:
 		return
-	# Guard against losing work: a dirty tab asks Save / Discard / Cancel before it closes.
-	if is_tab_dirty(index):
+	# Guard against losing work: a dirty tab asks Save / Discard / Cancel before it closes. A SCRATCH
+	# tab is the exception, and not as a convenience: it has no file to save to, so the prompt would
+	# be offering a choice that does not exist.
+	if is_tab_dirty(index) and not EventSheetDocScratch.closes_without_asking(
+			_open_tabs[index].get("sheet") as EventSheetResource):
 		_pending_close_index = index
 		_ensure_unsaved_close_dialog()
 		var tab: Dictionary = _open_tabs[index]
@@ -3107,6 +3164,14 @@ func open_documentation(doc_id: String = "", anchor: String = "") -> bool:
 	_set_status("No documentation for that row - what it uses is not in this project's vocabulary.", true)
 	_docs.open("")
 	return false
+
+
+## The last page the reader had open in the Manual, for Ctrl+F1 - "take me back to what I was
+## reading" rather than "explain this row". "" when they have not opened it yet, which lands them on
+## the index, and that is the right answer: there is nothing to go back to.
+func last_read_doc_id() -> String:
+	var history: Script = load("res://addons/eventsheet/editor/docs/doc_history.gd") as Script
+	return "" if history == null else str(history.call("current"))
 
 
 ## The row menu's "What does this do?". The CLICKED SPAN decides: right-clicking the third

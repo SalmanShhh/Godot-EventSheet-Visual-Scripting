@@ -1,0 +1,2635 @@
+[eventsheet-whatsnew v1]
+{
+"markdown": "# What's new
+
+What changed in the build you have installed (v0.17.0), in the words the release notes use. Older releases live in the project's own CHANGELOG.
+
+## Unreleased
+
+### Added - a wired-up signal reads as the trigger calling that function, and a scene opens as one sheet
+
+- **A signal wired to ANOTHER object's function reads as the trigger calling it.**
+  `$Button.pressed.connect(player.reset)` reads `Button ▸ On pressed` with
+  `player ▸ Call Reset` beside it, and `$Timer.timeout.connect(spawner.spawn_wave.bind(3))` puts the
+  bound value in an ordinary parameter chip - `count = 3`, named by the callee's own parameter name,
+  whether that function belongs to the engine or to a class the project declared. The
+  `Callable(obj, \"method\")` spelling reads the same, and a `CONNECT_ONE_SHOT` connection wears the
+  sheet's own `Trigger once` chip. This is the third way real code wires a signal, after a handler
+  declared in the file and a lambda, and now all three read as the trigger event they are. Display
+  only: the connect line keeps its muted `connects Button On Pressed` note, the file keeps its one
+  line, and the byte round-trip is untouched.
+- **A whole scene opens as one sheet.** Right-click a `.tscn` in the FileSystem ▸ **Open as Event
+  Sheet** (or pick it from Sheet ▸ Open…, or drag it onto the empty space of a reading) and the layout reads in one
+  place: the scene's own bar (`⇥ Level1.tscn  a  Node2D  4 scripts`), then every script the scene
+  uses, in tree order, each under its own object bar (`⇥ HUD  a  CanvasLayer  · hud.gd`) with the rows
+  the opened-script reading already produces beneath it. A script sitting on a CHILD node finally sees
+  the wiring the scene file holds for it, so a handler the Godot editor connected reads as its trigger
+  wherever in the tree it lives. The view is read-only for good - a scene is many files at once and
+  none of them is the `.tscn`, so nothing is ever written to it; double-click an object bar to open
+  that script as its own editable sheet. One script is read per frame behind the progress strip, so a
+  big scene never freezes the editor.
+
+### Added - an Editor object, so a tool script reads like a sheet
+
+No other event-sheet editor lets you write tools for the editor itself; Godot does. The editor is now
+an object the way System is - it is opened, it is drawn on, it is given docks and menu items, and it
+answers questions about what is selected - so an opened `@tool` script reads in the editor's own
+words instead of as a pile of raw handlers and raw calls.
+
+- **The Editor object.** New vocabulary, filed under Editor Tools so the whole category now reads
+  under one object name: the triggers **On plugin enabled / disabled**, **On object selected**,
+  **On draw over 2D viewport**, **On 2D viewport input** and **On draw gizmo**, the actions
+  **Add / Remove Tools Menu Item**, **Add / Remove Dock**, **Add / Remove Object Type**,
+  **Add / Remove Inspector Plugin** and **Redraw Viewport Overlays**, and the **Editor Settings** and
+  **Undo History** expressions. Everything the shipped Editor Tools rows already did now wears
+  \"Editor\" in its object cell too.
+- **A plugin's `_enter_tree` is not \"on created\".** On an EditorPlugin sheet the two tree callbacks
+  read as the plugin being switched on and off, which is what they mean there. Same emitted function
+  either way, so nothing about the file moves.
+- **The editor's own expressions, named.** `Editor.SelectedObjects`, `Editor.OpenLayout`,
+  `Editor.Settings` and `Editor.UndoHistory` instead of the `EditorInterface` calls behind them - so a
+  tool's selection walk reads `System ▸ For each n in Editor.SelectedObjects`.
+- **Undo steps as actions on a variable.** `var ur = get_undo_redo()` declares as
+  `Local object ur = Editor.UndoHistory`, and every `ur.xxx(...)` line reads Object then Verb like
+  every other row: `ur ▸ Begin undoable action \"Align Left\"`,
+  `ur ▸ Add do step: set n's x to left`, `ur ▸ Add undo step: ...`, `ur ▸ Add do step: call Refresh`,
+  `ur ▸ Commit undoable action`. Godot's `\"position:x\"` addressing stays out of the sentence: the
+  object it belongs to is already named on the row.
+- **The chip that says what `@tool` means.** A per-frame event on a tool sheet wears an
+  **in the editor too** chip - it is already running, while you edit, before the game exists.
+- **The Editor object is scoped to tool sheets.** The picker offers it on a sheet that runs in the
+  editor and nowhere else, the way it scopes Functions to the open script.
+- **Three more Doctor notes on a tool:** reaching outside the open layout through `get_tree()`,
+  destroying while editing with no undo step, and ticking in the editor with no guard to switch it
+  off.
+
+Display only, as always: the byte round-trip of an opened `.gd` is unchanged and gated for an opened
+EditorPlugin and an opened EditorScript, and the exact GDScript is still one hover away.
+
+### Added - a `static var` reads as what it is
+
+`static var spawned: int = 0` used to read as an ordinary variable, hiding the one thing about it
+that matters. It now reads **Static number spawned = 0  shared by every Player** - the scope word
+leads the type chip, and the muted tail names the object that shares the value (the same name the
+Include bar gives the script: its `class_name`, else its scene root, else its file). On an authored
+sheet, where there is no type chip to carry the word, `static` reads as a badge beside `const`.
+
+### Changed - a function reads as the trigger it is: Functions ▸ On <name>
+
+The condition lane answers \"when does this run?\" on every other event. A function's answer is \"when
+it is called\" - so in Reading mode its name and its input chips now sit in that lane, as a trigger,
+instead of on a header bar above a row whose left cell was the one empty condition cell in the whole
+reading.
+
+- `ƒ  Functions ▸ On Add Look  x  y` in the condition lane, with the body's first step beside it on
+  the right (`Set yaw to ...`), and the rest of the body as sub-events under it. A step that asks a
+  question of its own stays a row of its own; a verb with an empty body keeps the whole row for its
+  chips.
+- The kind stays a word: a published **condition** or **expression** says so, quietly, beside the
+  name. An action says nothing extra, because \"do these\" is what every other event already means.
+- Everything the header had is unchanged: the kind tint, the properties popup on click, and Collapse
+  folding the whole function to that one row. Input chips read as the bare names the call passes in;
+  their types are in the properties popup, where the rest of the picker metadata already lives.
+- Re-pinned to the new reading: `opened_pack_reading_test` (the three verb headers and the helper
+  block) and `opened_pack_head_test` (the Add Look header, the two-lane split, and the whole-row
+  chip width, which now uses a verb with an empty right lane).
+
+### Changed - the three event-shape commands, in the words the sheet reads them in
+
+Everything the sheet reads must be authorable in the same words: a beginner who reads \"Or\" has to be
+able to type \"Or\". The three event-shape commands every event sheet has now say what the reading
+says, on the right-click menu and on the **Add** menu alike.
+
+- `Add Sub-Event` reads **Add blank sub-event (B)** (the key was already B), `Convert to OR Block` /
+  `Convert to AND Block` read **Make 'Or' block** / **Make 'And' block**, and `Make Else` /
+  `Make Else-If` read **Add 'Else'** / **Add 'Else If'** (clearing them reads `Clear 'Else'`).
+- All three are greyed while the sheet is a read-only preview, with the reason on the tooltip, so a
+  preview never looks like it will rewrite the file. Press **Edit Events** first.
+- On an opened `.gd`, Make 'Or' block rewrites that event's joined condition (`a and b` <-> `a or b`)
+  and leaves every other byte of the file alone - pinned both ways by a round-trip test.
+
+### Added - an event is named by its number, everywhere a row is named
+
+The left margin has numbered events for a while; now everything that points at a row says the same
+number, so two people reading the same file mean one row by \"event 12\".
+
+- **Go to event on Ctrl+G.** The dialog the Command Palette already had gets the key every event
+  sheet gives it, and the Keyboard Shortcuts dialog lists it with the other fixed structural keys.
+- **The status bar says where you are.** Selecting a row prints `event 4 of 61 · line 38` on the
+  right of the status bar - the sheet's own event number first, the line after it. A row the margin
+  does not number (a comment, a group bar, a variable) prints nothing rather than inventing an
+  address.
+- **Find results and Doctor findings print the number.** The Find bar's counter reads
+  `3 of 12 · event 4`, and a Project Doctor finding about one row reads `player.gd · event 4` in the
+  panel and `path (event 4)` in the headless driver. The numbering walk itself moved onto
+  `EventSheetResource`, so the Doctor - which never touches the editor - counts events exactly the
+  way the margin does.
+
+### Added - the sheet as text, a Find results bar, a Properties bar, and zoom
+
+Five things every event-sheet editor has, in the sheet's own words.
+
+- **Copy as text, and Save as text.** Ctrl+Shift+C copies the selection as the plain listing every
+  event-sheet community pastes into a forum post, an issue or a chat message: `+ ` in front of a
+  condition, `-> ` in front of an action, one extra indent per sub-event, in exactly the words the
+  canvas is showing under the current reading lenses - because every line is assembled from the
+  spans the canvas already drew, not from a second grammar. **Sheet ▸ Save as Text…** writes the
+  whole sheet the same way as Markdown, with the margin event numbers in a gutter. Read-only
+  output: the round trip lives in the `.gd`, so nothing pastes back in from here. (Ctrl+Shift+C is
+  now Copy as text; adding a condition keeps its primary key `C` and its Ctrl alternate moved to
+  Ctrl+Alt+C - both rebindable in Tools ▸ Keyboard Shortcuts.)
+- **Find all references, and a Find results bar.** Right-click a variable, function, object,
+  signal or behavior ▸ *Find all references* and the results open in a bar under the sheet,
+  grouped by sheet with each hit's event number. Clicking a result jumps to it, opening the sheet
+  when it is not the one on screen; F3 and Shift+F3 step forward and back; the bar stays until it
+  is closed. Matching is whole-symbol, so `hp` never finds `hp_max`, and the open tabs are
+  searched alongside the project's sheets.
+- **A Properties bar.** Beside the canvas, splitter-resizable like the Inspector: the selected
+  condition or action's parameters as fields edited in place (Enter applies, one undo step,
+  through the same edit path as the Edit Parameter dialog, so an opened `.gd` stays byte-exact for
+  every line the edit does not touch), a selected object's properties, a selected group's name and
+  enabled state. Hidden by default in Simple Mode; **View ▸ Properties Bar** brings it back. The
+  dialog stays for anyone who prefers it.
+- **Replace object knows which objects are close.** *Replace object…* (the rename refactor with a
+  scope) now offers the objects that have the same conditions and actions first - the same script,
+  then the same class - and any parameter that named an instance variable the new object does not
+  have is said in the status line and recorded as a Doctor finding, instead of quietly compiling
+  to a member that is not there.
+- **The sheet zooms.** Ctrl + mouse wheel, Ctrl + + / Ctrl + -, Ctrl + 0 for 100%, or the new pill
+  in the status bar: 50% to 200% in six steps, text, chips, icons and guide lines scaling
+  together. The zoom is remembered for the LAYOUT rather than for one file, so the next sheet
+  opens at the size you were reading at. Density (Comfortable / Compact) stays a separate choice.
+
+All of it is translated in the nine shipped languages.
+
+### Added - the Input Map is an object, and the controls vocabulary the sheet was missing
+
+The project-wide Input Map is the thing every input row is really about, and until now it was
+invisible from a sheet: to find out what \"jump\" was bound to you left the sheet and opened Project
+Settings. It is read now, in the sheet's own spelling, and the vocabulary around it grew the
+sentences a controls screen, a gamepad and a phone need.
+
+- **The Input Map, read.** Every action the project declares, with its bindings as the sheet spells
+  them (`Space`, `A button`, `Left stick`, `Left mouse button`), its deadzone as a percent the way
+  the Gamepad object shows its Analog deadzone, and which object its rows read on (keys are the
+  Keyboard's, buttons the Mouse's, sticks the Gamepad's, fingers the Touch object's). The engine's
+  own `ui_text_*` defaults are left out, because a list led by them buries the four actions a game is
+  actually about. Nothing is written on a read.
+- **Gamepads by number.** `p2_jump` and `jump_2` both read as `jump` on gamepad 1 - the two
+  conventions a local-multiplayer project uses, so those rows stop reading as four unrelated names.
+- **Analog in the Gamepad object's words.** `Compare axis Left analog X of gamepad 0 > 20` and its
+  either-way twin, `Is button down <control> (exact match)`, and the `axis of gamepad` /
+  `how hard <control> is held` expressions, all on the -100 to 100 and 0 to 100 scales the Gamepad
+  object has always shown (Godot counts the same travel from -1 to 1).
+- **Gamepads, touch and gestures.** `On gamepad 0 button A pressed` / `released` with the device
+  index read as the gamepad number, `Has gamepads`, `Vibrate gamepad 0 for 0.2 seconds`, and the
+  Touch object's `On drag` / `On pinch` / `On pan` with their `touch index`, `pinch factor` and
+  `pan delta` payloads, plus `Mouse ▸ On double-click`.
+- **Rebinding, one action per row.** `Wait for the next key or button into ev`,
+  `Clear the bindings of jump`, `Bind jump to ev`, `name of ev`, `Reset all bindings to the
+  project's`, `Has action dash`, `Set deadzone of steer to v`, and `Save bindings` / `Load bindings`
+  writing a plain settings file under `user://` the way Remember Between Runs does.
+- **Simulated input and the pointer.** `Simulate control jump pressed` / `released` (how an AI, a
+  replay or a tutorial drives the same code the player does), `Simulate input ev`,
+  `Stop this input here`, `key is a held-down repeat`, `Request pointer lock`,
+  `Set cursor visible` / `invisible`, `Keep cursor inside the window` and `Move cursor to`.
+- **Handheld sensors.** `acceleration`, `gravity`, `rotation rate` and `magnetic field` on the Touch
+  object, and `Compare acceleration X > 5` for tilt. They report 0 on desktop, and every one of them
+  says so.
+
+### Added - one sentence for a variable, everywhere it appears
+
+A variable used to read one way in the head, another way inside an event, and a third way in Object
+properties. Now there is exactly one sentence for one, and every surface prints it:
+**`<scope> <type> <name> = <value>`**.
+
+- **The scope word leads.** `Global number Score = 0`, `Instance boolean alive = true`,
+  `Local text name = \"\"`, `Constant number MAX_HP = 100`, `Static number spawned = 0` (which adds
+  `shared by every Player`, because that is the whole surprise a static holds), and
+  `Field number price = 0` on a Resource script. Godot has more scopes than an event sheet does;
+  these are the five words that cover all of them.
+- **The type is in plain words**: number, whole number, text, boolean, vector, color, list (of text,
+  of numbers, of objects), table, object or the class the author named, scene, any. Godot's own
+  spelling (`float`, `int`, `String`, `Array[String]`, `Dictionary`) is still one hover away. A
+  declared `int` reads \"whole number\" because the author said they wanted no fractions; an
+  undeclared `100` still reads \"number\", because nothing in that line said so.
+- **Inspector-editable variables wear an Inspector chip** instead of living in a folder of their own,
+  so the head's `Settings` and `Internal state` folders are now one **Instance variables** folder
+  with the Inspector ones first. One list, and the row says which is which.
+- **A colour is always a live swatch** beside its word (`white`) or its hex (`#ff9b3c`), on variable
+  rows as well as on action parameters, whether or not the line bothered to declare the type -
+  `var tint := Color.WHITE` is as much a colour as `var tint: Color = ...`. Clicking the swatch opens
+  the colour picker the sheet already had (wheel, hex, RGBA, named colours, the saved palette,
+  eyedropper), and the pick is written back **in the spelling the line already used**: `Color.RED`
+  stays a named constant, `Color(\"#ff9b3c\")` stays a hex string, `Color(1, 0.6, 0.2)` stays numbers
+  with the argument count it was written with. A colour edit moves the colour and not one byte more.
+
+### Changed - the five variable verbs and the two questions, by the names you would say
+
+The picker used to offer *Set Variable*, *Add Variable*, *Subtract From Variable* and *Toggle* under
+names nobody says out loud, and typing \"add to\" found the wrong thing. They are now named the way the
+reading already reads them, so what you pick is what you get:
+
+- **Set value**, **Add to**, **Subtract from** and **Toggle boolean**, plus the question
+  **Compare variable**. Setting and testing a boolean go through Set value and Compare variable -
+  a separate descriptor for them would carry a line byte-identical to those two, and the lifter
+  resolves an opened line by the line it emits, so a duplicate would quietly steal every
+  `muted = true` in the project.
+- A boolean condition reads as the plain sentence it is - `alive is true`, `muted is false` - never
+  \"Is alive set\", and the negative form flips the word rather than adding a mark.
+- **The ids are frozen.** Only display names changed, so every sheet that already used them keeps
+  working, and the glossary maps each older name to its new one.
+- A **Range**'s own *Set Value* (a slider, progress bar or spinbox) is now **Set Slider Value**, so
+  the two verbs are not both called the same thing and typing \"set value\" reaches the variable one.
+
+### Changed - the Add variable dialog speaks the same sentence, and shows it
+
+- **Scope chips first** (Instance / Local / Constant), in the sheet's own order, with what each one
+  means on hover. Pressing one moves the variable and everything below follows.
+- **The type list uses the reading's own words** - number, text, boolean - instead of Godot-flavoured
+  ones.
+- **A live preview of the exact row it will write**, in the one variable shape:
+  `Instance whole number  hp = 100`. The dialog's whole job is to write one row, so it shows that
+  row, composed through the same grammar the sheet composes its own rows with. The \"Ships as\" strip
+  is still there underneath for people who read code.
+
+All of it is translated in the nine shipped languages.
+
+### Added - the Manual you do rather than read: tutorials, scratch sheets, one reference shape, and What's new
+
+The Manual gains the half every event-sheet editor opens with, and loses the two things a reader
+kept having to leave it for.
+
+- **Tutorials, in the live editor, on a sheet nobody minds losing.** Manual ▸ Tutorials lists five:
+  Your first event, Open your own script as a sheet, Add a behavior to an object, Make a function
+  and call it, and Coming from another event-sheet editor. Each is a sequence of step
+  cards (\"Now add an action: press A or click Add Action ...\"), each step names a control the editor
+  really has and makes the real one **pulse** in the toolbar until it is used, and a step completes
+  on its own the moment the sheet contains what it asked for. Back / Skip / Next, and Next never
+  waits for the check - a step you did your own way is a step you can walk past. Where you got to is
+  remembered per tutorial, and the tour is step 0 of the first one.
+- **\"Try it in a scratch sheet\" on every example.** A figure's rows open in a tab of their own,
+  *Scratch - Wait For Signal*, editable, Reading mode off, in memory. Nothing is written to your
+  project unless you Save As, it closes without asking (it has nowhere to save to), and it is not
+  restored next session. The badge on the tab says which one it is.
+- **One shape for every reference page**: Properties, Conditions, Actions, Expressions, Triggers, in
+  that order, on every object, module and behavior - and every table is the row's own mark, its
+  name, what it takes and one line about it. A behavior's Properties are read off its own scripts,
+  so a knob renamed in the pack renames on the page.
+- **Manual ▸ What's new**: the release notes for the build you have installed, rendered as a page
+  inside the editor, with a dot on the Manual entry after an update until you open it.
+- **Wayfinding.** A search that finds nothing now says *Looking for layout? Here it is called Scene*
+  before the empty list, when the word is one the glossary knows. Every page ends with **Was this
+  page helpful? Yes / No** - kept on your machine and sent nowhere - and **Report a problem**, which
+  opens the project's issue tracker in your browser with the page named in the title and never
+  submits anything by itself. **A-** and **A+** set the Manual's text size, `/` focuses the search,
+  Esc gives the sheet its focus back, and Ctrl+F1 reopens the page you were last reading.
+- **The Manual in your language, page by page.** `docs/<locale>/` is walked by the bundle builder the
+  same way the addon and module guides are - a translated page ships by existing. An untranslated
+  page shows in English with a one-line *This page is not translated yet - help translate it* that
+  opens the folder a translation would go in. No machine translation. The figures on an English page
+  are already in your language, because they are real rows drawn by the real renderer.
+
+### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words
+
+Four more families of everyday GDScript read as the rows they are. Display only: the file is
+untouched, the byte round-trip is unchanged, and the exact GDScript is still one hover away. Every
+shape reads the same whether it was typed by hand or dropped from the picker, because both go through
+the one row grammar.
+
+- **The wait, and what runs when it ends.** `get_tree().create_timer(2.0).timeout.connect(func():
+  explode())` reads `System ▸ ⏳ Wait 2 seconds then Call Explode` - the sheet already has that shape,
+  so the callback reads as the step that follows the wait rather than as a lambda handed to a signal.
+  A named function, a lambda body the grammar already has a sentence for (`Destroy`, `Set hp to 0`)
+  and the `CONNECT_ONE_SHOT` spelling all read the same way; a bound callable keeps its code, because
+  a wait that quietly loses its callback is worse than the line it replaced.
+- **Switching the tick on and off.** `set_physics_process(false)` reads
+  `Player ▸ Set Every tick (physics) deactivated`, `set_process(true)` reads
+  `Set Every tick (draw) activated`, and `set_process_input` / `set_process_unhandled_input` read the
+  same way about input - the sheet's own activation words, said about a tick. `process_mode` reads
+  `Set disabled` / `Set enabled` / `Set always active` / `Set pausable` /
+  `Set active only when paused`, in both of Godot's spellings.
+- **The question a `@tool` script asks about itself.** `Engine.is_editor_hint()` and
+  `OS.has_feature(\"editor\")` both read `System ▸ is in the editor` - one question, one sentence.
+- **The drawing verbs, and the lifecycle trigger names.** `draw_line`, `draw_rect`, `draw_circle`,
+  `draw_string` and `queue_redraw` read `Draw line a to b, c`, `Draw rectangle r, c`,
+  `Draw circle at p, radius r, c`, `Draw text ...` and `Redraw`. And the lifecycle triggers now read
+  the sheet's own names, always - never behind the Familiar Words toggle: a `_ready` on the script the
+  SCENE ITSELF carries is `System ▸ On start of layout`, a `_ready` on a script sitting on an object in
+  the scene is that object's `On created`, and `_exit_tree` is `On end of layout` or `On destroyed` the
+  same way round. `_enter_tree` reads `On created`, `_draw` reads `On draw`, and the notifications read
+  `On suspended` / `On resumed` / `On lost focus` / `On gained focus` / `On close` / `On paused` /
+  `On unpaused` / `On destroyed` (any other notification says its own name in plain words).
+- **Named argument chips where a name was still missing.** `sprite.play(\"run\", 2.0)` reads
+  `Set animation to \"run\" (play)  speed = 2` instead of leaving the second value bare.
+
+All of it is translated in the nine shipped languages.
+
+### Performance - opening a script is about 7x faster, and the compiler is off the boot path again
+
+Nothing here changes what anything reads as or what any file compiles to; the byte-exact round-trip
+gates are unchanged and green. These are the two hot paths, measured on this repo's own packs.
+
+- **Opening a `.gd` as a sheet: 6.8 s to 0.9 s on the FPS Controller pack (647 lines), 11.7 s to 1.4 s
+  on Save System (1,522 lines).** Two fixes. The lift matches every line against a reverse index of
+  the whole vocabulary, and building that index compiles one regular expression per reversible
+  template - 894 of them on a stock install. The per-function lift path rebuilt the entire index
+  *once per function*, so a file with 76 functions paid 76 full builds: that single line was ~80% of
+  the time an open took. It is now built once and shared. Then matching itself: each line was run
+  against every entry's regular expression, when a length check and one substring search can rule out
+  almost all of them first, and neither test can reject a line the expression would have matched.
+- **The compiler is no longer loaded at editor startup.** The Inspector drawer plugin is constructed
+  at every editor start, and through the drawer widgets it named the compiler for three table-column
+  schema helpers that only a designer editing a table cell ever calls - and naming a class compiles
+  its whole dependency subtree there and then. Reached on first use instead: the plugin's boot
+  subtree drops from 583 ms to 193 ms of script loading. The lazy-boot lint now covers both drawer
+  files, so it cannot creep back a third time.
+- **Both are pinned.** A new `lift_perf_test` asserts the reverse index is handed out by reference
+  (the structural invariant that makes it fast, checkable on any machine at any load) plus a generous
+  wall budget on a real pack open as the backstop, and `run_perf.gd` now runs the boot lint too.
+
+### Added - an opened script's polls, numbers, lists, delays, project names and enums read as rows
+
+Six more shapes every real Godot script is full of. All six are lenses over values the row already
+holds: the file is untouched, the byte round-trip is unchanged, and the exact GDScript is still one
+hover away.
+
+- **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner writes
+  input in Godot - `if Input.is_action_just_pressed(\"jump\"):` inside `_process`. That reads as the
+  top-level `Keyboard ▸ On \"jump\" pressed` an event sheet would draw, and the `Every tick` words go
+  away, because the poll already says when the event runs. Only the EDGE polls count: a held
+  `is_action_pressed` is a check every tick, so its handler keeps the tick reading.
+- **Numbers read the way a person writes them.** `300.0` reads 300, `0.50` reads 0.5, `1_000_000`
+  reads 1,000,000, `1e3` reads 1000, and the constants a reader knows are named (`1.5707963` reads
+  π/2, and τ, √2 and √3 likewise, from a spelling long enough to mean them). A 0..1 setting the
+  project marked with `@export_range(0, 1)` reads as a percentage. Reading only - the literal in the
+  file, and the value the params dialog puts in front of you, never move.
+- **Lists, tables and text in the sheet's own verbs.** `items.append(x)` reads `Push back x to items`,
+  and `push_front` / `pop_back` / `insert` / `remove_at` / `erase` / `clear` / `sort` / `shuffle` /
+  `reverse` / `dict.erase(k)` read as the List and Record modules' own rows. `label += \"!\"` reads
+  `Append \"!\" to label` rather than as arithmetic, because adding to text puts it on the end.
+- **Deferred work says the delay out loud.** `call_deferred(\"reset\")` reads `Call Reset (at end of
+  frame)`, `set_deferred(\"visible\", true)` reads `Set visible to true (at end of frame)`, and
+  `reset.call_deferred()` reads the same - the words `queue_free()` already read in. A handler wired
+  with `CONNECT_ONE_SHOT` wears the sheet's own `Trigger once` chip on its trigger.
+- **Physics layers and input actions by their PROJECT names.** `set_collision_layer_value(2, true)`
+  reads `Set collision with layer \"Enemies\" on` and `collision_layer = 5` reads `Set collision layers
+  to \"World\", \"Player\"`, from the names Project Settings holds; a layer the project never named keeps
+  its number. And the DEVICE an action is bound to picks its object, so an action bound only to mouse
+  buttons reads under Mouse and one bound only to a pad reads under Gamepad.
+- **Enum values in the sheet's words.** A number written where an engine enum is expected reads as the
+  member it names - `process_mode = 3` reads `Set process mode to Always`, `texture_filter = 1` reads
+  `Set texture filter to Nearest` - and so does a number written into a variable the sheet declared
+  with one of its own enums (`dir = 2` reads `Set dir to LEFT`).
+
+### Changed
+
+- The Array verbs are named the way the sheet's own rows read them: **Append** is **Push Back**,
+  **Push To Front** is **Push Front**, **Remove At** is **Delete At**, **Erase Value** is **Delete
+  Value**, **Pop Last** is **Pop Back** and **Pop First** is **Pop Front**. Every `ace_id` and every
+  `codegen_template` is unchanged, so existing sheets and emitted code are untouched; only the words
+  in the picker, the rows and the guides moved.
+- A handler wired with connection flags (`connect(_on_hit, CONNECT_ONE_SHOT)`) now lifts to the
+  trigger event it is instead of stranding the whole handler as a code block. The connect line is
+  re-emitted verbatim, flags and all.
+
+### Added - collapse and expand the whole sheet, remembered per file
+
+A long sheet is browsed by collapsing, so collapsing is now a whole-sheet gesture with the sheet's own
+words on it - collapse and expand, never fold.
+
+- **Ctrl+Shift+[ collapses every event and function block; Ctrl+Shift+] expands them all.** The keys
+  used to reach only the region CONTAINING the selection; that scope was never lost, because plain
+  Left and Right already collapse and expand the selected row.
+- **View > Collapse All / Expand All / Expand To Level 1, 2, 3** (and the same five in the Command
+  Palette). \"Expand to level N\" reads the sheet down to a depth: everything shallower stays expanded,
+  everything at that depth or deeper is collapsed.
+- **How deep a file was left is remembered for that file** - per-project editor state beside the
+  region folds, so the `.gd` is untouched. What is stored is the LEVEL, not a list of rows: a row's
+  identity embeds a live instance id and means nothing in the next session, while \"this file reads to
+  level 2\" means the same thing every time it is opened.
+- **A collapsed block keeps saying what it holds**: a muted one-line summary trails its header naming
+  its first rows (\"host does not exist -> Stop event - Set coyote timer to 0 - …\"), so collapsing
+  never hides what a block is for. Draw-only - it reserves no width and is never measured.
+
+### Added - a script that does not compile shows WHICH rows are broken
+
+An event sheet marks a broken event red with the reason. An opened `.gd` now does the same: the rows
+built from the offending lines carry the engine's own message, and the count is available to the head
+bar as \"N errors - the game will not run this script\".
+
+The reason is the ENGINE'S, not a second checker of our own that could disagree with the one that
+actually refuses to run the game - Godot does not bind its parse diagnostics to scripting, so the file
+is put to a second Godot with `--check-only` and its report is read back as line + message. That runs
+on the open job's worker thread, never on the paint path, and the answer is cached per file and
+modification time, so reopening a tab is free. The line-to-row join is the source map the compiler
+already keeps: an opened file re-emits byte-identically, so line N of the output is line N of the file.
+A file that parses reports nothing, which is also what an unreachable check reports - a reading that
+invents errors is worse than one that shows none.
+
+### Added - the paint, tree and notification callbacks read as the object's own triggers
+
+Four engine callbacks that used to open as helper functions now read as the lifecycle triggers they
+are. The file is untouched: every shape below is gated by the same byte-exact re-emission as the rest
+of the importer, so the exact GDScript comes back out unchanged.
+
+- **`_draw()`** reads as the object's paint trigger, and its body reads through the drawing words.
+- **`_enter_tree()` and `_exit_tree()`** read as the object's created and destroyed triggers - except
+  for the host-binding `_enter_tree` a host-targeting behaviour pack ships, which is regenerated from
+  the sheet's host and therefore keeps reading as the one-line Host binding row it already was.
+- **`_notification(what)` whose whole body is a `match what:`** reads as one trigger event per matched
+  notification, and all of them compile back into the single `_notification` handler the engine calls -
+  the match shape is carried on the events themselves, so the file round-trips byte-for-byte. The
+  older `if what == NOTIFICATION_TRANSLATION_CHANGED:` spelling is a different shape and is deliberately
+  left exactly as it read before.
+
+### Added - the Manual: docked beside the sheet, following what you select, and knowing your sheet
+
+The in-editor documentation is now the **Manual**, in every place a reader can see it (Tools ▸
+Manual…, the dock, the window), and it behaves like the manual an event-sheet editor has: it lives
+beside the sheet, it answers for whatever you are pointing at, and half of its pages are derived
+from the vocabulary rather than written by anybody.
+
+- **F1 is \"help for the selected item.\"** A condition or action row opens its reference entry; an
+  object label opens that object's reference page (the engine's own class reference is one click
+  further, in the Script editor's help); a group opens the Manual's page on groups; a behavior's
+  Include bar opens that behavior's reference. Docked, **Follow selection** does it as you click
+  around, and pauses the moment you click inside the Manual to read - press the pin to resume.
+- **A reference page per object, category and behavior.** *System reference* has a page per picker
+  category, *Behavior reference* a page per pack, each listing its conditions, actions and
+  expressions from the vocabulary this editor loaded, with every verb linking to its entry. A
+  behavior with no written guide is not a dead link: its page says \"No guide yet for *Priced
+  Tables* - its conditions, actions and expressions are listed below\" and offers a one-click
+  **Write this guide**, which writes the skeleton beside the pack where the Manual picks it up.
+- **One search box over the whole Manual** - conditions, actions, expressions, guides, System
+  reference, behavior reference, the engine's class reference and the glossary - with every result
+  tagged by which of those it is. A verb result says how many events of the open sheet already use
+  it; Enter opens it and **Ctrl+Enter adds it to the sheet at the caret** as one undo step.
+- **Every reference entry knows THIS sheet**: *Used in this sheet: 2 events* with **go to first /
+  next** (which selects the event), **See also** for what sits beside it, and **Add action /
+  Add condition**, **Add example events**, **Show GDScript** and **Open guide**.
+- **A glossary for readers coming from another event-sheet editor** - pick, family, layout,
+  instance variable, wait, else, or block, trigger once, sub-event and the rest, each in this
+  editor's own words, searchable as the *glossary* kind.
+- **The chrome every reader reaches for**: a breadcrumb starting at *Manual*, the on-this-page
+  chapter strip, back / forward (**Alt+Left / Alt+Right**), **Recent**, a **bookmark** star, a
+  reading measure of about eighty characters, a scroll position remembered per page, and
+  **Next: ...** at the foot of a guide. Recents and bookmarks travel with the editor layout.
+- **Help where the hand already is**: every entry in the Add condition / Add action dialogs carries
+  a small **?** (\"Help for this action\") that opens its entry, hovering an entry shows a mini-page
+  (what it does, the line it ships as, and how much this sheet uses it), hovering a mark on a sheet
+  row (⟳ ◆ ➜ ƒ ✕ ⏸) says what the mark means, and the icon legend is the Manual's first page.
+- **The Manual says what it is**: its footer reads *Manual v&lt;version&gt; · shipped with the
+  plugin · offline*, so a reader can tell the pages match the build they installed.
+- New public API: `EventSheets.all_verbs()` (every verb the live registry offers) and
+  `EventSheets.reveal_verb_row()` (select the n-th event of the open sheet that uses a verb).
+
+### Added - an opened file says how much of it reads as events, what its settings are limited to, and whether it is the project's global
+
+- **A reading-coverage chip on the Include bar.** An opened `.gd` now says the one thing a reader
+  wants before reading a line of it: `96% reads as events · 3 script blocks ▸`. Clicking it walks
+  the script blocks, one per click, so the parts that did NOT arrive as rows are a click away rather
+  than a scroll away. A file that lifted completely just says `reads as events` - a share and a zero
+  would be a sentence with nothing in it. The measure is ONE shared static
+  (`EventSheetReadingCoverage`), and it is the same one the corpus gate measures with, so the chip and
+  the test can never disagree about the same file. When the engine reported parse errors for the
+  file, the bar also says `N errors - the game will not run this script`, in red.
+- **Setting rows show their Inspector facts.** A knob's limits and choices read on its row, the way an
+  event sheet's properties panel shows them: `@export_range(0, 20, 0.5)` reads
+  `number speed = 5  0 to 20, step 0.5`; `@export_enum(\"Walk\", \"Run\", \"Fly\")` reads as a `combo` chip
+  showing the LABEL rather than the number (`mode = Walk  Walk / Run / Fly`); a 0-to-1 range reads as
+  a percent (`50%`); `@export_file(\"*.png\")` reads `file portrait = \"\"  *.png`; `@export_dir` reads
+  `folder`; `@export_multiline` reads `text` with a `multiline` note; a Color reads its swatch and its
+  word (`tint = white`); `@export_node_path` reads `node path`; and `@export_flags(...)` reads `flags`
+  with the names of the bits. Read from the hint families the importer already stores structurally, so
+  nothing new is parsed and nothing is written back.
+- **An autoload opens as the project's Globals sheet.** When the opened file IS a project autoload,
+  its Include bar reads `⇥ Game  autoload (global) · game.gd` with the globe, its Settings and
+  Internal state folders collapse into ONE `Global variables` folder (on a global there is nothing for
+  a second folder to mean), its Triggers bar says `this global fires - N`, and the Objects rail names
+  it the same way - the words every other sheet's `Game (global) ▸ …` rows already use for it.
+
+### Changed - the editor describes itself in the sheet's words
+
+One sweep of user-facing strings, so the chrome around the readings says what the readings say.
+`code card` / `code block` / `GDScript block` became **script block** wherever it means a block that
+could not lift - the folded card on the canvas, the Add menu, the code dialog, the Loose Ends entries,
+the lint and open status lines, the compiler's own warnings. `fold` / `unfold` became **collapse** /
+**expand** in the palette commands, the shortcut sheet, the theme editor and the group status line.
+And user-facing **verb** became `action`, `condition`, `expression` or `function` as each case
+deserved - the Loose Ends heading, the Repeated Rows dialog, the inline and refactor messages, the
+picker's own right-click menu, the publish-and-teach flow. Identifiers, ids and tests keep their
+names; `Teach a Verb` keeps its name too (it is the feature's), and only its description changed.
+Every renamed key moved in lockstep across all nine translation catalogs.
+
+### Added - objects: what they are, where their picture is, who listens, and a bar to find them in
+
+The sheet already said what a file DOES with its objects. Six changes now say what those objects ARE,
+and give the bar you reach for them from. Display only, again: no line of an opened file moves, and
+the byte round-trip is unchanged.
+
+- **Object properties say what the object IS.** The popup an object label opens gains its instance
+  variables, its functions (one that answers yes-or-no is marked `condition`), its triggers, the
+  behaviors mounted on it with what the scene set on each (`Health  max health = 50.0`), and the
+  families it belongs to - with the Godot word `(groups)` riding along once, muted. Two new buttons
+  start using it - **Add condition** and **Add action**, both opening the picker already scoped to
+  that object - and a third opens the file that says what it is, as a sheet. Read from the object's
+  own script and from the scene it is placed in, both as text: nothing is instantiated.
+- **The head shows the object's Behaviors and Families.** Two folded folders in an opened script's
+  head, before the settings, from the same two sources.
+- **Tabs and titles name the object, not the file.** A tab reads `Player` with the object's picture,
+  a pack reads by its pack name, an autoload reads as a global; the file name sits on the tooltip,
+  and two objects with one name get the file added.
+- **Signals say who listens.** An emit wears a muted `→ HUD, Level (2 listeners)`; a handler wears
+  `← emitted in player.gd: Take Damage`. Both are click-to-jump, both come from one project-wide
+  index of `.connect` lines, `emit` sites and `.tscn` `[connection]` rows, built once per session.
+- **Sprite thumbnails as the object's mark.** When an object's scene has a Sprite2D / TextureRect at
+  the top, its texture becomes the object's picture on the Include bar, the Object bar, the Object
+  properties popup and every object label - from the editor's own preview cache, so nothing new is
+  rendered and headless stays icon-only.
+- **The Object bar.** Three sections in the order a reader wants them: USED IN THIS SHEET with
+  per-object counts and behaviors nested under the object they ride on, ALSO IN THE SCENE collapsed,
+  GLOBALS & FAMILIES collapsed. Plus a filter box (Enter on a single match pins it), a sort toggle
+  (reading order / count / name, remembered), an object the scene does not have flagged `⚠`, and a
+  count whose hover splits into `2 conditions · 3 actions · 1 trigger`. Five gestures: hover previews
+  an object's rows, click pins that highlight, double-click opens Object properties, right-click
+  offers Add condition / Add action / Select in scene / Open its script as a sheet, and dragging an
+  object onto the sheet starts an event on it (dropping it in an event's action lane adds an action
+  instead).
+
+### Added - an opened script's questions, text, saving, behaviours, input and logging read as rows
+
+Six more families of everyday GDScript now read as the rows they are instead of as the code they are
+written in. Display only: the file is untouched, the byte round-trip is unchanged, and the exact
+GDScript is still one hover away. Every shape reads the same whether it was typed by hand or dropped
+from the picker, because both go through the one row grammar.
+
+- **What an object is and has.** `body is Player` reads `body ▸ is a Player` with the class as a chip;
+  `\"potion\" in inventory` reads `inventory has key \"potion\"`; `x in [1, 2, 3]` reads
+  `x is one of 1, 2, 3`; `x in wave` reads `wave contains x`; `body.has_method(\"take_damage\")` reads
+  `body ▸ has function Take Damage`; `has_node(\"Ball\")` reads `Player ▸ has child Ball`. And `>=` and
+  `<=` are drawn `≥` and `≤` wherever a comparison is shown - in a condition and inside a value alike,
+  next to the `≠` that already was.
+- **Text and math in the names a reader types into a field.** `uppercase(s)`, `lowercase(s)`,
+  `left(s, n)`, `mid(s, a, n)`, `right(s, n)`, `find(s, x)`, `replace(s, a, b)`, `trim(s)`,
+  `split(s, \",\")`, `s starts with x`, `s ends with x`, `s contains x`, `x ^ y` for a power, and both
+  `\"%s: %d\".format([a, b])` and `\"{0}: {1}\".format([a, b])` unrolled into the join `a & \": \" & b`.
+  `int()`, `float()` and `str()` are already the same word and stay as they are.
+- **Saving, files and JSON under the three objects that own them.** `Storage ▸ Set item \"score\" to hp
+  (section \"save\")`, `Storage ▸ Set s to item \"score\" (default 0)`, `Storage ▸ Save \"save.cfg\"`,
+  `Storage ▸ has item \"score\"`, `JSON ▸ Set d to parsed text`, `JSON ▸ Set t to d as text`,
+  `File ▸ Open \"log.txt\" for writing (as f)`, `f ▸ Write line` and `File ▸ \"log.txt\" exists`.
+- **Behaviour words, decided by the object's known class.** A RigidBody reads
+  `ball ▸ Physics  Apply impulse v` / `Physics  Set velocity to v`; a camera reads
+  `Set zoom to 200%` and `Set as active camera`; an emitter reads `Particles  Start spraying` /
+  `Stop spraying` / `Restart`; and the collision knobs read `Set collision with layer 2 on` and
+  `Set collisions off`. A class the sheet does not know gets no behaviour words at all - a guess would
+  put them on the wrong object.
+- **Input phases and devices.** `Keyboard ▸ On \"jump\" released`, `Keyboard ▸ On \"pause\" pressed
+  (this event)` for the `InputEvent` spellings, `Keyboard ▸ X is down`, `Mouse ▸ left button is down`,
+  and the analogue reads under the pad: `Gamepad ▸ strength of \"gas\"`.
+- **Logging, asserts, `breakpoint` and `@tool`.** `System ▸ Log error x` (both `push_error` and
+  `printerr`), `Log warning x`, `Log x` for `print_rich`, and `System ▸ Assert c \"msg\"`. A bare
+  `breakpoint` says nothing at all: the row wears the sheet's own breakpoint dot, which is what that
+  line means. `@tool` reads as a `runs in editor` chip on the Include bar rather than as a row.
+
+### Changed - product names out of the code
+
+- Comments, tooltips, ACE descriptions and test labels across `addons/`, `tools/`, `tests/`,
+  `eventsheet_addons/` and `demo/` now describe the BEHAVIOUR instead of naming another event-sheet
+  editor. The View toggle formerly called **Construct Words** is now **Familiar Words** (same lens:
+  layout, restart layout, time scale, layer nouns), stored under the `familiar_words` key. The
+  migration guide moved to `docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md`. Guides may still
+  draw the comparison for a reader who needs it; `tests/no_product_names_in_code_test.gd` keeps the
+  code itself clean.
+
+### Added - an opened file says what its objects ARE, and lists them
+
+A row's object column named a thing but never said what KIND of thing it was, so a project-wide
+global, a node, and a behaviour riding on that node all looked alike - and there was nowhere at all
+to ask \"what is in this file\".
+
+- **An autoload reads as a global.** A row reaching through a registered autoload now names the
+  singleton in the object column with a muted `(global)` note and a globe, and leaves the bare member
+  in the sentence: `EventForgeBridge (global) ▸ Add 1 to score`, `EventForgeBridge (global) ▸ score >
+  100`. The owner used to be buried mid-cell as a possessive (`event forge bridge's score > 100`),
+  which is the one place a reader does not look for it. Both readings a row can take - the shared
+  grammar and a definition's own display template - go through the same rewrite, on a throwaway copy,
+  so nothing a row stores or compiles to moves.
+- **A behaviour pack reads as its object's behaviour.** A pack node mounted under the script's own
+  node hands its rows back to that object, with the pack's display name as the leading chip:
+  `$Health.take_damage(3)` on a Player reads `Player ▸ Health  Take damage 3`, and
+  `$FPSController.do_jump()` reads `Player ▸ FPS Controller  Do jump`. The pack index is derived from
+  the packs themselves - `class_name`, folder, and `@ace_category` off each file's head - so a
+  dropped-in pack is recognised with no table to maintain.
+- **The left rail gains an Objects section.** Fold-away like the others, it lists every object the
+  open file uses, in reading order: the script's own object, the nodes it reaches for, the behaviours
+  mounted on it, the globals it touches, the groups it addresses, the scenes it spawns. Each carries
+  its class icon, a muted note (`%HpBar · ProgressBar · 2 rows`, `autoload · 2 rows`, `group · 1 row`)
+  and its hover lists the verbs the file uses it with. Clicking one shows only its rows through the
+  same filter lens the Filter button drives; clicking it again clears.
+- **Clicking a row's object name opens the object popup**: Type, Path (with the scene that path is
+  written in, when a scene uses this script), the verbs this file uses it with, the signals it
+  listens to, and **Highlight rows** / **Select in scene** / **Show in code**. Select in scene greys
+  out unless the scene is open, because offered-but-dead is worse than plainly unavailable. The verb
+  header popup is untouched - a ƒ row still opens its ACE properties.
+- The census counts USE, not mention: a doc comment naming `$Health` describes the file rather than
+  using it, a format string is no longer mistaken for a unique-name reference, and a node declared
+  `@onready` is one object under both its variable name and its node path.
+- Translated in all nine languages. Everything here is display-only - the fixture that exercises all
+  of it re-emits byte for byte.
+
+### Added - the structure an opened script is organised with now reads as sheet structure
+
+Four shapes every real Godot script is full of used to read as code, as comments, or as nothing at
+all. All four are lenses over the unchanged file: the fixture behind them re-emits byte for byte,
+which is the assertion that keeps them honest.
+
+- **`#region Movement` / `#endregion` reads as a GROUP bar.** The folder icon, the name, the muted
+  count (`Movement  2 events`), the group row's height and its accent band - and it folds, with the
+  fold remembered across reopens. A region written inside another nests inside its bar. The file
+  still holds exactly the two fence lines it always did.
+- **Authoring symmetry**: Add Group (and Group Selection) on a `.gd` sheet writes `#region <name>` /
+  `#endregion` instead of a marker comment, so a group made on the sheet is a fold in Godot's own
+  script editor, and reopening the file brings the same bar back. A `.tres` sheet's groups are
+  untouched - every generated pack is byte-identical.
+- **Commented-out code reads as a switched-off row.** A `.gd` file has nowhere to record that a row
+  is disabled except by commenting the line out, so that IS the storage: a comment whose text is a
+  statement (`# velocity.x = 0.0`, `# if hp <= 0: die()`) now reads as the row it would be, greyed
+  and struck through with the muted word `disabled`, while prose (`# TODO: add coyote time`) stays
+  the note it is. Switching such a row back on uncomments the line; switching a row off on a `.gd`
+  sheet comments it.
+- **Repeating Timers read as `Every X seconds`.** A `_ready` that sets `$SpawnTimer.wait_time`,
+  connects `timeout` and starts it makes its handler read `⟳ System  Every 2 seconds (SpawnTimer)`;
+  `while true: await get_tree().create_timer(0.5).timeout` reads `⟳ System  Every 0.5 seconds
+  (while running)`. A one-shot Timer keeps `On timeout`, which is what it does, and a Timer whose
+  wait time the script never sets is left alone rather than guessed at.
+- **A base script of this project reads as an Include.** `extends \"res://enemy.gd\"` (or
+  `extends Enemy`, resolved through the project's class list) adds a second head bar -
+  `⇥ Include enemy.gd - open as a sheet` - and clicking it opens that file as a sheet in its own tab
+  (Alt+Left comes back). `super._ready()` reads `Include enemy.gd ▸ run its On Ready`,
+  `super.take_damage(amount)` reads `▸ Call Take Damage  amount`. Extending an engine class adds no
+  bar: the identity bar above already says that.
+
+### Fixed - a comment could be read as an action
+
+A commented-out line was matched against the ACE templates like any other statement, so
+`# velocity.x = 0.0` claimed the set-property template with `# velocity` as its target and the row
+drew `set # velocity X = 0.0`. A comment is never an action now, whatever it says. A run of comment
+lines that mixes a commented-out statement with a note about it also splits into one row each, so
+the two can be read - and switched on - separately.
+
+### Fixed - three rows of an opened file stopped saying things that were not true
+
+- **`if i == 1:` is a comparison, not an identity test.** Is The Same Object's reverse template is the
+  bare `{a} == {b}`, which matches every equality anybody ever wrote - so a loop counter against a
+  number read `i is the same object as 1`. The lifter now hands an equality to **Compare Variable**
+  unless one side is recognisably a reference (`null`, `self`, a `$Node` / `%Node` path, a `get_node`
+  / `get_parent()` lookup, or a member the file declared with an object type), and Is The Same Object
+  keeps only the rows it is actually about. `x == null` still reads `x does not exist`; the emitted
+  bytes are identical either way, because both templates emit `{a} == {b}`.
+- **And it reads the way a sheet reads it**: `i = 1`, `hp ≠ 3`. GDScript doubles the sign because a
+  language has to tell assignment from a question - a row is only ever the question.
+- **A plain script's signals are its triggers.** The Triggers folder listed them as raw rows -
+  `died | internal`, `picked_up_coin | internal`. They now read `➜ On Died`, `➜ On Picked Up Coin`,
+  `➜ On Hit  body` - the same shape every other trigger in the editor has, with the values the signal
+  passes as chips beside it. \"internal\" named a distinction only a behavior pack has, and a pack's
+  rows are unchanged.
+- **A connected lambda's payload is a chip, not words inside the cell.** `$Timer.timeout.connect(func(body): …)`
+  drew `On Hit   body` crammed into the trigger cell; it now draws the SAME payload span a lifted
+  signal handler's row draws, so one event reads one way whether it was wired with a `func` or a
+  lambda. The reason it was crammed in is fixed rather than worked around: a condition/trigger cell
+  reserves the width its trailing payload chips need instead of filling the lane to the divider and
+  leaving them a sliver - which is what a declared handler's `[body]` chip had been drawing as too.
+
+### Added - an opened script reads in Construct's NOUNS: constants, sprites, collisions, angles, counts
+
+The sentences said what a line DOES; the nouns inside them were still Godot's. A Construct reader
+now recognises the values and the objects too, on both the typed line and the picked row - both read
+through one grammar, so they cannot drift apart. Display only: the file keeps every byte it had.
+
+- **Named constants have no namespace.** `State.PATROL` reads `PATROL` while no other enum on the
+  sheet has a `PATROL` of its own (else it keeps its enum, because the name alone stops saying
+  which). `Vector2.ZERO` is `(0, 0)`, `Vector3.FORWARD` is `forward`, `Color.RED` is `red`, and
+  `PI` / `TAU` / `INF` wear their symbols. `NAN` stays `NAN` - it has no symbol a reader knows.
+- **Sprite, audio and visibility read as Construct's own verbs**, chosen by the object's CLASS:
+  an AnimatedSprite2D / AnimationPlayer `play(\"run\")` is `Set animation to \"run\" (play)` and its
+  `stop()` is `Stop animation`, while an AudioStreamPlayer's are the `Audio` object's `Play` and
+  `Stop`. `visible = false` is `Set invisible`, `modulate.a = 0.5` is `Set opacity to 50%`,
+  `flip_h`/`flip_v` are `Set mirrored` / `Set flipped`, and a uniform `scale = Vector2(2, 2)` is
+  `Set size to 200%`. An unknown class keeps the plain call reading - `play` means two things.
+- **The collision family reads as Construct's two triggers**: `body_entered` / `area_entered` are
+  `On collision with`, their `*_exited` twins are `On stopped overlapping`, and `overlaps_body` /
+  `has_overlapping_bodies` are `Is overlapping X` / `Is overlapping something`. A 2D body's
+  `is_on_wall()` is `Is by wall`, `is_on_ceiling()` is `Is by ceiling`, and `velocity.y < 0` / `> 0`
+  are `Is jumping` / `Is falling` - claimed in 2D only, where Y grows downward.
+- **Angles and distances in plain words.** `rotation_degrees` is `angle` (and `rotation` is
+  `angle (radians)`, which is the one Godot fact worth keeping), `look_at(p)` is
+  `Set angle toward p`, `position.distance_to(b)` is `distance to b` (`distance from a to b` when it
+  is measured between two other points), `v.length()` is `length of v`, `v.normalized()` is
+  `v, normalized`, and `a.dot(b)` is `a · b`.
+- **Counting reads as a count**: `get_tree().get_nodes_in_group(\"enemies\").size()` is
+  `enemies (group) ▸ count`, `get_child_count()` is `child count`, and `is_empty()` / `not is_empty()`
+  are `items' count = 0` / `items' count > 0` - Construct has no \"is empty\".
+- **The system values by name**: `viewport width` / `viewport height`, `mouse position` (under the
+  `Mouse` object), `time`, `time in ms` and `fps`.
+- **A node lookup IS the object it names.** `get_node(\"Enemies/Boss\").hp -= 10` reads
+  `Boss ▸ Subtract 10 from hp`, `get_node_or_null(...)` reads the same object with a \"may be missing\"
+  note, `obj.set(\"hp\", 3)` is `obj ▸ Set hp to 3` and `obj.get(\"hp\")` is `obj's hp`.
+- **View ▾ \"Construct Words\"** (new, OFF by default, persisted per project like Compact Rows): for
+  people who think in Construct's nouns, a scene becomes a `layout`, `reload_current_scene()` becomes
+  `Restart layout`, pausing and `Engine.time_scale` become `Set time scale to 0 (pause)` / `to 0.5`,
+  and a CanvasLayer becomes `HUD (layer) ▸ Set layer invisible`. With it off nothing changes, and the
+  Godot word is on hover either way.
+
+### Added - four more Construct habits Godot spells differently
+
+Construct's commonest idioms have no Godot spelling of their own, so a project writes them as
+several statements that only mean anything together. Opening any hand-written `.gd` now reads them
+back as the one thing each of them says. All four are readings over unchanged rows: the file's own
+GDScript is what emission produces, byte for byte, and it is still one hover and one double-click
+away.
+
+- **Picking.** A For-each whose ENTIRE body is one `if` is Construct's whole model - a condition on
+  an object picks the instances, the actions run on the picked ones - and now reads as the one event
+  it means: `Enemy  (group \"enemies\")  hp < 10` on the left, its body on the right. The note says
+  where the instances came from (a group by name, the children of an object, any other list), and the
+  object column names the thing, so the condition drops the loop's own possessive. A body with any
+  statement outside the `if`, or a loop that filters, orders, caps, counts or spreads across frames,
+  is doing work of its own and keeps the plain For-each + sub-event reading.
+- **`match` on a plain value** reads as the if / else-if / else chain a Construct user knows: the
+  first case states its test, every later case is an `Else` carrying its own test on a second
+  condition line, and `_` is a plain `Else`. A case listing several values becomes the OR block. A
+  pattern that binds a name or destructures says more than a chain can and keeps the switch reading;
+  a state-shaped subject keeps its `◆ State:` reading.
+- **Spawning is Construct's Create object.** `var b := X.instantiate()`, `add_child(b)` and the first
+  line that places it read as one row - `System ▸ Create object Enemy at (10, 20) (as b)` - naming
+  the SCENE'S ROOT node the way a Construct user names the thing they spawn, falling back to the
+  variable's own name when the project has no scene for it. `.duplicate()` reads as a copy, all the
+  lines show on hover, and the new object then answers to its local name with the scene root's icon.
+- **Signals wired in the SCENE read as triggers.** Most projects connect signals in the Godot editor,
+  which writes the wiring into the `.tscn` and leaves the script holding a bare
+  `func _on_button_pressed()` - so the commonest UI script of all used to open as a list of nameless
+  helpers. The connections of the scene(s) whose root uses the script are now read back and the
+  handler lifts as `Button ▸ On pressed`, with the emitting node's name and class picture taken from
+  the scene. The scene is never touched and no connect line is ever emitted into the script.
+
+### Added - the head of an opened plain script reads as the object it drives
+
+Opening somebody's own `.gd` used to say `⇥ Script` and then list GDScript type names -
+`Array[String] names = []`, `const SPEED = 300.0`, `PackedScene bullet_scene = preload(...)`. A
+behavior pack introduces itself as a pack; every other script now introduces itself as the OBJECT it
+drives, in the same Construct grammar.
+
+- **The Include bar names the object.** `⇥ Player  a  CharacterBody2D  · player.gd · scene Player.tscn`
+  - the name is the script's `class_name`, or the ROOT NODE of the scene it is attached to when it
+  declares none (the common shape of a beginner's scene script), or the file name as the last resort.
+  The class icon is the editor's own, and the file and the scene trail it as muted receipts.
+- **Collections say what they hold.** `list of text`, `list of numbers`, `list of points`, `table`,
+  `function`, `signal` - derived from the element type, so `Array[String]` and `PackedStringArray`
+  read the same and a Resource subclass keeps the author's own class name. An empty `[]` / `{}` reads
+  `empty`.
+- **A constant says so in its type chip** - `constant number  MAX_SPEED = 300` - and an undeclared
+  type (`const SPEED := 300.0`, `var mode := \"idle\"`) is read off the value instead of showing \"any\".
+  A whole number written as a float drops the tail GDScript needs and a reader does not.
+- **A preloaded scene, script or resource is an Object row**:
+  `Object bullet_scene = Bullet  scene · bullet.tscn`, with the scene root's class icon. Both shapes
+  read this way - a typed `var` and a `const`, the latter of which used to stop the head dead one
+  line in.
+- **Same folders as a pack** - Triggers, Settings (one bar per `@export_group`), Internal state -
+  saying \"script\" rather than \"pack\". A script's opening `##` block, which sits above `class_name`
+  where the class-description rule never looked, now reads as the comment bar instead of folding away
+  with the class setup strip.
+- Display-only throughout: opening either of the new fixtures and re-emitting reproduces the file
+  byte for byte, and a pack's head is unchanged.
+
+### Added - an opened script reads in Construct's own words
+
+Opening any hand-written `.gd` - not just a pack - now reads as an event sheet a Construct user can
+follow. Everything here is display only over the unchanged file: emission, the byte round-trip and
+double-click-edits-the-line are untouched, and the exact GDScript is still one hover away.
+
+- **The script's own object has a name, and `self` never appears.** A script IS an object: its
+  `class_name`, else the class it sits on. Its ENGINE properties read under that name with its class
+  icon - `position.x = 100` is `Player ▸ Set X to 100`, `rotation > 1.5` is `Player ▸ rotation > 1.5`,
+  exactly as Construct writes `Sprite ▸ Set X`. Plain script variables stay with System, and the global
+  functions (`print`, `randi`, `len`, ...) read as System actions rather than as calls on the object.
+- **Any other call reads Object ▸ Verb values, with no parentheses.** The verb is the method in words
+  (`play` -> `Play`, `set_text(v)` -> `Set text to v`), the arguments wear chips named by the engine's
+  OWN parameter names when the object's class is known (`AnimatedSprite2D ▸ Play  name = \"run\"`), a
+  `$Path/To/Label` reads by its last segment, and `queue_free()` on anything is `Destroy`. A picked
+  Call Method row reads the same sentence.
+- **`delta` reads `dt`** in every expression - on hand-written lines and on lifted rows alike - and the
+  two tick triggers read `Every tick (physics)` / `Every tick (draw)`. The trigger ids are unchanged.
+- **Signals carry named payload chips**: `damaged.emit(3, attacker)` is
+  `Signal On Damaged  amount = 3  source = attacker`, named from the signal's own declaration. `await`
+  on a signal reads `⏳ Wait for signal door On Opened`, and the two frame awaits read `⏳ Wait one
+  tick` / `⏳ Wait one physics tick` (the Await Next Frame action says the same words now).
+- **Groups read as families.** `get_tree().call_group(\"enemies\", \"flee\")` is
+  `enemies (group) ▸ Call Flee`, `add_to_group` / `remove_from_group` are `Add to group \"enemies\"` on
+  their object, and `x.is_in_group(\"boss\")` is `x ▸ is in group \"boss\"`. The picked group rows say the
+  same words.
+- **Text joins read with Construct's `&`**: `str(lives) + \" lives\"` is `lives & \" lives\"` and
+  `\"Score: %d\" % score` unrolls to `\"Score: \" & score`; a format the reader cannot unroll stays as
+  written. Indexing reads possessively - `inventory[\"potion\"]` is `inventory's \"potion\"`, `items[0]` is
+  `items' item 0`.
+- **More idioms with one settled sentence**: `randi_range` -> `random whole number a to b`,
+  `randf_range` -> `random number a to b`, `create_tween().tween_property(...)` ->
+  `Tween position to target over 0.3s`, `Input.get_vector(...)` -> `input vector \"l\"/\"r\"/\"u\"/\"d\"` under
+  Keyboard, `a.direction_to(b)` -> `direction from a to b`, `rad_to_deg(x)` -> `x in degrees`,
+  `snapped(v, s)` -> `v snapped to s`, and `len(x)` / `x.size()` -> `x' count`.
+- **Loops say what Construct's System loops say**: `Repeat 3 times (loopindex i)`,
+  `For \"i\" from 2 to 7` (inclusive, the last value the body actually sees), `For each child child` on
+  the object whose children it walks, `While hp > 0`, and `break` / `continue` read `Stop loop` /
+  `Next` - the Break Loop and Continue Loop actions now say those words too.
+
+### Added - stacked conditions, the awaits Construct has words for, connected lambdas, and one-line `if`s
+
+Four more shapes an ordinary `.gd` file writes, now read the way a Construct sheet writes them.
+
+- **`and` never appears inside a condition cell.** Construct has no word for \"and\": each top-level
+  conjunct is a condition LINE of the one event, stacked, and a top-level `or` is the OR block. A
+  lifted `if a and b:` already stacked; the readings the grammar INVENTS now agree with it, so a
+  ternary's branch test reads `host exists` / `host is on wall` on two lines instead of spelling the
+  word, and `\"gold\" if hp > 100 or seconds_left > 9 else …` reads as an OR block. A mixed
+  `a and (b or c)` stacks `a` and keeps the parenthesised group whole on its own line - a condition
+  line cannot hold a nested OR block, and inventing one would say something the source does not.
+- **An `await` says which tick or which signal it waits for.** `await get_tree().process_frame` reads
+  `⏳ Wait one tick`, `physics_frame` reads `⏳ Wait one physics tick`, and an await on a signal reads
+  Construct's own System action, `⏳ Wait for signal host On Tree Exited`. The timer wait keeps its
+  `⏳ Wait 0.5 seconds` sentence, and every other await still keeps its GDScript - a sentence must
+  never paper over a suspension point it cannot name. Both the lifted row and a hand-written line read
+  the same, and all three readings are translated.
+- **A lambda handed to `connect` reads as the trigger event it is.** `$Timer.timeout.connect(func():
+  seconds_left -= 1)` inside `_ready` - one of the commonest things real Godot code does, and
+  something Construct has no equivalent for - now draws as `Timer ▸ On Timeout` with the lambda's body
+  as its rows, through the same body grammar a declared handler's body gets: statements become
+  actions, a branch inside the lambda becomes a sub-event, and the lambda's parameters read as the
+  trigger's payload. Multi-line lambdas too. The connect line itself keeps a muted note,
+  `connects Timer On Timeout`, so the wiring is still written down where the file writes it. Display
+  only: the file keeps its one statement, the reading is anchored to it, and clicking or dragging
+  anywhere in it addresses that statement.
+- **A one-line `if` / `elif` / `else` lifts as the sub-event its indented twin does.** `if target ==
+  null: return`, `if hp <= 0: die()` / `else: play(\"hurt\")`, `if i == 1: continue` - a beginner's most
+  common shapes - stayed verbatim code before, which meant a guard clause never became an event at
+  all. They now open as real rows, and the file re-emits byte for byte: the row remembers it was
+  written on one line and the compiler folds its single body line back onto the header. Nothing an
+  author builds in the editor changes shape.
+
+### Fixed - an `@export_group` written above its doc comment
+
+Godot's own convention writes `@export_group(\"Aim\")` first and the `##` doc directly above the
+variable it documents; the importer only recognised the other order (doc, then group). In Godot's
+order the group line stayed a raw GDScript block and the settings folder never formed at all for a
+hand-written script. Both orders now lift, the variable remembers which one its file used, and saving
+reproduces that file byte for byte either way.
+
+### Added - a ternary reads as a sub-event pair, and `return` reads Construct's own wording
+
+An opened pack still had one shape a Construct sheet never shows: a CONDITION inside an ACTION cell.
+`Give back host.get_wall_normal().x if host != null and host.is_on_wall() else 0` put the whole branch
+in the right-hand lane, where the reader expects a step.
+
+- **A ternary is now a sub-event pair.** A statement whose value carries an `if ... else` - a `return`,
+  an assignment, a compound assignment, a local declaration, or a ternary that is only PART of a larger
+  value (`speed = move_speed * (sprint_multiplier if sprint_held else 1.0)`) - reads as the rows
+  Construct would draw: the test on the LEFT, the whole statement re-read on the RIGHT with that arm's
+  value, then an `Else` row with the other one. A nested ternary chains further arms as Construct
+  spells an else-if - an `Else` on the row's first condition line with that arm's own test stacked
+  under it, so no two arms can read as though both could fire - and the last arm is a plain `Else`.
+  A second independent ternary nests its own pair beneath the first. `ƒ Wall Normal X` now opens as
+  `host exists` / `host is on wall` (two condition lines - see below) beside
+  `Set return value to host's wall normal X`, over `Else | Set return value to 0`.
+- Display only, over the unchanged statement: the file keeps its one line (byte round-trip identical),
+  hover shows the exact GDScript, and double-click edits that statement.
+- **On every sheet, editable ones included.** The pair is no longer a reading-view-only lens: an
+  authored sheet draws it too, because a Construct user must never meet an `if ... else` inside an
+  action cell. Reading and editing look identical.
+- **The pair is ONE statement under the pointer.** Every row of it carries the same statement identity,
+  and that is the single thing selection, drag/drop, delete and the gutter key on:
+  - clicking any row of the pair - the condition row, the branch, the `Else` - selects the one
+    statement and highlights the whole pair as one selection; Shift/Ctrl multi-select counts it once,
+    and the Up/Down arrows step over the pair as the single row it reads as (Left/Right still walk the
+    cells of whichever row the caret is on).
+  - grabbing any row drags the statement, so the pair travels together; a drop BEFORE a branch row
+    lands above the whole pair, a drop INTO one snaps below it, and only the pair's own head still
+    takes a sub-event.
+  - a double-click anywhere on the pair - including the condition cell and the plain `Else` row,
+    neither of which is a real cell - opens that ONE line's existing editor: the code dialog for a
+    hand-written statement, the ACE editor for a lifted row. Delete, Cut, Copy and the row context
+    menu act on the statement, and every edit still goes through the one undo funnel.
+  - no \"+ Add condition\" / \"+ Add action\" is drawn inside the pair (a pair is a statement, not an
+    editable event); the event's own scaffolding stays on the event's own row. Event numbers, hit
+    counts, breakpoints and bookmarks belong to the event and are drawn once, on the row the pair
+    leads with - never on a reading.
+- A ternary inside a `func(...)` lambda is deliberately left alone: the body is a scope of its own, so
+  hoisting a branch out of it would move when that branch runs. A hand-written statement carrying an
+  inline lambda now keeps the GDScript code cell it came from, rather than posing as a sentence.
+- **`return` reads Construct's function-block wording.** Inside a published CONDITION or EXPRESSION verb
+  a `return` now reads **Set return value to x** (`true` / `false` as themselves), replacing the earlier
+  \"Answer\" / \"Give back\" split. A bare `return` in an action still reads **Stop event**.
+- A call to one of the sheet's OWN functions inside a return cell reads by its Function name -
+  **Set return value to Can Stand Up** rather than `_can_stand_up()`, with `Call <Name>` plus argument
+  chips when it takes any (the same M16 rule the Call rows already follow).
+- A no-argument `get_thing()` now reads as the property it is (`host.get_wall_normal().x` ->
+  `host's wall normal X`), and a condition made of `and` / `or` conjuncts reads each one through the
+  grammar (`host != null and host.is_on_wall()` -> `host exists and host is on wall`).
+
+### Added - input handlers read as Mouse / Keyboard triggers, and they lift where they sit
+
+A `_unhandled_input` written under a pack's verbs used to stay a code block: emission writes
+events BEFORE the trailing functions, so lifting the handler would have hoisted it above every
+verb below it and broken the byte-verify. **EventAnchorRow** takes the handler's slot in the
+sheet, the lifted events follow it in place, and the external compile path emits that one
+function right there. The FPS Controller now opens with `_ready`, `_physics_process` AND
+`_unhandled_input` as real events - 24 rows that were three grey code blocks - and still
+recompiles byte-for-byte.
+
+With the handler lifted, each of its top-level branches reads as the Construct trigger it is,
+one row per branch:
+
+- `event is InputEventMouseMotion` reads **Mouse ▸ On mouse moved**, with a remaining
+  `Input.mouse_mode == MOUSE_MODE_CAPTURED` conjunct left as its own **Mouse ▸ mouse is captured**
+  condition row, and `event.relative.x` / `.y` reading as **mouse's ΔX / ΔY**.
+- `InputEventMouseButton` reads **On left/right/middle button pressed** (or released), and a
+  wheel index as **On mouse wheel up / down**.
+- `InputEventKey` reads **Keyboard ▸ On Escape pressed** (or released), `InputEventScreenTouch`
+  as **Touch ▸ On touch started / ended**, `InputEventJoypadButton` as **Gamepad ▸ On button A
+  pressed**. The `(event as InputEventKey)` casts never reach a sentence.
+
+The reading matches on ATOMS rather than on line text, which buys **symmetry for free**: a
+Mouse/Keyboard trigger authored from the picker compiles to ONE parenthesized conjunction, a
+hand-written handler splits the same test across separate cast conjuncts - both flatten to the
+same atoms, so a sheet saved and reopened reads exactly like the handler someone typed by hand.
+No frozen codegen template changed; the reader learned the second spelling.
+
+A hand-written signal handler now reads as **its source node** with its parameters as payload
+chips - `Hurtbox ▸ On Body Entered  [body]` instead of a `ƒ _on_hurtbox_body_entered(body: Node2D)`
+helper - and the connect grammar covers the spellings people actually type (`$Node`, `%Unique`, a
+member variable, the `connect(\"sig\", fn)` overload). The connect line and the handler's own header
+ride along verbatim, so emission reproduces `$Hurtbox...` and `body: Node2D` rather than rewriting
+them into the canonical forms and reverting the file.
+
+Also: a reverse match whose captured parameter has lopsided brackets is rejected, so
+`add_look((event as InputEventMouseMotion).relative.x, ...)` stops reading as a Call Method with
+half an expression for a target; Mouse / Keyboard / Gamepad / Touch are OBJECTS in the row's
+object cell rather than System; `_unhandled_key_input` joins the lifecycle vocabulary as **On
+Unhandled Key Input**. `tests/input_handler_reading_test.gd` pins every sentence above by value.
+
+### Changed - statements without an ACE read in Construct's own grammar: Object ▸ Verb values
+
+A row inside an opened pack used to show the code it came from wearing an object label -
+`System | var remaining: float = amount`, `System | host.call_deferred(\"queue_free\")`,
+`Emit signal on_damaged` naming the member behind a trigger the pack publishes as **On Damaged**.
+Every statement the sheet cannot express as an ACE now reads the way Construct writes its own
+rows - the object first, then the verb, then the values:
+
+- `_jumps_left -= 1` reads **System ▸ Subtract 1 from _jumps_left**; `x += v` **Add v to x**;
+  `x = v` **Set x to v**; `host.velocity.x = expr` **host ▸ Set velocity.x to expr**.
+- `queue_free()` reads **Destroy**, `host.call_deferred(\"queue_free\")` **host ▸ Destroy (at end of
+  frame)**, and `sig.emit(a)` **FPSController ▸ Signal On Jumped** - the PUBLISHED trigger name
+  when the sheet declares that signal, never the snake_case member.
+- `if flag:` reads **flag is true**, `if not flag:` **flag is false**, `host == null`
+  **host ▸ does not exist**, `host != null` **host ▸ exists**, and a bare `return` **Stop event**.
+- A curated Godot-idiom table gives one shape one sentence: `⏳ Wait 0.5 seconds`,
+  `Go to scene res://menu.tscn`, `Keyboard ▸ jump is down`, `Keyboard ▸ On jump pressed`,
+  `max(a, b)`, `v ≈ 0`, `a ≈ b`, `30% chance`, `a moved toward b by d`, `a → b at t`,
+  `x kept between lo and hi`, `|x|`, `x°`. Anything not in it stays the plain statement it is -
+  a fake sentence is worse than code.
+- A `var name: Type = value` line - and the Local Variable rows you drop from the picker - read as
+  Construct's declaration row: a type-word chip, the name, the starting value
+  (**Local number remaining = amount**).
+- Inside a published CONDITION or EXPRESSION verb a `return` reads Construct's own function-block
+  action, **Set return value to x** (with `true` / `false` as themselves); inside an action a bare
+  `return` reads **Stop event**.
+- No type annotation ever appears in a sentence: `: float` is dropped from a declaration,
+  `(x as Node2D)` reads `x`, and `Vector3(x, y, z)` reads `(x, y, z)`.
+
+All of it is DISPLAY ONLY - the rows and the emitted GDScript are untouched, the exact code is
+still on hover, and opening a file and saving it still reproduces every byte. The grammar lives in
+ONE producer that both the hand-written path and the ACE display path read through, so a shape says
+the same thing whether it was typed or picked - pinned by `tests/sentence_grammar_test.gd` and
+`tests/sentence_shapes_test.gd`, which opens a script holding every shape and asserts the words.
+
+### Added - the reading lenses: a sheet that reads like a sheet, not like the script it came from
+
+Eight display lenses over an opened `.gd`. Every one of them is view-only - no row model, no
+sheet resource and no emitted byte changes, the exact GDScript is still on hover, and the file
+still re-emits byte for byte (a fixture carrying all eight is the round-trip gate).
+
+- **Humanized names.** `_coyote_timer` reads \"coyote timer\"; an `@export` knob reads with Godot's
+  own Inspector capitalisation (\"Coyote Time\"), so the sheet and the Inspector say the same
+  thing. New **View ▾ Humanized Names**, and it is tri-state on purpose: with no choice made it
+  follows the surface - on where a sheet is being READ, off where one is being AUTHORED - and an
+  explicit choice persists per project per user, like Compact Rows. Only identifiers the row
+  builder already resolved as variables or parameters are touched; never a string literal, never
+  a constant, never a name inside an expression holding a call.
+- **Possessive property chains.** `host.velocity.x` reads \"host's velocity X\", `event.relative.x`
+  reads \"event's relative X\"; axis components read as capitals. Only simple identifier chains
+  qualify - anything with a `(` stays exactly as written, because a half-translated expression
+  reads worse than the code did.
+- **NOT is a mark, not a word.** A lifted `if not <cond>:` now shows the same red ✕ in the badge
+  column that an inverted ACE condition has always worn, and its sentence is the positive one.
+  One symbol, one meaning, wherever the inversion came from. Invert Condition is unchanged.
+- **Class icons on objects.** The pack's host, any `$Node` / `%Node` reference and any `@onready`
+  node variable draw their Godot class icon before the object label, recovered from the sheet's
+  host class and its `@onready` declarations - nothing is instantiated and no scene is opened.
+  Nothing resolves headless, which keeps renders text-only rather than crashing them.
+- **Tree guide lines.** A continuous connector from a parent event down to its sub-events, with
+  an elbow into the row it parents, replacing indent stops that dashed and left you counting.
+  Strictly draw-only: it reserves no width and is never measured, so no layout metric moves. It
+  follows row density.
+- **`Functions ▸ Call Name`.** A hand-written call the sheet can attribute to one of its own
+  functions reads Construct's way, with one argument per parameter name (`x = event's relative
+  X`), so a call documents itself. A callee the sheet does not know keeps the plain reading - a
+  call to something unknown is never dressed up as a project function.
+- **Folded code cards.** While reading, a block that could not lift costs ONE row - \"code · 12
+  lines\" - and opens in place to the exact GDScript. While authoring, the statement rows stay,
+  because those are what you edit. The fold rides the same child-row mechanism the enum fold
+  uses, so the arrow, the click, the keyboard fold and the fold memory all came for free.
+- **Object declarations.** `@onready var hp_bar: ProgressBar = %HpBar` reads as an Object row -
+  name, node, class, class icon - which is how Construct's object list is recovered from a
+  script; every later row using `hp_bar` then shows the same icon. Reading mode only: while
+  authoring, that row is the one the variable dialog edits.
+
+### Fixed - every pack opens as a sheet WITH its verbs (38 of 91 opened with none)
+
+Opening a behaviour pack's `.gd` as a sheet is supposed to show its published verbs as
+two-lane Function rows. Measured against the fleet: **38 of 91 packs opened with ZERO verbs** -
+the FPS Controller, Save System, Storylet Weaver, ProcRoom, Big Number, Loot Table, Event Bus,
+Quest, ... - every one of them falling back to the annotation-shell placeholder over a collapsed
+`ƒ` code block, so the sheet read WORSE than the script it was made from. Five causes, each of
+which reverted a whole file on the byte-verify:
+
+- A lifecycle handler after the verbs (`_unhandled_input` at the end of the FPS Controller):
+  emission writes events before functions, so lifting it moved it and failed the file. It now
+  re-anchors instead - the handler stays a verbatim block where it is, everything else lifts.
+- Annotated verbs could never anchor in place: the mid-file pass skipped any function wearing a
+  `## @ace_*` line. It now absorbs the annotation / doc / `@rpc` block from the row above, gated
+  per function on the compiler re-emitting header + body byte-for-byte.
+- A pack opened outside its own project cannot know it was an autoload or a static class, so the
+  regenerated `## @ace_codegen_template` lost its `Quests.` / `BigNumber.` prefix. The source's
+  call prefix (or a non-call template) now rides on the function and re-emits.
+- A class-level doc paragraph glued to the first verb was absorbed as that verb's doc and the
+  blank between them dropped. Only the contiguous header block directly above a function is its
+  header now; anything above the last blank line stays with the file.
+- Toggle claimed `_running = not _phases.is_empty() and ...` as `_running = not _running`: a
+  template that repeats a placeholder now compiles to a backreference, so both occurrences must
+  match the same text.
+
+And the trailing scan verifies each lifted function individually - one body the grammar cannot
+reproduce re-anchors instead of failing the file. Result: **79 of 79 packs that publish verbs
+open with them; 1,264 of 1,269 verbs fleet-wide** (five single functions remain raw, listed in
+the new test), zero byte drift. `tests/pack_open_lift_test.gd` opens every pack and pins it.
+
+### Changed - the head of an opened pack: one Include bar, the description once, settings in folders
+
+A pack opened as a preview spent two and a half screens before its first rule: a Class setup bar, a
+`host` variable, a Host binding bar, eleven trigger rows, forty-six variable rows in one flat list,
+and then - at the very END of the file - the pack's about text again, as a grey wall nobody scrolls
+to. Construct says all of that in four shapes, and the head now reads as them:
+
+- **The Include bar.** `⇥ Addon Pack` `FPSController` `v1.0.0` *behaves on a* `CharacterBody3D` - the
+  pack's identity as ONE bar, in the slot Construct uses for \"Include: Sheet\". The class-setup strip,
+  the `host` variable and the Host binding bar fold into it (an editable sheet keeps all three).
+- **The description, once.** The pack's about text reads as a comment bar directly under the identity
+  and is no longer repeated at the end of the file.
+- **Folders, closed.** `Triggers` *this pack fires - 11*, then one bar per `@export_group` in FILE
+  order (`Movement` *3 settings*, `Jump` *3 settings*, …), a `Settings` bar for knobs declared before
+  any group, and `Internal state` *values the pack keeps for itself - 21*. Godot's own grouping rule
+  is honoured - a group claims every knob declared under it, not just the one carrying the line.
+- **A knob reads as a sentence.** `number` `jump_velocity` `= 4.5` *Upward velocity applied on a jump*
+  - the friendly type word leads, and the knob's own `##` doc comment trails it muted, so you learn
+  what a setting does without opening the `.gd`. The `@export` and group chips are gone: everything in
+  a settings folder is exported, and the bar names the group.
+
+Pure view, like the Helpers bar: the rows are re-parented, no resource is touched and the pack still
+re-emits byte-identically. Also fixed: a Function block header whose right lane is empty now spans the
+WHOLE row, so its input chips stop being clipped at the lane divider (`y  number` drew as `y  numb` at
+a narrow split) and wrap onto a second line only if the row itself runs out.
+`tools/render_opened_pack_head_preview.gd` regenerates `docs/images/opened-pack-head.png` and
+`docs/images/opened-pack-head-open.png`; `tests/opened_pack_head_test.gd` pins the bars, their order,
+their fold state and the knob reading by value over the real FPS Controller pack.
+
+### Changed - an opened pack reads like a Construct sheet: Function blocks, a Helpers group, Reading mode
+
+Now that every pack opens WITH its verbs, the next question is what those verbs SAY. A verb header
+used to carry seven things at once - a kind badge, the display name (printing its `[b]` tags raw),
+a category chip, a ★, a \"gives back number\" chip, an \"internal\" marker, and the `@ace_description`
+as a grey caption welded above it. Opened side by side with Construct, none of that is on a
+Function block: **ƒ, the name, one chip per input, and nothing else.**
+
+- **A published verb is a Function block.** The header is `ƒ Jump`, `ƒ Set Third Person`
+  `enabled true/false`, `ƒ Add Look` `x number` `y number` - the inputs read in plain words
+  (`float`/`int` → number, `bool` → true/false, `String` → text, `Array` → list, `Dictionary` →
+  table, any Node class → node). The kind survives as the header's **wash** - action, condition and
+  expression tint differently - so you still tell them apart at a glance without a badge word. A
+  display name written with `[b]…[/b]` now draws **bold**; the tags are never printed.
+- **Everything else is one click away.** Clicking a verb header opens its **ACE properties**: kind,
+  category, inputs with their types and defaults, what it gives back, the description (rendered),
+  its picker entry (featured, icon), the exact line it inserts, and the function and file behind it -
+  with *Edit…*, *Open guide* and *Show in code*. One place instead of chips scattered over the row;
+  *Edit…* opens the same verb dialog that always edited those fields.
+- **Helpers are just functions.** A helper the pack does not publish reads as the same ƒ block with
+  no \"internal\" badge, its doc comment as the muted right-lane caption - which is how a Construct
+  user reads a function they did not write. In a read-only preview they gather under one closed
+  **Helpers** bar (\"functions this pack uses inside itself - 7\") after the last published verb. Pure
+  view: nothing is grouped, reordered or written in the file.
+- **Reading mode on open.** A `.gd` opens as a read-only preview, so it now renders as one: no
+  \"+ Add condition\" / \"+ Add action\" scaffolding you cannot use, and a body-only row leaves its left
+  cell blank instead of saying *Always*. Press the banner's **Edit Events** and all of it returns.
+
+No `## @ace_*` line is ever drawn as prose again. `tools/render_opened_pack_preview.gd` regenerates
+`docs/images/opened-pack-verbs.png` and `docs/images/ace-properties-popup.png` from the real FPS
+Controller pack, and `tests/opened_pack_reading_test.gd` pins the header spans, the tints, the
+Helpers bar, the suppressed scaffolding and the properties panel by value.
+
+### Fixed - opening a `.gd` as a sheet no longer freezes the editor (18 s of nothing, measured)
+
+Opening a `.gd` runs two passes: a fast raw one (every line lands as a row or a verbatim code
+block) and the ACE lift, which works out which events the code maps to and then recompiles the
+whole sheet to prove it still reproduces your file byte-for-byte. The lift is the slow half, and
+it ran on the same thread that draws the editor. Measured: **the FPS Controller pack blocked the
+editor 3.9 s, the Save System pack 7.2 s, and a 4,623-line file 21.3 s - with zero frames drawn
+the entire time.** No spinner, no cursor, no repaint. It did not look like work; it looked like a
+crash, and the honest advice was \"don't open big files\".
+
+Now the file is **on screen first** and the slow half runs behind it. The raw pass (36 ms for that
+same 4,623-line file) paints immediately, so you are reading your code as rows straight away, and
+a slim strip above the sheet says what is still happening: *Opening event_sheet_dock.gd - lifting
+functions 212 of 454 · 8.4 s*, with a bar. The editor stays live throughout - the same open now
+draws **1,352 frames while it works**. When the lift lands, the sheet upgrades in place: the
+functions become real Function rows and the usual \"viewing it as a sheet\" summary appears.
+
+And there is a way out. **Show as code instead** stops the lift wherever it is and keeps exactly
+what you are already looking at - your file as code blocks, unchanged on disk either way. Nothing
+is half-lifted: a cancelled open lands in the same state as a file the lifter cannot read at all,
+still round-tripping to the original bytes.
+
+Under the hood the lift runs on a worker thread, the compiler serializes its scratch state so a
+save or a Project Doctor pass can compile while a sheet opens, and every registry the import
+reads is built on the main thread first. `tests/open_job_test.gd` pins the threaded open against
+the old synchronous one (byte-identical output for a pack and a hand-written file), the cancel
+path, the progress counters, and the lock under real contention.
+
+### Added - coyote time on the FPS Controller (the 3D movement behaviour that jumps)
+
+The 2D Platformer has shipped coyote time as an Inspector feel-number since its first release;
+the FPS Controller - the one 3D movement pack with a jump - never had it, so a press a hair
+after walking off a rooftop was silently dropped. It now has the same shape as the 2D pack: a
+**Coyote Time** knob (0.1 s, group Jump, 0 turns it off) that opens a window the moment the host
+leaves the floor without jumping. A press inside it is the ordinary GROUND jump - On Jumped, not
+On Air Jumped - and spends none of the Max Jumps air budget; taking it closes the window, so a
+coyote jump can never chain into a second ground jump, and past the window a press falls
+through to a wall jump or an air jump exactly as before. Two verbs alongside: **Can Jump**
+(condition - floor, open coyote window, wall with Wall Jump enabled, or a banked air jump; the
+prompt agrees with what a press would actually do) and **Set Coyote Time** (a floaty power-up, a
+hard-mode toggle, a per-level tweak; negatives clamp to off). Nav Agent 3D, Move To 3D, Bullet 3D
+and the other 3D packs read the floor only for gravity and have no jump, so nothing changes there.
+
+Proven twice: the logic in the tech test (the window opens Can Jump off-floor, the jump spends it,
+the air budget is untouched, the tick's open/decay and jump branch are pinned on the emitted
+source), and under real physics in a non-headless smoke - three rigs walk off a ledge; the one
+with Coyote Time 0.1 pressed two frames after leaving jumps, the one with 0 does not, and the one
+pressing 0.5 s later does not. The FPS Controller guide gains the knob, both verbs and three use
+cases; the vocabulary catalog and help bundle are regenerated. Existing scenes keep their feel:
+the default 0.1 s only ever adds a jump that used to be dropped.
+
+### Added - the picker opens on the open script's own functions
+
+- **`ƒ Functions` is the first section of the picker's object page** when the sheet came from a `.gd`
+  file, with the muted sub-note `this script - 4`. Before System, before the packs, before your
+  project: what the file in front of you can already do. Each published verb shows its display name,
+  its kind in one word (`action` / `condition` / `expression`), and one chip per parameter as
+  `amount number`, `enabled true/false` - so you learn what the verb is and what it takes without
+  opening anything.
+- **The unpublished helpers are folded, not hidden**, under a `+ Helpers (2)` header. They are
+  functions of the same script and calling one is a normal thing to do; each entry says
+  `not published` beside its kind so nobody mistakes a helper for part of the vocabulary.
+- **Picking one inserts an ordinary call.** Every entry is a copy of the frozen `Core/CallFunction`
+  ace with its target pre-filled, so the row lands through the path that already existed, emits a
+  plain `award_points(5.0)`, and reads back as `Functions · Call Award Points   amount = 5.0` when
+  the file is reopened. No new ace id, no template change.
+- **Search finds them too** - part of a verb's display name or of its GDScript name - and the ghost
+  row's before-you-type chips lead with the script's own verbs, which live in no usage table and no
+  featured list.
+
+## 0.17.0 - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
+
+### Added - the developer-experience wave, part two: the editor seams (9 suggestions)
+
+Debugging that stays out of the way: **Row Hit Counts** (View menu, ships unticked) show
+how often each event fired since Run as a small chip in the gutter margin - never inside a
+cell, warm when hot, x0 with a dim rail when it never fired - and a hover on the event
+number gives the count with nothing turned on; with the toggle off the sheet is pixel-
+identical to before. **Why didn't this fire?** opens one panel for one row and lists each
+condition's verdict and the value it saw, from the live values the running game already
+streams; it never guesses, and leaves nothing behind. **Test Sheets**: a sheet kind whose
+claims (Assert That, Assert Equal, Expect Signal, Watch For Signal with Succeeded / Timed
+Out read back on the next rows) run headless through Tools > Run Tests... or
+tools/run_test_sheets.gd, printing per-test verdicts and the same summary line the plugin's
+own suite uses; On Test Start is a real signal-backed trigger.
+
+Authoring speed: a **Refactor** row menu with **Wrap in Condition...**, **Unwrap Event**,
+**Inline This Function** (the inverse of Extract to Function) and **Duplicate as
+Variant...** (copy a block with a rename applied, previewed first); **snippets with blanks**
+({{blank:Label}} fields filled in one small dialog at insert). **Compare With...** (another
+sheet or a backup from the ring, side by side, copy-over as ordinary rows). **Loose Ends** -
+a panel, deliberately not row badges - indexing TODO/FIXME, unfinished events, disabled rows,
+breakpoints left on and uncalled verbs, click to jump. **Find Repeated Rows** finds identical
+action runs and hands the fix to Extract to Function. Every refactor is one undo step, and
+every test asserts undo restores the sheet byte for byte.
+
+Under the hood: the addon listing and the pack-fleet walk are cached on directory and file
+modification times, so per-keystroke refreshes stop rescanning ~90 pack folders (the scale
+budget had already been blown by fleet growth and passed only on lucky timing).
+
+### Added - the developer-experience wave, part one: flow, packs, and vocabulary (22 suggestions)
+
+Drawn from a mockup audited twice - once for the condition/action lane, once for the ACE
+kind on Godot's primitives - so every outcome that HAPPENS is a trigger backed by a real
+signal with its payload as the row's captured context, every check is a condition, and no
+debugger information is program text or on by default.
+
+**Flow.** Wait Until / Wait For All Of / Wait For Any Of pause a row until a check or a set
+of signals comes true, with a deadline, and read back on the next row as **Wait Succeeded** /
+**Wait Timed Out** - never a variable to remember. **On Failure Of** / **On Success Of** are
+triggers any verb can raise (Report Failure / Report Success), with the reason as payload, so
+recovery can live in another event or sheet. **Retry Up To N Times** is a looping condition
+with Retries Exhausted and a backoff; **At Most Every** throttles; **Poke** / **Has Been
+Quiet For** debounce; **Only Once Per Node / Per Name / This Scene Load** fix Trigger Once
+firing only for the first item in a loop.
+
+**Five new packs.** **Event Bus** (named channels with a payload, On Event as one signal,
+Wait For Event with its read-back pair, one-shot listen, group fan-out). **Named Scenes** (a
+registry so no res:// path appears in a row, a handoff payload, scene_ready as the trigger).
+**Game Settings** (settings that declare themselves, On Setting Changed with name and value
+as payload - the exemplar shape). **Debug Overlay** (values, bars and marks on the game, off
+unless a row turns it on). **Follow A Path** (a Move To sibling with path_finished). 91
+packs total.
+
+**Vocabulary.** Register As Service / Service Named / Has Service and For Each Node That
+Can; Do After Frame / Call Later / Set Property Deferred and Only Once This Frame; Spawn
+Scene As with the node as trigger payload; Watch Data File / Reload Data Asset with
+data_file_changed as the trigger, and Validate Data Folder; Value Trails, Frame Over Budget,
+FPS Below For, named stopwatches; a spatial module (screen and world both ways, random point
+in a shape, bounce/slide/aim, grid math without a TileMap, falloff and radial force); and the
+Save System's Local-Storage-shaped keys - per-key triggers including **On Save Key Missing**,
+Remove Save Key, Clear Slot Keys, Check Save Key, Is Saving / Is Loading, Save Key Count /
+At. A Doctor check names a trigger whose signal the sheet never declared, which otherwise
+compiles silently and never runs.
+
+Every verb is pinned at its emitted line and run at runtime; every trigger's test connects
+to its signal and asserts the payload. 565 new strings translated across all nine bundled
+languages. Every group has worked use cases in the guide a reader would search, written as
+compilable rows so the in-editor reader lights them as live figures.
+
+### Added - a guide to writing the docs
+
+`docs/GUIDE-WRITING-THE-DOCS.md`: how documentation works here and how to add to it - the
+three doc sets and where each shows up (GitHub, the editor reader, the version-pinned browser
+link), naming, the addon and module guide standard the tests enforce, the figure fences that
+draw themselves in the editor (the recognizer's precedence, the measured gate and why the
+script header is what separates a worked example from an API sample, the three frozen
+markers), the house rules, regenerate-before-commit, documenting a third-party pack, and the
+verification loop.
+
+### Changed - the docs viewer reads like an editor tool (the Compact Developer chrome)
+
+The documentation chrome now follows one restrained visual language, without touching the
+sheet preview itself. The Explain panel: a large title with two metadata badges beside it
+(what the verb IS, where it comes from), the description, then SYNTAX as a monospace code
+card with a copy button and PARAMETERS as a compact Name / Type / Default / Description
+table side by side (stacked when narrow, and a column no parameter fills is dropped rather
+than left blank), the untouched live figure under HOW THIS READS ON THE SHEET with Insert
+and Copy beneath it, and ABOUT <PACK> as a card carrying the \"Open the <Pack> guide\"
+button. Section order is fixed and derived, not inherited. Guide pages share the same
+primitives: a sidebar grouped under small-caps labels with the active page as an accent
+pill, section labels as the only accent-coloured text, code cards and tables in the same
+style, long pages folding sections behind their headings past the first screen, and a
+sticky mini-nav of the page's sections pinned at the top. The dock inherits all of it and
+collapses its sidebar when narrow.
+
+### Added - every guide, readable inside the editor, with live figures
+
+The in-editor reader over all three doc sets: the guides, the 72 addon guides, and the new
+module guides. Tools > Documentation... (or F1, or the ? prefix in the command palette) opens
+a tree derived from the docs index beside a natively rendered page - headings on a real
+typographic scale, tables, code cards, links that stay in the editor - or the Explain panel.
+Worked examples in guides render as LIVE figures you can insert into your sheet: an
+authored eventsheet fence always draws (and fails loud if it stops compiling), a plain
+gdscript fence lights up automatically when it round-trips to real rows, and a no-figure
+comment keeps one as code. Search ranks guides, verbs and addon pages together with in-page
+highlight; a third-party pack ships its guide as eventsheet_addons/<pack>/guide.md and is
+discovered like its translations; the ACE reference in every addon guide renders from the
+live registry so it can never drift; and a docs folder of your own joins the tree through a
+project setting. The reader also lives as a dock beside the sheet, boot-lazy so editor
+startup is untouched. The bundle is generated at build time and byte-checked in the suite.
+
+### Added - guides for the builtin vocabulary (36 guides over all 48 modules)
+
+The core vocabulary - about 700 builtin verbs - had no guides at all and did not appear in
+the generated catalog. It now has 36 guides under docs/Modules/, grouped by what a beginner
+would search for (Working With Files, Timers Waiting And Cooldowns, Making Things Move In
+2D, Comparing Values, ...), to the same standard as the addon guides: a verb reference table
+read from source, 15+ worked use cases, five Other use cases, the real traps. The catalog
+gains a Built-in vocabulary section, and a test sweep fails the suite if a guide names a
+verb that no longer exists.
+
+### Fixed - wrapped cells break on words, and the picker loses its figure
+
+A squeezed cell rendered \"On Read / y\"; cells now break only on word boundaries (a single
+word wider than the whole cell may still split rather than clip). The ACE picker's info
+panel no longer carries a one-row figure - it read as clutter under a description that
+already said everything; the illustration lives in Explain This Row. The picker keeps its
+Open <Pack>'s guide link.
+
+### Added - documentation you can reach from inside the editor (the recommended slice)
+
+**Every shipped doc link now goes somewhere.** The release zip ships `addons/` and
+`README.md` but never `docs/`, so the Welcome window's guide button and the README's 29
+relative links were all dead in an installed project. `EventSheets.open_online_doc(path,
+anchor)` builds a URL pinned to the released tag from the same version constant the release
+ritual bumps, the Welcome button goes through it, and the release workflow rewrites the
+staged README's links to absolute tag URLs (images to raw URLs so they still display) with a
+packaging grep that fails the build on a missed link. The committed README is untouched.
+
+**A live figure wherever a verb is explained.** `EventSheetViewport` gains a figure mode -
+fully inert (no hover, no drag, no editing, no scroll poll) and sized to its rows in BOTH
+axes, so a figure in a narrow panel is as wide as its content, not 640px. The ACE picker's
+info panel now shows \"How this reads on the sheet\": a real rendered row built from the
+verb's own defaults, in your theme, with Copy - and `EventSheets.insert_snippet` drops it
+into the open sheet as one undoable step. The Mockup Slate theme preset now ships with the
+plugin (moved into `addons/eventsheet/themes/`, gated against drift).
+
+**Explain This Row.** Right-click any row (or press F1, or Tools > Documentation...) and the
+panel explains the verb from the LIVE registry - what it does, what it ships as, the values
+you fill in, a worked figure you can insert, the pack's own About text - and every pack verb
+carries **Open <Pack>'s guide**, resolving through a DERIVED pack-to-guide mapping (proven
+against all 86 packs by a sweep that fails the suite if a guide file is ever renamed), with
+`addon_help_url` as the third-party override. `EventSheets.open_docs(doc_id)` serves
+`ace:` / `section:` / `addon:` ids - the addon ids open the browser today and will resolve
+to native pages if the in-editor reader ships, with callers unchanged.
+
+### Added - shipping in more than one language (the i18n wave, 21 suggestions)
+
+**The words at runtime.** A language menu that builds itself (**For Each Language**, each
+name written in its own language, with honest fallbacks when a catalog is missing),
+**Language Matches** and **Region Is** so `en_GB` never fails a hand-written `== \"en\"`
+comparison, **Use Saved Language** reading the same settings file Save Setting writes, and
+**Set Text (follows language)** which is honest about the engine: text a sheet assigns stops
+following the locale, so the verb remembers the KEY on the node and **Refresh Text That
+Follows Language** re-applies every remembered key in one row. Plurals ride the engine's own
+machinery (**Counted Text**, proven against Russian's three forms, not an if-chain), missing
+keys become visible (**Text Is Translated** / **Language Has Text For** / **Translated Text
+Or Fallback**), gendered lines and player-named heroes compose the shipped pattern verbs
+(**... In Context**, **... With Words**), and numbers read like the locale writes them
+(**Number In Local Digits** and kin).
+
+**Fonts and fit.** Right-to-left in rows, font fallback for scripts the chosen font lacks,
+and **Will It Fit** - overflow measured in pixels against the real font, so the German
+string that breaks the button is caught in the editor, not in a review.
+
+**Assets and content.** Language variants of an asset (riding Godot's own remap mechanism),
+a voice line and its subtitle that cannot drift apart, and data-asset text fields that can
+hold translation KEYS instead of literals - resolved at read time, without touching any
+shipped pack.
+
+**The authoring workflow.** **Translation Studio** (Tools menu): extraction, per-language
+coverage, and the translator's CSV round trip in one window, reusing the grid-CSV seam.
+**Language Variants...** reaches Godot's remap table from the editor. Pseudo-localization
+preview shows the game in accented, widened fake text before a translator exists - and never
+writes pseudo text into a real file. Rename-a-key-everywhere extends the existing refactor
+idiom, and two Doctor checks name player-facing text that was never marked translatable and
+text that stays in the old language after a switch - both pinned against the clean cases so
+they never cry wolf. **Translation coverage** is vocabulary too, pairing with On Project
+Export so a build can refuse to ship under a threshold.
+
+### Added - save slots, runs and recovery (39 verbs on the Save System pack)
+
+The second half of the vocabulary wave, built ON the shipped Save System pack rather than
+beside it: every existing trigger still fires the same way, and every new behavior is inert
+at its defaults.
+
+**A load menu without loading the game.** A reserved header inside the slot file holds
+chapter, hero, percent and the playtime the pack now accumulates itself, read straight off
+disk by **Slot Detail** / **Slot Playtime**, with **Capture Slot Thumbnail** / **Slot
+Thumbnail** for the picture, **Copy Slot**, **Slot Path**, and **For Each Saved Slot** as
+the menu's loop.
+
+**An autosave the sheet can veto.** The Inspector interval now fires **On Autosave Due**
+when a handler is connected, so a boss fight can defer it; with nothing connected it saves
+exactly as before. Around it: **Delay Autosave By**, **Pause** / **Resume Autosave**,
+**Seconds Until Autosave**, **Autosave Is Paused** and **Safe To Save Now**.
+
+**Old saves and broken saves stop being silent.** **On Save Needs Upgrade** fires between
+reading a file and applying it, so the wave-1 migration verbs run in that gap (they are
+reused, not duplicated). The corrupt-read guard used to only push_error; now **On Load
+Failed** / **On Save Failed** fire, **Slot Is Readable** guards a menu tile, and **Slot
+Problem** / **Last Save Problem** give the reason as a sentence.
+
+**Everything saved, with no list to maintain.** **Save All Addons** / **Load All Addons**
+walk the duck-typed save seam that 27 packs already implement, **Addon Saves Itself** catches
+the pack that forgot one, and an addon in the save that the build no longer has is warned
+about rather than dropped.
+
+**What stays out, and what it costs.** **Never Save This Key** drops a key whichever row
+wrote it, **Save Size** and **Save Report** show total bytes, key count and the heaviest keys.
+
+**Recovery and new runs.** A backup ring (off by default) modeled on the sheet backup ring,
+with **Restore Slot From Backup** which backs up the current file first so a restore is never
+one-way, plus **Carry Value Into Next Run** / **Start New Run** / **Run Number** for new
+game plus. An unreadable slot is refused, never reset.
+
+### Added - three editor seams: retype a variable, grids to CSV, paste retargeted
+
+**Change Type Everywhere** turns a variable's type change into a guided, previewed, single
+undoable step instead of leaving every row holding the old shape. **Grid to CSV and back**
+exports a data-asset grid and re-imports it with a real answer about whether it saved.
+**Paste Special** pastes copied rows retargeted to another object in one step.
+
+### Added - a Doctor check for values read back that nothing ever saves
+
+The existing save-support check asks only whether the save seam exists. This one reads the
+emitted scripts and compares what a project READS BACK against what it WRITES, so a value
+you expect to persist but never save is named before a player loses it. Not crying wolf is
+the feature: a write counted from any route (another sheet, a pack's own save_state, the
+Remember Between Runs toggle) clears the key, and the clean cases are pinned in tests.
+
+### Added - two guides, and the localization sweep for the whole wave
+
+**Working with Values (and Copying Them Around)** and **Working with Text (and Reading Data
+Out of It)** document the wave end to end with worked examples. Every new builtin display
+name, template, parameter and dropdown label is translated across all nine bundled languages,
+and the vocabulary catalog is regenerated.
+
+### Added - 72 verbs for values, text, tables, resources and copying
+
+The first half of a vocabulary wave drawn from a design mockup, in five new modules plus
+two existing ones. Every verb is proven twice in tests: the emitted code is pinned, and the
+behavior is run for real including the edge case each verb exists for.
+
+**Asking what a value is** - **Text Is A Number** / **Text Is A Whole Number** answer before
+you convert, and **Number From Text** / **Whole Number From Text** convert with a fallback
+YOU choose. The shipped To Integer / To Decimal / Text To Int / Text To Float answer 0 for
+\"abc\", for \"\" and for \"0\" alike, so a typo in an amount box arrives as a real-looking bet of
+nothing; those templates are frozen and untouched, the checked pair sits beside them.
+**Is Nothing** / **Has Something** ask \"is there anything there\" across every type at once
+(a 0 is deliberately NOT nothing - a score of zero is a real value). **Contains Any Of** /
+**All Of** / **None Of** test text against a whole list in one row.
+
+**Values with a fallback and named parts** - **Number Or** / **Text Or** / **List Or** /
+**Record Or** / **Value Or**, and **Part Of** / **Set Part Of** which name the parts of a
+Vector, a Color or a record in words instead of `.x` / `.y`.
+
+**Text that fits and reads** - **Shorten To Fit** and **Shorten To Whole Words**,
+**With Thousands Separators**, **As Percent Text**, **As Duration**, **Align Left** /
+**Align Right** / **Center In Width** for lined-up columns, **As Title Text** /
+**As Sentence Text**, and **Translated Text From Pattern** (plus a Set Text twin) which
+keeps the translation KEY rather than baking the literal.
+
+**Reading text apart** - **Text Before** / **Text After** / **Text Between** and **Number In
+Text** do beginner-legible extraction with no regex jargon, **Split Keeping Quotes** respects
+quoted commas, and **Explain JSON Problem** / **Explain Table Problem** / **Missing Fields**
+turn a parse failure into a sentence naming what went wrong instead of a null.
+
+**Tables** - **Table From File** / **Table From Text** turn a spreadsheet into a list of
+records with a header row (quoted commas, CRLF endings, a missing trailing newline and
+duplicate header names are all handled and all pinned), with **Column Of Table**, **Row
+Where**, and looping conditions **For Each Line In Text** / **For Each Part In Text** /
+**For Each Resource In Folder**.
+
+**Resources** - **Resources In Folder** / **Resource In Folder** / **Load Resource Or
+Default** / **Count Of Resources In**, the copy pair that makes the real trap legible
+(**Copy Resource (Independent)** vs **Copy Resource (Share Sub-Resources)**, with Deep Copy
+for lists and records), **Copy Values From** / **Fill Blanks From** / **Apply Preset To
+Node** / **Matches Properties Of**, and the migration trio **Data Is Older Than Version** /
+**Rename Field** / **Stamp Data Version**.
+
+**Copying and sharing** - **Share Code For** / **Value From Share Code** / **Share Code Is
+Valid** round-trip any value through one pasteable string, **Copy Share Code To Clipboard**
+and the clipboard read side (**Clipboard Has Text** / **Has Image** / **Clipboard Image** /
+**Clipboard Text Is**), **Clone Into**, and the per-run memory **Remember Value As** /
+**Restore Value Into** / **Remembered Value** / **Has Remembered** / **Forget Remembered**.
+
+A param can now opt into showing its option LABEL in the row sentence
+(`display_option_labels`), so \"set the up/down part of velocity\" no longer reads as
+`set the \"y\" part of velocity` while still emitting the exact key.
+
+### Added - Priced Tables and Encounter Timeline (two packs, four addons)
+
+**Priced Tables** is the general priced-interaction table - vendors, upgrade kiosks, toll
+gates, skill trees, unlock walls. A **PriceTableResource** `.tres` holds the grid (id,
+label, price, currency, stock where -1 means unlimited, a locked flag, a plain-language
+requirement note) and the behavior worn by the seller loads it. **Buy Entry** runs the
+whole transaction in one row - unknown id, locked, out of stock, too expensive - stopping
+at the first problem so a refusal always carries one honest reason, then charging, counting
+stock down, and firing **On Purchased** or **On Purchase Refused**. The wallet is decoupled
+by design: the pack asks a wallet node that answers `balance()` / `spend()` (the shipped
+Currency Ledger does) and falls back to its own exported number when nothing answers, so
+the pack works alone and pairs without a hard dependency.
+
+**Encounter Timeline** is the general spawn and beat timeline - combat waves, boss phases,
+tutorial pacing, ambient traffic. An **EncounterResource** holds beats (at-seconds, scene,
+count, group, note); **Start Encounter** plays them in time order with catch-up on long
+frames, firing **On Entry Spawned** per spawn and **On Encounter Finished** at the end.
+Spawning prefers an Object Pool node when one is present (asked by capability, not by
+class) and instantiates otherwise. **Write Encounter Report** emits a plain-text summary
+whose per-30-second density is derived from the beats themselves and which names the fields
+it could not read, rather than inventing difficulty numbers.
+
+Both ship an addon guide with 17 use cases, and both are driven treeless in tests (74 and
+81 checks) including their refusal branches, seam fallbacks and save round-trips.
+
+### Added - Editor Tools: render scenes, preview weighted tables, bake on export
+
+Three general tool-dev verbs in the Editor Tools vocabulary. **Render Scene To Image**
+photographs any scene into a PNG at a chosen size - thumbnails, marketing shots,
+documentation figures, sprite baking - and says so plainly when the editor is headless
+instead of writing a blank file. **Preview Table Rolls** runs N seeded draws against a
+weighted table (a table resource, a resource path, or a plain value-to-weight Dictionary)
+and reports rolled percentage against weight-implied percentage per entry, so loot, gacha,
+crit chances, encounter picks and procgen weights can all be checked before shipping; the
+same seed always produces the same report. **On Project Export** is a new trigger: an
+export plugin fans out to the Editor Tool sheets that declare it, so version stamps,
+debug-node stripping and final budget checks become rows that run at export time, with
+**Write Version Stamp**, **Export Is Debug** and **Export Has Feature** to build on.
+
+### Improved - the copy-an-ACE authoring stub covers the newer code patterns
+
+Right-clicking any ACE in the picker copies a ready-to-edit authoring stub. It used to drop
+everything the vocabulary has gained since: dropdown option LABELS (only the inserted keys
+survived), parameter defaults, descriptions, looping iterators, stateful member templates,
+multi-line codegen templates, and the fact that a node-scoped ACE ships a transformed
+template rather than the authored one. All of those now appear, with generated comments
+naming the rules that are easy to learn the hard way ({uid} in every stateful identifier,
+the standalone-compile gate, the automatic target prefix).
+
+### Fixed - a pack condition reads in words when the registry has not been built
+
+A condition whose ACE the registry cannot resolve right now printed its raw id
+(\"method:can_afford_entry\") in the leftmost cell, while the action lane beside it had
+always fallen back to a readable sentence (\"Buy ( slot_id )\"). Both lanes now share one
+fallback, so reflected verbs read as words wherever they appear.
+
+### Fixed - the object sub-column separator aligns across every cell (both lanes)
+
+Within a lane, every cell's object-column separator (the middle line between \"System\" and
+the sentence) now sits at ONE shared x, instead of drifting a few pixels per line because
+each cell measured its column from its own left edge (a trigger badge shifts that edge).
+The shared boundary reserves the object icon slot - icon and label are one column, like
+Construct - so icon-bearing cells keep their label room and iconless cells simply get a
+slightly wider label area at the same edge. Applies to trigger lines, condition cells, loop
+lines (which now carry their System label), signal parameter cells, and action cells; the
+resize grab, hit-test origin, and measured widths all follow the drawn boundary, and the
+stamp self-invalidates when the column token changes.
+
+### Added - Mockup Slate theme preset
+
+A tenth bundled theme matching the design-mockup look the recent features were designed
+against: deep slate background, flat panel cells with hairline borders (no translucent lane
+tints), blue condition badges, purple action badges, a round green trigger badge, amber
+object labels, and lime value highlights. Rounded event shells (6px) with 4px cells. Pick it
+from the toolbar theme switcher; every token remains editable in the Theme Editor, which
+already exposes the full token set reflectively - no new knobs were needed.
+
+### Added - condition/action cells wrap instead of clipping (the Construct rule)
+
+A cell whose text is wider than its lane now grows the row and wraps the text - no more
+sentences cut off mid-word when the lane divider (or the object column) is dragged inward.
+One shared extents walk feeds BOTH the row-height metrics and the layout pass, so the
+reserved height and the drawn rects can never disagree; each lane wraps independently (a
+short action stays one line beside a four-line condition) and the row covers the taller
+lane. Plain cells wrap on TextServer word breaks (the comment path's renderer); styled
+cells - bold verbs, tinted values - wrap on shared greedy break points that slice the
+styled run per visual line, keeping every color and bold across lines. Dragging the lane
+divider or an object column rebuilds row heights live, so the canvas grows and shrinks
+under the cursor. The cell being edited keeps single-line caret math.
+
+### Added - the fourth pattern wave: goals, places, and firsts (five new packs)
+
+Five packs turn \"a mechanic demo\" into \"a game with goals\". **Quest** (autoload + QuestResource
+`.tres` data assets: objectives with counts, chains via Register + next_quest, reward notes;
+started/objective/completed triggers; \"3/5\" journal text one expression away; Save/Load in the
+Remember file). **Checkpoint** (set here/at, Respawn At Checkpoint restoring position and
+calling the host's `reset()` - the Object Pool's wake seam - plus On Respawned). **Interaction**
+(focus the nearest interactable in range, Interact With Focus with the `interact()` seam, On
+Focus Changed / On Interacted). **Phase Cycle** (self-ticking day/night phases with On Phase
+Changed and a 0-1 Phase Progress). **Home & Leash** (home point, Return Home with arrival
+trigger, and Is Beyond Home with FIVE metric geometries). Vocabulary: **Is Within Distance
+(choose metric)** - one dropdown for straight line / horizontal / vertical / grid steps / king
+moves - **Tiles(n)** sized by the `eventforge/tile_size` setting, **Only Once Ever** (Trigger
+Once across runs, in the Remember file) + **Forget First Time**, **Vanish Respawn In**,
+**Ramped** + **Start Ramp Clock**. Each pack ships its own icon, addon guide (15+ use cases),
+and a runtime-proven test; signal triggers named `on_*` no longer read \"On On ...\" in the
+condition lane. 82 behavior packs total.
+
+### Added - the third pattern wave: game feel and directors
+
+Fourteen additions turn game FEEL into rows. Generic timing: **Buffer Press / Press Is
+Buffered / Clear Buffer** (input buffering by name) and **Was Recently True** - coyote time as
+a condition (`is_on_floor() was true within 0.1s`); the Platformer pack already shipped both
+as Inspector feel-numbers. Directors: **On Group Emptied** (fires the tick the last member
+leaves - the wave director's trigger; never on a still-empty group at startup) and **On Group
+Gains First Member**. Motion: **Push Away From + Apply Pushes** (knockback that decays with
+the honest exp form), **Pull Group Toward** (the vacuum-pickup loop), **Orbit Around**,
+**Charge Toward**. Math: **Progress Of / Percent Of** (clamped inverse_lerp). **Repeat With
+Delay** (`5 times, 0.1s apart:` - suspends like Wait). Packs: the Health behavior gains
+**Grant Invincibility / Is Invincible** with its own Take Damage respecting them (an
+invincible hit never lands and never fires On Damaged; the Flash pack is the flicker), and
+HUD Kit gains **Pop Floating Text** (label, drift tween, cleanup - one verb). New linkable
+doc: **Everyday Patterns As Vocabulary** (`docs/EVERYDAY-PATTERNS-AS-VOCABULARY.md`) - the
+case for event-sheet visual scripting, pattern by pattern.
+
+### Added - the second pattern wave: eight verbs, the Timeline block, the pool reset seam
+
+Eight new Core ACEs turn more everyday code into words: **Move Toward (smooth)** (the
+frame-rate-independent damping, compiled correctly so nobody ever writes the exp form),
+**Toggle**, **As Clock Time** (\"01:30\" from 90 seconds), **Every X To Y Seconds** (spawner
+cadence that re-rolls each firing), and four 2D Movement verbs - **Is Within Distance (of a
+node)**, **Turn Toward** (degrees-per-second aiming), **Wrap Inside The Screen**, and **Bob Up
+And Down**. The **Timeline block** is a schedule as rows: a muted \"timeline · N steps\" caption
+with one condition/action child row per beat (\"at 1.0s\" left, the action right), compiling to
+the await-chain you would have written - Insert > Timeline drops one in, \"Add Step…\" on the
+block appends beats, and `EventSheets.timeline()` builds one from code. The shipped Object
+Pool pack gains the **reset() seam**: a pooled scene that defines `reset()` has it called on
+every spawn. New guide: **Block Styles - How To Read Every Row** (`docs/GUIDE-BLOCK-STYLES.md`),
+the field guide to every block kind and the icon legend.
+
+### Added - Remember Between Runs: one toggle makes a variable survive closing the game
+
+Right-click any sheet variable and pick **Remember Between Runs**. The compiler then emits the
+whole persistence ritual for you - the variable loads its last saved value when the node is
+ready, and every remembered variable saves back to `user://remembered.cfg` when the node leaves
+the tree (scene change or quit). What used to be fifteen lines of ConfigFile boilerplate is now
+one bit on the variable. A sheet with its own class name saves under that name, so two sheets'
+variables never collide. Constants and locals refuse the toggle with a plain explanation, and a
+non-Node host compiles with a warning instead of broken code. The generated trio is
+name-addressed: reopening the emitted `.gd` as a sheet lifts it into ordinary rows, and saving
+again emits no second copy - the reopen cycle stays byte-identical.
+
+### Added - identity rows read as BARS: state headers, Class setup, Host binding
+
+The rows that say what something IS (a state header, the sheet's inheritance, a behavior's
+host) now reserve 1.5x height with their content centered, and Class setup + Host binding wear
+the accent band with a left accent edge - the Construct Includes-bar presence. A state header,
+a Host binding, or the Class setup bar can never be mistaken for a variable row again, and the
+Host binding word pill is replaced by the host class's own editor icon.
+
+### Added - the enum block and Class setup read at rest, open into lists
+
+Both prelude blocks now share one rhythm - a single readable line closed, a list open, one fold
+arrow between them (display-only; rows and emission untouched):
+
+- **Enum block**: closed it reads as a sentence - `State is one of PATROL, CHASE or FLEE`
+  (tinted words, no braces, no boxes; long enums say \"and N more\"). Open it lists one row per
+  value with its number (`PATROL = 0 · default`) and an Add value footer. Double-click
+  anywhere still opens the enum editor.
+- **Class setup**: closed it is the inheritance breadcrumb - `Node ▸ CharacterBody2D ▸
+  ExternalSample` - with the editor's own class icon in the badge slot (SVG mark fallback
+  outside the editor). Open, the secondary facts drop down as label + value rows (Runs in
+  editor, Remembered variables, Setup lines) above the raw prelude lines, never crammed
+  inline on the bar. The word pill is gone.
+
+All eleven new UI strings ship translated in the eight bundled locales.
+
+### Added - beginner-style GDScript gets the same structured open as style-guide code
+
+The zero-blocks number was measured on style-guide sources; beginner files spell things
+differently, and each spelling now lifts with its byte recorded:
+
+- **Inferred `:=` variables** (`var hp := 100`, `const SPEED := 2.5`, `@export var x := ...`)
+  lift to first-class variable rows that re-emit the walrus exactly. Shapes other lifts own
+  stay theirs: collection heads keep the Declare row, preload/load lines keep the preload row.
+- **Untyped lifecycle headers** (`func _physics_process(delta):` - no return arrow) lift to
+  their triggers with the source header carried along, so emission reproduces the exact
+  spelling. The whole enum + match machine in a beginner file now opens fully structured.
+- **The prelude reads like Construct's Includes bar**: the Class setup strip names what the
+  sheet is built on (\"Inherits CharacterBody2D\", plus the class name when declared), and an
+  identity line folds into it even alone - no more naked `extends` row up top.
+- Expression defaults on variable rows display as code, not quoted strings
+  (`= State.PATROL`, not `= \"State.PATROL\"`).
+
+### Added - a hand-written enum + match machine opens in the state-machine shape
+
+Opening a `.gd` whose `_physics_process` holds a `match state:` now lands the full reading:
+the tick event, one `◆ State: <name>` case row per branch (the badge in the icon column), the
+branch bodies as its actions - recognition of the code's own indentation tree, byte-exact like
+every lift. The grammar keys on the match SUBJECT being state-shaped (`state`,
+`current_state`, `machine.state`); a match on anything else keeps its plain pattern text, and
+the `_` default is never relabeled. Badge marks across the editor are now SVG art rasterized
+at the exact pixel size they draw at, so every icon stays crisp at every zoom and HiDPI scale.
+
+### Added - state machines read like state machines
+
+Three display-only views (rows and compiled output untouched):
+
+- An **Is In State** condition renders as a state header - `◆ State: patrol` - keyed on the
+  method shape, so any state-machine-like behavior gets the reading, not just the bundled pack.
+- **Every Physics Tick** is now that trigger's name everywhere (was \"On Physics Process\"), and a
+  lifted trigger id resolves its friendly name through the same descriptor fallback conditions
+  always had - no more raw `OnPhysicsProcess` in the condition lane.
+- A published signal row's kind cue is the narrow glyph badge every event row uses; the
+  \"Trigger\"/\"Signal\" word pill is gone.
+
+### Added - the Common Game Patterns guide, with screenshots
+
+`docs/GUIDE-COMMON-GAME-PATTERNS.md` maps the patterns every game needs - run every X seconds,
+react on change, cooldowns, wait-then-continue, remembering variables, state machines, picking
+one node from a group, chance, tweens, and self-connecting signals - to the exact rows that
+replace them, with rendered previews (`tools/render_code_patterns_preview.gd`).
+
+### Fixed - editor translations caught up with the newer menu items
+
+Eight UI strings that had accumulated untranslated (Publish New Version, Name Raw Calls,
+Compact Rows, Remember Between Runs, the Declare entry menu, Lock Verb Body) now ship in all
+eight bundled locales plus the template.
+
+### Added - Has Changed condition and named cooldowns
+
+Four new Core ACEs for the two timing patterns beginners fake with scratch variables:
+
+- **Has Changed** (condition, Run Context) - true on the tick its watched value becomes
+  different, silent otherwise. The prev/now bookkeeping compiles behind the row the same way
+  Trigger Once's does; pair it with Every Frame to update a HUD only when the score moves.
+- **Start Cooldown / Cooldown Is Ready / Cooldown Time Left** (Time) - named cooldowns with no
+  timer variables to invent: `Start Cooldown \"dash\" for 1.5s`, then gate the dash event on
+  `Cooldown \"dash\" is ready`. A cooldown that was never started counts as ready, and Time Left
+  feeds progress bars directly.
+
+### Added - group picking completes: random member and best-by-property
+
+**Random Node In Group (empty-safe)** returns null on an empty group instead of erroring the
+way a bare `pick_random()` does, and **Group Member With Smallest/Largest Property** pick the
+weakest or strongest member by any property name (`hp`, `speed`, ...) - the argmin loop as one
+expression, joining Nearest/Furthest to finish the picking family.
+
+### Added - the State Machine behavior tells time
+
+The State Machine pack now records **previous_state** and exposes **Time In State** (seconds
+since the current state began), so \"flee for two seconds then return to what I was doing\" is
+two rows: `Time In State > 2` -> `Set State previous_state`.
+
+### Added - statements read as sentences, calls read as Object then Verb
+
+The adoption campaign put every line of a hand-written `.gd` on its own row; this makes those
+rows READ the way the rest of the sheet does. Two always-on views, both derived from the code
+itself at render time - nothing is stored, nothing appears in the picker, and hovering any of
+them shows the exact GDScript line it is:
+
+- **Statement sentences.** `score += wave[1]` reads **Add wave[1] to score**; `var label := x`
+  reads **Let label = x**; plain assignment reads **Set x to y**; subtraction, multiplication,
+  division and `return` follow. The patterns are deliberately few and exact - operator finds are
+  quote- and bracket-aware, `==`/`<=`/`:=` can never false-match, and anything unrecognized keeps
+  its code text, because a sentence that is almost right is worse than code.
+- **Object-Verb call rows.** An unmatched call renders as its target, the humanized method name,
+  and its arguments - `subgroup_item.set_text(0, str(x))` reads
+  **subgroup_item Set Text ( 0, str(x) )** - the same naming the project-vocabulary picker uses.
+  One continuous cell with tinted words, not a strip of boxes (segments are built directly, never
+  round-tripped through the BBCode parser - code text is full of square brackets, and a parser
+  eats them as tags).
+
+### Added - Reading Mode: the Simple Mode pill is now a lens
+
+Simple Mode used to only hide the code-authoring buttons. It now also turns body comments into
+italic CAPTIONS with their `#` marker dropped - a beginner reads the author's intent line first,
+the mechanics under it - across every open pane. View state only: toggle the pill off and the
+programmer look is back instantly, and no row is ever touched.
+
+### Added - Sheet ▸ Name Raw Calls: give raw one-call code rows their real verb name
+
+A sheet accumulates escape-hatch rows - a call typed into a GDScript block, or a line the lifter
+could not attribute because its class had not been scanned. **Sheet ▸ Name Raw Calls…** sweeps the
+open sheet and binds each of those to vocabulary you ALREADY have (an engine class through ClassDB
+reflection, one of your own scripts, an installed pack), so `item.set_collapsed(true)` becomes a
+real action row with an editable parameter field instead of grey code.
+
+- **Byte-gated per row.** Each replacement is emitted through the very call the compiler uses and
+  kept only when it reproduces the raw line character for character. Anything else is dropped and
+  the row is left exactly as it was, so naming can never change what a sheet compiles to.
+- **Ambiguity is skipped.** Zero matches or two matches both mean the tool does not actually know
+  which verb this is, and a confidently wrong name is worse than none - it would still compile, so
+  no gate could catch it. A local's declared type (`var item: TreeItem`), a typed local-variable
+  row, and a helper's typed parameters are all read to resolve a plain identifier's class.
+- **Never automatic.** It is a command you run, one undo step for the whole sweep, and it reports
+  how many rows it named and how many it left alone.
+
+### Fixed - the corpus's last wall of code is gone (0 block lines, from 88.1%)
+
+The one remaining multi-statement block in the whole repo was the body of a `for` loop iterating
+an inline multi-line list - a header no loop template matches, so it stays a bracket-kept
+statement, and the body behind it merged with the statements that followed into a single wall.
+A leading deeper-than-base run now re-splits at its OWN shallowest indent (the same rule every
+other run already gets), so the body lands as ordinary statement rows under the header row.
+
+Measured over 206 hand-written files: **0 of 25,974 code lines** still reach the plain
+GDScript-block rendering, from 88.1% when the adoption campaign started - with byte-exact
+round-trips on all 206 throughout.
+
+### Added - a body dictionary is a \"Declare\" action with editable entry rows
+
+A canonical function-local collection literal now lifts past per-line rows into real structure:
+`var waves := { ... }` becomes one **Declare waves - Dictionary - 3 entries** action whose entries
+are rows of their own, and the bracket lines are gone from the canvas entirely - they are
+re-emitted around the entries on save. Three surfaces land together:
+
+- **The row itself.** Entries read as `\"calm\" = 3` in the same single-cell shape as every other
+  action, with the automatic value tinting doing the emphasis - no separate chips, which read as
+  fragments rather than a row.
+- **The menu.** Right-click offers **Add Entry…**, and on an entry line **Edit Entry…** and
+  **Remove Entry**; the dialog holds the key's SOURCE text (quotes included), so `\"calm\"` and a
+  bare enum constant are both legal and neither is guessed at.
+- **The inline edit.** Double-click an entry and type - the whole line edits in place
+  (`\"calm\" = 12`, either side may change; pasting source form `\"calm\": 12` works too), landing
+  through the same undoable funnel as every other sheet mutation. Whatever would break the
+  one-entry-per-line shape (a blank, a missing key, an embedded newline) is refused.
+
+One mutation path serves all of it: `CollectionDeclRow.set_entry`, also reachable for extensions
+as **`EventSheets.collection_decl(name, entries, dictionary)`** - the API grows because building
+this feature needed exactly that seam, and anything an asset-drop handler wants to seed with a
+defaults table needs it too.
+
+**File scope gets the same treatment.** A top-level `const` table or `var` default set opens as
+the same Declare row - the plugin's own 31-entry annotation table now reads as
+`Declare KNOWN_ANNOTATIONS - const Dictionary, 31 entries` with every token on an editable row -
+with the same menu and the same inline editing (the edit routes by the row itself rather than an
+action index). A bare FINAL comma is recognised as the ordinary style it is and reproduced as
+written; adding an entry after one gives it the comma GDScript then requires.
+
+The byte gate is the resource's own `parse()`: a literal is claimed only when re-emitting the
+structured model reproduces the source exactly (`emit_lines()` is shared by the compiler and the
+gate, so they can never disagree). No trailing comma, a nested multi-line value, an inline
+comment - each falls back to the per-line rows this replaces, and the whole-file verify still
+gates everything.
+
+### Fixed - a statement continues while its brackets are open
+
+The last code walls came from a single upstream mistake: an ACE was matched on the OPENING line
+of a multi-line call, consuming it and stranding the rest. The run that followed therefore began
+mid-expression, with a lone `)` as its shallowest line - and since statement level is measured
+from a run's shallowest line, the real statements around it were then read as continuations of
+nothing and merged back into one block. Three separate downstream fixes failed to move the figure
+at all, because the damage was already done before they ran.
+
+A line whose brackets are still open is now taken with the rest of its expression, as one
+statement. A collection literal is still split per entry, since its entries are things you want to
+read and reorder - so that rule is checked first and a wrapped call takes the new path.
+
+Measured over 208 hand-written files, lines still reaching the plain GDScript-block rendering:
+**13 of 26,403 (0.05%)**, from 1.5% before this change and **14.1%** when the work started.
+Byte-exactness stayed at **208/208** throughout, and pack drift at 0. Not one of the gate's 1733
+sample lines renders as a block any more.
+
+### Fixed - a split must never land inside a class body or a string
+
+Two defects in the splitting above, both of which produced rows that were fragments of something
+larger rather than statements:
+
+- **A note inside a `class` body split the class apart.** Only column-0 breaks are taken now. An
+  indented line continues the statement above it - usually a class body - and breaking inside one
+  left pieces that were neither a class the canvas can render structurally nor a statement it can
+  render as a row. This was the single largest remaining source of code walls.
+- **A multi-line string could be split down the middle.** A `\"\"\"` body routinely starts at column
+  0, so its content read as a wall of separate statements and was a legal split point. Both the
+  importer and the lifter now track string interiors and never break inside one, and the renderer
+  counts such a row as the one statement it is.
+
+Measured over 208 hand-written files, lines still reaching the plain block rendering fell from
+**3.1% to 1.5%** - cumulatively **14.1% to 1.5%** - with byte-exactness at **208/208** throughout.
+
+### Changed - one statement is one action
+
+The remaining code walls were not code that resisted structure; they were structure nobody had
+split. A run of statements the lift could not match arrived as a single multi-line block, when the
+condition/action model says each statement is an action. They now arrive as one action row per
+statement - selectable, disableable, and draggable into a different order - rendered with the same
+chrome as the actions around them rather than the GDScript code cell, which exists to hold a WALL
+of statements together and made ordinary code look like an escape hatch.
+
+A statement that owns indented lines (a `for` header, a multi-line string) keeps them, because
+they are one statement and separating them would misrepresent the code. Statement level is the
+run's OWN shallowest indent rather than column 0, so a run collected from inside an unlifted `if`
+stays readable instead of being measured against a margin it never had.
+
+Measured over 208 hand-written files, lines still reaching the plain block rendering fell from
+**14.1% to 3.1%**, byte-exact **208/208** throughout - splitting is safe by construction, because
+consecutive verbatim rows re-emit by appending their lines in order, and each split is re-joined
+and compared before it is kept.
+
+What remains is code with no structured equivalent: the interior of a multi-line string, a run the
+lifter has to keep intact. Those are honest GDScript and are meant to stay that way.
+
+### Fixed - the last shapes that still read as code
+
+Following the block work above, the residue was measured rather than guessed: of every non-blank
+line across 208 hand-written files, **12.0% still reach the plain GDScript-block rendering**, down
+from 14.1%, with byte-exactness at 208/208. Three shapes were closed to get there.
+
+- **A comment now carries its own marker.** `CommentRow` gained a `source_marker`, so a note is
+  re-emitted exactly as it was written. That is what lets an unusual marker be claimed at all:
+  `#no space` and `## doc` lines become real comment rows instead of staying verbatim, where
+  before only the exact `# ` form could be.
+- **A note above code no longer merges with it.** A comment run closes before unrelated code joins
+  it, at both the body and the file level. A block that is part note and part code can be
+  recognised as neither, which is why most comments in real files were still rendering as code
+  even once comment runs could lift. Comment lines in blocks fell from 600 to 103.
+- **A typed default no longer costs a declaration its row.** `@export var max_offset: Vector2 =
+  Vector2(24, 16)` parses to a real Vector2 and re-emits canonically as `Vector2(24.0, 16.0)` - the
+  same value, different bytes - so the whole declaration stayed a block. It now falls back to
+  keeping the source text as a bare expression, the treatment `Vector2.ZERO` already had. Arrays
+  and dictionaries deliberately do NOT take this path: kept as text they would lose the structured
+  collection editor, which is a worse row than a code block.
+
+The hand-written gate now pins this directly: **almost nothing may still render as a block**. The
+ceiling was set by experiment - switching off the collapsed-function view moves the figure from 34
+to 55, so the obvious ceiling of 60 would have watched that regression go past.
+
+### Added - comments read as notes, and data tables collapse to one row
+
+Two kinds of block are no longer rendered as code, because neither one is logic.
+
+**A run of comments becomes a real comment row.** Inside a function body it lifts to the same
+comment resource a sheet-authored comment uses, so it drags, disables and converts like any other
+comment rather than being a code block that merely looks like one. Comments were the single
+largest category of code-looking content left after the lift. A marker emission cannot reproduce
+exactly (`#no space`, a `##` doc line) stays verbatim rather than risk the round-trip.
+
+**A multi-line collection literal becomes one action per entry.** A defaults table inside a
+function arrives as a row for the declaration and a row for each entry, so the entries can be
+read at a glance and dragged into the order you want. Entry rows carry no badge of their own -
+the indentation already says they continue the line above. At file scope, where entries are not
+actions, such a table collapses to a single `const RULES := { }  31 entries` row instead. Entry
+rows wear ordinary action chrome rather than a GDScript badge, because splitting the literal was
+only worth doing if the entries then read and behave like the actions around them.
+
+This also fixed a genuine mis-lift: the opening line of such a literal was being matched as an
+ACTION on its own, stranding the entries in a separate block below it - the plugin's own
+annotation table showed as thirty-one orphaned strings, which was the largest single category
+of in-body code left after the lift. The literal is now recognised whole, then split at its own
+line boundaries, which is also what lets the comment above it be seen as the note it is.
+
+Saving an untouched file still reproduces it byte-for-byte: comment notes are a pure view over an
+unchanged block, and splitting a literal into per-entry rows is safe because consecutive code
+rows re-emit by appending their lines in order. Double-click still opens the code editor on the
+real lines. Recognising a literal is deliberately fussy - a wrapped function call (a bare `(`
+opens arguments, not a value), a literal with a statement after it, and one with a comment above
+its head are all left as ordinary code, because in each of those cases something other than the
+value would be affected.
+
+### Fixed - hand-written GDScript now actually opens as rows
+
+Opening someone else's `.gd` as a sheet was supposed to give you events and functions, with
+verbatim blocks only where no structure could be recovered. Measured over 206 hand-written
+files in this repo, **88.1% of all code lines were landing in verbatim blocks**. Two causes,
+both spelling rather than semantics, and each one able to revert a whole file on its own:
+
+- **The style guide's two blank lines between functions.** The import groups contiguous
+  non-function lines, so the gap before a *documented* function arrives inside that function's
+  `##` block rather than as a blank row of its own - and that row's blank count was dropped.
+  Emission re-added a single blank, the whole-file byte-verify came up exactly one line short
+  per documented function, and the lift reverted **everything** to blocks. Since the official
+  GDScript style guide asks for two blank lines, this hit essentially every hand-written file.
+- **A typed-collection return type.** `func rows() -> Array[Dictionary]:` is ordinary modern
+  GDScript, but the header pattern accepted only a bare identifier there, so it matched
+  nothing at all. Worse, a failed function re-anchors the trailing run, so a single such
+  helper also took every function above it down with it.
+
+A third cause was worth more than both: **an explicit `: Variant` parameter annotation.**
+`Variant` doubled as the emitter's sentinel for \"this parameter has no annotation, render it
+bare\", so `func collect(row: Variant, ...)` re-emitted as `func collect(row, ...)`. Since the
+lift is all-or-nothing per file, ONE such helper reverted every function in its file - which is
+why so many perfectly liftable functions were still arriving as code. An empty type is now the
+bare sentinel, and a named type always renders, `Variant` included.
+
+A fourth: **a plain `#` note written directly above a function**, which is simply how people
+annotate one. Comments claimed by the trailing run emit at the *end* of the file - that path
+exists for genuinely trailing notes - so a mid-file note was relocated there, failed the
+whole-file verify, and reverted every function in its file. One dock helper lost all twelve of
+its functions to a single comment. Such a note now leaves the run to re-anchor, so the note
+stays where it is and the functions around it lift; emission also records a gap of zero rather
+than inserting a separator line the file never had.
+
+Measured over the same corpus, cumulatively: raw code lines **88.1% -> 38.4%**, lifted
+functions **167 -> 879**, lifted events **585 -> 3,789**, with byte-exactness at **207/207**
+files. Every gate is unchanged - the lift is still all-or-nothing per file and still reverts
+rather than risk a single altered byte.
+
+**None of this was visible to the test suite, which stayed green throughout.** Every other lift
+test builds its own fixture, and a fixture written to suit the lifter cannot notice that real
+code does not look like it. There is now a gate that opens real hand-written files - the
+plugin's own source, ordinary style-guide GDScript nobody wrote for a test - and pins both
+byte-exact round-trips and a floor on how many functions come back as functions. Each of the
+four bugs above was reintroduced one at a time to confirm the gate actually fails; the first
+version of it caught only three, which is exactly why that check is worth running.
+
+The **Class setup** strip - the fold that hides class boilerplate so an opened file reads as
+logic - also stopped firing on the exact shape a hand-written script has. It accepted `##` doc
+comments but not plain `#` ones, and a `#` file-header comment is how nearly every script
+opens, so that single line made the whole prelude count as real content: the header, `@tool`,
+`class_name` and `extends` all showed as a GDScript block at the top of every file. A comment
+is never logic, so plain `#` now counts too.
+
+Finally, a `static func` that could not be lifted now renders as a collapsed `ƒ name(...)`
+function row rather than a wall of code. The row renderer recognized only `func`, so in
+tool-style scripts (which are mostly static) a static helper looked like raw GDScript sitting
+beside its non-static neighbour rendered as a tidy row. Nothing about the underlying row
+changes - it is a view, so editing and the byte round-trip are untouched.
+
+### Fixed - opening a file could inject code that was never in it
+
+The compiler declares an owned member for each instance-backed provider it sees called in the
+emitted lines. That scan was purely textual, so a file whose **comments merely discussed the
+convention** was read as calling it: opening such a `.gd` and saving added
+`var __eventsheet_provider_Score := Score.new()` to a hand-written script. That is a rewrite of
+someone's file, which the lossless rule exists to forbid. A use site is now required to be a
+real member access (`__eventsheet_provider_Score.add(...)`, the form every emitter of the
+convention writes, and the one the Project Doctor's matching check already required), and
+comment lines are skipped. All 78 packs still re-emit byte-identically.
+
+### Added - \"this raw call looks like one of your verbs - convert it?\"
+
+A row that reached your sheet as a bare **Call Method** - hand-written code you opened as a
+sheet, or a call typed before the class was scanned - can usually be named.
+`$Inventory.add_item(\"potion\", 3)` IS your Inventory pack's **Add Item**. Right-click such a
+row and, when it matches exactly one of your project's verbs, the menu offers **Convert to
+Inventory ▸ Add Item**. Converting names the row, gives it that verb's real parameter fields,
+and emits exactly the same code as before.
+
+The offer only appears when the answer is certain: the target must be a plain reference (an
+expression with a call or an index in it names nothing), the method must exist on that class,
+and the argument count must match exactly - converting can never drop or invent an argument.
+Argument splitting is quote- and bracket-aware, so `Vector2(1, 2)` and `\"a, b\"` each stay one
+argument. Two candidates means no offer.
+
+Notably, this deliberately does **not** live in the importer. Teaching the lifter to match
+project vocabulary would make lifting depend on mutable editor state, when today it is a pure
+function of the file's bytes - and the drift audit compares bytes, so a row that silently
+changed which verb it names would sail through green. Attribution stays a decision you make,
+applied through the ordinary path that bakes the call at apply time.
+
+### Fixed - the project-vocabulary stack, after an adversarial review
+
+An independent review of the interop work confirmed 21 defects; these are the ones that
+would have reached you.
+
+- **Renaming or hiding a verb from the \"All of &lt;class&gt;\" section did nothing** while reporting
+  success. That section (the sheet's own host class, the one most people meet) never passed
+  through the override catalog, so every refinement applied there was a silent no-op.
+- **Baking could destroy overrides it never wrote.** A member the writer could not find was
+  reported as skipped but still counted as baked and cleared from the catalog - and with the
+  wrong script path, *every* override for the class was deleted on a success path, with no
+  backup taken. Clearing is now per-member and driven by what the writer confirms it wrote.
+- **Deleting `eventsheet_vocabulary.tres` - the undo the UI documents - did nothing** in a
+  running session, and the next override rewrote everything you thought you had deleted. The
+  catalog now validates its cache against the file.
+- **Editing your own script was invisible until restart**: reflected vocabulary was cached for
+  the session, so a method you just added never appeared. Reflection is now keyed on the
+  script's modification time.
+- **An autoload without a `class_name` got an empty card** (its script was only resolvable
+  through the global class list), and **a script that already publishes as a provider was
+  published twice**, quietly defeating `@ace_hidden`. The test is membership in the provider
+  set, not the presence of annotations: a script can carry `@ace_*` comments and still publish
+  nothing at all (they only take effect for scanned providers), and counting those as
+  published left such a class reachable from nowhere.
+- **Non-scalar parameter defaults baked `null`** into rows - uncompilable for arrays,
+  dictionaries, transforms and the rest, which now get real empty values.
+- A verb refined in one section could **appear twice** with the same identity; hiding a class
+  was a **one-way door** (hidden classes are now listed greyed, and selecting one restores
+  it); confirming a rename dialog **without editing anything** stamped the verb \"renamed by
+  you\"; and the extra-paths opt-in **could not admit a `class_name`-less script**, which was
+  its entire purpose.
+
+### Added - bake your overrides into the script, when you want the script to say it
+
+The catalog keeps your source untouched by default. `EventSheets.bake_overrides(path, class)`
+is the opt-out for teams who would rather the script describe itself: it writes the renames,
+categories and hidden marks in as `## @ace_*` annotations, so a teammate reading the file (or
+anyone who never opens this editor) sees the same vocabulary you do.
+
+It takes the same safe write every curation takes - backed up first, only `##` comment lines
+added or removed, no signature or body touched, re-applying is a no-op - and the test proves
+the code survives line for line. Baked overrides are then dropped from the catalog, because
+the source owns those facts now and source outranks the catalog; keeping both would be a
+second truth that silently does nothing.
+
+### Added - the Doctor follows your renames instead of just reporting them
+
+Renaming a member of your own script orphans every row that used it - the one failure here
+that compiles green and breaks at runtime. The orphaned-verb check now names the member you
+almost certainly renamed it to: \"`WeaponKit.start_fire()` does not exist... Did you rename it
+to `begin_fire()`?\"
+
+It stays quiet whenever it is not sure, which is the point: no suggestion when nothing is
+close, and none when two members look equally plausible (sibling names like `set_valve` and
+`set_valid` score identically, and guessing between them is how a lint loses trust). The
+similarity thresholds are set from measured scores rather than intuition - a swapped verb
+prefix scores only 0.44, well below where it feels like it should - and the numbers are
+recorded in the code beside the constants.
+
+### Added - the picker says where a verb's name came from, and lets you disagree
+
+A verb derived from your own code now carries its provenance in the tooltip - \"From your
+project's Enemy - inferred from the script, not curated. Right-click to rename or hide.\" -
+so an inferred name never reads as something the plugin decided behind your back. Once you
+refine one it says \"renamed by you\" instead.
+
+Right-clicking a derived verb offers **Rename this verb…**, **Set its category…**, **Hide
+this verb**, **Hide everything from <Class>**, and (once refined) **Reset to the inferred
+name**. Each writes to the project's override catalog, never to your script, and the prompt
+says so. Authored verbs deliberately offer none of this: their identity lives in their own
+`@ace_*` annotations, and a side file that could overrule source would be an invisible
+second truth.
+
+### Fixed - a verb from your own class no longer claims to come \"from the engine\"
+
+Reflected descriptions were hardcoded to say \"reflected from the engine\", including for
+classes you wrote yourself. They now name the real source (\"reflected from your script\").
+
+### Added - rename, recategorize or hide a reflected verb, without touching your script
+
+Reflected vocabulary can now be refined through a project override catalog
+(`res://eventsheet_vocabulary.tres`): rename a verb, move it to a category that suits your
+game, hide one you never use, or drop a whole class from the picker. Nothing is written into
+your source file, and the catalog stores only the differences from what inference produced.
+
+Its defining property, and the one pinned hardest by tests: **deleting the catalog can never
+break a sheet.** Overrides change presentation only - ids and emitted calls are never touched
+- so a project that loses the file falls back to the inferred vocabulary and keeps compiling
+byte-identically. A verb whose identity comes from `@ace_*` annotations ignores the catalog
+entirely: the source outranks the side file.
+
+New API: `EventSheets.project_classes()`, `EventSheets.override_verb(provider, ace, edits)`
+and `EventSheets.exclude_class(name)`.
+
+### Fixed - deriving one ACE definition from another silently produced a blank
+
+`ACEDefinition` extends Resource but declares plain `var` fields, so `duplicate()` copied
+none of them and returned an empty definition - valid-looking, publishing nothing. A
+documented `copy()` now does it properly, and the doc comment says why `duplicate()` must
+never be used here.
+
+### Added - reflected verbs read and edit like curated ones
+
+Vocabulary reflected from a class (yours or the engine's) no longer arrives bare. Each verb
+now carries a **row sentence**, so a row shows the values you typed - \"Add Item **\"potion\"**,
+**3**\" instead of just \"Add Item\" - with the same automatic emphasis every other row gets.
+Parameters infer their **widget** from the name and declared type: a `Color` gets the swatch
+and saved palette, a sound path gets the audio picker, a scene path the scene picker, an
+input action the live Input Map picker, a group name the group picker. Verified on real
+reflection: `Add To Group` offers the group picker, `Set Scene File Path` the scene picker.
+
+Inference stays deliberately conservative - a wrong widget is worse than a plain field - so
+name rules apply only to text arguments (an `int` called `action_index` is not an input
+action) and anything uncertain keeps the expression field it has today.
+
+### Fixed - an untyped method no longer reflects as an Action
+
+`func pick():` with no declared return reports the same \"nil\" type as `-> void`, so it was
+published as an Action - wrong for a helper that returns a value. Untyped returns are now
+Expressions (the kind that misleads in none of the places it can be used). Existing rows are
+unaffected: a row bakes its call when applied, so only the picker's classification changes.
+
+### Added - your own scripts are pickable vocabulary, with zero setup
+
+The picker's object page gained a **Your Project** section listing the classes and autoloads
+your game declares. Pick one and the tree scopes to its verbs - methods reflected as Actions
+(void), Conditions (bool) and Expressions (a value), properties as Set/Get pairs, signals as
+triggers - each emitting the plain call you would have written by hand. No annotations, no
+wizard, no moving files into `eventsheet_addons/`, and autoloads emit through their singleton
+name (`Inventory.add_item(...)`) rather than carrying a pointless target parameter.
+
+The list is deliberately narrow, and the filter was chosen by measurement rather than taste:
+of the 429 classes this project declares, 21 are Node-derived and earn a card. Test classes,
+tool scripts, data Resources and plain helpers are dropped, because nobody picks an *action*
+on them - they stay reachable where they belong, in expressions and the Self section. Nothing
+is ever instantiated to do this: derivation reads the script's own member lists, which is
+what makes it correct inside the editor process.
+
+### Added - guide skeletons carry the styled-sentences block
+
+`EventSheetAddonGuideScaffold` (and so `EventSheets.addon_guide_skeleton` + the CLI) now
+opens the generated ACE reference with the same \"how the verbs read\" block the shipped
+guides carry: every marked `@ace_display_template` rendered as a markdown bullet, values
+**bold**, node references *italic*. Plain templates are skipped on purpose - the viewport
+already bolds their values automatically, so the guide has nothing extra to show. The
+docs/Addons convention now survives future guide regeneration for free.
+
+### Added - the inline colour picker remembers your palette (and advertises itself)
+
+Clicking a row's colour swatch has opened a ColorPicker in place (no params dialog, one
+undo step on close) since v0.16; it now carries a **saved palette**: presets you save in
+the picker persist per project (editor metadata, never committed) and reappear in every
+session - the C3 swatch shelf. Saving or removing a preset in any picker updates the shelf
+live, deduped and capped at 30. Hovering the swatch now shows the **hand cursor**, so the
+click affordance is discoverable. Heavily verified: 16 value-pinned headless assertions
+(shelf dedupe/cap/removal, both signal directions, the hover predicate, and the full commit
+path through the real undo funnel onto the live sheet), plus a 6/6 real-editor probe that
+dispatches an ACTUAL click through the viewport's input path - popup opens seeded with the
+cell's colour and the saved shelf, and closing it commits the picked colour onto the live
+sheet.
+
+### Added - every pack's featured verbs carry authored styled sentences
+
+The Health treatment, swept across the fleet: **36 more packs' featured verbs** (60 verbs)
+now read as hand-authored sentences - \"Start boost **{id}** at **{multiplier}**x for
+**{duration}** s\", \"Tween **{property_path}** to **{final_value}** over **{duration}** s\",
+\"Despawn *{node}*\" - via the new `Lib.verb_sentences(sheet, {name: sentence})` builder
+helper (same name-addressing as `feature_verbs`, one call per builder). Emitted as
+`## @ace_display_template(...)`, round-tripping byte-exactly (drift=0), every touched
+builder and emitted pack parse-checked. Featured verbs with no parameters keep their plain
+display names on purpose - a sentence with no slot styles nothing the name does not already
+say.
+
+### Added - the bundled vocabulary adopts BBCode display styling (l10n-safe)
+
+The hand-authored layer on top of the automatic emphasis, the way a C3 addon styles its own
+ACEs. **42 built-in module display texts** now mark their slots explicitly - `[i]` italic
+around node/object references, `[b]` bold around the other parameters (\"add *{target}* to
+**{group}**\", \"Look at *{target}*\") - swept by display-argument position only and audited:
+a before/after dump of all 926 descriptors proves every change is tag-insertion (stripping
+the tags reproduces the old string byte-exactly) with zero codegen-template or display-name
+churn. **The Health pack's 15 verbs** carry authored marked sentences (\"Take `[b]{amount}[/b]`
+damage\", \"Add `[b]{amount}[/b]` to the `[b]{type}[/b]` pool\") via the new optional
+`display_template` argument on the pack builders' `append_function`, emitted as
+`## @ace_display_template(...)` and round-tripping byte-exactly (drift=0). Two foundations
+make the adoption safe: author-marked cells now KEEP the typed value tints (colour-less
+segments split at value-range boundaries, so `[b]{amount}[/b]` reads bold AND number-green),
+and template translation is BBCode-aware - a marked template that misses a locale's catalog
+retries the stripped sentence as the legacy key, so a translation authored before the styling
+still shows (plain, auto-bolded) instead of regressing to English. Both pinned in
+`tests/display_param_emphasis_test.gd` alongside the styled-branch arming rules.
+
+### Added - C3-style bold parameter emphasis in every row sentence
+
+Rows now read like Construct 3's: every substituted parameter value draws **bold** inside
+its sentence - \"Set variable **LayoutScale** to **lerp(LayoutScale, 1.0, 15.0 * delta)**\",
+\"Play sound **\"res://sfx/jump.ogg\"**\" - composing with the existing typed value tints
+(numbers, strings, booleans keep their hues, now emboldened where they are parameters).
+Fully automatic across all built-in module ACEs AND every behaviour pack's verbs: the
+display substitution now tracks exactly where each `{slot}`'s value lands (a byte-exact
+mirror of the replace chain, including repeated slots and cross-slot shifts), and the
+renderer re-draws those runs with the same 0.7px double-draw the BBCode cells use - layout
+metrics, hit-tests, and translations untouched, zero pack or template edits. Decorated
+sentences (the await hourglass prefix, an ACE note suffix) shift the ranges instead of
+mis-bolding, and an author's explicit `@ace_display_template` BBCode still supersedes the
+automatic emphasis. `tests/display_param_emphasis_test.gd` pins the tracking VALUES (exact
+starts/lengths, the overlap-drop degenerate), the real-formatter span attach, and the
+precedence rule.
+
+### Added - Ghost Row Part II: suggestion chips + learn-as-you-type ranking
+
+The zero-dialog add now meets you BEFORE you type. Opening the ghost row (E / C / A) shows a
+row of **suggestion chips** - your most-used verbs of that kind, or the picker's featured verbs
+until habits exist - and one click applies the verb with the post-insert continuation opening
+its first parameter: a complete add with zero typing. Every successful apply (picker, quick-add
+bar, ghost row) now records into a per-project usage store (editor metadata, never committed;
+bounded, most-used survive), and the quick-add ranking **learns from it**: at equal match
+quality the verb you actually use wins the tie, so \"process\" starts suggesting OnPhysicsProcess
+first once that is what you reach for. The summoning key also nudges its own kind (+5 inside a
+quality band, never across one - A prefers actions, C conditions, E triggers), and each ranked
+item now names the first parameter the sentence has not filled yet (\"⚡ Heal · amount…\"), so the
+next word to type is always announced. `tests/ghost_row_suggestions_test.gd` pins the store's
+values, the before/after tie-break flip, the exact +5, chip kinds per key, and the chip-apply
+flow; the existing ranking tests wipe the store first so suite order can never steer their pins.
+
+### Added - drop a node onto the Sheet Type dialog to set its host
+
+The last of the Sheet Type dialog's backlog: drag a node from the Scene dock onto the dialog
+(anywhere on it) and the **Controls / extends** field takes that node's class - a script's
+`class_name` when it has one (that IS the class a sheet would be controlling), the engine class
+otherwise - with the live \"Ships as\" line updating on the spot. Types that take no host (Editor
+Tool, Autoload, Custom Resource) refuse honestly with a status line instead of silently writing
+a hidden field, and junk drag payloads never arm the drop. Verified by a scripted harness drive
+(engine node, scripted node, the host-less guard, the payload gate). The backlog's other two
+tail items - the plain-sheet chip and the icon Browse button - turned out to have already
+shipped in earlier passes; the stale list is retired rather than re-implemented.
+
+### Added - the Picker Preview rail panel
+
+The Anatomy rail shows a sheet's census; what an author could not see without SAVING was how
+their verbs would actually read in the picker. The left rail's new fold-away **Picker preview**
+answers it live from the unsaved sheet: each published verb as the picker will show it - kind
+badge in the same colour language as everywhere else (action amber, condition teal, expression
+violet), the **featured star**, the display-name override, the parameter list, the category -
+plus annotation shells still living as raw code, signal triggers under their published names,
+and each exported knob once (labelled with the get/set/add/subtract it will publish). Refreshes
+with the Anatomy panel on every edit. `tests/picker_preview_test.gd` pins the census VALUES:
+kind classification, the overrides, the exposure gate (internal helpers never preview), both
+knob layers, and null failing closed.
+
+### Added - Sheet > Publish New Version (the pack versioning ritual)
+
+Packs had identity but no versioning workflow - authors hand-edited `@ace_version` and forgot.
+Now it is a ritual: pick **patch / minor / major** (minor resets patch, major resets both), write
+the one-line change note, and see the real `1.0.0 -> 1.0.1` preview before confirming. The bump
+rewrites `@ace_version` in place and records the note as a PLAIN doc comment directly under it
+(`## 1.0.1: fixed the wobble`) - the pack's history reads in its own class docs with no new
+annotation vocabulary. The file is backed up first (the same Curate Script write path), the
+vocabulary republishes on the spot, and the reopened sheet's Addon Pack chip reads the new
+version. Offered only for sheets that ARE packs (under `eventsheet_addons/` or already
+declaring a version); `EventSheets.publish_pack_version()` exposes the same ritual to code.
+`tests/publish_version_test.gd` pins the bump VALUES (resets, the missing- and short-version
+reads, note placement and flattening, fail-closed writes) and the pickup that matters: the
+republished source imports with the new `addon_version`.
+
+### Added - the addon guide scaffolder
+
+Writing a docs/Addons-grade guide for your own pack no longer starts from a blank page:
+`tools/scaffold_addon_guide.gd` (and `EventSheets.addon_guide_skeleton()` for code) emits the
+full guide skeleton with every FACTUAL section pre-filled from the script itself - the verb
+tables (actions/conditions/expressions/triggers, annotation-curated through the same reader the
+Self census uses, so a table can never name a verb the picker does not offer), the Inspector
+properties with real types and defaults, and the Self section with the pack's real `$Class.knob`
+chains. What remains is exactly the house standard's human half: 15 use-case blanks and 5
+one-liner prompts. The CLI refuses to overwrite an existing file - a finished guide can never be
+clobbered by a skeleton. `tests/addon_guide_scaffold_test.gd` pins the Sine output's VALUES
+(real verb row, real knob default, the blank counts, sequential TOC, fail-closed input).
+
+### Added - the sticky group breadcrumb
+
+Scrolled deep inside a group on a 1,000-row sheet, the sheet now tells you where you are: a slim
+**Gameplay - Combat** strip stays pinned under the column header while the enclosing group bars
+are out of sight, and CLICKING it jumps back to the innermost group's bar. Implemented as a draw
+pass inside the virtualized canvas (which already redraws on scroll), not a Control - so the
+strip appearing and disappearing can never reflow the scroll area or jitter at group boundaries,
+and it costs a map lookup per frame, never a scan (the enclosure map is one O(rows) pass, cached
+until the flat rows rebuild). A group bar still visible at the top maps to its PARENT, so the
+crumb never repeats the bar you can already see. `tests/group_breadcrumb_test.gd` pins the
+derivation values (nesting, sibling reset, group-at-top, top level), and the render check
+asserted the click actually lands on the group bar.
+
+### Added - View > Compact Rows (a density toggle)
+
+Comfortable (the default) or Compact: one check item that trades vertical breathing room for
+rows on screen - measured 10.9% more content visible on a 10-event sheet. Density scales ONLY
+the whitespace (line padding, the minimum-row-height floor, the gap between event blocks):
+text never shrinks (that is the theme font's job) and dialogs/panels never shrink (that is the
+display scale's job). At the default density every formula reduces to its pre-toggle form, so
+Comfortable renders byte-identically to before - pinned by `tests/row_density_test.gd`, along
+with the never-below-the-font guarantee and the clamp that keeps a stray factor from collapsing
+the sheet. Per-user, per-project (editor metadata), applied before the first layout so a
+Compact project never flashes Comfortable.
+
+### Added - recent values per parameter (the \"I keep typing the same thing\" fix)
+
+Every parameter now remembers the last five values COMMITTED to it across the project, most
+recent first, and offers them from a small `v` beside the field - so the third time an action
+needs `\"jump\"` or `res://sfx/hit.ogg`, it is one pick instead of a retype.
+
+- Attached in ONE post-pass over the finished form rather than inside each per-hint builder
+  (plain string, expression, audio_path, scene_path... a per-builder sprinkle misses whichever
+  field type is added next - the audio_path field proved it during the render check). Any
+  text-bearing field in a row gains the button once history exists; rows that already carry a
+  suggestions combo get their recents LEADING the declared choices instead of a second button.
+- Picking REPLACES the field (a recent value is a complete answer, unlike the ƒx dictionary's
+  compose-at-caret inserts) and re-validates expressions immediately.
+- The ring dedupes by exact text (re-commit moves to front), caps at five, never records
+  empty/whitespace, and keys on provider::ace::param so `amount` under Add Variable shares
+  nothing with `amount` under Set Variable. Stored as editor PROJECT METADATA - per-user,
+  per-project, never committed to the repo. `tests/recent_param_values_test.gd` pins the ring's
+  VALUES headless.
+
+### Docs - the Self section covered everywhere it matters
+
+- **All 64 addon guides** gained a \"Reading it from expressions - the Self section\" chapter, each
+  DERIVED from its pack's real published entries through the shipped census
+  (`$PlatformerMovement.acceleration`, `$SimpleHealthBehavior.invulnerable`, ...), so an example
+  fragment can never be a phantom the picker does not offer. Tables of contents renumbered.
+- **C3 migration guide**: `Self.` leads the Habits That Transfer Directly list, with the short
+  mapping (`Self.X` is `position.x`, `Self.MyVariable` is the bare name,
+  `Self.Platform.VectorX` is `$PlatformerMovement.velocity.x` - a child node, because behaviours
+  here ARE child nodes).
+- **Glossary**: a Self section entry covering all four tiers, the robust-lookups toggle, and the
+  no-Self-token-in-your-code contract. **Recipes**: a \"what can I even write here?\" tip.
+  **Custom ACEs guide**: how `@ace_hidden` / `@ace_expression` / `@ace_expose_all` curate what a
+  pack publishes into Self - Behaviours, and that the derivation is script-level (works without
+  `@tool`). **Addons index** and the README's Feature tour + Milestones now name the feature.
+
+### Added - Self live grounding: the running game answers
+
+The last tier of the Self section: while a Live Values session streams, opening the Expressions
+dictionary asks the RUNNING game for the sheet's real behaviour children, and the subgroup
+upgrades to **Behaviours (live - on <owner>)** - real runtime names, including behaviours
+attached at RUNTIME by spawners and loadouts, which no edit-time tier can see. A `1 of N
+running` note appears when several instances run the script; a report for another sheet, or one
+arriving after the dialog closed, is dropped as stale.
+
+- **Rides the channel Live Values already ships.** The emitted debug receiver (one per game,
+  first streaming sheet wins) gained a `query_children` branch: it walks the running tree, finds
+  the first node running the asked-for script, and reports its behaviour children over
+  `eventsheets:children_report`. No new runtime dependency, no autoload, parity intact - the
+  machinery lives in the compiled output exactly like the Live Values stream, round-trips
+  byte-identically as content (suite-pinned), and a NORMAL compile carries none of it (the
+  covenant, also pinned).
+- **Editor side**: the debugger bridge gained `send_query_children` + a children_report parser
+  (flat triples, truncated tails dropped, fails closed); the dock wires both to the dictionary
+  at the same point it wires the Live Values window.
+- The Variables census now skips `__`-prefixed names - a debug-compiled sheet's own
+  `__live_values_timer` is machinery, not \"your variable\".
+
+Verified in two REAL halves meeting at the same wire payload: a direct game harness ran the
+scene, its `_ready` attached a Sine behaviour named RuntimeWobble at runtime, and the emitted
+census walked the LIVE tree and produced the exact reply array; the real editor then consumed
+that exact array through the real parser and handler - wiring asserted, tree upgraded, staleness
+guard held, `$RuntimeWobble.magnitude` inserting under its runtime name. The editor-launches-game
+hop itself is not automatable in this sandbox (the child process never spawns - the same reason
+this repo's runtime smokes run scenes directly), and its two primitives are the ones Live Values
+has shipped on since v0.6.
+
+### Added - Self Phase 3: the grounded tier (and the bug the real editor exposed)
+
+Select your sheet's own instance in the Scene dock and the Self section stops guessing:
+**Behaviours (on the selected node)** reads that node's ACTUAL behaviour children - a renamed
+child inserts through its rename (`$Wobble.magnitude`, not `$SineBehavior.magnitude`), two
+instances of one pack are two groups their names tell apart, and non-behaviour children never
+leak in. Direct children only, grounding only when a selected node carries THIS sheet's script -
+grounding against someone else's node would list someone else's organs. No selection (or
+headless) falls back to the Phase 2 class-name tier unchanged.
+
+**The bug the end-to-end drive exposed**: driving the REAL editor showed the Behaviours subgroup
+empty where every headless test and harness passed - inside the editor process a non-@tool
+script cannot instantiate (`GDScript.can_instantiate()` is tool-gated there), so the
+instance-reflection channel Phase 2 derived from lists nothing exactly where the feature runs.
+Both tiers now derive at SCRIPT level - `get_script_property_list` for knobs,
+`get_script_method_list` for value-returning public verbs, and the `## @ace_*` annotations read
+from source for curation (`@ace_hidden`/`@ace_internal` exclude; publishing needs
+`@ace_expression` or a pack-level `@ace_expose_all`) - identical in the editor, a harness, and
+CI. Per-script members cache on path|mtime (the registry's own discipline), so only the first
+derivation after a save pays.
+
+Tested the way the bug demanded: the suite pins the renamed-child and duplicate-instance
+fragments, the publishing-vs-empty-pack census rule, and a crowded-instance scale case (100
+children, 30 behaviours across the whole fleet, budgeted); the 20-refresh project-scale budget
+still holds; and a scripted probe inside the REAL editor - scratch scene, real Scene-dock
+selection, real dialog - verified grounding, the tree labels, and real-name insertion, 6/6.
+
+### Added - Self Phase 2: Behaviours, the Host subgroup, and robust lookups
+
+The Self section now reaches what C3's `Self.Platform.VectorX` reaches - the attached behaviours:
+
+- **Behaviours subgroup**: one group per behaviour pack, its knobs and value-returning verbs as
+  `$SineBehavior.magnitude` chains - the attached-child access the README teaches, deliberately
+  NOT the compiler's owned-instance seam. Fragments build ONLY from clean reflection metadata
+  (source_kind property/method); a baked multi-line template cannot be represented as a chain, so
+  it is skipped rather than guessed. Packs this sheet already uses lead expanded and read
+  \"(used here)\"; the rest trail collapsed for browsing.
+- **The inserted node token stays SELECTED** (`$SineBehavior`, or the quoted name inside the
+  robust form), so retargeting to your actual child name is one keystroke or a node drag.
+- **Robust behaviour lookups**: a window checkbox swaps every behaviour fragment to
+  `get_node_or_null(\"SineBehavior\")` - the access that survives a behaviour attached at RUNTIME,
+  where a $-path to an auto-named child misses silently. It defaults ON for spawn-heavy sheets
+  (Spawn verbs or the ObjectPool vocabulary anywhere in the rows, sub-events included) and stays
+  a per-session override. Behaviour insertions get NO exemption from the fragile-node-path
+  Doctor check - they are plain text like a hand-typed path.
+- **Host subgroup** (behaviour mode only): the same C3 commons re-aimed through the `host`
+  binding every behaviour carries (`X · host.position.x`) - the behaviour author's \"my object\"
+  is the parent.
+
+Tested at project scale, not just in units: the suite reflects the full bundled pack fleet (76
+providers) plus a 300-row / 150-variable / 40-function sheet and pins correctness AND a time
+budget over twenty refreshes; all three fragment forms were compiled inside an emitted sheet and
+parse; and a scripted UI drive verified the spawn-heavy default, insertion, selection, and the
+robust toggle re-deriving live. Since typing in the search box only re-FILTERS, the derivation
+(census + 76 packs, ~25ms measured on a project-sized sheet) is cached per dialog-open and keyed
+on the robust toggle - a keystroke costs the filter, nothing else.
+
+### Added - the Self section: C3's `Self.` reflex in the Expressions dictionary
+
+Type `self` or `Self.` in the Expressions dictionary and a pinned **Self** section answers the
+Construct reflex \"what does my object know about itself\" - scoped to just that section while the
+query stays self-flavoured, the full catalog otherwise. Three subgroups, every entry inserting
+plain GDScript (the C3 name is only the label a migrating user scans for, so the section teaches
+the real language and obsoletes itself):
+
+- **Variables** - the sheet's own variables (dict + tree census, the same one the Sheet Variables
+  group uses - the census MOVED to the new `EventSheetSelfExpressions` model so the two listings
+  can never drift apart). `health : int` inserts `health`.
+- **Properties** - the host's C3-common properties under their C3 names: `X · position.x`,
+  `Angle · rotation`, `Opacity · modulate.a`, `Width · size.x`... Host-gated through ClassDB (a
+  custom `class_name` resolves to its engine base first): a Control gets Width/Height and X/Y, a
+  3D body gets Z but NO Angle (its `rotation` is a Vector3 - aliasing a scalar name to a vector
+  would insert a lie), a bare Node keeps only the Object-level `UID · get_instance_id()`. The
+  alias table is an OVERRIDE list on reflection, per SPEC-self-expressions - an alias exists only
+  when the C3 and Godot names genuinely differ.
+- **Functions** - the sheet's value-returning functions as ready calls (`damage_after(armor)`);
+  a bool function is a condition and a void one an action, so neither appears (the same
+  classifier the verb rows use).
+
+The main picker's search bridge gained `angle -> rotation` and `opacity -> modulate` (synonyms
+AUGMENT the query, so \"angle\" still finds Gravity Angle and AngleLerp). Search inside the section
+matches BOTH spellings - the C3 label and the GDScript fragment.
+
+Suite: `tests/self_expressions_test.gd` pins the model's VALUES (X maps to position.x on a 2D
+body, Angle absent on a 3D one, bool functions excluded, resource hosts keep variables but no
+node commons, an unresolvable host degrades to the Object commons - honest, never a guess).
+
+### Fixed - the plugin's chrome now tracks the editor display scale (the real macOS HiDPI fix)
+
+On a Retina Mac the plugin's chrome drew at HALF the size of the surrounding editor - the
+Conditions/Actions lane header, the sheet identity banner, the Anatomy rail, hint captions,
+pills and chips - while ordinary Controls (toolbar, panels) and the canvas rows looked right.
+The v0.16.0 HiDPI fix covered the ROW text (it rides `get_theme_default_font_size()`, into
+which Godot bakes the display scale), but everything custom-drawn or size-overridden was still
+authored in literal 1x pixels: 32 `add_theme_font_size_override(..., <literal>)` sites - each
+of which REPLACES the editor's scaled size with an unscaled one - plus hardcoded `draw_string`
+sizes (a 12px lane header drawn with the fallback font, 10/11/12px anatomy rows with hardcoded
+pixel offsets and hit-testing to match, 13px banner text on a fixed 24px band). Invisible on
+every 100% Windows/Linux machine, half-size on every Mac.
+
+- **One bridge**: `EventSheetPalette.ui_scale()` / `scaled()` / `scaled_f()` - sizes stay
+  authored at 1x and multiply by the editor scale at use time (export-safe access, cached for
+  the session, `set_scale_override()` for tests and harnesses). Row text is deliberately NOT
+  routed through it - that would re-apply the scale the theme font already carries.
+- **Every offender swept**: all 32 override sites, the lane header (band height, label size,
+  paddings - and it now uses the editor's font, not the ThemeDB fallback), the identity banner
+  (both bands, the icon, the Addon Pack + health chips), the Anatomy rail (fonts, row heights,
+  pill boxes, offsets - and the click hit-testing scales with the drawing, so fold/jump targets
+  stay under the cursor), the Functions rail's minimum sizes, and the Inspector drawer widgets'
+  value/bound/coordinate labels.
+- **Suite-enforced**: `tests/ui_scale_test.gd` pins the bridge's math at 100%/150%/200% AND
+  lints every plugin script so a new literal font-size override or literal draw size cannot
+  ship again - the bug class is invisible on the machines the plugin is developed on, which is
+  exactly why it needs a gate instead of vigilance.
+
+### Fixed - three wrong claims in the v0.16.0 release notes
+
+Swept all 30 countable claims in `docs/internal/RELEASE-NOTES-v0.16.md` against the code rather than
+against other docs. 25 held. Three did not, and each was confirmed by re-deriving it directly:
+
+- **\"Raycast Lab and Raycast Lab 3D each run six casts at once.\"** The 2D lab runs six; the 3D lab
+  runs **seven**. Counting the physics queries in the emitted showcase scripts: 2D fires
+  `force_raycast_update`, `intersect_ray`, `intersect_point`, `intersect_shape`, `cast_motion`,
+  `force_shapecast_update`; 3D fires those plus a second `intersect_shape` for Query Bodies In Box,
+  which has no 2D counterpart. \"Six\" traces to source comments that count question FAMILIES and fold
+  the sphere and box volume queries together. Related and also corrected: the 3D lab's box and point
+  queries are reported as counts in the readout, not drawn as markers, so \"drawn and colour-coded\"
+  covered six of seven.
+- **\"Editor boot dropped from 1.8s to 85ms.\"** Real, but it shipped in **v0.14.0**, two releases
+  before this one. `git merge-base --is-ancestor 2160fa8 v0.14.0` is true, and the figure lives in the
+  `[0.14.0]` CHANGELOG section. Nothing in the v0.15.0..v0.16.0 range touches boot cost. The sentence
+  is removed rather than reworded; the README already credits it to v0.14.0 correctly. Worth noting
+  the numbers were never test-pinned either - `plugin_boot_lazy_test.gd` deliberately refuses to
+  assert milliseconds (\"millisecond pins would be flaky\") and enforces the structure instead.
+- **\"compound assignments reverse-lift (`self.position += velocity` to Add To Property).\"** The family
+  is real but the example is the one case that does not do this. Probed it directly: with hosts `Node`,
+  `Node2D` and `CharacterBody2D` alike, `self.position += velocity` lifts to **MoveBy2D** (\"Move By\"),
+  because `MoveBy2D`'s template IS `position += {offset}` and a specific verb outranks the generic
+  property twin. `$Sprite.modulate.a -= fade` gives Subtract From Property and `$Hud.custom_value += 7`
+  gives Add To Property, so the example was swapped for one of those.
+
+Two claims came back unverifiable-by-test and were kept, because both are backed by a repo record
+rather than by inspection: the 15-finding ultra-review (CHANGELOG line 1399) and the stepping smoke's
+6000 px/s / 10px-wall figures (commit `be4b156`, whose harness was deleted per the house rule).
+
+Also aligns the notes' ACE total with the README (925) and applies the same nine-languages-eight-
+translations correction described below.
+
+### Fixed - the README's Milestones table still called v0.16.0 unreleased
+
+The table's last row was `_Unreleased on main_ ... 🚧 in repo` describing the exact wave that shipped
+as **v0.16.0** on 2026-07-28, so the README claimed the tagged release was still pending. That row is
+now the `v0.16.0` shipped row, matching the shape every previous release left behind (the unreleased
+row folds into a version row and only _Roadmap_ trails it).
+
+Every other count in the README was re-verified against the code rather than assumed:
+
+- **`920+ native ACEs` → `925+`.** `ACERegistry.get_all_descriptors()` returns **926**.
+- **`6,000+ assertions` → `6,100+ across 390 test files`.** 6,173 assertion call sites in `tests/`.
+- **\"8 languages (EFIGS + Korean, Japanese, Russian, Simplified Chinese)\" was self-contradictory** -
+  EFIGS already includes English, so the list named nine. `L10n.available_locales()` returns English
+  plus the eight shipped CSVs, so the picker offers **9**. Corrected in the README, the milestone row,
+  the translation guide (which claimed \"eight languages\" and then listed English plus eight CSVs) and
+  the docs index.
+- **Verified unchanged and left alone:** 76 packs (77 builders, one of which is `_lib`), 18 showcases,
+  18 `save_state` seams, 43 packs with `@ace_featured`, 9 bundled themes, 8 Inspector drawers, 64
+  Addons guides + 12 companion packs documented inside their partner's guide. Every pack directory is
+  accounted for in the family lists, and all 29 local README links resolve.
+
+Also folds in a duplicate `## [Unreleased]` header this file had grown, and brings the Feature tour up
+to the shipped release: number scrubbing on parameter labels, the `@ace_param` `default:` /
+`value=Label` / `hint: comparison` additions with the Custom Actions curation flow, and the Doctor's
+orphaned-verb check.
+
+### Changed - the README screenshots are the real Godot editor now
+
+Every image on the README was a floating crop of plugin controls on a flat background, which showed
+the rows but never showed that this is a Godot workspace. All four are now 1080p captures of the
+actual editor - the EventSheet tab beside 2D / 3D / Script, the Scene dock showing behaviour children,
+the Inspector showing that behaviour's own knobs, the FileSystem dock underneath:
+
+- The hero is `platformer_shooter.gd` opened as events, which is the point: a plain script, read as
+  numbered two-lane rows calling `$Player/PlatformerMovement.jump()`.
+- The compiles-to section gained a shot of the Generated GDScript panel open beside the sheet.
+- The picker and the Create Variable dialog are shown over the editor rather than cut out of it.
+
+### Fixed - opening a sheet spammed the Output dock
+
+`Invalid access to property or key 'node_type' on ACEDefinition`, once per drawn row. The builtin
+vocabulary list holds both shapes: an `ACEDescriptor` keeps its host class in `node_type`, while an
+`ACEDefinition` (what a provider script and `simple_ace` produce) has no such property and keeps it in
+`metadata`. The row builder read `.node_type` unconditionally. Headless runs never saw it, because
+definitions only join the list in a live editor - it surfaced the moment the editor was actually
+driven, which is how it was found.
+",
+"version": 1
+}

@@ -2216,3 +2216,27 @@ Is touching ceiling,天井に触れている
 Pause the game,ゲームを一時停止
 Unpause,一時停止を解除
 Quit game,ゲームを終了
+Yes,はい
+No,いいえ
+Skip,スキップ
+Start,開始
+Carry on,続ける
+Tutorials,チュートリアル
+What's new,新着情報
+Try it in a scratch sheet,下書きシートで試す
+"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.",この例を専用の下書きタブで開きます。編集でき、メモリ上だけに存在し、プロジェクトには書き込まれません。
+"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.",マニュアルの下書きシートです。メモリ上にだけ存在し、名前を付けて保存しない限りプロジェクトには何も書き込まれず、確認なしに閉じ、次のセッションには残りません。
+Was this page helpful?,このページは役に立ちましたか？
+"Thanks - noted on this machine, and sent nowhere.",ありがとうございます。この端末に記録しただけで、どこにも送信していません。
+Noted on this machine. Report a problem opens the tracker if you want to say why.,この端末に記録しました。理由を伝えたい場合は「問題を報告」でトラッカーを開けます。
+Kept on this machine. Nothing is sent anywhere.,この端末に保存されます。どこにも送信されません。
+Report a problem,問題を報告
+"Opens the project's issue tracker in your browser, with this page's name already in the title. It opens a page - it never sends one.",プロジェクトの課題トラッカーをブラウザーで開き、このページ名をタイトルに入れておきます。開くだけで、送信は決して行いません。
+Smaller text in the Manual.,マニュアルの文字を小さく。
+Larger text in the Manual.,マニュアルの文字を大きく。
+This page is not translated yet - help translate it,このページはまだ翻訳されていません - 翻訳に協力する
+Opens the page for the word this editor uses.,このエディターで使う言葉のページを開きます。
+Every word that is spelled differently here.,ここでは呼び方が違うすべての言葉。
+"Opened a scratch sheet - in memory only, never written to your project.",下書きシートを開きました。メモリ上だけで、プロジェクトには書き込まれません。
+Open a sheet first - a scratch tab needs the event-sheet workspace.,先にシートを開いてください。下書きタブにはイベントシートのワークスペースが必要です。
+"Scratch sheet - in memory only, never written to your project unless you Save As.",下書きシート。メモリ上だけで、名前を付けて保存しない限りプロジェクトには書き込まれません。

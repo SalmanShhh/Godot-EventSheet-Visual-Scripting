@@ -394,7 +394,17 @@ func build(root: Node) -> void:
 			21: _dock._open_translation_studio()
 			14: _dock._run_diagnostics_action()
 	)
-	tools_popup.set_item_tooltip(tools_popup.get_item_index(22), "The Manual: the guides, and a reference page for every object and behavior. F1 opens help for whatever is selected.")
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(22), "The Manual: the tutorials, the guides, and a reference page for every object and behavior. F1 opens help for whatever is selected; Ctrl+F1 reopens the page you were reading.")
+	# The dot: a reader who has not opened What's new since the plugin's version changed gets a mark
+	# on the Manual entry, and it comes off the moment they read it. Re-asked every time the menu
+	# opens, so reading the page while the menu is closed still clears it.
+	tools_popup.about_to_popup.connect(func() -> void:
+		var index: int = tools_popup.get_item_index(22)
+		if index < 0:
+			return
+		var version: String = EventSheets.docs_version()
+		tools_popup.set_item_text(index,
+			"Manual… ●" if EventSheetDocWhatsNew.has_unread(version, EventSheetDocWhatsNew.seen_version()) else "Manual…"))
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(21), "The whole handoff to a translator in one window: sweep the project for the text your game shows, read the note each key travels with, merge a returned file and register the catalogs.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + script block; flag the offending rows and jump to the first.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")

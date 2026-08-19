@@ -186,6 +186,38 @@ static func current_sheet() -> EventSheetResource:
 	return _dock.get_current_sheet()
 
 
+## Opens `sheet` in a SCRATCH tab - an ordinary in-memory sheet with no path, badged in the tab
+## strip, closed without a prompt, never written to the project unless the user does Save As, and
+## not restored next session. What the Manual's "Try it in a scratch sheet" opens, and where a
+## tutorial's steps are practised. A null sheet opens an empty one to practise on.
+##
+## False when no workspace is open, so a caller says so instead of reporting a tab nobody got.
+static func open_scratch_sheet(example_name: String, sheet: EventSheetResource = null) -> bool:
+	if not _dock_alive():
+		return false
+	return bool(_dock.open_scratch_sheet(example_name, sheet))
+
+
+## Makes the toolbar control with this exact label pulse, so a step that says "click Add Action"
+## points at the button. False when the workspace is closed or carries no such control.
+static func pulse_control(control_label: String) -> bool:
+	if not _dock_alive():
+		return false
+	return bool(_dock.pulse_control(control_label))
+
+
+## Puts the keyboard focus back on the sheet itself - what Esc in the Manual means. False when no
+## workspace is open.
+static func focus_sheet() -> bool:
+	if not _dock_alive():
+		return false
+	var view: Control = _dock.get("_viewport") as Control
+	if view == null:
+		return false
+	view.grab_focus()
+	return true
+
+
 ## Opens a sheet (.gd or .tres) in the editor. Returns false when no dock is open.
 static func open_sheet(path: String) -> bool:
 	if not _dock_alive():

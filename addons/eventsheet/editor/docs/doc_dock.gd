@@ -258,6 +258,9 @@ func _ensure_content() -> void:
 	_browser.connect("link_activated", _on_link_activated)
 	_browser.connect("snippet_inserted", _on_snippet_inserted)
 	_browser.connect("row_requested", _on_row_requested)
+	_browser.connect("scratch_requested", _on_scratch_requested)
+	_browser.connect("control_highlight_requested", _on_control_highlight_requested)
+	_browser.connect("focus_returned", _on_focus_returned)
 
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", _scaled(6))
@@ -436,6 +439,35 @@ func _on_row_requested(provider_id: String, ace_id: String, index: int) -> void:
 
 func _on_snippet_inserted() -> void:
 	_set_status("Inserted the illustrated rows below your selection - one undo step.")
+
+
+## "Try it in a scratch sheet", and a tutorial's Start. Both go through the same public, guarded
+## path a third-party caller would use, so there is one way a scratch tab opens rather than two.
+func _on_scratch_requested(example_name: String, sheet: EventSheetResource) -> void:
+	var api: Script = load(API_PATH) as Script
+	if api == null:
+		return
+	if bool(api.call("open_scratch_sheet", example_name, sheet)):
+		_set_status("Opened a scratch sheet - in memory only, never written to your project.")
+	else:
+		_set_status("Open a sheet first - a scratch tab needs the event-sheet workspace.")
+
+
+## A tutorial step naming a control the reader should use. The Manual does not own the toolbar, so
+## it asks; a step whose control this build does not carry simply does not pulse.
+func _on_control_highlight_requested(control_label: String) -> void:
+	var api: Script = load(API_PATH) as Script
+	if api != null:
+		api.call("pulse_control", control_label)
+
+
+## Esc inside the Manual means "give the sheet back its focus". The reader was reading; now they
+## are building again, and the next keystroke belongs to the rows.
+func _on_focus_returned() -> void:
+	var api: Script = load(API_PATH) as Script
+	if api != null:
+		api.call("focus_sheet")
+	_set_status("")
 
 
 func _set_status(text: String) -> void:

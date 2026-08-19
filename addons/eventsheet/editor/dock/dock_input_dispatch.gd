@@ -232,7 +232,12 @@ func unhandled_key_input(event: InputEvent) -> void:
 	# rebindable table: help is the one key a reader expects to work mid-edit, and it is the
 	# universal help key rather than a preference. With nothing selected it opens the index.
 	if key_event.keycode == KEY_F1:
-		_dock.open_documentation()
+		# Ctrl+F1 is the OTHER half of the reflex: not "explain this row" but "take me back to what
+		# I was reading". A reader who left the Manual mid-page gets that page, not the index.
+		if key_event.ctrl_pressed:
+			_dock.open_documentation(_dock.last_read_doc_id())
+		else:
+			_dock.open_documentation()
 		_dock.accept_event()
 		return
 	# Esc clears the live filter lens (after the picker check - closing a popup wins).

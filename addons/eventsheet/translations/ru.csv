@@ -2216,3 +2216,27 @@ Is touching ceiling,Касается потолка
 Pause the game,Поставить игру на паузу
 Unpause,Снять паузу
 Quit game,Выйти из игры
+Yes,Да
+No,Нет
+Skip,Пропустить
+Start,Начать
+Carry on,Продолжить
+Tutorials,Уроки
+What's new,Что нового
+Try it in a scratch sheet,Попробовать в черновом листе
+"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.","Открывает этот пример в отдельной черновой вкладке - редактируемой, только в памяти, никогда не записываемой в проект."
+"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","Черновой лист из Руководства. Он существует только в памяти: пока вы не выберете Сохранить как, в проект ничего не записывается, он закрывается без вопросов и не восстанавливается в следующей сессии."
+Was this page helpful?,Была ли эта страница полезной?
+"Thanks - noted on this machine, and sent nowhere.",Спасибо - отмечено на этом компьютере и никуда не отправлено.
+Noted on this machine. Report a problem opens the tracker if you want to say why.,"Отмечено на этом компьютере. Кнопка «Сообщить о проблеме» открывает трекер, если хотите объяснить почему."
+Kept on this machine. Nothing is sent anywhere.,Хранится на этом компьютере. Никуда ничего не отправляется.
+Report a problem,Сообщить о проблеме
+"Opens the project's issue tracker in your browser, with this page's name already in the title. It opens a page - it never sends one.","Открывает трекер задач проекта в браузере, подставив имя этой страницы в заголовок. Он открывает страницу - и никогда ничего не отправляет."
+Smaller text in the Manual.,Мельче текст в Руководстве.
+Larger text in the Manual.,Крупнее текст в Руководстве.
+This page is not translated yet - help translate it,Эта страница ещё не переведена - помогите её перевести
+Opens the page for the word this editor uses.,"Открывает страницу слова, которое использует этот редактор."
+Every word that is spelled differently here.,"Все слова, которые здесь называются иначе."
+"Opened a scratch sheet - in memory only, never written to your project.","Открыт черновой лист - только в памяти, в проект не записывается."
+Open a sheet first - a scratch tab needs the event-sheet workspace.,Сначала откройте лист - черновой вкладке нужно рабочее пространство листов событий.
+"Scratch sheet - in memory only, never written to your project unless you Save As.","Черновой лист - только в памяти, в проект не записывается, пока вы не выберете Сохранить как."

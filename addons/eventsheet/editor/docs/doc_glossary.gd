@@ -187,6 +187,55 @@ static func find(query: String) -> Array[Dictionary]:
 	return exact
 
 
+## "Looking for layout? Here it is called Scene" - the line a search that found NOTHING shows above
+## its empty list, when the word the reader typed is one this glossary knows.
+##
+## Returned as {key, term, here, line} rather than as a sentence alone, so the caller can offer the
+## page as well as print the words. An empty Dictionary means the query is not a word from another
+## editor's vocabulary, which is when an empty result list is the honest answer.
+##
+## The match is deliberately narrower than find(): the whole TERM, not a substring of some entry's
+## explanation, because this line asserts "you are looking for this word" and a partial match would
+## assert it about a word the reader did not type.
+static func redirect_for(query: String) -> Dictionary:
+	var wanted: String = query.strip_edges().to_lower()
+	if wanted.is_empty():
+		return {}
+	for entry: Dictionary in TERMS:
+		if str(entry.get("term", "")).to_lower() != wanted:
+			continue
+		var here: String = here_word(str(entry.get("here", "")))
+		# A word this editor spells the SAME is not a rename, and saying "here it is called
+		# sub-event" to somebody who typed sub-event is the line making a fool of itself.
+		if here.is_empty() or here.to_lower() == wanted:
+			continue
+		return {
+			"key": str(entry.get("key", "")),
+			"term": str(entry.get("term", "")),
+			"here": here,
+			"line": redirect_line(str(entry.get("term", "")), here),
+		}
+	return {}
+
+
+## The one word this editor uses instead, taken from the front of the entry's own explanation
+## ("Scene. A layout there is a .tscn here..." -> "Scene"). Derived rather than a second authored
+## field, so an entry can never say two different things about what the word is called here.
+static func here_word(here_text: String) -> String:
+	var text: String = here_text.strip_edges()
+	var stop: int = text.find(". ")
+	var head: String = text if stop < 0 else text.substr(0, stop)
+	# A leading sentence that EXPLAINS rather than names is not a rename at all - "A condition on an
+	# object filters which instances..." names nothing to redirect to, and neither does "A sheet
+	# variable". Two words is the whole budget: a rename is a name.
+	return "" if head.split(" ", false).size() > 2 else head.trim_suffix(".")
+
+
+## The sentence itself, pure over its two halves so the suite pins the words.
+static func redirect_line(term: String, here: String) -> String:
+	return "Looking for %s? Here it is called %s" % [term.strip_edges().to_lower(), here.strip_edges()]
+
+
 ## The whole glossary as page blocks, in the shape the page view draws: the title, a lead line,
 ## then one chapter per term. Pure, so the suite pins the page's structure without a window.
 static func blocks() -> Array[Dictionary]:

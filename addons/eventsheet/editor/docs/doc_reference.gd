@@ -33,9 +33,13 @@ const KIND_PACK := "pack"
 const KIND_CLASS := "class"
 const KIND_GLOSSARY := "glossary"
 const KIND_LEGEND := "legend"
+const KIND_WHATS_NEW := "whatsnew"
+const KIND_TUTORIALS := "tutorials"
+const KIND_TUTORIAL := "tutorial"
 
 ## The kinds a "reference:" id may name, so an unknown one fails loudly instead of drawing blank.
-const KINDS: Array[String] = [KIND_SECTION, KIND_PACK, KIND_CLASS, KIND_GLOSSARY, KIND_LEGEND]
+const KINDS: Array[String] = [KIND_SECTION, KIND_PACK, KIND_CLASS, KIND_GLOSSARY, KIND_LEGEND,
+	KIND_WHATS_NEW, KIND_TUTORIALS, KIND_TUTORIAL]
 
 ## What the reading surface is called, everywhere the reader can see it. An event sheet's
 ## documentation is its Manual, and every crumb trail starts here.
@@ -47,8 +51,29 @@ const SECTION_TREE_TITLE := "System reference"
 const PACK_TREE_TITLE := "Behavior reference"
 const CLASS_TREE_TITLE := "Object reference"
 
-## The verb groups, in the order every reference page prints them.
-const GROUP_ORDER: Array[String] = ["Conditions", "Actions", "Expressions", "Triggers"]
+## The tree section the hands-on tutorials hang under.
+const TUTORIALS_TREE_TITLE := "Tutorials"
+
+## THE FIXED SHAPE of every reference page, and the whole point of it: Properties, then Conditions,
+## Actions, Expressions, Triggers, in that order, on every object, module and behavior. A reader's
+## eye learns where to land once and lands there on every page after it. Triggers is the fifth
+## section because signals are what this sheet has more of than any other kind of verb.
+const GROUP_ORDER: Array[String] = ["Properties", "Conditions", "Actions", "Expressions", "Triggers"]
+
+## The group a page's PROPERTIES are filed under - the one section that is not a verb group, so
+## every caller that walks GROUP_ORDER can still ask "is this the property table?".
+const GROUP_PROPERTIES := "Properties"
+
+## The mark each section's rows wear in the icon column. These are the sheet's own glyphs: a
+## condition is a diamond, an action an arrow, an expression the function sign, a trigger the
+## recurrence mark. A property is a value rather than something that happens, so it wears nothing.
+const GROUP_MARKS := {
+	"Properties": "",
+	"Conditions": "◆",
+	"Actions": "➜",
+	"Expressions": "ƒ",
+	"Triggers": "⟳",
+}
 
 ## The marks a sheet draws, and what each one means. The legend page is built from this, and so is
 ## the hover help on the marks themselves - one table, so a mark can never mean two things.
@@ -102,8 +127,10 @@ static func has_page(doc_id_text: String) -> bool:
 		return false
 	var name: String = str(route.get("name", ""))
 	match str(route.get("kind", "")):
-		KIND_LEGEND:
+		KIND_LEGEND, KIND_WHATS_NEW, KIND_TUTORIALS:
 			return true
+		KIND_TUTORIAL:
+			return not EventSheetDocTutorials.tutorial(name).is_empty()
 		KIND_GLOSSARY:
 			return name.is_empty() or not EventSheetDocGlossary.term(name).is_empty()
 		KIND_PACK:
@@ -120,6 +147,12 @@ static func title_for(kind: String, name: String) -> String:
 	match kind:
 		KIND_LEGEND:
 			return "What the marks on a sheet mean"
+		KIND_WHATS_NEW:
+			return EventSheetDocWhatsNew.PAGE_TITLE
+		KIND_TUTORIALS:
+			return EventSheetDocTutorials.PAGE_TITLE
+		KIND_TUTORIAL:
+			return str(EventSheetDocTutorials.tutorial(name).get("title", ""))
 		KIND_GLOSSARY:
 			return EventSheetDocGlossary.PAGE_TITLE
 		KIND_PACK:
@@ -182,6 +215,10 @@ static func breadcrumb(doc_id_text: String, title: String) -> PackedStringArray:
 				crumbs.append(EventSheetDocGlossary.PAGE_TITLE)
 			KIND_LEGEND:
 				crumbs.append(title_for(KIND_LEGEND, ""))
+			KIND_WHATS_NEW:
+				crumbs.append(EventSheetDocWhatsNew.PAGE_TITLE)
+			KIND_TUTORIALS, KIND_TUTORIAL:
+				crumbs.append(TUTORIALS_TREE_TITLE)
 	elif id.begins_with("ace:"):
 		crumbs.append(SECTION_TREE_TITLE if EventSheets.addon_pack_directory(
 			id.substr(4).get_slice("/", 0)).is_empty() else PACK_TREE_TITLE)
@@ -316,6 +353,12 @@ static func blocks_for(kind: String, name: String) -> Array[Dictionary]:
 	match kind:
 		KIND_LEGEND:
 			return legend_blocks()
+		KIND_WHATS_NEW:
+			return EventSheetDocWhatsNew.blocks()
+		KIND_TUTORIALS:
+			return EventSheetDocTutorials.list_blocks()
+		KIND_TUTORIAL:
+			return EventSheetDocTutorials.step_blocks(name)
 		KIND_GLOSSARY:
 			return EventSheetDocGlossary.blocks()
 		KIND_PACK:
@@ -349,6 +392,11 @@ static func _pack_blocks(pack_dir: String) -> Array[Dictionary]:
 	if directory.is_empty() or not DirAccess.dir_exists_absolute("res://eventsheet_addons".path_join(directory)):
 		return []
 	var grouped: Dictionary = EventSheetDocAceReference.verb_rows(directory)
+	# The fixed shape opens with what the behavior IS before what it does: its designer knobs, read
+	# off the pack's own scripts so a knob renamed in the pack renames on the page.
+	var knobs: Array = EventSheetDocAceReference.property_rows(directory)
+	if not knobs.is_empty():
+		grouped[GROUP_PROPERTIES] = knobs
 	var guide_page: String = guide_page_for(KIND_PACK, directory)
 	var title: String = pack_title(directory)
 	var lead: String = "The conditions, actions and expressions %s publishes." % title
@@ -384,34 +432,46 @@ static func _rows_page(title: String, lead: String, grouped: Dictionary, guide_p
 			continue
 		blocks.append({"kind": "heading", "level": 2, "text": group, "bbcode": group,
 			"slug": EventSheetDocMarkdown.slug(group)})
-		blocks.append({"kind": "table", "headers": Array(table_columns(grouped)),
-			"rows": table_rows(rows, table_columns(grouped).size() > 2)})
+		var columns: PackedStringArray = table_columns(grouped, group)
+		blocks.append({"kind": "table", "headers": Array(columns),
+			"rows": table_rows(rows, columns.size() > 3, str(GROUP_MARKS.get(group, "")))})
 	if total == 0:
 		blocks.append({"kind": "paragraph", "bbcode":
 			"[i]No conditions, actions or expressions are loaded for this yet.[/i]"})
 	return blocks
 
 
-## The columns a page's tables draw. "What it does" only when at least one verb ON THE PAGE has
-## something to say there - a column of blank cells reads as a broken table, not as an honest one.
-## Decided once for the whole page so the tables stay the same shape down it.
-static func table_columns(grouped: Dictionary) -> PackedStringArray:
-	for group: String in GROUP_ORDER:
-		for entry: Variant in (grouped.get(group, []) as Array):
+## The columns a page's tables draw: the row's own mark, what it is called, what it takes, and one
+## line about it. "What it does" only when at least one row ON THE PAGE has something to say there -
+## a column of blank cells reads as a broken table, not as an honest one - and the decision is made
+## once for the whole page so the tables stay the same shape down it.
+##
+## The PROPERTY table names its two middle columns differently, because a knob has a default rather
+## than parameters and calling it "Parameters" would be a table lying about its own contents.
+static func table_columns(grouped: Dictionary, group: String = "") -> PackedStringArray:
+	var noted: bool = false
+	for name: String in GROUP_ORDER:
+		for entry: Variant in (grouped.get(name, []) as Array):
 			if not str((entry as Dictionary).get("note", "")).strip_edges().is_empty():
-				return PackedStringArray(["Verb", "Parameters", "What it does"])
-	return PackedStringArray(["Verb", "Parameters"])
+				noted = true
+	if group == GROUP_PROPERTIES:
+		return PackedStringArray(["Mark", "Property", "Default", "What it does"]) if noted \
+			else PackedStringArray(["Mark", "Property", "Default"])
+	return PackedStringArray(["Mark", "Verb", "Parameters", "What it does"]) if noted \
+		else PackedStringArray(["Mark", "Verb", "Parameters"])
 
 
-## One group's rows as table cells. A row that knows its own doc id links to its entry, so a
-## reference page is a way IN to the entries rather than a list that ends at itself.
-static func table_rows(rows: Array, with_note: bool) -> Array:
+## One group's rows as table cells, led by the group's own mark. A row that knows its own doc id
+## links to its entry, so a reference page is a way IN to the entries rather than a list that ends
+## at itself.
+static func table_rows(rows: Array, with_note: bool, mark: String = "") -> Array:
 	var out: Array = []
 	for entry: Variant in rows:
 		var row: Dictionary = entry as Dictionary
 		var name: String = EventSheetDocMarkdown.escape_brackets(str(row.get("name", "")))
 		var doc: String = str(row.get("doc_id", "")).strip_edges()
 		var cells: Array = [
+			mark,
 			"[url=%s]%s[/url]" % [doc, name] if not doc.is_empty() else "[code]%s[/code]" % name,
 			EventSheetDocMarkdown.escape_brackets(str(row.get("params", ""))),
 		]

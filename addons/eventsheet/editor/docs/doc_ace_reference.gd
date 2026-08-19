@@ -106,6 +106,54 @@ static func verb_rows(pack_dir: String) -> Dictionary:
 	return grouped
 
 
+## A pack's designer knobs, as the {name, params, note} rows every reference table draws: the
+## exported properties of its scripts, with the DEFAULT in the params column (a knob has a default
+## where a verb has parameters, and that is the fact a reader wants beside its name).
+##
+## Read off the scripts rather than off an instance: instance reflection is dead in the editor for
+## a non-@tool script, so a pack's knobs would silently be an empty table for most of the corpus.
+## Sorted by name, and de-duplicated across a pack's scripts so a knob declared on a base class and
+## its subclass is one row.
+static func property_rows(pack_dir: String) -> Array:
+	var directory: String = PACKS_ROOT.path_join(pack_dir.strip_edges())
+	if not DirAccess.dir_exists_absolute(directory):
+		return []
+	var seen: Dictionary = {}
+	var file_names: PackedStringArray = DirAccess.get_files_at(directory)
+	file_names.sort()
+	for file_name: String in file_names:
+		if file_name.get_extension().to_lower() != "gd":
+			continue
+		var path: String = directory.path_join(file_name)
+		var script: Script = load(path) as Script if ResourceLoader.exists(path) else null
+		if script == null:
+			continue
+		for property_info: Dictionary in script.get_script_property_list():
+			var usage: int = int(property_info.get("usage", 0))
+			if usage & PROPERTY_USAGE_SCRIPT_VARIABLE == 0 or usage & PROPERTY_USAGE_EDITOR == 0:
+				continue
+			var property_name: String = str(property_info.get("name", ""))
+			if property_name.is_empty() or property_name.begins_with("_") or seen.has(property_name):
+				continue
+			# The name in the sheet's own spelling ("max_hp" -> "max hp"), which is how the Object
+			# properties panel and the rows already say it. The note is deliberately left empty: a
+			# knob's type is already visible in its default, and a made-up sentence in the "what it
+			# does" column would be the page inventing documentation nobody wrote.
+			seen[property_name] = {
+				"name": property_name.capitalize().to_lower(),
+				"params": str(script.get_property_default_value(property_name)),
+				"note": "",
+			}
+	var names: PackedStringArray = PackedStringArray()
+	for name: Variant in seen:
+		names.append(str(name))
+	names.sort()
+	var rows: Array = []
+	for name: String in names:
+		rows.append(seen[name])
+	return rows
+
+
 ## The live half: what the running editor's registry offers for this pack's providers. Empty
 ## outside the editor, which is what hands the question to the script-level half.
 static func _rows_from_registry(pack_dir: String) -> Dictionary:

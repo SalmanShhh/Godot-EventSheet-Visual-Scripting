@@ -42,7 +42,7 @@ The other is **reference**, and nobody writes it:
 
 | Part of the Manual | Where its pages come from |
 |---|---|
-| The Manual (first pages) | the icon legend, and the glossary for readers coming from another event-sheet editor - both generated from the plugin's own tables |
+| The Manual (first pages) | the tutorials, the icon legend, the glossary for readers coming from another event-sheet editor, and What's new - all four generated from the plugin's own tables |
 | The guide groups | the Markdown you write, grouped exactly as `docs/README.md` groups it |
 | System reference | one page per picker category, listing every condition, action and expression the builtin vocabulary files under it |
 | Behavior reference | one page per behavior pack, listing the same for that pack |
@@ -79,7 +79,69 @@ inside the Manual to read (press the pin again to resume).
 **One search box** covers all of it - conditions, actions, expressions, guides, System reference,
 behavior reference, the engine's class reference and the glossary - and tags every result with
 which of those it is. A verb result also says how many events of the open sheet already use it;
-Enter opens it, Ctrl+Enter adds it to the sheet at the caret.
+Enter opens it, Ctrl+Enter adds it to the sheet at the caret. A search that finds **nothing** says
+*Looking for layout? Here it is called Scene* first, when the word is one the glossary knows, so a
+reader never concludes a feature is missing because it is spelled differently here.
+
+![Searching the Manual for layout: the first result row, in the accent colour, reads Looking for layout? Here it is called Scene, the second is Coming from another event-sheet editor, and the ordinary tagged results follow under them](images/manual-search-hint.png)
+
+`/` focuses the search box, Esc gives the sheet its focus back, **A-** and **A+** at the foot of
+the page set the Manual's text size, and **Ctrl+F1** reopens the page you were last reading (plain
+F1 stays "help for the selected item").
+
+### The fixed shape of a reference page
+
+Every reference page - object, module or behavior - prints the same five sections in the same
+order, so a reader's eye learns where to land once:
+
+**Properties · Conditions · Actions · Expressions · Triggers**
+
+![A behavior reference page in the fixed shape: the breadcrumb reads Manual, Behavior reference, Health; under the title and its lead line a Properties table lists destroy on death false, invulnerable false and max health 100.0, and a Conditions table follows with a diamond mark in front of every verb](images/manual-reference-shape.png)
+
+Each is one table of `Mark | Name | Parameters | What it does`, where the mark is the sheet's own
+glyph for that kind (`◆` condition, `➜` action, `ƒ` expression, `⟳` trigger). Properties are a
+behavior's designer knobs, read off the pack's own scripts with their defaults - so a knob renamed
+in the pack renames on the page, and nobody writes that table either. The last column only appears
+when at least one row on the page has something to say in it.
+
+### Tutorials, and the scratch sheet examples run in
+
+![Manual, Tutorials: the tree lists Tutorials, What the marks on a sheet mean, Coming from another event-sheet editor and What's new; the page lists five tutorials, each with a lead line, a time estimate and a Start button](images/manual-tutorials.png)
+
+![One tutorial step card: the page is titled Your first event, a small-caps line reads YOUR FIRST EVENT, step 1 of 6, the step itself sits in a quote card, a line says the named control stays highlighted in the toolbar, and Back, Skip and Next sit on one row above the page foot](images/manual-tutorial-step.png)
+
+**Manual ▸ Tutorials** is the hands-on half: step cards that name a real control, make it pulse in
+the toolbar, and complete when the open sheet contains what the step asked for. They are authored
+as data in `addons/eventsheet/editor/docs/doc_tutorials.gd` - `{text, control, check}` per step,
+where `control` is the EXACT label of a toolbar control and `check` names a pure predicate over the
+sheet. Adding a step is adding a Dictionary; adding a new kind of check is one `match` arm.
+
+Every figure in a guide also offers **Try it in a scratch sheet**: the example opens in a tab of its
+own, editable, in memory, with no path. Nothing is written to the reader's project unless they Save
+As, the tab closes without asking, and it is not restored next session. Write your examples knowing
+a reader may be about to play with them rather than only read them.
+
+### What's new
+
+`Manual ▸ What's new` is the repository's own `CHANGELOG.md` - the `[Unreleased]` section and the
+last release, and nothing older. It is extracted and baked into the bundle by the build tool (the
+CHANGELOG itself does not ship with the plugin), so **editing the CHANGELOG means regenerating the
+bundle**, exactly as editing a guide does. A reader who has not opened the page since the plugin's
+version changed sees a dot on the Manual entry.
+
+![Manual, What's new: a chapter strip above the page reads UNRELEASED and 0.17.0, the page says what changed in the build you have installed, and the unreleased release notes are rendered under a foldable Unreleased chapter](images/manual-whats-new.png)
+
+### Writing the Manual in another language
+
+The Manual is per locale, page by page: a translated page lives at `docs/<locale>/<same file
+name>.md` and the bundle builder walks those folders by directory, the way it walks `Addons/` and
+`Modules/`. Nothing is required to exist. A page with no copy in the reader's locale is shown in
+English with a one-line *This page is not translated yet - help translate it* note that opens the
+folder a translation would go in. There is no machine translation, and there will not be one.
+
+Figures need no translating at all: a figure is real rows drawn by the real renderer, whose words
+already go through the plugin's translation domain, so an English page shows a Spanish reader
+Spanish rows.
 
 ## The three doc sets
 
@@ -215,6 +277,10 @@ Editing any guide changes the shipped bundle. Regenerate it, then run the drift 
 godot --headless --path . --script tools/build_help_bundle.gd
 godot --headless --path . --script tools/build_help_bundle.gd --check
 ```
+
+The bundle also carries two derived files the same check covers: `figures.esdoc` (the figure
+verdicts) and `whatsnew.esdoc` (the What's new page). So **a CHANGELOG edit needs this regeneration
+too**, not only a guide edit.
 
 The second command must print `drifted=0`. `tests/doc_library_test.gd` runs the same
 comparison in the suite, so a forgotten regeneration fails the build rather than shipping stale
