@@ -5648,6 +5648,8 @@ func _plant_call_placement(code: String, alias: String) -> String:
 		if text.begins_with(head) and text == "%s%s)" % [head, alias]:
 			return str(entry[1])
 	return ""
+
+
 ## The value of a `b.global_position = P` / `b.position = P` that immediately follows, or "" when the
 ## next line is anything else. Only the FIRST placement joins the row: the ones after it are ordinary
 ## "set a property of the new object" actions, and an event sheet draws those separately too.
