@@ -2627,3 +2627,5 @@ History,历史
 "No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.",还没有修改。你对这张表做的每一次改动都会用表自己的话列在这里。
 Dictionary: GDScript to events,对照词典：GDScript 与事件
 Coming from GDScript,从 GDScript 过来
+Sheet map,表关系图
+Click a sheet to open it. Click a line to find every place it comes from.,点击一张表即可打开。点击一条连线，找出它的每一个来源。

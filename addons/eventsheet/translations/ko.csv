@@ -2627,3 +2627,5 @@ History,기록
 "No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.",아직 편집이 없습니다. 이 시트에 가한 변경은 시트 자신의 말로 여기에 나열됩니다.
 Dictionary: GDScript to events,사전: GDScript와 이벤트
 Coming from GDScript,GDScript에서 왔다면
+Sheet map,시트 맵
+Click a sheet to open it. Click a line to find every place it comes from.,시트를 클릭하면 열립니다. 선을 클릭하면 그것이 오는 모든 곳을 찾습니다.

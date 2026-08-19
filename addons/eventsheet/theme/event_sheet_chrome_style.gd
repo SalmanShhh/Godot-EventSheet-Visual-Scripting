@@ -46,8 +46,8 @@ extends Resource
 ## canvas rather than painting a row, so its colours live here with the rest of the chrome.
 @export var minimap_background_color: Color = Color(0.0, 0.0, 0.0, 0.16)
 ## The translucent box over the rows currently on screen, and the line around it.
-@export var minimap_window_color: Color = Color(1.0, 1.0, 1.0, 0.10)
-@export var minimap_window_border_color: Color = Color(1.0, 1.0, 1.0, 0.34)
+@export var minimap_window_color: Color = Color(1.0, 1.0, 1.0, 0.20)
+@export var minimap_window_border_color: Color = Color(1.0, 1.0, 1.0, 0.48)
 ## One tint per kind of event, so the shape of a sheet reads without any text.
 @export var minimap_trigger_color: Color = Color(0.98, 0.76, 0.36, 1.0)
 @export var minimap_tick_color: Color = Color(0.55, 0.78, 0.98, 1.0)

@@ -34,6 +34,16 @@ What changed in the build you have installed (v0.17.0), in the words the release
   answer too, which is what keeps the picker and the reading from ever disagreeing about what a
   call is called here.
 
+### Added - the sheet map: what talks to what, on one page
+
+- **View ▸ Sheet Map** draws the shape of a project's logic. Nodes are its sheets, scenes and
+  globals; lines are the four ways one reaches another - it CALLS a global, it SIGNALS (someone
+  raises it, someone else listens), it INCLUDES another script (`extends` / `preload`), or it
+  CHANGES LAYOUT to a scene. Click a sheet to open it, click a line to run the Find that explains
+  it (the signal's name, the global's name, the file's own name). Boxes lay themselves out in
+  columns by kind and can be dragged; where you put them is remembered per project in editor
+  metadata. The graph itself is DERIVED on every open and never written into the project.
+
 ### Added - a place to live in a long sheet: the minimap and the History list
 
 - **A minimap down the right edge of the canvas** (View ▸ Minimap). One 1 to 2 px bar per row,

@@ -3719,6 +3719,20 @@ func _open_history_panel() -> void:
 	_ensure_history_panel().open()
 
 
+# ── U17 Sheet map - extracted to dock/sheet_map_panel.gd ─────────────────────────────
+var _sheet_map_panel: EventSheetSheetMapPanel = null
+
+
+func _ensure_sheet_map_panel() -> EventSheetSheetMapPanel:
+	if _sheet_map_panel == null:
+		_sheet_map_panel = EventSheetSheetMapPanel.new(self)
+	return _sheet_map_panel
+
+
+func _open_sheet_map_panel() -> void:
+	_ensure_sheet_map_panel().open()
+
+
 var _outline_tree: Tree:
 	get: return _ensure_outline_panel().tree
 	set(value): _ensure_outline_panel().tree = value

@@ -2627,3 +2627,5 @@ History,履歴
 "No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.",まだ編集はありません。このシートへの変更は、シート自身の言葉でここに並びます。
 Dictionary: GDScript to events,対訳表: GDScript とイベント
 Coming from GDScript,GDScript から来た人へ
+Sheet map,シートマップ
+Click a sheet to open it. Click a line to find every place it comes from.,シートをクリックすると開きます。線をクリックすると、その出どころをすべて探します。

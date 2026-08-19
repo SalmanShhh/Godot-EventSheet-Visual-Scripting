@@ -2627,3 +2627,5 @@ History,Historial
 "No edits yet. Every change you make to this sheet is listed here, in the sheet's own words.","Todavía no hay cambios. Cada cambio que hagas en esta hoja aparecerá aquí, en las palabras de la propia hoja."
 Dictionary: GDScript to events,Diccionario: de GDScript a eventos
 Coming from GDScript,Vienes de GDScript
+Sheet map,Mapa de hojas
+Click a sheet to open it. Click a line to find every place it comes from.,Haz clic en una hoja para abrirla. Haz clic en una línea para encontrar todos los sitios de los que viene.
