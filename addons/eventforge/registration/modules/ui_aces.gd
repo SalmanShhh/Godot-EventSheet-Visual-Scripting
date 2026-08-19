@@ -101,8 +101,11 @@ max_value = {max}", "", [F.make_param("value", "String", "0", "Value", "How full
 		.described("Opens a file chooser in the middle of the screen."))
 	descriptors.append(F.make_descriptor("Core", "SwitchToTab", "Switch To Tab", ACEDescriptor.ACEType.ACTION, "current_tab = {index}", "", [F.make_param("index", "String", "0", "Tab", "Which tab to show, counting from 0.", "expression")], "UI", "Switch to tab {index}", "TabContainer")
 		.described("Shows one tab of a tabbed panel."))
-	descriptors.append(F.make_descriptor("Core", "SetFormattedText", "Set Formatted Text", ACEDescriptor.ACEType.ACTION, "text = {value}", "", [F.make_param("value", "String", "\"\"", "Text", "Text with [b]tags[/b] in it.", "expression")], "UI", "Set formatted text to {value}", "RichTextLabel")
-		.described("Replaces a rich text label's contents, tags and all."))
+	# Setting a rich label's whole text is DELIBERATELY not a row of its own: `text = {value}` is the
+	# same line as any other property write, so a row for it would shadow Set Property in the
+	# reverse-lift and make every `x.text = …` in the project read as a rich label. The reading
+	# still says "Set formatted text" when the object IS a RichTextLabel, and Set Property authors
+	# the same bytes.
 	descriptors.append(F.make_descriptor("Core", "AppendFormattedText", "Append Formatted Text", ACEDescriptor.ACEType.ACTION, "append_text({value})", "", [F.make_param("value", "String", "\"\"", "Text", "Text with [b]tags[/b] in it.", "expression")], "UI", "Append formatted text {value}", "RichTextLabel")
 		.described("Adds text to the end of a rich text label without clearing it."))
 	descriptors.append(F.make_descriptor("Core", "SetTooltip", "Set Tooltip", ACEDescriptor.ACEType.ACTION, "tooltip_text = {value}", "", [F.make_param("value", "String", "\"\"", "Tooltip", "What the pointer shows when it rests here.", "expression")], "UI", "Set tooltip to {value}", "Control")

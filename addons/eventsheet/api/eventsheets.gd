@@ -1652,6 +1652,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	"node_activation": "Scenes-Pausing-And-Turning-Nodes-Off",
 	"options": "Game-Options-And-The-Window",
 	"particle": "Particles-And-Drawing-On-Screen",
+	# Walking a drawn route is a way of moving something, so it reads under the movement guide
+	# rather than under a page of its own.
+	"path_follow": "Making-Things-Move-In-2D",
 	"physics": "Collisions-Joints-And-World-Physics",
 	"physics_server": "Collisions-Joints-And-World-Physics",
 	"procedural": "Doing-Math-And-Randomness",
