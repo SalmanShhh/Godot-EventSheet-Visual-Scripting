@@ -2887,9 +2887,11 @@ func _open_shortcuts_help() -> void:
 	_shortcuts.open()
 
 
-## Tools ▸ Documentation…, F1, and EventSheets.open_docs all land here. With no id, the row the
-## reader is already looking at answers - which is what makes F1 feel like "explain THIS", not
-## "open the manual". Returns false when the id names nothing, so the caller can say so.
+## Tools ▸ Manual…, F1, and EventSheets.open_docs all land here. With no id, whatever the reader
+## has SELECTED answers - a condition or action row with its entry, an object label with the
+## object's reference page, a group with the Manual's page on groups, a behavior's Include bar
+## with that behavior's reference - which is what makes F1 "help for this", not "open the manual".
+## Returns false when the id names nothing, so the caller can say so.
 func open_documentation(doc_id: String = "", anchor: String = "") -> bool:
 	var target: String = doc_id
 	if target.is_empty():
@@ -2922,10 +2924,43 @@ func _selected_row_doc_id() -> String:
 	for row_data: EventRowData in _viewport.get_selected_rows():
 		if row_data == null:
 			continue
-		var doc_id: String = EventSheetDocExplain.doc_id_for_row(row_data.source_resource)
+		# The whole selection is offered, not only its verb: an object label, a group band and a
+		# behavior's Include bar each have their own page, and one router decides which.
+		var doc_id: String = EventSheetDocHelpTarget.doc_id_for(_current_sheet,
+			row_data.source_resource, _selection_span_metadata(row_data))
 		if not doc_id.is_empty():
 			return doc_id
 	return ""
+
+
+## The span metadata F1 answers from. A click has one (the exact condition, the object label that
+## was pointed at); a KEY does not, so the row's own leading object label stands in - which is what
+## a reader pressing F1 on a row about the player means by "this".
+func _selection_span_metadata(row_data: EventRowData) -> Dictionary:
+	if row_data == null:
+		return {}
+	for span: SemanticSpan in row_data.spans:
+		if span == null:
+			continue
+		if not str(span.metadata.get("object_label", "")).strip_edges().is_empty():
+			return span.metadata
+		if str(span.metadata.get("kind", "")) == "pack_include":
+			return span.metadata
+	return {}
+
+
+## The Manual, kept beside the sheet and following the reader. Called on every selection change:
+## with Follow selection on, the docked Manual answers for whatever is now selected without a key
+## being pressed. Silent when the Manual is not docked, not open, or not following - a reader who
+## has not asked for this must never have a page change under them.
+func _follow_selection_in_manual() -> void:
+	var manual: EventSheetDocDock = EventSheetDocDock.active_dock()
+	if manual == null or not manual.is_following():
+		return
+	var doc_id: String = _selected_row_doc_id()
+	if doc_id.is_empty():
+		return
+	manual.follow_documentation(doc_id)
 
 
 ## The picker's "read more" affordance: the highlighted verb's pack guide. Routed through the
@@ -4392,6 +4427,7 @@ func _open_template_menu() -> void:  # New-Sheet shortcut (id 0) + command palet
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_refresh_variable_panel()
 	_update_code_panel_highlight()
+	_follow_selection_in_manual()
 	if _exposed_node != null and _viewport != null:
 		_exposed_node.set_row_context(_active_view().get_selected_ace_resource())
 

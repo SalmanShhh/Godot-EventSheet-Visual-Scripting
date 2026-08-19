@@ -11,7 +11,7 @@
 #   "module:<name>"             a vocabulary module's guide, native when it ships
 #   "ace:…" / "section:…" / ""  the live registry                     -> the explain panel
 #
-# It is a plain Control on purpose: the Documentation window parents it, the Help DOCK parents the
+# It is a plain Control on purpose: the Manual window parents it, the Manual DOCK parents the
 # same control in a column a third as wide, and neither host is named here. It owns no window, no
 # shortcut and no menu.
 #

@@ -1,4 +1,4 @@
-# EventSheet - EventSheetDocWindow: the Documentation window (Tools > Documentation..., F1).
+# EventSheet - EventSheetDocWindow: the Manual, as a window (Tools > Manual..., F1).
 #
 # The home of the reference surface. A window rather than a tooltip because PERSISTENCE is the
 # point: a hover vanishes the moment the reader moves the mouse to the row they are building,
@@ -79,7 +79,7 @@ func _ensure_built() -> void:
 	if _dialog != null:
 		return
 	var dialog: AcceptDialog = AcceptDialog.new()
-	dialog.title = "Documentation"
+	dialog.title = "Manual"
 	dialog.ok_button_text = "Close"
 	# Non-modal: reading and building happen together, so the sheet stays live behind this.
 	dialog.exclusive = false
@@ -92,6 +92,11 @@ func _ensure_built() -> void:
 		_dock._set_status("Opened %s in your browser." % target.get_file()))
 	_browser.snippet_inserted.connect(func() -> void:
 		_dock._set_status("Inserted the illustrated rows below your selection - one undo step."))
+	# "Go to first / next" on a reference entry: the window does not own the sheet either, so the
+	# same public reveal answers here.
+	_browser.row_requested.connect(func(provider_id: String, ace_id: String, index: int) -> void:
+		if not EventSheets.reveal_verb_row(provider_id, ace_id, index):
+			_dock._set_status("That verb is not used in this sheet."))
 	var body: VBoxContainer = EventSheetPopupUI.form_box()
 	body.add_child(_browser)
 	var online_button: Button = Button.new()
@@ -122,5 +127,5 @@ func _open_current_online() -> void:
 func _title_for(doc_id: String) -> String:
 	var title: String = _browser.current_title().strip_edges()
 	if title.is_empty() or str(EventSheetDocExplain.resolve(doc_id).get("scheme", "")) == "index":
-		return "Documentation"
-	return "Documentation - %s" % title
+		return "Manual"
+	return "Manual - %s" % title

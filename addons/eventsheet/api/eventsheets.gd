@@ -1509,7 +1509,7 @@ static func collection_decl(variable_name: String, entries: Array, dictionary: b
 	return decl
 
 
-# ── Documentation links (the guides live in the repo, not in the plugin zip) ──────────
+# ── Manual links (the guides live in the repo, not in the plugin zip) ──────────
 #
 # The release zip ships `addons/` only, so `res://docs/...` does not exist in an installed
 # project - a button that opens a local guide path opens nothing. Every doc link therefore
@@ -1951,6 +1951,22 @@ static func provider_verbs(provider_id: String) -> Array[ACEDefinition]:
 	return _dock._ace_registry.get_provider_definitions(provider_id)
 
 
+## Selects and scrolls to the `index`-th row of the open sheet that uses a verb, unfolding any
+## group it is hidden inside. The "go to first / next" of the Manual's reference entries: reading
+## about a verb and finding where you already use it is one gesture, and this is its second half.
+##
+## False when no sheet is open, when nothing in it uses that verb, or when the index is past the
+## end - so a caller says "not used here" rather than reporting a jump that never happened.
+static func reveal_verb_row(provider_id: String, ace_id: String, index: int = 0) -> bool:
+	if not _dock_alive():
+		return false
+	var rows: Array[Resource] = EventSheetDocUsage.rows_using(current_sheet(), provider_id, ace_id)
+	if index < 0 or index >= rows.size():
+		return false
+	var viewport: EventSheetViewport = _dock._viewport
+	return viewport != null and viewport.reveal_resource(rows[index])
+
+
 ## Every verb the LIVE registry currently offers, as immutable ACEDefinitions. Editor-only like
 ## provider_verbs: an empty array when no dock is open, so a headless caller falls back to a
 ## script-level derivation rather than reporting a project with no vocabulary.
@@ -1976,13 +1992,13 @@ static func search_docs(query: String, limit: int = 25) -> Array[Dictionary]:
 
 
 ## Where this project keeps its own Markdown guides - the `eventsheets/project/docs_dir` setting,
-## with its default. Every .md file there joins the Documentation window's tree under "This
+## with its default. Every .md file there joins the Manual's tree under "This
 ## project", so a team's own notes read beside the plugin's guides.
 static func user_docs_dir() -> String:
 	return EventSheetDocLibrary.user_docs_dir()
 
 
-## Opens the documentation surface on `doc_id`. THE one entry point - Tools ▸ Documentation…,
+## Opens the Manual on `doc_id`. THE one entry point - Tools ▸ Manual…,
 ## F1, the row menu's "What does this do?" and any third-party caller all come through here.
 ##
 ## The id scheme, frozen with this method:

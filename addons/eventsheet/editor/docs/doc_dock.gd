@@ -1,6 +1,6 @@
-# EventSheet - EventSheetDocDock: the documentation, docked where the reader keeps it.
+# EventSheet - EventSheetDocDock: the Manual, docked where the reader keeps it.
 #
-# A window is a visitor; a dock is furniture. This is the same reading surface the Documentation
+# A window is a visitor; a dock is furniture. This is the same reading surface the Manual
 # window shows (EventSheetDocBrowser: the guide tree, the rendered guide pages and the generated
 # "what does this row do?" panel), parented by an EditorDock instead - so it persists in the
 # editor layout, reopens where it was left, can be floated onto a second monitor, and sits BESIDE
@@ -36,6 +36,7 @@ const BROWSER_PATH: String = "res://addons/eventsheet/editor/docs/doc_browser.gd
 const L10N_PATH: String = "res://addons/eventsheet/editor/l10n.gd"
 const API_PATH: String = "res://addons/eventsheet/api/eventsheets.gd"
 const EXPLAIN_PATH: String = "res://addons/eventsheet/editor/docs/doc_explain.gd"
+const HISTORY_PATH: String = "res://addons/eventsheet/editor/docs/doc_history.gd"
 
 ## The public API scripts registered into the editor's built-in Help, so Search Help finds the
 ## extension surface. It renders in the engine's class-reference shape with no visual control and
@@ -52,11 +53,23 @@ const LAYOUT_KEY: String = "EventSheetsHelp"
 ## The config key the last-read page is persisted under, inside the editor's own dock section.
 const CONFIG_DOC_ID: String = "doc_id"
 
+## And the two things a reader KEEPS: what they have been reading, and what they starred. Written
+## beside the page id in the same section, so a layout carries a reader's whole position.
+const CONFIG_RECENT: String = "recent"
+const CONFIG_BOOKMARKS: String = "bookmarks"
+
+## Whether the Manual answers for whatever is selected on the sheet, without a key being pressed.
+## ON by default while docked - that is the whole difference between a manual you go to and a
+## manual that is already open beside the sheet - and paused the moment the reader clicks INSIDE
+## it, because they are reading something now and a page that changed under them would be a page
+## they lost.
+const CONFIG_FOLLOW: String = "follow_selection"
+
 ## The guide index, for the "Read this online" escape hatch when a page cannot show something
 ## (the native pages carry no images).
 const INDEX_DOC_PATH: String = "docs/README.md"
 
-## The live dock instance, so the Documentation window can hand a page to an already-open dock
+## The live dock instance, so the Manual window can hand a page to an already-open dock
 ## instead of popping a window over the sheet. Null whenever no dock is in the tree.
 static var _active: EventSheetDocDock = null
 
@@ -72,10 +85,17 @@ var _shown_any: bool = false
 ## The page the reader was on when the editor last closed, restored on the first build (the
 ## content does not exist yet when the layout is loaded).
 var _pending_doc_id: String = ""
+## Whether the Manual follows the sheet's selection, and whether that following is paused because
+## the reader is reading. The PIN is the reader's setting; the pause is what their last click said.
+var _follow: bool = true
+var _follow_paused: bool = false
+var _follow_button: Button = null
+## The reading position restored from the layout, applied on the first build with everything else.
+var _pending_history: Dictionary = {}
 
 
 func _init() -> void:
-	title = "EventSheets Help"
+	title = "Manual"
 	layout_key = LAYOUT_KEY
 	# The docs belong beside the sheet, not under it: a tall right-hand slot is the shape prose
 	# wants. Floating is offered too, which is the answer for a reader on a second monitor.
@@ -85,7 +105,7 @@ func _init() -> void:
 	icon_name = &"Help"
 
 
-## The open dock, or null when none is in the tree. The Documentation window asks this before
+## The open dock, or null when none is in the tree. The Manual window asks this before
 ## popping itself, so the reader's chosen home wins.
 static func active_dock() -> EventSheetDocDock:
 	if _active != null and is_instance_valid(_active) and _active.is_inside_tree():
@@ -189,12 +209,25 @@ func _show_first_page() -> void:
 func _save_layout_to_config(config: ConfigFile, section: String) -> void:
 	var doc_id: String = _pending_doc_id if _browser == null else str(_browser.call("current_doc_id"))
 	config.set_value(section, CONFIG_DOC_ID, doc_id)
+	config.set_value(section, CONFIG_FOLLOW, _follow)
+	# What was read and what was kept travel with the layout; the back/forward stacks deliberately
+	# do not - a back button that goes back to a page from last week lies about where the reader
+	# has been.
+	var history: Script = load(HISTORY_PATH) as Script
+	var state: Dictionary = _pending_history if history == null else history.call("state")
+	config.set_value(section, CONFIG_RECENT, state.get(CONFIG_RECENT, []))
+	config.set_value(section, CONFIG_BOOKMARKS, state.get(CONFIG_BOOKMARKS, []))
 
 
 func _load_layout_from_config(config: ConfigFile, section: String) -> void:
 	# The content does not exist yet (that is the point of building it lazily), so the id waits
 	# for the first reveal.
 	_pending_doc_id = str(config.get_value(section, CONFIG_DOC_ID, ""))
+	_follow = bool(config.get_value(section, CONFIG_FOLLOW, true))
+	_pending_history = {
+		CONFIG_RECENT: config.get_value(section, CONFIG_RECENT, []),
+		CONFIG_BOOKMARKS: config.get_value(section, CONFIG_BOOKMARKS, []),
+	}
 	if _browser != null and not _pending_doc_id.is_empty():
 		_shown_any = true
 		_browser.call("show_doc", _pending_doc_id, "")
@@ -224,15 +257,93 @@ func _ensure_content() -> void:
 	_browser.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_browser.connect("link_activated", _on_link_activated)
 	_browser.connect("snippet_inserted", _on_snippet_inserted)
+	_browser.connect("row_requested", _on_row_requested)
 
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", _scaled(6))
 	column.add_child(_browser)
 	column.add_child(_build_footer())
+	column.add_child(_build_version_line())
 	add_child(column)
+	var history: Script = load(HISTORY_PATH) as Script
+	if history != null and not _pending_history.is_empty():
+		history.call("restore", _pending_history)
 	# Chrome translates for free once the dock is in the plugin's translation domain.
 	load(L10N_PATH).apply_to(self)
 	_register_api_help()
+
+
+## What the Manual is: the build it shipped with, and the fact that it is all here. A reader who
+## cannot tell whether a page describes the plugin they installed cannot trust the page, and a
+## reader who does not know it works offline goes looking for a website that may have moved on.
+func _build_version_line() -> Label:
+	var label: Label = Label.new()
+	label.add_theme_font_size_override("font_size", _scaled(10))
+	label.modulate = Color(1.0, 1.0, 1.0, 0.6)
+	label.text = manual_footer_text(_plugin_version())
+	label.tooltip_text = label.text
+	return label
+
+
+## The footer sentence, pure over the version so the suite pins the words rather than a screenshot.
+static func manual_footer_text(version: String) -> String:
+	return "Manual v%s · shipped with the plugin · offline" % version
+
+
+## The installed plugin's version, read through the public API (by path - see the boot contract).
+## "" is impossible in a working install, and an empty version simply reads as "Manual v".
+func _plugin_version() -> String:
+	var api: Script = load(API_PATH) as Script
+	if api == null:
+		return ""
+	return str(api.call("docs_version"))
+
+
+## Whether the Manual is currently answering for the sheet's selection. False when the reader
+## unpinned it, and false while it is paused because they clicked inside the Manual to read.
+func is_following() -> bool:
+	return _follow and not _follow_paused and is_visible_in_tree()
+
+
+## The selection-driven navigation. Separate from show_documentation because it must never be an
+## error: a selection the Manual has nothing to say about leaves the page alone rather than
+## reporting a miss the reader never asked a question with.
+func follow_documentation(doc_id: String) -> void:
+	if not is_following() or doc_id.strip_edges().is_empty():
+		return
+	_ensure_content()
+	if _browser == null:
+		return
+	_shown_any = true
+	_browser.call("show_doc", doc_id, "")
+
+
+## Pins or unpins following. Pressing the pin also un-pauses it - a reader who has just asked for
+## following is asking for it now, not next time they touch the sheet.
+func set_following(enabled: bool) -> void:
+	_follow = enabled
+	_follow_paused = false
+	if _follow_button != null:
+		_follow_button.set_pressed_no_signal(enabled)
+	_set_status("Following the selection." if enabled else "Not following the selection.")
+
+
+## A click INSIDE the Manual pauses following until the pin is pressed again - "the reader is
+## reading this" is what any click in here means.
+##
+## Taken from _input with a hit test rather than from the surface's own gui_input, and that is not
+## a style choice: every control inside the browser (the tree, the page, a button) CONSUMES its own
+## clicks, so a gui_input on the host would only ever hear the clicks that landed on nothing.
+func _input(event: InputEvent) -> void:
+	var click: InputEventMouseButton = event as InputEventMouseButton
+	if click == null or not click.pressed or not _follow or _follow_paused:
+		return
+	if not is_visible_in_tree() or not get_global_rect().has_point(click.global_position):
+		return
+	_follow_paused = true
+	if _follow_button != null:
+		_follow_button.set_pressed_no_signal(false)
+	_set_status("Paused following - press the pin to follow the selection again.")
 
 
 ## The footer: what just happened, and the way out to the full-fidelity page. Both are one line,
@@ -240,6 +351,15 @@ func _ensure_content() -> void:
 func _build_footer() -> HBoxContainer:
 	var footer: HBoxContainer = HBoxContainer.new()
 	footer.add_theme_constant_override("separation", _scaled(6))
+	_follow_button = Button.new()
+	_follow_button.flat = true
+	_follow_button.toggle_mode = true
+	_follow_button.text = "Follow selection"
+	_follow_button.tooltip_text = "Shows help for whatever you select on the sheet. Clicking inside the Manual pauses this until you press it again."
+	_follow_button.add_theme_font_size_override("font_size", _scaled(10))
+	_follow_button.set_pressed_no_signal(_follow)
+	_follow_button.toggled.connect(set_following)
+	footer.add_child(_follow_button)
 	_status = Label.new()
 	_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -300,6 +420,18 @@ func _open_current_online() -> void:
 
 func _on_link_activated(target: String) -> void:
 	_set_status("Opened %s in your browser." % target.get_file())
+
+
+## "Go to first / next" on a reference entry. The Manual does not own the sheet, so it asks the
+## public API to reveal the row - the same guarded path any third-party caller would use.
+func _on_row_requested(provider_id: String, ace_id: String, index: int) -> void:
+	var api: Script = load(API_PATH) as Script
+	if api == null:
+		return
+	if bool(api.call("reveal_verb_row", provider_id, ace_id, index)):
+		_set_status("Selected the event that uses it.")
+	else:
+		_set_status("That verb is not used in this sheet.")
 
 
 func _on_snippet_inserted() -> void:
