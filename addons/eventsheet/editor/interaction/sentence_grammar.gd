@@ -3351,12 +3351,15 @@ static func enum_value_words(object_name: String, target: String, member: String
 	return str(members.get(index, ""))
 
 
-## Q11. The enum hint string the ENGINE reports for one property of one class, or "" when the property
-## is not an enum (or the class is not one ClassDB knows). Cached per class: a row builder asks this of
-## every assignment it draws, and the property list of a Node subclass is hundreds of entries long.
+## Q11. {ClassName: {property: enum hint string}} - the one impurity in this file besides the
+## translation catalog, and for the same reason: a row builder asks the question of every assignment
+## it draws, and a Node subclass's property list is hundreds of entries long. Engine reflection never
+## changes within a session, so the answer is safe to keep.
 static var _enum_hint_cache: Dictionary = {}
 
 
+## Q11. The enum hint string the ENGINE reports for one property of one class, or "" when the property
+## is not an enum, the class is not one ClassDB knows, or either name is blank.
 static func engine_enum_hint(class_name_str: String, property_name: String) -> String:
 	var bare: String = class_name_str.strip_edges()
 	if bare.is_empty() or property_name.strip_edges().is_empty() or not ClassDB.class_exists(bare):

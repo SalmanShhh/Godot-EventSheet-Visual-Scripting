@@ -2374,10 +2374,10 @@ Collections (rich variables)
 - **Delete Key** (`var_name: String, key: String`) - Removes a key and its value from a dictionary variable.
 - **Clear Dictionary** (`var_name: String`) - Empties a dictionary variable, removing every key and value.
 - **Merge Dictionary** (`var_name: String, other: String`) - Copies another dictionary's keys into this one, overwriting any clashes.
-- **Append** (`var_name: String, value: String`) - Adds a value to the end of an array variable.
+- **Push Back** (`var_name: String, value: String`) - Adds a value to the end of an array variable.
 - **Insert At** (`var_name: String, index: String, value: String`) - Inserts a value into an array at a specific position.
-- **Remove At** (`var_name: String, index: String`) - Removes the item at a specific position in an array.
-- **Erase Value** (`var_name: String, value: String`) - Removes the first item in the array that matches a given value.
+- **Delete At** (`var_name: String, index: String`) - Removes the item at a specific position in an array.
+- **Delete Value** (`var_name: String, value: String`) - Removes the first item in the array that matches a given value.
 - **Clear Array** (`var_name: String`) - Empties an array, removing every item.
 - **Sort Array** (`var_name: String`) - Sorts an array's items into ascending order.
 - **Shuffle Array** (`var_name: String`) - Randomly reorders the items in an array.
@@ -2426,7 +2426,7 @@ Collections (rich variables)
 - **Toggle** (`var_name: String`) - Flips a true/false variable to its opposite - on becomes off, off becomes on.
 - **Charge Toward** (`var_name: String, maximum: String, seconds: String`) - Fills a variable while the event runs, reaching the maximum after the given seconds - a hold-to-charge meter. Put it under a while-held input condition; it clamps itself at the top, and the release event just reads the value.
 - **Reverse Array** (`var_name: String`) - Flips the array so its items run in the opposite order.
-- **Push To Front** (`var_name: String, value: String`) - Inserts a value at the start of the array, shifting the rest along.
+- **Push Front** (`var_name: String, value: String`) - Inserts a value at the start of the array, shifting the rest along.
 - **Append Array** (`var_name: String, other: String`) - Adds every item from another array onto the end of this one.
 - **Resize Array** (`var_name: String, size: String`) - Changes the array's length, adding empty slots or trimming items.
 - **Fill Array** (`var_name: String, value: String`) - Sets every slot in the array to the same value.
@@ -2499,8 +2499,8 @@ Collections (rich variables)
 - **Last Item** (`var_name: String`) - Returns the last item in the array.
 - **Index Of** (`var_name: String, value: String`) - Returns the position of a value in the array, or -1 if it's missing.
 - **Count Of** (`var_name: String, value: String`) - Returns how many times a value appears in the array.
-- **Pop Last** (`var_name: String`) - Removes and returns the last item of the array.
-- **Pop First** (`var_name: String`) - Removes and returns the first item of the array.
+- **Pop Back** (`var_name: String`) - Removes and returns the last item of the array.
+- **Pop Front** (`var_name: String`) - Removes and returns the first item of the array.
 - **Slice** (`var_name: String, from: String, to: String`) - Returns a sub-section of the array between the start and end indexes.
 - **Join To Text** (`var_name: String, separator: String`) - Joins an array of strings into one text using a separator.
 - **Array Max** (`var_name: String`) - Returns the largest value found in the array.
@@ -2626,7 +2626,7 @@ Systems vocabulary (composition / ECS-lite queries over groups).
 - **First In Both Groups** (`group_a: String, group_b: String`) - The first node in both groups, or nothing if there is none.
 
 ### Console (`res://addons/eventforge/registration/modules/console_aces.gd`)
-Console vocabulary (C3 Browser/console-style logging).
+Console vocabulary (browser/console-style logging).
 
 #### Actions
 - **Log** (`message: String, level: String`) - Writes a message to the console as a Message, Warning, Error, or Rich text - one verb for all four.
@@ -3051,8 +3051,8 @@ Loop control vocabulary
 
 #### Expressions
 - **Current Loop Item** - Gives you the item the loop is currently working on inside a For Each.
-- **Loop Index** - Counts 0, 1, 2… for the current loop pass, like Construct's loopindex. Name the loop's index "loop_index" (the Loop index field on For Each / Repeat / While) and read it here.
-- **Loop Index Of** (`name: String`) - Reads a NAMED loop's counter - Construct's loopindex("name") for nested loops: give the outer loop a distinct index name and read it from inside the inner one.
+- **Loop Index** - Counts 0, 1, 2… for the current loop pass. Name the loop's index "loop_index" (the Loop index field on For Each / Repeat / While) and read it here.
+- **Loop Index Of** (`name: String`) - Reads a NAMED loop's counter, for nested loops: give the outer loop a distinct index name and read it from inside the inner one.
 
 ### Mesh (`res://addons/eventforge/registration/modules/mesh_aces.gd`)
 Mesh vocabulary (build and swap 3D meshes from events).
@@ -3379,7 +3379,7 @@ raycasting vocabulary (2D and 3D)
 - **Mouse Ray Point (3D)** (`distance: String, target: String`) - The world point the cursor is pointing at - where to place a build ghost, a move order marker, or a decal.
 
 ### Regex (`res://addons/eventforge/registration/modules/regex_aces.gd`)
-RegEx text matching (Construct 3's Regex* functions, Godot-native).
+RegEx text matching (the Regex* verbs event-sheet authors expect, Godot-native).
 
 #### Conditions
 - **Text Matches Regex** (`pattern: String, text: String`) - True when the text matches the regular expression anywhere (e.g. "^[0-9]+$" tests for digits only).

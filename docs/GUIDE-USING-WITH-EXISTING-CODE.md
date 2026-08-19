@@ -439,6 +439,8 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   reads `Set texture filter to Nearest`, `horizontal_alignment = 1` reads `Set horizontal alignment
   to Center` - and so does a number written into a variable the sheet declared with one of its own
   enums (`dir = 2` reads `Set dir to DOWN`). The number is still one hover away.
+<img src="images/batch6-reading.png" alt="A hand-written script opened as a sheet: an On Ready event whose actions read Push back, Push front, Insert at, Delete at, Delete key, Shuffle, Append, Set collision with layer Enemies on, Set process mode to Always, Set Y to 1,000,000, Set angle to π over 2 and Call Reset at end of frame, followed by two top-level Keyboard trigger events for jump pressed and fire released." width="720">
+
 - **A big file never freezes the editor.** The raw sheet paints within a frame under a progress strip
   (`Opening event_sheet_dock.gd - lifting functions 212 of 458 - 6.1 s`, a bar, and **Show as code
   instead**); the lift runs behind it, and the strip goes away when the last function lands.
