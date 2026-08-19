@@ -472,9 +472,10 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		var event_row: EventRow = row
 		if not event_row.enabled:
 			continue
-		if event_row.trigger_id.is_empty():
-			(result["warnings"] as Array[String]).append("Skipping event %s with no trigger" % event_row.event_uid)
-			continue
+		# A BLANK top-level event - no trigger picked - runs every tick, which is what a blank event
+		# means in an event sheet. It compiles exactly as an every-tick event would (the resolver
+		# reads the blank id as the tick one), so its actions land in `_process(delta)` and its
+		# conditions, if any, are checked there. Nothing is written onto the row: blank stays blank.
 		top_level_events.append(event_row)
 	var declared_signals: Array = _scan_declared_signals(raw_blocks)
 	for signal_entry: Variant in signal_rows:
@@ -1306,7 +1307,9 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if not (entry is EventRow):
 			continue
 		var event_row: EventRow = entry as EventRow
-		if not event_row.enabled or event_row.trigger_id.is_empty():
+		# A blank trigger is not "no event": it is the every-tick event (TriggerResolver reads it
+		# that way), so a blank top-level event groups into `_process` with the explicit ones.
+		if not event_row.enabled:
 			continue
 		var key: String = TriggerResolver.get_trigger_key(event_row)
 		if not grouped.has(key):

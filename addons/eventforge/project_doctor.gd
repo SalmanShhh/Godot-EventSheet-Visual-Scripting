@@ -59,6 +59,7 @@ static func run() -> Dictionary:
 	check_fanout_god_sheets(sheet_paths, findings)
 	check_fragile_node_paths(sheet_paths, findings)
 	check_unbounded_loops(sheet_paths, findings)
+	check_every_tick_setup(sheet_paths, findings)
 	check_coroutine_in_per_frame_trigger(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
 	check_pack_dependencies(sheet_paths, findings)
@@ -848,6 +849,48 @@ static func check_unbounded_loops(sheet_paths: PackedStringArray, findings: Arra
 
 static func _is_per_frame_trigger(trigger_id: String) -> bool:
 	return trigger_id == "OnProcess" or trigger_id == "OnPhysicsProcess"
+
+
+## S27. A BLANK top-level event runs every tick - that is what blank means in an event sheet. When
+## such an event does nothing but set values (no conditions, no sub-events, every action a Set), it
+## is almost always meant to run ONCE, at the start, and the every-tick repeat is a surprise. Note
+## tier, because a per-tick set is legal and sometimes deliberate.
+static func check_every_tick_setup(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		if sheet_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		var numbers: Dictionary = EventSheetResource.event_numbers(sheet.events)
+		for entry: Variant in sheet.events:
+			if not (entry is EventRow):
+				continue
+			var event: EventRow = entry as EventRow
+			if not _is_setup_only_blank_event(event):
+				continue
+			_add(findings, "info", "every-tick-setup", sheet_path,
+				"This blank event runs every tick and only sets values - did you mean On start of layout?",
+				int(numbers.get(event.get_instance_id(), 0)))
+
+
+## True for a blank top-level event whose whole body is setting things: no trigger picked, no
+## conditions, no sub-events, no picking, and every action a Set.
+static func _is_setup_only_blank_event(event: EventRow) -> bool:
+	if event == null or not event.enabled or not event.trigger_id.is_empty():
+		return false
+	if not event.conditions.is_empty() or not event.sub_events.is_empty():
+		return false
+	if not event.pick_filters.is_empty() or event.actions.is_empty():
+		return false
+	if not event.with_node_target.strip_edges().is_empty():
+		return false
+	for action_entry: Variant in event.actions:
+		if not (action_entry is ACEAction):
+			return false
+		if not str((action_entry as ACEAction).ace_id).begins_with("Set"):
+			return false
+	return true
 
 
 ## Walks an event + its sub-events for unbounded, unbudgeted For Each loops with >= threshold actions.

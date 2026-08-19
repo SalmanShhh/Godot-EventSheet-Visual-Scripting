@@ -9,16 +9,36 @@ class_name TriggerResolver
 extends RefCounted
 
 
+## The trigger id a TOP-LEVEL event actually compiles as. A blank event - no trigger picked - means
+## in an event sheet exactly what it looks like: it runs every tick, so it compiles as the every-tick
+## trigger would, conditions and all. Nothing is stored on the row (a blank event stays blank on
+## disk); this is only the compiler's reading of "blank".
+const EVERY_TICK_TRIGGER_ID: String = "OnProcess"
+
+## The vocabulary module the every-tick trigger belongs to. A blank event borrows it too, so a blank
+## event and an every-tick event picked from the list group into the SAME handler instead of asking
+## for two `_process` functions (which would not parse).
+const EVERY_TICK_TRIGGER_PROVIDER_ID: String = "Core"
+
+
+## The trigger id to compile an event with, resolving a blank trigger to the every-tick one.
+static func effective_trigger_id(event: EventRow) -> String:
+	return event.trigger_id if not event.trigger_id.is_empty() else EVERY_TICK_TRIGGER_ID
+
+
 ## Returns a stable trigger-group key. The source path is part of the key because the same
 ## signal from different source nodes needs different handlers.
 static func get_trigger_key(event: EventRow) -> String:
-	var trigger_id: String = event.trigger_id
+	var trigger_id: String = effective_trigger_id(event)
+	var provider_id: String = event.trigger_provider_id
+	if event.trigger_id.is_empty():
+		provider_id = EVERY_TICK_TRIGGER_PROVIDER_ID
 	if trigger_id.begins_with(NOTIFICATION_PREFIX):
 		# Every notification a sheet reacts to shares ONE `_notification` handler: the engine calls
 		# that single function for every notification, and two same-named functions do not parse.
 		# Which notification an event wants rides on its own id and becomes a case inside the handler.
 		trigger_id = "OnNotification"
-	return "%s::%s::%s" % [event.trigger_provider_id, trigger_id, event.trigger_source_path]
+	return "%s::%s::%s" % [provider_id, trigger_id, event.trigger_source_path]
 
 
 ## Trigger ids of the form "OnNotification:<NAME>" - one per engine notification constant a sheet
@@ -43,7 +63,7 @@ static func notification_constant_for(trigger_id: String) -> String:
 static func resolve_trigger(event: EventRow) -> Dictionary:
 	var source_path: String = event.trigger_source_path.strip_edges()
 	var source_token: String = _identifier_for_source(source_path)
-	match event.trigger_id:
+	match effective_trigger_id(event):
 		"OnReady":
 			return _lifecycle("_ready", "")
 		"OnProcess":
