@@ -29,7 +29,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 - **Your events all start with "Every tick".** The single biggest mental shift from C3 is reacting to signals instead of polling; [section 4](#4-polling-vs-reacting---the-biggest-shift-from-c3) gives you the rule of thumb.
 - **You expect events to run top to bottom, and includes to run where the include line sits.** Inside a sheet you get exactly that; between triggers, between nodes, and for includes the answer changes - [section 5](#5-when-does-my-code-run---top-to-bottom-and-where-that-stops) draws the three boundaries.
 - **You relied on the Dictionary / Array / JSON data plugins.** They're first-class variable types here, with their own picker groups - no addon needed.
-- **You're waiting for a `.c3p` importer.** Don't - it's a deliberate, permanent non-goal, and [section 10](#10-importing-c3-projects-directly---a-permanent-non-goal) explains why and what the supported path is.
+- **You have a `.c3p` and want the events, not a rebuild.** [Section 10](#10-importing-a-c3-event-sheet) is the importer: what it reads, what becomes which row, and what it says about the rows it cannot spell.
 
 ---
 
