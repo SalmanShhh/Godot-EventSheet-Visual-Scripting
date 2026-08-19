@@ -23,7 +23,8 @@ const PATTERN_IDS: PackedStringArray = [
 	"navigation", "effects", "tilemap", "camera", "blank_event",
 	"bullet", "turret", "move_to", "rotate", "wrap", "bound", "pin", "fade", "line_of_sight", "drag_drop",
 	"anchor", "solid", "jumpthru", "picking", "family", "layers", "text", "platform", "create_object",
-	"overlap", "advanced_random", "date"
+	"overlap", "advanced_random", "date",
+	"ajax", "lighting", "fps_look", "background"
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is
