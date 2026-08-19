@@ -9,6 +9,13 @@ class_name RuntimeErrorWordsTest
 extends RefCounted
 
 
+static func _span(text: String, metadata: Dictionary) -> SemanticSpan:
+	var span: SemanticSpan = SemanticSpan.new()
+	span.text = text
+	span.metadata = metadata
+	return span
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -73,6 +80,26 @@ static func run() -> bool:
 	ok = _check("an untranslated message is not repeated twice",
 		EventSheetRuntimeErrorWords.output_lines(EventSheetRuntimeErrorWords.report(
 			"Something new went wrong.", "", 0, "")).size(), 1) and ok
+
+	# ── The "where" is the row's WORDS, not its furniture ──
+	# The affordances a row carries ("+ Add condition", "+ Add action") are click targets, and an
+	# error that reads them back says the row's furniture to the reader instead of the row.
+	var row_data: EventRowData = EventRowData.new()
+	row_data.spans.append(_span("hp is 0", {"lane": "condition"}))
+	row_data.spans.append(_span("+ Add condition", {"lane": "condition", "kind": "add_condition"}))
+	row_data.spans.append(_span("Subtract 1 from hp", {"lane": "action"}))
+	row_data.spans.append(_span("+ Add action", {"lane": "action", "kind": "add_action"}))
+	ok = _check("the reading is the row's own words, both lanes",
+		EventSheetDock.row_reading(row_data), "hp is 0 ▸ Subtract 1 from hp") and ok
+	var actions_only: EventRowData = EventRowData.new()
+	actions_only.spans.append(_span("+ Add condition",
+		{"lane": "condition", "kind": "add_condition"}))
+	actions_only.spans.append(_span("Subtract 1 from hp", {"lane": "action"}))
+	ok = _check("a row with only actions reads as those actions",
+		EventSheetDock.row_reading(actions_only), "Subtract 1 from hp") and ok
+	ok = _check("a row that is all furniture reads as nothing",
+		EventSheetDock.row_reading(EventRowData.new()), "") and ok
+	ok = _check("no row at all reads as nothing", EventSheetDock.row_reading(null), "") and ok
 
 	# ── Every cause is complete, uniquely keyed, and its Explain page really exists ──
 	var seen: Dictionary = {}

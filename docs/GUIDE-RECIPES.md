@@ -99,6 +99,8 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 
 ![The event trace pulse at three intensities: just fired, mid-fade, and almost gone](images/live-pulse.png)
 
+![The Debugger window's Inspect tab: the objects this sheet talks about on the left with their reported values, and the picked instance's variables on the right, editable, with its behaviors' own values under them](images/debugger-inspect.png)
+
 **One window, four tabs.** **View ▸ Debugger** opens everything below in one place, with the four
 names you are probably looking for: **Inspect** (every object this sheet talks about, its running
 instances, and that instance's variables - editable straight into the running game - beside its
@@ -125,6 +127,8 @@ When something misbehaves, you have five tools - no `print()` required.
   you can *edit* them live to test branches). The **Watch** box in that window evaluates any
   expression over those variables each frame - e.g. `health <= 0` or `score + lives` - so you can
   see a condition flip in real time without adding a label.
+![The runtime-error strip under a sheet: a dot, the failure re-said as the row said it, and Jump to event, Explain and Godot's words beside it](images/friendly-runtime-error.png)
+
 - **Errors in the sheet's words.** When the running game hits a runtime error on a line one of
   your rows emitted, the sheet says it again the way the row said it - a strip under the canvas
   reads `player.gd · event 12 · Enemy ▸ Call Hit: target is empty (nothing was picked before this

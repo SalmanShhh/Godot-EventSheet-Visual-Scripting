@@ -2980,9 +2980,41 @@ func _locate_runtime_error_row(script_path: String, line: int) -> Dictionary:
 				continue
 			located["resource"] = resource
 			located["event_number"] = row_data.event_number
-			located["reading"] = view._folding.summary_piece(row_data)
+			located["reading"] = row_reading(row_data)
 			return located
 	return located
+
+
+## One row read back as the phrase the error sentence puts in front of the failure. The collapsed
+## block's summary is nearly this, but not quite: it keeps the "+ Add condition" / "+ Add action"
+## affordances, which are click targets rather than anything the row says, and an error message
+## reading "event 3 - + Add condition -> Subtract 1 from hp - + Add action: target is empty" says
+## the row's furniture back to the reader instead of the row.
+##
+## Static and pure over the row so the suite pins the words without a viewport.
+static func row_reading(row_data: EventRowData) -> String:
+	if row_data == null:
+		return ""
+	var conditions: PackedStringArray = PackedStringArray()
+	var actions: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		var text: String = span.text.strip_edges()
+		if text.is_empty() or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		var kind: String = str(metadata.get("kind", ""))
+		if kind == "add_condition" or kind == "add_action":
+			continue
+		match str(metadata.get("lane", "")):
+			"condition":
+				conditions.append(text)
+			"action":
+				actions.append(text)
+	if not conditions.is_empty() and not actions.is_empty():
+		return "%s ▸ %s" % [" - ".join(conditions), " - ".join(actions)]
+	if not conditions.is_empty():
+		return " - ".join(conditions)
+	return " - ".join(actions)
 
 
 ## Jump to event: the deep-link that already existed, aimed at the row the failure came from.

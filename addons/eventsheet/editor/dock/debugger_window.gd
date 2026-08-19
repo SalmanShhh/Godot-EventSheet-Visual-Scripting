@@ -59,6 +59,11 @@ func _init(dock: Control) -> void:
 ## can arm the debugger and open it on Profile while View ▸ Debugger opens it where it was left.
 func open(tab: String = "") -> void:
 	ensure_window()
+	# Frames that streamed BEFORE this window existed were delivered to the Live Values panel and
+	# nowhere else, so opening the debugger mid-run has to take the latest one from there. Without
+	# this, the first thing a reader sees after opening it during a run is "no running game".
+	if _last_values.is_empty() and _dock != null:
+		_last_values = _dock._ensure_live_values_panel()._last_values.duplicate()
 	var index: int = TAB_TITLES.find(tab)
 	if index >= 0:
 		tabs.current_tab = index
@@ -83,7 +88,12 @@ func ensure_window() -> void:
 	for index: int in range(TAB_TITLES.size()):
 		tabs.set_tab_title(index, TAB_TITLES[index])
 	tabs.tab_changed.connect(func(_index: int) -> void: refresh())
-	window.add_child(EventSheetPopupUI.margined(tabs))
+	# The margin wrapper is what the window actually holds, so IT is the thing that has to fill the
+	# window - anchoring the TabContainer inside a container that does not fill leaves four tabs in
+	# the top-left corner of an empty window.
+	var margined: MarginContainer = EventSheetPopupUI.margined(tabs)
+	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
+	window.add_child(margined)
 	_dock.add_child(window)
 	# A window parented to the dock inherits the plugin's translation domain through the tree, but
 	# claiming it here is what the dock's other detached windows do and what keeps a language switch
@@ -96,9 +106,11 @@ func _build_inspect_tab() -> Control:
 	var split: HSplitContainer = HSplitContainer.new()
 	split.name = "Inspect"
 	var objects_box: VBoxContainer = EventSheetPopupUI.form_box()
+	objects_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	objects_tree = Tree.new()
 	objects_tree.hide_root = true
 	objects_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	objects_tree.custom_minimum_size = Vector2(0.0, 240.0)
 	objects_tree.item_selected.connect(_on_object_picked)
 	objects_box.add_child(objects_tree)
 	var objects_card: PanelContainer = EventSheetPopupUI.titled_card("Objects", objects_box)
@@ -106,6 +118,7 @@ func _build_inspect_tab() -> Control:
 	objects_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	split.add_child(objects_card)
 	var values_box: VBoxContainer = EventSheetPopupUI.form_box()
+	values_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	values_box.add_child(EventSheetPopupUI.hint_label(
 		"Double-click a value to change it in the running game. A behavior's own values are shown but not editable."))
 	values_tree = Tree.new()
@@ -115,6 +128,7 @@ func _build_inspect_tab() -> Control:
 	values_tree.set_column_title(1, "Value")
 	values_tree.column_titles_visible = true
 	values_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	values_tree.custom_minimum_size = Vector2(0.0, 240.0)
 	values_tree.item_edited.connect(_on_value_edited)
 	values_box.add_child(values_tree)
 	var values_card: PanelContainer = EventSheetPopupUI.titled_card("Instance values", values_box)
@@ -250,6 +264,7 @@ func _build_watch_tab() -> Control:
 	watch_tree.set_column_title(1, "Value")
 	watch_tree.column_titles_visible = true
 	watch_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	watch_tree.custom_minimum_size = Vector2(0.0, 240.0)
 	watch_tree.item_activated.connect(_remove_watch)
 	box.add_child(watch_tree)
 	return box
@@ -305,6 +320,7 @@ func _build_profile_tab() -> Control:
 	profile_tree.set_column_title(3, "Fires")
 	profile_tree.column_titles_visible = true
 	profile_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	profile_tree.custom_minimum_size = Vector2(0.0, 240.0)
 	profile_tree.item_activated.connect(_jump_to_profile_row)
 	box.add_child(profile_tree)
 	return box
@@ -372,6 +388,7 @@ func _build_breakpoints_tab() -> Control:
 	breakpoints_tree.set_column_title(1, "Event")
 	breakpoints_tree.column_titles_visible = true
 	breakpoints_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	breakpoints_tree.custom_minimum_size = Vector2(0.0, 240.0)
 	breakpoints_tree.item_edited.connect(_on_breakpoint_toggled)
 	breakpoints_tree.item_activated.connect(_jump_to_breakpoint)
 	box.add_child(breakpoints_tree)

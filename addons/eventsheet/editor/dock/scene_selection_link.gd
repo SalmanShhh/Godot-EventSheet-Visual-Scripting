@@ -165,6 +165,10 @@ func follow_node(node_name: String, node_class: String) -> void:
 func follow_row(row_data: EventRowData) -> void:
 	if _crossing or _dock == null or not follow_enabled():
 		return
+	# There is no Scene dock to drive outside a running editor. The singleton exists headless but
+	# most of it does not, so `has_singleton` alone is not the question - "is there an editor" is.
+	if not Engine.is_editor_hint():
+		return
 	var label: String = object_label_for_row(row_data)
 	if label.is_empty():
 		return
