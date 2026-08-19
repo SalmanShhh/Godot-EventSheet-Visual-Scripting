@@ -306,6 +306,68 @@ no editor in it, so the window, the Doctor and the tests all read the same answe
   canvas. The marker follows the sheet snapshots the undo funnel restores, so Ctrl+Z from anywhere,
   the toolbar arrows and a click in the list all move the same place.
 
+### Added - the things AROUND an object read, and are written, in the sheet's own words
+
+Four families a project writes about an object rather than about its behaviour. Every reading is
+display only - a lens over a value the row already holds, so the file is untouched and the byte
+round-trip cannot move - and every one of them is also authorable in the same words, by rows whose
+templates write exactly the shape the reading recognises.
+
+- **Picking says which instances.** A line that picks an instance and names it is one row, not a
+  declaration whose value happens to be a list step: `enemies.pick_random()` reads
+  `System ▸ Pick a random Enemy → victim`, `enemies.filter(func(e): return e.gold > 50)` reads
+  `Pick Enemy where gold > 50`, `back()` / `front()` read `Pick top` / `Pick bottom`, and
+  `instance_from_id(id)` reads `Pick Enemy by UID id`. The name each pick filled is said after it,
+  muted, because that is the reader's next question. A pick only reads when the FAMILY is known -
+  the list was built from a group, or the variable carries the type - so nothing invents an object
+  type for a list nobody said the kind of. A walk-the-list-and-keep-the-nearest loop claims the
+  picking pattern with its own lines as evidence.
+- **Layers and Z order.** `z_index = 5` reads `Set Z order to 5`, with `(relative)` / `(absolute)`
+  when the file says which; `move_to_front()` / `move_to_back()` read `Move to top / bottom of
+  layer`; `reparent($\"../FX\")` reads `Move to layer FX`; a CanvasLayer's `layer` reads
+  `Set layer order` and its `visible` switch `Set layer visible / invisible`.
+- **Text styling.** `add_theme_font_size_override(\"font_size\", 32)` reads `Set font size to 32`,
+  `add_theme_color_override(\"font_color\", …)` reads `Set font colour to …`,
+  `horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER` reads `Set horizontal alignment to centre`,
+  `autowrap_mode` reads `Set word wrap on` / `off`, and a font written through `label_settings`
+  reads `Set font to bold.ttf`. `tr(\"HELLO\")` reads `translated \"HELLO\"` wherever it appears.
+- **The browser and the platform.** `OS.shell_open(url)` reads `Browser ▸ Go to URL`,
+  `DisplayServer.clipboard_set(x)` reads `Copy x to clipboard`, the fullscreen window mode reads
+  `Request fullscreen`, `OS.alert(m)` reads `Alert m`. `OS.has_feature(\"web\")` reads
+  `Platform ▸ Is on web` in the shipped Platform Info pack's own words, and
+  `OS.get_name() == \"Android\"` reads `Platform ▸ Is Android`.
+
+### Added - inheritance shown as one thing, under the word you choose for it
+
+A `class_name` that other scripts `extends` is a base class, and an event sheet has had one word for
+exactly that shape - an object set that shares instance variables and behaviors - since forever. The
+sheet now shows the hierarchy as one entry, and **the word it is shown under is a setting**.
+
+- `Family` with Familiar Words on, `Base class` with it off, or `Kind` or a word of your own from
+  Settings ▸ Words. One helper answers - it asks the Words registry for the word and adds the
+  plural the headings need - and every user-facing use goes through it, so the Object bar's section,
+  the head bar's folder and the object page change together and can never drift.
+- The head bar's folder lists the scripts that extend this object's class as its members, and, when
+  a Godot group of the same name exists, says so with a ✓ on the same line.
+- A new Doctor check, `family-group-drift`: a script that joins the \"enemy\" group without extending
+  Enemy is named out loud, because that is where an \"Invalid call\" at runtime comes from.
+
+### Added - the rows that write those shapes
+
+New picker rows whose templates are byte-for-byte what the readings above recognise, so a row
+dropped from the picker and the same shape typed by hand are the same file either way:
+Pick Nearest / Farthest / A Random One / Where / Top / Bottom / By UID (Nodes: Picking); Set Z Order,
+Set Z Order Absolute / Relative, Move To Top / Bottom Of Layer, Move To Layer, Set Layer Order,
+Set Layer Visible / Invisible (Layers); Set Font Size, Set Font Colour, Set Outline Colour, Set Font,
+Set Horizontal / Vertical Alignment, Set Word Wrap On / Off, Translated (Text); Go To URL, Request /
+Leave Fullscreen, Alert, Vibrate, Is Platform, Is On Web / Mobile / Desktop (Browser, Platform).
+
+### Changed
+
+- `Set Clipboard Text` is now **Copy To Clipboard**, the words an opened script's
+  `DisplayServer.clipboard_set(x)` reads with, so a picked row and a typed line say the same
+  sentence. Its id, its section and the line it writes are frozen and unchanged.
+
 ### Added - an opened script's PATTERNS read as the events they are
 
 The batches before this one made single statements read as the sheet's sentences. These are the

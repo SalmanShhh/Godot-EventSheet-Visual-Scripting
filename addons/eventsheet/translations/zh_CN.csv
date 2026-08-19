@@ -2812,3 +2812,47 @@ Dictionary: GDScript to events,对照词典：GDScript 与事件
 Coming from GDScript,从 GDScript 过来
 Sheet map,表关系图
 Click a sheet to open it. Click a line to find every place it comes from.,点击一张表即可打开。点击一条连线，找出它的每一个来源。
+Set Z order to {value},将 Z 顺序设为 {value}
+Set Z order relative to the layer,Z 顺序相对于图层
+Set Z order absolute,Z 顺序为绝对值
+Move to top of layer,移到图层最前
+Move to bottom of layer,移到图层最后
+Move to layer {layer},移到图层 {layer}
+Set layer order to {value},将图层顺序设为 {value}
+relative,相对
+absolute,绝对
+Set font size to {value},将字号设为 {value}
+Set font colour to {value},将字体颜色设为 {value}
+Set outline colour to {value},将描边颜色设为 {value}
+Set shadow colour to {value},将阴影颜色设为 {value}
+Set font to {value},将字体设为 {value}
+Set horizontal alignment to {value},将水平对齐设为 {value}
+Set vertical alignment to {value},将垂直对齐设为 {value}
+Set word wrap on,开启自动换行
+Set word wrap off,关闭自动换行
+centre,居中
+justified,两端对齐
+middle,中间
+translated,已翻译的
+Go to URL {url},打开网址 {url}
+Copy {value} to clipboard,将 {value} 复制到剪贴板
+Request fullscreen,请求全屏
+Leave fullscreen,退出全屏
+Alert {message},提示 {message}
+Vibrate for {milliseconds} ms,震动 {milliseconds} 毫秒
+Is on mobile,运行于移动端
+Is on desktop,运行于桌面端
+Is on web,运行于网页端
+Has feature tag {tag},具有功能标签 {tag}
+Is {platform},是 {platform}
+Pick a random {family},随机选择一个 {family}
+Pick top {family},选择最上面的 {family}
+Pick bottom {family},选择最下面的 {family}
+Pick {family} where {test},选择满足 {test} 的 {family}
+Pick {family} by UID {uid},按 UID {uid} 选择 {family}
+Family,族
+Base class,基类
+GLOBALS,全局
+extends it,继承它
+the group has the same members,该组成员相同
+what extends this object's class,继承该对象类的内容

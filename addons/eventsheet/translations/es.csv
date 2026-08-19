@@ -2812,3 +2812,47 @@ Dictionary: GDScript to events,Diccionario: de GDScript a eventos
 Coming from GDScript,Vienes de GDScript
 Sheet map,Mapa de hojas
 Click a sheet to open it. Click a line to find every place it comes from.,Haz clic en una hoja para abrirla. Haz clic en una línea para encontrar todos los sitios de los que viene.
+Set Z order to {value},Establecer orden Z en {value}
+Set Z order relative to the layer,Orden Z relativo a la capa
+Set Z order absolute,Orden Z absoluto
+Move to top of layer,Mover al frente de la capa
+Move to bottom of layer,Mover al fondo de la capa
+Move to layer {layer},Mover a la capa {layer}
+Set layer order to {value},Establecer orden de capa en {value}
+relative,relativo
+absolute,absoluto
+Set font size to {value},Establecer tamano de fuente en {value}
+Set font colour to {value},Establecer color de fuente en {value}
+Set outline colour to {value},Establecer color de contorno en {value}
+Set shadow colour to {value},Establecer color de sombra en {value}
+Set font to {value},Establecer fuente en {value}
+Set horizontal alignment to {value},Establecer alineacion horizontal en {value}
+Set vertical alignment to {value},Establecer alineacion vertical en {value}
+Set word wrap on,Activar ajuste de linea
+Set word wrap off,Desactivar ajuste de linea
+centre,centrado
+justified,justificado
+middle,medio
+translated,traducido
+Go to URL {url},Ir a la URL {url}
+Copy {value} to clipboard,Copiar {value} al portapapeles
+Request fullscreen,Solicitar pantalla completa
+Leave fullscreen,Salir de pantalla completa
+Alert {message},Aviso {message}
+Vibrate for {milliseconds} ms,Vibrar {milliseconds} ms
+Is on mobile,Esta en movil
+Is on desktop,Esta en escritorio
+Is on web,Esta en web
+Has feature tag {tag},Tiene la etiqueta {tag}
+Is {platform},Es {platform}
+Pick a random {family},Elegir un {family} al azar
+Pick top {family},Elegir el {family} superior
+Pick bottom {family},Elegir el {family} inferior
+Pick {family} where {test},Elegir {family} donde {test}
+Pick {family} by UID {uid},Elegir {family} por UID {uid}
+Family,Familia
+Base class,Clase base
+GLOBALS,GLOBALES
+extends it,la extiende
+the group has the same members,el grupo tiene los mismos miembros
+what extends this object's class,que extiende la clase de este objeto

@@ -2812,3 +2812,47 @@ Dictionary: GDScript to events,사전: GDScript와 이벤트
 Coming from GDScript,GDScript에서 왔다면
 Sheet map,시트 맵
 Click a sheet to open it. Click a line to find every place it comes from.,시트를 클릭하면 열립니다. 선을 클릭하면 그것이 오는 모든 곳을 찾습니다.
+Set Z order to {value},Z 순서를 {value}(으)로 설정
+Set Z order relative to the layer,Z 순서를 레이어 기준으로
+Set Z order absolute,Z 순서를 절대값으로
+Move to top of layer,레이어 맨 앞으로 이동
+Move to bottom of layer,레이어 맨 뒤로 이동
+Move to layer {layer},{layer} 레이어로 이동
+Set layer order to {value},레이어 순서를 {value}(으)로 설정
+relative,상대
+absolute,절대
+Set font size to {value},글꼴 크기를 {value}(으)로 설정
+Set font colour to {value},글꼴 색을 {value}(으)로 설정
+Set outline colour to {value},외곽선 색을 {value}(으)로 설정
+Set shadow colour to {value},그림자 색을 {value}(으)로 설정
+Set font to {value},글꼴을 {value}(으)로 설정
+Set horizontal alignment to {value},가로 정렬을 {value}(으)로 설정
+Set vertical alignment to {value},세로 정렬을 {value}(으)로 설정
+Set word wrap on,자동 줄바꿈 켜기
+Set word wrap off,자동 줄바꿈 끄기
+centre,가운데
+justified,양쪽 맞춤
+middle,중간
+translated,번역된
+Go to URL {url},URL {url} 열기
+Copy {value} to clipboard,{value}을(를) 클립보드에 복사
+Request fullscreen,전체 화면 요청
+Leave fullscreen,전체 화면 종료
+Alert {message},{message} 알림
+Vibrate for {milliseconds} ms,{milliseconds} ms 진동
+Is on mobile,모바일에서 실행 중
+Is on desktop,데스크톱에서 실행 중
+Is on web,웹에서 실행 중
+Has feature tag {tag},기능 태그 {tag} 보유
+Is {platform},{platform}임
+Pick a random {family},무작위 {family} 선택
+Pick top {family},맨 위 {family} 선택
+Pick bottom {family},맨 아래 {family} 선택
+Pick {family} where {test},{test} 인 {family} 선택
+Pick {family} by UID {uid},UID {uid} 의 {family} 선택
+Family,패밀리
+Base class,기반 클래스
+GLOBALS,전역
+extends it,이를 상속함
+the group has the same members,그룹 구성원이 동일함
+what extends this object's class,이 오브젝트의 클래스를 상속하는 것

@@ -277,8 +277,10 @@ func scene_entries() -> Array:
 ##   [{"id", "title", "note", "entries": Array}]
 ## in the order they are drawn. Sections with nothing in them are still returned (the header says so);
 ## the tree simply does not build an empty one.
+## T9. `familiar_words` decides only what the last section is CALLED - the sheet's word for an
+## inheritance set is a setting, and every place that says it asks the one helper.
 static func sections_for(census: Array, scene_only: Array, scene_name: String,
-		input_actions: Array = []) -> Array:
+		input_actions: Array = [], familiar_words: bool = false) -> Array:
 	var used: Array = []
 	var globals: Array = []
 	for entry: Variant in census:
@@ -304,7 +306,13 @@ static func sections_for(census: Array, scene_only: Array, scene_name: String,
 			"note": EventSheetL10n.translate("drag one onto the sheet to start an event"),
 			"entries": input_entries(input_actions)
 		},
-		{"id": "globals", "title": EventSheetL10n.translate("GLOBALS & FAMILIES"), "note": "", "entries": globals}
+		{
+			"id": "globals",
+			"title": "%s & %s" % [EventSheetL10n.translate("GLOBALS"),
+				EventSheetFamilyFacts.section_title(familiar_words)],
+			"note": "",
+			"entries": globals
+		}
 	]
 
 
@@ -490,6 +498,18 @@ static func matches_filter(entry: Dictionary, filter_text: String) -> bool:
 # ── The tree ──────────────────────────────────────────────────────────────────────────────────
 
 
+## T9. Whether the sheet's own glossary is on, which is the fallback the word for an inheritance set
+## follows when the project has not pinned one. Read from the same place the canvas reads it, so the
+## bar's heading and the rows never disagree about which glossary is showing.
+func _familiar_words() -> bool:
+	if not Engine.is_editor_hint():
+		return false
+	var editor_settings: EditorSettings = EditorInterface.get_editor_settings()
+	if editor_settings == null:
+		return false
+	return bool(editor_settings.get_project_metadata("eventsheets", "familiar_words", false))
+
+
 func _rebuild_tree() -> void:
 	tree.clear()
 	var root: TreeItem = tree.create_item()
@@ -499,7 +519,8 @@ func _rebuild_tree() -> void:
 	# Hoisted: the class map is a read of the whole sheet, and it is the same answer for every entry.
 	_class_map = EventSheetViewportReadingRows.object_class_map(_sheet)
 	var shown: int = 0
-	for section_entry: Variant in sections_for(_entries, _scene_only, _scene_name, _input_actions):
+	for section_entry: Variant in sections_for(_entries, _scene_only, _scene_name, _input_actions,
+			_familiar_words()):
 		var section: Dictionary = section_entry
 		var visible_entries: Array = []
 		for entry: Variant in sorted_entries(section.get("entries", []), _sort):

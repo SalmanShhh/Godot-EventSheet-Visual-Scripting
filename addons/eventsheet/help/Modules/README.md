@@ -69,6 +69,7 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 - [Triggers, Signals And When Rows Run](Triggers-Signals-And-When-Rows-Run.md) - the lifecycle and per-frame triggers, scene-tree and Area signals, On Signal and Emit Signal, and the gates that turn "every tick" into "once".
 - [Multiplayer](Multiplayer.md) - messages one peer runs on the others, who is the host, who owns which object, and this peer's own id.
 - [Making Web Requests](Making-Web-Requests.md) - the AJAX object: ask a server for something, send it something, and read the answer back as text.
+- [Around Objects: Picking, Layers, Text And The Browser](Around-Objects.md) - which instances the rows are about, where an object draws, how its text is styled, and what the game asks of the machine it runs on.
 
 ## Look and sound
 

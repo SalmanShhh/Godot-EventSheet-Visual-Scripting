@@ -2812,3 +2812,47 @@ Dictionary: GDScript to events,Dizionario: da GDScript agli eventi
 Coming from GDScript,Arrivi da GDScript
 Sheet map,Mappa dei fogli
 Click a sheet to open it. Click a line to find every place it comes from.,Fai clic su un foglio per aprirlo. Fai clic su una linea per trovare ogni punto da cui arriva.
+Set Z order to {value},Imposta ordine Z a {value}
+Set Z order relative to the layer,Ordine Z relativo al livello
+Set Z order absolute,Ordine Z assoluto
+Move to top of layer,Porta in cima al livello
+Move to bottom of layer,Porta in fondo al livello
+Move to layer {layer},Sposta sul livello {layer}
+Set layer order to {value},Imposta ordine livello a {value}
+relative,relativo
+absolute,assoluto
+Set font size to {value},Imposta dimensione carattere a {value}
+Set font colour to {value},Imposta colore carattere a {value}
+Set outline colour to {value},Imposta colore contorno a {value}
+Set shadow colour to {value},Imposta colore ombra a {value}
+Set font to {value},Imposta carattere a {value}
+Set horizontal alignment to {value},Imposta allineamento orizzontale a {value}
+Set vertical alignment to {value},Imposta allineamento verticale a {value}
+Set word wrap on,Attiva a capo automatico
+Set word wrap off,Disattiva a capo automatico
+centre,centrato
+justified,giustificato
+middle,centro
+translated,tradotto
+Go to URL {url},Vai all'URL {url}
+Copy {value} to clipboard,Copia {value} negli appunti
+Request fullscreen,Richiedi schermo intero
+Leave fullscreen,Esci da schermo intero
+Alert {message},Avviso {message}
+Vibrate for {milliseconds} ms,Vibra per {milliseconds} ms
+Is on mobile,E su mobile
+Is on desktop,E su desktop
+Is on web,E sul web
+Has feature tag {tag},Ha il tag {tag}
+Is {platform},E {platform}
+Pick a random {family},Scegli un {family} a caso
+Pick top {family},Scegli il {family} in cima
+Pick bottom {family},Scegli il {family} in fondo
+Pick {family} where {test},Scegli {family} dove {test}
+Pick {family} by UID {uid},Scegli {family} con UID {uid}
+Family,Famiglia
+Base class,Classe base
+GLOBALS,GLOBALI
+extends it,la estende
+the group has the same members,il gruppo ha gli stessi membri
+what extends this object's class,cosa estende la classe di questo oggetto

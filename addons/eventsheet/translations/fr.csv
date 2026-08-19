@@ -2812,3 +2812,47 @@ Dictionary: GDScript to events,Dictionnaire : GDScript vers les événements
 Coming from GDScript,Vous venez de GDScript
 Sheet map,Carte des feuilles
 Click a sheet to open it. Click a line to find every place it comes from.,Cliquez sur une feuille pour l'ouvrir. Cliquez sur une ligne pour trouver tous les endroits d'où elle vient.
+Set Z order to {value},Definir l'ordre Z sur {value}
+Set Z order relative to the layer,Ordre Z relatif au calque
+Set Z order absolute,Ordre Z absolu
+Move to top of layer,Placer devant sur le calque
+Move to bottom of layer,Placer derriere sur le calque
+Move to layer {layer},Deplacer vers le calque {layer}
+Set layer order to {value},Definir l'ordre du calque sur {value}
+relative,relatif
+absolute,absolu
+Set font size to {value},Definir la taille de police sur {value}
+Set font colour to {value},Definir la couleur du texte sur {value}
+Set outline colour to {value},Definir la couleur du contour sur {value}
+Set shadow colour to {value},Definir la couleur de l'ombre sur {value}
+Set font to {value},Definir la police sur {value}
+Set horizontal alignment to {value},Definir l'alignement horizontal sur {value}
+Set vertical alignment to {value},Definir l'alignement vertical sur {value}
+Set word wrap on,Activer le retour a la ligne
+Set word wrap off,Desactiver le retour a la ligne
+centre,centre
+justified,justifie
+middle,milieu
+translated,traduit
+Go to URL {url},Ouvrir l'URL {url}
+Copy {value} to clipboard,Copier {value} dans le presse-papiers
+Request fullscreen,Demander le plein ecran
+Leave fullscreen,Quitter le plein ecran
+Alert {message},Alerte {message}
+Vibrate for {milliseconds} ms,Vibrer pendant {milliseconds} ms
+Is on mobile,Est sur mobile
+Is on desktop,Est sur ordinateur
+Is on web,Est sur le web
+Has feature tag {tag},Possede le tag {tag}
+Is {platform},Est {platform}
+Pick a random {family},Choisir un {family} au hasard
+Pick top {family},Choisir le {family} du dessus
+Pick bottom {family},Choisir le {family} du dessous
+Pick {family} where {test},Choisir les {family} ou {test}
+Pick {family} by UID {uid},Choisir le {family} d'UID {uid}
+Family,Famille
+Base class,Classe de base
+GLOBALS,GLOBAUX
+extends it,en herite
+the group has the same members,le groupe a les memes membres
+what extends this object's class,ce qui herite de la classe de cet objet

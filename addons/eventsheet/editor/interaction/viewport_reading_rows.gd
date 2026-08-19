@@ -110,7 +110,102 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# Not one of those questions can be answered from a single line, so all of them are answered from
 	# one walk here and handed to the grammar as ordinary context.
 	extras.merge(EventSheetBehaviorShapes.facts(ordered_code_lines(sheet)), true)
+	# ── T10 lens hook ──────────────────────────────────────────────────────────────────────────
+	# Whether each object's Z order counts from its parent or from the layer. The file states it on a
+	# line of its own, a line away from the number it qualifies, so the answer is gathered once here
+	# rather than guessed at per row.
+	extras.merge(around_objects_facts(sheet), true)
 	return extras
+
+
+## T10 / T8. What the FILE says about its drawing order and about the lists it picks from:
+##
+##   z_order_relative  {object label: true when its Z order counts from the parent}
+##   family_lists      {local name: the family its members are}
+##
+## Absent for an object the file never says it about, and every reading built on it then simply says
+## nothing extra - the row still shows the number the file wrote.
+static func around_objects_facts(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	var relative: Dictionary = {}
+	var families: Dictionary = {}
+	var own_object: String = script_object_name(sheet)
+	for line: String in ordered_code_lines(sheet):
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		_note_family_list(text, families)
+		var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+		if assign_at <= 0:
+			continue
+		var target: String = text.substr(0, assign_at).strip_edges().trim_prefix("self.")
+		var value: String = text.substr(assign_at + 3).strip_edges()
+		if value != "true" and value != "false":
+			continue
+		if target == "z_as_relative":
+			relative[own_object] = value == "true"
+			continue
+		if not target.ends_with(".z_as_relative"):
+			continue
+		var receiver: String = target.substr(0, target.length() - 14).strip_edges()
+		if receiver.is_empty():
+			continue
+		relative[EventSheetSentence.object_of_reference(receiver)] = value == "true"
+	return {"z_order_relative": relative, "family_lists": families}
+
+
+## T8. Records the family a list holds, when the LINE that made the list says it: a list built from a
+## group holds that group's family, and a list declared `Array[Enemy]` holds Enemies. A list the file
+## never said the kind of is simply absent, and every pick reading then declines to fire.
+static func _note_family_list(text: String, families: Dictionary) -> void:
+	var declared: String = _declared_local_name(text)
+	if declared.is_empty():
+		return
+	var typed: String = _declared_local_type(text)
+	if not typed.is_empty():
+		var typed_family: String = EventSheetSentence.family_word_of(typed)
+		if not typed_family.is_empty():
+			families[declared] = typed_family
+			return
+	var group: String = _group_list_source(_declared_local_value(text))
+	if group.is_empty():
+		return
+	var group_family: String = EventSheetSentence.family_word_of(group)
+	if not group_family.is_empty():
+		families[declared] = group_family
+
+
+## T8. The group a `get_tree().get_nodes_in_group("enemy")` list was built from, or "" for any other
+## value. Only the literal group name answers: a group named by a variable is a name this reading
+## cannot show, so the list keeps its own words.
+static func _group_list_source(value: String) -> String:
+	const HEADS: PackedStringArray = [
+		"get_tree().get_nodes_in_group(", "get_nodes_in_group("
+	]
+	var text: String = value.strip_edges()
+	for head: String in HEADS:
+		if not text.begins_with(head) or not text.ends_with(")"):
+			continue
+		var inner: String = text.substr(head.length(), text.length() - head.length() - 1).strip_edges()
+		if inner.begins_with("\"") and inner.ends_with("\"") and inner.length() > 2:
+			return inner.substr(1, inner.length() - 2)
+	return ""
+
+
+## T8. The type a declaration carries (`var enemies: Array[Enemy] = ...`), or "" when it carries none.
+static func _declared_local_type(text: String) -> String:
+	var body: String = text.strip_edges()
+	var keyword: String = EventSheetSentence.leading_word(body)
+	if keyword != "var" and keyword != "const":
+		return ""
+	body = body.substr(keyword.length()).strip_edges()
+	var assign_at: int = EventSheetSentence.top_level_index(body, " = ")
+	if assign_at <= 0:
+		return ""
+	var head: String = body.substr(0, assign_at).strip_edges()
+	var colon_at: int = head.find(":")
+	return "" if colon_at < 0 else head.substr(colon_at + 1).strip_edges()
 
 
 ## Batch 8. Re-state every pattern this sheet writes in the registry, on the row that OWNS it - the

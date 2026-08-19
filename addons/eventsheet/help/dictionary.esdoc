@@ -27,11 +27,13 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_exception` | [Ignore Node In RayCast (2D)](ace:Core/RayCast2DAddException) | Raycast 2D | Vocabulary |
 | `add_inspector_plugin` | [Add Inspector Plugin](ace:Core/AddEditorInspectorPlugin) | Editor Tools | Vocabulary |
 | `add_node` | [Select Node In Editor](ace:Core/SelectNodeInEditor) | Editor Tools | Vocabulary |
-| `add_theme_color_override` | [Override Theme Color](ace:Core/SetThemeColorOverride) | UI | Vocabulary |
-| `add_theme_font_override` | [Use Font](ace:Core/UseFont) | UI | Vocabulary |
+| `add_theme_color_override` | [Set Font Colour](ace:Core/SetFontColour) | Text | Vocabulary |
+| `add_theme_font_override` | [Set Font](ace:Core/SetFontFile) | Text | Vocabulary |
+| `add_theme_font_size_override` | [Set Font Size](ace:Core/SetFontSize) | Text | Vocabulary |
 | `add_to_group` | [Add To Group](ace:Core/AddToGroup) | Groups | Vocabulary |
 | `add_tool_menu_item` | [Add Tools Menu Item](ace:Core/AddToolsMenuItem) | Editor Tools | Vocabulary |
 | `affine_inverse` | [Screen Point To World](ace:Core/ScreenPointToWorld) | Math & Random | Vocabulary |
+| `alert` | [Alert](ace:Core/BrowserAlert) | Browser | Vocabulary |
 | `all` | [All Match](ace:Core/ArrayAll) | Variables: Array | Vocabulary |
 | `always_on_top` | [Set Always On Top](ace:Core/WindowSetAlwaysOnTop) | Game Window | Vocabulary |
 | `ambient_light_energy` | [Set Ambient Light](ace:Core/SetAmbientLight) | Lighting | Vocabulary |
@@ -57,7 +59,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `attenuation` | [Set Falloff](ace:Core/AudioSetFalloff) | Audio | Vocabulary |
 | `auto_clear` | [Is Auto Clear](ace:Core/DrawIsAutoClear) | Drawing | Vocabulary |
 | `auto_translate_mode` | [Keep This Text Untranslated](ace:Core/KeepTextUntranslated) | Translation | Vocabulary |
-| `back` | [Last Item](ace:Core/ArrayBack) | Variables: Array | Vocabulary |
+| `autowrap_mode` | [Set Word Wrap On](ace:Core/SetWordWrapOn) | Text | Vocabulary |
+| `back` | [Pick Top](ace:Core/PickTop) | Nodes: Picking | Vocabulary |
 | `base64_to_variant` | [Value From Share Code](ace:Core/ValueFromShareCode) | Utility: Window | Vocabulary |
 | `basis` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
 | `begins_with` | [Text Begins With](ace:Core/StringBeginsWith) | Variables: String | Vocabulary |
@@ -90,7 +93,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `clipboard_get_image` | [Clipboard Image](ace:Core/ClipboardImage) | Utility: Window | Vocabulary |
 | `clipboard_has` | [Clipboard Has Text](ace:Core/ClipboardHasText) | Utility: Window | Vocabulary |
 | `clipboard_has_image` | [Clipboard Has Image](ace:Core/ClipboardHasImage) | Utility: Window | Vocabulary |
-| `clipboard_set` | [Set Clipboard Text](ace:Core/SetClipboard) | Utility: Window | Vocabulary |
+| `clipboard_set` | [Copy To Clipboard](ace:Core/SetClipboard) | Utility: Window | Vocabulary |
 | `close` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
 | `collide_with_areas` | [RayCast Detects Areas (2D)](ace:Core/RayCast2DSetHitAreas) | Raycast 2D | Vocabulary |
 | `collide_with_bodies` | [RayCast Detects Bodies (2D)](ace:Core/RayCast2DSetHitBodies) | Raycast 2D | Vocabulary |
@@ -180,7 +183,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `frame` | [Set Animation Frame](ace:Core/SetSpriteFrame) | General Actions | Vocabulary |
 | `frame_post_draw` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
 | `from_hsv` | [Color From HSV](ace:Core/ColorFromHSV) | Color | Vocabulary |
-| `front` | [First Item](ace:Core/ArrayFront) | Variables: Array | Vocabulary |
+| `front` | [Pick Bottom](ace:Core/PickBottom) | Nodes: Picking | Vocabulary |
 | `func` | [Lambda (returns a value)](ace:Core/LambdaValue) | Helpers | Vocabulary |
 | `get` | [Get Key (with default)](ace:Core/DictGet) | Variables: Dictionary | Vocabulary |
 | `get_aabb` | [Mesh Size](ace:Core/MeshSize) | Mesh | Vocabulary |
@@ -258,7 +261,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_monitor` | [Performance Monitor](ace:Core/GetPerfMonitor) | Utility: Debug | Vocabulary |
 | `get_mouse_position` | [Mouse Position (screen)](ace:Core/GetMouseScreenPosition) | Mouse | Vocabulary |
 | `get_multiline_string_size` | [Wrapped Text Height](ace:Core/WrappedTextHeight) | Text | Vocabulary |
-| `get_name` | [OS Name](ace:Core/GetOSName) | Platform | Vocabulary |
+| `get_name` | [Is Platform](ace:Core/IsPlatform) | Platform | Vocabulary |
 | `get_next_path_position` | [Next Path Position](ace:Core/GetNextPathPosition) | General Expressions | Vocabulary |
 | `get_node` | [Get Node](ace:Core/GetNode) | Helpers | Vocabulary |
 | `get_node_count_in_group` | [Count Nodes In Group](ace:Core/GetNodeCountInGroup) | Groups | Vocabulary |
@@ -332,7 +335,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `has_all` | [Has All Keys](ace:Core/DictHasAllKeys) | Variables: Dictionary | Vocabulary |
 | `has_animation` | [Has Animation](ace:Core/HasAnimation) | Animation | Vocabulary |
 | `has_char` | [Font Can Show](ace:Core/FontCanShow) | UI | Vocabulary |
-| `has_feature` | [Platform Has Feature](ace:Core/HasOSFeature) | Platform | Vocabulary |
+| `has_feature` | [Is On Web](ace:Core/IsOnWebPlatform) | Platform | Vocabulary |
 | `has_focus` | [Has Focus](ace:Core/HasFocus) | UI | Vocabulary |
 | `has_meta` | [Has Metadata](ace:Core/HasMeta) | Metadata | Vocabulary |
 | `has_method` | [Object Has Method](ace:Core/ObjectHasMethod) | Compare: Objects | Vocabulary |
@@ -355,6 +358,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `inner_radius` | [Make Torus Mesh](ace:Core/SetTorusMesh) | Mesh | Vocabulary |
 | `insert` | [Insert At](ace:Core/ArrayInsert) | Variables: Array | Vocabulary |
 | `inspect_object` | [Inspect In Editor](ace:Core/InspectInEditor) | Editor Tools | Vocabulary |
+| `instance_from_id` | [Pick By UID](ace:Core/PickByUid) | Nodes: Picking | Vocabulary |
 | `instantiate` | [Spawn Scene Instance](ace:Core/SpawnScene) | Scene | Vocabulary |
 | `int` | [Is Even](ace:Core/IsEven) | Compare: Numbers | Vocabulary |
 | `intersect_point` | [Query Bodies At Point (2D)](ace:Core/QueryBodiesAtPoint2D) | Overlap 2D | Vocabulary |
@@ -408,6 +412,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_zero_approx` | [Is Zero (approx)](ace:Core/IsZeroApprox) | Math & Random | Vocabulary |
 | `join` | [Join To Text](ace:Core/ArrayJoin) | Variables: Array | Vocabulary |
 | `keys` | [Dictionary Keys](ace:Core/DictKeys) | Variables: Dictionary | Vocabulary |
+| `layer` | [Set Layer Order](ace:Core/SetLayerOrder) | Layers | Vocabulary |
 | `layout_direction` | [Mirror Layout For Language](ace:Core/MirrorLayoutForLanguage) | Translation | Vocabulary |
 | `left` | [Left](ace:Core/TextLeft) | Text | Vocabulary |
 | `len` | ' count | System | Expressions |
@@ -465,6 +470,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `move_and_slide` | [Move And Slide](ace:Core/MoveAndSlide) | General Actions | Vocabulary |
 | `move_child` | [Move Child To Index](ace:Core/MoveChild) | Nodes | Vocabulary |
 | `move_to_center` | [Center Window](ace:Core/WindowCenter) | Game Window | Vocabulary |
+| `move_to_front` | [Move To Top Of Layer](ace:Core/MoveToTopOfLayer) | Layers | Vocabulary |
 | `move_toward` | [Move Toward](ace:Core/MoveTowardValue) | Helpers | Vocabulary |
 | `name` | [Set Node Name](ace:Core/SetNodeName) | Nodes | Vocabulary |
 | `naturalnocasecmp_to` | [Text Natural Order](ace:Core/TextNaturalOrder) | Compare: Text | Vocabulary |
@@ -554,7 +560,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `remove_tool_menu_item` | [Remove Tools Menu Item](ace:Core/RemoveToolsMenuItem) | Editor Tools | Vocabulary |
 | `rename_absolute` | [Move / Rename File](ace:Core/MoveFile) | Files | Vocabulary |
 | `render_target_update_mode` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
-| `reparent` | [Reparent To](ace:Core/ReparentNode) | Utility: Nodes | Vocabulary |
+| `reparent` | [Move To Layer](ace:Core/MoveToLayer) | Layers | Vocabulary |
 | `repeat` | [Repeat Text](ace:Core/StringRepeat) | Variables: String | Vocabulary |
 | `replace` | [Replace In Text](ace:Core/TextReplace) | Text | Vocabulary |
 | `request` | [Request](ace:Core/AjaxRequest) | AJAX | Vocabulary |
@@ -631,6 +637,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_value` | [Save Setting](ace:Core/SaveSetting) | Utility: Settings | Vocabulary |
 | `shadow_enabled` | [Set Shadows On/Off](ace:Core/SetLightShadows) | Lighting | Vocabulary |
 | `shape` | [Query Bodies In Circle (2D)](ace:Core/QueryBodiesInCircle2D) | Overlap 2D | Vocabulary |
+| `shell_open` | [Go To URL](ace:Core/GoToUrl) | Browser | Vocabulary |
 | `show` | [Show](ace:Core/ShowNode) | General Actions | Vocabulary |
 | `shuffle` | [Shuffle Array](ace:Core/ArrayShuffle) | Variables: Array | Vocabulary |
 | `sign` | [Sign](ace:Core/SignValue) | Helpers | Vocabulary |
@@ -681,7 +688,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `to_upper` | [Uppercase](ace:Core/TextUpper) | Text | Vocabulary |
 | `to_utf8_buffer` | [First To Finish](ace:Core/FirstToFinish) | Run Context | Vocabulary |
 | `top_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
-| `tr` | [Translate](ace:Core/Translate) | Translation | Vocabulary |
+| `tr` | [Translated](ace:Core/TranslatedText) | Text | Vocabulary |
 | `tr_n` | [Translate Plural](ace:Core/TranslatePlural) | Translation | Vocabulary |
 | `transform` | [Query Bodies In Circle (2D)](ace:Core/QueryBodiesInCircle2D) | Overlap 2D | Vocabulary |
 | `translate` | [Move By (3D)](ace:Core/TranslateNode3D) | General Actions | Vocabulary |
@@ -704,7 +711,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `var_to_str` | [To Text](ace:Core/Stringify) | Debug | Vocabulary |
 | `variant_to_base64` | [Share Code For](ace:Core/ShareCodeFor) | Utility: Window | Vocabulary |
 | `velocity` | [Get Velocity](ace:Core/GetVelocity2D) | General Expressions | Vocabulary |
-| `vibrate_handheld` | [Vibrate Phone](ace:Core/VibrationHandheld) | Vibration | Vocabulary |
+| `vibrate_handheld` | [Vibrate](ace:Core/VibrateHandheld) | Browser | Vocabulary |
 | `viewport_set_debug_draw` | [Set Debug Draw Mode](ace:Core/RenderingSetDebugDraw) | Rendering | Vocabulary |
 | `viewport_set_msaa_2d` | [Set MSAA (2D)](ace:Core/RenderingSetMsaa2D) | Rendering | Vocabulary |
 | `viewport_set_msaa_3d` | [Set MSAA (3D)](ace:Core/RenderingSetMsaa3D) | Rendering | Vocabulary |
@@ -726,6 +733,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `x` | [Is Cell In Bounds](ace:Core/IsCellInBounds) | Math & Random | Vocabulary |
 | `y` | [Is Jumping](ace:Core/IsJumping) | Collisions | Vocabulary |
 | `z` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
+| `z_as_relative` | [Set Z Order Absolute](ace:Core/SetZOrderAbsolute) | Layers | Vocabulary |
+| `z_index` | [Set Z Order](ace:Core/SetZOrder) | Layers | Vocabulary |
 | `zoom` | [Set Zoom](ace:Core/SetCameraZoom) | Camera | Vocabulary |
 ",
 "version": 1

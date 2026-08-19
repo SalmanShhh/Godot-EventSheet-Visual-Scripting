@@ -85,6 +85,7 @@ static func run() -> Dictionary:
 	check_vocabulary_doc(findings)
 	check_pack_reading(findings)
 	check_disabled_pack_usage(sheet_paths, findings)
+	check_family_group_agreement(findings)
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:
@@ -1852,6 +1853,42 @@ static func check_vocabulary_doc(findings: Array[Dictionary]) -> void:
 	if FileAccess.get_file_as_string(path) != EventSheetVocabularyDoc.generate():
 		_add(findings, "info", "vocabulary-doc", path,
 			"Vocabulary doc is stale - regenerate via Tools → Vocabulary Doc… or tools/vocabulary_doc.gd.")
+
+
+## T9. A Godot group and the inheritance set of the same name are the two halves of one idea, and
+## they drift: a script joins the "enemy" group without extending Enemy, and the first row that
+## calls an Enemy function on it fails at runtime with "Invalid call". The check says which script,
+## which group and which base class, once per stray.
+##
+## Read entirely from what the project already declares - its global class list, and the literal
+## `add_to_group("x")` lines of the scripts on it - so nothing is instantiated and nothing is loaded.
+## A group whose name matches no declared class is not a disagreement, it is just a group.
+static func check_family_group_agreement(findings: Array[Dictionary]) -> void:
+	var families: Dictionary = EventSheetFamilyFacts.project_families()
+	if families.is_empty():
+		return
+	# The base a group name stands for, matched the way a reader matches them: by name, ignoring case.
+	var base_by_group: Dictionary = {}
+	for base: String in families:
+		base_by_group[base.to_lower()] = base
+	for entry: Variant in ProjectSettings.get_global_class_list():
+		var record: Dictionary = entry
+		var class_text: String = str(record.get("class", "")).strip_edges()
+		var path: String = str(record.get("path", ""))
+		if class_text.is_empty() or path.is_empty():
+			continue
+		var facts: Dictionary = EventSheetObjectFacts.script_facts(path)
+		for group: Variant in (facts.get("families", PackedStringArray()) as PackedStringArray):
+			var group_name: String = str(group).strip_edges()
+			var base_name: String = str(base_by_group.get(group_name.to_lower(), ""))
+			if base_name.is_empty() or base_name == class_text:
+				continue
+			var members: PackedStringArray = (families[base_name] as Dictionary).get(
+				"members", PackedStringArray())
+			if members.has(class_text):
+				continue
+			_add(findings, "warning", "family-group-drift", path,
+				EventSheetFamilyFacts.stray_message(base_name, group_name, class_text, false))
 
 
 ## Everything in a sheet that can REFERENCE vocabulary: raw code, ACE param values and

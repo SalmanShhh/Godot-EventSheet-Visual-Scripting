@@ -1131,21 +1131,53 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 			"%s - %s" % [EventSheetL10n.translate("on this object"), " · ".join(names)],
 			members))
 	var families: PackedStringArray = PackedStringArray(facts.get("families", PackedStringArray()))
-	if not families.is_empty():
+	# ── T9 ──────────────────────────────────────────────────────────────────────────────────────
+	# The inheritance set this object is part of: the scripts that extend its class, shown as the
+	# members they are. The word the folder is called goes through the one helper, because a project
+	# may have pinned "Base class" or "Kind" and it has to change in every place at once.
+	var familiar: bool = _familiar_words_enabled()
+	var inheritance: Array[EventRowData] = _inheritance_member_rows(sheet, families)
+	if not families.is_empty() or not inheritance.is_empty():
 		var family_rows: Array[EventRowData] = []
 		for index in range(families.size()):
 			family_rows.append(_build_object_fact_row(
 				sheet, "object_family_%d" % index, families[index], ""))
+		family_rows.append_array(inheritance)
 		# The Godot word rides along ONCE, muted: a group IS the sheet's family, and a reader who knows
 		# only Godot's half of that pair needs the bridge here and nowhere else.
+		var summary: String = "%s - %s %s" % [
+			EventSheetL10n.translate("this object belongs to"), ", ".join(families),
+			EventSheetL10n.translate("(groups)")
+		] if not families.is_empty() else EventSheetL10n.translate("what extends this object's class")
 		bars.append(_build_head_group_row(
-			sheet, "object_families", EventSheetL10n.translate("Families"),
-			"%s - %s %s" % [
-				EventSheetL10n.translate("this object belongs to"), ", ".join(families),
-				EventSheetL10n.translate("(groups)")
-			],
-			family_rows))
+			sheet, "object_families", EventSheetFamilyFacts.plural(familiar), summary, family_rows))
 	return bars
+
+
+## T9. One row per script that extends this sheet's own class, plus, when a Godot group of the same
+## name exists, whether the two agree - a ✓ when the group's members are the set's, and the stray
+## named out loud when one of them is not. Empty when the sheet's class is nobody's base, which is
+## the common case and must cost nothing.
+func _inheritance_member_rows(sheet: EventSheetResource, groups: PackedStringArray) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	var base: String = sheet.custom_class_name.strip_edges()
+	if base.is_empty():
+		return rows
+	var families: Dictionary = EventSheetFamilyFacts.project_families()
+	if not families.has(base):
+		return rows
+	var members: PackedStringArray = (families[base] as Dictionary).get("members", PackedStringArray())
+	for index in range(members.size()):
+		rows.append(_build_object_fact_row(sheet, "object_extends_%d" % index, members[index],
+			EventSheetL10n.translate("extends it")))
+	# A group named after the base is the other half of the same idea, and the interesting answer is
+	# whether the two lists are the same one.
+	for group: String in groups:
+		if group.to_lower() != base.to_lower():
+			continue
+		rows.append(_build_object_fact_row(sheet, "object_family_group", "\"%s\"" % group,
+			"%s ✓" % EventSheetL10n.translate("the group has the same members")))
+	return rows
 
 
 ## R40 - the "Global variables used here" folder: which of the project's globals this file reads or
@@ -10117,6 +10149,29 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"words": "Background work",
 		"adoptable": "background_runner",
 		"ace_ids": []
+	},
+	"picking": {
+		"words": "Picking",
+		"ace_ids": ["Core/PickNearest", "Core/PickFarthest", "Core/PickRandomInstance",
+			"Core/PickWhere", "Core/PickTop", "Core/PickBottom", "Core/PickByUid"]
+	},
+	"layers": {
+		"words": "Layers and Z order",
+		"ace_ids": ["Core/SetZOrder", "Core/SetZOrderAbsolute", "Core/SetZOrderRelative",
+			"Core/MoveToTopOfLayer", "Core/MoveToBottomOfLayer", "Core/MoveToLayer",
+			"Core/SetLayerOrder", "Core/SetVisible", "Core/SetInvisible"]
+	},
+	"text": {
+		"words": "Text",
+		"ace_ids": ["Core/SetFontSize", "Core/SetFontColour", "Core/SetOutlineColour",
+			"Core/SetFontFile", "Core/SetWordWrapOn", "Core/SetWordWrapOff", "Core/TranslatedText"]
+	},
+	"platform": {
+		"words": "Browser and platform",
+		"ace_ids": ["Core/GoToUrl", "Core/SetClipboard", "Core/RequestFullscreen",
+			"Core/LeaveFullscreen", "Core/BrowserAlert", "Core/VibrateHandheld",
+			"Core/IsPlatform", "Core/IsOnWebPlatform", "Core/IsOnMobilePlatform",
+			"Core/IsOnDesktopPlatform"]
 	}
 }
 

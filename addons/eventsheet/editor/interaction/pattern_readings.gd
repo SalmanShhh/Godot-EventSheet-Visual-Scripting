@@ -163,6 +163,14 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 			"pattern": "wait_sequence", "evidence": beats, "words": wait_sequence_words(sequence),
 			"adoptable": "", "ace_ids": PackedStringArray()
 		})
+	var nearest: Dictionary = nearest_pick(body)
+	if not nearest.is_empty():
+		found.append({
+			"pattern": "picking", "evidence": nearest.get("evidence", PackedStringArray()),
+			"words": str(nearest.get("words", "")), "adoptable": "",
+			"ace_ids": PackedStringArray(["Core/PickNearest", "Core/PickFarthest",
+				"Core/PickRandomInstance", "Core/PickWhere", "Core/PickByUid"])
+		})
 	if not pool_evidence.is_empty():
 		found.append({
 			"pattern": "object_pool", "evidence": pool_evidence,
@@ -170,6 +178,60 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 			"adoptable": "object_pool", "ace_ids": PackedStringArray()
 		})
 	return found
+
+
+## T8. The nearest-or-farthest LOOP a body writes: walk a list, measure the distance to each one,
+## keep the best so far. An event sheet says that in one row - Pick nearest / Pick farthest - and no
+## single line of the loop is it, which is why it is recognised here rather than in the grammar.
+##
+## Returns {evidence, words, farthest} or {} when the body holds no such loop. All three halves are
+## required - the walk, the measurement, and a best-so-far comparison that keeps the winner - so a
+## loop that merely measures something stays the loop it is.
+static func nearest_pick(body: PackedStringArray) -> Dictionary:
+	var evidence: PackedStringArray = PackedStringArray()
+	var iterator_name: String = ""
+	var measured: bool = false
+	var kept: bool = false
+	var farthest: bool = false
+	for line: String in body:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		if text.begins_with("for ") and text.ends_with(":"):
+			var head: String = text.substr(4, text.length() - 5)
+			var in_at: int = EventSheetSentence.top_level_index(head, " in ")
+			if in_at > 0 and EventSheetSentence.is_identifier(head.substr(0, in_at).strip_edges()):
+				iterator_name = head.substr(0, in_at).strip_edges()
+				measured = false
+				kept = false
+				evidence = PackedStringArray([text])
+			continue
+		if iterator_name.is_empty():
+			continue
+		if text.contains(".distance_to(") or text.contains(".distance_squared_to("):
+			measured = true
+			evidence.append(text)
+			continue
+		# The comparison says which end of the walk is being kept: `<` keeps the nearest so far, `>`
+		# the farthest. Anything else is a loop that measures and does something the sheet has no one
+		# word for, so nothing is claimed.
+		if text.begins_with("if ") and text.ends_with(":"):
+			if EventSheetSentence.top_level_index(text, " < ") > 0:
+				evidence.append(text)
+			elif EventSheetSentence.top_level_index(text, " > ") > 0:
+				farthest = true
+				evidence.append(text)
+			continue
+		var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+		if assign_at > 0 and text.substr(assign_at + 3).strip_edges() == iterator_name:
+			kept = true
+			evidence.append(text)
+	if iterator_name.is_empty() or not measured or not kept:
+		return {}
+	return {
+		"evidence": evidence, "farthest": farthest,
+		"words": "picks the farthest one by distance" if farthest else "picks the nearest one by distance"
+	}
 
 
 ## S4. The numbers this file uses as countdowns: counted DOWN by a per-frame delta somewhere and

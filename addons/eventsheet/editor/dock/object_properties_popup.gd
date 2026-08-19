@@ -46,7 +46,8 @@ static func property_rows(entry: Dictionary, scene_name: String = "",
 ##
 ## The families row carries the muted Godot word as its note - a Godot group IS the sheet's family,
 ## and a reader who knows only one of the two words needs the bridge exactly once.
-static func identity_rows(entry: Dictionary, source_path: String) -> Array[Dictionary]:
+static func identity_rows(entry: Dictionary, source_path: String,
+		familiar_words: bool = false) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	if entry.is_empty():
 		return rows
@@ -61,7 +62,9 @@ static func identity_rows(entry: Dictionary, source_path: String) -> Array[Dicti
 	var families: Array = _family_chips(facts.get("families", PackedStringArray()))
 	if not families.is_empty():
 		rows.append({
-			"label": EventSheetL10n.translate("Families"),
+			# T9. The word for an inheritance set is a setting, so the object page asks the one helper
+			# for it exactly as the Object bar and the head folder do.
+			"label": EventSheetFamilyFacts.plural(familiar_words),
 			"value": _chip_text(families),
 			"form": "chips",
 			"chips": families,

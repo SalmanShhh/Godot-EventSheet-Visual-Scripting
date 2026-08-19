@@ -2282,6 +2282,45 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 - **Animation Length** (`target: String`) - The current animation's total length in seconds - pair with Animation Position for a normalized 0-to-1 progress.
 - **Animation Speed** (`target: String`) - The player's current speed scale (1 = normal).
 
+### Around Objects (`res://addons/eventforge/registration/modules/around_objects_aces.gd`)
+the things AROUND an object: picking, layers and Z order, text, the browser.
+
+#### Conditions
+- **Is Platform** (`platform: String`) - True on one named system. For a question about a whole family - every phone, every browser - Is On Mobile and Is On Web are the sturdier ones, because they cover systems added later.
+- **Is On Web** - True in a browser build. Hide the quit button, mind that sound and fullscreen need a real click first.
+- **Is On Mobile** - True on Android and iOS builds - the switch-to-touch-controls question.
+- **Is On Desktop** - True on Windows, macOS and Linux builds.
+
+#### Actions
+- **Pick Nearest** (`name: String, list: String, from: String`) - Walks the instances and keeps the one closest to a position - the shape a turret, a homing shot and a "talk to whoever is in front of me" row are all built from. Fills the name you give it, so the rows below can act on the one it found. Nothing is picked when the list is empty, so check the name exists before using it.
+- **Pick Farthest** (`name: String, list: String, from: String`) - The other end of Pick Nearest: keeps the instance furthest from a position. Useful for spawning away from the player, retreating, and picking the loneliest of a crowd.
+- **Pick A Random One** (`name: String, list: String`) - One instance at random out of the list, named so the rows below can act on it. An empty list has nothing to pick, so check the name exists first.
+- **Pick Where** (`name: String, list: String, item: String, test: String`) - Keeps every instance the test holds for - the "pick by comparison" of an event sheet. The result is a list, so the rows below run over what it holds rather than over one instance.
+- **Pick Top** (`name: String, list: String`) - The LAST instance in the list - the newest one when the list is in the order things were made, and the one drawn over the others in a scene's own order.
+- **Pick Bottom** (`name: String, list: String`) - The FIRST instance in the list - the oldest one when the list is in the order things were made.
+- **Pick By UID** (`name: String, uid_value: String`) - Finds one instance again from the unique id it was remembered by - the way to store "which one" in a variable, a save file or a table. Nothing is found when that instance is gone, so check the name exists before using it.
+- **Set Z Order** (`order: String, target: String`) - Where this object draws among the others on its layer: a higher number draws in front. Layers come first - a HUD layer above the world draws over everything in it no matter what the Z orders say.
+- **Set Z Order Absolute** (`target: String`) - Makes the Z order count from the layer rather than from this object's parent, so a child no longer inherits where its parent sits.
+- **Set Z Order Relative** (`target: String`) - Makes the Z order count from this object's parent - Godot's default, and what you want for a sprite that should move up and down the order with whatever holds it.
+- **Move To Top Of Layer** (`target: String`) - Draws this object over every sibling on its layer, without touching any Z order. The card you just picked up, the window you just clicked.
+- **Move To Bottom Of Layer** (`target: String`) - Draws this object behind every sibling on its layer - the card you just put down.
+- **Move To Layer** (`layer: String, target: String`) - Moves this object onto another layer, keeping where it is on screen. A CanvasLayer is the layer proper (it has its own order and its own visibility); a plain node used to group things works the same way for drawing order.
+- **Set Layer Order** (`order: String, target: String`) - Where this whole layer sits among the others: a HUD on a higher layer draws over the world however the world's objects are ordered among themselves.
+- **Set Font Size** (`size: String, target: String`) - Sets the size this control draws its text at, over whatever its theme says. Applies to this control only, so a heading and its body can differ without a theme of their own.
+- **Set Font Colour** (`colour: String, target: String`) - Sets the colour this control draws its text in, over whatever its theme says - the red of a damage number, the grey of a disabled option.
+- **Set Outline Colour** (`colour: String, target: String`) - Sets the colour of the outline around the text. An outline only shows once its SIZE is set too, in the control's theme or its label settings.
+- **Set Font** (`font: String, target: String`) - Gives this one control its own font, over whatever its theme says. Drag a .ttf or .otf from the FileSystem to fill it in.
+- **Set Word Wrap On** (`target: String`) - Wraps long text onto the next line at word boundaries instead of running off the edge. The box has to have a width for wrapping to have anything to wrap to.
+- **Set Word Wrap Off** (`target: String`) - Keeps the text on one line, however long it gets.
+- **Go To URL** (`url: String`) - Opens a web address outside the game: a store page, a wiki, a bug form. It leaves the game running, so say where the player is going before you send them there.
+- **Request Fullscreen** - Takes the game fullscreen. In a web build a browser only grants this from a real click, which is why it belongs under a button's own event rather than under a timer.
+- **Leave Fullscreen** - Puts the game back in a window.
+- **Alert** (`message: String`) - Shows a plain system message box and waits for the player to dismiss it. It stops everything while it is up, so it is for the one thing that must be read - not for anything the game itself can say.
+- **Vibrate** (`milliseconds: String`) - Buzzes a phone or tablet. Does nothing on a desktop, so it is safe to leave in a build that runs on both.
+
+#### Expressions
+- **Translated** (`key: String`) - The text a translation key stands for in the game's current language, falling back to the key itself when nothing translates it.
+
 ### Array Functional (`res://addons/eventforge/registration/modules/array_functional_aces.gd`)
 higher-order + typed-array operations for the "Variables: Array" vocabulary.
 
@@ -2844,7 +2883,7 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Save Setting** (`path: String, section: String, key: String, value: String`) - Writes a value into a config file on disk so it persists between play sessions.
 - **Load Setting Into Variable** (`var_name: String, path: String, section: String, key: String, default: String`) - Reads a saved value from a config file into a variable, with a fallback default.
 - **Set Window Title** (`title: String`) - Changes the text shown in the game window's title bar.
-- **Set Clipboard Text** (`text: String`) - Copies text to the operating system clipboard for pasting elsewhere.
+- **Copy To Clipboard** (`text: String`) - Copies text to the operating system clipboard for pasting elsewhere.
 - **Reparent To** (`new_parent: String`) - Moves this node under a new parent while keeping its on-screen position.
 
 #### Expressions

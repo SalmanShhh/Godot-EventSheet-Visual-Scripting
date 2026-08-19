@@ -1100,6 +1100,64 @@ Recognising a literal is deliberately fussy - a wrapped function call (a bare `(
 value), a literal with a statement after it, and one with a comment above its head are all left as ordinary
 code, because in each of those cases something other than the value would be affected.
 
+### The things around an object: picking, layers, text and the browser
+
+Four families of line that are about the world an object sits in rather than about what it does, each
+of which the sheet has one row for.
+
+- **Picking says which instances.** A line that picks an instance and names it is one row, not a
+  declaration whose value happens to be a list step. `var victim = enemies.pick_random()` reads
+  `System ▸ Pick a random Enemy`, with `→ victim` muted after it, because the reader's next question
+  is what the thing they just picked is called. `filter(func(e): return e.gold > 50)` reads
+  `Pick Enemy where gold > 50`, `back()` and `front()` read `Pick top` and `Pick bottom`, and
+  `instance_from_id(saved_id)` reads `Pick Enemy by UID saved_id`. A pick only reads when the FAMILY
+  is known - the list was built from a group, or the variable carries the type - so a list nobody
+  said the kind of keeps its own words rather than being given an object type it never had. A
+  walk-the-list-and-keep-the-nearest loop is too many lines to be one row, so it stays the loop it
+  is and CLAIMS the picking pattern instead, with its own lines as the evidence behind the chip.
+- **Layers and Z order.** `z_index = 5` reads `Set Z order to 5`, with `(relative)` or `(absolute)`
+  when the file also says which; `move_to_front()` reads `Move to top of layer` (and
+  `get_parent().move_child(self, 0)`, which is how Godot spells the other end, reads
+  `Move to bottom of layer`); `reparent($"../FX")` reads `Move to layer FX`. A CanvasLayer IS a
+  layer, so its `layer` number reads `Set layer order` and its `visible` switch reads
+  `Set layer visible / invisible`.
+- **Text.** The theme overrides and LabelSettings writes every HUD script is full of read as the
+  styling they are: `Set font size to 32`, `Set font colour to red`,
+  `Set horizontal alignment to centre`, `Set word wrap on`, `Set font to bold.ttf`. And `tr("HELLO")`
+  reads `translated "HELLO"` wherever an expression shows it.
+- **The browser and the platform.** `OS.shell_open(url)` reads `Browser ▸ Go to URL`,
+  `DisplayServer.clipboard_set(x)` reads `Copy x to clipboard`, the fullscreen window mode reads
+  `Request fullscreen`, and `OS.alert(m)` reads `Alert m`. The questions read under Platform in the
+  shipped Platform Info pack's own words - `OS.has_feature("web")` is `Is on web` - so a hand-written
+  check and a picked row say one sentence between them. `OS.get_name() == "Android"` reads
+  `Is Android`.
+
+All four are also authorable, and that is the point: every picker row's template writes exactly the
+shape the reading recognises, so a script that already had these lines OPENS as those rows and saves
+back byte for byte. See **docs/Modules/Around-Objects.md** for the rows themselves.
+
+<img src="images/around-objects-rows.png" alt="A hand-written Node2D script opened as a sheet: an On created event whose actions read set Z order to 5, move to top of layer, move to layer $../FX, set layer order to 10, set font size to 32 and set word wrap on, then a Share function whose actions read go to URL https://example.com, copy code to clipboard and request fullscreen." width="720">
+
+### Inheritance shown as one thing - Family, Base class, or your own word
+
+A `class_name` that other scripts `extends` is a base class. Godot has no view of that shape: to see
+which scripts extend `Enemy`, what they share, and whether the `"enemy"` group agrees with the
+`Enemy` class, a project has to be grepped. An event sheet has had one word for exactly this - an
+object set that shares instance variables and behaviors - so the sheet shows the hierarchy as one
+entry: the base on top, the scripts that extend it as its members, and the base's own variables and
+functions as what they share.
+
+**The word is a setting.** It is `Family` with Familiar Words on, `Base class` with it off, and
+`Kind` or anything else you type on the Words page (Settings ▸ Words). One helper answers - it asks
+the Words registry for the word and adds the plural the headings need - and every user-facing use
+goes through it, so the Object bar's section, the head bar's folder and the object page change
+together and can never drift apart.
+
+Where a Godot group has the same name as the base, it is shown on the same line with a ✓ when its
+members are the set's. When they are not, that is worth saying out loud, and **Tools ▸ Project
+Doctor…** says it: *"Goblin is in the group "enemy" but does not extend Enemy"* - which is where an
+"Invalid call" at runtime usually comes from.
+
 ### Beginner spellings and the reading layer
 
 The lift does not require style-guide code. Beginner spellings round-trip byte-exactly too:
