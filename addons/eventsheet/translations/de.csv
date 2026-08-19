@@ -3186,3 +3186,4 @@ Command Tool (runs headless from the command line),Kommandozeilen-Werkzeug (läu
 "A script the Godot binary runs headless from the command line, with arguments and an exit code.","Ein Skript, das die Godot-Binärdatei headless über die Kommandozeile ausführt, mit Argumenten und einem Rückgabecode."
 The editor icon this name draws.,"Das Editor-Symbol, das dieser Name zeichnet."
 The words for building editor tools,Die Wörter für den Bau von Editor-Werkzeugen
+bottom panel,unteres Panel

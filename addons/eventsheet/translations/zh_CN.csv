@@ -3186,3 +3186,4 @@ Command Tool (runs headless from the command line),命令行工具（从命令�
 "A script the Godot binary runs headless from the command line, with arguments and an exit code.",由 Godot 可执行文件从命令行以无界面方式运行的脚本，带参数和退出码。
 The editor icon this name draws.,该名称所绘制的编辑器图标。
 The words for building editor tools,构建编辑器工具的用语
+bottom panel,底部面板

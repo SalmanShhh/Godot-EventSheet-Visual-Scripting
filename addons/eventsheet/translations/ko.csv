@@ -3186,3 +3186,4 @@ Command Tool (runs headless from the command line),명령줄 도구 (명령줄�
 "A script the Godot binary runs headless from the command line, with arguments and an exit code.",Godot 실행 파일이 명령줄에서 헤드리스로 실행하는 스크립트입니다. 인수와 종료 코드를 가집니다.
 The editor icon this name draws.,이 이름이 그리는 에디터 아이콘입니다.
 The words for building editor tools,에디터 도구를 만드는 말
+bottom panel,하단 패널

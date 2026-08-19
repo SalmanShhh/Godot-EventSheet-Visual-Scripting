@@ -3186,3 +3186,4 @@ Command Tool (runs headless from the command line),Herramienta de línea de coma
 "A script the Godot binary runs headless from the command line, with arguments and an exit code.","Un script que el binario de Godot ejecuta sin interfaz desde la línea de comandos, con argumentos y un código de salida."
 The editor icon this name draws.,El icono del editor que dibuja este nombre.
 The words for building editor tools,Las palabras para crear herramientas del editor
+bottom panel,panel inferior

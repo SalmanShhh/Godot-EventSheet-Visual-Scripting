@@ -3186,3 +3186,4 @@ Command Tool (runs headless from the command line),Консольный инст
 "A script the Godot binary runs headless from the command line, with arguments and an exit code.","Скрипт, который бинарник Godot запускает без интерфейса из командной строки, с аргументами и кодом выхода."
 The editor icon this name draws.,"Значок редактора, который рисует это имя."
 The words for building editor tools,Слова для создания инструментов редактора
+bottom panel,нижняя панель

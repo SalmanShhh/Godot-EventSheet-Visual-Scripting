@@ -88,6 +88,13 @@ static func _test_every_shape_round_trips() -> bool:
 		",".join(added), "AddEditorDock") and all_passed
 	all_passed = _check("and takes it down again on disable",
 		",".join(removed), "RemoveEditorDock") and all_passed
+	# What a shape adds to the editor is what its own Include bar says it adds - a Bottom panel sheet
+	# claimed nothing there until the census learned the verb.
+	var claimed: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in EventSheetEditorToolCensus.from_sheet(EventSheetStarterTemplates.build_starter(16)):
+		claimed.append(str(entry.get("label", "")))
+	all_passed = _check("the bottom-panel shape says what it adds to the editor",
+		"|".join(claimed), "bottom panel: My Panel") and all_passed
 	return all_passed
 
 

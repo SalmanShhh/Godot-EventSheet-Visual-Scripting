@@ -3186,3 +3186,4 @@ Command Tool (runs headless from the command line),コマンドツール（コ�
 "A script the Godot binary runs headless from the command line, with arguments and an exit code.",Godot 本体がコマンドラインからヘッドレスで実行するスクリプトです。引数と終了コードを持ちます。
 The editor icon this name draws.,この名前が描くエディタアイコンです。
 The words for building editor tools,エディタツールを作るための言葉
+bottom panel,下部パネル

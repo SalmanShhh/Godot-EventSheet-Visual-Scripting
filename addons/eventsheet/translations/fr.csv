@@ -3186,3 +3186,4 @@ Command Tool (runs headless from the command line),Outil en ligne de commande (s
 "A script the Godot binary runs headless from the command line, with arguments and an exit code.","Un script que le binaire Godot exécute sans interface depuis la ligne de commande, avec des arguments et un code de sortie."
 The editor icon this name draws.,L'icône d'éditeur que ce nom dessine.
 The words for building editor tools,Les mots pour créer des outils d'éditeur
+bottom panel,panneau du bas

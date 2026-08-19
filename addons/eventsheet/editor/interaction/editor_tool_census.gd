@@ -27,6 +27,9 @@ extends RefCounted
 const CAPABILITIES: Array[Dictionary] = [
 	{"kind": "menu_item", "ace_id": "AddToolsMenuItem", "call": "add_tool_menu_item(", "noun": "Tools menu item", "label": "Tools menu item", "name_param": "title"},
 	{"kind": "dock", "ace_id": "AddEditorDock", "call": "add_control_to_dock(", "noun": "dock", "label": "dock", "name_param": "control"},
+	# W17. The bottom row of panels, added by the same pair of verbs as a dock. Without this entry a
+	# Bottom panel sheet claimed nothing on its own Include bar while a Dock panel sheet claimed one.
+	{"kind": "bottom_panel", "ace_id": "AddBottomPanel", "call": "add_control_to_bottom_panel(", "noun": "bottom panel", "label": "bottom panel", "name_param": "title"},
 	{"kind": "object_type", "ace_id": "AddEditorObjectType", "call": "add_custom_type(", "noun": "object type", "label": "object type", "name_param": "type_name"},
 	{"kind": "inspector", "ace_id": "AddEditorInspectorPlugin", "call": "add_inspector_plugin(", "noun": "Inspector button", "label": "Inspector button", "name_param": ""},
 ]
@@ -142,6 +145,8 @@ static func _label_for(capability: Dictionary, named: String) -> String:
 			return "%s ▸ %s" % [EventSheetL10n.translate("Tools menu"), named]
 		"dock":
 			return "%s: %s" % [EventSheetL10n.translate("dock"), named]
+		"bottom_panel":
+			return "%s: %s" % [EventSheetL10n.translate("bottom panel"), named]
 		"object_type":
 			return "%s: %s" % [EventSheetL10n.translate("object type"), named]
 	return EventSheetL10n.translate(str(capability["label"]))
