@@ -6,7 +6,7 @@ three families:
 - **What did I just hit?** After a character body moves, the engine already knows whether it ended up
   against a wall, a ceiling or a slope, and what it bumped into. **Is By Wall**, **Wall Normal**,
   **Last Slide Collider** and friends read those results instead of you re-deriving them.
-- **What is overlapping me?** An Area asks **Overlaps Body**, **Has Overlapping Areas**, or hands you
+- **What is overlapping me?** An Area asks **Is Overlapping Body**, **Has Overlapping Areas**, or hands you
   the whole list with **Overlapping Bodies**. Layers and masks decide who is even allowed to notice
   whom, and a collision shape can be switched off mid-game.
 - **What are the rules of this world?** Gravity strength, gravity direction, and whether physics is
@@ -46,7 +46,7 @@ that reads "Is by wall" ships as `is_on_wall()`, and that is the whole implement
   step, not before it, and not from a per-frame event that never moves anything.
 - **A normal is a direction, not a position.** Wall Normal points away from the surface the body is
   touching. That is why wall jumps are "push along the wall normal": it already faces out of the wall.
-- **Overlap questions are about right now.** An Area answers Overlaps Body, Overlaps Area, Has
+- **Overlap questions are about right now.** An Area answers Is Overlapping Body, Is Overlapping Area, Has
   Overlapping Bodies and Has Overlapping Areas from its current overlap set, so they are conditions
   you can ask any frame. The list forms (Overlapping Bodies, Overlapping Areas) hand you an array to
   loop with For Each.
@@ -101,8 +101,9 @@ picker under the node type in the last column.
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Overlaps Body | True when this Area2D overlaps the given physics body | `overlaps_body({body})` |
-| Overlaps Area | True when this Area2D overlaps the given other area | `overlaps_area({area})` |
+| Is Overlapping Body | True when this Area2D overlaps the given physics body | `overlaps_body({body})` |
+| Is Overlapping Area | True when this Area2D overlaps the given other area | `overlaps_area({area})` |
+| Is Overlapping At Offset | True when this body WOULD hit something solid if it moved by the offset - the ground check, and nothing moves | `test_move(transform, {offset})` |
 | Has Overlapping Bodies | True when this Area2D overlaps any physics body | `has_overlapping_bodies()` |
 | Has Overlapping Areas | True when this Area2D overlaps any other area | `has_overlapping_areas()` |
 | Overlapping Bodies | The list of physics bodies currently inside this Area2D | `get_overlapping_bodies()` |
@@ -252,7 +253,7 @@ func _process(delta: float) -> void:
 		$Sprite2D.frame = 0
 ```
 
-**9. Ask about one specific body.** Overlaps Body defaults to the first node in the `player` group, so
+**9. Ask about one specific body.** Is Overlapping Body defaults to the first node in the `player` group, so
 the row stands on its own with no scene path baked into it.
 
 ```gdscript
@@ -270,11 +271,11 @@ func _on_exploded() -> void:
 			body.call(&"take_damage", 40)
 ```
 
-**11. Two trigger volumes that must agree.** Overlaps Area answers "is that other zone on top of me".
+**11. Two trigger volumes that must agree.** Is Overlapping Area answers "is that other zone on top of me".
 
 ```
 Every frame
-  Condition: Area2D  Overlaps Area  get_tree().get_first_node_in_group("safe_zones")
+  Condition: Area2D  Is Overlapping Area  get_tree().get_first_node_in_group("safe_zones")
     -> stop draining oxygen
 ```
 
@@ -389,9 +390,9 @@ func _process(delta: float) -> void:
   to nothing and `Vector2.ZERO`, so they will not crash, but a `Vector2.ZERO` normal silently reflects
   a bounce into nowhere. Gate the event on Slide Collision Count greater than 0 when the answer
   matters.
-- **`self` never overlaps itself.** Both Overlaps Body and Overlaps Area say so in their own parameter
+- **`self` never overlaps itself.** Both Is Overlapping Body and Is Overlapping Area say so in their own parameter
   help. Pointing the row at the area it lives on always answers false.
-- **Overlaps Body defaults to a GROUP lookup, on purpose.** The shipped default is
+- **Is Overlapping Body defaults to a GROUP lookup, on purpose.** The shipped default is
   `get_tree().get_first_node_in_group("player")` rather than a tree path, so the row keeps working
   when the scene is rearranged. Replace it with your own group name, not with a `$Path/To/Node`.
 - **Layer and mask are not the same bit.** If your enemy stops being hit, check the mask on the thing
