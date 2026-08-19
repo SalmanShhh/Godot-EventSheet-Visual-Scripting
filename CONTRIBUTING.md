@@ -25,8 +25,8 @@ godot --headless --path . --script tools/build_help_bundle.gd  # ONLY after edit
 ```
 
 **If you touched a guide, regenerate the shipped copy.** The release zip carries `addons/` and
-nothing else, so the guides are copied verbatim into `addons/eventsheet/help/` for the in-editor
-documentation viewer to read. `tests/doc_library_test.gd` compares the two byte for byte, so an
+nothing else, so the guides are copied verbatim into `addons/eventsheet/help/` for the Manual (the
+in-editor documentation reader) to read. `tests/doc_library_test.gd` compares the two byte for byte, so an
 edited guide whose copy was not regenerated fails the suite. Run the builder above (it prints
 `help: pages=N drifted=0`) and commit the regenerated files with your guide edit. Pass
 `-- --check` to report drift without writing anything.
@@ -110,7 +110,7 @@ Canonical forms live in `sheet_compiler.gd` (`_emit_enum_line`, `_emit_signal_li
 
 ## Guides that draw live rows
 
-In the in-editor documentation viewer, a fenced ` ```gdscript ` block can be drawn as the real
+In the Manual (the in-editor documentation reader), a fenced ` ```gdscript ` block can be drawn as the real
 event rows its code lifts to, with an Insert button. It happens automatically when the fence is a
 whole little script (an `extends` / `class_name` / `@tool` line at the top), re-emits byte for byte,
 and lifts to at least one real row. Nothing to opt into: write the example the way the module
@@ -120,7 +120,7 @@ Three authored markers exist, and only three:
 
 ````text
 ```eventsheet          this fence IS a figure, even without a script header
-<!-- no-figure -->     the fence below stays a plain code card (use it for extension-API samples,
+<!-- no-figure -->     the fence below stays a plain code block (use it for extension-API samples,
                        where the reader copies GDScript into a file rather than authoring rows)
 <!-- caption: … -->    the line above the figure; otherwise the nearest heading captions the first
                        figure under it
@@ -128,7 +128,7 @@ Three authored markers exist, and only three:
 
 `tests/doc_figures_test.gd` sweeps `docs/`, `docs/Addons/` and `docs/Modules/`, so **breaking the
 GDScript inside a figure breaks the suite**, and a ` ```eventsheet ` fence that cannot be drawn is a
-named build error rather than a silent code card. Fix the fence, or mark it `<!-- no-figure -->`.
+named build error rather than a silent code block. Fix the fence, or mark it `<!-- no-figure -->`.
 
 ## GDScript gotchas that have bitten before
 
