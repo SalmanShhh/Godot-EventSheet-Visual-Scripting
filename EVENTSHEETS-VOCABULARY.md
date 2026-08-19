@@ -2646,6 +2646,9 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Every Physics Tick** - Runs every fixed physics step, the right place for physics-based movement and forces.
 - **After Every Frame (post-tick)** - Runs once AFTER every node has processed this frame - for logic that must come last, like a camera that follows after movement, or end-of-frame cleanup.
 - **After Every Physics Tick** - Runs once AFTER every node has finished its physics step this tick - the physics sibling of post-tick.
+- **On Created** - Runs the moment this object is added to the scene - before its children exist, which is what makes it earlier than On Ready.
+- **On Destroyed** - Runs when this object leaves the scene - the place to let go of what it was holding, save its state, or tell others it is gone.
+- **On Draw** - Runs when this object is asked to paint itself - the only place the drawing actions may be used. Ask for a repaint with Queue Redraw.
 - **On Close Requested** - Runs when the player clicks the window's close button (X) or asks to quit - the place to save progress or pop a confirm dialog before exiting.
 - **On Body Entered** (`body: Node`) - Runs when a physics body enters this 2D Area, e.g. detecting the player walking into a trigger.
 - **On Area Entered** (`area: Area2D`) - Runs when another 2D Area overlaps this one, e.g. a hitbox touching a hurtbox.
