@@ -3164,3 +3164,28 @@ starting {values},nachinayushchiysya s {values}
 {subject} is a table,{subject} - tablitsa
 with {clauses},s {clauses}
 has {key},soderzhit {key}
+Answer {value},Ответить {value}
+Edit sheet undoably {label},Изменить лист (с отменой) {label}
+Edit sheet undoably,Изменить лист (с отменой)
+Report error {value},Сообщить об ошибке {value}
+Warn {value},Предупредить {value}
+Define,Определить
+category,категория
+Writes,Пишет
+helper of,помощник для
+made with the {object},создан вместе с {object}
+adds its own actions to {object},добавляет свои действия к {object}
+shared store,общее хранилище
+nothing of its own is ever made,экземпляры никогда не создаются
+one store for the whole editor,одно хранилище на весь редактор
+vocabulary module,модуль словаря
+{n} rows published,опубликовано строк: {n}
+publishes rows the picker offers,"публикует строки, которые предлагает выбор"
+one for the whole editor,одно на весь редактор
+"One for the whole editor, kept between sheets.","Одно на весь редактор, сохраняется между листами."
+frozen,заморожено
+"Named elsewhere: add to it, never rename one.","На него ссылаются по имени: добавляйте, но не переименовывайте."
+itself,саму себя
+↓ the steps below are the edit,↓ шаги ниже - это само изменение
+"one undoable step, the edit under it","один отменяемый шаг, изменение под ним"
+Shared,Общая

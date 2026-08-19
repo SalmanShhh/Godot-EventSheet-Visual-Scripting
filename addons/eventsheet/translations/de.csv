@@ -3164,3 +3164,28 @@ starting {values},beginnend mit {values}
 {subject} is a table,{subject} ist eine Tabelle
 with {clauses},mit {clauses}
 has {key},hat {key}
+Answer {value},Antworte {value}
+Edit sheet undoably {label},Blatt bearbeiten (widerrufbar) {label}
+Edit sheet undoably,Blatt bearbeiten (widerrufbar)
+Report error {value},Fehler melden {value}
+Warn {value},Warnen {value}
+Define,Definieren
+category,Kategorie
+Writes,Schreibt
+helper of,Helfer von
+made with the {object},erstellt mit dem {object}
+adds its own actions to {object},fügt {object} eigene Aktionen hinzu
+shared store,gemeinsamer Speicher
+nothing of its own is ever made,davon wird nie etwas erzeugt
+one store for the whole editor,ein Speicher für den ganzen Editor
+vocabulary module,Vokabelmodul
+{n} rows published,{n} Zeilen veröffentlicht
+publishes rows the picker offers,veröffentlicht die Zeilen der Auswahl
+one for the whole editor,eine für den ganzen Editor
+"One for the whole editor, kept between sheets.","Eine für den ganzen Editor, bleibt zwischen Blättern erhalten."
+frozen,eingefroren
+"Named elsewhere: add to it, never rename one.","Wird anderswo benannt: ergänzen, nie umbenennen."
+itself,sich selbst
+↓ the steps below are the edit,↓ die Schritte unten sind die Bearbeitung
+"one undoable step, the edit under it","ein widerrufbarer Schritt, die Bearbeitung darunter"
+Shared,Gemeinsam

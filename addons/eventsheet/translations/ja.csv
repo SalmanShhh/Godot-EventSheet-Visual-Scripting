@@ -3164,3 +3164,28 @@ starting {values},先頭が {values}
 {subject} is a table,{subject} がテーブル
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
+Answer {value},{value} と答える
+Edit sheet undoably {label},シートを編集 (元に戻せる) {label}
+Edit sheet undoably,シートを編集 (元に戻せる)
+Report error {value},エラーを報告 {value}
+Warn {value},警告 {value}
+Define,定義
+category,カテゴリ
+Writes,書き出す
+helper of,の補助
+made with the {object},{object} と一緒に作られる
+adds its own actions to {object},{object} に自分の動作を加える
+shared store,共有ストア
+nothing of its own is ever made,実体は決して作られない
+one store for the whole editor,エディタ全体で一つのストア
+vocabulary module,語彙モジュール
+{n} rows published,{n} 行を公開
+publishes rows the picker offers,ピッカーが並べる行を公開する
+one for the whole editor,エディタ全体で一つ
+"One for the whole editor, kept between sheets.",エディタ全体で一つ。シートをまたいで保たれます。
+frozen,凍結
+"Named elsewhere: add to it, never rename one.",他の場所から名前で参照されます。追加はしても改名はしないでください。
+itself,自分自身
+↓ the steps below are the edit,↓ 下の手順がこの編集です
+"one undoable step, the edit under it",元に戻せる一つの手順、その下が編集内容
+Shared,共有

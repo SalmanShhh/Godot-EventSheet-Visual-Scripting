@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Added - the shapes an editor is written in, read as events
+
+- **A helper with a back-reference reads as a behavior of the object it helps.** A `RefCounted`
+  whose constructor only stores what it was handed, and whose methods reach back through it, now
+  says so on its head bar: `helper of Dock (event_sheet_dock.gd) · made with the dock`, with the
+  file resolved from what the project itself declares rather than from any list of names. The
+  constructor folds into that bar (it said nothing a reader had to read), a value read through the
+  reference reads as the object's own property (`Dock.CurrentSheet`), and a call through it reads
+  under the object's name (`Dock ▸ Select row`) instead of under a member nobody can see.
+- **An edit handed to the undo funnel reads as one undoable step.** A label plus a callback now
+  reads as a Local boolean catching the answer - `changed = Dock ▸ Edit sheet undoably "Apply Cell
+  Edit"` - with the edit hanging under it as sub-events, and a `return` inside it reading as the
+  Answer the funnel asked for. The Doctor learned the funnel too: a helper that changes the open
+  sheet around it rather than through it is an advisory note naming the line.
+- **A class that is all static reads as a shared store.** The bar says `shared store · nothing of
+  its own is ever made`, each `static var` reads as a **Shared** value that is "one for the whole
+  editor" (the hover says it is kept between sheets), and a `const` whose own comment says it is
+  frozen wears that promise. `push_warning` and `push_error` stopped pretending to be log lines:
+  they read as **Warn** and **Report error**, while `printerr` stays **Log error**.
+- **A vocabulary module reads as the Define rows a pack author already knows.** A published row
+  reads `Define condition Is Pinned   Core/IsPinned · category Pin · input target: Node   Writes
+  {target.}is_pinned()` - both spellings a module publishes in are read, and its head bar counts
+  what it publishes. A function that hands over to itself wears a muted `↻ itself` on the call row,
+  and the Manual's mark legend explains it.
+- All of the above is display only: every fixture still re-emits byte-identically, and an ordinary
+  game project sees none of it.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

@@ -3164,3 +3164,28 @@ starting {values},que empieza por {values}
 {subject} is a table,{subject} es una tabla
 with {clauses},con {clauses}
 has {key},tiene {key}
+Answer {value},Responder {value}
+Edit sheet undoably {label},Editar la hoja (deshacer) {label}
+Edit sheet undoably,Editar la hoja (deshacer)
+Report error {value},Informar del error {value}
+Warn {value},Advertir {value}
+Define,Definir
+category,categoría
+Writes,Escribe
+helper of,ayudante de
+made with the {object},creado con el {object}
+adds its own actions to {object},añade sus propias acciones a {object}
+shared store,almacén compartido
+nothing of its own is ever made,nunca se crea nada de ella
+one store for the whole editor,un solo almacén para todo el editor
+vocabulary module,módulo de vocabulario
+{n} rows published,{n} filas publicadas
+publishes rows the picker offers,publica las filas que ofrece el selector
+one for the whole editor,una sola para todo el editor
+"One for the whole editor, kept between sheets.","Una sola para todo el editor, se mantiene entre hojas."
+frozen,congelado
+"Named elsewhere: add to it, never rename one.","Se nombra en otros sitios: añade, nunca renombres."
+itself,a sí misma
+↓ the steps below are the edit,↓ los pasos de abajo son la edición
+"one undoable step, the edit under it","un paso deshacible, con la edición debajo"
+Shared,Compartida
