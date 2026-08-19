@@ -85,7 +85,7 @@ static func _test_page_shape() -> bool:
 	# because the whole point of the plan is that the page does not inherit the assembler's order.
 	all_passed = _check("a pack verb's page reads in the fixed order",
 		", ".join(EventSheetDocPanel.section_plan(blocks)),
-		"title, description, syntax, parameters, preview, usage, actions, about, link") and all_passed
+		"title, description, syntax, parameters, preview, usage, patterns, actions, about, link") and all_passed
 	var shuffled: Array[Dictionary] = []
 	for index: int in range(blocks.size()):
 		shuffled.append(blocks[blocks.size() - 1 - index])
