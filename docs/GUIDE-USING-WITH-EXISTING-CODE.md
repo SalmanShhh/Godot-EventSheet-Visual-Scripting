@@ -622,6 +622,8 @@ is instantiated to answer a question.
   read `On Died`, `On Hit  body`), **Behaviors** and **Families**. Two buttons start using it -
   **Add condition** and **Add action**, both opening the picker already scoped to that object - and
   **Open enemy.gd as sheet** jumps to the file that says what it is.
+![Object properties for Player: an Instance variables table with Name, Type, Initial value and Inspector columns - speed number 200.0 ticked into the Inspector, hp whole number 100, alive boolean true - each row ending in a pencil and a cross, above + Add instance variable; below it the Add global variable form with Name, Type, Value and Write into, and the row it will write previewed as Global number Score = 0](images/instance-variable-table.png)
+
 - **The object this file IS answers with an editable variable table.** For that one object - the
   thing the open script declares, not the nodes it merely names - the **Instance variables** row
   becomes a table you work in: **Name**, **Type** (a dropdown of the sheet's own type words),
