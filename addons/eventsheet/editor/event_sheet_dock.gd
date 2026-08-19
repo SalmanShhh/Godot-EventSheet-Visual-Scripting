@@ -270,6 +270,7 @@ var _quick_prompts: EventSheetQuickPromptDialogs = EventSheetQuickPromptDialogs.
 var _custom_block_dialog: EventSheetCustomBlockDialog = EventSheetCustomBlockDialog.new()  # Custom Block API: schema-driven add/edit dialog for registered kinds (dock/custom_block_dialog.gd)
 var _raw_call_namer: EventSheetRawCallNamer = EventSheetRawCallNamer.new()  # Sheet ▸ Name Raw Calls: binds raw one-call code rows to existing vocabulary, byte-gated (dock/raw_call_namer.gd)
 var _variable_retype_dialog: EventSheetVariableRetypeDialog = EventSheetVariableRetypeDialog.new()  # variable ▸ Change Type Everywhere…: preview + one-undo-step retype (dock/variable_retype_dialog.gd)
+var _pattern_adopt_dialog: EventSheetPatternAdoptDialog = EventSheetPatternAdoptDialog.new()  # row ▸ Adopt behavior…: preview-first swap of a hand-written pattern for the shipped one (dock/pattern_adopt_dialog.gd)
 var _grid_csv_dialog: EventSheetGridCSVDialog = EventSheetGridCSVDialog.new()  # variable ▸ Export/Import Grid …CSV: the data-asset grid round trip (dock/grid_csv_dialog.gd)
 var _paste_special_dialog: EventSheetPasteSpecialDialog = EventSheetPasteSpecialDialog.new()  # row ▸ More ▸ Paste Special…: snippet paste, retargeted (dock/paste_special_dialog.gd)
 var _language_variants_dialog: EventSheetLanguageVariantsDialog = EventSheetLanguageVariantsDialog.new()  # row ▸ Language Variants…: writes Godot's own per-locale asset remap table, and names the preloads that would ignore it (dock/language_variants_dialog.gd)
@@ -362,6 +363,7 @@ func _init() -> void:
 	# The three retarget/round-trip dialogs: init() only stores _dock (nothing tree-bound), and the
 	# suite drives them on a fresh .new() editor before _ready, so they are wired here with the rest.
 	_variable_retype_dialog.init(self)
+	_pattern_adopt_dialog.init(self)
 	_grid_csv_dialog.init(self)
 	_paste_special_dialog.init(self)
 	# The translation seams follow the same rule: init() only stores _dock, and the suite drives the
@@ -2138,6 +2140,7 @@ func _load_simple_mode_preference() -> void:
 	_apply_compact_rows_pref()
 	_apply_humanized_names_pref()
 	_apply_familiar_words_pref()
+	_apply_patterns_lens_pref()
 	# The sheet zoom rides the same startup read: it belongs to the layout, so the first sheet
 	# opens at the size the last one was being read at.
 	_apply_sheet_zoom_pref()
@@ -2287,6 +2290,48 @@ func _familiar_words_enabled() -> bool:
 	if _viewport != null:
 		return _viewport.familiar_words_enabled()
 	return _stored_familiar_words()
+
+
+## S24 - whether the sheet NAMES the patterns its readings claimed. On by default, because naming
+## the pattern is the teaching moment and a beginner is exactly who needs it; turning it off shows
+## the plain statement sentences underneath, which is how a doubter checks the claim. Persisted per
+## project per user in editor metadata, exactly like Familiar Words.
+func _patterns_lens_enabled() -> bool:
+	if _viewport != null:
+		return _viewport.patterns_lens_enabled()
+	return _stored_patterns_lens()
+
+
+func _stored_patterns_lens() -> bool:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "patterns_lens", true))
+	return true
+
+
+func _apply_patterns_lens_pref() -> void:
+	var stored: bool = _stored_patterns_lens()
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.patterns_lens = stored
+
+
+func _toggle_patterns_lens(view_popup: PopupMenu) -> void:
+	var showing: bool = not _patterns_lens_enabled()
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", "patterns_lens", showing)
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		view.patterns_lens = showing
+		# The chip is a SPAN built at row-build time, so the lens needs a span rebuild rather than a
+		# redraw - the same reason the Familiar Words toggle re-sets the sheet.
+		view.set_sheet(_current_sheet)
+	if view_popup != null:
+		var item_index: int = view_popup.get_item_index(27)
+		if item_index >= 0:
+			view_popup.set_item_checked(item_index, showing)
+	_set_status("Patterns - an event that is a known shape says which one, and its hover says why." if showing
+		else "Patterns off - every event reads as its own plain sentences.")
 
 
 func _stored_familiar_words() -> bool:
@@ -2890,6 +2935,41 @@ func _open_why_didnt_this_fire() -> void:
 	if panel == null:
 		return
 	panel.open_for_row(self, row, _ensure_live_values_panel()._last_values)
+
+
+## S24 - Row menu > Explain this reading: opens the pattern's Manual page, where the hand-written
+## shape and the events it reads as sit side by side. A pattern reading is a claim spanning several
+## lines, and this is the reader's way to go and check it.
+func explain_pattern_reading() -> void:
+	var claim: Dictionary = _context_pattern_claim()
+	if claim.is_empty():
+		_set_status("Pick an event with a pattern marker first.", true)
+		return
+	EventSheetPatternManual.open_page(str(claim.get("pattern", "")))
+
+
+## S20 - Row menu > Adopt behavior: the preview-first swap of a hand-written pattern for the shipped
+## one. Nothing changes until the reader has read what would.
+func adopt_pattern_behavior() -> void:
+	var claim: Dictionary = _context_pattern_claim(true)
+	if claim.is_empty():
+		_set_status("Pick an event with a behavior to adopt first.", true)
+		return
+	_pattern_adopt_dialog.open(claim)
+
+
+## The claim behind the row that was right-clicked, or {} when there is none. `adoptable_only`
+## narrows it to a claim this build can actually rewrite, which is what the Adopt item was offered
+## for in the first place.
+func _context_pattern_claim(adoptable_only: bool = false) -> Dictionary:
+	var row: EventRow = _context_row.source_resource as EventRow if _context_row != null else null
+	if row == null or _current_sheet == null:
+		return {}
+	for entry: Variant in EventSheetPatternFacts.claims_for_row(_current_sheet, row.event_uid):
+		if adoptable_only and not EventSheetPatternAdopt.is_adoptable(entry as Dictionary):
+			continue
+		return entry as Dictionary
+	return {}
 
 
 # ── Single-param inline editing (double-click value / colour swatch / node drop) → dock/inline_param_editor.gd ──
