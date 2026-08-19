@@ -201,6 +201,9 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Metadata": "Object",
 	"Mouse": "InputEventMouseButton",
 	"Movement": "Path2D",
+	# S10. Nothing derivable: "Multiplayer" is not a class, and the messages a peer sends are the
+	# nearest thing the editor draws to what these rows are about.
+	"Multiplayer": "Signals",
 	"Nodes": "Node",
 	"Overlap 2D": "Area2D",
 	"Overlap 3D": "Area3D",

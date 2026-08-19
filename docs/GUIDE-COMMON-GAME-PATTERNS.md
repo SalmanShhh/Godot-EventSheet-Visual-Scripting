@@ -280,6 +280,44 @@ event that owns one is marked as the pattern it is.
   `limit_top` / `limit_bottom` writes reads as ONE scroll-limits row; hover it to see every line
   it stands for, and the file keeps all four exactly as they were.
 
+## A loading screen that shows progress
+
+Godot can load the next layout on another thread while the current one keeps running. Written by
+hand that is four `ResourceLoader` calls, a status enum and an array passed by reference; as rows it
+is three sentences and one expression, and each of them writes exactly the line the reading
+recognises - so a loading screen you type and one you pick are the same bytes.
+
+1. On start of layout: **System ▸ Load layout `"res://levels/level_2.tscn"` in the background**.
+2. Every tick, feed the bar: **ProgressBar ▸ Set value to `System.LoadingProgress * 100`**. The
+   expression answers 0 to 1, so multiply by 100 for a percentage.
+3. Add a condition **System ▸ layout `"res://levels/level_2.tscn"` has finished loading**, and under
+   it **System ▸ Go to layout `"res://levels/level_2.tscn"`**. That switch reuses what was already
+   loaded, so there is no second load and no pause.
+
+Use the same path in all three rows - that is what ties them together. Open the file afterwards and
+it reads back as those three sentences, with the layout named the way the file is named.
+
+## Movement, multiplayer and paths in one vocabulary
+
+Three more shapes every Godot script makes now read - and are written - as the rows a behavior
+already has words for.
+
+- **Movement, on a `CharacterBody2D` or `CharacterBody3D`**: **Apply gravity**, **Accelerate x
+  toward … at … (per second)**, **Limit speed to …**, **Move (and slide along what it hits)**,
+  **Disable collisions with …**, **Ignore collisions with …**, **Set angle toward …** and **Rotate
+  toward … at … (per second)**. A plain node's `velocity` is just a variable, so none of these words
+  is claimed on one.
+- **Multiplayer**: mark a function as a message, then **Multiplayer ▸ Send `<message>` to everyone**
+  / **to the host** / **to one peer**, ask **Is host** or **Owns this object**, and read
+  **Multiplayer.MyID**. An `@rpc` function reads with its name in the condition lane and its mode
+  words muted beside it - *from any peer · runs here too · reliable*.
+- **Navigation**: **Find path to …**, **Move along path at …** and **Has arrived**. When the file
+  wires the avoidance callback, the move row says **(avoiding others)**.
+
+Where a shipped behavior could replace the hand-written block, the sheet says so: a body that
+applies gravity offers the Platformer pack, one that only steers offers Eight Direction, and a
+navigation block offers the pathfinding pack that matches its dimension.
+
 ## Where these live
 
 Everything above except the State Machine, Advanced Random, and HUD Kit sections is built into

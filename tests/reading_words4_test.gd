@@ -116,7 +116,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"lens ▸ Make current",
 	"sparks ▸ Particles  Start spraying",
 	"sparks ▸ Particles  Restart",
-	"ReadingWords4Player ▸ Set collision with layer 2 on",
+	"ReadingWords4Player ▸ Enable collisions with 2",
 	"ReadingWords4Player ▸ Set collisions off",
 	# N9 - the analogue read belongs to the pad, not to System
 	"Gamepad ▸ Set hp to strength of \"gas\"",
@@ -227,7 +227,7 @@ static func _statement_values() -> bool:
 		["sparks.emitting = true", "sparks ▸ Particles  Start spraying"],
 		["sparks.emitting = false", "sparks ▸ Particles  Stop spraying"],
 		["sparks.restart()", "sparks ▸ Particles  Restart"],
-		["set_collision_mask_value(2, true)", "Player ▸ Set collision with layer 2 on"],
+		["set_collision_mask_value(2, true)", "Player ▸ Enable collisions with 2"],
 		["set_collision_layer_value(3, false)", "Player ▸ Set collision with layer 3 off"],
 		["collision_layer = 0", "Player ▸ Set collisions off"],
 		["collision_mask = 0", "Player ▸ Set collisions off"],

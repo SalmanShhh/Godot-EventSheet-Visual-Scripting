@@ -2467,3 +2467,30 @@ runs every tick,выполняется каждый тик
 every tick,каждый тик
 Current state is,Текущее состояние -
 "one named state at a time, switched by Go to state","одно именованное состояние за раз, переключается через Перейти к состоянию"
+Load layout {path} in the background,Загрузить макет {path} в фоне
+layout {path} has finished loading,макет {path} загружен
+Apply gravity {gravity} (per second),Применить гравитацию {gravity} (в секунду)
+Accelerate {axis} toward {target} at {rate} (per second),Разгонять {axis} к {target} со скоростью {rate} (в секунду)
+Limit speed to {value},Ограничить скорость до {value}
+Move (and slide along what it hits),Двигаться (скользя вдоль преград)
+Disable collisions with {layer},Отключить столкновения с {layer}
+Enable collisions with {layer},Включить столкновения с {layer}
+Ignore collisions with {other},Игнорировать столкновения с {other}
+Rotate toward {target} at {rate} (per second),Поворачивать к {target} со скоростью {rate} (в секунду)
+collided object is in family {name},задетый объект входит в семейство {name}
+Send {name} to everyone,Отправить {name} всем
+Send {name} to the host,Отправить {name} хосту
+Send {name} to {peer},Отправить {name} узлу {peer}
+Is host,Является хостом
+Owns this object,Владеет этим объектом
+from any peer,от любого узла
+from the owner,от владельца
+runs here too,выполняется и здесь
+remote only,только удалённо
+reliable,надёжно
+unreliable,ненадёжно
+"unreliable, in order","ненадёжно, по порядку"
+Find path to {target},Найти путь к {target}
+Move along path at {speed},Двигаться по пути со скоростью {speed}
+Move along path at {speed} (avoiding others),Двигаться по пути со скоростью {speed} (обходя других)
+Has arrived,Прибыл

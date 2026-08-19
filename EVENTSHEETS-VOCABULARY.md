@@ -2360,6 +2360,7 @@ Collections (rich variables)
 - **Is Playing** (`target: String`) - True while the audio player is currently playing a sound.
 - **Is Animation Playing** (`target: String`) - True while the animated sprite is currently playing an animation.
 - **Has Arrived** (`target: String`) - True once the navigation agent has reached its target destination.
+- **Layout Has Finished Loading** (`path: String`) - True once a layout started with Load Layout In The Background is ready to switch to.
 - **Is Visible** (`target: String`) - True when the node is currently visible on screen.
 - **Is Equal (approx)** (`a: String, b: String`) - True when two numbers are nearly equal, avoiding tiny floating-point errors.
 - **Is Zero (approx)** (`value: String`) - True when a value is essentially zero, ignoring tiny rounding differences.
@@ -2421,6 +2422,9 @@ Collections (rich variables)
 - **Set Text** (`value: String, target: String`) - Sets the text shown on a label, like a score or message.
 - **Append Text** (`value: String, target: String`) - Adds more text onto the end of a label's existing text.
 - **Find Path To** (`position: String, target: String`) - Tells a navigation agent to pathfind toward a world position, for AI movement.
+- **Move Along Path** (`next: String, speed: String, target: String`) - Steers the body toward the next point on the path its navigation agent worked out. Follow it with Move so the body actually travels.
+- **Load Layout In The Background** (`path: String`) - Starts loading a layout on another thread while the game keeps running, so a loading screen can show progress instead of freezing.
+- **Go To Loaded Layout** (`path: String`) - Switches to a layout that finished loading in the background, with no second load and no pause.
 - **Show** (`target: String`) - Makes a node visible on screen.
 - **Hide** (`target: String`) - Hides a node so it no longer shows on screen.
 - **Set Color Tint** (`color: String, target: String`) - Tints a node and its children with a color, also useful for fading via alpha.
@@ -2458,6 +2462,7 @@ Collections (rich variables)
 - **Get Text** (`target: String`) - Returns the text currently displayed on the label.
 - **Next Path Position** (`target: String`) - Returns the next point along the path the agent should move toward.
 - **Distance To Target** (`target: String`) - Returns how far the agent still is from its navigation target.
+- **Loading Progress** (`path: String`) - How far a background load has got, from 0 to 1 - multiply by 100 for a percentage bar.
 - **Random** (`from: String, to: String`) - Returns a random decimal number between the two bounds you give.
 - **Random Integer** (`from: String, to: String`) - Returns a random whole number between the two bounds, both included.
 - **Choose** (`values: String`) - Randomly picks one value from a comma-separated list you provide.
@@ -2766,6 +2771,9 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Apply Gravity** (`gravity: String, delta_t: String`) - Adds constant downward acceleration to the character each frame, making it fall.
 - **Accelerate Velocity X Toward** (`target_speed: String, rate: String, delta_t: String`) - Smoothly eases horizontal speed toward a target, giving gradual acceleration and braking.
 - **Accelerate Velocity Y Toward** (`target_speed: String, rate: String, delta_t: String`) - Smoothly eases vertical speed toward a target value over time.
+- **Limit Speed** (`max_speed: String`) - Caps how fast the body can travel in any direction, keeping diagonal movement no faster than straight movement.
+- **Ignore Collisions With** (`other: String`) - Lets this body pass through one other body from now on - a moving platform it rides, or the object that just fired it.
+- **Rotate Toward** (`angle: String, rate: String, delta_t: String`) - Turns the object toward an angle a little each frame instead of snapping to it, taking the shorter way round.
 - **Apply Central Impulse** (`impulse: String, target: String`) - Gives a rigid body an instant push in a direction, like a kick or explosion.
 - **Apply Central Force** (`force: String, target: String`) - Applies a continuous push to a rigid body each physics frame, like steady thrust.
 - **Apply Torque Impulse** (`torque: String, target: String`) - Gives a rigid body an instant spin, making it start rotating.
@@ -3164,6 +3172,20 @@ Mesh vocabulary (build and swap 3D meshes from events).
 #### Expressions
 - **Mesh Surface Count** - How many surfaces (material slots) this mesh has - 0 when there is no mesh.
 - **Mesh Size** (`target: String`) - The mesh's bounding-box size (width, height, depth) in local space - handy for fitting or spacing.
+
+### Multiplayer (`res://addons/eventforge/registration/modules/multiplayer_aces.gd`)
+
+#### Conditions
+- **Is Host** - True on the peer that is hosting the game. Put everything that decides what is true behind this.
+- **Owns This Object** - True when this peer is the one allowed to move and change this object - the player's own character rather than everybody else's copy of it.
+
+#### Actions
+- **Send Message To Everyone** (`message: String, args: String`) - Runs a message on every peer in the game, including this one when the message says so. The function must be marked as a message first.
+- **Send Message To The Host** (`message: String, args: String`) - Runs a message on the host only - the peer that decides what is true, so cheats cannot be sent straight to everybody.
+- **Send Message To One Peer** (`message: String, peer: String, args: String`) - Runs a message on one named peer only - a private reply, or a correction sent back to the player it is about.
+
+#### Expressions
+- **My ID** - This peer's own id. The host is always 1; everyone else gets a number when they join.
 
 ### Native 3d (`res://addons/eventforge/registration/modules/native_3d_aces.gd`)
 3D vocabulary

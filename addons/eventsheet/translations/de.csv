@@ -2467,3 +2467,30 @@ runs every tick,läuft jeden Tick
 every tick,jeder Tick
 Current state is,Aktueller Zustand ist
 "one named state at a time, switched by Go to state","immer genau ein benannter Zustand, umgeschaltet mit Gehe zu Zustand"
+Load layout {path} in the background,Layout {path} im Hintergrund laden
+layout {path} has finished loading,Layout {path} ist fertig geladen
+Apply gravity {gravity} (per second),Schwerkraft {gravity} anwenden (pro Sekunde)
+Accelerate {axis} toward {target} at {rate} (per second),{axis} auf {target} mit {rate} beschleunigen (pro Sekunde)
+Limit speed to {value},Geschwindigkeit auf {value} begrenzen
+Move (and slide along what it hits),Bewegen (und an Getroffenem entlanggleiten)
+Disable collisions with {layer},Kollisionen mit {layer} abschalten
+Enable collisions with {layer},Kollisionen mit {layer} einschalten
+Ignore collisions with {other},Kollisionen mit {other} ignorieren
+Rotate toward {target} at {rate} (per second),Zu {target} mit {rate} drehen (pro Sekunde)
+collided object is in family {name},getroffenes Objekt ist in Familie {name}
+Send {name} to everyone,{name} an alle senden
+Send {name} to the host,{name} an den Host senden
+Send {name} to {peer},{name} an {peer} senden
+Is host,Ist Host
+Owns this object,Besitzt dieses Objekt
+from any peer,von jedem Peer
+from the owner,vom Besitzer
+runs here too,läuft auch hier
+remote only,nur entfernt
+reliable,zuverlässig
+unreliable,unzuverlässig
+"unreliable, in order","unzuverlässig, in Reihenfolge"
+Find path to {target},Weg zu {target} suchen
+Move along path at {speed},Auf dem Weg mit {speed} bewegen
+Move along path at {speed} (avoiding others),Auf dem Weg mit {speed} bewegen (anderen ausweichen)
+Has arrived,Ist angekommen

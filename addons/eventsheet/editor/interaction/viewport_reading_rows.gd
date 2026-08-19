@@ -90,6 +90,12 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		"tile_data_locals": tile_data_local_map(sheet)
 	}
 	extras.merge(patterns, true)
+	# ── S8 / S10 / S15 lens hook ───────────────────────────────────────────────────────────────
+	# The three patterns whose lines only mean something TOGETHER: the locals a background load
+	# threads its path and its progress through, the messages the file publishes with `@rpc`, and the
+	# navigation agent plus the waypoint local a path walk is written around. Worked out once here,
+	# for the same reason the tween chains are - a per-row guess could only see one line at a time.
+	extras.merge(godot_systems_facts(sheet), true)
 	return extras
 
 
@@ -165,6 +171,300 @@ static func tile_data_local_map(sheet: EventSheetResource) -> Dictionary:
 	for name_text: String in disagreed:
 		found.erase(name_text)
 	return found
+
+
+
+
+
+
+## S8 / S10 / S15. What the FILE says about its Godot-systems patterns, as the fact maps the sentence
+## grammar reads:
+##
+##   loading_paths     {local: the scene path literal it was declared from}
+##   loading_progress  {local: true} - the arrays passed to load_threaded_get_status
+##   loading_status    {local: the path expression its status was read for}
+##   message_names     {function: its published name}   message_params {function: parameter names}
+##   nav_agents        {local: true}   nav_waypoints {local: true}   nav_avoidance bool
+##
+## Everything here is a plain walk of lines the sheet already holds. A fact that the file does not
+## state outright is simply absent, and every reading built on it then declines to fire.
+static func godot_systems_facts(sheet: EventSheetResource) -> Dictionary:
+	var loading_paths: Dictionary = {}
+	var loading_progress: Dictionary = {}
+	var loading_status: Dictionary = {}
+	var nav_agents: Dictionary = {}
+	var nav_waypoints: Dictionary = {}
+	var avoidance_wired: bool = false
+	var computed_handler: bool = false
+	if sheet == null:
+		return {}
+	for line: String in _systems_fact_lines(sheet):
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var declared: String = _declared_local_name(text)
+		var value: String = _declared_local_value(text)
+		var scene_path: String = _scene_path_literal(value)
+		if not declared.is_empty() and not scene_path.is_empty():
+			loading_paths[declared] = scene_path
+		if not declared.is_empty() and _is_nav_agent_value(value, declared, sheet):
+			nav_agents[declared] = true
+		var status_at: int = text.find(EventSheetSentence.LOAD_STATUS_HEAD)
+		if status_at >= 0:
+			var close_at: int = EventSheetSentence.closing_paren(
+				text, status_at + EventSheetSentence.LOAD_STATUS_HEAD.length() - 1)
+			if close_at > 0:
+				var inside: String = text.substr(
+					status_at + EventSheetSentence.LOAD_STATUS_HEAD.length(),
+					close_at - status_at - EventSheetSentence.LOAD_STATUS_HEAD.length())
+				var asked: PackedStringArray = EventSheetSentence.split_top_level(inside, ",")
+				if asked.size() >= 1 and not declared.is_empty():
+					loading_status[declared] = asked[0].strip_edges()
+				if asked.size() >= 2 and EventSheetSentence.is_identifier(asked[1].strip_edges()):
+					loading_progress[asked[1].strip_edges()] = true
+		if not declared.is_empty() and value.ends_with(".get_next_path_position()"):
+			nav_waypoints[declared] = true
+		if text.contains(".set_velocity(") or text.begins_with("set_velocity("):
+			avoidance_wired = true
+		if text.contains("velocity_computed"):
+			computed_handler = true
+	var message_names: Dictionary = {}
+	var message_params: Dictionary = {}
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function == null:
+			continue
+		var mode_note: String = ""
+		for annotation: String in event_function.annotation_lines:
+			var words: String = EventSheetSentence.rpc_mode_words(annotation)
+			if annotation.strip_edges().begins_with("@rpc"):
+				mode_note = words
+		if not _declares_rpc(event_function):
+			continue
+		var name_text: String = event_function.function_name.strip_edges()
+		if name_text.is_empty():
+			continue
+		message_names[name_text] = EventSheetSentence.function_words(name_text)
+		message_params[name_text] = parameter_names_of(event_function)
+		if not mode_note.is_empty():
+			message_names["%s::modes" % name_text] = mode_note
+	return {
+		"loading_paths": loading_paths,
+		"loading_progress": loading_progress,
+		"loading_status": loading_status,
+		"message_names": message_names,
+		"message_params": message_params,
+		"nav_agents": nav_agents,
+		"nav_waypoints": nav_waypoints,
+		"nav_avoidance": avoidance_wired and computed_handler
+	}
+
+
+## S8 / S9 / S10 / S15. The evidence each pattern is recognised BY, as the fragments a line of the
+## event has to contain. Frozen alongside the pattern ids: a chip, a Doctor smell and a Manual page
+## all key on the same claim, so what counts as evidence may gain entries but never lose them.
+const SYSTEMS_PATTERN_EVIDENCE: Dictionary = {
+	"background_loading": [
+		"load_threaded_request", "load_threaded_get_status", "load_threaded_get(",
+		"THREAD_LOAD_LOADED", "change_scene_to_packed"
+	],
+	"movement": [
+		"move_and_slide()", "velocity.limit_length(", "move_toward(velocity",
+		"add_collision_exception_with(", "set_collision_mask_value(", "lerp_angle("
+	],
+	"multiplayer": [
+		".rpc(", ".rpc_id(", "multiplayer.is_server()", "is_multiplayer_authority()",
+		"multiplayer.get_unique_id()"
+	],
+	"navigation": [
+		"target_position =", "get_next_path_position()", "is_navigation_finished()",
+		"velocity_computed"
+	]
+}
+
+## The one line the chip says for each pattern - the sheet's own name for the shape.
+const SYSTEMS_PATTERN_WORDS: Dictionary = {
+	"background_loading": "Loading a layout in the background",
+	"movement": "Movement math a behavior already has words for",
+	"multiplayer": "Messages sent between peers",
+	"navigation": "Following a path a navigation agent worked out"
+}
+
+## The sheet ACEs each pattern is made of - what Adopt behavior would write, and what the Manual's
+## "Patterns using this" is derived from.
+const SYSTEMS_PATTERN_ACES: Dictionary = {
+	"background_loading": ["LoadLayoutInBackground", "LayoutFinishedLoading", "GoToLoadedLayout",
+		"LoadingProgress"],
+	"movement": ["ApplyGravitySimple", "AccelerateVelocityX", "AccelerateVelocityY", "LimitSpeed",
+		"MoveAndSlide", "IgnoreCollisionsWith", "SetCollisionMaskBit", "RotateToward"],
+	"multiplayer": ["SendMessageToEveryone", "SendMessageToHost", "SendMessageToPeer", "IsHost",
+		"OwnsThisObject", "MyPeerId"],
+	"navigation": ["SetNavTarget", "MoveAlongPath", "IsNavFinished", "GetNextPathPosition"]
+}
+
+
+## S8 / S9 / S10 / S15. Records which events of a sheet read as one of the four Godot-systems
+## patterns, with the exact source lines as evidence and - where one ships - the behavior that could
+## replace the hand-written shape.
+##
+## Called once at the top of a row build, after the registry has been cleared. Nothing here draws
+## anything: the chip, the hover and Adopt behavior all read the claims back.
+static func claim_godot_systems_patterns(sheet: EventSheetResource) -> void:
+	if sheet == null:
+		return
+	var dimension_3d: bool = sheet.host_class.strip_edges().contains("3D")
+	for entry: Variant in sheet.events:
+		_claim_systems_in(sheet, entry, dimension_3d, 0)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			for event_entry: Variant in (entry as EventFunction).events:
+				_claim_systems_in(sheet, event_entry, dimension_3d, 0)
+
+
+## One event of the walk: the lines it holds decide which pattern it owns, and its sub-events are
+## walked in turn so a pattern spread over a parent and its children is claimed where it starts.
+static func _claim_systems_in(sheet: EventSheetResource, entry: Variant, dimension_3d: bool,
+		depth: int) -> void:
+	if depth > 64 or not (entry is EventRow):
+		return
+	var event_row: EventRow = entry as EventRow
+	var lines: PackedStringArray = PackedStringArray()
+	_collect_code(event_row, lines)
+	var text: String = "\n".join(lines)
+	# A half-lifted event is the normal case, so the ids of the rows that DID lift count as evidence
+	# too: a Move row and the `move_and_slide()` beside it are the same pattern, and an event whose
+	# whole block lifted would otherwise claim nothing at all.
+	var picked: PackedStringArray = _systems_row_ace_ids(event_row)
+	for pattern: String in SYSTEMS_PATTERN_EVIDENCE:
+		var evidence: PackedStringArray = PackedStringArray()
+		for line: String in text.split("\n"):
+			for fragment: Variant in (SYSTEMS_PATTERN_EVIDENCE[pattern] as Array):
+				if line.contains(str(fragment)) and not evidence.has(line.strip_edges()):
+					evidence.append(line.strip_edges())
+		for ace_id: String in picked:
+			if (SYSTEMS_PATTERN_ACES[pattern] as Array).has(ace_id) and not evidence.has(ace_id):
+				evidence.append(ace_id)
+		if evidence.is_empty():
+			continue
+		EventSheetPatternFacts.claim(sheet, pattern, event_row.event_uid, event_row.event_uid, evidence,
+			str(SYSTEMS_PATTERN_WORDS.get(pattern, "")),
+			_systems_adoptable(pattern, text, picked, dimension_3d),
+			PackedStringArray(SYSTEMS_PATTERN_ACES.get(pattern, [])))
+	for sub_event: Variant in event_row.sub_events:
+		_claim_systems_in(sheet, sub_event, dimension_3d, depth + 1)
+
+
+## Every ace_id an event's trigger, conditions and actions carry, so a lifted row can be evidence of
+## the pattern it belongs to just as a hand-written line is.
+static func _systems_row_ace_ids(event_row: EventRow) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var rows: Array = [event_row.trigger]
+	rows.append_array(event_row.conditions)
+	rows.append_array(event_row.actions)
+	for entry: Variant in rows:
+		if not (entry is Resource):
+			continue
+		var ace_id: String = str((entry as Resource).get("ace_id")).strip_edges()
+		if not ace_id.is_empty() and not found.has(ace_id):
+			found.append(ace_id)
+	return found
+
+
+## Which shipped behavior could replace a hand-rolled pattern, by the SHAPE the evidence has: a body
+## that applies gravity is a platformer, one that only steers is an eight-direction mover, and a
+## navigation block belongs to whichever pathfinding pack matches its dimension. "" when nothing
+## ships for the pattern, which is what keeps the chip from offering an adoption nobody can take.
+static func _systems_adoptable(pattern: String, text: String, picked: PackedStringArray,
+		dimension_3d: bool) -> String:
+	match pattern:
+		"movement":
+			var gravity: bool = text.contains("velocity.y +=") or picked.has("ApplyGravitySimple") or picked.has("ApplyGravity")
+			return "platformer_movement" if gravity else "eight_direction"
+		"navigation":
+			return "nav_agent_3d" if dimension_3d else "platformer_pathfinding"
+	return ""
+
+
+## S8. A declaration's value as the QUOTED project path it is, or "" when it is not one. A lifted
+## variable row is written back out with its value already unquoted, so both spellings answer the
+## same literal and the layout gets named either way.
+static func _scene_path_literal(value: String) -> String:
+	var text: String = value.strip_edges()
+	if text.begins_with("\"") and text.ends_with("\"") and text.length() > 1:
+		text = text.substr(1, text.length() - 2)
+	if not text.begins_with("res://") or text.contains("\""):
+		return ""
+	return "\"%s\"" % text
+
+
+## Every line the systems facts are read from: the hand-written ones in file order, then the LIFTED
+## rows written back out as the code they stand for. A half-lifted file is the normal case - the
+## importer turns `velocity.y += gravity * delta` into a Movement row while the line beside it stays
+## verbatim - so a fact walk that saw only one of the two would answer differently depending on how
+## much of the file happened to lift, which is exactly the drift these facts exist to prevent.
+static func _systems_fact_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = ordered_code_lines(sheet)
+	var lifted: PackedStringArray = PackedStringArray()
+	for entry: Variant in sheet.events:
+		_collect_code(entry, lifted)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			for event_entry: Variant in (entry as EventFunction).events:
+				_collect_code(event_entry, lifted)
+	for block: String in lifted:
+		lines.append_array(block.split("\n"))
+	return lines
+
+
+## S10. True when a function carries an `@rpc` annotation - which is what makes it a message rather
+## than a function anyone can call locally.
+static func _declares_rpc(event_function: EventFunction) -> bool:
+	for annotation: String in event_function.annotation_lines:
+		if annotation.strip_edges().begins_with("@rpc"):
+			return true
+	return false
+
+
+## The name a `var x ... = ...` line declares, or "" when the line declares nothing. The walrus, the
+## annotated and the `@onready` spellings all answer the same name.
+## A lifted row is written back out as `name = value` with no `var` in front of it (the declaration
+## and the value it was filled from are two rows by then), so both spellings answer the same name.
+static func _declared_local_name(text: String) -> String:
+	var head: String = text.trim_prefix("@onready ").strip_edges()
+	if not head.begins_with("var "):
+		head = "var %s" % head
+	for separator: String in [" := ", " = "]:
+		var at: int = head.find(separator)
+		if at < 0:
+			continue
+		var name_text: String = head.substr(4, at - 4).strip_edges()
+		var colon_at: int = name_text.find(":")
+		if colon_at >= 0:
+			name_text = name_text.substr(0, colon_at).strip_edges()
+		return name_text if EventSheetSentence.is_identifier(name_text) else ""
+	return ""
+
+
+## The value a `var x ... = ...` line is declared from, or "" when the line declares nothing.
+static func _declared_local_value(text: String) -> String:
+	var head: String = text.trim_prefix("@onready ").strip_edges()
+	if not head.begins_with("var "):
+		head = "var %s" % head
+	for separator: String in [" := ", " = "]:
+		var at: int = head.find(separator)
+		if at >= 0:
+			return head.substr(at + separator.length()).strip_edges()
+	return ""
+
+
+## S15. True when a declaration's value IS a navigation agent - either a node whose name says so, or
+## a variable the sheet typed as one. A guess would put path words on an object that has no path.
+static func _is_nav_agent_value(value: String, declared: String, sheet: EventSheetResource) -> bool:
+	for agent_class: String in EventSheetSentence.NAV_AGENT_CLASSES:
+		if value.contains(agent_class):
+			return true
+	var known: String = str(object_class_map(sheet).get(declared, ""))
+	return EventSheetSentence.NAV_AGENT_CLASSES.has(known)
 
 
 ## R9. {timer tag: true when it fires once} from the `$Timer.one_shot = true` lines the file holds.

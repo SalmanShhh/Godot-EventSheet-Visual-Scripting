@@ -813,6 +813,43 @@ saves back byte for byte and the GDScript it compiles to is untouched.
   vocabularies spell them the same. With the glossary off, `s.length()` reads `length of s` as it
   always has; Godot's spelling is on hover either way.
 
+- **The Godot systems a script is built from.** Four shapes that only mean something across several
+  lines read as the rows an event sheet already has for them, and every one of them is also
+  writable in the same words, so a written and a picked block are the same bytes.
+  - **Loading a layout in the background.** `ResourceLoader.load_threaded_request(path)` reads
+    **System ▸ Load layout Level 2 in the background**, `st == ResourceLoader.THREAD_LOAD_LOADED`
+    reads **System ▸ layout Level 2 has finished loading**, the progress array read by index reads
+    **System.LoadingProgress**, and `change_scene_to_packed(load_threaded_get(path))` reads
+    **System ▸ Go to layout Level 2**. The layout is named the way the file is named, whether the
+    path is written in the call or held in a variable the file declared from a literal.
+  - **Movement math, on a `CharacterBody2D` or `CharacterBody3D` only.** `velocity.y += gravity *
+    delta` reads **Apply gravity**, `move_toward` on one axis reads **Accelerate x toward … at …
+    (per second)**, `limit_length` reads **Limit speed to …**, `move_and_slide()` reads **Move (and
+    slide along what it hits)**, `set_collision_mask_value(2, false)` reads **Disable collisions
+    with …** (by the project's own layer name where it has one),
+    `add_collision_exception_with(x)` reads **Ignore collisions with x**, `look_at(p)` reads **Set
+    angle toward p**, `lerp_angle` on the rotation reads **Rotate toward … at … (per second)**, and
+    `c.get_collider().is_in_group("enemy")` reads **c ▸ collided object is in family enemy**. A plain
+    node's `velocity` is just a variable, and a step that is not scaled by the frame time is not one
+    of these words, so neither is claimed.
+  - **Multiplayer.** An `@rpc` function reads with its name in the condition lane -
+    **Multiplayer ▸ On message Take Damage** with its parameter chips and its mode words muted
+    beside it (*from any peer · runs here too · reliable*). `f.rpc(10)` reads **Multiplayer ▸ Send
+    Take Damage to everyone** with the payload as named chips, `f.rpc_id(1, 10)` reads **to the
+    host**, `f.rpc_id(peer, 10)` reads **to peer**, `multiplayer.is_server()` reads **Is host**,
+    `is_multiplayer_authority()` reads **Owns this object**, and `multiplayer.get_unique_id()` reads
+    **Multiplayer.MyID**.
+  - **Navigation.** `agent.target_position = p` reads **Find path to p**, the
+    direction-to-the-next-waypoint step reads **Move along path at speed**, with **(avoiding
+    others)** when the file wires the `velocity_computed` callback, and `is_navigation_finished()`
+    reads **Has arrived**.
+
+  Each of these is also a claim in the sheet's pattern registry, recorded on the event that owns it,
+  with the exact source lines as its evidence and - where one ships - the behavior that could
+  replace the hand-written block.
+
+  ![A controller script read as an event sheet: a layout loaded in the background with its finished-loading condition, the movement math as Apply gravity / Accelerate / Limit speed / Move, the collision switches, a navigation agent's Find path to and Has arrived, and the multiplayer messages sent to everyone and to the host](images/opened-script-systems.png)
+
 ### The objects of an opened file - what they are, and where you find them
 
 A sheet says what a file DOES with its objects. These say what those objects ARE, and give you the bar

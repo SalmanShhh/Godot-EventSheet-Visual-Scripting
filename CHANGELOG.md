@@ -36,6 +36,49 @@ untouched, and the byte round-trip and the emitted GDScript cannot move.
   first)`, `items.has(sword)` reads `items contains sword`, and `commands["equip"].call()` reads
   `Functions ▸ Call the function stored in commands "equip"`. A lambda written over two lines keeps
   its Script block: a sentence may only stand for a shape it can see whole.
+### Added - the Godot systems an opened script is built from read as the sheet's own rows
+
+- **Loading a layout in the background is three sentences, not six lines of `ResourceLoader`.**
+  `load_threaded_request(path)` reads **System ▸ Load layout Level 2 in the background**, the status
+  enum reads **System ▸ layout Level 2 has finished loading**, the progress array read by index reads
+  **System.LoadingProgress**, and a `change_scene_to_packed(load_threaded_get(path))` pair collapses
+  to **System ▸ Go to layout Level 2** - each under the event its line sits in, with the layout named
+  the way the file is named. All four are also authorable: **Load Layout In The Background**,
+  **Layout Has Finished Loading**, **Go To Loaded Layout** and the **Loading Progress** expression
+  write exactly the shape the reading recognises, so a written and a picked loading screen are the
+  same bytes.
+- **Movement math on a character body reads in the movement behaviors' words.** `velocity.y +=
+  gravity * delta` is **Apply gravity**, `move_toward` on one axis is **Accelerate x toward … at …
+  (per second)**, `limit_length` is **Limit speed to …**, `move_and_slide()` is **Move (and slide
+  along what it hits)**, `add_collision_exception_with` is **Ignore collisions with …**,
+  `lerp_angle` on the rotation is **Rotate toward … at … (per second)**, and
+  `c.get_collider().is_in_group("enemy")` is **c ▸ collided object is in family enemy**. Claimed only
+  on `CharacterBody2D` / `CharacterBody3D` - a plain node's `velocity` is just a variable - and only
+  where the step is scaled by the frame time.
+- **New movement rows for the three steps that had none:** **Limit Speed**, **Ignore Collisions
+  With** and **Rotate Toward**.
+- **Godot's high-level multiplayer is an object.** A new **Multiplayer** vocabulary: **Send Message
+  To Everyone** / **To The Host** / **To One Peer**, **Is host**, **Owns this object** and the
+  **MyID** expression. An opened script reads `f.rpc(10)` as **Multiplayer ▸ Send Take Damage to
+  everyone** with the payload as named chips, `f.rpc_id(1, …)` as **to the host**,
+  `multiplayer.is_server()` as **Is host**, `is_multiplayer_authority()` as **Owns this object** and
+  `multiplayer.get_unique_id()` as **Multiplayer.MyID**.
+- **A navigation agent reads as the Pathfinding words.** `agent.target_position = p` is **Find path
+  to p**, the direction-to-the-next-waypoint step is **Move along path at speed**, with **(avoiding
+  others)** added when the file wires the avoidance callback, and `is_navigation_finished()` is
+  **Has arrived**. A new **Move Along Path** action writes the step; **Has Arrived** now says so on
+  the row instead of "Arrived at destination".
+- **The pattern registry is filled.** Every event holding one of these four shapes claims its
+  pattern with the exact source lines as evidence and, where one ships, the behavior that could
+  replace it (a body that applies gravity offers the Platformer pack, one that only steers offers
+  Eight Direction, a navigation block offers the matching pathfinding pack). The registry is cleared
+  and refilled at the top of each row build.
+
+### Changed
+
+- `set_collision_mask_value(n, false)` reads **Disable collisions with …** (was "Set collision with
+  layer … off"); the layers a body is ON keep the neutral wording, because joining a layer and
+  colliding with one are two different things.
 
 ### Added - effects, tilemaps and the camera read (and are authored) in the sheet's words
 

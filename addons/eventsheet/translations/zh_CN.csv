@@ -2467,3 +2467,30 @@ runs every tick,每个 tick 运行
 every tick,每个 tick
 Current state is,当前状态为
 "one named state at a time, switched by Go to state",同一时间只有一个命名状态，用 前往状态 切换
+Load layout {path} in the background,在后台加载布局 {path}
+layout {path} has finished loading,布局 {path} 已加载完成
+Apply gravity {gravity} (per second),施加重力 {gravity} (每秒)
+Accelerate {axis} toward {target} at {rate} (per second),以 {rate} 将 {axis} 加速至 {target} (每秒)
+Limit speed to {value},将速度限制为 {value}
+Move (and slide along what it hits),移动 (并沿碰到的物体滑行)
+Disable collisions with {layer},关闭与 {layer} 的碰撞
+Enable collisions with {layer},开启与 {layer} 的碰撞
+Ignore collisions with {other},忽略与 {other} 的碰撞
+Rotate toward {target} at {rate} (per second),以 {rate} 朝 {target} 旋转 (每秒)
+collided object is in family {name},碰到的对象属于族 {name}
+Send {name} to everyone,将 {name} 发送给所有人
+Send {name} to the host,将 {name} 发送给主机
+Send {name} to {peer},将 {name} 发送给 {peer}
+Is host,是主机
+Owns this object,拥有此对象
+from any peer,来自任意对等端
+from the owner,来自所有者
+runs here too,本机也会执行
+remote only,仅远程
+reliable,可靠
+unreliable,不可靠
+"unreliable, in order",不可靠，按顺序
+Find path to {target},寻找通往 {target} 的路径
+Move along path at {speed},以 {speed} 沿路径移动
+Move along path at {speed} (avoiding others),以 {speed} 沿路径移动 (避开其他对象)
+Has arrived,已到达
