@@ -61,7 +61,9 @@ func _build_new_window() -> void:
 	create_button.pressed.connect(_create_shared_sheet)
 	buttons.add_child(create_button)
 	body.add_child(buttons)
-	new_window.add_child(EventSheetPopupUI.margined(body))
+	var margined: MarginContainer = EventSheetPopupUI.margined(body)
+	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
+	new_window.add_child(margined)
 	_dock.add_child(new_window)
 
 

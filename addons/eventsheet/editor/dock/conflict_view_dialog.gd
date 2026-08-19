@@ -67,6 +67,9 @@ func build() -> void:
 	body.add_child(EventSheetPopupUI.hint_label(translate_hint()))
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# A ScrollContainer reports its CONTENT's size as nothing, so without a floor of its own the card
+	# above it collapses to a hairline and the two columns are invisible.
+	scroll.custom_minimum_size = Vector2(0.0, 300.0)
 	rows_box = VBoxContainer.new()
 	rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(rows_box)
@@ -79,7 +82,9 @@ func build() -> void:
 	save_button.pressed.connect(_save_resolved)
 	buttons.add_child(save_button)
 	body.add_child(buttons)
-	window.add_child(EventSheetPopupUI.margined(body))
+	var margined: MarginContainer = EventSheetPopupUI.margined(body)
+	margined.set_anchors_preset(Control.PRESET_FULL_RECT)
+	window.add_child(margined)
 	_dock.add_child(window)
 
 

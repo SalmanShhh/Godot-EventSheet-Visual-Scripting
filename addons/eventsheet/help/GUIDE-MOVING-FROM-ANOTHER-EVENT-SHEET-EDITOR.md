@@ -164,10 +164,33 @@ play the role both run at a definite, visible point:
 |---|---|---|
 | Include a sheet so its events run *at this point* | **Teach a Verb** - publish the shared logic and CALL it from a row | Exactly when the calling row runs - more explicit than an include, because the call is a row you can see |
 | Include a behaviour sheet for a whole family of objects | A **behavior pack** on the node | In scene-tree order each tick, as a separate node - NOT where any include line sits |
+| Include a sheet so *its whole set of events* runs in this script | **Sheet ▸ New shared sheet…**, then **Add ▸ Include sheet…** | Wherever those events' own triggers run - a shared sheet is included as a base class or as a helper, and both are ordinary Godot |
 
 So when you reach for an include meaning "run this shared logic here, now", the honest mapping
 is a called function. When you reach for it meaning "give these objects this behavior", it is a
-pack, and its ordering is the tree's.
+pack, and its ordering is the tree's. When you reach for it meaning "these events belong to every
+script like this one", that is a **shared sheet**.
+
+### Shared sheets: the closest thing to an include
+
+`Sheet ▸ New shared sheet…` makes a script whose whole job is to be included, and asks the one
+question that belongs to the shared sheet rather than to each script that includes it:
+
+- **as a base class** - the including script `extends` it, so the shared sheet's events simply *are*
+  that script's events. The Include bar at the top of the reading names it, and clicking it goes
+  there. Use this when the including scripts have no base class of their own.
+- **as a helper** - the including script keeps one of it, calls it each tick and forwards its
+  triggers to it. The sheet writes those forwarding rows for you. Use this when the script already
+  extends something (a `CharacterBody2D`, a pack's class) and cannot extend anything else.
+
+`Add ▸ Include sheet…` then wires any script to it with nothing left to ask, because the wiring was
+decided once. Included events read in the includer greyed and foldable; they are editable only in
+their own sheet, and changing that sheet changes every script that includes it.
+
+The Project Doctor reports one thing about includes: **two included sheets that both handle the same
+trigger**. Both run, in include order, and the last one's answer is the one that lasts - which is
+the single confusion you cannot see by reading the includer, because neither handler is written
+there.
 
 Rules of thumb, in the sheet's own terms:
 

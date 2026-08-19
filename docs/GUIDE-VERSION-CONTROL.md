@@ -68,6 +68,8 @@ way every source conflict does - `<<<<<<<`, `=======`, `>>>>>>>`. Opening such a
 does not try to read it as one sheet, because it is not one: it is two. Instead the **conflict view**
 opens, showing the conflicted region as **OURS** and **THEIRS** columns of events side by side.
 
+![A conflicted file open in the conflict view: the region heading names the two sides the merge wrote (HEAD against feature/jump), the event both sides left alone is greyed and marked "both the same", and the one event that differs carries its own Keep ours / Keep theirs / Keep both](images/conflict-view.png)
+
 - Events **both sides agree on are greyed** - there is nothing to decide about them.
 - Every differing event gets its own **Keep ours** / **Keep theirs** / **Keep both**.
 - The rest of the file is not shown here at all, because it is not in question.
