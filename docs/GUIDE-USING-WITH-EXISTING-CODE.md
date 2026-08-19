@@ -347,6 +347,8 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   just says `reads as events`. The number is measured by the same code the corpus gate measures with,
   so the chip and the test can never disagree about the same file. When the engine reported parse
   errors, the bar also says `N errors - the game will not run this script`, in red.
+![An opened script's head: one Instance variables folder holding every member, each row reading scope word, plain type word, name, value - Instance number speed = 200 with an Inspector chip, Constant number MAX_HP = 100, Static number spawned = 0 shared by every Player, Instance color tint = white with its live swatch](images/variable-sentence-head.png)
+
 - **Every variable reads as one sentence - `<scope> <type> <name> = <value>`.** The scope word leads:
   `Instance number speed = 200`, `Instance boolean alive = true`, `Constant number MAX_HP = 100`,
   `Static number spawned = 0` (which adds `shared by every Player`), `Local text name = ""` inside an

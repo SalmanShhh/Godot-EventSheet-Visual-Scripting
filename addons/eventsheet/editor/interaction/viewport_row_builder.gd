@@ -5209,7 +5209,12 @@ func _build_variable_row(
 		if not hinted_value.is_empty():
 			value_text = hinted_value
 	var value_meta: Dictionary = variable_meta.merged({"editable": false}, true)
-	if facts.get("swatch") is Color:
+	# The swatch draws AFTER its span's text and the span reserves no room for it, so it rides the
+	# LAST span of the row - the muted hex when a colour has a word, the value itself otherwise. Put
+	# on the value while a note follows, it would paint over the note's first character.
+	var swatch_on_note: bool = facts.get("swatch") is Color \
+		and not str(facts.get("note", "")).strip_edges().is_empty()
+	if facts.get("swatch") is Color and not swatch_on_note:
 		value_meta["swatch_color"] = facts["swatch"] as Color
 	row_data.spans.append(
 		_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta)
@@ -5218,13 +5223,12 @@ func _build_variable_row(
 	# them in, and ahead of the knob's own sentence so the fact reads before the prose.
 	var hint_note: String = str(facts.get("note", "")).strip_edges()
 	if not hint_note.is_empty():
-		row_data.spans.append(
-			_make_span(
-				hint_note,
-				SemanticSpan.SpanType.COMMENT,
-				variable_meta.merged({"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true)
-			)
+		var note_meta: Dictionary = variable_meta.merged(
+			{"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true
 		)
+		if swatch_on_note:
+			note_meta["swatch_color"] = facts["swatch"] as Color
+		row_data.spans.append(_make_span(hint_note, SemanticSpan.SpanType.COMMENT, note_meta))
 	# What the SCOPE adds that its word does not say on its own ("shared by every Player"), muted,
 	# in the same slot the limits use - a fact about the variable, ahead of its prose.
 	var scope_note: String = str(options.get("scope_note", "")).strip_edges()
@@ -5296,6 +5300,12 @@ static func _inferred_type_word(default_value: Variant, expression_default: bool
 		return friendly_type_word("Dictionary")
 	if text.is_valid_float():
 		return friendly_type_word("float")
+	# R37 - the two constructor spellings a reader meets constantly. `var tint := Color.WHITE` is a
+	# colour and `var home := Vector2.ZERO` is a vector; reading either as "any" would tell them less
+	# than the value in front of them already does.
+	for constructed: String in ["Color", "Vector2", "Vector3", "Vector4"]:
+		if text.begins_with("%s." % constructed) or text.begins_with("%s(" % constructed):
+			return friendly_type_word(constructed)
 	return ""
 
 
