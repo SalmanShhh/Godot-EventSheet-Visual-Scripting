@@ -10061,10 +10061,13 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"adoptable": "fps_controller",
 		"ace_ids": ["Core/MouseLook", "Core/LookAt3D", "Core/ObjectForward"]
 	},
+	# Background work has no picker rows of its own on purpose: the Run In Background behavior does
+	# the whole shape - the thread, the wait and the done signal - so the honest offer is the pack,
+	# not a row that writes one third of it.
 	"background": {
 		"words": "Background work",
 		"adoptable": "background_runner",
-		"ace_ids": ["Core/RunInBackground", "Core/WaitForBackground"]
+		"ace_ids": []
 	}
 }
 

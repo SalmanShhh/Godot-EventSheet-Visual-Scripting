@@ -151,7 +151,9 @@ the shape the reading recognises, so a hand-written line and a picked row are th
 - **The Video object** - Set Video, Play, Pause, Stop and Is Playing, with a module guide of its own.
 - **Sound and 3D** - Set Hearing Distance, Set Falloff and Crossfade join the Audio rows; Mouse Look
   and the Forward / Right / Up directions join the 3D rows.
-- **Background work** - Run In Background and Wait For Background Work.
+
+Background work deliberately gets no rows of its own: the Run In Background behavior does the whole
+shape - the thread, the wait and the done signal - so the offer a claim makes is the pack.
 
 ### Added - the Doctor warns when background work touches the scene tree
 

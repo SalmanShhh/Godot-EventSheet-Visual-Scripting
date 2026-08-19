@@ -907,6 +907,8 @@ saves back byte for byte and the GDScript it compiles to is untouched.
   These claim four more patterns on the event that owns them - web requests, lighting, first-person
   look and background work - and the last two offer the behavior that does the whole shape.
 
+  ![A 3D script read as an event sheet: a web request under the AJAX object, a light's energy and shadows, a video set and played with a positional sound's hearing distance and falloff, the mouse-look trio as one Mouse look row with its values muted beside it, a music crossfade as one row, work run in the background with its wait, and a signal unwired](images/opened-script-long-tail.png)
+
   ![A controller script read as an event sheet: a layout loaded in the background with its finished-loading condition, the movement math as Apply gravity / Accelerate / Limit speed / Move, the collision switches, a navigation agent's Find path to and Has arrived, and the multiplayer messages sent to everyone and to the host](images/opened-script-systems.png)
 
 ### The objects of an opened file - what they are, and where you find them
