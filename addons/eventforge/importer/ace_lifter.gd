@@ -2697,7 +2697,7 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 			# eats `const FMT = "a: b = c"` into name=`FMT = "a`). Flag it so _match_entry rejects any match
 			# whose captured name is not a bare identifier, letting the plain (correct) template win.
 			var decl_name: bool = variant.begins_with("var ") or variant.begins_with("const ")
-			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name, "scope_trigger": str(TRIGGER_SCOPED_ACES.get(descriptor.ace_id, ""))})
+			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name, "required_literal": _longest_literal_run(variant), "scope_trigger": str(TRIGGER_SCOPED_ACES.get(descriptor.ace_id, ""))})
 	# Try SPECIFIC templates before generic catch-alls. The Core generics (SetVar `{var_name} = {value}`,
 	# CallFunction `{function_name}({args})`, …) use lazy `.+?` captures that match almost any
 	# assignment/call, so in raw registry order they SHADOW every specific node ACE (`position = …`
@@ -2719,6 +2719,17 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 		# in the running inside that handler - elsewhere the same text is ordinary game code.
 		var entry_scope: String = str((entry as Dictionary).get("scope_trigger", ""))
 		if not entry_scope.is_empty() and entry_scope != scope_trigger:
+			continue
+		# Cheap necessary conditions before the expensive one. The pattern is anchored and every
+		# placeholder needs at least one character, so a line shorter than the template's literal text
+		# cannot match; and it must contain the template's longest literal run (see
+		# _longest_literal_run). Hundreds of entries are scanned per line, so rejecting the impossible
+		# ones with a length compare and a substring search - instead of a PCRE run each - is where
+		# most of the matching time went. Neither test can reject a line the regex would have matched.
+		if line.length() < int((entry as Dictionary).get("literal_len", 0)):
+			continue
+		var required_literal: String = str((entry as Dictionary).get("required_literal", ""))
+		if not required_literal.is_empty() and not line.contains(required_literal):
 			continue
 		var regex: RegEx = (entry as Dictionary).get("regex")
 		var regex_match: RegExMatch = regex.search(line)
@@ -2869,6 +2880,40 @@ static func _optional_prefix_variants(template: String) -> Array:
 
 
 ## "{amount}" placeholders become lazy named captures; everything else matches literally.
+## The longest run of LITERAL text in a template - the cheap prefilter _match_entry tries before it
+## pays for a regex. _template_to_regex emits every literal run escaped verbatim into an anchored
+## pattern, and no run sits inside an alternation or an optional group, so any line the pattern can
+## match must CONTAIN this run. String.contains is far cheaper than a PCRE search, and the index holds
+## hundreds of entries that are scanned per line, so skipping the ones that cannot possibly match is
+## most of the matching cost. Segmented exactly like _template_to_regex (same brace walk, same
+## "a brace pair that is not a parameter name is literal text" rule) so the two cannot drift.
+## Empty when the template is all placeholders - then there is nothing to prefilter on.
+static func _longest_literal_run(template: String) -> String:
+	var longest: String = ""
+	var cursor: int = 0
+	while cursor < template.length():
+		var open: int = template.find("{", cursor)
+		if open == -1:
+			var tail: String = template.substr(cursor)
+			return tail if tail.length() > longest.length() else longest
+		var close: int = template.find("}", open)
+		if close == -1:
+			var rest: String = template.substr(cursor)
+			return rest if rest.length() > longest.length() else longest
+		var literal: String = template.substr(cursor, open - cursor)
+		if literal.length() > longest.length():
+			longest = literal
+		var param_name: String = template.substr(open + 1, close - open - 1)
+		if not _is_bare_identifier(param_name):
+			# Not a capture - the braces are literal code (an empty dictionary literal above all), and
+			# _template_to_regex escapes them into the pattern as text, so they may join this run.
+			var braced: String = template.substr(open, close - open + 1)
+			if braced.length() > longest.length():
+				longest = braced
+		cursor = close + 1
+	return longest
+
+
 static func _template_to_regex(template: String) -> RegEx:
 	var pattern: String = "^"
 	var cursor: int = 0
