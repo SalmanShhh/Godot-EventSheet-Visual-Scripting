@@ -86,6 +86,9 @@ static func run() -> Dictionary:
 	check_pack_reading(findings)
 	check_disabled_pack_usage(sheet_paths, findings)
 	check_family_group_agreement(findings)
+	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
+	# notes only, and last of the built-ins so the established report never reorders.
+	EventSheetDoctorTidiness.check_tidiness(sheet_paths, findings)
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:

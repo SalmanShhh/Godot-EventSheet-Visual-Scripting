@@ -45,6 +45,9 @@ const OFFERED := {
 	"pack-reading": [
 		{"id": "open_pack", "label": "Open the pack"},
 	],
+	"repeated-literal": [
+		{"id": "extract_to_variable", "label": "⚡ Extract %s to a variable"},
+	],
 }
 
 
@@ -127,7 +130,34 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "%s is back on - its actions return to the picker on the next refresh." % subject}
 		"open_pack":
 			return {"ok": true, "message": "Open %s and Sheet ▸ Publish New Version… lists what does not read yet, with the fix." % str(finding.get("path", "")).get_file()}
+		"extract_to_variable":
+			return _extract_to_variable(subject, str(finding.get("path", "")), dock)
 	return {"ok": false, "message": "No fix named %s." % fix_id}
+
+
+## Gives a number typed three times a name, and points every row that spelled it at the name. The
+## first draft of the name comes from the value itself; renaming it afterwards is one gesture on
+## the variable row and is the point of extracting in the first place. Goes through the dock's own
+## undo funnel, so Ctrl+Z takes the whole extraction back.
+static func _extract_to_variable(literal: String, sheet_path: String, dock: Variant) -> Dictionary:
+	if literal.is_empty():
+		return {"ok": false, "message": "That finding names no value to extract."}
+	if dock == null or not dock.has_method("_perform_undoable_sheet_edit"):
+		return {"ok": false, "message": "Open %s to extract %s." % [sheet_path.get_file(), literal]}
+	if not sheet_path.is_empty() and dock.has_method("_load_sheet_from_path"):
+		dock.call("_load_sheet_from_path", sheet_path)
+	var variable_name: String = EventSheetDoctorTidiness.suggested_variable_name(literal)
+	var moved: Array[int] = [0]
+	var applied: bool = bool(dock.call("_perform_undoable_sheet_edit", "Extract to variable",
+		func() -> bool:
+			moved[0] = EventSheetDoctorTidiness.extract_literal_to_variable(
+				dock.get("_current_sheet"), literal, variable_name)
+			return moved[0] > 0))
+	if not applied:
+		return {"ok": false, "message": "Could not extract %s - is \"%s\" already a variable?"
+			% [literal, variable_name]}
+	return {"ok": true, "message": "%s is now \"%s\" in %d place(s) - rename it from its row."
+		% [literal, variable_name, moved[0]]}
 
 
 ## Registers one control with the project's Input Map, with no events bound - the row stops
