@@ -29,9 +29,46 @@ static func find_in_sheet(sheet: EventSheetResource, symbol: String) -> Array:
 			results.append({
 				"kind": str(fragment.get("kind", "")),
 				"count": hits.size(),
+				# The ROW the hit sits on, so a Find result can jump to it. Additive: callers that
+				# only read kind/count/preview are untouched.
+				"row": fragment.get("row", null),
 				"preview": _preview(str(fragment.get("text", "")), (hits[0] as RegExMatch).get_start())
 			})
 	return results
+
+
+## Project-wide references grouped by sheet, for the Find results bar: [{sheet, count,
+## references}] where every reference also carries the ROW resource it sits on, so clicking a
+## result can jump to it. `extra_sheets` is {path: EventSheetResource} for sheets the project scan
+## cannot see by itself - the open tabs, which in a .gd project is most of them.
+static func find_in_project_rows(symbol: String, extra_sheets: Dictionary = {}) -> Array:
+	var found: Array = []
+	var seen: Dictionary = {}
+	for path: Variant in extra_sheets.keys():
+		var open_sheet: EventSheetResource = extra_sheets[path] as EventSheetResource
+		if open_sheet == null:
+			continue
+		seen[str(path)] = true
+		var open_references: Array = find_in_sheet(open_sheet, symbol)
+		if not open_references.is_empty():
+			found.append({"sheet": str(path), "count": _total_of(open_references), "references": open_references})
+	for path: String in EventSheetProjectFind.list_project_sheets():
+		if seen.has(path):
+			continue
+		var sheet: EventSheetResource = load(path) as EventSheetResource
+		if sheet == null:
+			continue
+		var references: Array = find_in_sheet(sheet, symbol)
+		if not references.is_empty():
+			found.append({"sheet": path, "count": _total_of(references), "references": references})
+	return found
+
+
+static func _total_of(references: Array) -> int:
+	var total: int = 0
+	for reference: Dictionary in references:
+		total += int(reference.get("count", 0))
+	return total
 
 
 ## Project-wide references: [{sheet, count, references}] for every sheet that uses `symbol`.
@@ -100,30 +137,30 @@ static func _scan_definitions(rows: Array, name: String, into: Dictionary) -> vo
 static func _collect(rows: Array, into: Array) -> void:
 	for row: Variant in rows:
 		if row is CommentRow:
-			into.append({"text": (row as CommentRow).text, "kind": "comment"})
+			into.append({"text": (row as CommentRow).text, "kind": "comment", "row": row})
 		elif row is RawCodeRow:
-			into.append({"text": (row as RawCodeRow).code, "kind": "code"})
+			into.append({"text": (row as RawCodeRow).code, "kind": "code", "row": row})
 		elif row is LocalVariable:
-			into.append({"text": (row as LocalVariable).name, "kind": "local"})
+			into.append({"text": (row as LocalVariable).name, "kind": "local", "row": row})
 		elif row is SignalRow:
-			into.append({"text": (row as SignalRow).signal_name + " " + " ".join((row as SignalRow).params), "kind": "signal"})
+			into.append({"text": (row as SignalRow).signal_name + " " + " ".join((row as SignalRow).params), "kind": "signal", "row": row})
 		elif row is EventGroup:
-			into.append({"text": (row as EventGroup).group_name, "kind": "group"})
+			into.append({"text": (row as EventGroup).group_name, "kind": "group", "row": row})
 			_collect((row as EventGroup).events if not (row as EventGroup).events.is_empty() else (row as EventGroup).rows, into)
 		elif row is EventRow:
 			var event_row: EventRow = row as EventRow
 			for ace: Variant in event_row.conditions + event_row.actions:
 				if ace is RawCodeRow:
-					into.append({"text": (ace as RawCodeRow).code, "kind": "code"})
+					into.append({"text": (ace as RawCodeRow).code, "kind": "code", "row": event_row})
 				elif ace is Resource and ace.get("params") is Dictionary:
 					if ace.get("comment") is String and not str(ace.get("comment")).is_empty():
-						into.append({"text": str(ace.get("comment")), "kind": "comment"})
+						into.append({"text": str(ace.get("comment")), "kind": "comment", "row": event_row})
 					for value: Variant in (ace.get("params") as Dictionary).values():
 						if value is String:
-							into.append({"text": value, "kind": "param"})
+							into.append({"text": value, "kind": "param", "row": event_row})
 			for pick: Variant in event_row.pick_filters:
 				if pick is PickFilter:
-					into.append({"text": (pick as PickFilter).collection_value + " " + (pick as PickFilter).predicate_expression, "kind": "pick"})
+					into.append({"text": (pick as PickFilter).collection_value + " " + (pick as PickFilter).predicate_expression, "kind": "pick", "row": event_row})
 			_collect(event_row.sub_events, into)
 
 
