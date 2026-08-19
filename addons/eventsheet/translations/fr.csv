@@ -2691,3 +2691,37 @@ Learn,Apprendre
 Show this page when nothing is open,Afficher cette page quand rien n'est ouvert
 Nothing here yet.,Rien ici pour l'instant.
 Another event-sheet editor,Un autre éditeur de feuilles d'événements
+Request {url},Demander {url}
+Post to {url},Envoyer vers {url}
+Post {data} to {url},Envoyer {data} vers {url}
+request succeeded,la requête a réussi
+Set layer tint to {value},Définir la teinte du calque à {value}
+Set ambient light to {value},Définir la lumière ambiante à {value}
+Set light energy to {value},Définir l'intensité de la lumière à {value}
+Set light colour to {value},Définir la couleur de la lumière à {value}
+Set light on,Allumer la lumière
+Set light off,Éteindre la lumière
+Set shadows on,Activer les ombres
+Set shadows off,Désactiver les ombres
+Look at {place},Regarder vers {place}
+forward,avant
+up,haut
+Wait for it to finish,Attendre la fin
+Run {name} in the background,Exécuter {name} en arrière-plan
+Wire {signal} to {handler},Relier {signal} à {handler}
+Unwire {signal} from {handler},Détacher {signal} de {handler}
+at end of frame,en fin de frame
+{signal} is wired to {handler},{signal} est relié à {handler}
+Fire {name},Déclencher {name}
+Call {name},Appeler {name}
+by name,par son nom
+"by name, with a list","par son nom, avec une liste"
+the function,la fonction
+Set video to {file},Définir la vidéo sur {file}
+Pause,Pause
+Set hearing distance to {value},Définir la distance d'écoute à {value}
+Set falloff to {value},Définir l'atténuation à {value}
+Web requests,Requêtes web
+Lighting,Éclairage
+First-person look,Vue à la première personne
+Background work,Travail en arrière-plan

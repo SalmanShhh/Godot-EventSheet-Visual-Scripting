@@ -9881,6 +9881,29 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"adoptable": "juice",
 		"ace_ids": ["Core/CameraShakeOnce", "Core/Hitstop", "Core/BobY", "Core/FlashColour",
 			"Core/EaseSizeBack"]
+	},
+	# U6 - U9. The long tail's four shapes. Two of them have a behavior that does the whole thing -
+	# the FPS Controller owns the mouse-look block, and Run In Background owns the threads - so those
+	# two carry an `adoptable` and the other two do not: an adoption nobody could take is a worse
+	# offer than none.
+	"ajax": {
+		"words": "Web requests",
+		"ace_ids": ["Core/AjaxRequest", "Core/AjaxPost", "Core/AjaxLastData"]
+	},
+	"lighting": {
+		"words": "Lighting",
+		"ace_ids": ["Core/SetLightEnergy", "Core/SetLightColour", "Core/SetLightEnabled",
+			"Core/SetLightShadows", "Core/SetLayerTint", "Core/SetAmbientLight"]
+	},
+	"fps_look": {
+		"words": "First-person look",
+		"adoptable": "fps_controller",
+		"ace_ids": ["Core/MouseLook", "Core/LookAt3D", "Core/ObjectDirection"]
+	},
+	"background": {
+		"words": "Background work",
+		"adoptable": "background_runner",
+		"ace_ids": ["Core/RunInBackground", "Core/WaitForBackground"]
 	}
 }
 

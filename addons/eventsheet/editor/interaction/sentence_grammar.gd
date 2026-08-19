@@ -7052,11 +7052,15 @@ const POSITIONAL_AUDIO_CLASSES: PackedStringArray = ["AudioStreamPlayer2D", "Aud
 ## U8. `look_at(p, Vector3.UP)` - the one 3D call whose whole meaning is "face that". The up vector is
 ## Godot's bookkeeping, not part of what the row says, and a place belongs to the object whose place
 ## it is, so `target.global_position` reads as `target`.
+##
+## The UP VECTOR is what says this is the 3D call: a one-argument `look_at(p)` turns a 2D object to an
+## angle, which is a different sentence the sheet already has (`Set angle toward p`), so only the
+## two-argument spelling is claimed here.
 static func spatial_call(call: Dictionary, context: Dictionary) -> Dictionary:
 	if str(call.get("method", "")) != "look_at":
 		return {}
 	var args: PackedStringArray = call.get("args", PackedStringArray())
-	if args.is_empty() or args.size() > 2:
+	if args.size() != 2:
 		return {}
 	var receiver: String = str(call.get("target", "")).strip_edges()
 	if not receiver.is_empty() and not is_simple_target(receiver):

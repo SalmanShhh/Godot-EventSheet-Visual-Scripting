@@ -2691,3 +2691,37 @@ Learn,배우기
 Show this page when nothing is open,아무것도 열려 있지 않을 때 이 페이지 표시
 Nothing here yet.,아직 아무것도 없습니다.
 Another event-sheet editor,다른 이벤트 시트 편집기
+Request {url},{url} 요청
+Post to {url},{url} 로 전송
+Post {data} to {url},{data} 를 {url} 로 전송
+request succeeded,요청이 성공함
+Set layer tint to {value},레이어 색조를 {value} 로 설정
+Set ambient light to {value},환경광을 {value} 로 설정
+Set light energy to {value},빛 세기를 {value} 로 설정
+Set light colour to {value},빛 색상을 {value} 로 설정
+Set light on,조명 켜기
+Set light off,조명 끄기
+Set shadows on,그림자 켜기
+Set shadows off,그림자 끄기
+Look at {place},{place} 바라보기
+forward,앞쪽
+up,위쪽
+Wait for it to finish,끝날 때까지 기다리기
+Run {name} in the background,{name} 을(를) 백그라운드에서 실행
+Wire {signal} to {handler},{signal} 을(를) {handler} 에 연결
+Unwire {signal} from {handler},{signal} 을(를) {handler} 에서 해제
+at end of frame,프레임 끝에
+{signal} is wired to {handler},{signal} 이(가) {handler} 에 연결됨
+Fire {name},{name} 발생시키기
+Call {name},{name} 호출
+by name,이름으로
+"by name, with a list","이름으로, 목록과 함께"
+the function,함수
+Set video to {file},동영상을 {file} 로 설정
+Pause,일시정지
+Set hearing distance to {value},들리는 거리를 {value} 로 설정
+Set falloff to {value},감쇠를 {value} 로 설정
+Web requests,웹 요청
+Lighting,조명
+First-person look,1인칭 시점
+Background work,백그라운드 작업

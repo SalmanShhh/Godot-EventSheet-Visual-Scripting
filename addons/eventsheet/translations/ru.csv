@@ -2691,3 +2691,37 @@ Learn,Обучение
 Show this page when nothing is open,"Показывать эту страницу, когда ничего не открыто"
 Nothing here yet.,Здесь пока пусто.
 Another event-sheet editor,Другой редактор листов событий
+Request {url},Запросить {url}
+Post to {url},Отправить на {url}
+Post {data} to {url},Отправить {data} на {url}
+request succeeded,запрос выполнен успешно
+Set layer tint to {value},Задать оттенок слоя {value}
+Set ambient light to {value},Задать окружающий свет {value}
+Set light energy to {value},Задать яркость света {value}
+Set light colour to {value},Задать цвет света {value}
+Set light on,Включить свет
+Set light off,Выключить свет
+Set shadows on,Включить тени
+Set shadows off,Выключить тени
+Look at {place},Смотреть на {place}
+forward,вперёд
+up,вверх
+Wait for it to finish,Дождаться завершения
+Run {name} in the background,Выполнить {name} в фоне
+Wire {signal} to {handler},Связать {signal} с {handler}
+Unwire {signal} from {handler},Отвязать {signal} от {handler}
+at end of frame,в конце кадра
+{signal} is wired to {handler},{signal} связан с {handler}
+Fire {name},Вызвать {name}
+Call {name},Вызвать {name}
+by name,по имени
+"by name, with a list","по имени, со списком"
+the function,функция
+Set video to {file},Задать видео {file}
+Pause,Пауза
+Set hearing distance to {value},Задать дальность слышимости {value}
+Set falloff to {value},Задать затухание {value}
+Web requests,Веб-запросы
+Lighting,Освещение
+First-person look,Вид от первого лица
+Background work,Фоновая работа

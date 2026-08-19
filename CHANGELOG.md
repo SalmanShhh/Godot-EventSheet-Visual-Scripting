@@ -90,6 +90,45 @@ lands in a path that already existed.
   invert moves to X, collapse/expand lands on Ctrl+E, the Ctrl alternate for add-event steps aside,
   and preview moves to F4. Everything stays rebindable afterwards, and the picker reads the LIVE
   bindings - rebind one key by hand and it honestly says `Godot EventSheets` again.
+### Added - the long tail of an opened script reads in the sheet's words
+
+The lines a finished game writes and a first script does not: a request to a server, the lights a
+scene is lit with, the 3D words, work handed off the main thread, the signal steps that are actions
+rather than events, a call made by name, and the media a game plays. Every one of them already had a
+sentence somewhere on the sheet, and these readings say it. Display only: the file is untouched, and
+the byte round-trip and the emitted GDScript cannot move.
+
+- **HTTP and JSON read as the AJAX and JSON objects.** `http.request(url)` reads `AJAX ▸ Request
+  url`; the same call carrying the POST verb and a body reads `AJAX ▸ Post data to url`; `result !=
+  HTTPRequest.RESULT_SUCCESS` reads as the inverted `request succeeded`; `body.get_string_from_utf8()`
+  reads `AJAX.LastData`. `JSON.parse_string` and `JSON.stringify` are now spelled the way the sheet's
+  own JSON object spells them - `JSON.Parse(x)` and `JSON.ToString(x)`. A RUN of indexes is one
+  address: `data["scores"][0]["name"]` reads `data's scores 0 name` (a single index keeps its
+  shipped sentence).
+- **Lights read as the Light rows.** A 2D or 3D light's `energy` / `light_energy` reads `Set light
+  energy to 50%`, its colour `Set light colour to orange`, its switch `Set light on` / `Set light
+  off`, and `shadow_enabled` `Set shadows on` / `off`. A `CanvasModulate` reads `System ▸ Set layer
+  tint`, and a world environment's ambient energy `System ▸ Set ambient light to 30%`.
+- **The 3D words.** `look_at(p, UP)` reads `Look at p` - the up vector is Godot's bookkeeping - and
+  an object's own axes read as directions: `-basis.z` is `Player's forward`, `basis.x` is `right`,
+  `basis.y` is `up`.
+- **Threads read as Run in the background.** `thread.start(bake.bind(level))` and
+  `WorkerThreadPool.add_task(...)` both read `System ▸ Run Bake in the background   level = level`,
+  the group spelling adds `64 times`, and every wait reads `⏳ Wait for it to finish`. The claim
+  offers the shipped Run In Background behavior for the hand-rolled threads.
+- **The signal steps that are actions.** `connect` reads `Wire On died to On Died` (with an `at end
+  of frame` chip for a deferred connection), `disconnect` reads `Unwire`, `is_connected` reads `On
+  died is wired to On Died`, and a variable the sheet typed `Signal` declares as a local signal and
+  fires as `System ▸ Fire sig`.
+- **A call made by name.** `call("heal", 5)` and `callv("heal", [5, self])` both read as the ordinary
+  `Functions ▸ Call Heal` row with its parameter chips, and the muted `by name` / `by name, with a
+  list` that says how it was reached. `Callable(self, "heal")` reads `the function Heal`.
+- **Media.** A `VideoStreamPlayer` is the sheet's Video object - `Set video to intro.ogv`, `Play`,
+  `Pause`, `Is playing` - and a positional player's `max_distance` / `attenuation` read `Set hearing
+  distance` / `Set falloff`.
+- **The four new patterns are claimed** on the event that owns them (`ajax`, `lighting`, `fps_look`,
+  `background`), with the exact source lines as evidence and, for the two that a shipped behavior
+  does whole, the pack a reader could adopt instead.
 
 ### Added - an opened script's PATTERNS read as the events they are
 
