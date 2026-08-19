@@ -1387,6 +1387,28 @@ An artist wants to tweak enemy spawn timing but should never edit `spawner.gd`. 
 
 You suspect your inventory manager deserves first-class ACEs, but you are not sure the shape is right yet. Wire a few sheets to it with stringly Call Method calls first; if the same three methods keep showing up, that is your signal to add `## @ace_expose_all(node)` and promote them to type-safe vocabulary - no rewrite of the sheets that already use it.
 
+## 9b. The Doctor's Tidiness Sweep
+
+The rest of **Tools ▸ Project Doctor…** asks whether a sheet is *wrong*. The tidiness sweep asks the
+quieter question a readable sheet also has to answer: is any of this still earning its line. Seven
+notes, all advisory, never a build break:
+
+| Note | What it means |
+| --- | --- |
+| `unread-local` | A local variable is declared in a body and nothing in that body ever reads it. |
+| `uncalled-function` | Nothing calls this function. Published functions (they are vocabulary), lifecycle hooks and functions whose name appears anywhere are left alone. |
+| `unfired-trigger` | A trigger is declared and nothing ever fires it. |
+| `unused-behavior` | A behavior the sheet requires that no row uses - a node's worth of runtime nobody asked for. |
+| `long-disabled-event` | An event has been switched off for a long time. When git can answer, the note says how many days and says "(git)"; otherwise it uses the file's own date and says "(file date)" rather than presenting the weaker fact as the stronger one. |
+| `identical-events` | Two events read identically - same trigger, same conditions, same actions, same parameters. Comments and breakpoints are ignored; two rows that *do* the same thing are the finding however they are annotated. |
+| `repeated-literal` | The same number or quoted string is typed three times or more. |
+
+<img src="images/doctor-tidiness-findings.png" alt="The Project Doctor window showing eight tidiness notes on one sheet: an unread local variable, an uncalled function, an unfired trigger, an attached behavior no event uses, an event switched off for a long time, two pairs of identical events, and a literal appearing three times. Re-run checks and Fix selected buttons sit below." width="680">
+
+The last one repairs itself. Select it and the Fix button reads **⚡ Extract to variable**: name the
+value once, and every parameter that spelled it reads the name instead. The edit opens the sheet and
+goes through the ordinary undo funnel, so Ctrl+Z takes it back.
+
 ## 10. Tips and Common Mistakes
 
 Interop is broad, but it isn't magic - here's the candid list so nothing surprises you:
