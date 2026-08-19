@@ -2812,3 +2812,46 @@ Dictionary: GDScript to events,对照词典：GDScript 与事件
 Coming from GDScript,从 GDScript 过来
 Sheet map,表关系图
 Click a sheet to open it. Click a line to find every place it comes from.,点击一张表即可打开。点击一条连线，找出它的每一个来源。
+{object} has line of sight to {target},{object} 能看见 {target}
+within,范围内
+choose weighted,按权重选择
+Drag & Drop ▸ Start dragging,拖放 ▸ 开始拖动
+Drag & Drop ▸ Drop,拖放 ▸ 放下
+Drag & Drop ▸ Remember the grab offset,拖放 ▸ 记住抓取偏移
+Drag & Drop ▸ Follow the cursor (keeping the grab offset),拖放 ▸ 跟随光标（保持抓取偏移）
+Drag & Drop ▸ Is dragging,拖放 ▸ 正在拖动
+Drag & Drop ▸ Is not dragging,拖放 ▸ 未在拖动
+Anchor ▸ Anchor to {corner} (of the window),锚点 ▸ 锚定到窗口的 {corner}
+Anchor ▸ Set {side} anchor to {value},锚点 ▸ 将 {side} 锚点设为 {value}
+Anchor ▸ Set {side} margin to {value},锚点 ▸ 将 {side} 边距设为 {value}
+top left,左上
+top right,右上
+bottom left,左下
+bottom right,右下
+centre top,中上
+centre bottom,中下
+centre left,中左
+centre right,中右
+centre,居中
+full rect,整个矩形
+left edge,左边缘
+right edge,右边缘
+top edge,上边缘
+bottom edge,下边缘
+middle row,中间行
+middle column,中间列
+Jump-thru ▸ Set enabled (one-way: solid from above only),可跳穿 ▸ 启用（仅上方为实体）
+Jump-thru ▸ Set disabled,可跳穿 ▸ 停用
+Solid ▸ Set disabled,实体 ▸ 停用
+Solid ▸ Set enabled,实体 ▸ 启用
+Solid ▸ On layer {layer},实体 ▸ 位于层 {layer}
+Solid ▸ Not on layer {layer},实体 ▸ 不在层 {layer}
+layer,层
+Randomize seed,随机化种子
+Set seed to {seed},将种子设为 {seed}
+Set noise type to {type},将噪声类型设为 {type}
+Is overlapping at offset {offset} (a solid),在偏移 {offset} 处重叠（实体）
+Is not overlapping at offset {offset} (a solid),在偏移 {offset} 处未重叠（实体）
+on layer,位于层
+overlapping,重叠的
+For each,对每个

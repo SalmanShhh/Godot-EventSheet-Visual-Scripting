@@ -708,6 +708,8 @@ static func _lifted_row_line(resource: Resource) -> String:
 				str(values.get("a", "")), str(values.get("b", "")), str(values.get("distance", ""))]
 		"ExpressionIsTrue":
 			return str(values.get("expr", ""))
+		"IsOverlappingAtOffset":
+			return "test_move(transform, %s)" % str(values.get("offset", ""))
 		"ReturnValue":
 			return "return %s" % str(values.get("value", ""))
 		"CallMethod":

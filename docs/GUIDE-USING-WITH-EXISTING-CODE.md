@@ -1100,6 +1100,53 @@ Recognising a literal is deliberately fussy - a wrapped function call (a bare `(
 value), a literal with a statement after it, and one with a comment above its head are all left as ordinary
 code, because in each of those cases something other than the value would be affected.
 
+### The behaviors a script hand-rolls, named
+
+Some shapes are not one line and not one function - they are a *behavior* a reader already has a name
+for, spelled out in Godot's own vocabulary. The reading names them, and the file is untouched:
+
+- **A raycast cast at a target is one question.** A function that guards on distance, points a
+  `RayCast2D` at the target, forces an update and returns "nothing in the way, or the thing I hit *is*
+  the target" reads as `Enemy has line of sight to t (within Sight Range)` - one condition where five
+  rows of ray plumbing were. The shipped Line of Sight pack (2D and 3D) publishes exactly that
+  condition, so adopting it is a swap rather than a rewrite.
+- **The grab / release / follow trio is Drag & Drop.** A boolean raised beside the line that remembers
+  `global_position - get_global_mouse_position()`, lowered on the button-up, and tested before
+  `global_position = get_global_mouse_position() + grab_offset`, reads as
+  `Drag & Drop ▸ Start dragging`, `▸ Drop`, `▸ Is dragging` and
+  `▸ Follow the cursor (keeping the grab offset)`.
+- **An anchor preset is a corner.** `set_anchors_preset(Control.PRESET_TOP_RIGHT)` reads as
+  `Anchor ▸ Anchor to top right (of the window)`, and a single `anchor_left` or `offset_top` write
+  reads as the edge it moves. The Anchor pack writes the same sentence from the picker.
+- **Solid and Jump-thru are what a body already is.** `$CollisionShape2D.disabled = true` is
+  `Solid ▸ Set disabled`, `one_way_collision = true` is
+  `Jump-thru ▸ Set enabled (one-way: solid from above only)`, and `set_collision_layer_value(1, true)`
+  is `Solid ▸ On layer World (layer 1)` - with the layer's name from your own Project Settings when you
+  gave it one. Neither is a pack, because neither is anything to attach.
+- **`test_move(transform, Vector2(0, 1))` is the ground check.** It reads as
+  `Is overlapping at offset (0, 1) (a solid)` - the same words the new **Is Overlapping At Offset**
+  condition writes - and a loop over `get_overlapping_areas()` reads as `For each a overlapping Area2D`.
+- **A weighted draw, a seed and the noise belong to Advanced Random.**
+  `["coin", "gem", "nothing"][rng.rand_weighted([70, 20, 10])]` reads as
+  `choose weighted("coin" 70, "gem" 20, "nothing" 10)`, `rng.seed = hash("level-1")` as
+  `Advanced Random ▸ Set seed to "level-1"`, and `noise.get_noise_2d(x, y)` as
+  `AdvancedRandom.Perlin2d(x, y)` when the file said which noise type it wanted.
+- **The system clock is the Date object.** `Time.get_unix_time_from_system()` is `Date.Now`, the date
+  and time strings are `Date.Today` and `Date.TimeString`, and the fields of a datetime dictionary the
+  file read out of the clock are `Date.Hour`, `Date.Minute`, `Date.Second`, `Date.Year`, `Date.Month`,
+  `Date.Day` and `Date.Weekday`. Every one of them is also a row you can pick.
+- **A spawn is one row, layer and all.** The `instantiate()` local stays where the event declares it,
+  and everything the file then does to the new object - the node it is added to, where it is put, the
+  properties set on the way in - collapses into
+  `Create object Enemy on layer FX at spawn (as e)   rotation = angle`, whatever order those lines were
+  written in.
+
+None of this is a guess. Each reading rests on a fact the file *states* - the local really is a
+`RayCast2D`, the boolean really is raised beside the grab offset, the local really was filled from the
+system clock - and with the fact absent every line keeps the ordinary reading it has today. Each event
+holding one of these shapes also records it in the pattern registry with the exact source lines as its
+evidence, which is what the ⟡ chip, its hover and **Adopt behavior** read.
+
 ### Beginner spellings and the reading layer
 
 The lift does not require style-guide code. Beginner spellings round-trip byte-exactly too:

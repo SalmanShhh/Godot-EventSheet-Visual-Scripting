@@ -10969,6 +10969,13 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 			return EventSheetSentence.condition("%s %s %s" % [
 				str(params_dict.get("var_name", "")), str(params_dict.get("op", "==")),
 				str(params_dict.get("value", ""))], context)
+		# ── T23 lens hook ────────────────────────────────────────────────────────────────────────
+		# The ground check reads on the OBJECT that is asking, with its offset through the shared value
+		# lens - the same row a hand-written `test_move(transform, Vector2(0, 1))` reads as, so the
+		# picked row and the typed line are one sentence.
+		"IsOverlappingAtOffset":
+			return EventSheetSentence.condition(
+				"test_move(transform, %s)" % str(params_dict.get("offset", "")), context)
 		"IsActionPressed":
 			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), false)
 		"IsActionJustPressed":

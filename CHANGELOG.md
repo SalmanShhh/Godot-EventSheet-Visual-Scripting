@@ -302,6 +302,65 @@ no editor in it, so the window, the Doctor and the tests all read the same answe
   canvas. The marker follows the sheet snapshots the undo funnel restores, so Ctrl+Z from anywhere,
   the toolbar arrows and a click in the list all move the same place.
 
+### Added - the behaviors a hand-rolled script writes, read with the behavior's own words
+
+A behavior is not one line and not one function: it is a shape a reader of event sheets already has a
+name for. These read as that name. Display only, as always - the file is untouched, the byte
+round-trip and the emitted GDScript cannot move - and every event holding one of the shapes states it
+in the pattern registry with the exact source lines as evidence and, where one ships, the behavior
+that could replace it.
+
+- **Line of sight is one condition.** A function that guards on distance, aims a `RayCast2D` at the
+  target, forces an update and returns "nothing in the way, or what I hit IS the target" reads
+  `Enemy has line of sight to t (within Sight Range)`, where five rows of ray plumbing were. The claim
+  offers the shipped Line of Sight pack (2D or 3D, by the host).
+- **The grab / release / follow trio is Drag & Drop.** `Start dragging`, `Drop`,
+  `Remember the grab offset`, `Follow the cursor (keeping the grab offset)` and the `Is dragging`
+  question. A boolean is only read as the drag flag when the file raises it beside the line that
+  remembers the grab offset and lowers it elsewhere, so an ordinary flag stays an ordinary flag.
+- **An anchor preset is a corner.** `set_anchors_preset(Control.PRESET_TOP_RIGHT)` reads
+  `Anchor ▸ Anchor to top right (of the window)`, and a single `anchor_left` / `offset_top` write
+  reads as the edge it moves.
+- **Solid and Jump-thru are what a body already is to the others.** A collision shape switched off is
+  `Solid ▸ Set disabled`, `one_way_collision = true` is
+  `Jump-thru ▸ Set enabled (one-way: solid from above only)`, and `set_collision_layer_value(1, true)`
+  is `Solid ▸ On layer World (layer 1)`, with the layer's name taken from your own Project Settings.
+- **The platformer's ground check has its name back.** `test_move(transform, Vector2(0, 1))` and the
+  test-only `move_and_collide` twin read `Is overlapping at offset (0, 1) (a solid)`, and a loop over
+  `get_overlapping_areas()` reads `For each a overlapping Area2D`.
+- **Weighted draws, seeds and noise belong to Advanced Random.**
+  `["coin", "gem"][rng.rand_weighted([70, 20])]` reads `choose weighted("coin" 70, "gem" 20)`,
+  `rng.seed = hash("level-1")` reads `Advanced Random ▸ Set seed to "level-1"`, and
+  `noise.get_noise_2d(x, y)` reads `AdvancedRandom.Perlin2d(x, y)` by the noise type the file set.
+- **The system clock is the Date object.** `Date.Now`, `Date.Today`, `Date.TimeString` and the
+  `Date.Hour` / `Minute` / `Second` / `Year` / `Month` / `Day` / `Weekday` fields, read out of the
+  local the file filled from the clock.
+- **A spawn is one row, layer and all.** The instantiate stays the event's own Local row, and the node
+  the object is added to, where it is put and the properties set on the way in collapse into
+  `Create object Enemy on layer FX at spawn (as e)   rotation = angle` - in whatever order the author
+  wrote those lines, and whichever row each of them lifted to.
+
+### Added - the rows that write those shapes
+
+- **The Anchor behavior pack**, the one behavior of this batch with nothing behind it: where a Control
+  sits when the window changes size, said as a corner rather than as four numbers between 0 and 1.
+  Anchor To, Set Margins, Set Keep Size, Set Follow Resizes, Is Anchored To, Anchored Corner and On
+  Anchored, with a guide of sixteen use cases.
+- **Is Overlapping At Offset**, the ground check as a picked condition - a move that is never made.
+- **The Date object's expressions**: Date: Hour / Minute / Second / Year / Month / Day / Weekday.
+
+### Changed
+
+- The overlap conditions and the clock expressions now say the sentences an opened file already reads
+  them as: *Is Overlapping Body* / *Is Overlapping Area* (was *Overlaps Body* / *Overlaps Area*) and
+  *Date: Now* / *Date: Today* / *Date: Time Text* (was *Unix Time* / *System Date String* / *System
+  Time String*). Every `ace_id` and every codegen template is unchanged, so existing sheets compile
+  and lift exactly as before.
+- Writing the wall clock into a variable reads `Set stamp to Date.Now` rather than
+  `Set stamp to now (clock time)`, so the whole Date family reads alike. The game's own running clock
+  (`Time.get_ticks_msec()`) keeps `Set x to now`, because there is no Date expression for a number
+  that restarts with the game.
+
 ### Added - an opened script's PATTERNS read as the events they are
 
 The batches before this one made single statements read as the sheet's sentences. These are the
