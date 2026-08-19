@@ -113,6 +113,24 @@ Node script extending `CharacterBody2D`.
 - **Pick From Table** (`table: Resource`) - A weighted-random value from a RandomTableResource (.tres) - author your odds as a data asset and draw from it. "" if the table is empty.
 - **Shuffle Bag Pick** (`bag_name: String`) - Draws the next item from a named bag - every item appears once before any repeat.
 
+### AnchorBehavior (`res://eventsheet_addons/anchor/anchor_behavior.gd`)
+@ace_tags(ui, layout) @ace_category("Anchor") @ace_version(1.0.0)
+
+#### Triggers
+- **On Anchored** (`corner: String`)
+
+#### Conditions
+- **Is Anchored To** (`corner: String`) - True while the host is anchored to the given corner - what a row asks before moving it somewhere else.
+
+#### Actions
+- **Set Margins** (`left: float, top: float, right: float, bottom: float`) - Sets the gap in pixels between the host and the corner it is anchored to - left, top, right, bottom.
+- **Set Keep Size** (`enabled: bool`) - Whether anchoring keeps the host's current size instead of letting the corner stretch it.
+- **Set Follow Resizes** (`enabled: bool`) - Whether the host is placed again every time its parent changes size.
+- **Anchor To** (`corner: String`) - Puts the host on a corner, an edge or the whole rectangle of its parent - the one action this behavior exists for.
+
+#### Expressions
+- **Anchored Corner** - The corner the host is anchored to right now, as its word - what a row shows or compares.
+
 ### BackgroundRunner (`res://eventsheet_addons/background_runner/background_runner_behavior.gd`)
 @ace_tags(performance, threading) @ace_category("Background") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -2643,8 +2661,9 @@ Collision vocabulary (the "Helper ACEs for collisions").
 - **Is Jumping** - True while this 2D character is moving upward - the rising half of a jump. In 2D, Y grows downward, so going up is a NEGATIVE vertical speed.
 - **Is Falling** - True while this 2D character is moving downward - the falling half of a jump, or walking off a ledge.
 - **Is Moving** - True while this 2D character has any sideways speed - the walk-or-idle question an animation state usually asks.
-- **Overlaps Body** (`body: String, target: String`) - True when this Area2D is overlapping the given physics body.
-- **Overlaps Area** (`area: String, target: String`) - True when this Area2D is overlapping the given other area.
+- **Is Overlapping Body** (`body: String, target: String`) - True when this Area2D is overlapping the given physics body.
+- **Is Overlapping Area** (`area: String, target: String`) - True when this Area2D is overlapping the given other area.
+- **Is Overlapping At Offset** (`offset: String, target: String`) - True when this body WOULD hit something solid if it moved by the offset - the ground check every platformer needs, and nothing actually moves.
 - **Has Overlapping Bodies** (`target: String`) - True when this Area2D currently overlaps any physics body.
 - **Has Overlapping Areas** (`target: String`) - True when this Area2D currently overlaps any other area.
 - **Is On Collision Layer** (`layer: String, target: String`) - True when this object occupies the given collision layer.
@@ -2900,8 +2919,8 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Performance Monitor** (`monitor: String`) - Returns a live engine performance reading, like FPS or memory, for debugging.
 - **Static Memory (bytes)** - Returns how much memory the game is currently using, in bytes.
 - **Format Time (mm:ss)** (`seconds: String`) - Turns a number of seconds into a tidy mm:ss string for timers and clocks.
-- **System Time String** - Returns the player's current clock time as a text string.
-- **System Date String** - Returns the player's current calendar date as a text string.
+- **Date: Time Text** - Returns the player's current clock time as a text string.
+- **Date: Today** - Returns the player's current calendar date as a text string.
 
 ### Dev (`res://addons/eventforge/registration/modules/dev_aces.gd`)
 Developer helper vocabulary (the everyday dev tools).
@@ -3697,6 +3716,7 @@ Data assets: a folder of .tres as vocabulary, independent copies, pouring
 - **Data Folder Is Valid** (`folder: String`) - True when every data asset in a folder loads, has an id, and has an id no sibling shares - the check to put in front of loading a mod folder or user content. Read the reasons with Data Folder Problems.
 
 #### Actions
+- **Save Data Asset** (`resource: String, path: String`) - Writes a data asset back to a file. An editor tool uses this to generate or bulk-edit content; a running game should write under user://.
 - **Copy Values From** (`target: String, source: String, names: String`) - Pours a list of values off another object onto this one, in one row instead of one row per property. Names the target does not have are skipped, so a single preset can serve several kinds of node.
 - **Fill Blanks From** (`target: String, base: String`) - Writes a base's values ONLY into fields this object left empty, leaving everything you did fill in alone. That is the override chain: a base item plus a rarity variant, or a shipped table plus a mod file. Empty means nothing there: no value at all, blank text, an empty list or an empty record - a 0 and a false are real values and are kept, exactly as Is Nothing and Missing Fields read them.
 - **Apply Preset To Node** (`preset: String, target: String`) - Pours a data asset's fields onto the same-named properties of a node, so difficulty tiers, weapon tunings and boss phases become a data edit instead of a wall of rows.
@@ -3710,6 +3730,7 @@ Data assets: a folder of .tres as vocabulary, independent copies, pouring
 - **Resources In Folder** (`folder: String`) - Loads every data asset (.tres) in a folder as a list, so a folder of files becomes your content - items, enemies, levels, or a mod folder. A missing folder gives an empty list, and a file that fails to load is left out rather than arriving as nothing.
 - **Resource In Folder** (`folder: String, name: String`) - Fetches one data asset out of a folder by its file name, or nothing at all when there is no such file - no red error.
 - **Load Resource Or Default** (`path: String, fallback: String`) - Loads a file and hands back your fallback when it is missing, so a deleted or mod-supplied file never crashes the game.
+- **Data Asset** (`path: String`) - Fetches one data asset by its path - the values a designer filled in the Inspector, ready to read fields off.
 - **Count Of Resources In** (`folder: String`) - How many data assets a folder holds, counted without loading any of them - zero if the folder is missing.
 - **Copy Resource (Independent)** (`resource: String`) - Makes a private copy of a resource, right down to the resources inside it, so writing to the copy never changes the .tres on disk or any other node holding it. Use this before a node edits its own stats.
 - **Copy Resource (Share Sub-Resources)** (`resource: String`) - Makes a cheap copy whose own fields are separate but whose inner resources and lists are still SHARED with the original. Pick this only when you want that sharing - otherwise use Copy Resource (Independent).
@@ -3876,11 +3897,18 @@ System (event-sheet System parity)
 - **To Integer** (`value: String`) - Gives the value as a whole number: int("42") is 42, int(3.9) is 3.
 - **To Decimal** (`value: String`) - Gives the value as a decimal number: float("3.5") is 3.5.
 - **Date & Time Text** - Gives the system's current date and time as readable text.
-- **Unix Time** - Gives the current Unix timestamp in seconds, useful for saving real-world time.
+- **Date: Now** - Gives the current Unix timestamp in seconds, useful for saving real-world time.
+- **Date: Hour** - The hour on the system clock right now, 0 to 23.
+- **Date: Minute** - The minute on the system clock right now, 0 to 59.
+- **Date: Second** - The second on the system clock right now, 0 to 59.
+- **Date: Year** - The year on the system calendar right now.
+- **Date: Month** - The month on the system calendar right now, 1 to 12.
+- **Date: Day** - The day of the month on the system calendar right now, 1 to 31.
+- **Date: Weekday** - Which day of the week it is right now, 0 for Sunday through 6 for Saturday - what a daily-reward or weekend-bonus row asks.
 - **OS Name** - Gives the name of the operating system the game is running on.
 - **Cooldown Time Left** (`name: String`) - Gives the seconds left on a named cooldown, or 0 when it is ready - handy for a HUD readout.
 - **Now** - The moment right now, as the game's own running clock. Store it in a variable and ask Seconds Have Passed Since about it later. It restarts with the game.
-- **Now (Clock Time)** - The moment right now by the system clock, in seconds. Unlike Now, this keeps counting while the game is closed - which is what a daily reward or an idle-earnings sum needs.
+- **Date: Now (Clock Time)** - The moment right now by the system clock, in seconds. Unlike Now, this keeps counting while the game is closed - which is what a daily reward or an idle-earnings sum needs.
 - **Viewport Width** (`target: String`) - How wide the visible layout is, in pixels - the right edge to spawn at, wrap around, or clamp to.
 - **Viewport Height** (`target: String`) - How tall the visible layout is, in pixels - the bottom edge to spawn at, wrap around, or clamp to.
 - **Effect Parameter** (`param: String, target: String`) - Gives the current value of one of this object's effect parameters.
@@ -4175,6 +4203,10 @@ Game Window vocabulary (control the OS window from events).
 - **Set Always On Top** (`enabled: bool`) - Keeps the game window above every other window.
 - **Minimize Window** - Minimizes the game window to the taskbar.
 - **Maximize Window** - Maximizes the game window.
+- **Set Anti-aliasing** (`level: String`) - Smooths jagged edges in what this viewport draws. Higher costs more to render, so an options screen usually offers it as a choice.
+- **Save Image As** (`image: String, path: String`) - Writes a picture to a PNG file. Pair it with Screenshot to save what the player is looking at.
 
 #### Expressions
+- **Screenshot** - A picture of what is on screen right now. Put it in a variable, then Save Image As.
+- **Rendered As An Image** (`viewport: String`) - What a viewport is currently drawing, as a picture you can show on a sprite or save.
 - **Max FPS** - The current frame-rate cap (0 means uncapped).

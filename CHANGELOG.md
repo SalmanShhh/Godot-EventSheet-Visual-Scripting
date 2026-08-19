@@ -2420,20 +2420,20 @@ in the right-hand lane, where the reader expects a step.
 - **The pair is ONE statement under the pointer.** Every row of it carries the same statement identity,
   and that is the single thing selection, drag/drop, delete and the gutter key on:
   - clicking any row of the pair - the condition row, the branch, the `Else` - selects the one
-    statement and highlights the whole pair as one selection; Shift/Ctrl multi-select counts it once,
-    and the Up/Down arrows step over the pair as the single row it reads as (Left/Right still walk the
-    cells of whichever row the caret is on).
+	statement and highlights the whole pair as one selection; Shift/Ctrl multi-select counts it once,
+	and the Up/Down arrows step over the pair as the single row it reads as (Left/Right still walk the
+	cells of whichever row the caret is on).
   - grabbing any row drags the statement, so the pair travels together; a drop BEFORE a branch row
-    lands above the whole pair, a drop INTO one snaps below it, and only the pair's own head still
+	lands above the whole pair, a drop INTO one snaps below it, and only the pair's own head still
     takes a sub-event.
   - a double-click anywhere on the pair - including the condition cell and the plain `Else` row,
-    neither of which is a real cell - opens that ONE line's existing editor: the code dialog for a
-    hand-written statement, the ACE editor for a lifted row. Delete, Cut, Copy and the row context
-    menu act on the statement, and every edit still goes through the one undo funnel.
+	neither of which is a real cell - opens that ONE line's existing editor: the code dialog for a
+	hand-written statement, the ACE editor for a lifted row. Delete, Cut, Copy and the row context
+	menu act on the statement, and every edit still goes through the one undo funnel.
   - no "+ Add condition" / "+ Add action" is drawn inside the pair (a pair is a statement, not an
-    editable event); the event's own scaffolding stays on the event's own row. Event numbers, hit
-    counts, breakpoints and bookmarks belong to the event and are drawn once, on the row the pair
-    leads with - never on a reading.
+	editable event); the event's own scaffolding stays on the event's own row. Event numbers, hit
+	counts, breakpoints and bookmarks belong to the event and are drawn once, on the row the pair
+	leads with - never on a reading.
 - A ternary inside a `func(...)` lambda is deliberately left alone: the body is a scope of its own, so
   hoisting a branch out of it would move when that branch runs. A hand-written statement carrying an
   inline lambda now keeps the GDScript code cell it came from, rather than posing as a sentence.
@@ -4462,12 +4462,12 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
 	arithmetic), outside-range, positive, negative, even, odd, multiple-of (guarded against a zero
 	divisor), whole-number, and a -1/0/1 compare result.
   - **Vectors** - **Vectors Are Equal** and **Colors Are Equal** using Godot's approximate compare for
-    the same reason, plus within-distance, farther-than, points-the-same-way (a dot product with a
-    forgiveness knob), and longer-than.
+	the same reason, plus within-distance, farther-than, points-the-same-way (a dot product with a
+	forgiveness knob), and longer-than.
   - **Types** - is-of-type with a dropdown of the everyday Variant types, same-type, type name, and
-    is-a-class.
+	is-a-class.
   - **Objects** - same-object identity, **Object Still Exists** (`is_instance_valid`, which a null
-    check cannot replace: a freed node is not null, and touching it crashes), has-method (the
+	check cannot replace: a freed node is not null, and touching it crashes), has-method (the
 	duck-typing check behind "anything with take_damage"), and has-property.
 
 ### Added - turning nodes on and off, and pausing them (23 ACEs)
@@ -4475,10 +4475,10 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
 - Pausing was whole-game only (`Set Game Paused`), and there was no way to stop ONE node running. The
   new **Nodes: Activation** group covers both, because they are the same property wearing two hats:
   - **Activate / Deactivate Node** (2D and 3D) - hide it and stop it running, along with everything
-    under it. The verb most people were looking for.
+	under it. The verb most people were looking for.
   - **Pause Node / Unpause Node / Keep Node Running While Paused / Run Node Only While Paused /
-    Pause Node With The Game** - the five process modes as plain-English verbs, so a pause menu and
-    its music can stay alive while everything else freezes.
+	Pause Node With The Game** - the five process modes as plain-English verbs, so a pause menu and
+	its music can stay alive while everything else freezes.
   - **Node Is Running** answers the whole question with `can_process()`, taking the node's mode AND
 	the game pause into account, and **Node Is Frozen By The Game Pause** tells "paused" apart from
 	"paused but exempt".

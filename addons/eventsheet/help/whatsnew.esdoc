@@ -38,6 +38,38 @@ What changed in the build you have installed (v0.17.0), in the words the release
   smaller than a target, and the High Contrast preset now has a value for **every** theme token,
   with a test that says so the next time one is added.
 
+### Added - an event sheet from another editor, imported honestly
+
+- **Sheet ▸ Import event sheet…** reads a sheet out of another event-sheet editor's project export
+  (a zip of JSON, or one exported sheet file) and turns it into an ordinary `.gd`. Events become
+  events, sub-events become sub-events, Else becomes Else, an Or block becomes an Or block, groups
+  become groups, comments become comment rows, variables become variable rows, and a function block
+  becomes a function with its name in the condition lane and its parameters as chips. A top-level
+  event with no trigger of its own becomes **Every frame**, which is what a top-level event means
+  in the sheet it came from.
+- **Every row is either the row that says the same thing, or switched off with its own words.** The
+  mapping table covers System, Keyboard, Mouse, Touch, Sprite, Text, Audio, Array, Dictionary, JSON
+  and Functions rows plus the compare / set / add / subtract / toggle rows every object has, and
+  each entry names a shipped row whose id and parameter ids the suite checks against the registry.
+  Nothing is approximated: a row with no word here arrives disabled, its original words written into
+  the file, and named in the report with a reason. A row a shipped behaviour pack covers says which
+  pack (\"The shipped Platformer Movement behaviour covers this\").
+- **Expressions are translated by name**, from the exact inverse of the table the reading layer uses
+  to show those same words: `random` / `choose` / `len` / `distance` / `angle` / `zeropad` / `left` /
+  `mid` / `tokenat` / `tickcount`. `lerp`, `clamp`, `abs`, `floor`, `ceil`, `round`, `sqrt`, `min`
+  and `max` are spelled the same in both, so they are left alone. `Sprite.X` becomes the mapped
+  node's `position.x`, and `Space` / `Left arrow` become `KEY_SPACE` / `KEY_LEFT`. A value that
+  could not be translated is kept as written and flagged by name in the report.
+- **The wizard shows the result before anything is written**: the file, the sheet inside it, an
+  editable table saying which node each object became (pre-filled from the project's own object
+  types, or guessed from the rows an object is used with), the imported sheet in its own words, and
+  the report - \"14 of 17 rows mapped (82%)\" with every row that did not come across named. Save as…
+  writes a new `.gd` through the ordinary compiler, and it re-opens byte-identically. The source
+  archive is only ever read.
+- **A tally at the end of the generated file** lists every row that did not come across, including
+  the ones that sat under a switched-off event and wrote nothing of their own, and the project
+  health check counts it so they are not forgotten.
+
 ### Added - a place to live in: the words are a setting, the packs are a list, the fixes are one click
 
 - **Settings ▸ Words: every word the sheet lets you choose, on one page.** A row per choosable
@@ -324,6 +356,29 @@ cannot move.
   with a `⚠ blocks the game` note, and the Doctor says the same thing in words: that call stops the
   whole process while it counts, and the sheet's own Wait is the one everybody means.
 
+### Added - vectors and colours read as words
+
+The two value types every game line touches. A beginner used to meet them as the Godot methods that
+built them; each operation now reads as the word an event sheet already has for it, with Godot's own
+spelling one hover away. Display only - the file is untouched and the byte round-trip cannot move.
+
+- **Vectors.** `(target.position - position).normalized()` reads `the direction from Player to
+  target`; a bare `normalized()` reads `unit vector of dir`; `velocity.length()` is `the speed` (any
+  other length stays `length of x`); `facing.dot(dir)` reads `how much facing points along dir
+  (-1 to 1)`; `dir.rotated(PI / 2)` reads `dir turned 90°`, and the `TAU`, `deg_to_rad` and negative
+  spellings of a fixed turn read the same way. `angle_to` and the `UP` / `DOWN` / `ZERO` constants
+  already read as words and are unchanged.
+- **Colours.** `Color.RED.darkened(0.2)` reads `red, 20% darker` (and `lightened` its twin),
+  `Color(1, 0, 0, 0.5)` reads `red at 50% opacity`, `Color.from_hsv(0.3, 1, 1)` reads `colour from
+  hue 30%, full saturation`, and `Color.from_string(...)` names what it was built from. A mix nobody
+  has a word for keeps its channels. The colour swatch is unchanged: it reads the value the row
+  holds, not the words beside it.
+- **`modulate = modulate.lerp(Color.WHITE, 5 * delta)`** is one verb - `Ease colour toward white at
+  5` - claimed only when the line reads the very member it writes, so an ordinary blend stays a Set.
+- A local's starting value now reads with the sheet's own object names (`the direction from Player to
+  target` rather than from `System`), because the declaration reading is handed the sheet context the
+  rest of the row already had.
+
 ### Added - the Manual answers in GDScript as well as in the sheet's words
 
 - **Manual ▸ Dictionary: GDScript to events**, generated. Every Godot call, property and idiom the
@@ -379,6 +434,50 @@ cannot move.
   redone. Click one to undo or redo back to it; hover one to see the rows it touched lit on the
   canvas. The marker follows the sheet snapshots the undo funnel restores, so Ctrl+Z from anywhere,
   the toolbar arrows and a click in the list all move the same place.
+### Added - a note on a row, and the notes a project leaves itself
+
+- **A trailing `# note` reads as a note on its row.** `hp -= 1  # ouch` reads `Subtract 1 from hp
+  💬 ouch` instead of putting the comment inside the value it was lifted into (\"Subtract 1  # ouch
+  from hp\"). Every path a row is drawn through carries it: the sentence path, the picked-ACE path and
+  the local-declaration path, where the note also stopped the starting value being read as text.
+  Quote-aware, so a `#` inside a string literal (a colour, a hash in a label) is still content
+  somebody typed.
+- **A TODO / FIXME / HACK / NOTE line directly above a step is that step's note.** It is how a person
+  writes a note on one action when the language has nowhere else to put it. Every other comment line
+  stays the comment row it has always been: a paragraph above a run of steps is about the run.
+- **The Doctor counts them, and the Outline gathers them.** Each task note in the project's own
+  scripts is an `info` finding naming its marker, its file and its line, so the report can jump
+  straight to it; the Outline grows a `To do` folder at the end holding the same notes from the open
+  sheet. Both are lenses over comments already in the file - nothing is written, and the byte
+  round-trip is untouched.
+
+### Added - match patterns, data types and the scene tree read as the sheet's own rows
+
+- **`match` patterns are conditions.** A match on plain values already read as the Else-if chain it is;
+  the four patterns that say something a plain value cannot now join it. `[\"move\", var x, var y]`
+  reads `event is a list of 3 starting \"move\"` with `x` and `y` as chips; `{\"type\": \"hit\", \"amount\":
+  var a}` reads `event is a table with type = \"hit\"` with `amount → a` as its chip; `var other when
+  other is String` reads `event is text` with `other` as its chip, the guard read through the ordinary
+  condition grammar with the bound name standing for what it is bound to; a bare `var other` and `_`
+  are both the Else they are. A nested pattern, an open-ended `..` or anything with a call in it keeps
+  the pattern text it was written as.
+- **A range that counts down or steps says so.** `range(10, 0, -1)` reads `For \"i\" from 10 down to 1`
+  and `range(0, 100, 10)` reads `For \"i\" from 0 to 90 step 10` - both ends the values the body
+  actually sees, so nobody has to redo Godot's exclusive-stop arithmetic in their head.
+- **A pure-data `class X:` is a Data type bar.** The header says what the thing IS (`Data type
+  AbilityData`) rather than repeating GDScript's keyword, and its fields stay the editable rows below.
+  `Stats.new()` reads `a new Stats`, `stats.duplicate()` reads `a copy of stats`, and `thing is Stats`
+  already read `is a Stats`.
+- **Scene-tree idioms are one word each.** `find_child(\"HUD\")` is `the child named HUD`,
+  `get_tree().current_scene` is `the layout` (and `get_tree().current_scene.get_node(\"Boss\")` is `Boss
+  in the layout`), `%HealthBar` is `HealthBar` with `unique name` beside it, and `enemy.get_path()` is
+  `enemy's path`. A `%` inside a string literal or after a bracket is still the format operator or a
+  remainder, and is left alone.
+- **Copying a node that is already in the scene is Clone object.** `var copy = enemy.duplicate()`
+  followed by `get_parent().add_child(copy)` is one row - `Clone object enemy (→ copy, next to it)` -
+  where it used to read `Create object (copy of enemy)`. Create object stays what it is: making one
+  out of a scene file. The plain call spelling counts as the plant, not just the picked Add Child row,
+  and the row says whether the copy went next to the node or inside it.
 
 ### Added - the things AROUND an object read, and are written, in the sheet's own words
 
@@ -531,6 +630,65 @@ moves, and no emitted GDScript is touched.
   opens the panel that owns it, so the card stays a summary rather than a sixth place where things
   live. Nothing is measured twice: every line is the panel's own measure. The Open Sheets panel
   hovers with the card's first line and the workspace a tab belongs to.
+
+### Added - the behaviors a hand-rolled script writes, read with the behavior's own words
+
+A behavior is not one line and not one function: it is a shape a reader of event sheets already has a
+name for. These read as that name. Display only, as always - the file is untouched, the byte
+round-trip and the emitted GDScript cannot move - and every event holding one of the shapes states it
+in the pattern registry with the exact source lines as evidence and, where one ships, the behavior
+that could replace it.
+
+- **Line of sight is one condition.** A function that guards on distance, aims a `RayCast2D` at the
+  target, forces an update and returns \"nothing in the way, or what I hit IS the target\" reads
+  `Enemy has line of sight to t (within Sight Range)`, where five rows of ray plumbing were. The claim
+  offers the shipped Line of Sight pack (2D or 3D, by the host).
+- **The grab / release / follow trio is Drag & Drop.** `Start dragging`, `Drop`,
+  `Remember the grab offset`, `Follow the cursor (keeping the grab offset)` and the `Is dragging`
+  question. A boolean is only read as the drag flag when the file raises it beside the line that
+  remembers the grab offset and lowers it elsewhere, so an ordinary flag stays an ordinary flag.
+- **An anchor preset is a corner.** `set_anchors_preset(Control.PRESET_TOP_RIGHT)` reads
+  `Anchor ▸ Anchor to top right (of the window)`, and a single `anchor_left` / `offset_top` write
+  reads as the edge it moves.
+- **Solid and Jump-thru are what a body already is to the others.** A collision shape switched off is
+  `Solid ▸ Set disabled`, `one_way_collision = true` is
+  `Jump-thru ▸ Set enabled (one-way: solid from above only)`, and `set_collision_layer_value(1, true)`
+  is `Solid ▸ On layer World (layer 1)`, with the layer's name taken from your own Project Settings.
+- **The platformer's ground check has its name back.** `test_move(transform, Vector2(0, 1))` and the
+  test-only `move_and_collide` twin read `Is overlapping at offset (0, 1) (a solid)`, and a loop over
+  `get_overlapping_areas()` reads `For each a overlapping Area2D`.
+- **Weighted draws, seeds and noise belong to Advanced Random.**
+  `[\"coin\", \"gem\"][rng.rand_weighted([70, 20])]` reads `choose weighted(\"coin\" 70, \"gem\" 20)`,
+  `rng.seed = hash(\"level-1\")` reads `Advanced Random ▸ Set seed to \"level-1\"`, and
+  `noise.get_noise_2d(x, y)` reads `AdvancedRandom.Perlin2d(x, y)` by the noise type the file set.
+- **The system clock is the Date object.** `Date.Now`, `Date.Today`, `Date.TimeString` and the
+  `Date.Hour` / `Minute` / `Second` / `Year` / `Month` / `Day` / `Weekday` fields, read out of the
+  local the file filled from the clock.
+- **A spawn is one row, layer and all.** The instantiate stays the event's own Local row, and the node
+  the object is added to, where it is put and the properties set on the way in collapse into
+  `Create object Enemy on layer FX at spawn (as e)   rotation = angle` - in whatever order the author
+  wrote those lines, and whichever row each of them lifted to.
+
+### Added - the rows that write those shapes
+
+- **The Anchor behavior pack**, the one behavior of this batch with nothing behind it: where a Control
+  sits when the window changes size, said as a corner rather than as four numbers between 0 and 1.
+  Anchor To, Set Margins, Set Keep Size, Set Follow Resizes, Is Anchored To, Anchored Corner and On
+  Anchored, with a guide of sixteen use cases.
+- **Is Overlapping At Offset**, the ground check as a picked condition - a move that is never made.
+- **The Date object's expressions**: Date: Hour / Minute / Second / Year / Month / Day / Weekday.
+
+### Changed
+
+- The overlap conditions and the clock expressions now say the sentences an opened file already reads
+  them as: *Is Overlapping Body* / *Is Overlapping Area* (was *Overlaps Body* / *Overlaps Area*) and
+  *Date: Now* / *Date: Today* / *Date: Time Text* (was *Unix Time* / *System Date String* / *System
+  Time String*). Every `ace_id` and every codegen template is unchanged, so existing sheets compile
+  and lift exactly as before.
+- Writing the wall clock into a variable reads `Set stamp to Date.Now` rather than
+  `Set stamp to now (clock time)`, so the whole Date family reads alike. The game's own running clock
+  (`Time.get_ticks_msec()`) keeps `Set x to now`, because there is no Date expression for a number
+  that restarts with the game.
 
 ### Added - one debugger, four tabs
 
@@ -2266,20 +2424,20 @@ in the right-hand lane, where the reader expects a step.
 - **The pair is ONE statement under the pointer.** Every row of it carries the same statement identity,
   and that is the single thing selection, drag/drop, delete and the gutter key on:
   - clicking any row of the pair - the condition row, the branch, the `Else` - selects the one
-    statement and highlights the whole pair as one selection; Shift/Ctrl multi-select counts it once,
-    and the Up/Down arrows step over the pair as the single row it reads as (Left/Right still walk the
-    cells of whichever row the caret is on).
+	statement and highlights the whole pair as one selection; Shift/Ctrl multi-select counts it once,
+	and the Up/Down arrows step over the pair as the single row it reads as (Left/Right still walk the
+	cells of whichever row the caret is on).
   - grabbing any row drags the statement, so the pair travels together; a drop BEFORE a branch row
-    lands above the whole pair, a drop INTO one snaps below it, and only the pair's own head still
+	lands above the whole pair, a drop INTO one snaps below it, and only the pair's own head still
     takes a sub-event.
   - a double-click anywhere on the pair - including the condition cell and the plain `Else` row,
-    neither of which is a real cell - opens that ONE line's existing editor: the code dialog for a
-    hand-written statement, the ACE editor for a lifted row. Delete, Cut, Copy and the row context
-    menu act on the statement, and every edit still goes through the one undo funnel.
+	neither of which is a real cell - opens that ONE line's existing editor: the code dialog for a
+	hand-written statement, the ACE editor for a lifted row. Delete, Cut, Copy and the row context
+	menu act on the statement, and every edit still goes through the one undo funnel.
   - no \"+ Add condition\" / \"+ Add action\" is drawn inside the pair (a pair is a statement, not an
-    editable event); the event's own scaffolding stays on the event's own row. Event numbers, hit
-    counts, breakpoints and bookmarks belong to the event and are drawn once, on the row the pair
-    leads with - never on a reading.
+	editable event); the event's own scaffolding stays on the event's own row. Event numbers, hit
+	counts, breakpoints and bookmarks belong to the event and are drawn once, on the row the pair
+	leads with - never on a reading.
 - A ternary inside a `func(...)` lambda is deliberately left alone: the body is a scope of its own, so
   hoisting a branch out of it would move when that branch runs. A hand-written statement carrying an
   inline lambda now keeps the GDScript code cell it came from, rather than posing as a sentence.

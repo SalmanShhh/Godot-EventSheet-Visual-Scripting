@@ -126,6 +126,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `dashed_line` | [Draw Dashed Line](ace:Core/DrawDashedLine) | Drawing | Vocabulary |
 | `dashed_rect` | [Draw Dashed Rect](ace:Core/DrawDashedRect) | Drawing | Vocabulary |
 | `dashed_ring` | [Draw Dashed Ring](ace:Core/DrawDashedRing) | Drawing | Vocabulary |
+| `day` | [Date: Day](ace:Core/DateDay) | Time | Vocabulary |
 | `db_to_linear` | [Bus Volume (percent)](ace:Core/OptionsGetBusPercent) | Game Options | Vocabulary |
 | `deg_to_rad` | [Degrees To Radians](ace:Core/DegToRad) | Math & Random | Vocabulary |
 | `delta` | [Pan Delta](ace:Core/TouchPanDelta) | Touch | Vocabulary |
@@ -227,7 +228,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_country_name` | [Country Name](ace:Core/CountryName) | Translation | Vocabulary |
 | `get_current_node` | [Is In State](ace:Core/IsInState) | Animation | Vocabulary |
 | `get_custom_data` | [Tile Has Custom Data](ace:Core/TileMapTileHasCustomData) | Tilemap | Vocabulary |
-| `get_date_string_from_system` | [System Date String](ace:Core/GetSystemDate) | Utility: Time | Vocabulary |
+| `get_date_string_from_system` | [Date: Today](ace:Core/GetSystemDate) | Utility: Time | Vocabulary |
+| `get_datetime_dict_from_system` | [Date: Hour](ace:Core/DateHour) | Time | Vocabulary |
 | `get_datetime_dict_from_unix_time` | [Date Parts](ace:Core/DateParts) | Translation | Vocabulary |
 | `get_datetime_string_from_system` | [Date & Time Text](ace:Core/GetDatetimeString) | Time | Vocabulary |
 | `get_default_clear_color` | [Clear Color](ace:Core/RenderingGetClearColor) | Rendering | Vocabulary |
@@ -249,7 +251,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_global_mouse_position` | [Mouse Position (world)](ace:Core/GetMouseWorldPosition) | Mouse | Vocabulary |
 | `get_gravity` | [Gravity Direction](ace:Core/TouchGravity) | Touch | Vocabulary |
 | `get_gyroscope` | [Rotation Rate](ace:Core/TouchRotationRate) | Touch | Vocabulary |
-| `get_image` | [Take Screenshot](ace:Core/TakeScreenshot) | General Actions | Vocabulary |
+| `get_image` | [Screenshot](ace:Core/WindowScreenshot) | Game Window | Vocabulary |
 | `get_index` | [Index In Parent](ace:Core/GetIndexInParent) | Nodes | Vocabulary |
 | `get_item_text` | [Item Text](ace:Core/ListItemText) | UI | Vocabulary |
 | `get_joy_axis` | [Compare Axis](ace:Core/GamepadCompareAxis) | Gamepad | Vocabulary |
@@ -310,19 +312,19 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_string_from_utf8` | [Last Data](ace:Core/AjaxLastData) | AJAX | Vocabulary |
 | `get_string_size` | [Text Fits In Width](ace:Core/TextFitsInWidth) | Text | Vocabulary |
 | `get_surface_count` | [Mesh Surface Count](ace:Core/MeshSurfaceCount) | Mesh | Vocabulary |
-| `get_texture` | [Take Screenshot](ace:Core/TakeScreenshot) | General Actions | Vocabulary |
+| `get_texture` | [Rendered As An Image](ace:Core/WindowViewportImage) | Game Window | Vocabulary |
 | `get_theme_font` | [Font Of This Control](ace:Core/ControlFont) | UI | Vocabulary |
 | `get_theme_font_size` | [Text Overflows](ace:Core/TextOverflows) | Text | Vocabulary |
 | `get_ticks_msec` | [Game Time](ace:Core/GetGameTime) | Time | Vocabulary |
 | `get_ticks_usec` | [Begin Frame Budget](ace:Core/BeginFrameBudget) | Performance | Vocabulary |
-| `get_time_string_from_system` | [System Time String](ace:Core/GetSystemTime) | Utility: Time | Vocabulary |
+| `get_time_string_from_system` | [Date: Time Text](ace:Core/GetSystemTime) | Utility: Time | Vocabulary |
 | `get_translation_object` | [Language Has Text For](ace:Core/LanguageHasTextFor) | Translation | Vocabulary |
 | `get_tree` | [Await Next Frame](ace:Core/AwaitNextFrame) | Performance | Vocabulary |
 | `get_typed_builtin` | [Element Type](ace:Core/ArrayTypedBuiltin) | Variables: Array | Vocabulary |
 | `get_typed_class_name` | [Element Class](ace:Core/ArrayTypedClassName) | Variables: Array | Vocabulary |
 | `get_undo_redo` | [Undo History](ace:Core/EditorUndoHistory) | Editor Tools | Vocabulary |
 | `get_unique_id` | [My ID](ace:Core/MyPeerId) | Multiplayer | Vocabulary |
-| `get_unix_time_from_system` | [Unix Time](ace:Core/GetUnixTime) | Time | Vocabulary |
+| `get_unix_time_from_system` | [Date: Now](ace:Core/GetUnixTime) | Time | Vocabulary |
 | `get_used_cells` | [Used Cells Count](ace:Core/TileMapUsedCellsCount) | Tilemap | Vocabulary |
 | `get_value` | [Load Setting Into Variable](ace:Core/LoadSettingInto) | Utility: Settings | Vocabulary |
 | `get_vector` | [Move Vector](ace:Core/InputMoveVector) | Input | Vocabulary |
@@ -363,6 +365,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `hide` | [Hide](ace:Core/HideNode) | General Actions | Vocabulary |
 | `hit_back_faces` | [RayCast Hits Back Faces (3D)](ace:Core/RayCast3DSetHitBackFaces) | Raycast 3D | Vocabulary |
 | `hit_from_inside` | [RayCast Hits From Inside (2D)](ace:Core/RayCast2DSetHitFromInside) | Raycast 2D | Vocabulary |
+| `hour` | [Date: Hour](ace:Core/DateHour) | Time | Vocabulary |
 | `html` | [Color From Hex](ace:Core/ColorFromHex) | Color | Vocabulary |
 | `if` | [Text Or](ace:Core/TextOr) | Variables | Vocabulary |
 | `in` | [Log Measurements](ace:Core/LogMeasurements) | Debug | Vocabulary |
@@ -446,7 +449,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `linear_damp` | [Set Linear Damping](ace:Core/SetLinearDamping) | Physics | Vocabulary |
 | `linear_to_db` | [Set Volume (0 to 1)](ace:Core/AudioSetVolumeLevel) | Audio | Vocabulary |
 | `linear_velocity` | [Get Linear Velocity](ace:Core/GetLinearVelocity2D) | General Expressions | Vocabulary |
-| `load` | [Load Resource](ace:Core/LoadResource) | Helpers | Vocabulary |
+| `load` | [Data Asset](ace:Core/DataAsset) | Files | Vocabulary |
 | `load_from_project_settings` | [Reset All Bindings](ace:Core/InputResetBindings) | Keyboard | Vocabulary |
 | `load_threaded_get` | [Go To Loaded Layout](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
 | `load_threaded_get_status` | [Layout Has Finished Loading](ace:Core/LayoutFinishedLoading) | Scene | Vocabulary |
@@ -477,9 +480,11 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `min` | [Min](ace:Core/MinValue) | Helpers | Vocabulary |
 | `minf` | [Charge Toward](ace:Core/ChargeToward) | Variables | Vocabulary |
 | `mini` | min( , ) | System | Expressions |
+| `minute` | [Date: Minute](ace:Core/DateMinute) | Time | Vocabulary |
 | `mode` | [Go Fullscreen](ace:Core/WindowGoFullscreen) | Game Window | Vocabulary |
 | `modulate` | [Set Color Tint](ace:Core/SetModulate) | General Actions | Vocabulary |
 | `monitoring` | [Get Monitoring](ace:Core/GetMonitoring) | General Expressions | Vocabulary |
+| `month` | [Date: Month](ace:Core/DateMonth) | Time | Vocabulary |
 | `motion` | [Cast Circle Motion Into (2D)](ace:Core/CastCircleMotion2D) | Raycast 2D | Vocabulary |
 | `mouse_mode` | [Set Mouse Mode](ace:Core/SetMouseMode) | Mouse | Vocabulary |
 | `move_and_slide` | [Move And Slide](ace:Core/MoveAndSlide) | General Actions | Vocabulary |
@@ -487,6 +492,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `move_to_center` | [Center Window](ace:Core/WindowCenter) | Game Window | Vocabulary |
 | `move_to_front` | [Move To Top Of Layer](ace:Core/MoveToTopOfLayer) | Layers | Vocabulary |
 | `move_toward` | [Move Toward](ace:Core/MoveTowardValue) | Helpers | Vocabulary |
+| `msaa_2d` | [Set Anti-aliasing](ace:Core/WindowSetAntiAliasing) | Game Window | Vocabulary |
 | `name` | [Set Node Name](ace:Core/SetNodeName) | Nodes | Vocabulary |
 | `naturalnocasecmp_to` | [Text Natural Order](ace:Core/TextNaturalOrder) | Compare: Text | Vocabulary |
 | `new` | [Make Gradient](ace:Core/MakeGradient) | Gradients & Curves | Vocabulary |
@@ -500,8 +506,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `open_scene_from_path` | [Open Scene In Editor](ace:Core/OpenSceneInEditor) | Editor Tools | Vocabulary |
 | `or` | [Is Nothing](ace:Core/IsNothing) | Compare: Types | Vocabulary |
 | `outer_radius` | [Make Torus Mesh](ace:Core/SetTorusMesh) | Mesh | Vocabulary |
-| `overlaps_area` | [Overlaps Area](ace:Core/OverlapsArea) | Collisions | Vocabulary |
-| `overlaps_body` | [Overlaps Body](ace:Core/OverlapsBody) | Collisions | Vocabulary |
+| `overlaps_area` | [Is Overlapping Area](ace:Core/OverlapsArea) | Collisions | Vocabulary |
+| `overlaps_body` | [Is Overlapping Body](ace:Core/OverlapsBody) | Collisions | Vocabulary |
 | `own_world_3d` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
 | `owner` | [Get Scene Owner](ace:Core/GetOwner) | Nodes | Vocabulary |
 | `pack` | [Save Node As Scene](ace:Core/SaveNodeAsScene) | Editor Tools | Vocabulary |
@@ -609,8 +615,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `s` | [Write Version Stamp](ace:Core/WriteVersionStamp) | Editor Tools | Vocabulary |
 | `sample` | [Sample Gradient](ace:Core/SampleGradient) | Gradients & Curves | Vocabulary |
 | `sample_baked` | [Sample Curve](ace:Core/SampleCurve) | Gradients & Curves | Vocabulary |
-| `save` | [Save Resource To File](ace:Core/SaveResourceToFile) | Editor Tools | Vocabulary |
-| `save_png` | [Take Screenshot](ace:Core/TakeScreenshot) | General Actions | Vocabulary |
+| `save` | [Save Data Asset](ace:Core/SaveDataAsset) | Files | Vocabulary |
+| `save_png` | [Save Image As](ace:Core/WindowSaveImageAs) | Game Window | Vocabulary |
 | `save_scene` | [Save Current Scene](ace:Core/SaveEditedScene) | Editor Tools | Vocabulary |
 | `save_scene_as` | [Save Scene As](ace:Core/SaveEditedSceneAs) | Editor Tools | Vocabulary |
 | `scale` | [Set Scale (3D)](ace:Core/SetScale3D) | General Actions | Vocabulary |
@@ -618,6 +624,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `screen_get_size` | [Screen Size](ace:Core/GetScreenSize) | Utility: Window | Vocabulary |
 | `search` | [Match Pattern](ace:Core/MatchPattern) | Text: RegEx | Vocabulary |
 | `search_all` | [All Matches](ace:Core/AllMatches) | Text: RegEx | Vocabulary |
+| `second` | [Date: Second](ace:Core/DateSecond) | Time | Vocabulary |
 | `seed` | [Seed Random](ace:Core/SeedRandom) | Math & Random | Vocabulary |
 | `seek` | [Seek](ace:Core/AudioSeek) | Audio | Vocabulary |
 | `seek_end` | [Append To File](ace:Core/AppendTextFile) | Files | Vocabulary |
@@ -699,6 +706,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `substr` | [Mid](ace:Core/TextMid) | Text | Vocabulary |
 | `tan` | [Tangent](ace:Core/TanValue) | Helpers | Vocabulary |
 | `target_position` | [Find Path To](ace:Core/SetNavTarget) | General Actions | Vocabulary |
+| `test_move` | [Is Overlapping At Offset](ace:Core/IsOverlappingAtOffset) | Collisions | Vocabulary |
 | `text` | [Get Text](ace:Core/GetLabelText) | General Expressions | Vocabulary |
 | `texture` | [Set Image](ace:Core/SetSpriteTexture) | Animation | Vocabulary |
 | `time_left` | [Get Time Left](ace:Core/GetTimerTimeLeft) | General Expressions | Vocabulary |
@@ -746,6 +754,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `visible` | [Is Visible](ace:Core/IsVisible) | General Conditions | Vocabulary |
 | `volume_db` | [Set Volume](ace:Core/AudioSetVolume) | Audio | Vocabulary |
 | `warp_mouse` | [Move Cursor To](ace:Core/MouseMoveCursorTo) | Mouse | Vocabulary |
+| `weekday` | [Date: Weekday](ace:Core/DateWeekday) | Time | Vocabulary |
 | `window_get_mode` | [Is Fullscreen](ace:Core/IsFullscreen) | Display | Vocabulary |
 | `window_get_size` | [Window Width](ace:Core/GetWindowWidth) | Display | Vocabulary |
 | `window_input` | [Wait For The Next Key Or Button](ace:Core/InputWaitForNextKey) | Keyboard | Vocabulary |
@@ -756,6 +765,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `wrapi` | [Wrap (int)](ace:Core/WrapIntValue) | Helpers | Vocabulary |
 | `x` | [Is Cell In Bounds](ace:Core/IsCellInBounds) | Math & Random | Vocabulary |
 | `y` | [Is Jumping](ace:Core/IsJumping) | Collisions | Vocabulary |
+| `year` | [Date: Year](ace:Core/DateYear) | Time | Vocabulary |
 | `z` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
 | `z_as_relative` | [Set Z Order Absolute](ace:Core/SetZOrderAbsolute) | Layers | Vocabulary |
 | `z_index` | [Set Z Order](ace:Core/SetZOrder) | Layers | Vocabulary |

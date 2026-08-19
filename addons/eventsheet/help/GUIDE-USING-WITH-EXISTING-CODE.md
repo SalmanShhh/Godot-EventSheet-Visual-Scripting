@@ -680,7 +680,7 @@ That is the order this section is in.
   to Center` - and so does a number written into a variable the sheet declared with one of its own
   enums (`dir = 2` reads `Set dir to DOWN`). The number is still one hover away.
 - **Physics layers and input actions by their PROJECT names.** `set_collision_layer_value(2, true)`
-  reads `Set collision with layer "Enemies" on` and `collision_layer = 5` reads `Set collision
+  reads `Solid ▸ On layer Enemies (layer 2)` and `collision_layer = 5` reads `Set collision
   layers to "World", "Player"`, from the names Project Settings holds; a layer the project never
   named keeps its number. The DEVICE an action is bound to picks its object too, so an action bound
   only to mouse buttons reads under `Mouse` and one bound only to a pad under `Gamepad`.
@@ -1324,6 +1324,55 @@ Where a Godot group has the same name as the base, it is shown on the same line 
 members are the set's. When they are not, that is worth saying out loud, and **Tools ▸ Project
 Doctor…** says it: *"Goblin is in the group "enemy" but does not extend Enemy"* - which is where an
 "Invalid call" at runtime usually comes from.
+
+### The behaviors a script hand-rolls, named
+
+Some shapes are not one line and not one function - they are a *behavior* a reader already has a name
+for, spelled out in Godot's own vocabulary. The reading names them, and the file is untouched:
+
+- **A raycast cast at a target is one question.** A function that guards on distance, points a
+  `RayCast2D` at the target, forces an update and returns "nothing in the way, or the thing I hit *is*
+  the target" reads as `Enemy has line of sight to t (within Sight Range)` - one condition where five
+  rows of ray plumbing were. The shipped Line of Sight pack (2D and 3D) publishes exactly that
+  condition, so adopting it is a swap rather than a rewrite.
+- **The grab / release / follow trio is Drag & Drop.** A boolean raised beside the line that remembers
+  `global_position - get_global_mouse_position()`, lowered on the button-up, and tested before
+  `global_position = get_global_mouse_position() + grab_offset`, reads as
+  `Drag & Drop ▸ Start dragging`, `▸ Drop`, `▸ Is dragging` and
+  `▸ Follow the cursor (keeping the grab offset)`.
+- **An anchor preset is a corner.** `set_anchors_preset(Control.PRESET_TOP_RIGHT)` reads as
+  `Anchor ▸ Anchor to top right (of the window)`, and a single `anchor_left` or `offset_top` write
+  reads as the edge it moves. The Anchor pack writes the same sentence from the picker.
+- **Solid and Jump-thru are what a body already is.** `$CollisionShape2D.disabled = true` is
+  `Solid ▸ Set disabled`, `one_way_collision = true` is
+  `Jump-thru ▸ Set enabled (one-way: solid from above only)`, and `set_collision_layer_value(1, true)`
+  is `Solid ▸ On layer World (layer 1)` - with the layer's name from your own Project Settings when you
+  gave it one. Neither is a pack, because neither is anything to attach.
+- **`test_move(transform, Vector2(0, 1))` is the ground check.** It reads as
+  `Is overlapping at offset (0, 1) (a solid)` - the same words the new **Is Overlapping At Offset**
+  condition writes - and a loop over `get_overlapping_areas()` reads as `For each a overlapping Area2D`.
+- **A weighted draw, a seed and the noise belong to Advanced Random.**
+  `["coin", "gem", "nothing"][rng.rand_weighted([70, 20, 10])]` reads as
+  `choose weighted("coin" 70, "gem" 20, "nothing" 10)`, `rng.seed = hash("level-1")` as
+  `Advanced Random ▸ Set seed to "level-1"`, and `noise.get_noise_2d(x, y)` as
+  `AdvancedRandom.Perlin2d(x, y)` when the file said which noise type it wanted.
+- **The system clock is the Date object.** `Time.get_unix_time_from_system()` is `Date.Now`, the date
+  and time strings are `Date.Today` and `Date.TimeString`, and the fields of a datetime dictionary the
+  file read out of the clock are `Date.Hour`, `Date.Minute`, `Date.Second`, `Date.Year`, `Date.Month`,
+  `Date.Day` and `Date.Weekday`. Every one of them is also a row you can pick.
+- **A spawn is one row, layer and all.** The `instantiate()` local stays where the event declares it,
+  and everything the file then does to the new object - the node it is added to, where it is put, the
+  properties set on the way in - collapses into
+  `Create object Enemy on layer FX at spawn (as e)   rotation = angle`, whatever order those lines were
+  written in.
+
+<img src="images/opened-script-behaviors.png" alt="A hand-written CharacterBody2D script opened as a sheet: the head lists sight_range, the ray, the drag flag and its grab offset; a tick event reads Drag and Drop is dragging then Follow the cursor keeping the grab offset; a second reads Is overlapping at offset (0, 1) (a solid); and the functions read Return CharacterBody2D has line of sight to t within Sight Range, Start dragging, Drop, Jump-thru Set enabled, Solid Set disabled, Solid On layer 1, Set noise type to Perlin, Set seed to level-1 and Set drop to choose weighted." width="760">
+
+None of this is a guess. Each reading rests on a fact the file *states* - the local really is a
+`RayCast2D`, the boolean really is raised beside the grab offset, the local really was filled from the
+system clock - and with the fact absent every line keeps the ordinary reading it has today. Each event
+holding one of these shapes also records it in the pattern registry with the exact source lines as its
+evidence, which is what the ⟡ chip, its hover and **Adopt behavior** read.
 
 ### Beginner spellings and the reading layer
 
