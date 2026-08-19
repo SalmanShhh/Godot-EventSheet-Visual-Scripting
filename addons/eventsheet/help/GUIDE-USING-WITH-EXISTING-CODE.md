@@ -509,6 +509,8 @@ That is the order this section is in.
   that matters. Nothing is written to the file for any of this: a blank event compiles into
   `_process(delta)` and re-reads as a blank event, byte for byte.
 
+  ![Three events: a blank one whose condition lane holds only "+ Add condition" and whose action sets a label every tick, a physics one reading a muted "every tick (physics)", and an every-tick event carrying a condition, which keeps its full "Every tick (draw)" words and its tempo badge](images/blank-events.png)
+
   You can author one too. Press **E** and the Add event dialog's first entry is already selected -
   **(none - runs every tick)** - so Enter makes the blank event and **A** fills its actions. Under a
   parent, blank means something else and has its own gesture: **Add blank sub-event (B)** puts its

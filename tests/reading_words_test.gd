@@ -96,7 +96,9 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ ⏳ Wait one tick",
 	# M27 - the tick triggers in the familiar words
 	"System ▸ Every tick (physics)",
-	"System ▸ Every tick (draw)",
+	# S27 - the every-FRAME handler here carries no condition of its own, so it reads as the BLANK
+	# event it is (nothing in the condition lane at all). The physics one above keeps its words
+	# because its loops are conditions. Pinned as an absence just below.
 	# M33 - the familiar loop words
 	"System ▸ Repeat 3 times (loopindex i)",
 	"System ▸ For \"i\" from 2 to 7",
@@ -284,6 +286,10 @@ static func _opened_file_reads() -> bool:
 	var readings: PackedStringArray = _render(_import())
 	for expected: String in EXPECTED_READINGS:
 		ok = _check("opened row reads \"%s\"" % expected, readings.has(expected), true) and ok
+	# S27 - and the conditionless `_process` handler says nothing at all, because a blank event
+	# already means every tick.
+	ok = _check("a conditionless _process reads blank, not \"Every tick (draw)\"",
+		readings.has("System ▸ Every tick (draw)"), false) and ok
 	return ok
 
 
