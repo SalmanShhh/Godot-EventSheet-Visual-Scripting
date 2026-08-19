@@ -40,6 +40,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 - [Composition and Systems](GUIDE-COMPOSITION-SYSTEMS.md) - the ECS-lite pattern: entities as grouped nodes, systems as sheets that run over them.
 - [Randomness and Procedural Generation](GUIDE-PROCEDURAL-GENERATION.md) - one Advanced Random seed driving maps, loot, and cosmetics.
 - [Player and AI Input](GUIDE-PLAYER-AND-AI-INPUT.md) - the one seam that lets every input-reading pack be driven by the player or by your AI.
+- [Let Players Rebind the Controls](GUIDE-LET-PLAYERS-REBIND-THE-CONTROLS.md) - a controls screen as four events: wait for the next key, bind it, reset, and the two rows that make a remap survive a restart.
 
 ## Localization
 
