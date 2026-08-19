@@ -21,6 +21,9 @@ extends RefCounted
 # path at use time.
 
 const FACTS_PATH: String = "res://addons/eventsheet/editor/scene_events_facts.gd"
+## The same name scene_events_facts.gd owns, spelled here so the boot path can read the switch
+## without compiling the facts (and the vocabulary behind them) to find out it is off.
+const SETTING_SHOW_EVENTS: String = "eventsheets/editor/show_scene_events"
 const CANVAS_NODE_NAME: String = "__EventSheetEventsCanvas"
 const DOCK_MARK_NAME: String = "__EventSheetEventsDockMark"
 
@@ -37,11 +40,11 @@ func init(editor_interface: EditorInterface) -> void:
 		return
 	if not _editor_interface.get_selection().selection_changed.is_connected(refresh):
 		_editor_interface.get_selection().selection_changed.connect(refresh)
-	# The View-menu toggle reaches the live overlay through this, so the dock and the plugin never
-	# have to know about each other.
-	var facts: Script = load(FACTS_PATH) as Script
-	if facts != null:
-		facts.call("register_refresh", refresh)
+	# The View-menu toggle reaches the live overlay through the hook refresh() registers, and that
+	# only happens once the overlay is actually ON - loading the facts compiles the reading
+	# vocabulary behind them, and the boot path must not pay for a feature nobody switched on. So
+	# the FIRST switch-on draws at the next selection change rather than instantly; every one after
+	# that is immediate.
 	refresh()
 
 
@@ -62,9 +65,15 @@ func refresh() -> void:
 	_clear()
 	if _editor_interface == null:
 		return
-	var facts: Script = load(FACTS_PATH) as Script
-	if facts == null or not bool(facts.call("is_enabled")):
+	# The setting is read WITHOUT loading the facts: this runs at editor boot, and the reading
+	# vocabulary behind the badges must not be compiled for a feature nobody switched on. The name
+	# is spelled here rather than named through the facts for exactly that reason.
+	if not bool(ProjectSettings.get_setting(SETTING_SHOW_EVENTS, false)):
 		return
+	var facts: Script = load(FACTS_PATH) as Script
+	if facts == null:
+		return
+	facts.call("register_refresh", refresh)
 	var root: Node = _editor_interface.get_edited_scene_root()
 	if root == null:
 		return
