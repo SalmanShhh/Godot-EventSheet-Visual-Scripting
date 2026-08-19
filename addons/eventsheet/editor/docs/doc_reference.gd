@@ -17,6 +17,8 @@
 #   "reference:class/<ClassName>"   an object's reference
 #   "reference:glossary"            the words another event-sheet editor spells differently
 #   "reference:glossary/<term key>" the same page, at one term
+#   "reference:behaviors"           the behaviors by the name a reader arrives holding
+#   "reference:behaviors/<key>"     the same page, at one behavior
 #   "reference:legend"              what the marks on a sheet mean - the Manual's first page
 #
 # Everything is STATIC and PURE where it can be: the block assembly takes rows as an argument, so
@@ -32,6 +34,9 @@ const KIND_SECTION := "section"
 const KIND_PACK := "pack"
 const KIND_CLASS := "class"
 const KIND_GLOSSARY := "glossary"
+## The behaviors a reader arrives holding the names of, each pointing at the pack that does the
+## job here and at what a hand-written version of it reads like.
+const KIND_BEHAVIOR_INDEX := "behaviors"
 const KIND_LEGEND := "legend"
 const KIND_WHATS_NEW := "whatsnew"
 const KIND_TUTORIALS := "tutorials"
@@ -40,8 +45,9 @@ const KIND_PATTERNS := "patterns"
 const KIND_PATTERN := "pattern"
 
 ## The kinds a "reference:" id may name, so an unknown one fails loudly instead of drawing blank.
-const KINDS: Array[String] = [KIND_SECTION, KIND_PACK, KIND_CLASS, KIND_GLOSSARY, KIND_LEGEND,
-	KIND_WHATS_NEW, KIND_TUTORIALS, KIND_TUTORIAL, KIND_PATTERNS, KIND_PATTERN]
+const KINDS: Array[String] = [KIND_SECTION, KIND_PACK, KIND_CLASS, KIND_GLOSSARY,
+	KIND_BEHAVIOR_INDEX, KIND_LEGEND, KIND_WHATS_NEW, KIND_TUTORIALS, KIND_TUTORIAL,
+	KIND_PATTERNS, KIND_PATTERN]
 
 ## What the reading surface is called, everywhere the reader can see it. An event sheet's
 ## documentation is its Manual, and every crumb trail starts here.
@@ -137,6 +143,8 @@ static func has_page(doc_id_text: String) -> bool:
 			return not EventSheetDocTutorials.tutorial(name).is_empty()
 		KIND_GLOSSARY:
 			return name.is_empty() or not EventSheetDocGlossary.term(name).is_empty()
+		KIND_BEHAVIOR_INDEX:
+			return name.is_empty() or not EventSheetDocBehaviorIndex.entry(name).is_empty()
 		KIND_PACK:
 			return not name.is_empty() and DirAccess.dir_exists_absolute("res://eventsheet_addons".path_join(name))
 		KIND_CLASS:
@@ -163,6 +171,8 @@ static func title_for(kind: String, name: String) -> String:
 			return str(EventSheetDocTutorials.tutorial(name).get("title", ""))
 		KIND_GLOSSARY:
 			return EventSheetDocGlossary.PAGE_TITLE
+		KIND_BEHAVIOR_INDEX:
+			return EventSheetDocBehaviorIndex.PAGE_TITLE
 		KIND_PACK:
 			return pack_title(name)
 		KIND_CLASS:
@@ -221,6 +231,8 @@ static func breadcrumb(doc_id_text: String, title: String) -> PackedStringArray:
 				crumbs.append(CLASS_TREE_TITLE)
 			KIND_GLOSSARY:
 				crumbs.append(EventSheetDocGlossary.PAGE_TITLE)
+			KIND_BEHAVIOR_INDEX:
+				crumbs.append(EventSheetDocBehaviorIndex.PAGE_TITLE)
 			KIND_LEGEND:
 				crumbs.append(title_for(KIND_LEGEND, ""))
 			KIND_WHATS_NEW:
@@ -375,6 +387,8 @@ static func blocks_for(kind: String, name: String) -> Array[Dictionary]:
 			return EventSheetDocTutorials.step_blocks(name)
 		KIND_GLOSSARY:
 			return EventSheetDocGlossary.blocks()
+		KIND_BEHAVIOR_INDEX:
+			return EventSheetDocBehaviorIndex.blocks()
 		KIND_PACK:
 			return _pack_blocks(name)
 		KIND_CLASS:

@@ -91,6 +91,18 @@ lands in a path that already existed.
   and preview moves to F4. Everything stays rebindable afterwards, and the picker reads the LIVE
   bindings - rebind one key by hand and it honestly says `Godot EventSheets` again.
 
+### Added - the Manual answers a behavior name
+
+- **"Behaviors, by the name you know".** A new first page of the Manual, keyed by the behavior
+  names a reader arrives holding rather than by anything in this repo: 8 Direction, Bullet, Turret,
+  Move To, Pin, Wrap, Bound to layout, Rotate, Fade, Flash, Sine, Line of sight, Drag & Drop,
+  Anchor, Solid, Jump-thru, Platform, Pathfinding, Tween, Timer, Persist, No save, Scroll To,
+  Physics, Car, Orbit, Tile movement, Custom movement, Shadow caster, Shadow light. Each row
+  answers twice - what the thing IS here (the shipped pack, linked to its own reference page, or
+  the Godot node that already does the job and needs nothing attached), and what a HAND-WRITTEN
+  version of it reads like on a sheet. Searchable from the one Manual box under the same
+  *glossary* heading the word list uses, at `reference:behaviors` and `reference:behaviors/<name>`.
+
 ### Added - an opened script's PATTERNS read as the events they are
 
 The batches before this one made single statements read as the sheet's sentences. These are the

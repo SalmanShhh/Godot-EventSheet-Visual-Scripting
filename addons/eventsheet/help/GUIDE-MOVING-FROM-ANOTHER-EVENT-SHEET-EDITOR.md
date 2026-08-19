@@ -198,6 +198,18 @@ it), and anything not covered is one ƒx expression away.
 
 Every C3 behavior or plugin lands in one of three lanes: Godot already owns it, a portable pack ships it, or you use the Godot feature directly.
 
+**Look a behavior up by its name.** The Manual ships a page called **Behaviors, by the name you
+know** (Manual ▸ the first pages, or just type the behavior's name into the Manual's search box).
+One row per behavior you arrive holding - 8 Direction, Bullet, Turret, Move To, Pin, Wrap, Bound to
+layout, Rotate, Fade, Flash, Sine, Line of sight, Drag & Drop, Anchor, Solid, Jump-thru, Platform,
+Pathfinding, Tween, Timer, Persist, Scroll To, Physics, Car, Orbit, Tile movement, Custom movement,
+No save, Shadow caster, Shadow light - and each row answers twice: what the thing **is** here (the
+shipped pack, with a link to its reference page, or the Godot node that already does the job and
+needs no pack at all), and what a **hand-written** version of it reads like on a sheet. That second
+half matters more than it sounds: a `move_and_slide` tick with gravity and a jump test opens as the
+Platformer rows, so the code you already have arrives as the behavior it always was, and the sheet
+offers to adopt the pack rather than making you rewrite anything.
+
 ### Lane 1 - Godot already owns it
 
 The picker wraps the native feature:
