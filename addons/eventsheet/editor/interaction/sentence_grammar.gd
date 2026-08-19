@@ -457,7 +457,8 @@ static func condition_pieces(expression: String, context: Dictionary = {}) -> Di
 		for segment: Variant in (whole.get("segments", []) as Array):
 			var whole_segment: Dictionary = segment
 			whole_pieces.append([str(whole_segment.get("text", "")), str(whole_segment.get("tone", "plain"))])
-		return {"object": str(whole.get("object", "")), "pieces": whole_pieces}
+		return {"object": str(whole.get("object", "")), "pieces": whole_pieces,
+			"pattern": str(whole.get("pattern", ""))}
 	# One connective only. A mixed `a and b or c` has a precedence a flat run of words would misstate,
 	# so it is left whole and reads as the expression it is.
 	var connective: String = ""

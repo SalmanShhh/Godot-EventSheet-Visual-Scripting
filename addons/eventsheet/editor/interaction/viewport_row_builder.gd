@@ -5005,6 +5005,187 @@ func _create_object_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
+# ── S18: the four limit_* lines a camera's bounds are written as read as ONE scroll-limits row ────
+# Godot spells a camera's bounds as up to four property writes that only mean anything together; the
+# sheet spells them as one action, and the reader takes in the run as the one thing that happened.
+# The lines stay exactly as they are in the file - on hover, under a double-click and in the bytes
+# that are saved - which is the same promise the Create object run above makes.
+
+
+## The side each `limit_*` property names, in the order a scroll-limits row says them.
+const SCROLL_LIMIT_SIDES: Dictionary = {
+	"limit_left": "left", "limit_right": "right", "limit_top": "top", "limit_bottom": "bottom"
+}
+
+
+## The scroll-limit runs in one action lane, as {"leads": {index: {text, object, line_count, indices,
+## note}}, "consumed": {index: true}}. A run is two or more ADJACENT limit writes on the same object,
+## and it is only claimed when both horizontal sides are in it - "0 to 1920" is a sentence about the
+## left and right edges, and a run that never names them has no such sentence.
+func _scroll_limit_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var index: int = 0
+	while index < actions.size() - 1:
+		var first: Dictionary = _scroll_limit_parts(actions[index])
+		if first.is_empty():
+			index += 1
+			continue
+		var owner_name: String = str(first.get("object", ""))
+		var sides: Dictionary = {str(first.get("side", "")): str(first.get("value", ""))}
+		var evidence: PackedStringArray = PackedStringArray([str(first.get("line", ""))])
+		var last: int = index
+		while last + 1 < actions.size():
+			var next_part: Dictionary = _scroll_limit_parts(actions[last + 1])
+			if next_part.is_empty() or str(next_part.get("object", "")) != owner_name:
+				break
+			if sides.has(str(next_part.get("side", ""))):
+				break
+			sides[str(next_part.get("side", ""))] = str(next_part.get("value", ""))
+			evidence.append(str(next_part.get("line", "")))
+			last += 1
+		if last == index or not sides.has("left") or not sides.has("right"):
+			index += 1
+			continue
+		var indices: Array[int] = []
+		for member_index: int in range(index, last + 1):
+			indices.append(member_index)
+		leads[index] = {
+			"text": EventSheetL10n.translate("Set scroll limits {left} to {right}") \
+				.replace("{left}", str(sides["left"])).replace("{right}", str(sides["right"])),
+			"note": _scroll_limit_note(sides),
+			"object": owner_name,
+			"evidence": evidence,
+			"line_count": last - index + 1,
+			"indices": indices
+		}
+		for consumed_index: int in range(index + 1, last + 1):
+			consumed[consumed_index] = true
+		index = last + 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## Which edges a scroll-limits row actually set, said quietly after the sentence. The values of the
+## vertical pair are one hover away on the row, which lists every line it stands for.
+func _scroll_limit_note(sides: Dictionary) -> String:
+	var named: PackedStringArray = PackedStringArray()
+	for side: Variant in SCROLL_LIMIT_SIDES.values():
+		if sides.has(str(side)):
+			named.append(EventSheetL10n.translate(str(side)))
+	return "(%s)" % ", ".join(named)
+
+
+## S17. The condition pairs that are really ONE question, as {"leads": {index: {text, object}},
+## "consumed": {index: true}}. The file writes `if data and data.get_custom_data("solid"):` - one
+## question with a guard in front of it - and the importer files the two halves as two conditions,
+## because that is what the `and` says. Putting them back together is a pure view: the conditions
+## themselves are untouched, so the line re-emits exactly as it came in.
+func _joined_condition_groups(conditions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var index: int = 0
+	while index < conditions.size() - 1:
+		var first: String = _condition_expression_of(conditions[index])
+		var second: String = _condition_expression_of(conditions[index + 1])
+		if first.is_empty() or second.is_empty():
+			index += 1
+			continue
+		var reading: Dictionary = EventSheetSentence.condition_pieces(
+			"%s and %s" % [first, second], sentence_context())
+		if str(reading.get("pattern", "")).is_empty():
+			index += 1
+			continue
+		var text: String = ""
+		for piece: Variant in (reading.get("pieces", []) as Array):
+			text += str((piece as Array)[0])
+		leads[index] = {"text": text.strip_edges(), "object": str(reading.get("object", ""))}
+		consumed[index + 1] = true
+		_note_pattern(str(reading.get("pattern", "")), "%s and %s" % [first, second])
+		index += 2
+	return {"leads": leads, "consumed": consumed}
+
+
+## The plain expression an Expression Is True condition asks, "" for every other kind of condition -
+## a joined reading may only ever be built from text the file itself wrote.
+func _condition_expression_of(condition_resource: Variant) -> String:
+	var condition: ACECondition = condition_resource as ACECondition
+	if condition == null or not condition.enabled or condition.negated:
+		return ""
+	if condition.ace_id != "ExpressionIsTrue":
+		return ""
+	if not (condition.provider_id.is_empty() or condition.provider_id == "Core"):
+		return ""
+	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	return str(params_dict.get("expr", "")).strip_edges()
+
+
+## The ONE cell a scroll-limit run reads as: the sentence, then the edges it set, said quietly. The
+## span carries every line it stands for, so hover shows all of them and the row hides nothing; the
+## RawCodeRows themselves are untouched, so double-click still opens the exact GDScript.
+func _append_scroll_limit_spans(spans: Array, limits: Dictionary, action_index: int,
+		line_index: int, action_style_meta: Dictionary) -> void:
+	var base: Dictionary = {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": true,
+		"chip": true,
+		"raw_action": true,
+		"code_cell": false,
+		"line_index": line_index,
+		"object_label": str(limits.get("object", "")),
+		"compiled_lines": int(limits.get("line_count", 1)),
+		"create_object_indices": limits.get("indices", [])
+	}
+	spans.append(_make_span(str(limits.get("text", "")), SemanticSpan.SpanType.ACTION,
+		base.duplicate().merged({"natural_width": true}, true).merged(action_style_meta, true)))
+	# The note carries no object label: the row already said whose camera this is.
+	spans.append(_make_span(" %s" % str(limits.get("note", "")), SemanticSpan.SpanType.VALUE,
+		base.duplicate().merged({
+			"text_color": _viewport._get_reading_style().muted_text_color, "object_label": ""
+		}, true).merged(action_style_meta, false)))
+
+
+## One `camera.limit_left = 0` line -> {object, side, value}, or {} for anything else. Both spellings
+## a bound arrives in are read: the line as typed, and the Set property row the lifter files it as -
+## the run reads the same either way, which is the whole point of the shared grammar.
+func _scroll_limit_parts(action_resource: Variant) -> Dictionary:
+	var text: String = ""
+	if action_resource is RawCodeRow and (action_resource as RawCodeRow).enabled:
+		var code: String = (action_resource as RawCodeRow).code
+		if code.contains("\n"):
+			return {}
+		text = code.strip_edges()
+	elif action_resource is ACEAction and (action_resource as ACEAction).enabled:
+		var action: ACEAction = action_resource as ACEAction
+		if action.ace_id != "SetProperty":
+			return {}
+		var ace_params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+		text = "%s.%s = %s" % [str(ace_params.get("target", "")), str(ace_params.get("property", "")),
+			str(ace_params.get("value", ""))]
+	if text.is_empty():
+		return {}
+	var at: int = EventSheetSentence.top_level_index(text, " = ")
+	if at < 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges()
+	var value: String = text.substr(at + 3).strip_edges()
+	if value.is_empty() or not EventSheetSentence.is_simple_target(target):
+		return {}
+	var bare: String = target.trim_prefix("self.")
+	var dot_at: int = bare.rfind(".")
+	var member: String = bare if dot_at < 0 else bare.substr(dot_at + 1)
+	if not SCROLL_LIMIT_SIDES.has(member):
+		return {}
+	var owner_text: String = "" if dot_at < 0 else bare.substr(0, dot_at)
+	return {
+		"object": EventSheetSentence.call_object(owner_text, "", sentence_context()),
+		"side": str(SCROLL_LIMIT_SIDES[member]),
+		"value": EventSheetSentence.expression_text(value, sentence_context()),
+		"line": text
+	}
+
+
 ## `var b := bullet_scene.instantiate()` / `b = X.duplicate()` -> {alias, source, copy}, else {}.
 func _instantiate_action_parts(action_resource: Variant) -> Dictionary:
 	var action: ACEAction = action_resource as ACEAction
@@ -6906,10 +7087,15 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 		condition_line_index += 1
+	# S17 - a guard and the question it guards are ONE question. The importer files them as two
+	# conditions because the file joins them with `and`, so the pair is put back together here.
+	var joined_conditions: Dictionary = _joined_condition_groups(event_row.conditions)
 	if not event_row.conditions.is_empty():
 		var displayed_condition_indices: Array[int] = []
 		for condition_index in range(event_row.conditions.size()):
 			if condition_index == inline_trigger_condition_index or input_consumed.has(condition_index):
+				continue
+			if (joined_conditions.get("consumed", {}) as Dictionary).has(condition_index):
 				continue
 			displayed_condition_indices.append(condition_index)
 		for display_index in range(displayed_condition_indices.size()):
@@ -6938,9 +7124,15 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				state_badge_meta["line_index"] = line_index
 				state_badge_meta["badge_style"] = "trigger"
 				spans.append(_make_span("◆", SemanticSpan.SpanType.KEYWORD, state_badge_meta))
+			var joined_lead: Dictionary = (joined_conditions.get("leads", {}) as Dictionary).get(
+				condition_index, {})
+			var condition_text: String = str(joined_lead.get("text", "")) if not joined_lead.is_empty() \
+				else _format_condition_descriptor(condition)
+			var condition_owner: String = str(joined_lead.get("object", "")) if not joined_lead.is_empty() \
+				else _object_label_or_pending(condition.provider_id, condition.ace_id)
 			spans.append(
 				_make_span(
-					_format_condition_descriptor(condition),
+					condition_text,
 					SemanticSpan.SpanType.CONDITION,
 					{
 						"lane": "condition",
@@ -6949,7 +7141,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 						"ace_enabled": condition.enabled,
 						"chip": true,
 						"line_index": line_index,
-						"object_label": _object_label_or_pending(condition.provider_id, condition.ace_id),
+						"object_label": condition_owner,
 						"object_icon": _object_icon_for(condition.provider_id, condition.ace_id),
 						"swatch_color": _first_color_in_params(condition)
 					}.merged(condition_style_meta, true)
@@ -7056,11 +7248,23 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# M39 - the instantiate + add_child (+ first position) run is an event sheet's single Create object.
 		# Worked out once for the whole lane, because a group is recognised by what FOLLOWS its lead.
 		var create_groups: Dictionary = _create_object_groups(event_row.actions)
+		# S18 - the run of limit_* writes a camera's bounds are spelled as is one scroll-limits row.
+		var limit_groups: Dictionary = _scroll_limit_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
 			# A line the Create object row above already said. Skipped without advancing the line index,
 			# which is what turns three lines into one row.
 			if bool(create_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			if bool(limit_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			if (limit_groups.get("leads", {}) as Dictionary).has(action_index):
+				var limits: Dictionary = (limit_groups["leads"] as Dictionary)[action_index]
+				_append_scroll_limit_spans(spans, limits, action_index, action_line_index,
+					action_style_meta)
+				for limit_line: String in (limits.get("evidence", PackedStringArray()) as PackedStringArray):
+					_note_pattern("camera", limit_line)
+				action_line_index += 1
 				continue
 			if (create_groups.get("leads", {}) as Dictionary).has(action_index):
 				var create: Dictionary = (create_groups["leads"] as Dictionary)[action_index]
@@ -8534,6 +8738,8 @@ func _append_conjunct_condition_lines(branch_row: EventRowData, condition_text: 
 		var global_term: Dictionary = EventSheetViewportReadingRows.global_condition(term, _reading_autoloads())
 		var read_term: String = str(global_term.get("text", term)) if not global_term.is_empty() else term
 		var reading: Dictionary = EventSheetSentence.condition_pieces(read_term, sentence_context())
+		# A question can be a pattern too - a tile's own data is asked in one condition.
+		_note_pattern(str(reading.get("pattern", "")), term)
 		var condition_object: String = str(global_term.get("object", "")) if not global_term.is_empty() \
 			else str(reading.get("object", ""))
 		_append_one_condition_line(branch_row, condition_object, reading.get("pieces", []) as Array,
@@ -8769,9 +8975,14 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		var outer_kind: int = _verb_kind_override
 		_verb_kind_override = row_data.verb_kind
 		_pending_grammar_breakpoint = false
+		_pending_patterns = {}
 		row_data.spans = _build_event_spans(row_data.source_resource as EventRow, row_data.in_verb_body,
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
+		# The patterns those readings recognised, claimed on the event that OWNS them - the trigger,
+		# function or tick the shape hangs off. Everything that talks about patterns reads the
+		# registry; nothing re-derives them.
+		_claim_pending_patterns(row_data)
 		# N11 - a row holding a bare `breakpoint` wears the gutter dot. OR-ed in, never assigned, so a
 		# user's own breakpoint on the same row is not cleared by a rebuild.
 		if _pending_grammar_breakpoint:
@@ -9226,6 +9437,9 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 		read_action.params = params_dict
 	var grammar: Dictionary = grammar_action_sentence(read_action)
 	if not grammar.is_empty():
+		# A picked row is an instance of a pattern exactly as a typed line is, and the registry must
+		# not care which way the row got onto the sheet.
+		_note_pattern(str(grammar.get("pattern", "")), ActionCodegen.generate_action(read_action))
 		grammar = _attributed_grammar(grammar, global_owner)
 		_pending_object_label = str(grammar.get("object", ""))
 		_pending_grammar_segments = grammar.get("segments", []) as Array
@@ -9406,6 +9620,68 @@ var _pending_param_ranges: Dictionary = {}
 # untouched, and nothing about this reaches the view state a user's own breakpoints live in.
 var _pending_grammar_breakpoint: bool = false
 
+# The patterns the readings just built recognised, as {pattern id: [the source lines that are its
+# evidence]}. Filled by whatever reading claimed a shape while an event's spans were being built and
+# emptied by _ensure_event_spans, which is the only place that knows which row the spans belong to -
+# the same hand-off the breakpoint flag above uses, and for the same reason. Claiming here rather
+# than in a pass of its own is what keeps a pattern chip free: the answer falls out of the reading
+# that was going to run anyway, and a sheet nobody has scrolled to pays nothing.
+var _pending_patterns: Dictionary = {}
+
+
+## What each pattern is CALLED, and which sheet rows author it - the one line a chip prints and the
+## vocabulary a reader is sent to when they ask "how would I write this in the sheet?". Keyed by the
+## registry's own frozen pattern ids; a pattern with no entry still claims, it just says nothing
+## extra. `adoptable` is deliberately absent for all three of these: no shipped behavior replaces a
+## shader parameter, a tilemap cell or a camera limit, and offering one that does not fit would be
+## worse than offering none.
+const PATTERN_VOCABULARY: Dictionary = {
+	"effects": {
+		"words": "Effects",
+		"ace_ids": ["Core/SetShaderParameter", "Core/SetShaderMaterial", "Core/ClearMaterial",
+			"Core/TweenEffectParameter", "Core/GetShaderParameter"]
+	},
+	"tilemap": {
+		"words": "Tilemap",
+		"ace_ids": ["Core/TileMapSetCell", "Core/TileMapEraseCell", "Core/TileMapGetCellSourceId",
+			"Core/TileMapLocalToMap", "Core/TileMapMapToLocal", "Core/TileMapTileHasCustomData"]
+	},
+	"camera": {
+		"words": "Camera",
+		"ace_ids": ["Core/MakeCameraCurrent", "Core/SetCameraZoom", "Core/SetCameraLimits",
+			"Core/CameraScrollToward", "Core/SetCameraSmoothing"]
+	}
+}
+
+
+## Records that a reading recognised `pattern` on the line it was given. Called by the readings while
+## an event's spans are built; the claim itself is made once the owning row is known.
+func _note_pattern(pattern: String, evidence: String) -> void:
+	if pattern.is_empty():
+		return
+	if not _pending_patterns.has(pattern):
+		_pending_patterns[pattern] = PackedStringArray()
+	var lines: PackedStringArray = _pending_patterns[pattern]
+	var text: String = evidence.strip_edges()
+	if not text.is_empty() and not lines.has(text):
+		lines.append(text)
+	_pending_patterns[pattern] = lines
+
+
+## Hands every pattern the readings just recognised to the registry, on the row that owns it.
+func _claim_pending_patterns(row_data: EventRowData) -> void:
+	if _pending_patterns.is_empty():
+		return
+	var sheet: EventSheetResource = _viewport._sheet
+	for pattern: String in _pending_patterns:
+		var vocabulary: Dictionary = PATTERN_VOCABULARY.get(pattern, {})
+		var ace_ids: PackedStringArray = PackedStringArray()
+		for ace_id: Variant in (vocabulary.get("ace_ids", []) as Array):
+			ace_ids.append(str(ace_id))
+		EventSheetPatternFacts.claim(sheet, pattern, row_data.row_uid, row_data.row_uid,
+			_pending_patterns[pattern], str(vocabulary.get("words", "")), "", ace_ids)
+	_pending_patterns = {}
+
 
 ## Appends the flowing spans that make a single-statement raw row read as an event-sheet sentence
 ## ("Add 1 to score") or as an Object / Verb / parameters chip run, and returns true when it did.
@@ -9425,6 +9701,8 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	# A bare `breakpoint` reads as the mark it is: the row wears the gutter dot and says nothing.
 	if bool(sentence.get("breakpoint", false)):
 		_pending_grammar_breakpoint = true
+	# The pattern registry, filled by the reading that just fired rather than by a second walk.
+	_note_pattern(str(sentence.get("pattern", "")), raw.code)
 	if EventSheetSentence.leading_word(raw.code.strip_edges()) == "return":
 		sentence = _named_return_sentence(sentence, raw.code.strip_edges().substr(6))
 	# A `var` line is a DECLARATION, not a step: it reads as the event-sheet local-variable row - a type
@@ -9718,6 +9996,38 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		# one thing the shared grammar exists to prevent.
 		"MakeCameraCurrent":
 			return EventSheetSentence.statement("%s.make_current()" % _ace_target(params_dict), context)
+		# ── S16 / S17 / S18 lens hook ────────────────────────────────────────────────────────────
+		# The rows a hand-written effect / tilemap / camera line LIFTS to. Without these the reading
+		# would depend on whether the lifter happened to claim the line, which is the one thing the
+		# shared grammar exists to prevent - and the pattern the reading claims would be lost with it.
+		"SetShaderParameter":
+			return EventSheetSentence.statement("%s.material.set_shader_parameter(%s, %s)" % [
+				_ace_target(params_dict), str(params_dict.get("param", "")),
+				str(params_dict.get("value", ""))], context)
+		"SetShaderMaterial":
+			return EventSheetSentence.statement("%s.material = %s" % [
+				_ace_target(params_dict), str(params_dict.get("material", ""))], context)
+		"ClearMaterial":
+			return EventSheetSentence.statement("%s.material = null" % _ace_target(params_dict), context)
+		"TweenEffectParameter":
+			return EventSheetSentence.statement(
+				"create_tween().tween_method(func(v): %s.material.set_shader_parameter(%s, v), %s, %s, %s)" % [
+					_ace_target(params_dict), str(params_dict.get("param", "")),
+					str(params_dict.get("from", "")), str(params_dict.get("to", "")),
+					str(params_dict.get("seconds", ""))], context)
+		# The tilemap rows rebuild the call from their parameters in order, which is exactly the line
+		# the file holds - including the older node spelling, whose layer the lifter files as part of
+		# the first parameter.
+		"TileMapSetCell":
+			return EventSheetSentence.statement("%s.set_cell(%s, %s, %s)" % [
+				_ace_target(params_dict), str(params_dict.get("coords", "")),
+				str(params_dict.get("source_id", "")), str(params_dict.get("atlas_coords", ""))], context)
+		"TileMapEraseCell":
+			return EventSheetSentence.statement("%s.erase_cell(%s)" % [
+				_ace_target(params_dict), str(params_dict.get("coords", ""))], context)
+		"SetCameraSmoothing":
+			return EventSheetSentence.statement("%s.position_smoothing_enabled = %s" % [
+				_ace_target(params_dict), str(params_dict.get("enabled", ""))], context)
 		"SetCameraZoom":
 			return EventSheetSentence.statement("%s.zoom = %s" % [
 				_ace_target(params_dict), str(params_dict.get("zoom", ""))], context)

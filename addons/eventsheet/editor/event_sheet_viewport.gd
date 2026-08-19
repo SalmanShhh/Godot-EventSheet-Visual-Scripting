@@ -2145,6 +2145,11 @@ func _refresh_rows() -> void:
 
 func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	var root_rows: Array[EventRowData] = []
+	# The pattern registry lives exactly as long as one row build: the readings fill it as they go,
+	# and everything that talks ABOUT patterns (the chip on an event, its hover evidence, the
+	# coverage counts) reads what they claimed. Cleared here so a rebuild can never show a pattern
+	# the sheet no longer has.
+	EventSheetPatternFacts.clear(sheet)
 	# P4 - a whole SCENE opened as one sheet: the scene's bar, then every script it uses under its own
 	# object bar, each read by this very function. A composite has no events of its own.
 	if EventSheetSceneSheet.is_scene_sheet(sheet):
