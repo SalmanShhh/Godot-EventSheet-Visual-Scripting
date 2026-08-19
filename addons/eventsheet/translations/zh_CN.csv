@@ -2311,3 +2311,4 @@ size X,大小 X
 size Y,大小 Y
 position,位置
 Wait for tween to finish,等待补间结束
+%s is not visible here,%s 在这里不可见

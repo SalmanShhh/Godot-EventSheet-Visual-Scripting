@@ -188,6 +188,8 @@ var _selected_span_indices: Dictionary = {}
 var _span_only_row_uids: Dictionary = {}
 var _hovered_row_index: int = -1
 var _hovered_span_index: int = -1
+## R41. {row index: [span indices]} - every use of the local variable under the cursor, in its scope.
+var _hover_match_spans: Dictionary = {}
 var _hover_is_drag_zone: bool = false  # pointer over an event's empty lane band (the move-cursor grab zone)
 var _editing_row_index: int = -1
 var _editing_span_index: int = -1
@@ -2882,8 +2884,44 @@ func _sync_row_selection_flags() -> void:
 func _set_hover_state(row_index: int, span_index: int) -> void:
 	_hovered_row_index = row_index
 	_hovered_span_index = span_index
+	_hover_match_spans = _compute_hover_matches(row_index, span_index)
 	_selection_helper.apply_hover_state(_flat_rows, _hovered_row_index)
 	queue_redraw()
+
+
+## R41. {row index: [span indices]} for every USE of the local variable the cursor is on, anywhere in
+## that variable's scope. Hovering a name is how a reader asks "where does this go?", and a local's
+## answer is bounded - its event and the events under it - so the highlight can show all of it.
+##
+## {} for anything that is not a local of this sheet: a member, a global, a keyword and a plain word
+## all mean something outside this event, and lighting them up would say a scope they do not have.
+func _compute_hover_matches(row_index: int, span_index: int) -> Dictionary:
+	var matches: Dictionary = {}
+	if _sheet == null or row_index < 0 or span_index < 0:
+		return matches
+	var row_data: EventRowData = _row_at(row_index)
+	if row_data == null or span_index >= row_data.spans.size():
+		return matches
+	var name_text: String = row_data.spans[span_index].text.strip_edges()
+	if not EventSheetSentence.is_identifier(name_text):
+		return matches
+	var scope_ids: Dictionary = EventSheetLocalScope.scope_event_ids(_sheet, name_text)
+	if scope_ids.is_empty():
+		return matches
+	for index in range(_flat_rows.size()):
+		var candidate: EventRowData = _row_at(index)
+		if candidate == null:
+			continue
+		var owner: EventRow = candidate.source_resource as EventRow
+		if owner == null or not scope_ids.has(owner.get_instance_id()):
+			continue
+		var span_indices: PackedInt32Array = PackedInt32Array()
+		for candidate_span in range(candidate.spans.size()):
+			if EventSheetLocalScope.mentions_name(candidate.spans[candidate_span].text, name_text):
+				span_indices.append(candidate_span)
+		if not span_indices.is_empty():
+			matches[index] = span_indices
+	return matches
 
 
 func _toggle_row_fold(row_index: int) -> void:
@@ -3437,10 +3475,21 @@ func _resolve_lane_drop_target(row_data: EventRowData, lane: String, position: V
 
 
 func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictionary:
-	if row_data == null or lane != "condition":
+	if row_data == null:
 		return {"valid": true}
 	var target_event: EventRow = row_data.source_resource as EventRow
 	if target_event == null:
+		return {"valid": true}
+	# R41. A local is visible to the event that declares it and to that event's sub-events, and to
+	# nothing else - so an action that USES one may not be dropped where the name means nothing. The
+	# refusal names the variable, because that is the one thing a reader has to move or rename.
+	var out_of_scope: String = _out_of_scope_drag_name(target_event)
+	if not out_of_scope.is_empty():
+		return {
+			"valid": false,
+			"message": EventSheetL10n.translate("%s is not visible here") % out_of_scope
+		}
+	if lane != "condition":
 		return {"valid": true}
 	var trigger_entry_count: int = 0
 	var excluded_resources: Array = []
@@ -3465,6 +3514,22 @@ func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictiona
 			"message": "This event already has a trigger."
 		}
 	return {"valid": true}
+
+
+## R41. The local variable the rows being dragged USE that `target_event` cannot see, or "" when the
+## drop keeps every name in scope. Answered per drag rather than cached: the sheet is what decides,
+## and a drag is the only moment the question is asked.
+func _out_of_scope_drag_name(target_event: EventRow) -> String:
+	if _drag_ace_entries.is_empty() or _sheet == null:
+		return ""
+	var resources: Array = []
+	for entry in _drag_ace_entries:
+		var ace_resource: Resource = entry.get("ace_resource", null) as Resource
+		if ace_resource != null:
+			resources.append(ace_resource)
+	if resources.is_empty():
+		return ""
+	return EventSheetLocalScope.out_of_scope_name(_sheet as EventSheetResource, target_event, resources)
 
 
 # ── Row metrics: thin delegates to ViewportRowMetrics. Internal callers and tests call these

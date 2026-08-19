@@ -517,6 +517,15 @@ Open a behaviour pack or any script as a sheet and it reads the way a Construct 
   gamepad 0 button A pressed`, in the Gamepad object's own words, because the device index IS the
   gamepad number. A branch that names no device keeps `On button A pressed`; a Keyboard branch keeps
   its `event.device == 1` as an ordinary comparison, since a keyboard has no number in the sheet.
+- **A local variable's scope is enforced, and shown.** A local is visible from the event that
+  declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
+  action that uses `dealt` into an event that cannot see it and the drop refuses before you release,
+  in red: **`dealt is not visible here`**. Hover the variable's name and every other use of it inside
+  that scope lights up, so the highlight doubles as a picture of how far the name reaches. Members,
+  globals and keywords match nothing - they mean something outside this event.
+
+  ![Hovering a local variable's name highlights every use of it in its scope](images/local-variable-uses-highlight.png)
+
 - **A tween chain reads as Tween actions, one action per row.** `var t = create_tween()` reads
   `Local object t = a new tween`; each `t.tween_property(...)` under it reads
   `Player ▸ Tween position to target in 0.5 seconds` on the object being tweened, with

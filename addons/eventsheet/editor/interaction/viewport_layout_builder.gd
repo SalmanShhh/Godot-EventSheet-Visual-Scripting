@@ -50,6 +50,9 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		# whole event highlights instead of the clicked cell, and hover never appears.
 		cached_layout["selected_span_indices"] = _viewport._selected_span_indices.get(row_data.row_uid, []).duplicate()
 		cached_layout["hovered_span_index"] = _viewport._hovered_span_index if index == _viewport._hovered_row_index else -1
+		# R41 - the other USES of the hovered variable light up too, and they live on OTHER rows, so
+		# the hover state a row carries is no longer only its own.
+		cached_layout["match_span_indices"] = _viewport._hover_match_spans.get(index, PackedInt32Array())
 		# The inline edit state (buffer/caret/text selection) changes per keystroke without
 		# touching geometry - same rule: refresh on read, never trust the snapshot.
 		cached_layout["editing_span_index"] = _viewport._editing_span_index if index == _viewport._editing_row_index else -1
@@ -385,6 +388,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		"total_selected_spans": _viewport._get_selected_span_count(),
 		"selected_span_indices": _viewport._selected_span_indices.get(row_data.row_uid, []).duplicate(),
 		"hovered_span_index": _viewport._hovered_span_index if index == _viewport._hovered_row_index else -1,
+		"match_span_indices": _viewport._hover_match_spans.get(index, PackedInt32Array()),
 		"drag_mode": _viewport._drag_target_mode if _viewport._drag_target_index == index else ""
 	}
 	_viewport._layout_cache.store(key, layout)

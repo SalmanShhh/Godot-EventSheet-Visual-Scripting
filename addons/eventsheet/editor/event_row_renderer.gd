@@ -430,6 +430,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	var editing_select_anchor: int = int(layout.get("editing_select_anchor", -1))
 	var selected_span_indices: Array = layout.get("selected_span_indices", [])
 	var hovered_span_index: int = int(layout.get("hovered_span_index", -1))
+	# R41 - the other uses of the hovered variable, in ITS scope, lit up alongside the one under the
+	# cursor. The set arrives per row, because the uses are spread across rows.
+	var match_span_indices: Array = Array(layout.get("match_span_indices", PackedInt32Array()))
 	var total_selected_spans: int = int(layout.get("total_selected_spans", 0))
 	var line_number: int = int(layout.get("line_number", 0))
 	# Read LIVE off row_data (like bookmark_enabled below) - the layout dict is cached, so a
@@ -589,7 +592,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		soft_hover.a *= 0.4
 		control.draw_rect(row_rect, soft_hover, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
-	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill)
+	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices)
 	_draw_collapsed_summary(control, row_rect, row_data, font, font_size)
 	if drag_rect.size != Vector2.ZERO:
 		if bool(layout.get("drag_rect_outline", false)):
@@ -795,7 +798,8 @@ func _draw_spans(
 	total_selected_spans: int,
 	event_style: EventSheetEventStyle = null,
 	selection_fill: Color = EventSheetPalette.COLOR_SELECTION,
-	hover_fill: Color = EventSheetPalette.COLOR_HOVER
+	hover_fill: Color = EventSheetPalette.COLOR_HOVER,
+	match_span_indices: Array = []
 ) -> void:
 	# Multi-line blocks (in-flow GDScript, action-lane comments) paint as ONE merged
 	# cell: union rects per block, background/hover/selection drawn once. The per-line
@@ -870,6 +874,16 @@ func _draw_spans(
 				var selected_outline: Color = selection_fill.lightened(SPAN_SELECT_OUTLINE_LIGHTEN)
 				selected_outline.a = SPAN_SELECT_OUTLINE_ALPHA
 				control.draw_rect(span.rect.grow(2.0), selected_outline, false, 1.0)
+		elif match_span_indices.has(span_index) and span_index != hovered_span_index and not is_add_affordance:
+			# R41 - a use of the hovered variable somewhere else in its scope: a tint far softer than
+			# the cursor's own hover, so the eye finds every one of them without the sheet lighting up.
+			var match_rect: Rect2 = block_unions[span_index] if in_block else span.rect
+			var match_fill: Color = hover_fill
+			match_fill.a = 0.34
+			control.draw_rect(match_rect.grow(1.0), match_fill, true)
+			var match_edge: Color = hover_fill.lightened(SPAN_HOVER_OUTLINE_LIGHTEN)
+			match_edge.a = 0.65
+			control.draw_rect(match_rect.grow(1.0), match_edge, false, 1.0)
 		elif span_index == hovered_span_index and not is_add_affordance:
 			if bool(metadata.get("chip", false)):
 				var hover_rect: Rect2 = block_unions[span_index] if in_block else span.rect

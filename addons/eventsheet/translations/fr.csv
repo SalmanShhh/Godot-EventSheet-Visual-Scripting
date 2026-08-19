@@ -2311,3 +2311,4 @@ size X,taille X
 size Y,taille Y
 position,position
 Wait for tween to finish,Attendre la fin du tween
+%s is not visible here,%s n'est pas visible ici

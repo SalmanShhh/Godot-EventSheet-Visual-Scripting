@@ -2311,3 +2311,4 @@ size X,크기 X
 size Y,크기 Y
 position,위치
 Wait for tween to finish,트윈이 끝날 때까지 대기
+%s is not visible here,%s은(는) 여기에서 보이지 않습니다

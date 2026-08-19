@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - a local variable's scope is enforced, and shown
+
+- **An action dragged out of its variable's scope is refused, by name.** Drag a row that uses `dealt`
+  into an event that cannot see `dealt` and the drop turns red before you release, saying
+  **`dealt is not visible here`** - the same red bubble, tooltip and status line every other refused
+  drop uses. A local is visible from the event that declares it to the end of the body it was
+  declared in, subtrees included, and nowhere else; a function body opens as a run of sibling events,
+  so "the rest of the body" is what the scope has to mean. An action that uses no local of this sheet
+  is never refused.
+- **Hover a variable's name and every other use of it lights up** - only inside that variable's own
+  scope, so the highlight is also a picture of how far the name reaches. Members, globals, keywords
+  and plain words match nothing: those mean something outside this event, and lighting them up would
+  claim a scope they do not have.
+
+  ![Hovering a local variable's name highlights every use of it in its scope](docs/images/local-variable-uses-highlight.png)
+
 ### Fixed - a property's accessor events show in the head too
 
 - **`On hp set` and the getter block now appear in the head's Instance variables folder.** A script
