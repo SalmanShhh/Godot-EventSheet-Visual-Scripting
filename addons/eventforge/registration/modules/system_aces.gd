@@ -373,4 +373,5 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.stateful("var __once_load_{uid}: Dictionary = {}\n\nfunc __once_scene_{uid}(key: String) -> bool:\n\tif __once_load_{uid}.has(key):\n\t\treturn false\n\t__once_load_{uid}[key] = true\n\treturn true"))
 	descriptors.append(F.make_descriptor("Core", "ForgetOnceFor", "Forget Once For", ACEDescriptor.ACEType.ACTION, "if {node} != null and {node}.has_meta(&\"__ef_once_\" + str({label}).to_utf8_buffer().hex_encode()):\n\t{node}.remove_meta(&\"__ef_once_\" + str({label}).to_utf8_buffer().hex_encode())", "", [F.make_param("node", "String", "self", "Node", "The node holding the memory.", "expression"), F.make_param("label", "String", "\"init\"", "Memory", "The Only Once Per Node / Per Name memory to clear.", "expression")], "Run Context", "forget once ( [b]{label}[/b] ) for [b]{node}[/b]")
 		.described("Clears an Only Once Per Node / Per Name memory so the row fires again for that node. Drop it in an Object Pool's reset seam and a recycled instance initialises like a fresh one."))
+
 	return descriptors

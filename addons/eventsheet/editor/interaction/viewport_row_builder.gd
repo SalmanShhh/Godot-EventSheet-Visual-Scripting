@@ -1691,6 +1691,33 @@ static func friendly_param_label(param: ACEParam) -> String:
 	return label.replace("_", " ").strip_edges()
 
 
+## U11. What ONE parameter chip on a function's header says: its friendly label, plus the value a
+## caller gets when it leaves the input out, plus the ellipsis that marks the one input which
+## swallows however many values follow it.
+##
+## A default is part of the SIGNATURE, not decoration: `Heal [amount = 10]` is the difference between
+## a verb a reader may call with nothing and one they may not, and it is the value the picker
+## pre-fills. `null` reads as the sheet's word for nothing, because that is the word every other row
+## on the sheet uses for it.
+static func verb_param_chip_text(param: ACEParam) -> String:
+	var label: String = friendly_param_label(param)
+	if _is_varargs_param(param):
+		return "%s …" % label
+	var fallback: String = str(param.default_value).strip_edges()
+	if fallback.is_empty():
+		return label
+	if fallback == "null":
+		fallback = EventSheetL10n.translate("empty")
+	return "%s = %s" % [label, fallback]
+
+
+## U11. True for the one parameter that stands for "and however many more" - a list-typed input the
+## author named `args`. Godot has no varargs in a script function, and this is the shape every script
+## that wants them writes, so it is the only one the ellipsis is claimed for.
+static func _is_varargs_param(param: ACEParam) -> bool:
+	return param.id.strip_edges() == "args" and param.type_name.strip_edges() == "Array"
+
+
 ## The auto verb line's parameter slice - each param's friendly label, comma-joined ("from x, from y,
 ## width, color"). Empty when the verb takes none. Falls back to the legacy `parameters` string alias
 ## when a lifted verb carries no ACEParam metadata.
@@ -2090,7 +2117,10 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	if event_function.is_async:
 		spans.append(_define_chip(EventSheetL10n.translate("waits"), chip_bg, chip_fg, 0))
 	if event_function.is_static:
-		spans.append(_define_chip(EventSheetL10n.translate("static"), chip_bg, muted, 0))
+		# U11. `static` is GDScript's word; the sheet's word for a function that belongs to the class
+		# rather than to any one object is `shared`, and the define row says the same word the reading
+		# does.
+		spans.append(_define_chip(EventSheetL10n.translate("shared"), chip_bg, muted, 0))
 	if not event_function.expose_as_ace:
 		spans.append(_define_chip(EventSheetL10n.translate("internal"), chip_bg, muted, 0))
 	if event_function.featured:
@@ -2173,7 +2203,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 	var chip_texts: PackedStringArray = PackedStringArray()
 	for param: Variant in event_function.params:
 		if param is ACEParam:
-			chip_texts.append(friendly_param_label(param as ACEParam))
+			chip_texts.append(verb_param_chip_text(param as ACEParam))
 	if chip_texts.is_empty():
 		for legacy: String in event_function.parameters:
 			chip_texts.append(str(legacy).replace("_", " ").strip_edges())
@@ -2194,6 +2224,27 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 	# nothing extra - "do these" is what every other event already means.
 	if event_function.expose_as_ace and role != "action":
 		spans.append(_make_span(EventSheetL10n.translate(role), SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "define_function",
+			"lane": "condition",
+			"line_index": 0,
+			"natural_width": true,
+			"text_color": _viewport._get_reading_style().muted_text_color
+		}))
+	# ── U11 ─────────────────────────────────────────────────────────────────────────────────────
+	# The two things about a function that change how it is CALLED, said on the header where the call
+	# is decided rather than found out inside the body. A function that waits cannot be called and
+	# left; a shared one belongs to the class rather than to any one object.
+	if event_function.is_async:
+		spans.append(_make_span("⏳ %s" % EventSheetL10n.translate("waits"),
+			SemanticSpan.SpanType.CONDITION, {
+				"editable": false,
+				"kind": "verb_param",
+				"chip": true,
+				"line_index": 0
+			}.merged(chip_style, true)))
+	if event_function.is_static:
+		spans.append(_make_span(EventSheetL10n.translate("shared"), SemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "define_function",
 			"lane": "condition",
@@ -5079,6 +5130,97 @@ func _scroll_limit_note(sides: Dictionary) -> String:
 	return "(%s)" % ", ".join(named)
 
 
+# ── U8 / U12: the two runs whose lines only mean anything together ───────────────────────────────
+# A first-person script turns the body one way and the camera the other and then clamps the camera,
+# and a music crossfade writes one fader up and the other down. Each is ONE thing that happened, and
+# a reader takes the lines in as noise around it. The lines stay exactly as they are in the file - on
+# hover, under a double-click and in the bytes that are saved - which is the promise the Create
+# object and scroll-limits runs above make too.
+
+
+## U8. The mouse-look run in one action lane, as {"leads": {index: {text, note, object, evidence,
+## line_count, indices}}, "consumed": {index: true}}. A run is a `rotate_y(...)` followed by a
+## `<cam>.rotate_x(...)` and - only when it comes straight after - the clamp that keeps the camera
+## from looking through the floor. Both turns are required: one on its own is a turn, not a look.
+func _mouse_look_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var index: int = 0
+	while index < actions.size() - 1:
+		var turn: Dictionary = EventSheetSentence.mouse_look_turn_parts(_group_line_text(actions[index]))
+		var pitch: Dictionary = EventSheetSentence.mouse_look_pitch_parts(_group_line_text(actions[index + 1]))
+		if turn.is_empty() or pitch.is_empty():
+			index += 1
+			continue
+		var last: int = index + 1
+		var clamped: String = ""
+		if last + 1 < actions.size():
+			clamped = EventSheetSentence.mouse_look_clamp_limit(_group_line_text(actions[last + 1]),
+				str(pitch.get("camera", "")))
+			if not clamped.is_empty():
+				last += 1
+		var evidence: PackedStringArray = PackedStringArray()
+		var indices: Array[int] = []
+		for member_index: int in range(index, last + 1):
+			evidence.append(_group_line_text(actions[member_index]))
+			indices.append(member_index)
+		leads[index] = {
+			"text": EventSheetL10n.translate("Mouse look"),
+			"note": EventSheetSentence.mouse_look_note(turn, pitch, clamped, sentence_context()),
+			"object": EventSheetSentence.script_object(sentence_context()),
+			"evidence": evidence,
+			"line_count": last - index + 1,
+			"indices": indices
+		}
+		for consumed_index: int in range(index + 1, last + 1):
+			consumed[consumed_index] = true
+		index = last + 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## U12. The crossfade runs in one action lane, in the same shape. A run is two adjacent volume
+## writes driven by ONE fraction - one fader by `1 - t` and the other by `t` - which is the whole of
+## what a crossfade is. Two volumes set from unrelated values are two rows, and stay two rows.
+func _crossfade_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var index: int = 0
+	while index < actions.size() - 1:
+		var faded: Dictionary = EventSheetSentence.crossfade_parts(
+			_group_line_text(actions[index]), _group_line_text(actions[index + 1]), sentence_context())
+		if faded.is_empty():
+			index += 1
+			continue
+		leads[index] = {
+			"text": str(faded.get("text", "")),
+			"note": "",
+			"object": EventSheetSentence.OBJECT_SYSTEM,
+			"evidence": PackedStringArray([_group_line_text(actions[index]),
+				_group_line_text(actions[index + 1])]),
+			"line_count": 2,
+			"indices": [index, index + 1]
+		}
+		consumed[index + 1] = true
+		index += 2
+	return {"leads": leads, "consumed": consumed}
+
+
+## The one line an action stands for, whichever shape it took in the sheet: the verbatim text of a
+## raw line, or the line a LIFTED row compiles back to. A half-lifted file is the normal case - the
+## importer turns one line of a run into a row while the line beside it stays verbatim - so a run
+## that could only see raw text would be recognised or not depending on how much happened to lift,
+## which is exactly the drift these runs exist to prevent. "" for a disabled row or a multi-line one.
+func _group_line_text(action_resource: Variant) -> String:
+	var raw: RawCodeRow = action_resource as RawCodeRow
+	if raw != null:
+		return raw.code.strip_edges() if raw.enabled and not raw.code.contains("\n") else ""
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled:
+		return ""
+	var compiled: String = ActionCodegen.generate_action(action)
+	return compiled.strip_edges() if not compiled.contains("\n") else ""
+
+
 ## S17. The condition pairs that are really ONE question, as {"leads": {index: {text, object}},
 ## "consumed": {index: true}}. The file writes `if data and data.get_custom_data("solid"):` - one
 ## question with a guard in front of it - and the importer files the two halves as two conditions,
@@ -7365,6 +7507,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var create_groups: Dictionary = _create_object_groups(event_row.actions)
 		# S18 - the run of limit_* writes a camera's bounds are spelled as is one scroll-limits row.
 		var limit_groups: Dictionary = _scroll_limit_groups(event_row.actions)
+		# U8 / U12 - the mouse-look trio and the two faders of a crossfade are one row each.
+		var look_groups: Dictionary = _mouse_look_groups(event_row.actions)
+		var fade_groups: Dictionary = _crossfade_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
 			# A line the Create object row above already said. Skipped without advancing the line index,
@@ -7372,6 +7517,22 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if bool(create_groups.get("consumed", {}).get(action_index, false)):
 				continue
 			if bool(limit_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			# U8 / U12 - the same skip-without-advancing, for the two runs batch ten added.
+			if bool(look_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(fade_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			var run_lead: Dictionary = (look_groups["leads"] as Dictionary).get(action_index, {})
+			var run_pattern: String = "fps_look"
+			if run_lead.is_empty():
+				run_lead = (fade_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "sound"
+			if not run_lead.is_empty():
+				_append_scroll_limit_spans(spans, run_lead, action_index, action_line_index,
+					action_style_meta)
+				for run_line: String in (run_lead.get("evidence", PackedStringArray()) as PackedStringArray):
+					_note_pattern(run_pattern, run_line)
+				action_line_index += 1
 				continue
 			if (limit_groups.get("leads", {}) as Dictionary).has(action_index):
 				var limits: Dictionary = (limit_groups["leads"] as Dictionary)[action_index]
@@ -9929,6 +10090,32 @@ const PATTERN_VOCABULARY: Dictionary = {
 	"fade": {
 		"words": "Fading out, then destroyed",
 		"adoptable": "fade",
+		"ace_ids": []
+	},
+	# U6 - U9. The long tail's four shapes. Two of them have a behavior that does the whole thing -
+	# the FPS Controller owns the mouse-look block, and Run In Background owns the threads - so those
+	# two carry an `adoptable` and the other two do not: an adoption nobody could take is a worse
+	# offer than none.
+	"ajax": {
+		"words": "Web requests",
+		"ace_ids": ["Core/AjaxRequest", "Core/AjaxPost", "Core/AjaxLastData"]
+	},
+	"lighting": {
+		"words": "Lighting",
+		"ace_ids": ["Core/SetLightEnergy", "Core/SetLightColour", "Core/SetLightEnabled",
+			"Core/SetLightShadows", "Core/SetLayerTint", "Core/SetAmbientLight"]
+	},
+	"fps_look": {
+		"words": "First-person look",
+		"adoptable": "fps_controller",
+		"ace_ids": ["Core/MouseLook", "Core/LookAt3D", "Core/ObjectForward"]
+	},
+	# Background work has no picker rows of its own on purpose: the Run In Background behavior does
+	# the whole shape - the thread, the wait and the done signal - so the honest offer is the pack,
+	# not a row that writes one third of it.
+	"background": {
+		"words": "Background work",
+		"adoptable": "background_runner",
 		"ace_ids": []
 	}
 }

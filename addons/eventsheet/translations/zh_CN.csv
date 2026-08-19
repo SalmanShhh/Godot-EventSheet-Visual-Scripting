@@ -2758,3 +2758,43 @@ Wrap,环绕
 Bound To,限制范围
 Pin,固定
 Fade,淡出
+Request {url},请求 {url}
+Post to {url},发送到 {url}
+Post {data} to {url},将 {data} 发送到 {url}
+request succeeded,请求成功
+Set layer tint to {value},将图层色调设为 {value}
+Set ambient light to {value},将环境光设为 {value}
+Set light energy to {value},将灯光强度设为 {value}
+Set light colour to {value},将灯光颜色设为 {value}
+Set light on,打开灯光
+Set light off,关闭灯光
+Set shadows on,打开阴影
+Set shadows off,关闭阴影
+Look at {place},看向 {place}
+forward,前方
+up,上方
+Wait for it to finish,等待其完成
+Run {name} in the background,在后台运行 {name}
+Wire {signal} to {handler},将 {signal} 接到 {handler}
+Unwire {signal} from {handler},将 {signal} 从 {handler} 断开
+at end of frame,在帧末
+{signal} is wired to {handler},{signal} 已接到 {handler}
+Fire {name},触发 {name}
+Call {name},调用 {name}
+by name,按名称
+"by name, with a list",按名称，并带一个列表
+the function,函数
+Set video to {file},将视频设为 {file}
+Pause,暂停
+Set hearing distance to {value},将可听距离设为 {value}
+Set falloff to {value},将衰减设为 {value}
+Web requests,网络请求
+Lighting,光照
+First-person look,第一人称视角
+Background work,后台工作
+Mouse look,鼠标视角
+turn by,转动
+look up/down on,上下看
+clamped,限制
+Crossfade {from} → {to} by {amount},按 {amount} 将 {from} → {to} 交叉淡入淡出
+shared,共享

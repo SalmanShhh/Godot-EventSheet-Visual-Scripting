@@ -144,6 +144,29 @@ so that is what these rows are called.
 | Set Effect | Puts an effect on this object, changing how it draws. | `{target.}material = {material}` |
 | Remove Effect | Takes the effect off this object, returning it to how it normally draws. | `{target.}material = null` |
 
+### Lights
+
+The six knobs a running game actually touches. Godot spells brightness `energy` on a 2D light and
+`light_energy` on a 3D one, which is why each of those is its own row rather than one row guessing
+which kind of light it was handed. Brightness is a fraction and the row shows it as a percentage,
+because that is how a reader sets it and how every other 0-to-1 setting on the sheet reads.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Light Energy (2D) | Sets how bright a 2D light is. | `{node}.energy = {value}` |
+| Set Light Colour (2D) | Sets the colour a 2D light casts. | `{node}.color = {colour}` |
+| Set Light On/Off | Switches a 2D light on or off without hiding the node. | `{node}.enabled = {on}` |
+| Set Shadows On/Off | Turns a light's shadows on or off. | `{node}.shadow_enabled = {on}` |
+| Set Light Energy (3D) | Sets how bright a 3D light is. | `{node}.light_energy = {value}` |
+| Set Light Colour (3D) | Sets the colour a 3D light casts. | `{node}.light_color = {colour}` |
+| Set Layer Tint | Tints a whole 2D layer at once - the one row that makes a level read as night. | `{node}.color = {colour}` |
+| Set Ambient Light | Sets how much light a 3D scene has with no light shining on it. | `{node}.environment.ambient_light_energy = {value}` |
+
+An opened `.gd` file reads the same words: `lamp.energy = 0.5` is **Set light energy to 50%**,
+`lamp.enabled = false` is **Set light off**, `lamp.shadow_enabled = true` is **Set shadows on**,
+`$CanvasModulate.color = Color(0.2, 0.2, 0.4)` is **System ▸ Set layer tint**, and a world
+environment's ambient energy is **System ▸ Set ambient light to 30%**.
+
 An opened `.gd` file reads the same words: `sprite.material.set_shader_parameter("flash", 1.0)` is
 **Set effect parameter flash to 1**, `sprite.material = null` is **Remove effect**,
 `sprite.material = preload("res://outline.tres")` is **Set effect to outline**, and the

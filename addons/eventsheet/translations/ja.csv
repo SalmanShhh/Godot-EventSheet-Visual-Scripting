@@ -2758,3 +2758,43 @@ Wrap,ラップ
 Bound To,範囲制限
 Pin,固定
 Fade,フェード
+Request {url},{url} をリクエスト
+Post to {url},{url} へ送信
+Post {data} to {url},{data} を {url} へ送信
+request succeeded,リクエストが成功した
+Set layer tint to {value},レイヤーの色合いを {value} にする
+Set ambient light to {value},環境光を {value} にする
+Set light energy to {value},光の強さを {value} にする
+Set light colour to {value},光の色を {value} にする
+Set light on,ライトをオンにする
+Set light off,ライトをオフにする
+Set shadows on,影をオンにする
+Set shadows off,影をオフにする
+Look at {place},{place} の方を向く
+forward,前方
+up,上
+Wait for it to finish,終わるまで待つ
+Run {name} in the background,{name} をバックグラウンドで実行
+Wire {signal} to {handler},{signal} を {handler} につなぐ
+Unwire {signal} from {handler},{signal} を {handler} から外す
+at end of frame,フレームの終わりに
+{signal} is wired to {handler},{signal} は {handler} につながっている
+Fire {name},{name} を発火する
+Call {name},{name} を呼ぶ
+by name,名前で
+"by name, with a list",名前で、リストを渡して
+the function,関数
+Set video to {file},動画を {file} にする
+Pause,一時停止
+Set hearing distance to {value},聞こえる距離を {value} にする
+Set falloff to {value},減衰を {value} にする
+Web requests,Web リクエスト
+Lighting,ライティング
+First-person look,一人称視点
+Background work,バックグラウンド処理
+Mouse look,マウスルック
+turn by,回転量
+look up/down on,上下は
+clamped,制限
+Crossfade {from} → {to} by {amount},{amount} で {from} → {to} をクロスフェード
+shared,共有

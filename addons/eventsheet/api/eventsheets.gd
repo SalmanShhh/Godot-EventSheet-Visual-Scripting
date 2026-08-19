@@ -1616,6 +1616,7 @@ const MODULE_DIR: String = "res://addons/eventforge/registration/modules"
 ## missing file instead of shipping a dead link.
 const MODULE_GUIDE_OVERRIDES := {
 	# ── module files ──
+	"ajax": "Making-Web-Requests",
 	"animation_player": "Animation-And-Sprites",
 	"array_functional": "Working-With-Lists",
 	"audio": "Sound-And-Music",
@@ -1639,7 +1640,11 @@ const MODULE_GUIDE_OVERRIDES := {
 	"host": "Calling-Your-Own-Code-From-Rows",
 	"input": "Setting-Up-And-Rebinding-Controls",
 	"json": "Working-With-Files",
+	# U7. Lights are what a scene is LIT with, which is the graphics guide's subject - the same guide a
+	# reader lands on from the camera and screenshot rows.
+	"lighting": "Cameras-Graphics-And-Screenshots",
 	"locale_asset": "Localising-Your-Game",
+	"video": "Playing-Video",
 	"loop": "Working-With-Lists",
 	"mesh": "Working-In-3D",
 	"native_3d": "Working-In-3D",

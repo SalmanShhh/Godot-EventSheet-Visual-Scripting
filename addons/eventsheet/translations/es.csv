@@ -2758,3 +2758,43 @@ Wrap,Envolver
 Bound To,Limitar a
 Pin,Fijar
 Fade,Desvanecer
+Request {url},Solicitar {url}
+Post to {url},Enviar a {url}
+Post {data} to {url},Enviar {data} a {url}
+request succeeded,la solicitud tuvo éxito
+Set layer tint to {value},Poner el tinte de capa en {value}
+Set ambient light to {value},Poner la luz ambiental en {value}
+Set light energy to {value},Poner la intensidad de la luz en {value}
+Set light colour to {value},Poner el color de la luz en {value}
+Set light on,Encender la luz
+Set light off,Apagar la luz
+Set shadows on,Activar las sombras
+Set shadows off,Desactivar las sombras
+Look at {place},Mirar a {place}
+forward,adelante
+up,arriba
+Wait for it to finish,Esperar a que termine
+Run {name} in the background,Ejecutar {name} en segundo plano
+Wire {signal} to {handler},Conectar {signal} a {handler}
+Unwire {signal} from {handler},Desconectar {signal} de {handler}
+at end of frame,al final del fotograma
+{signal} is wired to {handler},{signal} está conectado a {handler}
+Fire {name},Disparar {name}
+Call {name},Llamar a {name}
+by name,por nombre
+"by name, with a list","por nombre, con una lista"
+the function,la función
+Set video to {file},Poner el vídeo en {file}
+Pause,Pausar
+Set hearing distance to {value},Poner la distancia audible en {value}
+Set falloff to {value},Poner la atenuación en {value}
+Web requests,Peticiones web
+Lighting,Iluminación
+First-person look,Vista en primera persona
+Background work,Trabajo en segundo plano
+Mouse look,Vista con el ratón
+turn by,girar
+look up/down on,mirar arriba/abajo en
+clamped,limitado
+Crossfade {from} → {to} by {amount},Fundir {from} → {to} con {amount}
+shared,compartida

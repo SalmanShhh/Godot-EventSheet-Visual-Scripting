@@ -68,12 +68,14 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 - [Groups, Tags And Systems](Groups-Tags-And-Systems.md) - a group as a tag, as a set to count and total, and as a system you run one method over.
 - [Triggers, Signals And When Rows Run](Triggers-Signals-And-When-Rows-Run.md) - the lifecycle and per-frame triggers, scene-tree and Area signals, On Signal and Emit Signal, and the gates that turn "every tick" into "once".
 - [Multiplayer](Multiplayer.md) - messages one peer runs on the others, who is the host, who owns which object, and this peer's own id.
+- [Making Web Requests](Making-Web-Requests.md) - the AJAX object: ask a server for something, send it something, and read the answer back as text.
 
 ## Look and sound
 
 - [Sound And Music](Sound-And-Music.md) - one-shots, placed players, and the bus mixer: volumes, mutes, effects and crossfades.
 - [Cameras, Graphics And Screenshots](Cameras-Graphics-And-Screenshots.md) - which camera is looking, how wide its view is, how the frame is rendered, and saving the result as a PNG.
 - [Particles And Drawing On Screen](Particles-And-Drawing-On-Screen.md) - drive GPU and CPU emitters from rows, and paint lines, circles, cones, stamps and ribbons onto any node's own canvas.
+- [Playing Video](Playing-Video.md) - a film inside the game: load it, play it, pause it, and ask whether the picture is still moving.
 - [Colors, Gradients And Curves](Colors-Gradients-And-Curves.md) - everyday colour maths for flashes, fades and rarity tints, plus smooth ramps and hand-drawn curves.
 
 ## Tooling and debugging

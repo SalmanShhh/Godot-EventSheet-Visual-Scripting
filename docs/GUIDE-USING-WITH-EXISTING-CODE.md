@@ -900,6 +900,45 @@ opened file says the same thing before and after the lift.
   with the exact source lines as its evidence and - where one ships - the behavior that could
   replace the hand-written block.
 
+- **The long tail** - the lines a finished game writes and a first script does not. Every one of them
+  already had a sentence somewhere on the sheet, and the reading says it.
+
+  - **Web requests are the AJAX object's, and JSON is the JSON object's.** `http.request(url)` reads
+    **AJAX ▸ Request url**; the same call carrying the POST verb and a body reads **AJAX ▸ Post data
+    to url**; `result != HTTPRequest.RESULT_SUCCESS` reads as the inverted **request succeeded**; and
+    `body.get_string_from_utf8()` reads **AJAX.LastData**. `JSON.parse_string(x)` reads
+    **JSON.Parse(x)** and `JSON.stringify(x)` reads **JSON.ToString(x)**. A whole run of indexes is
+    one address into one table: `data["scores"][0]["name"]` reads **data's scores 0 name** (a single
+    index keeps the sentence it already had).
+  - **Lights.** A 2D or 3D light's brightness reads **Set light energy to 50%** (a percentage,
+    because that is how a reader sets it), its colour **Set light colour to orange**, its switch
+    **Set light on** / **Set light off**, and its shadows **Set shadows on** / **off**. A
+    `CanvasModulate` is a whole layer's tint - **System ▸ Set layer tint** - and a world
+    environment's ambient energy is **System ▸ Set ambient light to 30%**.
+  - **3D.** `look_at(p, UP)` reads **Look at p**: the up vector is Godot's bookkeeping, not part of
+    what the row says. An object's own axes read as the directions they are - `-basis.z` is
+    **Player's forward**, `basis.x` is **right** and `basis.y` is **up**.
+  - **Background work.** `thread.start(bake.bind(level))` and `WorkerThreadPool.add_task(...)` both
+    read **System ▸ Run Bake in the background** with the values handed over as chips named by the
+    function's own parameters; the group spelling adds **64 times**; and every wait reads **⏳ Wait
+    for it to finish**. The claim offers the shipped Run In Background behavior.
+  - **The signal steps that are actions.** Wiring a handler up and taking it down are not events, so
+    they read as the actions they are: **Wire On died to On Died** (with an **at end of frame** chip
+    when the connection is deferred), **Unwire On died from On Died**, and the question **On died is
+    wired to On Died**. A variable the sheet typed `Signal` declares as a local signal and fires as
+    **System ▸ Fire sig**.
+  - **Calls made by name.** `call("heal", 5)` and `callv("heal", [5, self])` read as the ordinary
+    **Functions ▸ Call Heal** row with its parameter chips, plus the muted **by name** / **by name,
+    with a list** that says how it was reached. `Callable(self, "heal")` reads **the function Heal**.
+  - **Media.** A `VideoStreamPlayer` is the sheet's Video object - **Set video to intro.ogv**,
+    **Play**, **Pause**, **Is playing** - and a positional audio player's `max_distance` and
+    `attenuation` read **Set hearing distance** and **Set falloff**.
+
+  These claim four more patterns on the event that owns them - web requests, lighting, first-person
+  look and background work - and the last two offer the behavior that does the whole shape.
+
+  ![A 3D script read as an event sheet: a web request under the AJAX object, a light's energy and shadows, a video set and played with a positional sound's hearing distance and falloff, the mouse-look trio as one Mouse look row with its values muted beside it, a music crossfade as one row, work run in the background with its wait, and a signal unwired](images/opened-script-long-tail.png)
+
   ![A controller script read as an event sheet: a layout loaded in the background with its finished-loading condition, the movement math as Apply gravity / Accelerate / Limit speed / Move, the collision switches, a navigation agent's Find path to and Has arrived, and the multiplayer messages sent to everyone and to the host](images/opened-script-systems.png)
 
 ### The objects of an opened file - what they are, and where you find them

@@ -2758,3 +2758,43 @@ Wrap,Umbrechen
 Bound To,Begrenzen auf
 Pin,Heften
 Fade,Ausblenden
+Request {url},Anfordern {url}
+Post to {url},An {url} senden
+Post {data} to {url},{data} an {url} senden
+request succeeded,Anfrage war erfolgreich
+Set layer tint to {value},Ebenen-Tönung auf {value} setzen
+Set ambient light to {value},Umgebungslicht auf {value} setzen
+Set light energy to {value},Lichtstärke auf {value} setzen
+Set light colour to {value},Lichtfarbe auf {value} setzen
+Set light on,Licht einschalten
+Set light off,Licht ausschalten
+Set shadows on,Schatten einschalten
+Set shadows off,Schatten ausschalten
+Look at {place},Auf {place} ausrichten
+forward,vorne
+up,oben
+Wait for it to finish,Auf das Ende warten
+Run {name} in the background,{name} im Hintergrund ausführen
+Wire {signal} to {handler},{signal} mit {handler} verbinden
+Unwire {signal} from {handler},{signal} von {handler} trennen
+at end of frame,am Ende des Frames
+{signal} is wired to {handler},{signal} ist mit {handler} verbunden
+Fire {name},{name} auslösen
+Call {name},{name} aufrufen
+by name,über den Namen
+"by name, with a list","über den Namen, mit einer Liste"
+the function,die Funktion
+Set video to {file},Video auf {file} setzen
+Pause,Pause
+Set hearing distance to {value},Hörweite auf {value} setzen
+Set falloff to {value},Abschwächung auf {value} setzen
+Web requests,Web-Anfragen
+Lighting,Beleuchtung
+First-person look,Ego-Blick
+Background work,Hintergrundarbeit
+Mouse look,Mausblick
+turn by,drehen um
+look up/down on,hoch/runter an
+clamped,begrenzt
+Crossfade {from} → {to} by {amount},{from} → {to} überblenden mit {amount}
+shared,geteilt

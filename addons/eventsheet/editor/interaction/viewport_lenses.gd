@@ -213,7 +213,10 @@ static func humanize_expression(expression: String, knob_names: Dictionary = {})
 ## real property chain can never be mistaken for a file.
 const ASSET_FILE_TYPES: PackedStringArray = [
 	"png", "jpg", "jpeg", "webp", "svg", "bmp", "exr", "hdr", "ktx",
-	"wav", "ogg", "mp3", "tscn", "scn", "tres", "res", "gd", "json", "csv", "ttf", "otf"
+	"wav", "ogg", "mp3", "tscn", "scn", "tres", "res", "gd", "json", "csv", "ttf", "otf",
+	# U12 - the one video format Godot plays, and the two other sound files a project ships. A film
+	# read possessively ("intro's ogv") is the same mistake `jump.wav` was.
+	"ogv", "flac", "aac"
 ]
 
 

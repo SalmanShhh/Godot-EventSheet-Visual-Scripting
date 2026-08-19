@@ -2777,6 +2777,19 @@ static func _build_reverse_entries() -> Array:
 	return built
 
 
+## U6 / U7 / U12. The picker categories kept OUT of the reverse index, because the sentence grammar
+## already has a better sentence for every line they write. Frozen alongside the readings: adding a
+## category here is a promise that the reading covers it, and dropping one back in would silently
+## swap those rows' words.
+const REVERSE_LIFT_EXCLUDED_CATEGORIES: PackedStringArray = ["AJAX", "Lighting", "Video"]
+
+## U12. The same promise, for two rows that live in a category most of whose verbs SHOULD lift. A
+## positional sound's two knobs read under the player they belong to, which the lifted row cannot say.
+const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
+	"AudioSetHearingDistance", "AudioSetFalloff"
+]
+
+
 static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 	var entries: Array = []
 	var brace_regex: RegEx = RegEx.new()
@@ -2796,6 +2809,16 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 		# Each has more literal chars than the bare-var forms, so `self.x += 1` prefers the property twin over
 		# Add Variable, and typed outranks plain (`const N: int = 3` binds name="N"). Byte-verify gates all.
 		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "AddToProperty", "SubtractFromProperty", "MultiplyProperty", "DivideProperty", "CallMethod", "SetLocalVar", "SetLocalVarTyped", "SetLocalVarInferred", "SetLocalConst", "SetLocalConstTyped", "SetLocalConstInferred"]):
+			continue
+		# The categories whose lines the READING already says better than the row would. A lift is only
+		# ever worth making when the row it produces reads at least as well as the line it replaced,
+		# and for these three it does not: the reading names the object the row belongs to (AJAX, the
+		# light itself, Video) and says a brightness as the percentage a reader set, where the lifted
+		# row can only repeat the template's own words with the raw value in them. Nothing about the
+		# bytes changes either way - a line kept verbatim re-emits exactly as it came in - so the only
+		# question is which of the two a reader would rather have, and it is the reading.
+		if REVERSE_LIFT_EXCLUDED_CATEGORIES.has(descriptor.category) \
+				or REVERSE_LIFT_EXCLUDED_ACE_IDS.has(descriptor.ace_id):
 			continue
 		# `break` / `continue` are admitted but tagged loop_control: _match_entry only claims them inside a
 		# lifted loop body (they are invalid GDScript anywhere else), so they never mis-claim a bare keyword

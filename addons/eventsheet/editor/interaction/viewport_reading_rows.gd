@@ -87,7 +87,14 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		# Which locals hold a tile's own data, and the cell each one came from. The question a tile
 		# asks ("has solid set") is written a line below the answer's source, so the two are joined
 		# once here rather than guessed at per row.
-		"tile_data_locals": tile_data_local_map(sheet)
+		"tile_data_locals": tile_data_local_map(sheet),
+		# ── U9 / U10 / U11 ────────────────────────────────────────────────────────────────────
+		# Every function's parameter names, so a call that hands values over - a job sent to a
+		# background thread, a handler wired up with values bound to it, a call made by name - shows
+		# each value under the name the function receives it as, exactly as a signal's payload chips
+		# do. A function the sheet does not declare is simply absent, and the chips then show the
+		# bare values rather than a guessed name.
+		"function_params": function_parameter_map(sheet)
 	}
 	extras.merge(patterns, true)
 	# ── S8 / S10 / S15 lens hook ───────────────────────────────────────────────────────────────
@@ -1415,6 +1422,23 @@ static func generic_call_pieces(code: String, context: Dictionary, class_map: Di
 
 ## The parameter names of one of the sheet's own functions, in order. Empty when the function is
 ## unknown or declared none - the call then reads with plain argument values.
+## U9 / U10 / U11. {function name: its parameter names, in order} for every function the sheet
+## declares. One walk, because a call that names a function may sit anywhere in the file.
+static func function_parameter_map(sheet: EventSheetResource) -> Dictionary:
+	var map: Dictionary = {}
+	if sheet == null:
+		return map
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function == null:
+			continue
+		var name_text: String = event_function.function_name.strip_edges()
+		if name_text.is_empty():
+			continue
+		map[name_text] = parameter_names_of(event_function)
+	return map
+
+
 static func parameter_names_of(event_function: EventFunction) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
 	if event_function == null:

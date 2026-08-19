@@ -140,6 +140,77 @@ lands in a path that already existed.
   invert moves to X, collapse/expand lands on Ctrl+E, the Ctrl alternate for add-event steps aside,
   and preview moves to F4. Everything stays rebindable afterwards, and the picker reads the LIVE
   bindings - rebind one key by hand and it honestly says `Godot EventSheets` again.
+### Added - the long tail of an opened script reads in the sheet's words
+
+The lines a finished game writes and a first script does not: a request to a server, the lights a
+scene is lit with, the 3D words, work handed off the main thread, the signal steps that are actions
+rather than events, a call made by name, and the media a game plays. Every one of them already had a
+sentence somewhere on the sheet, and these readings say it. Display only: the file is untouched, and
+the byte round-trip and the emitted GDScript cannot move.
+
+- **HTTP and JSON read as the AJAX and JSON objects.** `http.request(url)` reads `AJAX ▸ Request
+  url`; the same call carrying the POST verb and a body reads `AJAX ▸ Post data to url`; `result !=
+  HTTPRequest.RESULT_SUCCESS` reads as the inverted `request succeeded`; `body.get_string_from_utf8()`
+  reads `AJAX.LastData`. `JSON.parse_string` and `JSON.stringify` are now spelled the way the sheet's
+  own JSON object spells them - `JSON.Parse(x)` and `JSON.ToString(x)`. A RUN of indexes is one
+  address: `data["scores"][0]["name"]` reads `data's scores 0 name` (a single index keeps its
+  shipped sentence).
+- **Lights read as the Light rows.** A 2D or 3D light's `energy` / `light_energy` reads `Set light
+  energy to 50%`, its colour `Set light colour to orange`, its switch `Set light on` / `Set light
+  off`, and `shadow_enabled` `Set shadows on` / `off`. A `CanvasModulate` reads `System ▸ Set layer
+  tint`, and a world environment's ambient energy `System ▸ Set ambient light to 30%`.
+- **The 3D words.** `look_at(p, UP)` reads `Look at p` - the up vector is Godot's bookkeeping - and
+  an object's own axes read as directions: `-basis.z` is `Player's forward`, `basis.x` is `right`,
+  `basis.y` is `up`.
+- **Threads read as Run in the background.** `thread.start(bake.bind(level))` and
+  `WorkerThreadPool.add_task(...)` both read `System ▸ Run Bake in the background   level = level`,
+  the group spelling adds `64 times`, and every wait reads `⏳ Wait for it to finish`. The claim
+  offers the shipped Run In Background behavior for the hand-rolled threads.
+- **The signal steps that are actions.** `connect` reads `Wire On died to On Died` (with an `at end
+  of frame` chip for a deferred connection), `disconnect` reads `Unwire`, `is_connected` reads `On
+  died is wired to On Died`, and a variable the sheet typed `Signal` declares as a local signal and
+  fires as `System ▸ Fire sig`.
+- **A call made by name.** `call("heal", 5)` and `callv("heal", [5, self])` both read as the ordinary
+  `Functions ▸ Call Heal` row with its parameter chips, and the muted `by name` / `by name, with a
+  list` that says how it was reached. `Callable(self, "heal")` reads `the function Heal`.
+- **Media.** A `VideoStreamPlayer` is the sheet's Video object - `Set video to intro.ogv`, `Play`,
+  `Pause`, `Is playing` - and a positional player's `max_distance` / `attenuation` read `Set hearing
+  distance` / `Set falloff`.
+- **Two runs read as the one row they are.** The first-person block - turn the body, pitch the
+  camera, clamp the camera - is one `Mouse look` row with the file's own values muted beside it, and
+  two volume writes driven by one fraction are one `System ▸ Crossfade music a → music b by t`. The
+  lines stay exactly as they are in the file, on hover, under a double-click and in the bytes saved.
+- **The four new patterns are claimed** on the event that owns them (`ajax`, `lighting`, `fps_look`,
+  `background`), with the exact source lines as evidence and, for the two that a shipped behavior
+  does whole, the pack a reader could adopt instead.
+- **A function's header says the three things that change how it is called.** Parameter chips carry
+  their default (`amount = 10`, `source = empty`), a function that awaits wears a `⏳ waits` chip,
+  and a `static func` reads `shared` - the sheet's word for a function that belongs to the class
+  rather than to any one object. An `Array` input named `args` wears the `…` that says it swallows
+  however many values follow.
+
+### Added - the long tail is authorable in the same words
+
+Every reading above that names an object a sheet can act on now has picker rows that write exactly
+the shape the reading recognises, so a hand-written line and a picked row are the same bytes.
+
+- **The AJAX object** - Request, Post, Cancel Request, Request Succeeded, Status Is OK and Last Data,
+  with a module guide of its own.
+- **The Lighting rows** - light energy and colour in both node generations, the on-off pair, shadows,
+  a whole layer's tint and the world's ambient light.
+- **The Video object** - Set Video, Play, Pause, Stop and Is Playing, with a module guide of its own.
+- **Sound and 3D** - Set Hearing Distance, Set Falloff and Crossfade join the Audio rows; Mouse Look
+  and the Forward / Right / Up directions join the 3D rows.
+
+Background work deliberately gets no rows of its own: the Run In Background behavior does the whole
+shape - the thread, the wait and the done signal - so the offer a claim makes is the pack.
+
+### Added - the Doctor warns when background work touches the scene tree
+
+A function handed to a thread whose own rows reach the scene tree earns a warning, because Godot's
+nodes are not thread-safe and the failure is a crash that happens one run in twenty rather than
+every time. Narrow on purpose: a named function handed off, and that function's own body reaching
+the tree.
 
 ### Added - working WITH a sheet: the running game, a recorded play, a merge conflict, a shared sheet
 

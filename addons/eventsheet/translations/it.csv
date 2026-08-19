@@ -2758,3 +2758,43 @@ Wrap,Avvolgi
 Bound To,Limita a
 Pin,Aggancia
 Fade,Dissolvenza
+Request {url},Richiedi {url}
+Post to {url},Invia a {url}
+Post {data} to {url},Invia {data} a {url}
+request succeeded,la richiesta è riuscita
+Set layer tint to {value},Imposta la tinta del livello su {value}
+Set ambient light to {value},Imposta la luce ambientale su {value}
+Set light energy to {value},Imposta l'intensità della luce su {value}
+Set light colour to {value},Imposta il colore della luce su {value}
+Set light on,Accendi la luce
+Set light off,Spegni la luce
+Set shadows on,Attiva le ombre
+Set shadows off,Disattiva le ombre
+Look at {place},Guarda verso {place}
+forward,avanti
+up,su
+Wait for it to finish,Attendi che finisca
+Run {name} in the background,Esegui {name} in background
+Wire {signal} to {handler},Collega {signal} a {handler}
+Unwire {signal} from {handler},Scollega {signal} da {handler}
+at end of frame,a fine frame
+{signal} is wired to {handler},{signal} è collegato a {handler}
+Fire {name},Attiva {name}
+Call {name},Chiama {name}
+by name,per nome
+"by name, with a list","per nome, con un elenco"
+the function,la funzione
+Set video to {file},Imposta il video su {file}
+Pause,Pausa
+Set hearing distance to {value},Imposta la distanza udibile su {value}
+Set falloff to {value},Imposta l'attenuazione su {value}
+Web requests,Richieste web
+Lighting,Illuminazione
+First-person look,Vista in prima persona
+Background work,Lavoro in background
+Mouse look,Vista col mouse
+turn by,ruota di
+look up/down on,su/giù su
+clamped,limitato
+Crossfade {from} → {to} by {amount},Dissolvenza {from} → {to} con {amount}
+shared,condivisa

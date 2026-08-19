@@ -165,6 +165,11 @@ const SUBCATEGORY_SEPARATOR: String = ": "
 ## headless runs degrade to no icon. Entries also OVERRIDE derivation, for the cases where a human
 ## choice beats the derived one (an "Overlap" section reads better as an Area than a bare Node).
 const CATEGORY_EDITOR_ICONS: Dictionary = {
+	# U6 / U7 / U12. The three objects batch ten added. Each names the node its rows act on, which is
+	# also the icon a reader already associates with that kind of row in the Scene dock.
+	"AJAX": "HTTPRequest",
+	"Lighting": "PointLight2D",
+	"Video": "VideoStreamPlayer",
 	"Animation": "AnimationPlayer",
 	"Mesh": "MeshInstance3D",
 	"Gradients & Curves": "Gradient",
