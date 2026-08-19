@@ -6,7 +6,7 @@ Where a list answers "the third one", a record answers "the gold". Godot calls i
 is what a save file, a settings block, a JSON payload, a spreadsheet row and an item definition all are
 once they are in memory: a set of named fields you read and write by key.
 
-This guide covers the whole builtin Dictionary vocabulary, plus the three verbs that migrate a record
+This guide covers the whole builtin Dictionary vocabulary, plus the three rows that migrate a record
 written by an older build of your game.
 
 Everything here is **builtin** - no addon, no autoload, no setup. In the picker it lives under
@@ -16,7 +16,7 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Migrating old data](#migrating-old-data)
 5. [Use cases](#use-cases)
 6. [Tips and common mistakes](#tips-and-common-mistakes)
@@ -29,32 +29,32 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 - **Item and enemy definitions** - a record per thing, with fields you can add without touching rows.
 - **Counters keyed by name** - kills per enemy type, resources per material, votes per option.
 - **Lookup tables** - a row out of a spreadsheet is exactly a record, keyed by column name.
-- **Migrations** - the three verbs that let last month's save file open in this month's build.
+- **Migrations** - the three rows that let last month's save file open in this month's build.
 
 ## Core concepts
 
 - **A key is usually text, and the quotes matter.** `"gold"` is the key; `gold` without quotes is a
   variable. Every key parameter here is an expression cell, so both are possible and the quotes are how
   you say which you meant.
-- **Set Key both adds and overwrites.** There is no separate "add" verb - writing a key that is not there
+- **Set Key both adds and overwrites.** There is no separate "add" action - writing a key that is not there
   yet creates it.
 - **Reading a missing key with plain subscript access errors.** That is why **Get Key (with default)**
   exists: it takes a fallback and hands that back when the key is not present.
-- **A dictionary variable's dropdown is scoped.** Every verb here takes a **var_name** whose picker offers
+- **A dictionary variable's dropdown is scoped.** Every row here takes a **var_name** whose picker offers
   Dictionary-typed sheet variables (and untyped ones). Its default is `dict`.
 - **Copy Dictionary is shallow.** It copies the outer level only; lists and records nested inside are
   still shared with the original. **Deep Copy** copies right through. This matters most for a settings
   block inside a save record - a shallow copy of the save still shares the settings.
 - **Merge overwrites.** Merge Dictionary copies another record's keys in and clashes go to the incoming
-  value, which is what makes it the "apply overrides" verb.
+  value, which is what makes it the "apply overrides" action.
 - **Godot's `.get` does not fall back on an empty value.** Only a MISSING key reaches the default. A key
   holding `""`, `0` or `null` hands that back, because those are real values.
 
-## Verb reference
+## Reference tables
 
 ### Changing a record (actions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Key | Stores a value under a key, adding it or overwriting it. | `{var_name}[{key}] = {value}` |
 | Delete Key | Removes a key and its value. | `{var_name}.erase({key})` |
@@ -63,7 +63,7 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 
 ### Asking about a record (conditions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Has Key | True when the record contains the given key. | `{var_name}.has({key})` |
 | Has All Keys | True when the record contains every key in the given list. | `{var_name}.has_all({keys})` |
@@ -72,7 +72,7 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 
 ### Reading a record (expressions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Get Key (with default) | The key's value, or your fallback when the key is missing. | `{var_name}.get({key}, {default})` |
 | Dictionary Size | How many keys the record holds. | `{var_name}.size()` |
@@ -83,7 +83,7 @@ Everything here is **builtin** - no addon, no autoload, no setup. In the picker 
 
 ### Migrating a record written by an older build
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Data Is Older Than Version | **Condition.** True when a loaded record was written by an older build than this one. | `(str({record}.get({field}, 0)).to_int() < {version})` |
 | Rename Field | **Action.** Moves a value to its new field name, doing nothing when the old name is not there. | see below |
@@ -103,7 +103,7 @@ Data outlives the shape it was written in. A player's save file, a downloaded pa
 config, a `.tres` written by last month's build - all of them can arrive with fields you have since
 renamed, or fields that did not exist yet.
 
-The three verbs above are a complete migration step, in the order you use them:
+The three rows above are a complete migration step, in the order you use them:
 
 1. **Data Is Older Than Version** gates the migration. It reads the version field as text and converts,
    so a record with NO version field counts as 0 - which is how the very first format upgrades too - and
@@ -253,7 +253,7 @@ for item in kills.keys():
 	add_bestiary_row(item)
 ```
 
-**Dictionary Keys** and **Dictionary Values** both hand back a list, so every list verb applies - Sort
+**Dictionary Keys** and **Dictionary Values** both hand back a list, so every list row applies - Sort
 Array on the keys for an alphabetical bestiary, Array Max on the values for the most-killed type.
 
 **9. Total everything in a record.**
@@ -374,7 +374,7 @@ For Each Resource In Folder  "res://mods"
     -> Stamp Data Version  entry.manifest, "format", 2
 ```
 
-The same three verbs serve a downloaded payload, a config, a spreadsheet row and a `.tres` - anywhere a
+The same three rows serve a downloaded payload, a config, a spreadsheet row and a `.tres` - anywhere a
 record outlives the build that wrote it. The version field does not have to be called `"version"`.
 
 ### Other use cases
@@ -404,7 +404,7 @@ and Dictionary Keys plus Dictionary Values dumped as two lists when the run ends
   condition covers all four empty shapes in one row.
 - **Plain subscript reads error on a missing key.** Prefer Get Key (with default) unless you have just
   checked with Has Key.
-- **Set Key adds as well as overwrites.** There is no separate add verb, and no warning when you create a
+- **Set Key adds as well as overwrites.** There is no separate add action, and no warning when you create a
   key by typo. A misspelled key writes fine and reads back as missing.
 - **Copy Dictionary is shallow.** A settings record inside a copied save record is still the same object.
   Use **Deep Copy** whenever the record holds records or lists.

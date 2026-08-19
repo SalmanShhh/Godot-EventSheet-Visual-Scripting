@@ -14,13 +14,13 @@ of GDScript:
 
 The 2D versions of all of this live in the sibling guide **Raycasting And Overlaps In 2D**. The two 3D
 mouse-ray halves (Mouse Ray Origin, Mouse Ray Direction) are documented in **Reading Keyboard, Mouse And
-Gamepad**; the camera-picking verbs here do the same job in one row.
+Gamepad**; the camera-picking vocabulary here does the same job in one row.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -41,10 +41,10 @@ Gamepad**; the camera-picking verbs here do the same job in one row.
 
 - **A node cast is continuous, a world query is a moment.** RayCast3D and ShapeCast3D update themselves on
   the physics tick, so you just READ them. A world query answers about the instant its row runs.
-- **Two shapes of verb, deliberately.** The single-shot EXPRESSIONS (World Raycast Point, Mouse Ray
+- **Two shapes of row, deliberately.** The single-shot EXPRESSIONS (World Raycast Point, Mouse Ray
   Collider) read well in one cell but RE-CAST the ray each time they are used - asking for the point and
   the collider costs two casts. The **Cast Ray Into (3D)** and **Cast Ray From Mouse Into (3D)** ACTIONS
-  fire ONE cast and store the result in a variable, which the **Ray Result ...** verbs then read for free.
+  fire ONE cast and store the result in a variable, which the **Ray Result ...** rows then read for free.
 - **A hit result is a Dictionary, and empty means "nothing".** Ray Result Hit Something (3D) is
   `not result.is_empty()`. Every reader has a safe fallback, so reading a point off a clear ray gives
   `Vector3.ZERO` rather than an error.
@@ -60,12 +60,13 @@ Gamepad**; the camera-picking verbs here do the same job in one row.
 - **3D has two options 2D does not.** RayCast Hits Back Faces (3D) decides whether the inside surface of
   concave level geometry counts, and RayCast Hit Face Index (3D) / Ray Result Face Index (3D) name the
   exact triangle of a concave mesh that was struck.
-- **Camera picking needs an active Camera3D.** Every mouse-ray verb projects through the viewport's current
+- **Camera picking needs an active Camera3D.** Every mouse-ray row projects through the viewport's current
   camera. With no current camera they fail at runtime.
-- **The node-scoped verbs need the right host.** The RayCast3D verbs only appear on a `RayCast3D` sheet, the
-  ShapeCast3D verbs on a `ShapeCast3D` sheet, and the world and picking queries on a `Node3D`.
+- **The node-scoped rows need the right host.** The RayCast3D vocabulary only appears on a `RayCast3D`
+  sheet, the ShapeCast3D vocabulary on a `ShapeCast3D` sheet, and the world and picking queries on a
+  `Node3D`.
 
-## Verb reference
+## Reference tables
 
 The "Ships as" column is the exact code the row compiles to. Parameters appear in `{braces}`.
 
@@ -73,7 +74,7 @@ The "Ships as" column is the exact code the row compiles to. Parameters appear i
 
 Scoped to a `RayCast3D` host.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | RayCast Is Colliding (3D) | True when a RayCast3D is currently hitting something in front of it. | `is_colliding()` |
 | Force RayCast Update (3D) | Forces a recheck immediately instead of waiting for the next frame. | `force_raycast_update()` |
@@ -101,7 +102,7 @@ Scoped to a `RayCast3D` host.
 
 Scoped to a `ShapeCast3D` host.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | ShapeCast Is Colliding (3D) | True when the swept shape is touching anything along its path. | `is_colliding()` |
 | Force ShapeCast Update (3D) | Re-runs the sweep immediately instead of waiting for the next physics frame. | `force_shapecast_update()` |
@@ -123,7 +124,7 @@ Scoped to a `ShapeCast3D` host.
 
 Scoped to a `Node3D` host.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Cast Ray Into (3D) | Fires ONE ray and stores everything it learned in a variable. | builds a `PhysicsRayQueryParameters3D` from `{from}`, `{to}`, `{mask}`, `{exclude}`, sets `collide_with_areas = {hit_areas}`, then `{into} = get_world_3d().direct_space_state.intersect_ray(...)` |
 | World Raycast Hits? (3D) | True when a ray cast between two points hits anything in the 3D world. | `not get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create({from}, {to})).is_empty()` |
@@ -136,7 +137,7 @@ Scoped to a `Node3D` host.
 
 Scoped to a `Node3D` host. All four need an active Camera3D.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Cast Ray From Mouse Into (3D) | Shoots a ray from the camera through the cursor and stores what it finds. | projects `{distance}` metres from `get_viewport().get_camera_3d()` through the mouse position, builds a `PhysicsRayQueryParameters3D` with `{mask}` and `{exclude}`, sets `collide_with_areas = {hit_areas}`, then `{into} = ...intersect_ray(...)` |
 | Mouse Ray Hits Something (3D) | True when the cursor is over something solid. | the same projection inline, `not ....is_empty()` |
@@ -147,7 +148,7 @@ Scoped to a `Node3D` host. All four need an active Camera3D.
 
 Scoped to a `Node3D` host. `{result}` is the variable a Cast Ray Into or Cast Ray From Mouse Into filled.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Ray Result Hit Something (3D) | True when the stored cast found something. | `not {result}.is_empty()` |
 | Ray Result Collider (3D) | The object the stored cast hit, or nothing. | `{result}.get("collider", null)` |
@@ -161,7 +162,7 @@ Scoped to a `Node3D` host. `{result}` is the variable a Cast Ray Into or Cast Ra
 
 Scoped to a `Node3D` host. Each one fills an Array variable with the objects it found.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Query Bodies At Point (3D) | Everything at one world point - like tapping the world with a finger. | a `PhysicsPointQueryParameters3D` at `{point}` with `collide_with_areas = {hit_areas}`, looping `intersect_point(..., {max_results})` and appending each `collider` to `{into}` |
 | Query Bodies In Sphere (3D) | Everything inside a sphere - explosion radii, pickup magnets, proximity checks. | a `SphereShape3D` of `{radius}` at `{center}` with `{mask}`, looping `intersect_shape(..., {max_results})` into `{into}` |
@@ -455,12 +456,12 @@ enormous.
 - **An empty result is normal, not an error.** Ray Result Point on a clear ray returns `Vector3.ZERO` and
   Ray Result Collider returns nothing. Check Ray Result Hit Something (3D) first, or use Ray Result Is In
   Group (3D), which already guards the nothing case.
-- **Camera picking needs a current Camera3D.** Every mouse-ray verb projects through
+- **Camera picking needs a current Camera3D.** Every mouse-ray row projects through
   `get_viewport().get_camera_3d()`. In a scene with no current camera, or before one becomes current, it
   fails at runtime.
-- **Distance is a real limit.** The picking verbs default to 1000 metres. A large open world can exceed it,
+- **Distance is a real limit.** The picking rows default to 1000 metres. A large open world can exceed it,
   and a small scene wastes nothing by lowering it.
-- **The exception verbs need a CollisionObject3D.** Ignore Node In RayCast (3D) and Ignore Node In
+- **The exception actions need a CollisionObject3D.** Ignore Node In RayCast (3D) and Ignore Node In
   ShapeCast (3D) will not compile with a plain Node, which is why the default reads
   `get_parent() as CollisionObject3D`.
 - **A disabled cast always reports no hit.** Enable RayCast (3D) set to false looks exactly like a clear

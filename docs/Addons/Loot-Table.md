@@ -90,7 +90,7 @@ On Roll Complete
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Create loot table **table_id**
 - Add **item_id** to **table_id** with weight **weight**
@@ -152,7 +152,7 @@ Every row below is exactly what the pack exposes. Parameter names and types are 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$LootBoxAddon.table_count()` inserts the **Table Count** entry straight into any expression
 - `$LootBoxAddon.entry_count(table_id)` inserts the **Entry Count** entry straight into any expression
@@ -534,7 +534,7 @@ On Ready
 
 **As a behaviour**, when you just want it loaded before anything asks: attach the **Loot Table Loader** behaviour to any node, drop the `.tres` onto its `Loot Table` slot in the Inspector, and it registers the table on ready. The Scene dock shows a warning until a resource is attached, so you cannot ship a loader that loads nothing.
 
-Either way the result is identical to building the table by hand - `Roll`, `Roll Times`, `Set Pity` and every other verb work exactly the same, and you can still `Add Entry` afterwards to extend what the asset seeded. Variants are just other `.tres` files: a hard-mode table, a seasonal table, a per-biome table.
+Either way the result is identical to building the table by hand - `Roll`, `Roll Times`, `Set Pity` and every other entry work exactly the same, and you can still `Add Entry` afterwards to extend what the asset seeded. Variants are just other `.tres` files: a hard-mode table, a seasonal table, a per-biome table.
 
 ---
 

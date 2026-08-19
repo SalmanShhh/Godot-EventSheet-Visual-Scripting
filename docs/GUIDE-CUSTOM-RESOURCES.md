@@ -163,7 +163,7 @@ A resource is not a node: it has **no `_ready`, no `_process`, no signals firing
 
 The **Custom Resource (data + logic)** starter template (the New-Sheet template menu, under "Custom Resources - data assets") models this flavor: a small `LootTable` with exported fields and a `roll()` function that picks a random entry, published as an ACE. Two things in it are worth copying:
 
-**Expose a function as an ACE.** In the function dialog, publish the function as a verb ("Roll Loot" in the starter). Any sheet that holds one of your `.tres` assets can then call it from the picker like built-in vocabulary - the resource stops being inert data and becomes a thing other sheets can *ask*.
+**Expose a function as an ACE.** In the function dialog, publish the function to the picker ("Roll Loot" in the starter). Any sheet that holds one of your `.tres` assets can then call it from the picker like built-in vocabulary - the resource stops being inert data and becomes a thing other sheets can *ask*.
 
 **Give a function an Inspector button.** The function dialog has an **Inspector button** field: type a label (like `Re-bake` or `Validate now`) and the function appears as a one-click button in the Inspector (it ships as `@export_tool_button`). Pressing the button runs the function's rows. This is the beginner path to editor tooling: a "sort rows by weight" or "fill missing ids" chore becomes a button on the asset itself, and its behavior stays ordinary, readable event rows.
 
@@ -200,7 +200,7 @@ corrupting them once it does.
 Four expressions in the **Files** picker folder mean there is no registry to maintain: adding an item
 is dropping a `.tres` in a folder.
 
-| Verb | Gives you |
+| Name | Gives you |
 | --- | --- |
 | **Resources In Folder** | every `.tres` / `.res` in a folder, already loaded, as a list |
 | **Resource In Folder** | one of them by file name, or nothing when there is no such file |
@@ -274,10 +274,10 @@ On loaded a data asset
   -> Stamp Data Version   entry   version   2
 ```
 
-They are not object verbs: `Rename Field` emits `has`/`erase` and `Data Is Older Than Version` emits
+They are not object rows: `Rename Field` emits `has`/`erase` and `Data Is Older Than Version` emits
 a two-argument `get`, none of which a Resource answers to. To version the resource ITSELF, add a
 plain exported `data_version` integer to your class and compare it with an ordinary condition row
-(**Compare Variable**), then fix the fields with **Set Property** rows. The three verbs above stay
+(**Compare Variable**), then fix the fields with **Set Property** rows. The three rows above stay
 for the Dictionary records inside it.
 
 ---
@@ -447,7 +447,7 @@ A validator that warns when a multiplier is `0` prevents the classic "enemies ha
 
 ### 14. A hint and tip deck
 
-One entry is a "Tip". The loading screen rolls a random row; a `random_tip()` function exposed as an ACE makes it one picker verb from anywhere.
+One entry is a "Tip". The loading screen rolls a random row; a `random_tip()` function exposed as an ACE makes it one picker row from anywhere.
 
 ```
 tip

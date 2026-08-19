@@ -85,7 +85,7 @@ Because the pack is a live event sheet, you can also open it and extend it direc
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Define storylet **id** titled **title**
 
@@ -174,7 +174,7 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$StoryletsAddon.quality_number(key)` inserts the **Quality Number** entry straight into any expression
 - `$StoryletsAddon.quality_text(key)` inserts the **Quality Text** entry straight into any expression
@@ -533,7 +533,7 @@ Pair a specific storylet's id with **Has Been Played** when you want tight contr
 
 ### 19. A choice that carries its own consequence
 
-**Scenario:** Paying the gatekeeper should cost 10 gold and open the gate. Instead of a per-choice branch in On Choice Made, let the choice apply its own outcome. (This is the Construct 3 guide's "gate toll" storylet, ported to the effects verbs.)
+**Scenario:** Paying the gatekeeper should cost 10 gold and open the gate. Instead of a per-choice branch in On Choice Made, let the choice apply its own outcome. (This is the Construct 3 guide's "gate toll" storylet, ported to the effect actions.)
 
 ```
 On Ready

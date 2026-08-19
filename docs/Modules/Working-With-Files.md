@@ -6,7 +6,7 @@ turn a folder into something a sheet can walk. And the JSON set crosses the text
 directions, so a dictionary of player state becomes one line in a file and comes back as a dictionary
 again.
 
-These verbs are builtin vocabulary: nothing to enable, nothing to attach, available in the picker from
+These rows are builtin vocabulary: nothing to enable, nothing to attach, available in the picker from
 any sheet. Each compiles to the exact native `FileAccess`, `DirAccess` or `JSON` call. The reads use
 the static, null-safe accessors on purpose - a missing file gives you empty text rather than a crash -
 and the writes guard the file handle, so a bad path cannot null-dereference.
@@ -16,7 +16,7 @@ and the writes guard the file handle, so a bad path cannot null-dereference.
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
 3. [Why writes belong under user://](#why-writes-belong-under-user)
-4. [Verb reference](#verb-reference)
+4. [Reference tables](#reference-tables)
 5. [Use cases](#use-cases)
 6. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -42,11 +42,11 @@ and the writes guard the file handle, so a bad path cannot null-dereference.
   needs the file to already exist and does nothing if it does not, so write it once before appending.
 - **JSON is a text boundary, not a data type.** **To JSON Text** turns a value into a string and
   **From JSON Text** turns a string back into a value. Once parsed, what you hold is an ordinary
-  Dictionary or Array; edit it with the Variables verbs, not with anything here.
+  Dictionary or Array; edit it with the Variables vocabulary, not with anything here.
 - **Invalid JSON parses as nothing.** **From JSON Text**, **Parse JSON Into Variable** and
   **Load JSON File** all give `null` when the text is bad or the file is missing. Guard with
   **JSON Is Valid**, or check the result before reading fields off it.
-- **The two "delete" verbs are the same call.** **Delete File** and **Remove Directory** both compile
+- **The two "delete" actions are the same call.** **Delete File** and **Remove Directory** both compile
   to `DirAccess.remove_absolute`, which only removes an EMPTY directory. Clear a folder's files before
   removing the folder.
 - **Paths are expressions.** Every path parameter takes any expression, so
@@ -57,7 +57,7 @@ and the writes guard the file handle, so a bad path cannot null-dereference.
 `res://` is your project folder. In the editor it is a real, writable directory, which is exactly why
 this trap survives testing: a save written to `res://save.dat` works perfectly right up until you
 export. In an exported game `res://` lives inside the packed archive and is **read-only**. Every write
-to it fails, and because the write verbs guard the handle rather than crashing, they fail quietly.
+to it fails, and because the write actions guard the handle rather than crashing, they fail quietly.
 
 `user://` is the per-user writable folder the engine provides on every platform (an application-data
 directory on desktop, the sandboxed container on mobile and web). Every write path in this module
@@ -66,15 +66,15 @@ defaults to `user://` for that reason, and every path hint says so.
 The rule in one line: **read from `res://`, write to `user://`**. Ship your level data, tables and
 defaults under `res://`; put saves, settings, logs and screenshots under `user://`.
 
-## Verb reference
+## Reference tables
 
 Ships as is the template the row compiles to. Where a template carries `{uid}`, the editor bakes a
-short per-row id into the local's name when you drop the row, so two of the same verb in one script
+short per-row id into the local's name when you drop the row, so two of the same action in one script
 never collide.
 
 ### Files
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | File Exists | True when a file exists at that path, so you can check before reading or writing | `FileAccess.file_exists({path})` |
 | Read Text File | The whole file's contents as text, empty if missing or unreadable | `FileAccess.get_file_as_string({path})` |
@@ -87,7 +87,7 @@ never collide.
 
 ### Files: Directories
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Directory Exists | True when a folder exists at that path | `DirAccess.dir_exists_absolute({path})` |
 | Make Directory | Creates a folder, building any missing parent folders along the way | `DirAccess.make_dir_recursive_absolute({path})` |
@@ -97,7 +97,7 @@ never collide.
 
 ### JSON
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | To JSON Text | Turns a dictionary, array, number, string or bool into compact JSON text | `JSON.stringify({value})` |
 | To JSON Text (pretty) | The same, indented with tabs so a human can read it | `JSON.stringify({value}, "\t")` |
@@ -324,7 +324,7 @@ On credits opened
 
 - **`res://` is read-only in an exported game.** Every write path here defaults to `user://` for that
   reason. A save that works in the editor and vanishes after export is nearly always this.
-- **A failed write is silent.** The write verbs guard the file handle, so a bad path does nothing
+- **A failed write is silent.** The write actions guard the file handle, so a bad path does nothing
   rather than crashing. If a file never appears, check the folder exists and the path starts with
   `user://`.
 - **Write Text File overwrites the whole file.** There is no "insert" and no partial write. Read,
@@ -344,11 +344,11 @@ On credits opened
   read. Guard with JSON Is Valid or File Exists.
 - **JSON Is Valid reads a document holding just the word `null` as invalid**, because its template is
   `JSON.parse_string(text) != null`. That is a shipped compatibility promise, so it will not change.
-  For a readable reason instead of a yes or no, the **Explain JSON Problem** verb reports the line and
-  the message, and branching on its emptiness sidesteps the disagreement entirely.
+  For a readable reason instead of a yes or no, the **Explain JSON Problem** expression reports the
+  line and the message, and branching on its emptiness sidesteps the disagreement entirely.
 - **JSON flattens types.** Every number comes back a float, and there is no Vector2 in JSON at all, so
   a saved `Vector2(3, 4)` returns as something else. If you need types to survive exactly, the share
-  code verbs in the Copying, Sharing And Remembering Values guide encode Godot's own binary Variant
+  code rows in the Copying, Sharing And Remembering Values guide encode Godot's own binary Variant
   form instead.
 - **JSON dictionary keys are always strings.** A dictionary keyed by numbers goes out as `"1"` and
   comes back as `"1"`, so a lookup by `1` misses.
@@ -359,5 +359,5 @@ On credits opened
   List Subdirectories if you need a tree.
 - **In an exported project, a converted `res://` text resource is stored with a trailing `.remap`.**
   Listing a `res://` data folder in an export will show names ending `.tres.remap` rather than
-  `.tres`, which is a trap when you build a list from file names. The folder verbs in the
+  `.tres`, which is a trap when you build a list from file names. The folder rows in the
   Reading Spreadsheets And Data Assets guide trim that suffix for you.

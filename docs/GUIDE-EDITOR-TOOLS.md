@@ -1,6 +1,6 @@
 # Editor Tools Guide - Automate the Godot Editor with Event Sheets
 
-An **editor tool** is an event sheet whose events run inside the Godot editor itself, never in the game. The same rows you use for gameplay - a trigger, some conditions, some actions - become one-click project chores: rename fifty nodes, generate a folder skeleton, sanity-check the open scene, stamp out a default settings file. The sheet compiles to a plain `@tool` script extending `EditorScript` (zero plugin dependency, like every compiled sheet), and you fire it from the script editor with **File > Run** (Ctrl+Shift+X). If you have ever copy-pasted a ten-line `EditorScript` from a forum, this is that - but as readable rows, with a picker full of editor verbs, and a Doctor that nudges you when a scene-mutating tool forgets undo.
+An **editor tool** is an event sheet whose events run inside the Godot editor itself, never in the game. The same rows you use for gameplay - a trigger, some conditions, some actions - become one-click project chores: rename fifty nodes, generate a folder skeleton, sanity-check the open scene, stamp out a default settings file. The sheet compiles to a plain `@tool` script extending `EditorScript` (zero plugin dependency, like every compiled sheet), and you fire it from the script editor with **File > Run** (Ctrl+Shift+X). If you have ever copy-pasted a ten-line `EditorScript` from a forum, this is that - but as readable rows, with a picker full of editor actions, conditions and expressions, and a Doctor that nudges you when a scene-mutating tool forgets undo.
 
 ---
 
@@ -71,7 +71,7 @@ That is the whole loop: edit rows, save, File > Run, read the Output panel. Ever
 
 **Files written by a tool need a rescan.** If your tool writes `.tres` or `.tscn` files to disk, the FileSystem dock does not notice by itself - end the tool with **Rescan Project Files** so they appear immediately.
 
-**Editor-only verbs stay in the editor.** The Editor Tools actions call `EditorInterface`, which only exists in the editor process. Keep them in Tool sheets; a gameplay sheet that needs to know where it is running can use the **Is In Editor** condition (`Engine.is_editor_hint()`) as a guard.
+**Editor-only actions stay in the editor.** The Editor Tools actions call `EditorInterface`, which only exists in the editor process. Keep them in Tool sheets; a gameplay sheet that needs to know where it is running can use the **Is In Editor** condition (`Engine.is_editor_hint()`) as a guard.
 
 ### Run it from the sheet - the tool's own Include bar
 
@@ -105,7 +105,7 @@ The two import/export types compile to a plain named function the editor calls (
 
 ## 4. The vocabulary - Editor Tools ACEs
 
-Open the picker inside an On Editor Run event and the **Editor Tools** category has the everyday editor-automation verbs. They compile to the exact plain Godot the editor exposes - `EditorInterface`, `ResourceSaver`, `DirAccess`, `Engine`, plus `SubViewport` / `RenderingServer` for Render Scene To Image, `RandomNumberGenerator` for Preview Table Rolls and `ConfigFile` for Write Version Stamp - with zero plugin references, so the generated script works in any Godot project.
+Open the picker inside an On Editor Run event and the **Editor Tools** category has the everyday editor-automation vocabulary. They compile to the exact plain Godot the editor exposes - `EditorInterface`, `ResourceSaver`, `DirAccess`, `Engine`, plus `SubViewport` / `RenderingServer` for Render Scene To Image, `RandomNumberGenerator` for Preview Table Rolls and `ConfigFile` for Write Version Stamp - with zero plugin references, so the generated script works in any Godot project.
 
 ### Trigger
 
@@ -188,7 +188,7 @@ It is not only for loot. Gacha pity tables, crit chances, encounter tables, biom
 - **Export Is Debug** - true for a debug build. Guard your test content with it and the release build never sees it.
 - **Export Has Feature** - true when the export preset carries a feature tag (`mobile`, `web`, `windows`, or a custom tag you added in Project > Export). Bake different data per platform without a second sheet.
 
-**Write Version Stamp** is the verb that makes it useful on day one: it writes a tiny `ConfigFile` holding your version string and the moment the stamp was written, which the game reads back in three lines:
+**Write Version Stamp** is the action that makes it useful on day one: it writes a tiny `ConfigFile` holding your version string and the moment the stamp was written, which the game reads back in three lines:
 
 ```gdscript
 var stamp := ConfigFile.new()
@@ -200,14 +200,14 @@ The timestamp is read when the tool *runs*, never baked into the generated scrip
 
 Four practical notes:
 
-- **Keep a bake step synchronous.** An export cannot wait for a row that waits: the moment the handler hits an `await`, the exporter carries on packaging files, and anything after that point may miss the build. The one Editor Tools verb that waits is **Render Scene To Image** (it waits for a drawn frame), so a thumbnail belongs in a File > Run tool rather than in a bake step. If a bake step does pause, the Output panel says so: "N tool(s) paused on an await and did not finish before the export continued."
+- **Keep a bake step synchronous.** An export cannot wait for a row that waits: the moment the handler hits an `await`, the exporter carries on packaging files, and anything after that point may miss the build. The one Editor Tools action that waits is **Render Scene To Image** (it waits for a drawn frame), so a thumbnail belongs in a File > Run tool rather than in a bake step. If a bake step does pause, the Output panel says so: "N tool(s) paused on an await and did not finish before the export continued."
 - **The sheet must be an Editor Tool sheet** (Sheet Type > Editor Tool, so it compiles to `@tool` + `extends EditorScript`). A node sheet that declares the trigger is skipped with a warning naming the file, because instantiating a node script during an export would leak a node into the editor.
 - **Create the file once before you rely on it.** The bake step rewrites the file at export time, and an export reads what is on disk - but a path the project has never seen may not be in the export's file list yet. Run the tool once (File > Run), let the FileSystem dock pick the file up, and every export after that refreshes its contents.
 - **Several bake steps run in path order.** If two tools touch the same file, that order is the same on your machine and in CI.
 
 ### The Editor object - what a tool talks to
 
-Everything in this category belongs to one object: the **Editor**. It stands next to System in the picker, and a row of it wears "Editor" in its object cell, so a tool reads the way every other sheet reads - object, then verb, then the values:
+Everything in this category belongs to one object: the **Editor**. It stands next to System in the picker, and a row of it wears "Editor" in its object cell, so a tool reads the way every other sheet reads - object, then what it does, then the values:
 
 ```
 Editor  On plugin enabled          Editor ▸ Add Tools menu item "Snap Selection"
@@ -346,7 +346,7 @@ System  For each n in nodes          ur ▸ Add do step: set n's x to left
                                      ur ▸ Commit undoable action
 ```
 
-Object, then verb, one step per row - the same shape as `Player ▸ Set position`. Two things make that readable rather than merely shorter: the variable is declared as what it *is* (an object you go on to call actions on, not a nameless value), and Godot's property addressing stays out of the sentence - `"position:x"` reads as `x`, because the object it belongs to is already named on the row.
+Object, then what it does, one step per row - the same shape as `Player ▸ Set position`. Two things make that readable rather than merely shorter: the variable is declared as what it *is* (an object you go on to call actions on, not a nameless value), and Godot's property addressing stays out of the sentence - `"position:x"` reads as `x`, because the object it belongs to is already named on the row.
 
 ### Three more things the Doctor watches on a tool
 
@@ -678,7 +678,7 @@ The mobile preset gets the low-quality settings resource; the release build lose
 - **The Inspector button does not appear (or does nothing).** The sheet must be a Tool sheet - `@export_tool_button` only runs in the editor under `@tool`. The compiler warns on save: "Tool buttons need a @tool sheet to run in the editor - enable Tool in the Sheet Type dialog." Also re-select the node after recompiling so the Inspector rebuilds.
 - **My validator never shows its message.** Same root cause: validate runs in-editor only on @tool sheets, and it is silent otherwise. Check Tool in the Sheet Type dialog, and make sure the function returns `""` (not nothing) for the valid case.
 - **The Doctor flagged "editor-tool-undo" - do I have to fix it?** It is an info finding, not an error. For a one-off script you re-run freely, ignore it. For a tool other people click, wrap the scene edits in `EditorInterface.get_editor_undo_redo()` `create_action` / `commit_action` as shown in section 7, and the finding goes away.
-- **Editor Tools actions crash in the running game.** `EditorInterface` exists only in the editor process. Keep Editor Tools verbs in Tool sheets; in a @tool node sheet that also runs in-game, gate editor-only rows behind the **Is In Editor** condition.
+- **Editor Tools actions crash in the running game.** `EditorInterface` exists only in the editor process. Keep Editor Tools actions in Tool sheets; in a @tool node sheet that also runs in-game, gate editor-only rows behind the **Is In Editor** condition.
 - **Ctrl+Z after a run undoes nothing.** Direct mutations (plain `add_child`, plain property sets) bypass the editor's undo history by design. Only changes registered through `create_action` / `add_do_*` / `add_undo_*` / `commit_action` are undoable.
 - **Render Scene To Image wrote nothing and warned about a display.** You ran it in a headless Godot (`--headless`, a CI job). There is no renderer there, so the action refuses rather than saving a blank file. Run it from the normal editor.
 - **The rendered PNG is empty (or transparent).** The scene has nothing photographing it. Add a `Camera2D` / `Camera3D` to the scene you are rendering (a 3D scene also needs a light), or render a `Control` scene, which needs neither.
@@ -713,7 +713,7 @@ Press **Compare** and you get two columns. On the left, rows of the open sheet t
 1. **Review a teammate's changes in rows.** Open your copy, compare against theirs, read the difference as events instead of as a generated-script diff.
 2. **Restore one event from a backup.** A bad edit half an hour ago: compare against the backup, bring back the one row, keep everything since.
 3. **Compare two difficulty variants.** Point one level sheet at the other and see exactly which numbers and guards differ.
-4. **Prove a refactor changed nothing.** Extract verbs, reorder groups, then compare against the last save: "identical" is the proof.
+4. **Prove a refactor changed nothing.** Extract functions, reorder groups, then compare against the last save: "identical" is the proof.
 5. **Code review on a pull request.** Check out the branch, browse to the changed `.gd`, and read the change in the language the author wrote it in.
 6. **Debug a pack upgrade.** Compare the old shipped `.gd` against the republished one to see what a version bump actually moved.
 7. **Recover from a bad merge.** Compare against the pre-merge backup and bring back the rows the merge dropped.
@@ -748,20 +748,20 @@ Click an entry and the sheet jumps to that row and selects it.
 
 ![Find Repeated Rows: identical action runs across the sheet, ranked by rows saved, with Make a Function](images/tools-find-repeated-rows.png)
 
-The abstraction lever already ships: right-click an event > **Extract All Actions to Function…** turns a run of actions into one named verb. What it cannot do is *notice*. **Tools > Find Repeated Rows…** scans the whole sheet for identical ordered runs of actions that appear twice or more, ranks them by rows saved, and lists each with the actions it contains.
+The abstraction lever already ships: right-click an event > **Extract All Actions to Function…** turns a run of actions into one named function. What it cannot do is *notice*. **Tools > Find Repeated Rows…** scans the whole sheet for identical ordered runs of actions that appear twice or more, ranks them by rows saved, and lists each with the actions it contains.
 
 Pick one, press **Make a Function…**, and name it. The run is extracted at the first place it appears - by the same extractor the right-click gesture uses - and every other occurrence is replaced with a Call to the new function. One undo step for the lot: a half-applied refactor would be worse than none.
 
-A run that leans on an event-local variable or a For Each item is listed and marked **needs parameters**, and the button stays off. Those sites cannot share one verb without arguments, and offering a one-click fix that fails would be worse than saying so.
+A run that leans on an event-local variable or a For Each item is listed and marked **needs parameters**, and the button stays off. Those sites cannot share one function without arguments, and offering a one-click fix that fails would be worse than saying so.
 
 **Use cases**
 
 1. **A sheet that grew during a jam.** The repeats you pasted at 3am are exactly the concepts the game turned out to have.
 2. **Copy-paste drift.** Two of five copies were updated and three were not: the scan reports three occurrences instead of five, which is the bug.
-3. **Turning a prototype into a behaviour pack.** The repeated runs are the verbs the pack should publish.
+3. **Turning a prototype into a behaviour pack.** The repeated runs are the functions the pack should publish.
 4. **Inheriting a project.** The repeats name its real concepts before anyone has written a document about them.
 5. **Shrinking generated output.** A size-sensitive export gets smaller by exactly the rows the list says it will.
-6. **Feeding Teach a Verb.** Publish the extracted verb project-wide instead of waiting to notice the repetition again.
+6. **Feeding Teach a Verb.** Publish the extracted function project-wide instead of waiting to notice the repetition again.
 
 ---
 
@@ -788,7 +788,7 @@ On Test Start (test_name)     →  Watch for signal "died" on "P" for 2 s
 
 The vocabulary lives in the picker's **Testing** section:
 
-| Verb | Kind | What it does |
+| Name | Kind | What it does |
 | --- | --- | --- |
 | On Test Start | trigger | Runs when a runner starts this sheet. The test's name arrives as a parameter. |
 | Assert That | action | Records a pass when a check is true, a failure with "expected true, got false" when it is not. |

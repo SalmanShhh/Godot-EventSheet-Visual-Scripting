@@ -62,7 +62,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | Layers | CanvasLayers / scene tree order |
 | The expression language | **GDScript** - there is no separate language to learn |
 | Scripting (JS blocks) | GDScript blocks: class-level or in-flow inside events, with lint + completion |
-| Functions (event sheets) | Sheet functions - callable as actions, optionally **exposed as ACEs** project-wide. Turn a selection of actions into one via **Extract-to-Function** (calls render as a first-class **ƒ** verb) |
+| Functions (event sheets) | Sheet functions - callable as actions, optionally **exposed as ACEs** project-wide. Turn a selection of actions into one via **Extract-to-Function** (calls render as a first-class **ƒ** action) |
 | Timer behavior | **TimerBehavior pack** (Start/Stop Timer, On Timer) - or a Timer node + `On Timeout` |
 | Flash / Tween behaviors | **FlashBehavior pack** (Flash, On Flash Finished); tweens via a GDScript block (`create_tween()…`) |
 
@@ -175,7 +175,7 @@ play the role both run at a definite, visible point:
 | Include a behaviour sheet for a whole family of objects | A **behavior pack** on the node | In scene-tree order each tick, as a separate node - NOT where any include line sits |
 
 So when you reach for an include meaning "run this shared logic here, now", the honest mapping
-is a called verb. When you reach for it meaning "give these objects this behavior", it is a
+is a called function. When you reach for it meaning "give these objects this behavior", it is a
 pack, and its ordering is the tree's.
 
 Rules of thumb, in the sheet's own terms:
@@ -194,7 +194,7 @@ Rules of thumb, in the sheet's own terms:
 | Construct 3 | Godot EventSheets |
 | --- | --- |
 | **Dictionary** addon (Add key, Delete key, Has key, For each key…) | First-class: declare a `Dictionary` variable, then use the **Variables: Dictionary** picker group (Set Key, Delete Key, Has Key, Get/Keys/Values/Size). "For each key" = a pick filter over `your_dict.keys()`. |
-| **Array** addon (Push, Pop, Insert, Sort, Contains…) | First-class: declare an `Array` (or typed `Array[int]`) variable, then the **Variables: Array** group (Push Back, Insert At, Delete At, Erase, Sort, Shuffle, Contains, Value At, Pick Random). |
+| **Array** addon (Push, Pop, Insert, Sort, Contains…) | First-class: declare an `Array` (or typed `Array[int]`) variable, then the **Variables: Array** group (Push Back, Insert At, Delete At, Delete Value, Sort, Shuffle, Contains, Value At, Pick Random). |
 | **JSON** plugin (Parse, Stringify, Load/Save) | The **JSON** group: To/From JSON Text, JSON Is Valid, Save/Load JSON File (`user://` paths survive exports). |
 | **XML** plugin | Intentionally unsupported - Godot has no XML writer/XPath. Use JSON. |
 
@@ -214,7 +214,7 @@ The picker wraps the native feature:
 | Construct 3 | Godot EventSheets |
 | --- | --- |
 | Tween behavior | **Tween Property** action (Godot's `create_tween`; all the ease names map to `Tween.TRANS_*` + `EASE_*`) |
-| Go to layout / restart layout | **Go To Scene / Restart Scene** (Scene group; also Quit, Pause, Spawn Scene Instance) |
+| Go to layout / restart layout | **Go To Layout / Restart Layout** (Scene group; also Quit, Pause, Spawn Scene Instance) |
 | Audio | **AudioStreamPlayer** group (Play/Stop Sound, Set Volume dB, Is Playing) - Play Sound remembers the LAST SOUND, so Set Last Sound Playback Rate right after gives per-shot pitch variation, C3-style (the default is randf_range(0.9, 1.1)) |
 | Sprite animations | **AnimatedSprite2D** group (Play/Stop Animation, Set Frame, Set Mirrored) |
 | Pathfinding behavior | **NavigationAgent2D** group (Find Path To, Has Arrived, Next Path Position) |
@@ -281,12 +281,12 @@ i18n (Godot translations).
   included.
 - **Double-click empty space and you get C3's two-step add**: page one is *object cards* -
   System first, then every behavior pack, autoload, and addon with its icon - and picking
-  one scopes the picker to that object's verbs, exactly like choosing an object then a
+  one scopes the picker to that object's own vocabulary, exactly like choosing an object then a
   condition in C3. Typing at any point drops into full search, so the fast path stays fast.
   The important difference to notice: what C3 calls an *object type* is here a **node with
   a behavior attached, or an autoload** - the dialog is quietly teaching you Godot's own API.
 - **Event numbers live in the margin**, flat and sequential through groups and sub-events,
-  computed from the sheet - folding or filtering never renumbers, so "check event 34" in a
+  computed from the sheet - collapsing or filtering never renumbers, so "check event 34" in a
   forum reply stays meaningful. Jump to one with the command palette's *Go to Event Number*.
 - **The bookmarks bar is C3's**: Ctrl+M marks a row, F4 / Shift+F4 cycle, and Tools >
   Bookmarks… opens the Previous / Next / Clear All panel whose entries lead with their
@@ -352,16 +352,16 @@ i18n (Godot translations).
   configured per-instance in the Inspector.
 - **The add keys meet you before you type.** `E` / `C` / `A` open the Ghost Row - a small
   type-a-sentence popup at the selected row - and it greets you with **suggestion chips**
-  of your most-used verbs for that key (the picker's featured verbs until you have habits).
-  One chip click adds the verb and hops straight into its first parameter, so a familiar
-  add is zero typing. Once you do type, the ranked list **learns**: at equal match quality
-  the verb you actually use wins the tie, the summoning key leans toward its own kind
+  of your most-used conditions and actions for that key (the picker's featured ones until
+  you have habits). One chip click adds the row and hops straight into its first parameter,
+  so a familiar add is zero typing. Once you do type, the ranked list **learns**: at equal
+  match quality the one you actually use wins the tie, the summoning key leans toward its own kind
   (`A` prefers actions), and every suggestion names the next parameter your sentence has
   not filled yet ("⚡ Heal · amount…") so you always know what the next word will do.
 
   <img src="images/ghost-row-chips.png" alt="The Ghost Row popup twice: freshly opened with suggestion chips (Play Sound, Set Variable, Make Shuffle Bag, Set Seed) under the query field, and after typing 'heal' with the ranked list showing each Heal candidate naming its next unfilled parameter - amount, target." width="640">
 - **Repeated values are one pick, not a retype.** Parameter fields remember the last five
-  values you committed for that exact verb-and-parameter across the whole project, offered
+  values you committed for that exact row-and-parameter across the whole project, offered
   from a small dropdown on the field's row - the third time an action needs `"jump"` or
   `res://sfx/hit.ogg`, it is a pick instead of a retype.
 - **You always know which group you are in.** On long sheets a slim breadcrumb strip
@@ -373,9 +373,9 @@ i18n (Godot translations).
   size, only the air shrinks - and toggling it off restores the roomier default. The choice
   is remembered per project.
 - **Rows read like C3's.** Every substituted parameter value draws **bold** inside its
-  sentence, node/object references draw *italic* in the verbs that take one ("add
+  sentence, node/object references draw *italic* in the rows that take one ("add
   *$Enemy* to **"enemies"**"), and numbers, strings and booleans keep their tints -
-  automatic for every built-in verb and behavior pack, no authoring required.
+  automatic for every built-in row and behavior pack, no authoring required.
 - **Your C3 keyboard grammar works verbatim** (rebindable via Tools > Keyboard Shortcuts):
 
   | Key | Action |

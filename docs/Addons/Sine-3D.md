@@ -156,7 +156,7 @@ Three actions come from the behavior's own methods (**Set Sine 3D Active**, **Se
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$Sine3DBehavior.active` inserts the **Active** entry straight into any expression
 - `$Sine3DBehavior.magnitude` inserts the **Magnitude** entry straight into any expression

@@ -17,7 +17,7 @@ per-language files, voice clips with captions that cannot out-run them, and data
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
-4. [Verb reference](#verb-reference)
+4. [Reference tables](#reference-tables)
 5. [Use cases](#use-cases)
 6. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -41,7 +41,7 @@ per-language files, voice clips with captions that cannot out-run them, and data
   column is the source string (its header cell is ignored, so it is usually spelled `keys`), and every
   other column is one language. A `.po` gettext catalog works too and can carry more plural forms.
 - **A missing key is not an error.** `tr()` hands the key straight back, so the player reads
-  `MENU_TITLE` and nothing warns. Three verbs make that visible: **Text Is Translated**, **Language
+  `MENU_TITLE` and nothing warns. Three rows make that visible: **Text Is Translated**, **Language
   Has Text For** and **Translated Text Or Fallback**.
 - **Match, do not compare.** `compare_locales` scores a pair of locales from 0 to 10, so `pt_BR`
   against `pt` scores 5. **Language Matches** is true for an `en_US` player asked about `en`, which a
@@ -82,7 +82,7 @@ On Ready
   -> use the saved language, otherwise OS.get_locale()
 ```
 
-## Verb reference
+## Reference tables
 
 On the canvas these read as sentences with the values in bold, exactly as the rows draw them:
 
@@ -93,7 +93,7 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Switching, reading and reacting to the language
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Language | Switches the game's language live. | `TranslationServer.set_locale({locale})` |
 | Use Saved Language | Applies the language the player picked last time, falling back on a first run. | a three-line `ConfigFile` block reading `user://settings.cfg`, section `game`, key `language` |
@@ -110,7 +110,7 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Looking text up
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Translate | Looks the text up in the current language. | `tr({text})` |
 | Translate With Context | The same, with a context that disambiguates identical strings. | `tr({text}, {context})` |
@@ -126,7 +126,7 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Labels that follow the language
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Text (follows language) | Sets a Label's text AND remembers the key on the node. | `set_meta(&"follows_language_key", {key})`, `add_to_group(&"follows_language", true)`, `text = tr({key})` |
 | Set Text (counted) | Sets a Label to the counted sentence in one row. | `text = ` plus the same form chooser and `%d` fill as Counted Text |
@@ -135,7 +135,7 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Numbers and dates
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Number In Local Digits | Writes a number in the digits the language uses. | `TranslationServer.format_number(str({value}), {locale})` |
 | Number From Local Digits | Turns digits the player typed back into plain ASCII ones. | `TranslationServer.parse_number({text}, {locale})` |
@@ -144,19 +144,19 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Is the catalog actually finished?
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Translation Coverage | How much of the spreadsheet that language fills, 0 to 100. | a lambda over the parsed `.csv` rows, counting unfilled cells, 0.0 for an empty file |
 | Missing Translation Keys | The list of source strings that language has NOT filled, in file order. | the same parse, filtered to unfilled rows and mapped to their first column |
 | Translation Is Complete | True only when every source string has a filled cell for that language. | "has rows AND none of them are unfilled" over the same parse |
 | Test With Fake Translation | Turns Godot's pseudolocalization on, so unmarked strings stay plain. | `TranslationServer.set_pseudolocalization_enabled({on})` |
 
-The three catalog verbs share three parameters: `locale` (the column heading, spelled exactly as it
+The three catalog rows share three parameters: `locale` (the column heading, spelled exactly as it
 appears in the file), `path` (the `.csv`), and `separator`.
 
 ### Content that is not a string
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Localized File | The path that exists for the player's language, or the base file. | a lambda resolving `<name>.<locale>.<ext>`, then `<name>.<language>.<ext>`, then the base path |
 | Load For Language | Loads that variant. | `load(...)` around the same resolution |
@@ -167,7 +167,7 @@ appears in the file), `path` (the `.csv`), and `separator`.
 | Translated Field Of | Reads a record's field as a translation key. | a lambda over `{record}.get({field})` returning `tr(str(...))`, or `""` for null |
 | Translated Column Of Table | A whole column read as translated text, in row order. | `{table}.map(...)` around the same field read |
 
-The voice verbs take `key` (the line's name, which is both the catalog key and the clip's file name),
+The voice rows take `key` (the line's name, which is both the catalog key and the clip's file name),
 `folder` (one subfolder per language inside it) and `extension` (the clip format). **Say Line** adds
 `caption` (the label the subtitle lands on, or null for voice with no caption) and an **On node**
 target so the row can point at any `AudioStreamPlayer`.
@@ -275,8 +275,8 @@ Every tick
   -> set BasketLabel text = Counted Text("%d apple", "%d apples", basket_count)
 ```
 
-**11. Set a Label's counted line in one row.** **Set Text (counted)** is the same verb with nothing to
-nest. Re-run it under **On Language Changed** so it follows a live switch.
+**11. Set a Label's counted line in one row.** **Set Text (counted)** is the same sentence as a single
+action, with nothing to nest. Re-run it under **On Language Changed** so it follows a live switch.
 
 **12. A counted sentence carrying more than the count.** **Counted Text From Pattern** lets the
 language pick the form first and the slots fill after, so a translator can move `{n}` and `{total}`
@@ -460,7 +460,7 @@ so the list stays the same length as the table.
   assigns the result, that node stops following the language. That is the whole reason **Set Text
   (follows language)** and **Refresh Text That Follows Language** exist.
 - **Set Text (follows language) takes plain keys only.** For a sentence with values in it, use the
-  translated-pattern verbs and re-run them from a function under On Language Changed.
+  translated-pattern expressions and re-run them from a function under On Language Changed.
 - **Region Is wants capitals.** The country code is checked against its own uppercase form, which is
   what stops a script subtag (the `Hans` in `zh_Hans`) from being mistaken for a country. Plain `pt`
   has no region and answers false.

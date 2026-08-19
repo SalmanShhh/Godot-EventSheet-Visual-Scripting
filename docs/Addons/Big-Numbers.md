@@ -1,6 +1,6 @@
 # Big Numbers
 
-Big Numbers is the number-formatting layer an idle or incremental game lives on, callable from any event sheet. It turns raw values into the compact, readable strings the genre depends on - `1250000` becomes `"1.25M"`, `3725` seconds becomes `"1h 2m 5s"`, `0.25` becomes `"25%"` - and it carries the whole short-scale ladder past a trillion (K M B T Qa Qi Sx Sp Oc No Dc) before falling through to scientific notation. It also ships a **Decimal** type: an `[mantissa, exponent]` pair that lets a value keep growing past a float's `~1.8e308` ceiling, the way an Antimatter-Dimensions-scale prestige game needs. It installs as an **autoload**: once the pack is in place it is the `BigNumber` singleton, live from the first frame with no node to place and no wiring. It does **not** store your numbers, draw your HUD, or touch a wallet - it is a bank of pure calculators. There are no actions and no triggers here; every verb is an expression (or one of two comparison conditions) that takes a value and hands back a formatted string, a number, or a Decimal.
+Big Numbers is the number-formatting layer an idle or incremental game lives on, callable from any event sheet. It turns raw values into the compact, readable strings the genre depends on - `1250000` becomes `"1.25M"`, `3725` seconds becomes `"1h 2m 5s"`, `0.25` becomes `"25%"` - and it carries the whole short-scale ladder past a trillion (K M B T Qa Qi Sx Sp Oc No Dc) before falling through to scientific notation. It also ships a **Decimal** type: an `[mantissa, exponent]` pair that lets a value keep growing past a float's `~1.8e308` ceiling, the way an Antimatter-Dimensions-scale prestige game needs. It installs as an **autoload**: once the pack is in place it is the `BigNumber` singleton, live from the first frame with no node to place and no wiring. It does **not** store your numbers, draw your HUD, or touch a wallet - it is a bank of pure calculators. There are no actions and no triggers here; every entry is an expression (or one of two comparison conditions) that takes a value and hands back a formatted string, a number, or a Decimal.
 
 ## Table of Contents
 
@@ -47,8 +47,8 @@ Big Numbers has two layers, and picking the right one is the whole mental model.
 A few rules tie it together:
 
 - **This pack stores nothing.** There is no "balance" here. You keep your own values (in a sheet variable, or in the Currency Ledger pack for plain money) and call a formatter when you draw.
-- **Decimals live in your variables.** `Make` and the maths verbs return an `Array`; assign it to a variable and pass that variable back in next time. `To Number` converts one back to a plain float (which may be `Infinity` if it is above `1.8e308`).
-- **Decimals stay normalized.** Every Decimal verb re-normalizes its result, so you never have to tidy the mantissa yourself.
+- **Decimals live in your variables.** `Make` and the maths expressions return an `Array`; assign it to a variable and pass that variable back in next time. `To Number` converts one back to a plain float (which may be `Infinity` if it is above `1.8e308`).
+- **Decimals stay normalized.** Every Decimal expression re-normalizes its result, so you never have to tidy the mantissa yourself.
 - **Add drops the negligible term.** When two Decimals differ by more than ~15 orders of magnitude the smaller one is below float precision and is dropped - by design, and invisible at idle scale.
 - **The wallet is a different pack.** Currency Ledger holds and spends plain-number money; Big Numbers only formats. Where a use case spends, it calls `CurrencyLedger.Spend(...)`; where it displays, it wraps the value in `BigNumber.Format Short(...)`.
 
@@ -76,12 +76,12 @@ That is the pattern for the whole pack: keep the number yourself, and call a `Fo
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Format **value** short with **decimals** decimals
 - Format big **decimal** with **decimals** decimals
 
-Every formatter takes a value (and usually a `decimals` count) and returns a string; the Decimal verbs take and return `Array` Decimals. All names are the exact display names from the pack.
+Every formatter takes a value (and usually a `decimals` count) and returns a string; the Decimal expressions take and return `Array` Decimals. All names are the exact display names from the pack.
 
 ### Actions
 
@@ -130,7 +130,7 @@ This pack ships **no triggers**. Formatting is pure and instant, so there is not
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$BigNumberAddon.fmt_short(value, decimals)` inserts the **Fmt Short** entry straight into any expression
 - `$BigNumberAddon.fmt_scientific(value, decimals)` inserts the **Fmt Scientific** entry straight into any expression
@@ -367,10 +367,10 @@ On Buy Pressed
 
 - **This pack never stores anything.** There is no balance and no "current value" inside Big Numbers. Keep your own number in a sheet variable (or use the Currency Ledger pack for plain money) and call a `Format ...` expression when you draw. Big Numbers is all read-only calculators.
 - **It never touches the wallet.** Spending money is Currency Ledger's job: `CurrencyLedger.Spend("gold", price)`. Big Numbers only turns the price into a label with `BigNumber.Format Short(price, 2)`. Mixing the two is the intended split.
-- **There are no actions and no triggers.** Every verb is an expression you read inside a value field, plus the two Decimal comparison conditions. Drive your displays off your own game's triggers or off `CurrencyLedger.On Amount Changed`.
+- **There are no actions and no triggers.** Every entry is an expression you read inside a value field, plus the two Decimal comparison conditions. Drive your displays off your own game's triggers or off `CurrencyLedger.On Amount Changed`.
 - **Plain floats are good to about `1e300` - Decimals are for past `1.8e308`.** Below the ceiling, format the raw number with `Format Short` and skip the Decimal ceremony. Only switch a value to a Decimal once it can realistically overflow, or a plain float will silently become `Infinity` and corrupt your save.
 - **A Decimal is an `[mantissa, exponent]` Array - carry both parts.** To persist one, save `decimal[0]` and `decimal[1]` and rebuild it with `Make(...)` on load. Storing only one half loses the value.
-- **Do maths on Decimals with the Decimal verbs, not `+` and `*`.** Adding two Decimals with plain `+` concatenates arrays; use `Add`, `Multiply`, `Scale`, and friends so the result stays a normalized Decimal.
+- **Do maths on Decimals with the Decimal expressions, not `+` and `*`.** Adding two Decimals with plain `+` concatenates arrays; use `Add`, `Multiply`, `Scale`, and friends so the result stays a normalized Decimal.
 - **`Add` drops a term that is ~15+ orders of magnitude smaller.** That is correct at idle scale (the small term is below float precision) but means micro-amounts vanish next to a huge stockpile - by design, not a bug.
 - **`To Number` can hand back `Infinity`.** It is only safe while the Decimal is under `1.8e308`. For endgame values keep everything in Decimal and render with `Format Big` instead of converting.
 - **The short formatters fall through to scientific past Dc.** `Format Short` and `Format Big` only carry named suffixes to `Dc` (`1e33`); above that they emit `"...e42"` style strings automatically, so a very large number never returns a blank suffix.

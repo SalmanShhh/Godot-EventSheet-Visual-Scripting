@@ -1,11 +1,11 @@
 # Working With Tilemaps
 
-Ten builtin verbs that let event rows read and write a **TileMapLayer**: paint a tile, erase one, wipe
-the layer, ask what is in a cell, count what is placed, and convert between pixel positions and grid
-coordinates. No pack to enable, no behavior to attach - drop a row on a TileMapLayer sheet (or point any
+Ten builtin actions, conditions and expressions let event rows read and write a **TileMapLayer**: paint
+a tile, erase one, wipe the layer, ask what is in a cell, count what is placed, and convert between
+pixel positions and grid coordinates. No pack to enable, no behavior to attach - drop a row on a TileMapLayer sheet (or point any
 row at one with **On node**) and it compiles to the exact native call you would have written by hand.
 
-These are the verbs behind destructible terrain, dig-and-build games, roguelike level generation,
+This is the vocabulary behind destructible terrain, dig-and-build games, roguelike level generation,
 grid-snapped placement, fog of war, tile-based puzzle boards, and anything else where the world is a
 grid rather than a pile of nodes.
 
@@ -13,7 +13,7 @@ grid rather than a pile of nodes.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -32,9 +32,9 @@ grid rather than a pile of nodes.
 
 ## Core concepts
 
-- **The host is a TileMapLayer.** These verbs target Godot's `TileMapLayer` node (Godot 4.3 and later),
+- **The host is a TileMapLayer.** These rows target Godot's `TileMapLayer` node (Godot 4.3 and later),
   where each layer is its own node. The legacy `TileMap` node took a layer index argument that these
-  verbs deliberately omit. A tilemap with three layers is three TileMapLayer nodes, and you point a row
+  rows deliberately omit. A tilemap with three layers is three TileMapLayer nodes, and you point a row
   at whichever one you mean.
 - **A cell is a Vector2i.** Every coordinate parameter is a grid coordinate written as a Vector2i
   expression, e.g. `Vector2i(3, -2)`. They are integers and they can be negative; the grid extends in
@@ -53,13 +53,13 @@ grid rather than a pile of nodes.
   TileMapLayer and compiles to the bare call in the Ships-as column. Filled in, the same call is prefixed
   with the node you picked, so one sheet can paint several layers.
 
-## Verb reference
+## Reference tables
 
 The **Ships as** column is the emitted GDScript with **On node** left blank.
 
 ### Actions - writing cells
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Cell | Paints a tile at a grid cell using a tile source and atlas position. | `set_cell({coords}, {source_id}, {atlas_coords})` |
 | Erase Cell | Clears the tile at a single grid cell, leaving it empty. | `erase_cell({coords})` |
@@ -67,14 +67,14 @@ The **Ships as** column is the emitted GDScript with **On node** left blank.
 
 ### Conditions - asking about a cell
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Cell Is Empty | True when the chosen tilemap cell has no tile in it. | `get_cell_source_id({coords}) == -1` |
 | Cell Has Tile | True when the chosen tilemap cell actually has a tile placed. | `get_cell_source_id({coords}) != -1` |
 
 ### Expressions - reading the grid
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Cell Source Id | Returns the tile source ID at a cell, or -1 when empty. | `get_cell_source_id({coords})` |
 | Cell Atlas Coords | Returns which tile in the atlas sits at the given cell. | `get_cell_atlas_coords({coords})` |
@@ -271,9 +271,9 @@ On spawn enemy
 - **Used Cells Count builds an array every call.** It emits `get_used_cells().size()`, which allocates
   the full list of used cells each time. That is fine on an event, and wasteful inside a per-frame row
   on a large map - cache it in a variable and update it when you actually change a cell.
-- **These are TileMapLayer verbs.** On a project still using the legacy TileMap node they will not
+- **These are TileMapLayer rows.** On a project still using the legacy TileMap node they will not
   appear in the picker, because the picker scopes by node type.
-- **Erase Cell is not Set Cell with source -1.** Use Erase Cell; it is the verb that exists and the one
+- **Erase Cell is not Set Cell with source -1.** Use Erase Cell; it is the action that exists and the one
   the emitted code reads clearest as.
 - **On node lets one sheet drive several layers**, and a blank On node compiles byte-for-byte to the bare
   host call - so adding a target later never disturbs the rows around it.

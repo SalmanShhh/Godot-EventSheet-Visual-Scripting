@@ -3,13 +3,13 @@
 **Colors, Gradients And Curves** is the builtin vocabulary for making a colour out of another colour,
 and for reading a smooth value out of a shape somebody drew.
 
-Seven **Color** verbs cover the everyday colour maths a game needs - a hit flash, a fade, a rarity
-tint, a health bar that runs green to red - without dropping to GDScript and without mixing channels
-by hand. Three **Gradients & Curves** verbs cover the smooth cases: build a quick two-colour ramp at
+Seven **Color** expressions cover the everyday colour maths a game needs - a hit flash, a fade, a
+rarity tint, a health bar that runs green to red - without dropping to GDScript and without mixing
+channels by hand. Three **Gradients & Curves** rows cover the smooth cases: build a quick two-colour ramp at
 runtime, and sample any gradient or curve at a 0-to-1 position.
 
 Every colour parameter is a full expression, which is what makes them compose: a literal, the node's
-own `modulate`, or another colour verb all drop into the same cell. `Lighten Color(Lerp Color(base,
+own `modulate`, or another colour expression all drop into the same cell. `Lighten Color(Lerp Color(base,
 Color(1, 0, 0, 1), damage), 0.3)` is one legal cell.
 
 Everything compiles to plain Godot with zero plugin references: *lighten `modulate` by `0.2`* ships
@@ -19,7 +19,7 @@ as `(modulate).lightened(0.2)`.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Authoring a rich gradient or curve](#authoring-a-rich-gradient-or-curve)
 5. [Use cases](#use-cases)
 6. [Tips and common mistakes](#tips-and-common-mistakes)
@@ -41,7 +41,7 @@ as `(modulate).lightened(0.2)`.
 
 ## Core concepts
 
-- **Colours are values.** Every Color verb here is an EXPRESSION - it hands back a new colour and
+- **Colours are values.** Every Color row here is an EXPRESSION - it hands back a new colour and
   changes nothing. To put one on screen, feed it to something that takes a colour: the builtin
   Set Color Tint / Set Self Tint actions, a Label's font colour, a shader parameter.
 - **Channels are 0 to 1, not 0 to 255.** `Color(1, 0, 0, 1)` is opaque red. Color From Hex is the
@@ -54,7 +54,7 @@ as `(modulate).lightened(0.2)`.
 - **A gradient is a ramp; a curve is a shape.** Sample either one at a position from 0 to 1. A
   Gradient hands back a Color, a Curve hands back a number.
 - **Position is normalized, not "seconds" or "pixels".** Convert first: `elapsed / duration`,
-  `distance / max_distance`, `health / max_health`. The builtin Progress Of verb is exactly that
+  `distance / max_distance`, `health / max_health`. The builtin Progress Of expression is exactly that
   conversion with the clamp already applied.
 - **Make Gradient is the quick two-colour case.** For a ramp with more than two stops, give a sheet
   variable the Gradient type and edit it in the Inspector with Godot's own ramp editor - the same is
@@ -62,14 +62,14 @@ as `(modulate).lightened(0.2)`.
 - **Make Gradient is the only ACTION here.** It builds into a variable, which the other two then
   read.
 
-## Verb reference
+## Reference tables
 
 On the canvas these read as sentences with the values drawn in place: *lighten `modulate` by `0.2`*,
 *lerp `Color(0, 1, 0, 1)` to `Color(1, 0, 0, 1)`*, *sample `ramp` at `0.5`*.
 
 ### Color
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Lighten Color | The colour shifted toward white by a 0-to-1 amount. | `({color}).lightened({amount})` |
 | Darken Color | The colour shifted toward black by a 0-to-1 amount. | `({color}).darkened({amount})` |
@@ -81,7 +81,7 @@ On the canvas these read as sentences with the values drawn in place: *lighten `
 
 ### Gradients & Curves
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Make Gradient | ACTION: builds a smooth two-colour ramp into a Gradient-typed variable at runtime. | `var __grad_{uid} := Gradient.new()` then `__grad_{uid}.set_color(0, {from})`, `__grad_{uid}.set_color(1, {to})`, `{var_name} = __grad_{uid}` |
 | Sample Gradient | The colour at a 0-to-1 position along a gradient. 0 is the first colour, 1 is the last. | `{gradient}.sample({position})` |
@@ -96,7 +96,7 @@ Make Gradient covers two stops. Anything richer is authored, not built:
    colour stops, and the curve editor with draggable points and tangents.
 3. Sample it from any row with Sample Gradient or Sample Curve.
 
-That is the whole workflow, and it is why the sampling verbs take a **variable reference** rather
+That is the whole workflow, and it is why the sampling expressions take a **variable reference** rather
 than a literal: the ramp or the curve is a thing a designer owns and edits, and the sheet only reads
 it.
 
@@ -303,10 +303,10 @@ Darken Color by a player-set amount, so a photosensitivity option is one slider 
   out-of-range value. Use Color From Hex when your source is a `#rrggbb` string.
 - **Lightened is not the same as raising Value in HSV.** Lightening mixes toward white and washes the
   saturation out; raising V keeps the hue pure. Pick the one that matches what you meant.
-- **Nothing here changes anything on screen by itself.** Every Color verb hands back a value. Feed it
-  to Set Color Tint, Set Self Tint, a font colour or a shader parameter.
+- **Nothing here changes anything on screen by itself.** Every Color expression hands back a value.
+  Feed it to Set Color Tint, Set Self Tint, a font colour or a shader parameter.
 - **Set Color Tint affects children; Set Self Tint does not.** Fading a whole panel and fading only
-  its background are different verbs, and confusing them is why "the fade also faded my text".
+  its background are different actions, and confusing them is why "the fade also faded my text".
 - **Color With Alpha writes over the alpha you had.** It does not multiply. Fading something already
   half-transparent back to 1.0 makes it fully opaque.
 - **Sample position is 0 to 1.** Handing Sample Gradient a raw health value or a seconds count reads

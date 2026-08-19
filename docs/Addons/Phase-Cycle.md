@@ -87,7 +87,7 @@ That is a complete day/night system. The cycle announces `"day"` on the first fr
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, exactly as the rows draw them:
 
 - Cycle phases **day,night**, **60** s each
 
@@ -124,7 +124,7 @@ All rows live in the **Phase Cycle** category and are called on the `Phases` aut
 
 ## Reading it from expressions
 
-Type `Phases` in any ƒx field, or open the ƒx **Expressions dictionary**, and the autoload's value verbs
+Type `Phases` in any ƒx field, or open the ƒx **Expressions dictionary**, and the autoload's value expressions
 list as ready-to-insert chains:
 
 - `Phases.current_phase()` inserts the **Current Phase** entry
@@ -395,7 +395,7 @@ The autoload owns the fast clock; a couple of variables give you the slow one on
 ## Tips and common mistakes
 
 - **Call Cycle Phases once, at startup.** It restarts from the first phase every time it runs, so calling it in a per-frame row pins the cycle to phase one forever. If nothing ever advances, that is the first thing to check.
-- **The autoload ticks itself - do not try to drive it.** There is no "advance" verb, on purpose. The pack has its own per-frame clock, which is why a scene reload or a new level cannot leave it stalled.
+- **The autoload ticks itself - do not try to drive it.** There is no "advance" action, on purpose. The pack has its own per-frame clock, which is why a scene reload or a new level cannot leave it stalled.
 - **Names are matched exactly.** `"night"`, `"Night"`, and `" night"` are three different phases. Spaces around a name in the list are trimmed for you, but the spelling and case in Phase Is must match the list.
 - **Every phase has the same length.** `seconds_each` applies to all of them. Repeat a name in the list to give it a longer turn - `"day,day,night"` is a two-thirds day - rather than looking for a per-phase duration that does not exist.
 - **The first On Phase Changed arrives at startup with an empty `previous`.** That is what makes your listeners correct on the first frame. If you are counting completed cycles, skip that one by checking that `previous` is not empty.

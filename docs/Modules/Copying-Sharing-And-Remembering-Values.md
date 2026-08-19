@@ -3,12 +3,12 @@
 Four small families that are all "copy this thing somewhere else".
 
 **Share codes** turn any value into one pasteable line of text and read it back: a run seed, a loadout,
-a colour preset, a whole save record. **The clipboard verbs** move text and images between your game
+a colour preset, a whole save record. **The clipboard rows** move text and images between your game
 and the rest of the operating system, in both directions. **Clone Into** copies a live node, adds it,
 places it and groups it, in one row. And **Remember / Restore** puts a named copy of any value aside
 for this run - the before-value for a preview, a buff, or a cutscene.
 
-These are builtin verbs, available from any sheet with nothing to enable. Every template compiles to
+These are builtin rows, available from any sheet with nothing to enable. Every template compiles to
 plain Godot: `DisplayServer`, `Marshalls`, `duplicate` and `add_child`, `set_meta`. Nothing here has a
 plugin dependency at runtime.
 
@@ -17,7 +17,7 @@ plugin dependency at runtime.
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
 3. [How share codes work](#how-share-codes-work)
-4. [Verb reference](#verb-reference)
+4. [Reference tables](#reference-tables)
 5. [Use cases](#use-cases)
 6. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -76,20 +76,20 @@ then the two shape facts every base64 payload has (a length that is a multiple o
 4-character group). Ordinary pasted prose is refused without the decoder being called at all, and the
 realistic bad paste - a code a chat client truncated - fails the length test three times out of four
 and is refused in silence too. Only a tagged, correctly-shaped, still-corrupt payload reaches the
-decoder, which logs an engine line when it refuses. That is why the verb's own description says to ask
+decoder, which logs an engine line when it refuses. That is why the condition's own description says to ask
 the question when the pasted text CHANGES rather than every frame.
 
 One more thing worth knowing: a code made from nothing at all also reads as invalid.
 
-## Verb reference
+## Reference tables
 
 Ships as is the template the row compiles to. Where a template carries `{uid}`, the editor bakes a
-short per-row id into the local's name when you drop the row, so two of the same verb in one script
+short per-row id into the local's name when you drop the row, so two of the same row in one script
 never collide.
 
 ### Utility: Window - share codes
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Share Code For | Turns any value into one compact line of text a player can paste anywhere | `("EF1." + Marshalls.variant_to_base64({value}))` |
 | Copy Share Code To Clipboard | Encodes a value as a share code and puts it straight on the OS clipboard | `DisplayServer.clipboard_set("EF1." + Marshalls.variant_to_base64({value}))` |
@@ -98,7 +98,7 @@ never collide.
 
 ### Utility: Window - the clipboard
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Clipboard Text | Copies text to the OS clipboard | `DisplayServer.clipboard_set({text})` |
 | Clipboard Text | Whatever text is on the OS clipboard right now | `DisplayServer.clipboard_get()` |
@@ -109,7 +109,7 @@ never collide.
 
 ### Nodes
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Clone Into | Copies a live node, adds the copy to a parent, places it and optionally groups it | `var __clone_{uid} = {source}.duplicate()`, `{parent}.add_child(__clone_{uid})`, a position write guarded by a Node2D / Node3D / Control test, and `add_to_group(StringName({group}), true)` when the group is not blank |
 
@@ -118,7 +118,7 @@ position, a Vector3 for a 3D node) and **Group** (optional, blank means none).
 
 ### Run Context - remember for this run
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Remember Value As | Copies any value aside under a name, in memory, for this run | `set_meta(&"__ef_mem_" + str({name}), {value})` |
 | Restore Value Into | Pours a remembered value back into a variable, leaving it alone when nothing was remembered | `{var_name} = get_meta(&"__ef_mem_" + str({name}), {var_name})` |
@@ -361,7 +361,7 @@ Forgetting a name that was never remembered is harmless.
 - **Share codes are not a security boundary.** They are readable by anyone who cares to decode them,
   so do not put a secret in one. What they do guarantee is that pasting one cannot construct objects.
 - **Share codes are not JSON and are not readable.** If you need a human to be able to read or edit the
-  payload, use the JSON verbs in the Working With Files guide instead - and accept that JSON flattens
+  payload, use the JSON rows in the Working With Files guide instead - and accept that JSON flattens
   numbers and has no Vector.
 - **Copy Share Code To Clipboard is not the same as Set Clipboard Text.** The first encodes the value
   first. Passing an already-encoded code to it would encode the code itself.

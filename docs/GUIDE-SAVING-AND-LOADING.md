@@ -54,11 +54,11 @@ There are two ways to save. Whole-game saving (Save Game and Load Game) captures
 - **Save Group State** and **Load Group State** persist every node in a named scene-tree group, matching each one back by node path on load.
 - **Save Singleton State** and **Load Singleton State** persist an autoload addon by its autoload name, for example `CurrencyLedger`.
 
-Targeted verbs are ideal when you want to snapshot one enemy, one squad, or one global system without saving the entire game.
+Targeted actions are ideal when you want to snapshot one enemy, one squad, or one global system without saving the entire game.
 
 ### The six save formats
 
-The `format` Inspector property picks how bytes hit the disk. All six round-trip through the same verbs and preserve exact types, so you can switch formats without changing a single sheet:
+The `format` Inspector property picks how bytes hit the disk. All six round-trip through the same actions and preserve exact types, so you can switch formats without changing a single sheet:
 
 - **config** is Godot's ConfigFile format and the default. It preserves full Variant fidelity, so integers stay integers and Vector2 stays Vector2.
 - **json** produces human-readable text, which is perfect for modding and hand-editing. Variants that JSON cannot represent natively, such as Vector2 and Color, are wrapped so they round-trip exactly, and integers are wrapped too so a whole number stays an integer instead of reloading as a float (floats, strings, and booleans stay bare, so the file is still easy to read).
@@ -81,7 +81,7 @@ Connect **On Autosave Due** and the interval stops saving by itself: the trigger
 
 ### Shipping an update that changes the save
 
-Bump `save_version` whenever your saved data changes shape. Load Game then fires **On Save Needs Upgrade** for every older file BEFORE anything reads it, handing your rows the raw record and the version that wrote it. Fix it with the record verbs (**Data Is Older Than Version**, **Rename Field**, **Stamp Data Version**), then finish with **Use Upgraded Save** - the one write that stamps the file as current, so the trigger stops firing for it. **Slot Save Version** asks what wrote a slot. An ordinary write never stamps: a settings save from the main menu cannot mark an un-migrated file as migrated.
+Bump `save_version` whenever your saved data changes shape. Load Game then fires **On Save Needs Upgrade** for every older file BEFORE anything reads it, handing your rows the raw record and the version that wrote it. Fix it with the record rows (**Data Is Older Than Version**, **Rename Field**, **Stamp Data Version**), then finish with **Use Upgraded Save** - the one write that stamps the file as current, so the trigger stops firing for it. **Slot Save Version** asks what wrote a slot. An ordinary write never stamps: a settings save from the main menu cannot mark an un-migrated file as migrated.
 
 ### When a save goes wrong, out loud
 
@@ -157,7 +157,7 @@ Proc Room seams the current run's state. At the end of each room, call `SaveSyst
 
 ### 11. Switch a save to JSON for modding
 
-If you want players to open and tweak their saves, set the Save System's `format` Inspector property to `json`. Every save and load verb behaves the same, but the file on disk becomes readable text. Vector2 and Color values are wrapped so they round-trip exactly, and integers are wrapped so they stay integers rather than reloading as floats, so your saved values come back with the same types you wrote.
+If you want players to open and tweak their saves, set the Save System's `format` Inspector property to `json`. Every save and load action behaves the same, but the file on disk becomes readable text. Vector2 and Color values are wrapped so they round-trip exactly, and integers are wrapped so they stay integers rather than reloading as floats, so your saved values come back with the same types you wrote.
 
 ### 12. Export a CSV for a balancing spreadsheet
 

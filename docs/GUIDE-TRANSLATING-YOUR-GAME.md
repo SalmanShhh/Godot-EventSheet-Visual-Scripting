@@ -105,7 +105,7 @@ catalog, because a catalog holds the PATTERN, not one filled-in instance of it. 
 `tr()` returns its argument unchanged, and the label reads in the source language forever. Nothing
 errors and nothing warns; the text is simply never translated.
 
-Two verbs do it in the order that works - look the whole sentence up FIRST, fill the slots second:
+Two rows do it in the order that works - look the whole sentence up FIRST, fill the slots second:
 
 - **Translated Text From Pattern** (Expression, folder **Translation**) - emits
   `tr(pattern).format(values)`.
@@ -155,7 +155,7 @@ languages with more than two plural forms.
 
 Everything AROUND the lookup has vocabulary of its own, grouped by the problem it solves:
 
-| Group | Verbs | The problem |
+| Group | Names | The problem |
 |---|---|---|
 | The menu that builds itself | For Each Language, Language Name In Its Own Language, Language Is Available, Use Saved Language | A language list that rots one hand-written button at a time |
 | Matching, not comparing | Language Matches, Region Is, Value For Language, Current Language Name, Country Name | `Current Language == "en"` is wrong for every player on en_US |

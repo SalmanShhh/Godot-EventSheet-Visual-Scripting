@@ -108,7 +108,7 @@ On Action Started
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Add action **action_name**: cooldown **cooldown** s, priority **priority**
 - Set input **key** to **value**
@@ -201,7 +201,7 @@ Choose one in the `curve` parameter of Add Consideration:
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$UtilityBrain.selection_mode` inserts the **Selection Mode** entry straight into any expression
 - `$UtilityBrain.weighted_top_n` inserts the **Weighted Top N** entry straight into any expression

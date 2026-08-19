@@ -86,7 +86,7 @@ All ACEs live in the **StatForge** category and target the `StatForge` behavior 
 
 | Action | Parameters | Description |
 |---|---|---|
-| Add Buff | `buff_id` (String), `stat` (String), `value` (float), `mode` (add / multiply / override), `tags` (String), `source` (String), `duration` (float) | The one verb that runs the whole system: a named buff targeting a stat. Tags are comma-separated labels for bulk operations, source names who applied it, duration in seconds expires it (0 = permanent). Re-adding an existing id REPLACES that buff. Fires On Buff Added. No-op if the id or stat is empty or the mode is invalid. |
+| Add Buff | `buff_id` (String), `stat` (String), `value` (float), `mode` (add / multiply / override), `tags` (String), `source` (String), `duration` (float) | The one action that runs the whole system: a named buff targeting a stat. Tags are comma-separated labels for bulk operations, source names who applied it, duration in seconds expires it (0 = permanent). Re-adding an existing id REPLACES that buff. Fires On Buff Added. No-op if the id or stat is empty or the mode is invalid. |
 | Remove Buff | `buff_id` (String) | Removes one buff by id (a no-op when absent). Fires On Buff Removed. |
 | Remove Buffs By Tag | `tag` (String) | Removes every buff carrying the tag - unequip all "equipment" in one action. Fires On Buff Removed per buff. |
 | Remove Buffs By Source | `source` (String) | Removes every buff a source applied - clear one enemy's curses when it dies. Fires On Buff Removed per buff. |
@@ -149,7 +149,7 @@ All ACEs live in the **StatForge** category and target the `StatForge` behavior 
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ---
@@ -179,20 +179,20 @@ The bases are set first, then the buff rows are added in order from top to botto
 
 ## Scaling the complexity
 
-StatForge is deliberately front-loaded onto **two verbs**: Add Buff writes, Stat Total reads. That pair alone runs a complete RPG stat system - bases, equipment bonuses, percentage multipliers, and "set it to exactly X" overrides are all just modes on Add Buff, and every consumer of the number reads one expression. Everything else in the pack is optional depth you pull in only when a real need shows up:
+StatForge is deliberately front-loaded onto **two rows**: Add Buff writes, Stat Total reads. That pair alone runs a complete RPG stat system - bases, equipment bonuses, percentage multipliers, and "set it to exactly X" overrides are all just modes on Add Buff, and every consumer of the number reads one expression. Everything else in the pack is optional depth you pull in only when a real need shows up:
 
-- **RPGs** start with the two verbs, then grow into tags when inventory arrives (`"equipment"` unequips as a group), sources when enemies start cursing (cleanse per caster), and .tres stat sheets when a designer wants to balance classes without touching sheets.
+- **RPGs** start with the two rows, then grow into tags when inventory arrives (`"equipment"` unequips as a group), sources when enemies start cursing (cleanse per caster), and .tres stat sheets when a designer wants to balance classes without touching sheets.
 - **Incremental games** start with a base and a pile of multiply buffs, then grow into permanent-vs-timed buffs for event boosts, Advance Timers for offline catch-up, and threshold rules to pop "you can now afford X" prompts.
 - **Action games** start with speed and damage stats, then grow into durations for powerups, threshold rules for combo milestones and overheat cutoffs, and Set Buff Active for stances that flip every frame-relevant number at once.
 
-You never pay for the features you are not using: a node with two verbs on it is exactly as simple as a variable, except it already knows how to be buffed.
+You never pay for the features you are not using: a node with those two rows on it is exactly as simple as a variable, except it already knows how to be buffed.
 
 ---
 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$StatForge.auto_tick` inserts the **Auto Tick** entry straight into any expression
 - `$StatForge.overflow_mode` inserts the **Overflow Mode** entry straight into any expression
@@ -209,7 +209,7 @@ dock, the section grounds to that node's actual children before you even press R
 
 Each example targets the `StatForge` behavior on the named node. Give stats a base first (with Set Stat Base or a stat sheet), then let buffs do the rest.
 
-### 1. The simplest possible setup: two verbs
+### 1. The simplest possible setup: two rows
 
 A stat with a base, one buff, one read. This is the whole system in three rows; everything else in this guide is optional depth.
 

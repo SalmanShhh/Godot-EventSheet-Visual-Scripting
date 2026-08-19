@@ -79,7 +79,7 @@ That is the whole loop: define once, report the number on every change, and let 
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Define milestone **id** at **threshold** rewarding **reward**
 - Update **id** progress to **value**
@@ -126,7 +126,7 @@ Every id below is a string. Thresholds, values, and rewards are numbers. All nam
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$MilestonesAddon.progress(id)` inserts the **Progress** entry straight into any expression
 - `$MilestonesAddon.threshold_of(id)` inserts the **Threshold Of** entry straight into any expression

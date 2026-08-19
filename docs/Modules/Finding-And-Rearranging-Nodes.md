@@ -1,7 +1,7 @@
 # Finding And Rearranging Nodes
 
 Every Godot game is a tree of nodes, and most gameplay logic is one of two sentences: **"put this
-thing here"** or **"find me that thing"**. These builtin verbs cover both, so the everyday tree work -
+thing here"** or **"find me that thing"**. This builtin vocabulary covers both, so the everyday tree work -
 spawning a bullet under the level, freeing a dead enemy, grabbing the nearest target, reading a
 child's name - never forces a drop into a GDScript block.
 
@@ -12,7 +12,7 @@ They divide into four families:
 - **Reading a node** - Node Name, Node Path, Index In Parent, Is Inside Tree, Get Parent, Get Child
   Count, Get Child (by index), Find Child (by name), Get Node Or Null, Has Node, Get Scene Owner,
   Is Ancestor Of, Current Scene Root.
-- **Picking** - the verbs that hand you a node or a list of nodes: by class, by name pattern, by
+- **Picking** - the expressions that hand you a node or a list of nodes: by class, by name pattern, by
   group, by distance, or by the largest or smallest value of a property.
 - **Metadata** - a private key/value shelf on any node, for the little bit of state that does not
   deserve a variable.
@@ -23,7 +23,7 @@ Every one compiles to the exact native call. **Node Name** ships as `{target}.na
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -44,7 +44,7 @@ Every one compiles to the exact native call. **Node Name** ships as `{target}.na
 
 ## Core concepts
 
-- **Almost every verb takes a Target.** Its default is `self`, so a row means "this node" until you
+- **Almost every row here takes a Target.** Its default is `self`, so a row means "this node" until you
   point it somewhere else. That is why Get Parent, Node Name and Set Metadata all read naturally on
   the sheet's own host and still work on any node you hand them.
 - **Free at the end of the frame, not now.** Free Node and Queue Free both use `queue_free`, so the
@@ -64,15 +64,15 @@ Every one compiles to the exact native call. **Node Name** ships as `{target}.na
   erroring - with one exception, noted in the tips.
 - **Metadata is invisible state on a node.** Set Metadata, Get Metadata, Has Metadata and Remove
   Metadata are Godot's own `set_meta` family. Nothing declares them in advance, and they travel with
-  the node, which is why several builtin verbs quietly use metadata for their own bookkeeping.
+  the node, which is why several builtin rows quietly use metadata for their own bookkeeping.
 
-## Verb reference
+## Reference tables
 
 Every `{target}` parameter defaults to `self`.
 
 ### Building and rearranging
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Add Child | Attaches another node as a child of this one at runtime | `add_child({node})` |
 | Remove Child | Detaches a child without deleting it | `remove_child({node})` |
@@ -101,7 +101,7 @@ node is packed into a scene and every later group check then silently never fire
 
 ### Reading a node
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Node Name | The node's name as text | `{target}.name` |
 | Node Path | The node's full path in the scene tree | `{target}.get_path()` |
@@ -119,7 +119,7 @@ node is packed into a scene and every later group check then silently never fire
 
 ### Picking
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Get Children | The list of a node's direct children | `{target}.get_children()` |
 | Find Children (by name) | Every descendant whose name matches a pattern | `{target}.find_children({pattern}, "", true, false)` |
@@ -139,7 +139,7 @@ this node's `global_position`. All four reduce-based picks return nothing on an 
 
 ### Metadata
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Metadata | Stores a custom named value on an object | `{target}.set_meta({name}, {value})` |
 | Get Metadata | Reads a stored metadata value back | `{target}.get_meta({name})` |
@@ -158,7 +158,7 @@ because both readers test `is_instance_valid` first. That is deliberately all th
 is: a registration that erased itself when its node left the tree would, in the ordinary
 scene-reload order, delete the entry belonging to the node that had already replaced it.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Register As Service | Publishes this node under a short name anything can ask for | `get_tree().set_meta(&"__ef_services", …)`, and nothing else - both readers refuse a freed node |
 | Service Named | The node published under a name, or nothing when it is gone | `get_tree().get_meta(&"__ef_services", {}).get({service_name}, null)` guarded by `is_instance_valid` |
@@ -204,7 +204,7 @@ func _on_picked_up(hand: Node) -> void:
 	position = Vector2.ZERO
 ```
 
-**5. Put it back down in the world.** The same verb, aimed at the current scene root.
+**5. Put it back down in the world.** The same action, aimed at the current scene root.
 
 ```gdscript
 func _on_dropped() -> void:
@@ -303,7 +303,7 @@ Every second
 ```
 
 Nodes In Group hands you the array. If counting is all you need, Groups, Tags And Systems has a
-dedicated Count Nodes In Group verb.
+dedicated Count Nodes In Group expression.
 
 **17. Remember where something started.** Metadata is a shelf on the node itself, so no variable has
 to be declared and nothing has to be wired in _ready.
@@ -450,7 +450,7 @@ func _process(_delta: float) -> void:
 ## Tips and common mistakes
 
 - **Random Node In Group ERRORS on an empty group.** `pick_random()` on an empty array is a runtime
-  error. That is exactly why **Random Node In Group (empty-safe)** exists as a separate verb. If the
+  error. That is exactly why **Random Node In Group (empty-safe)** exists as a separate expression. If the
   group can ever be empty - and a group of enemies always can - use the empty-safe one.
 - **A freed node is not gone until the frame ends.** Queue Free schedules the removal. Reading the
   node's properties on the very next row still works, and that is deliberate. What you must not do is
@@ -477,7 +477,7 @@ func _process(_delta: float) -> void:
   `global_position`. On a 3D host the same reduce shape works, but you will be writing it in a
   GDScript block.
 - **Metadata keys are strings and nobody validates them.** `set_meta("home", ...)` and
-  `get_meta("Home")` are different shelves. Guard reads with Has Metadata, or read through a verb that
-  takes a fallback.
+  `get_meta("Home")` are different shelves. Guard reads with Has Metadata, or read through an
+  expression that takes a fallback.
 - **Get Scene Owner is not Get Parent.** The owner is the scene a node was SAVED as part of, which for
   a node spawned at runtime is often nothing at all.

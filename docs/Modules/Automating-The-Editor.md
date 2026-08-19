@@ -6,7 +6,7 @@ editor executes it against the project you are editing: open a scene, add nodes 
 a resource, rescan the FileSystem dock, render a thumbnail. On top of that sits **On Project Export**,
 which turns the same sheet into a bake step the exporter runs before it writes any files.
 
-Every verb here compiles to the plain editor API - `EditorInterface`, `ResourceSaver`, `DirAccess`,
+Every row here compiles to the plain editor API - `EditorInterface`, `ResourceSaver`, `DirAccess`,
 `ConfigFile`, `SubViewport` - with no plugin reference at all, so a tool you build keeps working after
 the plugin is uninstalled.
 
@@ -15,7 +15,7 @@ the plugin is uninstalled.
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
-4. [Verb reference](#verb-reference)
+4. [Reference tables](#reference-tables)
 5. [Use cases](#use-cases)
 6. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -34,7 +34,7 @@ the plugin is uninstalled.
 
 ## Core concepts
 
-- **These verbs are editor-only.** They call `EditorInterface`, which does not exist in a running
+- **These rows are editor-only.** They call `EditorInterface`, which does not exist in a running
   game. Put them in an editor-tool sheet (**Sheet Type > Editor Tool**), which emits `@tool`, `extends EditorScript`
   and the `On Editor Run` trigger for you.
 - **On Editor Run is the entry point.** It compiles to `_run`, the function the editor calls when you
@@ -62,7 +62,7 @@ On editor run (File > Run)
   -> rescan project files
 ```
 
-## Verb reference
+## Reference tables
 
 On the canvas these read as sentences with the values in bold, exactly as the rows draw them:
 
@@ -72,7 +72,7 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Triggers
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | On Editor Run | Runs the tool when you press File > Run in the script editor. | the `_run` function of an `EditorScript` |
 | On Project Export | Runs while a project export is starting, before the files are written. | the `_on_project_export` export-plugin hook |
@@ -85,7 +85,7 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### What a plugin adds to the editor
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Add Tools Menu Item | Adds an item to the editor's Project > Tools menu. | `add_tool_menu_item({title}, {handler})` |
 | Remove Tools Menu Item | Takes the plugin's item back out of Project > Tools. | `remove_tool_menu_item({title})` |
@@ -101,7 +101,7 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Scene lifecycle
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Open Scene In Editor | Opens a `.tscn` as the current edited scene. | `EditorInterface.open_scene_from_path({path})` |
 | Save Current Scene | Saves whatever scene is open in the editor. | `EditorInterface.save_scene()` |
@@ -112,7 +112,7 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Selection and Inspector
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Select Node In Editor | Clears the selection and selects one node in the Scene dock. | `EditorInterface.get_selection().clear()` then `EditorInterface.get_selection().add_node({node})` |
 | Inspect In Editor | Shows a node or resource in the Inspector dock. | `EditorInterface.inspect_object({object})` |
@@ -121,7 +121,7 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Files and resources
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Save Resource To File | Writes a resource out to disk. | `ResourceSaver.save({resource}, {path})` |
 | Make Sure Folder Exists | Creates a folder and any missing parents. | `DirAccess.make_dir_recursive_absolute({path})` |
@@ -129,21 +129,21 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Scene builders
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Add Node To Edited Scene | Adds a node under a parent AND sets its owner, so the scene saves it. | a three-line block: a local for the node, `{parent}.add_child(...)`, then `.owner = EditorInterface.get_edited_scene_root()` |
 | Save Node As Scene | Packs a node and its children and saves them as a `.tscn`. | a three-line block: `PackedScene.new()`, `.pack({node})`, `ResourceSaver.save(..., {path})` |
 
 ### Editor state
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Is In Editor | True when the script is running inside the editor rather than the game. | `Engine.is_editor_hint()` |
 | Editor Scale | The editor's display scale, 1.0 at 100%, for sizing tool UI. | `EditorInterface.get_editor_scale()` |
 
 ### The heavy chores
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Render Scene To Image | Instantiates a scene into an off-screen viewport, lets it settle a frame, saves a PNG. | a guarded block: a headless check, a missing-scene check, then a `SubViewport` parented to the editor's base control, two `await`s (`process_frame`, `RenderingServer.frame_post_draw`) and `get_texture().get_image().save_png({save_path})` |
 | Preview Table Rolls | Rolls a weighted table many times and reports rolled percent, expected percent and the gap. | a block over a seeded `RandomNumberGenerator` that prints a `entry \| rolled \| expected \| delta` report and optionally writes it to a file |
@@ -151,7 +151,7 @@ On the canvas these read as sentences with the values in bold, exactly as the ro
 
 ### Export bake step
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Export Is Debug | True when the export that triggered this bake step is a debug build. | `is_debug` |
 | Export Has Feature | True when the export preset carries that feature tag. | `features.has({feature})` |
@@ -196,7 +196,7 @@ On editor run (File > Run)
     -> save MyTable to res://generated/tables/loot.tres
 ```
 
-**5. Build a node into the scene you are editing.** **Add Node To Edited Scene** is the verb that
+**5. Build a node into the scene you are editing.** **Add Node To Edited Scene** is the action that
 remembers the owner, which is the step everybody forgets: a node with no owner vanishes on save.
 
 ```gdscript
@@ -341,7 +341,7 @@ On project export (bake step)
   pushes a warning naming the file it did not write, rather than saving a blank PNG. Run the tool
   from the real editor.
 - **A rendered scene photographs itself.** If the scene has no camera and no Control layout, the
-  image is empty. That is the scene's problem, not the verb's.
+  image is empty. That is the scene's problem, not the action's.
 - **Preview Table Rolls needs weights above zero.** If every entry weighs zero, or the path resolves
   to nothing, the report says so by name instead of printing a table of zeroes. Read the second line.
 - **The stamp is written at run time, not at compile time.** The generated code calls

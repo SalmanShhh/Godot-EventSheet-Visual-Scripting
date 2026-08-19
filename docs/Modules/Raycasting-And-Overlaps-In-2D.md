@@ -18,7 +18,7 @@ The 3D versions of every one of these live in the sibling guide **Raycasting And
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -40,10 +40,10 @@ The 3D versions of every one of these live in the sibling guide **Raycasting And
 - **A node cast is continuous, a world query is a moment.** RayCast2D and ShapeCast2D update themselves
   every physics frame, so you just READ them. A world query fires when the row runs and answers about that
   instant.
-- **Two shapes of verb, deliberately.** The single-shot EXPRESSIONS (World Raycast Point, World Raycast
+- **Two shapes of row, deliberately.** The single-shot EXPRESSIONS (World Raycast Point, World Raycast
   Collider) read beautifully in one cell but RE-CAST the ray every time you use one - asking for the point
   and the collider costs two casts. The **Cast Ray Into (2D)** ACTION fires ONE cast and stores the result
-  in a variable, which the **Ray Result ...** verbs then read for free. Reach for Cast Ray Into whenever
+  in a variable, which the **Ray Result ...** rows then read for free. Reach for Cast Ray Into whenever
   you want more than one fact about the same hit.
 - **A hit result is a Dictionary, and empty means "nothing".** Cast Ray Into stores Godot's raw result.
   Ray Result Hit Something (2D) is `not result.is_empty()`; the readers each have a safe fallback, so
@@ -57,12 +57,12 @@ The 3D versions of every one of these live in the sibling guide **Raycasting And
 - **Areas are ignored by default.** A ray that "misses" a trigger zone is almost always a ray with
   `collide_with_areas` off. RayCast Detects Areas (2D) turns it on.
 - **A shapecast has thickness and reports a LIST.** ShapeCast Hit Count (2D) tells you how many, and the
-  ...At verbs read hit number 0, 1, 2. Its safe fraction is the distance it could travel before touching
+  ...At expressions read hit number 0, 1, 2. Its safe fraction is the distance it could travel before touching
   anything, from 0 to 1 - multiply the target by it to stop just short of a wall.
-- **The node-scoped verbs need the right host.** The RayCast2D verbs only appear on a `RayCast2D` sheet,
-  the ShapeCast2D verbs on a `ShapeCast2D` sheet, and the world queries on a `Node2D`.
+- **The node-scoped rows need the right host.** The RayCast2D vocabulary only appears on a `RayCast2D`
+  sheet, the ShapeCast2D vocabulary on a `ShapeCast2D` sheet, and the world queries on a `Node2D`.
 
-## Verb reference
+## Reference tables
 
 The "Ships as" column is the exact code the row compiles to. Parameters appear in `{braces}`.
 
@@ -70,7 +70,7 @@ The "Ships as" column is the exact code the row compiles to. Parameters appear i
 
 Scoped to a `RayCast2D` host.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | RayCast Is Colliding (2D) | True when the RayCast2D is currently hitting something in its path. | `is_colliding()` |
 | Force RayCast Update (2D) | Immediately re-checks the raycast this frame instead of waiting for physics. | `force_raycast_update()` |
@@ -96,7 +96,7 @@ Scoped to a `RayCast2D` host.
 
 Scoped to a `ShapeCast2D` host.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | ShapeCast Is Colliding (2D) | True when the swept shape is touching anything along its path. | `is_colliding()` |
 | Force ShapeCast Update (2D) | Re-runs the sweep immediately instead of waiting for the next physics frame. | `force_shapecast_update()` |
@@ -118,7 +118,7 @@ Scoped to a `ShapeCast2D` host.
 
 Scoped to a `Node2D` host.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Cast Ray Into (2D) | Fires ONE ray and stores everything it learned in a variable. | builds a `PhysicsRayQueryParameters2D` from `{from}`, `{to}`, `{mask}`, `{exclude}`, sets `collide_with_areas = {hit_areas}`, then `{into} = get_world_2d().direct_space_state.intersect_ray(...)` |
 | World Raycast Hits? (2D) | True when a ray drawn between two points hits any physics object. | `not get_world_2d().direct_space_state.intersect_ray(PhysicsRayQueryParameters2D.create({from}, {to})).is_empty()` |
@@ -131,7 +131,7 @@ Scoped to a `Node2D` host.
 
 Scoped to a `Node2D` host. `{result}` is the variable a Cast Ray Into filled.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Ray Result Hit Something (2D) | True when the stored cast found something. | `not {result}.is_empty()` |
 | Ray Result Collider (2D) | The object the stored cast hit, or nothing. | `{result}.get("collider", null)` |
@@ -144,7 +144,7 @@ Scoped to a `Node2D` host. `{result}` is the variable a Cast Ray Into filled.
 
 Scoped to a `Node2D` host. Each one fills an Array variable with the objects it found.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Query Bodies At Point (2D) | Everything at one world point - like tapping the world with a finger. | a `PhysicsPointQueryParameters2D` at `{point}`, looping `intersect_point(..., {max_results})` and appending each `collider` to `{into}` |
 | Query Bodies In Circle (2D) | Everything inside a circle - explosion radii, pickup magnets, proximity. | a `CircleShape2D` of `{radius}` at `{center}`, looping `intersect_shape(..., {max_results})` into `{into}` |
@@ -414,7 +414,7 @@ On attack
 - **An empty result is normal, not an error.** Ray Result Point on a clear ray returns `Vector2.ZERO`, and
   Ray Result Collider returns nothing. Check Ray Result Hit Something (2D) first, or Ray Result Is In
   Group (2D), which already guards against the nothing case.
-- **The exception verbs need a CollisionObject2D.** Ignore Node In RayCast (2D) and Ignore Node In
+- **The exception actions need a CollisionObject2D.** Ignore Node In RayCast (2D) and Ignore Node In
   ShapeCast (2D) will not compile with a plain Node; that is why the default is written
   `get_parent() as CollisionObject2D`.
 - **A disabled cast always reports no hit.** Enable RayCast (2D) set to false is free, and it looks exactly

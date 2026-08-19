@@ -79,7 +79,7 @@ The chest starts flat, springs up to 1.2 scale, and On Tween Finished settles it
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Tween **property_path** to **final_value** over **duration** s
 
@@ -127,7 +127,7 @@ All ACEs live in the **Tween** category and target the `TweenBehavior` on the no
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ---
@@ -135,7 +135,7 @@ change while the game runs.
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$TweenBehavior.default_duration` inserts the **Default Duration** entry straight into any expression
 - `$TweenBehavior.easing` inserts the **Easing** entry straight into any expression

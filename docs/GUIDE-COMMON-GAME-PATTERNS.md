@@ -91,7 +91,7 @@ subject is named `state`, the whole machine reads in plain words with zero conve
 - The enum shows as the machine's identity bar ("State is one of PATROL, CHASE or FLEE" -
   click it open for one row per value).
 - The tick event's lane says **decides by state - 3 states below** instead of `match state:`.
-- Each case is a `◆ State:` row; its plain statements read as sentences and verbs
+- Each case is a `◆ State:` row; its plain statements read as sentences and calls
   (`Patrol Step ( delta )`).
 - Each transition is a NESTED CONDITION ROW - the guard in the condition cell, in plain words
   (`Can See Player`, `Not Can See Player`, `hp < 20`), the state change as its action
@@ -141,7 +141,7 @@ button by name, no wiring), and **Connect Group Signal** (System, Signals) wires
 member of a group to a handler in one action. Declaring your own signal on a sheet publishes an
 **On <signal>** trigger for other sheets automatically.
 
-## The second wave - more patterns as verbs
+## The second wave - more patterns as rows
 
 Ten more spellings of everyday game code, shipped the same way:
 
@@ -191,7 +191,7 @@ Ten more spellings of everyday game code, shipped the same way:
   feeding bars directly.
 - **Repeat With Delay** (Time) - `5 times, 0.1s apart:` burst fire; suspends like Wait.
 - **Pop Floating Text** (HUD Kit) - the score popup's label, drift tween and cleanup as one
-  verb.
+  action.
 
 ## The fourth wave - goals, places, and firsts
 

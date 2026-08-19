@@ -1,20 +1,20 @@
-# Using the ACE Studio to Author a Verb
+# Using the ACE Studio to Author a Function
 
-In an event sheet, a **verb** is a reusable function you define once and call anywhere. The ACE Studio is the in-editor dialog that lets you author one of these verbs without ever meeting the words `func` or `return type`, while still producing plain, readable GDScript underneath. Its title is **"New Function"** (and "Edit Function - <name>" when you reopen it on an existing verb), and it turns the low-level idea of "add a function" into plain-language cards, a live preview of how your verb will look to other people, and an honest **"Ships as"** line that shows the exact GDScript signature your verb generates.
+In an event sheet, a **function** is a reusable block of rows you define once and call anywhere. The ACE Studio is the in-editor dialog that lets you author one of these without ever meeting the words `func` or `return type`, while still producing plain, readable GDScript underneath. Its title is **"New Function"** (and "Edit Function - <name>" when you reopen it on an existing function), and it turns the low-level idea of "add a function" into plain-language cards, a live preview of how your function will look to other people, and an honest **"Ships as"** line that shows the exact GDScript signature your function generates.
 
-The word **ACE** is the plugin's name for the three things a sheet's picker can offer you: an **Action** (does something), a **Condition** (a yes/no test), and an **Expression** (returns a value). The ACE Studio lets you write any one of these as a verb, and optionally **publish** it so that every other sheet in your project can pick it. Everything you build here compiles to a plain GDScript function - the ACE Studio is a friendly front end, not a runtime layer that sits under your game.
+The word **ACE** is the plugin's name for the three things a sheet's picker can offer you: an **Action** (does something), a **Condition** (a yes/no test), and an **Expression** (returns a value). The ACE Studio lets you write your function as any one of these, and optionally **publish** it so that every other sheet in your project can pick it. Everything you build here compiles to a plain GDScript function - the ACE Studio is a friendly front end, not a runtime layer that sits under your game.
 
 ![The ACE Studio: Name, Doc comment and Inspector button rows, three cards headlining Action / Condition / Expression with a plain-language line each, a live picker preview of the published function with its Ships-as GDScript signature, and a plain Publish-to-the-picker checkbox.](images/ace-studio.png)
 
 ## Table of Contents
 
 1. [Opening the ACE Studio](#1-opening-the-ace-studio)
-2. [Choosing What Kind of Verb](#2-choosing-what-kind-of-verb)
+2. [Choosing Action, Condition or Expression](#2-choosing-action-condition-or-expression)
 3. [The Live Preview and the Ships-as Line](#3-the-live-preview-and-the-ships-as-line)
-4. [Parameters Live on the Verb's Row](#4-parameters-live-on-the-verbs-row)
+4. [Parameters Live on the Function's Row](#4-parameters-live-on-the-functions-row)
 5. [Publishing to the Picker](#5-publishing-to-the-picker)
-6. [After You Create the Verb](#6-after-you-create-the-verb)
-7. [Publishing Verbs From a Script You Already Have](#7-publishing-verbs-from-a-script-you-already-have)
+6. [After You Create the Function](#6-after-you-create-the-function)
+7. [Publishing From a Script You Already Have](#7-publishing-from-a-script-you-already-have)
 8. [Use Cases](#8-use-cases)
 9. [Tips and Common Mistakes](#9-tips-and-common-mistakes)
 
@@ -35,13 +35,13 @@ To **edit an existing function**, double-click its **Define block** on the sheet
 
 ---
 
-## 2. Choosing What Kind of Verb
+## 2. Choosing Action, Condition or Expression
 
-The first fields you fill in describe the verb itself.
+The first fields you fill in describe the function itself.
 
-- **Name** - the verb's name, for example `Take Damage`. You can type it in plain words with spaces and capitals; the ACE Studio turns it into a valid identifier automatically, so `Take Damage` becomes `take_damage`.
-- **Doc comment** (optional) - Godot's own documentation for the verb, written above the function as `##` lines. It shows up in the editor's built-in help and when hovering the verb. BBCode like `[b]bold[/b]` is allowed.
-- **Inspector button** (optional) - name a label here and the verb also becomes a one-click button on the node's Inspector panel, handy for editor chores. Leave it empty (the usual case) and no button appears.
+- **Name** - the function's name, for example `Take Damage`. You can type it in plain words with spaces and capitals; the ACE Studio turns it into a valid identifier automatically, so `Take Damage` becomes `take_damage`.
+- **Doc comment** (optional) - Godot's own documentation for the function, written above it as `##` lines. It shows up in the editor's built-in help and when hovering the row. BBCode like `[b]bold[/b]` is allowed.
+- **Inspector button** (optional) - name a label here and the function also becomes a one-click button on the node's Inspector panel, handy for editor chores. Leave it empty (the usual case) and no button appears.
 
 Next comes **"Action, Condition, or Expression?"** - three cards, each headlining the ACE kind with a plain-language line and examples underneath. Click one:
 
@@ -69,23 +69,23 @@ If you pick an Action or a Condition, this dropdown stays hidden, because their 
 
 ![A filled-in ACE Studio: a Take Damage function with its doc comment, the three kind cards with Action selected, the live preview showing the Action badge and the Ships-as line reading func take_damage() -> void, and the Publish-to-the-picker checkbox ticked](images/ace-studio-example.png)
 
-The card labelled **"This is what other people will see"** appears once **Publish to the picker** is ticked - it is about what OTHER sheets will meet, so it stays out of the way while you are writing a private helper - and it updates on every keystroke. It is there so you can shape a clear, picker-ready verb before you commit. It shows:
+The card labelled **"This is what other people will see"** appears once **Publish to the picker** is ticked - it is about what OTHER sheets will meet, so it stays out of the way while you are writing a private helper - and it updates on every keystroke. It is there so you can shape a clear, picker-ready action, condition or expression before you commit. It shows:
 
-- A mock picker entry with a **role badge** (Action, Condition, or Expression), the **display name**, a **chip for each parameter the verb has**, and a **category chip**.
+- A mock picker entry with a **role badge** (Action, Condition, or Expression), the **display name**, a **chip for each parameter the function has**, and a **category chip**.
 - A one-line summary that reads like a real picker row, for example `Combat > Take Damage  amount`.
-- A **"SHIPS AS"** line showing the exact generated signature. A brand-new verb has no parameters yet (you add those from its row afterwards - see section 4), so it reads `func take_damage() -> void`; reopen a verb that already has an `amount` parameter and the same line reads `func take_damage(amount: float) -> void`.
+- A **"SHIPS AS"** line showing the exact generated signature. A brand-new function has no parameters yet (you add those from its row afterwards - see section 4), so it reads `func take_damage() -> void`; reopen a function that already has an `amount` parameter and the same line reads `func take_damage(amount: float) -> void`.
 
-The "Ships as" line is built from the compiler's own formatters - the same code that emits your final GDScript. That means the signature in the preview can never disagree with the code that actually ships. It is the honest bridge for anyone who wants to see the real function that will be generated, and it is the fastest way to hand a verb to a programmer teammate: they can read exactly what the call will look like in code.
+The "Ships as" line is built from the compiler's own formatters - the same code that emits your final GDScript. That means the signature in the preview can never disagree with the code that actually ships. It is the honest bridge for anyone who wants to see the real function that will be generated, and it is the fastest way to hand a function to a programmer teammate: they can read exactly what the call will look like in code.
 
 ---
 
-## 4. Parameters Live on the Verb's Row
+## 4. Parameters Live on the Function's Row
 
-Parameters are the values a verb takes in - the `amount` in Take Damage, or the direction and force in Knock Back. You add and edit them **on the verb's own row**, not in this dialog. That keeps a parameter in the same place you read it: a brand-new verb starts with none, and you add them once its Define block is on the canvas.
+Parameters are the values a function takes in - the `amount` in Take Damage, or the direction and force in Knock Back. You add and edit them **on the function's own row**, not in this dialog. That keeps a parameter in the same place you read it: a brand-new function starts with none, and you add them once its Define block is on the canvas.
 
 The Define block shows one cell per parameter, in the same grammar a condition cell uses - `amount : number`, `force : number`. Two gestures:
 
-- **Click a parameter cell** to open a small **Edit Parameter** dialog: its **Name**, its **Type** (float, int, bool, String, Vector2, Vector3, or Variant), an optional **Default**, and a **Description**. It is the same idea as clicking a condition: click the thing you want to change and you land in its editor, not in a form that could restructure the whole verb. (There is an **"Edit the whole verb..."** button inside it for when you did mean the big dialog.)
+- **Click a parameter cell** to open a small **Edit Parameter** dialog: its **Name**, its **Type** (float, int, bool, String, Vector2, Vector3, or Variant), an optional **Default**, and a **Description**. It is the same idea as clicking a condition: click the thing you want to change and you land in its editor, not in a form that could restructure the whole function. (There is an **"Edit the whole function..."** button inside it for when you did mean the big dialog.)
 - **Click the "+ Add parameter" cell** on the row to add another, opening the same small dialog blank.
 
 An optional default lets a caller skip the parameter. One rule carries over from GDScript: **parameters with a default must come after those without.** The Edit Parameter dialog refuses a change that would break that order and tells you what to fix.
@@ -108,22 +108,22 @@ Once published, the function appears in **every** sheet's picker as the kind you
 
 Only publish the functions you actually mean to reuse. One that is only useful inside a single sheet is better left unpublished, so the picker stays clean and full of genuinely reusable choices.
 
-The dialog's live preview shows the one verb you are editing; the left rail's fold-away
+The dialog's live preview shows the one function you are editing; the left rail's collapsible
 **Picker preview** panel (under the Anatomy panel) keeps the same promise for the WHOLE
-sheet - every published verb, trigger, and exported knob rendered as the picker will show
-it, live from the unsaved sheet. Rename a verb, move its category, or toggle featured, and
-its picker face updates there immediately.
+sheet - every published action, condition and expression, every trigger, and every exported
+knob rendered as the picker will show it, live from the unsaved sheet. Rename one, move its
+category, or toggle featured, and its picker face updates there immediately.
 
 <img src="images/picker-preview-panel.png" alt="The Picker preview panel expanded on the Health pack: 44 entries, each with its action pill, the featured star on Take Damage and Heal, the parameter list in parentheses, and the Health category chip." width="300">
 
 ---
 
-## 6. After You Create the Verb
+## 6. After You Create the Function
 
 When you press **"Create Function"** (or **"Save Changes"** in edit mode), a few things happen:
 
-- The verb appears among the sheet's functions as a **Define block**. You author its **body** as ordinary event rows underneath the block - the same conditions and actions you use anywhere else - and add its parameters from the row's cells (section 4). If the verb should only act in certain situations, put a condition on its first body row - an **Expression Is True** condition reading `host.enabled`, say - and the whole body runs only when that holds. That is an ordinary event row, visible and editable on the canvas, not a hidden dialog setting.
-- You call the verb from anywhere with the **Call Function** action.
+- The new function appears among the sheet's functions as a **Define block**. You author its **body** as ordinary event rows underneath the block - the same conditions and actions you use anywhere else - and add its parameters from the row's cells (section 4). If the function should only act in certain situations, put a condition on its first body row - an **Expression Is True** condition reading `host.enabled`, say - and the whole body runs only when that holds. That is an ordinary event row, visible and editable on the canvas, not a hidden dialog setting.
+- You call it from anywhere with the **Call Function** action.
 - If you published it, it shows up in **every sheet's picker** as an Action, Condition, or Expression, matching the preview.
 - Everything compiles to a **plain GDScript function**. The ACE Studio is a friendly front end, not a hidden runtime; the "Ships as" line is the bridge for a programmer who wants to see the real signature.
 
@@ -133,56 +133,56 @@ This no-code path complements the other ways to add vocabulary. The **"Make a be
 
 ---
 
-## 7. Publishing Verbs From a Script You Already Have
+## 7. Publishing From a Script You Already Have
 
-The ACE Studio authors a verb out of event rows. When the logic already exists as GDScript - a score keeper, a wave manager, an inventory you wrote long before you met this plugin - the same result is one dialog away: **Sheet ▸ Custom Actions...**, which opens the **Custom ACE Providers** window.
+The ACE Studio authors a function out of event rows. When the logic already exists as GDScript - a score keeper, a wave manager, an inventory you wrote long before you met this plugin - the same result is one dialog away: **Sheet ▸ Custom Actions...**, which opens the **Custom ACE Providers** window.
 
-Press **Add...** to browse to the `.gd` (or click one already listed) and the **What it publishes** table shows one row per verb the script would contribute: **Publish**, **Kind**, **Verb**, **Category**, **Parameters**, and the exact code it **Emits**. Looking registers nothing - **Register This Script** is a separate, deliberate click, so a script never joins the vocabulary unseen.
+Press **Add...** to browse to the `.gd` (or click one already listed) and the **What it publishes** table shows one row per entry the script would contribute: **Publish**, **Kind**, **Name**, **Category**, **Parameters**, and the exact code it **Emits**. Looking registers nothing - **Register This Script** is a separate, deliberate click, so a script never joins the vocabulary unseen.
 
-The table is an editing surface too, and that matters because the kinds are inferred from each function's signature: an untyped `func is_wave_active():` with no `-> bool` reads as an Action rather than a Condition, which is exactly what most hand-written game code looks like. Untick the members you do not want published, correct the kind, verb name and category in place, then use one of the three actions beneath the table:
+The table is an editing surface too, and that matters because the kinds are inferred from each function's signature: an untyped `func is_wave_active():` with no `-> bool` reads as an Action rather than a Condition, which is exactly what most hand-written game code looks like. Untick the members you do not want published, correct the kind, name and category in place, then use one of the three actions beneath the table:
 
 - **Curate Script...** writes your edits back into the file as `## @ace_*` comment lines, so the script keeps publishing them the next time it is scanned. A preview of the exact lines each member will gain is shown first. Only `##` comments above a declaration are added or removed - no signature and no body is ever touched, which is why a wrong kind is corrected with an `@ace_condition` comment instead of by editing someone's function - the file is backed up first (**Tools ▸ Sheet Backups** restores it), and re-applying the same edits changes nothing.
-- **Parameters...** shapes the selected verb's inputs: a widget hint (try `comparison`, which is the whole six-operator dropdown in one word), a fixed set of choices written `value=Label` so the menu reads as English while the row inserts the real token, and the starting value the row shows the moment it is dropped. The shapes are recorded; press Curate Script to write them.
-- **Keep Old Name...** is the fix for a verb you renamed. Renaming a function changes the verb's identity, so sheets that already use it break - and silently, because the old call is baked into each row and still compiles clean, failing only when the game runs. Name what the function used to be called and a deprecated stand-in of the old name is added that forwards to the new one: rows that already hold it keep working, while the old name stays out of the picker. Nothing existing is edited.
+- **Parameters...** shapes the selected member's inputs: a widget hint (try `comparison`, which is the whole six-operator dropdown in one word), a fixed set of choices written `value=Label` so the menu reads as English while the row inserts the real token, and the starting value the row shows the moment it is dropped. The shapes are recorded; press Curate Script to write them.
+- **Keep Old Name...** is the fix for a member you renamed. Renaming a function changes its identity in the picker, so sheets that already use it break - and silently, because the old call is baked into each row and still compiles clean, failing only when the game runs. Name what the function used to be called and a deprecated stand-in of the old name is added that forwards to the new one: rows that already hold it keep working, while the old name stays out of the picker. Nothing existing is edited.
 
 ---
 
 ## 8. Use Cases
 
-1. **A Take Damage action shared across enemies.** Author a `Take Damage` verb as an Action, add an `amount` parameter from its row, publish it under Combat, and every enemy sheet can pick it. One definition, consistent damage handling everywhere.
+1. **A Take Damage action shared across enemies.** Author `Take Damage` as an Action, add an `amount` parameter from its row, publish it under Combat, and every enemy sheet can pick it. One definition, consistent damage handling everywhere.
 
 2. **An Is Dead condition read from many sheets.** Author `Is Dead` as a Condition (the "Is it true?" card) that checks whether health has reached zero. Publish it, and any sheet - the enemy, the HUD, the score system - can test `Is Dead` without duplicating the check.
 
-3. **A Health % expression for a HUD bar.** Pick the "A value" card and choose **a number** (float). The verb returns current health divided by max health, times one hundred. A HUD sheet reads `Health %` straight into a progress bar's value.
+3. **A Health % expression for a HUD bar.** Pick the "A value" card and choose **a number** (float). The expression returns current health divided by max health, times one hundred. A HUD sheet reads `Health %` straight into a progress bar's value.
 
-4. **A guarded verb that only runs while a behaviour is enabled.** Put an **Expression Is True** condition reading `host.enabled` on the first row of the verb's body. The rest of the body runs only when the host is switched on, so a disabled behaviour quietly does nothing instead of misfiring.
+4. **A guarded function that only runs while a behaviour is enabled.** Put an **Expression Is True** condition reading `host.enabled` on the first row of the function's body. The rest of the body runs only when the host is switched on, so a disabled behaviour quietly does nothing instead of misfiring.
 
 5. **A Knock Back action with a direction and force.** Author `Knock Back` as an Action, then add two parameters from its row: `direction` of type Vector2 and `force` of type float. Publish it under Combat so every physics-driven enemy can be knocked back the same way.
 
-6. **A project-wide Give Currency verb.** Author `Give Currency` as an Action with an `amount` parameter and publish it under an Economy category. Shops, quest rewards, and pickups all call the same verb, so the rule for granting currency lives in exactly one place.
+6. **A project-wide Give Currency action.** Author `Give Currency` as an Action with an `amount` parameter and publish it under an Economy category. Shops, quest rewards, and pickups all call the same action, so the rule for granting currency lives in exactly one place.
 
-7. **A getter that returns a spawn point.** Pick "A value" and choose **a point** (Vector2). The verb computes and returns a spawn position. A spawner sheet reads it as an Expression wherever it needs a fresh spawn location.
+7. **A getter that returns a spawn point.** Pick "A value" and choose **a point** (Vector2). The expression computes and returns a spawn position. A spawner sheet reads it as an Expression wherever it needs a fresh spawn location.
 
-8. **Editing an existing verb by double-clicking its Define block.** You shipped `Take Damage` last week and now want it to also play a hurt sound. Double-click its Define block, the dialog reopens as "Edit Function - take_damage", adjust its kind or publishing, press "Save Changes", then extend the body rows - and tweak any parameter straight from its cell on the row.
+8. **Editing an existing function by double-clicking its Define block.** You shipped `Take Damage` last week and now want it to also play a hurt sound. Double-click its Define block, the dialog reopens as "Edit Function - take_damage", adjust its kind or publishing, press "Save Changes", then extend the body rows - and tweak any parameter straight from its cell on the row.
 
 9. **A Condition that keeps a designer out of GDScript.** A designer needs an `Is Full Health` test but does not write code. They pick the "Is it true?" card, describe it, and the ACE Studio produces a real boolean function without them ever typing `func` or `return`.
 
-10. **Checking the Ships-as line to hand a verb to a programmer.** Before asking a programmer teammate to wire something up, read the "SHIPS AS" line, for example `func take_damage(amount: float) -> void`. Because it comes from the compiler's own formatters, it is exactly the function that will be generated, so the programmer knows the precise call to make.
+10. **Checking the Ships-as line to hand a function to a programmer.** Before asking a programmer teammate to wire something up, read the "SHIPS AS" line, for example `func take_damage(amount: float) -> void`. Because it comes from the compiler's own formatters, it is exactly the function that will be generated, so the programmer knows the precise call to make.
 
-11. **A Remaining Shields expression for enemy AI.** Pick "A value" and choose **a whole number** (int). The verb returns how many shield charges are left. An AI sheet reads `Remaining Shields` as an Expression to decide whether to press an attack.
+11. **A Remaining Shields expression for enemy AI.** Pick "A value" and choose **a whole number** (int). The expression returns how many shield charges are left. An AI sheet reads `Remaining Shields` as an Expression to decide whether to press an attack.
 
-12. **A private helper you deliberately do not publish.** You need a small `Recompute Layout` verb used only inside one menu sheet. Leave the publish checkbox unticked so it stays a local helper and never clutters other sheets' pickers.
+12. **A private helper you deliberately do not publish.** You need a small `Recompute Layout` function used only inside one menu sheet. Leave the publish checkbox unticked so it stays a local helper and never clutters other sheets' pickers.
 
 ---
 
 ## 9. Tips and Common Mistakes
 
-- **Parameters live on the row, not in this dialog.** A brand-new verb has none; you add them from its Define block once it exists - click a `name : type` cell to edit one, or the "+ Add parameter" cell to add another.
+- **Parameters live on the row, not in this dialog.** A brand-new function has none; you add them from its Define block once it exists - click a `name : type` cell to edit one, or the "+ Add parameter" cell to add another.
 - **Defaulted parameters must be trailing.** If a parameter has a default value, every parameter after it must have one too. The Edit Parameter dialog refuses a change that would break that order and tells you what to fix.
 - **Names auto-convert to identifiers, and they can collide.** `Take Damage` becomes `take_damage` for you, but if a function or variable named `take_damage` already exists on the sheet, the dialog will stop and ask you to rename. Pick distinct names.
 - **The value-type dropdown only shows for "A value".** If you do not see a "What kind of value?" dropdown, you have picked an Action or a Condition, whose return types are already decided. Only the Expression card reveals it.
-- **Publish only the verbs meant to be reused.** Every published verb appears in every sheet's picker. Leave one-off helpers unpublished so the picker stays full of genuinely shared vocabulary.
-- **Gating lives in the body, not in the dialog.** A verb that should only act sometimes gets a condition row at the top of its body. That is an ordinary event row - visible, editable, and undoable - not a setting buried in a dialog.
-- **The Ships-as line always matches the real output.** It is generated from the same formatters the compiler uses, so trust it. If the "SHIPS AS" signature looks wrong, the fix is to change the verb's kind, name, or parameters - not to work around it in code later.
-- **Write a real Description.** The description is what other people read in the picker. A one-line "what it does" saves everyone from guessing, especially for published verbs.
-- **A verb is just a GDScript function.** Nothing here is magic. If you ever want to read or extend the generated code directly, it is plain, typed GDScript with the exact signature the preview showed you.
+- **Publish only the functions meant to be reused.** Every published function appears in every sheet's picker. Leave one-off helpers unpublished so the picker stays full of genuinely shared vocabulary.
+- **Gating lives in the body, not in the dialog.** A function that should only act sometimes gets a condition row at the top of its body. That is an ordinary event row - visible, editable, and undoable - not a setting buried in a dialog.
+- **The Ships-as line always matches the real output.** It is generated from the same formatters the compiler uses, so trust it. If the "SHIPS AS" signature looks wrong, the fix is to change the function's kind, name, or parameters - not to work around it in code later.
+- **Write a real Description.** The description is what other people read in the picker. A one-line "what it does" saves everyone from guessing, especially for published functions.
+- **A function here is just a GDScript function.** Nothing here is magic. If you ever want to read or extend the generated code directly, it is plain, typed GDScript with the exact signature the preview showed you.

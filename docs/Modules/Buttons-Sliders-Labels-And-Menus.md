@@ -3,13 +3,13 @@
 A menu or a HUD is a scene of Godot `Control` nodes, and this is the vocabulary that drives them from
 rows: the two button triggers, focus navigation for keyboard and gamepad, the button / slider /
 text-field getters and setters, a layout preset, a theme colour override, and the label and
-visibility verbs a HUD is mostly made of.
+visibility rows a HUD is mostly made of.
 
-Every verb is a thin wrap of a native member, so a sheet on a `Button` really does compile to
+Every row is a thin wrap of a native member, so a sheet on a `Button` really does compile to
 `disabled = true`, and a sheet on a `Label` really does compile to `text = str(score)`. Nothing here
 builds UI for you - you lay the scene out in the editor and drive it from events.
 
-Most of these verbs are node-scoped, which means each one also carries an optional **On node**
+Most of these rows are node-scoped, which means each one also carries an optional **On node**
 parameter: leave it blank to act on the node the sheet is attached to, or fill it in (`$Hud/Score`)
 to drive another node from a central sheet. That single choice decides whether your UI logic lives on
 each widget or in one menu sheet.
@@ -18,7 +18,7 @@ each widget or in one menu sheet.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -52,29 +52,29 @@ each widget or in one menu sheet.
   so writing a checkbox's state from your own settings-loading code cannot start an event loop where
   the toggle handler writes the setting that sets the toggle.
 - **Text lives on three different nodes.** **Set Text** / **Append Text** / **Get Text** are `Label`
-  verbs, **Set Field Text** / **Clear Field** / **Field Text** are `LineEdit` verbs, and
+  rows, **Set Field Text** / **Clear Field** / **Field Text** are `LineEdit` rows, and
   **Button Text** reads a `Button`. They all touch a `text` member; the node type is what tells them
   apart in the picker.
-- **Show and Hide are `CanvasItem` verbs**, so the same two rows work on a `Control`, a `Sprite2D` and
+- **Show and Hide are `CanvasItem` actions**, so the same two rows work on a `Control`, a `Sprite2D` and
   a whole panel with children.
 - **Tint is inherited, self-tint is not.** **Set Color Tint** colours the node and everything under
   it (a panel fading takes its labels with it); **Set Self Tint** colours only that node.
 
-## Verb reference
+## Reference tables
 
 Multi-line templates are shown by their first line; the full emitted block appears in the matching
 use case below.
 
 ### Triggers (picker section: Signals / Scene / Input)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | On Pressed | Runs when the player clicks or activates this button (`BaseButton`). | connects the `pressed` signal |
 | On Toggled | Runs when a toggle button is switched on or off; carries `toggled_on`. | connects the `toggled` signal |
 
 ### Focus and layout (picker section: UI, node type Control)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Grab Focus | Gives this control keyboard focus. | `{target.}grab_focus()` |
 | Release Focus | Removes keyboard focus from this control. | `{target.}release_focus()` |
@@ -92,7 +92,7 @@ use case below.
 
 ### Buttons (picker section: UI, node type BaseButton)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Is Button Pressed | True while this button is pressed or toggled on. | `{target.}button_pressed` |
 | Is Button Disabled | True when this button is disabled. | `{target.}disabled` |
@@ -102,7 +102,7 @@ use case below.
 
 ### Sliders and bars (picker section: UI, node type Range)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Slider Value | Sets a slider, progress bar or spinbox to a value. | `{target.}value = {value}` |
 | Set Max Value | Sets its maximum. | `{target.}max_value = {max}` |
@@ -111,7 +111,7 @@ use case below.
 
 ### Text fields (picker section: UI, node type LineEdit)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Field Text | Sets the text shown in a single-line field. | `{target.}text = str({value})` |
 | Clear Field | Empties the field. | `{target.}clear()` |
@@ -119,7 +119,7 @@ use case below.
 
 ### Labels, visibility and tint (picker sections: General Actions / Conditions / Expressions)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Text | Sets the text shown on a `Label`. | `{target.}text = str({value})` |
 | Append Text | Adds text onto the end of a `Label`'s text. | `{target.}text += str({value})` |
@@ -132,7 +132,7 @@ use case below.
 
 ## Use cases
 
-**1. A Play button.** A sheet on the button, one **On Pressed** event, one **Go To Scene** action:
+**1. A Play button.** A sheet on the button, one **On Pressed** event, one **Go To Layout** action:
 
 ```gdscript
 get_tree().change_scene_to_file("res://levels/level1.tscn")
@@ -348,8 +348,8 @@ $PausePanel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
   variable, which the retargeting pass refuses to prefix. They always walk from the node the row runs
   on.
 - **Button Text is scoped to `Button`, not `BaseButton`.** A `TextureButton` has no text to read, so
-  the verb does not offer itself there.
-- **Set Text and Set Field Text are different verbs for different nodes.** A `Label` uses
+  the expression does not offer itself there.
+- **Set Text and Set Field Text are different actions for different nodes.** A `Label` uses
   **Set Text**; a `LineEdit` uses **Set Field Text**. Both wrap `text`, so a row applied to the wrong
   node type will not appear in the picker at all - that is the picker telling you something, not a
   bug.

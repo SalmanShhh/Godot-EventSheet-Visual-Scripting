@@ -1,7 +1,7 @@
 # Reading Spreadsheets And Data Assets
 
 Two pipelines that answer the same question - "where does my game's content live, if not in a wall of
-rows?" - plus the verbs that tell you why a load went wrong.
+rows?" - plus the expressions that tell you why a load went wrong.
 
 The first pipeline is **a designer edits a spreadsheet**. **Table From File** reads a `.csv` whose
 first line is the column names and hands back one record per row, every field reachable as
@@ -11,10 +11,10 @@ The second is **a folder of `.tres` IS my content**. **Resources In Folder** loa
 a directory as a list, **Resource In Folder** fetches one by file name, and **For Each Resource In
 Folder** walks them in the loop lane with no list to maintain.
 
-Around both sit the copy-and-pour verbs (making a private copy of a resource, pouring a preset onto a
+Around both sit the copy-and-pour rows (making a private copy of a resource, pouring a preset onto a
 node) and three reports that turn a silent failure into a sentence you can print.
 
-These are builtin verbs: nothing to enable, nothing to attach. Every one compiles to plain,
+This is builtin vocabulary: nothing to enable, nothing to attach. Every one compiles to plain,
 dependency-free GDScript.
 
 ## Table of Contents
@@ -22,7 +22,7 @@ dependency-free GDScript.
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
 3. [The CSV parse policy](#the-csv-parse-policy)
-4. [Verb reference](#verb-reference)
+4. [Reference tables](#reference-tables)
 5. [Use cases](#use-cases)
 6. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -87,7 +87,7 @@ The Separator parameter offers **Comma**, **Semicolon** and **Tab** - deliberate
 because those three are what a spreadsheet export actually writes and the policy above is proven
 against them.
 
-## Verb reference
+## Reference tables
 
 Ships as is the template the row compiles to. The table and folder templates are long single
 expressions by necessity: an expression lands in a value field, so it has to BE one expression, with
@@ -96,7 +96,7 @@ character for character below.
 
 ### Files: Tables
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Table From File | Reads a `.csv` whose first line is the column names into one record per row | A single quote-aware fold over `FileAccess.get_file_as_string({path})`, split by `{separator}` |
 | Table From Text | The same parse over text you already hold instead of a file on disk | The same fold over `{text}` |
@@ -109,7 +109,7 @@ character for character below.
 These three are CONDITIONS that land in the event's loop lane, so the event's actions run once per
 item and the loop index, frame-spreading and round-trip all come from the pick machinery.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | For Each Line In Text | Runs the event's actions once per LINE, skipping blank ones. Read the current one as `line` | `{text}.replace("\r\n", "\n").replace("\r", "\n").split("\n", false)` |
 | For Each Part In Text | Once per PIECE split by a separator, each trimmed, empties skipped. Read it as `part` | `Array({text}.split({separator}, false)).map(strip_edges).filter(not empty)` |
@@ -117,7 +117,7 @@ item and the loop index, frame-spreading and round-trip all come from the pick m
 
 ### Files: a folder of data assets
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Resources In Folder | Loads every `.tres` / `.res` in a folder as a list (not recursive) | The same guarded walk, as an expression |
 | Resource In Folder | One data asset by file name without the extension, or nothing at all | `(load({folder}.path_join({name}) + ".tres") if ResourceLoader.exists(...) else null)` |
@@ -126,7 +126,7 @@ item and the loop index, frame-spreading and round-trip all come from the pick m
 
 ### Files: live data (a file that changed while the game is running)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Watch Data File | Checks whether a data file has been written since the last check, and fires the sheet's `data_file_changed(path)` signal when it has | A modification-time reading compared with the one remembered in node metadata under the path |
 | Reload Data Asset | Re-reads a data asset from disk into the copy every node is already holding | `ResourceLoader.load({path}, "", ResourceLoader.CACHE_MODE_REPLACE)`, guarded by `ResourceLoader.exists` |
@@ -143,14 +143,14 @@ checks first), so the watch row is always safe to drop.
 
 ### Helpers: copying
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Copy Resource (Independent) | A private copy right down to the resources inside it | `({resource}.duplicate(true) if {resource} is Resource else null)` |
 | Copy Resource (Share Sub-Resources) | A cheap copy whose inner resources and lists stay SHARED | `({resource}.duplicate(false) if {resource} is Resource else null)` |
 
 ### Helpers: pouring values between objects
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Copy Values From | Pours a comma-separated list of named values off another object onto this one (blank list means every variable the source's script declares) | A loop over the names that writes each one the source and target both have |
 | Fill Blanks From | Writes a base's values ONLY into fields the target left empty | A loop over the base's script variables that writes only where the target's value is null or an empty String, Array or Dictionary |
@@ -159,7 +159,7 @@ checks first), so the watch row is always safe to drop.
 
 ### The reports
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Explain JSON Problem | Why this JSON failed to parse, with the line: `"line 4: Expected ':'"`. Empty when it parses | A lambda binding a `JSON.new()` so `get_error_line() + 1` and `get_error_message()` can be read |
 | Explain Table Problem | The first non-numeric cell in a column that must hold numbers, or a row that is not a record at all | See the Files: Tables table above |
@@ -448,7 +448,7 @@ On mod folder chosen
     -> set mod_items = Resources In Folder( chosen_folder )
 ```
 
-**29. Fail a build on bad data.** The same verb in an Editor Tool sheet, so a designer's `.tres` edit
+**29. Fail a build on bad data.** The same condition in an Editor Tool sheet, so a designer's `.tres` edit
 is checked by the build server with no second implementation of the rules.
 
 ```
@@ -504,7 +504,7 @@ func _on_debug_key_pressed() -> void:
 - **Resources In Folder is not recursive.** It reads one folder. Nest content and the subfolders are
   ignored.
 - **In an exported project a converted `res://` text resource is stored as `<name>.tres.remap`.** The
-  folder verbs here trim that suffix before testing the extension, which is exactly why a hand-rolled
+  folder rows here trim that suffix before testing the extension, which is exactly why a hand-rolled
   version of the same walk finds nothing in an export while working perfectly in the editor.
 - **A file that fails to load is left OUT of the list**, not included as nothing. That is deliberate:
   a null in a list your rows call "my content" is a dead item the first `entry.field` trips over.
@@ -513,7 +513,7 @@ func _on_debug_key_pressed() -> void:
   file on disk.
 - **Copy Resource (Share Sub-Resources) is not the safe one.** Its inner resources and array fields
   are still shared with the original. Reach for it only when you want that.
-- **The pouring verbs skip names the target does not have; the comparison does the opposite.** Copy
+- **The pouring actions skip names the target does not have; the comparison does the opposite.** Copy
   Values From ignoring a name is a feature (one preset, several node types). Matches Properties Of
   reading a missing name as NOT matching is also a feature - it turns a rename into a visible false
   instead of a quiet "still in sync".

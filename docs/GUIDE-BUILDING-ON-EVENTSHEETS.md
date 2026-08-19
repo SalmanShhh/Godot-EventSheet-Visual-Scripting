@@ -1,6 +1,6 @@
 # Building on EventSheets
 
-Everything an extension needs lives in **one class: `EventSheets`** (`addons/eventsheet/api/eventsheets.gd`). It is all static, so any `@tool` script, editor plugin, or test can call it with zero setup: register new vocabulary, drive the live editor, use the compiler and importer as plain services, or plug into the Project Doctor. Every method on it is a compatibility promise, the same covenant `ace_id`s and codegen templates carry: shapes are stable once shipped, new capabilities get added, existing ones are never renamed. The plugin dogfoods this API itself (the region fold commands in the Command Palette and the MCP server's compile and import tools go through it), so the extension path is the exact path the built-ins take.
+Everything an extension needs lives in **one class: `EventSheets`** (`addons/eventsheet/api/eventsheets.gd`). It is all static, so any `@tool` script, editor plugin, or test can call it with zero setup: register new vocabulary, drive the live editor, use the compiler and importer as plain services, or plug into the Project Doctor. Every method on it is a compatibility promise, the same covenant `ace_id`s and codegen templates carry: shapes are stable once shipped, new capabilities get added, existing ones are never renamed. The plugin dogfoods this API itself (the region collapse commands in the Command Palette and the MCP server's compile and import tools go through it), so the extension path is the exact path the built-ins take.
 
 ![Vocabulary registered through the EventSheets API appears in the picker exactly like the built-ins - same live search, favorites and recents rails, and Ships-as GDScript preview](previews/editor-ace-picker.png)
 
@@ -22,7 +22,7 @@ Everything an extension needs lives in **one class: `EventSheets`** (`addons/eve
 
 ## 1. What You Can Build
 
-- **A vocabulary pack from another plugin.** Your editor plugin registers a provider script and a custom block kind in its `_enter_tree()`; EventSheets users get your verbs and rows with no files copied anywhere.
+- **A vocabulary pack from another plugin.** Your editor plugin registers a provider script and a custom block kind in its `_enter_tree()`; EventSheets users get your vocabulary and rows with no files copied anywhere.
 - **A Command Palette power tool.** "Sort events by trigger", "Insert my team's standard header", "Renumber TODO comments": register a command, mutate the sheet through `edit()`, and it lands as one undo step.
 - **A sheet linter or codemod.** Walk `current_sheet().events`, rewrite what you find inside `edit()`, report through `set_status()`.
 - **Headless tooling.** A CI script that compiles every sheet in a project, or byte-verifies that hand-edited GDScript still round-trips, using `compile()` / `round_trips()` with no editor open at all.
@@ -221,7 +221,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Editor | `build_inspector_preview(name, type_name, default_text, attributes, exported := true, constant := false)` | `Control` | no |
 | Editor | `describe_inspector(type_name, attributes, exported := true, constant := false)` | `String` | no |
 | Rows | `build_condition_action_row(condition_text, action_lines, indent := 0, source := null)` - the primitive for mapping any construct onto the event model | `EventRowData` | yes |
-| Rows | `add_field_cell(row, label, text, metadata := {})` - a named slot as a condition-style cell (label leads it, text says what it holds); a published verb's parameters use this exact call | `EventRowData` | yes |
+| Rows | `add_field_cell(row, label, text, metadata := {})` - a named slot as a condition-style cell (label leads it, text says what it holds); a published function's parameters use this exact call | `EventRowData` | yes |
 | Rows | `build_caption_row(text, indent := 0, row_uid := "", accent := Color(0,0,0,0))` - a wrapping line of prose welded above the row it describes | `EventRowData` | yes |
 | Rows | `mark_language_block(row)` - marks a row as GDScript structure (accent stripe + wash) | `EventRowData` | no |
 | Rows | `collection_decl(variable_name, entries, dictionary := true)` - a structured multi-line collection declaration (`var waves := { ... }`), the row an opened `.gd`'s canonical literal lifts into. `entries` is `[key, value]` pairs for a dictionary (keys carry their own quotes) or plain values for an array. Append it to an `EventRow`'s actions, or to `sheet.events` for a file-scope table; entries stay individually editable rows. Returns `null` when the name is not an identifier or an entry is refused | `CollectionDeclRow` | no |
@@ -248,12 +248,12 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Seams | `param_spec(config: Dictionary)` - normalizes one param/field config: `default` and `default_value` are interchangeable, `options` takes a plain list / a `{value: label}` dictionary / ready-made pairs, and `hint: "comparison"` expands to the whole labeled operator dropdown seeded to `==`. `simple_ace()` and `simple_block_kind()` run every param through it | `Dictionary` | no |
 | Seams | `combo_options(source)` / `comparison_options(equal_token := "==")` - dropdown options as `{key, label}` pairs, so a row READS as English while INSERTING the real token. Pass `equal_token` when your runtime stores a single `=` | `Array` | no |
 | Seams | `curate_provider(script_path, edits)` - writes `## @ace_*` annotations into a script you own (label, category, kind, opt-out, param specs). Only `##` comments are added or removed - never a signature or body - the file is backed up first, and re-applying the same edits is a no-op | `Dictionary` | no |
-| Seams | `keep_old_verb_working(script_path, old_member, new_member, message := "")` - appends a deprecated forwarding shim so a RENAMED verb keeps working for the sheets that already use it. Purely additive (no signature, body or call site is edited), backed up first, and the shim carries `@ace_deprecated` so the old name is hidden from the picker while still resolving | `Dictionary` | no |
+| Seams | `keep_old_verb_working(script_path, old_member, new_member, message := "")` - appends a deprecated forwarding shim so a RENAMED member keeps working for the sheets that already use it. Purely additive (no signature, body or call site is edited), backed up first, and the shim carries `@ace_deprecated` so the old name is hidden from the picker while still resolving | `Dictionary` | no |
 | Seams | `publish_pack_version(script_path, bump, note)` - the Sheet > Publish New Version ritual, callable from tooling: bumps `@ace_version` semver-style (`"patch"` / `"minor"` / `"major"`; a missing version reads as 1.0.0 first), records the note as a `## X.Y.Z: note` doc comment directly under the annotation, backs the script up first. Returns `{ok, old_version, new_version}` | `Dictionary` | no |
-| Seams | `addon_guide_skeleton(script_path)` - the docs/Addons guide template pre-filled from the pack's REAL vocabulary: title, numbered TOC, verb tables per kind, Inspector properties with their defaults, the Self section, and the house-standard use-case scaffolding (15 numbered blanks + 5 "Other use cases" prompts). Returns the Markdown text; `tools/scaffold_addon_guide.gd` is the CLI wrapper | `String` | no |
+| Seams | `addon_guide_skeleton(script_path)` - the docs/Addons guide template pre-filled from the pack's REAL vocabulary: title, numbered TOC, a reference table per kind, Inspector properties with their defaults, the Self section, and the house-standard use-case scaffolding (15 numbered blanks + 5 "Other use cases" prompts). Returns the Markdown text; `tools/scaffold_addon_guide.gd` is the CLI wrapper | `String` | no |
 | Vocabulary | `project_classes()` - the `Node`-derived classes and autoloads THIS project declares, as `{name, path, kind, autoload}` entries. The input set behind the picker's Your Project section; data classes and helpers are excluded because nobody picks an action on them | `Array` | no |
-| Vocabulary | `override_verb(provider_id, ace_id, edits)` - refines how a REFLECTED verb presents: `{"display_name": …}`, `{"category": …}`, `{"hidden": true}`; a null or empty value clears that facet. Stored in the project's override catalog, never in the user's script. Presentation only - ids and emitted calls never change, so deleting the catalog restores the inferred vocabulary and leaves every compiled sheet byte-identical. A verb whose identity comes from `@ace_*` annotations is unaffected: source outranks the catalog | `void` | no |
-| Vocabulary | `exclude_class(class_id, excluded := true)` - hides (or restores) a whole reflected class: its card and all its verbs | `void` | no |
+| Vocabulary | `override_verb(provider_id, ace_id, edits)` - refines how a REFLECTED member presents: `{"display_name": …}`, `{"category": …}`, `{"hidden": true}`; a null or empty value clears that facet. Stored in the project's override catalog, never in the user's script. Presentation only - ids and emitted calls never change, so deleting the catalog restores the inferred vocabulary and leaves every compiled sheet byte-identical. A member whose identity comes from `@ace_*` annotations is unaffected: source outranks the catalog | `void` | no |
+| Vocabulary | `exclude_class(class_id, excluded := true)` - hides (or restores) a whole reflected class: its card and everything it publishes | `void` | no |
 | Vocabulary | `bake_overrides(script_path, class_id)` - writes that class's catalog overrides INTO its script as `## @ace_*` comments (backed up first, comment lines only, no signature or body touched, idempotent), then drops the ones it actually wrote from the catalog. Returns `curate_provider`'s result plus `baked`: how many were written. Members the writer could not find are reported in `skipped` and their overrides are KEPT | `Dictionary` | no |
 | Seams | `register_param_editor(tag: String, factory: Callable)` / `param_editor_for(tag)` | `void` / `Callable` | no |
 | Seams | `register_param_commit_validator(hint, validator)` / `param_commit_validator_for(hint)` - `validator(value) -> Dictionary` runs when the params dialog COMMITS a field with that hint; return `{}` to pass, or `{title, message, confirm_text, cancel_text, on_confirm}` to ask first (the dialog delivers the commit exactly once however the prompt closes) | `void` / `Callable` | no |
@@ -327,7 +327,7 @@ EventSheets.register_doctor_check("dialogue.missing_files", func(sheet_paths: Pa
 
 ### 5. Registering your plugin's vocabulary on load
 
-**Scenario:** your editor plugin adds verbs to every project it is installed in - no files copied.
+**Scenario:** your editor plugin adds vocabulary to every project it is installed in - no files copied.
 
 ```gdscript
 func _enter_tree() -> void:
@@ -396,7 +396,7 @@ dialog.add_child(EventSheets.build_inspector_preview("drop_rate", "float", "0.25
 dialog.hint_label.text = EventSheets.describe_inspector("float", attrs)
 ```
 
-### 12. A migration codemod that renames a retired verb
+### 12. A migration codemod that renames a retired action
 
 **Scenario:** you deprecated an old inventory action and shipped a replacement; a one-shot palette command rewrites every affected row across the open sheet in a single undo step, so upgrading a project is one click, not a manual find-and-replace.
 
@@ -536,7 +536,7 @@ Return an ACEAction to join the event that was dropped on, any other row resourc
 
 ### 18. A domain-specific editor for one parameter
 
-**Scenario:** your pack's verbs take a `wave_id`, and typing it from memory is how typos ship. A custom editor turns that one field into a dropdown backed by your real wave table, while every other field stays a plain box.
+**Scenario:** your pack's rows take a `wave_id`, and typing it from memory is how typos ship. A custom editor turns that one field into a dropdown backed by your real wave table, while every other field stays a plain box.
 
 ```gdscript
 EventSheets.register_param_editor("wave_id", func(param: Dictionary, initial_text: String) -> LineEdit:
@@ -569,7 +569,7 @@ EventSheets.register_param_commit_validator("save_slot", func(value: String) -> 
 
 Return `{}` to let the commit through. The dialog owns the hard part: the commit is deferred and then delivered exactly once however the prompt closes, so you never get a double-apply or a silent drop.
 
-### 20. A right-click verb that only appears on your rows
+### 20. A right-click menu item that only appears on your rows
 
 **Scenario:** your pack ships a state-machine row, and the natural gesture is "jump to the state this transitions to". A row-menu item puts it where a user right-clicks, filtered so it never clutters anyone else's rows.
 
@@ -585,7 +585,7 @@ The filter receives the row's source resource, so a block row is matched on its 
 
 ### 21. Make the quick-add bar speak your team's words
 
-**Scenario:** your designers say "spawn a mob", the vocabulary says "Instantiate Scene". Rather than retraining people, map their words onto the verb.
+**Scenario:** your designers say "spawn a mob", the vocabulary says "Instantiate Scene". Rather than retraining people, map their words onto the real action.
 
 ```gdscript
 EventSheets.register_quick_add_synonyms({
@@ -596,7 +596,7 @@ EventSheets.register_quick_add_synonyms({
 })
 ```
 
-Typing "spawn a mob" into the quick-add bar now matches the real verb, so the team's habitual language stops being a barrier to finding vocabulary.
+Typing "spawn a mob" into the quick-add bar now matches the real action, so the team's habitual language stops being a barrier to finding vocabulary.
 
 ### 22. A starter template so new sheets begin correct
 
@@ -631,7 +631,7 @@ EventSheets.register_editor_gizmo("res://eventsheet_addons/patrol/patrol.gd",
 
 ### 24. Ship your pack's vocabulary in your users' language
 
-**Scenario:** your pack is used by a Japanese studio. Its verb names should read in Japanese without forking the pack.
+**Scenario:** your pack is used by a Japanese studio. Its vocabulary should read in Japanese without forking the pack.
 
 ```gdscript
 EventSheets.register_translation_file("res://addons/my_pack/i18n/ja.csv")
@@ -671,7 +671,7 @@ EventSheets.register_preference(func() -> Control:
 
 The row joins the Welcome window's Preferences card, built fresh each time it opens.
 
-### 27. One verb, no provider file
+### 27. One action, no provider file
 
 **Scenario:** you want to add a single action from a tool script or a test, without creating a provider script just to hold it.
 

@@ -53,11 +53,11 @@ Argument** for reading the handoff.
 2. Register your scenes once, in a boot sheet the game always runs first - either one Register Scene
    row per level, or a single Register Scenes In Folder over `res://levels`.
 3. Replace the `res://` paths in your existing Go To Scene rows with names. The old path-addressed
-   verbs keep working, so you can move over one row at a time.
+   actions keep working, so you can move over one row at a time.
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, exactly as the
+On the canvas these rows read as styled sentences - parameter values in **bold**, exactly as the
 rows draw them:
 
 - Register scene **"arena"** = **res://levels/arena.tscn**
@@ -255,8 +255,8 @@ func _on_save_pressed() -> void:
 	save_slot["level"] = NamedScenes.current_scene_name()
 ```
 
-**15. Hand a path to a verb that still wants one.** The escape hatch, for a fade-to-scene verb from
-another pack.
+**15. Hand a path to an action that still wants one.** The escape hatch, for a fade-to-scene action
+from another pack.
 
 ```gdscript
 extends Node
@@ -306,6 +306,6 @@ func _on_season_ended() -> void:
   apart.
 - **Preloading does not change scene**, and it does not expire. A warmed scene stays in memory until
   you Forget Named Scene it.
-- **Current Scene Is answers on the last ANNOUNCED name.** If you change scene with Godot's own verb
+- **Current Scene Is answers on the last ANNOUNCED name.** If you change scene with Godot's own action
   rather than this pack's, call Announce Scene Ready afterwards or the condition will still name the
   old level.

@@ -15,7 +15,7 @@ Cameras, Graphics and Screenshots guide.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -34,7 +34,7 @@ Cameras, Graphics and Screenshots guide.
 
 ## Core concepts
 
-- **There are two families of window verbs, and they behave the same.** The **Game Window** section
+- **There are two families of window rows, and they behave the same.** The **Game Window** section
   goes through `get_window()`, and the **Display** section goes through `DisplayServer`. Both change
   the same window. Pick one family per project and stay in it, because a **Set Window Size** row from
   each looks identical on the canvas and takes a different parameter shape.
@@ -43,7 +43,7 @@ Cameras, Graphics and Screenshots guide.
   **Toggle Fullscreen** flips between windowed and borderless. **Is Fullscreen** answers true for
   either fullscreen mode, which is what a toggle button's label wants.
 - **Minimize and maximize are modes too.** They set `Window.MODE_MINIMIZED` / `MODE_MAXIMIZED`, so
-  restoring a minimized window is **Go Windowed**, not an "unminimize" verb.
+  restoring a minimized window is **Go Windowed**, not an "unminimize" action.
 - **Sizes are pixels, positions are screen pixels.** **Set Window Size** takes Width and Height as
   separate ints in the Game Window family; the Display family takes one `Vector2i`. **Window Size**
   and **Screen Size** read them back, and the second is how you build a sane resolution list.
@@ -56,16 +56,16 @@ Cameras, Graphics and Screenshots guide.
   defaults to the same file, and **Load Setting Into Variable** is its reader, with a fallback
   default for a key that was never written.
 - **Nothing is applied for you.** Saving a setting stores a number; a stored number changes nothing
-  until a row reads it back and calls the matching verb on startup.
+  until a row reads it back and calls the matching action on startup.
 
-## Verb reference
+## Reference tables
 
 Multi-line templates are shown by their first line; the full emitted block appears in the matching
 use case below.
 
 ### Fullscreen and window mode (picker section: Game Window)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Go Fullscreen | Switches to borderless fullscreen. | `get_window().mode = Window.MODE_FULLSCREEN` |
 | Go Windowed | Switches back to a normal window. | `get_window().mode = Window.MODE_WINDOWED` |
@@ -77,7 +77,7 @@ use case below.
 
 ### Size, position and behaviour (picker section: Game Window)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Window Size | Resizes the window to an exact pixel size (Width, Height). | `get_window().size = Vector2i({width}, {height})` |
 | Set Window Position | Moves the window on the screen (X, Y). | `get_window().position = Vector2i({x}, {y})` |
@@ -89,7 +89,7 @@ use case below.
 
 ### The Display family (picker section: Display)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Fullscreen Mode | Picks a window mode from a dropdown (fullscreen, exclusive fullscreen, windowed, maximized). | `DisplayServer.window_set_mode({mode})` |
 | Set Window Size | Resizes the window, taking one Vector2i Size. | `DisplayServer.window_set_size({size})` |
@@ -105,7 +105,7 @@ The Mode dropdown on **Set Fullscreen Mode** offers exactly
 
 ### Title and screen (picker section: Utility: Window)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Window Title | Changes the text in the title bar. | `get_window().title = {title}` |
 | Window Size | The window's current size in pixels (a Vector2i). | `get_window().size` |
@@ -113,7 +113,7 @@ The Mode dropdown on **Set Fullscreen Mode** offers exactly
 
 ### Knowing where the game is running (picker section: Platform)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | OS Name | The name of the operating system the game is running on, as text ("Windows", "Android", "Web"). | `OS.get_name()` |
 | Platform Has Feature | True when the current platform supports the given Feature tag. The Feature cell defaults to `"mobile"` and offers the common tags (`"pc"`, `"web"`, `"android"`, `"ios"`, `"windows"`, `"linux"`, `"macos"`, `"editor"`, `"debug"`, `"release"`, `"touchscreen"` and more), and you can type a custom tag your export preset defines. | `OS.has_feature({feature})` |
@@ -124,7 +124,7 @@ once, while OS Name is best kept for showing or logging which system the player 
 
 ### Saving a choice (picker sections: Game Options and Utility: Settings)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Save Setting (Game Options) | Writes one Section / Key / Value into `user://settings.cfg`, keeping the other settings intact. | `var __cfg_{uid} = ConfigFile.new()` … (multi-line, use case 12) |
 | Has Saved Settings | True when a settings file has been saved before. | `FileAccess.file_exists("user://settings.cfg")` |
@@ -334,12 +334,12 @@ get_window().title = "My Game (DEBUG)"
 
 ## Tips and common mistakes
 
-- **Two verbs are called Set Window Size and two are called Is Fullscreen.** The **Game Window**
+- **Two rows are called Set Window Size and two are called Is Fullscreen.** The **Game Window**
   versions take Width and Height as separate numbers and read `get_window()`; the **Display**
   versions take a single `Vector2i` and go through `DisplayServer`. They do the same thing to the
   same window - just do not mix them inside one project, or a later reader cannot tell which row is
   which.
-- **Two verbs are called Save Setting, too.** The **Game Options** one has no File parameter and
+- **Two actions are called Save Setting, too.** The **Game Options** one has no File parameter and
   always writes `user://settings.cfg`; the **Utility: Settings** one takes the path. **Has Saved
   Settings** only ever checks `user://settings.cfg`, so it does not know about your other files.
 - **Set Max FPS appears twice as well** - once under **Game Window** (`Engine.max_fps = {fps}`, an
@@ -349,7 +349,7 @@ get_window().title = "My Game (DEBUG)"
   screen that only saves looks broken on the next launch until you add the load-and-apply block from
   use case 13.
 - **`res://` is read-only in an exported game.** Settings must live under `user://`. Both Save
-  Setting verbs default to a `user://` path for that reason.
+  Setting actions default to a `user://` path for that reason.
 - **A missing key is not an error.** **Load Setting Into Variable** takes a Default, which is what
   you get back the first time. Choose a default that is a sane setting, not a placeholder.
 - **Resizing does not reposition.** After **Set Window Size**, add **Center Window** unless you are

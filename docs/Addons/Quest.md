@@ -51,8 +51,8 @@ not a pile of global variables and if-rows.
 
 ## Setup
 
-Enable the **Quest** pack. It registers the `Quests` autoload, so there is nothing to attach - the verbs
-are available in the picker's **Quest** section from any sheet.
+Enable the **Quest** pack. It registers the `Quests` autoload, so there is nothing to attach - the whole
+vocabulary is available in the picker's **Quest** section from any sheet.
 
 Then create the quest itself: in the FileSystem dock, create a new **Resource**, pick **QuestResource**,
 fill it in, and save it as (for example) `res://quests/gem_hunt.tres`.
@@ -80,7 +80,7 @@ On Quest Completed
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, exactly as the rows
+On the canvas these rows read as styled sentences - parameter values in **bold**, exactly as the rows
 draw them:
 
 - Start quest **gem_hunt.tres**
@@ -155,7 +155,7 @@ On Start of Layout
 ```
 
 The pack also exposes the Save System's save-state seam, so if you already use the **Save System** pack
-its Save / Load verbs pick the same state up with no extra wiring.
+its Save / Load actions pick the same state up with no extra wiring.
 
 ## Use cases
 

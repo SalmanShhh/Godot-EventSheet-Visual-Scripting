@@ -7,9 +7,9 @@ you: the Output panel is invisible in fullscreen, absent on a phone or a console
 in the exported build a playtester is running.
 
 Three properties keep it out of your way, and all three are enforced in the code it ships as. It is
-**off until a row asks for it** (the drawing surface is created by the first verb call, so a project
+**off until a row asks for it** (the drawing surface is created by the first row that calls it, so a project
 with no Debug Overlay rows creates no node and draws nothing). It is **debug builds only** (the same
-`OS.is_debug_build()` gate the builtin Log (Debug Builds Only) verb uses, so an exported release
+`OS.is_debug_build()` gate the builtin Log (Debug Builds Only) action uses, so an exported release
 carries none of it). And it is **never on the sheet**: it draws over the running game, no row gains a
 chip or a readout, and the editor canvas is not touched at all. Press the toggle key to hide it while
 you play.
@@ -59,7 +59,7 @@ you play.
 ## Setup
 
 **Tools > Register Autoload** installs it once, under the name `DebugOverlay`. That is the whole
-setup: the picker then grows a **Debug Overlay** section and its verbs drop into any sheet like any
+setup: the picker then grows a **Debug Overlay** section and its vocabulary drops into any sheet like any
 other pack's. There is no **Tools > Attach to Selected Node** step, because it is a singleton rather
 than a behavior.
 
@@ -74,7 +74,7 @@ Two properties are on the autoload node in the Inspector:
 
 ### Actions
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Watch Value | Shows name = value in the on-screen list, refreshed every time you set it. | `DebugOverlay.watch_value({watch_name}, {value})` |
 | Clear Watch | Drops one named value from the on-screen list. | `DebugOverlay.clear_watch({watch_name})` |
@@ -89,13 +89,13 @@ Two properties are on the autoload node in the Inspector:
 
 ### Conditions
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Overlay Is Visible | True while the overlay is on screen. False in a release build, before any row has drawn to it, and while the toggle key has it hidden. | `DebugOverlay.is_overlay_visible()` |
 
 ### Triggers
 
-| Verb | Fires when | Payload |
+| Name | Fires when | Payload |
 |------|------------|---------|
 | On Overlay Toggled | The overlay is shown or hidden, whether by a row or by the toggle key. | `shown` - whether the overlay is now visible |
 
@@ -281,7 +281,7 @@ func _on_tuning_done() -> void:
 ```
 
 **16. Put a performance measurement on screen instead of in the console.** The builtin stopwatch
-verbs record; the overlay is where you send the reading when the console is not visible.
+actions record; the overlay is where you send the reading when the console is not visible.
 
 ```gdscript
 extends Node
@@ -332,9 +332,9 @@ Average Measured reading, is a poor man's profiler that works on the device with
 
 ## Tips and common mistakes
 
-- **Nothing appears until a row calls a verb.** That is deliberate: the drawing surface is built on
+- **Nothing appears until a row calls one of these actions.** That is deliberate: the drawing surface is built on
   the first call. If you registered the autoload and see nothing, you have not dropped a row yet.
-- **Nothing appears in an exported release build either.** Every verb is behind
+- **Nothing appears in an exported release build either.** Every action and condition here is behind
   `OS.is_debug_build()`. Export with a debug template if you need the overlay in a build you hand out.
 - **Overlay Is Visible is false before the first draw.** It answers "is there an overlay on screen
   right now", not "is the pack installed", so a startup row that checks it will get `false`.

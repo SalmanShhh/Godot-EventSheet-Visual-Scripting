@@ -1,17 +1,17 @@
 # Working With Vectors And Directions
 
 **Working With Vectors And Directions** is the builtin **Variables: Vector** vocabulary plus the spatial
-family that grew out of it: verbs that let a sheet build, measure, aim, turn, blend and cap positions and
+family that grew out of it: rows that let a sheet build, measure, aim, turn, blend and cap positions and
 directions without typing a single `.x` or writing the distance formula out by hand, and then two
 families that put those directions to work - **screen and world** conversions in both directions, and the
-verbs that CONSUME a surface normal (bounce, slide, depenetrate, face along motion, safe Look At and
+rows that CONSUME a surface normal (bounce, slide, depenetrate, face along motion, safe Look At and
 lead-aim).
 
 A Vector2 is a pair (a position, a velocity, a direction, a size); a Vector3 is a triple. Godot's own
 methods already know how to measure and aim with them - this vocabulary just names those methods as
 sentences, so *the distance between the player and the exit* is one cell instead of a square root.
 
-The last two verbs, **Part Of** and **Set Part Of**, are the odd ones out and the ones you will
+The last two rows, **Part Of** and **Set Part Of**, are the odd ones out and the ones you will
 reach for most: they read and write ONE named component of a pair, a triple, a colour OR a record,
 which is why they cover "zero the vertical speed on landing" and "fade only the see-through part of a
 tint" with the same row.
@@ -23,7 +23,7 @@ code: *the length of `velocity`* ships as `velocity.length()`.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [The named parts](#the-named-parts)
 5. [Use cases](#use-cases)
 6. [Tips and common mistakes](#tips-and-common-mistakes)
@@ -47,25 +47,25 @@ code: *the length of `velocity`* ships as `velocity.length()`.
 - **These are expressions, except one.** Twelve of the thirteen are EXPRESSIONS - values you drop
   into a cell. Only **Set Part Of** is an action.
 - **Nothing mutates.** `Normalized(velocity)` does not change `velocity`; it hands back a new value.
-  Assign the result somewhere. Set Part Of is the only verb here that writes.
+  Assign the result somewhere. Set Part Of is the only row here that writes.
 - **A direction is a vector of length 1.** Normalized and Direction To both produce one. Multiply it
   by a speed to get a velocity; that is the whole idiom.
 - **Distance Between and Direction To are the two halves of "aim at".** One gives you how far, the
   other which way, from the same two points.
 - **Angles here are RADIANS.** Vector Angle returns radians and Rotated takes radians. Godot's
-  `rotation` property is radians too; `rotation_degrees` is not. The builtin degree-based trig verbs
-  live in the general Math vocabulary.
+  `rotation` property is radians too; `rotation_degrees` is not. The builtin degree-based trig
+  expressions live in the general Math vocabulary.
 - **Dot Product answers "how aligned".** For two unit vectors it is 1 when they point the same way, 0
   when they are at right angles, and -1 when they are opposed. That single number replaces most
   "is it in front of me" arithmetic.
 - **Part Of works on more than vectors.** It emits a subscript with a quoted key, which Godot
-  resolves as a component on Vector2, Vector3 and Color, and as a field on a Dictionary. One verb
+  resolves as a component on Vector2, Vector3 and Color, and as a field on a Dictionary. One expression
   therefore reads `velocity["y"]`, `modulate["a"]` and `saved_position["x"]`.
 - **Set Part Of targets a PROPERTY, not only a sheet variable.** Its first cell is an editable
   autocomplete over the host class, because the headline targets are a node's own members
   (`velocity`, `modulate`, `position`) that a variables dropdown cannot name at all.
 
-## Verb reference
+## Reference tables
 
 On the canvas these read as sentences with the values drawn in place: *the distance between
 `position` and `target`*, *the Y (up / down) part of `velocity`*, *set the Y (up / down) part of
@@ -73,14 +73,14 @@ On the canvas these read as sentences with the values drawn in place: *the dista
 
 ### Variables: Vector (build)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Make Vector2 | Builds a Vector2 from separate x and y numbers, for positions or directions. | `Vector2({x}, {y})` |
 | Make Vector3 | Builds a 3D point or direction from X, Y and Z numbers. | `Vector3({x}, {y}, {z})` |
 
 ### Variables: Vector (measure)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Vector Length | How long a vector is - a velocity's speed, a displacement's size. | `{vector}.length()` |
 | Distance Between | The straight-line distance between two points. | `{a}.distance_to({b})` |
@@ -89,17 +89,17 @@ On the canvas these read as sentences with the values drawn in place: *the dista
 
 ### Variables: Vector (aim and shape)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Normalized | The vector shrunk to length 1, keeping only its direction. | `{vector}.normalized()` |
-| Direction To | A unit vector pointing from one point toward another - the aiming verb. | `{a}.direction_to({b})` |
+| Direction To | A unit vector pointing from one point toward another - the aiming expression. | `{a}.direction_to({b})` |
 | Rotated | The vector turned by an angle in radians. | `{vector}.rotated({radians})` |
 | Vector Lerp | A point blended between two vectors, great for smooth movement. | `{a}.lerp({b}, {weight})` |
 | Clamp Length | The vector capped to a maximum magnitude, e.g. a speed limit. | `{vector}.limit_length({max_length})` |
 
 ### Variables: Vector (named parts)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Part Of | One named piece of a pair, a triple, a colour or a record - read as a sentence instead of a typed-in `.y`. | `({value})[{part}]` |
 | Set Part Of | ACTION: changes one named part and leaves the rest alone. Writing a part a record does not have yet ADDS it. | `{var_name}[{part}] = {value}` |
@@ -109,7 +109,7 @@ On the canvas these read as sentences with the values drawn in place: *the dista
 The camera's own transform, named as sentences. **World Point To Screen** and **Screen Point To World**
 are exact opposites, so the pair round-trips; everything else here is built on one of the two.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | World Point To Screen | Where a world point sits on screen right now, camera zoom and scroll included. | `(get_viewport().get_canvas_transform() * {world_point})` |
 | Screen Point To World | The world position under a screen pixel - the exact opposite. | `(get_viewport().get_canvas_transform().affine_inverse() * {screen_point})` |
@@ -123,11 +123,11 @@ are exact opposites, so the pair round-trips; everything else here is built on o
 
 ### Bounce, slide and aim (Movement)
 
-The verbs that CONSUME a surface normal. Every hit trigger and every cast in the plugin hands one back -
+The rows that CONSUME a surface normal. Every hit trigger and every cast in the plugin hands one back -
 **Ray Result Normal**, **Wall Normal**, **Floor Normal**, the Bullet pack's **On Bullet Hit** - and these
 are the three lines a developer writes next.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Bounce Off Surface | The velocity a moving thing has AFTER hitting a surface. 1 keeps all the speed, 0 is a dead stop. | `({velocity}.bounce({normal}.normalized()) * {bounciness})` |
 | Slide Along Surface | The velocity left once the part pushing INTO a surface is removed - the wall slide. | `({velocity}.slide({normal}.normalized()))` |
@@ -156,10 +156,10 @@ Part Of and Set Part Of share one dropdown. The row draws the readable label and
 | Alpha (see-through) | `"a"` | Color |
 
 Pick a part the value actually has. A record that might be MISSING the field is the builtin Get Key
-(with default) verb's job instead, because that one takes a fallback and Part Of does not.
+(with default) expression's job instead, because that one takes a fallback and Part Of does not.
 
 One honest consequence of the subscript form: `velocity["y"] = 0.0` is character-for-character what
-the Set Key verb emits, so reopening a `.gd`-backed sheet lifts the row back as Set Key rather than
+the Set Key action emits, so reopening a `.gd`-backed sheet lifts the row back as Set Key rather than
 as Set Part Of. The code is byte-identical either way and the lossless round-trip is untouched - what
 is lost on a reopen is the sentence. That is the deliberate trade for never mis-labelling somebody
 else's `save["gold"] = 5`.
@@ -308,7 +308,7 @@ Every tick
   -> Set Part Of  modulate, Alpha (see-through), fade_value
 ```
 
-The same verb reaches a Color's named parts, so a fade needs no colour arithmetic at all.
+The same action reaches a Color's named parts, so a fade needs no colour arithmetic at all.
 
 **15. Read one field of a saved position record.**
 
@@ -317,7 +317,7 @@ On save loaded
   -> set spawn_x = Part Of(saved["spawn"], X (left / right))
 ```
 
-A record saved as `{"x": 120, "y": 64}` reads with the same verb a Vector2 does, so a loaded position
+A record saved as `{"x": 120, "y": 64}` reads with the same expression a Vector2 does, so a loaded position
 needs no special case.
 
 **16. Build a target point out of two loose numbers.**
@@ -368,8 +368,8 @@ func _process(delta: float) -> void:
 
 **21. An off-screen objective arrow.**
 
-Three verbs and one condition: show the arrow only when the target is NOT visible, park it on the edge,
-and turn it to point outward.
+Three expressions and one condition: show the arrow only when the target is NOT visible, park it on the
+edge, and turn it to point outward.
 
 ```gdscript
 extends Node
@@ -462,8 +462,8 @@ Every Frame
 
 **28. A bullet that ricochets instead of dying.**
 
-The Bullet pack's **On Bullet Hit** already carries `collider`, `point` and `normal`. These two verbs are
-the missing middle: reflect the heading, and park the bullet clear of the wall so the next frame's cast
+The Bullet pack's **On Bullet Hit** already carries `collider`, `point` and `normal`. These two
+expressions are the missing middle: reflect the heading, and park the bullet clear of the wall so the next frame's cast
 does not start inside it.
 
 ```
@@ -614,15 +614,15 @@ add it back, so the correction can never exceed the assist budget you set.
   the player stops.
 - **Direction To between two identical points is also zero**, for the same reason.
 - **Clamp Length only shortens.** It will not lengthen a vector to the maximum; a slow vector stays
-  slow. Normalized-times-speed is the verb pair for "always exactly this fast".
+  slow. Normalized-times-speed is the expression pair for "always exactly this fast".
 - **Vector Angle is Vector2 only.** A Vector3 has no single angle, so there is no 3D version of it.
 - **Dot Product is only "the cosine of the angle" for UNIT vectors.** With raw velocities the number
   is scaled by both lengths, so a cone test on un-normalized inputs silently changes threshold as the
   speed changes. Normalize both sides.
-- **Mixing Vector2 and Vector3 in one verb errors.** Distance Between, Dot Product and Vector Lerp
+- **Mixing Vector2 and Vector3 in one row errors.** Distance Between, Dot Product and Vector Lerp
   all need both arguments to be the same kind of vector.
 - **Pick a part the value has.** Reading the Z part of a Vector2, or Red off a Vector3, is not a
-  quiet zero - it fails. The dropdown offers all seven parts because one verb serves four shapes, not
+  quiet zero - it fails. The dropdown offers all seven parts because one row serves four shapes, not
   because every shape has all of them.
 - **Set Part Of on a record ADDS a missing field** rather than failing. That is useful for building a
   record up, and it means a typo creates a new field instead of reporting one.
@@ -630,7 +630,7 @@ add it back, so the correction can never exceed the assist budget you set.
   fallback, deliberately.
 - **Reopening a `.gd` sheet lifts Set Part Of back as Set Key.** The emitted line is identical either
   way, so nothing breaks and no bytes change - but do not be surprised when the sentence comes back
-  wearing the other verb's name.
+  wearing the other action's name.
 - **`position` and `global_position` are different vectors.** Aiming with one and moving with the
   other is a bug that looks like drift, and it is invisible until the node is nested.
 - **Screen space is not world space, and the difference is the camera.** A HUD node parented under the
@@ -638,7 +638,7 @@ add it back, so the correction can never exceed the assist budget you set.
   Mixing the two is what makes a nameplate lag one frame behind its owner.
 - **A 3D point behind the camera still projects to a number.** Project To Screen (3D) has no way to say
   "nowhere"; Is Behind Camera (3D) is how you ask. Every 3D marker needs that guard.
-- **The screen verbs read the CURRENT camera.** During a scene change there may be none, which is why the
+- **The screen rows read the CURRENT camera.** During a scene change there may be none, which is why the
   3D pair read as zero and true rather than faulting - but it also means a marker placed on the first
   frame of a new scene may be placed against nothing. Place it under a per-frame trigger, not On Ready.
 - **Angle Reflected is degrees in, degrees out**, to match Set Angle Of Motion and `rotation_degrees`.
@@ -653,5 +653,5 @@ add it back, so the correction can never exceed the assist budget you set.
 - **Aim At Moving Target assumes the target keeps going.** It is a straight-line lead, which is right for
   a walking player and wrong for one who is about to jump. Re-evaluate it every frame rather than aiming
   once and committing.
-- **These verbs hand back new values.** `Clamp Length(velocity, 400)` on its own line does nothing;
+- **These expressions hand back new values.** `Clamp Length(velocity, 400)` on its own line does nothing;
   the result has to be assigned back to `velocity`.

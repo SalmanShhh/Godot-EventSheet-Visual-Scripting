@@ -78,7 +78,7 @@ On Done
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Run **work** in the background
 
@@ -118,7 +118,7 @@ This pack has no Inspector properties - there is nothing to set. Attach the beha
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$BackgroundRunner.tasks_running()` inserts the **Tasks Running** entry straight into any expression
 

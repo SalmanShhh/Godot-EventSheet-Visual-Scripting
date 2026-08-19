@@ -1,10 +1,10 @@
 # Collisions, Joints And World Physics
 
-These are the builtin verbs for **what touched what, and the world it happens in**. Three questions,
+These are the builtin rows for **what touched what, and the world it happens in**. Three questions,
 three families:
 
 - **What did I just hit?** After a character body moves, the engine already knows whether it ended up
-  against a wall, a ceiling or a slope, and what it bumped into. **Is On Wall**, **Wall Normal**,
+  against a wall, a ceiling or a slope, and what it bumped into. **Is By Wall**, **Wall Normal**,
   **Last Slide Collider** and friends read those results instead of you re-deriving them.
 - **What is overlapping me?** An Area asks **Overlaps Body**, **Has Overlapping Areas**, or hands you
   the whole list with **Overlapping Bodies**. Layers and masks decide who is even allowed to notice
@@ -12,20 +12,20 @@ three families:
 - **What are the rules of this world?** Gravity strength, gravity direction, and whether physics is
   running at all are world-level knobs, plus the profiling numbers a performance HUD reads.
 
-Every verb here compiles to one plain Godot call. There is no plugin runtime under any of it: a row
-that reads "Is on wall" ships as `is_on_wall()`, and that is the whole implementation.
+Every row here compiles to one plain Godot call. There is no plugin runtime under any of it: a row
+that reads "Is by wall" ships as `is_on_wall()`, and that is the whole implementation.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
-- **Wall jumps and wall slides** - Is On Wall plus Wall Normal is the whole mechanic.
+- **Wall jumps and wall slides** - Is By Wall plus Wall Normal is the whole mechanic.
 - **Slope-aware movement** - Floor Normal tells you which way the ground is leaning.
 - **Bounce and ricochet** - Last Slide Normal reflects a projectile off whatever it just clipped.
 - **Damage on contact** - Last Slide Collider names the node the body ran into.
@@ -33,14 +33,14 @@ that reads "Is on wall" ships as `is_on_wall()`, and that is the whole implement
 - **Area-of-effect hits** - Overlapping Bodies gives every target inside a blast at once.
 - **Ghost and phase power-ups** - flip one mask bit and the player stops noticing enemies.
 - **One-way doors and shutters** - Enable / Disable Collision Shape, safely, mid-physics.
-- **Ropes, chains and breakable links** - joint verbs wire bodies together and snap them apart.
+- **Ropes, chains and breakable links** - joint actions wire bodies together and snap them apart.
 - **Low-gravity levels, water sections, gravity-flip puzzles** - one row changes the whole world.
 - **Photo mode and cutscene freezes** - stop the physics space while rendering keeps running.
 - **A performance HUD** - active bodies, collision pairs and islands, straight from the server.
 
 ## Core concepts
 
-- **Slide results are answers about the LAST move.** Is On Wall, Is On Ceiling, Wall Normal, Floor
+- **Slide results are answers about the LAST move.** Is By Wall, Is Touching Ceiling, Wall Normal, Floor
   Normal, Slide Collision Count, Last Slide Collider and Last Slide Normal all read what the engine
   recorded during the character body's most recent move. Ask them AFTER the move in the same physics
   step, not before it, and not from a per-frame event that never moves anything.
@@ -52,7 +52,7 @@ that reads "Is on wall" ships as `is_on_wall()`, and that is the whole implement
   loop with For Each.
 - **Layer is where you sit, mask is what you notice.** Set Collision Layer Bit puts this object on a
   layer for others to see. Set Collision Mask Bit decides which layers THIS object scans. They are two
-  different questions that people constantly mix up, which is why they are two different verbs.
+  different questions that people constantly mix up, which is why they are two different actions.
 - **A shape is switched off deferred.** Enable Collision Shape and Disable Collision Shape use
   `set_deferred`, so calling them from inside a collision callback is safe. That deferral means the
   change lands at the end of the frame, not on the next line.
@@ -64,15 +64,15 @@ that reads "Is on wall" ships as `is_on_wall()`, and that is the whole implement
 - **Pausing the space is not pausing the game.** Set Physics Active freezes every body while scripts,
   animation and rendering carry on. Pausing the scene tree is a different tool.
 
-## Verb reference
+## Reference tables
 
 `{host.}` in a template is the host prefix: on a sheet whose host IS the node it disappears, and on a
-sheet that targets another node it becomes that node plus a dot. Node-scoped verbs are filed in the
+sheet that targets another node it becomes that node plus a dot. Node-scoped rows are filed in the
 picker under the node type in the last column.
 
 ### Slide results, after Move And Slide (CharacterBody2D)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Is By Wall | True when this 2D character is pressing against a wall | `{host.}is_on_wall()` |
 | Is Touching Ceiling | True when this 2D character is touching a ceiling above | `{host.}is_on_ceiling()` |
@@ -87,7 +87,7 @@ picker under the node type in the last column.
 
 ### Slide results in 3D (CharacterBody3D)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Is By Wall (3D) | True when this 3D character is pressing against a wall | `{host.}is_on_wall()` |
 | Is Touching Ceiling (3D) | True when this 3D character is touching a ceiling above | `{host.}is_on_ceiling()` |
@@ -99,7 +99,7 @@ picker under the node type in the last column.
 
 ### Overlap tests and lists (Area2D)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Overlaps Body | True when this Area2D overlaps the given physics body | `overlaps_body({body})` |
 | Overlaps Area | True when this Area2D overlaps the given other area | `overlaps_area({area})` |
@@ -111,14 +111,14 @@ picker under the node type in the last column.
 
 ### Overlap in 3D (Area3D)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Has Overlapping Bodies (3D) | True when this 3D Area overlaps at least one body | `has_overlapping_bodies()` |
 | Overlapping Bodies (3D) | The list of physics bodies inside this 3D Area | `get_overlapping_bodies()` |
 
 ### Layers, masks and shapes
 
-| Verb | What it does | Ships as | On |
+| Name | What it does | Ships as | On |
 |------|--------------|----------|----|
 | Set Collision Layer Bit | Turns a layer on or off - what this object sits on | `set_collision_layer_value({layer}, {enabled})` | CollisionObject2D |
 | Set Collision Mask Bit | Turns a mask bit on or off - what this object detects | `set_collision_mask_value({mask}, {enabled})` | CollisionObject2D |
@@ -130,7 +130,7 @@ picker under the node type in the last column.
 
 ### Joints
 
-| Verb | What it does | Ships as | On |
+| Name | What it does | Ships as | On |
 |------|--------------|----------|----|
 | Set Joint Body A | Sets the first physics body a joint connects to | `node_a = {target}` | Joint2D |
 | Set Joint Body B | Sets the second physics body a joint connects to | `node_b = {target}` | Joint2D |
@@ -148,7 +148,7 @@ picker under the node type in the last column.
 
 ### World physics
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set World Gravity (2D) | Changes the whole 2D world's gravity strength | `PhysicsServer2D.area_set_param(get_viewport().find_world_2d().space, PhysicsServer2D.AREA_PARAM_GRAVITY, {gravity})` |
 | Set World Gravity Direction (2D) | Points 2D gravity in a new direction | `PhysicsServer2D.area_set_param(get_viewport().find_world_2d().space, PhysicsServer2D.AREA_PARAM_GRAVITY_VECTOR, {direction})` |
@@ -162,7 +162,7 @@ squared). Direction defaults to `Vector2.DOWN` and `Vector3.DOWN`.
 
 ### The performance numbers
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Active Bodies (2D) | How many 2D bodies are awake and simulating | `PhysicsServer2D.get_process_info(PhysicsServer2D.INFO_ACTIVE_OBJECTS)` |
 | Collision Pairs (2D) | How many 2D collision pairs are processed this step | `PhysicsServer2D.get_process_info(PhysicsServer2D.INFO_COLLISION_PAIRS)` |
@@ -184,7 +184,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = -380.0
 ```
 
-The two rows are the condition **Is On Wall** and an action setting velocity from **Wall Normal**.
+The two rows are the condition **Is By Wall** and an action setting velocity from **Wall Normal**.
 
 **2. A wall slide.** While the character is on a wall and falling, cap the fall speed.
 
@@ -369,7 +369,7 @@ func _process(delta: float) -> void:
 
 ### Other use cases
 
-**Ledge grab.** Is On Wall while falling, plus a small raycast above the hands, turns into a hang state that only needs one extra condition row on top of the wall-slide event.
+**Ledge grab.** Is By Wall while falling, plus a small raycast above the hands, turns into a hang state that only needs one extra condition row on top of the wall-slide event.
 
 **Conveyor belts.** Read Floor Normal to know which surface you are standing on, then add a constant push along its tangent so the player drifts while idle.
 
@@ -381,9 +381,10 @@ func _process(delta: float) -> void:
 
 ## Tips and common mistakes
 
-- **Ask slide questions AFTER the move.** Is On Wall, Is On Ceiling and every Last Slide verb read the
-  result of the character body's last move. Put them in the same physics event, below Move And Slide.
-  In a per-frame event that never moves the body they report stale answers forever.
+- **Ask slide questions AFTER the move.** Is By Wall, Is Touching Ceiling and every Last Slide
+  expression read the result of the character body's last move. Put them in the same physics event,
+  below Move And Slide. In a per-frame event that never moves the body they report stale answers
+  forever.
 - **Slide Collision Count is the guard.** Last Slide Collider and Last Slide Normal already fall back
   to nothing and `Vector2.ZERO`, so they will not crash, but a `Vector2.ZERO` normal silently reflects
   a bounce into nowhere. Gate the event on Slide Collision Count greater than 0 when the answer
@@ -400,7 +401,7 @@ func _process(delta: float) -> void:
   rest of this frame. Do not disable a shape and then, on the next row, expect an overlap test to have
   changed its mind.
 - **An Area with monitoring off answers nothing.** Get Monitoring exists precisely so you can tell
-  "nothing is overlapping" apart from "this area stopped looking". Some pickup and respawn verbs turn
+  "nothing is overlapping" apart from "this area stopped looking". Some pickup and respawn actions turn
   monitoring off while the item is away.
 - **Break Joint is one-way.** It clears body B; it does not remember what was there. Store the path
   yourself first if the joint has to be re-tied.
@@ -409,9 +410,9 @@ func _process(delta: float) -> void:
   the level is meant to feel light for the player too.
 - **Gravity direction must be normalized.** `Vector2.UP` and `Vector2.DOWN` already are. A hand-typed
   `Vector2(0, -3)` scales the strength as well as turning it, which reads as a bug in the direction
-  verb.
-- **The world-level verbs target the CURRENT viewport's world.** That is the case game events want,
+  action.
+- **The world-level rows target the CURRENT viewport's world.** That is the case game events want,
   but it means a row that runs inside a SubViewport changes THAT world, not the main one.
 - **Set Physics Active is not a pause menu.** Scripts, timers, input and animation keep running while
-  the space is frozen. For a real pause use the game-pause verbs described in the scenes and pausing
+  the space is frozen. For a real pause use the game-pause rows described in the scenes and pausing
   guide.

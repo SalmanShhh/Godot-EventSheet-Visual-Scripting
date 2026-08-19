@@ -38,19 +38,19 @@ Save System is a Godot EventSheets behavior pack that stores your game's values 
 
 ## Core concepts
 
-The model is small. Learn these ideas and the rest of the pack is just calling the right verb.
+The model is small. Learn these ideas and the rest of the pack is just calling the right row.
 
 **One shared singleton, called by name.** Save System is registered as the `SaveSystem` autoload, so there is a single instance for the whole game. Any sheet reaches it the same way: `SaveSystem: Save Number`, `Condition: SaveSystem  Has Save Key`, or the inline expression `SaveSystem.Load Number("coins")`. You never create or pass around a save object.
 
 **A save is keys and values.** Everything you store lives under a string **key** you choose - `"coins"`, `"level"`, `"player_pos"`. Writing the same key again overwrites it. Reading a key that was never written gives you the default you pass in. Keep your keys stable across versions and match them exactly between the save and the load.
 
-**Slots are separate files.** The `slot` Inspector property (0 to 9) picks which file you are reading and writing. Slot 0 and slot 1 never see each other's keys. To move to a different slot, set the `SaveSystem.slot` property before you save or load - there is no per-call slot argument on the write and read verbs. The metadata verbs (**Slot Exists**, **List Slots**, **Slot Modified Time**) take a slot number directly so a menu can inspect every slot without switching the active one.
+**Slots are separate files.** The `slot` Inspector property (0 to 9) picks which file you are reading and writing. Slot 0 and slot 1 never see each other's keys. To move to a different slot, set the `SaveSystem.slot` property before you save or load - there is no per-call slot argument on the write and read rows. The metadata rows (**Slot Exists**, **List Slots**, **Slot Modified Time**) take a slot number directly so a menu can inspect every slot without switching the active one.
 
-**Two ways to write, two ways to read.** The direct verbs write and read immediately: **Save Number**, **Save Text**, and **Save Value** flush a single key to the active slot's file the instant you call them, and **Load Number**, **Load Text**, and **Load Value** read a single key back. You do not need **Save Game** to persist one value - a direct **Save Number** is already on disk.
+**Two ways to write, two ways to read.** The direct rows write and read immediately: **Save Number**, **Save Text**, and **Save Value** flush a single key to the active slot's file the instant you call them, and **Load Number**, **Load Text**, and **Load Value** read a single key back. You do not need **Save Game** to persist one value - a direct **Save Number** is already on disk.
 
-**The lifecycle broadcast is the headline.** **Save Game** is the coordinator. It fires **On Before Save** (so every sheet that answers it writes its own piece with the direct verbs), snapshots the persist group, flushes the file, then fires **On Save Written** (your cue for a "Saved!" toast). **Load Game** is its mirror: it restores the persist-group snapshots, then fires **On After Load** so every sheet reads its own keys back with the direct verbs. This is what lets a large project save without any one sheet knowing what the others store - each sheet owns its slice of the save.
+**The lifecycle broadcast is the headline.** **Save Game** is the coordinator. It fires **On Before Save** (so every sheet that answers it writes its own piece with the direct actions), snapshots the persist group, flushes the file, then fires **On Save Written** (your cue for a "Saved!" toast). **Load Game** is its mirror: it restores the persist-group snapshots, then fires **On After Load** so every sheet reads its own keys back with the direct expressions. This is what lets a large project save without any one sheet knowing what the others store - each sheet owns its slice of the save.
 
-**Behaviors carry their own state through the save-state seam.** Stateful addons across the project - StatForge, Health, Currency Ledger, Skin Vault, Timer, State Machine, the incremental packs, Weapon Kit, and more - now expose two plain methods, `save_state() -> Dictionary` and `load_state(state)`. The Save System duck-types these: any node with a `save_state` method participates, no registration needed. This is what lets a behavior's internal runtime state - a StatForge node's buff stack, a Health node's pools - survive a save. Before the seam existed, that state lived only in the behavior and was unreachable by the key-value verbs, so you had to copy each field out by hand; now **Save Node State**, **Save Group State**, and **Save Singleton State** capture it whole.
+**Behaviors carry their own state through the save-state seam.** Stateful addons across the project - StatForge, Health, Currency Ledger, Skin Vault, Timer, State Machine, the incremental packs, Weapon Kit, and more - now expose two plain methods, `save_state() -> Dictionary` and `load_state(state)`. The Save System duck-types these: any node with a `save_state` method participates, no registration needed. This is what lets a behavior's internal runtime state - a StatForge node's buff stack, a Health node's pools - survive a save. Before the seam existed, that state lived only in the behavior and was unreachable by the key-value rows, so you had to copy each field out by hand; now **Save Node State**, **Save Group State**, and **Save Singleton State** capture it whole.
 
 **The persist group saves a whole scene for free.** The `persist_group` Inspector property (default `"persist"`) names a scene-tree group. **Save Game** automatically snapshots every node in that group (and every behavior on those nodes, through the same `save_state` seam), and **Load Game** restores those snapshots before it fires On After Load. Whole-scene persistence therefore needs zero extra rows - you just add the nodes you care about to the group and let Save Game find them.
 
@@ -64,7 +64,7 @@ The model is small. Learn these ideas and the rest of the pack is just calling t
 
 ## Setup
 
-**1. Register the autoload.** In your Godot project settings, add the pack's `SaveSystemAddon` script as an autoload named exactly `SaveSystem` (the pack sheet lives at `eventsheet_addons/save_system/save_system_addon.gd`). Once it is an autoload, every sheet can call `SaveSystem` verbs. The autoload node is a `Node`.
+**1. Register the autoload.** In your Godot project settings, add the pack's `SaveSystemAddon` script as an autoload named exactly `SaveSystem` (the pack sheet lives at `eventsheet_addons/save_system/save_system_addon.gd`). Once it is an autoload, every sheet can call the `SaveSystem` ACEs. The autoload node is a `Node`.
 
 **2. Set the Inspector strategy.** Select the `SaveSystem` autoload and decide how saves are stored:
 
@@ -188,7 +188,7 @@ Each slot-wide trigger passes the slot number that was saved or loaded, so a han
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ---
@@ -196,7 +196,7 @@ change while the game runs.
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$SaveSystemAddon.autosave_interval` inserts the **Autosave Interval** entry straight into any expression
 - `$SaveSystemAddon.encryption_key` inserts the **Encryption Key** entry straight into any expression
@@ -640,14 +640,14 @@ On Save Key Missing
 
 Save Studio is an editor window on the Tools menu for working with saves without leaving Godot. It has three tabs. **Format Preview** shows an addon's save output rendered in any of the six formats before you commit to one, so you can eyeball config against JSON, binary, CSV, INI, and XML side by side. **Save Slots** browses the `user://` saves on disk, lets you view a slot's contents, and exports or converts a slot between formats. **Add Save Support** generates a matching `save_state` / `load_state` pair for one of your own scripts, so a script you wrote joins the same seam the built-in behaviors use. If you are authoring a script that should participate in Save Node State, Save Group State, or the persist group, start there.
 
-- **Save Number / Save Text / Save Value are already on disk.** You do not need Save Game to persist a single key - the direct verbs flush immediately. Save Game is the coordinator that asks every sheet to write via On Before Save and then confirms with On Save Written; reach for it when you want a full "save the game now" moment.
+- **Save Number / Save Text / Save Value are already on disk.** You do not need Save Game to persist a single key - the direct actions flush immediately. Save Game is the coordinator that asks every sheet to write via On Before Save and then confirms with On Save Written; reach for it when you want a full "save the game now" moment.
 - **Load Game does not fill your objects by itself.** It broadcasts On After Load. If nothing seems to load, check that each sheet actually reads its keys back with Load Number / Load Text / Load Value inside an On After Load event - the pack cannot know where your values belong.
 - **Match save and load keys exactly.** A key is a plain string, so `"coins"` and `"Coins"` are different keys. A mismatch silently returns the default (0, empty string, or whatever you passed to Load Value) instead of the value you thought you stored.
 - **Give Load Value a sensible default.** The `default_value` is returned on the first run when the key is missing, so make it a valid starting value (an empty Dictionary, a zero Vector2, and so on). Use Has Save Key when you must tell "saved a zero" apart from "never saved".
-- **Change the slot before you save or load, not during the call.** The write and read verbs use the active `SaveSystem.slot` property; there is no per-call slot argument. Set `SaveSystem.slot` first, then call Save Game or Load Game. The metadata verbs (Slot Exists, List Slots, Slot Modified Time) do take a slot number, so a menu can inspect other slots without switching the active one.
+- **Change the slot before you save or load, not during the call.** The write and read rows use the active `SaveSystem.slot` property; there is no per-call slot argument. Set `SaveSystem.slot` first, then call Save Game or Load Game. The metadata rows (Slot Exists, List Slots, Slot Modified Time) do take a slot number, so a menu can inspect other slots without switching the active one.
 - **Keep `{slot}` in file_pattern.** If the pattern has no `{slot}` token every slot resolves to the same file name and they overwrite each other. The default `save_{slot}.cfg` is correct - preserve the token if you rename it.
 - **Guard the encryption_key.** A non-empty key encrypts saves, but keep it out of screenshots and any code you share, and do not change it after players have saves - files written with the old key can no longer be read.
 - **Pick the format for the job.** `config` stores Vector2, Color, and Dictionaries natively and is the safe default. `json` is readable and diffable, and it preserves rich Godot types and integer types through an internal wrapper so everything round-trips exactly. `csv` is the most hand-editable and doubles as a balancing spreadsheet, but it suits flat key/value data best. `binary` is the most compact and is the right pick for a shipped build, but it is not meant to be opened and edited by hand.
-- **Behavior state rides along only through the state verbs.** Save Node State, Save Group State, Save Singleton State, and the persist group capture a behavior's internal runtime state via its `save_state` method. The plain key/value verbs (Save Number and friends) do not - they only store the exact value you pass. If a buff stack or a health pool is not surviving a save, you are probably copying fields by hand instead of snapshotting the node.
+- **Behavior state rides along only through the state actions.** Save Node State, Save Group State, Save Singleton State, and the persist group capture a behavior's internal runtime state via its `save_state` method. The plain key/value actions (Save Number and friends) do not - they only store the exact value you pass. If a buff stack or a health pool is not surviving a save, you are probably copying fields by hand instead of snapshotting the node.
 - **Pick your storage strategy early.** Changing `save_directory`, `file_pattern`, `section`, or `format` after players already have saves orphans the old files, because the pack will look in the new location and not find them. Settle these Inspector knobs before you ship.
 - **Autosave writers should be cheap.** With `autosave_interval` set, On Before Save runs on a repeating timer. Keep those handlers light so the autosave tick never hitches the game.

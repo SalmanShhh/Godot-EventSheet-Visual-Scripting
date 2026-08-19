@@ -1,7 +1,7 @@
 # Setting Up And Rebinding Controls
 
 This is the **named action** vocabulary: the layer every game should build its controls on, and the
-InputMap verbs that let a player change them while the game is running.
+InputMap rows that let a player change them while the game is running.
 
 A named action ("jump", "move_left") is a label in Project Settings -> Input Map with one or more keys,
 mouse buttons or gamepad buttons behind it. Your sheet asks about the LABEL, and the player gets to decide
@@ -12,7 +12,7 @@ those.
 Everything here compiles to plain Godot (`Input`, `InputMap`) with zero plugin references.
 
 A whole controls screen is written end to end in the guide **Let Players Rebind the Controls**, using the
-Controls vocabulary's story version of these verbs: **Wait For The Next Key Or Button**,
+Controls vocabulary's story version of these rows: **Wait For The Next Key Or Button**,
 **Clear The Bindings Of**, **Bind Control To**, **Key Name**, **Reset All Bindings**, **Has Action**,
 **Set Deadzone Of**, and the pair every first rebind screen forgets - **Save Bindings** and
 **Load Bindings**, which write and read a plain settings file under `user://` so a remap survives the
@@ -26,7 +26,7 @@ wears a ⚠ there and in the Doctor.
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -45,7 +45,7 @@ wears a ⚠ there and in the Doctor.
 
 ## Core concepts
 
-- **The action name is the address.** Every verb here takes an action name string. The parameter uses the
+- **The action name is the address.** Every row here takes an action name string. The parameter uses the
   live Input Map picker, so the dropdown lists the actions your project actually has (plus the `ui_*`
   defaults) instead of asking you to remember spellings.
 - **Three tenses of "pressed".** Is Action Pressed is true the whole time it is held. On Action Just
@@ -56,7 +56,7 @@ wears a ⚠ there and in the Doctor.
   it gives 1.
 - **Vectors versus axes.** A vector takes four actions and hands back a Vector2 (movement). An axis takes
   two and hands back a single number from -1 to 1 (turning, throttle, a one-dimensional slide).
-- **Rebinding is destructive by design.** Every Rebind Action To ... verb CLEARS the action's bindings
+- **Rebinding is destructive by design.** Every Rebind Action To ... row CLEARS the action's bindings
   first, then adds exactly one. That is what a rebinding row means. To ADD a second binding without losing
   the first, use Bind Event To Action instead.
 - **Runtime rebinds are not saved.** They live in memory. Restore Default Bindings reloads the Input Map
@@ -66,13 +66,13 @@ wears a ⚠ there and in the Doctor.
   read the key from the event, and call Rebind Action To Key. Bind Event To Action takes the raw `event`
   when you would rather keep whatever kind of input the player pressed.
 
-## Verb reference
+## Reference tables
 
 The "Ships as" column is the exact code the row compiles to. Parameters appear in `{braces}`.
 
 ### Reading an action
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Is Action Pressed | True while the named action is held down, for continuous controls like running. | `Input.is_action_pressed(&{action})` |
 | On Action Just Pressed | True only on the frame the action was first pressed, for jumps or single taps. | `Input.is_action_just_pressed(&{action})` |
@@ -86,7 +86,7 @@ The "Ships as" column is the exact code the row compiles to. Parameters appear i
 
 ### Defining actions
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Add Input Action | Creates a named action at runtime if it does not already exist. | `if not InputMap.has_action({action}):` / `	InputMap.add_action({action})` |
 | Remove Input Action | Removes a runtime input action entirely. | `if InputMap.has_action({action}):` / `	InputMap.erase_action({action})` |
@@ -95,7 +95,7 @@ The "Ships as" column is the exact code the row compiles to. Parameters appear i
 
 ### Rebinding
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Rebind Action To Key | Clears an action's keys and binds it to a single key. | `InputMap.action_erase_events({action})` then a new `InputEventKey` with `physical_keycode = {physical_keycode}` added back |
 | Rebind Action To Mouse Button | Clears an action's bindings and binds it to a mouse button. | `InputMap.action_erase_events({action})` then a new `InputEventMouseButton` with `button_index = {button}` added back |
@@ -107,7 +107,7 @@ The "Ships as" column is the exact code the row compiles to. Parameters appear i
 
 ### Describing bindings
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Action Is Bound | True when the action has at least one key or button bound. | `not InputMap.action_get_events(&{action}).is_empty()` |
 | Action Binding Count | How many keys or buttons are bound to a named action. | `InputMap.action_get_events(&{action}).size()` |
@@ -350,11 +350,11 @@ On profile loaded
   for anything that should happen once.
 - **The action name must exist.** A misspelled action is not a silent no - Godot raises an error. Use the
   dropdown, and guard runtime-created actions with Has Input Action.
-- **Rebind Action To ... clears first.** All three Rebind verbs erase the action's existing bindings before
+- **Rebind Action To ... clears first.** All three Rebind rows erase the action's existing bindings before
   adding the new one, so a player who rebinds Jump to Space loses the gamepad A binding too. If you want
   keyboard and gamepad on the same action, rebind only the matching kind and add the other with Bind Event
   To Action, or re-add it right after.
-- **The Rebind verbs are multi-line actions.** They compile to four lines each, including a temporary
+- **The Rebind actions are multi-line.** They compile to four lines each, including a temporary
   variable the compiler names for you. Nothing to do about it, but do not expect a rebind row to be a
   single expression you can nest inside another cell.
 - **Runtime rebinds do not survive a restart.** Nothing here writes to disk. Save the bindings yourself

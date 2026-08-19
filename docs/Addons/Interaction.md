@@ -30,7 +30,7 @@ The split matters. The player owns "what am I near"; the thing owns "what happen
 - **Puzzle elements.** Pressure plates you place, valves you turn, crystals you charge - all of them just objects with an `interact()`.
 - **Farming and gathering.** Focus the nearest crop or ore node inside your tool's reach and act on it with one key.
 - **Co-op revives.** A downed teammate is an interactable; focus and hold to bring them back.
-- **Immersive-sim style verbs.** Because the behavior only reports focus, the same key can mean loot, hack, or pry - the focused thing decides.
+- **Immersive-sim style interactions.** Because the behavior only reports focus, the same key can mean loot, hack, or pry - the focused thing decides.
 - **Accessibility.** One key that always acts on the thing the game says is focused is far kinder than a pile of trigger areas that fire on their own.
 
 ---
@@ -51,7 +51,7 @@ The split matters. The player owns "what am I near"; the thing owns "what happen
 
 **Has Focus and Focused Node are the read side.** **Has Focus** is a condition - true while something is focused - and it is what your interact key should be gated behind. **Focused Node** is the expression that hands you the actual node, so you can read a name off it for the prompt, blink it, or compare it against something.
 
-**Interact With Focus calls `interact()` if the thing has one.** This is the whole thing-side story. Put your door's opening logic in a plain function named `interact()` on the door, and the player's key press finds it. There is nothing to register. If you want that function to also show up in the picker as a verb, annotate it - it is an ordinary function either way.
+**Interact With Focus calls `interact()` if the thing has one.** This is the whole thing-side story. Put your door's opening logic in a plain function named `interact()` on the door, and the player's key press finds it. There is nothing to register. If you want that function to also show up in the picker as an action, annotate it - it is an ordinary function either way.
 
 **On Interacted fires whether or not the thing has an `interact()`.** So a thing with no logic of its own is still perfectly usable: listen to **On Interacted**, check which node came through, and handle it entirely from a sheet. Use `interact()` when the behavior belongs to the object; use On Interacted when it belongs to the game.
 
@@ -92,7 +92,7 @@ That is a complete interaction system. The prompt appears when something comes i
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Focus nearest **interactable** within **64** px
 
@@ -130,7 +130,7 @@ All rows live in the **Interaction** category and target the `InteractionBehavio
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ---
@@ -138,7 +138,7 @@ change while the game runs.
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$InteractionBehavior.focused_node()` inserts the **Focused Node** entry straight into any expression
 
@@ -257,7 +257,7 @@ On Every Tick
 
 Equip a longer-handled tool, raise `tool_reach`, and the reach grows with no other change.
 
-### 8. Separate groups for separate verbs
+### 8. Separate groups for separate interactions
 
 Nothing says you have to use one group - just pick the one that matters right now.
 
@@ -418,7 +418,7 @@ Watching that label while you walk around is the fastest way to tune your `withi
 
 **Companion AI that uses the world.** Attach the behavior to a follower, run Focus Nearest Interactable on a `lootable` group, and let the follower call Interact With Focus on its own schedule.
 
-**Context-sensitive key labels.** Read the focused node's own `prompt_text` property in On Focus Changed so each object writes its own verb - "Open", "Read", "Talk", "Board".
+**Context-sensitive key labels.** Read the focused node's own `prompt_text` property in On Focus Changed so each object writes its own prompt - "Open", "Read", "Talk", "Board".
 
 **Interaction cooldowns.** Guard the interact row behind a cooldown so a repeatedly-mashed key cannot fire `interact()` twenty times in a second on the same object.
 

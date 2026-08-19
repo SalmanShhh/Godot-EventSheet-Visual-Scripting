@@ -5,12 +5,13 @@ a Label: shortening it so it fits, grouping its digits so a player can take it i
 a column, translating it in the right order, and then checking that it physically fits in the pixels
 it was given.
 
-It is two halves that answer the same question at two levels of precision. The **formatting** verbs
+It is two halves that answer the same question at two levels of precision. The **formatting** rows
 work in CHARACTERS and words: Shorten To Fit, With Thousands Separators, As Percent Text, As
-Duration, the three column verbs, As Title Text, As Sentence Text and the two translated-pattern
-verbs. The **drawn** verbs work in PIXELS, through Godot's own `Font.get_string_size`: Text Overflows,
-Fit Text To Label, Text Fits In Width and Wrapped Text Height, plus the font and direction verbs that
-decide whether the text can be drawn at all in someone else's language.
+Duration, the three column expressions, As Title Text, As Sentence Text and the two
+translated-pattern rows. The **drawn** rows work in PIXELS, through Godot's own
+`Font.get_string_size`: Text Overflows, Fit Text To Label, Text Fits In Width and Wrapped Text
+Height, plus the font and direction rows that decide whether the text can be drawn at all in someone
+else's language.
 
 Every template is plain GDScript over native calls. No runtime, no helper library, no autoload.
 
@@ -18,7 +19,7 @@ Every template is plain GDScript over native calls. No runtime, no helper librar
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [How Fit Text To Label works](#how-fit-text-to-label-works)
 5. [Use cases](#use-cases)
 6. [Tips and common mistakes](#tips-and-common-mistakes)
@@ -43,7 +44,7 @@ Every template is plain GDScript over native calls. No runtime, no helper librar
   monospace readout and increasingly wrong as the font gets more proportional. When the answer has to
   be true on screen, measure: Text Fits In Width and Text Overflows ask the font itself.
 - **A control does not draw what `text` holds.** Godot auto-translates a Control's own text at
-  display time, so a Label still holding `START GAME` draws its German translation. Every verb here
+  display time, so a Label still holding `START GAME` draws its German translation. Every row here
   that measures a control's own text goes through the same lookup the engine does, which is why
   Text Overflows answers about the language on screen rather than about English.
 - **Overflow only means something on a control that cannot grow.** A Label free to widen is grown by
@@ -63,7 +64,7 @@ Every template is plain GDScript over native calls. No runtime, no helper librar
   Use Font, Mirror Layout For Language, Add Font Fallback and Fit Text To Label. Everything else is
   an expression you drop into a cell.
 
-## Verb reference
+## Reference tables
 
 Two shorthands appear in the Shorten templates below, written out here so the table stays readable.
 They are literal text in the emitted code, not anything to look up:
@@ -75,14 +76,14 @@ They are literal text in the emitted code, not anything to look up:
 
 ### Text (fitting by characters)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Shorten To Fit | Trims to a maximum character count and marks the cut, so a clipped name never reads as a whole name. Text that already fits is untouched, and the result never runs past the width you gave. Cuts mid-word. | `({text} if {text}.length() <= int({max_chars}) else ({text}.left(B).strip_edges() + {suffix} if B > 0 else H))` |
 | Shorten To Whole Words | The same, but backs up to the last complete word first, so "Ancient Sword of Thorns" reads "Ancient Sword..." not "Ancient Sword of Th". Falls back to the character cut when the budget holds no whole word. | `({text} if {text}.length() <= int({max_chars}) else (({text}.left(B + 1).rsplit(" ", true, 1)[0].strip_edges() + {suffix}) if (B > 0 and {text}.left(B + 1).contains(" ") and not {text}.left(B + 1).rsplit(" ", true, 1)[0].strip_edges().is_empty()) else ({text}.left(B).strip_edges() + {suffix} if B > 0 else H)))` |
 
 ### Text (readable numbers)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | With Thousands Separators | Grouped digits a player can read at a glance: 1234567 reads `1,234,567`. Whole numbers only, the fraction is dropped; a negative keeps its minus sign. | `(("-" if float({value}) < 0.0 else "") + RegEx.create_from_string("(\\d)(?=(\\d\\d\\d)+$)").sub(str(absi(int({value}))), "$1,", true))` |
 | As Percent Text | A 0-to-1 fraction as percent TEXT with the sign on it: 0.73 reads `73%`. | `(String.num(float({value}) * 100.0, maxi(int({decimals}), 0)) + "%")` |
@@ -92,7 +93,7 @@ They are literal text in the emitted code, not anything to look up:
 
 These pad; they never cut. They only truly line up in a MONOSPACE font.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Align Left | Pads on the RIGHT to a fixed width, so every row starts on the same edge. | `{text}.rpad(int({width}), {fill})` |
 | Align Right | Pads on the LEFT to a fixed width, so numbers END on the same edge. | `{text}.lpad(int({width}), {fill})` |
@@ -100,14 +101,14 @@ These pad; they never cut. They only truly line up in a MONOSPACE font.
 
 ### Text (case that keeps word shape)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | As Title Text | A machine id as a readable name: `fire_sword` reads `Fire Sword`, `maxHealth` reads `Max Health`. | `{text}.capitalize()` |
 | As Sentence Text | Raises the FIRST letter only and leaves the rest exactly as it is, so `NPC` and `HP` keep their capitals. Empty text stays empty. | `({text}.substr(0, 1).to_upper() + {text}.substr(1))` |
 
 ### Translation (the right order, and the right direction)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Translated Text From Pattern | Looks the whole sentence up in the current language FIRST, then fills its `{slots}`. The pattern, slots and all, is the translation key. | `tr({pattern}).format({values})` |
 | Set Text (translated pattern) | ACTION on a Label: the same, written straight into its text. | `text = tr({pattern}).format({values})` |
@@ -117,7 +118,7 @@ These pad; they never cut. They only truly line up in a MONOSPACE font.
 
 ### UI (fonts and glyphs)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Add Font Fallback | ACTION: any character the main font cannot draw is drawn by the fallback instead. Adding the same fallback twice does nothing, so it is safe on every load and after every language change. | `if {fallback} != null and not {font}.fallbacks.has({fallback}):` then `{font}.fallbacks = {font}.fallbacks + [{fallback}]` |
 | Use Font | ACTION on a Control: gives ONE control its own font with no theme resource. The Slot list covers RichTextLabel's four separate faces. | `add_theme_font_override({slot}, {font})` |
@@ -126,7 +127,7 @@ These pad; they never cut. They only truly line up in a MONOSPACE font.
 
 ### Text (fit, measured in pixels)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Text Overflows | CONDITION on a Control: true when the text is wider than the control showing it. Measures what the control DRAWS, in its real font. Takes an optional **On node** so one row can ask about another control. | `{target.}get_theme_font(&"font").get_string_size({target.}atr(str({target.}text)), HORIZONTAL_ALIGNMENT_LEFT, -1.0, {target.}get_theme_font_size(&"font_size")).x > {target.}size.x` |
 | Fit Text To Label | ACTION on a Control: backs the text up until it MEASURES inside the control and marks the cut. Also takes an **On node**. | a multi-line block, see [How Fit Text To Label works](#how-fit-text-to-label-works) |
@@ -165,7 +166,7 @@ budget, backs up to the last whole word unless that would leave nothing, and dro
 entirely when nothing survived - so the result is never just the ending and never wider than the
 control.
 
-That is the same set of edge rules the character-based Shorten verbs follow, deliberately: two
+That is the same set of edge rules the character-based Shorten expressions follow, deliberately: two
 families that disagree about the same string would be worse than one that is only approximate.
 
 ## Use cases
@@ -194,7 +195,7 @@ Every tick
   -> set HealthPercentLabel text = As Percent Text(health / max_health, 0)
 ```
 
-Feed it a 0-to-1 fraction. The builtin Percent Of verb already returns 0-to-100, so divide that by
+Feed it a 0-to-1 fraction. The builtin Percent Of expression already returns 0-to-100, so divide that by
 100 rather than passing it straight in.
 
 **4. A run timer that survives an hour.**
@@ -289,7 +290,7 @@ Every tick
 
 Turn on Clip Text on the button first, or it grows to fit and honestly answers false.
 
-**13. Ask about a control from somewhere else.** Both pixel verbs that act on a control take an
+**13. Ask about a control from somewhere else.** Both pixel rows that act on a control take an
 **On node** parameter, so one watchdog row can check a button it is not attached to.
 
 ```
@@ -408,7 +409,7 @@ player-facing name for free, so the grid never has to carry a second column that
 - **Text Overflows measures ONE line.** For a label that wraps, compare Wrapped Text Height against
   the box height instead.
 - **Measure the TRANSLATED string, not the key and not the English.** Text Fits In Width and Font Can
-  Show take whatever you hand them; hand them `tr(...)`. The verbs that read a control's own text
+  Show take whatever you hand them; hand them `tr(...)`. The rows that read a control's own text
   already do this lookup for you.
 - **Translate first, fill second.** Translating the OUTPUT of Text From Pattern looks up a string
   with the values already baked in, which no catalog can contain, so the label never translates.
@@ -416,17 +417,17 @@ player-facing name for free, so the grid never has to carry a second column that
   the catalog key.
 - **The columns only line up in a monospace font.** Align Left, Align Right and Center In Width pad
   by CHARACTER count. In a proportional font the edges still drift, however correct the padding is.
-- **The column verbs never cut.** Text longer than the width is left exactly as it is, so a long name
+- **The column expressions never cut.** Text longer than the width is left exactly as it is, so a long name
   breaks the column. Shorten it first, then align it.
 - **Fill is one character.** Godot pads with the first character of what you give it.
 - **With Thousands Separators drops the fraction.** It is whole numbers only, by design. It is also a
-  plain-float verb: for idle-game scale (`1.23e15`, `1.23 Qa`) the Big Numbers pack has its own
+  plain-float expression: for idle-game scale (`1.23e15`, `1.23 Qa`) the Big Numbers pack has its own
   formatters.
 - **As Percent Text wants a 0-to-1 fraction.** Handing it a 0-to-100 value produces `7300%`.
-- **As Clock Time and As Duration are different verbs on purpose.** As Clock Time is strict `mm:ss`
+- **As Clock Time and As Duration are different expressions on purpose.** As Clock Time is strict `mm:ss`
   and rolls an hour into `60:00`; As Duration switches to `1h 02m`. Pick the one whose failure mode
   you can live with.
-- **Both Shorten verbs can return text with no ending on it.** When the width cannot hold the ending
+- **Both Shorten expressions can return text with no ending on it.** When the width cannot hold the ending
   at all, the text wins and the marker is dropped - which is what guarantees the result is never
   wider than the width you asked for, and never just an ellipsis.
 - **Add Font Fallback needs a fallback that resolves to the SAME resource every run.**

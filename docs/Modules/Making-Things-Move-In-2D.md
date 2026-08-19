@@ -1,18 +1,18 @@
 # Making Things Move In 2D
 
 Almost every 2D game is a stack of moving things: a character that runs and jumps, a bullet that flies,
-a coin that bobs, a turret that turns, an enemy that walks a path. This guide covers the builtin verbs
-that move a 2D node - by hand, by velocity, by physics impulse, or by one of the ready-made motions -
-and the readouts that tell you where things are and how fast they are going.
+a coin that bobs, a turret that turns, an enemy that walks a path. This guide covers the builtin
+actions that move a 2D node - by hand, by velocity, by physics impulse, or by one of the ready-made
+motions - and the readouts that tell you where things are and how fast they are going.
 
-These verbs are builtin. Each one compiles to the exact native Godot call it names, with no plugin
+These rows are builtin. Each one compiles to the exact native Godot call it names, with no plugin
 runtime in the output, so the emitted script is the code you would have written yourself.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -40,21 +40,21 @@ runtime in the output, so the emitted script is the code you would have written 
   **Every Physics Tick**.
 - **Multiply by delta or the game changes with the frame rate.** Anything you add per frame - a
   position offset, a gravity pull, an acceleration - needs `delta`. **Get Delta** gives you the value;
-  the gravity and acceleration verbs already take a **Delta** parameter that defaults to `delta`.
-- **Component verbs beat vector algebra.** **Set Velocity X** and **Set Velocity Y** let horizontal and
+  the gravity and acceleration actions already take a **Delta** parameter that defaults to `delta`.
+- **Component actions beat vector algebra.** **Set Velocity X** and **Set Velocity Y** let horizontal and
   vertical motion be authored separately, which is exactly how a platformer thinks: input drives X,
   gravity and jumping drive Y.
 - **The ready-made motions carry their own state.** **Bob Up And Down**, **Orbit Around** and
   **Push Away From** keep what they need in node metadata, so dropping the row anywhere just works with
   no exported variable and no `_ready` wiring.
 - **`{host.}` in a template is the behaviour seam.** On a plain CharacterBody2D sheet it is empty and
-  the line reads `velocity.y += ...`. Inside a behaviour pack it resolves to the host, so the same verb
-  drives the node the behaviour is attached to. It is byte-stable either way.
-- **Node-scoped verbs know their class.** A verb registered for CharacterBody2D only appears where a
-  CharacterBody2D is in scope. If a verb you expect is missing from the picker, the host class is
+  the line reads `velocity.y += ...`. Inside a behaviour pack it resolves to the host, so the same
+  action drives the node the behaviour is attached to. It is byte-stable either way.
+- **Node-scoped rows know their class.** A row registered for CharacterBody2D only appears where a
+  CharacterBody2D is in scope. If a row you expect is missing from the picker, the host class is
   usually why.
 
-## Verb reference
+## Reference tables
 
 On the canvas these read as sentences, with the parameter values drawn in bold:
 
@@ -65,7 +65,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### General Actions - moving a node directly
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Position | Places a 2D node at an exact **Position**. | `position = {pos}` |
 | Move By | Shifts a 2D node by an **Offset** from where it is. | `position += {offset}` |
@@ -78,7 +78,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### Movement - the velocity toolkit (CharacterBody2D)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Velocity X | Sets only the horizontal speed, leaving vertical motion untouched. | `{host.}velocity.x = {x}` |
 | Set Velocity Y | Sets only the vertical speed (negative moves upward). | `{host.}velocity.y = {y}` |
@@ -92,13 +92,13 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### General Conditions
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Is On Floor | True when this 2D character body is standing on the ground. | `{host.}is_on_floor()` |
 
 ### Movement - the ready-made motions (Node2D)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Turn Toward | Aims this node at a **Target** node, turning at **Turn Speed** degrees per second. | `rotation = rotate_toward(rotation, ({target}.global_position - global_position).angle(), deg_to_rad(maxf({degrees_per_second}, 0.0)) * get_process_delta_time())` |
 | Wrap Inside The Screen | The Asteroids rule: leave one edge, come back on the other. | a `{uid}` local holding `get_viewport_rect().size`, then a `wrapf` on each axis of `position` |
@@ -112,7 +112,7 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### General Expressions - the readouts
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Get Position | The node's 2D position as a Vector2. | `position` |
 | Get Velocity | The character body's current movement velocity. | `velocity` |
@@ -121,14 +121,14 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 
 ### Math & Random - two Node2D readouts worth knowing
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Distance To | The distance in pixels from this node to a **To** position. | `position.distance_to({to})` |
 | Angle Toward | The angle from this node toward a **To** position. | `position.angle_to_point({to})` |
 
 ### Navigation (NavigationAgent2D)
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Find Path To | Tells the agent to pathfind toward a **Target** world position. | `target_position = {position}` |
 | Has Arrived | True once the agent has reached its destination. | `is_navigation_finished()` |
@@ -241,7 +241,7 @@ Every Frame
   -> Turn Toward   target = $Player, turn speed = 180.0
 ```
 
-For an instant snap, give it a huge turn speed rather than reaching for a different verb.
+For an instant snap, give it a huge turn speed rather than reaching for a different action.
 
 **11. Asteroids wrap.**
 
@@ -356,7 +356,7 @@ Every Frame
   CharacterBody2D, produce motion that looks broken and is hard to debug. One node, one style.
 - **Negative Y is up.** **Set Velocity Y** with `-420.0` jumps; `420.0` drives into the floor.
 - **The Delta parameter expects a per-frame trigger.** **Apply Gravity**, both **Accelerate Velocity**
-  verbs and the gravity-with-terminal form default their **Delta** to `delta`, which only exists inside
+  actions and the gravity-with-terminal form default their **Delta** to `delta`, which only exists inside
   **Every Frame** and **Every Physics Tick**. Under **On Ready** or a signal trigger, that default does
   not resolve to anything.
 - **Physics belongs on the physics tick.** Gravity, velocity and **Apply Central Force** under
@@ -366,15 +366,15 @@ Every Frame
 - **The ready-made motions want a per-frame trigger.** **Bob Up And Down**, **Orbit Around**,
   **Pull Group Toward**, **Turn Toward** and **Apply Pushes** all advance a little each call. Under a
   one-shot trigger they run once and appear to do nothing.
-- **Wrap Inside The Screen and Apply Pushes are self-verbs.** Their templates open with a `var` line,
+- **Wrap Inside The Screen and Apply Pushes are self-targeting actions.** Their templates open with a `var` line,
   which is what keeps them from gaining an "On node" target. They act on the node the sheet is on.
 - **Turn Toward and the distance conditions need a node, not a position.** They read
   `{target}.global_position`, so handing them a raw Vector2 will not compile. The point-to-point
-  distance lives with the Vector verbs instead.
+  distance lives with the Vector expressions instead.
 - **Pull Group Toward skips non-Node2D members.** The row tests each member before moving it, so a
   plain Node accidentally added to the group is ignored rather than crashing - which also means a
   missing coin is usually a coin that is not a Node2D.
 - **Find Path To needs baked navigation.** With no NavigationRegion2D in the scene the agent has
   nowhere to path, **Has Arrived** answers immediately, and the enemy stands still.
 - **Set Rotation (Degrees) takes degrees, `velocity.angle()` returns radians.** Convert one way or the
-  other; **Radians To Degrees** is the verb for it.
+  other; **Radians To Degrees** is the expression for it.

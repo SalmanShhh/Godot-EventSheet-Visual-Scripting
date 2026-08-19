@@ -1,22 +1,22 @@
 # Debugging And Printing
 
-The builtin verbs for seeing what your sheet is actually doing. They cover the three console streams
+The builtin actions, conditions and expressions for seeing what your sheet is actually doing. They cover the three console streams
 Godot ships (the Output panel, the debugger's warning list, the debugger's error list), the combo-driven
 **Log** family that picks a stream from a dropdown, an assertion, a manual breakpoint, a scene-tree dump,
 and two live runtime readouts. Nothing here needs a pack enabled, and every one of them compiles to the
 exact native one-liner you would have typed - `print(...)`, `push_warning(...)`, `assert(...)` - so a
 debug row is an ordinary editable row rather than a raw GDScript block you have to unpick later.
 
-There are two families and it is worth knowing which one you are in. The **plain** verbs (Print, Push
+There are two families and it is worth knowing which one you are in. The **plain** actions (Print, Push
 Warning, Push Error) each hit one stream and always round-trip back to themselves when you reopen the
-sheet. The **combo** verbs (Log, Log If, Log (Debug Builds Only), Log Value) carry an **As** dropdown
-that chooses the stream, so one verb covers Message, Warning, Error and Rich text.
+sheet. The **combo** actions (Log, Log If, Log (Debug Builds Only), Log Value) carry an **As** dropdown
+that chooses the stream, so one action covers Message, Warning, Error and Rich text.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 6. [Reading the trace: hit counts and "Why didn't this fire?"](#reading-the-trace-hit-counts-and-why-didnt-this-fire)
@@ -50,8 +50,8 @@ that chooses the stream, so one verb covers Message, Warning, Error and Rich tex
 - **Picking Rich text switches the Message field to a BBCode editor.** Select text in the field and hit
   B / I / U / S to wrap it in tags. That behaviour is bound to the As dropdown, so it appears the moment
   you choose Rich text and goes away again when you do not.
-- **The Log verb carries a marker comment.** Its emitted line ends in `  # @ace:Core.ConsoleLog`. That
-  marker is inert at runtime and exists so the row reopens as **Log** rather than as the specific verb
+- **The Log action carries a marker comment.** Its emitted line ends in `  # @ace:Core.ConsoleLog`. That
+  marker is inert at runtime and exists so the row reopens as **Log** rather than as the specific action
   its call shape matches. Without it, a `push_warning("x")` line would be indistinguishable from a Push
   Warning row and would silently reopen as one.
 - **Assertions are removed from release builds.** `assert(...)` is stripped by the exporter. That is the
@@ -61,11 +61,11 @@ that chooses the stream, so one verb covers Message, Warning, Error and Rich tex
 - **Push Error does not stop the game.** It is a loud complaint, not a crash. Assert is the one that
   halts, and only while debugging.
 
-## Verb reference
+## Reference tables
 
 ### Printing to a stream
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Print | Prints a value to the Output console, useful for debugging what's happening. | `print({value})` |
 | Print Log | Prints a message to the output console, useful for debugging and checking values. | `print({message})` |
@@ -74,11 +74,11 @@ that chooses the stream, so one verb covers Message, Warning, Error and Rich tex
 | Push Warning | Logs a warning message that appears in Godot's debugger panel. | `push_warning({message})` |
 | Push Error | Logs an error message that appears in Godot's debugger panel. | `push_error({message})` |
 
-### The Log family - one verb, four streams
+### The Log family - one action, four streams
 
 Each of these carries the **As** dropdown: Message, Warning, Error, or Rich text (BBCode).
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Log | Writes a message to the console as a Message, Warning, Error, or Rich text - one verb for all four. | `{level}({message})  # @ace:Core.ConsoleLog` |
 | Log If | Writes a message to the console only when a condition is true. | `if {condition}: {level}({message})` |
@@ -88,7 +88,7 @@ Each of these carries the **As** dropdown: Message, Warning, Error, or Rich text
 
 ### Stopping and inspecting
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Assert | Crashes during testing if a condition isn't true, catching bugs early; removed from release. | `assert({condition}, {message})` |
 | Breakpoint (pause debugger) | Pauses the game in the debugger right here so you can inspect things. | `breakpoint` |
@@ -96,7 +96,7 @@ Each of these carries the **As** dropdown: Message, Warning, Error, or Rich text
 
 ### Live runtime readouts
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Performance Monitor | Returns a live engine performance reading, like FPS or memory, for debugging. | `Performance.get_monitor({monitor})` |
 | Static Memory (bytes) | Returns how much memory the game is currently using, in bytes. | `OS.get_static_memory_usage()` |
@@ -114,7 +114,7 @@ you go looking. It records silently: nothing appears anywhere until a row logs i
 reads it. Trails are stored in node metadata, so a trail filled in one event is readable from any
 other event on the same node, and a trail name is free text (spaces are fine).
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Remember In Trail | Records a value into a named rolling history you can dump, chart, or check when something goes wrong. | `__trails_N[{trail}] = __trail_N` (append plus a trim to Keep) |
 | Trail Values | Returns the whole trail as an array, oldest first. | `(get_meta(&"__ef_trails", {}) as Dictionary).get({trail}, []) as Array` |
@@ -136,7 +136,7 @@ Two threshold questions and a stopwatch. These are vocabulary, not chrome: they 
 row's margin and no always-on display anywhere. A measurement becomes visible only where you send
 it, whether that is Log Measurements, a label, or the Debug Overlay pack.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Frame Took Longer Than | True on a frame that took longer than your budget, which is the hitch caught as it happens. | `(get_process_delta_time() * 1000.0 > {ms})` |
 | FPS Below For | True once the framerate has stayed under your floor for the whole stretch you name. | `__fps_below_for_N({fps}, {seconds})` plus a per-row clock member |
@@ -208,8 +208,8 @@ func _ready() -> void:
 	push_error("save slot index out of range")
 ```
 
-**6. One verb, whichever stream you want.** Log's As dropdown means you can escalate a line from Message
-to Warning by changing a cell, without swapping the verb.
+**6. One action, whichever stream you want.** Log's As dropdown means you can escalate a line from Message
+to Warning by changing a cell, without swapping the action.
 
 ```
 On save failed
@@ -571,7 +571,7 @@ func _on_run_started() -> void:
   means the row does nothing you can see.
 - **The Log row's trailing comment is deliberate.** `# @ace:Core.ConsoleLog` is what makes the row reopen
   as Log rather than as Print or Push Warning. Deleting it by hand in the generated file does not break
-  the game, but the row comes back as a different verb.
+  the game, but the row comes back as a different action.
 - **Per-frame printing is genuinely slow.** A print in an Every Frame event costs real milliseconds and
   can itself cause the hitch you are hunting. Gate it with Log If, or use Log (Debug Builds Only), or
   put the value on a label instead of in the console.

@@ -1,6 +1,6 @@
 # Reading Keyboard, Mouse and Gamepad
 
-This is the **device** vocabulary: verbs that ask a physical device what it is doing right now, without
+This is the **device** vocabulary: rows that ask a physical device what it is doing right now, without
 going through a named input action. "Is the W key down", "where is the pointer", "how far is the right
 stick pushed", "did a finger just touch the screen", "buzz the phone".
 
@@ -9,7 +9,7 @@ you want named actions instead - see the sibling guide **Setting Up And Rebindin
 this guide when the device itself is the subject: a debug key, an FPS mouse-look, a "press any key"
 splash, controller-glyph switching, a custom cursor, rumble.
 
-Every verb here compiles to plain Godot (`Input`, `DisplayServer`, `OS`) with zero plugin references.
+Every row here compiles to plain Godot (`Input`, `DisplayServer`, `OS`) with zero plugin references.
 
 The **Controls** vocabulary sits alongside it and covers everything around a device rather than the
 device's raw state: sticks and triggers on the Gamepad object's own -100 to 100 and 0 to 100 scales
@@ -29,7 +29,7 @@ them together), simulated input (**Simulate Control Pressed** / **Released**, **
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -49,7 +49,7 @@ them together), simulated input (**Simulate Control Pressed** / **Released**, **
 ## Core concepts
 
 - **Polling versus events.** Most conditions here POLL: they answer "is it down right now" every time the
-  event is checked (Key Is Down, Mouse Button Is Down, Gamepad Button Is Down). The verbs whose names end
+  event is checked (Key Is Down, Mouse Button Is Down, Gamepad Button Is Down). The rows whose names end
   in **(event)** are different: they read the in-scope `event` and are only valid inside an **On Input**
   event. Dropping On Key Pressed (event) into a plain every-tick event will not compile, because there is
   no `event` there.
@@ -65,19 +65,19 @@ them together), simulated input (**Simulate Control Pressed** / **Released**, **
 - **Mouse mode is one global switch.** Capture Mouse and Release Mouse are the readable pair; Set Mouse
   Mode is the same switch with all four options (visible, hidden, captured, confined). Mouse Is Captured
   reads it back.
-- **Devices are numbered.** Every gamepad verb takes a device index, and `0` is the first controller.
+- **Devices are numbered.** Every gamepad row takes a device index, and `0` is the first controller.
   Gamepad Count tells you how many are plugged in.
-- **Node-scoped verbs need the right host.** Mouse Position (world) and Mouse Position (local) are scoped
-  to `Node2D`; Mouse Ray Origin (3D) and Mouse Ray Direction (3D) are scoped to `Node3D`. On a sheet whose
-  host is not that type, the picker will not offer them.
+- **Node-scoped expressions need the right host.** Mouse Position (world) and Mouse Position (local) are
+  scoped to `Node2D`; Mouse Ray Origin (3D) and Mouse Ray Direction (3D) are scoped to `Node3D`. On a sheet
+  whose host is not that type, the picker will not offer them.
 
-## Verb reference
+## Reference tables
 
 The "Ships as" column is the exact code the row compiles to. Parameters appear in `{braces}`.
 
 ### Keyboard
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Key Is Down | True while the given keyboard key is being held down. | `Input.is_physical_key_pressed({key})` |
 | On Key Pressed (event) | True the moment a key is pressed, used inside an input event. | `(event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == {key})` |
@@ -88,7 +88,7 @@ The "Ships as" column is the exact code the row compiles to. Parameters appear i
 
 ### Mouse
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Mouse Button Is Down | True while the given mouse button is being held down. | `Input.is_mouse_button_pressed({button})` |
 | On Mouse Button Pressed (event) | True the moment a mouse button goes down, inside an On Input event. | `(event is InputEventMouseButton and event.pressed and event.button_index == {button})` |
@@ -110,12 +110,12 @@ The "Ships as" column is the exact code the row compiles to. Parameters appear i
 | Mouse Ray Origin (3D) | Where the cursor's picking ray starts in 3D world space. | `get_viewport().get_camera_3d().project_ray_origin(get_viewport().get_mouse_position())` |
 | Mouse Ray Direction (3D) | The direction the cursor's picking ray travels in 3D world space. | `get_viewport().get_camera_3d().project_ray_normal(get_viewport().get_mouse_position())` |
 
-Mouse Position (world) and Mouse Position (local) are scoped to `Node2D`; the two Mouse Ray verbs are
-scoped to `Node3D` and need an active Camera3D at runtime.
+Mouse Position (world) and Mouse Position (local) are scoped to `Node2D`; the two Mouse Ray expressions
+are scoped to `Node3D` and need an active Camera3D at runtime.
 
 ### Gamepad and rumble
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Gamepad Button Is Down | True while the given gamepad button is being held down. | `Input.is_joy_button_pressed({device}, {button})` |
 | On Gamepad Button Pressed (event) | True the moment a gamepad button goes down, inside an On Input event. | `(event is InputEventJoypadButton and event.pressed and event.button_index == {button})` |
@@ -135,7 +135,7 @@ D-pad directions. The axis dropdown offers `JOY_AXIS_LEFT_X`, `LEFT_Y`, `RIGHT_X
 
 ### Touch
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Touchscreen Available | True when the device running the game has a touchscreen. | `DisplayServer.is_touchscreen_available()` |
 | On Touch (event) | True the moment a finger touches the screen, inside an input event. | `(event is InputEventScreenTouch and event.pressed)` |
@@ -144,7 +144,7 @@ D-pad directions. The axis dropdown offers `JOY_AXIS_LEFT_X`, `LEFT_Y`, `RIGHT_X
 
 ### Raw event helpers
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Event Matches Action | True when an input event matches a named action. | `{event}.is_action(&{action})` |
 | Event As Text | A readable label for an input event, like "Space" or "Left Mouse Button". | `{event}.as_text()` |
@@ -340,7 +340,7 @@ Every tick
 Gamepad Name gives the product string when you want to tell an Xbox pad from a PlayStation one, and
 Gamepad Is Recognized tells you whether its buttons mean what you expect at all.
 
-**17. Local multiplayer joins.** Every gamepad verb takes a device index, so player 2 is device 1.
+**17. Local multiplayer joins.** Every gamepad row takes a device index, so player 2 is device 1.
 
 ```
 Every tick
@@ -414,7 +414,7 @@ On Input
 
 ## Tips and common mistakes
 
-- **The (event) verbs only work inside an On Input event.** They read the in-scope `event` variable. In
+- **The (event) rows only work inside an On Input event.** They read the in-scope `event` variable. In
   any other event that name does not exist and the sheet will not compile. If you need "is it down right
   now" outside an input event, use the polling form: Key Is Down, Mouse Button Is Down, Gamepad Button Is
   Down.
@@ -437,10 +437,10 @@ On Input
 - **Device 0 is not guaranteed to exist.** Check Gamepad Is Connected before reading a device, or accept
   that the reads answer zero on an empty slot.
 - **Vibrate Phone is milliseconds, Vibrate Gamepad is seconds.** `200` and `0.2` are the same length of
-  time in those two verbs.
+  time in those two actions.
 - **Vibration stops on its own.** Vibrate Gamepad already takes a duration, so Stop Gamepad Vibration is
   for cutting a long rumble short (a pause, a death, a scene change), not for routine cleanup.
-- **The 3D mouse-ray verbs need an active Camera3D.** With no current camera in the viewport they will
+- **The 3D mouse-ray expressions need an active Camera3D.** With no current camera in the viewport they will
   fail at runtime; they are scoped to `Node3D` hosts for the same reason.
 - **Touchscreen Available describes the DEVICE, not the moment.** A laptop with a touchscreen answers true
   even while the player is using a mouse, so use it to decide what to offer, not what is being used.

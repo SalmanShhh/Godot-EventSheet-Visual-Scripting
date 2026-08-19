@@ -475,6 +475,15 @@ That is the order this section is in.
   their types), what it gives back, description, whether it is featured, its icon, the exact line it
   inserts, and the function behind it - with Edit..., Open guide and Show in code. Unpublished helpers are
   the same blocks with their doc as the right-hand caption, gathered under a closed **Helpers** folder.
+
+  The picker knows about them too. Open **Add Event** on a `.gd` you opened as a sheet and its first
+  page is **ƒ Functions - this script**, listing the file's own functions with the kind each one
+  publishes as and the inputs it takes, its unpublished helpers behind a `+ Helpers (N)` fold, and
+  **Your Project** under that with every class the project declares. Picking one inserts an ordinary
+  Call Function row.
+
+  ![The Add Event picker opened on a script's own functions: a Functions section headed "this script - 4" listing Award Points as an action taking amount number and Round Is Ready as a condition taking enabled true/false, a collapsed Helpers (2) entry, then a Your Project section listing the project's own classes](images/picker-functions-page.png)
+
 - **Lifecycle handlers are triggers, wherever they sit in the file.** `_physics_process` is `Every Physics
   Tick`; an `_unhandled_input` that branches on the event type reads as one trigger per branch -
   `Mouse ▸ On mouse moved` with `Mouse ▸ mouse is captured` under it, `Keyboard ▸ On Escape pressed` - and a

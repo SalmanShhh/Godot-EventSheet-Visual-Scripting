@@ -154,7 +154,7 @@ Set these on the node for the default feel; each one also has the Set / Add To /
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$CarBehavior.acceleration` inserts the **Acceleration** entry straight into any expression
 - `$CarBehavior.ai_controlled` inserts the **Ai Controlled** entry straight into any expression

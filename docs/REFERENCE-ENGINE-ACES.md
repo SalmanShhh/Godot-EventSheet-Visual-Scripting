@@ -1,6 +1,6 @@
 # Engine-Level ACEs
 
-Most of the picker talks to a **node** you placed: move this sprite, play that sound, check this body. This page collects the vocabulary that talks to the **engine itself** - the rendering server, the physics world, the audio mixer - plus the verbs that build 3D content at runtime. These are the rows behind a graphics options menu, a low-gravity power-up, an underwater audio filter, or a block you spawn from nothing.
+Most of the picker talks to a **node** you placed: move this sprite, play that sound, check this body. This page collects the vocabulary that talks to the **engine itself** - the rendering server, the physics world, the audio mixer - plus the rows that build 3D content at runtime. These are the rows behind a graphics options menu, a low-gravity power-up, an underwater audio filter, or a block you spawn from nothing.
 
 Everything here is a builtin ACE, so it is in the picker of every sheet with no addon to install. Each section names the picker category to look under.
 
@@ -35,7 +35,7 @@ Picker category: **Rendering**. This is the whole of a standard graphics options
 
 ### Conditions and expressions
 
-| Verb | Kind | Gives you |
+| Name | Kind | Gives you |
 | --- | --- | --- |
 | **Uses Modern Renderer** | Condition | True on Forward+ / Mobile, false on Compatibility (old GPUs, web) - gate fancy effects on it. |
 | **Draw Calls (frame)** | Expression | Draw calls issued this frame. |
@@ -92,9 +92,9 @@ On gravity flip
 
 ## Audio mixing (Audio Server)
 
-Picker category: **Audio Server**. Buses are set up in Godot's Audio panel; these verbs drive them at runtime. This is the options-menu volume story and the "everything sounds muffled underwater" trick.
+Picker category: **Audio Server**. Buses are set up in Godot's Audio panel; these rows drive them at runtime. This is the options-menu volume story and the "everything sounds muffled underwater" trick.
 
-| Verb | Kind | What it does |
+| Name | Kind | What it does |
 | --- | --- | --- |
 | **Set Bus Muted** | Action | Mutes or unmutes a whole bus - the music/SFX toggle in one action. |
 | **Set Bus Solo** | Action | Only soloed buses are heard - focus dialogue in a cutscene, audition a layer. |
@@ -122,7 +122,7 @@ On exit water
 
 Picker category: **Mesh**. These build a primitive shape onto a `MeshInstance3D` you already have in the scene - greyboxing, procedural props, or a stand-in body while you block out a level. No modelling tool required.
 
-| Verb | Kind | Parameters |
+| Name | Kind | Parameters |
 | --- | --- | --- |
 | **Make Box Mesh** | Action | `size` (Vector3) |
 | **Make Sphere Mesh** | Action | `radius` |
@@ -143,7 +143,7 @@ Picker category: **Mesh**. These build a primitive shape onto a `MeshInstance3D`
 
 Picker category: **Camera**. Field-of-view control for 3D cameras - the aim-down-sights zoom and the speed-boost widen.
 
-| Verb | Kind | What it does |
+| Name | Kind | What it does |
 | --- | --- | --- |
 | **Tween Camera FOV** | Action | Smoothly eases the active 3D camera's FOV to a target over a duration. Clamped to the legal range. |
 | **Adjust Camera FOV** | Action | Nudges a camera's FOV by a relative amount, clamped so repeated zooms can never flip the camera inside-out. |
@@ -155,7 +155,7 @@ Picker category: **Camera**. Field-of-view control for 3D cameras - the aim-down
 
 Picker category: **Animation**. Beyond Play and Stop, these drive an `AnimationPlayer` precisely - scrubbing, queueing, and reading where the play head is.
 
-| Verb | Kind | What it does |
+| Name | Kind | What it does |
 | --- | --- | --- |
 | **Set Animation Speed** | Action | Scales how fast every animation on this player runs - slow-mo a death, speed up a fast-forward. `0` freezes it. |
 | **Seek Animation** | Action | Jumps the play head to a time in seconds and updates the pose immediately - scrub, restart from a beat, sync to another clock. |
@@ -167,7 +167,7 @@ Picker category: **Animation**. Beyond Play and Stop, these drive an `AnimationP
 | **Animation Length** | Expression | The current animation's total length - pair with Animation Position for a normalized 0-to-1 progress. |
 | **Animation Speed** | Expression | The player's current speed scale (`1` = normal). |
 
-The same category also holds the AnimationTree verbs (Travel To State, Set Tree Parameter, Is In State, Current State) and the auto-finding "in object" verbs (Play Animation, Flip Sprite, Set Sprite Frame) that locate a node's AnimationPlayer or AnimatedSprite2D for you.
+The same category also holds the AnimationTree rows (Travel To State, Set Tree Parameter, Is In State, Current State) and the auto-finding "in object" actions (Play Animation, Flip Sprite, Set Sprite Frame) that locate a node's AnimationPlayer or AnimatedSprite2D for you.
 
 ---
 
@@ -175,7 +175,7 @@ The same category also holds the AnimationTree verbs (Travel To State, Set Tree 
 
 Picker category: **Gradients & Curves**. Turn a designer-drawn ramp or curve into a colour or a number, with no maths in the sheet.
 
-| Verb | Kind | What it does |
+| Name | Kind | What it does |
 | --- | --- | --- |
 | **Make Gradient** | Action | Builds a smooth two-colour ramp into a variable at runtime - a quick fire or sky gradient without opening the editor. |
 | **Sample Gradient** | Expression | The colour at a 0-to-1 position along a gradient - a health-bar tint, a day/night sky, a heat map, from one line. |
@@ -191,4 +191,4 @@ For a gradient or curve with many stops, author it as a Gradient variable (Godot
 - **Set Physics Active is not the same as pausing the tree.** It freezes the simulation while rendering and scripts keep running - which is exactly what a photo mode wants.
 - **Bus effects must exist before you toggle them.** Add the effect to the bus in Godot's Audio panel first; **Set Bus Effect Enabled** flips a slot that is already there, by index.
 - **The Rendering settings apply to the current viewport.** In a game with several viewports, apply the ones you care about where they matter.
-- **Mesh verbs need a MeshInstance3D to draw onto.** They build the shape and assign it; they do not create the node for you.
+- **The Mesh actions need a MeshInstance3D to draw onto.** They build the shape and assign it; they do not create the node for you.

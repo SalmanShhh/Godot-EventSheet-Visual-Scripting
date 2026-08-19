@@ -4,7 +4,7 @@ Two builtin vocabularies for the things a player actually sees: **Drawing**, whi
 circles, cones, stamps and ribbons onto any node's own 2D canvas, and **Particles**, which drives
 GPUParticles2D and CPUParticles2D emitters from rows. Neither needs a pack enabled.
 
-The Drawing verbs are the interesting half. Every one of them starts with `CanvasSurface.for_node(...)`,
+The Drawing rows are the interesting half. Every one of them starts with `CanvasSurface.for_node(...)`,
 which lazily builds one offscreen render target for that node and caches it there. So you do not attach
 anything, configure anything, or write a `_draw()` function: you pick **Draw Circle**, point it at a
 node, and that node has a canvas. Turn auto-clear on and the canvas is a per-frame telegraph (attack
@@ -15,7 +15,7 @@ footprints, splatter, a drawing game).
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -35,8 +35,8 @@ footprints, splatter, a drawing game).
 
 ## Core concepts
 
-- **A canvas belongs to a node and is created on first use.** Every Drawing verb takes an **On**
-  parameter naming the canvas host (any Node2D, defaulting to `self`). The first verb that runs against
+- **A canvas belongs to a node and is created on first use.** Every Drawing row takes an **On**
+  parameter naming the canvas host (any Node2D, defaulting to `self`). The first row that runs against
   that node builds its surface; there is nothing to attach beforehand.
 - **Auto Clear picks the whole personality of the canvas.** On: the surface is wiped every frame, so
   what you draw is only visible if you redraw it every tick. That is what a telegraph or a vision cone
@@ -52,20 +52,20 @@ footprints, splatter, a drawing game).
   take the same **Follow** node, and that node is the ribbon's identity. One canvas can carry several
   ribbons at once as long as each follows a different node.
 - **GPU and CPU particles are different classes.** GPUParticles2D and CPUParticles2D share property
-  names but are unrelated types, so the picker scopes by node type and the CPU side has its own verbs
+  names but are unrelated types, so the picker scopes by node type and the CPU side has its own actions
   where one was needed: **Set Emitting (CPU)**, **Restart / Burst (CPU)** and **Set Speed Scale (CPU)**.
-- **The particle verbs are node-scoped, so they carry On node.** Left blank they compile to the bare
+- **The particle rows are node-scoped, so they carry On node.** Left blank they compile to the bare
   member call on the host; filled in, the same call is prefixed with the node you picked.
 - **Emit Particles (in object)** is the object-level form: give it the object and it finds the first
   GPUParticles2D anywhere beneath, so no path is needed.
 
-## Verb reference
+## Reference tables
 
 ### Drawing - setup and control
 
 Every row here takes **On** (the canvas host node).
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Configure Canvas | Sets up (or retunes) the drawing surface on a node - size, auto-clear mode, coordinate mode, and whether it shows on the node. | `CanvasSurface.for_node({node}).configure({width}, {height}, {auto_clear}, {coordinates}, {display_on_host})` |
 | Clear Canvas | Wipes the node's canvas. In persistent mode the wipe happens next frame, then strokes keep again. | `CanvasSurface.for_node({node}).clear()` |
@@ -75,7 +75,7 @@ Every row here takes **On** (the canvas host node).
 
 ### Drawing - shapes
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Draw Line | Draws a line segment onto a node's canvas - attack direction indicators, lasers, aim guides. | `CanvasSurface.for_node({node}).line({from_x}, {from_y}, {to_x}, {to_y}, {width}, {color})` |
 | Draw Circle | Draws a filled circle onto a node's canvas - the classic soft blob shadow under a character. | `CanvasSurface.for_node({node}).circle({x}, {y}, {radius}, {color})` |
@@ -91,7 +91,7 @@ Every row here takes **On** (the canvas host node).
 
 ### Drawing - ribbons
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Start Ribbon | Starts a textured ribbon trailing another node - sword swooshes, skid marks, comet tails. Its update runs automatically. | `CanvasSurface.for_node({node}).start_ribbon({follow}, {point_count}, {width}, {color})` |
 | Set Ribbon Texture | Skins a running ribbon with a texture, stretched along its length. | `CanvasSurface.for_node({node}).set_ribbon_texture({follow}, {texture})` |
@@ -99,7 +99,7 @@ Every row here takes **On** (the canvas host node).
 
 ### Particles - GPUParticles2D
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | On Particles Finished | Fires once when this particle emitter's one-shot burst finishes playing. | the `finished` signal |
 | Set Emitting | Starts or stops the particle emitter, e.g. switching an effect on. | `emitting = {emitting}` |
@@ -112,7 +112,7 @@ Every row here takes **On** (the canvas host node).
 
 ### Particles - CPUParticles2D and object-level
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Emitting (CPU) | Starts or stops a CPU particle emitter, e.g. switching an effect on. | `emitting = {emitting}` |
 | Restart / Burst (CPU) | Restarts a CPU particle system from scratch, e.g. firing a fresh burst. | `restart()` |
@@ -249,7 +249,7 @@ On target designated
 ```
 
 **14. Put the canvas somewhere else.** Turn Show On Node off in Configure Canvas, then feed the live
-texture to a UI node - a minimap drawn with the same shape verbs.
+texture to a UI node - a minimap drawn with the same shape actions.
 
 ```
 On Ready
@@ -356,7 +356,7 @@ On landed
   strokes and a surface that only ever gets more opaque. Persistent canvases want event-driven strokes.
 - **Clear Canvas on a persistent canvas lands next frame.** The wipe is scheduled, not immediate, and
   strokes resume accumulating right after it, so you do not need to re-enable anything.
-- **Configure Canvas is optional but decides the defaults.** The first drawing verb builds the surface
+- **Configure Canvas is optional but decides the defaults.** The first drawing row builds the surface
   with the standard setup; Configure Canvas is how you change size, coordinates, auto-clear or whether
   it is shown. Run it before you draw, not after.
 - **World coordinates are centred on the host node**, not on the world origin. A shape drawn at 0,0 lands
@@ -368,14 +368,14 @@ On landed
   walls that live on another layer.
 - **Ribbons are identified by the node they follow.** Stop Ribbon with a different Follow node does not
   stop the ribbon you started. Keep the same node in all three ribbon rows.
-- **The Drawing verbs use the shared CanvasSurface runtime**, which ships with `eventsheet_addons/` as
+- **The Drawing rows use the shared CanvasSurface runtime**, which ships with `eventsheet_addons/` as
   plain GDScript. It travels with your exported game like any other pack runtime, but it does mean these
   particular rows are not the zero-file plain-Godot output the rest of the vocabulary emits.
 - **Set Emitting true does not replay a finished one-shot.** Once a one-shot emitter has finished,
   `emitting` is already false and setting it true may do nothing useful. Use Restart / Burst.
-- **CPU and GPU emitters do not share verbs.** Set One-Shot, Set Amount, Is Emitting and Amount are
+- **CPU and GPU emitters do not share rows.** Set One-Shot, Set Amount, Is Emitting and Amount are
   scoped to GPUParticles2D. For a CPUParticles2D you have Set Emitting (CPU), Restart / Burst (CPU) and
-  Set Speed Scale (CPU); reach anything else with the generic Set Property verb.
+  Set Speed Scale (CPU); reach anything else with the generic Set Property action.
 - **On Particles Finished is a one-shot trigger.** A looping emitter never emits `finished`, so a
   cleanup row hung off it will never run.
 - **Emit Particles (in object) takes the first GPUParticles2D in tree order** and is guarded, so an

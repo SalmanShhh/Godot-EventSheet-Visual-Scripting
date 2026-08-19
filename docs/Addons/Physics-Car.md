@@ -84,7 +84,7 @@ Each held key pushes one axis: `up` sets full throttle, `left` and `right` set s
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Drive **direction**
 - Drive toward (**x**, **y**) at throttle **throttle_amount**, max steer **max_steer**, tolerance **tolerance**
@@ -180,7 +180,7 @@ The Drive Toward actions take `throttle_amount`, `max_steer` and `tolerance` as 
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ---
@@ -188,7 +188,7 @@ change while the game runs.
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$PhysicsCar.max_speed` inserts the **Max Speed** entry straight into any expression
 - `$PhysicsCar.acceleration` inserts the **Acceleration** entry straight into any expression

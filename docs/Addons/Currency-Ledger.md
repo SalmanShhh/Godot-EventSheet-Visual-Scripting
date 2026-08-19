@@ -80,7 +80,7 @@ That is the whole loop: define once, earn and spend with single rows, and let On
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Define currency **id** starting at **starting_amount**, max **max_amount**
 - Add **amount** **id**
@@ -150,7 +150,7 @@ Every id below is a string. Amounts are numbers. All names are the exact display
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$CurrencyLedgerAddon.balance(id)` inserts the **Balance** entry straight into any expression
 - `$CurrencyLedgerAddon.cap(id)` inserts the **Cap** entry straight into any expression

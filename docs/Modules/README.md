@@ -1,22 +1,23 @@
 # Built-in Module Guides
 
-Deep-dive guides for the **built-in vocabulary** - the roughly 1,090 verbs that are already in the
-picker on a fresh install, before you enable a single behavior pack. They are authored as the
-vocabulary modules in `addons/eventforge/registration/modules/`, one file per subject, and this
-index groups their guides by what you are trying to do rather than by which file they came from.
+Deep-dive guides for the **built-in vocabulary** - the roughly 1,090 actions, conditions and
+expressions that are already in the picker on a fresh install, before you enable a single behavior
+pack. They are authored as the vocabulary modules in `addons/eventforge/registration/modules/`, one
+file per subject, and this index groups their guides by what you are trying to do rather than by
+which file they came from.
 
-Each guide covers when to reach for that vocabulary, its full verb reference (name, what it does,
+Each guide covers when to reach for that vocabulary, its full reference tables (name, what it does,
 and the exact GDScript each row ships as), fifteen or more worked use cases written as event-sheet
 rows, and the tips and mistakes that bite in practice.
 
-Nothing here needs installing, attaching or enabling. Every verb compiles to plain GDScript with
+Nothing here needs installing, attaching or enabling. Every row compiles to plain GDScript with
 zero plugin dependency, so a sheet built entirely from built-in vocabulary keeps running after the
 plugin is removed.
 
-These are the **per-verb reference**. The narrative, learn-by-doing versions of four of these
+These are the **complete reference**. The narrative, learn-by-doing versions of four of these
 subjects - lists, text, values, and raycasting - live in the main
 [documentation index](../README.md) under "Learn by doing"; start there if you want the story, and
-come here for the complete verb list.
+come here for the complete list.
 
 Looking for a bundled behavior pack instead? See the [addon guides index](../Addons/README.md).
 
@@ -32,12 +33,12 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 
 - [Setting And Changing Variables](Setting-And-Changing-Variables.md) - the plain arithmetic set, the eased and guarded forms, safe fallbacks, and scratch locals and constants.
 - [Comparing Values](Comparing-Values.md) - the condition rows an operator cannot express: method comparisons, tolerances, emptiness and type tests.
-- [Doing Math And Randomness](Doing-Math-And-Randomness.md) - every number verb in one place, from Clamp and Lerp to degree-based trig and seeded procedural values.
-- [Working With Lists](Working-With-Lists.md) - the whole Array vocabulary, the higher-order verbs (Filter, Map, Reduce, Any Match, All Match), typed lists, and the loop controls.
+- [Doing Math And Randomness](Doing-Math-And-Randomness.md) - every number expression in one place, from Clamp and Lerp to degree-based trig and seeded procedural values.
+- [Working With Lists](Working-With-Lists.md) - the whole Array vocabulary, the higher-order rows (Filter, Map, Reduce, Any Match, All Match), typed lists, and the loop controls.
 - [Working With Records](Working-With-Records.md) - Dictionaries: values addressed by name, safe reads with defaults, key sets, and the shapes a save file and a spreadsheet row arrive in.
 - [Copying, Sharing And Remembering Values](Copying-Sharing-And-Remembering-Values.md) - share codes, the OS clipboard both ways, cloning a live node, and putting a named copy of a value aside.
 - [Working With Files](Working-With-Files.md) - read and write text on disk, walk a folder, and cross the JSON boundary in both directions.
-- [Reading Spreadsheets And Data Assets](Reading-Spreadsheets-And-Data-Assets.md) - a `.csv` read as records, a folder of `.tres` read as content, and the verbs that explain why a load went wrong.
+- [Reading Spreadsheets And Data Assets](Reading-Spreadsheets-And-Data-Assets.md) - a `.csv` read as records, a folder of `.tres` read as content, and the rows that explain why a load went wrong.
 
 ## Text and localisation
 
@@ -48,7 +49,7 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 ## Input and UI
 
 - [Reading Keyboard, Mouse And Gamepad](Reading-Keyboard-Mouse-And-Gamepad.md) - ask a physical device what it is doing right now: keys, pointer, sticks, touches, and rumble.
-- [Setting Up And Rebinding Controls](Setting-Up-And-Rebinding-Controls.md) - named actions, the layer to build controls on, and the InputMap verbs a rebinding screen is made of.
+- [Setting Up And Rebinding Controls](Setting-Up-And-Rebinding-Controls.md) - named actions, the layer to build controls on, and the InputMap vocabulary a rebinding screen is made of.
 - [Buttons, Sliders, Labels And Menus](Buttons-Sliders-Labels-And-Menus.md) - the Control vocabulary a menu or HUD is driven by: button triggers, focus navigation, getters and setters, layout and theme overrides.
 - [Game Options And The Window](Game-Options-And-The-Window.md) - the OS window, vsync and the frame-rate cap, and the small persistence pair that makes a setting survive a restart.
 

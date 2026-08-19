@@ -6,7 +6,7 @@ The condition rows that ask a question an operator cannot.
 compares with a plain operator. This guide is the rest of the question: comparisons that need a method, a
 tolerance, or a type test, and that you would otherwise have to write as an ƒx expression.
 
-They are **builtin** verbs - no addon, no autoload, no setup. The picker groups them by what is being
+They are **builtin** rows - no addon, no autoload, no setup. The picker groups them by what is being
 compared, because the right question depends on the type:
 
 | Section | For |
@@ -24,7 +24,7 @@ compared, because the right question depends on the type:
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -45,7 +45,7 @@ compared, because the right question depends on the type:
   Text Natural Order, Compare Result, Value Type Name, and the pair Number From Text /
   Whole Number From Text.
 - **Every condition inverts.** Right-click a condition row and invert it rather than reaching for the
-  opposite verb - though where the positive reading is the one you act on, a named verb exists for it
+  opposite condition - though where the positive reading is the one you act on, a named condition exists for it
   (Contains None Of, Has Something, Is Farther Than).
 - **`=` on decimals is a coin flip.** Tiny rounding differences survive arithmetic. Values Are Near,
   Vectors Are Equal and Colors Are Equal use Godot's approximate comparisons instead, which is almost
@@ -60,11 +60,11 @@ compared, because the right question depends on the type:
   `"0"` alike, so a typo in an amount box arrives as a real-looking bet of nothing. Text Is A Number asks
   first; Number From Text converts with a fallback YOU chose.
 
-## Verb reference
+## Reference tables
 
 ### General conditions
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Compare variable | True when a sheet variable compares against a value with your chosen operator. | `{var_name} {op} {value}` |
 | Compare Values | True when two values compare with your chosen operator. | `{a} {op} {b}` |
@@ -81,7 +81,7 @@ plugin: `=` (equal to), `!=` (not equal to), `<` (less than), `<=` (at most), `>
 
 ### Compare: Text
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Text Equals (ignore case) | True when two pieces of text are the same, treating capitals and lowercase as identical. | `{a}.to_lower() == {b}.to_lower()` |
 | Text Begins With | True when text starts with a prefix. | `{text}.begins_with({prefix})` |
@@ -99,14 +99,14 @@ plugin: `=` (equal to), `!=` (not equal to), `<` (less than), `<=` (at most), `>
 
 ### Variables: String - the checked conversions
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Number From Text | **Expression.** Reads a number out of text, or hands back the fallback YOU chose - never a surprise zero. | `(str({text}).strip_edges().to_float() if str({text}).strip_edges().is_valid_float() else {fallback})` |
 | Whole Number From Text | **Expression.** The same for whole numbers. "12.5" lands on the fallback rather than quietly becoming 12. | `(str({text}).strip_edges().to_int() if str({text}).strip_edges().is_valid_int() else {fallback})` |
 
 ### Compare: Numbers
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Values Are Near | True when two numbers are within a tolerance of each other. | `absf({a} - {b}) <= {tolerance}` |
 | Is Outside Range | True when a value falls below the low bound or above the high one. | `({value} < {min} or {value} > {max})` |
@@ -120,7 +120,7 @@ plugin: `=` (equal to), `!=` (not equal to), `<` (less than), `<=` (at most), `>
 
 ### Compare: Vectors
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Vectors Are Equal | True when two vectors are the same allowing for rounding. | `{a}.is_equal_approx({b})` |
 | Is Within Distance | True when two points are no further apart than a distance. | `{a}.distance_to({b}) <= {distance}` |
@@ -131,7 +131,7 @@ plugin: `=` (equal to), `!=` (not equal to), `<` (less than), `<=` (at most), `>
 
 ### Compare: Types
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Value Is Of Type | True when a value is of a particular kind, picked from a dropdown. | `typeof({value}) == {type}` |
 | Values Are The Same Type | True when two values are of the same kind, so comparing them means anything. | `typeof({a}) == typeof({b})` |
@@ -145,7 +145,7 @@ Decimal number (float), Text, Vector2, Vector3, Color, List (Array), Dictionary,
 
 ### Compare: Objects
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Is The Same Object | True when two references point at the very same object, not merely one that looks alike. | `{a} == {b}` |
 | Object Still Exists | True when an object has not been freed. A variable holding a deleted node is NOT null. | `is_instance_valid({object})` |
@@ -500,7 +500,7 @@ On fire pressed
 if $Player/WeaponKit.can_fire():
 ```
 
-The expression is emitted verbatim and inverts to `not (...)` for free. Prefer a named verb where one
+The expression is emitted verbatim and inverts to `not (...)` for free. Prefer a named condition where one
 exists - this one is yours to get right.
 
 ### Other use cases
@@ -527,7 +527,7 @@ object does not have.
   and Colors Are Equal instead. This is the trap this whole vocabulary exists to close.
 - **Text Is Empty is not Text Is Blank.** A single space is not empty. A name box, a chat message and a
   search field almost always want Text Is Blank.
-- **Contains Any Of is case-sensitive.** Text Equals (ignore case) is the only verb here that lowercases
+- **Contains Any Of is case-sensitive.** Text Equals (ignore case) is the only condition here that lowercases
   for you. Lowercase the text yourself before a case-insensitive contains check.
 - **An empty list is true for Contains All Of and Contains None Of, and false for Contains Any Of.**
   Nothing is missing, nothing is forbidden, and nothing matched. That is consistent, but it means an
@@ -545,10 +545,10 @@ object does not have.
 - **Is Nothing keeps 0 and false.** If you want a zero treated as missing, say so explicitly with a
   Compare Values row - do not expect Is Nothing to do it.
 - **Is Nothing understands a Split Text result.** An empty PackedStringArray does not equal an empty
-  Array, so the verb tests the packed families separately. A hand-written `== []` check would miss it.
+  Array, so the condition tests the packed families separately. A hand-written `== []` check would miss it.
 - **Object Has Property takes the property name as text**, in quotes, not as a bare identifier.
 - **Points The Same Way normalizes both sides for you**, so you can feed it raw velocities without
   shrinking them first - but a zero-length vector has no direction and gives a meaningless answer. Gate
   it with Is Longer Than when the input might be still.
-- **Prefer a named verb over Expression Is True.** The escape hatch compiles fine, but nothing in the
+- **Prefer a named condition over Expression Is True.** The escape hatch compiles fine, but nothing in the
   editor can explain, translate or lift it the way a named row can.

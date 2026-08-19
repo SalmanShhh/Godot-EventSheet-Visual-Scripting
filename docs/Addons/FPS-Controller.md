@@ -4,7 +4,7 @@ FPS Controller is a complete first-person / third-person character controller yo
 `CharacterBody3D` and drive from event-sheet rows. It handles mouse look (yaw on the body, pitch
 on the head), WASD/arrow movement relative to where you look, Shift sprint, Space jump with
 gravity and **coyote time** (the ground jump still fires for a tenth of a second after you walk
-off a ledge, so presses never feel dropped), landing detection, and a one-verb camera-mode switch
+off a ledge, so presses never feel dropped), landing detection, and a one-action camera-mode switch
 between first and third person.
 Movement tech is built in: **crouch** (hold Ctrl - the capsule physically shrinks, and standing
 is ceiling-checked so you cannot pop up inside a vent), **crouch slide** (crouch while
@@ -15,7 +15,7 @@ The bundled **FPS Arena** showcase (`demo/showcase/fps_arena/`) is the reference
 press play, and walk around before wiring your own.
 
 It ships as the **`FPSController`** behavior: add it as a child of your player and the pack's
-verbs appear in every sheet's picker, node-targeted at that player.
+vocabulary appears in every sheet's picker, node-targeted at that player.
 
 ## Table of Contents
 
@@ -36,7 +36,7 @@ verbs appear in every sheet's picker, node-targeted at that player.
 - **First AND third person from the same setup.** `Toggle Camera Mode` slides the camera along a
   spring arm; walls never clip through it (SpringArm3D does the work).
 - **Sheet-driven feel tuning.** Speed, sprint, jump, sensitivity, and pitch clamps are exported
-  knobs AND runtime verbs - a speed-boost pickup is one `Set Move Speed` action.
+  knobs AND runtime actions - a speed-boost pickup is one `Set Move Speed` action.
 - **Reactive hooks.** `On Jumped`, `On Landed`, and `On Camera Mode Changed` are triggers -
   play a sound on land, kick particles on jump, swap HUDs per camera mode.
 
@@ -74,7 +74,7 @@ the behavior finds them by name and quietly skips what's missing.
 | Trigger | On Camera Mode Changed | Fires when first/third person flips. |
 | Action | Jump | Launches upward with Jump Velocity (also fires On Jumped). |
 | Action | Set Gravity Direction | Points gravity along a new 3D direction (normalized for you). `(0, 1, 0)` walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal. |
-| Action | Add Look (x, y) | Turns the view by a mouse delta - the same verb the built-in mouse look calls. |
+| Action | Add Look (x, y) | Turns the view by a mouse delta - the same action the built-in mouse look calls. |
 | Action | Set Third Person (enabled) | Switches camera mode explicitly. |
 | Action | Toggle Camera Mode | Flips first/third person. |
 | Action | Apply Camera Mode | Re-applies the mode to the Arm (after swapping rigs at runtime). |
@@ -137,13 +137,13 @@ Wall Ride Max Time + Wall Ride Min Speed; Wall Jump Enabled + Wall Jump Push.
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$FPSController.ai_controlled` inserts the **Ai Controlled** entry straight into any expression
 - `$FPSController.camera_distance` inserts the **Camera Distance** entry straight into any expression

@@ -85,7 +85,7 @@ That is the whole loop: configure once, Do Click on the tap, and credit Last Cli
 
 ## ACE reference
 
-On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
 
 - Click with **current_cps** production per second
 
@@ -130,7 +130,7 @@ All names below are the exact display names from the pack. Numbers are floats un
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$ClickPowerAddon.click_yield(current_cps)` inserts the **Click Yield** entry straight into any expression
 - `$ClickPowerAddon.last_click()` inserts the **Last Click** entry straight into any expression

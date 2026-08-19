@@ -13,14 +13,14 @@ byte-exactly: open the generated `.gd`, save it untouched, and you get the ident
 | Variables (typed and inferred) | Variable rows with plain-language types | Add > Global/Local Variable (typed containers explained in the Type dropdown) |
 | Constants | A constant row / local constant action | The variable dialog's Constant toggle; Set Local Constant |
 | Enums | Enum blocks with per-value fields | Add > Enum (the "+" adds each value as a field) |
-| Functions, parameters, returns | Expandable ƒ Define blocks | Add > Function… (the verb studio); parameters from the Define row's cells |
+| Functions, parameters, returns | Expandable ƒ Define blocks | Add > Function… (the ACE Studio); parameters from the Define row's cells |
 | Static functions and variables | static-marked rows | The Static toggle in the function/variable dialogs |
 | `if` / `elif` / `else` | Condition lane + System Else / Else If chips | Right-click an event > Add 'Else' / Add 'Else If' |
 | `match` | A Match row in the action lane: a subject expression plus one branch per case | Right-click an event > More > Add Match To Actions… (Expert mode; Simple Mode hides it) |
 | `for` / `while` loops | For Each / Repeat / While rows | Right-click > Add Pick Filter (For Each) |
 | `break` / `continue` | Break Loop / Continue Loop actions | The Loops category in the picker |
 | Loop counters | The Loop index field + Loop Index expressions | Name it on any loop; read with Loop Index / Loop Index Of |
-| Arrays and Dictionaries | 50 Variables: Array / Dictionary verbs | The picker's Variables sections |
+| Arrays and Dictionaries | 50 Variables: Array / Dictionary actions, conditions and expressions | The picker's Variables sections |
 | Higher-order list functions (`filter` / `map` / `reduce` / `any` / `all`) | Filter / Map / Reduce expressions + Any Match / All Match conditions | Variables: Array; you write just the test or transform, over an element you name |
 | Typed containers (`Array[int]`, ...) | Offered with plain-language hints, and readable at runtime | The variable dialog's Type dropdown; Is Typed / Element Type / Element Class / Assign |
 | Multi-line collection literals (`var waves := { ... }`) | A **Declare** row - one editable row per entry, no bracket lines - in a function body or at file scope, `const` included | Opens that way from an existing `.gd`; right-click for Add / Edit / Remove Entry |

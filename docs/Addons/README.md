@@ -64,7 +64,7 @@ Attach to a node to move it.
 
 - [Platformer](Platformer.md) - run, jump, gravity, and coyote time for a side-scroller.
 - [Platformer Pathfinding](Platformer-Pathfinding.md) - jump-aware navigation: a graph built from your tiles, A* with walk/jump/fall/portal edges, driving Platformer movement through its AI seam (see the Path Chase showcase).
-- [Nav Agent 3D](Nav-Agent-3D.md) - navmesh pathfinding for 3D, sheet-shaped: an auto-inserted NavigationAgent3D with the same verbs as the 2D pack, driving the FPS Controller or the body itself (see the FPS Arena's stalker).
+- [Nav Agent 3D](Nav-Agent-3D.md) - navmesh pathfinding for 3D, sheet-shaped: an auto-inserted NavigationAgent3D with the same vocabulary as the 2D pack, driving the FPS Controller or the body itself (see the FPS Arena's stalker).
 - [Eight Direction](Eight-Direction.md) - top-down movement in eight directions.
 - [Car](Car.md) - arcade car steering (turn-and-drive), no physics body needed.
 - [Tile Movement](Tile-Movement.md) - grid-locked stepping, one tile per press.
@@ -81,7 +81,7 @@ Attach to a node to move it.
 
 ## Movement (3D)
 
-- [FPS Controller](FPS-Controller.md) - a complete first/third-person character: mouse look, WASD move, sprint, jump, crouch + crouch slide, wall ride + wall jump, and a one-verb camera-mode switch (see the FPS Arena showcase).
+- [FPS Controller](FPS-Controller.md) - a complete first/third-person character: mouse look, WASD move, sprint, jump, crouch + crouch slide, wall ride + wall jump, and a one-action camera-mode switch (see the FPS Arena showcase).
 - [Move To 3D](Move-To-3D.md) - move a 3D node to a point or along a path.
 - [Bullet 3D](Bullet-3D.md) - fire a 3D node in a straight line.
 - [Sine 3D](Sine-3D.md) - oscillate a 3D property on a sine wave.

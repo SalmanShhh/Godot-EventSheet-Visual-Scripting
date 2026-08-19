@@ -8,7 +8,7 @@ to happen by. **Watch For Signal** waits and lets the next rows decide what each
 **Pass Test** and **Fail Test** say it outright. **Load Scene Under Test** gives the test something
 to be about.
 
-These verbs are builtin vocabulary, so they are in the picker with nothing to enable and nothing to
+These rows are builtin vocabulary, so they are in the picker with nothing to enable and nothing to
 attach. They compile to plain Godot - `set_meta`, `get_meta`, `connect`, `await get_tree().process_frame` -
 with no runtime library behind them, so a test script keeps working after the plugin is removed.
 
@@ -16,7 +16,7 @@ with no runtime library behind them, so a test script keeps working after the pl
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -63,7 +63,7 @@ with no runtime library behind them, so a test script keeps working after the pl
 - **The report is a window, never row chrome.** Nothing is drawn on your sheets. With the Run Tests
   window closed, the canvas is byte-identical to what it was before the run.
 
-## Verb reference
+## Reference tables
 
 Ships as is the template the row compiles to, so you can see exactly what lands in your `.gd`. Where
 a template carries `{uid}`, the editor bakes a short per-row id into the name when you drop the row,
@@ -71,7 +71,7 @@ so two claims in the same script keep separate locals.
 
 ### Testing: starting a test
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | On Test Start | Runs when a test runner starts this sheet, with the test's name as a parameter | `test_started.connect(_on_test_started)` in `_ready`, plus `func _on_test_started(test_name: String)` |
 | Load Scene Under Test | Instantiates a scene, adds it under the test node so it really runs, and remembers it under a short name | `(load({scene_path}) as PackedScene)` then `add_child(...)` then a `set_meta` under the name |
@@ -79,7 +79,7 @@ so two claims in the same script keep separate locals.
 
 ### Testing: making a claim
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Assert That | Records a pass when a check is true, and a failure saying "expected true, got false" when it is not | `var __assert_ok_{uid}: bool = bool({claim})` then a `set_meta` append to the report |
 | Assert Equal | Records a pass when two values match; the failure carries both ("expected 3, got 2") | the two values into locals, `==`, then the same report append |
@@ -87,7 +87,7 @@ so two claims in the same script keep separate locals.
 
 ### Testing: waiting for something to happen
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Watch For Signal | Waits until a signal fires or the time runs out, and records which - it states no verdict of its own | the same one-shot connect and deadline loop, then `set_meta(&"__ef_watch_" + …, 1 if fired else 2)` |
 | Watch For Signal Succeeded | True when the matching watch saw its signal fire in time | `int(get_meta(&"__ef_watch_" + str({signal_name}).to_utf8_buffer().hex_encode(), 0)) == 1` |
@@ -95,7 +95,7 @@ so two claims in the same script keep separate locals.
 
 ### Testing: stating the verdict
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Pass Test | Records a pass under this name and marks the test finished, so a runner stops waiting on it | a report append with `true`, then `set_meta(&"__ef_test_finished", true)` |
 | Fail Test | Records a failure with its reason and marks the test finished | a report append with `false` and the reason, then the same finished flag and a `push_error` |

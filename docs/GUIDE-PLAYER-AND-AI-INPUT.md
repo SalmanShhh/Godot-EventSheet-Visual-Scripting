@@ -27,7 +27,7 @@ instead, and *anything* can write them: an event row, a pathfinding behavior, a 
 machine, a replay file.
 
 The intents are **held, not pulsed**: write `ai_move_x = 1.0` once and the pack keeps moving
-right until you change it - exactly like holding a key. Impulse verbs (`jump()`,
+right until you change it - exactly like holding a key. Impulse calls (`jump()`,
 `Press Interact`) fire the one-shot parts.
 
 The payoff: the same Platformer Movement node is the player on Monday and a pathfinding
@@ -61,7 +61,7 @@ does the same for 3D movement. Your sheets get the same privilege - the seam is 
    from rows or code. Best for continuous drivers: chasers, followers, cutscene walks,
    recorded replays. The pack's feel knobs (acceleration, coyote time, drift) all still
    apply - the AI inherits the same movement feel the player has.
-3. **One-shot Simulate verbs (Virtual Cursor).** `Simulate Axis` / `Simulate Control` /
+3. **One-shot Simulate actions (Virtual Cursor).** `Simulate Axis` / `Simulate Control` /
    `Simulate Interact` inject a single tick of input and self-clear - handy when your source
    naturally re-fires every tick (following an analog stick you're reading yourself). The
    persistent seam is usually less work.
@@ -130,7 +130,7 @@ The rules that keep the seam trustworthy:
   pack without knowing each other.
 - **Name by role, not device.** `ai_move_axis`, `ai_steer_axis`, `ai_throttle_axis` - a
   reader should know what the number means without opening your tick.
-- **Impulses stay verbs.** Jumps, presses, steps are methods (`jump()`), not held floats -
+- **Impulses stay methods.** Jumps, presses, steps are methods (`jump()`), not held floats -
   an edge is an event, not a level.
 - **Expose `ai_controlled` in the Inspector** (with a tooltip saying who flips it); keep the
   `ai_*` intent floats unexported - they are wiring, not knobs.

@@ -41,7 +41,7 @@ arrival is a trigger - **On Path Finished** - not something you poll for.
 - **Is At Path End answers a different question.** Not "did it just arrive" - the trigger answers that
   for free - but "is it parked at the end right now", which a row reached at any time may legitimately
   ask (a lift that should only open its doors while it is at the top).
-- **The path verbs work with no run at all.** Point On Path At, Direction Along Path At, Path Length and
+- **The path expressions work with no run at all.** Point On Path At, Direction Along Path At, Path Length and
   Nearest Point On Path just read a curve. Use them to drive a camera, a marker or a preview ghost
   without moving the host anywhere.
 - **The pack draws its route in the editor.** Select the host and the curve appears in the 2D viewport
@@ -65,21 +65,21 @@ On Ready
 
 ### Actions
 
-| Verb | Parameters | Notes |
+| Name | Parameters | Notes |
 |---|---|---|
 | **Follow Path** | Path, Speed, Mode | Starts a run from the beginning of the route. Hands over a new route as well, so one host can walk several. |
 | **Stop Following Path** | - | Halts where it stands WITHOUT firing On Path Finished. Follow Path restarts from the top. |
 
 ### Conditions
 
-| Verb | Parameters | Notes |
+| Name | Parameters | Notes |
 |---|---|---|
 | **Is Following Path** | - | True while it is actually travelling - the gate for a walk animation or a conveyor's hum. |
 | **Is At Path End** | - | True while it is parked at the far end right now. For the MOMENT of arrival, use the trigger. |
 
 ### Expressions
 
-| Verb | Parameters | Notes |
+| Name | Parameters | Notes |
 |---|---|---|
 | **Progress Along Path** | - | How far the host has come, 0 at the start and 1 at the end. |
 | **Point On Path At** | Path, Progress | The world point a fraction along a route. Moves nothing. |
@@ -89,7 +89,7 @@ On Ready
 
 ### Triggers
 
-| Verb | Parameters | Notes |
+| Name | Parameters | Notes |
 |---|---|---|
 | **On Path Finished** | - | Fires once when a **Once** run reaches the end. Loop and Ping-pong never fire it. |
 
@@ -105,7 +105,7 @@ On Ready
 
 ## Reading it from expressions - the Self section
 
-Type `self` in any ƒx field and **Self ▸ Behaviours** lists this pack's knobs and value verbs as
+Type `self` in any ƒx field and **Self ▸ Behaviours** lists this pack's knobs and value expressions as
 ready-to-insert chains once the behaviour is attached:
 
 - `$PathFollowBehavior.travel_speed` inserts the **Travel Speed** knob straight into any expression
@@ -272,7 +272,7 @@ On Path Finished
 
 **15. An elevator the player can call.**
 
-Follow Path takes the route as a parameter, so calling the lift up and sending it down are the same verb
+Follow Path takes the route as a parameter, so calling the lift up and sending it down are the same action
 pointed at two different curves.
 
 ```

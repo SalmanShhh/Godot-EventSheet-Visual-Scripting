@@ -1,7 +1,7 @@
 # Groups, Tags And Systems
 
 A Godot **group** is just a name you can stick on any node. That is all it is - and it turns out to be
-enough to build most of what people reach for an entity system to do. These builtin verbs treat a
+enough to build most of what people reach for an entity system to do. This builtin vocabulary treats a
 group as a **tag** (add it, remove it, ask about it), as a **set** (count it, total it, average it,
 find its extremes) and as a **system** (call one method on every member, or on every member that also
 carries a second tag).
@@ -15,7 +15,7 @@ trigger over polling".
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Verb reference](#verb-reference)
+3. [Reference tables](#reference-tables)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -37,7 +37,7 @@ trigger over polling".
 - **A group is a tag, and tags are cheap.** A node can be in as many groups as you like. Add To Group
   and Remove From Group are ordinary actions, so `poisoned` can go on and come off during play exactly
   like a status effect.
-- **Two verbs ask "is this node tagged".** **Is In Group** takes a Target, so it can ask about any
+- **Two conditions ask "is this node tagged".** **Is In Group** takes a Target, so it can ask about any
   node. **Has Group Member** always asks about the node the sheet is on, which is the common case and
   reads better in a condition row.
 - **A roll-up is a reduce, not a loop.** Sum In Group, Average In Group, Lowest In Group and Highest
@@ -59,14 +59,14 @@ trigger over polling".
   a sheet's own event group ships, addressed by the snake-cased group name. It has nothing to do with
   `add_to_group`, and mixing the two up is the single most common confusion in this family.
 
-## Verb reference
+## Reference tables
 
 Group name parameters use the group picker, so the editor offers the groups your project already
 uses. Every `{target}` defaults to `self`.
 
 ### Tagging and asking
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Add To Group | Tags a node into a named group | `{target}.add_to_group({group})` |
 | Remove From Group | Untags a node from a named group | `{target}.remove_from_group({group})` |
@@ -79,7 +79,7 @@ uses. Every `{target}` defaults to `self`.
 
 Each takes a Group and a `Property` - a bare numeric member such as `health`.
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Sum In Group | Totals a numeric property across every member | `get_tree().get_nodes_in_group({group}).reduce(func(__acc, __n): return __acc + __n.{property}, 0.0)` |
 | Average In Group | The average of that property across the group | the same reduce, divided by `maxf(float(size()), 1.0)` |
@@ -88,7 +88,7 @@ Each takes a Group and a `Property` - a bare numeric member such as `health`.
 
 ### Broadcasting
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Call Method On Group | Calls a method on every node in the group | `get_tree().call_group({group}, {method})` |
 | Call Method On Group (with value) | The same, carrying one or more values | `get_tree().call_group({group}, {method}{, args})` |
@@ -104,7 +104,7 @@ for __entity_figure: Node in get_tree().get_nodes_in_group("enemies"):
 
 ### Archetype queries
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Entities In Group | Every node in a group, as an array | `get_tree().get_nodes_in_group({group})` |
 | Any Entity In Group | True when at least one node is in the group | `not get_tree().get_nodes_in_group({group}).is_empty()` |
@@ -115,7 +115,7 @@ for __entity_figure: Node in get_tree().get_nodes_in_group("enemies"):
 
 ### Sheet event groups
 
-| Verb | What it does | Ships as |
+| Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Group Active | Turns a runtime-toggleable sheet group on or off | `set("__group_" + {group} + "_active", {active})` |
 | Is Group Active | True when that named runtime group is switched on | `bool(get("__group_" + {group} + "_active"))` |
@@ -322,11 +322,11 @@ func _process(delta: float) -> void:
   does not have the method simply does not respond. When "did anyone answer" matters, loop the group
   yourself and check.
 - **Leave the Value blank for a no-argument call.** Call Method On Group (with value) drops the comma
-  cleanly when the Value parameter is empty, so you do not need to switch back to the plain verb.
+  cleanly when the Value parameter is empty, so you do not need to switch back to the plain action.
 - **Run On Tagged Entities checks `has_method` for you.** That is deliberate: a mixed group will not
   crash. It also means a typo in the Method name fails completely silently, so verify the spelling
   when a system quietly does nothing.
-- **This is composition, not an ECS.** Every one of these verbs walks a node array. It is fast enough
+- **This is composition, not an ECS.** Every one of these rows walks a node array. It is fast enough
   for hundreds of nodes and wrong for tens of thousands. Prefer triggers over per-frame polling for
   large sets, and keep group sizes reasonable.
 - **Get First Node In Group has no defined order.** It is "one of them", not "the oldest". Use a

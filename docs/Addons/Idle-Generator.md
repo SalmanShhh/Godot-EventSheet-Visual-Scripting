@@ -1,6 +1,6 @@
 # Idle Generator
 
-Idle Generator is a buy-more-to-make-more producer for incremental games - the cursor, farm, factory, or mine you buy in bulk to raise your output. It ships as a **behavior you attach to a node** (one node per generator type), and every unit costs more than the last on a geometric curve (`cost = base_cost * cost_growth^owned`, the classic 1.15 growth), so buying a hundred at once is exact closed-form math, not a loop. It gives you three buy verbs (Buy One / Buy Amount / Buy Max), a continuous Output Per Second, and an optional fill-and-collect cycle mode for building-style production. It deliberately does NOT hold your money: the Buy actions only record what they cost as Last Cost, and it is your sheet that Spends that from the wallet. It also does not draw buttons, format big numbers, or grant currency - that stays your job.
+Idle Generator is a buy-more-to-make-more producer for incremental games - the cursor, farm, factory, or mine you buy in bulk to raise your output. It ships as a **behavior you attach to a node** (one node per generator type), and every unit costs more than the last on a geometric curve (`cost = base_cost * cost_growth^owned`, the classic 1.15 growth), so buying a hundred at once is exact closed-form math, not a loop. It gives you three buy actions (Buy One / Buy Amount / Buy Max), a continuous Output Per Second, and an optional fill-and-collect cycle mode for building-style production. It deliberately does NOT hold your money: the Buy actions only record what they cost as Last Cost, and it is your sheet that Spends that from the wallet. It also does not draw buttons, format big numbers, or grant currency - that stays your job.
 
 ## Table of Contents
 
@@ -56,7 +56,7 @@ This is one clean producer. There is no separate "clicker" and "building" object
 
 ## Setup
 
-Idle Generator installs as a **behavior**. Once the pack is in `eventsheet_addons/`, attach the Idle Generator behavior to a node - one node per generator type (a Cursor node, a Farm node, a Factory node). Set its exported fields (base cost, growth, base output, cycle time, starting owned) in the inspector, then drive it from any sheet by calling its verbs on that node.
+Idle Generator installs as a **behavior**. Once the pack is in `eventsheet_addons/`, attach the Idle Generator behavior to a node - one node per generator type (a Cursor node, a Farm node, a Factory node). Set its exported fields (base cost, growth, base output, cycle time, starting owned) in the inspector, then drive it from any sheet by calling its actions on that node.
 
 A minimal first generator, as event-sheet rows (the node is named `Farm`, and the wallet is the separate Currency Ledger pack):
 
@@ -81,7 +81,7 @@ That is the whole loop: buy raises owned and records a cost you spend, and Produ
 
 ## ACE reference
 
-Every verb below is called on the generator node it is attached to. Parameters are numbers. All names are the exact display names from the pack.
+Every name below is called on the generator node it is attached to. Parameters are numbers. All names are the exact display names from the pack.
 
 ### Actions
 
@@ -132,7 +132,7 @@ Every verb below is called on the generator node it is attached to. Parameters a
 Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
 an expression named after the property reads it, a **Set ...** action writes it, and for number properties
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
-alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+alongside the vocabulary above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
 ---
@@ -140,7 +140,7 @@ change while the game runs.
 ## Reading it from expressions - the Self section
 
 Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
-lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is attached:
 
 - `$IdleGeneratorBehavior.base_cost` inserts the **Base Cost** entry straight into any expression
 - `$IdleGeneratorBehavior.base_output` inserts the **Base Output** entry straight into any expression
@@ -390,6 +390,6 @@ On Buy Torch Pressed
 - **Cycle mode needs Cycle Time above 0.** With Cycle Time at 0 the generator is continuous - Pending stays 0, Cycle Progress stays 0, and On Cycle Complete never fires. Set Cycle Time above 0 to get the fill-and-collect building; only then do Pending, Collect, and Last Collected mean anything.
 - **Collect is the only thing that pays out a cycle.** On Cycle Complete banks the lump into Pending but does not credit your wallet. You must call Collect (from a tap or a manager) and then Add Last Collected to the wallet. Reading Pending without Collecting never spends it down.
 - **Do not mix the two production models on one generator.** A generator is continuous or cycle-based, not both. In continuous mode credit Production Over(delta) each frame; in cycle mode credit Last Collected on Collect. Do not also Add Production Over in cycle mode or you double-pay.
-- **Set Owned and Grant do not record a cost.** They are for saves, rewards, and starting bonuses - Last Cost is untouched, so do not Spend after them. Only the three Buy verbs set Last Cost.
+- **Set Owned and Grant do not record a cost.** They are for saves, rewards, and starting bonuses - Last Cost is untouched, so do not Spend after them. Only the three Buy actions set Last Cost.
 - **Context expressions are only valid inside their trigger.** Last Cost and Last Bought describe the most recent buy, so read them inside On Purchased or right after your own Buy row. Last Collected describes the most recent Collect. Reading them at an unrelated time gives you a stale value.
 - **Output Multiplier is a single composed number.** Set Output Multiplier replaces the multiplier, it does not stack onto it. Compose your prestige x upgrade x boost product yourself and set the result, or each source will clobber the others.
