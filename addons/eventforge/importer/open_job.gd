@@ -39,6 +39,7 @@ var _canceled: bool = false
 static func warm_registries() -> void:
 	ACERegistry.get_all_descriptors()
 	EventSheetACELifter._build_reverse_entries()
+	EventSheetACELifter.warm_matchers()
 	EventSheetBlockRegistry.all_kinds()
 	# The codegen template regex, compiled lazily on first substitution: the verify compile would
 	# otherwise build it on the worker thread.

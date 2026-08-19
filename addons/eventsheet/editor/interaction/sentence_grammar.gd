@@ -926,7 +926,9 @@ static func _rewrite_dot_format(text: String) -> String:
 	# rather than written twice.
 	if body.contains("%"):
 		return _rewrite_format("%s %% %s" % [pattern, values_text])
-	var slot_regex: RegEx = RegEx.create_from_string("\\{([0-9]+)\\}")
+	if _brace_slot_regex == null:
+		_brace_slot_regex = RegEx.create_from_string("\\{([0-9]+)\\}")
+	var slot_regex: RegEx = _brace_slot_regex
 	if slot_regex == null:
 		return text
 	var pieces: PackedStringArray = PackedStringArray()
@@ -1119,7 +1121,9 @@ static func _constant_token(token: String, context: Dictionary) -> String:
 static func _rewrite_delta(text: String) -> String:
 	if not text.contains("delta"):
 		return text
-	var regex: RegEx = RegEx.create_from_string("(?<![\\w.])delta(?![\\w])")
+	if _delta_regex == null:
+		_delta_regex = RegEx.create_from_string("(?<![\\w.])delta(?![\\w])")
+	var regex: RegEx = _delta_regex
 	if regex == null:
 		return text
 	return regex.sub(text, "dt", true)
@@ -1173,7 +1177,9 @@ static func _rewrite_format(text: String) -> String:
 	if values_text.begins_with("[") and values_text.ends_with("]"):
 		values = _split_arguments(values_text.substr(1, values_text.length() - 2))
 	var body: String = pattern.substr(1, pattern.length() - 2)
-	var slot_regex: RegEx = RegEx.create_from_string("%[-+ 0#]*[0-9]*(?:\\.[0-9]+)?[sdfxXvc%]")
+	if _percent_slot_regex == null:
+		_percent_slot_regex = RegEx.create_from_string("%[-+ 0#]*[0-9]*(?:\\.[0-9]+)?[sdfxXvc%]")
+	var slot_regex: RegEx = _percent_slot_regex
 	if slot_regex == null:
 		return text
 	var pieces: PackedStringArray = PackedStringArray()
@@ -3370,15 +3376,17 @@ static func _tidy_numbers(text: String) -> String:
 ## The leading identifier word of a line. Matching the WORD rather than a begins_with prefix is what
 ## keeps `elsewhere = 1` from reading as an `else`.
 static func leading_word(text: String) -> String:
-	var word_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*")
-	var found: RegExMatch = word_regex.search(text)
+	if _leading_word_regex == null:
+		_leading_word_regex = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*")
+	var found: RegExMatch = _leading_word_regex.search(text)
 	return found.get_string(0) if found != null else ""
 
 
 ## True when `text` is a plain identifier - the only thing a declaration row may name.
 static func is_identifier(text: String) -> bool:
-	var identifier_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$")
-	return identifier_regex.search(text) != null
+	if _identifier_regex == null:
+		_identifier_regex = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$")
+	return _identifier_regex.search(text) != null
 
 
 ## True when a left-hand side is a SIMPLE target: `hp`, `item.text`, `scores[0]`, `$HUD/Bar`.
@@ -5026,6 +5034,15 @@ static func familiar_expression_words(text: String, context: Dictionary) -> Stri
 ## reading does. Filled by this function alone, so a half-built table can never be handed out.
 static var _compiled_familiar_patterns: Array = []
 
+## The grammar's other matchers, likewise compiled once. Each of these is asked of every word or
+## every value of every row, and building the pattern cost far more than running it.
+static var _brace_slot_regex: RegEx = null
+static var _percent_slot_regex: RegEx = null
+static var _delta_regex: RegEx = null
+static var _leading_word_regex: RegEx = null
+static var _identifier_regex: RegEx = null
+static var _color_constant_regex: RegEx = null
+
 
 static func _familiar_patterns() -> Array:
 	if not _compiled_familiar_patterns.is_empty():
@@ -5045,7 +5062,9 @@ static func _familiar_patterns() -> Array:
 static func _color_names(text: String) -> String:
 	if not text.contains("Color."):
 		return text
-	var pattern: RegEx = RegEx.create_from_string("Color\\.([A-Z][A-Z0-9_]*)")
+	if _color_constant_regex == null:
+		_color_constant_regex = RegEx.create_from_string("Color\\.([A-Z][A-Z0-9_]*)")
+	var pattern: RegEx = _color_constant_regex
 	if pattern == null:
 		return text
 	var out: String = text

@@ -332,9 +332,26 @@ Measured on the packs in this repo, opening a file end to end:
 | `fps_controller_behavior.gd` | 647 | ~0.9 s |
 | `save_system_addon.gd` | 1,522 | ~1.4 s |
 
-The first open of a session also builds the vocabulary index once (about two seconds on a stock install
+The first open of a session also builds the vocabulary index once (about one second on a stock install
 with every pack present); every later open reuses it. None of that cost is paid at editor startup - the
 plugin deliberately loads its heavy parts on first use, so enabling it does not slow Godot's boot.
+
+Three caches carry the rest of it, and all three are held for the session and dropped the moment
+Godot reports a filesystem change - so a script you edit outside the editor, or a pack you drop into
+the project, shows up on the next row that asks:
+
+- **The behaviour-pack index** (which pack a name belongs to, so `[Platform]` can sit between an
+  object and its verb). Rebuilding the rows of a 320-row pack asks for it a couple of hundred times;
+  holding it is what took that rebuild from 1.7 seconds to 0.27.
+- **The object facts and the signal fan-out** (what a script or scene IS, and who listens to a signal).
+  Each is one pass over the project's files, paid on the first question of the session.
+- **The block-kind scan**, which decides what a pack file is by reading its own `extends` line rather
+  than loading every pack script.
+
+If you are writing an editor extension against this plugin, the one rule to keep is that nothing on
+the boot path may NAME a class from the reading layer or the compiler: naming a global class compiles
+its whole dependency tree the moment the script loads, and the boot files reach those by path at call
+time instead. `tests/plugin_boot_lazy_test.gd` enforces it.
 
 ### What an opened file reads like - Construct grammar, not annotated code
 

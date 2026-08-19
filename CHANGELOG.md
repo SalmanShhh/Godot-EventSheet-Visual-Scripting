@@ -28,6 +28,41 @@
   one line, exactly as they did while it sat in the action lane. Display only - the file, the emitted
   GDScript and the byte round-trip are untouched.
 
+### Performance - the canvas redraws a big pack six times faster
+
+- **Rebuilding the rows of an opened pack: 1,718 ms down to 268 ms** (FPS Controller, 320 rows -
+  the rebuild the canvas pays after every edit, fold and lens change). The behaviour-pack index -
+  the table that knows `[Platform]` belongs between an object and its verb - re-asked the addon
+  scanner on every call, and the scanner re-stats every pack folder to answer. One rebuild asked
+  219 times. It is now held for the session and dropped when the project's files change, beside the
+  object and signal caches it belongs with, so a pack dropped into the project still appears on the
+  next row that asks. Building the spans of those rows fell from 415 ms to 43 ms in the same change.
+- **The first registry build an open pays: 1,809 ms down to 1,036 ms.** The block-kind scan loaded
+  (and therefore compiled) all 93 pack scripts just to ask each one what it extends. A script whose
+  top-level `extends` names an engine class has no base script at all, so it can never be a block
+  kind - that answer now comes off the file's own text and the load is skipped: 807 ms down to
+  46 ms. Same kinds registered, in the same order.
+- **Twenty-odd matchers are compiled once instead of per call.** The reading layer built a fresh
+  RegEx inside the function that used it, on functions asked once per row, once per line or once per
+  word of a rebuild - and building the pattern cost more than running it. The grammar, the row
+  builder, the lenses, the Input Map facts and the lift's statement walk now share one compiled
+  matcher each. The lift of the same pack went from 485 ms to 428 ms alongside.
+- **Moving the mouse inside a cell costs nothing now.** Hovering a name asks "where else is this
+  local used?" - a walk of the sheet for the name's scope, then every span of every row in it - and
+  a mouse-motion event fires many times a second while the pointer sits still. The same cell over
+  the same rows is now recognised as already answered: 200 motion events inside one cell went from
+  17.6 ms to 0.3 ms, and a rebuild still invalidates the answer, so an edit never leaves a stale
+  highlight.
+- **The picker's Objects tree opens without re-reading every pack.** Each provider card says what
+  editor tooling its pack adds, and answering meant reading every `.gd` of that pack end to end,
+  once per card: 84 ms across the shipped packs, on every open. Read once and remembered, dropped
+  with the other file caches when the project changes: 0.1 ms after the first.
+
+Nothing about any reading changed: the same rows, the same words, the same bytes on save. The suite,
+the byte round-trip and the pack drift gate all cover it, and `tests/lift_perf_test.gd` pins each win
+twice - once structurally (the index is handed out by reference; a matcher is the same object on the
+second call) and once as a generous wall budget.
+
 ### Added - a local variable's scope is enforced, and shown
 
 - **An action dragged out of its variable's scope is refused, by name.** Drag a row that uses `dealt`

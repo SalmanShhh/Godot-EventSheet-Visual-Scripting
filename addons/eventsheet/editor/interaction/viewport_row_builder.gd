@@ -51,6 +51,23 @@ var _region_occurrences: Dictionary = {}
 static var _await_loop_regex: RegEx = null
 static var _super_call_regex: RegEx = null
 
+# The rest of this file's matchers, likewise compiled once. Every one of these used to be built
+# fresh inside the function that used it, and those functions run per row, per line, or per word of
+# a rebuild - compiling the pattern was costing far more than matching it. Shared statics are safe
+# here: a RegEx is read-only once compiled, and the row build runs on the main thread.
+static var _word_regex: RegEx = null
+static var _identifier_regex: RegEx = null
+static var _host_bind_regex: RegEx = null
+static var _func_header_regex: RegEx = null
+static var _class_header_regex: RegEx = null
+static var _class_extends_regex: RegEx = null
+static var _class_var_default_regex: RegEx = null
+static var _class_var_bare_regex: RegEx = null
+static var _method_header_regex: RegEx = null
+static var _timer_wait_regex: RegEx = null
+static var _timer_one_shot_regex: RegEx = null
+static var _event_cast_regex: RegEx = null
+
 # Per-build occurrence counters for class-block row uids ("Stats" -> count). Class rows key
 # their uids by class NAME (stable across the undo funnel's resource rebuild, so expand /
 # disabled state survives edits) - but two blocks sharing a name then shared ONE uid, so
@@ -2698,10 +2715,11 @@ static func host_binding_class(code: String) -> String:
 		return ""
 	if lines[0] != "func _enter_tree() -> void:":
 		return ""
-	var bind: RegEx = RegEx.new()
-	if bind.compile("^\\thost = get_parent\\(\\) as ([A-Za-z_][A-Za-z0-9_]*)$") != OK:
-		return ""
-	var bind_match: RegExMatch = bind.search(lines[1])
+	if _host_bind_regex == null:
+		_host_bind_regex = RegEx.new()
+		if _host_bind_regex.compile("^\\thost = get_parent\\(\\) as ([A-Za-z_][A-Za-z0-9_]*)$") != OK:
+			return ""
+	var bind_match: RegExMatch = _host_bind_regex.search(lines[1])
 	if bind_match == null:
 		return ""
 	if lines[2] != "\tif host == null:":
@@ -2971,10 +2989,11 @@ static func function_body_info(code: String) -> Dictionary:
 	# `static func` reads as a function too. Without the optional prefix every static helper in a
 	# hand-written file - and tool/utility scripts are mostly static - rendered as a raw GDScript
 	# wall while its non-static neighbour beside it rendered as a tidy row.
-	var header_regex: RegEx = RegEx.new()
-	if header_regex.compile("^(?:static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?: -> (.+))?:$") != OK:
-		return {}
-	var header_match: RegExMatch = header_regex.search(lines[header_index])
+	if _func_header_regex == null:
+		_func_header_regex = RegEx.new()
+		if _func_header_regex.compile("^(?:static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?: -> (.+))?:$") != OK:
+			return {}
+	var header_match: RegExMatch = _func_header_regex.search(lines[header_index])
 	if header_match == null:
 		return {}
 	# Every later non-blank line must be indented (the body); a second column-0 statement means this row
@@ -3096,15 +3115,17 @@ static func call_parts(code: String) -> Dictionary:
 ## word). Matching the WORD rather than a begins_with prefix is what keeps `elsewhere = 1` from
 ## reading as an `else` and being refused.
 static func _leading_word(text: String) -> String:
-	var word_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*")
-	var found: RegExMatch = word_regex.search(text)
+	if _word_regex == null:
+		_word_regex = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*")
+	var found: RegExMatch = _word_regex.search(text)
 	return found.get_string(0) if found != null else ""
 
 
 ## True when `text` is a plain identifier - the only thing a "Let <name>" sentence may name.
 static func _is_identifier(text: String) -> bool:
-	var identifier_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$")
-	return identifier_regex.search(text) != null
+	if _identifier_regex == null:
+		_identifier_regex = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$")
+	return _identifier_regex.search(text) != null
 
 
 ## True when a left-hand side is a SIMPLE target: `hp`, `item.text`, `scores[0]`, `$HUD/Bar`,
@@ -3205,10 +3226,11 @@ static func data_class_name(code: String) -> String:
 			break
 	if i >= lines.size():
 		return ""
-	var header: RegEx = RegEx.new()
-	if header.compile("^class ([A-Za-z_][A-Za-z0-9_]*)(?: extends [A-Za-z_][A-Za-z0-9_.]*)?:$") != OK:
-		return ""
-	var header_match: RegExMatch = header.search(lines[i])
+	if _class_header_regex == null:
+		_class_header_regex = RegEx.new()
+		if _class_header_regex.compile("^class ([A-Za-z_][A-Za-z0-9_]*)(?: extends [A-Za-z_][A-Za-z0-9_.]*)?:$") != OK:
+			return ""
+	var header_match: RegExMatch = _class_header_regex.search(lines[i])
 	if header_match == null:
 		return ""
 	i += 1
@@ -3251,10 +3273,11 @@ static func methods_class_name(code: String) -> String:
 			break
 	if i >= lines.size():
 		return ""
-	var header: RegEx = RegEx.new()
-	if header.compile("^class ([A-Za-z_][A-Za-z0-9_]*)(?: extends [A-Za-z_][A-Za-z0-9_.]*)?:$") != OK:
-		return ""
-	var header_match: RegExMatch = header.search(lines[i])
+	if _class_header_regex == null:
+		_class_header_regex = RegEx.new()
+		if _class_header_regex.compile("^class ([A-Za-z_][A-Za-z0-9_]*)(?: extends [A-Za-z_][A-Za-z0-9_.]*)?:$") != OK:
+			return ""
+	var header_match: RegExMatch = _class_header_regex.search(lines[i])
 	if header_match == null:
 		return ""
 	i += 1
@@ -3329,16 +3352,22 @@ static func _parse_class_body(code: String, class_name_str: String) -> Dictionar
 			break
 	var header_line: String = lines[i]
 	var extends_base: String = ""
-	var ext: RegEx = RegEx.new()
-	if ext.compile("^class [A-Za-z_][A-Za-z0-9_]*(?: extends ([A-Za-z_][A-Za-z0-9_.]*))?:$") == OK:
-		var ext_match: RegExMatch = ext.search(header_line)
+	if _class_extends_regex == null:
+		_class_extends_regex = RegEx.new()
+		_class_extends_regex.compile("^class [A-Za-z_][A-Za-z0-9_]*(?: extends ([A-Za-z_][A-Za-z0-9_.]*))?:$")
+	if _class_extends_regex.is_valid():
+		var ext_match: RegExMatch = _class_extends_regex.search(header_line)
 		if ext_match != null:
 			extends_base = ext_match.get_string(1)
 	i += 1
-	var with_default: RegEx = RegEx.new()
-	with_default.compile("^\\tvar ([A-Za-z_][A-Za-z0-9_]*): (\\S.*?) = (.+)$")
-	var no_default: RegEx = RegEx.new()
-	no_default.compile("^\\tvar ([A-Za-z_][A-Za-z0-9_]*): (\\S.*)$")
+	if _class_var_default_regex == null:
+		_class_var_default_regex = RegEx.new()
+		_class_var_default_regex.compile("^\\tvar ([A-Za-z_][A-Za-z0-9_]*): (\\S.*?) = (.+)$")
+	if _class_var_bare_regex == null:
+		_class_var_bare_regex = RegEx.new()
+		_class_var_bare_regex.compile("^\\tvar ([A-Za-z_][A-Za-z0-9_]*): (\\S.*)$")
+	var with_default: RegEx = _class_var_default_regex
+	var no_default: RegEx = _class_var_bare_regex
 	var body: Array = []
 	while i < lines.size():
 		var line: String = lines[i]
@@ -4068,9 +4097,10 @@ func _build_class_method_row(class_name_str: String, child_index: int, method_li
 	row_data.line_count = 1
 	row_data.row_uid = "methods_class_method_%s_%d" % [class_name_str, child_index]
 	row_data.language_block = true  # a method chip of a class block - carries the language stripe
-	var header_regex: RegEx = RegEx.new()
-	header_regex.compile("^(static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?: -> (.+))?:$")
-	var header_match: RegExMatch = header_regex.search(method_lines[0])
+	if _method_header_regex == null:
+		_method_header_regex = RegEx.new()
+		_method_header_regex.compile("^(static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?: -> (.+))?:$")
+	var header_match: RegExMatch = _method_header_regex.search(method_lines[0])
 	var label: String = method_lines[0].strip_edges()
 	if header_match != null:
 		var static_prefix: String = "static " if not header_match.get_string(1).is_empty() else ""
@@ -5921,12 +5951,16 @@ func _repeating_timers() -> Dictionary:
 	for entry: Variant in sheet.functions:
 		if entry is EventFunction:
 			_collect_statement_text((entry as EventFunction).events, statements)
-	var wait_regex := RegEx.new()
-	var one_shot_regex := RegEx.new()
-	if wait_regex.compile("^([^\\s=]+)\\.wait_time\\s*=\\s*(.+)$") != OK:
-		return _repeat_timers
-	if one_shot_regex.compile("^([^\\s=]+)\\.one_shot\\s*=\\s*(true|false)$") != OK:
-		return _repeat_timers
+	if _timer_wait_regex == null:
+		_timer_wait_regex = RegEx.new()
+		if _timer_wait_regex.compile("^([^\\s=]+)\\.wait_time\\s*=\\s*(.+)$") != OK:
+			return _repeat_timers
+	if _timer_one_shot_regex == null:
+		_timer_one_shot_regex = RegEx.new()
+		if _timer_one_shot_regex.compile("^([^\\s=]+)\\.one_shot\\s*=\\s*(true|false)$") != OK:
+			return _repeat_timers
+	var wait_regex: RegEx = _timer_wait_regex
+	var one_shot_regex: RegEx = _timer_one_shot_regex
 	var waits: Dictionary = {}
 	var one_shot: Dictionary = {}
 	for statement: String in statements:
@@ -6503,8 +6537,9 @@ func _humanized_input_event_text(text: String) -> String:
 ## `(event as InputEventKey).pressed` -> `event.pressed`. A cast is how GDScript keeps its static
 ## type checker happy; it says nothing a reader needs, so it never reaches a sentence.
 func _strip_event_casts(text: String) -> String:
-	var cast_regex: RegEx = RegEx.create_from_string("\\(\\s*([A-Za-z_][A-Za-z0-9_]*)\\s+as\\s+InputEvent[A-Za-z]*\\s*\\)")
-	return cast_regex.sub(text, "$1", true)
+	if _event_cast_regex == null:
+		_event_cast_regex = RegEx.create_from_string("\\(\\s*([A-Za-z_][A-Za-z0-9_]*)\\s+as\\s+InputEvent[A-Za-z]*\\s*\\)")
+	return _event_cast_regex.sub(text, "$1", true)
 
 
 ## A boolean expression split on its TOP-LEVEL ` and ` conjuncts (outer parentheses peeled first),

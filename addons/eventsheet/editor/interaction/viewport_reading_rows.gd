@@ -1017,12 +1017,16 @@ static func leading_identifier(text: String) -> String:
 ##
 ## Derived, never a maintained table: packs are compiler output, and a new one appears by being
 ## dropped in a folder. Only each file's HEAD is read (class_name and the annotations all sit above
-## the first member), and the index is cached on the scanner's own file listing.
+## the first member).
+##
+## Held for the session and dropped when the filesystem changes, like the object and signal caches
+## beside it. It USED to re-ask the scanner on every call, and the scanner re-stats every pack folder
+## to answer - which reads as free until you count the calls: one row rebuild of an opened pack asks
+## for this index 219 times, and those 219 fleet-stats were most of the rebuild's cost.
 static func behaviour_pack_index() -> Dictionary:
-	var scripts: Array[String] = EventSheetAddonScanner.list_addon_scripts()
-	var key: String = "|".join(scripts)
-	if key == _pack_index_key:
+	if _pack_index_built:
 		return _pack_index
+	var scripts: Array[String] = EventSheetAddonScanner.list_addon_scripts()
 	var index: Dictionary = {}
 	for path: String in scripts:
 		var head: Dictionary = _pack_head(path)
@@ -1034,13 +1038,20 @@ static func behaviour_pack_index() -> Dictionary:
 			index[declared] = category
 		index[path.get_base_dir().get_file().to_pascal_case()] = category
 		index[category.replace(" ", "")] = category
-	_pack_index_key = key
 	_pack_index = index
+	_pack_index_built = true
 	return _pack_index
 
 
+## Drops the pack index so the next reader rebuilds it. Wired to the editor's filesystem-changed
+## hook, next to the object and signal caches; tests call it between fixtures.
+static func clear_pack_index() -> void:
+	_pack_index = {}
+	_pack_index_built = false
+
+
 static var _pack_index: Dictionary = {}
-static var _pack_index_key: String = ""
+static var _pack_index_built: bool = false
 
 
 ## A pack script's `class_name` and its `@ace_category`, read off the file's head. Stops at the first

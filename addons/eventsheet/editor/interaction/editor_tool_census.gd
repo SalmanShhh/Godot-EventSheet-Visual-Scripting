@@ -75,18 +75,34 @@ static func from_source(source: String) -> Array[Dictionary]:
 
 
 ## The census of a whole pack directory under res://eventsheet_addons/, read off its scripts.
+##
+## Remembered per pack for the session: the picker asks this once per provider card as it fills the
+## Objects tree, and answering means reading every .gd of that pack end to end. Dropped when the
+## project's files change, like the other reads-of-files caches in this folder.
 static func from_pack(pack_dir: String) -> Array[Dictionary]:
+	var key: String = pack_dir.strip_edges()
+	if _pack_cache.has(key):
+		return (_pack_cache[key] as Array[Dictionary]).duplicate(true)
 	var found: Array[Dictionary] = []
-	var directory: String = "res://eventsheet_addons".path_join(pack_dir.strip_edges())
+	var directory: String = "res://eventsheet_addons".path_join(key)
 	var dir: DirAccess = DirAccess.open(directory)
-	if pack_dir.strip_edges().is_empty() or dir == null:
+	if key.is_empty() or dir == null:
 		return found
 	var files: PackedStringArray = dir.get_files()
 	files.sort()
 	for file_name: String in files:
 		if file_name.get_extension() == "gd":
 			found.append_array(from_source(FileAccess.get_file_as_string(directory.path_join(file_name))))
-	return found
+	_pack_cache[key] = found
+	return found.duplicate(true)
+
+
+## Drops the remembered per-pack censuses. The editor calls this when the filesystem changes.
+static func clear_cache() -> void:
+	_pack_cache.clear()
+
+
+static var _pack_cache: Dictionary = {}
 
 
 ## The Include-bar line: `adds 1 Tools menu item, 1 dock`, counted per kind in CAPABILITIES order.

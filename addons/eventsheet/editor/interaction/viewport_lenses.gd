@@ -316,10 +316,15 @@ static func _sentence_token(token: String, knob_names: Dictionary) -> String:
 static func dt_words(text: String) -> String:
 	if not text.contains("delta"):
 		return text
-	var regex: RegEx = RegEx.create_from_string("(?<![\\w.])delta(?![\\w])")
-	if regex == null:
+	if _dt_regex == null:
+		_dt_regex = RegEx.create_from_string("(?<![\\w.])delta(?![\\w])")
+	if _dt_regex == null:
 		return text
-	return regex.sub(text, "dt", true)
+	return _dt_regex.sub(text, "dt", true)
+
+
+## Compiled once: this is asked of every finished sentence on every rebuild.
+static var _dt_regex: RegEx = null
 
 
 ## M12. The leading NOT of a condition sentence, removed so the red ✕ in the badge column can
