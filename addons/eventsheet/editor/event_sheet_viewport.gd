@@ -742,6 +742,20 @@ func _get_event_style() -> EventSheetEventStyle:
 	return _editor_style.get_event_style()
 
 
+## The marks that say what a row IS - chips, badges, tempo, guides, stripes, the refusal bubble.
+## Reached the same way the event style is, so a row builder never has to know where a theme lives.
+func _get_reading_style() -> EventSheetReadingStyle:
+	if _editor_style == null:
+		_editor_style = EventSheetEditorStyle.new()
+	return _editor_style.get_reading_style()
+
+
+func _get_chrome_style() -> EventSheetChromeStyle:
+	if _editor_style == null:
+		_editor_style = EventSheetEditorStyle.new()
+	return _editor_style.get_chrome_style()
+
+
 func _get_condition_style() -> EventSheetElementStyle:
 	if _editor_style == null:
 		_editor_style = EventSheetEditorStyle.new()

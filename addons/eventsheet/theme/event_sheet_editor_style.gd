@@ -4,11 +4,15 @@ extends Resource
 
 ## Installable theme resource for the EventSheet editor.
 ##
-## Bundles the three token resources the renderer paints from:
+## Bundles the token resources the editor paints from:
 ## - event_style: structural tokens (sheet background, row shells, lanes,
 ##   group/comment chrome, interaction fills)
 ## - condition_style / action_style: per-lane chip tokens (text, chip fills,
 ##   badge colors, padding)
+## - reading_style: the marks inside a sheet that say what a row IS (chips,
+##   badges, tempo, guides, stripes, the refusal bubble)
+## - chrome_style: the bars around the sheet (Object bar, status strip, tab title)
+## - manual_style: the docked Manual's pages
 ##
 ## A fresh resource seeds every null sub-style with the plugin's default dark
 ## look via ensure_defaults(), so EventSheetEditorStyle.new() is always fully
@@ -18,6 +22,9 @@ extends Resource
 @export var event_style: EventSheetEventStyle
 @export var condition_style: EventSheetElementStyle
 @export var action_style: EventSheetElementStyle
+@export var reading_style: EventSheetReadingStyle
+@export var chrome_style: EventSheetChromeStyle
+@export var manual_style: EventSheetManualStyle
 
 
 func _init() -> void:
@@ -54,6 +61,29 @@ func ensure_defaults() -> void:
 		action_style.chip_hover_color = Color(0.28, 0.72, 0.58, 0.20)
 		action_style.badge_background_color = action_style.chip_background_color.darkened(0.24)
 		action_style.badge_foreground_color = Color(0.82, 0.87, 0.95, 1.0)
+	# The reading / chrome / Manual tokens all seed from the palette in their own export defaults,
+	# so a fresh sub-style already IS the shipped look and no deltas belong here.
+	if reading_style == null:
+		reading_style = EventSheetReadingStyle.new()
+	if chrome_style == null:
+		chrome_style = EventSheetChromeStyle.new()
+	if manual_style == null:
+		manual_style = EventSheetManualStyle.new()
+
+
+func get_reading_style() -> EventSheetReadingStyle:
+	ensure_defaults()
+	return reading_style
+
+
+func get_chrome_style() -> EventSheetChromeStyle:
+	ensure_defaults()
+	return chrome_style
+
+
+func get_manual_style() -> EventSheetManualStyle:
+	ensure_defaults()
+	return manual_style
 
 
 func get_event_style() -> EventSheetEventStyle:

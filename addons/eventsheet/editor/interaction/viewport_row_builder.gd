@@ -150,7 +150,7 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 			opener.spans.append(_make_span(
 				_region_member_count_text(region_children),
 				SemanticSpan.SpanType.VALUE,
-				{"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.75)}
+				{"text_color": Color(_viewport._get_reading_style().muted_text_color.r, _viewport._get_reading_style().muted_text_color.g, _viewport._get_reading_style().muted_text_color.b, 0.75)}
 			))
 			_append_to_sink(output, stack, opener)
 			continue
@@ -248,8 +248,8 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 		"editable": false,
 		"badge": true,
 		"badge_style": "trigger",
-		"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
-		"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
+		"badge_bg": _viewport._get_reading_style().setup_badge_background_color,
+		"badge_fg": _viewport._get_reading_style().setup_badge_foreground_color,
 		"kind": "scaffolding_strip",
 		"line_index": 0
 	}
@@ -266,14 +266,14 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 		spans.append(_make_span("class_name, host binding & annotations - %d lines" % line_total, SemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "scaffolding_strip",
-			"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.8)
+			"text_color": Color(_viewport._get_reading_style().muted_text_color.r, _viewport._get_reading_style().muted_text_color.g, _viewport._get_reading_style().muted_text_color.b, 0.8)
 		}))
 	else:
 		if not crumb_prefix.is_empty():
 			var crumb_text: String = crumb_prefix + (" ▸" if not leaf_name.is_empty() else "")
-			spans.append(_make_span(crumb_text, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffolding_strip", "text_color": EventSheetPalette.TEXT_MUTED}))
+			spans.append(_make_span(crumb_text, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffolding_strip", "text_color": _viewport._get_reading_style().muted_text_color}))
 		if not leaf_name.is_empty():
-			spans.append(_make_span(leaf_name, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffolding_strip", "text_color": EventSheetPalette.TEXT_PRIMARY}))
+			spans.append(_make_span(leaf_name, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffolding_strip", "text_color": _viewport._get_reading_style().primary_text_color}))
 	# R33 - a tool sheet's own buttons ride the identity strip too. This is the bar an opened editor
 	# script actually gets (the pack Include bar is for a pack), and a Run now that is not where the
 	# tool is written is a Run now nobody finds.
@@ -320,9 +320,9 @@ func _build_setup_fact_row(label: String, value: String, fact_index: int) -> Eve
 	row.source_resource = null
 	row.row_uid = "scaffold_fact_%d_%s" % [fact_index, label]
 	row.spans = [
-		_make_span(label, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffold_fact", "text_color": EventSheetPalette.TEXT_MUTED, "line_index": 0}),
+		_make_span(label, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffold_fact", "text_color": _viewport._get_reading_style().muted_text_color, "line_index": 0}),
 		# The VALUE is the readable half - full-strength text, never the muted code grey.
-		_make_span(value, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffold_fact", "line_index": 0, "text_color": EventSheetPalette.TEXT_PRIMARY})
+		_make_span(value, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffold_fact", "line_index": 0, "text_color": _viewport._get_reading_style().primary_text_color})
 	]
 	return row
 
@@ -345,7 +345,7 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 				"kind": "add_event",
 				"editable": false,
 				"add_event_owner": owner_resource,
-				"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.8)
+				"text_color": Color(_viewport._get_reading_style().muted_text_color.r, _viewport._get_reading_style().muted_text_color.g, _viewport._get_reading_style().muted_text_color.b, 0.8)
 			}
 		)
 	]
@@ -448,7 +448,7 @@ func _build_helpers_group_row(sheet: EventSheetResource, helpers: Array[EventRow
 				"editable": false,
 				"kind": "helpers_group",
 				"line_index": 0,
-				"text_color": EventSheetPalette.TEXT_MUTED
+				"text_color": _viewport._get_reading_style().muted_text_color
 			}
 		)
 	]
@@ -703,8 +703,8 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 		"editable": false,
 		"badge": true,
 		"badge_style": "trigger",
-		"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
-		"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
+		"badge_bg": _viewport._get_reading_style().setup_badge_background_color,
+		"badge_fg": _viewport._get_reading_style().setup_badge_foreground_color,
 		"kind": "pack_include",
 		"line_index": 0
 	}
@@ -735,7 +735,7 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 	spans.append(_make_span(
 		EventSheetL10n.translate("Addon Pack"),
 		SemanticSpan.SpanType.VALUE,
-		{"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_PRIMARY}
+		{"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().primary_text_color}
 	))
 	var pack_name: String = sheet.custom_class_name.strip_edges()
 	if pack_name.is_empty():
@@ -747,7 +747,7 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 		spans.append(_pack_include_chip("v%s" % version))
 	if not host_class.is_empty():
 		spans.append(_make_span(EventSheetL10n.translate("behaves on a"), SemanticSpan.SpanType.VALUE, {
-			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
 		}))
 		spans.append(_pack_include_chip(host_class))
 	# R35. A pack that ships editor tooling says so on its own bar: `adds 1 Tools menu item, 1 dock`.
@@ -755,7 +755,7 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 	var tools_summary: String = EventSheetEditorToolCensus.summary(EventSheetEditorToolCensus.from_sheet(sheet))
 	if not tools_summary.is_empty():
 		spans.append(_make_span(tools_summary, SemanticSpan.SpanType.VALUE, {
-			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
 		}))
 	spans.append_array(_reading_coverage_spans(sheet))
 	spans.append_array(_editor_tool_bar_spans(sheet))
@@ -775,8 +775,8 @@ func _editor_tool_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
-			"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+			"badge_bg": _viewport._get_reading_style().chip_background_color,
+			"badge_fg": _viewport._get_reading_style().chip_foreground_color,
 			"kind": str(button["kind"]),
 			"line_index": 0
 		}))
@@ -797,7 +797,7 @@ func _reading_coverage_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	if not errors.is_empty():
 		spans.append(_make_span(errors, SemanticSpan.SpanType.VALUE, {
 			"editable": false, "kind": "pack_include", "line_index": 0,
-			"text_color": EventSheetPalette.COLOR_ERROR_TEXT
+			"text_color": _viewport._get_reading_style().error_text_color
 		}))
 	var coverage: String = EventSheetReadingCoverage.chip_text(sheet)
 	if coverage.is_empty():
@@ -806,8 +806,8 @@ func _reading_coverage_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 		"editable": false,
 		"badge": true,
 		"badge_style": "scope",
-		"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
-		"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+		"badge_bg": _viewport._get_reading_style().chip_background_color,
+		"badge_fg": _viewport._get_reading_style().chip_foreground_color,
 		"kind": "reading_coverage",
 		"line_index": 0
 	}))
@@ -838,7 +838,7 @@ func _autoload_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 		receipts.append("· %s" % source_path.get_file())
 	spans.append(_make_span(" ".join(receipts), SemanticSpan.SpanType.COMMENT, {
 		"editable": false, "kind": "pack_include", "line_index": 0,
-		"text_color": EventSheetPalette.TEXT_MUTED
+		"text_color": _viewport._get_reading_style().muted_text_color
 	}))
 	return spans
 
@@ -860,8 +860,8 @@ func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
 		"editable": false,
 		"badge": true,
 		"badge_style": "trigger",
-		"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
-		"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
+		"badge_bg": _viewport._get_reading_style().setup_badge_background_color,
+		"badge_fg": _viewport._get_reading_style().setup_badge_foreground_color,
 		"kind": "pack_include",
 		"line_index": 0
 	}
@@ -875,13 +875,13 @@ func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
 	}))
 	if not root_type.is_empty():
 		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE, {
-			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
 		}))
 		spans.append(_pack_include_chip(root_type))
 	var scripts: int = EventSheetSceneSheet.members_of(sheet).size()
 	spans.append(_make_span(EventSheetL10n.translate("{n} scripts").replace("{n}", str(scripts)),
 		SemanticSpan.SpanType.COMMENT, {
-			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
 		}))
 	row_data.spans = spans
 	return row_data
@@ -931,7 +931,7 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 		base_class = ""
 	if not base_class.is_empty() and base_class != object_name:
 		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE, {
-			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
 		}))
 		spans.append(_pack_include_chip(base_class))
 	# ── N11 lens hook ─────────────────────────────────────────────────────────────────────────
@@ -947,7 +947,7 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 		receipts.append("· %s %s" % [EventSheetL10n.translate("scene"), str(scene.get("scene_path", "")).get_file()])
 	if not receipts.is_empty():
 		spans.append(_make_span(" ".join(receipts), SemanticSpan.SpanType.COMMENT, {
-			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
+			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
 		}))
 	return spans
 
@@ -970,19 +970,19 @@ func _scene_object_bar_spans(object_bar: Dictionary, event_style: EventSheetEven
 	var node_type: String = str(object_bar.get("type", ""))
 	if not node_type.is_empty():
 		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE,
-			open_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true)))
+			open_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true)))
 		spans.append(_make_span(node_type, SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
-			"badge_fg": EventSheetPalette.COLOR_CHIP_FG
+			"badge_bg": _viewport._get_reading_style().chip_background_color,
+			"badge_fg": _viewport._get_reading_style().chip_foreground_color
 		}, true)))
 	var receipt: String = "· %s" % script_path.get_file()
 	var instances: int = int(object_bar.get("instances", 1))
 	if instances > 1:
 		receipt += " (x%d)" % instances
 	spans.append(_make_span(receipt, SemanticSpan.SpanType.COMMENT,
-		open_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true)))
+		open_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true)))
 	return spans
 
 
@@ -1033,20 +1033,20 @@ func _build_base_script_include_bar_row(sheet: EventSheetResource) -> EventRowDa
 		_make_span("⇥", SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
-			"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG
+			"badge_bg": _viewport._get_reading_style().setup_badge_background_color,
+			"badge_fg": _viewport._get_reading_style().setup_badge_foreground_color
 		}, true)),
 		_make_span(EventSheetL10n.translate("Include"), SemanticSpan.SpanType.VALUE, open_meta.duplicate().merged({
-			"text_color": EventSheetPalette.TEXT_PRIMARY
+			"text_color": _viewport._get_reading_style().primary_text_color
 		}, true)),
 		_make_span(base_path.get_file(), SemanticSpan.SpanType.KEYWORD, open_meta.duplicate().merged({
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
-			"badge_fg": EventSheetPalette.COLOR_CHIP_FG
+			"badge_bg": _viewport._get_reading_style().chip_background_color,
+			"badge_fg": _viewport._get_reading_style().chip_foreground_color
 		}, true)),
 		_make_span(EventSheetL10n.translate("- open as a sheet"), SemanticSpan.SpanType.COMMENT,
-			open_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true))
+			open_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true))
 	]
 	row_data.spans = spans
 	return row_data
@@ -1057,8 +1057,8 @@ func _pack_include_chip(text: String) -> SemanticSpan:
 		"editable": false,
 		"badge": true,
 		"badge_style": "scope",
-		"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
-		"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+		"badge_bg": _viewport._get_reading_style().chip_background_color,
+		"badge_fg": _viewport._get_reading_style().chip_foreground_color,
 		"kind": "pack_include",
 		"line_index": 0
 	})
@@ -1264,7 +1264,7 @@ func _build_object_fact_row(sheet: EventSheetResource, uid_suffix: String, title
 	if not detail.is_empty():
 		spans.append(_make_span(detail, SemanticSpan.SpanType.COMMENT, {
 			"editable": false, "kind": "object_fact", "line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}))
 	row_data.spans = spans
 	return row_data
@@ -1383,7 +1383,7 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 			"editable": false,
 			"kind": "pack_head_group",
 			"line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		})
 	]
 	return row_data
@@ -1520,7 +1520,7 @@ func _build_verb_note_row(event_function: EventFunction, role: String, indent: i
 		meta["edit_kind"] = "verb_description"
 		if placeholder:
 			meta["edit_placeholder"] = true
-			meta["text_color"] = EventSheetPalette.TEXT_MUTED
+			meta["text_color"] = _viewport._get_reading_style().muted_text_color
 		span.metadata = meta
 	return row_data
 
@@ -1663,7 +1663,7 @@ static func helper_doc_line(event_function: EventFunction) -> String:
 func _verb_chip_colors() -> Array:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	if event_style == null:
-		return [EventSheetPalette.COLOR_CHIP_BG, EventSheetPalette.COLOR_CHIP_FG]
+		return [_viewport._get_reading_style().chip_background_color, _viewport._get_reading_style().chip_foreground_color]
 	return [event_style.verb_chip_background_color, event_style.verb_chip_foreground_color]
 
 
@@ -2063,7 +2063,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		var owning_sheet: EventSheetResource = _viewport._sheet
 		if owning_sheet != null and not owning_sheet.read_only:
 			var add_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
-			var add_color: Color = add_style_meta.get("text_color", EventSheetPalette.COLOR_CONDITION)
+			var add_color: Color = add_style_meta.get("text_color", _viewport._get_condition_style().text_color)
 			add_color.a *= 0.55
 			spans.append(_make_span(
 				EventSheetL10n.translate("+ Add parameter"),
@@ -2195,7 +2195,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 			"lane": "condition",
 			"line_index": 0,
 			"natural_width": true,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}))
 	if not event_function.expose_as_ace:
 		var doc_line: String = helper_doc_line(event_function)
@@ -2205,7 +2205,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 				"kind": "define_function",
 				"lane": "action",
 				"line_index": 0,
-				"text_color": EventSheetPalette.TEXT_MUTED
+				"text_color": _viewport._get_reading_style().muted_text_color
 			}))
 	return spans
 
@@ -2374,7 +2374,7 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 		"editable": false,
 		"badge": true,
 		"badge_style": "trigger",
-		"badge_bg": event_style.behavior_accent_color.lerp(EventSheetPalette.COLOR_LANE_DIVIDER, 0.45),
+		"badge_bg": event_style.behavior_accent_color.lerp(event_style.lane_divider_color, 0.45),
 		"badge_fg": event_style.trigger_badge_foreground_color,
 		"kind": "enum_row",
 		"line_index": 0
@@ -2391,18 +2391,18 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 		# The sentence: up to five values spelled out, the rest counted - a long enum never
 		# walls the sheet at rest.
 		var spoken: int = mini(names.size(), 5)
-		spans.append(_make_span(EventSheetL10n.translate("is one of"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": EventSheetPalette.TEXT_MUTED}))
+		spans.append(_make_span(EventSheetL10n.translate("is one of"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
 		for name_index: int in range(spoken):
 			if name_index > 0 and name_index == spoken - 1 and names.size() <= spoken:
-				spans.append(_make_span(EventSheetL10n.translate("or"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": EventSheetPalette.TEXT_MUTED}))
+				spans.append(_make_span(EventSheetL10n.translate("or"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
 			# The comma rides INSIDE the value span - spans are auto-spaced, and "PATROL ," is
 			# exactly the boxed-fragment look the sentence exists to avoid.
 			var needs_comma: bool = name_index < spoken - 1 and not (name_index == spoken - 2 and names.size() <= spoken)
 			spans.append(_make_span(names[name_index] + ("," if needs_comma else ""), SemanticSpan.SpanType.VALUE, {"kind": "enum_row"}))
 		if names.size() > spoken:
-			spans.append(_make_span("%s %d %s" % [EventSheetL10n.translate("and"), names.size() - spoken, EventSheetL10n.translate("more")], SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": EventSheetPalette.TEXT_MUTED}))
+			spans.append(_make_span("%s %d %s" % [EventSheetL10n.translate("and"), names.size() - spoken, EventSheetL10n.translate("more")], SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
 	else:
-		spans.append(_make_span("- %d %s" % [names.size(), EventSheetL10n.translate("values")], SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": EventSheetPalette.TEXT_MUTED}))
+		spans.append(_make_span("- %d %s" % [names.size(), EventSheetL10n.translate("values")], SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": _viewport._get_reading_style().muted_text_color}))
 		var next_value: int = 0
 		var member_index: int = 0
 		for member: String in enum_row.members:
@@ -2421,7 +2421,7 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 				entry_note += " · %s" % EventSheetL10n.translate("default")
 			entry.spans = [
 				_make_span(member_name, SemanticSpan.SpanType.VALUE, {"kind": "enum_value", "line_index": 0}),
-				_make_span(entry_note, SemanticSpan.SpanType.COMMENT, {"kind": "enum_value", "text_color": EventSheetPalette.TEXT_MUTED})
+				_make_span(entry_note, SemanticSpan.SpanType.COMMENT, {"kind": "enum_value", "text_color": _viewport._get_reading_style().muted_text_color})
 			]
 			row_data.children.append(entry)
 			next_value += 1
@@ -2433,7 +2433,7 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 			add_row.row_type = EventRowData.RowType.SECTION
 			add_row.source_resource = enum_row
 			add_row.row_uid = "enum_add_%s" % str(enum_row.get_instance_id())
-			add_row.spans = [_make_span(EventSheetL10n.translate("+ Add value…"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_add", "text_color": EventSheetPalette.TEXT_MUTED})]
+			add_row.spans = [_make_span(EventSheetL10n.translate("+ Add value…"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_add", "text_color": _viewport._get_reading_style().muted_text_color})]
 			row_data.children.append(add_row)
 	row_data.spans = spans
 	return row_data
@@ -2466,7 +2466,7 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 			row_data.spans = [_make_span(
 				"end region",
 				SemanticSpan.SpanType.VALUE,
-				{"kind": "custom_block_row", "text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.7)}
+				{"kind": "custom_block_row", "text_color": Color(_viewport._get_reading_style().muted_text_color.r, _viewport._get_reading_style().muted_text_color.g, _viewport._get_reading_style().muted_text_color.b, 0.7)}
 			)]
 			return row_data
 		# N1 - `#region Name` IS a Group: Godot folds a script with regions, an event sheet
@@ -2492,7 +2492,7 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 			row_data.spans.append(_make_span(
 				region_description,
 				SemanticSpan.SpanType.VALUE,
-				{"text_color": Color(EventSheetPalette.TEXT_SECONDARY.r, EventSheetPalette.TEXT_SECONDARY.g, EventSheetPalette.TEXT_SECONDARY.b, 0.8)}
+				{"text_color": Color(_viewport._get_reading_style().secondary_text_color.r, _viewport._get_reading_style().secondary_text_color.g, _viewport._get_reading_style().secondary_text_color.b, 0.8)}
 			))
 		return row_data
 	# First-class display: a kind may describe variable-style spans (name / operator / value /
@@ -2516,8 +2516,8 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 						"kind": "custom_block_row",
 						"badge": true,
 						"badge_style": "const" if is_const_style else "scope",
-						"badge_bg": EventSheetPalette.COLOR_CONST_BADGE_BG if is_const_style else EventSheetPalette.COLOR_GROUP_CHIP_BG,
-						"badge_fg": EventSheetPalette.COLOR_CONST_BADGE_FG if is_const_style else EventSheetPalette.COLOR_GROUP_CHIP_FG
+						"badge_bg": _viewport._get_reading_style().constant_badge_background_color if is_const_style else _viewport._get_reading_style().inspector_chip_background_color,
+						"badge_fg": _viewport._get_reading_style().constant_badge_foreground_color if is_const_style else _viewport._get_reading_style().inspector_chip_foreground_color
 					}))
 				_:
 					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.VALUE, {"kind": "custom_block_row", "text_color": event_style.object_label_color}))
@@ -2544,7 +2544,7 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 		row_data.spans.append(_make_span(
 			"⚠ " + problem,
 			SemanticSpan.SpanType.VALUE,
-			{"kind": "custom_block_row", "text_color": Color(0.88, 0.42, 0.42, 1.0)}
+			{"kind": "custom_block_row", "text_color": _viewport._get_reading_style().error_text_color}
 		))
 	return row_data
 
@@ -3493,7 +3493,7 @@ func _build_collection_decl_row(decl: CollectionDeclRow, indent: int) -> EventRo
 		"editable": false,
 		"kind": "collection_decl",
 		"line_index": 0,
-		"text_color": EventSheetPalette.TEXT_PRIMARY
+		"text_color": _viewport._get_reading_style().primary_text_color
 	}))
 	spans.append(_make_span("%s%s - %d %s" % ["const " if decl.is_constant() else "",
 		"Dictionary" if decl.is_dictionary() else "Array", decl.entry_values.size(),
@@ -3553,8 +3553,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"editable": false,
 			"badge": true,
 			"badge_style": "trigger",
-			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
-			"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
+			"badge_bg": _viewport._get_reading_style().setup_badge_background_color,
+			"badge_fg": _viewport._get_reading_style().setup_badge_foreground_color,
 			"kind": "raw_code",
 			"line_index": 0
 		}
@@ -3567,14 +3567,14 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"editable": false,
 				"kind": "raw_code",
 				"line_index": 0,
-				"text_color": EventSheetPalette.TEXT_PRIMARY
+				"text_color": _viewport._get_reading_style().primary_text_color
 			}),
 			_make_span(host_class, SemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
-				"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
-				"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+				"badge_bg": _viewport._get_reading_style().chip_background_color,
+				"badge_fg": _viewport._get_reading_style().chip_foreground_color,
 				"kind": "raw_code",
 				"line_index": 0
 			}),
@@ -3582,7 +3582,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"editable": false,
 				"kind": "raw_code",
 				"line_index": 0,
-				"text_color": EventSheetPalette.TEXT_MUTED
+				"text_color": _viewport._get_reading_style().muted_text_color
 			})
 		]
 		return row_data
@@ -3590,10 +3590,12 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	if not shell.is_empty():
 		row_data.line_count = 1  # visual collapse only - the underlying lines are all still there
 		row_data.language_block = true  # a published-verb annotation shell - language structure
+		# The kind badge takes the LIVE theme's role pair, the same one a published verb's own row
+		# wears, so an Action shell and an Action verb are never two different ambers.
 		var badge_colors: Dictionary = {
-			"action": [EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG],
-			"condition": [EventSheetPalette.COLOR_ACE_CONDITION_BADGE_BG, EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG],
-			"expression": [EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG, EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG],
+			"action": _define_role_colors("action"),
+			"condition": _define_role_colors("condition"),
+			"expression": _define_role_colors("expression"),
 		}
 		var kind: String = str(shell.get("kind"))
 		var shell_spans: Array[SemanticSpan] = [
@@ -3618,8 +3620,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
-				"badge_bg": EventSheetPalette.COLOR_CAT_CHIP_BG,
-				"badge_fg": EventSheetPalette.COLOR_CAT_CHIP_FG,
+				"badge_bg": _viewport._get_reading_style().category_chip_background_color,
+				"badge_fg": _viewport._get_reading_style().category_chip_foreground_color,
 				"kind": "raw_code",
 				"line_index": 0
 			}))
@@ -3627,7 +3629,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}))
 		row_data.spans = shell_spans
 		return row_data
@@ -3661,8 +3663,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
-				"badge_bg": EventSheetPalette.COLOR_CODE_BADGE_BG,
-				"badge_fg": EventSheetPalette.COLOR_CODE_BADGE_FG,
+				"badge_bg": _viewport._get_reading_style().code_badge_background_color,
+				"badge_fg": _viewport._get_reading_style().code_badge_foreground_color,
 				"kind": "raw_code",
 				"line_index": 0
 			}),
@@ -3671,7 +3673,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 					"editable": false,
 					"kind": "raw_code",
 					"line_index": 0,
-					"text_color": EventSheetPalette.TEXT_PRIMARY
+					"text_color": _viewport._get_reading_style().primary_text_color
 				}),
 			_make_span("%d entries" % int(literal_info.get("entries", 0)), SemanticSpan.SpanType.COMMENT, {
 				"editable": false,
@@ -3697,8 +3699,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
-				"badge_bg": EventSheetPalette.COLOR_CODE_BADGE_BG,
-				"badge_fg": EventSheetPalette.COLOR_CODE_BADGE_FG,
+				"badge_bg": _viewport._get_reading_style().code_badge_background_color,
+				"badge_fg": _viewport._get_reading_style().code_badge_foreground_color,
 				"kind": "raw_code",
 				"line_index": 0
 			}),
@@ -3714,8 +3716,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"editable": false,
 				"badge": true,
 				"badge_style": "scope",
-				"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
-				"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+				"badge_bg": _viewport._get_reading_style().chip_background_color,
+				"badge_fg": _viewport._get_reading_style().chip_foreground_color,
 				"kind": "raw_code",
 				"line_index": 0
 			}))
@@ -3724,7 +3726,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}))
 		row_data.spans = function_spans
 		return row_data
@@ -3750,7 +3752,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# Type-aware styling: boilerplate reads dimmer (no label) while real logic keeps the brighter
 	# "GDScript" badge + primary text. Same row, no codegen change.
 	var is_scaffold: bool = _viewport.is_scaffolding_code(raw_row.code)
-	var line_fg: Color = EventSheetPalette.TEXT_MUTED if is_scaffold else EventSheetPalette.TEXT_PRIMARY
+	var line_fg: Color = _viewport._get_reading_style().muted_text_color if is_scaffold else _viewport._get_reading_style().primary_text_color
 	var spans: Array[SemanticSpan] = []
 	# Scaffold blocks carry NO "GDScript" pill: they live under the Class setup dropdown, whose
 	# facts already say what they are - the pill was pure noise there (and a word in a box). The
@@ -3760,8 +3762,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_CODE_BADGE_BG,
-			"badge_fg": EventSheetPalette.COLOR_CODE_BADGE_FG,
+			"badge_bg": _viewport._get_reading_style().code_badge_background_color,
+			"badge_fg": _viewport._get_reading_style().code_badge_foreground_color,
 			"kind": "raw_code",
 			"line_index": 0
 		}))
@@ -3773,8 +3775,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_LIFT_NOTE_BADGE_BG,
-			"badge_fg": EventSheetPalette.COLOR_LIFT_NOTE_BADGE_FG,
+			"badge_bg": _viewport._get_reading_style().lift_note_badge_background_color,
+			"badge_fg": _viewport._get_reading_style().lift_note_badge_foreground_color,
 			"kind": "lift_note",
 			"line_index": 0
 		}))
@@ -3788,7 +3790,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		spans.append(_make_span(
 			EventSheetViewportReadingRows.code_card_label(code_lines.size()),
 			SemanticSpan.SpanType.VALUE,
-			{"editable": false, "kind": "raw_code", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED}
+			{"editable": false, "kind": "raw_code", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color}
 		))
 		row_data.spans = spans
 		row_data.line_count = 1
@@ -3948,7 +3950,7 @@ func _build_data_class_field_row(raw_row: RawCodeRow, class_name_str: String, fi
 			"field_index": field_index,
 			"raw_row": raw_row,
 			"line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}.merged(condition_style, true))
 	]
 	# Action cell: its default value (the editable part).
@@ -3990,7 +3992,7 @@ func _build_data_class_member_row(class_name_str: String, body_index: int, text:
 			"editable": false,
 			"kind": "data_class_field",
 			"line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}.merged(condition_style, true))
 	]
 	return row_data
@@ -4121,7 +4123,7 @@ func _build_class_method_row(class_name_str: String, child_index: int, method_li
 	if body_line_count > 0:
 		spans.append(_make_span("%d line%s" % [body_line_count, "" if body_line_count == 1 else "s"], SemanticSpan.SpanType.VALUE, {
 			"lane": "action", "editable": false, "kind": "raw_code", "line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}.merged(action_style, true)))
 	row_data.spans = spans
 	return row_data
@@ -4159,7 +4161,7 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 	var spans: Array[SemanticSpan] = [
 		_make_span(EventSheetL10n.translate("Object"), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false, "kind": "variable", "line_index": 0, "badge": true, "badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_GROUP_CHIP_BG, "badge_fg": EventSheetPalette.COLOR_GROUP_CHIP_FG
+			"badge_bg": _viewport._get_reading_style().inspector_chip_background_color, "badge_fg": _viewport._get_reading_style().inspector_chip_foreground_color
 		}),
 		_make_span(shown_name, SemanticSpan.SpanType.OBJECT, {
 			"editable": false, "kind": "variable", "line_index": 0,
@@ -4167,7 +4169,7 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 		}),
 		_make_span("=", SemanticSpan.SpanType.OPERATOR, {
 			"editable": false, "kind": "variable", "line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}),
 		_make_span(node_reference, SemanticSpan.SpanType.VALUE, {
 			"editable": false, "kind": "variable", "line_index": 0,
@@ -4178,12 +4180,12 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 	if not declared_class.is_empty():
 		spans.append(_make_span(declared_class, SemanticSpan.SpanType.COMMENT, {
 			"editable": false, "kind": "variable", "line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}))
 	if not missing_note.is_empty():
 		spans.append(_make_span(missing_note, SemanticSpan.SpanType.COMMENT, {
 			"editable": false, "kind": "variable", "line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}))
 	row_data.spans = spans
 	return row_data
@@ -4215,7 +4217,7 @@ func _build_preload_object_row(object_name: String, res_path: String, indent: in
 	row_data.spans = [
 		_make_span(EventSheetL10n.translate("Object"), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false, "kind": "variable", "line_index": 0, "badge": true, "badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_GROUP_CHIP_BG, "badge_fg": EventSheetPalette.COLOR_GROUP_CHIP_FG
+			"badge_bg": _viewport._get_reading_style().inspector_chip_background_color, "badge_fg": _viewport._get_reading_style().inspector_chip_foreground_color
 		}),
 		_make_span(object_name, SemanticSpan.SpanType.OBJECT, {
 			"editable": false, "kind": "variable", "line_index": 0,
@@ -4223,7 +4225,7 @@ func _build_preload_object_row(object_name: String, res_path: String, indent: in
 		}),
 		_make_span("=", SemanticSpan.SpanType.OPERATOR, {
 			"editable": false, "kind": "variable", "line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}),
 		_make_span(str(resolved.get("name", "")), SemanticSpan.SpanType.VALUE, {
 			"editable": false, "kind": "variable", "line_index": 0,
@@ -4232,7 +4234,7 @@ func _build_preload_object_row(object_name: String, res_path: String, indent: in
 		}),
 		_make_span("%s · %s" % [str(resolved.get("kind_word", "")), res_path.get_file()], SemanticSpan.SpanType.COMMENT, {
 			"editable": false, "kind": "variable", "line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		})
 	]
 	return row_data
@@ -4579,7 +4581,7 @@ func _build_property_getter_row(variable: LocalVariable, object_name: String, in
 		"lane": "condition",
 		"line_index": 0,
 		"natural_width": true,
-		"text_color": EventSheetPalette.TEXT_MUTED
+		"text_color": _viewport._get_reading_style().muted_text_color
 	}))
 	if not _append_property_body_rows(row, variable.getter_body, indent, row.row_uid,
 			EventSheetSentence.VerbKind.EXPRESSION):
@@ -5235,8 +5237,8 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 	# glance the value comes from a FUNCTION, not a bool variable, without meeting parentheses.
 	if _guard_is_call(guard):
 		var guard_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-		guard_badge_meta["badge_bg"] = EventSheetPalette.COLOR_CODE_BADGE_BG
-		guard_badge_meta["badge_fg"] = EventSheetPalette.COLOR_CODE_BADGE_FG
+		guard_badge_meta["badge_bg"] = _viewport._get_reading_style().code_badge_background_color
+		guard_badge_meta["badge_fg"] = _viewport._get_reading_style().code_badge_foreground_color
 		guard_badge_meta["badge_style"] = "trigger"
 		guard_badge_meta["lane"] = "condition"
 		guard_badge_meta["line_index"] = 0
@@ -5558,8 +5560,8 @@ func _build_variable_row(
 					"editable": false,
 					"badge": true,
 					"badge_style": "scope",
-					"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
-					"badge_fg": EventSheetPalette.COLOR_CHIP_FG
+					"badge_bg": _viewport._get_reading_style().chip_background_color,
+					"badge_fg": _viewport._get_reading_style().chip_foreground_color
 				}, true)
 			),
 			_make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, variable_meta.merged({"editable": false}, true))
@@ -5583,8 +5585,8 @@ func _build_variable_row(
 						"badge": true,
 						"badge_style": "const",
 						"badge_natural_width": true,
-						"badge_bg": EventSheetPalette.COLOR_CONST_BADGE_BG,
-						"badge_fg": EventSheetPalette.COLOR_CONST_BADGE_FG
+						"badge_bg": _viewport._get_reading_style().constant_badge_background_color,
+						"badge_fg": _viewport._get_reading_style().constant_badge_foreground_color
 					},
 					true
 				)
@@ -5600,8 +5602,8 @@ func _build_variable_row(
 						"editable": false,
 						"badge": true,
 						"badge_style": "const",
-						"badge_bg": EventSheetPalette.COLOR_CONST_BADGE_BG,
-						"badge_fg": EventSheetPalette.COLOR_CONST_BADGE_FG
+						"badge_bg": _viewport._get_reading_style().constant_badge_background_color,
+						"badge_fg": _viewport._get_reading_style().constant_badge_foreground_color
 					},
 					true
 				)
@@ -5620,8 +5622,8 @@ func _build_variable_row(
 						"editable": false,
 						"badge": true,
 						"badge_style": "scope",
-						"badge_bg": EventSheetPalette.COLOR_GROUP_CHIP_BG,
-						"badge_fg": EventSheetPalette.COLOR_GROUP_CHIP_FG
+						"badge_bg": _viewport._get_reading_style().inspector_chip_background_color,
+						"badge_fg": _viewport._get_reading_style().inspector_chip_foreground_color
 					},
 					true
 				)
@@ -5645,8 +5647,8 @@ func _build_variable_row(
 						"editable": false,
 						"badge": true,
 						"badge_style": "scope",
-						"badge_bg": EventSheetPalette.COLOR_CAT_CHIP_BG,
-						"badge_fg": EventSheetPalette.COLOR_CAT_CHIP_FG,
+						"badge_bg": _viewport._get_reading_style().category_chip_background_color,
+						"badge_fg": _viewport._get_reading_style().category_chip_foreground_color,
 						# Marks THIS span as the group chip (variable_meta rides on every span of the
 						# row, so the rename gesture needs to know it hit the chip, not the name).
 						"group_chip": true
@@ -5681,7 +5683,7 @@ func _build_variable_row(
 	var hint_note: String = str(facts.get("note", "")).strip_edges()
 	if not hint_note.is_empty():
 		var note_meta: Dictionary = variable_meta.merged(
-			{"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true
+			{"editable": false, "text_color": _viewport._get_reading_style().muted_text_color}, true
 		)
 		row_data.spans.append(_make_span(hint_note, SemanticSpan.SpanType.COMMENT, note_meta))
 	# What the SCOPE adds that its word does not say on its own ("shared by every Player"), muted,
@@ -5692,7 +5694,7 @@ func _build_variable_row(
 			_make_span(
 				scope_note,
 				SemanticSpan.SpanType.COMMENT,
-				variable_meta.merged({"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true)
+				variable_meta.merged({"editable": false, "text_color": _viewport._get_reading_style().muted_text_color}, true)
 			)
 		)
 	# A static variable says who shares it: one value on the CLASS, so every object of this type reads
@@ -5706,7 +5708,7 @@ func _build_variable_row(
 				_make_span(
 					EventSheetL10n.translate("shared by every %s") % owner_word,
 					SemanticSpan.SpanType.COMMENT,
-					variable_meta.merged({"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true)
+					variable_meta.merged({"editable": false, "text_color": _viewport._get_reading_style().muted_text_color}, true)
 				)
 			)
 	# The knob's own sentence, muted, trailing the value - the `##` doc comment the Inspector shows as
@@ -5718,7 +5720,7 @@ func _build_variable_row(
 			_make_span(
 				variable_description,
 				SemanticSpan.SpanType.COMMENT,
-				variable_meta.merged({"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true)
+				variable_meta.merged({"editable": false, "text_color": _viewport._get_reading_style().muted_text_color}, true)
 			)
 		)
 	return row_data
@@ -5903,16 +5905,16 @@ func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, t
 	meta["tempo"] = tempo
 	match tempo:
 		TriggerResolver.TEMPO_EVERY_TICK:
-			meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_BG
-			meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_FG
+			meta["badge_bg"] = _viewport._get_reading_style().tempo_every_tick_background_color
+			meta["badge_fg"] = _viewport._get_reading_style().tempo_every_tick_foreground_color
 			return "⟳"
 		TriggerResolver.TEMPO_INPUT:
-			meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_INPUT_BG
-			meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_INPUT_FG
+			meta["badge_bg"] = _viewport._get_reading_style().tempo_input_background_color
+			meta["badge_fg"] = _viewport._get_reading_style().tempo_input_foreground_color
 			return "⌨"
 		TriggerResolver.TEMPO_ONCE:
-			meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_ONCE_BG
-			meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_ONCE_FG
+			meta["badge_bg"] = _viewport._get_reading_style().tempo_once_background_color
+			meta["badge_fg"] = _viewport._get_reading_style().tempo_once_foreground_color
 			return "▶"
 		_:
 			meta["badge_bg"] = event_style.trigger_badge_background_color
@@ -6137,13 +6139,13 @@ func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, a
 		"line_index": action_line_index
 	}
 	spans.append(_make_span(EventSheetL10n.translate("Include"), SemanticSpan.SpanType.VALUE,
-		base_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true).merged(action_style_meta, false)))
+		base_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true).merged(action_style_meta, false)))
 	spans.append(_make_span(str(reading.get("file", "")), SemanticSpan.SpanType.KEYWORD,
 		base_meta.duplicate().merged({
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
-			"badge_fg": EventSheetPalette.COLOR_CHIP_FG
+			"badge_bg": _viewport._get_reading_style().chip_background_color,
+			"badge_fg": _viewport._get_reading_style().chip_foreground_color
 		}, true).merged(action_style_meta, false)))
 	var runs: String = str(reading.get("runs", ""))
 	var tail: String = ""
@@ -6156,7 +6158,7 @@ func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, a
 		tail = "%s  %s" % [tail, args]
 	spans.append(_make_span(tail, SemanticSpan.SpanType.ACTION, base_meta.duplicate().merged({
 		"natural_width": false,
-		"text_color": EventSheetPalette.TEXT_PRIMARY
+		"text_color": _viewport._get_reading_style().primary_text_color
 	}, true).merged(action_style_meta, false)))
 
 
@@ -6203,7 +6205,7 @@ func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, actio
 			"natural_width": true,
 			# The NOTE is not the code: striking it through would say the word itself is switched off.
 			"ace_enabled": true,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		}, true).merged(action_style_meta, false)))
 	# The stand-in is DISABLED, which is what the sentence builder reads to strike its cell through;
 	# nothing is written to the sheet, the row it stands for is still the comment the file holds.
@@ -6212,7 +6214,7 @@ func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, actio
 	stand_in.enabled = false
 	if not _append_sentence_spans(spans, stand_in, action_index, action_line_index, action_style_meta):
 		spans.append(_make_span(code, SemanticSpan.SpanType.VALUE,
-			disabled_meta.duplicate().merged({"text_color": EventSheetPalette.TEXT_MUTED}, true).merged(action_style_meta, false)))
+			disabled_meta.duplicate().merged({"text_color": _viewport._get_reading_style().muted_text_color}, true).merged(action_style_meta, false)))
 
 
 ## The header spans of a function that IS an await beat: the repeating badge, the words, and the
@@ -6220,8 +6222,8 @@ func _append_disabled_code_spans(spans: Array[SemanticSpan], code: String, actio
 func _await_loop_trigger_spans(seconds: String) -> Array[SemanticSpan]:
 	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 	badge_meta["tempo"] = TriggerResolver.TEMPO_EVERY_TICK
-	badge_meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_BG
-	badge_meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_FG
+	badge_meta["badge_bg"] = _viewport._get_reading_style().tempo_every_tick_background_color
+	badge_meta["badge_fg"] = _viewport._get_reading_style().tempo_every_tick_foreground_color
 	badge_meta["badge_style"] = "trigger"
 	badge_meta["kind"] = "raw_code"
 	badge_meta["line_index"] = 0
@@ -6237,13 +6239,13 @@ func _await_loop_trigger_spans(seconds: String) -> Array[SemanticSpan]:
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
-			"text_color": EventSheetPalette.TEXT_PRIMARY
+			"text_color": _viewport._get_reading_style().primary_text_color
 		}),
 		_make_span(EventSheetL10n.translate("(while running)"), SemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
+			"text_color": _viewport._get_reading_style().muted_text_color
 		})
 	]
 
@@ -6355,7 +6357,7 @@ func _fanout_metadata(lane: String, ace_index: int, line_index: int, signal_name
 		"editable": false,
 		"signal_name": signal_name,
 		"include_path": str(target.get("path", "")),
-		"text_color": EventSheetPalette.TEXT_MUTED
+		"text_color": _viewport._get_reading_style().muted_text_color
 	}
 
 
@@ -6697,8 +6699,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# is the SAME event row with one span fewer, so the file cannot move.
 		var poll_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		poll_badge_meta["tempo"] = TriggerResolver.TEMPO_INPUT
-		poll_badge_meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_INPUT_BG
-		poll_badge_meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_INPUT_FG
+		poll_badge_meta["badge_bg"] = _viewport._get_reading_style().tempo_input_background_color
+		poll_badge_meta["badge_fg"] = _viewport._get_reading_style().tempo_input_foreground_color
 		poll_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		poll_badge_meta["line_index"] = condition_line_index
 		poll_badge_meta["badge_style"] = "trigger"
@@ -6714,8 +6716,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		if not timer_reading.is_empty():
 			trigger_id_glyph = "⟳"
 			trigger_id_badge_meta["tempo"] = TriggerResolver.TEMPO_EVERY_TICK
-			trigger_id_badge_meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_BG
-			trigger_id_badge_meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_FG
+			trigger_id_badge_meta["badge_bg"] = _viewport._get_reading_style().tempo_every_tick_background_color
+			trigger_id_badge_meta["badge_fg"] = _viewport._get_reading_style().tempo_every_tick_foreground_color
 		trigger_id_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		trigger_id_badge_meta["line_index"] = condition_line_index
 		trigger_id_badge_meta["badge_style"] = "trigger"
@@ -6946,7 +6948,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# which sits at line 0 without advancing condition_line_index).
 	# A FIGURE gets neither affordance: it is an illustration, so an "+ Add condition" line is a
 	# click target that does nothing, and it reserves a whole empty line of height under every row.
-	var add_condition_color: Color = condition_style_meta.get("text_color", EventSheetPalette.COLOR_CONDITION)
+	var add_condition_color: Color = condition_style_meta.get("text_color", _viewport._get_condition_style().text_color)
 	add_condition_color.a *= 0.55
 	if not _scaffolding_suppressed():
 		spans.append(
@@ -7009,7 +7011,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"raw_action": action_resource is RawCodeRow,
 					"code_cell": false,
 					"line_index": action_line_index,
-					"text_color": EventSheetPalette.TEXT_MUTED
+					"text_color": _viewport._get_reading_style().muted_text_color
 				}.merged(action_style_meta, false)))
 				action_line_index += 1
 				continue
@@ -7113,7 +7115,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 								# out vertically by line_index); without it every branch overlapped at line 0.
 								"line_index": match_line_index,
 								# The structured caption reads as an explanation (muted), never as code.
-								"text_color": EventSheetPalette.TEXT_MUTED if structured_match else event_style.value_highlight_color
+								"text_color": _viewport._get_reading_style().muted_text_color if structured_match else event_style.value_highlight_color
 							}
 						)
 					)
@@ -7134,7 +7136,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 							"kind": "action",
 							"ace_index": action_index,
 							"line_index": 0,
-							"text_color": EventSheetPalette.TEXT_MUTED
+							"text_color": _viewport._get_reading_style().muted_text_color
 						}
 					)
 				)
@@ -7160,7 +7162,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				spans.append(_make_span("Declare", SemanticSpan.SpanType.VALUE,
 					decl_head_meta.duplicate().merged({"natural_width": true}, true).merged(action_style_meta, false)))
 				spans.append(_make_span(decl.variable_name(), SemanticSpan.SpanType.VALUE,
-					decl_head_meta.duplicate().merged({"natural_width": true, "text_color": EventSheetPalette.TEXT_PRIMARY}, true).merged(action_style_meta, false)))
+					decl_head_meta.duplicate().merged({"natural_width": true, "text_color": _viewport._get_reading_style().primary_text_color}, true).merged(action_style_meta, false)))
 				spans.append(_make_span("%s - %d %s" % ["Dictionary" if decl.is_dictionary() else "Array",
 					decl.entry_values.size(), "entry" if decl.entry_values.size() == 1 else "entries"],
 					SemanticSpan.SpanType.VALUE,
@@ -7245,7 +7247,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 								"block_lines": inline_total,
 								"block_line": inline_line_index,
 								"line_index": action_line_index,
-								"text_color": _viewport._get_event_style().comment_text_color if inline_is_note else action_style_meta.get("text_color", EventSheetPalette.TEXT_PRIMARY),
+								"text_color": _viewport._get_event_style().comment_text_color if inline_is_note else action_style_meta.get("text_color", _viewport._get_reading_style().primary_text_color),
 								"object_label": "" if inline_is_literal_part else (_inline_block_label(inline_is_note, inline_literal) if inline_line_index == 0 else "")
 							}.merged(action_style_meta, true)
 						)
@@ -7305,7 +7307,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		)
 		add_action_line_index = comment_line_index + 1
 	# Event-sheet-style faint "Add action" affordance on its own line below the actions.
-	var add_action_color: Color = action_style_meta.get("text_color", EventSheetPalette.COLOR_ACTION)
+	var add_action_color: Color = action_style_meta.get("text_color", _viewport._get_action_style().text_color)
 	add_action_color.a *= 0.55
 	if not _scaffolding_suppressed():
 		spans.append(
@@ -7964,7 +7966,7 @@ func _build_connect_call_row(event_row: EventRow, parts: Dictionary, anchor: Str
 		sentence_text += text
 		sentence_segments.append({
 			"text": text,
-			"color": EventSheetPalette.TEXT_PRIMARY if str(piece[1]) == "name" else null,
+			"color": _viewport._get_reading_style().primary_text_color if str(piece[1]) == "name" else null,
 			"bold": str(piece[1]) == "name",
 			"italic": false
 		})
@@ -8182,7 +8184,7 @@ func _apply_picking_note(row_data: EventRowData) -> void:
 			# Written as segments because the styled runs behind the old text were measured against
 			# offsets the note has just moved, and re-deriving those costs a re-read of the whole cell.
 			span.metadata["bbcode_segments"] = [
-				{"text": "%s " % row_data.picking_note, "color": EventSheetPalette.TEXT_MUTED, "bold": false, "italic": false},
+				{"text": "%s " % row_data.picking_note, "color": _viewport._get_reading_style().muted_text_color, "bold": false, "italic": false},
 				{"text": span.text, "color": null, "bold": false, "italic": false},
 			]
 			span.metadata.erase("value_ranges")
@@ -8607,15 +8609,15 @@ func _tone_segments(pieces: Array) -> Dictionary:
 		var tone_bold: bool = false
 		match str(pair[1]):
 			"name":
-				tone_color = EventSheetPalette.TEXT_PRIMARY
+				tone_color = _viewport._get_reading_style().primary_text_color
 				tone_bold = true
 			"value":
 				tone_color = _viewport._get_event_style().value_highlight_color
 			"object":
-				tone_color = EventSheetPalette.COLOR_OBJECT
+				tone_color = _viewport._get_event_style().object_label_color
 			"muted":
 				# P6 - a connective the sentence needs but the reader does not read ("then").
-				tone_color = EventSheetPalette.TEXT_MUTED
+				tone_color = _viewport._get_reading_style().muted_text_color
 		segments.append({"text": piece_text, "color": tone_color, "bold": tone_bold, "italic": false})
 	return {"text": text, "segments": segments}
 
@@ -9436,20 +9438,20 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		var tone_bold: bool = false
 		match str(piece[1]):
 			"name":
-				tone_color = EventSheetPalette.TEXT_PRIMARY
+				tone_color = _viewport._get_reading_style().primary_text_color
 				tone_bold = true
 			"value":
 				tone_color = _viewport._get_event_style().value_highlight_color
 			"object":
-				tone_color = EventSheetPalette.COLOR_OBJECT
+				tone_color = _viewport._get_event_style().object_label_color
 			"behaviour":
 				# N4 - the pack's name between the object and its verb. Drawn in the object tint and
 				# bold, so it reads as part of WHO acts rather than as part of what the verb says.
-				tone_color = EventSheetPalette.COLOR_OBJECT
+				tone_color = _viewport._get_event_style().object_label_color
 				tone_bold = true
 			"muted":
 				# P6 - a connective the sentence needs but the reader does not read ("then").
-				tone_color = EventSheetPalette.TEXT_MUTED
+				tone_color = _viewport._get_reading_style().muted_text_color
 		sentence_segments.append({"text": text, "color": tone_color, "bold": tone_bold, "italic": false})
 	spans.append(_make_span(sentence_text, SemanticSpan.SpanType.VALUE, {
 		"lane": "action",
@@ -9487,7 +9489,7 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 	var name_meta: Dictionary = base_meta.duplicate()
 	name_meta["chip"] = true
 	name_meta["natural_width"] = true
-	name_meta["text_color"] = EventSheetPalette.TEXT_PRIMARY
+	name_meta["text_color"] = _viewport._get_reading_style().primary_text_color
 	spans.append(_make_span(str(declaration.get("name", "")), SemanticSpan.SpanType.VALUE, name_meta.merged(style_meta, false)))
 	var value_meta: Dictionary = base_meta.duplicate()
 	value_meta["chip"] = true
@@ -10080,20 +10082,20 @@ func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
 		var tone_bold: bool = false
 		match str(part.get("tone", "plain")):
 			"name":
-				tone_color = EventSheetPalette.TEXT_PRIMARY
+				tone_color = _viewport._get_reading_style().primary_text_color
 				tone_bold = true
 			"value":
 				tone_color = _viewport._get_event_style().value_highlight_color
 			"object":
-				tone_color = EventSheetPalette.COLOR_OBJECT
+				tone_color = _viewport._get_event_style().object_label_color
 			"chip":
 				# N5/N8 - a class name or a behaviour name is a LABEL on the row, not a word in the
 				# sentence, so it wears the object hue the object column uses for the same idea.
-				tone_color = EventSheetPalette.COLOR_OBJECT
+				tone_color = _viewport._get_event_style().object_label_color
 				tone_bold = true
 			"muted":
 				# P6 - a connective the sentence needs but the reader does not read ("then").
-				tone_color = EventSheetPalette.TEXT_MUTED
+				tone_color = _viewport._get_reading_style().muted_text_color
 		segments.append({"text": str(part.get("text", "")), "color": tone_color, "bold": tone_bold, "italic": false})
 	return segments
 

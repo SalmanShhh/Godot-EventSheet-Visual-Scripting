@@ -223,6 +223,7 @@ func apply_theme_style(style: EventSheetEditorStyle) -> void:
 	)
 	if changed:
 		_active_theme_style = style
+		_publish_active_style()
 		_dock._refresh_after_edit()
 		_refresh_theme_picker_selection()
 		_dock._mark_dirty("Theme applied from the theme editor.")
@@ -241,6 +242,15 @@ func _sync_active_theme_binding() -> void:
 	_active_theme_style = next_style
 	if _active_theme_style != null and not _active_theme_style.changed.is_connected(_on_active_theme_style_changed):
 		_active_theme_style.changed.connect(_on_active_theme_style_changed)
+	_publish_active_style()
+
+
+## Hands the active style to the chrome OUTSIDE the canvas - the Object bar, the status strip, the
+## Manual - which have no path back to a sheet and read their tokens through EventSheetActiveTheme.
+## Called from every point the active style can change, so a theme switch reaches them in the same
+## breath it reaches the viewport.
+func _publish_active_style() -> void:
+	EventSheetActiveTheme.publish(_active_theme_style)
 
 
 func _on_active_theme_style_changed() -> void:
