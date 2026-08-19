@@ -2727,3 +2727,24 @@ Nothing is running - Apply to running game needs a game to apply to.,Ничег�
 ⟳ Applies when the game resumes (paused at a row),⟳ Применится при возобновлении игры (пауза на строке)
 Auto-apply while debugging,Применять автоматически при отладке
 Ships as,Будет создан как
+Import event sheet…,Импорт листа событий…
+Import event sheet,Импорт листа событий
+"Bring a sheet over from another event-sheet editor. Pick the project it saved or one exported sheet, say which node each object became, and see exactly what came across - every row the vocabulary knows becomes the row that says the same thing, and every row it does not arrives switched off with its own words beside it. Nothing is written until you choose Save as…","Переносит лист из другого редактора листов событий. Выберите сохранённый им проект или один экспортированный лист, укажите, каким узлом стал каждый объект, и увидьте точно, что перенеслось: каждая строка, слово которой есть в этом словаре, становится строкой с тем же смыслом, а остальные приходят выключенными со своими словами рядом. Ничего не записывается, пока вы не выберете «Сохранить как…»."
+"Brings a sheet over from another event-sheet editor. Pick the project it saved (a zip of JSON) or a single exported event sheet. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it, and is counted below. Nothing is written until you choose Save as…","Переносит лист из другого редактора листов событий. Выберите сохранённый им проект (zip из JSON) или один экспортированный лист событий. Каждое условие, действие и выражение, слово которых есть в этом словаре, становится строкой с тем же смыслом; всё остальное приходит выключенным со своими словами рядом и считается ниже. Ничего не записывается, пока вы не выберете «Сохранить как…»."
+Which file?,Какой файл?
+"The exported project, or one exported event sheet",Экспортированный проект или один лист событий
+Browse…,Обзор…
+Which node is which object?,Какой узел — какой объект?
+"One line per object the sheet talks to. The node is written into the rows as-is, so $Player means the child called Player; leave it empty and the rows act on the sheet's own node and the object name is kept in the report.","По одной строке на каждый объект, с которым говорит лист. Узел записывается в строки как есть, поэтому $Player означает потомка с именем Player; оставьте пустым — и строки будут действовать на собственный узел листа, а имя объекта останется в отчёте."
+What it reads like,Как это читается
+What came across,Что перенеслось
+Save as…,Сохранить как…
+Pick the exported project or sheet,Выберите экспортированный проект или лист
+Save the imported sheet as,Сохранить импортированный лист как
+Pick a file to see what comes across.,"Выберите файл, чтобы увидеть, что переносится."
+Pick a file first.,Сначала выберите файл.
+That file could not be opened as a project archive.,Этот файл не удалось открыть как архив проекта.
+No event sheets were found in that archive.,В этом архиве листов событий не найдено.
+That file does not exist.,Такого файла нет.
+That file is not an exported event sheet.,Этот файл не является экспортированным листом событий.
+Nothing has been imported yet.,Пока ничего не импортировано.

@@ -2727,3 +2727,24 @@ Nothing is running - Apply to running game needs a game to apply to.,No hay nada
 ⟳ Applies when the game resumes (paused at a row),⟳ Se aplicara al reanudar el juego (pausado en una fila)
 Auto-apply while debugging,Aplicar automaticamente al depurar
 Ships as,Se genera como
+Import event sheet…,Importar hoja de eventos…
+Import event sheet,Importar hoja de eventos
+"Bring a sheet over from another event-sheet editor. Pick the project it saved or one exported sheet, say which node each object became, and see exactly what came across - every row the vocabulary knows becomes the row that says the same thing, and every row it does not arrives switched off with its own words beside it. Nothing is written until you choose Save as…","Trae una hoja desde otro editor de hojas de eventos. Elige el proyecto que guardó o una hoja exportada, indica en qué nodo se convirtió cada objeto y mira exactamente qué llegó: cada fila cuya palabra conoce este vocabulario se convierte en la fila que dice lo mismo, y cada fila que no, llega desactivada con sus propias palabras al lado. No se escribe nada hasta que elijas Guardar como…"
+"Brings a sheet over from another event-sheet editor. Pick the project it saved (a zip of JSON) or a single exported event sheet. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it, and is counted below. Nothing is written until you choose Save as…","Trae una hoja desde otro editor de hojas de eventos. Elige el proyecto que guardó (un zip de JSON) o una sola hoja de eventos exportada. Cada condición, acción y expresión cuya palabra conoce este vocabulario se convierte en la fila que dice lo mismo; lo demás llega desactivado con sus propias palabras al lado y se cuenta abajo. No se escribe nada hasta que elijas Guardar como…"
+Which file?,¿Qué archivo?
+"The exported project, or one exported event sheet","El proyecto exportado, o una hoja de eventos exportada"
+Browse…,Examinar…
+Which node is which object?,¿Qué nodo es qué objeto?
+"One line per object the sheet talks to. The node is written into the rows as-is, so $Player means the child called Player; leave it empty and the rows act on the sheet's own node and the object name is kept in the report.","Una línea por cada objeto con el que habla la hoja. El nodo se escribe tal cual en las filas, así que $Player significa el hijo llamado Player; déjalo vacío y las filas actúan sobre el propio nodo de la hoja y el nombre del objeto se conserva en el informe."
+What it reads like,Cómo se lee
+What came across,Qué llegó
+Save as…,Guardar como…
+Pick the exported project or sheet,Elige el proyecto u hoja exportados
+Save the imported sheet as,Guardar la hoja importada como
+Pick a file to see what comes across.,Elige un archivo para ver qué llega.
+Pick a file first.,Elige primero un archivo.
+That file could not be opened as a project archive.,Ese archivo no se pudo abrir como archivo de proyecto.
+No event sheets were found in that archive.,No se encontraron hojas de eventos en ese archivo.
+That file does not exist.,Ese archivo no existe.
+That file is not an exported event sheet.,Ese archivo no es una hoja de eventos exportada.
+Nothing has been imported yet.,Todavía no se ha importado nada.

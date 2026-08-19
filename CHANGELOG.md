@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+### Added - an event sheet from another editor, imported honestly
+
+- **Sheet ▸ Import event sheet…** reads a sheet out of another event-sheet editor's project export
+  (a zip of JSON, or one exported sheet file) and turns it into an ordinary `.gd`. Events become
+  events, sub-events become sub-events, Else becomes Else, an Or block becomes an Or block, groups
+  become groups, comments become comment rows, variables become variable rows, and a function block
+  becomes a function with its name in the condition lane and its parameters as chips. A top-level
+  event with no trigger of its own becomes **Every frame**, which is what a top-level event means
+  in the sheet it came from.
+- **Every row is either the row that says the same thing, or switched off with its own words.** The
+  mapping table covers System, Keyboard, Mouse, Touch, Sprite, Text, Audio, Array, Dictionary, JSON
+  and Functions rows plus the compare / set / add / subtract / toggle rows every object has, and
+  each entry names a shipped row whose id and parameter ids the suite checks against the registry.
+  Nothing is approximated: a row with no word here arrives disabled, its original words written into
+  the file, and named in the report with a reason. A row a shipped behaviour pack covers says which
+  pack ("The shipped Platformer Movement behaviour covers this").
+- **Expressions are translated by name**, from the exact inverse of the table the reading layer uses
+  to show those same words: `random` / `choose` / `len` / `distance` / `angle` / `zeropad` / `left` /
+  `mid` / `tokenat` / `tickcount`. `lerp`, `clamp`, `abs`, `floor`, `ceil`, `round`, `sqrt`, `min`
+  and `max` are spelled the same in both, so they are left alone. `Sprite.X` becomes the mapped
+  node's `position.x`, and `Space` / `Left arrow` become `KEY_SPACE` / `KEY_LEFT`. A value that
+  could not be translated is kept as written and flagged by name in the report.
+- **The wizard shows the result before anything is written**: the file, the sheet inside it, an
+  editable table saying which node each object became (pre-filled from the project's own object
+  types, or guessed from the rows an object is used with), the imported sheet in its own words, and
+  the report - "14 of 17 rows mapped (82%)" with every row that did not come across named. Save as…
+  writes a new `.gd` through the ordinary compiler, and it re-opens byte-identically. The source
+  archive is only ever read.
+- **A tally at the end of the generated file** lists every row that did not come across, including
+  the ones that sat under a switched-off event and wrote nothing of their own, and the project
+  health check counts it so they are not forgotten.
+
 ### Added - a place to live in: the words are a setting, the packs are a list, the fixes are one click
 
 - **Settings ▸ Words: every word the sheet lets you choose, on one page.** A row per choosable

@@ -2727,3 +2727,24 @@ Nothing is running - Apply to running game needs a game to apply to.,실행 중�
 ⟳ Applies when the game resumes (paused at a row),⟳ 게임이 재개될 때 적용됩니다 (행에서 일시정지)
 Auto-apply while debugging,디버깅 중 자동 적용
 Ships as,생성 형태
+Import event sheet…,이벤트 시트 가져오기…
+Import event sheet,이벤트 시트 가져오기
+"Bring a sheet over from another event-sheet editor. Pick the project it saved or one exported sheet, say which node each object became, and see exactly what came across - every row the vocabulary knows becomes the row that says the same thing, and every row it does not arrives switched off with its own words beside it. Nothing is written until you choose Save as…","다른 이벤트 시트 편집기에서 시트를 가져옵니다. 저장된 프로젝트나 내보낸 시트를 고르고, 각 오브젝트가 어떤 노드가 되었는지 지정하면 무엇이 넘어왔는지 그대로 보입니다. 어휘가 아는 행은 같은 뜻의 행이 되고, 모르는 행은 원래 말을 곁에 남긴 채 꺼진 상태로 도착합니다. 다른 이름으로 저장… 을 고를 때까지 아무것도 기록되지 않습니다."
+"Brings a sheet over from another event-sheet editor. Pick the project it saved (a zip of JSON) or a single exported event sheet. Every condition, action and expression this vocabulary knows becomes the row that says the same thing; anything it does not know arrives switched off with its own words beside it, and is counted below. Nothing is written until you choose Save as…","다른 이벤트 시트 편집기에서 시트를 가져옵니다. 저장된 프로젝트(JSON의 zip)나 내보낸 시트 하나를 고르세요. 어휘가 아는 조건·동작·식은 같은 뜻의 행이 되고, 나머지는 원래 말을 곁에 남긴 채 꺼진 상태로 도착해 아래에 집계됩니다. 다른 이름으로 저장… 을 고를 때까지 아무것도 기록되지 않습니다."
+Which file?,어떤 파일?
+"The exported project, or one exported event sheet",내보낸 프로젝트 또는 내보낸 이벤트 시트 하나
+Browse…,찾아보기…
+Which node is which object?,어떤 노드가 어떤 오브젝트인가?
+"One line per object the sheet talks to. The node is written into the rows as-is, so $Player means the child called Player; leave it empty and the rows act on the sheet's own node and the object name is kept in the report.",시트가 말을 거는 오브젝트마다 한 줄. 노드는 그대로 행에 적히므로 $Player는 Player라는 자식을 뜻합니다. 비워 두면 행은 시트 자신의 노드에 작용하고 오브젝트 이름은 보고서에 남습니다.
+What it reads like,어떻게 읽히는가
+What came across,무엇이 넘어왔나
+Save as…,다른 이름으로 저장…
+Pick the exported project or sheet,내보낸 프로젝트나 시트를 고르기
+Save the imported sheet as,가져온 시트를 다른 이름으로 저장
+Pick a file to see what comes across.,파일을 고르면 무엇이 넘어오는지 보입니다.
+Pick a file first.,먼저 파일을 고르세요.
+That file could not be opened as a project archive.,그 파일을 프로젝트 압축 파일로 열 수 없었습니다.
+No event sheets were found in that archive.,그 압축 파일에서 이벤트 시트를 찾지 못했습니다.
+That file does not exist.,그 파일은 없습니다.
+That file is not an exported event sheet.,그 파일은 내보낸 이벤트 시트가 아닙니다.
+Nothing has been imported yet.,아직 아무것도 가져오지 않았습니다.
