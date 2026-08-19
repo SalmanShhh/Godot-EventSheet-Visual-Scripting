@@ -79,7 +79,7 @@ static func read_sheet_file(json_path: String) -> Dictionary:
 	if not FileAccess.file_exists(json_path):
 		return {"ok": false, "error": "That file does not exist.", "sheet": {}}
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(json_path))
-	if not (parsed is Dictionary) or not (parsed as Dictionary).has("events"):
+	if not (parsed is Dictionary) or not ((parsed as Dictionary).get("events", null) is Array):
 		return {"ok": false, "error": "That file is not an exported event sheet.", "sheet": {}}
 	return {"ok": true, "error": "", "sheet": parsed as Dictionary}
 
@@ -106,7 +106,7 @@ static func object_kind_for_plugin(plugin_id: String) -> String:
 ## objects this sheet needs rather than every object in the project.
 static func object_names(sheet_json: Dictionary) -> PackedStringArray:
 	var seen: Dictionary = {}
-	_collect_object_names(sheet_json.get("events", []) as Array, seen)
+	_collect_object_names(_as_array(sheet_json.get("events", [])), seen)
 	var names: Array = seen.keys()
 	names.sort()
 	var out: PackedStringArray = PackedStringArray()
@@ -120,12 +120,12 @@ static func _collect_object_names(events: Array, seen: Dictionary) -> void:
 		if not (entry is Dictionary):
 			continue
 		var event: Dictionary = entry as Dictionary
-		for cell: Variant in (event.get("conditions", []) as Array) + (event.get("actions", []) as Array):
+		for cell: Variant in (_as_array(event.get("conditions", []))) + (_as_array(event.get("actions", []))):
 			if cell is Dictionary:
 				var object_name: String = str((cell as Dictionary).get("objectClass", "")).strip_edges()
 				if not object_name.is_empty() and not EventSheetForeignACEMap.SYSTEM_OBJECT_KINDS.has(object_name):
 					seen[object_name] = true
-		_collect_object_names(event.get("children", []) as Array, seen)
+		_collect_object_names(_as_array(event.get("children", [])), seen)
 
 
 ## The mapping table the wizard shows before anything is imported: one row per object the sheet
@@ -157,7 +157,7 @@ static func guess_object_kinds(sheet_json: Dictionary) -> Dictionary:
 			by_id[parts[1]] = []
 		(by_id[parts[1]] as Array).append(parts[0])
 	var votes: Dictionary = {}
-	_collect_kind_votes(sheet_json.get("events", []) as Array, by_id, votes)
+	_collect_kind_votes(_as_array(sheet_json.get("events", [])), by_id, votes)
 	var out: Dictionary = {}
 	for object_name: String in votes:
 		var best: String = ""
@@ -179,7 +179,7 @@ static func _collect_kind_votes(events: Array, by_id: Dictionary, votes: Diction
 		if not (entry is Dictionary):
 			continue
 		var event: Dictionary = entry as Dictionary
-		for cell: Variant in (event.get("conditions", []) as Array) + (event.get("actions", []) as Array):
+		for cell: Variant in (_as_array(event.get("conditions", []))) + (_as_array(event.get("actions", []))):
 			if not (cell is Dictionary):
 				continue
 			var object_name: String = str((cell as Dictionary).get("objectClass", "")).strip_edges()
@@ -192,7 +192,7 @@ static func _collect_kind_votes(events: Array, by_id: Dictionary, votes: Diction
 				votes[object_name] = {}
 			for kind: String in by_id[row_id] as Array:
 				(votes[object_name] as Dictionary)[kind] = int((votes[object_name] as Dictionary).get(kind, 0)) + 1
-		_collect_kind_votes(event.get("children", []) as Array, by_id, votes)
+		_collect_kind_votes(_as_array(event.get("children", [])), by_id, votes)
 
 
 ## The whole import as one pure function: an exported sheet plus the object mapping in, a sheet and
@@ -222,7 +222,7 @@ static func import_sheet(sheet_json: Dictionary, object_map: Dictionary = {}, op
 		heading.style = CommentRow.CommentStyle.SECTION
 		heading.text = "%s - imported from another event-sheet editor. Rows it could not spell are switched off with their original words beside them." % title
 		sheet.events.append(heading)
-	var rows: Array = _convert_events(sheet_json.get("events", []) as Array, context, true)
+	var rows: Array = _convert_events(_as_array(sheet_json.get("events", [])), context, true)
 	for row: Resource in rows:
 		sheet.events.append(row)
 	report["percent"] = 100 if int(report["total"]) == 0 else int(round(100.0 * float(report["mapped"]) / float(report["total"])))
@@ -248,7 +248,7 @@ static func import_sheet(sheet_json: Dictionary, object_map: Dictionary = {}, op
 ## through this, and a `Score` in an expression lands on the `score` the head of the file shows.
 static func declared_names(sheet_json: Dictionary) -> Dictionary:
 	var out: Dictionary = {}
-	_collect_declared(sheet_json.get("events", []) as Array, out)
+	_collect_declared(_as_array(sheet_json.get("events", [])), out)
 	return out
 
 
@@ -263,12 +263,12 @@ static func _collect_declared(events: Array, out: Dictionary) -> void:
 			if not declared.is_empty():
 				out[declared] = declared.to_snake_case()
 		elif kind == "function-block":
-			for param: Variant in event.get("functionParameters", []) as Array:
+			for param: Variant in _as_array(event.get("functionParameters", [])):
 				if param is Dictionary:
 					var param_name: String = str((param as Dictionary).get("name", "")).strip_edges()
 					if not param_name.is_empty():
 						out[param_name] = param_name.to_snake_case()
-		_collect_declared(event.get("children", []) as Array, out)
+		_collect_declared(_as_array(event.get("children", [])), out)
 
 
 ## "12 of 14 rows mapped (86%)" - the report in one line, exactly as counted.
@@ -282,6 +282,9 @@ static func report_summary(report: Dictionary) -> String:
 static func _convert_events(events: Array, context: Dictionary, top_level: bool) -> Array:
 	var out: Array = []
 	var last_trigger: String = ""
+	# True while the row before this one left a chain an Else may legally stand under: an event with
+	# conditions of its own. A bare Else closes it again, exactly as the emitted `else:` does.
+	var chainable: bool = false
 	for entry: Variant in events:
 		if not (entry is Dictionary):
 			continue
@@ -308,8 +311,14 @@ static func _convert_events(events: Array, context: Dictionary, top_level: bool)
 						if event_row.else_mode != EventRow.ElseMode.NONE and event_row.trigger_id.is_empty():
 							event_row.trigger_provider_id = "Core"
 							event_row.trigger_id = last_trigger
+							# An Else with nothing in front of it to stand under has no "otherwise" to be:
+							# it is emitted on its own and so runs EVERY time, which is the opposite of
+							# what it read as. Said out loud here rather than found in the running game.
+							if not chainable:
+								_note(context, "An Else here had no event before it to stand under, so its actions now run every time. Give it a condition of its own, or move it under the event it belongs to.")
 						elif not event_row.trigger_id.is_empty():
 							last_trigger = event_row.trigger_id
+						chainable = not event_row.conditions.is_empty()
 					out.append(row)
 	return out
 
@@ -324,7 +333,7 @@ static func _convert_block(event: Dictionary, context: Dictionary, top_level: bo
 	if bool(event.get("isElse", false)):
 		row.else_mode = EventRow.ElseMode.ELSE
 	var leading: Array = []
-	for cell: Variant in event.get("conditions", []) as Array:
+	for cell: Variant in _as_array(event.get("conditions", [])):
 		if not (cell is Dictionary):
 			continue
 		var source: Dictionary = cell as Dictionary
@@ -350,7 +359,7 @@ static func _convert_block(event: Dictionary, context: Dictionary, top_level: bo
 		condition.negated = bool(source.get("isInverted", false))
 		condition.comment = str(built.get("note", ""))
 		row.conditions.append(condition)
-	for cell: Variant in event.get("actions", []) as Array:
+	for cell: Variant in _as_array(event.get("actions", [])):
 		if not (cell is Dictionary):
 			continue
 		var action_source: Dictionary = cell as Dictionary
@@ -368,7 +377,7 @@ static func _convert_block(event: Dictionary, context: Dictionary, top_level: bo
 		action.enabled = not bool(action_source.get("disabled", false))
 		action.comment = str(built_action.get("note", ""))
 		row.actions.append(action)
-	for child: Resource in _convert_events(event.get("children", []) as Array, context, false):
+	for child: Resource in _convert_events(_as_array(event.get("children", [])), context, false):
 		row.sub_events.append(child)
 	if top_level and row.trigger_id.is_empty() and row.else_mode == EventRow.ElseMode.NONE:
 		row.trigger_provider_id = "Core"
@@ -385,7 +394,7 @@ static func _convert_group(event: Dictionary, context: Dictionary) -> EventGroup
 	group.enabled = not bool(event.get("disabled", false))
 	if event.has("isActiveOnStart") and not bool(event.get("isActiveOnStart", true)):
 		_note(context, "The group \"%s\" started switched off. Groups here are always on; add a condition that guards it." % group.name)
-	for child: Resource in _convert_events(event.get("children", []) as Array, context, true):
+	for child: Resource in _convert_events(_as_array(event.get("children", [])), context, true):
 		group.events.append(child)
 	return group
 
@@ -439,7 +448,7 @@ static func _convert_function(event: Dictionary, context: Dictionary) -> void:
 	function.function_name = str(event.get("functionName", "do_thing")).to_snake_case()
 	function.description = str(event.get("functionDescription", ""))
 	function.is_async = bool(event.get("functionIsAsync", false))
-	for entry: Variant in event.get("functionParameters", []) as Array:
+	for entry: Variant in _as_array(event.get("functionParameters", [])):
 		if not (entry is Dictionary):
 			continue
 		var source: Dictionary = entry as Dictionary
@@ -499,6 +508,13 @@ static func _build_cell(source: Dictionary, context: Dictionary, wanted_kind: St
 	var flagged: PackedStringArray = PackedStringArray()
 	for param_id: String in (entry.get("params", {}) as Dictionary):
 		var filled: Dictionary = _fill_param(str((entry["params"] as Dictionary)[param_id]), source, object_name, context)
+		# A slot the export carried no value for, or a comparison nobody here can name, cannot be
+		# filled honestly: an empty slot writes `Vector2(, )` and a bare `=` writes an assignment,
+		# and both are files that do not parse. The row is refused instead, with its original words
+		# kept, which is what every other unspellable row already does.
+		if bool(filled.get("refused", false)):
+			_reject(context, _cell_label(source, context), str(filled["reason"]))
+			return {}
 		(built["params"] as Dictionary)[param_id] = filled["text"]
 		if bool(filled["flagged"]):
 			flagged.append(param_id)
@@ -531,10 +547,17 @@ static func _fill_param(source_spec: String, cell: Dictionary, object_name: Stri
 		var any_flagged: bool = false
 		for index: int in range(1, parts.size()):
 			var piece: Dictionary = _fill_param(parts[index], cell, object_name, context)
+			if bool(piece.get("refused", false)):
+				return piece
 			values.append(piece["text"])
 			any_flagged = any_flagged or bool(piece["flagged"])
 		return {"text": parts[0] % values, "flagged": any_flagged}
-	var raw: String = str(_parameter(cell, source_spec.substr(1)))
+	var wanted: String = source_spec.substr(1)
+	var found: Variant = _parameter(cell, wanted)
+	if found == null:
+		return {"text": "", "flagged": true, "refused": true,
+			"reason": "The export carried no \"%s\" for this row." % wanted}
+	var raw: String = str(found)
 	if source_spec.begins_with("!"):
 		return {"text": raw, "flagged": true}
 	if source_spec.begins_with("~"):
@@ -543,12 +566,20 @@ static func _fill_param(source_spec: String, cell: Dictionary, object_name: Stri
 	if source_spec.begins_with("^"):
 		var button: Dictionary = EventSheetForeignACEMap.translate_button(raw)
 		return {"text": str(button["text"]), "flagged": not bool(button["translated"])}
+	if source_spec.begins_with("="):
+		var comparison: Dictionary = EventSheetForeignACEMap.translate_comparison(raw)
+		if not bool(comparison["translated"]):
+			return {"text": raw, "flagged": true, "refused": true,
+				"reason": "No comparison here is spelled \"%s\"." % raw}
+		return {"text": str(comparison["text"]), "flagged": false}
 	var translated: Dictionary = EventSheetForeignACEMap.translate_expression(raw, context["aliases"] as Dictionary)
 	return {"text": str(translated["text"]), "flagged": not bool(translated["translated"])}
 
 
 ## A parameter by the name the export gave it, matched loosely (the export writes human labels, and
-## an editor release may re-space one).
+## an editor release may re-space one). Returns null when the export carried no such parameter at
+## all, which is a different thing from carrying an empty one and has to stay tellable apart: the
+## caller refuses the row rather than writing a slot with nothing in it.
 static func _parameter(cell: Dictionary, wanted: String) -> Variant:
 	var parameters: Dictionary = cell.get("parameters", {}) as Dictionary
 	if parameters.has(wanted):
@@ -557,7 +588,7 @@ static func _parameter(cell: Dictionary, wanted: String) -> Variant:
 	for key: String in parameters:
 		if EventSheetForeignACEMap.normalize_id(key) == normalized:
 			return parameters[key]
-	return ""
+	return null
 
 
 # --- honesty ----------------------------------------------------------------------------------
@@ -617,6 +648,12 @@ static func _reject_behavior(cell: Dictionary, context: Dictionary, behavior: St
 		_reject(context, _cell_label(cell, context), str(EventSheetForeignACEMap.NO_HOME[key]))
 		return
 	_reject(context, _cell_label(cell, context), "No behaviour here matches this yet.")
+
+
+## An arm's length from a hand-edited export: a member the format says is a list, when it is not a
+## list, is read as an empty one rather than crashing the import halfway through a file.
+static func _as_array(value: Variant) -> Array:
+	return value as Array if value is Array else []
 
 
 static func _count(context: Dictionary, mapped: bool) -> void:
