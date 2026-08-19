@@ -5407,12 +5407,6 @@ func _instantiate_action_parts(action_resource: Variant) -> Dictionary:
 	return {}
 
 
-## True when the action is the `add_child(b)` / `add_sibling(b)` (on this node or on a named parent)
-## that puts the freshly made object into the tree.
-func _plants_node(action_resource: Variant, alias: String) -> bool:
-	return not _plant_parent(action_resource, alias).is_empty()
-
-
 ## T22. {alias: {alias, source, copy}} for every LOCAL of this event that was filled from a scene -
 ## the `var e = Scene.instantiate()` row an event sheet draws at the top of its event. Empty when the
 ## event declares no such local, which is what keeps the run below from claiming anything.
