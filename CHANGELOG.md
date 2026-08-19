@@ -25,6 +25,43 @@
   that script as its own editable sheet. One script is read per frame behind the progress strip, so a
   big scene never freezes the editor.
 
+### Added - the sheet as text, a Find results bar, a Properties bar, and zoom
+
+Five things every event-sheet editor has, in the sheet's own words.
+
+- **Copy as text, and Save as text.** Ctrl+Shift+C copies the selection as the plain listing every
+  event-sheet community pastes into a forum post, an issue or a chat message: `+ ` in front of a
+  condition, `-> ` in front of an action, one extra indent per sub-event, in exactly the words the
+  canvas is showing under the current reading lenses - because every line is assembled from the
+  spans the canvas already drew, not from a second grammar. **Sheet ▸ Save as Text…** writes the
+  whole sheet the same way as Markdown, with the margin event numbers in a gutter. Read-only
+  output: the round trip lives in the `.gd`, so nothing pastes back in from here. (Ctrl+Shift+C is
+  now Copy as text; adding a condition keeps its primary key `C` and its Ctrl alternate moved to
+  Ctrl+Alt+C - both rebindable in Tools ▸ Keyboard Shortcuts.)
+- **Find all references, and a Find results bar.** Right-click a variable, function, object,
+  signal or behavior ▸ *Find all references* and the results open in a bar under the sheet,
+  grouped by sheet with each hit's event number. Clicking a result jumps to it, opening the sheet
+  when it is not the one on screen; F3 and Shift+F3 step forward and back; the bar stays until it
+  is closed. Matching is whole-symbol, so `hp` never finds `hp_max`, and the open tabs are
+  searched alongside the project's sheets.
+- **A Properties bar.** Beside the canvas, splitter-resizable like the Inspector: the selected
+  condition or action's parameters as fields edited in place (Enter applies, one undo step,
+  through the same edit path as the Edit Parameter dialog, so an opened `.gd` stays byte-exact for
+  every line the edit does not touch), a selected object's properties, a selected group's name and
+  enabled state. Hidden by default in Simple Mode; **View ▸ Properties Bar** brings it back. The
+  dialog stays for anyone who prefers it.
+- **Replace object knows which objects are close.** *Replace object…* (the rename refactor with a
+  scope) now offers the objects that have the same conditions and actions first - the same script,
+  then the same class - and any parameter that named an instance variable the new object does not
+  have is said in the status line and recorded as a Doctor finding, instead of quietly compiling
+  to a member that is not there.
+- **The sheet zooms.** Ctrl + mouse wheel, Ctrl + + / Ctrl + -, Ctrl + 0 for 100%, or the new pill
+  in the status bar: 50% to 200% in six steps, text, chips, icons and guide lines scaling
+  together. The zoom is remembered for the LAYOUT rather than for one file, so the next sheet
+  opens at the size you were reading at. Density (Comfortable / Compact) stays a separate choice.
+
+All of it is translated in the nine shipped languages.
+
 ### Added - the wait-then, the tick switches and the lifecycle triggers in the sheet's own words
 
 Four more families of everyday GDScript read as the rows they are. Display only: the file is
