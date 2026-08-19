@@ -180,14 +180,14 @@ static func run() -> bool:
 	ok = _check("the mutation reached the live sheet", found, true) and ok
 
 	# Palette registration: an extension entry lands in the palette list; the dogfooded
-	# fold commands are already there via the same seam.
+	# collapse commands are already there via the same seam.
 	var ran: Array = []
 	EventSheets.register_palette_command("API Test Command", func() -> void: ran.append(true))
 	var titles: Array = []
 	for command: Dictionary in dock._command_palette_commands():
 		titles.append(str(command.get("title", "")))
 	ok = _check("a registered command reaches the palette", titles.has("API Test Command"), true) and ok
-	ok = _check("the fold commands dogfood the same seam", titles.has("Fold All Regions") and titles.has("Unfold Everything"), true) and ok
+	ok = _check("the collapse commands dogfood the same seam", titles.has("Collapse All Regions") and titles.has("Expand Everything"), true) and ok
 	ok = _check("Save Studio dogfoods the palette seam", titles.has("Save Studio"), true) and ok
 	for command: Dictionary in EventSheets.palette_commands():
 		if str(command.get("title", "")) == "API Test Command":
