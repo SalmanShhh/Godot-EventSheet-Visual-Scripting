@@ -87,8 +87,8 @@ file name.
 
 Right-click any of these verbs in the picker:
 
-- **Rename this verb…** / **Set its category…** - fix a name that reads badly in a row.
-- **Hide this verb** / **Hide everything from `<Class>`** - trim what you never use. A hidden
+- **Rename this entry…** / **Set its category…** - fix a name that reads badly in a row.
+- **Hide this entry** / **Hide everything from `<Class>`** - trim what you never use. A hidden
   class stays listed greyed out; select it to bring it back.
 - **Reset to the inferred name** - undo one refinement.
 

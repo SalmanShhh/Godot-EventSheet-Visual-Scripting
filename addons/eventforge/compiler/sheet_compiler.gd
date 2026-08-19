@@ -439,7 +439,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		if hook_generated:
 			for raw_entry2: Variant in raw_blocks:
 				if raw_entry2 is RawCodeRow and (raw_entry2 as RawCodeRow).code.contains("func %s(" % hook_name):
-					(result["warnings"] as Array).append("A GDScript block also defines %s() - remove it or clear the Inspector/Requires settings (duplicate functions don't compile)." % hook_name)
+					(result["warnings"] as Array).append("A script block also defines %s() - remove it or clear the Inspector/Requires settings (duplicate functions don't compile)." % hook_name)
 
 	var deferred_rows: PackedStringArray = PackedStringArray()
 	var top_level_events: Array = []
@@ -1325,7 +1325,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			var declared_signals: Array = connect_context.get("declared_signals", [])
 			if not ClassDB.class_has_signal(self_class, signal_name) and not declared_signals.has(signal_name):
 				(result["warnings"] as Array[String]).append(
-					"Trigger %s: %s has no signal \"%s\" - connection skipped (connect it in the scene or declare the signal in a GDScript block)." % [key, self_class, signal_name]
+					"Trigger %s: %s has no signal \"%s\" - connection skipped (connect it in the scene or declare the signal in a script block)." % [key, self_class, signal_name]
 				)
 				continue
 		var source_prefix: String = ""

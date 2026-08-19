@@ -41,8 +41,8 @@ Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,시�
 Add an event (E).,이벤트를 추가합니다 (E).
 Add a condition to the selected event (C).,선택한 이벤트에 조건을 추가합니다 (C).
 Add an action to the selected event (A).,선택한 이벤트에 액션을 추가합니다 (A).
-Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,선택한 이벤트에 GDScript 블록을 추가합니다 - 의도적으로 '코드로 내려가는' 탈출구입니다. 코드 편집기가 바로 열립니다.
-"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","초보자 친화적 보기: 고급/코드 항목(GDScript 블록, 하위 조건, 선택 필터, 시그널/열거형)을 숨깁니다. 꺼도 모든 기능은 그대로 동작합니다."
+Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,선택한 이벤트에 스크립트 블록을 추가합니다 - 의도적으로 '코드로 내려가는' 탈출구입니다. 코드 편집기가 바로 열립니다.
+"Beginner-friendly view: hides the advanced/code entries (script blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","초보자 친화적 보기: 고급/코드 항목(스크립트 블록, 하위 조건, 선택 필터, 시그널/열거형)을 숨깁니다. 꺼도 모든 기능은 그대로 동작합니다."
 "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.",생성된 GDScript 패널을 켜고 끕니다 - 시트의 있는 그대로의 컴파일 결과를 나란히 보여줍니다.
 Theme for this sheet (Load/Reload and the Theme Editor live in View),이 시트의 테마 (불러오기/다시 불러오기와 테마 편집기는 보기 메뉴에 있습니다)
 "Quick add…  (e.g. every tick, heal 5)","빠른 추가…  (예: every tick, heal 5)"
@@ -82,7 +82,7 @@ Load Theme…,테마 불러오기…
 Reload Theme,테마 다시 불러오기
 Theme Editor…,테마 편집기…
 MCP Server (AI tools),MCP 서버 (AI 도구)
-"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","우클릭 메뉴에서 고급/코드 항목(GDScript 블록, 하위 조건, 선택 필터, match, 시그널/열거형)을 숨깁니다. 전문가 모드에서는 모든 기능이 그대로 동작합니다."
+"Hide the advanced/code entries (script blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","우클릭 메뉴에서 고급/코드 항목(스크립트 블록, 하위 조건, 선택 필터, match, 시그널/열거형)을 숨깁니다. 전문가 모드에서는 모든 기능이 그대로 동작합니다."
 Show/hide the generated-GDScript panel beside the sheet.,시트 옆의 생성된 GDScript 패널을 표시하거나 숨깁니다.
 "Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.","끝의 ""+ 이벤트 추가…"" 행을 표시하거나 숨깁니다. 끄면 더 깔끔하고 차분한 시트가 됩니다."
 "Show/hide a second synchronized view of this sheet, side by side.",이 시트의 두 번째 동기화된 보기를 나란히 표시하거나 숨깁니다.
@@ -109,7 +109,7 @@ Start the Tour…,둘러보기 시작…
 Keyboard Shortcuts,키보드 단축키
 Rename Everywhere…,모든 곳에서 이름 바꾸기…
 Change Type Everywhere…,모든 곳에서 형식 바꾸기…
-Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,모든 ƒx 표현식과 GDScript 블록을 검사하여 문제가 있는 행을 표시하고 첫 번째 행으로 이동합니다.
+Lint every ƒx expression + script block; flag the offending rows and jump to the first.,모든 ƒx 표현식과 스크립트 블록을 검사하여 문제가 있는 행을 표시하고 첫 번째 행으로 이동합니다.
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,중단점 출력을 켜고 끕니다: 디버그로 컴파일된 시트는 중단점이 있는 행에서 일시 정지합니다.
 Toggle Live Values: running sheets stream their variables here (editable).,실시간 값을 켜고 끕니다: 실행 중인 시트의 변수가 여기로 스트리밍됩니다 (편집 가능).
 + Add action,+ 액션 추가
@@ -340,7 +340,7 @@ Alternate group header background (zebra).,그룹 헤더의 교차 배경 (얼�
 Apply To Current Sheet,현재 시트에 적용
 Background of a group header row.,그룹 헤더 행의 배경.
 Background of the Conditions / Actions column header bar.,조건 / 액션 열 헤더 바의 배경.
-Background of the fold triangle box on a group.,그룹의 접기 삼각형 상자 배경.
+Background of the collapse triangle box on a group.,그룹의 접기 삼각형 상자 배경.
 Badge Background Color,배지 배경 색상
 Badge Extra Width,배지 추가 너비
 Badge Foreground Color,배지 전경 색상
@@ -479,7 +479,7 @@ Enum,열거형 (Enum)
 Event Above,위에 이벤트
 Event Below,아래에 이벤트
 Find Usages (project),사용처 찾기 (프로젝트)
-GDScript Block,GDScript 블록
+Script Block,스크립트 블록
 Group,그룹
 Group Color…,그룹 색상…
 Group Selection into New Group,선택 항목을 새 그룹으로 묶기
@@ -622,7 +622,7 @@ e.g. Re-bake  (empty = no button),예: 다시 굽기 (비우면 버튼 없음)
 "What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.","이 동사의 이름입니다. ""Take Damage""처럼 쉬운 말로 쓰면 생성된 GDScript에서는 take_damage가 됩니다. 다른 행은 이 이름으로 동사를 호출합니다."
 Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,이 동사에 대한 Godot 자체 문서입니다. 함수 위에 ## 줄로 작성되며 에디터 내장 도움말과 동사에 마우스를 올렸을 때 표시됩니다. 선택 사항입니다.
 "Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.",이 노드의 Inspector 패널에 여기 입력한 문구를 라벨로 하는 버튼을 추가합니다. 누르면 이 동사가 에디터 안에서 바로 실행됩니다 - 레벨 다시 굽기나 테스트 데이터 채우기 같은 작업에 유용합니다. 비워 두면(보통의 경우) 버튼이 생기지 않습니다.
-"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.","이 동사가 호출한 쪽에 돌려주는 값의 종류입니다 - 숫자, 텍스트, true/false, 좌표 등입니다. 동사가 실제로 계산하는 것에 맞는 것을 고르세요."
+"The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.","이 함수가 호출한 쪽에 돌려주는 값의 종류 - 숫자, 텍스트, 참/거짓, 위치 등. 함수가 실제로 계산하는 것에 맞는 것을 고르세요."
 "One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.","이 동사가 무엇을 하는지 한 줄로 씁니다. 피커에서 동사 옆에 표시되므로, 원하는 동사인지 판단하는 사람이 읽게 되는 문장입니다."
 "The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","피커에서 함수 이름 대신 표시되는 친숙한 이름입니다 - ""Deal Damage""가 deal_damage보다 읽기 좋습니다. 비워 두면 동사 이름에서 자동으로 정해집니다."
 "Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.","이 동사를 피커의 어느 구역에 넣을지입니다. 같은 카테고리의 동사끼리 묶이므로, 팩은 보통 자기 동사를 모두 하나에 넣습니다 - 팩 이름이 잘 어울립니다."
@@ -660,7 +660,7 @@ Remember Between Runs,실행 간 기억
 Add Entry…,항목 추가…
 Edit Entry…,항목 편집…
 Remove Entry,항목 제거
-Lock Verb Body (read-only),동사 본문 잠금(읽기 전용)
+Lock Function Body (read-only),함수 본문 잠금 (읽기 전용)
 State,상태
 is one of,다음 중 하나
 or,또는
@@ -705,13 +705,13 @@ Fast (60),빠름(60)
 First-Person Controller (3D),1인칭 컨트롤러(3D)
 GDScript iterable,GDScript 이터러블
 Game State (Autoload),게임 상태(오토로드)
-Hide this verb,이 동사 숨기기
+Hide this entry,이 항목 숨기기
 Major - breaking changes,메이저 - 호환성 깨짐
-"Minor - new verbs, nothing breaks","마이너 - 새 동사, 호환성 유지"
+"Minor - new actions, nothing breaks","마이너 - 새 액션, 호환성 유지"
 No actions or conditions were found on the dropped node.,드롭한 노드에서 액션이나 조건을 찾지 못했습니다.
 No sheets open,열린 시트 없음
 Node group,노드 그룹
-"Patch - fixes, no new verbs","패치 - 수정만, 새 동사 없음"
+"Patch - fixes, no new actions","패치 - 수정만, 새 액션 없음"
 Pin / Unpin Favorite,즐겨찾기 고정/해제
 Platformer Starter,플랫포머 스타터
 Recently closed,최근에 닫음
@@ -726,7 +726,7 @@ bow,활
 keep format,형식 유지
 potion,물약
 sword,검
-Rename this verb…,이 동사 이름 바꾸기…
+Rename this entry…,이 항목 이름 바꾸기…
 Set its category…,카테고리 설정…
 timeline,타임라인
 steps,단계
@@ -1743,7 +1743,7 @@ ACE properties,ACE 속성
 Edit…,편집…
 Open guide,가이드 열기
 Show in code,코드에서 보기
-This verb is no longer on the sheet.,이 동사는 더 이상 시트에 없습니다.
+This function is no longer on the sheet.,이 함수는 시트에 없습니다.
 behaves on a,적용 대상
 Triggers,트리거
 this pack fires - %d,이 팩이 발생시키는 - %d
@@ -2019,3 +2019,30 @@ Set {name} to {value} (at end of frame),{name}을(를) {value}(으)로 설정 (�
 Set collision layers to {layers},충돌 레이어를 {layers}(으)로 설정
 Set collides with {layers},{layers}와(과) 충돌
 Trigger once,한 번만
+reads as events,이벤트로 읽힘
+1 script block,스크립트 블록 1개
+%d script blocks,스크립트 블록 %d개
+1 error,오류 1개
+%d errors,오류 %d개
+the game will not run this script,게임이 이 스크립트를 실행하지 않습니다
+Script block,스크립트 블록
+combo,콤보
+file,파일
+folder,폴더
+flags,플래그
+node path,노드 경로
+multiline,여러 줄
+%s to %s,%s ~ %s
+"%s to %s, step %s","%s ~ %s, 단계 %s"
+white,흰색
+black,검정
+red,빨강
+green,초록
+blue,파랑
+yellow,노랑
+cyan,청록
+magenta,자홍
+transparent,투명
+autoload (global),오토로드 (전역)
+Global variables,전역 변수
+this global fires - %d,이 전역이 발생 - %d

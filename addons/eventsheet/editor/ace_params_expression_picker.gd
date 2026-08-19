@@ -292,7 +292,7 @@ func _add_self_section(root: TreeItem, lowered_query: String) -> void:
 		if behaviours_item == null:
 			behaviours_item = _expression_tree.create_item(self_item)
 			var behaviours_label: String = "Behaviours"
-			var behaviours_tooltip: String = "Attached behaviours' knobs and value verbs, reached through the child node. Retarget the inserted $Name if yours is named differently - it stays selected after insert."
+			var behaviours_tooltip: String = "Attached behaviours' knobs and value expressions, reached through the child node. Retarget the inserted $Name if yours is named differently - it stays selected after insert."
 			if not _live_owner.is_empty():
 				behaviours_label = "Behaviours (live · on %s)" % _live_owner
 				if _live_instances > 1:

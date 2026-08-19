@@ -41,8 +41,8 @@ Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,Со
 Add an event (E).,Добавить событие (E).
 Add a condition to the selected event (C).,Добавить условие к выбранному событию (C).
 Add an action to the selected event (A).,Добавить действие к выбранному событию (A).
-Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,"Добавить блок GDScript к выбранному событию - осознанный запасной выход ""в код"". Сразу открывает редактор кода."
-"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","Режим для новичков: скрывает продвинутые/кодовые пункты (блоки GDScript, под-условия, фильтры выбора, сигналы/перечисления). При выключении всё продолжает работать."
+Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,"Добавить блок скрипта к выбранному событию - осознанный запасной выход ""в код"". Сразу открывает редактор кода."
+"Beginner-friendly view: hides the advanced/code entries (script blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","Режим для новичков: скрывает продвинутые/кодовые пункты (блоки скрипта, под-условия, фильтры выбора, сигналы/перечисления). При выключении всё продолжает работать."
 "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.","Показать/скрыть панель сгенерированного GDScript - честный скомпилированный результат листа, бок о бок."
 Theme for this sheet (Load/Reload and the Theme Editor live in View),Тема этого листа (Загрузить/Перезагрузить и Редактор тем находятся в меню Вид)
 "Quick add…  (e.g. every tick, heal 5)","Быстрое добавление…  (напр. every tick, heal 5)"
@@ -82,7 +82,7 @@ Load Theme…,Загрузить тему…
 Reload Theme,Перезагрузить тему
 Theme Editor…,Редактор тем…
 MCP Server (AI tools),Сервер MCP (инструменты ИИ)
-"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","Скрыть продвинутые/кодовые пункты (блоки GDScript, под-условия, фильтры выбора, match, сигналы/перечисления) из контекстных меню. В режиме эксперта всё продолжает работать."
+"Hide the advanced/code entries (script blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","Скрыть продвинутые/кодовые пункты (блоки скрипта, под-условия, фильтры выбора, match, сигналы/перечисления) из контекстных меню. В режиме эксперта всё продолжает работать."
 Show/hide the generated-GDScript panel beside the sheet.,Показать/скрыть панель сгенерированного GDScript рядом с листом.
 "Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.","Показать/скрыть завершающие строки ""+ Добавить событие…"". Отключите для более чистого и спокойного листа."
 "Show/hide a second synchronized view of this sheet, side by side.","Показать/скрыть второй синхронизированный вид этого листа, бок о бок."
@@ -109,7 +109,7 @@ Start the Tour…,Начать тур…
 Keyboard Shortcuts,Горячие клавиши
 Rename Everywhere…,Переименовать везде…
 Change Type Everywhere…,Изменить тип везде…
-Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,Проверить каждое выражение ƒx и блок GDScript; пометить проблемные строки и перейти к первой.
+Lint every ƒx expression + script block; flag the offending rows and jump to the first.,Проверить каждое выражение ƒx и блок скрипта; пометить проблемные строки и перейти к первой.
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,"Переключить эмиссию точек останова: листы, скомпилированные в режиме отладки, останавливаются на строках с точками останова."
 Toggle Live Values: running sheets stream their variables here (editable).,Переключить живые значения: работающие листы передают сюда свои переменные (можно редактировать).
 + Add action,+ Добавить действие
@@ -340,7 +340,7 @@ Alternate group header background (zebra).,Чередующийся фон за�
 Apply To Current Sheet,Применить к текущему листу
 Background of a group header row.,Фон строки заголовка группы.
 Background of the Conditions / Actions column header bar.,Фон панели заголовков колонок Условия / Действия.
-Background of the fold triangle box on a group.,Фон квадратика с треугольником сворачивания у группы.
+Background of the collapse triangle box on a group.,Фон блока треугольника сворачивания у группы.
 Badge Background Color,Цвет фона значка
 Badge Extra Width,Дополнительная ширина значка
 Badge Foreground Color,Цвет текста значка
@@ -479,7 +479,7 @@ Enum,Перечисление
 Event Above,Событие выше
 Event Below,Событие ниже
 Find Usages (project),Найти использования (проект)
-GDScript Block,Блок GDScript
+Script Block,Блок скрипта
 Group,Группа
 Group Color…,Цвет группы…
 Group Selection into New Group,Сгруппировать выделенное в новую группу
@@ -622,7 +622,7 @@ e.g. Re-bake  (empty = no button),напр. Пересчитать  (пусто 
 "What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.","Как называется этот глагол. Пишите обычными словами: ""Take Damage"" станет take_damage в сгенерированном GDScript. Другие строки вызывают глагол по этому имени."
 Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,Собственная документация Godot для этого глагола. Пишется над функцией строками ## и появляется во встроенной справке редактора и при наведении на глагол. Необязательно.
 "Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.","Добавляет кнопку на панель Inspector этого узла с подписью, которую вы здесь введёте. Нажатие выполняет этот глагол прямо в редакторе - удобно для рутины вроде пересчёта уровня или заполнения тестовых данных. Оставьте пустым (обычный случай) - кнопки не будет."
-"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.","Тип значения, которое этот глагол возвращает вызывающему: число, текст, истина/ложь, координата и так далее. Выберите то, что глагол на самом деле вычисляет."
+"The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.","Тип значения, которое эта функция возвращает спрашивающему - число, текст, да/нет, позиция и так далее. Выберите тот, что соответствует тому, что функция вычисляет."
 "One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.","Одна строка о том, что делает этот глагол. Показывается рядом с глаголом в списке выбора - именно её читают, решая, тот ли это глагол."
 "The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","Понятное имя, показываемое в списке выбора вместо имени функции: ""Deal Damage"" читается лучше, чем deal_damage. Оставьте пустым, чтобы оно вывелось из имени глагола."
 "Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.","В какой раздел списка выбора попадёт этот глагол. Глаголы одной категории группируются вместе, поэтому пакет обычно помещает все свои под одну - его собственное имя подходит хорошо."
@@ -660,7 +660,7 @@ Remember Between Runs,Запоминать между запусками
 Add Entry…,Добавить запись…
 Edit Entry…,Изменить запись…
 Remove Entry,Удалить запись
-Lock Verb Body (read-only),Заблокировать тело глагола (только чтение)
+Lock Function Body (read-only),Заблокировать тело функции (только чтение)
 State,Состояние
 is one of,одно из
 or,или
@@ -705,13 +705,13 @@ Fast (60),Быстро (60)
 First-Person Controller (3D),Контроллер от первого лица (3D)
 GDScript iterable,GDScript-итерируемое
 Game State (Autoload),Состояние игры (автозагрузка)
-Hide this verb,Скрыть этот глагол
+Hide this entry,Скрыть эту запись
 Major - breaking changes,Мажорная - ломающие изменения
-"Minor - new verbs, nothing breaks","Минорная - новые глаголы, ничего не ломается"
+"Minor - new actions, nothing breaks","Минорная - новые действия, ничего не ломается"
 No actions or conditions were found on the dropped node.,На перетащенном узле не найдено действий или условий.
 No sheets open,Нет открытых листов
 Node group,Группа узлов
-"Patch - fixes, no new verbs","Патч - исправления, без новых глаголов"
+"Patch - fixes, no new actions","Патч - исправления, без новых действий"
 Pin / Unpin Favorite,Закрепить / открепить избранное
 Platformer Starter,Стартовый платформер
 Recently closed,Недавно закрытые
@@ -726,7 +726,7 @@ bow,лук
 keep format,сохранить формат
 potion,зелье
 sword,меч
-Rename this verb…,Переименовать этот глагол…
+Rename this entry…,Переименовать эту запись…
 Set its category…,Задать категорию…
 timeline,таймлайн
 steps,шагов
@@ -1743,7 +1743,7 @@ ACE properties,Свойства ACE
 Edit…,Изменить…
 Open guide,Открыть руководство
 Show in code,Показать в коде
-This verb is no longer on the sheet.,Этого глагола больше нет на листе.
+This function is no longer on the sheet.,Этой функции больше нет в листе.
 behaves on a,работает с
 Triggers,Триггеры
 this pack fires - %d,которые вызывает этот пакет - %d
@@ -2019,3 +2019,30 @@ Set {name} to {value} (at end of frame),Задать {name} = {value} (в кон
 Set collision layers to {layers},Задать слои столкновений: {layers}
 Set collides with {layers},Сталкивается с {layers}
 Trigger once,Сработать один раз
+reads as events,читается как события
+1 script block,1 блок скрипта
+%d script blocks,блоков скрипта: %d
+1 error,1 ошибка
+%d errors,ошибок: %d
+the game will not run this script,игра не выполнит этот скрипт
+Script block,Блок скрипта
+combo,список
+file,файл
+folder,папка
+flags,флаги
+node path,путь к узлу
+multiline,многострочный
+%s to %s,от %s до %s
+"%s to %s, step %s","от %s до %s, шаг %s"
+white,белый
+black,чёрный
+red,красный
+green,зелёный
+blue,синий
+yellow,жёлтый
+cyan,голубой
+magenta,пурпурный
+transparent,прозрачный
+autoload (global),автозагрузка (глобально)
+Global variables,Глобальные переменные
+this global fires - %d,этот глобал вызывает - %d

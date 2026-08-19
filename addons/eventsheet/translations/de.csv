@@ -41,8 +41,8 @@ Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,Spei
 Add an event (E).,Fügt ein Ereignis hinzu (E).
 Add a condition to the selected event (C).,Fügt dem ausgewählten Ereignis eine Bedingung hinzu (C).
 Add an action to the selected event (A).,Fügt dem ausgewählten Ereignis eine Aktion hinzu (A).
-Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,Fügt dem ausgewählten Ereignis einen GDScript-Block hinzu - der bewusste Ausstieg in den Code. Öffnet sofort den Code-Editor.
-"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","Einsteigerfreundliche Ansicht: blendet die fortgeschrittenen/Code-Einträge aus (GDScript-Blöcke, Unterbedingungen, Filter, Signale/Enums). Ausgeschaltet funktioniert weiterhin alles."
+Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,Fügt dem ausgewählten Ereignis einen Skript-Block hinzu - der bewusste Ausstieg in den Code. Öffnet sofort den Code-Editor.
+"Beginner-friendly view: hides the advanced/code entries (script blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","Einsteigerfreundliche Ansicht: blendet die fortgeschrittenen/Code-Einträge aus (Skript-Blöcke, Unterbedingungen, Filter, Signale/Enums). Ausgeschaltet funktioniert weiterhin alles."
 "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.","Zeigt/verbirgt das erzeugte GDScript-Panel - die ehrliche kompilierte Ausgabe des Blatts, Seite an Seite."
 Theme for this sheet (Load/Reload and the Theme Editor live in View),Thema dieses Blatts (Laden/Neu laden und der Themen-Editor sind unter Ansicht)
 "Quick add…  (e.g. every tick, heal 5)","Schnell hinzufügen…  (z. B. jeder Tick, heal 5)"
@@ -82,7 +82,7 @@ Load Theme…,Thema laden…
 Reload Theme,Thema neu laden
 Theme Editor…,Themen-Editor…
 MCP Server (AI tools),MCP-Server (KI-Werkzeuge)
-"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","Blendet die fortgeschrittenen/Code-Einträge (GDScript-Blöcke, Unterbedingungen, Filter, Match, Signale/Enums) aus den Kontextmenüs aus. Im Expertenmodus funktioniert weiterhin alles."
+"Hide the advanced/code entries (script blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","Blendet die fortgeschrittenen/Code-Einträge (Skript-Blöcke, Unterbedingungen, Filter, Match, Signale/Enums) aus den Kontextmenüs aus. Im Expertenmodus funktioniert weiterhin alles."
 Show/hide the generated-GDScript panel beside the sheet.,Zeigt/verbirgt das erzeugte GDScript-Panel neben dem Blatt.
 "Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.",Zeigt/verbirgt die „+ Ereignis hinzufügen…“-Zeilen. Ausschalten sorgt für ein ruhigeres Blatt.
 "Show/hide a second synchronized view of this sheet, side by side.","Zeigt/verbirgt eine zweite synchronisierte Ansicht dieses Blatts, Seite an Seite."
@@ -109,7 +109,7 @@ Start the Tour…,Tour starten…
 Keyboard Shortcuts,Tastenkürzel
 Rename Everywhere…,Überall umbenennen…
 Change Type Everywhere…,Typ überall ändern…
-Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,Prüft jede ƒx-Ausdruck und jeden GDScript-Block; markiert die betroffenen Zeilen und springt zur ersten.
+Lint every ƒx expression + script block; flag the offending rows and jump to the first.,Prüft jede ƒx-Ausdruck und jeden Skript-Block; markiert die betroffenen Zeilen und springt zur ersten.
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,Schaltet die Haltepunkt-Ausgabe um: im Debug kompilierte Blätter halten an markierten Zeilen an.
 Toggle Live Values: running sheets stream their variables here (editable).,Schaltet Live-Werte um: laufende Blätter übertragen ihre Variablen hierher (bearbeitbar).
 + Add action,+ Aktion hinzufügen
@@ -340,7 +340,7 @@ Alternate group header background (zebra).,Alternativer Gruppenkopf-Hintergrund 
 Apply To Current Sheet,Auf aktuelles Blatt anwenden
 Background of a group header row.,Hintergrund einer Gruppenkopfzeile.
 Background of the Conditions / Actions column header bar.,Hintergrund der Kopfleiste der Spalten Bedingungen / Aktionen.
-Background of the fold triangle box on a group.,Hintergrund des Falt-Dreieck-Feldes einer Gruppe.
+Background of the collapse triangle box on a group.,Hintergrund des Einklapp-Dreieck-Feldes einer Gruppe.
 Badge Background Color,Badge-Hintergrundfarbe
 Badge Extra Width,Zusätzliche Badge-Breite
 Badge Foreground Color,Badge-Vordergrundfarbe
@@ -479,7 +479,7 @@ Enum,Enum
 Event Above,Ereignis darüber
 Event Below,Ereignis darunter
 Find Usages (project),Verwendungen suchen (Projekt)
-GDScript Block,GDScript-Block
+Script Block,Skriptblock
 Group,Gruppe
 Group Color…,Gruppenfarbe…
 Group Selection into New Group,Auswahl in neue Gruppe gruppieren
@@ -622,7 +622,7 @@ e.g. Re-bake  (empty = no button),z. B. Neu backen  (leer = keine Schaltfläche)
 "What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.","Wie dieses Verb heißt. Schreibe es in einfachen Worten - aus ""Take Damage"" wird take_damage im erzeugten GDScript. Andere Zeilen rufen das Verb unter diesem Namen auf."
 Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,Godots eigene Dokumentation für dieses Verb. Sie wird als ##-Zeilen über die Funktion geschrieben und erscheint in der integrierten Hilfe des Editors sowie beim Überfahren des Verbs. Optional.
 "Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.","Setzt eine anklickbare Schaltfläche in das Inspector-Panel dieses Nodes, beschriftet mit dem, was du hier eingibst. Ein Klick führt dieses Verb direkt im Editor aus - praktisch für Aufgaben wie das Neuberechnen eines Levels oder das Einfüllen von Testdaten. Leer lassen (der Normalfall) heißt: keine Schaltfläche."
-"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.","Die Art von Wert, die dieses Verb zurückgibt - eine Zahl, Text, ein Wahr/Falsch, eine Position und so weiter. Wähle das, was das Verb tatsächlich ermittelt."
+"The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.","Die Art von Wert, die diese Funktion zurückgibt - eine Zahl, Text, ein Wahr/Falsch, eine Position und so weiter. Wähle das, was die Funktion tatsächlich ermittelt."
 "One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.","Eine Zeile darüber, was dieses Verb tut. Sie steht im Auswahlfenster neben dem Verb - also genau das, was jemand liest, während er entscheidet, ob es das gesuchte Verb ist."
 "The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","Der freundliche Name, der im Auswahlfenster statt des Funktionsnamens erscheint - ""Deal Damage"" liest sich besser als deal_damage. Leer lassen, um ihn aus dem Verbnamen abzuleiten."
 "Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.","In welchen Abschnitt des Auswahlfensters dieses Verb einsortiert wird. Verben derselben Kategorie stehen zusammen, daher legt ein Pack meist alle seine Verben unter eine - der eigene Name eignet sich gut."
@@ -660,7 +660,7 @@ Remember Between Runs,Zwischen Läufen merken
 Add Entry…,Eintrag hinzufügen…
 Edit Entry…,Eintrag bearbeiten…
 Remove Entry,Eintrag entfernen
-Lock Verb Body (read-only),Verb-Rumpf sperren (schreibgeschützt)
+Lock Function Body (read-only),Funktionsrumpf sperren (schreibgeschützt)
 State,Zustand
 is one of,ist eines von
 or,oder
@@ -705,13 +705,13 @@ Fast (60),Schnell (60)
 First-Person Controller (3D),First-Person-Controller (3D)
 GDScript iterable,GDScript-Iterable
 Game State (Autoload),Spielzustand (Autoload)
-Hide this verb,Dieses Verb ausblenden
+Hide this entry,Diesen Eintrag ausblenden
 Major - breaking changes,Major - inkompatible Aenderungen
-"Minor - new verbs, nothing breaks","Minor - neue Verben, nichts bricht"
+"Minor - new actions, nothing breaks","Minor - neue Aktionen, nichts bricht"
 No actions or conditions were found on the dropped node.,Auf dem abgelegten Node wurden keine Aktionen oder Bedingungen gefunden.
 No sheets open,Keine Sheets geöffnet
 Node group,Node-Gruppe
-"Patch - fixes, no new verbs","Patch - Fixes, keine neuen Verben"
+"Patch - fixes, no new actions","Patch - Fixes, keine neuen Aktionen"
 Pin / Unpin Favorite,Favorit anheften / lösen
 Platformer Starter,Platformer-Starter
 Recently closed,Zuletzt geschlossen
@@ -726,7 +726,7 @@ bow,Bogen
 keep format,Format beibehalten
 potion,Trank
 sword,Schwert
-Rename this verb…,Dieses Verb umbenennen…
+Rename this entry…,Diesen Eintrag umbenennen…
 Set its category…,Kategorie festlegen…
 timeline,Timeline
 steps,Schritte
@@ -1743,7 +1743,7 @@ ACE properties,ACE-Eigenschaften
 Edit…,Bearbeiten…
 Open guide,Anleitung öffnen
 Show in code,Im Code zeigen
-This verb is no longer on the sheet.,Dieses Verb steht nicht mehr auf dem Blatt.
+This function is no longer on the sheet.,Diese Funktion ist nicht mehr im Blatt.
 behaves on a,wirkt auf ein
 Triggers,Auslöser
 this pack fires - %d,die dieses Paket auslöst - %d
@@ -2019,3 +2019,30 @@ Set {name} to {value} (at end of frame),{name} auf {value} setzen (am Frame-Ende
 Set collision layers to {layers},Kollisionsebenen auf {layers} setzen
 Set collides with {layers},Kollidiert mit {layers}
 Trigger once,Einmal auslösen
+reads as events,liest sich als Ereignisse
+1 script block,1 Skriptblock
+%d script blocks,%d Skriptblöcke
+1 error,1 Fehler
+%d errors,%d Fehler
+the game will not run this script,das Spiel führt dieses Skript nicht aus
+Script block,Skriptblock
+combo,Auswahl
+file,Datei
+folder,Ordner
+flags,Flags
+node path,Knotenpfad
+multiline,mehrzeilig
+%s to %s,%s bis %s
+"%s to %s, step %s","%s bis %s, Schritt %s"
+white,weiß
+black,schwarz
+red,rot
+green,grün
+blue,blau
+yellow,gelb
+cyan,Cyan
+magenta,Magenta
+transparent,transparent
+autoload (global),Autoload (global)
+Global variables,Globale Variablen
+this global fires - %d,dieses Global löst aus - %d

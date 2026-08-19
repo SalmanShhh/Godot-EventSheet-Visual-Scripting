@@ -195,7 +195,7 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 		_dock._refresh_preview_banner()
 	EventSheets._notify_lifecycle("opened", {"sheet": sheet, "path": resolved_path})
 	if was_canceled:
-		_dock._set_status("Opened %s as code - stopped working out the events, so every function is shown as a code block. Reopen the file to try again." % resolved_path.get_file())
+		_dock._set_status("Opened %s as code - stopped working out the events, so every function is shown as a script block. Reopen the file to try again." % resolved_path.get_file())
 		return
 	_dock._set_status("Opened %s - viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(sheet))])
 

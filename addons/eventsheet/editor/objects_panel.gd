@@ -69,7 +69,7 @@ func highlighted_object() -> String:
 ## Rebuilds the list from a sheet. Safe to call on every sheet change - the census is a read of the
 ## sheet's own rows, and nothing here is cached across sheets.
 func set_sheet(sheet: EventSheetResource) -> void:
-	_entries = EventSheetViewportReadingRows.object_census(sheet)
+	_entries = _with_autoload_identity(EventSheetViewportReadingRows.object_census(sheet), sheet)
 	var class_map: Dictionary = EventSheetViewportReadingRows.object_class_map(sheet)
 	list.clear()
 	for entry: Dictionary in _entries:
@@ -81,6 +81,35 @@ func set_sheet(sheet: EventSheetResource) -> void:
 	if not _entries.is_empty() and _highlighted.is_empty():
 		list.deselect_all()
 	_refresh_header()
+
+
+## P10 - when the OPEN FILE is itself a project autoload, the rail says so about it: the file's own
+## entry reads under the singleton's name, wears the globe, and says "autoload (global)" - the same
+## words its Include bar uses, and the same words every other sheet's `Game (global) ▸ …` rows use
+## for it, so a reader following one of those rows here recognises what they landed on.
+##
+## The census is left alone: it answers "what does this file USE", and what this file IS belongs to
+## the head. So the identity is re-read here, on the derived list, and nothing downstream of the
+## census changes.
+func _with_autoload_identity(entries: Array, sheet: EventSheetResource) -> Array:
+	if sheet == null or not sheet.autoload_mode or sheet.autoload_name.strip_edges().is_empty():
+		return entries
+	for entry: Variant in entries:
+		if not (entry is Dictionary) or str((entry as Dictionary).get("kind", "")) != "script":
+			continue
+		(entry as Dictionary)["label"] = sheet.autoload_name.strip_edges()
+		(entry as Dictionary)["kind"] = "autoload"
+		(entry as Dictionary)["path"] = str(sheet.external_source_path)
+		return entries
+	# A global whose script declares no class of its own is named by nothing the census could see, so
+	# its entry has to be added rather than amended - the rail must never be silent about the very
+	# file it is describing.
+	entries.insert(0, {
+		"label": sheet.autoload_name.strip_edges(), "kind": "autoload", "class": "",
+		"path": str(sheet.external_source_path), "match": sheet.autoload_name.strip_edges(),
+		"rows": 0, "verbs": PackedStringArray(), "signals": PackedStringArray()
+	})
+	return entries
 
 
 ## One entry's line: the object's name, then its muted note - what kind of thing it is, the class or

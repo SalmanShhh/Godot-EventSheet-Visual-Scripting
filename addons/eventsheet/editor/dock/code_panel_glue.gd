@@ -337,13 +337,13 @@ func on_raw_code_dialog_confirmed() -> void:
 	# Guardrail: broken GDScript never commits - the dialog reopens with the text intact.
 	var commit_lint: Dictionary = EventSheetGDScriptLint.lint(_dock._raw_code_edit.text, _dock._raw_code_in_flow, _dock._current_sheet)
 	if not bool(commit_lint.get("ok", true)):
-		_dock._set_status("GDScript block not saved: fix the error first (or Cancel to discard).", true)
+		_dock._set_status("Script block not saved: fix the error first (or Cancel to discard).", true)
 		if _dock.is_inside_tree():
 			_dock._raw_code_dialog.call_deferred("popup_centered", Vector2i(680, 420))
 		return
 	_dock._raw_code_target = null
 	var new_code: String = _dock._raw_code_edit.text
-	var changed: bool = _dock._perform_undoable_sheet_edit("Edit GDScript Block", func() -> bool:
+	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Script Block", func() -> bool:
 		if target.code == new_code:
 			return false
 		target.code = new_code
@@ -351,4 +351,4 @@ func on_raw_code_dialog_confirmed() -> void:
 	)
 	if changed:
 		_dock._refresh_after_edit()
-		_dock._mark_dirty("Updated GDScript block.")
+		_dock._mark_dirty("Updated script block.")

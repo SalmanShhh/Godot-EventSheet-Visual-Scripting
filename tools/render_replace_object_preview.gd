@@ -28,7 +28,7 @@ func _on_frame() -> void:
 		_dialog.ok_button_text = "Replace"
 		var content: VBoxContainer = VBoxContainer.new()
 		content.add_theme_constant_override("separation", 8)
-		content.add_child(EventSheetPopupUI.hint_label("Every matching reference across the 6 selected row(s) rewrites - params, With-Node scopes, pick filters, and GDScript blocks. Token-safe: $Enemy never touches $EnemySpawner.", 420.0))
+		content.add_child(EventSheetPopupUI.hint_label("Every matching reference across the 6 selected row(s) rewrites - params, With-Node scopes, pick filters, and script blocks. Token-safe: $Enemy never touches $EnemySpawner.", 420.0))
 		var from_options: OptionButton = OptionButton.new()
 		for reference: String in ["$Enemy", "$EnemySpawner", "%HealthBar", "self"]:
 			from_options.add_item(reference)

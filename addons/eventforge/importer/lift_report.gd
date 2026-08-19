@@ -67,10 +67,10 @@ static func _label_for(code: String) -> String:
 	return "(blank block)"
 
 
-## "4 events, 1 function, 2 code blocks" - the status-line form.
+## "4 events, 1 function, 2 script blocks" - the status-line form.
 static func summary(entries: Array[Dictionary]) -> String:
 	var counts: Dictionary = {"event": 0, "function": 0, "code": 0, "comment": 0}
 	for entry: Dictionary in entries:
 		var kind: String = str(entry.get("kind"))
 		counts[kind] = int(counts.get(kind, 0)) + 1
-	return "%d event(s), %d function(s), %d code section(s)" % [int(counts["event"]), int(counts["function"]), int(counts["code"])]
+	return "%d event(s), %d function(s), %d script block(s)" % [int(counts["event"]), int(counts["function"]), int(counts["code"])]

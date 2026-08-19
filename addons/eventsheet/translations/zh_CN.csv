@@ -41,8 +41,8 @@ Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,保�
 Add an event (E).,添加一个事件（E）。
 Add a condition to the selected event (C).,为所选事件添加一个条件（C）。
 Add an action to the selected event (A).,为所选事件添加一个动作（A）。
-Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,为所选事件添加一个 GDScript 代码块 - 特意保留的“回到代码”出口。会立即打开代码编辑器。
-"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.",适合新手的视图：隐藏高级/代码条目（GDScript 代码块、子条件、筛选条件、信号/枚举）。关闭后一切功能仍然可用。
+Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,为所选事件添加一个 脚本 代码块 - 特意保留的“回到代码”出口。会立即打开代码编辑器。
+"Beginner-friendly view: hides the advanced/code entries (script blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.",适合新手的视图：隐藏高级/代码条目（脚本 代码块、子条件、筛选条件、信号/枚举）。关闭后一切功能仍然可用。
 "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.",切换生成的 GDScript 面板 - 事件表真实的编译输出，并排显示。
 Theme for this sheet (Load/Reload and the Theme Editor live in View),此事件表的主题（加载/重新加载和主题编辑器在“视图”菜单中）
 "Quick add…  (e.g. every tick, heal 5)",快速添加…（例如 every tick、heal 5）
@@ -82,7 +82,7 @@ Load Theme…,加载主题…
 Reload Theme,重新加载主题
 Theme Editor…,主题编辑器…
 MCP Server (AI tools),MCP 服务器（AI 工具）
-"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.",在右键菜单中隐藏高级/代码条目（GDScript 代码块、子条件、筛选条件、match、信号/枚举）。专家模式下一切功能仍然可用。
+"Hide the advanced/code entries (script blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.",在右键菜单中隐藏高级/代码条目（脚本 代码块、子条件、筛选条件、match、信号/枚举）。专家模式下一切功能仍然可用。
 Show/hide the generated-GDScript panel beside the sheet.,显示/隐藏事件表旁边生成的 GDScript 面板。
 "Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.",显示/隐藏末尾的“+ 添加事件…”行。关闭后事件表更简洁清爽。
 "Show/hide a second synchronized view of this sheet, side by side.",显示/隐藏此事件表的第二个同步视图，并排显示。
@@ -109,7 +109,7 @@ Start the Tour…,开始导览…
 Keyboard Shortcuts,键盘快捷键
 Rename Everywhere…,全局重命名…
 Change Type Everywhere…,全局更改类型…
-Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,检查每个 ƒx 表达式和 GDScript 代码块；标记有问题的行并跳转到第一处。
+Lint every ƒx expression + script block; flag the offending rows and jump to the first.,检查每个 ƒx 表达式和 脚本 代码块；标记有问题的行并跳转到第一处。
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,切换断点输出：以调试模式编译的事件表会在带断点的行暂停。
 Toggle Live Values: running sheets stream their variables here (editable).,切换实时值：运行中的事件表会将其变量实时显示在此处（可编辑）。
 + Add action,+ 添加动作
@@ -340,7 +340,7 @@ Alternate group header background (zebra).,分组标题的交替背景（斑马�
 Apply To Current Sheet,应用到当前事件表
 Background of a group header row.,分组标题行的背景。
 Background of the Conditions / Actions column header bar.,条件 / 动作列标题栏的背景。
-Background of the fold triangle box on a group.,分组上折叠三角框的背景。
+Background of the collapse triangle box on a group.,分组折叠三角形方框的背景。
 Badge Background Color,徽章背景色
 Badge Extra Width,徽章额外宽度
 Badge Foreground Color,徽章前景色
@@ -479,7 +479,7 @@ Enum,枚举
 Event Above,上方事件
 Event Below,下方事件
 Find Usages (project),查找用法（项目范围）
-GDScript Block,GDScript 代码块
+Script Block,脚本块
 Group,分组
 Group Color…,分组颜色…
 Group Selection into New Group,将所选内容归入新分组
@@ -622,7 +622,7 @@ e.g. Re-bake  (empty = no button),例如 重新烘焙（留空 = 无按钮）
 "What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.","这个动词叫什么。用平实的词语书写 - ""Take Damage"" 在生成的 GDScript 中会变成 take_damage。其他行通过这个名称调用该动词。"
 Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,这个动词的 Godot 原生文档。它以 ## 行的形式写在函数上方，会出现在编辑器的内置帮助中，以及悬停该动词时。可选。
 "Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.",在该节点的 Inspector 面板上放置一个可点击按钮，标签就是你在这里输入的文字。按下它会直接在编辑器中运行这个动词 - 适合重新烘焙关卡、填充测试数据这类杂活。留空（通常情况）则不会出现按钮。
-"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.",这个动词返回给调用方的值的类型 - 数字、文本、true/false、坐标等等。选择与该动词实际算出的东西相符的一项。
+"The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.",此函数返回给调用方的值的类型 - 数字、文本、真/假、位置等。选择与函数实际计算结果相符的一种。
 "One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.",一句话说明这个动词做什么。它显示在选择器中动词的旁边，也就是别人判断这是不是自己要用的动词时读到的内容。
 "The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","在选择器中代替函数名显示的友好名称 - ""Deal Damage"" 比 deal_damage 更好读。留空则从动词名自动生成。"
 "Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.",这个动词归入选择器的哪个分区。同一分类的动词会归在一起，所以一个包通常把自己所有的动词放在同一个分类下 - 用包自己的名字就很合适。
@@ -660,7 +660,7 @@ Remember Between Runs,在运行之间记住
 Add Entry…,添加条目…
 Edit Entry…,编辑条目…
 Remove Entry,移除条目
-Lock Verb Body (read-only),锁定动词主体（只读）
+Lock Function Body (read-only),锁定函数体 (只读)
 State,状态
 is one of,是以下之一
 or,或
@@ -705,13 +705,13 @@ Fast (60),快（60）
 First-Person Controller (3D),第一人称控制器（3D）
 GDScript iterable,GDScript 可迭代对象
 Game State (Autoload),游戏状态（自动加载）
-Hide this verb,隐藏此动词
+Hide this entry,隐藏此条目
 Major - breaking changes,主版本 - 不兼容变更
-"Minor - new verbs, nothing breaks",次版本 - 新动词，不破坏兼容
+"Minor - new actions, nothing breaks",次版本 - 新增动作，不破坏兼容
 No actions or conditions were found on the dropped node.,在拖放的节点上未找到动作或条件。
 No sheets open,没有打开的表
 Node group,节点组
-"Patch - fixes, no new verbs",补丁 - 仅修复，无新动词
+"Patch - fixes, no new actions",补丁 - 仅修复，无新动作
 Pin / Unpin Favorite,固定/取消收藏
 Platformer Starter,平台跳跃入门
 Recently closed,最近关闭
@@ -726,7 +726,7 @@ bow,弓
 keep format,保留格式
 potion,药水
 sword,剑
-Rename this verb…,重命名此动词…
+Rename this entry…,重命名此条目…
 Set its category…,设置其分类…
 timeline,时间轴
 steps,个步骤
@@ -1743,7 +1743,7 @@ ACE properties,ACE 属性
 Edit…,编辑…
 Open guide,打开指南
 Show in code,在代码中显示
-This verb is no longer on the sheet.,该动作已不在事件表中。
+This function is no longer on the sheet.,此函数已不在事件表中。
 behaves on a,作用于
 Triggers,触发器
 this pack fires - %d,此扩展包会触发 - %d
@@ -2019,3 +2019,30 @@ Set {name} to {value} (at end of frame),将 {name} 设为 {value}（帧结束时
 Set collision layers to {layers},将碰撞层设为 {layers}
 Set collides with {layers},与 {layers} 碰撞
 Trigger once,仅触发一次
+reads as events,读作事件
+1 script block,1 个脚本块
+%d script blocks,%d 个脚本块
+1 error,1 个错误
+%d errors,%d 个错误
+the game will not run this script,游戏不会运行此脚本
+Script block,脚本块
+combo,下拉选项
+file,文件
+folder,文件夹
+flags,标志
+node path,节点路径
+multiline,多行
+%s to %s,%s 到 %s
+"%s to %s, step %s",%s 到 %s，步长 %s
+white,白色
+black,黑色
+red,红色
+green,绿色
+blue,蓝色
+yellow,黄色
+cyan,青色
+magenta,品红
+transparent,透明
+autoload (global),自动加载 (全局)
+Global variables,全局变量
+this global fires - %d,此全局触发 - %d

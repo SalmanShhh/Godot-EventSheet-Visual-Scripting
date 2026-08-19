@@ -207,7 +207,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"group_title_color": "The group title text colour.",
 	"group_badge_background_color": "Fill of the count badge on a group.",
 	"group_badge_foreground_color": "Text colour on the group count badge.",
-	"group_fold_background_color": "Background of the fold triangle box on a group.",
+	"group_fold_background_color": "Background of the collapse triangle box on a group.",
 	"comment_row_background_color": "The banner colour behind a full-width comment.",
 	"comment_text_color": "The text colour of comments.",
 	"selection_fill_color": "The highlight over a selected row.",

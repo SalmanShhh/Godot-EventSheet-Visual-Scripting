@@ -137,7 +137,7 @@ func show_doc(doc_id: String) -> bool:
 		return false
 	match str(route.get("scheme", "")):
 		"index":
-			show_message("Right-click a row and choose \"What does this do?\", or press F1 with a row selected, to read about the verb it uses.")
+			show_message("Right-click a row and choose \"What does this do?\", or press F1 with a row selected, to read about what it does.")
 			_doc_id = ""
 			return true
 		"section":

@@ -132,7 +132,7 @@ func build_all() -> void:
 	# ignores anything else, so this second listener on one popup cannot collide with it.
 	_dock._action_context_menu.add_item("Inline This Call", EventSheetRefactorMenu.ACTION_MENU_INLINE_CALL)
 	_dock._action_context_menu.set_item_tooltip(_dock._action_context_menu.item_count - 1,
-		"Replace this call with the verb's own rows (the inverse of Extract to Function).")
+		"Replace this call with the function's own rows (the inverse of Extract to Function).")
 	_dock._action_context_menu.id_pressed.connect(func(id: int) -> void:
 		if id == EventSheetRefactorMenu.ACTION_MENU_INLINE_CALL:
 			EventSheetRefactorMenu.inline_call_requested(_dock))
@@ -211,7 +211,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		if verb_sheet != null and not verb_sheet.read_only and not verb_sheet.external_source_path.strip_edges().is_empty():
 			var verb_name: String = verb_function.function_name
 			var already_editable: bool = _dock._active_view().is_function_body_editable_opt_in(verb_name)
-			menu.add_item("Lock Verb Body (read-only)" if already_editable else "Make Verb Body Editable", _dock.ROW_MENU_MAKE_FUNCTION_EDITABLE)
+			menu.add_item("Lock Function Body (read-only)" if already_editable else "Make Function Body Editable", _dock.ROW_MENU_MAKE_FUNCTION_EDITABLE)
 	elif data_class_raw != null:
 		# A lifting data-class holder row, or one of its FIELD rows: field authoring
 		# follows the add/remove-action gesture (one resolver decides for menu + handlers).
@@ -347,7 +347,7 @@ func _build_row_insert_submenu() -> void:
 		# Simple mode keeps Insert to the four everyday row types; the code-leaning ones
 		# (raw GDScript, signal handlers, enums) stay available in Expert mode.
 		return
-	m.add_item("GDScript Block", _dock.ROW_MENU_ADD_GDSCRIPT_BELOW)
+	m.add_item("Script Block", _dock.ROW_MENU_ADD_GDSCRIPT_BELOW)
 	m.add_item("Signal Handler", _dock.ROW_MENU_ADD_SIGNAL)
 	m.add_item("Enum", _dock.ROW_MENU_ADD_ENUM)
 

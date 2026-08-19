@@ -41,8 +41,8 @@ Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,シ�
 Add an event (E).,イベントを追加します (E)。
 Add a condition to the selected event (C).,選択したイベントに条件を追加します (C)。
 Add an action to the selected event (A).,選択したイベントにアクションを追加します (A)。
-Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,選択したイベントに GDScript ブロックを追加します - 意図的に「コードへ降りる」ための出口です。すぐにコードエディターが開きます。
-"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.",初心者向けの表示: 上級者/コード系の項目 (GDScript ブロック、サブ条件、ピックフィルター、シグナル/列挙型) を隠します。オフでもすべての機能はそのまま動作します。
+Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,選択したイベントに スクリプト ブロックを追加します - 意図的に「コードへ降りる」ための出口です。すぐにコードエディターが開きます。
+"Beginner-friendly view: hides the advanced/code entries (script blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.",初心者向けの表示: 上級者/コード系の項目 (スクリプト ブロック、サブ条件、ピックフィルター、シグナル/列挙型) を隠します。オフでもすべての機能はそのまま動作します。
 "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.",生成された GDScript パネルを切り替えます - シートの正直なコンパイル結果を並べて表示します。
 Theme for this sheet (Load/Reload and the Theme Editor live in View),このシートのテーマ (読み込み/再読み込みとテーマエディターは「表示」メニューにあります)
 "Quick add…  (e.g. every tick, heal 5)","クイック追加…  (例: every tick, heal 5)"
@@ -82,7 +82,7 @@ Load Theme…,テーマを読み込み…
 Reload Theme,テーマを再読み込み
 Theme Editor…,テーマエディター…
 MCP Server (AI tools),MCP サーバー (AI ツール)
-"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.",右クリックメニューから上級者/コード系の項目 (GDScript ブロック、サブ条件、ピックフィルター、match、シグナル/列挙型) を隠します。エキスパートモードではすべてそのまま使えます。
+"Hide the advanced/code entries (script blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.",右クリックメニューから上級者/コード系の項目 (スクリプト ブロック、サブ条件、ピックフィルター、match、シグナル/列挙型) を隠します。エキスパートモードではすべてそのまま使えます。
 Show/hide the generated-GDScript panel beside the sheet.,シートの横に生成された GDScript パネルを表示/非表示にします。
 "Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.",末尾の「+ イベントを追加…」行を表示/非表示にします。オフにするとシートがすっきり落ち着きます。
 "Show/hide a second synchronized view of this sheet, side by side.",このシートの2つ目の同期ビューを並べて表示/非表示にします。
@@ -109,7 +109,7 @@ Start the Tour…,ツアーを開始…
 Keyboard Shortcuts,キーボードショートカット
 Rename Everywhere…,すべての場所で名前を変更…
 Change Type Everywhere…,すべての場所で型を変更…
-Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,すべての ƒx 式と GDScript ブロックをリントし、問題のある行をマークして最初の行へジャンプします。
+Lint every ƒx expression + script block; flag the offending rows and jump to the first.,すべての ƒx 式と スクリプト ブロックをリントし、問題のある行をマークして最初の行へジャンプします。
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,ブレークポイント出力を切り替えます: デバッグコンパイルされたシートはブレークポイントのある行で一時停止します。
 Toggle Live Values: running sheets stream their variables here (editable).,ライブ値を切り替えます: 実行中のシートの変数がここにストリーム表示されます (編集可能)。
 + Add action,+ アクションを追加
@@ -340,7 +340,7 @@ Alternate group header background (zebra).,グループヘッダーの交互背�
 Apply To Current Sheet,現在のシートに適用
 Background of a group header row.,グループヘッダー行の背景。
 Background of the Conditions / Actions column header bar.,条件 / アクション列ヘッダーバーの背景。
-Background of the fold triangle box on a group.,グループの折りたたみ三角ボックスの背景。
+Background of the collapse triangle box on a group.,グループの折りたたみ三角形の背景。
 Badge Background Color,バッジの背景色
 Badge Extra Width,バッジの追加幅
 Badge Foreground Color,バッジの前景色
@@ -479,7 +479,7 @@ Enum,列挙型
 Event Above,上にイベント
 Event Below,下にイベント
 Find Usages (project),使用箇所を検索 (プロジェクト)
-GDScript Block,GDScript ブロック
+Script Block,スクリプトブロック
 Group,グループ
 Group Color…,グループの色…
 Group Selection into New Group,選択範囲を新しいグループにまとめる
@@ -622,7 +622,7 @@ e.g. Re-bake  (empty = no button),例: 再ベイク（空欄 = ボタンなし�
 "What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.",この動詞の名前です。「Take Damage」のように普通の言葉で書くと、生成される GDScript では take_damage になります。他の行はこの名前で動詞を呼び出します。
 Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,この動詞に対する Godot 標準のドキュメントです。関数の上に ## 行として書かれ、エディタの組み込みヘルプや動詞にカーソルを合わせたときに表示されます。省略可能です。
 "Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.",このノードの Inspector パネルに、ここで入力した文字をラベルにしたボタンを追加します。押すとこの動詞がエディタ内でそのまま実行されます - レベルの再ベイクやテストデータの投入といった作業に便利です。空欄のまま（通常はこちら）ならボタンは表示されません。
-"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.",この動詞が呼び出し元に返す値の種類です - 数値、テキスト、true/false、座標などです。動詞が実際に求めるものに合うものを選んでください。
+"The kind of value this function hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the function works out.",この関数が呼び出し元に返す値の種類 - 数値、テキスト、真偽値、位置など。関数が実際に求めるものに合うものを選びます。
 "One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.",この動詞が何をするかを 1 行で書きます。ピッカーで動詞の横に表示されるので、目当ての動詞かどうかを判断する人が読む文になります。
 "The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","ピッカーで関数名の代わりに表示される分かりやすい名前です - ""Deal Damage"" のほうが deal_damage より読みやすいでしょう。空欄にすると動詞名から自動で決まります。"
 "Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.",この動詞をピッカーのどのセクションに分類するかです。同じカテゴリの動詞はまとまって表示されるため、パックは通常すべての動詞を 1 つにまとめます - パック自身の名前が適しています。
@@ -660,7 +660,7 @@ Remember Between Runs,実行間で記憶
 Add Entry…,エントリを追加…
 Edit Entry…,エントリを編集…
 Remove Entry,エントリを削除
-Lock Verb Body (read-only),動詞本体をロック（読み取り専用）
+Lock Function Body (read-only),関数本体をロック (読み取り専用)
 State,状態
 is one of,は次のいずれか
 or,または
@@ -705,13 +705,13 @@ Fast (60),高速（60）
 First-Person Controller (3D),一人称コントローラー（3D）
 GDScript iterable,GDScriptのイテラブル
 Game State (Autoload),ゲームステート（オートロード）
-Hide this verb,この動詞を非表示
+Hide this entry,この項目を隠す
 Major - breaking changes,メジャー - 互換性のない変更
-"Minor - new verbs, nothing breaks",マイナー - 新しい動詞、互換性維持
+"Minor - new actions, nothing breaks",マイナー - 新しいアクション、破壊的変更なし
 No actions or conditions were found on the dropped node.,ドロップしたノードにアクションや条件が見つかりませんでした。
 No sheets open,開いているシートはありません
 Node group,ノードグループ
-"Patch - fixes, no new verbs",パッチ - 修正のみ、新しい動詞なし
+"Patch - fixes, no new actions",パッチ - 修正のみ、新しいアクションなし
 Pin / Unpin Favorite,お気に入りを固定/解除
 Platformer Starter,プラットフォーマー・スターター
 Recently closed,最近閉じたシート
@@ -726,7 +726,7 @@ bow,弓
 keep format,形式を維持
 potion,ポーション
 sword,剣
-Rename this verb…,この動詞の名前を変更…
+Rename this entry…,この項目の名前を変更…
 Set its category…,カテゴリを設定…
 timeline,タイムライン
 steps,ステップ
@@ -1743,7 +1743,7 @@ ACE properties,ACE のプロパティ
 Edit…,編集…
 Open guide,ガイドを開く
 Show in code,コードで表示
-This verb is no longer on the sheet.,この動詞はもうシートにありません。
+This function is no longer on the sheet.,この関数はシートにありません。
 behaves on a,対象ノード
 Triggers,トリガー
 this pack fires - %d,このパックが発火する - %d
@@ -2019,3 +2019,30 @@ Set {name} to {value} (at end of frame),{name} を {value} に設定 (フレー�
 Set collision layers to {layers},コリジョンレイヤーを {layers} に設定
 Set collides with {layers},{layers} と衝突する
 Trigger once,一度だけ
+reads as events,イベントとして読める
+1 script block,スクリプトブロック 1 個
+%d script blocks,スクリプトブロック %d 個
+1 error,エラー 1 件
+%d errors,エラー %d 件
+the game will not run this script,ゲームはこのスクリプトを実行しません
+Script block,スクリプトブロック
+combo,コンボ
+file,ファイル
+folder,フォルダ
+flags,フラグ
+node path,ノードパス
+multiline,複数行
+%s to %s,%s ～ %s
+"%s to %s, step %s","%s ～ %s, 刻み %s"
+white,白
+black,黒
+red,赤
+green,緑
+blue,青
+yellow,黄
+cyan,シアン
+magenta,マゼンタ
+transparent,透明
+autoload (global),オートロード (グローバル)
+Global variables,グローバル変数
+this global fires - %d,このグローバルが発火 - %d

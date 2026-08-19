@@ -84,7 +84,7 @@ func build() -> PanelContainer:
 
 	_cancel_button = Button.new()
 	_cancel_button.text = "Show as code instead"
-	_cancel_button.tooltip_text = "Stop working out which events this code maps to and just show the file as code blocks. Nothing is changed on disk either way."
+	_cancel_button.tooltip_text = "Stop working out which events this code maps to and just show the file as script blocks. Nothing is changed on disk either way."
 	_cancel_button.pressed.connect(_on_cancel_pressed)
 	row.add_child(_cancel_button)
 	return _panel

@@ -609,9 +609,11 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 		about_row.indent = 0
 		head.append(about_row)
 	if not triggers.is_empty():
-		var fires_subtitle: String = EventSheetL10n.translate("this pack fires - %d") \
-			if is_addon_pack(sheet) \
-			else EventSheetL10n.translate("this script fires - %d")
+		var fires_subtitle: String = EventSheetL10n.translate("this script fires - %d")
+		if is_addon_pack(sheet):
+			fires_subtitle = EventSheetL10n.translate("this pack fires - %d")
+		elif is_autoload(sheet):
+			fires_subtitle = EventSheetL10n.translate("this global fires - %d")
 		head.append(_build_head_group_row(
 			sheet,
 			"pack_triggers",
@@ -684,11 +686,24 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 	}
 	var icon_class: String = host_class if not host_class.is_empty() else sheet.host_class
 	var identity_icon: Texture2D = ACEPickerDialog.editor_icon(icon_class) if not icon_class.is_empty() else null
+	# P10 - an autoload is the project's GLOBAL, and the globe is the mark it already wears in the
+	# Objects rail and in every other sheet's `Game (global) ▸ …` row. Its own class is beside the
+	# point: what a reader needs is that this file is reachable from everywhere.
+	if is_autoload(sheet):
+		var globe: Texture2D = EventSheetViewportReadingRows.autoload_icon()
+		if globe != null:
+			identity_icon = globe
 	if identity_icon != null:
 		badge_meta["badge_icon"] = identity_icon
 	var spans: Array[SemanticSpan] = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, badge_meta)]
+	if is_autoload(sheet):
+		spans.append_array(_autoload_include_spans(sheet))
+		spans.append_array(_reading_coverage_spans(sheet))
+		row_data.spans = spans
+		return row_data
 	if not is_addon_pack(sheet):
 		spans.append_array(_script_include_spans(sheet))
+		spans.append_array(_reading_coverage_spans(sheet))
 		row_data.spans = spans
 		return row_data
 	spans.append(_make_span(
@@ -709,8 +724,69 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": EventSheetPalette.TEXT_MUTED
 		}))
 		spans.append(_pack_include_chip(host_class))
+	spans.append_array(_reading_coverage_spans(sheet))
 	row_data.spans = spans
 	return row_data
+
+
+## P3 - the two things a reader wants to know about an opened file before reading a line of it: how
+## much of it arrived as events, and whether it even compiles.
+##
+## The coverage chip (`96% reads as events · 3 script blocks ▸`) is measured by the SAME static the
+## corpus gate measures with, so the chip and the test can never disagree about the same file; a
+## click walks the script blocks one at a time. A fully-lifted file drops the number and just says
+## `reads as events`. The error line is the ENGINE's own count, in red, saying what it costs - a
+## script that does not parse does not run, and that is worth more than any styling.
+func _reading_coverage_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var errors: String = EventSheetReadingCoverage.parse_error_text(sheet)
+	if not errors.is_empty():
+		spans.append(_make_span(errors, SemanticSpan.SpanType.VALUE, {
+			"editable": false, "kind": "pack_include", "line_index": 0,
+			"text_color": EventSheetPalette.COLOR_ERROR_TEXT
+		}))
+	var coverage: String = EventSheetReadingCoverage.chip_text(sheet)
+	if coverage.is_empty():
+		return spans
+	spans.append(_make_span(coverage, SemanticSpan.SpanType.KEYWORD, {
+		"editable": false,
+		"badge": true,
+		"badge_style": "scope",
+		"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+		"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+		"kind": "reading_coverage",
+		"line_index": 0
+	}))
+	return spans
+
+
+## P10 - TRUE when the opened file IS a project autoload. ProjectSettings is the single source of
+## truth and the importer already reads it onto the sheet, so this is a read of what the project
+## says rather than a guess from the file's shape.
+static func is_autoload(sheet: EventSheetResource) -> bool:
+	return sheet != null and sheet.autoload_mode and not sheet.autoload_name.strip_edges().is_empty()
+
+
+## The Include bar of an autoload: `⇥ [globe] Game  autoload (global) · game.gd`. The NAME is the
+## singleton's - the word every other sheet in the project writes to reach it - and the muted words
+## say what that means, because "autoload" alone is a Godot term and "(global)" is the sheet's.
+func _autoload_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var spans: Array[SemanticSpan] = [
+		_make_span(sheet.autoload_name.strip_edges(), SemanticSpan.SpanType.OBJECT, {
+			"editable": false, "kind": "pack_include", "line_index": 0,
+			"text_color": event_style.object_label_color
+		})
+	]
+	var receipts: PackedStringArray = PackedStringArray([EventSheetL10n.translate("autoload (global)")])
+	var source_path: String = str(sheet.external_source_path)
+	if not source_path.is_empty():
+		receipts.append("· %s" % source_path.get_file())
+	spans.append(_make_span(" ".join(receipts), SemanticSpan.SpanType.COMMENT, {
+		"editable": false, "kind": "pack_include", "line_index": 0,
+		"text_color": EventSheetPalette.TEXT_MUTED
+	}))
+	return spans
 
 
 ## "Addon Pack" is a CLAIM, so only a file that actually is one makes it: a declared @ace_version, or a
@@ -888,6 +964,12 @@ func _build_pack_about_row(sheet: EventSheetResource, fallback_text: String = ""
 ## The pack's knobs as event-sheet setting folders: one bar per @export_group in FILE order, a Settings
 ## bar for exported knobs declared before any group, and Internal state for the rest.
 func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[EventRowData]:
+	# P10 - on an autoload every one of these IS a global variable, exported or not: the whole point
+	# of the singleton is that the rest of the project reads them. Splitting them into Settings and
+	# Internal state would be drawing a line a reader of an event sheet has no use for, so they read
+	# as the ONE folder the sheet already has a name for.
+	if is_autoload(sheet):
+		return _build_global_variables_folder(sheet, knobs)
 	var order: PackedStringArray = PackedStringArray()
 	var buckets: Dictionary = {}
 	var internal: Array[EventRowData] = []
@@ -932,6 +1014,29 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 			internal
 		))
 	return bars
+
+
+## P10 - an autoload's knobs as the sheet's ONE Global variables folder, in file order. Same rows,
+## same reading; only the folders they live in change, because on a global there is nothing for a
+## second folder to mean.
+func _build_global_variables_folder(sheet: EventSheetResource, knobs: Array) -> Array[EventRowData]:
+	var members: Array[EventRowData] = []
+	for entry: Variant in knobs:
+		var record: Dictionary = entry as Dictionary
+		var variable: LocalVariable = record.get("variable")
+		if variable == null:
+			members.append(record.get("row") as EventRowData)
+			continue
+		members.append(_build_reading_variable_row(variable, str(record.get("description", "")), 1))
+	if members.is_empty():
+		return [] as Array[EventRowData]
+	return [_build_head_group_row(
+		sheet,
+		"pack_global_variables",
+		EventSheetL10n.translate("Global variables"),
+		"%d" % members.size(),
+		members
+	)] as Array[EventRowData]
 
 
 ## One head bar: the event-group header look (folder icon, title, muted count), owning its rows as
@@ -996,7 +1101,11 @@ func _build_reading_variable_row(variable: LocalVariable, description: String, i
 			"source_resource": variable,
 			"row_uid": "variable_reading_%d" % variable.get_instance_id(),
 			"reading": true,
-			"description": description
+			"description": description,
+			# P7 - the Inspector facts this knob carries: its range and step, its choices, the filter
+			# on the file it picks, its colour. Read from what the importer already stored, so the row
+			# says what the Inspector would say about the same variable.
+			"facts": EventSheetSettingFacts.facts(variable)
 		}
 	)
 
@@ -3226,7 +3335,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# facts already say what they are - the pill was pure noise there (and a word in a box). The
 	# pill stays on REAL logic blocks only, where it marks the escape hatch.
 	if not is_scaffold:
-		spans.append(_make_span("GDScript", SemanticSpan.SpanType.KEYWORD, {
+		spans.append(_make_span(EventSheetL10n.translate("Script block"), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
@@ -4767,6 +4876,10 @@ func _build_variable_row(
 	# knob is, not how GDScript declares it. The @export and group chips are dropped by the caller's
 	# options: inside a settings bar every knob is exported, and the bar names the group.
 	var reading: bool = bool(options.get("reading", false))
+	# P7 - the Inspector facts (see EventSheetSettingFacts): a type word the hint settles ("combo",
+	# "file", "folder", "flags", "node path"), a value the hint re-reads (an enum's LABEL, a 0-1 range
+	# as a percent, a colour's word) and the muted note that says the limits or the choices.
+	var facts: Dictionary = options.get("facts", {}) if options.get("facts") is Dictionary else {}
 	if reading:
 		# The type word a READER needs, which is not always the declared one: `const SPEED := 300.0`
 		# declares nothing, so the word comes from the value, and a constant says so in the chip
@@ -4775,6 +4888,9 @@ func _build_variable_row(
 		var reading_type_word: String = _reading_type_word(
 			type_name, default_value, bool(options.get("expression_default", false))
 		)
+		var hinted_type_word: String = str(facts.get("type_word", "")).strip_edges()
+		if not hinted_type_word.is_empty():
+			reading_type_word = hinted_type_word
 		if is_constant:
 			reading_type_word = EventSheetL10n.translate("constant %s") % reading_type_word
 		row_data.spans = [
@@ -4867,13 +4983,28 @@ func _build_variable_row(
 	var value_text: String = str(default_value) if bool(options.get("expression_default", false)) else _format_variable_value(default_value)
 	if reading:
 		value_text = _reading_value_text(value_text)
+		# The hint re-reads the value itself where it knows better than the literal does: an enum's
+		# number is really its label, a 0-1 range is really a percent, a colour is really a word.
+		var hinted_value: String = str(facts.get("value_text", "")).strip_edges()
+		if not hinted_value.is_empty():
+			value_text = hinted_value
+	var value_meta: Dictionary = variable_meta.merged({"editable": false}, true)
+	if facts.get("swatch") is Color:
+		value_meta["swatch_color"] = facts["swatch"] as Color
 	row_data.spans.append(
-		_make_span(
-			value_text,
-			SemanticSpan.SpanType.VALUE,
-			variable_meta.merged({"editable": false}, true)
-		)
+		_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta)
 	)
+	# The limits and the choices, muted, straight after the value - the same slot the Inspector puts
+	# them in, and ahead of the knob's own sentence so the fact reads before the prose.
+	var hint_note: String = str(facts.get("note", "")).strip_edges()
+	if not hint_note.is_empty():
+		row_data.spans.append(
+			_make_span(
+				hint_note,
+				SemanticSpan.SpanType.COMMENT,
+				variable_meta.merged({"editable": false, "text_color": EventSheetPalette.TEXT_MUTED}, true)
+			)
+		)
 	# The knob's own sentence, muted, trailing the value - the `##` doc comment the Inspector shows as
 	# its tooltip. A reader of an opened pack should never have to open the .gd to learn what a setting
 	# does. Reading shape only; an authored row keeps the tooltip in the variable dialog.

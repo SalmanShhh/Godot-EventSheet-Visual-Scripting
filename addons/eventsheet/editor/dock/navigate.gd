@@ -66,7 +66,7 @@ func navigate(row_data: EventRowData, _span_index: int, metadata: Dictionary) ->
 	record_current()
 	open_or_focus(str(target.get("path")))
 	if str(metadata.get("include_path", "")).strip_edges().is_empty():
-		_dock._set_status("Opened %s - the behaviour that defines this verb (Alt+Left jumps back)." % str(target.get("path")).get_file())
+		_dock._set_status("Opened %s - the behaviour that defines this action (Alt+Left jumps back)." % str(target.get("path")).get_file())
 	else:
 		_dock._set_status("Opened %s - the sheet this one includes (Alt+Left jumps back)." % str(target.get("path")).get_file())
 
@@ -92,7 +92,7 @@ func record_current() -> void:
 
 
 func go_back() -> void:
-	_history_step(_back_stack, _forward_stack, "Nothing to go back to yet - Ctrl+Click a verb or open a sheet first.")
+	_history_step(_back_stack, _forward_stack, "Nothing to go back to yet - Ctrl+Click a row or open a sheet first.")
 
 
 func go_forward() -> void:

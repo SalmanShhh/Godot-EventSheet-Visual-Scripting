@@ -51,7 +51,7 @@ static func _test_a_script_with_a_class_name() -> bool:
 		bar != null and bar.row_uid.begins_with("pack_include_bar_"), true) and ok
 	ok = _check("the Include bar names the object, its class and its receipts",
 		_texts(bar),
-		"⇥ | PlayerAvatar | a | CharacterBody2D | · opened_script_head_player.gd · scene opened_script_head_player.tscn") and ok
+		"⇥ | PlayerAvatar | a | CharacterBody2D | · opened_script_head_player.gd · scene opened_script_head_player.tscn | reads as events") and ok
 	ok = _check("it is not called an Addon Pack", _texts(bar).contains("Addon Pack"), false) and ok
 	ok = _check("it wears the identity bar's presence",
 		bar != null and is_equal_approx(bar.height_scale, 1.5), true) and ok
@@ -107,7 +107,7 @@ static func _test_a_script_named_by_its_scene() -> bool:
 	var bar: EventRowData = _row_at(view.get_flat_rows(), 0)
 	ok = _check("a script with no class_name is named by its scene's root node",
 		_texts(bar),
-		"⇥ | SpawnerPad | a | Node2D | · opened_script_head_pad.gd · scene opened_script_head_pad.tscn") and ok
+		"⇥ | SpawnerPad | a | Node2D | · opened_script_head_pad.gd · scene opened_script_head_pad.tscn | reads as events") and ok
 	view.free()
 	return ok
 
@@ -133,7 +133,7 @@ static func _test_a_script_no_scene_uses() -> bool:
 	view.set_sheet(sheet)
 	var bar: EventRowData = _row_at(view.get_flat_rows(), 0)
 	ok = _check("a script no scene uses falls back to its file name",
-		_texts(bar), "⇥ | no_such_script_head | a | Node2D | · no_such_script_head.gd") and ok
+		_texts(bar), "⇥ | no_such_script_head | a | Node2D | · no_such_script_head.gd | reads as events") and ok
 	view.free()
 	return ok
 

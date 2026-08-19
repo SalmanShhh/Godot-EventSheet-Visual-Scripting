@@ -47,7 +47,7 @@ static func run() -> bool:
 	ok = _check("the sheet opens on the Include bar",
 		include_bar != null and include_bar.row_uid.begins_with("pack_include_bar_"), true) and ok
 	ok = _check("the Include bar reads as the pack's identity",
-		_texts(include_bar), "⇥ | Addon Pack | FPSController | v1.0.0 | behaves on a | CharacterBody3D") and ok
+		_texts(include_bar), "⇥ | Addon Pack | FPSController | v1.0.0 | behaves on a | CharacterBody3D | reads as events") and ok
 	ok = _check("it wears the identity bar's presence",
 		include_bar != null and is_equal_approx(include_bar.height_scale, 1.5), true) and ok
 	ok = _check("the Class setup strip folded into it", _has_uid_prefix(rows, "scaffolding_strip_"), false) and ok
@@ -149,7 +149,7 @@ static func _test_a_plain_script_is_not_called_a_pack() -> bool:
 	ok = _check("a plain script still gets the Include bar", bar != null and bar.row_uid.begins_with("pack_include_bar_"), true) and ok
 	# M34 - and it does not wear the word "Script" either: the bar names the OBJECT the script drives
 	# and the class it is, which is what a reader is actually looking at.
-	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | Patrol | a | Node") and ok
+	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | Patrol | a | Node | reads as events") and ok
 	ok = _check("its exported knob lands in the Settings bar",
 		_texts(_bar_titled(view.get_flat_rows(), "Settings")), "Settings | 1 setting") and ok
 	view.free()

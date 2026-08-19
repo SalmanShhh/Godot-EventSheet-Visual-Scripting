@@ -72,13 +72,13 @@ static func find_function(sheet: EventSheetResource, function_name: String) -> E
 ## inlined. Each refusal names what would go wrong, so the message doubles as the fix.
 static func inline_refusal(sheet: EventSheetResource, event: EventRow, call_index: int) -> String:
 	if sheet == null or event == null or call_index < 0 or call_index >= event.actions.size():
-		return "Right-click a Call row to inline the verb it calls."
+		return "Right-click a Call row to inline the function it calls."
 	var function_name: String = called_function_name(event.actions[call_index])
 	if function_name.is_empty():
-		return "That row isn't a call to a sheet verb - inline replaces a Call with the verb's own rows."
+		return "That row isn't a call to a sheet function - inline replaces a Call with the function's own rows."
 	var function: EventFunction = find_function(sheet, function_name)
 	if function == null:
-		return "This sheet has no verb called %s to inline." % function_name
+		return "This sheet has no function called %s to inline." % function_name
 	if body_actions(function).is_empty():
 		return "%s's body isn't a plain run of actions (it has conditions, loops or several events), so it can't be spliced into the caller." % function_name
 	var argument_problem: String = _argument_refusal(function, event.actions[call_index] as ACEAction)
@@ -121,7 +121,7 @@ static func calls_to(sheet: EventSheetResource, function_name: String) -> Array:
 ## The refusal reason for folding `function` back into its callers and deleting it, or "".
 static func inline_everywhere_refusal(sheet: EventSheetResource, function: EventFunction) -> String:
 	if sheet == null or function == null:
-		return "Right-click a verb's Define row to fold it back into its callers."
+		return "Right-click a function's Define row to inline it back into its callers."
 	if body_actions(function).is_empty():
 		return "%s's body isn't a plain run of actions, so it can't be spliced into its callers." % function.function_name
 	for site: Dictionary in calls_to(sheet, function.function_name):

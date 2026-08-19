@@ -118,47 +118,13 @@ static func run() -> bool:
 ## Lines that reach the plain GDScript-block rendering - everything the canvas has no structured
 ## view for. Mirrors the renderer's own dispatch order, so it measures what a reader actually sees
 ## rather than how the rows happen to be stored.
+##
+## THE WALK ITSELF LIVES IN EventSheetReadingCoverage rather than here, and that is the point: the
+## head bar's reading-coverage chip shows a reader this same number, and two implementations of
+## "what still reads as code" would drift the moment either one learned a new row shape - this gate
+## would go on passing while the chip told a reader something else about the same file.
 static func _block_line_count(items: Array, top_level: bool) -> int:
-	var total: int = 0
-	for item: Variant in items:
-		if item is RawCodeRow:
-			if not _renders_as_block(item as RawCodeRow, top_level):
-				continue
-			for line: String in (item as RawCodeRow).code.split("
-"):
-				if not line.strip_edges().is_empty():
-					total += 1
-		elif item is EventRow:
-			total += _block_line_count((item as EventRow).actions, false)
-			total += _block_line_count((item as EventRow).sub_events, false)
-		elif item is EventFunction:
-			total += _block_line_count((item as EventFunction).events, false)
-		elif item is EventGroup:
-			total += _block_line_count((item as EventGroup).events, top_level)
-	return total
-
-
-## True when a verbatim row falls through every structured view the canvas offers it.
-static func _renders_as_block(raw: RawCodeRow, top_level: bool) -> bool:
-	var code_lines: PackedStringArray = raw.code.split("
-")
-	if ViewportRowBuilder.is_comment_only_block(code_lines) or ViewportRowBuilder.is_blank_block(code_lines):
-		return false
-	# A single statement renders as an ordinary action row, and a literal entry as an action chip -
-	# neither is the code-block treatment, so neither counts here. Mirroring the renderer exactly is
-	# the whole point: a gate that measures how rows are STORED rather than how they READ would have
-	# gone on passing while the canvas filled up with walls of code.
-	if ViewportRowBuilder.is_literal_part(raw.code) or ViewportRowBuilder.is_single_statement(raw.code):
-		return false
-	if not ViewportRowBuilder.data_literal_info(raw.code).is_empty():
-		return false
-	if not ViewportRowBuilder.function_body_info(raw.code).is_empty():
-		return false
-	if not ViewportRowBuilder.define_shell_info(raw.code).is_empty():
-		return false
-	if top_level and EventSheetViewport.is_scaffolding_code(raw.code):
-		return false
-	return true
+	return EventSheetReadingCoverage.block_line_count(items, top_level)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -21,9 +21,28 @@ extends RefCounted
 
 var _viewport: Control = null
 
+## Where the reading-coverage chip has walked to. One click is one script block, so the cursor rides
+## with the VIEW - a second tab keeps its own place in its own file.
+var _script_block_cursor: int = 0
+
 
 func init(viewport: Control) -> void:
 	_viewport = viewport
+
+
+## P3 - the coverage chip's click: reveal the next script block of this file and select it, wrapping
+## round at the end. The chip says how many there are; this is how a reader goes and looks at them,
+## one click at a time, without leaving the sheet.
+func _walk_to_next_script_block() -> bool:
+	var sheet: EventSheetResource = _viewport._sheet
+	var blocks: Array[RawCodeRow] = EventSheetReadingCoverage.script_blocks(sheet)
+	if blocks.is_empty():
+		return false
+	if _script_block_cursor >= blocks.size():
+		_script_block_cursor = 0
+	var target: RawCodeRow = blocks[_script_block_cursor]
+	_script_block_cursor = (_script_block_cursor + 1) % blocks.size()
+	return _viewport.reveal_resource(target)
 
 
 ## Whether the pointer sits on a cell's colour swatch (the clickable box that opens the
@@ -225,6 +244,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# it in words.
 		if not event.double_click and str(metadata.get("kind", "")) == "include_open" and _viewport.navigation_probe.is_valid() and bool(_viewport.navigation_probe.call(row_data, metadata)):
 			_viewport.navigate_requested.emit(row_data, span_index, metadata)
+			_viewport.accept_event()
+			return
+		# The head bar's coverage chip counts the script blocks; clicking it walks them, one per
+		# click. Same one-click grammar as the Include bar beside it, because the chip ends in ▸ and
+		# an arrow that does nothing is worse than no arrow.
+		if not event.double_click and str(metadata.get("kind", "")) == "reading_coverage":
+			_walk_to_next_script_block()
 			_viewport.accept_event()
 			return
 		if bool(hit.get("fold", false)):

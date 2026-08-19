@@ -107,7 +107,7 @@ func build(root: Node) -> void:
 	_add_toolbar_button(_toolbar, "Add Condition", _dock._on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
 	_add_toolbar_button(_toolbar, "Add Action", _dock._on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
 	# Kept as a reference: Simple Mode hides this deliberate drop-to-code surface entirely.
-	_dock._add_code_button = _add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.", "Script")
+	_dock._add_code_button = _add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a script block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.", "Script")
 	# Add ▾ - the rest of the authoring vocabulary.
 	var add_menu: MenuButton = MenuButton.new()
 	add_menu.name = "EventSheetAddMenu"
@@ -286,7 +286,7 @@ func build(root: Node) -> void:
 	view_popup.set_item_tooltip(view_popup.get_item_index(0), "Show/hide the generated-GDScript panel beside the sheet.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(9), "Show/hide the trailing \"+ Add event…\" rows. Turn off for a cleaner, calmer sheet.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(18), "On: every row's condition/action text starts at the same edge, so the sheet scans as a table. Off: the text follows each object's name, starting at a different point on every row. Drag the gap after an object name to set the width by hand.")
-	view_popup.set_item_tooltip(view_popup.get_item_index(11), "Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.")
+	view_popup.set_item_tooltip(view_popup.get_item_index(11), "Hide the advanced/code entries (script blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(12), "Turn the MCP server (AI-assistant tools) on/off. When off, connected AI clients see no tools and can't read or change your sheets. Takes effect live - no reconnect needed.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(1), "Show/hide a second synchronized view of this sheet, side by side.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(2), "Pop the sheet view out into its own window / bring it back.")
@@ -353,9 +353,9 @@ func build(root: Node) -> void:
 			21: _dock._open_translation_studio()
 			14: _dock._run_diagnostics_action()
 	)
-	tools_popup.set_item_tooltip(tools_popup.get_item_index(22), "Explain the selected row's verb - what it does, what it ships as, and a live illustration you can insert. F1 opens the same page.")
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(22), "Explain the selected row - what it does, what it ships as, and a live illustration you can insert. F1 opens the same page.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(21), "The whole handoff to a translator in one window: sweep the project for the text your game shows, read the note each key travels with, merge a returned file and register the catalogs.")
-	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.")
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + script block; flag the offending rows and jump to the first.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")
 	_toolbar.add_child(tools_menu)
@@ -366,7 +366,7 @@ func build(root: Node) -> void:
 	simple_button.text = "Simple Mode"
 	simple_button.toggle_mode = true
 	simple_button.set_pressed_no_signal(_dock._simple_mode)
-	simple_button.tooltip_text = "Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off."
+	simple_button.tooltip_text = "Beginner-friendly view: hides the advanced/code entries (script blocks, sub-conditions, pick filters, signals/enums). Everything still works when off."
 	simple_button.toggled.connect(func(on: bool) -> void: _dock.set_simple_mode(on))
 	_dock._simple_mode_button = simple_button
 	_toolbar.add_child(simple_button)
@@ -408,9 +408,9 @@ func build(root: Node) -> void:
 	tools_popup.add_item("Compare With…", 60)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(60), "Compare this sheet against its last save, a backup, or another sheet - in rows, not in generated code. A row that only exists on the other side can be brought over in one undo step.")
 	tools_popup.add_item("Loose Ends…", 61)
-	tools_popup.set_item_tooltip(tools_popup.get_item_index(61), "Everything you left unfinished, indexed: TODO/FIXME notes, disabled rows, events with no actions, breakpoints left on, verbs nothing calls. Nothing is drawn on the sheet - click an entry to jump to the row.")
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(61), "Everything you left unfinished, indexed: TODO/FIXME notes, disabled rows, events with no actions, breakpoints left on, functions nothing calls. Nothing is drawn on the sheet - click an entry to jump to the row.")
 	tools_popup.add_item("Find Repeated Rows…", 62)
-	tools_popup.set_item_tooltip(tools_popup.get_item_index(62), "Find action sequences written more than once, then turn one into a reusable verb: extracted where it first appears, called everywhere else, in one undo step.")
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(62), "Find action sequences written more than once, then turn one into a reusable function: extracted where it first appears, called everywhere else, in one undo step.")
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
 			60: open_dev_tool.call("compare", func() -> Variant: return EventSheetCompareDialog.new())
