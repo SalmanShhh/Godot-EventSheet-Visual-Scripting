@@ -289,7 +289,13 @@ static func _key_column_cells(path: String) -> Array:
 ## carries its own translations.csv beside it, and .godot holds copies of everything.
 static func files_under(root: String, extensions: Array) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	var pending: Array[String] = [root.rstrip("/")]
+	# The trailing slash is trimmed so a path never doubles it - but "res://" trims to "res:", which
+	# DirAccess cannot open, so the project root would silently scan to nothing. Put the slashes back
+	# for exactly that case (any scheme root: "res://", "user://").
+	var start: String = root.rstrip("/")
+	if start.ends_with(":"):
+		start = "%s//" % start
+	var pending: Array[String] = [start]
 	while not pending.is_empty():
 		var directory_path: String = pending.pop_back()
 		var directory: DirAccess = DirAccess.open(directory_path)

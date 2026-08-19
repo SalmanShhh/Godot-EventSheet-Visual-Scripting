@@ -1045,6 +1045,8 @@ PROJECT                        ⚙ ✕
 ▸ Files         art · data · shaders
 ```
 
+![The Object bar with its Project tab selected: a PROJECT header with the count and a hide button, a filter box, then Scenes (layouts) open with each scene under its own name and its file muted beside it](images/project-bar.png)
+
 The headings follow **View ▸ Familiar Words**: with the toggle off Godot's word leads and the other
 editor's is muted beside it, and with it on the two swap - so both words are always on screen and the
 one you think in comes first. A section both editors call the same thing (Sounds, Files) is not
@@ -1085,6 +1087,8 @@ Three smaller surfaces come with it and are worth knowing on day one:
   hover, on by default in Simple mode. And **Keyboard Shortcuts ▸ Preset ▾** offers *Another
   event-sheet editor*, which rebinds only the handful of keys that differ (invert to X, collapse and
   expand to Ctrl+E, preview to F4) and leaves everything rebindable underneath.
+
+![The Add toolbar above the canvas: + Event, + Sub-event, + Condition, + Action, + Group, + Comment, + Variable, + Function, then a separator and the three Preview buttons](images/beginner-toolbar.png)
 
 ---
 
