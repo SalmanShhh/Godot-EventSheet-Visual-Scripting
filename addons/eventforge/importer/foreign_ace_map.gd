@@ -12,6 +12,8 @@
 # Parameter sources, the little language the `params` dictionaries speak:
 #   "#Name"  take the foreign parameter called Name, through the expression translator
 #   "!Name"  take the foreign parameter called Name VERBATIM and FLAG it as untranslated
+#   "~Name"  a KEY name, through the key table
+#   "^Name"  a mouse BUTTON name, through the button table
 #   "@node"  the node the object was mapped to ("" = the sheet's own host)
 #   "@self"  the same, but `self` when nothing was mapped (for slots that need a real node)
 #   "@name"  the object's own name as a variable name (a list object IS the list)
@@ -77,12 +79,12 @@ const ROWS: Dictionary = {
 	"Browser/close": {"ace": "QuitGame", "kind": KIND_ACTION},
 
 	# --- input ------------------------------------------------------------------------------
-	"Keyboard/on-key-pressed": {"ace": "KeyEventPressed", "kind": KIND_CONDITION, "trigger": "OnInput", "params": {"key": "!Key"}, "note": "The key is kept as written - spell it as a Godot key constant (KEY_SPACE)."},
-	"Keyboard/on-key-released": {"ace": "KeyEventReleased", "kind": KIND_CONDITION, "trigger": "OnInput", "params": {"key": "!Key"}, "note": "The key is kept as written - spell it as a Godot key constant (KEY_SPACE)."},
-	"Keyboard/key-is-down": {"ace": "KeyIsDown", "kind": KIND_CONDITION, "params": {"key": "!Key"}, "note": "The key is kept as written - spell it as a Godot key constant (KEY_SPACE)."},
-	"Mouse/on-click": {"ace": "MouseButtonEventPressed", "kind": KIND_CONDITION, "trigger": "OnInput", "params": {"button": "!Button"}, "note": "The button is kept as written - spell it as a Godot button constant (MOUSE_BUTTON_LEFT)."},
+	"Keyboard/on-key-pressed": {"ace": "KeyEventPressed", "kind": KIND_CONDITION, "trigger": "OnInput", "params": {"key": "~Key"}},
+	"Keyboard/on-key-released": {"ace": "KeyEventReleased", "kind": KIND_CONDITION, "trigger": "OnInput", "params": {"key": "~Key"}},
+	"Keyboard/key-is-down": {"ace": "KeyIsDown", "kind": KIND_CONDITION, "params": {"key": "~Key"}},
+	"Mouse/on-click": {"ace": "MouseButtonEventPressed", "kind": KIND_CONDITION, "trigger": "OnInput", "params": {"button": "^Button"}},
 	"Mouse/on-any-click": {"ace": "MouseButtonEventPressed", "kind": KIND_CONDITION, "trigger": "OnInput"},
-	"Mouse/mouse-button-is-down": {"ace": "MouseButtonDown", "kind": KIND_CONDITION, "params": {"button": "!Button"}, "note": "The button is kept as written - spell it as a Godot button constant (MOUSE_BUTTON_LEFT)."},
+	"Mouse/mouse-button-is-down": {"ace": "MouseButtonDown", "kind": KIND_CONDITION, "params": {"button": "^Button"}},
 	"Touch/on-touch-start": {"ace": "TouchEventPressed", "kind": KIND_CONDITION, "trigger": "OnInput"},
 	"Touch/on-touch-end": {"ace": "TouchEventReleased", "kind": KIND_CONDITION, "trigger": "OnInput"},
 	"Touch/is-touching-object": {"ace": "TouchEventPressed", "kind": KIND_CONDITION, "trigger": "OnInput", "note": "Which object was touched is not carried over - add the object check yourself."},
@@ -167,6 +169,36 @@ const NO_HOME: Dictionary = {
 	"multiplayer": "Multiplayer here is Godot's own, not a row-for-row twin.",
 }
 
+## The properties a placed object answers to, in both vocabularies. Used to rewrite `Player.X`
+## into the node property it means, so an imported expression names something that exists.
+const OBJECT_PROPERTIES: Dictionary = {
+	"X": "position.x",
+	"Y": "position.y",
+	"Angle": "rotation_degrees",
+	"Text": "text",
+	"Opacity": "modulate.a",
+	"AnimationFrame": "frame",
+	"Visible": "visible",
+}
+
+## Key names, in both vocabularies. Anything not here is kept as written and flagged, because a key
+## nobody can name is a key nobody can press.
+const KEY_NAMES: Dictionary = {
+	"space": "KEY_SPACE", "enter": "KEY_ENTER", "return": "KEY_ENTER", "esc": "KEY_ESCAPE",
+	"escape": "KEY_ESCAPE", "tab": "KEY_TAB", "shift": "KEY_SHIFT", "control": "KEY_CTRL",
+	"ctrl": "KEY_CTRL", "alt": "KEY_ALT", "backspace": "KEY_BACKSPACE", "delete": "KEY_DELETE",
+	"up": "KEY_UP", "down": "KEY_DOWN", "left": "KEY_LEFT", "right": "KEY_RIGHT",
+	"up arrow": "KEY_UP", "down arrow": "KEY_DOWN", "left arrow": "KEY_LEFT",
+	"right arrow": "KEY_RIGHT", "home": "KEY_HOME", "end": "KEY_END",
+}
+
+## Mouse button names, in both vocabularies.
+const BUTTON_NAMES: Dictionary = {
+	"left": "MOUSE_BUTTON_LEFT", "right": "MOUSE_BUTTON_RIGHT", "middle": "MOUSE_BUTTON_MIDDLE",
+	"0": "MOUSE_BUTTON_LEFT", "1": "MOUSE_BUTTON_MIDDLE", "2": "MOUSE_BUTTON_RIGHT",
+}
+
+
 ## The sheet's expression names, back into GDScript.
 ##
 ## This is the exact INVERSE of the reading layer's familiar-expression table: the words a reader
@@ -244,16 +276,77 @@ static func lookup(object_kind: String, row_id: String) -> Dictionary:
 	return ROWS.get(row_key("Object", row_id), {})
 
 
+## A key name in the words the export wrote, as the Godot constant it means.
+## Returns {"text": String, "translated": bool}.
+static func translate_key(name: String) -> Dictionary:
+	return _from_table(name, KEY_NAMES, "KEY_")
+
+
+## A mouse button name in the words the export wrote, as the Godot constant it means.
+static func translate_button(name: String) -> Dictionary:
+	return _from_table(name, BUTTON_NAMES, "MOUSE_BUTTON_")
+
+
+static func _from_table(name: String, table: Dictionary, already: String) -> Dictionary:
+	var trimmed: String = name.strip_edges()
+	if trimmed.begins_with(already):
+		return {"text": trimmed, "translated": true}
+	var lowered: String = trimmed.to_lower()
+	if table.has(lowered):
+		return {"text": str(table[lowered]), "translated": true}
+	if lowered.length() == 1 and ((lowered >= "a" and lowered <= "z") or (lowered >= "0" and lowered <= "9")):
+		return {"text": "KEY_%s" % lowered.to_upper(), "translated": already == "KEY_"}
+	return {"text": trimmed, "translated": false}
+
+
+## Every name the sheet declares, from its own spelling to the one the generated file uses, plus the
+## object properties that have a node property behind them. Handed to translate_expression so an
+## imported value names something that exists in the file it lands in.
+static func value_aliases(declared: Dictionary, objects: Dictionary) -> Dictionary:
+	var aliases: Dictionary = {}
+	for object_name: String in objects:
+		var node: String = str((objects[object_name] as Dictionary).get("node", "")).strip_edges()
+		if node.is_empty():
+			continue
+		for property_name: String in OBJECT_PROPERTIES:
+			var behind: String = "%s.%s" % [node, OBJECT_PROPERTIES[property_name]]
+			aliases["%s.%s" % [object_name, property_name]] = behind
+			aliases["%s.%s" % [object_name, property_name.to_lower()]] = behind
+	for declared_name: String in declared:
+		aliases[declared_name] = str(declared[declared_name])
+	return aliases
+
+
 ## An expression in the sheet's own words, rewritten as the GDScript the compiler wants.
 ## Returns {"text": String, "translated": bool} - translated false means a human still has to look.
-static func translate_expression(text: String) -> Dictionary:
+static func translate_expression(text: String, aliases: Dictionary = {}) -> Dictionary:
 	var trimmed: String = text.strip_edges()
 	if trimmed.is_empty():
 		return {"text": "", "translated": true}
-	var out: String = trimmed
+	var out: String = _apply_aliases(trimmed, aliases)
 	for entry: Array in _expression_patterns():
 		out = (entry[0] as RegEx).sub(out, str(entry[1]), true)
 	return {"text": out, "translated": not _has_residual(out)}
+
+
+## Longest name first, so `Player.X` is rewritten before the bare `Player` in it ever could be.
+static func _apply_aliases(text: String, aliases: Dictionary) -> String:
+	if aliases.is_empty():
+		return text
+	var names: Array = aliases.keys()
+	names.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
+	var out: String = text
+	for name: String in names:
+		var pattern: RegEx = RegEx.create_from_string("(?<![A-Za-z0-9_.$])%s(?![A-Za-z0-9_])" % name.replace(".", "\\."))
+		if pattern == null:
+			continue
+		# Spliced by hand rather than through RegEx.sub: a replacement here can start with `$`
+		# (a node path), and `$` is what a substitution pattern reads as a capture reference.
+		var found: Array[RegExMatch] = pattern.search_all(out)
+		for index: int in range(found.size() - 1, -1, -1):
+			var hit: RegExMatch = found[index]
+			out = out.substr(0, hit.get_start()) + str(aliases[name]) + out.substr(hit.get_end())
+	return out
 
 
 ## True when a translated value still carries a shape only the other editor understands.

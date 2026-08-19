@@ -1,0 +1,162 @@
+{
+	"name": "Main",
+	"events": [
+		{
+			"eventType": "variable",
+			"name": "Score",
+			"type": "number",
+			"initialValue": "0",
+			"comment": "Points so far",
+			"sid": 100
+		},
+		{
+			"eventType": "comment",
+			"text": "Player movement"
+		},
+		{
+			"eventType": "include",
+			"includeSheet": "Shared"
+		},
+		{
+			"eventType": "group",
+			"title": "Controls",
+			"description": "What the keys do",
+			"isActiveOnStart": true,
+			"children": [
+				{
+					"eventType": "block",
+					"sid": 200,
+					"conditions": [
+						{
+							"id": "on-key-pressed",
+							"objectClass": "Keyboard",
+							"sid": 201,
+							"parameters": {"Key": "space"}
+						}
+					],
+					"actions": [
+						{
+							"id": "set-position",
+							"objectClass": "Player",
+							"sid": 202,
+							"parameters": {"X": "Player.X", "Y": "200"}
+						},
+						{
+							"id": "set-text",
+							"objectClass": "ScoreLabel",
+							"sid": 203,
+							"parameters": {"Text": "zeropad(Score, 3)"}
+						}
+					]
+				}
+			]
+		},
+		{
+			"eventType": "block",
+			"sid": 300,
+			"conditions": [
+				{
+					"id": "compare-variable",
+					"objectClass": "System",
+					"sid": 301,
+					"parameters": {"Variable": "Score", "Comparison": "<", "Value": "10"}
+				}
+			],
+			"actions": [
+				{
+					"id": "add-to",
+					"objectClass": "System",
+					"sid": 302,
+					"parameters": {"Variable": "Score", "Value": "random(1, 6)"}
+				}
+			]
+		},
+		{
+			"eventType": "block",
+			"sid": 310,
+			"isElse": true,
+			"conditions": [],
+			"actions": [
+				{
+					"id": "set-text",
+					"objectClass": "ScoreLabel",
+					"sid": 311,
+					"parameters": {"Text": "len(\"Well done\")"}
+				}
+			]
+		},
+		{
+			"eventType": "block",
+			"sid": 400,
+			"conditions": [
+				{
+					"id": "compare-variable",
+					"objectClass": "System",
+					"sid": 401,
+					"parameters": {"Variable": "Score", "Comparison": ">=", "Value": "10"}
+				},
+				{
+					"id": "is-on-floor",
+					"objectClass": "Player",
+					"behavior-type": "Platform",
+					"sid": 402,
+					"parameters": {}
+				}
+			],
+			"actions": [
+				{
+					"id": "destroy",
+					"objectClass": "Enemy",
+					"sid": 403,
+					"parameters": {}
+				}
+			],
+			"children": [
+				{
+					"eventType": "block",
+					"sid": 410,
+					"conditions": [
+						{
+							"id": "is-visible",
+							"objectClass": "Enemy",
+							"sid": 411,
+							"isInverted": true,
+							"parameters": {}
+						}
+					],
+					"actions": [
+						{
+							"id": "set-blend-mode",
+							"objectClass": "Enemy",
+							"sid": 412,
+							"parameters": {"Mode": "additive"}
+						},
+						{
+							"type": "script",
+							"script": "runtime.objects.Enemy.destroy();"
+						}
+					]
+				}
+			]
+		},
+		{
+			"eventType": "function-block",
+			"functionName": "Reset Score",
+			"functionDescription": "Back to zero",
+			"functionReturnType": "none",
+			"functionIsAsync": false,
+			"functionParameters": [
+				{"name": "Start", "type": "number", "initialValue": "0", "comment": "where to start"}
+			],
+			"conditions": [],
+			"actions": [
+				{
+					"id": "set-value",
+					"objectClass": "System",
+					"sid": 501,
+					"parameters": {"Variable": "Score", "Value": "Start"}
+				}
+			]
+		}
+	]
+}

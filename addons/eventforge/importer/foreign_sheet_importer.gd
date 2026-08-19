@@ -150,7 +150,12 @@ static func import_sheet(sheet_json: Dictionary, object_map: Dictionary = {}, op
 		"total": 0, "mapped": 0, "percent": 100,
 		"unmapped": [], "flagged": [], "notes": [],
 	}
-	var context: Dictionary = {"objects": object_map, "report": report, "sheet": sheet}
+	var context: Dictionary = {
+		"objects": object_map,
+		"report": report,
+		"sheet": sheet,
+		"aliases": EventSheetForeignACEMap.value_aliases(declared_names(sheet_json), object_map),
+	}
 	var title: String = str(sheet_json.get("name", "")).strip_edges()
 	if not title.is_empty():
 		var heading: CommentRow = CommentRow.new()
@@ -161,7 +166,49 @@ static func import_sheet(sheet_json: Dictionary, object_map: Dictionary = {}, op
 	for row: Resource in rows:
 		sheet.events.append(row)
 	report["percent"] = 100 if int(report["total"]) == 0 else int(round(100.0 * float(report["mapped"]) / float(report["total"])))
+	# A row nobody could spell is switched off, and a switched-off row writes nothing - so the
+	# whole list is written once at the end as well. Then the generated file records every row
+	# that did not survive, including the ones that sat under a switched-off event.
+	if not (report["unmapped"] as Array).is_empty():
+		var log_lines: PackedStringArray = PackedStringArray([
+			"%s %d of %d rows. Each one is switched off; its original words are here." % [
+				UNMAPPED_MARKER, (report["unmapped"] as Array).size(), int(report["total"])],
+		])
+		for entry: Dictionary in report["unmapped"] as Array:
+			log_lines.append("  %s - %s" % [entry["label"], entry["reason"]])
+		var log_row: CommentRow = CommentRow.new()
+		log_row.style = CommentRow.CommentStyle.TODO
+		log_row.text = "\n".join(log_lines)
+		sheet.events.append(log_row)
 	return {"sheet": sheet, "report": report}
+
+
+## Every name the exported sheet declares, from its own spelling to the one the generated file uses.
+## A reading may only name a variable the file declares, so every value that mentions one is rewritten
+## through this, and a `Score` in an expression lands on the `score` the head of the file shows.
+static func declared_names(sheet_json: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	_collect_declared(sheet_json.get("events", []) as Array, out)
+	return out
+
+
+static func _collect_declared(events: Array, out: Dictionary) -> void:
+	for entry: Variant in events:
+		if not (entry is Dictionary):
+			continue
+		var event: Dictionary = entry as Dictionary
+		var kind: String = str(event.get("eventType", "block"))
+		if kind == "variable":
+			var declared: String = str(event.get("name", "")).strip_edges()
+			if not declared.is_empty():
+				out[declared] = declared.to_snake_case()
+		elif kind == "function-block":
+			for param: Variant in event.get("functionParameters", []) as Array:
+				if param is Dictionary:
+					var param_name: String = str((param as Dictionary).get("name", "")).strip_edges()
+					if not param_name.is_empty():
+						out[param_name] = param_name.to_snake_case()
+		_collect_declared(event.get("children", []) as Array, out)
 
 
 ## "12 of 14 rows mapped (86%)" - the report in one line, exactly as counted.
@@ -174,6 +221,7 @@ static func report_summary(report: Dictionary) -> String:
 
 static func _convert_events(events: Array, context: Dictionary, top_level: bool) -> Array:
 	var out: Array = []
+	var last_trigger: String = ""
 	for entry: Variant in events:
 		if not (entry is Dictionary):
 			continue
@@ -193,6 +241,15 @@ static func _convert_events(events: Array, context: Dictionary, top_level: bool)
 				out.append(_script_comment(str(event.get("script", "")), context))
 			_:
 				for row: Resource in _convert_block(event, context, top_level):
+					# An Else stands under the event before it, so it has to run where that event
+					# runs: it inherits the trigger rather than opening one of its own.
+					if row is EventRow:
+						var event_row: EventRow = row as EventRow
+						if event_row.else_mode != EventRow.ElseMode.NONE and event_row.trigger_id.is_empty():
+							event_row.trigger_provider_id = "Core"
+							event_row.trigger_id = last_trigger
+						elif not event_row.trigger_id.is_empty():
+							last_trigger = event_row.trigger_id
 					out.append(row)
 	return out
 
@@ -417,11 +474,16 @@ static func _fill_param(source_spec: String, cell: Dictionary, object_name: Stri
 			values.append(piece["text"])
 			any_flagged = any_flagged or bool(piece["flagged"])
 		return {"text": parts[0] % values, "flagged": any_flagged}
-	var verbatim: bool = source_spec.begins_with("!")
 	var raw: String = str(_parameter(cell, source_spec.substr(1)))
-	if verbatim:
+	if source_spec.begins_with("!"):
 		return {"text": raw, "flagged": true}
-	var translated: Dictionary = EventSheetForeignACEMap.translate_expression(raw)
+	if source_spec.begins_with("~"):
+		var key: Dictionary = EventSheetForeignACEMap.translate_key(raw)
+		return {"text": str(key["text"]), "flagged": not bool(key["translated"])}
+	if source_spec.begins_with("^"):
+		var button: Dictionary = EventSheetForeignACEMap.translate_button(raw)
+		return {"text": str(button["text"]), "flagged": not bool(button["translated"])}
+	var translated: Dictionary = EventSheetForeignACEMap.translate_expression(raw, context["aliases"] as Dictionary)
 	return {"text": str(translated["text"]), "flagged": not bool(translated["translated"])}
 
 
