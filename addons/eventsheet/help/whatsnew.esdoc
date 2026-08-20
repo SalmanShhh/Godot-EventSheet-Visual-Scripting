@@ -6,6 +6,40 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Fixed - surfaces that opened, and did nothing
+
+A verification pass drove each newly merged editor surface in a real editor window and read the
+result back, which is how every one of these got caught: each has a green unit test, because in each
+one the logic is right and the wiring is not.
+
+- **Sheet ▸ Export ▸ Image / PDF / Markdown wrote a blank picture.** The whole-sheet capture
+  stitches screen grabs into an RGBA8 buffer with `Image.blit_rect`, which requires both images to
+  share a format and silently does NOTHING when they do not - and a grab off an opaque viewport
+  comes back RGB8. Nothing threw and nothing failed: the PNG, every PDF page and every Markdown
+  figure were written out of an untouched empty buffer. The grab is now converted to the buffer's
+  format first, through a seam the suite pins with a real blit.
+- **View ▸ Minimap was a dead menu item** - it shared id 27 with the Patterns lens four lines above
+  it, and a `match` takes its first arm, so clicking Minimap toggled Patterns. It also wrote its own
+  tick and its own tooltip onto the Patterns item. Minimap is now id 46.
+- **View ▸ Follow Scene Selection and Auto-apply while debugging shared id 9801**, so clicking
+  either one toggled BOTH settings, and Follow Scene Selection's tick and tooltip landed on
+  Auto-apply. Three separately-merged blocks each recorded that 9801 was \"clear of every block
+  above\", and each was right when it was written. Follow Scene Selection is now 9805, Debugger…
+  (which shared 9802 with the Saved Views submenu) is 9806, Arrange by is 9807, and Preview In
+  Language (which shared 20 with Humanized Names) is 30. `Sheet ▸ New shared sheet…` also gets the
+  tooltip that was being written onto an id that did not exist yet. A new suite gate reads the menu
+  source and fails on any id two items in one menu share, on any handler answering to an id nothing
+  adds, and pins each of the ids above by value.
+- **Sheet ▸ Start page opened empty.** All three columns collapsed to their titles in the top-left
+  corner, because the margin wrapper the window holds was not anchored to fill it and the cards were
+  not told to expand. The templates, the recents and the tutorials were all being built correctly
+  and drawn at zero height.
+- **A declaration row read with two colons** in Save as Text and in the Markdown export
+  (`player: : Player = $Player`): the listing adds a colon after the object it is about, and a
+  declaration row already carries its own. The row's own punctuation wins.
+- **\"Duplicate events for…\" never said which object it was about** - a reused dialog whose title was
+  set once at build time. It now names the source object on every open.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

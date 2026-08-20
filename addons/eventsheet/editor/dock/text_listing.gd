@@ -135,4 +135,11 @@ static func _join_spans(spans: Array) -> String:
 		body = "not " + body
 	if object_label.is_empty():
 		return body
-	return object_label if body.is_empty() else "%s: %s" % [object_label, body]
+	if body.is_empty():
+		return object_label
+	# The colon after the object is what separates "who" from "what" - but a declaration row already
+	# carries its own ":" or "=" as its next word ("player : Player = $Player"), and writing both
+	# reads "player: : Player = $Player". The row's own punctuation wins.
+	if body.begins_with(":") or body.begins_with("="):
+		return "%s %s" % [object_label, body]
+	return "%s: %s" % [object_label, body]
