@@ -109,6 +109,15 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# space. A run is four lines joined only by its locals' names and a canvas distance is two
 	# declarations away from the call that measures it, so both are answered from one walk here.
 	extras.merge(cursor_ray_facts(sheet), true)
+	# ── X22 / X28 lens hook ────────────────────────────────────────────────────────────────────
+	# The sensor shapes and the input window are asked of the HALF-LIFTED file rather than of its
+	# hand-written lines alone: the control a window waits for is written inside an `if` that lifts
+	# to a condition row, so a walk that saw only the verbatim text would name the window in a file
+	# the importer left alone and refuse to name it in the same file once it lifted.
+	var input_lines: PackedStringArray = behavior_code_lines(sheet)
+	extras["tilt_variables"] = EventSheetPatternReadings.tilt_variables(input_lines)
+	extras["rate_variables"] = EventSheetPatternReadings.rate_variables(input_lines)
+	extras["input_window"] = EventSheetPatternReadings.input_window_facts(input_lines)
 	# ── S8 / S10 / S15 lens hook ───────────────────────────────────────────────────────────────
 	# The three patterns whose lines only mean something TOGETHER: the locals a background load
 	# threads its path and its progress through, the messages the file publishes with `@rpc`, and the
@@ -588,6 +597,30 @@ const SYSTEMS_PATTERN_EVIDENCE: Dictionary = {
 	"window": [
 		"get_window().", "DisplayServer.window_set_", "Engine.max_fps", "msaa_2d", "msaa_3d",
 		"get_texture().get_image()", ".save_png(", ".save_jpg("
+	],
+	# X23. A swipe is a touch-down, a touch-up and the distance between them measured against a clock;
+	# a drawn shape is the drag positions gathered into a stroke. Every fragment here is a Godot
+	# spelling only a touch script writes, so a mouse-driven file cannot wander into the claim.
+	"swipe": [
+		"InputEventScreenTouch", "InputEventScreenDrag", "stroke.append("
+	],
+	# X25. The shooter's three shapes: the ray down the crosshair, the blast that pushes bodies away
+	# from a point, and the wrapping index over a weapons list.
+	"hitscan": [
+		"project_ray_origin(", "project_ray_normal(", "PhysicsRayQueryParameters3D.create(",
+		"intersect_shape(", "apply_impulse(", "weapons.size()", "weapon_index"
+	],
+	# X25. The counter every level of this shape keeps. `secret` is the word the Area itself is marked
+	# with, which is why the claim asks for it beside a count rather than for a count alone.
+	"secrets": [
+		"secrets_found", "is_in_group(\"secret\")", "secrets_total"
+	],
+	# X29. The options screen: the live Input Map being rewritten, the settings the packs read, and
+	# the spoken text. Each fragment is a line only an options screen writes.
+	"accessibility_options": [
+		"InputMap.action_erase_events(", "InputMap.action_add_event(", "effect_strength",
+		"no_flashing", "text_size_scale", "aim_assist_radius", "DisplayServer.tts_speak(",
+		"show_caption"
 	]
 }
 
@@ -598,7 +631,11 @@ const SYSTEMS_PATTERN_WORDS: Dictionary = {
 	"multiplayer": "Messages sent between peers",
 	"navigation": "Following a path a navigation agent worked out",
 	"data_asset": "Values kept in data assets rather than in the file",
-	"window": "Window, render and screenshot settings"
+	"window": "Window, render and screenshot settings",
+	"swipe": "Swipes and drawn shapes",
+	"hitscan": "Shots, blasts and an arsenal",
+	"secrets": "Secrets found",
+	"accessibility_options": "An accessibility options screen"
 }
 
 ## The sheet ACEs each pattern is made of - what Adopt behavior would write, and what the Manual's
@@ -615,7 +652,19 @@ const SYSTEMS_PATTERN_ACES: Dictionary = {
 		"ResourceInFolder", "LoadResourceOrDefault"],
 	"window": ["WindowSetSize", "WindowGoFullscreen", "WindowGoWindowed", "WindowSetVSync",
 		"WindowSetMaxFps", "WindowSetAntiAliasing", "WindowScreenshot", "WindowSaveImageAs",
-		"WindowViewportImage"]
+		"WindowViewportImage"],
+	"swipe": [],
+	"hitscan": ["FireHitscan", "ExplodeAt", "SwitchToNextWeapon", "SwitchToPreviousWeapon",
+		"CurrentWeapon"],
+	"secrets": ["MarkSecretFound", "SecretsFoundCount", "SecretAlreadyFound"],
+	# The rebinding rows that already shipped belong to this pattern too: a remap screen written with
+	# Clear The Bindings Of and Bind Control To IS the shape, and an event whose whole block lifted
+	# would otherwise claim nothing at all.
+	"accessibility_options": ["StartListeningForControl", "AnyInputReceived", "RebindControlTo",
+		"TreatControlAsToggle", "SetEffectStrength", "SetNoFlashing", "SetTextSizeScale",
+		"SetAimAssistRadius", "UsePalette", "SpeakText", "PlaySoundWithCaption",
+		"InputWaitForNextKey", "InputClearBindings", "InputBindTo", "InputSaveBindings",
+		"InputLoadBindings", "InputResetBindings"]
 }
 
 
@@ -699,6 +748,11 @@ static func _systems_adoptable(pattern: String, text: String, picked: PackedStri
 			return "platformer_movement" if gravity else "eight_direction"
 		"navigation":
 			return "nav_agent_3d" if dimension_3d else "platformer_pathfinding"
+		# X23. A hand-written swipe or shape matcher has a behaviour that does the whole thing
+		# properly, with the thresholds, the diagonals and the stroke templates - so the honest offer
+		# is the pack, not a row that writes a third of it.
+		"swipe":
+			return "touch_gestures"
 	return ""
 
 

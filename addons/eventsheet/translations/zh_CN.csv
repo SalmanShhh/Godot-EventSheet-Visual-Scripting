@@ -3650,3 +3650,18 @@ Mission timer,任务计时
 "a clock counts a mission down, shows the time left, and fails when it reaches zero",时钟为任务倒数、显示剩余时间，归零即失败
 Advanced Random,Advanced Random
 Line Of Sight,视线
+Set {neutral} to Touch.{sensor},将 {neutral} 设为 Touch.{sensor}
+"hold the device how you want ""flat"" to feel",以你希望作为「水平」的姿势握持设备
+Steer by tilt {axis} at {strength},按倾斜 {axis} 转向，强度 {strength}
+Aim by gyro,用陀螺仪瞄准
+"yaw on the body, pitch on the camera",左右转身体，上下转相机
+Open input window for {seconds},打开输入窗口 {seconds}
+Open input window {action} for {seconds},打开输入窗口 {action} {seconds}
+perfect = the last {seconds}s,完美 = 最后 {seconds} 秒
+"on the engine clock, which keeps running while paused",按引擎时钟计时（暂停时仍在走）
+Tilt steering and gyro aim,倾斜转向与陀螺仪瞄准
+Swipes and drawn shapes,滑动与手绘图形
+"Shots, blasts and an arsenal",射击、爆炸与武器库
+Secrets found,已发现的秘密
+Timed input windows,限时输入窗口
+An accessibility options screen,无障碍选项界面

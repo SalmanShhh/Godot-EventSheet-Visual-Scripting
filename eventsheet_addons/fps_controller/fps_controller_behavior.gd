@@ -110,8 +110,12 @@ var yaw: float = 0.0
 @export var jump_velocity: float = 4.5
 ## Total jumps before touching the floor again (1 = a single jump, 2 = double jump, 3 = triple). Extra jumps happen in mid-air.
 @export var max_jumps: int = 1
-## Look sensitivity in degrees turned per mouse pixel moved.
+## Aim with the device's gyroscope as well as the mouse - the phone itself turns the view. Off on desktop, where the sensor reads 0 anyway.
 @export_group("Look")
+@export var gyro_aim: bool = false
+## How far a turn of the device moves the view, in mouse pixels per radian per second. Higher is twitchier.
+@export var gyro_sensitivity: float = 220.0
+## Look sensitivity in degrees turned per mouse pixel moved.
 @export var mouse_sensitivity: float = 0.12
 ## Highest look angle in degrees (how far you can look up).
 @export var pitch_max: float = 80.0
@@ -164,6 +168,12 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if host == null:
 		return
+	# The gyro half of looking around: the device's own rotation rate fed through the same
+	# Add Look the mouse uses, so one clamp and one yaw serve both hands. Reads 0 on desktop.
+	if gyro_aim:
+		var rate := Input.get_gyroscope()
+		if rate != Vector3.ZERO:
+			add_look(rate.y * gyro_sensitivity * delta, rate.x * gyro_sensitivity * delta)
 	# up_direction tracks the gravity direction, so is_on_floor() means "resting against
 	# whatever gravity presses you into" - the ceiling under inverted gravity.
 	host.up_direction = -_gravity_dir()

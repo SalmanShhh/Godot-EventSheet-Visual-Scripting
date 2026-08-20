@@ -238,7 +238,9 @@ const PACK_LABELS: Dictionary = {
 	"follow_path": "Follow A Path",
 	"drawing_canvas": "Drawing Canvas",
 	"advanced_random": "Advanced Random",
-	"line_of_sight": "Line Of Sight"
+	"line_of_sight": "Line Of Sight",
+	"touch_gestures": "Touch Gestures",
+	"fps_controller": "FPS Controller"
 }
 
 

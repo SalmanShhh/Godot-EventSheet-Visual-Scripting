@@ -3650,3 +3650,18 @@ Mission timer,미션 타이머
 "a clock counts a mission down, shows the time left, and fails when it reaches zero","시계가 미션을 세어 내려가며 남은 시간을 보여 주고, 0이 되면 실패시킨다"
 Advanced Random,Advanced Random
 Line Of Sight,시야선
+Set {neutral} to Touch.{sensor},{neutral}을(를) Touch.{sensor}(으)로 설정
+"hold the device how you want ""flat"" to feel","""수평""으로 삼고 싶은 자세로 기기를 잡으세요"
+Steer by tilt {axis} at {strength},기울기 {axis}로 조향 (세기 {strength})
+Aim by gyro,자이로로 조준
+"yaw on the body, pitch on the camera","좌우는 몸체, 상하는 카메라"
+Open input window for {seconds},입력 창을 {seconds} 동안 열기
+Open input window {action} for {seconds},입력 창 {action}을(를) {seconds} 동안 열기
+perfect = the last {seconds}s,perfect = 마지막 {seconds}초
+"on the engine clock, which keeps running while paused",엔진 시계 기준 (일시정지 중에도 흐름)
+Tilt steering and gyro aim,기울기 조향과 자이로 조준
+Swipes and drawn shapes,스와이프와 그린 도형
+"Shots, blasts and an arsenal","사격, 폭발 그리고 무기고"
+Secrets found,찾은 비밀
+Timed input windows,시간 제한 입력 창
+An accessibility options screen,접근성 옵션 화면

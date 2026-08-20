@@ -331,6 +331,24 @@ on an empty MeshInstance3D.
 
 **Scope zoom.** Set Camera FOV stepped between two values gives a working scope without a second camera or a render target.
 
+## Weapons in 3D
+
+A fast 3D shooter writes three things out by hand that are one row each here. **Fire Hitscan** casts
+a ray from the middle of the screen (which is where the crosshair is), wanders it by the spread you
+give it, and damages the first thing it hits within reach on the layers you name. **Explode At**
+damages and throws every body near a point, fading with distance - the push is a real impulse on a
+real body, so standing in your own blast throws you, which is how rocket jumping works. **Switch To
+Next Weapon** and **Switch To Previous Weapon** wrap an index over a list you declare, and **Current
+Weapon** is the name to look ammo up by.
+
+**Mark Secret Found** counts a secret once and never again, so walking back through the room does
+not count it twice; **Secrets Found** is the number an end-of-level screen shows.
+
+Movement is not this page's job - add the FPS Controller behaviour for that. New Sheet ▸ Boomer
+Arsenal (3D) wires firing, switching, ammo and secrets together to start from:
+
+![The boomer arsenal starter: fire, switch, spend ammo, count secrets](../images/boomer-arsenal-starter.png)
+
 ## Tips and common mistakes
 
 - **Up is positive Y in 3D.** Copying a 2D jump straight across gives you a jump that drives into the

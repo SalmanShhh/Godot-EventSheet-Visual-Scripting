@@ -3650,3 +3650,18 @@ Mission timer,Missionsuhr
 "a clock counts a mission down, shows the time left, and fails when it reaches zero","eine Uhr zaehlt eine Mission herunter, zeigt die Restzeit und laesst sie bei null scheitern"
 Advanced Random,Advanced Random
 Line Of Sight,Sichtlinie
+Set {neutral} to Touch.{sensor},{neutral} auf Touch.{sensor} setzen
+"hold the device how you want ""flat"" to feel","das Gerät so halten, wie sich ""flach"" anfühlen soll"
+Steer by tilt {axis} at {strength},"Mit Neigung {axis} lenken, Stärke {strength}"
+Aim by gyro,Mit Gyroskop zielen
+"yaw on the body, pitch on the camera","Drehung am Körper, Neigung an der Kamera"
+Open input window for {seconds},Eingabefenster für {seconds} öffnen
+Open input window {action} for {seconds},Eingabefenster {action} für {seconds} öffnen
+perfect = the last {seconds}s,perfekt = die letzten {seconds} s
+"on the engine clock, which keeps running while paused","auf der Engine-Uhr, die auch im Pausenzustand weiterläuft"
+Tilt steering and gyro aim,Neigungssteuerung und Gyro-Zielen
+Swipes and drawn shapes,Wischgesten und gezeichnete Formen
+"Shots, blasts and an arsenal","Schüsse, Explosionen und ein Arsenal"
+Secrets found,Gefundene Geheimnisse
+Timed input windows,Zeitfenster für Eingaben
+An accessibility options screen,Ein Bildschirm für Barrierefreiheits-Optionen

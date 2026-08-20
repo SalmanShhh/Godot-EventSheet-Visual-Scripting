@@ -17,7 +17,8 @@ const NO_VERB_PACKS: Array[String] = [
 	"ability_set_resource.gd", "encounter_resource.gd", "loot_loader_behavior.gd",
 	"loot_table_resource.gd", "price_table_resource.gd", "quest_resource.gd",
 	"random_table_resource.gd", "skin_catalog_loader_behavior.gd", "skin_catalog_resource.gd",
-	"stat_sheet_resource.gd", "storylet_resource.gd", "uhtn_plan_resource.gd",
+	"stat_sheet_resource.gd", "storylet_resource.gd", "touch_shape_library_resource.gd",
+	"uhtn_plan_resource.gd",
 ]
 ## Verbs the lifter still cannot reproduce byte-exactly (one function each - an async loop guard,
 ## an @ace_param header, two Line of Sight helpers, one Drawing Canvas verb). Each stays a raw block
@@ -59,11 +60,12 @@ static func run() -> bool:
 				all_passed = _check("%s lifts at least one function" % file_name, sheet.functions.size() > 0, true) and all_passed
 			var reopened: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
 			all_passed = _check("%s reopened sheet compiles back byte-identically" % file_name, reopened == source, true) and all_passed
-	all_passed = _check("the fleet was scanned (93 packs)", packs, 93) and all_passed
+	# Batch 13 added two packs (Touch Gestures and its shape-library data asset): 93 + 2.
+	all_passed = _check("the fleet was scanned (95 packs)", packs, 95) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
-	# Batch 13 (X21) added three verbs to the Advanced Random pack: Roll With Pity, Reset Pity and
-	# Pity Count. 1283 + 3.
-	all_passed = _check("fleet-wide declared verbs count matches the catalog (1286)", total_verbs, 1286) and all_passed
+	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
+	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
+	all_passed = _check("fleet-wide declared verbs count", declared_total, 1283 + 3 + 19) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0

@@ -3650,3 +3650,18 @@ Mission timer,ミッションタイマー
 "a clock counts a mission down, shows the time left, and fails when it reaches zero",時計がミッションを刻み、残り時間を見せ、ゼロで失敗させる
 Advanced Random,Advanced Random
 Line Of Sight,視線
+Set {neutral} to Touch.{sensor},{neutral} を Touch.{sensor} に設定
+"hold the device how you want ""flat"" to feel",「水平」としたい向きで端末を持つ
+Steer by tilt {axis} at {strength},傾き {axis} で操作 (強さ {strength})
+Aim by gyro,ジャイロで照準
+"yaw on the body, pitch on the camera",左右は本体、上下はカメラ
+Open input window for {seconds},入力受付を {seconds} 開く
+Open input window {action} for {seconds},入力受付 {action} を {seconds} 開く
+perfect = the last {seconds}s,perfect = 最後の {seconds} 秒
+"on the engine clock, which keeps running while paused",エンジン時計基準 (ポーズ中も進む)
+Tilt steering and gyro aim,傾き操作とジャイロ照準
+Swipes and drawn shapes,スワイプと描いた形
+"Shots, blasts and an arsenal",射撃・爆発・武器の切り替え
+Secrets found,見つけた秘密
+Timed input windows,時間制限つき入力受付
+An accessibility options screen,アクセシビリティ設定画面

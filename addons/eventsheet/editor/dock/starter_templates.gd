@@ -46,6 +46,8 @@ func _build_template_menu_items() -> void:
 	_template_menu.add_item("Top-down Starter", 2)
 	_template_menu.add_item("First-Person Controller (3D)", 6)
 	_template_menu.add_item("Third-Person Mover (3D)", 7)
+	_template_menu.add_item("Boomer Arsenal (3D)", 30)
+	_template_menu.add_item("Game Options", 31)
 	_template_menu.add_separator("Behaviours - attach under a node")
 	_template_menu.add_item("Behavior Component (signal-driven)", 8)
 	_template_menu.add_separator("Autoloads - project-wide singletons")
@@ -752,6 +754,164 @@ static func _build_topdown_starter() -> EventSheetResource:
 	return sheet
 
 
+## X25. A BOOMER ARSENAL starter: fire, switch, ammo and secrets wired in one go, on the movement the
+## FPS Controller behaviour already does. Deliberately no aiming-down-sights: it is a boomer shooter.
+static func _build_boomer_arsenal_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "CharacterBody3D"
+	sheet.variables = {
+		"weapons": {"type": "Array", "default": ["shotgun", "rifle", "launcher"], "exported": true,
+			"attributes": {"tooltip": "The arsenal, in the order the wheel runs. Ammo is looked up by these names."}},
+		"weapon_index": {"type": "int", "default": 0, "exported": false,
+			"attributes": {"tooltip": "Which weapon is out, counting from 0."}},
+		"ammo": {"type": "Dictionary", "default": {"shotgun": 30, "rifle": 90, "launcher": 8}, "exported": true,
+			"attributes": {"tooltip": "How many rounds each weapon has left, keyed by weapon name."}},
+		"secrets_found": {"type": "Array", "default": [], "exported": false,
+			"attributes": {"tooltip": "Every secret counted so far. Each one goes in once."}}
+	}
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Boomer arsenal[/b] - fire, switch weapons, spend ammo and count secrets.\nAdd the FPS Controller behaviour for the movement, then Compile and attach the script."
+	sheet.events.append(note)
+	var fire: EventRow = EventRow.new()
+	fire.trigger_provider_id = "Core"
+	fire.trigger_id = "OnPhysicsProcess"
+	var pressed: ACECondition = ACECondition.new()
+	pressed.provider_id = "Core"
+	pressed.ace_id = "IsActionJustPressed"
+	pressed.codegen_template = "Input.is_action_just_pressed(&{action})"
+	pressed.params = {"action": "\"ui_accept\""}
+	fire.conditions.append(pressed)
+	var has_ammo: RawCodeRow = RawCodeRow.new()
+	has_ammo.code = "if int(ammo.get(weapons[weapon_index], 0)) > 0:\n\tammo[weapons[weapon_index]] = int(ammo[weapons[weapon_index]]) - 1"
+	fire.actions.append(has_ammo)
+	var shot: ACEAction = ACEAction.new()
+	shot.provider_id = "Core"
+	shot.ace_id = "FireHitscan"
+	shot.codegen_template = _shipped_template("FireHitscan", "arsenal_shot")
+	shot.params = {"spread": "1.5", "damage": "25", "reach": "200.0", "mask": "1"}
+	fire.actions.append(shot)
+	sheet.events.append(fire)
+	var switching: EventRow = EventRow.new()
+	switching.trigger_provider_id = "Core"
+	switching.trigger_id = "OnPhysicsProcess"
+	var wheeled: ACECondition = ACECondition.new()
+	wheeled.provider_id = "Core"
+	wheeled.ace_id = "IsActionJustPressed"
+	wheeled.codegen_template = "Input.is_action_just_pressed(&{action})"
+	wheeled.params = {"action": "\"ui_right\""}
+	switching.conditions.append(wheeled)
+	var next_weapon: ACEAction = ACEAction.new()
+	next_weapon.provider_id = "Core"
+	next_weapon.ace_id = "SwitchToNextWeapon"
+	next_weapon.codegen_template = _shipped_template("SwitchToNextWeapon")
+	next_weapon.params = {"index": "weapon_index", "weapons": "weapons"}
+	switching.actions.append(next_weapon)
+	sheet.events.append(switching)
+	var secret: EventRow = EventRow.new()
+	secret.trigger_provider_id = "Core"
+	secret.trigger_id = "OnPhysicsProcess"
+	var count_it: ACEAction = ACEAction.new()
+	count_it.provider_id = "Core"
+	count_it.ace_id = "MarkSecretFound"
+	count_it.codegen_template = _shipped_template("MarkSecretFound")
+	count_it.params = {"name": "\"secret\"", "found": "secrets_found"}
+	secret.actions.append(count_it)
+	sheet.events.append(secret)
+	return sheet
+
+
+## X29. A GAME OPTIONS starter: the accessibility screen every project should be an afternoon from.
+## The settings are remembered between runs, the remap flow is four rows of one action each, and the
+## three dials are the ones the juice, text and aim rows ask before they fire.
+static func _build_game_options_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Control"
+	sheet.variables = {
+		"effect_strength_percent": {"type": "int", "default": 100, "exported": true,
+			"attributes": {"remember": true, "tooltip": "How strong shakes, kicks and flashes are, 0 to 100. Bind a slider to it.",
+				"header": "Accessibility", "header_color": "#7bc96f",
+				"info": "Every setting here is remembered between runs, so a player sets it once."}},
+		"no_flashing": {"type": "bool", "default": false, "exported": true,
+			"attributes": {"remember": true, "tooltip": "On: every flash becomes a fade, for players with photosensitive epilepsy."}},
+		"text_size_scale": {"type": "float", "default": 1.0, "exported": true,
+			"attributes": {"remember": true, "tooltip": "1 is the size you designed. Every text size multiplies by it."}},
+		"aim_assist_radius": {"type": "float", "default": 0.0, "exported": true,
+			"attributes": {"remember": true, "tooltip": "How far from dead centre a target still counts. 0 is no help."}},
+		"hold_is_toggle": {"type": "bool", "default": false, "exported": true,
+			"attributes": {"remember": true, "tooltip": "On: a held control (aim, crouch, sprint) is pressed once on and once off instead."}},
+		"listening_for": {"type": "String", "default": "", "exported": false,
+			"attributes": {"tooltip": "Which control is being rebound right now, \"\" when none."}}
+	}
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Game Options[/b] - the accessibility screen: remapping, effect strength, no flashing, text size and aim help.\nBind each setting to a slider or a checkbox, then apply it with the row under Apply."
+	sheet.events.append(note)
+	var applying: EventRow = EventRow.new()
+	applying.trigger_provider_id = "Core"
+	applying.trigger_id = "OnReady"
+	for row: Dictionary in [
+		{"ace": "SetEffectStrength", "params": {"percent": "effect_strength_percent"}},
+		{"ace": "SetNoFlashing", "params": {"on": "no_flashing"}},
+		{"ace": "SetTextSizeScale", "params": {"scale": "text_size_scale"}},
+		{"ace": "SetAimAssistRadius", "params": {"radius": "aim_assist_radius"}}
+	]:
+		var setting: ACEAction = ACEAction.new()
+		setting.provider_id = "Core"
+		setting.ace_id = str(row["ace"])
+		setting.codegen_template = _shipped_template(str(row["ace"]), "options_%s" % str(row["ace"]).to_snake_case())
+		setting.params = (row["params"] as Dictionary).duplicate()
+		applying.actions.append(setting)
+	var load_them: ACEAction = ACEAction.new()
+	load_them.provider_id = "Core"
+	load_them.ace_id = "InputLoadBindings"
+	load_them.codegen_template = _shipped_template("InputLoadBindings", "options_load")
+	load_them.params = {"path": "\"user://bindings.cfg\""}
+	applying.actions.append(load_them)
+	sheet.events.append(applying)
+	var listening: EventRow = EventRow.new()
+	listening.trigger_provider_id = "Core"
+	listening.trigger_id = "OnUnhandledInput"
+	var received: ACECondition = ACECondition.new()
+	received.provider_id = "Core"
+	received.ace_id = "AnyInputReceived"
+	received.codegen_template = _shipped_template("AnyInputReceived")
+	received.params = {"listening": "listening_for"}
+	listening.conditions.append(received)
+	var rebind: ACEAction = ACEAction.new()
+	rebind.provider_id = "Core"
+	rebind.ace_id = "RebindControlTo"
+	rebind.codegen_template = _shipped_template("RebindControlTo")
+	rebind.params = {"action": "listening_for", "event": "event"}
+	listening.actions.append(rebind)
+	var save_them: ACEAction = ACEAction.new()
+	save_them.provider_id = "Core"
+	save_them.ace_id = "InputSaveBindings"
+	save_them.codegen_template = _shipped_template("InputSaveBindings", "options_save")
+	save_them.params = {"path": "\"user://bindings.cfg\""}
+	listening.actions.append(save_them)
+	var stop: ACEAction = ACEAction.new()
+	stop.provider_id = "Core"
+	stop.ace_id = "StopListeningForControl"
+	stop.codegen_template = _shipped_template("StopListeningForControl")
+	stop.params = {"listening": "listening_for"}
+	listening.actions.append(stop)
+	sheet.events.append(listening)
+	return sheet
+
+
+## The template a shipped ACE writes, taken from the registry rather than re-typed here: a starter
+## that spelled a template by hand would drift the moment the vocabulary gained an optional slot,
+## and a starter is the first thing a newcomer compiles.
+##
+## `{uid}` is baked HERE, with a stable id per row. The dock bakes it when a reader drops a row and
+## the compiler never does, so a starter that handed its rows over unbaked would ship `var __cam_{uid}`
+## straight into the emitted GDScript - which does not parse.
+static func _shipped_template(ace_id: String, row_uid: String = "") -> String:
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		if str(descriptor.ace_id) == ace_id:
+			return str(descriptor.codegen_template).replace("{uid}", row_uid)
+	return ""
+
+
 ## Returns a fresh starter sheet for a template id - the ONE source of truth shared by the
 ## New-Sheet menu (below) and the FileSystem "Create New > Event Sheet" dialog. Only the
 ## dock-free starters live here (Blank + 2D movement + the three data-asset intents); the
@@ -794,6 +954,9 @@ static func build_starter(template_id: int) -> EventSheetResource:
 		27: return _build_stealth_guard_starter()
 		28: return _build_boss_fight_starter()
 		29: return _build_mission_timer_starter()
+		# Batch 13 kits 2, renumbered past the game shapes at merge.
+		30: return _build_boomer_arsenal_starter()
+		31: return _build_game_options_starter()
 		_: return EventSheetResource.new()  # 0 Blank (and any other id) -> a minimal editable sheet
 
 
@@ -868,6 +1031,10 @@ func _new_sheet_from_template(template_id: int) -> void:
 			sheet = _build_import_tool_starter()
 		14:
 			sheet = _build_export_hook_starter()
+		15:
+			sheet = _build_boomer_arsenal_starter()
+		16:
+			sheet = _build_game_options_starter()
 		6:
 			sheet.host_class = "CharacterBody3D"
 			var note6: CommentRow = CommentRow.new()

@@ -187,6 +187,12 @@ func _process(delta: float) -> void:
 	if _bob_active:
 		# A walking figure-8: side sway at half rate, one vertical dip per step.
 		fx_position += Vector3(sin(_bob_time * TAU * 0.5) * _bob_amplitude * 0.5, -absf(sin(_bob_time * TAU * 0.5)) * _bob_amplitude, 0.0)
+	# One global dial every camera effect is scaled by, so a player who gets motion sick can
+	# turn shake, recoil, bob and lean down (or off) and keep the game. 1 when nobody has set
+	# it, so a project that never asks is untouched.
+	var effect_strength: float = float(Engine.get_meta("effect_strength", 1.0))
+	fx_position *= effect_strength
+	fx_rotation *= effect_strength
 	cam.position += fx_position
 	cam.rotation += fx_rotation
 	cam.fov = clampf(cam.fov + _fov_kick, 1.0, 179.0)

@@ -336,6 +336,35 @@ get_window().title = "My Game (DEBUG)"
 
 **A "your monitor is smaller than this" warning.** Compare Screen Size against the chosen resolution before applying it, and offer the next size down instead.
 
+## Accessibility options for the player
+
+Every ingredient for an options screen already existed somewhere; these rows are what composes them.
+
+**Remapping** is four rows of one action each: **Start Listening For** a control, **Any Input
+Received** as the question inside an input event, **Rebind Control To** the key or button that just
+arrived, then **Stop Listening**. Save Bindings and Load Bindings keep the result across restarts.
+
+**Treat Control As A Toggle** makes a held control work either way - held down while the setting is
+off, pressed once on and once off while it is on - so every other row asks one yes-no variable and
+nothing else changes.
+
+**Set Effect Strength** is one dial from 0 to 100 that the Juice and Juice 3D behaviours multiply
+every shake, recoil, bob and tilt by, so a player who gets motion sick can turn it down and keep the
+game. **Set No Flashing** replaces the Flash behaviour's blink with a fade, which matters for players
+with photosensitive epilepsy. **Set Text Size Scale** is the number every font size should multiply
+by, **Use Palette** swaps a colour set kept as a data asset, and **Set Aim Assist Radius** is how
+generous the aim is, as the player's choice rather than a designer's guess.
+
+**Play Sound With Caption** shows what a player who cannot hear it needs to read on a HUD caption
+strip (any node in the `caption_strip` group with a `show_caption` method), and **Show Caption**
+covers a sound played some other way. Turning on the `eventsheets/doctor/caption_sounds` project
+setting makes the Doctor list scripts that play sounds with no caption. **Speak** and **Stop
+Speaking** read a line out loud through the voices the player's own system has.
+
+New Sheet ▸ Game Options scaffolds the whole screen, with every setting remembered between runs:
+
+![The Game Options starter: remapping and the four accessibility dials](../images/game-options-starter.png)
+
 ## Tips and common mistakes
 
 - **Two rows are called Set Window Size and two are called Is Fullscreen.** The **Game Window**

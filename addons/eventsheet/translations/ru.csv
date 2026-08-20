@@ -3650,3 +3650,18 @@ Mission timer,Таймер миссии
 "a clock counts a mission down, shows the time left, and fails when it reaches zero","часы отсчитывают миссию, показывают оставшееся время и проваливают её на нуле"
 Advanced Random,Advanced Random
 Line Of Sight,Линия видимости
+Set {neutral} to Touch.{sensor},Задать {neutral} = Touch.{sensor}
+"hold the device how you want ""flat"" to feel","держите устройство так, как должно ощущаться ""ровно"""
+Steer by tilt {axis} at {strength},Управлять наклоном {axis} с силой {strength}
+Aim by gyro,Прицеливание гироскопом
+"yaw on the body, pitch on the camera","поворот на теле, наклон на камере"
+Open input window for {seconds},Открыть окно ввода на {seconds}
+Open input window {action} for {seconds},Открыть окно ввода {action} на {seconds}
+perfect = the last {seconds}s,идеально = последние {seconds} с
+"on the engine clock, which keeps running while paused","по часам движка, которые идут и на паузе"
+Tilt steering and gyro aim,Управление наклоном и прицел гироскопом
+Swipes and drawn shapes,Свайпы и нарисованные фигуры
+"Shots, blasts and an arsenal","Выстрелы, взрывы и арсенал"
+Secrets found,Найденные секреты
+Timed input windows,Окна ввода по времени
+An accessibility options screen,Экран настроек доступности
