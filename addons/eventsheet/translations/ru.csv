@@ -3164,8 +3164,6 @@ starting {values},nachinayushchiysya s {values}
 {subject} is a table,{subject} - tablitsa
 with {clauses},s {clauses}
 has {key},soderzhit {key}
-<<<<<<< HEAD
-<<<<<<< HEAD
 Editor Tool…,Инструмент редактора…
 "One-click chore - run it yourself, from the sheet's bar",Задача в один клик - запускается вручную с панели листа
 Editor plugin - the editor switches it on and off,Плагин редактора - редактор включает и выключает его
@@ -3189,12 +3187,9 @@ Command Tool (runs headless from the command line),Консольный инст
 The editor icon this name draws.,"Значок редактора, который рисует это имя."
 The words for building editor tools,Слова для создания инструментов редактора
 bottom panel,нижняя панель
-=======
 each one's,у каждого
 those where,"те, где"
 each one,каждый
->>>>>>> worktree-agent-a41d7362ff0b1efba
-=======
 editor plugin,плагин редактора
 Properties bar add-on,дополнение панели свойств
 Importer add-on,дополнение импорта
@@ -3261,4 +3256,3 @@ Add item {0},Добавить пункт {0}
 Answer {value},Ответить {value}
 handled,обработано
 not handled,не обработано
->>>>>>> worktree-agent-a9da6ecc4c51b1029

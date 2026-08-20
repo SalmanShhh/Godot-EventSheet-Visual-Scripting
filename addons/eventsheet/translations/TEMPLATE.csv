@@ -3152,8 +3152,6 @@ starting {values},
 {subject} is a table,
 with {clauses},
 has {key},
-<<<<<<< HEAD
-<<<<<<< HEAD
 Editor Tool…,
 "One-click chore - run it yourself, from the sheet's bar",
 Editor plugin - the editor switches it on and off,
@@ -3177,12 +3175,9 @@ Command Tool (runs headless from the command line),
 The editor icon this name draws.,
 The words for building editor tools,
 bottom panel,
-=======
 each one's,
 those where,
 each one,
->>>>>>> worktree-agent-a41d7362ff0b1efba
-=======
 editor plugin,
 Properties bar add-on,
 Importer add-on,
@@ -3249,4 +3244,3 @@ Add item {0},
 Answer {value},
 handled,
 not handled,
->>>>>>> worktree-agent-a9da6ecc4c51b1029

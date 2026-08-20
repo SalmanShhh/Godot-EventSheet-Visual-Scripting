@@ -3164,8 +3164,6 @@ starting {values},che inizia con {values}
 {subject} is a table,{subject} e una tabella
 with {clauses},con {clauses}
 has {key},ha {key}
-<<<<<<< HEAD
-<<<<<<< HEAD
 Editor Tool…,Strumento dell'editor…
 "One-click chore - run it yourself, from the sheet's bar","Compito con un clic - lo esegui tu, dalla barra del foglio"
 Editor plugin - the editor switches it on and off,Plugin dell'editor - l'editor lo attiva e lo disattiva
@@ -3189,12 +3187,9 @@ Command Tool (runs headless from the command line),Strumento da riga di comando 
 The editor icon this name draws.,L'icona dell'editor che questo nome disegna.
 The words for building editor tools,Le parole per costruire strumenti dell'editor
 bottom panel,pannello inferiore
-=======
 each one's,di ciascuno
 those where,quelli in cui
 each one,ciascuno
->>>>>>> worktree-agent-a41d7362ff0b1efba
-=======
 editor plugin,plugin dell'editor
 Properties bar add-on,estensione della barra delle proprietà
 Importer add-on,estensione di importazione
@@ -3261,4 +3256,3 @@ Add item {0},Aggiungi la voce {0}
 Answer {value},Rispondi {value}
 handled,gestito
 not handled,non gestito
->>>>>>> worktree-agent-a9da6ecc4c51b1029
