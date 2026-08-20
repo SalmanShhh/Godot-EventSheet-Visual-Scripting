@@ -3164,6 +3164,7 @@ starting {values},以 {values} 开头
 {subject} is a table,{subject} 是一张表
 with {clauses},其中 {clauses}
 has {key},含有 {key}
+<<<<<<< HEAD
 Editor Tool…,编辑器工具…
 "One-click chore - run it yourself, from the sheet's bar",一键杂务 - 从表格栏中自行运行
 Editor plugin - the editor switches it on and off,编辑器插件 - 由编辑器开启和关闭
@@ -3187,3 +3188,8 @@ Command Tool (runs headless from the command line),命令行工具（从命令�
 The editor icon this name draws.,该名称所绘制的编辑器图标。
 The words for building editor tools,构建编辑器工具的用语
 bottom panel,底部面板
+=======
+each one's,每个的
+those where,满足条件的
+each one,每一个
+>>>>>>> worktree-agent-a41d7362ff0b1efba

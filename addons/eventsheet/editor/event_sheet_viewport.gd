@@ -3136,7 +3136,15 @@ func _begin_edit(row_index: int, span_index: int) -> void:
 	_editing_span_index = resolved_span_index
 	# A placeholder span (an empty verb description / category showing "+ ...") starts the buffer EMPTY,
 	# not with the placeholder text - the user is filling in a blank field, not editing that prompt.
-	_editing_buffer = "" if bool(metadata.get("edit_placeholder", false)) else span.text
+	# W12 - a span whose TEXT is a reading edits the source it stands for: a table entry chip reads
+	# `span index = 3` and is written `"span_index": 3`, and putting the reading in the field would
+	# have the user's first keystroke rewrite a quoted key into a bare one. `edit_text` is the
+	# characters the file actually holds; a span without one edits exactly what it shows.
+	var source_text: String = str(metadata.get("edit_text", ""))
+	if bool(metadata.get("edit_placeholder", false)):
+		_editing_buffer = ""
+	else:
+		_editing_buffer = source_text if not source_text.is_empty() else span.text
 	_editing_caret = _editing_buffer.length()
 	_editing_select_anchor = -1
 	_update_inline_format_bar()
@@ -3313,6 +3321,10 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
 	if edit_kind.begins_with("decl_entry_line:"):
 		_apply_decl_entry_edit(row_data.source_resource, edit_kind, value)
 		return
+	# W12 - a chip of a multi-line table or list rewrites the one verbatim row its entry came from.
+	if edit_kind.begins_with("literal_entry_line:"):
+		EventSheetValueLiteralRows.apply_entry_edit(row_data.source_resource, edit_kind, value)
+		return
 	match edit_kind:
 		"group_name":
 			if row_data.source_resource is EventGroup:
@@ -3426,6 +3438,11 @@ func _get_tooltip(at_position: Vector2) -> String:
 			var sentence_prefix: String = "%s\n\n" % sentence if not sentence.is_empty() else ""
 			# M39 - a Create object cell stands for two or three statements. Hover shows all of them, so
 			# the shorter reading never costs the reader the ability to see what the file actually says.
+			# W12 - a folded literal shows its first three entries and says how many are left. The
+			# hover is the whole thing, so the shorter reading never costs the reader an entry.
+			var literal_hover: String = str(metadata.get("literal_full_text", ""))
+			if not literal_hover.is_empty():
+				return sentence_prefix + literal_hover
 			var create_indices: Array = metadata.get("create_object_indices", []) as Array
 			if not create_indices.is_empty():
 				var create_lines: PackedStringArray = PackedStringArray()

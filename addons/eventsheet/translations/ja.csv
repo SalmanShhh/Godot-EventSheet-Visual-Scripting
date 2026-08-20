@@ -3164,6 +3164,7 @@ starting {values},先頭が {values}
 {subject} is a table,{subject} がテーブル
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
+<<<<<<< HEAD
 Editor Tool…,エディタツール…
 "One-click chore - run it yourself, from the sheet's bar",ワンクリック作業 - シートのバーから自分で実行
 Editor plugin - the editor switches it on and off,エディタプラグイン - エディタがオン/オフを切り替える
@@ -3187,3 +3188,8 @@ Command Tool (runs headless from the command line),コマンドツール（コ�
 The editor icon this name draws.,この名前が描くエディタアイコンです。
 The words for building editor tools,エディタツールを作るための言葉
 bottom panel,下部パネル
+=======
+each one's,それぞれの
+those where,次の条件のもの
+each one,それぞれ
+>>>>>>> worktree-agent-a41d7362ff0b1efba

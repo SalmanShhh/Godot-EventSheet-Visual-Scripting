@@ -3164,6 +3164,7 @@ starting {values},{values} 로 시작
 {subject} is a table,{subject} 가 테이블
 with {clauses},{clauses} 인
 has {key},{key} 가 있는
+<<<<<<< HEAD
 Editor Tool…,에디터 도구…
 "One-click chore - run it yourself, from the sheet's bar",원클릭 작업 - 시트 바에서 직접 실행
 Editor plugin - the editor switches it on and off,에디터 플러그인 - 에디터가 켜고 끕니다
@@ -3187,3 +3188,8 @@ Command Tool (runs headless from the command line),명령줄 도구 (명령줄�
 The editor icon this name draws.,이 이름이 그리는 에디터 아이콘입니다.
 The words for building editor tools,에디터 도구를 만드는 말
 bottom panel,하단 패널
+=======
+each one's,각각의
+those where,다음 조건인 것
+each one,각각
+>>>>>>> worktree-agent-a41d7362ff0b1efba

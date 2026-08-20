@@ -106,6 +106,30 @@ one the logic is right and the wiring is not.
   Godot spells it; on, as the sheet says it; and the new Manual page **The words for building editor
   tools** lists every pair with the reason the word was changed.
 
+### Added - tables and lists as chips, functions as values, objects named by class
+
+- **A table or a list written across several lines is one row, with its entries as chips.** A
+  `{...}` or `[...]` handed to `return`, to a signal, to `append`, to a call, or to a `var` used to
+  arrive as one row per line: a head that said half a sentence, entries that said nothing on their
+  own, and a closing bracket that was a row of its own. Now the run reads as ONE row - the
+  statement's own sentence, the word **table** or **list** where the literal sat, and each entry as
+  a named chip (`span index = selected span index`). A long one folds to the first three plus
+  "… N more", with the whole literal on hover; a nested table nests inside its chip; the orphan
+  `}` / `})` / `],` line is gone. Double-clicking a chip edits that entry in place, rewriting the
+  one line it came from. Display-only: the rows are untouched, so the file still holds every line
+  and the byte round-trip is gated on it. Measured on the editor's own `event_sheet_viewport.gd`,
+  fifteen runs and over a hundred bare lines now read as entries.
+- **A function handed around as a value reads as a function.** A bare function name assigned or
+  passed reads as the **ƒ** chip the condition lane already names functions with, and so does
+  `Callable(self, "on_done")`. A `Callable` local reads **Local function**; `callback.call(result)`
+  reads **Call callback   result**; `callback.is_valid()` reads **callback is set**; and a one-line
+  `map` / `filter` lambda reads in the Array rows' own words - `rows each one's name`,
+  `rows those where ready`.
+- **A typed receiver is named by what it IS.** When the sheet declared a receiver's class, the
+  object column says that class in words with the plugin prefix dropped - `_registry` reads
+  **ACE registry**, `_find_bar` reads **Find bar** - with the variable's own name muted beside it.
+  Familiar Words off shows the class exactly as the file declares it. Display-only.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

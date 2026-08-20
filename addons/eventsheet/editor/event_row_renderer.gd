@@ -994,10 +994,34 @@ func _draw_spans(
 				# column the user can drag narrow needs to degrade legibly at any width.
 				var label_limit: float = min(object_column_width - 6.0, text_width)
 				_draw_text(control, Vector2(text_x, baseline_y), _elide(object_label, label_limit, font, draw_font_size), label_limit, font, draw_font_size, object_color)
+				# W14 - the variable's OWN name, muted, after the class the object column now says.
+				# The class is what the object is; the name is which one, and a reader who goes looking
+				# for it in the code needs both. Drawn INSIDE the column and only when the column has
+				# room left, so every row's text still starts on the same edge.
+				var column_note: String = str(metadata.get("object_note", ""))
+				if not column_note.is_empty():
+					var used: float = font.get_string_size(object_label + " ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+					var note_room: float = label_limit - used
+					if note_room > 12.0:
+						var column_note_color: Color = object_color
+						column_note_color.a *= 0.55
+						_draw_text(control, Vector2(text_x + used, baseline_y),
+							_elide(column_note, note_room, font, draw_font_size), note_room, font,
+							draw_font_size, column_note_color)
 				text_x += object_column_width
 			else:
 				_draw_text(control, Vector2(text_x, baseline_y), object_label, text_width, font, draw_font_size, object_color)
 				text_x += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+				# W14 - the variable's OWN name, muted, beside the class the object column now says.
+				# The class is what the object is; the name is which one, and a reader who goes
+				# looking for it in the code needs both. Flow mode only: in column mode the column is
+				# the class's, and a second word in it would push every row's text out of alignment.
+				var object_note: String = str(metadata.get("object_note", ""))
+				if not object_note.is_empty():
+					var note_color: Color = object_color
+					note_color.a *= 0.55
+					_draw_text(control, Vector2(text_x, baseline_y), object_note, text_width, font, draw_font_size, note_color)
+					text_x += font.get_string_size(object_note + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 			# The object column's RESTING separator - a hairline on the same boundary the resize grab
 			# uses. An event sheet shows this split permanently, so the object column reads as a real column
 			# rather than as text that happens to start further along; without it the boundary was

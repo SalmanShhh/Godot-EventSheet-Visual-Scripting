@@ -3164,6 +3164,7 @@ starting {values},commencant par {values}
 {subject} is a table,{subject} est une table
 with {clauses},avec {clauses}
 has {key},a {key}
+<<<<<<< HEAD
 Editor Tool…,Outil d'éditeur…
 "One-click chore - run it yourself, from the sheet's bar","Corvée en un clic - lancez-la vous-même, depuis la barre de la feuille"
 Editor plugin - the editor switches it on and off,Extension d'éditeur - l'éditeur l'active et le désactive
@@ -3187,3 +3188,8 @@ Command Tool (runs headless from the command line),Outil en ligne de commande (s
 The editor icon this name draws.,L'icône d'éditeur que ce nom dessine.
 The words for building editor tools,Les mots pour créer des outils d'éditeur
 bottom panel,panneau du bas
+=======
+each one's,de chacun
+those where,ceux où
+each one,chacun
+>>>>>>> worktree-agent-a41d7362ff0b1efba

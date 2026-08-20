@@ -17,6 +17,8 @@ extends RefCounted
 #   M20      object declaration rows  - @onready var hp_bar: ProgressBar = %HpBar
 #   N4       autoloads and behaviours - an autoload reads as a global, and a pack node under the
 #                                       script's own node reads as that object's behaviour
+#   W14      typed objects by class   - a receiver whose declared class the PROJECT wrote reads
+#                                       under that class in words, its own name muted beside it
 
 
 ## The object label a pack's host is shown under. One constant so the icon map, the row builder
@@ -1826,6 +1828,89 @@ static func object_class_map(sheet: EventSheetResource) -> Dictionary:
 			map[node_reference.substr(1)] = declared_type
 			map[EventSheetSentence.object_of_reference(node_reference)] = declared_type
 	return map
+
+
+## W14. The prefixes a plugin puts in front of every class it declares. They are there to keep the
+## global class list from colliding, and they say nothing to a reader looking at one row - the same
+## seven characters on every object is noise, not information.
+const CLASS_NAME_PREFIXES: PackedStringArray = ["EventSheet", "EventForge"]
+
+
+## W14. The object label a DECLARED CLASS reads under: `EventSheetACERegistry` reads `ACE registry`,
+## `EventSheetFindBar` reads `Find bar`, `ContextMenu` reads `Context menu`.
+##
+## The plugin prefix comes off, the camel-case name splits into words, an all-caps run stays an
+## acronym, and only the first word is capitalized - which is how a sheet writes the name of a thing
+## rather than how a language writes a type. "" when there is no class name to read.
+static func class_object_label(class_text: String) -> String:
+	var bare: String = class_text.strip_edges()
+	if bare.is_empty():
+		return ""
+	for prefix: String in CLASS_NAME_PREFIXES:
+		if bare.begins_with(prefix) and bare.length() > prefix.length():
+			bare = bare.substr(prefix.length())
+			break
+	var words: PackedStringArray = PackedStringArray()
+	var current: String = ""
+	for index: int in bare.length():
+		var character: String = bare[index]
+		var upper: bool = character == character.to_upper() and character != character.to_lower()
+		# A new word starts at a capital that FOLLOWS a lower-case letter or a digit, so an acronym
+		# run (`ACERegistry`) stays whole until the word after it begins.
+		var previous_lower: bool = index > 0 and bare[index - 1] != bare[index - 1].to_upper()
+		var next_lower: bool = index + 1 < bare.length() and bare[index + 1] != bare[index + 1].to_upper() \
+			and bare[index + 1] == bare[index + 1].to_lower()
+		if upper and not current.is_empty() and (previous_lower or (next_lower and current.length() > 1)):
+			words.append(current)
+			current = ""
+		current += character
+	if not current.is_empty():
+		words.append(current)
+	if words.is_empty():
+		return bare
+	var spelled: PackedStringArray = PackedStringArray()
+	for index: int in words.size():
+		var word: String = words[index]
+		# An acronym is a word a reader reads as letters, so it keeps its capitals wherever it sits.
+		if word == word.to_upper() and word.length() > 1:
+			spelled.append(word)
+		elif index == 0:
+			spelled.append(word)
+		else:
+			spelled.append(word.to_lower())
+	return " ".join(spelled)
+
+
+## W14. The object column for a receiver whose declared CLASS the sheet knows, as {label, note} - the
+## class in words, and the variable's own name muted beside it when the two differ. {} when nothing
+## was declared, which leaves the label exactly as the row already read it.
+##
+## The variable name says who; the class says WHAT, and for tool code (`_registry`, `_x_plugin`,
+## `helper`) the what is the informative half. Only a class the PROJECT declared is read this way -
+## see the engine-class refusal below. Display-only: nothing here reaches a row or the file.
+static func typed_object_label(object_label: String, context: Dictionary, humanize: bool) -> Dictionary:
+	var label: String = object_label.strip_edges()
+	if label.is_empty() or label == EventSheetSentence.OBJECT_SYSTEM:
+		return {}
+	var declared: String = str((context.get("variable_types", {}) as Dictionary).get(label, ""))
+	if declared.is_empty() or declared.contains("["):
+		return {}
+	# An ENGINE class is left alone. `label ▸ Set horizontal alignment` already reads right: the class
+	# behind a `Label` is drawn as its icon and says nothing the row does not, while the variable name
+	# is the half that says WHICH one. The case this reading exists for is a class the project itself
+	# declared - `EventSheetACERegistry`, `HudKit` - where the name is the only place the class is
+	# ever written down and `_registry` says nothing at all.
+	if ClassDB.class_exists(declared):
+		return {}
+	# Familiar Words off: the class exactly as the file declares it, because that is then the name
+	# the reader is looking for in the code.
+	if not humanize:
+		return {"label": declared, "note": ""} if declared != label else {}
+	var words: String = class_object_label(declared)
+	if words.is_empty() or words == label:
+		return {}
+	var spelled_name: String = EventSheetViewportLenses.humanize_identifier(label)
+	return {"label": words, "note": "" if spelled_name.to_lower() == words.to_lower() else spelled_name}
 
 
 ## M13 - the Godot class icon for an object label, or null when nothing is known (which is also

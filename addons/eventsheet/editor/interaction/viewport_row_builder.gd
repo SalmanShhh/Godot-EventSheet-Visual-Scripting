@@ -7966,9 +7966,21 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var fade_groups: Dictionary = _crossfade_groups(event_row.actions)
 		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
 		var task_notes: Dictionary = _task_note_groups(event_row.actions)
+		# W12 - the run of rows a multi-line `{...}` / `[...]` used as a VALUE was split into is one
+		# statement, so it reads as one row with the entries as chips and no orphan bracket line.
+		var literal_groups: Dictionary = EventSheetValueLiteralRows.groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
 			if bool(task_notes.get("consumed", {}).get(action_index, false)):
+				continue
+			# An entry line or the closing bracket of a literal the lead row above already drew. Skipped
+			# without advancing the line index, which is what turns the run into one row.
+			if bool(literal_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			if (literal_groups.get("leads", {}) as Dictionary).has(action_index):
+				_append_value_literal_spans(spans, (literal_groups["leads"] as Dictionary)[action_index],
+					action_index, action_line_index, action_style_meta)
+				action_line_index += 1
 				continue
 			# One-shot, read and cleared by whichever formatter draws this action - the same discipline
 			# the object label and the grammar segments beside it already use.
@@ -8456,7 +8468,19 @@ func _count_event_lines(event_row: EventRow) -> int:
 	# when present), so the lane spans action_count (+ comment) + 1 lines. In-flow GDScript
 	# blocks occupy one line per code line.
 	var action_count: int = 0
+	# W12 mirrors the span pass: the run of rows one multi-line literal was split into draws ONE
+	# line, and its entry and closing-bracket rows draw none.
+	var literal_groups: Dictionary = EventSheetValueLiteralRows.groups(event_row.actions)
+	var literal_consumed: Dictionary = literal_groups.get("consumed", {})
+	var literal_leads: Dictionary = literal_groups.get("leads", {})
+	var literal_index: int = -1
 	for action_resource in event_row.actions:
+		literal_index += 1
+		if bool(literal_consumed.get(literal_index, false)):
+			continue
+		if literal_leads.has(literal_index):
+			action_count += 1
+			continue
 		if action_resource is ACEAction:
 			# R41 mirrors the span pass: a local whose value is already a value draws no action line at
 			# all - its declaration is the row at the top of the event.
@@ -10758,7 +10782,10 @@ func _claim_pending_patterns(row_data: EventRowData) -> void:
 ## double-click-opens-the-code-editor behave exactly as they do for any other raw row. Only the LAST
 ## span omits `natural_width`, so it stretches to close the action cell the way the Declare header
 ## does - without that, the cell background would stop mid-row.
-func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, line_index: int, action_style_meta: Dictionary) -> bool:
+## W12: `literal` is the multi-line table or list this statement's value was written over, when the
+## row is the LEAD of such a run. The statement then reads with the word `table` / `list` where the
+## literal sat and the entries as chips after it; every other caller passes {} and nothing changes.
+func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, line_index: int, action_style_meta: Dictionary, literal: Dictionary = {}) -> bool:
 	var pieces: Array = []
 	var indent: int = 0
 	var object_label: String = ""
@@ -10782,7 +10809,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 			"raw_action": true,
 			"code_cell": false,
 			"line_index": line_index
-		}, action_style_meta)
+		}, action_style_meta, literal)
 		return true
 	if not sentence.is_empty():
 		indent = int(sentence.get("indent", 0))
@@ -10839,6 +10866,16 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	object_label = str(attribution.get("object", object_label))
 	pieces = attribution.get("pieces", pieces) as Array
 	var attributed_icon: Variant = attribution.get("icon")
+	# ── W14 lens hook ──────────────────────────────────────────────────────────────────────────
+	# When the sheet DECLARED what this receiver is, the object column says what it is rather than
+	# what it was called: `_registry` reads `ACE registry`, with `registry` muted beside it. Applied
+	# after the attribution above, so an autoload or a pack's own object still wins.
+	var object_note: String = ""
+	var typed_object: Dictionary = EventSheetViewportReadingRows.typed_object_label(
+		object_label, sentence_context(), _viewport.humanize_names_enabled())
+	if not typed_object.is_empty():
+		object_label = str(typed_object.get("label", object_label))
+		object_note = str(typed_object.get("note", ""))
 	# ── M9 / M10 lens hook ─────────────────────────────────────────────────────────────────────
 	# Applied to the sentence layer's OUTPUT, never inside it: the sentence layer decides what a
 	# statement SAYS, this only decides how the names in it are SPELLED. Only "name" and "value"
@@ -10865,16 +10902,46 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	# separate flowing spans each painted their own chip and the row read as a strip of boxes,
 	# the exact fragmented look the entry rows were already reworked away from. Four spaces per
 	# source tab keeps deeper statements visually nested like the code they came from.
+	# W12 - the statement is written around a multi-line table or list: the sentence splits where the
+	# literal sat, the word for it goes there, and the entries follow as chips.
+	if not literal.is_empty():
+		_append_literal_sentence_spans(spans, pieces, literal, indent, object_label, object_note,
+			sentence_icon, raw, action_index, line_index, action_style_meta)
+		return true
 	var sentence_text: String = "    ".repeat(indent)
 	# Segments are built DIRECTLY, never round-tripped through the BBCode parser: code text is
 	# full of square brackets (`wave[1]`, `[]`), and a parser would eat them as tags - the first
 	# render lost every array value exactly that way.
-	var sentence_segments: Array[Dictionary] = []
-	if indent > 0:
-		sentence_segments.append({"text": "    ".repeat(indent), "color": null, "bold": false, "italic": false})
+	var sentence_segments: Array[Dictionary] = _sentence_tone_segments(pieces, indent)
 	for piece: Array in pieces:
-		var text: String = str(piece[0])
-		sentence_text += text
+		sentence_text += str(piece[0])
+	spans.append(_make_span(sentence_text, SemanticSpan.SpanType.VALUE, {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": raw.enabled,
+		"chip": true,
+		"raw_action": true,
+		"code_cell": false,
+		"line_index": line_index,
+		# The object column, exactly as an ACE row fills it: a variable belongs to System, a member
+		# assignment to the node it is on. A declaration row names no object at all.
+		"object_label": object_label,
+		"object_note": object_note,
+		"bbcode_segments": sentence_segments,
+		"object_icon": sentence_icon
+	}.merged(action_style_meta, false)))
+	return true
+
+
+## The sentence layer's [[text, tone], ...] as tinted BBCode segments. Built DIRECTLY, never
+## round-tripped through the BBCode parser: code text is full of square brackets (`wave[1]`, `[]`)
+## and a parser would eat them as tags - the first render lost every array value exactly that way.
+func _sentence_tone_segments(pieces: Array, indent: int) -> Array[Dictionary]:
+	var segments: Array[Dictionary] = []
+	if indent > 0:
+		segments.append({"text": "    ".repeat(indent), "color": null, "bold": false, "italic": false})
+	for piece: Array in pieces:
 		var tone_color: Variant = null
 		var tone_bold: bool = false
 		match str(piece[1]):
@@ -10893,8 +10960,34 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 			"muted":
 				# P6 - a connective the sentence needs but the reader does not read ("then").
 				tone_color = _viewport._get_reading_style().muted_text_color
-		sentence_segments.append({"text": text, "color": tone_color, "bold": tone_bold, "italic": false})
-	spans.append(_make_span(sentence_text, SemanticSpan.SpanType.VALUE, {
+		segments.append({"text": str(piece[0]), "color": tone_color, "bold": tone_bold, "italic": false})
+	return segments
+
+
+## W12. The lead row of a multi-line literal: the statement's own sentence up to where the literal
+## sat, then the entry chips, then whatever the statement said after it (the `)` of the call it was
+## an argument to). The chips are the point - `"span_index": _selected_span_index` reads
+## `span index = selected span index` instead of being a line of code with no row of its own.
+func _append_literal_sentence_spans(spans: Array, pieces: Array, literal: Dictionary, indent: int,
+		object_label: String, object_note: String, sentence_icon: Texture2D, raw: RawCodeRow,
+		action_index: int, line_index: int, action_style_meta: Dictionary) -> void:
+	var head_pieces: Array = []
+	var tail_pieces: Array = []
+	var split_found: bool = false
+	for piece: Variant in pieces:
+		var entry: Array = piece
+		var text: String = str(entry[0])
+		if split_found or not text.contains(EventSheetValueLiteralRows.LITERAL_TOKEN):
+			(tail_pieces if split_found else head_pieces).append(entry)
+			continue
+		split_found = true
+		var at: int = text.find(EventSheetValueLiteralRows.LITERAL_TOKEN)
+		if at > 0:
+			head_pieces.append([text.substr(0, at), str(entry[1])])
+		var after: String = text.substr(at + EventSheetValueLiteralRows.LITERAL_TOKEN.length())
+		if not after.is_empty():
+			tail_pieces.append([after, str(entry[1])])
+	var base_meta: Dictionary = {
 		"lane": "action",
 		"kind": "action",
 		"ace_index": action_index,
@@ -10902,25 +10995,130 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		"chip": true,
 		"raw_action": true,
 		"code_cell": false,
-		"line_index": line_index,
-		# The object column, exactly as an ACE row fills it: a variable belongs to System, a member
-		# assignment to the node it is on. A declaration row names no object at all.
+		"line_index": line_index
+	}
+	var head_text: String = "    ".repeat(indent)
+	for piece: Array in head_pieces:
+		head_text += str(piece[0])
+	spans.append(_make_span(head_text, SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+		"natural_width": true,
 		"object_label": object_label,
-		"bbcode_segments": sentence_segments,
+		"object_note": object_note,
+		"bbcode_segments": _sentence_tone_segments(head_pieces, indent),
 		"object_icon": sentence_icon
-	}.merged(action_style_meta, false)))
-	return true
+	}, true).merged(action_style_meta, false)))
+	_append_literal_chip_spans(spans, literal, action_index, line_index, action_style_meta,
+		tail_pieces.is_empty())
+	if tail_pieces.is_empty():
+		return
+	var tail_text: String = ""
+	for piece: Array in tail_pieces:
+		tail_text += str(piece[0])
+	spans.append(_make_span(tail_text, SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+		"bbcode_segments": _sentence_tone_segments(tail_pieces, 0)
+	}, true).merged(action_style_meta, false)))
+
+
+## W12. The word for the literal (`table` / `list`) and one chip per entry, folded to the first three
+## with "… N more" when there are more - the whole thing is on the row's hover, so a folded row never
+## hides a line. Each chip edits in place, rewriting the ONE source row its entry came from.
+## `show_word` is off on a declaration row, whose type chip already says `Local table` - the word
+## twice in one row is the row saying the same thing to itself.
+func _append_literal_chip_spans(spans: Array, literal: Dictionary, action_index: int,
+		line_index: int, action_style_meta: Dictionary, close_cell: bool, show_word: bool = true) -> void:
+	var entries: Array = literal.get("entries", []) as Array
+	var open_bracket: String = str(literal.get("open", "{"))
+	var humanize: bool = _viewport.humanize_names_enabled()
+	var full_text: String = EventSheetValueLiteralRows.full_text(entries, open_bracket, humanize)
+	var base_meta: Dictionary = {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": true,
+		"chip": true,
+		"raw_action": true,
+		"code_cell": false,
+		"line_index": line_index,
+		"hoverable": true,
+		"literal_full_text": full_text
+	}
+	if show_word:
+		spans.append(_make_span(EventSheetL10n.translate("table" if open_bracket == "{" else "list"),
+			SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+				"natural_width": true,
+				"text_color": _viewport._get_event_style().object_label_color
+			}, true).merged(action_style_meta, false)))
+	var folded: bool = entries.size() > EventSheetValueLiteralRows.FOLD_AT
+	var shown: int = EventSheetValueLiteralRows.FOLD_AT if folded else entries.size()
+	for entry_index: int in shown:
+		var entry: Dictionary = entries[entry_index] as Dictionary
+		var last: bool = close_cell and not folded and entry_index == shown - 1
+		var chip_meta: Dictionary = base_meta.duplicate()
+		chip_meta["text_color"] = _viewport._get_event_style().value_highlight_color
+		if not last:
+			chip_meta["natural_width"] = true
+		# A chip edits the one row its entry was lifted from, so a table written over ten lines is
+		# ten independently editable values rather than one blob of code.
+		if (entry.get("nested", []) as Array).is_empty():
+			chip_meta["editable"] = true
+			chip_meta["edit_kind"] = "literal_entry_line:%d:%d" % [action_index, int(entry.get("row", -1))]
+			# The field opens on the FILE's own spelling, not on the reading: a chip that reads
+			# `span index = 3` is written `"span_index": 3`, and editing the reading would quietly
+			# turn a quoted key into a bare one.
+			chip_meta["edit_text"] = EventSheetValueLiteralRows.chip_text(entry, false)
+		spans.append(_make_span(EventSheetValueLiteralRows.chip_text(entry, humanize),
+			SemanticSpan.SpanType.VALUE, chip_meta.merged(action_style_meta, false)))
+	if not folded:
+		return
+	var more_meta: Dictionary = base_meta.duplicate()
+	more_meta["text_color"] = _viewport._get_reading_style().muted_text_color
+	if not close_cell:
+		more_meta["natural_width"] = true
+	spans.append(_make_span("… %s" % (EventSheetL10n.translate("%d more") % (entries.size() - shown)),
+		SemanticSpan.SpanType.VALUE, more_meta.merged(action_style_meta, false)))
+
+
+## W12. The lead row of a literal run whose flattened statement no sentence claimed: the head line
+## reads as itself and the chips still follow it, so the entries are named either way.
+func _append_value_literal_spans(spans: Array, literal: Dictionary, action_index: int,
+		line_index: int, action_style_meta: Dictionary) -> void:
+	var synthetic := RawCodeRow.new()
+	synthetic.code = str(literal.get("statement", ""))
+	if _append_sentence_spans(spans, synthetic, action_index, line_index, action_style_meta, literal):
+		return
+	var head_text: String = synthetic.code.strip_edges().replace(
+		EventSheetValueLiteralRows.LITERAL_TOKEN, "").strip_edges()
+	if not head_text.is_empty():
+		spans.append(_make_span(head_text, SemanticSpan.SpanType.VALUE, {
+			"lane": "action",
+			"kind": "action",
+			"ace_index": action_index,
+			"ace_enabled": true,
+			"chip": true,
+			"raw_action": true,
+			"code_cell": false,
+			"natural_width": true,
+			"line_index": line_index
+		}.merged(action_style_meta, false)))
+	_append_literal_chip_spans(spans, literal, action_index, line_index, action_style_meta, true)
 
 
 ## The event-sheet local-variable row: a type-word chip, the name, and the starting value. Shared by the
 ## hand-written `var` line and by the Local Variable ACE, so a local reads the same however it got
 ## there. `base_meta` carries the row identity (which lane, which action index) and `style_meta` the
 ## cell chrome; the LAST span omits natural_width so the cell background closes the row.
-func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_meta: Dictionary, style_meta: Dictionary) -> void:
+## W12: `literal` is the multi-line table or list the local was declared from, when there is one -
+## the starting value is then the entry chips rather than one blob of text.
+func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_meta: Dictionary, style_meta: Dictionary, literal: Dictionary = {}) -> void:
 	var indent_text: String = "    ".repeat(int(declaration.get("indent", 0)))
+	var type_word: String = str(declaration.get("type_word", ""))
+	# W12 - an untyped `var x := {` says nothing about what x is, but the literal it opens says
+	# exactly what it is: the chip reads `Local table` / `Local list` rather than `Local value`.
+	if not literal.is_empty() and type_word == EventSheetL10n.translate("value"):
+		type_word = EventSheetL10n.translate("table" if str(literal.get("open", "{")) == "{" else "list")
 	var chip_word: String = "%s %s" % [
 		EventSheetL10n.translate("Local constant") if bool(declaration.get("is_constant", false)) else EventSheetL10n.translate("Local"),
-		str(declaration.get("type_word", ""))
+		type_word
 	]
 	var chip_meta: Dictionary = base_meta.duplicate()
 	chip_meta["chip"] = true
@@ -10932,6 +11130,12 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 	name_meta["natural_width"] = true
 	name_meta["text_color"] = _viewport._get_reading_style().primary_text_color
 	spans.append(_make_span(str(declaration.get("name", "")), SemanticSpan.SpanType.VALUE, name_meta.merged(style_meta, false)))
+	if not literal.is_empty():
+		# The declared value IS the literal, so there is nothing to print between the name and the
+		# entries: the chips are the starting value, one per line the file wrote it over.
+		_append_literal_chip_spans(spans, literal, int(base_meta.get("ace_index", -1)),
+			int(base_meta.get("line_index", 0)), style_meta, true, false)
+		return
 	var value_meta: Dictionary = base_meta.duplicate()
 	value_meta["chip"] = true
 	value_meta["text_color"] = _viewport._get_event_style().value_highlight_color
@@ -11737,7 +11941,24 @@ func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
 func _object_label_or_pending(provider_id: String, ace_id: String) -> String:
 	var pending: String = _pending_object_label
 	_pending_object_label = ""
-	return pending if not pending.is_empty() else _object_label_for(provider_id, ace_id)
+	var label: String = pending if not pending.is_empty() else _object_label_for(provider_id, ace_id)
+	# ── W14 lens hook ──────────────────────────────────────────────────────────────────────────
+	# The same reading a hand-written statement gets: a receiver the sheet declared a class for is
+	# named by that class, with its own name muted beside it. Applied here because this is the ONE
+	# place a picked row's object column is decided, so a lifted call and a picked row agree.
+	_pending_object_note = ""
+	var typed_object: Dictionary = EventSheetViewportReadingRows.typed_object_label(
+		label, sentence_context(), _viewport.humanize_names_enabled())
+	if typed_object.is_empty():
+		return label
+	_pending_object_note = str(typed_object.get("note", ""))
+	return str(typed_object.get("label", label))
+
+
+# W14. The variable name shown muted beside the class an object column now names. One-shot, the same
+# discipline _pending_object_label above uses: _object_label_or_pending writes it, _make_span reads
+# and clears it, and the two always run back to back.
+var _pending_object_note: String = ""
 
 
 ## What the grammar needs to know about THIS sheet: the class that owns its signals, and the
@@ -12055,6 +12276,12 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 					for entry: Variant in _pending_param_ranges.get("ranges", []):
 						shifted.append([int(entry[0]) + at, int(entry[1])])
 					span.metadata["param_ranges"] = shifted
+	# W14 - the muted variable name that belongs to the object label this span was just given. Only
+	# a span that actually carries a label takes it; the flag is cleared either way, so it can never
+	# land on the next row.
+	if not _pending_object_note.is_empty() and not str(span.metadata.get("object_label", "")).is_empty():
+		span.metadata["object_note"] = _pending_object_note
+	_pending_object_note = ""
 	_pending_display_bbcode = false
 	_pending_param_ranges = {}
 	_pending_grammar_segments = []
