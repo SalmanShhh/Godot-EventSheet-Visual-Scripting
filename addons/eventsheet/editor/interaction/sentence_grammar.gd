@@ -12194,7 +12194,7 @@ static func _orbit_circle_parts(value: String) -> Dictionary:
 				return {}
 			flat = axis_names[index]
 			continue
-		var inner: String = _trig_argument(axis)
+		var inner: String = _orbit_trig_argument(axis)
 		if inner.is_empty():
 			return {}
 		if angle.is_empty():
@@ -12208,7 +12208,7 @@ static func _orbit_circle_parts(value: String) -> Dictionary:
 
 
 ## X4. The angle inside a `cos(a)` or a `sin(a)`, "" for anything else.
-static func _trig_argument(value: String) -> String:
+static func _orbit_trig_argument(value: String) -> String:
 	var text: String = value.strip_edges()
 	for head: String in ["cos(", "sin("]:
 		if not text.begins_with(head) or not text.ends_with(")"):

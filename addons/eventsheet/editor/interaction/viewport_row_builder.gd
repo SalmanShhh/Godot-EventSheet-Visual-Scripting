@@ -8717,7 +8717,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					or bool(fade_groups.get("consumed", {}).get(action_index, false)):
 				continue
 			# X2 / X6 / X8 / X30 - the same skip-without-advancing for the batch-thirteen runs.
-			if bool(ray_groups.get("consumed", {}).get(action_index, false)) \n					or bool(move_groups.get("consumed", {}).get(action_index, false)) \n					or bool(range_groups.get("consumed", {}).get(action_index, false)):
+			if bool(ray_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(move_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(range_groups.get("consumed", {}).get(action_index, false)):
 				continue
 			var run_lead: Dictionary = (look_groups["leads"] as Dictionary).get(action_index, {})
 			var run_pattern: String = "fps_look"
