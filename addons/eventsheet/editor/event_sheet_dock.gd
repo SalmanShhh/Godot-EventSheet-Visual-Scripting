@@ -258,6 +258,8 @@ var _add_rows: EventSheetAddRowRequests = EventSheetAddRowRequests.new()
 var _extract_ops: EventSheetExtractOps = EventSheetExtractOps.new()  # extract-to-function / extract-to-include (dock/extract_ops.gd)  # dock/add_row_requests.gd  # code/provenance + open-sheets panel behavior (dock/code_panel_glue.gd)  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
 var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
 var _editor_tool_bar: EventSheetEditorToolBar = EventSheetEditorToolBar.new()  # R33: Run now / Reload / Output / Enable plugin on a tool sheet's Include bar (dock/editor_tool_bar.gd)
+var _pending_built_here: Dictionary = {}  # W19: a recorded "show the events behind this" waiting for its file to finish opening
+var _this_editor_bar: EventSheetThisEditorBar = EventSheetThisEditorBar.new()  # W20: Enabled / Reload / Output / plugin.cfg + the read-only guard on a sheet that is part of the running editor (dock/this_editor_bar.gd)
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
 var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
@@ -352,6 +354,7 @@ func _init() -> void:
 	EventSheets.register_palette_command("Translation Studio", func() -> void: _open_translation_studio(), "Translation")
 	_ace_apply.init(self)
 	_editor_tool_bar.init(self)
+	_this_editor_bar.init(self)
 	# Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning - tests exercise ops like
 	# _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.
 	_row_edit_ops.init(self)
@@ -1152,6 +1155,55 @@ func _build_theme_file_dialog() -> void:  # called by _build_ui() - theme file d
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	_input_dispatch.unhandled_key_input(event)
+
+
+## W19 - "show the events behind this". Ctrl+Shift+Alt on any control the plugin built opens the
+## sheet that built it, scrolled to the row. Handled here rather than on each control because the
+## question is asked OF a control and answered BY the dock, and because a chord this deliberate must
+## work over the whole editor rather than only where somebody remembered to connect it.
+##
+## Silent everywhere else: outside the editor's own repo nothing is marked, so this finds nothing and
+## the click goes where it always went.
+func _input(event: InputEvent) -> void:
+	if not EventSheetBuiltHere.is_show_source_click(event):
+		return
+	var view: Viewport = get_viewport()
+	if view == null:
+		return
+	var source: Dictionary = EventSheetBuiltHere.source_for(view.gui_get_hovered_control())
+	if source.is_empty():
+		return
+	get_viewport().set_input_as_handled()
+	open_built_here(str(source.get("path", "")), str(source.get("marker", "")))
+
+
+## Opens the editor's own file that built a control, and lands on the row that names it. Public so a
+## test can walk the same path without a mouse.
+##
+## Opening a .gd is asynchronous - the lift runs while the tab is already there - so the jump is
+## RECORDED and finished when the file lands. Revealing straight away would search the sheet that was
+## open a moment ago and answer about the wrong file.
+func open_built_here(source_path: String, marker: String) -> void:
+	if source_path.is_empty():
+		return
+	_pending_built_here = {"path": source_path, "marker": marker}
+	_navigate.record_current()
+	_navigate.open_or_focus(source_path)
+	if _current_sheet != null and str(_current_sheet.external_source_path) == source_path:
+		# Already open: refocusing a tab is immediate, so there is nothing to wait for.
+		_complete_built_here(_current_sheet, source_path)
+
+
+## Finishes a recorded "show the events behind this" once its file is open. Called by the open path.
+func _complete_built_here(sheet: EventSheetResource, path: String) -> void:
+	if str(_pending_built_here.get("path", "")) != path:
+		return
+	var marker: String = str(_pending_built_here.get("marker", ""))
+	_pending_built_here = {}
+	var row: Resource = EventSheetBuiltHere.find_row(sheet, marker)
+	if row != null:
+		_active_view().reveal_resource(row)
+	_set_status(EventSheetBuiltHere.landed_text(path, marker, row != null))
 
 
 

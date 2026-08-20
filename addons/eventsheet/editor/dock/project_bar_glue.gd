@@ -109,6 +109,8 @@ func _on_entry_activated(route: String, entry: Dictionary) -> void:
 		"sheet":
 			_dock._navigate.record_current()
 			_dock._navigate.open_or_focus(path)
+		"this_editor_sheet":
+			_open_this_editor_file(path)
 		"script_editor":
 			_dock._open_gdscript_path_in_godot(path)
 		"object_properties":
@@ -117,6 +119,16 @@ func _on_entry_activated(route: String, entry: Dictionary) -> void:
 			_dock.open_documentation(str(entry.get("note", "")))
 		_:
 			_reveal_in_filesystem(path)
+
+
+## W1 - a file of the RUNNING editor. It opens as a sheet like any .gd, which means read-only, and
+## the status line says what that is and where the door out of it is. Nothing special happens on the
+## way in: the bar on the sheet is what makes this file different, and it says so itself.
+func _open_this_editor_file(path: String) -> void:
+	_dock._navigate.record_current()
+	_dock._navigate.open_or_focus(path)
+	_dock._set_status("%s - part of the editor you are using, opened read-only. Edit anyway on its bar unlocks it; saving it reloads the plugin."
+		% path.get_file())
 
 
 ## A scene opens where a scene belongs - Godot's own 2D/3D editor - and the sheet says the other

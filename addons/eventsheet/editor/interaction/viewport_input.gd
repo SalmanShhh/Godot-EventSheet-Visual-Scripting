@@ -318,6 +318,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.editor_tool_action_requested.emit(str(metadata.get("kind", "")))
 			_viewport.accept_event()
 			return
+		# W20. The same one-click grammar on a sheet that is part of the running editor: Enabled,
+		# Reload, Output, plugin.cfg, Edit anyway. The muted words beside them carry a kind too, so a
+		# click on "part of this editor · read-only" is swallowed here rather than selecting the bar.
+		if not event.double_click and str(metadata.get("kind", "")).begins_with("this_editor_"):
+			_viewport.this_editor_action_requested.emit(str(metadata.get("kind", "")))
+			_viewport.accept_event()
+			return
 		if bool(hit.get("fold", false)):
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport._toggle_row_fold(row_index)

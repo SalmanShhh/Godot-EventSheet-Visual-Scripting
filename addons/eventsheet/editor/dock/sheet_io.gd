@@ -289,6 +289,9 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 		_dock._refresh_preview_banner()
 		_flag_parse_error_rows(sheet, resolved_path)
 	EventSheets._notify_lifecycle("opened", {"sheet": sheet, "path": resolved_path})
+	# W19 - a "show the events behind this" that was waiting for this file finishes here, now that
+	# there are rows to land on.
+	_dock._complete_built_here(sheet, resolved_path)
 	if was_canceled:
 		_dock._set_status("Opened %s as code - stopped working out the events, so every function is shown as a script block. Reopen the file to try again." % resolved_path.get_file())
 		return
@@ -351,6 +354,51 @@ func _save_backed_sheet() -> bool:
 	return true
 
 
+## W20 - the question a save of the running editor's own source asks, once. Two ways to say yes,
+## because the reader who is going to edit the editor all afternoon should not be asked all afternoon.
+func _ask_before_saving_this_editor() -> void:
+	var dialog: ConfirmationDialog = ConfirmationDialog.new()
+	dialog.title = EventSheetL10n.translate("Save a file of this editor?")
+	dialog.ok_button_text = EventSheetL10n.translate("Save, keep asking")
+	var always_button: Button = dialog.add_button(EventSheetL10n.translate("Save, always"), true, "always")
+	var body: VBoxContainer = EventSheetPopupUI.form_box()
+	body.add_child(EventSheetPopupUI.hint_label(EventSheetThisEditorBar.save_question(), 460.0))
+	dialog.add_child(EventSheetPopupUI.margined(EventSheetPopupUI.titled_card(
+		EventSheetL10n.translate("Saving reloads the plugin"), body)))
+	dialog.confirmed.connect(func() -> void:
+		dialog.queue_free()
+		_save_this_editor_now())
+	always_button.pressed.connect(func() -> void:
+		EventSheetThisEditorBar.set_keep_asking(false)
+		dialog.hide()
+		dialog.queue_free()
+		_save_this_editor_now())
+	dialog.canceled.connect(func() -> void:
+		dialog.queue_free()
+		_dock._set_status("Not saved. The editor you are using is unchanged."))
+	_dock.add_child(dialog)
+	dialog.popup_centered()
+
+
+## The save the question was about, and the reload that follows it.
+func _save_this_editor_now() -> void:
+	if _dock._current_sheet == null or _dock._current_sheet.external_source_path.is_empty():
+		return
+	if _save_backed_sheet():
+		_dock._set_status("Saved GDScript: %s" % _dock._current_sheet.external_source_path.get_file())
+		_reload_after_editor_save()
+
+
+## W20 - what happens after a file of the running editor is written: the plugin comes back, UNLESS
+## the file it was written from does not parse, in which case the version already running keeps
+## running and the bar says why. That refusal is the whole reason editing the editor from inside
+## itself is survivable.
+func _reload_after_editor_save() -> void:
+	if not EventSheetThisEditorBar.applies_to(_dock._current_sheet):
+		return
+	_dock._this_editor_bar.reload(str(_dock._current_sheet.external_source_path))
+
+
 func _on_save_requested() -> void:
 	if _dock._current_sheet == null:
 		_dock._set_status("Nothing to save.", true)
@@ -367,11 +415,18 @@ func _on_save_requested() -> void:
 		var source_name: String = _dock._current_sheet.external_source_path.get_file()
 		_dock._set_status("You're viewing %s - click \"Edit Events\" in the banner to edit and save it, or use Save As… to keep a separate copy." % source_name, true)
 		return
+	# W20 - the one file whose save has a consequence no other file's does: this one builds the editor
+	# you are looking at. Asked once, answerable with "always", and asked BEFORE the write rather than
+	# reported after it.
+	if EventSheetThisEditorBar.applies_to(_dock._current_sheet) and EventSheetThisEditorBar.keep_asking():
+		_ask_before_saving_this_editor()
+		return
 	# GDScript-backed sheets save by compiling back to their .gd source (order-preserving;
 	# an untouched sheet reproduces the file byte-identically).
 	if not _dock._current_sheet.external_source_path.is_empty():
 		if _save_backed_sheet():
 			_dock._set_status("Saved GDScript: %s" % _dock._current_sheet.external_source_path.get_file())
+			_reload_after_editor_save()
 		return
 	if _dock._current_sheet_path.is_empty() and _dock._current_sheet.resource_path.is_empty():
 		_on_save_as_requested()

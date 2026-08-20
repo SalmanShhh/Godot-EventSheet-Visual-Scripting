@@ -6,6 +6,46 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - the editor reads its own source
+
+- **A \"This editor\" folder in the Project bar.** In the plugin's own repository only, the Project
+  bar grows one more folder listing every file the editor is built from as a sheet, grouped by what
+  each file DOES rather than by the folder it sits in: Plugin, Workspace, Canvas, Readings,
+  Importer, Compiler, Vocabulary, Manual, Tests, Command tools, Pack recipes. The role is derived
+  from each file's own shape - an `EditorPlugin` is the Plugin, a helper holding a back-reference
+  into the dock is Workspace, `extends SceneTree` under `tools/` is a Command tool - so a new file
+  lands in the right group the moment it is written. The gate is two marks side by side (the
+  plugin's `plugin.cfg` AND `tools/pack_builders/` beside it), so a project that merely installed
+  the plugin never sees any of it. The listing is read when the folder is first opened and forgotten
+  when it is folded: a session that never opens it pays nothing.
+- **The plugin's own bar** (W20). A file of the running editor opens read-only with
+  `part of this editor · read-only` and an **Edit anyway** chip; `plugin.gd` also carries
+  **Enabled ●** (the plugin list's live state), **Reload ↻** (disable and enable through the editor),
+  **Output ▾** (the editor log filtered to what the reload printed) and **plugin.cfg ▸** (the
+  descriptor as setting rows, whose version row is the one Publish new version bumps). The first
+  save through Edit anyway asks once - \"This file is part of the editor you are using. Saving
+  reloads the plugin (your open sheets are kept).\" - with *Save, keep asking* and *Save, always*.
+  **A saved file that does not parse is NOT reloaded**: the version already running keeps running
+  and the bar goes red saying so, which is the one thing that makes editing the editor from inside
+  itself survivable.
+- **\"Show the events behind this\"** (W19). Ctrl+Shift+Alt on any control the plugin built opens the
+  file that built it as a sheet, at the row that names it. No registry: a control carries the file
+  that made it and the words it was made with, and the row is found by those words. Written only
+  while the This-editor folder is on, so a shipped editor in a game project carries nothing.
+- **Dogfood gates** (W22). New `tests/plugin_reads_itself_test.gd`: a rotating sample of forty files
+  a day (seeded by the day, so a run is fast and a week covers the editor) must open, round-trip
+  byte-exact, add no script block, and stay under a *wordless-row* ceiling measured per role group
+  on the current tree rather than guessed. A wordless row is one with no words of its own - an entry
+  of a list, a bare call, a set to a bare function name. Measured today: 612 files, 610 at zero
+  script blocks, 89% of 136,434 rows in the sheet's own words. **Tools ▸ Project Doctor ▸ plugin
+  reading health** reports the same numbers per group, clickable into the worst file, and only while
+  the folder is on. Two pre-existing byte round-trip drifts were found by the new gate and are
+  listed in it with their cause rather than skipped.
+- **A contributor's door** (W24). The Start page gains a card - \"This is the editor's own project -
+  open its source as sheets\" - in the plugin's repository only, and the Manual gains two tutorials:
+  *Read the editor's code as events* and *Add a word to the vocabulary*. New guide:
+  **The Editor, Read as Events**.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

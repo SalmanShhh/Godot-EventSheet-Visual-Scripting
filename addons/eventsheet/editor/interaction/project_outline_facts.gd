@@ -285,6 +285,11 @@ static func matches_filter(entry: Dictionary, filter_text: String) -> bool:
 ##   sound/folder-> Godot's FileSystem dock
 static func route_for(entry: Dictionary, script_opens_as_sheet: bool = true) -> String:
 	match str(entry.get("kind", "")):
+		# W1 - a file of the RUNNING editor always opens as a sheet, and always read-only, whatever
+		# the reader's default for ordinary project scripts is. Its own route, because what happens
+		# after it opens (the read-only bar, the save guard) is different from every other script.
+		"this_editor_script":
+			return "this_editor_sheet"
 		"scene":
 			return "scene_editor"
 		"script":

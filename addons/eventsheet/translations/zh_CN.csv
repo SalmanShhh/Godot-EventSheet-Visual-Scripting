@@ -3164,3 +3164,51 @@ starting {values},以 {values} 开头
 {subject} is a table,{subject} 是一张表
 with {clauses},其中 {clauses}
 has {key},含有 {key}
+"%s: %d files read, %d%% of their rows say nothing of their own. Worst: %s at %d%%.",%s：已读取 %d 个文件，其中 %d%% 的行没有自己的措辞。最差：%s，%d%%。
+"%s is built here - the row that makes ""%s"".",%s 在这里构建 - 创建“%s”的那一行。
+"%s builds it, but no row still names ""%s"" - it was renamed or moved.",%s 会构建它，但已没有行提到“%s” - 它被重命名或移动了。
+plugin.cfg,plugin.cfg
+Edit anyway,仍然编辑
+Disabled,已禁用
+part of this editor · editing it reloads the plugin,属于本编辑器 · 编辑会重新加载插件
+part of this editor · read-only,属于本编辑器 · 只读
+"the plugin was NOT reloaded, the running one is still the old one",插件未重新加载，正在运行的仍是旧版本
+This file is part of the editor you are using. Saving reloads the plugin (your open sheets are kept). Continue?,此文件属于你正在使用的编辑器。保存会重新加载插件（已打开的表会保留）。继续吗？
+setting,设置
+Nothing yet. Press Reload and this fills with what the plugin printed as it came back.,还没有内容。按“重新加载”，插件回来时打印的内容会显示在这里。
+What the reload printed,重新加载输出的内容
+Plugin settings,插件设置
+This plugin has no descriptor to read.,该插件没有可读取的描述文件。
+"Sheet ▸ Publish new version bumps the version row, the same way it bumps a behavior pack.",表 ▸ 发布新版本 会提升版本行，和行为包的做法一样。
+Save a file of this editor?,保存本编辑器的文件？
+"Save, keep asking",保存，继续询问
+"Save, always",保存，不再询问
+Saving reloads the plugin,保存会重新加载插件
+"The files this editor is built from, opened as sheets. Read-only: saving one reloads the plugin you are using.",构成本编辑器的文件，以表的形式打开。只读：保存其中任何一个都会重新加载你正在使用的插件。
+This editor,本编辑器
+addons/eventforge + addons/eventsheet,addons/eventforge + addons/eventsheet
+open to read this editor's own source,打开以阅读本编辑器自身的源码
+%d sheets,%d 张表
+Plugin,插件
+the plugin itself,插件本身
+Workspace,工作区
+"dock, menus, dialogs",面板、菜单、对话框
+Canvas,画布
+"viewport, row builder, renderer, input",视图、行构建、绘制、输入
+Readings,读法
+"sentence grammar, facts, patterns",句式语法、事实、模式
+Importer,导入器
+open a .gd as events,把 .gd 作为事件打开
+Compiler,编译器
+events to GDScript,事件到 GDScript
+Vocabulary,词汇
+"modules, registry, picker",模块、注册表、选择器
+"docs dock, search, reference",手册面板、搜索、参考
+Tests,测试
+what the gates pin,各项检查所锁定的内容
+Command tools,命令行工具
+run from the command line,从命令行运行
+Pack recipes,包配方
+the behaviors that ship,随附的行为
+Everything else,其他所有
+the rest of these folders,这些文件夹中的其余部分

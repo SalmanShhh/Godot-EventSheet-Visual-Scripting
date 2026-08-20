@@ -57,6 +57,10 @@ var _script_opens_as_sheet: bool = true
 var _coverage_by_path: Dictionary = {}
 var _menu: PopupMenu = null
 var _section_folds: Dictionary = {}
+# W1 - the editor's own source, listed only in the editor's own repo and scanned only once the folder
+# is actually opened. Empty until then, which is the whole cost of a folder nobody expanded.
+var _this_editor: Dictionary = {}
+var _this_editor_built: bool = false
 
 
 func _init() -> void:
@@ -114,6 +118,18 @@ func set_expanded(expanded: bool) -> void:
 		refresh()
 	_refresh_header()
 	_save_prefs()
+
+
+## W24 - opens the This-editor folder from outside (the Start page's contributor card). Reads the
+## editor's own source if this is the first time it has been asked for, exactly as unfolding it does.
+func open_this_editor_folder() -> void:
+	if not EventSheetThisEditor.is_editor_project():
+		return
+	if not _this_editor_built:
+		_this_editor = EventSheetThisEditor.entries()
+		_this_editor_built = true
+	_section_folds["this_editor"] = false
+	_rebuild_tree()
 
 
 func is_expanded() -> bool:
@@ -174,6 +190,7 @@ func _rebuild_tree() -> void:
 		for entry: Variant in visible_entries:
 			_add_entry_item(section, entry as Dictionary)
 			shown += 1
+	shown += _add_this_editor_section(root)
 	if shown == 0:
 		var empty_item: TreeItem = tree.create_item(root)
 		empty_item.set_text(0, EventSheetL10n.translate("Nothing here matches that.") if not _filter.strip_edges().is_empty()
@@ -181,6 +198,56 @@ func _rebuild_tree() -> void:
 		empty_item.set_selectable(0, false)
 		empty_item.set_custom_color(0, EventSheetActiveTheme.chrome().project_bar_heading_color)
 		empty_item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
+
+
+## W1 - "This editor": the plugin's own source, as sheets, grouped by what each file IS. Returns how
+## many files it listed, so the bar's "nothing here" line counts them too.
+##
+## Only in the editor's own repo, and only scanned once someone opens it. Until then the folder is a
+## heading with an arrow, which is exactly what an opt-in folder of 1,200 files should cost.
+func _add_this_editor_section(root: TreeItem) -> int:
+	if not EventSheetThisEditor.is_editor_project():
+		return 0
+	var section: TreeItem = tree.create_item(root)
+	section.set_selectable(0, false)
+	section.set_custom_color(0, EventSheetActiveTheme.chrome().project_bar_heading_color)
+	section.set_metadata(0, {"section": "this_editor"})
+	section.set_tooltip_text(0, EventSheetL10n.translate(
+		"The files this editor is built from, opened as sheets. Read-only: saving one reloads the plugin you are using."))
+	if not _this_editor_built:
+		section.set_text(0, "%s  %s" % [EventSheetL10n.translate("This editor"),
+			EventSheetL10n.translate("addons/eventforge + addons/eventsheet")])
+		# A folded placeholder is what gives the heading its arrow; opening it is what builds the list.
+		var placeholder: TreeItem = tree.create_item(section)
+		placeholder.set_text(0, EventSheetL10n.translate("open to read this editor's own source"))
+		placeholder.set_selectable(0, false)
+		section.collapsed = true
+		return 0
+	var listed: int = 0
+	section.set_text(0, "%s  %s · %s" % [EventSheetL10n.translate("This editor"),
+		EventSheetL10n.translate("addons/eventforge + addons/eventsheet"),
+		EventSheetL10n.translate("%d sheets") % EventSheetThisEditor.entry_count(_this_editor)])
+	section.collapsed = bool(_section_folds.get("this_editor", false)) and _filter.strip_edges().is_empty()
+	for role: String in EventSheetThisEditor.ROLE_ORDER:
+		var entries: Array = _this_editor.get(role, [])
+		var visible_entries: Array = []
+		for entry: Variant in entries:
+			if EventSheetProjectOutline.matches_filter(entry as Dictionary, _filter):
+				visible_entries.append(entry)
+		if visible_entries.is_empty():
+			continue
+		var role_item: TreeItem = tree.create_item(section)
+		role_item.set_text(0, "%s  %s · %d" % [EventSheetThisEditor.role_heading(role),
+			EventSheetThisEditor.role_note(role), visible_entries.size()])
+		role_item.set_selectable(0, false)
+		role_item.set_custom_color(0, EventSheetActiveTheme.chrome().project_bar_heading_color)
+		role_item.set_metadata(0, {"section": "this_editor/%s" % role})
+		role_item.collapsed = bool(_section_folds.get("this_editor/%s" % role, true)) \
+			and _filter.strip_edges().is_empty()
+		for entry: Variant in visible_entries:
+			_add_entry_item(role_item, entry as Dictionary)
+			listed += 1
+	return listed
 
 
 func _add_entry_item(parent_item: TreeItem, entry: Dictionary) -> TreeItem:
@@ -227,8 +294,24 @@ func _on_item_mouse_selected(_position: Vector2, mouse_button_index: int) -> voi
 
 func _on_section_collapsed(item: TreeItem) -> void:
 	var metadata: Variant = item.get_metadata(0)
-	if metadata is Dictionary and (metadata as Dictionary).has("section"):
-		_section_folds[str((metadata as Dictionary)["section"])] = item.collapsed
+	if not (metadata is Dictionary) or not (metadata as Dictionary).has("section"):
+		return
+	var section: String = str((metadata as Dictionary)["section"])
+	_section_folds[section] = item.collapsed
+	# W1 - THE LAZY BUILD. Opening the folder for the first time is what reads the editor's own
+	# source; a reader who never opens it never pays for the scan.
+	if section != "this_editor":
+		return
+	if not item.collapsed and not _this_editor_built:
+		_this_editor = EventSheetThisEditor.entries()
+		_this_editor_built = true
+		_rebuild_tree()
+	elif item.collapsed and _this_editor_built:
+		# Folding it FORGETS it, so re-opening reads the source again. That is what keeps the listing
+		# true without a watcher: a bar that re-scanned on every filesystem ping would spend a second
+		# reading 1,200 files to answer a question nobody currently has open.
+		_this_editor = {}
+		_this_editor_built = false
 
 
 func _on_tree_gui_input(event: InputEvent) -> void:

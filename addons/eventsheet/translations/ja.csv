@@ -3164,3 +3164,51 @@ starting {values},先頭が {values}
 {subject} is a table,{subject} がテーブル
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
+"%s: %d files read, %d%% of their rows say nothing of their own. Worst: %s at %d%%.",%s: %d 個のファイルを読み込み、その行の %d%% は独自の言葉を持ちません。最悪: %s (%d%%)
+"%s is built here - the row that makes ""%s"".","%s はここで作られています - ""%s"" を作る行です。"
+"%s builds it, but no row still names ""%s"" - it was renamed or moved.","%s が作っていますが、""%s"" という語を持つ行はもうありません - 名前が変わったか移動しました。"
+plugin.cfg,plugin.cfg
+Edit anyway,それでも編集
+Disabled,無効
+part of this editor · editing it reloads the plugin,このエディタの一部 · 編集するとプラグインが再読み込みされます
+part of this editor · read-only,このエディタの一部 · 読み取り専用
+"the plugin was NOT reloaded, the running one is still the old one",プラグインは再読み込みされていません。動いているのは以前のままです
+This file is part of the editor you are using. Saving reloads the plugin (your open sheets are kept). Continue?,このファイルは今使っているエディタの一部です。保存するとプラグインが再読み込みされます（開いているシートは保持されます）。続けますか？
+setting,設定
+Nothing yet. Press Reload and this fills with what the plugin printed as it came back.,まだ何もありません。「再読み込み」を押すと、戻ってきたプラグインが出力した内容がここに入ります。
+What the reload printed,再読み込みの出力
+Plugin settings,プラグイン設定
+This plugin has no descriptor to read.,このプラグインには読み取る記述ファイルがありません。
+"Sheet ▸ Publish new version bumps the version row, the same way it bumps a behavior pack.",シート ▸ 新しいバージョンを公開 は、ビヘイビアパックと同じようにバージョン行を上げます。
+Save a file of this editor?,このエディタのファイルを保存しますか？
+"Save, keep asking",保存して今後も確認する
+"Save, always",保存して今後は確認しない
+Saving reloads the plugin,保存するとプラグインが再読み込みされます
+"The files this editor is built from, opened as sheets. Read-only: saving one reloads the plugin you are using.",このエディタを構成しているファイルを、シートとして開きます。読み取り専用: 保存すると使用中のプラグインが再読み込みされます。
+This editor,このエディタ
+addons/eventforge + addons/eventsheet,addons/eventforge + addons/eventsheet
+open to read this editor's own source,開いてこのエディタ自身のソースを読む
+%d sheets,%d 枚のシート
+Plugin,プラグイン
+the plugin itself,プラグイン本体
+Workspace,ワークスペース
+"dock, menus, dialogs",ドック、メニュー、ダイアログ
+Canvas,キャンバス
+"viewport, row builder, renderer, input",ビュー、行の組み立て、描画、入力
+Readings,読み取り
+"sentence grammar, facts, patterns",文の組み立て、事実、パターン
+Importer,インポーター
+open a .gd as events,.gd をイベントとして開く
+Compiler,コンパイラ
+events to GDScript,イベントから GDScript へ
+Vocabulary,語彙
+"modules, registry, picker",モジュール、登録、ピッカー
+"docs dock, search, reference",マニュアルのドック、検索、リファレンス
+Tests,テスト
+what the gates pin,ゲートが固定していること
+Command tools,コマンドツール
+run from the command line,コマンドラインから実行
+Pack recipes,パックのレシピ
+the behaviors that ship,同梱されるビヘイビア
+Everything else,その他すべて
+the rest of these folders,これらのフォルダーの残り

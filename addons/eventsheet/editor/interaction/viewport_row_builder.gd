@@ -294,6 +294,7 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 	# script actually gets (the pack Include bar is for a pack), and a Run now that is not where the
 	# tool is written is a Run now nobody finds.
 	spans.append_array(_editor_tool_bar_spans(sheet))
+	spans.append_array(_this_editor_bar_spans(sheet))
 	row_data.spans = spans
 	# The dropdown facts, prepended above the raw prelude children. Label + value per row; only
 	# facts that exist get a row (no "@tool: no" noise).
@@ -740,12 +741,14 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 		spans.append_array(_autoload_include_spans(sheet))
 		spans.append_array(_reading_coverage_spans(sheet))
 		spans.append_array(_editor_tool_bar_spans(sheet))
+		spans.append_array(_this_editor_bar_spans(sheet))
 		row_data.spans = spans
 		return row_data
 	if not is_addon_pack(sheet):
 		spans.append_array(_script_include_spans(sheet))
 		spans.append_array(_reading_coverage_spans(sheet))
 		spans.append_array(_editor_tool_bar_spans(sheet))
+		spans.append_array(_this_editor_bar_spans(sheet))
 		row_data.spans = spans
 		return row_data
 	spans.append(_make_span(
@@ -785,8 +788,46 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 ## kind of sheet gets nothing here - a Run now that cannot run is worse than no Run now at all.
 func _editor_tool_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
+	# W20 - a file of the RUNNING editor gets its own bar instead of this one. Both would otherwise
+	# draw a Reload, and the two mean different things: one re-reads a tool you wrote, the other takes
+	# the editor you are looking at off and on again.
+	if EventSheetThisEditorBar.applies_to(sheet):
+		return spans
 	var script_path: String = sheet.external_source_path if sheet != null else ""
 	for button: Dictionary in EventSheetEditorToolBar.buttons_for(sheet, script_path):
+		spans.append(_make_span(str(button["text"]), SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": _viewport._get_reading_style().plain_chip_background_color,
+			"badge_fg": _viewport._get_reading_style().plain_chip_foreground_color,
+			"kind": str(button["kind"]),
+			"line_index": 0
+		}))
+	return spans
+
+
+## W1 + W20 - the bar a file of the RUNNING editor wears: what it is, that it is read-only, the door
+## out of that, and - on the one file that IS the plugin - Enabled, Reload, Output and plugin.cfg.
+##
+## Drawn nowhere but in the editor's own repo, so an installed plugin's sheets look exactly as they
+## always have. The muted chips are words rather than buttons; the rest are clicked.
+func _this_editor_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	for button: Dictionary in EventSheetThisEditorBar.buttons_for(
+			sheet, EventSheetThisEditorBar.is_plugin_enabled()):
+		if bool(button.get("muted", false)):
+			spans.append(_make_span(str(button["text"]), SemanticSpan.SpanType.COMMENT, {
+				"editable": false, "kind": str(button["kind"]), "line_index": 0,
+				"text_color": _viewport._get_reading_style().muted_text_color
+			}))
+			continue
+		if bool(button.get("error", false)):
+			spans.append(_make_span(str(button["text"]), SemanticSpan.SpanType.VALUE, {
+				"editable": false, "kind": str(button["kind"]), "line_index": 0,
+				"text_color": _viewport._get_reading_style().error_text_color
+			}))
+			continue
 		spans.append(_make_span(str(button["text"]), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,

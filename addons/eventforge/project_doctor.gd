@@ -89,6 +89,7 @@ static func run() -> Dictionary:
 	check_family_group_agreement(findings)
 	check_imported_rows(sheet_paths, findings)
 	check_task_notes(findings)
+	check_plugin_reading_health(findings)
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
 	EventSheetDoctorTidiness.check_tidiness(sheet_paths, findings)
@@ -2285,6 +2286,21 @@ static func check_unresolved_conflicts(findings: Array[Dictionary]) -> void:
 			continue
 		_add(findings, "error", "merge-conflict", script_path,
 			EventSheetConflictRegions.doctor_message(EventSheetConflictRegions.find(source), script_path.get_file()))
+
+
+## W22 - PLUGIN READING HEALTH, and only in the editor's own repo. One note per role group of the
+## editor's own source: how many of its files were read, what share of their rows say nothing of
+## their own, and which file in the group reads worst - so the note is clickable straight into it.
+##
+## Notes, never warnings: this is the project's own dogfood measurement, not a fault in anybody's
+## game, and a Doctor that accuses a working project of something gets switched off. Silent in every
+## project but this one, which is the same rule the This-editor folder follows.
+static func check_plugin_reading_health(findings: Array[Dictionary]) -> void:
+	if not EventSheetThisEditor.folder_is_on():
+		return
+	for entry: Dictionary in EventSheetGenericRows.health_by_role(EventSheetThisEditor.entries()):
+		_add(findings, "info", "plugin-reading-health", str(entry.get("worst_path", "")),
+			EventSheetGenericRows.health_message(entry))
 
 
 ## Two shared sheets included into one script that both handle the SAME trigger. Both run, in

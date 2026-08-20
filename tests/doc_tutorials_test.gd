@@ -30,11 +30,13 @@ static func run() -> bool:
 	return all_passed
 
 
-## The six tutorials the Manual opens with, and the shape of a step.
+## The eight tutorials the Manual opens with, and the shape of a step. Six shipped first; W24 added
+## the two contributor tutorials (reading the editor's own code, and adding a word to the vocabulary),
+## so the pin moved from six to eight and stays a VALUE rather than a range.
 static func _test_tutorial_catalogue() -> bool:
 	var all_passed: bool = true
-	all_passed = _check("six tutorials ship",
-		EventSheetDocTutorials.tutorials().size(), 6) and all_passed
+	all_passed = _check("eight tutorials ship",
+		EventSheetDocTutorials.tutorials().size(), 8) and all_passed
 	# R35. Writing a tool is something a beginner has to be able to FIND, not just be capable of.
 	all_passed = _check("the editor-tool tutorial is one of them",
 		str(EventSheetDocTutorials.tutorial("make-an-editor-tool").get("title", "")),
@@ -163,7 +165,7 @@ static func _test_walking_the_steps() -> bool:
 	for block: Dictionary in list:
 		if str(block.get("kind", "")) == "heading" and int(block.get("level", 0)) == 2:
 			chapters += 1
-	all_passed = _check("the list has one chapter per tutorial", chapters, 6) and all_passed
+	all_passed = _check("the list has one chapter per tutorial", chapters, 8) and all_passed
 	all_passed = _check("the list lives at a frozen id",
 		EventSheetDocTutorials.LIST_DOC_ID, "reference:tutorials") and all_passed
 	all_passed = _check("and one tutorial at its own",

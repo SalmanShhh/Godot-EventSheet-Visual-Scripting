@@ -3164,3 +3164,51 @@ starting {values},beginnend mit {values}
 {subject} is a table,{subject} ist eine Tabelle
 with {clauses},mit {clauses}
 has {key},hat {key}
+"%s: %d files read, %d%% of their rows say nothing of their own. Worst: %s at %d%%.","%s: %d Dateien gelesen, %d%% ihrer Zeilen sagen nichts Eigenes. Am schlechtesten: %s mit %d%%."
+"%s is built here - the row that makes ""%s"".","%s wird hier gebaut - die Zeile, die ""%s"" erzeugt."
+"%s builds it, but no row still names ""%s"" - it was renamed or moved.","%s baut es, aber keine Zeile nennt ""%s"" mehr - es wurde umbenannt oder verschoben."
+plugin.cfg,plugin.cfg
+Edit anyway,Trotzdem bearbeiten
+Disabled,Deaktiviert
+part of this editor · editing it reloads the plugin,Teil dieses Editors · Bearbeiten lädt das Plugin neu
+part of this editor · read-only,Teil dieses Editors · schreibgeschützt
+"the plugin was NOT reloaded, the running one is still the old one","das Plugin wurde NICHT neu geladen, es läuft weiter die alte Fassung"
+This file is part of the editor you are using. Saving reloads the plugin (your open sheets are kept). Continue?,"Diese Datei gehört zu dem Editor, den du gerade benutzt. Speichern lädt das Plugin neu (deine offenen Blätter bleiben erhalten). Fortfahren?"
+setting,Einstellung
+Nothing yet. Press Reload and this fills with what the plugin printed as it came back.,"Noch nichts. Drücke Neu laden, und hier steht, was das Plugin beim Zurückkommen ausgegeben hat."
+What the reload printed,Was beim Neuladen ausgegeben wurde
+Plugin settings,Plugin-Einstellungen
+This plugin has no descriptor to read.,Dieses Plugin hat keine Beschreibungsdatei zum Lesen.
+"Sheet ▸ Publish new version bumps the version row, the same way it bumps a behavior pack.",Blatt ▸ Neue Version veröffentlichen erhöht die Versionszeile - genauso wie bei einem Verhaltenspaket.
+Save a file of this editor?,Eine Datei dieses Editors speichern?
+"Save, keep asking","Speichern, weiter fragen"
+"Save, always","Speichern, immer"
+Saving reloads the plugin,Speichern lädt das Plugin neu
+"The files this editor is built from, opened as sheets. Read-only: saving one reloads the plugin you are using.","Die Dateien, aus denen dieser Editor gebaut ist, als Blätter geöffnet. Schreibgeschützt: Speichern lädt das Plugin neu, das du benutzt."
+This editor,Dieser Editor
+addons/eventforge + addons/eventsheet,addons/eventforge + addons/eventsheet
+open to read this editor's own source,"öffnen, um den Quelltext dieses Editors zu lesen"
+%d sheets,%d Blätter
+Plugin,Plugin
+the plugin itself,das Plugin selbst
+Workspace,Arbeitsbereich
+"dock, menus, dialogs","Dock, Menüs, Dialoge"
+Canvas,Leinwand
+"viewport, row builder, renderer, input","Ansicht, Zeilenbau, Zeichnen, Eingabe"
+Readings,Lesarten
+"sentence grammar, facts, patterns","Satzbau, Fakten, Muster"
+Importer,Importeur
+open a .gd as events,eine .gd als Ereignisse öffnen
+Compiler,Compiler
+events to GDScript,Ereignisse zu GDScript
+Vocabulary,Wortschatz
+"modules, registry, picker","Module, Registrierung, Auswahl"
+"docs dock, search, reference","Handbuch-Dock, Suche, Referenz"
+Tests,Tests
+what the gates pin,was die Prüfungen festhalten
+Command tools,Kommandozeilen-Werkzeuge
+run from the command line,von der Kommandozeile ausgeführt
+Pack recipes,Paket-Rezepte
+the behaviors that ship,die mitgelieferten Verhalten
+Everything else,Alles Übrige
+the rest of these folders,der Rest dieser Ordner

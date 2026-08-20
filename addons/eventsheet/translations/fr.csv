@@ -3164,3 +3164,51 @@ starting {values},commencant par {values}
 {subject} is a table,{subject} est une table
 with {clauses},avec {clauses}
 has {key},a {key}
+"%s: %d files read, %d%% of their rows say nothing of their own. Worst: %s at %d%%.","%s : %d fichiers lus, %d%% de leurs lignes ne disent rien par elles-mêmes. Pire : %s à %d%%."
+"%s is built here - the row that makes ""%s"".","%s est construit ici - la ligne qui crée ""%s""."
+"%s builds it, but no row still names ""%s"" - it was renamed or moved.","%s le construit, mais aucune ligne ne nomme plus ""%s"" - il a été renommé ou déplacé."
+plugin.cfg,plugin.cfg
+Edit anyway,Modifier quand même
+Disabled,Désactivé
+part of this editor · editing it reloads the plugin,fait partie de cet éditeur · le modifier recharge l'extension
+part of this editor · read-only,fait partie de cet éditeur · lecture seule
+"the plugin was NOT reloaded, the running one is still the old one","l'extension n'a PAS été rechargée, celle qui tourne est toujours l'ancienne"
+This file is part of the editor you are using. Saving reloads the plugin (your open sheets are kept). Continue?,Ce fichier fait partie de l'éditeur que vous utilisez. L'enregistrer recharge l'extension (vos feuilles ouvertes sont conservées). Continuer ?
+setting,réglage
+Nothing yet. Press Reload and this fills with what the plugin printed as it came back.,Rien pour l'instant. Appuyez sur Recharger et ceci se remplira de ce que l'extension a affiché en revenant.
+What the reload printed,Ce que le rechargement a affiché
+Plugin settings,Réglages de l'extension
+This plugin has no descriptor to read.,Cette extension n'a pas de descripteur à lire.
+"Sheet ▸ Publish new version bumps the version row, the same way it bumps a behavior pack.","Feuille ▸ Publier une nouvelle version incrémente la ligne de version, comme pour un pack de comportement."
+Save a file of this editor?,Enregistrer un fichier de cet éditeur ?
+"Save, keep asking","Enregistrer, continuer à demander"
+"Save, always","Enregistrer, toujours"
+Saving reloads the plugin,Enregistrer recharge l'extension
+"The files this editor is built from, opened as sheets. Read-only: saving one reloads the plugin you are using.","Les fichiers dont cet éditeur est fait, ouverts comme des feuilles. Lecture seule : en enregistrer un recharge l'extension que vous utilisez."
+This editor,Cet éditeur
+addons/eventforge + addons/eventsheet,addons/eventforge + addons/eventsheet
+open to read this editor's own source,ouvrir pour lire le code de cet éditeur
+%d sheets,%d feuilles
+Plugin,Extension
+the plugin itself,l'extension elle-même
+Workspace,Espace de travail
+"dock, menus, dialogs","panneau, menus, dialogues"
+Canvas,Canevas
+"viewport, row builder, renderer, input","vue, construction des lignes, rendu, saisie"
+Readings,Lectures
+"sentence grammar, facts, patterns","grammaire des phrases, faits, motifs"
+Importer,Importateur
+open a .gd as events,ouvrir un .gd comme des événements
+Compiler,Compilateur
+events to GDScript,des événements vers GDScript
+Vocabulary,Vocabulaire
+"modules, registry, picker","modules, registre, sélecteur"
+"docs dock, search, reference","panneau du manuel, recherche, référence"
+Tests,Tests
+what the gates pin,ce que les garde-fous verrouillent
+Command tools,Outils en ligne de commande
+run from the command line,lancés en ligne de commande
+Pack recipes,Recettes de packs
+the behaviors that ship,les comportements livrés
+Everything else,Tout le reste
+the rest of these folders,le reste de ces dossiers

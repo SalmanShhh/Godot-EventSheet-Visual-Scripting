@@ -13,6 +13,17 @@ hours.
   `.gitattributes` enforces it; if a fresh checkout fails byte tests, run
   `git rm -rq --cached . && git reset --hard`.
 
+## Read this repository as event sheets
+
+Open this project in the editor and the Project bar grows a **This editor** folder (View ▸ Project
+bar): every file the plugin is built from, listed as a sheet and grouped by what it does. It is
+read-only by default, because saving one reloads the plugin you are using - and a file that does not
+parse is not reloaded at all, so the editor keeps running while you fix it. Two Manual tutorials walk
+it: **Read the editor's code as events** and **Add a word to the vocabulary**. The written version is
+`docs/GUIDE-THE-EDITOR-READ-AS-EVENTS.md`.
+
+If you prefer prose, the rest of this file and `AGENTS.md` say the same things in words.
+
 ## The verification loop (run all of it, in order)
 
 ```text

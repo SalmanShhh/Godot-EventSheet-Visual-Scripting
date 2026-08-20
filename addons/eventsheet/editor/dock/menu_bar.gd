@@ -13,6 +13,11 @@ extends RefCounted
 var _dock: Control = null
 
 
+## W19 - this file's own path, so a control it builds can say where it was built. Written out rather
+## than derived, because a RefCounted helper has no script path to ask for at the point it matters.
+const THIS_FILE_PATH: String = "res://addons/eventsheet/editor/dock/menu_bar.gd"
+
+
 func init(dock: Control) -> void:
 	_dock = dock
 
@@ -548,6 +553,12 @@ func build(root: Node) -> void:
 			_quick_add_edit.clear()
 	)
 	_toolbar.add_child(_quick_add_edit)
+	# W19 - every menu on the strip remembers this file too, so "where is this menu made" is the same
+	# gesture as "where is this button made". One sweep rather than a mark beside each `MenuButton`,
+	# because a mark that has to be remembered at eleven call sites is a mark that goes stale.
+	for child: Node in _toolbar.get_children():
+		if child is MenuButton:
+			EventSheetBuiltHere.mark(child as Control, THIS_FILE_PATH, (child as MenuButton).text)
 	# ── Compare / Loose Ends / Find Repeated Rows (appended block - keep together) ──────────────
 	# Three "scan, list, jump, fix" tools, which is why they sit beside Project Doctor and Check
 	# Sheet for Errors. Each owns its own window, so they live in a lazily-filled dictionary here
@@ -822,6 +833,10 @@ func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callab
 		if editor_theme != null and editor_theme.has_icon(editor_icon, "EditorIcons"):
 			button.icon = editor_theme.get_icon(editor_icon, "EditorIcons")
 	button.pressed.connect(callable)
+	# W19 - the button remembers which of the editor's files made it, so Ctrl+Shift+Alt on it opens
+	# that file as a sheet at the row that names these words. Nothing is written outside the editor's
+	# own repo, so a game project's toolbar carries no extra bytes.
+	EventSheetBuiltHere.mark(button, THIS_FILE_PATH, text)
 	toolbar.add_child(button)
 	return button
 
