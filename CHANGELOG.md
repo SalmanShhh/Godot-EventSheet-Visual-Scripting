@@ -218,6 +218,41 @@ one the logic is right and the wiring is not.
 - Two new pattern claims for what the readings recognise: *Painting the canvas by hand* (adoptable as
   the Drawing Canvas pack only where the host is a 2D node) and *A dialog built in code*.
 
+### Added - the files you build a project WITH, read as sheets
+
+- **Tests read as Test sheets.** A `.gd` under a `tests/` folder whose entry point is
+  `static func run() -> bool` now opens with a head that says so - `test sheet · N checks` - and its
+  entry point reads `Test ▸ On run` instead of as one more helper function. The idiom the whole
+  suite is written in, `passed = _check(label, actual, expected) and passed`, reads as
+  **Test ▸ Check "label": actual = expected**, with the `and passed` folded away and a check
+  wrapped over several lines still reading as ONE row. The accumulator's name is derived from the
+  file rather than assumed, so a project that calls it `all_passed` (or anything else) reads the
+  same. **Run ▸** on the bar runs that one test headless, in a second copy of the editor you are
+  already in, and marks every Check row ✓ or ✗ from the `[PASS]` / `[FAIL]` lines it printed -
+  matched by the check's own label, not by the order they came out in. A test that opens a fixture
+  wears it on the bar, and double-click opens the fixture beside the test.
+- **Command tools read as command tools.** `extends SceneTree` (or `MainLoop`) with an `_init` is a
+  script the engine runs as its whole main loop, and it now says so: the head reads
+  `command tool · runs headless`, `_init` reads **Command tool ▸ On run**, and the steps only such a
+  file takes have words at last - `quit(1)` is **Command tool ▸ Finish with code 1**, `quit()` is
+  **Finish**, `DirAccess.make_dir_recursive_absolute(p)` is **Folder ▸ Create p**, a one-line
+  `FileAccess.open(p, WRITE).store_string(t)` is **File ▸ Write text to p**, and the four-line
+  folder walk's `while not entry.is_empty()` reads as **For each file in folder**. Three values got
+  words too: `OS.get_cmdline_user_args()` is **Command tool.Arguments**, a `ResourceLoader.load`
+  past the cache is **load p ignoring the cache**, and `FileAccess.get_file_as_string(p)` is **the
+  file's text**. **Run with arguments… ▸** on the bar runs it headless with whatever would follow
+  `--` on the command line, and **Output ▾** shows what it printed.
+- **Pack recipes read as the behavior they build.** A `static func build()` under a `pack_builders`
+  folder that fills an EventSheetResource and calls `save_pack` now says what it makes on its bar -
+  `pack recipe · host Node2D · class PinBehavior · category Pin · builds eventsheet_addons/pin` -
+  because those sheet-level property writes are facts about the pack rather than steps it takes.
+  **Build pack ▸** runs that one recipe instead of all ninety-five, and **Open built pack ▸** opens
+  the `.gd` it emitted beside it.
+- Every one of those readings is DISPLAY ONLY and gated on what the whole file is, so a game script
+  that happens to call `quit()` or write `passed = ...` reads exactly as it did before, and opening
+  any of the three and saving it untouched still reproduces it byte for byte - proved on this repo's
+  own files, escaped quotes and joined string lists and all.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

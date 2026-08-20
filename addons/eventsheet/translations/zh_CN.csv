@@ -3319,3 +3319,29 @@ Drawing Canvas,绘图画布
 On Input On This Element,当输入落在此元素上时
 On input on this element,当输入落在此元素上时
 "Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.",当输入落在此界面元素上时运行 - 点击、拖动，或它获得焦点时的按键。若不希望它后面的东西也响应，请以消耗输入结束。
+Test,测试
+Command tool,命令行工具
+Check {label}: {actual} = {expected},检查 {label}：{actual} = {expected}
+Finish with code {code},以代码 {code} 结束
+Create {path},创建 {path}
+Write text to {path},将文本写入 {path}
+For each file in folder,对文件夹中的每个文件
+Arguments,参数
+load {path} ignoring the cache,忽略缓存加载 {path}
+the file's text,该文件的文本
+test sheet,测试表
+checks,项检查
+check,项检查
+command tool,命令行工具
+runs headless,无窗口运行
+pack recipe,包配方
+host,宿主
+class,类
+builds,构建
+fixture,测试用文件
+Run,运行
+Run with arguments…,带参数运行…
+Build pack,构建包
+Open built pack,打开已构建的包
+run,运行
+"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.",命令行中跟在 -- 后面的词。此工具将在本编辑器的另一份副本中无窗口运行。

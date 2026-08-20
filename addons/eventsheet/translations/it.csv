@@ -3319,3 +3319,29 @@ Drawing Canvas,Tela di disegno
 On Input On This Element,All'input su questo elemento
 On input on this element,All'input su questo elemento
 "Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.","Viene eseguito quando un input arriva su questo elemento di interfaccia - un clic, un trascinamento o un tasto mentre ha il fuoco. Termina con Consuma input quando nulla dietro deve reagire."
+Test,Test
+Command tool,Strumento da riga di comando
+Check {label}: {actual} = {expected},Verifica {label}: {actual} = {expected}
+Finish with code {code},Termina con il codice {code}
+Create {path},Crea {path}
+Write text to {path},Scrivi il testo in {path}
+For each file in folder,Per ogni file nella cartella
+Arguments,Argomenti
+load {path} ignoring the cache,carica {path} ignorando la cache
+the file's text,il testo del file
+test sheet,foglio di test
+checks,verifiche
+check,verifica
+command tool,strumento da riga di comando
+runs headless,gira senza finestra
+pack recipe,ricetta del pacchetto
+host,ospite
+class,classe
+builds,costruisce
+fixture,risorsa di prova
+Run,Esegui
+Run with arguments…,Esegui con argomenti…
+Build pack,Costruisci il pacchetto
+Open built pack,Apri il pacchetto costruito
+run,esegui
+"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.","Le parole che seguirebbero -- sulla riga di comando. Questo strumento gira senza finestra, in una seconda copia di questo editor."

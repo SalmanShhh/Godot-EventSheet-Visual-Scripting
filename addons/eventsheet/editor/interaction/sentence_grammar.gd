@@ -302,6 +302,15 @@ enum VerbKind {
 ## the line declares a local variable, which the canvas draws as a declaration row rather than a
 ## sentence.
 static func statement(code: String, context: Dictionary = {}) -> Dictionary:
+	# ── W9 / W10 lens hook ──────────────────────────────────────────────────────────────────────
+	# The tool-file readings run FIRST, and are the one place a statement wrapped over several lines
+	# inside its own brackets still reads: the suite's `_check` call is written that way in most of
+	# the 612 tests, and the bail-out below would drop it. Gated on the file kind, so nothing else
+	# reaches this at all.
+	if not str(context.get("tool_file_kind", "")).is_empty():
+		var tool_file: Dictionary = tool_file_statement(code, context)
+		if not tool_file.is_empty():
+			return _with_indent(tool_file, code.length() - code.lstrip("\t").length())
 	# R3. A line broken with a trailing `\` is ONE statement, and a chained tween is the shape that
 	# writes it that way most often. Joining first is what lets the rest of the grammar see it at all.
 	if code.contains("\n"):
@@ -421,6 +430,13 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var text: String = node_lookup_text(expression.strip_edges())
 	if text.is_empty():
 		return {}
+	# ── W10 lens hook ───────────────────────────────────────────────────────────────────────────
+	# A folder walk's `while not entry.is_empty()` is the header of a loop over files, which no
+	# reading of the comparison alone could ever say. Gated on the file being a command tool AND on
+	# the local having been filled by `get_next()`, so nothing else can be mistaken for it.
+	var walked: Dictionary = tool_file_condition(text, context)
+	if not walked.is_empty():
+		return walked
 	# ── R4 / R5 / R11 ───────────────────────────────────────────────────────────────────────────
 	# The questions that span MORE than one operator - a range, an angle window, a distance, an area,
 	# an approximate equality, an elapsed-time check, the layout edges - before any reading that would
@@ -1022,6 +1038,13 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var through_helper: String = helper_member_words(trimmed, context)
 	if not through_helper.is_empty():
 		return through_helper
+	# ── W10 lens hook ───────────────────────────────────────────────────────────────────────────
+	# The three values a command tool reads and a game script does not: the words typed after `--`,
+	# a resource loaded past the cache, and a file read whole. Each is one settled phrase, so it goes
+	# ahead of the general call rewriting that would take its arguments apart.
+	var tool_file_value: String = tool_file_expression(trimmed, context)
+	if not tool_file_value.is_empty():
+		return tool_file_value
 	# R24 / R25 / R29 - a whole controls read (a stick, a gamepad's name, a sensor) is one settled
 	# phrase, ahead of the general call rewriting which would only take its arguments apart.
 	var controls_value: String = controls_expression(trimmed)
@@ -7582,6 +7605,46 @@ static func behavior_shape_statement(text: String, context: Dictionary) -> Dicti
 ## The behavior-shape reading of one CONDITION, or {} when no shape claims it.
 static func behavior_shape_condition(text: String, context: Dictionary) -> Dictionary:
 	return EventSheetBehaviorShapes.condition(text, context)
+
+
+# ── W9 / W10 / W11: the files a project's TOOLING is written in ───────────────────────────────────
+# A test, a command-line tool and a behavior pack's recipe are each a whole-FILE shape rather than a
+# statement, so their recognisers live in their own file (EventSheetToolFiles) exactly as the behavior
+# shapes do. These four functions are the whole of their contact with the grammar. Every one of them
+# is gated on the file kind the context carries, so a game script that calls `quit()` or writes
+# `passed = ...` is untouched.
+
+
+## One reading in the plainest form the grammar has: an object and a template with named values.
+## Public so a reading that lives in its own file builds a row exactly as the readings here do.
+static func sentence_of(object_name: String, template: String, values: Dictionary) -> Dictionary:
+	return _sentence(object_name, template, values)
+
+
+## The tool-file reading of one STATEMENT - a test's Check row, and a command tool's Finish, folder
+## and file steps - or {} when this file is not one of those or the line is not one of theirs.
+static func tool_file_statement(text: String, context: Dictionary) -> Dictionary:
+	var checked: Dictionary = EventSheetToolFiles.check_statement(text, context)
+	if not checked.is_empty():
+		return _with_pattern(checked, EventSheetToolFiles.KIND_TEST_SHEET, text)
+	var commanded: Dictionary = EventSheetToolFiles.command_statement(text, context)
+	if commanded.is_empty():
+		return {}
+	return _with_pattern(commanded, EventSheetToolFiles.KIND_COMMAND_TOOL, text)
+
+
+## The tool-file reading of one CONDITION - a folder walk's loop header - or {}.
+static func tool_file_condition(text: String, context: Dictionary) -> Dictionary:
+	var walked: Dictionary = EventSheetToolFiles.command_condition(text, context)
+	if walked.is_empty():
+		return {}
+	return _with_pattern(walked, EventSheetToolFiles.KIND_COMMAND_TOOL, text)
+
+
+## The tool-file words for one VALUE - the command line's arguments, a load past the cache, a file
+## read whole - or "" when the caller keeps whatever words it already had.
+static func tool_file_expression(text: String, context: Dictionary) -> String:
+	return EventSheetToolFiles.command_expression(text, context)
 # ── U6 / U7 - web requests and lights ───────────────────────────────────────────────────────────
 #
 # Two families of line a finished game has and a first script does not: a request to a server, and

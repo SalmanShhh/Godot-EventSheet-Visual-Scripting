@@ -297,6 +297,11 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 	# V4 - the two words that say what this file is, in the chip slot the class ladder vacated.
 	if data_type:
 		spans.append(_pack_include_chip(EventSheetL10n.translate("data type")))
+	# ── W9 / W10 / W11 lens hook ──────────────────────────────────────────────────────────────
+	# What this file is as a piece of TOOLING, said before its buttons: a test sheet and how many
+	# checks it makes, a command tool that runs headless, a pack recipe and the behavior it builds.
+	# The same chips the read-only Include bar states, because it is the same fact about the file.
+	spans.append_array(_tool_file_chip_spans(sheet, str(sheet.external_source_path)))
 	# R33 - a tool sheet's own buttons ride the identity strip too. This is the bar an opened editor
 	# script actually gets (the pack Include bar is for a pack), and a Run now that is not where the
 	# tool is written is a Run now nobody finds.
@@ -1055,6 +1060,11 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	# this only shows what the file said.
 	if bool(sheet.tool_mode) and not plugin_words:
 		spans.append(_pack_include_chip(EventSheetL10n.translate("runs in editor")))
+	# ── W9 / W10 / W11 lens hook ──────────────────────────────────────────────────────────────
+	# What this file is as a piece of TOOLING, in the same chips: a test sheet and how many checks it
+	# makes, a command tool that runs headless, a pack recipe and the behavior it builds. A recipe's
+	# sheet-level property writes are FACTS about the pack, so they read here rather than as rows.
+	spans.append_array(_tool_file_chip_spans(sheet, source_path))
 	var receipts: PackedStringArray = PackedStringArray()
 	if not source_path.is_empty():
 		receipts.append("· %s" % source_path.get_file())
@@ -1157,6 +1167,37 @@ func _function_body_entries(sheet: EventSheetResource, function_name: String) ->
 			var body: Array = (entry as EventFunction).events
 			return body if not body.is_empty() else (entry as EventFunction).rows
 	return []
+## W9 / W10 / W11. The Include-bar chips a tooling file states about itself, plus - for a test that
+## opens one - the fixture it reads, which double-click opens beside it. Empty for every other file.
+func _tool_file_chip_spans(sheet: EventSheetResource, source_path: String) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var lines: PackedStringArray = EventSheetToolFiles.lines_of_sheet(sheet)
+	var kind: String = EventSheetToolFiles.kind_of(lines, source_path)
+	if kind.is_empty():
+		return spans
+	var head: Dictionary = EventSheetToolFiles.recipe_head(lines) if kind == EventSheetToolFiles.KIND_PACK_RECIPE else {}
+	var check_count: int = EventSheetToolFiles.checks(lines).size() if kind == EventSheetToolFiles.KIND_TEST_SHEET else 0
+	for chip: String in EventSheetToolFiles.head_chips(kind, check_count, head):
+		spans.append(_pack_include_chip(chip))
+	if kind == EventSheetToolFiles.KIND_PACK_RECIPE:
+		var built: String = EventSheetEditorToolBar.built_pack_path(sheet)
+		if not built.is_empty():
+			spans.append(_make_span("%s %s" % [EventSheetL10n.translate("builds"), built.get_base_dir().trim_prefix("res://")],
+				SemanticSpan.SpanType.COMMENT, {
+					"editable": false, "kind": "pack_include", "line_index": 0,
+					"text_color": _viewport._get_reading_style().muted_text_color
+				}))
+	if kind == EventSheetToolFiles.KIND_TEST_SHEET:
+		var fixture: String = EventSheetToolFiles.fixture_path(lines)
+		if not fixture.is_empty():
+			# The fixture is an OBJECT this test opens, so it wears a chip and carries the path every
+			# other openable include carries - double-click opens it beside the test.
+			var fixture_span: SemanticSpan = _pack_include_chip(
+				"%s: %s" % [EventSheetL10n.translate("fixture"), fixture.get_file()])
+			fixture_span.metadata["include_path"] = fixture
+			fixture_span.metadata["kind"] = "scene_object_open"
+			spans.append(fixture_span)
+	return spans
 
 
 ## P4 - one node's object bar inside a scene view: the node's own name, the class it is, the file its
@@ -2482,6 +2523,49 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	return row_data
 
 
+## W9. What the last headless run said about one Check row, or null when this test has not been run
+## in this session (and the row is then marked with nothing at all).
+func _check_row_verdict(check_label: String) -> Variant:
+	if check_label.is_empty() or _viewport._sheet == null:
+		return null
+	return EventSheetEditorToolBar.check_verdict(_viewport._sheet.external_source_path, check_label)
+
+
+## W9 / W10. Which object a function reads its trigger under. A test's `run` and a command tool's
+## `_init` are what the file EXISTS to do and the runner calls them by name, so they belong to Test
+## and to Command tool. Every other function is a helper this sheet calls, and stays under Functions.
+func _verb_trigger_object(event_function: EventFunction) -> String:
+	match _tool_file_entry_kind(event_function):
+		EventSheetToolFiles.KIND_TEST_SHEET:
+			return EventSheetL10n.translate(EventSheetToolFiles.OBJECT_TEST)
+		EventSheetToolFiles.KIND_COMMAND_TOOL:
+			return EventSheetL10n.translate(EventSheetToolFiles.OBJECT_COMMAND_TOOL)
+	return EventSheetL10n.translate("Functions")
+
+
+## The words after "On" for the same two entry points, and they are the same words: both files are
+## RUN. A command tool's entry is spelled `_init` because that is when a main loop starts, and a
+## test's is spelled `run` because that is what the runner calls - one thing, said once.
+func _verb_trigger_name(event_function: EventFunction, display_name: String) -> String:
+	if _tool_file_entry_kind(event_function).is_empty():
+		return display_name
+	return EventSheetL10n.translate("run")
+
+
+## "" unless this function IS the open tooling file's entry point - the name and the file kind have to
+## agree, so a test's own `_init` and a command tool's own `run` helper both stay under Functions.
+func _tool_file_entry_kind(event_function: EventFunction) -> String:
+	if event_function == null:
+		return ""
+	var kind: String = str(sentence_context().get("tool_file_kind", ""))
+	var name: String = event_function.function_name.strip_edges()
+	if kind == EventSheetToolFiles.KIND_TEST_SHEET and name == EventSheetToolFiles.TEST_ENTRY_NAME:
+		return kind
+	if kind == EventSheetToolFiles.KIND_COMMAND_TOOL and name == EventSheetToolFiles.COMMAND_ENTRY_NAME:
+		return kind
+	return ""
+
+
 ## True when any span of a row sits in the ACTION lane - i.e. the row's right half carries something.
 static func _has_action_lane_span(spans: Array[SemanticSpan]) -> bool:
 	for span: SemanticSpan in spans:
@@ -2528,10 +2612,14 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 		"lane": "condition",
 		"line_index": 0,
 		"chip": true,
-		"object_label": EventSheetL10n.translate("Functions"),
+		# ── W9 / W10 lens hook ────────────────────────────────────────────────────────────────
+		# A test's `run` and a command tool's `_init` are not helpers something else calls: they are
+		# the one thing the file is FOR, and the runner calls them. So they read under the object
+		# that runs them - Test ▸ On run, Command tool ▸ On run - rather than under Functions.
+		"object_label": _verb_trigger_object(event_function),
 		"text_color": name_color
 	}
-	var plain_name: String = display_name
+	var plain_name: String = _verb_trigger_name(event_function, display_name)
 	if EventSheetBBCodeLite.has_markup(display_name):
 		plain_name = EventSheetBBCodeLite.strip(display_name)
 		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(display_name, name_color)
@@ -10499,6 +10587,17 @@ func _format_pick_filter(pick: PickFilter) -> String:
 		PickFilter.CollectionKind.REPEAT:
 			return "Repeat %s times" % collection
 		PickFilter.CollectionKind.WHILE:
+			# ── W10 lens hook ──────────────────────────────────────────────────────────────
+			# A folder walk is written as a `while` over a local that `get_next()` keeps filling,
+			# and what the four lines MEAN together is one loop over the files in a folder. The
+			# reading is gated on the file being a command tool AND on that local, so no other
+			# `while` can be mistaken for it.
+			var walked: Dictionary = EventSheetSentence.tool_file_condition(collection, sentence_context())
+			if not walked.is_empty():
+				var words: PackedStringArray = PackedStringArray()
+				for segment: Variant in (walked.get("segments", []) as Array):
+					words.append(str((segment as Dictionary).get("text", "")))
+				return "".join(words).strip_edges()
 			return "While %s" % collection
 	var text: String = "For each %s in %s" % [iterator, source_text]
 	if not pick.predicate_expression.strip_edges().is_empty():
@@ -11309,6 +11408,17 @@ const PATTERN_VOCABULARY: Dictionary = {
 	"menu": {
 		"words": "A menu and the items it answers",
 		"ace_ids": []
+	# W9 / W10 / W11. The three tooling shapes. None is adoptable: a test, a command tool and a pack
+	# recipe are things you WRITE, not behaviors a pack could take over, so the chip names the shape
+	# and offers nothing to swap it for.
+	"test_sheet": {
+		"words": "Test sheet"
+	},
+	"command_tool": {
+		"words": "Command tool"
+	},
+	"pack_recipe": {
+		"words": "Pack recipe"
 	}
 }
 
@@ -11411,6 +11521,13 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	if not sentence.is_empty():
 		indent = int(sentence.get("indent", 0))
 		object_label = str(sentence.get("object", ""))
+		# ── W9 lens hook ───────────────────────────────────────────────────────────────────────
+		# A Check row that has been RUN says so, in front of what it checks: ✓ when the last headless
+		# run passed it, ✗ when it did not. A check that has never been run says nothing, which is the
+		# truth. Display only - the mark comes from the run's output and never from the file.
+		var verdict: Variant = _check_row_verdict(str(sentence.get("check_label", "")))
+		if verdict != null:
+			pieces.append(["✓ " if bool(verdict) else "✗ ", "plain"])
 		for segment: Variant in (sentence.get("segments", []) as Array):
 			var part: Dictionary = segment
 			pieces.append([str(part.get("text", "")), str(part.get("tone", "plain"))])

@@ -3319,3 +3319,29 @@ Drawing Canvas,描画キャンバス
 On Input On This Element,この要素への入力時
 On input on this element,この要素への入力時
 "Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.",この UI 要素に入力が届いたときに実行されます - クリック、ドラッグ、フォーカス中のキー。背後の要素に反応させたくないときは入力を消費で終えます。
+Test,テスト
+Command tool,コマンドツール
+Check {label}: {actual} = {expected},確認 {label}: {actual} = {expected}
+Finish with code {code},コード {code} で終了
+Create {path},{path} を作成
+Write text to {path},{path} にテキストを書き込む
+For each file in folder,フォルダー内の各ファイルについて
+Arguments,引数
+load {path} ignoring the cache,キャッシュを無視して {path} を読み込む
+the file's text,そのファイルのテキスト
+test sheet,テストシート
+checks,件の確認
+check,件の確認
+command tool,コマンドツール
+runs headless,ウィンドウなしで実行
+pack recipe,パックのレシピ
+host,ホスト
+class,クラス
+builds,生成先
+fixture,テスト用ファイル
+Run,実行
+Run with arguments…,引数を指定して実行…
+Build pack,パックを生成
+Open built pack,生成されたパックを開く
+run,実行
+"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.",コマンドラインで -- の後に続く語です。このツールはウィンドウなしで、このエディターのもう一つのコピー上で実行されます。

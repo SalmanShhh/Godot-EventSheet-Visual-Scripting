@@ -3319,3 +3319,29 @@ Drawing Canvas,그리기 캔버스
 On Input On This Element,이 요소에 입력이 있을 때
 On input on this element,이 요소에 입력이 있을 때
 "Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.","이 UI 요소에 입력이 도달할 때 실행됩니다 - 클릭, 드래그, 포커스가 있을 때의 키. 뒤에 있는 것이 함께 반응하지 않아야 하면 입력 소비로 끝냅니다."
+Test,테스트
+Command tool,명령 도구
+Check {label}: {actual} = {expected},확인 {label}: {actual} = {expected}
+Finish with code {code},코드 {code}(으)로 종료
+Create {path},{path} 만들기
+Write text to {path},{path}에 텍스트 쓰기
+For each file in folder,폴더의 각 파일마다
+Arguments,인자
+load {path} ignoring the cache,캐시를 무시하고 {path} 불러오기
+the file's text,그 파일의 텍스트
+test sheet,테스트 시트
+checks,개 확인
+check,개 확인
+command tool,명령 도구
+runs headless,창 없이 실행
+pack recipe,팩 레시피
+host,호스트
+class,클래스
+builds,생성
+fixture,테스트 자료
+Run,실행
+Run with arguments…,인자를 지정해 실행…
+Build pack,팩 생성
+Open built pack,생성된 팩 열기
+run,실행
+"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.",명령줄에서 -- 뒤에 오는 단어입니다. 이 도구는 이 편집기의 두 번째 사본에서 창 없이 실행됩니다.

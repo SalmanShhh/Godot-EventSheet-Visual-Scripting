@@ -3319,3 +3319,29 @@ Drawing Canvas,Zeichenflaeche
 On Input On This Element,Bei Eingabe auf diesem Element
 On input on this element,Bei Eingabe auf diesem Element
 "Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.","Laeuft, wenn eine Eingabe auf diesem UI-Element landet - ein Klick, ein Ziehen oder eine Taste, solange es den Fokus hat. Endet mit Eingabe verbrauchen, wenn nichts dahinter ebenfalls reagieren soll."
+Test,Test
+Command tool,Kommandozeilenwerkzeug
+Check {label}: {actual} = {expected},Prüfe {label}: {actual} = {expected}
+Finish with code {code},Mit Code {code} beenden
+Create {path},{path} anlegen
+Write text to {path},Text nach {path} schreiben
+For each file in folder,Für jede Datei im Ordner
+Arguments,Argumente
+load {path} ignoring the cache,"{path} laden, den Zwischenspeicher übergehen"
+the file's text,der Text der Datei
+test sheet,Testblatt
+checks,Prüfungen
+check,Prüfung
+command tool,Kommandozeilenwerkzeug
+runs headless,läuft ohne Fenster
+pack recipe,Paketrezept
+host,Träger
+class,Klasse
+builds,baut
+fixture,Vorlage
+Run,Ausführen
+Run with arguments…,Mit Argumenten ausführen…
+Build pack,Paket bauen
+Open built pack,Gebautes Paket öffnen
+run,Ausführen
+"The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.","Die Wörter, die auf der Kommandozeile hinter -- stünden. Dieses Werkzeug läuft ohne Fenster, in einer zweiten Kopie dieses Editors."
