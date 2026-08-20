@@ -59,9 +59,11 @@ static func run() -> bool:
 				all_passed = _check("%s lifts at least one function" % file_name, sheet.functions.size() > 0, true) and all_passed
 			var reopened: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
 			all_passed = _check("%s reopened sheet compiles back byte-identically" % file_name, reopened == source, true) and all_passed
-	all_passed = _check("the fleet was scanned (93 packs)", packs, 93) and all_passed
+	# Batch 13 added two packs (Touch Gestures and its shape-library data asset): 93 + 2.
+	all_passed = _check("the fleet was scanned (95 packs)", packs, 95) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
-	all_passed = _check("fleet-wide declared verbs count matches the catalog (1283)", total_verbs, 1283) and all_passed
+	# 1283 + 19 (Touch Gestures publishes 19 verbs, conditions and expressions).
+	all_passed = _check("fleet-wide declared verbs count matches the catalog (1302)", total_verbs, 1302) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0

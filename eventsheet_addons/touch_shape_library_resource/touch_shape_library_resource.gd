@@ -1,5 +1,5 @@
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/touch_shape_library_resource/icon.svg")
 class_name TouchShapeLibraryResource
 extends Resource
 ## The drawn shapes a project recognises, as a data asset. Each entry is a name and the smoothed outline that was drawn to teach it; Touch Gestures matches a finished stroke against every entry and fires On Shape Drawn with the closest name.

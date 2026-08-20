@@ -169,7 +169,9 @@ const PACK_LABELS: Dictionary = {
 	"camera_kit": "Camera",
 	"scene_flow": "Scene Flow",
 	"nav_agent": "Nav Agent",
-	"follow_path": "Follow A Path"
+	"follow_path": "Follow A Path",
+	"touch_gestures": "Touch Gestures",
+	"fps_controller": "FPS Controller"
 }
 
 

@@ -154,13 +154,14 @@ static func run() -> bool:
 		copy.resource_path.is_empty() and copy.custom_class_name == "BossFight"
 		and int((copy.variables.get("phase", {}) as Dictionary).get("default", -1)) == 1, true) and all_passed
 
-	# New… menu: 15 built-in starters (R33 added Editor Plugin / Import Tool / Export Hook to the
-	# Editor Tools section) + 6 intent section separators (the creation-time "what are you making?"
+	# New… menu: 17 built-in starters (R33 added Editor Plugin / Import Tool / Export Hook to the
+	# Editor Tools section; batch 13 added Boomer Arsenal and Game Options to the node-scripts
+	# section) + 6 intent section separators (the creation-time "what are you making?"
 	# ask, including the Systems/ECS-lite section) + the project-templates separator + 1 project
-	# template = 23 entries; adopting id 100 swaps the template copy in as an unsaved sheet.
+	# template = 25 entries; adopting id 100 swaps the template copy in as an unsaved sheet.
 	editor._starter._build_template_menu_items()
 	all_passed = _check("template menu lists built-ins and the project template",
-		editor._starter._template_menu.item_count == 23
+		editor._starter._template_menu.item_count == 25
 		and editor._starter._project_template_paths == PackedStringArray(["user://tpl_dir/boss_fight.tres"]), true) and all_passed
 	# The four tool starters are VALUES rather than a count, so a renamed entry names itself.
 	var tool_entries: PackedStringArray = PackedStringArray()

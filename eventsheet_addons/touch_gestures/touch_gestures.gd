@@ -1,7 +1,7 @@
 ## @ace_tags(input, touch, gestures)
 ## @ace_category("Touch Gestures")
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/touch_gestures/icon.svg")
 class_name TouchGesturesBehavior
 extends Node
 ## Swipes and drawn shapes as triggers. Watches the touch events itself and fires On Swipe (left / right / up / down, or eight ways with the diagonals on) and On Shape Drawn with the name of the closest taught shape. Teach a shape by drawing it once.
@@ -121,7 +121,7 @@ func _resample(points: PackedVector2Array) -> PackedVector2Array:
 ## @ace_category("Touch Gestures")
 ## @ace_description("Sets how far (pixels) and how fast (seconds) a drag has to be before it counts as a swipe. The defaults suit a phone held in one hand.")
 ## @ace_display_template("Set swipe thresholds: [b]{minimum_distance}[/b] px in [b]{maximum_seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.set_swipe_thresholds({minimum_distance}, {maximum_seconds})")
 func set_swipe_thresholds(minimum_distance: float, maximum_seconds: float) -> void:
 	swipe_min_distance = maxf(minimum_distance, 1.0)
@@ -131,7 +131,7 @@ func set_swipe_thresholds(minimum_distance: float, maximum_seconds: float) -> vo
 ## @ace_name("Set Eight Way")
 ## @ace_category("Touch Gestures")
 ## @ace_description("Turns the four diagonals on or off. Off, a diagonal swipe reports as whichever of left / right / up / down it leaned towards.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.set_eight_way({on})")
 func set_eight_way(on: bool) -> void:
 	eight_way = on
@@ -142,7 +142,7 @@ func set_eight_way(on: bool) -> void:
 ## @ace_category("Touch Gestures")
 ## @ace_description("Records the stroke that was just drawn as a template under a name. Draw the shape in the running game, then call this - there is no coordinate list to type. Saves into the attached shape library when there is one.")
 ## @ace_display_template("Teach shape from stroke as [b]{shape_name}[/b]")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.teach_shape_from_stroke({shape_name})")
 func teach_shape_from_stroke(shape_name: String) -> void:
 	if _stroke.size() < minimum_stroke_points:
@@ -157,7 +157,7 @@ func teach_shape_from_stroke(shape_name: String) -> void:
 ## @ace_name("Forget Shape")
 ## @ace_category("Touch Gestures")
 ## @ace_description("Removes a taught shape, so it stops being matched.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.forget_shape({shape_name})")
 func forget_shape(shape_name: String) -> void:
 	_shapes.erase(shape_name)
@@ -168,7 +168,7 @@ func forget_shape(shape_name: String) -> void:
 ## @ace_name("Load Shapes From Library")
 ## @ace_category("Touch Gestures")
 ## @ace_description("Reads every taught shape out of the attached shape library, replacing what is loaded. Called for you when the behaviour starts.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.load_shapes_from_library()")
 func load_shapes_from_library() -> void:
 	_shapes.clear()
@@ -180,7 +180,7 @@ func load_shapes_from_library() -> void:
 ## @ace_name("Save Shapes To Library")
 ## @ace_category("Touch Gestures")
 ## @ace_description("Writes the taught shapes back to the attached shape library file, so they survive the run. Does nothing when no library is attached.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.save_shapes_to_library()")
 func save_shapes_to_library() -> void:
 	if shape_library == null or not "shapes" in shape_library:
@@ -193,7 +193,7 @@ func save_shapes_to_library() -> void:
 ## @ace_name("Clear Stroke")
 ## @ace_category("Touch Gestures")
 ## @ace_description("Throws away the stroke gathered so far, so a gesture interrupted by a menu cannot finish afterwards.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.clear_stroke()")
 func clear_stroke() -> void:
 	_stroke.clear()
@@ -202,7 +202,7 @@ func clear_stroke() -> void:
 ## @ace_name("Swipe Was")
 ## @ace_category("Touch Gestures")
 ## @ace_description("Whether the swipe that just fired went this way ("left", "right", "up", "down", and with eight-way on "up left", "up right", "down left", "down right").")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.swipe_was({direction})")
 func swipe_was(direction: String) -> bool:
 	return _swipe_direction == direction
@@ -211,7 +211,7 @@ func swipe_was(direction: String) -> bool:
 ## @ace_name("Shape Was")
 ## @ace_category("Touch Gestures")
 ## @ace_description("Whether the shape that was just drawn is this one.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.shape_was({shape_name})")
 func shape_was(shape_name: String) -> bool:
 	return _shape_name == shape_name
@@ -220,7 +220,7 @@ func shape_was(shape_name: String) -> bool:
 ## @ace_name("Knows Shape")
 ## @ace_category("Touch Gestures")
 ## @ace_description("Whether a shape has been taught under this name.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.knows_shape({shape_name})")
 func knows_shape(shape_name: String) -> bool:
 	return _shapes.has(shape_name)
@@ -229,7 +229,7 @@ func knows_shape(shape_name: String) -> bool:
 ## @ace_name("Swipe Direction")
 ## @ace_category("Touch Gestures")
 ## @ace_description("Which way the swipe went, as a word (inside On Swipe).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.swipe_direction()")
 func swipe_direction() -> String:
 	return _swipe_direction
@@ -238,7 +238,7 @@ func swipe_direction() -> String:
 ## @ace_name("Swipe Angle")
 ## @ace_category("Touch Gestures")
 ## @ace_description("The swipe's angle in degrees, 0 pointing right and counting clockwise the way screen coordinates do (inside On Swipe).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.swipe_angle()")
 func swipe_angle() -> float:
 	return _swipe_angle
@@ -247,7 +247,7 @@ func swipe_angle() -> float:
 ## @ace_name("Swipe Distance")
 ## @ace_category("Touch Gestures")
 ## @ace_description("How far the finger travelled, in pixels (inside On Swipe).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.swipe_distance()")
 func swipe_distance() -> float:
 	return _swipe_distance
@@ -256,7 +256,7 @@ func swipe_distance() -> float:
 ## @ace_name("Swipe Seconds")
 ## @ace_category("Touch Gestures")
 ## @ace_description("How long the swipe took, in seconds (inside On Swipe).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.swipe_seconds()")
 func swipe_seconds() -> float:
 	return _swipe_seconds
@@ -265,7 +265,7 @@ func swipe_seconds() -> float:
 ## @ace_name("Swipe Speed")
 ## @ace_category("Touch Gestures")
 ## @ace_description("How fast the swipe was, in pixels per second - the number a flick's momentum should scale with (inside On Swipe).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.swipe_speed()")
 func swipe_speed() -> float:
 	return _swipe_distance / maxf(_swipe_seconds, 0.001)
@@ -274,7 +274,7 @@ func swipe_speed() -> float:
 ## @ace_name("Shape Name")
 ## @ace_category("Touch Gestures")
 ## @ace_description("The name of the shape that was just drawn (inside On Shape Drawn).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.shape_name()")
 func shape_name() -> String:
 	return _shape_name
@@ -283,7 +283,7 @@ func shape_name() -> String:
 ## @ace_name("Shape Closeness")
 ## @ace_category("Touch Gestures")
 ## @ace_description("How close the stroke was to the taught shape, 0 to 1, where 1 is an exact match (inside On Shape Drawn).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.shape_closeness()")
 func shape_closeness() -> float:
 	return _shape_closeness
@@ -292,7 +292,7 @@ func shape_closeness() -> float:
 ## @ace_name("Stroke Length")
 ## @ace_category("Touch Gestures")
 ## @ace_description("How far the finger travelled along the whole stroke, in pixels - the drawn line's length, not the distance between its ends.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.stroke_length()")
 func stroke_length() -> float:
 	return _stroke_length(_stroke)
@@ -301,7 +301,7 @@ func stroke_length() -> float:
 ## @ace_name("Stroke Points")
 ## @ace_category("Touch Gestures")
 ## @ace_description("How many points the stroke gathered so far.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.stroke_points()")
 func stroke_points() -> int:
 	return _stroke.size()

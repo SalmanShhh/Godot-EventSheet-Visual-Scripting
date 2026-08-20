@@ -222,10 +222,14 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Scene": "PackedScene",
 	"Signals / Scene / Input": "Signals",
 	"Systems": "Groups",
+	# X29. The player-facing accessibility options. Godot has no icon for the idea, so the row that
+	# every one of them ends up on - a setting the player changes - lends its own.
+	"Accessibility": "GuiRadioCheckedDisabled",
 	# A Test sheet's claims: the name is not a class and the verbs record onto the test node rather
 	# than driving one, so derivation cannot reach it. The tick reads as pass/fail, which is what a
 	# claim is.
 	"Testing": "GuiChecked",
+	"Timed Input": "Timer",
 	"Text": "String",
 	"Time": "Timer",
 	"Touch": "InputEventScreenTouch",
@@ -236,6 +240,7 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Variables: String": "String",
 	"Variables: Vector": "Vector2",
 	"Vibration": "InputEventJoypadMotion",
+	"Weapons 3D": "RayCast3D",
 }
 
 # Group-header colours (by group kind).
