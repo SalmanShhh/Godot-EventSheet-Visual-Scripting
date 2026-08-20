@@ -415,6 +415,13 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var behaviors: Dictionary = behavior_words_statement(text, context)
 	if not behaviors.is_empty():
 		return _with_indent(behaviors, indent)
+	# ── X1 / X5 ─────────────────────────────────────────────────────────────────────────────────
+	# The 3D lines: a direction and a speed, a turn, a facing turned toward, a place copied off
+	# another object, a tilt onto a slope. Every one of them is arithmetic on a property, so they go
+	# ahead of the compound / assignment split that would describe the property instead of the step.
+	var spatial: Dictionary = spatial_words_statement(text, context)
+	if not spatial.is_empty():
+		return _with_indent(spatial, indent)
 	var compound: Dictionary = _compound_statement(text, context)
 	if not compound.is_empty():
 		return _with_indent(compound, indent)
@@ -481,6 +488,13 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var behaviors: Dictionary = behavior_words_condition(text, context)
 	if not behaviors.is_empty():
 		return behaviors
+	# ── X3 ──────────────────────────────────────────────────────────────────────────────────────
+	# How far off facing something is, and which side of an object it is on. Both are comparisons on
+	# paper, so they go ahead of every reading below that would describe the operator rather than the
+	# question the line asks with it.
+	var facing: Dictionary = spatial_words_condition(text, context)
+	if not facing.is_empty():
+		return facing
 	# S1. Which state the machine is in is the FSM behavior's own question, and the comparison and
 	# membership readings below would both answer a narrower one - `state = 2`, `state is in a list`.
 	var machine_test: Dictionary = _state_machine_condition(text, context)
@@ -1066,6 +1080,13 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var faced: String = basis_direction_words(trimmed, context)
 	if not faced.is_empty():
 		return faced
+	# ── X1 / X31 ────────────────────────────────────────────────────────────────────────────────
+	# A facing built out of a direction, a point given as an angle and a distance, and one loop
+	# step's share of a full turn. Each is decided by the WHOLE expression, so all three are asked
+	# before the innermost-first pass takes the calls inside them apart.
+	var spatial_value: String = spatial_words_expression(trimmed, context)
+	if not spatial_value.is_empty():
+		return spatial_value
 	# U11 - a callable held in a value is the FUNCTION it names, said the way a Call row says it.
 	var held: String = callable_value_words(trimmed)
 	if not held.is_empty():
@@ -7785,10 +7806,14 @@ static func _class_note(object_class: String) -> String:
 ## adoption is offered the pack that ships the shape rather than a rewrite of it.
 const FPS_LOOK_PACK := "fps_controller"
 
-## U8. The three directions an object's own axes point in, by the basis member each one is. `-z` is
-## forward because that is the way Godot's cameras face; the sheet says the direction, not the axis.
+## U8 / X1. The six directions an object's own axes point in, by the SIGNED basis member each one is.
+## `-z` is forward because that is the way Godot's cameras face; the sheet says the direction, not the
+## axis. The three negated twins are the other half of the same table: a reader who has been told what
+## `-basis.z` means has already been told what `basis.z` means.
 const BASIS_DIRECTION_WORDS: Dictionary = {
-	"-basis.z": "forward", "basis.x": "right", "basis.y": "up"
+	"-basis.z": "forward", "basis.z": "backward",
+	"basis.x": "right", "-basis.x": "left",
+	"basis.y": "up", "-basis.y": "down"
 }
 
 ## U8. The transforms a basis may be reached through. Both spellings name the same three directions.
@@ -7823,19 +7848,29 @@ const POSITIONAL_AUDIO_CLASSES: PackedStringArray = ["AudioStreamPlayer2D", "Aud
 ## The UP VECTOR is what says this is the 3D call: a one-argument `look_at(p)` turns a 2D object to an
 ## angle, which is a different sentence the sheet already has (`Set angle toward p`), so only the
 ## two-argument spelling is claimed here.
+## X1 extends it twice, without moving the shipped row: a ONE-argument `look_at(p)` is the same
+## sentence when the object is a 3D one (a 2D object's one-argument `look_at` keeps `Set angle
+## toward p`, which is the different thing it is), and an up vector that is NOT Godot's own default
+## is the one part of the call a reader has to be told about, so it is folded onto the end.
 static func spatial_call(call: Dictionary, context: Dictionary) -> Dictionary:
 	if str(call.get("method", "")) != "look_at":
 		return {}
 	var args: PackedStringArray = call.get("args", PackedStringArray())
-	if args.size() != 2:
+	if args.size() < 1 or args.size() > 2:
 		return {}
 	var receiver: String = str(call.get("target", "")).strip_edges()
 	if not receiver.is_empty() and not is_simple_target(receiver):
 		return {}
 	var object_name: String = _receiver_object(receiver, context)
-	return _with_pattern(_sentence(object_name, "Look at {place}", {
-		"place": [_place_owner(args[0], context), "value"]}), "fps_look", str(call.get("line", "")),
-		FPS_LOOK_PACK)
+	if args.size() == 1 and not is_spatial_object(object_name, context):
+		return {}
+	var reading: Dictionary = _sentence(object_name, "Look at {place}", {
+		"place": [_place_owner(args[0], context), "value"]})
+	if args.size() == 2 and not DEFAULT_UP_VECTORS.has(args[1].strip_edges()):
+		(reading["segments"] as Array).append({
+			"text": " %s" % _fill(translate("(up is {value})"),
+				{"value": expression_text(args[1], context)}), "tone": "muted"})
+	return _with_pattern(reading, "fps_look", str(call.get("line", "")), FPS_LOOK_PACK)
 
 
 ## U8. The object a PLACE belongs to: an event-sheet object has a position, so `target.global_position`
@@ -7856,21 +7891,33 @@ static func _place_owner(value: String, context: Dictionary) -> String:
 ## the middle of a longer sum is arithmetic a reader follows as arithmetic, and renaming half of it
 ## would leave a sentence nobody could check against the code.
 static func basis_direction_words(text: String, context: Dictionary) -> String:
+	var parts: Dictionary = direction_axis_parts(text)
+	if parts.is_empty():
+		return ""
+	var owner_text: String = str(parts.get("owner", ""))
+	var object_name: String = script_object(context) if owner_text == "self" \
+		else object_of_reference(owner_text)
+	return "%s's %s" % [object_name, translate(str(parts.get("word", "")))]
+
+
+## U8 / X1. A signed basis member taken apart into the DIRECTION it names and the object whose axes
+## those are ("self" for the script's own), or {} when the text is not one of the six at all. The
+## whole-expression reading above and the movement reading below both ask this, so the table that says
+## `-basis.z` is forward is read in exactly one place.
+static func direction_axis_parts(text: String) -> Dictionary:
 	var bare: String = text.strip_edges()
 	for suffix: String in BASIS_DIRECTION_WORDS.keys():
 		var tail: String = str(suffix)
 		var negated: bool = tail.begins_with("-")
-		var member: String = tail.trim_prefix("-")
-		var head: String = bare.substr(1).strip_edges() if negated and bare.begins_with("-") else bare
 		if negated != bare.begins_with("-"):
 			continue
+		var member: String = tail.trim_prefix("-")
+		var head: String = bare.substr(1).strip_edges() if negated else bare
 		var owner_text: String = _basis_owner(head, member)
 		if owner_text.is_empty():
 			continue
-		var object_name: String = script_object(context) if owner_text == "self" \
-			else object_of_reference(owner_text)
-		return "%s's %s" % [object_name, translate(str(BASIS_DIRECTION_WORDS[suffix]))]
-	return ""
+		return {"word": str(BASIS_DIRECTION_WORDS[suffix]), "owner": owner_text}
+	return {}
 
 
 ## U8. The object a `<owner>.<transform>.basis.<axis>` read belongs to - "self" when the script wrote
@@ -10338,22 +10385,31 @@ static func vector_colour_words(text: String, context: Dictionary) -> String:
 ## direction from B to A. Claimed only when the bracket group is exactly one subtraction and the whole
 ## expression is that group normalized, so `(a - b + c).normalized()` keeps its own code.
 static func _direction_between_words(text: String, context: Dictionary) -> String:
+	var parts: Dictionary = direction_between_parts(text, context)
+	if parts.is_empty():
+		return ""
+	return _fill(translate("the direction from {from} to {to}"), parts)
+
+
+## U1 / X3. The two ENDS of a direction-between expression, as the objects they belong to, or {} when
+## the text is not one. The words above and the facing test in X3 both ask this, so "which two things
+## is this the direction between" is answered in one place.
+static func direction_between_parts(text: String, context: Dictionary) -> Dictionary:
 	const TAIL := ").normalized()"
 	var trimmed: String = text.strip_edges()
 	if not trimmed.begins_with("(") or not trimmed.ends_with(TAIL):
-		return ""
+		return {}
 	if closing_paren(trimmed, 0) != trimmed.length() - TAIL.length():
-		return ""
+		return {}
 	var inner: String = trimmed.substr(1, trimmed.length() - TAIL.length() - 1)
 	var minus_at: int = top_level_index(inner, " - ")
 	if minus_at <= 0:
-		return ""
+		return {}
 	var to_point: String = inner.substr(0, minus_at).strip_edges()
 	var from_point: String = inner.substr(minus_at + 3).strip_edges()
 	if to_point.is_empty() or from_point.is_empty():
-		return ""
-	return _fill(translate("the direction from {from} to {to}"),
-		{"from": _point_object(from_point, context), "to": _point_object(to_point, context)})
+		return {}
+	return {"from": _point_object(from_point, context), "to": _point_object(to_point, context)}
 
 
 ## U1. The vector and colour methods whose reading needs the receiver, in the words the sheet has for
@@ -10812,3 +10868,608 @@ static func _is_pattern_value(text: String) -> bool:
 static func _pattern_key_words(key: String) -> String:
 	var text: String = key.strip_edges()
 	return _unquote(text) if _is_string_literal(text) else text
+
+
+# ── X1 / X3 / X5 / X31 - moving, facing, placing, and the point at an angle ──────────────────────
+#
+# The 3D lines every project writes, in the words the sheet already owns. A movement line is one of
+# six directions or three turns; a facing test is a QUESTION rather than a dot product; a placement
+# is a spawn marker, a drop to the ground and a tilt onto its slope; and a ring of bullets is an
+# angle and a distance.
+#
+# Every reading here is DISPLAY: the row still holds the line the file wrote, which is why the byte
+# round-trip cannot move, and every row on the 3D page writes back exactly the spelling read here.
+
+
+## X1 / X3 / X5. The class whose axes, turns and places these readings are about. A 2D object writes
+## some of the same words meaning something else (`look_at(p)` turns it to an angle), so every reading
+## in this section is gated on the object being a spatial one.
+const SPATIAL_CLASSES: PackedStringArray = ["Node3D"]
+
+## X1. The up vector Godot itself would have used. `look_at(p, Vector3.UP)` therefore tells a reader
+## nothing; any other up vector is a deliberate choice and the row says so.
+const DEFAULT_UP_VECTORS: PackedStringArray = ["Vector3.UP", "Vector3(0, 1, 0)"]
+
+## X1 / X5. The two spellings of an object's own orientation.
+const BASIS_MEMBERS: PackedStringArray = ["basis", "global_basis"]
+
+## X5. The classes a place in the scene is MARKED with. A place copied off one of these is a spawn
+## point, which is what the row calls it.
+const SPAWN_MARKER_CLASSES: PackedStringArray = ["Marker3D", "Marker2D"]
+
+## X1. The three turns, by the call that writes each: the sentence, the word a bare amount turns, the
+## word a negated one turns, and the axis the row folds after it.
+##
+## The sign is read off the TEXT and nowhere else - an amount held in a variable has no sign a reading
+## could know, so the bare spelling gets the first word and a leading minus gets the second.
+##
+## Which word goes with which sign is the ENGINE's answer, not a preference: a positive `rotate_y`
+## takes `-Z` toward `-X`, so an object turns to its own left, which is counter-clockwise seen from
+## above. A row that says clockwise and turns a character left would be a reading nobody could trust,
+## so the words follow the turn rather than the sign that happens to be written. `rotate_x` positive
+## lifts the nose (`-Z` toward `+Y`) and `rotate_z` positive raises the right side, so those two pairs
+## read in the order they are written.
+const TURN_CALL_WORDS: Dictionary = {
+	"rotate_y": {"template": "Rotate {turn} at {rate}°", "positive": "counter-clockwise",
+		"negative": "clockwise", "axis": "yaw"},
+	"rotate_x": {"template": "Rotate {turn} at {rate}°", "positive": "up",
+		"negative": "down", "axis": "pitch"},
+	"rotate_z": {"template": "Roll {turn} at {rate}°", "positive": "left",
+		"negative": "right", "axis": "roll"}
+}
+
+## X1. The axis constants `rotate_object_local` is written with, as [the turn they are, whether the
+## constant points the OTHER way along it]. A turn about `Vector3.DOWN` is the same turn about up,
+## backwards, so the word pair is swapped rather than the text rewritten.
+const TURN_AXIS_CALLS: Dictionary = {
+	"Vector3.UP": ["rotate_y", false], "Vector3.DOWN": ["rotate_y", true],
+	"Vector3.RIGHT": ["rotate_x", false], "Vector3.LEFT": ["rotate_x", true],
+	"Vector3.BACK": ["rotate_z", false], "Vector3.FORWARD": ["rotate_z", true]
+}
+
+
+## X1 / X3 / X5. True when an object label is known to be a 3D one. An object nothing said the class
+## of answers false, which is what keeps every reading in this section off a file it cannot read.
+static func is_spatial_object(object_label: String, context: Dictionary) -> bool:
+	return _class_is_any(object_class_of(object_label, context), SPATIAL_CLASSES)
+
+
+## X1 / X5. The 3D statements, tried whole-shape first. {} when the line is none of them, which is the
+## caller's cue to keep the arithmetic reading it has today.
+static func spatial_words_statement(text: String, context: Dictionary) -> Dictionary:
+	var moved: Dictionary = _move_direction_statement(text, context)
+	if not moved.is_empty():
+		return moved
+	var turned: Dictionary = _turn_statement(text, context)
+	if not turned.is_empty():
+		return turned
+	var toward: Dictionary = _rotate_toward_statement(text, context)
+	if not toward.is_empty():
+		return toward
+	return placement_statement(text, context)
+
+
+## X1. `global_position += -transform.basis.z * speed * delta` - one of six directions, at a speed,
+## per second. A vector that is not one of the object's own axes keeps its own name and reads as the
+## direction it is; anything that is not `<direction> * <speed> * delta` is arithmetic and stays it.
+static func _move_direction_statement(text: String, context: Dictionary) -> Dictionary:
+	var at: int = top_level_index(text, " += ")
+	if at <= 0:
+		return {}
+	var place: String = text.substr(0, at).strip_edges()
+	if not OWN_POSITION_NAMES.has(_trailing_member(place)):
+		return {}
+	var owner_text: String = _owner_of(place)
+	if not owner_text.is_empty() and not is_simple_target(owner_text):
+		return {}
+	var object_name: String = _receiver_object(owner_text, context)
+	if not is_spatial_object(object_name, context):
+		return {}
+	var stepped: String = _per_second_step(text.substr(at + 4).strip_edges())
+	if stepped.is_empty():
+		return {}
+	var speed_at: int = _last_top_level_index(stepped, " * ")
+	if speed_at <= 0:
+		return {}
+	var direction: String = stepped.substr(0, speed_at).strip_edges()
+	var speed: String = stepped.substr(speed_at + 3).strip_edges()
+	if direction.is_empty() or speed.is_empty():
+		return {}
+	var reading: Dictionary = {}
+	var axis: Dictionary = direction_axis_parts(direction)
+	var own_axis: bool = not axis.is_empty() and (str(axis.get("owner", "")) == "self" \
+		or object_of_reference(str(axis.get("owner", ""))) == object_name)
+	if own_axis:
+		reading = _sentence(object_name, "Move {direction} at {speed}", {
+			"direction": [translate(str(axis.get("word", ""))), "name"],
+			"speed": [expression_text(speed, context), "value"]})
+	else:
+		reading = _sentence(object_name, "Move along {direction} at {speed}", {
+			"direction": [expression_text(direction, context), "value"],
+			"speed": [expression_text(speed, context), "value"]})
+	_append_note(reading, translate("per second"))
+	return _with_pattern(reading, "movement", text.strip_edges())
+
+
+## X1. `rotate_y(deg_to_rad(turn_rate * delta))` - a turn, in degrees a second, about the axis the
+## call names. `rotate_object_local` is the same turn said in the object's own space, and says so.
+static func _turn_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	var angle_text: String = ""
+	var own_space: bool = false
+	var flipped: bool = false
+	if TURN_CALL_WORDS.has(method) and args.size() == 1:
+		angle_text = args[0]
+	elif method == "rotate_object_local" and args.size() == 2 \
+			and TURN_AXIS_CALLS.has(args[0].strip_edges()):
+		var axis: Array = TURN_AXIS_CALLS[args[0].strip_edges()]
+		method = str(axis[0])
+		flipped = bool(axis[1])
+		own_space = true
+		angle_text = args[1]
+	else:
+		return {}
+	# A turn the other way is written two ways - the minus on the amount, or on the whole angle - and
+	# the row that WRITES one puts it outside, where a reader-typed negative amount cannot double it
+	# up into `--30`. Both spellings mean the same turn, so both are read the same.
+	var angle_bare: String = angle_text.strip_edges()
+	if angle_bare.begins_with("-"):
+		flipped = not flipped
+		angle_bare = angle_bare.substr(1).strip_edges()
+	var degrees: Dictionary = call_parts(angle_bare)
+	if degrees.is_empty() or str(degrees.get("method", "")) != "deg_to_rad":
+		return {}
+	var degree_args: PackedStringArray = degrees.get("args", PackedStringArray())
+	if degree_args.size() != 1:
+		return {}
+	var rate: String = _per_second_factor(degree_args[0])
+	if rate.is_empty():
+		return {}
+	var negated: bool = rate.begins_with("-")
+	if negated:
+		rate = rate.substr(1).strip_edges()
+	if rate.is_empty():
+		return {}
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	if not receiver.is_empty() and not is_simple_target(receiver):
+		return {}
+	var object_name: String = _receiver_object(receiver, context)
+	if not is_spatial_object(object_name, context):
+		return {}
+	var words: Dictionary = TURN_CALL_WORDS[method]
+	var turn_word: String = str(words.get("negative" if negated != flipped else "positive", ""))
+	var reading: Dictionary = _sentence(object_name, str(words.get("template", "")), {
+		"turn": [translate(turn_word), "name"],
+		"rate": [expression_text(rate, context), "value"]})
+	# The rate and its unit are ONE reading - "90°/s" - so the fold joins the degree sign with no gap,
+	# which is why it is appended here rather than through the spaced note helper.
+	(reading["segments"] as Array).append({"text": _fill(translate("/s · {axis}"),
+		{"axis": translate(str(words.get("axis", "")))}), "tone": "muted"})
+	if own_space:
+		_append_note(reading, translate("(in its own space)"))
+	return _with_pattern(reading, "movement", text.strip_edges())
+
+
+## X1. `basis = basis.slerp(desired, 5.0 * delta)` - turning toward a facing rather than snapping to
+## it, which is the word the turret already uses. Only a per-second rate is claimed: a slerp with a
+## bare constant turns at a different speed on every machine and reads as the arithmetic it is.
+static func _rotate_toward_statement(text: String, context: Dictionary) -> Dictionary:
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges()
+	if not BASIS_MEMBERS.has(_trailing_member(target)):
+		return {}
+	var object_name: String = _receiver_object(_owner_of(target), context)
+	if not is_spatial_object(object_name, context):
+		return {}
+	var call: Dictionary = call_parts(text.substr(at + 3).strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "slerp":
+		return {}
+	if str(call.get("target", "")).strip_edges() != target.trim_prefix("self."):
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 2:
+		return {}
+	var rate: String = _per_second_factor(args[1])
+	if rate.is_empty():
+		return {}
+	var reading: Dictionary = _sentence(object_name, "Rotate toward {facing} at {rate}", {
+		"facing": [expression_text(args[0], context), "value"],
+		"rate": [expression_text(rate, context), "value"]})
+	_append_note(reading, translate("per second"))
+	return _with_pattern(reading, "movement", text.strip_edges())
+
+
+## X5. The two placement lines a reader meets on their own: a place copied off another object, and the
+## basis tilted onto a surface's normal. The drop to the ground is three lines together, so it is
+## grouped in the action lane rather than claimed here.
+static func placement_statement(text: String, context: Dictionary) -> Dictionary:
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges()
+	if not is_simple_target(target):
+		return {}
+	var object_name: String = _receiver_object(_owner_of(target), context)
+	if not is_spatial_object(object_name, context):
+		return {}
+	var value: String = text.substr(at + 3).strip_edges()
+	var member: String = _trailing_member(target)
+	if OWN_POSITION_NAMES.has(member):
+		return _place_at_object_statement(object_name, value, text, context)
+	if BASIS_MEMBERS.has(member):
+		return _align_to_slope_statement(object_name, target, value, text)
+	return {}
+
+
+## X5. `crate.global_position = spawn.global_position` - the sheet's own 2D words, said in 3D. A place
+## belongs to the object whose place it is, so the row names the object and folds what kind of thing
+## it was: a marker node is a spawn point, which is the word a reader is looking for.
+static func _place_at_object_statement(object_name: String, value: String, text: String,
+		context: Dictionary) -> Dictionary:
+	if not OWN_POSITION_NAMES.has(_trailing_member(value)):
+		return {}
+	var other_text: String = _owner_of(value)
+	if other_text.is_empty() or not is_simple_target(other_text):
+		return {}
+	var other_object: String = object_of_reference(other_text)
+	if other_object == object_name:
+		return {}
+	# The other end has to be a thing in the SCENE. A `position` read off a table the file happens to
+	# have called something (`ground.position`, a ray hit) is not another object's place, and a row
+	# saying it was would name a thing the reader cannot find.
+	if not is_spatial_object(other_object, context):
+		return {}
+	var reading: Dictionary = _sentence(object_name, "Set position to {other}", {
+		"other": [other_object, "value"]})
+	_append_note(reading, translate("spawn point") if _class_is_any(
+		object_class_of(other_object, context), SPAWN_MARKER_CLASSES) else translate("another object"))
+	return _with_pattern(reading, "placement", text.strip_edges())
+
+
+## X5. `crate.basis = Basis(Quaternion(Vector3.UP, ground.normal)) * crate.basis` - the single most
+## searched-for 3D line there is, and unreadable to anyone who has not looked it up. Claimed ONLY in
+## that exact spelling: a quaternion built any other way is doing something the row cannot promise.
+static func _align_to_slope_statement(object_name: String, target: String, value: String,
+		text: String) -> Dictionary:
+	var times_at: int = top_level_index(value, " * ")
+	if times_at <= 0:
+		return {}
+	if value.substr(times_at + 3).strip_edges() != target:
+		return {}
+	var built: Dictionary = call_parts(value.substr(0, times_at).strip_edges())
+	if built.is_empty() or str(built.get("method", "")) != "Basis":
+		return {}
+	var built_args: PackedStringArray = built.get("args", PackedStringArray())
+	if built_args.size() != 1:
+		return {}
+	var turn: Dictionary = call_parts(built_args[0].strip_edges())
+	if turn.is_empty() or str(turn.get("method", "")) != "Quaternion":
+		return {}
+	var turn_args: PackedStringArray = turn.get("args", PackedStringArray())
+	if turn_args.size() != 2 or turn_args[0].strip_edges() != "Vector3.UP":
+		return {}
+	return _with_pattern(_sentence(object_name, "Align to the ground's slope", {}),
+		"placement", text.strip_edges())
+
+
+## X3. The two 3D questions: how far off facing something is, and which side of an object it is on.
+## {} when the expression asks neither, which keeps every comparison reading it has today.
+static func spatial_words_condition(text: String, context: Dictionary) -> Dictionary:
+	var facing: Dictionary = _facing_cone_condition(text, context)
+	if not facing.is_empty():
+		return facing
+	return _relative_side_condition(text, context)
+
+
+## X3. `forward.dot(to_enemy) > cos(deg_to_rad(45.0))` - the one idiom every vision cone, backstab
+## check and "is the camera looking at it" is written with. Both vectors may be spelled out or held in
+## a local the file named earlier; either way the row asks the question rather than doing the maths.
+static func _facing_cone_condition(text: String, context: Dictionary) -> Dictionary:
+	for operator: String in [" >= ", " <= ", " > ", " < "]:
+		var at: int = top_level_index(text, operator)
+		if at <= 0:
+			continue
+		var angle: String = _cosine_angle_degrees(text.substr(at + operator.length()))
+		if angle.is_empty():
+			continue
+		var dot: Dictionary = _dot_parts(text.substr(0, at).strip_edges())
+		if dot.is_empty():
+			continue
+		var object_name: String = facing_object_of(str(dot.get("receiver", "")), context)
+		if object_name.is_empty():
+			continue
+		var target_name: String = _direction_target_of(str(dot.get("argument", "")), context, object_name)
+		if target_name.is_empty():
+			continue
+		var within: bool = operator == " > " or operator == " >= "
+		return _sentence(object_name, "Is within {angle} of facing {target}" if within \
+			else "Is not within {angle} of facing {target}", {
+			"angle": [angle, "name"], "target": [target_name, "value"]})
+	return {}
+
+
+## X3. A `<vector>.dot(<vector>)` taken apart into its two ends, or {} when the text is not one. The
+## receiver is often written in brackets (`(-global_transform.basis.z).dot(...)`), which the general
+## call reader cannot see past because the line then STARTS with a bracket - so the wrapper comes off
+## here, and a spelled-out facing test reads the same as one written through two named locals.
+static func _dot_parts(text: String) -> Dictionary:
+	var bare: String = text.strip_edges()
+	var receiver: String = ""
+	var rest: String = bare
+	if bare.begins_with("("):
+		var close_at: int = closing_paren(bare, 0)
+		if close_at <= 0:
+			return {}
+		receiver = bare.substr(1, close_at - 1).strip_edges()
+		rest = bare.substr(close_at + 1).strip_edges()
+		if not rest.begins_with(".") or not rest.ends_with(")"):
+			return {}
+		rest = "%s%s" % ["_", rest]
+	var call: Dictionary = call_parts(rest)
+	if call.is_empty() or str(call.get("method", "")) != "dot":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1:
+		return {}
+	if receiver.is_empty():
+		receiver = str(call.get("target", "")).strip_edges()
+	elif str(call.get("target", "")).strip_edges() != "_":
+		return {}
+	return {} if receiver.is_empty() else {"receiver": receiver, "argument": args[0].strip_edges()}
+
+
+## X3. The object whose FORWARD a value is - spelled out as its own axis, or held in a local the file
+## declared from one. "" when the value is neither, which refuses the whole facing reading.
+static func facing_object_of(text: String, context: Dictionary) -> String:
+	var bare: String = text.strip_edges()
+	if bare.is_empty():
+		return ""
+	var axis: Dictionary = direction_axis_parts(bare)
+	if not axis.is_empty() and str(axis.get("word", "")) == "forward":
+		var owner_text: String = str(axis.get("owner", ""))
+		return script_object(context) if owner_text == "self" else object_of_reference(owner_text)
+	return str((context.get("facing_locals", {}) as Dictionary).get(bare, ""))
+
+
+## X3. The object a direction POINTS AT, when that direction starts at `from_object` - spelled out as
+## a difference of two places, or held in a local the file declared from one. "" otherwise, so a
+## direction between two other things is never read as this object's facing test.
+static func _direction_target_of(text: String, context: Dictionary, from_object: String) -> String:
+	var bare: String = text.strip_edges()
+	var parts: Dictionary = direction_between_parts(bare, context)
+	if parts.is_empty():
+		parts = (context.get("direction_locals", {}) as Dictionary).get(bare, {})
+	if parts.is_empty() or str(parts.get("from", "")) != from_object:
+		return ""
+	return str(parts.get("to", ""))
+
+
+## X3. The degrees inside `cos(deg_to_rad(45.0))`, with the degree sign a reader thinks in. "" when
+## the value is not a cosine of an angle at all.
+static func _cosine_angle_degrees(text: String) -> String:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "cos":
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1:
+		return ""
+	return _angle_degrees(args[0])
+
+
+## X3. `to_local(enemy.global_position).z > 0` - which side of an object something is on, said the way
+## a reader would say it. The object's own axes decide: z is behind and in front, x is right and left.
+static func _relative_side_condition(text: String, context: Dictionary) -> Dictionary:
+	for operator: String in [" > ", " < "]:
+		var at: int = top_level_index(text, operator)
+		if at <= 0:
+			continue
+		var zero: String = text.substr(at + operator.length()).strip_edges()
+		if not zero.is_valid_float() or not is_zero_approx(zero.to_float()):
+			continue
+		var left: String = text.substr(0, at).strip_edges()
+		var axis: String = _trailing_member(left)
+		if axis != "z" and axis != "x":
+			continue
+		var call: Dictionary = call_parts(_owner_of(left))
+		if call.is_empty() or str(call.get("method", "")) != "to_local":
+			continue
+		var args: PackedStringArray = call.get("args", PackedStringArray())
+		if args.size() != 1:
+			continue
+		var receiver: String = str(call.get("target", "")).strip_edges()
+		if not receiver.is_empty() and not is_simple_target(receiver):
+			continue
+		var object_name: String = _receiver_object(receiver, context)
+		if not is_spatial_object(object_name, context):
+			continue
+		var positive: bool = operator == " > "
+		var side: String = ""
+		if axis == "z":
+			side = "behind" if positive else "in front of"
+		else:
+			side = "to the right of" if positive else "to the left of"
+		return _sentence("", "{target} is {side} {object}", {
+			"target": [_place_owner(args[0], context), "value"],
+			"side": [translate(side), "name"],
+			"object": [object_name, "object"]})
+	return {}
+
+
+## X1 / X31. The whole-expression 3D values: a facing built out of a direction, a point given as an
+## angle and a distance, and one loop step's share of a full turn. "" when the text is none of them.
+static func spatial_words_expression(text: String, context: Dictionary) -> String:
+	var facing: String = _facing_along_words(text, context)
+	if not facing.is_empty():
+		return facing
+	var polar: String = polar_point_words(text, context)
+	if not polar.is_empty():
+		return polar
+	# A place ON a circle is that point added to a CENTRE, which is how every ring and every spiral is
+	# actually written - so a sum whose far side is the point keeps the centre's own words in front of
+	# it rather than falling back to the trig the innermost pass would show.
+	var trimmed: String = text.strip_edges()
+	var plus_at: int = _last_top_level_index(trimmed, " + ")
+	if plus_at > 0:
+		var around: String = polar_point_words(trimmed.substr(plus_at + 3), context)
+		if not around.is_empty():
+			return "%s + %s" % [expression_text(trimmed.substr(0, plus_at), context), around]
+	return turn_share_words(text)
+
+
+## X1. `Basis.looking_at(to_target)` is a FACING, not a matrix - and the row says which way it faces.
+static func _facing_along_words(text: String, context: Dictionary) -> String:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "looking_at":
+		return ""
+	if str(call.get("target", "")).strip_edges() != "Basis":
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() < 1 or args[0].strip_edges().is_empty():
+		return ""
+	return _fill(translate("facing along {direction}"),
+		{"direction": expression_text(args[0], context)})
+
+
+## X31. `Vector2(cos(a), sin(a)) * r`, `Vector2.from_angle(a) * r` and the 3D ground-plane
+## `Vector3(cos(a), 0, sin(a)) * r` are one thought: the point at an angle, that far away. Added to a
+## centre it is a place on a circle; grown every tick it is a spiral, and the row that adds it says so.
+static func polar_point_words(text: String, context: Dictionary) -> String:
+	var trimmed: String = text.strip_edges()
+	var at: int = _last_top_level_index(trimmed, " * ")
+	if at <= 0:
+		return ""
+	var distance: String = trimmed.substr(at + 3).strip_edges()
+	var angle: String = _polar_angle_of(trimmed.substr(0, at).strip_edges())
+	if angle.is_empty() or distance.is_empty():
+		return ""
+	return _fill(translate("the point at angle {angle}, distance {distance}"),
+		{"angle": expression_text(angle, context), "distance": expression_text(distance, context)})
+
+
+## X31. The angle a unit-circle vector is built from, or "" when the expression builds something else.
+## The cosine and the sine have to be the SAME angle, or the shape is not a circle at all.
+static func _polar_angle_of(text: String) -> String:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty():
+		return ""
+	var method: String = str(call.get("method", ""))
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if method == "from_angle" and str(call.get("target", "")).strip_edges() == "Vector2" \
+			and args.size() == 1:
+		return args[0].strip_edges()
+	var cosine: String = ""
+	var sine: String = ""
+	if method == "Vector2" and args.size() == 2:
+		cosine = args[0]
+		sine = args[1]
+	elif method == "Vector3" and args.size() == 3 and args[1].strip_edges().is_valid_float() \
+			and is_zero_approx(args[1].strip_edges().to_float()):
+		cosine = args[0]
+		sine = args[2]
+	else:
+		return ""
+	var angle: String = _trig_argument(cosine, "cos")
+	if angle.is_empty() or angle != _trig_argument(sine, "sin"):
+		return ""
+	return angle
+
+
+## X31. The argument of a `cos(...)` / `sin(...)` call, or "" when the text is not that call.
+static func _trig_argument(text: String, method_name: String) -> String:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != method_name:
+		return ""
+	if not str(call.get("target", "")).strip_edges().is_empty():
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	return "" if args.size() != 1 else args[0].strip_edges()
+
+
+## X31. `TAU * float(i) / float(n)` is the step's share of a full turn - the one line a ring loop is
+## built around, and the reason the loop head can say "evenly around a circle".
+static func turn_share_words(text: String) -> String:
+	var index_name: String = turn_share_index(text)
+	if index_name.is_empty():
+		return ""
+	return _fill(translate("{index}'s share of a full turn"), {"index": index_name})
+
+
+## X31. The loop variable a share-of-a-turn expression is written around, or "" when the text is not
+## one. The ring loop's head asks this about the lines under it, which is what lets it say what the
+## loop is FOR without guessing.
+static func turn_share_index(text: String) -> String:
+	var trimmed: String = text.strip_edges()
+	var slash_at: int = _last_top_level_index(trimmed, " / ")
+	if slash_at <= 0:
+		return ""
+	# The bottom of the fraction is HOW MANY there are - a name when the count is passed in, a plain
+	# number when the row that wrote it was told one. Both are counts; only the index has to be a name.
+	var count_text: String = _bare_number_name(trimmed.substr(slash_at + 3).strip_edges())
+	if count_text.is_empty():
+		count_text = _bare_number_literal(trimmed.substr(slash_at + 3).strip_edges())
+	if count_text.is_empty():
+		return ""
+	var head: String = trimmed.substr(0, slash_at).strip_edges()
+	var times_at: int = top_level_index(head, " * ")
+	if times_at <= 0 or head.substr(0, times_at).strip_edges() != "TAU":
+		return ""
+	return _bare_number_name(head.substr(times_at + 3).strip_edges())
+
+
+## X31. The name inside a `float(x)` / `int(x)` conversion, or the bare name itself. "" for anything
+## that is not a plain name, because a ring loop divides by a COUNT and steps by an INDEX.
+static func _bare_number_name(text: String) -> String:
+	var bare: String = text.strip_edges()
+	var call: Dictionary = call_parts(bare)
+	if not call.is_empty() and str(call.get("target", "")).strip_edges().is_empty() \
+			and (str(call.get("method", "")) == "float" or str(call.get("method", "")) == "int"):
+		var args: PackedStringArray = call.get("args", PackedStringArray())
+		if args.size() == 1:
+			bare = args[0].strip_edges()
+	return bare if is_identifier(bare) else ""
+
+
+## X31. The number inside a `float(8)` / `int(8)` conversion, or the bare number itself. "" when the
+## text is not a plain number at all.
+static func _bare_number_literal(text: String) -> String:
+	var bare: String = text.strip_edges()
+	var call: Dictionary = call_parts(bare)
+	if not call.is_empty() and str(call.get("target", "")).strip_edges().is_empty() \
+			and (str(call.get("method", "")) == "float" or str(call.get("method", "")) == "int"):
+		var args: PackedStringArray = call.get("args", PackedStringArray())
+		if args.size() == 1:
+			bare = args[0].strip_edges()
+	return bare if bare.is_valid_float() else ""
+
+
+## X1. The part of `<something> * delta` in front of the delta, or "" when the value is not a
+## per-second step at all. The twin of `_per_second_factor`, which reads the factor of a two-part
+## product; a movement line is a THREE-part one and needs the whole head kept.
+static func _per_second_step(value: String) -> String:
+	var text: String = value.strip_edges()
+	var at: int = _last_top_level_index(text, " * ")
+	if at <= 0:
+		return ""
+	if not PER_SECOND_NAMES.has(text.substr(at + 3).strip_edges()):
+		return ""
+	return text.substr(0, at).strip_edges()
+
+
+## The LAST top-level occurrence of an operator, where `top_level_index` finds the first. A product of
+## three things is split from the right, so `dir * speed * delta` gives up its delta before its speed.
+static func _last_top_level_index(text: String, operator: String) -> int:
+	var found: int = -1
+	var from: int = 0
+	while from < text.length():
+		var at: int = top_level_index(text.substr(from), operator)
+		if at < 0:
+			break
+		found = from + at
+		from = found + operator.length()
+	return found

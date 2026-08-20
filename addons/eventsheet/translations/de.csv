@@ -3393,3 +3393,34 @@ Pack recipes,Paket-Rezepte
 the behaviors that ship,die mitgelieferten Verhalten
 Everything else,Alles Übrige
 the rest of these folders,der Rest dieser Ordner
+Move {direction} at {speed},{direction} mit {speed} bewegen
+Move along {direction} at {speed},Entlang {direction} mit {speed} bewegen
+Rotate {turn} at {rate}°,{turn} mit {rate}° drehen
+Roll {turn} at {rate}°,{turn} mit {rate}° rollen
+/s · {axis},/s · {axis}
+clockwise,im Uhrzeigersinn
+counter-clockwise,gegen den Uhrzeigersinn
+yaw,Gieren
+pitch,Nicken
+roll,Rollen
+(in its own space),(im eigenen Raum)
+Rotate toward {facing} at {rate},Zu {facing} mit {rate} drehen
+facing along {direction},ausgerichtet entlang {direction}
+(up is {value}),(oben ist {value})
+Set position to {other},Position auf {other} setzen
+spawn point,Startpunkt
+another object,ein anderes Objekt
+Align to the ground's slope,An die Neigung des Bodens anpassen
+Is within {angle} of facing {target},Ist innerhalb von {angle} zu {target} ausgerichtet
+Is not within {angle} of facing {target},Ist nicht innerhalb von {angle} zu {target} ausgerichtet
+{target} is {side} {object},{target} ist {side} {object}
+behind,hinter
+in front of,vor
+to the right of,rechts von
+to the left of,links von
+"the point at angle {angle}, distance {distance}","der Punkt im Winkel {angle}, Abstand {distance}"
+{index}'s share of a full turn,Anteil von {index} an einer vollen Drehung
+Placement,Platzierung
+Angle and distance,Winkel und Abstand
+"something is put where a marker is, dropped onto the ground and tilted onto its slope","etwas wird an eine Markierung gesetzt, auf den Boden gelegt und an dessen Neigung ausgerichtet"
+"points worked out as an angle and a distance, which is how a ring and a spiral are drawn","Punkte, die als Winkel und Abstand berechnet werden - so entstehen Ring und Spirale"

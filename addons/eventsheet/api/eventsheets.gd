@@ -1661,6 +1661,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	"loop": "Working-With-Lists",
 	"mesh": "Working-In-3D",
 	"native_3d": "Working-In-3D",
+	# X1 / X3 / X5 / X31. The 3D page's own verbs - moving in a direction, the three turns, placing and
+	# the facing questions - are the same subject the 3D guide already covers, said in plainer words.
+	"spatial_words": "Working-In-3D",
 	"node": "Finding-And-Rearranging-Nodes",
 	"node_activation": "Scenes-Pausing-And-Turning-Nodes-Off",
 	"options": "Game-Options-And-The-Window",

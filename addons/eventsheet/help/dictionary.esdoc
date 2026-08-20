@@ -193,6 +193,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `frame_post_draw` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
 | `freeze` | [Set Immovable](ace:Core/SetBodyImmovable) | Physics | Vocabulary |
 | `friction` | [Set Friction](ace:Core/SetBodyFriction) | Physics | Vocabulary |
+| `from_angle` | [Point At Angle](ace:Core/PointAtAngle) | Math & Random | Vocabulary |
 | `from_hsv` | [Color From HSV](ace:Core/ColorFromHSV) | Color | Vocabulary |
 | `front` | [Pick Bottom](ace:Core/PickBottom) | Nodes: Picking | Vocabulary |
 | `func` | [Lambda (returns a value)](ace:Core/LambdaValue) | Helpers | Vocabulary |
@@ -466,6 +467,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `load_threaded_request` | [Load Layout In The Background](ace:Core/LoadLayoutInBackground) | Scene | Vocabulary |
 | `local_to_map` | [Position To Tile](ace:Core/TileMapLocalToMap) | Tilemap | Vocabulary |
 | `look_at` | [Look At](ace:Core/LookAt3D) | General Actions | Vocabulary |
+| `looking_at` | [Facing Along](ace:Core/FacingAlong3D) | 3D: Move & Turn | Vocabulary |
 | `loop` | [Set Looping](ace:Core/SetPathLooping) | Follow a Path | Vocabulary |
 | `lpad` | [Align Right](ace:Core/AlignRight) | Text | Vocabulary |
 | `make_current` | [Make Current](ace:Core/MakeCameraCurrent) | Camera | Vocabulary |
@@ -612,8 +614,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `ring` | [Draw Ring](ace:Core/DrawRing) | Drawing | Vocabulary |
 | `rotate` | [Rotate (3D)](ace:Core/RotateNode3D) | General Actions | Vocabulary |
 | `rotate_toward` | [Rotate Toward (angle)](ace:Core/RotateTowardAngle) | Math & Random | Vocabulary |
-| `rotate_x` | [Mouse Look](ace:Core/MouseLook) | Native 3D | Vocabulary |
-| `rotate_y` | [Mouse Look](ace:Core/MouseLook) | Native 3D | Vocabulary |
+| `rotate_x` | [Rotate Up Or Down](ace:Core/RotatePitch3D) | 3D: Move & Turn | Vocabulary |
+| `rotate_y` | [Rotate Clockwise](ace:Core/RotateClockwise3D) | 3D: Move & Turn | Vocabulary |
+| `rotate_z` | [Roll](ace:Core/Roll3D) | 3D: Move & Turn | Vocabulary |
 | `rotated` | [Rotated](ace:Core/VectorRotated) | Variables: Vector | Vocabulary |
 | `rotates` | [Set Rotate With Path](ace:Core/SetPathRotates) | Follow a Path | Vocabulary |
 | `rotation` | [Pin Angle To](ace:Core/PinAngleToObject) | Pin | Vocabulary |
@@ -688,6 +691,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `sin` | [Sine](ace:Core/SinValue) | Helpers | Vocabulary |
 | `size` | [Dictionary Size](ace:Core/DictSize) | Variables: Dictionary | Vocabulary |
 | `sleeping` | [Is Sleeping](ace:Core/IsBodySleeping) | Physics | Vocabulary |
+| `slerp` | [Rotate Toward Facing](ace:Core/RotateToward3DFacing) | 3D: Move & Turn | Vocabulary |
 | `slice` | [Slice](ace:Core/ArraySlice) | Variables: Array | Vocabulary |
 | `slide` | [Slide Along Surface](ace:Core/SlideAlongSurface) | Movement | Vocabulary |
 | `smoothstep` | [Smoothstep](ace:Core/Smoothstep) | Math & Random | Vocabulary |
@@ -729,6 +733,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `title` | [Set Window Title](ace:Core/SetWindowTitle) | Utility: Window | Vocabulary |
 | `to_float` | [Text To Float](ace:Core/StringToFloat) | Variables: String | Vocabulary |
 | `to_int` | [Text To Int](ace:Core/StringToInt) | Variables: String | Vocabulary |
+| `to_local` | [Is Behind](ace:Core/IsBehindObject3D) | 3D: See | Vocabulary |
 | `to_lower` | [Text Equals (ignore case)](ace:Core/TextEqualsIgnoreCase) | Compare: Text | Vocabulary |
 | `to_upper` | [Uppercase](ace:Core/TextUpper) | Text | Vocabulary |
 | `to_utf8_buffer` | [First To Finish](ace:Core/FirstToFinish) | Run Context | Vocabulary |
@@ -780,7 +785,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `x` | [Is Cell In Bounds](ace:Core/IsCellInBounds) | Math & Random | Vocabulary |
 | `y` | [Is Jumping](ace:Core/IsJumping) | Collisions | Vocabulary |
 | `year` | [Date: Year](ace:Core/DateYear) | Time | Vocabulary |
-| `z` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
+| `z` | [Is Behind](ace:Core/IsBehindObject3D) | 3D: See | Vocabulary |
 | `z_as_relative` | [Set Z Order Absolute](ace:Core/SetZOrderAbsolute) | Layers | Vocabulary |
 | `z_index` | [Set Z Order](ace:Core/SetZOrder) | Layers | Vocabulary |
 | `zoom` | [Set Zoom](ace:Core/SetCameraZoom) | Camera | Vocabulary |

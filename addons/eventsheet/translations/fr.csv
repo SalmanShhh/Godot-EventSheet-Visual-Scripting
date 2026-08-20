@@ -3393,3 +3393,34 @@ Pack recipes,Recettes de packs
 the behaviors that ship,les comportements livrés
 Everything else,Tout le reste
 the rest of these folders,le reste de ces dossiers
+Move {direction} at {speed},Deplacer {direction} a {speed}
+Move along {direction} at {speed},Deplacer le long de {direction} a {speed}
+Rotate {turn} at {rate}°,Tourner {turn} a {rate}°
+Roll {turn} at {rate}°,Rouler {turn} a {rate}°
+/s · {axis},/s · {axis}
+clockwise,dans le sens horaire
+counter-clockwise,dans le sens antihoraire
+yaw,lacet
+pitch,tangage
+roll,roulis
+(in its own space),(dans son propre repere)
+Rotate toward {facing} at {rate},Tourner vers {facing} a {rate}
+facing along {direction},oriente le long de {direction}
+(up is {value}),(le haut est {value})
+Set position to {other},Definir la position sur {other}
+spawn point,point d'apparition
+another object,un autre objet
+Align to the ground's slope,Aligner sur la pente du sol
+Is within {angle} of facing {target},Est a moins de {angle} de faire face a {target}
+Is not within {angle} of facing {target},N'est pas a moins de {angle} de faire face a {target}
+{target} is {side} {object},{target} est {side} {object}
+behind,derriere
+in front of,devant
+to the right of,a droite de
+to the left of,a gauche de
+"the point at angle {angle}, distance {distance}","le point a l'angle {angle}, distance {distance}"
+{index}'s share of a full turn,la part de {index} d'un tour complet
+Placement,Placement
+Angle and distance,Angle et distance
+"something is put where a marker is, dropped onto the ground and tilted onto its slope","quelque chose est place sur un marqueur, pose au sol et incline selon sa pente"
+"points worked out as an angle and a distance, which is how a ring and a spiral are drawn","des points calcules comme un angle et une distance, ce qui dessine un anneau et une spirale"

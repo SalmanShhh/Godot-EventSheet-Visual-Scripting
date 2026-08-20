@@ -140,6 +140,11 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# the locals a folder walk fills, the facts a recipe states about the pack it builds. A file that
 	# is none of the three adds nothing at all, which is every game script.
 	extras.merge(tool_file_facts(sheet), true)
+	# ── X3 lens hook ───────────────────────────────────────────────────────────────────────────
+	# A facing test names its two vectors a line or two before it asks the question, so no single
+	# line can say whose forward `forward` is or what `to_enemy` points at. Both are answered from
+	# one walk of the file here, exactly as the tween chains and the sight rays are.
+	extras.merge(spatial_words_facts(sheet), true)
 	return extras
 
 
@@ -153,6 +158,43 @@ static func tool_file_facts(sheet: EventSheetResource) -> Dictionary:
 		EventSheetToolFiles.lines_of_sheet(sheet), sheet.external_source_path)
 
 
+## X3. What the FILE says about the vectors a facing test is written with:
+##
+##   facing_locals     {local name: the object whose FORWARD it holds}
+##   direction_locals  {local name: {"from": object, "to": object} it points between}
+##
+## A local the file never declared from one of those two shapes is simply absent, and the facing
+## reading then does not fire - which is what keeps a dot product nobody explained reading as one.
+static func spatial_words_facts(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	var facing: Dictionary = {}
+	var directions: Dictionary = {}
+	var own_object: String = script_object_name(sheet)
+	var context: Dictionary = {
+		"self_object": own_object, "script_object": own_object,
+		"self_class": sheet.host_class.strip_edges(), "object_classes": object_class_map(sheet)
+	}
+	for line: String in behavior_code_lines(sheet):
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var declared: String = _declared_local_name(text)
+		if declared.is_empty():
+			continue
+		var value: String = _declared_local_value(text)
+		if value.is_empty():
+			continue
+		var axis: Dictionary = EventSheetSentence.direction_axis_parts(value)
+		if not axis.is_empty() and str(axis.get("word", "")) == "forward":
+			var owner_text: String = str(axis.get("owner", ""))
+			facing[declared] = own_object if owner_text == "self" \
+				else EventSheetSentence.object_of_reference(owner_text)
+			continue
+		var between: Dictionary = EventSheetSentence.direction_between_parts(value, context)
+		if not between.is_empty():
+			directions[declared] = between
+	return {"facing_locals": facing, "direction_locals": directions}
 ## T10 / T8. What the FILE says about its drawing order and about the lists it picks from:
 ##
 ##   z_order_relative  {object label: true when its Z order counts from the parent}

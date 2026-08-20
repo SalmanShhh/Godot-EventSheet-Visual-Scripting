@@ -3393,3 +3393,34 @@ Pack recipes,Recetas de paquetes
 the behaviors that ship,los comportamientos que se distribuyen
 Everything else,Todo lo demás
 the rest of these folders,el resto de estas carpetas
+Move {direction} at {speed},Mover {direction} a {speed}
+Move along {direction} at {speed},Mover a lo largo de {direction} a {speed}
+Rotate {turn} at {rate}°,Girar {turn} a {rate}°
+Roll {turn} at {rate}°,Alabear {turn} a {rate}°
+/s · {axis},/s · {axis}
+clockwise,en sentido horario
+counter-clockwise,en sentido antihorario
+yaw,guinada
+pitch,cabeceo
+roll,alabeo
+(in its own space),(en su propio espacio)
+Rotate toward {facing} at {rate},Girar hacia {facing} a {rate}
+facing along {direction},orientado a lo largo de {direction}
+(up is {value}),(arriba es {value})
+Set position to {other},Poner posicion en {other}
+spawn point,punto de aparicion
+another object,otro objeto
+Align to the ground's slope,Alinear con la pendiente del suelo
+Is within {angle} of facing {target},Esta dentro de {angle} de mirar a {target}
+Is not within {angle} of facing {target},No esta dentro de {angle} de mirar a {target}
+{target} is {side} {object},{target} esta {side} {object}
+behind,detras de
+in front of,delante de
+to the right of,a la derecha de
+to the left of,a la izquierda de
+"the point at angle {angle}, distance {distance}","el punto en el angulo {angle}, distancia {distance}"
+{index}'s share of a full turn,la parte de {index} de una vuelta completa
+Placement,Colocacion
+Angle and distance,Angulo y distancia
+"something is put where a marker is, dropped onto the ground and tilted onto its slope","algo se coloca donde hay un marcador, se deja caer al suelo y se inclina con su pendiente"
+"points worked out as an angle and a distance, which is how a ring and a spiral are drawn","puntos calculados como un angulo y una distancia, que es como se dibujan un anillo y una espiral"

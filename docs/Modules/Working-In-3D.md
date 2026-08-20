@@ -31,6 +31,12 @@ plugin reference left behind.
 
 ## Core concepts
 
+3D code that was typed by hand reads in these same words when the file is opened as a sheet - a
+direction rather than a basis member, a turn rather than a call, a question rather than a dot
+product, and a place rather than a quaternion:
+
+![The 3D words: directions, turns, facing questions, placements and a ring](../images/opened-script-3d-words.png)
+
 - **Y is up in 3D, and up is positive.** In 2D, negative Y is up. In 3D, `Vector3.UP` is `(0, 1, 0)`.
   Jump velocities are positive here.
 - **Rotation is in radians, unless the action says degrees.** **Rotate (3D)** takes a **Radians** angle,

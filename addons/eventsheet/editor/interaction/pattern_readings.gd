@@ -187,7 +187,67 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 	var machine_claim: Dictionary = state_machine_claim(body, file_facts)
 	if not machine_claim.is_empty():
 		found.append(machine_claim)
+	var circle_claim: Dictionary = polar_claim(body)
+	if not circle_claim.is_empty():
+		found.append(circle_claim)
 	return found
+
+
+## X31. The two shapes a body draws with an angle and a distance: a RING - a loop that gives each step
+## its share of a full turn and places something at that angle - and a SPIRAL, where the angle and the
+## distance both grow every tick and a place is worked out from the pair.
+##
+## A lone conversion is an expression, not a pattern: `Vector2.from_angle(a) * r` on its own is one
+## value with one sentence, and a marker beside it would say nothing the row does not already.
+## Returns {pattern, evidence, words, adoptable, ace_ids} or {} when the body draws neither.
+static func polar_claim(body: PackedStringArray) -> Dictionary:
+	var share_lines: PackedStringArray = PackedStringArray()
+	var point_lines: PackedStringArray = PackedStringArray()
+	for line: String in body:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var value: String = text
+		var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+		if assign_at > 0:
+			value = text.substr(assign_at + 3).strip_edges()
+		var declared_at: int = EventSheetSentence.top_level_index(text, " := ")
+		if declared_at > 0:
+			value = text.substr(declared_at + 4).strip_edges()
+		if not EventSheetSentence.turn_share_index(value).is_empty():
+			share_lines.append(text)
+			continue
+		if _holds_polar_point(value):
+			point_lines.append(text)
+	if point_lines.is_empty():
+		return {}
+	var evidence: PackedStringArray = PackedStringArray()
+	evidence.append_array(share_lines)
+	evidence.append_array(point_lines)
+	# A ring is the loop's share of a turn placed at a distance; a spiral is the same point worked out
+	# without one, which is what the growing angle and radius above it make it.
+	var ring: bool = not share_lines.is_empty()
+	return {
+		"pattern": "polar", "evidence": evidence,
+		"words": "places things evenly around a circle" if ring \
+			else "works a place out as an angle and a distance",
+		"adoptable": "", "ace_ids": PackedStringArray(["Core/CreateAroundCircle", "Core/PointAtAngle"])
+	}
+
+
+## X31. True when a value works a POINT out of an angle and a distance anywhere inside it, so the
+## `centre + <point>` a spiral is written as counts as much as the bare product a ring uses.
+static func _holds_polar_point(value: String) -> bool:
+	var text: String = value.strip_edges()
+	if not EventSheetSentence.polar_point_words(text, {}).is_empty():
+		return true
+	for operator: String in [" + ", " - "]:
+		var at: int = EventSheetSentence.top_level_index(text, operator)
+		if at <= 0:
+			continue
+		if not EventSheetSentence.polar_point_words(text.substr(at + 3), {}).is_empty():
+			return true
+	return false
 
 
 ## T8. The nearest-or-farthest LOOP a body writes: walk a list, measure the distance to each one,
