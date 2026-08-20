@@ -575,9 +575,10 @@ static func _claim_systems_in(sheet: EventSheetResource, entry: Variant, dimensi
 	var lines: PackedStringArray = PackedStringArray()
 	_collect_code(event_row, lines)
 	var text: String = "\n".join(lines)
-	# A half-lifted event is the normal case, so the ids of the rows that DID lift count as evidence
-	# too: a Move row and the `move_and_slide()` beside it are the same pattern, and an event whose
-	# whole block lifted would otherwise claim nothing at all.
+	# A half-lifted event is the normal case, so the ids of the rows that DID lift count as grounds
+	# beside the lines that stayed verbatim: a Move row and the `move_and_slide()` beside it are the
+	# same pattern, and an event whose whole block lifted would otherwise claim nothing at all. An id
+	# is an internal name, so whatever quotes a claim to a READER leaves those out again.
 	var picked: PackedStringArray = _systems_row_ace_ids(event_row)
 	for pattern: String in SYSTEMS_PATTERN_EVIDENCE:
 		var evidence: PackedStringArray = PackedStringArray()
@@ -1201,6 +1202,15 @@ static func _append_ordered_lines(entry: Variant, lines: PackedStringArray, dept
 			"CallMethod":
 				lines.append("%s.%s(%s)" % [
 					str(params.get("target", "")), str(params.get("method", "")), str(params.get("args", ""))])
+			# The waits a SEQUENCE is made of. An `await` lifts to one of these rows, so without them a
+			# cutscene body arrives here as its doing-steps alone and the sequence reading - two waits
+			# with something between them - could never see the waits it is named after.
+			"Wait":
+				lines.append("await get_tree().create_timer(%s).timeout" % str(params.get("seconds", "")))
+			"AwaitSignal":
+				lines.append("await %s" % str(params.get("signal_expression", "")))
+			"AwaitNextFrame":
+				lines.append("await get_tree().process_frame")
 			_:
 				# T1 / T3 / T4 - the steps a behavior shape is MADE of, whether the importer claimed a
 				# typed line for a shipped row or the picker wrote the row outright. Without them the

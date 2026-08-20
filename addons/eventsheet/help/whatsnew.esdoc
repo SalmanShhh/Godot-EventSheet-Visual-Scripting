@@ -2741,6 +2741,27 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   row's before-you-type chips lead with the script's own verbs, which live in no usage table and no
   featured list.
 
+### Fixed - a pattern says only what the file says, and the ones that had gone quiet
+
+- **A pattern's hover no longer quotes a name from inside the program.** An event whose lines had
+  all lifted was told back to its reader as \"read as the movement pattern because: MoveAndSlide,
+  ApplyGravitySimple\" - internal ace ids, which name nothing a reader can find in their own code.
+  Those rows are the grounds for the claim, never its evidence: the pattern is still claimed, and
+  the hover now says what it read without quoting a word the file does not contain.
+- **A wait sequence is recognised again.** An `await` becomes a Wait row when the file is opened, and
+  the walk the pattern readings use did not know that row, so a cutscene body arrived as its
+  doing-steps alone - two waits with something between them could never be seen, and the sequence
+  reading had been silently unreachable for any file that opened normally. The three waiting rows
+  now read back as the `await` they stand for.
+- **Pick nearest reads a typed loop.** `for foe: Node2D in ...` is the spelling a careful project
+  writes, and the nearest-or-farthest reading only knew `for foe in ...`, so the whole reading
+  skipped typed files. The written-out type is set aside and the loop reads as it should. A lifted
+  comparison (`d < best`, where the `if` and its colon are the row now) is read too, so a farthest
+  loop is no longer told back to its author as a nearest one.
+- **A dev render harness that did not parse.** `tools/render_looping_condition_preview.gd` carried
+  its provider declaration twice, which is a duplicate-member parse error, and its member name failed
+  the style gate - the gate had been red on it.
+
 ## 0.17.0 - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 
 ### Added - the developer-experience wave, part two: the editor seams (9 suggestions)
