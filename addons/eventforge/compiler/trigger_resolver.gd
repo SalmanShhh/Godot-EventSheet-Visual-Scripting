@@ -106,6 +106,13 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# paths that just landed. A plain function is also what lets an opened tool read back - a
 			# connection spelled through EditorInterface would strand the whole handler as code.
 			return _lifecycle("_on_files_imported", "paths: PackedStringArray")
+		"OnNoiseHeard":
+			# X24. The receiving half of Make Noise. Not an engine virtual and deliberately not a
+			# signal either: the noise maker walks the listening group and CALLS this by name, which
+			# is the only spelling that works when the listeners are not connected to anything and
+			# come and go with the level. Plain GDScript on both sides, so a compiled guard has zero
+			# plugin dependency and simply never runs when nothing makes a noise.
+			return _lifecycle("hear", "at: Variant")
 		"OnPluginEnabled":
 			# R30. An EditorPlugin's `_enter_tree` is not "on created" - it is the moment the plugin was
 			# switched on, which is when a plugin hangs its dock and adds its menu items. Same function

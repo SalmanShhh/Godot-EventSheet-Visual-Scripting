@@ -3635,3 +3635,18 @@ flags…,indicadores…
 Add child,Añadir hijo
 Add child %s,Añadir hijo %s
 "All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.","Los cuatro activados es un hijo normal de Godot y escribe una sola línea. Desactivar una transformación añade en su lugar el nodo que mueve al hijo; desactivar las tres es ignorar el movimiento del padre. Sin «conservando su lugar», el hijo salta hasta su nuevo padre."
+Rolled with pity,Tirada con compensacion
+guaranteed at,garantizado en
+Phase {phase} starts,Comienza la fase {phase}
+once,una vez
+as minutes:seconds,como minutos:segundos
+Pity,Compensacion
+"a counter fed by every miss raises the odds until a cap guarantees the win, and the win resets it","un contador alimentado por cada fallo sube las probabilidades hasta que un tope garantiza el premio, y el premio lo reinicia"
+Detection,Deteccion
+"a meter fills while the target is seen and drains while it is not, and a threshold starts the hunt","un medidor se llena mientras se ve al objetivo y se vacia mientras no, y un umbral inicia la caza"
+Boss phases,Fases del jefe
+"health thresholds move a fight through numbered phases, each one entered exactly once","los umbrales de salud llevan el combate por fases numeradas, cada una iniciada exactamente una vez"
+Mission timer,Reloj de mision
+"a clock counts a mission down, shows the time left, and fails when it reaches zero","un reloj cuenta atras la mision, muestra el tiempo restante y la hace fracasar al llegar a cero"
+Advanced Random,Advanced Random
+Line Of Sight,Linea de vision

@@ -3635,3 +3635,18 @@ flags…,флаги…
 Add child,Добавить потомка
 Add child %s,Добавить потомка %s
 "All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.","Все четыре включены - это обычный потомок Godot, и пишется одна строка. Выключение одного преобразования вместо этого добавляет узел, который ведёт потомка; выключение всех трёх - это игнорирование движения родителя. Без «сохраняя своё место» потомок прыгает к новому родителю."
+Rolled with pity,Бросок с компенсацией
+guaranteed at,гарантия при
+Phase {phase} starts,Начинается фаза {phase}
+once,один раз
+as minutes:seconds,как минуты:секунды
+Pity,Компенсация
+"a counter fed by every miss raises the odds until a cap guarantees the win, and the win resets it","счётчик, растущий с каждым промахом, повышает шансы, пока предел не гарантирует выигрыш, а выигрыш обнуляет его"
+Detection,Обнаружение
+"a meter fills while the target is seen and drains while it is not, and a threshold starts the hunt","шкала растёт, пока цель видна, и падает, пока нет; порог запускает погоню"
+Boss phases,Фазы босса
+"health thresholds move a fight through numbered phases, each one entered exactly once","пороги здоровья ведут бой через пронумерованные фазы, в каждую входят ровно один раз"
+Mission timer,Таймер миссии
+"a clock counts a mission down, shows the time left, and fails when it reaches zero","часы отсчитывают миссию, показывают оставшееся время и проваливают её на нуле"
+Advanced Random,Advanced Random
+Line Of Sight,Линия видимости

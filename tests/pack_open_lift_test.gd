@@ -61,7 +61,9 @@ static func run() -> bool:
 			all_passed = _check("%s reopened sheet compiles back byte-identically" % file_name, reopened == source, true) and all_passed
 	all_passed = _check("the fleet was scanned (93 packs)", packs, 93) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
-	all_passed = _check("fleet-wide declared verbs count matches the catalog (1283)", total_verbs, 1283) and all_passed
+	# Batch 13 (X21) added three verbs to the Advanced Random pack: Roll With Pity, Reset Pity and
+	# Pity Count. 1283 + 3.
+	all_passed = _check("fleet-wide declared verbs count matches the catalog (1286)", total_verbs, 1286) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0

@@ -1090,6 +1090,12 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var timer_value: String = timer_expression(trimmed)
 	if not timer_value.is_empty():
 		return timer_value
+	# X27 - a mission clock shown to the player is m:ss, and the arithmetic that builds it is the
+	# format, not the value. Whole-expression only, and only for a clock the file actually runs as a
+	# mission timer, so no ordinary division by sixty is claimed.
+	var clock_text: String = minutes_seconds_expression(trimmed, context)
+	if not clock_text.is_empty():
+		return clock_text
 	# R3 - the value a tween local is declared from is "a new tween", not a call to repeat back.
 	var tween_value: String = tween_expression(trimmed)
 	if not tween_value.is_empty():
@@ -5709,7 +5715,80 @@ static func joined_condition(text: String, context: Dictionary) -> Dictionary:
 	var between: Dictionary = _between_condition(bare, context)
 	if not between.is_empty():
 		return between
+	# X21 / X26. Two questions written as a run of terms that mean nothing apart: a roll that is
+	# either won or guaranteed, and a health threshold guarded by the phase the fight is in. Claimed
+	# before the run is split, because after the split each half reads as a true and useless fact.
+	var pity: Dictionary = _pity_condition(bare, context)
+	if not pity.is_empty():
+		return pity
+	var phase: Dictionary = _boss_phase_condition(bare, context)
+	if not phase.is_empty():
+		return phase
 	return _layout_bounds_condition(bare, context)
+
+
+## X21. The object a pity roll belongs to: the randomness pack, whose seeded generator makes the
+## same run of rolls replay identically - which is the whole reason a pity system can be tested.
+const PITY_OBJECT := "AdvancedRandom"
+
+
+## X21. The pity roll's own question. Which conditions are one is a whole-file question - a counter
+## fed per roll, a chance grown out of it, this roll-or-cap test and a reset on the win - answered
+## once per rebuild and handed in as `pity_rolls`; with no such fact nothing here fires and the
+## `or` run keeps the two comparisons it reads as today.
+##
+##   if pity >= pity_cap or randf() < chance:
+##       AdvancedRandom ▸ Rolled with pity (chance, guaranteed at pity cap)
+static func _pity_condition(text: String, context: Dictionary) -> Dictionary:
+	var rolls: Dictionary = context.get("pity_rolls", {})
+	if rolls.is_empty() or not rolls.has(text):
+		return {}
+	var roll: Dictionary = rolls[text]
+	var reading: Dictionary = _sentence(PITY_OBJECT, "Rolled with pity", {})
+	(reading["segments"] as Array).append({
+		"text": " (%s, %s %s)" % [_member_word(str(roll.get("chance", ""))),
+			translate("guaranteed at"), _member_word(str(roll.get("cap", "")))],
+		"tone": "muted"
+	})
+	reading["pattern"] = "pity"
+	return reading
+
+
+## X27. The m:ss a mission clock is SHOWN as. Dividing by sixty, taking the remainder and joining the
+## two with a colon is one idea with a name every player knows, and spelling the arithmetic out tells
+## a reader how it is done rather than what it says. "" for any other expression, and for every
+## expression at all in a file that runs no mission clock.
+static func minutes_seconds_expression(text: String, context: Dictionary) -> String:
+	var timers: Dictionary = context.get("mission_timers", {})
+	if timers.is_empty():
+		return ""
+	for name_text: String in timers:
+		if not EventSheetPatternReadings.is_minutes_seconds(text, name_text):
+			continue
+		return "%s %s" % [_member_word(name_text), translate("as minutes:seconds")]
+	return ""
+
+
+## X26. The phase ladder's own question. `phase == 1 and hp <= max_hp * 0.6` is one idea - phase 2
+## starts here, and it starts once - and the guard IS the once, which is why the row says so instead
+## of showing the bookkeeping. Which conditions are one is answered from the whole file and handed in
+## as `boss_phase_steps`; with no such fact nothing here fires.
+static func _boss_phase_condition(text: String, context: Dictionary) -> Dictionary:
+	var steps: Dictionary = context.get("boss_phase_steps", {})
+	if steps.is_empty() or not steps.has(text):
+		return {}
+	var step: Dictionary = steps[text]
+	var reading: Dictionary = _sentence(script_object(context), "Phase {phase} starts",
+		{"phase": [str(step.get("into", "")), "value"]})
+	var percent: String = str(step.get("percent", ""))
+	var limit: String = "%s%%" % percent if not percent.is_empty() else str(step.get("threshold", ""))
+	(reading["segments"] as Array).append({
+		"text": " (%s ≤ %s, %s)" % [_member_word(str(step.get("subject", "hp"))), limit,
+			translate("once")],
+		"tone": "muted"
+	})
+	reading["pattern"] = "boss_phases"
+	return reading
 
 
 ## R4 / R5 / R11. The readings a SINGLE term settles: an angle window, a distance, an area, an

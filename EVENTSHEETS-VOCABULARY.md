@@ -87,6 +87,7 @@ Node script extending `CharacterBody2D`.
 #### Conditions
 - **Chance** (`percent: float`) - True roughly percent of the time (0-100) - e.g. Chance(5) for a 5% event.
 - **One In** (`n: int`) - True with a 1-in-n probability.
+- **Roll With Pity** (`counter_name: String, base_chance: float, step: float, cap: int`) - True on a win. Every miss raises the odds by the step, and reaching the cap guarantees it - the win resets the counter for you. Name the counter and one autoload keeps as many as your project needs.
 
 #### Actions
 - **Set Seed** (`seed_value: int`) - Sets the seed for BOTH numbers and noise - same seed reproduces the same sequence.
@@ -96,6 +97,7 @@ Node script extending `CharacterBody2D`.
 - **Set Noise Octaves** (`octaves: int`) - Fractal detail layers - more octaves add fine detail (fractal/fBm noise).
 - **Generate Permutation Table** (`size: int`) - Builds a shuffled 0..size-1 table (read with the Permutation expression) - a fixed deck order.
 - **Make Shuffle Bag** (`bag_name: String, items: Array`) - Creates a named bag of items - Shuffle Bag Pick draws each once before any repeats.
+- **Reset Pity** (`counter_name: String`) - Puts a named pity counter back to zero - for a new run, a new chest, a new banner.
 
 #### Expressions
 - **Random (0-1)** - A uniform float in [0, 1).
@@ -112,6 +114,7 @@ Node script extending `CharacterBody2D`.
 - **Weighted Index** (`weights: Array`) - An index chosen in proportion to the weights array (heavier = likelier).
 - **Pick From Table** (`table: Resource`) - A weighted-random value from a RandomTableResource (.tres) - author your odds as a data asset and draw from it. "" if the table is empty.
 - **Shuffle Bag Pick** (`bag_name: String`) - Draws the next item from a named bag - every item appears once before any repeat.
+- **Pity Count** (`counter_name: String`) - How many misses a named pity counter has piled up since its last win.
 
 ### AnchorBehavior (`res://eventsheet_addons/anchor/anchor_behavior.gd`)
 @ace_tags(ui, layout) @ace_category("Anchor") @ace_version(1.0.0)
@@ -3120,6 +3123,26 @@ Game Feel: the five snippets every game copies, as rows.
 - **Bob** (`base: String, time: String, frequency: String, magnitude: String, target: String`) - Floats this object up and down on a sine wave. Run it every tick.
 - **Flash** (`colour: String, seconds: String`) - Tints this object for a moment and then puts it back - the damage flash.
 - **Ease Size Back** (`rate: String`) - Eases this object's size back to normal, which is how a squash recovers. Run it every tick.
+
+### Game Mechanics (`res://addons/eventforge/registration/modules/game_mechanics_aces.gd`)
+the game shapes every project writes by hand
+
+#### Triggers
+- **On Noise Heard** - Runs when a Make Noise action happens close enough for this object to hear it, with the place it came from. Put this object in the listening group first (Add To Group, on created).
+
+#### Conditions
+- **Phase Starts** (`phase: String, share: String, hp: String, max_hp: String, phase_var: String`) - True the one time health first falls past a share of its maximum while the fight is in an earlier phase. The phase guard is what makes it happen once: set the phase variable in the actions under this condition.
+
+#### Actions
+- **Fill Meter** (`var_name: String, rate: String, cap: String`) - Raises a number at a steady rate per second and stops it at a limit - a suspicion meter filling while a guard sees you, a bar charging, stamina coming back.
+- **Drain Meter** (`var_name: String, rate: String, floor: String`) - Lowers a number at a steady rate per second and stops it at a floor - suspicion cooling off, a shield decaying, a charge bleeding away.
+- **Make Noise** (`at: String, radius: String, group: String`) - Tells everything in the listening group that a noise happened at a place, but only the ones close enough to hear it. Footsteps, a door, a thrown bottle.
+- **Set Invulnerable For** (`flag: String, seconds: String`) - Turns a flag on, waits, and turns it back off - the invulnerability window after a hit, written once instead of as a flag and a timer that can drift apart.
+- **Start Mission Timer** (`var_name: String, seconds: String`) - Puts a number of seconds on the mission clock. Type the time the way a player reads it - 3:00 - and the row stores the seconds.
+- **Add Mission Time** (`var_name: String, seconds: String`) - Puts time back on the mission clock - the pickup that buys you another half minute.
+
+#### Expressions
+- **Mission Time Left** (`var_name: String`) - Gives the time left as text a player can read - "2:41" - ready to drop into a HUD label.
 
 ### Gradient Curve (`res://addons/eventforge/registration/modules/gradient_curve_aces.gd`)
 Gradient & Curve vocabulary (smooth colour ramps and shaped 0-1 curves).

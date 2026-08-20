@@ -2485,6 +2485,10 @@ static func scan_pattern_smells(sheet: EventSheetResource, sheet_path: String,
 		return
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_patterns(sheet)
+	# X21 / X24 / X27 - the three notes that accuse a MISSING half, which is exactly what a claim
+	# cannot describe. Run before the early return below: a sheet whose shapes are all incomplete
+	# claims nothing, and that is precisely the sheet these notes are for.
+	scan_game_shape_smells(sheet, sheet_path, findings)
 	var claims: Array = EventSheetPatternFacts.claims(sheet)
 	if claims.is_empty():
 		return
@@ -2593,6 +2597,53 @@ static func _sheet_uses_ace(sheet: EventSheetResource, ace_id: String) -> bool:
 			if action is ACEAction and (action as ACEAction).ace_id == ace_id:
 				return true
 	return false
+
+
+## X21 / X24 / X27 - THREE ADVISORY NOTES on the game shapes, each one a HALF that is missing.
+##
+## Unlike the pattern smells above these cannot read the claim registry, because a claim requires
+## the whole shape and what is being accused here is exactly a shape that is NOT whole: a pity
+## counter with no reset, a meter that only fills, a mission clock nothing shows. All three are
+## advisory (info): each is occasionally deliberate, and none of them is a compile error.
+static func scan_game_shape_smells(sheet: EventSheetResource, sheet_path: String,
+		findings: Array[Dictionary]) -> void:
+	if sheet == null:
+		return
+	var lines: PackedStringArray = EventSheetViewportReadingRows.ordered_code_lines(sheet)
+	# X21. The pity counter that never resets - the guarantee then fires on EVERY roll after the
+	# first cap hit, which is the single most common bug in a hand-written pity system.
+	for counter: String in (EventSheetPatternReadings.pity_facts(lines).get("unreset", {}) as Dictionary):
+		_add(findings, "info", "pity-counter-never-resets", sheet_path,
+			"%s grows the odds and is guaranteed at a cap, but nothing puts it back to zero on the win - after the first guarantee it fires every roll." % counter)
+	# X24. The meter that only fills. Read from the file's lines first (a hand-written pair) and
+	# from the sheet's own rows second (a Fill Meter row with no Drain Meter row anywhere).
+	for filled: String in _filled_without_drain(lines):
+		_add(findings, "info", "meter-never-drains", sheet_path,
+			"%s is filled at a rate and nothing drains it - once it reaches its cap it stays there." % filled)
+	if _sheet_uses_ace(sheet, "FillMeter") and not _sheet_uses_ace(sheet, "DrainMeter"):
+		_add(findings, "info", "meter-never-drains", sheet_path,
+			"This sheet fills a meter and never drains one - a meter that only goes up reaches its cap and stays there.")
+	# X27. The mission clock the player cannot see. Pressure nobody can read is not pressure.
+	if _sheet_uses_ace(sheet, "StartMissionTimer") and not _sheet_uses_ace(sheet, "MissionTimeLeft"):
+		_add(findings, "info", "mission-timer-not-shown", sheet_path,
+			"A mission timer starts here and no row shows the time left - drop Mission Time Left into a HUD label so the player can feel the deadline.")
+
+
+## X24. The meters a FILE fills without ever draining, as the names it fills. The reading answers
+## which pairs are complete; anything filled at a per-frame rate and missing from that answer is a
+## one-way meter.
+static func _filled_without_drain(lines: PackedStringArray) -> PackedStringArray:
+	var paired: Dictionary = EventSheetPatternReadings.meter_variables(lines)
+	var lonely: PackedStringArray = PackedStringArray()
+	for line: String in lines:
+		var step: Dictionary = EventSheetPatternReadings.meter_step(line.strip_edges())
+		if step.is_empty() or str(step.get("kind", "")) != "fill":
+			continue
+		var name_text: String = str(step.get("name", ""))
+		if paired.has(name_text) or lonely.has(name_text):
+			continue
+		lonely.append(name_text)
+	return lonely
 
 
 ## Every EventRow of a sheet, its functions included.

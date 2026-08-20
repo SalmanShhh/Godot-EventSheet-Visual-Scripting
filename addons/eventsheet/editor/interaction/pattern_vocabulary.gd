@@ -195,6 +195,30 @@ const ENTRIES: Dictionary = {
 		"why": "the one nearest the crosshair ON THE CANVAS, in pixels rather than world units",
 		"adoptable": "",
 		"rank": 28
+	},
+	"pity": {
+		"words": "Pity",
+		"why": "a counter fed by every miss raises the odds until a cap guarantees the win, and the win resets it",
+		"adoptable": "advanced_random",
+		"rank": 29
+	},
+	"detection": {
+		"words": "Detection",
+		"why": "a meter fills while the target is seen and drains while it is not, and a threshold starts the hunt",
+		"adoptable": "line_of_sight",
+		"rank": 30
+	},
+	"boss_phases": {
+		"words": "Boss phases",
+		"why": "health thresholds move a fight through numbered phases, each one entered exactly once",
+		"adoptable": "",
+		"rank": 31
+	},
+	"quest_timer": {
+		"words": "Mission timer",
+		"why": "a clock counts a mission down, shows the time left, and fails when it reaches zero",
+		"adoptable": "",
+		"rank": 32
 	}
 }
 
@@ -213,6 +237,9 @@ const PACK_LABELS: Dictionary = {
 	"nav_agent": "Nav Agent",
 	"follow_path": "Follow A Path",
 	"drawing_canvas": "Drawing Canvas"
+	},
+	"advanced_random": "Advanced Random",
+	"line_of_sight": "Line Of Sight"
 }
 
 

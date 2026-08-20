@@ -3635,3 +3635,18 @@ flags…,标志…
 Add child,添加子节点
 Add child %s,添加子节点 %s
 "All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.",四项全开就是普通的 Godot 子节点，只写一行。关掉某一项变换会改为添加驱动该子节点的节点；三项全关就是忽略父节点的移动。取消“保持原位”会让子节点吸附到新的父节点上。
+Rolled with pity,带保底的抽取
+guaranteed at,保底于
+Phase {phase} starts,阶段 {phase} 开始
+once,仅一次
+as minutes:seconds,以分:秒显示
+Pity,保底
+"a counter fed by every miss raises the odds until a cap guarantees the win, and the win resets it",每次落空都会累加的计数器不断抬高概率，达到上限即必中，中奖后计数器归零
+Detection,察觉
+"a meter fills while the target is seen and drains while it is not, and a threshold starts the hunt",看得见目标时槽位持续上升，看不见时下降，越过阈值便开始追捕
+Boss phases,首领阶段
+"health thresholds move a fight through numbered phases, each one entered exactly once",生命值阈值推动战斗进入编号阶段，每个阶段恰好进入一次
+Mission timer,任务计时
+"a clock counts a mission down, shows the time left, and fails when it reaches zero",时钟为任务倒数、显示剩余时间，归零即失败
+Advanced Random,Advanced Random
+Line Of Sight,视线
