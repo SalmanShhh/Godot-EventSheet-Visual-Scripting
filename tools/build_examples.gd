@@ -31,6 +31,7 @@ func _init() -> void:
 	all_ok = _build_draw_lab() and all_ok
 	all_ok = _build_raycast_lab() and all_ok
 	all_ok = _build_raycast_lab_3d() and all_ok
+	all_ok = _build_hierarchy_playground() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -3136,3 +3137,370 @@ func _build_raycast_lab_3d() -> bool:
 	readout.owner = root
 
 	return _save_scene(root, "%s/raycast_lab_3d.tscn" % RAYCAST_LAB_3D_DIR)
+
+
+# ── 19. Hierarchy Playground (parenting, unparenting, and the follow-flags) ───
+
+const HIERARCHY_DIR := "res://demo/showcase/hierarchy_playground"
+
+
+## The hierarchy in one room: everything a game actually does to the scene tree while it runs, each
+## written in the spelling the sheet reads as a hierarchy sentence.
+##
+##   MOUNT     the rider is reparented onto the horse's saddle, snapping to it
+##   EQUIP     the hat becomes a child of the rider's head, but does NOT follow its size
+##   SQUAD     one walk over a leader's children heals every soldier among them
+##   BAR       the health bar stays a child and stops following - it never tilts
+##   CAMERA    a pivot turns, and the camera parked on it orbits for free
+##   CRATES    a downward ray under each crate parks it exactly on the ground
+##
+## Everything is plain GDScript on purpose: these are the very lines the hierarchy readings
+## recognise, so the showcase is the round-trip proof as well as the demo. Press Space to mount and
+## dismount; the readout names the tree as it stands.
+func _build_hierarchy_playground() -> bool:
+	# The soldier: a Node3D that carries its own hp, so "heal every child" has something to add to.
+	var soldier: EventSheetResource = EventSheetResource.new()
+	soldier.host_class = "Node3D"
+	soldier.custom_class_name = "HierarchySoldier"
+	soldier.class_description = "One member of the squad, carrying the hp a per-child heal adds to."
+	soldier.variables = {
+		"hp": {"type": "int", "default": 40, "exported": true,
+			"attributes": {"tooltip": "This soldier's health. Healing the squad walks the leader's children and tops each one up."}}
+	}
+	var soldier_ready: EventRow = EventRow.new()
+	soldier_ready.trigger_provider_id = "Core"
+	soldier_ready.trigger_id = "OnReady"
+	soldier_ready.actions.append(_action("Core", "AddToGroup", "{target}.add_to_group({group})",
+		{"target": "self", "group": "\"soldier\""}))
+	soldier.events.append(soldier_ready)
+	if not _compile(soldier, "%s/soldier.tres" % HIERARCHY_DIR, "%s/soldier.gd" % HIERARCHY_DIR):
+		return false
+
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "HierarchyPlayground"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"orbit_deg": {"type": "float", "default": 0.0, "exported": false},
+		"mounted": {"type": "bool", "default": false, "exported": false},
+		"crates_settled": {"type": "bool", "default": false, "exported": false},
+		"squad_hp": {"type": "int", "default": 0, "exported": false}
+	}
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Hierarchy Playground[/b] - everything a game does to the scene tree while it runs, in one room. [b]Space[/b] mounts the rider onto the horse's [b]Saddle[/b] and dismounts again: mounting SNAPS the rider to its new parent, dismounting hands it back to the layout keeping the place it stands in. The [b]hat[/b] is a child of the rider's head that follows position and angle but NOT size - the flag that Godot has no single property for, so a RemoteTransform3D drives it instead. The [b]health bar[/b] is still a child and still dies with the rider, but ignores its movement, which is why it never tilts. The [b]squad[/b] is healed by ONE walk over the leader's children. The [b]camera[/b] orbits because its parent pivot turns - it does nothing itself. The [b]crates[/b] each cast a ray down and park on whatever the ray found."
+	sheet.events.append(about)
+
+	# ── Start of layout: build the tree the demo starts from. ──
+	var setup: EventRow = EventRow.new()
+	setup.trigger_provider_id = "Core"
+	setup.trigger_id = "OnReady"
+	setup.actions.append(_raw("equip(%Hat)"))
+	# X13's first escape hatch: still a child (still freed with the rider, still picked as one of its
+	# children), but its own transform is global from here on.
+	setup.actions.append(_raw("%HealthBar.top_level = true"))
+	setup.actions.append(_raw("heal_squad($Squad)"))
+	sheet.events.append(setup)
+
+	# ── Space: mount, and press again to get back off. ──
+	var mount_row: EventRow = EventRow.new()
+	mount_row.trigger_provider_id = "Core"
+	mount_row.trigger_id = "OnProcess"
+	mount_row.conditions.append(_condition("Core", "IsActionJustPressed",
+		_ace_template("IsActionJustPressed"), {"action": "\"ui_accept\""}))
+	mount_row.actions.append(_raw("\n".join(PackedStringArray([
+		"if mounted:",
+		"\tdismount(%Rider)",
+		"else:",
+		"\tmount(%Rider)",
+		"mounted = not mounted"
+	]))))
+	sheet.events.append(mount_row)
+
+	# ── The first physics frame: park every crate on the ground. ──
+	#
+	# Not at start of layout: the physics world has nothing in it until the first step, so a ray cast
+	# in _ready finds an empty room and every crate stays floating.
+	var settle: EventRow = EventRow.new()
+	settle.trigger_provider_id = "Core"
+	settle.trigger_id = "OnPhysicsProcess"
+	settle.conditions.append(_condition("Core", "ExpressionIsTrue",
+		_ace_template("ExpressionIsTrue"), {"expr": "not crates_settled"}))
+	settle.actions.append(_raw("\n".join(PackedStringArray([
+		"for crate: Node3D in $Crates.get_children():",
+		"\tvar __down := PhysicsRayQueryParameters3D.create(",
+		"\t\tcrate.global_position + Vector3(0.0, 3.0, 0.0),",
+		"\t\tcrate.global_position - Vector3(0.0, 8.0, 0.0), 1)",
+		"\tvar __ground := get_world_3d().direct_space_state.intersect_ray(__down)",
+		"\tif not __ground.is_empty():",
+		"\t\tcrate.global_position = __ground[\"position\"] + Vector3(0.0, 0.5, 0.0)",
+		"crates_settled = true"
+	]))))
+	sheet.events.append(settle)
+
+	# ── Every frame: turn the pivot, keep the bar upright, say what the tree looks like. ──
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	tick.actions.append(_raw("\n".join(PackedStringArray([
+		"# The camera does nothing: its PARENT turns, and a child goes where its parent goes.",
+		"orbit_deg = fmod(orbit_deg + 18.0 * delta, 360.0)",
+		"$CameraPivot.rotation_degrees = Vector3(0.0, orbit_deg, 0.0)",
+		"# The rider leans as it rides. The hat leans with it; the bar, ignoring the rider's",
+		"# movement, has to be told where to stand - which is exactly what that flag costs.",
+		"%Rider.rotation_degrees = Vector3(0.0, 0.0, sin(orbit_deg * 0.08) * 14.0)",
+		"%HealthBar.global_position = %Rider.global_position + Vector3(0.0, 1.9, 0.0)",
+		"%HealthBar.rotation = Vector3.ZERO",
+		"$HudLayer/Readout.text = \"rider's parent: %s   hat follows size: no   bar ignores movement: yes   squad hp: %d   crates settled: %s\" % [%Rider.get_parent().name, squad_hp, \"yes\" if crates_settled else \"no\"]"
+	]))))
+	sheet.events.append(tick)
+
+	# ── The hierarchy's own verbs, one function each. ──
+	var mount_fn: EventFunction = EventFunction.new()
+	mount_fn.function_name = "mount"
+	mount_fn.enabled = true
+	mount_fn.description = "Makes the rider a child of the saddle, snapping it to where the saddle stands."
+	var p_rider: ACEParam = ACEParam.new()
+	p_rider.id = "rider"
+	p_rider.type_name = "Node3D"
+	p_rider.type = TYPE_OBJECT
+	mount_fn.params = [p_rider]
+	mount_fn.events = [_raw("rider.reparent($Horse/Saddle, false)")]
+	sheet.functions.append(mount_fn)
+
+	var dismount_fn: EventFunction = EventFunction.new()
+	dismount_fn.function_name = "dismount"
+	dismount_fn.enabled = true
+	dismount_fn.description = "Hands the rider back to the layout, keeping the place it already stands in."
+	var p_dismount: ACEParam = ACEParam.new()
+	p_dismount.id = "rider"
+	p_dismount.type_name = "Node3D"
+	p_dismount.type = TYPE_OBJECT
+	dismount_fn.params = [p_dismount]
+	dismount_fn.events = [_raw("rider.reparent(get_tree().current_scene)")]
+	sheet.functions.append(dismount_fn)
+
+	# The flags shape. A plain child follows position, angle AND size, and Godot has no single
+	# property for "follow everything except size" - so the child is detached from its parent's
+	# transform and a RemoteTransform3D puts back exactly the parts that stayed ticked. Both lines
+	# are needed: detaching alone stops all following, and the follower alone changes nothing at all
+	# while the child is still inheriting on its own (which is how this room caught it).
+	var equip_fn: EventFunction = EventFunction.new()
+	equip_fn.function_name = "equip"
+	equip_fn.enabled = true
+	equip_fn.description = "Puts the hat on the rider's head, following its position and angle but not its size."
+	var p_hat: ACEParam = ACEParam.new()
+	p_hat.id = "hat"
+	p_hat.type_name = "Node3D"
+	p_hat.type = TYPE_OBJECT
+	equip_fn.params = [p_hat]
+	equip_fn.events = [_raw("\n".join(PackedStringArray([
+		"hat.reparent(%Head)",
+		"hat.top_level = true",
+		"var __follow_hat := RemoteTransform3D.new()",
+		"%Head.add_child(__follow_hat)",
+		"__follow_hat.remote_path = __follow_hat.get_path_to(hat)",
+		"__follow_hat.update_scale = false"
+	])))]
+	sheet.functions.append(equip_fn)
+
+	# One walk over a leader's children. It only READS each child, so walking the live list is safe -
+	# a walk that MOVED them would have to take a copy first, which is the footgun the Doctor names.
+	var heal_fn: EventFunction = EventFunction.new()
+	heal_fn.function_name = "heal_squad"
+	heal_fn.enabled = true
+	heal_fn.description = "Tops up every soldier among a leader's children, and totals what they now carry."
+	var p_leader: ACEParam = ACEParam.new()
+	p_leader.id = "leader"
+	p_leader.type_name = "Node3D"
+	p_leader.type = TYPE_OBJECT
+	heal_fn.params = [p_leader]
+	heal_fn.events = [_raw("\n".join(PackedStringArray([
+		"squad_hp = 0",
+		"for unit in leader.get_children():",
+		"\tif unit.is_in_group(\"soldier\"):",
+		"\t\tunit.hp += 10",
+		"\t\tsquad_hp += unit.hp"
+	])))]
+	sheet.functions.append(heal_fn)
+
+	if not _compile(sheet, "%s/hierarchy_playground.tres" % HIERARCHY_DIR,
+			"%s/hierarchy_playground.gd" % HIERARCHY_DIR):
+		return false
+	var emitted: String = FileAccess.get_file_as_string("%s/hierarchy_playground.gd" % HIERARCHY_DIR)
+	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
+	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
+	var out: FileAccess = FileAccess.open("%s/hierarchy_playground.gd" % HIERARCHY_DIR, FileAccess.WRITE)
+	out.store_string(emitted)
+	out.close()
+
+	return _save_hierarchy_scene()
+
+
+## The room: a lit ground plane, the horse and its saddle, the rider with a head and a bar, a squad
+## of four, three floating crates and an orbit pivot carrying the camera.
+func _save_hierarchy_scene() -> bool:
+	var root: Node3D = Node3D.new()
+	root.name = "HierarchyPlayground"
+	root.set_script(load("%s/hierarchy_playground.gd" % HIERARCHY_DIR))
+
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-52.0, -38.0, 0.0)
+	sun.shadow_enabled = true
+	root.add_child(sun)
+	sun.owner = root
+	var world: WorldEnvironment = WorldEnvironment.new()
+	world.name = "World"
+	var environment: Environment = Environment.new()
+	environment.background_mode = Environment.BG_COLOR
+	environment.background_color = Color(0.08, 0.09, 0.12)
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.ambient_light_color = Color(0.46, 0.52, 0.64)
+	environment.ambient_light_energy = 0.75
+	world.environment = environment
+	root.add_child(world)
+	world.owner = root
+
+	# The ground the crates land on - a real body on layer 1, because the crate snapping asks physics
+	# where the floor is rather than assuming y = 0.
+	var ground: StaticBody3D = StaticBody3D.new()
+	ground.name = "Ground"
+	ground.collision_layer = 1
+	root.add_child(ground)
+	ground.owner = root
+	var ground_plane: PlaneMesh = PlaneMesh.new()
+	ground_plane.size = Vector2(30.0, 30.0)
+	var ground_material: StandardMaterial3D = StandardMaterial3D.new()
+	ground_material.albedo_color = Color(0.26, 0.3, 0.38, 1.0)
+	ground_plane.material = ground_material
+	var ground_mesh: MeshInstance3D = MeshInstance3D.new()
+	ground_mesh.name = "Mesh"
+	ground_mesh.mesh = ground_plane
+	ground.add_child(ground_mesh)
+	ground_mesh.owner = root
+	var ground_shape: CollisionShape3D = CollisionShape3D.new()
+	ground_shape.name = "Shape"
+	var ground_box: BoxShape3D = BoxShape3D.new()
+	ground_box.size = Vector3(30.0, 0.4, 30.0)
+	ground_shape.shape = ground_box
+	ground_shape.position = Vector3(0.0, -0.2, 0.0)
+	ground.add_child(ground_shape)
+	ground_shape.owner = root
+
+	var horse: Node3D = Node3D.new()
+	horse.name = "Horse"
+	horse.position = Vector3(-2.0, 0.0, 0.0)
+	root.add_child(horse)
+	horse.owner = root
+	_add_block(horse, root, "Mesh", Vector3(0.0, 0.9, 0.0), Vector3(2.4, 1.0, 0.9), Color(0.55, 0.4, 0.3))
+	# The saddle is an empty marker, which is the point: a parent is a PLACE, not a thing you can see.
+	var saddle: Node3D = Node3D.new()
+	saddle.name = "Saddle"
+	saddle.position = Vector3(0.0, 1.5, 0.0)
+	horse.add_child(saddle)
+	saddle.owner = root
+
+	# The rider starts standing beside the horse. It is addressed by its SCENE-UNIQUE name, not by a
+	# path: the moment it is mounted, `$Rider` would point at nothing, and %Rider still finds it.
+	var rider: Node3D = Node3D.new()
+	rider.name = "Rider"
+	rider.unique_name_in_owner = true
+	rider.position = Vector3(1.6, 0.0, 1.2)
+	root.add_child(rider)
+	rider.owner = root
+	_add_block(rider, root, "Mesh", Vector3(0.0, 0.8, 0.0), Vector3(0.5, 1.6, 0.5), Color(0.35, 0.6, 0.95))
+	var head: Node3D = Node3D.new()
+	head.name = "Head"
+	head.unique_name_in_owner = true
+	head.position = Vector3(0.0, 1.75, 0.0)
+	rider.add_child(head)
+	head.owner = root
+	var health_bar: MeshInstance3D = _add_block(rider, root, "HealthBar",
+		Vector3(0.0, 1.9, 0.0), Vector3(1.0, 0.12, 0.12), Color(0.4, 0.95, 0.5))
+	health_bar.unique_name_in_owner = true
+
+	var hat: MeshInstance3D = _add_block(root, root, "Hat",
+		Vector3(3.4, 0.2, 1.2), Vector3(0.7, 0.25, 0.7), Color(0.95, 0.75, 0.3))
+	hat.unique_name_in_owner = true
+
+	var squad: Node3D = Node3D.new()
+	squad.name = "Squad"
+	squad.position = Vector3(3.0, 0.0, -3.0)
+	root.add_child(squad)
+	squad.owner = root
+	var soldier_script: GDScript = load("%s/soldier.gd" % HIERARCHY_DIR) as GDScript
+	for index: int in range(4):
+		var unit: Node3D = Node3D.new()
+		unit.name = "Soldier%d" % (index + 1)
+		unit.set_script(soldier_script)
+		unit.position = Vector3(float(index) * 1.1, 0.0, 0.0)
+		squad.add_child(unit)
+		unit.owner = root
+		# Persistent, or PackedScene.pack() drops it and "every soldier among the children" matches
+		# nobody in the shipped scene.
+		unit.add_to_group("soldier", true)
+		_add_block(unit, root, "Mesh", Vector3(0.0, 0.6, 0.0), Vector3(0.4, 1.2, 0.4), Color(0.8, 0.45, 0.45))
+
+	# Three crates left floating on purpose: the snapping row is what puts them down.
+	var crates: Node3D = Node3D.new()
+	crates.name = "Crates"
+	root.add_child(crates)
+	crates.owner = root
+	var crate_spots: Array[Vector3] = [Vector3(-4.5, 2.4, 3.0), Vector3(-6.0, 3.1, 0.5),
+		Vector3(-3.2, 1.9, -3.4)]
+	for index: int in range(crate_spots.size()):
+		var crate: Node3D = _add_block(crates, root, "Crate%d" % (index + 1),
+			crate_spots[index], Vector3(1.0, 1.0, 1.0), Color(0.66, 0.7, 0.8))
+		crate.owner = root
+
+	# The pivot IS the orbit: the camera is parked on it and never moves itself.
+	var pivot: Node3D = Node3D.new()
+	pivot.name = "CameraPivot"
+	root.add_child(pivot)
+	pivot.owner = root
+	var camera: Camera3D = Camera3D.new()
+	camera.name = "Camera"
+	camera.position = Vector3(0.0, 4.2, 8.0)
+	camera.rotation_degrees = Vector3(-20.0, 0.0, 0.0)
+	camera.current = true
+	pivot.add_child(camera)
+	camera.owner = root
+
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HudLayer"
+	root.add_child(hud_layer)
+	hud_layer.owner = root
+	var hud: Label = Label.new()
+	hud.name = "Hud"
+	hud.position = Vector2(24.0, 16.0)
+	hud.add_theme_font_size_override("font_size", 17)
+	hud.text = "Space mounts the rider onto the horse's saddle, and dismounts again\nThe hat is a child that does not follow size - the bar is a child that ignores movement\nOne walk over the squad leader's children heals every soldier among them\nThe camera orbits because its parent pivot turns - the crates park on the ray they cast down"
+	hud_layer.add_child(hud)
+	hud.owner = root
+	var readout: Label = Label.new()
+	readout.name = "Readout"
+	readout.position = Vector2(24.0, 604.0)
+	readout.add_theme_font_size_override("font_size", 17)
+	readout.text = "rider's parent: HierarchyPlayground   hat follows size: no   bar ignores movement: yes   squad hp: 0   crates settled: no"
+	hud_layer.add_child(readout)
+	readout.owner = root
+
+	return _save_scene(root, "%s/hierarchy_playground.tscn" % HIERARCHY_DIR)
+
+
+## One coloured box, parented and owned in the one step every node in this room needs.
+func _add_block(parent: Node, root: Node, node_name: String, at: Vector3, box_size: Vector3,
+		tint: Color) -> MeshInstance3D:
+	var block: MeshInstance3D = MeshInstance3D.new()
+	block.name = node_name
+	block.position = at
+	var mesh: BoxMesh = BoxMesh.new()
+	mesh.size = box_size
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.albedo_color = tint
+	mesh.material = material
+	block.mesh = mesh
+	parent.add_child(block)
+	block.owner = root
+	return block

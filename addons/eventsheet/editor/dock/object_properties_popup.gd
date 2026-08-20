@@ -179,7 +179,8 @@ static func build_panel(entry: Dictionary, scene_name: String = "", class_map: D
 		on_highlight: Callable = Callable(), on_select: Callable = Callable(),
 		on_code: Callable = Callable(), source_path: String = "",
 		on_add_condition: Callable = Callable(), on_add_action: Callable = Callable(),
-		on_open_sheet: Callable = Callable(), variable_table: Control = null) -> Control:
+		on_open_sheet: Callable = Callable(), variable_table: Control = null,
+		hierarchy_section: Control = null) -> Control:
 	var column: VBoxContainer = EventSheetPopupUI.form_box()
 	column.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(360.0), 0.0)
 	if entry.is_empty():
@@ -209,6 +210,11 @@ static func build_panel(entry: Dictionary, scene_name: String = "", class_map: D
 	for row: Dictionary in property_rows(entry, scene_name, source_path):
 		form.add_child(EventSheetPopupUI.form_row(str(row.get("label", "")), _field_for(row)))
 	column.add_child(EventSheetPopupUI.panel_section(form))
+	# X15 - where this object sits in the tree, and what each child carries. Only a node has a place
+	# in a tree, so the section is simply absent for a group, an autoload or a scene file.
+	if hierarchy_section != null:
+		column.add_child(EventSheetPopupUI.section_header(EventSheetL10n.translate("Hierarchy")))
+		column.add_child(hierarchy_section)
 	# R39 - the object's own variables as a TABLE, not a chip list: the popup is where a reader
 	# already came to ask what the object is, so it is where adding, renaming, retyping and
 	# deleting one belongs. Only the sheet's own object gets it - the table writes into THIS file.
@@ -343,10 +349,33 @@ func open_for(object_label: String) -> void:
 		func() -> void: _run_and_close(func() -> void: _dock.add_row_for_object(label, false)),
 		func() -> void: _run_and_close(func() -> void: _dock.add_row_for_object(label, true)),
 		func() -> void: _run_and_close(func() -> void: _dock.open_object_file_as_sheet(own_file)),
-		_dock._instance_variables.build_for(sheet) if owns_sheet_variables(entry) else null
+		_dock._instance_variables.build_for(sheet) if owns_sheet_variables(entry) else null,
+		_hierarchy_section_for(sheet, entry, label, source_path)
 	))
 	_popup.reset_size()
 	_popup.popup(Rect2i(Vector2i(_dock.get_screen_transform() * _dock.get_local_mouse_position()), Vector2i.ZERO))
+
+
+## X15 - the Hierarchy pane for this object, with every gesture wired to the dock operation that
+## writes it. Each handler re-derives what it needs from the live sheet, so a pane left open across
+## an undo cannot write against a resource the funnel has already replaced.
+func _hierarchy_section_for(sheet: EventSheetResource, entry: Dictionary, label: String,
+		source_path: String) -> Control:
+	var facts: Dictionary = EventSheetObjectHierarchy.facts_for(sheet, entry, source_path)
+	return EventSheetObjectHierarchy.build_section(facts, {
+		"jump": func(parent_label: String) -> void: _run_and_close(
+			func() -> void: _dock.open_object_properties(parent_label)),
+		"add_child": func(child_label: String) -> void: _run_and_close(
+			func() -> void: _dock.hierarchy_add_child(label, child_label)),
+		"flags": func(child_label: String) -> void: _run_and_close(
+			func() -> void: _dock.hierarchy_edit_flags(label, child_label)),
+		"unparent": func(child_label: String) -> void: _run_and_close(
+			func() -> void: _dock.hierarchy_unparent(child_label)),
+		"select": func(child_label: String) -> void: _run_and_close(
+			func() -> void: _dock.select_object_in_scene(child_label)),
+		"edit_scene": func(child_label: String) -> void: _run_and_close(
+			func() -> void: _dock.hierarchy_edit_scene(child_label))
+	})
 
 
 ## The census entry an object label belongs to, re-derived from the LIVE sheet at click time: the

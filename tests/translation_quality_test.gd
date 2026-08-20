@@ -544,6 +544,7 @@ static func _test_doctor_gate() -> bool:
 	ok = _check("the accusations over this repo are exactly the one-language showcases",
 		"\n".join(accused), "\n".join(PackedStringArray([
 			"res://demo/showcase/family_arena/family_arena.gd",
+			"res://demo/showcase/hierarchy_playground/hierarchy_playground.gd",
 			"res://demo/showcase/input_rebind/input_rebind.gd",
 			"res://demo/showcase/menu_starter/menu_starter.gd",
 			"res://demo/showcase/platformer_shooter/platformer_shooter.gd",

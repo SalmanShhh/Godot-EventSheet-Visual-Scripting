@@ -3164,3 +3164,23 @@ starting {values},以 {values} 开头
 {subject} is a table,{subject} 是一张表
 with {clauses},其中 {clauses}
 has {key},含有 {key}
+Hierarchy,层级
+parent,父节点
+(the layout),(布局)
+1 child,1 个子节点
+%d children,%d 个子节点
+ignores parent's movement,忽略父节点的移动
+transforms:,变换：
+in the scene file,在场景文件中
+edit the scene,编辑场景
+"drag an object here = Add child · drag a child out to unparent · right-click: flags…, Remove from parent, Select in scene",把对象拖到这里 = 添加子节点 · 把子节点拖出去以解除父子关系 · 右键：标志…、从父节点移出、在场景中选中
+flags…,标志…
+Remove from parent,从父节点移出
+Add child,添加子节点
+Add child %s,添加子节点 %s
+transform position,变换位置
+transform angle,变换角度
+transform size,变换大小
+destroy with parent,随父节点销毁
+keeping its place,保持原位
+"All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.",四项全开就是普通的 Godot 子节点，只写一行。关掉某一项变换会改为添加驱动该子节点的节点；三项全关就是忽略父节点的移动。取消“保持原位”会让子节点吸附到新的父节点上。

@@ -3164,3 +3164,23 @@ starting {values},beginnend mit {values}
 {subject} is a table,{subject} ist eine Tabelle
 with {clauses},mit {clauses}
 has {key},hat {key}
+Hierarchy,Hierarchie
+parent,Elternobjekt
+(the layout),(das Layout)
+1 child,1 Kind
+%d children,%d Kinder
+ignores parent's movement,ignoriert die Bewegung des Elternobjekts
+transforms:,Transformationen:
+in the scene file,in der Szenendatei
+edit the scene,Szene bearbeiten
+"drag an object here = Add child · drag a child out to unparent · right-click: flags…, Remove from parent, Select in scene","ein Objekt hierher ziehen = Kind hinzufügen · ein Kind herausziehen, um es zu lösen · Rechtsklick: Flags…, Vom Elternobjekt lösen, In der Szene auswählen"
+flags…,Flags…
+Remove from parent,Vom Elternobjekt lösen
+Add child,Kind hinzufügen
+Add child %s,%s als Kind hinzufügen
+transform position,Position übernehmen
+transform angle,Winkel übernehmen
+transform size,Größe übernehmen
+destroy with parent,mit Elternobjekt zerstören
+keeping its place,seinen Platz behalten
+"All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.","Alle vier an ergibt ein einfaches Godot-Kind und schreibt eine Zeile. Eine Transformation abzuschalten fügt stattdessen den Knoten hinzu, der das Kind steuert; alle drei abzuschalten heißt die Bewegung des Elternobjekts ignorieren. Ohne „seinen Platz behalten“ springt das Kind an sein neues Elternobjekt."

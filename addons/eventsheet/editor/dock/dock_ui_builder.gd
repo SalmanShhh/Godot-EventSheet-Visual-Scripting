@@ -243,6 +243,8 @@ func build_ui() -> void:
 	_dock._viewport.asset_dropped.connect(_dock._apply_asset_drop)
 	_dock._viewport.object_bar_dropped.connect(_dock.apply_object_bar_drop)
 	_dock._viewport.input_action_dropped.connect(_dock.apply_input_action_drop)
+	# X15 - a child dragged out of the Hierarchy pane and let go anywhere on the canvas: unparent it.
+	_dock._viewport.hierarchy_child_dropped.connect(_dock.hierarchy_unparent)
 	# T13 - the Project bar's own drop: what it means travels in the payload, and the dock writes it.
 	_dock._viewport.project_entry_dropped.connect(_dock.apply_project_entry_drop)
 	# Q10 - a thumbnail the editor's preview cache renders after the row was drawn: redraw once when

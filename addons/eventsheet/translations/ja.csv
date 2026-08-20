@@ -3164,3 +3164,23 @@ starting {values},先頭が {values}
 {subject} is a table,{subject} がテーブル
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
+Hierarchy,階層
+parent,親
+(the layout),(レイアウト)
+1 child,子 1 個
+%d children,子 %d 個
+ignores parent's movement,親の動きを無視
+transforms:,変換:
+in the scene file,シーンファイル内
+edit the scene,シーンを編集
+"drag an object here = Add child · drag a child out to unparent · right-click: flags…, Remove from parent, Select in scene",オブジェクトをここにドラッグ = 子を追加 · 子を外へドラッグして親から外す · 右クリック: フラグ…、親から外す、シーンで選択
+flags…,フラグ…
+Remove from parent,親から外す
+Add child,子を追加
+Add child %s,子 %s を追加
+transform position,位置を追従
+transform angle,角度を追従
+transform size,サイズを追従
+destroy with parent,親と一緒に破棄
+keeping its place,その場所を保つ
+"All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.",4つすべてオンなら通常の Godot の子で、書かれる行は1行です。変換を一つオフにすると、代わりに子を動かすノードが追加されます。3つすべてオフにすると「親の動きを無視」になります。「その場所を保つ」を外すと、子は新しい親の位置にスナップします。

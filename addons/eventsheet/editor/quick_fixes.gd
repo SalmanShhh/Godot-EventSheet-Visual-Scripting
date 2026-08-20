@@ -48,6 +48,17 @@ const OFFERED := {
 	"repeated-literal": [
 		{"id": "extract_to_variable", "label": "⚡ Extract %s to a variable"},
 	],
+	# X17 - the three hierarchy footguns. Each has exactly one accepted answer, and the chip says it
+	# in the words the row would use rather than in Godot's.
+	"reparent-while-iterating": [
+		{"id": "walk_a_copy", "label": "Walk a copy of the children"},
+	],
+	"reparent-in-ready": [
+		{"id": "defer_reparent", "label": "Do it after the tree settles"},
+	],
+	"freed-parent-reference": [
+		{"id": "guard_still_there", "label": "Ask whether %s is still there"},
+	],
 }
 
 
@@ -132,6 +143,14 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Open %s and Sheet ▸ Publish New Version… lists what does not read yet, with the fix." % str(finding.get("path", "")).get_file()}
 		"extract_to_variable":
 			return _extract_to_variable(subject, str(finding.get("path", "")), dock)
+		# X17. All three point at a line in an emitted script rather than at one row, so each names
+		# the one edit to make instead of rewriting bytes underneath the author.
+		"walk_a_copy":
+			return {"ok": true, "message": "Swap the walk for System ▸ For Each Child, which takes the snapshot for you - or add .duplicate() after the children so %s cannot shift the list it is walking." % subject}
+		"defer_reparent":
+			return {"ok": true, "message": "Move this out of On start of layout into a row that runs after the tree has settled - the parent is still adding its children while _ready runs."}
+		"guard_still_there":
+			return {"ok": true, "message": "Put the rows that use %s under a condition asking whether it is still there - a child goes when its parent goes." % subject}
 	return {"ok": false, "message": "No fix named %s." % fix_id}
 
 

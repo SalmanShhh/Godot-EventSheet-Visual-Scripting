@@ -3164,3 +3164,23 @@ starting {values},commencant par {values}
 {subject} is a table,{subject} est une table
 with {clauses},avec {clauses}
 has {key},a {key}
+Hierarchy,Hiérarchie
+parent,parent
+(the layout),(la mise en page)
+1 child,1 enfant
+%d children,%d enfants
+ignores parent's movement,ignore le mouvement du parent
+transforms:,transformations :
+in the scene file,dans le fichier de scène
+edit the scene,modifier la scène
+"drag an object here = Add child · drag a child out to unparent · right-click: flags…, Remove from parent, Select in scene","glisser un objet ici = Ajouter un enfant · glisser un enfant dehors pour le détacher · clic droit : indicateurs…, Retirer du parent, Sélectionner dans la scène"
+flags…,indicateurs…
+Remove from parent,Retirer du parent
+Add child,Ajouter un enfant
+Add child %s,Ajouter l'enfant %s
+transform position,transformer la position
+transform angle,transformer l'angle
+transform size,transformer la taille
+destroy with parent,détruire avec le parent
+keeping its place,en conservant sa place
+"All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.","Les quatre activés donnent un enfant Godot ordinaire et n'écrivent qu'une ligne. Désactiver une transformation ajoute à la place le nœud qui pilote l'enfant ; les désactiver toutes les trois revient à ignorer le mouvement du parent. Sans « en conservant sa place », l'enfant se colle à son nouveau parent."

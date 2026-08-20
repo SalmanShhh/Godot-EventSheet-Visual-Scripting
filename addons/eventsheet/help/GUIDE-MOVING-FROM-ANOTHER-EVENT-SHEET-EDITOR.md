@@ -516,6 +516,47 @@ i18n (Godot translations).
 - **Scenes replace layouts** and instancing replaces "create object by name" - spawn via
   `preload("res://enemy.tscn").instantiate()` in a block or action.
 
+### The Hierarchy pane (the panel you are missing, in Godot's terms)
+
+Click an object's name in any row and the Object properties popup now has a **Hierarchy** section:
+the object's parent, its children, and what each child carries.
+
+![The Hierarchy section of the Object properties popup: the parent, four children, and the follow-flags each carries](images/hierarchy-pane.png)
+
+The gestures are the ones you already know. Drag an object in from the Object bar to make it a
+child; the four flags open on the drop. Drag a child out onto the canvas to unparent it. Right-click
+a child for **flags…**, **Remove from parent** and **Select in scene**.
+
+The flags are the honest part. Godot has no single property for "follow everything except size", so
+each tick maps onto something real:
+
+| tick | what it writes |
+| --- | --- |
+| all four on | a plain Godot child - one `reparent` line, and the chips stay quiet |
+| **keeping its place** off | the child snaps to where its new parent stands |
+| one or two transforms off | the child is detached, and a `RemoteTransform2D`/`3D` on the parent puts back exactly the parts that stayed on |
+| all three transforms off | **ignore parent's movement** - still a child, still freed with the parent, but it stops following |
+| **destroy with parent** off | the parent hands the child back to the layout as it leaves the tree |
+
+Two things this pane will not do. It never edits a `.tscn`: children the scene file owns show muted
+with **in the scene file** and offer **edit the scene**, which hands the node to Godot's own Scene
+dock. And it writes nothing special - every gesture writes ordinary rows through the undo funnel, in
+the same spelling a hand-typed file uses, so the pane and the canvas always describe one tree and
+Ctrl+Z takes a parenting back like any other edit.
+
+The Project Doctor covers the three ways this goes wrong at run time: a walk over a node's children
+that **moves** one of them while it walks (the list is live, so the loop skips the next child), a
+reparent of **self** at start of layout (the old parent is still adding its children, and Godot
+refuses), and a variable **keeping hold of a child whose parent gets freed**. Each is a note with a
+one-click chip naming the single edit to make.
+
+`demo/showcase/hierarchy_playground/` is all of it in one playable room: Space mounts the rider onto
+the horse's saddle and dismounts again, the hat follows its wearer's angle but not its size, the
+green bar stays upright while the rider leans, one walk over the squad leader's children heals every
+soldier among them, and the crates park themselves on the ray they cast down.
+
+![The Hierarchy Playground showcase: a rider mounted on a horse wearing a hat and an upright health bar, a squad of four, and crates settled on the ground](images/hierarchy-playground.png)
+
 ---
 
 ## 10. Importing a C3 Event Sheet
