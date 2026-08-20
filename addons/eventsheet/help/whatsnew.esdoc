@@ -32,7 +32,9 @@ What changed in the build you have installed (v0.17.0), in the words the release
   point reads **Set neutral to Touch.Acceleration** with the note that says what the player has to
   do, the multiplication reads **Steer by tilt x at tilt strength**, and the turn-and-pitch pair
   reads **Aim by gyro** as one row. `Input.get_gravity()` stays named apart from the accelerometer,
-  because mixing the two is the classic tilt bug.
+  because mixing the two is the classic tilt bug. The **FPS Controller** behaviour gained the same
+  option: tick Gyro Aim and the device's rotation rate goes through the very Add Look the mouse uses,
+  so one clamp and one yaw serve both hands.
 - **Touch Gestures** - a new behaviour pack, with a **Touch Shape Library** data asset beside it.
   Attach it and it watches the touch events itself: **On Swipe** with a direction (four ways, or
   eight with the diagonals on), a distance and a time, and **On Shape Drawn** with the name of the
@@ -58,13 +60,21 @@ What changed in the build you have installed (v0.17.0), in the words the release
   accessibility, each piece a row an options screen can bind to a slider or a checkbox: **Start
   Listening For** / **Any Input Received** / **Rebind Control To** / **Stop Listening** over the live
   Input Map (Save Bindings and Load Bindings already shipped), **Treat Control As A Toggle** so a
-  held control works either way, **Set Effect Strength** and **Set No Flashing** as the two dials
-  every shake and flash should ask before it fires, **Set Text Size Scale**, **Use Palette**, **Set
-  Aim Assist Radius**, and **Speak** / **Stop Speaking** through the voices the player's system
-  already has. Captions ride **Play Sound With Caption**, a SIBLING of Play Sound rather than a
+  held control works either way, **Set Effect Strength** and **Set No Flashing** as two dials the
+  packs now actually honour (Juice and Juice 3D multiply every shake, recoil, bob and tilt by the
+  first; the Flash behaviour swaps its blink for a fade under the second, which is a medical matter
+  rather than a taste), **Set Text Size Scale**, **Use Palette**, **Set Aim Assist Radius**, and
+  **Speak** / **Stop Speaking** through the voices the player's system already has. Both dials are
+  plain metadata on `Engine`, so any script or pack reads them in one line and a project that never
+  sets one is untouched. Captions ride **Play Sound With Caption**, a SIBLING of Play Sound rather than a
   change to it: that row's emitted bytes are a compatibility promise, so adding a caption to it
   would have rewritten every project's audio. **Show Caption** covers a sound played some other way.
-  An options screen's shape is claimed as its own pattern.
+  An options screen's shape is claimed as its own pattern, and the Doctor grew an OPT-IN sweep
+  (`eventsheets/doctor/caption_sounds`) that names scripts playing sounds with no caption.
+- **Two new starters.** New Sheet ▸ **Boomer Arsenal (3D)** wires firing, weapon switching, per-weapon
+  ammo and the secrets counter together; New Sheet ▸ **Game Options** scaffolds the accessibility
+  screen with every setting ticked Remember Between Runs and the remap flow as four rows of one
+  action each.
 
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
