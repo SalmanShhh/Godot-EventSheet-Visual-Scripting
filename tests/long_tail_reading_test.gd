@@ -113,7 +113,9 @@ static var STATEMENT_READINGS: Dictionary = {
 	# U1 re-pinned this one: a colour built from its channels reads as the colour, and a mix nobody has
 	# a word for keeps the channels rather than repeating the Color call that built them.
 	"tint.color = Color(0.2, 0.2, 0.4)": "System ▸ Set layer tint to 0.2, 0.2, 0.4 CanvasModulate",
-	"$WorldEnvironment.environment.ambient_light_energy = 0.3": "System ▸ Set ambient light to 30%",
+	# X9 re-homed this one: the world's ambient light is one of the ENVIRONMENT's knobs, and it now
+	# reads under the Environment object with the rest of them, in these same words.
+	"$WorldEnvironment.environment.ambient_light_energy = 0.3": "Environment ▸ Set ambient light to 30%",
 	# U8 - facing something
 	"look_at(target.global_position, Vector3.UP)": "Player ▸ Look at target",
 	# U9 - work handed off the main thread, and the wait that joins it back up

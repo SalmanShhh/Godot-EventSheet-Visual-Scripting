@@ -464,6 +464,53 @@ That is the order this section is in.
   ![A clickable, tweened, snap-to-grid script read as an event sheet: the Inspector button as a setting row, a one-line tween chain, the cursor and the click on the Mouse, the gamepad cable on the Gamepad, and a snap setter on the loop's own object](images/opened-script-batch7.png)
 
   ![Three opened scripts stacked: one whose Include bar says "73% reads as events - 2 script blocks", one whose settings read as Movement and Look folders with every export hint family, and the same file opened as an autoload, whose head is one Global variables folder](images/opened-script-head5.png)
+- **Third-person locomotion is one action.** The five-line run every 3D character script writes -
+  fetch the camera's basis, mix it with the two numbers of input, flatten the result onto the ground,
+  make it one unit long, write it into the velocity - reads as a single row: `Player ▸ Move relative
+  to the camera along input at speed (flattened to the ground)`, with a `→5` mark saying how many
+  lines it stands for and every one of them one hover away. Under it, `velocity.y -= 30.0 * delta`
+  reads `Fall at 30 (gravity)` rather than as arithmetic on a member, and `is_on_floor()` reads as
+  the question the sheet already publishes. Nothing about the file changes: it saves back byte for
+  byte, and double-click still opens the exact GDScript.
+
+  ![A third-person controller opened as an event sheet: the five-line camera-basis run collapsed into one Move relative to the camera row with a 4-line mark, the gravity line reading Fall at 30, and move_and_slide reading Move and slide along what it hits](images/reading-camera-relative-movement.png)
+- **Orbiting reads as orbiting, in both spellings.** `global_position = moon.global_position +
+  Vector3(cos(angle), 0, sin(angle)) * radius` reads `Orbit moon at radius radius angle angle (on the
+  ground plane)` - the plane named after the axis the circle is drawn flat against. A `rotate_y` on a
+  node the SCENE says holds nothing but a camera or a camera arm reads `Orbit around its centre by
+  ... (yaw)`, because turning that node is the camera going round what it looks at; a `rotate_y` on
+  an ordinary node is still a turn. A `SpringArm3D`'s length reads `Set camera distance`. Both orbit
+  shapes offer the Orbit 3D behavior, which does the whole thing.
+
+  ![An orbiting script opened as an event sheet: the cos/sin placement reading Orbit moon at radius radius angle angle on the ground plane, and the camera arm's length reading Set camera distance to 6](images/reading-orbit-words.png)
+- **A blend tree's magic strings read as animation words.** `anim_tree.set("parameters/Locomotion/
+  blend_position", pace)` reads `Player ▸ Animation ▸ Set Locomotion blend to pace` - named after the
+  GROUP the parameter belongs to, not the leaf Godot spells it with. `.../TimeScale/scale` reads `Set
+  animation speed`, `.../Shoot/request` reads `Play one-shot animation Shoot`, and the state machine's
+  own two calls read `Go to state "Jump"` and `Current state is "Land"` - the words the State Machine
+  behavior already publishes. An AnimationTree is not an object anybody points at, it is HOW one
+  object animates, so every row wears the object's own name and its Animation aspect.
+
+  ![A blend-tree script opened as an event sheet: four parameter writes reading as Set Locomotion blend, Go to state, Set animation speed and Play one-shot animation, all under the object's Animation aspect](images/reading-animation-tree-words.png)
+- **Seen, heard, and the world's look.** A 3D sound's `max_distance` and `unit_size` read as its
+  hearing distance and falloff; a mesh's `visibility_range_begin` and `_end` written together read as
+  one `Visible from 10 to 90` row; `transparency` reads `Set see-through to 40%` and `cast_shadow`
+  off reads `Set shadows off`. A `VisibleOnScreenNotifier`'s two signals read as the triggers `On
+  entered view` and `On left view`. And the Environment - however the file reached it - is the
+  **Environment** object, with fog, glow, ambient light, ambient occlusion and the sky rotation as
+  plain Set rows under it. `RenderingServer.global_shader_parameter_set(...)` reads `Set effect
+  parameter wind strength to 2 (everywhere)`.
+
+  ![A 3D scene script opened as an event sheet: the audio distances, a mesh's visible range as one row, see-through and shadows, and a whole fog-and-glow block reading under the Environment object](images/reading-seen-heard-and-the-world.png)
+- **UI that lives in the world.** `billboard` reads `Set always face the camera on` (and the upright
+  variant says so), `no_depth_test` reads `Set show through walls on`, `pixel_size` reads `Set world
+  size ... (per pixel)`, a sprite's region width reads `Set bar width` - the health bar over a head -
+  and a SubViewport painting UI onto a surface reads `Send input ... (UI on a surface)`, with
+  `render_target_update_mode` reading `Set redraw only when seen`. All three of the property names are
+  gated on the CLASS, so `transparency` and `pixel_size` on anything else stay the property writes
+  they are.
+
+  ![A name tag and a health bar over a head opened as an event sheet: billboard, show through walls, world size, the bar's width and the in-world screen's redraw mode all reading as plain rows](images/reading-world-space-ui.png)
 - **A local variable's scope is enforced, and shown.** A local is visible from the event that
   declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
   action that uses `dealt` into an event that cannot see it and the drop refuses before you release,

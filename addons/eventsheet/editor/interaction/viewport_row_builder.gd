@@ -5331,6 +5331,192 @@ func _mouse_look_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
+# ── X6 / X8: the two runs batch thirteen adds ────────────────────────────────────────────────────
+# A third-person script mixes the camera's own axes with the input, flattens the result, makes it one
+# unit long and writes it into the velocity - five lines that only mean "move the way the camera is
+# facing" together. A mesh's visible range is two writes that only mean a distance BAND together.
+# Each is ONE thing that happened. The lines stay exactly as they are in the file - on hover, under a
+# double-click and in the bytes that are saved - which is the promise every run above makes too.
+
+
+## X6. The camera-relative run in one action lane, as {"leads": {index: {text, note, object,
+## evidence, line_count, indices}}, "consumed": {index: true}}.
+##
+## The camera and the direction are declared as LOCALS, above the lane, which is where the shape says
+## what it is: `cam_basis` is a camera's basis and `dir` is that basis mixed with the input. The
+## ACTIONS are the rest of it - the flatten, the normalize and the two velocity writes - and BOTH
+## velocity writes are required: one axis on its own is a nudge, not locomotion.
+func _camera_relative_move_groups(actions: Array, locals: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var mix: Dictionary = _camera_relative_locals(actions, locals)
+	if mix.is_empty():
+		return {"leads": leads, "consumed": consumed}
+	var direction: String = str(mix.get("direction", ""))
+	var index: int = 0
+	while index < actions.size() - 1:
+		var last: int = index - 1
+		var flattened: bool = false
+		var speed: String = ""
+		var axes: Dictionary = {}
+		var step: int = index
+		while step < actions.size():
+			var line: String = _group_line_text(actions[step])
+			if line.is_empty():
+				break
+			if EventSheetSentence.is_flatten_line(line, direction):
+				flattened = true
+			elif not EventSheetSentence.is_normalize_line(line, direction):
+				var found: String = EventSheetSentence.velocity_step_speed(line, direction)
+				# Every axis of the run has to move at ONE speed: two speeds are two sentences, and
+				# a row that named only the first would hide the second.
+				if found.is_empty() or (not speed.is_empty() and found != speed):
+					break
+				speed = found
+				axes[line.get_slice(" = ", 0).strip_edges()] = true
+			last = step
+			step += 1
+		if axes.size() < 2 or speed.is_empty():
+			index += 1
+			continue
+		var evidence: PackedStringArray = PackedStringArray([
+			str(mix.get("basis_line", "")), str(mix.get("mix_line", ""))])
+		var indices: Array[int] = []
+		for member_index: int in range(index, last + 1):
+			evidence.append(_group_line_text(actions[member_index]))
+			indices.append(member_index)
+		var sentence: Dictionary = EventSheetSentence.camera_relative_move_sentence(
+			EventSheetSentence.script_object(sentence_context()), str(mix.get("input", "")), speed,
+			flattened, sentence_context())
+		var text: String = ""
+		for segment: Variant in (sentence.get("segments", []) as Array):
+			text += str((segment as Dictionary).get("text", ""))
+		leads[index] = {
+			"text": text.strip_edges(),
+			"note": "",
+			"object": str(sentence.get("object", "")),
+			"evidence": evidence,
+			"line_count": last - index + 1,
+			"indices": indices
+		}
+		for consumed_index: int in range(index + 1, last + 1):
+			consumed[consumed_index] = true
+		index = last + 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## X6. What the event's LOCALS say about a camera-relative run: which local holds a camera's basis,
+## which one holds that basis mixed with the input, and which input vector drove the mix. {} when the
+## event declares no such pair, which is what keeps the walk above from claiming anything.
+##
+## Both shapes a local arrives in are read. An opened .gd file's locals are Local Variable ACTIONS
+## the canvas promotes to declaration rows; a sheet somebody authored carries them as LocalVariable
+## resources on the event. The run must be recognised the same either way, or it would fire or not
+## depending on which half of the file happened to lift - exactly the drift these runs prevent.
+func _camera_relative_locals(actions: Array, locals: Array) -> Dictionary:
+	var declared: Dictionary = {}
+	var order: PackedStringArray = PackedStringArray()
+	for entry: Variant in locals:
+		var local: LocalVariable = entry as LocalVariable
+		if local == null or local.name.strip_edges().is_empty():
+			continue
+		declared[local.name.strip_edges()] = str(local.default_value).strip_edges()
+		order.append(local.name.strip_edges())
+	for entry: Variant in actions:
+		var action: ACEAction = entry as ACEAction
+		if action == null or not action.enabled:
+			continue
+		var declaration: Dictionary = grammar_action_declaration(action)
+		var name_text: String = str(declaration.get("name", "")).strip_edges()
+		if name_text.is_empty() or declared.has(name_text):
+			continue
+		declared[name_text] = str(declaration.get("raw_value", "")).strip_edges()
+		order.append(name_text)
+	var bases: Dictionary = {}
+	for name_text: String in order:
+		if not EventSheetSentence.camera_basis_source(str(declared[name_text])).is_empty():
+			bases[name_text] = true
+	if bases.is_empty():
+		return {}
+	for name_text: String in order:
+		for basis_name: Variant in bases:
+			var input_name: String = EventSheetSentence.camera_basis_mix_input(
+				str(declared[name_text]), str(basis_name))
+			if input_name.is_empty():
+				continue
+			return {
+				"direction": name_text,
+				"input": input_name,
+				"basis_line": "%s = %s" % [str(basis_name), str(declared[basis_name])],
+				"mix_line": "%s = %s" % [name_text, str(declared[name_text])]
+			}
+	return {}
+
+
+## X8. The visible-range runs in one action lane, in the same shape as the scroll limits above: two
+## adjacent writes on ONE object, the near end and the far end, which only name a band together.
+func _visible_range_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var index: int = 0
+	while index < actions.size() - 1:
+		var near: Dictionary = _visible_range_parts(actions[index])
+		var far: Dictionary = _visible_range_parts(actions[index + 1])
+		if near.is_empty() or far.is_empty() \
+				or str(near.get("object", "")) != str(far.get("object", "")) \
+				or str(near.get("end", "")) != "begin" or str(far.get("end", "")) != "end":
+			index += 1
+			continue
+		var sentence: Dictionary = EventSheetSentence.visibility_range_sentence(
+			str(near.get("object", "")), str(near.get("value", "")), str(far.get("value", "")),
+			sentence_context())
+		var text: String = ""
+		for segment: Variant in (sentence.get("segments", []) as Array):
+			text += str((segment as Dictionary).get("text", ""))
+		leads[index] = {
+			"text": text.strip_edges(),
+			"note": "",
+			"object": str(near.get("object", "")),
+			"evidence": PackedStringArray([str(near.get("line", "")), str(far.get("line", ""))]),
+			"line_count": 2,
+			"indices": [index, index + 1]
+		}
+		consumed[index + 1] = true
+		index += 2
+	return {"leads": leads, "consumed": consumed}
+
+
+## X8. One `rock.visibility_range_begin = 10` line -> {object, end, value, line}, or {} for anything
+## else. Both spellings a write arrives in are read, exactly as the scroll limits are.
+func _visible_range_parts(action_resource: Variant) -> Dictionary:
+	var text: String = _group_line_text(action_resource)
+	if text.is_empty():
+		return {}
+	var at: int = EventSheetSentence.top_level_index(text, " = ")
+	if at < 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges()
+	var value: String = text.substr(at + 3).strip_edges()
+	if value.is_empty() or not EventSheetSentence.is_simple_target(target):
+		return {}
+	var bare: String = target.trim_prefix("self.")
+	var dot_at: int = bare.rfind(".")
+	var member: String = bare if dot_at < 0 else bare.substr(dot_at + 1)
+	if member != "visibility_range_begin" and member != "visibility_range_end":
+		return {}
+	var owner_text: String = "" if dot_at < 0 else bare.substr(0, dot_at)
+	var object_name: String = EventSheetSentence.call_object(owner_text, "", sentence_context())
+	if not EventSheetSentence.class_is_geometry(
+			EventSheetSentence.object_class_of(object_name, sentence_context())):
+		return {}
+	return {
+		"object": object_name,
+		"end": "begin" if member.ends_with("begin") else "end",
+		"value": value,
+		"line": text
+	}
+
+
 ## U12. The crossfade runs in one action lane, in the same shape. A run is two adjacent volume
 ## writes driven by ONE fraction - one fader by `1 - t` and the other by `t` - which is the whole of
 ## what a crossfade is. Two volumes set from unrelated values are two rows, and stay two rows.
@@ -5448,7 +5634,10 @@ func _append_scroll_limit_spans(spans: Array, limits: Dictionary, action_index: 
 			"compiled_lines": int(limits.get("line_count", 1)),
 			"create_object_indices": limits.get("indices", [])
 		}, true).merged(action_style_meta, true)))
-	# The note carries no object label: the row already said whose camera this is.
+	# The note carries no object label: the row already said whose camera this is. A run whose
+	# sentence carries the whole of what happened has no note, and draws no empty span for one.
+	if str(limits.get("note", "")).is_empty():
+		return
 	spans.append(_make_span(" %s" % str(limits.get("note", "")), SemanticSpan.SpanType.VALUE,
 		base.duplicate().merged({
 			"text_color": _viewport._get_reading_style().muted_text_color, "object_label": ""
@@ -7953,6 +8142,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# U8 / U12 - the mouse-look trio and the two faders of a crossfade are one row each.
 		var look_groups: Dictionary = _mouse_look_groups(event_row.actions)
 		var fade_groups: Dictionary = _crossfade_groups(event_row.actions)
+		# X6 / X8 - the camera-relative run and a mesh's visible-range band are one row each.
+		var move_groups: Dictionary = _camera_relative_move_groups(
+			event_row.actions, event_row.local_variables)
+		var range_groups: Dictionary = _visible_range_groups(event_row.actions)
 		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
 		var task_notes: Dictionary = _task_note_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
@@ -7972,11 +8165,21 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if bool(look_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(fade_groups.get("consumed", {}).get(action_index, false)):
 				continue
+			# X6 / X8 - the same skip-without-advancing, for the two runs batch thirteen added.
+			if bool(move_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(range_groups.get("consumed", {}).get(action_index, false)):
+				continue
 			var run_lead: Dictionary = (look_groups["leads"] as Dictionary).get(action_index, {})
 			var run_pattern: String = "fps_look"
 			if run_lead.is_empty():
 				run_lead = (fade_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "sound"
+			if run_lead.is_empty():
+				run_lead = (move_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "movement"
+			if run_lead.is_empty():
+				run_lead = (range_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "lighting"
 			if not run_lead.is_empty():
 				_append_scroll_limit_spans(spans, run_lead, action_index, action_line_index,
 					action_style_meta)
@@ -10701,6 +10904,27 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"words": "Text and patterns",
 		"ace_ids": ["Core/SetTextPattern", "Core/MatchPattern", "Core/AllMatches",
 			"Core/ReplaceMatches"]
+	},
+	# X6. Movement claims from the readings themselves (the camera-relative run, a fall) as well as
+	# from the whole-file pattern walk. No `adoptable`: what could replace a hand-written movement
+	# depends entirely on which one it is, and offering one pack for all of them would misfit most.
+	"movement": {
+		"words": "Movement",
+		"ace_ids": ["Core/SetVelocity3D", "Core/MoveAndSlide3D", "Core/GetInputVector",
+			"Core/MoveRelativeToCamera", "Core/IsOnFloor3D"]
+	},
+	# X4 / X19. Batch thirteen's two new shapes. An orbit HAS a pack that does the whole thing, so it
+	# offers one; world-space UI is a handful of settings on ordinary nodes, so the honest offer is
+	# the rows themselves and no adoption.
+	"orbit": {
+		"words": "Orbiting - a camera or an object going round a centre",
+		"adoptable": "orbit_3d",
+		"ace_ids": ["Core/OrbitAtRadius", "Core/SetCameraDistance"]
+	},
+	"worldspace_ui": {
+		"words": "UI that lives in the world",
+		"ace_ids": ["Core/SetFaceTheCamera", "Core/SetShowThroughWalls", "Core/SetWorldSize",
+			"Core/SetBarWidth", "Core/SendInputToSurface", "Core/SetSurfaceRedraw"]
 	}
 }
 
@@ -10969,6 +11193,25 @@ func behavior_shape_condition_sentence(ace_id: String, params_dict: Dictionary,
 	return {} if code.is_empty() else EventSheetBehaviorShapes.condition(code, context)
 
 
+## X4 / X7 / X8 / X9 / X19. The rows batch thirteen added whose sentence is the SHARED one: each of
+## them writes exactly the line its reading recognises, so the row is read by compiling it back and
+## asking the grammar rather than by its own display template. That is what keeps a picked row and a
+## typed line one sentence - the parity the two-way byte gate proves.
+##
+## Frozen alongside the ace ids themselves: adding a row here is what opts it into the shared
+## sentence, and a row that is not here keeps its descriptor's words exactly as before.
+const GRAMMAR_READ_ACE_IDS: PackedStringArray = [
+	"OrbitAtRadius", "SetCameraDistance",
+	"PlayOneShotAnimation",
+	"AudioSetHearingDistance3D", "AudioSetLoudnessFalloff",
+	"SetSeeThrough", "SetShadowsOff3D", "SetShadowsOn3D",
+	"SetFog", "SetFogDensity", "SetFogColour", "SetGlow", "SetGlowStrength",
+	"SetAmbientOcclusion", "SetSkyRotation",
+	"SetFaceTheCamera", "SetFaceTheCameraUpright", "SetShowThroughWalls", "SetWorldSize",
+	"SetBarWidth", "SendInputToSurface", "SetSurfaceRedraw"
+]
+
+
 ## The shared-grammar reading of an ACE ACTION whose shape a hand-written line can also have, or {}
 ## when this row has no such twin. The point is symmetry: `Destroy`, `Signal On Jumped`, `Set hp to 0`
 ## must be one sentence, whether the row came out of the picker or out of the user's own .gd file.
@@ -10989,9 +11232,32 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 	# reads in that behavior's words - but only when the shape actually claims it. A row no shape
 	# claims falls straight through to the reading it already had, which is why routing these three
 	# ace ids here cannot move anything that does not belong to a projectile or a glide.
+	# ── X4 ─────────────────────────────────────────────────────────────────────────────────────
+	# A place written as a circle around somebody is an ORBIT, and it is asked before the shape
+	# lookup below for the same reason the typed line asks it before the shapes: the importer files
+	# `me = you.global_position + <offset>` as a Pin, and "pinned to you at an offset" is true of one
+	# frame of an orbit and a plain lie about the rest of them.
+	var shape_line: String = EventSheetBehaviorShapes.line_for(action.ace_id, params_dict)
+	if not shape_line.is_empty():
+		var circled: Dictionary = EventSheetSentence.orbit_placement_assignment_of(shape_line, context)
+		if not circled.is_empty():
+			return circled
 	var shaped: Dictionary = behavior_shape_action_sentence(action.ace_id, params_dict, context)
 	if not shaped.is_empty():
 		return shaped
+	# ── X4 / X7 / X8 / X9 / X19 ────────────────────────────────────────────────────────────────
+	# The batch-thirteen rows whose reading IS the grammar's reading of the line they compile to.
+	# Routing them here rather than letting each keep its descriptor's display template is what makes
+	# the promise hold in BOTH directions: the row a user drops from the picker and the line the same
+	# user could have typed by hand say the one sentence, with the same object in front of it and the
+	# same half-word after it. A row that compiles to more than one line is left alone - its own
+	# display template is the only thing that can say what a multi-line row does.
+	if Array(GRAMMAR_READ_ACE_IDS).has(action.ace_id):
+		var compiled: String = ActionCodegen.generate_action(action)
+		if not compiled.is_empty() and not compiled.contains("\n"):
+			var read_as_typed: Dictionary = EventSheetSentence.statement(compiled.strip_edges(), context)
+			if not read_as_typed.is_empty():
+				return read_as_typed
 	match action.ace_id:
 		"SetVar":
 			return EventSheetSentence.statement("%s = %s" % [
@@ -11051,6 +11317,13 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement(group_call, context)
 		"QueueFreeNode":
 			return EventSheetSentence.statement("%s.queue_free()" % str(params_dict.get("target", "self")), context)
+		# X9. The importer claims a `RenderingServer.global_shader_parameter_set(...)` line as this
+		# row, so the row has to say what the typed line says - otherwise an opened file reads one way
+		# before the lift and another after it.
+		"RenderingSetGlobalShaderParam":
+			return EventSheetSentence.statement(
+				"RenderingServer.global_shader_parameter_set(%s, %s)" % [
+					str(params_dict.get("name", "")), str(params_dict.get("value", ""))], context)
 		# U1. A tint set from the tint itself is an EASE, and the grammar is the only place that can
 		# see it: the row holds one value, and only the shape of that value says it eases. Every other
 		# tint row keeps the descriptor's own words, which is why this returns {} unless it matches.

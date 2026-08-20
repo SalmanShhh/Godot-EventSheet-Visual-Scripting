@@ -51,6 +51,23 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "AnimationIsPlaying", "Is Playing", ACEDescriptor.ACEType.CONDITION, "is_playing()", "", [], CAT, "Is playing", "AnimationPlayer")
 		.described("True while this animation player is running an animation."))
 
+	# ── X7 - the blend-tree rows the magic parameter strings hide ──
+	#
+	# An AnimationTree is driven by writing values into paths like `parameters/Locomotion/blend_position`,
+	# which is exactly the kind of string an event sheet exists to hide. Set Blend and Go To State
+	# already ship; these are the two the reading found missing. Both templates write the exact shape
+	# the reading recognises, so a picked row and a hand-typed line are the same bytes.
+	descriptors.append(F.make_descriptor("Core", "PlayOneShotAnimation", "Play One-Shot Animation", ACEDescriptor.ACEType.ACTION,
+		"set(\"parameters/{name}/request\", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)", "",
+		[F.make_param("name", "String", "Shoot", "One-shot", "The name of the OneShot node in the blend tree.")],
+		CAT, "Play one-shot animation {name}", "AnimationTree")
+		.described("Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.").featured())
+	descriptors.append(F.make_descriptor("Core", "AnimationStateIs", "Current State Is", ACEDescriptor.ACEType.CONDITION,
+		"get(\"parameters/playback\").get_current_node() == {state}", "",
+		[F.make_param("state", "String", "\"Idle\"", "State", "The name of the state-machine node to ask about.")],
+		CAT, "Current state is {state}", "AnimationTree")
+		.described("True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on."))
+
 	return descriptors
 
 

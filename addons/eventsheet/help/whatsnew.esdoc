@@ -6,6 +6,56 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - the 3D words: orbiting, camera-relative movement, blend trees, the world's look
+
+- **Orbiting reads as orbiting, in both spellings.** A `rotate_y` on a node the scene says holds
+  nothing but a camera or a camera arm reads **Orbit around its centre by ... (yaw)** - the facts
+  walk gets the pivot's children straight out of the `.tscn`, so a turn on an ordinary node is
+  still a turn. The angle written out - `global_position = target.global_position +
+  Vector3(cos(a), 0, sin(a)) * r` - reads **Orbit target at radius r angle a**, with the plane
+  named after the axis the circle is flat against. Both offer the Orbit 3D pack, and both are asked
+  BEFORE the Pin shape, which used to claim the second one and call an orbit \"pinned at an offset\".
+  A `SpringArm3D`'s length reads **Set camera distance**. New rows: **Orbit At Radius**,
+  **Set Camera Distance**.
+- **Third-person locomotion is one sentence.** The five-line camera-basis run every 3D game writes
+  - fetch the camera's basis, mix it with the input, flatten it, make it one unit long, write it
+  into the velocity - reads as ONE action, **Move relative to the camera along input at speed
+  (flattened to the ground)**, with all five lines as its hover evidence and the file untouched.
+  The line under the not-on-floor guard reads **Fall at 30 (gravity)** instead of \"Subtract 30 * dt
+  from velocity Y\", and `is_on_floor()` / `is_on_wall()` / `is_on_ceiling()` read as the questions
+  the shipped rows already publish. New row: **Move Relative To Camera**.
+- **An AnimationTree's magic strings read as animation words.** `set(\"parameters/Locomotion/
+  blend_position\", v)` reads **Animation ▸ Set Locomotion blend to v** - by the GROUP the parameter
+  belongs to, not the leaf; `.../TimeScale/scale` reads **Set animation speed**; `.../Shoot/request`
+  reads **Play one-shot animation Shoot**; `playback.travel(\"Jump\")` and
+  `get_current_node() == \"Land\"` read as **Go to state** and **Current state is**, the words the
+  State Machine behavior already publishes. Every one of them wears the object's own name and its
+  Animation aspect, exactly as the 2D sprite words do. New rows: **Play One-Shot Animation**,
+  **Current State Is**.
+- **Seen and heard.** A `VisibleOnScreenNotifier`'s two signals read as the triggers **On entered
+  view** / **On left view**, in both node generations. A mesh's `visibility_range_begin` and
+  `_end` written together read as one **Visible from 10 to 90** row; `transparency` reads
+  **Set see-through to 40%**; `cast_shadow` off reads **Set shadows off**. New rows: **Set Visible
+  Range**, **Set See-Through**, **Set Shadows Off / On (3D)**, and the 3D twins of the two
+  positional-sound knobs - **Set Hearing Distance (3D)** and **Set Loudness Falloff**.
+- **The world's look has an object.** An Environment - fetched however the file fetches it - is the
+  **Environment** object, and its fog, glow, ambient light, ambient occlusion and sky rotation read
+  as plain Set rows under it, with the colour swatches every other colour row shows.
+  `RenderingServer.global_shader_parameter_set(...)` reads **Set effect parameter wind strength to
+  2 (everywhere)**, and `set_instance_shader_parameter` reads as the same effect-parameter row for
+  one object. New picker section **Environment**, with seven rows.
+- **UI that lives in the world.** Billboard modes read **Set always face the camera on** (and the
+  upright variant says so), `no_depth_test` reads **show through walls**, `pixel_size` reads
+  **world size**, a sprite's region width reads **Set bar width** - the health bar over a head -
+  and a SubViewport painting UI onto a surface reads **Send input ... (UI on a surface)** with
+  `render_target_update_mode` reading **Set redraw only when seen**. New picker section
+  **World-space UI**, with seven rows. All three of the class-gated property names are exactly
+  that: gated on the class, so `transparency` and `pixel_size` on anything else keep the property
+  write they are.
+- Two new pattern ids - `orbit` and `worldspace_ui` - and every one of these readings is display
+  only: the byte round-trip is gated, and each new row is gated in BOTH directions, emitting
+  exactly the line its reading recognises.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

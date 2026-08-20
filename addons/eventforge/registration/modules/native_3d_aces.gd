@@ -9,6 +9,10 @@ extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
+## X19. UI standing in the WORLD is its own section of the picker: name tags, health bars over heads,
+## and the screens a SubViewport paints onto a surface.
+const UI_CAT := "World-space UI"
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
@@ -79,5 +83,95 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("The direction to an object's right, as a unit vector - what strafing moves along."))
 	descriptors.append(F.make_descriptor("Core", "ObjectUp", "Up Direction", ACEDescriptor.ACEType.EXPRESSION, "{node}.global_transform.basis.y", "", [F.make_param("node", "String", "self", "Object", "The object whose own axes are asked about.", "expression")], "Native 3D", "up", "Node3D")
 		.described("The direction out of an object's own top, as a unit vector."))
+
+	# ── X4 / X6 - orbiting, the camera arm, and the third-person run ──
+	#
+	# Each template writes the EXACT shape the reading recognises, so a row dropped from the picker
+	# and the same shape typed by hand are the same bytes and read as the same row.
+	descriptors.append(F.make_descriptor("Core", "OrbitAtRadius", "Orbit At Radius", ACEDescriptor.ACEType.ACTION,
+		"global_position = {centre}.global_position + Vector3(cos({angle}), 0.0, sin({angle})) * {radius}", "",
+		[F.make_param("centre", "String", "self", "Centre", "The object to go round.", "expression"),
+			F.make_param("radius", "String", "8.0", "Radius", "How far out the circle is.", "expression"),
+			F.make_param("angle", "String", "0.0", "Angle", "Where on the circle this object is, in radians. Add to it every tick to make it go round.", "expression")],
+		"Native 3D", "Orbit [i]{centre}[/i] at radius [i]{radius}[/i] angle [i]{angle}[/i]", "Node3D")
+		.described("Places an object on a circle around another one, on the ground plane. Advance the angle every tick and it orbits.").featured())
+	descriptors.append(F.make_descriptor("Core", "SetCameraDistance", "Set Camera Distance", ACEDescriptor.ACEType.ACTION,
+		"spring_length = {value}", "",
+		[F.make_param("value", "String", "6.0", "Distance", "How far the camera sits from what the arm is mounted on.", "expression")],
+		"Native 3D", "Set camera distance to {value}", "SpringArm3D")
+		.described("Sets how far back a third-person camera sits. The arm pulls the camera in by itself when a wall is in the way."))
+	descriptors.append(F.make_descriptor("Core", "MoveRelativeToCamera", "Move Relative To Camera", ACEDescriptor.ACEType.ACTION,
+		"var _cam_basis_{uid} := {camera}.global_transform.basis\nvar _dir_{uid} := _cam_basis_{uid}.x * {input}.x + _cam_basis_{uid}.z * {input}.y\n_dir_{uid}.y = 0.0\n_dir_{uid} = _dir_{uid}.normalized()\nvelocity.x = _dir_{uid}.x * {speed}\nvelocity.z = _dir_{uid}.z * {speed}", "",
+		[F.make_param("camera", "String", "get_viewport().get_camera_3d()", "Camera", "The camera the directions are measured from - forward means the way this camera faces. The default is whichever camera is looking at the scene right now.", "expression"),
+			F.make_param("input", "String", "Vector2.ZERO", "Input", "The two numbers of steering input, from an Input Vector.", "expression"),
+			F.make_param("speed", "String", "6.0", "Speed", "How fast to move, in units per second.", "expression")],
+		"Native 3D", "Move relative to the camera along [i]{input}[/i] at [i]{speed}[/i]", "CharacterBody3D")
+		.described("Steers a body the way the camera is facing: pushing forward walks away from the camera, whichever way it has been turned. Flattened to the ground, so looking down does not drive the body into the floor. Follow it with Move And Slide.").featured())
+
+	# ── X8 - what a mesh lets through: how far away it is still drawn, how see-through it is, and
+	# whether it casts a shadow at all. The three knobs a reader tunes by eye. ──
+	descriptors.append(F.make_descriptor("Core", "SetVisibleRange", "Set Visible Range", ACEDescriptor.ACEType.ACTION,
+		"visibility_range_begin = {near}\nvisibility_range_end = {far}", "",
+		[F.make_param("near", "String", "0.0", "From", "How close the camera has to be before this is drawn. 0 means always.", "expression"),
+			F.make_param("far", "String", "100.0", "To", "How far away the camera may get before this stops being drawn. 0 means never stop.", "expression")],
+		"Native 3D", "Visible from {near} to {far}", "GeometryInstance3D")
+		.described("Draws something only while the camera is inside a distance band - the cheapest way to stop drawing detail nobody can see.").featured())
+	descriptors.append(F.make_descriptor("Core", "SetSeeThrough", "Set See-Through", ACEDescriptor.ACEType.ACTION,
+		"transparency = {value}", "",
+		[F.make_param("value", "String", "0.5", "See-through", "0 is solid, 1 is invisible. The row shows the fraction as a percentage.", "expression")],
+		"Native 3D", "Set see-through to {value}", "GeometryInstance3D")
+		.described("Fades a 3D object out without hiding it - what a wall between the camera and the player does."))
+	descriptors.append(F.make_descriptor("Core", "SetShadowsOff3D", "Set Shadows Off (3D)", ACEDescriptor.ACEType.ACTION,
+		"cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF", "", [],
+		"Native 3D", "Set shadows off", "GeometryInstance3D")
+		.described("Stops a 3D object casting a shadow. The object is still drawn - only its shadow goes."))
+	descriptors.append(F.make_descriptor("Core", "SetShadowsOn3D", "Set Shadows On (3D)", ACEDescriptor.ACEType.ACTION,
+		"cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON", "", [],
+		"Native 3D", "Set shadows on", "GeometryInstance3D")
+		.described("Makes a 3D object cast a shadow again after Set Shadows Off."))
+
+	# ── X19 - UI that lives in the world: name tags, health bars over heads, and the screens a
+	# SubViewport paints onto a surface. ──
+	# The first five take the node the way the Lighting rows do rather than being host-scoped: the
+	# three knobs live on Label3D and on SpriteBase3D, which share no base class that HAS them, so a
+	# host-scoped row would be a row that cannot compile in the class it was filed under.
+	descriptors.append(F.make_descriptor("Core", "SetFaceTheCamera", "Set Always Face The Camera", ACEDescriptor.ACEType.ACTION,
+		"{node}.billboard = BaseMaterial3D.BILLBOARD_ENABLED", "",
+		[F.make_param("node", "String", "$Label3D", "Label or sprite", "The world-space label or sprite to turn.", "expression")],
+		UI_CAT, "Set always face the camera on")
+		.described("Turns a label or a sprite to face the camera wherever the camera goes - what a name tag over a head needs.").featured())
+	descriptors.append(F.make_descriptor("Core", "SetFaceTheCameraUpright", "Set Always Face The Camera (Upright)", ACEDescriptor.ACEType.ACTION,
+		"{node}.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y", "",
+		[F.make_param("node", "String", "$Label3D", "Label or sprite", "The world-space label or sprite to turn.", "expression")],
+		UI_CAT, "Set always face the camera on (upright)")
+		.described("Turns a label or a sprite to face the camera sideways only, so it stays upright when the camera looks down at it."))
+	descriptors.append(F.make_descriptor("Core", "SetShowThroughWalls", "Set Show Through Walls", ACEDescriptor.ACEType.ACTION,
+		"{node}.no_depth_test = {on}", "",
+		[F.make_param("node", "String", "$Label3D", "Label or sprite", "The world-space label or sprite to change.", "expression"),
+			F.make_param("on", "bool", "true", "On", "true draws it over everything; false lets walls hide it.", "", ["true", "false"])],
+		UI_CAT, "Set show through walls {on}")
+		.described("Draws a world-space label or icon over whatever is in front of it - what an objective marker needs."))
+	descriptors.append(F.make_descriptor("Core", "SetWorldSize", "Set World Size", ACEDescriptor.ACEType.ACTION,
+		"{node}.pixel_size = {value}", "",
+		[F.make_param("node", "String", "$Label3D", "Label or sprite", "The world-space label or sprite to resize.", "expression"),
+			F.make_param("value", "String", "0.004", "Size", "How many world units one pixel of the label or sprite is. Smaller means smaller.", "expression")],
+		UI_CAT, "Set world size to {value}")
+		.described("Sets how big a world-space label or sprite is, measured in world units per pixel."))
+	descriptors.append(F.make_descriptor("Core", "SetBarWidth", "Set Bar Width", ACEDescriptor.ACEType.ACTION,
+		"{node}.region_rect.size.x = {width}", "",
+		[F.make_param("node", "String", "$HpBar", "Bar", "The world-space sprite the bar is drawn on.", "expression"),
+			F.make_param("width", "String", "100.0", "Width", "How wide the visible slice of the image is, in pixels.", "expression")],
+		UI_CAT, "Set bar width to {width}")
+		.described("Cuts a sprite off at a width - how a health bar over a head is driven from a number.").featured())
+	descriptors.append(F.make_descriptor("Core", "SendInputToSurface", "Send Input To Surface", ACEDescriptor.ACEType.ACTION,
+		"push_input({event})", "",
+		[F.make_param("event", "String", "InputEventMouseButton.new()", "Input", "The input to hand to the UI painted on the surface.", "expression")],
+		UI_CAT, "Send input [i]{event}[/i]", "SubViewport")
+		.described("Hands a click or a key to the UI a SubViewport is painting onto a surface, so an in-world screen can be used."))
+	descriptors.append(F.make_descriptor("Core", "SetSurfaceRedraw", "Set Surface Redraw", ACEDescriptor.ACEType.ACTION,
+		"render_target_update_mode = SubViewport.{mode}", "",
+		[F.make_param("mode", "String", "UPDATE_WHEN_VISIBLE", "When", "How often the surface is redrawn.", "", ["UPDATE_WHEN_VISIBLE", "UPDATE_ALWAYS", "UPDATE_DISABLED"])],
+		UI_CAT, "Set surface redraw to {mode}", "SubViewport")
+		.described("Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default."))
 
 	return descriptors

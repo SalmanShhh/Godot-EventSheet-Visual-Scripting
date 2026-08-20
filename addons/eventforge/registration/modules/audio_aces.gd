@@ -140,6 +140,17 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"attenuation = {value}", "", [F.make_param("value", "float", "1.0", "Falloff", "How fast the sound fades with distance: 1 is even, higher drops off sooner.", "expression")],
 		"Audio", "Set falloff to {value}", "AudioStreamPlayer2D")
 		.described("Sets how quickly a positional sound fades as the listener moves away."))
+	# ── X8 - the same two knobs on a sound heard from a place in 3D. Godot spells the falloff
+	# differently there (`unit_size` rather than `attenuation`), which is why each is its own row
+	# rather than one row that guesses - the same split the 2D and 3D light rows already make. ──
+	descriptors.append(F.make_descriptor("Core", "AudioSetHearingDistance3D", "Set Hearing Distance (3D)", ACEDescriptor.ACEType.ACTION,
+		"max_distance = {value}", "", [F.make_param("value", "float", "40.0", "Distance", "How far away the sound can still be heard at all. 0 means no limit.", "expression")],
+		"Audio", "Set hearing distance to {value}", "AudioStreamPlayer3D")
+		.described("Sets how far a 3D positional sound carries. Past this distance it is silent."))
+	descriptors.append(F.make_descriptor("Core", "AudioSetLoudnessFalloff", "Set Loudness Falloff", ACEDescriptor.ACEType.ACTION,
+		"unit_size = {value}", "", [F.make_param("value", "float", "10.0", "Falloff", "How far the sound stays at full loudness before it starts fading. Bigger carries further.", "expression")],
+		"Audio", "Set falloff to {value}", "AudioStreamPlayer3D")
+		.described("Sets how quickly a 3D positional sound fades as the listener moves away."))
 	descriptors.append(F.make_descriptor("Core", "AudioCrossfade", "Crossfade", ACEDescriptor.ACEType.ACTION,
 		"{from}.volume_db = linear_to_db(1.0 - {amount})\n{to}.volume_db = linear_to_db({amount})", "",
 		[F.make_param("from", "String", "$MusicA", "From", "The player fading out.", "expression"),
