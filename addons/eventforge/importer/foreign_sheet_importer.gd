@@ -39,21 +39,38 @@ const FAMILIES_DIR: String = "families/"
 
 ## Reads an exported project archive. Returns
 ## {"ok": bool, "error": String, "project_name": String, "sheets": {name: Dictionary},
-##  "objects": {name: kind}, "families": PackedStringArray}.
+##  "objects": {name: kind}, "families": PackedStringArray, "notes": PackedStringArray}.
+## `notes` is the honesty half: one line per member the reader expected to be project data and could
+## not use. Skipping such a member silently is the one way this file could pretend, so it says so and
+## the wizard adds the lines to the import report the reader is already looking at.
 ## The archive is opened read-only and closed again; nothing is written back to it, ever.
 static func read_project(archive_path: String) -> Dictionary:
 	var result: Dictionary = {
 		"ok": false, "error": "", "project_name": "", "sheets": {}, "objects": {},
-		"families": PackedStringArray(),
+		"families": PackedStringArray(), "notes": PackedStringArray(),
 	}
 	var reader: ZIPReader = ZIPReader.new()
 	if reader.open(archive_path) != OK:
 		result["error"] = "That file could not be opened as a project archive."
 		return result
+	# A packed array read back out of a Dictionary is a COPY, so both of these are collected in locals
+	# and put back once. Appending through `result[...]` would append to a copy and lose every entry.
+	var families: PackedStringArray = PackedStringArray()
+	var notes: PackedStringArray = PackedStringArray()
 	for entry: String in reader.get_files():
 		var text: String = reader.read_file(entry).get_string_from_utf8()
-		var parsed: Variant = JSON.parse_string(text)
+		# Parsed through an instance rather than JSON.parse_string, which pushes an engine error for
+		# every member that is not JSON - and a project archive is mostly images and fonts. A member
+		# that fails here is REPORTED below; it is not the engine log's business.
+		var json: JSON = JSON.new()
+		var parsed: Variant = null if json.parse(text) != OK else json.data
 		if not (parsed is Dictionary):
+			# A zip may legitimately carry members that are not project data at all (images, fonts,
+			# the export's own bookkeeping). Only a member that SHOULD have been readable is worth a
+			# line, so the reader is told about a broken sheet and not about every icon.
+			if _is_project_data_member(entry):
+				var reason: String = "is not written as JSON" if parsed == null else "is not a JSON object"
+				notes.append("%s %s, so it was skipped." % [entry, reason])
 			continue
 		var data: Dictionary = parsed as Dictionary
 		if entry.begins_with(SHEETS_DIR) and entry.ends_with(".json"):
@@ -63,15 +80,28 @@ static func read_project(archive_path: String) -> Dictionary:
 			var object_name: String = str(data.get("name", entry.get_file().get_basename()))
 			(result["objects"] as Dictionary)[object_name] = object_kind_for_plugin(str(data.get("plugin-id", "")))
 		elif entry.begins_with(FAMILIES_DIR) and entry.ends_with(".json"):
-			(result["families"] as PackedStringArray).append(str(data.get("name", entry.get_file().get_basename())))
+			families.append(str(data.get("name", entry.get_file().get_basename())))
 		elif data.has("projectFormatVersion") or entry.ends_with(".c3proj"):
 			result["project_name"] = str(data.get("name", ""))
 	reader.close()
+	result["families"] = families
+	result["notes"] = notes
 	if (result["sheets"] as Dictionary).is_empty():
 		result["error"] = "No event sheets were found in that archive."
 		return result
 	result["ok"] = true
 	return result
+
+
+## Whether a zip member is one the reader expected to BE project data - a sheet, an object type, a
+## family, or the project file itself. Anything else in the archive is not this reader's business and
+## is passed over without a word.
+static func _is_project_data_member(entry: String) -> bool:
+	if entry.ends_with(".c3proj"):
+		return true
+	if not entry.ends_with(".json"):
+		return false
+	return entry.begins_with(SHEETS_DIR) or entry.begins_with(OBJECTS_DIR) or entry.begins_with(FAMILIES_DIR)
 
 
 ## Reads one exported event sheet file. Returns {"ok": bool, "error": String, "sheet": Dictionary}.

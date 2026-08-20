@@ -31,6 +31,10 @@ var _project_objects: Dictionary = {}
 var _mapping_fields: Dictionary = {}
 var _imported: Dictionary = {}
 
+## What the archive reader could not use. Held apart from the per-sheet report because it is a fact
+## about the WHOLE file, and re-stated on every re-import so the reader never loses sight of it.
+var _project_notes: PackedStringArray = PackedStringArray()
+
 
 func init(dock: Control) -> void:
 	_dock = dock
@@ -128,6 +132,7 @@ func load_source(path: String) -> String:
 	_source_edit.text = path
 	_sheets = {}
 	_project_objects = {}
+	_project_notes = PackedStringArray()
 	_sheet_picker.clear()
 	if path.strip_edges().is_empty():
 		_refresh()
@@ -141,6 +146,7 @@ func load_source(path: String) -> String:
 		_sheets[single_name] = single["sheet"]
 	else:
 		var project: Dictionary = EventSheetForeignImporter.read_project(path)
+		_project_notes = project.get("notes", PackedStringArray()) as PackedStringArray
 		if not bool(project["ok"]):
 			_refresh(str(project["error"]))
 			return str(project["error"])
@@ -185,6 +191,13 @@ func refresh_import() -> void:
 		return
 	_rebuild_mapping_table(json)
 	_imported = EventSheetForeignImporter.import_sheet(json, object_map())
+	# import_sheet builds a fresh report every time, so the archive's own notes are added once per
+	# import and never accumulate. They lead, because a member that never arrived explains a sheet
+	# that looks thinner than the project it came from.
+	var report: Dictionary = _imported["report"] as Dictionary
+	var notes: Array = report["notes"] as Array
+	for index: int in _project_notes.size():
+		notes.insert(index, _project_notes[index])
 	_refresh()
 
 

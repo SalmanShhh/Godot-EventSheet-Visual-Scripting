@@ -60,6 +60,7 @@ static func run() -> bool:
 
 	all_passed = _roundtrip(sheet) and all_passed
 	all_passed = _wizard() and all_passed
+	all_passed = _archive_members() and all_passed
 	all_passed = _vocabulary_is_real() and all_passed
 	all_passed = _expressions() and all_passed
 	return all_passed
@@ -100,6 +101,57 @@ static func _wizard() -> bool:
 		wizard.load_source("res://tests/fixtures/nothing_here.json"), "That file does not exist.") and passed
 	host.free()
 	return passed
+
+
+## A project archive says what it could not use. A member that should have been project data and was
+## not readable is NAMED - the alternative is a sheet that quietly arrives short of the project it
+## came from - while a member that was never this reader's business passes without a word.
+static func _archive_members() -> bool:
+	var passed: bool = true
+	var path: String = "user://foreign_import_archive_%d.zip" % OS.get_process_id()
+	var packer: ZIPPacker = ZIPPacker.new()
+	if packer.open(path) != OK:
+		return _check("the test archive is written", "could not open", path)
+	_pack(packer, "project.json", "{\"name\": \"Two Sheets\", \"projectFormatVersion\": 1}")
+	_pack(packer, "eventSheets/Level1.json", "{\"name\": \"Level1\", \"events\": []}")
+	_pack(packer, "eventSheets/Level2.json", "{\"name\": \"Level2\", events }")
+	_pack(packer, "objectTypes/Player.json", "[\"not an object\"]")
+	_pack(packer, "families/Enemies.json", "{\"name\": \"Enemies\"}")
+	_pack(packer, "images/player.png", "not json and not ours")
+	packer.close()
+
+	var project: Dictionary = EventSheetForeignImporter.read_project(path)
+	passed = _check("the readable sheets still come across", str((project["sheets"] as Dictionary).keys()),
+		"[\"Level1\"]") and passed
+	passed = _check("the project still names itself", str(project["project_name"]), "Two Sheets") and passed
+	passed = _check("the families the archive lists survive the read",
+		str(project["families"] as PackedStringArray), "[\"Enemies\"]") and passed
+	passed = _check("the archive read succeeds on the half it could read", project["ok"], true) and passed
+	passed = _check("every member it could not use is named",
+		"\n".join(project["notes"] as PackedStringArray),
+		"eventSheets/Level2.json is not written as JSON, so it was skipped.\n"
+		+ "objectTypes/Player.json is not a JSON object, so it was skipped.") and passed
+
+	# And the reader sees it: the archive's own notes lead the report the wizard prints, so a sheet
+	# that arrives thinner than the project it came from is explained on the same screen.
+	var host: Control = Control.new()
+	var wizard: EventSheetImportSheetWizard = EventSheetImportSheetWizard.new()
+	wizard.init(host)
+	wizard.open()
+	passed = _check("the wizard reads the archive", wizard.load_source(path), "") and passed
+	passed = _check("the wizard's report carries the skipped member",
+		wizard.report_text().contains(
+			"Note: eventSheets/Level2.json is not written as JSON, so it was skipped."),
+		true) and passed
+	host.free()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	return passed
+
+
+static func _pack(packer: ZIPPacker, member: String, text: String) -> void:
+	packer.start_file(member)
+	packer.write_file(text.to_utf8_buffer())
+	packer.close_file()
 
 
 ## Every ace_id and every parameter id the map names is one the registry really ships. A renamed
