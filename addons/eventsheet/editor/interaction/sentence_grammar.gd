@@ -11270,6 +11270,17 @@ static func _direction_target_of(text: String, context: Dictionary, from_object:
 static func _cosine_angle_degrees(text: String) -> String:
 	var call: Dictionary = call_parts(text.strip_edges())
 	if call.is_empty() or str(call.get("method", "")) != "cos":
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1:
+		return ""
+	return _angle_degrees(args[0])
+
+
+## X3. `to_local(enemy.global_position).z > 0` - which side of an object something is on, said the way
+## a reader would say it. The object's own axes decide: z is behind and in front, x is right and left.
+
+
 # ── X2 / X20 / X30: the cursor's ray, and how far things are ON THE CANVAS ───────────────────────
 #
 # Three shapes that every 3D game writes and no sheet had words for:
