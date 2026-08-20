@@ -56,19 +56,12 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	"other": 30,
 }
 
-## The files that do NOT round-trip byte-exact today, with what is wrong. Both were found BY this
-## gate, both are older than it, and neither is a reading bug:
-##
-##   render_looping_condition_preview.gd - the compiler adds a provider instance declaration the file
-##       never had, so the emitted text is three lines longer than the source.
-##   sentence_shapes_test.gd - a line holding only a tab comes back holding nothing.
-##
-## They are listed rather than skipped so the gate stays honest about the size of the exception, and
-## an entry is DELETED the day its cause is fixed - never added to make a red run green.
-const KNOWN_DRIFT: PackedStringArray = [
-	"res://tools/render_looping_condition_preview.gd",
-	"res://tests/sentence_shapes_test.gd",
-]
+## The files that do NOT round-trip byte-exact today, with what is wrong beside each. Empty: the two
+## drifts this gate found at birth (a provider declaration injected into a file whose STRING quoted
+## the member convention; a tab-only separator line swapped with the blank beside it) are fixed at
+## their roots, and opened_file_drift_regressions_test pins both shapes. An entry added here must
+## carry its cause and is DELETED the day that cause is fixed - never added to make a red run green.
+const KNOWN_DRIFT: PackedStringArray = []
 
 ## The two files under addons/ and tools/ that still put lines in a script block, with the count each
 ## one has today. Everything else in the editor's own source reaches zero.

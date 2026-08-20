@@ -35,8 +35,9 @@
   of a list, a bare call, a set to a bare function name. Measured today: 612 files, 610 at zero
   script blocks, 89% of 136,434 rows in the sheet's own words. **Tools ▸ Project Doctor ▸ plugin
   reading health** reports the same numbers per group, clickable into the worst file, and only while
-  the folder is on. Two pre-existing byte round-trip drifts were found by the new gate and are
-  listed in it with their cause rather than skipped.
+  the folder is on. Two pre-existing byte round-trip drifts were found by the new gate; both are
+  fixed at their roots (see Fixed below), the gate's exception list is empty, and it now enforces
+  the lossless contract on the whole corpus it samples.
 - **A contributor's door** (W24). The Start page gains a card - "This is the editor's own project -
   open its source as sheets" - in the plugin's repository only, and the Manual gains two tutorials:
   *Read the editor's code as events* and *Add a word to the vocabulary*. New guide:
@@ -73,6 +74,24 @@
   bundled, so no font licence lands in anyone's project. A chip is never caught in a rectangle
   smaller than a target, and the High Contrast preset now has a value for **every** theme token,
   with a test that says so the next time one is added.
+
+### Fixed - two ways an untouched opened file could come back changed
+
+- **A string that quoted the provider convention gained a real declaration.** The pass that declares
+  owned addon-provider instances (`var __eventsheet_provider_X := X.new()`) scanned every emitted
+  line for the member convention, including the inside of string literals - so opening a
+  hand-written file whose *string* merely spelled `__eventsheet_provider_StatForge.each_buff()` and
+  saving it untouched injected a declaration block the file never had, three lines longer every
+  save. The scan now blanks string contents before matching and skips any member the file already
+  declares itself, so an untouched round-trip never gains a line - while a sheet whose emitted code
+  genuinely uses an undeclared provider member still gets its declaration, exactly once.
+- **A tab-only separator line swapped places with the blank beside it.** The importer moves a
+  function block's trailing blank lines to whatever follows, and did it by popping them off the end
+  one at a time - which reverses the run. Every reversed line being empty hid it for a long time; a
+  whitespace-only line (a stray lone tab) between two functions came back one line lower than it was
+  written. The trim now moves the run as a slice in source order. Both shapes are pinned in
+  `tests/opened_file_drift_regressions_test.gd`, and `plugin_reads_itself_test`'s exception list is
+  empty - the byte round-trip gate holds for the whole corpus it samples.
 
 ### Added - an event sheet from another editor, imported honestly
 
