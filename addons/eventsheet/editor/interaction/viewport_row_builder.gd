@@ -6205,44 +6205,6 @@ func _hierarchy_flag_note(flags: Dictionary) -> String:
 	return " ".join(chips)
 
 
-		var line: String = _group_line_text(actions[index])
-		if line.is_empty():
-			index += 1
-			continue
-		var turn: Dictionary = EventSheetSentence.gyro_aim_turn_parts(line, sentence_context())
-		if not turn.is_empty() and index + 1 < actions.size():
-			var pitch: Dictionary = EventSheetSentence.gyro_aim_pitch_parts(
-				_group_line_text(actions[index + 1]), sentence_context(), str(turn.get("rate", "")))
-			if not pitch.is_empty():
-				leads[index] = {
-					"text": EventSheetL10n.translate("Aim by gyro"),
-					"note": EventSheetSentence.gyro_aim_note(),
-					"object": EventSheetSentence.script_object(sentence_context()),
-					"evidence": PackedStringArray([line, _group_line_text(actions[index + 1])]),
-					"line_count": 2,
-					"indices": [index, index + 1]
-				}
-				consumed[index + 1] = true
-				index += 2
-				continue
-		var single: Dictionary = EventSheetSentence.tilt_steer_parts(line, sentence_context())
-		var object_label: String = EventSheetSentence.script_object(sentence_context())
-		if single.is_empty():
-			single = EventSheetSentence.tilt_neutral_parts(line, sentence_context())
-			object_label = EventSheetSentence.OBJECT_SYSTEM
-		if not single.is_empty():
-			leads[index] = {
-				"text": str(single.get("text", "")),
-				"note": str(single.get("note", "")),
-				"object": object_label,
-				"evidence": PackedStringArray([line]),
-				"line_count": 1,
-				"indices": [index]
-			}
-		index += 1
-	return {"leads": leads, "consumed": consumed}
-
-
 ## X28. The input-window pair in one action lane. A flag set true and the deadline beside it are one
 ## thing that happened - a window opened - and the file's own facts have to agree that this is the
 ## window they describe before the two lines read as one row.
