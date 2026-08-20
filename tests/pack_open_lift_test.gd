@@ -17,7 +17,8 @@ const NO_VERB_PACKS: Array[String] = [
 	"ability_set_resource.gd", "encounter_resource.gd", "loot_loader_behavior.gd",
 	"loot_table_resource.gd", "price_table_resource.gd", "quest_resource.gd",
 	"random_table_resource.gd", "skin_catalog_loader_behavior.gd", "skin_catalog_resource.gd",
-	"stat_sheet_resource.gd", "storylet_resource.gd", "uhtn_plan_resource.gd",
+	"stat_sheet_resource.gd", "storylet_resource.gd", "touch_shape_library_resource.gd",
+	"uhtn_plan_resource.gd",
 ]
 ## Verbs the lifter still cannot reproduce byte-exactly (one function each - an async loop guard,
 ## an @ace_param header, two Line of Sight helpers, one Drawing Canvas verb). Each stays a raw block
