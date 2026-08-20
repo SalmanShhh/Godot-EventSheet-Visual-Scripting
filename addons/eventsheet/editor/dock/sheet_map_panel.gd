@@ -21,13 +21,6 @@ const HIT_TOLERANCE := 6.0
 ## position, not something a project commits.
 const LAYOUT_META := "sheet_map_layout"
 
-const COLOR_SHEET := Color("#7fb3d5")
-const COLOR_SCENE := Color("#e0b070")
-const COLOR_GLOBAL := Color("#c79bf0")
-const COLOR_EDGE := Color(1.0, 1.0, 1.0, 0.30)
-const COLOR_EDGE_SIGNAL := Color(0.98, 0.76, 0.36, 0.55)
-const COLOR_TEXT := Color("#dfe4ec")
-
 var _dock: Control = null
 
 var window: Window = null
@@ -134,6 +127,11 @@ func _canvas_extent() -> Vector2:
 
 
 func _draw_map() -> void:
+	var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+	# The map is a picture of sheets, so it sits on the sheet's own paper: without this the boxes
+	# float on the popup card's grey, and a pale theme's dark ink text would land on dark.
+	canvas.draw_rect(Rect2(Vector2.ZERO, canvas.size),
+		EventSheetActiveTheme.active().get_event_style().sheet_background_color, true)
 	var scale: float = EventSheetPalette.scaled_f(1.0)
 	var font: Font = canvas.get_theme_default_font()
 	var font_size: int = canvas.get_theme_default_font_size()
@@ -143,7 +141,8 @@ func _draw_map() -> void:
 			continue
 		var from_point: Vector2 = _anchor(str(edge["from"]), true) * scale
 		var to_point: Vector2 = _anchor(str(edge["to"]), false) * scale
-		var color: Color = COLOR_EDGE_SIGNAL if str(edge["kind"]) == EventSheetSheetMap.EDGE_SIGNALS else COLOR_EDGE
+		var color: Color = chrome.sheet_map_signal_edge_color \
+			if str(edge["kind"]) == EventSheetSheetMap.EDGE_SIGNALS else chrome.sheet_map_edge_color
 		canvas.draw_line(from_point, to_point, color, 1.0 * scale)
 	for entry: Variant in (found.get("nodes", []) as Array):
 		var node: Dictionary = entry
@@ -152,22 +151,22 @@ func _draw_map() -> void:
 			continue
 		var box: Rect2 = Rect2((positions[id] as Vector2) * scale,
 			Vector2(BOX_WIDTH, BOX_HEIGHT) * scale)
-		var tint: Color = _kind_color(str(node.get("kind", "")))
+		var tint: Color = _kind_color(str(node.get("kind", "")), chrome)
 		canvas.draw_rect(box, Color(tint.r, tint.g, tint.b, 0.16), true)
 		canvas.draw_rect(box, tint, false, 1.0 * scale)
 		if font != null:
 			canvas.draw_string(font, box.position + Vector2(8.0, BOX_HEIGHT * 0.68) * scale,
 				str(node.get("label", "")), HORIZONTAL_ALIGNMENT_LEFT,
-				box.size.x - 12.0 * scale, font_size, COLOR_TEXT)
+				box.size.x - 12.0 * scale, font_size, chrome.sheet_map_text_color)
 
 
-static func _kind_color(kind: String) -> Color:
+static func _kind_color(kind: String, chrome: EventSheetChromeStyle) -> Color:
 	match kind:
 		EventSheetSheetMap.NODE_SCENE:
-			return COLOR_SCENE
+			return chrome.sheet_map_scene_color
 		EventSheetSheetMap.NODE_GLOBAL:
-			return COLOR_GLOBAL
-	return COLOR_SHEET
+			return chrome.sheet_map_global_color
+	return chrome.sheet_map_sheet_color
 
 
 ## Where a line leaves or lands on a box: the right edge of the one it comes from, the left edge of

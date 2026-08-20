@@ -40,6 +40,9 @@ const LINTED_PAINTERS := [
 	"res://addons/eventsheet/editor/event_row_renderer.gd",
 	"res://addons/eventsheet/editor/interaction/viewport_row_builder.gd",
 	"res://addons/eventsheet/editor/objects_panel.gd",
+	"res://addons/eventsheet/editor/dock/sheet_map_panel.gd",
+	"res://addons/eventsheet/editor/drawer_widgets.gd",
+	"res://addons/eventsheet/editor/behaviour_anatomy_panel.gd",
 ]
 
 ## What each linted painter is still allowed to spell literally, and why. Every entry is a colour
@@ -58,6 +61,13 @@ const LINT_ALLOWANCES := {
 		"folder_tone", "Color(0.0, 0.0, 0.0, 0.0)", "Color(0, 0, 0, 0)", "Color.WHITE",
 	],
 	"objects_panel.gd": [],
+	"drawer_widgets.gd": [
+		# Parsing a colour value out of the user's own table cell is not a paint (the WHITE is only
+		# the parser's fallback for an unreadable string), and the swatch row's starting VALUE is the
+		# colour being edited, not a colour the editor chose to draw with.
+		"Color.from_string", "Color.WHITE",
+	],
+	"behaviour_anatomy_panel.gd": [],
 }
 
 
@@ -108,6 +118,16 @@ static func run() -> bool:
 		"minimap_event_color", "minimap_disabled_color",
 		"minimap_bookmark_color", "minimap_finding_color",
 		"minimap_band_color", "minimap_band_text_color",
+		"sheet_map_sheet_color", "sheet_map_scene_color", "sheet_map_global_color",
+		"sheet_map_edge_color", "sheet_map_signal_edge_color", "sheet_map_text_color",
+		"drawer_accent_color", "drawer_accent_bright_color",
+		"drawer_ink_color", "drawer_well_color",
+		"drawer_handle_color", "drawer_handle_border_color",
+		"drawer_info_background_color", "drawer_info_border_color", "drawer_info_text_color",
+		"drawer_header_text_color", "drawer_required_color", "drawer_validate_color",
+		"drawer_checker_dark_color", "drawer_checker_light_color",
+		"anatomy_trigger_pill_background_color", "anatomy_trigger_pill_foreground_color",
+		"anatomy_knob_pill_foreground_color",
 	]) and ok
 	ok = _check("Manual token names", _token_names(style.get_manual_style()), [
 		"page_background_color", "heading_color", "page_muted_text_color", "search_hit_color",

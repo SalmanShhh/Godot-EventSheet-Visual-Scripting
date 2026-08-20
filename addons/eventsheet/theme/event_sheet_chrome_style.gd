@@ -70,3 +70,52 @@ extends Resource
 ## The band a group paints down the column, and the name written on it.
 @export var minimap_band_color: Color = Color(1.0, 1.0, 1.0, 0.05)
 @export var minimap_band_text_color: Color = Color(1.0, 1.0, 1.0, 0.55)
+
+# ── The Sheet map ─────────────────────────────────────────────────────────────────────────────
+## The Sheet map window's boxes, one tint per kind: sheets, the scenes that carry them, and the
+## globals they call. Each box wears its tint as a border and a faint fill of the same colour.
+@export var sheet_map_sheet_color: Color = Color("#7fb3d5")
+@export var sheet_map_scene_color: Color = Color("#e0b070")
+@export var sheet_map_global_color: Color = Color("#c79bf0")
+## The lines between the boxes: the quiet one for includes, calls and layout changes, and the warm
+## one for a signal connection, so the wiring that fires at runtime stands out from the plumbing.
+@export var sheet_map_edge_color: Color = Color(1.0, 1.0, 1.0, 0.30)
+@export var sheet_map_signal_edge_color: Color = Color(0.98, 0.76, 0.36, 0.55)
+## The name written inside every box.
+@export var sheet_map_text_color: Color = Color("#dfe4ec")
+
+# ── The Inspector drawers ─────────────────────────────────────────────────────────────────────
+## The custom drawers a variable's decor comments put in the Inspector (progress bars, range
+## sliders, direction dials, previews). One ACCENT fills everything interactive; the BRIGHT accent
+## is its lit end - a slider's vector line's handle, a curve's plotted line. The INK is the quiet
+## base every hairline, guide and value label mixes its own alpha from, and the WELL is the sunken
+## plate a bar or preview sits in.
+@export var drawer_accent_color: Color = Color(0.36, 0.66, 1.0, 0.92)
+@export var drawer_accent_bright_color: Color = Color(0.45, 0.74, 1.0, 1.0)
+@export var drawer_ink_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+@export var drawer_well_color: Color = Color(0.0, 0.0, 0.0, 0.28)
+## The min-max range slider's two round handles, and the line around each.
+@export var drawer_handle_color: Color = Color(0.86, 0.9, 0.97, 1.0)
+@export var drawer_handle_border_color: Color = Color(0.2, 0.28, 0.4, 1.0)
+## The quiet note panel an `@inspector_info` comment builds, and the words on it.
+@export var drawer_info_background_color: Color = Color(0.25, 0.42, 0.6, 0.22)
+@export var drawer_info_border_color: Color = Color(0.36, 0.66, 1.0, 0.5)
+@export var drawer_info_text_color: Color = Color(0.86, 0.9, 0.96, 1.0)
+## An `@inspector_header` section label that named no accent of its own.
+@export var drawer_header_text_color: Color = Color(0.85, 0.88, 0.95, 1.0)
+## The ⚠ badges: "assign a value" while a required property is empty, and the message a sheet's own
+## validator function returns while a value is out of bounds.
+@export var drawer_required_color: Color = Color("#e06666")
+@export var drawer_validate_color: Color = Color("#f0883e")
+## The checkerboard behind a texture thumbnail, so a transparent sprite still reads.
+@export var drawer_checker_dark_color: Color = Color(0.20, 0.20, 0.20, 1.0)
+@export var drawer_checker_light_color: Color = Color(0.28, 0.28, 0.28, 1.0)
+
+# ── The Anatomy rail ──────────────────────────────────────────────────────────────────────────
+## The pills down the Anatomy rail take the sheet's own ACE badge pairs and plain chip pair, so the
+## rail and the canvas speak one colour language. These three are the pills the sheet has no token
+## for: the ➜ trigger pill (also worn by ⚒ Editor Tools - verbs the editor calls, like a trigger),
+## and the @ ink on a designer knob's chip.
+@export var anatomy_trigger_pill_background_color: Color = Color("#233b2b")
+@export var anatomy_trigger_pill_foreground_color: Color = Color("#7fd494")
+@export var anatomy_knob_pill_foreground_color: Color = Color("#9cc4ef")

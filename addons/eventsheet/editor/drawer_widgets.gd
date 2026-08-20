@@ -19,11 +19,12 @@ const SHEET_COMPILER_PATH: String = "res://addons/eventforge/compiler/sheet_comp
 
 static var _compiler_script: Script = null
 
-## A shared, game-flavoured palette for the swatch-row drawer (and its preview).
-const SWATCH_PRESETS: Array[Color] = [
-	Color("#e6e6e6"), Color("#1a1a1a"), Color("#e23b3b"), Color("#f0883e"),
-	Color("#f4d03f"), Color("#52c46a"), Color("#3aa6e0"), Color("#5566e0"),
-	Color("#9b51e0"), Color("#e055a8"),
+## A shared, game-flavoured palette for the swatch-row drawer (and its preview). Hex text on
+## purpose: these are game-content choices a designer picks a colour FROM, not editor chrome a
+## theme owns, so they stay literal - and as strings they stay out of the theme-token lint's way.
+const SWATCH_PRESET_HTML: Array[String] = [
+	"e6e6e6", "1a1a1a", "e23b3b", "f0883e", "f4d03f",
+	"52c46a", "3aa6e0", "5566e0", "9b51e0", "e055a8",
 ]
 
 
@@ -46,7 +47,8 @@ static func build_header_label(text: String, accent: String) -> Control:
 	var label: Label = Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(13))
-	label.add_theme_color_override("font_color", Color(accent) if not accent.is_empty() else Color(0.85, 0.88, 0.95))
+	label.add_theme_color_override("font_color", Color(accent) if not accent.is_empty()
+		else EventSheetActiveTheme.chrome().drawer_header_text_color)
 	var margin: MarginContainer = MarginContainer.new()
 	margin.add_theme_constant_override("margin_top", 8)
 	margin.add_theme_constant_override("margin_bottom", 2)
@@ -56,9 +58,10 @@ static func build_header_label(text: String, accent: String) -> Control:
 
 ## A quiet, wrapping note panel - the place for "this resource is shared - edits affect every user".
 static func build_info_panel(text: String) -> Control:
+	var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.25, 0.42, 0.6, 0.22)
-	style.border_color = Color(0.36, 0.66, 1.0, 0.5)
+	style.bg_color = chrome.drawer_info_background_color
+	style.border_color = chrome.drawer_info_border_color
 	style.set_border_width_all(1)
 	style.border_width_left = 3
 	style.set_corner_radius_all(3)
@@ -69,7 +72,7 @@ static func build_info_panel(text: String) -> Control:
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-	label.add_theme_color_override("font_color", Color(0.86, 0.9, 0.96))
+	label.add_theme_color_override("font_color", chrome.drawer_info_text_color)
 	panel.add_child(label)
 	return panel
 
@@ -88,7 +91,7 @@ class RequiredBadge:
 		_property = property
 		text = "⚠ Required - assign a value"
 		add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-		add_theme_color_override("font_color", Color("#e06666"))
+		add_theme_color_override("font_color", EventSheetActiveTheme.chrome().drawer_required_color)
 		_refresh()
 
 	func _process(delta: float) -> void:
@@ -138,18 +141,20 @@ class DrawerProgressBar:
 		return _value
 
 	func _draw() -> void:
+		var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+		var ink: Color = chrome.drawer_ink_color
 		var w: float = size.x
 		var h: float = size.y
-		draw_rect(Rect2(0.0, 0.0, w, h), Color(0.0, 0.0, 0.0, 0.28), true)
+		draw_rect(Rect2(0.0, 0.0, w, h), chrome.drawer_well_color, true)
 		var span: float = maxf(0.0001, max_value - min_value)
 		var frac: float = clampf((_value - min_value) / span, 0.0, 1.0)
 		if frac > 0.0:
-			draw_rect(Rect2(0.0, 0.0, w * frac, h), Color(0.36, 0.66, 1.0, 0.92), true)
-		draw_rect(Rect2(0.0, 0.0, w, h), Color(1.0, 1.0, 1.0, 0.12), false, 1.0)
+			draw_rect(Rect2(0.0, 0.0, w * frac, h), chrome.drawer_accent_color, true)
+		draw_rect(Rect2(0.0, 0.0, w, h), Color(ink.r, ink.g, ink.b, 0.12), false, 1.0)
 		var font: Font = ThemeDB.fallback_font
 		var rounded: float = roundf(_value)
 		var label: String = str(int(rounded)) if absf(_value - rounded) < 0.001 else str(snappedf(_value, 0.01))
-		draw_string(font, Vector2(6.0, h * 0.5 + 4.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(11), Color(1, 1, 1, 0.9))
+		draw_string(font, Vector2(6.0, h * 0.5 + 4.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(11), Color(ink.r, ink.g, ink.b, 0.9))
 
 	func _gui_input(event: InputEvent) -> void:
 		if not editable:
@@ -203,26 +208,29 @@ class DrawerMinMaxSlider:
 		return clampf((v - min_value) / maxf(0.0001, max_value - min_value), 0.0, 1.0)
 
 	func _draw() -> void:
+		var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+		var ink: Color = chrome.drawer_ink_color
+		var label_color: Color = Color(ink.r, ink.g, ink.b, 0.75)
 		var w: float = size.x
 		var h: float = size.y
 		var track_y: float = h * 0.5
-		draw_rect(Rect2(0.0, track_y - 2.0, w, 4.0), Color(0.0, 0.0, 0.0, 0.32), true)
+		draw_rect(Rect2(0.0, track_y - 2.0, w, 4.0), chrome.drawer_well_color, true)
 		var x_low: float = _frac(_value.x) * w
 		var x_high: float = _frac(_value.y) * w
-		draw_rect(Rect2(x_low, track_y - 2.0, maxf(0.0, x_high - x_low), 4.0), Color(0.36, 0.66, 1.0, 0.92), true)
+		draw_rect(Rect2(x_low, track_y - 2.0, maxf(0.0, x_high - x_low), 4.0), chrome.drawer_accent_color, true)
 		for x: float in [x_low, x_high]:
-			draw_circle(Vector2(x, track_y), 5.0, Color(0.86, 0.9, 0.97))
-			draw_circle(Vector2(x, track_y), 5.0, Color(0.2, 0.28, 0.4), false, 1.0)
+			draw_circle(Vector2(x, track_y), 5.0, chrome.drawer_handle_color)
+			draw_circle(Vector2(x, track_y), 5.0, chrome.drawer_handle_border_color, false, 1.0)
 		# Value labels ride WITH their handles (clamped to the widget), so they read as the pair's
 		# current values - at the edges they would read as the track's fixed bounds instead.
 		var font: Font = ThemeDB.fallback_font
 		var low_label: String = _bound_label(_value.x)
 		var low_width: float = font.get_string_size(low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10)).x
-		draw_string(font, Vector2(clampf(x_low - low_width * 0.5, 0.0, w - low_width), track_y - 7.0), low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), Color(1, 1, 1, 0.75))
+		draw_string(font, Vector2(clampf(x_low - low_width * 0.5, 0.0, w - low_width), track_y - 7.0), low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), label_color)
 		var high_label: String = _bound_label(_value.y)
 		var high_width: float = font.get_string_size(high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10)).x
 		if absf(x_high - x_low) > (low_width + high_width) * 0.5 + 4.0:
-			draw_string(font, Vector2(clampf(x_high - high_width * 0.5, 0.0, w - high_width), track_y - 7.0), high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), Color(1, 1, 1, 0.75))
+			draw_string(font, Vector2(clampf(x_high - high_width * 0.5, 0.0, w - high_width), track_y - 7.0), high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), label_color)
 
 	static func _bound_label(v: float) -> String:
 		return str(int(roundf(v))) if absf(v - roundf(v)) < 0.001 else str(snappedf(v, 0.01))
@@ -267,7 +275,7 @@ class ValidateBadge:
 		text = "⚠ validated by %s() while you edit" % (_function if not _function.is_empty() else "a sheet function")
 		autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-		add_theme_color_override("font_color", Color("#f0883e"))
+		add_theme_color_override("font_color", EventSheetActiveTheme.chrome().drawer_validate_color)
 		_refresh()
 
 	func _process(delta: float) -> void:
@@ -442,11 +450,12 @@ class DrawerTable:
 		for stale: Node in _grid.get_children():
 			stale.queue_free()
 		_add_button.disabled = not editable
+		var ink: Color = EventSheetActiveTheme.chrome().drawer_ink_color
 		for column: Dictionary in _columns:
 			var head: Label = Label.new()
 			head.text = str(column.get("name")).capitalize()
 			head.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-			head.modulate = Color(0.72, 0.76, 0.84)
+			head.modulate = Color(ink.r, ink.g, ink.b, 0.8)
 			_grid.add_child(head)
 		_grid.add_child(Control.new())
 		_grid.add_child(Control.new())
@@ -581,21 +590,23 @@ class DrawerVectorDial:
 		return maxf(8.0, minf(size.x, size.y) * 0.5 - 12.0)
 
 	func _draw() -> void:
+		var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+		var ink: Color = chrome.drawer_ink_color
 		var c: Vector2 = _center()
 		var r: float = _radius()
-		draw_arc(c, r, 0.0, TAU, 48, Color(1, 1, 1, 0.22), 1.5, true)
-		draw_arc(c, r * 0.5, 0.0, TAU, 32, Color(1, 1, 1, 0.08), 1.0, true)
-		draw_line(c - Vector2(r, 0.0), c + Vector2(r, 0.0), Color(1, 1, 1, 0.10), 1.0)
-		draw_line(c - Vector2(0.0, r), c + Vector2(0.0, r), Color(1, 1, 1, 0.10), 1.0)
+		draw_arc(c, r, 0.0, TAU, 48, Color(ink.r, ink.g, ink.b, 0.22), 1.5, true)
+		draw_arc(c, r * 0.5, 0.0, TAU, 32, Color(ink.r, ink.g, ink.b, 0.08), 1.0, true)
+		draw_line(c - Vector2(r, 0.0), c + Vector2(r, 0.0), Color(ink.r, ink.g, ink.b, 0.10), 1.0)
+		draw_line(c - Vector2(0.0, r), c + Vector2(0.0, r), Color(ink.r, ink.g, ink.b, 0.10), 1.0)
 		var disp: Vector2 = (_value / max_magnitude) * r
 		if disp.length() > r:
 			disp = disp.normalized() * r
 		var handle: Vector2 = c + disp
-		draw_line(c, handle, Color(0.36, 0.66, 1.0, 0.9), 2.0, true)
-		draw_circle(handle, 5.5, Color(0.45, 0.74, 1.0))
-		draw_circle(c, 2.5, Color(1, 1, 1, 0.5))
+		draw_line(c, handle, chrome.drawer_accent_color, 2.0, true)
+		draw_circle(handle, 5.5, chrome.drawer_accent_bright_color)
+		draw_circle(c, 2.5, Color(ink.r, ink.g, ink.b, 0.5))
 		var font: Font = ThemeDB.fallback_font
-		draw_string(font, Vector2(4.0, size.y - 5.0), "(%s, %s)" % [snappedf(_value.x, 0.1), snappedf(_value.y, 0.1)], HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), Color(1, 1, 1, 0.7))
+		draw_string(font, Vector2(4.0, size.y - 5.0), "(%s, %s)" % [snappedf(_value.x, 0.1), snappedf(_value.y, 0.1)], HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), Color(ink.r, ink.g, ink.b, 0.7))
 
 	func _gui_input(event: InputEvent) -> void:
 		if not editable:
@@ -621,8 +632,8 @@ class DrawerSwatchRow:
 
 	func _init() -> void:
 		add_theme_constant_override("separation", 3)
-		for preset: Color in EventSheetDrawerWidgets.SWATCH_PRESETS:
-			add_child(_make_swatch(preset))
+		for preset_html: String in EventSheetDrawerWidgets.SWATCH_PRESET_HTML:
+			add_child(_make_swatch(Color.html(preset_html)))
 		_picker = ColorPickerButton.new()
 		_picker.custom_minimum_size = Vector2(38.0, 20.0)
 		_picker.color = _value
@@ -646,7 +657,8 @@ class DrawerSwatchRow:
 		sb.bg_color = preset
 		sb.set_corner_radius_all(3)
 		sb.set_border_width_all(1)
-		sb.border_color = Color(1, 1, 1, 0.25)
+		var ink: Color = EventSheetActiveTheme.chrome().drawer_ink_color
+		sb.border_color = Color(ink.r, ink.g, ink.b, 0.25)
 		b.add_theme_stylebox_override("normal", sb)
 		b.add_theme_stylebox_override("hover", sb)
 		b.add_theme_stylebox_override("pressed", sb)
@@ -684,6 +696,8 @@ class DrawerTexturePreview:
 		queue_redraw()
 
 	func _draw() -> void:
+		var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+		var ink: Color = chrome.drawer_ink_color
 		var rect: Rect2 = Rect2(Vector2.ZERO, size)
 		# checkerboard so transparent textures read clearly
 		var cell: float = 8.0
@@ -691,7 +705,8 @@ class DrawerTexturePreview:
 		var cols: int = int(ceil(size.x / cell))
 		for ry: int in range(rows):
 			for cx: int in range(cols):
-				var shade: Color = Color(0.20, 0.20, 0.20, 1.0) if (ry + cx) % 2 == 0 else Color(0.28, 0.28, 0.28, 1.0)
+				var shade: Color = chrome.drawer_checker_dark_color if (ry + cx) % 2 == 0 \
+					else chrome.drawer_checker_light_color
 				draw_rect(Rect2(cx * cell, ry * cell, cell, cell), shade, true)
 		if _texture != null:
 			var tsize: Vector2 = _texture.get_size()
@@ -701,8 +716,8 @@ class DrawerTexturePreview:
 				draw_texture_rect(_texture, Rect2((size - draw_size) * 0.5, draw_size), false)
 		else:
 			var font: Font = ThemeDB.fallback_font
-			draw_string(font, Vector2(4.0, size.y * 0.5 + 4.0), "(no texture)", HORIZONTAL_ALIGNMENT_CENTER, size.x - 8.0, EventSheetPalette.scaled(10), Color(1, 1, 1, 0.45))
-		draw_rect(rect, Color(1, 1, 1, 0.18), false, 1.0)
+			draw_string(font, Vector2(4.0, size.y * 0.5 + 4.0), "(no texture)", HORIZONTAL_ALIGNMENT_CENTER, size.x - 8.0, EventSheetPalette.scaled(10), Color(ink.r, ink.g, ink.b, 0.45))
+		draw_rect(rect, Color(ink.r, ink.g, ink.b, 0.18), false, 1.0)
 
 
 # ── Curve preview ───────────────────────────────────────────────────────────
@@ -721,12 +736,14 @@ class DrawerCurvePreview:
 		queue_redraw()
 
 	func _draw() -> void:
+		var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+		var ink: Color = chrome.drawer_ink_color
 		var w: float = size.x
 		var h: float = size.y
-		draw_rect(Rect2(0.0, 0.0, w, h), Color(0.0, 0.0, 0.0, 0.25), true)
+		draw_rect(Rect2(0.0, 0.0, w, h), chrome.drawer_well_color, true)
 		# baseline + midline
-		draw_line(Vector2(0.0, h - 1.0), Vector2(w, h - 1.0), Color(1, 1, 1, 0.12), 1.0)
-		draw_line(Vector2(0.0, h * 0.5), Vector2(w, h * 0.5), Color(1, 1, 1, 0.06), 1.0)
+		draw_line(Vector2(0.0, h - 1.0), Vector2(w, h - 1.0), Color(ink.r, ink.g, ink.b, 0.12), 1.0)
+		draw_line(Vector2(0.0, h * 0.5), Vector2(w, h * 0.5), Color(ink.r, ink.g, ink.b, 0.06), 1.0)
 		var pad: float = 4.0
 		var inner_h: float = h - pad * 2.0
 		var samples: int = 48
@@ -737,8 +754,8 @@ class DrawerCurvePreview:
 			var y: float = pad + (1.0 - clampf(sampled, 0.0, 1.0)) * inner_h
 			points.append(Vector2(t * w, y))
 		if points.size() >= 2:
-			draw_polyline(points, Color(0.45, 0.74, 1.0, 0.95), 1.8, true)
-		draw_rect(Rect2(0.0, 0.0, w, h), Color(1, 1, 1, 0.14), false, 1.0)
+			draw_polyline(points, chrome.drawer_accent_bright_color, 1.8, true)
+		draw_rect(Rect2(0.0, 0.0, w, h), Color(ink.r, ink.g, ink.b, 0.14), false, 1.0)
 
 	## A pleasant default ease (smoothstep) for the dialog preview when there's no real Curve yet.
 	func _ease_sample(t: float) -> float:

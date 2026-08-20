@@ -122,6 +122,39 @@ static func fill_derived_tokens(style: EventSheetEditorStyle) -> EventSheetEdito
 	chrome.minimap_band_color = Color(ink.r, ink.g, ink.b, 0.05)
 	chrome.minimap_band_text_color = Color(ink.r, ink.g, ink.b, 0.55)
 
+	# ── The Sheet map: the minimap's own reading of the palette, one tint per kind of box ──
+	var warm: Color = _warning_for(background)
+	chrome.sheet_map_sheet_color = event_style.column_header_conditions_color
+	chrome.sheet_map_scene_color = warm
+	chrome.sheet_map_global_color = event_style.column_header_actions_color
+	chrome.sheet_map_edge_color = Color(ink.r, ink.g, ink.b, 0.30)
+	chrome.sheet_map_signal_edge_color = Color(warm.r, warm.g, warm.b, 0.55)
+	chrome.sheet_map_text_color = background.lerp(ink, 0.92)
+
+	# ── The Inspector drawers: the theme's cool accent fills, its ink draws the quiet parts ──
+	var cool: Color = event_style.column_header_conditions_color
+	chrome.drawer_accent_color = Color(cool.r, cool.g, cool.b, 0.92)
+	chrome.drawer_accent_bright_color = cool.lightened(0.15 if not pale else 0.0)
+	chrome.drawer_ink_color = ink
+	chrome.drawer_well_color = Color(0.0, 0.0, 0.0, 0.28)
+	chrome.drawer_handle_color = background.lerp(ink, 0.95)
+	chrome.drawer_handle_border_color = background.lerp(ink, 0.35)
+	chrome.drawer_info_background_color = Color(cool.r, cool.g, cool.b, 0.22)
+	chrome.drawer_info_border_color = Color(cool.r, cool.g, cool.b, 0.5)
+	chrome.drawer_info_text_color = reading.primary_text_color
+	chrome.drawer_header_text_color = reading.primary_text_color
+	chrome.drawer_required_color = flag_red
+	chrome.drawer_validate_color = warm
+	chrome.drawer_checker_dark_color = background.lerp(ink, 0.06)
+	chrome.drawer_checker_light_color = background.lerp(ink, 0.13)
+
+	# ── The Anatomy rail: the trigger pill wears the theme's own trigger badge hue ──
+	var trigger_hue: Color = event_style.trigger_badge_background_color
+	chrome.anatomy_trigger_pill_background_color = background.lerp(trigger_hue, 0.32)
+	chrome.anatomy_trigger_pill_foreground_color = trigger_hue.lightened(0.45) if not pale \
+		else trigger_hue.darkened(0.25)
+	chrome.anatomy_knob_pill_foreground_color = background.lerp(cool, 0.85)
+
 	# ── The Manual: headings and quiet words follow the theme; the rest keeps no opinion, so a
 	# reader who never opens the Theme Editor still gets help that matches their editor ──
 	manual.heading_color = reading.primary_text_color

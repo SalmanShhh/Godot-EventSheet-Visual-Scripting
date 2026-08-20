@@ -17,6 +17,34 @@
   lifted events do not reproduce its exact source re-anchors as a verbatim block on the spot,
   instead of surfacing only at the whole-file verify and reverting every other function with it.
 
+### Changed - the Inspector drawers and the Anatomy rail dress in the theme
+
+- **The custom Inspector drawers now paint from theme tokens** instead of some forty literal
+  colours: the progress bar, the min-max range slider, the direction dial, the curve and texture
+  previews, the table grid's headings, the info panel and the ⚠ required / validate badges all
+  read fourteen new `drawer_*` chrome tokens (accent, bright accent, ink, well, handles, info
+  panel, badges, checkerboard) through the active theme, so a preset switch - or High Contrast -
+  restyles them. The swatch row's ten game-flavoured presets stay literal on purpose: they are
+  content a designer picks a colour from, not editor chrome.
+- **The Anatomy rail speaks the sheet's own colour language.** Its A / ? / ƒ pills now take the
+  theme's ACE badge pairs, its neutral pills the reading marks' plain chip pair, its entry text the
+  reading text tones and its hover the Object bar's wash; three new chrome tokens
+  (`anatomy_trigger_pill_background_color` / `..._foreground_color`,
+  `anatomy_knob_pill_foreground_color`) cover the two pills the sheet had no token for. Both
+  painters joined the no-new-literal-colours lint, every token is described in the Theme Editor,
+  the shared derivation rule dresses them from each palette, and all ten bundled presets were
+  brought forward.
+
+### Changed - the Sheet map dresses in the theme
+
+- **The Sheet map window now paints from the theme's own chrome tokens** instead of six colours of
+  its own, so on Nord, Gruvbox, Solarized Light or High Contrast its boxes and lines match the bars
+  around the sheet. Six new chrome tokens (`sheet_map_sheet_color`, `sheet_map_scene_color`,
+  `sheet_map_global_color`, `sheet_map_edge_color`, `sheet_map_signal_edge_color`,
+  `sheet_map_text_color`), each derived from the theme's own background, headers and accent the way
+  the minimap's already are, each editable in the Theme Editor, and every bundled preset brought
+  forward. The Sheet map's painter joined the no-new-literal-colours lint.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

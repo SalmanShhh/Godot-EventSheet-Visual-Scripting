@@ -35,22 +35,43 @@ const _ORGAN_ACCENTS: Dictionary = {
 	"editor_tools": EventSheetPalette.COLOR_TRIGGER,
 	"uses": EventSheetPalette.TEXT_SECONDARY,
 }
-## The pill drawn before an entry, per organ: [text, bg, fg]. Verb organs reuse the canvas's ACE
-## badge pairs so the rail and the sheet speak one colour language.
-const _ORGAN_PILLS: Dictionary = {
-	"properties": ["@", Color("#2c313a"), Color("#9cc4ef")],
-	"state": ["·", Color("#2c313a"), Color("#9aa1ad")],
-	"triggers": ["➜", Color("#233b2b"), Color("#7fd494")],
-	"actions": ["A", Color("#463414"), Color("#f2c879")],
-	"conditions": ["?", Color("#123a30"), Color("#77d3b7")],
-	"expressions": ["ƒ", Color("#3a2247"), Color("#d7a6ea")],
-	"editor_tools": ["⚒", Color("#233b2b"), Color("#7fd494")],
-	"uses": ["↗", Color("#2c313a"), Color("#9aa1ad")],
-}
 # 1x design heights - _header_height()/_entry_height() apply the editor display scale, and the
 # hit-testing below uses the same helpers so click targets always match what was drawn.
 const _HEADER_HEIGHT: float = 24.0
 const _ENTRY_HEIGHT: float = 20.0
+
+
+## The pill drawn before an entry, per organ: [text, bg, fg]. Verb organs reuse the canvas's ACE
+## badge TOKENS and the neutral organs the reading marks' plain chip pair, so the rail, the sheet
+## and the active theme speak one colour language. Read per redraw (the lists are small), which is
+## also what lets a preset switch re-dress the rail without the panel being rebuilt.
+static func _organ_pill(organ: String) -> Array:
+	var event_style: EventSheetEventStyle = EventSheetActiveTheme.active().get_event_style()
+	var reading: EventSheetReadingStyle = EventSheetActiveTheme.reading()
+	var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
+	match organ:
+		"properties":
+			return ["@", reading.plain_chip_background_color, chrome.anatomy_knob_pill_foreground_color]
+		"triggers":
+			return ["➜", chrome.anatomy_trigger_pill_background_color,
+				chrome.anatomy_trigger_pill_foreground_color]
+		"actions":
+			return ["A", event_style.ace_action_badge_background_color,
+				event_style.ace_action_accent_color]
+		"conditions":
+			return ["?", event_style.ace_condition_badge_background_color,
+				event_style.ace_condition_accent_color]
+		"expressions":
+			return ["ƒ", event_style.ace_expression_badge_background_color,
+				event_style.ace_expression_accent_color]
+		"editor_tools":
+			# What the pack adds to the EDITOR rather than to the game - the editor calls these the
+			# way it calls a trigger, so the pill wears the trigger pair too.
+			return ["⚒", chrome.anatomy_trigger_pill_background_color,
+				chrome.anatomy_trigger_pill_foreground_color]
+		"uses":
+			return ["↗", reading.plain_chip_background_color, reading.plain_chip_foreground_color]
+	return ["·", reading.plain_chip_background_color, reading.plain_chip_foreground_color]
 
 
 static func _header_height() -> float:
@@ -139,6 +160,8 @@ func _row_index_at(y: float) -> int:
 func _draw_rows() -> void:
 	var font: Font = get_theme_default_font()
 	var width: float = _canvas.size.x
+	var reading: EventSheetReadingStyle = EventSheetActiveTheme.reading()
+	var hover_wash: Color = EventSheetActiveTheme.chrome().object_bar_hover_wash_color
 	# 1x-authored text sizes and offsets, scaled once per redraw so the rail tracks HiDPI.
 	var ui: float = EventSheetPalette.ui_scale()
 	var header_font: int = EventSheetPalette.scaled(12)
@@ -149,7 +172,7 @@ func _draw_rows() -> void:
 		var row: Dictionary = _rows[index]
 		var height: float = _header_height() if bool(row.get("header")) else _entry_height()
 		if index == _hover_index:
-			_canvas.draw_rect(Rect2(0.0, y, width, height), Color(1.0, 1.0, 1.0, 0.06), true)
+			_canvas.draw_rect(Rect2(0.0, y, width, height), hover_wash, true)
 		if bool(row.get("header")):
 			var accent: Color = row.get("accent")
 			var header_text: String = "%s · %d" % [str(row.get("title")), int(row.get("count"))]
@@ -158,14 +181,14 @@ func _draw_rows() -> void:
 			_canvas.draw_string(font, Vector2(4.0 * ui, y + 16.0 * ui), header_text, HORIZONTAL_ALIGNMENT_LEFT, width - 8.0 * ui, header_font, accent)
 			_canvas.draw_rect(Rect2(4.0 * ui, y + height - 3.0 * ui, width - 8.0 * ui, 1.0), Color(accent.r, accent.g, accent.b, 0.35), true)
 		else:
-			var pill: Array = _ORGAN_PILLS.get(str(row.get("organ")), ["·", Color("#2c313a"), Color("#9aa1ad")])
+			var pill: Array = _organ_pill(str(row.get("organ")))
 			var pill_rect: Rect2 = Rect2(8.0 * ui, y + 3.0 * ui, 16.0 * ui, height - 6.0 * ui)
 			var pill_box: StyleBoxFlat = StyleBoxFlat.new()
 			pill_box.bg_color = pill[1]
 			pill_box.set_corner_radius_all(3)
 			pill_box.draw(_canvas.get_canvas_item(), pill_rect)
 			_canvas.draw_string(font, Vector2(pill_rect.position.x + 4.0 * ui, y + 14.0 * ui), str(pill[0]), HORIZONTAL_ALIGNMENT_LEFT, -1.0, pill_font, pill[2])
-			var label_color: Color = EventSheetPalette.TEXT_PRIMARY if row.get("resource") != null else EventSheetPalette.TEXT_SECONDARY
+			var label_color: Color = reading.primary_text_color if row.get("resource") != null else reading.secondary_text_color
 			_canvas.draw_string(font, Vector2(30.0 * ui, y + 14.0 * ui), str(row.get("label")), HORIZONTAL_ALIGNMENT_LEFT, width - 34.0 * ui, label_font, label_color)
 		y += height
 
