@@ -16,7 +16,7 @@ config/features=PackedStringArray("4.7")
 
 [autoload]
 
-EventForgeBridge="*uid://comqpj8kesjwy"
+EventForgeBridge="*uid://duh4jgpamtcwn"
 
 [editor_plugins]
 

@@ -373,9 +373,10 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 	var circle_claim: Dictionary = polar_claim(body)
 	if not circle_claim.is_empty():
 		found.append(circle_claim)
-	return found
 	found.append_array(game_shape_claims(body, file_facts))
 	return found
+
+
 ## X31. The two shapes a body draws with an angle and a distance: a RING - a loop that gives each step
 ## its share of a full turn and places something at that angle - and a SPIRAL, where the angle and the
 ## distance both grow every tick and a place is worked out from the pair.

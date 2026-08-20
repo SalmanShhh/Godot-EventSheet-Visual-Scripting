@@ -214,6 +214,8 @@ static func spatial_words_facts(sheet: EventSheetResource) -> Dictionary:
 		if not between.is_empty():
 			directions[declared] = between
 	return {"facing_locals": facing, "direction_locals": directions}
+
+
 ## T10 / T8. What the FILE says about its drawing order and about the lists it picks from:
 ##
 ##   z_order_relative  {object label: true when its Z order counts from the parent}

@@ -1208,6 +1208,8 @@ func _function_body_entries(sheet: EventSheetResource, function_name: String) ->
 			var body: Array = (entry as EventFunction).events
 			return body if not body.is_empty() else (entry as EventFunction).rows
 	return []
+
+
 ## W9 / W10 / W11. The Include-bar chips a tooling file states about itself, plus - for a test that
 ## opens one - the fixture it reads, which double-click opens beside it. Empty for every other file.
 func _tool_file_chip_spans(sheet: EventSheetResource, source_path: String) -> Array[SemanticSpan]:
@@ -6141,6 +6143,8 @@ func _gyro_groups(actions: Array) -> Dictionary:
 			}
 		index += 1
 	return {"leads": leads, "consumed": consumed}
+
+
 ## X10 / X11. The hierarchy run that STARTS at `index`, as {text, note, object, last}, or {} when
 ## nothing there is one. Only a run of more than one line is claimed: a lone `reparent` already reads
 ## as its own sentence through the shared grammar, and wrapping it here would say the same thing

@@ -24,7 +24,7 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 const MOUSE := "Mouse"
 const CANVAS := "Canvas"
-const PICKING := "Picking"
+const PICKING := "Nodes: Picking"
 
 ## The one emitted helper every aimed-floor word calls. The compiler writes its definition into the
 ## file the first time any of them appears, so all three expressions share one function and a file

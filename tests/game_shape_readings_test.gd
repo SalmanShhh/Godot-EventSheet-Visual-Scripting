@@ -439,7 +439,7 @@ static func _doctor_notes() -> bool:
 ## All four starters build and compile.
 static func _starters() -> bool:
 	var ok: bool = true
-	for entry: Array in [[15, "LootChest"], [16, "StealthGuard"], [17, "BossFight"], [18, "MissionTimer"]]:
+	for entry: Array in [[26, "LootChest"], [27, "StealthGuard"], [28, "BossFight"], [29, "MissionTimer"]]:
 		var sheet: EventSheetResource = EventSheetStarterTemplates.build_starter(int(entry[0]))
 		ok = _check("starter %d is the %s sheet" % [int(entry[0]), str(entry[1])],
 			sheet.custom_class_name, str(entry[1])) and ok
@@ -449,20 +449,20 @@ static func _starters() -> bool:
 		script.source_code = compiled
 		ok = _check("and compiles to valid GDScript", script.reload(true) == OK, true) and ok
 	# The loot chest is the pity shape the reading recognises - the starter and the words agree.
-	var chest: EventSheetResource = EventSheetStarterTemplates.build_starter(15)
+	var chest: EventSheetResource = EventSheetStarterTemplates.build_starter(26)
 	var chest_lines: PackedStringArray = EventSheetViewportReadingRows.ordered_code_lines(chest)
 	ok = _check("the loot chest starter reads as a pity system",
 		(EventSheetPatternReadings.facts(chest_lines).get("pity_rolls", {}) as Dictionary).size(), 1) and ok
-	var guard: EventSheetResource = EventSheetStarterTemplates.build_starter(16)
+	var guard: EventSheetResource = EventSheetStarterTemplates.build_starter(27)
 	var guard_lines: PackedStringArray = EventSheetViewportReadingRows.ordered_code_lines(guard)
 	ok = _check("the stealth guard starter keeps a real meter",
 		", ".join((EventSheetPatternReadings.facts(guard_lines).get("meter_variables", {}) as Dictionary).keys()),
 		"suspicion") and ok
-	var boss: EventSheetResource = EventSheetStarterTemplates.build_starter(17)
+	var boss: EventSheetResource = EventSheetStarterTemplates.build_starter(28)
 	var boss_lines: PackedStringArray = EventSheetViewportReadingRows.ordered_code_lines(boss)
 	ok = _check("the boss starter climbs a two-step ladder",
 		(EventSheetPatternReadings.facts(boss_lines).get("boss_phase_steps", {}) as Dictionary).size(), 2) and ok
-	var mission: EventSheetResource = EventSheetStarterTemplates.build_starter(18)
+	var mission: EventSheetResource = EventSheetStarterTemplates.build_starter(29)
 	var mission_lines: PackedStringArray = EventSheetViewportReadingRows.ordered_code_lines(mission)
 	ok = _check("the mission starter runs a clock the player can read",
 		", ".join((EventSheetPatternReadings.facts(mission_lines).get("mission_timers", {}) as Dictionary).keys()),

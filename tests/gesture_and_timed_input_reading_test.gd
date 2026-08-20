@@ -135,8 +135,8 @@ static func run() -> bool:
 ## that does not is worse than no starter.
 static func _starters() -> bool:
 	var ok: bool = true
-	var arsenal: EventSheetResource = EventSheetStarterTemplates.build_starter(15)
-	var options: EventSheetResource = EventSheetStarterTemplates.build_starter(16)
+	var arsenal: EventSheetResource = EventSheetStarterTemplates.build_starter(30)
+	var options: EventSheetResource = EventSheetStarterTemplates.build_starter(31)
 	ok = _check("the arsenal starter is a body that moves", arsenal.host_class, "CharacterBody3D") and ok
 	ok = _check("the options starter is a screen", options.host_class, "Control") and ok
 	ok = _check("the options starter remembers its settings between runs",
