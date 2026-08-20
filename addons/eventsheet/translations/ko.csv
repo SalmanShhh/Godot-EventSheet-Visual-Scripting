@@ -3280,3 +3280,42 @@ itself,자기 자신
 ↓ the steps below are the edit,↓ 아래 단계들이 이 편집입니다
 "one undoable step, the edit under it","되돌릴 수 있는 한 단계, 그 아래가 편집 내용"
 Shared,공유
+Consume input,입력 소비
+"Draw text {text} at {at}, size {size}, {colour}","텍스트 {text} 를 {at} 에 그리기, 크기 {size}, {colour}"
+"Draw text {text} at {at}, size {size}","텍스트 {text} 를 {at} 에 그리기, 크기 {size}"
+Draw image {image} at {at},이미지 {image} 를 {at} 에 그리기
+"Draw line along {points}, {colour}","{points} 를 따라 선 그리기, {colour}"
+"Draw line along {points}, {colour} width {width}","{points} 를 따라 선 그리기, {colour} 두께 {width}"
+"Draw ring at {at}, radius {radius}, {colour}","{at} 에 링 그리기, 반지름 {radius}, {colour}"
+"Draw ring at {at}, radius {radius}, {colour} width {width}","{at} 에 링 그리기, 반지름 {radius}, {colour} 두께 {width}"
+"Draw line {from} to {to}, {colour} width {width}","{from} 에서 {to} 로 선 그리기, {colour} 두께 {width}"
+"Draw rectangle {at} size {size}, {colour}","{at} 에 사각형 그리기, 크기 {size}, {colour}"
+(outline),(윤곽선)
+Set style {slot} to {value},스타일 {slot} 을 {value} 로 설정
+Theme.Colour({name}),테마.색({name})
+Open centered,가운데에 열기
+Confirm dialog,확인 대화상자
+Accept dialog,알림 대화상자
+Window,창
+Popup,팝업
+Popup menu,팝업 메뉴
+Popup panel,팝업 패널
+Button,버튼
+Tree,트리
+Colour picker,색 선택기
+Add titled card {title},제목 카드 {title} 추가
+Add section {title},섹션 {title} 추가
+Add form row {title} {value},양식 행 {title} {value} 추가
+On %s button clicked,%s 버튼을 클릭했을 때
+(on %s),(%s 위에서)
+Mouse.Position,마우스.위치
+Painting the canvas by hand,캔버스를 직접 그리기
+"shapes and text painted every draw pass, and a redraw asked for when something moves","매 그리기 패스마다 도형과 글자를 그리고, 무언가 움직이면 다시 그리기를 요청한다"
+A dialog built in code,코드로 만든 대화상자
+"a window made, filled with rows, wired to its two answers and opened",창을 만들고 행을 채우고 두 가지 답에 연결한 뒤 여는 흐름
+A menu and the items it answers,메뉴와 그것이 응답하는 항목들
+"items declared once with an id each, and one handler answering the id that was chosen","항목을 각각 id와 함께 한 번 선언하고, 선택된 id에 하나의 처리기가 응답한다"
+Drawing Canvas,그리기 캔버스
+On Input On This Element,이 요소에 입력이 있을 때
+On input on this element,이 요소에 입력이 있을 때
+"Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.","이 UI 요소에 입력이 도달할 때 실행됩니다 - 클릭, 드래그, 포커스가 있을 때의 키. 뒤에 있는 것이 함께 반응하지 않아야 하면 입력 소비로 끝냅니다."

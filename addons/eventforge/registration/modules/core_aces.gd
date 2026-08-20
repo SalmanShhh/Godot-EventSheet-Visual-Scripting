@@ -34,6 +34,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs when this object leaves the scene - the place to let go of what it was holding, save its state, or tell others it is gone."))
 	descriptors.append(F.make_descriptor("Core", "OnDraw", "On Draw", ACEDescriptor.ACEType.TRIGGER, "", "_draw", [], "Run Context", "Run when drawing", "CanvasItem")
 		.described("Runs when this object is asked to paint itself - the only place the drawing actions may be used. Ask for a repaint with Queue Redraw."))
+	descriptors.append(F.make_descriptor("Core", "OnControlInput", "On Input On This Element", ACEDescriptor.ACEType.TRIGGER, "", "_gui_input", [], "Signals / Scene / Input", "On input on this element", "Control")
+		.described("Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react."))
 	descriptors.append(F.make_descriptor("Core", "OnCloseRequested", "On Close Requested", ACEDescriptor.ACEType.TRIGGER, "", "close_requested", [], "Signals / Scene / Input", "On window close requested", "Node")
 		.described("Runs when the player clicks the window's close button (X) or asks to quit - the place to save progress or pop a confirm dialog before exiting."))
 	descriptors.append(F.make_descriptor("Core", "OnBodyEntered", "On Body Entered", ACEDescriptor.ACEType.TRIGGER, "", "body_entered", [F.make_param("body", "Node")], "Signals / Scene / Input", "On body entered {body}", "Area2D")

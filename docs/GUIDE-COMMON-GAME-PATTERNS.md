@@ -330,7 +330,7 @@ is written in the same words:
   `Is playing`, plus an animation tree's `Set blend blend position` and
   `Travel to animation state "Hurt"`.
 - **UI** - `Set focus`, `Set progress to hp of max hp` (the value and the maximum in one row),
-  `Show dialog (centred)`, `Set text to "Score: " & score`, `Set master volume to v (0 to 1)` and
+  `Open centered`, `Set text to "Score: " & score`, `Set master volume to v (0 to 1)` and
   `Pause the game`.
 - **Sound** - `Set sound to jump.wav`, `Set pitch`, `Set bus to SFX`, `Set volume to 50%` (the
   decibel conversion is done for you and Godot's own line is one hover away), `Seek to 12 seconds`,

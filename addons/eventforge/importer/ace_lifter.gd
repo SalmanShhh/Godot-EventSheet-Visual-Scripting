@@ -34,6 +34,10 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	# three above - the body branches on the event exactly the same way - so it lifts to a trigger
 	# rather than staying the raw handler it used to be.
 	"func _input_event(viewport: Viewport, event: InputEvent, shape_idx: int) -> void:": "OnInputEvent",
+	# W8. The same callback for a UI element: input that landed on THIS Control, after the ones above
+	# have passed on it. A tool's whole canvas is one of these, and it branches on the event exactly
+	# like the handlers above, so it lifts to a trigger and its branches read as Mouse / Keyboard.
+	"func _gui_input(event: InputEvent) -> void:": "OnControlInput",
 	# The tree + paint callbacks. They carry authored logic as often as `_ready` does, so they read as
 	# the object's own lifecycle triggers rather than as helper functions. `_enter_tree` is the one that
 	# needs a body check as well as a header one: the host-binding boilerplate every host-targeting pack
@@ -1596,7 +1600,7 @@ static func _is_lifecycle_header(header: String) -> bool:
 
 
 static func _loose_lifecycle_match(header: String) -> RegExMatch:
-	var loose_regex: RegEx = RegEx.create_from_string("^func (_ready|_process|_physics_process|_input|_unhandled_input|_unhandled_key_input|_input_event)\\((.*)\\)(?: -> void)?:$")
+	var loose_regex: RegEx = RegEx.create_from_string("^func (_ready|_process|_physics_process|_input|_unhandled_input|_unhandled_key_input|_input_event|_gui_input)\\((.*)\\)(?: -> void)?:$")
 	return loose_regex.search(header)
 
 
@@ -1695,6 +1699,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 				"_ready": "OnReady", "_process": "OnProcess", "_physics_process": "OnPhysicsProcess",
 				"_input": "OnInput", "_unhandled_input": "OnUnhandledInput",
 				"_unhandled_key_input": "OnUnhandledKeyInput", "_input_event": "OnInputEvent",
+				"_gui_input": "OnControlInput",
 			}
 			trigger_id = str(loose_map[loose_lifecycle.get_string(1)])
 			source_header = function_lines[0]

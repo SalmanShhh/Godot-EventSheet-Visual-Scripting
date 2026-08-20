@@ -3280,3 +3280,42 @@ itself,自身
 ↓ the steps below are the edit,↓ 下面的步骤就是这次编辑
 "one undoable step, the edit under it",一个可撤销的步骤，编辑内容在其下
 Shared,共享
+Consume input,消耗输入
+"Draw text {text} at {at}, size {size}, {colour}",在 {at} 绘制文字 {text}，大小 {size}，{colour}
+"Draw text {text} at {at}, size {size}",在 {at} 绘制文字 {text}，大小 {size}
+Draw image {image} at {at},在 {at} 绘制图像 {image}
+"Draw line along {points}, {colour}",沿 {points} 绘制折线，{colour}
+"Draw line along {points}, {colour} width {width}",沿 {points} 绘制折线，{colour} 宽度 {width}
+"Draw ring at {at}, radius {radius}, {colour}",在 {at} 绘制圆环，半径 {radius}，{colour}
+"Draw ring at {at}, radius {radius}, {colour} width {width}",在 {at} 绘制圆环，半径 {radius}，{colour} 宽度 {width}
+"Draw line {from} to {to}, {colour} width {width}",从 {from} 到 {to} 绘制线条，{colour} 宽度 {width}
+"Draw rectangle {at} size {size}, {colour}",在 {at} 绘制矩形，大小 {size}，{colour}
+(outline),(轮廓)
+Set style {slot} to {value},将样式 {slot} 设为 {value}
+Theme.Colour({name}),主题.颜色({name})
+Open centered,居中打开
+Confirm dialog,确认对话框
+Accept dialog,提示对话框
+Window,窗口
+Popup,弹出层
+Popup menu,弹出菜单
+Popup panel,弹出面板
+Button,按钮
+Tree,树
+Colour picker,颜色选择器
+Add titled card {title},添加标题卡片 {title}
+Add section {title},添加分区 {title}
+Add form row {title} {value},添加表单行 {title} {value}
+On %s button clicked,点击 %s 键时
+(on %s),(在 %s 上)
+Mouse.Position,鼠标.位置
+Painting the canvas by hand,手工绘制画布
+"shapes and text painted every draw pass, and a redraw asked for when something moves",每次绘制都画出图形和文字，并在有东西移动时请求重绘
+A dialog built in code,在代码中搭建的对话框
+"a window made, filled with rows, wired to its two answers and opened",创建窗口、填入若干行、接上两种答复并打开
+A menu and the items it answers,一个菜单以及它所应答的项目
+"items declared once with an id each, and one handler answering the id that was chosen",项目各带一个 id 声明一次，由一个处理函数应答被选中的 id
+Drawing Canvas,绘图画布
+On Input On This Element,当输入落在此元素上时
+On input on this element,当输入落在此元素上时
+"Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.",当输入落在此界面元素上时运行 - 点击、拖动，或它获得焦点时的按键。若不希望它后面的东西也响应，请以消耗输入结束。

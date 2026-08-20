@@ -3280,3 +3280,42 @@ itself,sich selbst
 ↓ the steps below are the edit,↓ die Schritte unten sind die Bearbeitung
 "one undoable step, the edit under it","ein widerrufbarer Schritt, die Bearbeitung darunter"
 Shared,Gemeinsam
+Consume input,Eingabe verbrauchen
+"Draw text {text} at {at}, size {size}, {colour}","Text {text} bei {at} zeichnen, Groesse {size}, {colour}"
+"Draw text {text} at {at}, size {size}","Text {text} bei {at} zeichnen, Groesse {size}"
+Draw image {image} at {at},Bild {image} bei {at} zeichnen
+"Draw line along {points}, {colour}","Linie entlang {points} zeichnen, {colour}"
+"Draw line along {points}, {colour} width {width}","Linie entlang {points} zeichnen, {colour} Breite {width}"
+"Draw ring at {at}, radius {radius}, {colour}","Ring bei {at} zeichnen, Radius {radius}, {colour}"
+"Draw ring at {at}, radius {radius}, {colour} width {width}","Ring bei {at} zeichnen, Radius {radius}, {colour} Breite {width}"
+"Draw line {from} to {to}, {colour} width {width}","Linie von {from} nach {to} zeichnen, {colour} Breite {width}"
+"Draw rectangle {at} size {size}, {colour}","Rechteck bei {at} zeichnen, Groesse {size}, {colour}"
+(outline),(Umriss)
+Set style {slot} to {value},Stil {slot} auf {value} setzen
+Theme.Colour({name}),Stil.Farbe({name})
+Open centered,Zentriert oeffnen
+Confirm dialog,Bestaetigungsdialog
+Accept dialog,Hinweisdialog
+Window,Fenster
+Popup,Popup
+Popup menu,Popup-Menue
+Popup panel,Popup-Panel
+Button,Schaltflaeche
+Tree,Baum
+Colour picker,Farbwaehler
+Add titled card {title},Titelkarte {title} hinzufuegen
+Add section {title},Abschnitt {title} hinzufuegen
+Add form row {title} {value},Formularzeile {title} {value} hinzufuegen
+On %s button clicked,Bei Klick mit %s Taste
+(on %s),(auf %s)
+Mouse.Position,Maus.Position
+Painting the canvas by hand,Die Flaeche von Hand malen
+"shapes and text painted every draw pass, and a redraw asked for when something moves","Formen und Text bei jedem Zeichendurchgang gemalt, und ein Neuzeichnen angefordert, wenn sich etwas bewegt"
+A dialog built in code,Ein im Code gebauter Dialog
+"a window made, filled with rows, wired to its two answers and opened","Ein Fenster wird erstellt, mit Zeilen gefuellt, mit seinen zwei Antworten verbunden und geoeffnet"
+A menu and the items it answers,"Ein Menue und die Eintraege, die es beantwortet"
+"items declared once with an id each, and one handler answering the id that was chosen","Eintraege einmal mit je einer Id deklariert, und ein Handler beantwortet die gewaehlte Id"
+Drawing Canvas,Zeichenflaeche
+On Input On This Element,Bei Eingabe auf diesem Element
+On input on this element,Bei Eingabe auf diesem Element
+"Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.","Laeuft, wenn eine Eingabe auf diesem UI-Element landet - ein Klick, ein Ziehen oder eine Taste, solange es den Fokus hat. Endet mit Eingabe verbrauchen, wenn nichts dahinter ebenfalls reagieren soll."
