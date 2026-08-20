@@ -869,12 +869,37 @@ static func _signal_parameter_names(signal_name: String, context: Dictionary) ->
 static func return_sentence(returned: String, context: Dictionary) -> Dictionary:
 	var verb_kind: int = int(context.get("verb_kind", VerbKind.ACTION))
 	var value: String = returned.strip_edges()
+	# ── W2 / W15 ────────────────────────────────────────────────────────────────────────────────
+	# Inside an editor callback the sheet reads as a QUESTION ("Asks: can this plugin edit object?"),
+	# a `return` is the answer to that question and nothing else - so it reads as one, from System,
+	# the way every Answer row in the sheet does. Checked before the verb-kind split because such a
+	# callback is not a published verb at all and would otherwise fall to "Return x".
+	var answer: String = str(context.get("answer_shape", ""))
+	if not answer.is_empty() and not value.is_empty():
+		return _answer_sentence(value, answer, context)
 	if value.is_empty():
 		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Stop event", {})
 	var shown: String = expression_text(value, context)
 	if verb_kind == VerbKind.CONDITION or verb_kind == VerbKind.EXPRESSION:
 		return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Set return value to {value}", {"value": [shown, "value"]})
 	return _sentence(str(context.get("self_object", OBJECT_SYSTEM)), "Return {value}", {"value": [shown, "value"]})
+
+
+## W2 / W15. The answer to an editor callback's question. Always from System - the callback's own
+## object already asked ("Properties bar Asks: show this add-on for object?"), and answering in that
+## object's name a second time would read as the panel talking to itself.
+##
+## Two shapes, because two different things are being answered. A callback whose flag means "did this
+## add-on take that property" answers HANDLED or NOT HANDLED - the words the engine reads the flag
+## as - and a bare `true` there is not the value `true`, it is the whole answer. Every other
+## callback answers a value, and the value reads exactly as the rest of the sheet reads values.
+static func _answer_sentence(value: String, answer: String, context: Dictionary) -> Dictionary:
+	if answer == EventSheetEditorPluginWords.ANSWER_HANDLED:
+		if value == "true":
+			return _sentence(OBJECT_SYSTEM, "Answer {value}", {"value": [translate("handled"), "value"]})
+		if value == "false":
+			return _sentence(OBJECT_SYSTEM, "Answer {value}", {"value": [translate("not handled"), "value"]})
+	return _sentence(OBJECT_SYSTEM, "Answer {value}", {"value": [expression_text(value, context), "value"]})
 
 
 ## The declaration a `var name: Type = value` line reads as: a type word chip, the name, and the
@@ -1184,6 +1209,10 @@ static func editor_words(text: String) -> String:
 	out = out.replace("EditorInterface.get_edited_scene_root()", "Editor.OpenLayout")
 	out = out.replace("EditorInterface.get_editor_settings()", "Editor.Settings")
 	out = out.replace("get_undo_redo()", "Editor.UndoHistory")
+	# W2. The right-click surfaces a context menu can be hung on, in the names the sheet uses for
+	# those panels everywhere else - a loop over two slot constants reads "Scene dock, Project bar"
+	# rather than two lines of engine spelling nobody would recognise as the panels they name.
+	out = EventSheetEditorPluginWords.context_slot_words(out)
 	return out
 
 
@@ -2216,6 +2245,12 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var undo_step: Dictionary = _undo_statement(target, method, args, context)
 	if not undo_step.is_empty():
 		return undo_step
+	# W2 / W15. What a plugin DOES to the editor - hang a dock, add a menu item, register an add-on,
+	# teach the project a global. Checked here, above the generic Object ▸ Verb fallback, so
+	# `add_export_plugin(x)` reads as "Editor ▸ Add export hook x" rather than "Add export plugin".
+	var editor_step: Dictionary = _editor_plugin_statement(target, method, args, context)
+	if not editor_step.is_empty():
+		return editor_step
 	# A behaviour step on the script's OWN object belongs to that object by name, never to System: a
 	# collision switch is something the node does, the way every other row about it reads.
 	var acting_object: String = script_object(context) if target.is_empty() or target == "self" else object_name
@@ -2526,6 +2561,38 @@ static func _undo_member_word(property_value: String) -> String:
 	if colon_at >= 0:
 		bare = bare.substr(colon_at + 1)
 	return bare.strip_edges()
+
+
+## W2 / W15. An add_* / remove_* call on the editor, as the Add / Remove sentence the sheet already
+## uses for that thing. Only claimed on a script that EXTENDS one of the editor's plugin classes (the
+## Include bar already knows which), and only for the methods that class actually declares, so a game
+## script with its own `add_file` keeps its plain reading.
+##
+## The object cell is the class's own noun - the Editor for a plugin, the Properties bar for an
+## Inspector add-on - because that is the thing being changed, not the file doing the changing. A
+## call with an explicit receiver keeps that receiver in the object cell instead: a debugger panel
+## says `session ▸ Send message …`, and the session is the thing the message goes to.
+static func _editor_plugin_statement(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	var host_class: String = str(context.get("editor_plugin_class", "")).strip_edges()
+	if host_class.is_empty():
+		return {}
+	var verb: Dictionary = EventSheetEditorPluginWords.verb_for(host_class, method)
+	if verb.is_empty() or args.size() < int(verb.get("arity", 0)):
+		return {}
+	var receiver: String = target.strip_edges()
+	if not receiver.is_empty() and receiver != "self" and not is_simple_target(receiver):
+		return {}
+	var object_name: String = EventSheetEditorPluginWords.object_for(host_class)
+	if not receiver.is_empty() and receiver != "self":
+		object_name = receiver
+	var values: Dictionary = {}
+	for index: int in args.size():
+		# file_name_value, not expression_text: half of these arguments are res:// paths, and the
+		# folder they live in is filing rather than something the row says. Anything that is not a
+		# literal path falls straight through to the ordinary value reading.
+		values[str(index)] = [file_name_value(args[index], context), "value"]
+	return _sentence(object_name, str(verb.get("text", "")), values)
 
 
 ## S5. The one name a section and a key address together - `"player"` + `"score"` is the item

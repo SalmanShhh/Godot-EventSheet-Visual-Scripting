@@ -46,8 +46,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs when the plugin is switched on - at editor start, or the moment you tick it in Project Settings. This is where a plugin hangs its dock, adds its Tools menu item and teaches the editor its object types."))
 	descriptors.append(F.make_descriptor("Core", "OnPluginDisabled", "On Plugin Disabled", ACEDescriptor.ACEType.TRIGGER, "", "_exit_tree", [], CAT, "On plugin disabled")
 		.described("Runs when the plugin is switched off or the editor closes. Undo here everything On plugin enabled did, or the editor keeps a dock nobody owns."))
-	descriptors.append(F.make_descriptor("Core", "OnEditorObjectSelected", "On Object Selected", ACEDescriptor.ACEType.TRIGGER, "", "_edit", [], CAT, "On object selected")
-		.described("Runs when the user selects an object this plugin handles. The selected object arrives as `object`."))
+	# W2 - what `_edit` actually is: the editor HANDED this plugin an object to edit, because the
+	# plugin answered yes when asked whether it could. "On object selected" said only half of that,
+	# and sent a reader looking for a selection change that never fires for objects this plugin
+	# refused. The ace_id and the callback behind it are unchanged; only the words are.
+	descriptors.append(F.make_descriptor("Core", "OnEditorObjectSelected", "On Object Handed To Plugin", ACEDescriptor.ACEType.TRIGGER, "", "_edit", [], CAT, "On object handed to plugin")
+		.described("Runs when the editor hands this plugin an object to edit - the user selected something this plugin said yes to. The object arrives as `object`."))
 
 	# ── The 2D viewport (the overlay pass and the gizmo pass) ──
 	descriptors.append(F.make_descriptor("Core", "OnDrawOver2DViewport", "On Draw Over 2D Viewport", ACEDescriptor.ACEType.TRIGGER, "", "_forward_canvas_draw_over_viewport", [], CAT, "On draw over 2D viewport")
@@ -70,10 +74,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Teaches the editor a new object type, so it shows up in Create Node like a built-in one."))
 	descriptors.append(F.make_descriptor("Core", "RemoveEditorObjectType", "Remove Object Type", ACEDescriptor.ACEType.ACTION, "remove_custom_type({type_name})", "", [F.make_param("type_name", "String", "\"Waypoint\"", "Named", "The name the type was added with.", "expression")], CAT, "Remove object type {type_name}")
 		.described("Takes a custom object type back out of the Create Node dialog."))
-	descriptors.append(F.make_descriptor("Core", "AddEditorInspectorPlugin", "Add Inspector Plugin", ACEDescriptor.ACEType.ACTION, "add_inspector_plugin({plugin})", "", [F.make_param("plugin", "EditorInspectorPlugin", "null", "Inspector plugin", "The EditorInspectorPlugin that draws the custom fields.", "expression")], CAT, "Add Inspector plugin {plugin}")
-		.described("Registers a custom Inspector drawer, so your own fields appear in the Inspector."))
-	descriptors.append(F.make_descriptor("Core", "RemoveEditorInspectorPlugin", "Remove Inspector Plugin", ACEDescriptor.ACEType.ACTION, "remove_inspector_plugin({plugin})", "", [F.make_param("plugin", "EditorInspectorPlugin", "null", "Inspector plugin", "The EditorInspectorPlugin that was registered.", "expression")], CAT, "Remove Inspector plugin {plugin}")
-		.described("Takes a custom Inspector drawer back out."))
+	# W15 - the panel these two register an add-on with is the one the sheet calls the Properties
+	# bar, everywhere else it names it. Same ace_ids, same emitted calls; the words catch up.
+	descriptors.append(F.make_descriptor("Core", "AddEditorInspectorPlugin", "Add Properties Bar Add-on", ACEDescriptor.ACEType.ACTION, "add_inspector_plugin({plugin})", "", [F.make_param("plugin", "EditorInspectorPlugin", "null", "Add-on", "The Properties bar add-on that draws the custom fields.", "expression")], CAT, "Add Properties bar add-on {plugin}")
+		.described("Registers a Properties bar add-on, so your own buttons and fields appear in the Properties bar beside the object's own."))
+	descriptors.append(F.make_descriptor("Core", "RemoveEditorInspectorPlugin", "Remove Properties Bar Add-on", ACEDescriptor.ACEType.ACTION, "remove_inspector_plugin({plugin})", "", [F.make_param("plugin", "EditorInspectorPlugin", "null", "Add-on", "The Properties bar add-on that was registered.", "expression")], CAT, "Remove Properties bar add-on {plugin}")
+		.described("Takes a Properties bar add-on back out."))
 	descriptors.append(F.make_descriptor("Core", "UpdateViewportOverlays", "Redraw Viewport Overlays", ACEDescriptor.ACEType.ACTION, "update_overlays()", "", [], CAT, "redraw viewport overlays")
 		.described("Asks the editor to run the overlay pass again, so On draw over 2D viewport repaints."))
 
