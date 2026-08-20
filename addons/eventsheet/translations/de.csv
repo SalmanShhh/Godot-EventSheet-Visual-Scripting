@@ -3164,3 +3164,69 @@ starting {values},beginnend mit {values}
 {subject} is a table,{subject} ist eine Tabelle
 with {clauses},mit {clauses}
 has {key},hat {key}
+editor plugin,Editor-Plugin
+Properties bar add-on,Eigenschaftsleisten-Erweiterung
+Importer add-on,Importer-Erweiterung
+Export hook,Export-Haken
+Debugger panel,Debugger-Bereich
+Thumbnail maker,Vorschaubild-Ersteller
+Code colours,Code-Farben
+Text finder,Textsucher
+icon,Symbol
+named,genannt
+On plugin enabled,Wenn das Plugin eingeschaltet wird
+On plugin disabled,Wenn das Plugin ausgeschaltet wird
+On save,Beim Speichern
+main screen,Hauptbereich
+added by,hinzugefügt von
+On plugin first turned on,Beim ersten Einschalten des Plugins
+On plugin first turned off,Beim ersten Ausschalten des Plugins
+Asks: can this plugin edit {0}?,Fragt: Kann dieses Plugin {0} bearbeiten?
+On object handed to plugin,Wenn dem Plugin ein Objekt übergeben wird
+On workspace shown,Wenn der Arbeitsbereich gezeigt wird
+On project run,Beim Start des Projekts
+Asks: show this add-on for {0}?,Fragt: Diese Erweiterung für {0} zeigen?
+On start of {0}'s properties,Am Anfang der Eigenschaften von {0}
+On property {2} of {0},Bei Eigenschaft {2} von {0}
+On end of {0}'s properties,Am Ende der Eigenschaften von {0}
+On group {1} of {0},Bei Gruppe {1} von {0}
+On import,Beim Import
+On export begins,Wenn der Export beginnt
+On file exported,Wenn eine Datei exportiert wird
+On export ends,Wenn der Export endet
+On session started,Wenn eine Sitzung startet
+On message,Bei einer Nachricht
+Asks: handles type?,Fragt: Diesen Typ übernehmen?
+On make thumbnail,Beim Erstellen des Vorschaubilds
+On menu opens for {0},Wenn das Menü für {0} geöffnet wird
+Add dock {1} at {0},Bereich {1} bei {0} hinzufügen
+Add dock {0},Bereich {0} hinzufügen
+Remove dock {0},Bereich {0} entfernen
+Add bottom panel {0} named {1},Unteren Bereich {0} namens {1} hinzufügen
+Remove bottom panel {0},Unteren Bereich {0} entfernen
+Add Tools menu item {0},Werkzeuge-Menüeintrag {0} hinzufügen
+Remove Tools menu item {0},Werkzeuge-Menüeintrag {0} entfernen
+Add context menu {1} to {0},Kontextmenü {1} zu {0} hinzufügen
+Remove context menu {0},Kontextmenü {0} entfernen
+Add Properties bar add-on {0},Eigenschaftsleisten-Erweiterung {0} hinzufügen
+Remove Properties bar add-on {0},Eigenschaftsleisten-Erweiterung {0} entfernen
+Add importer add-on {0},Importer-Erweiterung {0} hinzufügen
+Remove importer add-on {0},Importer-Erweiterung {0} entfernen
+Add export hook {0},Export-Haken {0} hinzufügen
+Remove export hook {0},Export-Haken {0} entfernen
+Add debugger panel {0},Debugger-Bereich {0} hinzufügen
+Remove debugger panel {0},Debugger-Bereich {0} entfernen
+Add object type {0},Objekttyp {0} hinzufügen
+Remove object type {0},Objekttyp {0} entfernen
+Add global {0} from {1},Globales {0} aus {1} hinzufügen
+Remove global {0},Globales {0} entfernen
+Add control {0},Bedienelement {0} hinzufügen
+Use editor {1} for {0},Editor {1} für {0} verwenden
+Use editor {2} for {1},Editor {2} für {1} verwenden
+Add file to export {0},Datei {0} zum Export hinzufügen
+Skip file,Datei überspringen
+Send message {0},Nachricht {0} senden
+Add item {0},Eintrag {0} hinzufügen
+Answer {value},Antworte {value}
+handled,übernommen
+not handled,nicht übernommen

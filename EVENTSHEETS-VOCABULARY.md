@@ -3067,7 +3067,7 @@ the Editor object (plugin lifecycle, docks, menu items, object types).
 #### Triggers
 - **On Plugin Enabled** - Runs when the plugin is switched on - at editor start, or the moment you tick it in Project Settings. This is where a plugin hangs its dock, adds its Tools menu item and teaches the editor its object types.
 - **On Plugin Disabled** - Runs when the plugin is switched off or the editor closes. Undo here everything On plugin enabled did, or the editor keeps a dock nobody owns.
-- **On Object Selected** - Runs when the user selects an object this plugin handles. The selected object arrives as `object`.
+- **On Object Handed To Plugin** - Runs when the editor hands this plugin an object to edit - the user selected something this plugin said yes to. The object arrives as `object`.
 - **On Draw Over 2D Viewport** - The editor's 2D overlay pass. Draw handles, guides or labels on top of the scene with the Drawing actions - the surface arrives as `overlay`.
 - **On 2D Viewport Input** - Input that lands in the editor's 2D viewport, before the viewport itself sees it. End the event with Stop This Input Here to keep the viewport from also acting on it.
 - **On Draw Gizmo** - A gizmo's own paint pass - what an EditorNode3DGizmo redraws when its node moves or changes.
@@ -3079,8 +3079,8 @@ the Editor object (plugin lifecycle, docks, menu items, object types).
 - **Remove Dock** (`control: Control`) - Takes a dock back out of the editor.
 - **Add Object Type** (`type_name: String, base: String, script: Script, icon: Texture2D`) - Teaches the editor a new object type, so it shows up in Create Node like a built-in one.
 - **Remove Object Type** (`type_name: String`) - Takes a custom object type back out of the Create Node dialog.
-- **Add Inspector Plugin** (`plugin: EditorInspectorPlugin`) - Registers a custom Inspector drawer, so your own fields appear in the Inspector.
-- **Remove Inspector Plugin** (`plugin: EditorInspectorPlugin`) - Takes a custom Inspector drawer back out.
+- **Add Properties Bar Add-on** (`plugin: EditorInspectorPlugin`) - Registers a Properties bar add-on, so your own buttons and fields appear in the Properties bar beside the object's own.
+- **Remove Properties Bar Add-on** (`plugin: EditorInspectorPlugin`) - Takes a Properties bar add-on back out.
 - **Redraw Viewport Overlays** - Asks the editor to run the overlay pass again, so On draw over 2D viewport repaints.
 
 #### Expressions

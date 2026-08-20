@@ -3164,3 +3164,69 @@ starting {values},以 {values} 开头
 {subject} is a table,{subject} 是一张表
 with {clauses},其中 {clauses}
 has {key},含有 {key}
+editor plugin,编辑器插件
+Properties bar add-on,属性栏附加组件
+Importer add-on,导入器附加组件
+Export hook,导出挂钩
+Debugger panel,调试器面板
+Thumbnail maker,缩略图生成器
+Code colours,代码配色
+Text finder,文本查找器
+icon,图标
+named,名为
+On plugin enabled,插件启用时
+On plugin disabled,插件停用时
+On save,保存时
+main screen,主界面
+added by,添加者
+On plugin first turned on,首次开启插件时
+On plugin first turned off,首次关闭插件时
+Asks: can this plugin edit {0}?,询问：此插件能编辑 {0} 吗？
+On object handed to plugin,对象交给插件时
+On workspace shown,显示工作区时
+On project run,运行项目时
+Asks: show this add-on for {0}?,询问：为 {0} 显示此附加组件吗？
+On start of {0}'s properties,在 {0} 的属性开头
+On property {2} of {0},在 {0} 的属性 {2} 上
+On end of {0}'s properties,在 {0} 的属性末尾
+On group {1} of {0},在 {0} 的分组 {1} 上
+On import,导入时
+On export begins,导出开始时
+On file exported,文件被导出时
+On export ends,导出结束时
+On session started,会话开始时
+On message,收到消息时
+Asks: handles type?,询问：处理此类型吗？
+On make thumbnail,生成缩略图时
+On menu opens for {0},为 {0} 打开菜单时
+Add dock {1} at {0},在 {0} 添加面板 {1}
+Add dock {0},添加面板 {0}
+Remove dock {0},移除面板 {0}
+Add bottom panel {0} named {1},添加名为 {1} 的底部面板 {0}
+Remove bottom panel {0},移除底部面板 {0}
+Add Tools menu item {0},添加工具菜单项 {0}
+Remove Tools menu item {0},移除工具菜单项 {0}
+Add context menu {1} to {0},向 {0} 添加右键菜单 {1}
+Remove context menu {0},移除右键菜单 {0}
+Add Properties bar add-on {0},添加属性栏附加组件 {0}
+Remove Properties bar add-on {0},移除属性栏附加组件 {0}
+Add importer add-on {0},添加导入器附加组件 {0}
+Remove importer add-on {0},移除导入器附加组件 {0}
+Add export hook {0},添加导出挂钩 {0}
+Remove export hook {0},移除导出挂钩 {0}
+Add debugger panel {0},添加调试器面板 {0}
+Remove debugger panel {0},移除调试器面板 {0}
+Add object type {0},添加对象类型 {0}
+Remove object type {0},移除对象类型 {0}
+Add global {0} from {1},从 {1} 添加全局 {0}
+Remove global {0},移除全局 {0}
+Add control {0},添加控件 {0}
+Use editor {1} for {0},为 {0} 使用编辑器 {1}
+Use editor {2} for {1},为 {1} 使用编辑器 {2}
+Add file to export {0},将文件 {0} 加入导出
+Skip file,跳过文件
+Send message {0},发送消息 {0}
+Add item {0},添加项目 {0}
+Answer {value},回答 {value}
+handled,已处理
+not handled,未处理

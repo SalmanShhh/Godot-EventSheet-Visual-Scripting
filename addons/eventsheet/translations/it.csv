@@ -3164,3 +3164,69 @@ starting {values},che inizia con {values}
 {subject} is a table,{subject} e una tabella
 with {clauses},con {clauses}
 has {key},ha {key}
+editor plugin,plugin dell'editor
+Properties bar add-on,estensione della barra delle proprietà
+Importer add-on,estensione di importazione
+Export hook,aggancio di esportazione
+Debugger panel,pannello del debugger
+Thumbnail maker,generatore di miniature
+Code colours,colori del codice
+Text finder,cercatore di testo
+icon,icona
+named,chiamato
+On plugin enabled,All'attivazione del plugin
+On plugin disabled,Alla disattivazione del plugin
+On save,Al salvataggio
+main screen,schermata principale
+added by,aggiunto da
+On plugin first turned on,Alla prima attivazione del plugin
+On plugin first turned off,Alla prima disattivazione del plugin
+Asks: can this plugin edit {0}?,Chiede: questo plugin può modificare {0}?
+On object handed to plugin,Quando un oggetto viene affidato al plugin
+On workspace shown,Quando l'area di lavoro viene mostrata
+On project run,All'avvio del progetto
+Asks: show this add-on for {0}?,Chiede: mostrare questa estensione per {0}?
+On start of {0}'s properties,All'inizio delle proprietà di {0}
+On property {2} of {0},Sulla proprietà {2} di {0}
+On end of {0}'s properties,Alla fine delle proprietà di {0}
+On group {1} of {0},Sul gruppo {1} di {0}
+On import,All'importazione
+On export begins,All'inizio dell'esportazione
+On file exported,Quando un file viene esportato
+On export ends,Alla fine dell'esportazione
+On session started,All'avvio della sessione
+On message,All'arrivo di un messaggio
+Asks: handles type?,Chiede: gestisce questo tipo?
+On make thumbnail,Alla creazione della miniatura
+On menu opens for {0},All'apertura del menu per {0}
+Add dock {1} at {0},Aggiungi il pannello {1} in {0}
+Add dock {0},Aggiungi il pannello {0}
+Remove dock {0},Rimuovi il pannello {0}
+Add bottom panel {0} named {1},Aggiungi il pannello inferiore {0} chiamato {1}
+Remove bottom panel {0},Rimuovi il pannello inferiore {0}
+Add Tools menu item {0},Aggiungi la voce {0} al menu Strumenti
+Remove Tools menu item {0},Rimuovi la voce {0} dal menu Strumenti
+Add context menu {1} to {0},Aggiungi il menu contestuale {1} a {0}
+Remove context menu {0},Rimuovi il menu contestuale {0}
+Add Properties bar add-on {0},Aggiungi l'estensione della barra delle proprietà {0}
+Remove Properties bar add-on {0},Rimuovi l'estensione della barra delle proprietà {0}
+Add importer add-on {0},Aggiungi l'estensione di importazione {0}
+Remove importer add-on {0},Rimuovi l'estensione di importazione {0}
+Add export hook {0},Aggiungi l'aggancio di esportazione {0}
+Remove export hook {0},Rimuovi l'aggancio di esportazione {0}
+Add debugger panel {0},Aggiungi il pannello del debugger {0}
+Remove debugger panel {0},Rimuovi il pannello del debugger {0}
+Add object type {0},Aggiungi il tipo di oggetto {0}
+Remove object type {0},Rimuovi il tipo di oggetto {0}
+Add global {0} from {1},Aggiungi il globale {0} da {1}
+Remove global {0},Rimuovi il globale {0}
+Add control {0},Aggiungi il controllo {0}
+Use editor {1} for {0},Usa l'editor {1} per {0}
+Use editor {2} for {1},Usa l'editor {2} per {1}
+Add file to export {0},Aggiungi il file {0} all'esportazione
+Skip file,Salta il file
+Send message {0},Invia il messaggio {0}
+Add item {0},Aggiungi la voce {0}
+Answer {value},Rispondi {value}
+handled,gestito
+not handled,non gestito

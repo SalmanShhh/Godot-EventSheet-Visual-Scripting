@@ -3164,3 +3164,69 @@ starting {values},{values} 로 시작
 {subject} is a table,{subject} 가 테이블
 with {clauses},{clauses} 인
 has {key},{key} 가 있는
+editor plugin,에디터 플러그인
+Properties bar add-on,속성 표시줄 추가 기능
+Importer add-on,가져오기 추가 기능
+Export hook,내보내기 훅
+Debugger panel,디버거 패널
+Thumbnail maker,미리보기 생성기
+Code colours,코드 색상
+Text finder,텍스트 찾기
+icon,아이콘
+named,이름
+On plugin enabled,플러그인이 켜질 때
+On plugin disabled,플러그인이 꺼질 때
+On save,저장할 때
+main screen,기본 화면
+added by,추가한 곳
+On plugin first turned on,플러그인을 처음 켰을 때
+On plugin first turned off,플러그인을 처음 껐을 때
+Asks: can this plugin edit {0}?,질문: 이 플러그인이 {0} 을(를) 편집할 수 있나요?
+On object handed to plugin,오브젝트가 플러그인에 전달될 때
+On workspace shown,작업 공간이 표시될 때
+On project run,프로젝트를 실행할 때
+Asks: show this add-on for {0}?,질문: {0} 에 이 추가 기능을 표시할까요?
+On start of {0}'s properties,{0} 의 속성 시작에서
+On property {2} of {0},{0} 의 속성 {2} 에서
+On end of {0}'s properties,{0} 의 속성 끝에서
+On group {1} of {0},{0} 의 그룹 {1} 에서
+On import,가져올 때
+On export begins,내보내기가 시작될 때
+On file exported,파일이 내보내질 때
+On export ends,내보내기가 끝날 때
+On session started,세션이 시작될 때
+On message,메시지가 올 때
+Asks: handles type?,질문: 이 형식을 처리하나요?
+On make thumbnail,미리보기를 만들 때
+On menu opens for {0},{0} 의 메뉴가 열릴 때
+Add dock {1} at {0},{0} 에 패널 {1} 추가
+Add dock {0},패널 {0} 추가
+Remove dock {0},패널 {0} 제거
+Add bottom panel {0} named {1},하단 패널 {0} 을(를) {1} 이름으로 추가
+Remove bottom panel {0},하단 패널 {0} 제거
+Add Tools menu item {0},도구 메뉴 항목 {0} 추가
+Remove Tools menu item {0},도구 메뉴 항목 {0} 제거
+Add context menu {1} to {0},{0} 에 컨텍스트 메뉴 {1} 추가
+Remove context menu {0},컨텍스트 메뉴 {0} 제거
+Add Properties bar add-on {0},속성 표시줄 추가 기능 {0} 추가
+Remove Properties bar add-on {0},속성 표시줄 추가 기능 {0} 제거
+Add importer add-on {0},가져오기 추가 기능 {0} 추가
+Remove importer add-on {0},가져오기 추가 기능 {0} 제거
+Add export hook {0},내보내기 훅 {0} 추가
+Remove export hook {0},내보내기 훅 {0} 제거
+Add debugger panel {0},디버거 패널 {0} 추가
+Remove debugger panel {0},디버거 패널 {0} 제거
+Add object type {0},오브젝트 유형 {0} 추가
+Remove object type {0},오브젝트 유형 {0} 제거
+Add global {0} from {1},{1} 에서 전역 {0} 추가
+Remove global {0},전역 {0} 제거
+Add control {0},컨트롤 {0} 추가
+Use editor {1} for {0},{0} 에 편집기 {1} 사용
+Use editor {2} for {1},{1} 에 편집기 {2} 사용
+Add file to export {0},내보내기에 파일 {0} 추가
+Skip file,파일 건너뛰기
+Send message {0},메시지 {0} 보내기
+Add item {0},항목 {0} 추가
+Answer {value},{value} 로 답하기
+handled,처리함
+not handled,처리 안 함

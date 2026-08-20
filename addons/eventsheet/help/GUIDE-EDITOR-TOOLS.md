@@ -230,17 +230,23 @@ The Editor object appears in the picker **only on a sheet that runs in the edito
 | On Editor Run | you pick File > Run | `_run()` |
 | On Plugin Enabled | the plugin is switched on | `_enter_tree()` |
 | On Plugin Disabled | the plugin is switched off | `_exit_tree()` |
-| On Object Selected | the user selects an object this plugin handles | `_edit(object)` |
+| On Object Handed To Plugin | the editor hands this plugin an object to edit | `_edit(object)` |
 | On Draw Over 2D Viewport | the editor paints its 2D overlay | `_forward_canvas_draw_over_viewport(overlay)` |
 | On 2D Viewport Input | input lands in the 2D viewport | `_forward_canvas_gui_input(event)` |
 | On Draw Gizmo | a gizmo repaints | `_redraw()` |
 | On Project Export | an export starts | `_on_project_export(is_debug, features)` |
 
-On an EditorPlugin sheet, `_enter_tree` reads as **On plugin enabled** rather than the "on created" a node script gets - because on a plugin that is what the callback means, and a reader of a plugin is looking for a different idea.
+On an EditorPlugin sheet, `_enter_tree` reads as **On plugin enabled** rather than the "on created" a node script gets - because on a plugin that is what the callback means, and a reader of a plugin is looking for a different idea. The pair beside it, `_enable_plugin` / `_disable_plugin`, reads as **On plugin first turned on / off**: those two run once, the first time somebody ticks the plugin on, and never again at editor start.
+
+Four more callbacks read as what the editor wants rather than as their Godot spelling: `_handles` is **Asks: can this plugin edit object?** with its `return` as **System ▸ Answer object is a Sheet**, `_make_visible` is **On workspace shown**, `_build` is **On project run** and `_save_external_data` is **On save**. The three that answer a constant - `_get_plugin_name`, `_has_main_screen`, `_get_plugin_icon` - are not events at all: nothing ever happens in them, so they read on the head bar as the facts they state.
+
+![This plugin's own plugin.gd opened as a sheet: the head bar says editor plugin, main screen "EventSheet" and icon eventsheet.svg, and the events below read as On Object Handed To Plugin](images/editor-plugin-reading.png)
+
+Every other editor plugin class Godot offers has a word of its own, and its callbacks read in that thing's voice: an `EditorInspectorPlugin` is a **Properties bar add-on** (*Asks: show this add-on for object? / On start of object's properties / On property name of object / Add control / Use editor X for property*), an `EditorImportPlugin` an **Importer add-on**, an `EditorExportPlugin` an **Export hook** (*On export begins / On file exported / On export ends / Add file to export / Skip file*), an `EditorDebuggerPlugin` a **Debugger panel**, an `EditorResourcePreviewGenerator` a **Thumbnail maker**, an `EditorContextMenuPlugin` a **Context menu**, an `EditorSyntaxHighlighter` **Code colours** and an `EditorTranslationParserPlugin` a **Text finder**. Where such a callback answers a "did this add-on take it" flag, `return true` / `return false` read as **Answer handled** / **Answer not handled**.
 
 The overlay trigger hands you the surface as `overlay`, and its body is the ordinary Drawing vocabulary: `overlay ▸ Draw circle at pos, radius 6, yellow`. The viewport-input trigger is the one editor callback that *answers*: returning true means this plugin consumed the input and the viewport must not also act on it, so an event under it has to end with a return.
 
-**Its actions** are what a plugin adds to the editor and takes away again - Add / Remove Tools Menu Item, Add / Remove Dock, Add / Remove Object Type, Add / Remove Inspector Plugin, and Redraw Viewport Overlays. Everything a plugin adds on the way in should be removed on the way out, or the editor keeps a dock nobody owns.
+**Its actions** are what a plugin adds to the editor and takes away again - Add / Remove Tools Menu Item, Add / Remove Dock, Add / Remove Object Type, Add / Remove Properties Bar Add-on, and Redraw Viewport Overlays. Everything a plugin adds on the way in should be removed on the way out, or the editor keeps a dock nobody owns.
 
 **Its expressions** are what the editor can be asked. In a row they read as the Editor's own names, so a loop over the selection says what it walks:
 
