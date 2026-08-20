@@ -11408,6 +11408,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 	"menu": {
 		"words": "A menu and the items it answers",
 		"ace_ids": []
+	},
 	# W9 / W10 / W11. The three tooling shapes. None is adoptable: a test, a command tool and a pack
 	# recipe are things you WRITE, not behaviors a pack could take over, so the chip names the shape
 	# and offers nothing to swap it for.
