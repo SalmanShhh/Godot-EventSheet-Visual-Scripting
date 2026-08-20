@@ -1,8 +1,8 @@
 # Built-in Module Guides
 
-Deep-dive guides for the **built-in vocabulary** - the roughly 1,090 actions, conditions and
-expressions that are already in the picker on a fresh install, before you enable a single behavior
-pack. They are authored as the vocabulary modules in `addons/eventforge/registration/modules/`, one
+Deep-dive guides for the **built-in vocabulary** - the 1,520 actions, conditions and expressions
+(and 48 triggers) that are already in the picker on a fresh install, before you enable a single
+behavior pack. They are authored as the vocabulary modules in `addons/eventforge/registration/modules/`, one
 file per subject, and this index groups their guides by what you are trying to do rather than by
 which file they came from.
 

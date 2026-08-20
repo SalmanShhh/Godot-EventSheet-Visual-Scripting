@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+### Changed - the documentation caught up with everything the sheet learned, and the index gates it
+
+- **The two guides nobody could find are indexed.** Anchor and Touch Gestures shipped inside the
+  editor's Manual while the addon index linked neither, so the only way to reach them was to already
+  know they existed. Both are listed now, and the hole is closed for good: the addon index is gated
+  the way the root index has been for months - every guide in `docs/Addons/` must be linked from
+  `docs/Addons/README.md`, with a sentence after the link saying what the pack is.
+- **The 15-and-5 standard is gated on the folder it was written for.** Fifteen or more numbered use
+  cases and exactly five bolded "Other use cases" was enforced across the Modules guides and merely
+  *hoped for* across the addon guides. It is now checked over all 79 of them, counting all three
+  spellings the corpus really uses (a heading per case, a bold-led paragraph, a markdown ordered
+  list), and the counters themselves are pinned so a corpus that drifts away from them fails rather
+  than reading as green.
+- **The readings that had no heading have one.** The hierarchy words, the cursor's ray and the canvas
+  distances, and the whole 3D batch - directions, orbits, blend trees, the world's look - were all
+  sitting inside a section titled "Variables", unreachable by heading or by the page's own contents.
+  Each is its own section now, and the hierarchy one carries the **Hierarchy pane** in full (the
+  parent, the children with what each carries, the scene-file children that hand you to Godot's Scene
+  dock, the drag and right-click gestures, and the three Doctor notes), so a reader who never opens
+  a migration guide can still find it.
+- **The 3D page is in the reference tables.** Working In 3D listed six Node3D actions and knew
+  nothing of the picker's 3D page; **Move & Turn**, **Place** and **See** are documented row by row
+  with what each one writes, and the three flat-plane rows that ship from the same place are named
+  where they actually are filed.
+- **Three surfaces that were documented nowhere.** The Scene dock and the sheet sharing one selection
+  (both directions, the filter offer, **Show events**, and the setting that turns the follow off);
+  **Sheet ▸ Export** to a picture, a PDF or Markdown with figures; and **Sheet ▸ Health…**. The four
+  game-shape starters - Loot Chest, Stealth Guard, Boss Fight, Mission Timer - now say what each one
+  actually opens with.
+- **Two more counts read off the tree rather than nudged**: the built-in vocabulary is 1,520 actions,
+  conditions and expressions plus 48 triggers (the README and both indexes had been carrying "1,200+"
+  and "~1,090" from different years), and the pack line now says which 79 of the 95 packs carry a
+  guide of their own and which 16 are companions documented inside their partner's. The README's
+  status section says what the last six batches shipped instead of stopping at the readability
+  program.
+
 ### Added - the Editor object's pages, the command tool as rows, and the glossary on hover
 
 - **The command tool is authorable, not just readable.** New Sheet ▸ Command tool now starts from

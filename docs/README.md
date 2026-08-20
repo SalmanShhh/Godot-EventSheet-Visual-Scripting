@@ -79,7 +79,7 @@ The entry-by-entry reference for everything the picker already offers. The four 
 open a Modules guide when you want the full list of actions, conditions and expressions, their
 parameters, and what each row ships as.
 
-- [Built-in Module Guides Index](Modules/README.md) - deep-dive guides for the ~1,090 actions, conditions and expressions that ship in the picker before you enable a single pack.
+- [Built-in Module Guides Index](Modules/README.md) - deep-dive guides for the 1,520 actions, conditions and expressions that ship in the picker before you enable a single pack.
 
 ## Addon packs
 

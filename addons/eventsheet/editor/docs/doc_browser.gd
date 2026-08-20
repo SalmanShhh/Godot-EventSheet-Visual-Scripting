@@ -1215,6 +1215,11 @@ func _build_manual_group(root: TreeItem) -> void:
 			# W21 - the editor-building words, beside the other two word pages: it answers the same
 			# question ("what do you call this?") for the reader who is building a tool.
 			EventSheetDocReference.KIND_EDITOR_WORDS,
+			# The patterns index sits beside the behaviors index because the two answer the same
+			# question from opposite ends: what shape is this event, and what could take it over.
+			# It had a Tools menu entry and no row here, which made it the one derived page a
+			# reader browsing the Manual could not find.
+			EventSheetDocReference.KIND_PATTERNS,
 			EventSheetDocReference.KIND_BEHAVIOR_INDEX,
 			EventSheetDocReference.KIND_WHATS_NEW]:
 		_add_reference_row(manual, kind, "")

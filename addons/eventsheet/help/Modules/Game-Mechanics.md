@@ -126,6 +126,24 @@ Between Runs** on it. Neither needs anything new.
 | --- | --- | --- |
 | **On Noise Heard** | a Make Noise happened close enough | Put the object in the listening group first. |
 
+## The four starters
+
+Each of the four shapes on this page ships as a starter sheet, so the first version is rows you read
+rather than rows you assemble. They are in the workspace's **New Sheet** menu and in the FileSystem's
+**Create New ▸ Event Sheet** dialog:
+
+| Starter | What you get |
+| --- | --- |
+| **Loot Chest** | A `LootChest` with three exported numbers - the first-roll chance, how much every miss raises it, and the miss count that guarantees the win - a `pity` counter, and an `open_chest()` function that raises the odds, hands out the rare item at the cap, and puts the counter back. |
+| **Stealth Guard** | A `StealthGuard` on a Node3D whose suspicion FILLS while the target is seen and not hidden and DRAINS while it is not, remembers `last_known` as the place to walk to, starts the hunt at 100, and joins the listening group on created so any Make Noise nearby reaches its On Noise Heard event. |
+| **Boss Fight** | A `BossFight` with `max_hp`, a `phase`, an invulnerability flag, an **On Defeated** trigger, and a `take_damage` function whose two thresholds are each guarded by the phase the fight is in - which is what makes a phase start exactly once. |
+| **Mission Timer** | A `MissionTimer` with the seconds left exported, a HUD label to write into, an **On Mission Time Up** trigger, and the tick that counts down, shows the time as `m:ss` and fires at zero. |
+
+A starter is an ordinary unsaved sheet - Save As puts it where you want it, and every row in it is one
+you could have dropped yourself. Each one opens with a comment row at the top saying which pack takes
+the shape further: Advanced Random's Roll With Pity for a seeded chest, Line Of Sight 3D and Nav Agent
+3D for the guard, HUD Kit for the boss bar, and Remember Between Runs for a clock that survives a quit.
+
 ## Use cases
 
 **1. A loot chest that cannot be cruel.** Feed a counter on every open, grow the chance out of it,

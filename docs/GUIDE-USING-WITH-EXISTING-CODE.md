@@ -24,8 +24,6 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
    [scene](#a-whole-scene-read-in-one-place), [what stays code](#what-stays-code-still-reads-as-what-it-is)
    and [beginner spellings](#beginner-spellings-and-the-reading-layer), plus
    [the Project bar](#the-project-bar---your-project-by-kind-not-by-folder)
-
-   and [beginner spellings](#beginner-spellings-and-the-reading-layer)
 7b. [Living in a Big Project: the Minimap, the Sheet Map and the History List](#7b-living-in-a-big-project-the-minimap-the-sheet-map-and-the-history-list)
 8. [When to Wrap Existing Code in Your Own ACEs](#8-when-to-wrap-existing-code-in-your-own-aces)
 9. [Use Cases](#9-use-cases)
@@ -463,6 +461,8 @@ That is the order this section is in.
 
   ![A clickable, tweened, snap-to-grid script read as an event sheet: the Inspector button as a setting row, a one-line tween chain, the cursor and the click on the Mouse, the gamepad cable on the Gamepad, and a snap setter on the loop's own object](images/opened-script-batch7.png)
 
+#### The hierarchy - who gained the child, and what happened to its place
+
 - **The hierarchy reads as the two words it has always had.** `item.reparent($Hand)` reads `Hand ▸
   Add child item` with *keeping its place* said quietly beside it, because who gained the child and
   what happened to its place are the two things a reader wants. `reparent(p, false)` says *snapping
@@ -476,6 +476,37 @@ That is the order this section is in.
   ![Functions read as an event sheet, each row a hierarchy sentence: Hand gains a child keeping its place, an item is removed from its parent, a remove-then-add pair reads as one row snapping to it, and an Add child row wears its follow-flag chips](images/hierarchy-reading.png)
 
   ![Three opened scripts stacked: one whose Include bar says "73% reads as events - 2 script blocks", one whose settings read as Movement and Look folders with every export hint family, and the same file opened as an autoload, whose head is one Global variables folder](images/opened-script-head5.png)
+
+**The Hierarchy pane** answers the same questions without opening a row. Click an object's name in
+any row and **Object properties** now carries a Hierarchy section: its **parent** (click to jump to
+that object) and its **children**, each with what it carries - its type, how many children of its
+own it has, a broken link when it ignores its parent's movement, and the three transform ticks when
+it follows some of them and not others. A child the scene file owns shows muted with *in the scene
+file* and offers **edit the scene**, which hands the node to Godot's Scene dock: the pane writes
+runtime rows and never edits a `.tscn`. Drag an object in from the Object bar to make it a child
+(the four flags open on the drop), drag a child out onto the canvas to unparent it, or right-click
+one for **flags…**, **Remove from parent** and **Select in scene**. Every gesture writes ordinary
+rows through the undo funnel, in the same spellings a hand-typed file uses, so the pane and the
+canvas can never disagree about the tree and Ctrl+Z takes a parenting back like any other edit.
+
+![The Hierarchy section of Object properties for Player: parent Level (the layout), four children, two of them muted as in the scene file with an edit the scene link, a HealthBar marked as ignoring its parent's movement, and a Hat whose transform ticks say position and angle but not size](images/hierarchy-pane.png)
+
+Three hierarchy footguns are Doctor notes rather than rules - each advisory, each with a one-click
+chip naming the single edit to make. A walk over a node's children that **moves** one of them while
+it walks (Godot's child list is live, so the loop silently skips the next child - walk a copy, or
+use the For Each Child row, which snapshots for you). A **reparent of self inside start of layout**,
+which Godot refuses outright because the old parent is still adding its children. And a variable
+**keeping hold of a child whose parent this file frees** - a child goes when its parent goes, so the
+next line that touches it crashes. The `demo/showcase/hierarchy_playground/` room has one of every
+move in it: mounting a rider onto a saddle and dismounting again, a hat that follows position and
+angle but not size, a health bar that stays a child and stops following so it never tilts, one walk
+that heals every soldier among a leader's children, and a camera that orbits because its parent
+pivot turns.
+
+![The Hierarchy Playground showcase running: the rider mounted on the horse wearing a hat and an upright health bar, a squad of four soldiers, two settled crates, and a status line reading rider's parent, hat follows size no, bar ignores movement yes, squad hp 200, crates settled yes](images/hierarchy-playground.png)
+
+#### The cursor's ray, and how far things are on the canvas
+
 - **The camera-ray run is one question, and the canvas has its own words.** `project_ray_origin`,
   `project_ray_normal`, the query and `intersect_ray` are four lines that only mean anything
   together, so they read as ONE row: `System ▸ Set hit to the object under the cursor`, with how far
@@ -493,6 +524,8 @@ That is the order this section is in.
   because an aim assist measured in world units ignores zoom.
 
   ![An opened 3D script read as an event sheet: the four-line camera-ray run as one row saying "Set hit to the object under the cursor, reach 1000, none when nothing is hit", the same run aimed through a crosshair with its layer mask, and an aim-assist walk whose locals read as the canvas centre, a position on the canvas and a canvas distance in pixels](images/reading-cursor-ray-and-canvas.png)
+
+#### The 3D words - moving, orbiting, animating, and the world's look
 
 - **Third-person locomotion is one action.** The five-line run every 3D character script writes -
   fetch the camera's basis, mix it with the two numbers of input, flatten the result onto the ground,
@@ -541,6 +574,8 @@ That is the order this section is in.
   they are.
 
   ![A name tag and a health bar over a head opened as an event sheet: billboard, show through walls, world size, the bar's width and the in-world screen's redraw mode all reading as plain rows](images/reading-world-space-ui.png)
+#### Locals and accessors - how far a name reaches, and a setter as a trigger
+
 - **A local variable's scope is enforced, and shown.** A local is visible from the event that
   declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
   action that uses `dealt` into an event that cannot see it and the drop refuses before you release,
@@ -1358,6 +1393,21 @@ them, so nothing is ever written back to it and there is no "Edit Events" to unl
 object bar and that script opens as its own editable sheet, exactly as opening it from the FileSystem
 would. A big scene never stalls the editor either - one script is read per frame behind the progress
 strip, so the bars are on screen immediately and the rows fill in under them.
+
+**The Scene dock and the sheet share one selection.** Click a node in Godot's Scene dock and the
+sheet highlights that node's entry on the Object bar and offers **Filter events to &lt;node&gt;** in the
+status line - an offer rather than a silent filter, because the reader chose a node in another dock
+and rewriting what their sheet shows on the strength of that would be the sheet taking a liberty.
+Click one of the offer's words and the Filter lens the sheet already has does the narrowing; click
+anything else and nothing changed. It runs the other way too: selecting a row selects the node that
+row is about, so the Scene dock and the 2D or 3D view land on it. Right-click a node in the Scene
+dock for **Show events** to go straight there - the node's script opens as a sheet with its events
+already filtered to that node.
+
+The follow is a setting, on by default: **View ▸ Follow Scene Selection** toggles it, and it is
+stored as the project setting `eventsheets/editor/follow_scene_selection`, so the choice outlives
+the session. Turn it off while you are working on one row and clicking around a scene; nothing else
+about either dock changes.
 
 ### What stays code still reads as what it is
 

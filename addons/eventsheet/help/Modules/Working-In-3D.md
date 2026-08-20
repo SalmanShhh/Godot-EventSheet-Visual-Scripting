@@ -94,6 +94,44 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 | Get Position (3D) | A Node3D's current position as a Vector3. | `position` |
 | Get Velocity (3D) | A CharacterBody3D's current velocity vector. | `velocity` |
 
+### 3D: Move & Turn - directions and turns, said in words
+
+The rows above name Godot's members. The **3D** page names the DIRECTION instead: you pick "forward"
+and the file is written the axis expression that is. Every template here is exactly the spelling the
+opened-script reading recognises, so a line typed by hand and the same line dropped from the picker
+are one row and one file.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Move In Direction | Moves along one of its own six directions - **forward**, backward, right, left, up, down - at a **Speed** a second. | `global_position += {direction} * {speed} * {delta_t}` |
+| Rotate Clockwise | Turns about its up axis, in **Degrees per second** - the yaw a character or a turret turns with. | `rotate_y(-deg_to_rad({degrees_per_second} * {delta_t}))` |
+| Rotate Up Or Down | Tilts its nose up or down - the pitch a plane or a camera arm moves with. | `rotate_x(deg_to_rad({degrees_per_second} * {delta_t}))` |
+| Roll | Rolls about the way it faces - the bank a plane or a ship leans with. | `rotate_z(deg_to_rad({degrees_per_second} * {delta_t}))` |
+| Rotate Toward Facing | Turns smoothly toward a **Facing** at a **Rate** instead of snapping - the way a turret leads its target. | `basis = basis.slerp({facing}, {rate} * {delta_t})` |
+| Facing Along | The facing that looks along a **Direction** - what Rotate Toward Facing turns toward. | `Basis.looking_at({direction})` |
+
+### 3D: Place - standing somewhere, and sitting flat
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Position To Another Object | Puts this node exactly where **Other** is - a spawn marker, a socket, a respawn point. | `global_position = {other}.global_position` |
+| Align To The Ground's Slope | Tilts the node so its up points the way the **Ground normal** does - what makes a dropped crate sit flat on a hill. A ray hit gives you the normal. | `basis = Basis(Quaternion(Vector3.UP, {normal})) * basis` |
+
+### 3D: See - the facing questions
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Is Within Angle Of Facing | True when **Toward** lies inside the cone this object looks down - **Within** is half the cone's width in degrees, so 45 is a 90-degree field of view. | `{forward}.dot({direction}) > cos(deg_to_rad({angle}))` |
+| Is Behind | True when a **Point** is behind this object - the backstab half of a facing test. | `to_local({point}).z > 0.0` |
+| Is In Front Of | True when a **Point** is in front of it, whichever way it happens to be turned. | `to_local({point}).z < 0.0` |
+| Is To The Right Of | True when a **Point** is off its right side - which way to lean, dodge or steer. | `to_local({point}).x > 0.0` |
+| Is To The Left Of | The twin of the row above. | `to_local({point}).x < 0.0` |
+
+Three more rows ship from the same place but are filed where a reader would look for them rather
+than on the 3D page, because they are flat-plane maths: **Point At Angle** and **Store As Angle And
+Distance** are on the **Math & Random** page, and **Create Evenly Around A Circle** - the bullet-hell
+ring, the radial menu, the circle of pillars - is on the **Scene** page.
+
 ### Input
 
 | Name | What it does | Ships as |

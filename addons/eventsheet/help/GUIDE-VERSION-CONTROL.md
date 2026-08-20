@@ -9,6 +9,7 @@ By default an event sheet is a plain **`.gd`** file - it diffs and merges like a
 1. [LF and Byte-Stable Regeneration (Automatic)](#1-lf-and-byte-stable-regeneration-automatic)
 2. [Readable Diffs via textconv](#2-readable-diffs-via-textconv)
 3. [Semantic 3-Way Merge (Opt-In)](#3-semantic-3-way-merge-opt-in)
+3b. [Showing a Sheet to Someone Who Is Not in the Editor](#3b-showing-a-sheet-to-someone-who-is-not-in-the-editor)
 4. [Use Cases](#4-use-cases)
 5. [Tips and Common Mistakes](#5-tips-and-common-mistakes)
 
@@ -81,6 +82,31 @@ resolution is still a file you can come back to.
 
 The Project Doctor reports any file still holding markers as an **error**: it does not compile, and
 the worst moment to discover that is when the game will not start.
+
+---
+
+## 3b. Showing a Sheet to Someone Who Is Not in the Editor
+
+A diff answers "what changed"; a review comment, a design document, a bug report or a lesson often
+needs "what does this sheet SAY". **Sheet ▸ Export** writes the canvas exactly as it is being read -
+the current theme, density, arrangement and reading lenses, with the event numbers on, so the
+picture and the reader's screen agree:
+
+- **Image (PNG)…** - the whole sheet as one picture. What you paste into a forum post or an issue.
+- **PDF…** - that same picture split into pages, for a document somebody prints or annotates.
+- **Markdown with figures…** - the plain listing, with a figure per group. This is the one to
+  commit beside a sheet: it diffs as text, and it still shows the rows.
+
+Nothing about the sheet changes and nothing is written next to it - the export is a file you choose
+the location of, and the `.gd` is untouched.
+
+**Sheet ▸ Health…** answers the other review question, about the sheet rather than about the change:
+one card saying how much of the file reads as events, which patterns it contains and which of them a
+shipped behavior could take over, what the Doctor says about it, which Test Sheets cover it and how
+they last went, and how much of it nothing uses. Every line clicks through to the panel it came
+from, so a health card is a starting point for the work rather than a score.
+
+<img src="images/sheet-health-card.png" alt="The health card for player.gd: reads as events 100% with 4 patterns and 2 adoptable, Doctor 0 errors and 2 notes, tests 3 Test Sheets with the last run green, and unused 1 thing." width="450">
 
 ---
 

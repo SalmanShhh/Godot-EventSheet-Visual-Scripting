@@ -29,6 +29,8 @@ extends RefCounted
 
 const STAGING_SCRIPT_PATH: String = "res://tools/stage_readme_links.gd"
 const ADDON_ROOT: String = "res://eventsheet_addons"
+const ADDON_GUIDE_DIR: String = "res://docs/Addons"
+const ADDON_GUIDE_INDEX: String = "res://docs/Addons/README.md"
 
 
 static func run() -> bool:
@@ -36,6 +38,8 @@ static func run() -> bool:
 	all_passed = _test_doc_urls() and all_passed
 	all_passed = _test_guide_mapping() and all_passed
 	all_passed = _test_guide_sweep() and all_passed
+	all_passed = _test_addon_index_lists_every_guide() and all_passed
+	all_passed = _test_addon_guide_shape() and all_passed
 	all_passed = _test_provider_resolution() and all_passed
 	all_passed = _test_hardwired_doc_paths() and all_passed
 	all_passed = _test_help_annotation() and all_passed
@@ -166,6 +170,118 @@ static func _test_guide_sweep() -> bool:
 	all_passed = _check("the sweep would catch an undocumented pack",
 		FileAccess.file_exists("res://" + EventSheets.addon_guide_target("no_such_pack_here")), false) and all_passed
 	return all_passed
+
+
+## Every addon guide is reachable from the addon index, with a sentence saying what it is.
+##
+## The root docs index has had this gate since the day a parallel batch of doc work broke the
+## habit; the addon index did not, and two guides written in the same window (Anchor and Touch
+## Gestures) shipped linked from nowhere. A guide nobody indexed is a guide nobody finds.
+static func _test_addon_index_lists_every_guide() -> bool:
+	var all_passed: bool = true
+	var index: String = _read(ADDON_GUIDE_INDEX)
+	all_passed = _check("the addon index reads", index.is_empty(), false) and all_passed
+	var missing: PackedStringArray = PackedStringArray()
+	var undescribed: PackedStringArray = PackedStringArray()
+	var swept: int = 0
+	for guide: String in _addon_guide_files():
+		swept += 1
+		var link: String = "(%s)" % guide
+		if not index.contains(link):
+			missing.append(guide)
+			continue
+		for line: String in index.split("\n"):
+			if not line.contains(link):
+				continue
+			if line.substr(line.find(link) + link.length()).strip_edges().length() < 20:
+				undescribed.append(guide)
+			break
+	# Without this the whole check passes vacuously the day the folder cannot be read.
+	all_passed = _check("the addon guide folder was actually swept", swept > 60, true) and all_passed
+	all_passed = _check("every docs/Addons guide is listed in the addon index",
+		", ".join(missing), "") and all_passed
+	all_passed = _check("every listed addon guide carries a one-line description",
+		", ".join(undescribed), "") and all_passed
+	all_passed = _check("the lookup can say no", index.contains("(No-Such-Pack.md)"), false) and all_passed
+	return all_passed
+
+
+## THE 15+5 STANDARD, gated at last on the folder it was written for. Fifteen or more numbered use
+## cases, and exactly five bolded lines under "Other use cases".
+##
+## Counted across all three spellings the corpus really uses, because the house style grew over
+## seventy-odd guides and a gate that knew only one of them would score most of them zero:
+##   `### 3. A title`        a heading per case (the commonest)
+##   `**3. A title.**`       a bold-led paragraph (what the Modules guides use)
+##   `3. **A title.**`       a markdown ordered list
+## and in the tail, both `**...**` and `- **...**`.
+static func _test_addon_guide_shape() -> bool:
+	var all_passed: bool = true
+	var thin: PackedStringArray = PackedStringArray()
+	var wrong_tail: PackedStringArray = PackedStringArray()
+	var swept: int = 0
+	for guide: String in _addon_guide_files():
+		swept += 1
+		var numbered: int = 0
+		var other: int = 0
+		var in_other: bool = false
+		for line: String in _read(ADDON_GUIDE_DIR.path_join(guide)).split("\n"):
+			var stripped: String = line.strip_edges()
+			if stripped.begins_with("#") and stripped.ends_with("Other use cases"):
+				in_other = true
+				continue
+			if in_other and stripped.begins_with("## "):
+				in_other = false
+			if in_other:
+				if stripped.begins_with("**") or stripped.begins_with("- **"):
+					other += 1
+				continue
+			if _numbered_use_case(stripped):
+				numbered += 1
+		if numbered < 15:
+			thin.append("%s has %d" % [guide, numbered])
+		if other != 5:
+			wrong_tail.append("%s has %d" % [guide, other])
+	all_passed = _check("the addon guide folder was swept for shape", swept > 60, true) and all_passed
+	all_passed = _check("every addon guide carries 15 or more numbered use cases",
+		", ".join(thin), "") and all_passed
+	all_passed = _check("every addon guide closes with exactly five other use cases",
+		", ".join(wrong_tail), "") and all_passed
+	# The counters must be able to say no, or a corpus that stopped matching them reads as green.
+	all_passed = _check("a heading case counts", _numbered_use_case("### 3. Something"), true) and all_passed
+	all_passed = _check("a bold-led case counts", _numbered_use_case("**3. Something.**"), true) and all_passed
+	all_passed = _check("an ordered-list case counts", _numbered_use_case("3. **Something.**"), true) and all_passed
+	all_passed = _check("a plain sentence is not a use case", _numbered_use_case("Some prose."), false) and all_passed
+	all_passed = _check("a numbered line with no title is not one either",
+		_numbered_use_case("3."), false) and all_passed
+	return all_passed
+
+
+## Whether a line OPENS a numbered use case, in any of the three spellings the corpus uses.
+static func _numbered_use_case(line: String) -> bool:
+	var head: String = line.strip_edges()
+	for prefix: String in ["### ", "#### ", "**"]:
+		if head.begins_with(prefix):
+			head = head.substr(prefix.length())
+			break
+	var digits: String = ""
+	for index: int in head.length():
+		if not head[index].is_valid_int():
+			break
+		digits += head[index]
+	if digits.is_empty():
+		return false
+	return head.substr(digits.length()).begins_with(". ")
+
+
+## Every addon guide file, README aside, sorted so a failure names them in a stable order.
+static func _addon_guide_files() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for file_name: String in DirAccess.get_files_at(ADDON_GUIDE_DIR):
+		if file_name.ends_with(".md") and file_name != "README.md":
+			found.append(file_name)
+	found.sort()
+	return found
 
 
 static func _test_provider_resolution() -> bool:

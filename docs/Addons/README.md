@@ -99,7 +99,7 @@ Attach to a node to move it.
 - [State Machine](State-Machine.md) - named states with enter/exit and transitions.
 - [Home & Leash](Home-And-Leash.md) - a home point, a leash distance with five geometry metrics, and a return-home walk with its arrival trigger.
 - [Line Of Sight](Line-Of-Sight.md) - can this node see a target (2D raycast, cone, range).
-- [Line Of Sight 3D](Line-Of-Sight-3D.md) - the same, in 3D.
+- [Line Of Sight 3D](Line-Of-Sight-3D.md) - the same question in 3D: raycast, cone of view and range.
 
 ## Combat and gameplay
 
@@ -107,7 +107,6 @@ Attach to a node to move it.
 - [Interaction](Interaction.md) - focus the nearest interactable in range, press to interact, and let each thing answer On Interacted.
 - [Priced Tables](Priced-Tables.md) - the priced-interaction table (vendors, kiosks, toll gates, skill trees) as a .tres of entries: prices, stock, unlock gates, and one Buy Entry row that spends through whatever wallet answers.
 - [Encounter Timeline](Encounter-Timeline.md) - spawn beats on a schedule (waves, boss phases, tutorial pacing, ambient traffic) from a .tres, pooled when a pool is there, with a derived plain-text report of the plan and its density.
-
 - [Physics Car](Physics-Car.md) - a force-driven arcade car on a RigidBody2D, with grip and drift.
 - [Weapon Kit](Weapon-Kit.md) - fire rates, ammo, reloads, and spread for a weapon.
 - [Health](Health.md) - hit points with absorption and shield pools, damage and heal events.
@@ -129,6 +128,8 @@ Attach to a node to move it.
 - [Scene Flow](Scene-Flow.md) - fades and scene changes.
 - [Dialogue Kit](Dialogue-Kit.md) - typewriter conversations with named UI.
 - [Virtual Cursor](Virtual-Cursor.md) - a gamepad-driven pointer for controller UI.
+- [Anchor](Anchor.md) - where a panel sits when the window resizes: anchor a Control to a corner, an edge or the full rect as one row, nudge it with pixel margins, and let it place itself again on every resize.
+- [Touch Gestures](Touch-Gestures.md) - fingers as sentences: On Swipe with a named direction (four-way or eight), On Shape Drawn for shapes you taught by drawing them once, and a Touch Shape Library .tres so the taught shapes ship with the project.
 - [Drag And Drop](Drag-And-Drop.md) - make a node draggable, with drop targets.
 - [Drawing Canvas](Drawing-Canvas.md) - draw shapes, ribbons, raycast line-of-sight fans, and reusable DRAWING PREFABS (ordered .tres formations) onto a live texture (persistent paint or per-frame telegraphs). See the Draw Lab showcase.
 - [Decal Painter](Decal-Painter.md) - 3D blob shadows, splats with lifetimes, and 2D-canvas textures projected onto the world.
