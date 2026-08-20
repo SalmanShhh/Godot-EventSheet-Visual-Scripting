@@ -3665,3 +3665,339 @@ Swipes and drawn shapes,スワイプと描いた形
 Secrets found,見つけた秘密
 Timed input windows,時間制限つき入力受付
 An accessibility options screen,アクセシビリティ設定画面
+Fill Meter,メーターを満たす
+"Raises a number at a steady rate per second and stops it at a limit - a suspicion meter filling while a guard sees you, a bar charging, stamina coming back.",数値を毎秒一定の割合で上げ、上限で止めます。見張りに見られている間に溜まる警戒メーター、チャージしていくバー、回復していくスタミナなどに使います。
+Meters,メーター
+Fill [b]{var_name}[/b] at [b]{rate}[/b] up to [b]{cap}[/b],[b]{var_name}[/b] を [b]{rate}[/b] で [b]{cap}[/b] まで満たす
+Meter,メーター
+The number to fill.,満たす対象の数値。
+Per second,毎秒
+How much it gains each second.,1 秒ごとに増える量。
+Up to,上限
+The value it stops at.,そこで止まる値。
+Drain Meter,メーターを減らす
+"Lowers a number at a steady rate per second and stops it at a floor - suspicion cooling off, a shield decaying, a charge bleeding away.",数値を毎秒一定の割合で下げ、下限で止めます。冷めていく警戒、削れていくシールド、抜けていくチャージなどに使います。
+Drain [b]{var_name}[/b] at [b]{rate}[/b] down to [b]{floor}[/b],[b]{var_name}[/b] を [b]{rate}[/b] で [b]{floor}[/b] まで減らす
+The number to drain.,減らす対象の数値。
+How much it loses each second.,1 秒ごとに減る量。
+Down to,下限
+Make Noise,物音を立てる
+"Tells everything in the listening group that a noise happened at a place, but only the ones close enough to hear it. Footsteps, a door, a thrown bottle.",ある場所で物音がしたことを、聞き耳グループの全員に伝えます。ただし届くのは、聞こえるほど近くにいるものだけです。足音、扉、投げた瓶などに。
+Stealth,隠密
+"Make noise at [b]{at}[/b], heard within [b]{radius}[/b]",[b]{at}[/b] で物音を立てる、[b]{radius}[/b] 以内に届く
+Where the noise happened (a position expression).,物音がした場所 (座標の式)。
+Heard within,届く範囲
+How far the noise carries.,物音が届く距離。
+Heard by,聞く相手
+The group whose members can hear - each one needs an On Noise Heard event.,聞き取れるメンバーのグループ。それぞれに 物音を聞いたとき のイベントが必要です。
+On Noise Heard,物音を聞いたとき
+"Runs when a Make Noise action happens close enough for this object to hear it, with the place it came from. Put this object in the listening group first (Add To Group, on created).",物音を立てる アクションが、このオブジェクトに聞こえるほど近くで起きたときに、その発生場所とともに実行されます。まずこのオブジェクトを聞き耳グループに入れてください (作成時に グループに追加)。
+On noise heard at,物音を聞いたとき、場所
+Phase Starts,フェーズ開始
+True the one time health first falls past a share of its maximum while the fight is in an earlier phase. The phase guard is what makes it happen once: set the phase variable in the actions under this condition.,戦いがまだ前のフェーズにいる間に、体力が最大値の一定割合を初めて下回った、その一度だけ真になります。一度きりにしているのはフェーズの見張りです。この条件の下のアクションでフェーズ変数を設定してください。
+Boss,ボス
+"Phase [b]{phase}[/b] starts ([b]{hp}[/b] <= [b]{share}[/b] of [b]{max_hp}[/b], once)",フェーズ [b]{phase}[/b] 開始 ([b]{hp}[/b] <= [b]{max_hp}[/b] の [b]{share}[/b]、一度だけ)
+Phase,フェーズ
+The phase number that starts here.,ここで始まるフェーズの番号。
+At share of maximum,最大値に対する割合
+The health share it starts at - 0.6 is 60%.,始まるときの体力の割合。0.6 は 60 % です。
+Health,体力
+The variable holding health now.,現在の体力を持つ変数。
+Maximum health,最大体力
+The variable holding full health.,満タンの体力を持つ変数。
+Phase variable,フェーズ変数
+The variable holding which phase the fight is in - set it in the actions below.,戦いがどのフェーズにいるかを持つ変数。下のアクションで設定してください。
+Set Invulnerable For,指定時間だけ無敵にする
+"Turns a flag on, waits, and turns it back off - the invulnerability window after a hit, written once instead of as a flag and a timer that can drift apart.",フラグを立て、待ってから、また下ろします。被弾後の無敵時間を、ずれてしまいがちなフラグとタイマーに分けずに、一行で書けます。
+Set [b]{flag}[/b] for [b]{seconds}[/b] seconds,[b]{flag}[/b] を [b]{seconds}[/b] 秒間 立てる
+Flag,フラグ
+The boolean that says nothing lands.,何も当たらないことを表す真偽値。
+For seconds,秒数
+How long the window lasts.,その猶予が続く長さ。
+Start Mission Timer,ミッションタイマーを開始
+Puts a number of seconds on the mission clock. Type the time the way a player reads it - 3:00 - and the row stores the seconds.,ミッションタイマーに秒数をセットします。時間はプレイヤーが読むとおりに - 3:00 のように - 入力すれば、行はそれを秒として記録します。
+Missions,ミッション
+Start [b]{var_name}[/b] at [b]{seconds}[/b],[b]{var_name}[/b] を [b]{seconds}[/b] から開始
+Timer variable,タイマー変数
+The variable holding the seconds left.,残り秒数を持つ変数。
+How long the mission runs - type it as minutes:seconds.,ミッションが続く長さ。分:秒 の形で入力します。
+Add Mission Time,ミッション時間を追加
+Puts time back on the mission clock - the pickup that buys you another half minute.,ミッションタイマーに時間を戻します。もう 30 秒を買ってくれる、あの拾い物です。
+Add [b]{seconds}[/b] to [b]{var_name}[/b],[b]{seconds}[/b] を [b]{var_name}[/b] に足す
+How much time to add - type it as minutes:seconds.,追加する時間。分:秒 の形で入力します。
+Mission Time Left,ミッションの残り時間
+"Gives the time left as text a player can read - ""2:41"" - ready to drop into a HUD label.","残り時間を、プレイヤーが読めるテキスト - ""2:41"" - で返します。HUD のラベルにそのまま入れられます。"
+Missions.TimeLeft,ミッション.残り時間
+Editor Icon,エディターアイコン
+"One of the editor's own icons, so a tool's buttons and docks look like the editor around them instead of shipping their own art. The field draws the icon it names as you pick it.",エディターが持つアイコンのひとつです。ツールのボタンやドックが独自の絵を持ち込まず、まわりのエディターと同じ見た目になります。フィールドは選んだアイコンをその場で描いて見せます。
+Editor Tools: Panels & menus,エディターツール: パネルとメニュー
+Editor.Icon({icon_name}),Editor.Icon({icon_name})
+"The editor icon's name - usually a class name like Node2D, Script or Folder.",エディターアイコンの名前です - たいていは Node2D、Script、Folder のようなクラス名です。
+Editor Preference,エディター設定
+"One value out of the user's own Editor Settings - their theme colour, grid step, font size. Read it so a tool matches the editor the person in front of it actually set up.",ユーザー自身のエディター設定にある値ひとつです - テーマ色、グリッド幅、フォントサイズなど。これを読めば、ツールは目の前の人が実際に整えたエディターに合わせられます。
+Editor Tools: Project & preferences,エディターツール: プロジェクトと設定
+Editor.Preference({path}),Editor.Preference({path})
+"The Editor Settings path, as it reads in Editor > Editor Settings.",エディター設定のパスです。エディター > エディター設定 に書かれているとおりに指定します。
+Project Setting,プロジェクト設定
+"One value out of this project's own settings. Unlike a preference, it is saved with the project, so every person opening it sees the same answer.",このプロジェクト自身の設定にある値ひとつです。エディター設定と違い、プロジェクトと一緒に保存されるので、開く人が誰であっても同じ答えになります。
+Project.Setting({path}),Project.Setting({path})
+"The Project Settings path, as it reads in Project > Project Settings.",プロジェクト設定のパスです。プロジェクト > プロジェクト設定 に書かれているとおりに指定します。
+Workspace Area,ワークスペース領域
+"The big area the 2D, 3D and Script tabs share. A workspace plugin adds its own screen as a child of this.",2D、3D、Script のタブが共有する大きな領域です。ワークスペースプラグインは自分の画面をこの子として追加します。
+Editor.MainScreen,Editor.MainScreen
+Set Setting,設定を書き込む
+"Writes one project setting. It lives in memory until Save settings runs, so a tool that changes several settings writes them all and saves once.",プロジェクト設定をひとつ書き込みます。設定を保存 が走るまではメモリ上にあるので、複数の設定を変えるツールはすべて書き込んでから一度だけ保存します。
+Set setting {path} to {value},設定 {path} を {value} にする
+The Project Settings path to write.,書き込むプロジェクト設定のパスです。
+The value to store there.,そこに保存する値です。
+Save Settings,設定を保存
+"Writes the project settings back to project.godot. Without this, everything Set setting changed is lost when the editor closes.",プロジェクト設定を project.godot に書き戻します。これがないと、設定を書き込む で変えた内容はエディターを閉じたときに失われます。
+Save settings,設定を保存
+Switch To Workspace,ワークスペースを切り替える
+Brings one of the editor's top tabs to the front - the same click as pressing 2D or Script yourself.,エディター上部のタブのひとつを前面に出します - 自分で 2D や Script を押すのと同じことです。
+Switch to workspace {workspace},ワークスペース {workspace} に切り替える
+Which of the editor's top tabs to bring forward.,エディター上部のどのタブを前面に出すかです。
+2D,2D
+3D,3D
+Game,ゲーム
+AssetLib,AssetLib
+Show In Project Bar,プロジェクトバーで表示
+"Reveals a folder or file in the editor's project file list and selects it - what a tool does after it writes something, so the reader can see what just landed.",エディターのプロジェクトファイル一覧でフォルダーやファイルを表示して選択します - 何かを書き出したあとにツールがやることで、今しがた出来たものが目に入ります。
+Show in Project bar {path},プロジェクトバーで {path} を表示
+"The folder or file to reveal, as a res:// path.",表示するフォルダーまたはファイルを res:// パスで指定します。
+Open Script At Line,スクリプトを行を指定して開く
+Jumps the script editor to a line of the script it already has open - how a tool points at the thing it is complaining about.,すでに開いているスクリプトの指定した行へスクリプトエディターを飛ばします - ツールが文句を言っている当の場所を指し示す方法です。
+Open script at line {line},スクリプトを {line} 行目で開く
+Line,行
+"The line to jump to, counted from zero.",飛び先の行です。0 から数えます。
+Add Window,ウィンドウを追加
+"Puts a window or dialog under the editor's own root, which is what makes it show up with the editor's theme and stay on top of it. Free it again when the plugin is disabled.",ウィンドウやダイアログをエディター自身のルートの下に置きます。こうすることでエディターのテーマで表示され、その上に留まります。プラグインを無効にするときは解放してください。
+Add window {window} to the editor's root,ウィンドウ {window} をエディターのルートに追加
+The window or dialog to hang on the editor.,エディターに取り付けるウィンドウまたはダイアログです。
+Add Command,コマンドを追加
+"Adds one entry to the editor's command palette (Ctrl+Shift+P), so a tool is reachable without a menu of its own.",エディターのコマンドパレット (Ctrl+Shift+P) に項目をひとつ追加します。専用のメニューがなくてもツールに手が届きます。
+Add command {title},コマンド {title} を追加
+The words the command palette shows.,コマンドパレットに表示される文言です。
+Keyed,キー
+The unique key the palette files it under.,パレットがこの項目を登録する一意のキーです。
+Calls,呼び出し
+The function to run when the command is chosen.,コマンドが選ばれたときに実行する関数です。
+Add Bottom Panel,下部パネルを追加
+"Adds a tab to the row Output and Debugger share, at the bottom of the editor. Remove it on plugin disabled or the row keeps a tab nobody owns.",エディター下部で 出力 と デバッガー が並ぶ行にタブを追加します。プラグインを無効にするときは取り除いてください。さもないと持ち主のいないタブが残ります。
+Add bottom panel {control} titled {title},下部パネル {control} を {title} という名前で追加
+Panel,パネル
+The Control to show in the bottom row.,下部の行に表示する Control です。
+Titled,タイトル
+"The words on its tab, beside Output and Debugger.",出力 と デバッガー の隣に並ぶタブの文言です。
+Remove Bottom Panel,下部パネルを削除
+Takes the plugin's tab back out of the bottom row.,プラグインのタブを下部の行から取り除きます。
+Remove bottom panel {control},下部パネル {control} を削除
+The Control that was added to the bottom row.,下部の行に追加した Control です。
+On Project Files Changed,プロジェクトファイル変更時
+"Runs whenever the project's files change on disk - something was imported, moved, deleted or added. The place to rescan whatever a tool keeps a list of.",プロジェクトのファイルがディスク上で変わるたびに実行されます - 何かがインポート、移動、削除、追加されたときです。ツールが一覧を持っているものを取り直す場所です。
+On project files changed,プロジェクトファイル変更時
+On Preferences Changed,エディター設定変更時
+"Runs when the user changes anything in Editor Settings. Re-read the preferences a tool draws with, so it follows the theme instead of keeping the old one.",ユーザーがエディター設定で何かを変えたときに実行されます。ツールが描画に使っている設定を読み直し、古いままにせずテーマに追随させます。
+On preferences changed,エディター設定変更時
+Move In Direction,方向へ移動
+"Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second.",3D ノードを自身の向きのいずれか (前・後・右・左・上・下) に沿って、毎秒の速さで移動させます。
+3D: Move & Turn,3D: 移動と回転
+Move [b]{direction}[/b] at [i]{speed}[/i],[b]{direction}[/b] へ [i]{speed}[/i] で移動
+Direction,方向
+Which of its own six directions to move along.,自身の 6 方向のうち、どれに沿って動くか。
+backward,後ろ
+down,下
+Units a second.,毎秒の単位数。
+Delta,デルタ
+Frame time; defaults to `delta`.,フレーム時間。既定は `delta` です。
+Rotate Clockwise,時計回りに回転
+Turns a 3D node about its up axis - the yaw a character or a turret turns with.,3D ノードを自身の上方向の軸まわりに回します - キャラクターや砲塔が向きを変えるヨーです。
+Rotate [b]clockwise[/b] at [i]{degrees_per_second}[/i]°/s,[b]時計回り[/b]に [i]{degrees_per_second}[/i]°/秒 で回転
+Degrees per second,毎秒の角度
+"Degrees a second, turning clockwise seen from above; a negative number turns the other way.",毎秒の角度。上から見て時計回りに回ります。負の値にすると逆向きに回ります。
+Rotate Up Or Down,上下に回転
+Tilts a 3D node's nose up or down - the pitch a plane or a camera arm moves with.,3D ノードの鼻先を上下に傾けます - 飛行機やカメラアームが動くピッチです。
+Rotate [b]up[/b] at [i]{degrees_per_second}[/i]°/s,[b]上[/b]へ [i]{degrees_per_second}[/i]°/秒 で回転
+Degrees a second; a negative number tilts the other way.,毎秒の角度。負の値にすると逆向きに傾きます。
+Roll,ロール
+Rolls a 3D node about the way it faces - the bank a plane or a ship leans with.,3D ノードを、向いている方向を軸にして傾けます - 飛行機や船が体を傾けるバンクです。
+Roll [b]left[/b] at [i]{degrees_per_second}[/i]°/s,[b]左[/b]へ [i]{degrees_per_second}[/i]°/秒 でロール
+Degrees a second; a negative number rolls the other way.,毎秒の角度。負の値にすると逆向きにロールします。
+Rotate Toward Facing,向きへ回転
+Turns a 3D node smoothly toward a facing instead of snapping to it - the way a turret leads its target.,3D ノードを、いきなり向き直るのではなく、なめらかにその向きへ回します - 砲塔が標的を追うような動きです。
+Rotate toward [i]{facing}[/i] at [i]{rate}[/i],[i]{facing}[/i] へ [i]{rate}[/i] で回転
+The facing to turn toward - Facing Along a direction gives you one.,回って向かう向き - 方向に沿った向き で取得できます。
+Rate,速さ
+"How fast it closes the gap, per second. Bigger turns harder.",残りの差を毎秒どれだけ詰めるか。大きいほど鋭く曲がります。
+Facing Along,方向に沿った向き
+The facing that looks along a direction - what Rotate Toward Facing turns toward.,ある方向に沿って見る向き - 向きへ回転 が向かう先です。
+The direction to face along.,沿って向く方向。
+Set Position To Another Object,別のオブジェクトの位置に合わせる
+"Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.",3D ノードを、別のノードがいる場所ちょうどに置きます - スポーン地点、装着位置、復活地点の使い方そのものです。
+3D: Place,3D: 配置
+Set position to [b]{other}[/b],位置を [b]{other}[/b] に合わせる
+Other,相手
+"The object to stand where - a spawn marker, a socket, another character.",その位置に立つ相手 - スポーン地点の目印、装着位置、別のキャラクターなど。
+Align To The Ground's Slope,地面の傾きに合わせる
+Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill.,3D ノードを傾けて、その上方向を地面の向きにそろえます - 落とした木箱が坂の上で平らに座る、あの 1 行です。
+Align to the ground's [b]slope[/b],地面の[b]傾き[/b]に合わせる
+Ground normal,地面の法線
+The way the surface faces - a ray hit gives you one as its `normal`.,面が向いている方向 - レイの当たり結果の `normal` から得られます。
+Is Within Angle Of Facing,向きの角度内にあるか
+"Asks whether something is inside the cone this object is looking down - a vision cone, a backstab check, an aim assist.",このオブジェクトが見ている円錐の中に何かが入っているかを尋ねます - 視界コーン、背後からの一撃の判定、エイムアシストに。
+3D: See,3D: 視界
+Is within [b]{angle}[/b]° of facing [i]{direction}[/i],[i]{direction}[/i] を向いた向きから [b]{angle}[/b]° 以内にある
+"The way this object faces. Its own forward, unless you say otherwise.",このオブジェクトが向いている方向。指定しなければ自身の前方です。
+The direction to the thing being looked for - Direction To gives you one.,探している相手への方向 - 〜への方向 で取得できます。
+Within,範囲内
+"Half the width of the cone, in degrees. 45 is a 90-degree field of view.",円錐の幅の半分 (度)。45 なら視野は 90 度になります。
+Is Behind,後ろにあるか
+Asks whether a place is behind this object - the backstab half of a facing test.,ある場所がこのオブジェクトの後ろにあるかを尋ねます - 向きの判定の、背後からの一撃にあたる半分です。
+[i]{point}[/i] is [b]behind[/b] it,[i]{point}[/i] は[b]後ろ[/b]にある
+The place being asked about.,判定したい場所。
+Is In Front Of,前にあるか
+"Asks whether a place is in front of this object, whichever way it happens to be turned.",ある場所がこのオブジェクトの前にあるかを尋ねます。今どちらを向いていても構いません。
+[i]{point}[/i] is [b]in front of[/b] it,[i]{point}[/i] は[b]前[/b]にある
+Is To The Right Of,右にあるか
+"Asks whether a place is off this object's right side - which way to lean, dodge or steer.",ある場所がこのオブジェクトの右側にあるかを尋ねます - どちらへ傾き、かわし、舵を切るかの判断に。
+[i]{point}[/i] is [b]to the right of[/b] it,[i]{point}[/i] は[b]右[/b]にある
+Is To The Left Of,左にあるか
+Asks whether a place is off this object's left side - the twin of Is To The Right Of.,ある場所がこのオブジェクトの左側にあるかを尋ねます - 右にあるか の片割れです。
+[i]{point}[/i] is [b]to the left of[/b] it,[i]{point}[/i] は[b]左[/b]にある
+Point At Angle,角度の先の点
+The point an angle and a distance name. Add it to a centre for a place on a circle; grow the distance every tick and it draws a spiral.,角度と距離が指し示す点。中心に足せば円周上の位置になり、毎ティック距離を伸ばせば渦を描きます。
+"The angle, in degrees.",角度 (度)。
+How far out to go.,どれだけ外へ離すか。
+Create Evenly Around A Circle,円周上に均等に生成
+"Places a number of copies evenly around a circle - the bullet-hell ring, the radial menu, the circle of pillars.",指定した数のコピーを円周上に均等に並べます - 弾幕のリング、放射メニュー、柱の輪に。
+Create [b]{count}[/b] of {scene} evenly around a circle of [i]{radius}[/i],半径 [i]{radius}[/i] の円周上に {scene} を [b]{count}[/b] 個 均等に生成
+How many,個数
+How many to place.,何個置くか。
+The scene to place.,配置するシーン。
+The middle of the circle.,円の中心。
+How far out from the centre they sit.,中心からどれだけ離れた位置に置くか。
+Store As Angle And Distance,角度と距離として控える
+"Reads a place back the other way - as the angle from one point to another and how far apart they are, both named in one drop.",場所を逆向きに読み取ります - ある点から別の点への角度と、その間の距離を、1 回の操作で両方とも名前付きで受け取ります。
+Store [i]{from}[/i] to [i]{to}[/i] as [b]{angle_name}[/b] and [b]{distance_name}[/b],[i]{from}[/i] から [i]{to}[/i] を [b]{angle_name}[/b] と [b]{distance_name}[/b] として控える
+The place to measure from.,測る起点となる場所。
+The place to measure to.,測る終点となる場所。
+Angle name,角度の名前
+What to call the angle.,角度に付ける名前。
+Distance name,距離の名前
+What to call the distance.,距離に付ける名前。
+Cursor Is Over Object (3D),カーソルがオブジェクトの上にある (3D)
+"True while the mouse is pointing at this object in the 3D world - hover highlights, tooltips and ""what am I about to click"" all start here. Needs an active Camera3D.",3D ワールドでマウスがこのオブジェクトを指している間、真になります。ホバー時のハイライト、ツールチップ、「いま何をクリックしようとしているか」はすべてここから始まります。有効な Camera3D が必要です。
+Mouse,マウス
+cursor is over {object},カーソルが {object} の上にある
+The object the cursor has to be over for this to be true.,これが真になるために、カーソルが上にある必要のあるオブジェクト。
+Layers,レイヤー
+"Which collision layers the ray may see, by the names this project gave them.",レイが見てよいコリジョンレイヤー。このプロジェクトが付けた名前で指定します。
+"How far into the scene the ray reaches, in metres.",レイがシーンのどこまで届くか (メートル単位)。
+On Object Clicked (3D),オブジェクトがクリックされたとき (3D)
+"Fires when a mouse button goes down over this object in the 3D world - click-to-select, click-to-attack, click-to-open. Lives in an input event, beside the other On ... pressed rows.",3D ワールドで、このオブジェクトの上でマウスボタンが押されたときに発火します。クリックで選択、クリックで攻撃、クリックで開く。ほかの「... を押したとき」の行と並べて、入力イベントの中に置きます。
+On {object} clicked,{object} がクリックされたとき
+The object the click has to land on.,クリックが当たる必要のあるオブジェクト。
+Mouse button.,マウスボタン。
+Mouse Floor Point,マウス下の床の位置
+"The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal.",カーソルが狙っている床上のワールド座標。建設プレビュー、移動指示のマーカー、デカールを置く場所です。
+mouse floor point,マウス下の床の位置
+Aimed Floor Point,照準先の床の位置
+"The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal. Aimed through a crosshair object rather than the OS pointer.",カーソルが狙っている床上のワールド座標。建設プレビュー、移動指示のマーカー、デカールを置く場所です。 OS のポインターではなく、照準オブジェクトを通して狙います。
+aimed floor point through {target},{target} を通した照準先の床の位置
+Cursor object,カーソルオブジェクト
+"The crosshair or virtual cursor to aim through. Its position ON THE CANVAS is what aims the ray, so a gamepad or touch cursor works exactly like the pointer.",狙いを通す照準または仮想カーソル。レイの向きを決めるのは、その「キャンバス上」の位置です。だからゲームパッドやタッチのカーソルでも、ポインターとまったく同じに使えます。
+Mouse Floor Object,マウス下の床オブジェクト
+"The floor object the cursor is aiming at, or nothing when the cursor is off the floor.",カーソルが狙っている床オブジェクト。カーソルが床から外れているときは何も返しません。
+mouse floor object,マウス下の床オブジェクト
+Aimed Floor Object,照準先の床オブジェクト
+"The floor object the cursor is aiming at, or nothing when the cursor is off the floor. Aimed through a crosshair object rather than the OS pointer.",カーソルが狙っている床オブジェクト。カーソルが床から外れているときは何も返しません。 OS のポインターではなく、照準オブジェクトを通して狙います。
+aimed floor object through {target},{target} を通した照準先の床オブジェクト
+Mouse Floor Slope,マウス下の床の傾斜
+"Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable.",カーソルの下で床が向いている方向。「地面に合わせる」の傾斜に渡したり、「傾斜が…より急」に建てられるかを尋ねたりします。
+mouse floor slope,マウス下の床の傾斜
+Aimed Floor Slope,照準先の床の傾斜
+"Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable. Aimed through a crosshair object rather than the OS pointer.",カーソルの下で床が向いている方向。「地面に合わせる」の傾斜に渡したり、「傾斜が…より急」に建てられるかを尋ねたりします。 OS のポインターではなく、照準オブジェクトを通して狙います。
+aimed floor slope through {target},{target} を通した照準先の床の傾斜
+Slope Steeper Than,傾斜が…より急
+True when the ground faces further than this from straight up - the buildable test a placement preview tints itself with.,地面の向きが真上からこれ以上ずれているときに真になります。設置プレビューが自分の色を変える「建てられるか」の判定です。
+Slope,傾斜
+Which way the ground faces - the floor slope expressions answer exactly this.,地面が向いている方向。床の傾斜の式がまさにこれを返します。
+Degrees,度
+How far from flat counts as too steep.,水平からどれだけ離れたら急すぎとみなすか。
+Canvas X (2D),キャンバス X (2D)
+"Where this object is ON THE CANVAS, in pixels. Camera zoom and canvas layers are already in the answer, which is exactly what plain position arithmetic gets wrong.",このオブジェクトが「キャンバス上」のどこにあるか (ピクセル単位)。カメラのズームやキャンバスレイヤーはすでに織り込み済みで、位置をそのまま計算するとまさにここを間違えます。
+{target}'s canvas x,{target} のキャンバス x
+The object being asked where it is on screen.,画面上のどこにいるかを尋ねる対象のオブジェクト。
+Canvas X (3D),キャンバス X (3D)
+"Where this 3D object lands ON THE CANVAS, in pixels - the number a health bar over its head, an off-screen arrow or an aim assist is positioned by.",この 3D オブジェクトが「キャンバス上」のどこに落ちるか (ピクセル単位)。頭上の体力バー、画面外を指す矢印、エイムアシストを配置するための数値です。
+The 3D object being asked where it is on screen.,画面上のどこにいるかを尋ねる対象の 3D オブジェクト。
+Canvas Y (2D),キャンバス Y (2D)
+{target}'s canvas y,{target} のキャンバス y
+Canvas Y (3D),キャンバス Y (3D)
+Canvas Centre,キャンバスの中心
+"The middle of what the player can see, in pixels - where a crosshair sits.",プレイヤーに見えている範囲の中央 (ピクセル単位)。照準が置かれる場所です。
+Pick Nearest To Canvas Point,キャンバス上の点に最も近いものをピック
+"Walks the instances and keeps whichever is closest to a point ON THE CANVAS - aim assist, snap-to-target crosshairs and ""whichever one I am nearly pointing at"". Measured in pixels, so camera zoom is honoured; anything behind the camera is skipped.",インスタンスをたどり、「キャンバス上」のある点に最も近いものだけを残します。エイムアシスト、標的に吸い付く照準、「ほとんど狙えているやつ」に使います。測るのはピクセルなのでカメラのズームも効き、カメラの背後にあるものは飛ばします。
+pick nearest of [i]{list}[/i] to canvas point {from} -> [b]{name}[/b],[i]{list}[/i] からキャンバス上の点 {from} に最も近いものをピック -> [b]{name}[/b]
+Picked name,ピックした名前
+"The name the one it picks goes by in the rows below. Nothing is picked when the list is empty or everything is off screen, so check the name exists first.",ピックしたものが下の行で名乗る名前。リストが空のときや全部が画面外のときは何もピックされないので、まず名前が存在するかを確かめてください。
+Out of,対象
+"The instances to pick from - usually a group, which is how a project spells ""every one of this kind"".",ピックの候補になるインスタンス。ふつうはグループで、プロジェクトで「この種類のすべて」を表す書き方です。
+Nearest to,基準の点
+"The canvas point distances are measured from, in pixels. The canvas centre is the crosshair.",距離を測る起点となるキャンバス上の点 (ピクセル単位)。キャンバスの中心が照準です。
+"How far from that point, in PIXELS, still counts. Nothing beyond it is picked.",その点からどれだけ離れるまでを有効とみなすか (ピクセル単位)。それを超えたものはピックされません。
+Remove Child,子を外す
+"Detaches a child node from this one without deleting it, so you can reattach it later.",子ノードをこのノードから外します。削除はしないので、あとで付け直せます。
+remove child [i]{node}[/i],子 [i]{node}[/i] を外す
+Child to detach (by index here - no hardcoded name; pick one or use a scene-unique node). Not freed.,外す子 (ここではインデックス指定 - 名前の直書きはしません。ひとつ選ぶか、シーン内で一意なノードを使ってください)。解放はしません。
+Add Child (existing node),子を追加 (既存のノード)
+"Moves a node that is already in the layout under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.",すでにレイアウトにあるノードを、新しい親の下へ移します。アイテムを手に持たせる、乗り手を鞍に乗せる、武器を背中に掛ける、といった使い方です。「位置を保つ」なら見えているそのままの場所に残り、「合わせる」なら親自身の位置に移ります。
+add child [i]{child}[/i] to [i]{parent}[/i],子 [i]{child}[/i] を [i]{parent}[/i] に追加
+Child,子
+The node that becomes a child. It keeps everything it is - only its parent changes.,子になるノード。中身は何も変わらず、親だけが変わります。
+Parent,親
+The node it goes under.,その下に入るノード。
+Its place,位置の扱い
+"Whether the child stays where it is in the world, or snaps to its new parent.",子をワールド上のいまの位置に残すか、新しい親の位置に合わせるか。
+Remove From Parent,親から外す
+"Takes a node off whatever it is under and puts it back at the top of the layout, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.",ノードを、いま属している親から外してレイアウトの一番上に戻します。ワールド上の位置はそのままです。持っている物を落とす、乗り手を降ろす、といった使い方。ノードは解放されず、ほかは何も変わりません。
+remove [i]{child}[/i] from its parent,[i]{child}[/i] を親から外す
+"The node to take off its parent. It stays in the layout, at the top level.",親から外すノード。レイアウトには一番上の階層として残ります。
+Set Ignore Parent's Movement,親の動きを無視を設定
+"Stops a child moving, turning and scaling with its parent while leaving it a child in every other way - it is still freed with the parent and still picked as one of its children. The answer for a muzzle flash that should not swing with the gun, or a health bar that should not tilt with the enemy.",子が親と一緒に移動・回転・拡大縮小するのをやめさせます。それ以外はこれまでどおり子のままで、親と一緒に解放されますし、子として拾われもします。銃と一緒に振り回されたくないマズルフラッシュや、敵と一緒に傾いてほしくない体力バーの答えです。
+set ignore parent's movement [b]{ignore}[/b] on [i]{target}[/i],[i]{target}[/i] の親の動きを無視を [b]{ignore}[/b] に設定
+The child that should stop (or start) following its parent.,親に追従するのをやめる (または始める) 子。
+Ignore,無視
+On: the child stays where it is when the parent moves.,オン: 親が動いても子はその場に留まります。
+Copy Place To,位置をコピーする先
+"Points a RemoteTransform at the node it should drive, so that node follows this one without being its child at all. Which parts follow - position, angle, size - are the RemoteTransform's own switches.",RemoteTransform に、動かす相手のノードを指し示させます。相手は子にならないまま、このノードに追従します。どの要素が追従するか (位置、角度、大きさ) は RemoteTransform 側のスイッチで決まります。
+copy [i]{follower}[/i] place to [b]{path}[/b],[i]{follower}[/i] の位置を [b]{path}[/b] にコピー
+Follower,追従役
+The RemoteTransform2D / RemoteTransform3D doing the copying.,コピーを行う RemoteTransform2D / RemoteTransform3D。
+Path to the node its place is copied onto.,位置のコピー先となるノードへのパス。
+Stop Copying Place,位置のコピーをやめる
+"Clears a RemoteTransform's target, so whatever it was driving stops following immediately. The node it drove keeps the place it had.",RemoteTransform のターゲットを空にします。動かしていた相手は即座に追従をやめ、その時点の位置をそのまま保ちます。
+stop [i]{follower}[/i] copying,[i]{follower}[/i] のコピーを止める
+The RemoteTransform2D / RemoteTransform3D to switch off.,オフにする RemoteTransform2D / RemoteTransform3D。
+For Each Child,子ごとに
+"Runs this event's actions once per direct child of a node - healing a squad, totting up an inventory, checking every socket. Read the current one as `child`. Children added while it runs are not visited by this pass.",このイベントのアクションを、ノードの直接の子ごとに 1 回ずつ実行します。分隊を回復する、インベントリを合計する、全スロットを調べる、といった用途です。いま処理中の子は `child` で読めます。実行中に追加された子は、この回では回りません。
+for each child of [i]{target}[/i],[i]{target}[/i] の子ごとに
+The node whose children the actions run once for.,その子ごとにアクションが 1 回ずつ走る対象のノード。
+Move Child To Index,子をインデックスへ移動
+"Reorders a child to a new sibling index, changing its draw and process order.",子を兄弟の中の新しいインデックスに並べ替え、描画順と処理順を変えます。
+move [i]{node}[/i] to index [b]{index}[/b],[i]{node}[/i] をインデックス [b]{index}[/b] へ移動
+Child to reorder (by index here - no hardcoded name; pick one or use a scene-unique node).,並べ替える子 (ここではインデックス指定 - 名前の直書きはしません。ひとつ選ぶか、シーン内で一意なノードを使ってください)。
+Index,インデックス
+New sibling index (draw / process order).,兄弟の中での新しいインデックス (描画順 / 処理順)。
+Free Node,ノードを解放
+"Safely deletes a node at the end of the frame, e.g. removing a dead enemy.",フレームの終わりにノードを安全に削除します。たとえば倒した敵を片づけるときに使います。
+free [i]{target}[/i],[i]{target}[/i] を解放
+Target,対象
+Node to free at the end of the frame.,フレームの終わりに解放するノード。
+Signals / Scene / Input,シグナル / シーン / 入力
+On Child Added,子ノードが追加されたとき
+"Runs when a child node is added beneath this one, e.g. reacting to spawned items.",このノードの下に子ノードが追加されたときに実行されます。たとえば生成されたアイテムに反応する場合に使います。
+On child added [i]{node}[/i],子ノード [i]{node}[/i] が追加されたとき
+On Child Leaving,子ノードが離れるとき
+"Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it.",子ノードがこのノードから離れる直前に実行されます。まだ読み取れるうちに走るので、個数や合計、パネルの表示をその子の情報で更新できます。
+On child leaving [i]{node}[/i],子ノード [i]{node}[/i] が離れるとき

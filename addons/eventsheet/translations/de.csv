@@ -3665,3 +3665,339 @@ Swipes and drawn shapes,Wischgesten und gezeichnete Formen
 Secrets found,Gefundene Geheimnisse
 Timed input windows,Zeitfenster für Eingaben
 An accessibility options screen,Ein Bildschirm für Barrierefreiheits-Optionen
+Fill Meter,Anzeige füllen
+"Raises a number at a steady rate per second and stops it at a limit - a suspicion meter filling while a guard sees you, a bar charging, stamina coming back.","Hebt eine Zahl mit gleichmäßiger Rate pro Sekunde und stoppt sie an einer Grenze - eine Verdachtsanzeige, die sich füllt, während eine Wache dich sieht, ein aufladender Balken, zurückkehrende Ausdauer."
+Meters,Anzeigen
+Fill [b]{var_name}[/b] at [b]{rate}[/b] up to [b]{cap}[/b],[b]{var_name}[/b] mit [b]{rate}[/b] bis [b]{cap}[/b] füllen
+Meter,Anzeige
+The number to fill.,"Die Zahl, die gefüllt wird."
+Per second,Pro Sekunde
+How much it gains each second.,Wie viel sie pro Sekunde gewinnt.
+Up to,Bis
+The value it stops at.,"Der Wert, bei dem sie stoppt."
+Drain Meter,Anzeige leeren
+"Lowers a number at a steady rate per second and stops it at a floor - suspicion cooling off, a shield decaying, a charge bleeding away.","Senkt eine Zahl mit gleichmäßiger Rate pro Sekunde und stoppt sie an einer Untergrenze - abkühlender Verdacht, ein zerfallender Schild, eine versickernde Ladung."
+Drain [b]{var_name}[/b] at [b]{rate}[/b] down to [b]{floor}[/b],[b]{var_name}[/b] mit [b]{rate}[/b] bis auf [b]{floor}[/b] leeren
+The number to drain.,"Die Zahl, die geleert wird."
+How much it loses each second.,Wie viel sie pro Sekunde verliert.
+Down to,Bis auf
+Make Noise,Geräusch machen
+"Tells everything in the listening group that a noise happened at a place, but only the ones close enough to hear it. Footsteps, a door, a thrown bottle.","Teilt allem in der Zuhörergruppe mit, dass an einem Ort ein Geräusch passiert ist - aber nur denen, die nah genug sind, um es zu hören. Schritte, eine Tür, eine geworfene Flasche."
+Stealth,Schleichen
+"Make noise at [b]{at}[/b], heard within [b]{radius}[/b]","Geräusch bei [b]{at}[/b] machen, hörbar innerhalb von [b]{radius}[/b]"
+Where the noise happened (a position expression).,Wo das Geräusch passiert ist (ein Positionsausdruck).
+Heard within,Hörbar innerhalb
+How far the noise carries.,Wie weit das Geräusch trägt.
+Heard by,Gehört von
+The group whose members can hear - each one needs an On Noise Heard event.,"Die Gruppe, deren Mitglieder hören können - jedes braucht ein Ereignis Bei gehörtem Geräusch."
+On Noise Heard,Bei gehörtem Geräusch
+"Runs when a Make Noise action happens close enough for this object to hear it, with the place it came from. Put this object in the listening group first (Add To Group, on created).","Läuft, wenn eine Aktion Geräusch machen nah genug passiert, dass dieses Objekt sie hört - mitsamt dem Ort, von dem sie kam. Nimm dieses Objekt zuerst in die Zuhörergruppe auf (Zu Gruppe hinzufügen, beim Erstellen)."
+On noise heard at,Bei gehörtem Geräusch bei
+Phase Starts,Phase beginnt
+True the one time health first falls past a share of its maximum while the fight is in an earlier phase. The phase guard is what makes it happen once: set the phase variable in the actions under this condition.,"Wahr genau einmal - wenn die Lebenspunkte zum ersten Mal unter einen Anteil ihres Maximums fallen, während der Kampf noch in einer früheren Phase ist. Die Phasenprüfung sorgt für das Einmalige: setze die Phasenvariable in den Aktionen unter dieser Bedingung."
+Boss,Boss
+"Phase [b]{phase}[/b] starts ([b]{hp}[/b] <= [b]{share}[/b] of [b]{max_hp}[/b], once)","Phase [b]{phase}[/b] beginnt ([b]{hp}[/b] <= [b]{share}[/b] von [b]{max_hp}[/b], einmalig)"
+Phase,Phase
+The phase number that starts here.,"Die Phasennummer, die hier beginnt."
+At share of maximum,Bei Anteil des Maximums
+The health share it starts at - 0.6 is 60%.,"Der Lebenspunkte-Anteil, bei dem sie beginnt - 0.6 sind 60 %."
+Health,Lebenspunkte
+The variable holding health now.,Die Variable mit den aktuellen Lebenspunkten.
+Maximum health,Maximale Lebenspunkte
+The variable holding full health.,Die Variable mit den vollen Lebenspunkten.
+Phase variable,Phasenvariable
+The variable holding which phase the fight is in - set it in the actions below.,"Die Variable, in der steht, in welcher Phase der Kampf ist - setze sie in den Aktionen darunter."
+Set Invulnerable For,Unverwundbar setzen für
+"Turns a flag on, waits, and turns it back off - the invulnerability window after a hit, written once instead of as a flag and a timer that can drift apart.","Schaltet ein Flag ein, wartet und schaltet es wieder aus - das Unverwundbarkeitsfenster nach einem Treffer, einmal geschrieben statt als Flag und Zeitgeber, die auseinanderlaufen können."
+Set [b]{flag}[/b] for [b]{seconds}[/b] seconds,[b]{flag}[/b] für [b]{seconds}[/b] Sekunden setzen
+Flag,Flag
+The boolean that says nothing lands.,"Der Wahrheitswert, der sagt, dass nichts trifft."
+For seconds,Für Sekunden
+How long the window lasts.,Wie lange das Fenster dauert.
+Start Mission Timer,Missionsuhr starten
+Puts a number of seconds on the mission clock. Type the time the way a player reads it - 3:00 - and the row stores the seconds.,"Stellt eine Anzahl Sekunden auf die Missionsuhr. Tippe die Zeit so, wie ein Spieler sie liest - 3:00 - und die Zeile speichert die Sekunden."
+Missions,Missionen
+Start [b]{var_name}[/b] at [b]{seconds}[/b],[b]{var_name}[/b] bei [b]{seconds}[/b] starten
+Timer variable,Zeitgeber-Variable
+The variable holding the seconds left.,Die Variable mit den verbleibenden Sekunden.
+How long the mission runs - type it as minutes:seconds.,Wie lange die Mission läuft - tippe es als Minuten:Sekunden.
+Add Mission Time,Missionszeit hinzufügen
+Puts time back on the mission clock - the pickup that buys you another half minute.,"Legt Zeit auf die Missionsuhr zurück - das Aufsammelbare, das dir eine weitere halbe Minute kauft."
+Add [b]{seconds}[/b] to [b]{var_name}[/b],[b]{seconds}[/b] zu [b]{var_name}[/b] hinzufügen
+How much time to add - type it as minutes:seconds.,Wie viel Zeit hinzukommt - tippe es als Minuten:Sekunden.
+Mission Time Left,Verbleibende Missionszeit
+"Gives the time left as text a player can read - ""2:41"" - ready to drop into a HUD label.","Gibt die Restzeit als Text, den ein Spieler lesen kann - ""2:41"" - fertig, um in ein HUD-Label zu wandern."
+Missions.TimeLeft,Missionen.Restzeit
+Editor Icon,Editor-Symbol
+"One of the editor's own icons, so a tool's buttons and docks look like the editor around them instead of shipping their own art. The field draws the icon it names as you pick it.","Eines der Symbole des Editors, damit die Schaltflächen und Docks eines Werkzeugs wie der Editor ringsherum aussehen, statt eigene Grafiken mitzubringen. Das Feld zeichnet beim Auswählen das Symbol, das es benennt."
+Editor Tools: Panels & menus,Editor-Werkzeuge: Panels & Menüs
+Editor.Icon({icon_name}),Editor.Icon({icon_name})
+"The editor icon's name - usually a class name like Node2D, Script or Folder.","Der Name des Editor-Symbols - meist ein Klassenname wie Node2D, Script oder Folder."
+Editor Preference,Editor-Einstellung
+"One value out of the user's own Editor Settings - their theme colour, grid step, font size. Read it so a tool matches the editor the person in front of it actually set up.","Ein Wert aus den eigenen Editor-Einstellungen des Nutzers - seine Themenfarbe, Rasterschritt, Schriftgröße. Lies ihn, damit ein Werkzeug zu dem Editor passt, den die Person davor tatsächlich eingerichtet hat."
+Editor Tools: Project & preferences,Editor-Werkzeuge: Projekt & Einstellungen
+Editor.Preference({path}),Editor.Preference({path})
+"The Editor Settings path, as it reads in Editor > Editor Settings.","Der Pfad in den Editor-Einstellungen, so wie er unter Editor > Editor-Einstellungen steht."
+Project Setting,Projekteinstellung
+"One value out of this project's own settings. Unlike a preference, it is saved with the project, so every person opening it sees the same answer.","Ein Wert aus den eigenen Einstellungen dieses Projekts. Anders als eine Editor-Einstellung wird er mit dem Projekt gespeichert, sodass jede Person, die es öffnet, dieselbe Antwort sieht."
+Project.Setting({path}),Project.Setting({path})
+"The Project Settings path, as it reads in Project > Project Settings.","Der Pfad in den Projekteinstellungen, so wie er unter Projekt > Projekteinstellungen steht."
+Workspace Area,Arbeitsbereichsfläche
+"The big area the 2D, 3D and Script tabs share. A workspace plugin adds its own screen as a child of this.","Die große Fläche, die sich die Tabs 2D, 3D und Script teilen. Ein Arbeitsbereichs-Plugin hängt seinen eigenen Bildschirm als Kind daran."
+Editor.MainScreen,Editor.MainScreen
+Set Setting,Einstellung setzen
+"Writes one project setting. It lives in memory until Save settings runs, so a tool that changes several settings writes them all and saves once.","Schreibt eine Projekteinstellung. Sie lebt im Speicher, bis Einstellungen speichern läuft - ein Werkzeug, das mehrere Einstellungen ändert, schreibt also alle und speichert einmal."
+Set setting {path} to {value},Einstellung {path} auf {value} setzen
+The Project Settings path to write.,Der zu schreibende Pfad in den Projekteinstellungen.
+The value to store there.,"Der Wert, der dort abgelegt wird."
+Save Settings,Einstellungen speichern
+"Writes the project settings back to project.godot. Without this, everything Set setting changed is lost when the editor closes.","Schreibt die Projekteinstellungen zurück nach project.godot. Ohne das geht alles, was Einstellung setzen geändert hat, beim Schließen des Editors verloren."
+Save settings,Einstellungen speichern
+Switch To Workspace,Zu Arbeitsbereich wechseln
+Brings one of the editor's top tabs to the front - the same click as pressing 2D or Script yourself.,"Holt einen der oberen Tabs des Editors nach vorn - derselbe Klick, als würdest du selbst 2D oder Script drücken."
+Switch to workspace {workspace},Zu Arbeitsbereich {workspace} wechseln
+Which of the editor's top tabs to bring forward.,Welcher der oberen Tabs des Editors nach vorn geholt wird.
+2D,2D
+3D,3D
+Game,Spiel
+AssetLib,AssetLib
+Show In Project Bar,In Projektleiste anzeigen
+"Reveals a folder or file in the editor's project file list and selects it - what a tool does after it writes something, so the reader can see what just landed.","Zeigt einen Ordner oder eine Datei in der Projektdateiliste des Editors und wählt sie aus - das, was ein Werkzeug tut, nachdem es etwas geschrieben hat, damit man sieht, was gerade gelandet ist."
+Show in Project bar {path},{path} in der Projektleiste anzeigen
+"The folder or file to reveal, as a res:// path.",Der anzuzeigende Ordner oder die Datei als res://-Pfad.
+Open Script At Line,Skript bei Zeile öffnen
+Jumps the script editor to a line of the script it already has open - how a tool points at the thing it is complaining about.,"Springt im Skripteditor zu einer Zeile des bereits geöffneten Skripts - so zeigt ein Werkzeug auf genau das, worüber es sich beschwert."
+Open script at line {line},Skript bei Zeile {line} öffnen
+Line,Zeile
+"The line to jump to, counted from zero.","Die Zeile, zu der gesprungen wird, ab null gezählt."
+Add Window,Fenster hinzufügen
+"Puts a window or dialog under the editor's own root, which is what makes it show up with the editor's theme and stay on top of it. Free it again when the plugin is disabled.",Hängt ein Fenster oder einen Dialog unter die eigene Wurzel des Editors - erst dadurch erscheint es im Thema des Editors und bleibt darüber. Beim Deaktivieren des Plugins wieder freigeben.
+Add window {window} to the editor's root,Fenster {window} an die Editor-Wurzel hängen
+The window or dialog to hang on the editor.,"Das Fenster oder der Dialog, der an den Editor gehängt wird."
+Add Command,Befehl hinzufügen
+"Adds one entry to the editor's command palette (Ctrl+Shift+P), so a tool is reachable without a menu of its own.","Fügt der Befehlspalette des Editors (Ctrl+Shift+P) einen Eintrag hinzu, sodass ein Werkzeug ohne eigenes Menü erreichbar ist."
+Add command {title},Befehl {title} hinzufügen
+The words the command palette shows.,"Die Worte, die die Befehlspalette anzeigt."
+Keyed,Schlüssel
+The unique key the palette files it under.,"Der eindeutige Schlüssel, unter dem die Palette ihn ablegt."
+Calls,Ruft auf
+The function to run when the command is chosen.,"Die Funktion, die beim Auswählen des Befehls läuft."
+Add Bottom Panel,Unteres Panel hinzufügen
+"Adds a tab to the row Output and Debugger share, at the bottom of the editor. Remove it on plugin disabled or the row keeps a tab nobody owns.","Fügt der Leiste, die sich Ausgabe und Debugger am unteren Rand des Editors teilen, einen Tab hinzu. Beim Deaktivieren des Plugins wieder entfernen, sonst behält die Leiste einen Tab, dem niemand gehört."
+Add bottom panel {control} titled {title},Unteres Panel {control} mit Titel {title} hinzufügen
+Panel,Panel
+The Control to show in the bottom row.,"Das Control, das in der unteren Leiste gezeigt wird."
+Titled,Titel
+"The words on its tab, beside Output and Debugger.","Die Worte auf seinem Tab, neben Ausgabe und Debugger."
+Remove Bottom Panel,Unteres Panel entfernen
+Takes the plugin's tab back out of the bottom row.,Nimmt den Tab des Plugins wieder aus der unteren Leiste heraus.
+Remove bottom panel {control},Unteres Panel {control} entfernen
+The Control that was added to the bottom row.,"Das Control, das der unteren Leiste hinzugefügt wurde."
+On Project Files Changed,Bei geänderten Projektdateien
+"Runs whenever the project's files change on disk - something was imported, moved, deleted or added. The place to rescan whatever a tool keeps a list of.","Läuft immer dann, wenn sich die Dateien des Projekts auf der Festplatte ändern - etwas wurde importiert, verschoben, gelöscht oder hinzugefügt. Der Ort, um neu einzulesen, worüber ein Werkzeug eine Liste führt."
+On project files changed,Bei geänderten Projektdateien
+On Preferences Changed,Bei geänderten Editor-Einstellungen
+"Runs when the user changes anything in Editor Settings. Re-read the preferences a tool draws with, so it follows the theme instead of keeping the old one.","Läuft, wenn der Nutzer irgendetwas in den Editor-Einstellungen ändert. Lies die Einstellungen, mit denen ein Werkzeug zeichnet, neu ein, damit es dem Thema folgt statt am alten festzuhalten."
+On preferences changed,Bei geänderten Editor-Einstellungen
+Move In Direction,In Richtung bewegen
+"Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second.","Bewegt einen 3D-Node entlang einer seiner eigenen Richtungen - vorwärts, rückwärts, rechts, links, oben oder unten - mit einer Geschwindigkeit pro Sekunde."
+3D: Move & Turn,3D: Bewegen & Drehen
+Move [b]{direction}[/b] at [i]{speed}[/i],[b]{direction}[/b] mit [i]{speed}[/i] bewegen
+Direction,Richtung
+Which of its own six directions to move along.,Entlang welcher seiner sechs eigenen Richtungen bewegt wird.
+backward,rückwärts
+down,unten
+Units a second.,Einheiten pro Sekunde.
+Delta,Delta
+Frame time; defaults to `delta`.,Framezeit; Standard ist `delta`.
+Rotate Clockwise,Im Uhrzeigersinn drehen
+Turns a 3D node about its up axis - the yaw a character or a turret turns with.,"Dreht einen 3D-Node um seine Hochachse - das Gieren, mit dem sich eine Figur oder ein Geschützturm dreht."
+Rotate [b]clockwise[/b] at [i]{degrees_per_second}[/i]°/s,[b]Im Uhrzeigersinn[/b] mit [i]{degrees_per_second}[/i]°/s drehen
+Degrees per second,Grad pro Sekunde
+"Degrees a second, turning clockwise seen from above; a negative number turns the other way.","Grad pro Sekunde, von oben gesehen im Uhrzeigersinn; ein negativer Wert dreht andersherum."
+Rotate Up Or Down,Nach oben oder unten drehen
+Tilts a 3D node's nose up or down - the pitch a plane or a camera arm moves with.,"Neigt die Nase eines 3D-Nodes nach oben oder unten - das Nicken, mit dem sich ein Flugzeug oder ein Kameraarm bewegt."
+Rotate [b]up[/b] at [i]{degrees_per_second}[/i]°/s,[b]Nach oben[/b] mit [i]{degrees_per_second}[/i]°/s drehen
+Degrees a second; a negative number tilts the other way.,Grad pro Sekunde; ein negativer Wert neigt andersherum.
+Roll,Rollen
+Rolls a 3D node about the way it faces - the bank a plane or a ship leans with.,"Rollt einen 3D-Node um seine Blickrichtung - die Schräglage, in die sich ein Flugzeug oder ein Schiff legt."
+Roll [b]left[/b] at [i]{degrees_per_second}[/i]°/s,[b]Nach links[/b] mit [i]{degrees_per_second}[/i]°/s rollen
+Degrees a second; a negative number rolls the other way.,Grad pro Sekunde; ein negativer Wert rollt andersherum.
+Rotate Toward Facing,Zur Ausrichtung drehen
+Turns a 3D node smoothly toward a facing instead of snapping to it - the way a turret leads its target.,"Dreht einen 3D-Node sanft zu einer Ausrichtung, statt hart einzurasten - so, wie ein Geschützturm sein Ziel vorhält."
+Rotate toward [i]{facing}[/i] at [i]{rate}[/i],Zu [i]{facing}[/i] mit [i]{rate}[/i] drehen
+The facing to turn toward - Facing Along a direction gives you one.,"Die Ausrichtung, zu der gedreht wird - Ausrichtung entlang einer Richtung liefert dir eine."
+Rate,Rate
+"How fast it closes the gap, per second. Bigger turns harder.",Wie schnell der Rest pro Sekunde aufgeholt wird. Größer dreht härter.
+Facing Along,Ausrichtung entlang
+The facing that looks along a direction - what Rotate Toward Facing turns toward.,"Die Ausrichtung, die entlang einer Richtung blickt - das, wozu Zur Ausrichtung drehen sich dreht."
+The direction to face along.,"Die Richtung, entlang der geblickt wird."
+Set Position To Another Object,Position auf ein anderes Objekt setzen
+"Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.","Setzt einen 3D-Node genau dorthin, wo ein anderer steht - so nutzt man einen Spawnpunkt, einen Aufhängepunkt oder eine Wiedereinstiegsmarke."
+3D: Place,3D: Platzieren
+Set position to [b]{other}[/b],Position auf [b]{other}[/b] setzen
+Other,Anderes Objekt
+"The object to stand where - a spawn marker, a socket, another character.","Das Objekt, an dessen Stelle getreten wird - eine Spawnmarke, ein Aufhängepunkt, eine andere Figur."
+Align To The Ground's Slope,An der Neigung des Bodens ausrichten
+Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill.,"Neigt einen 3D-Node so, dass sein Oben dorthin zeigt wie der Boden - die Zeile, durch die eine fallengelassene Kiste flach auf einem Hang liegt."
+Align to the ground's [b]slope[/b],An der [b]Neigung[/b] des Bodens ausrichten
+Ground normal,Bodennormale
+The way the surface faces - a ray hit gives you one as its `normal`.,"Die Richtung, in die die Oberfläche zeigt - ein Strahlentreffer liefert sie als `normal`."
+Is Within Angle Of Facing,Ist im Blickwinkel
+"Asks whether something is inside the cone this object is looking down - a vision cone, a backstab check, an aim assist.","Fragt, ob etwas in dem Kegel liegt, in den dieses Objekt blickt - ein Sichtkegel, eine Rückenangriffs-Prüfung, eine Zielhilfe."
+3D: See,3D: Sehen
+Is within [b]{angle}[/b]° of facing [i]{direction}[/i],Liegt innerhalb von [b]{angle}[/b]° der Blickrichtung [i]{direction}[/i]
+"The way this object faces. Its own forward, unless you say otherwise.","Die Richtung, in die dieses Objekt blickt. Sein eigenes Vorne, sofern du nichts anderes angibst."
+The direction to the thing being looked for - Direction To gives you one.,Die Richtung zu dem Gesuchten - Richtung zu liefert dir eine.
+Within,Innerhalb von
+"Half the width of the cone, in degrees. 45 is a 90-degree field of view.","Die halbe Breite des Kegels, in Grad. 45 ergibt ein Sichtfeld von 90 Grad."
+Is Behind,Ist dahinter
+Asks whether a place is behind this object - the backstab half of a facing test.,"Fragt, ob ein Ort hinter diesem Objekt liegt - die Rückenangriffs-Hälfte einer Blickrichtungsprüfung."
+[i]{point}[/i] is [b]behind[/b] it,[i]{point}[/i] liegt [b]dahinter[/b]
+The place being asked about.,"Der Ort, nach dem gefragt wird."
+Is In Front Of,Ist davor
+"Asks whether a place is in front of this object, whichever way it happens to be turned.","Fragt, ob ein Ort vor diesem Objekt liegt, egal wie es gerade gedreht ist."
+[i]{point}[/i] is [b]in front of[/b] it,[i]{point}[/i] liegt [b]davor[/b]
+Is To The Right Of,Ist rechts davon
+"Asks whether a place is off this object's right side - which way to lean, dodge or steer.","Fragt, ob ein Ort auf der rechten Seite dieses Objekts liegt - wohin man sich lehnt, ausweicht oder steuert."
+[i]{point}[/i] is [b]to the right of[/b] it,[i]{point}[/i] liegt [b]rechts davon[/b]
+Is To The Left Of,Ist links davon
+Asks whether a place is off this object's left side - the twin of Is To The Right Of.,"Fragt, ob ein Ort auf der linken Seite dieses Objekts liegt - der Zwilling von Ist rechts davon."
+[i]{point}[/i] is [b]to the left of[/b] it,[i]{point}[/i] liegt [b]links davon[/b]
+Point At Angle,Punkt im Winkel
+The point an angle and a distance name. Add it to a centre for a place on a circle; grow the distance every tick and it draws a spiral.,"Der Punkt, den ein Winkel und eine Entfernung benennen. Addiere ihn zu einer Mitte für eine Stelle auf einem Kreis; lass die Entfernung mit jedem Tick wachsen, und er zeichnet eine Spirale."
+"The angle, in degrees.","Der Winkel, in Grad."
+How far out to go.,Wie weit hinaus es geht.
+Create Evenly Around A Circle,Gleichmäßig im Kreis erzeugen
+"Places a number of copies evenly around a circle - the bullet-hell ring, the radial menu, the circle of pillars.","Setzt eine Anzahl Kopien gleichmäßig auf einen Kreis - der Kugelhagel-Ring, das Radialmenü, der Säulenkreis."
+Create [b]{count}[/b] of {scene} evenly around a circle of [i]{radius}[/i],[b]{count}[/b] von {scene} gleichmäßig auf einem Kreis mit [i]{radius}[/i] erzeugen
+How many,Anzahl
+How many to place.,Wie viele platziert werden.
+The scene to place.,"Die Szene, die platziert wird."
+The middle of the circle.,Die Mitte des Kreises.
+How far out from the centre they sit.,Wie weit von der Mitte entfernt sie sitzen.
+Store As Angle And Distance,Als Winkel und Entfernung ablegen
+"Reads a place back the other way - as the angle from one point to another and how far apart they are, both named in one drop.","Liest einen Ort andersherum aus - als Winkel von einem Punkt zum anderen und als Abstand zwischen beiden, beide in einem Zug benannt."
+Store [i]{from}[/i] to [i]{to}[/i] as [b]{angle_name}[/b] and [b]{distance_name}[/b],[i]{from}[/i] nach [i]{to}[/i] als [b]{angle_name}[/b] und [b]{distance_name}[/b] ablegen
+The place to measure from.,"Der Ort, von dem aus gemessen wird."
+The place to measure to.,"Der Ort, bis zu dem gemessen wird."
+Angle name,Name des Winkels
+What to call the angle.,Wie der Winkel heißen soll.
+Distance name,Name der Entfernung
+What to call the distance.,Wie die Entfernung heißen soll.
+Cursor Is Over Object (3D),Zeiger ist ueber Objekt (3D)
+"True while the mouse is pointing at this object in the 3D world - hover highlights, tooltips and ""what am I about to click"" all start here. Needs an active Camera3D.","Wahr, solange die Maus im 3D-Raum auf dieses Objekt zeigt - Hover-Hervorhebungen, Tooltips und ""worauf klicke ich gleich"" fangen alle hier an. Benoetigt eine aktive Camera3D."
+Mouse,Maus
+cursor is over {object},Zeiger ist ueber {object}
+The object the cursor has to be over for this to be true.,"Das Objekt, ueber dem der Zeiger sein muss, damit dies wahr ist."
+Layers,Ebenen
+"Which collision layers the ray may see, by the names this project gave them.","Welche Kollisionsebenen der Strahl sehen darf, unter den Namen, die dieses Projekt ihnen gegeben hat."
+"How far into the scene the ray reaches, in metres.","Wie weit der Strahl in die Szene reicht, in Metern."
+On Object Clicked (3D),Bei angeklicktem Objekt (3D)
+"Fires when a mouse button goes down over this object in the 3D world - click-to-select, click-to-attack, click-to-open. Lives in an input event, beside the other On ... pressed rows.","Loest aus, wenn im 3D-Raum eine Maustaste ueber diesem Objekt gedrueckt wird - Anklicken zum Auswaehlen, zum Angreifen, zum Oeffnen. Gehoert in ein Eingabeereignis, neben die anderen ""Bei ... gedrueckt""-Zeilen."
+On {object} clicked,Bei {object} angeklickt
+The object the click has to land on.,"Das Objekt, auf dem der Klick landen muss."
+Mouse button.,Maustaste.
+Mouse Floor Point,Bodenpunkt unter der Maus
+"The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal.","Der Weltpunkt auf dem Boden, auf den der Zeiger zielt - wohin eine Bauvorschau, eine Bewegungsmarkierung oder ein Decal gehoert."
+mouse floor point,Bodenpunkt unter der Maus
+Aimed Floor Point,Angezielter Bodenpunkt
+"The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal. Aimed through a crosshair object rather than the OS pointer.","Der Weltpunkt auf dem Boden, auf den der Zeiger zielt - wohin eine Bauvorschau, eine Bewegungsmarkierung oder ein Decal gehoert. Gezielt wird durch ein Fadenkreuz-Objekt statt durch den Systemzeiger."
+aimed floor point through {target},angezielter Bodenpunkt durch {target}
+Cursor object,Zeigerobjekt
+"The crosshair or virtual cursor to aim through. Its position ON THE CANVAS is what aims the ray, so a gamepad or touch cursor works exactly like the pointer.","Das Fadenkreuz oder der virtuelle Zeiger, durch den gezielt wird. Seine Position AUF DER LEINWAND richtet den Strahl aus, sodass ein Gamepad- oder Touch-Zeiger genau wie der Mauszeiger funktioniert."
+Mouse Floor Object,Bodenobjekt unter der Maus
+"The floor object the cursor is aiming at, or nothing when the cursor is off the floor.","Das Bodenobjekt, auf das der Zeiger zielt, oder nichts, wenn der Zeiger neben dem Boden liegt."
+mouse floor object,Bodenobjekt unter der Maus
+Aimed Floor Object,Angezieltes Bodenobjekt
+"The floor object the cursor is aiming at, or nothing when the cursor is off the floor. Aimed through a crosshair object rather than the OS pointer.","Das Bodenobjekt, auf das der Zeiger zielt, oder nichts, wenn der Zeiger neben dem Boden liegt. Gezielt wird durch ein Fadenkreuz-Objekt statt durch den Systemzeiger."
+aimed floor object through {target},angezieltes Bodenobjekt durch {target}
+Mouse Floor Slope,Bodenneigung unter der Maus
+"Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable.","Wohin der Boden unter dem Zeiger zeigt - geben Sie es an die Neigung von ""Am Boden ausrichten"" weiter, oder fragen Sie mit ""Neigung steiler als"", ob dort gebaut werden kann."
+mouse floor slope,Bodenneigung unter der Maus
+Aimed Floor Slope,Angezielte Bodenneigung
+"Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable. Aimed through a crosshair object rather than the OS pointer.","Wohin der Boden unter dem Zeiger zeigt - geben Sie es an die Neigung von ""Am Boden ausrichten"" weiter, oder fragen Sie mit ""Neigung steiler als"", ob dort gebaut werden kann. Gezielt wird durch ein Fadenkreuz-Objekt statt durch den Systemzeiger."
+aimed floor slope through {target},angezielte Bodenneigung durch {target}
+Slope Steeper Than,Neigung steiler als
+True when the ground faces further than this from straight up - the buildable test a placement preview tints itself with.,"Wahr, wenn der Boden weiter als dies von der Senkrechten abweicht - der Bebaubarkeitstest, mit dem sich eine Platzierungsvorschau einfaerbt."
+Slope,Neigung
+Which way the ground faces - the floor slope expressions answer exactly this.,Wohin der Boden zeigt - genau das liefern die Ausdruecke zur Bodenneigung.
+Degrees,Grad
+How far from flat counts as too steep.,Wie weit von der Ebene entfernt als zu steil gilt.
+Canvas X (2D),Leinwand-X (2D)
+"Where this object is ON THE CANVAS, in pixels. Camera zoom and canvas layers are already in the answer, which is exactly what plain position arithmetic gets wrong.","Wo dieses Objekt AUF DER LEINWAND liegt, in Pixeln. Kamerazoom und Leinwandebenen stecken bereits in der Antwort - genau das, was schlichtes Rechnen mit der Position falsch macht."
+{target}'s canvas x,Leinwand-X von {target}
+The object being asked where it is on screen.,"Das Objekt, das gefragt wird, wo es auf dem Bildschirm liegt."
+Canvas X (3D),Leinwand-X (3D)
+"Where this 3D object lands ON THE CANVAS, in pixels - the number a health bar over its head, an off-screen arrow or an aim assist is positioned by.","Wo dieses 3D-Objekt AUF DER LEINWAND landet, in Pixeln - die Zahl, nach der sich eine Lebensleiste ueber seinem Kopf, ein Pfeil ausserhalb des Bildes oder eine Zielhilfe ausrichtet."
+The 3D object being asked where it is on screen.,"Das 3D-Objekt, das gefragt wird, wo es auf dem Bildschirm liegt."
+Canvas Y (2D),Leinwand-Y (2D)
+{target}'s canvas y,Leinwand-Y von {target}
+Canvas Y (3D),Leinwand-Y (3D)
+Canvas Centre,Leinwandmitte
+"The middle of what the player can see, in pixels - where a crosshair sits.","Die Mitte dessen, was der Spieler sieht, in Pixeln - dort sitzt das Fadenkreuz."
+Pick Nearest To Canvas Point,Naechstes zum Leinwandpunkt auswaehlen
+"Walks the instances and keeps whichever is closest to a point ON THE CANVAS - aim assist, snap-to-target crosshairs and ""whichever one I am nearly pointing at"". Measured in pixels, so camera zoom is honoured; anything behind the camera is skipped.","Geht die Instanzen durch und behaelt diejenige, die einem Punkt AUF DER LEINWAND am naechsten ist - Zielhilfe, einrastende Fadenkreuze und ""das, worauf ich fast zeige"". Gemessen wird in Pixeln, der Kamerazoom zaehlt also mit; alles hinter der Kamera wird uebersprungen."
+pick nearest of [i]{list}[/i] to canvas point {from} -> [b]{name}[/b],naechstes aus [i]{list}[/i] zum Leinwandpunkt {from} auswaehlen -> [b]{name}[/b]
+Picked name,Name der Auswahl
+"The name the one it picks goes by in the rows below. Nothing is picked when the list is empty or everything is off screen, so check the name exists first.","Der Name, unter dem das Ausgewaehlte in den Zeilen darunter laeuft. Nichts wird ausgewaehlt, wenn die Liste leer ist oder alles ausserhalb des Bildes liegt - pruefen Sie also zuerst, ob der Name existiert."
+Out of,Aus
+"The instances to pick from - usually a group, which is how a project spells ""every one of this kind"".","Die Instanzen, aus denen ausgewaehlt wird - meist eine Gruppe, so schreibt ein Projekt ""alle dieser Art""."
+Nearest to,Am naechsten zu
+"The canvas point distances are measured from, in pixels. The canvas centre is the crosshair.","Der Leinwandpunkt, von dem aus die Abstaende gemessen werden, in Pixeln. Die Leinwandmitte ist das Fadenkreuz."
+"How far from that point, in PIXELS, still counts. Nothing beyond it is picked.","Wie weit von diesem Punkt entfernt, in PIXELN, noch zaehlt. Darueber hinaus wird nichts ausgewaehlt."
+Remove Child,Kind entfernen
+"Detaches a child node from this one without deleting it, so you can reattach it later.","Loest einen Kindknoten von diesem, ohne ihn zu loeschen, damit Sie ihn spaeter wieder anhaengen koennen."
+remove child [i]{node}[/i],Kind [i]{node}[/i] entfernen
+Child to detach (by index here - no hardcoded name; pick one or use a scene-unique node). Not freed.,Zu loesendes Kind (hier ueber den Index - kein fest eingetragener Name; waehlen Sie eines aus oder nehmen Sie einen szenenweit eindeutigen Node). Wird nicht freigegeben.
+Add Child (existing node),Kind hinzufuegen (bestehender Node)
+"Moves a node that is already in the layout under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.","Verschiebt einen Node, der bereits im Layout ist, unter ein neues Elternobjekt - einen Gegenstand in die Hand nehmen, einen Reiter auf den Sattel setzen, eine Waffe auf den Ruecken schnallen. ""Position behalten"" laesst ihn genau dort, wo er zu sehen ist; ""Einrasten"" setzt ihn auf die Stelle des Elternobjekts."
+add child [i]{child}[/i] to [i]{parent}[/i],Kind [i]{child}[/i] zu [i]{parent}[/i] hinzufuegen
+Child,Kind
+The node that becomes a child. It keeps everything it is - only its parent changes.,"Der Node, der zum Kind wird. Er bleibt in allem, was er ist - nur sein Elternobjekt aendert sich."
+Parent,Elternobjekt
+The node it goes under.,"Der Node, unter den es kommt."
+Its place,Seine Position
+"Whether the child stays where it is in the world, or snaps to its new parent.","Ob das Kind dort bleibt, wo es in der Welt steht, oder an seinem neuen Elternobjekt einrastet."
+Remove From Parent,Vom Elternobjekt loesen
+"Takes a node off whatever it is under and puts it back at the top of the layout, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.","Nimmt einen Node von dem, worunter er haengt, und setzt ihn wieder auf die oberste Ebene des Layouts, wobei er seinen Platz in der Welt behaelt - einen getragenen Gegenstand fallen lassen, einen Reiter absitzen lassen. Der Node wird nicht freigegeben, und sonst aendert sich nichts an ihm."
+remove [i]{child}[/i] from its parent,[i]{child}[/i] von seinem Elternobjekt loesen
+"The node to take off its parent. It stays in the layout, at the top level.","Der Node, der vom Elternobjekt geloest wird. Er bleibt im Layout, auf oberster Ebene."
+Set Ignore Parent's Movement,Bewegung des Elternobjekts ignorieren
+"Stops a child moving, turning and scaling with its parent while leaving it a child in every other way - it is still freed with the parent and still picked as one of its children. The answer for a muzzle flash that should not swing with the gun, or a health bar that should not tilt with the enemy.","Sorgt dafuer, dass ein Kind sich nicht mehr mit seinem Elternobjekt bewegt, dreht und skaliert, in jeder anderen Hinsicht aber Kind bleibt - es wird weiterhin mit dem Elternobjekt freigegeben und weiterhin als eines seiner Kinder gefunden. Die Antwort auf ein Muendungsfeuer, das nicht mit der Waffe schwenken soll, oder eine Lebensleiste, die sich nicht mit dem Gegner neigen soll."
+set ignore parent's movement [b]{ignore}[/b] on [i]{target}[/i],Bewegung des Elternobjekts ignorieren [b]{ignore}[/b] fuer [i]{target}[/i] setzen
+The child that should stop (or start) following its parent.,"Das Kind, das aufhoeren (oder anfangen) soll, seinem Elternobjekt zu folgen."
+Ignore,Ignorieren
+On: the child stays where it is when the parent moves.,"An: Das Kind bleibt, wo es ist, wenn sich das Elternobjekt bewegt."
+Copy Place To,Position kopieren auf
+"Points a RemoteTransform at the node it should drive, so that node follows this one without being its child at all. Which parts follow - position, angle, size - are the RemoteTransform's own switches.","Richtet einen RemoteTransform auf den Node, den er steuern soll, sodass dieser Node diesem hier folgt, ohne ueberhaupt sein Kind zu sein. Welche Teile folgen - Position, Winkel, Groesse - legen die eigenen Schalter des RemoteTransform fest."
+copy [i]{follower}[/i] place to [b]{path}[/b],Position von [i]{follower}[/i] auf [b]{path}[/b] kopieren
+Follower,Folger
+The RemoteTransform2D / RemoteTransform3D doing the copying.,"Der RemoteTransform2D / RemoteTransform3D, der die Position kopiert."
+Path to the node its place is copied onto.,"Pfad zu dem Node, auf den die Position kopiert wird."
+Stop Copying Place,Positionskopie stoppen
+"Clears a RemoteTransform's target, so whatever it was driving stops following immediately. The node it drove keeps the place it had.","Leert das Ziel eines RemoteTransform, sodass alles, was er gesteuert hat, sofort aufhoert zu folgen. Der gesteuerte Node behaelt die Position, die er hatte."
+stop [i]{follower}[/i] copying,Kopieren von [i]{follower}[/i] stoppen
+The RemoteTransform2D / RemoteTransform3D to switch off.,"Der RemoteTransform2D / RemoteTransform3D, der abgeschaltet wird."
+For Each Child,Fuer jedes Kind
+"Runs this event's actions once per direct child of a node - healing a squad, totting up an inventory, checking every socket. Read the current one as `child`. Children added while it runs are not visited by this pass.","Fuehrt die Aktionen dieses Ereignisses einmal pro direktem Kind eines Nodes aus - einen Trupp heilen, ein Inventar zusammenzaehlen, jeden Steckplatz pruefen. Das aktuelle wird als `child` gelesen. Kinder, die waehrenddessen hinzukommen, besucht dieser Durchgang nicht mehr."
+for each child of [i]{target}[/i],fuer jedes Kind von [i]{target}[/i]
+The node whose children the actions run once for.,"Der Node, fuer dessen Kinder die Aktionen je einmal laufen."
+Move Child To Index,Kind auf Index verschieben
+"Reorders a child to a new sibling index, changing its draw and process order.",Ordnet ein Kind auf einen neuen Geschwisterindex um und aendert damit seine Zeichen- und Verarbeitungsreihenfolge.
+move [i]{node}[/i] to index [b]{index}[/b],[i]{node}[/i] auf Index [b]{index}[/b] verschieben
+Child to reorder (by index here - no hardcoded name; pick one or use a scene-unique node).,Zu verschiebendes Kind (hier ueber den Index - kein fest eingetragener Name; waehlen Sie eines aus oder nehmen Sie einen szenenweit eindeutigen Node).
+Index,Index
+New sibling index (draw / process order).,Neuer Geschwisterindex (Zeichen- / Verarbeitungsreihenfolge).
+Free Node,Node freigeben
+"Safely deletes a node at the end of the frame, e.g. removing a dead enemy.","Loescht einen Node sicher am Ende des Frames, z. B. um einen toten Gegner zu entfernen."
+free [i]{target}[/i],[i]{target}[/i] freigeben
+Target,Ziel
+Node to free at the end of the frame.,"Node, der am Ende des Frames freigegeben wird."
+Signals / Scene / Input,Signale / Szene / Eingabe
+On Child Added,Bei hinzugefügtem Kind
+"Runs when a child node is added beneath this one, e.g. reacting to spawned items.","Läuft, wenn ein Kind-Node unter diesem hinzugefügt wird, z. B. um auf erzeugte Gegenstände zu reagieren."
+On child added [i]{node}[/i],Bei hinzugefügtem Kind [i]{node}[/i]
+On Child Leaving,Bei ausscheidendem Kind
+"Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it.","Läuft genau bevor ein Kind-Node diesen verlässt - solange es noch da ist, um gelesen zu werden, damit eine Anzahl, eine Summe oder eine Anzeige damit aktualisiert werden kann."
+On child leaving [i]{node}[/i],Bei ausscheidendem Kind [i]{node}[/i]

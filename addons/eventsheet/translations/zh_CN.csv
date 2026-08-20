@@ -3665,3 +3665,339 @@ Swipes and drawn shapes,滑动与手绘图形
 Secrets found,已发现的秘密
 Timed input windows,限时输入窗口
 An accessibility options screen,无障碍选项界面
+Fill Meter,填充计量条
+"Raises a number at a steady rate per second and stops it at a limit - a suspicion meter filling while a guard sees you, a bar charging, stamina coming back.",以每秒固定的速度抬高一个数值，到上限就停住 - 守卫看着你时上涨的警戒条、正在蓄力的进度条、慢慢回来的体力。
+Meters,计量条
+Fill [b]{var_name}[/b] at [b]{rate}[/b] up to [b]{cap}[/b],以 [b]{rate}[/b] 填充 [b]{var_name}[/b]，最多到 [b]{cap}[/b]
+Meter,计量条
+The number to fill.,要填充的数值。
+Per second,每秒
+How much it gains each second.,每秒增加多少。
+Up to,上限
+The value it stops at.,停在哪个值。
+Drain Meter,消耗计量条
+"Lowers a number at a steady rate per second and stops it at a floor - suspicion cooling off, a shield decaying, a charge bleeding away.",以每秒固定的速度压低一个数值，到下限就停住 - 慢慢冷却的警戒、逐渐衰减的护盾、一点点漏掉的充能。
+Drain [b]{var_name}[/b] at [b]{rate}[/b] down to [b]{floor}[/b],以 [b]{rate}[/b] 消耗 [b]{var_name}[/b]，最低到 [b]{floor}[/b]
+The number to drain.,要消耗的数值。
+How much it loses each second.,每秒减少多少。
+Down to,下限
+Make Noise,发出声响
+"Tells everything in the listening group that a noise happened at a place, but only the ones close enough to hear it. Footsteps, a door, a thrown bottle.",告诉侦听组里的所有对象：某个位置发出了声响 - 但只有离得够近、听得见的才会收到。脚步声、一扇门、一只扔出去的瓶子。
+Stealth,潜行
+"Make noise at [b]{at}[/b], heard within [b]{radius}[/b]",在 [b]{at}[/b] 发出声响，[b]{radius}[/b] 以内能听见
+Where the noise happened (a position expression).,声响发生的位置（一个位置表达式）。
+Heard within,可听范围
+How far the noise carries.,声响能传多远。
+Heard by,由谁听见
+The group whose members can hear - each one needs an On Noise Heard event.,由哪个组的成员来听 - 每个成员都需要一个「当听见声响时」事件。
+On Noise Heard,当听见声响时
+"Runs when a Make Noise action happens close enough for this object to hear it, with the place it came from. Put this object in the listening group first (Add To Group, on created).",当「发出声响」动作发生在这个对象听得见的范围内时执行，并带上声音传来的位置。先把这个对象放进侦听组（创建时「加入组」）。
+On noise heard at,当听见声响时，位置
+Phase Starts,阶段开始
+True the one time health first falls past a share of its maximum while the fight is in an earlier phase. The phase guard is what makes it happen once: set the phase variable in the actions under this condition.,在战斗还处于更早阶段时，生命值第一次跌破最大值的某个比例，那一次为真。让它只发生一次的正是阶段判断：请在这个条件下面的动作里设置阶段变量。
+Boss,首领
+"Phase [b]{phase}[/b] starts ([b]{hp}[/b] <= [b]{share}[/b] of [b]{max_hp}[/b], once)",阶段 [b]{phase}[/b] 开始（[b]{hp}[/b] <= [b]{max_hp}[/b] 的 [b]{share}[/b]，仅一次）
+Phase,阶段
+The phase number that starts here.,从这里开始的阶段编号。
+At share of maximum,占最大值的比例
+The health share it starts at - 0.6 is 60%.,从哪个生命值比例开始 - 0.6 就是 60 %。
+Health,生命值
+The variable holding health now.,存放当前生命值的变量。
+Maximum health,最大生命值
+The variable holding full health.,存放满生命值的变量。
+Phase variable,阶段变量
+The variable holding which phase the fight is in - set it in the actions below.,存放战斗处于哪个阶段的变量 - 请在下面的动作里设置它。
+Set Invulnerable For,设为无敌一段时间
+"Turns a flag on, waits, and turns it back off - the invulnerability window after a hit, written once instead of as a flag and a timer that can drift apart.",打开一个标志，等待，再把它关掉 - 受击后的无敌时间，一行写完，不必拆成容易走偏的标志加计时器。
+Set [b]{flag}[/b] for [b]{seconds}[/b] seconds,把 [b]{flag}[/b] 打开 [b]{seconds}[/b] 秒
+Flag,标志
+The boolean that says nothing lands.,表示「什么都打不中」的布尔值。
+For seconds,持续秒数
+How long the window lasts.,这段时间持续多久。
+Start Mission Timer,启动任务计时
+Puts a number of seconds on the mission clock. Type the time the way a player reads it - 3:00 - and the row stores the seconds.,给任务时钟放上一段秒数。按玩家读到的样子填写时间 - 3:00 - 这一行会把它存成秒。
+Missions,任务
+Start [b]{var_name}[/b] at [b]{seconds}[/b],从 [b]{seconds}[/b] 开始计 [b]{var_name}[/b]
+Timer variable,计时变量
+The variable holding the seconds left.,存放剩余秒数的变量。
+How long the mission runs - type it as minutes:seconds.,任务持续多久 - 按 分:秒 填写。
+Add Mission Time,增加任务时间
+Puts time back on the mission clock - the pickup that buys you another half minute.,把时间加回任务时钟 - 就是那种能再买你半分钟的拾取物。
+Add [b]{seconds}[/b] to [b]{var_name}[/b],把 [b]{seconds}[/b] 加到 [b]{var_name}[/b]
+How much time to add - type it as minutes:seconds.,要加多少时间 - 按 分:秒 填写。
+Mission Time Left,任务剩余时间
+"Gives the time left as text a player can read - ""2:41"" - ready to drop into a HUD label.","把剩余时间给成玩家能读的文本 - ""2:41"" - 直接放进 HUD 标签即可。"
+Missions.TimeLeft,任务.剩余时间
+Editor Icon,编辑器图标
+"One of the editor's own icons, so a tool's buttons and docks look like the editor around them instead of shipping their own art. The field draws the icon it names as you pick it.",编辑器自带的图标之一，让工具的按钮和面板看起来像周围的编辑器，而不必自带一套美术。选择时该字段会把它所命名的图标画出来。
+Editor Tools: Panels & menus,编辑器工具：面板与菜单
+Editor.Icon({icon_name}),Editor.Icon({icon_name})
+"The editor icon's name - usually a class name like Node2D, Script or Folder.",编辑器图标的名称 - 通常是 Node2D、Script 或 Folder 这样的类名。
+Editor Preference,编辑器偏好设置
+"One value out of the user's own Editor Settings - their theme colour, grid step, font size. Read it so a tool matches the editor the person in front of it actually set up.",用户自己的编辑器设置中的一个值 - 主题颜色、网格步长、字号。读它，工具就能与眼前这个人实际配置的编辑器保持一致。
+Editor Tools: Project & preferences,编辑器工具：项目与偏好设置
+Editor.Preference({path}),Editor.Preference({path})
+"The Editor Settings path, as it reads in Editor > Editor Settings.",编辑器设置中的路径，按 编辑器 > 编辑器设置 里显示的写法填写。
+Project Setting,项目设置
+"One value out of this project's own settings. Unlike a preference, it is saved with the project, so every person opening it sees the same answer.",本项目自身设置中的一个值。与编辑器偏好不同，它随项目一起保存，所以每个打开项目的人看到的答案都一样。
+Project.Setting({path}),Project.Setting({path})
+"The Project Settings path, as it reads in Project > Project Settings.",项目设置中的路径，按 项目 > 项目设置 里显示的写法填写。
+Workspace Area,工作区区域
+"The big area the 2D, 3D and Script tabs share. A workspace plugin adds its own screen as a child of this.",2D、3D 和 Script 标签页共用的大块区域。工作区插件会把自己的界面作为它的子节点添加进来。
+Editor.MainScreen,Editor.MainScreen
+Set Setting,写入设置
+"Writes one project setting. It lives in memory until Save settings runs, so a tool that changes several settings writes them all and saves once.",写入一项项目设置。在执行 保存设置 之前它只存在于内存中，所以要改多项设置的工具应先全部写入，最后保存一次。
+Set setting {path} to {value},将设置 {path} 设为 {value}
+The Project Settings path to write.,要写入的项目设置路径。
+The value to store there.,要存进去的值。
+Save Settings,保存设置
+"Writes the project settings back to project.godot. Without this, everything Set setting changed is lost when the editor closes.",把项目设置写回 project.godot。没有这一步，写入设置 改过的一切都会在编辑器关闭时丢失。
+Save settings,保存设置
+Switch To Workspace,切换工作区
+Brings one of the editor's top tabs to the front - the same click as pressing 2D or Script yourself.,把编辑器顶部的某个标签页切到前面 - 和你自己点 2D 或 Script 是一回事。
+Switch to workspace {workspace},切换到工作区 {workspace}
+Which of the editor's top tabs to bring forward.,要把编辑器顶部的哪个标签页切到前面。
+2D,2D
+3D,3D
+Game,游戏
+AssetLib,AssetLib
+Show In Project Bar,在项目栏中显示
+"Reveals a folder or file in the editor's project file list and selects it - what a tool does after it writes something, so the reader can see what just landed.",在编辑器的项目文件列表中定位并选中某个文件夹或文件 - 工具写出东西之后就该这么做，好让人看到刚刚生成了什么。
+Show in Project bar {path},在项目栏中显示 {path}
+"The folder or file to reveal, as a res:// path.",要定位的文件夹或文件，使用 res:// 路径。
+Open Script At Line,在指定行打开脚本
+Jumps the script editor to a line of the script it already has open - how a tool points at the thing it is complaining about.,让脚本编辑器跳到已打开脚本的某一行 - 工具就是这样指出它所抱怨的那个地方。
+Open script at line {line},在第 {line} 行打开脚本
+Line,行
+"The line to jump to, counted from zero.",要跳转到的行，从 0 开始计数。
+Add Window,添加窗口
+"Puts a window or dialog under the editor's own root, which is what makes it show up with the editor's theme and stay on top of it. Free it again when the plugin is disabled.",把窗口或对话框挂到编辑器自己的根节点下，这样它才会带着编辑器的主题显示并浮在编辑器之上。插件被禁用时记得释放它。
+Add window {window} to the editor's root,将窗口 {window} 添加到编辑器根节点
+The window or dialog to hang on the editor.,要挂到编辑器上的窗口或对话框。
+Add Command,添加命令
+"Adds one entry to the editor's command palette (Ctrl+Shift+P), so a tool is reachable without a menu of its own.",向编辑器的命令面板（Ctrl+Shift+P）添加一个条目，这样不用自建菜单也能用到该工具。
+Add command {title},添加命令 {title}
+The words the command palette shows.,命令面板上显示的文字。
+Keyed,键为
+The unique key the palette files it under.,命令面板用来登记它的唯一键。
+Calls,调用
+The function to run when the command is chosen.,选中该命令时要运行的函数。
+Add Bottom Panel,添加底部面板
+"Adds a tab to the row Output and Debugger share, at the bottom of the editor. Remove it on plugin disabled or the row keeps a tab nobody owns.",在编辑器底部“输出”和“调试器”共用的那一行里添加一个标签页。插件禁用时要移除，否则那一行会留下一个没人认领的标签页。
+Add bottom panel {control} titled {title},添加底部面板 {control}，标题为 {title}
+Panel,面板
+The Control to show in the bottom row.,要在底部这一行里显示的 Control。
+Titled,标题为
+"The words on its tab, beside Output and Debugger.",它的标签页上的文字，就挨着“输出”和“调试器”。
+Remove Bottom Panel,移除底部面板
+Takes the plugin's tab back out of the bottom row.,把插件的标签页从底部那一行里撤回来。
+Remove bottom panel {control},移除底部面板 {control}
+The Control that was added to the bottom row.,之前添加到底部那一行的 Control。
+On Project Files Changed,项目文件变化时
+"Runs whenever the project's files change on disk - something was imported, moved, deleted or added. The place to rescan whatever a tool keeps a list of.",每当项目文件在磁盘上发生变化时运行 - 有东西被导入、移动、删除或添加。工具在这里重新扫描它所维护的那份清单。
+On project files changed,项目文件变化时
+On Preferences Changed,编辑器偏好设置变化时
+"Runs when the user changes anything in Editor Settings. Re-read the preferences a tool draws with, so it follows the theme instead of keeping the old one.",当用户在编辑器设置里改动任何内容时运行。重新读取工具绘制时所用的偏好设置，让它跟上主题，而不是抱着旧值不放。
+On preferences changed,编辑器偏好设置变化时
+Move In Direction,沿方向移动
+"Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second.",让一个 3D 节点沿它自身的某个方向移动 - 前、后、右、左、上或下 - 速度按每秒计。
+3D: Move & Turn,3D：移动与转向
+Move [b]{direction}[/b] at [i]{speed}[/i],以 [i]{speed}[/i] 向 [b]{direction}[/b] 移动
+Direction,方向
+Which of its own six directions to move along.,沿它自身六个方向中的哪一个移动。
+backward,向后
+down,向下
+Units a second.,每秒多少单位。
+Delta,时间增量
+Frame time; defaults to `delta`.,一帧的时间；默认为 `delta`。
+Rotate Clockwise,顺时针旋转
+Turns a 3D node about its up axis - the yaw a character or a turret turns with.,让一个 3D 节点绕它自身的向上轴转动 - 角色或炮塔转身用的偏航。
+Rotate [b]clockwise[/b] at [i]{degrees_per_second}[/i]°/s,以 [i]{degrees_per_second}[/i]°/秒 [b]顺时针[/b]旋转
+Degrees per second,每秒度数
+"Degrees a second, turning clockwise seen from above; a negative number turns the other way.",每秒多少度，从上方看是顺时针；填负数则朝反方向转。
+Rotate Up Or Down,向上或向下旋转
+Tilts a 3D node's nose up or down - the pitch a plane or a camera arm moves with.,让一个 3D 节点的机头朝上或朝下倾斜 - 飞机或摄像机臂运动时的俯仰。
+Rotate [b]up[/b] at [i]{degrees_per_second}[/i]°/s,以 [i]{degrees_per_second}[/i]°/秒 [b]向上[/b]旋转
+Degrees a second; a negative number tilts the other way.,每秒多少度；填负数则朝反方向倾斜。
+Roll,横滚
+Rolls a 3D node about the way it faces - the bank a plane or a ship leans with.,让一个 3D 节点绕它面朝的方向翻滚 - 飞机或船倾斜时的侧倾。
+Roll [b]left[/b] at [i]{degrees_per_second}[/i]°/s,以 [i]{degrees_per_second}[/i]°/秒 [b]向左[/b]横滚
+Degrees a second; a negative number rolls the other way.,每秒多少度；填负数则朝反方向横滚。
+Rotate Toward Facing,转向朝向
+Turns a 3D node smoothly toward a facing instead of snapping to it - the way a turret leads its target.,让一个 3D 节点平滑地转向某个朝向，而不是直接对齐过去 - 就像炮塔跟着目标转。
+Rotate toward [i]{facing}[/i] at [i]{rate}[/i],以 [i]{rate}[/i] 转向 [i]{facing}[/i]
+The facing to turn toward - Facing Along a direction gives you one.,要转向的那个朝向 - 用「沿方向的朝向」就能得到一个。
+Rate,速率
+"How fast it closes the gap, per second. Bigger turns harder.",每秒把差距收拢多快。数值越大转得越猛。
+Facing Along,沿方向的朝向
+The facing that looks along a direction - what Rotate Toward Facing turns toward.,沿着某个方向看去的朝向 - 也就是「转向朝向」要转到的目标。
+The direction to face along.,要朝着看去的方向。
+Set Position To Another Object,把位置设为另一个对象的位置
+"Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.",把一个 3D 节点放到另一个节点所在的位置 - 出生点、挂点或复活标记就是这么用的。
+3D: Place,3D：摆放
+Set position to [b]{other}[/b],把位置设为 [b]{other}[/b]
+Other,另一个对象
+"The object to stand where - a spawn marker, a socket, another character.",要站到它位置上的那个对象 - 出生点标记、挂点，或另一个角色。
+Align To The Ground's Slope,与地面坡度对齐
+Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill.,把一个 3D 节点倾斜，让它的向上方向对齐地面的朝向 - 让掉落的木箱平贴在斜坡上的就是这一行。
+Align to the ground's [b]slope[/b],与地面[b]坡度[/b]对齐
+Ground normal,地面法线
+The way the surface faces - a ray hit gives you one as its `normal`.,表面朝向的方向 - 射线命中结果的 `normal` 就是一个。
+Is Within Angle Of Facing,在朝向的角度范围内
+"Asks whether something is inside the cone this object is looking down - a vision cone, a backstab check, an aim assist.",询问某个东西是否落在这个对象所看的锥形范围内 - 视野锥、背刺判定、瞄准辅助。
+3D: See,3D：视野
+Is within [b]{angle}[/b]° of facing [i]{direction}[/i],在朝向 [i]{direction}[/i] 的 [b]{angle}[/b]° 范围内
+"The way this object faces. Its own forward, unless you say otherwise.",这个对象面朝的方向。除非另行指定，否则就是它自身的前方。
+The direction to the thing being looked for - Direction To gives you one.,指向要找的那个东西的方向 - 用「到…的方向」就能得到一个。
+Within,在此范围内
+"Half the width of the cone, in degrees. 45 is a 90-degree field of view.",锥形宽度的一半，以度为单位。填 45 就是 90 度的视野。
+Is Behind,在后方
+Asks whether a place is behind this object - the backstab half of a facing test.,询问某个位置是否在这个对象的后方 - 朝向判定里负责背刺的那一半。
+[i]{point}[/i] is [b]behind[/b] it,[i]{point}[/i] 在它的[b]后方[/b]
+The place being asked about.,被询问的那个位置。
+Is In Front Of,在前方
+"Asks whether a place is in front of this object, whichever way it happens to be turned.",询问某个位置是否在这个对象的前方，无论它此刻转向哪边。
+[i]{point}[/i] is [b]in front of[/b] it,[i]{point}[/i] 在它的[b]前方[/b]
+Is To The Right Of,在右侧
+"Asks whether a place is off this object's right side - which way to lean, dodge or steer.",询问某个位置是否在这个对象的右侧 - 决定往哪边倾、往哪边闪、往哪边打方向。
+[i]{point}[/i] is [b]to the right of[/b] it,[i]{point}[/i] 在它的[b]右侧[/b]
+Is To The Left Of,在左侧
+Asks whether a place is off this object's left side - the twin of Is To The Right Of.,询问某个位置是否在这个对象的左侧 - 「在右侧」的孪生兄弟。
+[i]{point}[/i] is [b]to the left of[/b] it,[i]{point}[/i] 在它的[b]左侧[/b]
+Point At Angle,指定角度上的点
+The point an angle and a distance name. Add it to a centre for a place on a circle; grow the distance every tick and it draws a spiral.,由一个角度和一段距离确定的点。把它加到某个中心上，就得到圆周上的位置；每一拍都把距离加大，它就画出一条螺旋。
+"The angle, in degrees.",角度，以度为单位。
+How far out to go.,要往外走多远。
+Create Evenly Around A Circle,沿圆周均匀生成
+"Places a number of copies evenly around a circle - the bullet-hell ring, the radial menu, the circle of pillars.",把若干份副本沿一个圆周均匀摆开 - 弹幕环、径向菜单、一圈立柱。
+Create [b]{count}[/b] of {scene} evenly around a circle of [i]{radius}[/i],在半径 [i]{radius}[/i] 的圆周上均匀生成 [b]{count}[/b] 个 {scene}
+How many,数量
+How many to place.,要摆放多少个。
+The scene to place.,要摆放的场景。
+The middle of the circle.,圆的中心。
+How far out from the centre they sit.,它们离中心有多远。
+Store As Angle And Distance,存为角度和距离
+"Reads a place back the other way - as the angle from one point to another and how far apart they are, both named in one drop.",把一个位置反着读出来 - 从一个点到另一个点的角度，以及两者相距多远，一次就给两者都起好名字。
+Store [i]{from}[/i] to [i]{to}[/i] as [b]{angle_name}[/b] and [b]{distance_name}[/b],把 [i]{from}[/i] 到 [i]{to}[/i] 存为 [b]{angle_name}[/b] 和 [b]{distance_name}[/b]
+The place to measure from.,从哪个位置开始量。
+The place to measure to.,量到哪个位置。
+Angle name,角度的名字
+What to call the angle.,给这个角度起什么名字。
+Distance name,距离的名字
+What to call the distance.,给这段距离起什么名字。
+Cursor Is Over Object (3D),光标位于对象上方（3D）
+"True while the mouse is pointing at this object in the 3D world - hover highlights, tooltips and ""what am I about to click"" all start here. Needs an active Camera3D.","当鼠标在 3D 世界中指向该对象时为真 - 悬停高亮、提示气泡和""我马上要点到什么""都从这里开始。需要一个启用的 Camera3D。"
+Mouse,鼠标
+cursor is over {object},光标位于 {object} 上方
+The object the cursor has to be over for this to be true.,光标必须位于其上方，此条件才成立的对象。
+Layers,图层
+"Which collision layers the ray may see, by the names this project gave them.",射线可以看见哪些碰撞层，按本项目为它们起的名字选择。
+"How far into the scene the ray reaches, in metres.",射线伸入场景多远，以米为单位。
+On Object Clicked (3D),当对象被点击时（3D）
+"Fires when a mouse button goes down over this object in the 3D world - click-to-select, click-to-attack, click-to-open. Lives in an input event, beside the other On ... pressed rows.","在 3D 世界中，鼠标按键在该对象上按下时触发 - 点击选中、点击攻击、点击打开。它放在输入事件里，与其他""当按下 ... 时""的行并列。"
+On {object} clicked,当 {object} 被点击时
+The object the click has to land on.,点击必须落在哪个对象上。
+Mouse button.,鼠标按键。
+Mouse Floor Point,鼠标下方的地面位置
+"The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal.",光标瞄准的地面世界坐标 - 建造预览、移动指令标记或贴花该放的位置。
+mouse floor point,鼠标下方的地面位置
+Aimed Floor Point,瞄准的地面位置
+"The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal. Aimed through a crosshair object rather than the OS pointer.",光标瞄准的地面世界坐标 - 建造预览、移动指令标记或贴花该放的位置。 通过准星对象瞄准，而不是系统指针。
+aimed floor point through {target},通过 {target} 瞄准的地面位置
+Cursor object,光标对象
+"The crosshair or virtual cursor to aim through. Its position ON THE CANVAS is what aims the ray, so a gamepad or touch cursor works exactly like the pointer.",用来瞄准的准星或虚拟光标。决定射线方向的是它在画布上的位置，所以手柄或触摸光标与指针的效果完全一样。
+Mouse Floor Object,鼠标下方的地面对象
+"The floor object the cursor is aiming at, or nothing when the cursor is off the floor.",光标瞄准的地面对象；光标不在地面上时为空。
+mouse floor object,鼠标下方的地面对象
+Aimed Floor Object,瞄准的地面对象
+"The floor object the cursor is aiming at, or nothing when the cursor is off the floor. Aimed through a crosshair object rather than the OS pointer.",光标瞄准的地面对象；光标不在地面上时为空。 通过准星对象瞄准，而不是系统指针。
+aimed floor object through {target},通过 {target} 瞄准的地面对象
+Mouse Floor Slope,鼠标下方的地面坡度
+"Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable.","光标下方地面朝向哪个方向 - 把它交给""贴合地面""的坡度，或用""坡度陡于""问问那里能不能建造。"
+mouse floor slope,鼠标下方的地面坡度
+Aimed Floor Slope,瞄准的地面坡度
+"Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable. Aimed through a crosshair object rather than the OS pointer.","光标下方地面朝向哪个方向 - 把它交给""贴合地面""的坡度，或用""坡度陡于""问问那里能不能建造。 通过准星对象瞄准，而不是系统指针。"
+aimed floor slope through {target},通过 {target} 瞄准的地面坡度
+Slope Steeper Than,坡度陡于
+True when the ground faces further than this from straight up - the buildable test a placement preview tints itself with.,"当地面朝向偏离正上方超过这个角度时为真 - 放置预览用来给自己上色的""能否建造""判定。"
+Slope,坡度
+Which way the ground faces - the floor slope expressions answer exactly this.,地面朝向哪个方向 - 地面坡度表达式返回的正是这个。
+Degrees,度数
+How far from flat counts as too steep.,偏离水平多少就算太陡。
+Canvas X (2D),画布 X（2D）
+"Where this object is ON THE CANVAS, in pixels. Camera zoom and canvas layers are already in the answer, which is exactly what plain position arithmetic gets wrong.",该对象在画布上的位置，以像素计。相机缩放和画布图层已经算进去了，而这正是直接拿位置做算术会弄错的地方。
+{target}'s canvas x,{target} 的画布 x
+The object being asked where it is on screen.,被询问其屏幕位置的对象。
+Canvas X (3D),画布 X（3D）
+"Where this 3D object lands ON THE CANVAS, in pixels - the number a health bar over its head, an off-screen arrow or an aim assist is positioned by.",该 3D 对象落在画布上的什么位置，以像素计 - 头顶血条、屏幕外指示箭头或辅助瞄准都按这个数值定位。
+The 3D object being asked where it is on screen.,被询问其屏幕位置的 3D 对象。
+Canvas Y (2D),画布 Y（2D）
+{target}'s canvas y,{target} 的画布 y
+Canvas Y (3D),画布 Y（3D）
+Canvas Centre,画布中心
+"The middle of what the player can see, in pixels - where a crosshair sits.",玩家可见范围的正中，以像素计 - 准星就在这里。
+Pick Nearest To Canvas Point,选取最接近画布点的一个
+"Walks the instances and keeps whichever is closest to a point ON THE CANVAS - aim assist, snap-to-target crosshairs and ""whichever one I am nearly pointing at"". Measured in pixels, so camera zoom is honoured; anything behind the camera is skipped.","遍历实例，只保留离画布上某个点最近的那一个 - 辅助瞄准、吸附目标的准星，以及""我差不多正指着的那个""。以像素度量，所以相机缩放会被计入；相机背后的一律跳过。"
+pick nearest of [i]{list}[/i] to canvas point {from} -> [b]{name}[/b],从 [i]{list}[/i] 中选取最接近画布点 {from} 的一个 -> [b]{name}[/b]
+Picked name,选中项的名字
+"The name the one it picks goes by in the rows below. Nothing is picked when the list is empty or everything is off screen, so check the name exists first.",被选中的那个在下面几行里使用的名字。列表为空或全部在屏幕外时不会选中任何东西，所以请先检查这个名字是否存在。
+Out of,从中选
+"The instances to pick from - usually a group, which is how a project spells ""every one of this kind"".","供选取的实例 - 通常是一个组，这就是项目里""这一类的全部""的写法。"
+Nearest to,最接近于
+"The canvas point distances are measured from, in pixels. The canvas centre is the crosshair.",测量距离的起点画布点，以像素计。画布中心就是准星。
+"How far from that point, in PIXELS, still counts. Nothing beyond it is picked.",距离该点多远（以像素计）仍然算数。超出的一律不选。
+Remove Child,移除子节点
+"Detaches a child node from this one without deleting it, so you can reattach it later.",把一个子节点从本节点上摘下来，但不删除它，以后还可以重新挂上。
+remove child [i]{node}[/i],移除子节点 [i]{node}[/i]
+Child to detach (by index here - no hardcoded name; pick one or use a scene-unique node). Not freed.,要摘下的子节点（这里按索引 - 不写死名字；挑一个，或使用场景内唯一的节点）。不会被释放。
+Add Child (existing node),添加子节点（已有节点）
+"Moves a node that is already in the layout under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.","把已经在布局中的节点移到新的父节点下 - 把物品拿到手上、把骑手放上马鞍、把武器背到背上。""保持原位""让它停在看起来的那个位置；""贴合""则把它放到父节点自身所在的位置。"
+add child [i]{child}[/i] to [i]{parent}[/i],把子节点 [i]{child}[/i] 添加到 [i]{parent}[/i]
+Child,子节点
+The node that becomes a child. It keeps everything it is - only its parent changes.,将要成为子节点的节点。它本身的一切都不变 - 只是父节点换了。
+Parent,父节点
+The node it goes under.,它将被挂到哪个节点下。
+Its place,它的位置
+"Whether the child stays where it is in the world, or snaps to its new parent.",子节点是留在世界中原来的位置，还是贴到新的父节点上。
+Remove From Parent,从父节点移除
+"Takes a node off whatever it is under and puts it back at the top of the layout, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.",把节点从它当前所属的父节点上摘下来，放回布局的最顶层，并保留它在世界中的位置 - 放下携带的物品、让骑手下马。节点不会被释放，其他一切都不变。
+remove [i]{child}[/i] from its parent,把 [i]{child}[/i] 从其父节点移除
+"The node to take off its parent. It stays in the layout, at the top level.",要从父节点上摘下的节点。它仍留在布局中，处于最顶层。
+Set Ignore Parent's Movement,设置忽略父节点移动
+"Stops a child moving, turning and scaling with its parent while leaving it a child in every other way - it is still freed with the parent and still picked as one of its children. The answer for a muzzle flash that should not swing with the gun, or a health bar that should not tilt with the enemy.",让子节点不再随父节点移动、旋转和缩放，但在其他方面仍然是子节点 - 依旧随父节点一起释放，也依旧算作它的子节点。适合不该随枪摆动的枪口火光，或不该随敌人倾斜的血条。
+set ignore parent's movement [b]{ignore}[/b] on [i]{target}[/i],把 [i]{target}[/i] 的忽略父节点移动设为 [b]{ignore}[/b]
+The child that should stop (or start) following its parent.,要停止（或开始）跟随父节点的那个子节点。
+Ignore,忽略
+On: the child stays where it is when the parent moves.,开：父节点移动时，子节点留在原处。
+Copy Place To,把位置复制到
+"Points a RemoteTransform at the node it should drive, so that node follows this one without being its child at all. Which parts follow - position, angle, size - are the RemoteTransform's own switches.",让 RemoteTransform 指向它该驱动的节点，那个节点便会跟随本节点，而完全不必成为它的子节点。哪些部分跟随（位置、角度、大小）由 RemoteTransform 自己的开关决定。
+copy [i]{follower}[/i] place to [b]{path}[/b],把 [i]{follower}[/i] 的位置复制到 [b]{path}[/b]
+Follower,跟随者
+The RemoteTransform2D / RemoteTransform3D doing the copying.,执行复制的 RemoteTransform2D / RemoteTransform3D。
+Path to the node its place is copied onto.,位置将被复制到哪个节点的路径。
+Stop Copying Place,停止复制位置
+"Clears a RemoteTransform's target, so whatever it was driving stops following immediately. The node it drove keeps the place it had.",清空 RemoteTransform 的目标，它原本驱动的节点立刻停止跟随，并保留当时的位置。
+stop [i]{follower}[/i] copying,停止 [i]{follower}[/i] 的复制
+The RemoteTransform2D / RemoteTransform3D to switch off.,要关闭的 RemoteTransform2D / RemoteTransform3D。
+For Each Child,对每个子节点
+"Runs this event's actions once per direct child of a node - healing a squad, totting up an inventory, checking every socket. Read the current one as `child`. Children added while it runs are not visited by this pass.",把本事件的动作对某个节点的每个直接子节点各执行一次 - 治疗一个小队、清点背包、检查每个插槽。当前的那个用 `child` 读取。运行期间新加的子节点，本轮不会访问。
+for each child of [i]{target}[/i],对 [i]{target}[/i] 的每个子节点
+The node whose children the actions run once for.,要遍历其子节点、对每个子节点执行一次动作的节点。
+Move Child To Index,把子节点移到指定索引
+"Reorders a child to a new sibling index, changing its draw and process order.",把子节点重排到新的同级索引，从而改变它的绘制顺序和处理顺序。
+move [i]{node}[/i] to index [b]{index}[/b],把 [i]{node}[/i] 移到索引 [b]{index}[/b]
+Child to reorder (by index here - no hardcoded name; pick one or use a scene-unique node).,要重排的子节点（这里按索引 - 不写死名字；挑一个，或使用场景内唯一的节点）。
+Index,索引
+New sibling index (draw / process order).,新的同级索引（绘制 / 处理顺序）。
+Free Node,释放节点
+"Safely deletes a node at the end of the frame, e.g. removing a dead enemy.",在帧结束时安全地删除节点，例如清掉一个已死的敌人。
+free [i]{target}[/i],释放 [i]{target}[/i]
+Target,目标
+Node to free at the end of the frame.,在帧结束时要释放的节点。
+Signals / Scene / Input,信号 / 场景 / 输入
+On Child Added,当添加子节点时
+"Runs when a child node is added beneath this one, e.g. reacting to spawned items.",当有子节点被添加到该节点之下时执行，例如用来响应刚生成的物品。
+On child added [i]{node}[/i],当子节点 [i]{node}[/i] 被添加时
+On Child Leaving,当子节点离开时
+"Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it.",在子节点离开该节点之前执行 - 此时它还在、仍可读取，于是计数、总和或某块面板都能据此更新。
+On child leaving [i]{node}[/i],当子节点 [i]{node}[/i] 离开时

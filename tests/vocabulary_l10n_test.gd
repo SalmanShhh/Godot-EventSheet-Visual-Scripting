@@ -44,6 +44,13 @@ const NEW_MODULES: Array[String] = [
 	"res://addons/eventforge/registration/modules/text_extract_aces.gd",
 	"res://addons/eventforge/registration/modules/text_format_aces.gd",
 	"res://addons/eventforge/registration/modules/spatial_aces.gd",
+	# The reading waves that followed: the game shapes every project writes by hand, the words for
+	# authoring an editor plugin, the 3D move/turn/face/place vocabulary, and the cursor-and-canvas
+	# words. Each of these modules is WHOLLY new, so the whole module is owed and swept.
+	"res://addons/eventforge/registration/modules/game_mechanics_aces.gd",
+	"res://addons/eventforge/registration/modules/editor_author_aces.gd",
+	"res://addons/eventforge/registration/modules/spatial_words_aces.gd",
+	"res://addons/eventforge/registration/modules/cursor_canvas_aces.gd",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the
@@ -71,6 +78,13 @@ const EXTENDED_MODULES: Dictionary = {
 	"res://addons/eventforge/registration/modules/node_aces.gd": [
 		"RegisterAsService", "ServiceNamed", "HasService", "ForEachNodeThatCan",
 		"DoAfterFrame", "CallLater", "SetPropertyDeferred", "OnceThisFrame",
+		# The hierarchy wave: parenting, the two follow-flag escape hatches, and the child picks.
+		"RemoveChild", "HierarchyAddChild", "HierarchyRemoveFromParent", "SetIgnoreParentMovement",
+		"CopyPlaceTo", "StopCopyingPlace", "ForEachChildOf", "MoveChild", "QueueFreeNode",
+	],
+	# The hierarchy wave's two triggers, and the element-input trigger that shipped beside them.
+	"res://addons/eventforge/registration/modules/core_aces.gd": [
+		"OnControlInput", "OnChildEnteredTree", "OnChildExitingTree",
 	],
 	# The data wave: watched data files and the data-folder validation verbs.
 	"res://addons/eventforge/registration/modules/resource_aces.gd": [

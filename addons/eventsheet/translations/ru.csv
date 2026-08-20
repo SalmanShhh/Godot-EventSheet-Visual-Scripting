@@ -3665,3 +3665,339 @@ Swipes and drawn shapes,Свайпы и нарисованные фигуры
 Secrets found,Найденные секреты
 Timed input windows,Окна ввода по времени
 An accessibility options screen,Экран настроек доступности
+Fill Meter,Наполнять шкалу
+"Raises a number at a steady rate per second and stops it at a limit - a suspicion meter filling while a guard sees you, a bar charging, stamina coming back.","Поднимает число с постоянной скоростью в секунду и останавливает его на пределе - шкала подозрения, растущая, пока охранник вас видит, заряжающаяся полоса, восстанавливающаяся выносливость."
+Meters,Шкалы
+Fill [b]{var_name}[/b] at [b]{rate}[/b] up to [b]{cap}[/b],Наполнять [b]{var_name}[/b] со скоростью [b]{rate}[/b] до [b]{cap}[/b]
+Meter,Шкала
+The number to fill.,"Число, которое наполняется."
+Per second,В секунду
+How much it gains each second.,Сколько прибавляется каждую секунду.
+Up to,До
+The value it stops at.,"Значение, на котором она останавливается."
+Drain Meter,Опустошать шкалу
+"Lowers a number at a steady rate per second and stops it at a floor - suspicion cooling off, a shield decaying, a charge bleeding away.","Понижает число с постоянной скоростью в секунду и останавливает его на нижней границе - остывающее подозрение, тающий щит, утекающий заряд."
+Drain [b]{var_name}[/b] at [b]{rate}[/b] down to [b]{floor}[/b],Опустошать [b]{var_name}[/b] со скоростью [b]{rate}[/b] до [b]{floor}[/b]
+The number to drain.,"Число, которое опустошается."
+How much it loses each second.,Сколько убавляется каждую секунду.
+Down to,Вниз до
+Make Noise,Создать шум
+"Tells everything in the listening group that a noise happened at a place, but only the ones close enough to hear it. Footsteps, a door, a thrown bottle.","Сообщает всем в слушающей группе, что в некоторой точке раздался шум, но только тем, кто достаточно близко, чтобы его услышать. Шаги, дверь, брошенная бутылка."
+Stealth,Скрытность
+"Make noise at [b]{at}[/b], heard within [b]{radius}[/b]","Создать шум в [b]{at}[/b], слышно в пределах [b]{radius}[/b]"
+Where the noise happened (a position expression).,Где раздался шум (выражение позиции).
+Heard within,Слышно в пределах
+How far the noise carries.,Как далеко разносится шум.
+Heard by,Кто слышит
+The group whose members can hear - each one needs an On Noise Heard event.,"Группа, чьи участники слышат - каждому нужно событие При услышанном шуме."
+On Noise Heard,При услышанном шуме
+"Runs when a Make Noise action happens close enough for this object to hear it, with the place it came from. Put this object in the listening group first (Add To Group, on created).","Срабатывает, когда действие Создать шум происходит достаточно близко, чтобы этот объект его услышал, вместе с местом, откуда шум пришёл. Сначала добавьте этот объект в слушающую группу (Добавить в группу, при создании)."
+On noise heard at,При услышанном шуме в
+Phase Starts,Начинается фаза
+True the one time health first falls past a share of its maximum while the fight is in an earlier phase. The phase guard is what makes it happen once: set the phase variable in the actions under this condition.,"Истинно ровно один раз - когда здоровье впервые опускается ниже доли от максимума, пока бой ещё в более ранней фазе. Однократность обеспечивает проверка фазы: задайте переменную фазы в действиях под этим условием."
+Boss,Босс
+"Phase [b]{phase}[/b] starts ([b]{hp}[/b] <= [b]{share}[/b] of [b]{max_hp}[/b], once)","Начинается фаза [b]{phase}[/b] ([b]{hp}[/b] <= [b]{share}[/b] от [b]{max_hp}[/b], один раз)"
+Phase,Фаза
+The phase number that starts here.,"Номер фазы, которая здесь начинается."
+At share of maximum,При доле от максимума
+The health share it starts at - 0.6 is 60%.,"Доля здоровья, при которой она начинается - 0.6 это 60 %."
+Health,Здоровье
+The variable holding health now.,Переменная с текущим здоровьем.
+Maximum health,Максимальное здоровье
+The variable holding full health.,Переменная с полным здоровьем.
+Phase variable,Переменная фазы
+The variable holding which phase the fight is in - set it in the actions below.,"Переменная, в которой хранится текущая фаза боя - задайте её в действиях ниже."
+Set Invulnerable For,Сделать неуязвимым на
+"Turns a flag on, waits, and turns it back off - the invulnerability window after a hit, written once instead of as a flag and a timer that can drift apart.","Включает флаг, ждёт и снова выключает его - окно неуязвимости после удара, записанное одной строкой вместо флага и таймера, которые могут разъехаться."
+Set [b]{flag}[/b] for [b]{seconds}[/b] seconds,Включить [b]{flag}[/b] на [b]{seconds}[/b] секунд
+Flag,Флаг
+The boolean that says nothing lands.,"Логическое значение, которое говорит, что ничто не попадает."
+For seconds,На секунд
+How long the window lasts.,Сколько длится это окно.
+Start Mission Timer,Запустить таймер миссии
+Puts a number of seconds on the mission clock. Type the time the way a player reads it - 3:00 - and the row stores the seconds.,"Ставит на часы миссии заданное число секунд. Вводите время так, как его читает игрок - 3:00 - и строка сохранит секунды."
+Missions,Миссии
+Start [b]{var_name}[/b] at [b]{seconds}[/b],Запустить [b]{var_name}[/b] с [b]{seconds}[/b]
+Timer variable,Переменная таймера
+The variable holding the seconds left.,Переменная с оставшимися секундами.
+How long the mission runs - type it as minutes:seconds.,Сколько длится миссия - вводите как минуты:секунды.
+Add Mission Time,Добавить время миссии
+Puts time back on the mission clock - the pickup that buys you another half minute.,"Возвращает время на часы миссии - тот подбираемый бонус, который покупает вам ещё полминуты."
+Add [b]{seconds}[/b] to [b]{var_name}[/b],Добавить [b]{seconds}[/b] к [b]{var_name}[/b]
+How much time to add - type it as minutes:seconds.,Сколько времени добавить - вводите как минуты:секунды.
+Mission Time Left,Оставшееся время миссии
+"Gives the time left as text a player can read - ""2:41"" - ready to drop into a HUD label.","Даёт оставшееся время текстом, который читает игрок - ""2:41"" - готовым для метки в HUD."
+Missions.TimeLeft,Миссии.ОставшеесяВремя
+Editor Icon,Значок редактора
+"One of the editor's own icons, so a tool's buttons and docks look like the editor around them instead of shipping their own art. The field draws the icon it names as you pick it.","Один из собственных значков редактора, чтобы кнопки и панели инструмента выглядели как окружающий их редактор, а не тащили за собой свою графику. Поле рисует значок, который называет, прямо при выборе."
+Editor Tools: Panels & menus,Инструменты редактора: панели и меню
+Editor.Icon({icon_name}),Editor.Icon({icon_name})
+"The editor icon's name - usually a class name like Node2D, Script or Folder.","Имя значка редактора - обычно имя класса вроде Node2D, Script или Folder."
+Editor Preference,Настройка редактора
+"One value out of the user's own Editor Settings - their theme colour, grid step, font size. Read it so a tool matches the editor the person in front of it actually set up.","Одно значение из собственных Настроек редактора пользователя - цвет темы, шаг сетки, размер шрифта. Читайте его, чтобы инструмент соответствовал тому редактору, который человек перед ним действительно настроил."
+Editor Tools: Project & preferences,Инструменты редактора: проект и настройки
+Editor.Preference({path}),Editor.Preference({path})
+"The Editor Settings path, as it reads in Editor > Editor Settings.","Путь в Настройках редактора - в том виде, как он записан в Редактор > Настройки редактора."
+Project Setting,Настройка проекта
+"One value out of this project's own settings. Unlike a preference, it is saved with the project, so every person opening it sees the same answer.","Одно значение из собственных настроек этого проекта. В отличие от настройки редактора, оно сохраняется вместе с проектом, поэтому все, кто его откроет, увидят один и тот же ответ."
+Project.Setting({path}),Project.Setting({path})
+"The Project Settings path, as it reads in Project > Project Settings.","Путь в Настройках проекта - в том виде, как он записан в Проект > Настройки проекта."
+Workspace Area,Зона рабочей области
+"The big area the 2D, 3D and Script tabs share. A workspace plugin adds its own screen as a child of this.","Большая область, которую делят вкладки 2D, 3D и Script. Плагин рабочей области добавляет свой экран как её потомка."
+Editor.MainScreen,Editor.MainScreen
+Set Setting,Задать настройку
+"Writes one project setting. It lives in memory until Save settings runs, so a tool that changes several settings writes them all and saves once.","Записывает одну настройку проекта. Она живёт в памяти, пока не выполнится Сохранить настройки, поэтому инструмент, меняющий несколько настроек, записывает их все и сохраняет один раз."
+Set setting {path} to {value},Установить настройку {path} в {value}
+The Project Settings path to write.,"Путь в Настройках проекта, куда писать."
+The value to store there.,"Значение, которое туда положить."
+Save Settings,Сохранить настройки
+"Writes the project settings back to project.godot. Without this, everything Set setting changed is lost when the editor closes.","Записывает настройки проекта обратно в project.godot. Без этого всё, что изменила Задать настройку, теряется при закрытии редактора."
+Save settings,Сохранить настройки
+Switch To Workspace,Перейти в рабочую область
+Brings one of the editor's top tabs to the front - the same click as pressing 2D or Script yourself.,"Выводит вперёд одну из верхних вкладок редактора - тот же клик, как если бы вы сами нажали 2D или Script."
+Switch to workspace {workspace},Перейти в рабочую область {workspace}
+Which of the editor's top tabs to bring forward.,Какую из верхних вкладок редактора вывести вперёд.
+2D,2D
+3D,3D
+Game,Игра
+AssetLib,AssetLib
+Show In Project Bar,Показать в панели проекта
+"Reveals a folder or file in the editor's project file list and selects it - what a tool does after it writes something, so the reader can see what just landed.","Показывает папку или файл в списке файлов проекта редактора и выделяет его - то, что инструмент делает после записи, чтобы было видно, что только что появилось."
+Show in Project bar {path},Показать {path} в панели проекта
+"The folder or file to reveal, as a res:// path.","Папка или файл, который нужно показать, в виде пути res://."
+Open Script At Line,Открыть скрипт на строке
+Jumps the script editor to a line of the script it already has open - how a tool points at the thing it is complaining about.,"Переводит редактор скриптов на строку уже открытого скрипта - так инструмент указывает на то, на что жалуется."
+Open script at line {line},Открыть скрипт на строке {line}
+Line,Строка
+"The line to jump to, counted from zero.","Строка, к которой перейти; счёт с нуля."
+Add Window,Добавить окно
+"Puts a window or dialog under the editor's own root, which is what makes it show up with the editor's theme and stay on top of it. Free it again when the plugin is disabled.",Помещает окно или диалог под собственный корень редактора - именно поэтому оно отображается в теме редактора и держится поверх него. При отключении плагина освободите его обратно.
+Add window {window} to the editor's root,Добавить окно {window} в корень редактора
+The window or dialog to hang on the editor.,"Окно или диалог, который навешивается на редактор."
+Add Command,Добавить команду
+"Adds one entry to the editor's command palette (Ctrl+Shift+P), so a tool is reachable without a menu of its own.","Добавляет одну запись в палитру команд редактора (Ctrl+Shift+P), чтобы до инструмента можно было добраться без собственного меню."
+Add command {title},Добавить команду {title}
+The words the command palette shows.,"Текст, который показывает палитра команд."
+Keyed,С ключом
+The unique key the palette files it under.,"Уникальный ключ, под которым палитра его хранит."
+Calls,Вызывает
+The function to run when the command is chosen.,"Функция, которая выполняется при выборе команды."
+Add Bottom Panel,Добавить нижнюю панель
+"Adds a tab to the row Output and Debugger share, at the bottom of the editor. Remove it on plugin disabled or the row keeps a tab nobody owns.","Добавляет вкладку в ряд, который делят Вывод и Отладчик внизу редактора. При отключении плагина уберите её, иначе в ряду останется ничья вкладка."
+Add bottom panel {control} titled {title},Добавить нижнюю панель {control} с заголовком {title}
+Panel,Панель
+The Control to show in the bottom row.,"Control, который показывается в нижнем ряду."
+Titled,Заголовок
+"The words on its tab, beside Output and Debugger.","Надпись на его вкладке, рядом с Выводом и Отладчиком."
+Remove Bottom Panel,Убрать нижнюю панель
+Takes the plugin's tab back out of the bottom row.,Убирает вкладку плагина обратно из нижнего ряда.
+Remove bottom panel {control},Убрать нижнюю панель {control}
+The Control that was added to the bottom row.,"Control, который был добавлен в нижний ряд."
+On Project Files Changed,При изменении файлов проекта
+"Runs whenever the project's files change on disk - something was imported, moved, deleted or added. The place to rescan whatever a tool keeps a list of.","Выполняется всякий раз, когда файлы проекта меняются на диске - что-то импортировали, переместили, удалили или добавили. Место, где стоит пересканировать то, чему инструмент ведёт список."
+On project files changed,При изменении файлов проекта
+On Preferences Changed,При изменении настроек редактора
+"Runs when the user changes anything in Editor Settings. Re-read the preferences a tool draws with, so it follows the theme instead of keeping the old one.","Выполняется, когда пользователь меняет что-либо в Настройках редактора. Перечитайте настройки, с которыми инструмент рисует, чтобы он следовал теме, а не держался за старую."
+On preferences changed,При изменении настроек редактора
+Move In Direction,Двигать в направлении
+"Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second.","Двигает 3D-узел вдоль одного из его собственных направлений - вперёд, назад, вправо, влево, вверх или вниз - со скоростью в секунду."
+3D: Move & Turn,3D: движение и поворот
+Move [b]{direction}[/b] at [i]{speed}[/i],Двигать [b]{direction}[/b] со скоростью [i]{speed}[/i]
+Direction,Направление
+Which of its own six directions to move along.,По какому из шести собственных направлений двигаться.
+backward,назад
+down,вниз
+Units a second.,Единиц в секунду.
+Delta,Дельта
+Frame time; defaults to `delta`.,Время кадра; по умолчанию `delta`.
+Rotate Clockwise,Поворачивать по часовой стрелке
+Turns a 3D node about its up axis - the yaw a character or a turret turns with.,"Поворачивает 3D-узел вокруг его собственной вертикальной оси - рыскание, которым разворачиваются персонаж или турель."
+Rotate [b]clockwise[/b] at [i]{degrees_per_second}[/i]°/s,Поворачивать [b]по часовой стрелке[/b] со скоростью [i]{degrees_per_second}[/i]°/с
+Degrees per second,Градусов в секунду
+"Degrees a second, turning clockwise seen from above; a negative number turns the other way.","Градусов в секунду, по часовой стрелке при взгляде сверху; отрицательное значение поворачивает в другую сторону."
+Rotate Up Or Down,Поворачивать вверх или вниз
+Tilts a 3D node's nose up or down - the pitch a plane or a camera arm moves with.,"Наклоняет нос 3D-узла вверх или вниз - тангаж, которым движутся самолёт или штанга камеры."
+Rotate [b]up[/b] at [i]{degrees_per_second}[/i]°/s,Поворачивать [b]вверх[/b] со скоростью [i]{degrees_per_second}[/i]°/с
+Degrees a second; a negative number tilts the other way.,Градусов в секунду; отрицательное значение наклоняет в другую сторону.
+Roll,Крен
+Rolls a 3D node about the way it faces - the bank a plane or a ship leans with.,"Кренит 3D-узел вокруг направления, куда он смотрит - тот наклон, в который ложатся самолёт или корабль."
+Roll [b]left[/b] at [i]{degrees_per_second}[/i]°/s,Крениться [b]влево[/b] со скоростью [i]{degrees_per_second}[/i]°/с
+Degrees a second; a negative number rolls the other way.,Градусов в секунду; отрицательное значение кренит в другую сторону.
+Rotate Toward Facing,Поворачивать к ориентации
+Turns a 3D node smoothly toward a facing instead of snapping to it - the way a turret leads its target.,"Плавно поворачивает 3D-узел к ориентации, а не защёлкивает его на ней - так турель ведёт свою цель."
+Rotate toward [i]{facing}[/i] at [i]{rate}[/i],Поворачивать к [i]{facing}[/i] со скоростью [i]{rate}[/i]
+The facing to turn toward - Facing Along a direction gives you one.,"Ориентация, к которой поворачиваемся - Ориентация вдоль направления даёт вам такую."
+Rate,Скорость
+"How fast it closes the gap, per second. Bigger turns harder.","Насколько быстро закрывается остаток, за секунду. Больше - поворот резче."
+Facing Along,Ориентация вдоль
+The facing that looks along a direction - what Rotate Toward Facing turns toward.,"Ориентация, которая смотрит вдоль направления - то, к чему поворачивает Поворачивать к ориентации."
+The direction to face along.,"Направление, вдоль которого смотреть."
+Set Position To Another Object,Задать позицию по другому объекту
+"Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.","Ставит 3D-узел ровно туда, где находится другой - так и пользуются точкой появления, креплением или меткой возрождения."
+3D: Place,3D: размещение
+Set position to [b]{other}[/b],Задать позицию как у [b]{other}[/b]
+Other,Другой
+"The object to stand where - a spawn marker, a socket, another character.","Объект, на чьё место встать - метка появления, крепление, другой персонаж."
+Align To The Ground's Slope,Выровнять по уклону земли
+Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill.,"Наклоняет 3D-узел так, чтобы его верх смотрел туда же, куда земля - строка, из-за которой брошенный ящик ложится на склон плашмя."
+Align to the ground's [b]slope[/b],Выровнять по [b]уклону[/b] земли
+Ground normal,Нормаль земли
+The way the surface faces - a ray hit gives you one as its `normal`.,Куда смотрит поверхность - попадание луча даёт её в поле `normal`.
+Is Within Angle Of Facing,В пределах угла обзора
+"Asks whether something is inside the cone this object is looking down - a vision cone, a backstab check, an aim assist.","Спрашивает, находится ли нечто внутри конуса, в который смотрит этот объект - конус обзора, проверка удара в спину, помощь прицеливанию."
+3D: See,3D: обзор
+Is within [b]{angle}[/b]° of facing [i]{direction}[/i],Находится в пределах [b]{angle}[/b]° от взгляда [i]{direction}[/i]
+"The way this object faces. Its own forward, unless you say otherwise.","Куда смотрит этот объект. Его собственное вперёд, если не указать иное."
+The direction to the thing being looked for - Direction To gives you one.,"Направление к тому, что ищем - Направление к даёт вам такое."
+Within,В пределах
+"Half the width of the cone, in degrees. 45 is a 90-degree field of view.","Половина ширины конуса, в градусах. 45 - это поле обзора в 90 градусов."
+Is Behind,Находится позади
+Asks whether a place is behind this object - the backstab half of a facing test.,"Спрашивает, находится ли место позади этого объекта - половина «удар в спину» у проверки ориентации."
+[i]{point}[/i] is [b]behind[/b] it,[i]{point}[/i] находится [b]позади[/b] него
+The place being asked about.,"Место, о котором спрашиваем."
+Is In Front Of,Находится впереди
+"Asks whether a place is in front of this object, whichever way it happens to be turned.","Спрашивает, находится ли место перед этим объектом, как бы он ни был повёрнут."
+[i]{point}[/i] is [b]in front of[/b] it,[i]{point}[/i] находится [b]перед[/b] ним
+Is To The Right Of,Находится справа
+"Asks whether a place is off this object's right side - which way to lean, dodge or steer.","Спрашивает, находится ли место справа от этого объекта - в какую сторону наклоняться, уклоняться или рулить."
+[i]{point}[/i] is [b]to the right of[/b] it,[i]{point}[/i] находится [b]справа[/b] от него
+Is To The Left Of,Находится слева
+Asks whether a place is off this object's left side - the twin of Is To The Right Of.,"Спрашивает, находится ли место слева от этого объекта - близнец условия Находится справа."
+[i]{point}[/i] is [b]to the left of[/b] it,[i]{point}[/i] находится [b]слева[/b] от него
+Point At Angle,Точка под углом
+The point an angle and a distance name. Add it to a centre for a place on a circle; grow the distance every tick and it draws a spiral.,"Точка, которую задают угол и расстояние. Прибавьте её к центру - получите место на окружности; наращивайте расстояние каждый тик, и она рисует спираль."
+"The angle, in degrees.","Угол, в градусах."
+How far out to go.,Насколько далеко отойти.
+Create Evenly Around A Circle,Создать равномерно по окружности
+"Places a number of copies evenly around a circle - the bullet-hell ring, the radial menu, the circle of pillars.","Расставляет заданное число копий равномерно по окружности - кольцо пуль, радиальное меню, круг колонн."
+Create [b]{count}[/b] of {scene} evenly around a circle of [i]{radius}[/i],Создать [b]{count}[/b] шт. {scene} равномерно по окружности радиусом [i]{radius}[/i]
+How many,Сколько
+How many to place.,Сколько штук разместить.
+The scene to place.,"Сцена, которую размещаем."
+The middle of the circle.,Середина круга.
+How far out from the centre they sit.,На каком расстоянии от середины они стоят.
+Store As Angle And Distance,Сохранить как угол и расстояние
+"Reads a place back the other way - as the angle from one point to another and how far apart they are, both named in one drop.","Читает место в обратную сторону - как угол от одной точки к другой и расстояние между ними, оба с именами за один приём."
+Store [i]{from}[/i] to [i]{to}[/i] as [b]{angle_name}[/b] and [b]{distance_name}[/b],Сохранить от [i]{from}[/i] до [i]{to}[/i] как [b]{angle_name}[/b] и [b]{distance_name}[/b]
+The place to measure from.,"Место, от которого меряем."
+The place to measure to.,"Место, до которого меряем."
+Angle name,Имя угла
+What to call the angle.,Как назвать угол.
+Distance name,Имя расстояния
+What to call the distance.,Как назвать расстояние.
+Cursor Is Over Object (3D),Курсор над объектом (3D)
+"True while the mouse is pointing at this object in the 3D world - hover highlights, tooltips and ""what am I about to click"" all start here. Needs an active Camera3D.","Истинно, пока мышь указывает на этот объект в 3D-мире - подсветка при наведении, подсказки и ""на что я сейчас нажму"" начинаются отсюда. Нужна активная Camera3D."
+Mouse,Мышь
+cursor is over {object},курсор над {object}
+The object the cursor has to be over for this to be true.,"Объект, над которым должен находиться курсор, чтобы это было истинно."
+Layers,Слои
+"Which collision layers the ray may see, by the names this project gave them.","Какие слои столкновений видит луч, по именам, которые дал им этот проект."
+"How far into the scene the ray reaches, in metres.","Насколько далеко луч уходит в сцену, в метрах."
+On Object Clicked (3D),При клике по объекту (3D)
+"Fires when a mouse button goes down over this object in the 3D world - click-to-select, click-to-attack, click-to-open. Lives in an input event, beside the other On ... pressed rows.","Срабатывает, когда кнопка мыши нажимается над этим объектом в 3D-мире - клик, чтобы выбрать, чтобы атаковать, чтобы открыть. Живёт во входном событии, рядом с другими строками ""При нажатии ...""."
+On {object} clicked,При клике по {object}
+The object the click has to land on.,"Объект, по которому должен попасть клик."
+Mouse button.,Кнопка мыши.
+Mouse Floor Point,Точка пола под мышью
+"The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal.","Точка мира на полу, куда целится курсор - куда положить призрак постройки, метку приказа на движение или декаль."
+mouse floor point,точка пола под мышью
+Aimed Floor Point,Прицельная точка пола
+"The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal. Aimed through a crosshair object rather than the OS pointer.","Точка мира на полу, куда целится курсор - куда положить призрак постройки, метку приказа на движение или декаль. Прицеливание идёт через объект-прицел, а не через системный указатель."
+aimed floor point through {target},"точка пола, прицельная через {target}"
+Cursor object,Объект-курсор
+"The crosshair or virtual cursor to aim through. Its position ON THE CANVAS is what aims the ray, so a gamepad or touch cursor works exactly like the pointer.","Прицел или виртуальный курсор, через который идёт наводка. Луч направляет именно его положение НА ХОЛСТЕ, поэтому курсор с геймпада или с касания работает точно так же, как указатель."
+Mouse Floor Object,Объект пола под мышью
+"The floor object the cursor is aiming at, or nothing when the cursor is off the floor.","Объект пола, на который целится курсор, или ничего, когда курсор вне пола."
+mouse floor object,объект пола под мышью
+Aimed Floor Object,Прицельный объект пола
+"The floor object the cursor is aiming at, or nothing when the cursor is off the floor. Aimed through a crosshair object rather than the OS pointer.","Объект пола, на который целится курсор, или ничего, когда курсор вне пола. Прицеливание идёт через объект-прицел, а не через системный указатель."
+aimed floor object through {target},"объект пола, прицельный через {target}"
+Mouse Floor Slope,Уклон пола под мышью
+"Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable.","Куда обращён пол под курсором - передайте это в Уклон у ""Выровнять по земле"" или спросите у ""Уклон круче"", можно ли там строить."
+mouse floor slope,уклон пола под мышью
+Aimed Floor Slope,Прицельный уклон пола
+"Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable. Aimed through a crosshair object rather than the OS pointer.","Куда обращён пол под курсором - передайте это в Уклон у ""Выровнять по земле"" или спросите у ""Уклон круче"", можно ли там строить. Прицеливание идёт через объект-прицел, а не через системный указатель."
+aimed floor slope through {target},"уклон пола, прицельный через {target}"
+Slope Steeper Than,Уклон круче
+True when the ground faces further than this from straight up - the buildable test a placement preview tints itself with.,"Истинно, когда земля отклоняется от вертикали больше, чем на это значение - проверка ""можно ли строить"", по которой предпросмотр размещения красит себя."
+Slope,Уклон
+Which way the ground faces - the floor slope expressions answer exactly this.,Куда обращена земля - именно это возвращают выражения уклона пола.
+Degrees,Градусы
+How far from flat counts as too steep.,Насколько отклонение от горизонтали уже считается слишком крутым.
+Canvas X (2D),X на холсте (2D)
+"Where this object is ON THE CANVAS, in pixels. Camera zoom and canvas layers are already in the answer, which is exactly what plain position arithmetic gets wrong.","Где этот объект находится НА ХОЛСТЕ, в пикселях. Зум камеры и слои холста уже учтены - именно это простая арифметика с позицией и путает."
+{target}'s canvas x,x на холсте у {target}
+The object being asked where it is on screen.,"Объект, у которого спрашивают, где он на экране."
+Canvas X (3D),X на холсте (3D)
+"Where this 3D object lands ON THE CANVAS, in pixels - the number a health bar over its head, an off-screen arrow or an aim assist is positioned by.","Где этот 3D-объект оказывается НА ХОЛСТЕ, в пикселях - число, по которому ставят полоску здоровья над головой, стрелку за краем экрана или помощь в прицеливании."
+The 3D object being asked where it is on screen.,"3D-объект, у которого спрашивают, где он на экране."
+Canvas Y (2D),Y на холсте (2D)
+{target}'s canvas y,y на холсте у {target}
+Canvas Y (3D),Y на холсте (3D)
+Canvas Centre,Центр холста
+"The middle of what the player can see, in pixels - where a crosshair sits.","Середина того, что видит игрок, в пикселях - там сидит прицел."
+Pick Nearest To Canvas Point,Выбрать ближайший к точке холста
+"Walks the instances and keeps whichever is closest to a point ON THE CANVAS - aim assist, snap-to-target crosshairs and ""whichever one I am nearly pointing at"". Measured in pixels, so camera zoom is honoured; anything behind the camera is skipped.","Проходит по экземплярам и оставляет тот, что ближе всего к точке НА ХОЛСТЕ - помощь в прицеливании, прицел с прилипанием к цели и ""тот, на кого я почти навёлся"". Мерится в пикселях, поэтому зум камеры учитывается; всё за камерой пропускается."
+pick nearest of [i]{list}[/i] to canvas point {from} -> [b]{name}[/b],выбрать ближайший из [i]{list}[/i] к точке холста {from} -> [b]{name}[/b]
+Picked name,Имя выбранного
+"The name the one it picks goes by in the rows below. Nothing is picked when the list is empty or everything is off screen, so check the name exists first.","Имя, под которым выбранный будет фигурировать в строках ниже. Ничего не выбирается, если список пуст или всё за пределами экрана, так что сначала проверьте, что имя существует."
+Out of,Из
+"The instances to pick from - usually a group, which is how a project spells ""every one of this kind"".","Экземпляры, из которых выбирают - обычно группа: так проект записывает ""все такого рода""."
+Nearest to,Ближайший к
+"The canvas point distances are measured from, in pixels. The canvas centre is the crosshair.","Точка холста, от которой меряются расстояния, в пикселях. Центр холста - это прицел."
+"How far from that point, in PIXELS, still counts. Nothing beyond it is picked.","На каком расстоянии от этой точки, в ПИКСЕЛЯХ, ещё засчитывается. Дальше ничего не выбирается."
+Remove Child,Убрать потомка
+"Detaches a child node from this one without deleting it, so you can reattach it later.","Отсоединяет дочерний узел от этого, не удаляя его, так что позже его можно присоединить снова."
+remove child [i]{node}[/i],убрать потомка [i]{node}[/i]
+Child to detach (by index here - no hardcoded name; pick one or use a scene-unique node). Not freed.,"Потомок, которого нужно отсоединить (здесь по индексу - без жёстко прописанного имени; выберите один или возьмите уникальный в сцене узел). Не освобождается."
+Add Child (existing node),Добавить потомка (существующий узел)
+"Moves a node that is already in the layout under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.","Переносит узел, который уже есть в макете, под нового родителя - взять предмет в руку, посадить всадника в седло, закинуть оружие за спину. ""Сохранить место"" оставляет его ровно там, где он виден; ""притянуть"" ставит его в точку самого родителя."
+add child [i]{child}[/i] to [i]{parent}[/i],добавить потомка [i]{child}[/i] к [i]{parent}[/i]
+Child,Потомок
+The node that becomes a child. It keeps everything it is - only its parent changes.,"Узел, который становится потомком. Он остаётся всем, чем был - меняется только его родитель."
+Parent,Родитель
+The node it goes under.,"Узел, под который он попадает."
+Its place,Его место
+"Whether the child stays where it is in the world, or snaps to its new parent.","Останется ли потомок там, где он в мире, или притянется к новому родителю."
+Remove From Parent,Убрать из родителя
+"Takes a node off whatever it is under and puts it back at the top of the layout, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.","Снимает узел с того, под чем он находится, и возвращает его на верхний уровень макета, сохраняя место в мире - выронить носимый предмет, ссадить всадника. Узел не освобождается, и больше в нём ничего не меняется."
+remove [i]{child}[/i] from its parent,убрать [i]{child}[/i] из его родителя
+"The node to take off its parent. It stays in the layout, at the top level.","Узел, который снимают с родителя. Он остаётся в макете, на верхнем уровне."
+Set Ignore Parent's Movement,Задать игнорирование движения родителя
+"Stops a child moving, turning and scaling with its parent while leaving it a child in every other way - it is still freed with the parent and still picked as one of its children. The answer for a muzzle flash that should not swing with the gun, or a health bar that should not tilt with the enemy.","Заставляет потомка перестать двигаться, поворачиваться и масштабироваться вместе с родителем, оставаясь потомком во всём остальном - он по-прежнему освобождается вместе с родителем и по-прежнему попадает в число его потомков. Ответ для вспышки выстрела, которая не должна качаться вместе с оружием, или полоски здоровья, которая не должна наклоняться вместе с врагом."
+set ignore parent's movement [b]{ignore}[/b] on [i]{target}[/i],задать игнорирование движения родителя [b]{ignore}[/b] у [i]{target}[/i]
+The child that should stop (or start) following its parent.,"Потомок, который должен перестать (или начать) следовать за родителем."
+Ignore,Игнорировать
+On: the child stays where it is when the parent moves.,"Вкл: потомок остаётся на месте, когда родитель движется."
+Copy Place To,Копировать место в
+"Points a RemoteTransform at the node it should drive, so that node follows this one without being its child at all. Which parts follow - position, angle, size - are the RemoteTransform's own switches.","Наводит RemoteTransform на узел, которым он должен управлять, так что тот узел следует за этим, вовсе не будучи его потомком. Какие части следуют - позиция, угол, размер - решают собственные переключатели RemoteTransform."
+copy [i]{follower}[/i] place to [b]{path}[/b],копировать место [i]{follower}[/i] в [b]{path}[/b]
+Follower,Последователь
+The RemoteTransform2D / RemoteTransform3D doing the copying.,"RemoteTransform2D / RemoteTransform3D, который выполняет копирование."
+Path to the node its place is copied onto.,"Путь к узлу, на который копируется его место."
+Stop Copying Place,Прекратить копирование места
+"Clears a RemoteTransform's target, so whatever it was driving stops following immediately. The node it drove keeps the place it had.","Очищает цель RemoteTransform, так что тот, кем он управлял, тут же перестаёт следовать. Ведомый узел сохраняет то место, где был."
+stop [i]{follower}[/i] copying,остановить копирование у [i]{follower}[/i]
+The RemoteTransform2D / RemoteTransform3D to switch off.,"RemoteTransform2D / RemoteTransform3D, который надо выключить."
+For Each Child,Для каждого потомка
+"Runs this event's actions once per direct child of a node - healing a squad, totting up an inventory, checking every socket. Read the current one as `child`. Children added while it runs are not visited by this pass.","Выполняет действия этого события по разу на каждого прямого потомка узла - подлечить отряд, сложить инвентарь, проверить каждый слот. Текущий читается как `child`. Потомки, добавленные во время работы, этим проходом не посещаются."
+for each child of [i]{target}[/i],для каждого потомка [i]{target}[/i]
+The node whose children the actions run once for.,"Узел, для чьих потомков действия выполняются по разу."
+Move Child To Index,Переместить потомка на индекс
+"Reorders a child to a new sibling index, changing its draw and process order.","Переставляет потомка на новый индекс среди соседей, меняя порядок отрисовки и обработки."
+move [i]{node}[/i] to index [b]{index}[/b],переместить [i]{node}[/i] на индекс [b]{index}[/b]
+Child to reorder (by index here - no hardcoded name; pick one or use a scene-unique node).,"Потомок, которого нужно переставить (здесь по индексу - без жёстко прописанного имени; выберите один или возьмите уникальный в сцене узел)."
+Index,Индекс
+New sibling index (draw / process order).,Новый индекс среди соседей (порядок отрисовки / обработки).
+Free Node,Освободить узел
+"Safely deletes a node at the end of the frame, e.g. removing a dead enemy.","Безопасно удаляет узел в конце кадра, напр. чтобы убрать мёртвого врага."
+free [i]{target}[/i],освободить [i]{target}[/i]
+Target,Цель
+Node to free at the end of the frame.,"Узел, который освобождается в конце кадра."
+Signals / Scene / Input,Сигналы / Сцена / Ввод
+On Child Added,При добавлении потомка
+"Runs when a child node is added beneath this one, e.g. reacting to spawned items.","Срабатывает, когда под этим узлом добавляется дочерний узел - например, чтобы отреагировать на созданные предметы."
+On child added [i]{node}[/i],При добавлении потомка [i]{node}[/i]
+On Child Leaving,При уходе потомка
+"Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it.","Срабатывает прямо перед тем, как дочерний узел покидает этот - пока его ещё можно прочитать, чтобы обновить по нему счётчик, сумму или панель."
+On child leaving [i]{node}[/i],При уходе потомка [i]{node}[/i]

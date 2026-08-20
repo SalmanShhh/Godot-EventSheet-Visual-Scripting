@@ -3665,3 +3665,339 @@ Swipes and drawn shapes,스와이프와 그린 도형
 Secrets found,찾은 비밀
 Timed input windows,시간 제한 입력 창
 An accessibility options screen,접근성 옵션 화면
+Fill Meter,게이지 채우기
+"Raises a number at a steady rate per second and stops it at a limit - a suspicion meter filling while a guard sees you, a bar charging, stamina coming back.","숫자를 초당 일정한 속도로 올리다가 상한에서 멈춥니다. 경비병에게 보이는 동안 차오르는 의심 게이지, 충전되는 바, 회복되는 스태미나 같은 것에 씁니다."
+Meters,게이지
+Fill [b]{var_name}[/b] at [b]{rate}[/b] up to [b]{cap}[/b],[b]{var_name}[/b] 를 [b]{rate}[/b] 로 [b]{cap}[/b] 까지 채우기
+Meter,게이지
+The number to fill.,채울 숫자.
+Per second,초당
+How much it gains each second.,1 초마다 늘어나는 양.
+Up to,상한
+The value it stops at.,여기서 멈추는 값.
+Drain Meter,게이지 줄이기
+"Lowers a number at a steady rate per second and stops it at a floor - suspicion cooling off, a shield decaying, a charge bleeding away.","숫자를 초당 일정한 속도로 내리다가 하한에서 멈춥니다. 식어가는 의심, 깎여 나가는 실드, 새어 나가는 충전량 같은 것에 씁니다."
+Drain [b]{var_name}[/b] at [b]{rate}[/b] down to [b]{floor}[/b],[b]{var_name}[/b] 를 [b]{rate}[/b] 로 [b]{floor}[/b] 까지 줄이기
+The number to drain.,줄일 숫자.
+How much it loses each second.,1 초마다 줄어드는 양.
+Down to,하한
+Make Noise,소리 내기
+"Tells everything in the listening group that a noise happened at a place, but only the ones close enough to hear it. Footsteps, a door, a thrown bottle.","어떤 자리에서 소리가 났다는 사실을 듣는 그룹 전체에 알립니다. 다만 들을 만큼 가까이 있는 대상에게만 전해집니다. 발소리, 문, 던진 병 같은 것."
+Stealth,잠입
+"Make noise at [b]{at}[/b], heard within [b]{radius}[/b]","[b]{at}[/b] 에서 소리 내기, [b]{radius}[/b] 안에서 들림"
+Where the noise happened (a position expression).,소리가 난 자리 (위치 식).
+Heard within,들리는 범위
+How far the noise carries.,소리가 퍼지는 거리.
+Heard by,듣는 대상
+The group whose members can hear - each one needs an On Noise Heard event.,들을 수 있는 구성원들의 그룹. 각각 소리를 들었을 때 이벤트가 있어야 합니다.
+On Noise Heard,소리를 들었을 때
+"Runs when a Make Noise action happens close enough for this object to hear it, with the place it came from. Put this object in the listening group first (Add To Group, on created).","소리 내기 액션이 이 오브젝트가 들을 만큼 가까이에서 일어났을 때, 소리가 난 자리와 함께 실행됩니다. 먼저 이 오브젝트를 듣는 그룹에 넣으세요 (생성될 때 그룹에 추가)."
+On noise heard at,"소리를 들었을 때, 위치"
+Phase Starts,페이즈 시작
+True the one time health first falls past a share of its maximum while the fight is in an earlier phase. The phase guard is what makes it happen once: set the phase variable in the actions under this condition.,"전투가 아직 이전 페이즈에 있는 동안 체력이 최대치의 일정 비율 아래로 처음 떨어지는, 그 한 번만 참이 됩니다. 한 번만 일어나게 하는 것은 페이즈 검사입니다. 이 조건 아래의 액션에서 페이즈 변수를 설정하세요."
+Boss,보스
+"Phase [b]{phase}[/b] starts ([b]{hp}[/b] <= [b]{share}[/b] of [b]{max_hp}[/b], once)","페이즈 [b]{phase}[/b] 시작 ([b]{hp}[/b] <= [b]{max_hp}[/b] 의 [b]{share}[/b], 한 번만)"
+Phase,페이즈
+The phase number that starts here.,여기서 시작하는 페이즈 번호.
+At share of maximum,최대치 대비 비율
+The health share it starts at - 0.6 is 60%.,시작하는 체력 비율. 0.6 은 60 % 입니다.
+Health,체력
+The variable holding health now.,현재 체력을 담고 있는 변수.
+Maximum health,최대 체력
+The variable holding full health.,가득 찬 체력을 담고 있는 변수.
+Phase variable,페이즈 변수
+The variable holding which phase the fight is in - set it in the actions below.,전투가 어느 페이즈에 있는지 담고 있는 변수. 아래 액션에서 설정하세요.
+Set Invulnerable For,일정 시간 무적으로 만들기
+"Turns a flag on, waits, and turns it back off - the invulnerability window after a hit, written once instead of as a flag and a timer that can drift apart.","플래그를 켜고, 기다렸다가, 다시 끕니다. 피격 후 무적 시간을 서로 어긋나기 쉬운 플래그와 타이머로 나누지 않고 한 줄로 씁니다."
+Set [b]{flag}[/b] for [b]{seconds}[/b] seconds,[b]{flag}[/b] 를 [b]{seconds}[/b] 초 동안 켜기
+Flag,플래그
+The boolean that says nothing lands.,아무것도 맞지 않음을 뜻하는 참/거짓 값.
+For seconds,지속 초
+How long the window lasts.,그 구간이 이어지는 시간.
+Start Mission Timer,미션 타이머 시작
+Puts a number of seconds on the mission clock. Type the time the way a player reads it - 3:00 - and the row stores the seconds.,"미션 시계에 초를 올려 둡니다. 시간은 플레이어가 읽는 방식 그대로 - 3:00 - 적으면, 행이 그것을 초로 저장합니다."
+Missions,미션
+Start [b]{var_name}[/b] at [b]{seconds}[/b],[b]{var_name}[/b] 를 [b]{seconds}[/b] 에서 시작
+Timer variable,타이머 변수
+The variable holding the seconds left.,남은 초를 담고 있는 변수.
+How long the mission runs - type it as minutes:seconds.,미션이 이어지는 시간. 분:초 형식으로 적습니다.
+Add Mission Time,미션 시간 추가
+Puts time back on the mission clock - the pickup that buys you another half minute.,미션 시계에 시간을 되돌려 놓습니다. 30 초를 더 벌어 주는 그 습득물이죠.
+Add [b]{seconds}[/b] to [b]{var_name}[/b],[b]{seconds}[/b] 를 [b]{var_name}[/b] 에 더하기
+How much time to add - type it as minutes:seconds.,더할 시간. 분:초 형식으로 적습니다.
+Mission Time Left,미션 남은 시간
+"Gives the time left as text a player can read - ""2:41"" - ready to drop into a HUD label.","남은 시간을 플레이어가 읽을 수 있는 텍스트 - ""2:41"" - 로 돌려줍니다. HUD 라벨에 그대로 넣으면 됩니다."
+Missions.TimeLeft,미션.남은시간
+Editor Icon,에디터 아이콘
+"One of the editor's own icons, so a tool's buttons and docks look like the editor around them instead of shipping their own art. The field draws the icon it names as you pick it.",에디터가 가진 아이콘 중 하나입니다. 도구의 버튼과 독이 자체 그림을 들고 오는 대신 주변 에디터와 같은 모습이 됩니다. 이 필드는 고르는 동안 이름이 가리키는 아이콘을 그려 보여 줍니다.
+Editor Tools: Panels & menus,에디터 도구: 패널 & 메뉴
+Editor.Icon({icon_name}),Editor.Icon({icon_name})
+"The editor icon's name - usually a class name like Node2D, Script or Folder.","에디터 아이콘의 이름입니다 - 보통 Node2D, Script, Folder 같은 클래스 이름입니다."
+Editor Preference,에디터 환경 설정
+"One value out of the user's own Editor Settings - their theme colour, grid step, font size. Read it so a tool matches the editor the person in front of it actually set up.","사용자 자신의 에디터 설정에 있는 값 하나입니다 - 테마 색, 격자 간격, 글꼴 크기 등. 이 값을 읽으면 도구가 앞에 앉은 사람이 실제로 꾸며 둔 에디터에 맞춰집니다."
+Editor Tools: Project & preferences,에디터 도구: 프로젝트 & 환경 설정
+Editor.Preference({path}),Editor.Preference({path})
+"The Editor Settings path, as it reads in Editor > Editor Settings.",에디터 설정 경로입니다. 에디터 > 에디터 설정 에 적힌 그대로 씁니다.
+Project Setting,프로젝트 설정
+"One value out of this project's own settings. Unlike a preference, it is saved with the project, so every person opening it sees the same answer.","이 프로젝트 자체 설정에 있는 값 하나입니다. 환경 설정과 달리 프로젝트와 함께 저장되므로, 열어 보는 사람이 누구든 같은 답을 봅니다."
+Project.Setting({path}),Project.Setting({path})
+"The Project Settings path, as it reads in Project > Project Settings.",프로젝트 설정 경로입니다. 프로젝트 > 프로젝트 설정 에 적힌 그대로 씁니다.
+Workspace Area,작업 공간 영역
+"The big area the 2D, 3D and Script tabs share. A workspace plugin adds its own screen as a child of this.","2D, 3D, Script 탭이 함께 쓰는 큰 영역입니다. 작업 공간 플러그인은 자기 화면을 이 영역의 자식으로 추가합니다."
+Editor.MainScreen,Editor.MainScreen
+Set Setting,설정 쓰기
+"Writes one project setting. It lives in memory until Save settings runs, so a tool that changes several settings writes them all and saves once.","프로젝트 설정 하나를 씁니다. 설정 저장 이 실행될 때까지는 메모리에만 있으므로, 여러 설정을 바꾸는 도구는 전부 쓴 뒤 한 번만 저장합니다."
+Set setting {path} to {value},설정 {path} 을(를) {value} 로 설정
+The Project Settings path to write.,쓸 프로젝트 설정 경로입니다.
+The value to store there.,거기에 저장할 값입니다.
+Save Settings,설정 저장
+"Writes the project settings back to project.godot. Without this, everything Set setting changed is lost when the editor closes.",프로젝트 설정을 project.godot 에 다시 씁니다. 이것이 없으면 설정 쓰기 로 바꾼 내용은 에디터를 닫을 때 모두 사라집니다.
+Save settings,설정 저장
+Switch To Workspace,작업 공간 전환
+Brings one of the editor's top tabs to the front - the same click as pressing 2D or Script yourself.,에디터 위쪽 탭 중 하나를 앞으로 가져옵니다 - 직접 2D 나 Script 를 누르는 것과 같습니다.
+Switch to workspace {workspace},작업 공간 {workspace} 으로 전환
+Which of the editor's top tabs to bring forward.,에디터 위쪽 탭 중 어느 것을 앞으로 가져올지입니다.
+2D,2D
+3D,3D
+Game,게임
+AssetLib,AssetLib
+Show In Project Bar,프로젝트 바에서 보이기
+"Reveals a folder or file in the editor's project file list and selects it - what a tool does after it writes something, so the reader can see what just landed.","에디터의 프로젝트 파일 목록에서 폴더나 파일을 드러내고 선택합니다 - 무언가를 쓴 뒤에 도구가 하는 일로, 방금 생긴 것이 눈에 들어오게 합니다."
+Show in Project bar {path},프로젝트 바에서 {path} 보이기
+"The folder or file to reveal, as a res:// path.",드러낼 폴더나 파일을 res:// 경로로 지정합니다.
+Open Script At Line,스크립트를 해당 줄에서 열기
+Jumps the script editor to a line of the script it already has open - how a tool points at the thing it is complaining about.,이미 열려 있는 스크립트의 특정 줄로 스크립트 편집기를 이동시킵니다 - 도구가 문제 삼는 바로 그 지점을 가리키는 방법입니다.
+Open script at line {line},스크립트를 {line} 줄에서 열기
+Line,줄
+"The line to jump to, counted from zero.",이동할 줄입니다. 0 부터 셉니다.
+Add Window,창 추가
+"Puts a window or dialog under the editor's own root, which is what makes it show up with the editor's theme and stay on top of it. Free it again when the plugin is disabled.",창이나 대화상자를 에디터 자체의 루트 아래에 답니다. 그래야 에디터 테마로 표시되고 그 위에 머무릅니다. 플러그인을 끌 때 다시 해제하세요.
+Add window {window} to the editor's root,창 {window} 을(를) 에디터 루트에 추가
+The window or dialog to hang on the editor.,에디터에 매달 창이나 대화상자입니다.
+Add Command,명령 추가
+"Adds one entry to the editor's command palette (Ctrl+Shift+P), so a tool is reachable without a menu of its own.",에디터의 명령 팔레트 (Ctrl+Shift+P) 에 항목 하나를 추가합니다. 전용 메뉴 없이도 도구에 닿을 수 있습니다.
+Add command {title},명령 {title} 추가
+The words the command palette shows.,명령 팔레트에 표시되는 문구입니다.
+Keyed,키
+The unique key the palette files it under.,팔레트가 이 항목을 등록하는 고유 키입니다.
+Calls,호출
+The function to run when the command is chosen.,명령을 골랐을 때 실행할 함수입니다.
+Add Bottom Panel,하단 패널 추가
+"Adds a tab to the row Output and Debugger share, at the bottom of the editor. Remove it on plugin disabled or the row keeps a tab nobody owns.",에디터 아래쪽에서 출력 과 디버거 가 함께 쓰는 줄에 탭을 추가합니다. 플러그인을 끌 때 제거하지 않으면 주인 없는 탭이 그대로 남습니다.
+Add bottom panel {control} titled {title},하단 패널 {control} 을(를) {title} 제목으로 추가
+Panel,패널
+The Control to show in the bottom row.,하단 줄에 표시할 Control 입니다.
+Titled,제목
+"The words on its tab, beside Output and Debugger.",출력 과 디버거 옆에 놓이는 탭의 문구입니다.
+Remove Bottom Panel,하단 패널 제거
+Takes the plugin's tab back out of the bottom row.,플러그인의 탭을 하단 줄에서 다시 빼냅니다.
+Remove bottom panel {control},하단 패널 {control} 제거
+The Control that was added to the bottom row.,하단 줄에 추가했던 Control 입니다.
+On Project Files Changed,프로젝트 파일 변경 시
+"Runs whenever the project's files change on disk - something was imported, moved, deleted or added. The place to rescan whatever a tool keeps a list of.","프로젝트 파일이 디스크에서 바뀔 때마다 실행됩니다 - 무언가가 가져와지거나, 옮겨지거나, 지워지거나, 추가된 경우입니다. 도구가 목록으로 들고 있는 것을 다시 훑기 좋은 자리입니다."
+On project files changed,프로젝트 파일 변경 시
+On Preferences Changed,환경 설정 변경 시
+"Runs when the user changes anything in Editor Settings. Re-read the preferences a tool draws with, so it follows the theme instead of keeping the old one.","사용자가 에디터 설정에서 무언가를 바꾸면 실행됩니다. 도구가 그릴 때 쓰는 환경 설정을 다시 읽어, 옛 값을 붙들지 말고 테마를 따라가게 하세요."
+On preferences changed,환경 설정 변경 시
+Move In Direction,방향으로 이동
+"Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second.","3D 노드를 자신의 방향 가운데 하나 - 앞, 뒤, 오른쪽, 왼쪽, 위, 아래 - 를 따라 초당 속도로 움직입니다."
+3D: Move & Turn,3D: 이동과 회전
+Move [b]{direction}[/b] at [i]{speed}[/i],[b]{direction}[/b] 으로 [i]{speed}[/i] 로 이동
+Direction,방향
+Which of its own six directions to move along.,자신의 여섯 방향 가운데 어느 쪽을 따라 움직일지.
+backward,뒤
+down,아래
+Units a second.,초당 단위 수.
+Delta,델타
+Frame time; defaults to `delta`.,"프레임 시간이며, 기본값은 `delta` 입니다."
+Rotate Clockwise,시계 방향으로 회전
+Turns a 3D node about its up axis - the yaw a character or a turret turns with.,3D 노드를 자신의 위쪽 축을 중심으로 돌립니다 - 캐릭터나 포탑이 몸을 트는 요(yaw) 회전입니다.
+Rotate [b]clockwise[/b] at [i]{degrees_per_second}[/i]°/s,[b]시계 방향[/b]으로 [i]{degrees_per_second}[/i]°/초 로 회전
+Degrees per second,초당 각도
+"Degrees a second, turning clockwise seen from above; a negative number turns the other way.","초당 각도이며, 위에서 볼 때 시계 방향으로 돕니다. 음수를 넣으면 반대로 돕니다."
+Rotate Up Or Down,위아래로 회전
+Tilts a 3D node's nose up or down - the pitch a plane or a camera arm moves with.,3D 노드의 앞머리를 위나 아래로 기울입니다 - 비행기나 카메라 암이 움직이는 피치입니다.
+Rotate [b]up[/b] at [i]{degrees_per_second}[/i]°/s,[b]위[/b]로 [i]{degrees_per_second}[/i]°/초 로 회전
+Degrees a second; a negative number tilts the other way.,"초당 각도이며, 음수를 넣으면 반대로 기웁니다."
+Roll,롤
+Rolls a 3D node about the way it faces - the bank a plane or a ship leans with.,3D 노드를 바라보는 방향을 축으로 굴립니다 - 비행기나 배가 몸을 기울이는 뱅크입니다.
+Roll [b]left[/b] at [i]{degrees_per_second}[/i]°/s,[b]왼쪽[/b]으로 [i]{degrees_per_second}[/i]°/초 로 롤
+Degrees a second; a negative number rolls the other way.,"초당 각도이며, 음수를 넣으면 반대로 구릅니다."
+Rotate Toward Facing,바라보는 방향으로 회전
+Turns a 3D node smoothly toward a facing instead of snapping to it - the way a turret leads its target.,3D 노드를 딱 붙듯 돌리지 않고 그 방향으로 부드럽게 돌립니다 - 포탑이 표적을 따라가는 방식입니다.
+Rotate toward [i]{facing}[/i] at [i]{rate}[/i],[i]{facing}[/i] 쪽으로 [i]{rate}[/i] 로 회전
+The facing to turn toward - Facing Along a direction gives you one.,돌아서 향할 방향 - 방향을 따라 바라보기 로 하나 얻을 수 있습니다.
+Rate,속도
+"How fast it closes the gap, per second. Bigger turns harder.",남은 차이를 초당 얼마나 좁히는지. 클수록 더 급하게 돕니다.
+Facing Along,방향을 따라 바라보기
+The facing that looks along a direction - what Rotate Toward Facing turns toward.,어떤 방향을 따라 바라보는 방향 - 바라보는 방향으로 회전 이 향하는 대상입니다.
+The direction to face along.,따라서 바라볼 방향.
+Set Position To Another Object,다른 오브젝트 위치로 설정
+"Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.","3D 노드를 다른 노드가 있는 자리에 그대로 놓습니다 - 스폰 지점, 장착 위치, 부활 표식을 쓰는 방식입니다."
+3D: Place,3D: 배치
+Set position to [b]{other}[/b],위치를 [b]{other}[/b] 로 설정
+Other,대상
+"The object to stand where - a spawn marker, a socket, another character.","그 자리에 설 대상 - 스폰 표식, 장착 위치, 다른 캐릭터 등."
+Align To The Ground's Slope,지면 기울기에 맞추기
+Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill.,3D 노드를 기울여 그 위쪽이 지면이 향한 쪽을 가리키게 합니다 - 떨어뜨린 상자가 비탈에 납작하게 놓이게 만드는 그 행입니다.
+Align to the ground's [b]slope[/b],지면 [b]기울기[/b]에 맞추기
+Ground normal,지면 법선
+The way the surface faces - a ray hit gives you one as its `normal`.,표면이 향한 방향 - 레이 충돌 결과의 `normal` 로 얻을 수 있습니다.
+Is Within Angle Of Facing,바라보는 각도 안에 있음
+"Asks whether something is inside the cone this object is looking down - a vision cone, a backstab check, an aim assist.","이 오브젝트가 바라보는 원뿔 안에 무언가가 들어 있는지 묻습니다 - 시야 원뿔, 뒤치기 판정, 조준 보조에 씁니다."
+3D: See,3D: 시야
+Is within [b]{angle}[/b]° of facing [i]{direction}[/i],[i]{direction}[/i] 를 바라보는 방향에서 [b]{angle}[/b]° 안에 있음
+"The way this object faces. Its own forward, unless you say otherwise.",이 오브젝트가 바라보는 방향. 따로 지정하지 않으면 자신의 앞쪽입니다.
+The direction to the thing being looked for - Direction To gives you one.,찾고 있는 대상 쪽 방향 - ~로 향한 방향 으로 하나 얻을 수 있습니다.
+Within,이내
+"Half the width of the cone, in degrees. 45 is a 90-degree field of view.",원뿔 너비의 절반(도). 45 면 시야각은 90 도입니다.
+Is Behind,뒤에 있음
+Asks whether a place is behind this object - the backstab half of a facing test.,어떤 자리가 이 오브젝트 뒤에 있는지 묻습니다 - 방향 판정 가운데 뒤치기에 해당하는 절반입니다.
+[i]{point}[/i] is [b]behind[/b] it,[i]{point}[/i] 이(가) [b]뒤[/b]에 있음
+The place being asked about.,묻고 있는 자리.
+Is In Front Of,앞에 있음
+"Asks whether a place is in front of this object, whichever way it happens to be turned.",어떤 자리가 이 오브젝트 앞에 있는지 묻습니다. 지금 어느 쪽을 보고 있든 상관없습니다.
+[i]{point}[/i] is [b]in front of[/b] it,[i]{point}[/i] 이(가) [b]앞[/b]에 있음
+Is To The Right Of,오른쪽에 있음
+"Asks whether a place is off this object's right side - which way to lean, dodge or steer.","어떤 자리가 이 오브젝트의 오른쪽에 있는지 묻습니다 - 어느 쪽으로 기울고, 피하고, 꺾을지 정할 때 씁니다."
+[i]{point}[/i] is [b]to the right of[/b] it,[i]{point}[/i] 이(가) [b]오른쪽[/b]에 있음
+Is To The Left Of,왼쪽에 있음
+Asks whether a place is off this object's left side - the twin of Is To The Right Of.,어떤 자리가 이 오브젝트의 왼쪽에 있는지 묻습니다 - 오른쪽에 있음 의 쌍둥이입니다.
+[i]{point}[/i] is [b]to the left of[/b] it,[i]{point}[/i] 이(가) [b]왼쪽[/b]에 있음
+Point At Angle,각도 방향의 지점
+The point an angle and a distance name. Add it to a centre for a place on a circle; grow the distance every tick and it draws a spiral.,"각도와 거리가 가리키는 지점. 중심에 더하면 원 위의 자리가 되고, 매 틱마다 거리를 늘리면 나선을 그립니다."
+"The angle, in degrees.",각도(도 단위).
+How far out to go.,얼마나 바깥으로 나갈지.
+Create Evenly Around A Circle,원 둘레에 고르게 생성
+"Places a number of copies evenly around a circle - the bullet-hell ring, the radial menu, the circle of pillars.","지정한 개수의 사본을 원 둘레에 고르게 놓습니다 - 탄막 고리, 방사형 메뉴, 기둥의 원."
+Create [b]{count}[/b] of {scene} evenly around a circle of [i]{radius}[/i],반지름 [i]{radius}[/i] 원 둘레에 {scene} 을(를) [b]{count}[/b] 개 고르게 생성
+How many,개수
+How many to place.,몇 개를 놓을지.
+The scene to place.,놓을 씬.
+The middle of the circle.,원의 가운데.
+How far out from the centre they sit.,가운데에서 얼마나 떨어진 자리에 놓일지.
+Store As Angle And Distance,각도와 거리로 저장
+"Reads a place back the other way - as the angle from one point to another and how far apart they are, both named in one drop.","자리를 반대 방향으로 읽어 냅니다 - 한 지점에서 다른 지점으로의 각도와 둘 사이의 거리를, 한 번에 둘 다 이름을 붙여 받습니다."
+Store [i]{from}[/i] to [i]{to}[/i] as [b]{angle_name}[/b] and [b]{distance_name}[/b],[i]{from}[/i] 에서 [i]{to}[/i] 까지를 [b]{angle_name}[/b] 와(과) [b]{distance_name}[/b] 로 저장
+The place to measure from.,재기 시작할 자리.
+The place to measure to.,재서 도달할 자리.
+Angle name,각도 이름
+What to call the angle.,각도에 붙일 이름.
+Distance name,거리 이름
+What to call the distance.,거리에 붙일 이름.
+Cursor Is Over Object (3D),커서가 오브젝트 위에 있음 (3D)
+"True while the mouse is pointing at this object in the 3D world - hover highlights, tooltips and ""what am I about to click"" all start here. Needs an active Camera3D.","3D 월드에서 마우스가 이 오브젝트를 가리키는 동안 참입니다. 마우스를 올렸을 때의 강조, 툴팁, ""지금 무엇을 클릭하려는가""가 모두 여기서 시작합니다. 활성 Camera3D 가 필요합니다."
+Mouse,마우스
+cursor is over {object},커서가 {object} 위에 있음
+The object the cursor has to be over for this to be true.,이것이 참이 되려면 커서가 위에 있어야 하는 오브젝트.
+Layers,레이어
+"Which collision layers the ray may see, by the names this project gave them.","레이가 볼 수 있는 충돌 레이어를, 이 프로젝트가 붙인 이름으로 지정합니다."
+"How far into the scene the ray reaches, in metres.","레이가 씬 안으로 얼마나 멀리 뻗는지, 미터 단위."
+On Object Clicked (3D),오브젝트를 클릭했을 때 (3D)
+"Fires when a mouse button goes down over this object in the 3D world - click-to-select, click-to-attack, click-to-open. Lives in an input event, beside the other On ... pressed rows.","3D 월드에서 이 오브젝트 위로 마우스 버튼이 눌리면 발생합니다. 클릭해서 선택, 클릭해서 공격, 클릭해서 열기. 다른 ""... 을 눌렀을 때"" 행 옆, 입력 이벤트 안에 놓입니다."
+On {object} clicked,{object} 을(를) 클릭했을 때
+The object the click has to land on.,클릭이 닿아야 하는 오브젝트.
+Mouse button.,마우스 버튼.
+Mouse Floor Point,마우스 아래의 바닥 지점
+"The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal.","커서가 겨누고 있는 바닥 위의 월드 좌표. 건설 미리보기, 이동 명령 표식, 데칼을 놓을 자리입니다."
+mouse floor point,마우스 아래의 바닥 지점
+Aimed Floor Point,조준한 바닥 지점
+"The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal. Aimed through a crosshair object rather than the OS pointer.","커서가 겨누고 있는 바닥 위의 월드 좌표. 건설 미리보기, 이동 명령 표식, 데칼을 놓을 자리입니다. OS 포인터가 아니라 조준점 오브젝트를 통해 겨눕니다."
+aimed floor point through {target},{target} 을(를) 통해 조준한 바닥 지점
+Cursor object,커서 오브젝트
+"The crosshair or virtual cursor to aim through. Its position ON THE CANVAS is what aims the ray, so a gamepad or touch cursor works exactly like the pointer.","겨냥을 통과시킬 조준점 또는 가상 커서. 레이의 방향을 정하는 것은 그 오브젝트의 '캔버스 위' 위치이므로, 게임패드나 터치 커서도 포인터와 똑같이 동작합니다."
+Mouse Floor Object,마우스 아래의 바닥 오브젝트
+"The floor object the cursor is aiming at, or nothing when the cursor is off the floor.",커서가 겨누고 있는 바닥 오브젝트. 커서가 바닥을 벗어나면 아무것도 나오지 않습니다.
+mouse floor object,마우스 아래의 바닥 오브젝트
+Aimed Floor Object,조준한 바닥 오브젝트
+"The floor object the cursor is aiming at, or nothing when the cursor is off the floor. Aimed through a crosshair object rather than the OS pointer.",커서가 겨누고 있는 바닥 오브젝트. 커서가 바닥을 벗어나면 아무것도 나오지 않습니다. OS 포인터가 아니라 조준점 오브젝트를 통해 겨눕니다.
+aimed floor object through {target},{target} 을(를) 통해 조준한 바닥 오브젝트
+Mouse Floor Slope,마우스 아래의 바닥 경사
+"Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable.","커서 아래에서 바닥이 향하는 방향. ""지면에 맞추기""의 경사로 넘기거나, ""경사가 …보다 급함""에 지을 수 있는지 물어보세요."
+mouse floor slope,마우스 아래의 바닥 경사
+Aimed Floor Slope,조준한 바닥 경사
+"Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable. Aimed through a crosshair object rather than the OS pointer.","커서 아래에서 바닥이 향하는 방향. ""지면에 맞추기""의 경사로 넘기거나, ""경사가 …보다 급함""에 지을 수 있는지 물어보세요. OS 포인터가 아니라 조준점 오브젝트를 통해 겨눕니다."
+aimed floor slope through {target},{target} 을(를) 통해 조준한 바닥 경사
+Slope Steeper Than,경사가 …보다 급함
+True when the ground faces further than this from straight up - the buildable test a placement preview tints itself with.,"지면이 수직에서 이보다 더 기울어져 있을 때 참입니다. 배치 미리보기가 스스로 색을 바꾸는 ""지을 수 있는가"" 판정입니다."
+Slope,경사
+Which way the ground faces - the floor slope expressions answer exactly this.,지면이 향하는 방향. 바닥 경사 표현식이 바로 이 값을 돌려줍니다.
+Degrees,도
+How far from flat counts as too steep.,평평함에서 얼마나 벗어나야 너무 급한 것으로 치는지.
+Canvas X (2D),캔버스 X (2D)
+"Where this object is ON THE CANVAS, in pixels. Camera zoom and canvas layers are already in the answer, which is exactly what plain position arithmetic gets wrong.","이 오브젝트가 '캔버스 위' 어디에 있는지, 픽셀 단위. 카메라 줌과 캔버스 레이어가 이미 반영되어 있는데, 위치를 그냥 계산하면 바로 이 부분을 틀립니다."
+{target}'s canvas x,{target} 의 캔버스 x
+The object being asked where it is on screen.,화면에서 어디에 있는지 묻는 대상 오브젝트.
+Canvas X (3D),캔버스 X (3D)
+"Where this 3D object lands ON THE CANVAS, in pixels - the number a health bar over its head, an off-screen arrow or an aim assist is positioned by.","이 3D 오브젝트가 '캔버스 위' 어디에 놓이는지, 픽셀 단위. 머리 위 체력 바, 화면 밖 화살표, 조준 보조를 배치할 때 쓰는 값입니다."
+The 3D object being asked where it is on screen.,화면에서 어디에 있는지 묻는 대상 3D 오브젝트.
+Canvas Y (2D),캔버스 Y (2D)
+{target}'s canvas y,{target} 의 캔버스 y
+Canvas Y (3D),캔버스 Y (3D)
+Canvas Centre,캔버스 중심
+"The middle of what the player can see, in pixels - where a crosshair sits.","플레이어가 보는 범위의 한가운데, 픽셀 단위. 조준점이 놓이는 자리입니다."
+Pick Nearest To Canvas Point,캔버스 지점에 가장 가까운 것 선택
+"Walks the instances and keeps whichever is closest to a point ON THE CANVAS - aim assist, snap-to-target crosshairs and ""whichever one I am nearly pointing at"". Measured in pixels, so camera zoom is honoured; anything behind the camera is skipped.","인스턴스를 훑어서 '캔버스 위'의 한 지점에 가장 가까운 것만 남깁니다. 조준 보조, 대상에 달라붙는 조준점, ""거의 겨누고 있는 그것""에 씁니다. 픽셀로 재기 때문에 카메라 줌이 반영되며, 카메라 뒤에 있는 것은 건너뜁니다."
+pick nearest of [i]{list}[/i] to canvas point {from} -> [b]{name}[/b],[i]{list}[/i] 중 캔버스 지점 {from} 에 가장 가까운 것 선택 -> [b]{name}[/b]
+Picked name,선택된 이름
+"The name the one it picks goes by in the rows below. Nothing is picked when the list is empty or everything is off screen, so check the name exists first.","선택된 것이 아래 행에서 쓰이는 이름. 목록이 비었거나 전부 화면 밖이면 아무것도 선택되지 않으니, 먼저 이름이 있는지 확인하세요."
+Out of,대상 목록
+"The instances to pick from - usually a group, which is how a project spells ""every one of this kind"".","선택 후보가 되는 인스턴스들. 보통은 그룹이며, 프로젝트에서 ""이 종류 전부""를 적는 방식입니다."
+Nearest to,기준 지점
+"The canvas point distances are measured from, in pixels. The canvas centre is the crosshair.","거리를 재는 기준이 되는 캔버스 지점, 픽셀 단위. 캔버스 중심이 곧 조준점입니다."
+"How far from that point, in PIXELS, still counts. Nothing beyond it is picked.",그 지점에서 몇 픽셀까지를 유효한 것으로 치는지. 그 너머는 선택되지 않습니다.
+Remove Child,자식 떼기
+"Detaches a child node from this one without deleting it, so you can reattach it later.",자식 노드를 이 노드에서 떼어냅니다. 삭제하지 않으므로 나중에 다시 붙일 수 있습니다.
+remove child [i]{node}[/i],자식 [i]{node}[/i] 떼기
+Child to detach (by index here - no hardcoded name; pick one or use a scene-unique node). Not freed.,떼어낼 자식 (여기서는 인덱스로 - 이름을 직접 적지 않습니다. 하나를 고르거나 씬에서 고유한 노드를 쓰세요). 해제되지는 않습니다.
+Add Child (existing node),자식 추가 (기존 노드)
+"Moves a node that is already in the layout under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.","이미 레이아웃에 있는 노드를 새 부모 아래로 옮깁니다. 아이템을 손에 쥐여주기, 기수를 안장에 태우기, 무기를 등에 메기 같은 일에 씁니다. '자리 유지'는 보이는 그 자리에 그대로 두고, '맞추기'는 부모 자신의 위치로 옮깁니다."
+add child [i]{child}[/i] to [i]{parent}[/i],자식 [i]{child}[/i] 를 [i]{parent}[/i] 에 추가
+Child,자식
+The node that becomes a child. It keeps everything it is - only its parent changes.,자식이 될 노드. 지금 그대로를 전부 유지하고 부모만 바뀝니다.
+Parent,부모
+The node it goes under.,그 아래로 들어갈 노드.
+Its place,위치 처리
+"Whether the child stays where it is in the world, or snaps to its new parent.","자식을 월드에서 지금 자리에 그대로 둘지, 새 부모의 위치에 맞출지."
+Remove From Parent,부모에서 떼기
+"Takes a node off whatever it is under and puts it back at the top of the layout, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.","노드를 지금 속해 있는 부모에서 떼어 레이아웃 최상위로 되돌리며, 월드에서의 위치는 그대로 둡니다. 들고 있던 물건을 떨어뜨리기, 기수를 내리기 같은 일에 씁니다. 노드는 해제되지 않고 나머지는 아무것도 바뀌지 않습니다."
+remove [i]{child}[/i] from its parent,[i]{child}[/i] 를 부모에서 떼기
+"The node to take off its parent. It stays in the layout, at the top level.",부모에서 뗄 노드. 레이아웃에는 최상위로 남습니다.
+Set Ignore Parent's Movement,부모의 움직임 무시 설정
+"Stops a child moving, turning and scaling with its parent while leaving it a child in every other way - it is still freed with the parent and still picked as one of its children. The answer for a muzzle flash that should not swing with the gun, or a health bar that should not tilt with the enemy.","자식이 부모를 따라 움직이고 회전하고 크기가 바뀌는 것을 멈춥니다. 그 밖의 모든 면에서는 여전히 자식이라, 부모와 함께 해제되고 자식 목록에도 그대로 잡힙니다. 총과 함께 휘둘리면 안 되는 총구 화염, 적과 함께 기울면 안 되는 체력 바를 위한 답입니다."
+set ignore parent's movement [b]{ignore}[/b] on [i]{target}[/i],[i]{target}[/i] 의 부모의 움직임 무시를 [b]{ignore}[/b] 로 설정
+The child that should stop (or start) following its parent.,부모를 따라다니는 것을 멈출 (또는 시작할) 자식.
+Ignore,무시
+On: the child stays where it is when the parent moves.,켬: 부모가 움직여도 자식은 제자리에 남습니다.
+Copy Place To,위치를 복사할 대상
+"Points a RemoteTransform at the node it should drive, so that node follows this one without being its child at all. Which parts follow - position, angle, size - are the RemoteTransform's own switches.","RemoteTransform 이 몰아야 할 노드를 가리키게 합니다. 그 노드는 자식이 되지 않은 채로 이 노드를 따라갑니다. 어떤 요소가 따라갈지 (위치, 각도, 크기) 는 RemoteTransform 자체의 스위치로 정합니다."
+copy [i]{follower}[/i] place to [b]{path}[/b],[i]{follower}[/i] 의 위치를 [b]{path}[/b] 로 복사
+Follower,따라가는 쪽
+The RemoteTransform2D / RemoteTransform3D doing the copying.,복사를 수행하는 RemoteTransform2D / RemoteTransform3D.
+Path to the node its place is copied onto.,위치가 복사될 노드의 경로.
+Stop Copying Place,위치 복사 중지
+"Clears a RemoteTransform's target, so whatever it was driving stops following immediately. The node it drove keeps the place it had.","RemoteTransform 의 대상을 지웁니다. 몰고 있던 노드는 즉시 따라가기를 멈추고, 그때의 위치를 그대로 유지합니다."
+stop [i]{follower}[/i] copying,[i]{follower}[/i] 의 복사 중지
+The RemoteTransform2D / RemoteTransform3D to switch off.,끌 RemoteTransform2D / RemoteTransform3D.
+For Each Child,각 자식마다
+"Runs this event's actions once per direct child of a node - healing a squad, totting up an inventory, checking every socket. Read the current one as `child`. Children added while it runs are not visited by this pass.","이 이벤트의 액션을 노드의 직속 자식마다 한 번씩 실행합니다. 분대를 치유하기, 인벤토리를 합산하기, 모든 슬롯을 검사하기 같은 일에 씁니다. 지금 차례인 자식은 `child` 로 읽습니다. 실행 도중에 추가된 자식은 이번 회차에서는 들르지 않습니다."
+for each child of [i]{target}[/i],[i]{target}[/i] 의 각 자식마다
+The node whose children the actions run once for.,그 자식마다 액션이 한 번씩 실행될 노드.
+Move Child To Index,자식을 인덱스로 옮기기
+"Reorders a child to a new sibling index, changing its draw and process order.","자식을 형제 사이의 새 인덱스로 옮겨, 그리기 순서와 처리 순서를 바꿉니다."
+move [i]{node}[/i] to index [b]{index}[/b],[i]{node}[/i] 를 인덱스 [b]{index}[/b] 로 옮기기
+Child to reorder (by index here - no hardcoded name; pick one or use a scene-unique node).,순서를 바꿀 자식 (여기서는 인덱스로 - 이름을 직접 적지 않습니다. 하나를 고르거나 씬에서 고유한 노드를 쓰세요).
+Index,인덱스
+New sibling index (draw / process order).,형제 사이의 새 인덱스 (그리기 / 처리 순서).
+Free Node,노드 해제
+"Safely deletes a node at the end of the frame, e.g. removing a dead enemy.",프레임이 끝날 때 노드를 안전하게 삭제합니다. 예를 들어 죽은 적을 치울 때 씁니다.
+free [i]{target}[/i],[i]{target}[/i] 해제
+Target,대상
+Node to free at the end of the frame.,프레임이 끝날 때 해제할 노드.
+Signals / Scene / Input,시그널 / 씬 / 입력
+On Child Added,자식이 추가될 때
+"Runs when a child node is added beneath this one, e.g. reacting to spawned items.",이 노드 아래에 자식 노드가 추가될 때 실행됩니다. 예를 들어 생성된 아이템에 반응할 때 씁니다.
+On child added [i]{node}[/i],자식 [i]{node}[/i] 이(가) 추가될 때
+On Child Leaving,자식이 떠날 때
+"Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it.","자식 노드가 이 노드에서 떠나기 직전에 실행됩니다. 아직 읽을 수 있는 동안이라 개수나 합계, 패널을 그 자식의 정보로 갱신할 수 있습니다."
+On child leaving [i]{node}[/i],자식 [i]{node}[/i] 이(가) 떠날 때
