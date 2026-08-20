@@ -236,8 +236,7 @@ const PACK_LABELS: Dictionary = {
 	"scene_flow": "Scene Flow",
 	"nav_agent": "Nav Agent",
 	"follow_path": "Follow A Path",
-	"drawing_canvas": "Drawing Canvas"
-	},
+	"drawing_canvas": "Drawing Canvas",
 	"advanced_random": "Advanced Random",
 	"line_of_sight": "Line Of Sight"
 }
