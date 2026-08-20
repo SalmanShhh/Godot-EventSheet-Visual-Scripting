@@ -233,10 +233,16 @@ static func pattern_evidence_line(sheet: EventSheetResource, event_uid: String) 
 			words = str((claim as Dictionary).get("words", ""))
 		if words.is_empty():
 			continue
+		# A claim made by an event whose rows all lifted carries the ids of those rows as its grounds.
+		# They are what the registry reasons with, and they are not words: quoting `MoveAndSlide` at a
+		# reader names nothing they can find in their own file. What is left is the lines, and a claim
+		# with none of those says what it read without pretending to quote anything.
+		var ace_ids: PackedStringArray = (claim as Dictionary).get("ace_ids", PackedStringArray())
 		var evidence: PackedStringArray = PackedStringArray()
 		for entry: Variant in (claim as Dictionary).get("evidence", PackedStringArray()):
-			if not str(entry).strip_edges().is_empty():
-				evidence.append(str(entry).strip_edges())
+			var line: String = str(entry).strip_edges()
+			if not line.is_empty() and not ace_ids.has(line):
+				evidence.append(line)
 		if evidence.is_empty():
 			lines.append(EventSheetL10n.translate("read as the %s pattern") % EventSheetL10n.translate(words))
 			continue

@@ -210,8 +210,9 @@ static func nearest_pick(body: PackedStringArray) -> Dictionary:
 		if text.begins_with("for ") and text.ends_with(":"):
 			var head: String = text.substr(4, text.length() - 5)
 			var in_at: int = EventSheetSentence.top_level_index(head, " in ")
-			if in_at > 0 and EventSheetSentence.is_identifier(head.substr(0, in_at).strip_edges()):
-				iterator_name = head.substr(0, in_at).strip_edges()
+			var walker: String = _loop_variable_name(head.substr(0, in_at).strip_edges()) if in_at > 0 else ""
+			if not walker.is_empty():
+				iterator_name = walker
 				measured = false
 				kept = false
 				evidence = PackedStringArray([text])
@@ -225,12 +226,20 @@ static func nearest_pick(body: PackedStringArray) -> Dictionary:
 		# The comparison says which end of the walk is being kept: `<` keeps the nearest so far, `>`
 		# the farthest. Anything else is a loop that measures and does something the sheet has no one
 		# word for, so nothing is claimed.
-		if text.begins_with("if ") and text.ends_with(":"):
-			if EventSheetSentence.top_level_index(text, " < ") > 0:
+		# A lifted condition arrives as the bare test - the `if` and its colon are the row now - so both
+		# spellings are read, or a lifted farthest loop would be told back to its author as a nearest one.
+		var test: String = text
+		if test.begins_with("if ") and test.ends_with(":"):
+			test = test.substr(3, test.length() - 4).strip_edges()
+		if EventSheetSentence.top_level_index(test, " = ") <= 0:
+			if EventSheetSentence.top_level_index(test, " < ") > 0:
 				evidence.append(text)
-			elif EventSheetSentence.top_level_index(text, " > ") > 0:
+				continue
+			if EventSheetSentence.top_level_index(test, " > ") > 0:
 				farthest = true
 				evidence.append(text)
+				continue
+		if test != text:
 			continue
 		var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
 		if assign_at > 0 and text.substr(assign_at + 3).strip_edges() == iterator_name:
@@ -242,6 +251,17 @@ static func nearest_pick(body: PackedStringArray) -> Dictionary:
 		"evidence": evidence, "farthest": farthest,
 		"words": "picks the farthest one by distance" if farthest else "picks the nearest one by distance"
 	}
+
+
+## The name a `for` loop walks under, with a written-out type set aside: `foe` for both `for foe in`
+## and `for foe: Node2D in`. The typed spelling is the one a careful project writes, so reading only
+## the bare one would quietly skip every loop in a typed file. "" when the head is not a plain name.
+static func _loop_variable_name(head: String) -> String:
+	var text: String = head.strip_edges()
+	var colon_at: int = text.find(":")
+	if colon_at >= 0:
+		text = text.substr(0, colon_at).strip_edges()
+	return text if EventSheetSentence.is_identifier(text) else ""
 
 
 ## S1. The shipped behavior a hand-rolled state machine could be replaced by. Named here rather than
