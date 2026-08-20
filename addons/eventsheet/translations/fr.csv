@@ -3165,6 +3165,7 @@ starting {values},commencant par {values}
 with {clauses},avec {clauses}
 has {key},a {key}
 <<<<<<< HEAD
+<<<<<<< HEAD
 Editor Tool…,Outil d'éditeur…
 "One-click chore - run it yourself, from the sheet's bar","Corvée en un clic - lancez-la vous-même, depuis la barre de la feuille"
 Editor plugin - the editor switches it on and off,Extension d'éditeur - l'éditeur l'active et le désactive
@@ -3193,3 +3194,71 @@ each one's,de chacun
 those where,ceux où
 each one,chacun
 >>>>>>> worktree-agent-a41d7362ff0b1efba
+=======
+editor plugin,extension de l'éditeur
+Properties bar add-on,extension de la barre de propriétés
+Importer add-on,extension d'import
+Export hook,point d'export
+Debugger panel,panneau du débogueur
+Thumbnail maker,générateur de vignettes
+Code colours,couleurs du code
+Text finder,chercheur de texte
+icon,icône
+named,nommé
+On plugin enabled,À l'activation de l'extension
+On plugin disabled,À la désactivation de l'extension
+On save,À l'enregistrement
+main screen,écran principal
+added by,ajouté par
+On plugin first turned on,À la première activation de l'extension
+On plugin first turned off,À la première désactivation de l'extension
+Asks: can this plugin edit {0}?,Demande : cette extension peut-elle modifier {0} ?
+On object handed to plugin,Quand un objet est confié à l'extension
+On workspace shown,À l'affichage de l'espace de travail
+On project run,Au lancement du projet
+Asks: show this add-on for {0}?,Demande : afficher cette extension pour {0} ?
+On start of {0}'s properties,Au début des propriétés de {0}
+On property {2} of {0},Sur la propriété {2} de {0}
+On end of {0}'s properties,À la fin des propriétés de {0}
+On group {1} of {0},Sur le groupe {1} de {0}
+On import,À l'import
+On export begins,Au début de l'export
+On file exported,Quand un fichier est exporté
+On export ends,À la fin de l'export
+On session started,Au démarrage de la session
+On message,À la réception d'un message
+Asks: handles type?,Demande : prend-il en charge ce type ?
+On make thumbnail,À la création de la vignette
+On menu opens for {0},À l'ouverture du menu pour {0}
+Add dock {1} at {0},Ajouter le panneau {1} à {0}
+Add dock {0},Ajouter le panneau {0}
+Remove dock {0},Retirer le panneau {0}
+Add bottom panel {0} named {1},Ajouter le panneau bas {0} nommé {1}
+Remove bottom panel {0},Retirer le panneau bas {0}
+Add Tools menu item {0},Ajouter l'entrée {0} au menu Outils
+Remove Tools menu item {0},Retirer l'entrée {0} du menu Outils
+Add context menu {1} to {0},Ajouter le menu contextuel {1} à {0}
+Remove context menu {0},Retirer le menu contextuel {0}
+Add Properties bar add-on {0},Ajouter l'extension de la barre de propriétés {0}
+Remove Properties bar add-on {0},Retirer l'extension de la barre de propriétés {0}
+Add importer add-on {0},Ajouter l'extension d'import {0}
+Remove importer add-on {0},Retirer l'extension d'import {0}
+Add export hook {0},Ajouter le point d'export {0}
+Remove export hook {0},Retirer le point d'export {0}
+Add debugger panel {0},Ajouter le panneau du débogueur {0}
+Remove debugger panel {0},Retirer le panneau du débogueur {0}
+Add object type {0},Ajouter le type d'objet {0}
+Remove object type {0},Retirer le type d'objet {0}
+Add global {0} from {1},Ajouter le global {0} depuis {1}
+Remove global {0},Retirer le global {0}
+Add control {0},Ajouter le contrôle {0}
+Use editor {1} for {0},Utiliser l'éditeur {1} pour {0}
+Use editor {2} for {1},Utiliser l'éditeur {2} pour {1}
+Add file to export {0},Ajouter le fichier {0} à l'export
+Skip file,Ignorer le fichier
+Send message {0},Envoyer le message {0}
+Add item {0},Ajouter l'entrée {0}
+Answer {value},Répondre {value}
+handled,pris en charge
+not handled,non pris en charge
+>>>>>>> worktree-agent-a9da6ecc4c51b1029

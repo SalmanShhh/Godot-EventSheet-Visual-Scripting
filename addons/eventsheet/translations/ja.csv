@@ -3165,6 +3165,7 @@ starting {values},先頭が {values}
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
 <<<<<<< HEAD
+<<<<<<< HEAD
 Editor Tool…,エディタツール…
 "One-click chore - run it yourself, from the sheet's bar",ワンクリック作業 - シートのバーから自分で実行
 Editor plugin - the editor switches it on and off,エディタプラグイン - エディタがオン/オフを切り替える
@@ -3193,3 +3194,71 @@ each one's,それぞれの
 those where,次の条件のもの
 each one,それぞれ
 >>>>>>> worktree-agent-a41d7362ff0b1efba
+=======
+editor plugin,エディタープラグイン
+Properties bar add-on,プロパティバー アドオン
+Importer add-on,インポーター アドオン
+Export hook,エクスポート フック
+Debugger panel,デバッガー パネル
+Thumbnail maker,サムネイル作成
+Code colours,コードの色
+Text finder,テキスト検索
+icon,アイコン
+named,名前
+On plugin enabled,プラグインが有効になったとき
+On plugin disabled,プラグインが無効になったとき
+On save,保存時
+main screen,メイン画面
+added by,追加元
+On plugin first turned on,プラグインを初めてオンにしたとき
+On plugin first turned off,プラグインを初めてオフにしたとき
+Asks: can this plugin edit {0}?,質問: このプラグインは {0} を編集できますか?
+On object handed to plugin,オブジェクトがプラグインに渡されたとき
+On workspace shown,ワークスペースが表示されたとき
+On project run,プロジェクト実行時
+Asks: show this add-on for {0}?,質問: {0} にこのアドオンを表示しますか?
+On start of {0}'s properties,{0} のプロパティの先頭で
+On property {2} of {0},{0} のプロパティ {2} で
+On end of {0}'s properties,{0} のプロパティの末尾で
+On group {1} of {0},{0} のグループ {1} で
+On import,インポート時
+On export begins,エクスポート開始時
+On file exported,ファイルがエクスポートされたとき
+On export ends,エクスポート終了時
+On session started,セッション開始時
+On message,メッセージ受信時
+Asks: handles type?,質問: この型を扱いますか?
+On make thumbnail,サムネイル作成時
+On menu opens for {0},{0} のメニューが開いたとき
+Add dock {1} at {0},{0} にパネル {1} を追加
+Add dock {0},パネル {0} を追加
+Remove dock {0},パネル {0} を削除
+Add bottom panel {0} named {1},下部パネル {0} を {1} という名前で追加
+Remove bottom panel {0},下部パネル {0} を削除
+Add Tools menu item {0},ツールメニュー項目 {0} を追加
+Remove Tools menu item {0},ツールメニュー項目 {0} を削除
+Add context menu {1} to {0},{0} にコンテキストメニュー {1} を追加
+Remove context menu {0},コンテキストメニュー {0} を削除
+Add Properties bar add-on {0},プロパティバー アドオン {0} を追加
+Remove Properties bar add-on {0},プロパティバー アドオン {0} を削除
+Add importer add-on {0},インポーター アドオン {0} を追加
+Remove importer add-on {0},インポーター アドオン {0} を削除
+Add export hook {0},エクスポート フック {0} を追加
+Remove export hook {0},エクスポート フック {0} を削除
+Add debugger panel {0},デバッガー パネル {0} を追加
+Remove debugger panel {0},デバッガー パネル {0} を削除
+Add object type {0},オブジェクト型 {0} を追加
+Remove object type {0},オブジェクト型 {0} を削除
+Add global {0} from {1},{1} からグローバル {0} を追加
+Remove global {0},グローバル {0} を削除
+Add control {0},コントロール {0} を追加
+Use editor {1} for {0},{0} に エディター {1} を使う
+Use editor {2} for {1},{1} に エディター {2} を使う
+Add file to export {0},エクスポートにファイル {0} を追加
+Skip file,ファイルをスキップ
+Send message {0},メッセージ {0} を送信
+Add item {0},項目 {0} を追加
+Answer {value},{value} と答える
+handled,処理した
+not handled,処理しない
+>>>>>>> worktree-agent-a9da6ecc4c51b1029

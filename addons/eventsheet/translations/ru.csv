@@ -3165,6 +3165,7 @@ starting {values},nachinayushchiysya s {values}
 with {clauses},s {clauses}
 has {key},soderzhit {key}
 <<<<<<< HEAD
+<<<<<<< HEAD
 Editor Tool…,Инструмент редактора…
 "One-click chore - run it yourself, from the sheet's bar",Задача в один клик - запускается вручную с панели листа
 Editor plugin - the editor switches it on and off,Плагин редактора - редактор включает и выключает его
@@ -3193,3 +3194,71 @@ each one's,у каждого
 those where,"те, где"
 each one,каждый
 >>>>>>> worktree-agent-a41d7362ff0b1efba
+=======
+editor plugin,плагин редактора
+Properties bar add-on,дополнение панели свойств
+Importer add-on,дополнение импорта
+Export hook,перехват экспорта
+Debugger panel,панель отладчика
+Thumbnail maker,создатель миниатюр
+Code colours,цвета кода
+Text finder,поиск текста
+icon,значок
+named,с именем
+On plugin enabled,При включении плагина
+On plugin disabled,При выключении плагина
+On save,При сохранении
+main screen,главный экран
+added by,добавлено
+On plugin first turned on,При первом включении плагина
+On plugin first turned off,При первом выключении плагина
+Asks: can this plugin edit {0}?,Спрашивает: может ли плагин изменить {0}?
+On object handed to plugin,Когда объект передан плагину
+On workspace shown,При показе рабочей области
+On project run,При запуске проекта
+Asks: show this add-on for {0}?,Спрашивает: показать это дополнение для {0}?
+On start of {0}'s properties,В начале свойств {0}
+On property {2} of {0},На свойстве {2} объекта {0}
+On end of {0}'s properties,В конце свойств {0}
+On group {1} of {0},На группе {1} объекта {0}
+On import,При импорте
+On export begins,В начале экспорта
+On file exported,Когда файл экспортирован
+On export ends,В конце экспорта
+On session started,При запуске сеанса
+On message,При сообщении
+Asks: handles type?,Спрашивает: обрабатывает этот тип?
+On make thumbnail,При создании миниатюры
+On menu opens for {0},При открытии меню для {0}
+Add dock {1} at {0},Добавить панель {1} в {0}
+Add dock {0},Добавить панель {0}
+Remove dock {0},Убрать панель {0}
+Add bottom panel {0} named {1},Добавить нижнюю панель {0} с именем {1}
+Remove bottom panel {0},Убрать нижнюю панель {0}
+Add Tools menu item {0},Добавить пункт {0} в меню Инструменты
+Remove Tools menu item {0},Убрать пункт {0} из меню Инструменты
+Add context menu {1} to {0},Добавить контекстное меню {1} в {0}
+Remove context menu {0},Убрать контекстное меню {0}
+Add Properties bar add-on {0},Добавить дополнение панели свойств {0}
+Remove Properties bar add-on {0},Убрать дополнение панели свойств {0}
+Add importer add-on {0},Добавить дополнение импорта {0}
+Remove importer add-on {0},Убрать дополнение импорта {0}
+Add export hook {0},Добавить перехват экспорта {0}
+Remove export hook {0},Убрать перехват экспорта {0}
+Add debugger panel {0},Добавить панель отладчика {0}
+Remove debugger panel {0},Убрать панель отладчика {0}
+Add object type {0},Добавить тип объекта {0}
+Remove object type {0},Убрать тип объекта {0}
+Add global {0} from {1},Добавить глобальный {0} из {1}
+Remove global {0},Убрать глобальный {0}
+Add control {0},Добавить элемент {0}
+Use editor {1} for {0},Использовать редактор {1} для {0}
+Use editor {2} for {1},Использовать редактор {2} для {1}
+Add file to export {0},Добавить файл {0} в экспорт
+Skip file,Пропустить файл
+Send message {0},Отправить сообщение {0}
+Add item {0},Добавить пункт {0}
+Answer {value},Ответить {value}
+handled,обработано
+not handled,не обработано
+>>>>>>> worktree-agent-a9da6ecc4c51b1029

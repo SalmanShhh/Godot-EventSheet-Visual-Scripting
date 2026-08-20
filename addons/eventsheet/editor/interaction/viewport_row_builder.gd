@@ -510,6 +510,12 @@ func fold_nested_verb_rows(rows: Array[EventRowData], nested: bool = false) -> v
 func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
 	if sheet == null or not sheet.read_only or rows.is_empty():
 		return rows
+	# ── W2 / W15 ────────────────────────────────────────────────────────────────────────────────
+	# Ahead of everything else, and whatever the rest of this head turns out to read as: on an editor
+	# add-on the constant-answer virtuals have already been said on the Include bar as facts, so the
+	# rows that would repeat them are dropped from the VIEW. Nothing is removed from the sheet - the
+	# functions are still there, and still emitted, which is why this may only ever run read-only.
+	rows = _fold_editor_plugin_facts(rows, sheet)
 	var host_class: String = ""
 	var identity_seen: bool = false
 	var triggers: Array[EventRowData] = []
@@ -630,8 +636,12 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 		break
 	if pending_row != null:
 		leftovers.append(pending_row)
-	# Nothing that reads as a pack head - leave the sheet exactly as it was built.
-	if not identity_seen or (triggers.is_empty() and knobs.is_empty()):
+	# Nothing that reads as a pack head - leave the sheet exactly as it was built. An editor add-on is
+	# the exception: what KIND of add-on it is has to be said, and the smallest ones (an Inspector
+	# add-on is four callbacks and no members at all) declare neither a signal nor a knob to hang the
+	# bar on. Their identity is the class they extend, which is a head fact on its own.
+	var editor_addon: bool = EventSheetEditorPluginWords.is_editor_plugin_class(str(sheet.host_class).strip_edges())
+	if not identity_seen or (triggers.is_empty() and knobs.is_empty() and not editor_addon):
 		return rows
 	var head: Array[EventRowData] = [_build_pack_include_bar_row(sheet, host_class)]
 	# N12 - a script that extends ANOTHER SCRIPT of this project is including that sheet: everything
@@ -670,6 +680,29 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 			continue  # the about text reads at the TOP now; a second copy at the end is the grey wall
 		output.append(rows[tail_index])
 	return output
+
+
+## W2 / W15. The same row list without the rows that only restate a head fact, and with the file's
+## shape claimed as the editor-plugin pattern it is. Returns `rows` untouched for every sheet that
+## does not extend an editor plugin class, which is every game script.
+func _fold_editor_plugin_facts(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
+	var host_class: String = str(sheet.host_class).strip_edges()
+	if not EventSheetEditorPluginWords.is_editor_plugin_class(host_class):
+		return rows
+	# The one claim this reading makes, and it is about the whole file: what you are looking at is an
+	# add-on to the editor, of this kind. Nothing to adopt - a plugin is not a shape a shipped
+	# behavior could replace, it IS the plugin.
+	EventSheetPatternFacts.claim(sheet, "editor_plugin", "editor_plugin_head", "editor_plugin_head",
+		PackedStringArray(["extends %s" % host_class]),
+		EventSheetL10n.translate(EventSheetEditorPluginWords.head_word_for(host_class)), "")
+	var kept: Array[EventRowData] = []
+	for row_data: EventRowData in rows:
+		var source: Resource = row_data.source_resource
+		if source is EventFunction and EventSheetEditorPluginWords.is_head_fact_callback(
+				host_class, (source as EventFunction).function_name):
+			continue
+		kept.append(row_data)
+	return kept
 
 
 ## The prose of a comment-only block, "" when it carries only `## @ace_*` annotations (which say
@@ -965,7 +998,20 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	# noise, and the Include bar directly below already names that file (N12).
 	if base_class.begins_with("\"") or base_class.begins_with("'"):
 		base_class = ""
-	if not base_class.is_empty() and base_class != object_name:
+	# ── W2 / W15 ────────────────────────────────────────────────────────────────────────────────
+	# A script extending one of the editor's plugin classes says what KIND of add-on it is in the
+	# sheet's own word for that thing, and states the questions with constant answers as the facts
+	# they are: an EditorPlugin's name, its main screen and its icon are three lines of code that say
+	# one thing each, and reading them as three events would be reading three lies. `@tool` is left
+	# off deliberately - an editor plugin runs in the editor by definition, so the chip says nothing.
+	var plugin_words: bool = EventSheetEditorPluginWords.is_editor_plugin_class(base_class)
+	if plugin_words:
+		var facts: PackedStringArray = _editor_plugin_head_facts(sheet, base_class)
+		spans.append(_make_span(" · ".join(facts), SemanticSpan.SpanType.COMMENT, {
+			"editable": false, "kind": "pack_include", "line_index": 0,
+			"text_color": _viewport._get_reading_style().muted_text_color
+		}))
+	elif not base_class.is_empty() and base_class != object_name:
 		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE, {
 			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
 		}))
@@ -974,7 +1020,7 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	# `@tool` is not a line of the program; it is a fact about WHEN the whole file runs, which is
 	# exactly what a chip on the head bar is for. The importer already recorded it on the sheet, so
 	# this only shows what the file said.
-	if bool(sheet.tool_mode):
+	if bool(sheet.tool_mode) and not plugin_words:
 		spans.append(_pack_include_chip(EventSheetL10n.translate("runs in editor")))
 	var receipts: PackedStringArray = PackedStringArray()
 	if not source_path.is_empty():
@@ -986,6 +1032,98 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
 		}))
 	return spans
+
+
+## W2 / W15. The facts an editor add-on's head bar states, in reading order: what kind of add-on it
+## is, then whatever its constant-answer virtuals answer. `editor plugin · main screen "EventSheet"
+## · icon eventsheet.svg` for a plugin that owns a workspace, and just `editor plugin` for one that
+## does not - a main-screen line on a plugin with no main screen would be a fact it never claimed.
+func _editor_plugin_head_facts(sheet: EventSheetResource, host_class: String) -> PackedStringArray:
+	var facts: PackedStringArray = PackedStringArray([
+		EventSheetL10n.translate(EventSheetEditorPluginWords.head_word_for(host_class))
+	])
+	match host_class:
+		"EditorPlugin":
+			if _constant_return_of(sheet, "_has_main_screen") == "true":
+				var screen_name: String = _constant_return_of(sheet, "_get_plugin_name")
+				if not screen_name.is_empty():
+					facts.append("%s %s" % [EventSheetL10n.translate("main screen"), screen_name])
+			var icon_file: String = _first_quoted_file(sheet, "_get_plugin_icon")
+			if not icon_file.is_empty():
+				facts.append("%s %s" % [EventSheetL10n.translate("icon"), icon_file])
+		"EditorImportPlugin":
+			var importer_name: String = _constant_return_of(sheet, "_get_visible_name")
+			if importer_name.is_empty():
+				importer_name = _constant_return_of(sheet, "_get_importer_name")
+			if not importer_name.is_empty():
+				facts.append("%s %s" % [EventSheetL10n.translate("named"), importer_name])
+	# The receipt that says who registered this add-on with the editor, found by reading the plugins
+	# of THIS project - never a guess, and silent when no file of this project registers it.
+	var owner: String = EventSheetEditorPluginWords.added_by(str(sheet.custom_class_name).strip_edges())
+	if not owner.is_empty():
+		facts.append("%s %s ▸ %s" % [
+			EventSheetL10n.translate("added by"), owner, EventSheetL10n.translate("On plugin enabled")
+		])
+	return facts
+
+
+## The one value a constant-answer virtual answers with, as the file writes it (`"EventSheet"`,
+## `true`) - "" when the sheet has no such function or its body does more than answer.
+func _constant_return_of(sheet: EventSheetResource, function_name: String) -> String:
+	# The one-line body of a constant-answer virtual lifts to a Return Value row inside an event, so
+	# the answer is a parameter rather than a line of text - read it there first, and fall back to the
+	# raw text below for a body the lifter left alone.
+	for entry: Variant in _function_body_entries(sheet, function_name):
+		var steps: Array = (entry as EventRow).actions if entry is EventRow else [entry]
+		for step: Variant in steps:
+			if not (step is ACEAction) or (step as ACEAction).ace_id != "ReturnValue":
+				continue
+			var params: Dictionary = (step as ACEAction).params
+			if params.is_empty():
+				params = (step as ACEAction).parameters
+			return str(params.get("value", "")).strip_edges()
+	for line: String in _function_body_lines(sheet, function_name):
+		var stripped: String = line.strip_edges()
+		if stripped.begins_with("return "):
+			return stripped.substr(7).strip_edges()
+	return ""
+
+
+## The FILE NAME of the first quoted res:// path a function names - what `_get_plugin_icon` is for,
+## where the value is behind a `load()` and the folder it lives in is filing rather than a fact.
+func _first_quoted_file(sheet: EventSheetResource, function_name: String) -> String:
+	var searched: PackedStringArray = PackedStringArray([_constant_return_of(sheet, function_name)])
+	searched.append_array(_function_body_lines(sheet, function_name))
+	for line: String in searched:
+		var at: int = line.find("\"res://")
+		if at < 0:
+			continue
+		var rest: String = line.substr(at + 1)
+		var close_at: int = rest.find("\"")
+		if close_at > 0:
+			return rest.substr(0, close_at).get_file()
+	return ""
+
+
+## One of the sheet's functions as its body lines, rebuilt in the same spelling every other reading
+## is built from. Empty when the sheet declares no such function.
+func _function_body_lines(sheet: EventSheetResource, function_name: String) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for body_entry: Variant in _function_body_entries(sheet, function_name):
+		EventSheetViewportReadingRows.append_body_lines(body_entry, lines)
+	return lines
+
+
+## One of the sheet's functions as the resources its body is made of, in file order. Empty when the
+## sheet declares no such function.
+func _function_body_entries(sheet: EventSheetResource, function_name: String) -> Array:
+	if sheet == null:
+		return []
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction and (entry as EventFunction).function_name == function_name:
+			var body: Array = (entry as EventFunction).events
+			return body if not body.is_empty() else (entry as EventFunction).rows
+	return []
 
 
 ## P4 - one node's object bar inside a scene view: the node's own name, the class it is, the file its
@@ -2264,6 +2402,16 @@ static func _has_action_lane_span(spans: Array[SemanticSpan]) -> bool:
 ## segments the renderer paints, so the tags themselves are never printed. An unpublished helper adds
 ## the one caption a reader takes a function in by - its doc comment - in the RIGHT lane, muted.
 func _build_verb_function_block_spans(event_function: EventFunction, role: String, display_name: String) -> Array[SemanticSpan]:
+	# ── W2 / W15 ────────────────────────────────────────────────────────────────────────────────
+	# On a script that extends one of the editor's plugin classes, some of these functions are not
+	# the author's verbs at all: they are the questions and the events the EDITOR calls, and reading
+	# them as "ƒ On parse property" tells a reader nothing they can act on. Named here, keyed only
+	# off the class the file extends and the function's own name - the reading changes, the sheet
+	# does not.
+	var editor_callback: Dictionary = EventSheetEditorPluginWords.callback_for(
+		_editor_plugin_class(), event_function.function_name)
+	if not editor_callback.is_empty():
+		return _build_editor_callback_spans(event_function, str(editor_callback.get("text", "")))
 	var badge_colors: Array = _define_role_colors(role)
 	var name_color: Color = _define_role_name_color(role)
 	var spans: Array[SemanticSpan] = [
@@ -2374,6 +2522,86 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 				"text_color": _viewport._get_reading_style().muted_text_color
 			}))
 	return spans
+
+
+## W2 / W15. One editor callback as the event it is: the trigger arrow, the owning panel in the
+## object column, and the sentence that says what the editor wants.
+##
+## Two shapes, chosen by the sentence itself. A sentence that NAMES the callback's parameters
+## ("On property name of object") spells them inline and bold, because they are the subject of the
+## question and a chip repeating them would print the same words twice. A sentence that names none
+## ("On workspace shown") keeps them as the trigger payload chips every other event wears, which is
+## how `visible` stays visible without the sentence having to mention it.
+func _build_editor_callback_spans(event_function: EventFunction, sentence: String) -> Array[SemanticSpan]:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var chip_bg: Color = _verb_chip_colors()[0]
+	var spans: Array[SemanticSpan] = [
+		_make_span("➜", SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "trigger",
+			"badge_bg": chip_bg,
+			"badge_fg": event_style.behavior_accent_color,
+			"kind": "define_function",
+			"lane": "condition",
+			"line_index": 0
+		})
+	]
+	var names: PackedStringArray = _editor_callback_param_names(event_function)
+	var marked_up: String = EventSheetL10n.translate(sentence)
+	var named_any: bool = false
+	for index: int in names.size():
+		var slot: String = "{%d}" % index
+		if marked_up.contains(slot):
+			marked_up = marked_up.replace(slot, "[b]%s[/b]" % names[index])
+			named_any = true
+	var name_color: Color = event_style.object_label_color
+	var name_meta: Dictionary = {
+		"editable": false,
+		"kind": "define_function",
+		"lane": "condition",
+		"line_index": 0,
+		# The object column keeps the object's NAME as the sheet spells it, untranslated - the same
+		# rule the Editor object has followed since it was introduced, so one sheet never shows two
+		# spellings of the same object.
+		"object_label": EventSheetEditorPluginWords.object_for(_editor_plugin_class()),
+		"text_color": name_color
+	}
+	if EventSheetBBCodeLite.has_markup(marked_up):
+		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(marked_up, name_color)
+	spans.append(_make_span(EventSheetBBCodeLite.strip(marked_up), SemanticSpan.SpanType.OBJECT, name_meta))
+	if named_any:
+		return spans
+	var chip_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	for index: int in names.size():
+		spans.append(_make_span(names[index], SemanticSpan.SpanType.CONDITION, {
+			"editable": false,
+			"lane": "condition",
+			"kind": "verb_param",
+			"param_index": index,
+			"chip": true,
+			"line_index": 0
+		}.merged(chip_style, true)))
+	return spans
+
+
+## The callback's parameters under the names the FILE writes them with - `object`, `visible`,
+## `paths`. Not the friendly labels a published verb's inputs wear: the sentence is the editor's
+## question about that very argument, and a reader following it into the body will find the
+## identifier, not a Title Case label.
+func _editor_callback_param_names(event_function: EventFunction) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for param: Variant in event_function.params:
+		if not (param is ACEParam):
+			continue
+		var bare: String = str((param as ACEParam).id).strip_edges()
+		if bare.is_empty():
+			bare = str((param as ACEParam).name).strip_edges()
+		names.append(bare)
+	if names.is_empty():
+		for legacy: String in event_function.parameters:
+			names.append(str(legacy).strip_edges())
+	return names
 
 
 ## S3. The `sequence · N s` chip a function of alternating waits and actions wears, or "" for every
@@ -11970,6 +12198,7 @@ func sentence_context() -> Dictionary:
 	if sheet == _sentence_context_sheet and not _sentence_context_cache.is_empty():
 		var reused: Dictionary = _sentence_context_cache.duplicate()
 		reused["verb_kind"] = _current_verb_kind()
+		reused["answer_shape"] = _current_answer_shape()
 		# ── M46 lens hook ─────────────────────────────────────────────────────────────────────
 		# The Familiar Words glossary is VIEW state, not sheet state, so it is stamped after the
 		# per-sheet cache - flipping the toggle must change the reading without invalidating it.
@@ -11991,9 +12220,17 @@ func sentence_context() -> Dictionary:
 		# What only something able to ASK can answer: the script's own object name, its engine
 		# properties, and each signal's parameter names. Cached with the rest of the context.
 		context.merge(EventSheetViewportReadingRows.sentence_context_extras(sheet as EventSheetResource), true)
+		# ── W2 / W15 lens hook ─────────────────────────────────────────────────────────────────
+		# The class the file EXTENDS, when that class is one of the editor's own plugin classes. It
+		# is the single fact every editor-plugin reading is keyed off: what the add_* verbs read as,
+		# and which of this file's functions are the editor's questions rather than the author's.
+		var extended: String = str(sheet.get("host_class")).strip_edges()
+		if EventSheetEditorPluginWords.is_editor_plugin_class(extended):
+			context["editor_plugin_class"] = extended
 	_sentence_context_sheet = sheet
 	_sentence_context_cache = context.duplicate()
 	context["verb_kind"] = _current_verb_kind()
+	context["answer_shape"] = _current_answer_shape()
 	context["familiar_words"] = _familiar_words_enabled()
 	return context
 
@@ -12031,6 +12268,27 @@ func _current_verb_kind() -> int:
 	if _current_verb_function.return_type != TYPE_NIL or (not type_name.is_empty() and type_name != "void"):
 		return EventSheetSentence.VerbKind.EXPRESSION
 	return EventSheetSentence.VerbKind.ACTION
+
+
+## W2 / W15. The Answer shape a `return` in the function currently being walked takes - "" for every
+## function that is not one of the editor's own callbacks, which is every function in a game script.
+## Read from the same pair the header reads from (the class the file extends, and the function's own
+## name), so the row that asks the question and the row that answers it can never disagree.
+func _current_answer_shape() -> String:
+	if _current_verb_function == null:
+		return ""
+	return EventSheetEditorPluginWords.answer_shape(
+		_editor_plugin_class(), _current_verb_function.function_name)
+
+
+## The editor plugin class the open sheet extends, "" when it extends anything else. One string
+## lookup per ask; the sheet's host class is a field, not a walk.
+func _editor_plugin_class() -> String:
+	var sheet: Resource = _viewport._sheet if _viewport != null else null
+	if sheet == null:
+		return ""
+	var extended: String = str(sheet.get("host_class")).strip_edges()
+	return extended if EventSheetEditorPluginWords.is_editor_plugin_class(extended) else ""
 
 
 # ── Reading lenses (M9/M10/M13/M16/M20) ───────────────────────────────────────────────────────

@@ -130,6 +130,43 @@ one the logic is right and the wiring is not.
   **ACE registry**, `_find_bar` reads **Find bar** - with the variable's own name muted beside it.
   Familiar Words off shows the class exactly as the file declares it. Display-only.
 
+### Added - an editor plugin reads as what it does to the editor
+
+- **An `EditorPlugin` reads with the Editor object's plugin triggers.** `_enable_plugin` /
+  `_disable_plugin` are **On plugin first turned on / off** - the pair almost nobody tells apart
+  from the enabled pair, which `_enter_tree` / `_exit_tree` already read as. `_handles` is
+  **Editor Asks: can this plugin edit object?**, and the `return` inside it is **System ▸ Answer
+  object is Resource**. `_make_visible` is **On workspace shown**, `_build` **On project run**,
+  `_save_external_data` **On save**, and `_edit` **On object handed to plugin** - what that
+  callback actually is, since the editor only hands over objects the plugin said yes to.
+- **The three questions with constant answers are head facts, not events.** `_get_plugin_name`,
+  `_has_main_screen` and `_get_plugin_icon` state one fact each and nothing ever happens in them,
+  so the Include bar says `editor plugin · main screen "EventSheet" · icon eventsheet.svg` and
+  their rows are not drawn underneath it. The functions are untouched; only the drawing changes.
+- **`add_*` / `remove_*` read as what they add.** Dock, bottom panel, Tools menu item, context
+  menu, Properties bar add-on, importer add-on, export hook, debugger panel, object type and
+  global, each with the Editor in the object column. A context-menu slot constant reads as the
+  panel it names - **Scene dock**, **Project bar**, **Project bar ▸ Create new**, **Script
+  editor**.
+- **Every editor plugin class Godot offers has a word of its own.** `EditorInspectorPlugin` is a
+  **Properties bar add-on** (*Asks: show this add-on for object? / On start of object's properties
+  / On property name of object / Add control / Use editor X for property*), `EditorImportPlugin`
+  an **Importer add-on**, `EditorExportPlugin` an **Export hook** (*On export begins / On file
+  exported / On export ends / Add file to export / Skip file*), `EditorDebuggerPlugin` a
+  **Debugger panel**, `EditorResourcePreviewGenerator` a **Thumbnail maker**,
+  `EditorContextMenuPlugin` a **Context menu**, `EditorSyntaxHighlighter` **Code colours** and
+  `EditorTranslationParserPlugin` a **Text finder**. A `return true` / `return false` from a
+  callback whose flag means "did this add-on take it" reads **Answer handled / not handled**.
+  The head bar names who registered the add-on when a plugin of this same project does it -
+  `added by EventForgePlugin ▸ On plugin enabled`.
+- Every one of these readings is keyed off the class the file **extends** and changes nothing that
+  is saved: opening a plugin or an add-on and saving it untouched still reproduces every byte, and
+  the file's shape is claimed once as the `editor_plugin` pattern (nothing to adopt - it IS the
+  plugin).
+- The shipped **Add / Remove Inspector Plugin** rows now read **Add / Remove Properties bar
+  add-on**, and **On Object Selected** reads **On Object Handed To Plugin**. Same `ace_id`s, same
+  emitted calls - the words caught up with the rest of the vocabulary.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

@@ -3165,6 +3165,7 @@ starting {values},que empieza por {values}
 with {clauses},con {clauses}
 has {key},tiene {key}
 <<<<<<< HEAD
+<<<<<<< HEAD
 Editor Tool…,Herramienta del editor…
 "One-click chore - run it yourself, from the sheet's bar","Tarea de un clic - la ejecutas tú, desde la barra de la hoja"
 Editor plugin - the editor switches it on and off,Complemento del editor - el editor lo activa y desactiva
@@ -3193,3 +3194,71 @@ each one's,de cada uno
 those where,los que
 each one,cada uno
 >>>>>>> worktree-agent-a41d7362ff0b1efba
+=======
+editor plugin,complemento del editor
+Properties bar add-on,extensión de la barra de propiedades
+Importer add-on,extensión de importación
+Export hook,gancho de exportación
+Debugger panel,panel del depurador
+Thumbnail maker,generador de miniaturas
+Code colours,colores del código
+Text finder,buscador de texto
+icon,icono
+named,llamado
+On plugin enabled,Al activarse el complemento
+On plugin disabled,Al desactivarse el complemento
+On save,Al guardar
+main screen,pantalla principal
+added by,añadido por
+On plugin first turned on,Al activar el complemento por primera vez
+On plugin first turned off,Al desactivar el complemento por primera vez
+Asks: can this plugin edit {0}?,Pregunta: ¿este complemento puede editar {0}?
+On object handed to plugin,Al entregar un objeto al complemento
+On workspace shown,Al mostrarse el espacio de trabajo
+On project run,Al ejecutar el proyecto
+Asks: show this add-on for {0}?,Pregunta: ¿mostrar esta extensión para {0}?
+On start of {0}'s properties,Al comenzar las propiedades de {0}
+On property {2} of {0},En la propiedad {2} de {0}
+On end of {0}'s properties,Al terminar las propiedades de {0}
+On group {1} of {0},En el grupo {1} de {0}
+On import,Al importar
+On export begins,Al empezar la exportación
+On file exported,Al exportarse un archivo
+On export ends,Al terminar la exportación
+On session started,Al iniciarse la sesión
+On message,Al llegar un mensaje
+Asks: handles type?,Pregunta: ¿se encarga de este tipo?
+On make thumbnail,Al crear la miniatura
+On menu opens for {0},Al abrirse el menú para {0}
+Add dock {1} at {0},Añadir panel {1} en {0}
+Add dock {0},Añadir panel {0}
+Remove dock {0},Quitar panel {0}
+Add bottom panel {0} named {1},Añadir panel inferior {0} llamado {1}
+Remove bottom panel {0},Quitar panel inferior {0}
+Add Tools menu item {0},Añadir elemento {0} al menú Herramientas
+Remove Tools menu item {0},Quitar elemento {0} del menú Herramientas
+Add context menu {1} to {0},Añadir menú contextual {1} a {0}
+Remove context menu {0},Quitar menú contextual {0}
+Add Properties bar add-on {0},Añadir extensión de la barra de propiedades {0}
+Remove Properties bar add-on {0},Quitar extensión de la barra de propiedades {0}
+Add importer add-on {0},Añadir extensión de importación {0}
+Remove importer add-on {0},Quitar extensión de importación {0}
+Add export hook {0},Añadir gancho de exportación {0}
+Remove export hook {0},Quitar gancho de exportación {0}
+Add debugger panel {0},Añadir panel del depurador {0}
+Remove debugger panel {0},Quitar panel del depurador {0}
+Add object type {0},Añadir tipo de objeto {0}
+Remove object type {0},Quitar tipo de objeto {0}
+Add global {0} from {1},Añadir global {0} desde {1}
+Remove global {0},Quitar global {0}
+Add control {0},Añadir control {0}
+Use editor {1} for {0},Usar el editor {1} para {0}
+Use editor {2} for {1},Usar el editor {2} para {1}
+Add file to export {0},Añadir archivo {0} a la exportación
+Skip file,Omitir archivo
+Send message {0},Enviar mensaje {0}
+Add item {0},Añadir elemento {0}
+Answer {value},Responder {value}
+handled,atendido
+not handled,no atendido
+>>>>>>> worktree-agent-a9da6ecc4c51b1029
