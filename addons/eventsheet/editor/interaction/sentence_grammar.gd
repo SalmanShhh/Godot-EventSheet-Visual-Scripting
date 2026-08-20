@@ -4033,7 +4033,7 @@ static func vocabulary_define_sentence(row: Dictionary) -> Dictionary:
 ## under it. {} when the call is not the funnel, or when it was handed no label to show.
 static func undo_step_sentence(target: String, method: String, args: PackedStringArray,
 		context: Dictionary) -> Dictionary:
-	if not EventSheetEditorSourceFacts.FUNNEL_METHODS.has(method) or args.is_empty():
+	if not EventSheetEditorSourceFacts.is_funnel_method(method) or args.is_empty():
 		return {}
 	var label: String = args[0].strip_edges()
 	if not (label.begins_with("\"") or label.begins_with("'")):

@@ -8718,17 +8718,18 @@ static func undo_step_parts(code: String) -> Dictionary:
 		name = (declared if colon_at < 0 else declared.substr(0, colon_at)).strip_edges()
 		type_word = "" if colon_at < 0 else declared.substr(colon_at + 1).strip_edges()
 		first = first.substr(assign_at + 3).strip_edges()
-	var funnel_at: int = -1
-	var funnel: String = ""
-	for method: String in EventSheetEditorSourceFacts.FUNNEL_METHODS:
-		funnel_at = first.find(".%s(" % method)
-		if funnel_at >= 0:
-			funnel = method
-			break
-	if funnel_at < 0 or not first.ends_with(":"):
+	# The funnel itself, or a thin forwarder that says "undoable" in its own name - the alias a
+	# coordinator's door is usually reached through. Read off the head of the call rather than
+	# through a call parse: the statement is deliberately unclosed here, the lambda's body being
+	# the rest of the block.
+	var open_at: int = first.find("(")
+	if open_at <= 0 or not first.ends_with(":"):
 		return {}
-	var receiver: String = first.substr(0, funnel_at).strip_edges()
-	var open_at: int = funnel_at + funnel.length() + 1
+	var head: String = first.substr(0, open_at)
+	var dot_at: int = head.rfind(".")
+	if dot_at <= 0 or not EventSheetEditorSourceFacts.is_funnel_method(head.substr(dot_at + 1)):
+		return {}
+	var receiver: String = head.substr(0, dot_at).strip_edges()
 	var arguments: String = first.substr(open_at + 1)
 	var comma_at: int = arguments.find(",")
 	if comma_at < 0:

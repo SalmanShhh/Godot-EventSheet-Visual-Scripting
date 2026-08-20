@@ -32,6 +32,11 @@ extends RefCounted
 ## pattern ids - the reading, the claim and the health check all key on the pair.
 const FUNNEL_METHODS: PackedStringArray = ["_perform_undoable_sheet_edit", "perform_undoable_sheet_edit"]
 
+## The word an ALIAS of the funnel is spelled with. A coordinator's door is often reached through a
+## thin forwarder on a helper, and a forwarder that says "undoable" in its own name is saying it
+## does the same thing - which is the only claim the reading makes about it.
+const FUNNEL_WORD := "undoable"
+
 ## The vocabulary calls a module publishes a row with, and the kind word each one publishes.
 const REGISTER_CALLS: Dictionary = {
 	"add_condition": "condition", "add_action": "action", "add_expression": "expression"
@@ -113,6 +118,12 @@ static func facts_for_source(source: String) -> Dictionary:
 	if not recursive.is_empty():
 		out["recursive_functions"] = recursive
 	return out
+
+
+## True when a method name is the mutation funnel, or an alias forwarding to it.
+static func is_funnel_method(method: String) -> bool:
+	var name: String = method.strip_edges()
+	return FUNNEL_METHODS.has(name) or name.to_lower().contains(FUNNEL_WORD)
 
 
 ## True when the project being edited IS this editor's own repo - the one project where a file can

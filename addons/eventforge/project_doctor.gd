@@ -687,6 +687,8 @@ static func sheet_edit_outside_funnel(source: String) -> String:
 	for method: String in EventSheetEditorSourceFacts.FUNNEL_METHODS:
 		if source.contains("%s(" % method):
 			return ""
+	if source.contains("%s" % EventSheetEditorSourceFacts.FUNNEL_WORD):
+		return ""
 	for write: String in _LIVE_SHEET_WRITES:
 		if source.contains(write):
 			return write.trim_suffix("(")
