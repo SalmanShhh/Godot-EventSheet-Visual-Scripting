@@ -35,6 +35,9 @@ static var _live_values_receiver_pending: bool = false
 # so the synthesized _process and the user-_process injection never both emit it. This is the
 # coordination signal that lets the event trace run WITHOUT live values (empty payload).
 static var _throttle_process_emitted: bool = false
+# Whether the current debug compile still needs the runtime-error reporter ARMED in _ready
+# (OS.add_logger of the emitted Logger subclass). Cleared once injected, like the receiver flag.
+static var _error_reporter_pending: bool = false
 
 # Runtime-toggleable groups: event -> "__group_<snake>_active" guard (per-compile).
 static var _runtime_group_guards: Dictionary = {}
@@ -378,6 +381,11 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			_live_values_receiver_pending = true
 	if sheet.emit_event_trace:
 		_emit_event_trace_flag = true
+	# Runtime errors (debugging rung 5): with ANY sheet-debug switch armed, the compiled script
+	# carries a Logger that announces script errors to the editor (message, file, line) over the
+	# sheet's channel. Announced, not captured: the engine's own error channel never reaches
+	# editor debugger plugins, so the game says its own trouble - the paused-row pattern.
+	_error_reporter_pending = _wants_error_reporter(sheet)
 	# Live values and the event trace share one throttled _process, so they share the timer member;
 	# the trace also needs its per-frame buffer. Declared whenever either is enabled - the trace can
 	# run on its own (without live values), so this is no longer gated behind emit_live_values.
@@ -573,6 +581,31 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("\t\t\tcontinue")
 		lines.append("\t\tEngineDebugger.send_message(\"eventsheets:input\", [str(__recorded_action), event.is_action_pressed(__recorded_action), Engine.get_frames_drawn()])")
 
+	# Runtime-error reporter (debugging rung 5, debug compiles only): a Logger subclass the game
+	# registers in _ready, announcing each script error's message, file and line to the editor over
+	# the sheet's channel, so the dock can re-say the failure as the row said it. Each failing line
+	# is announced once per run - the strip says a failure the FIRST time it happens, and a row that
+	# fails every tick must not flood the debugger wire on its way there. The engine hands the
+	# message in `rationale` for asserts and in `code` for plain script errors, so whichever is
+	# non-empty wins.
+	if _wants_error_reporter(sheet):
+		lines.append("")
+		lines.append("## Runtime-error reporter (debug sessions only): announces each script error's message,")
+		lines.append("## file and line to the editor, once per failing line per run.")
+		lines.append("class __EventSheetsErrorReporter extends Logger:")
+		lines.append("\tstatic var armed: bool = false")
+		lines.append("\tvar _said: Dictionary = {}")
+		lines.append("")
+		lines.append("\tfunc _log_error(_function: String, file: String, line: int, code: String, rationale: String, _editor_notify: bool, error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:")
+		lines.append("\t\tif error_type != ERROR_TYPE_SCRIPT or not EngineDebugger.is_active():")
+		lines.append("\t\t\treturn")
+		lines.append("\t\tvar location: String = \"%s:%d\" % [file, line]")
+		lines.append("\t\tif _said.has(location):")
+		lines.append("\t\t\treturn")
+		lines.append("\t\t_said[location] = true")
+		lines.append("\t\tvar message: String = rationale if not rationale.is_empty() else code")
+		lines.append("\t\tEngineDebugger.send_message.call_deferred(\"eventsheets:runtime_error\", [message, file, line])")
+
 	# Emit sheet functions as callable GDScript methods (after the trigger handlers).
 	for function_resource: Variant in all_functions:
 		if not (function_resource is EventFunction):
@@ -658,6 +691,9 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	_emit_event_trace_flag = false
 	_live_values_payload = ""
 	_throttle_process_emitted = false
+	# External mode is lossless, so it carries no synthesized debug members - the runtime-error
+	# reporter (like live values) rides sheet-native compiles only.
+	_error_reporter_pending = false
 	# Event groups dissolve into the trigger sections on this path too, so refill the per-compile slug
 	# map for THIS sheet (compile() returns into _compile_external before the main path's reset/collect
 	# runs). The `## @ace_group` declarations ride along verbatim in the preserved prelude rows - we only
@@ -1408,13 +1444,34 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if str((signatures.get(key, {}) as Dictionary).get("function_name", "")) == "_ready":
 			has_ready_group = true
 	# No OnReady events but connections/receiver needed → synthesize a `_ready`.
-	if not has_ready_group and (not ready_connections.is_empty() or _live_values_receiver_pending):
-		lines.append("")
-		lines.append("func _ready() -> void:")
+	if not has_ready_group and (not ready_connections.is_empty() or _live_values_receiver_pending \
+			or _error_reporter_pending):
+		# On the external (opened-file) path, honor the SOURCE's own spacing and header spelling
+		# when the lift recorded them: a connects-only `_ready` leaves no OnReady event to carry
+		# the usual __source_leading_blanks, so its gap (and a non-canonical header) ride the first
+		# lifted event instead. Defaults - one blank, canonical header - keep authored sheets
+		# byte-identical to what they always emitted.
+		var ready_blanks: int = 1
+		var ready_header: String = "func _ready() -> void:"
+		if bool(connect_context.get("external", false)):
+			for entry: Variant in flattened:
+				if not (entry is EventRow):
+					continue
+				var flat_event: EventRow = entry as EventRow
+				if flat_event.has_meta("__source_ready_blanks") or flat_event.has_meta("__source_ready_header"):
+					ready_blanks = maxi(int(flat_event.get_meta("__source_ready_blanks", 1)), 1)
+					ready_header = str(flat_event.get_meta("__source_ready_header", ready_header))
+					break
+		for _ready_blank_index: int in range(ready_blanks):
+			lines.append("")
+		lines.append(ready_header)
 		if _live_values_receiver_pending:
 			lines.append("\tif EngineDebugger.is_active() and not EngineDebugger.has_capture(\"eventsheets\"):")
 			lines.append("\t\tEngineDebugger.register_message_capture(&\"eventsheets\", _eventsheets_debug_set)")
 			_live_values_receiver_pending = false
+		if _error_reporter_pending:
+			_emit_error_reporter_arming(lines)
+			_error_reporter_pending = false
 		for connection_line: String in ready_connections:
 			lines.append(connection_line)
 
@@ -1457,6 +1514,10 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			lines.append("\t\tEngineDebugger.register_message_capture(&\"eventsheets\", _eventsheets_debug_set)")
 			had_body = true
 			_live_values_receiver_pending = false
+		if function_name == "_ready" and _error_reporter_pending:
+			_emit_error_reporter_arming(lines)
+			had_body = true
+			_error_reporter_pending = false
 		if function_name == "_process" and not _throttle_process_emitted and (not _live_values_payload.is_empty() or _emit_event_trace_flag):
 			# Live-values stream and/or the event trace: throttled, debug-session-only, before user logic.
 			# The trace's frame ruler: how many fires had happened by the top of THIS frame.
@@ -2527,6 +2588,21 @@ static func _emit_live_values_send(lines: PackedStringArray) -> void:
 	lines.append("\t\t\t\t\t__live_frame.append(str(__live_child.name) + \".\" + str(__live_key))")
 	lines.append("\t\t\t\t\t__live_frame.append(__live_props[__live_key])")
 	lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", __live_frame)")
+
+
+## Any of the sheet-debug switches arms the runtime-error reporter: an error matters to the
+## strip whenever the reader is debugging, whichever switch they reached for first.
+static func _wants_error_reporter(sheet: EventSheetResource) -> bool:
+	return sheet.emit_live_values or sheet.emit_event_trace or sheet.emit_breakpoints
+
+
+## The _ready arming for the runtime-error reporter. The static `armed` guard keeps a scene with
+## several instances of the same debug sheet from registering several loggers (every logger hears
+## every error, so duplicates would say each failure that many times).
+static func _emit_error_reporter_arming(lines: PackedStringArray) -> void:
+	lines.append("\tif EngineDebugger.is_active() and not __EventSheetsErrorReporter.armed:")
+	lines.append("\t\t__EventSheetsErrorReporter.armed = true")
+	lines.append("\t\tOS.add_logger(__EventSheetsErrorReporter.new())")
 
 
 static func _emit_enum_line(enum_row: EnumRow) -> String:

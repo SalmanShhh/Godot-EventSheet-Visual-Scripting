@@ -402,6 +402,10 @@ func _ensure_editor() -> void:
 		_live_values_debugger.event_times_received.connect(editor.update_event_times)
 	if _live_values_debugger != null and editor.has_method("reveal_paused_row"):
 		_live_values_debugger.paused_row_received.connect(editor.reveal_paused_row)
+	if _live_values_debugger != null and editor.has_method("report_runtime_error"):
+		# A script error announced by the running game lands on the runtime-error strip, re-said
+		# as the row said it, with Jump to event / Explain / Godot's words live.
+		_live_values_debugger.runtime_error_received.connect(editor.report_runtime_error)
 	if _live_values_debugger != null and editor.has_method("set_live_values_debugger"):
 		editor.set_live_values_debugger(_live_values_debugger)
 	editor.name = MAIN_SCREEN_ROOT_NAME

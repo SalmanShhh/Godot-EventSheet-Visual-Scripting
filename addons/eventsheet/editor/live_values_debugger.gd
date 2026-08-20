@@ -30,6 +30,11 @@ signal children_report_received(report: Dictionary)
 ## Replay recording: one control the running game saw go down or come up, with the engine frame it
 ## happened on. [action, pressed, frame] - the three facts a replay row is written from.
 signal input_recorded(action: String, pressed: bool, frame: int)
+## Emitted when the running game announces a script error (debug compiles carry a Logger that says
+## each failure's message, file and line to the editor - the engine's own error channel never
+## reaches editor plugins, so the game reports its own trouble, the paused-row pattern). The dock
+## re-says it as the row said it on the runtime-error strip.
+signal runtime_error_received(message: String, script_path: String, line: int)
 
 var _last_session_id: int = -1
 
@@ -82,6 +87,14 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 	if message == "eventsheets:children_report":
 		children_report_received.emit(parse_children_report(data))
 		return true
+	if message == "eventsheets:runtime_error":
+		var report: Dictionary = parse_runtime_error(data)
+		# Fails closed: a malformed announce with no message is dropped rather than showing the
+		# strip with nothing to say on it.
+		if not str(report.get("message", "")).is_empty():
+			runtime_error_received.emit(str(report.get("message", "")),
+				str(report.get("script_path", "")), int(report.get("line", 0)))
+		return true
 	return false
 
 
@@ -113,6 +126,18 @@ static func parse_event_times(data: Array) -> Dictionary:
 		"stamps": stamps,
 		"markers": markers,
 		"flush": int(data[2]) if data.size() > 2 else 0,
+	}
+
+
+## The runtime-error payload: [message, script_path, line] -> a Dictionary. Each part defaults
+## rather than errors, so a truncated announce degrades to "a failure with less of an address"
+## instead of erroring mid-session. Static like the other parsers so tests drive it without an
+## editor (EditorDebuggerPlugin cannot be instantiated headless).
+static func parse_runtime_error(data: Array) -> Dictionary:
+	return {
+		"message": str(data[0]) if data.size() > 0 else "",
+		"script_path": str(data[1]) if data.size() > 1 else "",
+		"line": int(data[2]) if data.size() > 2 else 0,
 	}
 
 

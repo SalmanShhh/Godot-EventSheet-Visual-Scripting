@@ -728,18 +728,28 @@ that could replace it.
 
 ### Added - a runtime error is re-said in the sheet's words
 
-- **"event 12 · target is empty", not "null instance".** When the running game fails on a line one
-  of your rows emitted, the source map says which row and the row's own reading says what it was
-  trying to do, so the failure is said again as the row said it:
+- **"event 12 · target is empty", not "null instance".** When a script error the strip has been
+  told about struck a line one of your rows emitted, the source map says which row and the row's
+  own reading says what it was trying to do, so the failure is said again as the row said it:
   `player.gd · event 12 · Enemy ▸ Call Hit: target is empty (nothing was picked before this
   action)` - on a strip under the canvas and in the Output panel. **Jump to event** lands on the
   row, **Explain** opens the Manual page behind that kind of failure, and **Godot's words** shows
   the engine's own message unchanged: it is never hidden, because it is what every search and
   every issue tracker speaks. The table covers an empty target, a list position that is not there,
   an action the object does not have, a divide by zero and a name nothing carries; anything else
-  is repeated verbatim rather than guessed at. Pasting an error line into the command palette now
+  is repeated verbatim rather than guessed at. Pasting an error line into the command palette
   re-says it on the row it jumps to, and `EventSheets.report_runtime_error()` opens the same path
   to any tool. New theme token: `runtime_error_color`.
+- **What fires the strip by itself: a debug run.** Godot's own error channel never reaches editor
+  debugger plugins, so live capture is the game's job: with any of the sheet's debug switches
+  armed (**🐞 Debug layout** arms them all), the compiled script carries a small error reporter -
+  a core-Godot `Logger` registered in `_ready`, debug sessions only - that announces each script
+  error's message, file and line to the editor over the sheet's channel, once per failing line
+  per run, and the strip re-says it as the row said it while the game is still running. The
+  honest limits: a plain ▶ Preview run (debug switches off) announces nothing - there the strip
+  fires only from a pasted error line or `EventSheets.report_runtime_error()` - and a sheet
+  opened from a hand-written `.gd` keeps its bytes and carries no reporter, the same line Live
+  Values already draws.
 
 ### Added - the Manual answers a behavior name
 
