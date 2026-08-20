@@ -11311,7 +11311,6 @@ const CURSOR_AIM_HELPER := "__eventsheets_aim_floor("
 const CURSOR_MOUSE_POINT := "get_viewport().get_mouse_position()"
 
 
-
 ## X20. The canvas-space names, or "" when the expression is not one of them. Whole-expression
 ## shapes only - a fragment of a bigger sum is left to the ordinary call pass, which already leaves
 ## what it does not recognise exactly as it was.
@@ -11429,19 +11428,6 @@ static func _canvas_point_owner(point: String, context: Dictionary) -> String:
 		if bare.ends_with(".%s" % member):
 			return object_of_reference(bare.substr(0, bare.length() - member.length() - 1).strip_edges())
 	return object_of_reference(bare) if is_simple_target(bare) else ""
-
-
-## X20. A distance between two CANVAS points, in pixels - deliberately named apart from a world
-## distance, because measuring aim assist in world units is the bug this word exists to prevent.
-## "" unless both ends are canvas points the reading can prove.
-static func canvas_distance_words(text: String, context: Dictionary) -> String:
-	var call: Dictionary = call_parts(text.strip_edges())
-	if call.is_empty() or str(call.get("method", "")) != "distance_to":
-		return ""
-	var args: PackedStringArray = call.get("args", PackedStringArray())
-	if args.size() != 1:
-		return ""
-	return _angle_degrees(args[0])
 
 
 ## X3. `to_local(enemy.global_position).z > 0` - which side of an object something is on, said the way
@@ -11655,6 +11641,18 @@ static func _last_top_level_index(text: String, operator: String) -> int:
 		found = from + at
 		from = found + operator.length()
 	return found
+
+
+## X20. A distance between two CANVAS points, in pixels - deliberately named apart from a world
+## distance, because measuring aim assist in world units is the bug this word exists to prevent.
+## "" unless both ends are canvas points the reading can prove.
+static func canvas_distance_words(text: String, context: Dictionary) -> String:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "distance_to":
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1:
+		return ""
 	var from_text: String = str(call.get("target", "")).strip_edges()
 	var to_text: String = args[0].strip_edges()
 	var canvas_locals: Dictionary = context.get("canvas_points", {})
