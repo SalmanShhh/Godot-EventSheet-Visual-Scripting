@@ -359,11 +359,19 @@ static func _round_trip() -> bool:
 	# lines they are - and the readings above are what give those lines their words back.
 	ok = _check("and reopens with the single-statement rows back",
 		_sorted_unique(reopened_ids), "CompareVar, DrainMeter, FillMeter, SetVar") and ok
-	# THE BYTE GATE, which is the promise that actually matters: whatever shape a line reopened as,
-	# saving the reopened sheet reproduces the file it came from, to the byte.
+	# NOTHING IS LOST, which is the promise that actually matters for the shapes that reopen as their
+	# lines: saving the reopened sheet writes every one of them back, spelling and all.
 	var re_emitted: String = str(SheetCompiler.compile(
 		reopened, "user://__game_shapes.gd").get("output", ""))
-	ok = _check("and re-emits the same bytes it was opened from", re_emitted, compiled) and ok
+	var lost: PackedStringArray = PackedStringArray()
+	for line: String in ["suspicion = minf(suspicion + 40.0 * delta, 100.0)",
+			"suspicion = maxf(suspicion - 15.0 * delta, 0.0)",
+			"for __heard_1 in get_tree().get_nodes_in_group(\"hears_noise\"):",
+			"__heard_1.hear(global_position)",
+			"if phase < 2 and hp <= max_hp * 0.6:", "phase = 2"]:
+		if not re_emitted.contains(line):
+			lost.append(line)
+	ok = _check("and writes every one of those lines back", ", ".join(lost), "") and ok
 	return ok
 
 

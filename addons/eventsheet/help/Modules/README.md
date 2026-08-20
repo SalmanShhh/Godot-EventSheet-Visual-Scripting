@@ -27,6 +27,7 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 - [Working In 3D](Working-In-3D.md) - Node3D transforms, CharacterBody3D and RigidBody3D, cameras and field of view, and building meshes at runtime.
 - [Animation And Sprites](Animation-And-Sprites.md) - play, stop, scrub and queue AnimationPlayer clips, flip a sprite, and drive an AnimationTree state machine.
 - [Game Feel](Game-Feel.md) - the five snippets every game copies as rows: shake, hitstop, bob, flash, and the squash that eases back.
+- [Game Mechanics](Game-Mechanics.md) - four shapes every game writes by hand: pity rolls, meters that fill and drain, boss phases, and a mission clock with a deadline.
 - [Timers, Waiting And Cooldowns](Timers-Waiting-And-Cooldowns.md) - Wait, Every X Seconds, cooldowns, buffered presses, tweens, and the engine's own clocks.
 - [Working With Vectors And Directions](Working-With-Vectors-And-Directions.md) - build, measure, aim, turn, blend and cap positions and directions without writing the distance formula out.
 

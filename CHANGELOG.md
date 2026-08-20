@@ -16,11 +16,12 @@
   event lift gained the per-function byte gate its sheet-function twin already had: a handler whose
   lifted events do not reproduce its exact source re-anchors as a verbatim block on the spot,
   instead of surfacing only at the whole-file verify and reverting every other function with it.
+
 ### Added - four game shapes the sheet now says by name
 
 - **Pity: randomness that owes you one.** A counter fed once per roll, a chance grown out of it, a
   roll compared against that chance or a hard cap, and a reset on the win - all four halves, or
-  nothing. Together they read `AdvancedRandom ▸ Rolled with pity (chance, guaranteed at pity cap)`
+  nothing. Together they read `AdvancedRandom ▸ Rolled with pity (chance, guaranteed at pity_cap)`
   and claim the new `pity` pattern; a plain `randf() < x` stays the Chance condition it already is.
   Authorable too: the Advanced Random pack gained **Roll With Pity**, **Reset Pity** and **Pity
   Count**, keyed by counter name so one autoload holds a project's worth of them, riding the same
