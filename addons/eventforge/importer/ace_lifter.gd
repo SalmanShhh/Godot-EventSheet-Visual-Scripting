@@ -2868,13 +2868,11 @@ const REVERSE_LIFT_EXCLUDED_CATEGORIES: PackedStringArray = [
 ## positional sound's two knobs read under the player they belong to, which the lifted row cannot say.
 const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	"AudioSetHearingDistance", "AudioSetFalloff",
-<<<<<<< HEAD
 	# X27. The two mission-clock rows whose templates are a plain Set and a plain Add. Their VALUE is
 	# the minutes:seconds field the picker offers, not a new spelling - so admitting them to the
 	# reverse index would have them claim every assignment and every increment in every project, and
 	# the shipped countdown reading already says what those lines are.
-	"StartMissionTimer", "AddMissionTime"
-=======
+	"StartMissionTimer", "AddMissionTime",
 	# X22 / X25 / X28 / X29. Rows whose template is a perfectly ordinary line - `x = y`, `x = ""`,
 	# `x += 1`, `x = load(p)`, `list[i]`, `list.size()`, `a in b`, `absf(a - b)`. Each is exactly
 	# right for the row that writes it and hopelessly general for the index that reads lines BACK:
@@ -2883,7 +2881,6 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# author fine; they just do not get to speak for lines nobody wrote them for.
 	"StartListeningForControl", "StopListeningForControl", "CloseInputWindow", "CountMashPress",
 	"UsePalette", "CurrentWeapon", "SecretsFoundCount", "SecretAlreadyFound", "OffBeatBy"
->>>>>>> e03e4ee5
 ]
 
 

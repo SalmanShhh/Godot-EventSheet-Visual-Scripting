@@ -65,7 +65,7 @@ static func run() -> bool:
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
 	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
 	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
-	all_passed = _check("fleet-wide declared verbs count", declared_total, 1283 + 3 + 19) and all_passed
+	all_passed = _check("fleet-wide declared verbs count", total_verbs, 1283 + 3 + 19) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0
