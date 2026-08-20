@@ -466,6 +466,15 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var answered: Dictionary = web_condition(text, context)
 	if not answered.is_empty():
 		return answered
+	# X20 / X30. Whether a point is behind the viewer at all, and how steep the ground under the
+	# cursor is - each one question, ahead of the comparison reading which would describe the second
+	# as the angle arithmetic it is written with.
+	var canvas_test: Dictionary = canvas_condition(text, context)
+	if not canvas_test.is_empty():
+		return canvas_test
+	var slope_test: Dictionary = slope_steeper_condition(text, context)
+	if not slope_test.is_empty():
+		return slope_test
 	# U10. Whether a handler is wired up is a question about the SIGNAL, not about a call's result.
 	var connected: Dictionary = signal_wiring_condition(text, context)
 	if not connected.is_empty():
@@ -1087,6 +1096,12 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var spatial_value: String = spatial_words_expression(trimmed, context)
 	if not spatial_value.is_empty():
 		return spatial_value
+	# X2 / X20 / X30 - the canvas names and the cursor's ray, decided by the WHOLE expression and
+	# claimed before the call rewriting could take any of them apart into the arguments they are
+	# written with. Nothing here changes a byte: these are the words, not the code.
+	var canvas_value: String = canvas_expression_words(trimmed, context)
+	if not canvas_value.is_empty():
+		return canvas_value
 	# U11 - a callable held in a value is the FUNCTION it names, said the way a Call row says it.
 	var held: String = callable_value_words(trimmed)
 	if not held.is_empty():
@@ -11255,6 +11270,162 @@ static func _direction_target_of(text: String, context: Dictionary, from_object:
 static func _cosine_angle_degrees(text: String) -> String:
 	var call: Dictionary = call_parts(text.strip_edges())
 	if call.is_empty() or str(call.get("method", "")) != "cos":
+# ── X2 / X20 / X30: the cursor's ray, and how far things are ON THE CANVAS ───────────────────────
+#
+# Three shapes that every 3D game writes and no sheet had words for:
+#
+#   X2   the camera-ray run - project_ray_origin, project_ray_normal, the query, intersect_ray -
+#        which is ONE question ("what is under the cursor?") written as four lines of plumbing;
+#   X20  canvas space - unproject_position, the canvas transforms, the centre of the view, and a
+#        distance measured in PIXELS rather than in world units, which is the distinction beginners
+#        ship aim assist without (a crosshair that ignores camera zoom);
+#   X30  the same ray aimed and filtered - from the OS mouse or from any object's canvas position,
+#        restricted to a layer mask - answering where on the floor the cursor points, what is there,
+#        and how steep it is.
+#
+# Everything here is a READING: the lines stay exactly as the file wrote them, so the byte
+# round-trip is untouched, and every sentence is the same one the matching ACE writes.
+
+## X2. The one spelling of a 3D ray query a reading may claim.
+const CURSOR_RAY_QUERY_MAKER := "PhysicsRayQueryParameters3D.create("
+
+## X2. The tail every one-off ray cast ends with, whichever way the space state was reached.
+const CURSOR_RAY_CAST_CALL := ".intersect_ray("
+
+## X30. The emitted helper the three aimed-floor expressions share - one function per file, whichever
+## of them the picker wrote first.
+const CURSOR_AIM_HELPER := "__eventsheets_aim_floor("
+
+## X30. The canvas point the OS mouse is at, as the helper's callers spell it.
+const CURSOR_MOUSE_POINT := "get_viewport().get_mouse_position()"
+
+
+
+## X20. The canvas-space names, or "" when the expression is not one of them. Whole-expression
+## shapes only - a fragment of a bigger sum is left to the ordinary call pass, which already leaves
+## what it does not recognise exactly as it was.
+static func canvas_expression_words(text: String, context: Dictionary) -> String:
+	var bare: String = text.strip_edges()
+	while bare.begins_with("(") and closing_paren(bare, 0) == bare.length() - 1:
+		bare = bare.substr(1, bare.length() - 2).strip_edges()
+	var centre: String = canvas_centre_words(bare)
+	if not centre.is_empty():
+		return centre
+	var clamped: String = _canvas_edge_clamp_words(bare, context)
+	if not clamped.is_empty():
+		return clamped
+	var position: String = canvas_position_words(bare, context)
+	if not position.is_empty():
+		return position
+	var distance: String = canvas_distance_words(bare, context)
+	if not distance.is_empty():
+		return distance
+	var under: String = canvas_depth_point_words(bare, context)
+	if not under.is_empty():
+		return under
+	var hit_member: String = cursor_hit_expression_words(bare, context)
+	if not hit_member.is_empty():
+		return hit_member
+	return cursor_ray_expression_words(bare, context)
+
+
+## X2. What one entry of a ray HIT means, but only on a local this FILE filled from a cursor ray -
+## `hit.position` is "where the cursor touches the world" there and an ordinary possessive anywhere
+## else. The file's own walk decides which locals qualify, so no line has to guess.
+static func cursor_hit_expression_words(text: String, context: Dictionary) -> String:
+	var bare: String = text.strip_edges()
+	var dot_at: int = bare.rfind(".")
+	if dot_at <= 0:
+		return ""
+	var rays: Dictionary = context.get("cursor_rays", {})
+	if not rays.has(bare.substr(0, dot_at).strip_edges()):
+		return ""
+	return cursor_hit_member_words(bare.substr(dot_at + 1))
+
+
+## X20. `get_viewport().get_visible_rect().size / 2.0` and its `* 0.5` twin - the middle of what the
+## player can see, which is where a crosshair sits. "" for any other expression.
+static func canvas_centre_words(text: String) -> String:
+	var bare: String = text.strip_edges()
+	for operator: String in [" / ", " * "]:
+		var at: int = top_level_index(bare, operator)
+		if at <= 0:
+			continue
+		var half: String = bare.substr(at + 3).strip_edges()
+		var wanted: bool = (operator == " / " and (half == "2" or half == "2.0")) \
+			or (operator == " * " and (half == "0.5" or half == ".5"))
+		if not wanted:
+			continue
+		if not _is_visible_rect_size(bare.substr(0, at).strip_edges()):
+			continue
+		return translate("the canvas centre")
+	return ""
+
+
+## X20. True for the three spellings of "how big the view is".
+static func _is_visible_rect_size(text: String) -> bool:
+	var bare: String = text.strip_edges()
+	if not bare.ends_with(".size"):
+		return false
+	return VIEWPORT_RECTS.has(bare.substr(0, bare.length() - 5).strip_edges())
+
+
+## X20. Where something is ON THE CANVAS, in either dimension, or "" when the expression asks
+## something else. Three spellings answer alike on purpose: a 3D camera's `unproject_position`, a
+## 2D node's `get_global_transform_with_canvas().origin`, and the `get_screen_transform() * p` form.
+## Camera zoom and canvas layers are IN all three, which is exactly what plain `position` arithmetic
+## gets wrong - so the sheet gives the honest one its own name.
+static func canvas_position_words(text: String, context: Dictionary) -> String:
+	var bare: String = text.strip_edges()
+	if bare.ends_with(".origin"):
+		var call: Dictionary = call_parts(bare.substr(0, bare.length() - 7).strip_edges())
+		if not call.is_empty() and str(call.get("method", "")) == "get_global_transform_with_canvas" \
+				and (call.get("args", PackedStringArray()) as PackedStringArray).is_empty():
+			return _canvas_position_sentence(str(call.get("target", "")), context)
+	var product_at: int = top_level_index(bare, " * ")
+	if product_at > 0:
+		var left: Dictionary = call_parts(bare.substr(0, product_at).strip_edges())
+		if not left.is_empty() and str(left.get("method", "")) == "get_screen_transform" \
+				and (left.get("args", PackedStringArray()) as PackedStringArray).is_empty():
+			return _canvas_position_sentence(bare.substr(product_at + 3).strip_edges(), context)
+	var projected: Dictionary = call_parts(bare)
+	if projected.is_empty() or str(projected.get("method", "")) != "unproject_position":
+		return ""
+	var args: PackedStringArray = projected.get("args", PackedStringArray())
+	if args.size() != 1:
+		return ""
+	return _canvas_position_sentence(args[0].strip_edges(), context)
+
+
+## X20. "x's position on the canvas" for whatever the point belongs to. A bare `global_position`
+## with no owner is the script's own place, so the sentence names the script's object.
+static func _canvas_position_sentence(point: String, context: Dictionary) -> String:
+	var owner_text: String = _canvas_point_owner(point, context)
+	if owner_text.is_empty():
+		return ""
+	return _fill(translate("{object}'s position on the canvas"), {"object": owner_text})
+
+
+## X20. Whose position a canvas conversion was handed, in the words the row would use. "" when the
+## argument is not a position at all, which keeps the ordinary reading of any other call.
+static func _canvas_point_owner(point: String, context: Dictionary) -> String:
+	var bare: String = point.strip_edges().trim_prefix("self.")
+	if bare.is_empty():
+		return ""
+	for member: String in ["global_position", "position", "global_transform.origin"]:
+		if bare == member:
+			return str(context.get("self_object", OBJECT_SYSTEM))
+		if bare.ends_with(".%s" % member):
+			return object_of_reference(bare.substr(0, bare.length() - member.length() - 1).strip_edges())
+	return object_of_reference(bare) if is_simple_target(bare) else ""
+
+
+## X20. A distance between two CANVAS points, in pixels - deliberately named apart from a world
+## distance, because measuring aim assist in world units is the bug this word exists to prevent.
+## "" unless both ends are canvas points the reading can prove.
+static func canvas_distance_words(text: String, context: Dictionary) -> String:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "distance_to":
 		return ""
 	var args: PackedStringArray = call.get("args", PackedStringArray())
 	if args.size() != 1:
@@ -11473,3 +11644,256 @@ static func _last_top_level_index(text: String, operator: String) -> int:
 		found = from + at
 		from = found + operator.length()
 	return found
+	var from_text: String = str(call.get("target", "")).strip_edges()
+	var to_text: String = args[0].strip_edges()
+	var canvas_locals: Dictionary = context.get("canvas_points", {})
+	if not _is_canvas_point(from_text, canvas_locals, context):
+		return ""
+	if not _is_canvas_point(to_text, canvas_locals, context):
+		return ""
+	return _fill(translate("the canvas distance from {from} to {to} (pixels)"), {
+		"from": expression_text(from_text, context), "to": expression_text(to_text, context)
+	})
+
+
+## X20. Whether one end of a measurement is a canvas point: a local the file declared from one of the
+## canvas conversions, or a conversion written out in place.
+static func _is_canvas_point(text: String, canvas_locals: Dictionary, context: Dictionary) -> bool:
+	var bare: String = text.strip_edges()
+	if canvas_locals.has(bare):
+		return true
+	if not canvas_centre_words(bare).is_empty():
+		return true
+	return not canvas_position_words(bare, context).is_empty()
+
+
+## X20. `cam.project_position(p, d)` - the cheap sibling of X2's ray: where a canvas point lands in
+## the world at a chosen depth, with no physics asked at all.
+static func canvas_depth_point_words(text: String, context: Dictionary) -> String:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "project_position":
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 2:
+		return ""
+	return _fill(translate("the world point under {point} at depth {depth}"), {
+		"point": expression_text(args[0].strip_edges(), context),
+		"depth": expression_text(args[1].strip_edges(), context)
+	})
+
+
+## X20. An off-screen indicator's position: a canvas point pinned inside the view, which is the whole
+## of what an arrow at the edge of the screen is. "" when the clamp is not that shape.
+static func _canvas_edge_clamp_words(text: String, context: Dictionary) -> String:
+	var bare: String = text.strip_edges()
+	# Matched on the TAIL: the point being pinned is itself a call, and the whole-expression split
+	# cannot see past the first bracket it meets.
+	var clamp_at: int = bare.rfind(".clamp(")
+	if clamp_at <= 0 or not bare.ends_with(")"):
+		return ""
+	if closing_paren(bare, clamp_at + 6) != bare.length() - 1:
+		return ""
+	if _split_arguments(bare.substr(clamp_at + 7, bare.length() - clamp_at - 8)).size() != 2:
+		return ""
+	var inner: String = canvas_position_words(bare.substr(0, clamp_at), context)
+	if inner.is_empty():
+		return ""
+	return "%s %s" % [inner, translate("clamped to the canvas edge")]
+
+
+## X20. Whether a point is behind the viewer, which decides whether a marker may be drawn at all.
+## {} for anything else, which keeps today's reading of every other call.
+static func canvas_condition(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = text.strip_edges()
+	while bare.begins_with("(") and closing_paren(bare, 0) == bare.length() - 1:
+		bare = bare.substr(1, bare.length() - 2).strip_edges()
+	var call: Dictionary = call_parts(bare)
+	if call.is_empty() or str(call.get("method", "")) != "is_position_behind":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1:
+		return {}
+	var owner_text: String = _canvas_point_owner(args[0].strip_edges(), context)
+	if owner_text.is_empty():
+		return {}
+	return _with_pattern(_sentence(owner_text, "is behind the camera", {}), "aim_assist", bare)
+
+
+## X30. `rad_to_deg(hit.normal.angle_to(Vector3.UP)) > 30` - how steep the ground is, asked the way a
+## builder asks it. {} when the line asks something else.
+static func slope_steeper_condition(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = text.strip_edges()
+	var at: int = top_level_index(bare, " > ")
+	if at <= 0:
+		return {}
+	var degrees: String = bare.substr(at + 3).strip_edges()
+	var call: Dictionary = call_parts(bare.substr(0, at).strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "rad_to_deg":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1:
+		return {}
+	var angle: Dictionary = call_parts(args[0].strip_edges())
+	if angle.is_empty() or str(angle.get("method", "")) != "angle_to":
+		return {}
+	var up: PackedStringArray = angle.get("args", PackedStringArray())
+	if up.size() != 1 or up[0].strip_edges() != "Vector3.UP":
+		return {}
+	return _with_pattern(_sentence(OBJECT_SYSTEM, "slope steeper than {degrees}°",
+		{"degrees": [expression_text(degrees, context), "value"]}), "cursor_ray", bare)
+
+
+## X2. One step of a camera-ray run, as {"step", …}, or {} when the line is not one of them. The four
+## steps are recognised separately so a run written with any local names still reads, and so a
+## HALF-lifted file - where the importer turned one line into a row and left its neighbour verbatim -
+## is recognised exactly as often as an untouched one.
+static func cursor_ray_step_parts(text: String) -> Dictionary:
+	var bare: String = text.strip_edges()
+	if bare.begins_with(CURSOR_RAY_QUERY_MAKER) and bare.ends_with(")"):
+		var query: Dictionary = call_parts(bare)
+		var query_args: PackedStringArray = query.get("args", PackedStringArray())
+		if query_args.size() >= 2:
+			return {"step": "query", "from": query_args[0].strip_edges(),
+				"to": query_args[1].strip_edges()}
+		return {}
+	# The cast is written on the space state, which is reached through `get_world_3d()` - a call the
+	# whole-expression split cannot see past, so this one step is matched on its own tail.
+	var cast_at: int = bare.rfind(CURSOR_RAY_CAST_CALL)
+	if cast_at > 0 and bare.ends_with(")"):
+		var inner: String = bare.substr(cast_at + CURSOR_RAY_CAST_CALL.length())
+		inner = inner.substr(0, inner.length() - 1).strip_edges()
+		if is_identifier(inner):
+			return {"step": "cast", "query": inner}
+	var call: Dictionary = call_parts(bare)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if (method == "project_ray_origin" or method == "project_ray_normal") and args.size() == 1:
+		return {"step": method, "camera": str(call.get("target", "")).strip_edges(),
+			"point": args[0].strip_edges()}
+	return {}
+
+
+## X2. The `1000.0` in `origin + dir * 1000.0`, or "" when the far end of a ray is not that shape -
+## a ray to a FIXED point is a different question, and reads as one.
+static func cursor_ray_reach(to_text: String, origin_name: String, direction_name: String) -> String:
+	var bare: String = to_text.strip_edges()
+	var at: int = top_level_index(bare, " + ")
+	if at <= 0 or bare.substr(0, at).strip_edges() != origin_name:
+		return ""
+	var scaled: String = bare.substr(at + 3).strip_edges()
+	var times_at: int = top_level_index(scaled, " * ")
+	if times_at <= 0 or scaled.substr(0, times_at).strip_edges() != direction_name:
+		return ""
+	return scaled.substr(times_at + 3).strip_edges()
+
+
+## X2 / X30. The words a whole camera-ray run reads as, and the muted note beside them.
+##
+## `aimed_at` is "" for the OS mouse and the object whose canvas position aimed the ray otherwise,
+## which is what makes a gamepad or touch crosshair first-class: the same run, aimed a second way.
+## Returns {"text", "note"} - never {} - so a caller that has already matched the run cannot end up
+## drawing a row with nothing in it.
+static func cursor_ray_run_words(into: String, reach: String, aimed_at: String, mask: String,
+		dimension: String, context: Dictionary) -> Dictionary:
+	var text: String = _fill(translate("Set {name} to {what}"), {
+		"name": expression_text(into, context),
+		"what": _fill(translate("the object under {cursor}"), {"cursor": cursor_target_words(aimed_at)})
+	})
+	return {"text": text, "note": cursor_ray_note(reach, mask, dimension, context)}
+
+
+## X2 / X30. The muted half of a ray row: which layers it may see and how far it reaches, in the
+## file's own values, so a reader can check the row without opening the code.
+static func cursor_ray_note(reach: String, mask: String, dimension: String, context: Dictionary) -> String:
+	var notes: PackedStringArray = PackedStringArray()
+	if not mask.strip_edges().is_empty():
+		var layer_words: String = ""
+		if mask.strip_edges().is_valid_int():
+			layer_words = physics_layer_words(mask.strip_edges().to_int(), dimension)
+		notes.append(_fill(translate("on layer {layers}"), {
+			"layers": layer_words if not layer_words.is_empty() else expression_text(mask, context)
+		}))
+	if not reach.strip_edges().is_empty():
+		notes.append("%s %s" % [translate("reach"), expression_text(reach, context)])
+	return ", ".join(notes)
+
+
+## X2 / X30. What the ray was aimed through: the cursor itself, or the object standing in for it.
+static func cursor_target_words(aimed_at: String) -> String:
+	var bare: String = aimed_at.strip_edges()
+	return translate("the cursor") if bare.is_empty() else object_of_reference(bare)
+
+
+## X2. What a ray HIT says about itself, in the words a reader means. "" for any other member, which
+## keeps the possessive reading every other Dictionary entry has.
+static func cursor_hit_member_words(member: String) -> String:
+	match member.strip_edges():
+		"position":
+			return translate("where the cursor touches the world")
+		"normal":
+			return translate("the surface's facing there")
+		"collider":
+			return translate("the object under the cursor")
+	return ""
+
+
+## X2. A ray to a FIXED point, which is not a cursor question at all: it asks whether anything stands
+## between two places, and the sheet already has a sight test that says so. "" for anything else.
+static func fixed_point_ray_words(from_text: String, to_text: String, context: Dictionary) -> String:
+	if from_text.strip_edges().is_empty() or to_text.strip_edges().is_empty():
+		return ""
+	return _fill(translate("the first object between {from} and {to}"), {
+		"from": expression_text(from_text.strip_edges(), context),
+		"to": expression_text(to_text.strip_edges(), context)
+	})
+
+
+## X2 / X30. The one-cell expressions the shipped Mouse and aimed-cursor words write, read back in
+## the same sentence the picker offered - which is what makes the row round-trip in both directions.
+## "" when the expression is not one of them.
+static func cursor_ray_expression_words(text: String, context: Dictionary) -> String:
+	var bare: String = text.strip_edges()
+	if not bare.begins_with(CURSOR_AIM_HELPER) or not bare.ends_with(")"):
+		return ""
+	# The whole-expression split cannot see past the helper's own call, so the entry being read is
+	# taken off the tail instead - exactly the way the ray cast's own step is matched.
+	var helper_end: int = closing_paren(bare, CURSOR_AIM_HELPER.length() - 1)
+	if helper_end < 0:
+		return ""
+	var tail: String = bare.substr(helper_end + 1).strip_edges()
+	if not tail.begins_with(".get("):
+		return ""
+	var entries: PackedStringArray = _split_arguments(tail.substr(5, tail.length() - 6))
+	if entries.is_empty():
+		return ""
+	var aim: Dictionary = call_parts(bare.substr(0, helper_end + 1))
+	return _cursor_floor_words(_unquote(entries[0].strip_edges()), _aimed_cursor_owner(aim, context))
+
+
+## X30. Which object's canvas position aimed the helper, "" for the OS mouse.
+static func _aimed_cursor_owner(aim: Dictionary, context: Dictionary) -> String:
+	var args: PackedStringArray = aim.get("args", PackedStringArray())
+	if args.is_empty():
+		return ""
+	var point: String = args[0].strip_edges()
+	if point == CURSOR_MOUSE_POINT:
+		return ""
+	var owner_text: String = canvas_position_words(point, context)
+	if owner_text.is_empty():
+		return ""
+	return owner_text.trim_suffix(translate("'s position on the canvas"))
+
+
+## X30. The three answers a masked floor ray gives, each named for what a reader wants out of it.
+static func _cursor_floor_words(entry: String, aimed_at: String) -> String:
+	var cursor: String = cursor_target_words(aimed_at)
+	match entry:
+		"position":
+			return _fill(translate("the floor point under {cursor}"), {"cursor": cursor})
+		"collider":
+			return _fill(translate("the floor object under {cursor}"), {"cursor": cursor})
+		"normal":
+			return _fill(translate("the floor's slope under {cursor}"), {"cursor": cursor})
+	return ""

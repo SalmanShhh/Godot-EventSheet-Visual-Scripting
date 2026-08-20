@@ -54,6 +54,14 @@ const NOT_STANDALONE: Array[String] = [
 	"StopRetrying",  # ends with `break` - only compiles inside the Retry Up To N Times loop it belongs to
 	"RetryAttemptNumber",  # reads `attempt`, the Retry Up To N Times loop's own iterator
 	"RetryUpTo", "RetriesExhausted",  # call sheet-synthesized helpers over the retry's own three-state record
+	# X2 / X30. All five aimed-cursor words call ONE sheet-synthesized helper - the masked ray the
+	# compiler writes into the file the first time any of them appears - so none of them compiles in
+	# a class this harness wraps by hand, exactly like the once-memory and retry helpers above. Their
+	# templates and the helper itself are gated by cursor_and_canvas_reading_test, which compiles them
+	# through the real compiler and pins that the helper lands exactly once per file.
+	"CursorIsOverObject3D", "OnObjectClicked3D",
+	"MouseFloorPoint", "MouseFloorObject", "MouseFloorSlope",
+	"AimedFloorPoint", "AimedFloorObject", "AimedFloorSlope",
 ]
 
 

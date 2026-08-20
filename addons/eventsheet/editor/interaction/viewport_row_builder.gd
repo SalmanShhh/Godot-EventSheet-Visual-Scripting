@@ -6632,7 +6632,15 @@ func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[Event
 	var rows: Array[EventRowData] = []
 	if event_row == null or not event_promotes_locals(event_row):
 		return rows
+	# X2 / X30. A local the camera-ray run already said is not a declaration of its own: the run reads
+	# as ONE row in the action lane, and drawing its four locals above that row would say the same
+	# thing twice - once as plumbing, which is exactly what the run exists to stop showing.
+	var ray_groups: Dictionary = _cursor_ray_groups(event_row.actions)
+	var ray_leads: Dictionary = ray_groups.get("leads", {})
+	var ray_consumed: Dictionary = ray_groups.get("consumed", {})
 	for action_index in event_row.actions.size():
+		if ray_leads.has(action_index) or ray_consumed.has(action_index):
+			continue
 		var action: ACEAction = event_row.actions[action_index] as ACEAction
 		if action == null:
 			continue
@@ -8482,6 +8490,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# U8 / U12 - the mouse-look trio and the two faders of a crossfade are one row each.
 		var look_groups: Dictionary = _mouse_look_groups(event_row.actions)
 		var fade_groups: Dictionary = _crossfade_groups(event_row.actions)
+		# X2 / X30 - the four lines of camera-ray plumbing are ONE question, and read as one row.
+		var ray_groups: Dictionary = _cursor_ray_groups(event_row.actions)
 		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
 		var task_notes: Dictionary = _task_note_groups(event_row.actions)
 		# W12 - the run of rows a multi-line `{...}` / `[...]` used as a VALUE was split into is one
@@ -8513,11 +8523,17 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if bool(look_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(fade_groups.get("consumed", {}).get(action_index, false)):
 				continue
+			# X2 / X30 - and for the camera-ray run, whose four lines only mean anything together.
+			if bool(ray_groups.get("consumed", {}).get(action_index, false)):
+				continue
 			var run_lead: Dictionary = (look_groups["leads"] as Dictionary).get(action_index, {})
 			var run_pattern: String = "fps_look"
 			if run_lead.is_empty():
 				run_lead = (fade_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "sound"
+			if run_lead.is_empty():
+				run_lead = (ray_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "cursor_ray"
 			if not run_lead.is_empty():
 				_append_scroll_limit_spans(spans, run_lead, action_index, action_line_index,
 					action_style_meta)
@@ -11461,6 +11477,20 @@ const PATTERN_VOCABULARY: Dictionary = {
 	},
 	"pack_recipe": {
 		"words": "Pack recipe"
+	},
+	# X2 / X20 / X30. The cursor's ray and the canvas measurements built on it. Neither has a pack to
+	# adopt: both are FREE vocabulary - the shipped camera-picking words, the aimed-floor expressions
+	# and the canvas distance - so what a hand-written run should become is a row, not an addon.
+	"cursor_ray": {
+		"words": "The object under the cursor",
+		"ace_ids": ["Core/MouseRayCollider3D", "Core/MouseRayPoint3D", "Core/CastMouseRayInto3D",
+			"Core/CursorIsOverObject3D", "Core/OnObjectClicked3D", "Core/MouseFloorPoint",
+			"Core/MouseFloorObject", "Core/MouseFloorSlope", "Core/SlopeSteeperThan"]
+	},
+	"aim_assist": {
+		"words": "Aim assist",
+		"ace_ids": ["Core/PickNearestToCanvasPoint", "Core/VectorDistanceTo", "Core/IsBehindCamera3D",
+			"Core/CanvasX2D", "Core/CanvasY2D", "Core/CanvasX3D", "Core/CanvasY3D"]
 	}
 }
 
@@ -13449,3 +13479,169 @@ func _build_arrangement_header_row(sheet: EventSheetResource, mode: int, bucket_
 		title, subtitle, members)
 	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
 	return row_data
+
+
+# ── X2 / X30: the camera-ray run, which is ONE question written as four lines ────────────────────
+#
+# `project_ray_origin`, `project_ray_normal`, the query, `intersect_ray` - four lines that only mean
+# anything together, and that every 3D game writes to answer "what is under the cursor?". They read
+# as ONE row, in exactly the discipline the mouse-look and crossfade runs above use: the lines stay
+# as the file wrote them (hover shows all of them, double-click opens the exact GDScript, the bytes
+# saved are untouched), and only what the canvas SAYS about them changes.
+#
+# The run's own facts - how far it reaches, which layers it may see, what aimed it, and whether the
+# branch under it clears what it found - come from the file's one walk (cursor_ray_facts), because
+# no line of the run can answer any of them on its own.
+
+
+## X2 / X30. The camera-ray runs in one action lane, as {"leads": {index: {…}}, "consumed": {…}} -
+## the same shape every other run grouper here answers in.
+func _cursor_ray_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var rays: Dictionary = sentence_context().get("cursor_rays", {})
+	if rays.is_empty():
+		return {"leads": leads, "consumed": consumed}
+	var index: int = 0
+	while index < actions.size() - 3:
+		var last: int = _cursor_ray_run_end(actions, index)
+		if last < 0:
+			index += 1
+			continue
+		var hit_name: String = _cursor_ray_declared_name(_group_line_text(actions[last]))
+		var facts: Dictionary = rays.get(hit_name, {})
+		if facts.is_empty():
+			index += 1
+			continue
+		# The reach, what aimed the ray and the mask come from THESE lines, never from the name: two
+		# functions may both call their hit `hit`, and a note taken from the other one's run would be
+		# exactly the confident lie this reading refuses. Only whether the branch under the run clears
+		# what it found is a question these lines cannot answer, so only that comes from the file.
+		var run_facts: Dictionary = _cursor_ray_run_facts(actions, index, last)
+		var evidence: PackedStringArray = PackedStringArray()
+		var indices: Array[int] = []
+		for member_index: int in range(index, last + 1):
+			evidence.append(_group_line_text(actions[member_index]))
+			indices.append(member_index)
+		var words: Dictionary = EventSheetSentence.cursor_ray_run_words(hit_name,
+			str(run_facts.get("reach", "")), str(run_facts.get("aimed_at", "")),
+			str(run_facts.get("mask", "")),
+			EventSheetSentence.PHYSICS_DIMENSION_3D, sentence_context())
+		var note: String = str(words.get("note", ""))
+		if bool(facts.get("cleared", false)):
+			var nothing: String = EventSheetL10n.translate("none when nothing is hit")
+			note = "%s · %s" % [note, nothing] if not note.is_empty() else nothing
+		leads[index] = {
+			"text": str(words.get("text", "")),
+			"note": note,
+			"object": EventSheetSentence.OBJECT_SYSTEM,
+			"evidence": evidence,
+			"line_count": last - index + 1,
+			"indices": indices
+		}
+		for consumed_index: int in range(index + 1, last + 1):
+			consumed[consumed_index] = true
+		index = last + 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## X2 / X30. The LAST action of a camera-ray run starting at `first`, or -1 when the lines there are
+## not one. Every step is required: two halves of a ray with no query built from them are two
+## ordinary declarations, and reading them as a question would be exactly the confident lie this
+## grammar refuses. The mask line is the one optional member, because a ray restricted to the floor
+## and one that sees everything are the same question asked with a filter.
+func _cursor_ray_run_end(actions: Array, first: int) -> int:
+	var origin: Dictionary = EventSheetSentence.cursor_ray_step_parts(
+		_cursor_ray_declared_value(_group_line_text(actions[first])))
+	if str(origin.get("step", "")) != "project_ray_origin":
+		return -1
+	var origin_name: String = _cursor_ray_declared_name(_group_line_text(actions[first]))
+	if origin_name.is_empty():
+		return -1
+	var direction: Dictionary = EventSheetSentence.cursor_ray_step_parts(
+		_cursor_ray_declared_value(_group_line_text(actions[first + 1])))
+	if str(direction.get("step", "")) != "project_ray_normal":
+		return -1
+	if str(direction.get("point", "")) != str(origin.get("point", "")):
+		return -1
+	if str(direction.get("camera", "")) != str(origin.get("camera", "")):
+		return -1
+	var direction_name: String = _cursor_ray_declared_name(_group_line_text(actions[first + 1]))
+	var query: Dictionary = EventSheetSentence.cursor_ray_step_parts(
+		_cursor_ray_declared_value(_group_line_text(actions[first + 2])))
+	if str(query.get("step", "")) != "query":
+		return -1
+	if EventSheetSentence.cursor_ray_reach(str(query.get("to", "")), origin_name, direction_name).is_empty():
+		return -1
+	var query_name: String = _cursor_ray_declared_name(_group_line_text(actions[first + 2]))
+	if query_name.is_empty():
+		return -1
+	var cast_at: int = first + 3
+	if _cursor_ray_mask_target(_group_line_text(actions[cast_at])) == query_name:
+		cast_at += 1
+	if cast_at >= actions.size():
+		return -1
+	var cast: Dictionary = EventSheetSentence.cursor_ray_step_parts(
+		_cursor_ray_declared_value(_group_line_text(actions[cast_at])))
+	if str(cast.get("step", "")) != "cast" or str(cast.get("query", "")) != query_name:
+		return -1
+	return cast_at
+
+
+## The name a `var x := …` line declares, or "" when the line declares nothing.
+func _cursor_ray_declared_name(text: String) -> String:
+	var bare: String = text.strip_edges()
+	if not bare.begins_with("var "):
+		return ""
+	for separator: String in [" := ", " = "]:
+		var at: int = bare.find(separator)
+		if at < 0:
+			continue
+		var name_text: String = bare.substr(4, at - 4).strip_edges()
+		var colon_at: int = name_text.find(":")
+		if colon_at >= 0:
+			name_text = name_text.substr(0, colon_at).strip_edges()
+		return name_text if EventSheetSentence.is_identifier(name_text) else ""
+	return ""
+
+
+## The value a `var x := …` line is declared from, or "" when the line declares nothing.
+func _cursor_ray_declared_value(text: String) -> String:
+	var bare: String = text.strip_edges()
+	if not bare.begins_with("var "):
+		return ""
+	for separator: String in [" := ", " = "]:
+		var at: int = bare.find(separator)
+		if at >= 0:
+			return bare.substr(at + separator.length()).strip_edges()
+	return ""
+
+
+## The query a `q.collision_mask = …` line restricts, "" when the line is not that write.
+func _cursor_ray_mask_target(text: String) -> String:
+	var at: int = text.strip_edges().find(".collision_mask = ")
+	return "" if at <= 0 else text.strip_edges().substr(0, at).strip_edges()
+
+
+## X2 / X30. What THIS run says about itself: how far it reaches, which layers it may see, and the
+## object whose canvas position aimed it ("" for the OS pointer). Read off the run's own lines so two
+## same-named runs in one file can never borrow each other's numbers.
+func _cursor_ray_run_facts(actions: Array, first: int, last: int) -> Dictionary:
+	var origin: Dictionary = EventSheetSentence.cursor_ray_step_parts(
+		_cursor_ray_declared_value(_group_line_text(actions[first])))
+	var origin_name: String = _cursor_ray_declared_name(_group_line_text(actions[first]))
+	var direction_name: String = _cursor_ray_declared_name(_group_line_text(actions[first + 1]))
+	var query: Dictionary = EventSheetSentence.cursor_ray_step_parts(
+		_cursor_ray_declared_value(_group_line_text(actions[first + 2])))
+	var query_name: String = _cursor_ray_declared_name(_group_line_text(actions[first + 2]))
+	var mask: String = ""
+	for index: int in range(first + 3, last + 1):
+		var line: String = _group_line_text(actions[index]).strip_edges()
+		if _cursor_ray_mask_target(line) != query_name:
+			continue
+		mask = line.substr(line.find(".collision_mask = ") + 18).strip_edges()
+	return {
+		"reach": EventSheetSentence.cursor_ray_reach(str(query.get("to", "")), origin_name, direction_name),
+		"aimed_at": EventSheetViewportReadingRows.cursor_aim_owner(str(origin.get("point", ""))),
+		"mask": mask
+	}

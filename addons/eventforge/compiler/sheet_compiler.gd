@@ -21,6 +21,10 @@ extends RefCounted
 
 const VERSION: String = "0.17.0"
 
+## X30. The name of the shared aimed-floor helper the cursor and floor expressions call. One
+## definition per file, whichever of them the picker wrote first.
+const AIMED_CURSOR_HELPER: String = "__eventsheets_aim_floor"
+
 # Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
 static var _emit_breakpoints_flag: bool = false
 static var _emit_event_trace_flag: bool = false
@@ -632,6 +636,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 
 	_insert_stateful_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
+	_append_aimed_cursor_helper(lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -833,6 +838,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		lines.append("# %s" % comment_line)
 	_insert_stateful_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
+	_append_aimed_cursor_helper(lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -3567,3 +3573,36 @@ static func _resolve_output_path(sheet: EventSheetResource, output_path: String)
 			return sibling
 		return generated
 	return "res://event_sheet_generated.gd"
+
+
+## X30. The one function every aimed-floor word calls, written into the file the first time any of
+## them appears in it. All three answers - the floor point, the floor object and the floor's slope -
+## and both cursor questions share this ONE definition, so a project that asks for the point AND the
+## slope gains the plumbing once rather than twice.
+##
+## APPENDED, never inserted: nothing follows it, so no source-map line ever moves. Skipped outright
+## when the file already defines it, which is what makes reopening an emitted file and saving it
+## again byte-identical - the definition read back as an ordinary function is the same definition
+## this would have written.
+static func _append_aimed_cursor_helper(lines: PackedStringArray) -> void:
+	var head: String = "func %s(canvas_point: Vector2, layer_mask: int, reach: float) -> Dictionary:" % AIMED_CURSOR_HELPER
+	var called: bool = false
+	for line: String in lines:
+		if line == head:
+			return
+		if line.strip_edges().begins_with("#"):
+			continue
+		if line.contains("%s(" % AIMED_CURSOR_HELPER):
+			called = true
+	if not called:
+		return
+	lines.append("")
+	lines.append(head)
+	lines.append("	var camera: Camera3D = get_viewport().get_camera_3d()")
+	lines.append("	if camera == null:")
+	lines.append("		return {}")
+	lines.append("	var from: Vector3 = camera.project_ray_origin(canvas_point)")
+	lines.append("	var to: Vector3 = from + camera.project_ray_normal(canvas_point) * reach")
+	lines.append("	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, to)")
+	lines.append("	query.collision_mask = layer_mask")
+	lines.append("	return get_viewport().find_world_3d().direct_space_state.intersect_ray(query)")

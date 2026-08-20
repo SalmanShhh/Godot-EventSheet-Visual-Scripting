@@ -3424,3 +3424,24 @@ Placement,放置
 Angle and distance,角度与距离
 "something is put where a marker is, dropped onto the ground and tilted onto its slope",把东西放到标记处、落到地面上，并顺着地面的坡度倾斜
 "points worked out as an angle and a distance, which is how a ring and a spiral are drawn",用角度和距离算出点，环形与螺旋就是这样画出来的
+the canvas centre,画布中心
+{object}'s position on the canvas,{object} 在画布上的位置
+'s position on the canvas, 在画布上的位置
+the canvas distance from {from} to {to} (pixels),画布上从 {from} 到 {to} 的距离 (像素)
+the world point under {point} at depth {depth},在深度 {depth} 处 {point} 下方的世界坐标
+clamped to the canvas edge,限制在画布边缘
+is behind the camera,在摄像机后面
+slope steeper than {degrees}°,坡度陡于 {degrees}°
+the object under {cursor},{cursor} 下方的对象
+the cursor,光标
+reach,射程
+where the cursor touches the world,光标接触世界的位置
+the surface's facing there,该处表面的朝向
+the object under the cursor,光标下方的对象
+the first object between {from} and {to},{from} 与 {to} 之间的第一个对象
+the floor point under {cursor},{cursor} 下方的地面位置
+the floor object under {cursor},{cursor} 下方的地面对象
+the floor's slope under {cursor},{cursor} 下方的地面坡度
+none when nothing is hit,未命中时为空
+on layer {layers},在图层 {layers} 上
+Set {name} to {what},将 {name} 设为 {what}

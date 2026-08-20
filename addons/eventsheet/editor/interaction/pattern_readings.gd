@@ -184,6 +184,27 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 			"words": "reuses objects from %s instead of making a new one" % ", ".join(pool_names),
 			"adoptable": "object_pool", "ace_ids": PackedStringArray()
 		})
+	# X2 / X30. The camera-ray run, and X20's nearest-on-the-canvas walk. Both are SHAPES spread over
+	# several lines joined only by their locals' names, so they are claimed here rather than read as a
+	# row: the rows stay exactly as they are, and the chip, the hover evidence and the coverage count
+	# get the one sentence each shape is.
+	var ray: Dictionary = cursor_ray_run(body)
+	if not ray.is_empty():
+		var aimed_at: String = str(ray.get("aimed", ""))
+		var by_mouse: bool = aimed_at.is_empty() or aimed_at == EventSheetSentence.CURSOR_MOUSE_POINT
+		found.append({
+			"pattern": "cursor_ray", "evidence": ray.get("evidence", PackedStringArray()),
+			"words": "asks what is under the cursor" if by_mouse else "asks what the crosshair is aimed at",
+			"adoptable": "", "ace_ids": PackedStringArray(["Core/MouseRayCollider3D",
+				"Core/MouseRayPoint3D", "Core/CastMouseRayInto3D"])
+		})
+	var canvas_pick: Dictionary = canvas_nearest_pick(body)
+	if not canvas_pick.is_empty():
+		found.append({
+			"pattern": "aim_assist", "evidence": canvas_pick.get("evidence", PackedStringArray()),
+			"words": "keeps the one nearest the crosshair, measured on the canvas in pixels",
+			"adoptable": "", "ace_ids": PackedStringArray(["Core/PickNearestToCanvasPoint"])
+		})
 	var machine_claim: Dictionary = state_machine_claim(body, file_facts)
 	if not machine_claim.is_empty():
 		found.append(machine_claim)
@@ -617,3 +638,133 @@ static func pool_return_step(line: String, pools: Dictionary) -> Dictionary:
 	if args.size() == 1 and args[0].strip_edges() == "false":
 		return {"kind": "sleep", "object": receiver, "pool": ""}
 	return {}
+
+
+## X2 / X30. The camera-ray run a body writes, as {evidence, aimed}, or {} when it writes none. The
+## four lines only mean anything together, and the question they ask - what is under the cursor - is
+## the thing a reader is looking for when they open the file.
+static func cursor_ray_run(body: PackedStringArray) -> Dictionary:
+	var evidence: PackedStringArray = PackedStringArray()
+	var origin_name: String = ""
+	var direction_name: String = ""
+	var query_name: String = ""
+	var aimed: String = ""
+	for line: String in body:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var value: String = text
+		if text.begins_with("var "):
+			for separator: String in [" := ", " = "]:
+				var at: int = text.find(separator)
+				if at >= 0:
+					value = text.substr(at + separator.length()).strip_edges()
+					break
+		var step: Dictionary = EventSheetSentence.cursor_ray_step_parts(value)
+		match str(step.get("step", "")):
+			"project_ray_origin":
+				origin_name = _cursor_ray_name(text)
+				aimed = str(step.get("point", ""))
+				evidence = PackedStringArray([text])
+			"project_ray_normal":
+				if origin_name.is_empty() or str(step.get("point", "")) != aimed:
+					continue
+				direction_name = _cursor_ray_name(text)
+				evidence.append(text)
+			"query":
+				if direction_name.is_empty():
+					continue
+				if EventSheetSentence.cursor_ray_reach(str(step.get("to", "")), origin_name,
+						direction_name).is_empty():
+					continue
+				query_name = _cursor_ray_name(text)
+				evidence.append(text)
+			"cast":
+				if query_name.is_empty() or str(step.get("query", "")) != query_name:
+					continue
+				evidence.append(text)
+				return {"evidence": evidence, "aimed": aimed}
+	return {}
+
+
+## X20. The nearest-on-the-CANVAS walk a body writes, as {evidence}, or {} when it writes none. The
+## difference from the ordinary nearest pick is the whole point: a distance measured between canvas
+## points is in PIXELS, so the pick honours camera zoom, which is exactly what a crosshair must do
+## and what a world-distance pick silently gets wrong.
+static func canvas_nearest_pick(body: PackedStringArray) -> Dictionary:
+	var evidence: PackedStringArray = PackedStringArray()
+	var canvas_locals: Dictionary = {}
+	var iterator_name: String = ""
+	var measured: bool = false
+	var kept: bool = false
+	for line: String in body:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		if text.begins_with("for ") and text.ends_with(":"):
+			var head: String = text.substr(4, text.length() - 5)
+			var in_at: int = EventSheetSentence.top_level_index(head, " in ")
+			if in_at > 0 and EventSheetSentence.is_identifier(head.substr(0, in_at).strip_edges()):
+				iterator_name = head.substr(0, in_at).strip_edges()
+				measured = false
+				kept = false
+				evidence = PackedStringArray([text])
+			continue
+		var declared: String = _cursor_ray_name(text)
+		if not declared.is_empty():
+			var value: String = text.substr(text.find(declared) + declared.length())
+			for separator: String in [":= ", "= "]:
+				var at: int = value.find(separator)
+				if at >= 0:
+					value = value.substr(at + separator.length()).strip_edges()
+					break
+			if not EventSheetSentence.canvas_position_words(value, {}).is_empty() \
+					or not EventSheetSentence.canvas_centre_words(value).is_empty():
+				canvas_locals[declared] = true
+				if not iterator_name.is_empty():
+					evidence.append(text)
+				continue
+		if iterator_name.is_empty():
+			continue
+		if not EventSheetSentence.canvas_distance_words(_cursor_ray_value(text),
+				{"canvas_points": canvas_locals}).is_empty():
+			measured = true
+			evidence.append(text)
+			continue
+		var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+		if assign_at > 0 and text.substr(assign_at + 3).strip_edges() == iterator_name:
+			kept = true
+			evidence.append(text)
+	if iterator_name.is_empty() or not measured or not kept:
+		return {}
+	return {"evidence": evidence}
+
+
+## The name a `var x … = …` line declares, "" when the line declares nothing.
+static func _cursor_ray_name(text: String) -> String:
+	var bare: String = text.strip_edges()
+	if not bare.begins_with("var "):
+		return ""
+	for separator: String in [" := ", " = "]:
+		var at: int = bare.find(separator)
+		if at < 0:
+			continue
+		var name_text: String = bare.substr(4, at - 4).strip_edges()
+		var colon_at: int = name_text.find(":")
+		if colon_at >= 0:
+			name_text = name_text.substr(0, colon_at).strip_edges()
+		return name_text if EventSheetSentence.is_identifier(name_text) else ""
+	return ""
+
+
+## The value a `var x … = …` line is declared from - the whole line when it declares nothing, so a
+## measurement written straight into a comparison is read as readily as one given a name.
+static func _cursor_ray_value(text: String) -> String:
+	var bare: String = text.strip_edges()
+	if not bare.begins_with("var "):
+		return bare
+	for separator: String in [" := ", " = "]:
+		var at: int = bare.find(separator)
+		if at >= 0:
+			return bare.substr(at + separator.length()).strip_edges()
+	return bare

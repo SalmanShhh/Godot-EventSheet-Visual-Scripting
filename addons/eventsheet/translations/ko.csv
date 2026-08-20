@@ -3424,3 +3424,24 @@ Placement,배치
 Angle and distance,각도와 거리
 "something is put where a marker is, dropped onto the ground and tilted onto its slope","표식 위치에 놓고, 지면에 떨어뜨리고, 그 경사에 맞춘다"
 "points worked out as an angle and a distance, which is how a ring and a spiral are drawn",각도와 거리로 점을 구하는 방식 - 고리와 나선을 그리는 방법
+the canvas centre,캔버스 중심
+{object}'s position on the canvas,캔버스에서 {object} 의 위치
+'s position on the canvas, 의 캔버스 위치
+the canvas distance from {from} to {to} (pixels),캔버스에서 {from} 부터 {to} 까지의 거리 (픽셀)
+the world point under {point} at depth {depth},깊이 {depth} 에서 {point} 아래의 월드 지점
+clamped to the canvas edge,캔버스 가장자리로 제한
+is behind the camera,은(는) 카메라 뒤에 있음
+slope steeper than {degrees}°,경사가 {degrees}° 보다 급함
+the object under {cursor},{cursor} 아래의 오브젝트
+the cursor,커서
+reach,사거리
+where the cursor touches the world,커서가 월드에 닿는 지점
+the surface's facing there,그 지점의 표면 방향
+the object under the cursor,커서 아래의 오브젝트
+the first object between {from} and {to},{from} 와(과) {to} 사이의 첫 오브젝트
+the floor point under {cursor},{cursor} 아래의 바닥 지점
+the floor object under {cursor},{cursor} 아래의 바닥 오브젝트
+the floor's slope under {cursor},{cursor} 아래의 바닥 경사
+none when nothing is hit,아무것도 맞지 않으면 없음
+on layer {layers},레이어 {layers} 에서
+Set {name} to {what},{name} 을(를) {what} 로 설정

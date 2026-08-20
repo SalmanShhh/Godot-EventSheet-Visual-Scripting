@@ -16,6 +16,39 @@
   event lift gained the per-function byte gate its sheet-function twin already had: a handler whose
   lifted events do not reproduce its exact source re-anchors as a verbatim block on the spot,
   instead of surfacing only at the whole-file verify and reverting every other function with it.
+### Added - the cursor's ray, and how far things are ON THE CANVAS
+
+- **The camera-ray run reads as the one question it is.** `project_ray_origin`,
+  `project_ray_normal`, the query and `intersect_ray` are four lines of plumbing that only mean
+  anything together, and an opened script now draws them as ONE row - **Set hit to the object under
+  the cursor**, with the reach and the branch that clears what it found said quietly beside it
+  (`reach 1000 · none when nothing is hit`). Aimed through a crosshair object rather than the OS
+  pointer, the same run reads **the object under crosshair**, and a mask says which layers it may
+  see, in the project's own layer names. A ray hit's own entries read as what they mean:
+  `hit.position` is **where the cursor touches the world**, `hit.normal` **the surface's facing
+  there**, `hit.collider` **the object under the cursor**. Display only - every byte of the file is
+  untouched, hover still shows all four lines, and double-click still opens the exact GDScript.
+- **Canvas space has words now, in both dimensions.** `unproject_position`,
+  `get_global_transform_with_canvas().origin` and `get_screen_transform() * p` all read as
+  **x's position on the canvas** (camera zoom and canvas layers included, which is exactly what
+  plain position arithmetic gets wrong); `get_visible_rect().size / 2` is **the canvas centre**;
+  a distance between two canvas points is **the canvas distance from A to B (pixels)**, named apart
+  from world distance on purpose, because an aim assist measured in world units ignores zoom;
+  `is_position_behind` is **is behind the camera**; `project_position` is **the world point under a
+  canvas point at a depth**; and an off-screen arrow reads **clamped to the canvas edge**.
+- **Two new patterns, claimed and chipped**: `cursor_ray` (a ray cast from the camera through a
+  cursor) and `aim_assist` (the whole nearest-to-crosshair walk, measured on the canvas in pixels).
+- **The words that author all of it.** `Cursor Is Over Object (3D)` and `On Object Clicked (3D)`
+  give the 3D twins of the Mouse words a sheet already says in 2D. `Mouse Floor Point` /
+  `Mouse Floor Object` / `Mouse Floor Slope` answer where on the floor the pointer aims, what is
+  there and how steep it is, with the layers named by the project's own layer names; the
+  `Aimed Floor …` twins route through any crosshair object's canvas position instead, which makes
+  gamepad and touch cursors first-class. All of them share ONE emitted helper function per file, so
+  a project that asks for the point AND the slope gains the plumbing once. `Slope Steeper Than`
+  is the buildable test. On the canvas side: `Canvas X / Y` in both dimensions, `Canvas Centre`,
+  and `Pick Nearest To Canvas Point`, which writes exactly the snapshot loop the reading recognises.
+  There is deliberately no Canvas Distance verb - the shipped `Distance Between` already writes that
+  exact line, and what the canvas needed was a NAME for it, which the reading now supplies.
 
 ### Changed - the Inspector drawers and the Anatomy rail dress in the theme
 

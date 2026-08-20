@@ -3424,3 +3424,24 @@ Placement,Placement
 Angle and distance,Angle et distance
 "something is put where a marker is, dropped onto the ground and tilted onto its slope","quelque chose est place sur un marqueur, pose au sol et incline selon sa pente"
 "points worked out as an angle and a distance, which is how a ring and a spiral are drawn","des points calcules comme un angle et une distance, ce qui dessine un anneau et une spirale"
+the canvas centre,le centre du canevas
+{object}'s position on the canvas,position de {object} sur le canevas
+'s position on the canvas, sur le canevas
+the canvas distance from {from} to {to} (pixels),la distance sur le canevas de {from} à {to} (pixels)
+the world point under {point} at depth {depth},le point du monde sous {point} à la profondeur {depth}
+clamped to the canvas edge,limité au bord du canevas
+is behind the camera,est derrière la caméra
+slope steeper than {degrees}°,pente plus raide que {degrees}°
+the object under {cursor},l'objet sous {cursor}
+the cursor,le curseur
+reach,portée
+where the cursor touches the world,où le curseur touche le monde
+the surface's facing there,l'orientation de la surface à cet endroit
+the object under the cursor,l'objet sous le curseur
+the first object between {from} and {to},le premier objet entre {from} et {to}
+the floor point under {cursor},le point du sol sous {cursor}
+the floor object under {cursor},l'objet du sol sous {cursor}
+the floor's slope under {cursor},la pente du sol sous {cursor}
+none when nothing is hit,rien quand rien n'est touché
+on layer {layers},sur le calque {layers}
+Set {name} to {what},Définir {name} sur {what}

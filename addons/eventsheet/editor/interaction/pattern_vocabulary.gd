@@ -183,6 +183,18 @@ const ENTRIES: Dictionary = {
 		"why": "points worked out as an angle and a distance, which is how a ring and a spiral are drawn",
 		"adoptable": "",
 		"rank": 26
+	},
+	"cursor_ray": {
+		"words": "The object under the cursor",
+		"why": "a ray cast from the camera through a cursor, asking what it points at",
+		"adoptable": "",
+		"rank": 27
+	},
+	"aim_assist": {
+		"words": "Aim assist",
+		"why": "the one nearest the crosshair ON THE CANVAS, in pixels rather than world units",
+		"adoptable": "",
+		"rank": 28
 	}
 }
 

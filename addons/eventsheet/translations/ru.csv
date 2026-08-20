@@ -3424,3 +3424,24 @@ Placement,Razmeshchenie
 Angle and distance,Ugol i rasstoyanie
 "something is put where a marker is, dropped onto the ground and tilted onto its slope","predmet stavitsya na metku, opuskaetsya na zemlyu i naklonyaetsya po ee uklonu"
 "points worked out as an angle and a distance, which is how a ring and a spiral are drawn","tochki, vychislennye kak ugol i rasstoyanie - tak risuyutsya koltso i spiral"
+the canvas centre,центр холста
+{object}'s position on the canvas,положение {object} на холсте
+'s position on the canvas, на холсте
+the canvas distance from {from} to {to} (pixels),расстояние на холсте от {from} до {to} (пиксели)
+the world point under {point} at depth {depth},точка мира под {point} на глубине {depth}
+clamped to the canvas edge,ограничено краем холста
+is behind the camera,находится позади камеры
+slope steeper than {degrees}°,уклон круче {degrees}°
+the object under {cursor},объект под {cursor}
+the cursor,курсором
+reach,дальность
+where the cursor touches the world,где курсор касается мира
+the surface's facing there,направление поверхности там
+the object under the cursor,объект под курсором
+the first object between {from} and {to},первый объект между {from} и {to}
+the floor point under {cursor},точка пола под {cursor}
+the floor object under {cursor},объект пола под {cursor}
+the floor's slope under {cursor},уклон пола под {cursor}
+none when nothing is hit,"ничего, если ничего не задето"
+on layer {layers},на слое {layers}
+Set {name} to {what},Задать {name} значение {what}

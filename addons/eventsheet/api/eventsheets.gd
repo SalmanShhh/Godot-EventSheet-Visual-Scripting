@@ -1674,6 +1674,10 @@ const MODULE_GUIDE_OVERRIDES := {
 	"physics": "Collisions-Joints-And-World-Physics",
 	"physics_server": "Collisions-Joints-And-World-Physics",
 	"procedural": "Doing-Math-And-Randomness",
+	# X2 / X20 / X30. The cursor's ray IS a 3D raycast, and the canvas words that go with it are
+	# read and written beside it, so both share the 3D raycasting guide rather than opening a page
+	# nobody would look for them under.
+	"cursor_canvas": "Raycasting-And-Overlaps-In-3D",
 	"raycast": "Raycasting-And-Overlaps-In-2D",
 	"regex": "Working-With-Text",
 	"rendering": "Cameras-Graphics-And-Screenshots",
