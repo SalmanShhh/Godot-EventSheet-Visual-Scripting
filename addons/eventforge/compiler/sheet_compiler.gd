@@ -1103,12 +1103,27 @@ static func _insert_provider_member_declarations(lines: PackedStringArray, resul
 	var member_regex: RegEx = RegEx.new()
 	if member_regex.compile("__eventsheet_provider_([A-Za-z_][A-Za-z0-9_]*)(?=\\.)") != OK:
 		return
+	# A member the file already declares needs no injection. On the external (opened-file) path the
+	# declaration rides verbatim in the source's own rows, so injecting it again would duplicate the
+	# line and rewrite a hand-written file on save - an untouched round-trip must never change a byte.
+	var declaration_regex: RegEx = RegEx.new()
+	if declaration_regex.compile("^\\s*var\\s+(__eventsheet_provider_[A-Za-z_][A-Za-z0-9_]*)\\b") != OK:
+		return
 	var providers: Dictionary = {}  # member name -> class name, deduped
+	var declared: Dictionary = {}  # member name -> true, already present in the emitted lines
 	for line: String in lines:
 		if line.strip_edges().begins_with("#"):
 			continue
-		for regex_match: RegExMatch in member_regex.search_all(line):
+		var declaration_match: RegExMatch = declaration_regex.search(line)
+		if declaration_match != null:
+			declared[declaration_match.get_string(1)] = true
+		# String literals are prose, not use-sites: a hand-written file whose STRINGS merely quote the
+		# convention (a harness pinning "__eventsheet_provider_X.y()") was having a declaration
+		# injected into it on save - the same silent rewrite the comment skip above prevents.
+		for regex_match: RegExMatch in member_regex.search_all(_without_string_literals(line)):
 			providers[regex_match.get_string(0)] = regex_match.get_string(1)
+	for declared_name: Variant in declared:
+		providers.erase(declared_name)
 	if providers.is_empty():
 		return
 	# Members are declared right before the first function (GDScript allows members
@@ -1133,6 +1148,29 @@ static func _insert_provider_member_declarations(lines: PackedStringArray, resul
 	for offset in range(declarations.size()):
 		lines.insert(insert_index + offset, declarations[offset])
 	_shift_source_map(result.get("source_map", []), insert_index + 1, declarations.size())
+
+
+## `line` with every quoted string literal's content blanked out, so a scan for code constructs never
+## reads text inside a string as code. Handles both quote styles and backslash escapes; the interior
+## lines of a triple-quoted literal are out of scope for a per-line scan (the declared-member dedup
+## in the provider pass backstops that shape).
+static func _without_string_literals(line: String) -> String:
+	var kept: String = ""
+	var open_quote: String = ""
+	var index: int = 0
+	while index < line.length():
+		var character: String = line[index]
+		if open_quote.is_empty():
+			kept += character
+			if character == "\"" or character == "'":
+				open_quote = character
+		elif character == "\\":
+			index += 1
+		elif character == open_quote:
+			kept += character
+			open_quote = ""
+		index += 1
+	return kept
 
 
 ## Recursively merges included sheets (see EventSheetResource.includes): variables and

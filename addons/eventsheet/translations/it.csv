@@ -3345,3 +3345,51 @@ Build pack,Costruisci il pacchetto
 Open built pack,Apri il pacchetto costruito
 run,esegui
 "The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.","Le parole che seguirebbero -- sulla riga di comando. Questo strumento gira senza finestra, in una seconda copia di questo editor."
+"%s: %d files read, %d%% of their rows say nothing of their own. Worst: %s at %d%%.","%s: %d file letti, il %d%% delle loro righe non dice nulla di proprio. Peggiore: %s al %d%%."
+"%s is built here - the row that makes ""%s"".","%s viene costruito qui - la riga che crea ""%s""."
+"%s builds it, but no row still names ""%s"" - it was renamed or moved.","%s lo costruisce, ma nessuna riga nomina più ""%s"" - è stato rinominato o spostato."
+plugin.cfg,plugin.cfg
+Edit anyway,Modifica comunque
+Disabled,Disattivato
+part of this editor · editing it reloads the plugin,parte di questo editor · modificarlo ricarica il plugin
+part of this editor · read-only,parte di questo editor · sola lettura
+"the plugin was NOT reloaded, the running one is still the old one","il plugin NON è stato ricaricato, quello in esecuzione è ancora il precedente"
+This file is part of the editor you are using. Saving reloads the plugin (your open sheets are kept). Continue?,Questo file fa parte dell'editor che stai usando. Salvarlo ricarica il plugin (i fogli aperti vengono mantenuti). Continuare?
+setting,impostazione
+Nothing yet. Press Reload and this fills with what the plugin printed as it came back.,Ancora niente. Premi Ricarica e qui comparirà ciò che il plugin ha stampato al ritorno.
+What the reload printed,Cosa ha stampato il ricaricamento
+Plugin settings,Impostazioni del plugin
+This plugin has no descriptor to read.,Questo plugin non ha un descrittore da leggere.
+"Sheet ▸ Publish new version bumps the version row, the same way it bumps a behavior pack.","Foglio ▸ Pubblica nuova versione incrementa la riga della versione, come per un pacchetto di comportamenti."
+Save a file of this editor?,Salvare un file di questo editor?
+"Save, keep asking",Salva e continua a chiedere
+"Save, always",Salva sempre
+Saving reloads the plugin,Salvare ricarica il plugin
+"The files this editor is built from, opened as sheets. Read-only: saving one reloads the plugin you are using.","I file di cui è fatto questo editor, aperti come fogli. Sola lettura: salvarne uno ricarica il plugin che stai usando."
+This editor,Questo editor
+addons/eventforge + addons/eventsheet,addons/eventforge + addons/eventsheet
+open to read this editor's own source,apri per leggere il codice di questo editor
+%d sheets,%d fogli
+Plugin,Plugin
+the plugin itself,il plugin stesso
+Workspace,Area di lavoro
+"dock, menus, dialogs","pannello, menu, finestre"
+Canvas,Tela
+"viewport, row builder, renderer, input","vista, costruzione righe, disegno, input"
+Readings,Letture
+"sentence grammar, facts, patterns","grammatica delle frasi, fatti, schemi"
+Importer,Importatore
+open a .gd as events,aprire un .gd come eventi
+Compiler,Compilatore
+events to GDScript,dagli eventi a GDScript
+Vocabulary,Vocabolario
+"modules, registry, picker","moduli, registro, selettore"
+"docs dock, search, reference","pannello del manuale, ricerca, riferimento"
+Tests,Test
+what the gates pin,ciò che i controlli fissano
+Command tools,Strumenti da riga di comando
+run from the command line,eseguiti dalla riga di comando
+Pack recipes,Ricette dei pacchetti
+the behaviors that ship,i comportamenti inclusi
+Everything else,Tutto il resto
+the rest of these folders,il resto di queste cartelle

@@ -124,10 +124,16 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 					break
 				function_lines.append(body_line)
 				index += 1
-			# Trailing blank lines belong to whatever follows, not to the function block.
-			while function_lines.size() > 1 and function_lines[function_lines.size() - 1].strip_edges().is_empty():
-				pending.append(function_lines[function_lines.size() - 1])
-				function_lines.remove_at(function_lines.size() - 1)
+			# Trailing blank lines belong to whatever follows, not to the function block. Moved as a
+			# slice IN SOURCE ORDER: popping them off the end one at a time reversed the run, which
+			# swapped a whitespace-only separator line (a stray lone tab) with the empty line beside
+			# it and silently broke the byte round-trip of an otherwise untouched file.
+			var first_trailing_blank: int = function_lines.size()
+			while first_trailing_blank > 1 and function_lines[first_trailing_blank - 1].strip_edges().is_empty():
+				first_trailing_blank -= 1
+			for trailing_index: int in range(first_trailing_blank, function_lines.size()):
+				pending.append(function_lines[trailing_index])
+			function_lines.resize(first_trailing_blank)
 			var function_block: RawCodeRow = RawCodeRow.new()
 			function_block.code = "\n".join(function_lines)
 			sheet.events.append(function_block)

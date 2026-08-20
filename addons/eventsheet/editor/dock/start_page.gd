@@ -78,7 +78,9 @@ static func _set_opens_on_startup(on: bool) -> void:
 ##   kind "showcase"  target = the scene path
 ##   kind "recent"    target = the file path
 ##   kind "learn"     target = the Manual doc id
-static func columns(starters: Array, showcases: PackedStringArray, recents: Array) -> Array:
+##   kind "this_editor"  target = "" (W24: only in the plugin's own repo)
+static func columns(starters: Array, showcases: PackedStringArray, recents: Array,
+		is_editor_project: bool = false) -> Array:
 	var templates: Array = []
 	var label_by_id: Dictionary = {}
 	for starter: Variant in starters:
@@ -113,11 +115,21 @@ static func columns(starters: Array, showcases: PackedStringArray, recents: Arra
 		})
 	learn.append({"kind": "learn", "label": "What's new", "note": "since you last looked",
 		"target": "reference:whats-new"})
-	return [
+	var built: Array = [
 		{"id": "templates", "title": "New from template", "entries": templates},
 		{"id": "recent", "title": "Recent", "entries": recent_entries},
 		{"id": "learn", "title": "Learn", "entries": learn},
 	]
+	# W24 - the contributor's door, and only in the editor's own repo. A game project's Start page is
+	# exactly what it always was.
+	if is_editor_project:
+		built.append({"id": "this_editor", "title": "This editor", "entries": [{
+			"kind": "this_editor",
+			"label": "This is the editor's own project - open its source as sheets",
+			"note": "Every file the editor is built from, grouped by what it does, read the way your own scripts are.",
+			"target": ""
+		}]})
+	return built
 
 
 ## The showcase folders on disk, sorted. Empty when the project has no demo folder, which is the
@@ -182,7 +194,7 @@ func _fill() -> void:
 		child.queue_free()
 	var recents: Array = _dock.get_open_sheets_state().get("recent", [])
 	for column: Variant in columns(EventSheetStarterTemplates.create_new_starters(),
-			showcase_folders(), recents):
+			showcase_folders(), recents, EventSheetThisEditor.is_editor_project()):
 		var section: Dictionary = column
 		var box: VBoxContainer = VBoxContainer.new()
 		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -230,8 +242,23 @@ func activate(entry: Dictionary) -> void:
 			_dock.reopen_sheet_path(target)
 		"learn":
 			_dock.open_documentation(target)
+		"this_editor":
+			_open_this_editor_folder()
 	if _window != null:
 		_window.hide()
+
+
+## W24 - the contributor's door: turn the Project bar on, open it, and open the plugin's own script
+## as the first thing they read. Everything here is a gesture the reader could make by hand; the card
+## just makes it one click instead of four.
+func _open_this_editor_folder() -> void:
+	_dock._project_bar_glue.set_shown(true)
+	var bar: EventSheetProjectBar = _dock._project_bar_glue.bar()
+	if bar != null:
+		bar.set_expanded(true)
+		bar.open_this_editor_folder()
+	_dock._navigate.open_or_focus(EventSheetThisEditor.PLUGIN_SCRIPT_PATH)
+	_dock._set_status("The editor's own source, in the Project bar under This editor. Every file is read-only until you say Edit anyway.")
 
 
 ## A showcase folder opens its scene in Godot's own editor - the point of a showcase is that it runs.

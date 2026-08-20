@@ -35,6 +35,7 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 - [Editor Tools](GUIDE-EDITOR-TOOLS.md) - sheets whose events run inside the editor: the one-click chore, an Editor Plugin, an Import Tool and an Export Hook, with a Run now button where you write them, Inspector buttons, and undo done right.
 - [Custom Resources](GUIDE-CUSTOM-RESOURCES.md) - your own data assets from the three-question wizard: column language, validation, the .tres workflow.
 - [Making Editor Tools from Code](GUIDE-BUILDING-EDITOR-TOOLS.md) - the programmatic side: author tool sheets through the EventSheets API.
+- [The Editor, Read as Events](GUIDE-THE-EDITOR-READ-AS-EVENTS.md) - the plugin's own source opened as sheets in its own repository: the This editor folder, the plugin's bar, editing the editor from inside itself, and the numbers that measure it.
 - [Writing the Docs](GUIDE-WRITING-THE-DOCS.md) - how documentation works here and how to add to it: the three doc sets, the guide standard, the figure fences that draw themselves in the editor, and the regenerate-before-commit gate.
 
 ## Patterns

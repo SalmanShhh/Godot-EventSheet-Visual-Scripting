@@ -239,6 +239,77 @@ const TUTORIALS: Array[Dictionary] = [
 			},
 		],
 	},
+	{
+		"id": "read-the-editor",
+		"title": "Read the editor's code as events",
+		"minutes": 6,
+		"lead": "This editor is written in the language it reads. In its own repository the Project bar grows a This editor folder, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.",
+		"steps": [
+			{
+				"text": "Open the folder: View ▸ Project bar, then This editor at the bottom of it. The files are grouped by what each one DOES - Plugin, Workspace, Canvas, Readings, Importer, Compiler, Vocabulary, Manual, Tests, Command tools, Pack recipes - not by the folder it sits in.",
+				"control": "View",
+				"check": "",
+			},
+			{
+				"text": "Start with Plugin ▸ plugin.gd. It reads as the editor's own triggers: On plugin enabled, On plugin disabled, and the rows that add the dock, the menu item and the Inspector add-on. Its bar carries Enabled, Reload, Output and plugin.cfg.",
+				"control": "",
+				"check": "sheet_is_opened_script",
+			},
+			{
+				"text": "Now open Workspace and pick any helper. A helper that holds a back-reference into the dock reads as a behavior OF the dock, which is why they are grouped together rather than by their folder.",
+				"control": "",
+				"check": "",
+			},
+			{
+				"text": "Open a file under Tests. A test is a sheet whose rows are checks - the same rows, asserting instead of acting.",
+				"control": "",
+				"check": "",
+			},
+			{
+				"text": "Open a file under Pack recipes. A pack builder is the behavior it builds, written once: its rows are the definitions the shipped pack is compiled from.",
+				"control": "",
+				"check": "",
+			},
+			{
+				"text": "If you want to change something you are reading, press Edit anyway on the bar. The first save asks once, then reloads the plugin - and a file that does not parse is NOT reloaded, so the editor you are using keeps running while you fix it.",
+				"control": "",
+				"check": "",
+			},
+		],
+	},
+	{
+		"id": "add-a-word",
+		"title": "Add a word to the vocabulary",
+		"minutes": 6,
+		"lead": "Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.",
+		"steps": [
+			{
+				"text": "Open the Project bar's This editor folder and go to Vocabulary. Each file there is one group of words - the core rows, the maths rows, the editor's own rows.",
+				"control": "View",
+				"check": "",
+			},
+			{
+				"text": "Open core_aces.gd. It reads as a list of Define rows: each one names a word, the values it takes, and the line it writes.",
+				"control": "",
+				"check": "sheet_is_opened_script",
+			},
+			{
+				"text": "Press Edit anyway, then add a Define row of your own beside the others. Give it a name a reader would search for, and write the line it should produce.",
+				"control": "",
+				"check": "",
+			},
+			{
+				"text": "Save. The plugin reloads, and a word that does not parse does not take the editor with it.",
+				"control": "",
+				"check": "",
+			},
+			{
+				"text": "Open the picker and type the name you gave it. Your word is in the list beside the ones that shipped, and a row made from it compiles to the line you wrote.",
+				"control": "Add Action",
+				"check": "",
+			},
+		],
+	},
 ]
 
 

@@ -3345,3 +3345,51 @@ Build pack,팩 생성
 Open built pack,생성된 팩 열기
 run,실행
 "The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.",명령줄에서 -- 뒤에 오는 단어입니다. 이 도구는 이 편집기의 두 번째 사본에서 창 없이 실행됩니다.
+"%s: %d files read, %d%% of their rows say nothing of their own. Worst: %s at %d%%.",%s: %d개 파일을 읽었고 그 행의 %d%%는 고유한 표현이 없습니다. 최악: %s (%d%%)
+"%s is built here - the row that makes ""%s"".","%s은(는) 여기에서 만들어집니다 - ""%s""을(를) 만드는 행입니다."
+"%s builds it, but no row still names ""%s"" - it was renamed or moved.","%s이(가) 만들지만 ""%s""을(를) 언급하는 행이 없습니다 - 이름이 바뀌었거나 옮겨졌습니다."
+plugin.cfg,plugin.cfg
+Edit anyway,그래도 편집
+Disabled,사용 안 함
+part of this editor · editing it reloads the plugin,이 에디터의 일부 · 편집하면 플러그인이 다시 로드됩니다
+part of this editor · read-only,이 에디터의 일부 · 읽기 전용
+"the plugin was NOT reloaded, the running one is still the old one",플러그인이 다시 로드되지 않았습니다. 실행 중인 것은 이전 버전입니다
+This file is part of the editor you are using. Saving reloads the plugin (your open sheets are kept). Continue?,이 파일은 지금 사용 중인 에디터의 일부입니다. 저장하면 플러그인이 다시 로드됩니다(열린 시트는 유지됩니다). 계속할까요?
+setting,설정
+Nothing yet. Press Reload and this fills with what the plugin printed as it came back.,아직 없습니다. 다시 불러오기를 누르면 플러그인이 돌아오며 출력한 내용이 여기에 채워집니다.
+What the reload printed,다시 불러오기 출력
+Plugin settings,플러그인 설정
+This plugin has no descriptor to read.,이 플러그인에는 읽을 설명 파일이 없습니다.
+"Sheet ▸ Publish new version bumps the version row, the same way it bumps a behavior pack.",시트 ▸ 새 버전 게시는 비헤이비어 팩과 똑같이 버전 행을 올립니다.
+Save a file of this editor?,이 에디터의 파일을 저장할까요?
+"Save, keep asking",저장하고 계속 묻기
+"Save, always",저장하고 다시 묻지 않기
+Saving reloads the plugin,저장하면 플러그인이 다시 로드됩니다
+"The files this editor is built from, opened as sheets. Read-only: saving one reloads the plugin you are using.",이 에디터를 이루는 파일들을 시트로 엽니다. 읽기 전용: 저장하면 사용 중인 플러그인이 다시 로드됩니다.
+This editor,이 에디터
+addons/eventforge + addons/eventsheet,addons/eventforge + addons/eventsheet
+open to read this editor's own source,열어서 이 에디터의 소스를 읽기
+%d sheets,시트 %d개
+Plugin,플러그인
+the plugin itself,플러그인 자체
+Workspace,작업 공간
+"dock, menus, dialogs","독, 메뉴, 대화 상자"
+Canvas,캔버스
+"viewport, row builder, renderer, input","뷰, 행 구성, 렌더링, 입력"
+Readings,읽기 방식
+"sentence grammar, facts, patterns","문장 문법, 사실, 패턴"
+Importer,가져오기
+open a .gd as events,.gd를 이벤트로 열기
+Compiler,컴파일러
+events to GDScript,이벤트에서 GDScript로
+Vocabulary,어휘
+"modules, registry, picker","모듈, 레지스트리, 선택기"
+"docs dock, search, reference","설명서 독, 검색, 레퍼런스"
+Tests,테스트
+what the gates pin,게이트가 고정하는 것
+Command tools,명령줄 도구
+run from the command line,명령줄에서 실행
+Pack recipes,팩 레시피
+the behaviors that ship,함께 제공되는 비헤이비어
+Everything else,그 밖의 모든 것
+the rest of these folders,이 폴더들의 나머지

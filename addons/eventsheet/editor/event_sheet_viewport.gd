@@ -55,6 +55,11 @@ signal navigate_requested(row_data: EventRowData, span_index: int, metadata: Dic
 ## R33. A button on a tool sheet's Include bar was pressed (Run now / Reload / Output / Enable
 ## plugin). The viewport never runs anything itself - it says which button, and the dock acts.
 signal editor_tool_action_requested(kind: String)
+
+## W20. A chip on the bar of a sheet that is part of the RUNNING editor was pressed (Enabled /
+## Reload / Output / plugin.cfg / Edit anyway). Kept apart from the tool bar's signal above because
+## the two Reloads mean different things and must never be routed to the same handler.
+signal this_editor_action_requested(kind: String)
 signal drag_status_requested(message: String, is_error: bool)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 ## Emitted when a comment needs the dialog editor (multiline comment rows and action-cell

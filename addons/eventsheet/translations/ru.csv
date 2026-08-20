@@ -3345,3 +3345,51 @@ Build pack,Собрать набор
 Open built pack,Открыть собранный набор
 run,запуск
 "The words that would follow -- on the command line. This tool runs headless, in a second copy of this editor.","Слова, которые шли бы после -- в командной строке. Инструмент работает без окна, во второй копии этого редактора."
+"%s: %d files read, %d%% of their rows say nothing of their own. Worst: %s at %d%%.","%s: прочитано файлов: %d, %d%% их строк ничего не говорят сами по себе. Хуже всего: %s - %d%%."
+"%s is built here - the row that makes ""%s"".","%s создаётся здесь - строка, которая делает ""%s""."
+"%s builds it, but no row still names ""%s"" - it was renamed or moved.","%s создаёт это, но ни одна строка больше не называет ""%s"" - переименовано или перенесено."
+plugin.cfg,plugin.cfg
+Edit anyway,Всё равно редактировать
+Disabled,Выключен
+part of this editor · editing it reloads the plugin,часть этого редактора · правка перезагружает плагин
+part of this editor · read-only,часть этого редактора · только чтение
+"the plugin was NOT reloaded, the running one is still the old one","плагин НЕ перезагружен, работает по-прежнему прежняя версия"
+This file is part of the editor you are using. Saving reloads the plugin (your open sheets are kept). Continue?,"Этот файл - часть редактора, которым вы пользуетесь. Сохранение перезагрузит плагин (открытые листы сохранятся). Продолжить?"
+setting,настройка
+Nothing yet. Press Reload and this fills with what the plugin printed as it came back.,"Пока пусто. Нажмите Перезагрузить, и здесь появится то, что напечатал плагин при возврате."
+What the reload printed,Что напечатала перезагрузка
+Plugin settings,Настройки плагина
+This plugin has no descriptor to read.,У этого плагина нет файла описания.
+"Sheet ▸ Publish new version bumps the version row, the same way it bumps a behavior pack.","Лист ▸ Опубликовать новую версию поднимает строку версии - так же, как у пакета поведений."
+Save a file of this editor?,Сохранить файл этого редактора?
+"Save, keep asking",Сохранить и спрашивать дальше
+"Save, always",Сохранять всегда
+Saving reloads the plugin,Сохранение перезагружает плагин
+"The files this editor is built from, opened as sheets. Read-only: saving one reloads the plugin you are using.","Файлы, из которых собран этот редактор, открытые как листы. Только чтение: сохранение перезагружает используемый плагин."
+This editor,Этот редактор
+addons/eventforge + addons/eventsheet,addons/eventforge + addons/eventsheet
+open to read this editor's own source,"откройте, чтобы прочитать исходники этого редактора"
+%d sheets,листов: %d
+Plugin,Плагин
+the plugin itself,сам плагин
+Workspace,Рабочая область
+"dock, menus, dialogs","док, меню, диалоги"
+Canvas,Холст
+"viewport, row builder, renderer, input","вид, сборка строк, отрисовка, ввод"
+Readings,Прочтения
+"sentence grammar, facts, patterns","грамматика фраз, факты, шаблоны"
+Importer,Импортёр
+open a .gd as events,открыть .gd как события
+Compiler,Компилятор
+events to GDScript,события в GDScript
+Vocabulary,Словарь
+"modules, registry, picker","модули, реестр, выбор"
+"docs dock, search, reference","док руководства, поиск, справочник"
+Tests,Тесты
+what the gates pin,что закрепляют проверки
+Command tools,Команды
+run from the command line,запускаются из командной строки
+Pack recipes,Рецепты пакетов
+the behaviors that ship,поставляемые поведения
+Everything else,Всё остальное
+the rest of these folders,остальное в этих папках
