@@ -667,6 +667,28 @@ On Failure Of  verb_id, reason
 
 **Idle-game offline earnings.** Store Date: Now on quit, compare it against Date: Now on load, and pay out the elapsed seconds capped at whatever your economy can stand.
 
+## Timed input windows
+
+A dodge window, a finisher, a lockpick and a rhythm hit are the same five words. **Open Input
+Window** opens a moment the player has to answer in; **Pressed In The Window** catches the answer
+inside an input event; **Window Grade** says whether it was `"perfect"` or `"good"`; **Input Window
+Missed** fires when the moment runs out with nothing pressed; **Close Input Window** shuts it so one
+press cannot count twice. **Mashed In Time** is the flurry version - N presses before a deadline,
+with the counter folded into the question.
+
+**Show Prompt** puts the control's real key or button on a label by asking the Input Map, so the
+prompt is right on every keyboard and stays right after a rebind. For a rhythm game, **Beat Grade**
+is the same two words measured against a beat instead of a deadline.
+
+One thing to know and one thing to plan for: the deadline is on the engine's own clock, which keeps
+counting while the game is paused, so a window opened before a pause can close during one. A
+SEQUENCE of inputs (press what is shown, in order) is the Combo Box behaviour's whole job - open the
+window around it rather than re-writing it.
+
+A hand-written window reads back as the same row, and the note says which clock it is on:
+
+![A flag and a deadline read as one Open input window row](../images/input-window-reading.png)
+
 ## Tips and common mistakes
 
 - **Every X Seconds under a one-shot trigger never fires.** It counts frame time from inside the event

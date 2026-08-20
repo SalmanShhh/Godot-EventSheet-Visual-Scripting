@@ -423,6 +423,14 @@ Raising **swipe_max_seconds** to `1.0` lets a hesitant swipe still count, and a 
 
 ---
 
+## What a hand-written recogniser reads as
+
+A project that gathers the touch events itself, without this behaviour, still reads as touch
+bookkeeping - and the sheet says so, claiming the whole shape as one pattern and offering this pack
+as the thing that does it properly:
+
+![A hand-written stroke gatherer, claimed as swipes and drawn shapes](../images/swipe-gestures-reading.png)
+
 ## Tips and common mistakes
 
 - **Nothing fires on desktop until you emulate touch.** The behavior listens for touch events only. Turn on Project Settings > Input Devices > Pointing > Emulate Touch From Mouse and the mouse starts producing them. This is the single most common "the pack is broken" report.

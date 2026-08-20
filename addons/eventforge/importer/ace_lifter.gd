@@ -2831,7 +2831,15 @@ const REVERSE_LIFT_EXCLUDED_CATEGORIES: PackedStringArray = ["AJAX", "Lighting",
 ## U12. The same promise, for two rows that live in a category most of whose verbs SHOULD lift. A
 ## positional sound's two knobs read under the player they belong to, which the lifted row cannot say.
 const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
-	"AudioSetHearingDistance", "AudioSetFalloff"
+	"AudioSetHearingDistance", "AudioSetFalloff",
+	# X22 / X25 / X28 / X29. Rows whose template is a perfectly ordinary line - `x = y`, `x = ""`,
+	# `x += 1`, `x = load(p)`, `list[i]`, `list.size()`, `a in b`, `absf(a - b)`. Each is exactly
+	# right for the row that writes it and hopelessly general for the index that reads lines BACK:
+	# admitted, they would claim every assignment, every resource load and every list length in
+	# every project, and the specific rows those lines belong to would stop being recognised. They
+	# author fine; they just do not get to speak for lines nobody wrote them for.
+	"StartListeningForControl", "StopListeningForControl", "CloseInputWindow", "CountMashPress",
+	"UsePalette", "CurrentWeapon", "SecretsFoundCount", "SecretAlreadyFound", "OffBeatBy"
 ]
 
 

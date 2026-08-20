@@ -412,6 +412,26 @@ On Input
 
 **Cursor-trail juice.** Feed Mouse Velocity into a particle emitter's direction and amount so the trail thickens as the pointer whips across the screen.
 
+## Tilt steering and gyro aim
+
+The four handheld sensors are raw numbers; these are the two shapes games actually make of them, and
+each is one row.
+
+**Set Neutral Tilt** stores how the device is being held right now, and every tilt after it is
+measured from there. Offer it as a Calibrate button - a tilt game that measures from whatever the
+sensor happened to see at start-up only plays flat on a table. **Steer By Tilt** feeds one direction
+of that measured tilt into movement. **Aim By Gyro** turns the body and pitches the camera by how
+fast the device is being turned, which is mouse look with the phone doing the turning; the FPS
+Controller behaviour takes the same shape if you would rather attach it than write it.
+
+`Gravity Direction` is the smoothed twin of `Acceleration` and is named apart from it on purpose:
+reading one where you meant the other is the classic tilt bug. Every sensor reports 0 on a desktop,
+so keep a keyboard or stick path beside the tilt one.
+
+Opening a script that writes those shapes by hand shows them in the same words:
+
+![Tilt steering and gyro aim read as three rows](../images/gyro-controls-reading.png)
+
 ## Tips and common mistakes
 
 - **The (event) rows only work inside an On Input event.** They read the in-scope `event` variable. In
