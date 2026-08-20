@@ -16,6 +16,7 @@
   event lift gained the per-function byte gate its sheet-function twin already had: a handler whose
   lifted events do not reproduce its exact source re-anchors as a verbatim block on the spot,
   instead of surfacing only at the whole-file verify and reverting every other function with it.
+
 ### Added - the 3D words: orbiting, camera-relative movement, blend trees, the world's look
 
 - **Orbiting reads as orbiting, in both spellings.** A `rotate_y` on a node the scene says holds
