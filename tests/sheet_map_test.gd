@@ -19,6 +19,7 @@ static func run() -> bool:
 	passed = _the_edges(found) and passed
 	passed = _the_summary(found) and passed
 	passed = _the_arrangement(found) and passed
+	passed = _a_long_name_still_reads(found) and passed
 	passed = _what_a_click_on_a_line_finds() and passed
 	EventSheetSignalFanout.clear_cache()
 	return passed
@@ -54,6 +55,41 @@ static func _the_arrangement(found: Dictionary) -> bool:
 		[placed["%s/game.gd" % FIXTURE_ROOT].x == placed["%s/player.gd" % FIXTURE_ROOT].x,
 		placed["%s/level_two.tscn" % FIXTURE_ROOT].x > placed["%s/game.gd" % FIXTURE_ROOT].x],
 		[true, true]) and passed
+	return passed
+
+
+## A box is a name, so the name has to fit in it: a sheet called something long gets a WIDER box
+## rather than a name cut off mid-word, and the column after it starts past the widest box in this
+## one instead of underneath it.
+static func _a_long_name_still_reads(found: Dictionary) -> bool:
+	var passed: bool = true
+	var font: Font = ThemeDB.fallback_font
+	var font_size: int = ThemeDB.fallback_font_size
+	var long_name: String = "Ancient Vault Boss Encounter Director"
+	var long_width: float = EventSheetSheetMapPanel.width_for_label(long_name, font, font_size, 1.0)
+	var text_width: float = font.get_string_size(long_name, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		font_size).x
+	passed = _check("a long name gets the whole name plus its clear space on both sides",
+		snappedf(long_width - text_width, 0.001), snappedf(EventSheetSheetMapPanel.TEXT_INSET * 2.0, 0.001)) and passed
+	passed = _check("the name really fits inside the box it was given",
+		[long_width - EventSheetSheetMapPanel.TEXT_INSET * 2.0 >= text_width,
+		long_width > EventSheetSheetMapPanel.BOX_WIDTH],
+		[true, true]) and passed
+	passed = _check("a short name keeps the standard box",
+		EventSheetSheetMapPanel.width_for_label("Hud", font, font_size, 1.0),
+		EventSheetSheetMapPanel.BOX_WIDTH) and passed
+	# At 200% the font is already twice as big, so the answer still comes back in 1x space.
+	passed = _check("the width comes back at 1x whatever the display scale",
+		EventSheetSheetMapPanel.width_for_label(long_name, font, font_size, 2.0),
+		maxf(EventSheetSheetMapPanel.BOX_WIDTH,
+			text_width * 0.5 + EventSheetSheetMapPanel.TEXT_INSET * 2.0)) and passed
+	# One wide box in the sheets column moves the scenes column over by exactly what it took.
+	var widened: Dictionary = {"%s/game.gd" % FIXTURE_ROOT: 300.0}
+	var placed: Dictionary = EventSheetSheetMapPanel.default_positions(
+		found.get("nodes", []) as Array, widened)
+	passed = _check("the widest box in a column decides where the next column starts",
+		[placed["%s/game.gd" % FIXTURE_ROOT].x, placed["%s/level_two.tscn" % FIXTURE_ROOT].x],
+		[220.0, 576.0]) and passed
 	return passed
 
 

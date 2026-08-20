@@ -2,7 +2,8 @@
 #
 # The graph sheet_map.gd derives, drawn: sheets, scenes and globals as boxes, and the four ways one
 # reaches another as lines between them. Click a box to open that sheet; click a line to run the
-# Find that explains it. Boxes lay themselves out in columns by kind and can be dragged, and where
+# Find that explains it. A box is as wide as the name in it, because the map is a picture of names.
+# Boxes lay themselves out in columns by kind and can be dragged, and where
 # you drag one is remembered per project in editor metadata - the picture is derived, the
 # arrangement is yours.
 @tool
@@ -10,12 +11,16 @@ class_name EventSheetSheetMapPanel
 extends RefCounted
 
 ## Author these at 1x; they are multiplied by the editor's display scale at use time.
+## BOX_WIDTH is the NARROWEST a box gets - a box whose name does not fit in it grows to hold the
+## whole name, because a sheet nobody can read the name of is a box nobody can use.
 const BOX_WIDTH := 148.0
 const BOX_HEIGHT := 34.0
 const COLUMN_GAP := 56.0
 const ROW_GAP := 18.0
 const MARGIN := 16.0
 const HIT_TOLERANCE := 6.0
+## The clear space between a box's edge and its name, on each side.
+const TEXT_INSET := 8.0
 
 ## Where the arrangement is remembered. Editor metadata, not project state: it is a reading
 ## position, not something a project commits.
@@ -31,6 +36,8 @@ var summary_label: Label = null
 var found: Dictionary = {}
 ## node id -> Vector2, the top-left of its box in canvas space.
 var positions: Dictionary = {}
+## node id -> float, how wide its box has to be to hold its name. Authored at 1x like the constants.
+var widths: Dictionary = {}
 
 var _dragging_id: String = ""
 var _drag_offset: Vector2 = Vector2.ZERO
@@ -42,21 +49,64 @@ func _init(dock: Control) -> void:
 
 
 ## Where every box sits before anyone drags one: one column per kind (globals, sheets, scenes),
-## each in the graph's own order. Pure over the nodes, so a test pins the arrangement.
-static func default_positions(nodes: Array) -> Dictionary:
+## each in the graph's own order. A column is as wide as its widest box, so a long name pushes the
+## NEXT column over rather than overlapping it. `widths` is node id -> box width (from
+## `label_widths`); leave it out and every box is the standard width. Pure over the nodes, so a test
+## pins the arrangement.
+static func default_positions(nodes: Array, widths_by_id: Dictionary = {}) -> Dictionary:
 	var placed: Dictionary = {}
 	var per_column: Dictionary = {}
 	var columns: PackedStringArray = PackedStringArray([EventSheetSheetMap.NODE_GLOBAL,
 		EventSheetSheetMap.NODE_SHEET, EventSheetSheetMap.NODE_SCENE])
+	var column_of: Dictionary = {}
+	var column_widths: Dictionary = {}
 	for entry: Variant in nodes:
 		var node: Dictionary = entry
+		var id: String = str(node.get("id", ""))
 		var column: int = maxi(columns.find(str(node.get("kind", ""))), 0)
+		column_of[id] = column
+		column_widths[column] = maxf(float(column_widths.get(column, BOX_WIDTH)),
+			float(widths_by_id.get(id, BOX_WIDTH)))
+	for entry: Variant in nodes:
+		var node: Dictionary = entry
+		var id: String = str(node.get("id", ""))
+		var column: int = int(column_of.get(id, 0))
 		var row: int = int(per_column.get(column, 0))
 		per_column[column] = row + 1
-		placed[str(node.get("id", ""))] = Vector2(
-			MARGIN + column * (BOX_WIDTH + COLUMN_GAP),
+		placed[id] = Vector2(_column_left(column, column_widths),
 			MARGIN + row * (BOX_HEIGHT + ROW_GAP))
 	return placed
+
+
+## The left edge of one column: every column before it, each as wide as its own widest box, plus the
+## gap between them. An empty column still holds a standard width open, so adding the project's first
+## global never shoves the sheets sideways.
+static func _column_left(column: int, column_widths: Dictionary) -> float:
+	var left: float = MARGIN
+	for index: int in range(column):
+		left += maxf(float(column_widths.get(index, BOX_WIDTH)), BOX_WIDTH) + COLUMN_GAP
+	return left
+
+
+## How wide each node's box has to be, node id -> width at 1x. `scale` is the display scale the font
+## is already sized in, so the answer comes back in the same 1x space the constants are authored in.
+static func label_widths(nodes: Array, font: Font, font_size: int, scale: float) -> Dictionary:
+	var measured: Dictionary = {}
+	for entry: Variant in nodes:
+		var node: Dictionary = entry
+		measured[str(node.get("id", ""))] = width_for_label(str(node.get("label", "")), font,
+			font_size, scale)
+	return measured
+
+
+## One box's width: never narrower than BOX_WIDTH, never narrower than the name plus its clear space
+## on both sides. Pure, so a test pins that a long name really does get a box that holds it.
+static func width_for_label(label: String, font: Font, font_size: int, scale: float) -> float:
+	if font == null:
+		return BOX_WIDTH
+	var text_width: float = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		font_size).x / maxf(scale, 0.01)
+	return maxf(BOX_WIDTH, text_width + TEXT_INSET * 2.0)
 
 
 func build() -> void:
@@ -103,7 +153,9 @@ func open() -> void:
 ## Popup-free, so tests pin it headless.
 func refresh() -> void:
 	found = EventSheetSheetMap.graph()
-	positions = default_positions(found.get("nodes", []) as Array)
+	widths = label_widths(found.get("nodes", []) as Array, _map_font(), _map_font_size(),
+		EventSheetPalette.scaled_f(1.0))
+	positions = default_positions(found.get("nodes", []) as Array, widths)
 	for id: String in _remembered_positions():
 		if positions.has(id):
 			positions[id] = _remembered_positions()[id]
@@ -118,9 +170,28 @@ func refresh() -> void:
 func _canvas_extent() -> Vector2:
 	var extent: Vector2 = Vector2(700.0, 420.0)
 	for id: String in positions:
-		var corner: Vector2 = (positions[id] as Vector2) + Vector2(BOX_WIDTH, BOX_HEIGHT) + Vector2(MARGIN, MARGIN)
+		var corner: Vector2 = (positions[id] as Vector2) + Vector2(width_of(id), BOX_HEIGHT) + Vector2(MARGIN, MARGIN)
 		extent = Vector2(maxf(extent.x, corner.x), maxf(extent.y, corner.y))
 	return EventSheetPalette.scaled_f(1.0) * extent
+
+
+## One box's width at 1x, standard until its name asks for more.
+func width_of(id: String) -> float:
+	return maxf(float(widths.get(id, BOX_WIDTH)), BOX_WIDTH)
+
+
+## The font the map's names are drawn in. The canvas's own before it exists is the editor's default,
+## which is what a headless refresh measures against.
+func _map_font() -> Font:
+	if canvas != null and canvas.get_theme_default_font() != null:
+		return canvas.get_theme_default_font()
+	return ThemeDB.fallback_font
+
+
+func _map_font_size() -> int:
+	if canvas != null:
+		return canvas.get_theme_default_font_size()
+	return ThemeDB.fallback_font_size
 
 
 # ── Drawing ───────────────────────────────────────────────────────────────────────────────────
@@ -150,14 +221,14 @@ func _draw_map() -> void:
 		if not positions.has(id):
 			continue
 		var box: Rect2 = Rect2((positions[id] as Vector2) * scale,
-			Vector2(BOX_WIDTH, BOX_HEIGHT) * scale)
+			Vector2(width_of(id), BOX_HEIGHT) * scale)
 		var tint: Color = _kind_color(str(node.get("kind", "")), chrome)
 		canvas.draw_rect(box, Color(tint.r, tint.g, tint.b, 0.16), true)
 		canvas.draw_rect(box, tint, false, 1.0 * scale)
 		if font != null:
-			canvas.draw_string(font, box.position + Vector2(8.0, BOX_HEIGHT * 0.68) * scale,
+			canvas.draw_string(font, box.position + Vector2(TEXT_INSET, BOX_HEIGHT * 0.68) * scale,
 				str(node.get("label", "")), HORIZONTAL_ALIGNMENT_LEFT,
-				box.size.x - 12.0 * scale, font_size, chrome.sheet_map_text_color)
+				box.size.x - TEXT_INSET * 2.0 * scale, font_size, chrome.sheet_map_text_color)
 
 
 static func _kind_color(kind: String, chrome: EventSheetChromeStyle) -> Color:
@@ -173,7 +244,7 @@ static func _kind_color(kind: String, chrome: EventSheetChromeStyle) -> Color:
 ## the one it goes to, so the direction reads without an arrowhead to draw.
 func _anchor(id: String, outgoing: bool) -> Vector2:
 	var corner: Vector2 = positions.get(id, Vector2.ZERO)
-	return corner + Vector2(BOX_WIDTH if outgoing else 0.0, BOX_HEIGHT * 0.5)
+	return corner + Vector2(width_of(id) if outgoing else 0.0, BOX_HEIGHT * 0.5)
 
 
 # ── Clicking and dragging ─────────────────────────────────────────────────────────────────────
@@ -221,7 +292,7 @@ func node_at(at: Vector2) -> String:
 		var id: String = str((entry as Dictionary).get("id", ""))
 		if not positions.has(id):
 			continue
-		if Rect2(positions[id] as Vector2, Vector2(BOX_WIDTH, BOX_HEIGHT)).has_point(at):
+		if Rect2(positions[id] as Vector2, Vector2(width_of(id), BOX_HEIGHT)).has_point(at):
 			return id
 	return ""
 
