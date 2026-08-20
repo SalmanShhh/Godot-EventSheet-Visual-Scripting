@@ -31,12 +31,57 @@ const WORDS := {
 	"collection": ["Array / Dictionary", "list / table", "list / table", []],
 	"destroy": ["queue_free", "Destroy", "Destroy", []],
 	"manual": ["the reader", "Manual", "Manual", []],
+	# W21. The editor-building nouns. Until now Familiar Words covered the GAME words (layout, object
+	# type, family) and a tool sheet mixed two vocabularies on one screen: half of it in the sheet's
+	# words, half in Godot's class names. These are the twenty-four a first tool meets, each with
+	# Godot's own spelling as the "off" side, so nothing is hidden - only renamed, and reversibly.
+	"editor_plugin": ["what the editor switches on", "Editor plugin", "EditorPlugin", []],
+	"editor_object": ["the editor itself, as an object", "Editor", "EditorInterface", []],
+	"editor_dock": ["a panel docked in the editor", "Panel (dock)", "Dock", []],
+	"inspector": ["the properties panel and its add-ons", "Properties bar", "Inspector", ["Properties bar add-on"]],
+	"scene_dock": ["the tree of the open scene", "Layout's object list", "Scene dock", []],
+	"filesystem_dock": ["the project's file list", "Project bar", "FileSystem dock", []],
+	"tools_menu": ["Project > Tools", "Tools menu", "Tools menu", []],
+	"undo_history": ["what Ctrl+Z walks back", "Undo history", "UndoRedo", ["Undo/redo"]],
+	"editor_preferences": ["the user's own editor settings", "Preferences", "EditorSettings", []],
+	"project_settings": ["the settings saved with the project", "Project settings", "ProjectSettings", []],
+	"style": ["how a control is drawn", "Style", "Theme", ["StyleBox"]],
+	"ui_element": ["a node you can see and click", "UI element", "Control", []],
+	"tool_annotation": ["a script that also runs in the editor", "runs in the editor too", "@tool", []],
+	"command_tool": ["a script run from the command line", "Command tool", "SceneTree script", []],
+	"importer_addon": ["what runs when files are imported", "Importer add-on", "EditorImportPlugin", []],
+	"export_hook": ["what runs when the project is exported", "Export hook", "EditorExportPlugin", []],
+	"view_handle": ["something drawn over the 2D or 3D view", "Layout view handle", "Gizmo", ["Viewport overlay"]],
+	"thumbnail_maker": ["what draws a file's preview picture", "Thumbnail maker", "EditorResourcePreviewGenerator", []],
+	"debugger_panel": ["a tab in the Debugger while the game runs", "Debugger panel", "EditorDebuggerPlugin", []],
+	"object_type": ["a node of your own in Create Node", "Object type", "Custom type", ["add_custom_type"]],
+	"global_singleton": ["one always-on instance the project shares", "Global", "Autoload", []],
+	"shared_store": ["one copy for the whole editor", "Shared store", "Static class", ["shared"]],
+	"behavior_of": ["a helper that points back at what it helps", "Behavior of …", "Helper class", []],
+	"workspace": ["one of the editor's top tabs", "Workspace", "Main screen", []],
 }
 
 ## Display order on the Words page - the order the mockup approved, not the dictionary's.
 const KEY_ORDER: Array[String] = [
 	"inheritance_set", "layout", "every_tick", "behavior",
 	"group", "collection", "destroy", "manual",
+	# W21 - the editor-building words, in the mockup's own order (the plugin itself first, then its
+	# surfaces, then the shapes it can take, then the three code idioms a reader meets in tool code).
+	"editor_plugin", "editor_object", "editor_dock", "inspector", "scene_dock", "filesystem_dock",
+	"tools_menu", "undo_history", "editor_preferences", "project_settings", "style", "ui_element",
+	"tool_annotation", "command_tool", "importer_addon", "export_hook", "view_handle",
+	"thumbnail_maker", "debugger_panel", "object_type", "global_singleton", "shared_store",
+	"behavior_of", "workspace",
+]
+
+## W21. The keys W21 added, so the Manual's page and any test can name "the editor-building words"
+## without re-listing them. Everything before these is the game vocabulary the earlier batches shipped.
+const EDITOR_KEYS: Array[String] = [
+	"editor_plugin", "editor_object", "editor_dock", "inspector", "scene_dock", "filesystem_dock",
+	"tools_menu", "undo_history", "editor_preferences", "project_settings", "style", "ui_element",
+	"tool_annotation", "command_tool", "importer_addon", "export_hook", "view_handle",
+	"thumbnail_maker", "debugger_panel", "object_type", "global_singleton", "shared_store",
+	"behavior_of", "workspace",
 ]
 
 
@@ -75,6 +120,28 @@ static func plain_default(key: String) -> String:
 	if not WORDS.has(key):
 		return key
 	return str((WORDS[key] as Array)[2])
+
+
+## W21. The glossary lens both ways: hand it either spelling of a word and get the other one back.
+## The lens's whole promise is that renaming a noun hides nothing - Godot's own term is one hover
+## away from the sheet's, and the sheet's is one hover away from Godot's - so the lookup has to work
+## from either side. "" when the word is not one of ours, so a caller can tell "no entry" from "the
+## same word either way" (Tools menu is spelled the same in both vocabularies).
+static func godot_word(sheet_word: String) -> String:
+	var wanted: String = sheet_word.strip_edges()
+	for key: String in keys():
+		if familiar_default(key) == wanted:
+			return plain_default(key)
+	return ""
+
+
+## The sheet's word for a Godot term, or "" when the sheet has no word of its own for it.
+static func sheet_word(godot_term: String) -> String:
+	var wanted: String = godot_term.strip_edges()
+	for key: String in keys():
+		if plain_default(key) == wanted:
+			return familiar_default(key)
+	return ""
 
 
 ## The two defaults plus any extra offered words, deduplicated, in offer order.

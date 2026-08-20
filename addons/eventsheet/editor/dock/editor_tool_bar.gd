@@ -52,7 +52,19 @@ func init(dock: Control) -> void:
 static func applies_to(sheet: EventSheetResource) -> bool:
 	if sheet == null or not sheet.tool_mode:
 		return false
-	return sheet.host_class.strip_edges() in ["EditorScript", "EditorPlugin"]
+	if sheet.host_class.strip_edges() in ["EditorScript", "EditorPlugin"]:
+		return true
+	# W17. The other editor shapes - a Properties bar add-on, an importer, a thumbnail maker, a
+	# debugger panel, a context menu. They are never RUN (see runnable_sheet below), but Reload and
+	# Output are exactly as useful on them: a reader edits one, reloads, and reads what it printed.
+	return EventSheetScriptIntent.ADDON_HOSTS.has(sheet.host_class.strip_edges())
+
+
+## True when pressing Run on this sheet would actually run something. An EditorScript runs on demand
+## (that IS what it is for) and a plugin re-enters its tree; an add-on class has no entry point of its
+## own - the editor calls it, and a Run now that cannot run is worse than no Run now.
+static func runnable_sheet(sheet: EventSheetResource) -> bool:
+	return sheet != null and sheet.host_class.strip_edges() in ["EditorScript", "EditorPlugin"]
 
 
 ## True when the sheet compiles to an EditorPlugin - the only kind that has a plugin to enable.
@@ -67,7 +79,8 @@ static func buttons_for(sheet: EventSheetResource, script_path: String = "") -> 
 	var buttons: Array[Dictionary] = []
 	if not applies_to(sheet):
 		return buttons
-	buttons.append({"kind": KIND_RUN, "text": "▶ " + EventSheetL10n.translate("Run now")})
+	if runnable_sheet(sheet):
+		buttons.append({"kind": KIND_RUN, "text": "▶ " + EventSheetL10n.translate("Run now")})
 	buttons.append({"kind": KIND_RELOAD, "text": "↻ " + EventSheetL10n.translate("Reload")})
 	buttons.append({"kind": KIND_OUTPUT, "text": output_text(script_path)})
 	if is_plugin_sheet(sheet):

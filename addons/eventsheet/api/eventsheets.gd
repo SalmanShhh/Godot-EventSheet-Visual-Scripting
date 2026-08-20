@@ -1688,6 +1688,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	# resolves to the same guide - a reader who followed a dock verb here must not land somewhere else
 	# than a reader who followed a Save Scene one.
 	"editor_object": "Automating-The-Editor",
+	# W18. The tool author's everyday Editor set is the same subject as the two modules beside it, so
+	# it reads in the same guide rather than in a page of its own.
+	"editor_author": "Automating-The-Editor",
 	"translation": "Localising-Your-Game",
 	"translation_quality": "Localising-Your-Game",
 	"ui": "Buttons-Sliders-Labels-And-Menus",
@@ -1710,6 +1713,10 @@ const MODULE_GUIDE_OVERRIDES := {
 	"debug": "Debugging-And-Printing",
 	"display": "Game-Options-And-The-Window",
 	"editor_tools": "Automating-The-Editor",
+	# W23. The Editor object's picker PAGES. They are folders inside the same object, so they read in
+	# the same guide the flat category always did.
+	"editor_tools_panels_menus": "Automating-The-Editor",
+	"editor_tools_project_preferences": "Automating-The-Editor",
 	"effects": "Particles-And-Drawing-On-Screen",
 	"files": "Working-With-Files",
 	"files_directories": "Working-With-Files",

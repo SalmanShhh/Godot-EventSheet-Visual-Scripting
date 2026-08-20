@@ -3164,3 +3164,26 @@ starting {values},以 {values} 开头
 {subject} is a table,{subject} 是一张表
 with {clauses},其中 {clauses}
 has {key},含有 {key}
+Editor Tool…,编辑器工具…
+"One-click chore - run it yourself, from the sheet's bar",一键杂务 - 从表格栏中自行运行
+Editor plugin - the editor switches it on and off,编辑器插件 - 由编辑器开启和关闭
+Importer add-on - runs when files are imported,导入器附加组件 - 导入文件时运行
+Export hook - runs when the project is exported,导出钩子 - 导出项目时运行
+Dock panel - a panel beside the Scene dock,停靠面板 - 场景面板旁边的面板
+Bottom panel - beside Output and Debugger,底部面板 - 在输出和调试器旁边
+Tools menu item - Project > Tools > your entry,工具菜单项 - 项目 > 工具 > 你的条目
+Properties bar add-on - buttons and editors in the Inspector,属性栏附加组件 - 检查器中的按钮和编辑器
+Context menu item - right-click in the Scene dock or Project bar,右键菜单项 - 在场景面板或项目栏中右键点击
+Layout view handle - draw over the 2D view,布局视图手柄 - 在 2D 视图上绘制
+Thumbnail maker - previews for a file type,缩略图生成器 - 某种文件类型的预览
+Debugger panel - a tab while the game runs,调试器面板 - 游戏运行时的标签页
+"Command tool - headless, run with arguments",命令行工具 - 无界面，带参数运行
+Test sheet - check rows and a verdict,测试表 - 检查行与结论
+Object type - a node of your own in Create Node,对象类型 - 在创建节点中加入你自己的节点
+"Editor Add-on (Properties bar, importer, thumbnails…)",编辑器附加组件（属性栏、导入器、缩略图…）
+Command Tool (runs headless from the command line),命令行工具（从命令行以无界面方式运行）
+"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.",插件交给编辑器的一个部件：属性栏附加组件、导入器、缩略图生成器、调试器面板、右键菜单或视图手柄。
+"A script the Godot binary runs headless from the command line, with arguments and an exit code.",由 Godot 可执行文件从命令行以无界面方式运行的脚本，带参数和退出码。
+The editor icon this name draws.,该名称所绘制的编辑器图标。
+The words for building editor tools,构建编辑器工具的用语
+bottom panel,底部面板

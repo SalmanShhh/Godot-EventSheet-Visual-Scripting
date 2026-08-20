@@ -3164,3 +3164,26 @@ starting {values},commencant par {values}
 {subject} is a table,{subject} est une table
 with {clauses},avec {clauses}
 has {key},a {key}
+Editor Tool…,Outil d'éditeur…
+"One-click chore - run it yourself, from the sheet's bar","Corvée en un clic - lancez-la vous-même, depuis la barre de la feuille"
+Editor plugin - the editor switches it on and off,Extension d'éditeur - l'éditeur l'active et le désactive
+Importer add-on - runs when files are imported,Module d'import - s'exécute lors de l'import de fichiers
+Export hook - runs when the project is exported,Crochet d'export - s'exécute lors de l'export du projet
+Dock panel - a panel beside the Scene dock,Panneau ancré - un panneau à côté du dock Scène
+Bottom panel - beside Output and Debugger,Panneau du bas - à côté de Sortie et Débogueur
+Tools menu item - Project > Tools > your entry,Entrée du menu Outils - Projet > Outils > votre entrée
+Properties bar add-on - buttons and editors in the Inspector,Extension de la barre de propriétés - boutons et éditeurs dans l'Inspecteur
+Context menu item - right-click in the Scene dock or Project bar,Entrée du menu contextuel - clic droit dans le dock Scène ou la barre du projet
+Layout view handle - draw over the 2D view,Poignée de vue - dessine par-dessus la vue 2D
+Thumbnail maker - previews for a file type,Générateur de vignettes - aperçus pour un type de fichier
+Debugger panel - a tab while the game runs,Panneau du débogueur - un onglet pendant l'exécution du jeu
+"Command tool - headless, run with arguments","Outil en ligne de commande - sans interface, lancé avec des arguments"
+Test sheet - check rows and a verdict,Feuille de test - des lignes de vérification et un verdict
+Object type - a node of your own in Create Node,Type d'objet - un nœud à vous dans Créer un nœud
+"Editor Add-on (Properties bar, importer, thumbnails…)","Extension d'éditeur (barre de propriétés, import, vignettes…)"
+Command Tool (runs headless from the command line),Outil en ligne de commande (s'exécute sans interface depuis la ligne de commande)
+"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.","Un élément qu'une extension confie à l'éditeur : une extension de la barre de propriétés, un module d'import, un générateur de vignettes, un panneau de débogueur, un menu contextuel ou une poignée de vue."
+"A script the Godot binary runs headless from the command line, with arguments and an exit code.","Un script que le binaire Godot exécute sans interface depuis la ligne de commande, avec des arguments et un code de sortie."
+The editor icon this name draws.,L'icône d'éditeur que ce nom dessine.
+The words for building editor tools,Les mots pour créer des outils d'éditeur
+bottom panel,panneau du bas

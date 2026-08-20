@@ -79,6 +79,33 @@ one the logic is right and the wiring is not.
 - **"Duplicate events for…" never said which object it was about** - a reused dialog whose title was
   set once at build time. It now names the source object on every open.
 
+### Added - every shape the editor can be extended in, and the words for building one
+
+- **New Sheet ▸ Editor Tool… now lists all fifteen shapes Godot's editor has**, not four. Dock
+  panel, Bottom panel, Tools menu item, Properties bar add-on, Context menu item, Layout view
+  handle, Thumbnail maker, Debugger panel, Command tool, Test sheet and Object type join the
+  one-click chore, the plugin, the importer add-on and the export hook. Each writes a prefilled
+  skeleton with the body left blank and the pairing already in it - whatever the plugin adds when it
+  is switched on, it takes away again when it is switched off - and each is gated in BOTH
+  directions: compile the skeleton, open the result as a sheet, and the recompile reproduces every
+  byte. The Sheet Type dialog grew the two types those shapes need: **Editor Add-on**, the one tool
+  type whose host you choose (which of Godot's add-on classes it is, is the whole decision), and
+  **Command Tool**, always a SceneTree. A saved add-on now reopens as an add-on instead of being
+  mistaken for a custom node and losing its host the next time the dialog was confirmed.
+- **The Editor object answers a tool author's first day.** `Editor.Icon("Node2D")` with a field that
+  draws the icon it names as you pick it; `Editor.Preference("…")` and `Project.Setting("…")` with
+  fields that offer the real setting paths; `Editor.MainScreen`; **Project ▸ Set setting** and
+  **Save settings**; **Switch to workspace**, **Show in Project bar**, **Open script at line**, **Add
+  window**, **Add command** (the command palette) and the bottom-panel pair; and two triggers the
+  editor raises, **On project files changed** and **On preferences changed**. Every row emits the
+  plain `EditorInterface` / `ProjectSettings` line it names, so an opened hand-written tool lifts
+  into these rows and re-emits byte-identically. Tool sheets only, as the rest of the Editor object
+  is - and the picker's Editor object now has pages rather than one long list.
+- **Familiar Words learned the editor-building nouns** - twenty-four of them, from Editor plugin and
+  Project bar to Preferences, Command tool, Thumbnail maker and Shared store. Off, each reads as
+  Godot spells it; on, as the sheet says it; and the new Manual page **The words for building editor
+  tools** lists every pair with the reason the word was changed.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

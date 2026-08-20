@@ -7147,6 +7147,17 @@ const INPUT_DEVICE_OBJECTS: Array[String] = ["Mouse", "Keyboard", "Gamepad", "To
 const EDITOR_TOOLS_CATEGORY := "Editor Tools"
 const EDITOR_OBJECT := "Editor"
 
+## W23. The Editor object's vocabulary now sits on PAGES ("Editor Tools: Panels & menus" and the
+## rest), which the picker nests one level in. A page is still the Editor, so the object cell tests
+## the prefix rather than the whole string.
+const EDITOR_TOOLS_PAGE_PREFIX := "Editor Tools: "
+
+## W18. Two rows in the Editor's pages are not about the editor at all - they read and write THIS
+## PROJECT's settings, which every person opening the project shares. An event sheet says that as its
+## own object, so a reader can tell "your editor" from "this project" at a glance.
+const PROJECT_OBJECT := "Project"
+const PROJECT_ACE_IDS: PackedStringArray = ["SetProjectSetting", "SaveProjectSettings"]
+
 ## V5. The window is an object too - it is resized, retitled, made fullscreen, and asked whether it
 ## is. An OVERRIDE list rather than the whole Game Window category, because that category also holds
 ## the frame cap and the render settings, which an event sheet says as System (the reading says the
@@ -9944,7 +9955,10 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 		var input_descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
 		if input_descriptor != null and INPUT_DEVICE_OBJECTS.has(input_descriptor.category):
 			return input_descriptor.category
-		if input_descriptor != null and input_descriptor.category == EDITOR_TOOLS_CATEGORY:
+		if PROJECT_ACE_IDS.has(ace_id):
+			return PROJECT_OBJECT
+		if input_descriptor != null and (input_descriptor.category == EDITOR_TOOLS_CATEGORY \
+				or str(input_descriptor.category).begins_with(EDITOR_TOOLS_PAGE_PREFIX)):
 			return EDITOR_OBJECT
 		if WINDOW_ACE_IDS.has(ace_id):
 			return WINDOW_OBJECT

@@ -140,6 +140,15 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# compiles to the _notification virtual; applying the trigger auto-adds the
 			# "Language Just Changed" gate condition so only that notification runs.
 			return _lifecycle("_notification", "what: int")
+		"OnProjectFilesChanged":
+			# W18. The editor's own file watcher: EditorInterface.get_resource_filesystem() reports
+			# every import, move, delete and add through one signal. Connected on that global source
+			# ("@editor_files"), not self - a tool script is not the filesystem.
+			return _signal_backed("_on_project_files_changed", "", "filesystem_changed", "@editor_files")
+		"OnPreferencesChanged":
+			# W18. The user changed something in Editor Settings. Same shape as the file watcher, on
+			# the editor's settings object ("@editor_preferences").
+			return _signal_backed("_on_preferences_changed", "", "settings_changed", "@editor_preferences")
 		"OnCloseRequested":
 			# The window's close button (X) / an app-quit request - for save-on-quit or a confirm dialog.
 			# Connected on the root window (the "@window" global source), not self.

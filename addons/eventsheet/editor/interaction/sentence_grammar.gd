@@ -1177,13 +1177,38 @@ static func _system_words(text: String) -> String:
 ## group already reads as a group), and `for n in Editor.SelectedObjects` is the one line of a tool
 ## that must not read as engine plumbing.
 static func editor_words(text: String) -> String:
-	if not text.contains("Editor") and not text.contains("get_undo_redo()"):
+	if not text.contains("Editor") and not text.contains("get_undo_redo()") and not text.contains("ProjectSettings.get_setting("):
 		return text
-	var out: String = text
+	var out: String = _editor_call_words(text)
 	out = out.replace("EditorInterface.get_selection().get_selected_nodes()", "Editor.SelectedObjects")
 	out = out.replace("EditorInterface.get_edited_scene_root()", "Editor.OpenLayout")
 	out = out.replace("EditorInterface.get_editor_settings()", "Editor.Settings")
 	out = out.replace("get_undo_redo()", "Editor.UndoHistory")
+	return out
+
+
+## W18. The three editor questions that carry an ARGUMENT, so a whole-spelling replace cannot reach
+## them: an icon by name, one Editor Setting by path, one project setting by path. Run before the
+## whole-spelling table above, because `EditorInterface.get_editor_settings()` is also a value in its
+## own right and would otherwise eat the head of the get_setting chain.
+## The argument is copied through untouched - it is whatever the author typed.
+static var _editor_call_patterns: Array = []
+
+
+static func _editor_call_words(text: String) -> String:
+	if _editor_call_patterns.is_empty():
+		for pair: Array in [
+			["EditorInterface\\.get_editor_theme\\(\\)\\.get_icon\\((.+?), \"EditorIcons\"\\)", "Editor.Icon($1)"],
+			["EditorInterface\\.get_editor_settings\\(\\)\\.get_setting\\((.+?)\\)", "Editor.Preference($1)"],
+			["EditorInterface\\.get_editor_main_screen\\(\\)", "Editor.MainScreen"],
+			["ProjectSettings\\.get_setting\\((.+?)\\)", "Project.Setting($1)"],
+		]:
+			var compiled: RegEx = RegEx.create_from_string(str(pair[0]))
+			if compiled != null:
+				_editor_call_patterns.append([compiled, str(pair[1])])
+	var out: String = text
+	for entry: Array in _editor_call_patterns:
+		out = (entry[0] as RegEx).sub(out, str(entry[1]), true)
 	return out
 
 

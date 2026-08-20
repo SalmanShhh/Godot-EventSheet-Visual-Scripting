@@ -3164,3 +3164,26 @@ starting {values},先頭が {values}
 {subject} is a table,{subject} がテーブル
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
+Editor Tool…,エディタツール…
+"One-click chore - run it yourself, from the sheet's bar",ワンクリック作業 - シートのバーから自分で実行
+Editor plugin - the editor switches it on and off,エディタプラグイン - エディタがオン/オフを切り替える
+Importer add-on - runs when files are imported,インポーター拡張 - ファイルのインポート時に実行
+Export hook - runs when the project is exported,エクスポートフック - プロジェクトのエクスポート時に実行
+Dock panel - a panel beside the Scene dock,ドックパネル - シーンドックの隣のパネル
+Bottom panel - beside Output and Debugger,下部パネル - 出力とデバッガーの隣
+Tools menu item - Project > Tools > your entry,ツールメニュー項目 - プロジェクト > ツール > 自分の項目
+Properties bar add-on - buttons and editors in the Inspector,プロパティバー拡張 - インスペクターのボタンとエディタ
+Context menu item - right-click in the Scene dock or Project bar,コンテキストメニュー項目 - シーンドックまたはプロジェクトバーで右クリック
+Layout view handle - draw over the 2D view,レイアウトビューハンドル - 2Dビューの上に描画
+Thumbnail maker - previews for a file type,サムネイル生成 - ファイル種別のプレビュー
+Debugger panel - a tab while the game runs,デバッガーパネル - ゲーム実行中のタブ
+"Command tool - headless, run with arguments",コマンドツール - ヘッドレスで引数付き実行
+Test sheet - check rows and a verdict,テストシート - チェック行と判定
+Object type - a node of your own in Create Node,オブジェクト型 - ノード作成に自分のノードを追加
+"Editor Add-on (Properties bar, importer, thumbnails…)",エディタ拡張（プロパティバー、インポーター、サムネイル…）
+Command Tool (runs headless from the command line),コマンドツール（コマンドラインからヘッドレスで実行）
+"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.",プラグインがエディタに渡す部品です。プロパティバー拡張、インポーター、サムネイル生成、デバッガーパネル、コンテキストメニュー、ビューハンドルのいずれかです。
+"A script the Godot binary runs headless from the command line, with arguments and an exit code.",Godot 本体がコマンドラインからヘッドレスで実行するスクリプトです。引数と終了コードを持ちます。
+The editor icon this name draws.,この名前が描くエディタアイコンです。
+The words for building editor tools,エディタツールを作るための言葉
+bottom panel,下部パネル

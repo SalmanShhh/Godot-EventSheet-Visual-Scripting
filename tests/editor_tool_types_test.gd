@@ -25,8 +25,9 @@ static func run() -> bool:
 ## identity line each previews. A type with a hint but no host would ship as a plain Node script.
 static func _test_type_table() -> bool:
 	var passed: bool = true
+	# 10 shipped types (R33), +2 from W17: Editor add-on and Command tool.
 	passed = _check("hint count covers every type",
-		EventSheetSheetTypeDialog.TYPE_HINTS.size(), 10) and passed
+		EventSheetSheetTypeDialog.TYPE_HINTS.size(), 10 + 2) and passed
 	passed = _check("Editor plugin hint",
 		EventSheetSheetTypeDialog.TYPE_HINTS[7],
 		"A plugin the editor switches on: it adds a dock, a Tools menu item, an object type.") and passed

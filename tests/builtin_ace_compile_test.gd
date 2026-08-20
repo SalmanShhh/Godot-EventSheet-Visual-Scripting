@@ -45,6 +45,10 @@ const NOT_STANDALONE: Array[String] = [
 	"AddToolsMenuItem", "RemoveToolsMenuItem", "AddEditorDock", "RemoveEditorDock",
 	"AddEditorObjectType", "RemoveEditorObjectType", "AddEditorInspectorPlugin",
 	"RemoveEditorInspectorPlugin", "UpdateViewportOverlays", "EditorUndoHistory",
+	# W17 / W18. Same reason, three more EditorPlugin methods: the bottom-panel pair, and the command
+	# palette entry (whose Calls default names a function the plugin defines, exactly as the Tools
+	# menu item's does). Their round-trip is gated by editor_tool_shapes_test.
+	"AddBottomPanel", "RemoveBottomPanel", "AddCommandPaletteCommand",
 	"AtMostEvery",  # calls a sheet-synthesized helper over its own last-run timestamp slot
 	"OnlyOncePerNode", "OnlyOncePerName", "OnlyOnceThisSceneLoad",  # call sheet-synthesized once-memory helpers
 	"StopRetrying",  # ends with `break` - only compiles inside the Retry Up To N Times loop it belongs to

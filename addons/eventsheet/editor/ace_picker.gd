@@ -512,7 +512,15 @@ static func host_ace_hidden(provider_id: String, ace_id: String, is_behavior_she
 ## rows that cannot run, so the picker scopes the object to @tool sheets the way it scopes Functions
 ## to the open script. Pure + static so the gate is unit-testable without a live picker.
 static func editor_ace_hidden(category: String, is_tool_sheet: bool) -> bool:
-	return not is_tool_sheet and category == EDITOR_TOOLS_CATEGORY
+	return not is_tool_sheet and is_editor_tools_category(category)
+
+
+## W23. The Editor object grew PAGES - "Editor Tools: Panels & menus", "Editor Tools: Project &
+## preferences" and the rest - which the picker nests one level in on the ": " separator. A page is
+## still the Editor object, so every gate that used to compare the whole category asks here instead;
+## comparing on equality would have quietly un-scoped every paged row onto game sheets.
+static func is_editor_tools_category(category: String) -> bool:
+	return category == EDITOR_TOOLS_CATEGORY or category.begins_with(EDITOR_TOOLS_CATEGORY + SUBCATEGORY_SEPARATOR)
 
 
 ## The one category the gate above reads. Named here rather than spelled at the call site because it

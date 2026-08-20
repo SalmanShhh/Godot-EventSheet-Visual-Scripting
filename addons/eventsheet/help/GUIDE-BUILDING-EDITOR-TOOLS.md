@@ -29,6 +29,22 @@ A Tool sheet is for **automating edits you would otherwise do by hand**:
 
 And with the plugin's public **EventSheets** API (covered in section 4) you can go one level up and automate the *editor* itself: add a Command Palette entry, ship a Project Doctor check, register a new row type, or generate whole sheets from code.
 
+### Pick the shape from the list, not from Godot's class reference
+
+Godot has fifteen ways to extend its editor, and **New Sheet ▸ Editor Tool…** lists all of them in
+plain words - what the thing is, and where it shows up:
+
+![The New Sheet Editor Tool list, with all fifteen editor shapes](images/new-sheet-editor-tool-shapes.png)
+
+Every choice writes a prefilled sheet with the body left blank and the pairing already in it. The
+Dock panel, for instance, arrives as the two events that shape needs - what the plugin hangs when it
+is switched on, and what it takes down again when it is switched off:
+
+![The Dock panel skeleton, as the events it is written from](images/editor-tool-dock-panel-skeleton.png)
+
+Saving that sheet compiles it to plain GDScript, and opening the result reads back as exactly the
+same events - so a skeleton is a starting point you can keep editing, not a one-way generation.
+
 ## 2. Your First Tool Sheet
 
 ### Step 1 - make a new sheet and set its type

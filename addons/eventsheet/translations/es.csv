@@ -3164,3 +3164,26 @@ starting {values},que empieza por {values}
 {subject} is a table,{subject} es una tabla
 with {clauses},con {clauses}
 has {key},tiene {key}
+Editor Tool…,Herramienta del editor…
+"One-click chore - run it yourself, from the sheet's bar","Tarea de un clic - la ejecutas tú, desde la barra de la hoja"
+Editor plugin - the editor switches it on and off,Complemento del editor - el editor lo activa y desactiva
+Importer add-on - runs when files are imported,Complemento de importación - se ejecuta al importar archivos
+Export hook - runs when the project is exported,Enganche de exportación - se ejecuta al exportar el proyecto
+Dock panel - a panel beside the Scene dock,Panel acoplado - un panel junto al panel de Escena
+Bottom panel - beside Output and Debugger,Panel inferior - junto a Salida y Depurador
+Tools menu item - Project > Tools > your entry,Elemento del menú Herramientas - Proyecto > Herramientas > tu entrada
+Properties bar add-on - buttons and editors in the Inspector,Complemento de la barra de propiedades - botones y editores en el Inspector
+Context menu item - right-click in the Scene dock or Project bar,Elemento del menú contextual - clic derecho en el panel de Escena o la barra del proyecto
+Layout view handle - draw over the 2D view,Manejador de la vista - dibuja sobre la vista 2D
+Thumbnail maker - previews for a file type,Generador de miniaturas - vistas previas para un tipo de archivo
+Debugger panel - a tab while the game runs,Panel del depurador - una pestaña mientras el juego se ejecuta
+"Command tool - headless, run with arguments","Herramienta de línea de comandos - sin interfaz, se ejecuta con argumentos"
+Test sheet - check rows and a verdict,Hoja de pruebas - filas de comprobación y un veredicto
+Object type - a node of your own in Create Node,Tipo de objeto - un nodo propio en Crear nodo
+"Editor Add-on (Properties bar, importer, thumbnails…)","Complemento del editor (barra de propiedades, importador, miniaturas…)"
+Command Tool (runs headless from the command line),Herramienta de línea de comandos (se ejecuta sin interfaz desde la línea de comandos)
+"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.","Una pieza que un complemento entrega al editor: un complemento de la barra de propiedades, un importador, un generador de miniaturas, un panel del depurador, un menú contextual o un manejador de vista."
+"A script the Godot binary runs headless from the command line, with arguments and an exit code.","Un script que el binario de Godot ejecuta sin interfaz desde la línea de comandos, con argumentos y un código de salida."
+The editor icon this name draws.,El icono del editor que dibuja este nombre.
+The words for building editor tools,Las palabras para crear herramientas del editor
+bottom panel,panel inferior

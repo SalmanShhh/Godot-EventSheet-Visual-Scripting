@@ -80,7 +80,9 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 		# tool types (Editor plugin / Import tool / Export hook); every one of them is a @tool script,
 		# and the ONE table below says which host each is forced to, so the dialog's preview line and
 		# this apply can never disagree about what a type ships as.
-		_dock._current_sheet.tool_mode = tool_enabled or EventSheetSheetTypeDialog.TOOL_TYPE_HOSTS.has(type_index)
+		# W17 added two more (Editor add-on / Command tool), and the add-on is the one tool type that
+		# does NOT force a host - so the @tool answer reads the type-index list, not the host table.
+		_dock._current_sheet.tool_mode = tool_enabled or EventSheetSheetTypeDialog.TOOL_TYPE_INDICES.has(type_index)
 		_dock._current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
 		_dock._current_sheet.custom_class_icon = icon_path.strip_edges() if type_index != 0 else ""
 		# Family rides with the named-type identity: a plain sheet has no class to form a group from, so
@@ -120,6 +122,11 @@ func apply_sheet_type_settings(type_index: int, class_name_text: String, icon_pa
 			# back to plain Resource so the choice always produces a valid asset script.
 			var resource_host: String = host_class_text.strip_edges()
 			_dock._current_sheet.host_class = resource_host if EventSheetScriptIntent.is_resource_host(resource_host) else "Resource"
+		elif type_index == 10:
+			# W17. Editor add-on: the user's own class wins, and an empty field lands on the add-on
+			# most people mean first - the same fallback the dialog's Ships-as line previews.
+			var addon_host: String = host_class_text.strip_edges()
+			_dock._current_sheet.host_class = addon_host if not addon_host.is_empty() else "EditorInspectorPlugin"
 		elif not host_class_text.strip_edges().is_empty():
 			_dock._current_sheet.host_class = host_class_text.strip_edges()
 		return true
