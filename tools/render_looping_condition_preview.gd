@@ -10,6 +10,12 @@ var _frames: int = 0
 var _viewport: EventSheetViewport = null
 
 
+# Stands in for the owned addon-provider instance an emitted sheet declares (instance-backed ACEs).
+# The emitted member is spelled after its class; here it is snake_case so the harness itself passes
+# the hand-written style gate.
+var _stat_forge_provider := StatForge.new()
+
+
 func _init() -> void:
 	root.title = "Looping Condition"
 	root.size = Vector2i(1000, 420)
@@ -41,7 +47,7 @@ func _init() -> void:
 	row.trigger_id = "OnProcess"
 	var pick: PickFilter = PickFilter.new()
 	pick.collection_kind = PickFilter.CollectionKind.EXPRESSION
-	pick.collection_value = "__eventsheet_provider_StatForge.each_buff()"
+	pick.collection_value = "_stat_forge_provider.each_buff()"
 	pick.iterator_name = "buff_id"
 	row.pick_filters.append(pick)
 	var action: ACEAction = ACEAction.new()
