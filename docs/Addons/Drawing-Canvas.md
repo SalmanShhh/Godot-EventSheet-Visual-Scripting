@@ -36,6 +36,13 @@ Every tick     -> Player | Drawing Canvas: Draw Line Of Sight
                   Player.X, Player.Y, facing_deg, 90, 300, [Walls], Color(1, 0.9, 0.4, 0.35)
 ```
 
+**What is doing the drawing.** The pack ships a second folder, `canvas_surface/`, holding
+`CanvasSurface` - the offscreen render target, the command queue and the self-updating ribbons that
+every draw row writes into. You never attach it and it publishes no rows of its own: one is created
+on first use and cached on the host, so every "… on *node*" draw in your project shares that host's
+one surface. It is named here only so that a `CanvasSurface` appearing under a node in the Scene
+dock, or in an opened script, is not a mystery.
+
 ## ACE reference
 
 ### Actions
