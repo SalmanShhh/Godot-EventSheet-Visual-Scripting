@@ -1171,6 +1171,28 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 			sheet, "object_behaviors", EventSheetL10n.translate("Behaviors"),
 			"%s - %s" % [EventSheetL10n.translate("on this object"), " · ".join(names)],
 			members))
+	# ── X13 ─────────────────────────────────────────────────────────────────────────────────────
+	# A RemoteTransform on this object drives a node that is NOT its child, which is the answer to
+	# "why does that thing follow me" and lives nowhere a reader of the script would find it. So it
+	# reads here, as the fact it is, with the parts it copies as tick chips.
+	var followers: Array = facts.get("followers", []) as Array
+	if not followers.is_empty():
+		var follows: Array[EventRowData] = []
+		var followed: PackedStringArray = PackedStringArray()
+		for index in range(followers.size()):
+			var follower: Dictionary = followers[index]
+			var target: String = str(follower.get("target", ""))
+			var says: String = EventSheetL10n.translate("copies its place to nothing yet")
+			if not target.is_empty():
+				says = "%s %s · %s" % [EventSheetL10n.translate("copies its place to"), target,
+					str(follower.get("flags", ""))]
+			followed.append(str(follower.get("node", "")))
+			follows.append(_build_object_fact_row(
+				sheet, "object_follower_%d" % index, str(follower.get("node", "")), says))
+		bars.append(_build_head_group_row(
+			sheet, "object_followers", EventSheetL10n.translate("Follows"),
+			"%s - %s" % [EventSheetL10n.translate("places this object copies onto others"),
+				" · ".join(followed)], follows))
 	var families: PackedStringArray = PackedStringArray(facts.get("families", PackedStringArray()))
 	# ── T9 ──────────────────────────────────────────────────────────────────────────────────────
 	# The inheritance set this object is part of: the scripts that extend its class, shown as the
@@ -5206,11 +5228,25 @@ func _create_object_groups(actions: Array, locals: Array = []) -> Dictionary:
 			"alias": alias,
 			"line_count": last - index + 1,
 			"indices": indices,
+			# X14. The scene file this row instances, so the hover can show the tree it just made.
+			"scene": _spawned_scene_path(str(spawn.get("source", ""))),
 		}
 		for consumed_index: int in range(index + 1, last + 1):
 			consumed[consumed_index] = true
 		index = last + 1
 	return {"leads": leads, "consumed": consumed}
+
+
+## X14. The scene FILE a Create object row makes an instance of, "" when the row spawns something the
+## sheet never named a file for. Both spellings are read: the expression written into the row
+## (`preload("res://enemy.tscn")`) and the const the file usually holds it in, which the same scan the
+## head's Objects folder is drawn from has already resolved.
+func _spawned_scene_path(source: String) -> String:
+	var direct: String = EventSheetObjectFacts.scene_path_in(source)
+	if not direct.is_empty():
+		return direct
+	var declared: Dictionary = _lens_scene_vars.get(source.strip_edges(), {}) as Dictionary
+	return str(declared.get("res_path", ""))
 
 
 # ── S18: the four limit_* lines a camera's bounds are written as read as ONE scroll-limits row ────
@@ -5356,6 +5392,124 @@ func _crossfade_groups(actions: Array) -> Dictionary:
 		consumed[index + 1] = true
 		index += 2
 	return {"leads": leads, "consumed": consumed}
+
+
+# ── X10 / X11: the spellings a hierarchy move takes read as the ONE row they are ──────────────────
+#
+# "Put this object under that one" has three spellings in Godot and one meaning: `reparent`, the
+# `remove_child` + `add_child` pair, and - when the mover wanted the child to follow only SOME of its
+# new parent's transform - a reparent with a RemoteTransform and a `top_level` beside it. A reader
+# looking at any of them is looking at one thing that happened, so they read as one row, with the
+# flags it was given said out loud and every line it stands for on the hover.
+#
+# The lines are untouched: this is a lens, exactly as the Create object and scroll-limits runs above
+# are, so the file re-emits byte for byte whichever spelling it came in as.
+
+
+## X11. The four flags an Add child row carries, in the order the row says them, as
+## member/word pairs. Godot's default for every one of them is ON, which is why a plain child needs
+## no plumbing at all and a plain row shows no chips.
+const HIERARCHY_FLAG_WORDS: Dictionary = {
+	"update_position": "transform position",
+	"update_rotation": "transform angle",
+	"update_scale": "transform size",
+	"destroy_with_parent": "destroy with parent"
+}
+
+
+## X10 / X11. The hierarchy runs in one action lane, as {"leads": {index: {text, note, object,
+## evidence, line_count, indices}}, "consumed": {index: true}}.
+func _hierarchy_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var index: int = 0
+	while index < actions.size():
+		var run: Dictionary = _hierarchy_run_at(actions, index)
+		if run.is_empty():
+			index += 1
+			continue
+		var last: int = int(run.get("last", index))
+		var evidence: PackedStringArray = PackedStringArray()
+		var indices: Array[int] = []
+		for member_index: int in range(index, last + 1):
+			evidence.append(_group_line_text(actions[member_index]))
+			indices.append(member_index)
+		leads[index] = {
+			"text": str(run.get("text", "")),
+			"note": str(run.get("note", "")),
+			"object": str(run.get("object", "")),
+			"evidence": evidence,
+			"line_count": last - index + 1,
+			"indices": indices
+		}
+		for consumed_index: int in range(index + 1, last + 1):
+			consumed[consumed_index] = true
+		index = last + 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## X10 / X11. The hierarchy run that STARTS at `index`, as {text, note, object, last}, or {} when
+## nothing there is one. Only a run of more than one line is claimed: a lone `reparent` already reads
+## as its own sentence through the shared grammar, and wrapping it here would say the same thing
+## twice and cost the row its own chips.
+func _hierarchy_run_at(actions: Array, index: int) -> Dictionary:
+	if index + 1 >= actions.size():
+		return {}
+	var first: String = _group_line_text(actions[index])
+	# This pass runs on every action of every event, and the overwhelmingly common answer is "this is
+	# not a hierarchy move" - so it costs two substring searches before anything parses a line.
+	if first.is_empty() or not (first.contains("reparent(") or first.contains("remove_child(")):
+		return {}
+	var context: Dictionary = sentence_context()
+	# X10 - the remove-then-add pair, which is one move said in two lines.
+	var paired: Dictionary = EventSheetSentence.remove_then_add_sentence(
+		first, _group_line_text(actions[index + 1]), context)
+	if not paired.is_empty():
+		return {"text": _joined_segments(paired), "note": "",
+			"object": str(paired.get("object", "")), "last": index + 1}
+	# X11 - a reparent whose transform or lifetime flags were written out beneath it.
+	var moved: Dictionary = EventSheetSentence.reparent_call_parts(first, context)
+	if moved.is_empty():
+		return {}
+	var flags: Dictionary = {}
+	var last: int = index
+	var cursor: int = index + 1
+	while cursor < actions.size():
+		var flag: String = EventSheetSentence.hierarchy_flag_line(
+			_group_line_text(actions[cursor]), str(moved.get("child_value", "")),
+			str(moved.get("parent_value", "")))
+		if flag.is_empty():
+			break
+		flags[flag] = true
+		last = cursor
+		cursor += 1
+	# What makes this ONE row rather than a move followed by two other steps: an ordinary child already
+	# inherits its parent's WHOLE transform, so a follower on its own changes nothing and a
+	# `top_level` on its own turns every part off. Only the pair says "follow these parts and not
+	# those", which is what a partial set of transform flags IS - and it is the only shape that may
+	# swallow the lines beneath the move. Turning the lifetime flag off is its own honest case: the
+	# handler that saves the child from being freed with its parent says that by itself.
+	if not (flags.has("destroy_with_parent") or (flags.has("top_level") and flags.has("follower"))):
+		return {}
+	var sentence: Dictionary = EventSheetSentence.reparent_sentence(
+		str(moved.get("child", "")), str(moved.get("parent_value", "")),
+		str(moved.get("keep_place", "")), context)
+	if sentence.is_empty():
+		return {}
+	_note_pattern("hierarchy", first)
+	return {"text": _joined_segments(sentence), "note": _hierarchy_flag_note(flags),
+		"object": str(sentence.get("object", "")), "last": last}
+
+
+## X11. The flag chips a hierarchy row wears - every flag the run turned OFF said with a ✗ and the
+## rest with a ✓, so the row shows the whole set rather than only what changed. "" when the run set
+## none of them, which is the plain child that needs no chips at all.
+func _hierarchy_flag_note(flags: Dictionary) -> String:
+	var chips: PackedStringArray = PackedStringArray()
+	for member: String in HIERARCHY_FLAG_WORDS:
+		chips.append("%s %s" % [EventSheetL10n.translate(str(HIERARCHY_FLAG_WORDS[member])),
+			"✗" if flags.has(member) else "✓"])
+	return " ".join(chips)
 
 
 ## The one line an action stands for, whichever shape it took in the sheet: the verbatim text of a
@@ -7953,6 +8107,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# U8 / U12 - the mouse-look trio and the two faders of a crossfade are one row each.
 		var look_groups: Dictionary = _mouse_look_groups(event_row.actions)
 		var fade_groups: Dictionary = _crossfade_groups(event_row.actions)
+		# X10 / X11 - the remove-then-add pair, and a reparent whose follow-flags were written out
+		# beneath it, are each one hierarchy row with every line they stand for on the hover.
+		var hierarchy_runs: Dictionary = _hierarchy_groups(event_row.actions)
 		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
 		var task_notes: Dictionary = _task_note_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
@@ -7970,13 +8127,17 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				continue
 			# U8 / U12 - the same skip-without-advancing, for the two runs batch ten added.
 			if bool(look_groups.get("consumed", {}).get(action_index, false)) \
-					or bool(fade_groups.get("consumed", {}).get(action_index, false)):
+					or bool(fade_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(hierarchy_runs.get("consumed", {}).get(action_index, false)):
 				continue
 			var run_lead: Dictionary = (look_groups["leads"] as Dictionary).get(action_index, {})
 			var run_pattern: String = "fps_look"
 			if run_lead.is_empty():
 				run_lead = (fade_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "sound"
+			if run_lead.is_empty():
+				run_lead = (hierarchy_runs["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "hierarchy"
 			if not run_lead.is_empty():
 				_append_scroll_limit_spans(spans, run_lead, action_index, action_line_index,
 					action_style_meta)
@@ -8006,7 +8167,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"compiled_lines": int(create.get("line_count", 1)),
 					# The statements this ONE cell stands for. Hover shows all of them, so the row never
 					# hides a line: it says what happened, and the file's own spelling is a pointer away.
-					"create_object_indices": create.get("indices", [])
+					"create_object_indices": create.get("indices", []),
+					# X14. An instance is a ready-made hierarchy: the hover shows the tree this row
+					# just made, so nobody has to open the .tscn to find out what is inside it.
+					"create_object_scene": str(create.get("scene", ""))
 				}.merged(action_style_meta, true)))
 				action_line_index += 1
 				continue
@@ -11051,6 +11215,38 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement(group_call, context)
 		"QueueFreeNode":
 			return EventSheetSentence.statement("%s.queue_free()" % str(params_dict.get("target", "self")), context)
+		# ── X10 / X13 lens hook (the hierarchy) ───────────────────────────────────────────────────
+		# The picked hierarchy rows read the words a hand-typed `item.reparent($Hand)` now reads, so
+		# Add child is one sentence whether it was dropped from the picker or written by hand - and
+		# the keep-its-place half never depends on which way the row got onto the sheet.
+		# The importer claims every `x.reparent(y)` for this row, so without the same lens an opened
+		# file would read a pick-up as a layer move. The grammar decides which of the two it is: the
+		# layer words when the new parent IS a known drawing layer, the hierarchy's own otherwise.
+		"MoveToLayer":
+			var mover: String = str(params_dict.get("target", "")).strip_edges()
+			return EventSheetSentence.statement("%sreparent(%s)" % [
+				"" if mover.is_empty() else "%s." % mover,
+				str(params_dict.get("layer", ""))], context)
+		"HierarchyAddChild":
+			var keep_place: String = str(params_dict.get("keep", "")).strip_edges()
+			return EventSheetSentence.reparent_sentence(
+				EventSheetSentence.object_of_reference(str(params_dict.get("child", ""))),
+				str(params_dict.get("parent", "")), keep_place, context)
+		"HierarchyRemoveFromParent", "ReparentNode":
+			var moved: String = str(params_dict.get("child", "")).strip_edges()
+			if moved.is_empty():
+				moved = "self"
+			return EventSheetSentence.statement("%s.reparent(%s)" % [moved,
+				str(params_dict.get("new_parent", "get_tree().current_scene"))], context)
+		"SetIgnoreParentMovement":
+			return EventSheetSentence.statement("%s.top_level = %s" % [
+				str(params_dict.get("target", "self")), str(params_dict.get("ignore", "true"))], context)
+		"CopyPlaceTo":
+			return EventSheetSentence.statement("%s.remote_path = NodePath(%s)" % [
+				str(params_dict.get("follower", "")), str(params_dict.get("path", ""))], context)
+		"StopCopyingPlace":
+			return EventSheetSentence.statement("%s.remote_path = NodePath(\"\")" % str(
+				params_dict.get("follower", "")), context)
 		# U1. A tint set from the tint itself is an EASE, and the grammar is the only place that can
 		# see it: the row holds one value, and only the shape of that value says it eases. Every other
 		# tint row keeps the descriptor's own words, which is why this returns {} unless it matches.
@@ -11461,6 +11657,12 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 		"IsOverlappingAtOffset":
 			return EventSheetSentence.condition(
 				"test_move(transform, %s)" % str(params_dict.get("offset", "")), context)
+		# ── X12 lens hook (the hierarchy's own question) ──────────────────────────────────────────
+		# "Does this object contain that one" is the word a reader uses about a tree out loud, and it
+		# is what a typed `squad.is_ancestor_of(unit)` now reads as - so the picked row says it too.
+		"IsAncestorOf":
+			return EventSheetSentence.condition("%s.is_ancestor_of(%s)" % [
+				str(params_dict.get("target", "self")), str(params_dict.get("node", ""))], context)
 		"IsActionPressed":
 			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), false)
 		"IsActionJustPressed":
@@ -11658,6 +11860,11 @@ func local_declaration_promotion(action: ACEAction) -> Dictionary:
 	var raw_value: String = str(declaration.get("raw_value", ""))
 	if raw_value.contains(" if ") and raw_value.contains(" else "):
 		return {}
+	# X11. The follower a hierarchy row writes out is plumbing the row already stands for, not a
+	# value the reader introduced - promoting it would put a name nobody typed at the top of the
+	# event, one line above the row that explains it.
+	if str(declaration.get("name", "")).begins_with(EventSheetSentence.HIERARCHY_FOLLOWER_PREFIX):
+		return {}
 	var split: Dictionary = EventSheetSentence.declaration_rows(declaration)
 	var promoted: Dictionary = declaration.duplicate(true)
 	promoted["value"] = str(split.get("value", ""))
@@ -11854,7 +12061,9 @@ func _scene_variable_map(sheet: EventSheetResource) -> Dictionary:
 			continue
 		var resolved: Dictionary = ViewportRowBuilder.resolve_res_object(res_path)
 		if not resolved.is_empty():
-			map[declared_name] = resolved
+			# X14. The file itself rides along, so a row that MAKES one of these can show what is
+			# inside it without resolving the name a second time.
+			map[declared_name] = resolved.duplicate().merged({"res_path": res_path}, true)
 	return map
 
 

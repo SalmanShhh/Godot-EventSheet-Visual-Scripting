@@ -3164,3 +3164,35 @@ starting {values},che inizia con {values}
 {subject} is a table,{subject} e una tabella
 with {clauses},con {clauses}
 has {key},ha {key}
+Add child {child},Aggiungi figlio {child}
+Remove from parent,Rimuovi dal genitore
+Take out of the layout,Togli dal layout
+keeping its place,mantenendo il suo posto
+keeping its place in the layout,mantenendo il suo posto nel layout
+snapping to it,agganciandosi a esso
+kept in memory,resta in memoria
+Set ignore parent's movement on,Ignora il movimento del genitore: sì
+Set ignore parent's movement off,Ignora il movimento del genitore: no
+Stop copying,Smetti di copiare
+Copy its place to {target},Copia il suo posto su {target}
+Copy {what} on,Copia {what}: sì
+Copy {what} off,Copia {what}: no
+contains {node},contiene {node}
+ignores parent's movement,ignora il movimento del genitore
+{object}'s parent,genitore di {object}
+ChildCount,NumFigli
+{object}'s first child,primo figlio di {object}
+{object}'s child #{index},figlio n. {index} di {object}
+every {type} among {object}'s descendants,ogni {type} tra i discendenti di {object}
+For each {item} in {object}'s children,Per ogni {item} tra i figli di {object}
+transform position,posizione
+transform angle,angolo
+transform size,dimensione
+destroy with parent,distruggi con il genitore
+What it makes:,Che cosa crea:
+edited inside,modificato all'interno
+Nodes: Hierarchy,Nodi: gerarchia
+Follows,Segue
+places this object copies onto others,posizioni che questo oggetto copia su altri
+copies its place to,copia il suo posto su
+copies its place to nothing yet,non copia ancora il suo posto su nulla

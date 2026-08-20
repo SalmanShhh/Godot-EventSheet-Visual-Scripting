@@ -3164,3 +3164,35 @@ starting {values},commencant par {values}
 {subject} is a table,{subject} est une table
 with {clauses},avec {clauses}
 has {key},a {key}
+Add child {child},Ajouter l'enfant {child}
+Remove from parent,Retirer du parent
+Take out of the layout,Retirer de la mise en page
+keeping its place,en gardant sa place
+keeping its place in the layout,en gardant sa place dans la mise en page
+snapping to it,en s'y calant
+kept in memory,conservé en mémoire
+Set ignore parent's movement on,Ignorer le mouvement du parent : oui
+Set ignore parent's movement off,Ignorer le mouvement du parent : non
+Stop copying,Arrêter de copier
+Copy its place to {target},Copier sa place vers {target}
+Copy {what} on,Copier {what} : oui
+Copy {what} off,Copier {what} : non
+contains {node},contient {node}
+ignores parent's movement,ignore le mouvement du parent
+{object}'s parent,parent de {object}
+ChildCount,NbEnfants
+{object}'s first child,premier enfant de {object}
+{object}'s child #{index},enfant n° {index} de {object}
+every {type} among {object}'s descendants,chaque {type} parmi les descendants de {object}
+For each {item} in {object}'s children,Pour chaque {item} parmi les enfants de {object}
+transform position,position
+transform angle,angle
+transform size,taille
+destroy with parent,détruire avec le parent
+What it makes:,Ce que cela crée :
+edited inside,modifié à l'intérieur
+Nodes: Hierarchy,Nœuds : hiérarchie
+Follows,Suit
+places this object copies onto others,positions que cet objet copie sur d'autres
+copies its place to,copie sa place vers
+copies its place to nothing yet,ne copie encore sa place nulle part

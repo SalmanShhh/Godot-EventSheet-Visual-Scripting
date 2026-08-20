@@ -2845,7 +2845,8 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **On Tree Exiting** - Runs just before this node leaves the scene tree, a good spot for cleanup.
 - **On Tree Exited** - Runs after this node has been removed from the scene tree.
 - **On Renamed** - Runs when this node's name changes in the scene tree.
-- **On Child Entered Tree** (`node: Node`) - Runs when a child node is added beneath this one, e.g. reacting to spawned items.
+- **On Child Added** (`node: Node`) - Runs when a child node is added beneath this one, e.g. reacting to spawned items.
+- **On Child Leaving** (`node: Node`) - Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it.
 
 #### Conditions
 - **Is Action Pressed** (`action: String`) - True while the named input action is held down, for continuous controls like running.
@@ -3363,6 +3364,7 @@ Mesh vocabulary (build and swap 3D meshes from events).
 Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 
 #### Conditions
+- **For Each Child** (`target: String`) - Runs this event's actions once per direct child of a node - healing a squad, totting up an inventory, checking every socket. Read the current one as `child`. Children added while it runs are not visited by this pass.
 - **Is Inside Tree** (`target: String`) - True when the node is currently part of the active scene tree.
 - **Has Child Of Type** (`target: String, type: String`) - True when at least one descendant node of the given class exists beneath this node.
 - **Is Animating (in object)** (`target: String`) - True when any AnimationPlayer beneath the object is currently playing.
@@ -3375,6 +3377,11 @@ Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 #### Actions
 - **Add Child** (`node: String`) - Attaches another node as a child of this one at runtime, e.g. spawning a bullet.
 - **Remove Child** (`node: String`) - Detaches a child node from this one without deleting it, so you can reattach it later.
+- **Add Child (existing node)** (`child: String, parent: String, keep: String`) - Moves a node that is already in the layout under a new parent - picking an item up into a hand, mounting a rider on a saddle, holstering a weapon on a back. Keeping its place leaves it exactly where it looks; snapping to it puts it at the parent's own spot.
+- **Remove From Parent** (`child: String`) - Takes a node off whatever it is under and puts it back at the top of the layout, keeping the place it has in the world - dropping a carried item, dismounting a rider. The node is not freed and nothing else about it changes.
+- **Set Ignore Parent's Movement** (`target: String, ignore: String`) - Stops a child moving, turning and scaling with its parent while leaving it a child in every other way - it is still freed with the parent and still picked as one of its children. The answer for a muzzle flash that should not swing with the gun, or a health bar that should not tilt with the enemy.
+- **Copy Place To** (`follower: String, path: String`) - Points a RemoteTransform at the node it should drive, so that node follows this one without being its child at all. Which parts follow - position, angle, size - are the RemoteTransform's own switches.
+- **Stop Copying Place** (`follower: String`) - Clears a RemoteTransform's target, so whatever it was driving stops following immediately. The node it drove keeps the place it had.
 - **Move Child To Index** (`node: String, index: String`) - Reorders a child to a new sibling index, changing its draw and process order.
 - **Free Node** (`target: String`) - Safely deletes a node at the end of the frame, e.g. removing a dead enemy.
 - **Set Node Name** (`target: String, name: String`) - Renames a node at runtime, handy for tracking or finding it later.

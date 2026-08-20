@@ -279,7 +279,7 @@ Body*, the picker tips you toward **On Body Entered** and lands "overlap" + Ente
 trigger by default.
 
 **5. React to coins *appearing*, don't poll.** Spawning coins at runtime? Instead of checking
-`IsInsideTree` every frame, use **On Child Entered Tree** (source: the coins container) to act the
+`IsInsideTree` every frame, use **On Child Added** (source: the coins container) to act the
 moment a coin is added.
 
 **6. Stay composed.** If a sheet starts reaching into a dozen different nodes, the Doctor's *fan-out*

@@ -6,6 +6,39 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - the Hierarchy: parent and unparent as first-class words
+
+- **Add child, said by the parent.** `item.reparent($Hand)` reads **Hand ▸ Add child item**
+  *keeping its place*, `reparent(p, false)` says *snapping to it*, and a reparent onto the layout
+  root reads **Remove from parent** *keeping its place in the layout*. The two-line
+  `get_parent().remove_child(x)` + `p.add_child(x)` spelling is the SAME one row - with *snapping to
+  it*, because that spelling does not keep the world place - and both lines are on the hover. A bare
+  `remove_child(x)` reads **Take out of the layout** *(kept in memory)*, which is honestly what it
+  does. 2D and 3D. The 2D **Move to layer** reading keeps every reparent whose new parent is a known
+  drawing layer.
+- **The follow-flags, read back off whatever wrote them.** A reparent with a RemoteTransform and a
+  `top_level` beneath it collapses into one Add child row wearing the four chips a hierarchy row has
+  always had - *transform position*, *transform angle*, *transform size*, *destroy with parent* -
+  each ✓ or ✗ according to what the plumbing actually set. The lines are untouched, so the file
+  saves byte for byte, and every line the row stands for is one hover away.
+- **The picks and the counts.** `for c in x.get_children():` reads **For each c in x's children**;
+  `x.get_child_count()` is **x.ChildCount**; `x.get_parent()` is **x's parent**; `x.get_child(0)` is
+  **x's first child**; `x.find_children(\"*\", \"Enemy\")` is **every Enemy among x's descendants**; and
+  `x.is_ancestor_of(y)` is **x contains y**.
+- **The two escape hatches in words.** `top_level = true` reads **Set ignore parent's movement on**
+  (with the question twin), a RemoteTransform reads **copies its place to Target** with its
+  `update_*` switches as tick chips, and a cleared `remote_path` reads **Stop copying**. A
+  RemoteTransform sitting on the object also reads in the head, under **Follows** - the answer to
+  \"why does that thing follow me when it is not my child\".
+- **A scene instance is a ready-made hierarchy, and the row says so.** A Create object row's hover
+  now shows the instanced scene's own tree - the root and two levels beneath it, read out of the
+  `.tscn` as text - and an instance whose insides were changed in that scene wears an *edited
+  inside* mark.
+- **Authorable in the same words.** New rows under **Nodes: Hierarchy**: Add Child (existing node),
+  Remove From Parent, Set Ignore Parent's Movement, Copy Place To, Stop Copying Place and For Each
+  Child, each emitting exactly the line the readings above recognise. **On Child Added** and its new
+  sibling **On Child Leaving** are the two triggers for something joining or leaving an object.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

@@ -1470,7 +1470,8 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"tree_exiting": "OnTreeExiting",
 	"tree_exited": "OnTreeExited",
 	"renamed": "OnRenamed",
-	"child_entered_tree": "OnChildEnteredTree"
+	"child_entered_tree": "OnChildEnteredTree",
+	"child_exiting_tree": "OnChildExitingTree"
 }
 
 

@@ -223,7 +223,19 @@ static func _read_scene_facts(path: String) -> Dictionary:
 	var text: String = FileAccess.get_file_as_string(path)
 	var facts: Dictionary = {
 		"root": "", "root_type": "", "root_script": "", "behaviors": [],
-		"families": PackedStringArray(), "children": [], "picture": ""
+		"families": PackedStringArray(), "children": [], "picture": "",
+		# X14. Every node in the file, root first, as {name, type, parent} - the scene's own tree, kept
+		# apart from `children` because that list deliberately drops the nodes that ARE behaviors and a
+		# tree that hid them would not be the tree.
+		"tree": [],
+		# X14. The instances this scene has `editable_children` turned on for, by their node path -
+		# the ones whose insides were changed HERE rather than in the file they came from.
+		"editable": PackedStringArray(),
+		# X13. The RemoteTransforms on this object, as {node, target, flags}. A node that copies its
+		# place onto another one is a fact ABOUT the object - the answer to "why does that thing
+		# follow me when it is not my child" - so the head says it rather than leaving it in a
+		# property name nobody outside Godot's docs has met.
+		"followers": []
 	}
 	if text.is_empty():
 		return facts
@@ -247,6 +259,13 @@ static func _read_scene_facts(path: String) -> Dictionary:
 			}
 			nodes.append(current)
 			continue
+		# X14. `[editable path="Turret"]` is Godot's record that an INSTANCE was opened up and changed
+		# in this scene, which is the one thing a reader of that instance's tree has to know.
+		if line.begins_with("[editable "):
+			var editable_path: String = _attribute(line, "path")
+			if not editable_path.is_empty():
+				(facts["editable"] as PackedStringArray).append(editable_path)
+			continue
 		if line.begins_with("[") or current.is_empty():
 			continue
 		if line.begins_with("script = ExtResource("):
@@ -257,6 +276,17 @@ static func _read_scene_facts(path: String) -> Dictionary:
 			current[_property_key(line)] = line.get_slice(" = ", 1).strip_edges()
 	for entry: Variant in nodes:
 		var node: Dictionary = entry
+		(facts["tree"] as Array).append({
+			"name": str(node.get("name", "")),
+			"type": str(node.get("type", "")),
+			"parent": "" if not bool(node.get("has_parent", false)) else str(node.get("parent", ""))
+		})
+		if Array(EventSheetSentence.REMOTE_TRANSFORM_CLASSES).has(str(node.get("type", ""))):
+			(facts["followers"] as Array).append({
+				"node": str(node.get("name", "")),
+				"target": EventSheetSentence.node_path_words(str(node.get("remote_path", ""))),
+				"flags": _follower_flags(node)
+			})
 		if not bool(node.get("has_parent", false)):
 			facts["root"] = str(node.get("name", ""))
 			facts["root_type"] = str(node.get("type", ""))
@@ -294,6 +324,18 @@ static func _pack_name_of(script_path: String, node_type: String, packs: Diction
 		return ""
 	var folder: String = script_path.get_base_dir().get_file().to_pascal_case()
 	return str(packs.get(folder, ""))
+
+
+## X13. Which parts of a place a RemoteTransform actually copies, as the tick chips a row wears.
+## Godot's default for all three is ON, so a scene that says nothing about them copies everything -
+## which is why the answer is built from what the file turned OFF.
+static func _follower_flags(node: Dictionary) -> String:
+	var chips: PackedStringArray = PackedStringArray()
+	for member: String in EventSheetSentence.REMOTE_TRANSFORM_FLAGS:
+		var word: String = EventSheetL10n.translate(
+			str(EventSheetSentence.REMOTE_TRANSFORM_FLAGS[member]))
+		chips.append("%s %s" % [word, "✗" if str(node.get(member, "")) == "false" else "✓"])
+	return " ".join(chips)
 
 
 ## The properties a behavior node has set IN THE SCENE, as {name, value} in file order - "Health ▸
@@ -455,6 +497,54 @@ static func is_global_script(script_path: String) -> bool:
 		if str(autoloads[singleton]) == script_path:
 			return true
 	return false
+
+
+## X14. A scene instance is a ready-made hierarchy, and a row that makes one should be able to say
+## what it just made. This is that tree, as indented lines: the root and `levels` levels beneath it,
+## in file order, with an "edited inside" mark on any instance this scene opened up and changed.
+## Empty for a path that is not a readable .tscn, which is the cue to leave the hover as it was.
+##
+## Two levels by default, because the point is to recognise the thing - a reader who needs the whole
+## tree has the scene itself one double-click away, and a hover that tried to be the scene dock would
+## bury the row it belongs to.
+static func scene_tree_lines(scene_path: String, levels: int = 2) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	var facts: Dictionary = scene_facts(scene_path)
+	if facts.is_empty() or str(facts.get("root", "")).is_empty():
+		return lines
+	var editable: PackedStringArray = facts.get("editable", PackedStringArray())
+	lines.append("%s (%s)" % [str(facts.get("root", "")), str(facts.get("root_type", ""))])
+	for entry: Variant in (facts.get("tree", []) as Array):
+		var node: Dictionary = entry
+		var parent: String = str(node.get("parent", ""))
+		if parent.is_empty():
+			continue  # the root, already said
+		var depth: int = 1 if parent == "." else parent.split("/", false).size() + 1
+		if depth > levels:
+			continue
+		var path: String = str(node.get("name", "")) if parent == "." \
+			else "%s/%s" % [parent, str(node.get("name", ""))]
+		var mark: String = ""
+		if Array(editable).has(path):
+			mark = "  %s" % EventSheetL10n.translate("edited inside")
+		var kind: String = str(node.get("type", ""))
+		var named: String = str(node.get("name", "")) if kind.is_empty() \
+			else "%s (%s)" % [str(node.get("name", "")), kind]
+		lines.append("%s%s%s" % ["    ".repeat(depth), named, mark])
+	return lines
+
+
+## X14. The `res://….tscn` a spawn expression names, "" when the expression names no scene file. Both
+## spellings a scene arrives in are read - `preload("…")` and `load("…")` - plus a bare path, which is
+## what a row holds when the scene came from the picker.
+static func scene_path_in(expression: String) -> String:
+	var text: String = expression.strip_edges()
+	for head: String in ["preload(", "load("]:
+		if text.begins_with(head) and text.ends_with(")"):
+			text = text.substr(head.length(), text.length() - head.length() - 1).strip_edges()
+			break
+	text = text.trim_prefix("&").trim_prefix("\"").trim_suffix("\"")
+	return text if text.begins_with("res://") and text.get_extension().to_lower() == "tscn" else ""
 
 
 ## The texture one NAMED node of a scene carries, "" when that node has none (or is not there). What

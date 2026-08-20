@@ -172,6 +172,8 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _signal_backed("_on%s_renamed" % source_token, "", "renamed", source_path)
 		"OnChildEnteredTree":
 			return _signal_backed("_on%s_child_entered_tree" % source_token, "node: Node", "child_entered_tree", source_path)
+		"OnChildExitingTree":
+			return _signal_backed("_on%s_child_exiting_tree" % source_token, "node: Node", "child_exiting_tree", source_path)
 		"OnSignal":
 			var signal_name: String = str(event.trigger_params.get("signal_name", "eventforge_signal"))
 			return _signal_backed("_on%s_%s" % [source_token, signal_name], str(event.trigger_params.get("args", "")).strip_edges(), signal_name, source_path)

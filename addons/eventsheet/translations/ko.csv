@@ -3164,3 +3164,35 @@ starting {values},{values} 로 시작
 {subject} is a table,{subject} 가 테이블
 with {clauses},{clauses} 인
 has {key},{key} 가 있는
+Add child {child},자식 {child} 추가
+Remove from parent,부모에서 떼기
+Take out of the layout,레이아웃에서 꺼내기
+keeping its place,자리를 유지하며
+keeping its place in the layout,레이아웃 안의 자리를 유지하며
+snapping to it,그 위치에 맞추며
+kept in memory,메모리에는 남음
+Set ignore parent's movement on,부모의 움직임 무시: 켬
+Set ignore parent's movement off,부모의 움직임 무시: 끔
+Stop copying,복사 중지
+Copy its place to {target},위치를 {target}에 복사
+Copy {what} on,{what} 복사: 켬
+Copy {what} off,{what} 복사: 끔
+contains {node},{node}를 포함
+ignores parent's movement,부모의 움직임을 무시함
+{object}'s parent,{object}의 부모
+ChildCount,자식수
+{object}'s first child,{object}의 첫 자식
+{object}'s child #{index},{object}의 자식 #{index}
+every {type} among {object}'s descendants,{object}의 자손 중 모든 {type}
+For each {item} in {object}'s children,{object}의 자식마다 {item}
+transform position,위치 따라가기
+transform angle,각도 따라가기
+transform size,크기 따라가기
+destroy with parent,부모와 함께 삭제
+What it makes:,만들어지는 것:
+edited inside,내부 편집됨
+Nodes: Hierarchy,노드: 계층
+Follows,따라감
+places this object copies onto others,이 오브젝트가 다른 것에 복사하는 위치
+copies its place to,위치를 복사함
+copies its place to nothing yet,아직 복사 대상이 없음

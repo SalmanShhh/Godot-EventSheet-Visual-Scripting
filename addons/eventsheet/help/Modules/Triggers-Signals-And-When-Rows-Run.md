@@ -151,7 +151,8 @@ carries the action's name and the reason as its ARGUMENTS, which arrive on the t
 | On Tree Exiting | Runs just before this node leaves the scene tree, a good spot for cleanup. | the `tree_exiting` signal of a Node |
 | On Tree Exited | Runs after this node has been removed from the scene tree. | the `tree_exited` signal of a Node |
 | On Renamed | Runs when this node's name changes in the scene tree. | the `renamed` signal of a Node |
-| On Child Entered Tree | Runs when a child node is added beneath this one. Hands you **node**. | the `child_entered_tree` signal of a Node |
+| On Child Added | Runs when a child node is added beneath this one. Hands you **node**. | the `child_entered_tree` signal of a Node |
+| On Child Leaving | Runs just before a child node leaves this one, while it is still there to be read. Hands you **node**. | the `child_exiting_tree` signal of a Node |
 | On Close Requested | Runs when the player clicks the window's close button or asks to quit. | the `close_requested` signal of the root window |
 | Emit Signal | Fires a signal so other events or nodes can react. Takes **Signal Name** and optional **Arguments**. | `{signal_name}.emit({args})` |
 
@@ -518,7 +519,7 @@ On pool item reset  item
 
 **Hitbox and hurtbox pairs.** On Area Entered on the hurtbox, with a group test on the incoming **area**, keeps damage wiring to one event per fighter instead of one per attack.
 
-**Spawn counters from the tree itself.** On Child Entered Tree under a spawn container counts what actually exists, so a spawner that failed cannot inflate the count.
+**Spawn counters from the tree itself.** On Child Added under a spawn container counts what actually exists, so a spawner that failed cannot inflate the count.
 
 **Debug renaming.** On Renamed paired with Set Node Name turns runtime renames into a live label, useful while tracking down which pooled instance is which.
 

@@ -257,7 +257,10 @@ static func _loop_words() -> bool:
 		[PickFilter.CollectionKind.REPEAT, "i", "10", "Repeat 10 times (loopindex i)", ""],
 		[PickFilter.CollectionKind.REPEAT, "i", "2, 8", "For \"i\" from 2 to 7", ""],
 		[PickFilter.CollectionKind.WHILE, "", "hp > 0", "While hp > 0", ""],
-		[PickFilter.CollectionKind.EXPRESSION, "child", "host.get_children()", "For each child child", "host"],
+		# X10 - a loop over ANOTHER object's children names whose they are, in the possessive the rest
+		# of the hierarchy words use. The loop is the sheet's own For each, so it belongs to nobody.
+		[PickFilter.CollectionKind.EXPRESSION, "child", "host.get_children()",
+			"For each child in host's children", ""],
 		[PickFilter.CollectionKind.CHILDREN, "child", "", "For each child child", ""]
 	]:
 		var words: Dictionary = EventSheetViewportReadingRows.loop_words(int(entry[0]), str(entry[1]), str(entry[2]))

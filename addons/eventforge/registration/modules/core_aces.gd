@@ -82,8 +82,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs after this node has been removed from the scene tree."))
 	descriptors.append(F.make_descriptor("Core", "OnRenamed", "On Renamed", ACEDescriptor.ACEType.TRIGGER, "", "renamed", [], "Signals / Scene / Input", "On renamed", "Node")
 		.described("Runs when this node's name changes in the scene tree."))
-	descriptors.append(F.make_descriptor("Core", "OnChildEnteredTree", "On Child Entered Tree", ACEDescriptor.ACEType.TRIGGER, "", "child_entered_tree", [F.make_param("node", "Node")], "Signals / Scene / Input", "On child entered [i]{node}[/i]", "Node")
+	# X12. The two ends of "something joined / left this object" - the pair a spawn counter, an
+	# inventory panel and a socket check are all written from. The words are the hierarchy's own
+	# ("added" / "leaving"), not the signal names, because the signal names are what a reader has to
+	# translate every time they meet them.
+	descriptors.append(F.make_descriptor("Core", "OnChildEnteredTree", "On Child Added", ACEDescriptor.ACEType.TRIGGER, "", "child_entered_tree", [F.make_param("node", "Node")], "Signals / Scene / Input", "On child added [i]{node}[/i]", "Node")
 		.described("Runs when a child node is added beneath this one, e.g. reacting to spawned items."))
+	descriptors.append(F.make_descriptor("Core", "OnChildExitingTree", "On Child Leaving", ACEDescriptor.ACEType.TRIGGER, "", "child_exiting_tree", [F.make_param("node", "Node")], "Signals / Scene / Input", "On child leaving [i]{node}[/i]", "Node")
+		.described("Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it."))
 
 	# HIDDEN-OPTIMIZATION RULE: templates may use expert idioms a beginner wouldn't type
 	# (&"name" StringName literals below skip the per-call String->StringName hash in hot

@@ -1725,9 +1725,14 @@ static func loop_words(kind: int, iterator_name: String, collection: String) -> 
 	# and a receiver-less `get_children()` is the script's own, which the object column already names.
 	if source == "get_children()":
 		return {"text": "%s %s" % [EventSheetL10n.translate("For each child"), iterator], "object": ""}
+	# X12. A loop over ANOTHER object's children names whose children they are, in the possessive the
+	# rest of the hierarchy vocabulary uses ("leader's children") - the object column cannot say it,
+	# because the loop belongs to the sheet's own For each rather than to the object being walked.
 	var children_of: String = _children_receiver(source)
 	if not children_of.is_empty():
-		return {"text": "%s %s" % [EventSheetL10n.translate("For each child"), iterator], "object": children_of}
+		var possessive: String = EventSheetL10n.translate("For each {item} in {object}'s children")
+		return {"text": possessive.replace("{item}", iterator).replace("{object}", children_of),
+			"object": ""}
 	return {}
 
 

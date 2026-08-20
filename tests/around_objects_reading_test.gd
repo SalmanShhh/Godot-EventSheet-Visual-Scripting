@@ -68,7 +68,10 @@ static var STATEMENT_READINGS: Dictionary = {
 	"z_as_relative = false": "Player ▸ Set Z order absolute",
 	"move_to_front()": "Player ▸ Move to top of layer",
 	"move_to_back()": "Player ▸ Move to bottom of layer",
-	"reparent($\"../FX\")": "Player ▸ Move to layer FX",
+	# X10 - a reparent onto a KNOWN drawing layer is a layer move and keeps these words; a reparent
+	# onto anything else is a move in the hierarchy, and reads as the Add child it is.
+	"label.reparent(hud_layer)": "label ▸ Move to layer hud_layer",
+	"reparent($\"../FX\")": "FX ▸ Add child Player keeping its place",
 	"hud_layer.layer = 10": "hud_layer ▸ Set layer order to 10",
 	# T11 - how its text is styled
 	"label.add_theme_font_size_override(\"font_size\", 32)": "label ▸ Set font size to 32",
@@ -122,7 +125,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ set Z order to 5",
 	"System ▸ set Z order absolute",
 	"System ▸ move to top of layer",
-	"System ▸ move to layer $\"../FX\"",
+	"FX ▸ Add child Node2D keeping its place",
 	"System ▸ set layer order to 10",
 	"System ▸ set font size to 32",
 	"label ▸ Set horizontal alignment to centre",
