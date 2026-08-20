@@ -3590,3 +3590,35 @@ Set Loudness Falloff,Définir l'atténuation du volume
 Sets how quickly a 3D positional sound fades as the listener moves away.,Définit à quelle vitesse un son positionnel 3D s'atténue quand l'auditeur s'éloigne.
 Falloff,Atténuation
 How far the sound stays at full loudness before it starts fading. Bigger carries further.,"Jusqu'où le son reste à plein volume avant de commencer à s'atténuer. Plus la valeur est grande, plus il porte loin."
+Add child {child},Ajouter l'enfant {child}
+Remove from parent,Retirer du parent
+Take out of the layout,Retirer de la mise en page
+keeping its place,en gardant sa place
+keeping its place in the layout,en gardant sa place dans la mise en page
+snapping to it,en s'y calant
+kept in memory,conservé en mémoire
+Set ignore parent's movement on,Ignorer le mouvement du parent : oui
+Set ignore parent's movement off,Ignorer le mouvement du parent : non
+Stop copying,Arrêter de copier
+Copy its place to {target},Copier sa place vers {target}
+Copy {what} on,Copier {what} : oui
+Copy {what} off,Copier {what} : non
+contains {node},contient {node}
+ignores parent's movement,ignore le mouvement du parent
+{object}'s parent,parent de {object}
+ChildCount,NbEnfants
+{object}'s first child,premier enfant de {object}
+{object}'s child #{index},enfant n° {index} de {object}
+every {type} among {object}'s descendants,chaque {type} parmi les descendants de {object}
+For each {item} in {object}'s children,Pour chaque {item} parmi les enfants de {object}
+transform position,position
+transform angle,angle
+transform size,taille
+destroy with parent,détruire avec le parent
+What it makes:,Ce que cela crée :
+edited inside,modifié à l'intérieur
+Nodes: Hierarchy,Nœuds : hiérarchie
+Follows,Suit
+places this object copies onto others,positions que cet objet copie sur d'autres
+copies its place to,copie sa place vers
+copies its place to nothing yet,ne copie encore sa place nulle part

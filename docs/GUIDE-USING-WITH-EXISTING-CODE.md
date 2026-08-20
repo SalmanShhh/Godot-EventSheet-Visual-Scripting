@@ -463,6 +463,18 @@ That is the order this section is in.
 
   ![A clickable, tweened, snap-to-grid script read as an event sheet: the Inspector button as a setting row, a one-line tween chain, the cursor and the click on the Mouse, the gamepad cable on the Gamepad, and a snap setter on the loop's own object](images/opened-script-batch7.png)
 
+- **The hierarchy reads as the two words it has always had.** `item.reparent($Hand)` reads `Hand ▸
+  Add child item` with *keeping its place* said quietly beside it, because who gained the child and
+  what happened to its place are the two things a reader wants. `reparent(p, false)` says *snapping
+  to it*; a reparent onto the layout root reads `Remove from parent`; and the two-line
+  `get_parent().remove_child(x)` + `p.add_child(x)` spelling is the same ONE row, with both lines on
+  the hover. A reparent with a RemoteTransform and a `top_level` beneath it folds into one Add child
+  row wearing the follow-flags the plumbing actually set. `for c in x.get_children():` reads `For
+  each c in x's children`, `x.get_child_count()` is `x.ChildCount`, and `top_level = true` is `Set
+  ignore parent's movement on` rather than a property name from Godot's docs.
+
+  ![Functions read as an event sheet, each row a hierarchy sentence: Hand gains a child keeping its place, an item is removed from its parent, a remove-then-add pair reads as one row snapping to it, and an Add child row wears its follow-flag chips](images/hierarchy-reading.png)
+
   ![Three opened scripts stacked: one whose Include bar says "73% reads as events - 2 script blocks", one whose settings read as Movement and Look folders with every export hint family, and the same file opened as an autoload, whose head is one Global variables folder](images/opened-script-head5.png)
 - **The camera-ray run is one question, and the canvas has its own words.** `project_ray_origin`,
   `project_ray_normal`, the query and `intersect_ray` are four lines that only mean anything

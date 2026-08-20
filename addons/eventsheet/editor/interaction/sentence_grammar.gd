@@ -2297,6 +2297,11 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 		(removed["segments"] as Array).append(
 			{"text": " (%s)" % translate("kept alive, not destroyed"), "tone": "muted"})
 		return removed
+	# X10. The same step said about ANOTHER object - `item.get_parent().remove_child(item)`. Its
+	# receiver is itself a call, so the plain call split below could never name it.
+	var unparented: Dictionary = hierarchy_chained_call(text, context)
+	if not unparented.is_empty():
+		return unparented
 	# R8. Godot reloads the current scene; an event sheet restarts the layout.
 	if text == "get_tree().reload_current_scene()":
 		return _sentence(OBJECT_SYSTEM, "Restart layout", {})
@@ -8693,9 +8698,11 @@ static func _layers_call(object_name: String, method: String, args: PackedString
 		return _patterned(_sentence(object_name, "Move to bottom of layer", {}), "layers")
 	# `reparent(node)` moves an object under another parent, and in a 2D scene that parent IS the
 	# layer it draws on. The optional second argument only says whether the world position is kept.
+	# X10. Only a KNOWN drawing layer keeps these words: every other parent is a move in the
+	# HIERARCHY, and reads as the Add child / Remove from parent the sheet has always said.
 	if method == "reparent" and (args.size() == 1 or args.size() == 2):
 		var into: String = drawing_layer_name(args[0])
-		if into.is_empty():
+		if into.is_empty() or not _class_is_any(object_class_of(into, context), LAYER_CLASSES):
 			return {}
 		return _patterned(_sentence(object_name, "Move to layer {layer}",
 			{"layer": [into, "name"]}), "layers")
@@ -8787,7 +8794,12 @@ static func around_objects_assignment(object_name: String, member: String, assig
 	var layered: Dictionary = _layers_assignment(object_name, member, assigned, context)
 	if not layered.is_empty():
 		return layered
-	return _text_assignment(object_name, member, assigned, context)
+	var styled: Dictionary = _text_assignment(object_name, member, assigned, context)
+	if not styled.is_empty():
+		return styled
+	# X13. The two escape hatches out of a parent's movement, in the words the answers to "why does
+	# my child not follow" are actually about.
+	return hierarchy_assignment(object_name, member, assigned, context)
 
 
 ## T10 / T11 / T12. The around-objects reading of one CALL, or {} when no family claims it.
@@ -8808,12 +8820,341 @@ static func around_objects_call(target: String, method: String, args: PackedStri
 	var styled: Dictionary = _text_call(object_name, method, args, context)
 	if not styled.is_empty():
 		return styled
-	return _layers_call(object_name, method, args, context)
+	var layered: Dictionary = _layers_call(object_name, method, args, context)
+	if not layered.is_empty():
+		return layered
+	# X10. Whatever the drawing order did not claim is a HIERARCHY move, said by the parent.
+	return hierarchy_call(target, method, args, context)
 
 
-## T12. The around-objects reading of one CONDITION, or {} when nothing claims it.
+## T12 / X13. The around-objects reading of one CONDITION, or {} when nothing claims it.
 static func around_objects_condition(text: String, context: Dictionary) -> Dictionary:
-	return _platform_condition(text, context)
+	var platform: Dictionary = _platform_condition(text, context)
+	if not platform.is_empty():
+		return platform
+	return hierarchy_condition(text, context)
+
+
+# ── X10 / X12 / X13 - the hierarchy: parent and unparent as first-class words ────────────────────
+#
+# Godot spells "put this object under that one" as `reparent`, or as a `remove_child` + `add_child`
+# pair, and "stop following the parent" as `top_level` or a RemoteTransform node. An event sheet has
+# had two words for all of it as long as it has existed: Add child, said by the PARENT, and Remove
+# from parent - with the keep-its-place choice spelled out rather than hidden in a boolean nobody
+# reads. These readings say those words.
+#
+# Every one of them is a lens over a line the file already holds: nothing here moves a byte, and the
+# same sentence is what the picker's own hierarchy rows say, so a typed line and a dropped row read
+# alike.
+
+
+## X10. The expressions that name the layout's own root. Reparenting to one of these is not gaining
+## a parent, it is leaving the one you had - a different sentence, and the one a reader wants.
+const LAYOUT_ROOT_EXPRESSIONS: PackedStringArray = [
+	"get_tree().current_scene", "get_tree().get_current_scene()", "get_tree().root",
+	"get_tree().get_root()"
+]
+
+## X13. The RemoteTransform flags, in the order a row says them, as member -> the word it wears.
+const REMOTE_TRANSFORM_FLAGS: Dictionary = {
+	"update_position": "position", "update_rotation": "angle", "update_scale": "size"
+}
+
+## X11 / X13. The two node types that copy one node's place onto another.
+const REMOTE_TRANSFORM_CLASSES: PackedStringArray = ["RemoteTransform2D", "RemoteTransform3D"]
+
+
+## X10. True when `value` names the layout root - the parent an object has when it has no other.
+static func is_layout_root_expression(value: String) -> bool:
+	return LAYOUT_ROOT_EXPRESSIONS.has(value.strip_edges())
+
+
+## X10. One call taken apart even when its RECEIVER is itself a call - `item.get_parent()
+## .remove_child(item)`, which the ordinary split refuses because the first bracket it meets closes
+## long before the end. Same {target, method, args} answer, so a reading can use either.
+static func chained_call_parts(text: String) -> Dictionary:
+	var plain: Dictionary = call_parts(text)
+	if not plain.is_empty():
+		return plain
+	var body: String = text.strip_edges()
+	if not body.ends_with(")"):
+		return {}
+	var open_at: int = _final_call_open(body)
+	if open_at <= 0:
+		return {}
+	var head: String = body.substr(0, open_at).strip_edges()
+	var dot_at: int = head.rfind(".")
+	if dot_at < 0:
+		return {}
+	var method: String = head.substr(dot_at + 1).strip_edges()
+	if not is_identifier(method):
+		return {}
+	return {"target": head.substr(0, dot_at).strip_edges(), "method": method,
+		"args": _split_arguments(body.substr(open_at + 1, body.length() - open_at - 2))}
+
+
+## X10. The bracket that opens the call this line ENDS with, -1 when the line does not end in one.
+static func _final_call_open(text: String) -> int:
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if character == "\"" or character == "'":
+			index = _string_end(text, index) + 1
+			continue
+		if character != "(":
+			index += 1
+			continue
+		var close_at: int = closing_paren(text, index)
+		if close_at < 0:
+			return -1
+		if close_at == text.length() - 1:
+			return index
+		index = close_at + 1
+	return -1
+
+
+## X10. The hierarchy reading of a call whose receiver is itself a call, or {} when the line is not
+## one. Asked before the plain call split, which cannot name such a receiver at all.
+static func hierarchy_chained_call(text: String, context: Dictionary) -> Dictionary:
+	# This is asked of every call statement in every sheet, and the overwhelmingly common answer is
+	# "not one of these two" - so it costs a substring search rather than a parse.
+	if not text.contains(".remove_child(") and not text.contains(".reparent("):
+		return {}
+	var call: Dictionary = chained_call_parts(text.strip_edges())
+	if call.is_empty() or not str(call.get("target", "")).ends_with(")"):
+		return {}
+	return hierarchy_call(str(call.get("target", "")), str(call.get("method", "")),
+		call.get("args", PackedStringArray()), context)
+
+
+## X10. The reading of one HIERARCHY call - `reparent`, `remove_child` - or {} when the call is
+## neither. The receiver is handed in raw so a receiver-less line still reads on the script's own
+## object, which is whose the line is about.
+static func hierarchy_call(target: String, method: String, args: PackedStringArray,
+		context: Dictionary) -> Dictionary:
+	if method == "reparent" and (args.size() == 1 or args.size() == 2):
+		return reparent_sentence(_receiver_object(target, context), args[0],
+			"" if args.size() == 1 else args[1], context)
+	# X10. `p.remove_child(x)` with nothing putting x back takes an object out of the layout while
+	# leaving it alive, and the reader's first question about it is exactly that - so the row says
+	# both halves. The `get_parent().remove_child(self)` spelling has its own settled sentence above
+	# and keeps it.
+	if method == "remove_child" and args.size() == 1 and is_simple_target(args[0].strip_edges()):
+		var taken: Dictionary = _sentence(_receiver_object(args[0].strip_edges(), context),
+			"Take out of the layout", {})
+		(taken["segments"] as Array).append(
+			{"text": " (%s)" % translate("kept in memory"), "tone": "muted"})
+		return _patterned(taken, "hierarchy")
+	return {}
+
+
+## X10. The Add child / Remove from parent sentence for one reparent, or {} when the new parent is
+## not something a row can name. `keep_place` is the reparent call's optional second argument, "" for
+## the one-argument form Godot defaults to true.
+##
+## Said by the PARENT, because that is who Add child has always been said by: the row belongs in the
+## parent's column and names the child it gained.
+static func reparent_sentence(child_name: String, parent_value: String, keep_place: String,
+		context: Dictionary) -> Dictionary:
+	var parent_text: String = parent_value.strip_edges()
+	var keeps_place: bool = keep_place.strip_edges() != "false"
+	if is_layout_root_expression(parent_text):
+		var removed: Dictionary = _sentence(child_name, "Remove from parent", {})
+		(removed["segments"] as Array).append(_reparent_place_tail(keeps_place, true))
+		return _patterned(removed, "hierarchy")
+	if parent_text.is_empty() or not is_simple_target(parent_text):
+		return {}
+	var added: Dictionary = _sentence(object_of_reference(parent_text), "Add child {child}",
+		{"child": [child_name, "value"]})
+	(added["segments"] as Array).append(_reparent_place_tail(keeps_place, false))
+	return _patterned(added, "hierarchy")
+
+
+## X10. The half of a hierarchy sentence that says what happened to the object's PLACE - the whole
+## reason `reparent` takes a second argument, and the thing a reader is looking for when a picked-up
+## item lands in the wrong spot.
+static func _reparent_place_tail(keeps_place: bool, into_layout: bool) -> Dictionary:
+	if not keeps_place:
+		return {"text": ", %s" % translate("snapping to it"), "tone": "plain"}
+	if into_layout:
+		return {"text": " %s" % translate("keeping its place in the layout"), "tone": "muted"}
+	return {"text": " %s" % translate("keeping its place"), "tone": "muted"}
+
+
+## X10. The ONE sentence the two-line `get_parent().remove_child(x)` + `p.add_child(x)` spelling
+## says, or {} when the two lines are not that pair. Godot's own remove-then-add does NOT keep the
+## world place, so the row says "snapping to it" - which is the difference between the two spellings
+## and exactly what a reader is being bitten by when they use it.
+static func remove_then_add_sentence(first_line: String, second_line: String,
+		context: Dictionary) -> Dictionary:
+	var removal: Dictionary = chained_call_parts(first_line.strip_edges())
+	var addition: Dictionary = chained_call_parts(second_line.strip_edges())
+	if removal.is_empty() or addition.is_empty():
+		return {}
+	if str(removal.get("method", "")) != "remove_child" or str(addition.get("method", "")) != "add_child":
+		return {}
+	var removed_args: PackedStringArray = removal.get("args", PackedStringArray())
+	var added_args: PackedStringArray = addition.get("args", PackedStringArray())
+	if removed_args.size() != 1 or added_args.size() != 1:
+		return {}
+	var moved: String = removed_args[0].strip_edges()
+	if moved.is_empty() or moved != added_args[0].strip_edges():
+		return {}
+	# The line has to be TAKING the object off its current parent, whoever that is. Anything else is
+	# two unrelated steps that happen to name the same node, and they stay two rows.
+	var from_parent: String = str(removal.get("target", "")).strip_edges()
+	if from_parent != "get_parent()" and from_parent != "%s.get_parent()" % moved:
+		return {}
+	var new_parent: String = str(addition.get("target", "")).strip_edges()
+	if new_parent.is_empty():
+		new_parent = "self"
+	return reparent_sentence(_receiver_object(moved, context), new_parent, "false", context)
+
+
+## X11. One `x.reparent(p)` line taken apart, as {child, child_value, parent_value, keep_place}, or
+## {} when the line is not a reparent. `child` is the name a row says; `child_value` is the
+## expression as written, which is what the plumbing lines beneath it are matched against.
+static func reparent_call_parts(line: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(line.strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "reparent":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.is_empty() or args.size() > 2:
+		return {}
+	var child_value: String = str(call.get("target", "")).strip_edges()
+	if child_value.is_empty():
+		child_value = "self"
+	return {
+		"child": _receiver_object(child_value, context),
+		"child_value": child_value,
+		"parent_value": args[0].strip_edges(),
+		"keep_place": "" if args.size() == 1 else args[1].strip_edges()
+	}
+
+
+## X11. The flag one plumbing line beneath an Add child turns OFF, or "" when the line is not part of
+## that shape. Four lines can say it: the child stepping out of its parent's transform, a follower's
+## own `update_*` switch, the follower being planted, and the handler that saves the child from being
+## freed with its parent. Only lines that name THIS child (or the follower made for it) are claimed,
+## so an unrelated step below a reparent stays the row it is.
+static func hierarchy_flag_line(line: String, child_value: String, parent_value: String) -> String:
+	var text: String = line.strip_edges()
+	if text.is_empty() or child_value.is_empty():
+		return ""
+	# The child stepping out of the parent's transform: the half of the shape that makes room for a
+	# follower to drive it. It carries no flag of its own - the follower's switches say which.
+	if text == "%s.top_level = true" % child_value:
+		return "top_level"
+	# `var __follow_x := RemoteTransform3D.new()` - the follower that will drive the child.
+	if not _remote_follower_name(text).is_empty():
+		return "follower"
+	# Everything else the follower needs: its own `update_*` switches, its target, and being planted
+	# under the new parent. The follower's name is what marks these as plumbing.
+	if text.contains(HIERARCHY_FOLLOWER_PREFIX):
+		var assignment_at: int = top_level_index(text, " = ")
+		if assignment_at > 0:
+			var member: String = text.substr(0, assignment_at).strip_edges()
+			var value: String = text.substr(assignment_at + 3).strip_edges()
+			var dot_at: int = member.rfind(".")
+			var flag: String = "" if dot_at < 0 else member.substr(dot_at + 1)
+			if REMOTE_TRANSFORM_FLAGS.has(flag):
+				return flag if value == "false" else "follower"
+			if flag == "remote_path":
+				return "follower"
+		elif text.begins_with("%s.add_child(" % parent_value):
+			return "follower"
+	# The handler that puts the child back in the layout when its parent goes: what "destroy with
+	# parent" being OFF actually is.
+	if text.contains("tree_exiting.connect(") and text.contains("%s.reparent(" % child_value):
+		return "destroy_with_parent"
+	return ""
+
+
+## X11. The name of the follower a `var __follow_… := RemoteTransform3D.new()` line declares, "" for
+## every other line.
+static func _remote_follower_name(line: String) -> String:
+	var text: String = line.strip_edges()
+	if not text.begins_with("var "):
+		return ""
+	var assignment_at: int = top_level_index(text, " := ")
+	var separator: int = 4
+	if assignment_at < 0:
+		assignment_at = top_level_index(text, " = ")
+		separator = 3
+	if assignment_at < 0:
+		return ""
+	var made: String = text.substr(assignment_at + separator).strip_edges()
+	for kind: String in REMOTE_TRANSFORM_CLASSES:
+		if made == "%s.new()" % kind:
+			return text.substr(4, assignment_at - 4).strip_edges()
+	return ""
+
+
+## X11. The name every follower a hierarchy row writes out begins with, so the lines that configure
+## one are recognisable as plumbing rather than as steps of their own.
+const HIERARCHY_FOLLOWER_PREFIX := "__follow_"
+
+
+## X13. The reading of one hierarchy ASSIGNMENT - the two escape hatches out of a parent's movement -
+## or {} when the member is neither of them.
+static func hierarchy_assignment(object_name: String, member: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	if member == "top_level" and (value == "true" or value == "false"):
+		return _patterned(_sentence(object_name, "Set ignore parent's movement on"
+			if value == "true" else "Set ignore parent's movement off", {}), "hierarchy")
+	if member == "remote_path":
+		var followed: String = node_path_words(value)
+		if followed.is_empty():
+			return _patterned(_sentence(object_name, "Stop copying", {}), "hierarchy")
+		return _patterned(_sentence(object_name, "Copy its place to {target}",
+			{"target": [followed, "name"]}), "hierarchy")
+	if REMOTE_TRANSFORM_FLAGS.has(member) and (value == "true" or value == "false"):
+		return _patterned(_sentence(object_name, "Copy {what} on" if value == "true"
+			else "Copy {what} off",
+			{"what": [translate(str(REMOTE_TRANSFORM_FLAGS[member])), "name"]}), "hierarchy")
+	return {}
+
+
+## X13. The node a `remote_path` value points at, by the name a reader sees in the scene tree. ""
+## for a cleared path, which is the "stop copying" the row says out loud.
+static func node_path_words(value: String) -> String:
+	var text: String = value.strip_edges()
+	for head: String in ["NodePath(", "^"]:
+		if text.begins_with(head):
+			text = text.substr(head.length())
+			break
+	text = text.rstrip(")").strip_edges()
+	if not _is_string_literal(text):
+		return "" if text.is_empty() else text
+	var path: String = _unquote(text).strip_edges()
+	if path.is_empty():
+		return ""
+	var slash_at: int = path.rfind("/")
+	return path if slash_at < 0 else path.substr(slash_at + 1)
+
+
+## X13. The reading of one hierarchy CONDITION - "does this object ignore its parent's movement" -
+## or {} when the question is something else.
+static func hierarchy_condition(text: String, context: Dictionary) -> Dictionary:
+	var asked: String = text.strip_edges()
+	# X12. `p.is_ancestor_of(c)` asks whether one object is anywhere beneath another, which the sheet
+	# says as containment - the word a reader uses about a hierarchy out loud.
+	var call: Dictionary = call_parts(asked)
+	if not call.is_empty() and str(call.get("method", "")) == "is_ancestor_of":
+		var inside: PackedStringArray = call.get("args", PackedStringArray())
+		var holder: String = str(call.get("target", "")).strip_edges()
+		if inside.size() == 1 and is_simple_target(inside[0].strip_edges()):
+			return _patterned(_sentence(_receiver_object(holder, context), "contains {node}",
+				{"node": [_receiver_object(inside[0].strip_edges(), context), "value"]}), "hierarchy")
+	var dot_at: int = asked.rfind(".top_level")
+	if dot_at > 0 and asked.substr(dot_at) == ".top_level":
+		return _patterned(_sentence(object_of_reference(asked.substr(0, dot_at)),
+			"ignores parent's movement", {}), "hierarchy")
+	if asked == "top_level":
+		return _patterned(_sentence(script_object(context), "ignores parent's movement", {}),
+			"hierarchy")
+	return {}
 
 
 # ── T8 - picking: WHICH instances a row is about ─────────────────────────────────────────────────
@@ -10633,7 +10974,38 @@ static func data_scene_receiver_words(receiver: String, method: String,
 			if arguments.size() == 1 and _is_string_literal(arguments[0]):
 				return _fill(translate("{object}'s child named {name}"),
 					{"object": receiver, "name": _unquote(arguments[0])})
+		# ── X12 - the hierarchy read as the possessives a reader already says out loud ───────────
+		# "the squad's parent", "the squad's first child", "how many children the squad has". Each is
+		# one call with one answer, which is exactly when a value earns a sentence of its own.
+		"get_parent":
+			if arguments.is_empty():
+				return _fill(translate("{object}'s parent"), {"object": receiver})
+		"get_child_count":
+			if arguments.is_empty():
+				return "%s.%s" % [receiver, translate("ChildCount")]
+		"get_child":
+			if arguments.size() == 1:
+				return _nth_child_words(receiver, arguments[0])
+		# X12. `find_children("*", "Enemy")` is every Enemy anywhere beneath an object. Only the
+		# match-everything pattern is read this way: a NAME pattern is a different question, and
+		# `find_child` above already answers that one.
+		"find_children":
+			if arguments.size() >= 2 and arguments.size() <= 4 \
+					and _unquote(arguments[0].strip_edges()) == "*" and _is_string_literal(arguments[1]):
+				var kind: String = _unquote(arguments[1]).strip_edges()
+				if not kind.is_empty():
+					return _fill(translate("every {type} among {object}'s descendants"),
+						{"type": kind, "object": receiver})
 	return ""
+
+
+## X12. The nth child of an object, said the way a reader counts them. The first one has a word of
+## its own because that is the one every script asks for; every other index says its number.
+static func _nth_child_words(receiver: String, index_value: String) -> String:
+	var index: String = index_value.strip_edges()
+	if index == "0":
+		return _fill(translate("{object}'s first child"), {"object": receiver})
+	return _fill(translate("{object}'s child #{index}"), {"object": receiver, "index": index})
 
 
 ## U5. The scene-tree spellings that are one word in an event sheet, on a whole value. Run after the

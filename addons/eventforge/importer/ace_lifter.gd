@@ -1474,7 +1474,8 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"tree_exiting": "OnTreeExiting",
 	"tree_exited": "OnTreeExited",
 	"renamed": "OnRenamed",
-	"child_entered_tree": "OnChildEnteredTree"
+	"child_entered_tree": "OnChildEnteredTree",
+	"child_exiting_tree": "OnChildExitingTree"
 }
 
 ## W18. Two editor signals that only mean what the Editor object says they mean when they came off

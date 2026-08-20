@@ -3590,3 +3590,35 @@ Set Loudness Falloff,设置音量衰减
 Sets how quickly a 3D positional sound fades as the listener moves away.,设置当听者远离时，3D 位置音效衰减得有多快。
 Falloff,衰减
 How far the sound stays at full loudness before it starts fading. Bigger carries further.,声音在多远之内保持满音量，之后才开始衰减。数值越大传得越远。
+Add child {child},添加子节点 {child}
+Remove from parent,从父节点移除
+Take out of the layout,从布局中取出
+keeping its place,保持其位置
+keeping its place in the layout,保持其在布局中的位置
+snapping to it,对齐到它
+kept in memory,仍保留在内存中
+Set ignore parent's movement on,忽略父节点移动：开
+Set ignore parent's movement off,忽略父节点移动：关
+Stop copying,停止复制
+Copy its place to {target},把位置复制到 {target}
+Copy {what} on,复制 {what}：开
+Copy {what} off,复制 {what}：关
+contains {node},包含 {node}
+ignores parent's movement,忽略父节点的移动
+{object}'s parent,{object} 的父节点
+ChildCount,子节点数
+{object}'s first child,{object} 的第一个子节点
+{object}'s child #{index},{object} 的第 {index} 个子节点
+every {type} among {object}'s descendants,{object} 后代中的每个 {type}
+For each {item} in {object}'s children,对 {object} 的每个子节点 {item}
+transform position,位置
+transform angle,角度
+transform size,大小
+destroy with parent,随父节点销毁
+What it makes:,它会创建：
+edited inside,内部已编辑
+Nodes: Hierarchy,节点：层级
+Follows,跟随
+places this object copies onto others,此对象复制到其他对象的位置
+copies its place to,把位置复制到
+copies its place to nothing yet,尚未复制到任何对象

@@ -99,6 +99,36 @@ if not str("coins").is_empty():
 The group is added with `true`, meaning persistent, because a non-persistent group vanishes when a
 node is packed into a scene and every later group check then silently never fires.
 
+### The hierarchy: moving a node that is already there
+
+Add Child above builds a NEW node under this one. These move a node that is already in the layout,
+and each says the one thing that decides where it lands: does it keep the place it has in the world,
+or snap to its new parent? An event sheet reads all of them back in the same words - `Hand ▸ Add
+child item keeping its place` - whether the row was dropped from the picker or the line was typed by
+hand.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Add Child (existing node) | Moves a node already in the layout under a new parent | `{child}.reparent({parent}{, keep})` |
+| Remove From Parent | Puts a node back at the top of the layout, keeping its place | `{child}.reparent(get_tree().current_scene)` |
+| Set Ignore Parent's Movement | The child stops following its parent while staying a child | `{target}.top_level = {ignore}` |
+| Copy Place To | Points a RemoteTransform at the node it should drive | `{follower}.remote_path = NodePath({path})` |
+| Stop Copying Place | Clears a RemoteTransform's target | `{follower}.remote_path = NodePath("")` |
+| For Each Child | Runs the actions once per direct child of a node | `{target}.get_children()` |
+
+**Its place** on Add Child has two settings. *Keeping its place* leaves the child exactly where it
+looks - what picking an item up into a hand wants. *Snapping to it* puts the child at the parent's
+own spot, which is what a socket wants.
+
+**Ignore parent's movement** is the muzzle flash that should not swing with the gun and the health
+bar that should not tilt with the enemy. The child stays a child in every other way: it is still
+freed with the parent and still walked by For Each Child.
+
+**Copy Place To** is the other hatch, and it works the opposite way round: the follower is not the
+child at all, it just copies its place onto whatever it points at. Which parts follow - position,
+angle, size - are the RemoteTransform's own switches, and an event sheet reads them back as tick
+chips on the row that made them.
+
 ### Reading a node
 
 | Name | What it does | Ships as |

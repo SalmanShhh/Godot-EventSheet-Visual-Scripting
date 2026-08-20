@@ -3590,3 +3590,35 @@ Set Loudness Falloff,Задать спад громкости
 Sets how quickly a 3D positional sound fades as the listener moves away.,"Задаёт, как быстро позиционный 3D-звук затухает по мере удаления слушателя."
 Falloff,Спад
 How far the sound stays at full loudness before it starts fading. Bigger carries further.,"На каком расстоянии звук остаётся в полную громкость, прежде чем начнёт затухать. Больше значение - дальше слышно."
+Add child {child},Добавить потомка {child}
+Remove from parent,Убрать из родителя
+Take out of the layout,Убрать из макета
+keeping its place,сохраняя своё место
+keeping its place in the layout,сохраняя своё место в макете
+snapping to it,привязываясь к нему
+kept in memory,остаётся в памяти
+Set ignore parent's movement on,Игнорировать движение родителя: вкл
+Set ignore parent's movement off,Игнорировать движение родителя: выкл
+Stop copying,Прекратить копирование
+Copy its place to {target},Копировать своё место в {target}
+Copy {what} on,Копировать {what}: вкл
+Copy {what} off,Копировать {what}: выкл
+contains {node},содержит {node}
+ignores parent's movement,игнорирует движение родителя
+{object}'s parent,родитель {object}
+ChildCount,ЧислоПотомков
+{object}'s first child,первый потомок {object}
+{object}'s child #{index},потомок №{index} объекта {object}
+every {type} among {object}'s descendants,каждый {type} среди потомков {object}
+For each {item} in {object}'s children,Для каждого {item} среди потомков {object}
+transform position,положение
+transform angle,угол
+transform size,размер
+destroy with parent,уничтожать с родителем
+What it makes:,Что создаётся:
+edited inside,отредактировано внутри
+Nodes: Hierarchy,Узлы: иерархия
+Follows,Следование
+places this object copies onto others,"места, которые этот объект копирует другим"
+copies its place to,копирует своё место в
+copies its place to nothing yet,пока никуда не копирует своё место

@@ -3590,3 +3590,35 @@ Set Loudness Falloff,音量の減衰を設定
 Sets how quickly a 3D positional sound fades as the listener moves away.,リスナーが離れていくとき、3D 位置つきサウンドがどれだけ速く小さくなるかを設定します。
 Falloff,減衰
 How far the sound stays at full loudness before it starts fading. Bigger carries further.,音が最大の音量を保つ距離。ここを超えると小さくなり始めます。大きいほど遠くまで届きます。
+Add child {child},子 {child} を追加
+Remove from parent,親から外す
+Take out of the layout,レイアウトから取り出す
+keeping its place,位置はそのまま
+keeping its place in the layout,レイアウト内の位置はそのまま
+snapping to it,その位置にそろえる
+kept in memory,メモリ上には残る
+Set ignore parent's movement on,親の動きを無視: オン
+Set ignore parent's movement off,親の動きを無視: オフ
+Stop copying,コピーを停止
+Copy its place to {target},位置を {target} にコピー
+Copy {what} on,{what} をコピー: オン
+Copy {what} off,{what} をコピー: オフ
+contains {node},{node} を含む
+ignores parent's movement,親の動きを無視している
+{object}'s parent,{object} の親
+ChildCount,子の数
+{object}'s first child,{object} の最初の子
+{object}'s child #{index},{object} の子 #{index}
+every {type} among {object}'s descendants,{object} の子孫にあるすべての {type}
+For each {item} in {object}'s children,{object} の子ごとに {item}
+transform position,位置を追従
+transform angle,角度を追従
+transform size,サイズを追従
+destroy with parent,親と一緒に破棄
+What it makes:,作られるもの:
+edited inside,内部を編集済み
+Nodes: Hierarchy,ノード: 階層
+Follows,追従
+places this object copies onto others,このオブジェクトが他へコピーする位置
+copies its place to,位置をコピー先
+copies its place to nothing yet,まだコピー先がありません

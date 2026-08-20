@@ -3590,3 +3590,35 @@ Set Loudness Falloff,Lautstärkeabfall setzen
 Sets how quickly a 3D positional sound fades as the listener moves away.,"Legt fest, wie schnell ein 3D-Klang mit Position leiser wird, während sich der Zuhörer entfernt."
 Falloff,Abfall
 How far the sound stays at full loudness before it starts fading. Bigger carries further.,"Wie weit der Klang voll laut bleibt, bevor er abfällt. Größer trägt weiter."
+Add child {child},Kind {child} hinzufügen
+Remove from parent,Vom Elternobjekt lösen
+Take out of the layout,Aus dem Layout nehmen
+keeping its place,behält seinen Platz
+keeping its place in the layout,behält seinen Platz im Layout
+snapping to it,springt an dessen Position
+kept in memory,bleibt im Speicher
+Set ignore parent's movement on,Bewegung des Elternobjekts ignorieren: an
+Set ignore parent's movement off,Bewegung des Elternobjekts ignorieren: aus
+Stop copying,Kopieren beenden
+Copy its place to {target},Position auf {target} kopieren
+Copy {what} on,{what} kopieren: an
+Copy {what} off,{what} kopieren: aus
+contains {node},enthält {node}
+ignores parent's movement,ignoriert die Bewegung des Elternobjekts
+{object}'s parent,Elternobjekt von {object}
+ChildCount,KindAnzahl
+{object}'s first child,erstes Kind von {object}
+{object}'s child #{index},Kind Nr. {index} von {object}
+every {type} among {object}'s descendants,jedes {type} unter den Nachfahren von {object}
+For each {item} in {object}'s children,Für jedes {item} in den Kindern von {object}
+transform position,Position übernehmen
+transform angle,Winkel übernehmen
+transform size,Größe übernehmen
+destroy with parent,mit Elternobjekt zerstören
+What it makes:,Was dabei entsteht:
+edited inside,innen bearbeitet
+Nodes: Hierarchy,Knoten: Hierarchie
+Follows,Folgt
+places this object copies onto others,"Positionen, die dieses Objekt auf andere kopiert"
+copies its place to,kopiert seine Position auf
+copies its place to nothing yet,kopiert seine Position noch nirgendwohin

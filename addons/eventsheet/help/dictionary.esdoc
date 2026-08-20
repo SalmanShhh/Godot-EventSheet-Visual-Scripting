@@ -590,6 +590,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `release_focus` | [Release Focus](ace:Core/ReleaseFocus) | UI | Vocabulary |
 | `reload_current_scene` | [Restart Layout](ace:Core/ReloadScene) | Scene | Vocabulary |
 | `remap` | [Remap Range](ace:Core/RemapValue) | Helpers | Vocabulary |
+| `remote_path` | [Copy Place To](ace:Core/CopyPlaceTo) | Nodes: Hierarchy | Vocabulary |
 | `remove_absolute` | [Delete File](ace:Core/DeleteFile) | Files | Vocabulary |
 | `remove_at` | [Delete At](ace:Core/ArrayRemoveAt) | Variables: Array | Vocabulary |
 | `remove_child` | [Remove Child](ace:Core/RemoveChild) | Nodes | Vocabulary |
@@ -742,6 +743,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `to_upper` | [Uppercase](ace:Core/TextUpper) | Text | Vocabulary |
 | `to_utf8_buffer` | [First To Finish](ace:Core/FirstToFinish) | Run Context | Vocabulary |
 | `tooltip_text` | [Set Tooltip](ace:Core/SetTooltip) | UI | Vocabulary |
+| `top_level` | [Set Ignore Parent's Movement](ace:Core/SetIgnoreParentMovement) | Nodes: Hierarchy | Vocabulary |
 | `top_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
 | `tr` | [Translated](ace:Core/TranslatedText) | Text | Vocabulary |
 | `tr_n` | [Translate Plural](ace:Core/TranslatePlural) | Translation | Vocabulary |

@@ -3464,8 +3464,16 @@ func _get_tooltip(at_position: Vector2) -> String:
 						created.params if not created.params.is_empty() else created.parameters)
 					if not created_code.strip_edges().is_empty():
 						create_lines.append(created_code)
+				# X14. A scene instance is a hierarchy somebody already built, so the row that makes
+				# one shows it: the root and two levels beneath it, read out of the .tscn as text.
+				# An instance this scene opened up and changed wears the "edited inside" mark, which
+				# is the one thing about such a child that is not in the file it came from.
+				var made_scene: PackedStringArray = EventSheetObjectFacts.scene_tree_lines(
+					str(metadata.get("create_object_scene", "")))
+				var made_text: String = "" if made_scene.is_empty() else "\n\n%s\n%s" % [
+					EventSheetL10n.translate("What it makes:"), "\n".join(made_scene)]
 				if not create_lines.is_empty():
-					return sentence_prefix + "GDScript:\n%s" % "\n".join(create_lines)
+					return sentence_prefix + "GDScript:\n%s%s" % ["\n".join(create_lines), made_text]
 			var ace_resource: Resource = _resolve_ace_resource(row_data.source_resource, kind, int(metadata.get("ace_index", -1)))
 			# Show the plain-language DESCRIPTION of the ACE / function (what it does) on hover. Built-in
 			# ACEs get theirs from the generated map; custom ACEs + functions carry their own.
