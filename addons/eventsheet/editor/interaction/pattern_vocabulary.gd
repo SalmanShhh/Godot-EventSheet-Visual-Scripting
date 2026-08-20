@@ -153,6 +153,30 @@ const ENTRIES: Dictionary = {
 		"why": "text built from values, and a regular expression searched or replaced in it",
 		"adoptable": "",
 		"rank": 21
+	},
+	"pity": {
+		"words": "Pity",
+		"why": "a counter fed by every miss raises the odds until a cap guarantees the win, and the win resets it",
+		"adoptable": "advanced_random",
+		"rank": 22
+	},
+	"detection": {
+		"words": "Detection",
+		"why": "a meter fills while the target is seen and drains while it is not, and a threshold starts the hunt",
+		"adoptable": "line_of_sight",
+		"rank": 23
+	},
+	"boss_phases": {
+		"words": "Boss phases",
+		"why": "health thresholds move a fight through numbered phases, each one entered exactly once",
+		"adoptable": "",
+		"rank": 24
+	},
+	"quest_timer": {
+		"words": "Mission timer",
+		"why": "a clock counts a mission down, shows the time left, and fails when it reaches zero",
+		"adoptable": "",
+		"rank": 25
 	}
 }
 
@@ -169,7 +193,9 @@ const PACK_LABELS: Dictionary = {
 	"camera_kit": "Camera",
 	"scene_flow": "Scene Flow",
 	"nav_agent": "Nav Agent",
-	"follow_path": "Follow A Path"
+	"follow_path": "Follow A Path",
+	"advanced_random": "Advanced Random",
+	"line_of_sight": "Line Of Sight"
 }
 
 

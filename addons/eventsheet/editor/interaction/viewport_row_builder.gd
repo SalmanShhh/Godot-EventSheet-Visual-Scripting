@@ -5383,20 +5383,28 @@ func _group_line_text(action_resource: Variant) -> String:
 const JOINED_CONDITION_MARK := ".get_custom_data("
 
 
-func _joined_condition_groups(conditions: Array) -> Dictionary:
+func _joined_condition_groups(conditions: Array, joiner: String = " and ") -> Dictionary:
 	var leads: Dictionary = {}
 	var consumed: Dictionary = {}
+	var context: Dictionary = sentence_context()
+	# X21 / X26. Two more runs whose halves mean nothing apart - a roll that is either won or
+	# guaranteed, and a health threshold guarded by the phase the fight is in. Which files write one
+	# is a whole-file fact already in hand, so the parse below only ever runs on a file that writes
+	# one; every other sheet in the world still pays a substring search and nothing more.
+	var writes_runs: bool = not (context.get("pity_rolls", {}) as Dictionary).is_empty() \
+		or not (context.get("boss_phase_steps", {}) as Dictionary).is_empty()
 	var index: int = 0
 	while index < conditions.size() - 1:
 		var first: String = _condition_expression_of(conditions[index])
 		var second: String = _condition_expression_of(conditions[index + 1])
 		# This pass runs on every event of every sheet, so the overwhelmingly common answer - "these
 		# two questions are not one question" - must cost a substring search, not a parse.
-		if first.is_empty() or not second.contains(JOINED_CONDITION_MARK):
+		if first.is_empty() or second.is_empty() \
+				or not (writes_runs or second.contains(JOINED_CONDITION_MARK)):
 			index += 1
 			continue
-		var reading: Dictionary = EventSheetSentence.condition_pieces(
-			"%s and %s" % [first, second], sentence_context())
+		var run: String = "%s%s%s" % [first, joiner, second]
+		var reading: Dictionary = EventSheetSentence.condition_pieces(run, context)
 		if str(reading.get("pattern", "")).is_empty():
 			index += 1
 			continue
@@ -5405,7 +5413,7 @@ func _joined_condition_groups(conditions: Array) -> Dictionary:
 			text += str((piece as Array)[0])
 		leads[index] = {"text": text.strip_edges(), "object": str(reading.get("object", ""))}
 		consumed[index + 1] = true
-		_note_pattern(str(reading.get("pattern", "")), "%s and %s" % [first, second])
+		_note_pattern(str(reading.get("pattern", "")), run)
 		index += 2
 	return {"leads": leads, "consumed": consumed}
 
@@ -5416,12 +5424,23 @@ func _condition_expression_of(condition_resource: Variant) -> String:
 	var condition: ACECondition = condition_resource as ACECondition
 	if condition == null or not condition.enabled or condition.negated:
 		return ""
-	if condition.ace_id != "ExpressionIsTrue":
-		return ""
 	if not (condition.provider_id.is_empty() or condition.provider_id == "Core"):
 		return ""
 	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
-	return str(params_dict.get("expr", "")).strip_edges()
+	if condition.ace_id == "ExpressionIsTrue":
+		return str(params_dict.get("expr", "")).strip_edges()
+	# X26. A comparison the importer filed as a Compare row is text the file wrote too - `phase == 1`
+	# reached the sheet as a row rather than as an expression only because the lifter had a row for
+	# it. Rebuilt in the file's own spelling, so a joined reading is still built from nothing but
+	# what the author typed.
+	if condition.ace_id == "CompareVar":
+		var compared: String = str(params_dict.get("var_name", "")).strip_edges()
+		var operator: String = str(params_dict.get("op", "")).strip_edges()
+		var value: String = str(params_dict.get("value", "")).strip_edges()
+		if compared.is_empty() or operator.is_empty() or value.is_empty():
+			return ""
+		return "%s %s %s" % [compared, operator, value]
+	return ""
 
 
 ## The ONE cell a scroll-limit run reads as: the sentence, then the edges it set, said quietly. The
@@ -7777,7 +7796,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		condition_line_index += 1
 	# S17 - a guard and the question it guards are ONE question. The importer files them as two
 	# conditions because the file joins them with `and`, so the pair is put back together here.
-	var joined_conditions: Dictionary = _joined_condition_groups(event_row.conditions)
+	var joined_conditions: Dictionary = _joined_condition_groups(event_row.conditions,
+		" or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and ")
 	if not event_row.conditions.is_empty():
 		var displayed_condition_indices: Array[int] = []
 		for condition_index in range(event_row.conditions.size()):

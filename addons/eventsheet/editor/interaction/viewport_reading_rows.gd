@@ -1234,10 +1234,60 @@ static func _append_ordered_lines(entry: Variant, lines: PackedStringArray, dept
 				condition_params = condition_row.parameters
 			lines.append("%s %s %s" % [str(condition_params.get("var_name", "")),
 				str(condition_params.get("op", "")), str(condition_params.get("value", ""))])
+		# X21 / X26 - the RUN the condition lane stands for, rebuilt as the `if` it compiles to. Two
+		# questions this walk has to answer are runs whose halves mean nothing apart: a roll that is
+		# either won or guaranteed, and a health threshold guarded by the phase the fight is in.
+		# Once the importer has lifted such a line into rows there is no text left to read it from,
+		# so the line is rebuilt here - and ONLY for a run of two or more terms, because a single
+		# term is already visible through its own row and repeating it would say the same thing twice.
+		var run_line: String = _condition_run_line(entry as EventRow)
+		if not run_line.is_empty():
+			lines.append(run_line)
 		for action_entry: Variant in (entry as EventRow).actions:
 			_append_ordered_lines(action_entry, lines, depth + 1)
 		for sub_entry: Variant in (entry as EventRow).sub_events:
 			_append_ordered_lines(sub_entry, lines, depth + 1)
+
+
+## X21 / X26. The `if ...:` a row's CONDITION RUN stands for, or "" when the row has no run to
+## rebuild - fewer than two terms, a term whose spelling the row does not carry, or a disabled one.
+## The joiner is the row's own, so an OR block reads back as the `or` it compiles to.
+static func _condition_run_line(row: EventRow) -> String:
+	var terms: PackedStringArray = PackedStringArray()
+	for entry: Variant in row.conditions:
+		var condition_row: ACECondition = entry as ACECondition
+		if condition_row == null or not condition_row.enabled:
+			return ""
+		var text: String = _condition_expression(condition_row)
+		if text.is_empty():
+			return ""
+		terms.append(text)
+	if terms.size() < 2:
+		return ""
+	var joiner: String = " or " if row.condition_mode == EventRow.ConditionMode.OR else " and "
+	return "if %s:" % joiner.join(terms)
+
+
+## One lifted condition's expression, from the template the row baked and the parameters it holds.
+## "" whenever the spelling cannot be reproduced exactly - a multi-line template, a placeholder with
+## no value - because a half-substituted line would be a reading built on a sentence nobody wrote.
+static func _condition_expression(condition_row: ACECondition) -> String:
+	var params: Dictionary = condition_row.params
+	if params.is_empty():
+		params = condition_row.parameters
+	var template: String = condition_row.codegen_template
+	if template.is_empty():
+		if condition_row.ace_id != "CompareVar":
+			return ""
+		template = "{var_name} {op} {value}"
+	if template.contains("\n"):
+		return ""
+	var text: String = template
+	for key: Variant in params.keys():
+		text = text.replace("{%s}" % str(key), str(params[key]))
+	if text.contains("{"):
+		return ""
+	return "not (%s)" % text if condition_row.negated else text
 
 
 ## Every line of hand-written GDScript the sheet still holds, from the top level down through event

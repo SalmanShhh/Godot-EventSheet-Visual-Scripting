@@ -53,10 +53,21 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 		# The declarations the one FSM line stands for ride along with the facts, so the claim can
 		# show them as its evidence without a second walk over the file.
 		machine["evidence"] = EventSheetStateMachineFacts.evidence(lines, machine)
+	var pity: Dictionary = pity_facts(lines)
 	return {
 		"countdown_variables": countdown_variables(lines),
 		"pool_variables": pool_variables(lines),
-		"state_machine": machine
+		"state_machine": machine,
+		# ── X21 / X24 / X26 / X27 ──────────────────────────────────────────────────────────────
+		# Four game shapes no single line can decide: a roll that owes the player one, a meter that
+		# fills while something is seen and drains while it is not, a health ladder that moves a
+		# fight through numbered phases, and a mission clock with a deadline on it. Each is answered
+		# once here and handed to the grammar as ordinary context.
+		"pity_rolls": pity.get("rolls", {}),
+		"pity_unreset": pity.get("unreset", {}),
+		"meter_variables": meter_variables(lines),
+		"boss_phase_steps": boss_phase_steps(lines),
+		"mission_timers": mission_timers(lines, countdown_variables(lines))
 	}
 
 
@@ -187,7 +198,153 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 	var machine_claim: Dictionary = state_machine_claim(body, file_facts)
 	if not machine_claim.is_empty():
 		found.append(machine_claim)
+	found.append_array(game_shape_claims(body, file_facts))
 	return found
+
+
+## X21 / X24 / X26 / X27. The four game shapes this body writes, each claimed WHOLE or not at all.
+## Split out of claims_in so each one can be pinned on its own: they share nothing but the body.
+static func game_shape_claims(body: PackedStringArray, file_facts: Dictionary) -> Array:
+	var found: Array = []
+	var pity_claim: Dictionary = _pity_claim(body, file_facts)
+	if not pity_claim.is_empty():
+		found.append(pity_claim)
+	var detection: Dictionary = _detection_claim(body, file_facts)
+	if not detection.is_empty():
+		found.append(detection)
+	var phases: Dictionary = _boss_phase_claim(body, file_facts)
+	if not phases.is_empty():
+		found.append(phases)
+	var mission: Dictionary = _mission_timer_claim(body, file_facts)
+	if not mission.is_empty():
+		found.append(mission)
+	return found
+
+
+## X21. The pity roll this body makes, with the four lines that ARE it as the evidence.
+static func _pity_claim(body: PackedStringArray, file_facts: Dictionary) -> Dictionary:
+	var rolls: Dictionary = file_facts.get("pity_rolls", {})
+	if rolls.is_empty():
+		return {}
+	for line: String in body:
+		var condition: String = _branch_condition(line)
+		if condition.is_empty() or not rolls.has(condition):
+			continue
+		var roll: Dictionary = rolls[condition]
+		return {
+			"pattern": "pity", "evidence": roll.get("evidence", PackedStringArray()),
+			"words": "every miss raises the odds for %s until %s guarantees the win" % [
+				str(roll.get("counter", "")), str(roll.get("cap", ""))],
+			"adoptable": "advanced_random", "ace_ids": PackedStringArray()
+		}
+	return {}
+
+
+## X24. The detection loop this body writes: a meter filled while the target is seen and drained
+## while it is not, PLUS the sight-or-hidden question that gates the two halves. The gate is
+## required - without it the pair is an ordinary meter, and calling every meter "detection" would
+## name a stealth system in every file that has a bar.
+static func _detection_claim(body: PackedStringArray, file_facts: Dictionary) -> Dictionary:
+	var meters: Dictionary = file_facts.get("meter_variables", {})
+	if meters.is_empty():
+		return {}
+	var gated: bool = false
+	for line: String in body:
+		if is_detection_gate(line.strip_edges()):
+			gated = true
+			break
+	if not gated:
+		return {}
+	for name_text: String in meters:
+		var meter: Dictionary = meters[name_text]
+		var fill_line: String = str(meter.get("fill_line", ""))
+		var drain_line: String = str(meter.get("drain_line", ""))
+		var has_fill: bool = false
+		var has_drain: bool = false
+		var evidence: PackedStringArray = PackedStringArray()
+		for line: String in body:
+			var text: String = line.strip_edges()
+			if text == fill_line:
+				has_fill = true
+				evidence.append(text)
+			elif text == drain_line:
+				has_drain = true
+				evidence.append(text)
+			elif _last_known_assignment(text):
+				evidence.append(text)
+		if not (has_fill and has_drain):
+			continue
+		return {
+			"pattern": "detection", "evidence": evidence,
+			"words": "fills %s while the target is seen, drains it while it is not" % name_text,
+			"adoptable": "line_of_sight", "ace_ids": PackedStringArray()
+		}
+	return {}
+
+
+## X24. True when a line asks the question a detection meter is gated on: can this thing SEE the
+## target, or is the target HIDDEN. Both spellings, because a stealth script writes one or the other
+## and neither is more honest than the other.
+static func is_detection_gate(text: String) -> bool:
+	var lowered: String = text.to_lower()
+	for word: String in ["can_see", "line_of_sight", "has_sight", "is_hidden", "in_cover"]:
+		if lowered.contains(word):
+			return true
+	return false
+
+
+## X24. True when a line remembers WHERE the target was - the one variable every stealth AI keeps,
+## and the reason the guard walks to a place instead of standing still.
+static func _last_known_assignment(text: String) -> bool:
+	var at: int = EventSheetSentence.top_level_index(text, " = ")
+	if at <= 0:
+		return false
+	var target: String = text.substr(0, at).strip_edges().to_lower()
+	return target.contains("last_known") or target.contains("last_seen")
+
+
+## X26. The phase ladder this body climbs, with every guarded threshold as the evidence.
+static func _boss_phase_claim(body: PackedStringArray, file_facts: Dictionary) -> Dictionary:
+	var steps: Dictionary = file_facts.get("boss_phase_steps", {})
+	if steps.is_empty():
+		return {}
+	var evidence: PackedStringArray = PackedStringArray()
+	var highest: String = ""
+	for line: String in body:
+		var condition: String = _branch_condition(line)
+		if condition.is_empty() or not steps.has(condition):
+			continue
+		evidence.append(line.strip_edges())
+		highest = str((steps[condition] as Dictionary).get("into", ""))
+	if evidence.is_empty():
+		return {}
+	return {
+		"pattern": "boss_phases", "evidence": evidence,
+		"words": "health thresholds move the fight up to phase %s, each one entered once" % highest,
+		"adoptable": "", "ace_ids": PackedStringArray()
+	}
+
+
+## X27. The mission clock this body counts down - claimed on the event that TICKS it, because that
+## is the row a reader looks at when they ask how long the mission is.
+static func _mission_timer_claim(body: PackedStringArray, file_facts: Dictionary) -> Dictionary:
+	var timers: Dictionary = file_facts.get("mission_timers", {})
+	if timers.is_empty():
+		return {}
+	for line: String in body:
+		var text: String = line.strip_edges()
+		var step: Dictionary = countdown_step(text)
+		var counted: String = str(step.get("name", ""))
+		if counted.is_empty() or not timers.has(counted):
+			continue
+		var evidence: PackedStringArray = PackedStringArray([text,
+			str((timers[counted] as Dictionary).get("format_line", ""))])
+		return {
+			"pattern": "quest_timer", "evidence": evidence,
+			"words": "%s counts the mission down and the HUD shows it as minutes and seconds" % counted,
+			"adoptable": "", "ace_ids": PackedStringArray()
+		}
+	return {}
 
 
 ## T8. The nearest-or-farthest LOOP a body writes: walk a list, measure the distance to each one,
@@ -537,3 +694,468 @@ static func pool_return_step(line: String, pools: Dictionary) -> Dictionary:
 	if args.size() == 1 and args[0].strip_edges() == "false":
 		return {"kind": "sleep", "object": receiver, "pool": ""}
 	return {}
+
+
+## X21. The randomness that OWES the player one. A pity roll is four halves written apart:
+##
+##   pity += 1                                            a counter fed once per roll
+##   var chance := base_chance + pity_step * float(pity)  a chance that grows out of it
+##   if pity >= pity_cap or randf() < chance:             a roll compared against it, or a hard cap
+##       pity = 0                                         and a reset on the winning branch
+##
+## All four are required. A plain `randf() < x` stays the Chance question it already is, a counter
+## without a roll stays a counter, and a chance that never grows is arithmetic - reading any of them
+## as a pity system would promise a guarantee that is not in the file.
+##
+## Returns {rolls, unreset}:
+##   rolls    {the roll's condition text: {counter, chance, cap, evidence}} - the complete shape
+##   unreset  {counter: {condition, evidence}} - the same shape MISSING its reset, which is the
+##            classic bug (the guarantee fires on every roll after the first cap hit). Nothing reads
+##            it as a pity system; the Doctor's advisory note is the only consumer.
+static func pity_facts(lines: PackedStringArray) -> Dictionary:
+	var fed: Dictionary = {}
+	var grown: Dictionary = {}
+	var reset: Dictionary = {}
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var counted: String = _pity_feed_name(text)
+		if not counted.is_empty():
+			fed[counted] = text
+		var growth: Dictionary = _pity_growth(text)
+		if not growth.is_empty():
+			grown[str(growth.get("name", ""))] = growth
+		var cleared: String = _pity_reset_name(text)
+		if not cleared.is_empty():
+			reset[cleared] = text
+	var rolls: Dictionary = {}
+	var unreset: Dictionary = {}
+	for line: String in lines:
+		var condition: String = _branch_condition(line)
+		if condition.is_empty():
+			continue
+		var roll: Dictionary = _pity_roll(condition, fed, grown)
+		if roll.is_empty():
+			continue
+		var counter: String = str(roll.get("counter", ""))
+		var chance: String = str(roll.get("chance", ""))
+		var evidence: PackedStringArray = PackedStringArray([
+			str(fed.get(counter, "")), str((grown.get(chance, {}) as Dictionary).get("line", "")),
+			line.strip_edges()
+		])
+		if reset.has(counter):
+			evidence.append(str(reset[counter]))
+			roll["evidence"] = evidence
+			rolls[condition] = roll
+			continue
+		unreset[counter] = {"condition": condition, "evidence": evidence}
+	return {"rolls": rolls, "unreset": unreset}
+
+
+## The counter a line feeds once per roll: `pity += 1`, and nothing else. A counter stepped by a
+## variable amount is a score, not a pity counter.
+static func _pity_feed_name(text: String) -> String:
+	var at: int = EventSheetSentence.top_level_index(text, " += ")
+	if at <= 0:
+		return ""
+	var target: String = text.substr(0, at).strip_edges()
+	var amount: String = text.substr(at + 4).strip_edges()
+	if not EventSheetSentence.is_identifier(target) or (amount != "1" and amount != "1.0"):
+		return ""
+	return target
+
+
+## The growing chance a line declares, as {name, counter, base, step, line}, or {} when the line is
+## not one. `base + step * counter`, with the counter allowed to wear a `float()` / `int()` cast -
+## the spelling every one of these files uses, because the counter is an int and the chance is not.
+static func _pity_growth(text: String) -> Dictionary:
+	var assigned: Dictionary = _assigned_parts(text)
+	if assigned.is_empty():
+		return {}
+	var value: String = str(assigned.get("value", ""))
+	var plus_at: int = EventSheetSentence.top_level_index(value, " + ")
+	if plus_at <= 0:
+		return {}
+	var base: String = value.substr(0, plus_at).strip_edges()
+	var product: String = value.substr(plus_at + 3).strip_edges()
+	var times_at: int = EventSheetSentence.top_level_index(product, " * ")
+	if times_at <= 0:
+		return {}
+	var step: String = product.substr(0, times_at).strip_edges()
+	var counter: String = _numeric_cast_inner(product.substr(times_at + 3).strip_edges())
+	if not EventSheetSentence.is_identifier(counter):
+		return {}
+	return {"name": str(assigned.get("name", "")), "counter": counter, "base": base, "step": step,
+		"line": text}
+
+
+## The counter a line puts back to zero - the win's own reset.
+static func _pity_reset_name(text: String) -> String:
+	var at: int = EventSheetSentence.top_level_index(text, " = ")
+	if at <= 0:
+		return ""
+	var target: String = text.substr(0, at).strip_edges()
+	if not EventSheetSentence.is_identifier(target) or not _is_zero(text.substr(at + 3)):
+		return ""
+	return target
+
+
+## The roll-or-cap question a condition IS, as {counter, chance, cap}, or {} when it is not one.
+## Both terms are required and either order is accepted: the cap alone is a counter test, the roll
+## alone is the Chance condition the sheet already has.
+static func _pity_roll(condition: String, fed: Dictionary, grown: Dictionary) -> Dictionary:
+	if EventSheetSentence.top_level_index(condition, " and ") >= 0:
+		return {}
+	var parts: PackedStringArray = EventSheetSentence.split_top_level(condition, " or ")
+	if parts.size() != 2:
+		return {}
+	for order: Array in [[0, 1], [1, 0]]:
+		var cap: Dictionary = _pity_cap_test(parts[int(order[0])], fed)
+		if cap.is_empty():
+			continue
+		var roll: Dictionary = _pity_chance_test(parts[int(order[1])], grown)
+		if roll.is_empty():
+			continue
+		if str((grown.get(str(roll.get("chance", "")), {}) as Dictionary).get("counter", "")) \
+				!= str(cap.get("counter", "")):
+			continue
+		return {"counter": str(cap.get("counter", "")), "cap": str(cap.get("cap", "")),
+			"chance": str(roll.get("chance", ""))}
+	return {}
+
+
+## `pity >= pity_cap` - the guarantee half, as {counter, cap}.
+static func _pity_cap_test(term: String, fed: Dictionary) -> Dictionary:
+	for operator: String in [" >= ", " > "]:
+		var text: String = term.strip_edges()
+		var at: int = EventSheetSentence.top_level_index(text, operator)
+		if at <= 0:
+			continue
+		var counter: String = text.substr(0, at).strip_edges()
+		if not fed.has(counter):
+			continue
+		return {"counter": counter, "cap": text.substr(at + operator.length()).strip_edges()}
+	return {}
+
+
+## `randf() < chance` - the roll half, as {chance}. Only a randomness call counts on the left: any
+## other value compared against the growing number is a different question entirely.
+static func _pity_chance_test(term: String, grown: Dictionary) -> Dictionary:
+	var text: String = term.strip_edges()
+	var at: int = EventSheetSentence.top_level_index(text, " < ")
+	if at <= 0:
+		return {}
+	var rolled: String = text.substr(0, at).strip_edges()
+	var chance: String = text.substr(at + 3).strip_edges()
+	if not _is_random_roll(rolled) or not grown.has(chance):
+		return {}
+	return {"chance": chance}
+
+
+## True for the calls that ROLL: `randf()`, `_rng.randf()`, the pack's own Random (0-1). A value that
+## merely holds a number is not a roll, however random it happens to be.
+static func _is_random_roll(value: String) -> bool:
+	var call: Dictionary = EventSheetSentence.call_parts(value.strip_edges())
+	if call.is_empty():
+		return false
+	var method: String = str(call.get("method", ""))
+	return method.begins_with("rand") or method == "random_value"
+
+
+## X24. The METERS this file keeps: a number filled at a rate while something holds and drained at a
+## rate while it does not, each half clamped. Both halves are required for the same name, which is
+## what keeps an ordinary clamped add - a stamina top-up, a bar nudged to its maximum - out: a meter
+## is the PAIR, and one without the other is the arithmetic it looks like.
+##
+## Returns {name: {fill_rate, cap, fill_line, drain_rate, floor, drain_line}}.
+static func meter_variables(lines: PackedStringArray) -> Dictionary:
+	var filled: Dictionary = {}
+	var drained: Dictionary = {}
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var step: Dictionary = meter_step(text)
+		if step.is_empty():
+			continue
+		if str(step.get("kind", "")) == "fill":
+			filled[str(step.get("name", ""))] = step
+		else:
+			drained[str(step.get("name", ""))] = step
+	var out: Dictionary = {}
+	for name_text: String in filled:
+		if not drained.has(name_text):
+			continue
+		var up: Dictionary = filled[name_text]
+		var down: Dictionary = drained[name_text]
+		out[name_text] = {
+			"fill_rate": str(up.get("rate", "")), "cap": str(up.get("limit", "")),
+			"fill_line": str(up.get("line", "")),
+			"drain_rate": str(down.get("rate", "")), "floor": str(down.get("limit", "")),
+			"drain_line": str(down.get("line", ""))
+		}
+	return out
+
+
+## X24. The meter step a line IS, as {name, kind, rate, limit, line}, or {} when it is not one:
+##
+##   suspicion = minf(suspicion + detect_rate * delta, 100.0)   fill, up to 100
+##   suspicion = maxf(suspicion - calm_rate * delta, 0.0)       drain, down to 0
+##
+## The rate must be per-frame (`<rate> * delta`), which is the whole difference between a meter and
+## a clamped add: a meter moves at a SPEED.
+static func meter_step(line: String) -> Dictionary:
+	var text: String = line.strip_edges()
+	var equals_at: int = EventSheetSentence.top_level_index(text, " = ")
+	if equals_at <= 0:
+		return {}
+	var name_text: String = text.substr(0, equals_at).strip_edges()
+	if not EventSheetSentence.is_identifier(name_text):
+		return {}
+	var call: Dictionary = EventSheetSentence.call_parts(text.substr(equals_at + 3).strip_edges())
+	if call.is_empty() or not str(call.get("target", "")).is_empty():
+		return {}
+	var head: String = str(call.get("method", ""))
+	var kind: String = ""
+	if head == "min" or head == "minf":
+		kind = "fill"
+	elif head == "max" or head == "maxf":
+		kind = "drain"
+	else:
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 2:
+		return {}
+	# Either argument order: `minf(x + r * delta, cap)` and `minf(cap, x + r * delta)` are the same
+	# sentence, and which one a file wrote is a matter of habit.
+	for order: Array in [[0, 1], [1, 0]]:
+		var rate: String = _meter_rate(args[int(order[0])], name_text, kind)
+		if rate.is_empty():
+			continue
+		return {"name": name_text, "kind": kind, "rate": rate,
+			"limit": args[int(order[1])].strip_edges(), "line": text}
+	return {}
+
+
+## The per-frame rate in `<name> + <rate> * delta` (fill) or `<name> - <rate> * delta` (drain), or ""
+## when the term is anything else. `delta * <rate>` is the same product written the other way round.
+static func _meter_rate(term: String, name_text: String, kind: String) -> String:
+	var operator: String = " + " if kind == "fill" else " - "
+	var text: String = term.strip_edges()
+	var at: int = EventSheetSentence.top_level_index(text, operator)
+	if at <= 0 or text.substr(0, at).strip_edges() != name_text:
+		return ""
+	var product: String = text.substr(at + 3).strip_edges()
+	var times_at: int = EventSheetSentence.top_level_index(product, " * ")
+	if times_at <= 0:
+		return ""
+	var left: String = product.substr(0, times_at).strip_edges()
+	var right: String = product.substr(times_at + 3).strip_edges()
+	if is_delta_value(right):
+		return left
+	if is_delta_value(left):
+		return right
+	return ""
+
+
+## X26. The PHASE LADDER a boss fight is: a health threshold guarded by the phase the fight is in,
+## so each phase is entered exactly once. `if phase == 1 and hp <= max_hp * 0.6:` with `phase = 2`
+## as the branch's first step - the guard IS the trigger-once, which is why the reading says "once"
+## instead of showing the bookkeeping.
+##
+## Returns {the branch's condition text: {variable, from, into, percent, threshold}} - `percent` the
+## share of maximum health as a whole number ("60"), "" when the threshold is not a share of one.
+##
+## A plain `hp <= 0` is NOT in here and must never be: a health check is a health check, and calling
+## every one of them a phase would name a ladder in every file that has hit points.
+static func boss_phase_steps(lines: PackedStringArray) -> Dictionary:
+	var out: Dictionary = {}
+	var pending: Dictionary = {}
+	var pending_condition: String = ""
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		if not pending.is_empty():
+			# The branch's own first step says which phase it enters. Read from the line after the
+			# guard, so the number the row announces is the file's, never a guess.
+			var entered: String = _phase_assignment(text, str(pending.get("variable", "")))
+			if not entered.is_empty():
+				pending["into"] = entered
+			out[pending_condition] = pending
+			pending = {}
+			pending_condition = ""
+		var condition: String = _branch_condition(line)
+		if condition.is_empty():
+			continue
+		var step: Dictionary = _boss_phase_guard(condition)
+		if step.is_empty():
+			continue
+		pending = step
+		pending_condition = condition
+	if not pending.is_empty():
+		out[pending_condition] = pending
+	return out
+
+
+## `phase == 1 and hp <= max_hp * 0.6` as {variable, from, into, percent, threshold}, or {} for
+## anything else. Both halves are required: the phase guard and the health threshold.
+static func _boss_phase_guard(condition: String) -> Dictionary:
+	if EventSheetSentence.top_level_index(condition, " or ") >= 0:
+		return {}
+	var parts: PackedStringArray = EventSheetSentence.split_top_level(condition, " and ")
+	if parts.size() != 2:
+		return {}
+	for order: Array in [[0, 1], [1, 0]]:
+		var guard: Dictionary = _phase_guard_test(parts[int(order[0])])
+		if guard.is_empty():
+			continue
+		var threshold: Dictionary = _health_threshold_test(parts[int(order[1])])
+		if threshold.is_empty() or str(threshold.get("subject", "")) == str(guard.get("variable", "")):
+			continue
+		return {
+			"variable": str(guard.get("variable", "")), "from": str(guard.get("value", "")),
+			"into": str(guard.get("into", "")),
+			"subject": str(threshold.get("subject", "")),
+			"percent": str(threshold.get("percent", "")),
+			"threshold": str(threshold.get("threshold", ""))
+		}
+	return {}
+
+
+## `phase == 1` (or `phase < 2`) as {variable, value, into} - a bare name against a whole number, and
+## nothing else. Both spellings say the same thing about a ladder: `== 1` guards the step out of
+## phase one, `< 2` guards the step INTO phase two and survives a hit big enough to skip a phase.
+## `into` is the phase the step starts, which is the number the row announces.
+static func _phase_guard_test(term: String) -> Dictionary:
+	var text: String = term.strip_edges()
+	for pair: Array in [[" == ", 1], [" < ", 0]]:
+		var operator: String = str(pair[0])
+		var at: int = EventSheetSentence.top_level_index(text, operator)
+		if at <= 0:
+			continue
+		var variable: String = text.substr(0, at).strip_edges()
+		var value: String = text.substr(at + operator.length()).strip_edges()
+		if not EventSheetSentence.is_identifier(variable) or not value.is_valid_int():
+			continue
+		return {"variable": variable, "value": value, "into": str(value.to_int() + int(pair[1]))}
+	return {}
+
+
+## `hp <= max_hp * 0.6` as {subject, percent, threshold}. `percent` is filled only when the
+## threshold is a SHARE of another number, which is what lets the row say 60% instead of the
+## multiplication.
+static func _health_threshold_test(term: String) -> Dictionary:
+	var text: String = term.strip_edges()
+	var at: int = EventSheetSentence.top_level_index(text, " <= ")
+	if at <= 0:
+		return {}
+	var subject: String = text.substr(0, at).strip_edges()
+	var threshold: String = text.substr(at + 4).strip_edges()
+	if not EventSheetSentence.is_identifier(subject):
+		return {}
+	var times_at: int = EventSheetSentence.top_level_index(threshold, " * ")
+	if times_at <= 0:
+		return {"subject": subject, "percent": "", "threshold": threshold}
+	var share: String = threshold.substr(times_at + 3).strip_edges()
+	if not share.is_valid_float():
+		return {"subject": subject, "percent": "", "threshold": threshold}
+	var fraction: float = share.to_float()
+	if fraction <= 0.0 or fraction >= 1.0:
+		return {"subject": subject, "percent": "", "threshold": threshold}
+	var percent: String = String.num(fraction * 100.0, 2)
+	if percent.contains("."):
+		percent = percent.trim_suffix("0").trim_suffix("0").trim_suffix(".")
+	return {"subject": subject, "percent": percent, "threshold": threshold}
+
+
+## The phase a line moves the fight INTO - `phase = 2` - or "" for any other line.
+static func _phase_assignment(text: String, variable: String) -> String:
+	if variable.is_empty():
+		return ""
+	var at: int = EventSheetSentence.top_level_index(text, " = ")
+	if at <= 0 or text.substr(0, at).strip_edges() != variable:
+		return ""
+	var value: String = text.substr(at + 3).strip_edges()
+	return value if value.is_valid_int() else ""
+
+
+## X27. The MISSION CLOCKS this file keeps: a countdown (already a countdown, by the shipped rule -
+## counted down by a delta AND asked about against zero) that is ALSO shown to the player as
+## minutes and seconds. All three halves are required, which is what keeps an ordinary countdown a
+## countdown: a cooldown nobody can see is not a mission.
+##
+## Returns {name: {format_line}}.
+static func mission_timers(lines: PackedStringArray, countdowns: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	if countdowns.is_empty():
+		return out
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		for name_text: String in countdowns:
+			if out.has(name_text) or not is_minutes_seconds(text, name_text):
+				continue
+			out[name_text] = {"format_line": text}
+	return out
+
+
+## X27. True when a piece of text builds `m:ss` out of a number of seconds: it divides by sixty, it
+## takes the remainder over sixty, and it joins the two with a colon. Every spelling of that - a
+## format string, two zero-pads, an `int()` pair - says the same thing, and this asks the question
+## all of them answer rather than matching one of their shapes.
+static func is_minutes_seconds(text: String, name_text: String) -> bool:
+	if not name_text.is_empty() and not text.contains(name_text):
+		return false
+	if not text.contains("\":\"") and not text.contains("%02d:%02d") and not text.contains(":%02d"):
+		return false
+	var divides: bool = text.contains("/ 60") or text.contains("/60")
+	var remainder: bool = text.contains("% 60") or text.contains("%60") or text.contains("fmod(") \
+		or text.contains("posmod(")
+	return divides and remainder
+
+
+## The condition a branch line asks, or "" when the line is not a branch. `if` and `elif` both, the
+## trailing colon dropped, so every reading below can ask about the question itself.
+static func _branch_condition(line: String) -> String:
+	var text: String = line.strip_edges()
+	if not text.ends_with(":"):
+		return ""
+	for keyword: String in ["if ", "elif "]:
+		if text.begins_with(keyword):
+			return text.substr(keyword.length(), text.length() - keyword.length() - 1).strip_edges()
+	return ""
+
+
+## The name and value an assignment or a declaration puts together, as {name, value}, or {} when the
+## line is neither. `var chance := x`, `var chance: float = x` and `chance = x` all answer the same.
+static func _assigned_parts(text: String) -> Dictionary:
+	var body: String = text
+	for keyword: String in ["var ", "const "]:
+		if body.begins_with(keyword):
+			body = body.substr(keyword.length()).strip_edges()
+			break
+	for operator: String in [" := ", " = "]:
+		var at: int = EventSheetSentence.top_level_index(body, operator)
+		if at <= 0:
+			continue
+		var name_text: String = body.substr(0, at).strip_edges()
+		var colon_at: int = name_text.find(":")
+		if colon_at > 0:
+			name_text = name_text.substr(0, colon_at).strip_edges()
+		if not EventSheetSentence.is_identifier(name_text):
+			return {}
+		return {"name": name_text, "value": body.substr(at + operator.length()).strip_edges()}
+	return {}
+
+
+## What is INSIDE a numeric cast - `float(pity)` is the counter, said in the type the arithmetic
+## needs. A value that is not a cast comes back as itself.
+static func _numeric_cast_inner(value: String) -> String:
+	var text: String = value.strip_edges()
+	for cast: String in ["float(", "int("]:
+		if text.begins_with(cast) and text.ends_with(")"):
+			return text.substr(cast.length(), text.length() - cast.length() - 1).strip_edges()
+	return text

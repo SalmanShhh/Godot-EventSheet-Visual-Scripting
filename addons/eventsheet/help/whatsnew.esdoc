@@ -6,6 +6,40 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - four game shapes the sheet now says by name
+
+- **Pity: randomness that owes you one.** A counter fed once per roll, a chance grown out of it, a
+  roll compared against that chance or a hard cap, and a reset on the win - all four halves, or
+  nothing. Together they read `AdvancedRandom ▸ Rolled with pity (chance, guaranteed at pity cap)`
+  and claim the new `pity` pattern; a plain `randf() < x` stays the Chance condition it already is.
+  Authorable too: the Advanced Random pack gained **Roll With Pity**, **Reset Pity** and **Pity
+  Count**, keyed by counter name so one autoload holds a project's worth of them, riding the same
+  seeded generator (a seeded run replays its pity rolls identically) and travelling in the pack's
+  save state. **New Sheet ▸ Loot Chest** scaffolds the whole shape.
+- **Meters, and the stealth loop built on them.** A number filled at a rate while something holds
+  and drained at a rate while it does not now reads as **Fill / Drain \\<name\\> at \\<rate\\> (up to /
+  down to)** - the countdown's two-way twin, and both are picker rows. A meter is the PAIR: a
+  clamped add with no per-frame rate is not one, and neither is a fill nothing drains. With a
+  sight-or-hidden question gating the two halves the whole loop claims the new `detection` pattern,
+  with the last-known-position line as part of its evidence. **Make Noise at \\<p\\>, heard within
+  \\<r\\>** is one row where a hand-written script walks the group, and **On Noise Heard** is the
+  receiving half. **New Sheet ▸ Stealth Guard** wires sight, sound, memory and the hunt.
+- **Boss phases.** `if phase == 1 and hp <= max_hp * 0.6:` reads `Phase 2 starts (hp ≤ 60%, once)` -
+  the guard IS the trigger-once, so the row says \"once\" instead of spelling the bookkeeping - and
+  the ladder claims the new `boss_phases` pattern. A plain `hp <= 0` stays the health check it is.
+  **Boss ▸ Phase Starts** writes the guarded pair from the picker, and **Set Invulnerable For** is
+  the flag-and-timer window as one action. **New Sheet ▸ Boss Fight** scaffolds two phases and the
+  defeated signal.
+- **Mission clocks.** A countdown that is also SHOWN as minutes and seconds claims the new
+  `quest_timer` pattern, and the arithmetic that builds `2:41` reads `as minutes:seconds` instead of
+  spelling out the division. **Start Mission Timer** and **Add Mission Time** take their time in a
+  new **minutes:seconds** field - type `3:00`, the row stores 180 seconds - and **Mission Time
+  Left** hands a HUD label the text a player reads. **New Sheet ▸ Mission Timer** wires the clock,
+  the label and the fail event; persistence is the shipped Remember Between Runs on the variable.
+- **Three advisory Doctor notes**, each on a shape missing a half: a pity counter that never resets
+  on the win (after the first guarantee it fires every roll), a meter that only ever fills, and a
+  mission timer no row shows the player.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

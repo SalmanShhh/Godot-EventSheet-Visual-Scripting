@@ -176,6 +176,13 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Audio Server": "AudioBusLayout",
 	"Physics Server": "PhysicsMaterial",
 	"Behavior": "Node",
+	# X21 / X24 / X26 / X27. The four game-shape sections. None of their names is a class and none of
+	# their verbs has a host node, which is exactly what this table is still for: a meter is a bar, a
+	# stealth row is about being heard, a boss section is the fight itself, a mission is its clock.
+	"Meters": "ProgressBar",
+	"Stealth": "AudioStreamPlayer",
+	"Boss": "GuiRadioUnchecked",
+	"Missions": "Timer",
 	"Collisions": "CollisionShape2D",
 	"Color": "Color",
 	# The one entry the five "Compare: …" sub-categories all inherit. Nothing derivable here: the name

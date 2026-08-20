@@ -54,6 +54,11 @@ func _build_template_menu_items() -> void:
 	_template_menu.add_item("Save System (Autoload)", 5)
 	_template_menu.add_separator("Systems - run over a group of entities")
 	_template_menu.add_item("Entity System (Autoload)", 11)
+	_template_menu.add_separator("Game shapes - a whole mechanic, ready to retune")
+	_template_menu.add_item("Loot Chest (pity rolls)", 15)
+	_template_menu.add_item("Stealth Guard (seen, heard, hunted)", 16)
+	_template_menu.add_item("Boss Fight (phases and i-frames)", 17)
+	_template_menu.add_item("Mission Timer (a clock with a deadline)", 18)
 	_template_menu.add_separator("Custom Resources - data assets (.tres)")
 	_template_menu.add_item("Custom Resource (data + logic)", 9)
 	_template_menu.add_separator("Editor Tools - run inside the editor")
@@ -91,6 +96,186 @@ static func _build_behavior_component_starter() -> EventSheetResource:
 	connect_signal.code = "if host != null:\n\thost.body_entered.connect(func(body: Node) -> void:\n\t\tcollected.emit(body, value)\n\t\thost.queue_free()\n\t)"
 	on_ready.actions.append(connect_signal)
 	sheet.events.append(on_ready)
+	return sheet
+
+
+## X21. A LOOT CHEST starter: randomness a player can trust. Every miss raises the odds, the cap
+## guarantees the win and the win puts the counter back - the four halves that make a pity system,
+## laid out so the whole shape reads as one idea and the three numbers are the only things to tune.
+static func _build_loot_chest_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	sheet.custom_class_name = "LootChest"
+	sheet.class_description = "A chest whose odds owe you one: every miss raises the chance of a rare item, and a cap guarantees it."
+	sheet.variables = {
+		"base_chance": {"type": "float", "default": 0.05, "exported": true,
+			"attributes": {"tooltip": "The odds of a rare item on the very first roll (0.05 is 5%)."}},
+		"pity_step": {"type": "float", "default": 0.02, "exported": true,
+			"attributes": {"tooltip": "How much every miss raises the odds."}},
+		"pity_cap": {"type": "int", "default": 30, "exported": true,
+			"attributes": {"tooltip": "The number of misses that guarantees a rare item."}},
+		"pity": {"type": "int", "default": 0,
+			"attributes": {"tooltip": "How many misses have piled up since the last rare item."}}
+	}
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Loot Chest[/b] - a pity system. [code]pity[/code] counts the misses, the chance grows out of it, [code]pity_cap[/code] guarantees the win, and the win resets the counter. Tune the three exported numbers and leave the shape alone.\nFor a seeded run that replays identically, use the Advanced Random pack's Roll With Pity row instead - same shape, one row, and its counter rides the shared seed."
+	sheet.events.append(note)
+	var open_chest: EventFunction = EventFunction.new()
+	open_chest.function_name = "open_chest"
+	open_chest.return_type = TYPE_STRING
+	open_chest.description = "Opens the chest and answers what came out."
+	var body: RawCodeRow = RawCodeRow.new()
+	body.code = "\n".join(PackedStringArray([
+		"pity += 1",
+		"var chance := base_chance + pity_step * float(pity)",
+		"if pity >= pity_cap or randf() < chance:",
+		"\tpity = 0",
+		"\treturn \"rare\"",
+		"return \"common\""
+	]))
+	open_chest.events.append(body)
+	sheet.functions.append(open_chest)
+	return sheet
+
+
+## X24. A STEALTH GUARD starter: the whole detection loop as events. Sight fills a meter, losing
+## sight drains it, the place the target was last seen is remembered, a threshold starts the hunt,
+## and a noise anywhere nearby is heard. Every half is a row, so retuning is arithmetic, not surgery.
+static func _build_stealth_guard_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "StealthGuard"
+	sheet.class_description = "A guard that sees, hears, remembers where you were, and hunts once it is sure."
+	sheet.variables = {
+		"target": {"type": "Node3D", "default": null, "exported": true,
+			"attributes": {"tooltip": "Who this guard is looking for."}},
+		"sight_range": {"type": "float", "default": 18.0, "exported": true,
+			"attributes": {"tooltip": "How far the guard can see."}},
+		"detect_rate": {"type": "float", "default": 40.0, "exported": true,
+			"attributes": {"tooltip": "Suspicion gained each second while the target is in sight."}},
+		"calm_rate": {"type": "float", "default": 15.0, "exported": true,
+			"attributes": {"tooltip": "Suspicion lost each second while the target is out of sight."}},
+		"suspicion": {"type": "float", "default": 0.0},
+		"last_known": {"type": "Vector3", "default": Vector3.ZERO},
+		"state": {"type": "String", "default": "patrolling"}
+	}
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Stealth Guard[/b] - the detection loop. Suspicion FILLS while the target is seen and not hidden, DRAINS while it is not, and 100 starts the hunt; [code]last_known[/code] is where to walk to. The guard joins the listening group on created, so any Make Noise row nearby reaches its On Noise Heard event.\nSwap the distance test for the Line Of Sight 3D pack's cone of view, and the walk for the Nav Agent 3D pack - both drop straight in."
+	sheet.events.append(note)
+	var on_ready: EventRow = EventRow.new()
+	on_ready.trigger_provider_id = "Core"
+	on_ready.trigger_id = "OnReady"
+	var join: RawCodeRow = RawCodeRow.new()
+	join.code = "add_to_group(\"hears_noise\", true)"
+	on_ready.actions.append(join)
+	sheet.events.append(on_ready)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnPhysicsProcess"
+	var loop: RawCodeRow = RawCodeRow.new()
+	loop.code = "\n".join(PackedStringArray([
+		"var target_is_hidden: bool = target != null and bool(target.get(\"is_hidden\"))",
+		"var can_see: bool = target != null and global_position.distance_to(target.global_position) < sight_range",
+		"if can_see and not target_is_hidden:",
+		"\tsuspicion = minf(suspicion + detect_rate * delta, 100.0)",
+		"\tlast_known = target.global_position",
+		"else:",
+		"\tsuspicion = maxf(suspicion - calm_rate * delta, 0.0)",
+		"if suspicion >= 100.0:",
+		"\tstate = \"hunting\""
+	]))
+	tick.actions.append(loop)
+	sheet.events.append(tick)
+	var heard: EventRow = EventRow.new()
+	heard.trigger_provider_id = "Core"
+	heard.trigger_id = "OnNoiseHeard"
+	var react: RawCodeRow = RawCodeRow.new()
+	react.code = "\n".join(PackedStringArray([
+		"last_known = at",
+		"suspicion = minf(suspicion + 30.0, 100.0)"
+	]))
+	heard.actions.append(react)
+	sheet.events.append(heard)
+	return sheet
+
+
+## X26. A BOSS FIGHT starter: two phases from health, an invulnerability window after every hit, and
+## the signal that says it is over. The phase guard is what makes each phase start exactly once.
+static func _build_boss_fight_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "BossFight"
+	sheet.class_description = "A boss whose fight moves through phases as its health falls, with an invulnerability window after every hit."
+	sheet.variables = {
+		"max_hp": {"type": "float", "default": 1000.0, "exported": true,
+			"attributes": {"tooltip": "Full health - the number every phase threshold is a share of."}},
+		"hp": {"type": "float", "default": 1000.0},
+		"phase": {"type": "int", "default": 1},
+		"invulnerable": {"type": "bool", "default": false}
+	}
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Boss Fight[/b] - phases from health, attacks from Timelines. Each threshold is guarded by the phase the fight is in, which is what makes a phase start exactly ONCE. Lay each attack out as a Timeline block (telegraph, strike, recover) and play it from the phase's own event.\nBind a HUD bar to [code]hp[/code] with the HUD Kit pack, and listen for On Defeated from anywhere."
+	sheet.events.append(note)
+	var defeated: RawCodeRow = RawCodeRow.new()
+	defeated.code = "## @ace_trigger\n## @ace_name(\"On Defeated\")\n## @ace_category(\"Boss\")\nsignal defeated"
+	sheet.events.append(defeated)
+	var take_damage: EventFunction = EventFunction.new()
+	take_damage.function_name = "take_damage"
+	take_damage.description = "Applies a hit, unless the invulnerability window is open."
+	var amount: ACEParam = ACEParam.new()
+	amount.id = "amount"
+	amount.type_name = "float"
+	take_damage.params.append(amount)
+	var body: RawCodeRow = RawCodeRow.new()
+	body.code = "\n".join(PackedStringArray([
+		"if invulnerable:",
+		"\treturn",
+		"hp -= amount",
+		"if phase < 2 and hp <= max_hp * 0.6:",
+		"\tphase = 2",
+		"if phase < 3 and hp <= max_hp * 0.25:",
+		"\tphase = 3",
+		"if hp <= 0.0:",
+		"\tdefeated.emit()"
+	]))
+	take_damage.events.append(body)
+	sheet.functions.append(take_damage)
+	return sheet
+
+
+## X27. A MISSION TIMER starter: a clock, a deadline, a HUD label and the event that fires when the
+## time runs out - the four faces of one shape, wired to each other.
+static func _build_mission_timer_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	sheet.custom_class_name = "MissionTimer"
+	sheet.class_description = "A mission clock: it counts down, it shows the time left as minutes and seconds, and it fails the mission at zero."
+	sheet.variables = {
+		"mission_time_left": {"type": "float", "default": 180.0, "exported": true,
+			"attributes": {"tooltip": "Seconds left on the mission clock. 180 is 3:00."}},
+		"time_label": {"type": "Node", "default": null, "exported": true,
+			"attributes": {"tooltip": "The HUD label that shows the time left."}}
+	}
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Mission Timer[/b] - a clock with a deadline. The countdown, the m:ss the player reads, and the fail event are one shape.\nTo carry the clock across scenes put [code]mission_time_left[/code] on an autoload; to survive a quit, tick Remember Between Runs on it. For a deadline that is not wall time (\"by nightfall\"), compare against your own clock variable instead."
+	sheet.events.append(note)
+	var failed: RawCodeRow = RawCodeRow.new()
+	failed.code = "## @ace_trigger\n## @ace_name(\"On Mission Time Up\")\n## @ace_category(\"Missions\")\nsignal mission_time_up"
+	sheet.events.append(failed)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var body: RawCodeRow = RawCodeRow.new()
+	body.code = "\n".join(PackedStringArray([
+		"mission_time_left = maxf(0.0, mission_time_left - delta)",
+		"if time_label != null:",
+		"\ttime_label.set(\"text\", (\"%02d:%02d\" % [int(mission_time_left) / 60, int(mission_time_left) % 60]))",
+		"if mission_time_left <= 0.0:",
+		"\tmission_time_up.emit()",
+		"\tset_process(false)"
+	]))
+	tick.actions.append(body)
+	sheet.events.append(tick)
 	return sheet
 
 
@@ -343,6 +528,10 @@ static func build_starter(template_id: int) -> EventSheetResource:
 		12: return _build_editor_plugin_starter()
 		13: return _build_import_tool_starter()
 		14: return _build_export_hook_starter()
+		15: return _build_loot_chest_starter()
+		16: return _build_stealth_guard_starter()
+		17: return _build_boss_fight_starter()
+		18: return _build_mission_timer_starter()
 		_: return EventSheetResource.new()  # 0 Blank (and any other id) -> a minimal editable sheet
 
 
@@ -360,6 +549,10 @@ static func create_new_starters() -> Array[Dictionary]:
 		{"id": 12, "label": "Editor Plugin"},
 		{"id": 13, "label": "Import Tool"},
 		{"id": 14, "label": "Export Hook"},
+		{"id": 15, "label": "Loot Chest"},
+		{"id": 16, "label": "Stealth Guard"},
+		{"id": 17, "label": "Boss Fight"},
+		{"id": 18, "label": "Mission Timer"},
 	]
 	# Extension starters (EventSheets.register_starter) append after the built-ins, ids 1000+.
 	var registered: Array[Dictionary] = EventSheets.registered_starters()

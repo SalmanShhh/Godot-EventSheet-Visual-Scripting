@@ -3164,3 +3164,18 @@ starting {values},nachinayushchiysya s {values}
 {subject} is a table,{subject} - tablitsa
 with {clauses},s {clauses}
 has {key},soderzhit {key}
+Rolled with pity,Бросок с компенсацией
+guaranteed at,гарантия при
+Phase {phase} starts,Начинается фаза {phase}
+once,один раз
+as minutes:seconds,как минуты:секунды
+Pity,Компенсация
+"a counter fed by every miss raises the odds until a cap guarantees the win, and the win resets it","счётчик, растущий с каждым промахом, повышает шансы, пока предел не гарантирует выигрыш, а выигрыш обнуляет его"
+Detection,Обнаружение
+"a meter fills while the target is seen and drains while it is not, and a threshold starts the hunt","шкала растёт, пока цель видна, и падает, пока нет; порог запускает погоню"
+Boss phases,Фазы босса
+"health thresholds move a fight through numbered phases, each one entered exactly once","пороги здоровья ведут бой через пронумерованные фазы, в каждую входят ровно один раз"
+Mission timer,Таймер миссии
+"a clock counts a mission down, shows the time left, and fails when it reaches zero","часы отсчитывают миссию, показывают оставшееся время и проваливают её на нуле"
+Advanced Random,Advanced Random
+Line Of Sight,Линия видимости

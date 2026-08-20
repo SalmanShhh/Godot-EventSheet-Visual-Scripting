@@ -325,7 +325,65 @@ func _ensure_hint_factories() -> void:
 			"physics_layer_2d": _create_physics_layer_2d_field,
 			"physics_layer_3d": _create_physics_layer_3d_field,
 			"feature_tag": _create_feature_tag_field,
+			"minutes_seconds": _create_minutes_seconds_field,
 		}
+
+
+## X27. A length of time typed the way a player READS it - 3:00 - and stored as the seconds the
+## emitted line needs. The visible field takes m:ss (or plain seconds, or any expression); a hidden
+## mirror holds what actually ships, so the commit path reads seconds without knowing this field
+## exists. A value that is not a time at all passes straight through, because the seconds slot is
+## still an ordinary expression and a variable belongs in it as much as a number does.
+func _create_minutes_seconds_field(key: String, default_value: Variant) -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	var seconds: LineEdit = LineEdit.new()
+	seconds.text = str(default_value)
+	seconds.visible = false
+	var typed: LineEdit = LineEdit.new()
+	typed.text = seconds_as_minutes_seconds(str(default_value))
+	typed.tooltip_text = "Type it as minutes:seconds - 3:00 - or as plain seconds."
+	typed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var shown: Label = Label.new()
+	shown.add_theme_color_override("font_color", Color(0.74, 0.78, 0.86, 0.95))
+	shown.text = "= %s s" % seconds.text
+	var sync: Callable = func(_ignored: Variant = null) -> void:
+		seconds.text = minutes_seconds_as_seconds(typed.text)
+		shown.text = "= %s s" % seconds.text
+	typed.text_changed.connect(sync)
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(typed)
+	row.add_child(typed)
+	row.add_child(shown)
+	row.add_child(seconds)
+	_fields[key] = seconds
+	return row
+
+
+## X27. "180.0" -> "3:00", so a stored length opens in the field a reader can check at a glance. A
+## value that is not a plain number comes back as itself: an expression is not a time to reformat.
+static func seconds_as_minutes_seconds(value: String) -> String:
+	var text: String = value.strip_edges()
+	if not text.is_valid_float():
+		return text
+	var total: int = int(text.to_float())
+	if total < 0:
+		return text
+	return "%d:%02d" % [total / 60, total % 60]
+
+
+## X27. "3:00" -> "180.0", the seconds the emitted line carries. Anything that is not m:ss comes
+## back untouched, so a plain number and a variable name both ship exactly as typed.
+static func minutes_seconds_as_seconds(value: String) -> String:
+	var text: String = value.strip_edges()
+	var colon_at: int = text.find(":")
+	if colon_at <= 0:
+		return text
+	var minutes: String = text.substr(0, colon_at).strip_edges()
+	var seconds: String = text.substr(colon_at + 1).strip_edges()
+	if not minutes.is_valid_int() or not seconds.is_valid_float():
+		return text
+	return String.num(minutes.to_int() * 60.0 + seconds.to_float(), 1)
 
 
 ## Feature-tag combo, LIVE (the input_action lesson: never bake project state into the

@@ -13,6 +13,7 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _noise: FastNoiseLite = FastNoiseLite.new()
 var _perm: PackedInt32Array = PackedInt32Array()
 var _bags: Dictionary = {}
+var _pity: Dictionary = {}
 
 func _ready() -> void:
 	if seed_on_start != 0:
@@ -282,6 +283,43 @@ func chance(percent: float) -> bool:
 func one_in(n: int) -> bool:
 	return _rng.randi_range(1, maxi(n, 1)) == 1
 
+## @ace_condition
+## @ace_name("Roll With Pity")
+## @ace_category("Advanced Random: Chance")
+## @ace_description("True on a win. Every miss raises the odds by the step, and reaching the cap guarantees it - the win resets the counter for you. Name the counter and one autoload keeps as many as your project needs.")
+## @ace_display_template("Rolled with pity [b]{counter_name}[/b] ([b]{base_chance}[/b] + [b]{step}[/b] a miss, guaranteed at [b]{cap}[/b])")
+## @ace_icon("res://eventsheet_addons/advanced_random/icon.svg")
+## @ace_codegen_template("AdvancedRandom.roll_with_pity({counter_name}, {base_chance}, {step}, {cap})")
+func roll_with_pity(counter_name: String, base_chance: float, step: float, cap: int) -> bool:
+	var count: int = int(_pity.get(counter_name, 0)) + 1
+	_pity[counter_name] = count
+	if cap > 0 and count >= cap:
+		_pity[counter_name] = 0
+		return true
+	if _rng.randf() < base_chance + step * float(count):
+		_pity[counter_name] = 0
+		return true
+	return false
+
+## @ace_action
+## @ace_name("Reset Pity")
+## @ace_category("Advanced Random: Chance")
+## @ace_description("Puts a named pity counter back to zero - for a new run, a new chest, a new banner.")
+## @ace_display_template("Reset pity [b]{counter_name}[/b]")
+## @ace_icon("res://eventsheet_addons/advanced_random/icon.svg")
+## @ace_codegen_template("AdvancedRandom.reset_pity({counter_name})")
+func reset_pity(counter_name: String) -> void:
+	_pity[counter_name] = 0
+
+## @ace_expression
+## @ace_name("Pity Count")
+## @ace_category("Advanced Random: Chance")
+## @ace_description("How many misses a named pity counter has piled up since its last win.")
+## @ace_icon("res://eventsheet_addons/advanced_random/icon.svg")
+## @ace_codegen_template("AdvancedRandom.pity_count({counter_name})")
+func pity_count(counter_name: String) -> int:
+	return int(_pity.get(counter_name, 0))
+
 ## @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
@@ -291,7 +329,8 @@ func save_state() -> Dictionary:
 	return {
 		"seed": _rng.seed,
 		"state": _rng.state,
-		"bags": _bags.duplicate(true)
+		"bags": _bags.duplicate(true),
+		"pity": _pity.duplicate()
 	}
 
 ## @ace_hidden
@@ -302,5 +341,6 @@ func load_state(state: Dictionary) -> void:
 	_rng.seed = int(state.get("seed", 0))
 	_rng.state = int(state.get("state", 0))
 	_bags = (state.get("bags", {}) as Dictionary).duplicate(true)
+	_pity = (state.get("pity", {}) as Dictionary).duplicate()
 
 # Advanced Random (autoload): register as the AdvancedRandom autoload, then call its ACEs from any sheet - seeded numbers/dice/normal, Perlin/Simplex noise, permutation tables, shuffle bags, weighted picks, and a Chance(%) condition. Set seed_on_start in the Inspector for reproducible runs. This pack is an event sheet - extend it by editing it.

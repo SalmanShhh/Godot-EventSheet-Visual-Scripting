@@ -45,6 +45,9 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _run() -> void:": "OnEditorRun",
 	"func _on_project_export(is_debug: bool, features: PackedStringArray) -> void:": "OnProjectExport",
 	"func _on_files_imported(paths: PackedStringArray) -> void:": "OnFileImported",
+	# X24. The half of Make Noise that RECEIVES. A guard's `hear` is a handler the noise maker calls
+	# by name, so an opened stealth script reads it as the reaction it is rather than as a helper.
+	"func hear(at: Variant) -> void:": "OnNoiseHeard",
 	# R30 / R34. The editor's own callbacks. An opened plugin or gizmo script is one of the least
 	# readable files there is until these read as what the editor calls them for: an object was
 	# selected, the 2D overlay is being painted, input landed in the viewport, a gizmo is redrawing.
@@ -2831,7 +2834,12 @@ const REVERSE_LIFT_EXCLUDED_CATEGORIES: PackedStringArray = ["AJAX", "Lighting",
 ## U12. The same promise, for two rows that live in a category most of whose verbs SHOULD lift. A
 ## positional sound's two knobs read under the player they belong to, which the lifted row cannot say.
 const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
-	"AudioSetHearingDistance", "AudioSetFalloff"
+	"AudioSetHearingDistance", "AudioSetFalloff",
+	# X27. The two mission-clock rows whose templates are a plain Set and a plain Add. Their VALUE is
+	# the minutes:seconds field the picker offers, not a new spelling - so admitting them to the
+	# reverse index would have them claim every assignment and every increment in every project, and
+	# the shipped countdown reading already says what those lines are.
+	"StartMissionTimer", "AddMissionTime"
 ]
 
 

@@ -360,6 +360,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `has_signal` | [Report Failure](ace:Core/ReportFailure) | Run Context | Vocabulary |
 | `has_translation_for_locale` | [Language Is Available](ace:Core/LanguageIsAvailable) | Translation | Vocabulary |
 | `hash` | [Seeded Value](ace:Core/SeededValue) | Procedural | Vocabulary |
+| `hear` | [Make Noise](ace:Core/MakeNoise) | Stealth | Vocabulary |
 | `height` | [Make Sphere Mesh](ace:Core/SetSphereMesh) | Mesh | Vocabulary |
 | `hex_encode` | [First To Finish](ace:Core/FirstToFinish) | Run Context | Vocabulary |
 | `hide` | [Hide](ace:Core/HideNode) | General Actions | Vocabulary |
@@ -472,13 +473,13 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `max_fps` | [Max FPS](ace:Core/WindowMaxFps) | Game Window | Vocabulary |
 | `max_results` | [Set ShapeCast Max Results (2D)](ace:Core/ShapeCast2DSetMaxResults) | Raycast 2D | Vocabulary |
 | `max_value` | [Set Max Value](ace:Core/SetRangeMax) | UI | Vocabulary |
-| `maxf` | [Every X Seconds](ace:Core/EveryXSeconds) | Time | Vocabulary |
+| `maxf` | [Drain Meter](ace:Core/DrainMeter) | Meters | Vocabulary |
 | `maxi` | [Repeat With Delay](ace:Core/RepeatWithDelay) | Time | Vocabulary |
 | `merge` | [Merge Dictionary](ace:Core/DictMerge) | Variables: Dictionary | Vocabulary |
 | `merged` | [Translated Text With Words](ace:Core/TranslatedTextWithWords) | Translation | Vocabulary |
 | `mesh` | [Clear Mesh](ace:Core/ClearMesh) | Mesh | Vocabulary |
 | `min` | [Min](ace:Core/MinValue) | Helpers | Vocabulary |
-| `minf` | [Charge Toward](ace:Core/ChargeToward) | Variables | Vocabulary |
+| `minf` | [Fill Meter](ace:Core/FillMeter) | Meters | Vocabulary |
 | `mini` | min( , ) | System | Expressions |
 | `minute` | [Date: Minute](ace:Core/DateMinute) | Time | Vocabulary |
 | `mode` | [Go Fullscreen](ace:Core/WindowGoFullscreen) | Game Window | Vocabulary |

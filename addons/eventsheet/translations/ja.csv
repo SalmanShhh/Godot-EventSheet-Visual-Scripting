@@ -3164,3 +3164,18 @@ starting {values},先頭が {values}
 {subject} is a table,{subject} がテーブル
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
+Rolled with pity,救済つきの抽選
+guaranteed at,確定は
+Phase {phase} starts,フェーズ {phase} 開始
+once,一度だけ
+as minutes:seconds,分:秒として
+Pity,救済
+"a counter fed by every miss raises the odds until a cap guarantees the win, and the win resets it",外れるたびに増えるカウンターが確率を押し上げ、上限に達すると当たりが確定し、当たるとカウンターは戻る
+Detection,察知
+"a meter fills while the target is seen and drains while it is not, and a threshold starts the hunt",対象が見えている間はメーターが溜まり、見えない間は減っていき、しきい値を超えると追跡が始まる
+Boss phases,ボスのフェーズ
+"health thresholds move a fight through numbered phases, each one entered exactly once",体力のしきい値が戦いを番号つきのフェーズへ進め、それぞれのフェーズはちょうど一度だけ始まる
+Mission timer,ミッションタイマー
+"a clock counts a mission down, shows the time left, and fails when it reaches zero",時計がミッションを刻み、残り時間を見せ、ゼロで失敗させる
+Advanced Random,Advanced Random
+Line Of Sight,視線

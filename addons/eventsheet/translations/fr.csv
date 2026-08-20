@@ -3164,3 +3164,18 @@ starting {values},commencant par {values}
 {subject} is a table,{subject} est une table
 with {clauses},avec {clauses}
 has {key},a {key}
+Rolled with pity,Tirage avec compensation
+guaranteed at,garanti a
+Phase {phase} starts,La phase {phase} commence
+once,une fois
+as minutes:seconds,en minutes:secondes
+Pity,Compensation
+"a counter fed by every miss raises the odds until a cap guarantees the win, and the win resets it","un compteur nourri par chaque echec augmente les chances jusqu'a ce qu'un plafond garantisse le gain, et le gain le remet a zero"
+Detection,Detection
+"a meter fills while the target is seen and drains while it is not, and a threshold starts the hunt","une jauge se remplit tant que la cible est vue et se vide sinon, et un seuil declenche la traque"
+Boss phases,Phases du boss
+"health thresholds move a fight through numbered phases, each one entered exactly once","des seuils de points de vie font passer le combat par des phases numerotees, chacune entamee une seule fois"
+Mission timer,Chrono de mission
+"a clock counts a mission down, shows the time left, and fails when it reaches zero","une horloge decompte la mission, affiche le temps restant et la fait echouer a zero"
+Advanced Random,Advanced Random
+Line Of Sight,Ligne de vue

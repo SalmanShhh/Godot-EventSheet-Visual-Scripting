@@ -35,6 +35,7 @@ static func build() -> bool:
 		"var _noise: FastNoiseLite = FastNoiseLite.new()",
 		"var _perm: PackedInt32Array = PackedInt32Array()",
 		"var _bags: Dictionary = {}",
+		"var _pity: Dictionary = {}",
 	]))
 	sheet.events.append(state)
 
@@ -159,6 +160,28 @@ static func build() -> bool:
 	_cond(sheet, "chance", "Chance", "Advanced Random: Chance", "True roughly percent of the time (0-100) - e.g. Chance(5) for a 5% event.", [["percent", "float"]], "return _rng.randf() * 100.0 < percent")
 	_cond(sheet, "one_in", "One In", "Advanced Random: Chance", "True with a 1-in-n probability.", [["n", "int"]], "return _rng.randi_range(1, maxi(n, 1)) == 1")
 
+	# ── Pity (randomness a player can trust) ──
+	# Every miss raises the odds; a cap guarantees the win; the win puts the counter back. Counters
+	# are addressed BY NAME so one autoload holds a project's worth of them, and they ride the same
+	# seeded generator as every other roll here - a seeded run replays its pity rolls identically.
+	_cond(sheet, "roll_with_pity", "Roll With Pity", "Advanced Random: Chance", "True on a win. Every miss raises the odds by the step, and reaching the cap guarantees it - the win resets the counter for you. Name the counter and one autoload keeps as many as your project needs.",
+		[["counter_name", "String"], ["base_chance", "float"], ["step", "float"], ["cap", "int"]],
+		"\n".join(PackedStringArray([
+			"var count: int = int(_pity.get(counter_name, 0)) + 1",
+			"_pity[counter_name] = count",
+			"if cap > 0 and count >= cap:",
+			"\t_pity[counter_name] = 0",
+			"\treturn true",
+			"if _rng.randf() < base_chance + step * float(count):",
+			"\t_pity[counter_name] = 0",
+			"\treturn true",
+			"return false",
+		])))
+	Lib.append_function(sheet, "reset_pity", "Reset Pity", "Advanced Random: Chance", "Puts a named pity counter back to zero - for a new run, a new chest, a new banner.",
+		[["counter_name", "String"]],
+		"_pity[counter_name] = 0")
+	_expr(sheet, "pity_count", "Pity Count", "Advanced Random: Chance", "How many misses a named pity counter has piled up since its last win.", [["counter_name", "String"]], "return int(_pity.get(counter_name, 0))", TYPE_INT)
+
 	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
 	var persistence: RawCodeRow = RawCodeRow.new()
 	persistence.code = "\n".join(PackedStringArray([
@@ -171,7 +194,8 @@ static func build() -> bool:
 		"\treturn {",
 		"\t\t\"seed\": _rng.seed,",
 		"\t\t\"state\": _rng.state,",
-		"\t\t\"bags\": _bags.duplicate(true)",
+		"\t\t\"bags\": _bags.duplicate(true),",
+		"\t\t\"pity\": _pity.duplicate()",
 		"\t}",
 		"",
 		"## @ace_hidden",
@@ -181,7 +205,8 @@ static func build() -> bool:
 		"\t# Seed must be assigned before state - assigning seed resets the RNG state.",
 		"\t_rng.seed = int(state.get(\"seed\", 0))",
 		"\t_rng.state = int(state.get(\"state\", 0))",
-		"\t_bags = (state.get(\"bags\", {}) as Dictionary).duplicate(true)"
+		"\t_bags = (state.get(\"bags\", {}) as Dictionary).duplicate(true)",
+		"\t_pity = (state.get(\"pity\", {}) as Dictionary).duplicate()"
 	]))
 	sheet.events.append(persistence)
 
@@ -189,6 +214,8 @@ static func build() -> bool:
 	Lib.verb_sentences(sheet, {
 		"make_shuffle_bag": "Make shuffle bag [b]{bag_name}[/b] from [b]{items}[/b]",
 		"set_random_seed": "Set random seed to [b]{seed_value}[/b]",
+		"roll_with_pity": "Rolled with pity [b]{counter_name}[/b] ([b]{base_chance}[/b] + [b]{step}[/b] a miss, guaranteed at [b]{cap}[/b])",
+		"reset_pity": "Reset pity [b]{counter_name}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["set_random_seed", "make_shuffle_bag"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/advanced_random/advanced_random_addon")
