@@ -1527,6 +1527,42 @@ Three smaller surfaces come with it and are worth knowing on day one:
 
 ![The Add toolbar above the canvas: + Event, + Sub-event, + Condition, + Action, + Group, + Comment, + Variable, + Function, then a separator and the three Preview buttons](images/beginner-toolbar.png)
 
+### Tool code: the four shapes an editor is written in
+
+A project that builds editor tooling is written in shapes a game script never has, and the sheet
+reads all four of them by SHAPE - there is no list of file names anywhere.
+
+**A helper with a back-reference is a behavior of the thing it helps.** A `RefCounted` whose
+constructor only stores the object it was handed, and whose methods reach back through it, adds its
+verbs to that object. So the head bar says whose helper it is and which file that object lives in,
+the constructor folds into the bar (it stored a reference; there is nothing to read), a value read
+through the reference reads as the object's own property, and a call through it reads under the
+object's name:
+
+![A helper script read as an event sheet: the head bar says helper of Dock (event_sheet_dock.gd), made with the dock; the Build function reads Set window to a new Window, Set title, Set size, and the connected lambdas read as On Close Requested and On Pressed triggers](images/opened-script-helper-of.png)
+
+**An edit handed to an undo funnel is one undoable step.** A label plus a callback reads as a Local
+boolean catching the answer, named by the label the user will see in Undo, with the edit hanging
+under it as sub-events - and a `return` inside it is the Answer the funnel asked for:
+
+![An undo-funnel edit read as one step: Local boolean changed = Dock, Edit sheet undoably "Apply Cell Edit", with the steps below it reading mode = "new_condition_event", Call Append Condition Entry, Answer true, and Answer false at the end](images/opened-script-undo-step.png)
+
+**A class that is all static is a shared store.** Nothing of it is ever made, so each `static var` is
+one value for the whole editor rather than one per copy, and a `const` whose own comment says it is
+frozen wears that promise. The three report levels read as three different acts: **Warn**, **Report
+error** and **Log error**:
+
+![A static registry read as an event sheet: the head bar says shared store, nothing of its own is ever made; PATTERN_IDS is a constant list of text marked frozen; _claims and _stated are Shared tables, one for the whole editor; the rows read Warn, Stop event and Report error](images/opened-script-shared-store.png)
+
+**A vocabulary module publishes Define rows.** Every row a module registers reads the way a pack
+author reads their own verbs - the kind, the name, the id, the category, the inputs, and the line it
+writes. And a function that hands over to itself wears a muted `↻ itself` on the call row:
+
+![A vocabulary module read as an event sheet: the Register function's rows read Define condition Is Pinned and Define action Pin To with their categories, inputs and Writes lines, and a Walk function whose call row ends with the mark for calls itself](images/opened-script-vocabulary-module.png)
+
+None of this appears in an ordinary game project: every one of the four shapes has to be there in
+the file before a word of it is said.
+
 ## 7b. Living in a Big Project: the Minimap, the Sheet Map and the History List
 
 An adopted project is not one file. Three views in the **View** menu are for the size of it.

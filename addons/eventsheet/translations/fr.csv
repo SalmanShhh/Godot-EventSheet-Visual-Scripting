@@ -3256,3 +3256,27 @@ Add item {0},Ajouter l'entrée {0}
 Answer {value},Répondre {value}
 handled,pris en charge
 not handled,non pris en charge
+Edit sheet undoably {label},Modifier la feuille (annulable) {label}
+Edit sheet undoably,Modifier la feuille (annulable)
+Report error {value},Signaler l'erreur {value}
+Warn {value},Avertir {value}
+Define,Définir
+category,catégorie
+Writes,Écrit
+helper of,assistant de
+made with the {object},créé avec le {object}
+adds its own actions to {object},ajoute ses propres actions à {object}
+shared store,réserve partagée
+nothing of its own is ever made,rien n'en est jamais créé
+one store for the whole editor,une seule réserve pour tout l'éditeur
+vocabulary module,module de vocabulaire
+{n} rows published,{n} lignes publiées
+publishes rows the picker offers,publie les lignes proposées par le sélecteur
+one for the whole editor,une seule pour tout l'éditeur
+"One for the whole editor, kept between sheets.","Une seule pour tout l'éditeur, conservée d'une feuille à l'autre."
+frozen,figé
+"Named elsewhere: add to it, never rename one.","Nommé ailleurs : ajoutez-en, ne renommez jamais."
+itself,lui-même
+↓ the steps below are the edit,↓ les étapes ci-dessous sont la modification
+"one undoable step, the edit under it","une étape annulable, la modification en dessous"
+Shared,Partagée

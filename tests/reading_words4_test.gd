@@ -136,9 +136,10 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# N7 - the file test
 	"File ▸ \"log.txt\" exists",
 	# N11 - the debug verbs
-	"System ▸ Log error \"no target\"",
+	"System ▸ Report error \"no target\"",
+	# `printerr` writes a line to the output; `push_error` reports a fault. Two acts, two words.
 	"System ▸ Log error label",
-	"System ▸ Log warning label",
+	"System ▸ Warn label",
 	"System ▸ Log label",
 	"System ▸ Assert hp ≥ 0 \"hp went negative\""
 ])
@@ -238,9 +239,9 @@ static func _statement_values() -> bool:
 		["s = Input.get_action_raw_strength(\"gas\")", "Gamepad ▸ Set s to raw strength of \"gas\""],
 		["x = Input.get_axis(\"left\", \"right\")", "Keyboard ▸ Set x to axis \"left\"/\"right\""],
 		# N11 - the debug verbs
-		["push_error(\"no target\")", "System ▸ Log error \"no target\""],
+		["push_error(\"no target\")", "System ▸ Report error \"no target\""],
 		["printerr(x)", "System ▸ Log error x"],
-		["push_warning(x)", "System ▸ Log warning x"],
+		["push_warning(x)", "System ▸ Warn x"],
 		["print_rich(x)", "System ▸ Log x"],
 		["assert(hp >= 0, \"hp went negative\")", "System ▸ Assert hp ≥ 0 \"hp went negative\""],
 		["assert(hp > 0)", "System ▸ Assert hp > 0"]
@@ -445,8 +446,8 @@ static func _picked_matches_typed() -> bool:
 	for expected: String in [
 		"File ▸ \"log.txt\" exists",
 		"Keyboard ▸ On \"jump\" released",
-		"System ▸ Log error \"no target\"",
-		"System ▸ Log warning \"check this\"",
+		"System ▸ Report error \"no target\"",
+		"System ▸ Warn \"check this\"",
 		"System ▸ Log \"done\"",
 		"System ▸ Assert hp ≥ 0 \"hp went negative\""
 	]:

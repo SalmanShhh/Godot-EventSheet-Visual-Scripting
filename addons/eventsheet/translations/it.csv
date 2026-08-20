@@ -3256,3 +3256,27 @@ Add item {0},Aggiungi la voce {0}
 Answer {value},Rispondi {value}
 handled,gestito
 not handled,non gestito
+Edit sheet undoably {label},Modifica il foglio (annullabile) {label}
+Edit sheet undoably,Modifica il foglio (annullabile)
+Report error {value},Segnala l'errore {value}
+Warn {value},Avvisa {value}
+Define,Definisci
+category,categoria
+Writes,Scrive
+helper of,aiutante di
+made with the {object},creato con il {object}
+adds its own actions to {object},aggiunge le proprie azioni a {object}
+shared store,deposito condiviso
+nothing of its own is ever made,non ne viene mai creato nulla
+one store for the whole editor,un solo deposito per tutto l'editor
+vocabulary module,modulo di vocabolario
+{n} rows published,{n} righe pubblicate
+publishes rows the picker offers,pubblica le righe offerte dal selettore
+one for the whole editor,una sola per tutto l'editor
+"One for the whole editor, kept between sheets.","Una sola per tutto l'editor, mantenuta tra i fogli."
+frozen,congelato
+"Named elsewhere: add to it, never rename one.","Nominato altrove: aggiungi, non rinominare mai."
+itself,se stessa
+↓ the steps below are the edit,↓ i passi qui sotto sono la modifica
+"one undoable step, the edit under it","un passo annullabile, con la modifica sotto"
+Shared,Condivisa

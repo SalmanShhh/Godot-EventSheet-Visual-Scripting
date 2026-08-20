@@ -128,6 +128,12 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# and which local holds the clock the date fields are read out of. Every one of them is a whole-
 	# file question, so it is answered once here rather than guessed at line by line.
 	extras.merge(behavior_words_facts(sheet), true)
+	# ── W3 / W4 / W5 / W16 lens hook ───────────────────────────────────────────────────────────
+	# What a TOOL script's own shape says about it: the object a helper is a behavior of, the class
+	# that is a shared store, the vocabulary rows a module publishes and the functions that call
+	# themselves. Every one of those is stated in a `func` header or spread over a whole file, so all
+	# of them are answered from one read of the file here rather than guessed at line by line.
+	extras.merge(EventSheetEditorSourceFacts.facts(sheet), true)
 	return extras
 
 

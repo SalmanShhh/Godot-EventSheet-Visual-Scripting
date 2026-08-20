@@ -3256,3 +3256,27 @@ Add item {0},항목 {0} 추가
 Answer {value},{value} 로 답하기
 handled,처리함
 not handled,처리 안 함
+Edit sheet undoably {label},시트 편집 (되돌리기 가능) {label}
+Edit sheet undoably,시트 편집 (되돌리기 가능)
+Report error {value},오류 보고 {value}
+Warn {value},경고 {value}
+Define,정의
+category,분류
+Writes,작성
+helper of,의 보조
+made with the {object},{object} 와 함께 만들어짐
+adds its own actions to {object},{object} 에 자체 동작을 더함
+shared store,공유 저장소
+nothing of its own is ever made,인스턴스는 결코 만들어지지 않음
+one store for the whole editor,편집기 전체에 하나의 저장소
+vocabulary module,어휘 모듈
+{n} rows published,{n} 개 행 게시
+publishes rows the picker offers,선택기가 제공하는 행을 게시
+one for the whole editor,편집기 전체에 하나
+"One for the whole editor, kept between sheets.",편집기 전체에 하나이며 시트 사이에서 유지됩니다.
+frozen,고정됨
+"Named elsewhere: add to it, never rename one.",다른 곳에서 이름으로 참조됩니다. 추가는 하되 이름은 바꾸지 마세요.
+itself,자기 자신
+↓ the steps below are the edit,↓ 아래 단계들이 이 편집입니다
+"one undoable step, the edit under it","되돌릴 수 있는 한 단계, 그 아래가 편집 내용"
+Shared,공유

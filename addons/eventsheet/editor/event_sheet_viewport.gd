@@ -3387,6 +3387,11 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var mark_help: String = _mark_tooltip(hit)
 	if not mark_help.is_empty():
 		return mark_help
+	# A span may carry its OWN one-line explanation ("one for the whole editor, kept between sheets"):
+	# a muted hint on a row is a summary, and the hover is where the rest of the sentence lives.
+	var span_note: String = str(metadata.get("hover_note", "")).strip_edges()
+	if not span_note.is_empty():
+		return span_note
 	# S19 - the ⟡ chip is a NAME, and a name on its own teaches nothing: hovering it says what the
 	# pattern is in one line and that the Manual has a page about it (which a click opens).
 	if kind == "pattern_chip":

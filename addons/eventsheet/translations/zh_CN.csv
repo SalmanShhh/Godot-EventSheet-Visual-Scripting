@@ -3256,3 +3256,27 @@ Add item {0},添加项目 {0}
 Answer {value},回答 {value}
 handled,已处理
 not handled,未处理
+Edit sheet undoably {label},编辑事件表（可撤销）{label}
+Edit sheet undoably,编辑事件表（可撤销）
+Report error {value},报告错误 {value}
+Warn {value},警告 {value}
+Define,定义
+category,分类
+Writes,写出
+helper of,的助手
+made with the {object},与 {object} 一同创建
+adds its own actions to {object},为 {object} 添加自己的动作
+shared store,共享存储
+nothing of its own is ever made,从不创建它的实例
+one store for the whole editor,整个编辑器共用一个存储
+vocabulary module,词汇模块
+{n} rows published,已发布 {n} 行
+publishes rows the picker offers,发布选择器所提供的行
+one for the whole editor,整个编辑器共用一个
+"One for the whole editor, kept between sheets.",整个编辑器共用一个，在不同事件表之间保留。
+frozen,已冻结
+"Named elsewhere: add to it, never rename one.",别处按名称引用：可以新增，切勿改名。
+itself,自身
+↓ the steps below are the edit,↓ 下面的步骤就是这次编辑
+"one undoable step, the edit under it",一个可撤销的步骤，编辑内容在其下
+Shared,共享

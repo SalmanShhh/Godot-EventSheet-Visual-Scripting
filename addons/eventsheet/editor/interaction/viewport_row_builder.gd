@@ -35,6 +35,10 @@ extends RefCounted
 ## has to be visible even when the theme ships verb_row_tint_strength at 0.0 for the authoring look.
 const VERB_KIND_TINT_ALPHA: float = 0.16
 
+## W16. The mark a call row wears when the function hands over to ITSELF. One constant, so the row,
+## the hover help and the Manual's legend can never draw two different glyphs for the same fact.
+const MARK_RECURSION := "↻"
+
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
 # CONDITION or EXPRESSION verb read their `return` as "Set return value to x" rather than "Stop event",
@@ -42,6 +46,9 @@ var _viewport: Control = null
 var _current_verb_function: EventFunction = null
 # The verb kind a lazily-built row carries with it, or -1 when the walk itself is the authority.
 var _verb_kind_override: int = -1
+# W4 - how many undo-step edits the walk is inside right now. A `return` in there is the ANSWER the
+# funnel asked for ("did this change anything?"), never the "stop the event" a plain body's is.
+var _answer_return_rows: int = 0
 # Per-build occurrence counters ("label" -> count) giving every paired region a STABLE
 # fold key ("label#n") that survives sessions - row uids are instance-based and cannot
 # (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
@@ -421,8 +428,15 @@ func group_helper_verb_rows(rows: Array[EventRowData], sheet: EventSheetResource
 	var helpers: Array[EventRowData] = []
 	var kept: Array[EventRowData] = []
 	var last_published: int = -1
+	# W3 - a constructor that only stores the object it was handed says nothing a reader has to read:
+	# the Include bar already says the class is made with that object. So it folds into the bar, and
+	# the helper's functions start with the first one that does something.
+	var folds_constructor: bool = EventSheetEditorSourceFacts.facts(_viewport._sheet as EventSheetResource) \
+		.get("helper_of") is Dictionary
 	for row_data: EventRowData in rows:
 		var owner_function: EventFunction = row_data.source_resource as EventFunction
+		if folds_constructor and owner_function != null and owner_function.function_name == "_init":
+			continue
 		if owner_function != null and row_data.row_type == EventRowData.RowType.EVENT and not owner_function.expose_as_ace:
 			_shift_row_indent(row_data, 1)
 			helpers.append(row_data)
@@ -641,7 +655,8 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	# add-on is four callbacks and no members at all) declare neither a signal nor a knob to hang the
 	# bar on. Their identity is the class they extend, which is a head fact on its own.
 	var editor_addon: bool = EventSheetEditorPluginWords.is_editor_plugin_class(str(sheet.host_class).strip_edges())
-	if not identity_seen or (triggers.is_empty() and knobs.is_empty() and not editor_addon):
+	var publishes_vocabulary: bool = bool(EventSheetEditorSourceFacts.facts(sheet).get("vocabulary_module", false))
+	if not identity_seen or (triggers.is_empty() and knobs.is_empty() and not editor_addon and not publishes_vocabulary):
 		return rows
 	var head: Array[EventRowData] = [_build_pack_include_bar_row(sheet, host_class)]
 	# N12 - a script that extends ANOTHER SCRIPT of this project is including that sheet: everything
@@ -994,6 +1009,24 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 				"text_color": _viewport._get_reading_style().muted_text_color
 			}))
 		return spans
+	# ── W3 / W5 / W16 ───────────────────────────────────────────────────────────────────────────
+	# What this file IS to the editor it is part of, said instead of the class it happens to extend:
+	# a behavior of the object it was made with, a store nothing is ever made of, or a page of the
+	# vocabulary. All three replace "a RefCounted", which is the least useful true thing about them.
+	var tool_shape: Array[SemanticSpan] = _tool_shape_spans(sheet)
+	if not tool_shape.is_empty():
+		spans.append_array(tool_shape)
+		if bool(sheet.tool_mode):
+			spans.append(_pack_include_chip(EventSheetL10n.translate("runs in editor")))
+		var shape_receipts: PackedStringArray = PackedStringArray()
+		if not source_path.is_empty():
+			shape_receipts.append("· %s" % source_path.get_file())
+		if not shape_receipts.is_empty():
+			spans.append(_make_span(" ".join(shape_receipts), SemanticSpan.SpanType.COMMENT, {
+				"editable": false, "kind": "pack_include", "line_index": 0,
+				"text_color": _viewport._get_reading_style().muted_text_color
+			}))
+		return spans
 	# `extends "res://enemy.gd"` is a FILE, not a class: quoting a path into the identity chip reads as
 	# noise, and the Include bar directly below already names that file (N12).
 	if base_class.begins_with("\"") or base_class.begins_with("'"):
@@ -1224,6 +1257,62 @@ func _build_base_script_include_bar_row(sheet: EventSheetResource) -> EventRowDa
 	]
 	row_data.spans = spans
 	return row_data
+
+
+## W3 / W5 / W16. The middle of a TOOL script's Include bar - the one sentence that says what the
+## file is to the editor it belongs to. Empty for every ordinary game script, which is why an
+## ordinary project never sees any of these words.
+##
+## Each shape also CLAIMS itself, so the chip, the hover evidence and the Doctor read one registry
+## rather than each re-deriving the same fact from the same file.
+func _tool_shape_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	if sheet == null:
+		return spans
+	var facts: Dictionary = EventSheetEditorSourceFacts.facts(sheet)
+	if facts.is_empty():
+		return spans
+	var bar_uid: String = "pack_include_bar_%d" % sheet.get_instance_id()
+	var helper: Dictionary = facts.get("helper_of", {}) if facts.get("helper_of") is Dictionary else {}
+	if not helper.is_empty():
+		var object_name: String = str(helper.get("object", ""))
+		var helper_file: String = str(helper.get("file", ""))
+		spans.append(_include_muted_span(EventSheetL10n.translate("helper of")))
+		spans.append(_make_span(object_name, SemanticSpan.SpanType.OBJECT, {
+			"editable": false, "kind": "pack_include", "line_index": 0,
+			"text_color": _viewport._get_event_style().object_label_color
+		}))
+		var made_with: String = EventSheetL10n.translate("made with the {object}") \
+			.replace("{object}", object_name.to_lower())
+		spans.append(_include_muted_span(
+			"· %s" % made_with if helper_file.is_empty() else "(%s) · %s" % [helper_file, made_with]))
+		EventSheetPatternFacts.claim(sheet, "helper_of", bar_uid, bar_uid,
+			PackedStringArray([str(helper.get("member", ""))]),
+			EventSheetL10n.translate("adds its own actions to {object}").replace("{object}", object_name))
+		return spans
+	if bool(facts.get("shared_store", false)):
+		spans.append(_include_muted_span(EventSheetL10n.translate("shared store")))
+		spans.append(_include_muted_span("· %s" % EventSheetL10n.translate("nothing of its own is ever made")))
+		EventSheetPatternFacts.claim(sheet, "shared_store", bar_uid, bar_uid, PackedStringArray(),
+			EventSheetL10n.translate("one store for the whole editor"))
+		return spans
+	if bool(facts.get("vocabulary_module", false)):
+		var published: int = (facts.get("vocabulary_rows", []) as Array).size()
+		spans.append(_include_muted_span(EventSheetL10n.translate("vocabulary module")))
+		spans.append(_include_muted_span("· %s" % EventSheetL10n.translate("{n} rows published")
+			.replace("{n}", str(published))))
+		EventSheetPatternFacts.claim(sheet, "vocabulary_module", bar_uid, bar_uid, PackedStringArray(),
+			EventSheetL10n.translate("publishes rows the picker offers"))
+		return spans
+	return spans
+
+
+## One muted word of an Include bar - the tone every receipt on that bar is written in.
+func _include_muted_span(text: String) -> SemanticSpan:
+	return _make_span(text, SemanticSpan.SpanType.COMMENT, {
+		"editable": false, "kind": "pack_include", "line_index": 0,
+		"text_color": _viewport._get_reading_style().muted_text_color
+	})
 
 
 func _pack_include_chip(text: String) -> SemanticSpan:
@@ -1681,6 +1770,9 @@ func _build_reading_variable_row(variable: LocalVariable, description: String, i
 ## autoload, Field on a Resource script, Instance otherwise.
 func _member_scope_key(variable: LocalVariable) -> String:
 	var sheet: EventSheetResource = _viewport._sheet
+	# W5 - the same declaration, read where there are no copies to share it between.
+	if variable.is_static and not variable.is_constant and _is_shared_store():
+		return EventSheetVariableSentence.SCOPE_SHARED
 	return EventSheetVariableSentence.member_scope(
 		variable.is_constant,
 		variable.is_static,
@@ -1695,6 +1787,8 @@ func _member_scope_key(variable: LocalVariable) -> String:
 func _member_scope_note(variable: LocalVariable) -> String:
 	if not variable.is_static:
 		return ""
+	if _is_shared_store():
+		return EventSheetL10n.translate("one for the whole editor")
 	var object_name: String = EventSheetViewportReadingRows.script_object_name(_viewport._sheet)
 	if object_name.is_empty():
 		return EventSheetL10n.translate("shared by every copy")
@@ -5216,6 +5310,10 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	# event beside the ones the sheet itself owns, in file order among them.
 	for promoted_row: EventRowData in _build_promoted_local_rows(event_row, indent + 1):
 		row_data.children.append(promoted_row)
+	# W4 - the edit handed to the undo funnel hangs under the step it belongs to, which is where the
+	# file writes it: one undoable step, and the lines it is made of below it.
+	for edit_row: EventRowData in _build_undo_step_rows(event_row, row_data.row_uid, indent + 1):
+		row_data.children.append(edit_row)
 	# M29 - a lambda handed to `connect` IS a trigger event; an event sheet has no lambdas, only triggers.
 	# Its reading sits with the actions (which is where the connect line sits) and above the real
 	# sub-events, because that is the order the file runs in.
@@ -6504,7 +6602,8 @@ func _build_variable_row(
 		if reading_scope.is_empty() and is_constant:
 			reading_scope = EventSheetVariableSentence.SCOPE_CONSTANT
 		if reading_scope.is_empty() and bool(options.get("is_static", false)):
-			reading_scope = EventSheetVariableSentence.SCOPE_STATIC
+			reading_scope = EventSheetVariableSentence.SCOPE_SHARED if _is_shared_store() \
+				else EventSheetVariableSentence.SCOPE_STATIC
 		variable_meta["variable_scope_word"] = reading_scope
 		reading_type_word = EventSheetVariableSentence.chip_text(reading_scope, reading_type_word)
 		row_data.spans = [
@@ -6659,7 +6758,13 @@ func _build_variable_row(
 			_make_span(
 				scope_note,
 				SemanticSpan.SpanType.COMMENT,
-				variable_meta.merged({"editable": false, "text_color": _viewport._get_reading_style().muted_text_color}, true)
+				variable_meta.merged({
+					"editable": false,
+					"text_color": _viewport._get_reading_style().muted_text_color,
+					# W5 - the rest of the sentence a shared value's note is the short form of.
+					"hover_note": EventSheetL10n.translate("One for the whole editor, kept between sheets.") \
+						if bool(options.get("is_static", false)) and _is_shared_store() else ""
+				}, true)
 			)
 		)
 	# A static variable says who shares it: one value on the CLASS, so every object of this type reads
@@ -6667,15 +6772,38 @@ func _build_variable_row(
 	# variable that happens to wear an extra word. A head row already carries the note as its
 	# scope_note (above), so it is only added here when nothing said it yet.
 	if bool(options.get("is_static", false)) and scope_note.is_empty():
-		var owner_word: String = _static_owner_word()
-		if not owner_word.is_empty():
+		# W5 - in a class nothing is ever made of, "shared by every X" names copies that do not exist.
+		# What the reader needs there is that this ONE value is the editor's, and it outlives the sheet
+		# they are looking at.
+		var shared_note: String = EventSheetL10n.translate("one for the whole editor") if _is_shared_store() \
+			else EventSheetL10n.translate("shared by every %s") % _static_owner_word()
+		if not shared_note.strip_edges().is_empty():
 			row_data.spans.append(
 				_make_span(
-					EventSheetL10n.translate("shared by every %s") % owner_word,
+					shared_note,
 					SemanticSpan.SpanType.COMMENT,
-					variable_meta.merged({"editable": false, "text_color": _viewport._get_reading_style().muted_text_color}, true)
+					variable_meta.merged({
+						"editable": false,
+						"text_color": _viewport._get_reading_style().muted_text_color,
+						"hover_note": EventSheetL10n.translate("One for the whole editor, kept between sheets.") \
+							if _is_shared_store() else ""
+					}, true)
 				)
 			)
+	# W5 - a constant the file itself says must never change wears that promise where a reader meets
+	# it. The words come from the doc comment above the line, so nothing here decides what is frozen.
+	if is_constant and reading and _frozen_constants().has(var_name):
+		row_data.spans.append(
+			_make_span(
+				EventSheetL10n.translate("frozen"),
+				SemanticSpan.SpanType.COMMENT,
+				variable_meta.merged({
+					"editable": false,
+					"text_color": _viewport._get_reading_style().muted_text_color,
+					"hover_note": EventSheetL10n.translate("Named elsewhere: add to it, never rename one.")
+				}, true)
+			)
+		)
 	# The knob's own sentence, muted, trailing the value - the `##` doc comment the Inspector shows as
 	# its tooltip. A reader of an opened pack should never have to open the .gd to learn what a setting
 	# does. Reading shape only; an authored row keeps the tooltip in the variable dialog.
@@ -6695,6 +6823,19 @@ func _build_variable_row(
 ## Player"). The same three fallbacks the Include bar names the script with - the class name its author
 ## gave it, else the scene root that carries it, else the file - so the two never disagree. "" when the
 ## sheet has no object to name, which is when the note is dropped rather than left half-said.
+## W5. True when the opened file is a class nothing is ever made of - the shared stores an editor
+## keeps its memory in. False for every ordinary script, which is what keeps these words out of a
+## game project.
+func _is_shared_store() -> bool:
+	return bool(EventSheetEditorSourceFacts.facts(_viewport._sheet as EventSheetResource).get("shared_store", false))
+
+
+## W5. The constants this file says must never be renamed, {} when it says it about none.
+func _frozen_constants() -> Dictionary:
+	var facts: Variant = EventSheetEditorSourceFacts.facts(_viewport._sheet as EventSheetResource).get("frozen_constants")
+	return facts if facts is Dictionary else {}
+
+
 func _static_owner_word() -> String:
 	var sheet: EventSheetResource = _viewport._sheet
 	if sheet == null:
@@ -8812,6 +8953,166 @@ func _return_value_function_pieces(returned: String) -> Array:
 	return pieces
 
 
+# ── W4: the undo funnel - one door, one step ───────────────────────────────────────────────────
+
+
+## The parts of an edit handed to the mutation funnel:
+## {name, type_word, object, label, body} - the local that catches the answer, the object whose
+## funnel it is, the words the step is called by, and the lines of the edit itself.
+## {} for anything that is not that shape, which is every other block in the file.
+##
+## Shape-bound on purpose, exactly like the connected-lambda parse it sits beside: everything
+## downstream is a reading, nothing is lifted, and the file keeps the lines it always had.
+static func undo_step_parts(code: String) -> Dictionary:
+	var lines: PackedStringArray = code.split("\n")
+	if lines.size() < 2:
+		return {}
+	var first: String = lines[0].strip_edges()
+	var name: String = ""
+	var type_word: String = ""
+	if first.begins_with("var "):
+		var assign_at: int = first.find(" = ")
+		if assign_at < 0:
+			return {}
+		var declared: String = first.substr(4, assign_at - 4).strip_edges()
+		var colon_at: int = declared.find(":")
+		name = (declared if colon_at < 0 else declared.substr(0, colon_at)).strip_edges()
+		type_word = "" if colon_at < 0 else declared.substr(colon_at + 1).strip_edges()
+		first = first.substr(assign_at + 3).strip_edges()
+	# The funnel itself, or a thin forwarder that says "undoable" in its own name - the alias a
+	# coordinator's door is usually reached through. Read off the head of the call rather than
+	# through a call parse: the statement is deliberately unclosed here, the lambda's body being
+	# the rest of the block.
+	var open_at: int = first.find("(")
+	if open_at <= 0 or not first.ends_with(":"):
+		return {}
+	var head: String = first.substr(0, open_at)
+	var dot_at: int = head.rfind(".")
+	if dot_at <= 0 or not EventSheetEditorSourceFacts.is_funnel_method(head.substr(dot_at + 1)):
+		return {}
+	var receiver: String = head.substr(0, dot_at).strip_edges()
+	var arguments: String = first.substr(open_at + 1)
+	var comma_at: int = arguments.find(",")
+	if comma_at < 0:
+		return {}
+	var label: String = arguments.substr(0, comma_at).strip_edges()
+	if not (label.begins_with("\"") or label.begins_with("'")):
+		return {}
+	if not arguments.substr(comma_at + 1).strip_edges().begins_with("func("):
+		return {}
+	var body: PackedStringArray = PackedStringArray()
+	for index: int in range(1, lines.size()):
+		var line: String = lines[index]
+		var text: String = line.substr(1) if line.begins_with("\t") else line.strip_edges()
+		if index == lines.size() - 1:
+			# The funnel's own `)` closes on the edit's last line, where it is punctuation rather
+			# than part of the step. Dropped only when it is the bracket that closes the call.
+			if not text.ends_with(")"):
+				return {}
+			text = text.substr(0, text.length() - 1)
+		if not text.strip_edges().is_empty():
+			body.append(text)
+	if body.is_empty():
+		return {}
+	return {
+		"name": name,
+		"type_word": type_word,
+		"receiver": receiver,
+		"label": label.substr(1, label.length() - 2),
+		"body": body
+	}
+
+
+## W4. The undo-step row's own cell: the local that catches the answer, the step's name in the words
+## Undo will show, and the cue that what follows is the edit. Pure view - the RawCodeRow keeps every
+## line it had, so the byte round-trip is untouched and a double-click still opens the statement.
+func _append_undo_step_spans(spans: Array, parts: Dictionary, action_index: int, line_index: int,
+		action_style_meta: Dictionary) -> void:
+	var context: Dictionary = sentence_context()
+	var object_name: String = EventSheetSentence.helper_object(str(parts.get("receiver", "")), context)
+	if object_name.is_empty():
+		object_name = EventSheetSentence.object_of_reference(str(parts.get("receiver", "")))
+	var step_text: String = "%s ▸ %s \"%s\"" % [object_name,
+		EventSheetL10n.translate("Edit sheet undoably"), str(parts.get("label", ""))]
+	var base_meta: Dictionary = {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"raw_action": true,
+		"code_cell": false,
+		"chip": true,
+		"line_index": line_index
+	}
+	var type_word: String = friendly_type_word(str(parts.get("type_word", "")))
+	spans.append(_make_span("%s %s" % [EventSheetL10n.translate("Local"), type_word],
+		SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+			"natural_width": true,
+			"text_color": _viewport._get_event_style().object_label_color
+		}, true).merged(action_style_meta, false)))
+	spans.append(_make_span(str(parts.get("name", "")), SemanticSpan.SpanType.VALUE,
+		base_meta.duplicate().merged({
+			"natural_width": true,
+			"text_color": _viewport._get_reading_style().primary_text_color
+		}, true).merged(action_style_meta, false)))
+	spans.append(_make_span("= %s" % step_text, SemanticSpan.SpanType.VALUE,
+		base_meta.duplicate().merged({
+			"natural_width": true,
+			"text_color": _viewport._get_event_style().value_highlight_color
+		}, true).merged(action_style_meta, false)))
+	spans.append(_make_span(EventSheetL10n.translate("↓ the steps below are the edit"),
+		SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+			"text_color": _viewport._get_reading_style().muted_text_color
+		}, true).merged(action_style_meta, false)))
+
+
+## W4. The edit itself, as the sub-events it is: every line of the callback read through the very
+## same lift a declared function's body goes through, so a statement says the same thing wherever it
+## was written. The rows are inert - they stand for one statement the file holds, which is untouched.
+func _build_undo_step_rows(event_row: EventRow, anchor_base: String, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if event_row == null:
+		return rows
+	for action_index: int in event_row.actions.size():
+		var raw: RawCodeRow = event_row.actions[action_index] as RawCodeRow
+		if raw == null:
+			continue
+		var parts: Dictionary = undo_step_parts(raw.code)
+		if parts.is_empty():
+			continue
+		# `return true` inside an edit is the ANSWER the funnel asked for ("did this change
+		# anything?"), which is what the flag below turns on - for these rows only.
+		_answer_return_rows += 1
+		var built: int = 0
+		for body_event: Variant in EventSheetACELifter.lift_body_rows(
+				parts.get("body", PackedStringArray()), _sheet_object_variable_names()):
+			if not (body_event is EventRow):
+				continue
+			var body_row: EventRowData = _build_event_row(body_event as EventRow, indent)
+			body_row.row_uid = "%s_edit%d_%d" % [anchor_base, action_index, built]
+			# A line of the edit runs when the edit runs - "Always", never the sheet's "Every Tick",
+			# which is what a condition-less row means at sheet level and never means in here.
+			_mark_verb_body(body_row, EventSheetSentence.VerbKind.ACTION)
+			_ensure_subtree_spans(body_row)
+			_make_row_inert(body_row)
+			rows.append(body_row)
+			built += 1
+		_answer_return_rows -= 1
+		var sheet: EventSheetResource = _viewport._sheet
+		if sheet != null:
+			EventSheetPatternFacts.claim(sheet, "undo_step", anchor_base, anchor_base,
+				PackedStringArray([str(parts.get("label", ""))]),
+				EventSheetL10n.translate("one undoable step, the edit under it"))
+	return rows
+
+
+## Builds a row's spans and its whole subtree's, now rather than on first paint - what a reading with
+## a per-row fact of its own needs, because the lazy build runs long after the fact is gone.
+func _ensure_subtree_spans(row_data: EventRowData) -> void:
+	_ensure_event_spans(row_data)
+	for child: EventRowData in row_data.children:
+		_ensure_subtree_spans(child)
+
+
 # ── M29: a lambda connected to a signal reads as the trigger event it is ────────────────────────
 
 
@@ -10260,6 +10561,10 @@ func _function_call_label(action: ACEAction) -> String:
 			# IS that label - is dropped here rather than repeated inside the sentence.
 			for index: int in range(1, call_pieces.size()):
 				text += str((call_pieces[index] as Array)[0])
+			# W16 - a call that sits inside the very function it calls says so: the rows below are
+			# these rows again, one level in, and that is the one thing a reader cannot see.
+			if _function_body_holds(called, action):
+				text += "   %s %s" % [MARK_RECURSION, EventSheetL10n.translate("itself")]
 			return text.strip_edges()
 	return "%s(%s)" % [label, args] if not args.is_empty() else label
 
@@ -11014,6 +11319,13 @@ func _claim_pending_patterns(row_data: EventRowData) -> void:
 ## row is the LEAD of such a run. The statement then reads with the word `table` / `list` where the
 ## literal sat and the entries as chips after it; every other caller passes {} and nothing changes.
 func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, line_index: int, action_style_meta: Dictionary, literal: Dictionary = {}) -> bool:
+	# W4 - an edit handed to the mutation funnel is ONE undoable step: the row names the step, and the
+	# callback's own lines read as sub-events under it. Ahead of the sentence layer, which cannot see
+	# a statement written across several lines at all.
+	var undo_step: Dictionary = undo_step_parts(raw.code)
+	if not undo_step.is_empty():
+		_append_undo_step_spans(spans, undo_step, action_index, line_index, action_style_meta)
+		return true
 	var pieces: Array = []
 	var indent: int = 0
 	var object_label: String = ""
@@ -12203,6 +12515,9 @@ func sentence_context() -> Dictionary:
 		# The Familiar Words glossary is VIEW state, not sheet state, so it is stamped after the
 		# per-sheet cache - flipping the toggle must change the reading without invalidating it.
 		reused["familiar_words"] = _familiar_words_enabled()
+		# W4 - which edit the walk is inside is a fact about the WALK, not about the sheet, so it is
+		# stamped after the per-sheet cache exactly as the verb kind above is.
+		reused["answer_return"] = _answer_return_rows > 0
 		return reused
 	var context: Dictionary = {"self_object": EventSheetSentence.OBJECT_SYSTEM, "owner": "", "signals": {}}
 	if sheet != null:
@@ -12232,6 +12547,7 @@ func sentence_context() -> Dictionary:
 	context["verb_kind"] = _current_verb_kind()
 	context["answer_shape"] = _current_answer_shape()
 	context["familiar_words"] = _familiar_words_enabled()
+	context["answer_return"] = _answer_return_rows > 0
 	return context
 
 
@@ -12490,13 +12806,71 @@ func _reading_call_pieces(code: String, arguments: PackedStringArray) -> Array:
 	var event_function: EventFunction = find_function_by_name(sheet, function_name)
 	if event_function == null:
 		return []
-	return EventSheetViewportReadingRows.call_reading_pieces(
+	var pieces: Array = EventSheetViewportReadingRows.call_reading_pieces(
 		EventSheetViewportLenses.function_display_name(function_name, event_function.ace_display_name),
 		arguments,
 		EventSheetViewportReadingRows.parameter_names_of(event_function),
 		_viewport.humanize_names_enabled(),
 		_export_knob_names()
 	)
+	# W16 - a function that hands over to ITSELF is the one shape a reader has to be told about: the
+	# rows below this one are the same rows again, one level in. Said on the call row, muted, because
+	# that is the row where a reader would otherwise go looking for a second function.
+	# The call is the function's OWN when the line sits in that function's body, which is a question
+	# the row model can answer at span time - the walk that knew the enclosing verb is long over by
+	# the time a row's spans are built.
+	if not pieces.is_empty() and _function_body_holds_line(event_function, code):
+		pieces.append(["   %s %s" % [MARK_RECURSION, EventSheetL10n.translate("itself")], "muted"])
+	return pieces
+
+
+## W16. True when `action` is one of the rows of `event_function`'s own body - the lifted twin of
+## the line test below, asked by identity because a lifted row IS the statement.
+func _function_body_holds(event_function: EventFunction, action: Resource) -> bool:
+	if event_function == null or action == null:
+		return false
+	var entries: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+	return _entries_hold_action(entries, action, 0)
+
+
+func _entries_hold_action(entries: Array, action: Resource, depth: int) -> bool:
+	if depth > 32:
+		return false
+	for entry: Variant in entries:
+		if entry == action:
+			return true
+		if entry is EventRow:
+			var event_entry: EventRow = entry as EventRow
+			if _entries_hold_action(event_entry.actions, action, depth + 1) \
+					or _entries_hold_action(event_entry.sub_events, action, depth + 1):
+				return true
+	return false
+
+
+## W16. True when `code` is one of the lines of `event_function`'s own body.
+func _function_body_holds_line(event_function: EventFunction, code: String) -> bool:
+	var wanted: String = code.strip_edges()
+	if wanted.is_empty():
+		return false
+	var entries: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+	return _entries_hold_line(entries, wanted, 0)
+
+
+## The same question, walked down the event tree. Depth-capped like every other walk here.
+func _entries_hold_line(entries: Array, wanted: String, depth: int) -> bool:
+	if depth > 32:
+		return false
+	for entry: Variant in entries:
+		if entry is RawCodeRow:
+			for line: String in (entry as RawCodeRow).code.split("\n"):
+				if line.strip_edges() == wanted:
+					return true
+		elif entry is EventRow:
+			var event_entry: EventRow = entry as EventRow
+			if _entries_hold_line(event_entry.actions, wanted, depth + 1) \
+					or _entries_hold_line(event_entry.sub_events, wanted, depth + 1):
+				return true
+	return false
 
 
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
