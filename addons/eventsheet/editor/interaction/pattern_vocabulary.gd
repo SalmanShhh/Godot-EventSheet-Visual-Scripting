@@ -153,6 +153,18 @@ const ENTRIES: Dictionary = {
 		"why": "text built from values, and a regular expression searched or replaced in it",
 		"adoptable": "",
 		"rank": 21
+	},
+	"placement": {
+		"words": "Placement",
+		"why": "something is put where a marker is, dropped onto the ground and tilted onto its slope",
+		"adoptable": "",
+		"rank": 22
+	},
+	"polar": {
+		"words": "Angle and distance",
+		"why": "points worked out as an angle and a distance, which is how a ring and a spiral are drawn",
+		"adoptable": "",
+		"rank": 23
 	}
 }
 

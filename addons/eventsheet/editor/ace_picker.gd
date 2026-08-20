@@ -47,6 +47,10 @@ const FAVORITES_SETTING := "eventsheets/picker/favorites"
 ## Marks an object-card entry as "hidden class, select to restore" rather than a scope target.
 const UNHIDE_PREFIX := "unhide:"
 
+## X16. The page the 3D verbs are filed on. A category starting with this names a page and a section
+## ("3D: Move & Turn"), and is filed as one even though the row is also scoped to a node type.
+const SPATIAL_PAGE_PREFIX := "3D: "
+
 ## Marks an object-page entry as "one of the open script's own functions - insert a call to it"
 ## rather than a scope target. The rest of the string is the GDScript function name.
 const FUNCTION_PREFIX := "function:"
@@ -1282,7 +1286,15 @@ func _refresh_tree() -> void:
 		if not _is_allowed_for_mode(definition, mode, signals_only):
 			continue
 		var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
-		var is_node_type_group: bool = not node_type.is_empty()
+		# ── X16 ─────────────────────────────────────────────────────────────────────────────────
+		# The 3D page. Scoping a row to a node type is what decides which objects may drop it, and
+		# until now it also decided where it was FILED - so every 3D verb sat in one flat "Node3D"
+		# list while the 2D ones were sorted into named sections. A row filed on the 3D page keeps
+		# that page, which is the only way a node-scoped row can be sorted the way an unscoped one
+		# is. Held to that one page on purpose: it is the only category a shipped row spells this
+		# way, so no existing row's group can move under it.
+		var paged: bool = _category_of(definition).begins_with(SPATIAL_PAGE_PREFIX)
+		var is_node_type_group: bool = not node_type.is_empty() and not paged
 		var group_key: String = node_type if is_node_type_group else _category_of(definition)
 		var group_item: TreeItem = _resolve_group_item(root, group_nodes, group_key, is_node_type_group)
 		var item: TreeItem = _tree.create_item(group_item)

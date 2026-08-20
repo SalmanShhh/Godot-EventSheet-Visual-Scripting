@@ -3164,3 +3164,34 @@ starting {values},nachinayushchiysya s {values}
 {subject} is a table,{subject} - tablitsa
 with {clauses},s {clauses}
 has {key},soderzhit {key}
+Move {direction} at {speed},Dvigatsya {direction} so skorostyu {speed}
+Move along {direction} at {speed},Dvigatsya vdol {direction} so skorostyu {speed}
+Rotate {turn} at {rate}°,Povorachivat {turn} na {rate}°
+Roll {turn} at {rate}°,Krenitsya {turn} na {rate}°
+/s · {axis},/s · {axis}
+clockwise,po chasovoy strelke
+counter-clockwise,protiv chasovoy strelki
+yaw,ryskanie
+pitch,tangazh
+roll,kren
+(in its own space),(v sobstvennom prostranstve)
+Rotate toward {facing} at {rate},Povorachivat k {facing} so skorostyu {rate}
+facing along {direction},napravlenniy vdol {direction}
+(up is {value}),(verkh - {value})
+Set position to {other},Zadat poziciyu {other}
+spawn point,tochka poyavleniya
+another object,drugoy obyekt
+Align to the ground's slope,Vyrovnyat po uklonu zemli
+Is within {angle} of facing {target},Naklon k {target} v predelakh {angle}
+Is not within {angle} of facing {target},Naklon k {target} ne v predelakh {angle}
+{target} is {side} {object},{target} {side} {object}
+behind,pozadi
+in front of,pered
+to the right of,sprava ot
+to the left of,sleva ot
+"the point at angle {angle}, distance {distance}",tochka pod uglom {angle} na rasstoyanii {distance}
+{index}'s share of a full turn,dolya {index} ot polnogo oborota
+Placement,Razmeshchenie
+Angle and distance,Ugol i rasstoyanie
+"something is put where a marker is, dropped onto the ground and tilted onto its slope","predmet stavitsya na metku, opuskaetsya na zemlyu i naklonyaetsya po ee uklonu"
+"points worked out as an angle and a distance, which is how a ring and a spiral are drawn","tochki, vychislennye kak ugol i rasstoyanie - tak risuyutsya koltso i spiral"

@@ -17,6 +17,45 @@
   lifted events do not reproduce its exact source re-anchors as a verbatim block on the spot,
   instead of surfacing only at the whole-file verify and reverting every other function with it.
 
+### Added - 3D reads as directions, questions and places
+
+- **Moving and turning in 3D read as the six directions and the three turns.** `global_position +=
+  -transform.basis.z * speed * delta` reads `Player ▸ Move forward at speed · per second`, and the
+  basis table is now whole in both directions: `-basis.z` is forward and `basis.z` is backward,
+  `basis.x` right and `-basis.x` left, `basis.y` up and `-basis.y` down, in the `transform` and
+  `global_transform` spellings alike. `rotate_y(deg_to_rad(x * delta))` reads `Rotate clockwise at
+  x°/s · yaw` (a leading minus turns it counter-clockwise), `rotate_x` is `Rotate up / down · pitch`
+  and `rotate_z` is `Roll left / right · roll`; `rotate_object_local` says **(in its own space)**.
+  `basis = basis.slerp(desired, w * delta)` is the turret's own word - `Rotate toward desired at w` -
+  and `Basis.looking_at(dir)` is `facing along dir`. A one-argument `look_at(p)` on a 3D object now
+  reads `Look at p` as its two-argument twin already did, and an up vector that is not Godot's own
+  default is folded onto the row instead of being dropped.
+- **Facing tests read as the question they ask.** `forward.dot(to_enemy) > cos(deg_to_rad(45))` reads
+  `Guard ▸ Is within 45° of facing enemy` - in any spelling of those two vectors, including through
+  the locals that hold them, which the reading now gathers in one walk of the file. `< cos(...)`
+  inverts it. `to_local(p).z > 0` reads `p is behind Guard`, `< 0` `is in front of`, and the x-axis
+  twins read `to the right of` / `to the left of`.
+- **Placing things in the world.** `crate.global_position = spawn.global_position` reads `crate ▸ Set
+  position to spawn`, folding **spawn point** when the other end is a marker node and **another
+  object** when it is not, and `basis = Basis(Quaternion(Vector3.UP, normal)) * basis` - the most
+  looked-up line in 3D - reads `Align to the ground's slope`. Claimed only in that exact spelling;
+  a quaternion built any other way stays the maths it is. Both claim the new **Placement** pattern.
+- **Angle and distance are first-class words.** `Vector2(cos(a), sin(a)) * r`, `Vector2.from_angle(a)
+  * r` and the 3D ground-plane `Vector3(cos(a), 0, sin(a)) * r` all read `the point at angle a,
+  distance r`, and `TAU * float(i) / float(n)` reads `i's share of a full turn`. A loop that places
+  things at that point claims the new **Angle and distance** pattern as *places things evenly around
+  a circle*; a growing angle and radius claim it as *works a place out as an angle and a distance*.
+  A lone conversion claims nothing - it is an expression, not a pattern.
+- **A 3D page in the picker, and the six directions as a dropdown.** The 3D verbs are filed on a
+  **3D** page with **Move & Turn**, **Place** and **See** sections instead of one flat list keyed on
+  the node type they are scoped to, and every row writes exactly the spelling the readings above
+  recognise: Move In Direction, Rotate Clockwise, Rotate Up Or Down, Roll, Rotate Toward Facing,
+  Facing Along, Set Position To Another Object, Align To The Ground's Slope, Is Within Angle Of
+  Facing, Is Behind / In Front Of / To The Right Of / To The Left Of. A direction parameter offers
+  the six words as a dropdown and writes the basis expression, so the reader picks *forward* and the
+  file says `-basis.z`. **Point At Angle**, **Create Evenly Around A Circle** and **Store As Angle
+  And Distance** join the System expressions beside them.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

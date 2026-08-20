@@ -3164,3 +3164,34 @@ starting {values},先頭が {values}
 {subject} is a table,{subject} がテーブル
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
+Move {direction} at {speed},{direction} へ {speed} で移動
+Move along {direction} at {speed},{direction} に沿って {speed} で移動
+Rotate {turn} at {rate}°,{turn} に {rate}° 回転
+Roll {turn} at {rate}°,{turn} に {rate}° ロール
+/s · {axis},/秒 · {axis}
+clockwise,時計回り
+counter-clockwise,反時計回り
+yaw,ヨー
+pitch,ピッチ
+roll,ロール
+(in its own space),(自分の空間で)
+Rotate toward {facing} at {rate},{facing} へ {rate} で回転
+facing along {direction},{direction} を向いた姿勢
+(up is {value}),(上は {value})
+Set position to {other},位置を {other} にする
+spawn point,出現位置
+another object,別のオブジェクト
+Align to the ground's slope,地面の傾きに合わせる
+Is within {angle} of facing {target},{target} を向く角度が {angle} 以内
+Is not within {angle} of facing {target},{target} を向く角度が {angle} 以内ではない
+{target} is {side} {object},{target} は {object} の{side}
+behind,後ろ
+in front of,前
+to the right of,右
+to the left of,左
+"the point at angle {angle}, distance {distance}",角度 {angle}、距離 {distance} の点
+{index}'s share of a full turn,{index} が受け持つ一周分の角度
+Placement,配置
+Angle and distance,角度と距離
+"something is put where a marker is, dropped onto the ground and tilted onto its slope",目印の位置に置き、地面に落とし、その傾きに合わせる
+"points worked out as an angle and a distance, which is how a ring and a spiral are drawn",角度と距離から点を求める - 環と螺旋の描き方

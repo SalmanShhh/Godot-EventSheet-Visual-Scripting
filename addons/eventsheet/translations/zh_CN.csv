@@ -3164,3 +3164,34 @@ starting {values},以 {values} 开头
 {subject} is a table,{subject} 是一张表
 with {clauses},其中 {clauses}
 has {key},含有 {key}
+Move {direction} at {speed},以 {speed} 向{direction}移动
+Move along {direction} at {speed},以 {speed} 沿 {direction} 移动
+Rotate {turn} at {rate}°,以 {rate}° {turn}旋转
+Roll {turn} at {rate}°,以 {rate}° 向{turn}翻滚
+/s · {axis},/秒 · {axis}
+clockwise,顺时针
+counter-clockwise,逆时针
+yaw,偏航
+pitch,俯仰
+roll,翻滚
+(in its own space),(在自身空间中)
+Rotate toward {facing} at {rate},以 {rate} 朝 {facing} 旋转
+facing along {direction},朝向 {direction} 的姿态
+(up is {value}),(上方为 {value})
+Set position to {other},将位置设为 {other}
+spawn point,出生点
+another object,另一个对象
+Align to the ground's slope,对齐到地面坡度
+Is within {angle} of facing {target},朝向 {target} 的角度在 {angle} 以内
+Is not within {angle} of facing {target},朝向 {target} 的角度不在 {angle} 以内
+{target} is {side} {object},{target} 在 {object} 的{side}
+behind,后方
+in front of,前方
+to the right of,右侧
+to the left of,左侧
+"the point at angle {angle}, distance {distance}",角度 {angle}、距离 {distance} 处的点
+{index}'s share of a full turn,{index} 在整圈中所占的一份
+Placement,放置
+Angle and distance,角度与距离
+"something is put where a marker is, dropped onto the ground and tilted onto its slope",把东西放到标记处、落到地面上，并顺着地面的坡度倾斜
+"points worked out as an angle and a distance, which is how a ring and a spiral are drawn",用角度和距离算出点，环形与螺旋就是这样画出来的

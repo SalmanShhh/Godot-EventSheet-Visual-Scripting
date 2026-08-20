@@ -3164,3 +3164,34 @@ starting {values},che inizia con {values}
 {subject} is a table,{subject} e una tabella
 with {clauses},con {clauses}
 has {key},ha {key}
+Move {direction} at {speed},Muovi {direction} a {speed}
+Move along {direction} at {speed},Muovi lungo {direction} a {speed}
+Rotate {turn} at {rate}°,Ruota {turn} a {rate}°
+Roll {turn} at {rate}°,Rolla {turn} a {rate}°
+/s · {axis},/s · {axis}
+clockwise,in senso orario
+counter-clockwise,in senso antiorario
+yaw,imbardata
+pitch,beccheggio
+roll,rollio
+(in its own space),(nel suo spazio)
+Rotate toward {facing} at {rate},Ruota verso {facing} a {rate}
+facing along {direction},orientato lungo {direction}
+(up is {value}),(l'alto e {value})
+Set position to {other},Imposta posizione a {other}
+spawn point,punto di comparsa
+another object,un altro oggetto
+Align to the ground's slope,Allinea alla pendenza del terreno
+Is within {angle} of facing {target},E entro {angle} dal guardare {target}
+Is not within {angle} of facing {target},Non e entro {angle} dal guardare {target}
+{target} is {side} {object},{target} e {side} {object}
+behind,dietro
+in front of,davanti a
+to the right of,a destra di
+to the left of,a sinistra di
+"the point at angle {angle}, distance {distance}","il punto all'angolo {angle}, distanza {distance}"
+{index}'s share of a full turn,la quota di {index} di un giro completo
+Placement,Posizionamento
+Angle and distance,Angolo e distanza
+"something is put where a marker is, dropped onto the ground and tilted onto its slope","qualcosa viene messo dove c'e un segnaposto, appoggiato a terra e inclinato sulla pendenza"
+"points worked out as an angle and a distance, which is how a ring and a spiral are drawn","punti calcolati come angolo e distanza, che e come si disegnano un anello e una spirale"

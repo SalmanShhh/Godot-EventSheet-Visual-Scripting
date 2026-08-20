@@ -2826,7 +2826,15 @@ static func _build_reverse_entries() -> Array:
 ## already has a better sentence for every line they write. Frozen alongside the readings: adding a
 ## category here is a promise that the reading covers it, and dropping one back in would silently
 ## swap those rows' words.
-const REVERSE_LIFT_EXCLUDED_CATEGORIES: PackedStringArray = ["AJAX", "Lighting", "Video"]
+## X1 / X3 / X5 join them: every row on the 3D page writes a line the sentence grammar reads in the
+## sheet's own words - "Move forward at speed", "Is within 45° of facing enemy" - where the lifted row
+## could only repeat the template with the raw basis expression in it. The move template is the other
+## half of the reason: `global_position += {direction} * {speed} * {delta_t}` is a GENERAL spelling,
+## and admitting it to the reverse index would have it claim every three-part movement line in every
+## project, shadowing readings that say more than it can.
+const REVERSE_LIFT_EXCLUDED_CATEGORIES: PackedStringArray = [
+	"AJAX", "Lighting", "Video", "3D: Move & Turn", "3D: Place", "3D: See"
+]
 
 ## U12. The same promise, for two rows that live in a category most of whose verbs SHOULD lift. A
 ## positional sound's two knobs read under the player they belong to, which the lifted row cannot say.
