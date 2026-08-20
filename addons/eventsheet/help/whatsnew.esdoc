@@ -6,6 +6,115 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - the Hierarchy: parent and unparent as first-class words
+
+- **Add child, said by the parent.** `item.reparent($Hand)` reads **Hand ▸ Add child item**
+  *keeping its place*, `reparent(p, false)` says *snapping to it*, and a reparent onto the layout
+  root reads **Remove from parent** *keeping its place in the layout*. The two-line
+  `get_parent().remove_child(x)` + `p.add_child(x)` spelling is the SAME one row - with *snapping to
+  it*, because that spelling does not keep the world place - and both lines are on the hover. A bare
+  `remove_child(x)` reads **Take out of the layout** *(kept in memory)*, which is honestly what it
+  does. 2D and 3D. The 2D **Move to layer** reading keeps every reparent whose new parent is a known
+  drawing layer.
+- **The follow-flags, read back off whatever wrote them.** A reparent with a RemoteTransform and a
+  `top_level` beneath it collapses into one Add child row wearing the four chips a hierarchy row has
+  always had - *transform position*, *transform angle*, *transform size*, *destroy with parent* -
+  each ✓ or ✗ according to what the plumbing actually set. The lines are untouched, so the file
+  saves byte for byte, and every line the row stands for is one hover away.
+- **The picks and the counts.** `for c in x.get_children():` reads **For each c in x's children**;
+  `x.get_child_count()` is **x.ChildCount**; `x.get_parent()` is **x's parent**; `x.get_child(0)` is
+  **x's first child**; `x.find_children(\"*\", \"Enemy\")` is **every Enemy among x's descendants**; and
+  `x.is_ancestor_of(y)` is **x contains y**.
+- **The two escape hatches in words.** `top_level = true` reads **Set ignore parent's movement on**
+  (with the question twin), a RemoteTransform reads **copies its place to Target** with its
+  `update_*` switches as tick chips, and a cleared `remote_path` reads **Stop copying**. A
+  RemoteTransform sitting on the object also reads in the head, under **Follows** - the answer to
+  \"why does that thing follow me when it is not my child\".
+- **A scene instance is a ready-made hierarchy, and the row says so.** A Create object row's hover
+  now shows the instanced scene's own tree - the root and two levels beneath it, read out of the
+  `.tscn` as text - and an instance whose insides were changed in that scene wears an *edited
+  inside* mark.
+- **Authorable in the same words.** New rows under **Nodes: Hierarchy**: Add Child (existing node),
+  Remove From Parent, Set Ignore Parent's Movement, Copy Place To, Stop Copying Place and For Each
+  Child, each emitting exactly the line the readings above recognise. **On Child Added** and its new
+  sibling **On Child Leaving** are the two triggers for something joining or leaving an object.
+
+### Fixed - a connects-only `_ready` no longer sinks its whole file
+
+- **Opening a .gd whose `_ready` holds nothing but connect lines lifts again, end to end.** Such a
+  `_ready` lifts to zero events (emission regenerates it from the handlers' connect metadata), so
+  nothing carried the idiomatic two-blank gap above it - the re-emitted file came back one line
+  short, the whole-file byte-verify refused it, and EVERY function in the file (the menu handler,
+  an unrelated `_draw`, all of them) degraded to raw script blocks. The gap - and a non-canonical
+  `_ready` header spelling - now ride the first lifted event as metadata the compiler reads back,
+  so the reported shape (a named `id_pressed` handler dispatching on a top-level `match id:` with
+  literal arms) lifts as the signal-trigger event and MatchRow it is.
+- **A trigger handler that cannot re-emit its own bytes now degrades alone.** The trailing-run
+  event lift gained the per-function byte gate its sheet-function twin already had: a handler whose
+  lifted events do not reproduce its exact source re-anchors as a verbatim block on the spot,
+  instead of surfacing only at the whole-file verify and reverting every other function with it.
+### Added - the cursor's ray, and how far things are ON THE CANVAS
+
+- **The camera-ray run reads as the one question it is.** `project_ray_origin`,
+  `project_ray_normal`, the query and `intersect_ray` are four lines of plumbing that only mean
+  anything together, and an opened script now draws them as ONE row - **Set hit to the object under
+  the cursor**, with the reach and the branch that clears what it found said quietly beside it
+  (`reach 1000 · none when nothing is hit`). Aimed through a crosshair object rather than the OS
+  pointer, the same run reads **the object under crosshair**, and a mask says which layers it may
+  see, in the project's own layer names. A ray hit's own entries read as what they mean:
+  `hit.position` is **where the cursor touches the world**, `hit.normal` **the surface's facing
+  there**, `hit.collider` **the object under the cursor**. Display only - every byte of the file is
+  untouched, hover still shows all four lines, and double-click still opens the exact GDScript.
+- **Canvas space has words now, in both dimensions.** `unproject_position`,
+  `get_global_transform_with_canvas().origin` and `get_screen_transform() * p` all read as
+  **x's position on the canvas** (camera zoom and canvas layers included, which is exactly what
+  plain position arithmetic gets wrong); `get_visible_rect().size / 2` is **the canvas centre**;
+  a distance between two canvas points is **the canvas distance from A to B (pixels)**, named apart
+  from world distance on purpose, because an aim assist measured in world units ignores zoom;
+  `is_position_behind` is **is behind the camera**; `project_position` is **the world point under a
+  canvas point at a depth**; and an off-screen arrow reads **clamped to the canvas edge**.
+- **Two new patterns, claimed and chipped**: `cursor_ray` (a ray cast from the camera through a
+  cursor) and `aim_assist` (the whole nearest-to-crosshair walk, measured on the canvas in pixels).
+- **The words that author all of it.** `Cursor Is Over Object (3D)` and `On Object Clicked (3D)`
+  give the 3D twins of the Mouse words a sheet already says in 2D. `Mouse Floor Point` /
+  `Mouse Floor Object` / `Mouse Floor Slope` answer where on the floor the pointer aims, what is
+  there and how steep it is, with the layers named by the project's own layer names; the
+  `Aimed Floor …` twins route through any crosshair object's canvas position instead, which makes
+  gamepad and touch cursors first-class. All of them share ONE emitted helper function per file, so
+  a project that asks for the point AND the slope gains the plumbing once. `Slope Steeper Than`
+  is the buildable test. On the canvas side: `Canvas X / Y` in both dimensions, `Canvas Centre`,
+  and `Pick Nearest To Canvas Point`, which writes exactly the snapshot loop the reading recognises.
+  There is deliberately no Canvas Distance verb - the shipped `Distance Between` already writes that
+  exact line, and what the canvas needed was a NAME for it, which the reading now supplies.
+
+### Changed - the Inspector drawers and the Anatomy rail dress in the theme
+
+- **The custom Inspector drawers now paint from theme tokens** instead of some forty literal
+  colours: the progress bar, the min-max range slider, the direction dial, the curve and texture
+  previews, the table grid's headings, the info panel and the ⚠ required / validate badges all
+  read fourteen new `drawer_*` chrome tokens (accent, bright accent, ink, well, handles, info
+  panel, badges, checkerboard) through the active theme, so a preset switch - or High Contrast -
+  restyles them. The swatch row's ten game-flavoured presets stay literal on purpose: they are
+  content a designer picks a colour from, not editor chrome.
+- **The Anatomy rail speaks the sheet's own colour language.** Its A / ? / ƒ pills now take the
+  theme's ACE badge pairs, its neutral pills the reading marks' plain chip pair, its entry text the
+  reading text tones and its hover the Object bar's wash; three new chrome tokens
+  (`anatomy_trigger_pill_background_color` / `..._foreground_color`,
+  `anatomy_knob_pill_foreground_color`) cover the two pills the sheet had no token for. Both
+  painters joined the no-new-literal-colours lint, every token is described in the Theme Editor,
+  the shared derivation rule dresses them from each palette, and all ten bundled presets were
+  brought forward.
+
+### Changed - the Sheet map dresses in the theme
+
+- **The Sheet map window now paints from the theme's own chrome tokens** instead of six colours of
+  its own, so on Nord, Gruvbox, Solarized Light or High Contrast its boxes and lines match the bars
+  around the sheet. Six new chrome tokens (`sheet_map_sheet_color`, `sheet_map_scene_color`,
+  `sheet_map_global_color`, `sheet_map_edge_color`, `sheet_map_signal_edge_color`,
+  `sheet_map_text_color`), each derived from the theme's own background, headers and accent the way
+  the minimap's already are, each editable in the Theme Editor, and every bundled preset brought
+  forward. The Sheet map's painter joined the no-new-literal-colours lint.
+
 ### Fixed - surfaces that opened, and did nothing
 
 A verification pass drove each newly merged editor surface in a real editor window and read the
@@ -40,6 +149,430 @@ one the logic is right and the wiring is not.
 - **\"Duplicate events for…\" never said which object it was about** - a reused dialog whose title was
   set once at build time. It now names the source object on every open.
 
+### Added - every shape the editor can be extended in, and the words for building one
+
+- **New Sheet ▸ Editor Tool… now lists all fifteen shapes Godot's editor has**, not four. Dock
+  panel, Bottom panel, Tools menu item, Properties bar add-on, Context menu item, Layout view
+  handle, Thumbnail maker, Debugger panel, Command tool, Test sheet and Object type join the
+  one-click chore, the plugin, the importer add-on and the export hook. Each writes a prefilled
+  skeleton with the body left blank and the pairing already in it - whatever the plugin adds when it
+  is switched on, it takes away again when it is switched off - and each is gated in BOTH
+  directions: compile the skeleton, open the result as a sheet, and the recompile reproduces every
+  byte. The Sheet Type dialog grew the two types those shapes need: **Editor Add-on**, the one tool
+  type whose host you choose (which of Godot's add-on classes it is, is the whole decision), and
+  **Command Tool**, always a SceneTree. A saved add-on now reopens as an add-on instead of being
+  mistaken for a custom node and losing its host the next time the dialog was confirmed.
+- **The Editor object answers a tool author's first day.** `Editor.Icon(\"Node2D\")` with a field that
+  draws the icon it names as you pick it; `Editor.Preference(\"…\")` and `Project.Setting(\"…\")` with
+  fields that offer the real setting paths; `Editor.MainScreen`; **Project ▸ Set setting** and
+  **Save settings**; **Switch to workspace**, **Show in Project bar**, **Open script at line**, **Add
+  window**, **Add command** (the command palette) and the bottom-panel pair; and two triggers the
+  editor raises, **On project files changed** and **On preferences changed**. Every row emits the
+  plain `EditorInterface` / `ProjectSettings` line it names, so an opened hand-written tool lifts
+  into these rows and re-emits byte-identically. Tool sheets only, as the rest of the Editor object
+  is - and the picker's Editor object now has pages rather than one long list.
+- **Familiar Words learned the editor-building nouns** - twenty-four of them, from Editor plugin and
+  Project bar to Preferences, Command tool, Thumbnail maker and Shared store. Off, each reads as
+  Godot spells it; on, as the sheet says it; and the new Manual page **The words for building editor
+  tools** lists every pair with the reason the word was changed.
+
+### Added - tables and lists as chips, functions as values, objects named by class
+
+- **A table or a list written across several lines is one row, with its entries as chips.** A
+  `{...}` or `[...]` handed to `return`, to a signal, to `append`, to a call, or to a `var` used to
+  arrive as one row per line: a head that said half a sentence, entries that said nothing on their
+  own, and a closing bracket that was a row of its own. Now the run reads as ONE row - the
+  statement's own sentence, the word **table** or **list** where the literal sat, and each entry as
+  a named chip (`span index = selected span index`). A long one folds to the first three plus
+  \"… N more\", with the whole literal on hover; a nested table nests inside its chip; the orphan
+  `}` / `})` / `],` line is gone. Double-clicking a chip edits that entry in place, rewriting the
+  one line it came from. Display-only: the rows are untouched, so the file still holds every line
+  and the byte round-trip is gated on it. Measured on the editor's own `event_sheet_viewport.gd`,
+  fifteen runs and over a hundred bare lines now read as entries.
+- **A function handed around as a value reads as a function.** A bare function name assigned or
+  passed reads as the **ƒ** chip the condition lane already names functions with, and so does
+  `Callable(self, \"on_done\")`. A `Callable` local reads **Local function**; `callback.call(result)`
+  reads **Call callback   result**; `callback.is_valid()` reads **callback is set**; and a one-line
+  `map` / `filter` lambda reads in the Array rows' own words - `rows each one's name`,
+  `rows those where ready`.
+- **A typed receiver is named by what it IS.** When the sheet declared a receiver's class, the
+  object column says that class in words with the plugin prefix dropped - `_registry` reads
+  **ACE registry**, `_find_bar` reads **Find bar** - with the variable's own name muted beside it.
+  Familiar Words off shows the class exactly as the file declares it. Display-only.
+
+### Added - an editor plugin reads as what it does to the editor
+
+- **An `EditorPlugin` reads with the Editor object's plugin triggers.** `_enable_plugin` /
+  `_disable_plugin` are **On plugin first turned on / off** - the pair almost nobody tells apart
+  from the enabled pair, which `_enter_tree` / `_exit_tree` already read as. `_handles` is
+  **Editor Asks: can this plugin edit object?**, and the `return` inside it is **System ▸ Answer
+  object is Resource**. `_make_visible` is **On workspace shown**, `_build` **On project run**,
+  `_save_external_data` **On save**, and `_edit` **On object handed to plugin** - what that
+  callback actually is, since the editor only hands over objects the plugin said yes to.
+- **The three questions with constant answers are head facts, not events.** `_get_plugin_name`,
+  `_has_main_screen` and `_get_plugin_icon` state one fact each and nothing ever happens in them,
+  so the Include bar says `editor plugin · main screen \"EventSheet\" · icon eventsheet.svg` and
+  their rows are not drawn underneath it. The functions are untouched; only the drawing changes.
+- **`add_*` / `remove_*` read as what they add.** Dock, bottom panel, Tools menu item, context
+  menu, Properties bar add-on, importer add-on, export hook, debugger panel, object type and
+  global, each with the Editor in the object column. A context-menu slot constant reads as the
+  panel it names - **Scene dock**, **Project bar**, **Project bar ▸ Create new**, **Script
+  editor**.
+- **Every editor plugin class Godot offers has a word of its own.** `EditorInspectorPlugin` is a
+  **Properties bar add-on** (*Asks: show this add-on for object? / On start of object's properties
+  / On property name of object / Add control / Use editor X for property*), `EditorImportPlugin`
+  an **Importer add-on**, `EditorExportPlugin` an **Export hook** (*On export begins / On file
+  exported / On export ends / Add file to export / Skip file*), `EditorDebuggerPlugin` a
+  **Debugger panel**, `EditorResourcePreviewGenerator` a **Thumbnail maker**,
+  `EditorContextMenuPlugin` a **Context menu**, `EditorSyntaxHighlighter` **Code colours** and
+  `EditorTranslationParserPlugin` a **Text finder**. A `return true` / `return false` from a
+  callback whose flag means \"did this add-on take it\" reads **Answer handled / not handled**.
+  The head bar names who registered the add-on when a plugin of this same project does it -
+  `added by EventForgePlugin ▸ On plugin enabled`.
+- Every one of these readings is keyed off the class the file **extends** and changes nothing that
+  is saved: opening a plugin or an add-on and saving it untouched still reproduces every byte, and
+  the file's shape is claimed once as the `editor_plugin` pattern (nothing to adopt - it IS the
+  plugin).
+- The shipped **Add / Remove Inspector Plugin** rows now read **Add / Remove Properties bar
+  add-on**, and **On Object Selected** reads **On Object Handed To Plugin**. Same `ace_id`s, same
+  emitted calls - the words caught up with the rest of the vocabulary.
+
+### Added - the shapes an editor is written in, read as events
+
+- **A helper with a back-reference reads as a behavior of the object it helps.** A `RefCounted`
+  whose constructor only stores what it was handed, and whose methods reach back through it, now
+  says so on its head bar: `helper of Dock (event_sheet_dock.gd) · made with the dock`, with the
+  file resolved from what the project itself declares rather than from any list of names. The
+  constructor folds into that bar (it said nothing a reader had to read), a value read through the
+  reference reads as the object's own property (`Dock.CurrentSheet`), and a call through it reads
+  under the object's name (`Dock ▸ Select row`) instead of under a member nobody can see.
+- **An edit handed to the undo funnel reads as one undoable step.** A label plus a callback now
+  reads as a Local boolean catching the answer - `changed = Dock ▸ Edit sheet undoably \"Apply Cell
+  Edit\"` - with the edit hanging under it as sub-events, and a `return` inside it reading as the
+  Answer the funnel asked for. The Doctor learned the funnel too: a helper that changes the open
+  sheet around it rather than through it is an advisory note naming the line.
+- **A class that is all static reads as a shared store.** The bar says `shared store · nothing of
+  its own is ever made`, each `static var` reads as a **Shared** value that is \"one for the whole
+  editor\" (the hover says it is kept between sheets), and a `const` whose own comment says it is
+  frozen wears that promise. `push_warning` and `push_error` stopped pretending to be log lines:
+  they read as **Warn** and **Report error**, while `printerr` stays **Log error**.
+- **A vocabulary module reads as the Define rows a pack author already knows.** A published row
+  reads `Define condition Is Pinned   Core/IsPinned · category Pin · input target: Node   Writes
+  {target.}is_pinned()` - both spellings a module publishes in are read, and its head bar counts
+  what it publishes. A function that hands over to itself wears a muted `↻ itself` on the call row,
+  and the Manual's mark legend explains it.
+- All of the above is display only: every fixture still re-emits byte-identically, and an ordinary
+  game project sees none of it.
+
+### Added - a tool's own UI reads: the dialogs it builds and the canvas it paints
+
+- **A Control built in code reads as the thing it builds.** `ConfirmationDialog.new()` is now
+  *a new Confirm dialog*, and so are the Accept dialog, the Window, the Button, the Check box, the
+  Text input, the List, the Tabs, the Tree, the File chooser, the Colour picker and the Popup menu -
+  the sheet's own names for Controls, which it already used when a line SET one. `popup_centered()`
+  reads *Open centered*, `popup()` reads *Open*, and `hide()` on a window reads *Close* rather than
+  a visibility flag. The plugin's own popup builders read as the verbs they publish, filed under the
+  thing they add to: *dialog - Add titled card \"...\"*, *card - Add section \"...\"*, *card - Add form
+  row \"Event\" label*.
+- **A hand-painted canvas reads in the Drawing words at every arity.** `draw_line` with a thickness
+  behind the colour, `draw_rect` and `draw_circle` with a fill flag (*(outline)* when it is off), a
+  `draw_rect` whose `Rect2(corner, size)` is written inline (*Draw rectangle (0, 0) size size*),
+  `draw_string` with its size and colour, plus `draw_texture` (*Draw image*), `draw_polyline`
+  (*Draw line along*) and `draw_arc` (*Draw ring*). `accept_event()` reads *Consume input*,
+  `get_theme_color(\"row_color\", \"EventSheet\")` reads *Theme.Colour(\"row_color\")*, and
+  `add_theme_stylebox_override(\"normal\", box)` reads *Set style \"normal\" to box*.
+- **A Control's own `_gui_input` is an input handler like the others.** It lifts to a trigger, so its
+  branches read as the Mouse and Keyboard triggers `_unhandled_input` already reads as - scoped to
+  the object the input landed on (*On left button clicked (on Viewport)*) - and `event.position`
+  reads as *Mouse.Position*. **On Input On This Element** joins the picker for Controls.
+- Two new pattern claims for what the readings recognise: *Painting the canvas by hand* (adoptable as
+  the Drawing Canvas pack only where the host is a 2D node) and *A dialog built in code*.
+
+### Added - the files you build a project WITH, read as sheets
+
+- **Tests read as Test sheets.** A `.gd` under a `tests/` folder whose entry point is
+  `static func run() -> bool` now opens with a head that says so - `test sheet · N checks` - and its
+  entry point reads `Test ▸ On run` instead of as one more helper function. The idiom the whole
+  suite is written in, `passed = _check(label, actual, expected) and passed`, reads as
+  **Test ▸ Check \"label\": actual = expected**, with the `and passed` folded away and a check
+  wrapped over several lines still reading as ONE row. The accumulator's name is derived from the
+  file rather than assumed, so a project that calls it `all_passed` (or anything else) reads the
+  same. **Run ▸** on the bar runs that one test headless, in a second copy of the editor you are
+  already in, and marks every Check row ✓ or ✗ from the `[PASS]` / `[FAIL]` lines it printed -
+  matched by the check's own label, not by the order they came out in. A test that opens a fixture
+  wears it on the bar, and double-click opens the fixture beside the test.
+- **Command tools read as command tools.** `extends SceneTree` (or `MainLoop`) with an `_init` is a
+  script the engine runs as its whole main loop, and it now says so: the head reads
+  `command tool · runs headless`, `_init` reads **Command tool ▸ On run**, and the steps only such a
+  file takes have words at last - `quit(1)` is **Command tool ▸ Finish with code 1**, `quit()` is
+  **Finish**, `DirAccess.make_dir_recursive_absolute(p)` is **Folder ▸ Create p**, a one-line
+  `FileAccess.open(p, WRITE).store_string(t)` is **File ▸ Write text to p**, and the four-line
+  folder walk's `while not entry.is_empty()` reads as **For each file in folder**. Three values got
+  words too: `OS.get_cmdline_user_args()` is **Command tool.Arguments**, a `ResourceLoader.load`
+  past the cache is **load p ignoring the cache**, and `FileAccess.get_file_as_string(p)` is **the
+  file's text**. **Run with arguments… ▸** on the bar runs it headless with whatever would follow
+  `--` on the command line, and **Output ▾** shows what it printed.
+- **Pack recipes read as the behavior they build.** A `static func build()` under a `pack_builders`
+  folder that fills an EventSheetResource and calls `save_pack` now says what it makes on its bar -
+  `pack recipe · host Node2D · class PinBehavior · category Pin · builds eventsheet_addons/pin` -
+  because those sheet-level property writes are facts about the pack rather than steps it takes.
+  **Build pack ▸** runs that one recipe instead of all ninety-five, and **Open built pack ▸** opens
+  the `.gd` it emitted beside it.
+- Every one of those readings is DISPLAY ONLY and gated on what the whole file is, so a game script
+  that happens to call `quit()` or write `passed = ...` reads exactly as it did before, and opening
+  any of the three and saving it untouched still reproduces it byte for byte - proved on this repo's
+  own files, escaped quotes and joined string lists and all.
+
+### Added - the editor reads its own source
+
+- **A \"This editor\" folder in the Project bar.** In the plugin's own repository only, the Project
+  bar grows one more folder listing every file the editor is built from as a sheet, grouped by what
+  each file DOES rather than by the folder it sits in: Plugin, Workspace, Canvas, Readings,
+  Importer, Compiler, Vocabulary, Manual, Tests, Command tools, Pack recipes. The role is derived
+  from each file's own shape - an `EditorPlugin` is the Plugin, a helper holding a back-reference
+  into the dock is Workspace, `extends SceneTree` under `tools/` is a Command tool - so a new file
+  lands in the right group the moment it is written. The gate is two marks side by side (the
+  plugin's `plugin.cfg` AND `tools/pack_builders/` beside it), so a project that merely installed
+  the plugin never sees any of it. The listing is read when the folder is first opened and forgotten
+  when it is folded: a session that never opens it pays nothing.
+- **The plugin's own bar** (W20). A file of the running editor opens read-only with
+  `part of this editor · read-only` and an **Edit anyway** chip; `plugin.gd` also carries
+  **Enabled ●** (the plugin list's live state), **Reload ↻** (disable and enable through the editor),
+  **Output ▾** (the editor log filtered to what the reload printed) and **plugin.cfg ▸** (the
+  descriptor as setting rows, whose version row is the one Publish new version bumps). The first
+  save through Edit anyway asks once - \"This file is part of the editor you are using. Saving
+  reloads the plugin (your open sheets are kept).\" - with *Save, keep asking* and *Save, always*.
+  **A saved file that does not parse is NOT reloaded**: the version already running keeps running
+  and the bar goes red saying so, which is the one thing that makes editing the editor from inside
+  itself survivable.
+- **\"Show the events behind this\"** (W19). Ctrl+Shift+Alt on any control the plugin built opens the
+  file that built it as a sheet, at the row that names it. No registry: a control carries the file
+  that made it and the words it was made with, and the row is found by those words. Written only
+  while the This-editor folder is on, so a shipped editor in a game project carries nothing.
+- **Dogfood gates** (W22). New `tests/plugin_reads_itself_test.gd`: a rotating sample of forty files
+  a day (seeded by the day, so a run is fast and a week covers the editor) must open, round-trip
+  byte-exact, add no script block, and stay under a *wordless-row* ceiling measured per role group
+  on the current tree rather than guessed. A wordless row is one with no words of its own - an entry
+  of a list, a bare call, a set to a bare function name. Measured today: 612 files, 610 at zero
+  script blocks, 89% of 136,434 rows in the sheet's own words. **Tools ▸ Project Doctor ▸ plugin
+  reading health** reports the same numbers per group, clickable into the worst file, and only while
+  the folder is on. Two pre-existing byte round-trip drifts were found by the new gate; both are
+  fixed at their roots (see Fixed below), the gate's exception list is empty, and it now enforces
+  the lossless contract on the whole corpus it samples.
+- **A contributor's door** (W24). The Start page gains a card - \"This is the editor's own project -
+  open its source as sheets\" - in the plugin's repository only, and the Manual gains two tutorials:
+  *Read the editor's code as events* and *Add a word to the vocabulary*. New guide:
+  **The Editor, Read as Events**.
+
+### Added - 3D reads as directions, questions and places
+
+- **Moving and turning in 3D read as the six directions and the three turns.** `global_position +=
+  -transform.basis.z * speed * delta` reads `Player ▸ Move forward at speed · per second`, and the
+  basis table is now whole in both directions: `-basis.z` is forward and `basis.z` is backward,
+  `basis.x` right and `-basis.x` left, `basis.y` up and `-basis.y` down, in the `transform` and
+  `global_transform` spellings alike. `rotate_y(deg_to_rad(x * delta))` reads `Rotate
+  counter-clockwise at x°/s · yaw` and a leading minus reads clockwise - which way round is the
+  engine's answer, not a preference: a positive `rotate_y` turns an object to its own left, so a row
+  that said clockwise there would turn a character the way it did not say. The **Rotate Clockwise**
+  row writes the turn accordingly (`rotate_y(-deg_to_rad(…))`), so the word, the code and the object
+  all agree. `rotate_x` is `Rotate up / down · pitch` and `rotate_z` is `Roll left / right · roll`,
+  both reading in the order they are written; `rotate_object_local` says **(in its own space)**.
+  `basis = basis.slerp(desired, w * delta)` is the turret's own word - `Rotate toward desired at w` -
+  and `Basis.looking_at(dir)` is `facing along dir`. A one-argument `look_at(p)` on a 3D object now
+  reads `Look at p` as its two-argument twin already did, and an up vector that is not Godot's own
+  default is folded onto the row instead of being dropped.
+- **Facing tests read as the question they ask.** `forward.dot(to_enemy) > cos(deg_to_rad(45))` reads
+  `Guard ▸ Is within 45° of facing enemy` - in any spelling of those two vectors, including through
+  the locals that hold them, which the reading now gathers in one walk of the file. `< cos(...)`
+  inverts it. `to_local(p).z > 0` reads `p is behind Guard`, `< 0` `is in front of`, and the x-axis
+  twins read `to the right of` / `to the left of`.
+- **Placing things in the world.** `crate.global_position = spawn.global_position` reads `crate ▸ Set
+  position to spawn`, folding **spawn point** when the other end is a marker node and **another
+  object** when it is not, and `basis = Basis(Quaternion(Vector3.UP, normal)) * basis` - the most
+  looked-up line in 3D - reads `Align to the ground's slope`. Claimed only in that exact spelling;
+  a quaternion built any other way stays the maths it is. Both claim the new **Placement** pattern.
+- **Angle and distance are first-class words.** `Vector2(cos(a), sin(a)) * r`, `Vector2.from_angle(a)
+  * r` and the 3D ground-plane `Vector3(cos(a), 0, sin(a)) * r` all read `the point at angle a,
+  distance r`, and `TAU * float(i) / float(n)` reads `i's share of a full turn`. A loop that places
+  things at that point claims the new **Angle and distance** pattern as *places things evenly around
+  a circle*; a growing angle and radius claim it as *works a place out as an angle and a distance*.
+  A lone conversion claims nothing - it is an expression, not a pattern.
+- **A 3D page in the picker, and the six directions as a dropdown.** The 3D verbs are filed on a
+  **3D** page with **Move & Turn**, **Place** and **See** sections instead of one flat list keyed on
+  the node type they are scoped to, and every row writes exactly the spelling the readings above
+  recognise: Move In Direction, Rotate Clockwise, Rotate Up Or Down, Roll, Rotate Toward Facing,
+  Facing Along, Set Position To Another Object, Align To The Ground's Slope, Is Within Angle Of
+  Facing, Is Behind / In Front Of / To The Right Of / To The Left Of. A direction parameter offers
+  the six words as a dropdown and writes the basis expression, so the reader picks *forward* and the
+  file says `-basis.z`. **Point At Angle**, **Create Evenly Around A Circle** and **Store As Angle
+  And Distance** join the System expressions beside them.
+
+### Added - the 3D words: orbiting, camera-relative movement, blend trees, the world's look
+
+- **Orbiting reads as orbiting, in both spellings.** A `rotate_y` on a node the scene says holds
+  nothing but a camera or a camera arm reads **Orbit around its centre by ... (yaw)** - the facts
+  walk gets the pivot's children straight out of the `.tscn`, so a turn on an ordinary node is
+  still a turn. The angle written out - `global_position = target.global_position +
+  Vector3(cos(a), 0, sin(a)) * r` - reads **Orbit target at radius r angle a**, with the plane
+  named after the axis the circle is flat against. Both offer the Orbit 3D pack, and both are asked
+  BEFORE the Pin shape, which used to claim the second one and call an orbit \"pinned at an offset\".
+  A `SpringArm3D`'s length reads **Set camera distance**. New rows: **Orbit At Radius**,
+  **Set Camera Distance**.
+- **Third-person locomotion is one sentence.** The five-line camera-basis run every 3D game writes
+  - fetch the camera's basis, mix it with the input, flatten it, make it one unit long, write it
+  into the velocity - reads as ONE action, **Move relative to the camera along input at speed
+  (flattened to the ground)**, with all five lines as its hover evidence and the file untouched.
+  The line under the not-on-floor guard reads **Fall at 30 (gravity)** instead of \"Subtract 30 * dt
+  from velocity Y\", and `is_on_floor()` / `is_on_wall()` / `is_on_ceiling()` read as the questions
+  the shipped rows already publish. New row: **Move Relative To Camera**.
+- **An AnimationTree's magic strings read as animation words.** `set(\"parameters/Locomotion/
+  blend_position\", v)` reads **Animation ▸ Set Locomotion blend to v** - by the GROUP the parameter
+  belongs to, not the leaf; `.../TimeScale/scale` reads **Set animation speed**; `.../Shoot/request`
+  reads **Play one-shot animation Shoot**; `playback.travel(\"Jump\")` and
+  `get_current_node() == \"Land\"` read as **Go to state** and **Current state is**, the words the
+  State Machine behavior already publishes. Every one of them wears the object's own name and its
+  Animation aspect, exactly as the 2D sprite words do. New rows: **Play One-Shot Animation**,
+  **Current State Is**.
+- **Seen and heard.** A `VisibleOnScreenNotifier`'s two signals read as the triggers **On entered
+  view** / **On left view**, in both node generations. A mesh's `visibility_range_begin` and
+  `_end` written together read as one **Visible from 10 to 90** row; `transparency` reads
+  **Set see-through to 40%**; `cast_shadow` off reads **Set shadows off**. New rows: **Set Visible
+  Range**, **Set See-Through**, **Set Shadows Off / On (3D)**, and the 3D twins of the two
+  positional-sound knobs - **Set Hearing Distance (3D)** and **Set Loudness Falloff**.
+- **The world's look has an object.** An Environment - fetched however the file fetches it - is the
+  **Environment** object, and its fog, glow, ambient light, ambient occlusion and sky rotation read
+  as plain Set rows under it, with the colour swatches every other colour row shows.
+  `RenderingServer.global_shader_parameter_set(...)` reads **Set effect parameter wind strength to
+  2 (everywhere)**, and `set_instance_shader_parameter` reads as the same effect-parameter row for
+  one object. New picker section **Environment**, with seven rows.
+- **UI that lives in the world.** Billboard modes read **Set always face the camera on** (and the
+  upright variant says so), `no_depth_test` reads **show through walls**, `pixel_size` reads
+  **world size**, a sprite's region width reads **Set bar width** - the health bar over a head -
+  and a SubViewport painting UI onto a surface reads **Send input ... (UI on a surface)** with
+  `render_target_update_mode` reading **Set redraw only when seen**. New picker section
+  **World-space UI**, with seven rows. All three of the class-gated property names are exactly
+  that: gated on the class, so `transparency` and `pixel_size` on anything else keep the property
+  write they are.
+- Two new pattern ids - `orbit` and `worldspace_ui` - and every one of these readings is display
+  only: the byte round-trip is gated, and each new row is gated in BOTH directions, emitting
+  exactly the line its reading recognises.
+
+### Added - the Hierarchy pane, three hierarchy notes, and a room to try them in
+
+- **A Hierarchy section in Object properties.** Click an object's name in a row and the popup now
+  says where it sits in the tree: its **parent** (a click jumps to that object), and its
+  **children**, each with what it carries - its type, how many children of its own it has, a broken
+  link when it ignores its parent's movement, and the three transform ticks when it follows some of
+  them and not others. Children the scene file owns show muted with **in the scene file** and offer
+  **edit the scene**, which hands the node to Godot's Scene dock: the pane writes runtime rows and
+  never edits a `.tscn`. Drag an object in from the Object bar to make it a child (the four flags
+  open on the drop), drag a child out onto the canvas to unparent it, or right-click one for
+  **flags…**, **Remove from parent** and **Select in scene**. Every gesture writes ordinary rows
+  through the undo funnel, in the same spellings a hand-typed file uses - so the pane and the canvas
+  can never disagree about the tree, and Ctrl+Z takes a parenting back like any other edit.
+- **Three hierarchy footguns as Doctor notes**, each advisory and each with a one-click chip saying
+  the single edit to make. A walk over a node's children that **moves** one of them while it walks
+  (Godot's child list is live, so the loop silently skips the next child) - walk a copy, or use the
+  For Each Child row, which snapshots for you. A **reparent of self inside start-of-layout**, which
+  Godot refuses outright because the old parent is still adding its children. And a variable
+  **keeping hold of a child whose parent this file frees** - a child goes when its parent goes, so
+  the next line that touches it crashes.
+- **The Hierarchy Playground showcase** (`demo/showcase/hierarchy_playground/`). One room holding
+  every hierarchy move a game makes: Space mounts a rider onto a horse's saddle (snapping to it) and
+  dismounts again (keeping its place), a hat follows its wearer's position and angle but not its
+  size, a health bar stays a child and stops following so it never tilts, one walk over a leader's
+  children heals every soldier among them, a camera orbits because its parent pivot turns, and three
+  crates park themselves on the ray they cast down.
+
+### Added - four game shapes the sheet now says by name
+
+- **Pity: randomness that owes you one.** A counter fed once per roll, a chance grown out of it, a
+  roll compared against that chance or a hard cap, and a reset on the win - all four halves, or
+  nothing. Together they read `AdvancedRandom ▸ Rolled with pity (chance, guaranteed at pity_cap)`
+  and claim the new `pity` pattern; a plain `randf() < x` stays the Chance condition it already is.
+  Authorable too: the Advanced Random pack gained **Roll With Pity**, **Reset Pity** and **Pity
+  Count**, keyed by counter name so one autoload holds a project's worth of them, riding the same
+  seeded generator (a seeded run replays its pity rolls identically) and travelling in the pack's
+  save state. **New Sheet ▸ Loot Chest** scaffolds the whole shape.
+- **Meters, and the stealth loop built on them.** A number filled at a rate while something holds
+  and drained at a rate while it does not now reads as **Fill / Drain \\<name\\> at \\<rate\\> (up to /
+  down to)** - the countdown's two-way twin, and both are picker rows. A meter is the PAIR: a
+  clamped add with no per-frame rate is not one, and neither is a fill nothing drains. With a
+  sight-or-hidden question gating the two halves the whole loop claims the new `detection` pattern,
+  with the last-known-position line as part of its evidence. **Make Noise at \\<p\\>, heard within
+  \\<r\\>** is one row where a hand-written script walks the group, and **On Noise Heard** is the
+  receiving half. **New Sheet ▸ Stealth Guard** wires sight, sound, memory and the hunt.
+- **Boss phases.** `if phase == 1 and hp <= max_hp * 0.6:` reads `Phase 2 starts (hp ≤ 60%, once)` -
+  the guard IS the trigger-once, so the row says \"once\" instead of spelling the bookkeeping - and
+  the ladder claims the new `boss_phases` pattern. A plain `hp <= 0` stays the health check it is.
+  **Boss ▸ Phase Starts** writes the guarded pair from the picker, and **Set Invulnerable For** is
+  the flag-and-timer window as one action. **New Sheet ▸ Boss Fight** scaffolds two phases and the
+  defeated signal.
+- **Mission clocks.** A countdown that is also SHOWN as minutes and seconds claims the new
+  `quest_timer` pattern, and the arithmetic that builds `2:41` reads `as minutes:seconds` instead of
+  spelling out the division. **Start Mission Timer** and **Add Mission Time** take their time in a
+  new **minutes:seconds** field - type `3:00`, the row stores 180 seconds - and **Mission Time
+  Left** hands a HUD label the text a player reads. **New Sheet ▸ Mission Timer** wires the clock,
+  the label and the fail event; persistence is the shipped Remember Between Runs on the variable.
+- **Three advisory Doctor notes**, each on a shape missing a half: a pity counter that never resets
+  on the win (after the first guarantee it fires every roll), a meter that only ever fills, and a
+  mission timer no row shows the player.
+
+### Added - Tilt, swipes, a shooter's verbs, timed input and the options screen a player needs
+
+- **Tilt steering and gyro aim** (Touch page). The two shapes games actually make of the handheld
+  sensors, each one row: **Set Neutral Tilt** remembers how the device is being held so a tilt is
+  measured from a \"flat\" the player chose, **Steer By Tilt** feeds one direction of that tilt into
+  movement, and **Aim By Gyro** turns the body and pitches the camera by the rotation rate - mouse
+  look with the phone doing the turning, and adoptable by the FPS Controller behaviour. An opened
+  script that writes those shapes by hand now reads them back in the same words: the stored neutral
+  point reads **Set neutral to Touch.Acceleration** with the note that says what the player has to
+  do, the multiplication reads **Steer by tilt x at tilt strength**, and the turn-and-pitch pair
+  reads **Aim by gyro** as one row. `Input.get_gravity()` stays named apart from the accelerometer,
+  because mixing the two is the classic tilt bug. The **FPS Controller** behaviour gained the same
+  option: tick Gyro Aim and the device's rotation rate goes through the very Add Look the mouse uses,
+  so one clamp and one yaw serve both hands.
+- **Touch Gestures** - a new behaviour pack, with a **Touch Shape Library** data asset beside it.
+  Attach it and it watches the touch events itself: **On Swipe** with a direction (four ways, or
+  eight with the diagonals on), a distance and a time, and **On Shape Drawn** with the name of the
+  closest taught shape. Shapes are taught by DRAWING them - draw it once, call **Teach Shape From
+  Stroke**, save the library - so there is no coordinate list anywhere. A hand-written swipe or
+  shape matcher is claimed as one pattern and offered the pack as the adoption; pinches and pans
+  stay the sentences the sheet already owns, and a SEQUENCE of gestures is still Combo Box's job.
+- **A boomer shooter's missing verbs** (Weapons 3D). **Fire Hitscan** (spread, damage, reach, layer
+  mask) is the ray from the middle of the screen with the damage on the end of it; **Explode At**
+  damages and throws every body away from a point with a real impulse, so rocket jumping falls out
+  of it rather than being special-cased; **Switch To Next / Previous Weapon** wrap an index over a
+  weapons list, with **Current Weapon** to look ammo up by. **Mark Secret Found** counts a secret
+  once and never again. The hand-written spellings of all of it are claimed as patterns.
+- **Timed inputs and QTEs** (Timed Input). **Open Input Window** for a moment, **Pressed In The
+  Window** to catch the answer, **Window Grade** to tell a perfect one from a good one, **Input
+  Window Missed** for the punish, **Mashed In Time** for the flurry, and **Show Prompt**, which puts
+  the control's real key or button on a label and follows a rebind because it asks the Input Map
+  every time. **Beat Grade** is the same two words measured against a beat. An opened script's
+  flag-and-deadline pair reads as one **Open input window** row whose note says where the perfect
+  band starts AND which clock the deadline is on - the engine's own, which keeps running while the
+  game is paused.
+- **Accessibility options for the GAME** (Accessibility). The player-facing half of the editor's own
+  accessibility, each piece a row an options screen can bind to a slider or a checkbox: **Start
+  Listening For** / **Any Input Received** / **Rebind Control To** / **Stop Listening** over the live
+  Input Map (Save Bindings and Load Bindings already shipped), **Treat Control As A Toggle** so a
+  held control works either way, **Set Effect Strength** and **Set No Flashing** as two dials the
+  packs now actually honour (Juice and Juice 3D multiply every shake, recoil, bob and tilt by the
+  first; the Flash behaviour swaps its blink for a fade under the second, which is a medical matter
+  rather than a taste), **Set Text Size Scale**, **Use Palette**, **Set Aim Assist Radius**, and
+  **Speak** / **Stop Speaking** through the voices the player's system already has. Both dials are
+  plain metadata on `Engine`, so any script or pack reads them in one line and a project that never
+  sets one is untouched. Captions ride **Play Sound With Caption**, a SIBLING of Play Sound rather than a
+  change to it: that row's emitted bytes are a compatibility promise, so adding a caption to it
+  would have rewritten every project's audio. **Show Caption** covers a sound played some other way.
+  An options screen's shape is claimed as its own pattern, and the Doctor grew an OPT-IN sweep
+  (`eventsheets/doctor/caption_sounds`) that names scripts playing sounds with no caption.
+- **Two new starters.** New Sheet ▸ **Boomer Arsenal (3D)** wires firing, weapon switching, per-weapon
+  ammo and the secrets counter together; New Sheet ▸ **Game Options** scaffolds the accessibility
+  screen with every setting ticked Remember Between Runs and the remap flow as four rows of one
+  action each.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means
@@ -71,6 +604,24 @@ one the logic is right and the wiring is not.
   bundled, so no font licence lands in anyone's project. A chip is never caught in a rectangle
   smaller than a target, and the High Contrast preset now has a value for **every** theme token,
   with a test that says so the next time one is added.
+
+### Fixed - two ways an untouched opened file could come back changed
+
+- **A string that quoted the provider convention gained a real declaration.** The pass that declares
+  owned addon-provider instances (`var __eventsheet_provider_X := X.new()`) scanned every emitted
+  line for the member convention, including the inside of string literals - so opening a
+  hand-written file whose *string* merely spelled `__eventsheet_provider_StatForge.each_buff()` and
+  saving it untouched injected a declaration block the file never had, three lines longer every
+  save. The scan now blanks string contents before matching and skips any member the file already
+  declares itself, so an untouched round-trip never gains a line - while a sheet whose emitted code
+  genuinely uses an undeclared provider member still gets its declaration, exactly once.
+- **A tab-only separator line swapped places with the blank beside it.** The importer moves a
+  function block's trailing blank lines to whatever follows, and did it by popping them off the end
+  one at a time - which reverses the run. Every reversed line being empty hid it for a long time; a
+  whitespace-only line (a stray lone tab) between two functions came back one line lower than it was
+  written. The trim now moves the run as a slice in source order. Both shapes are pinned in
+  `tests/opened_file_drift_regressions_test.gd`, and `plugin_reads_itself_test`'s exception list is
+  empty - the byte round-trip gate holds for the whole corpus it samples.
 
 ### Added - an event sheet from another editor, imported honestly
 
@@ -786,18 +1337,28 @@ that could replace it.
 
 ### Added - a runtime error is re-said in the sheet's words
 
-- **\"event 12 · target is empty\", not \"null instance\".** When the running game fails on a line one
-  of your rows emitted, the source map says which row and the row's own reading says what it was
-  trying to do, so the failure is said again as the row said it:
+- **\"event 12 · target is empty\", not \"null instance\".** When a script error the strip has been
+  told about struck a line one of your rows emitted, the source map says which row and the row's
+  own reading says what it was trying to do, so the failure is said again as the row said it:
   `player.gd · event 12 · Enemy ▸ Call Hit: target is empty (nothing was picked before this
   action)` - on a strip under the canvas and in the Output panel. **Jump to event** lands on the
   row, **Explain** opens the Manual page behind that kind of failure, and **Godot's words** shows
   the engine's own message unchanged: it is never hidden, because it is what every search and
   every issue tracker speaks. The table covers an empty target, a list position that is not there,
   an action the object does not have, a divide by zero and a name nothing carries; anything else
-  is repeated verbatim rather than guessed at. Pasting an error line into the command palette now
+  is repeated verbatim rather than guessed at. Pasting an error line into the command palette
   re-says it on the row it jumps to, and `EventSheets.report_runtime_error()` opens the same path
   to any tool. New theme token: `runtime_error_color`.
+- **What fires the strip by itself: a debug run.** Godot's own error channel never reaches editor
+  debugger plugins, so live capture is the game's job: with any of the sheet's debug switches
+  armed (**🐞 Debug layout** arms them all), the compiled script carries a small error reporter -
+  a core-Godot `Logger` registered in `_ready`, debug sessions only - that announces each script
+  error's message, file and line to the editor over the sheet's channel, once per failing line
+  per run, and the strip re-says it as the row said it while the game is still running. The
+  honest limits: a plain ▶ Preview run (debug switches off) announces nothing - there the strip
+  fires only from a pasted error line or `EventSheets.report_runtime_error()` - and a sheet
+  opened from a hand-written `.gd` keeps its bytes and carries no reporter, the same line Live
+  Values already draws.
 
 ### Added - the Manual answers a behavior name
 

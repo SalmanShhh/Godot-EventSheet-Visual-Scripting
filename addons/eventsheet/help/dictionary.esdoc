@@ -42,7 +42,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `always_on_top` | [Set Always On Top](ace:Core/WindowSetAlwaysOnTop) | Game Window | Vocabulary |
 | `ambient_light_energy` | [Set Ambient Light](ace:Core/SetAmbientLight) | Lighting | Vocabulary |
 | `amount` | [Amount](ace:Core/GetParticleAmount) | Particles | Vocabulary |
-| `and` | [Pull Group Toward](ace:Core/PullGroupToward) | Movement | Vocabulary |
+| `and` | [Any Input Received](ace:Core/AnyInputReceived) | Accessibility | Vocabulary |
 | `angle` | [Vector Angle](ace:Core/VectorAngle) | Variables: Vector | Vocabulary |
 | `angle_difference` | [Angle Difference](ace:Core/AngleDifference) | Math & Random | Vocabulary |
 | `angle_to` | [Slope Steeper Than](ace:Core/SlopeSteeperThan) | Canvas | Vocabulary |
@@ -50,7 +50,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `angular_damp` | [Set Angular Damping](ace:Core/SetAngularDamping) | Physics | Vocabulary |
 | `animation` | [Current Animation](ace:Core/GetSpriteAnimation) | General Expressions | Vocabulary |
 | `any` | [Any Match](ace:Core/ArrayAny) | Variables: Array | Vocabulary |
-| `append` | [Push Back](ace:Core/ArrayAppend) | Variables: Array | Vocabulary |
+| `append` | [Mark Secret Found](ace:Core/MarkSecretFound) | Weapons 3D | Vocabulary |
 | `append_array` | [Append Array](ace:Core/ArrayAppendArray) | Variables: Array | Vocabulary |
 | `append_text` | [Append Formatted Text](ace:Core/AppendFormattedText) | UI | Vocabulary |
 | `apply_central_force` | [Apply Central Force](ace:Core/ApplyCentralForce2D) | General Actions | Vocabulary |
@@ -72,8 +72,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `base64_to_variant` | [Value From Share Code](ace:Core/ValueFromShareCode) | Utility: Window | Vocabulary |
 | `basis` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
 | `begins_with` | [Text Begins With](ace:Core/StringBeginsWith) | Variables: String | Vocabulary |
+| `billboard` | [Set Always Face The Camera](ace:Core/SetFaceTheCamera) | World-space UI | Vocabulary |
 | `bind` | [Bind Arguments](ace:Core/CallableBind) | Helpers | Vocabulary |
-| `bool` | [Was Recently True](ace:Core/WasRecentlyTrue) | Run Context | Vocabulary |
+| `bool` | [No Flashing](ace:Core/NoFlashing) | Accessibility | Vocabulary |
 | `bottom_radius` | [Make Cylinder Mesh](ace:Core/SetCylinderMesh) | Mesh | Vocabulary |
 | `bounce` | [Bounce Off Solids](ace:Core/BounceOffSolid) | Bullet | Vocabulary |
 | `bus` | [Set Bus](ace:Core/AudioSetBus) | Audio | Vocabulary |
@@ -87,6 +88,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `capitalize` | [As Title Text](ace:Core/AsTitleText) | Text | Vocabulary |
 | `casecmp_to` | [Text Sorts Before](ace:Core/TextSortsBefore) | Compare: Text | Vocabulary |
 | `cast_motion` | [Cast Circle Motion Into (2D)](ace:Core/CastCircleMotion2D) | Raycast 2D | Vocabulary |
+| `cast_shadow` | [Set Shadows Off (3D)](ace:Core/SetShadowsOff3D) | Native 3D | Vocabulary |
 | `ceil` | [Ceil](ace:Core/CeilValue) | Helpers | Vocabulary |
 | `cfg` | [Has Saved Settings](ace:Core/OptionsHasSavedSettings) | Game Options | Vocabulary |
 | `change_scene_to_file` | [Go To Layout](ace:Core/ChangeScene) | Scene | Vocabulary |
@@ -105,6 +107,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `close` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
 | `collide_with_areas` | [RayCast Detects Areas (2D)](ace:Core/RayCast2DSetHitAreas) | Raycast 2D | Vocabulary |
 | `collide_with_bodies` | [RayCast Detects Bodies (2D)](ace:Core/RayCast2DSetHitBodies) | Raycast 2D | Vocabulary |
+| `collider` | [Explode At](ace:Core/ExplodeAt) | Weapons 3D | Vocabulary |
 | `collision_mask` | [Set RayCast Mask (2D)](ace:Core/RayCast2DSetMask) | Raycast 2D | Vocabulary |
 | `color` | [Set Light Colour (2D)](ace:Core/SetLightColour) | Lighting | Vocabulary |
 | `compare_locales` | [Language Matches](ace:Core/LanguageMatches) | Translation | Vocabulary |
@@ -120,6 +123,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `create_from_string` | [Text Matches Regex](ace:Core/RegexMatches) | Text: RegEx | Vocabulary |
 | `create_timer` | [Wait](ace:Core/Wait) | Time | Vocabulary |
 | `create_tween` | [Tween Callback](ace:Core/TweenCallback) | Tween | Vocabulary |
+| `cross` | [Fire Hitscan](ace:Core/FireHitscan) | Weapons 3D | Vocabulary |
 | `current_animation` | [Set Current Animation](ace:Core/SetAnimationTime) | Animation | Vocabulary |
 | `current_animation_length` | [Animation Length](ace:Core/AnimationLength) | Animation | Vocabulary |
 | `current_animation_position` | [Animation Position](ace:Core/AnimationPosition) | Animation | Vocabulary |
@@ -185,6 +189,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `floori` | [Cell Of Point](ace:Core/CellOfPoint) | Math & Random | Vocabulary |
 | `fmod` | [Float Modulo](ace:Core/FmodValue) | Helpers | Vocabulary |
 | `fms` | [Log Measurements](ace:Core/LogMeasurements) | Debug | Vocabulary |
+| `fog_density` | [Set Fog Density](ace:Core/SetFogDensity) | Environment | Vocabulary |
+| `fog_enabled` | [Set Fog On/Off](ace:Core/SetFog) | Environment | Vocabulary |
+| `fog_light_color` | [Set Fog Colour](ace:Core/SetFogColour) | Environment | Vocabulary |
 | `for_node` | [Configure Canvas](ace:Core/DrawConfigure) | Drawing | Vocabulary |
 | `force_raycast_update` | [Force RayCast Update (2D)](ace:Core/RayCast2DForceUpdate) | Raycast 2D | Vocabulary |
 | `force_shapecast_update` | [Force ShapeCast Update (2D)](ace:Core/ShapeCast2DForceUpdate) | Raycast 2D | Vocabulary |
@@ -232,7 +239,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_command_palette` | [Add Command](ace:Core/AddCommandPaletteCommand) | Editor Tools: Panels & menus | Vocabulary |
 | `get_connected_joypads` | [Has Gamepads](ace:Core/GamepadHasAny) | Gamepad | Vocabulary |
 | `get_country_name` | [Country Name](ace:Core/CountryName) | Translation | Vocabulary |
-| `get_current_node` | [Is In State](ace:Core/IsInState) | Animation | Vocabulary |
+| `get_current_node` | [Current State Is](ace:Core/AnimationStateIs) | Animation | Vocabulary |
 | `get_custom_data` | [Tile Has Custom Data](ace:Core/TileMapTileHasCustomData) | Tilemap | Vocabulary |
 | `get_date_string_from_system` | [Date: Today](ace:Core/GetSystemDate) | Utility: Time | Vocabulary |
 | `get_datetime_dict_from_system` | [Date: Hour](ace:Core/DateHour) | Time | Vocabulary |
@@ -275,6 +282,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_loaded_locales` | [For Each Language](ace:Core/ForEachLanguage) | Loops | Vocabulary |
 | `get_local_mouse_position` | [Mouse Position (local)](ace:Core/MouseLocalPosition) | Mouse | Vocabulary |
 | `get_locale` | [Current Language](ace:Core/GetLocale) | Translation | Vocabulary |
+| `get_locale_language` | [Speak](ace:Core/SpeakText) | Accessibility | Vocabulary |
 | `get_locale_name` | [Current Language Name](ace:Core/CurrentLanguageName) | Translation | Vocabulary |
 | `get_magnetometer` | [Magnetic Field](ace:Core/TouchMagneticField) | Touch | Vocabulary |
 | `get_message` | [Language Has Text For](ace:Core/LanguageHasTextFor) | Translation | Vocabulary |
@@ -352,6 +360,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `global_shader_parameter_get` | [Global Shader Parameter](ace:Core/RenderingGetGlobalShaderParam) | Rendering | Vocabulary |
 | `global_shader_parameter_set` | [Set Global Shader Parameter](ace:Core/RenderingSetGlobalShaderParam) | Rendering | Vocabulary |
 | `global_transform` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
+| `glow_enabled` | [Set Glow On/Off](ace:Core/SetGlow) | Environment | Vocabulary |
+| `glow_intensity` | [Set Glow Strength](ace:Core/SetGlowStrength) | Environment | Vocabulary |
 | `goto_line` | [Open Script At Line](ace:Core/OpenScriptAtLine) | Editor Tools: Panels & menus | Vocabulary |
 | `grab_focus` | [Set Focus](ace:Core/GrabFocus) | UI | Vocabulary |
 | `gravity` | [Set World Gravity](ace:Core/SetWorldGravity) | Physics | Vocabulary |
@@ -430,6 +440,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_physics_processing` | [Node Is Physics Processing](ace:Core/NodeIsPhysicsProcessing) | Nodes: Activation | Vocabulary |
 | `is_playing` | [Is Playing](ace:Core/AnimationIsPlaying) | Animation | Vocabulary |
 | `is_position_behind` | [Is Behind Camera (3D)](ace:Core/IsBehindCamera3D) | Math & Random | Vocabulary |
+| `is_pressed` | [Any Input Received](ace:Core/AnyInputReceived) | Accessibility | Vocabulary |
 | `is_processing` | [Node Is Processing Per Frame](ace:Core/NodeIsProcessing) | Nodes: Activation | Vocabulary |
 | `is_processing_input` | [Node Is Handling Input](ace:Core/NodeIsProcessingInput) | Nodes: Activation | Vocabulary |
 | `is_server` | [Is Host](ace:Core/IsHost) | Multiplayer | Vocabulary |
@@ -464,7 +475,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `linear_damp` | [Set Linear Damping](ace:Core/SetLinearDamping) | Physics | Vocabulary |
 | `linear_to_db` | [Set Volume (0 to 1)](ace:Core/AudioSetVolumeLevel) | Audio | Vocabulary |
 | `linear_velocity` | [Get Linear Velocity](ace:Core/GetLinearVelocity2D) | General Expressions | Vocabulary |
-| `load` | [Data Asset](ace:Core/DataAsset) | Files | Vocabulary |
+| `load` | [Use Palette](ace:Core/UsePalette) | Accessibility | Vocabulary |
 | `load_from_project_settings` | [Reset All Bindings](ace:Core/InputResetBindings) | Keyboard | Vocabulary |
 | `load_threaded_get` | [Go To Loaded Layout](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
 | `load_threaded_get_status` | [Layout Has Finished Loading](ace:Core/LayoutFinishedLoading) | Scene | Vocabulary |
@@ -513,6 +524,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `naturalnocasecmp_to` | [Text Natural Order](ace:Core/TextNaturalOrder) | Compare: Text | Vocabulary |
 | `navigate_to_path` | [Show In Project Bar](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
 | `new` | [Make Gradient](ace:Core/MakeGradient) | Gradients & Curves | Vocabulary |
+| `no_depth_test` | [Set Show Through Walls](ace:Core/SetShowThroughWalls) | World-space UI | Vocabulary |
 | `node_b` | [Break Joint](ace:Core/BreakJoint) | Joints | Vocabulary |
 | `normalized` | [Normalized](ace:Core/VectorNormalized) | Variables: Vector | Vocabulary |
 | `not` | [Has Something](ace:Core/HasSomething) | Compare: Types | Vocabulary |
@@ -543,6 +555,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `pick_random` | [Pick Random](ace:Core/ArrayPickRandom) | Variables: Array | Vocabulary |
 | `pingpong` | [Ping-Pong](ace:Core/PingPong) | Math & Random | Vocabulary |
 | `pitch_scale` | [Set Pitch](ace:Core/AudioSetPitch) | Audio | Vocabulary |
+| `pixel_size` | [Set World Size](ace:Core/SetWorldSize) | World-space UI | Vocabulary |
 | `placeholder_text` | [Set Placeholder](ace:Core/SetTextInputPlaceholder) | UI | Vocabulary |
 | `play` | [Play](ace:Core/AudioPlay) | Audio | Vocabulary |
 | `play_current_scene` | [Play Current Scene](ace:Core/PlayCurrentScene) | Editor Tools | Vocabulary |
@@ -572,6 +585,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `push_back` | Push back to | Array | Lists |
 | `push_error` | [Push Error](ace:Core/PushError) | Debug | Vocabulary |
 | `push_front` | [Push Front](ace:Core/ArrayPushFront) | Variables: Array | Vocabulary |
+| `push_input` | [Send Input To Surface](ace:Core/SendInputToSurface) | World-space UI | Vocabulary |
 | `push_warning` | [Push Warning](ace:Core/PushWarning) | Debug | Vocabulary |
 | `queue` | [Queue Animation](ace:Core/QueueAnimation) | Animation | Vocabulary |
 | `queue_free` | [Queue Free](ace:Core/QueueFree) | General Actions | Vocabulary |
@@ -587,6 +601,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `ratio` | [Value Ratio](ace:Core/GetRangeRatio) | UI | Vocabulary |
 | `rect` | [Draw Rect](ace:Core/DrawRect) | Drawing | Vocabulary |
 | `reduce` | [Reduce](ace:Core/ArrayReduce) | Variables: Array | Vocabulary |
+| `region_rect` | [Set Bar Width](ace:Core/SetBarWidth) | World-space UI | Vocabulary |
 | `relative` | [Mouse Move Delta (event)](ace:Core/MouseMotionDelta) | Mouse | Vocabulary |
 | `release_focus` | [Release Focus](ace:Core/ReleaseFocus) | UI | Vocabulary |
 | `reload_current_scene` | [Restart Layout](ace:Core/ReloadScene) | Scene | Vocabulary |
@@ -605,7 +620,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `remove_meta` | [Remove Metadata](ace:Core/RemoveMeta) | Metadata | Vocabulary |
 | `remove_tool_menu_item` | [Remove Tools Menu Item](ace:Core/RemoveToolsMenuItem) | Editor Tools | Vocabulary |
 | `rename_absolute` | [Move / Rename File](ace:Core/MoveFile) | Files | Vocabulary |
-| `render_target_update_mode` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
+| `render_target_update_mode` | [Set Surface Redraw](ace:Core/SetSurfaceRedraw) | World-space UI | Vocabulary |
 | `reparent` | [Move To Layer](ace:Core/MoveToLayer) | Layers | Vocabulary |
 | `repeat` | [Repeat Text](ace:Core/StringRepeat) | Variables: String | Vocabulary |
 | `replace` | [Replace In Text](ace:Core/TextReplace) | Text | Vocabulary |
@@ -695,7 +710,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `sign` | [Sign](ace:Core/SignValue) | Helpers | Vocabulary |
 | `signi` | [Compare Result](ace:Core/CompareResult) | Compare: Numbers | Vocabulary |
 | `sin` | [Sine](ace:Core/SinValue) | Helpers | Vocabulary |
-| `size` | [Dictionary Size](ace:Core/DictSize) | Variables: Dictionary | Vocabulary |
+| `size` | [Switch To Next Weapon](ace:Core/SwitchToNextWeapon) | Weapons 3D | Vocabulary |
+| `sky_rotation` | [Set Sky Rotation](ace:Core/SetSkyRotation) | Environment | Vocabulary |
 | `sleeping` | [Is Sleeping](ace:Core/IsBodySleeping) | Physics | Vocabulary |
 | `slerp` | [Rotate Toward Facing](ace:Core/RotateToward3DFacing) | 3D: Move & Turn | Vocabulary |
 | `slice` | [Slice](ace:Core/ArraySlice) | Variables: Array | Vocabulary |
@@ -710,7 +726,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `space_set_active` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
 | `speed_scale` | [Set Animation Speed](ace:Core/SetAnimationSpeed) | Animation | Vocabulary |
 | `split` | [Split Text](ace:Core/StringSplit) | Variables: String | Vocabulary |
+| `spring_length` | [Set Camera Distance](ace:Core/SetCameraDistance) | Native 3D | Vocabulary |
 | `sqrt` | [Square Root](ace:Core/MathSqrt) | Math & Random | Vocabulary |
+| `ssao_enabled` | [Set Ambient Occlusion On/Off](ace:Core/SetAmbientOcclusion) | Environment | Vocabulary |
 | `stamp` | [Draw Stamp](ace:Core/DrawStamp) | Drawing | Vocabulary |
 | `start` | [Start Timer](ace:Core/StartTimer) | General Actions | Vocabulary |
 | `start_joy_vibration` | [Vibrate Gamepad For](ace:Core/GamepadVibrateFor) | Gamepad | Vocabulary |
@@ -728,6 +746,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `strip_edges` | [Trim](ace:Core/TextTrim) | Text | Vocabulary |
 | `sub` | [Replace Matches](ace:Core/ReplaceMatches) | Text: RegEx | Vocabulary |
 | `substr` | [Mid](ace:Core/TextMid) | Text | Vocabulary |
+| `take_damage` | [Explode At](ace:Core/ExplodeAt) | Weapons 3D | Vocabulary |
 | `tan` | [Tangent](ace:Core/TanValue) | Helpers | Vocabulary |
 | `target_position` | [Find Path To](ace:Core/SetNavTarget) | General Actions | Vocabulary |
 | `test_move` | [Is Overlapping At Offset](ace:Core/IsOverlappingAtOffset) | Collisions | Vocabulary |
@@ -750,11 +769,15 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `tr_n` | [Translate Plural](ace:Core/TranslatePlural) | Translation | Vocabulary |
 | `transform` | [Query Bodies In Circle (2D)](ace:Core/QueryBodiesInCircle2D) | Overlap 2D | Vocabulary |
 | `translate` | [Move By (3D)](ace:Core/TranslateNode3D) | General Actions | Vocabulary |
+| `transparency` | [Set See-Through](ace:Core/SetSeeThrough) | Native 3D | Vocabulary |
 | `transparent_bg` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
 | `travel` | [Travel To State](ace:Core/TravelToState) | Animation | Vocabulary |
 | `tres` | [Resource In Folder](ace:Core/ResourceInFolder) | Files | Vocabulary |
 | `trim_prefix` | [Value From Share Code](ace:Core/ValueFromShareCode) | Utility: Window | Vocabulary |
 | `trim_suffix` | [Count Of Resources In](ace:Core/CountResourcesInFolder) | Files | Vocabulary |
+| `tts_get_voices_for_language` | [Speak](ace:Core/SpeakText) | Accessibility | Vocabulary |
+| `tts_speak` | [Speak](ace:Core/SpeakText) | Accessibility | Vocabulary |
+| `tts_stop` | [Stop Speaking](ace:Core/StopSpeaking) | Accessibility | Vocabulary |
 | `tween_callback` | [Tween Callback](ace:Core/TweenCallback) | Tween | Vocabulary |
 | `tween_method` | [Tween Effect Parameter](ace:Core/TweenEffectParameter) | Effects | Vocabulary |
 | `tween_property` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
@@ -762,6 +785,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `typeof` | [Number Or](ace:Core/NumberOr) | Variables | Vocabulary |
 | `unbind` | [Expect Signal](ace:Core/ExpectSignal) | Testing | Vocabulary |
 | `unicode_at` | [Font Can Show](ace:Core/FontCanShow) | UI | Vocabulary |
+| `unit_size` | [Set Loudness Falloff](ace:Core/AudioSetLoudnessFalloff) | Audio | Vocabulary |
 | `unproject_position` | [Project To Screen (3D)](ace:Core/ProjectToScreen3D) | Math & Random | Vocabulary |
 | `update_overlays` | [Redraw Viewport Overlays](ace:Core/UpdateViewportOverlays) | Editor Tools | Vocabulary |
 | `value` | [Value](ace:Core/GetRangeValue) | UI | Vocabulary |
@@ -777,6 +801,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `viewport_set_screen_space_aa` | [Set Screen-Space AA](ace:Core/RenderingSetScreenSpaceAA) | Rendering | Vocabulary |
 | `viewport_set_use_debanding` | [Set Debanding](ace:Core/RenderingSetDebanding) | Rendering | Vocabulary |
 | `viewport_set_use_occlusion_culling` | [Set Occlusion Culling](ace:Core/RenderingSetOcclusionCulling) | Rendering | Vocabulary |
+| `visibility_range_begin` | [Set Visible Range](ace:Core/SetVisibleRange) | Native 3D | Vocabulary |
+| `visibility_range_end` | [Set Visible Range](ace:Core/SetVisibleRange) | Native 3D | Vocabulary |
 | `visible` | [Is Visible](ace:Core/IsVisible) | General Conditions | Vocabulary |
 | `volume_db` | [Set Volume](ace:Core/AudioSetVolume) | Audio | Vocabulary |
 | `warp_mouse` | [Move Cursor To](ace:Core/MouseMoveCursorTo) | Mouse | Vocabulary |

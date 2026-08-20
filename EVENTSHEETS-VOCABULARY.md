@@ -2321,6 +2321,7 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 #### Conditions
 - **Has Animation** (`animation: String, target: String`) - True when this player owns a clip by that name - guard a Play so a missing animation never errors.
 - **Is Playing** (`target: String`) - True while this animation player is running an animation.
+- **Current State Is** (`state: String, target: String`) - True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.
 
 #### Actions
 - **Set Animation Speed** (`scale: float, target: String`) - Scales how fast every animation on this player runs - slow-mo a death, speed up a fast-forward. 0 freezes it in place.
@@ -2330,6 +2331,7 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 - **Set Current Animation** (`animation: String, target: String`) - Switches which clip is current (assigning it starts it) - a direct set when you don't need Play's blend arguments.
 - **Set Flipped** (`flipped: String, target: String`) - Turns this sprite upside down, or back the right way up.
 - **Set Image** (`path: String, target: String`) - Shows a different image on this sprite.
+- **Play One-Shot Animation** (`name: String, target: String`) - Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.
 
 #### Expressions
 - **Animation Position** (`target: String`) - How many seconds into the current animation the play head is - sync an effect to a frame or drive a progress bar.
@@ -2418,6 +2420,8 @@ Audio (the Audio vocabulary, the Godot way).
 - **Set Volume (0 to 1)** (`level: String, target: String`) - Sets how loud this player is from a 0-to-1 level, with the decibel conversion done for you.
 - **Set Hearing Distance** (`value: float, target: String`) - Sets how far a positional sound carries. Past this distance it is silent.
 - **Set Falloff** (`value: float, target: String`) - Sets how quickly a positional sound fades as the listener moves away.
+- **Set Hearing Distance (3D)** (`value: float, target: String`) - Sets how far a 3D positional sound carries. Past this distance it is silent.
+- **Set Loudness Falloff** (`value: float, target: String`) - Sets how quickly a 3D positional sound fades as the listener moves away.
 - **Crossfade** (`from: String, to: String, amount: String`) - Fades one music player down while the other comes up, from one 0-to-1 number. Both players must already be playing.
 
 #### Expressions
@@ -2980,6 +2984,30 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Date: Time Text** - Returns the player's current clock time as a text string.
 - **Date: Today** - Returns the player's current calendar date as a text string.
 
+### Cursor Canvas (`res://addons/eventforge/registration/modules/cursor_canvas_aces.gd`)
+what the cursor is aiming at, and how far things are ON THE CANVAS.
+
+#### Conditions
+- **Cursor Is Over Object (3D)** (`object: String, layer: String, reach: String`) - True while the mouse is pointing at this object in the 3D world - hover highlights, tooltips and "what am I about to click" all start here. Needs an active Camera3D.
+- **On Object Clicked (3D)** (`object: String, button: String, layer: String, reach: String`) - Fires when a mouse button goes down over this object in the 3D world - click-to-select, click-to-attack, click-to-open. Lives in an input event, beside the other On ... pressed rows.
+- **Slope Steeper Than** (`normal: String, degrees: String`) - True when the ground faces further than this from straight up - the buildable test a placement preview tints itself with.
+
+#### Actions
+- **Pick Nearest To Canvas Point** (`name: String, list: String, from: String, radius: String`) - Walks the instances and keeps whichever is closest to a point ON THE CANVAS - aim assist, snap-to-target crosshairs and "whichever one I am nearly pointing at". Measured in pixels, so camera zoom is honoured; anything behind the camera is skipped.
+
+#### Expressions
+- **Mouse Floor Point** (`layer: String, reach: String`) - The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal.
+- **Aimed Floor Point** (`target: String, layer: String, reach: String`) - The world point on the floor the cursor is aiming at - where to drop a build ghost, a move-order marker or a decal. Aimed through a crosshair object rather than the OS pointer.
+- **Mouse Floor Object** (`layer: String, reach: String`) - The floor object the cursor is aiming at, or nothing when the cursor is off the floor.
+- **Aimed Floor Object** (`target: String, layer: String, reach: String`) - The floor object the cursor is aiming at, or nothing when the cursor is off the floor. Aimed through a crosshair object rather than the OS pointer.
+- **Mouse Floor Slope** (`layer: String, reach: String`) - Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable.
+- **Aimed Floor Slope** (`target: String, layer: String, reach: String`) - Which way the floor faces under the cursor - hand it to Align To The Ground's Slope, or ask Slope Steeper Than whether it is buildable. Aimed through a crosshair object rather than the OS pointer.
+- **Canvas X (2D)** (`target: String`) - Where this object is ON THE CANVAS, in pixels. Camera zoom and canvas layers are already in the answer, which is exactly what plain position arithmetic gets wrong.
+- **Canvas X (3D)** (`target: String`) - Where this 3D object lands ON THE CANVAS, in pixels - the number a health bar over its head, an off-screen arrow or an aim assist is positioned by.
+- **Canvas Y (2D)** (`target: String`) - Where this object is ON THE CANVAS, in pixels. Camera zoom and canvas layers are already in the answer, which is exactly what plain position arithmetic gets wrong.
+- **Canvas Y (3D)** (`target: String`) - Where this 3D object lands ON THE CANVAS, in pixels - the number a health bar over its head, an off-screen arrow or an aim assist is positioned by.
+- **Canvas Centre** - The middle of what the player can see, in pixels - where a crosshair sits.
+
 ### Dev (`res://addons/eventforge/registration/modules/dev_aces.gd`)
 Developer helper vocabulary (the everyday dev tools).
 
@@ -3118,6 +3146,30 @@ Drawing (2D immediate-mode canvas, on any node).
 
 #### Expressions
 - **Canvas Texture** (`node: Node`) - A node's LIVE canvas texture - assign it to a TextureRect, a material, a particle, or a 3D Decal. Updates as the canvas draws.
+
+### Editor Author (`res://addons/eventforge/registration/modules/editor_author_aces.gd`)
+the tool author's everyday Editor set (icons, preferences, project settings,
+
+#### Triggers
+- **On Project Files Changed** - Runs whenever the project's files change on disk - something was imported, moved, deleted or added. The place to rescan whatever a tool keeps a list of.
+- **On Preferences Changed** - Runs when the user changes anything in Editor Settings. Re-read the preferences a tool draws with, so it follows the theme instead of keeping the old one.
+
+#### Actions
+- **Set Setting** (`path: String, value: Variant`) - Writes one project setting. It lives in memory until Save settings runs, so a tool that changes several settings writes them all and saves once.
+- **Save Settings** - Writes the project settings back to project.godot. Without this, everything Set setting changed is lost when the editor closes.
+- **Switch To Workspace** (`workspace: String`) - Brings one of the editor's top tabs to the front - the same click as pressing 2D or Script yourself.
+- **Show In Project Bar** (`path: String`) - Reveals a folder or file in the editor's project file list and selects it - what a tool does after it writes something, so the reader can see what just landed.
+- **Open Script At Line** (`line: int`) - Jumps the script editor to a line of the script it already has open - how a tool points at the thing it is complaining about.
+- **Add Window** (`window: Node`) - Puts a window or dialog under the editor's own root, which is what makes it show up with the editor's theme and stay on top of it. Free it again when the plugin is disabled.
+- **Add Command** (`title: String, key_name: String, handler: Callable`) - Adds one entry to the editor's command palette (Ctrl+Shift+P), so a tool is reachable without a menu of its own.
+- **Add Bottom Panel** (`control: Control, title: String`) - Adds a tab to the row Output and Debugger share, at the bottom of the editor. Remove it on plugin disabled or the row keeps a tab nobody owns.
+- **Remove Bottom Panel** (`control: Control`) - Takes the plugin's tab back out of the bottom row.
+
+#### Expressions
+- **Editor Icon** (`icon_name: String`) - One of the editor's own icons, so a tool's buttons and docks look like the editor around them instead of shipping their own art. The field draws the icon it names as you pick it.
+- **Editor Preference** (`path: String`) - One value out of the user's own Editor Settings - their theme colour, grid step, font size. Read it so a tool matches the editor the person in front of it actually set up.
+- **Project Setting** (`path: String`) - One value out of this project's own settings. Unlike a preference, it is saved with the project, so every person opening it sees the same answer.
+- **Workspace Area** - The big area the 2D, 3D and Script tabs share. A workspace plugin adds its own screen as a child of this.
 
 ### Editor Object (`res://addons/eventforge/registration/modules/editor_object_aces.gd`)
 the Editor object (plugin lifecycle, docks, menu items, object types).
@@ -3364,6 +3416,13 @@ lights, layer tint and the world's ambient light.
 - **Set Light Colour (3D)** (`node: String, colour: Color`) - Sets the colour a 3D light casts - the one knob that turns midday into sunset.
 - **Set Layer Tint** (`node: String, colour: Color`) - Tints a whole 2D layer at once - the one row that makes a level read as night.
 - **Set Ambient Light** (`node: String, value: float`) - Sets how much light a 3D scene has with no light shining on it.
+- **Set Fog On/Off** (`env: String, on: bool`) - Switches the world's fog on or off - the one row that turns a clear day into a misty one.
+- **Set Fog Density** (`env: String, value: String`) - Sets how thick the world's fog is. Ramp it up over time for a storm rolling in.
+- **Set Fog Colour** (`env: String, colour: Color`) - Sets the colour of the world's fog - dusk purple, underwater green, dust orange.
+- **Set Glow On/Off** (`env: String, on: bool`) - Switches the world's glow on or off - what makes neon, fire and magic read as bright.
+- **Set Glow Strength** (`env: String, value: String`) - Sets how strongly bright things glow. Push it up for a boss room, back down when the fight ends.
+- **Set Ambient Occlusion On/Off** (`env: String, on: bool`) - Darkens the corners and creases of a 3D scene, which is what makes it look solid. Costs frames - turn it off on weak machines.
+- **Set Sky Rotation** (`value: String, env: String`) - Turns the sky. Advance it slowly every tick and the clouds drift.
 
 ### Locale Asset (`res://addons/eventforge/registration/modules/locale_asset_aces.gd`)
 the parts of a localised game that are NOT strings: files, voice, data cells.
@@ -3451,6 +3510,20 @@ Mesh vocabulary (build and swap 3D meshes from events).
 - **Set Camera FOV** (`degrees: String, target: String`) - Sets a 3D camera's field of view in degrees (lower zooms in, higher widens).
 - **Force RayCast Update (3D)** (`target: String`) - Forces a RayCast3D to recheck immediately instead of waiting for the next frame.
 - **Mouse Look** (`relative: String, sensitivity: String, camera: String, limit: String`) - Turns the body left and right and the camera up and down from one pointer movement, keeping the camera from looking through the floor. Put it under a pointer-movement event.
+- **Orbit At Radius** (`centre: String, radius: String, angle: String`) - Places an object on a circle around another one, on the ground plane. Advance the angle every tick and it orbits.
+- **Set Camera Distance** (`value: String, target: String`) - Sets how far back a third-person camera sits. The arm pulls the camera in by itself when a wall is in the way.
+- **Move Relative To Camera** (`camera: String, input: String, speed: String`) - Steers a body the way the camera is facing: pushing forward walks away from the camera, whichever way it has been turned. Flattened to the ground, so looking down does not drive the body into the floor. Follow it with Move And Slide.
+- **Set Visible Range** (`near: String, far: String, target: String`) - Draws something only while the camera is inside a distance band - the cheapest way to stop drawing detail nobody can see.
+- **Set See-Through** (`value: String, target: String`) - Fades a 3D object out without hiding it - what a wall between the camera and the player does.
+- **Set Shadows Off (3D)** (`target: String`) - Stops a 3D object casting a shadow. The object is still drawn - only its shadow goes.
+- **Set Shadows On (3D)** (`target: String`) - Makes a 3D object cast a shadow again after Set Shadows Off.
+- **Set Always Face The Camera** (`node: String`) - Turns a label or a sprite to face the camera wherever the camera goes - what a name tag over a head needs.
+- **Set Always Face The Camera (Upright)** (`node: String`) - Turns a label or a sprite to face the camera sideways only, so it stays upright when the camera looks down at it.
+- **Set Show Through Walls** (`node: String, on: bool`) - Draws a world-space label or icon over whatever is in front of it - what an objective marker needs.
+- **Set World Size** (`node: String, value: String`) - Sets how big a world-space label or sprite is, measured in world units per pixel.
+- **Set Bar Width** (`node: String, width: String`) - Cuts a sprite off at a width - how a health bar over a head is driven from a number.
+- **Send Input To Surface** (`event: String, target: String`) - Hands a click or a key to the UI a SubViewport is painting onto a surface, so an in-world screen can be used.
+- **Set Surface Redraw** (`mode: String, target: String`) - Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default.
 
 #### Expressions
 - **Get Position (3D)** (`target: String`) - Returns a 3D node's current world position as a Vector3.
@@ -3904,6 +3977,31 @@ Spatial vocabulary (screen/world, random geometry, surfaces, grids, falloff).
 - **Cells In Rectangle** (`top_left: Vector2i, size: Vector2i`) - Every cell in a rectangular block, row by row - stamping a room, laying out an inventory grid, placing a multi-cell building, clearing a region of fog. An empty or negative size walks nothing rather than looping backwards.
 - **Falloff At Distance** (`center: Vector2, point: Vector2, radius: float, shape: String`) - How strong an effect is at a distance, from 1 at the centre to 0 at the edge - the one number that makes an explosion, a sound, a magnet or a screen shake care how close it was. Anything past the radius reads as 0, so it is safe to multiply straight into damage. For a hand-drawn profile, feed this number into Sample Curve.
 - **Strength Toward** (`node: String, radius: float`) - Falloff between THIS node and another one, without spelling out either position - guard suspicion that builds faster the closer you are, a magnet that pulls harder up close, a sound that ducks as you approach. Reads 0 once the other node is out of range.
+
+### Spatial Words (`res://addons/eventforge/registration/modules/spatial_words_aces.gd`)
+the 3D page: moving, turning, placing, and the point at an angle
+
+#### Conditions
+- **Is Within Angle Of Facing** (`forward: String, direction: String, angle: String`) - Asks whether something is inside the cone this object is looking down - a vision cone, a backstab check, an aim assist.
+- **Is Behind** (`point: String, target: String`) - Asks whether a place is behind this object - the backstab half of a facing test.
+- **Is In Front Of** (`point: String, target: String`) - Asks whether a place is in front of this object, whichever way it happens to be turned.
+- **Is To The Right Of** (`point: String, target: String`) - Asks whether a place is off this object's right side - which way to lean, dodge or steer.
+- **Is To The Left Of** (`point: String, target: String`) - Asks whether a place is off this object's left side - the twin of Is To The Right Of.
+
+#### Actions
+- **Move In Direction** (`direction: String, speed: String, delta_t: String, target: String`) - Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second.
+- **Rotate Clockwise** (`degrees_per_second: String, delta_t: String, target: String`) - Turns a 3D node about its up axis - the yaw a character or a turret turns with.
+- **Rotate Up Or Down** (`degrees_per_second: String, delta_t: String, target: String`) - Tilts a 3D node's nose up or down - the pitch a plane or a camera arm moves with.
+- **Roll** (`degrees_per_second: String, delta_t: String, target: String`) - Rolls a 3D node about the way it faces - the bank a plane or a ship leans with.
+- **Rotate Toward Facing** (`facing: String, rate: String, delta_t: String`) - Turns a 3D node smoothly toward a facing instead of snapping to it - the way a turret leads its target.
+- **Set Position To Another Object** (`other: String`) - Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.
+- **Align To The Ground's Slope** (`normal: String`) - Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill.
+- **Create Evenly Around A Circle** (`count: String, scene: String, centre: String, radius: String`) - Places a number of copies evenly around a circle - the bullet-hell ring, the radial menu, the circle of pillars.
+- **Store As Angle And Distance** (`from: String, to: String, angle_name: String, distance_name: String`) - Reads a place back the other way - as the angle from one point to another and how far apart they are, both named in one drop.
+
+#### Expressions
+- **Facing Along** (`direction: String`) - The facing that looks along a direction - what Rotate Toward Facing turns toward.
+- **Point At Angle** (`angle: String, distance: String`) - The point an angle and a distance name. Add it to a centre for a place on a circle; grow the distance every tick and it draws a spiral.
 
 ### System (`res://addons/eventforge/registration/modules/system_aces.gd`)
 System (event-sheet System parity)
