@@ -10294,9 +10294,16 @@ const SPAWN_MARKER_CLASSES: PackedStringArray = ["Marker3D", "Marker2D"]
 ##
 ## The sign is read off the TEXT and nowhere else - an amount held in a variable has no sign a reading
 ## could know, so the bare spelling gets the first word and a leading minus gets the second.
+##
+## Which word goes with which sign is the ENGINE's answer, not a preference: a positive `rotate_y`
+## takes `-Z` toward `-X`, so an object turns to its own left, which is counter-clockwise seen from
+## above. A row that says clockwise and turns a character left would be a reading nobody could trust,
+## so the words follow the turn rather than the sign that happens to be written. `rotate_x` positive
+## lifts the nose (`-Z` toward `+Y`) and `rotate_z` positive raises the right side, so those two pairs
+## read in the order they are written.
 const TURN_CALL_WORDS: Dictionary = {
-	"rotate_y": {"template": "Rotate {turn} at {rate}°", "positive": "clockwise",
-		"negative": "counter-clockwise", "axis": "yaw"},
+	"rotate_y": {"template": "Rotate {turn} at {rate}°", "positive": "counter-clockwise",
+		"negative": "clockwise", "axis": "yaw"},
 	"rotate_x": {"template": "Rotate {turn} at {rate}°", "positive": "up",
 		"negative": "down", "axis": "pitch"},
 	"rotate_z": {"template": "Roll {turn} at {rate}°", "positive": "left",
@@ -10398,7 +10405,14 @@ static func _turn_statement(text: String, context: Dictionary) -> Dictionary:
 		angle_text = args[1]
 	else:
 		return {}
-	var degrees: Dictionary = call_parts(angle_text.strip_edges())
+	# A turn the other way is written two ways - the minus on the amount, or on the whole angle - and
+	# the row that WRITES one puts it outside, where a reader-typed negative amount cannot double it
+	# up into `--30`. Both spellings mean the same turn, so both are read the same.
+	var angle_bare: String = angle_text.strip_edges()
+	if angle_bare.begins_with("-"):
+		flipped = not flipped
+		angle_bare = angle_bare.substr(1).strip_edges()
+	var degrees: Dictionary = call_parts(angle_bare)
 	if degrees.is_empty() or str(degrees.get("method", "")) != "deg_to_rad":
 		return {}
 	var degree_args: PackedStringArray = degrees.get("args", PackedStringArray())

@@ -60,13 +60,20 @@ static var STATEMENT_READINGS: Dictionary = {
 	"position += basis.y * lift * delta": "Player ▸ Move up at lift per second",
 	"position += -basis.x * strafe * delta": "Player ▸ Move left at strafe per second",
 	"global_position += wind * 3.0 * delta": "Player ▸ Move along wind at 3 per second",
-	# X1 - the three turns, and the axis each one is about
-	"rotate_y(deg_to_rad(turn_rate * delta))": "Player ▸ Rotate clockwise at turn_rate°/s · yaw",
-	"rotate_y(deg_to_rad(-turn_rate * delta))":
+	# X1 - the three turns, and the axis each one is about. Which word goes with which sign is the
+	# ENGINE's answer: a positive `rotate_y` turns an object to its own left, which is
+	# counter-clockwise seen from above, so that is what the bare spelling reads as.
+	"rotate_y(deg_to_rad(turn_rate * delta))":
 		"Player ▸ Rotate counter-clockwise at turn_rate°/s · yaw",
+	"rotate_y(deg_to_rad(-turn_rate * delta))": "Player ▸ Rotate clockwise at turn_rate°/s · yaw",
+	# The same turn with the minus on the whole angle, which is where the picker's own row puts it.
+	"rotate_y(-deg_to_rad(turn_rate * delta))": "Player ▸ Rotate clockwise at turn_rate°/s · yaw",
 	"rotate_x(deg_to_rad(pitch_rate * delta))": "Player ▸ Rotate up at pitch_rate°/s · pitch",
 	"rotate_z(deg_to_rad(roll_rate * delta))": "Player ▸ Roll left at roll_rate°/s · roll",
 	"rotate_object_local(Vector3.UP, deg_to_rad(turn_rate * delta))":
+		"Player ▸ Rotate counter-clockwise at turn_rate°/s · yaw (in its own space)",
+	# Turning about DOWN is the same turn about up, backwards - so the words swap, not the amount.
+	"rotate_object_local(Vector3.DOWN, deg_to_rad(turn_rate * delta))":
 		"Player ▸ Rotate clockwise at turn_rate°/s · yaw (in its own space)",
 	# X1 - turning toward a facing, and facing something with an up vector worth saying
 	"basis = basis.slerp(desired, 5.0 * delta)": "Player ▸ Rotate toward desired at 5 per second",
@@ -250,7 +257,7 @@ static func _authoring() -> bool:
 	var ok: bool = true
 	var templates: Dictionary = {
 		"MoveInDirection3D": "{target.}global_position += {direction} * {speed} * {delta_t}",
-		"RotateClockwise3D": "{target.}rotate_y(deg_to_rad({degrees_per_second} * {delta_t}))",
+		"RotateClockwise3D": "{target.}rotate_y(-deg_to_rad({degrees_per_second} * {delta_t}))",
 		"RotatePitch3D": "{target.}rotate_x(deg_to_rad({degrees_per_second} * {delta_t}))",
 		"Roll3D": "{target.}rotate_z(deg_to_rad({degrees_per_second} * {delta_t}))",
 		"RotateToward3DFacing": "basis = basis.slerp({facing}, {rate} * {delta_t})",
@@ -307,9 +314,11 @@ static func _authoring() -> bool:
 		_joined_segments(EventSheetSentence.statement(
 			"global_position += -basis.z * 6.0 * delta", _context())),
 		"Player ▸ Move forward at 6 per second") and ok
+	# The row writes the turn the other way round, because a positive `rotate_y` is the OTHER turn -
+	# so what the picker drops and what the reading says are the same word, and the object agrees.
 	ok = _check("a Rotate Clockwise row reads back as its own words",
 		_joined_segments(EventSheetSentence.statement(
-			"rotate_y(deg_to_rad(90.0 * delta))", _context())),
+			"rotate_y(-deg_to_rad(90.0 * delta))", _context())),
 		"Player ▸ Rotate clockwise at 90°/s · yaw") and ok
 	ok = _check("an Is Within Angle Of Facing row reads back as its own question",
 		_joined_pieces(EventSheetSentence.condition_pieces(

@@ -23,9 +23,13 @@
   -transform.basis.z * speed * delta` reads `Player ▸ Move forward at speed · per second`, and the
   basis table is now whole in both directions: `-basis.z` is forward and `basis.z` is backward,
   `basis.x` right and `-basis.x` left, `basis.y` up and `-basis.y` down, in the `transform` and
-  `global_transform` spellings alike. `rotate_y(deg_to_rad(x * delta))` reads `Rotate clockwise at
-  x°/s · yaw` (a leading minus turns it counter-clockwise), `rotate_x` is `Rotate up / down · pitch`
-  and `rotate_z` is `Roll left / right · roll`; `rotate_object_local` says **(in its own space)**.
+  `global_transform` spellings alike. `rotate_y(deg_to_rad(x * delta))` reads `Rotate
+  counter-clockwise at x°/s · yaw` and a leading minus reads clockwise - which way round is the
+  engine's answer, not a preference: a positive `rotate_y` turns an object to its own left, so a row
+  that said clockwise there would turn a character the way it did not say. The **Rotate Clockwise**
+  row writes the turn accordingly (`rotate_y(-deg_to_rad(…))`), so the word, the code and the object
+  all agree. `rotate_x` is `Rotate up / down · pitch` and `rotate_z` is `Roll left / right · roll`,
+  both reading in the order they are written; `rotate_object_local` says **(in its own space)**.
   `basis = basis.slerp(desired, w * delta)` is the turret's own word - `Rotate toward desired at w` -
   and `Basis.looking_at(dir)` is `facing along dir`. A one-argument `look_at(p)` on a 3D object now
   reads `Look at p` as its two-argument twin already did, and an up vector that is not Godot's own

@@ -65,11 +65,16 @@ static func _append_move(descriptors: Array[ACEDescriptor]) -> void:
 			"expression")],
 		PAGE_MOVE, "Move [b]{direction}[/b] at [i]{speed}[/i]", "Node3D")
 		.described("Moves a 3D node along one of its own directions - forward, back, right, left, up or down - at a speed a second."))
+	# The minus is the whole point of this row: a POSITIVE `rotate_y` turns an object to its own left,
+	# which is counter-clockwise seen from above, so a row that says clockwise has to write the turn
+	# the other way round or its words would be a lie. It sits outside `deg_to_rad` so a reader who
+	# types a negative amount gets `-deg_to_rad(-30.0 * delta)` rather than `--30.0`.
 	descriptors.append(F.make_descriptor("Core", "RotateClockwise3D", "Rotate Clockwise",
 		ACEDescriptor.ACEType.ACTION,
-		"rotate_y(deg_to_rad({degrees_per_second} * {delta_t}))", "",
+		"rotate_y(-deg_to_rad({degrees_per_second} * {delta_t}))", "",
 		[F.make_param("degrees_per_second", "String", "90.0", "Degrees per second",
-			"Degrees a second; a negative number turns the other way.", "expression"),
+			"Degrees a second, turning clockwise seen from above; a negative number turns the other way.",
+			"expression"),
 		F.make_param("delta_t", "String", "delta", "Delta", "Frame time; defaults to `delta`.",
 			"expression")],
 		PAGE_MOVE, "Rotate [b]clockwise[/b] at [i]{degrees_per_second}[/i]°/s", "Node3D")
