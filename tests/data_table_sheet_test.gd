@@ -14,9 +14,8 @@ extends RefCounted
 # designer's assets would show up as a diff in every commit, so the gate below writes an asset,
 # reads it as a table, saves each field back with the value it already had, and compares the bytes.
 
-const FOLDER := "user://eventforge_data_table"
-
-const TYPE_PATH := "user://eventforge_data_table/enemy_stats_test_type.gd"
+## The folder name the fixture lives under, before the running process is added to it.
+const FOLDER_STEM: String = "eventforge_data_table"
 
 const TYPE_SOURCE: String = """@tool
 class_name EventForgeDataTableTestType
@@ -35,8 +34,8 @@ static func run() -> bool:
 	if script == null:
 		print("[FAIL] data_table_sheet_test: the test data type could not be written")
 		return false
-	var slime: String = FOLDER.path_join("slime.tres")
-	var bat: String = FOLDER.path_join("bat.tres")
+	var slime: String = _folder().path_join("slime.tres")
+	var bat: String = _folder().path_join("bat.tres")
 	_write_asset(script, slime, 8, 90.0, PackedStringArray(["slime", "gel"]))
 	_write_asset(script, bat, 4, 140.0, PackedStringArray(["wing"]))
 
@@ -47,6 +46,7 @@ static func run() -> bool:
 	ok = _edits(slime) and ok
 	ok = _new_and_delete() and ok
 	ok = _titles(slime) and ok
+	_remove_folder()
 	return ok
 
 
@@ -87,8 +87,8 @@ static func _one_asset(path: String) -> bool:
 static func _grid() -> bool:
 	var ok: bool = true
 	ok = _check("a folder of one type opens as a grid",
-		EventSheetDataTable.is_one_type_folder(FOLDER), true) and ok
-	var grid: Dictionary = EventSheetDataTable.folder_grid(FOLDER)
+		EventSheetDataTable.is_one_type_folder(_folder()), true) and ok
+	var grid: Dictionary = EventSheetDataTable.folder_grid(_folder())
 	ok = _check("the grid names the type its rows share", str(grid.get("type", "")),
 		"EventForgeDataTableTestType") and ok
 	ok = _check("the grid has one row per asset", (grid.get("rows", []) as Array).size(), 2) and ok
@@ -138,17 +138,17 @@ static func _edits(path: String) -> bool:
 ## that names it.
 static func _new_and_delete() -> bool:
 	var ok: bool = true
-	var made: Dictionary = EventSheetDataTable.new_asset(FOLDER, "EventForgeDataTableTestType", "ghost")
+	var made: Dictionary = EventSheetDataTable.new_asset(_folder(), "EventForgeDataTableTestType", "ghost")
 	ok = _check("a new row writes a new asset", bool(made.get("ok", false)), true) and ok
 	var path: String = str(made.get("path", ""))
 	ok = _check("the new asset is in the folder's grid",
-		EventSheetDataTable.folder_assets(FOLDER).has(path), true) and ok
+		EventSheetDataTable.folder_assets(_folder()).has(path), true) and ok
 	ok = _check("the confirm names the file being deleted",
 		EventSheetDataTable.delete_confirm_text(path).contains("ghost.tres"), true) and ok
 	ok = _check("deleting a row removes the file",
 		bool(EventSheetDataTable.delete_asset(path).get("ok", false)), true) and ok
 	ok = _check("the deleted asset is gone from the grid",
-		EventSheetDataTable.folder_assets(FOLDER).has(path), false) and ok
+		EventSheetDataTable.folder_assets(_folder()).has(path), false) and ok
 	return ok
 
 
@@ -158,31 +158,58 @@ static func _titles(path: String) -> bool:
 	ok = _check("an asset's tab is named after the asset",
 		EventSheetDataTable.tab_title(path), "slime.tres") and ok
 	ok = _check("a folder's tab is named after the folder",
-		EventSheetDataTable.tab_title(FOLDER), "eventforge_data_table") and ok
+		EventSheetDataTable.tab_title(_folder()), _folder_name()) and ok
 	ok = _check("Open as Event Sheet offers a data asset",
 		EventSheetWorkflow.is_openable_as_sheet(path), true) and ok
 	ok = _check("Open as Event Sheet offers a folder of one type",
-		EventSheetWorkflow.is_openable_as_sheet(FOLDER), true) and ok
+		EventSheetWorkflow.is_openable_as_sheet(_folder()), true) and ok
 	ok = _check("Open as Event Sheet still refuses a plain file",
 		EventSheetWorkflow.is_openable_as_sheet("res://not_a_sheet.txt"), false) and ok
 	return ok
 
 
+## A fixture folder of this PROCESS's own, removed again at the end.
+##
+## Two suites running at once - the ordinary way a change is verified beside another agent's - shared
+## one fixed folder before this, and each rewrote the other's assets mid-assertion. The failures that
+## made looked exactly like a real regression in the table model and were not one, so the folder
+## carries the process id and the run takes it away with it.
+static func _folder() -> String:
+	return "user://%s" % _folder_name()
+
+
+static func _folder_name() -> String:
+	return "%s_%d" % [FOLDER_STEM, OS.get_process_id()]
+
+
+static func _type_path() -> String:
+	return _folder().path_join("enemy_stats_test_type.gd")
+
+
 static func _make_folder() -> void:
-	DirAccess.make_dir_recursive_absolute(FOLDER)
+	DirAccess.make_dir_recursive_absolute(_folder())
+
+
+static func _remove_folder() -> void:
+	var directory: DirAccess = DirAccess.open(_folder())
+	if directory == null:
+		return
+	for entry: String in directory.get_files():
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(_folder().path_join(entry)))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(_folder()))
 
 
 ## The Resource script the test's assets are made of, written to disk and loaded from there: the
 ## script behind a .tres has to BE a file, or the saved asset would point at nothing.
 static func _test_type() -> Script:
-	var file: FileAccess = FileAccess.open(TYPE_PATH, FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(_type_path(), FileAccess.WRITE)
 	if file == null:
 		return null
 	file.store_string(TYPE_SOURCE)
 	file.close()
 	var script := GDScript.new()
 	script.source_code = TYPE_SOURCE
-	script.resource_path = TYPE_PATH
+	script.resource_path = _type_path()
 	script.reload()
 	return script
 

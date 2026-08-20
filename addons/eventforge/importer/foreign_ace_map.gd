@@ -14,6 +14,7 @@
 #   "!Name"  take the foreign parameter called Name VERBATIM and FLAG it as untranslated
 #   "~Name"  a KEY name, through the key table
 #   "^Name"  a mouse BUTTON name, through the button table
+#   "=Name"  a COMPARISON, through the comparison table
 #   "@node"  the node the object was mapped to ("" = the sheet's own host)
 #   "@self"  the same, but `self` when nothing was mapped (for slots that need a real node)
 #   "@name"  the object's own name as a variable name (a list object IS the list)
@@ -61,8 +62,8 @@ const ROWS: Dictionary = {
 	"System/on-end-of-layout": {"ace": "OnExitTree", "kind": KIND_TRIGGER},
 	"System/trigger-once-while-true": {"ace": "TriggerOnce", "kind": KIND_CONDITION},
 	"System/every-x-seconds": {"ace": "EveryXSeconds", "kind": KIND_CONDITION, "params": {"seconds": "#Interval"}},
-	"System/compare-variable": {"ace": "CompareVar", "kind": KIND_CONDITION, "params": {"var_name": "#Variable", "op": "#Comparison", "value": "#Value"}},
-	"System/compare-two-values": {"ace": "CompareValues", "kind": KIND_CONDITION, "params": {"a": "#First value", "op": "#Comparison", "b": "#Second value"}},
+	"System/compare-variable": {"ace": "CompareVar", "kind": KIND_CONDITION, "params": {"var_name": "#Variable", "op": "=Comparison", "value": "#Value"}},
+	"System/compare-two-values": {"ace": "CompareValues", "kind": KIND_CONDITION, "params": {"a": "#First value", "op": "=Comparison", "b": "#Second value"}},
 	"System/is-between-values": {"ace": "IsBetween", "kind": KIND_CONDITION, "params": {"value": "#Value", "min": "#Lower bound", "max": "#Upper bound"}},
 	"System/set-value": {"ace": "SetVar", "kind": KIND_ACTION, "params": {"var_name": "#Variable", "value": "#Value"}},
 	"System/add-to": {"ace": "AddVar", "kind": KIND_ACTION, "params": {"var_name": "#Variable", "amount": "#Value"}},
@@ -90,7 +91,7 @@ const ROWS: Dictionary = {
 	"Touch/is-touching-object": {"ace": "TouchEventPressed", "kind": KIND_CONDITION, "trigger": "OnInput", "note": "Which object was touched is not carried over - add the object check yourself."},
 
 	# --- every placed object ----------------------------------------------------------------
-	"Object/compare-instance-variable": {"ace": "CompareVar", "kind": KIND_CONDITION, "params": {"var_name": "#Instance variable", "op": "#Comparison", "value": "#Value"}},
+	"Object/compare-instance-variable": {"ace": "CompareVar", "kind": KIND_CONDITION, "params": {"var_name": "#Instance variable", "op": "=Comparison", "value": "#Value"}},
 	"Object/is-boolean-instance-variable-set": {"ace": "CompareVar", "kind": KIND_CONDITION, "params": {"var_name": "#Instance variable", "op": "$==", "value": "$true"}},
 	"Object/set-value": {"ace": "SetVar", "kind": KIND_ACTION, "params": {"var_name": "#Instance variable", "value": "#Value"}},
 	"Object/add-to-value": {"ace": "AddVar", "kind": KIND_ACTION, "params": {"var_name": "#Instance variable", "amount": "#Value"}},
@@ -192,6 +193,20 @@ const KEY_NAMES: Dictionary = {
 	"right arrow": "KEY_RIGHT", "home": "KEY_HOME", "end": "KEY_END",
 }
 
+## Comparisons, in both vocabularies. The export writes a comparison either as the symbol a reader
+## sees or as its place in the drop-down (0 = equal, then not-equal, less, less-or-equal, greater,
+## greater-or-equal), and the two spellings that matter most - a single `=` for equality and `<>`
+## for inequality - are ASSIGNMENT and nothing at all in GDScript. Left as written they wrote a file
+## that does not parse, so every comparison goes through here and one nobody can name is refused.
+const COMPARISON_OPERATORS: Dictionary = {
+	"=": "==", "==": "==", "0": "==",
+	"≠": "!=", "<>": "!=", "!=": "!=", "1": "!=",
+	"<": "<", "2": "<",
+	"≤": "<=", "<=": "<=", "3": "<=",
+	">": ">", "4": ">",
+	"≥": ">=", ">=": ">=", "5": ">=",
+}
+
 ## Mouse button names, in both vocabularies.
 const BUTTON_NAMES: Dictionary = {
 	"left": "MOUSE_BUTTON_LEFT", "right": "MOUSE_BUTTON_RIGHT", "middle": "MOUSE_BUTTON_MIDDLE",
@@ -236,6 +251,11 @@ const EXPRESSION_PATTERNS: Array = [
 const RESIDUAL_PATTERNS: Array = [
 	"[A-Za-z_][A-Za-z0-9_]*\\.[A-Z][A-Za-z0-9_]*",
 	"&",
+	# A call in a name the table above DOES rewrite, still standing after every rewrite ran, is one
+	# the table met at an arity it does not know - `distance(x1, y1, x2, y2)` beside the two-argument
+	# form, say. Nothing here spells it, so it is flagged rather than written out as a call to a
+	# function that does not exist. The names are the table's own, so the two can never drift apart.
+	"\\b(distance|angle|tokenat|zeropad|left|mid|len|choose|random|find|uppercase|lowercase)\\s*\\(",
 ]
 
 static var _compiled_expressions: Array = []
@@ -287,6 +307,16 @@ static func translate_button(name: String) -> Dictionary:
 	return _from_table(name, BUTTON_NAMES, "MOUSE_BUTTON_")
 
 
+## A comparison in the words (or the drop-down place) the export wrote, as the GDScript operator it
+## means. Returns {"text": String, "translated": bool}; translated false means the row cannot be
+## built honestly, because a comparison nobody can name is a condition nobody can run.
+static func translate_comparison(name: String) -> Dictionary:
+	var trimmed: String = name.strip_edges()
+	if COMPARISON_OPERATORS.has(trimmed):
+		return {"text": str(COMPARISON_OPERATORS[trimmed]), "translated": true}
+	return {"text": trimmed, "translated": false}
+
+
 static func _from_table(name: String, table: Dictionary, already: String) -> Dictionary:
 	var trimmed: String = name.strip_edges()
 	if trimmed.begins_with(already):
@@ -294,8 +324,11 @@ static func _from_table(name: String, table: Dictionary, already: String) -> Dic
 	var lowered: String = trimmed.to_lower()
 	if table.has(lowered):
 		return {"text": str(table[lowered]), "translated": true}
-	if lowered.length() == 1 and ((lowered >= "a" and lowered <= "z") or (lowered >= "0" and lowered <= "9")):
-		return {"text": "KEY_%s" % lowered.to_upper(), "translated": already == "KEY_"}
+	# A single letter or digit IS its own key name. Only for the key table, though: a mouse button
+	# nobody can name is kept as written rather than handed a keyboard constant, which would put a
+	# `KEY_3` in a slot that asks which button was clicked.
+	if already == "KEY_" and lowered.length() == 1 and ((lowered >= "a" and lowered <= "z") or (lowered >= "0" and lowered <= "9")):
+		return {"text": "KEY_%s" % lowered.to_upper(), "translated": true}
 	return {"text": trimmed, "translated": false}
 
 

@@ -179,6 +179,26 @@ one the logic is right and the wiring is not.
   the pack back on, open the pack that does not read - and each applies through the operations
   the dock already owns and re-runs the check, so the finding's disappearance is proven.
 
+### Fixed - four ways an imported sheet wrote a file that would not load
+
+- **A comparison written the other editor's way is translated, not copied.** That editor spells
+  equality `=` and inequality `<>`, and writes a comparison as its place in the drop-down as often
+  as its symbol. Copied through, `=` is an ASSIGNMENT and the generated file did not load. Every
+  comparison now goes through a table, and a comparison nobody here can name switches the row off
+  with its original words beside it, exactly like every other unspellable row.
+- **A row whose slot the export did not carry is refused, not half-written.** A parameter name the
+  export does not use used to fill the slot with nothing at all, writing `Vector2(, )` and no
+  warning. The row is switched off now and the report says which parameter went missing.
+- **An event whose every row was unspellable writes a body again.** Those rows keep their original
+  words as comments, and a body of nothing but comments is not a body - the file did not load. The
+  compiler now asks its bodies for a STATEMENT rather than for lines, so a comment-only handler,
+  function, match case or `if` gets its `pass` back.
+- **Two Else rows in a row no longer write `else:` twice.** A bare `else` ends its chain, so a
+  second Else beside it stands on its own (with the warning that already existed for an Else with
+  nothing to chain onto). An Else an import found with no event in front of it is now called out in
+  the report as well: it runs every time, which is the opposite of what it read as.
+- An export whose `events` is not a list is refused at the door instead of read halfway.
+
 ### Changed
 
 - **Every bundled theme now has an opinion about every colour, not just High Contrast.** The nine
