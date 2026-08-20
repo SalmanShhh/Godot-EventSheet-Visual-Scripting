@@ -481,7 +481,6 @@ That is the order this section is in.
   because an aim assist measured in world units ignores zoom.
 
   ![An opened 3D script read as an event sheet: the four-line camera-ray run as one row saying "Set hit to the object under the cursor, reach 1000, none when nothing is hit", the same run aimed through a crosshair with its layer mask, and an aim-assist walk whose locals read as the canvas centre, a position on the canvas and a canvas distance in pixels](images/reading-cursor-ray-and-canvas.png)
-
 - **A local variable's scope is enforced, and shown.** A local is visible from the event that
   declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
   action that uses `dealt` into an event that cannot see it and the drop refuses before you release,
