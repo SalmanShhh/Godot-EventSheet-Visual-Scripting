@@ -671,7 +671,7 @@ const SYSTEMS_PATTERN_ACES: Dictionary = {
 
 
 ## S8 / S9 / S10 / S15. Records which events of a sheet read as one of the four Godot-systems
-## patterns, with the exact source lines as evidence and - where one ships - the behavior that could
+## patterns, with the statements themselves as evidence and - where one ships - the behavior that could
 ## replace the hand-written shape.
 ##
 ## Called once at the top of a row build, after the registry has been cleared. Nothing here draws
@@ -1099,7 +1099,7 @@ const BEHAVIOR_PATTERN_ACES: Dictionary = {
 
 
 ## T5 / T6 / T7 / T22 / T23 / T25 / T26. Records which events of a sheet read as one of the behavior
-## patterns, with the exact source lines as evidence and - where one ships - the behavior that could
+## patterns, with the statements themselves as evidence and - where one ships - the behavior that could
 ## replace the hand-written shape. Called once at the top of a row build, after the registry has been
 ## cleared; nothing here draws anything, because the chip and the hover read the claims back.
 static func claim_behavior_patterns(sheet: EventSheetResource) -> void:

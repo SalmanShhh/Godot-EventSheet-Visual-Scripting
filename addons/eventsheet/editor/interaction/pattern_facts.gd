@@ -3,7 +3,7 @@
 # A pattern is a shape several lines make together - a cooldown counted down by dt, an object pool,
 # a state machine, a wait sequence, a save file. The readings that recognise one (the sentence
 # grammar, the row builder's pre-passes) CLAIM it here, once per rebuild, naming the pattern, the
-# row that owns it, the source lines that are its evidence and, when one ships, the behavior that
+# row that owns it, the row spellings that are its evidence and, when one ships, the behavior that
 # could replace the hand-written shape. Everything that talks ABOUT patterns - the ⟡ chip on the
 # owning event, the hover evidence, Adopt behavior, the Doctor's pattern smells, the coverage
 # chip's counts, the Manual's "Patterns using this" - reads the claims; nothing re-derives them.
@@ -40,7 +40,8 @@ const PATTERN_IDS: PackedStringArray = [
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is
-## {pattern: String, row_uid: String, event_uid: String, evidence: PackedStringArray (source lines),
+## {pattern: String, row_uid: String, event_uid: String, evidence: PackedStringArray (the statements
+##  the rows stand for, each in the row's own canonical spelling rather than the file's bytes),
 ##  words: String (the one line the chip says), adoptable: String ("" or the pack id that could
 ##  replace the shape), ace_ids: PackedStringArray (the sheet ACEs the pattern is made of)}.
 static var _claims: Dictionary = {}

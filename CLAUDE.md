@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Godot EventSheets (engine codename EventForge): a Godot 4 `@tool` plugin providing a Construct 3-style event sheet editor that compiles sheets to plain, typed GDScript. `addons/eventforge/` is the data model, compiler, importer, and builtin ACE vocabulary; `addons/eventsheet/` is the editor (dock, virtualized viewport, renderer, picker, themes, MCP server, drop-in CSV translations); `eventsheet_addons/` holds the 93 behavior packs (COMPILER OUTPUT, regenerated from `tools/pack_builders/` - builders auto-register by glob, no list to maintain); `demo/showcase/<name>/` holds the playable showcases (also generated - `tools/build_examples.gd`); `AGENTS.md` has the deeper architecture map and standing contracts.
+Godot EventSheets (engine codename EventForge): a Godot 4 `@tool` plugin providing a Construct 3-style event sheet editor that compiles sheets to plain, typed GDScript. `addons/eventforge/` is the data model, compiler, importer, and builtin ACE vocabulary; `addons/eventsheet/` is the editor (dock, virtualized viewport, renderer, picker, themes, MCP server, drop-in CSV translations); `eventsheet_addons/` holds the 95 behavior packs (COMPILER OUTPUT, regenerated from `tools/pack_builders/` - builders auto-register by glob, no list to maintain); `demo/showcase/<name>/` holds the playable showcases (also generated - `tools/build_examples.gd`); `AGENTS.md` has the deeper architecture map and standing contracts.
 
 ## Commands
 
@@ -35,6 +35,8 @@ GODOT="/path/to/Godot_v4.7-stable_win64.exe/Godot_v4.7-stable_win64_console.exe"
 ## Verifying results (the traps that bite here)
 
 - **The suite can fail silently.** A test that crashes or returns non-bool produces ZERO `[FAIL]` lines; always check for the literal `All tests passed.` / `Some tests failed.` verdict line, never just grep for FAIL.
+- **A brand-new test file is invisible until the project is imported.** `run_tests.gd` discovers `tests/*_test.gd` through the resource filesystem, so a file added in a fresh worktree (or after a rebase that brought new tests) is skipped without a word until `"$GODOT" --headless --path . --import` has run. A suite that goes green without ever printing your test's name did not run it.
+- **Grep the verdict, never the `[FAIL]` lines.** They can be INDENTED (some tests print through a nested reporter, so the line reads `  [FAIL] ...`) - a `grep "^\[FAIL\]"` anchor therefore reports a clean run on a failing suite. They can also appear UNDER a green `All tests passed.`, printed by a probe a test runs deliberately and does not count. The verdict line is the answer in BOTH directions: no `[FAIL]` lines does not mean green, and a `[FAIL]` line does not mean red.
 - **`_check(a and b, expected_string)` crashes the comparison** (`bool == String` is a runtime error in GDScript) and triggers exactly the silent failure above. Compare values, not boolean-and chains; pin VALUES, not counts.
 - A parse error in one core file (e.g. `sheet_compiler.gd`) cascades as baffling "Nonexistent function in base Nil" errors in unrelated tests. Pinpoint with `--check-only --script <file>`.
 - Some tests deliberately lint invalid GDScript; "Parse Error" lines naming fixtures like `1 +` or identifier `this` mid-suite are expected noise.

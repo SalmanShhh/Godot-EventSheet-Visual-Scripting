@@ -993,8 +993,13 @@ read once when the rows are built, and the events that turn out to BE a known pa
   zero; a pool must be drained behind an `is_empty()` guard AND have an `instantiate()` fallback; a
   sequence needs two waits AND something to do between them. One half alone keeps the ordinary
   reading, because a pattern that is almost right is worse than the code it replaced.
-- **The evidence is the source lines, never a paraphrase.** Every pattern an event claims carries the
-  exact lines that made the sheet think so, so the reason a row says what it says is one hover away.
+- **The evidence is the statements, never a paraphrase.** Every pattern an event claims carries the
+  lines that made the sheet think so, so the reason a row says what it says is one hover away. They
+  are the statements themselves and not a description of them, but they are not a quote of your file
+  either: a line the editor read straight out of the file arrives without its indentation and its
+  trailing comment, and a line that became a row is written back out from that row - the same
+  statement in the sheet's own spelling. That is what lets the hover answer the same way whether a
+  line was kept as code or read as a row.
 - **A shipped behavior is offered where one exists.** A hand-rolled object pool names the Object Pool
   behavior in its claim, so the sheet can offer to swap the hand-written shape for the pack.
 - **What reads as a pattern today:** countdowns (`Count down x`, `Start x for N seconds`, `x has run

@@ -86,8 +86,8 @@ The catalog works because the sheet obeys a small set of enforced rules, not tas
   ([The full reading grammar.](GUIDE-BLOCK-STYLES.md))
 - **The expert loses nothing.** Hover shows the real line; the generated file is plain, typed
   GDScript with parity enforced by tests; a statement the vocabulary does not match stays an
-  honest single-statement row. Measured across this repo's 206 hand-written files: every one
-  of 25,974 code lines arrives as structure, round-tripping byte-for-byte.
+  honest single-statement row. Measured across this repo's 628 hand-written source files: every
+  one of 186,504 code lines but nine arrives as structure, round-tripping byte-for-byte.
 - **The vocabulary teaches the code.** Every row is a GDScript lesson one hover away - the
   tool is a ramp into the language, not a wall around it.
 

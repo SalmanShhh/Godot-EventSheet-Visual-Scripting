@@ -283,8 +283,14 @@ static func wait_sequence_words(facts: Dictionary) -> String:
 ## of one owning unit - a trigger event, a tick event, a function - and `facts` is what `facts()`
 ## answered for the whole file, because a countdown counted here may be asked about anywhere.
 ##
-## The evidence is the exact source lines, never a paraphrase: the chip that shows it is showing the
-## reader why the row says what it says, and a paraphrase there would be a second reading to distrust.
+## The evidence is the statements themselves, never a paraphrase of what they do: the chip that shows
+## it is showing the reader why the row says what it says, and a paraphrase there would be a second
+## reading to distrust. What it is NOT is a quote of the file: a line the importer took verbatim
+## reaches here stripped of its indentation and its trailing comment, and a line that was LIFTED into
+## a row reaches here re-spelled from that row's parameters - the canonical spelling of the statement
+## the row stands for, which is byte-equal to the source only when the source was already written
+## that way. That is deliberate, and it is what lets a fact and a claim answer the same question
+## whether the importer took a line or lifted it; do not describe the chip's lines as source quotes.
 static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 	var found: Array = []
 	var countdowns: Dictionary = file_facts.get("countdown_variables", {})
