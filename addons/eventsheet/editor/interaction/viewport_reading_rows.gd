@@ -97,6 +97,11 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		"function_params": function_parameter_map(sheet)
 	}
 	extras.merge(patterns, true)
+	# ── X2 / X20 / X30 lens hook ───────────────────────────────────────────────────────────────
+	# The camera-ray runs the file casts through the cursor, and the locals it converts into canvas
+	# space. A run is four lines joined only by its locals' names and a canvas distance is two
+	# declarations away from the call that measures it, so both are answered from one walk here.
+	extras.merge(cursor_ray_facts(sheet), true)
 	# ── S8 / S10 / S15 lens hook ───────────────────────────────────────────────────────────────
 	# The three patterns whose lines only mean something TOGETHER: the locals a background load
 	# threads its path and its progress through, the messages the file publishes with `@rpc`, and the
@@ -2689,3 +2694,211 @@ static func object_icon(entry: Dictionary, class_map: Dictionary, sheet_source_p
 	if not class_name_str.is_empty() and ClassDB.class_exists(class_name_str):
 		return ACEPickerDialog.editor_icon(class_name_str)
 	return class_icon_for(str(entry.get("label", "")), class_map)
+
+
+## X2 / X20 / X30. What the FILE says about the rays it casts through the cursor and the points it
+## converts into canvas space, as the two fact maps the sentence grammar reads:
+##
+##   cursor_rays    {hit local: {reach, aimed_at, mask, cleared}} - one entry per camera-ray run the
+##                  file writes, so `hit.position` can read "where the cursor touches the world"
+##                  HERE and stay an ordinary possessive in a file that never cast a ray
+##   canvas_points  {local: true} - the locals declared from a canvas conversion, so a distance
+##                  between two of them can be named in PIXELS rather than in world units
+##
+## No single line can answer either question - a run is four lines and a canvas distance is two
+## declarations away from the call that measures it - so both are answered from one walk of the file
+## and handed to the grammar as ordinary context. Nothing here is written back: the lines stay as the
+## file wrote them, which is what keeps the byte round-trip intact.
+static func cursor_ray_facts(sheet: EventSheetResource) -> Dictionary:
+	var rays: Dictionary = {}
+	var canvas_points: Dictionary = {}
+	if sheet == null:
+		return {"cursor_rays": rays, "canvas_points": canvas_points}
+	# What the run has said so far: the local holding the ray's start, the one holding its direction,
+	# and the query the two of them built. Cleared whenever a name is filled from something else.
+	var origins: Dictionary = {}
+	var directions: Dictionary = {}
+	var queries: Dictionary = {}
+	# How many runs each name stands for across the whole file, and how many of them the file
+	# guarded with an emptiness check.
+	var total_runs: Dictionary = {}
+	var cleared_runs: Dictionary = {}
+	for line: String in _cursor_ray_lines(sheet):
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		# The mask a query is restricted to, written on a line of its own after it was built.
+		var mask_at: int = text.find(".collision_mask = ")
+		if mask_at > 0 and queries.has(text.substr(0, mask_at).strip_edges()):
+			(queries[text.substr(0, mask_at).strip_edges()] as Dictionary)["mask"] = \
+				text.substr(mask_at + 18).strip_edges()
+			continue
+		# The empty-check that follows a run and clears what it found: the row's "none when nothing
+		# is hit" note, folded in from the branch rather than drawn as a rule of its own.
+		var emptiness: String = _cursor_ray_empty_check(text)
+		if not emptiness.is_empty() and rays.has(emptiness):
+			(rays[emptiness] as Dictionary)["cleared"] = true
+			cleared_runs[emptiness] = int(cleared_runs.get(emptiness, 0)) + 1
+			continue
+		var declared: String = _declared_local_name(text)
+		if declared.is_empty():
+			continue
+		var value: String = _declared_local_value(text)
+		if not EventSheetSentence.canvas_position_words(value, {}).is_empty() \
+				or not EventSheetSentence.canvas_centre_words(value).is_empty():
+			canvas_points[declared] = true
+		var step: Dictionary = EventSheetSentence.cursor_ray_step_parts(value)
+		# A name filled from anything else stops standing for what it stood for a moment ago: the
+		# same word may not read two ways on one sheet.
+		origins.erase(declared)
+		directions.erase(declared)
+		queries.erase(declared)
+		rays.erase(declared)
+		match str(step.get("step", "")):
+			"project_ray_origin":
+				origins[declared] = str(step.get("point", ""))
+			"project_ray_normal":
+				directions[declared] = str(step.get("point", ""))
+			"query":
+				var built: Dictionary = _cursor_ray_query_facts(step, origins, directions)
+				if not built.is_empty():
+					queries[declared] = built
+			"cast":
+				var query_name: String = str(step.get("query", ""))
+				if queries.has(query_name):
+					rays[declared] = (queries[query_name] as Dictionary).duplicate()
+					total_runs[declared] = int(total_runs.get(declared, 0)) + 1
+	# Two functions may both call their hit `hit`. The note is only allowed to say "none when
+	# nothing is hit" when EVERY run of that name is followed by the branch that clears it: a note
+	# taken from one run and drawn beside another would be the confident lie this walk exists to
+	# prevent, and one word may not read two ways on one sheet.
+	for name_text: String in rays:
+		(rays[name_text] as Dictionary)["cleared"] = 			int(cleared_runs.get(name_text, 0)) >= int(total_runs.get(name_text, 0))
+	return {"cursor_rays": rays, "canvas_points": canvas_points}
+
+
+## X2. What a query line says about the ray it builds, given the locals declared above it - the far
+## end's reach and the canvas point the ray was aimed through - or {} when its two ends are not the
+## ray pair at all (a ray to a FIXED point is a different question, and reads as one).
+static func _cursor_ray_query_facts(step: Dictionary, origins: Dictionary,
+		directions: Dictionary) -> Dictionary:
+	var from_name: String = str(step.get("from", ""))
+	if not origins.has(from_name):
+		return {}
+	var to_text: String = str(step.get("to", ""))
+	for direction_name: String in directions:
+		var reach: String = EventSheetSentence.cursor_ray_reach(to_text, from_name, direction_name)
+		if reach.is_empty():
+			continue
+		if str(origins[from_name]) != str(directions[direction_name]):
+			continue
+		return {"reach": reach, "aimed_at": cursor_aim_owner(str(origins[from_name])), "mask": "",
+			"cleared": false}
+	return {}
+
+
+## X30. The object whose canvas position aimed a ray, "" when the ray was aimed by the OS mouse -
+## which is what makes a gamepad or a touch crosshair as first-class as the pointer.
+static func cursor_aim_owner(point: String) -> String:
+	var bare: String = point.strip_edges()
+	if bare.is_empty() or bare == EventSheetSentence.CURSOR_MOUSE_POINT:
+		return ""
+	if bare.ends_with(".origin"):
+		var call: Dictionary = EventSheetSentence.call_parts(bare.substr(0, bare.length() - 7).strip_edges())
+		if not call.is_empty() and str(call.get("method", "")) == "get_global_transform_with_canvas":
+			return str(call.get("target", "")).strip_edges()
+	return ""
+
+
+## X2. The local a `if <name>.is_empty():` guard asks about, or "" when the line is not that guard.
+static func _cursor_ray_empty_check(text: String) -> String:
+	var bare: String = text.strip_edges()
+	if not bare.begins_with("if ") or not bare.ends_with(":"):
+		return ""
+	var call: Dictionary = EventSheetSentence.call_parts(bare.substr(3, bare.length() - 4).strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "is_empty":
+		return ""
+	return str(call.get("target", "")).strip_edges()
+
+
+## X2 / X30. The file's lines for the ray walk, in FILE order, with the two things the shared walks
+## leave out because no other reading needs them: the mask a query is restricted to (an ACE row, not
+## a property write) and the emptiness GUARD under a run (a condition, not a statement). Both are
+## members of the run's shape - a ray filtered to the floor and a branch that clears what the ray
+## found - so the walk that answers about runs has to be able to see them.
+static func _cursor_ray_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if sheet == null:
+		return lines
+	for entry: Variant in sheet.events:
+		_append_cursor_ray_lines(entry, lines, 0)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			for event_entry: Variant in (entry as EventFunction).events:
+				_append_cursor_ray_lines(event_entry, lines, 0)
+	return lines
+
+
+## One row unit of that walk. Depth-limited so a sheet that somehow nests into itself cannot spin.
+static func _append_cursor_ray_lines(entry: Variant, lines: PackedStringArray, depth: int) -> void:
+	if depth > 64 or entry == null or not (entry is Resource):
+		return
+	if entry is RawCodeRow:
+		lines.append_array((entry as RawCodeRow).code.split("\n"))
+		return
+	if entry is EventRow:
+		var event_row: EventRow = entry as EventRow
+		for condition: Variant in event_row.conditions:
+			var guard: String = _cursor_ray_guard_line(condition as Resource)
+			if not guard.is_empty():
+				lines.append(guard)
+		for action: Variant in event_row.actions:
+			_append_cursor_ray_lines(action, lines, depth + 1)
+		for sub_event: Variant in event_row.sub_events:
+			_append_cursor_ray_lines(sub_event, lines, depth + 1)
+		return
+	var mask_line: String = _cursor_ray_mask_line(entry as Resource)
+	if not mask_line.is_empty():
+		lines.append(mask_line)
+		return
+	var line: String = _lifted_row_line(entry as Resource)
+	if not line.is_empty():
+		lines.append(line)
+
+
+## X2. The `if <name>.is_empty():` a lifted emptiness question stands for, "" for anything else. Only
+## the shapes that ASK about emptiness count: the note this feeds is "none when nothing is hit", and
+## a guard about something else would put those words on a branch that never says them.
+static func _cursor_ray_guard_line(condition: Resource) -> String:
+	if condition == null:
+		return ""
+	var ace_id: String = str(condition.get("ace_id")).strip_edges()
+	if ace_id != "DictIsEmpty" and ace_id != "ArrayIsEmpty":
+		return ""
+	var params: Variant = condition.get("params")
+	if not (params is Dictionary) or (params as Dictionary).is_empty():
+		params = condition.get("parameters")
+	if not (params is Dictionary):
+		return ""
+	var name_text: String = str((params as Dictionary).get("var_name", "")).strip_edges()
+	return "" if name_text.is_empty() else "if %s.is_empty():" % name_text
+
+
+## X30. The `q.collision_mask = <mask>` a lifted Set RayCast Mask row stands for, "" for anything
+## else. Both dimensions' rows spell the same property, and a query object takes it in either.
+static func _cursor_ray_mask_line(action: Resource) -> String:
+	if action == null:
+		return ""
+	var ace_id: String = str(action.get("ace_id")).strip_edges()
+	if ace_id != "RayCast2DSetMask" and ace_id != "RayCast3DSetMask":
+		return ""
+	var params: Variant = action.get("params")
+	if not (params is Dictionary) or (params as Dictionary).is_empty():
+		params = action.get("parameters")
+	if not (params is Dictionary):
+		return ""
+	var target: String = str((params as Dictionary).get("target", "")).strip_edges()
+	var mask: String = str((params as Dictionary).get("mask", "")).strip_edges()
+	if target.is_empty() or mask.is_empty():
+		return ""
+	return "%s.collision_mask = %s" % [target, mask]

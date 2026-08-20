@@ -153,6 +153,18 @@ const ENTRIES: Dictionary = {
 		"why": "text built from values, and a regular expression searched or replaced in it",
 		"adoptable": "",
 		"rank": 21
+	},
+	"cursor_ray": {
+		"words": "The object under the cursor",
+		"why": "a ray cast from the camera through a cursor, asking what it points at",
+		"adoptable": "",
+		"rank": 22
+	},
+	"aim_assist": {
+		"words": "Aim assist",
+		"why": "the one nearest the crosshair ON THE CANVAS, in pixels rather than world units",
+		"adoptable": "",
+		"rank": 23
 	}
 }
 
