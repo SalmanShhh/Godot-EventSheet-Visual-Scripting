@@ -70,6 +70,17 @@ plugin's discovery) opens the flagship; the others are right there in the folder
   Face Index** (which mesh TRIANGLE the ray struck - the floor is deliberately a concave trimesh, the
   only kind of shape that has one). The camera orbits rather than being mouse-driven on purpose: a
   captured pointer has no screen position to project a picking ray through.
+- **`hierarchy_playground/` - Hierarchy Playground (parenting as a first-class move).** Every change a
+  game makes to the scene tree while it runs, in one room. **Space** mounts the rider onto the horse's
+  **Saddle** (snapping to it) and dismounts again (keeping the place it stands in). The **hat** follows
+  its wearer's position and angle but **not its size** - the flag Godot has no single property for, so
+  the hat is detached and a `RemoteTransform3D` puts back exactly the parts that stayed on. The **health
+  bar** is still a child and still dies with the rider, but ignores its movement, which is why it never
+  tilts. One walk over the **squad** leader's children heals every soldier among them. The **camera**
+  orbits because its parent pivot turns - it does nothing itself. The **crates** each cast a ray down
+  and park on whatever it found.
+
+  ![Hierarchy Playground](../docs/images/hierarchy-playground.png)
 - **`swarm.tscn` - Swarm (frame-spreading made visible).** 800 sprites spawn into a group; one **Budgeted
   For Each** (90/frame) wobbles them, so the colour refresh *sweeps* through the crowd - that visible wave
   **is** the frame-spreading, while the FPS stays pinned. Tick `frame_spread_count` on any For Each and a
@@ -109,6 +120,7 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 | `showcase/path_chase/` | **Path Chase** - Platformer Pathfinding + Platformer Movement: the red Chaser routes to you through stairs, gaps, and platforms (green line = its live path) |
 | `showcase/raycast_lab/` | **Raycast Lab** - all six kinds of cast at once (RayCast2D node, ShapeCast2D, Cast Ray Into + Ray Result readers, circle overlap, point query under the mouse, motion cast), each drawn live |
 | `showcase/raycast_lab_3d/` | **Raycast Lab 3D** - the six casts in 3D, including the two that only exist there: camera picking (click-to-select) and the mesh-triangle face index |
+| `showcase/hierarchy_playground/` | **Hierarchy Playground** - mounting, equipping with follow-flags, healing a squad per child, a bar that ignores movement, a camera orbiting its pivot, crates snapped to the ground |
 | `showcase/draw_lab/` | **Draw Lab** - four Drawing Canvases at work: your live line-of-sight fan (walls carve it), an enemy telegraph cone, a comet ribbon, a persistent paint trail, and target-marker DRAWING PREFABS stamped from one .tres (Space stamps one where you stand) |
 | `themes/` | Nine bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |

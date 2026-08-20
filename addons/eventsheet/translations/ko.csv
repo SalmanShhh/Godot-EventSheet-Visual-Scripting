@@ -3622,3 +3622,16 @@ Follows,따라감
 places this object copies onto others,이 오브젝트가 다른 것에 복사하는 위치
 copies its place to,위치를 복사함
 copies its place to nothing yet,아직 복사 대상이 없음
+Hierarchy,계층
+parent,부모
+(the layout),(레이아웃)
+1 child,자식 1개
+%d children,자식 %d개
+transforms:,변환:
+in the scene file,씨 파일 안
+edit the scene,씨 편집
+"drag an object here = Add child · drag a child out to unparent · right-click: flags…, Remove from parent, Select in scene","오브젝트를 여기로 끌어놓기 = 자식 추가 · 자식을 밖으로 끌어 부모에서 분리 · 우클릭: 플래그…, 부모에서 제거, 씨에서 선택"
+flags…,플래그…
+Add child,자식 추가
+Add child %s,자식 %s 추가
+"All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.","네 가지가 모두 켜져 있으면 평범한 Godot 자식이며 한 줄만 씁니다. 변환을 하나 끄면 대신 자식을 움직이는 노드가 추가되고, 세 가지를 모두 끄면 부모의 움직임을 무시하게 됩니다. 제자리 유지를 끄면 자식이 새 부모에 스냅됩니다."

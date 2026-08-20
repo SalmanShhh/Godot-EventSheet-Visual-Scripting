@@ -84,6 +84,7 @@ static func run() -> Dictionary:
 	check_unresolved_conflicts(findings)
 	check_shared_sheet_includes(findings)
 	check_blocking_waits(sheet_paths, findings)
+	check_hierarchy_footguns(sheet_paths, findings)
 	check_vocabulary_doc(findings)
 	check_pack_reading(findings)
 	check_disabled_pack_usage(sheet_paths, findings)
@@ -2620,6 +2621,199 @@ static func _events_by_uid(sheet: EventSheetResource) -> Dictionary:
 		if not event_row.event_uid.is_empty():
 			found[event_row.event_uid] = event_row
 	return found
+
+
+# ── X17: the three hierarchy footguns ────────────────────────────────────────────
+#
+# Reparenting is where a beginner meets the scene tree's sharp edges, and all three of these fail at
+# RUN time with an engine message that names a line inside Godot rather than the row that caused it.
+# They are decidable from the emitted code, so they are decidable at authoring time - and each has
+# exactly one accepted fix, which is what makes them worth a note rather than a lecture.
+#
+# All three are NOTES, never warnings: each is occasionally what somebody meant (a one-child list is
+# safe to walk while moving it; a deferred reparent may already be deferred by hand), and a lint that
+# accuses working code is a lint people switch off.
+
+
+## X17 (1). The loop variable of a `for c in x.get_children():` walk whose body moves THAT child.
+## Godot's child list is live: taking a child out mid-walk shifts every child after it down one, so
+## the loop skips the next one - the classic "it only reparented half of them" bug. Iterating a
+## `.duplicate()` (or the sheet's For Each Child row, which always snapshots) is the whole fix, so a
+## loop that already walks a copy is never flagged.
+static func reparenting_children_loops(source: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var loop_variable: String = ""
+	var loop_indent: int = 0
+	for line: String in _without_comment_lines(source).split("\n"):
+		var stripped: String = line.strip_edges()
+		if stripped.is_empty():
+			continue
+		var indent: int = line.length() - line.strip_edges(true, false).length()
+		if not loop_variable.is_empty() and indent <= loop_indent:
+			loop_variable = ""
+		if stripped.begins_with("for ") and stripped.contains(".get_children()") \
+				and not stripped.contains(".duplicate()"):
+			loop_variable = stripped.substr(4).get_slice(" in ", 0).get_slice(":", 0).strip_edges()
+			loop_indent = indent
+			continue
+		if loop_variable.is_empty() or found.has(loop_variable):
+			continue
+		if _moves_child(stripped, loop_variable):
+			found.append(loop_variable)
+	return found
+
+
+## True when one line takes `child_name` out of, or into, somebody's child list.
+static func _moves_child(stripped: String, child_name: String) -> bool:
+	if stripped.begins_with("%s.reparent(" % child_name):
+		return true
+	for verb: String in [".add_child(", ".remove_child("]:
+		var at: int = stripped.find(verb)
+		if at >= 0 and stripped.substr(at + verb.length()).get_slice(",", 0).get_slice(")", 0).strip_edges() == child_name:
+			return true
+	return false
+
+
+## X17 (2). A reparent of SELF inside `_ready`. The node's own parent is still adding its children at
+## that moment, so Godot refuses the move outright ("parent node is busy setting up children") and
+## the game dies on the first frame. Deferring it to after the tree settles is the accepted fix.
+static func self_reparent_in_ready(source: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var in_ready: bool = false
+	for line: String in _without_comment_lines(source).split("\n"):
+		var stripped: String = line.strip_edges()
+		if stripped.begins_with("func "):
+			in_ready = stripped.begins_with("func _ready(")
+			continue
+		if not in_ready:
+			continue
+		if not (stripped.begins_with("reparent(") or stripped.begins_with("self.reparent(")):
+			continue
+		# Already deferred by hand is already the fix - `call_deferred("reparent", ...)` never begins
+		# with the call itself, so only the direct spelling can reach here.
+		if not found.has(stripped):
+			found.append(stripped)
+	return found
+
+
+## X17 (3). A variable that keeps hold of a node while the file also frees that node's PARENT. A
+## child is destroyed with its parent (that is Godot's default, and the hierarchy's "destroy with
+## parent" tick), so the variable is left pointing at nothing and the next line that touches it is a
+## "previously freed instance" crash. An `is_instance_valid` check before the use is the fix, so a
+## file that already asks that question anywhere is never flagged.
+static func freed_parent_references(source: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var text: String = _without_comment_lines(source)
+	if text.contains("is_instance_valid("):
+		return found
+	var held: PackedStringArray = _held_node_variables(text)
+	if held.is_empty():
+		return found
+	var parent_of: Dictionary = _parented_children(text)
+	var aliases: Dictionary = _held_variable_aliases(text, held)
+	for line: String in text.split("\n"):
+		var stripped: String = line.strip_edges()
+		var at: int = stripped.find(".queue_free()")
+		if at < 0:
+			continue
+		var freed: String = _node_name_of(stripped.substr(0, at))
+		if freed.is_empty():
+			continue
+		for variable_name: String in held:
+			var child: String = str(aliases.get(variable_name, variable_name))
+			if str(parent_of.get(child, "")) == freed and not found.has(variable_name):
+				found.append(variable_name)
+	return found
+
+
+## `carried = item` - the member and the local naming ONE node. Picking a thing up is written that
+## way in every project, so without this the note would only ever see the half-written version.
+static func _held_variable_aliases(text: String, held: PackedStringArray) -> Dictionary:
+	var aliases: Dictionary = {}
+	for line: String in text.split("\n"):
+		var stripped: String = line.strip_edges()
+		var at: int = stripped.find(" = ")
+		if at < 0:
+			continue
+		var target: String = stripped.substr(0, at).strip_edges()
+		if not held.has(target):
+			continue
+		var source_name: String = _node_name_of(stripped.substr(at + 3))
+		if not source_name.is_empty() and source_name != target:
+			aliases[target] = source_name
+	return aliases
+
+
+## The file's own members that hold a node - what "keeping a reference" means in a script. Only
+## file-scope declarations count: a local dies with its function and cannot dangle across frames.
+static func _held_node_variables(text: String) -> PackedStringArray:
+	var held: PackedStringArray = PackedStringArray()
+	for line: String in text.split("\n"):
+		if line.begins_with("\t") or line.begins_with(" "):
+			continue
+		var stripped: String = line.strip_edges().trim_prefix("@onready ").trim_prefix("@export ")
+		if not stripped.begins_with("var "):
+			continue
+		var declared: String = stripped.substr(4).get_slice(":", 0).get_slice("=", 0).strip_edges()
+		if not declared.is_empty() and not held.has(declared):
+			held.append(declared)
+	return held
+
+
+## Which node each child is parented ONTO, from the two spellings that say so: `child.reparent(p)`
+## and `p.add_child(child)`. The last line to speak wins, exactly as it does at run time.
+static func _parented_children(text: String) -> Dictionary:
+	var parent_of: Dictionary = {}
+	for line: String in text.split("\n"):
+		var stripped: String = line.strip_edges()
+		var reparent_at: int = stripped.find(".reparent(")
+		if reparent_at >= 0:
+			var child: String = _node_name_of(stripped.substr(0, reparent_at))
+			var owner_text: String = stripped.substr(reparent_at + ".reparent(".length()).get_slice(",", 0).get_slice(")", 0)
+			if not child.is_empty():
+				parent_of[child] = _node_name_of(owner_text)
+			continue
+		var add_at: int = stripped.find(".add_child(")
+		if add_at < 0:
+			continue
+		var added: String = _node_name_of(stripped.substr(add_at + ".add_child(".length()).get_slice(",", 0).get_slice(")", 0))
+		if not added.is_empty():
+			parent_of[added] = _node_name_of(stripped.substr(0, add_at))
+	return parent_of
+
+
+## The one name two spellings of the same node share: `$Hand`, `%Hat`, `$Arm/Hand` and a plain local
+## all key on their last segment. "" for anything that is not a plain node reference.
+static func _node_name_of(text: String) -> String:
+	var clean: String = text.strip_edges().trim_prefix("$").trim_prefix("%").strip_edges()
+	if clean.contains("/"):
+		clean = clean.get_file()
+	if clean.contains(" ") or clean.contains("(") or clean.contains(".") or clean.contains("\""):
+		return ""
+	return clean
+
+
+## The three notes, over every script the project owns. Advisory, each naming what to reach for.
+static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_scripts():
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if source.is_empty():
+			continue
+		for loop_variable: String in reparenting_children_loops(source):
+			_add(findings, "info", "reparent-while-iterating", script_path,
+				"This walk over a node's children moves %s while it is walking them. Godot's child list is live, so every child after the moved one shifts down and the loop skips it - half the children quietly never get their turn. Walk a copy instead (add .duplicate() to the children), or use the sheet's For Each Child row, which always takes the snapshot for you."
+					% loop_variable)
+			(findings[findings.size() - 1] as Dictionary)["subject"] = loop_variable
+		for call_text: String in self_reparent_in_ready(source):
+			_add(findings, "info", "reparent-in-ready", script_path,
+				"\"%s\" moves this object to a new parent while the old parent is still adding its children, and Godot refuses that outright. Do it after the tree has settled instead."
+					% call_text)
+			(findings[findings.size() - 1] as Dictionary)["subject"] = call_text
+		for held: String in freed_parent_references(source):
+			_add(findings, "info", "freed-parent-reference", script_path,
+				"%s keeps hold of an object whose parent this file frees. A child is destroyed with its parent, so %s is left pointing at nothing and the next line that uses it crashes. Ask whether it is still there before touching it."
+					% [held, held])
+			(findings[findings.size() - 1] as Dictionary)["subject"] = held
 
 
 # ── U3: the notes a project leaves itself ────────────────────────────────────────

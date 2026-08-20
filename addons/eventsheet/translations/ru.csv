@@ -3622,3 +3622,16 @@ Follows,Следование
 places this object copies onto others,"места, которые этот объект копирует другим"
 copies its place to,копирует своё место в
 copies its place to nothing yet,пока никуда не копирует своё место
+Hierarchy,Иерархия
+parent,родитель
+(the layout),(maket)
+1 child,1 потомок
+%d children,потомков: %d
+transforms:,преобразования:
+in the scene file,в файле сцены
+edit the scene,изменить сцену
+"drag an object here = Add child · drag a child out to unparent · right-click: flags…, Remove from parent, Select in scene","перетащите объект сюда = Добавить потомка · перетащите потомка наружу, чтобы отсоединить · правый клик: флаги…, Убрать из родителя, Выбрать в сцене"
+flags…,флаги…
+Add child,Добавить потомка
+Add child %s,Добавить потомка %s
+"All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.","Все четыре включены - это обычный потомок Godot, и пишется одна строка. Выключение одного преобразования вместо этого добавляет узел, который ведёт потомка; выключение всех трёх - это игнорирование движения родителя. Без «сохраняя своё место» потомок прыгает к новому родителю."

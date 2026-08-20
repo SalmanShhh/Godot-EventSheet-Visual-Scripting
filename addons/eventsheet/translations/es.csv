@@ -3622,3 +3622,16 @@ Follows,Sigue
 places this object copies onto others,posiciones que este objeto copia a otros
 copies its place to,copia su lugar a
 copies its place to nothing yet,aún no copia su lugar a nada
+Hierarchy,Jerarquía
+parent,padre
+(the layout),(el diseno)
+1 child,1 hijo
+%d children,%d hijos
+transforms:,transformaciones:
+in the scene file,en el archivo de escena
+edit the scene,editar la escena
+"drag an object here = Add child · drag a child out to unparent · right-click: flags…, Remove from parent, Select in scene","arrastra un objeto aquí = Añadir hijo · arrastra un hijo fuera para desvincularlo · clic derecho: indicadores…, Quitar del padre, Seleccionar en la escena"
+flags…,indicadores…
+Add child,Añadir hijo
+Add child %s,Añadir hijo %s
+"All four on is a plain Godot child, and writes one line. Switching a transform off adds the node that drives the child instead; switching all three off is Ignore parent's movement. Unticking keeping its place snaps the child to its new parent.","Los cuatro activados es un hijo normal de Godot y escribe una sola línea. Desactivar una transformación añade en su lugar el nodo que mueve al hijo; desactivar las tres es ignorar el movimiento del padre. Sin «conservando su lugar», el hijo salta hasta su nuevo padre."

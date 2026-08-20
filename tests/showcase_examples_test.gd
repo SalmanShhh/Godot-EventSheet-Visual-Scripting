@@ -136,6 +136,59 @@ static func run() -> bool:
 	passed = _check("raycast_lab_3d targets keep their group in the packed scene",
 		FileAccess.get_file_as_string("res://demo/showcase/raycast_lab_3d/raycast_lab_3d.tscn").contains("groups=[\"targets\"]"), true) and passed
 
+	# Hierarchy Playground - the scene tree changed at run time, in the spellings the hierarchy
+	# readings recognise. The tokens below ARE those spellings, so a reading that stops matching one
+	# and a builder that starts writing a different one both land here.
+	#
+	# The RUNTIME behaviour was verified by a NON-headless harness (physics does not step in this
+	# suite: run_tests.gd's _init runs before the main loop exists, so there is no scene tree to
+	# reach). The recipe, and the numbers it produced, so anyone can repeat it:
+	#   a temp SceneTree script instantiates hierarchy_playground.tscn under `root`, sets
+	#   `current_scene` to it (the dismount hands the rider back to `get_tree().current_scene`, which
+	#   a hand-parked scene has not set), awaits ~12 process+physics frames, then reads:
+	#     squad_hp                     -> 200   (four soldiers, 40 each, one heal of +10 each)
+	#     every crate's global y        -> 0.5   (parked on the ground the downward ray found)
+	#     %HealthBar.rotation_degrees   -> (0, 0, 0) while the rider leans ~10 degrees (upright)
+	#     %Rider.get_parent().name      -> Saddle after mount, HierarchyPlayground after dismount
+	#     %Hat global scale             -> (1, 1, 1) after %Head is scaled to 2 (size flag honoured)
+	# That last one is why `hat.top_level = true` is in the emitted equip: WITHOUT it the hat grew
+	# with the head and the RemoteTransform changed nothing, which the harness caught and no static
+	# check could have.
+	passed = _check_sheet("hierarchy_playground", "res://demo/showcase/hierarchy_playground/hierarchy_playground.gd", [
+		"class_name HierarchyPlayground",
+		"rider.reparent($Horse/Saddle, false)",
+		"rider.reparent(get_tree().current_scene)",
+		"hat.reparent(%Head)",
+		"hat.top_level = true",
+		"var __follow_hat := RemoteTransform3D.new()",
+		"__follow_hat.remote_path = __follow_hat.get_path_to(hat)",
+		"__follow_hat.update_scale = false",
+		"%HealthBar.top_level = true",
+		"for unit in leader.get_children():",
+		"if unit.is_in_group(\"soldier\"):",
+		"unit.hp += 10",
+		"$CameraPivot.rotation_degrees = Vector3(0.0, orbit_deg, 0.0)",
+		"var __ground := get_world_3d().direct_space_state.intersect_ray(__down)",
+	]) and passed
+	passed = _check_sheet("hierarchy_soldier", "res://demo/showcase/hierarchy_playground/soldier.gd", [
+		"class_name HierarchySoldier",
+		"@export var hp: int = 40",
+		"self.add_to_group(\"soldier\")",
+	]) and passed
+	passed = _check("hierarchy_playground bakes every per-row uid",
+		FileAccess.get_file_as_string("res://demo/showcase/hierarchy_playground/hierarchy_playground.gd").contains("{uid}"), false) and passed
+	passed = _check_scene("hierarchy_playground scene wires the horse, the rider, the squad and the crates",
+		"res://demo/showcase/hierarchy_playground/hierarchy_playground.tscn",
+		["Horse", "Saddle", "Rider", "Head", "HealthBar", "Hat", "Squad", "Soldier1", "Crates", "Crate1", "CameraPivot", "Readout"]) and passed
+	# The rider survives being mounted only because it is addressed by its scene-unique name: the
+	# moment it moves under the saddle, a $Rider path points at nothing.
+	passed = _check("the rider, head, bar and hat keep their scene-unique names in the packed scene",
+		FileAccess.get_file_as_string("res://demo/showcase/hierarchy_playground/hierarchy_playground.tscn").count("unique_name_in_owner = true"), 4) and passed
+	# "every soldier among the children" matches nobody unless the group reached the packed scene,
+	# and PackedScene.pack() saves PERSISTENT groups only.
+	passed = _check("the squad keeps its group in the packed scene",
+		FileAccess.get_file_as_string("res://demo/showcase/hierarchy_playground/hierarchy_playground.tscn").contains("groups=[\"soldier\"]"), true) and passed
+
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/carousel/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",

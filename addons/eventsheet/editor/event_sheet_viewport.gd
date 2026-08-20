@@ -19,6 +19,10 @@ signal object_bar_dropped(object_label: String, target_event: Resource, on_actio
 ## starts an "On <action> pressed" event for it, after the event it landed on.
 signal input_action_dropped(action_name: String, target_event: Resource)
 
+## X15 - a child dragged OUT of the Hierarchy pane and let go on the canvas. That gesture has exactly
+## one meaning - Remove from parent - so the drop writes it rather than opening anything.
+signal hierarchy_child_dropped(child_label: String)
+
 ## T13 - a Project bar entry dropped on the canvas. The payload carries what it IS and what dropping
 ## it means; the dock decides how to write that, exactly as it does for the Object bar's drops.
 signal project_entry_dropped(payload: Dictionary, target_event: Resource)
@@ -4334,6 +4338,10 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	# sheet has no gesture for, so a payload that got this far always means something.
 	if is_object_bar_drag(data) or is_input_action_drag(data) or is_project_bar_drag(data):
 		return true
+	# X15 - a child dragged out of the Hierarchy pane. Anywhere on the canvas will do: the gesture
+	# means "out of its parent", and where it lands says nothing more than that.
+	if is_hierarchy_child_drag(data):
+		return true
 	# A scene-tree node dragged ONTO a condition/action param VALUE → fill that param with the node
 	# reference, but only when the param can hold one (not a plain number/bool cell), so the cursor reads
 	# as droppable exactly where the drop will land somewhere sensible.
@@ -4349,6 +4357,10 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
+	# X15 - a Hierarchy-pane child let go on the canvas: Remove from parent, written straight.
+	if is_hierarchy_child_drag(data):
+		hierarchy_child_dropped.emit(str((data as Dictionary).get("label", "")))
+		return
 	# R23 - an Input Map action dropped on the canvas starts the event it is for: "On <action>
 	# pressed". Where it lands only decides where the new event goes.
 	if is_input_action_drag(data):
@@ -4445,6 +4457,15 @@ static func is_project_bar_drag(data: Variant) -> bool:
 
 
 ## True for the Object bar's own drag payload ({type: "eventsheet_object", label}).
+## X15 - the payload a Hierarchy-pane child chip hands its drag.
+static func is_hierarchy_child_drag(data: Variant) -> bool:
+	if not (data is Dictionary):
+		return false
+	var payload: Dictionary = data
+	return str(payload.get("type", "")) == EventSheetObjectHierarchy.CHILD_DRAG_TYPE \
+		and not str(payload.get("label", "")).strip_edges().is_empty()
+
+
 static func is_object_bar_drag(data: Variant) -> bool:
 	if not (data is Dictionary):
 		return false

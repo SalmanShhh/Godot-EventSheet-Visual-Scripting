@@ -266,6 +266,7 @@ var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # 
 var _verb_properties: EventSheetVerbProperties = EventSheetVerbProperties.new()  # a published verb's header click: the ACE properties popup (kind, category, inputs, inserts) (dock/verb_properties_popup.gd)
 var _object_properties: EventSheetObjectProperties = EventSheetObjectProperties.new()  # a row's object-name click: the object popup (type, path, rows, signals) (dock/object_properties_popup.gd)
 var _instance_variables: EventSheetInstanceVariableTable = EventSheetInstanceVariableTable.new()  # the object's variables as an editable table on Object properties and the Properties bar (dock/instance_variable_table.gd)
+var _hierarchy_edits: EventSheetHierarchyEdits = EventSheetHierarchyEdits.new()  # X15: what the Hierarchy pane's gestures write - Add child + flags dialog, Remove from parent (dock/hierarchy_edits.gd)
 var _global_variables: EventSheetGlobalVariables = EventSheetGlobalVariables.new()  # Add ▸ Global variable…: one value the project shares, written into an autoload (dock/global_variables.gd)
 var _find_results: EventSheetFindResultsBar = EventSheetFindResultsBar.new()  # Find all references: the results bar under the sheet, grouped by sheet with event numbers (dock/find_results_bar.gd)
 var _properties_bar: EventSheetPropertiesBar = EventSheetPropertiesBar.new()  # the selected condition/action/object/group as fields edited in place, beside the canvas (dock/properties_bar.gd)
@@ -370,6 +371,7 @@ func _init() -> void:
 	_verb_properties.init(self)
 	_object_properties.init(self)
 	_instance_variables.init(self)
+	_hierarchy_edits.init(self)
 	_global_variables.init(self)
 	_find_results.init(self)
 	_properties_bar.init(self)
@@ -4933,6 +4935,27 @@ func open_verb_properties(event_function: Resource) -> void:
 ## N10 - a click on a row's object name opens that object's popup.
 func open_object_properties(object_label: String) -> void:
 	_object_properties.open_for(object_label)
+
+
+## X15 - the four Hierarchy-pane gestures. Thin delegates so the pane, the canvas drop and any test
+## all reach the same writer (dock/hierarchy_edits.gd).
+func hierarchy_add_child(parent_label: String, child_label: String) -> void:
+	if _ensure_sheet_for_editing():
+		_hierarchy_edits.add_child_requested(parent_label, child_label)
+
+
+func hierarchy_edit_flags(parent_label: String, child_label: String) -> void:
+	if _ensure_sheet_for_editing():
+		_hierarchy_edits.flags_requested(parent_label, child_label)
+
+
+func hierarchy_unparent(child_label: String) -> void:
+	if _ensure_sheet_for_editing():
+		_hierarchy_edits.unparent_requested(child_label)
+
+
+func hierarchy_edit_scene(child_label: String) -> void:
+	_hierarchy_edits.edit_scene_requested(child_label)
 
 
 ## N10 - show only the rows that use one object, through the SAME filter lens the Filter button

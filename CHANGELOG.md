@@ -453,6 +453,33 @@ one the logic is right and the wiring is not.
   only: the byte round-trip is gated, and each new row is gated in BOTH directions, emitting
   exactly the line its reading recognises.
 
+### Added - the Hierarchy pane, three hierarchy notes, and a room to try them in
+
+- **A Hierarchy section in Object properties.** Click an object's name in a row and the popup now
+  says where it sits in the tree: its **parent** (a click jumps to that object), and its
+  **children**, each with what it carries - its type, how many children of its own it has, a broken
+  link when it ignores its parent's movement, and the three transform ticks when it follows some of
+  them and not others. Children the scene file owns show muted with **in the scene file** and offer
+  **edit the scene**, which hands the node to Godot's Scene dock: the pane writes runtime rows and
+  never edits a `.tscn`. Drag an object in from the Object bar to make it a child (the four flags
+  open on the drop), drag a child out onto the canvas to unparent it, or right-click one for
+  **flags…**, **Remove from parent** and **Select in scene**. Every gesture writes ordinary rows
+  through the undo funnel, in the same spellings a hand-typed file uses - so the pane and the canvas
+  can never disagree about the tree, and Ctrl+Z takes a parenting back like any other edit.
+- **Three hierarchy footguns as Doctor notes**, each advisory and each with a one-click chip saying
+  the single edit to make. A walk over a node's children that **moves** one of them while it walks
+  (Godot's child list is live, so the loop silently skips the next child) - walk a copy, or use the
+  For Each Child row, which snapshots for you. A **reparent of self inside start-of-layout**, which
+  Godot refuses outright because the old parent is still adding its children. And a variable
+  **keeping hold of a child whose parent this file frees** - a child goes when its parent goes, so
+  the next line that touches it crashes.
+- **The Hierarchy Playground showcase** (`demo/showcase/hierarchy_playground/`). One room holding
+  every hierarchy move a game makes: Space mounts a rider onto a horse's saddle (snapping to it) and
+  dismounts again (keeping its place), a hat follows its wearer's position and angle but not its
+  size, a health bar stays a child and stops following so it never tilts, one walk over a leader's
+  children heals every soldier among them, a camera orbits because its parent pivot turns, and three
+  crates park themselves on the ray they cast down.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means
