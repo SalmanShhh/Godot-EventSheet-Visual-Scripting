@@ -3445,3 +3445,148 @@ the floor's slope under {cursor},la pente du sol sous {cursor}
 none when nothing is hit,rien quand rien n'est touché
 on layer {layers},sur le calque {layers}
 Set {name} to {what},Définir {name} sur {what}
+Animation,Animation
+Fall at {strength},Tomber à {strength}
+Move relative to the camera along {input} at {speed},Déplacer par rapport à la caméra selon {input} à {speed}
+On entered view,Quand entre dans la vue
+On left view,Quand sort de la vue
+Orbit around its centre by {amount},Orbiter autour de son centre de {amount}
+Orbit {centre} at radius {radius} angle {angle},Orbiter {centre} au rayon {radius} et à l'angle {angle}
+Play one-shot animation {name},Jouer l'animation ponctuelle {name}
+Send input {event},Envoyer l'entrée {event}
+Set always face the camera off,Toujours face à la caméra désactivé
+Set always face the camera on,Toujours face à la caméra activé
+Set ambient light colour to {value},Définir la couleur de lumière ambiante à {value}
+Set ambient occlusion off,Occlusion ambiante désactivée
+Set ambient occlusion on,Occlusion ambiante activée
+Set bar width to {value},Définir la largeur de la barre à {value}
+Set camera distance to {value},Définir la distance de caméra à {value}
+Set fog colour to {value},Définir la couleur du brouillard à {value}
+Set fog density to {value},Définir la densité du brouillard à {value}
+Set fog off,Brouillard désactivé
+Set fog on,Brouillard activé
+Set fog over the sky to {value},Définir le brouillard sur le ciel à {value}
+Set global illumination off,Illumination globale désactivée
+Set global illumination on,Illumination globale activée
+Set glow bloom to {value},Définir le bloom de la lueur à {value}
+Set glow off,Lueur désactivée
+Set glow on,Lueur activée
+Set glow strength to {value},Définir l'intensité de la lueur à {value}
+Set redraw every frame,Redessiner à chaque image
+Set redraw never,Ne jamais redessiner
+Set redraw only when seen,Redessiner seulement quand visible
+Set see-through to {value},Définir la transparence à {value}
+Set show through walls off,Voir à travers les murs désactivé
+Set show through walls on,Voir à travers les murs activé
+Set sky rotation to {value},Définir la rotation du ciel à {value}
+Set visible from {value},Visible à partir de {value}
+Set visible until {value},Visible jusqu'à {value}
+Set world size to {value},Définir la taille dans le monde à {value}
+Set {name} blend to {value},Définir le mélange {name} à {value}
+UI on a surface,interface sur une surface
+Visible from {near} to {far},Visible de {near} à {far}
+everywhere,partout
+flattened to the ground,aplati au sol
+on the ground plane,dans le plan du sol
+on the side plane,dans le plan latéral
+on the upright plane,dans le plan vertical
+per pixel,par pixel
+upright,vertical
+Orbiting - a camera or an object going round a centre,Orbite - une caméra ou un objet tournant autour d'un centre
+UI that lives in the world,Interface qui vit dans le monde
+Orbit At Radius,Orbiter à un rayon
+Native 3D,3D natif
+"Places an object on a circle around another one, on the ground plane. Advance the angle every tick and it orbits.","Place un objet sur un cercle autour d'un autre, dans le plan du sol. Augmentez l'angle à chaque tick et il orbite."
+Centre,Centre
+The object to go round.,L'objet autour duquel tourner.
+How far out the circle is.,À quelle distance se trouve le cercle.
+"Where on the circle this object is, in radians. Add to it every tick to make it go round.","Où se trouve cet objet sur le cercle, en radians. Ajoutez-y à chaque tick pour le faire tourner."
+Set Camera Distance,Définir la distance de caméra
+Sets how far back a third-person camera sits. The arm pulls the camera in by itself when a wall is in the way.,Définit à quelle distance se place une caméra à la troisième personne. Le bras rapproche la caméra tout seul quand un mur gêne.
+How far the camera sits from what the arm is mounted on.,À quelle distance la caméra se place de ce sur quoi le bras est monté.
+Move Relative To Camera,Déplacer par rapport à la caméra
+"Steers a body the way the camera is facing: pushing forward walks away from the camera, whichever way it has been turned. Flattened to the ground, so looking down does not drive the body into the floor. Follow it with Move And Slide.","Dirige un corps selon l'orientation de la caméra : pousser vers l'avant l'éloigne de la caméra, quel que soit son angle. Aplati au sol, pour que regarder vers le bas n'enfonce pas le corps dans le plancher. Enchaînez avec Move And Slide."
+The camera the directions are measured from - forward means the way this camera faces. The default is whichever camera is looking at the scene right now.,"La caméra depuis laquelle les directions sont mesurées - avant signifie dans le sens où cette caméra regarde. Par défaut, la caméra qui regarde la scène en ce moment."
+"The two numbers of steering input, from an Input Vector.","Les deux nombres de l'entrée de direction, issus d'un Input Vector."
+"How fast to move, in units per second.","À quelle vitesse se déplacer, en unités par seconde."
+Set Visible Range,Définir la plage de visibilité
+Draws something only while the camera is inside a distance band - the cheapest way to stop drawing detail nobody can see.,Ne dessine un élément que tant que la caméra est dans une plage de distance - le moyen le moins coûteux d'arrêter de dessiner des détails que personne ne voit.
+How close the camera has to be before this is drawn. 0 means always.,À quelle distance minimale la caméra doit être pour que ceci soit dessiné. 0 signifie toujours.
+How far away the camera may get before this stops being drawn. 0 means never stop.,Jusqu'à quelle distance la caméra peut s'éloigner avant que ceci cesse d'être dessiné. 0 signifie jamais.
+Set See-Through,Définir la transparence
+Fades a 3D object out without hiding it - what a wall between the camera and the player does.,Estompe un objet 3D sans le cacher - ce que fait un mur entre la caméra et le joueur.
+See-through,Transparence
+"0 is solid, 1 is invisible. The row shows the fraction as a percentage.","0 est opaque, 1 est invisible. La ligne affiche la fraction en pourcentage."
+Set Shadows Off (3D),Désactiver les ombres (3D)
+Stops a 3D object casting a shadow. The object is still drawn - only its shadow goes.,Empêche un objet 3D de projeter une ombre. L'objet est toujours dessiné - seule son ombre disparaît.
+Set Shadows On (3D),Activer les ombres (3D)
+Makes a 3D object cast a shadow again after Set Shadows Off.,Fait de nouveau projeter une ombre à un objet 3D après Désactiver les ombres.
+Set Always Face The Camera,Définir toujours face à la caméra
+World-space UI,Interface dans le monde
+Turns a label or a sprite to face the camera wherever the camera goes - what a name tag over a head needs.,Oriente une étiquette ou un sprite vers la caméra où qu'elle aille - ce qu'il faut à une étiquette de nom au-dessus d'une tête.
+Label or sprite,Étiquette ou sprite
+The world-space label or sprite to turn.,L'étiquette ou le sprite dans le monde à orienter.
+Set Always Face The Camera (Upright),Définir toujours face à la caméra (vertical)
+"Turns a label or a sprite to face the camera sideways only, so it stays upright when the camera looks down at it.","Oriente une étiquette ou un sprite vers la caméra uniquement sur les côtés, pour qu'il reste vertical quand la caméra le regarde d'en haut."
+Set Show Through Walls,Définir voir à travers les murs
+Draws a world-space label or icon over whatever is in front of it - what an objective marker needs.,Dessine une étiquette ou une icône dans le monde par-dessus ce qui se trouve devant - ce qu'il faut à un marqueur d'objectif.
+The world-space label or sprite to change.,L'étiquette ou le sprite dans le monde à modifier.
+Set World Size,Définir la taille dans le monde
+"Sets how big a world-space label or sprite is, measured in world units per pixel.","Définit la taille d'une étiquette ou d'un sprite dans le monde, mesurée en unités de monde par pixel."
+The world-space label or sprite to resize.,L'étiquette ou le sprite dans le monde à redimensionner.
+How many world units one pixel of the label or sprite is. Smaller means smaller.,Combien d'unités de monde vaut un pixel de l'étiquette ou du sprite. Plus petit veut dire plus petit.
+Set Bar Width,Définir la largeur de la barre
+Cuts a sprite off at a width - how a health bar over a head is driven from a number.,Coupe un sprite à une largeur donnée - c'est ainsi qu'une barre de vie au-dessus d'une tête est pilotée par un nombre.
+Bar,Barre
+The world-space sprite the bar is drawn on.,Le sprite dans le monde sur lequel la barre est dessinée.
+"How wide the visible slice of the image is, in pixels.","Quelle est la largeur de la portion visible de l'image, en pixels."
+Send Input To Surface,Envoyer l'entrée à la surface
+"Hands a click or a key to the UI a SubViewport is painting onto a surface, so an in-world screen can be used.","Transmet un clic ou une touche à l'interface qu'un SubViewport peint sur une surface, pour qu'un écran dans le monde puisse être utilisé."
+The input to hand to the UI painted on the surface.,L'entrée à transmettre à l'interface peinte sur la surface.
+Set Surface Redraw,Définir le redessin de la surface
+Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default.,Décide à quelle fréquence un écran dans le monde est redessiné. Seulement quand visible est le réglage économique et le bon défaut.
+When,Quand
+How often the surface is redrawn.,À quelle fréquence la surface est redessinée.
+Set surface redraw to {mode},Définir le redessin de la surface à {mode}
+Set Fog On/Off,Activer ou désactiver le brouillard
+Environment,Environnement
+Switches the world's fog on or off - the one row that turns a clear day into a misty one.,Active ou désactive le brouillard du monde - la seule ligne qui transforme une journée claire en journée brumeuse.
+The environment whose look is being changed.,L'environnement dont l'aspect est modifié.
+Whether the world has fog at all.,Si le monde a du brouillard ou non.
+Set fog {on},Définir le brouillard sur {on}
+Set Fog Density,Définir la densité du brouillard
+Sets how thick the world's fog is. Ramp it up over time for a storm rolling in.,Définit l'épaisseur du brouillard du monde. Augmentez-la peu à peu pour une tempête qui arrive.
+Density,Densité
+"How thick the fog is. Small numbers: 0.01 is a haze, 0.1 is a wall.","L'épaisseur du brouillard. Petits nombres : 0.01 est une brume, 0.1 est un mur."
+Set Fog Colour,Définir la couleur du brouillard
+"Sets the colour of the world's fog - dusk purple, underwater green, dust orange.","Définit la couleur du brouillard du monde - violet crépusculaire, vert sous-marin, orange poussière."
+Colour,Couleur
+The colour the fog picks up from the light.,La couleur que le brouillard prend de la lumière.
+Set Glow On/Off,Activer ou désactiver la lueur
+"Switches the world's glow on or off - what makes neon, fire and magic read as bright.","Active ou désactive la lueur du monde - ce qui fait que le néon, le feu et la magie paraissent lumineux."
+Whether bright things bleed light into what is around them.,Si les éléments lumineux débordent de lumière sur ce qui les entoure.
+Set glow {on},Définir la lueur sur {on}
+Set Glow Strength,Définir l'intensité de la lueur
+"Sets how strongly bright things glow. Push it up for a boss room, back down when the fight ends.","Définit l'intensité de la lueur des éléments lumineux. Montez-la pour une salle de boss, redescendez-la à la fin du combat."
+How much bright things bleed. Around 1 is strong.,"À quel point les éléments lumineux débordent. Autour de 1, c'est fort."
+Set Ambient Occlusion On/Off,Activer ou désactiver l'occlusion ambiante
+"Darkens the corners and creases of a 3D scene, which is what makes it look solid. Costs frames - turn it off on weak machines.","Assombrit les coins et les plis d'une scène 3D, ce qui lui donne l'air solide. Coûte des images par seconde - désactivez-la sur les machines faibles."
+Whether corners and creases are darkened.,Si les coins et les plis sont assombris.
+Set ambient occlusion {on},Définir l'occlusion ambiante sur {on}
+Set Sky Rotation,Définir la rotation du ciel
+Turns the sky. Advance it slowly every tick and the clouds drift.,Fait tourner le ciel. Augmentez-le doucement à chaque tick et les nuages dérivent.
+Rotation,Rotation
+"How the sky is turned, in radians on each axis.","Comment le ciel est tourné, en radians sur chaque axe."
+Play One-Shot Animation,Jouer une animation ponctuelle
+"Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.","Déclenche une animation ponctuelle sur un arbre de mélange - un tir, une réaction à un coup, un signe de la main - par-dessus ce que le personnage fait déjà."
+One-shot,Animation ponctuelle
+Current State Is,L'état actuel est
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,Vrai tant que la machine à états d'un arbre de mélange est dans l'état nommé - ce sur quoi se branche une récupération d'atterrissage ou une fenêtre d'attaque.
+Set Hearing Distance (3D),Définir la distance d'audition (3D)
+Audio,Audio
+Sets how far a 3D positional sound carries. Past this distance it is silent.,"Définit jusqu'où porte un son positionnel 3D. Au-delà de cette distance, il est muet."
+How far away the sound can still be heard at all. 0 means no limit.,Jusqu'à quelle distance le son reste audible. 0 signifie sans limite.
+Set Loudness Falloff,Définir l'atténuation du volume
+Sets how quickly a 3D positional sound fades as the listener moves away.,Définit à quelle vitesse un son positionnel 3D s'atténue quand l'auditeur s'éloigne.
+Falloff,Atténuation
+How far the sound stays at full loudness before it starts fading. Bigger carries further.,"Jusqu'où le son reste à plein volume avant de commencer à s'atténuer. Plus la valeur est grande, plus il porte loin."

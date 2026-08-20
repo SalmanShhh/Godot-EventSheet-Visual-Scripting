@@ -49,12 +49,15 @@ static func _check_sprite_words() -> bool:
 		_reading("anim.speed_scale = 2.0"), "anim ▸ Set animation speed to 2") and passed
 	passed = _pin("a texture write names the file",
 		_reading("sprite.texture = load(\"res://hero.png\")"), "sprite ▸ Set image to hero.png") and passed
+	# X7 re-homed both of these: an AnimationTree is not an object a reader points at, it is HOW one
+	# object animates, so its rows wear the object's own name and its Animation aspect - and a blend
+	# tree's playback reads in the State Machine behavior's words rather than in Godot's `travel`.
 	passed = _pin("an animation tree parameter is a blend",
 		_reading("anim_tree.set(\"parameters/blend_position\", dir)"),
-		"anim_tree ▸ Set blend blend position to dir") and passed
+		"Player ▸ Animation ▸ Set blend blend position to dir") and passed
 	passed = _pin("a state machine travels",
 		_reading("anim_tree[\"parameters/playback\"].travel(\"Hurt\")"),
-		"anim_tree ▸ Travel to animation state Hurt") and passed
+		"Player ▸ Animation ▸ Go to state \"Hurt\"") and passed
 	passed = _pin("an animation player answers is playing",
 		_condition_reading("anim.is_playing()"), "anim ▸ Is playing") and passed
 	return passed

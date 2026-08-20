@@ -3445,3 +3445,148 @@ the floor's slope under {cursor},la pendenza del pavimento sotto {cursor}
 none when nothing is hit,niente quando non si colpisce nulla
 on layer {layers},sul livello {layers}
 Set {name} to {what},Imposta {name} su {what}
+Animation,Animazione
+Fall at {strength},Cadi a {strength}
+Move relative to the camera along {input} at {speed},Muovi rispetto alla telecamera lungo {input} a {speed}
+On entered view,Quando entra in vista
+On left view,Quando esce dalla vista
+Orbit around its centre by {amount},Orbita attorno al proprio centro di {amount}
+Orbit {centre} at radius {radius} angle {angle},Orbita {centre} a raggio {radius} e angolo {angle}
+Play one-shot animation {name},Riproduci l'animazione singola {name}
+Send input {event},Invia l'input {event}
+Set always face the camera off,Sempre rivolto alla telecamera disattivato
+Set always face the camera on,Sempre rivolto alla telecamera attivato
+Set ambient light colour to {value},Imposta il colore della luce ambientale a {value}
+Set ambient occlusion off,Occlusione ambientale disattivata
+Set ambient occlusion on,Occlusione ambientale attivata
+Set bar width to {value},Imposta la larghezza della barra a {value}
+Set camera distance to {value},Imposta la distanza della telecamera a {value}
+Set fog colour to {value},Imposta il colore della nebbia a {value}
+Set fog density to {value},Imposta la densità della nebbia a {value}
+Set fog off,Nebbia disattivata
+Set fog on,Nebbia attivata
+Set fog over the sky to {value},Imposta la nebbia sul cielo a {value}
+Set global illumination off,Illuminazione globale disattivata
+Set global illumination on,Illuminazione globale attivata
+Set glow bloom to {value},Imposta il bloom del bagliore a {value}
+Set glow off,Bagliore disattivato
+Set glow on,Bagliore attivato
+Set glow strength to {value},Imposta l'intensità del bagliore a {value}
+Set redraw every frame,Ridisegna a ogni fotogramma
+Set redraw never,Non ridisegnare mai
+Set redraw only when seen,Ridisegna solo quando è visibile
+Set see-through to {value},Imposta la trasparenza a {value}
+Set show through walls off,Mostra attraverso i muri disattivato
+Set show through walls on,Mostra attraverso i muri attivato
+Set sky rotation to {value},Imposta la rotazione del cielo a {value}
+Set visible from {value},Visibile da {value}
+Set visible until {value},Visibile fino a {value}
+Set world size to {value},Imposta la dimensione nel mondo a {value}
+Set {name} blend to {value},Imposta la fusione {name} a {value}
+UI on a surface,interfaccia su una superficie
+Visible from {near} to {far},Visibile da {near} a {far}
+everywhere,ovunque
+flattened to the ground,appiattito al suolo
+on the ground plane,sul piano del terreno
+on the side plane,sul piano laterale
+on the upright plane,sul piano verticale
+per pixel,per pixel
+upright,verticale
+Orbiting - a camera or an object going round a centre,Orbita - una telecamera o un oggetto che gira attorno a un centro
+UI that lives in the world,Interfaccia che vive nel mondo
+Orbit At Radius,Orbita a raggio
+Native 3D,3D nativo
+"Places an object on a circle around another one, on the ground plane. Advance the angle every tick and it orbits.","Mette un oggetto su un cerchio attorno a un altro, sul piano del terreno. Aumenta l'angolo a ogni tick e orbita."
+Centre,Centro
+The object to go round.,L'oggetto attorno a cui girare.
+How far out the circle is.,Quanto è distante il cerchio.
+"Where on the circle this object is, in radians. Add to it every tick to make it go round.","In quale punto del cerchio si trova questo oggetto, in radianti. Aggiungici qualcosa a ogni tick per farlo girare."
+Set Camera Distance,Imposta la distanza della telecamera
+Sets how far back a third-person camera sits. The arm pulls the camera in by itself when a wall is in the way.,Imposta quanto sta indietro una telecamera in terza persona. Il braccio avvicina la telecamera da solo quando c'è un muro di mezzo.
+How far the camera sits from what the arm is mounted on.,Quanto è distante la telecamera da ciò su cui è montato il braccio.
+Move Relative To Camera,Muovi rispetto alla telecamera
+"Steers a body the way the camera is facing: pushing forward walks away from the camera, whichever way it has been turned. Flattened to the ground, so looking down does not drive the body into the floor. Follow it with Move And Slide.","Guida un corpo secondo la direzione della telecamera: spingere in avanti lo allontana dalla telecamera, comunque sia ruotata. Appiattito al suolo, così guardare in basso non spinge il corpo nel pavimento. Falla seguire da Move And Slide."
+The camera the directions are measured from - forward means the way this camera faces. The default is whichever camera is looking at the scene right now.,"La telecamera da cui si misurano le direzioni - avanti significa nella direzione in cui guarda questa telecamera. Di default, la telecamera che sta inquadrando la scena adesso."
+"The two numbers of steering input, from an Input Vector.","I due numeri dell'input di direzione, da un Input Vector."
+"How fast to move, in units per second.","Quanto velocemente muoversi, in unità al secondo."
+Set Visible Range,Imposta l'intervallo di visibilità
+Draws something only while the camera is inside a distance band - the cheapest way to stop drawing detail nobody can see.,Disegna qualcosa solo finché la telecamera è dentro una fascia di distanza - il modo più economico per smettere di disegnare dettagli che nessuno vede.
+How close the camera has to be before this is drawn. 0 means always.,Quanto deve essere vicina la telecamera perché questo venga disegnato. 0 significa sempre.
+How far away the camera may get before this stops being drawn. 0 means never stop.,Quanto può allontanarsi la telecamera prima che questo smetta di essere disegnato. 0 significa mai.
+Set See-Through,Imposta la trasparenza
+Fades a 3D object out without hiding it - what a wall between the camera and the player does.,Sfuma un oggetto 3D senza nasconderlo - quello che fa un muro tra la telecamera e il giocatore.
+See-through,Trasparenza
+"0 is solid, 1 is invisible. The row shows the fraction as a percentage.","0 è opaco, 1 è invisibile. La riga mostra la frazione in percentuale."
+Set Shadows Off (3D),Disattiva le ombre (3D)
+Stops a 3D object casting a shadow. The object is still drawn - only its shadow goes.,Fa sì che un oggetto 3D non proietti più ombra. L'oggetto viene ancora disegnato - sparisce solo la sua ombra.
+Set Shadows On (3D),Attiva le ombre (3D)
+Makes a 3D object cast a shadow again after Set Shadows Off.,Fa proiettare di nuovo l'ombra a un oggetto 3D dopo Disattiva le ombre.
+Set Always Face The Camera,Imposta sempre rivolto alla telecamera
+World-space UI,Interfaccia nel mondo
+Turns a label or a sprite to face the camera wherever the camera goes - what a name tag over a head needs.,Ruota un'etichetta o uno sprite verso la telecamera ovunque essa vada - quello che serve a una targhetta col nome sopra la testa.
+Label or sprite,Etichetta o sprite
+The world-space label or sprite to turn.,L'etichetta o lo sprite nel mondo da ruotare.
+Set Always Face The Camera (Upright),Imposta sempre rivolto alla telecamera (verticale)
+"Turns a label or a sprite to face the camera sideways only, so it stays upright when the camera looks down at it.","Ruota un'etichetta o uno sprite verso la telecamera solo di lato, così resta verticale quando la telecamera la guarda dall'alto."
+Set Show Through Walls,Imposta mostra attraverso i muri
+Draws a world-space label or icon over whatever is in front of it - what an objective marker needs.,Disegna un'etichetta o un'icona nel mondo sopra qualsiasi cosa le stia davanti - quello che serve a un indicatore di obiettivo.
+The world-space label or sprite to change.,L'etichetta o lo sprite nel mondo da modificare.
+Set World Size,Imposta la dimensione nel mondo
+"Sets how big a world-space label or sprite is, measured in world units per pixel.","Imposta quanto è grande un'etichetta o uno sprite nel mondo, misurato in unità di mondo per pixel."
+The world-space label or sprite to resize.,L'etichetta o lo sprite nel mondo da ridimensionare.
+How many world units one pixel of the label or sprite is. Smaller means smaller.,Quante unità di mondo vale un pixel dell'etichetta o dello sprite. Più piccolo vuol dire più piccolo.
+Set Bar Width,Imposta la larghezza della barra
+Cuts a sprite off at a width - how a health bar over a head is driven from a number.,Taglia uno sprite a una certa larghezza - è così che una barra della vita sopra la testa viene guidata da un numero.
+Bar,Barra
+The world-space sprite the bar is drawn on.,Lo sprite nel mondo su cui viene disegnata la barra.
+"How wide the visible slice of the image is, in pixels.","Quanto è larga la fetta visibile dell'immagine, in pixel."
+Send Input To Surface,Invia l'input alla superficie
+"Hands a click or a key to the UI a SubViewport is painting onto a surface, so an in-world screen can be used.","Passa un clic o un tasto all'interfaccia che un SubViewport sta dipingendo su una superficie, così uno schermo nel mondo può essere usato."
+The input to hand to the UI painted on the surface.,L'input da passare all'interfaccia dipinta sulla superficie.
+Set Surface Redraw,Imposta il ridisegno della superficie
+Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default.,Decide ogni quanto uno schermo nel mondo viene ridisegnato. Solo quando è visibile è l'impostazione economica e il default giusto.
+When,Quando
+How often the surface is redrawn.,Ogni quanto la superficie viene ridisegnata.
+Set surface redraw to {mode},Imposta il ridisegno della superficie a {mode}
+Set Fog On/Off,Attiva o disattiva la nebbia
+Environment,Ambiente
+Switches the world's fog on or off - the one row that turns a clear day into a misty one.,Attiva o disattiva la nebbia del mondo - l'unica riga che trasforma una giornata limpida in una nebbiosa.
+The environment whose look is being changed.,L'ambiente di cui si sta cambiando l'aspetto.
+Whether the world has fog at all.,Se il mondo ha la nebbia oppure no.
+Set fog {on},Imposta la nebbia su {on}
+Set Fog Density,Imposta la densità della nebbia
+Sets how thick the world's fog is. Ramp it up over time for a storm rolling in.,Imposta quanto è densa la nebbia del mondo. Aumentala col tempo per una tempesta in arrivo.
+Density,Densità
+"How thick the fog is. Small numbers: 0.01 is a haze, 0.1 is a wall.","Quanto è densa la nebbia. Numeri piccoli: 0.01 è una foschia, 0.1 è un muro."
+Set Fog Colour,Imposta il colore della nebbia
+"Sets the colour of the world's fog - dusk purple, underwater green, dust orange.","Imposta il colore della nebbia del mondo - viola del crepuscolo, verde sott'acqua, arancione di polvere."
+Colour,Colore
+The colour the fog picks up from the light.,Il colore che la nebbia prende dalla luce.
+Set Glow On/Off,Attiva o disattiva il bagliore
+"Switches the world's glow on or off - what makes neon, fire and magic read as bright.","Attiva o disattiva il bagliore del mondo - quello che fa sembrare luminosi neon, fuoco e magia."
+Whether bright things bleed light into what is around them.,Se le cose luminose sbordano luce su ciò che le circonda.
+Set glow {on},Imposta il bagliore su {on}
+Set Glow Strength,Imposta l'intensità del bagliore
+"Sets how strongly bright things glow. Push it up for a boss room, back down when the fight ends.",Imposta quanto intensamente brillano le cose luminose. Alzala per la stanza del boss e riabbassala quando lo scontro finisce.
+How much bright things bleed. Around 1 is strong.,Quanto sbordano le cose luminose. Intorno a 1 è forte.
+Set Ambient Occlusion On/Off,Attiva o disattiva l'occlusione ambientale
+"Darkens the corners and creases of a 3D scene, which is what makes it look solid. Costs frames - turn it off on weak machines.","Scurisce angoli e pieghe di una scena 3D, ed è questo che la fa sembrare solida. Costa fotogrammi - disattivala sulle macchine deboli."
+Whether corners and creases are darkened.,Se angoli e pieghe vengono scuriti.
+Set ambient occlusion {on},Imposta l'occlusione ambientale su {on}
+Set Sky Rotation,Imposta la rotazione del cielo
+Turns the sky. Advance it slowly every tick and the clouds drift.,Ruota il cielo. Aumentalo piano a ogni tick e le nuvole scorrono.
+Rotation,Rotazione
+"How the sky is turned, in radians on each axis.","Come è ruotato il cielo, in radianti su ogni asse."
+Play One-Shot Animation,Riproduci un'animazione singola
+"Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.","Lancia un'animazione singola su un albero di fusione - uno sparo, una reazione a un colpo, un saluto - sopra a quello che il personaggio sta già facendo."
+One-shot,Animazione singola
+Current State Is,Lo stato attuale è
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,Vero finché la macchina a stati di un albero di fusione è nello stato indicato - ciò su cui si dirama un recupero dall'atterraggio o una finestra d'attacco.
+Set Hearing Distance (3D),Imposta la distanza di ascolto (3D)
+Audio,Audio
+Sets how far a 3D positional sound carries. Past this distance it is silent.,Imposta fin dove arriva un suono posizionale 3D. Oltre questa distanza è muto.
+How far away the sound can still be heard at all. 0 means no limit.,Fino a quale distanza il suono si sente ancora. 0 significa nessun limite.
+Set Loudness Falloff,Imposta il calo del volume
+Sets how quickly a 3D positional sound fades as the listener moves away.,Imposta quanto in fretta un suono posizionale 3D si affievolisce mentre l'ascoltatore si allontana.
+Falloff,Calo
+How far the sound stays at full loudness before it starts fading. Bigger carries further.,"Fin dove il suono resta a pieno volume prima di iniziare a calare. Più grande, più lontano arriva."

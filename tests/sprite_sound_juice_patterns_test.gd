@@ -63,11 +63,12 @@ func _on_pause_pressed() -> void:
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# S11 - the sprite and animation words
 	"sprite ▸ Set mirrored when dir < 0",
-	"anim_tree ▸ Set blend blend position to dir",
+	# X7 re-homed the two blend-tree rows onto the object's Animation aspect.
+	"SpriteSoundJuiceReader ▸ Animation ▸ Set blend blend position to dir",
 	"sprite ▸ Set animation frame to 3",
 	"anim ▸ Set animation speed to 2",
 	"sprite ▸ Set opacity to 50%",
-	"anim_tree ▸ Travel to animation state Hurt",
+	"SpriteSoundJuiceReader ▸ Animation ▸ Go to state \"Hurt\"",
 	# S13 - the sound words
 	"sfx ▸ Set sound to jump.wav",
 	"sfx ▸ Set pitch to 1.1",

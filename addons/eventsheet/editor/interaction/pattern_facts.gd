@@ -31,7 +31,8 @@ const PATTERN_IDS: PackedStringArray = [
 	"menu", "dialog", "custom_draw",
 	"test_sheet", "command_tool", "pack_recipe",
 	"placement", "polar",
-	"cursor_ray", "aim_assist"
+	"cursor_ray", "aim_assist",
+	"orbit", "worldspace_ui"
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is

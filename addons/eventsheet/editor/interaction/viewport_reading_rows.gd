@@ -96,7 +96,12 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		# each value under the name the function receives it as, exactly as a signal's payload chips
 		# do. A function the sheet does not declare is simply absent, and the chips then show the
 		# bare values rather than a guessed name.
-		"function_params": function_parameter_map(sheet)
+		"function_params": function_parameter_map(sheet),
+		# ── X4 ────────────────────────────────────────────────────────────────────────────────
+		# Which of this file's objects are camera PIVOTS - nodes whose only children in the scene
+		# are a camera or the arm one hangs off. Turning one of those is not a turn, it is the
+		# camera going round what it looks at, and only the SCENE can say which nodes those are.
+		"orbit_pivots": orbit_pivot_map(sheet)
 	}
 	extras.merge(patterns, true)
 	# ── X2 / X20 / X30 lens hook ───────────────────────────────────────────────────────────────
@@ -467,10 +472,6 @@ static func tile_data_local_map(sheet: EventSheetResource) -> Dictionary:
 	for name_text: String in disagreed:
 		found.erase(name_text)
 	return found
-
-
-
-
 
 
 ## S8 / S10 / S15. What the FILE says about its Godot-systems patterns, as the fact maps the sentence
@@ -1600,7 +1601,12 @@ static func tick_trigger_words(trigger_id: String, display_text: String) -> Stri
 			return "%s %s" % [EventSheetL10n.translate("Every tick"), EventSheetL10n.translate("(draw)")]
 	# M41 - the collision family reads as the event-sheet's own two triggers.
 	var collision: String = collision_trigger_words(trigger_id)
-	return collision if not collision.is_empty() else display_text
+	if not collision.is_empty():
+		return collision
+	# X8 - a notifier's two signals ARE the sheet's "came into view" and "left view", in both node
+	# generations: Godot spells them the same on the 2D notifier and the 3D one.
+	var seen: String = EventSheetSentence.view_trigger_words(trigger_id)
+	return seen if not seen.is_empty() else display_text
 
 
 ## S27. The tick triggers whose body carries no condition of its own read as a BLANK event, because
@@ -1980,6 +1986,67 @@ static func typed_object_label(object_label: String, context: Dictionary, humani
 		return {}
 	var spelled_name: String = EventSheetViewportLenses.humanize_identifier(label)
 	return {"label": words, "note": "" if spelled_name.to_lower() == words.to_lower() else spelled_name}
+
+
+## X4. The classes a node holds when it is a camera PIVOT rather than an ordinary parent: a camera,
+## or the arm one hangs off. A node holding anything else is somebody's node, and turning it is a turn.
+const ORBIT_PIVOT_CHILD_CLASSES: PackedStringArray = ["Camera3D", "SpringArm3D"]
+
+
+## X4. {object label: true} for every object of this sheet the SCENE says is a camera pivot - a node
+## with at least one child and no child that is anything but a camera or a camera arm. Both the
+## variable's own name and the `$Path` spelling resolve, because a row may name either.
+##
+## Answered from the .tscn the script sits in, once per rebuild, and simply empty when the script is
+## not placed in a scene at all - in which case the orbit reading declines to fire and a `rotate_y`
+## keeps the plain rotate it already reads as. Nothing here loads a scene: it is the same cached
+## text walk the object bar and the behavior chips already run.
+static func orbit_pivot_map(sheet: EventSheetResource) -> Dictionary:
+	var pivots: Dictionary = {}
+	if sheet == null:
+		return pivots
+	var source_path: String = str(sheet.external_source_path).strip_edges()
+	if source_path.is_empty():
+		return pivots
+	var placement: Dictionary = ViewportRowBuilder.scene_using_script(source_path)
+	var scene_path: String = str(placement.get("scene_path", ""))
+	if scene_path.is_empty():
+		return pivots
+	# The scene's nodes, grouped by the parent each one names. A .tscn spells a root child's parent
+	# as ".", and a deeper node's as the path from the root - which is exactly the key a child of
+	# that node names, so one map answers for every depth.
+	var children_by_parent: Dictionary = {}
+	for entry: Variant in (EventSheetObjectFacts.scene_facts(scene_path).get("children", []) as Array):
+		var child: Dictionary = entry
+		var parent: String = str(child.get("parent", ""))
+		if not children_by_parent.has(parent):
+			children_by_parent[parent] = []
+		(children_by_parent[parent] as Array).append(str(child.get("type", "")))
+	for entry: Variant in sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable == null or not variable.onready:
+			continue
+		var reference: String = EventSheetSentence.node_lookup_text(variable.default_value.strip_edges())
+		if not (reference.begins_with("$") or reference.begins_with("%")):
+			continue
+		var node_path: String = reference.substr(1)
+		if not _holds_only_camera(children_by_parent.get(node_path, []) as Array):
+			continue
+		pivots[variable.name] = true
+		pivots[EventSheetSentence.object_of_reference(reference)] = true
+	return pivots
+
+
+## X4. True when a node's children are a camera rig and nothing else. An empty list is not a pivot:
+## a node with no children at all is a node somebody turns.
+static func _holds_only_camera(child_types: Array) -> bool:
+	if child_types.is_empty():
+		return false
+	for entry: Variant in child_types:
+		var type_name: String = str(entry).strip_edges()
+		if not Array(ORBIT_PIVOT_CHILD_CLASSES).has(type_name):
+			return false
+	return true
 
 
 ## M13 - the Godot class icon for an object label, or null when nothing is known (which is also

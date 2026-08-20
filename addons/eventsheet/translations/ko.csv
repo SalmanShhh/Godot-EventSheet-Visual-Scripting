@@ -3445,3 +3445,148 @@ the floor's slope under {cursor},{cursor} 아래의 바닥 경사
 none when nothing is hit,아무것도 맞지 않으면 없음
 on layer {layers},레이어 {layers} 에서
 Set {name} to {what},{name} 을(를) {what} 로 설정
+Animation,애니메이션
+Fall at {strength},{strength} 로 낙하
+Move relative to the camera along {input} at {speed},카메라 기준으로 {input} 방향으로 {speed} 이동
+On entered view,화면에 들어올 때
+On left view,화면에서 벗어날 때
+Orbit around its centre by {amount},자기 중심을 축으로 {amount} 회전
+Orbit {centre} at radius {radius} angle {angle},{centre} 를 반지름 {radius} 각도 {angle} 로 공전
+Play one-shot animation {name},원샷 애니메이션 {name} 재생
+Send input {event},입력 {event} 보내기
+Set always face the camera off,항상 카메라 보기 끄기
+Set always face the camera on,항상 카메라 보기 켜기
+Set ambient light colour to {value},환경광 색을 {value} 로 설정
+Set ambient occlusion off,앰비언트 오클루전 끄기
+Set ambient occlusion on,앰비언트 오클루전 켜기
+Set bar width to {value},바 너비를 {value} 로 설정
+Set camera distance to {value},카메라 거리를 {value} 로 설정
+Set fog colour to {value},안개 색을 {value} 로 설정
+Set fog density to {value},안개 농도를 {value} 로 설정
+Set fog off,안개 끄기
+Set fog on,안개 켜기
+Set fog over the sky to {value},하늘에 걸리는 안개를 {value} 로 설정
+Set global illumination off,전역 조명 끄기
+Set global illumination on,전역 조명 켜기
+Set glow bloom to {value},글로우 블룸을 {value} 로 설정
+Set glow off,글로우 끄기
+Set glow on,글로우 켜기
+Set glow strength to {value},글로우 세기를 {value} 로 설정
+Set redraw every frame,매 프레임 다시 그리기
+Set redraw never,다시 그리지 않기
+Set redraw only when seen,보일 때만 다시 그리기
+Set see-through to {value},투명도를 {value} 로 설정
+Set show through walls off,벽 너머로 보이기 끄기
+Set show through walls on,벽 너머로 보이기 켜기
+Set sky rotation to {value},하늘 회전을 {value} 로 설정
+Set visible from {value},{value} 부터 보임
+Set visible until {value},{value} 까지 보임
+Set world size to {value},월드 크기를 {value} 로 설정
+Set {name} blend to {value},{name} 블렌드를 {value} 로 설정
+UI on a surface,표면에 그려진 UI
+Visible from {near} to {far},{near} 부터 {far} 까지 보임
+everywhere,전체에
+flattened to the ground,지면에 평평하게
+on the ground plane,지면 평면에서
+on the side plane,측면 평면에서
+on the upright plane,수직 평면에서
+per pixel,픽셀당
+upright,수직 유지
+Orbiting - a camera or an object going round a centre,공전 - 카메라나 물체가 중심 주위를 도는 것
+UI that lives in the world,월드에 놓인 UI
+Orbit At Radius,반지름으로 공전
+Native 3D,네이티브 3D
+"Places an object on a circle around another one, on the ground plane. Advance the angle every tick and it orbits.","다른 오브젝트를 중심으로 한 원 위에, 지면 평면을 따라 배치합니다. 매 틱 각도를 늘리면 공전합니다."
+Centre,중심
+The object to go round.,돌 대상이 되는 오브젝트.
+How far out the circle is.,원이 얼마나 바깥에 있는지.
+"Where on the circle this object is, in radians. Add to it every tick to make it go round.","이 오브젝트가 원 위의 어디에 있는지, 라디안 단위. 매 틱 더해 주면 계속 돕니다."
+Set Camera Distance,카메라 거리 설정
+Sets how far back a third-person camera sits. The arm pulls the camera in by itself when a wall is in the way.,3인칭 카메라가 얼마나 뒤에 자리할지 설정합니다. 벽이 가로막으면 암이 알아서 카메라를 당겨 옵니다.
+How far the camera sits from what the arm is mounted on.,암이 붙어 있는 대상에서 카메라가 얼마나 떨어져 있는지.
+Move Relative To Camera,카메라 기준으로 이동
+"Steers a body the way the camera is facing: pushing forward walks away from the camera, whichever way it has been turned. Flattened to the ground, so looking down does not drive the body into the floor. Follow it with Move And Slide.","카메라가 보는 방향을 기준으로 보디를 움직입니다. 앞으로 밀면 카메라에서 멀어지는 쪽으로 걸어가며, 카메라를 어느 쪽으로 돌렸든 같습니다. 지면에 평평하게 눌러 주므로 아래를 봐도 보디가 바닥으로 파고들지 않습니다. 뒤이어 Move And Slide 를 실행하세요."
+The camera the directions are measured from - forward means the way this camera faces. The default is whichever camera is looking at the scene right now.,방향의 기준이 되는 카메라 - 앞이란 이 카메라가 바라보는 쪽을 말합니다. 기본값은 지금 장면을 비추고 있는 카메라입니다.
+"The two numbers of steering input, from an Input Vector.",조작 입력의 두 숫자. Input Vector 에서 나옵니다.
+"How fast to move, in units per second.","이동 속도, 초당 유닛 단위."
+Set Visible Range,표시 범위 설정
+Draws something only while the camera is inside a distance band - the cheapest way to stop drawing detail nobody can see.,카메라가 지정한 거리 구간 안에 있을 때만 그립니다. 아무도 볼 수 없는 디테일의 그리기를 멈추는 가장 값싼 방법입니다.
+How close the camera has to be before this is drawn. 0 means always.,이것이 그려지려면 카메라가 얼마나 가까워야 하는지. 0 이면 항상 그립니다.
+How far away the camera may get before this stops being drawn. 0 means never stop.,이것이 더 이상 그려지지 않기까지 카메라가 얼마나 멀어질 수 있는지. 0 이면 멈추지 않습니다.
+Set See-Through,투명도 설정
+Fades a 3D object out without hiding it - what a wall between the camera and the player does.,3D 오브젝트를 숨기지 않고 흐릿하게 비칩니다. 카메라와 플레이어 사이의 벽이 하는 동작입니다.
+See-through,투명도
+"0 is solid, 1 is invisible. The row shows the fraction as a percentage.","0 이면 불투명, 1 이면 보이지 않습니다. 행에서는 비율을 백분율로 보여 줍니다."
+Set Shadows Off (3D),그림자 끄기 (3D)
+Stops a 3D object casting a shadow. The object is still drawn - only its shadow goes.,3D 오브젝트가 그림자를 드리우지 않게 합니다. 오브젝트 자체는 계속 그려지고 그림자만 사라집니다.
+Set Shadows On (3D),그림자 켜기 (3D)
+Makes a 3D object cast a shadow again after Set Shadows Off.,그림자 끄기 이후에 3D 오브젝트가 다시 그림자를 드리우게 합니다.
+Set Always Face The Camera,항상 카메라 보기 설정
+World-space UI,월드 공간 UI
+Turns a label or a sprite to face the camera wherever the camera goes - what a name tag over a head needs.,라벨이나 스프라이트를 카메라가 어디로 가든 카메라 쪽으로 돌립니다. 머리 위 이름표에 필요한 동작입니다.
+Label or sprite,라벨 또는 스프라이트
+The world-space label or sprite to turn.,돌릴 월드 공간 라벨 또는 스프라이트.
+Set Always Face The Camera (Upright),항상 카메라 보기 설정 (수직 유지)
+"Turns a label or a sprite to face the camera sideways only, so it stays upright when the camera looks down at it.",라벨이나 스프라이트를 좌우 방향으로만 카메라를 향하게 합니다. 카메라가 내려다봐도 수직을 유지합니다.
+Set Show Through Walls,벽 너머로 보이기 설정
+Draws a world-space label or icon over whatever is in front of it - what an objective marker needs.,월드 공간 라벨이나 아이콘을 앞을 가로막은 무엇보다 위에 그립니다. 목표 표시에 필요한 동작입니다.
+The world-space label or sprite to change.,바꿀 월드 공간 라벨 또는 스프라이트.
+Set World Size,월드 크기 설정
+"Sets how big a world-space label or sprite is, measured in world units per pixel.",월드 공간 라벨이나 스프라이트의 크기를 설정합니다. 단위는 픽셀당 월드 단위입니다.
+The world-space label or sprite to resize.,크기를 바꿀 월드 공간 라벨 또는 스프라이트.
+How many world units one pixel of the label or sprite is. Smaller means smaller.,라벨이나 스프라이트의 1 픽셀이 몇 월드 단위인지. 작을수록 작아집니다.
+Set Bar Width,바 너비 설정
+Cuts a sprite off at a width - how a health bar over a head is driven from a number.,스프라이트를 지정한 너비에서 잘라 냅니다. 머리 위 체력 바를 숫자로 움직이는 방식입니다.
+Bar,바
+The world-space sprite the bar is drawn on.,바가 그려지는 월드 공간 스프라이트.
+"How wide the visible slice of the image is, in pixels.","이미지에서 보이는 부분의 너비, 픽셀 단위."
+Send Input To Surface,표면에 입력 보내기
+"Hands a click or a key to the UI a SubViewport is painting onto a surface, so an in-world screen can be used.",SubViewport 가 표면에 그리고 있는 UI 에 클릭이나 키 입력을 넘겨 줍니다. 월드 안의 화면을 조작할 수 있습니다.
+The input to hand to the UI painted on the surface.,표면에 그려진 UI 에 넘길 입력.
+Set Surface Redraw,표면 다시 그리기 설정
+Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default.,월드 안 화면을 얼마나 자주 다시 그릴지 정합니다. 보일 때만이 가벼운 설정이자 알맞은 기본값입니다.
+When,시점
+How often the surface is redrawn.,표면을 다시 그리는 빈도.
+Set surface redraw to {mode},표면 다시 그리기를 {mode} 로 설정
+Set Fog On/Off,안개 켜기/끄기 설정
+Environment,환경
+Switches the world's fog on or off - the one row that turns a clear day into a misty one.,월드의 안개를 켜거나 끕니다. 맑은 날을 안개 낀 날로 바꾸는 단 한 줄입니다.
+The environment whose look is being changed.,모습을 바꿀 대상 환경.
+Whether the world has fog at all.,월드에 안개가 있는지 여부.
+Set fog {on},안개를 {on} 로 설정
+Set Fog Density,안개 농도 설정
+Sets how thick the world's fog is. Ramp it up over time for a storm rolling in.,월드 안개가 얼마나 짙은지 설정합니다. 시간에 따라 올리면 폭풍이 몰려오는 느낌이 납니다.
+Density,농도
+"How thick the fog is. Small numbers: 0.01 is a haze, 0.1 is a wall.","안개의 짙기. 작은 숫자를 씁니다. 0.01 이면 옅은 안개, 0.1 이면 벽처럼 짙습니다."
+Set Fog Colour,안개 색 설정
+"Sets the colour of the world's fog - dusk purple, underwater green, dust orange.","월드 안개의 색을 설정합니다. 노을빛 보라, 물속의 초록, 흙먼지 주황 등."
+Colour,색
+The colour the fog picks up from the light.,안개가 빛에서 받아 오는 색.
+Set Glow On/Off,글로우 켜기/끄기 설정
+"Switches the world's glow on or off - what makes neon, fire and magic read as bright.","월드의 글로우를 켜거나 끕니다. 네온과 불, 마법이 밝게 보이는 건 이것 덕분입니다."
+Whether bright things bleed light into what is around them.,밝은 것이 주위로 빛을 번지게 할지 여부.
+Set glow {on},글로우를 {on} 로 설정
+Set Glow Strength,글로우 세기 설정
+"Sets how strongly bright things glow. Push it up for a boss room, back down when the fight ends.","밝은 것이 얼마나 세게 빛날지 설정합니다. 보스 방에서는 올리고, 전투가 끝나면 다시 내리세요."
+How much bright things bleed. Around 1 is strong.,밝은 것이 얼마나 번지는지. 1 정도면 강한 편입니다.
+Set Ambient Occlusion On/Off,앰비언트 오클루전 켜기/끄기 설정
+"Darkens the corners and creases of a 3D scene, which is what makes it look solid. Costs frames - turn it off on weak machines.",3D 장면의 모서리와 주름을 어둡게 합니다. 장면이 단단해 보이는 건 이것 덕분입니다. 프레임을 잡아먹으니 사양이 낮은 기기에서는 끄세요.
+Whether corners and creases are darkened.,모서리와 주름을 어둡게 할지 여부.
+Set ambient occlusion {on},앰비언트 오클루전을 {on} 로 설정
+Set Sky Rotation,하늘 회전 설정
+Turns the sky. Advance it slowly every tick and the clouds drift.,하늘을 돌립니다. 매 틱 조금씩 늘리면 구름이 흘러갑니다.
+Rotation,회전
+"How the sky is turned, in radians on each axis.","하늘이 어떻게 돌아가 있는지, 각 축의 라디안 값."
+Play One-Shot Animation,원샷 애니메이션 재생
+"Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.","블렌드 트리에서 원샷 애니메이션을 실행합니다. 사격, 피격 반응, 손 흔들기 같은 동작을 캐릭터가 이미 하고 있는 동작 위에 겹칩니다."
+One-shot,원샷
+Current State Is,현재 상태가
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,블렌드 트리의 상태 머신이 지정한 상태에 있는 동안 참입니다. 착지 경직이나 공격 판정 구간을 분기할 때 씁니다.
+Set Hearing Distance (3D),들리는 거리 설정 (3D)
+Audio,오디오
+Sets how far a 3D positional sound carries. Past this distance it is silent.,3D 위치 사운드가 어디까지 닿는지 설정합니다. 이 거리를 넘으면 들리지 않습니다.
+How far away the sound can still be heard at all. 0 means no limit.,얼마나 멀어져도 소리가 들리는지. 0 이면 제한이 없습니다.
+Set Loudness Falloff,음량 감쇠 설정
+Sets how quickly a 3D positional sound fades as the listener moves away.,리스너가 멀어질 때 3D 위치 사운드가 얼마나 빨리 작아지는지 설정합니다.
+Falloff,감쇠
+How far the sound stays at full loudness before it starts fading. Bigger carries further.,소리가 최대 음량을 유지하는 거리. 이 거리를 넘으면 작아지기 시작합니다. 클수록 멀리 갑니다.

@@ -1750,6 +1750,11 @@ const MODULE_GUIDE_OVERRIDES := {
 	"metadata": "Finding-And-Rearranging-Nodes",
 	"mouse": "Reading-Keyboard-Mouse-And-Gamepad",
 	"movement": "Making-Things-Move-In-2D",
+	# X9 / X19. Batch thirteen's two new picker sections. The world's look is the graphics guide's
+	# subject (the same guide the camera and light rows land on); UI standing in the world is the 3D
+	# guide's, because everything about it is a 3D node.
+	"environment": "Cameras-Graphics-And-Screenshots",
+	"world_space_ui": "Working-In-3D",
 	"nodes": "Finding-And-Rearranging-Nodes",
 	"nodes_activation": "Scenes-Pausing-And-Turning-Nodes-Off",
 	"nodes_picking": "Finding-And-Rearranging-Nodes",

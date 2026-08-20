@@ -3445,3 +3445,148 @@ the floor's slope under {cursor},{cursor} 下方的地面坡度
 none when nothing is hit,未命中时为空
 on layer {layers},在图层 {layers} 上
 Set {name} to {what},将 {name} 设为 {what}
+Animation,动画
+Fall at {strength},以 {strength} 下落
+Move relative to the camera along {input} at {speed},相对摄像机沿 {input} 以 {speed} 移动
+On entered view,进入视野时
+On left view,离开视野时
+Orbit around its centre by {amount},绕自身中心旋转 {amount}
+Orbit {centre} at radius {radius} angle {angle},以半径 {radius} 角度 {angle} 环绕 {centre}
+Play one-shot animation {name},播放一次性动画 {name}
+Send input {event},发送输入 {event}
+Set always face the camera off,关闭始终面向摄像机
+Set always face the camera on,开启始终面向摄像机
+Set ambient light colour to {value},将环境光颜色设为 {value}
+Set ambient occlusion off,关闭环境光遮蔽
+Set ambient occlusion on,开启环境光遮蔽
+Set bar width to {value},将条宽设为 {value}
+Set camera distance to {value},将摄像机距离设为 {value}
+Set fog colour to {value},将雾颜色设为 {value}
+Set fog density to {value},将雾浓度设为 {value}
+Set fog off,关闭雾
+Set fog on,开启雾
+Set fog over the sky to {value},将天空上的雾设为 {value}
+Set global illumination off,关闭全局光照
+Set global illumination on,开启全局光照
+Set glow bloom to {value},将辉光泛光设为 {value}
+Set glow off,关闭辉光
+Set glow on,开启辉光
+Set glow strength to {value},将辉光强度设为 {value}
+Set redraw every frame,每帧重绘
+Set redraw never,从不重绘
+Set redraw only when seen,仅在可见时重绘
+Set see-through to {value},将通透度设为 {value}
+Set show through walls off,关闭穿墙显示
+Set show through walls on,开启穿墙显示
+Set sky rotation to {value},将天空旋转设为 {value}
+Set visible from {value},从 {value} 起可见
+Set visible until {value},可见至 {value}
+Set world size to {value},将世界尺寸设为 {value}
+Set {name} blend to {value},将 {name} 混合设为 {value}
+UI on a surface,贴在表面上的界面
+Visible from {near} to {far},在 {near} 到 {far} 之间可见
+everywhere,全局
+flattened to the ground,压平到地面
+on the ground plane,在地平面上
+on the side plane,在侧平面上
+on the upright plane,在竖直平面上
+per pixel,每像素
+upright,保持竖直
+Orbiting - a camera or an object going round a centre,环绕 - 摄像机或物体绕着一个中心转
+UI that lives in the world,存在于世界中的界面
+Orbit At Radius,按半径环绕
+Native 3D,原生 3D
+"Places an object on a circle around another one, on the ground plane. Advance the angle every tick and it orbits.",把一个对象放到围绕另一个对象的圆周上，位于地平面内。每个 tick 递增角度，它就会环绕运动。
+Centre,中心
+The object to go round.,要环绕的对象。
+How far out the circle is.,圆周离中心有多远。
+"Where on the circle this object is, in radians. Add to it every tick to make it go round.",该对象位于圆周上的位置，单位为弧度。每个 tick 累加即可让它转起来。
+Set Camera Distance,设置摄像机距离
+Sets how far back a third-person camera sits. The arm pulls the camera in by itself when a wall is in the way.,设置第三人称摄像机后退多远。当有墙挡住时，摇臂会自动把摄像机拉近。
+How far the camera sits from what the arm is mounted on.,摄像机与摇臂所挂载对象之间的距离。
+Move Relative To Camera,相对摄像机移动
+"Steers a body the way the camera is facing: pushing forward walks away from the camera, whichever way it has been turned. Flattened to the ground, so looking down does not drive the body into the floor. Follow it with Move And Slide.",按摄像机的朝向操控物体：向前推就是远离摄像机走，无论摄像机转到哪个方向。方向会被压平到地面，所以向下看不会把物体推进地板。随后接一行 Move And Slide。
+The camera the directions are measured from - forward means the way this camera faces. The default is whichever camera is looking at the scene right now.,作为方向基准的摄像机 - 向前是指这台摄像机所面向的方向。默认使用当前正在拍摄场景的摄像机。
+"The two numbers of steering input, from an Input Vector.",转向输入的两个数值，来自 Input Vector。
+"How fast to move, in units per second.",移动速度，单位为每秒单位数。
+Set Visible Range,设置可见范围
+Draws something only while the camera is inside a distance band - the cheapest way to stop drawing detail nobody can see.,只有当摄像机处于某个距离区间内时才绘制该对象 - 这是停止绘制没人看得见的细节的最省事做法。
+How close the camera has to be before this is drawn. 0 means always.,摄像机要多近才会绘制它。0 表示始终绘制。
+How far away the camera may get before this stops being drawn. 0 means never stop.,摄像机可以离多远才停止绘制它。0 表示永不停止。
+Set See-Through,设置通透度
+Fades a 3D object out without hiding it - what a wall between the camera and the player does.,让 3D 对象淡出而不隐藏 - 就像挡在摄像机和玩家之间的墙那样。
+See-through,通透度
+"0 is solid, 1 is invisible. The row shows the fraction as a percentage.",0 为不透明，1 为完全看不见。行中会把这个比例显示为百分数。
+Set Shadows Off (3D),关闭阴影（3D）
+Stops a 3D object casting a shadow. The object is still drawn - only its shadow goes.,让 3D 对象不再投下阴影。对象本身仍会绘制 - 只是阴影没了。
+Set Shadows On (3D),开启阴影（3D）
+Makes a 3D object cast a shadow again after Set Shadows Off.,在关闭阴影之后，让 3D 对象重新投下阴影。
+Set Always Face The Camera,设置始终面向摄像机
+World-space UI,世界空间界面
+Turns a label or a sprite to face the camera wherever the camera goes - what a name tag over a head needs.,让标签或精灵始终朝向摄像机，无论摄像机移动到哪里 - 头顶上的名牌就需要这个。
+Label or sprite,标签或精灵
+The world-space label or sprite to turn.,要转向的世界空间标签或精灵。
+Set Always Face The Camera (Upright),设置始终面向摄像机（保持竖直）
+"Turns a label or a sprite to face the camera sideways only, so it stays upright when the camera looks down at it.",只在左右方向上让标签或精灵朝向摄像机，这样摄像机俯视时它仍保持竖直。
+Set Show Through Walls,设置穿墙显示
+Draws a world-space label or icon over whatever is in front of it - what an objective marker needs.,把世界空间的标签或图标画在挡在它前面的任何东西之上 - 目标标记就需要这个。
+The world-space label or sprite to change.,要修改的世界空间标签或精灵。
+Set World Size,设置世界尺寸
+"Sets how big a world-space label or sprite is, measured in world units per pixel.",设置世界空间标签或精灵的大小，单位为每像素对应的世界单位。
+The world-space label or sprite to resize.,要调整大小的世界空间标签或精灵。
+How many world units one pixel of the label or sprite is. Smaller means smaller.,标签或精灵的一个像素相当于多少世界单位。数值越小，显示越小。
+Set Bar Width,设置条宽
+Cuts a sprite off at a width - how a health bar over a head is driven from a number.,按给定宽度裁切精灵 - 头顶血条就是这样由一个数值驱动的。
+Bar,条
+The world-space sprite the bar is drawn on.,绘制该条的世界空间精灵。
+"How wide the visible slice of the image is, in pixels.",图像可见部分的宽度，单位为像素。
+Send Input To Surface,向表面发送输入
+"Hands a click or a key to the UI a SubViewport is painting onto a surface, so an in-world screen can be used.",把点击或按键交给 SubViewport 绘制在表面上的界面，这样世界中的屏幕就能操作了。
+The input to hand to the UI painted on the surface.,要交给绘制在表面上的界面的输入。
+Set Surface Redraw,设置表面重绘
+Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default.,决定世界中的屏幕多久重绘一次。仅在可见时是最省性能的设置，也是合适的默认值。
+When,何时
+How often the surface is redrawn.,表面重绘的频率。
+Set surface redraw to {mode},将表面重绘设为 {mode}
+Set Fog On/Off,开关雾
+Environment,环境
+Switches the world's fog on or off - the one row that turns a clear day into a misty one.,打开或关闭世界的雾 - 一行就能把晴天变成雾天。
+The environment whose look is being changed.,要改变外观的环境。
+Whether the world has fog at all.,世界中是否有雾。
+Set fog {on},将雾设为 {on}
+Set Fog Density,设置雾浓度
+Sets how thick the world's fog is. Ramp it up over time for a storm rolling in.,设置世界中雾的浓稠程度。随时间逐渐调高，就像风暴正在逼近。
+Density,浓度
+"How thick the fog is. Small numbers: 0.01 is a haze, 0.1 is a wall.",雾有多浓。数值很小：0.01 是薄雾，0.1 就像一堵墙。
+Set Fog Colour,设置雾颜色
+"Sets the colour of the world's fog - dusk purple, underwater green, dust orange.",设置世界中雾的颜色 - 黄昏的紫、水下的绿、扬尘的橙。
+Colour,颜色
+The colour the fog picks up from the light.,雾从光线中获得的颜色。
+Set Glow On/Off,开关辉光
+"Switches the world's glow on or off - what makes neon, fire and magic read as bright.",打开或关闭世界的辉光 - 霓虹、火焰和魔法之所以显得明亮，靠的就是它。
+Whether bright things bleed light into what is around them.,明亮的物体是否会向周围溢出光晕。
+Set glow {on},将辉光设为 {on}
+Set Glow Strength,设置辉光强度
+"Sets how strongly bright things glow. Push it up for a boss room, back down when the fight ends.",设置明亮物体发光的强度。进入 Boss 房时调高，战斗结束后再调回来。
+How much bright things bleed. Around 1 is strong.,明亮物体溢出光晕的程度。1 左右已经很强了。
+Set Ambient Occlusion On/Off,开关环境光遮蔽
+"Darkens the corners and creases of a 3D scene, which is what makes it look solid. Costs frames - turn it off on weak machines.",让 3D 场景的角落和褶皱变暗，画面因此显得厚实。会消耗帧数 - 在配置较弱的机器上把它关掉。
+Whether corners and creases are darkened.,是否让角落和褶皱变暗。
+Set ambient occlusion {on},将环境光遮蔽设为 {on}
+Set Sky Rotation,设置天空旋转
+Turns the sky. Advance it slowly every tick and the clouds drift.,旋转天空。每个 tick 缓慢递增，云就会飘动起来。
+Rotation,旋转
+"How the sky is turned, in radians on each axis.",天空的旋转方式，各轴均以弧度表示。
+Play One-Shot Animation,播放一次性动画
+"Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.",在混合树上触发一次性动画 - 开枪、受击反应、挥手 - 叠加在角色当前正在做的动作之上。
+One-shot,一次性动画
+Current State Is,当前状态为
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,当混合树的状态机处于指定状态时为真 - 落地硬直或攻击判定窗口就以此分支。
+Set Hearing Distance (3D),设置可听距离（3D）
+Audio,音频
+Sets how far a 3D positional sound carries. Past this distance it is silent.,设置 3D 位置音效能传多远。超过这个距离就完全听不见了。
+How far away the sound can still be heard at all. 0 means no limit.,声音在多远之外仍然能被听到。0 表示没有限制。
+Set Loudness Falloff,设置音量衰减
+Sets how quickly a 3D positional sound fades as the listener moves away.,设置当听者远离时，3D 位置音效衰减得有多快。
+Falloff,衰减
+How far the sound stays at full loudness before it starts fading. Bigger carries further.,声音在多远之内保持满音量，之后才开始衰减。数值越大传得越远。

@@ -380,6 +380,14 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var systems: Dictionary = godot_systems_statement(text, context)
 	if not systems.is_empty():
 		return _with_indent(systems, indent)
+	# ── X4 ──────────────────────────────────────────────────────────────────────────────────────
+	# A place written as a circle around somebody is an ORBIT, and it goes AHEAD of the behavior
+	# shapes below for one concrete reason: `me = you.global_position + <offset>` is the Pin shape,
+	# so a cos/sin offset at a radius would otherwise read as "pinned to you at an offset" - true of
+	# one frame, and a plain lie about what the line does over time.
+	var circled: Dictionary = orbit_placement_assignment_of(text, context)
+	if not circled.is_empty():
+		return _with_indent(circled, indent)
 	# ── T1 / T2 / T3 / T4 ───────────────────────────────────────────────────────────────────────
 	# The hand-rolled behavior shapes, in the shipped behavior's own words. AFTER the readings above
 	# so nothing already settled moves, and BEFORE the arithmetic below, which would describe one
@@ -479,6 +487,11 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var connected: Dictionary = signal_wiring_condition(text, context)
 	if not connected.is_empty():
 		return connected
+	# X7. Which state a blend tree is in, before the comparison reading could describe it as a call
+	# result measured against a piece of text.
+	var animating: Dictionary = animation_state_condition(text, context)
+	if not animating.is_empty():
+		return animating
 	# ── T12 ─────────────────────────────────────────────────────────────────────────────────────
 	# What the game is running on, which is a comparison on paper and one settled question in the
 	# sheet's words - and the shipped Platform Info pack's words are the ones it uses.
@@ -1946,6 +1959,13 @@ static func _compound_statement(text: String, context: Dictionary) -> Dictionary
 		if not is_simple_target(target) or amount.is_empty():
 			return {}
 		var split: Array = _split_object(target, context)
+		# X6. A body's downward velocity changed by an amount times the frame time is a FALL, at the
+		# strength the file wrote. Asked before the arithmetic words below, which would describe the
+		# one line every 3D character script has as "Subtract 30 * dt from velocity Y".
+		var fell: Dictionary = gravity_assignment(str(split[0]),
+			object_class_of(str(split[0]), context), target, operator, amount, context)
+		if not fell.is_empty():
+			return fell
 		var values: Dictionary = {
 			"name": [str(split[1]), "name"],
 			"value": [expression_text(amount, context), "value"]
@@ -1982,6 +2002,17 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 	var engine_verb: Dictionary = _engine_verb_assignment(target, assigned, context)
 	if not engine_verb.is_empty():
 		return engine_verb
+	# X4. A place written as a circle around somebody is an ORBIT, and it is asked before the shape
+	# readings below because a `cos/sin * radius` offset added to another object's place would
+	# otherwise read as a Pin - which is a different behavior with a different meaning.
+	var orbited: Dictionary = orbit_placement_assignment(target, assigned, context)
+	if not orbited.is_empty():
+		return orbited
+	# X19. A health bar over a head is a width write on a sprite's region, which is two members deep
+	# and so never reaches the one-member arms above.
+	var bar: Dictionary = bar_width_assignment(target, assigned, context)
+	if not bar.is_empty():
+		return bar
 	# S18. The camera follow is written THROUGH a call (`...lerp(...)`), so it is asked before the
 	# simple-target gate turns the whole line down.
 	var scrolled: Dictionary = _scroll_toward_assignment(target, assigned, context)
@@ -2128,6 +2159,15 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 		assigned, context)
 	if not played.is_empty():
 		return played
+	# X4 / X8 / X9 / X19. The 3D property families: the world's environment, a mesh's visible range
+	# and see-through, the world-space UI knobs and a camera arm's length. Every one of them is gated
+	# on the CLASS, for the same reason the light knobs above are - `transparency` and `pixel_size`
+	# are general spellings, and a reading that claimed them everywhere would rename lines it knows
+	# nothing about.
+	var spatial: Dictionary = spatial_words_assignment(object_name, object_class, member, owner_text,
+		assigned, context)
+	if not spatial.is_empty():
+		return spatial
 	match member:
 		"visible":
 			if assigned != "true" and assigned != "false":
@@ -2312,6 +2352,13 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 	var long_tail: Dictionary = long_tail_call(call, text, context)
 	if not long_tail.is_empty():
 		return long_tail
+	# ── X4 / X9 / X19 ───────────────────────────────────────────────────────────────────────────
+	# The 3D call shapes: a camera pivot going round what it looks at, an effect parameter set for
+	# every shader at once, and a click handed to the UI painted onto a surface. Ahead of the
+	# generic Object ▸ Verb split, which would spell each of them as the method it is written with.
+	var spatial_step: Dictionary = spatial_words_call(call, text, context)
+	if not spatial_step.is_empty():
+		return spatial_step
 	var engine_verb: Dictionary = _engine_verb_call(call, context)
 	if not engine_verb.is_empty():
 		return engine_verb
@@ -6555,7 +6602,11 @@ static func _effects_call(method: String, args: PackedStringArray, receiver: Str
 	# is usually a field declared far from the line that drives it.
 	if method == "tween_method":
 		return _tween_effect_sentence(args, context)
-	if method != "set_shader_parameter" or args.size() != 2:
+	# X9. `set_instance_shader_parameter` is the same row for ONE object rather than for the material
+	# every object sharing it wears - the sheet already calls both an effect parameter.
+	if method != "set_shader_parameter" and method != "set_instance_shader_parameter":
+		return {}
+	if args.size() != 2:
 		return {}
 	if receiver.strip_edges().is_empty():
 		return {}
@@ -7226,6 +7277,10 @@ const ANIMATION_TREE_CLASSES: PackedStringArray = ["AnimationTree"]
 const ANIMATION_PARAMETER_HEAD := "parameters/"
 const ANIMATION_PLAYBACK_PATH := "parameters/playback"
 
+## X7. The class a file gives a variable it keeps a blend tree's state machine in. A `travel` on
+## something the file TYPED as one is the same step as a `travel` on the playback fetched inline.
+const ANIMATION_PLAYBACK_CLASSES: PackedStringArray = ["AnimationNodeStateMachinePlayback"]
+
 ## S14. A bob is written on the object's OWN place, which is the one an event sheet just calls
 ## position.
 const JUICE_OWN_POSITION: PackedStringArray = ["position", "global_position"]
@@ -7522,19 +7577,34 @@ static func media_call(call: Dictionary, context: Dictionary) -> Dictionary:
 					"seconds": [number_words(arguments[0].strip_edges()), "value"]}), "sound", line)
 		"set":
 			if arguments.size() == 2 and _class_is_any(object_class, ANIMATION_TREE_CLASSES):
+				# X7. What the parameter IS decides the sentence: a named group's blend value, the
+				# time scale, or a one-shot's request. A path none of those three name keeps the
+				# general Set blend row below.
+				var roled: Dictionary = animation_parameter_assignment(script_object(context),
+					arguments[0], arguments[1], line, context)
+				if not roled.is_empty():
+					return roled
 				var blended: String = _animation_parameter_name(arguments[0])
 				if not blended.is_empty():
-					return _with_pattern(_sentence(object_name, "Set blend {name} to {value}", {
-						"name": [blended, "name"],
-						"value": [expression_text(arguments[1], context), "value"]}),
+					return _with_pattern(_animation_aspect(_sentence(script_object(context),
+						"Set blend {name} to {value}", {
+							"name": [blended, "name"],
+							"value": [expression_text(arguments[1], context), "value"]})),
 						"sprite_animation", line)
 		"travel":
 			if arguments.size() == 1:
+				# X7. Three spellings, one machine: the playback fetched inline, the playback held in
+				# a variable the file TYPED as one, and the `[...]` index spelling. A `travel` on
+				# anything else keeps its own reading.
 				var machine: String = _animation_playback_receiver(receiver)
+				if machine.is_empty() and _class_is_any(object_class, ANIMATION_PLAYBACK_CLASSES):
+					machine = receiver
 				if not machine.is_empty():
-					return _with_pattern(_sentence(_receiver_object(machine, context),
-						"Travel to animation state {state}", {
-							"state": [_unquote(arguments[0].strip_edges()), "value"]}),
+					# X7. A blend tree's playback IS a state machine, so it reads in the words the
+					# State Machine behavior already publishes rather than in Godot's own `travel`.
+					return _with_pattern(_animation_aspect(_sentence(script_object(context),
+						"Go to state {state}", {
+							"state": [_quoted(arguments[0].strip_edges()), "value"]})),
 						"sprite_animation", line)
 	return {}
 
@@ -7763,10 +7833,10 @@ const LIGHT_CLASSES: PackedStringArray = ["Light2D", "Light3D"]
 const LIGHT_ENERGY_MEMBERS: PackedStringArray = ["energy", "light_energy"]
 const LIGHT_COLOUR_MEMBERS: PackedStringArray = ["color", "light_color"]
 
-## U7. The class a whole layer's tint is written on, and the environment member the world's ambient
-## light is. Neither belongs to a light anybody can point at, so both read under System.
+## U7. The class a whole layer's tint is written on. It belongs to no light anybody can point at, so
+## it reads under System. (The world's ambient light was U7's other such row; X9 gave the whole
+## environment block one object of its own, and the ambient row moved there with the rest of it.)
 const LAYER_TINT_CLASSES: PackedStringArray = ["CanvasModulate"]
-const AMBIENT_LIGHT_MEMBER := "ambient_light_energy"
 
 
 ## U7. The light knobs, in the words the sheet's own Light rows publish. Brightness is a percentage,
@@ -7782,9 +7852,9 @@ static func lighting_assignment(object_name: String, object_class: String, membe
 			{"value": [expression_text(value, context), "value"]})
 		(tint["segments"] as Array).append({"text": " %s" % _class_note(object_class), "tone": "muted"})
 		return _with_pattern(tint, "lighting", line)
-	if member == AMBIENT_LIGHT_MEMBER and owner_text.ends_with("environment"):
-		return _with_pattern(_sentence(OBJECT_SYSTEM, "Set ambient light to {value}",
-			{"value": [_percent_words(value, context), "value"]}), "lighting", line)
+	# X9 re-homed the ambient row: the world's ambient light is one of the ENVIRONMENT's knobs, and
+	# it now reads under the Environment object with the rest of them, in these same words. Reaching
+	# it through a WorldEnvironment node and reaching it through an Environment value are one row.
 	if not _class_is_any(object_class, LIGHT_CLASSES):
 		return {}
 	if LIGHT_ENERGY_MEMBERS.has(member):
@@ -11906,3 +11976,717 @@ static func _cursor_floor_words(entry: String, aimed_at: String) -> String:
 		"normal":
 			return _fill(translate("the floor's slope under {cursor}"), {"cursor": cursor})
 	return ""
+
+
+# ── X4 / X6 / X7 / X8 / X9 / X19 - the 3D words a finished game writes ───────────────────────────
+#
+# Batch thirteen's reading half. Six families of line every 3D project writes and no event sheet had
+# words for: orbiting (both spellings), camera-relative locomotion, the AnimationTree's magic
+# parameter strings, the seen-and-heard distances, the world's environment block, and the UI that
+# lives in the world rather than on the screen.
+#
+# Every one of them is DISPLAY ONLY. Nothing here reaches emission, every reading is claimed at the
+# exact shape it names, and a line one of them cannot say honestly keeps the reading it already had.
+# Where a shipped pack owns the whole shape, the reading offers the pack rather than a rewrite of it.
+
+## X4. The behavior whose words an orbit is already written in, so a reader offered an adoption gets
+## the pack that ships the shape rather than a rewrite of it.
+const ORBIT_PACK := "orbit_3d"
+
+## X4. The arm a third-person camera hangs off, whose length IS the camera distance.
+const SPRING_ARM_CLASSES: PackedStringArray = ["SpringArm3D"]
+
+## X4. The two axes a `Vector3(cos, sin)` placement leaves alone, and the plane each one names. A
+## circle is named after the plane a reader can SEE it in, never after the axis Godot holds still.
+const ORBIT_PLANE_WORDS: Dictionary = {
+	"y": "on the ground plane", "z": "on the upright plane", "x": "on the side plane"
+}
+
+## X4. The places a placement may be written to. `transform.origin` is the same place spelled the
+## long way, and both read as the object being put somewhere.
+const OWN_PLACE_TARGETS: PackedStringArray = [
+	"global_position", "position", "transform.origin", "global_transform.origin"
+]
+
+## X6. The behavior that ships the whole third-person block, which a reader could adopt instead of
+## keeping the hand-written run. The bodies the run writes its velocity into are the ones the
+## movement readings above already name (CHARACTER_BODY_CLASSES).
+const CAMERA_RELATIVE_PACK := "fps_controller"
+
+## X6. What a body is standing on already reads as the sheet's own questions - M41/R10 published
+## Is on floor / Is by wall / Is touching ceiling, and X6 adopts them rather than minting a second
+## set of words for the same three calls. (See BODY_STATE_WORDS above.)
+
+## X7. The parameter-path legs that mean something other than "a blend value": the time scale every
+## tree spells the same way, and the one-shot a request fires.
+const ANIMATION_TIME_SCALE_LEG := "scale"
+const ANIMATION_ONE_SHOT_LEG := "request"
+const ANIMATION_BLEND_LEGS: PackedStringArray = ["blend_position", "blend_amount"]
+
+## X8. The classes whose visible range, see-through and shadow switch are the sheet's own rows.
+const GEOMETRY_CLASSES: PackedStringArray = ["GeometryInstance3D"]
+
+## X8. The shadow setting that means "none". Every other value casts something, so every other value
+## reads as the shadows being on.
+const SHADOW_OFF_LEG := "SHADOW_CASTING_SETTING_OFF"
+
+## X8. The two signals a notifier raises when an object comes into view and leaves it again - the
+## same pair in both node generations, which is why one reading covers both.
+## Both spellings a trigger arrives in are keyed: the signal name a handler lifted from a
+## `.connect(...)` line carries, and the id the class-reflected trigger definition publishes.
+const VIEW_TRIGGER_WORDS: Dictionary = {
+	"screen_entered": "On entered view", "screen_exited": "On left view",
+	"OnScreenEntered": "On entered view", "OnScreenExited": "On left view"
+}
+
+## X9. The world's look belongs to the Environment, whichever node or local the file reached it
+## through - the same way every save row belongs to Local Storage.
+const OBJECT_ENVIRONMENT := "Environment"
+const ENVIRONMENT_CLASSES: PackedStringArray = ["Environment"]
+
+## X9. The environment switches, as {member: [the on words, the off words]}.
+const ENVIRONMENT_SWITCHES: Dictionary = {
+	"fog_enabled": ["Set fog on", "Set fog off"],
+	"glow_enabled": ["Set glow on", "Set glow off"],
+	"ssao_enabled": ["Set ambient occlusion on", "Set ambient occlusion off"],
+	"sdfgi_enabled": ["Set global illumination on", "Set global illumination off"]
+}
+
+## X9. The environment knobs that carry a value, as {member: the sentence}. A closed family on
+## purpose: an environment property nobody has a plain word for keeps the property write it is.
+const ENVIRONMENT_VALUES: Dictionary = {
+	"fog_density": "Set fog density to {value}",
+	"fog_light_color": "Set fog colour to {value}",
+	"fog_sky_affect": "Set fog over the sky to {value}",
+	"glow_intensity": "Set glow strength to {value}",
+	"glow_bloom": "Set glow bloom to {value}",
+	"ambient_light_color": "Set ambient light colour to {value}",
+	"sky_rotation": "Set sky rotation to {value}"
+}
+
+## X9. The one environment knob U7 already publishes a row for, kept in U7's exact words.
+const ENVIRONMENT_AMBIENT_MEMBER := "ambient_light_energy"
+
+## X19. The classes a label or a bar wears in the WORLD rather than on the screen. GeometryInstance3D
+## is the base every one of them shares, and it is here rather than a narrower list because these
+## three members exist on nothing else that derives from it: a sheet hosted on the base still reads
+## its own rows, and nothing outside the family can be caught by the names.
+const WORLD_SPACE_UI_CLASSES: PackedStringArray = ["Label3D", "SpriteBase3D", "GeometryInstance3D"]
+
+## X19. The billboard modes, by the constant each is written as. The upright variant keeps its own
+## half-word: turning with the camera and turning with it only sideways are two different settings.
+const BILLBOARD_UPRIGHT_LEG := "BILLBOARD_FIXED_Y"
+const BILLBOARD_OFF_LEG := "BILLBOARD_DISABLED"
+
+## X19. The surface a SubViewport paints UI onto, and the update modes in the sheet's words.
+const SUB_VIEWPORT_CLASSES: PackedStringArray = ["SubViewport"]
+const VIEWPORT_UPDATE_WORDS: Dictionary = {
+	"UPDATE_WHEN_VISIBLE": "Set redraw only when seen",
+	"UPDATE_ALWAYS": "Set redraw every frame",
+	"UPDATE_DISABLED": "Set redraw never"
+}
+
+
+## The bare name a qualified constant ends with (`SubViewport.UPDATE_WHEN_VISIBLE` -> its last leg),
+## so both spellings a file writes a constant in resolve to one answer.
+static func _constant_leg(value: String) -> String:
+	var text: String = value.strip_edges()
+	var dot_at: int = text.rfind(".")
+	return text if dot_at < 0 else text.substr(dot_at + 1)
+
+
+## The reading with a muted half-word said quietly after it - Godot's own spelling, or the half of a
+## setting the sentence itself could not carry, one glance away rather than one hover away.
+static func _noted(reading: Dictionary, note: String) -> Dictionary:
+	if reading.is_empty() or note.is_empty():
+		return reading
+	(reading["segments"] as Array).append({"text": " (%s)" % translate(note), "tone": "muted"})
+	return reading
+
+
+# ── X4. Orbiting: the pivot-parent shape and the angle written out ───────────────────────────────
+
+
+## X4. `pivot.rotate_y(-relative.x * 0.005)` where the SCENE says `pivot` holds nothing but a camera
+## or the arm one hangs off: turning that node is not a turn, it is the camera going round what it
+## looks at. {} for a `rotate_y` on anything else, which keeps the plain rotate the line is.
+static func orbit_pivot_call(call: Dictionary, context: Dictionary) -> Dictionary:
+	if str(call.get("method", "")) != "rotate_y":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1:
+		return {}
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	if receiver.is_empty() or not is_simple_target(receiver):
+		return {}
+	var object_name: String = _receiver_object(receiver, context)
+	if not bool((context.get("orbit_pivots", {}) as Dictionary).get(object_name, false)):
+		return {}
+	var turned: Dictionary = _sentence(object_name, "Orbit around its centre by {amount}", {
+		"amount": [expression_text(args[0], context), "value"]})
+	return _with_pattern(_noted(turned, "yaw"), "orbit", str(call.get("line", "")), ORBIT_PACK)
+
+
+## X4. `global_position = target.global_position + Vector3(cos(a), 0, sin(a)) * r` - the angle
+## written out. {} when the value is not a circle around somebody: an offset that is not built from
+## a cosine and a sine at ONE angle is an offset, and calling it an orbit would be a guess.
+##
+## The plane is named by the axis the constructor holds at zero, because that is the plane the circle
+## is drawn flat against - and a reader who wrote `Vector3(cos, 0, sin)` is thinking about the ground.
+static func orbit_placement_assignment(target: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	var place: String = target.strip_edges().trim_prefix("self.")
+	if not OWN_PLACE_TARGETS.has(place):
+		return {}
+	var at: int = top_level_index(assigned, " + ")
+	if at <= 0:
+		return {}
+	var centre: String = assigned.substr(0, at).strip_edges()
+	var offset: String = assigned.substr(at + 3).strip_edges()
+	var times_at: int = top_level_index(offset, " * ")
+	if times_at <= 0:
+		return {}
+	var circle: Dictionary = _orbit_circle_parts(offset.substr(0, times_at).strip_edges())
+	if circle.is_empty():
+		return {}
+	var radius: String = offset.substr(times_at + 3).strip_edges()
+	var placed: Dictionary = _sentence(_receiver_object("", context),
+		"Orbit {centre} at radius {radius} angle {angle}", {
+			"centre": [_place_owner(centre, context), "value"],
+			"radius": [expression_text(radius, context), "value"],
+			"angle": [expression_text(str(circle.get("angle", "")), context), "value"]
+		})
+	return _with_pattern(_noted(placed, str(circle.get("plane", ""))), "orbit",
+		"%s = %s" % [target.strip_edges(), assigned.strip_edges()], ORBIT_PACK)
+
+
+## X4. The same reading asked of a WHOLE line rather than of its two halves - what the statement
+## dispatcher calls, because the orbit has to be recognised before the shapes that would claim half
+## of it. {} for a line that is not an assignment at all.
+static func orbit_placement_assignment_of(text: String, context: Dictionary) -> Dictionary:
+	var at: int = top_level_index(text, " = ")
+	if at < 0:
+		return {}
+	return orbit_placement_assignment(text.substr(0, at), text.substr(at + 3), context)
+
+
+## X4. `Vector3(cos(a), 0.0, sin(a))` as {angle, plane}, or {} when the constructor is not one circle
+## at one angle. Both trig calls must name the SAME angle: two different angles draw a shape nobody
+## has a word for, and "orbit" would be the wrong one.
+static func _orbit_circle_parts(value: String) -> Dictionary:
+	var text: String = value.strip_edges()
+	var open_at: int = text.find("(")
+	if open_at <= 0 or not text.ends_with(")"):
+		return {}
+	if text.substr(0, open_at) != "Vector3":
+		return {}
+	var axes: PackedStringArray = _split_arguments(text.substr(open_at + 1, text.length() - open_at - 2))
+	if axes.size() != 3:
+		return {}
+	var axis_names: PackedStringArray = PackedStringArray(["x", "y", "z"])
+	var flat: String = ""
+	var angle: String = ""
+	var trig_seen: int = 0
+	for index: int in axes.size():
+		var axis: String = axes[index].strip_edges()
+		if axis == "0" or axis == "0.0":
+			if not flat.is_empty():
+				return {}
+			flat = axis_names[index]
+			continue
+		var inner: String = _trig_argument(axis)
+		if inner.is_empty():
+			return {}
+		if angle.is_empty():
+			angle = inner
+		elif angle != inner:
+			return {}
+		trig_seen += 1
+	if flat.is_empty() or trig_seen != 2:
+		return {}
+	return {"angle": angle, "plane": str(ORBIT_PLANE_WORDS.get(flat, ""))}
+
+
+## X4. The angle inside a `cos(a)` or a `sin(a)`, "" for anything else.
+static func _trig_argument(value: String) -> String:
+	var text: String = value.strip_edges()
+	for head: String in ["cos(", "sin("]:
+		if not text.begins_with(head) or not text.ends_with(")"):
+			continue
+		return text.substr(head.length(), text.length() - head.length() - 1).strip_edges()
+	return ""
+
+
+# ── X6. Camera-relative locomotion ──────────────────────────────────────────────────────────────
+
+
+## X6. `var cam_basis := cam.global_transform.basis` - the camera whose facing a run steers by, or ""
+## for any other value.
+static func camera_basis_source(value: String) -> String:
+	var text: String = value.strip_edges()
+	for tail: String in [".global_transform.basis", ".transform.basis"]:
+		if not text.ends_with(tail):
+			continue
+		# Whatever the camera was reached THROUGH is the camera: a variable, a node path, or the
+		# viewport's own current-camera lookup. Nothing narrower would do, and nothing broader is
+		# needed - a basis is only ever claimed once the mix below proves what it was used for.
+		return text.substr(0, text.length() - tail.length()).strip_edges()
+	return ""
+
+
+## X6. `(cam_basis.x * input.x + cam_basis.z * input.y)` - the mix that turns two numbers of input
+## into a direction in the camera's own frame. Returns the input vector's name, "" for any other sum.
+## Both halves must come off the SAME basis and the SAME input: a mix of two different things is two
+## things, and one sentence for it would hide one of them.
+static func camera_basis_mix_input(value: String, basis_name: String) -> String:
+	var text: String = value.strip_edges()
+	while text.begins_with("(") and text.ends_with(")"):
+		text = text.substr(1, text.length() - 2).strip_edges()
+	var at: int = top_level_index(text, " + ")
+	if at <= 0:
+		return ""
+	var first: String = _basis_input_leg(text.substr(0, at).strip_edges(), basis_name)
+	var second: String = _basis_input_leg(text.substr(at + 3).strip_edges(), basis_name)
+	return first if not first.is_empty() and first == second else ""
+
+
+## X6. One leg of that mix - `cam_basis.x * input.x` - as the input vector it multiplies, or "" when
+## the leg is anything else. The basis axis and the input axis are not checked against each other:
+## which axis drives which is the file's business, and the row says the same thing either way.
+static func _basis_input_leg(leg: String, basis_name: String) -> String:
+	var at: int = top_level_index(leg, " * ")
+	if at <= 0:
+		return ""
+	var left: String = leg.substr(0, at).strip_edges()
+	var right: String = leg.substr(at + 3).strip_edges()
+	if not left.begins_with("%s." % basis_name):
+		return ""
+	var dot_at: int = right.rfind(".")
+	if dot_at <= 0:
+		return ""
+	var input_name: String = right.substr(0, dot_at).strip_edges()
+	return input_name if is_identifier(input_name) else ""
+
+
+## X6. `dir.y = 0.0` - the line that flattens a camera direction onto the ground so looking down does
+## not drive the body into the floor. True only for the direction the run is already about.
+static func is_flatten_line(text: String, direction_name: String) -> bool:
+	var bare: String = text.strip_edges()
+	var at: int = top_level_index(bare, " = ")
+	if at <= 0:
+		return false
+	var value: String = bare.substr(at + 3).strip_edges()
+	return bare.substr(0, at).strip_edges() == "%s.y" % direction_name and (value == "0" or value == "0.0")
+
+
+## X6. `dir = dir.normalized()` - the line that makes the direction one unit long, so a diagonal is
+## not faster than a straight line.
+static func is_normalize_line(text: String, direction_name: String) -> bool:
+	return text.strip_edges() == "%s = %s.normalized()" % [direction_name, direction_name]
+
+
+## X6. `velocity.x = dir.x * speed` as the speed it multiplies by, or "" when the line writes some
+## other velocity axis, some other direction, or a value that is not that direction times something.
+static func velocity_step_speed(text: String, direction_name: String) -> String:
+	var bare: String = text.strip_edges()
+	var at: int = top_level_index(bare, " = ")
+	if at <= 0:
+		return ""
+	var target: String = bare.substr(0, at).strip_edges().trim_prefix("self.")
+	if target != "velocity.x" and target != "velocity.z" and target != "velocity.y":
+		return ""
+	var value: String = bare.substr(at + 3).strip_edges()
+	var times_at: int = top_level_index(value, " * ")
+	if times_at <= 0:
+		return ""
+	var direction: String = value.substr(0, times_at).strip_edges()
+	if not direction.begins_with("%s." % direction_name):
+		return ""
+	var speed: String = value.substr(times_at + 3).strip_edges()
+	return speed if not speed.is_empty() else ""
+
+
+## X6. The one sentence the whole camera-relative run reads as. `flattened` says whether the run held
+## the line that keeps the direction on the ground, which is the half a reader most wants told.
+static func camera_relative_move_sentence(object_name: String, input_name: String, speed: String,
+		flattened: bool, context: Dictionary) -> Dictionary:
+	var moved: Dictionary = _sentence(object_name,
+		"Move relative to the camera along {input} at {speed}", {
+			"input": [expression_text(input_name, context), "value"],
+			"speed": [expression_text(speed, context), "value"]
+		})
+	return _noted(moved, "flattened to the ground") if flattened else moved
+
+
+## X6. `velocity.y -= 30.0 * delta` - the one line a fall is written as. Reads as the fall it is, at
+## the strength the file wrote, and only on a body that HAS a velocity: the same arithmetic on an
+## ordinary variable is arithmetic.
+static func gravity_assignment(object_name: String, object_class: String, target: String,
+		operator: String, amount: String, context: Dictionary) -> Dictionary:
+	if target.strip_edges().trim_prefix("self.") != "velocity.y":
+		return {}
+	if operator != " -= " and operator != " += ":
+		return {}
+	if not _class_is_any(object_class, CHARACTER_BODY_CLASSES):
+		return {}
+	var strength: String = _per_frame_factor(amount)
+	if strength.is_empty():
+		return {}
+	var line: String = "velocity.y%s%s" % [operator, amount.strip_edges()]
+	var fell: Dictionary = _sentence(object_name, "Fall at {strength}",
+		{"strength": [expression_text(strength, context), "value"]})
+	return _with_pattern(_noted(fell, "gravity"), "movement", line, CAMERA_RELATIVE_PACK)
+
+
+## X6. The `30.0` in `30.0 * delta`, in either order - what a per-frame amount is actually SET to,
+## with the frame time that spreads it over the second taken off. "" when the amount is not per-frame:
+## a one-off nudge is not a gravity.
+static func _per_frame_factor(amount: String) -> String:
+	var text: String = amount.strip_edges()
+	var at: int = top_level_index(text, " * ")
+	if at <= 0:
+		return ""
+	var left: String = text.substr(0, at).strip_edges()
+	var right: String = text.substr(at + 3).strip_edges()
+	if EventSheetPatternReadings.DELTA_WORDS.has(right):
+		return left
+	return right if EventSheetPatternReadings.DELTA_WORDS.has(left) else ""
+
+
+# ── X7. The AnimationTree's magic strings, as the sheet's animation words ────────────────────────
+
+
+## X7. The reading with the object's ANIMATION aspect in front of it. An AnimationTree is not an
+## object a reader points at - it is how one object animates - so its rows wear the object's name and
+## the aspect, exactly as the 2D sprite words do.
+static func _animation_aspect(reading: Dictionary) -> Dictionary:
+	if reading.is_empty():
+		return reading
+	var segments: Array = [{"text": "%s ▸ " % translate("Animation"), "tone": "plain"}]
+	segments.append_array(reading.get("segments", []) as Array)
+	reading["segments"] = segments
+	return reading
+
+
+## X7. What a `parameters/...` path IS, as {kind, name}: a blend value under a named group, the time
+## scale, or a one-shot's request. {} for a path this reading has no word for, which keeps the
+## general Set blend row S11 already publishes.
+##
+##   parameters/Locomotion/blend_position   {kind: "blend",  name: "Locomotion"}
+##   parameters/TimeScale/scale             {kind: "speed",  name: "TimeScale"}
+##   parameters/Shoot/request               {kind: "oneshot", name: "Shoot"}
+static func animation_parameter_role(argument: String) -> Dictionary:
+	var text: String = argument.strip_edges()
+	if not _is_string_literal(text):
+		return {}
+	var path: String = _unquote(text)
+	if not path.begins_with(ANIMATION_PARAMETER_HEAD) or path == ANIMATION_PLAYBACK_PATH:
+		return {}
+	var legs: PackedStringArray = path.split("/")
+	if legs.size() < 3:
+		return {}
+	var leaf: String = legs[legs.size() - 1]
+	var group: String = legs[legs.size() - 2]
+	if ANIMATION_BLEND_LEGS.has(leaf):
+		return {"kind": "blend", "name": group}
+	if leaf == ANIMATION_TIME_SCALE_LEG:
+		return {"kind": "speed", "name": group}
+	if leaf == ANIMATION_ONE_SHOT_LEG:
+		return {"kind": "oneshot", "name": group}
+	return {}
+
+
+## X7. The three parameter writes that have a plain sentence, under the object's Animation aspect.
+## {} for every other path, which keeps S11's Set blend row.
+static func animation_parameter_assignment(object_name: String, argument: String, assigned: String,
+		line: String, context: Dictionary) -> Dictionary:
+	var role: Dictionary = animation_parameter_role(argument)
+	if role.is_empty():
+		return {}
+	var written: Dictionary = {}
+	match str(role.get("kind", "")):
+		"blend":
+			written = _sentence(object_name, "Set {name} blend to {value}", {
+				"name": [str(role.get("name", "")), "name"],
+				"value": [expression_text(assigned, context), "value"]})
+		"speed":
+			written = _sentence(object_name, "Set animation speed to {value}",
+				{"value": [expression_text(assigned, context), "value"]})
+		"oneshot":
+			written = _sentence(object_name, "Play one-shot animation {name}",
+				{"name": [str(role.get("name", "")), "name"]})
+	if written.is_empty():
+		return {}
+	return _with_pattern(_animation_aspect(written), "sprite_animation", line)
+
+
+## X7. `anim_state.get_current_node() == "Land"` - the question a blend tree's state machine answers,
+## in the words the State Machine behavior already publishes. Only a bare piece of text on the right
+## is claimed: a state worked out from something else is not the name this question is about.
+static func animation_state_condition(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = text.strip_edges()
+	for operator: String in [" == ", " != "]:
+		var at: int = top_level_index(bare, operator)
+		if at <= 0:
+			continue
+		var state: String = bare.substr(at + operator.length()).strip_edges()
+		if not _is_string_literal(state):
+			continue
+		const CURRENT_NODE_TAIL := ".get_current_node()"
+		var left: String = bare.substr(0, at).strip_edges()
+		if not left.ends_with(CURRENT_NODE_TAIL):
+			continue
+		var owner_text: String = left.substr(0, left.length() - CURRENT_NODE_TAIL.length()).strip_edges()
+		# Both spellings of the machine: a variable the file keeps the playback in, and the playback
+		# fetched inline - which is the spelling the sheet's own row writes.
+		if not is_identifier(owner_text) and _animation_playback_receiver(owner_text).is_empty():
+			continue
+		var asked: Dictionary = _animation_aspect(_sentence(script_object(context),
+			"Current state is {state}", {"state": [_quoted(state), "value"]}))
+		if operator == " == ":
+			return _with_pattern(asked, "sprite_animation", bare)
+		var negated: Array = [{"text": "%s " % translate("not"), "tone": "plain"}]
+		negated.append_array(asked.get("segments", []) as Array)
+		return _with_pattern({"object": asked.get("object", ""), "segments": negated},
+			"sprite_animation", bare)
+	return {}
+
+
+# ── X8. Seen and heard: the visible range, see-through, and the shadow switch ────────────────────
+
+
+## X8. The three GeometryInstance3D knobs a reader tunes by eye, in the sheet's words. The class is
+## what tells them apart from an ordinary property of the same name: `transparency` is a general
+## spelling, and a reading that claimed every one of them would rename lines it knows nothing about.
+static func geometry_assignment(object_name: String, object_class: String, member: String,
+		owner_text: String, assigned: String, context: Dictionary) -> Dictionary:
+	if not _class_is_any(object_class, GEOMETRY_CLASSES):
+		return {}
+	var value: String = assigned.strip_edges()
+	var line: String = _member_line(owner_text, member, value)
+	if member == "transparency":
+		return _with_pattern(_sentence(object_name, "Set see-through to {value}",
+			{"value": [_percent_words(value, context), "value"]}), "lighting", line)
+	if member == "cast_shadow":
+		var off: bool = _constant_leg(value) == SHADOW_OFF_LEG
+		return _with_pattern(_sentence(object_name,
+			"Set shadows off" if off else "Set shadows on", {}), "lighting", line)
+	return {}
+
+
+## X8. `rock.visibility_range_begin = 10` on its own - the half of a range a reader set first. Read as
+## the one end it is, so a file that sets only one still says what it did; the pair written together
+## reads as ONE "Visible from a to b" row, which the row builder puts back together.
+static func visibility_range_assignment(object_name: String, object_class: String, member: String,
+		owner_text: String, assigned: String, context: Dictionary) -> Dictionary:
+	if not _class_is_any(object_class, GEOMETRY_CLASSES):
+		return {}
+	if member != "visibility_range_begin" and member != "visibility_range_end":
+		return {}
+	var value: String = assigned.strip_edges()
+	var template: String = "Set visible from {value}" if member.ends_with("begin") \
+		else "Set visible until {value}"
+	return _with_pattern(_sentence(object_name, template,
+		{"value": [expression_text(value, context), "value"]}), "lighting",
+		_member_line(owner_text, member, value))
+
+
+## X8. True when a class is one whose visible range is the sheet's own row - the one question the row
+## builder's run pass has to ask about a class, kept here so the class table has one home.
+static func class_is_geometry(object_class: String) -> bool:
+	return _class_is_any(object_class, GEOMETRY_CLASSES)
+
+
+## X8. The sentence a visible-range PAIR reads as, which the row builder builds when it finds the two
+## writes side by side on one object.
+static func visibility_range_sentence(object_name: String, near: String, far: String,
+		context: Dictionary) -> Dictionary:
+	return _sentence(object_name, "Visible from {near} to {far}", {
+		"near": [expression_text(near, context), "value"],
+		"far": [expression_text(far, context), "value"]
+	})
+
+
+## X8. `screen_entered` / `screen_exited` as the two triggers an event sheet already has words for -
+## an object coming into view and leaving it again. "" for every other signal.
+static func view_trigger_words(signal_name: String) -> String:
+	var bare: String = signal_name.strip_edges().trim_prefix("signal:")
+	return translate(str(VIEW_TRIGGER_WORDS[bare])) if VIEW_TRIGGER_WORDS.has(bare) else ""
+
+
+# ── X9. The world's look ────────────────────────────────────────────────────────────────────────
+
+
+## X9. The environment block, under the Environment object it belongs to. Whichever node or local the
+## file reached the environment through, the row says Environment - the same way every save row says
+## Local Storage - because there is one world and its look is not any node's property.
+static func environment_assignment(object_class: String, member: String, owner_text: String,
+		assigned: String, context: Dictionary) -> Dictionary:
+	# Two ways in, one object. A value the file TYPED as an Environment is one; a write that goes
+	# through a WorldEnvironment node's own `environment` slot is the other, and it is recognised by
+	# the slot's name because a node path has no declared type for the lookup to find.
+	var owner_bare: String = owner_text.strip_edges().trim_prefix("self.")
+	var through_node: bool = owner_bare == "environment" or owner_bare.ends_with(".environment")
+	if not through_node and not _class_is_any(object_class, ENVIRONMENT_CLASSES):
+		return {}
+	var value: String = assigned.strip_edges()
+	var line: String = _member_line(owner_text, member, value)
+	if ENVIRONMENT_SWITCHES.has(member):
+		if value != "true" and value != "false":
+			return {}
+		var words: Array = ENVIRONMENT_SWITCHES[member]
+		return _with_pattern(_sentence(OBJECT_ENVIRONMENT,
+			str(words[0] if value == "true" else words[1]), {}), "lighting", line)
+	# U7 already publishes the ambient row, so it keeps U7's exact words - a second spelling of one
+	# setting is exactly the drift the shared grammar exists to prevent.
+	if member == ENVIRONMENT_AMBIENT_MEMBER:
+		return _with_pattern(_sentence(OBJECT_ENVIRONMENT, "Set ambient light to {value}",
+			{"value": [_percent_words(value, context), "value"]}), "lighting", line)
+	if ENVIRONMENT_VALUES.has(member):
+		return _with_pattern(_sentence(OBJECT_ENVIRONMENT, str(ENVIRONMENT_VALUES[member]),
+			{"value": [expression_text(value, context), "value"]}), "lighting", line)
+	return {}
+
+
+## X9. `RenderingServer.global_shader_parameter_set("wind_strength", 2.0)` - one effect parameter set
+## for every shader at once, in the words the sheet's own effect rows already use.
+static func global_effect_parameter_call(call: Dictionary, context: Dictionary) -> Dictionary:
+	if str(call.get("target", "")).strip_edges() != "RenderingServer":
+		return {}
+	if str(call.get("method", "")) != "global_shader_parameter_set":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 2:
+		return {}
+	var set_everywhere: Dictionary = _sentence(OBJECT_SYSTEM, "Set effect parameter {name} to {value}", {
+		"name": [effect_parameter_name(args[0]).replace("_", " "), "name"],
+		"value": [expression_text(args[1], context), "value"]
+	})
+	return _with_pattern(_noted(set_everywhere, "everywhere"), "effects", str(call.get("line", "")))
+
+
+# ── X19. UI that lives in the world ─────────────────────────────────────────────────────────────
+
+
+## X19. The knobs that decide how a label or a bar behaves once it is standing in the world: whether
+## it turns to face the camera, whether walls hide it, and how big one screen pixel of it is. All
+## three are gated on the CLASS, because all three are general property spellings a reading has no
+## business claiming anywhere else.
+static func world_space_ui_assignment(object_name: String, object_class: String, member: String,
+		owner_text: String, assigned: String, context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	var line: String = _member_line(owner_text, member, value)
+	if _class_is_any(object_class, WORLD_SPACE_UI_CLASSES):
+		match member:
+			"billboard":
+				var leg: String = _constant_leg(value)
+				if leg == BILLBOARD_OFF_LEG:
+					return _with_pattern(_sentence(object_name, "Set always face the camera off", {}),
+						"worldspace_ui", line)
+				var faced: Dictionary = _sentence(object_name, "Set always face the camera on", {})
+				if leg == BILLBOARD_UPRIGHT_LEG:
+					faced = _noted(faced, "upright")
+				return _with_pattern(faced, "worldspace_ui", line)
+			"no_depth_test":
+				if value != "true" and value != "false":
+					return {}
+				return _with_pattern(_sentence(object_name,
+					"Set show through walls on" if value == "true" else "Set show through walls off",
+					{}), "worldspace_ui", line)
+			"pixel_size":
+				return _with_pattern(_noted(_sentence(object_name, "Set world size to {value}",
+					{"value": [expression_text(value, context), "value"]}), "per pixel"),
+					"worldspace_ui", line)
+	if _class_is_any(object_class, SUB_VIEWPORT_CLASSES) and member == "render_target_update_mode":
+		var mode: String = _constant_leg(value)
+		if not VIEWPORT_UPDATE_WORDS.has(mode):
+			return {}
+		return _with_pattern(_sentence(object_name, str(VIEWPORT_UPDATE_WORDS[mode]), {}),
+			"worldspace_ui", line)
+	return {}
+
+
+## X19. `hp_bar.region_rect.size.x = hp` - the one write a health bar over a head is made of. Gated on
+## the sprite classes, because `region_rect` belongs to them and to nothing else a reader points at.
+static func bar_width_assignment(target: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	const REGION_WIDTH := "region_rect.size.x"
+	var bare: String = target.strip_edges().trim_prefix("self.")
+	if not bare.ends_with(REGION_WIDTH):
+		return {}
+	# Both spellings: the bar named ahead of the member, and the bare member a sheet hosted ON the
+	# bar writes. A receiver that is not a plain name is a chain this reading has no object for.
+	var receiver: String = bare.substr(0, maxi(bare.length() - REGION_WIDTH.length() - 1, 0)).strip_edges()
+	if not receiver.is_empty() and not is_identifier(receiver):
+		return {}
+	var object_name: String = _receiver_object(receiver, context)
+	if not _class_is_any(object_class_of(object_name, context), SPRITE_CLASSES):
+		return {}
+	var value: String = assigned.strip_edges()
+	return _with_pattern(_sentence(object_name, "Set bar width to {value}",
+		{"value": [expression_text(value, context), "value"]}), "worldspace_ui",
+		"%s = %s" % [target.strip_edges(), value])
+
+
+## X19. `panel_view.push_input(event)` - a click handed to the UI painted onto a surface. Gated on the
+## SubViewport class: `push_input` on a window is the window's own business.
+static func world_space_input_call(call: Dictionary, context: Dictionary) -> Dictionary:
+	if str(call.get("method", "")) != "push_input":
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.is_empty():
+		return {}
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	if receiver.is_empty() or not is_simple_target(receiver):
+		return {}
+	var object_name: String = _receiver_object(receiver, context)
+	if not _class_is_any(object_class_of(object_name, context), SUB_VIEWPORT_CLASSES):
+		return {}
+	var sent: Dictionary = _sentence(object_name, "Send input {event}",
+		{"event": [expression_text(args[0], context), "value"]})
+	return _with_pattern(_noted(sent, "UI on a surface"), "worldspace_ui", str(call.get("line", "")))
+
+
+# ── The batch's own dispatchers ─────────────────────────────────────────────────────────────────
+
+
+## Every batch-thirteen ASSIGNMENT reading in one place, tried in the order that recognises each
+## whole shape before a narrower one could claim half of it. {} when none of them says anything,
+## which keeps the reading the line already had.
+static func spatial_words_assignment(object_name: String, object_class: String, member: String,
+		owner_text: String, assigned: String, context: Dictionary) -> Dictionary:
+	var environment: Dictionary = environment_assignment(object_class, member, owner_text, assigned, context)
+	if not environment.is_empty():
+		return environment
+	var geometry: Dictionary = geometry_assignment(object_name, object_class, member, owner_text,
+		assigned, context)
+	if not geometry.is_empty():
+		return geometry
+	var ranged: Dictionary = visibility_range_assignment(object_name, object_class, member,
+		owner_text, assigned, context)
+	if not ranged.is_empty():
+		return ranged
+	var world_ui: Dictionary = world_space_ui_assignment(object_name, object_class, member,
+		owner_text, assigned, context)
+	if not world_ui.is_empty():
+		return world_ui
+	# X4. The arm a third-person camera hangs off has one number a reader ever sets, and "spring
+	# length" is not what they call it. Its collision margin keeps Godot's own words: there is no
+	# honest simpler name for it, and inventing one would be worse than the property write.
+	if member == "spring_length" and _class_is_any(object_class, SPRING_ARM_CLASSES):
+		return _with_pattern(_sentence(object_name, "Set camera distance to {value}",
+			{"value": [expression_text(assigned, context), "value"]}), "camera",
+			_member_line(owner_text, member, assigned))
+	return {}
+
+
+## Every batch-thirteen CALL reading in one place, in the same order and for the same reason.
+static func spatial_words_call(call: Dictionary, text: String, context: Dictionary) -> Dictionary:
+	var traced: Dictionary = call.duplicate().merged({"line": text}, true)
+	var orbited: Dictionary = orbit_pivot_call(traced, context)
+	if not orbited.is_empty():
+		return orbited
+	var everywhere: Dictionary = global_effect_parameter_call(traced, context)
+	if not everywhere.is_empty():
+		return everywhere
+	return world_space_input_call(traced, context)

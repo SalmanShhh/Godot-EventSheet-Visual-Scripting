@@ -2857,7 +2857,7 @@ Is {platform},Это {platform}
 Pick a random {family},Выбрать случайного {family}
 Pick top {family},Выбрать верхнего {family}
 Pick bottom {family},Выбрать нижнего {family}
-Pick {family} where {test},Выбрать {family}, где {test}
+Pick {family} where {test},"Выбрать {family}, где {test}"
 Pick {family} by UID {uid},Выбрать {family} по UID {uid}
 Family,Семейство
 Base class,Базовый класс
@@ -3116,8 +3116,8 @@ Import event sheet,Импорт листа событий
 Which file?,Какой файл?
 "The exported project, or one exported event sheet",Экспортированный проект или один лист событий
 Browse…,Обзор…
-Which node is which object?,Какой узел — какой объект?
-"One line per object the sheet talks to. The node is written into the rows as-is, so $Player means the child called Player; leave it empty and the rows act on the sheet's own node and the object name is kept in the report.","По одной строке на каждый объект, с которым говорит лист. Узел записывается в строки как есть, поэтому $Player означает потомка с именем Player; оставьте пустым — и строки будут действовать на собственный узел листа, а имя объекта останется в отчёте."
+Which node is which object?,Какой узел - какой объект?
+"One line per object the sheet talks to. The node is written into the rows as-is, so $Player means the child called Player; leave it empty and the rows act on the sheet's own node and the object name is kept in the report.","По одной строке на каждый объект, с которым говорит лист. Узел записывается в строки как есть, поэтому $Player означает потомка с именем Player; оставьте пустым - и строки будут действовать на собственный узел листа, а имя объекта останется в отчёте."
 What it reads like,Как это читается
 What came across,Что перенеслось
 Save as…,Сохранить как…
@@ -3445,3 +3445,148 @@ the floor's slope under {cursor},уклон пола под {cursor}
 none when nothing is hit,"ничего, если ничего не задето"
 on layer {layers},на слое {layers}
 Set {name} to {what},Задать {name} значение {what}
+Animation,Анимация
+Fall at {strength},Падать с ускорением {strength}
+Move relative to the camera along {input} at {speed},Двигать относительно камеры по {input} со скоростью {speed}
+On entered view,Когда появился в кадре
+On left view,Когда покинул кадр
+Orbit around its centre by {amount},Вращаться вокруг своего центра на {amount}
+Orbit {centre} at radius {radius} angle {angle},Вращаться вокруг {centre} на радиусе {radius} под углом {angle}
+Play one-shot animation {name},Проиграть одиночную анимацию {name}
+Send input {event},Отправить ввод {event}
+Set always face the camera off,Всегда лицом к камере выключено
+Set always face the camera on,Всегда лицом к камере включено
+Set ambient light colour to {value},Задать цвет фонового света {value}
+Set ambient occlusion off,Затенение в углах выключено
+Set ambient occlusion on,Затенение в углах включено
+Set bar width to {value},Задать ширину полосы {value}
+Set camera distance to {value},Задать расстояние камеры {value}
+Set fog colour to {value},Задать цвет тумана {value}
+Set fog density to {value},Задать плотность тумана {value}
+Set fog off,Туман выключен
+Set fog on,Туман включён
+Set fog over the sky to {value},Задать туман над небом {value}
+Set global illumination off,Глобальное освещение выключено
+Set global illumination on,Глобальное освещение включено
+Set glow bloom to {value},Задать засветку свечения {value}
+Set glow off,Свечение выключено
+Set glow on,Свечение включено
+Set glow strength to {value},Задать силу свечения {value}
+Set redraw every frame,Перерисовывать каждый кадр
+Set redraw never,Никогда не перерисовывать
+Set redraw only when seen,Перерисовывать только когда видно
+Set see-through to {value},Задать прозрачность {value}
+Set show through walls off,Показывать сквозь стены выключено
+Set show through walls on,Показывать сквозь стены включено
+Set sky rotation to {value},Задать поворот неба {value}
+Set visible from {value},Виден начиная с {value}
+Set visible until {value},Виден до {value}
+Set world size to {value},Задать размер в мире {value}
+Set {name} blend to {value},Задать смешивание {name} на {value}
+UI on a surface,интерфейс на поверхности
+Visible from {near} to {far},Виден от {near} до {far}
+everywhere,везде
+flattened to the ground,прижато к земле
+on the ground plane,в горизонтальной плоскости
+on the side plane,в боковой плоскости
+on the upright plane,в вертикальной плоскости
+per pixel,на пиксель
+upright,вертикально
+Orbiting - a camera or an object going round a centre,"Вращение - камера или объект, идущий вокруг центра"
+UI that lives in the world,"Интерфейс, стоящий в мире"
+Orbit At Radius,Вращаться по радиусу
+Native 3D,Родной 3D
+"Places an object on a circle around another one, on the ground plane. Advance the angle every tick and it orbits.","Ставит объект на окружность вокруг другого, в горизонтальной плоскости. Увеличивайте угол каждый тик, и он будет вращаться."
+Centre,Центр
+The object to go round.,"Объект, вокруг которого вращаться."
+How far out the circle is.,Насколько далеко проходит окружность.
+"Where on the circle this object is, in radians. Add to it every tick to make it go round.","Где на окружности находится этот объект, в радианах. Прибавляйте к нему каждый тик, чтобы он вращался."
+Set Camera Distance,Задать расстояние камеры
+Sets how far back a third-person camera sits. The arm pulls the camera in by itself when a wall is in the way.,"Задаёт, насколько далеко назад стоит камера от третьего лица. Штанга сама подтягивает камеру, когда мешает стена."
+How far the camera sits from what the arm is mounted on.,"Насколько далеко камера стоит от того, на чём закреплена штанга."
+Move Relative To Camera,Двигать относительно камеры
+"Steers a body the way the camera is facing: pushing forward walks away from the camera, whichever way it has been turned. Flattened to the ground, so looking down does not drive the body into the floor. Follow it with Move And Slide.","Ведёт тело туда, куда смотрит камера: движение вперёд уводит от камеры, как бы она ни была повёрнута. Прижато к земле, поэтому взгляд вниз не вгоняет тело в пол. Следом выполните Move And Slide."
+The camera the directions are measured from - forward means the way this camera faces. The default is whichever camera is looking at the scene right now.,"Камера, от которой отсчитываются направления - вперёд означает туда, куда смотрит эта камера. По умолчанию - та камера, что сейчас показывает сцену."
+"The two numbers of steering input, from an Input Vector.","Две величины ввода управления, из Input Vector."
+"How fast to move, in units per second.","Скорость движения, в единицах в секунду."
+Set Visible Range,Задать диапазон видимости
+Draws something only while the camera is inside a distance band - the cheapest way to stop drawing detail nobody can see.,"Рисует объект только пока камера находится в заданном диапазоне расстояний - самый дешёвый способ перестать рисовать детали, которых никто не видит."
+How close the camera has to be before this is drawn. 0 means always.,"Насколько близко должна быть камера, чтобы это рисовалось. 0 означает всегда."
+How far away the camera may get before this stops being drawn. 0 means never stop.,"Насколько далеко может отойти камера, прежде чем это перестанет рисоваться. 0 означает никогда."
+Set See-Through,Задать прозрачность
+Fades a 3D object out without hiding it - what a wall between the camera and the player does.,"Плавно растворяет 3D-объект, не скрывая его - так ведёт себя стена между камерой и игроком."
+See-through,Прозрачность
+"0 is solid, 1 is invisible. The row shows the fraction as a percentage.","0 - непрозрачный, 1 - невидимый. В строке доля показана в процентах."
+Set Shadows Off (3D),Выключить тени (3D)
+Stops a 3D object casting a shadow. The object is still drawn - only its shadow goes.,Объект перестаёт отбрасывать тень. Сам объект по-прежнему рисуется - пропадает только его тень.
+Set Shadows On (3D),Включить тени (3D)
+Makes a 3D object cast a shadow again after Set Shadows Off.,"Возвращает 3D-объекту тень после того, как её выключили."
+Set Always Face The Camera,Задать всегда лицом к камере
+World-space UI,Интерфейс в мире
+Turns a label or a sprite to face the camera wherever the camera goes - what a name tag over a head needs.,"Поворачивает надпись или спрайт лицом к камере, куда бы камера ни двигалась - то, что нужно табличке с именем над головой."
+Label or sprite,Надпись или спрайт
+The world-space label or sprite to turn.,"Надпись или спрайт в мире, который нужно повернуть."
+Set Always Face The Camera (Upright),Задать всегда лицом к камере (вертикально)
+"Turns a label or a sprite to face the camera sideways only, so it stays upright when the camera looks down at it.","Поворачивает надпись или спрайт к камере только вбок, чтобы она оставалась вертикальной, когда камера смотрит сверху."
+Set Show Through Walls,Задать показ сквозь стены
+Draws a world-space label or icon over whatever is in front of it - what an objective marker needs.,"Рисует надпись или значок в мире поверх всего, что перед ним - то, что нужно маркеру цели."
+The world-space label or sprite to change.,"Надпись или спрайт в мире, который нужно изменить."
+Set World Size,Задать размер в мире
+"Sets how big a world-space label or sprite is, measured in world units per pixel.","Задаёт размер надписи или спрайта в мире, в мировых единицах на пиксель."
+The world-space label or sprite to resize.,"Надпись или спрайт в мире, размер которого нужно изменить."
+How many world units one pixel of the label or sprite is. Smaller means smaller.,Сколько мировых единиц занимает один пиксель надписи или спрайта. Меньше значит мельче.
+Set Bar Width,Задать ширину полосы
+Cuts a sprite off at a width - how a health bar over a head is driven from a number.,Обрезает спрайт по ширине - так полоса здоровья над головой управляется числом.
+Bar,Полоса
+The world-space sprite the bar is drawn on.,"Спрайт в мире, на котором рисуется полоса."
+"How wide the visible slice of the image is, in pixels.","Насколько широк видимый кусок изображения, в пикселях."
+Send Input To Surface,Отправить ввод на поверхность
+"Hands a click or a key to the UI a SubViewport is painting onto a surface, so an in-world screen can be used.","Передаёт клик или клавишу интерфейсу, который SubViewport рисует на поверхности, чтобы экраном в мире можно было пользоваться."
+The input to hand to the UI painted on the surface.,"Ввод, который передаётся интерфейсу, нарисованному на поверхности."
+Set Surface Redraw,Задать перерисовку поверхности
+Decides how often an in-world screen is redrawn. Only when seen is the cheap setting and the right default.,"Определяет, как часто перерисовывается экран в мире. Только когда видно - дешёвый вариант и правильное значение по умолчанию."
+When,Когда
+How often the surface is redrawn.,Как часто перерисовывается поверхность.
+Set surface redraw to {mode},Задать перерисовку поверхности {mode}
+Set Fog On/Off,Включить или выключить туман
+Environment,Окружение
+Switches the world's fog on or off - the one row that turns a clear day into a misty one.,"Включает или выключает туман в мире - одна строка, которая превращает ясный день в туманный."
+The environment whose look is being changed.,"Окружение, вид которого меняется."
+Whether the world has fog at all.,Есть ли в мире туман вообще.
+Set fog {on},Задать туман {on}
+Set Fog Density,Задать плотность тумана
+Sets how thick the world's fog is. Ramp it up over time for a storm rolling in.,Задаёт густоту тумана в мире. Наращивайте её со временем - и надвигается буря.
+Density,Плотность
+"How thick the fog is. Small numbers: 0.01 is a haze, 0.1 is a wall.","Насколько густой туман. Числа маленькие: 0.01 - дымка, 0.1 - стена."
+Set Fog Colour,Задать цвет тумана
+"Sets the colour of the world's fog - dusk purple, underwater green, dust orange.","Задаёт цвет тумана в мире - сумеречный фиолетовый, подводный зелёный, пыльный оранжевый."
+Colour,Цвет
+The colour the fog picks up from the light.,"Цвет, который туман получает от света."
+Set Glow On/Off,Включить или выключить свечение
+"Switches the world's glow on or off - what makes neon, fire and magic read as bright.","Включает или выключает свечение в мире - именно оно делает неон, огонь и магию яркими."
+Whether bright things bleed light into what is around them.,"Растекается ли свет от ярких предметов на то, что вокруг них."
+Set glow {on},Задать свечение {on}
+Set Glow Strength,Задать силу свечения
+"Sets how strongly bright things glow. Push it up for a boss room, back down when the fight ends.","Задаёт, насколько сильно светятся яркие вещи. Поднимите её в комнате босса и опустите, когда бой закончится."
+How much bright things bleed. Around 1 is strong.,Насколько сильно растекается свет от ярких предметов. Около 1 - сильно.
+Set Ambient Occlusion On/Off,Включить или выключить затенение в углах
+"Darkens the corners and creases of a 3D scene, which is what makes it look solid. Costs frames - turn it off on weak machines.",Затемняет углы и складки 3D-сцены - именно это делает её объёмной. Стоит кадров - на слабых машинах выключайте.
+Whether corners and creases are darkened.,Затемняются ли углы и складки.
+Set ambient occlusion {on},Задать затенение в углах {on}
+Set Sky Rotation,Задать поворот неба
+Turns the sky. Advance it slowly every tick and the clouds drift.,Поворачивает небо. Прибавляйте понемногу каждый тик - и облака поплывут.
+Rotation,Поворот
+"How the sky is turned, in radians on each axis.","Как повёрнуто небо, в радианах по каждой оси."
+Play One-Shot Animation,Проиграть одиночную анимацию
+"Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.","Запускает одиночную анимацию на дереве смешивания - выстрел, реакцию на удар, взмах рукой - поверх того, что персонаж уже делает."
+One-shot,Одиночная анимация
+Current State Is,Текущее состояние
+True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.,"Истинно, пока машина состояний дерева смешивания находится в названном состоянии - на этом ветвятся отход после приземления или окно атаки."
+Set Hearing Distance (3D),Задать дальность слышимости (3D)
+Audio,Звук
+Sets how far a 3D positional sound carries. Past this distance it is silent.,"Задаёт, как далеко разносится позиционный 3D-звук. Дальше этого расстояния он не слышен."
+How far away the sound can still be heard at all. 0 means no limit.,На каком расстоянии звук ещё слышно. 0 означает без ограничения.
+Set Loudness Falloff,Задать спад громкости
+Sets how quickly a 3D positional sound fades as the listener moves away.,"Задаёт, как быстро позиционный 3D-звук затухает по мере удаления слушателя."
+Falloff,Спад
+How far the sound stays at full loudness before it starts fading. Bigger carries further.,"На каком расстоянии звук остаётся в полную громкость, прежде чем начнёт затухать. Больше значение - дальше слышно."
