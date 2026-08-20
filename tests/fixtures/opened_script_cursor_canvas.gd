@@ -6,6 +6,7 @@ extends Node3D
 var hovered: Node3D = null
 var best: Node3D = null
 
+
 func _pick(mouse_pos: Vector2) -> void:
 	var origin := cam.project_ray_origin(mouse_pos)
 	var dir := cam.project_ray_normal(mouse_pos)
@@ -16,6 +17,7 @@ func _pick(mouse_pos: Vector2) -> void:
 		return
 	hovered = hit.collider
 
+
 func _aim() -> void:
 	var from := cam.project_ray_origin(crosshair.get_global_transform_with_canvas().origin)
 	var dir := cam.project_ray_normal(crosshair.get_global_transform_with_canvas().origin)
@@ -25,6 +27,7 @@ func _aim() -> void:
 	if hit.is_empty():
 		return
 	hovered = hit.collider
+
 
 func _aim_assist(enemies: Array) -> void:
 	var centre := get_viewport().get_visible_rect().size / 2.0
@@ -38,6 +41,7 @@ func _aim_assist(enemies: Array) -> void:
 		if d < best_d:
 			best_d = d
 			best = e
+
 
 func _screen_pos(o: Node2D) -> Vector2:
 	return o.get_global_transform_with_canvas().origin
