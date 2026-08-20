@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Fixed - a connects-only `_ready` no longer sinks its whole file
+
+- **Opening a .gd whose `_ready` holds nothing but connect lines lifts again, end to end.** Such a
+  `_ready` lifts to zero events (emission regenerates it from the handlers' connect metadata), so
+  nothing carried the idiomatic two-blank gap above it - the re-emitted file came back one line
+  short, the whole-file byte-verify refused it, and EVERY function in the file (the menu handler,
+  an unrelated `_draw`, all of them) degraded to raw script blocks. The gap - and a non-canonical
+  `_ready` header spelling - now ride the first lifted event as metadata the compiler reads back,
+  so the reported shape (a named `id_pressed` handler dispatching on a top-level `match id:` with
+  literal arms) lifts as the signal-trigger event and MatchRow it is.
+- **A trigger handler that cannot re-emit its own bytes now degrades alone.** The trailing-run
+  event lift gained the per-function byte gate its sheet-function twin already had: a handler whose
+  lifted events do not reproduce its exact source re-anchors as a verbatim block on the spot,
+  instead of surfacing only at the whole-file verify and reverting every other function with it.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

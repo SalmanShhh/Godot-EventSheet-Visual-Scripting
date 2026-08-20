@@ -10,11 +10,13 @@
 # become named captures; params round-trip as strings because codegen substitutes with
 # plain str()).
 #
-# THE CONTRACT (lossless rule): lifting is all-or-nothing per file and verified by
-# recompiling the whole sheet - if the output is not byte-identical to the source, the
-# lift is reverted and every function stays a verbatim block row. Only the trailing run of
-# trigger functions is considered (EventForge's own layout); files with other layouts
-# simply keep their blocks.
+# THE CONTRACT (lossless rule): every lift is verified by recompiling the whole sheet - if
+# the output is not byte-identical to the source, the lift is reverted and every function
+# stays a verbatim block row. Per-function byte gates screen each candidate FIRST (a function
+# whose lifted form cannot re-emit its own bytes re-anchors alone as a verbatim block), so
+# the whole-file verify is the backstop, not the everyday judge. Only the trailing run of
+# trigger functions plus the mid-file anchor pass are considered (EventForge's own layout);
+# files with other layouts simply keep their blocks.
 @tool
 class_name EventSheetACELifter
 extends RefCounted
@@ -292,6 +294,14 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# this carries the narrow ones too, so a run that re-anchors onto a boundary ending in text
 	# can state "no blank here" instead of silently inheriting that default.
 	var first_section_blanks: int = -1
+	# A connects-only `_ready` lifts to ZERO events (emission regenerates it from the handlers'
+	# connect metas), so no OnReady event survives to carry its leading gap or a non-canonical
+	# header spelling. Both are remembered here and stamped onto the first lifted event below,
+	# where the compiler's synthesized `_ready` reads them back. Without this, the idiomatic
+	# two-blank gap above a connects-only `_ready` re-emitted as ONE blank, failed the whole-file
+	# byte-verify, and reverted EVERY function in the file to raw blocks.
+	var connects_ready_blanks: int = 0
+	var connects_ready_header: String = ""
 	for index in range(first_run_index, sheet.events.size()):
 		var row: RawCodeRow = sheet.events[index] as RawCodeRow
 		var failed: bool = false
@@ -366,9 +376,31 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						# Lenient ifs: unmatched control flow becomes in-flow GDScript inside
 						# the event instead of failing the file (byte-verify still gates).
 						var lift: Dictionary = _lift_function(row.code.split("\n"), connections, true)
+						# Per-function gate, the trigger-branch twin of the sheet-function gate below:
+						# the lifted events must re-emit this handler's exact bytes, or the handler
+						# stays raw and the run re-anchors after it (a mis-emitting handler used to
+						# surface only at the whole-file verify, which reverted EVERY function in the
+						# file). Exempt: `_ready` (its emission regenerates connect lines that live
+						# outside its own events) and a `_process`/`_physics_process` that may inline
+						# split-out async coroutines (its re-emission spans other rows by design).
+						var gate_exempt: bool = header.begins_with("func _ready(") \
+								or (not async_funcs.is_empty() and (header.begins_with("func _process(") or header.begins_with("func _physics_process(")))
+						# Group markers are stripped from BOTH sides exactly as the whole-file verify
+						# strips them: the `# @group:` tags re-emit from a registry the full compile
+						# fills, which this per-function probe does not have.
+						if bool(lift.get("ok", false)) and not gate_exempt \
+								and not (lift.get("events", []) as Array).is_empty() \
+								and _strip_group_markers(SheetCompiler.emit_anchored_trigger_text(lift.get("events", []))) != _strip_group_markers(row.code):
+							lift = {"ok": false}
 						if bool(lift.get("ok", false)):
 							saw_function = true
 							var lift_events: Array = lift.get("events", [])
+							if lift_events.is_empty() and header.begins_with("func _ready("):
+								# Connects-only `_ready`: remember its gap (and any non-canonical
+								# header spelling) for the stamp below - see the declarations above.
+								connects_ready_blanks = pending_blank_count
+								if header != "func _ready() -> void:":
+									connects_ready_header = header
 							if not async_funcs.is_empty() and (header.begins_with("func _process(") or header.begins_with("func _physics_process(")):
 								lift_events = _inline_async_events(lift_events, header, async_funcs, connections, inlined_async_uids)
 							# Preserve the source's inter-function spacing: stamp the gap count onto this
@@ -423,6 +455,8 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 			pending_header_text = ""
 			saw_function = false
 			first_section_blanks = -1
+			connects_ready_blanks = 0
+			connects_ready_header = ""
 			anchor_index = index + 1
 		# A blank separator's count was just consumed by (or is irrelevant to) this non-blank row - clear it
 		# so it never leaks onto a later function. The "blank" branch continues past here, keeping its
@@ -460,6 +494,17 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				# note written directly above a function measures 0, which the default would turn
 				# into a line the file never had.
 				_stamp_leading_blanks(lifted_events, lifted_functions, maxi(first_section_blanks, 0))
+		# The connects-only `_ready`'s remembered gap/header ride the first lifted event (the
+		# synthesized `_ready` has no OnReady event of its own to carry them) - stamped on exactly
+		# one event; the compiler scans for whichever event carries the metas.
+		if connects_ready_blanks > 1 or not connects_ready_header.is_empty():
+			for stamped_event: Variant in lifted_events:
+				if stamped_event is EventRow:
+					if connects_ready_blanks > 1:
+						(stamped_event as EventRow).set_meta("__source_ready_blanks", connects_ready_blanks)
+					if not connects_ready_header.is_empty():
+						(stamped_event as EventRow).set_meta("__source_ready_header", connects_ready_header)
+					break
 		# Reconstruct event groups from the recovered `## @ace_group` declarations + the per-row `# @group:`
 		# tags the lift captured (transient meta on the rows). A no-op when the source declares no groups.
 		lifted_events = _reconstruct_groups(lifted_events, _recover_group_declarations(source))

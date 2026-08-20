@@ -294,7 +294,9 @@ static func _verbs_in(sheet: EventSheetResource) -> PackedStringArray:
 		if not (row is EventRow):
 			continue
 		var event: EventRow = row as EventRow
-		if not event.trigger_id.strip_edges().is_empty():
+		# A "signal:<name>" trigger names a signal the fence itself declares (a lifted custom-signal
+		# handler), never a registry verb - the registry cannot offer one by design, so it is exempt.
+		if not event.trigger_id.strip_edges().is_empty() and not event.trigger_id.begins_with("signal:"):
 			verbs.append("%s/%s" % [event.trigger_provider_id, event.trigger_id])
 		for condition: Variant in event.conditions:
 			if condition is ACECondition:
