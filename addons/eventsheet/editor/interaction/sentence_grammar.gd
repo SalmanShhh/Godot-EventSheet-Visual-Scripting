@@ -233,6 +233,26 @@ const CONTROLS_SENSOR_WORDS: Dictionary = {
 	"Input.get_magnetometer()": "magnetic field"
 }
 
+## X22. The two sensors a neutral point is taken from, by the object-dotted name the row says them
+## under. Gravity is named apart from acceleration on purpose: they are the smoothed and unsmoothed
+## halves of the same idea, and mixing them is the classic tilt bug.
+const TILT_SENSOR_WORDS: Dictionary = {
+	"Input.get_accelerometer()": "Acceleration",
+	"Input.get_gravity()": "Gravity"
+}
+
+
+## X22. The words a per-frame delta is written in, for the steer row that drops a trailing one from
+## the strength it prints. Kept here rather than borrowed so the grammar and the pattern walk do not
+## have to name each other.
+const PER_FRAME_DELTA_WORDS: PackedStringArray = [
+	"delta", "_delta", "get_process_delta_time()", "get_physics_process_delta_time()"
+]
+
+## X28. The engine's seconds clock, spelled the way an ordinary Godot script spells it.
+const ENGINE_SECONDS_CLOCK := "Time.get_ticks_msec() / 1000.0"
+
+
 ## R25. The whole-expression reads about the gamepads themselves.
 const CONTROLS_GAMEPAD_WORDS: Dictionary = {
 	"Input.get_connected_joypads().size()": "gamepad count",
@@ -7805,6 +7825,188 @@ static func mouse_look_note(turn: Dictionary, pitch: Dictionary, clamp_limit: St
 	if not clamp_limit.is_empty():
 		pieces.append("%s ±%s" % [translate("clamped"), clamp_limit])
 	return ", ".join(pieces)
+
+
+## X22. `neutral = Input.get_accelerometer()` as {"text", "note"} - the calibration row - or {} for
+## any other line. The whole shape is one sensor read stored in a variable this file measures a tilt
+## FROM, so the context has to say the name is a neutral point before the line is read as one:
+## storing a sensor reading for its own sake is a sensor reading.
+static func tilt_neutral_parts(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = text.strip_edges()
+	var at: int = top_level_index(bare, " = ")
+	if at <= 0:
+		return {}
+	var name_text: String = bare.substr(0, at).strip_edges()
+	var value: String = bare.substr(at + 3).strip_edges()
+	if not is_identifier(name_text) or not TILT_SENSOR_WORDS.has(value):
+		return {}
+	var neutrals: Dictionary = {}
+	for tilt_name: Variant in (context.get("tilt_variables", {}) as Dictionary):
+		neutrals[str((context.get("tilt_variables", {}) as Dictionary)[tilt_name])] = true
+	if not neutrals.has(name_text):
+		return {}
+	return {
+		"text": _fill(translate("Set {neutral} to Touch.{sensor}"), {
+			"neutral": _spaced_name(name_text),
+			"sensor": str(TILT_SENSOR_WORDS[value])
+		}),
+		"note": translate("hold the device how you want \"flat\" to feel")
+	}
+
+
+## X22. `velocity.x = tilt.x * tilt_strength * delta` as {"text"} - the tilt fed into movement - or
+## {} when the line is any other multiplication. The value on the right must be one the FILE measured
+## from a neutral point, which is what tells tilt steering from arithmetic that happens to look alike.
+static func tilt_steer_parts(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = text.strip_edges()
+	var at: int = top_level_index(bare, " = ")
+	if at <= 0:
+		return {}
+	var target: String = bare.substr(0, at).strip_edges().trim_prefix("self.")
+	if not target.begins_with("velocity."):
+		return {}
+	var factors: PackedStringArray = split_top_level(bare.substr(at + 3).strip_edges(), " * ")
+	if factors.size() < 2:
+		return {}
+	var lead: String = factors[0].strip_edges()
+	var dot_at: int = lead.rfind(".")
+	if dot_at <= 0:
+		return {}
+	var tilt_name: String = lead.substr(0, dot_at).strip_edges()
+	var axis: String = lead.substr(dot_at + 1).strip_edges()
+	if not (context.get("tilt_variables", {}) as Dictionary).has(tilt_name):
+		return {}
+	if not ["x", "y", "z"].has(axis):
+		return {}
+	var strength: PackedStringArray = PackedStringArray()
+	for index: int in range(1, factors.size()):
+		var factor: String = factors[index].strip_edges()
+		if index == factors.size() - 1 and PER_FRAME_DELTA_WORDS.has(factor):
+			continue
+		strength.append(factor)
+	if strength.is_empty():
+		return {}
+	return {"text": _fill(translate("Steer by tilt {axis} at {strength}"), {
+		"axis": axis,
+		"strength": _steer_strength_words(" * ".join(strength), context)
+	})}
+
+
+## The strength half of a tilt-steer row: a variable reads as the words its name is, anything else as
+## the expression it is written as. A reader knows `tilt_strength` by sight and does not need it
+## re-spelled; an inline number or a call has no name to use.
+static func _steer_strength_words(value: String, context: Dictionary) -> String:
+	if is_identifier(value):
+		return _spaced_name(value)
+	return expression_text(value, context)
+
+
+## X22. `rotate_y(-rate.y * delta)` as {"rate"} - the body's half of a gyro aim - or {} when the turn
+## is driven by anything but a rotation rate this file read from the gyroscope. Mouse look's own
+## shape, with the phone doing the turning.
+static func gyro_aim_turn_parts(text: String, context: Dictionary) -> Dictionary:
+	var turn: Dictionary = mouse_look_turn_parts(text)
+	if turn.is_empty():
+		return {}
+	var rate: String = _gyro_rate_name(str(turn.get("amount", "")), context)
+	return {} if rate.is_empty() else {"rate": rate}
+
+
+## X22. `cam.rotate_x(-rate.x * delta)` as {"camera", "rate"} - the camera's half - or {}. The camera
+## must be NAMED and the rate must be the SAME one the turn used: two sensors pitching and yawing
+## unrelated things are two rows.
+static func gyro_aim_pitch_parts(text: String, context: Dictionary, rate_name: String) -> Dictionary:
+	var pitch: Dictionary = mouse_look_pitch_parts(text)
+	if pitch.is_empty():
+		return {}
+	var rate: String = _gyro_rate_name(str(pitch.get("amount", "")), context)
+	if rate.is_empty() or rate != rate_name:
+		return {}
+	return {"camera": str(pitch.get("camera", "")), "rate": rate}
+
+
+## The rotation rate an amount is driven by - the `rate` in `-rate.y * delta` - or "" when the amount
+## names none. Only a value the FILE read from the gyroscope counts.
+static func _gyro_rate_name(amount: String, context: Dictionary) -> String:
+	var rates: Dictionary = context.get("rate_variables", {})
+	if rates.is_empty():
+		return ""
+	for factor: String in split_top_level(amount.strip_edges().trim_prefix("-"), " * "):
+		var piece: String = factor.strip_edges().trim_prefix("-")
+		var dot_at: int = piece.rfind(".")
+		if dot_at <= 0:
+			continue
+		var name_text: String = piece.substr(0, dot_at).strip_edges()
+		if rates.has(name_text):
+			return name_text
+	return ""
+
+
+## X22. What the muted note beside a gyro aim row says: which half of the turn happens where, and the
+## sensor it all comes off. The same two facts Mouse look's note carries, in the words the sensor
+## rows already use.
+static func gyro_aim_note() -> String:
+	# `Touch.RotationRate` is the expression's own name rather than prose, so it stays as it is in
+	# every language - the same way `AJAX.LastData` does.
+	return "%s · Touch.RotationRate" % translate("yaw on the body, pitch on the camera")
+
+
+## X28. The flag-and-deadline pair an input window is opened with, as {"text", "note"}, or {} when the
+## two lines are not that pair. `window_open = true` on its own is a flag; the deadline beside it is
+## what makes it a window, which is why both lines are required and why the file's own facts have to
+## agree that this is the window they describe.
+static func input_window_parts(first: String, second: String, context: Dictionary) -> Dictionary:
+	var window: Dictionary = context.get("input_window", {})
+	if window.is_empty():
+		return {}
+	var opened: String = _assigned_name(first, "true")
+	if opened.is_empty() or opened != str(window.get("flag", "")):
+		return {}
+	var deadline_at: int = top_level_index(second.strip_edges(), " = ")
+	if deadline_at <= 0:
+		return {}
+	var deadline_name: String = second.strip_edges().substr(0, deadline_at).strip_edges()
+	if deadline_name != str(window.get("deadline", "")):
+		return {}
+	var value: String = second.strip_edges().substr(deadline_at + 3).strip_edges()
+	var plus_at: int = top_level_index(value, " + ")
+	if plus_at <= 0 or value.substr(0, plus_at).strip_edges() != ENGINE_SECONDS_CLOCK:
+		return {}
+	var seconds: String = value.substr(plus_at + 3).strip_edges()
+	var action: String = str(window.get("action", ""))
+	var text: String = ""
+	if action.is_empty():
+		text = _fill(translate("Open input window for {seconds}"), {
+			"seconds": expression_text(seconds, context)})
+	else:
+		text = _fill(translate("Open input window {action} for {seconds}"), {
+			"action": action, "seconds": expression_text(seconds, context)})
+	return {"text": text, "note": input_window_note(str(window.get("perfect", "")))}
+
+
+## X28. What the muted note beside an Open input window row says: where the perfect band starts when
+## the file grades its answers, and WHICH CLOCK the deadline is on. The clock is not a detail - the
+## engine's own clock keeps counting while the game is paused, so a window opened before a pause can
+## close during one, and a reader has to be told rather than find out.
+static func input_window_note(perfect: String) -> String:
+	var clock: String = translate("on the engine clock, which keeps running while paused")
+	if perfect.strip_edges().is_empty():
+		return clock
+	return "%s · %s" % [_fill(translate("perfect = the last {seconds}s"),
+		{"seconds": perfect.strip_edges()}), clock]
+
+
+## `name = <value>` as the name, when the value is exactly the one asked for, else "". The narrow
+## question an opened window asks of its first line.
+static func _assigned_name(text: String, expected_value: String) -> String:
+	var bare: String = text.strip_edges()
+	var at: int = top_level_index(bare, " = ")
+	if at <= 0:
+		return ""
+	var name_text: String = bare.substr(0, at).strip_edges()
+	if not is_identifier(name_text) or bare.substr(at + 3).strip_edges() != expected_value:
+		return ""
+	return name_text
 
 
 ## U12. Two adjacent volume writes driven by ONE fraction as {"text"} - the crossfade they are - or

@@ -25,7 +25,9 @@ const PATTERN_IDS: PackedStringArray = [
 	"anchor", "solid", "jumpthru", "picking", "family", "layers", "text", "platform", "create_object",
 	"overlap", "advanced_random", "date",
 	"ajax", "lighting", "fps_look", "background",
-	"physics", "path", "data_asset", "window", "text_format"
+	"physics", "path", "data_asset", "window", "text_format",
+	# X22 / X23 / X25 / X28 / X29 - the sensor, touch, shooter, timed-input and options shapes.
+	"gyro_controls", "swipe", "hitscan", "secrets", "qte", "accessibility_options"
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is

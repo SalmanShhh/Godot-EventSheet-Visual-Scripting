@@ -2016,6 +2016,39 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Start Timer** (`seconds: float`) - Starts (or restarts) the countdown with the given duration.
 - **Stop Timer** - Stops the countdown without firing On Timer.
 
+### TouchGesturesBehavior (`res://eventsheet_addons/touch_gestures/touch_gestures.gd`)
+@ace_tags(input, touch, gestures) @ace_category("Touch Gestures") @ace_version(1.0.0)
+
+#### Triggers
+- **On Swipe**
+- **On Shape Drawn**
+- **On Stroke Started**
+
+#### Conditions
+- **Swipe Was** (`direction: String`) - Whether the swipe that just fired went this way ("left", "right", "up", "down", and with eight-way on "up left", "up right", "down left", "down right").
+- **Shape Was** (`shape_name: String`) - Whether the shape that was just drawn is this one.
+- **Knows Shape** (`shape_name: String`) - Whether a shape has been taught under this name.
+
+#### Actions
+- **Set Swipe Thresholds** (`minimum_distance: float, maximum_seconds: float`) - Sets how far (pixels) and how fast (seconds) a drag has to be before it counts as a swipe. The defaults suit a phone held in one hand.
+- **Set Eight Way** (`on: bool`) - Turns the four diagonals on or off. Off, a diagonal swipe reports as whichever of left / right / up / down it leaned towards.
+- **Teach Shape From Stroke** (`shape_name: String`) - Records the stroke that was just drawn as a template under a name. Draw the shape in the running game, then call this - there is no coordinate list to type. Saves into the attached shape library when there is one.
+- **Forget Shape** (`shape_name: String`) - Removes a taught shape, so it stops being matched.
+- **Load Shapes From Library** - Reads every taught shape out of the attached shape library, replacing what is loaded. Called for you when the behaviour starts.
+- **Save Shapes To Library** - Writes the taught shapes back to the attached shape library file, so they survive the run. Does nothing when no library is attached.
+- **Clear Stroke** - Throws away the stroke gathered so far, so a gesture interrupted by a menu cannot finish afterwards.
+
+#### Expressions
+- **Swipe Direction** - Which way the swipe went, as a word (inside On Swipe).
+- **Swipe Angle** - The swipe's angle in degrees, 0 pointing right and counting clockwise the way screen coordinates do (inside On Swipe).
+- **Swipe Distance** - How far the finger travelled, in pixels (inside On Swipe).
+- **Swipe Seconds** - How long the swipe took, in seconds (inside On Swipe).
+- **Swipe Speed** - How fast the swipe was, in pixels per second - the number a flick's momentum should scale with (inside On Swipe).
+- **Shape Name** - The name of the shape that was just drawn (inside On Shape Drawn).
+- **Shape Closeness** - How close the stroke was to the taught shape, 0 to 1, where 1 is an exact match (inside On Shape Drawn).
+- **Stroke Length** - How far the finger travelled along the whole stroke, in pixels - the drawn line's length, not the distance between its ends.
+- **Stroke Points** - How many points the stroke gathered so far.
+
 ### TweenBehavior (`res://eventsheet_addons/tween/tween_behavior.gd`)
 @ace_tags(motion, juice) @ace_category("Tween") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -2423,6 +2456,23 @@ the behavior SHAPES as free actions (T1 / T3 / T4).
 - **Pin To** (`anchor: String, offset: String`) - Puts the object at another object's place, offset by however far apart you want them.
 - **Pin Angle To** (`anchor: String`) - Turns the object to match another object's angle, so the two stay aligned.
 
+### Boomer Weapons (`res://addons/eventforge/registration/modules/boomer_weapons_aces.gd`)
+Weapons in 3D (X25): hitscan, explosions, an arsenal and the secrets counter.
+
+#### Conditions
+- **Secret Already Found** (`name: String, found: String`) - True when this secret has already been counted - the guard on the chime and the pop-up.
+
+#### Actions
+- **Fire Hitscan** (`spread: String, damage: String, reach: String, mask: String`) - Shoots a ray from the middle of the screen and damages the first thing it hits. Instant, no projectile - the shotgun, the rifle and the zap all start here.
+- **Explode At** (`point: String, radius: String, damage: String, push: String, mask: String`) - Damages and throws everything near a point, fading with distance. The push is real physics, so standing in your own blast throws you - which is how rocket jumping works.
+- **Switch To Next Weapon** (`index: String, weapons: String`) - Moves to the next weapon in the list, wrapping round to the first after the last - the mouse wheel up.
+- **Switch To Previous Weapon** (`index: String, weapons: String`) - Moves to the weapon before this one, wrapping round to the last after the first - the mouse wheel down.
+- **Mark Secret Found** (`name: String, found: String`) - Records a secret the first time it is found and never again, so walking back through the room does not count twice.
+
+#### Expressions
+- **Current Weapon** (`weapons: String, index: String`) - The weapon that is out right now - the name to look ammo up by and to show on the HUD.
+- **Secrets Found** (`found: String`) - How many secrets the player has found - the left-hand number of the end-of-level screen.
+
 ### Camera Fov (`res://addons/eventforge/registration/modules/camera_fov_aces.gd`)
 Camera FOV vocabulary (field of view from events).
 
@@ -2803,6 +2853,9 @@ Controls (R23-R29): analog, gamepads by number, touch and gestures,
 - **Set Cursor Invisible** - Hides the cursor while leaving it free to move - a game that draws its own crosshair.
 - **Keep Cursor Inside The Window** - The cursor stays visible but cannot leave the window - strategy games on two monitors.
 - **Move Cursor To** (`position: String`) - Teleports the pointer - snap it to a menu item, re-centre it after a cutscene.
+- **Set Neutral Tilt** (`neutral: String`) - Remembers how the device is being held right now as "flat", so every tilt after this is measured from there. Offer it as a Calibrate button - it is the difference between a tilt game that works and one that does not.
+- **Steer By Tilt** (`tilt: String, sensor_axis: String, strength: String, motion_axis: String, target: String`) - Feeds one direction of the tilt into movement, so leaning the device steers. Measure the tilt from a neutral point first, or the game only plays flat on a table.
+- **Aim By Gyro** (`rate: String, camera: String`) - Turns the body and pitches the camera by how fast the device is being turned - mouse look with the phone itself. Reports 0 on desktop, so keep a mouse or stick path beside it.
 
 #### Expressions
 - **Axis Of Gamepad** (`device: String, axis: String`) - How far a stick is pushed, -100 to 100 (Godot counts the same travel from -1 to 1).
@@ -3108,6 +3161,33 @@ File management (read / write / JSON, plus directory + file operations).
 - **File Size (bytes)** (`path: String`) - Returns a file's size in bytes, or zero if the file doesn't exist.
 - **List Files** (`path: String`) - Returns the list of file names inside a folder (empty if the folder is missing).
 - **List Subdirectories** (`path: String`) - Returns the list of subfolder names inside a folder.
+
+### Game Accessibility (`res://addons/eventforge/registration/modules/game_accessibility_aces.gd`)
+Accessibility for the GAME (X29): the options every project should be one row
+
+#### Conditions
+- **Any Input Received** (`listening: String`) - True on the next key, button or click after Start Listening For, used inside an input event - whatever the player pressed is what they want bound.
+- **No Flashing** - True while the player has asked for no flashing - guard a strobe with it and fade in the other branch.
+
+#### Actions
+- **Start Listening For** (`listening: String, action: String`) - Marks a control as the one being rebound, so the next input the player gives belongs to it. The first row of a remap screen.
+- **Rebind Control To** (`action: String, event: String`) - Takes the old bindings off a control and puts the new one on, in one row - the middle of a remap screen. Save Bindings afterwards to keep it.
+- **Stop Listening** (`listening: String`) - Ends the rebind, so ordinary controls work again. Put it right after the Rebind row and on the Cancel button.
+- **Treat Control As A Toggle** (`action: String, held: String, as_toggle: String`) - One row that makes a held control work either way: held down while the setting is off, pressed once on and once off while it is on. Every other row asks the yes-no variable, so nothing else changes.
+- **Play Sound With Caption** (`path: String, caption: String, bus: String, volume_db: String`) - Plays a sound and shows its caption on the HUD caption strip. Blank caption means the sound carries no information and needs none.
+- **Show Caption** (`caption: String`) - Puts one line on the caption strip, for a sound played some other way or for something that makes no sound at all.
+- **Set Effect Strength** (`percent: String`) - One dial every shake, kick and flash multiplies itself by. A player who gets motion sick turns it to 0 and keeps the game.
+- **Set No Flashing** (`on: String`) - Turns every flash into a fade for players with photosensitive epilepsy. Ask it before a flash row and fade instead.
+- **Set Text Size Scale** (`scale: String`) - One number every text size multiplies by, so a whole game's text grows together instead of one label at a time.
+- **Use Palette** (`palette: String, path: String`) - Swaps the colour set the game draws with, so a colour-blind player can pick one they can tell apart. Keep each palette as a data asset and show the swatches beside the name.
+- **Set Aim Assist Radius** (`radius: String`) - How generous the aim is, as a player setting rather than a designer's guess - the pick radius a shot searches within.
+- **Speak** (`text: String`) - Reads a line out loud in the player's own language, using the voices their system already has. Does nothing where there is no voice, so it is safe to leave in.
+- **Stop Speaking** - Cuts off whatever is being spoken - put it before the next Speak so two lines never talk over each other.
+
+#### Expressions
+- **Effect Strength** - The effect dial as 0 to 1, 1 when nobody has set it - multiply a shake or a kick by it.
+- **Text Size Scale** - The text dial, 1 when nobody has set it - multiply a Set Font Size by it.
+- **Aim Assist Radius** - The aim-help dial, 0 when nobody has set it - hand it to the row that picks the nearest target.
 
 ### Game Feel (`res://addons/eventforge/registration/modules/game_feel_aces.gd`)
 Game Feel: the five snippets every game copies, as rows.
@@ -4025,6 +4105,28 @@ Tilemaps (TileMapLayer, Godot 4.3+)
 - **Used Cells Count** (`target: String`) - Returns how many cells in the tilemap currently hold a tile.
 - **Position To Tile** (`pos: String, target: String`) - Converts a pixel position into the cell coordinates that contain it.
 - **Tile To Position** (`coords: String, target: String`) - Converts cell coordinates into the pixel position at that cell's center.
+
+### Timed Input (`res://addons/eventforge/registration/modules/timed_input_aces.gd`)
+Timed inputs (X28): input windows, mashes, prompts and graded timing.
+
+#### Conditions
+- **Pressed In The Window** (`open_flag: String, action: String, deadline: String`) - True when the control goes down while the window is still open, used inside an input event. Pair it with the grade to tell a perfect answer from a good one.
+- **Input Window Missed** (`open_flag: String, deadline: String`) - True the moment an open window runs out with nothing pressed - the punish, the failed lockpick, the dropped finisher.
+- **Mashed In Time** (`counter: String, count: String, started: String, seconds: String`) - True once the presses arrive quickly enough - breaking free, cranking a winch, shaking off a grab.
+
+#### Actions
+- **Open Input Window** (`open_flag: String, deadline: String, seconds: String`) - Opens a window the player has a moment to answer. Measured on the engine clock, which keeps running while the game is paused.
+- **Close Input Window** (`open_flag: String`) - Shuts the window whether or not the player answered - put it after the graded branches so one press cannot count twice.
+- **Start Mash Count** (`counter: String, started: String`) - Resets the press count and stamps the moment the mash began, so the question below can be asked about this attempt only.
+- **Count Mash Press** (`counter: String`) - Adds one press to the mash. Put it under the control's own pressed event.
+- **Show Prompt** (`label: String, action: String`) - Puts the control's real key or button on a label, so the prompt is right on every keyboard and after every rebind.
+
+#### Expressions
+- **Window Grade** (`deadline: String, perfect: String`) - "perfect" for an answer inside the cutoff at the end of the window, "good" for any other answer in time - the word to hand a hit reaction or a score.
+- **Window Time Left** (`deadline: String`) - Seconds left before the window closes, never below zero - the fill of the shrinking ring a QTE draws.
+- **Prompt For Control** (`action: String`) - The readable name of the key or button a control is bound to right now ("Space", "A button"). Follows a rebind, because it asks the Input Map every time.
+- **Beat Grade** (`pressed_at: String, beat_at: String, perfect: String`) - Grades a press against the beat rather than against a window - the same two words, so one hit reaction serves both.
+- **Off The Beat By** (`pressed_at: String, beat_at: String`) - How far off the beat the press was, in seconds - the number a timing bar draws and a tuning screen shows.
 
 ### Tooling (`res://addons/eventforge/registration/modules/tooling_aces.gd`)
 Editor Tools vocabulary (build @tool / EditorScript sheets by events).

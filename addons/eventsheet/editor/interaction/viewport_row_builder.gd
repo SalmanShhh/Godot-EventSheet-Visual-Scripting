@@ -5305,6 +5305,13 @@ func _mouse_look_groups(actions: Array) -> Dictionary:
 		if turn.is_empty() or pitch.is_empty():
 			index += 1
 			continue
+		# X22 - the same two lines driven by the GYROSCOPE are a gyro aim, not a mouse look. The two
+		# runs are the same shape with a different hand on it, so the more specific one gets first
+		# refusal and this pass steps over it rather than claiming both.
+		if not EventSheetSentence.gyro_aim_turn_parts(
+				_group_line_text(actions[index]), sentence_context()).is_empty():
+			index += 1
+			continue
 		var last: int = index + 1
 		var clamped: String = ""
 		if last + 1 < actions.size():
@@ -5350,6 +5357,80 @@ func _crossfade_groups(actions: Array) -> Dictionary:
 			"object": EventSheetSentence.OBJECT_SYSTEM,
 			"evidence": PackedStringArray([_group_line_text(actions[index]),
 				_group_line_text(actions[index + 1])]),
+			"line_count": 2,
+			"indices": [index, index + 1]
+		}
+		consumed[index + 1] = true
+		index += 2
+	return {"leads": leads, "consumed": consumed}
+
+
+## X22. The gyro runs in one action lane, in the shape every run here has. Three shapes share the
+## pass because they are one idea: the calibration line that stores a neutral point, the line that
+## feeds a tilt into movement, and the two-line turn-and-pitch that is mouse look with the phone
+## doing the turning. Each is claimed on the event that owns it and none of them moves a byte.
+func _gyro_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var index: int = 0
+	while index < actions.size():
+		var line: String = _group_line_text(actions[index])
+		if line.is_empty():
+			index += 1
+			continue
+		var turn: Dictionary = EventSheetSentence.gyro_aim_turn_parts(line, sentence_context())
+		if not turn.is_empty() and index + 1 < actions.size():
+			var pitch: Dictionary = EventSheetSentence.gyro_aim_pitch_parts(
+				_group_line_text(actions[index + 1]), sentence_context(), str(turn.get("rate", "")))
+			if not pitch.is_empty():
+				leads[index] = {
+					"text": EventSheetL10n.translate("Aim by gyro"),
+					"note": EventSheetSentence.gyro_aim_note(),
+					"object": EventSheetSentence.script_object(sentence_context()),
+					"evidence": PackedStringArray([line, _group_line_text(actions[index + 1])]),
+					"line_count": 2,
+					"indices": [index, index + 1]
+				}
+				consumed[index + 1] = true
+				index += 2
+				continue
+		var single: Dictionary = EventSheetSentence.tilt_steer_parts(line, sentence_context())
+		var object_label: String = EventSheetSentence.script_object(sentence_context())
+		if single.is_empty():
+			single = EventSheetSentence.tilt_neutral_parts(line, sentence_context())
+			object_label = EventSheetSentence.OBJECT_SYSTEM
+		if not single.is_empty():
+			leads[index] = {
+				"text": str(single.get("text", "")),
+				"note": str(single.get("note", "")),
+				"object": object_label,
+				"evidence": PackedStringArray([line]),
+				"line_count": 1,
+				"indices": [index]
+			}
+		index += 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## X28. The input-window pair in one action lane. A flag set true and the deadline beside it are one
+## thing that happened - a window opened - and the file's own facts have to agree that this is the
+## window they describe before the two lines read as one row.
+func _input_window_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var index: int = 0
+	while index < actions.size() - 1:
+		var first: String = _group_line_text(actions[index])
+		var second: String = _group_line_text(actions[index + 1])
+		var opened: Dictionary = EventSheetSentence.input_window_parts(first, second, sentence_context())
+		if opened.is_empty():
+			index += 1
+			continue
+		leads[index] = {
+			"text": str(opened.get("text", "")),
+			"note": str(opened.get("note", "")),
+			"object": EventSheetSentence.OBJECT_SYSTEM,
+			"evidence": PackedStringArray([first, second]),
 			"line_count": 2,
 			"indices": [index, index + 1]
 		}
@@ -7953,6 +8034,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# U8 / U12 - the mouse-look trio and the two faders of a crossfade are one row each.
 		var look_groups: Dictionary = _mouse_look_groups(event_row.actions)
 		var fade_groups: Dictionary = _crossfade_groups(event_row.actions)
+		# X22 / X28 - the sensor shapes and the opened input window are one row each.
+		var gyro_groups: Dictionary = _gyro_groups(event_row.actions)
+		var window_groups: Dictionary = _input_window_groups(event_row.actions)
 		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
 		var task_notes: Dictionary = _task_note_groups(event_row.actions)
 		for action_index in range(event_row.actions.size()):
@@ -7970,13 +8054,22 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				continue
 			# U8 / U12 - the same skip-without-advancing, for the two runs batch ten added.
 			if bool(look_groups.get("consumed", {}).get(action_index, false)) \
-					or bool(fade_groups.get("consumed", {}).get(action_index, false)):
+					or bool(fade_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(gyro_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(window_groups.get("consumed", {}).get(action_index, false)):
 				continue
 			var run_lead: Dictionary = (look_groups["leads"] as Dictionary).get(action_index, {})
 			var run_pattern: String = "fps_look"
 			if run_lead.is_empty():
 				run_lead = (fade_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "sound"
+			# X22 / X28 - the same skip-without-advancing for batch thirteen's two runs.
+			if run_lead.is_empty():
+				run_lead = (gyro_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "gyro_controls"
+			if run_lead.is_empty():
+				run_lead = (window_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "qte"
 			if not run_lead.is_empty():
 				_append_scroll_limit_spans(spans, run_lead, action_index, action_line_index,
 					action_style_meta)
@@ -10701,6 +10794,43 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"words": "Text and patterns",
 		"ace_ids": ["Core/SetTextPattern", "Core/MatchPattern", "Core/AllMatches",
 			"Core/ReplaceMatches"]
+	},
+	# X22 / X23 / X25 / X28 / X29. Only two of the six have a behavior that does the whole shape - the
+	# FPS Controller owns gyro aim the way it owns mouse look, and the Touch Gestures pack owns swipes
+	# and drawn shapes outright - so only those two carry an `adoptable`. A shot, a blast, a secrets
+	# counter, an input window and an options screen are vocabulary, not a behaviour to attach.
+	"gyro_controls": {
+		"words": "Tilt steering and gyro aim",
+		"adoptable": "fps_controller",
+		"ace_ids": ["Core/TouchSetNeutralTilt", "Core/TouchSteerByTilt", "Core/TouchAimByGyro",
+			"Core/TouchAcceleration", "Core/TouchRotationRate", "Core/TouchGravity"]
+	},
+	"swipe": {
+		"words": "Swipes and drawn shapes",
+		"adoptable": "touch_gestures",
+		"ace_ids": []
+	},
+	"hitscan": {
+		"words": "Shots, blasts and an arsenal",
+		"ace_ids": ["Core/FireHitscan", "Core/ExplodeAt", "Core/SwitchToNextWeapon",
+			"Core/SwitchToPreviousWeapon", "Core/CurrentWeapon"]
+	},
+	"secrets": {
+		"words": "Secrets found",
+		"ace_ids": ["Core/MarkSecretFound", "Core/SecretsFoundCount", "Core/SecretAlreadyFound"]
+	},
+	"qte": {
+		"words": "Timed input windows",
+		"ace_ids": ["Core/OpenInputWindow", "Core/CloseInputWindow", "Core/PressedInInputWindow",
+			"Core/InputWindowMissed", "Core/InputWindowGrade", "Core/MashedInTime",
+			"Core/ShowInputPrompt"]
+	},
+	"accessibility_options": {
+		"words": "An accessibility options screen",
+		"ace_ids": ["Core/StartListeningForControl", "Core/RebindControlTo",
+			"Core/TreatControlAsToggle", "Core/SetEffectStrength", "Core/SetNoFlashing",
+			"Core/SetTextSizeScale", "Core/SetAimAssistRadius", "Core/SpeakText",
+			"Core/PlaySoundWithCaption"]
 	}
 }
 

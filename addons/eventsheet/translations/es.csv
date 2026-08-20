@@ -3164,3 +3164,18 @@ starting {values},que empieza por {values}
 {subject} is a table,{subject} es una tabla
 with {clauses},con {clauses}
 has {key},tiene {key}
+Set {neutral} to Touch.{sensor},Establecer {neutral} en Touch.{sensor}
+"hold the device how you want ""flat"" to feel","sujeta el dispositivo como quieres que se sienta ""plano"""
+Steer by tilt {axis} at {strength},Girar con la inclinación {axis} a {strength}
+Aim by gyro,Apuntar con el giroscopio
+"yaw on the body, pitch on the camera","giro en el cuerpo, cabeceo en la cámara"
+Open input window for {seconds},Abrir ventana de entrada durante {seconds}
+Open input window {action} for {seconds},Abrir ventana de entrada {action} durante {seconds}
+perfect = the last {seconds}s,perfecto = los últimos {seconds} s
+"on the engine clock, which keeps running while paused","en el reloj del motor, que sigue corriendo en pausa"
+Tilt steering and gyro aim,Dirección por inclinación y puntería por giroscopio
+Swipes and drawn shapes,Deslizamientos y formas dibujadas
+"Shots, blasts and an arsenal","Disparos, explosiones y un arsenal"
+Secrets found,Secretos encontrados
+Timed input windows,Ventanas de entrada con tiempo
+An accessibility options screen,Una pantalla de opciones de accesibilidad

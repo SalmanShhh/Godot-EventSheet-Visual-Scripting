@@ -31,10 +31,15 @@ func _process(delta: float) -> void:
 		accumulator += delta
 		if accumulator >= interval:
 			accumulator = 0.0
-			host.visible = not host.visible
+			if bool(Engine.get_meta("no_flashing", false)):
+				host.visible = true
+				host.modulate.a = 1.0 if host.modulate.a < 0.7 else 0.35
+			else:
+				host.visible = not host.visible
 		if remaining <= 0.0:
 			flashing = false
 			host.visible = true
+			host.modulate.a = 1.0
 			flash_finished.emit()
 
 ## @ace_action

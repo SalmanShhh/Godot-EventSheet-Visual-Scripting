@@ -75,6 +75,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	_rebinding(descriptors)
 	_simulated_input(descriptors)
 	_sensors(descriptors)
+	_gyro_controls(descriptors)
 	return descriptors
 
 
@@ -186,6 +187,20 @@ static func _sensors(descriptors: Array[ACEDescriptor]) -> void:
 		.described("The magnetic field around the device, as x, y, z (the compass). Reports 0 on desktop."))
 	descriptors.append(F.make_descriptor("Core", "TouchCompareAcceleration", "Compare Acceleration", ACEDescriptor.ACEType.CONDITION, "Input.get_accelerometer().{sensor_axis} {comparison} {value}", "", [F.make_param("sensor_axis", "String", "x", "Direction", "Which way to measure.", "", SENSOR_AXIS_OPTIONS), F.make_param("comparison", "String", ">", "Comparison", "How to compare.", "", F.COMPARISON_OPTIONS), F.make_param("value", "String", "5", "Value", "How much tilt counts.", "expression")], TOUCH, "Compare acceleration {sensor_axis} {comparison} {value}")
 		.described("Tilt as a condition - X above zero is tilted to the right, Y is tilted forward. Reports 0 on desktop.").featured())
+
+
+## X22 - the two SHAPES games make of the raw sensors, beside the sensors they refine. Tilt-to-steer
+## is a stored neutral point, the subtraction, and one axis fed into movement; gyro aim is the
+## rotation rate fed into yaw and pitch, which is mouse look with a different hand on it. The
+## calibration row is first on purpose: without it a tilt game measures from whatever "flat" the
+## sensor happened to see at start-up, which is the bug every first tilt game ships with.
+static func _gyro_controls(descriptors: Array[ACEDescriptor]) -> void:
+	descriptors.append(F.make_descriptor("Core", "TouchSetNeutralTilt", "Set Neutral Tilt", ACEDescriptor.ACEType.ACTION, "{neutral} = Input.get_accelerometer()", "", [F.make_param("neutral", "String", "neutral", "Neutral", "The variable that remembers how the device is being held.", "variable_reference")], TOUCH, "Set neutral to Touch.Acceleration")
+		.described("Remembers how the device is being held right now as \"flat\", so every tilt after this is measured from there. Offer it as a Calibrate button - it is the difference between a tilt game that works and one that does not.").featured())
+	descriptors.append(F.make_descriptor("Core", "TouchSteerByTilt", "Steer By Tilt", ACEDescriptor.ACEType.ACTION, "velocity.{motion_axis} = {tilt}.{sensor_axis} * {strength} * delta", "", [F.make_param("tilt", "String", "tilt", "Tilt", "The value holding the tilt away from neutral (Touch.Acceleration minus your neutral).", "variable_reference"), F.make_param("sensor_axis", "String", "x", "Tilt direction", "Which way of the tilt to steer with.", "", SENSOR_AXIS_OPTIONS), F.make_param("strength", "String", "900.0", "Strength", "How hard a full tilt pushes.", "expression"), F.make_param("motion_axis", "String", "x", "Movement direction", "Which way the object is pushed.", "", SENSOR_AXIS_OPTIONS)], TOUCH, "Steer by tilt {sensor_axis} at {strength}", "CharacterBody3D")
+		.described("Feeds one direction of the tilt into movement, so leaning the device steers. Measure the tilt from a neutral point first, or the game only plays flat on a table.").featured())
+	descriptors.append(F.make_descriptor("Core", "TouchAimByGyro", "Aim By Gyro", ACEDescriptor.ACEType.ACTION, "rotate_y(-{rate}.y * delta)\n{camera}.rotate_x(-{rate}.x * delta)", "", [F.make_param("rate", "String", "rate", "Rotation rate", "The value holding Touch.RotationRate for this frame.", "variable_reference"), F.make_param("camera", "String", "$Camera3D", "Camera", "The camera that looks up and down.", "expression")], TOUCH, "Aim by gyro", "Node3D")
+		.described("Turns the body and pitches the camera by how fast the device is being turned - mouse look with the phone itself. Reports 0 on desktop, so keep a mouse or stick path beside it.").featured())
 
 
 static func section_descriptions() -> Dictionary:

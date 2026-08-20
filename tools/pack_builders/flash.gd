@@ -49,13 +49,30 @@ static func build() -> bool:
 	var blink: EventRow = EventRow.new()
 	blink.conditions.append(_cond("CompareVar", {"var_name": "accumulator", "op": ">=", "value": "interval"}))
 	blink.actions.append(_action("SetVar", {"var_name": "accumulator", "value": "0.0"}))
-	blink.actions.append(_action("SetProperty", {"target": "host", "property": "visible", "value": "not host.visible"}))
+	# A strobe is a medical problem rather than a taste, so a player who has asked for no flashing
+	# gets a fade of the same rhythm instead of the blink: the host stays visible and its alpha
+	# steps between full and faint. The setting is plain metadata on Engine, so any project can set
+	# it with one row and a project that never asks gets exactly the blink it always had.
+	var toggle: RawCodeRow = RawCodeRow.new()
+	toggle.code = "
+".join(PackedStringArray([
+		"if bool(Engine.get_meta(\"no_flashing\", false)):",
+		"	host.visible = true",
+		"	host.modulate.a = 1.0 if host.modulate.a < 0.7 else 0.35",
+		"else:",
+		"	host.visible = not host.visible"
+	]))
+	blink.actions.append(toggle)
 	tick.sub_events.append(blink)
 
 	var finish: EventRow = EventRow.new()
 	finish.conditions.append(_cond("CompareVar", {"var_name": "remaining", "op": "<=", "value": "0.0"}))
 	finish.actions.append(_action("SetVar", {"var_name": "flashing", "value": "false"}))
 	finish.actions.append(_action("SetProperty", {"target": "host", "property": "visible", "value": "true"}))
+	# Whichever of the two the burst used, the host is handed back at full opacity.
+	var restore_alpha: RawCodeRow = RawCodeRow.new()
+	restore_alpha.code = "host.modulate.a = 1.0"
+	finish.actions.append(restore_alpha)
 	finish.actions.append(_action("EmitSignal", {"signal_name": "flash_finished", "args": ""}))
 	tick.sub_events.append(finish)
 	sheet.events.append(tick)

@@ -77,6 +77,7 @@ static func run() -> Dictionary:
 	check_background_thread_safety(sheet_paths, findings)
 	check_unknown_input_actions(sheet_paths, findings)
 	check_unsaved_rebindings(sheet_paths, findings)
+	check_caption_less_sounds(sheet_paths, findings)
 	check_orphaned_provider_calls(sheet_paths, findings)
 	check_sheet_signal_declarations(sheet_paths, findings)
 	check_pattern_smells(sheet_paths, findings)
@@ -2007,6 +2008,43 @@ static func check_unsaved_rebindings(_sheet_paths: PackedStringArray, findings: 
 			continue
 		_add(findings, "info", "unsaved-rebindings", script_path,
 			"This script changes control bindings at runtime but never saves them - every remap is lost when the game closes. Add Save bindings after the rebind and Load bindings on start-up.")
+
+
+## X29 - sounds played with nothing for a player who cannot hear them to read. OPT IN: a project
+## that has not decided to caption its audio would get one note per script for a decision it has not
+## made, which is how a Doctor stops being read. Turn it on with `eventsheets/doctor/caption_sounds`
+## and it names, per script, how many one-shot sounds are played beyond the captions it shows.
+##
+## Counted from the EMITTED code rather than from the sheets: `.gd` is the default sheet format, so a
+## check built on the `.tres` sheet list would quietly skip most real projects while looking like it
+## worked. `set_meta("__last_sfx"` is the one-shot Play Sound's own mark, which nothing else writes.
+const CAPTION_SOUND_MARK := "set_meta(\"__last_sfx\""
+const CAPTION_SHOW_MARK := "\"show_caption\""
+
+
+static func _captions_wanted() -> bool:
+	return bool(ProjectSettings.get_setting("eventsheets/doctor/caption_sounds", false))
+
+
+static func check_caption_less_sounds(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	if not _captions_wanted():
+		return
+	for script_path: String in _list_files_with_extension("gd"):
+		if script_path.begins_with("res://addons/") or script_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
+		if file == null:
+			continue
+		var source: String = file.get_as_text()
+		file.close()
+		var played: int = source.count(CAPTION_SOUND_MARK)
+		if played == 0:
+			continue
+		var captioned: int = source.count(CAPTION_SHOW_MARK)
+		if captioned >= played:
+			continue
+		_add(findings, "info", "caption-less-sound", script_path,
+			"This script plays %d sound(s) with no caption - a player who cannot hear them is told nothing. Use Play Sound With Caption for the ones that carry information (a door, a reload, a warning), and leave the rest blank on purpose." % [played - captioned])
 
 
 ## The reading check, as a Doctor check on this project's own packs. Same rule as the Publish

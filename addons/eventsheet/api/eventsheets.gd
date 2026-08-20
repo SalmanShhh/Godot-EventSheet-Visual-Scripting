@@ -1601,6 +1601,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"skin_vault": "SkinVault",
 	"slide_move": "Slide-Movement",
 	"stat_forge": "StatForge",
+	"touch_shape_library_resource": "Touch-Gestures",
 	"stat_sheet_resource": "StatForge",
 	"storylet_resource": "Storylet-Weaver",
 	"uhtn_plan_resource": "UHTN-Planning",

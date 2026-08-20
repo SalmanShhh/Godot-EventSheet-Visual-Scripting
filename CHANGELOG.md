@@ -17,6 +17,51 @@
   lifted events do not reproduce its exact source re-anchors as a verbatim block on the spot,
   instead of surfacing only at the whole-file verify and reverting every other function with it.
 
+### Added - Tilt, swipes, a shooter's verbs, timed input and the options screen a player needs
+
+- **Tilt steering and gyro aim** (Touch page). The two shapes games actually make of the handheld
+  sensors, each one row: **Set Neutral Tilt** remembers how the device is being held so a tilt is
+  measured from a "flat" the player chose, **Steer By Tilt** feeds one direction of that tilt into
+  movement, and **Aim By Gyro** turns the body and pitches the camera by the rotation rate - mouse
+  look with the phone doing the turning, and adoptable by the FPS Controller behaviour. An opened
+  script that writes those shapes by hand now reads them back in the same words: the stored neutral
+  point reads **Set neutral to Touch.Acceleration** with the note that says what the player has to
+  do, the multiplication reads **Steer by tilt x at tilt strength**, and the turn-and-pitch pair
+  reads **Aim by gyro** as one row. `Input.get_gravity()` stays named apart from the accelerometer,
+  because mixing the two is the classic tilt bug.
+- **Touch Gestures** - a new behaviour pack, with a **Touch Shape Library** data asset beside it.
+  Attach it and it watches the touch events itself: **On Swipe** with a direction (four ways, or
+  eight with the diagonals on), a distance and a time, and **On Shape Drawn** with the name of the
+  closest taught shape. Shapes are taught by DRAWING them - draw it once, call **Teach Shape From
+  Stroke**, save the library - so there is no coordinate list anywhere. A hand-written swipe or
+  shape matcher is claimed as one pattern and offered the pack as the adoption; pinches and pans
+  stay the sentences the sheet already owns, and a SEQUENCE of gestures is still Combo Box's job.
+- **A boomer shooter's missing verbs** (Weapons 3D). **Fire Hitscan** (spread, damage, reach, layer
+  mask) is the ray from the middle of the screen with the damage on the end of it; **Explode At**
+  damages and throws every body away from a point with a real impulse, so rocket jumping falls out
+  of it rather than being special-cased; **Switch To Next / Previous Weapon** wrap an index over a
+  weapons list, with **Current Weapon** to look ammo up by. **Mark Secret Found** counts a secret
+  once and never again. The hand-written spellings of all of it are claimed as patterns.
+- **Timed inputs and QTEs** (Timed Input). **Open Input Window** for a moment, **Pressed In The
+  Window** to catch the answer, **Window Grade** to tell a perfect one from a good one, **Input
+  Window Missed** for the punish, **Mashed In Time** for the flurry, and **Show Prompt**, which puts
+  the control's real key or button on a label and follows a rebind because it asks the Input Map
+  every time. **Beat Grade** is the same two words measured against a beat. An opened script's
+  flag-and-deadline pair reads as one **Open input window** row whose note says where the perfect
+  band starts AND which clock the deadline is on - the engine's own, which keeps running while the
+  game is paused.
+- **Accessibility options for the GAME** (Accessibility). The player-facing half of the editor's own
+  accessibility, each piece a row an options screen can bind to a slider or a checkbox: **Start
+  Listening For** / **Any Input Received** / **Rebind Control To** / **Stop Listening** over the live
+  Input Map (Save Bindings and Load Bindings already shipped), **Treat Control As A Toggle** so a
+  held control works either way, **Set Effect Strength** and **Set No Flashing** as the two dials
+  every shake and flash should ask before it fires, **Set Text Size Scale**, **Use Palette**, **Set
+  Aim Assist Radius**, and **Speak** / **Stop Speaking** through the voices the player's system
+  already has. Captions ride **Play Sound With Caption**, a SIBLING of Play Sound rather than a
+  change to it: that row's emitted bytes are a compatibility promise, so adding a caption to it
+  would have rewritten every project's audio. **Show Caption** covers a sound played some other way.
+  An options screen's shape is claimed as its own pattern.
+
 ### Added - Ask, a tidiness sweep, and the reading said aloud
 
 - **Ask: plain words in, proposed events out** (View ▸ Ask…). Off by default, and off means

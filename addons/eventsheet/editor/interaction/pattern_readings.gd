@@ -37,6 +37,17 @@ const POOL_SLEEP_METHODS: PackedStringArray = [
 ## The step that returns the object to the list it came from.
 const POOL_RETURN_METHODS: PackedStringArray = ["push_back", "push_front", "append"]
 
+## The two sensors a tilt can honestly be measured from. The magnetometer is a compass and the
+## gyroscope is a rate, so neither becomes a tilt by having a number taken off it.
+const TILT_SENSORS: PackedStringArray = ["Input.get_accelerometer()", "Input.get_gravity()"]
+
+## The gyroscope, spelled the way Godot spells it.
+const GYROSCOPE := "Input.get_gyroscope()"
+
+
+## The engine clock in seconds, spelled the way an ordinary Godot script spells it.
+const WINDOW_CLOCK := "Time.get_ticks_msec() / 1000.0"
+
 
 ## Everything the sentence grammar needs to know about the patterns THIS sheet writes, merged into
 ## the row builder's sentence context once per rebuild:
@@ -56,8 +67,148 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 	return {
 		"countdown_variables": countdown_variables(lines),
 		"pool_variables": pool_variables(lines),
-		"state_machine": machine
+		"state_machine": machine,
+		# X22 - which values hold a tilt measured from a neutral point, and which hold a rotation
+		# rate. A single line cannot tell `tilt.x * speed * delta` from any other multiplication, so
+		# the two questions are answered from one walk of the file here.
+		"tilt_variables": tilt_variables(lines),
+		"rate_variables": rate_variables(lines),
+		# X28 - the input window this file writes, {} when it writes none. The flag, the deadline and
+		# the control are three lines apart, so the shape is worked out once rather than guessed at.
+		"input_window": input_window_facts(lines)
 	}
+
+
+## X22. The values this file uses as a TILT: assigned the accelerometer (or the gravity direction)
+## with a neutral point taken off. The subtraction is required - the raw sensor reading is a sensor
+## reading, and only measuring it from a remembered "flat" makes it a tilt.
+##
+## The value is the neutral point's own name, so the row that steers by it can say where the tilt is
+## measured from.
+static func tilt_variables(lines: PackedStringArray) -> Dictionary:
+	var found: Dictionary = {}
+	for line: String in lines:
+		var parts: Dictionary = _sensor_assignment(line)
+		if parts.is_empty():
+			continue
+		var value: String = str(parts.get("value", ""))
+		var minus_at: int = EventSheetSentence.top_level_index(value, " - ")
+		if minus_at <= 0:
+			continue
+		var sensor: String = value.substr(0, minus_at).strip_edges()
+		var neutral: String = value.substr(minus_at + 3).strip_edges()
+		if not TILT_SENSORS.has(sensor) or not EventSheetSentence.is_identifier(neutral):
+			continue
+		found[str(parts.get("name", ""))] = neutral
+	return found
+
+
+## X22. The values this file uses as a ROTATION RATE: assigned the gyroscope outright. Nothing is
+## subtracted from a rate - a gyroscope reads zero when the device is still - so the bare assignment
+## is the whole shape.
+static func rate_variables(lines: PackedStringArray) -> Dictionary:
+	var found: Dictionary = {}
+	for line: String in lines:
+		var parts: Dictionary = _sensor_assignment(line)
+		if parts.is_empty():
+			continue
+		if str(parts.get("value", "")).strip_edges() == GYROSCOPE:
+			found[str(parts.get("name", ""))] = true
+	return found
+
+
+## `var tilt := <value>` / `tilt = <value>` as {name, value}, or {} for any other line. Both spellings
+## count: the file may declare the value or reuse a variable it already has.
+static func _sensor_assignment(line: String) -> Dictionary:
+	var text: String = line.strip_edges()
+	if text.is_empty() or text.begins_with("#"):
+		return {}
+	if text.begins_with("var "):
+		text = text.substr(4).strip_edges()
+	for separator: String in [" := ", " = "]:
+		var at: int = EventSheetSentence.top_level_index(text, separator)
+		if at <= 0:
+			continue
+		var name_text: String = text.substr(0, at).strip_edges()
+		var colon_at: int = name_text.find(":")
+		if colon_at > 0:
+			name_text = name_text.substr(0, colon_at).strip_edges()
+		if not EventSheetSentence.is_identifier(name_text):
+			continue
+		return {"name": name_text, "value": text.substr(at + separator.length()).strip_edges()}
+	return {}
+
+
+## X28. The input window this file writes, as {flag, deadline, action, perfect}, or {} when it writes
+## none. Three marks together and nothing less: a yes-no flag set true, a deadline set to the clock
+## plus something, and a control tested while the flag is up. Two of the three is a timer.
+static func input_window_facts(lines: PackedStringArray) -> Dictionary:
+	var flag: String = ""
+	var deadline: String = ""
+	var action: String = ""
+	var perfect: String = ""
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var parts: Dictionary = _sensor_assignment(text)
+		var name_text: String = str(parts.get("name", ""))
+		var value: String = str(parts.get("value", ""))
+		if not name_text.is_empty() and value == "true" and flag.is_empty() and text.contains(name_text):
+			# Only a name that reads like a window flag counts, so an unrelated `ready = true` is not
+			# read as somebody opening a window.
+			if name_text.contains("window") or name_text.contains("open"):
+				flag = name_text
+		if not name_text.is_empty() and deadline.is_empty() and _is_deadline_value(value):
+			deadline = name_text
+		if action.is_empty():
+			action = _action_tested(text)
+		if perfect.is_empty():
+			perfect = _perfect_cutoff(text)
+	if flag.is_empty() or deadline.is_empty():
+		return {}
+	return {"flag": flag, "deadline": deadline, "action": action, "perfect": perfect}
+
+
+## `Time.get_ticks_msec() / 1000.0 + seconds` - the clock plus something - or false for anything else.
+static func _is_deadline_value(value: String) -> bool:
+	var plus_at: int = EventSheetSentence.top_level_index(value, " + ")
+	if plus_at <= 0:
+		return false
+	return value.substr(0, plus_at).strip_edges() == WINDOW_CLOCK
+
+
+## The control a line tests, as the quoted name the file wrote, or "" when the line tests none.
+static func _action_tested(text: String) -> String:
+	for head: String in ["is_action_pressed(", "is_action_just_pressed(", "is_action_released("]:
+		var at: int = text.find(head)
+		if at < 0:
+			continue
+		var close_at: int = EventSheetSentence.closing_paren(text, at + head.length() - 1)
+		if close_at <= 0:
+			continue
+		var inside: String = text.substr(at + head.length(), close_at - at - head.length()).strip_edges()
+		var asked: PackedStringArray = EventSheetSentence.split_top_level(inside, ",")
+		if asked.size() >= 1 and asked[0].strip_edges().begins_with("\""):
+			return asked[0].strip_edges()
+	return ""
+
+
+## The perfect cutoff a graded window compares what is left against, or "" when the line is not that
+## comparison. `remaining > 0.15` is the whole of it: a number the time left is measured against. The
+## `if` in front of it is optional because a lifted condition row is written back out without one.
+static func _perfect_cutoff(text: String) -> String:
+	for sign_text: String in [" > ", " >= ", " <= ", " < "]:
+		var at: int = EventSheetSentence.top_level_index(text, sign_text)
+		if at <= 0:
+			continue
+		var left: String = text.substr(0, at).strip_edges().trim_prefix("elif ").trim_prefix("if ")
+		var right: String = text.substr(at + sign_text.length()).strip_edges().trim_suffix(":")
+		if not left.contains("remaining") and not left.contains("left"):
+			continue
+		if right.is_valid_float() and right.to_float() > 0.0:
+			return right
+	return ""
 
 
 ## S3. Whether a function body is a SEQUENCE - rows that alternate waiting and doing, which is what
