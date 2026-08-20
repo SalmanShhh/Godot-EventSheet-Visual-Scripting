@@ -8,6 +8,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 
 | GDScript | Reads as | Object | Where the reading comes from |
 | --- | --- | --- | --- |
+| `__eventsheets_aim_floor` | [Cursor Is Over Object (3D)](ace:Core/CursorIsOverObject3D) | Mouse | Vocabulary |
 | `abs` | [Absolute Value](ace:Core/AbsValue) | Helpers | Vocabulary |
 | `absf` | [Values Are Near](ace:Core/ValuesAreNear) | Compare: Numbers | Vocabulary |
 | `absi` | [Seeded Int](ace:Core/SeededInt) | Procedural | Vocabulary |
@@ -42,6 +43,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `and` | [Pull Group Toward](ace:Core/PullGroupToward) | Movement | Vocabulary |
 | `angle` | [Vector Angle](ace:Core/VectorAngle) | Variables: Vector | Vocabulary |
 | `angle_difference` | [Angle Difference](ace:Core/AngleDifference) | Math & Random | Vocabulary |
+| `angle_to` | [Slope Steeper Than](ace:Core/SlopeSteeperThan) | Canvas | Vocabulary |
 | `angle_to_point` | [Angle Toward](ace:Core/AngleToPoint) | Math & Random | Vocabulary |
 | `angular_damp` | [Set Angular Damping](ace:Core/SetAngularDamping) | Physics | Vocabulary |
 | `animation` | [Current Animation](ace:Core/GetSpriteAnimation) | General Expressions | Vocabulary |
@@ -249,6 +251,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_frames_drawn` | [Wait Until Frame](ace:Core/WaitUntilFrame) | Testing | Vocabulary |
 | `get_frames_per_second` | [FPS](ace:Core/GetFps) | Time | Vocabulary |
 | `get_global_mouse_position` | [Mouse Position (world)](ace:Core/GetMouseWorldPosition) | Mouse | Vocabulary |
+| `get_global_transform_with_canvas` | [Canvas X (2D)](ace:Core/CanvasX2D) | Canvas | Vocabulary |
 | `get_gravity` | [Gravity Direction](ace:Core/TouchGravity) | Touch | Vocabulary |
 | `get_gyroscope` | [Rotation Rate](ace:Core/TouchRotationRate) | Touch | Vocabulary |
 | `get_image` | [Screenshot](ace:Core/WindowScreenshot) | Game Window | Vocabulary |
@@ -331,7 +334,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_viewport` | [Stop This Input Here](ace:Core/StopInputHere) | General Actions | Vocabulary |
 | `get_viewport_rect` | [Is Outside Layout](ace:Core/IsOutsideLayout) | General Conditions | Vocabulary |
 | `get_viewport_rid` | [Set MSAA (2D)](ace:Core/RenderingSetMsaa2D) | Rendering | Vocabulary |
-| `get_visible_rect` | [Visible World Rect](ace:Core/VisibleWorldRect) | Math & Random | Vocabulary |
+| `get_visible_rect` | [Canvas Centre](ace:Core/CanvasCentre) | Canvas | Vocabulary |
 | `get_wall_normal` | [Wall Normal](ace:Core/GetWallNormal) | Collisions | Vocabulary |
 | `get_window` | [Wait For The Next Key Or Button](ace:Core/InputWaitForNextKey) | Keyboard | Vocabulary |
 | `get_world_2d` | [World Raycast Hits? (2D)](ace:Core/WorldRaycastHit2D) | Raycast 2D | Vocabulary |
@@ -505,6 +508,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `open` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
 | `open_scene_from_path` | [Open Scene In Editor](ace:Core/OpenSceneInEditor) | Editor Tools | Vocabulary |
 | `or` | [Is Nothing](ace:Core/IsNothing) | Compare: Types | Vocabulary |
+| `origin` | [Canvas X (2D)](ace:Core/CanvasX2D) | Canvas | Vocabulary |
 | `outer_radius` | [Make Torus Mesh](ace:Core/SetTorusMesh) | Mesh | Vocabulary |
 | `overlaps_area` | [Is Overlapping Area](ace:Core/OverlapsArea) | Collisions | Vocabulary |
 | `overlaps_body` | [Is Overlapping Body](ace:Core/OverlapsBody) | Collisions | Vocabulary |

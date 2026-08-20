@@ -3164,3 +3164,24 @@ starting {values},先頭が {values}
 {subject} is a table,{subject} がテーブル
 with {clauses},条件 {clauses}
 has {key},{key} を持つ
+the canvas centre,キャンバスの中心
+{object}'s position on the canvas,キャンバス上の {object} の位置
+'s position on the canvas, のキャンバス上の位置
+the canvas distance from {from} to {to} (pixels),キャンバス上の {from} から {to} までの距離 (ピクセル)
+the world point under {point} at depth {depth},深さ {depth} で {point} の下のワールド座標
+clamped to the canvas edge,キャンバスの端に制限
+is behind the camera,はカメラの後ろにある
+slope steeper than {degrees}°,傾斜が {degrees}° より急
+the object under {cursor},{cursor} の下のオブジェクト
+the cursor,カーソル
+reach,到達距離
+where the cursor touches the world,カーソルがワールドに触れる位置
+the surface's facing there,そこでの面の向き
+the object under the cursor,カーソルの下のオブジェクト
+the first object between {from} and {to},{from} と {to} の間の最初のオブジェクト
+the floor point under {cursor},{cursor} の下の床の位置
+the floor object under {cursor},{cursor} の下の床オブジェクト
+the floor's slope under {cursor},{cursor} の下の床の傾斜
+none when nothing is hit,何も当たらなければ空
+on layer {layers},レイヤー {layers} 上
+Set {name} to {what},{name} を {what} に設定

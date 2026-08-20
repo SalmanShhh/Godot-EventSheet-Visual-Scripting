@@ -3164,3 +3164,24 @@ starting {values},que empieza por {values}
 {subject} is a table,{subject} es una tabla
 with {clauses},con {clauses}
 has {key},tiene {key}
+the canvas centre,el centro del lienzo
+{object}'s position on the canvas,posición de {object} en el lienzo
+'s position on the canvas, en el lienzo
+the canvas distance from {from} to {to} (pixels),la distancia en el lienzo de {from} a {to} (píxeles)
+the world point under {point} at depth {depth},el punto del mundo bajo {point} a profundidad {depth}
+clamped to the canvas edge,limitado al borde del lienzo
+is behind the camera,está detrás de la cámara
+slope steeper than {degrees}°,pendiente más inclinada que {degrees}°
+the object under {cursor},el objeto bajo {cursor}
+the cursor,el cursor
+reach,alcance
+where the cursor touches the world,donde el cursor toca el mundo
+the surface's facing there,la orientación de la superficie ahí
+the object under the cursor,el objeto bajo el cursor
+the first object between {from} and {to},el primer objeto entre {from} y {to}
+the floor point under {cursor},el punto del suelo bajo {cursor}
+the floor object under {cursor},el objeto del suelo bajo {cursor}
+the floor's slope under {cursor},la pendiente del suelo bajo {cursor}
+none when nothing is hit,nada cuando no se acierta nada
+on layer {layers},en la capa {layers}
+Set {name} to {what},Poner {name} en {what}

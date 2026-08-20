@@ -464,6 +464,24 @@ That is the order this section is in.
   ![A clickable, tweened, snap-to-grid script read as an event sheet: the Inspector button as a setting row, a one-line tween chain, the cursor and the click on the Mouse, the gamepad cable on the Gamepad, and a snap setter on the loop's own object](images/opened-script-batch7.png)
 
   ![Three opened scripts stacked: one whose Include bar says "73% reads as events - 2 script blocks", one whose settings read as Movement and Look folders with every export hint family, and the same file opened as an autoload, whose head is one Global variables folder](images/opened-script-head5.png)
+- **The camera-ray run is one question, and the canvas has its own words.** `project_ray_origin`,
+  `project_ray_normal`, the query and `intersect_ray` are four lines that only mean anything
+  together, so they read as ONE row: `System ▸ Set hit to the object under the cursor`, with how far
+  it reaches and the branch that clears what it found said quietly beside it -
+  `reach 1000 · none when nothing is hit`. Aimed through a crosshair object rather than the OS
+  pointer the same run reads `the object under crosshair`, and a mask says which layers it may see,
+  in the project's own layer names. A hit's own entries read as what they mean: `hit.position` is
+  **where the cursor touches the world**, `hit.normal` **the surface's facing there**,
+  `hit.collider` **the object under the cursor**. Beside them, canvas space:
+  `cam.unproject_position(p)`, `o.get_global_transform_with_canvas().origin` and
+  `get_screen_transform() * p` all read as **x's position on the canvas** (camera zoom and canvas
+  layers included, which is exactly what plain position arithmetic gets wrong),
+  `get_visible_rect().size / 2` is **the canvas centre**, and a distance between two canvas points
+  is **the canvas distance from A to B (pixels)** - named apart from world distance on purpose,
+  because an aim assist measured in world units ignores zoom.
+
+  ![An opened 3D script read as an event sheet: the four-line camera-ray run as one row saying "Set hit to the object under the cursor, reach 1000, none when nothing is hit", the same run aimed through a crosshair with its layer mask, and an aim-assist walk whose locals read as the canvas centre, a position on the canvas and a canvas distance in pixels](images/reading-cursor-ray-and-canvas.png)
+
 - **A local variable's scope is enforced, and shown.** A local is visible from the event that
   declares it to the end of the body it was declared in, subtrees included, and nowhere else. Drag an
   action that uses `dealt` into an event that cannot see it and the drop refuses before you release,
