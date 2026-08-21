@@ -35,9 +35,47 @@ What changed in the build you have installed (v0.17.0), in the words the release
   **Sheet ▸ Export** to a picture, a PDF or Markdown with figures; and **Sheet ▸ Health…**. The four
   game-shape starters - Loot Chest, Stealth Guard, Boss Fight, Mission Timer - now say what each one
   actually opens with.
-- **The README's numbers were re-measured rather than bumped**: the pack count, the assertion count,
-  the test-file count and the dogfood figures, each read off this tree. The status section says what
-  the last six batches shipped instead of stopping at the readability program.
+- **Two more counts read off the tree rather than nudged**: the built-in vocabulary is 1,520 actions,
+  conditions and expressions plus 48 triggers (the README and both indexes had been carrying \"1,200+\"
+  and \"~1,090\" from different years), and the pack line now says which 79 of the 95 packs carry a
+  guide of their own and which 16 are companions documented inside their partner's. The README's
+  status section says what the last six batches shipped instead of stopping at the readability
+  program.
+
+### Added - the newest vocabulary speaks the eight bundled languages
+
+- **336 strings caught up.** The game shapes (meters, stealth noise, boss phases, mission clocks),
+  the words for authoring an editor plugin, the 3D move/turn/face/place vocabulary, the
+  cursor-and-canvas words and the whole Hierarchy set - every display name, description, category,
+  row sentence, parameter label, parameter description and dropdown option - now have a real
+  translation in German, Spanish, French, Italian, Japanese, Korean, Russian and Chinese, written to
+  match the voice each catalog already uses rather than run through a machine.
+- **And the gate now says so.** The four new modules are registered as wholly-owed in the
+  vocabulary l10n gate, and the hierarchy verbs and triggers are named in the extended-module lists,
+  so a verb added to any of them tomorrow fails the suite until its nine rows exist.
+
+### Fixed - a box on the Sheet map is as wide as the name in it
+
+- **A long sheet name is no longer cut off mid-word.** Every box on the Sheet map was the same fixed
+  width, so a sheet called anything longer than about a dozen characters lost its tail with no way
+  to read it - and the map is a picture of names, so a name you cannot read is a box you cannot use.
+  A box now measures its own name and grows to hold it, keeping the standard width as its narrowest.
+- **The columns move over with it.** A column is now as wide as its widest box, so a long name
+  pushes the next column across instead of drawing over it, and the lines between boxes leave from
+  the wider box's real right edge. Clicking, dragging and the canvas the map scrolls in all follow
+  the same widths, so a click still lands on the box you aimed at.
+
+### Fixed - a project archive says which of its members it could not read
+
+- **A malformed member is named instead of skipped in silence.** Reading an exported project
+  archive, a sheet, object type or family file that is not readable JSON was passed over without a
+  word, so a project could arrive one sheet short and look complete. Each one now leaves a line in
+  the import report the wizard already shows, saying which member it was and why it was skipped.
+  Members that were never project data (images, fonts) still pass without comment, and reading them
+  no longer writes a parse error into the editor log.
+- **The families an archive lists survive the read.** They were collected into a copy of the
+  returned list rather than the list itself, so the reader always answered \"no families\" no matter
+  what the archive held.
 
 ### Added - the Hierarchy: parent and unparent as first-class words
 
@@ -3088,7 +3126,7 @@ in the right-hand lane, where the reader expects a step.
 	cells of whichever row the caret is on).
   - grabbing any row drags the statement, so the pair travels together; a drop BEFORE a branch row
 	lands above the whole pair, a drop INTO one snaps below it, and only the pair's own head still
-    takes a sub-event.
+	takes a sub-event.
   - a double-click anywhere on the pair - including the condition cell and the plain `Else` row,
 	neither of which is a real cell - opens that ONE line's existing editor: the code dialog for a
 	hand-written statement, the ACE editor for a lifted row. Delete, Cut, Copy and the row context
