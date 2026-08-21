@@ -21,7 +21,21 @@ extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
+## W23. The root every page below hangs under. Kept as a constant even though no descriptor uses it
+## any more: it is the string the tool-sheet gate and the "Editor" object label test the prefix of, and
+## naming it here is what stops a page being spelled a hair differently and quietly ungating itself.
 const CAT := "Editor Tools"
+
+## W23. The pages this module's rows are filed on. Every one begins "Editor Tools: " so the tool-sheet
+## gate and the "Editor" object label keep working - both test the PREFIX, not the whole string - and
+## every one names the surface a reader is already looking at when they come here: the plugin's own
+## life, the panels it hangs, the Properties bar it adds to, the history Ctrl+Z walks. A page per
+## surface is the whole point: the flat list was thirty-eight rows of four unrelated jobs.
+const CAT_LIFECYCLE := "Editor Tools: Plugin lifecycle"
+const CAT_PANELS := "Editor Tools: Panels & menus"
+const CAT_PROPERTIES := "Editor Tools: Properties bar"
+const CAT_UNDO := "Editor Tools: Undo history"
+const CAT_PREFERENCES := "Editor Tools: Project & preferences"
 
 ## The dock slots Godot exposes, in the editor's own reading order. The label is the words a sheet
 ## row uses ("left, top"), the key the engine constant the emitted line needs - one list, so the
@@ -42,54 +56,66 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── The plugin's own life (what the editor calls when it is switched on and off) ──
-	descriptors.append(F.make_descriptor("Core", "OnPluginEnabled", "On Plugin Enabled", ACEDescriptor.ACEType.TRIGGER, "", "_enter_tree", [], CAT, "On plugin enabled")
+	descriptors.append(F.make_descriptor("Core", "OnPluginEnabled", "On Plugin Enabled", ACEDescriptor.ACEType.TRIGGER, "", "_enter_tree", [], CAT_LIFECYCLE, "On plugin enabled")
 		.described("Runs when the plugin is switched on - at editor start, or the moment you tick it in Project Settings. This is where a plugin hangs its dock, adds its Tools menu item and teaches the editor its object types."))
-	descriptors.append(F.make_descriptor("Core", "OnPluginDisabled", "On Plugin Disabled", ACEDescriptor.ACEType.TRIGGER, "", "_exit_tree", [], CAT, "On plugin disabled")
+	descriptors.append(F.make_descriptor("Core", "OnPluginDisabled", "On Plugin Disabled", ACEDescriptor.ACEType.TRIGGER, "", "_exit_tree", [], CAT_LIFECYCLE, "On plugin disabled")
 		.described("Runs when the plugin is switched off or the editor closes. Undo here everything On plugin enabled did, or the editor keeps a dock nobody owns."))
 	# W2 - what `_edit` actually is: the editor HANDED this plugin an object to edit, because the
 	# plugin answered yes when asked whether it could. "On object selected" said only half of that,
 	# and sent a reader looking for a selection change that never fires for objects this plugin
 	# refused. The ace_id and the callback behind it are unchanged; only the words are.
-	descriptors.append(F.make_descriptor("Core", "OnEditorObjectSelected", "On Object Handed To Plugin", ACEDescriptor.ACEType.TRIGGER, "", "_edit", [], CAT, "On object handed to plugin")
+	descriptors.append(F.make_descriptor("Core", "OnEditorObjectSelected", "On Object Handed To Plugin", ACEDescriptor.ACEType.TRIGGER, "", "_edit", [], CAT_LIFECYCLE, "On object handed to plugin")
 		.described("Runs when the editor hands this plugin an object to edit - the user selected something this plugin said yes to. The object arrives as `object`."))
 
 	# ── The 2D viewport (the overlay pass and the gizmo pass) ──
-	descriptors.append(F.make_descriptor("Core", "OnDrawOver2DViewport", "On Draw Over 2D Viewport", ACEDescriptor.ACEType.TRIGGER, "", "_forward_canvas_draw_over_viewport", [], CAT, "On draw over 2D viewport")
+	descriptors.append(F.make_descriptor("Core", "OnDrawOver2DViewport", "On Draw Over 2D Viewport", ACEDescriptor.ACEType.TRIGGER, "", "_forward_canvas_draw_over_viewport", [], CAT_LIFECYCLE, "On draw over 2D viewport")
 		.described("The editor's 2D overlay pass. Draw handles, guides or labels on top of the scene with the Drawing actions - the surface arrives as `overlay`."))
-	descriptors.append(F.make_descriptor("Core", "On2DViewportInput", "On 2D Viewport Input", ACEDescriptor.ACEType.TRIGGER, "", "_forward_canvas_gui_input", [], CAT, "On 2D viewport input")
+	descriptors.append(F.make_descriptor("Core", "On2DViewportInput", "On 2D Viewport Input", ACEDescriptor.ACEType.TRIGGER, "", "_forward_canvas_gui_input", [], CAT_LIFECYCLE, "On 2D viewport input")
 		.described("Input that lands in the editor's 2D viewport, before the viewport itself sees it. End the event with Stop This Input Here to keep the viewport from also acting on it."))
-	descriptors.append(F.make_descriptor("Core", "OnDrawGizmo", "On Draw Gizmo", ACEDescriptor.ACEType.TRIGGER, "", "_redraw", [], CAT, "On draw gizmo")
+	descriptors.append(F.make_descriptor("Core", "OnDrawGizmo", "On Draw Gizmo", ACEDescriptor.ACEType.TRIGGER, "", "_redraw", [], CAT_LIFECYCLE, "On draw gizmo")
 		.described("A gizmo's own paint pass - what an EditorNode3DGizmo redraws when its node moves or changes."))
 
 	# ── What a plugin adds to the editor, and takes away again ──
-	descriptors.append(F.make_descriptor("Core", "AddToolsMenuItem", "Add Tools Menu Item", ACEDescriptor.ACEType.ACTION, "add_tool_menu_item({title}, {handler})", "", [F.make_param("title", "String", "\"My Tool\"", "Title", "The words the item shows in Project > Tools.", "expression"), F.make_param("handler", "Callable", "_run_tool", "Calls", "The function to run when the item is picked.", "expression")], CAT, "Add Tools menu item {title}")
+	descriptors.append(F.make_descriptor("Core", "AddToolsMenuItem", "Add Tools Menu Item", ACEDescriptor.ACEType.ACTION, "add_tool_menu_item({title}, {handler})", "", [F.make_param("title", "String", "\"My Tool\"", "Title", "The words the item shows in Project > Tools.", "expression"), F.make_param("handler", "Callable", "_run_tool", "Calls", "The function to run when the item is picked.", "expression")], CAT_PANELS, "Add Tools menu item {title}")
 		.described("Adds an item to the editor's Project > Tools menu. Remove it again on plugin disabled or the menu keeps a dead entry."))
-	descriptors.append(F.make_descriptor("Core", "RemoveToolsMenuItem", "Remove Tools Menu Item", ACEDescriptor.ACEType.ACTION, "remove_tool_menu_item({title})", "", [F.make_param("title", "String", "\"My Tool\"", "Title", "The title the item was added with.", "expression")], CAT, "Remove Tools menu item {title}")
+	descriptors.append(F.make_descriptor("Core", "RemoveToolsMenuItem", "Remove Tools Menu Item", ACEDescriptor.ACEType.ACTION, "remove_tool_menu_item({title})", "", [F.make_param("title", "String", "\"My Tool\"", "Title", "The title the item was added with.", "expression")], CAT_PANELS, "Remove Tools menu item {title}")
 		.described("Takes the plugin's item back out of Project > Tools."))
-	descriptors.append(F.make_descriptor("Core", "AddEditorDock", "Add Dock", ACEDescriptor.ACEType.ACTION, "add_control_to_dock({slot}, {control})", "", [F.make_param("control", "Control", "Control.new()", "Dock", "The Control to hang in the editor as a dock.", "expression"), _dock_slot_param()], CAT, "Add dock {control} at {slot}")
+	descriptors.append(F.make_descriptor("Core", "AddEditorDock", "Add Dock", ACEDescriptor.ACEType.ACTION, "add_control_to_dock({slot}, {control})", "", [F.make_param("control", "Control", "Control.new()", "Dock", "The Control to hang in the editor as a dock.", "expression"), _dock_slot_param()], CAT_PANELS, "Add dock {control} at {slot}")
 		.described("Hangs a Control in one of the editor's dock slots. Remove it on plugin disabled - a dock left behind survives the plugin."))
-	descriptors.append(F.make_descriptor("Core", "RemoveEditorDock", "Remove Dock", ACEDescriptor.ACEType.ACTION, "remove_control_from_docks({control})", "", [F.make_param("control", "Control", "Control.new()", "Dock", "The Control that was added as a dock.", "expression")], CAT, "Remove dock {control}")
+	descriptors.append(F.make_descriptor("Core", "RemoveEditorDock", "Remove Dock", ACEDescriptor.ACEType.ACTION, "remove_control_from_docks({control})", "", [F.make_param("control", "Control", "Control.new()", "Dock", "The Control that was added as a dock.", "expression")], CAT_PANELS, "Remove dock {control}")
 		.described("Takes a dock back out of the editor."))
-	descriptors.append(F.make_descriptor("Core", "AddEditorObjectType", "Add Object Type", ACEDescriptor.ACEType.ACTION, "add_custom_type({type_name}, {base}, {script}, {icon})", "", [F.make_param("type_name", "String", "\"Waypoint\"", "Named", "The name the editor's Create Node dialog will show.", "expression"), F.make_param("base", "String", "\"Node2D\"", "A", "The built-in class it extends.", "expression"), F.make_param("script", "Script", "null", "Script", "The script the new object gets.", "expression"), F.make_param("icon", "Texture2D", "null", "Icon", "The icon it shows in the Scene dock. Leave null for the base class icon.", "expression")], CAT, "Add object type {type_name}")
+	descriptors.append(F.make_descriptor("Core", "AddEditorObjectType", "Add Object Type", ACEDescriptor.ACEType.ACTION, "add_custom_type({type_name}, {base}, {script}, {icon})", "", [F.make_param("type_name", "String", "\"Waypoint\"", "Named", "The name the editor's Create Node dialog will show.", "expression"), F.make_param("base", "String", "\"Node2D\"", "A", "The built-in class it extends.", "expression"), F.make_param("script", "Script", "null", "Script", "The script the new object gets.", "expression"), F.make_param("icon", "Texture2D", "null", "Icon", "The icon it shows in the Scene dock. Leave null for the base class icon.", "expression")], CAT_PANELS, "Add object type {type_name}")
 		.described("Teaches the editor a new object type, so it shows up in Create Node like a built-in one."))
-	descriptors.append(F.make_descriptor("Core", "RemoveEditorObjectType", "Remove Object Type", ACEDescriptor.ACEType.ACTION, "remove_custom_type({type_name})", "", [F.make_param("type_name", "String", "\"Waypoint\"", "Named", "The name the type was added with.", "expression")], CAT, "Remove object type {type_name}")
+	descriptors.append(F.make_descriptor("Core", "RemoveEditorObjectType", "Remove Object Type", ACEDescriptor.ACEType.ACTION, "remove_custom_type({type_name})", "", [F.make_param("type_name", "String", "\"Waypoint\"", "Named", "The name the type was added with.", "expression")], CAT_PANELS, "Remove object type {type_name}")
 		.described("Takes a custom object type back out of the Create Node dialog."))
 	# W15 - the panel these two register an add-on with is the one the sheet calls the Properties
 	# bar, everywhere else it names it. Same ace_ids, same emitted calls; the words catch up.
-	descriptors.append(F.make_descriptor("Core", "AddEditorInspectorPlugin", "Add Properties Bar Add-on", ACEDescriptor.ACEType.ACTION, "add_inspector_plugin({plugin})", "", [F.make_param("plugin", "EditorInspectorPlugin", "null", "Add-on", "The Properties bar add-on that draws the custom fields.", "expression")], CAT, "Add Properties bar add-on {plugin}")
+	descriptors.append(F.make_descriptor("Core", "AddEditorInspectorPlugin", "Add Properties Bar Add-on", ACEDescriptor.ACEType.ACTION, "add_inspector_plugin({plugin})", "", [F.make_param("plugin", "EditorInspectorPlugin", "null", "Add-on", "The Properties bar add-on that draws the custom fields.", "expression")], CAT_PROPERTIES, "Add Properties bar add-on {plugin}")
 		.described("Registers a Properties bar add-on, so your own buttons and fields appear in the Properties bar beside the object's own."))
-	descriptors.append(F.make_descriptor("Core", "RemoveEditorInspectorPlugin", "Remove Properties Bar Add-on", ACEDescriptor.ACEType.ACTION, "remove_inspector_plugin({plugin})", "", [F.make_param("plugin", "EditorInspectorPlugin", "null", "Add-on", "The Properties bar add-on that was registered.", "expression")], CAT, "Remove Properties bar add-on {plugin}")
+	descriptors.append(F.make_descriptor("Core", "RemoveEditorInspectorPlugin", "Remove Properties Bar Add-on", ACEDescriptor.ACEType.ACTION, "remove_inspector_plugin({plugin})", "", [F.make_param("plugin", "EditorInspectorPlugin", "null", "Add-on", "The Properties bar add-on that was registered.", "expression")], CAT_PROPERTIES, "Remove Properties bar add-on {plugin}")
 		.described("Takes a Properties bar add-on back out."))
-	descriptors.append(F.make_descriptor("Core", "UpdateViewportOverlays", "Redraw Viewport Overlays", ACEDescriptor.ACEType.ACTION, "update_overlays()", "", [], CAT, "redraw viewport overlays")
+	descriptors.append(F.make_descriptor("Core", "UpdateViewportOverlays", "Redraw Viewport Overlays", ACEDescriptor.ACEType.ACTION, "update_overlays()", "", [], CAT_LIFECYCLE, "redraw viewport overlays")
 		.described("Asks the editor to run the overlay pass again, so On draw over 2D viewport repaints."))
 
 	# ── What the editor can be asked (the expressions the picker offers) ──
-	descriptors.append(F.make_descriptor("Core", "EditorSettingsObject", "Editor Settings", ACEDescriptor.ACEType.EXPRESSION, "EditorInterface.get_editor_settings()", "", [], CAT, "editor settings")
+	descriptors.append(F.make_descriptor("Core", "EditorSettingsObject", "Editor Settings", ACEDescriptor.ACEType.EXPRESSION, "EditorInterface.get_editor_settings()", "", [], CAT_PREFERENCES, "editor settings")
 		.described("The editor's own settings object - read a user's grid step, theme or font size from it."))
-	descriptors.append(F.make_descriptor("Core", "EditorUndoHistory", "Undo History", ACEDescriptor.ACEType.EXPRESSION, "get_undo_redo()", "", [], CAT, "the editor's undo history")
+	descriptors.append(F.make_descriptor("Core", "EditorUndoHistory", "Undo History", ACEDescriptor.ACEType.EXPRESSION, "get_undo_redo()", "", [], CAT_UNDO, "the editor's undo history")
 		.described("The editor's undo / redo history. Put it in a local object variable and add do / undo steps to it, so Ctrl+Z reverses what your tool changed."))
 
 	return descriptors
+
+
+## Blurbs for the four pages this module opens, so a reader clicking the folder is told what the page
+## is for before reading a single row. Panels & menus and Project & preferences are described by the
+## module that opened them first - the merge keeps the first blurb registered for a name, so naming
+## them again here would be a second answer to a settled question.
+static func section_descriptions() -> Dictionary:
+	return {
+		CAT_LIFECYCLE: "What the editor calls on a plugin: switched on, switched off, handed an object to edit, and the two passes it paints over the 2D view.",
+		CAT_PROPERTIES: "The panel an object's properties are shown in, and the add-on that puts your own buttons and fields in it beside them.",
+		CAT_UNDO: "What Ctrl+Z walks back. A tool that adds its change as a step here is a tool the user can undo like any other edit.",
+	}
 
 
 ## The dock-slot dropdown. `display_option_labels` is what makes the ROW say "at left, top" while the

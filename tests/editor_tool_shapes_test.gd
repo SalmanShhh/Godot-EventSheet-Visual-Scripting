@@ -21,6 +21,8 @@ static func run() -> bool:
 	all_passed = _test_editor_reading_words() and all_passed
 	all_passed = _test_editor_words_glossary() and all_passed
 	all_passed = _test_picker_pages() and all_passed
+	all_passed = _test_command_tool_rows() and all_passed
+	all_passed = _test_glossary_hover() and all_passed
 	return all_passed
 
 
@@ -337,6 +339,121 @@ static func _test_picker_pages() -> bool:
 	# The two rows that are about the PROJECT rather than about the editor wear the project's name.
 	all_passed = _check("writing a project setting reads as the Project, not the Editor",
 		"|".join(ViewportRowBuilder.PROJECT_ACE_IDS), "SetProjectSetting|SaveProjectSettings") and all_passed
+	# ── W23, the rest of the pages. Every row that belonged to one named surface is filed on it, so
+	# the flat root keeps only the one-off chores. Pinned by VALUE per row: a row that quietly slid
+	# back onto the root would still pass a count.
+	var filed: Dictionary = {}
+	for module: Object in [EventForgeToolingACEs, EventForgeEditorObjectACEs, EventForgeEditorAuthorACEs]:
+		for descriptor: ACEDescriptor in module.call("get_descriptors"):
+			filed[str(descriptor.ace_id)] = str(descriptor.category)
+	for pair: Array in [
+			["OnPluginEnabled", "Editor Tools: Plugin lifecycle"],
+			["OnEditorObjectSelected", "Editor Tools: Plugin lifecycle"],
+			["AddEditorDock", "Editor Tools: Panels & menus"],
+			["AddEditorObjectType", "Editor Tools: Panels & menus"],
+			["AddEditorWindow", "Editor Tools: Panels & menus"],
+			["AddEditorInspectorPlugin", "Editor Tools: Properties bar"],
+			["RemoveEditorInspectorPlugin", "Editor Tools: Properties bar"],
+			["EditorUndoHistory", "Editor Tools: Undo history"],
+			["EditorSettingsObject", "Editor Tools: Project & preferences"],
+			["OnFileImported", "Editor Tools: Import & export"],
+			["ExportHasFeature", "Editor Tools: Import & export"],
+			["EnsureFolderExists", "Editor Tools: Files & folders"],
+			["SaveNodeAsScene", "Editor Tools: Files & folders"],
+			["OnCommandToolRun", "Editor Tools: Command tool"],
+			["CommandToolFinishWithCode", "Editor Tools: Command tool"],
+			# The one-off chores stay on the root, so the folder a reader lands on is not empty.
+			["OpenSceneInEditor", "Editor Tools"],
+			["EditorSelectedNodes", "Editor Tools"]]:
+		all_passed = _check("%s is filed on its own surface" % str(pair[0]),
+			str(filed.get(str(pair[0]), "")), str(pair[1])) and all_passed
+	for page: String in ["Editor Tools: Plugin lifecycle", "Editor Tools: Properties bar",
+			"Editor Tools: Undo history", "Editor Tools: Files & folders",
+			"Editor Tools: Import & export", "Editor Tools: Command tool"]:
+		all_passed = _check("the %s page is gated to tool sheets" % page,
+			"%s/%s" % [ACEPickerDialog.editor_ace_hidden(page, false), ACEPickerDialog.editor_ace_hidden(page, true)],
+			"true/false") and all_passed
+		all_passed = _check("the %s page says what it is for" % page,
+			EventSheetSectionInfo.description_for(page).is_empty(), false) and all_passed
+	return all_passed
+
+
+## W10. The command tool's four rows, and the one thing that makes them worth having: each writes
+## EXACTLY the line the reading already recognises, so a tool authored from the picker and one typed
+## by hand are the same file. The whole-shape byte gate above covers the skeleton; this covers the
+## individual spellings, which is where a paraphrase would hide.
+static func _test_command_tool_rows() -> bool:
+	var all_passed: bool = true
+	var descriptors: Dictionary = {}
+	for descriptor: ACEDescriptor in EventForgeToolingACEs.get_descriptors():
+		descriptors[str(descriptor.ace_id)] = descriptor
+	for pair: Array in [["CommandToolFinish", "quit()"],
+			["CommandToolFinishWithCode", "quit({code})"],
+			["CommandToolArguments", "OS.get_cmdline_user_args()"]]:
+		all_passed = _check("%s writes the line the reading claims" % str(pair[0]),
+			str((descriptors[str(pair[0])] as ACEDescriptor).codegen_template), str(pair[1])) and all_passed
+	var run_event: EventRow = EventRow.new()
+	run_event.trigger_provider_id = "Core"
+	run_event.trigger_id = "OnCommandToolRun"
+	all_passed = _check("On run is the SceneTree script's whole run",
+		str(TriggerResolver.resolve_trigger(run_event).get("function_name", "")), "_init") and all_passed
+	all_passed = _check("and it runs once, like every other lifetime callback",
+		TriggerResolver.tempo_class_for("OnCommandToolRun"), TriggerResolver.TEMPO_ONCE) and all_passed
+	# The object cell: a command tool is not the editor - nothing of the editor is even open - so its
+	# rows wear the same object a hand-written tools/*.gd already reads under.
+	all_passed = _check("a command tool row is the Command tool's, not the Editor's",
+		EventSheetToolFiles.OBJECT_COMMAND_TOOL, "Command tool") and all_passed
+	all_passed = _check("the object cell reads the page it is keyed off",
+		ViewportRowBuilder.COMMAND_TOOL_PAGE, "Editor Tools: Command tool") and all_passed
+	# The skeleton itself: an EVENT with the On run trigger, not a hand-written `_init` function.
+	var skeleton: EventSheetResource = EventSheetStarterTemplates.build_starter(23)
+	var triggers: PackedStringArray = PackedStringArray()
+	for entry: Variant in skeleton.events:
+		if entry is EventRow:
+			triggers.append(str((entry as EventRow).trigger_id))
+	all_passed = _check("the New Sheet skeleton starts from the On run event",
+		"|".join(triggers), "OnCommandToolRun") and all_passed
+	all_passed = _check("and carries no hand-written callback beside it",
+		skeleton.functions.size(), 0) and all_passed
+	var compiled: String = str(SheetCompiler.compile(skeleton, "user://w10_command_tool.gd").get("output", ""))
+	all_passed = _check("so the file it compiles to opens as a command tool",
+		EventSheetToolFiles.kind_of(compiled.split("\n")), EventSheetToolFiles.KIND_COMMAND_TOOL) and all_passed
+	all_passed = _check("with the run as a plain _init and no annotation on it",
+		compiled.contains("\nfunc _init() -> void:\n\tvar args: PackedStringArray = OS.get_cmdline_user_args()"),
+		true) and all_passed
+	all_passed = _check("and the finish the picker wrote, verbatim",
+		compiled.contains("\n\tquit()\n"), true) and all_passed
+	return all_passed
+
+
+## M46. The glossary lens as a hover line. The promise the renamed nouns are only acceptable under is
+## that nothing is HIDDEN by the rename - so the lookup has to answer from either side, and has to
+## stay silent about a word it does not know rather than inventing a translation.
+static func _test_glossary_hover() -> bool:
+	var all_passed: bool = true
+	all_passed = _check("the sheet's word hovers as Godot's",
+		EventSheetWords.glossary_hover_for("Properties bar", true, {}),
+		"Properties bar - Godot calls this Inspector.\nThe properties panel and its add-ons.") and all_passed
+	all_passed = _check("and Godot's hovers as the sheet's",
+		EventSheetWords.glossary_hover_for("Inspector", false, {}),
+		"Inspector - this sheet calls it Properties bar.\nThe properties panel and its add-ons.") and all_passed
+	all_passed = _check("a command tool says what a SceneTree script is",
+		EventSheetWords.glossary_hover_for("Command tool", true, {}),
+		"Command tool - Godot calls this SceneTree script.\nA script run from the command line.") and all_passed
+	all_passed = _check("a word spelled the same in both vocabularies says nothing",
+		EventSheetWords.glossary_hover_for("Tools menu", true, {}), "") and all_passed
+	all_passed = _check("and a word that is not one of ours says nothing either",
+		EventSheetWords.glossary_hover_for("velocity", true, {}), "") and all_passed
+	all_passed = _check("a word the reader typed themselves still names Godot's",
+		EventSheetWords.glossary_hover_for("Side bar", true, {"familiar": {"inspector": "Side bar"}}),
+		"Side bar - Godot calls this Inspector.\nThe properties panel and its add-ons.") and all_passed
+	var covered: int = 0
+	for key: String in EventSheetWords.EDITOR_KEYS:
+		if not EventSheetWords.glossary_hover_for(EventSheetWords.familiar_default(key), true, {}).is_empty():
+			covered += 1
+	# Tools menu is the one noun spelled identically in both vocabularies, so twenty-three of the
+	# twenty-four have something to say. A lens that answered for all of them would be padding.
+	all_passed = _check("every editor noun with two spellings carries the lens", covered, 23) and all_passed
 	return all_passed
 
 

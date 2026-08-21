@@ -8107,6 +8107,13 @@ const EDITOR_OBJECT := "Editor"
 ## the prefix rather than the whole string.
 const EDITOR_TOOLS_PAGE_PREFIX := "Editor Tools: "
 
+## W10 / W23. One page of the Editor's vocabulary is NOT the editor: a command tool is a program the
+## Godot binary runs from the command line, with no editor open at all. Its rows therefore wear the
+## same object a hand-written tools/*.gd already reads under - "Command tool ▸ Finish with code 1" -
+## so a picked row and a typed line say one sentence. Keyed off the PAGE rather than a list of ace
+## ids, because every row of that page is the command tool's and none of them is the editor's.
+const COMMAND_TOOL_PAGE := "Editor Tools: Command tool"
+
 ## W18. Two rows in the Editor's pages are not about the editor at all - they read and write THIS
 ## PROJECT's settings, which every person opening the project shares. An event sheet says that as its
 ## own object, so a reader can tell "your editor" from "this project" at a glance.
@@ -11166,6 +11173,8 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 			return input_descriptor.category
 		if PROJECT_ACE_IDS.has(ace_id):
 			return PROJECT_OBJECT
+		if input_descriptor != null and str(input_descriptor.category) == COMMAND_TOOL_PAGE:
+			return EventSheetToolFiles.OBJECT_COMMAND_TOOL
 		if input_descriptor != null and (input_descriptor.category == EDITOR_TOOLS_CATEGORY \
 				or str(input_descriptor.category).begins_with(EDITOR_TOOLS_PAGE_PREFIX)):
 			return EDITOR_OBJECT

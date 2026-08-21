@@ -49,6 +49,12 @@ const NOT_STANDALONE: Array[String] = [
 	# palette entry (whose Calls default names a function the plugin defines, exactly as the Tools
 	# menu item's does). Their round-trip is gated by editor_tool_shapes_test.
 	"AddBottomPanel", "RemoveBottomPanel", "AddCommandPaletteCommand",
+	# W10. `quit()` is SceneTree's, and a command tool IS a SceneTree - it is the whole main loop,
+	# not a node in one. Same reason as the EditorPlugin methods above: the harness builds one host
+	# class by hand, and a row that only exists in a SceneTree script has no business compiling in a
+	# Node. Their round-trip is gated by editor_tool_shapes_test, which compiles the Command tool
+	# skeleton, opens the result and recompiles it byte for byte.
+	"CommandToolFinish", "CommandToolFinishWithCode",
 	"AtMostEvery",  # calls a sheet-synthesized helper over its own last-run timestamp slot
 	"OnlyOncePerNode", "OnlyOncePerName", "OnlyOnceThisSceneLoad",  # call sheet-synthesized once-memory helpers
 	"StopRetrying",  # ends with `break` - only compiles inside the Retry Up To N Times loop it belongs to

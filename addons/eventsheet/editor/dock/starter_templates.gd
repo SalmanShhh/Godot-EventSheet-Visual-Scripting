@@ -667,7 +667,14 @@ static func _build_debugger_panel_starter() -> EventSheetResource:
 ## tells success from failure.
 static func _build_command_tool_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = _tool_starter("SceneTree", "[b]Command tool[/b] - a script the Godot binary runs headless from the command line, with arguments and an exit code:\ngodot --headless --path . --script res://tools/my_tool.gd -- arg1\nEverything after the -- arrives as the arguments. Finish with code 1 when something went wrong, so a script calling this can tell.")
-	sheet.functions.append(_callback_function("_init", [], "void", "var args: PackedStringArray = OS.get_cmdline_user_args()\n# What this tool does.\nquit()"))
+	# W10. The skeleton is an EVENT, not a function: `_init` on a SceneTree script is the whole run,
+	# which is what the Command tool's On run trigger says, and what a hand-written tools/*.gd already
+	# reads back as. Authored as picked rows, so the file this starter compiles to is byte-for-byte
+	# the file the reading recognises - the two-way gate every batch ships with.
+	sheet.events.append(_plugin_event("OnCommandToolRun", [
+		_member_row("var args: PackedStringArray = OS.get_cmdline_user_args()\n# What this tool does."),
+		_tool_action("CommandToolFinish", "quit()", {}),
+	]))
 	return sheet
 
 

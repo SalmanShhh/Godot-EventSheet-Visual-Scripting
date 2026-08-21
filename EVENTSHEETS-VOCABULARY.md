@@ -2035,10 +2035,10 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Actions
 - **Set Swipe Thresholds** (`minimum_distance: float, maximum_seconds: float`) - Sets how far (pixels) and how fast (seconds) a drag has to be before it counts as a swipe. The defaults suit a phone held in one hand.
 - **Set Eight Way** (`on: bool`) - Turns the four diagonals on or off. Off, a diagonal swipe reports as whichever of left / right / up / down it leaned towards.
-- **Teach Shape From Stroke** (`shape_name: String`) - Records the stroke that was just drawn as a template under a name. Draw the shape in the running game, then call this - there is no coordinate list to type. Saves into the attached shape library when there is one.
-- **Forget Shape** (`shape_name: String`) - Removes a taught shape, so it stops being matched.
+- **Teach Shape From Stroke** (`shape_name: String`) - Records the stroke that was just drawn as a template under a name. Draw the shape in the running game, then call this - there is no coordinate list to type. The attached shape library is updated straight away and marked changed, so the editor's own Save writes it out; Save Shapes To Library is the explicit write for a running game.
+- **Forget Shape** (`shape_name: String`) - Removes a taught shape, so it stops being matched. The attached library is updated and marked changed the same way teaching updates it.
 - **Load Shapes From Library** - Reads every taught shape out of the attached shape library, replacing what is loaded. Called for you when the behaviour starts.
-- **Save Shapes To Library** - Writes the taught shapes back to the attached shape library file, so they survive the run. Does nothing when no library is attached.
+- **Save Shapes To Library** - Writes the attached shape library out to its own file, so the shapes taught this run survive it. Teaching already put them in the library - this is the step that puts the library on disk. Says so when no library is attached, or when the one attached has never been saved as a file and so has nowhere to write.
 - **Clear Stroke** - Throws away the stroke gathered so far, so a gesture interrupted by a menu cannot finish afterwards.
 
 #### Expressions
@@ -4263,6 +4263,7 @@ Editor Tools vocabulary (build @tool / EditorScript sheets by events).
 #### Triggers
 - **On Project Export** - Runs while a project export is starting, before the files are written - the place to stamp a build number, bake a data file, or strip debug content.
 - **On File Imported** - Runs just after Godot finishes importing assets - the paths that landed arrive as `paths`. The place to rename what a designer dropped in, check an atlas for the wrong settings, or write a manifest.
+- **On Run** - Where a command tool starts. The Godot binary runs the script as its whole main loop, so this is not a node's ready - nothing is in a scene tree and nothing is on screen. Finish with an exit code when the work is done.
 
 #### Conditions
 - **Resource Exists** (`path: String`) - True when a resource file already exists at the given path.
@@ -4286,11 +4287,14 @@ Editor Tools vocabulary (build @tool / EditorScript sheets by events).
 - **Render Scene To Image** (`scene_path: String, width: int, height: int, save_path: String`) - Instantiates a scene into an off-screen viewport, lets it settle for a frame, and saves what it shows as a PNG - thumbnails, store shots, doc figures, baked sprites. Needs a windowed editor: a headless run has no renderer, so it warns and writes nothing.
 - **Preview Table Rolls** (`table: String, rolls: int, seed: int, save_path: String`) - Rolls a weighted table many times and reports what actually came out: per entry the rolled percent, the percent its weight implies, and the gap between them. Pure maths - it runs anywhere, and the same seed always gives the same numbers.
 - **Write Version Stamp** (`path: String, version: String`) - Writes a small build stamp file: the version string plus the date and time the stamp was written. The timestamp is read when the tool runs, so the generated code stays identical every save.
+- **Finish** - Ends the tool, reporting success. Whatever called it - a shell script, a build step, a test runner - reads that as "this worked".
+- **Finish With Code** (`code: int`) - Ends the tool with an exit code. Use it for the failure paths - a missing argument, a file that would not load - so a script calling this tool can tell that it did not work.
 
 #### Expressions
 - **Edited Scene Root** - Returns the root node of the scene currently open in the editor.
 - **Selected Nodes** - Returns the array of nodes currently selected in the Scene dock.
 - **Editor Scale** - Returns the editor's display scale (1.0 at 100%), for sizing tool UI.
+- **Arguments** - The words typed after the `--` on the command line, as a list of text. Everything before the `--` belongs to Godot itself, so this is only what the caller meant for this tool.
 
 ### Translation (`res://addons/eventforge/registration/modules/translation_aces.gd`)
 Translation vocabulary (localisation the Godot way).

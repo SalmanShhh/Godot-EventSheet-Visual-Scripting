@@ -109,6 +109,32 @@ The two import/export types compile to a plain named function the editor calls (
 
 Open the picker inside an On Editor Run event and the **Editor Tools** category has the everyday editor-automation vocabulary. They compile to the exact plain Godot the editor exposes - `EditorInterface`, `ResourceSaver`, `DirAccess`, `Engine`, plus `SubViewport` / `RenderingServer` for Render Scene To Image, `RandomNumberGenerator` for Preview Table Rolls and `ConfigFile` for Write Version Stamp - with zero plugin references, so the generated script works in any Godot project.
 
+**The category is a folder of pages.** Its root holds the one-off chores - open a scene, select a
+node, ask the editor a question - and the rest of the vocabulary is filed by the surface it belongs
+to, so you look where the thing you are automating lives rather than reading thirty-eight unrelated
+rows:
+
+| Page | What is on it |
+|---|---|
+| Editor Tools | The one-off chores: open / save / play the scene you are editing, select and inspect a node, add a node to the edited scene, render a scene to a picture, preview a table's odds. |
+| Editor Tools: Plugin lifecycle | What the editor calls on a plugin - switched on, switched off, handed an object to edit - and the two passes it paints over the 2D view. |
+| Editor Tools: Panels & menus | The docks, the Tools menu items, the object types, the bottom panels and the command palette entries a plugin adds and takes away. |
+| Editor Tools: Properties bar | Registering and removing a Properties bar add-on. |
+| Editor Tools: Undo history | The editor's undo / redo history, so a tool's change is one Ctrl+Z away. |
+| Editor Tools: Files & folders | Writing what a tool generates back to the project: a resource to a file, a node as a scene, the folder to put them in, and whether one is already there. |
+| Editor Tools: Import & export | The two moments the editor calls a tool without being asked - just after assets are imported, and while an export is starting - plus the export flags and the version stamp. |
+| Editor Tools: Project & preferences | This project's settings and the user's own editor preferences: read one, write one, save them, hear about it when either changes. |
+| Editor Tools: Command tool | A script the Godot binary runs headless from the command line: **On run**, **Command tool.Arguments**, **Finish**, **Finish with code**. |
+
+Every page is still gated to Tool sheets: a game sheet's picker never offers any of them.
+
+**Writing a command tool from the picker.** New Sheet ▸ **Command tool** starts you on an **On run**
+event rather than a hand-written `_init`, and the four rows above write exactly the lines a
+hand-written `tools/*.gd` already reads back as - `_init`, `OS.get_cmdline_user_args()`, `quit()` and
+`quit(n)`. So a tool you author here and one you type by hand are the same file, and opening either
+gives you the same rows. Command tool rows wear **Command tool** in the object cell rather than
+**Editor**, because nothing of the editor is open while one runs.
+
 ### Trigger
 
 | Trigger | Fires when |

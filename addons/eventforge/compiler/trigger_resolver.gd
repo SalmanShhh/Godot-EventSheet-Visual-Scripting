@@ -93,6 +93,14 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_exit_tree", "")
 		"OnEditorRun":
 			return _lifecycle("_run", "")
+		"OnCommandToolRun":
+			# W10. A command tool is a SceneTree script: the engine builds it and that IS the program,
+			# so `_init` is not "on created" the way it is on a node - it is the whole run. Same
+			# reasoning as OnPluginEnabled sharing _enter_tree: one engine callback, a different name
+			# because a reader of a command tool is looking for a different idea. The reading side
+			# already files a SceneTree script's `_init` under "Command tool ▸ On run", so a tool
+			# authored from this row and one typed by hand are the same file.
+			return _lifecycle("_init", "")
 		"OnProjectExport":
 			# The project-export bake step. Not an engine virtual: the editor's export hook calls this
 			# function by name on the compiled Editor Tool script (that is the whole seam), and hands it
@@ -232,8 +240,8 @@ static func tempo_class_for(trigger_id: String) -> String:
 		"OnDrawOver2DViewport", "OnDrawGizmo":
 			# A paint pass runs whenever the editor repaints that surface - the hot path of a tool.
 			return TEMPO_EVERY_TICK
-		"OnReady", "OnEditorRun", "OnProjectExport", "OnFileImported", "OnEnterTree", "OnExitTree", \
-				"OnPluginEnabled", "OnPluginDisabled":
+		"OnReady", "OnEditorRun", "OnCommandToolRun", "OnProjectExport", "OnFileImported", \
+				"OnEnterTree", "OnExitTree", "OnPluginEnabled", "OnPluginDisabled":
 			# The tree callbacks run once per lifetime of the object, like _ready does.
 			return TEMPO_ONCE
 		_:
