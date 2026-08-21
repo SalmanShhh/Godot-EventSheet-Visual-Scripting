@@ -4010,3 +4010,24 @@ On Child Leaving,Au départ d'un enfant
 On child leaving [i]{node}[/i],Au départ de l'enfant [i]{node}[/i]
 %s - Godot calls this %s.,%s - Godot appelle cela %s.
 %s - this sheet calls it %s.,%s - cette feuille l'appelle %s.
+Menu,Menu
+menu,menu
+items:,éléments :
+On %s chosen,Quand %s est choisi
+On item %s chosen,Quand l'élément %s est choisi
+never chosen,jamais choisi
+Add Item,Ajouter un élément
+Add item {label} to {menu},Ajouter l'élément {label} à {menu}
+"Puts one item in a menu. The id is how the menu says which item was picked, so On Item Chosen answers the same number this row was given.","Place un élément dans un menu. L'id est la façon dont le menu dit quel élément a été choisi, donc Quand un élément est choisi répond au même nombre que celui donné à cette ligne."
+On Item Chosen,Quand un élément est choisi
+On item {item} of {menu} chosen,Quand l'élément {item} de {menu} est choisi
+"Runs when the user picks the item with this id out of the menu. Every item of one menu shares a single handler, so all of them stay together in the emitted file.","S'exécute quand l'utilisateur choisit dans le menu l'élément portant cet id. Tous les éléments d'un menu partagent un seul gestionnaire, ils restent donc ensemble dans le fichier produit."
+Editor Tools: Menus,Outils de l'éditeur : menus
+"The menus a tool puts on screen: the items that go in one, and the event that runs when the user picks one of them.","Les menus qu'un outil affiche : les éléments qui s'y trouvent, et l'événement qui s'exécute quand l'utilisateur en choisit un."
+The menu variable this row acts on - the one the menu was made into.,La variable de menu sur laquelle agit cette ligne - celle dans laquelle le menu a été créé.
+Labelled,Intitulé
+The words the item shows in the menu.,Les mots que l'élément affiche dans le menu.
+Id,Id
+The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,"Le nombre que cet élément envoie quand il est choisi. Donne le sien à chaque élément - si deux partagent un id, le second ne peut jamais s'exécuter."
+Item,Élément
+The id of the item this event answers - the same number Add Item gave it.,L'id de l'élément auquel cet événement répond - le même nombre que celui donné par Ajouter un élément.

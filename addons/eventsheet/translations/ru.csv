@@ -4010,3 +4010,24 @@ On Child Leaving,При уходе потомка
 On child leaving [i]{node}[/i],При уходе потомка [i]{node}[/i]
 %s - Godot calls this %s.,%s - в Godot это называется %s.
 %s - this sheet calls it %s.,%s - в этом листе это называется %s.
+Menu,Меню
+menu,меню
+items:,пункты:
+On %s chosen,Когда выбрано %s
+On item %s chosen,Когда выбран пункт %s
+never chosen,никогда не выбирается
+Add Item,Добавить пункт
+Add item {label} to {menu},Добавить пункт {label} в {menu}
+"Puts one item in a menu. The id is how the menu says which item was picked, so On Item Chosen answers the same number this row was given.","Помещает один пункт в меню. Id - это число, которым меню сообщает, какой пункт выбран, поэтому Когда выбран пункт отвечает на то же число, что задано в этой строке."
+On Item Chosen,Когда выбран пункт
+On item {item} of {menu} chosen,Когда выбран пункт {item} меню {menu}
+"Runs when the user picks the item with this id out of the menu. Every item of one menu shares a single handler, so all of them stay together in the emitted file.","Выполняется, когда пользователь выбирает в меню пункт с этим id. Все пункты одного меню используют один обработчик, поэтому в созданном файле они остаются вместе."
+Editor Tools: Menus,Инструменты редактора: меню
+"The menus a tool puts on screen: the items that go in one, and the event that runs when the user picks one of them.","Меню, которые инструмент показывает на экране: пункты, которые в него входят, и событие, которое выполняется, когда пользователь выбирает один из них."
+The menu variable this row acts on - the one the menu was made into.,"Переменная меню, с которой работает эта строка - та, в которую было создано меню."
+Labelled,С надписью
+The words the item shows in the menu.,"Слова, которые пункт показывает в меню."
+Id,Id
+The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,"Число, которое этот пункт отправляет при выборе. Дайте каждому пункту своё - если два пункта делят один id, второй никогда не выполнится."
+Item,Пункт
+The id of the item this event answers - the same number Add Item gave it.,"Id пункта, на который отвечает это событие - то же число, которое дало ему Добавить пункт."

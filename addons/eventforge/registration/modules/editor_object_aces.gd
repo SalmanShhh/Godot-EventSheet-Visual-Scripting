@@ -37,6 +37,11 @@ const CAT_PROPERTIES := "Editor Tools: Properties bar"
 const CAT_UNDO := "Editor Tools: Undo history"
 const CAT_PREFERENCES := "Editor Tools: Project & preferences"
 
+## W6. The menu a tool builds in code, and the item the user picked out of it. Its own page because a
+## menu is its own object: the rows read "Menu ▸ Add item …" and "Sheet menu ▸ On Save chosen", which
+## is exactly how a hand-written menu already reads when a file is opened as a sheet.
+const CAT_MENUS := "Editor Tools: Menus"
+
 ## The dock slots Godot exposes, in the editor's own reading order. The label is the words a sheet
 ## row uses ("left, top"), the key the engine constant the emitted line needs - one list, so the
 ## dropdown and the reading cannot drift apart.
@@ -97,6 +102,16 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "UpdateViewportOverlays", "Redraw Viewport Overlays", ACEDescriptor.ACEType.ACTION, "update_overlays()", "", [], CAT_LIFECYCLE, "redraw viewport overlays")
 		.described("Asks the editor to run the overlay pass again, so On draw over 2D viewport repaints."))
 
+	# ── W6. The menu, and the item that was chosen out of it ──
+	# The action writes the one line the reading recognises, and the trigger compiles into the one
+	# handler every item of a menu shares - `match id:` with a case per item, which is the shape every
+	# menu in Godot is already written in. So a menu picked here and a menu typed by hand are the same
+	# file, and open as the same rows.
+	descriptors.append(F.make_descriptor("Core", "MenuAddItem", "Add Item", ACEDescriptor.ACEType.ACTION, "{menu}.add_item({label}, {id})", "", [_menu_param(), F.make_param("label", "String", "\"New…\"", "Labelled", "The words the item shows in the menu.", "expression"), F.make_param("id", "int", "0", "Id", "The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.", "expression")], CAT_MENUS, "Add item {label} to {menu}")
+		.described("Puts one item in a menu. The id is how the menu says which item was picked, so On Item Chosen answers the same number this row was given."))
+	descriptors.append(F.make_descriptor("Core", "OnMenuItemChosen", "On Item Chosen", ACEDescriptor.ACEType.TRIGGER, "", "", [_menu_param(), F.make_param("item", "int", "0", "Item", "The id of the item this event answers - the same number Add Item gave it.", "expression")], CAT_MENUS, "On item {item} of {menu} chosen")
+		.described("Runs when the user picks the item with this id out of the menu. Every item of one menu shares a single handler, so all of them stay together in the emitted file."))
+
 	# ── What the editor can be asked (the expressions the picker offers) ──
 	descriptors.append(F.make_descriptor("Core", "EditorSettingsObject", "Editor Settings", ACEDescriptor.ACEType.EXPRESSION, "EditorInterface.get_editor_settings()", "", [], CAT_PREFERENCES, "editor settings")
 		.described("The editor's own settings object - read a user's grid step, theme or font size from it."))
@@ -115,7 +130,16 @@ static func section_descriptions() -> Dictionary:
 		CAT_LIFECYCLE: "What the editor calls on a plugin: switched on, switched off, handed an object to edit, and the two passes it paints over the 2D view.",
 		CAT_PROPERTIES: "The panel an object's properties are shown in, and the add-on that puts your own buttons and fields in it beside them.",
 		CAT_UNDO: "What Ctrl+Z walks back. A tool that adds its change as a step here is a tool the user can undo like any other edit.",
+		CAT_MENUS: "The menus a tool puts on screen: the items that go in one, and the event that runs when the user picks one of them.",
 	}
+
+
+## W6. The menu every row on the Menus page acts on - the variable the menu was made into. Written as
+## a plain expression because that is what it is: `sheet_popup`, `_dock._view_menu`, whatever the file
+## already calls it. The same param on both rows, so the action and the trigger can never name the
+## menu two different ways.
+static func _menu_param() -> ACEParam:
+	return F.make_param("menu", "PopupMenu", "menu", "Menu", "The menu variable this row acts on - the one the menu was made into.", "expression")
 
 
 ## The dock-slot dropdown. `display_option_labels` is what makes the ROW say "at left, top" while the

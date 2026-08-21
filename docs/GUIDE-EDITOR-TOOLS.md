@@ -125,6 +125,7 @@ rows:
 | Editor Tools: Import & export | The two moments the editor calls a tool without being asked - just after assets are imported, and while an export is starting - plus the export flags and the version stamp. |
 | Editor Tools: Project & preferences | This project's settings and the user's own editor preferences: read one, write one, save them, hear about it when either changes. |
 | Editor Tools: Command tool | A script the Godot binary runs headless from the command line: **On run**, **Command tool.Arguments**, **Finish**, **Finish with code**. |
+| Editor Tools: Menus | The menu a tool puts on screen: **Add item** puts one item in it with the id that item answers to, and the **On item chosen** trigger runs when the user picks it. |
 
 Every page is still gated to Tool sheets: a game sheet's picker never offers any of them.
 
@@ -134,6 +135,19 @@ hand-written `tools/*.gd` already reads back as - `_init`, `OS.get_cmdline_user_
 `quit(n)`. So a tool you author here and one you type by hand are the same file, and opening either
 gives you the same rows. Command tool rows wear **Command tool** in the object cell rather than
 **Editor**, because nothing of the editor is open while one runs.
+
+**Menus, from either end.** Every tool has a menu, and in Godot every menu is the same two halves
+written far apart: a run of `add_item("Save", 2)` calls saying what is in it, and a `match id:`
+somewhere else saying what each item does. Opened as a sheet, the run collapses into one bar -
+`Menu Sheet`, listing its items in order, separators as a dash, check items with a tick - and every
+arm reads as the trigger it is, `Sheet menu ▸ On "Save" chosen`, with the number resolved back to
+the words the user clicks. An arm on an id nothing ever adds keeps its number in the warning colour,
+and an item whose id an earlier item already took is marked as never chosen; the Doctor says both
+out loud. Authoring writes the same two halves: **Add item** puts the `add_item` line in, and
+**On item chosen** compiles every item of one menu into a single `match id:` handler wired through
+the menu's own variable, so a menu you pick and a menu you type are the same file.
+
+![A menu built in code, opened as a sheet: the add_item run as one bar, and every match arm as the item it answers](images/menu-reading-rows.png)
 
 ### Trigger
 

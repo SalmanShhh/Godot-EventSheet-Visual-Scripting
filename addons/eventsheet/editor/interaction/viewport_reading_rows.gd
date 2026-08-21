@@ -164,7 +164,22 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# line can say whose forward `forward` is or what `to_enemy` points at. Both are answered from
 	# one walk of the file here, exactly as the tween chains and the sight rays are.
 	extras.merge(spatial_words_facts(sheet), true)
+	# ── W6 lens hook ───────────────────────────────────────────────────────────────────────────
+	# The menus this file builds: which add_item labels went into which menu with which id, and
+	# which handler answers that menu. Both halves are written far apart, so neither line can say
+	# what the other knows - they are joined here, once, from one walk of the file.
+	extras.merge(menu_facts(sheet), true)
 	return extras
+
+
+## W6. The menus this file builds, or {} when it builds none - which is every sheet that never calls
+## add_item, so the common case costs one walk and nothing else. Read off DISK for an opened file,
+## exactly as the tooling facts are: the importer lifts a menu's `_ready` into structure, and the
+## file on disk is the only place that still holds every line in order.
+static func menu_facts(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	return EventSheetMenuFacts.facts(EventSheetToolFiles.lines_of_sheet(sheet))
 
 
 ## W9 / W10 / W11. What this file is as a piece of TOOLING, or {} when it is not one. The path is what

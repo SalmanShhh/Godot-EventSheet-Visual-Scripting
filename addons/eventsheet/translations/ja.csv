@@ -4010,3 +4010,24 @@ On Child Leaving,子ノードが離れるとき
 On child leaving [i]{node}[/i],子ノード [i]{node}[/i] が離れるとき
 %s - Godot calls this %s.,%s - Godot ではこれを %s と呼びます。
 %s - this sheet calls it %s.,%s - このシートではこれを %s と呼びます。
+Menu,メニュー
+menu,メニュー
+items:,項目:
+On %s chosen,%s が選ばれたとき
+On item %s chosen,項目 %s が選ばれたとき
+never chosen,選ばれない
+Add Item,項目を追加
+Add item {label} to {menu},{menu} に項目 {label} を追加
+"Puts one item in a menu. The id is how the menu says which item was picked, so On Item Chosen answers the same number this row was given.",メニューに項目を 1 つ入れます。id はどの項目が選ばれたかをメニューが伝える番号なので、項目が選ばれたときはこの行に与えたのと同じ番号に応えます。
+On Item Chosen,項目が選ばれたとき
+On item {item} of {menu} chosen,{menu} の項目 {item} が選ばれたとき
+"Runs when the user picks the item with this id out of the menu. Every item of one menu shares a single handler, so all of them stay together in the emitted file.",この id を持つ項目がメニューから選ばれたときに実行されます。ひとつのメニューのすべての項目は 1 つのハンドラを共有するため、生成されるファイルの中でまとまって並びます。
+Editor Tools: Menus,エディタ ツール: メニュー
+"The menus a tool puts on screen: the items that go in one, and the event that runs when the user picks one of them.",ツールが画面に出すメニュー: そこに入る項目と、ユーザーがそのひとつを選んだときに走るイベント。
+The menu variable this row acts on - the one the menu was made into.,この行が働きかけるメニュー変数 - メニューを入れた変数です。
+Labelled,ラベル
+The words the item shows in the menu.,項目がメニューに表示する文字。
+Id,Id
+The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,この項目が選ばれたときに送る番号。項目ごとに別の番号を与えてください - 2 つの項目が同じ id を持つと、2 つめは決して実行されません。
+Item,項目
+The id of the item this event answers - the same number Add Item gave it.,このイベントが応える項目の id - 項目を追加 でその項目に与えたのと同じ番号です。

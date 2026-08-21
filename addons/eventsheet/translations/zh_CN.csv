@@ -4010,3 +4010,24 @@ On Child Leaving,当子节点离开时
 On child leaving [i]{node}[/i],当子节点 [i]{node}[/i] 离开时
 %s - Godot calls this %s.,%s - Godot 称其为 %s。
 %s - this sheet calls it %s.,%s - 本表称其为 %s。
+Menu,菜单
+menu,菜单
+items:,项目：
+On %s chosen,当选择 %s 时
+On item %s chosen,当选择项目 %s 时
+never chosen,永远不会被选中
+Add Item,添加项目
+Add item {label} to {menu},将项目 {label} 添加到 {menu}
+"Puts one item in a menu. The id is how the menu says which item was picked, so On Item Chosen answers the same number this row was given.",在菜单中放入一个项目。id 是菜单用来说明选中了哪个项目的编号，因此“当选择项目时”响应的正是这一行给出的编号。
+On Item Chosen,当选择项目时
+On item {item} of {menu} chosen,当选择 {menu} 的项目 {item} 时
+"Runs when the user picks the item with this id out of the menu. Every item of one menu shares a single handler, so all of them stay together in the emitted file.",当用户从菜单中选择具有该 id 的项目时运行。同一个菜单的所有项目共用一个处理函数，因此它们在生成的文件中始终排在一起。
+Editor Tools: Menus,编辑器工具：菜单
+"The menus a tool puts on screen: the items that go in one, and the event that runs when the user picks one of them.",工具放到屏幕上的菜单：其中包含的项目，以及用户选择其中一项时运行的事件。
+The menu variable this row acts on - the one the menu was made into.,这一行作用的菜单变量 - 也就是创建菜单时所用的那个变量。
+Labelled,标签
+The words the item shows in the menu.,该项目在菜单中显示的文字。
+Id,Id
+The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,该项目被选中时发送的编号。请给每个项目各自的编号 - 两个项目共用一个 id 时，第二个永远不会运行。
+Item,项目
+The id of the item this event answers - the same number Add Item gave it.,该事件所响应的项目 id - 与“添加项目”给它的编号相同。

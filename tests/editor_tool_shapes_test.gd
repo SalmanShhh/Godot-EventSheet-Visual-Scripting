@@ -362,6 +362,9 @@ static func _test_picker_pages() -> bool:
 			["SaveNodeAsScene", "Editor Tools: Files & folders"],
 			["OnCommandToolRun", "Editor Tools: Command tool"],
 			["CommandToolFinishWithCode", "Editor Tools: Command tool"],
+			# W6 - the menu page: the item that goes in one, and the event the chosen item runs.
+			["MenuAddItem", "Editor Tools: Menus"],
+			["OnMenuItemChosen", "Editor Tools: Menus"],
 			# The one-off chores stay on the root, so the folder a reader lands on is not empty.
 			["OpenSceneInEditor", "Editor Tools"],
 			["EditorSelectedNodes", "Editor Tools"]]:
@@ -369,7 +372,7 @@ static func _test_picker_pages() -> bool:
 			str(filed.get(str(pair[0]), "")), str(pair[1])) and all_passed
 	for page: String in ["Editor Tools: Plugin lifecycle", "Editor Tools: Properties bar",
 			"Editor Tools: Undo history", "Editor Tools: Files & folders",
-			"Editor Tools: Import & export", "Editor Tools: Command tool"]:
+			"Editor Tools: Import & export", "Editor Tools: Command tool", "Editor Tools: Menus"]:
 		all_passed = _check("the %s page is gated to tool sheets" % page,
 			"%s/%s" % [ACEPickerDialog.editor_ace_hidden(page, false), ACEPickerDialog.editor_ace_hidden(page, true)],
 			"true/false") and all_passed

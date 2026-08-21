@@ -29,7 +29,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_custom_type` | [Add Object Type](ace:Core/AddEditorObjectType) | Editor Tools: Panels & menus | Vocabulary |
 | `add_exception` | [Ignore Node In RayCast (2D)](ace:Core/RayCast2DAddException) | Raycast 2D | Vocabulary |
 | `add_inspector_plugin` | [Add Properties Bar Add-on](ace:Core/AddEditorInspectorPlugin) | Editor Tools: Properties bar | Vocabulary |
-| `add_item` | [Add Item](ace:Core/ListAddItem) | UI | Vocabulary |
+| `add_item` | [Add Item](ace:Core/MenuAddItem) | Editor Tools: Menus | Vocabulary |
 | `add_node` | [Select Node In Editor](ace:Core/SelectNodeInEditor) | Editor Tools | Vocabulary |
 | `add_theme_color_override` | [Set Font Colour](ace:Core/SetFontColour) | Text | Vocabulary |
 | `add_theme_font_override` | [Set Font](ace:Core/SetFontFile) | Text | Vocabulary |

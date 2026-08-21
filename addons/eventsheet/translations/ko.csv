@@ -4010,3 +4010,24 @@ On Child Leaving,자식이 떠날 때
 On child leaving [i]{node}[/i],자식 [i]{node}[/i] 이(가) 떠날 때
 %s - Godot calls this %s.,%s - Godot에서는 이것을 %s(이)라고 합니다.
 %s - this sheet calls it %s.,%s - 이 시트에서는 이것을 %s(이)라고 합니다.
+Menu,메뉴
+menu,메뉴
+items:,항목:
+On %s chosen,%s 을(를) 선택했을 때
+On item %s chosen,항목 %s 을(를) 선택했을 때
+never chosen,선택되지 않음
+Add Item,항목 추가
+Add item {label} to {menu},{menu} 에 항목 {label} 추가
+"Puts one item in a menu. The id is how the menu says which item was picked, so On Item Chosen answers the same number this row was given.","메뉴에 항목 하나를 넣습니다. id 는 어떤 항목이 선택되었는지 메뉴가 알려 주는 번호이므로, 항목을 선택했을 때 는 이 행에 준 번호와 같은 번호에 응답합니다."
+On Item Chosen,항목을 선택했을 때
+On item {item} of {menu} chosen,{menu} 의 항목 {item} 을(를) 선택했을 때
+"Runs when the user picks the item with this id out of the menu. Every item of one menu shares a single handler, so all of them stay together in the emitted file.",사용자가 이 id 를 가진 항목을 메뉴에서 선택할 때 실행됩니다. 한 메뉴의 모든 항목은 하나의 처리 함수를 공유하므로 생성된 파일에서 함께 모여 있습니다.
+Editor Tools: Menus,에디터 도구: 메뉴
+"The menus a tool puts on screen: the items that go in one, and the event that runs when the user picks one of them.","도구가 화면에 띄우는 메뉴: 그 안에 들어가는 항목과, 사용자가 그중 하나를 선택할 때 실행되는 이벤트."
+The menu variable this row acts on - the one the menu was made into.,이 행이 다루는 메뉴 변수 - 메뉴를 담아 둔 그 변수입니다.
+Labelled,이름
+The words the item shows in the menu.,항목이 메뉴에 보여 주는 글자.
+Id,Id
+The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,이 항목이 선택될 때 보내는 번호. 항목마다 고유한 번호를 주세요 - 두 항목이 같은 id 를 쓰면 두 번째 항목은 결코 실행될 수 없습니다.
+Item,항목
+The id of the item this event answers - the same number Add Item gave it.,이 이벤트가 응답하는 항목의 id - 항목 추가 에서 그 항목에 준 번호와 같습니다.

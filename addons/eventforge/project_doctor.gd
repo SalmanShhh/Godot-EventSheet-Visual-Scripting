@@ -92,6 +92,7 @@ static func run() -> Dictionary:
 	check_family_group_agreement(findings)
 	check_imported_rows(sheet_paths, findings)
 	check_task_notes(findings)
+	check_menu_ids(findings)
 	check_plugin_reading_health(findings)
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
@@ -2883,6 +2884,52 @@ static func _node_name_of(text: String) -> String:
 
 
 ## The three notes, over every script the project owns. Advisory, each naming what to reach for.
+## W6. The two ways a menu built in code goes quietly wrong, both of them invisible to any test of
+## the handlers themselves - every handler works, and the ROUTING is what is broken:
+##
+##   an arm on an id nothing adds   a branch of real code the menu can never reach
+##   two items sharing one id       the engine sends one number, the handler answers it once, and
+##                                  the second item is dead however clearly it was written
+##
+## Notes, never warnings: a menu is a working menu, and these are things the author cannot see rather
+## than contracts they broke. The project's own scripts only - this plugin's menus have their own
+## gate, and a note about somebody else's shipped addon is not the reader's to act on.
+static func check_menu_ids(findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_scripts():
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if not source.contains("add_item("):
+			continue
+		for note: Dictionary in menu_id_notes(source.split("\n")):
+			_add(findings, "info", str(note.get("check", "")), script_path, str(note.get("message", "")))
+			(findings[findings.size() - 1] as Dictionary)["subject"] = str(note.get("subject", ""))
+
+
+## W6. The menu notes one file's lines are worth, as {check, message, subject} in file order. Pure and
+## static so a test can pin the words without a project to walk: the walk above is only the loop that
+## finds the files.
+static func menu_id_notes(lines: PackedStringArray) -> Array[Dictionary]:
+	var notes: Array[Dictionary] = []
+	var context: Dictionary = EventSheetMenuFacts.facts(lines)
+	if context.is_empty():
+		return notes
+	for arm: Dictionary in EventSheetMenuFacts.unknown_arms(context, lines):
+		notes.append({
+			"check": "menu-unknown-item",
+			"message": "The %s menu answers item %s, and nothing ever adds an item with that id. The branch is real code the menu can never reach - either add the item, or move the branch to the id the item it means already has."
+				% [str(arm.get("name", "")), str(arm.get("id", ""))],
+			"subject": str(arm.get("id", ""))
+		})
+	for item: Dictionary in EventSheetMenuFacts.duplicate_items(context):
+		notes.append({
+			"check": "menu-duplicate-id",
+			"message": "The %s menu adds \"%s\" with id %s, which \"%s\" already took. Godot sends that one number for both items and the handler answers it once, so \"%s\" is dead however clearly it is written. Give it an id of its own."
+				% [str(item.get("name", "")), str(item.get("label", "")), str(item.get("id", "")),
+					str(item.get("first", "")), str(item.get("label", ""))],
+			"subject": str(item.get("id", ""))
+		})
+	return notes
+
+
 static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
 		var source: String = FileAccess.get_file_as_string(script_path)

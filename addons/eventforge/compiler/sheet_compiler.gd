@@ -968,10 +968,37 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 		lines.append("func %s(%s) -> %s:" % [function_name, args, returns])
 	if _emit_notification_match(events, lines, source_map, result["warnings"]):
 		return
+	if _emit_menu_match(events, lines, source_map, result["warnings"]):
+		return
 	var handler_body_start: int = lines.size()
 	_emit_event_body(events, lines, source_map, 1, result["warnings"])
 	if not _has_statement(lines, handler_body_start):
 		lines.append("\tpass")
+
+
+## W6. A menu handler's body: `match id:` with one case per item of that menu, in sheet order - the
+## shape every menu in Godot is already written in, and the shape the reading reads back as one
+## trigger per item. Returns false (emitting nothing) unless EVERY event in the group is a menu item,
+## which keeps every other trigger on the ordinary body path.
+static func _emit_menu_match(events: Array, lines: PackedStringArray, source_map: Array, warnings: Array) -> bool:
+	var ids: PackedStringArray = PackedStringArray()
+	for event_entry: Variant in events:
+		if not (event_entry is EventRow):
+			return false
+		var item_id: String = TriggerResolver.menu_item_id_of(event_entry as EventRow)
+		if item_id.is_empty():
+			return false
+		ids.append(item_id)
+	if ids.is_empty():
+		return false
+	lines.append("\tmatch id:")
+	for case_index: int in range(events.size()):
+		lines.append("\t\t%s:" % ids[case_index])
+		var case_body_start: int = lines.size()
+		_emit_event_body([events[case_index]], lines, source_map, 3, warnings)
+		if not _has_statement(lines, case_body_start):
+			lines.append("\t\t\tpass")
+	return true
 
 
 ## The `_notification` handler's body: `match what:` with one case per notification the sheet reacts
@@ -1489,6 +1516,11 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		elif source_path == "@window":
 			# Root-window signals (close_requested) - the On Close Requested trigger connects here.
 			source_prefix = "get_window()."
+		elif source_path.begins_with(TriggerResolver.MEMBER_SOURCE_PREFIX):
+			# W6. A menu is a variable of this script, not a node looked up by path: the line that
+			# wires it is `sheet_popup.id_pressed.connect(...)`, which is what every hand-written
+			# menu already says.
+			source_prefix = "%s." % source_path.trim_prefix(TriggerResolver.MEMBER_SOURCE_PREFIX)
 		elif source_path.begins_with("autoload:"):
 			# Bus triggers: autoloads are global - connect by name, no node paths.
 			source_prefix = "%s." % source_path.trim_prefix("autoload:")
@@ -1620,6 +1652,8 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 					if event_entry is EventRow and _subtree_awaits(event_entry as EventRow):
 						split_events.append(event_entry)
 		if _emit_notification_match(events, lines, source_map, result["warnings"]):
+			continue
+		if _emit_menu_match(events, lines, source_map, result["warnings"]):
 			continue
 		if split_events.is_empty():
 			had_body = _emit_event_body(events, lines, source_map, 1, result["warnings"]) or had_body

@@ -49,6 +49,12 @@ const NOT_STANDALONE: Array[String] = [
 	# palette entry (whose Calls default names a function the plugin defines, exactly as the Tools
 	# menu item's does). Their round-trip is gated by editor_tool_shapes_test.
 	"AddBottomPanel", "RemoveBottomPanel", "AddCommandPaletteCommand",
+	# W6. Add Item acts on the MENU VARIABLE a tool made, which is a member of that tool's own script
+	# and not of the one host class this harness builds by hand - the same reason as the plugin
+	# methods above. Its line, and the handler its trigger compiles into, are gated by
+	# menu_reading_test, which compiles the authored menu, opens the result and recompiles it byte
+	# for byte.
+	"MenuAddItem",
 	# W10. `quit()` is SceneTree's, and a command tool IS a SceneTree - it is the whole main loop,
 	# not a node in one. Same reason as the EditorPlugin methods above: the harness builds one host
 	# class by hand, and a row that only exists in a SceneTree script has no business compiling in a

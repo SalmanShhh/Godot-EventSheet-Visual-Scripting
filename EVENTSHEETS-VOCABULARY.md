@@ -3181,6 +3181,7 @@ the Editor object (plugin lifecycle, docks, menu items, object types).
 - **On Draw Over 2D Viewport** - The editor's 2D overlay pass. Draw handles, guides or labels on top of the scene with the Drawing actions - the surface arrives as `overlay`.
 - **On 2D Viewport Input** - Input that lands in the editor's 2D viewport, before the viewport itself sees it. End the event with Stop This Input Here to keep the viewport from also acting on it.
 - **On Draw Gizmo** - A gizmo's own paint pass - what an EditorNode3DGizmo redraws when its node moves or changes.
+- **On Item Chosen** (`menu: PopupMenu, item: int`) - Runs when the user picks the item with this id out of the menu. Every item of one menu shares a single handler, so all of them stay together in the emitted file.
 
 #### Actions
 - **Add Tools Menu Item** (`title: String, handler: Callable`) - Adds an item to the editor's Project > Tools menu. Remove it again on plugin disabled or the menu keeps a dead entry.
@@ -3192,6 +3193,7 @@ the Editor object (plugin lifecycle, docks, menu items, object types).
 - **Add Properties Bar Add-on** (`plugin: EditorInspectorPlugin`) - Registers a Properties bar add-on, so your own buttons and fields appear in the Properties bar beside the object's own.
 - **Remove Properties Bar Add-on** (`plugin: EditorInspectorPlugin`) - Takes a Properties bar add-on back out.
 - **Redraw Viewport Overlays** - Asks the editor to run the overlay pass again, so On draw over 2D viewport repaints.
+- **Add Item** (`menu: PopupMenu, label: String, id: int`) - Puts one item in a menu. The id is how the menu says which item was picked, so On Item Chosen answers the same number this row was given.
 
 #### Expressions
 - **Editor Settings** - The editor's own settings object - read a user's grid step, theme or font size from it.

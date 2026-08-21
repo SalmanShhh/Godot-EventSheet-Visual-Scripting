@@ -33,12 +33,49 @@ static func get_trigger_key(event: EventRow) -> String:
 	var provider_id: String = event.trigger_provider_id
 	if event.trigger_id.is_empty():
 		provider_id = EVERY_TICK_TRIGGER_PROVIDER_ID
+	if trigger_id == MENU_TRIGGER_ID:
+		# W6. Every item of ONE menu shares a single handler, for the same reason every notification
+		# shares `_notification`: the engine calls one function with the id that was chosen, and which
+		# item an event answers is a case inside it. The menu is therefore part of the key, and the
+		# item is not.
+		return "%s::%s::%s" % [provider_id, trigger_id, menu_variable_of(event)]
 	if trigger_id.begins_with(NOTIFICATION_PREFIX):
 		# Every notification a sheet reacts to shares ONE `_notification` handler: the engine calls
 		# that single function for every notification, and two same-named functions do not parse.
 		# Which notification an event wants rides on its own id and becomes a case inside the handler.
 		trigger_id = "OnNotification"
 	return "%s::%s::%s" % [provider_id, trigger_id, event.trigger_source_path]
+
+
+## W6. The trigger every menu item's event carries. The menu it belongs to and the item's id ride in
+## its trigger params, because both of them are things the author typed rather than parts of the id.
+const MENU_TRIGGER_ID: String = "OnMenuItemChosen"
+
+## The `member:` source-path prefix a menu handler is connected through. A menu is a VARIABLE of the
+## script, not a node the sheet looked up by path, so the `_ready` line that wires it reads
+## `sheet_popup.id_pressed.connect(...)` - the spelling every hand-written menu already uses.
+const MEMBER_SOURCE_PREFIX: String = "member:"
+
+
+## W6. The menu variable a menu-item event names, "" for any other trigger.
+static func menu_variable_of(event: EventRow) -> String:
+	if effective_trigger_id(event) != MENU_TRIGGER_ID:
+		return ""
+	return str(event.trigger_params.get("menu", "")).strip_edges()
+
+
+## W6. The item id a menu-item event answers, "" for any other trigger.
+static func menu_item_id_of(event: EventRow) -> String:
+	if effective_trigger_id(event) != MENU_TRIGGER_ID:
+		return ""
+	return str(event.trigger_params.get("item", "")).strip_edges()
+
+
+## W6. The handler name a menu's events share: `_on_<menu>_id_pressed`, with the menu's own spelling
+## reduced to a safe identifier fragment (`_dock._view_menu` -> `dock_view_menu`).
+static func menu_handler_name(menu_variable: String) -> String:
+	var bare: String = menu_variable.strip_edges().replace("self.", "").replace(".", "_").lstrip("_")
+	return "_on_%s_id_pressed" % (bare if not bare.is_empty() else "menu")
 
 
 ## Trigger ids of the form "OnNotification:<NAME>" - one per engine notification constant a sheet
@@ -201,6 +238,13 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _signal_backed("_on%s_child_entered_tree" % source_token, "node: Node", "child_entered_tree", source_path)
 		"OnChildExitingTree":
 			return _signal_backed("_on%s_child_exiting_tree" % source_token, "node: Node", "child_exiting_tree", source_path)
+		MENU_TRIGGER_ID:
+			# W6. One handler per MENU, connected to the menu variable itself. The item this event
+			# answers becomes a case of that handler's `match id:` - see get_trigger_key and the
+			# emitter, exactly as the notification triggers work.
+			var menu_variable: String = menu_variable_of(event)
+			return _signal_backed(menu_handler_name(menu_variable), "id: int", "id_pressed",
+				"%s%s" % [MEMBER_SOURCE_PREFIX, menu_variable])
 		"OnSignal":
 			var signal_name: String = str(event.trigger_params.get("signal_name", "eventforge_signal"))
 			return _signal_backed("_on%s_%s" % [source_token, signal_name], str(event.trigger_params.get("args", "")).strip_edges(), signal_name, source_path)

@@ -2880,7 +2880,12 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# every project, and the specific rows those lines belong to would stop being recognised. They
 	# author fine; they just do not get to speak for lines nobody wrote them for.
 	"StartListeningForControl", "StopListeningForControl", "CloseInputWindow", "CountMashPress",
-	"UsePalette", "CurrentWeapon", "SecretsFoundCount", "SecretAlreadyFound", "OffBeatBy"
+	"UsePalette", "CurrentWeapon", "SecretsFoundCount", "SecretAlreadyFound", "OffBeatBy",
+	# W6. Add Item authors one line of a menu; `x.add_item("y", 1)` is written by dropdowns, lists
+	# and trees as well, and the whole point of the menu reading is that the RUN of those lines is
+	# one bar naming the menu's items in order. Admitted to the reverse index the row would claim
+	# each line separately, and the bar would never see a run to collapse.
+	"MenuAddItem"
 ]
 
 

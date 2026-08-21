@@ -6,6 +6,29 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Added - a menu built in code reads as the menu it is, item by item
+
+- **The add_item run is one menu, not ten rows.** A run of `add_item(\"Save\", 2)` calls on one menu
+  collapses into a single bar, `Menu Sheet`, listing its items in the order the file adds them -
+  separators as a dash, check items with a tick, submenus with the menu they open, and an item that
+  was greyed out saying so. The lines are untouched: the bar is a lens, so the file still saves every
+  byte it opened with.
+- **Every `match id:` arm reads as the item it answers.** `0:` reads `Sheet menu ▸ On \"New…\" chosen`,
+  with the number resolved back to the words the user clicks, so nobody has to hold \"4 means Sheet
+  Type\" in their head while scrolling between the two halves. Both spellings of a handler are read -
+  the lambda handed to `id_pressed.connect`, and the plain function a connect line named - and the
+  menu each arm belongs to is worked out from the connect line, which is the only place that says it.
+- **The two ways a menu goes quietly wrong now show.** An arm on an id nothing ever adds keeps its
+  number and wears the warning colour, and an item whose id an earlier item already took is drawn
+  with the rest and marked as never chosen. The Doctor says both out loud as notes on the project's
+  own scripts - the same bug class this plugin's own View menu once shipped three times in one merge,
+  where a `match` took the first arm and the second item was dead.
+- **Menus are authorable.** A new **Editor Tools: Menus** page carries two rows: **Add Item**, which
+  writes the `add_item` line the reading reads, and the **On Item Chosen** trigger, which compiles
+  every item of one menu into a single `match id:` handler wired through the menu's own variable -
+  exactly the shape a hand-written menu already has, so a picked menu and a typed one are the same
+  file and open as the same rows.
+
 ### Changed - the documentation caught up with everything the sheet learned, and the index gates it
 
 - **The two guides nobody could find are indexed.** Anchor and Touch Gestures shipped inside the

@@ -4010,3 +4010,24 @@ On Child Leaving,All'uscita di un figlio
 On child leaving [i]{node}[/i],All'uscita del figlio [i]{node}[/i]
 %s - Godot calls this %s.,%s - Godot lo chiama %s.
 %s - this sheet calls it %s.,%s - questo foglio lo chiama %s.
+Menu,Menu
+menu,menu
+items:,voci:
+On %s chosen,Quando si sceglie %s
+On item %s chosen,Quando si sceglie la voce %s
+never chosen,mai scelta
+Add Item,Aggiungi voce
+Add item {label} to {menu},Aggiungi la voce {label} a {menu}
+"Puts one item in a menu. The id is how the menu says which item was picked, so On Item Chosen answers the same number this row was given.","Mette una voce in un menu. L'id è il modo in cui il menu dice quale voce è stata scelta, quindi Quando si sceglie una voce risponde allo stesso numero dato a questa riga."
+On Item Chosen,Quando si sceglie una voce
+On item {item} of {menu} chosen,Quando si sceglie la voce {item} di {menu}
+"Runs when the user picks the item with this id out of the menu. Every item of one menu shares a single handler, so all of them stay together in the emitted file.","Viene eseguito quando l'utente sceglie dal menu la voce con questo id. Tutte le voci di un menu condividono un solo gestore, quindi restano insieme nel file generato."
+Editor Tools: Menus,Strumenti dell'editor: menu
+"The menus a tool puts on screen: the items that go in one, and the event that runs when the user picks one of them.",I menu che uno strumento mette sullo schermo: le voci che ci vanno dentro e l'evento che parte quando l'utente ne sceglie una.
+The menu variable this row acts on - the one the menu was made into.,La variabile di menu su cui agisce questa riga - quella in cui il menu è stato creato.
+Labelled,Etichettata
+The words the item shows in the menu.,Le parole che la voce mostra nel menu.
+Id,Id
+The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,"Il numero che questa voce invia quando viene scelta. Dai a ogni voce il suo - se due condividono un id, la seconda non può mai essere eseguita."
+Item,Voce
+The id of the item this event answers - the same number Add Item gave it.,L'id della voce a cui risponde questo evento - lo stesso numero che le ha dato Aggiungi voce.

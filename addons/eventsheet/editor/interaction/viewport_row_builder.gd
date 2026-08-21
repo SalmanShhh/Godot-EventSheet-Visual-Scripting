@@ -49,6 +49,10 @@ var _verb_kind_override: int = -1
 # W4 - how many undo-step edits the walk is inside right now. A `return` in there is the ANSWER the
 # funnel asked for ("did this change anything?"), never the "stop the event" a plain body's is.
 var _answer_return_rows: int = 0
+# W6 - the menu whose handler the walk is inside right now, "" at sheet level. A `match id:` arm says
+# only a number; which MENU that number belongs to is a fact about the walk (the lambda it was handed
+# to, or the function the connect line named), so it is stamped here exactly as the verb kind is.
+var _current_menu_key: String = ""
 # Per-build occurrence counters ("label" -> count) giving every paired region a STABLE
 # fold key ("label#n") that survives sessions - row uids are instance-based and cannot
 # (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
@@ -5511,6 +5515,83 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	return row_data
 
 
+## W6. The menu a `match` answers, or {} when it answers none. Three things have to be true: the walk
+## is inside a menu's handler (a lambda handed to `id_pressed`, or a function that connect named),
+## the file knows that menu, and the thing being matched is a bare name - the handler's own parameter.
+## `match some.thing:` in a menu handler is a switch on something else and keeps its own reading.
+func _menu_of_match(match_row: MatchRow, event_row: EventRow) -> Dictionary:
+	if match_row == null:
+		return {}
+	var subject: String = str(match_row.match_expression).strip_edges()
+	if subject.is_empty() or not EventSheetSentence.is_identifier(subject):
+		return {}
+	var key: String = _menu_context_key(event_row)
+	return {} if key.is_empty() else EventSheetMenuFacts.menu_of(sentence_context(), key)
+
+
+## W6. Records that this event is a menu answering its items. Claimed here rather than through the
+## pending-pattern funnel because a handler is a shape all by itself: a file may answer a menu built
+## in another file, and then there is no add_item run on this sheet to hang the claim on.
+func _claim_menu_pattern(event_row: EventRow, menu: Dictionary) -> void:
+	var uid: String = event_row.event_uid if event_row != null else ""
+	if uid.is_empty():
+		return
+	var vocabulary: Dictionary = PATTERN_VOCABULARY.get(EventSheetMenuFacts.PATTERN_ID, {})
+	EventSheetPatternFacts.claim(_viewport._sheet, EventSheetMenuFacts.PATTERN_ID, uid, uid,
+		PackedStringArray([str(menu.get("object", ""))]), str(vocabulary.get("words", "")))
+
+
+## W6. The menu whose handler the walk is inside. A handler arrives one of three ways, and every one
+## of them names its menu somewhere the arm itself cannot see: a lambda says it on the connect line it
+## was handed to (stamped for the length of that walk), a plain function says it on the connect line
+## that named the function, and a handler the open already recognised as a signal trigger carries that
+## very connect line on the event it became.
+func _menu_context_key(event_row: EventRow) -> String:
+	if not _current_menu_key.is_empty():
+		return _current_menu_key
+	if event_row != null:
+		var connected: String = EventSheetMenuFacts.connected_menu_key(
+			str(event_row.get_meta("__source_connect_line", "")))
+		if not connected.is_empty():
+			return connected
+	if _current_verb_function == null:
+		return ""
+	return EventSheetMenuFacts.handler_menu(sentence_context(), _current_verb_function.function_name)
+
+
+## W6. One `match` arm of a menu handler as the trigger it is: the ➜ badge, the menu in the object
+## column, and `On <item> chosen` with the id resolved back to the words the user clicks. An id no
+## item declared keeps the number and wears the warning colour - the branch is real, and nothing in
+## the menu can ever reach it.
+func _menu_arm_condition_spans(menu: Dictionary, pattern_text: String) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var words: Dictionary = EventSheetMenuFacts.arm_words(menu, pattern_text)
+	if words.is_empty():
+		return spans
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+	badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
+	badge_meta["badge_fg"] = _viewport._get_event_style().trigger_badge_foreground_color
+	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+	badge_meta["line_index"] = 0
+	badge_meta["badge_style"] = "trigger"
+	badge_meta["lane"] = "condition"
+	spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, badge_meta))
+	var arm_meta: Dictionary = {
+		"lane": "condition",
+		"kind": "trigger",
+		"ace_index": -1,
+		"chip": true,
+		"editable": false,
+		"line_index": 0,
+		"object_label": str(menu.get("object", ""))
+	}.merged(condition_style_meta, true)
+	if not bool(words.get("known", false)):
+		arm_meta["text_color"] = EventSheetActiveTheme.chrome().object_bar_warning_color
+	spans.append(_make_span(str(words.get("text", "")), SemanticSpan.SpanType.CONDITION, arm_meta))
+	return spans
+
+
 ## One child row per beat of any Timeline in this event's actions: "at 0.5s" reads as the
 ## condition (the WHEN), the step's action as the action (the WHAT) - the schedule in the
 ## sheet's own two-lane grammar. Rows carry the TimelineRow for double-click routing.
@@ -5564,6 +5645,15 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 		# qualify; a pattern that binds a name or destructures an array is doing something an Else-if
 		# cannot say, and keeps its pattern text.
 		var else_if_chain: bool = not state_shaped and _match_reads_as_else_if(match_row)
+		# W6 - a `match id:` inside a menu's handler is not a switch on a number, it is the menu
+		# answering: every arm is the item the user picked. The menu is what the WALK knows (the
+		# lambda the handler was handed to, or the function the connect line named), which is why the
+		# key is stamped rather than read off this row.
+		var menu: Dictionary = _menu_of_match(match_row, event_row)
+		if not menu.is_empty():
+			state_shaped = false
+			else_if_chain = false
+			_claim_menu_pattern(event_row, menu)
 		var chain_index: int = 0
 		for match_case: MatchCase in match_row.cases:
 			if match_case == null:
@@ -5597,6 +5687,8 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			if state_shaped and pattern_text != "_":
 				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
 			var chain_spans: Array[SemanticSpan] = []
+			if not menu.is_empty():
+				chain_spans = _menu_arm_condition_spans(menu, pattern_text)
 			if else_if_chain:
 				chain_spans = _match_else_if_condition_spans(match_row.match_expression, pattern_text, chain_index)
 				chain_index += 1
@@ -5973,6 +6065,65 @@ func _camera_relative_locals(actions: Array, locals: Array) -> Dictionary:
 				"mix_line": "%s = %s" % [name_text, str(declared[name_text])]
 			}
 	return {}
+
+
+## W6. The add_item runs in one action lane, in the same shape as the scroll limits above: a run of
+## adjacent calls that put items into ONE menu. Ten `add_item` lines are not ten things that happened
+## - they are one menu, and a reader wants to see the menu, in order, with its separators and its
+## tick items where they are. The lines are untouched: this is a lens, so the file re-emits byte for
+## byte, and every line the bar stands for is one hover away.
+func _menu_item_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var facts: Dictionary = sentence_context()
+	if not (facts.get("menus", null) is Dictionary):
+		return {"leads": leads, "consumed": consumed}
+	var index: int = 0
+	while index < actions.size() - 1:
+		var first: Dictionary = _menu_item_parts(actions[index])
+		if first.is_empty():
+			index += 1
+			continue
+		var menu_key: String = str(first.get("menu", ""))
+		var evidence: PackedStringArray = PackedStringArray([str(first.get("line", ""))])
+		var last: int = index
+		while last + 1 < actions.size():
+			var next_part: Dictionary = _menu_item_parts(actions[last + 1])
+			if next_part.is_empty() or str(next_part.get("menu", "")) != menu_key:
+				break
+			evidence.append(str(next_part.get("line", "")))
+			last += 1
+		var menu: Dictionary = EventSheetMenuFacts.menu_of(facts, menu_key)
+		if last == index or menu.is_empty():
+			index += 1
+			continue
+		var indices: Array[int] = []
+		for member_index: int in range(index, last + 1):
+			indices.append(member_index)
+		var bar: Dictionary = EventSheetMenuFacts.bar_words(menu)
+		leads[index] = {
+			"text": str(bar.get("text", "")),
+			"note": str(bar.get("note", "")),
+			"object": str(menu.get("object", "")),
+			"evidence": evidence,
+			"line_count": last - index + 1,
+			"indices": indices
+		}
+		for consumed_index: int in range(index + 1, last + 1):
+			consumed[consumed_index] = true
+		index = last + 1
+	return {"leads": leads, "consumed": consumed}
+
+
+## W6. One line that puts something in a menu -> {menu, line}, or {} for anything else. Both
+## spellings are read - the line as typed and the Call Method row the lifter files it as - so a run
+## reads the same whichever way the open lifted it.
+func _menu_item_parts(action_resource: Variant) -> Dictionary:
+	var text: String = _group_line_text(action_resource)
+	if text.is_empty():
+		return {}
+	var menu_key: String = EventSheetMenuFacts.item_menu_key(text)
+	return {} if menu_key.is_empty() else {"menu": menu_key, "line": text}
 
 
 ## X8. The visible-range runs in one action lane, in the same shape as the scroll limits above: two
@@ -8141,6 +8292,12 @@ const EDITOR_TOOLS_PAGE_PREFIX := "Editor Tools: "
 ## ids, because every row of that page is the command tool's and none of them is the editor's.
 const COMMAND_TOOL_PAGE := "Editor Tools: Command tool"
 
+## W6. Another page of the Editor's vocabulary that is not the editor: the rows that build a MENU and
+## answer the item that was chosen. A hand-written menu already reads under its own object ("Sheet
+## menu ▸ On Save chosen"), so a picked row wears the same word rather than the Editor's, and a
+## picked menu and a typed one say one sentence.
+const MENU_PAGE := "Editor Tools: Menus"
+
 ## W18. Two rows in the Editor's pages are not about the editor at all - they read and write THIS
 ## PROJECT's settings, which every person opening the project shares. An event sheet says that as its
 ## own object, so a reader can tell "your editor" from "this project" at a glance.
@@ -8994,6 +9151,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# X22 / X28 - the sensor shapes and the opened input window are one row each.
 		var gyro_groups: Dictionary = _gyro_groups(event_row.actions)
 		var window_groups: Dictionary = _input_window_groups(event_row.actions)
+		# W6 - the run of add_item calls that builds a menu is ONE menu, and reads as one bar.
+		var menu_groups: Dictionary = _menu_item_groups(event_row.actions)
 		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
 		var task_notes: Dictionary = _task_note_groups(event_row.actions)
 		# W12 - the run of rows a multi-line `{...}` / `[...]` used as a VALUE was split into is one
@@ -9036,7 +9195,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					or bool(move_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(range_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(gyro_groups.get("consumed", {}).get(action_index, false)) \
-					or bool(window_groups.get("consumed", {}).get(action_index, false)):
+					or bool(window_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(menu_groups.get("consumed", {}).get(action_index, false)):
 				continue
 			var run_lead: Dictionary = (look_groups["leads"] as Dictionary).get(action_index, {})
 			var run_pattern: String = "fps_look"
@@ -9062,6 +9222,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if run_lead.is_empty():
 				run_lead = (window_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "qte"
+			# W6 - the menu the run above built, as the one bar it is.
+			if run_lead.is_empty():
+				run_lead = (menu_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = EventSheetMenuFacts.PATTERN_ID
 			if not run_lead.is_empty():
 				_append_scroll_limit_spans(spans, run_lead, action_index, action_line_index,
 					action_style_meta)
@@ -9895,11 +10059,24 @@ static func connect_lambda_parts(code: String) -> Dictionary:
 	else:
 		if not after.substr(colon_at + 1).strip_edges().is_empty():
 			return {}
-		if lines[lines.size() - 1].strip_edges() != ")":
-			return {}
+		# The `)` that closes `connect(` is written two ways, and both mean the same thing: on a line
+		# of its own, or glued to the end of the last line of the body - which is how nearly every
+		# hand-written connect in a real file spells it. A tail line is the last body line with that
+		# one bracket taken off, and it is only taken off when the bracket really is the one that
+		# closes the call.
+		var last_line: String = lines[lines.size() - 1]
+		var tail_line: String = ""
+		if last_line.strip_edges() != ")":
+			if _matching_paren(code, marker + 8) != code.length() - 1:
+				return {}
+			tail_line = last_line.substr(0, last_line.length() - 1)
+			if tail_line.strip_edges().is_empty():
+				return {}
 		for line_index: int in range(1, lines.size() - 1):
 			var body_line: String = lines[line_index]
 			body_lines.append(body_line.substr(1) if body_line.begins_with("\t") else body_line.strip_edges())
+		if not tail_line.is_empty():
+			body_lines.append(tail_line.substr(1) if tail_line.begins_with("\t") else tail_line.strip_edges())
 		if body_lines.is_empty():
 			return {}
 	var args: PackedStringArray = PackedStringArray()
@@ -9966,6 +10143,12 @@ func _build_connect_lambda_rows(event_row: EventRow, anchor_base: String, indent
 			continue
 		var anchor: String = "%s_connect%d" % [anchor_base, action_index]
 		var trigger_row: EventRowData = _build_connect_trigger_row(event_row, parts, anchor, indent, action_index)
+		# W6 - which menu a lambda answers is written on the CONNECT line, and nowhere inside the
+		# lambda. Stamped for the length of the body walk, exactly as the verb kind is, and put back
+		# afterwards so a lambda on anything else is untouched.
+		var outer_menu: String = _current_menu_key
+		_current_menu_key = EventSheetMenuFacts.connected_menu_key(
+			connect_statement_of(event_row.actions[action_index]))
 		# The body reads through the very same lift a declared handler's body goes through, so a
 		# statement says the same thing whether it was written in a func or handed to connect.
 		for body_event: Variant in EventSheetACELifter.lift_body_rows(
@@ -9975,6 +10158,7 @@ func _build_connect_lambda_rows(event_row: EventRow, anchor_base: String, indent
 			var body_row: EventRowData = _build_event_row(body_event as EventRow, indent + 1)
 			_mark_connect_reading(body_row, event_row, anchor, action_index)
 			trigger_row.children.append(body_row)
+		_current_menu_key = outer_menu
 		rows.append(trigger_row)
 	return rows
 
@@ -11235,6 +11419,8 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 			return PROJECT_OBJECT
 		if input_descriptor != null and str(input_descriptor.category) == COMMAND_TOOL_PAGE:
 			return EventSheetToolFiles.OBJECT_COMMAND_TOOL
+		if input_descriptor != null and str(input_descriptor.category) == MENU_PAGE:
+			return EventSheetMenuFacts.OBJECT_WORD.capitalize()
 		if input_descriptor != null and (input_descriptor.category == EDITOR_TOOLS_CATEGORY \
 				or str(input_descriptor.category).begins_with(EDITOR_TOOLS_PAGE_PREFIX)):
 			return EDITOR_OBJECT

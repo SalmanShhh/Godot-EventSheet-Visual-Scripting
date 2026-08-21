@@ -98,6 +98,10 @@ const EXTENDED_MODULES: Dictionary = {
 		"AtMostEvery", "Poke", "ClearPoke", "HasBeenQuiet", "OnlyOncePerNode",
 		"OnlyOncePerName", "OnlyOnceThisSceneLoad", "ForgetOnceFor",
 	],
+	# W6 - the two rows that build a menu and answer the item that was chosen out of it.
+	"res://addons/eventforge/registration/modules/editor_object_aces.gd": [
+		"MenuAddItem", "OnMenuItemChosen",
+	],
 }
 
 ## One pinned translation per language, chosen from a string whose translation differs from its
