@@ -4031,3 +4031,10 @@ Id,Id
 The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,"Die Zahl, die dieser Eintrag beim Wählen sendet. Gib jedem Eintrag eine eigene - teilen sich zwei Einträge eine Id, kann der zweite nie laufen."
 Item,Eintrag
 The id of the item this event answers - the same number Add Item gave it.,"Die Id des Eintrags, auf den dieses Ereignis antwortet - dieselbe Zahl, die Eintrag hinzufügen ihm gegeben hat."
+Object Under Cursor (2D),Objekt unter dem Cursor (2D)
+"Which 2D body or area the mouse is over, or nothing when it is over empty space - click-to-select, hover highlights and ""what am I about to pick up"". Asked as a point query, so overlapping shapes answer with the one on top.","Welcher 2D-Körper oder -Bereich sich unter der Maus befindet, oder nichts, wenn sie über leerem Raum steht - Klick-Auswahl, Hover-Hervorhebung und ""was hebe ich gleich auf"". Als Punktabfrage gestellt, daher antworten überlappende Formen mit der obersten."
+"Which collision layers the query may see, by the names this project gave them.","Welche Kollisionsebenen die Abfrage sehen darf, unter den Namen, die dieses Projekt ihnen gegeben hat."
+Tile Under Cursor,Kachel unter dem Cursor
+"Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","Über welcher Zelle einer Tilemap-Ebene die Maus steht, als Kartenkoordinaten - die Zahl, die ""Kachel setzen bei"", ""Kachel löschen bei"" und ""Zelle ist leer"" alle nehmen. Kacheln malen, Baugitter und ""welches Feld habe ich angeklickt"" fangen hier an."
+the tile under the cursor,die Kachel unter dem Cursor
+"The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","Die Tilemap-Ebene, in der die Zelle nachgeschlagen wird. Ihre eigene Transformation macht aus dem Zeiger eine Zelle, daher antwortet auch eine verschobene oder gezoomte Karte richtig."

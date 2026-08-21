@@ -74,6 +74,9 @@ const NOT_STANDALONE: Array[String] = [
 	"CursorIsOverObject3D", "OnObjectClicked3D",
 	"MouseFloorPoint", "MouseFloorObject", "MouseFloorSlope",
 	"AimedFloorPoint", "AimedFloorObject", "AimedFloorSlope",
+	# The same is true of the 2D twins: the point query and the tile lookup are each one synthesized
+	# helper, gated the same way in cursor_and_canvas_reading_test.
+	"ObjectUnderCursor2D", "TileUnderCursor",
 ]
 
 

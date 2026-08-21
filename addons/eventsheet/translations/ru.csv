@@ -4031,3 +4031,10 @@ Id,Id
 The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,"Число, которое этот пункт отправляет при выборе. Дайте каждому пункту своё - если два пункта делят один id, второй никогда не выполнится."
 Item,Пункт
 The id of the item this event answers - the same number Add Item gave it.,"Id пункта, на который отвечает это событие - то же число, которое дало ему Добавить пункт."
+Object Under Cursor (2D),Объект под курсором (2D)
+"Which 2D body or area the mouse is over, or nothing when it is over empty space - click-to-select, hover highlights and ""what am I about to pick up"". Asked as a point query, so overlapping shapes answer with the one on top.","Какое 2D-тело или область находится под мышью, или ничего, когда она над пустым местом - выбор щелчком, подсветка при наведении и «что я сейчас подниму». Задаётся как точечный запрос, поэтому перекрывающиеся формы отвечают самой верхней."
+"Which collision layers the query may see, by the names this project gave them.","Какие слои столкновений может видеть запрос, под именами, которые дал им этот проект."
+Tile Under Cursor,Тайл под курсором
+"Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","Над какой ячейкой слоя тайлмапа находится мышь, в координатах карты - число, которое принимают «Задать тайл в», «Стереть тайл в» и «Ячейка пуста». Рисование тайлами, строительные сетки и «по какой клетке я щёлкнул» начинаются здесь."
+the tile under the cursor,тайл под курсором
+"The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","Слой тайлмапа, в котором ищется ячейка. Именно его собственное преобразование превращает указатель в ячейку, поэтому прокрученная или масштабированная карта отвечает верно."

@@ -20,6 +20,25 @@ extends RefCounted
 
 const SOURCE_PATH := "user://eventforge_canvas_dialog_reading_test.gd"
 
+## W7. The file the regroup gate opens: one dialog, made and then shaped, which is the shape every
+## tool file repeats dozens of times.
+const SETUP_PATH := "user://eventforge_dialog_setup_run_test.gd"
+const SETUP_SOURCE: String = """extends Node
+
+
+func _ask_keep_every_tick(uid: String, label: String) -> void:
+	var dialog: ConfirmationDialog = ConfirmationDialog.new()
+	dialog.title = "Keep as every tick?"
+	dialog.ok_button_text = "Keep As Every Tick"
+	dialog.confirmed.connect(_keep_every_tick.bind(uid))
+	add_child(dialog)
+	dialog.popup_centered()
+
+
+func _keep_every_tick(uid: String) -> void:
+	print(uid)
+"""
+
 ## The checked-in file the guide figure is rendered from. Read by the whole-path gate too, so the
 ## picture in the docs and the words pinned here can never drift apart.
 const FIXTURE_PATH := "res://tests/fixtures/canvas_dialog_reading_fixture.gd"
@@ -71,6 +90,7 @@ static func run() -> bool:
 	ok = _dialog_values() and ok
 	ok = _refusals() and ok
 	ok = _opened_file_reads() and ok
+	ok = _setup_run_rows() and ok
 	ok = _round_trip() and ok
 	return ok
 
@@ -194,6 +214,53 @@ static func _opened_file_reads() -> bool:
 
 ## Both readings are display only, so the file saves back byte for byte - the string this test wrote
 ## AND the checked-in fixture the guide figure is made from.
+## W7. A dialog built in code reads as a dialog and the rows that shape it: the lines that write its
+## properties, put it in the tree and open it hang UNDER the Local row that made it, instead of
+## standing as their own top-level steps. Pinned by the exact shape of the tree, because "the rows
+## are somewhere" is the one thing a regroup can get wrong while every sentence still reads right.
+##
+## Display only, like every reading around it: the byte gate below opens this very file.
+static func _setup_run_rows() -> bool:
+	var ok: bool = true
+	var handle: FileAccess = FileAccess.open(SETUP_PATH, FileAccess.WRITE)
+	handle.store_string(SETUP_SOURCE)
+	handle.close()
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(SETUP_PATH)
+	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
+	style.ensure_defaults()
+	sheet.editor_style = style
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport.set_ace_registry(EventSheetACERegistry.new())
+	viewport.set_sheet(sheet)
+	viewport.set_reading_mode(true)
+	var local_row: EventRowData = null
+	var event_lines: PackedStringArray = PackedStringArray()
+	for row_data: EventRowData in _walk(viewport._root_rows, viewport):
+		if row_data.row_uid.begins_with("local_declaration_") and not row_data.row_uid.contains("_setup"):
+			local_row = row_data
+		for span: SemanticSpan in row_data.spans:
+			if str(span.metadata.get("kind", "")) == "action" 					and span.text.contains("Wire On Confirmed"):
+				event_lines.append(span.text.strip_edges())
+	ok = _check("the dialog's declaration is a Local row", local_row != null, true) and ok
+	if local_row != null:
+		var under: PackedStringArray = PackedStringArray()
+		for child: EventRowData in local_row.children:
+			for span: SemanticSpan in child.spans:
+				if str(span.metadata.get("kind", "")) == "action":
+					under.append(span.text.strip_edges())
+		ok = _check("the lines that shape the dialog hang under it", " | ".join(under),
+			"Set title to \"Keep as every tick?\" | Set ok button text to \"Keep As Every Tick\" | add child dialog | Open centered") and ok
+	# The wired-up signal is NOT swallowed: it keeps the trigger reading the sheet already gives it,
+	# on the event itself, which is why the run steps over a connect instead of taking it.
+	ok = _check("the wired-up signal keeps its own row, once", " | ".join(event_lines),
+		"Wire On Confirmed to Keep Every Tick   uid = uid") and ok
+	viewport.free()
+	var output: String = str(SheetCompiler.compile(
+		GDScriptImporter.new().import_external(SETUP_PATH), SETUP_PATH).get("output", ""))
+	ok = _check("and the regrouped file still saves every byte back", output, SETUP_SOURCE) and ok
+	return ok
+
+
 static func _round_trip() -> bool:
 	_write_source()
 	var ok: bool = true

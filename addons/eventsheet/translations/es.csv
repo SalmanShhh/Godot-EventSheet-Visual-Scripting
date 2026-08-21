@@ -4031,3 +4031,10 @@ Id,Id
 The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,"El número que este elemento envía al elegirlo. Da a cada elemento el suyo - si dos comparten un id, el segundo nunca puede ejecutarse."
 Item,Elemento
 The id of the item this event answers - the same number Add Item gave it.,El id del elemento al que responde este evento - el mismo número que le dio Añadir elemento.
+Object Under Cursor (2D),Objeto bajo el cursor (2D)
+"Which 2D body or area the mouse is over, or nothing when it is over empty space - click-to-select, hover highlights and ""what am I about to pick up"". Asked as a point query, so overlapping shapes answer with the one on top.","Qué cuerpo o área 2D está bajo el ratón, o nada cuando está sobre espacio vacío - selección por clic, resaltado al pasar por encima y ""qué estoy a punto de recoger"". Se pregunta como una consulta de punto, así que las formas superpuestas responden con la de arriba."
+"Which collision layers the query may see, by the names this project gave them.","Qué capas de colisión puede ver la consulta, con los nombres que este proyecto les dio."
+Tile Under Cursor,Casilla bajo el cursor
+"Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","Sobre qué celda de una capa de tilemap está el ratón, en coordenadas de mapa - el número que toman ""Poner casilla en"", ""Borrar casilla en"" y ""La celda está vacía"". Pintar casillas, rejillas de construcción y ""qué cuadro he pulsado"" empiezan aquí."
+the tile under the cursor,la casilla bajo el cursor
+"The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","La capa de tilemap en la que se busca la celda. Su propia transformación es lo que convierte el puntero en una celda, así que un mapa desplazado o con zoom responde correctamente."

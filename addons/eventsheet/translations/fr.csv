@@ -4031,3 +4031,10 @@ Id,Id
 The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,"Le nombre que cet élément envoie quand il est choisi. Donne le sien à chaque élément - si deux partagent un id, le second ne peut jamais s'exécuter."
 Item,Élément
 The id of the item this event answers - the same number Add Item gave it.,L'id de l'élément auquel cet événement répond - le même nombre que celui donné par Ajouter un élément.
+Object Under Cursor (2D),Objet sous le curseur (2D)
+"Which 2D body or area the mouse is over, or nothing when it is over empty space - click-to-select, hover highlights and ""what am I about to pick up"". Asked as a point query, so overlapping shapes answer with the one on top.","Quel corps ou quelle zone 2D se trouve sous la souris, ou rien lorsqu'elle est sur du vide - sélection au clic, surbrillance au survol et « qu'est-ce que je m'apprête à ramasser ». Posée comme une requête de point, donc les formes superposées répondent avec celle du dessus."
+"Which collision layers the query may see, by the names this project gave them.","Quelles couches de collision la requête peut voir, sous les noms que ce projet leur a donnés."
+Tile Under Cursor,Tuile sous le curseur
+"Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","Sur quelle cellule d'un calque de tuiles la souris se trouve, en coordonnées de carte - le nombre que prennent « Définir la tuile à », « Effacer la tuile à » et « La cellule est vide ». Peindre des tuiles, les grilles de construction et « quelle case ai-je cliquée » commencent ici."
+the tile under the cursor,la tuile sous le curseur
+"The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","Le calque de tuiles dans lequel la cellule est recherchée. Sa propre transformation est ce qui convertit le pointeur en cellule, donc une carte défilée ou zoomée répond correctement."

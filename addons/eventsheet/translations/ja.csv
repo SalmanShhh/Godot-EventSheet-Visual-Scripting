@@ -4031,3 +4031,10 @@ Id,Id
 The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,この項目が選ばれたときに送る番号。項目ごとに別の番号を与えてください - 2 つの項目が同じ id を持つと、2 つめは決して実行されません。
 Item,項目
 The id of the item this event answers - the same number Add Item gave it.,このイベントが応える項目の id - 項目を追加 でその項目に与えたのと同じ番号です。
+Object Under Cursor (2D),カーソルの下のオブジェクト (2D)
+"Which 2D body or area the mouse is over, or nothing when it is over empty space - click-to-select, hover highlights and ""what am I about to pick up"". Asked as a point query, so overlapping shapes answer with the one on top.",マウスの下にある2Dのボディまたはエリア。何もない場所の上なら何も返しません - クリック選択、ホバー強調、「今なにを拾おうとしているか」。ポイントクエリとして尋ねるので、重なった形状は一番上のものが答えます。
+"Which collision layers the query may see, by the names this project gave them.",このクエリが見てよい衝突レイヤー。このプロジェクトが付けた名前で指定します。
+Tile Under Cursor,カーソルの下のタイル
+"Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.",マウスがタイルマップレイヤーのどのセルの上にあるかを、マップ座標で返します - 「タイルを設定」「タイルを消去」「セルが空」がすべて受け取る値です。タイルを塗る、建築グリッド、「どのマスをクリックしたか」はここから始まります。
+the tile under the cursor,カーソルの下のタイル
+"The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.",セルを調べるタイルマップレイヤー。ポインタをセルに変えるのはこのレイヤー自身のトランスフォームなので、スクロールやズームをした地図でも正しく答えます。

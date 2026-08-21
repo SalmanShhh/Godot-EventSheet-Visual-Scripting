@@ -89,6 +89,9 @@ signal function_edit_requested(event_function: Resource)
 signal verb_properties_requested(event_function: Resource)
 ## N10 - a single click on a row's object name asks for that object's popup.
 signal object_properties_requested(object_label: String)
+## X11 - the flags chip on an Add child row was clicked: the ticks it was written with travel in the
+## payload, and the dock opens them as the tick dialog and writes the answer back.
+signal hierarchy_flags_requested(payload: Dictionary)
 ## Emitted when a match action cell is double-clicked.
 signal match_edit_requested(match_row: Resource)
 ## Emitted on Ctrl+/ - the dock toggles the selected rows' enabled state (undoable).

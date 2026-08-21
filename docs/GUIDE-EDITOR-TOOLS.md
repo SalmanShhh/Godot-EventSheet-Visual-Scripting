@@ -929,8 +929,13 @@ headless with whatever would follow `--` on the command line; **Output ▾** sho
 **A pack recipe.** A `static func build()` under a `pack_builders` folder that fills an
 EventSheetResource and calls `save_pack` states what it makes on its bar - the host it attaches to,
 the class it ships as, its category, and the folder it builds into - because those are facts about
-the pack rather than steps the recipe takes. **Build pack ▸** runs that one recipe instead of all of
-them, and **Open built pack ▸** opens the `.gd` it emitted beside it.
+the pack rather than steps the recipe takes. Because the bar states them, the six lines that write
+them - the host class, the class name, the category, the description, the tags and the behavior
+switch - draw no rows at all: the action lane holds what the recipe DOES, and nothing is said twice.
+The same lines in an ordinary game script keep every row they always had, because the reading is
+gated on the file being a recipe rather than on the spelling of the line. **Build pack ▸** runs
+that one recipe instead of all of them, and **Open built pack ▸** opens the `.gd` it emitted
+beside it.
 
 ![A pack recipe: the head says pack recipe with the host, class and category it builds, plus Build pack and Open built pack buttons](images/pack-recipe-rows.png)
 

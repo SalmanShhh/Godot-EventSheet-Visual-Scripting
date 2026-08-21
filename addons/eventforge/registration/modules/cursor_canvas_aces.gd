@@ -31,14 +31,24 @@ const PICKING := "Nodes: Picking"
 ## never gains a near-duplicate of it.
 const AIM_HELPER := "__eventsheets_aim_floor"
 
+## The 2D twins' helpers: the point query that answers what the cursor is over on a 2D canvas, and
+## the tile lookup that answers which cell it is over. Written into the file exactly once each, by
+## the same rule the aimed-floor helper follows.
+const POINT_HELPER := "__eventsheets_object_at_2d"
+const TILE_HELPER := "__eventsheets_tile_under"
+
 ## The canvas point of the OS pointer, spelled the one way the readings recognise.
 const MOUSE_POINT := "get_viewport().get_mouse_position()"
+
+## Where the OS pointer is in the 2D world, which is the point a 2D query asks about.
+const MOUSE_WORLD_POINT_2D := "get_global_mouse_position()"
 
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	_add_cursor_words(descriptors)
 	_add_floor_words(descriptors)
+	_add_flat_cursor_words(descriptors)
 	_add_canvas_words(descriptors)
 	return descriptors
 
@@ -113,6 +123,29 @@ static func _add_floor_words(descriptors: Array[ACEDescriptor]) -> void:
 			"How far from flat counts as too steep.", "angle")],
 		CANVAS, "slope steeper than {degrees}°")
 		.described("True when the ground faces further than this from straight up - the buildable test a placement preview tints itself with."))
+
+
+## X30, the 2D twins. The same aiming question asked of a flat game: what is under the cursor, and
+## which tile is under it. A 2D canvas has no camera ray to cast, so the object question is a POINT
+## query and the tile question is a map lookup - but both share the one-helper discipline the 3D
+## words use, so a project that asks both gains one small function for each rather than the query
+## plumbing inline on every row.
+static func _add_flat_cursor_words(descriptors: Array[ACEDescriptor]) -> void:
+	descriptors.append(F.make_descriptor("Core", "ObjectUnderCursor2D", "Object Under Cursor (2D)",
+		ACEDescriptor.ACEType.EXPRESSION,
+		"%s(%s, {layer}).get(\"collider\", null)" % [POINT_HELPER, MOUSE_WORLD_POINT_2D], "",
+		[F.make_param("layer", "String", "1", "Layers",
+			"Which collision layers the query may see, by the names this project gave them.",
+			"physics_layer_2d")],
+		MOUSE, "the object under the cursor")
+		.described("Which 2D body or area the mouse is over, or nothing when it is over empty space - click-to-select, hover highlights and \"what am I about to pick up\". Asked as a point query, so overlapping shapes answer with the one on top."))
+	descriptors.append(F.make_descriptor("Core", "TileUnderCursor", "Tile Under Cursor",
+		ACEDescriptor.ACEType.EXPRESSION, "%s({tilemap})" % TILE_HELPER, "",
+		[F.make_param("tilemap", "String", "self", "Tilemap",
+			"The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.",
+			"expression")],
+		MOUSE, "the tile under the cursor")
+		.described("Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and \"which square did I click\" start here."))
 
 
 ## X20. Canvas space: where something is on screen, how far apart two screen points are in PIXELS,

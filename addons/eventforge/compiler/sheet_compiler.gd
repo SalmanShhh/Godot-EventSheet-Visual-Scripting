@@ -25,6 +25,12 @@ const VERSION: String = "0.17.0"
 ## definition per file, whichever of them the picker wrote first.
 const AIMED_CURSOR_HELPER: String = "__eventsheets_aim_floor"
 
+## X30, the 2D twins. The point query that answers what the cursor is over on a 2D canvas, and the
+## tile lookup that answers which cell it is over. Same discipline as the aimed-floor helper above:
+## one definition per file, appended last, skipped outright when the file already defines it.
+const POINT_CURSOR_HELPER: String = "__eventsheets_object_at_2d"
+const TILE_CURSOR_HELPER: String = "__eventsheets_tile_under"
+
 # Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
 static var _emit_breakpoints_flag: bool = false
 static var _emit_event_trace_flag: bool = false
@@ -3643,24 +3649,55 @@ static func _calls_outside_strings(line: String, needle: String) -> bool:
 ## again byte-identical - the definition read back as an ordinary function is the same definition
 ## this would have written.
 static func _append_aimed_cursor_helper(lines: PackedStringArray) -> void:
-	var head: String = "func %s(canvas_point: Vector2, layer_mask: int, reach: float) -> Dictionary:" % AIMED_CURSOR_HELPER
+	_append_shared_helper(lines, AIMED_CURSOR_HELPER,
+		"func %s(canvas_point: Vector2, layer_mask: int, reach: float) -> Dictionary:" % AIMED_CURSOR_HELPER,
+		["	var camera: Camera3D = get_viewport().get_camera_3d()",
+		"	if camera == null:",
+		"		return {}",
+		"	var from: Vector3 = camera.project_ray_origin(canvas_point)",
+		"	var to: Vector3 = from + camera.project_ray_normal(canvas_point) * reach",
+		"	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, to)",
+		"	query.collision_mask = layer_mask",
+		"	return get_viewport().find_world_3d().direct_space_state.intersect_ray(query)"])
+	_append_shared_helper(lines, POINT_CURSOR_HELPER,
+		"func %s(canvas_point: Vector2, layer_mask: int) -> Dictionary:" % POINT_CURSOR_HELPER,
+		["	var world: World2D = get_viewport().find_world_2d()",
+		"	if world == null:",
+		"		return {}",
+		"	var query: PhysicsPointQueryParameters2D = PhysicsPointQueryParameters2D.new()",
+		"	query.position = canvas_point",
+		"	query.collision_mask = layer_mask",
+		"	query.collide_with_areas = true",
+		"	var hits: Array[Dictionary] = world.direct_space_state.intersect_point(query, 1)",
+		"	if hits.is_empty():",
+		"		return {}",
+		"	return hits[0]"])
+	# The map is deliberately UNTYPED: a tile lookup is asked of whatever node the row names, and a
+	# `Node`-typed parameter would refuse `local_to_map` at parse time in every project that uses it.
+	_append_shared_helper(lines, TILE_CURSOR_HELPER,
+		"func %s(map) -> Vector2i:" % TILE_CURSOR_HELPER,
+		["	if map == null:",
+		"		return Vector2i.ZERO",
+		"	return map.local_to_map(map.get_local_mouse_position())"])
+
+
+## One shared helper's definition, appended when the file calls it and does not already define it.
+## Every rule the aimed-floor helper documents above holds for each of them: appended last so no
+## source-map line moves, skipped when the head line is already present so a reopened file re-emits
+## byte-identically, and a mere mention inside a string literal never counts as a call.
+static func _append_shared_helper(lines: PackedStringArray, helper_name: String, head: String,
+		body: Array) -> void:
 	var called: bool = false
 	for line: String in lines:
 		if line == head:
 			return
 		if line.strip_edges().begins_with("#"):
 			continue
-		if _calls_outside_strings(line, "%s(" % AIMED_CURSOR_HELPER):
+		if _calls_outside_strings(line, "%s(" % helper_name):
 			called = true
 	if not called:
 		return
 	lines.append("")
 	lines.append(head)
-	lines.append("	var camera: Camera3D = get_viewport().get_camera_3d()")
-	lines.append("	if camera == null:")
-	lines.append("		return {}")
-	lines.append("	var from: Vector3 = camera.project_ray_origin(canvas_point)")
-	lines.append("	var to: Vector3 = from + camera.project_ray_normal(canvas_point) * reach")
-	lines.append("	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, to)")
-	lines.append("	query.collision_mask = layer_mask")
-	lines.append("	return get_viewport().find_world_3d().direct_space_state.intersect_ray(query)")
+	for body_line: String in body:
+		lines.append(body_line)

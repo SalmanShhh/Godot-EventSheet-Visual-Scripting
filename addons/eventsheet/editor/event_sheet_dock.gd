@@ -4949,6 +4949,13 @@ func hierarchy_edit_flags(parent_label: String, child_label: String) -> void:
 		_hierarchy_edits.flags_requested(parent_label, child_label)
 
 
+## X11 - the flags chip on an Add child ROW. The pane's gesture writes a new run; this one edits
+## the run the chip sits on, in place.
+func hierarchy_edit_row_flags(payload: Dictionary) -> void:
+	if _ensure_sheet_for_editing():
+		_hierarchy_edits.row_flags_requested(payload)
+
+
 func hierarchy_unparent(child_label: String) -> void:
 	if _ensure_sheet_for_editing():
 		_hierarchy_edits.unparent_requested(child_label)

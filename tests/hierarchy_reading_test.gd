@@ -159,8 +159,115 @@ static func run() -> bool:
 	ok = _claims() and ok
 	ok = _authored_rows() and ok
 	ok = _child_triggers() and ok
+	ok = _flags_chip() and ok
 	ok = _round_trip() and ok
 	return ok
+
+
+## X11. The flags chip is the row's own way back to the ticks that wrote it, so the two directions
+## have to meet exactly: the lines the writer emits read back as this row, the chip reports the very
+## ticks they were written with, and handing those ticks back to the writer reproduces the lines.
+## Anything less and clicking flags… twice would quietly change what the row does.
+static func _flags_chip() -> bool:
+	var ok: bool = true
+	var flags: Dictionary = {"position": true, "angle": true, "size": false, "destroy": false,
+		"keep_place": true}
+	var lines: PackedStringArray = EventSheetObjectHierarchy.add_child_lines("$Head", "hat", flags, "3D")
+	var chip: Dictionary = _chip_of(lines)
+	ok = _check("the written run offers the flags chip", chip.is_empty(), false) and ok
+	ok = _check("the chip names the child the row moved", str(chip.get("child", "")), "hat") and ok
+	ok = _check("the chip keeps the spelling of the move",
+		"%s -> %s" % [str(chip.get("child_value", "")), str(chip.get("parent_value", ""))],
+		"hat -> $Head") and ok
+	ok = _check("the chip reads back the very ticks that wrote the run",
+		chip.get("flags", {}), flags) and ok
+	ok = _check("the chip knows which dimension the follower was written in",
+		str(chip.get("dimension", "")), "3D") and ok
+	ok = _check("the chip names the actions it stands for",
+		"%d..%d" % [int(chip.get("first_index", -1)), int(chip.get("last_index", -1))],
+		"0..%d" % (lines.size() - 1)) and ok
+	# The other direction: the ticks the chip reports, handed back to the writer, are these lines.
+	ok = _check("the ticks the chip reports write the same run again",
+		"\n".join(EventSheetObjectHierarchy.add_child_lines("$Head", "hat",
+			chip.get("flags", {}), str(chip.get("dimension", "")))),
+		"\n".join(lines)) and ok
+	# A plain child needs no plumbing, so there is no run to edit and no chip to offer.
+	ok = _check("a plain child offers no flags chip",
+		_chip_of(EventSheetObjectHierarchy.add_child_lines("$Head", "hat",
+			EventSheetObjectHierarchy.default_flags(), "3D")).is_empty(), true) and ok
+	ok = _flags_write() and ok
+	return ok
+
+
+## X11, the writing half. Ticking the size back ON replaces the run the chip sits on - every line of
+## it - rather than stacking a second set of plumbing beside the first, which is the one way this
+## could go wrong and the reason the payload carries the exact actions the row stands for.
+static func _flags_write() -> bool:
+	var ok: bool = true
+	var written: Dictionary = _run_sheet(EventSheetObjectHierarchy.add_child_lines("$Head", "hat",
+		{"position": true, "angle": true, "size": false, "destroy": true, "keep_place": true}, "3D"))
+	var sheet: EventSheetResource = written["sheet"]
+	var payload: Dictionary = {"event_uid": "flagschip", "first_index": 0,
+		"last_index": int(written["count"]) - 1}
+	var applied: bool = EventSheetHierarchyEdits.replace_run_lines(sheet, payload,
+		EventSheetObjectHierarchy.add_child_lines("$Head", "hat",
+			EventSheetObjectHierarchy.default_flags(), "3D"))
+	ok = _check("the chip's write lands on the run it was drawn from", applied, true) and ok
+	var event_row: EventRow = sheet.events[0]
+	ok = _check("the whole run is replaced, not added to",
+		_action_code(event_row), "hat.reparent($Head)") and ok
+	# ...and a payload naming an event this sheet does not have writes nothing at all.
+	ok = _check("a stale payload writes nothing",
+		EventSheetHierarchyEdits.replace_run_lines(sheet,
+			{"event_uid": "gone", "first_index": 0, "last_index": 0},
+			PackedStringArray(["hat.reparent($Head)"])), false) and ok
+	return ok
+
+
+## Every action of the one event, as the lines they hold.
+static func _action_code(event_row: EventRow) -> String:
+	var lines: PackedStringArray = PackedStringArray()
+	for entry: Variant in event_row.actions:
+		var raw: RawCodeRow = entry as RawCodeRow
+		if raw != null:
+			lines.append(raw.code)
+	return "\n".join(lines)
+
+
+## A one-event sheet holding a run of written lines, and how many actions it took.
+static func _run_sheet(lines: PackedStringArray) -> Dictionary:
+	var event_row: EventRow = EventRow.new()
+	event_row.event_uid = "flagschip"
+	event_row.trigger_provider_id = "Core"
+	event_row.trigger_id = "OnReady"
+	for line: String in lines:
+		var raw: RawCodeRow = RawCodeRow.new()
+		raw.code = line
+		event_row.actions.append(raw)
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node3D"
+	sheet.events.append(event_row)
+	return {"sheet": sheet, "count": lines.size()}
+
+
+## The flags chip a run of written lines produces, as the payload a click would carry. {} when the
+## lines are not a flagged Add child run at all.
+static func _chip_of(lines: PackedStringArray) -> Dictionary:
+	var sheet: EventSheetResource = _run_sheet(lines)["sheet"]
+	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
+	style.ensure_defaults()
+	sheet.editor_style = style
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport.set_ace_registry(EventSheetACERegistry.new())
+	viewport.set_sheet(sheet)
+	viewport.set_reading_mode(true)
+	var payload: Dictionary = {}
+	for row_data: EventRowData in _walk(viewport._root_rows, viewport):
+		for span: SemanticSpan in row_data.spans:
+			if str(span.metadata.get("kind", "")) == "hierarchy_flags":
+				payload = span.metadata.get("hierarchy_flags", {})
+	viewport.free()
+	return payload
 
 
 ## The sentence context an opened script hands the grammar.

@@ -276,6 +276,7 @@ func build_ui() -> void:
 	_dock._viewport.function_edit_requested.connect(_dock._function_dialog_glue._open_function_dialog_for)
 	_dock._viewport.verb_properties_requested.connect(_dock.open_verb_properties)
 	_dock._viewport.object_properties_requested.connect(_dock.open_object_properties)
+	_dock._viewport.hierarchy_flags_requested.connect(_dock.hierarchy_edit_row_flags)
 	_dock._viewport.variable_group_requested.connect(_dock._variable_grouping.on_group_requested)
 	_dock._viewport.variable_group_rename_requested.connect(_dock._variable_grouping.on_rename_requested)
 	_dock._viewport.match_edit_requested.connect(_dock._open_match_dialog)

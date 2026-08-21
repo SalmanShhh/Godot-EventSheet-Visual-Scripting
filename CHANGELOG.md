@@ -24,6 +24,40 @@
   every item of one menu into a single `match id:` handler wired through the menu's own variable -
   exactly the shape a hand-written menu already has, so a picked menu and a typed one are the same
   file and open as the same rows.
+### Added - the aiming words a flat game needed, and three readings that had been deferred twice
+
+- **What the cursor is over in 2D, and which tile it is over.** The aimed-floor words answered "where
+  on the floor am I pointing" for 3D only; a flat game had to write the point query by hand. `Object
+  Under Cursor (2D)` asks a masked point query - the layers named by the names this project gave
+  them - and `Tile Under Cursor` answers in map coordinates, which is exactly the number Set Tile At,
+  Erase Tile At and Cell Is Empty all take. Both follow the one-helper discipline the 3D words use:
+  a file that asks gains one small function per question, appended last so no line moves, skipped
+  outright when the file already defines it, and a file that asks for neither gains neither.
+- **The Add child row's `flags…` chip.** The four hierarchy ticks - transform position, transform
+  angle, transform size, destroy with parent - were reachable only from the Hierarchy pane's
+  right-click menu, while the row that shows them wore them as plain text. The chip at the end of
+  the row now reopens exactly the ticks the run was written with and writes the answer back over
+  that run through the undo funnel, so ticking twice leaves ONE set of plumbing rather than two.
+  Gated in both directions: the lines the writer emits read back as the flagged row, and the ticks
+  the row reports write the same lines again.
+- **The ƒ chip is a link.** A function handed around as a value already read as `ƒ Open Sheet In
+  Workspace`; now that chip is a span of its own carrying the raw name, and one click goes to the
+  function - the same two calls the Outline panel makes. Splitting it off changes no word of the
+  row, and every other reading's spans come back exactly as they went in.
+- **A dialog built in code reads as a dialog and the rows that shape it.** The property writes, the
+  `add_child` and the `popup_centered` that follow `var dialog := ConfirmationDialog.new()` now hang
+  under the Local row that made it instead of standing as their own top-level steps. Control
+  construction is the bulk of every tool file, and reading forty of them is only possible when each
+  is one thing with its rows underneath. A wired-up signal is deliberately not swallowed: it keeps
+  the trigger reading the sheet already gives it.
+- **A pack recipe states its head facts once.** `sheet.host_class`, `custom_class_name`,
+  `addon_category`, `class_description`, `addon_tags` and `behavior_mode` are what the pack IS, and
+  the bar above already computes and shows them; the six Set rows that said the same thing again are
+  gone from the action lane. Gated on the file being a recipe, so the identical lines in a game
+  script keep every row they had.
+
+All five are display-only lenses or new vocabulary: every file involved still opens and saves back
+byte for byte, which is the gate each of them ships behind.
 
 ### Changed - the documentation caught up with everything the sheet learned, and the index gates it
 

@@ -8425,6 +8425,25 @@ static func function_reference_words(text: String, context: Dictionary) -> Strin
 	return "%s%s" % [FUNCTION_MARK, function_words(bare)]
 
 
+## W13, the way back. Which function a ƒ chip on a row NAMES - the raw identifier behind the humanized
+## words - so a click on the chip can jump to it. "" when the words name no function this sheet
+## declares, which is what keeps a chip nobody can follow from pretending to be a link.
+##
+## Derived by asking each declared name what its chip would read as, rather than by un-capitalizing
+## the words: `_open_sheet_in_workspace` and `open_sheet_in_workspace` read identically, and only the
+## sheet's own list can say which of them is there.
+static func function_reference_name(chip_text: String, context: Dictionary) -> String:
+	var words: String = chip_text.strip_edges()
+	if not words.begins_with(FUNCTION_MARK):
+		return ""
+	# Compared without case: a row is free to say the same chip in its own sentence case (a value at
+	# the end of "Set open sheet to ..." reads lower), and the function it names is the same one.
+	for name: Variant in (context.get("function_params", {}) as Dictionary):
+		if ("%s%s" % [FUNCTION_MARK, function_words(str(name))]).nocasecmp_to(words) == 0:
+			return str(name)
+	return ""
+
+
 ## U12. The video and positional-sound knobs, in the words their own objects publish. A video player
 ## is the Video object; how far a sound carries is a hearing distance and how fast it fades is a
 ## falloff, which are the two words a reader sets them by.
@@ -12056,6 +12075,11 @@ const CURSOR_AIM_HELPER := "__eventsheets_aim_floor("
 ## X30. The canvas point the OS mouse is at, as the helper's callers spell it.
 const CURSOR_MOUSE_POINT := "get_viewport().get_mouse_position()"
 
+## X30, the 2D twins. The flat game's two helpers: the point query that answers what the cursor is
+## over, and the map lookup that answers which tile it is over.
+const CURSOR_POINT_HELPER := "__eventsheets_object_at_2d("
+const CURSOR_TILE_HELPER := "__eventsheets_tile_under("
+
 
 ## X20. The canvas-space names, or "" when the expression is not one of them. Whole-expression
 ## shapes only - a fragment of a bigger sum is left to the ordinary call pass, which already leaves
@@ -12610,6 +12634,9 @@ static func fixed_point_ray_words(from_text: String, to_text: String, context: D
 ## "" when the expression is not one of them.
 static func cursor_ray_expression_words(text: String, context: Dictionary) -> String:
 	var bare: String = text.strip_edges()
+	var flat: String = cursor_flat_expression_words(bare)
+	if not flat.is_empty():
+		return flat
 	if not bare.begins_with(CURSOR_AIM_HELPER) or not bare.ends_with(")"):
 		return ""
 	# The whole-expression split cannot see past the helper's own call, so the entry being read is
@@ -12625,6 +12652,29 @@ static func cursor_ray_expression_words(text: String, context: Dictionary) -> St
 		return ""
 	var aim: Dictionary = call_parts(bare.substr(0, helper_end + 1))
 	return _cursor_floor_words(_unquote(entries[0].strip_edges()), _aimed_cursor_owner(aim, context))
+
+
+## X30, the 2D twins. The flat game's two aiming answers, read back out of the helpers the picker
+## writes: what the cursor is over, and which tile it is over. "" for anything else, so a project
+## that never asks keeps every reading it had.
+static func cursor_flat_expression_words(text: String) -> String:
+	var bare: String = text.strip_edges()
+	if bare.begins_with(CURSOR_TILE_HELPER) and bare.ends_with(")"):
+		return translate("the tile under the cursor")
+	if not bare.begins_with(CURSOR_POINT_HELPER) or not bare.ends_with(")"):
+		return ""
+	var helper_end: int = closing_paren(bare, CURSOR_POINT_HELPER.length() - 1)
+	if helper_end < 0:
+		return ""
+	var tail: String = bare.substr(helper_end + 1).strip_edges()
+	if not tail.begins_with(".get("):
+		return ""
+	var entries: PackedStringArray = _split_arguments(tail.substr(5, tail.length() - 6))
+	if entries.is_empty():
+		return ""
+	if _unquote(entries[0].strip_edges()) != "collider":
+		return ""
+	return translate("the object under the cursor")
 
 
 ## X30. Which object's canvas position aimed the helper, "" for the OS mouse.

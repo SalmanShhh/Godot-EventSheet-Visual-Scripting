@@ -173,6 +173,16 @@ static func run() -> bool:
 		"rows those where ready") and ok
 	ok = _check("a lambda with a BODY is left as code",
 		EventSheetSentence.lambda_over_list_words("rows.map(func(r):\n\treturn r.name)", {}), "") and ok
+	# W13, the way back: the words the chip shows name the function they came from, and words that
+	# name nothing this sheet declares resolve to nothing rather than to a guess.
+	ok = _check("the chip's words name the function behind them",
+		EventSheetSentence.function_reference_name("ƒ Open Sheet In Workspace", function_context),
+		"_open_sheet_in_workspace") and ok
+	ok = _check("words naming no declared function resolve to nothing",
+		EventSheetSentence.function_reference_name("ƒ Something Else", function_context), "") and ok
+	ok = _check("plain words are not a chip at all",
+		EventSheetSentence.function_reference_name("Open Sheet In Workspace", function_context), "") and ok
+	ok = _function_chip_span() and ok
 
 	# ── W14: the object column says what the receiver IS ──
 	ok = _check("the plugin prefix comes off and the acronym stays",
@@ -196,6 +206,70 @@ static func run() -> bool:
 			{"variable_types": {"System": "EventSheetDock"}}, true).is_empty(), true) and ok
 
 	return ok
+
+
+## W13. The ƒ chip on a real row is a span of its OWN, carrying the raw name a click jumps to -
+## and splitting it off changes not one word of what the row says. Both halves are pinned here,
+## because a split that quietly dropped or reordered a word would still look like a working link.
+static func _function_chip_span() -> bool:
+	var ok: bool = true
+	var handler: EventFunction = EventFunction.new()
+	handler.function_name = "_open_sheet_in_workspace"
+	var wiring: EventFunction = EventFunction.new()
+	wiring.function_name = "_wire_up"
+	var event_row: EventRow = EventRow.new()
+	event_row.event_uid = "wire"
+	var raw: RawCodeRow = RawCodeRow.new()
+	raw.code = "menu.open_sheet = _open_sheet_in_workspace"
+	event_row.actions.append(raw)
+	wiring.events.append(event_row)
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	sheet.functions.append(wiring)
+	sheet.functions.append(handler)
+	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
+	style.ensure_defaults()
+	sheet.editor_style = style
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport.set_ace_registry(EventSheetACERegistry.new())
+	viewport.set_sheet(sheet)
+	viewport.set_reading_mode(true)
+	var chip: SemanticSpan = null
+	var whole: String = ""
+	for row_data: EventRowData in _rows_of(viewport):
+		if row_data.source_resource != event_row:
+			continue
+		viewport._row_builder._ensure_event_spans(row_data)
+		for span: SemanticSpan in row_data.spans:
+			if not str(span.metadata.get("kind", "")) in ["action", "function_ref"]:
+				continue
+			whole += span.text
+			if str(span.metadata.get("kind", "")) == "function_ref":
+				chip = span
+	ok = _check("the row's ƒ chip is a span of its own", chip != null, true) and ok
+	if chip != null:
+		ok = _check("the chip reads as the function's name in words", chip.text,
+			"ƒ open sheet in workspace") and ok
+		ok = _check("and carries the raw name a click jumps to",
+			str(chip.metadata.get("name", "")), "_open_sheet_in_workspace") and ok
+	ok = _check("splitting the chip off changes no word of the row",
+		whole.strip_edges(), "Set open sheet to ƒ open sheet in workspace") and ok
+	# The seam the click lands on: the same lookup the Outline uses, answering with the function.
+	ok = _check("the name the chip carries finds the function it names",
+		ViewportRowBuilder.find_function_by_name(sheet, "_open_sheet_in_workspace"), handler) and ok
+	viewport.free()
+	return ok
+
+
+## Every row of a built viewport, parents before children.
+static func _rows_of(viewport: EventSheetViewport) -> Array:
+	var found: Array = []
+	var pending: Array = viewport._root_rows.duplicate()
+	while not pending.is_empty():
+		var row_data: EventRowData = pending.pop_front()
+		found.append(row_data)
+		pending.append_array(row_data.children)
+	return found
 
 
 ## The one lead of a group result, or {} - so a classifier that claims nothing fails the check

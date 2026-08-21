@@ -6240,9 +6240,154 @@ const HIERARCHY_FLAG_WORDS: Dictionary = {
 }
 
 
+## W7. The run that CONFIGURES a Control a Local row just made: the property writes, the calls and
+## the add_child that name it, from the line under the declaration onwards. Returned as
+## {declaration index: {"name", "indices"}, "consumed": {index: true}} - the shape every run pass here
+## uses - so the action lane drops them and the Local row draws them underneath instead.
+##
+## Building a dialog is the most repetitive code any tool file has, and read line by line it is twenty
+## top-level rows saying one thing. Under the Local row it is a dialog and the rows that shape it.
+##
+## Gated on the DECLARATION: nothing is walked until an action declares a local whose value is a
+## Control being made (`ConfirmationDialog.new()` and the rest of the sheet's Control nouns), which is
+## the head predicate that keeps this off every other event in every other file.
+##
+## A `.connect(` line is deliberately NOT taken: the sheet already reads a wired-up signal as the
+## trigger it is, with the call under it, and that reading lives on the event itself. The run steps
+## over such a line and carries on, so the two readings share the statement list without either
+## saying it twice.
+func _control_setup_groups(event_row: EventRow) -> Dictionary:
+	var runs: Dictionary = {}
+	var consumed: Dictionary = {}
+	if event_row == null or not event_promotes_locals(event_row):
+		return {"runs": runs, "consumed": consumed}
+	for action_index: int in event_row.actions.size():
+		var name: String = _control_declared_name(event_row.actions[action_index])
+		if name.is_empty():
+			continue
+		var indices: Array[int] = []
+		var cursor: int = action_index + 1
+		while cursor < event_row.actions.size():
+			var line: String = _group_line_text(event_row.actions[cursor])
+			if line.begins_with("%s." % name) and line.contains(".connect("):
+				cursor += 1
+				continue
+			if not _configures_control(line, name):
+				break
+			indices.append(cursor)
+			consumed[cursor] = true
+			cursor += 1
+		if not indices.is_empty():
+			runs[action_index] = {"name": name, "indices": indices}
+	return {"runs": runs, "consumed": consumed}
+
+
+## W7. The local ONE action declares as a newly made Control, or "" for every other action. This is
+## the head predicate the whole regroup hangs off, so it must not cost a code generation per action:
+## a lifted row is asked for its declaration directly (the same answer the Local rows are built from)
+## and only a verbatim line is read as text. Nothing below here runs until this says yes.
+func _control_declared_name(action_resource: Variant) -> String:
+	var raw: RawCodeRow = action_resource as RawCodeRow
+	if raw != null:
+		if not raw.enabled or raw.code.contains("\n"):
+			return ""
+		return _declared_control_name(raw.code.strip_edges())
+	var action: ACEAction = action_resource as ACEAction
+	if action == null or not action.enabled:
+		return ""
+	if not (action.provider_id.is_empty() or action.provider_id == "Core"):
+		return ""
+	# The row's own parameters, read straight: the grammar's declaration reading would answer the
+	# same thing, and would build a copy of the whole sentence context to do it - per action, on the
+	# paint path, for every file whether or not it builds any UI at all.
+	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	var made: String = str(params_dict.get("value", "")).strip_edges()
+	if not made.ends_with(".new()"):
+		return ""
+	if EventSheetSentence.control_noun(made.substr(0, made.length() - 6)).is_empty():
+		return ""
+	var declared: String = str(params_dict.get("name", "")).strip_edges()
+	return declared if EventSheetSentence.is_identifier(declared) else ""
+
+
+## The local a verbatim LINE declares as a newly made Control, or "" for every other line. The sheet's
+## own Control nouns decide: a local holding a `Timer.new()` is not a piece of UI and keeps its rows.
+func _declared_control_name(line: String) -> String:
+	if not line.begins_with("var ") or not line.ends_with(".new()"):
+		return ""
+	var assignment_at: int = EventSheetSentence.top_level_index(line, " = ")
+	var separator: int = 3
+	if assignment_at < 0:
+		assignment_at = EventSheetSentence.top_level_index(line, " := ")
+		separator = 4
+	if assignment_at < 0:
+		return ""
+	var made: String = line.substr(assignment_at + separator).strip_edges()
+	if EventSheetSentence.control_noun(made.substr(0, made.length() - 6)).is_empty():
+		return ""
+	var declared: String = line.substr(4, assignment_at - 4).strip_edges()
+	var colon_at: int = declared.find(":")
+	if colon_at > 0:
+		declared = declared.substr(0, colon_at).strip_edges()
+	return declared if EventSheetSentence.is_identifier(declared) else ""
+
+
+## True when one line shapes the named Control rather than doing something else: a write or a call on
+## it, or the line that puts it in the tree.
+func _configures_control(line: String, name: String) -> bool:
+	if line.is_empty():
+		return false
+	if line == "add_child(%s)" % name or line.ends_with(".add_child(%s)" % name):
+		return true
+	return line.begins_with("%s." % name)
+
+
+## W11. The lines a pack recipe uses to STATE what the pack is - its host class, its class name, its
+## category, its tags, what it says about itself, and that it is a behavior at all - as
+## {"consumed": {index: true}}. They are head facts on the bar above (which computes them from the
+## file itself), so drawing them again as six Set rows says the same thing twice and buries the one
+## thing the function actually does.
+##
+## Gated on the FILE: only a `static func build()` under a pack_builders folder that saves a pack is a
+## recipe, so `sheet.host_class = ...` in a game script keeps the row it always had. Display only -
+## the actions themselves are untouched, which is what keeps the recipe's byte round-trip exact.
+func _recipe_head_groups(actions: Array) -> Dictionary:
+	var consumed: Dictionary = {}
+	if not _sheet_is_pack_recipe():
+		return {"leads": {}, "consumed": consumed}
+	for action_index: int in actions.size():
+		if _is_recipe_head_line(_group_line_text(actions[action_index])):
+			consumed[action_index] = true
+	return {"leads": {}, "consumed": consumed}
+
+
+## W11. Whether the open sheet is a pack recipe, answered once per sheet. The kind is a whole-FILE
+## fact that cannot change while the file is open, so a tab switch is the only thing that rebuilds it.
+func _sheet_is_pack_recipe() -> bool:
+	var sheet: Resource = _viewport._sheet if _viewport != null else null
+	if sheet == _recipe_sheet_seen:
+		return _recipe_sheet_is
+	_recipe_sheet_seen = sheet
+	_recipe_sheet_is = str(sentence_context().get("tool_file_kind", "")) \
+		== EventSheetToolFiles.KIND_PACK_RECIPE
+	return _recipe_sheet_is
+
+
+## True when one line of a recipe states a head fact rather than doing something. The properties are
+## the very list the bar reads, so a fact the bar stops showing starts drawing its row again rather
+## than vanishing from both.
+func _is_recipe_head_line(line: String) -> bool:
+	if not line.begins_with("sheet."):
+		return false
+	for property: Variant in EventSheetToolFiles.RECIPE_HEAD_PROPERTIES:
+		if line.begins_with("sheet.%s = " % str(property)):
+			return true
+	return false
+
+
 ## X10 / X11. The hierarchy runs in one action lane, as {"leads": {index: {text, note, object,
 ## evidence, line_count, indices}}, "consumed": {index: true}}.
-func _hierarchy_groups(actions: Array) -> Dictionary:
+func _hierarchy_groups(actions: Array, event_uid: String = "") -> Dictionary:
 	var leads: Dictionary = {}
 	var consumed: Dictionary = {}
 	var index: int = 0
@@ -6265,6 +6410,16 @@ func _hierarchy_groups(actions: Array) -> Dictionary:
 			"line_count": last - index + 1,
 			"indices": indices
 		}
+		# X11. What the flags chip needs to reopen this run as ticks and write it back: which event
+		# and which actions it stands for, how the move itself is spelled, and which flags are on
+		# right now. Everything travels by VALUE - a resource captured here would describe a sheet
+		# the next undoable edit has already replaced.
+		var chip: Dictionary = run.get("flags_chip", {})
+		if not chip.is_empty():
+			chip["event_uid"] = event_uid
+			chip["first_index"] = index
+			chip["last_index"] = last
+			leads[index]["flags_chip"] = chip
 		for consumed_index: int in range(index + 1, last + 1):
 			consumed[consumed_index] = true
 		index = last + 1
@@ -6368,7 +6523,35 @@ func _hierarchy_run_at(actions: Array, index: int) -> Dictionary:
 		return {}
 	_note_pattern("hierarchy", first)
 	return {"text": _joined_segments(sentence), "note": _hierarchy_flag_note(flags),
-		"object": str(sentence.get("object", "")), "last": last}
+		"object": str(sentence.get("object", "")), "last": last,
+		"flags_chip": _hierarchy_flags_chip(actions, moved, flags, index, last)}
+
+
+## X11. The flags a hierarchy run was written with, as the ticks the dialog shows them as, beside the
+## spelling of the move itself. The transform words are stated in the code only when they are OFF -
+## Godot's default for every one of them is on - so a member the run never wrote is a ticked box.
+func _hierarchy_flags_chip(actions: Array, moved: Dictionary, flags: Dictionary, first: int,
+		last: int) -> Dictionary:
+	var dimension: String = ""
+	for member_index: int in range(first, last + 1):
+		var line: String = _group_line_text(actions[member_index])
+		if line.contains("RemoteTransform2D"):
+			dimension = "2D"
+		elif line.contains("RemoteTransform3D"):
+			dimension = "3D"
+	return {
+		"child": str(moved.get("child", "")),
+		"child_value": str(moved.get("child_value", "")),
+		"parent_value": str(moved.get("parent_value", "")),
+		"dimension": dimension,
+		"flags": {
+			"position": not flags.has("update_position"),
+			"angle": not flags.has("update_rotation"),
+			"size": not flags.has("update_scale"),
+			"destroy": not flags.has("destroy_with_parent"),
+			"keep_place": str(moved.get("keep_place", "")).strip_edges() != "false"
+		}
+	}
 
 
 ## X11. The flag chips a hierarchy row wears - every flag the run turned OFF said with a ✗ and the
@@ -6518,6 +6701,21 @@ func _append_scroll_limit_spans(spans: Array, limits: Dictionary, action_index: 
 			"compiled_lines": int(limits.get("line_count", 1)),
 			"create_object_indices": limits.get("indices", [])
 		}, true).merged(action_style_meta, true)))
+	# X11. A run whose flags are EDITABLE offers the chip that reopens them as ticks, AHEAD of the
+	# note: the note is what wraps to the cell's right edge, so a chip behind it would be laid out
+	# past that edge, where nothing is painted. Only the hierarchy run offers one, and only while the
+	# row is not read-only - everything else here is a lens over lines nobody may rewrite from a row.
+	var flags_chip: Dictionary = limits.get("flags_chip", {})
+	if not flags_chip.is_empty() and _viewport._sheet != null and not _viewport._sheet.read_only:
+		spans.append(_make_span(" %s" % EventSheetL10n.translate("flags…"),
+			SemanticSpan.SpanType.KEYWORD, base.duplicate().merged({
+				"kind": "hierarchy_flags",
+				"natural_width": true,
+				"editable": false,
+				"object_label": "",
+				"text_color": _viewport._get_event_style().value_highlight_color,
+				"hierarchy_flags": flags_chip
+			}, true).merged(action_style_meta, false)))
 	# The note carries no object label: the row already said whose camera this is. A run whose
 	# sentence carries the whole of what happened has no note, and draws no empty span for one.
 	if str(limits.get("note", "")).is_empty():
@@ -7259,6 +7457,8 @@ func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[Event
 	# W9. And the same for a test's verdict local: the action lane does not draw it, so a Local row
 	# above the gate would be the one place the folded bookkeeping came back.
 	var verdict_consumed: Dictionary = _test_verdict_consumed(event_row)
+	# W7 - which Local rows have a configure run to draw under them.
+	var setup_runs: Dictionary = _control_setup_groups(event_row).get("runs", {})
 	for action_index in event_row.actions.size():
 		if ray_leads.has(action_index) or ray_consumed.has(action_index):
 			continue
@@ -7293,8 +7493,32 @@ func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[Event
 			if span is SemanticSpan:
 				typed_spans.append(span as SemanticSpan)
 		row_data.spans = typed_spans
+		# W7 - what the event did to the Control it just made hangs under the row that made it.
+		_append_control_setup_rows(row_data, event_row, setup_runs.get(action_index, {}), indent + 1)
 		rows.append(row_data)
 	return rows
+
+
+## W7. The configure run as the rows under its Local row. Each line is built through the very same
+## row builder every other statement goes through, so a `Set title to ...` under a dialog says exactly
+## what it says anywhere else; the rows are inert, because they stand for statements the event itself
+## still holds and the file is never touched.
+func _append_control_setup_rows(row_data: EventRowData, event_row: EventRow, run: Dictionary,
+		indent: int) -> void:
+	if run.is_empty():
+		return
+	for member_index: int in (run.get("indices", []) as Array):
+		var stand_in: EventRow = EventRow.new()
+		stand_in.event_uid = "%s_setup%d" % [row_data.row_uid, member_index]
+		stand_in.actions.append(event_row.actions[member_index])
+		var member_row: EventRowData = _build_event_row(stand_in, indent)
+		member_row.row_uid = stand_in.event_uid
+		# A line that shapes a dialog runs when the dialog is made - "Always", never the sheet-level
+		# "Every Tick", which is what a condition-less row means out at the top and never means here.
+		_mark_verb_body(member_row, EventSheetSentence.VerbKind.ACTION)
+		_ensure_subtree_spans(member_row)
+		_make_row_inert(member_row)
+		row_data.children.append(member_row)
 
 
 func _build_variable_row(
@@ -9147,7 +9371,11 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var range_groups: Dictionary = _visible_range_groups(event_row.actions)
 		# X10 / X11 - the remove-then-add pair, and a reparent whose follow-flags were written out
 		# beneath it, are each one hierarchy row with every line they stand for on the hover.
-		var hierarchy_runs: Dictionary = _hierarchy_groups(event_row.actions)
+		var hierarchy_runs: Dictionary = _hierarchy_groups(event_row.actions, event_row.event_uid)
+		# W11 - a pack recipe's head facts are said once, on the bar.
+		var recipe_head: Dictionary = _recipe_head_groups(event_row.actions)
+		# W7 - the lines that shape a Control the event just made read under its Local row.
+		var control_setup: Dictionary = _control_setup_groups(event_row)
 		# X22 / X28 - the sensor shapes and the opened input window are one row each.
 		var gyro_groups: Dictionary = _gyro_groups(event_row.actions)
 		var window_groups: Dictionary = _input_window_groups(event_row.actions)
@@ -9170,6 +9398,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			# An entry line or the closing bracket of a literal the lead row above already drew. Skipped
 			# without advancing the line index, which is what turns the run into one row.
 			if bool(literal_groups.get("consumed", {}).get(action_index, false)):
+				continue
+			# W11 - the same skip-without-advancing: a head fact draws no row at all, so the step below
+			# it takes the line the fact would have had.
+			if bool(recipe_head.get("consumed", {}).get(action_index, false)):
+				continue
+			# W7 - the same skip-without-advancing: the line is drawn under the Local row instead.
+			if bool(control_setup.get("consumed", {}).get(action_index, false)):
 				continue
 			if (literal_groups.get("leads", {}) as Dictionary).has(action_index):
 				_append_value_literal_spans(spans, (literal_groups["leads"] as Dictionary)[action_index],
@@ -9704,12 +9939,21 @@ func _count_event_lines(event_row: EventRow) -> int:
 	var literal_leads: Dictionary = literal_groups.get("leads", {})
 	# W9 mirrors the span pass too: a test's folded verdict local draws no line in either lane.
 	var verdict_consumed: Dictionary = _test_verdict_consumed(event_row)
+	# W11 mirrors the span pass: a pack recipe's head facts are said on the bar, so the lines that
+	# state them draw no rows and cost the lane no height.
+	var recipe_consumed: Dictionary = _recipe_head_groups(event_row.actions).get("consumed", {})
+	# W7 mirrors the span pass: a line drawn under the Local row costs the action lane no height.
+	var setup_consumed: Dictionary = _control_setup_groups(event_row).get("consumed", {})
 	var literal_index: int = -1
 	for action_resource in event_row.actions:
 		literal_index += 1
 		if bool(verdict_consumed.get(literal_index, false)):
 			continue
 		if bool(literal_consumed.get(literal_index, false)):
+			continue
+		if bool(recipe_consumed.get(literal_index, false)):
+			continue
+		if bool(setup_consumed.get(literal_index, false)):
 			continue
 		if literal_leads.has(literal_index):
 			action_count += 1
@@ -11201,6 +11445,7 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		row_data.spans = _build_event_spans(row_data.source_resource as EventRow, row_data.in_verb_body,
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
+		row_data.spans = _split_function_reference_spans(row_data.spans)
 		# The patterns those readings recognised, claimed on the event that OWNS them - the trigger,
 		# function or tick the shape hangs off. Everything that talks about patterns reads the
 		# registry; nothing re-derives them.
@@ -11213,6 +11458,75 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		_verb_kind_override = outer_kind
 		if not row_data.picking_object.is_empty():
 			_apply_picking_note(row_data)
+
+
+## W13. The ƒ chip a row ends with is a LINK: a function held as a value names a function this sheet
+## declares, and a reader who sees its name wants to be at it. So the chip is split off the sentence
+## into a span of its own carrying the raw name, which the click handler jumps to.
+##
+## Only a TRAILING chip is split - "Set open sheet to ƒ Open Sheet In Workspace" ends with the one
+## thing being named - because splitting mid-sentence would reorder the runs a cell was measured
+## with. Every other span comes back exactly as it went in, including a sentence that merely mentions
+## a function somewhere in the middle.
+func _split_function_reference_spans(spans: Array[SemanticSpan]) -> Array[SemanticSpan]:
+	var context: Dictionary = sentence_context()
+	if (context.get("function_params", {}) as Dictionary).is_empty():
+		return spans
+	var split: Array[SemanticSpan] = []
+	for span: SemanticSpan in spans:
+		var at: int = span.text.rfind(EventSheetSentence.FUNCTION_MARK)
+		if at < 0 or str((span.metadata as Dictionary).get("kind", "")) == "function_ref":
+			split.append(span)
+			continue
+		var chip_text: String = span.text.substr(at)
+		var name: String = EventSheetSentence.function_reference_name(chip_text, context)
+		if name.is_empty():
+			split.append(span)
+			continue
+		var chip_meta: Dictionary = (span.metadata as Dictionary).duplicate(true)
+		chip_meta["kind"] = "function_ref"
+		chip_meta["name"] = name
+		chip_meta["editable"] = false
+		chip_meta["natural_width"] = true
+		chip_meta["object_label"] = ""
+		chip_meta["bbcode_segments"] = _segments_slice(span, at, span.text.length())
+		if at > 0:
+			var head_meta: Dictionary = (span.metadata as Dictionary).duplicate(true)
+			# Both halves size to their own text: a head span that still filled the whole cell would
+			# push the chip past the cell's right edge, where nothing is ever painted.
+			head_meta["natural_width"] = true
+			var head: SemanticSpan = _make_span(span.text.substr(0, at), span.type, head_meta)
+			head.metadata["bbcode_segments"] = _segments_slice(span, 0, at)
+			split.append(head)
+			chip_meta.erase("compiled_lines")
+			chip_meta.erase("create_object_indices")
+		var chip: SemanticSpan = _make_span(chip_text, span.type, chip_meta)
+		split.append(chip)
+	return split
+
+
+## The styled runs of a span between two character offsets, so a split cell keeps the very pixels it
+## had. A span with no runs of its own answers with none, and is painted in its span type's colour
+## exactly as it was before.
+func _segments_slice(span: SemanticSpan, from: int, to: int) -> Array:
+	var segments: Array = (span.metadata as Dictionary).get("bbcode_segments", []) as Array
+	if segments.is_empty():
+		return []
+	var sliced: Array = []
+	var cursor: int = 0
+	for entry: Variant in segments:
+		var segment: Dictionary = entry
+		var text: String = str(segment.get("text", ""))
+		var start: int = cursor
+		cursor += text.length()
+		var take_from: int = maxi(from, start)
+		var take_to: int = mini(to, cursor)
+		if take_to <= take_from:
+			continue
+		var part: Dictionary = segment.duplicate(true)
+		part["text"] = text.substr(take_from - start, take_to - take_from)
+		sliced.append(part)
+	return sliced
 
 
 func _append_condition_prefix_spans(
@@ -12220,7 +12534,8 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"words": "The object under the cursor",
 		"ace_ids": ["Core/MouseRayCollider3D", "Core/MouseRayPoint3D", "Core/CastMouseRayInto3D",
 			"Core/CursorIsOverObject3D", "Core/OnObjectClicked3D", "Core/MouseFloorPoint",
-			"Core/MouseFloorObject", "Core/MouseFloorSlope", "Core/SlopeSteeperThan"]
+			"Core/MouseFloorObject", "Core/MouseFloorSlope", "Core/SlopeSteeperThan",
+			"Core/ObjectUnderCursor2D", "Core/TileUnderCursor"]
 	},
 	"aim_assist": {
 		"words": "Aim assist",
@@ -12747,6 +13062,12 @@ var _pending_grammar_segments: Array = []
 # The sheet the cached sentence context was built for, so a tab switch rebuilds it.
 var _sentence_context_sheet: Resource = null
 var _sentence_context_cache: Dictionary = {}
+# W11. Whether the open sheet is a pack recipe, remembered per sheet. Asked once per EVENT in both
+# the span pass and its line-count twin, and the answer is a fact about the FILE - so asking the
+# sentence context each time (which duplicates the whole context dictionary) would put a copy of it
+# on the paint path for every event in every ordinary game script, which is exactly what this is not.
+var _recipe_sheet_seen: Resource = null
+var _recipe_sheet_is: bool = false
 
 
 ## T1 / T3 / T4 / T27. The behavior-shape reading of a ROW - whether the importer lifted a typed line

@@ -4031,3 +4031,10 @@ Id,Id
 The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,이 항목이 선택될 때 보내는 번호. 항목마다 고유한 번호를 주세요 - 두 항목이 같은 id 를 쓰면 두 번째 항목은 결코 실행될 수 없습니다.
 Item,항목
 The id of the item this event answers - the same number Add Item gave it.,이 이벤트가 응답하는 항목의 id - 항목 추가 에서 그 항목에 준 번호와 같습니다.
+Object Under Cursor (2D),커서 아래의 오브젝트 (2D)
+"Which 2D body or area the mouse is over, or nothing when it is over empty space - click-to-select, hover highlights and ""what am I about to pick up"". Asked as a point query, so overlapping shapes answer with the one on top.","마우스 아래에 있는 2D 바디 또는 에리어이며, 빈 공간 위에서는 아무것도 없습니다 - 클릭 선택, 호버 강조, ""지금 무엇을 주우려는가"". 포인트 쿼리로 묻기 때문에 겹친 도형은 맨 위의 것이 답합니다."
+"Which collision layers the query may see, by the names this project gave them.",이 쿼리가 볼 수 있는 충돌 레이어입니다. 이 프로젝트가 붙인 이름으로 지정합니다.
+Tile Under Cursor,커서 아래의 타일
+"Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","마우스가 타일맵 레이어의 어느 셀 위에 있는지를 맵 좌표로 알려줍니다 - ""타일 설정"", ""타일 지우기"", ""셀이 비어 있음""이 모두 받는 값입니다. 타일 칠하기, 건설 격자, ""어느 칸을 클릭했는가""가 여기서 시작합니다."
+the tile under the cursor,커서 아래의 타일
+"The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","셀을 조회할 타일맵 레이어입니다. 포인터를 셀로 바꾸는 것은 이 레이어 자신의 트랜스폼이므로, 스크롤하거나 확대한 맵도 정확히 답합니다."

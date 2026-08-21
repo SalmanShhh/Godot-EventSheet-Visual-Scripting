@@ -4031,3 +4031,10 @@ Id,Id
 The number this item sends when it is chosen. Give every item its own - two items sharing one id means the second one can never run.,该项目被选中时发送的编号。请给每个项目各自的编号 - 两个项目共用一个 id 时，第二个永远不会运行。
 Item,项目
 The id of the item this event answers - the same number Add Item gave it.,该事件所响应的项目 id - 与“添加项目”给它的编号相同。
+Object Under Cursor (2D),光标下的对象 (2D)
+"Which 2D body or area the mouse is over, or nothing when it is over empty space - click-to-select, hover highlights and ""what am I about to pick up"". Asked as a point query, so overlapping shapes answer with the one on top.",鼠标下方的 2D 物体或区域；指向空白处时为空 - 点击选择、悬停高亮，以及“我马上要捡起什么”。以点查询的方式提问，因此重叠的形状由最上层的作答。
+"Which collision layers the query may see, by the names this project gave them.",该查询可以看到哪些碰撞层，使用本项目为它们起的名称。
+Tile Under Cursor,光标下的图块
+"Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.",鼠标位于图块地图层的哪个单元格上，以地图坐标给出 - 这正是“设置图块”、“擦除图块”和“单元格为空”都接受的数值。刷图块、建造网格，以及“我点了哪一格”都从这里开始。
+the tile under the cursor,光标下的图块
+"The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.",用于查找单元格的图块地图层。把指针换算成单元格的正是该图层自身的变换，因此即使地图滚动或缩放也能答对。

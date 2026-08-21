@@ -49,6 +49,93 @@ func flags_requested(parent_label: String, child_label: String) -> void:
 		func(flags: Dictionary) -> void: _write_add_child(parent_label, child_label, flags))
 
 
+## X11. The flags chip on an Add child ROW: the same four ticks, seeded from what the run already
+## says, and written back over the very lines the row stands for rather than appended beside them.
+func row_flags_requested(payload: Dictionary) -> void:
+	if payload.is_empty():
+		return
+	prompt_flags(str(payload.get("child", "")), payload.get("flags", {}),
+		func(flags: Dictionary) -> void: _write_row_flags(payload, flags))
+
+
+## The rewrite. The run's own actions are replaced by the lines the new ticks mean, so ticking twice
+## leaves ONE set of plumbing rather than two - and the row reads back as the flagged row it was,
+## which is the two-way promise this chip makes.
+func _write_row_flags(payload: Dictionary, flags: Dictionary) -> bool:
+	var lines: PackedStringArray = EventSheetObjectHierarchy.add_child_lines(
+		str(payload.get("parent_value", "")), str(payload.get("child_value", "")), flags,
+		_row_dimension(payload))
+	if lines.is_empty():
+		_dock._set_status("Nothing to write - the row no longer names both objects.", true)
+		return false
+	var applied: bool = _dock._perform_undoable_sheet_edit("Add Child Flags",
+		func() -> bool: return _replace_run_lines(payload, lines))
+	if applied:
+		_dock._set_status("%s follows %s by the flags you ticked." % [str(payload.get("child", "")),
+			EventSheetSentence.object_of_reference(str(payload.get("parent_value", "")))])
+	return applied
+
+
+## Which dimension the follower is written in: the one the run already used, or - for a run that had
+## no follower to say it - what the two objects themselves are.
+func _row_dimension(payload: Dictionary) -> String:
+	var stated: String = str(payload.get("dimension", "")).strip_edges()
+	if not stated.is_empty():
+		return stated
+	var sheet: EventSheetResource = _dock._current_sheet
+	return EventSheetObjectHierarchy.dimension_for(sheet, {}, {})
+
+
+## The actions the row stands for, swapped for the ones the ticks mean. The event is found by UID in
+## the LIVE sheet: the undo funnel replaces every resource on commit, so the row the chip was drawn
+## from describes a sheet that no longer exists by the time this runs.
+func _replace_run_lines(payload: Dictionary, lines: PackedStringArray) -> bool:
+	return replace_run_lines(_dock._current_sheet, payload, lines)
+
+
+## The same rewrite, over any sheet - which is how a test asks what the chip writes without a dock,
+## a viewport or a dialog anywhere in the picture.
+static func replace_run_lines(sheet: EventSheetResource, payload: Dictionary,
+		lines: PackedStringArray) -> bool:
+	var event_row: EventRow = _find_event(sheet, str(payload.get("event_uid", "")))
+	if event_row == null:
+		return false
+	var first: int = int(payload.get("first_index", -1))
+	var last: int = int(payload.get("last_index", -1))
+	if first < 0 or last < first or last >= event_row.actions.size():
+		return false
+	var written: RawCodeRow = RawCodeRow.new()
+	written.code = "\n".join(lines)
+	for _removed: int in range(first, last + 1):
+		event_row.actions.remove_at(first)
+	event_row.actions.insert(first, written)
+	return true
+
+
+## One event by uid, anywhere in the sheet - inside a group or a function as readily as at the top.
+static func _find_event(sheet: EventSheetResource, event_uid: String) -> EventRow:
+	if sheet == null or event_uid.strip_edges().is_empty():
+		return null
+	var pending: Array = []
+	pending.append_array(sheet.events)
+	for function_entry: Variant in sheet.functions:
+		var event_function: EventFunction = function_entry as EventFunction
+		if event_function != null:
+			pending.append_array(event_function.events)
+	while not pending.is_empty():
+		var entry: Variant = pending.pop_front()
+		var event_row: EventRow = entry as EventRow
+		if event_row != null:
+			if event_row.event_uid == event_uid:
+				return event_row
+			pending.append_array(event_row.sub_events)
+			continue
+		var group: EventGroup = entry as EventGroup
+		if group != null:
+			pending.append_array(group.events)
+	return null
+
+
 ## Right-click ▸ Remove from parent, and the same thing a child chip dragged out of the pane means.
 func unparent_requested(child_label: String) -> void:
 	var child_entry: Dictionary = EventSheetObjectProperties.find_entry(_dock._current_sheet, child_label)

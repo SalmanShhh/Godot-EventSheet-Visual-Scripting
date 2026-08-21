@@ -77,8 +77,81 @@ static func run() -> bool:
 	all_passed = _test_run_verdicts() and all_passed
 	all_passed = _test_head_chips() and all_passed
 	all_passed = _test_opened_files() and all_passed
+	all_passed = _test_head_rows() and all_passed
 	all_passed = _test_round_trip() and all_passed
 	return all_passed
+
+
+## W11. A recipe's head facts read on the BAR, so the six lines that state them draw no rows at all -
+## and the very same lines in a file that is not a recipe keep every row they had. Both halves are
+## pinned, because "no head rows" is also what a reading that silently stopped firing looks like.
+static func _test_head_rows() -> bool:
+	var passed: bool = true
+	var head_lines: PackedStringArray = PackedStringArray([
+		"sheet.behavior_mode = true", "sheet.host_class = \"Node2D\"",
+		"sheet.custom_class_name = \"PinBehavior\"", "sheet.addon_category = \"Pin\""])
+	var work_line: String = "sheet.events.append(block)"
+	var recipe_rows: PackedStringArray = _action_rows_of(head_lines, work_line,
+		"res://tools/pack_builders/synthetic_recipe.gd")
+	passed = _check("a recipe states its head facts on the bar, not as rows",
+		"\n".join(recipe_rows), "append   block") and passed
+	# The gate itself: the same four lines in a game script are four ordinary Set rows.
+	var game_rows: PackedStringArray = _action_rows_of(head_lines, work_line,
+		"res://game/level_setup.gd")
+	passed = _check("the same lines in a game script keep every row they had",
+		game_rows.size(), head_lines.size() + 1) and passed
+	return passed
+
+
+## The action-lane rows a one-event sheet draws for a run of lines, as their sentences. The sheet is
+## given the path it would have on disk, which is what tells the readings which kind of file this is.
+static func _action_rows_of(head_lines: PackedStringArray, work_line: String,
+		source_path: String) -> PackedStringArray:
+	var event_row: EventRow = EventRow.new()
+	event_row.event_uid = "recipehead"
+	for line: String in head_lines:
+		var raw: RawCodeRow = RawCodeRow.new()
+		raw.code = line
+		event_row.actions.append(raw)
+	var work: RawCodeRow = RawCodeRow.new()
+	work.code = work_line
+	event_row.actions.append(work)
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	sheet.external_source_path = source_path
+	# What makes the file a recipe at all, stated the way the file itself states it - a `build()` that
+	# saves a pack, under a pack_builders folder.
+	var preamble: RawCodeRow = RawCodeRow.new()
+	preamble.code = "static func build() -> bool:\n\treturn Lib.save_pack(sheet, \"pin\")"
+	sheet.events.append(preamble)
+	sheet.events.append(event_row)
+	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
+	style.ensure_defaults()
+	sheet.editor_style = style
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport.set_ace_registry(EventSheetACERegistry.new())
+	viewport.set_sheet(sheet)
+	viewport.set_reading_mode(true)
+	var rows: PackedStringArray = PackedStringArray()
+	var pending: Array = viewport._root_rows.duplicate()
+	while not pending.is_empty():
+		var row_data: EventRowData = pending.pop_front()
+		pending.append_array(row_data.children)
+		if row_data.source_resource != event_row:
+			continue
+		viewport._row_builder._ensure_event_spans(row_data)
+		var line_texts: Dictionary = {}
+		for span: SemanticSpan in row_data.spans:
+			if str(span.metadata.get("kind", "")) != "action":
+				continue
+			var at: int = int(span.metadata.get("line_index", 0))
+			line_texts[at] = str(line_texts.get(at, "")) + span.text
+		var ordered: Array = line_texts.keys()
+		ordered.sort()
+		for at: Variant in ordered:
+			rows.append(str(line_texts[at]).strip_edges())
+	viewport.free()
+	return rows
 
 
 ## Which file is which, and - just as important - which is neither. A game script that calls `quit()`

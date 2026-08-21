@@ -489,6 +489,15 @@ one for **flags…**, **Remove from parent** and **Select in scene**. Every gest
 rows through the undo funnel, in the same spellings a hand-typed file uses, so the pane and the
 canvas can never disagree about the tree and Ctrl+Z takes a parenting back like any other edit.
 
+The row itself offers the ticks too. An Add child row that was written with flags wears them - `
+transform position ✓ transform angle ✓ transform size ✗ destroy with parent ✓` - and ends with a
+**flags…** chip. One click reopens exactly those ticks, and confirming rewrites the run the chip
+sits on rather than adding a second set beside it, so ticking twice leaves one RemoteTransform and
+one `top_level`, never two. What comes back out reads as the same flagged row, which is the promise
+that lets a reader treat the chips as the truth rather than as a summary.
+
+![Three opened functions read as rows: On Wire Up setting open sheet to an f Open Sheet In Workspace chip, On Equip reading Add child hat keeping its place with a flags... chip and the four transform ticks beside it, and On Ask Keep Every Tick whose Local ConfirmationDialog row carries the four lines that shape the dialog underneath it](images/reading-dialog-hierarchy-and-function-chips.png)
+
 ![The Hierarchy section of Object properties for Player: parent Level (the layout), four children, two of them muted as in the scene file with an edit the scene link, a HealthBar marked as ignoring its parent's movement, and a Hat whose transform ticks say position and angle but not size](images/hierarchy-pane.png)
 
 Three hierarchy footguns are Doctor notes rather than rules - each advisory, each with a one-click
@@ -524,6 +533,17 @@ pivot turns.
   because an aim assist measured in world units ignores zoom.
 
   ![An opened 3D script read as an event sheet: the four-line camera-ray run as one row saying "Set hit to the object under the cursor, reach 1000, none when nothing is hit", the same run aimed through a crosshair with its layer mask, and an aim-assist walk whose locals read as the canvas centre, a position on the canvas and a canvas distance in pixels](images/reading-cursor-ray-and-canvas.png)
+
+- **A flat game asks the same two questions, and has words for them too.** There is no camera ray to
+  cast in 2D, so "what is under the cursor" is a POINT query and "which square is under the cursor"
+  is a map lookup - and both are in the picker. `Mouse ▸ Object Under Cursor (2D)` reads **the object
+  under the cursor** and answers with whichever body or area the pointer is over, or nothing over
+  empty space; the layers it may see are named by the names this project gave them, so a pick that
+  should ignore scenery says so in words. `Mouse ▸ Tile Under Cursor` reads **the tile under the
+  cursor** and answers in map coordinates - the very number `Set Tile At`, `Erase Tile At` and `Cell
+  Is Empty` take, so tile painting is two rows. Both write a small helper function into the file the
+  first time they are used, one per question however many rows ask it, appended after everything
+  else so no line of yours moves.
 
 #### The 3D words - moving, orbiting, animating, and the world's look
 
@@ -737,7 +757,8 @@ pivot turns.
   `Callable(self, "on_done")`. A `Callable` variable reads **Local function**; `on_done.call(result)`
   reads `Call on done   result`; `on_done.is_valid()` reads `on done is set`; `call_deferred("f")`
   reads `Call F (at end of frame)`; and a one-line `map` / `filter` lambda reads in the Array rows'
-  own words - `rows each one's name`, `rows those where ready`.
+  own words - `rows each one's name`, `rows those where ready`. The chip is a link: clicking it goes
+to the function it names, the same jump the Outline panel makes.
 
   ![Rows reading functions as values: menu - Set open sheet to f Open Sheet In Workspace, System - Call Refresh after edit (at end of frame), a condition reading on done is set with System - Call on done result, and two Local value rows reading rows each one's name and rows those where ready](images/functions-as-values.png)
 - **A typed receiver is named by what it IS.** When the file declared a receiver's class, the object
@@ -907,6 +928,11 @@ pivot turns.
   `Theme.Colour("row_color")`, and `add_theme_stylebox_override("normal", box)` is `Set style
   "normal" to box`. A Control's own `_gui_input` is an input handler like `_unhandled_input`, so its
   branches read as the Mouse and Keyboard triggers, scoped to the object the input landed on.
+  The lines that SHAPE a Control the event just made - the property writes, the `add_child` that
+  puts it in the tree, the `popup_centered` that opens it - hang under the Local row that made it
+  instead of standing as their own top-level steps, so forty dialogs in a dock file read as forty
+  dialogs rather than four hundred rows. A wired-up signal is the one thing not folded in: it keeps
+  the trigger row the sheet already gives it, with the call it makes underneath.
 
   ![A tool's dialog-building and canvas-painting code opened as a sheet](images/opened-script-canvas-dialog.png)
 

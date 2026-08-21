@@ -134,7 +134,12 @@ static var EXPRESSION_READINGS: Dictionary = {
 	"__eventsheets_aim_floor(get_viewport().get_mouse_position(), 1, 500.0).get(\"collider\", null)":
 		"the floor object under the cursor",
 	"__eventsheets_aim_floor(crosshair.get_global_transform_with_canvas().origin, 1, 500.0).get(\"normal\", Vector3.UP)":
-		"the floor's slope under crosshair"
+		"the floor's slope under crosshair",
+	# X30's 2D twins - a flat game has no camera ray, so the same two questions are a point query
+	# and a map lookup, and each reads back as the sentence its word offered.
+	"__eventsheets_object_at_2d(get_global_mouse_position(), 1).get(\"collider\", null)":
+		"the object under the cursor",
+	"__eventsheets_tile_under(ground)": "the tile under the cursor"
 }
 
 ## The questions these items settle, as "object ▸ sentence".
@@ -353,7 +358,48 @@ static func _authoring() -> bool:
 		_helper_body(_compile_with(["MouseFloorPoint"]))) and ok
 	ok = _check("a file that asks for none of them gains no helper at all",
 		_compile_with([]).contains("func %s(" % SheetCompiler.AIMED_CURSOR_HELPER), false) and ok
+	ok = _flat_twins() and ok
 	return ok
+
+
+## X30's 2D half. The flat game's two aiming words write their own one helper each, by exactly the
+## rule the aimed-floor helper follows: one definition per file, none at all when nothing asks.
+static func _flat_twins() -> bool:
+	var ok: bool = true
+	for pair: Array in [["ObjectUnderCursor2D", "the object under the cursor"],
+			["TileUnderCursor", "the tile under the cursor"]]:
+		var descriptor: ACEDescriptor = _descriptor(str(pair[0]))
+		var written: String = _filled(descriptor)
+		ok = _check("%s writes what the reading recognises" % str(pair[0]),
+			EventSheetSentence.expression_text(written, _context()), str(pair[1])) and ok
+	ok = _check("the object question says it in the sheet's own words",
+		_descriptor("ObjectUnderCursor2D").display_text, "the object under the cursor") and ok
+	ok = _check("the tile question says it in the sheet's own words",
+		_descriptor("TileUnderCursor").display_text, "the tile under the cursor") and ok
+	var both: String = _compile_with(["ObjectUnderCursor2D", "TileUnderCursor"])
+	ok = _check("the point query's helper is written into the file exactly once",
+		both.count("func %s(" % SheetCompiler.POINT_CURSOR_HELPER), 1) and ok
+	ok = _check("the tile lookup's helper is written into the file exactly once",
+		both.count("func %s(" % SheetCompiler.TILE_CURSOR_HELPER), 1) and ok
+	var only_tile: String = _compile_with(["TileUnderCursor"])
+	ok = _check("a file that asks only for the tile gains no point query",
+		only_tile.contains("func %s(" % SheetCompiler.POINT_CURSOR_HELPER), false) and ok
+	ok = _check("a file that asks for neither gains neither",
+		_compile_with([]).contains("func %s(" % SheetCompiler.TILE_CURSOR_HELPER), false) and ok
+	# The same lossless promise the 3D helper carries: an emitted file reopens and re-saves byte for
+	# byte, which is only true while the helper is skipped on a file that already defines it.
+	ok = _check("an emitted file that gained both helpers still saves every byte back",
+		EventSheets.round_trips(both), true) and ok
+	return ok
+
+
+## One descriptor's template with its parameters filled by their own defaults - which is what the
+## row shows the moment it is dropped, and therefore what the reading is owed.
+static func _filled(descriptor: ACEDescriptor) -> String:
+	var written: String = str(descriptor.codegen_template)
+	for param: ACEParam in descriptor.params:
+		written = written.replace("{%s}" % param.name, str(param.default_value))
+	return written
 
 
 ## One shipped descriptor by id, so a rename would fail here rather than silently.
@@ -377,7 +423,7 @@ static func _compile_with(ace_ids: Array) -> String:
 		action.ace_id = "SetVar"
 		action.params = {
 			"var_name": "aimed_%d" % index,
-			"value": str(descriptor.codegen_template).replace("{layer}", "1").replace("{reach}", "500.0")
+			"value": _filled(descriptor)
 		}
 		event_row.actions.append(action)
 	sheet.events.append(event_row)

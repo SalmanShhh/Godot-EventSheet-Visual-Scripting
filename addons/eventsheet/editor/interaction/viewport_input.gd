@@ -30,6 +30,21 @@ func init(viewport: Control) -> void:
 	_viewport = viewport
 
 
+## W13 - go to the function a ƒ chip names. The same two calls the Outline makes when one of its
+## entries is picked, so the chip and the panel land the reader in the very same place; a name whose
+## function this sheet does not declare simply does nothing, which is what the chip promised.
+func _jump_to_function(function_name: String) -> bool:
+	if function_name.strip_edges().is_empty():
+		return false
+	var target: EventFunction = ViewportRowBuilder.find_function_by_name(
+		_viewport._sheet, function_name)
+	if target == null:
+		return false
+	_viewport.reveal_resource(target)
+	_viewport.select_resource(target)
+	return true
+
+
 ## P3 / S25 - the coverage chip's click: reveal the next place the chip counted and select it,
 ## wrapping round at the end. The chip says how many there are; this is how a reader goes and looks
 ## at them, one click at a time, without leaving the sheet.
@@ -309,6 +324,20 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# so the click has to keep the promise.
 		if not event.double_click and str(metadata.get("kind", "")) == "pattern_chip":
 			EventSheetPatternManual.open_page(str(metadata.get("pattern", "")))
+			_viewport.accept_event()
+			return
+		# W13 - the ƒ chip names a function this sheet declares; clicking it goes there, the way the
+		# Outline does. One click, no modifier: the chip is the sheet's own word for "a function, by
+		# name", and a name a reader can see is a name they want to be at.
+		if not event.double_click and str(metadata.get("kind", "")) == "function_ref":
+			_jump_to_function(str(metadata.get("name", "")))
+			_viewport.accept_event()
+			return
+		# X11 - the flags… chip at the end of an Add child row reopens the four ticks the row was
+		# written with. One click, like every other chip that ends in an affordance; the viewport
+		# only names what was clicked, and the dock owns the dialog and the undoable write.
+		if not event.double_click and str(metadata.get("kind", "")) == "hierarchy_flags":
+			_viewport.hierarchy_flags_requested.emit(metadata.get("hierarchy_flags", {}))
 			_viewport.accept_event()
 			return
 		# R33. A tool sheet's own buttons, next to the coverage chip and read the same way: one click,
