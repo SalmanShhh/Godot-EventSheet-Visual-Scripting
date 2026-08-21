@@ -111,7 +111,7 @@ static func _readability(descriptors: Array[ACEDescriptor]) -> void:
 		.described("One number every text size multiplies by, so a whole game's text grows together instead of one label at a time.").featured())
 	descriptors.append(F.make_descriptor("Core", "TextSizeScale", "Text Size Scale", ACEDescriptor.ACEType.EXPRESSION, "float(Engine.get_meta(\"text_size_scale\", 1.0))", "", [], OPTIONS, "text size scale")
 		.described("The text dial, 1 when nobody has set it - multiply a Set Font Size by it.").featured())
-	descriptors.append(F.make_descriptor("Core", "UsePalette", "Use Palette", ACEDescriptor.ACEType.ACTION, "{palette} = load({path})", "", [F.make_param("palette", "String", "palette", "Palette", "The variable holding the palette in use.", "variable_reference"), F.make_param("path", "String", "\"res://palettes/default.tres\"", "Palette asset", "The palette data asset to swap in.", "resource_path")], OPTIONS, "Use palette {path}")
+	descriptors.append(F.make_descriptor("Core", "UsePalette", "Use Palette", ACEDescriptor.ACEType.ACTION, "{palette} = load({path})", "", [F.make_param("palette", "String", "palette", "Palette", "The variable holding the palette in use.", "variable_reference"), F.make_param("path", "String", "\"res://palettes/default.tres\"", "Palette asset", "The palette data asset to swap in.", "palette")], OPTIONS, "Use palette {path}")
 		.described("Swaps the colour set the game draws with, so a colour-blind player can pick one they can tell apart. Keep each palette as a data asset and show the swatches beside the name."))
 
 

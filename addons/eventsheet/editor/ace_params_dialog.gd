@@ -316,6 +316,7 @@ func _ensure_hint_factories() -> void:
 			"key_capture": _create_key_capture_field,
 			"input_action": _create_input_action_field,
 			"group_reference": _create_group_reference_field,
+			"scene_node": _create_scene_node_field,
 			"bbcode_text": _create_bbcode_field,
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
@@ -329,7 +330,148 @@ func _ensure_hint_factories() -> void:
 			"editor_preference": _create_editor_preference_field,
 			"project_setting": _create_project_setting_field,
 			"minutes_seconds": _create_minutes_seconds_field,
+			"palette": _create_palette_field,
+			"input_prompt_show": _create_input_prompt_show_field,
+			"input_prompt_clear": _create_input_prompt_clear_field,
 		}
+
+
+## The glyph expression an input prompt is written with - the readable name of whatever the control
+## is bound to right now, or nothing when it is bound to nothing. The same spelling the Show Prompt
+## row writes, so a prompt an input window puts up and a prompt put up by hand are one line, not two
+## dialects. Takes the control expression TWICE (it is asked about, then asked for).
+const INPUT_PROMPT_GLYPH := "InputMap.action_get_events(%s)[0].as_text() if not InputMap.action_get_events(%s).is_empty() else \"\""
+
+
+## The extra line an Open Input Window row writes when a prompt was chosen: the control's key goes on
+## the label as the window opens. Leading newline, because the value is a TAIL appended to a template
+## - an empty answer therefore leaves the row writing exactly the lines it wrote before prompts
+## existed. "" whenever either half is missing, which is the no-prompt answer.
+static func input_prompt_show_tail(label: String, action: String) -> String:
+	var target: String = str(label).strip_edges()
+	var control: String = str(action).strip_edges()
+	if target.is_empty() or control.is_empty():
+		return ""
+	return "\n%s.text = %s" % [target, INPUT_PROMPT_GLYPH % [control, control]]
+
+
+## The extra line a Close Input Window row writes: the prompt comes off the label as the window
+## shuts, so it can never outlive the moment it was asking about. "" when no label was chosen.
+static func input_prompt_clear_tail(label: String) -> String:
+	var target: String = str(label).strip_edges()
+	return "" if target.is_empty() else "\n%s.text = \"\"" % target
+
+
+## Reads a show-tail back as {label, action}, or {} when the text is not one. The answer is proved by
+## RECOMPOSING it - if the two halves do not rebuild the very bytes handed in, this was somebody
+## else's line and the fields stay empty rather than being filled with a guess.
+static func input_prompt_show_facts(tail: String) -> Dictionary:
+	var marker: String = ".text = InputMap.action_get_events("
+	var at: int = tail.find(marker)
+	if at <= 0:
+		return {}
+	var label: String = tail.substr(0, at).strip_edges().trim_prefix("\n").strip_edges()
+	var rest: String = tail.substr(at + marker.length())
+	var close: int = rest.find(")[0].as_text()")
+	if close <= 0:
+		return {}
+	var action: String = rest.substr(0, close)
+	if input_prompt_show_tail(label, action) != tail:
+		return {}
+	return {"label": label, "action": action}
+
+
+## Reads a clear-tail back as its label, or "" when the text is not one. Proved by recomposition, the
+## same way the show-tail is.
+static func input_prompt_clear_label(tail: String) -> String:
+	var label: String = tail.strip_edges().trim_suffix("\n").strip_edges()
+	var at: int = label.find(".text = \"\"")
+	if at <= 0:
+		return ""
+	label = label.substr(0, at).strip_edges()
+	return label if input_prompt_clear_tail(label) == tail else ""
+
+
+## The Prompt field on Open Input Window (hint "input_prompt_show"): a tick, a label and a control -
+## never a line of code. The value it carries IS the emitted line, composed here, so the row shows
+## the player which key to press for exactly as long as the window is open.
+func _create_input_prompt_show_field(key: String, default_value: Variant) -> Control:
+	var facts: Dictionary = input_prompt_show_facts(str(default_value))
+	var choices: Array = input_action_choices()
+	var first_choice: String = str(choices[0]) if not choices.is_empty() else "\"ui_accept\""
+	var action_row: Control = _create_autocomplete_field("%s__action" % key,
+		choices, str(facts.get("action", first_choice)))
+	var action_edit: LineEdit = _fields.get("%s__action" % key) as LineEdit
+	_fields.erase("%s__action" % key)
+	var container: VBoxContainer = _new_input_prompt_container(key,
+		EventSheetL10n.translate("Show the control's key on a label while the window is open"),
+		str(facts.get("label", "$PromptLabel")), not facts.is_empty())
+	container.set_meta("input_prompt_kind", "show")
+	container.set_meta("input_prompt_action", action_edit)
+	container.add_child(action_row)
+	_refresh_input_prompt_enabled(container)
+	return container
+
+
+## The Prompt field on Close Input Window (hint "input_prompt_clear"): the same tick and the same
+## label, with no control to name - shutting a window takes the prompt off whatever it was showing.
+func _create_input_prompt_clear_field(key: String, default_value: Variant) -> Control:
+	var label: String = input_prompt_clear_label(str(default_value))
+	var container: VBoxContainer = _new_input_prompt_container(key,
+		EventSheetL10n.translate("Clear the prompt off its label as the window shuts"),
+		label if not label.is_empty() else "$PromptLabel", not label.is_empty())
+	container.set_meta("input_prompt_kind", "clear")
+	_refresh_input_prompt_enabled(container)
+	return container
+
+
+## The half both prompt fields share: the tick that turns the prompt on and the label it goes on.
+## Registered into _fields[key] as the value-bearing control, which is what makes the composed line
+## the parameter's value.
+func _new_input_prompt_container(key: String, tick_text: String, label_text: String, on: bool) -> VBoxContainer:
+	var container: VBoxContainer = VBoxContainer.new()
+	container.add_theme_constant_override("separation", 4)
+	var toggle: CheckBox = CheckBox.new()
+	toggle.text = tick_text
+	toggle.button_pressed = on
+	container.add_child(toggle)
+	var label_edit: LineEdit = LineEdit.new()
+	label_edit.text = label_text
+	label_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label_edit.tooltip_text = EventSheetL10n.translate(
+		"The label that shows the prompt, as a node path - $PromptLabel.")
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(label_edit)
+	container.add_child(label_edit)
+	container.set_meta("input_prompt_toggle", toggle)
+	container.set_meta("input_prompt_label", label_edit)
+	toggle.toggled.connect(func(_pressed: bool) -> void: _refresh_input_prompt_enabled(container))
+	_fields[key] = container
+	return container
+
+
+## The label and control fields only take answers while the tick is on - an untouched prompt field
+## reads as no prompt at all, however much text was left sitting in it.
+func _refresh_input_prompt_enabled(container: Control) -> void:
+	var on: bool = (container.get_meta("input_prompt_toggle") as CheckBox).button_pressed
+	(container.get_meta("input_prompt_label") as LineEdit).editable = on
+	if container.has_meta("input_prompt_action"):
+		(container.get_meta("input_prompt_action") as LineEdit).editable = on
+
+
+## The line a prompt field stands for, or "" when its tick is off.
+func _read_input_prompt_tail(container: Control) -> String:
+	if not (container.get_meta("input_prompt_toggle") as CheckBox).button_pressed:
+		return ""
+	var label: String = (container.get_meta("input_prompt_label") as LineEdit).text
+	if str(container.get_meta("input_prompt_kind", "")) != "show":
+		return input_prompt_clear_tail(label)
+	# No control field to read means no control was named, and a prompt with no control to ask for
+	# is nothing at all - better an untouched row than a half-written line.
+	if not container.has_meta("input_prompt_action"):
+		return ""
+	return input_prompt_show_tail(label,
+		(container.get_meta("input_prompt_action") as LineEdit).text)
 
 
 ## X27. A length of time typed the way a player READS it - 3:00 - and stored as the seconds the
@@ -1243,6 +1385,211 @@ func _browse_for_scene(path_edit: LineEdit) -> void:
 	_scene_file_dialog.popup_file_dialog()
 
 
+## X29. The palette parameter: a path to a colour-palette data asset, with every colour SET that
+## asset carries drawn SIDE BY SIDE underneath the field. Choosing a palette is a looking task -
+## "Deuteranopia" is a word until the three colours it swaps in are on the screen next to the three
+## it replaces - so the field shows the sets instead of describing them. Typing stays free (an
+## expression or a variable belongs in this slot as much as a path does), and a value that names
+## nothing readable on disk simply leaves the strip out, so the field degrades to a plain path box.
+func _create_palette_field(key: String, default_value: Variant) -> Control:
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	var row: Control = _create_autocomplete_field(key, palette_asset_choices(), default_value)
+	column.add_child(row)
+	var edit: LineEdit = _fields.get(key) as LineEdit
+	if edit == null:
+		return column
+	var browse: Button = Button.new()
+	browse.text = EventSheetL10n.translate("Browse…")
+	browse.pressed.connect(func() -> void: _browse_for_palette(edit))
+	row.add_child(browse)
+	var swatches: HBoxContainer = HBoxContainer.new()
+	swatches.add_theme_constant_override("separation", 12)
+	swatches.tooltip_text = EventSheetL10n.translate(
+		"Every colour set this palette asset carries, side by side.")
+	column.add_child(swatches)
+	edit.text_changed.connect(func(_new_text: String) -> void:
+		fill_palette_swatches(swatches, edit.text))
+	fill_palette_swatches(swatches, edit.text)
+	return column
+
+
+## Rebuilds the swatch strip for one typed value: one column per colour set, the set's name over it,
+## and the role names down the left when the asset names them. Clears first, so retyping redraws
+## rather than stacking. Static and container-in, so a headless test can hand it a plain HBox.
+static func fill_palette_swatches(into: HBoxContainer, raw_value: String) -> void:
+	for child: Node in into.get_children():
+		into.remove_child(child)
+		child.queue_free()
+	var path: String = palette_path_of(raw_value)
+	var sets: Array = palette_sets_at(path)
+	into.visible = not sets.is_empty()
+	if sets.is_empty():
+		return
+	var swatch_side: float = float(EventSheetPalette.scaled(18))
+	var roles: PackedStringArray = palette_role_names_at(path)
+	if not roles.is_empty():
+		var role_column: VBoxContainer = VBoxContainer.new()
+		role_column.add_theme_constant_override("separation", 2)
+		var spacer: Control = Control.new()
+		spacer.custom_minimum_size = Vector2(0.0, swatch_side)
+		role_column.add_child(spacer)
+		for role_name: String in roles:
+			var role_label: Label = Label.new()
+			role_label.text = role_name
+			role_label.custom_minimum_size = Vector2(0.0, swatch_side)
+			role_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			role_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+			role_label.add_theme_color_override("font_color", Color(0.74, 0.78, 0.86, 0.95))
+			role_column.add_child(role_label)
+		into.add_child(role_column)
+	for entry: Variant in sets:
+		var colour_set: Dictionary = entry
+		var set_column: VBoxContainer = VBoxContainer.new()
+		set_column.add_theme_constant_override("separation", 2)
+		var set_label: Label = Label.new()
+		set_label.text = str(colour_set.get("name", ""))
+		set_label.custom_minimum_size = Vector2(0.0, swatch_side)
+		set_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		set_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		set_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+		set_column.add_child(set_label)
+		var swatch_index: int = 0
+		for colour: Color in (colour_set.get("colors", PackedColorArray()) as PackedColorArray):
+			var swatch: ColorRect = ColorRect.new()
+			swatch.color = colour
+			swatch.custom_minimum_size = Vector2(swatch_side * 2.0, swatch_side)
+			swatch.tooltip_text = ("#%s" % colour.to_html(false)) if swatch_index >= roles.size() \
+				else "%s - #%s" % [roles[swatch_index], colour.to_html(false)]
+			set_column.add_child(swatch)
+			swatch_index += 1
+		into.add_child(set_column)
+
+
+## The asset path a typed palette value points at, or "" when the value is not a plain path at all
+## (an expression, a variable, an empty field). Quotes come off, because the slot ships quoted; the
+## test is the extension rather than a res:// prefix, so a palette kept beside a save file reads too.
+static func palette_path_of(raw_value: String) -> String:
+	var text: String = raw_value.strip_edges().trim_prefix("\"").trim_suffix("\"").strip_edges()
+	return text if EventSheetDataTable.ASSET_EXTENSIONS.has(text.get_extension().to_lower()) else ""
+
+
+## The colour SETS in one palette data asset, as [{name, colors}] in the asset's own order.
+##
+## The canonical shape is a ColorPaletteResource: `set_names` names the sets and `set_colors` holds
+## one colour array per set. Any other asset whose exported fields are plainly colour arrays reads
+## as a palette too, one set per field named after the field - a hand-rolled palette class from
+## before this one existed still draws rather than showing nothing.
+static func palette_sets_at(path: String) -> Array:
+	var sets: Array = []
+	if path.is_empty() or not ResourceLoader.exists(path):
+		return sets
+	var asset: Dictionary = EventSheetDataTable.asset_row(path)
+	var values: Dictionary = asset.get("values", {}) if asset.get("values") is Dictionary else {}
+	if values.is_empty():
+		return sets
+	var names: PackedStringArray = _palette_names_of(values.get("set_names"))
+	var grouped: Variant = values.get("set_colors")
+	if grouped is Array:
+		var set_index: int = 0
+		for entry: Variant in (grouped as Array):
+			var colours: PackedColorArray = _palette_colors_of(entry)
+			if not colours.is_empty():
+				var set_name: String = names[set_index] if set_index < names.size() else str(set_index + 1)
+				sets.append({"name": set_name, "colors": colours})
+			set_index += 1
+	if not sets.is_empty():
+		return sets
+	for column_entry: Variant in EventSheetDataTable.columns_at(path):
+		var column: Dictionary = column_entry
+		var field: String = str(column.get("name", ""))
+		var field_colours: PackedColorArray = _palette_colors_of(values.get(field))
+		if not field_colours.is_empty():
+			sets.append({"name": str(column.get("words", field)), "colors": field_colours})
+	return sets
+
+
+## What each position in a set means, when the asset says so ("Danger", "Safe"). Empty is fine: the
+## strip then draws the colours with no labels beside them rather than inventing names for them.
+static func palette_role_names_at(path: String) -> PackedStringArray:
+	if path.is_empty() or not ResourceLoader.exists(path):
+		return PackedStringArray()
+	var asset: Dictionary = EventSheetDataTable.asset_row(path)
+	var values: Dictionary = asset.get("values", {}) if asset.get("values") is Dictionary else {}
+	return _palette_names_of(values.get("role_names"))
+
+
+static func _palette_names_of(value: Variant) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	if value is PackedStringArray:
+		return value as PackedStringArray
+	if value is Array:
+		for entry: Variant in (value as Array):
+			names.append(str(entry))
+	return names
+
+
+static func _palette_colors_of(value: Variant) -> PackedColorArray:
+	if value is PackedColorArray:
+		return value as PackedColorArray
+	var colours: PackedColorArray = PackedColorArray()
+	if value is Array:
+		for entry: Variant in (value as Array):
+			if entry is Color:
+				colours.append(entry as Color)
+	return colours
+
+
+## Every palette asset in the project, quoted the way the slot ships it. Read at dialog-open rather
+## than baked into the descriptor, so an asset saved a minute ago is in the list. The plugin's own
+## folders are skipped: a palette is the user's content, and walking addons/ would only cost time.
+static func palette_asset_choices() -> Array:
+	var choices: Array = []
+	var pending: PackedStringArray = PackedStringArray(["res://"])
+	while not pending.is_empty():
+		var directory_path: String = pending[pending.size() - 1]
+		pending.remove_at(pending.size() - 1)
+		var directory: DirAccess = DirAccess.open(directory_path)
+		if directory == null:
+			continue
+		for sub_directory: String in directory.get_directories():
+			if not sub_directory.begins_with(".") and sub_directory != "addons":
+				pending.append(directory_path.path_join(sub_directory))
+		for file_name: String in directory.get_files():
+			var bare: String = file_name.trim_suffix(".remap")
+			if bare.get_extension().to_lower() != "tres":
+				continue
+			var full_path: String = directory_path.path_join(bare)
+			if not palette_sets_at(full_path).is_empty():
+				choices.append(format_quoted_literal(full_path))
+	choices.sort()
+	return choices
+
+# One cached palette browser, parented to the persistent dialog for the same reason the scene
+# browser is: no per-press accumulation, and a form rebuild cannot kill it mid-interaction.
+var _palette_file_dialog: EditorFileDialog = null
+var _palette_browse_target: LineEdit = null
+
+
+func _browse_for_palette(path_edit: LineEdit) -> void:
+	if not Engine.is_editor_hint():
+		return
+	if _palette_file_dialog == null:
+		_palette_file_dialog = EditorFileDialog.new()
+		_palette_file_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+		_palette_file_dialog.add_filter("*.tres", EventSheetL10n.translate("Palette assets"))
+		_palette_file_dialog.file_selected.connect(func(selected_path: String) -> void:
+			if _palette_browse_target != null and is_instance_valid(_palette_browse_target):
+				_palette_browse_target.text = format_quoted_literal(selected_path)
+				# Setting `text` in code raises no signal, so the strip is told by hand -
+				# otherwise a browsed palette lands in the field with the old swatches under it.
+				_palette_browse_target.text_changed.emit(_palette_browse_target.text)
+		)
+		_dialog.add_child(_palette_file_dialog)
+	_palette_browse_target = path_edit
+	_palette_file_dialog.popup_file_dialog()
+
+
 ## Drops onto plain LineEdit fields: files become quoted paths, nodes $Refs (reuses
 ## the expression-field converter so the two can never disagree).
 func _drop_on_line_edit(_position: Vector2, data: Variant, edit: LineEdit) -> void:
@@ -1618,6 +1965,48 @@ func _validation_scene_root() -> Node:
 	return EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
 
 
+## X16. The node parameter, picked out of the layout that is open RIGHT NOW (hint "scene_node"): an
+## editable suggest-combo whose choices are the tree the editor is showing, in the spellings a row
+## writes. Enumerated when the dialog builds - never baked into the descriptor - so a node added a
+## minute ago is in the list without an editor restart. Free text stays allowed (expressions,
+## variables, nodes that only exist at runtime), and with no scene open (or headless) there are no
+## choices at all, which leaves the ordinary text field the param had before.
+func _create_scene_node_field(key: String, default_value: Variant) -> Control:
+	return _create_autocomplete_field(key, scene_node_choices(_validation_scene_root()), default_value)
+
+
+## Every node reference the open layout offers: `self` first (the sheet's own node is the commonest
+## answer of all), then `%Name` for the scene-unique nodes - the refactor-proof reference, so it
+## leads the paths - then `$Path` for the rest. A name a bare `$` cannot spell (a space in it) is
+## quoted, because `$My Node` is not GDScript and `$"My Node"` is. Empty for a null scene: a picker
+## with nothing in it IS a plain field, which is the no-scene-open fallback. Pure and static (the
+## scene is passed in), so tests pin it headless.
+static func scene_node_choices(scene_root: Node) -> Array:
+	if scene_root == null:
+		return []
+	var choices: Array = ["self"]
+	for unique_name: String in scene_unique_names(scene_root):
+		choices.append("%" + unique_name)
+	for node_path: String in scene_node_paths(scene_root):
+		choices.append("$" + node_path if is_bare_node_path(node_path) else "$\"%s\"" % node_path)
+	return choices
+
+
+## The characters a node path may hold and still follow a bare `$`.
+const BARE_NODE_PATH_CHARACTERS: String = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_/"
+
+
+## True when a node path can follow a bare `$` (letters, digits, underscores and the `/` between
+## names). Anything else has to be written as `$"…"`.
+static func is_bare_node_path(node_path: String) -> bool:
+	if node_path.is_empty():
+		return false
+	for character: String in node_path:
+		if not BARE_NODE_PATH_CHARACTERS.contains(character):
+			return false
+	return true
+
+
 ## Live expression validation: compile-checks the field against the sheet context
 ## (variables, host members) and tints the text red when it would not compile. The lint
 ## context provider is optional - without it the field stays unvalidated.
@@ -1949,6 +2338,10 @@ func _extract_value(field: Control) -> Variant:
 		return (field as CheckBox).button_pressed
 	if field is MenuButton and field.has_meta("physics_mask"):
 		return int(field.get_meta("physics_mask"))
+	# An input-window prompt field: a tick, a label and (on the open row) a control, read back as the
+	# one line they stand for - so nothing above this has to know the prompt is code at all.
+	if field.has_meta("input_prompt_kind"):
+		return _read_input_prompt_tail(field)
 	if field.has_meta("vector_axis_edits"):
 		var axis_values: PackedStringArray = PackedStringArray()
 		for axis_edit: Variant in (field.get_meta("vector_axis_edits") as Array):
