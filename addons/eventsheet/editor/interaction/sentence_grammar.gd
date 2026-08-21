@@ -8679,7 +8679,10 @@ static func gyro_aim_note() -> String:
 ## two lines are not that pair. `window_open = true` on its own is a flag; the deadline beside it is
 ## what makes it a window, which is why both lines are required and why the file's own facts have to
 ## agree that this is the window they describe.
-static func input_window_parts(first: String, second: String, context: Dictionary) -> Dictionary:
+## X28. The window OWNS its prompt, so a THIRD line may follow the deadline: the control's key put on
+## a label. `third` is optional - a window opened without a prompt is still two lines, and passing a
+## line that is not a prompt simply leaves the prompt unmentioned rather than refusing the window.
+static func input_window_parts(first: String, second: String, context: Dictionary, third: String = "") -> Dictionary:
 	var window: Dictionary = context.get("input_window", {})
 	if window.is_empty():
 		return {}
@@ -8705,19 +8708,66 @@ static func input_window_parts(first: String, second: String, context: Dictionar
 	else:
 		text = _fill(translate("Open input window {action} for {seconds}"), {
 			"action": action, "seconds": expression_text(seconds, context)})
-	return {"text": text, "note": input_window_note(str(window.get("perfect", "")))}
+	var prompt: String = input_window_prompt_label(third)
+	return {"text": text, "note": input_window_note(str(window.get("perfect", "")), prompt),
+		"prompt": prompt}
+
+
+## X28. The label an opened window puts its prompt on, read off the line beneath its deadline, or ""
+## when that line is not a prompt at all. The spelling is the one the Show Prompt row writes - the
+## Input Map asked for the control's current binding - so a prompt an input window put up and a
+## prompt put up by hand read the same.
+static func input_window_prompt_label(text: String) -> String:
+	var bare: String = text.strip_edges()
+	var at: int = bare.find(".text = InputMap.action_get_events(")
+	if at <= 0:
+		return ""
+	if not bare.contains(")[0].as_text() if not InputMap.action_get_events(") \
+			or not bare.ends_with(").is_empty() else \"\""):
+		return ""
+	return bare.substr(0, at).strip_edges()
+
+
+## X28. The label a CLOSING window takes its prompt back off, or "" when the line is not that. The
+## other half of the same promise: a prompt cannot outlive the window that asked the question.
+static func input_window_prompt_cleared_label(text: String) -> String:
+	var bare: String = text.strip_edges()
+	var suffix: String = ".text = \"\""
+	if not bare.ends_with(suffix):
+		return ""
+	return bare.substr(0, bare.length() - suffix.length()).strip_edges()
+
+
+## X28. A window shut with its prompt taken down beside it, as {"text", "note"}, or {} when the two
+## lines are not that pair. The flag going false on its own is an ordinary assignment and stays one -
+## it is the prompt coming off with it that makes the two lines one thing that happened.
+static func input_window_close_parts(first: String, second: String, context: Dictionary) -> Dictionary:
+	var window: Dictionary = context.get("input_window", {})
+	if window.is_empty():
+		return {}
+	var closed: String = _assigned_name(first, "false")
+	if closed.is_empty() or closed != str(window.get("flag", "")):
+		return {}
+	var label: String = input_window_prompt_cleared_label(second)
+	if label.is_empty():
+		return {}
+	return {"text": translate("Close input window"),
+		"note": _fill(translate("prompt taken off {label}"), {"label": label}), "prompt": label}
 
 
 ## X28. What the muted note beside an Open input window row says: where the perfect band starts when
 ## the file grades its answers, and WHICH CLOCK the deadline is on. The clock is not a detail - the
 ## engine's own clock keeps counting while the game is paused, so a window opened before a pause can
 ## close during one, and a reader has to be told rather than find out.
-static func input_window_note(perfect: String) -> String:
-	var clock: String = translate("on the engine clock, which keeps running while paused")
-	if perfect.strip_edges().is_empty():
-		return clock
-	return "%s · %s" % [_fill(translate("perfect = the last {seconds}s"),
-		{"seconds": perfect.strip_edges()}), clock]
+static func input_window_note(perfect: String, prompt: String = "") -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	if not prompt.strip_edges().is_empty():
+		parts.append(_fill(translate("prompt on {label}"), {"label": prompt.strip_edges()}))
+	if not perfect.strip_edges().is_empty():
+		parts.append(_fill(translate("perfect = the last {seconds}s"),
+			{"seconds": perfect.strip_edges()}))
+	parts.append(translate("on the engine clock, which keeps running while paused"))
+	return " · ".join(parts)
 
 
 ## `name = <value>` as the name, when the value is exactly the one asked for, else "". The narrow
@@ -11907,8 +11957,15 @@ static func _place_at_object_statement(object_name: String, value: String, text:
 		return {}
 	var reading: Dictionary = _sentence(object_name, "Set position to {other}", {
 		"other": [other_object, "value"]})
-	_append_note(reading, translate("spawn point") if _class_is_any(
-		object_class_of(other_object, context), SPAWN_MARKER_CLASSES) else translate("another object"))
+	var other_class: String = object_class_of(other_object, context)
+	var marked_place: bool = _class_is_any(other_class, SPAWN_MARKER_CLASSES)
+	_append_note(reading, translate("spawn point") if marked_place else translate("another object"))
+	# The place is MARKED, so the row wears the mark: the value the position is copied from draws the
+	# marker's own class picture, the same picture the scene tree shows it by. Named here because the
+	# class is already resolved for the note above - the canvas only turns the name into a texture,
+	# and never looks a class up on its own. Display only, like every reading in this section.
+	if marked_place:
+		reading["value_icon_class"] = other_class
 	return _with_pattern(reading, "placement", text.strip_edges())
 
 

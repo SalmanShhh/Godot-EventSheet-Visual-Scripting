@@ -6575,20 +6575,46 @@ func _input_window_groups(actions: Array) -> Dictionary:
 	while index < actions.size() - 1:
 		var first: String = _group_line_text(actions[index])
 		var second: String = _group_line_text(actions[index + 1])
-		var opened: Dictionary = EventSheetSentence.input_window_parts(first, second, sentence_context())
+		# The prompt line, when there is one, is the third: the window OWNS it, so it belongs to the
+		# row that opened the window rather than standing beside it as a stray label assignment.
+		var third: String = _group_line_text(actions[index + 2]) if index + 2 < actions.size() else ""
+		var opened: Dictionary = EventSheetSentence.input_window_parts(first, second,
+			sentence_context(), third)
 		if opened.is_empty():
-			index += 1
+			# The other half of the same promise: the flag going false with the prompt coming off
+			# beneath it is one window shutting, not an assignment and a label edit.
+			var closed: Dictionary = EventSheetSentence.input_window_close_parts(first, second,
+				sentence_context())
+			if closed.is_empty():
+				index += 1
+				continue
+			leads[index] = {
+				"text": str(closed.get("text", "")),
+				"note": str(closed.get("note", "")),
+				"object": EventSheetSentence.OBJECT_SYSTEM,
+				"evidence": PackedStringArray([first, second]),
+				"line_count": 2,
+				"indices": [index, index + 1]
+			}
+			consumed[index + 1] = true
+			index += 2
 			continue
+		var has_prompt: bool = not str(opened.get("prompt", "")).is_empty()
+		var evidence: PackedStringArray = PackedStringArray([first, second])
+		if has_prompt:
+			evidence.append(third)
 		leads[index] = {
 			"text": str(opened.get("text", "")),
 			"note": str(opened.get("note", "")),
 			"object": EventSheetSentence.OBJECT_SYSTEM,
-			"evidence": PackedStringArray([first, second]),
-			"line_count": 2,
-			"indices": [index, index + 1]
+			"evidence": evidence,
+			"line_count": 3 if has_prompt else 2,
+			"indices": [index, index + 1, index + 2] if has_prompt else [index, index + 1]
 		}
 		consumed[index + 1] = true
-		index += 2
+		if has_prompt:
+			consumed[index + 2] = true
+		index += 3 if has_prompt else 2
 	return {"leads": leads, "consumed": consumed}
 
 
@@ -12792,6 +12818,18 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	var sentence_icon: Texture2D = _reading_sentence_icon(sentence, raw.code)
 	if attributed_icon is Texture2D and _viewport.show_object_icons:
 		sentence_icon = attributed_icon as Texture2D
+	# ── X5 lens hook ───────────────────────────────────────────────────────────────────────────
+	# A statement whose VALUE is a thing in the scene draws that thing's picture beside it, not only
+	# the subject's: `crate ▸ Set position to spawn_point` shows the marker's own icon on the marker.
+	# The class is named by the sentence layer, which resolved it there anyway - this reads one key
+	# off a Dictionary and bails, which is the whole cost on every other statement in the file.
+	var value_icon_class: String = str(sentence.get("value_icon_class", ""))
+	if not value_icon_class.is_empty() and literal.is_empty() and _viewport.show_object_icons:
+		var value_icon: Texture2D = ACEPickerDialog.editor_icon(value_icon_class)
+		if value_icon != null and _append_value_icon_sentence_spans(spans, pieces, indent,
+				object_label, object_note, sentence_icon, value_icon, raw, action_index,
+				line_index, action_style_meta):
+			return true
 	# ONE span, tinted by BBCode segments, so the sentence reads as a single continuous cell -
 	# separate flowing spans each painted their own chip and the row read as a strip of boxes,
 	# the exact fragmented look the entry rows were already reworked away from. Four spaces per
@@ -12825,6 +12863,68 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		"bbcode_segments": sentence_segments,
 		"object_icon": sentence_icon
 	}.merged(action_style_meta, false)))
+	return true
+
+
+## X5. The statement split in two so the VALUE can wear its own picture: the sentence up to the value
+## (carrying the subject's icon, its object label and its note), then the value itself with the class
+## icon the sentence layer named, then whatever the sentence said after it. An icon draws at the
+## START of the span it is on, which is exactly why the value needs a span of its own.
+##
+## False when the sentence has no value piece to split at, which is the caller's cue to keep the
+## single-span reading it has today. Display only: every span carries the same row identity
+## (`ace_index`, `line_index`, `raw_action`), so selection, editing and the emitted bytes are the
+## statement's, untouched - the same shape the multi-line-literal split already uses.
+func _append_value_icon_sentence_spans(spans: Array, pieces: Array, indent: int,
+		object_label: String, object_note: String, sentence_icon: Texture2D, value_icon: Texture2D,
+		raw: RawCodeRow, action_index: int, line_index: int, action_style_meta: Dictionary) -> bool:
+	var value_at: int = -1
+	for piece_index: int in pieces.size():
+		if str((pieces[piece_index] as Array)[1]) == "value":
+			value_at = piece_index
+			break
+	if value_at < 0:
+		return false
+	var head_pieces: Array = pieces.slice(0, value_at)
+	var value_pieces: Array = pieces.slice(value_at, value_at + 1)
+	var tail_pieces: Array = pieces.slice(value_at + 1)
+	var base_meta: Dictionary = {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": raw.enabled,
+		"chip": true,
+		"raw_action": true,
+		"code_cell": false,
+		"line_index": line_index
+	}
+	var head_text: String = "    ".repeat(indent)
+	for piece: Array in head_pieces:
+		head_text += str(piece[0])
+	spans.append(_make_span(head_text, SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+		"natural_width": true,
+		"object_label": object_label,
+		"object_note": object_note,
+		"bbcode_segments": _sentence_tone_segments(head_pieces, indent),
+		"object_icon": sentence_icon
+	}, true).merged(action_style_meta, false)))
+	var value_meta: Dictionary = base_meta.duplicate().merged({
+		"bbcode_segments": _sentence_tone_segments(value_pieces, 0),
+		"object_icon": value_icon
+	}, true)
+	# The LAST span of a row fills the cell; every earlier one is as wide as its own words.
+	if not tail_pieces.is_empty():
+		value_meta["natural_width"] = true
+	spans.append(_make_span(str((value_pieces[0] as Array)[0]), SemanticSpan.SpanType.VALUE,
+		value_meta.merged(action_style_meta, false)))
+	if tail_pieces.is_empty():
+		return true
+	var tail_text: String = ""
+	for piece: Array in tail_pieces:
+		tail_text += str(piece[0])
+	spans.append(_make_span(tail_text, SemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+		"bbcode_segments": _sentence_tone_segments(tail_pieces, 0)
+	}, true).merged(action_style_meta, false)))
 	return true
 
 
