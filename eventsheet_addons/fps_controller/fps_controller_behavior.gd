@@ -60,6 +60,7 @@ signal wall_ride_ended
 signal wall_jumped
 
 var _coyote_timer: float = 0.0
+var _firing_timer: float = 0.0
 var _jumps_left: int = 0
 var ai_move_x: float = 0.0
 var ai_move_z: float = 0.0
@@ -121,8 +122,10 @@ var yaw: float = 0.0
 @export var pitch_max: float = 80.0
 ## Lowest look angle in degrees (how far you can look down).
 @export var pitch_min: float = -80.0
-## Downward acceleration pulling the host to the floor, in metres per second squared.
+## Walking speed in metres per second while the firing window is open - the shooter's foot-planted slowdown. It replaces Move Speed as the base, so sprint and crouch still multiply it.
 @export_group("Movement")
+@export var firing_move_speed: float = 2.5
+## Downward acceleration pulling the host to the floor, in metres per second squared.
 @export var gravity: float = 9.8
 ## Base walking speed in metres per second.
 @export var move_speed: float = 5.0
@@ -205,11 +208,16 @@ func _physics_process(delta: float) -> void:
 		if slide_fraction >= 1.0 or not on_floor:
 			stop_sliding()
 	else:
-		var speed := move_speed * (sprint_multiplier if sprint_held else 1.0) * (crouch_speed_multiplier if crouching else 1.0)
+		# While the firing window is open the base speed becomes firing_move_speed - sprint and
+		# crouch still multiply it, so a firing sprint is a fast walk rather than a full sprint.
+		var base_speed := firing_move_speed if _firing_timer > 0.0 else move_speed
+		var speed := base_speed * (sprint_multiplier if sprint_held else 1.0) * (crouch_speed_multiplier if crouching else 1.0)
 		# push_x/z is the decaying wall-jump kick - without it the every-frame velocity
 		# assignment would erase the push after a single physics tick.
 		host.velocity.x = direction.x * speed + push_x
 		host.velocity.z = direction.z * speed + push_z
+	# The firing window closes on its own, so a weapon only has to say it fired once.
+	_firing_timer = maxf(_firing_timer - delta, 0.0)
 	var push_fade := wall_jump_push * 2.0 * delta
 	push_x = move_toward(push_x, 0.0, push_fade)
 	push_z = move_toward(push_z, 0.0, push_fade)
@@ -513,6 +521,25 @@ func can_jump() -> bool:
 ## @ace_codegen_template("$FPSController.set_coyote_time({seconds})")
 func set_coyote_time(seconds: float) -> void:
 	coyote_time = maxf(seconds, 0.0)
+
+## @ace_action
+## @ace_name("Set Move Speed While Firing")
+## @ace_category("FPS Controller")
+## @ace_description("Holds the host to a shooter's walking speed for a moment after a shot: sets Firing Move Speed and opens the firing window for the given seconds. Drop it on your weapon's fired trigger and the player plants their feet while shooting, then eases straight back to normal walking speed when the window closes. Sprint and crouch still multiply the firing speed, and Move Speed itself is untouched.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.set_move_speed_while_firing({speed}, {seconds})")
+func set_move_speed_while_firing(speed: float, seconds: float) -> void:
+	firing_move_speed = maxf(speed, 0.0)
+	_firing_timer = maxf(seconds, 0.0)
+
+## @ace_condition
+## @ace_name("Is Firing")
+## @ace_category("FPS Controller")
+## @ace_description("True while the firing window opened by Set Move Speed While Firing is still open - the cue for a weapon-ready pose, a tighter camera, or a lowered aim sway.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.is_firing()")
+func is_firing() -> bool:
+	return _firing_timer > 0.0
 
 ## @ace_action
 ## @ace_name("Reset Jumps")

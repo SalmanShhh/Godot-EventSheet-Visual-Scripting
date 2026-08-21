@@ -18,10 +18,98 @@ extends RefCounted
 # with the rest of the editor about what it is showing.
 
 
+# ── X25. The one thing this panel WRITES: is this object a secret? ───────────────────────────
+# Every other row here answers a question about the object; the secret mark is the reader's own
+# answer, so it is a checkbox rather than a value. It is authoring metadata about how the sheet
+# treats the object, not game data the object carries, which is why it lives in the same
+# per-project editor store the sheet map's layout and the saved views already use rather than in
+# the sheet file (a sheet is emitted GDScript, and a mark that changed the emitted bytes would
+# break the round-trip contract for a fact the game never reads).
+const SECRET_META_SECTION := "eventsheets"
+const SECRET_META_KEY := "object_secret_flags"
+
+static var _secret_flags: Dictionary = {}
+static var _secret_flags_loaded: bool = false
+
+
+## The store key for one object: the file that names it plus its label, so two sheets with an
+## object of the same name mark their own.
+static func secret_key(source_path: String, object_label: String) -> String:
+	return "%s::%s" % [source_path.strip_edges(), object_label.strip_edges()]
+
+
+## True when the reader has marked this object a secret - the flag the canvas drop reads before it
+## offers the secrets-counter event.
+static func is_secret(source_path: String, object_label: String) -> bool:
+	_ensure_secret_flags()
+	return bool(_secret_flags.get(secret_key(source_path, object_label), false))
+
+
+## Marks (or unmarks) an object a secret and remembers it for the project.
+static func set_secret(source_path: String, object_label: String, marked: bool) -> void:
+	_ensure_secret_flags()
+	var key: String = secret_key(source_path, object_label)
+	if marked:
+		_secret_flags[key] = true
+	else:
+		_secret_flags.erase(key)
+	var settings: Object = _editor_settings()
+	if settings != null:
+		settings.call("set_project_metadata", SECRET_META_SECTION, SECRET_META_KEY, _secret_flags)
+
+
+## Tests only: a clean slate (also marks the store loaded so persistence stays untouched).
+static func reset_secret_flags_for_tests() -> void:
+	_secret_flags = {}
+	_secret_flags_loaded = true
+
+
+static func _ensure_secret_flags() -> void:
+	if _secret_flags_loaded:
+		return
+	_secret_flags_loaded = true
+	var settings: Object = _editor_settings()
+	if settings == null:
+		return
+	var stored: Variant = settings.call("get_project_metadata", SECRET_META_SECTION, SECRET_META_KEY, {})
+	if stored is Dictionary:
+		_secret_flags = (stored as Dictionary).duplicate()
+
+
+## Export-safe editor access (the palette's pattern): never NAME the editor-only class.
+static func _editor_settings() -> Object:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	var editor_interface: Object = Engine.get_singleton("EditorInterface")
+	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
+		return null
+	return editor_interface.call("get_editor_settings")
+
+
+## True when "secret" is a sensible thing to say about this object at all: an area is the shape a
+## secret room is made of, so the mark is offered on areas and on nothing else rather than
+## cluttering every timer and label with a question that has no meaning for them.
+static func can_be_secret(entry: Dictionary) -> bool:
+	if entry.is_empty() or str(entry.get("kind", "")) in ["group", "scene", "autoload"]:
+		return false
+	var class_name_text: String = str(entry.get("class", "")).strip_edges()
+	if class_name_text.is_empty():
+		return false
+	var cursor: String = class_name_text
+	while not cursor.is_empty():
+		if cursor in ["Area2D", "Area3D"]:
+			return true
+		if not ClassDB.class_exists(cursor):
+			return false
+		cursor = ClassDB.get_parent_class(cursor)
+	return false
+
+
 ## Rows shown above the buttons, in order. Kept as data so a caller (and a test) reads exactly what
 ## an object answers, and so the panel builder has one loop instead of five hand-placed rows.
-## Each entry: {"label": String, "value": String, "form": String} - form is "text" (a plain value)
-## or "code" (a monospace card).
+## Each entry: {"label": String, "value": String, "form": String} - form is "text" (a plain value),
+## "code" (a monospace card), "chips" (a badge list) or "check" (the one WRITABLE form, a tick box
+## whose state rides along as "checked").
 static func property_rows(entry: Dictionary, scene_name: String = "",
 		source_path: String = "") -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
@@ -36,6 +124,19 @@ static func property_rows(entry: Dictionary, scene_name: String = "",
 	var signals_used: String = signals_summary(entry)
 	if not signals_used.is_empty():
 		rows.append({"label": EventSheetL10n.translate("Signals used"), "value": signals_used, "form": "text"})
+	if can_be_secret(entry):
+		var object_label: String = str(entry.get("label", ""))
+		var marked: bool = is_secret(source_path, object_label)
+		rows.append({
+			"label": EventSheetL10n.translate("Secret"),
+			"value": EventSheetL10n.translate("Counts as a secret") if marked \
+				else EventSheetL10n.translate("Not a secret"),
+			"form": "check",
+			"checked": marked,
+			"object": object_label,
+			"source": source_path,
+			"note": EventSheetL10n.translate("Dropping it on the canvas offers the secrets counter.")
+		})
 	return rows
 
 
@@ -270,11 +371,39 @@ static func _field_for(row: Dictionary) -> Control:
 		return EventSheetPopupUI.code_card(value, EventSheetPalette.scaled_f(240.0))
 	if form == "chips":
 		return _chip_field(row)
+	if form == "check":
+		return _check_field(row)
 	var label: Label = Label.new()
 	label.text = value
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(240.0), 0.0)
 	return label
+
+
+## X25. The one WRITABLE field: the secret tick box, with the muted line saying what ticking it
+## does. Ticking writes straight through the static store, so the panel needs no handler threaded
+## in from the dock and a reader's answer survives closing the popup.
+static func _check_field(row: Dictionary) -> Control:
+	var column: VBoxContainer = VBoxContainer.new()
+	column.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(240.0), 0.0)
+	var tick: CheckBox = CheckBox.new()
+	tick.text = str(row.get("value", ""))
+	tick.button_pressed = bool(row.get("checked", false))
+	var source_path: String = str(row.get("source", ""))
+	var object_label: String = str(row.get("object", ""))
+	tick.toggled.connect(func(pressed: bool) -> void:
+		set_secret(source_path, object_label, pressed)
+		tick.text = EventSheetL10n.translate("Counts as a secret") if pressed \
+			else EventSheetL10n.translate("Not a secret"))
+	column.add_child(tick)
+	var note_text: String = str(row.get("note", ""))
+	if not note_text.is_empty():
+		var muted: Label = Label.new()
+		muted.text = note_text
+		muted.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		muted.add_theme_color_override("font_color", EventSheetActiveTheme.reading().muted_text_color)
+		column.add_child(muted)
+	return column
 
 
 ## A chip row's field: one badge per name, wrapping, with the row's muted note (the Godot word behind

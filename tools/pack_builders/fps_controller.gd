@@ -21,6 +21,7 @@ static func build() -> bool:
 	sheet.variables = {
 		"move_speed": {"type": "float", "default": 5.0, "exported": true, "description": "Base walking speed in metres per second.", "attributes": {"group": "Movement"}},
 		"sprint_multiplier": {"type": "float", "default": 1.6, "exported": true, "description": "Multiplies move speed while the sprint key (Shift) is held.", "attributes": {"group": "Movement"}},
+		"firing_move_speed": {"type": "float", "default": 2.5, "exported": true, "description": "Walking speed in metres per second while the firing window is open - the shooter's foot-planted slowdown. It replaces Move Speed as the base, so sprint and crouch still multiply it.", "attributes": {"group": "Movement"}},
 		"gravity": {"type": "float", "default": 9.8, "exported": true, "description": "Downward acceleration pulling the host to the floor, in metres per second squared.", "attributes": {"group": "Movement"}},
 		"jump_velocity": {"type": "float", "default": 4.5, "exported": true, "description": "Upward velocity applied on a jump (and on a wall jump).", "attributes": {"group": "Jump"}},
 		"max_jumps": {"type": "int", "default": 1, "exported": true, "description": "Total jumps before touching the floor again (1 = a single jump, 2 = double jump, 3 = triple). Extra jumps happen in mid-air.", "attributes": {"group": "Jump"}},
@@ -51,6 +52,7 @@ static func build() -> bool:
 		"yaw": {"type": "float", "default": 0.0, "exported": false},
 		"pitch": {"type": "float", "default": 0.0, "exported": false},
 		"sprint_held": {"type": "bool", "default": false, "exported": false},
+		"_firing_timer": {"type": "float", "default": 0.0, "exported": false},
 		"was_on_floor": {"type": "bool", "default": true, "exported": false},
 		"_jumps_left": {"type": "int", "default": 0, "exported": false},
 		"_coyote_timer": {"type": "float", "default": 0.0, "exported": false},
@@ -263,11 +265,16 @@ static func build() -> bool:
 		"\tif slide_fraction >= 1.0 or not on_floor:",
 		"\t\tstop_sliding()",
 		"else:",
-		"\tvar speed := move_speed * (sprint_multiplier if sprint_held else 1.0) * (crouch_speed_multiplier if crouching else 1.0)",
+		"\t# While the firing window is open the base speed becomes firing_move_speed - sprint and",
+		"\t# crouch still multiply it, so a firing sprint is a fast walk rather than a full sprint.",
+		"\tvar base_speed := firing_move_speed if _firing_timer > 0.0 else move_speed",
+		"\tvar speed := base_speed * (sprint_multiplier if sprint_held else 1.0) * (crouch_speed_multiplier if crouching else 1.0)",
 		"\t# push_x/z is the decaying wall-jump kick - without it the every-frame velocity",
 		"\t# assignment would erase the push after a single physics tick.",
 		"\thost.velocity.x = direction.x * speed + push_x",
 		"\thost.velocity.z = direction.z * speed + push_z",
+		"# The firing window closes on its own, so a weapon only has to say it fired once.",
+		"_firing_timer = maxf(_firing_timer - delta, 0.0)",
 		"var push_fade := wall_jump_push * 2.0 * delta",
 		"push_x = move_toward(push_x, 0.0, push_fade)",
 		"push_z = move_toward(push_z, 0.0, push_fade)",
@@ -610,6 +617,17 @@ static func build() -> bool:
 		"Changes the coyote grace window at runtime (0 turns it off) - a floaty-feel power-up, a hard-mode toggle, or a per-level tweak.",
 		[["seconds", "float"]],
 		"coyote_time = maxf(seconds, 0.0)")
+	Lib.append_function(sheet, "set_move_speed_while_firing", "Set Move Speed While Firing", "FPS Controller",
+		"Holds the host to a shooter's walking speed for a moment after a shot: sets Firing Move Speed and opens the firing window for the given seconds. Drop it on your weapon's fired trigger and the player plants their feet while shooting, then eases straight back to normal walking speed when the window closes. Sprint and crouch still multiply the firing speed, and Move Speed itself is untouched.",
+		[["speed", "float"], ["seconds", "float"]],
+		"firing_move_speed = maxf(speed, 0.0)\n_firing_timer = maxf(seconds, 0.0)")
+	_default(sheet, "speed", "2.5")
+	_default(sheet, "seconds", "0.35")
+	Lib.append_function(sheet, "is_firing", "Is Firing", "FPS Controller",
+		"True while the firing window opened by Set Move Speed While Firing is still open - the cue for a weapon-ready pose, a tighter camera, or a lowered aim sway.",
+		[],
+		"return _firing_timer > 0.0")
+	_last_returns(sheet, TYPE_BOOL)
 	Lib.append_function(sheet, "reset_jumps", "Reset Jumps", "FPS Controller",
 		"Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.",
 		[],
@@ -662,3 +680,12 @@ static func build() -> bool:
 ## to condition (bool) or expression (float/int/String) in the picker.
 static func _last_returns(sheet: EventSheetResource, return_type: int) -> void:
 	sheet.functions[sheet.functions.size() - 1].return_type = return_type
+
+
+## Pre-fills the last-appended ACE's parameter default (authoring-time metadata only), so the row
+## reads as a working sentence the moment it is dropped.
+static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
+	var event_function: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in event_function.params:
+		if parameter.id == param_id:
+			parameter.default_value = value

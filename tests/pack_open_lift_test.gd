@@ -61,19 +61,23 @@ static func run() -> bool:
 			var reopened: String = str(SheetCompiler.compile(sheet, path).get("output", ""))
 			all_passed = _check("%s reopened sheet compiles back byte-identically" % file_name, reopened == source, true) and all_passed
 	# Batch 13 added two packs (Touch Gestures and its shape-library data asset): 93 + 2.
-	all_passed = _check("the fleet was scanned (95 packs)", packs, 95) and all_passed
+	# The leftovers parcel added the colour-palette data asset: + 1. Recomputed as base + deltas.
+	all_passed = _check("the fleet was scanned (96 packs)", packs, 93 + 2 + 1) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
 	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
 	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
-	all_passed = _check("fleet-wide declared verbs count", total_verbs, 1283 + 3 + 19) and all_passed
+	# The leftovers parcel: +2 FPS Controller verbs (the firing slowdown and its question).
+	# The colour-palette pack adds none - it is a data asset and publishes no verbs.
+	all_passed = _check("fleet-wide declared verbs count", total_verbs, 1283 + 3 + 19 + 2) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0
 	for function: Variant in fps.functions:
 		if function is EventFunction and (function as EventFunction).expose_as_ace:
 			fps_exposed += 1
-	all_passed = _check("FPS Controller opens with all 31 published verbs", fps_exposed, 31) and all_passed
-	all_passed = _check("FPS Controller's hidden helpers lift too (38 functions in all)", fps.functions.size(), 38) and all_passed
+	# The leftovers parcel gave the pack Set Move Speed While Firing and Is Firing: 31 + 2.
+	all_passed = _check("FPS Controller opens with all 33 published verbs", fps_exposed, 31 + 2) and all_passed
+	all_passed = _check("FPS Controller's hidden helpers lift too (40 functions in all)", fps.functions.size(), 38 + 2) and all_passed
 	return all_passed
 
 

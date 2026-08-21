@@ -48,6 +48,7 @@ func _build_template_menu_items() -> void:
 	_template_menu.add_item("Third-Person Mover (3D)", 7)
 	_template_menu.add_item("Boomer Arsenal (3D)", 30)
 	_template_menu.add_item("Game Options", 31)
+	_template_menu.add_item("Level Stats Screen", 32)
 	_template_menu.add_separator("Behaviours - attach under a node")
 	_template_menu.add_item("Behavior Component (signal-driven)", 8)
 	_template_menu.add_separator("Autoloads - project-wide singletons")
@@ -771,8 +772,14 @@ static func _build_boomer_arsenal_starter() -> EventSheetResource:
 			"attributes": {"tooltip": "The arsenal, in the order the wheel runs. Ammo is looked up by these names."}},
 		"weapon_index": {"type": "int", "default": 0, "exported": false,
 			"attributes": {"tooltip": "Which weapon is out, counting from 0."}},
-		"ammo": {"type": "Dictionary", "default": {"shotgun": 30, "rifle": 90, "launcher": 8}, "exported": true,
-			"attributes": {"tooltip": "How many rounds each weapon has left, keyed by weapon name."}},
+		"ammo": {"type": "Array", "default": [
+			{"weapon": "shotgun", "rounds": 30},
+			{"weapon": "rifle", "rounds": 90},
+			{"weapon": "launcher", "rounds": 8}
+		], "exported": true,
+			"attributes": {"tooltip": "The ammo table: one record per weapon, with a weapon column and a rounds column. Add a weapon by adding a record - the Row Where row finds it by name."}},
+		"current_ammo": {"type": "Dictionary", "default": {}, "exported": false,
+			"attributes": {"tooltip": "The ammo record for the weapon that is out, found by the Row Where row just before it is spent."}},
 		"secrets_found": {"type": "Array", "default": [], "exported": false,
 			"attributes": {"tooltip": "Every secret counted so far. Each one goes in once."}}
 	}
@@ -788,8 +795,21 @@ static func _build_boomer_arsenal_starter() -> EventSheetResource:
 	pressed.codegen_template = "Input.is_action_just_pressed(&{action})"
 	pressed.params = {"action": "\"ui_accept\""}
 	fire.conditions.append(pressed)
+	# X25. Ammo is a TABLE - an Array of records with a weapon column and a rounds column - so the
+	# shipped Row Where word finds the record for the weapon that is out. Row Where hands back the
+	# record itself (not a copy), so spending a round writes straight back into the table.
+	var find_ammo: ACEAction = ACEAction.new()
+	find_ammo.provider_id = "Core"
+	find_ammo.ace_id = "SetVar"
+	find_ammo.codegen_template = _shipped_template("SetVar", "arsenal_ammo_lookup")
+	find_ammo.params = {"var_name": "current_ammo", "value": _shipped_template("TableRowWhere", "arsenal_ammo_row").format({
+		"table": "ammo",
+		"column": "\"weapon\"",
+		"value": _shipped_template("CurrentWeapon", "arsenal_current_weapon").format({"weapons": "weapons", "index": "weapon_index"})
+	})}
+	fire.actions.append(find_ammo)
 	var has_ammo: RawCodeRow = RawCodeRow.new()
-	has_ammo.code = "if int(ammo.get(weapons[weapon_index], 0)) > 0:\n\tammo[weapons[weapon_index]] = int(ammo[weapons[weapon_index]]) - 1"
+	has_ammo.code = "if int(current_ammo.get(\"rounds\", 0)) > 0:\n\tcurrent_ammo[\"rounds\"] = int(current_ammo[\"rounds\"]) - 1"
 	fire.actions.append(has_ammo)
 	var shot: ACEAction = ACEAction.new()
 	shot.provider_id = "Core"
@@ -825,6 +845,151 @@ static func _build_boomer_arsenal_starter() -> EventSheetResource:
 	secret.actions.append(count_it)
 	sheet.events.append(secret)
 	return sheet
+
+
+## X25. The HUD Kit behaviour pack, whose rows this file's stats screen drives. Named once so the
+## template lookups below cannot point at a moved or renamed pack without failing loudly.
+const HUD_KIT_PACK := "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd"
+
+## X25. The node names the stats screen drives, as {label node, what it shows}. The starter's own
+## comment row and its Set Text rows both read this table, so the panel a reader is told to build
+## and the rows that fill it can never name two different things.
+const STATS_SCREEN_PANEL := "StatsScreen"
+const STATS_SCREEN_LABELS: Array[Dictionary] = [
+	{"node": "KillsValue", "shows": "how many enemies fell"},
+	{"node": "SecretsValue", "shows": "secrets found out of the level's total"},
+	{"node": "TimeValue", "shows": "your time against par"},
+]
+
+
+## X25. An END-OF-LEVEL STATS SCREEN starter: kills, secrets and time counted while the level runs,
+## then shown on a named panel the moment the level is over. Every number reaches the screen through
+## the shipped HUD Kit rows - Switch Screen, Set Text, Set Bar and the one On Button Pressed trigger -
+## so the whole panel is named nodes under a UI root with not one signal connected by hand. Attach the
+## compiled script to that UI root and drop the HUD Kit behaviour under it.
+static func _build_level_stats_screen_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Control"
+	sheet.custom_class_name = "LevelStatsScreen"
+	sheet.class_description = "Counts kills, secrets and time while a level runs, then fills a named end-of-level panel with them through the HUD Kit behaviour the moment the level is over."
+	sheet.variables = {
+		"kills": {"type": "int", "default": 0, "exported": false,
+			"attributes": {"tooltip": "How many enemies fell this level. Add 1 to it from the row that kills one."}},
+		"secrets_found": {"type": "Array", "default": [], "exported": false,
+			"attributes": {"tooltip": "Every secret counted so far. The Mark Secret Found row on your secret areas fills it, and each one goes in once."}},
+		"secrets_total": {"type": "int", "default": 3, "exported": true,
+			"attributes": {"tooltip": "How many secrets this level hides - the right-hand number of the secrets line."}},
+		"level_seconds": {"type": "float", "default": 0.0, "exported": false,
+			"attributes": {"tooltip": "How long the level has been running, counted up while it is not over."}},
+		"par_seconds": {"type": "float", "default": 180.0, "exported": true,
+			"attributes": {"tooltip": "The time to beat, in seconds. It is shown beside your own time."}},
+		"level_over": {"type": "bool", "default": false, "exported": false,
+			"attributes": {"tooltip": "Turn this on when the player reaches the exit - the stats screen shows itself on the next tick."}},
+		"stats_shown": {"type": "bool", "default": false, "exported": false,
+			"attributes": {"tooltip": "True once the screen has been filled in, so the numbers are written once rather than every frame."}}
+	}
+	var shown_lines: PackedStringArray = PackedStringArray()
+	for label: Dictionary in STATS_SCREEN_LABELS:
+		shown_lines.append("[code]%s[/code] (%s)" % [str(label["node"]), str(label["shows"])])
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Level stats screen[/b] - the end-of-level tally: kills, secrets and time.\nBuild a panel named [code]%s[/code] under your UI root holding %s and a bar named [code]SecretsBar[/code], plus a [code]ContinueButton[/code]. Drop the HUD Kit behaviour under the same root, attach this script to it, and turn [code]level_over[/code] on when the exit is reached." % [STATS_SCREEN_PANEL, ", ".join(shown_lines)]
+	sheet.events.append(note)
+
+	# The clock: it runs while the level is not over, so the time on the screen is the time played.
+	var clock: EventRow = EventRow.new()
+	clock.trigger_provider_id = "Core"
+	clock.trigger_id = "OnPhysicsProcess"
+	clock.conditions.append(_compare("level_over", "==", "false"))
+	var tick_clock: ACEAction = ACEAction.new()
+	tick_clock.provider_id = "Core"
+	tick_clock.ace_id = "AddVar"
+	tick_clock.codegen_template = _shipped_template("AddVar")
+	tick_clock.params = {"var_name": "level_seconds", "amount": "delta"}
+	clock.actions.append(tick_clock)
+	sheet.events.append(clock)
+
+	# The reveal: once, on the first tick after the level ends.
+	var reveal: EventRow = EventRow.new()
+	reveal.trigger_provider_id = "Core"
+	reveal.trigger_id = "OnPhysicsProcess"
+	reveal.conditions.append(_compare("level_over", "==", "true"))
+	reveal.conditions.append(_compare("stats_shown", "==", "false"))
+	var mark_shown: ACEAction = ACEAction.new()
+	mark_shown.provider_id = "Core"
+	mark_shown.ace_id = "SetVar"
+	mark_shown.codegen_template = _shipped_template("SetVar")
+	mark_shown.params = {"var_name": "stats_shown", "value": "true"}
+	reveal.actions.append(mark_shown)
+	reveal.actions.append(_hud_action("switch_screen", {"panel_name": "\"%s\"" % STATS_SCREEN_PANEL}))
+	var secrets_count: String = _shipped_template("SecretsFoundCount").format({"found": "secrets_found"})
+	var time_played: String = _shipped_template("FormatTime").format({"seconds": "level_seconds"})
+	var time_par: String = _shipped_template("FormatTime").format({"seconds": "par_seconds"})
+	reveal.actions.append(_hud_action("set_text", {"control_name": "\"KillsValue\"", "text": "str(kills)"}))
+	reveal.actions.append(_hud_action("set_text", {"control_name": "\"SecretsValue\"",
+		"text": "\"%d of %d\" % [" + secrets_count + ", secrets_total]"}))
+	reveal.actions.append(_hud_action("set_text", {"control_name": "\"TimeValue\"",
+		"text": time_played + " + \" of \" + " + time_par}))
+	reveal.actions.append(_hud_action("set_bar", {"bar_name": "\"SecretsBar\"",
+		"value": "float(" + secrets_count + ")", "max_value": "float(secrets_total)"}))
+	sheet.events.append(reveal)
+
+	# The way out. HUD Kit wires every descendant Button into its one trigger, so the button is
+	# named rather than connected, and the row that answers it resets the tally for the next level.
+	var carry_on: EventRow = EventRow.new()
+	carry_on.trigger_provider_id = "HudKitBehavior"
+	carry_on.trigger_id = "signal:on_button_pressed"
+	carry_on.trigger_source_path = "HudKitBehavior"
+	var which_button: ACECondition = ACECondition.new()
+	which_button.provider_id = "HudKitBehavior"
+	which_button.ace_id = "button_is"
+	which_button.codegen_template = _pack_template(HUD_KIT_PACK, "button_is")
+	which_button.params = {"button_name": "\"ContinueButton\""}
+	carry_on.conditions.append(which_button)
+	for reset: Array in [["level_over", "false"], ["stats_shown", "false"], ["kills", "0"],
+		["level_seconds", "0.0"], ["secrets_found", "[]"]]:
+		var clear_it: ACEAction = ACEAction.new()
+		clear_it.provider_id = "Core"
+		clear_it.ace_id = "SetVar"
+		clear_it.codegen_template = _shipped_template("SetVar")
+		clear_it.params = {"var_name": str(reset[0]), "value": str(reset[1])}
+		carry_on.actions.append(clear_it)
+	carry_on.actions.append(_hud_action("switch_screen", {"panel_name": "\"HudScreen\""}))
+	sheet.events.append(carry_on)
+	return sheet
+
+
+## One "compare variable" condition, built from the shipped word rather than a typed-out `a == b`.
+static func _compare(variable_name: String, operator: String, value: String) -> ACECondition:
+	var comparison: ACECondition = ACECondition.new()
+	comparison.provider_id = "Core"
+	comparison.ace_id = "CompareVar"
+	comparison.codegen_template = _shipped_template("CompareVar")
+	comparison.params = {"var_name": variable_name, "op": operator, "value": value}
+	return comparison
+
+
+## One HUD Kit row, with its template read off the shipped pack instead of typed here.
+static func _hud_action(method_name: String, params: Dictionary) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "HudKitBehavior"
+	action.ace_id = method_name
+	action.codegen_template = _pack_template(HUD_KIT_PACK, method_name)
+	action.params = params.duplicate()
+	return action
+
+
+## The template a shipped BEHAVIOUR PACK row writes, read from that pack's own
+## `@ace_codegen_template` annotation on disk. Same no-drift rule as _shipped_template below, for the
+## verbs a pack publishes rather than the built-in vocabulary: a starter that spelled `$Pack.verb(...)`
+## by hand would keep writing the old call the day the pack gains a parameter.
+static func _pack_template(pack_path: String, method_name: String) -> String:
+	var pack_script: Script = load(pack_path) as Script
+	if pack_script == null:
+		return ""
+	var analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
+	var source_metadata: Dictionary = analyzer.parse_source_metadata(pack_script)
+	var methods: Dictionary = source_metadata.get("methods", {})
+	return str((methods.get(method_name, {}) as Dictionary).get("codegen_template", ""))
 
 
 ## X29. A GAME OPTIONS starter: the accessibility screen every project should be an afternoon from.
@@ -964,6 +1129,8 @@ static func build_starter(template_id: int) -> EventSheetResource:
 		# Batch 13 kits 2, renumbered past the game shapes at merge.
 		30: return _build_boomer_arsenal_starter()
 		31: return _build_game_options_starter()
+		# X25 - the end-of-level screen the arsenal starter's counters feed.
+		32: return _build_level_stats_screen_starter()
 		_: return EventSheetResource.new()  # 0 Blank (and any other id) -> a minimal editable sheet
 
 

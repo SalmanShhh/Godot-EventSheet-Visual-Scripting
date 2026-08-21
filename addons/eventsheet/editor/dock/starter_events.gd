@@ -175,6 +175,48 @@ static func missing_signal_rows(starters: Array, sheet: EventSheetResource) -> A
 	return rows
 
 
+# ── X25. The secrets counter one object marked `secret` is offered on drop ────────────────────
+# An area marked a secret has exactly one event worth writing: when the player walks into it, count
+# it - once, however many times they walk back through. That is the shipped Mark Secret Found row,
+# and this is the whole event around it, built here rather than in the dock so it is pure and a
+# test can pin what the offer would add without opening a canvas.
+
+## The list every Mark Secret Found row counts into, and the name the shipped row's own default
+## already reads with - so a sheet that has this variable and a sheet that took it from the Boomer
+## Arsenal starter are the same sheet.
+const SECRETS_VARIABLE := "secrets_found"
+
+
+## The variable declaration a sheet needs before it can count secrets, in the sheet's own
+## variables-dictionary shape. Only added when the sheet does not declare it already.
+static func secrets_variable_entry() -> Dictionary:
+	return {"type": "Array", "default": [], "exported": false,
+		"attributes": {"tooltip": "Every secret counted so far. Each one goes in once, so walking back through a room does not count it twice."}}
+
+
+## The event an object marked `secret` offers: its own "walked into" trigger with the shipped Mark
+## Secret Found row already in the action lane, naming the object as the secret.
+static func secret_counter_event(object_label: String, host_class: String = "Area3D") -> EventRow:
+	var event: EventRow = build_event(entry_for("signal:body_entered", host_class))
+	event.trigger_source_path = object_label
+	var count_it: ACEAction = ACEAction.new()
+	count_it.provider_id = "Core"
+	count_it.ace_id = "MarkSecretFound"
+	count_it.codegen_template = secret_counter_template()
+	count_it.params = {"name": "\"%s\"" % object_label, "found": SECRETS_VARIABLE}
+	event.actions.append(count_it)
+	return event
+
+
+## The template the shipped Mark Secret Found row writes, taken from the registry rather than
+## re-typed here - the same no-drift rule the starter sheets follow.
+static func secret_counter_template() -> String:
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		if str(descriptor.ace_id) == "MarkSecretFound":
+			return str(descriptor.codegen_template)
+	return ""
+
+
 ## `{"name": ..., "args": [...]}` for a signal the host class itself declares, or {} when the class
 ## does not have one by that name (which is what makes it a signal the sheet declares).
 static func _native_signal(host_class: String, signal_name: String) -> Dictionary:
