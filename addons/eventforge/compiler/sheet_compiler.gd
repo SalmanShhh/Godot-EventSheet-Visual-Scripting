@@ -3575,6 +3575,30 @@ static func _resolve_output_path(sheet: EventSheetResource, output_path: String)
 	return "res://event_sheet_generated.gd"
 
 
+## Whether `needle` appears in `line` OUTSIDE every string literal. A file that merely TALKS about
+## the helper - a pattern table, a doc string, a test's expected text - must never be handed the
+## helper's definition: injecting it breaks the byte-exact reopen of a file that was only opened.
+static func _calls_outside_strings(line: String, needle: String) -> bool:
+	var in_string: bool = false
+	var quote: String = ""
+	var index: int = 0
+	while index < line.length():
+		var character: String = line[index]
+		if in_string:
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				in_string = false
+		elif character == "\"" or character == "'":
+			in_string = true
+			quote = character
+		elif line.substr(index).begins_with(needle):
+			return true
+		index += 1
+	return false
+
+
 ## X30. The one function every aimed-floor word calls, written into the file the first time any of
 ## them appears in it. All three answers - the floor point, the floor object and the floor's slope -
 ## and both cursor questions share this ONE definition, so a project that asks for the point AND the
@@ -3592,7 +3616,7 @@ static func _append_aimed_cursor_helper(lines: PackedStringArray) -> void:
 			return
 		if line.strip_edges().begins_with("#"):
 			continue
-		if line.contains("%s(" % AIMED_CURSOR_HELPER):
+		if _calls_outside_strings(line, "%s(" % AIMED_CURSOR_HELPER):
 			called = true
 	if not called:
 		return

@@ -154,6 +154,16 @@ static var REFUSED_EXPRESSIONS: PackedStringArray = PackedStringArray([
 
 static func run() -> bool:
 	var ok: bool = true
+
+	# The helper is appended for CALLS only. A file that merely NAMES the helper inside a string
+	# literal - a pattern table, a doc - must reopen byte-identically; injecting the definition
+	# there broke the lossless contract on the grammar file itself once.
+	ok = _check("a string literal naming the helper earns no injection",
+		EventSheets.round_trips("extends Node
+
+
+var table: Dictionary = {\"call\": \"__eventsheets_aim_floor(\"}
+"), true) and ok
 	ok = _grammar_values() and ok
 	var readings: PackedStringArray = PackedStringArray()
 	var patterns: Dictionary = {}

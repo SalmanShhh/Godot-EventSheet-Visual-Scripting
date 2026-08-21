@@ -3086,7 +3086,7 @@ in the right-hand lane, where the reader expects a step.
 	cells of whichever row the caret is on).
   - grabbing any row drags the statement, so the pair travels together; a drop BEFORE a branch row
 	lands above the whole pair, a drop INTO one snaps below it, and only the pair's own head still
-    takes a sub-event.
+	takes a sub-event.
   - a double-click anywhere on the pair - including the condition cell and the plain `Else` row,
 	neither of which is a real cell - opens that ONE line's existing editor: the code dialog for a
 	hand-written statement, the ACE editor for a lifted row. Delete, Cut, Copy and the row context
