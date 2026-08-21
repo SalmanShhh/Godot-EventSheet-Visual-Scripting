@@ -4038,3 +4038,21 @@ Tile Under Cursor,Kachel unter dem Cursor
 "Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","Über welcher Zelle einer Tilemap-Ebene die Maus steht, als Kartenkoordinaten - die Zahl, die ""Kachel setzen bei"", ""Kachel löschen bei"" und ""Zelle ist leer"" alle nehmen. Kacheln malen, Baugitter und ""welches Feld habe ich angeklickt"" fangen hier an."
 the tile under the cursor,die Kachel unter dem Cursor
 "The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","Die Tilemap-Ebene, in der die Zelle nachgeschlagen wird. Ihre eigene Transformation macht aus dem Zeiger eine Zelle, daher antwortet auch eine verschobene oder gezoomte Karte richtig."
+Secret,Geheimnis
+Counts as a secret,Zählt als Geheimnis
+Not a secret,Kein Geheimnis
+Dropping it on the canvas offers the secrets counter.,"Wird es auf die Fläche gezogen, wird der Geheimnis-Zähler angeboten."
+Count This Secret,Dieses Geheimnis zählen
+Count it,Zählen
+Just add a row,Nur eine Zeile hinzufügen
+%s is marked a secret. Add the event that counts it the first time the player walks in?,"%s ist als Geheimnis markiert. Das Ereignis hinzufügen, das es beim ersten Betreten zählt?"
+Counting %s as a secret.,%s wird als Geheimnis gezählt.
+Level Stats Screen,Level-Statistikbildschirm
+Show the control's key on a label while the window is open,"Die Taste der Steuerung auf einem Label anzeigen, solange das Fenster offen ist"
+Clear the prompt off its label as the window shuts,"Den Hinweis vom Label entfernen, wenn das Fenster schließt"
+"The label that shows the prompt, as a node path - $PromptLabel.","Das Label, das den Hinweis anzeigt, als Node-Pfad - $PromptLabel."
+prompt on {label},Hinweis auf {label}
+prompt taken off {label},Hinweis von {label} entfernt
+Close input window,Eingabefenster schließen
+"Every colour set this palette asset carries, side by side.","Alle Farbsätze dieses Palettenassets, nebeneinander."
+Palette assets,Palettenassets

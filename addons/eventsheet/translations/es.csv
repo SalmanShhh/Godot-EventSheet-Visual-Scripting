@@ -4038,3 +4038,21 @@ Tile Under Cursor,Casilla bajo el cursor
 "Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","Sobre qué celda de una capa de tilemap está el ratón, en coordenadas de mapa - el número que toman ""Poner casilla en"", ""Borrar casilla en"" y ""La celda está vacía"". Pintar casillas, rejillas de construcción y ""qué cuadro he pulsado"" empiezan aquí."
 the tile under the cursor,la casilla bajo el cursor
 "The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","La capa de tilemap en la que se busca la celda. Su propia transformación es lo que convierte el puntero en una celda, así que un mapa desplazado o con zoom responde correctamente."
+Secret,Secreto
+Counts as a secret,Cuenta como secreto
+Not a secret,No es un secreto
+Dropping it on the canvas offers the secrets counter.,Al soltarlo en el lienzo se ofrece el contador de secretos.
+Count This Secret,Contar este secreto
+Count it,Contarlo
+Just add a row,Solo añadir una fila
+%s is marked a secret. Add the event that counts it the first time the player walks in?,%s está marcado como secreto. ¿Añadir el evento que lo cuenta la primera vez que el jugador entra?
+Counting %s as a secret.,Contando %s como secreto.
+Level Stats Screen,Pantalla de estadísticas del nivel
+Show the control's key on a label while the window is open,Mostrar la tecla del control en una etiqueta mientras la ventana está abierta
+Clear the prompt off its label as the window shuts,Quitar el aviso de su etiqueta cuando la ventana se cierra
+"The label that shows the prompt, as a node path - $PromptLabel.","La etiqueta que muestra el aviso, como ruta de nodo - $PromptLabel."
+prompt on {label},aviso en {label}
+prompt taken off {label},aviso retirado de {label}
+Close input window,Cerrar ventana de entrada
+"Every colour set this palette asset carries, side by side.","Todos los conjuntos de colores de este recurso de paleta, uno al lado del otro."
+Palette assets,Recursos de paleta

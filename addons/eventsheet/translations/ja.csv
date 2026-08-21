@@ -4038,3 +4038,21 @@ Tile Under Cursor,カーソルの下のタイル
 "Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.",マウスがタイルマップレイヤーのどのセルの上にあるかを、マップ座標で返します - 「タイルを設定」「タイルを消去」「セルが空」がすべて受け取る値です。タイルを塗る、建築グリッド、「どのマスをクリックしたか」はここから始まります。
 the tile under the cursor,カーソルの下のタイル
 "The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.",セルを調べるタイルマップレイヤー。ポインタをセルに変えるのはこのレイヤー自身のトランスフォームなので、スクロールやズームをした地図でも正しく答えます。
+Secret,シークレット
+Counts as a secret,シークレットとして数える
+Not a secret,シークレットではない
+Dropping it on the canvas offers the secrets counter.,キャンバスにドロップするとシークレットのカウント行が提案されます。
+Count This Secret,このシークレットを数える
+Count it,数える
+Just add a row,行を追加するだけ
+%s is marked a secret. Add the event that counts it the first time the player walks in?,%s はシークレットとして印が付いています。プレイヤーが最初に入ったときに数えるイベントを追加しますか？
+Counting %s as a secret.,%s をシークレットとして数えます。
+Level Stats Screen,レベル成績画面
+Show the control's key on a label while the window is open,ウィンドウが開いている間、操作のキーをラベルに表示する
+Clear the prompt off its label as the window shuts,ウィンドウが閉じるときにラベルから表示を消す
+"The label that shows the prompt, as a node path - $PromptLabel.",表示に使うラベル。ノードパスで指定します - $PromptLabel。
+prompt on {label},{label} に表示
+prompt taken off {label},{label} から消去
+Close input window,入力ウィンドウを閉じる
+"Every colour set this palette asset carries, side by side.",このパレットアセットが持つすべての配色を並べて表示します。
+Palette assets,パレットアセット

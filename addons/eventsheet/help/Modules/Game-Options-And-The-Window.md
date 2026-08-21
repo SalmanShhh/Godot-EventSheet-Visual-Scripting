@@ -355,6 +355,15 @@ with photosensitive epilepsy. **Set Text Size Scale** is the number every font s
 by, **Use Palette** swaps a colour set kept as a data asset, and **Set Aim Assist Radius** is how
 generous the aim is, as the player's choice rather than a designer's guess.
 
+A palette asset is a `ColorPaletteResource`: `Set Names` names one colour set per kind of colour
+vision, `Role Names` says what each position in a set means (`Danger`, `Safe`, `Neutral`), and `Set
+Colors` holds one colour array per set, filling those roles in that order. Use Palette's asset
+parameter draws every set beside every other one, so the choice is made by looking rather than by
+reading file names. Typing stays free: a variable or an expression belongs in the slot as much as a
+path does, and a value that names nothing readable simply leaves the swatches out.
+
+![The Use Palette parameter form: the asset path with a Browse button, and under it three colour sets - Default, Deuteranopia and Tritanopia - drawn side by side as swatch columns against the role names Danger, Safe, Neutral and Highlight](../images/palette-param-swatches.png)
+
 **Play Sound With Caption** shows what a player who cannot hear it needs to read on a HUD caption
 strip (any node in the `caption_strip` group with a `show_caption` method), and **Show Caption**
 covers a sound played some other way. Turning on the `eventsheets/doctor/caption_sounds` project

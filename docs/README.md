@@ -44,6 +44,7 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 - [Randomness and Procedural Generation](GUIDE-PROCEDURAL-GENERATION.md) - one Advanced Random seed driving maps, loot, and cosmetics.
 - [Player and AI Input](GUIDE-PLAYER-AND-AI-INPUT.md) - the one seam that lets every input-reading pack be driven by the player or by your AI.
 - [Let Players Rebind the Controls](GUIDE-LET-PLAYERS-REBIND-THE-CONTROLS.md) - a controls screen as four events: wait for the next key, bind it, reset, and the two rows that make a remap survive a restart.
+- [Secrets and the End-of-Level Screen](GUIDE-SECRETS-AND-THE-END-OF-LEVEL-SCREEN.md) - mark a room a secret so dropping it offers the counting event, then show kills, secrets and time on a named panel when the level ends.
 
 ## Localization
 

@@ -4038,3 +4038,21 @@ Tile Under Cursor,光标下的图块
 "Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.",鼠标位于图块地图层的哪个单元格上，以地图坐标给出 - 这正是“设置图块”、“擦除图块”和“单元格为空”都接受的数值。刷图块、建造网格，以及“我点了哪一格”都从这里开始。
 the tile under the cursor,光标下的图块
 "The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.",用于查找单元格的图块地图层。把指针换算成单元格的正是该图层自身的变换，因此即使地图滚动或缩放也能答对。
+Secret,秘密
+Counts as a secret,计为秘密
+Not a secret,不是秘密
+Dropping it on the canvas offers the secrets counter.,将它拖放到画布上时会提示添加秘密计数事件。
+Count This Secret,计入这个秘密
+Count it,计入
+Just add a row,仅添加一行
+%s is marked a secret. Add the event that counts it the first time the player walks in?,%s 已标记为秘密。是否添加在玩家首次进入时计数的事件？
+Counting %s as a secret.,将 %s 计为秘密。
+Level Stats Screen,关卡统计画面
+Show the control's key on a label while the window is open,窗口打开期间，在标签上显示该操作的按键
+Clear the prompt off its label as the window shuts,窗口关闭时，把提示从标签上清除
+"The label that shows the prompt, as a node path - $PromptLabel.",显示提示的标签，用节点路径填写 - $PromptLabel。
+prompt on {label},提示显示在 {label}
+prompt taken off {label},提示已从 {label} 移除
+Close input window,关闭输入窗口
+"Every colour set this palette asset carries, side by side.",该调色板资源包含的所有配色，并排显示。
+Palette assets,调色板资源

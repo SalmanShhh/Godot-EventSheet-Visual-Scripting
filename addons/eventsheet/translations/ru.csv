@@ -4038,3 +4038,21 @@ Tile Under Cursor,Тайл под курсором
 "Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","Над какой ячейкой слоя тайлмапа находится мышь, в координатах карты - число, которое принимают «Задать тайл в», «Стереть тайл в» и «Ячейка пуста». Рисование тайлами, строительные сетки и «по какой клетке я щёлкнул» начинаются здесь."
 the tile under the cursor,тайл под курсором
 "The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","Слой тайлмапа, в котором ищется ячейка. Именно его собственное преобразование превращает указатель в ячейку, поэтому прокрученная или масштабированная карта отвечает верно."
+Secret,Секрет
+Counts as a secret,Считается секретом
+Not a secret,Не секрет
+Dropping it on the canvas offers the secrets counter.,При переносе на холст предлагается счётчик секретов.
+Count This Secret,Засчитать этот секрет
+Count it,Засчитать
+Just add a row,Просто добавить строку
+%s is marked a secret. Add the event that counts it the first time the player walks in?,"%s отмечен как секрет. Добавить событие, которое засчитает его при первом входе игрока?"
+Counting %s as a secret.,%s засчитывается как секрет.
+Level Stats Screen,Экран итогов уровня
+Show the control's key on a label while the window is open,"Показывать клавишу управления на надписи, пока окно открыто"
+Clear the prompt off its label as the window shuts,Убирать подсказку с надписи при закрытии окна
+"The label that shows the prompt, as a node path - $PromptLabel.","Надпись, на которой показывается подсказка, как путь к узлу - $PromptLabel."
+prompt on {label},подсказка на {label}
+prompt taken off {label},подсказка убрана с {label}
+Close input window,Закрыть окно ввода
+"Every colour set this palette asset carries, side by side.","Все наборы цветов этого ресурса палитры, рядом друг с другом."
+Palette assets,Ресурсы палитр

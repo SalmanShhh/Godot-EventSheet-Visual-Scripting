@@ -4038,3 +4038,21 @@ Tile Under Cursor,Tassello sotto il cursore
 "Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","Su quale cella di un livello tilemap si trova il mouse, in coordinate della mappa - il numero che prendono ""Imposta tassello a"", ""Cancella tassello a"" e ""La cella è vuota"". Dipingere tasselli, griglie di costruzione e ""quale casella ho cliccato"" iniziano qui."
 the tile under the cursor,il tassello sotto il cursore
 "The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","Il livello tilemap in cui viene cercata la cella. La sua stessa trasformazione è ciò che converte il puntatore in una cella, quindi una mappa scorsa o ingrandita risponde correttamente."
+Secret,Segreto
+Counts as a secret,Conta come segreto
+Not a secret,Non è un segreto
+Dropping it on the canvas offers the secrets counter.,Trascinandolo sull'area di lavoro viene proposto il contatore dei segreti.
+Count This Secret,Conta questo segreto
+Count it,Contalo
+Just add a row,Aggiungi solo una riga
+%s is marked a secret. Add the event that counts it the first time the player walks in?,%s è contrassegnato come segreto. Aggiungere l'evento che lo conta la prima volta che il giocatore entra?
+Counting %s as a secret.,%s viene contato come segreto.
+Level Stats Screen,Schermata statistiche del livello
+Show the control's key on a label while the window is open,Mostra il tasto del comando su un'etichetta finché la finestra è aperta
+Clear the prompt off its label as the window shuts,Togli l'indicazione dalla sua etichetta quando la finestra si chiude
+"The label that shows the prompt, as a node path - $PromptLabel.","L'etichetta che mostra l'indicazione, come percorso di nodo - $PromptLabel."
+prompt on {label},indicazione su {label}
+prompt taken off {label},indicazione tolta da {label}
+Close input window,Chiudi finestra di input
+"Every colour set this palette asset carries, side by side.","Tutti i set di colori di questa risorsa palette, affiancati."
+Palette assets,Risorse palette

@@ -772,6 +772,7 @@ The `hint` chooses the input widget in the parameter dialog. `expression` is by 
 | `key_capture` | Press-a-key modal | A keyboard key (records the key you press). |
 | `input_action` | Editable picker of the project's Input Map actions (enumerated live at dialog-open, project actions first) | An existing input action, as a quoted literal. |
 | `group_reference` | Editable picker of the node groups that actually exist (project globals + the edited scene's groups) | A node group name, as a quoted literal. |
+| `scene_node` | Editable picker of the tree in the layout that is OPEN, offered in the spellings a row writes: `self` first, then `%Unique` for the scene-unique nodes, then `$Path` for the rest (a name with a space in it comes quoted, `$"Health Bar"`). Enumerated when the dialog builds, never baked into the descriptor, so a node added a minute ago is in the list. | A node in the current scene. With no scene open there are no choices at all and the param is the ordinary text field it was, so an expression, a variable or a node that only exists at runtime stays typeable. The Nodes: Hierarchy rows use it. |
 | `bbcode_text` | Discord-style rich-text field: select text and hit B / I / U / S (or Ctrl+B/I/U, Ctrl+Shift+S) to wrap it in the matching BBCode tag - toggles off when already wrapped - with a live rendered preview underneath | A BBCode string (Print Rich uses it). |
 | `physics_layer_2d` / `physics_layer_3d` | Checkable list of the project's physics layers - NAMED layers (Project Settings > Layer Names) show their names, and the button reads the selection back ("Walls, Enemies") | A collision mask int. Params named `collision_mask` / `*_mask` (2D) or `*_mask_3d` (3D) get this picker by convention, no annotation needed. |
 | `audio_path` | Text field with a `▶` preview button | An audio file path. |
@@ -781,6 +782,8 @@ The `hint` chooses the input widget in the parameter dialog. `expression` is by 
 | `method_reference` | Autocomplete of the host's public methods | A method name. |
 | `property_reference` | Autocomplete of the host's public properties | A property name. |
 | `enum:EnumName` | Dropdown of that sheet enum's members | A sheet enum member. |
+
+![The Add Child (existing node) parameter dialog with the Child field's picker open, listing the nodes of the layout currently open in the editor: self first, then the scene-unique %Score, then $Player, $UI and $UI/Score](images/scene-node-param-picker.png)
 
 Factory helpers cover the common dropdowns, so nobody re-types them: `F.COMPARISON_OPTIONS` is the
 canonical labeled operator list (`==` reads "= (equal to)", `>=` reads ">= (at least)"), and

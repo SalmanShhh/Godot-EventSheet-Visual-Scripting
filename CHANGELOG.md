@@ -58,6 +58,46 @@
 
 All five are display-only lenses or new vocabulary: every file involved still opens and saves back
 byte for byte, which is the gate each of them ships behind.
+### Added - the deferrals nobody had a seam for, each one now attached to the seam it needed
+
+- **A prompt cannot outlive the moment it was asking about.** `Show prompt for "dodge"` set a
+  label's text and nothing ever took it off again, so a missed window left the glyph on screen for
+  the rest of the level. The input WINDOW owns the prompt now: **Open Input Window** and **Close
+  Input Window** each carry an optional **Prompt** parameter, so opening a window puts the control's
+  key on a label and closing or missing it takes the key off. Both parameters default to nothing at
+  all, which is the whole point - a window authored before this existed still writes exactly the two
+  lines it always wrote, byte for byte, and that is pinned by value for the absent-key spelling as
+  well as the empty one. The row never asks anyone to type code: a tick, a label and a control
+  compose the line, and reading it back recomposes it, so a line somebody else wrote fills nothing.
+- **A parameter that meant a file now shows what is in the file.** A `palette` parameter hint draws
+  every colour set the palette asset carries side by side instead of leaving you to trust a path you
+  typed. **Use palette** keeps its template; only the field is new, over a new colour-palette data
+  asset that ships as a pack the way the other data assets do.
+- **A node parameter offers the layout that is open right now.** The hierarchy rows took a node as
+  free text, which is a spelling test. They read the open layout's tree instead, and fall back to
+  the plain field with no scene open, so nothing is worse anywhere.
+- **The boomer shooter's last three verbs.** **Set Move Speed While Firing** on the FPS Controller
+  (a foot-planted base speed that sprint and crouch still multiply, so the pack keeps one speed
+  story); a **Level Stats Screen** starter binding kills, secrets and time through the HUD Kit rows;
+  and marking an Area **secret** in Object properties, after which dropping it on the canvas OFFERS
+  the event that counts it - an offer, so dismissing it drops the row you asked for.
+- **The arsenal's ammo is a table.** The Boomer Arsenal starter kept ammo in a Dictionary literal
+  while the sheet had table words for exactly this. It is an Array of records now, found by the
+  shipped **Row Where** row, so adding a weapon is adding a record. A starter body change: no
+  template moved.
+
+### Fixed
+
+- **An optional parameter could write its own name into your game.** Filling a template left an
+  unanswered `{name}` in the output verbatim, so a row saved before a parameter existed would have
+  emitted `{prompt}` into the compiled file. Parameters whose shipped answer is nothing are filled
+  with nothing, which can only ever replace text that was already broken GDScript.
+
+### Changed
+
+- **The Addon manager figure counts the packs that are actually there.** It said 91; there are 95.
+  Re-rendered from the real window, and the alt text says what the picture says.
+
 
 ### Changed - the documentation caught up with everything the sheet learned, and the index gates it
 

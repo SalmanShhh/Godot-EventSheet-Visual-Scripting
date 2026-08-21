@@ -4038,3 +4038,21 @@ Tile Under Cursor,Tuile sous le curseur
 "Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","Sur quelle cellule d'un calque de tuiles la souris se trouve, en coordonnées de carte - le nombre que prennent « Définir la tuile à », « Effacer la tuile à » et « La cellule est vide ». Peindre des tuiles, les grilles de construction et « quelle case ai-je cliquée » commencent ici."
 the tile under the cursor,la tuile sous le curseur
 "The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","Le calque de tuiles dans lequel la cellule est recherchée. Sa propre transformation est ce qui convertit le pointeur en cellule, donc une carte défilée ou zoomée répond correctement."
+Secret,Secret
+Counts as a secret,Compte comme un secret
+Not a secret,Pas un secret
+Dropping it on the canvas offers the secrets counter.,Le déposer sur la zone de travail propose le compteur de secrets.
+Count This Secret,Compter ce secret
+Count it,Le compter
+Just add a row,Ajouter seulement une ligne
+%s is marked a secret. Add the event that counts it the first time the player walks in?,%s est marqué comme secret. Ajouter l'événement qui le compte la première fois que le joueur y entre ?
+Counting %s as a secret.,%s est compté comme un secret.
+Level Stats Screen,Écran de statistiques du niveau
+Show the control's key on a label while the window is open,Afficher la touche de la commande sur un libellé tant que la fenêtre est ouverte
+Clear the prompt off its label as the window shuts,Retirer l'indication de son libellé à la fermeture de la fenêtre
+"The label that shows the prompt, as a node path - $PromptLabel.","Le libellé qui affiche l'indication, sous forme de chemin de nœud - $PromptLabel."
+prompt on {label},indication sur {label}
+prompt taken off {label},indication retirée de {label}
+Close input window,Fermer la fenêtre de saisie
+"Every colour set this palette asset carries, side by side.","Tous les jeux de couleurs de cette ressource de palette, côte à côte."
+Palette assets,Ressources de palette

@@ -4038,3 +4038,21 @@ Tile Under Cursor,커서 아래의 타일
 "Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and ""which square did I click"" start here.","마우스가 타일맵 레이어의 어느 셀 위에 있는지를 맵 좌표로 알려줍니다 - ""타일 설정"", ""타일 지우기"", ""셀이 비어 있음""이 모두 받는 값입니다. 타일 칠하기, 건설 격자, ""어느 칸을 클릭했는가""가 여기서 시작합니다."
 the tile under the cursor,커서 아래의 타일
 "The tilemap layer the cell is looked up in. Its own transform is what turns the pointer into a cell, so a scrolled or zoomed map answers correctly.","셀을 조회할 타일맵 레이어입니다. 포인터를 셀로 바꾸는 것은 이 레이어 자신의 트랜스폼이므로, 스크롤하거나 확대한 맵도 정확히 답합니다."
+Secret,비밀
+Counts as a secret,비밀로 집계됨
+Not a secret,비밀 아님
+Dropping it on the canvas offers the secrets counter.,캔버스에 놓으면 비밀 집계 이벤트를 제안합니다.
+Count This Secret,이 비밀 집계하기
+Count it,집계하기
+Just add a row,행만 추가
+%s is marked a secret. Add the event that counts it the first time the player walks in?,%s 은(는) 비밀로 표시되어 있습니다. 플레이어가 처음 들어올 때 집계하는 이벤트를 추가할까요?
+Counting %s as a secret.,%s 을(를) 비밀로 집계합니다.
+Level Stats Screen,레벨 결과 화면
+Show the control's key on a label while the window is open,창이 열려 있는 동안 조작 키를 라벨에 표시
+Clear the prompt off its label as the window shuts,창이 닫힐 때 라벨에서 안내를 지우기
+"The label that shows the prompt, as a node path - $PromptLabel.",안내를 표시할 라벨. 노드 경로로 적습니다 - $PromptLabel.
+prompt on {label},{label}에 안내
+prompt taken off {label},{label}에서 안내 지움
+Close input window,입력 창 닫기
+"Every colour set this palette asset carries, side by side.",이 팔레트 애셋이 담고 있는 모든 색상 세트를 나란히 보여줍니다.
+Palette assets,팔레트 애셋
