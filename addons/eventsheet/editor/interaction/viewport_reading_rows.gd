@@ -1884,11 +1884,23 @@ static func collision_trigger_words(trigger_id: String) -> String:
 ## M33. The event-sheet words for a loop row, and the object it belongs to.
 ##
 ## Returns {"text", "object"} - `object` empty for the System loops, and the host for a loop over
-## another object's children, which an event sheet draws as that object's own For each. The loop rows
-## themselves are unchanged: this is what they SAY, never what they are.
-static func loop_words(kind: int, iterator_name: String, collection: String) -> Dictionary:
+## another object's children, which an event sheet draws as that object's own For each. A ring loop
+## also carries a muted "note". The loop rows themselves are unchanged: this is what they SAY, never
+## what they are.
+##
+## X31. `body` is the lines the loop runs, which is how the head can say what the loop is FOR: a
+## count alone is a count, and the same count whose body gives each step its share of a full turn is
+## a circle. Empty for every caller that has no body to hand, and the head reads as it always did.
+static func loop_words(kind: int, iterator_name: String, collection: String,
+		body: PackedStringArray = PackedStringArray()) -> Dictionary:
 	var iterator: String = iterator_name.strip_edges()
 	var source: String = collection.strip_edges()
+	# X31. Asked before anything else, because a ring loop IS a plain count however the loop was
+	# lifted - what tells a ring from a count is only ever the body under it.
+	if kind != PickFilter.CollectionKind.WHILE and kind != PickFilter.CollectionKind.CHILDREN:
+		var ring: Dictionary = ring_loop_words(iterator, source, body)
+		if not ring.is_empty():
+			return ring
 	match kind:
 		PickFilter.CollectionKind.REPEAT:
 			var bounds: PackedStringArray = EventSheetSentence.split_top_level(source, ", ")
@@ -1926,6 +1938,50 @@ static func loop_words(kind: int, iterator_name: String, collection: String) -> 
 		var possessive: String = EventSheetL10n.translate("For each {item} in {object}'s children")
 		return {"text": possessive.replace("{item}", iterator).replace("{object}", children_of),
 			"object": ""}
+	return {}
+
+
+## X31. Whether this loop head COULD be a ring, decided from the head alone. Two string tests, and
+## the reason the row builder never walks a loop's body to find out: a ring is a plain count -
+## `for i in n:` or `for i in 8:` - and a range's bounds, a collection and a call are all different
+## loop heads with words of their own.
+static func ring_loop_possible(iterator: String, count: String) -> bool:
+	if iterator.strip_edges().is_empty():
+		return false
+	var source: String = count.strip_edges()
+	if source.is_empty():
+		return false
+	return EventSheetSentence.is_identifier(source) or source.is_valid_int()
+
+
+## X31. The head of a RING loop: `for i in n:` whose body gives each step its share of a full turn.
+## Reads `For i from 0 to n − 1` with `evenly around a circle` beside it, because the count is not
+## what the loop is about - the circle is, and a reader scanning for the ring should not have to read
+## three lines of trigonometry to find it.
+##
+## {} unless the loop is a plain count AND its own body writes `TAU * float(i) / float(n)` for THIS
+## loop's index: a count whose body does something else is a count, and says so.
+static func ring_loop_words(iterator: String, count: String, body: PackedStringArray) -> Dictionary:
+	if body.is_empty() or not ring_loop_possible(iterator, count):
+		return {}
+	for line: String in body:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var value: String = text
+		for separator: String in [" := ", " = "]:
+			var at: int = EventSheetSentence.top_level_index(text, separator)
+			if at > 0:
+				value = text.substr(at + separator.length()).strip_edges()
+				break
+		if EventSheetSentence.turn_share_index(value) != iterator:
+			continue
+		return {
+			"text": EventSheetL10n.translate("For {index} from 0 to {count} − 1") \
+				.replace("{index}", iterator).replace("{count}", count),
+			"object": "",
+			"note": EventSheetL10n.translate("evenly around a circle")
+		}
 	return {}
 
 

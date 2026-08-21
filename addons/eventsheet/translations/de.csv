@@ -3306,6 +3306,7 @@ Colour picker,Farbwaehler
 Add titled card {title},Titelkarte {title} hinzufuegen
 Add section {title},Abschnitt {title} hinzufuegen
 Add form row {title} {value},Formularzeile {title} {value} hinzufuegen
+as {name},als {name}
 On %s button clicked,Bei Klick mit %s Taste
 (on %s),(auf %s)
 Mouse.Position,Maus.Position
@@ -3411,6 +3412,10 @@ Set position to {other},Position auf {other} setzen
 spawn point,Startpunkt
 another object,ein anderes Objekt
 Align to the ground's slope,An die Neigung des Bodens anpassen
+Place On The Ground,Auf dem Boden absetzen
+Place on the [b]ground[/b] [i]reach {reach}[/i],Auf dem [b]Boden[/b] absetzen [i]Reichweite {reach}[/i]
+"Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.","Lässt einen 3D-Knoten senkrecht auf das fallen, was unter ihm liegt - das Aufsetzen auf den Boden, mit dem jeder Spawn, jeder Gegenstandsabwurf und jede Bauplatzierung endet. Bleibt liegen, wenn nichts in Reichweite ist."
+"How far down to look for ground, in units. Nothing moves when there is none within reach.","Wie weit nach unten nach Boden gesucht wird, in Einheiten. Ohne Boden in Reichweite bewegt sich nichts."
 Is within {angle} of facing {target},Ist innerhalb von {angle} zu {target} ausgerichtet
 Is not within {angle} of facing {target},Ist nicht innerhalb von {angle} zu {target} ausgerichtet
 {target} is {side} {object},{target} ist {side} {object}
@@ -3420,6 +3425,8 @@ to the right of,rechts von
 to the left of,links von
 "the point at angle {angle}, distance {distance}","der Punkt im Winkel {angle}, Abstand {distance}"
 {index}'s share of a full turn,Anteil von {index} an einer vollen Drehung
+For {index} from 0 to {count} − 1,Für {index} von 0 bis {count} − 1
+evenly around a circle,gleichmäßig im Kreis verteilt
 Placement,Platzierung
 Angle and distance,Winkel und Abstand
 "something is put where a marker is, dropped onto the ground and tilted onto its slope","etwas wird an eine Markierung gesetzt, auf den Boden gelegt und an dessen Neigung ausgerichtet"

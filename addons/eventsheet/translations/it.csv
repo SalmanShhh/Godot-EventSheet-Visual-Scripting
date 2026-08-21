@@ -3306,6 +3306,7 @@ Colour picker,Selettore colore
 Add titled card {title},Aggiungi scheda con titolo {title}
 Add section {title},Aggiungi sezione {title}
 Add form row {title} {value},Aggiungi riga modulo {title} {value}
+as {name},come {name}
 On %s button clicked,Al clic del pulsante %s
 (on %s),(su %s)
 Mouse.Position,Mouse.Posizione
@@ -3411,6 +3412,10 @@ Set position to {other},Imposta posizione a {other}
 spawn point,punto di comparsa
 another object,un altro oggetto
 Align to the ground's slope,Allinea alla pendenza del terreno
+Place On The Ground,Posa a terra
+Place on the [b]ground[/b] [i]reach {reach}[/i],Posa a [b]terra[/b] [i]portata {reach}[/i]
+"Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.","Fa cadere un nodo 3D dritto su ciò che sta sotto - l'appoggio a terra con cui finiscono ogni comparsa, ogni oggetto lasciato cadere e ogni posa di edificio. Resta dov'è se non c'è nulla a portata."
+"How far down to look for ground, in units. Nothing moves when there is none within reach.","Quanto in basso cercare il terreno, in unità. Senza terreno a portata non si muove nulla."
 Is within {angle} of facing {target},E entro {angle} dal guardare {target}
 Is not within {angle} of facing {target},Non e entro {angle} dal guardare {target}
 {target} is {side} {object},{target} e {side} {object}
@@ -3420,6 +3425,8 @@ to the right of,a destra di
 to the left of,a sinistra di
 "the point at angle {angle}, distance {distance}","il punto all'angolo {angle}, distanza {distance}"
 {index}'s share of a full turn,la quota di {index} di un giro completo
+For {index} from 0 to {count} − 1,Per {index} da 0 a {count} − 1
+evenly around a circle,distribuiti uniformemente in cerchio
 Placement,Posizionamento
 Angle and distance,Angolo e distanza
 "something is put where a marker is, dropped onto the ground and tilted onto its slope","qualcosa viene messo dove c'e un segnaposto, appoggiato a terra e inclinato sulla pendenza"

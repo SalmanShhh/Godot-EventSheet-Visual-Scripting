@@ -3306,6 +3306,7 @@ Colour picker,Выбор цвета
 Add titled card {title},Добавить карточку с заголовком {title}
 Add section {title},Добавить раздел {title}
 Add form row {title} {value},Добавить строку формы {title} {value}
+as {name},kak {name}
 On %s button clicked,При щелчке %s кнопкой
 (on %s),(на %s)
 Mouse.Position,Мышь.Позиция
@@ -3411,6 +3412,10 @@ Set position to {other},Zadat poziciyu {other}
 spawn point,tochka poyavleniya
 another object,drugoy obyekt
 Align to the ground's slope,Vyrovnyat po uklonu zemli
+Place On The Ground,Postavit na zemlyu
+Place on the [b]ground[/b] [i]reach {reach}[/i],Postavit na [b]zemlyu[/b] [i]dalnost {reach}[/i]
+"Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.","Ronyaet 3D-uzel pryamo vniz na to, chto pod nim - postanovka na pol, kotoroy zakanchivaetsya lyuboy spaun, vybros predmeta i razmeshchenie postroyki. Ostaetsya na meste, esli v predelakh dalnosti nichego net."
+"How far down to look for ground, in units. Nothing moves when there is none within reach.","Kak daleko vniz iskat zemlyu, v edinitsakh. Esli zemli v predelakh dalnosti net, nichego ne dvizhetsya."
 Is within {angle} of facing {target},Naklon k {target} v predelakh {angle}
 Is not within {angle} of facing {target},Naklon k {target} ne v predelakh {angle}
 {target} is {side} {object},{target} {side} {object}
@@ -3420,6 +3425,8 @@ to the right of,sprava ot
 to the left of,sleva ot
 "the point at angle {angle}, distance {distance}",tochka pod uglom {angle} na rasstoyanii {distance}
 {index}'s share of a full turn,dolya {index} ot polnogo oborota
+For {index} from 0 to {count} − 1,Dlya {index} ot 0 do {count} − 1
+evenly around a circle,ravnomerno po okruzhnosti
 Placement,Razmeshchenie
 Angle and distance,Ugol i rasstoyanie
 "something is put where a marker is, dropped onto the ground and tilted onto its slope","predmet stavitsya na metku, opuskaetsya na zemlyu i naklonyaetsya po ee uklonu"

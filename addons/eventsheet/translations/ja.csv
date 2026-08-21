@@ -3306,6 +3306,7 @@ Colour picker,カラーピッカー
 Add titled card {title},見出しカード {title} を追加
 Add section {title},セクション {title} を追加
 Add form row {title} {value},フォーム行 {title} {value} を追加
+as {name},{name} として
 On %s button clicked,%s ボタンがクリックされたとき
 (on %s),(%s の上で)
 Mouse.Position,マウス.位置
@@ -3411,6 +3412,10 @@ Set position to {other},位置を {other} にする
 spawn point,出現位置
 another object,別のオブジェクト
 Align to the ground's slope,地面の傾きに合わせる
+Place On The Ground,地面に置く
+Place on the [b]ground[/b] [i]reach {reach}[/i],[b]地面[/b]に置く [i]探索距離 {reach}[/i]
+"Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.",3D ノードを真下にあるものの上に落とします - スポーン、アイテムのドロップ、建物の設置がいつも最後に行う接地です。探索距離内に何もなければその場に留まります。
+"How far down to look for ground, in units. Nothing moves when there is none within reach.",地面をどれだけ下まで探すか (単位)。範囲内に地面がなければ何も動きません。
 Is within {angle} of facing {target},{target} を向く角度が {angle} 以内
 Is not within {angle} of facing {target},{target} を向く角度が {angle} 以内ではない
 {target} is {side} {object},{target} は {object} の{side}
@@ -3420,6 +3425,8 @@ to the right of,右
 to the left of,左
 "the point at angle {angle}, distance {distance}",角度 {angle}、距離 {distance} の点
 {index}'s share of a full turn,{index} が受け持つ一周分の角度
+For {index} from 0 to {count} − 1,{index} を 0 から {count} − 1 まで
+evenly around a circle,円上に均等に
 Placement,配置
 Angle and distance,角度と距離
 "something is put where a marker is, dropped onto the ground and tilted onto its slope",目印の位置に置き、地面に落とし、その傾きに合わせる

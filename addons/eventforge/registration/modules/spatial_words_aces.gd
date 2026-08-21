@@ -130,6 +130,21 @@ static func _append_place(descriptors: Array[ACEDescriptor]) -> void:
 			"expression")],
 		PAGE_PLACE, "Set position to [b]{other}[/b]", "Node3D")
 		.described("Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used."))
+	# X5. The snap-to-floor run, written exactly as the reading recognises it - the ray straight down
+	# from where the object is, the cast, the is-empty guard and the hit taken back. Four lines,
+	# because that is what Godot needs; one row, because that is what it means.
+	descriptors.append(F.make_descriptor("Core", "PlaceOnGround3D",
+		"Place On The Ground", ACEDescriptor.ACEType.ACTION,
+		"var __drop_query_{uid} := PhysicsRayQueryParameters3D.create("
+		+ "global_position, global_position + Vector3.DOWN * {reach})\n"
+		+ "var __drop_hit_{uid} := get_world_3d().direct_space_state.intersect_ray(__drop_query_{uid})\n"
+		+ "if not __drop_hit_{uid}.is_empty():\n"
+		+ "\tglobal_position = __drop_hit_{uid}.position", "",
+		[F.make_param("reach", "String", "100.0", "Reach",
+			"How far down to look for ground, in units. Nothing moves when there is none within reach.",
+			"expression")],
+		PAGE_PLACE, "Place on the [b]ground[/b] [i]reach {reach}[/i]", "Node3D")
+		.described("Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach."))
 	descriptors.append(F.make_descriptor("Core", "AlignToGroundSlope3D",
 		"Align To The Ground's Slope", ACEDescriptor.ACEType.ACTION,
 		"basis = Basis(Quaternion(Vector3.UP, {normal})) * basis", "",

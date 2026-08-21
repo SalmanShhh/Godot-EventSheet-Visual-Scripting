@@ -108,6 +108,47 @@
   returned list rather than the list itself, so the reader always answered "no families" no matter
   what the archive held.
 
+### Changed - a popup builder kept under a name still reads as what it does
+
+- **`var card := EventSheetPopupUI.titled_card(dialog, "…")` reads as the card being added.** The
+  row says **dialog ▸ Add titled card "…"** with *as card* muted beside it, instead of a Local row
+  holding a call nobody can see the point of. What the rows below do to `card` is done to the card
+  this row just made, which is exactly what the muted name says. All three builders - titled card,
+  section and form row - and the unassigned spelling keeps the reading it already had.
+
+### Changed - a test sheet shows the test, not the harness
+
+- **The verdict bookkeeping folds away.** `var passed := true` - the line every gate in every test
+  opens with - no longer draws a Local row. The Check rows under it ARE the verdict, and the Include
+  bar already says this is a test sheet and how many checks it makes. Only a name the file actually
+  folds its verdict through, only for the exact `true` it is opened with, and only in a file under a
+  `tests/` folder whose entry point is `static func run() -> bool`.
+- **So does `_check` itself.** The eleven-line helper every file in the folder carries a copy of is
+  the harness the Check rows are drawn from, not something the test does, so it no longer appears
+  among the file's helpers. The same lines in a game script keep every row they had - what makes a
+  test a test is its folder, and a fold that forgot that would quietly eat rows out of a project.
+- Both are pure view. The sheet keeps both, the compiler emits both, and opening a folded test and
+  saving it untouched still puts back every byte.
+
+### Added - placing things on the ground, and the ring loop that says what it is for
+
+- **The drop to the floor is one idea, not four lines.** A ray straight down from where an object
+  stands, the cast, the `if not hit.is_empty():` guard and the hit taken back now read together as
+  the **Placement** pattern: the chip says *places crate on the ground under it* and its hover shows
+  all four lines, guard included. Every step is required and the ray has to go down from the very
+  place the object is put back to - a ray cast from somewhere else, or a hit taken by an object that
+  did not cast it, is refused, because a row promising "on the ground under it" has to mean it. The
+  rows the file wrote are untouched, so the bytes are untouched.
+- **Place On The Ground, authorable.** A new row on **3D: Place** writes exactly that run, with a
+  *reach* for how far down to look, and reopening the file reads it straight back as the pattern it
+  is. It sits beside the existing **Set Position To Another Object** and **Align To The Ground's
+  Slope**, which together are the three sentences a spawn, an item drop or a building placement ends
+  with.
+- **A ring loop's head says it is a ring.** `for i in n:` whose body gives each step its share of a
+  full turn now reads **For i from 0 to n − 1** with *evenly around a circle* muted beside it,
+  instead of a bare count twenty lines away from the trigonometry that explains it. A count whose
+  body does something else keeps the words it always had, and so does a walk over a collection.
+
 ### Added - the Hierarchy: parent and unparent as first-class words
 
 - **Add child, said by the parent.** `item.reparent($Hand)` reads **Hand ▸ Add child item**

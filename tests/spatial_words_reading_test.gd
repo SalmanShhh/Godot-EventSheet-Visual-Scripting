@@ -139,6 +139,7 @@ static func run() -> bool:
 	ok = _refusals() and ok
 	ok = _claims() and ok
 	ok = _authoring() and ok
+	ok = _loop_heads() and ok
 	ok = _round_trip() and ok
 	return ok
 
@@ -230,6 +231,43 @@ static func _claims() -> bool:
 	var lone: PackedStringArray = PackedStringArray(["var step := TAU * float(i) / float(n)"])
 	ok = _check("a share of a turn with nothing placed at it claims nothing",
 		_claim_words(lone, "polar"), "") and ok
+	# X5. The drop to the ground: four lines that only mean one thing together, and the guard that
+	# folds into them. The chip names the object whose place moved, because that is what a reader
+	# scanning the file came for.
+	var dropped: PackedStringArray = PackedStringArray([
+		"var query := PhysicsRayQueryParameters3D.create(crate.global_position,"
+		+ " crate.global_position + Vector3.DOWN * 100.0)",
+		"var ground := get_world_3d().direct_space_state.intersect_ray(query)",
+		"if not ground.is_empty():",
+		"\tcrate.global_position = ground.position"
+	])
+	ok = _check("a drop to the ground claims the placement pattern",
+		_claim_words(dropped, "placement"), "places crate on the ground under it") and ok
+	var drop_run: Dictionary = EventSheetPatternReadings.ground_drop_run(dropped)
+	ok = _check("how far down it looked is the file's own number",
+		str(drop_run.get("reach", "")), "100.0") and ok
+	ok = _check("and the guard rides along as evidence rather than as a row",
+		" | ".join(drop_run.get("evidence", PackedStringArray())).contains("if not ground.is_empty():"),
+		true) and ok
+	# A ray cast from somewhere ELSE that happens to move this object is a different question, and a
+	# row promising "on the ground under it" would be exactly the confident lie the grammar refuses.
+	var elsewhere: PackedStringArray = PackedStringArray([
+		"var query := PhysicsRayQueryParameters3D.create(muzzle.global_position,"
+		+ " muzzle.global_position + Vector3.DOWN * 100.0)",
+		"var ground := get_world_3d().direct_space_state.intersect_ray(query)",
+		"crate.global_position = ground.position"
+	])
+	ok = _check("a drop that did not cast its own ray claims nothing",
+		_claim_words(elsewhere, "placement"), "") and ok
+	# And a ray that goes any way but DOWN is not a drop to the ground either.
+	var sideways: PackedStringArray = PackedStringArray([
+		"var query := PhysicsRayQueryParameters3D.create(crate.global_position,"
+		+ " crate.global_position + Vector3.RIGHT * 100.0)",
+		"var ground := get_world_3d().direct_space_state.intersect_ray(query)",
+		"crate.global_position = ground.position"
+	])
+	ok = _check("nor does a ray cast sideways",
+		_claim_words(sideways, "placement"), "") and ok
 	# The two new pattern ids exist, and the words their chip says come from one table.
 	ok = _check("the placement pattern is registered",
 		EventSheetPatternFacts.PATTERN_IDS.has("placement"), true) and ok
@@ -263,6 +301,11 @@ static func _authoring() -> bool:
 		"RotateToward3DFacing": "basis = basis.slerp({facing}, {rate} * {delta_t})",
 		"SetPositionToObject3D": "global_position = {other}.global_position",
 		"AlignToGroundSlope3D": "basis = Basis(Quaternion(Vector3.UP, {normal})) * basis",
+		"PlaceOnGround3D": "var __drop_query_{uid} := PhysicsRayQueryParameters3D.create("
+			+ "global_position, global_position + Vector3.DOWN * {reach})\n"
+			+ "var __drop_hit_{uid} := get_world_3d().direct_space_state.intersect_ray(__drop_query_{uid})\n"
+			+ "if not __drop_hit_{uid}.is_empty():\n"
+			+ "\tglobal_position = __drop_hit_{uid}.position",
 		"IsWithinAngleOfFacing3D": "{forward}.dot({direction}) > cos(deg_to_rad({angle}))",
 		"IsBehindObject3D": "{target.}to_local({point}).z > 0.0",
 		"IsInFrontOfObject3D": "{target.}to_local({point}).z < 0.0",
@@ -328,6 +371,58 @@ static func _authoring() -> bool:
 		EventSheetSentence.expression_text(
 			"Vector2.from_angle(deg_to_rad(30.0)) * 100.0", _context()),
 		"the point at angle 30°, distance 100") and ok
+	# X5. What a Place On The Ground row writes is what the run reading recognises: the row's own
+	# emission, with the dock's `{uid}` baked, claims the placement pattern straight back.
+	var place: ACEDescriptor = shipped.get("PlaceOnGround3D", null)
+	var emitted: PackedStringArray = PackedStringArray()
+	if place != null:
+		emitted = str(place.codegen_template).replace("{uid}", "7").replace("{reach}", "100.0").split("\n")
+	ok = _check("a Place On The Ground row reads back as the drop it wrote",
+		_claim_words(emitted, "placement"), "places the object on the ground under it") and ok
+	ok = _check("and it is filed on the placing page",
+		str((place as ACEDescriptor).category) if place != null else "", "3D: Place") and ok
+	return ok
+
+
+## Gate six: the ring loop's HEAD, which is the one row a reader scanning for a circle looks at. The
+## same count with a different body is a count, and says so.
+static func _loop_heads() -> bool:
+	var ok: bool = true
+	var ring_body: PackedStringArray = PackedStringArray([
+		"var angle := TAU * float(i) / float(n)",
+		"var b = bullet_scene.instantiate()",
+		"add_child(b)",
+		"b.position = position + Vector2(cos(angle), sin(angle)) * radius"
+	])
+	var ring: Dictionary = EventSheetViewportReadingRows.loop_words(
+		PickFilter.CollectionKind.EXPRESSION, "i", "n", ring_body)
+	ok = _check("a ring loop's head counts to one less than the count",
+		str(ring.get("text", "")), "For i from 0 to n − 1") and ok
+	ok = _check("and says what the loop is for, beside it",
+		str(ring.get("note", "")), "evenly around a circle") and ok
+	# A literal count is the same ring, said with the number the author typed.
+	ok = _check("a ring around a literal count says the number",
+		str(EventSheetViewportReadingRows.loop_words(
+			PickFilter.CollectionKind.EXPRESSION, "i", "8", PackedStringArray([
+				"var angle := TAU * float(i) / float(8)",
+				"b.position = position + Vector2.from_angle(angle) * radius"
+			])).get("text", "")),
+		"For i from 0 to 8 − 1") and ok
+	# The same loop with an ordinary body is an ordinary loop, and keeps the words it always had.
+	ok = _check("a plain count keeps the words it always had",
+		str(EventSheetViewportReadingRows.loop_words(
+			PickFilter.CollectionKind.EXPRESSION, "i", "n",
+			PackedStringArray(["print(i)"])).get("text", "")), "") and ok
+	# A share of a turn taken for a DIFFERENT loop's index does not make this loop a ring.
+	ok = _check("nor does another loop's share of a turn",
+		str(EventSheetViewportReadingRows.loop_words(
+			PickFilter.CollectionKind.EXPRESSION, "i", "n",
+			PackedStringArray(["var angle := TAU * float(j) / float(n)"])).get("text", "")), "") and ok
+	# A walk over a collection is not a count, whatever its body says.
+	ok = _check("and a walk over children is still a walk over children",
+		str(EventSheetViewportReadingRows.loop_words(
+			PickFilter.CollectionKind.CHILDREN, "i", "get_children()",
+			ring_body).get("text", "")), "For each child i") and ok
 	return ok
 
 

@@ -121,7 +121,16 @@ static func _dialog_values() -> bool:
 			"dialog ▸ Add titled card \"Last condition removed\""],
 		["EventSheetPopupUI.panel_section(card, \"Fields\")", "card ▸ Add section \"Fields\""],
 		["EventSheetPopupUI.form_row(card, \"Event\", label)",
-			"card ▸ Add form row \"Event\" label"]
+			"card ▸ Add form row \"Event\" label"],
+		# The same builder KEPT under a name is still the one thing it does - the card added to the
+		# dialog - with the name it was kept under muted beside it, because what the rows below do to
+		# `card` is done to the card this row just made.
+		["var card: VBoxContainer = EventSheetPopupUI.titled_card(dialog, \"Last condition removed\")",
+			"dialog ▸ Add titled card \"Last condition removed\" as card"],
+		["var card := EventSheetPopupUI.titled_card(dialog, \"Last condition removed\")",
+			"dialog ▸ Add titled card \"Last condition removed\" as card"],
+		["var fields := EventSheetPopupUI.panel_section(card, \"Fields\")",
+			"card ▸ Add section \"Fields\" as fields"]
 	]:
 		ok = _check("\"%s\" reads \"%s\"" % [str(pair[0]), str(pair[1])],
 			_read(str(pair[0])), str(pair[1])) and ok

@@ -366,6 +366,18 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 			"adoptable": "", "ace_ids": PackedStringArray(["Core/MouseRayCollider3D",
 				"Core/MouseRayPoint3D", "Core/CastMouseRayInto3D"])
 		})
+	# X5. Putting a thing on the floor under it, which is four lines and one sentence. Claimed here
+	# rather than read as a row because the run straddles the `if not …is_empty()` guard: the rows the
+	# file wrote stay exactly as they are, and the chip and its evidence say what they are FOR.
+	var dropped: Dictionary = ground_drop_run(body)
+	if not dropped.is_empty():
+		var dropped_object: String = str(dropped.get("object", ""))
+		found.append({
+			"pattern": "placement", "evidence": dropped.get("evidence", PackedStringArray()),
+			"words": "places %s on the ground under it" % (dropped_object if not dropped_object.is_empty() \
+				else "the object"),
+			"adoptable": "", "ace_ids": PackedStringArray(["Core/PlaceOnGround3D"])
+		})
 	var canvas_pick: Dictionary = canvas_nearest_pick(body)
 	if not canvas_pick.is_empty():
 		found.append({
@@ -999,6 +1011,93 @@ static func cursor_ray_run(body: PackedStringArray) -> Dictionary:
 				evidence.append(text)
 				return {"evidence": evidence, "aimed": aimed}
 	return {}
+
+
+## X5. The drop-to-the-ground run a body writes, as {evidence, object, reach}, or {} when it writes
+## none. Four lines that say one thing - put this on the floor under it:
+##
+##   var query := PhysicsRayQueryParameters3D.create(crate.global_position,
+##           crate.global_position + Vector3.DOWN * 100.0)   a ray straight down from where it is
+##   var ground := get_world_3d().direct_space_state.intersect_ray(query)   cast
+##   if not ground.is_empty():                                              the guard, which folds
+##       crate.global_position = ground.position                            and take the hit
+##
+## Every step is required, and the ray has to go DOWN from the very place the object is put back to:
+## a ray cast from somewhere else, or a hit taken by an object that did not cast it, is a different
+## question, and reading it as "place on the ground" would promise something the file does not do.
+static func ground_drop_run(body: PackedStringArray) -> Dictionary:
+	var evidence: PackedStringArray = PackedStringArray()
+	var query_name: String = ""
+	var hit_name: String = ""
+	var placed: String = ""
+	var reach: String = ""
+	for line: String in body:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var step: Dictionary = EventSheetSentence.cursor_ray_step_parts(_cursor_ray_value(text))
+		match str(step.get("step", "")):
+			"query":
+				var from_text: String = str(step.get("from", "")).strip_edges()
+				var down: String = _straight_down_reach(str(step.get("to", "")), from_text)
+				if down.is_empty():
+					continue
+				query_name = _cursor_ray_name(text)
+				if query_name.is_empty():
+					continue
+				placed = from_text
+				reach = down
+				hit_name = ""
+				evidence = PackedStringArray([text])
+				continue
+			"cast":
+				if query_name.is_empty() or str(step.get("query", "")) != query_name:
+					continue
+				hit_name = _cursor_ray_name(text)
+				if not hit_name.is_empty():
+					evidence.append(text)
+				continue
+		if hit_name.is_empty():
+			continue
+		# The guard is not a step of its own - it is what the run does when the ray finds nothing -
+		# so it rides along as evidence and the reading folds it.
+		if text == "if not %s.is_empty():" % hit_name:
+			evidence.append(text)
+			continue
+		var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+		if assign_at <= 0 or text.substr(0, assign_at).strip_edges() != placed:
+			continue
+		if text.substr(assign_at + 3).strip_edges() != "%s.position" % hit_name:
+			continue
+		evidence.append(text)
+		return {"evidence": evidence, "object": _placed_object(placed), "reach": reach}
+	return {}
+
+
+## X5. Whose place a `crate.global_position` is, in the sheet's own words. A bare `position` is the
+## script's own object, which the row's object column already names.
+static func _placed_object(target: String) -> String:
+	var dot_at: int = target.rfind(".")
+	if dot_at <= 0:
+		return ""
+	return EventSheetSentence.object_of_reference(target.substr(0, dot_at).strip_edges())
+
+
+## X5. The `100.0` in `here + Vector3.DOWN * 100.0`, or "" when the far end of a ray is not straight
+## down from `here`. Both dimensions, because a top-down 2D game drops things onto the floor too.
+static func _straight_down_reach(to_text: String, from_text: String) -> String:
+	var bare: String = to_text.strip_edges()
+	var at: int = EventSheetSentence.top_level_index(bare, " + ")
+	if at <= 0 or bare.substr(0, at).strip_edges() != from_text:
+		return ""
+	var scaled: String = bare.substr(at + 3).strip_edges()
+	var times_at: int = EventSheetSentence.top_level_index(scaled, " * ")
+	if times_at <= 0:
+		return ""
+	var direction: String = scaled.substr(0, times_at).strip_edges()
+	if direction != "Vector3.DOWN" and direction != "Vector2.DOWN":
+		return ""
+	return scaled.substr(times_at + 3).strip_edges()
 
 
 ## X20. The nearest-on-the-CANVAS walk a body writes, as {evidence}, or {} when it writes none. The

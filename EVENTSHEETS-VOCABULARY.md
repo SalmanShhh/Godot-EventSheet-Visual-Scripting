@@ -3995,6 +3995,7 @@ the 3D page: moving, turning, placing, and the point at an angle
 - **Roll** (`degrees_per_second: String, delta_t: String, target: String`) - Rolls a 3D node about the way it faces - the bank a plane or a ship leans with.
 - **Rotate Toward Facing** (`facing: String, rate: String, delta_t: String`) - Turns a 3D node smoothly toward a facing instead of snapping to it - the way a turret leads its target.
 - **Set Position To Another Object** (`other: String`) - Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used.
+- **Place On The Ground** (`reach: String`) - Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.
 - **Align To The Ground's Slope** (`normal: String`) - Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill.
 - **Create Evenly Around A Circle** (`count: String, scene: String, centre: String, radius: String`) - Places a number of copies evenly around a circle - the bullet-hell ring, the radial menu, the circle of pillars.
 - **Store As Angle And Distance** (`from: String, to: String, angle_name: String, distance_name: String`) - Reads a place back the other way - as the angle from one point to another and how far apart they are, both named in one drop.

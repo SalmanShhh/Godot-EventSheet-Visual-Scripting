@@ -3306,6 +3306,7 @@ Colour picker,색 선택기
 Add titled card {title},제목 카드 {title} 추가
 Add section {title},섹션 {title} 추가
 Add form row {title} {value},양식 행 {title} {value} 추가
+as {name},{name} 로
 On %s button clicked,%s 버튼을 클릭했을 때
 (on %s),(%s 위에서)
 Mouse.Position,마우스.위치
@@ -3411,6 +3412,10 @@ Set position to {other},위치를 {other} 으로 설정
 spawn point,생성 지점
 another object,다른 오브젝트
 Align to the ground's slope,지면의 경사에 맞추기
+Place On The Ground,바닥에 놓기
+Place on the [b]ground[/b] [i]reach {reach}[/i],[b]바닥[/b]에 놓기 [i]탐색 거리 {reach}[/i]
+"Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.","3D 노드를 바로 아래에 있는 것 위로 떨어뜨립니다 - 스폰, 아이템 드롭, 건물 배치가 언제나 마지막에 하는 바닥 맞춤입니다. 탐색 거리 안에 아무것도 없으면 그 자리에 그대로 둡니다."
+"How far down to look for ground, in units. Nothing moves when there is none within reach.",바닥을 아래로 얼마나 멀리 찾을지 (단위). 범위 안에 바닥이 없으면 아무것도 움직이지 않습니다.
 Is within {angle} of facing {target},{target} 을(를) 바라보는 각도가 {angle} 이내
 Is not within {angle} of facing {target},{target} 을(를) 바라보는 각도가 {angle} 이내가 아님
 {target} is {side} {object},{target} 은(는) {object} 의 {side}
@@ -3420,6 +3425,8 @@ to the right of,오른쪽
 to the left of,왼쪽
 "the point at angle {angle}, distance {distance}","각도 {angle}, 거리 {distance} 의 점"
 {index}'s share of a full turn,한 바퀴에서 {index} 의 몫
+For {index} from 0 to {count} − 1,{index} 를 0 부터 {count} − 1 까지
+evenly around a circle,원 둘레에 고르게
 Placement,배치
 Angle and distance,각도와 거리
 "something is put where a marker is, dropped onto the ground and tilted onto its slope","표식 위치에 놓고, 지면에 떨어뜨리고, 그 경사에 맞춘다"

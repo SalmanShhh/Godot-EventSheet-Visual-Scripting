@@ -768,6 +768,16 @@ pivot turns.
   indented twins do, byte-exact, and `@export_group` is recognised in either order around its `##` doc.
 
   ![The lifecycle words on two scripts of one scene: the scene's own script reading On start of layout, On end of layout, On draw with its drawing rows and On close, and the script on a child node reading On created and On destroyed instead](images/opened-script-words5.png)
+- **A loop, a drop and a test say what they are for.** `for i in n:` whose body gives each step its
+  share of a full turn reads `For i from 0 to n - 1 - evenly around a circle`, so the ring is on the
+  head instead of three lines of trigonometry below it; the same count with an ordinary body keeps
+  the words it always had. A ray straight down, the cast, the `if not hit.is_empty():` guard and the
+  hit taken back are claimed together as the Placement pattern, with all four lines on the hover. And
+  a file under `tests/` whose entry point is `static func run() -> bool` folds its `var passed := true`
+  and its `_check` helper into the head, because the Check rows are the verdict and the bar already
+  counts them - the same lines in a game script keep every row.
+
+  ![Three opened scripts: a ring loop whose head reads For i from 0 to n minus 1 evenly around a circle beside an ordinary count that does not, a drop-to-the-ground run wearing its pattern chips, and a test sheet whose head says test sheet with 2 checks and whose verdict local and check helper have folded away](images/reading-ring-and-test-fold.png)
 - **Numbers read the way a person writes them.** `300.0` reads `300`, `0.50` reads `0.5`,
   `1_000_000` reads `1,000,000`, `1e3` reads `1000`, and the constants a reader recognises are named
   (`1.5707963` reads `π/2`; `τ`, `√2` and `√3` likewise, from a spelling long enough to mean them -

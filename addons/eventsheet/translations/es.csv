@@ -3306,6 +3306,7 @@ Colour picker,Selector de color
 Add titled card {title},Anadir tarjeta titulada {title}
 Add section {title},Anadir seccion {title}
 Add form row {title} {value},Anadir fila de formulario {title} {value}
+as {name},como {name}
 On %s button clicked,Al hacer clic con el boton %s
 (on %s),(en %s)
 Mouse.Position,Raton.Posicion
@@ -3411,6 +3412,10 @@ Set position to {other},Poner posicion en {other}
 spawn point,punto de aparicion
 another object,otro objeto
 Align to the ground's slope,Alinear con la pendiente del suelo
+Place On The Ground,Colocar en el suelo
+Place on the [b]ground[/b] [i]reach {reach}[/i],Colocar en el [b]suelo[/b] [i]alcance {reach}[/i]
+"Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.","Deja caer un nodo 3D en vertical sobre lo que haya debajo - el ajuste al suelo con el que terminan todas las apariciones, sueltas de objetos y colocaciones de edificios. Se queda donde está si no hay nada al alcance."
+"How far down to look for ground, in units. Nothing moves when there is none within reach.","Hasta qué profundidad buscar suelo, en unidades. Si no hay ninguno al alcance, nada se mueve."
 Is within {angle} of facing {target},Esta dentro de {angle} de mirar a {target}
 Is not within {angle} of facing {target},No esta dentro de {angle} de mirar a {target}
 {target} is {side} {object},{target} esta {side} {object}
@@ -3420,6 +3425,8 @@ to the right of,a la derecha de
 to the left of,a la izquierda de
 "the point at angle {angle}, distance {distance}","el punto en el angulo {angle}, distancia {distance}"
 {index}'s share of a full turn,la parte de {index} de una vuelta completa
+For {index} from 0 to {count} − 1,Para {index} de 0 a {count} − 1
+evenly around a circle,repartidos por igual en un círculo
 Placement,Colocacion
 Angle and distance,Angulo y distancia
 "something is put where a marker is, dropped onto the ground and tilted onto its slope","algo se coloca donde hay un marcador, se deja caer al suelo y se inclina con su pendiente"

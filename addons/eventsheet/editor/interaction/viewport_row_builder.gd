@@ -439,9 +439,17 @@ func group_helper_verb_rows(rows: Array[EventRowData], sheet: EventSheetResource
 	# the helper's functions start with the first one that does something.
 	var folds_constructor: bool = EventSheetEditorSourceFacts.facts(_viewport._sheet as EventSheetResource) \
 		.get("helper_of") is Dictionary
+	# W9 - and the same rule for a test's `_check`: it is the harness the Check rows are DRAWN from,
+	# the same eleven lines in every file in the folder, and the Include bar already says this is a
+	# test sheet and how many checks it makes. Folded here rather than with the other head facts
+	# because the trailing verbs are appended to the list after that pass has run.
+	var folds_harness: bool = _folds_test_harness(sheet)
 	for row_data: EventRowData in rows:
 		var owner_function: EventFunction = row_data.source_resource as EventFunction
 		if folds_constructor and owner_function != null and owner_function.function_name == "_init":
+			continue
+		if folds_harness and owner_function != null \
+				and owner_function.function_name == EventSheetToolFiles.CHECK_HELPER:
 			continue
 		if owner_function != null and row_data.row_type == EventRowData.RowType.EVENT and not owner_function.expose_as_ace:
 			_shift_row_indent(row_data, 1)
@@ -724,6 +732,20 @@ func _fold_editor_plugin_facts(rows: Array[EventRowData], sheet: EventSheetResou
 			continue
 		kept.append(row_data)
 	return kept
+
+
+## W9. True when this sheet is a TEST sheet, whose `_check` helper is the harness the Check rows are
+## drawn from rather than anything the test does. False for every file that is not one, which is
+## every game script - and for a test opened with no file behind it, since the folder a file lives in
+## is half of what makes it a test.
+func _folds_test_harness(sheet: EventSheetResource) -> bool:
+	if sheet == null:
+		return false
+	var source_path: String = str(sheet.external_source_path).strip_edges()
+	if source_path.is_empty():
+		return false
+	return EventSheetToolFiles.kind_of(EventSheetToolFiles.lines_of_sheet(sheet), source_path) \
+		== EventSheetToolFiles.KIND_TEST_SHEET
 
 
 ## The prose of a comment-only block, "" when it carries only `## @ace_*` annotations (which say
@@ -7083,8 +7105,13 @@ func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[Event
 	var ray_groups: Dictionary = _cursor_ray_groups(event_row.actions)
 	var ray_leads: Dictionary = ray_groups.get("leads", {})
 	var ray_consumed: Dictionary = ray_groups.get("consumed", {})
+	# W9. And the same for a test's verdict local: the action lane does not draw it, so a Local row
+	# above the gate would be the one place the folded bookkeeping came back.
+	var verdict_consumed: Dictionary = _test_verdict_consumed(event_row)
 	for action_index in event_row.actions.size():
 		if ray_leads.has(action_index) or ray_consumed.has(action_index):
+			continue
+		if verdict_consumed.has(action_index):
 			continue
 		var action: ACEAction = event_row.actions[action_index] as ACEAction
 		if action == null:
@@ -8853,12 +8880,24 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# A filtered or limited pick says more than the loop words can carry, so it keeps its own text.
 		var loop_reading: Dictionary = {}
 		if pick.predicate_expression.strip_edges().is_empty() and pick.pick_first_n <= 0:
+			var collection_words: String = _pick_collection_words(pick)
+			# X31 - only a plain count can be a ring, and only a ring needs its body read. Deciding
+			# that from the HEAD keeps every other loop in the file free of a body walk.
+			var loop_body: PackedStringArray = PackedStringArray()
+			if EventSheetViewportReadingRows.ring_loop_possible(pick.iterator_name, collection_words):
+				loop_body = _loop_body_lines(event_row)
 			loop_reading = EventSheetViewportReadingRows.loop_words(
-				pick.collection_kind, pick.iterator_name, _pick_collection_words(pick))
+				pick.collection_kind, pick.iterator_name, collection_words, loop_body)
 		var loop_object: String = str(loop_reading.get("object", ""))
+		# X31 - what the loop is FOR rides in the head's own cell, after a "·": the condition lane is
+		# one column wide, and a note in a span of its own is the half a reader never gets to see.
+		var loop_text: String = str(loop_reading.get("text", ""))
+		var loop_note: String = str(loop_reading.get("note", ""))
+		if not loop_text.is_empty() and not loop_note.is_empty():
+			loop_text = "%s · %s" % [loop_text, loop_note]
 		spans.append(
 			_make_span(
-				str(loop_reading.get("text", "")) if not loop_reading.is_empty() else _format_pick_filter(pick),
+				loop_text if not loop_reading.is_empty() else _format_pick_filter(pick),
 				SemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
@@ -8960,8 +8999,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# W12 - the run of rows a multi-line `{...}` / `[...]` used as a VALUE was split into is one
 		# statement, so it reads as one row with the entries as chips and no orphan bracket line.
 		var literal_groups: Dictionary = EventSheetValueLiteralRows.groups(event_row.actions)
+		# W9 - a test's `var passed := true` is the harness's bookkeeping, and the Check rows are the
+		# verdict it stands for.
+		var verdict_consumed: Dictionary = _test_verdict_consumed(event_row)
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
+			if bool(verdict_consumed.get(action_index, false)):
+				continue
 			if bool(task_notes.get("consumed", {}).get(action_index, false)):
 				continue
 			# An entry line or the closing bracket of a literal the lead row above already drew. Skipped
@@ -9494,9 +9538,13 @@ func _count_event_lines(event_row: EventRow) -> int:
 	var literal_groups: Dictionary = EventSheetValueLiteralRows.groups(event_row.actions)
 	var literal_consumed: Dictionary = literal_groups.get("consumed", {})
 	var literal_leads: Dictionary = literal_groups.get("leads", {})
+	# W9 mirrors the span pass too: a test's folded verdict local draws no line in either lane.
+	var verdict_consumed: Dictionary = _test_verdict_consumed(event_row)
 	var literal_index: int = -1
 	for action_resource in event_row.actions:
 		literal_index += 1
+		if bool(verdict_consumed.get(literal_index, false)):
+			continue
 		if bool(literal_consumed.get(literal_index, false)):
 			continue
 		if literal_leads.has(literal_index):
@@ -11092,6 +11140,18 @@ func _pick_collection_text(pick: PickFilter) -> String:
 ## Editor.SelectedObjects, and reading it as the engine call spells out plumbing nobody wrote.
 func _pick_collection_words(pick: PickFilter) -> String:
 	return EventSheetSentence.editor_words(_pick_collection_text(pick))
+
+
+## X31. The lines a loop row RUNS, in file order - what lets the loop head say what the loop is for.
+## The row's own actions, because that is where a ring loop's share-of-a-turn line is written; a
+## sub-event under the loop is a loop of its own and answers for itself.
+func _loop_body_lines(event_row: EventRow) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if event_row == null:
+		return lines
+	for action_entry: Variant in event_row.actions:
+		EventSheetViewportReadingRows.append_body_lines(action_entry, lines)
+	return lines
 
 
 ## R32. True when this event runs every frame AND the sheet is a @tool script - the one combination
@@ -14137,6 +14197,41 @@ func _build_arrangement_header_row(sheet: EventSheetResource, mode: int, bucket_
 
 ## X2 / X30. The camera-ray runs in one action lane, as {"leads": {index: {…}}, "consumed": {…}} -
 ## the same shape every other run grouper here answers in.
+## W9. The action indices a TEST sheet's verdict bookkeeping sits at - the `var passed := true` a
+## file opens each of its gates with. Not something the test DOES: the Check rows under it are the
+## verdict, and the Include bar already says this is a test sheet and how many checks it makes. Every
+## other file, and every other local, comes back empty and draws exactly as it always did.
+##
+## Answers a plain {index: true} set, which is the `consumed` half of the run-grouper shape the lane
+## already skips by - so the row is not drawn, the line index does not advance, and the height count
+## agrees without a second rule.
+func _test_verdict_consumed(event_row: EventRow) -> Dictionary:
+	var consumed: Dictionary = {}
+	if event_row == null:
+		return consumed
+	var context: Dictionary = sentence_context()
+	if str(context.get("tool_file_kind", "")) != EventSheetToolFiles.KIND_TEST_SHEET:
+		return consumed
+	var accumulators: PackedStringArray = context.get("test_accumulators", PackedStringArray())
+	if accumulators.is_empty():
+		return consumed
+	for action_index: int in event_row.actions.size():
+		var action: ACEAction = event_row.actions[action_index] as ACEAction
+		if action == null:
+			continue
+		var declaration: Dictionary = grammar_action_declaration(action)
+		if declaration.is_empty():
+			continue
+		if not accumulators.has(str(declaration.get("name", ""))):
+			continue
+		# Only the exact `true` the verdict is opened with. A name that happens to match, holding
+		# anything else, is an ordinary local and keeps its row.
+		if str(declaration.get("raw_value", "")).strip_edges() != "true":
+			continue
+		consumed[action_index] = true
+	return consumed
+
+
 func _cursor_ray_groups(actions: Array) -> Dictionary:
 	var leads: Dictionary = {}
 	var consumed: Dictionary = {}

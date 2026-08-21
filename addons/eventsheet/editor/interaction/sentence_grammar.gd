@@ -1792,6 +1792,13 @@ static func _declaration_statement(text: String, keyword: String, context: Dicti
 		name_text = name_text.substr(0, colon_at).strip_edges()
 	if value_text.is_empty() or not is_identifier(name_text):
 		return {}
+	# W7. A popup builder is an ACTION on the thing it adds to, not a value the reader introduced:
+	# `var card := EventSheetPopupUI.titled_card(dialog, "…")` reads as the card being ADDED to the
+	# dialog, with the name it was kept under muted beside it - because what the next rows do to
+	# `card` is done to the card this row just made.
+	var built: Dictionary = _popup_ui_declaration(name_text, value_text, context)
+	if not built.is_empty():
+		return built
 	# An inferred or annotation-free local still shows a type word, taken from the value when the
 	# value says plainly what it is - a chip reading "value" on `var count := 0` helps nobody.
 	if declared_type.is_empty():
@@ -9770,6 +9777,22 @@ static func popup_ui_call(target: String, method: String, args: PackedStringArra
 			return {}
 		values["title"] = [expression_text(args[1], context), "value"]
 	return _patterned(_sentence(object_name, str(POPUP_UI_BUILDERS[method]), values), "dialog")
+
+
+## W7. `var card := EventSheetPopupUI.titled_card(dialog, "Last condition removed")` as the one thing
+## it does: `dialog ▸ Add titled card "Last condition removed"`, with `as card` muted beside it. {}
+## when the value is not one of the three builders, which leaves every other local a local.
+static func _popup_ui_declaration(name_text: String, value_text: String,
+		context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(value_text.strip_edges())
+	if call.is_empty():
+		return {}
+	var built: Dictionary = popup_ui_call(str(call.get("target", "")), str(call.get("method", "")),
+		call.get("args", PackedStringArray()), context)
+	if built.is_empty():
+		return {}
+	_append_note(built, _fill(translate("as {name}"), {"name": name_text}))
+	return built
 
 
 ## The event-sheet reading of one statement in the five families above, or {} to let the rest of the

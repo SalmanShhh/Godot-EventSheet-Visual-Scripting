@@ -3306,6 +3306,7 @@ Colour picker,颜色选择器
 Add titled card {title},添加标题卡片 {title}
 Add section {title},添加分区 {title}
 Add form row {title} {value},添加表单行 {title} {value}
+as {name},作为 {name}
 On %s button clicked,点击 %s 键时
 (on %s),(在 %s 上)
 Mouse.Position,鼠标.位置
@@ -3411,6 +3412,10 @@ Set position to {other},将位置设为 {other}
 spawn point,出生点
 another object,另一个对象
 Align to the ground's slope,对齐到地面坡度
+Place On The Ground,放到地面上
+Place on the [b]ground[/b] [i]reach {reach}[/i],放到[b]地面[/b]上 [i]探测距离 {reach}[/i]
+"Drops a 3D node straight down onto whatever is under it - the snap-to-floor every spawn, item drop and building placement ends with. Leaves it where it is when nothing is within reach.",让 3D 节点垂直落到正下方的物体上 - 每次生成、掉落物品和建造摆放最后都要做的贴地。探测距离内没有东西时保持原位。
+"How far down to look for ground, in units. Nothing moves when there is none within reach.",向下寻找地面的距离 (单位)。范围内没有地面时不会移动任何东西。
 Is within {angle} of facing {target},朝向 {target} 的角度在 {angle} 以内
 Is not within {angle} of facing {target},朝向 {target} 的角度不在 {angle} 以内
 {target} is {side} {object},{target} 在 {object} 的{side}
@@ -3420,6 +3425,8 @@ to the right of,右侧
 to the left of,左侧
 "the point at angle {angle}, distance {distance}",角度 {angle}、距离 {distance} 处的点
 {index}'s share of a full turn,{index} 在整圈中所占的一份
+For {index} from 0 to {count} − 1,对 {index} 从 0 到 {count} − 1
+evenly around a circle,均匀分布在圆周上
 Placement,放置
 Angle and distance,角度与距离
 "something is put where a marker is, dropped onto the ground and tilted onto its slope",把东西放到标记处、落到地面上，并顺着地面的坡度倾斜
