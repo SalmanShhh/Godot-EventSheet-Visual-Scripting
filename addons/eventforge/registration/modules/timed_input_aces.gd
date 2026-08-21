@@ -27,6 +27,15 @@ const TIMED := "Timed Input"
 ## into measuring against two different clocks.
 const NOW := "Time.get_ticks_msec() / 1000.0"
 
+## The window OWNS the prompt: opening one puts the control's key on a label, closing one takes it
+## off again, so a prompt can never outlive the moment it was asking about. Both rows carry the same
+## optional Prompt parameter, whose value is the extra line itself - empty by default, which is why
+## a window authored before this existed still writes the two lines it always wrote, byte for byte.
+## The parameter hints name the two little editors that compose that line out of a label and a
+## control, so the row never asks anybody to type code into it.
+const PROMPT_SHOW_HINT := "input_prompt_show"
+const PROMPT_CLEAR_HINT := "input_prompt_clear"
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
@@ -40,9 +49,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 ## The window itself: open it, ask about it, close it. The flag and the deadline are two ordinary
 ## variables the sheet declares, which is what lets an opened script read back as these rows.
 static func _windows(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "OpenInputWindow", "Open Input Window", ACEDescriptor.ACEType.ACTION, "{open_flag} = true\n{deadline} = %s + {seconds}" % NOW, "", [F.make_param("open_flag", "String", "window_open", "Window flag", "The yes-no variable that says the window is open.", "variable_reference"), F.make_param("deadline", "String", "window_until", "Deadline", "The number variable that holds the moment it closes.", "variable_reference"), F.make_param("seconds", "String", "0.5", "Seconds", "How long the player has.", "expression")], TIMED, "Open input window for {seconds} s")
+	descriptors.append(F.make_descriptor("Core", "OpenInputWindow", "Open Input Window", ACEDescriptor.ACEType.ACTION, "{open_flag} = true\n{deadline} = %s + {seconds}{prompt}" % NOW, "", [F.make_param("open_flag", "String", "window_open", "Window flag", "The yes-no variable that says the window is open.", "variable_reference"), F.make_param("deadline", "String", "window_until", "Deadline", "The number variable that holds the moment it closes.", "variable_reference"), F.make_param("seconds", "String", "0.5", "Seconds", "How long the player has.", "expression"), F.make_param("prompt", "String", "", "Prompt", "The label that shows the player which control to press while the window is open. Leave it off and the window opens silently.", PROMPT_SHOW_HINT)], TIMED, "Open input window for {seconds} s")
 		.described("Opens a window the player has a moment to answer. Measured on the engine clock, which keeps running while the game is paused.").featured())
-	descriptors.append(F.make_descriptor("Core", "CloseInputWindow", "Close Input Window", ACEDescriptor.ACEType.ACTION, "{open_flag} = false", "", [F.make_param("open_flag", "String", "window_open", "Window flag", "The yes-no variable that says the window is open.", "variable_reference")], TIMED, "Close input window")
+	descriptors.append(F.make_descriptor("Core", "CloseInputWindow", "Close Input Window", ACEDescriptor.ACEType.ACTION, "{open_flag} = false{prompt}", "", [F.make_param("open_flag", "String", "window_open", "Window flag", "The yes-no variable that says the window is open.", "variable_reference"), F.make_param("prompt", "String", "", "Prompt", "The label the prompt was put on, cleared as the window shuts. Leave it off and nothing is cleared.", PROMPT_CLEAR_HINT)], TIMED, "Close input window")
 		.described("Shuts the window whether or not the player answered - put it after the graded branches so one press cannot count twice."))
 	descriptors.append(F.make_descriptor("Core", "PressedInInputWindow", "Pressed In The Window", ACEDescriptor.ACEType.CONDITION, "({open_flag} and event.is_action_pressed({action}) and {deadline} - %s > 0.0)" % NOW, "", [F.make_param("open_flag", "String", "window_open", "Window flag", "The yes-no variable that says the window is open.", "variable_reference"), F.make_param("action", "String", F.default_input_action(), "Control", "The control the window is waiting for.", "input_action", F.input_action_options()), F.make_param("deadline", "String", "window_until", "Deadline", "The number variable that holds the moment it closes.", "variable_reference")], TIMED, "{action} pressed in the window")
 		.described("True when the control goes down while the window is still open, used inside an input event. Pair it with the grade to tell a perfect answer from a good one.").featured())

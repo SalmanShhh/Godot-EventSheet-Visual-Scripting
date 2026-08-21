@@ -2879,6 +2879,11 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# admitted, they would claim every assignment, every resource load and every list length in
 	# every project, and the specific rows those lines belong to would stop being recognised. They
 	# author fine; they just do not get to speak for lines nobody wrote them for.
+	# CloseInputWindow stays out for a second reason now that it carries an optional Prompt tail:
+	# `{open_flag} = false{prompt}` ends in a capture that needs at least one character, so admitted
+	# it would claim every `x = false…` line in every project rather than the one row it writes.
+	# (Its sibling OpenInputWindow needs no entry here: a template spanning two lines can never match
+	# the single lines the reverse index is asked about, so the tail widens nothing.)
 	"StartListeningForControl", "StopListeningForControl", "CloseInputWindow", "CountMashPress",
 	"UsePalette", "CurrentWeapon", "SecretsFoundCount", "SecretAlreadyFound", "OffBeatBy",
 	# W6. Add Item authors one line of a menu; `x.add_item("y", 1)` is written by dropdowns, lists

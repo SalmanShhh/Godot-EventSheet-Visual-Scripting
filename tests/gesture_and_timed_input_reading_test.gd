@@ -89,7 +89,10 @@ static var SHIPPED_TEMPLATES: Dictionary = {
 	# No "On node" prefix on this one: its second line leads with a slot rather than a member, so the
 	# registry leaves the whole template alone - which is the spelling a hand-written gyro aim has.
 	"TouchAimByGyro": "rotate_y(-{rate}.y * delta)\n{camera}.rotate_x(-{rate}.x * delta)",
-	"OpenInputWindow": "{open_flag} = true\n{deadline} = Time.get_ticks_msec() / 1000.0 + {seconds}",
+	# X28's Prompt tail sits at the very END of both window templates and ships blank, which is what
+	# lets the window own the prompt without moving a single byte of what a promptless window writes.
+	"OpenInputWindow": "{open_flag} = true\n{deadline} = Time.get_ticks_msec() / 1000.0 + {seconds}{prompt}",
+	"CloseInputWindow": "{open_flag} = false{prompt}",
 	"InputWindowMissed": "({open_flag} and Time.get_ticks_msec() / 1000.0 >= {deadline})",
 	"SwitchToNextWeapon": "{index} = ({index} + 1) % {weapons}.size()",
 	"SwitchToPreviousWeapon": "{index} = ({index} - 1 + {weapons}.size()) % {weapons}.size()",

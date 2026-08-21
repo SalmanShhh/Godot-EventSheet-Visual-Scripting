@@ -150,7 +150,7 @@ static func _sensor_assignment(line: String) -> Dictionary:
 	return {}
 
 
-## X28. The input window this file writes, as {flag, deadline, action, perfect}, or {} when it writes
+## X28. The input window this file writes, as {flag, deadline, action, perfect, prompt}, or {} when it writes
 ## none. Three marks together and nothing less: a yes-no flag set true, a deadline set to the clock
 ## plus something, and a control tested while the flag is up. Two of the three is a timer.
 static func input_window_facts(lines: PackedStringArray) -> Dictionary:
@@ -158,6 +158,7 @@ static func input_window_facts(lines: PackedStringArray) -> Dictionary:
 	var deadline: String = ""
 	var action: String = ""
 	var perfect: String = ""
+	var prompt: String = ""
 	for line: String in lines:
 		var text: String = line.strip_edges()
 		if text.is_empty() or text.begins_with("#"):
@@ -176,9 +177,14 @@ static func input_window_facts(lines: PackedStringArray) -> Dictionary:
 			action = _action_tested(text)
 		if perfect.is_empty():
 			perfect = _perfect_cutoff(text)
+		if prompt.is_empty():
+			prompt = EventSheetSentence.input_window_prompt_label(text)
 	if flag.is_empty() or deadline.is_empty():
 		return {}
-	return {"flag": flag, "deadline": deadline, "action": action, "perfect": perfect}
+	# The label a prompt goes on, when the file puts one up. Unlike the flag and the deadline it is
+	# not required: a window that never tells the player which key to press is still a window.
+	return {"flag": flag, "deadline": deadline, "action": action, "perfect": perfect,
+		"prompt": prompt}
 
 
 ## `Time.get_ticks_msec() / 1000.0 + seconds` - the clock plus something - or false for anything else.
