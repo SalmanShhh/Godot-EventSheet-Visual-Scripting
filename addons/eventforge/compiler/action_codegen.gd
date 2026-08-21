@@ -23,7 +23,30 @@ static func generate_action(action: ACEAction, target_default: String = "", host
 
 	var params: Dictionary = _params_with_scope_target(action, target_default, template)
 	params = _params_with_host(params, host_default, template)
+	params = _params_with_blank_defaults(action, params)
 	return _apply_template(template, params)
+
+
+## Fills in the parameters a saved row never answered, but ONLY the ones whose shipped answer is
+## nothing at all. This is what lets an already-shipped row grow an OPTIONAL trailing parameter
+## without rewriting anybody's sheet: a row saved before the parameter existed has no value for it,
+## and without this its slot would be left in the emitted file as the literal text `{name}`. Blank
+## defaults only, so a row that omitted a parameter with a real default keeps whatever it emitted
+## before - this can add nothing but emptiness where broken text used to go.
+static func _params_with_blank_defaults(action: ACEAction, params: Dictionary) -> Dictionary:
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(action.provider_id, action.ace_id)
+	if descriptor == null:
+		return params
+	var filled: Dictionary = params
+	for parameter: ACEParam in descriptor.params:
+		if params.has(parameter.id) or not (parameter.default_value is String):
+			continue
+		if not str(parameter.default_value).is_empty():
+			continue
+		if filled == params:
+			filled = params.duplicate()
+		filled[parameter.id] = ""
+	return filled
 
 
 ## Returns the action's params, with a "With node X:" scope's target folded in when applicable: the

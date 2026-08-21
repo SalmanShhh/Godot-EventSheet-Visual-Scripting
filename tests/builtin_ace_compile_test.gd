@@ -23,6 +23,13 @@ extends RefCounted
 ## compiler-injected companion state (frame-budget / every-N-seconds accumulators emitted as
 ## sibling declarations), a preloaded user resource, or a user-supplied call/connect target.
 ## Their templates are exercised by their own feature tests; here they are listed, not dropped.
+## Hints whose parameter carries a WHOLE EXTRA LINE rather than a value spliced into one - a picker
+## composes it out of ordinary fields, and its slot sits at the very end of the template so a blank
+## answer leaves the row writing exactly the lines it wrote before the parameter existed. Blank is
+## therefore the right fill here: synthesizing a String for one would staple a stray literal onto the
+## end of a working statement and fail an ACE that is perfectly correct.
+const OWN_LINE_HINTS: Array[String] = ["input_prompt_show", "input_prompt_clear"]
+
 const NOT_STANDALONE: Array[String] = [
 	"LoopBreak", "LoopContinue", "ReturnValue",
 	"EveryXSeconds", "TriggerOnce", "SingleFlight", "HasChanged",  # call sheet-synthesized companion state (an accumulator / an edge-test helper / a busy latch / a previous-value slot)
@@ -134,6 +141,8 @@ static func _fill_params(d: ACEDescriptor) -> Dictionary:
 			params[p.id] = "sig"                     # the declared scaffold signal
 		elif d.codegen_template.contains("{%s.}" % p.id) or d.codegen_template.contains("{, %s}" % p.id):
 			params[p.id] = default.strip_edges()     # optional {id.} prefix / {, id} arg - default or "" both drop cleanly
+		elif OWN_LINE_HINTS.has(hint):
+			params[p.id] = default                   # an optional WHOLE LINE (see OWN_LINE_HINTS) - blank means no line
 		elif not default.strip_edges().is_empty():
 			params[p.id] = default                   # concrete default - used verbatim (self, KEY_SPACE, "enemies", a member name, …)
 		else:
