@@ -25,17 +25,17 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_collision_exception_with` | [Ignore Collisions With](ace:Core/IgnoreCollisionsWith) | Movement | Vocabulary |
 | `add_command` | [Add Command](ace:Core/AddCommandPaletteCommand) | Editor Tools: Panels & menus | Vocabulary |
 | `add_control_to_bottom_panel` | [Add Bottom Panel](ace:Core/AddBottomPanel) | Editor Tools: Panels & menus | Vocabulary |
-| `add_control_to_dock` | [Add Dock](ace:Core/AddEditorDock) | Editor Tools | Vocabulary |
-| `add_custom_type` | [Add Object Type](ace:Core/AddEditorObjectType) | Editor Tools | Vocabulary |
+| `add_control_to_dock` | [Add Dock](ace:Core/AddEditorDock) | Editor Tools: Panels & menus | Vocabulary |
+| `add_custom_type` | [Add Object Type](ace:Core/AddEditorObjectType) | Editor Tools: Panels & menus | Vocabulary |
 | `add_exception` | [Ignore Node In RayCast (2D)](ace:Core/RayCast2DAddException) | Raycast 2D | Vocabulary |
-| `add_inspector_plugin` | [Add Properties Bar Add-on](ace:Core/AddEditorInspectorPlugin) | Editor Tools | Vocabulary |
+| `add_inspector_plugin` | [Add Properties Bar Add-on](ace:Core/AddEditorInspectorPlugin) | Editor Tools: Properties bar | Vocabulary |
 | `add_item` | [Add Item](ace:Core/ListAddItem) | UI | Vocabulary |
 | `add_node` | [Select Node In Editor](ace:Core/SelectNodeInEditor) | Editor Tools | Vocabulary |
 | `add_theme_color_override` | [Set Font Colour](ace:Core/SetFontColour) | Text | Vocabulary |
 | `add_theme_font_override` | [Set Font](ace:Core/SetFontFile) | Text | Vocabulary |
 | `add_theme_font_size_override` | [Set Font Size](ace:Core/SetFontSize) | Text | Vocabulary |
 | `add_to_group` | [Add To Group](ace:Core/AddToGroup) | Groups | Vocabulary |
-| `add_tool_menu_item` | [Add Tools Menu Item](ace:Core/AddToolsMenuItem) | Editor Tools | Vocabulary |
+| `add_tool_menu_item` | [Add Tools Menu Item](ace:Core/AddToolsMenuItem) | Editor Tools: Panels & menus | Vocabulary |
 | `affine_inverse` | [Screen Point To World](ace:Core/ScreenPointToWorld) | Math & Random | Vocabulary |
 | `alert` | [Alert](ace:Core/BrowserAlert) | Browser | Vocabulary |
 | `all` | [All Match](ace:Core/ArrayAll) | Variables: Array | Vocabulary |
@@ -164,9 +164,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `erase` | [Delete Key](ace:Core/DictDeleteKey) | Variables: Dictionary | Vocabulary |
 | `erase_action` | [Remove Input Action](ace:Core/InputRemoveAction) | Input | Vocabulary |
 | `erase_cell` | [Erase Tile](ace:Core/TileMapEraseCell) | Tilemap | Vocabulary |
-| `error_string` | [Write Version Stamp](ace:Core/WriteVersionStamp) | Editor Tools | Vocabulary |
+| `error_string` | [Write Version Stamp](ace:Core/WriteVersionStamp) | Editor Tools: Import & export | Vocabulary |
 | `exclude_parent` | [RayCast Ignores Its Parent (2D)](ace:Core/RayCast2DSetExcludeParent) | Raycast 2D | Vocabulary |
-| `exists` | [Resource Exists](ace:Core/ResourceFileExists) | Editor Tools | Vocabulary |
+| `exists` | [Resource Exists](ace:Core/ResourceFileExists) | Editor Tools: Files & folders | Vocabulary |
 | `exp` | [Exponential](ace:Core/MathExp) | Math & Random | Vocabulary |
 | `factor` | [Pinch Factor](ace:Core/TouchPinchFactor) | Touch | Vocabulary |
 | `fallbacks` | [Add Font Fallback](ace:Core/AddFontFallback) | UI | Vocabulary |
@@ -229,6 +229,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_children` | [Get Children](ace:Core/GetChildren) | Nodes: Picking | Vocabulary |
 | `get_closest_collision_safe_fraction` | [ShapeCast Safe Fraction (2D)](ace:Core/ShapeCast2DSafeFraction) | Raycast 2D | Vocabulary |
 | `get_closest_collision_unsafe_fraction` | [ShapeCast Unsafe Fraction (2D)](ace:Core/ShapeCast2DUnsafeFraction) | Raycast 2D | Vocabulary |
+| `get_cmdline_user_args` | [Arguments](ace:Core/CommandToolArguments) | Editor Tools: Command tool | Vocabulary |
 | `get_collider` | [RayCast Collider (2D)](ace:Core/RayCast2DGetCollider) | Raycast 2D | Vocabulary |
 | `get_collider_shape` | [RayCast Hit Shape Index (2D)](ace:Core/RayCast2DColliderShape) | Raycast 2D | Vocabulary |
 | `get_collision_count` | [ShapeCast Hit Count (2D)](ace:Core/ShapeCast2DCount) | Raycast 2D | Vocabulary |
@@ -250,7 +251,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_edited_scene_root` | [Edited Scene Root](ace:Core/EditedSceneRoot) | Editor Tools | Vocabulary |
 | `get_editor_main_screen` | [Workspace Area](ace:Core/EditorMainScreen) | Editor Tools: Panels & menus | Vocabulary |
 | `get_editor_scale` | [Editor Scale](ace:Core/EditorUiScale) | Editor Tools | Vocabulary |
-| `get_editor_settings` | [Editor Settings](ace:Core/EditorSettingsObject) | Editor Tools | Vocabulary |
+| `get_editor_settings` | [Editor Settings](ace:Core/EditorSettingsObject) | Editor Tools: Project & preferences | Vocabulary |
 | `get_editor_theme` | [Editor Icon](ace:Core/EditorIcon) | Editor Tools: Panels & menus | Vocabulary |
 | `get_error_line` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
 | `get_error_message` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
@@ -342,7 +343,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_tree` | [Await Next Frame](ace:Core/AwaitNextFrame) | Performance | Vocabulary |
 | `get_typed_builtin` | [Element Type](ace:Core/ArrayTypedBuiltin) | Variables: Array | Vocabulary |
 | `get_typed_class_name` | [Element Class](ace:Core/ArrayTypedClassName) | Variables: Array | Vocabulary |
-| `get_undo_redo` | [Undo History](ace:Core/EditorUndoHistory) | Editor Tools | Vocabulary |
+| `get_undo_redo` | [Undo History](ace:Core/EditorUndoHistory) | Editor Tools: Undo history | Vocabulary |
 | `get_unique_id` | [My ID](ace:Core/MyPeerId) | Multiplayer | Vocabulary |
 | `get_unix_time_from_system` | [Date: Now](ace:Core/GetUnixTime) | Time | Vocabulary |
 | `get_used_cells` | [Used Cells Count](ace:Core/TileMapUsedCellsCount) | Tilemap | Vocabulary |
@@ -540,7 +541,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `overlaps_body` | [Is Overlapping Body](ace:Core/OverlapsBody) | Collisions | Vocabulary |
 | `own_world_3d` | [Render Scene To Image](ace:Core/RenderSceneToImage) | Editor Tools | Vocabulary |
 | `owner` | [Get Scene Owner](ace:Core/GetOwner) | Nodes | Vocabulary |
-| `pack` | [Save Node As Scene](ace:Core/SaveNodeAsScene) | Editor Tools | Vocabulary |
+| `pack` | [Save Node As Scene](ace:Core/SaveNodeAsScene) | Editor Tools: Files & folders | Vocabulary |
 | `pad_zeros` | [Pad Number](ace:Core/StringPadZeros) | Variables: String | Vocabulary |
 | `parse` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
 | `parse_input_event` | [Simulate Input](ace:Core/SimulateInputEvent) | General Actions | Vocabulary |
@@ -589,7 +590,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `push_warning` | [Push Warning](ace:Core/PushWarning) | Debug | Vocabulary |
 | `queue` | [Queue Animation](ace:Core/QueueAnimation) | Animation | Vocabulary |
 | `queue_free` | [Queue Free](ace:Core/QueueFree) | General Actions | Vocabulary |
-| `quit` | [Quit Game](ace:Core/QuitGame) | Scene | Vocabulary |
+| `quit` | [Finish](ace:Core/CommandToolFinish) | Editor Tools: Command tool | Vocabulary |
 | `rad_to_deg` | [Radians To Degrees](ace:Core/RadToDeg) | Math & Random | Vocabulary |
 | `radius` | [Make Sphere Mesh](ace:Core/SetSphereMesh) | Mesh | Vocabulary |
 | `randf` | [Chance](ace:Core/Chance) | Math & Random | Vocabulary |
@@ -611,14 +612,14 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `remove_at` | [Delete At](ace:Core/ArrayRemoveAt) | Variables: Array | Vocabulary |
 | `remove_child` | [Remove Child](ace:Core/RemoveChild) | Nodes | Vocabulary |
 | `remove_control_from_bottom_panel` | [Remove Bottom Panel](ace:Core/RemoveBottomPanel) | Editor Tools: Panels & menus | Vocabulary |
-| `remove_control_from_docks` | [Remove Dock](ace:Core/RemoveEditorDock) | Editor Tools | Vocabulary |
-| `remove_custom_type` | [Remove Object Type](ace:Core/RemoveEditorObjectType) | Editor Tools | Vocabulary |
+| `remove_control_from_docks` | [Remove Dock](ace:Core/RemoveEditorDock) | Editor Tools: Panels & menus | Vocabulary |
+| `remove_custom_type` | [Remove Object Type](ace:Core/RemoveEditorObjectType) | Editor Tools: Panels & menus | Vocabulary |
 | `remove_exception` | [Stop Ignoring Node In RayCast (2D)](ace:Core/RayCast2DRemoveException) | Raycast 2D | Vocabulary |
 | `remove_from_group` | [Remove From Group](ace:Core/RemoveFromGroup) | Groups | Vocabulary |
-| `remove_inspector_plugin` | [Remove Properties Bar Add-on](ace:Core/RemoveEditorInspectorPlugin) | Editor Tools | Vocabulary |
+| `remove_inspector_plugin` | [Remove Properties Bar Add-on](ace:Core/RemoveEditorInspectorPlugin) | Editor Tools: Properties bar | Vocabulary |
 | `remove_item` | [Remove Item](ace:Core/ListRemoveItem) | UI | Vocabulary |
 | `remove_meta` | [Remove Metadata](ace:Core/RemoveMeta) | Metadata | Vocabulary |
-| `remove_tool_menu_item` | [Remove Tools Menu Item](ace:Core/RemoveToolsMenuItem) | Editor Tools | Vocabulary |
+| `remove_tool_menu_item` | [Remove Tools Menu Item](ace:Core/RemoveToolsMenuItem) | Editor Tools: Panels & menus | Vocabulary |
 | `rename_absolute` | [Move / Rename File](ace:Core/MoveFile) | Files | Vocabulary |
 | `render_target_update_mode` | [Set Surface Redraw](ace:Core/SetSurfaceRedraw) | World-space UI | Vocabulary |
 | `reparent` | [Move To Layer](ace:Core/MoveToLayer) | Layers | Vocabulary |
@@ -648,7 +649,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `rpc` | [Send Message To Everyone](ace:Core/SendMessageToEveryone) | Multiplayer | Vocabulary |
 | `rpc_id` | [Send Message To The Host](ace:Core/SendMessageToHost) | Multiplayer | Vocabulary |
 | `rsplit` | [Shorten To Whole Words](ace:Core/ShortenToWholeWords) | Text | Vocabulary |
-| `s` | [Write Version Stamp](ace:Core/WriteVersionStamp) | Editor Tools | Vocabulary |
+| `s` | [Write Version Stamp](ace:Core/WriteVersionStamp) | Editor Tools: Import & export | Vocabulary |
 | `sample` | [Sample Gradient](ace:Core/SampleGradient) | Gradients & Curves | Vocabulary |
 | `sample_baked` | [Sample Curve](ace:Core/SampleCurve) | Gradients & Curves | Vocabulary |
 | `save` | [Save Settings](ace:Core/SaveProjectSettings) | Editor Tools: Project & preferences | Vocabulary |
@@ -787,7 +788,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `unicode_at` | [Font Can Show](ace:Core/FontCanShow) | UI | Vocabulary |
 | `unit_size` | [Set Loudness Falloff](ace:Core/AudioSetLoudnessFalloff) | Audio | Vocabulary |
 | `unproject_position` | [Project To Screen (3D)](ace:Core/ProjectToScreen3D) | Math & Random | Vocabulary |
-| `update_overlays` | [Redraw Viewport Overlays](ace:Core/UpdateViewportOverlays) | Editor Tools | Vocabulary |
+| `update_overlays` | [Redraw Viewport Overlays](ace:Core/UpdateViewportOverlays) | Editor Tools: Plugin lifecycle | Vocabulary |
 | `value` | [Value](ace:Core/GetRangeValue) | UI | Vocabulary |
 | `values` | [Dictionary Values](ace:Core/DictValues) | Variables: Dictionary | Vocabulary |
 | `var_to_str` | [To Text](ace:Core/Stringify) | Debug | Vocabulary |

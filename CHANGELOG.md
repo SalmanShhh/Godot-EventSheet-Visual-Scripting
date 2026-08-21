@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Added - the Editor object's pages, the command tool as rows, and the glossary on hover
+
+- **The command tool is authorable, not just readable.** New Sheet ▸ Command tool now starts from
+  an **On run** event rather than a hand-written `_init`, and the picker's new *Editor Tools ▸
+  Command tool* page carries the four rows the reading already recognised: **On run**,
+  **Command tool.Arguments**, **Finish**, and **Finish with code**. Each writes exactly the line a
+  hand-written `tools/*.gd` reads back as, so a tool authored from the picker and one typed by hand
+  are the same file - the two-way byte gate covers the whole skeleton. Command tool rows wear
+  **Command tool** in the object cell, not **Editor**: nothing of the editor is open while one runs.
+- **The Editor object's vocabulary is filed by surface.** What used to be thirty-eight rows of four
+  unrelated jobs on one flat page is now *Plugin lifecycle*, *Panels & menus*, *Properties bar*,
+  *Undo history*, *Files & folders*, *Import & export*, *Project & preferences* and *Command tool*,
+  each with a blurb saying what it is for. The one-off chores - open a scene, select a node, ask the
+  editor a question - stay on the root, so the folder a reader lands on is not empty. Every page is
+  still gated to tool sheets, and still reads as the Editor.
+- **The glossary lens, on hover.** Hovering any of the twenty-four editor-building nouns now says
+  what the other vocabulary calls it - *Properties bar - Godot calls this Inspector* with Familiar
+  Words on, *Inspector - this sheet calls it Properties bar* with it off - plus one line saying what
+  the thing actually is. A word spelled the same in both vocabularies stays quiet rather than saying
+  nothing at length, and a word the reader typed themselves still names Godot's.
+- **Three more behaviors preview in the editor.** *Preview Behaviors on Selected Node* now animates
+  **Orbit**, **Orbit 3D** and **Bullet 3D**: the ring and the arc solved for a time rather than
+  integrated frame by frame, so the editor shows where the thing goes without running the behavior
+  or writing the saved position. Bullet 3D's Stepping is deliberately not previewed - a sweep needs
+  a physics space the editor does not have.
+
+### Changed
+
+- **Touch Gestures: teaching and saving are one honest flow.** **Teach Shape From Stroke** now
+  writes straight into the attached shape library and marks that resource changed, so the library in
+  the Inspector is never a step behind what the behaviour knows and the editor's own Save writes it
+  out; **Forget Shape** removes from both halves at once. **Save Shapes To Library** is the
+  deliberate write a running game needs, and it now says why when it cannot do it - no library
+  attached, or one that has never been saved as a file and so has nowhere to write. The guide's
+  documented trap about teaching not persisting is gone with it.
 ### Added - the newest vocabulary speaks the eight bundled languages
 
 - **336 strings caught up.** The game shapes (meters, stealth noise, boss phases, mission clocks),
