@@ -1376,7 +1376,7 @@ is instantiated to answer a question.
   disappearance is proven rather than assumed.
 <img src="images/add-behavior.png" alt="The Add behavior dialog for Player: a scrolling row of category shelves above a search box, a list of pack cards each naming the pack and its one-line pitch, and on the right the selected pack's properties as editable fields above a Where dropdown reading as a behavior node." width="620">
 
-<img src="images/addon-manager.png" alt="The Addon manager: a table of installed packs with columns pack, version, enabled, what you can do and reads, each row showing the pack name over its eventsheet_addons folder, its version, a ticked enabled box and Guide, Update and Publish buttons, above Import from .zip, Import from URL, Check for updates and Find more, and the line 95 packs installed, 0 switched off." width="620">
+<img src="images/addon-manager.png" alt="The Addon manager: a table of installed packs with columns pack, version, enabled, what you can do and reads, each row showing the pack name over its eventsheet_addons folder, its version, a ticked enabled box and Guide, Update and Publish buttons, above Import from .zip, Import from URL, Check for updates and Find more, and the line 96 packs installed, 0 switched off." width="620">
 
 <img src="images/words-settings.png" alt="The Words page: a table headed what it names, with Familiar Words on, off, listing an inheritance set as Family or Base class, a scene as Layout or Scene, _process as Every tick, an attached pack as Behavior, a Godot group as Family (group) or Group, Array slash Dictionary as list slash table, queue_free as Destroy and the reader as Manual, above a live preview of one event and a Reset to defaults button." width="560">
 
