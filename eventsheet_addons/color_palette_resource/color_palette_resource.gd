@@ -1,5 +1,5 @@
 ## @ace_version(1.0.0)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/color_palette_resource/icon.svg")
 class_name ColorPaletteResource
 extends Resource
 ## Several colour sets in one data asset - one set per kind of colour vision, each filling the same roles in the same order. Load it with the Use Palette action; the palette parameter draws every set side by side.

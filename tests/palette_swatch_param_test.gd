@@ -133,6 +133,7 @@ static func _first_swatch_hex(strip: HBoxContainer) -> String:
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:
+		print("[PASS] palette_swatch_param_test: %s" % label)
 		return true
-	print("  [FAIL] palette_swatch_param_test: %s (got %s, expected %s)" % [label, str(actual), str(expected)])
+	print("[FAIL] palette_swatch_param_test: %s - expected %s, got %s" % [label, str(expected), str(actual)])
 	return false

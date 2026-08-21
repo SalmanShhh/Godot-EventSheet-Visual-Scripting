@@ -378,3 +378,21 @@ On Ready
   System's node-state seam as well.
 - **Re-declaring keeps the current value.** That makes a hot-reloaded sheet safe, and it means
   changing a default in code does not move a player who already saved one.
+
+## Its companion data asset: Color Palette
+
+A colour-blind palette is a setting like any other, but the value it stores is a whole set of
+colours rather than a number. The **Color Palette** pack ships as a data asset for exactly that: a
+resource holding several named colour sets, one per vision type, each set naming the same roles so
+a row that asks for the Danger colour gets the right one whichever set is in use.
+
+Author it as a `.tres` in the Godot Inspector, then swap it at runtime with the **Use palette** row
+from the accessibility words. When you fill that row's palette field in, the parameter draws every
+colour set the asset carries side by side, so you pick a file by looking at it instead of by trusting
+the path you typed:
+
+<img src="../images/palette-param-swatches.png" alt="The Use Palette parameters window: a Palette dropdown holding the variable, a palette asset path field with a Browse button, and under it a swatch grid whose rows are the colour roles Danger, Safe, Neutral and Highlight and whose columns are the colour sets Default, Deuteranopia and Tritanopia, each cell a filled colour chip." width="600">
+
+The pack publishes no verbs of its own - it is the shape of the data, and the accessibility words are
+what spend it. Bind the swap to a setting (`Set setting "palette"` then a reaction that runs Use
+palette) and the choice survives a restart with everything else in `user://settings.cfg`.

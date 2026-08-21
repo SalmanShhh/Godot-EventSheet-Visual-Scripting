@@ -26,4 +26,5 @@ static func build() -> bool:
 		"set_colors": {"type": "Array[PackedColorArray]", "default": [], "exported": true,
 			"attributes": {"tooltip": "One colour array per set, in the same order as Set Names. Inside an array the colours follow Role Names."}}
 	}
-	return Lib.save_pack(sheet, "res://eventsheet_addons/color_palette_resource/color_palette_resource")
+	return Lib.save_pack(sheet, "res://eventsheet_addons/color_palette_resource/color_palette_resource",
+		"res://eventsheet_addons/color_palette_resource/icon.svg")

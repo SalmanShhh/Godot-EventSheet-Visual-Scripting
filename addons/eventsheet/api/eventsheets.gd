@@ -1585,6 +1585,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"drag_drop": "Drag-And-Drop",
 	"drawing_prefab_resource": "Drawing-Canvas",
 	"drawing_prefab_stamp": "Drawing-Canvas",
+	"color_palette_resource": "Game-Settings",
 	"encounter_resource": "Encounter-Timeline",
 	"home_leash": "Home-And-Leash",
 	"loot_loader": "Loot-Table",
