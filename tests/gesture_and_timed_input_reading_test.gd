@@ -127,6 +127,35 @@ static func run() -> bool:
 	ok = _pattern_claims(opened.get("patterns", {})) and ok
 	ok = _round_trip() and ok
 	ok = _starters() and ok
+	ok = _teach_and_save_are_one_flow() and ok
+	return ok
+
+
+## X23. Teaching a shape and saving the library used to be two half-truths: teaching wrote into the
+## library but nothing said so, and saving replaced the library wholesale and then did NOTHING at all
+## when the resource had no file - the guide had to carry a trap paragraph for both. One write-through
+## now serves teach, forget and save, and every refusal says why out loud. Both rows keep their ids.
+static func _teach_and_save_are_one_flow() -> bool:
+	var ok: bool = true
+	var source: String = FileAccess.get_file_as_string("res://eventsheet_addons/touch_gestures/touch_gestures.gd")
+	ok = _check("teaching goes through the one write-through",
+		source.contains("\t_shapes[shape_name] = _normalise(_stroke)\n\t_write_through_to_library()"), true) and ok
+	ok = _check("and so does forgetting",
+		source.contains("\t_shapes.erase(shape_name)\n\t_write_through_to_library()"), true) and ok
+	ok = _check("the write-through marks the resource changed, which is what makes Save write it",
+		source.contains("\tshape_library.shapes = _shapes.duplicate(true)\n\tshape_library.emit_changed()"), true) and ok
+	ok = _check("saving with no library attached says so instead of returning quietly",
+		source.contains("push_warning(\"[Touch Gestures] No shape library is attached"), true) and ok
+	ok = _check("and so does saving a library that has no file to be written to",
+		source.contains("push_warning(\"[Touch Gestures] The attached shape library has never been saved as a file"), true) and ok
+	ok = _check("both rows keep the ids they shipped with",
+		source.contains("## @ace_name(\"Teach Shape From Stroke\")") \
+			and source.contains("## @ace_name(\"Save Shapes To Library\")"), true) and ok
+	var guide: String = FileAccess.get_file_as_string("res://docs/Addons/Touch-Gestures.md")
+	ok = _check("the guide no longer documents the trap as a trap",
+		guide.contains("Teaching writes to the library, but only saving makes it permanent."), false) and ok
+	ok = _check("it says what actually happens now",
+		guide.contains("Teaching updates the library there and then; saving is what puts it on disk."), true) and ok
 	return ok
 
 

@@ -140,7 +140,7 @@ func set_eight_way(on: bool) -> void:
 ## @ace_featured
 ## @ace_name("Teach Shape From Stroke")
 ## @ace_category("Touch Gestures")
-## @ace_description("Records the stroke that was just drawn as a template under a name. Draw the shape in the running game, then call this - there is no coordinate list to type. Saves into the attached shape library when there is one.")
+## @ace_description("Records the stroke that was just drawn as a template under a name. Draw the shape in the running game, then call this - there is no coordinate list to type. The attached shape library is updated straight away and marked changed, so the editor's own Save writes it out; Save Shapes To Library is the explicit write for a running game.")
 ## @ace_display_template("Teach shape from stroke as [b]{shape_name}[/b]")
 ## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.teach_shape_from_stroke({shape_name})")
@@ -148,21 +148,19 @@ func teach_shape_from_stroke(shape_name: String) -> void:
 	if _stroke.size() < minimum_stroke_points:
 		return
 	_shapes[shape_name] = _normalise(_stroke)
-	if shape_library != null and "shapes" in shape_library:
-		shape_library.shapes[shape_name] = _shapes[shape_name]
+	_write_through_to_library()
 	if debug_logging:
 		print("[Touch Gestures] taught ", shape_name, " from ", _stroke.size(), " points")
 
 ## @ace_action
 ## @ace_name("Forget Shape")
 ## @ace_category("Touch Gestures")
-## @ace_description("Removes a taught shape, so it stops being matched.")
+## @ace_description("Removes a taught shape, so it stops being matched. The attached library is updated and marked changed the same way teaching updates it.")
 ## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.forget_shape({shape_name})")
 func forget_shape(shape_name: String) -> void:
 	_shapes.erase(shape_name)
-	if shape_library != null and "shapes" in shape_library:
-		shape_library.shapes.erase(shape_name)
+	_write_through_to_library()
 
 ## @ace_action
 ## @ace_name("Load Shapes From Library")
@@ -179,15 +177,18 @@ func load_shapes_from_library() -> void:
 ## @ace_action
 ## @ace_name("Save Shapes To Library")
 ## @ace_category("Touch Gestures")
-## @ace_description("Writes the taught shapes back to the attached shape library file, so they survive the run. Does nothing when no library is attached.")
+## @ace_description("Writes the attached shape library out to its own file, so the shapes taught this run survive it. Teaching already put them in the library - this is the step that puts the library on disk. Says so when no library is attached, or when the one attached has never been saved as a file and so has nowhere to write.")
 ## @ace_icon("res://eventsheet_addons/touch_gestures/icon.svg")
 ## @ace_codegen_template("$TouchGesturesBehavior.save_shapes_to_library()")
 func save_shapes_to_library() -> void:
 	if shape_library == null or not "shapes" in shape_library:
+		push_warning("[Touch Gestures] No shape library is attached, so the shapes taught this run cannot be saved. Attach a Touch Shape Library data asset to keep them.")
 		return
-	shape_library.shapes = _shapes.duplicate(true)
-	if not shape_library.resource_path.is_empty():
-		ResourceSaver.save(shape_library, shape_library.resource_path)
+	_write_through_to_library()
+	if shape_library.resource_path.is_empty():
+		push_warning("[Touch Gestures] The attached shape library has never been saved as a file, so there is nowhere to write it. Save it as a .tres first.")
+		return
+	ResourceSaver.save(shape_library, shape_library.resource_path)
 
 ## @ace_action
 ## @ace_name("Clear Stroke")
@@ -360,6 +361,18 @@ func _direction_of(travelled: Vector2) -> String:
 	return EIGHT_WAY_NAMES[band]
 
 ## @ace_hidden
+func _write_through_to_library() -> void:
+	# The one place the attached library is written. Teaching and forgetting both go through it,
+	# so the library an author can see in the Inspector is never a step behind what the behaviour
+	# knows - and emit_changed() marks the resource dirty, which is what makes the editor's own
+	# Save write it out. Saving to DISK from a running game is still Save Shapes To Library: a
+	# game cannot rely on an editor being open.
+	if shape_library == null or not "shapes" in shape_library:
+		return
+	shape_library.shapes = _shapes.duplicate(true)
+	shape_library.emit_changed()
+
+## @ace_hidden
 func _stroke_length(points: PackedVector2Array) -> float:
 	# How far the finger travelled ALONG the stroke, which is what tells a long scribble from a
 	# short one even when both start and end in the same place.
@@ -400,4 +413,4 @@ func _average_distance(a: PackedVector2Array, b: PackedVector2Array) -> float:
 		total += a[index].distance_to(b[index])
 	return total / float(a.size())
 
-# Touch Gestures: attach under any node. It reads the touch events itself and fires On Swipe (direction, distance, seconds) and On Shape Drawn (name). Teach a shape by drawing it and calling Teach Shape From Stroke, then Save Shapes To a .tres. On desktop, turn on Project Settings > Input Devices > Pointing > Emulate Touch From Mouse to try it with the mouse.
+# Touch Gestures: attach under any node. It reads the touch events itself and fires On Swipe (direction, distance, seconds) and On Shape Drawn (name). Teach a shape by drawing it and calling Teach Shape From Stroke - the attached library is updated there and then. Save Shapes To Library is what writes that library to its file from a running game. On desktop, turn on Project Settings > Input Devices > Pointing > Emulate Touch From Mouse to try it with the mouse.

@@ -77,4 +77,28 @@ func set_orbit_radii(primary: float, secondary: float) -> void:
 	primary_radius = primary
 	secondary_radius = secondary
 
+## @ace_hidden
+static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
+	# Editor-preview contract (Tools > Preview Behaviors on Selected Node): the tick's ellipse
+	# solved for a time rather than accumulated - angle(t) = speed*t - so the editor can show the
+	# ring without running the behavior or writing the saved position. Facing is sampled the same
+	# way, from the tangent at t, so match_rotation looks right in the preview too.
+	var rest: Variant = base.get("position", null)
+	if not rest is Vector2:
+		return {}
+	var centre: Vector2 = rest
+	var primary: float = float(params.get("primary_radius", 100.0))
+	var secondary: float = float(params.get("secondary_radius", 0.0))
+	var radius_b: float = secondary if secondary > 0.0 else primary
+	var tilt: float = deg_to_rad(float(params.get("offset_angle_degrees", 0.0)))
+	var speed: float = deg_to_rad(float(params.get("speed_degrees", 90.0)))
+	var angle: float = speed * time
+	var local: Vector2 = Vector2(cos(angle) * primary, sin(angle) * radius_b).rotated(tilt)
+	var out: Dictionary = {"position": centre + local}
+	if bool(params.get("match_rotation", false)):
+		var tangent: Vector2 = Vector2(-sin(angle) * primary, cos(angle) * radius_b).rotated(tilt)
+		if tangent != Vector2.ZERO:
+			out["rotation"] = tangent.angle()
+	return out
+
 # Orbit behavior (event-sheet parity): circles or ellipses around a point. secondary_radius 0 = circle; offset_angle tilts the ellipse; match_rotation faces the travel direction.

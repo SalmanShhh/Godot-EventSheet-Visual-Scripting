@@ -76,6 +76,30 @@ static func build() -> bool:
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
+	var preview_block: RawCodeRow = RawCodeRow.new()
+	preview_block.code = "\n".join(PackedStringArray([
+		"# Editor-preview contract (Tools > Preview Behaviors on Selected Node): the arc solved for a",
+		"# time instead of integrated frame by frame - p(t) = rest + forward*speed*t + pull*t*t/2 -",
+		"# so the editor can show which way the shot goes, and how far gravity bends it, without",
+		"# running the behavior. Stepping is deliberately NOT previewed: a sweep needs a physics space",
+		"# and the editor has none, so the preview shows the unobstructed flight and says so by",
+		"# ignoring the knob rather than pretending to collide.",
+		"## @ace_hidden",
+		"static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:",
+		"\tif not bool(params.get(\"enabled_movement\", true)):",
+		"\t\treturn {}",
+		"\tvar rest: Variant = base.get(\"position\", null)",
+		"\tif not rest is Vector3:",
+		"\t\treturn {}",
+		"\tvar euler: Variant = base.get(\"rotation\", Vector3.ZERO)",
+		"\tvar facing: Basis = Basis.from_euler(euler if euler is Vector3 else Vector3.ZERO)",
+		"\tvar forward: Vector3 = -facing.z",
+		"\tvar pull_direction: Variant = params.get(\"gravity_direction\", Vector3.DOWN)",
+		"\tvar pull: Vector3 = (pull_direction if pull_direction is Vector3 else Vector3.DOWN).normalized() * float(params.get(\"gravity\", 0.0))",
+		"\tvar flown: Vector3 = forward * float(params.get(\"speed\", 10.0)) * time + pull * time * time * 0.5",
+		"\treturn {\"position\": (rest as Vector3) + flown}"
+	]))
+	sheet.events.append(preview_block)
 
 	# The trigger Stepping fires, declared with its arguments so a sheet row receives what was hit,
 	# where, and which way that surface faces - everything an impact effect needs.

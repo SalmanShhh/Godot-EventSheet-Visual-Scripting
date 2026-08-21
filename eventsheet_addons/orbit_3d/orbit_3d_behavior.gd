@@ -47,4 +47,18 @@ func set_orbit3d_center(x: float, y: float, z: float) -> void:
 	center_z = z
 	center_captured = true
 
+## @ace_hidden
+static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
+	# Editor-preview contract (Tools > Preview Behaviors on Selected Node): the same circle the
+	# tick walks, solved for a time instead of accumulated - angle(t) = speed*t - so the editor
+	# can show the ring without running the behavior or touching the saved position. The centre
+	# is the host's REST position, which is what the running behavior captures on its first frame.
+	var rest: Variant = base.get("position", null)
+	if not rest is Vector3:
+		return {}
+	var centre: Vector3 = rest
+	var angle: float = deg_to_rad(float(params.get("speed_degrees", 90.0)) * time)
+	var radius: float = float(params.get("radius", 3.0))
+	return {"position": Vector3(centre.x + cos(angle) * radius, centre.y, centre.z + sin(angle) * radius)}
+
 # Orbit 3D behavior (event-sheet-style): circles the host around its starting point in the XZ plane (Y stays).

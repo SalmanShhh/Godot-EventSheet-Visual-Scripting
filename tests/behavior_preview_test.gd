@@ -113,6 +113,51 @@ static func run() -> bool:
 	host.free()
 	bare.free()
 	dock.free()
+	passed = _test_spatial_samplers() and passed
+	return passed
+
+
+## X16. The three behaviors the 3D page's rows describe, previewed. Each sampler is the SAME motion
+## the tick walks, solved for a time rather than accumulated, so the values are exact and pinnable -
+## which is the point: a preview that only looked about right would be a second implementation
+## nobody could check against the first.
+static func _test_spatial_samplers() -> bool:
+	var passed: bool = true
+	var orbit: Script = load("res://eventsheet_addons/orbit/orbit_behavior.gd")
+	var orbit_base: Dictionary = {"position": Vector2(10.0, 20.0), "rotation": 0.0}
+	# 90 deg/s for one second is a quarter turn: cos 90 = 0, sin 90 = 1, so the host sits one
+	# radius BELOW the centre in screen coordinates.
+	var orbit_sample: Dictionary = orbit.call("editor_preview_sample",
+		{"primary_radius": 100.0, "secondary_radius": 0.0, "speed_degrees": 90.0,
+		"offset_angle_degrees": 0.0, "match_rotation": false}, orbit_base, 1.0)
+	passed = _check("a quarter turn puts the orbit one radius past the centre",
+		(orbit_sample.get("position") as Vector2).round(), Vector2(10.0, 120.0)) and passed
+	passed = _check("and says nothing about facing unless asked",
+		orbit_sample.has("rotation"), false) and passed
+	orbit_sample = orbit.call("editor_preview_sample",
+		{"primary_radius": 100.0, "secondary_radius": 0.0, "speed_degrees": 90.0,
+		"offset_angle_degrees": 0.0, "match_rotation": true}, orbit_base, 0.0)
+	passed = _check("with match rotation on, the facing is the tangent at that moment",
+		snappedf(float(orbit_sample.get("rotation", 0.0)), 0.0001), snappedf(PI * 0.5, 0.0001)) and passed
+	passed = _check("a 3D orbit's sampler refuses a 2D rest position",
+		load("res://eventsheet_addons/orbit_3d/orbit_3d_behavior.gd").call("editor_preview_sample",
+			{"radius": 3.0, "speed_degrees": 90.0}, {"position": Vector2.ZERO}, 1.0), {}) and passed
+	var orbit_3d: Dictionary = load("res://eventsheet_addons/orbit_3d/orbit_3d_behavior.gd").call(
+		"editor_preview_sample", {"radius": 3.0, "speed_degrees": 90.0},
+		{"position": Vector3(0.0, 5.0, 0.0)}, 1.0)
+	passed = _check("the 3D ring stays level and sweeps the XZ plane",
+		(orbit_3d.get("position") as Vector3).round(), Vector3(0.0, 5.0, 3.0)) and passed
+	var bullet: Script = load("res://eventsheet_addons/bullet_3d/bullet_3d_behavior.gd")
+	# Facing straight down -Z at 10 units/s for two seconds, gravity 10 straight down.
+	var flight: Dictionary = bullet.call("editor_preview_sample",
+		{"speed": 10.0, "gravity": 10.0, "gravity_direction": Vector3.DOWN, "enabled_movement": true},
+		{"position": Vector3.ZERO, "rotation": Vector3.ZERO}, 2.0)
+	passed = _check("the shot flies forward and gravity bends it by half g t squared",
+		(flight.get("position") as Vector3).round(), Vector3(0.0, -20.0, -20.0)) and passed
+	passed = _check("a bullet whose movement is switched off does not move",
+		bullet.call("editor_preview_sample",
+			{"speed": 10.0, "enabled_movement": false},
+			{"position": Vector3.ZERO, "rotation": Vector3.ZERO}, 2.0), {}) and passed
 	return passed
 
 

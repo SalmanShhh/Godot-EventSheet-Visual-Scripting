@@ -46,7 +46,7 @@ static func build() -> bool:
 			"attributes": {"tooltip": "Print every swipe and every match to the Output panel while tuning the thresholds."}}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Touch Gestures: attach under any node. It reads the touch events itself and fires On Swipe (direction, distance, seconds) and On Shape Drawn (name). Teach a shape by drawing it and calling Teach Shape From Stroke, then Save Shapes To a .tres. On desktop, turn on Project Settings > Input Devices > Pointing > Emulate Touch From Mouse to try it with the mouse."
+	about.text = "Touch Gestures: attach under any node. It reads the touch events itself and fires On Swipe (direction, distance, seconds) and On Shape Drawn (name). Teach a shape by drawing it and calling Teach Shape From Stroke - the attached library is updated there and then. Save Shapes To Library is what writes that library to its file from a running game. On desktop, turn on Project Settings > Input Devices > Pointing > Emulate Touch From Mouse to try it with the mouse."
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(_runtime_lines())
@@ -61,18 +61,18 @@ static func build() -> bool:
 		"eight_way = on")
 
 	# --- Shapes ---
-	Lib.append_function(sheet, "teach_shape_from_stroke", "Teach Shape From Stroke", "Touch Gestures", "Records the stroke that was just drawn as a template under a name. Draw the shape in the running game, then call this - there is no coordinate list to type. Saves into the attached shape library when there is one.",
+	Lib.append_function(sheet, "teach_shape_from_stroke", "Teach Shape From Stroke", "Touch Gestures", "Records the stroke that was just drawn as a template under a name. Draw the shape in the running game, then call this - there is no coordinate list to type. The attached shape library is updated straight away and marked changed, so the editor's own Save writes it out; Save Shapes To Library is the explicit write for a running game.",
 		[["shape_name", "String"]],
-		"if _stroke.size() < minimum_stroke_points:\n\treturn\n_shapes[shape_name] = _normalise(_stroke)\nif shape_library != null and \"shapes\" in shape_library:\n\tshape_library.shapes[shape_name] = _shapes[shape_name]\nif debug_logging:\n\tprint(\"[Touch Gestures] taught \", shape_name, \" from \", _stroke.size(), \" points\")")
-	Lib.append_function(sheet, "forget_shape", "Forget Shape", "Touch Gestures", "Removes a taught shape, so it stops being matched.",
+		"if _stroke.size() < minimum_stroke_points:\n\treturn\n_shapes[shape_name] = _normalise(_stroke)\n_write_through_to_library()\nif debug_logging:\n\tprint(\"[Touch Gestures] taught \", shape_name, \" from \", _stroke.size(), \" points\")")
+	Lib.append_function(sheet, "forget_shape", "Forget Shape", "Touch Gestures", "Removes a taught shape, so it stops being matched. The attached library is updated and marked changed the same way teaching updates it.",
 		[["shape_name", "String"]],
-		"_shapes.erase(shape_name)\nif shape_library != null and \"shapes\" in shape_library:\n\tshape_library.shapes.erase(shape_name)")
+		"_shapes.erase(shape_name)\n_write_through_to_library()")
 	Lib.append_function(sheet, "load_shapes_from_library", "Load Shapes From Library", "Touch Gestures", "Reads every taught shape out of the attached shape library, replacing what is loaded. Called for you when the behaviour starts.",
 		[],
 		"_shapes.clear()\nif shape_library != null and \"shapes\" in shape_library:\n\tfor key: Variant in shape_library.shapes:\n\t\t_shapes[str(key)] = shape_library.shapes[key]")
-	Lib.append_function(sheet, "save_shapes_to_library", "Save Shapes To Library", "Touch Gestures", "Writes the taught shapes back to the attached shape library file, so they survive the run. Does nothing when no library is attached.",
+	Lib.append_function(sheet, "save_shapes_to_library", "Save Shapes To Library", "Touch Gestures", "Writes the attached shape library out to its own file, so the shapes taught this run survive it. Teaching already put them in the library - this is the step that puts the library on disk. Says so when no library is attached, or when the one attached has never been saved as a file and so has nowhere to write.",
 		[],
-		"if shape_library == null or not \"shapes\" in shape_library:\n\treturn\nshape_library.shapes = _shapes.duplicate(true)\nif not shape_library.resource_path.is_empty():\n\tResourceSaver.save(shape_library, shape_library.resource_path)")
+		"if shape_library == null or not \"shapes\" in shape_library:\n\tpush_warning(\"[Touch Gestures] No shape library is attached, so the shapes taught this run cannot be saved. Attach a Touch Shape Library data asset to keep them.\")\n\treturn\n_write_through_to_library()\nif shape_library.resource_path.is_empty():\n\tpush_warning(\"[Touch Gestures] The attached shape library has never been saved as a file, so there is nowhere to write it. Save it as a .tres first.\")\n\treturn\nResourceSaver.save(shape_library, shape_library.resource_path)")
 	Lib.append_function(sheet, "clear_stroke", "Clear Stroke", "Touch Gestures", "Throws away the stroke gathered so far, so a gesture interrupted by a menu cannot finish afterwards.",
 		[],
 		"_stroke.clear()")
@@ -212,6 +212,18 @@ static func _runtime_lines() -> PackedStringArray:
 		"\tvar degrees: float = rad_to_deg(travelled.angle())",
 		"\tvar band: int = int(round((degrees + 180.0) / 45.0)) % 8",
 		"\treturn EIGHT_WAY_NAMES[band]",
+		"",
+		"# The one place the attached library is written. Teaching and forgetting both go through it,",
+		"# so the library an author can see in the Inspector is never a step behind what the behaviour",
+		"# knows - and emit_changed() marks the resource dirty, which is what makes the editor's own",
+		"# Save write it out. Saving to DISK from a running game is still Save Shapes To Library: a",
+		"# game cannot rely on an editor being open.",
+		"## @ace_hidden",
+		"func _write_through_to_library() -> void:",
+		"\tif shape_library == null or not \"shapes\" in shape_library:",
+		"\t\treturn",
+		"\tshape_library.shapes = _shapes.duplicate(true)",
+		"\tshape_library.emit_changed()",
 		"",
 		"# How far the finger travelled ALONG the stroke, which is what tells a long scribble from a",
 		"# short one even when both start and end in the same place.",

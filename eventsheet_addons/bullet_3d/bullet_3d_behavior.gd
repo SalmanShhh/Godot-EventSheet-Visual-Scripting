@@ -115,4 +115,25 @@ func set_bullet3d_speed(value: float) -> void:
 func set_gravity_direction(x: float, y: float, z: float) -> void:
 	gravity_direction = Vector3(x, y, z)
 
+## @ace_hidden
+static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
+	# Editor-preview contract (Tools > Preview Behaviors on Selected Node): the arc solved for a
+	# time instead of integrated frame by frame - p(t) = rest + forward*speed*t + pull*t*t/2 -
+	# so the editor can show which way the shot goes, and how far gravity bends it, without
+	# running the behavior. Stepping is deliberately NOT previewed: a sweep needs a physics space
+	# and the editor has none, so the preview shows the unobstructed flight and says so by
+	# ignoring the knob rather than pretending to collide.
+	if not bool(params.get("enabled_movement", true)):
+		return {}
+	var rest: Variant = base.get("position", null)
+	if not rest is Vector3:
+		return {}
+	var euler: Variant = base.get("rotation", Vector3.ZERO)
+	var facing: Basis = Basis.from_euler(euler if euler is Vector3 else Vector3.ZERO)
+	var forward: Vector3 = -facing.z
+	var pull_direction: Variant = params.get("gravity_direction", Vector3.DOWN)
+	var pull: Vector3 = (pull_direction if pull_direction is Vector3 else Vector3.DOWN).normalized() * float(params.get("gravity", 0.0))
+	var flown: Vector3 = forward * float(params.get("speed", 10.0)) * time + pull * time * time * 0.5
+	return {"position": (rest as Vector3) + flown}
+
 # Bullet 3D behavior (event-sheet-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled.

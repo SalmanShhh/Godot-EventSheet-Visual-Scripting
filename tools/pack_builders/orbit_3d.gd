@@ -42,6 +42,23 @@ static func build() -> bool:
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
+	var preview_block: RawCodeRow = RawCodeRow.new()
+	preview_block.code = "\n".join(PackedStringArray([
+		"# Editor-preview contract (Tools > Preview Behaviors on Selected Node): the same circle the",
+		"# tick walks, solved for a time instead of accumulated - angle(t) = speed*t - so the editor",
+		"# can show the ring without running the behavior or touching the saved position. The centre",
+		"# is the host's REST position, which is what the running behavior captures on its first frame.",
+		"## @ace_hidden",
+		"static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:",
+		"\tvar rest: Variant = base.get(\"position\", null)",
+		"\tif not rest is Vector3:",
+		"\t\treturn {}",
+		"\tvar centre: Vector3 = rest",
+		"\tvar angle: float = deg_to_rad(float(params.get(\"speed_degrees\", 90.0)) * time)",
+		"\tvar radius: float = float(params.get(\"radius\", 3.0))",
+		"\treturn {\"position\": Vector3(centre.x + cos(angle) * radius, centre.y, centre.z + sin(angle) * radius)}"
+	]))
+	sheet.events.append(preview_block)
 
 	var set_orbit3d_center_fn: EventFunction = EventFunction.new()
 	set_orbit3d_center_fn.function_name = "set_orbit3d_center"

@@ -51,6 +51,33 @@ static func build() -> bool:
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
+	var preview_block: RawCodeRow = RawCodeRow.new()
+	preview_block.code = "\n".join(PackedStringArray([
+		"# Editor-preview contract (Tools > Preview Behaviors on Selected Node): the tick's ellipse",
+		"# solved for a time rather than accumulated - angle(t) = speed*t - so the editor can show the",
+		"# ring without running the behavior or writing the saved position. Facing is sampled the same",
+		"# way, from the tangent at t, so match_rotation looks right in the preview too.",
+		"## @ace_hidden",
+		"static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:",
+		"\tvar rest: Variant = base.get(\"position\", null)",
+		"\tif not rest is Vector2:",
+		"\t\treturn {}",
+		"\tvar centre: Vector2 = rest",
+		"\tvar primary: float = float(params.get(\"primary_radius\", 100.0))",
+		"\tvar secondary: float = float(params.get(\"secondary_radius\", 0.0))",
+		"\tvar radius_b: float = secondary if secondary > 0.0 else primary",
+		"\tvar tilt: float = deg_to_rad(float(params.get(\"offset_angle_degrees\", 0.0)))",
+		"\tvar speed: float = deg_to_rad(float(params.get(\"speed_degrees\", 90.0)))",
+		"\tvar angle: float = speed * time",
+		"\tvar local: Vector2 = Vector2(cos(angle) * primary, sin(angle) * radius_b).rotated(tilt)",
+		"\tvar out: Dictionary = {\"position\": centre + local}",
+		"\tif bool(params.get(\"match_rotation\", false)):",
+		"\t\tvar tangent: Vector2 = Vector2(-sin(angle) * primary, cos(angle) * radius_b).rotated(tilt)",
+		"\t\tif tangent != Vector2.ZERO:",
+		"\t\t\tout[\"rotation\"] = tangent.angle()",
+		"\treturn out"
+	]))
+	sheet.events.append(preview_block)
 
 	var set_orbit_center_fn: EventFunction = EventFunction.new()
 	set_orbit_center_fn.function_name = "set_orbit_center"
