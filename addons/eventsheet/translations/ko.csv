@@ -4001,3 +4001,5 @@ On child added [i]{node}[/i],자식 [i]{node}[/i] 이(가) 추가될 때
 On Child Leaving,자식이 떠날 때
 "Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it.","자식 노드가 이 노드에서 떠나기 직전에 실행됩니다. 아직 읽을 수 있는 동안이라 개수나 합계, 패널을 그 자식의 정보로 갱신할 수 있습니다."
 On child leaving [i]{node}[/i],자식 [i]{node}[/i] 이(가) 떠날 때
+%s - Godot calls this %s.,%s - Godot에서는 이것을 %s(이)라고 합니다.
+%s - this sheet calls it %s.,%s - 이 시트에서는 이것을 %s(이)라고 합니다.

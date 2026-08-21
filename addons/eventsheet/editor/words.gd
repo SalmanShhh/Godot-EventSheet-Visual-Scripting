@@ -135,6 +135,46 @@ static func godot_word(sheet_word: String) -> String:
 	return ""
 
 
+## M46. The glossary lens as a HOVER LINE. Hand it the exact text a row is showing and get back the
+## one or two lines that say what the other vocabulary calls the same thing, or "" when the text is
+## not one of the sheet's nouns (which is nearly every span, so the caller can use the empty string
+## as "keep looking").
+##
+## Both directions, because the reader who needs the lens most is the one who did NOT choose the
+## word in front of them: with Familiar Words on the row says "Properties bar" and the Godot term is
+## what is hidden; with it off the row says "Inspector" and the sheet's own word is. A word spelled
+## the same in both vocabularies (Tools menu) returns "" rather than a sentence saying nothing.
+##
+## A word the reader TYPED themselves is handled too: it matches neither default, so the Godot
+## spelling is the useful half and that is the one the line names.
+static func glossary_hover(shown_text: String) -> String:
+	return glossary_hover_for(shown_text, familiar_words_enabled(), overrides())
+
+
+## The pure form, for tests and for a renderer that already holds the Familiar Words state.
+static func glossary_hover_for(shown_text: String, familiar: bool, override_map: Dictionary) -> String:
+	var wanted: String = shown_text.strip_edges()
+	if wanted.is_empty():
+		return ""
+	for key: String in keys():
+		if word_for(key, familiar, override_map) != wanted:
+			continue
+		var godot: String = plain_default(key)
+		var sheet_side: String = familiar_default(key)
+		var line: String = ""
+		if wanted == godot:
+			if sheet_side == godot:
+				return ""
+			line = EventSheetL10n.translate("%s - this sheet calls it %s.") % [wanted, sheet_side]
+		else:
+			line = EventSheetL10n.translate("%s - Godot calls this %s.") % [wanted, godot]
+		var what: String = names_what(key).strip_edges()
+		if what.is_empty():
+			return line
+		return "%s\n%s." % [line, what.substr(0, 1).to_upper() + what.substr(1)]
+	return ""
+
+
 ## The sheet's word for a Godot term, or "" when the sheet has no word of its own for it.
 static func sheet_word(godot_term: String) -> String:
 	var wanted: String = godot_term.strip_edges()

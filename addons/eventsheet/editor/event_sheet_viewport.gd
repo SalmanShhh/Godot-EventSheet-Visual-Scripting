@@ -3401,6 +3401,15 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var span_note: String = str(metadata.get("hover_note", "")).strip_edges()
 	if not span_note.is_empty():
 		return span_note
+	# M46 - the glossary lens. A tool sheet reads in the editor-building words (Properties bar,
+	# Panel (dock), Command tool, Shared store), and a reader who knows Godot's own name for the
+	# thing has nowhere to look it up. Hovering the word says it. Asked of the span TEXT rather than
+	# stamped on every reading, so a word renamed in Settings > Words keeps its hover with no
+	# reading to update, and a span that is not one of the vocabulary's nouns costs one dictionary
+	# walk and falls through to everything below.
+	var glossary_help: String = _glossary_tooltip(hit)
+	if not glossary_help.is_empty():
+		return glossary_help
 	# S19 - the ⟡ chip is a NAME, and a name on its own teaches nothing: hovering it says what the
 	# pattern is in one line and that the Manual has a page about it (which a click opens).
 	if kind == "pattern_chip":
@@ -3530,6 +3539,20 @@ func _get_tooltip(at_position: Vector2) -> String:
 
 ## What a hovered mark means, or "" when the hovered span is not one. The text comes from the
 ## Manual's own legend table, so the hover and the legend page can never say two different things.
+## M46. What the OTHER vocabulary calls the hovered word, or "" when the hovered span is not one of
+## the sheet's nouns. The whole lens is one lookup on the span's own text, so nothing about a row
+## has to know it is being read through a glossary.
+func _glossary_tooltip(hit: Dictionary) -> String:
+	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	var span_index: int = int(hit.get("span_index", -1))
+	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+		return ""
+	var span: SemanticSpan = row_data.spans[span_index]
+	if span == null:
+		return ""
+	return EventSheetWords.glossary_hover(span.text)
+
+
 func _mark_tooltip(hit: Dictionary) -> String:
 	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
 	var span_index: int = int(hit.get("span_index", -1))

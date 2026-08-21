@@ -4001,3 +4001,5 @@ On child added [i]{node}[/i],All'aggiunta del figlio [i]{node}[/i]
 On Child Leaving,All'uscita di un figlio
 "Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it.","Viene eseguito appena prima che un nodo figlio esca da questo - finché è ancora lì da leggere, così un conteggio, un totale o un pannello possono essere aggiornati con esso."
 On child leaving [i]{node}[/i],All'uscita del figlio [i]{node}[/i]
+%s - Godot calls this %s.,%s - Godot lo chiama %s.
+%s - this sheet calls it %s.,%s - questo foglio lo chiama %s.

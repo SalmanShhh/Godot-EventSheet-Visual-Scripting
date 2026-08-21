@@ -4001,3 +4001,5 @@ On child added [i]{node}[/i],当子节点 [i]{node}[/i] 被添加时
 On Child Leaving,当子节点离开时
 "Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it.",在子节点离开该节点之前执行 - 此时它还在、仍可读取，于是计数、总和或某块面板都能据此更新。
 On child leaving [i]{node}[/i],当子节点 [i]{node}[/i] 离开时
+%s - Godot calls this %s.,%s - Godot 称其为 %s。
+%s - this sheet calls it %s.,%s - 本表称其为 %s。

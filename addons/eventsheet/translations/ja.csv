@@ -4001,3 +4001,5 @@ On child added [i]{node}[/i],子ノード [i]{node}[/i] が追加されたとき
 On Child Leaving,子ノードが離れるとき
 "Runs just before a child node leaves this one - while it is still there to be read, so a count, a total or a panel can be brought up to date with it.",子ノードがこのノードから離れる直前に実行されます。まだ読み取れるうちに走るので、個数や合計、パネルの表示をその子の情報で更新できます。
 On child leaving [i]{node}[/i],子ノード [i]{node}[/i] が離れるとき
+%s - Godot calls this %s.,%s - Godot ではこれを %s と呼びます。
+%s - this sheet calls it %s.,%s - このシートではこれを %s と呼びます。
