@@ -78,7 +78,7 @@ Attach to a node to move it.
 - [Move To](Move-To.md) - move a node to a point or along a path.
 - [Follow Path](Follow-Path.md) - walk a drawn Path2D at a real speed, once, looping or ping-pong, with On Path Finished at the end.
 - [Follow](Follow.md) - chase or trail another node with easing.
-- [Pin](Pin.md) - stick one object to another: position, angle or both, with the offset remembered.
+- [Pin](Pin.md) - stick one object to another in eight modes: position, angle, both, a rope that only pulls when taut, a bar that holds its length, a soft follow that lags, a spring that settles, and the anchor's size - plus one axis at a time, a named point on the anchor (a marker, a bone, a hand) and a point travelling a path.
 - [Bullet](Bullet.md) - fire a node in a straight line at a speed and angle.
 - [Sine](Sine.md) - oscillate a property (position, size, angle) on a sine wave.
 - [Orbit](Orbit.md) - circle a node around a centre point.
@@ -90,6 +90,7 @@ Attach to a node to move it.
 - [Bullet 3D](Bullet-3D.md) - fire a 3D node in a straight line.
 - [Sine 3D](Sine-3D.md) - oscillate a 3D property on a sine wave.
 - [Orbit 3D](Orbit-3D.md) - circle a 3D node around a centre.
+- [Pin 3D](Pin-3D.md) - the Pin behavior's twin on a Node3D host, mode for mode, with the point pin riding a BoneAttachment3D so "pin the sword to the hand" is one name.
 
 ## AI and logic
 

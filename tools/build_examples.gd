@@ -33,6 +33,7 @@ func _init() -> void:
 	all_ok = _build_raycast_lab_3d() and all_ok
 	all_ok = _build_hierarchy_playground() and all_ok
 	all_ok = _build_mirror_and_flip() and all_ok
+	all_ok = _build_pin_modes() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -3795,3 +3796,301 @@ func _mirror_tile_set() -> TileSet:
 	tile_set.tile_size = Vector2i(32, 32)
 	tile_set.add_source(atlas, 0)
 	return tile_set
+
+# ── 21. Pin modes: every way one thing can ride another (Y4 / Y5) ───────────
+#
+# One room per mode, side by side, all driven by anchors the sheet moves - so the DIFFERENCES are
+# the demo. A rope hangs slack and only pulls when it goes taut; a bar holds its length every tick
+# whatever happens; a soft pin lags behind on purpose; a spring overshoots and settles; an
+# axis-locked pin follows a column and keeps its own height; a point pin rides a marker on somebody
+# else's body rather than the body itself. Then the whole thing again in 3D, with the Pin 3D twin.
+
+const PIN := "res://eventsheet_addons/pin/pin_behavior.gd"
+const PIN_3D := "res://eventsheet_addons/pin_3d/pin_3d_behavior.gd"
+const PIN_MODES_DIR := "res://demo/showcase/pin_modes"
+
+
+func _build_pin_modes() -> bool:
+	return _build_pin_modes_2d() and _build_pin_modes_3d()
+
+
+func _build_pin_modes_2d() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "PinModesDemo"
+	sheet.emit_live_values = false
+	sheet.variables = {"t": {"type": "float", "default": 0.0, "exported": false}}
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Pin Modes[/b] - six ways one object can ride another, running at once. The sheet moves only the ANCHORS (the post, the engine, the walker); everything else is a Pin behavior in a different mode. Watch the rope go slack and then snap taut, the bar hold its length through every turn, the camera target trail behind, the hat overshoot and settle, the shadow keep its own ground line, and the sword stay in the hand rather than beside the body."
+	sheet.events.append(about)
+
+	# One-time setup: each pin is started in the mode that names it, in one row.
+	var setup: EventRow = EventRow.new()
+	setup.trigger_provider_id = "Core"
+	setup.trigger_id = "OnReady"
+	setup.actions.append(_action("PinBehavior", "method:pin_rope",
+		"{target}.pin_rope({anchor}, {max_length})",
+		{"target": "$Lantern/Pin", "anchor": "$Post", "max_length": "90.0"}))
+	setup.actions.append(_action("PinBehavior", "method:pin_bar",
+		"{target}.pin_bar({anchor}, {length})",
+		{"target": "$Cart/Pin", "anchor": "$Engine", "length": "70.0"}))
+	setup.actions.append(_action("PinBehavior", "method:pin_soft",
+		"{target}.pin_soft({anchor}, {speed})",
+		{"target": "$CamTarget/Pin", "anchor": "$Player", "speed": "3.0"}))
+	setup.actions.append(_action("PinBehavior", "method:pin_spring",
+		"{target}.pin_spring({anchor}, {stiffness}, {damping})",
+		{"target": "$Hat/Pin", "anchor": "$Player/Head", "stiffness": "140.0", "damping": "0.6"}))
+	setup.actions.append(_action("PinBehavior", "method:pin_x_to",
+		"{target}.pin_x_to({anchor})", {"target": "$Shadow/Pin", "anchor": "$Player"}))
+	setup.actions.append(_action("PinBehavior", "method:pin_to_point",
+		"{target}.pin_to_point({anchor}, {point_name})",
+		{"target": "$Sword/Pin", "anchor": "$Player", "point_name": "\"Hand\""}))
+	sheet.events.append(setup)
+
+	# The anchors move; the pins answer. The lantern also falls, which is what gives the rope
+	# something to be slack about - a constraint with nothing pulling on it never shows its shape.
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnPhysicsProcess"
+	tick.actions.append(_raw("\n".join(PackedStringArray([
+		"t += delta",
+		"$Post.position = Vector2(250.0 + sin(t * 1.2) * 190.0, 180.0)",
+		"$Engine.position = Vector2(180.0 + fmod(t * 90.0, 760.0), 560.0)",
+		"$Player.position = Vector2(600.0 + sin(t * 0.8) * 280.0, 420.0)",
+		"$Player.rotation = sin(t * 0.8) * 0.25",
+		"# Gravity for the lantern alone. The rope never pushes - it only stops the fall once the",
+		"# line is straight, which is exactly the difference between a rope and a bar.",
+		"$Lantern.position.y = minf($Lantern.position.y + 220.0 * delta, 620.0)"
+	]))))
+	sheet.events.append(tick)
+
+	var readout: EventRow = EventRow.new()
+	readout.trigger_provider_id = "Core"
+	readout.trigger_id = "OnProcess"
+	readout.actions.append(_raw("$Screen.text = \"PIN MODES   rope %.0f / 90 px   bar %.0f / 70 px   soft lag %.0f px\" % [$Lantern.global_position.distance_to($Post.global_position), $Cart.global_position.distance_to($Engine.global_position), $CamTarget.global_position.distance_to($Player.global_position)]"))
+	sheet.events.append(readout)
+
+	if not _compile(sheet, "%s/pin_modes.tres" % PIN_MODES_DIR, "%s/pin_modes.gd" % PIN_MODES_DIR):
+		return false
+
+	# ── The scene ──
+	var root: Node2D = Node2D.new()
+	root.name = "PinModes"
+	root.set_script(load("%s/pin_modes.gd" % PIN_MODES_DIR))
+	var texture: ImageTexture = _make_texture()
+
+	_pin_sprite(root, root, "Post", Vector2(250.0, 180.0), texture,
+		Color(0.62, 0.66, 0.78, 1.0), Vector2(0.55, 0.55))
+	var lantern: Sprite2D = _pin_sprite(root, root, "Lantern", Vector2(250.0, 240.0), texture,
+		Color(1.0, 0.82, 0.35, 1.0), Vector2(0.7, 0.7))
+	_attach_behavior(lantern, "Pin", PIN, root)
+
+	_pin_sprite(root, root, "Engine", Vector2(180.0, 560.0), texture,
+		Color(0.5, 0.78, 0.95, 1.0), Vector2(0.9, 0.6))
+	var cart: Sprite2D = _pin_sprite(root, root, "Cart", Vector2(110.0, 560.0), texture,
+		Color(0.75, 0.85, 0.6, 1.0), Vector2(0.75, 0.55))
+	_attach_behavior(cart, "Pin", PIN, root)
+
+	var player: Sprite2D = _pin_sprite(root, root, "Player", Vector2(600.0, 420.0), texture,
+		Color(0.95, 0.55, 0.45, 1.0), Vector2(1.0, 1.0))
+	var hand: Marker2D = Marker2D.new()
+	hand.name = "Hand"
+	hand.position = Vector2(30.0, -4.0)
+	player.add_child(hand)
+	hand.owner = root
+	var head: Marker2D = Marker2D.new()
+	head.name = "Head"
+	head.position = Vector2(0.0, -34.0)
+	player.add_child(head)
+	head.owner = root
+
+	var sword: Sprite2D = _pin_sprite(root, root, "Sword", Vector2(630.0, 416.0), texture,
+		Color(0.85, 0.88, 0.95, 1.0), Vector2(0.5, 0.18))
+	_attach_behavior(sword, "Pin", PIN, root)
+	var hat: Sprite2D = _pin_sprite(root, root, "Hat", Vector2(600.0, 386.0), texture,
+		Color(0.7, 0.5, 0.9, 1.0), Vector2(0.6, 0.3))
+	_attach_behavior(hat, "Pin", PIN, root)
+	var cam_target: Sprite2D = _pin_sprite(root, root, "CamTarget", Vector2(600.0, 420.0), texture,
+		Color(0.4, 0.95, 0.8, 0.7), Vector2(0.4, 0.4))
+	_attach_behavior(cam_target, "Pin", PIN, root)
+	var shadow: Sprite2D = _pin_sprite(root, root, "Shadow", Vector2(600.0, 470.0), texture,
+		Color(0.1, 0.12, 0.16, 0.65), Vector2(0.9, 0.22))
+	_attach_behavior(shadow, "Pin", PIN, root)
+
+	_pin_label(root, root, "Screen", Vector2(36.0, 28.0), 26,
+		"PIN MODES", Color(0.92, 0.94, 1.0, 1.0))
+	_pin_label(root, root, "RopeCaption", Vector2(36.0, 300.0), 15,
+		"rope: slack until taut, then it pulls", Color(1.0, 0.82, 0.35, 1.0))
+	_pin_label(root, root, "BarCaption", Vector2(36.0, 596.0), 15,
+		"bar: held at exactly its length", Color(0.75, 0.85, 0.6, 1.0))
+	_pin_label(root, root, "SoftCaption", Vector2(760.0, 300.0), 15,
+		"soft: a camera target that trails", Color(0.4, 0.95, 0.8, 1.0))
+	_pin_label(root, root, "SpringCaption", Vector2(760.0, 322.0), 15,
+		"spring: a hat that overshoots and settles", Color(0.7, 0.5, 0.9, 1.0))
+	_pin_label(root, root, "AxisCaption", Vector2(760.0, 344.0), 15,
+		"X only: a shadow that keeps its ground line", Color(0.72, 0.76, 0.86, 1.0))
+	_pin_label(root, root, "PointCaption", Vector2(760.0, 366.0), 15,
+		"point: a sword in the hand, not beside the body", Color(0.85, 0.88, 0.95, 1.0))
+
+	return _save_scene(root, "%s/pin_modes.tscn" % PIN_MODES_DIR)
+
+
+## One coloured sprite, parented and owned in the one step every node in this room needs.
+func _pin_sprite(parent: Node, root: Node, node_name: String, at: Vector2, texture: Texture2D,
+		tint: Color, size: Vector2) -> Sprite2D:
+	var sprite: Sprite2D = Sprite2D.new()
+	sprite.name = node_name
+	sprite.position = at
+	sprite.texture = texture
+	sprite.modulate = tint
+	sprite.scale = size
+	parent.add_child(sprite)
+	sprite.owner = root
+	return sprite
+
+
+func _pin_label(parent: Node, root: Node, node_name: String, at: Vector2, font_size: int,
+		text: String, tint: Color) -> Label:
+	var label: Label = Label.new()
+	label.name = node_name
+	label.position = at
+	label.text = text
+	label.modulate = tint
+	label.add_theme_font_size_override("font_size", font_size)
+	parent.add_child(label)
+	label.owner = root
+	return label
+
+
+func _build_pin_modes_3d() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "PinModes3DDemo"
+	sheet.emit_live_values = false
+	sheet.variables = {"t": {"type": "float", "default": 0.0, "exported": false}}
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Pin Modes 3D[/b] - the same six relationships, on the Pin 3D pack. Nothing here is a child of anything it follows: every one of them is a pin, which is why each can let go and none of them is destroyed when its anchor is. The point pin rides a Marker3D on the walker, which is where a BoneAttachment3D would sit on a real rig."
+	sheet.events.append(about)
+
+	var setup: EventRow = EventRow.new()
+	setup.trigger_provider_id = "Core"
+	setup.trigger_id = "OnReady"
+	setup.actions.append(_action("Pin3DBehavior", "method:pin_rope",
+		"{target}.pin_rope({anchor}, {max_length})",
+		{"target": "$Lantern/Pin", "anchor": "$Post", "max_length": "2.0"}))
+	setup.actions.append(_action("Pin3DBehavior", "method:pin_bar",
+		"{target}.pin_bar({anchor}, {length})",
+		{"target": "$Cart/Pin", "anchor": "$Engine", "length": "2.0"}))
+	setup.actions.append(_action("Pin3DBehavior", "method:pin_soft",
+		"{target}.pin_soft({anchor}, {speed})",
+		{"target": "$CamTarget/Pin", "anchor": "$Player", "speed": "3.0"}))
+	setup.actions.append(_action("Pin3DBehavior", "method:pin_spring",
+		"{target}.pin_spring({anchor}, {stiffness}, {damping})",
+		{"target": "$Hat/Pin", "anchor": "$Player/Head", "stiffness": "140.0", "damping": "0.6"}))
+	setup.actions.append(_action("Pin3DBehavior", "method:pin_x_to",
+		"{target}.pin_x_to({anchor})", {"target": "$Shadow/Pin", "anchor": "$Player"}))
+	setup.actions.append(_action("Pin3DBehavior", "method:pin_to_point",
+		"{target}.pin_to_point({anchor}, {point_name})",
+		{"target": "$Sword/Pin", "anchor": "$Player", "point_name": "\"Hand\""}))
+	sheet.events.append(setup)
+
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnPhysicsProcess"
+	tick.actions.append(_raw("\n".join(PackedStringArray([
+		"t += delta",
+		"$Post.position = Vector3(-6.0 + sin(t * 1.2) * 3.0, 4.0, 0.0)",
+		"$Engine.position = Vector3(fmod(t * 2.0, 14.0) - 7.0, 0.5, 6.0)",
+		"$Player.position = Vector3(sin(t * 0.8) * 5.0, 1.0, 0.0)",
+		"$Player.rotation.y = sin(t * 0.8) * 0.4",
+		"# The same fall the 2D room gives its lantern, so the rope has something to hold.",
+		"$Lantern.position.y = maxf($Lantern.position.y - 4.0 * delta, 0.3)"
+	]))))
+	sheet.events.append(tick)
+
+	var readout: EventRow = EventRow.new()
+	readout.trigger_provider_id = "Core"
+	readout.trigger_id = "OnProcess"
+	readout.actions.append(_raw("$HudLayer/Readout.text = \"PIN MODES 3D   rope %.2f / 2.00   bar %.2f / 2.00   soft lag %.2f\" % [$Lantern.global_position.distance_to($Post.global_position), $Cart.global_position.distance_to($Engine.global_position), $CamTarget.global_position.distance_to($Player.global_position)]"))
+	sheet.events.append(readout)
+
+	if not _compile(sheet, "%s/pin_modes_3d.tres" % PIN_MODES_DIR, "%s/pin_modes_3d.gd" % PIN_MODES_DIR):
+		return false
+
+	# ── The scene ──
+	var root: Node3D = Node3D.new()
+	root.name = "PinModes3D"
+	root.set_script(load("%s/pin_modes_3d.gd" % PIN_MODES_DIR))
+
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-55.0, -35.0, 0.0)
+	sun.shadow_enabled = true
+	root.add_child(sun)
+	sun.owner = root
+	var world: WorldEnvironment = WorldEnvironment.new()
+	world.name = "World"
+	var env: Environment = Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.07, 0.08, 0.11)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.45, 0.5, 0.62)
+	env.ambient_light_energy = 0.7
+	world.environment = env
+	root.add_child(world)
+	world.owner = root
+	var camera: Camera3D = Camera3D.new()
+	camera.name = "Camera"
+	camera.position = Vector3(0.0, 7.0, 16.0)
+	camera.rotation_degrees = Vector3(-22.0, 0.0, 0.0)
+	root.add_child(camera)
+	camera.owner = root
+
+	_add_block(root, root, "Post", Vector3(-6.0, 4.0, 0.0), Vector3(0.5, 0.5, 0.5),
+		Color(0.62, 0.66, 0.78, 1.0))
+	var lantern: MeshInstance3D = _add_block(root, root, "Lantern", Vector3(-6.0, 3.0, 0.0),
+		Vector3(0.6, 0.6, 0.6), Color(1.0, 0.82, 0.35, 1.0))
+	_attach_behavior(lantern, "Pin", PIN_3D, root)
+
+	_add_block(root, root, "Engine", Vector3(-7.0, 0.5, 6.0), Vector3(1.2, 0.8, 0.8),
+		Color(0.5, 0.78, 0.95, 1.0))
+	var cart: MeshInstance3D = _add_block(root, root, "Cart", Vector3(-9.0, 0.5, 6.0),
+		Vector3(1.0, 0.7, 0.8), Color(0.75, 0.85, 0.6, 1.0))
+	_attach_behavior(cart, "Pin", PIN_3D, root)
+
+	var player: MeshInstance3D = _add_block(root, root, "Player", Vector3(0.0, 1.0, 0.0),
+		Vector3(0.8, 1.6, 0.8), Color(0.95, 0.55, 0.45, 1.0))
+	var hand: Marker3D = Marker3D.new()
+	hand.name = "Hand"
+	hand.position = Vector3(0.7, 0.2, 0.0)
+	player.add_child(hand)
+	hand.owner = root
+	var head: Marker3D = Marker3D.new()
+	head.name = "Head"
+	head.position = Vector3(0.0, 1.1, 0.0)
+	player.add_child(head)
+	head.owner = root
+
+	var sword: MeshInstance3D = _add_block(root, root, "Sword", Vector3(0.7, 1.2, 0.0),
+		Vector3(0.12, 1.1, 0.12), Color(0.85, 0.88, 0.95, 1.0))
+	_attach_behavior(sword, "Pin", PIN_3D, root)
+	var hat: MeshInstance3D = _add_block(root, root, "Hat", Vector3(0.0, 2.1, 0.0),
+		Vector3(0.9, 0.25, 0.9), Color(0.7, 0.5, 0.9, 1.0))
+	_attach_behavior(hat, "Pin", PIN_3D, root)
+	var cam_target: MeshInstance3D = _add_block(root, root, "CamTarget", Vector3(0.0, 1.0, 0.0),
+		Vector3(0.4, 0.4, 0.4), Color(0.4, 0.95, 0.8, 1.0))
+	_attach_behavior(cam_target, "Pin", PIN_3D, root)
+	var shadow: MeshInstance3D = _add_block(root, root, "Shadow", Vector3(0.0, 0.02, 0.0),
+		Vector3(1.2, 0.04, 1.2), Color(0.1, 0.12, 0.16, 1.0))
+	_attach_behavior(shadow, "Pin", PIN_3D, root)
+
+	var hud: CanvasLayer = CanvasLayer.new()
+	hud.name = "HudLayer"
+	root.add_child(hud)
+	hud.owner = root
+	_pin_label(hud, root, "Readout", Vector2(32.0, 26.0), 22, "PIN MODES 3D",
+		Color(0.92, 0.94, 1.0, 1.0))
+
+	return _save_scene(root, "%s/pin_modes_3d.tscn" % PIN_MODES_DIR)

@@ -41,6 +41,64 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **A `Mirror and Flip` showcase.** A hero that faces the way it moves with its ray, its muzzle point
   and its dust coming along and its name plate staying readable, a mirrored UI panel, a mirrored
   sub-viewport, a flipped tile and a 3D twin that turns around instead of scaling itself inside out.
+### Added - Pin in every mode, in 2D and 3D, and the note for using it and parenting at once
+
+- **Five more ways to ride something, on the row that already said \"Pin to\".** The Pin pack shipped
+  position, angle and both; a rope, a bar, a soft follow and a spring were left as hand-written
+  distance maths, which is the arithmetic every lantern, leash, cart, camera target and bouncing hat
+  in the world is written out of. The mode knob grew - `rope`, `bar`, `soft`, `spring`, `size` beside
+  the three it always had - and each arrived as its own row: **Pin To Rope** (free inside the length,
+  pulled the moment the line goes taut), **Pin To Bar** (held at exactly that length, every tick),
+  **Pin To Softly** (a share of the gap closed each second, which is what a lag is), **Pin To With
+  Spring** (overshoot, wobble, settle). Nothing was renamed: the three shipped modes keep the exact
+  meaning they had, written out as two lists rather than inferred from two `!=` tests.
+- **Pin one axis, the size, a named point, or a place on a path.** **Pin X Position To** and **Pin Y
+  Position To** follow a column or a height and leave the other alone - a shadow under a jumper is
+  now one row instead of a per-frame override. **Pin Size To** copies the anchor's scale. **Pin To
+  Point** rides a *named child* of the anchor - a `Marker2D`, a `Bone2D`, the hand a weapon hangs off
+  - looked up fresh each frame, so a rig that re-parents its attachments cannot leave the pin holding
+  a stale node. **Pin To Path** rides a point travelling a `Path2D`, making the follower once if the
+  project has not, with **Set Path Progress** to drive it. **Is Taut** and **PinDistance** are the
+  two questions those modes needed.
+- **A Pin 3D pack, mode for mode.** 3D had no Pin at all, so every health bar over a head and every
+  sword in a hand was three axes of arithmetic written again. `Pin3DBehavior` hosts a `Node3D` and
+  carries the same rows plus a Z axis, with one difference worth knowing: in 3D a named point is
+  usually the `BoneAttachment3D` Godot already keeps glued to a `Skeleton3D` bone, so \"pin the sword
+  to the hand\" is one name and the skeleton does the hard half.
+- **All of it reads back off hand-written code, in the mode's own word.** The rope's
+  `.limit_length()` and the bar's `.normalized() * length` differ by one call and are the whole
+  difference between the two behaviours, so they read as `Pin to X (rope, max length 80)` and `Pin to
+  X (bar, length 80)`; `global_position.lerp(a.global_position, 10 * delta)` reads `Pin to a softly
+  (speed 10)`. A variable *declared* as a point on somebody - `@onready var hand: Marker2D =
+  $Player/Hand` - turns the plain place copy into `Pin to Player's hand`, and a `PathFollow2D` into
+  `Pin to Track's path position`. Every one of them is authorable as the same bytes from the Pin
+  section of the picker, which is the two-way gate the readings ship with.
+- **The over-general spellings are gated, deliberately, and two of them get no picker row at all.**
+  `scale = x.scale`, `position.x = x.position.x` and the per-second `lerp` are lines a parallax layer,
+  a UI element and a solver step all write, so they read as a pin ONLY in a file that has already
+  pinned that anchor another way, copies both axes from it, or declared it as a point on somebody. The
+  lerp taught the rule the hard way: it is byte for byte how a **camera** scrolls toward a target, and
+  an ungated version took the camera's own row away from it. And only the rope and the bar are offered
+  as free picker rows, because a row's template is also what the IMPORTER matches - a row for one of
+  the general spellings would re-file every such line in every project as a pin whatever the reading
+  said. The four gated modes are authored by attaching the pack, and the test that pins all of this is
+  the point of the whole file.
+- **Pin or child, said where a reader meets it.** An object's head bar grew a **Pins** folder saying
+  what it rides and in which mode (`pinned to anchor (rope)`), derived from the file's own lines
+  through the same gates the rows use, so it can never announce a pin the canvas does not show. The
+  Pin To row's hover now says the difference out loud: a pin follows at runtime and can let go; a
+  child is structure and is destroyed with its parent.
+- **Two Doctor notes for the ways those two get crossed.** **Double follow** names an object that is
+  BOTH a child of X and pinned to X - the classic \"it drifts twice as fast\" bug, where being a child
+  already carries it and the pin writes its place a second time from the same source - and offers
+  both ways out. **Pin to a freed object** names a pin whose anchor the file destroys with no Unpin
+  and no validity question anywhere, and offers the guard. Notes, never warnings: both files run,
+  they just do something their author did not mean.
+- **A showcase in both dimensions.** `demo/showcase/pin_modes/` runs six modes side by side with the
+  sheet moving only the anchors, so the differences are the demo, and ships a 3D twin scene on the
+  new pack. Measured over 360 physics frames: the rope's length never exceeds its 90 px and drops to
+  63.8 px of slack, the bar holds 70.000 px at both ends of the run, and the soft pin trails up to
+  68.7 px behind its anchor.
 
 ### Added - a menu built in code reads as the menu it is, item by item
 
