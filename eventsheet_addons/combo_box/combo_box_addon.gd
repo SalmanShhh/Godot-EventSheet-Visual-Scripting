@@ -54,6 +54,10 @@ var _chain_score: float = 0.0
 var _chain_multiplier: int = 1
 var _banked_score: float = 0.0
 var _chain_last: String = ""
+# Y1 - combo id -> {player: AnimationPlayer, animation: String}: the move each combo PLAYS.
+# Wiring a sequence to an animation is what a fighter does twenty times over, and keeping it
+# here makes those twenty one table rather than twenty copies of the same event.
+var _animations: Dictionary = {}
 
 func _process(delta: float) -> void:
 	_advance(delta)
@@ -246,6 +250,26 @@ func drop_chain() -> void:
 	_chain_score = 0.0
 	_chain_multiplier = 1
 
+## @ace_action
+## @ace_featured
+## @ace_name("Set Animation For Combo")
+## @ace_category("ComboBox")
+## @ace_description("Wires a registered combo to an animation: when that combo matches, the player you name plays that clip, and On Combo Matched still fires for everything else the move does. One row per move - the whole move list is a table.")
+## @ace_display_template("Set animation [b]{animation}[/b] for combo [b]{id}[/b]")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.set_animation_for_combo({id}, {player}, {animation})")
+func set_animation_for_combo(id: String, player: AnimationPlayer, animation: String) -> void:
+	_animations[id] = {"player": player, "animation": animation}
+
+## @ace_action
+## @ace_name("Clear Animation For Combo")
+## @ace_category("ComboBox")
+## @ace_description("Unwires a combo from its animation. The combo keeps matching and keeps firing its trigger; it simply stops playing a clip of its own.")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.clear_animation_for_combo({id})")
+func clear_animation_for_combo(id: String) -> void:
+	_animations.erase(id)
+
 ## @ace_condition
 ## @ace_name("Has Combo")
 ## @ace_category("ComboBox")
@@ -281,6 +305,15 @@ func is_buffer_empty() -> bool:
 ## @ace_codegen_template("ComboBox.combo_has_tag({id}, {tag})")
 func combo_has_tag(id: String, tag: String) -> bool:
 	return _combos.has(id) and tag in (_combos[id].tags as PackedStringArray)
+
+## @ace_condition
+## @ace_name("Combo Has Animation")
+## @ace_category("ComboBox")
+## @ace_description("Whether a combo has been wired to an animation.")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.combo_has_animation({id})")
+func combo_has_animation(id: String) -> bool:
+	return _animations.has(id)
 
 ## @ace_expression
 ## @ace_name("Matched Id")
@@ -453,6 +486,15 @@ func combo_count() -> int:
 func combo_id_at(index: int) -> String:
 	return str(_combos.keys()[index]) if index >= 0 and index < _combos.size() else ""
 
+## @ace_expression
+## @ace_name("Animation For Combo")
+## @ace_category("ComboBox")
+## @ace_description("The animation a combo is wired to play; "" when it is wired to none.")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.animation_for_combo({id})")
+func animation_for_combo(id: String) -> String:
+	return str(_animations[id].animation) if _animations.has(id) else ""
+
 func _token_matches(pattern: String, token: String) -> bool:
 	# A registered token pattern matches an input if it is the wildcard "*" or the exact token.
 	return pattern == "*" or pattern == token
@@ -546,9 +588,23 @@ func _evaluate() -> void:
 		_match_time = _clock
 		if debug_logging:
 			print("[ComboBox] matched ", best_full)
+		# Y1 - the move this combo was wired to, played before the trigger fires so the
+		# animation and everything the trigger does start on the same frame.
+		_play_combo_animation(best_full)
 		on_combo_matched.emit()
 	if partial_changed:
 		on_partial_progress.emit()
+
+func _play_combo_animation(id: String) -> void:
+	# Y1. Plays the animation a combo was wired to, when it was wired to one and the player it
+	# names is still alive. A combo with no animation, or one whose player has gone, plays nothing:
+	# detecting is this pack's job, and a missing animation must never stop the trigger firing.
+	if not _animations.has(id):
+		return
+	var wired: Dictionary = _animations[id]
+	var player: AnimationPlayer = wired.player as AnimationPlayer
+	if is_instance_valid(player) and player.has_animation(str(wired.animation)):
+		player.play(str(wired.animation))
 
 func _advance(delta: float) -> void:
 	# Ticks the clock and expires any partial whose timing window elapsed with no further input,
