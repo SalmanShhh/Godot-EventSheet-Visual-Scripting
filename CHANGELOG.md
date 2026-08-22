@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed - a compile leaves nothing behind for the next file you open
+
+- **Opening a .gd right after the Test Bench (or any behaviour compile) kept `_physics_process` as
+  one code block.** A behaviour compile switches the compiler's node-scoped templates onto the
+  `host.` prefix, and that per-compile scratch stayed set after the compile finished. The lifter's
+  byte gate for a lifecycle handler emits its fragment outside any compile, so it inherited the
+  stale prefix, regenerated `host.move_and_slide()` against a file that says `move_and_slide()`,
+  and left the whole function verbatim - until the next compile of anything (a provider rescan, a
+  second open) happened to clear it. Every emission entry point now starts from the scratch state
+  its own sheet calls for, so a fragment compares like with like no matter what compiled last.
+
 ### Added - mirror and flip, in the same two words on every host that can do it
 
 - **Set Mirrored now means something on every node, not just a sprite.** The row shipped for

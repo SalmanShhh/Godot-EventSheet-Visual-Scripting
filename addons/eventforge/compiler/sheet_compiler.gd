@@ -104,9 +104,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		(result["errors"] as Array[String]).append("Sheet is null")
 		return result
 
-	# Host-targeting default for {host.} templates - reset before the external-source path so a
-	# prior behavior compile never leaks "host" into a later non-behavior compile.
-	_behavior_host_default = ""
+	_reset_emission_scratch(sheet)
 
 	# GDScript-backed sheets (opened FROM a .gd file) compile via the order-preserving
 	# external path: no generated header, no synthesized extends, rows emit in sheet order
@@ -198,8 +196,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	# host) - Godot's component idiom standing in for node-attached behaviors. host_class is
 	# the declared required host type, not the script's base.
 	if sheet.behavior_mode:
-		# Node-scoped ACEs ({host.} templates) target the parent host, not the behavior Node.
-		_behavior_host_default = "host"
+		# Node-scoped ACEs ({host.} templates) target the parent host, not the behavior Node - the
+		# "host" prefix every emitter reads was set from this same flag in _reset_emission_scratch.
 		lines.append("extends Node")
 	else:
 		lines.append("extends %s" % sheet.host_class)
@@ -1032,11 +1030,37 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 	return true
 
 
+## Puts every per-compile scratch static back to the state a compile of `sheet` starts from: the
+## {host.} prefix is "host" only for a behaviour sheet compiled from its own resource (an opened .gd
+## takes the order-preserving external path, which never prefixes), and the debug emitters are off.
+## compile() always started here, but the two fragment emitters below (one function block, one
+## anchored trigger function) run OUTSIDE a compile, and they inherited whatever the last compile left
+## behind. After a behaviour compile (the Test Bench, a pack build) the prefix was still "host", so
+## the lifter's byte gate regenerated `host.move_and_slide()` against a file that says
+## `move_and_slide()` and kept the whole function as a verbatim block - until the next compile of
+## anything happened to reset the static, which is why a rescan or a second open "repaired" it.
+## `null` is a fragment with no sheet behind it: a lifted trigger function compared against the file
+## it came from, so it emits exactly as that file's external compile would.
+static func _reset_emission_scratch(sheet: EventSheetResource) -> void:
+	_behavior_host_default = "host" if sheet != null and sheet.behavior_mode and sheet.external_source_path.is_empty() else ""
+	_emit_breakpoints_flag = sheet.emit_breakpoints if sheet != null else false
+	_emit_event_trace_flag = false
+	_live_values_payload = ""
+	_live_values_receiver_pending = false
+	_throttle_process_emitted = false
+	_error_reporter_pending = false
+	_runtime_group_guards = {}
+	_runtime_group_members = []
+	_group_slugs = {}
+	_row_group_path = {}
+
+
 ## The lifter's per-anchor gate for a lifecycle handler: exactly what the slot above would emit for
 ## these events, as text, with no side effects. The handler anchors only when this equals the
 ## original source lines byte-for-byte, so anchoring can never change a file.
 static func emit_anchored_trigger_text(events: Array) -> String:
 	_compile_mutex.lock()
+	_reset_emission_scratch(null)
 	var lines: PackedStringArray = PackedStringArray()
 	var scratch: Dictionary = {"warnings": [], "errors": []}
 	_emit_anchored_trigger_function(events, lines, [], scratch)
@@ -1046,6 +1070,7 @@ static func emit_anchored_trigger_text(events: Array) -> String:
 
 static func emit_function_block_text(event_function: EventFunction, sheet: EventSheetResource) -> String:
 	_compile_mutex.lock()
+	_reset_emission_scratch(sheet)
 	var lines: PackedStringArray = PackedStringArray()
 	var scratch: Dictionary = {"warnings": [], "errors": []}
 	_emit_function_block(event_function, sheet, lines, [], scratch)
