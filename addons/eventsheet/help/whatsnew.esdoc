@@ -41,6 +41,7 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **A `Mirror and Flip` showcase.** A hero that faces the way it moves with its ray, its muzzle point
   and its dust coming along and its name plate staying readable, a mirrored UI panel, a mirrored
   sub-viewport, a flipped tile and a 3D twin that turns around instead of scaling itself inside out.
+
 ### Added - Pin in every mode, in 2D and 3D, and the note for using it and parenting at once
 
 - **Five more ways to ride something, on the row that already said \"Pin to\".** The Pin pack shipped
