@@ -660,6 +660,25 @@ func build(root: Node) -> void:
 			arrange_menu.add_radio_check_item(EventSheetL10n.translate(EventSheetArrangement.mode_label(mode)), mode)
 			arrange_menu.set_item_checked(mode, mode == active_mode))
 	arrange_menu.id_pressed.connect(func(mode: int) -> void: _dock.set_arrangement_mode(mode))
+	# ── V13: View ▸ Variable rows (appended block - keep together) ─────────────────────────────
+	# How much of a variable row is drawn: the sentence a beginner reads, the sentence with the
+	# declaration echoed beside it (the shipped default), or the declaration as the whole row. A
+	# toolbar setting, never a row on the sheet. Id 9813 is the next number the View menu has never
+	# used; the submenu's radio ids are its own private range, rebuilt on every open.
+	var variable_view_menu: PopupMenu = PopupMenu.new()
+	variable_view_menu.name = "EventSheetVariableViewMenu"
+	view_popup.add_child(variable_view_menu)
+	view_popup.add_submenu_item("Variable rows", "EventSheetVariableViewMenu", 9813)
+	view_popup.set_item_tooltip(view_popup.get_item_index(9813),
+		"How much of a variable row to draw: the sentence on its own, the sentence with the GDScript declaration echoed at the right edge, or that declaration as the whole row. Display only - the file is never touched. Simple Mode keeps it on sentence.")
+	variable_view_menu.about_to_popup.connect(func() -> void:
+		variable_view_menu.clear()
+		var active_view_mode: int = _dock.variable_row_view()
+		for mode: int in EventSheetCodeEcho.VIEW_LABELS.size():
+			variable_view_menu.add_radio_check_item(
+				EventSheetL10n.translate(EventSheetCodeEcho.VIEW_LABELS[mode]), mode)
+			variable_view_menu.set_item_checked(mode, mode == active_view_mode))
+	variable_view_menu.id_pressed.connect(func(mode: int) -> void: _dock.set_variable_row_view(mode))
 	var views_menu: PopupMenu = PopupMenu.new()
 	views_menu.name = "EventSheetSavedViewsMenu"
 	view_popup.add_child(views_menu)

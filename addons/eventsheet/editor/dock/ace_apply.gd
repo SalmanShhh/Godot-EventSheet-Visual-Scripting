@@ -709,6 +709,51 @@ func _group_children_array(group: EventGroup) -> Array:
 	return group.rows
 
 
+## V2 - one sheet-level variable dropped onto another: the declaration order in the sheet's own
+## dictionary is rewritten, in one undo step. False when either row is not such a variable, which is
+## the caller's cue to fall through to the ordinary resource move.
+func _move_sheet_variable(source_row: EventRowData, target_row: EventRowData, drop_mode: String) -> bool:
+	var moved_name: String = _sheet_variable_name(source_row)
+	var anchor_name: String = _sheet_variable_name(target_row)
+	if moved_name.is_empty() or anchor_name.is_empty() or moved_name == anchor_name:
+		return false
+	# "group" is the drag-into-folder gesture, which the variable-grouping helper owns.
+	if drop_mode == "group":
+		return false
+	var reordered: bool = _dock._perform_undoable_sheet_edit("Reorder Variable", func() -> bool:
+		var sheet: EventSheetResource = _dock._current_sheet
+		if sheet == null or not sheet.variables.has(moved_name) or not sheet.variables.has(anchor_name):
+			return false
+		var order: Array = sheet.variables.keys()
+		order.erase(moved_name)
+		var anchor_index: int = order.find(anchor_name)
+		if anchor_index < 0:
+			return false
+		order.insert(anchor_index + (1 if drop_mode == "after" else 0), moved_name)
+		var rebuilt: Dictionary = {}
+		for var_name: Variant in order:
+			rebuilt[var_name] = sheet.variables[var_name]
+		if rebuilt.keys() == sheet.variables.keys():
+			return false
+		sheet.variables = rebuilt
+		return true
+	)
+	if reordered:
+		_dock._mark_dirty(EventSheetL10n.translate("Moved %s.") % moved_name)
+	return true
+
+
+## The sheet-level variable a row declares, "" when the row declares no such variable (a tree
+## variable, whose declaration is a resource in the events array, answers "" too).
+func _sheet_variable_name(row_data: EventRowData) -> String:
+	if row_data == null or row_data.spans.is_empty() or row_data.source_resource is LocalVariable:
+		return ""
+	var metadata: Dictionary = row_data.spans[0].metadata if row_data.spans[0].metadata is Dictionary else {}
+	if str(metadata.get("kind", "")) != "variable" or str(metadata.get("variable_scope", "")) != "global":
+		return ""
+	return str(metadata.get("variable_name", "")).strip_edges()
+
+
 func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String = "before", copy_mode: bool = false) -> void:
 	if source_row == null:
 		return
@@ -729,6 +774,12 @@ func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String,
 		return
 	var target_resource: Resource = target_row.source_resource
 	if target_resource == null:
+		return
+	# V2 - dragging a SHEET-LEVEL variable reorders the declarations. Those live in the sheet's own
+	# dictionary rather than in an events array, so they cannot go through the resource-location walk
+	# below (every one of them answers with the sheet itself); the dictionary is re-laid instead.
+	if not copy_mode and source_rows.size() == 1 \
+			and _move_sheet_variable(source_rows[0] as EventRowData, target_row, drop_mode):
 		return
 	# A published verb's row is a READ view of sheet.functions, whose array order IS the order the
 	# compiler emits the file in - so a verb is never a drop target and never a dragged payload. This is

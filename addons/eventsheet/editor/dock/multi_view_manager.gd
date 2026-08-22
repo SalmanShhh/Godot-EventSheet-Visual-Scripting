@@ -82,6 +82,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
 		_dock._on_viewport_selection_changed(row_data)
 	)
 	view.row_drop_requested.connect(_dock._on_row_drop_requested)
+	view.code_echo_activated.connect(_dock._code_panel_glue.open_at_row)
 	view.rows_drop_requested.connect(_dock._on_rows_drop_requested)
 	view.ace_picker_requested.connect(_dock._on_viewport_ace_picker_requested)
 	view.span_edit_requested.connect(_dock._on_viewport_span_edit_requested)

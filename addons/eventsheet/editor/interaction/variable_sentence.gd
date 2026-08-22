@@ -73,6 +73,63 @@ static func scope_word(scope: String) -> String:
 	return ""
 
 
+## The one line a scope word means, for the hover on a variable row. "" for a scope with nothing to
+## add beyond its word.
+static func scope_note(scope: String) -> String:
+	match scope:
+		SCOPE_GLOBAL:
+			return EventSheetL10n.translate("One value the whole project shares.")
+		SCOPE_INSTANCE:
+			return EventSheetL10n.translate("One per object - each copy in the scene has its own.")
+		SCOPE_LOCAL:
+			return EventSheetL10n.translate("Lives inside the event or function it sits in.")
+		SCOPE_CONSTANT:
+			return EventSheetL10n.translate("Never changes once the game runs.")
+		SCOPE_STATIC:
+			return EventSheetL10n.translate("One value shared by every copy of this object.")
+		SCOPE_SHARED:
+			return EventSheetL10n.translate("One for the whole editor, kept between sheets.")
+		SCOPE_FIELD:
+			return EventSheetL10n.translate("Saved in every resource made from this - a data field, not a live value.")
+	return ""
+
+
+## True when `text` is a literal the declared type can hold. What the inline value editor turns
+## amber on: the type word is the guide rail, and a value that cannot fit says so where it is typed
+## instead of in a dialog. An unknown / Variant type accepts anything, because it does.
+static func value_fits(type_name: String, text: String) -> bool:
+	var literal: String = text.strip_edges()
+	if literal.is_empty():
+		return false
+	match type_name.strip_edges():
+		"int":
+			return literal.is_valid_int()
+		"float":
+			return literal.is_valid_float()
+		"bool":
+			return literal == "true" or literal == "false"
+	return true
+
+
+## What a typed literal becomes when it is written back onto a variable. Text keeps its quotes off
+## (a value field holds the words, not the GDScript spelling of them); anything the type does not
+## settle is stored as the author typed it, which is exactly how an expression default already works.
+static func parse_value(type_name: String, text: String) -> Variant:
+	var literal: String = text.strip_edges()
+	match type_name.strip_edges():
+		"int":
+			return int(literal) if literal.is_valid_int() else 0
+		"float":
+			return float(literal) if literal.is_valid_float() else 0.0
+		"bool":
+			return literal == "true"
+		"String", "StringName":
+			if literal.length() >= 2 and literal.begins_with("\"") and literal.ends_with("\""):
+				return literal.substr(1, literal.length() - 2)
+			return literal
+	return literal
+
+
 ## The chip that leads a variable row: the scope word, then the type in plain words. Either half
 ## alone still reads (a scope nothing settles keeps just the type).
 static func chip_text(scope: String, type_word: String) -> String:

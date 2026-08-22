@@ -105,6 +105,9 @@ const VARIABLE_MENU_TEXT_IMPORT := 11
 ## reads as an `On <name> set` trigger, "Add getter" the `get:` block that reads as an expression.
 const VARIABLE_MENU_ADD_SETTER := 12
 const VARIABLE_MENU_ADD_GETTER := 13
+## V2 - the variable list reads in AUTHOR order, so alphabetical is something you ask for. It writes
+## the order rather than sorting the view, which is why it lands through the undo funnel.
+const VARIABLE_MENU_SORT_AZ := 14
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
@@ -2270,6 +2273,10 @@ func _apply_simple_mode_gates() -> void:
 	# explicit View-menu choice still wins; these only re-resolve the "nobody said" case.
 	_project_bar_glue.apply_visibility()
 	_beginner_toolbar.apply_visibility()
+	# V13 - Simple Mode pins the variable dial at the sentence. Expert mode does not push it back:
+	# the reader's own choice of dial is theirs to keep.
+	if _simple_mode:
+		set_variable_row_view(EventSheetCodeEcho.VIEW_SENTENCE)
 	if _add_code_button != null:
 		_add_code_button.visible = not _simple_mode
 	if _add_menu_popup != null:
@@ -5709,6 +5716,43 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_properties_bar.refresh()
 
 
+## V12 - writes a variable's initial value from the row's own inline field, through the undo funnel.
+## Refuses a literal the declared type cannot hold and says why, because the row must never show a
+## value the file does not have. Handles both kinds of declaration: a sheet-level entry in the
+## variables dictionary, and a `var` line placed in the event list.
+func _apply_variable_value_edit(row_data: EventRowData, new_value: String) -> void:
+	if row_data == null or row_data.spans.is_empty():
+		return
+	var metadata: Dictionary = row_data.spans[0].metadata if row_data.spans[0].metadata is Dictionary else {}
+	var var_name: String = str(metadata.get("variable_name", "")).strip_edges()
+	var declared_type: String = ""
+	for span: SemanticSpan in row_data.spans:
+		var span_meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		if bool(span_meta.get("variable_value_span", false)):
+			declared_type = str(span_meta.get("variable_type_name", ""))
+	if var_name.is_empty():
+		return
+	if not EventSheetVariableSentence.value_fits(declared_type, new_value):
+		_set_status(EventSheetL10n.translate("%s is a %s - it cannot hold %s.") % [
+			var_name, ViewportRowBuilder.friendly_type_word(declared_type), new_value], true)
+		return
+	var declaring: LocalVariable = row_data.source_resource as LocalVariable
+	var written: bool = _perform_undoable_sheet_edit("Edit Variable Value", func() -> bool:
+		if declaring != null:
+			declaring.default_value = str(new_value) if declaring.expression_default or declaring.inferred_type \
+				else EventSheetVariableSentence.parse_value(declared_type, new_value)
+			return true
+		if _current_sheet == null or not _current_sheet.variables.has(var_name):
+			return false
+		var descriptor: Dictionary = (_current_sheet.variables[var_name] as Dictionary).duplicate(true)
+		descriptor["default"] = EventSheetVariableSentence.parse_value(declared_type, new_value)
+		_current_sheet.variables[var_name] = descriptor
+		return true
+	)
+	if written:
+		_mark_dirty(EventSheetL10n.translate("%s starts at %s.") % [var_name, new_value])
+
+
 func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String) -> void:
 	if row_data == null or row_data.source_resource == null:
 		return
@@ -5729,6 +5773,12 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 		)
 		if literal_updated:
 			_mark_dirty("Updated entry.")
+		return
+	# V12 - a variable's value, edited in place on its row. The type word beside it is the guide rail:
+	# a literal that does not fit is refused here rather than written as something the row does not
+	# say (the field already turned amber while it was being typed).
+	if edit_kind == "variable_value":
+		_apply_variable_value_edit(row_data, new_value)
 		return
 	var updated: bool = _perform_undoable_sheet_edit("Edit Row Text", func() -> bool:
 		match edit_kind:
@@ -6315,6 +6365,23 @@ func _scene_node_for_object(object_label: String) -> Node:
 func arrangement_mode() -> int:
 	var view: EventSheetViewport = _active_view()
 	return view.arrangement_mode if view != null else EventSheetArrangement.MODE_FILE_ORDER
+
+
+## V13 - the View dial for variable rows: sentence / both / code. Per view, like every other lens.
+func variable_row_view() -> int:
+	var view: EventSheetViewport = _active_view()
+	return view.variable_row_view if view != null else EventSheetCodeEcho.VIEW_BOTH
+
+
+## Reads every variable row at `mode` in every open pane. Simple Mode pins the dial at the sentence:
+## a beginner's sheet is the sheet, and the declaration is what they came here NOT to write.
+func set_variable_row_view(mode: int) -> void:
+	var wanted: int = EventSheetCodeEcho.VIEW_SENTENCE if _simple_mode else mode
+	for view: Variant in _multi_view.all_views():
+		var pane: EventSheetViewport = view as EventSheetViewport
+		if pane != null:
+			pane.set_variable_row_view(wanted)
+	_set_status(EventSheetL10n.translate("Variable rows: %s.") % EventSheetCodeEcho.VIEW_LABELS[wanted])
 
 
 ## Reads the sheet arranged by `mode`, in every open pane, and points the Outline at it too.

@@ -124,6 +124,10 @@ static func _join_spans(spans: Array) -> String:
 			if str(metadata.get("badge_style", "")) == "negated":
 				negated = true
 			continue
+		# A listing is the sheet in words. The code echo beside a variable row is the same fact in
+		# GDScript, and writing both would say the declaration twice on one line.
+		if bool(metadata.get("code_echo", false)):
+			continue
 		if text.is_empty():
 			continue
 		if pieces.is_empty() and object_label.is_empty() and typed.type == SemanticSpan.SpanType.OBJECT:

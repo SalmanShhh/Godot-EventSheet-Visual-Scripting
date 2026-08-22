@@ -99,6 +99,9 @@ func build_all() -> void:
 	_dock._variable_context_menu.add_item("Toggle Constant", _dock.VARIABLE_MENU_TOGGLE_CONST)
 	_dock._variable_context_menu.add_item("Remember Between Runs", _dock.VARIABLE_MENU_REMEMBER)
 	_dock._variable_context_menu.add_item("Group Under a Heading…", _dock.VARIABLE_MENU_GROUP)
+	# V2 - the list is in the order it was written; this is how you ask for alphabetical, and it
+	# WRITES that order rather than sorting the view behind your back.
+	_dock._variable_context_menu.add_item("Sort A-Z", _dock.VARIABLE_MENU_SORT_AZ)
 	# R2 - the two accessor events. A setter fires when the value is set, so it reads as a trigger;
 	# a getter gives a value, so it reads as an expression. Enabled only on a sheet-level (tree)
 	# variable that does not already have that accessor.

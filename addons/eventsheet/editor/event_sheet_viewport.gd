@@ -66,6 +66,8 @@ signal editor_tool_action_requested(kind: String)
 signal this_editor_action_requested(kind: String)
 signal drag_status_requested(message: String, is_error: bool)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
+## V13 - the code echo beside a variable row was activated: open the code panel at the line it is.
+signal code_echo_activated(row_data: EventRowData)
 ## Emitted when a comment needs the dialog editor (multiline comment rows and action-cell
 ## comments; single-line comment rows keep fast inline editing).
 signal comment_edit_requested(comment_row: Resource)
@@ -1536,6 +1538,22 @@ var show_event_numbers: bool = true
 ## only decides whether they are drawn.
 var show_hit_counts: bool = false
 
+## V13 - how much of a variable row is drawn: the sentence alone, the sentence with the declaration
+## echoed at the right edge (the shipped default), or the declaration as the whole row. A View-menu
+## dial, per view, never a row on the sheet; Simple Mode pins it to the sentence.
+var variable_row_view: int = EventSheetCodeEcho.VIEW_BOTH
+
+
+## Reads every variable row at `mode` (an EventSheetCodeEcho.VIEW_*), rebuilding the rows because
+## the dial decides which spans a variable row HAS, not merely how they are painted.
+func set_variable_row_view(mode: int) -> void:
+	var wanted: int = clampi(mode, EventSheetCodeEcho.VIEW_SENTENCE, EventSheetCodeEcho.VIEW_CODE)
+	if variable_row_view == wanted:
+		return
+	variable_row_view = wanted
+	_refresh_rows()
+	queue_redraw()
+
 
 ## instance-id -> 1-based event number, walking the sheet the way an event sheet counts: every
 ## EventRow in order, descending into groups and sub-events. Pure and static.
@@ -1991,6 +2009,40 @@ func _draw_variable_group_bubbles(width: float) -> void:
 		var top: float = _get_row_top(start_index)
 		var bottom: float = _get_row_top(end_index) + _get_row_height(end_index)
 		bubble.draw(get_canvas_item(), Rect2(3.0, top + 1.0, width - 6.0, bottom - top - 2.0))
+		# V1 - the folder says its own name. A list the sheet builds leads its run with a folder
+		# STRIP that already carries the label (and the fold arrow); a run of declarations lifted
+		# from a file has no such row, so the outline writes the name itself rather than leaving an
+		# unlabelled bracket around three rows.
+		if not _run_leads_with_folder_strip(start_index):
+			_draw_variable_group_label(str(run.get("group", "")), top)
+
+
+## True when the row at `index` IS the folder strip that names its run - the row the builder puts
+## over a list of grouped variables, which carries the label and the fold arrow.
+func _run_leads_with_folder_strip(index: int) -> bool:
+	var row_data: EventRowData = _row_at(index)
+	if row_data == null or row_data.spans.is_empty() or not (row_data.spans[0].metadata is Dictionary):
+		return false
+	return bool((row_data.spans[0].metadata as Dictionary).get("group_chip", false))
+
+
+## The Inspector section's name as a slim label over its run, in the folder's own ink. Drawn at the
+## bubble's top-left inset, never as an offset on the rows: a bracket around rows must not push them
+## sideways.
+func _draw_variable_group_label(group_name: String, run_top: float) -> void:
+	if group_name.strip_edges().is_empty():
+		return
+	var font: Font = _get_font()
+	var font_size: int = EventSheetPalette.resolve_font_size(_get_font_size(), -1)
+	draw_string(
+		font,
+		Vector2(EventSheetPalette.ROW_HORIZONTAL_PADDING + 8.0, run_top + float(font_size)),
+		group_name,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		-1.0,
+		font_size,
+		_get_reading_style().category_chip_foreground_color
+	)
 
 
 ## The region bubbles: a THIN rounded outline around each unfolded #region range
@@ -2293,6 +2345,8 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# Per-sweep class-uid counters: same-named class blocks suffix "-2"/"-3" in build order.
 	# Reset HERE (not lazily) so the suffixes stay stable across rebuilds.
 	_row_builder._class_uid_counts.clear()
+	# V13 - and the code echo's token colours, so a theme change reaches the next sweep's echoes.
+	_row_builder._code_echo_palette.clear()
 	if sheet == null:
 		return root_rows
 	# ── The pattern registry ──────────────────────────────────────────────────────────────────

@@ -22,24 +22,25 @@ func set_live_values(values: Dictionary) -> void:
 	_viewport.queue_redraw()
 
 
-## The "= value" chip for a row, or "" (variable rows whose name has a live frame).
+## The "now value" chip for a row, or "" (variable rows whose name has a live frame). V12 - "now",
+## never "=": the declaration's own value never changes while the game runs, and a second "= 73" on
+## the row read as though it had.
 func chip_for(row_data: EventRowData) -> String:
 	var variable_name: String = ""
 	if row_data.source_resource is LocalVariable:
 		variable_name = (row_data.source_resource as LocalVariable).name
 	elif row_data.row_type != EventRowData.RowType.GROUP and not row_data.spans.is_empty():
-		# Group headers expose their name as spans[0] (the "Group" badge that used to shield it is
-		# gone), but a group is organizational, not a variable - never read its name as a live value.
-		var first_word: String = str(row_data.spans[0].text).get_slice(":", 0).strip_edges()
-		if _live_values.has(first_word):
-			variable_name = first_word
+		# The name is a FACT on the row, carried in its metadata - never the first span's text, which
+		# is a badge or a scope word depending on how the row reads.
+		var metadata: Dictionary = row_data.spans[0].metadata if row_data.spans[0].metadata is Dictionary else {}
+		variable_name = str(metadata.get("variable_name", "")).strip_edges()
 	if variable_name.is_empty() or not _live_values.has(variable_name):
 		return ""
-	return "= %s" % str(_live_values[variable_name])
+	return "now %s" % str(_live_values[variable_name])
 
 
-## Draws "= value" after a variable row's text when a live frame carries its name. Called from the
-## viewport's _draw, so draw_string is proxied through _viewport (the owning CanvasItem).
+## Draws "now value" after a variable row's sentence when a live frame carries its name. Called from
+## the viewport's _draw, so draw_string is proxied through _viewport (the owning CanvasItem).
 func draw_chip(row_data: EventRowData, row_top: float, row_height: float, font: Font, font_size: int) -> void:
 	if _live_values.is_empty() or row_data == null:
 		return
@@ -47,8 +48,26 @@ func draw_chip(row_data: EventRowData, row_top: float, row_height: float, font: 
 	if chip_text.is_empty():
 		return
 	var text_width: float = font.get_string_size(chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-	var chip_x: float = _viewport._get_logical_canvas_width() - text_width - 24.0
+	# Straight after the sentence, which is where "now" belongs - the row's right edge is the code
+	# echo's, and a live value parked there read as part of the declaration.
+	var chip_x: float = minf(
+		_sentence_right_edge(row_data) + 10.0,
+		_viewport._get_logical_canvas_width() - text_width - 24.0
+	)
 	var style: Variant = _viewport.get_event_style()
 	var chip_color: Color = style.value_highlight_color if style != null else EventSheetPalette.COLOR_VALUE
 	_viewport.draw_string(font, Vector2(chip_x, row_top + row_height * 0.5 + font_size * 0.35), chip_text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, chip_color)
+
+
+## Where the row's own words end - the rightmost edge of every span that is not the code echo.
+func _sentence_right_edge(row_data: EventRowData) -> float:
+	var edge: float = 0.0
+	for span: SemanticSpan in row_data.spans:
+		if span == null:
+			continue
+		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		if bool(metadata.get("code_echo", false)):
+			continue
+		edge = maxf(edge, span.rect.end.x)
+	return edge

@@ -46,6 +46,11 @@ var custom_color: Color = Color(0, 0, 0, 0)
 # rows with a quiet indigo left stripe + faint wash so the distinction is visible at a glance without
 # dimming the row. Stamp via EventSheets.mark_language_block so custom blocks get the same cue for free.
 var language_block: bool = false
+# True on a row that DECLARES a variable (a sheet member, a tree variable, an event local, an
+# Inspector-group strip over a run of them). The renderer washes those rows in the theme's flat
+# variable tint and rules their left edge, so a declaration never reads as an event. View-only,
+# never serialized.
+var variable_row: bool = false
 
 ## Vertical presence multiplier (1.0 = normal). Header-like rows (state headers, the Class
 ## setup bar, Host binding) reserve extra height so they read as BARS, the way an event sheet's

@@ -17,6 +17,11 @@ extends RefCounted
 # _get_or_build_row_layout delegate, so every call site (draw, hit-test, box selection,
 # param scope) needed no edits.
 
+## V13 - the narrowest canvas a code echo still fits on. Below it the echo is dropped entirely
+## (an empty rect draws nothing and hit-tests to nothing), because a sentence squeezed against a
+## half-drawn declaration reads worse than a sentence alone. The line is still one hover away.
+const CODE_ECHO_MIN_ROW_WIDTH := 440.0
+
 var _viewport: Control = null
 
 
@@ -150,6 +155,9 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			continue
 		var span_lane: String = _viewport._resolve_span_lane(span)
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		if bool(metadata.get("code_echo", false)) and width < CODE_ECHO_MIN_ROW_WIDTH:
+			span.rect = Rect2()
+			continue
 		var span_x: float = x
 		var span_y: float = row_top + scale_pad + 3.0
 		if lane_divider_x <= 0.0:
@@ -258,6 +266,11 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			# A comment fills to the row's right padding (event-sheet banner), not just its text
 			# width, so the whole row reads as one solid note band.
 			span_width = max(row_right_limit - span_x - 2.0, 1.0)
+		elif bool(metadata.get("align_right", false)):
+			# A right-aligned span on a flow row (the variable row's code echo) rides the row's
+			# right padding at its measured size instead of following the sentence's cursor.
+			span_width = max(min(span_width, row_right_limit - non_event_origin_x - 2.0), 1.0)
+			span_x = max(non_event_origin_x, row_right_limit - span_width - 2.0)
 		else:
 			# -2.0 accounts for the +2.0 the rect adds below, so non-event spans (variables,
 			# blocks) never bleed past the row's right padding.
@@ -305,7 +318,10 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		# Store absolute X for the next span start on this line.
 		var next_span_start_x: float = span.rect.end.x + _viewport._get_span_gap(span)
 		if lane_divider_x <= 0.0:
-			non_event_line_x[int(metadata.get("line_index", 0))] = next_span_start_x
+			# A right-aligned span sits outside the sentence's run, so it never moves the cursor the
+			# spans after it start from.
+			if not bool(metadata.get("align_right", false)):
+				non_event_line_x[int(metadata.get("line_index", 0))] = next_span_start_x
 		elif span_lane == "action":
 			var action_line_index_next: int = int(metadata.get("line_index", 0))
 			if not bool(metadata.get("align_right", false)):

@@ -31,6 +31,8 @@ const OBJECT_ICON_PLATE_BORDER := Color(1.0, 1.0, 1.0, 0.13)
 const SWATCH_GAP := 6.0
 const SWATCH_MIN_BOX := 8.0
 const SWATCH_FONT_RATIO := 0.7
+# The rule down the left edge of a variable row, in logical pixels.
+const VARIABLE_ROW_RULE_WIDTH := 2.0
 
 # One shared plate StyleBox (this draws once per icon per frame on a virtualized canvas -
 # never allocate it inside the draw loop).
@@ -531,6 +533,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, section_bg, true)
 		if row_data.custom_color.a > 0.01:
 			control.draw_rect(Rect2(row_rect.position, Vector2(3.0, row_rect.size.y)), Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, 0.9), true)
+	if row_data.variable_row:
+		_draw_variable_row_wash(control, row_rect, reading_style)
 	if not is_event_row and (breakpoint_enabled or row_data.bookmark_enabled):
 		# The full-bleed bar just covered the gutter - re-stamp only the MARKERS so a
 		# bookmarked comment / breakpointed group keeps its pennant and dot visible.
@@ -933,6 +937,12 @@ func _draw_spans(
 			_draw_badge_span(control, span, font, font_size, metadata)
 			continue
 		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style))
+		# V12 - the type word is the guide rail on a variable's value: while the field is being typed
+		# into, a literal the declared type cannot hold turns amber with the reason on the row, never
+		# a modal. The value is still whatever the file says until Enter.
+		if span_index == editing_span_index and metadata.has("variable_type_name") \
+				and not EventSheetVariableSentence.value_fits(str(metadata["variable_type_name"]), editing_buffer):
+			color = reading.lift_note_badge_foreground_color
 		var ace_enabled: bool = bool(metadata.get("ace_enabled", true))
 		if not ace_enabled:
 			color = color.lerp(TEXT_MUTED, 0.6)
@@ -1042,6 +1052,10 @@ func _draw_spans(
 		var value_ranges: Array = metadata.get("value_ranges", []) if span_index != editing_span_index else []
 		var param_ranges: Array = metadata.get("param_ranges", []) if span_index != editing_span_index else []
 		var bbcode_segments: Array = metadata.get("bbcode_segments", []) if span_index != editing_span_index else []
+		# V13 - the code echo rests at a fraction of its colour so the sentence leads, and comes up
+		# to full the moment the pointer is on the row it belongs to.
+		if row_data.hovered and bool(metadata.get("code_echo", false)) and not bbcode_segments.is_empty():
+			bbcode_segments = opaque_segments(bbcode_segments)
 		if not bbcode_segments.is_empty():
 			# BBCode-lite cells: sequential styled segments (bold = double-draw). A segment the
 			# author left colour-less still shows the typed value TINTS - its text is split at
@@ -1331,6 +1345,44 @@ func _draw_drag_feedback(
 	)
 
 
+## The same styled segments at full opacity - what a resting code echo looks like once the pointer
+## reaches its row. Static and pure, so the hover state is testable without a canvas.
+static func opaque_segments(segments: Array) -> Array:
+	var lit: Array = []
+	for entry: Variant in segments:
+		var segment: Dictionary = (entry as Dictionary).duplicate()
+		if segment.get("color") is Color:
+			var tone: Color = segment["color"]
+			segment["color"] = Color(tone.r, tone.g, tone.b, 1.0)
+		lit.append(segment)
+	return lit
+
+
+## The flat lilac wash + 2px left rule every variable row wears. Flat is the shipped look: the wash
+## draws as one rectangle unless the theme states a different right-edge colour, and only then does
+## it become a two-triangle fade across the row.
+func _draw_variable_row_wash(control: Control, row_rect: Rect2, reading: EventSheetReadingStyle) -> void:
+	var wash: Color = reading.variable_row_wash_color
+	var wash_end: Color = reading.variable_row_wash_end_color
+	if wash_end == wash:
+		control.draw_rect(row_rect, wash, true)
+	else:
+		control.draw_polygon(
+			PackedVector2Array([
+				row_rect.position,
+				Vector2(row_rect.end.x, row_rect.position.y),
+				row_rect.end,
+				Vector2(row_rect.position.x, row_rect.end.y),
+			]),
+			PackedColorArray([wash, wash_end, wash_end, wash])
+		)
+	control.draw_rect(
+		Rect2(row_rect.position, Vector2(VARIABLE_ROW_RULE_WIDTH, row_rect.size.y)),
+		reading.variable_row_rule_color,
+		true
+	)
+
+
 func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary) -> void:
 	var badge_rect: Rect2 = span.rect
 	var badge_bg: Color = metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER)
@@ -1341,7 +1393,31 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 		int(metadata.get("font_size_delta", 0)),
 		-BADGE_FONT_SIZE_DELTA
 	)
-	if badge_style in ["trigger", "negated"]:
+	if badge_style == "glyph":
+		# A MARK, not a chip: the small cue that says ONE fact about the row (this variable is
+		# editable in the Inspector). No plate and no word - the hover carries the sentence. Falls
+		# through to the plain text draw below if the mark has no art.
+		var mark_side: float = min(badge_rect.size.x, badge_rect.size.y) * 0.95
+		var mark: Texture2D = _badge_icon(span.text, int(round(mark_side)))
+		if mark != null:
+			control.draw_texture_rect(
+				mark,
+				Rect2(badge_rect.get_center() - Vector2(mark_side, mark_side) * 0.5, Vector2(mark_side, mark_side)),
+				false,
+				badge_fg
+			)
+			return
+	elif badge_style == "outline":
+		# The kind cue a variable row leads with: an outlined box around one glyph, so the badge
+		# column reads as a column without the weight of a filled chip on every declaration.
+		var outline := StyleBoxFlat.new()
+		outline.bg_color = Color(badge_bg.r, badge_bg.g, badge_bg.b, badge_bg.a * 0.35)
+		outline.border_color = badge_fg
+		outline.set_border_width_all(1)
+		outline.set_corner_radius_all(int(metadata.get("corner_radius", 4)))
+		outline.set_content_margin_all(0)
+		control.draw_style_box(outline, badge_rect)
+	elif badge_style in ["trigger", "negated"]:
 		var radius: float = min(badge_rect.size.x, badge_rect.size.y) * 0.45
 		control.draw_circle(badge_rect.get_center(), radius, badge_bg, true, -1.0, true)
 		# Badge marks are SVG art rasterized at the EXACT pixel size this badge draws at (cached
@@ -1403,6 +1479,8 @@ const BADGE_MARK_SVGS: Dictionary = {
 	"ƒ": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M15.8 4.4c-2.1-.3-3.5.7-3.9 2.9l-.5 2.7H8.6v2.2h2.4l-1.1 6c-.2 1.2-.8 1.6-2.1 1.4v2c2.6.4 4.2-.7 4.6-3.2l1.1-6.2h2.9V10h-2.5l.4-2.3c.2-1 .7-1.3 1.9-1.1z\" fill=\"#fff\"/></svg>",
 	"≡": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M5 7.5h14M5 12h14M5 16.5h10\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\"/></svg>",
 	"▣": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"4.5\" y=\"4.5\" width=\"15\" height=\"15\" rx=\"3\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.2\"/><rect x=\"9.4\" y=\"9.4\" width=\"5.2\" height=\"5.2\" rx=\"1\" fill=\"#fff\"/></svg>",
+	# The sliders mark: a variable a designer can edit in the Inspector wears this instead of a word.
+	"⚙": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M3.6 8.4h16.8M3.6 15.6h16.8\" stroke=\"#fff\" stroke-width=\"2.1\" stroke-linecap=\"round\"/><circle cx=\"8.8\" cy=\"8.4\" r=\"2.9\" fill=\"#fff\"/><circle cx=\"15.6\" cy=\"15.6\" r=\"2.9\" fill=\"#fff\"/></svg>",
 }
 
 ## SVG textures rasterized per (glyph, pixel size) - a handful of tiny images per session.

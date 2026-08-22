@@ -243,6 +243,23 @@ func on_code_panel_gui_input(event: InputEvent) -> void:
 	_dock._select_sheet_row_for_code_line(_dock._code_edit.get_caret_line() + 1)
 
 
+## V13 - the code echo beside a variable row, activated: show the GDScript panel and put the caret on
+## the very line that row writes. The reverse direction already works (clicking a line of generated
+## code selects the row that produced it), so this closes the loop from the canvas side.
+func open_at_row(row_data: EventRowData) -> void:
+	if row_data == null or row_data.source_resource == null:
+		return
+	_dock._ensure_code_panel()
+	if not _dock._side_panel.visible:
+		_dock._toggle_code_panel()
+	else:
+		_dock._refresh_code_panel()
+	var emitted: Vector2i = EventSheetLineRowMapper.range_for_resource(_dock._code_source_map, row_data.source_resource)
+	if _dock._code_edit != null and emitted.x > 0:
+		_dock._code_edit.set_caret_line(maxi(emitted.x - 1, 0))
+	_dock._update_code_panel_highlight()
+
+
 ## The script editor's "Go to Sheet Row": shows the GDScript panel, refreshes the
 ## source map and selects the row that emitted the given 1-based generated line -
 ## errors and stack traces land on rows, not on generated code.

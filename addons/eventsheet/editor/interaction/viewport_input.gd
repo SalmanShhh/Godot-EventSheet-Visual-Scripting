@@ -502,6 +502,18 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				_viewport.variable_group_rename_requested.emit(str(double_click_meta.get("variable_group")))
 				_viewport.accept_event()
 				return
+			# V13 - the code echo is a door into the script: activating it opens the code panel at the
+			# very line the row writes.
+			if bool(double_click_meta.get("code_echo", false)):
+				_viewport.code_echo_activated.emit(row_data)
+				_viewport.accept_event()
+				return
+			# V12 - the VALUE is the one cell of a variable row that edits in place, with the type word
+			# beside it as the guide rail. Everywhere else on the row still opens the dialog.
+			if bool(double_click_meta.get("variable_value_span", false)) and span_index >= 0:
+				_viewport._begin_edit(row_index, span_index)
+				_viewport.accept_event()
+				return
 			if _viewport._maybe_request_variable_edit(hit, row_index):
 				_viewport.accept_event()
 				return

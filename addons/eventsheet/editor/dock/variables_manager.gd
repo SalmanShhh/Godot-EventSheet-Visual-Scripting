@@ -32,6 +32,49 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
+## V2 - "Sort A-Z" on a variable row's menu. The list reads in author order now, so alphabetical is a
+## thing you ASK for - and asking WRITES it: the sheet's own dictionary is rebuilt in name order and
+## the declarations placed in the event list are re-laid in name order at the very slots they already
+## occupy, so nothing else in the file moves. One undo step, through the funnel.
+func sort_variables_alphabetically() -> bool:
+	var sorted: bool = _dock._perform_undoable_sheet_edit("Sort Variables A-Z", func() -> bool:
+		var sheet: EventSheetResource = _dock._current_sheet
+		if sheet == null:
+			return false
+		var changed: bool = false
+		var names: Array = sheet.variables.keys()
+		var ordered: Array = names.duplicate()
+		ordered.sort_custom(func(a: Variant, b: Variant) -> bool: return str(a).naturalnocasecmp_to(str(b)) < 0)
+		if ordered != names:
+			var rebuilt: Dictionary = {}
+			for var_name: Variant in ordered:
+				rebuilt[var_name] = sheet.variables[var_name]
+			sheet.variables = rebuilt
+			changed = true
+		# The declarations that live in the event list keep their SLOTS - a variable sitting between
+		# two events stays between them; only which variable sits in which slot changes.
+		var slots: Array[int] = []
+		var declared: Array[LocalVariable] = []
+		for index: int in sheet.events.size():
+			if sheet.events[index] is LocalVariable:
+				slots.append(index)
+				declared.append(sheet.events[index] as LocalVariable)
+		var relaid: Array[LocalVariable] = declared.duplicate()
+		relaid.sort_custom(func(a: LocalVariable, b: LocalVariable) -> bool:
+			return a.name.naturalnocasecmp_to(b.name) < 0)
+		if relaid != declared:
+			for slot_index: int in slots.size():
+				sheet.events[slots[slot_index]] = relaid[slot_index]
+			changed = true
+		return changed
+	)
+	if sorted:
+		_dock._mark_dirty(EventSheetL10n.translate("Sorted the variables A-Z."))
+	else:
+		_dock._set_status(EventSheetL10n.translate("The variables are already in name order."))
+	return sorted
+
+
 func _on_add_global_variable_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
@@ -100,6 +143,8 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_toggle_context_variable_remember()
 		_dock.VARIABLE_MENU_GROUP:
 			_group_context_selection()
+		_dock.VARIABLE_MENU_SORT_AZ:
+			sort_variables_alphabetically()
 		_dock.VARIABLE_MENU_GRID_EXPORT:
 			_dock._grid_csv_dialog.open("export", _context_variable)
 		_dock.VARIABLE_MENU_GRID_IMPORT:
