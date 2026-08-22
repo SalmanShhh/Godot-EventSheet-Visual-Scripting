@@ -93,6 +93,7 @@ static func run() -> Dictionary:
 	check_imported_rows(sheet_paths, findings)
 	check_task_notes(findings)
 	check_menu_ids(findings)
+	check_animation_method_tracks(findings)
 	check_plugin_reading_health(findings)
 	check_facing_follows(sheet_paths, findings)
 	check_skill_trees(findings)
@@ -2637,6 +2638,50 @@ static func blocking_wait_calls(source: String) -> PackedStringArray:
 			var call_text: String = line.substr(at, close_at - at + 1)
 			if not found.has(call_text):
 				found.append(call_text)
+	return found
+
+
+## Y3 - THE SILENT-NOTHING BUG: an animation's method track calls a function by name, and nothing in
+## the project defines it.
+##
+## A method track is a real contract between an animation and a script, and it is the only contract in
+## Godot that both sides can honour without either side saying so: the animation names a function, the
+## script has no idea it is named, and a rename on either side leaves a game that plays the animation,
+## calls nothing, and reports nothing. The hit never lands, the footstep never sounds, and there is no
+## error to search for.
+##
+## Advisory, because a function can arrive from a base class, a `class_name` in another file, or a
+## script attached at run time - so this names what it could not find rather than accusing.
+static func check_animation_method_tracks(findings: Array[Dictionary]) -> void:
+	var defined: Dictionary = {}
+	for script_path: String in _list_files_with_extension("gd"):
+		for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
+			var stripped: String = line.strip_edges()
+			if not (stripped.begins_with("func ") or stripped.begins_with("static func ")):
+				continue
+			var head: String = stripped.trim_prefix("static ").trim_prefix("func ")
+			var opening: int = head.find("(")
+			if opening > 0:
+				defined[head.substr(0, opening).strip_edges()] = true
+	for source_path: String in _animation_bearing_files():
+		var text: String = FileAccess.get_file_as_string(source_path)
+		var reported: Dictionary = {}
+		for track: Dictionary in EventSheetAnimationTrackFacts.tracks_in(text):
+			var method: String = str(track.get("method", ""))
+			if method.is_empty() or defined.has(method) or reported.has(method):
+				continue
+			reported[method] = true
+			var clip: String = str(track.get("animation", "")).strip_edges()
+			var named: String = "\"%s\"" % clip if not clip.is_empty() else "an animation"
+			_add(findings, "warning", "animation-track", source_path,
+				"A method track in %s calls %s(), which no script in this project defines - the key will play and do nothing." % [named, method])
+
+
+## Every file an Animation could live in: a scene, or a resource of its own. The plugin's own folders
+## are skipped for the same reason every other sweep skips them - they are the editor, not the game.
+static func _animation_bearing_files() -> PackedStringArray:
+	var found: PackedStringArray = _list_files_with_extension("tscn")
+	found.append_array(_list_files_with_extension("tres"))
 	return found
 
 

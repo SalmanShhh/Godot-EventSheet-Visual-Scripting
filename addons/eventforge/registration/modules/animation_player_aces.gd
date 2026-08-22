@@ -68,7 +68,82 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		CAT, "Current state is {state}", "AnimationTree")
 		.described("True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on."))
 
+	_combo_timing(descriptors)
+	_animation_events(descriptors)
 	return descriptors
+
+
+## ── Y2 - the two timing tricks every combo game writes ──────────────────────────────────────────
+##
+## A CANCEL WINDOW is a slice of one animation's clock: between 0.3 s and 0.6 s of "uppercut" the
+## next move may interrupt this one. Written by hand it is two comparisons on
+## `current_animation_position` with the clip name beside them, which reads as raw property maths and
+## names nothing; as a row it is one question with a name.
+##
+## HIT-STOP freezes the whole game for a few frames on a connecting blow - that row already ships as
+## Juice ▸ Hitstop, so nothing is minted for it here. What is missing is the PER-OBJECT twin: pausing
+## one animation player while everything else keeps running, which is the version a fighter uses when
+## only the two characters should feel the blow.
+##
+## Both templates carry their own `{target.}` slots rather than taking the automatic "On node" one,
+## because each mentions the player TWICE and the automatic prefix reaches only the first line lead.
+static func _combo_timing(descriptors: Array[ACEDescriptor]) -> void:
+	descriptors.append(F.make_descriptor("Core", "AnimationIsBetween", "Is Between", ACEDescriptor.ACEType.CONDITION,
+		"{target.}current_animation == {animation} and {target.}current_animation_position > {from_time} and {target.}current_animation_position < {to_time}", "",
+		[
+			F.make_param("animation", "String", "\"attack\"", "Animation", "The clip whose clock the window lives on.", "animation_reference"),
+			F.make_param("from_time", "String", "0.3", "From", "Seconds into the clip the window opens.", "expression"),
+			F.make_param("to_time", "String", "0.6", "To", "Seconds into the clip the window shuts.", "expression"),
+			F.make_param("target", "String", "", "On node", "Ask another AnimationPlayer instead of this one. Leave blank for this node.", "expression")
+		],
+		CAT, "Is between {from_time} s and {to_time} s of {animation}", "AnimationPlayer")
+		.described("True while the play head is inside a slice of one clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on.").featured())
+	descriptors.append(F.make_descriptor("Core", "PauseAnimationFor", "Pause For", ACEDescriptor.ACEType.ACTION,
+		"{target.}pause()\nawait get_tree().create_timer({seconds}, true, false, true).timeout\n{target.}play()", "",
+		[
+			F.make_param("seconds", "String", "0.08", "Seconds", "How long the animation holds still, in real time.", "expression"),
+			F.make_param("target", "String", "", "On node", "Pause another AnimationPlayer instead of this one. Leave blank for this node.", "expression")
+		],
+		CAT, "Pause for {seconds} s", "AnimationPlayer")
+		.described("Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.").featured())
+
+
+## ── Y3 - animation-driven events ────────────────────────────────────────────────────────────────
+##
+## Half of game feel is the animation telling the game when: the hit lands on frame 3, the footstep
+## plays on frame 6, the projectile leaves the hand at 0.4 s. Godot spells that two ways, and both
+## of them read as plumbing rather than as an event:
+##
+##   2D   `frame_changed` on an AnimatedSprite2D, plus a test of which clip and which frame it is.
+##   Any  an AnimationPlayer METHOD TRACK, whose key calls a function on the script by name.
+##
+## The first is a signal with its guard folded into the head; the second is a plain function the
+## engine calls, exactly like the noise-heard hook, so it compiles to a named function and nothing
+## else. Both are the shape the reading recognises, so a hand-typed hit frame and a picked row are
+## the same bytes.
+static func _animation_events(descriptors: Array[ACEDescriptor]) -> void:
+	descriptors.append(F.make_descriptor("Core", "OnAnimationFrame", "On Animation Frame", ACEDescriptor.ACEType.TRIGGER,
+		"", "frame_changed",
+		[
+			F.make_param("animation", "String", "\"attack\"", "Animation", "The clip the frame belongs to.", "animation_reference"),
+			F.make_param("frame", "String", "3", "Frame", "Which frame of that clip to answer.", "expression")
+		],
+		CAT, "On animation {animation} frame {frame}", "AnimatedSprite2D")
+		.described("Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. Applying it adds the clip-and-frame question as a condition you can see and edit."))
+	descriptors.append(F.make_descriptor("Core", "SpriteAnimationFrameIs", "Is Animation Frame", ACEDescriptor.ACEType.CONDITION,
+		"{target.}animation == {animation} and {target.}frame == {frame}", "",
+		[
+			F.make_param("animation", "String", "\"attack\"", "Animation", "The clip to ask about.", "animation_reference"),
+			F.make_param("frame", "String", "3", "Frame", "The frame index to ask about.", "expression"),
+			F.make_param("target", "String", "", "On node", "Ask another AnimatedSprite2D instead of this one. Leave blank for this node.", "expression")
+		],
+		CAT, "animation is {animation} frame {frame}", "AnimatedSprite2D")
+		.described("True when a sprite is showing one particular frame of one particular clip - the question under On Animation Frame, on its own for a per-tick check."))
+	descriptors.append(F.make_descriptor("Core", "OnAnimationEvent", "On Animation Event", ACEDescriptor.ACEType.TRIGGER,
+		"", "",
+		[F.make_param("event_name", "String", "hit", "Event", "The name the animation's method track calls, in plain words (\"hit frame\" becomes the function _on_hit_frame).")],
+		CAT, "On animation event {event_name}")
+		.described("Runs when an animation's method track reaches its key. The track calls a function by name and this event IS that function, so the animation and the sheet meet without a signal in between - name the event here and call the same name from the track."))
 
 
 static func section_descriptions() -> Dictionary:

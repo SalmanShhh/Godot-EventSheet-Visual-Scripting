@@ -472,6 +472,22 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 		gate.ace_id = "IsLocaleChangeNotification"
 		gate.codegen_template = "what == NOTIFICATION_TRANSLATION_CHANGED"
 		event_row.conditions.append(gate)
+	# Y3. On Animation Frame is the SPRITE's frame_changed signal, which fires for every frame of
+	# every clip - so which frame the event answers is a condition under it, added here for the same
+	# reason the language gate is: visible in the sheet, editable, deletable, and a plain condition on
+	# disk. The sprite the trigger listens to is the sprite the question is asked of, so the target
+	# rides across from the trigger's own source rather than being asked for twice.
+	if definition.id == "OnAnimationFrame" and event_row.conditions.is_empty():
+		var frame_gate: ACECondition = ACECondition.new()
+		frame_gate.provider_id = "Core"
+		frame_gate.ace_id = "SpriteAnimationFrameIs"
+		frame_gate.codegen_template = "{target.}animation == {animation} and {target.}frame == {frame}"
+		frame_gate.params = {
+			"animation": str(event_row.trigger_params.get("animation", "\"attack\"")),
+			"frame": str(event_row.trigger_params.get("frame", "0")),
+			"target": event_row.trigger_source_path.strip_edges()
+		}
+		event_row.conditions.append(frame_gate)
 
 
 ## Bakes the trigger signature onto event_row FROM its already-built trigger condition -

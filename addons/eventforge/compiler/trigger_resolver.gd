@@ -39,6 +39,11 @@ static func get_trigger_key(event: EventRow) -> String:
 		# item an event answers is a case inside it. The menu is therefore part of the key, and the
 		# item is not.
 		return "%s::%s::%s" % [provider_id, trigger_id, menu_variable_of(event)]
+	if trigger_id == ANIMATION_EVENT_TRIGGER_ID:
+		# Y3. Two animation events with different names are two functions the track can call, so the
+		# name is part of the key. Two rows sharing a name are one function, which is what lets a
+		# single "hit" key drive several things.
+		return "%s::%s::%s" % [provider_id, trigger_id, animation_event_name_of(event)]
 	if trigger_id.begins_with(NOTIFICATION_PREFIX):
 		# Every notification a sheet reacts to shares ONE `_notification` handler: the engine calls
 		# that single function for every notification, and two same-named functions do not parse.
@@ -50,6 +55,35 @@ static func get_trigger_key(event: EventRow) -> String:
 ## W6. The trigger every menu item's event carries. The menu it belongs to and the item's id ride in
 ## its trigger params, because both of them are things the author typed rather than parts of the id.
 const MENU_TRIGGER_ID: String = "OnMenuItemChosen"
+
+## Y3. The trigger an animation's method track raises. The event's NAME is what the track calls, so
+## it rides in the trigger params and becomes part of the handler name (and of the trigger key: two
+## differently named animation events are two different functions, not two halves of one).
+const ANIMATION_EVENT_TRIGGER_ID: String = "OnAnimationEvent"
+
+
+## Y3. The plain-words event name an animation-event row carries ("hit frame"), "" for any other
+## trigger. Blank falls back to "event" so a half-filled row still compiles to something callable.
+static func animation_event_name_of(event: EventRow) -> String:
+	if effective_trigger_id(event) != ANIMATION_EVENT_TRIGGER_ID:
+		return ""
+	var named: String = str(event.trigger_params.get("event_name", "")).strip_edges()
+	return named if not named.is_empty() else "event"
+
+
+## Y3. The function an animation's method track calls for an event name: "hit frame" -> `_on_hit_frame`.
+## Everything about the name that is not an identifier collapses to an underscore, so the words the
+## author typed and the function the track must name can never disagree.
+static func animation_event_handler_name(event_name: String) -> String:
+	var safe: String = ""
+	for index: int in range(event_name.length()):
+		var glyph: String = event_name[index]
+		var is_letter: bool = glyph.to_lower() != glyph.to_upper()
+		safe += glyph if (is_letter or glyph.is_valid_int() or glyph == "_") else "_"
+	safe = safe.to_snake_case().strip_edges().lstrip("_").rstrip("_")
+	while safe.contains("__"):
+		safe = safe.replace("__", "_")
+	return "_on_%s" % (safe if not safe.is_empty() else "event")
 
 ## The `member:` source-path prefix a menu handler is connected through. A menu is a VARIABLE of the
 ## script, not a node the sheet looked up by path, so the `_ready` line that wires it reads
@@ -230,6 +264,17 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _signal_backed("_on%s_timeout" % source_token, "", "timeout", source_path)
 		"OnAnimationFinished":
 			return _signal_backed("_on%s_animation_finished" % source_token, "anim_name: StringName", "animation_finished", source_path)
+		"OnAnimationFrame":
+			# Y3. The sprite says which frame it just moved to; WHICH frame the event answers is the
+			# condition under it, exactly as a notification's constant is a case under `_notification`.
+			# One handler per sprite, so every frame event on the same sprite shares it.
+			return _signal_backed("_on%s_frame_changed" % source_token, "", "frame_changed", source_path)
+		ANIMATION_EVENT_TRIGGER_ID:
+			# Y3. An animation METHOD TRACK calls a function on the script by name - there is no signal
+			# to connect, the animation itself is the caller. So the event compiles to that named
+			# function and nothing else, the same way the noise hook above does: plain GDScript on both
+			# sides, and a track that names it finds it.
+			return _lifecycle(animation_event_handler_name(animation_event_name_of(event)), "")
 		"OnButtonPressed":
 			return _signal_backed("_on%s_pressed" % source_token, "", "pressed", source_path)
 		"OnButtonToggled":

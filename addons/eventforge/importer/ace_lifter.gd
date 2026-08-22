@@ -1478,6 +1478,9 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"area_exited": "OnAreaExited",
 	"timeout": "OnTimeout",
 	"animation_finished": "OnAnimationFinished",
+	# Y3. The sprite's own "I just moved to another frame". The clip-and-frame question stays a
+	# condition inside the handler, so a lifted row and a picked one hold the same two resources.
+	"frame_changed": "OnAnimationFrame",
 	"tree_entered": "OnTreeEntered",
 	"tree_exiting": "OnTreeExiting",
 	"tree_exited": "OnTreeExited",
