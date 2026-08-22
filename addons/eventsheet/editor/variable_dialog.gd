@@ -420,6 +420,12 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_section_card = EventSheetPopupUI.panel_section(_attr_section)
 	_attr_section_card.visible = false
 	_attr_block.add_child(_attr_section_card)
+	# The Inspector is a Godot-only fact, so it lives behind "More options" with the range and
+	# drawer it unlocks - first in the card, because every row under it depends on it.
+	_exported_check = CheckBox.new()
+	_exported_check.text = "Editable in the Inspector (a designer property)"
+	_exported_check.toggled.connect(func(_pressed: bool) -> void: _update_attr_gating())
+	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector", _exported_check))
 	# ── BASIC tier: the friendly polish a designer reaches for first (Description is promoted to
 	# the always-visible form above; range / drawer / look controls live here) ──
 	_attr_range_edit = LineEdit.new()
@@ -598,34 +604,20 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_getter_edit.custom_minimum_size = Vector2(0.0, 54.0)
 	_attr_getter_edit.tooltip_text = "The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter."
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Getter body", _attr_getter_edit))
-	# V5 - Static and Constant are CHECKBOXES with their explanation muted beside them, the way the
-	# other two flags in the dialog read. They are not scopes (they say nothing about where the
-	# variable lives), but picking either in the Scope dropdown ticks the matching box, so the two
-	# spellings of the same fact can never disagree.
+	# V5 - Static and Constant are CHECKBOXES with no text of their own beside them: the help strip
+	# explains whichever one is focused, and nothing else in the dialog repeats it. They are not
+	# scopes (they say nothing about where the variable lives), but picking either in the Scope
+	# dropdown ticks the matching box, so the two spellings of the same fact can never disagree.
 	var flags_box: VBoxContainer = VBoxContainer.new()
 	flags_box.add_theme_constant_override("separation", 2)
 	_static_check = CheckBox.new()
 	_static_check.text = "Static"
 	_static_check.toggled.connect(func(pressed: bool) -> void: _on_static_toggled(pressed))
 	flags_box.add_child(_static_check)
-	flags_box.add_child(_flag_note("One value shared by every copy, not one each - and readable without a copy at all."))
 	_const_check = CheckBox.new()
 	_const_check.text = "Constant"
 	flags_box.add_child(_const_check)
-	flags_box.add_child(_flag_note("Set here and never changed while the game runs."))
 	form.add_child(EventSheetPopupUI.form_row("Flags", flags_box))
-
-	var access_row: HBoxContainer = HBoxContainer.new()
-	var access_label: Label = Label.new()
-	access_label.text = "Access"
-	access_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
-	access_row.add_child(access_label)
-	_exported_check = CheckBox.new()
-	_exported_check.text = "Editable in the Inspector (a designer property)"
-	_exported_check.tooltip_text = "On: a designer can tweak this per-instance in the Inspector (@export var).\nOff: internal script state - a plain private var (the default for a new variable)."
-	_exported_check.toggled.connect(func(_pressed: bool) -> void: _update_attr_gating())
-	access_row.add_child(_exported_check)
-	form.add_child(access_row)
 
 	# @onready row - shown only for tree-placed (class-level) variables (open_for_edit gates visibility).
 	_onready_row = HBoxContainer.new()
@@ -1015,8 +1007,14 @@ func open(scope: String) -> void:
 func _update_attr_gating() -> void:
 	if _attr_toggle == null:
 		return
-	var can_export: bool = _exported_check != null and _exported_check.button_pressed and not _exported_check.disabled
-	_attr_toggle.visible = can_export
+	# The disclosure shows whenever the variable COULD be a property (a local or a constant never
+	# can); inside it, everything under the Inspector checkbox waits for the checkbox.
+	var could_export: bool = _exported_check != null and not _exported_check.disabled
+	_attr_toggle.visible = could_export
+	if _attr_section != null:
+		var exported: bool = could_export and _exported_check.button_pressed
+		for index: int in range(1, _attr_section.get_child_count()):
+			(_attr_section.get_child(index) as Control).visible = exported
 	# Simple Mode keeps the whole Advanced tier out of sight: its six fields are wiring
 	# and organization, not looks. Display-only - attributes already set on a variable
 	# still round-trip untouched, and the tier returns the moment Simple Mode turns off.
@@ -1028,7 +1026,7 @@ func _update_attr_gating() -> void:
 			_attr_advanced_section.visible = false
 	elif _attr_advanced_toggle != null:
 		_attr_advanced_toggle.visible = true
-	if not can_export:
+	if not could_export:
 		_attr_toggle.set_pressed_no_signal(false)
 		_attr_toggle.text = "▸" + _attr_toggle.text.substr(1)
 		if _attr_section_card != null:
@@ -1192,7 +1190,10 @@ func open_for_edit(
 		var non_description_attrs: Dictionary = existing_attributes.duplicate()
 		# Description (tooltip) lives in the always-visible form now, so it alone must NOT unfurl More options.
 		non_description_attrs.erase("tooltip")
-		var has_any: bool = not non_description_attrs.is_empty()
+		# An already-exported variable opens with the card unfurled, because its Inspector checkbox
+		# now lives inside it and a ticked box the user cannot see would be a silent fact.
+		var has_any: bool = not non_description_attrs.is_empty() \
+			or (_exported_check != null and _exported_check.button_pressed)
 		_attr_toggle.button_pressed = has_any
 		_attr_section_card.visible = has_any
 		_attr_toggle.text = ("▾" if _attr_section_card.visible else "▸") + _attr_toggle.text.substr(1)
@@ -1863,14 +1864,6 @@ func _on_constant_toggled(pressed: bool) -> void:
 	if pressed:
 		_is_static = false
 	_apply_scope_gating()
-
-
-## A flag's explanation, muted and tucked under its checkbox - the one place a per-field hint is
-## still worth its space, because a checkbox has room for two words and no more.
-func _flag_note(text: String) -> Label:
-	var note: Label = EventSheetPopupUI.hint_label(text, 320.0)
-	note.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-	return note
 
 
 ## The object this variable will belong to - "Player" for a sheet that names itself, otherwise what

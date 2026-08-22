@@ -35,8 +35,13 @@ static func run() -> bool:
 	# ── The field order V5 pins ──
 	ok = _check("the fields read in the row's own order", Array(dialog.field_order()), [
 		"Scope", "Write into", "Name", "Type", "Whole numbers only", "Initial value",
-		"Options (combo)", "Description", "Flags", "Access", "On ready"
+		"Options (combo)", "Description", "Flags", "On ready"
 	]) and ok
+	# ── No hint text sits under a checkbox: the strip is the one place that explains ──
+	ok = _check("the Flags row carries the two checkboxes and nothing else",
+		dialog._static_check.get_parent().get_child_count(), 2) and ok
+	ok = _check("the Inspector checkbox lives behind More options",
+		dialog._exported_check.get_parent().get_parent() == dialog._attr_section, true) and ok
 	dialog.open_for_edit("global", {}, "hp", "int", "100", false, "Add variable")
 	ok = _check("an instance variable is not asked which autoload it lands on",
 		Array(dialog.field_order(true)).has("Write into"), false) and ok
