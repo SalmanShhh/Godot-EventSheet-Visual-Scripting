@@ -237,6 +237,12 @@ const ENTRIES: Dictionary = {
 		"why": "speed is kept rather than chased, and the slope under you is where it comes from",
 		"adoptable": "skateboard",
 		"rank": 35
+	},
+	"animation_combo": {
+		"words": "Animation combo",
+		"why": "pressed inputs collect into a list inside a time window, and the move the list spells plays its animation",
+		"adoptable": "combo_box",
+		"rank": 36
 	}
 }
 
@@ -260,7 +266,8 @@ const PACK_LABELS: Dictionary = {
 	"touch_gestures": "Touch Gestures",
 	"fps_controller": "FPS Controller",
 	"upgrades": "Upgrades",
-	"skateboard": "Skateboard"
+	"skateboard": "Skateboard",
+	"combo_box": "Combo Box"
 }
 
 

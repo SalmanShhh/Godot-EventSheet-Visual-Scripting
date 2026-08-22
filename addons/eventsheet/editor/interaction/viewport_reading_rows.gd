@@ -1418,6 +1418,15 @@ static func _append_file_lines(entry: Variant, lines: PackedStringArray, depth: 
 			"CallMethod":
 				lines.append("%s.%s(%s)" % [
 					str(params.get("target", "")), str(params.get("method", "")), str(params.get("args", ""))])
+			# Y1 - the two list steps a COMBO buffer is made of. Pushing the pressed input on and
+			# emptying the buffer both lift to rows, so a walk over verbatim text alone would find a
+			# detector in an untouched file and lose it the moment the importer tidied the same file.
+			"ArrayAppend":
+				lines.append("%s.append(%s)" % [str(params.get("var_name", "")), str(params.get("value", ""))])
+			# Both spellings of "empty it": `.clear()` is one line the importer may file under either
+			# row, and which one it picked says nothing about what the file does.
+			"ArrayClear", "DictClear":
+				lines.append("%s.clear()" % str(params.get("var_name", "")))
 			# The waits a SEQUENCE is made of. An `await` lifts to one of these rows, so without them a
 			# cutscene body arrives here as its doing-steps alone and the sequence reading - two waits
 			# with something between them - could never see the waits it is named after.

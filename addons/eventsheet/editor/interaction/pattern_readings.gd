@@ -96,8 +96,65 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 		"rate_variables": rate_variables(lines),
 		# X28 - the input window this file writes, {} when it writes none. The flag, the deadline and
 		# the control are three lines apart, so the shape is worked out once rather than guessed at.
-		"input_window": input_window_facts(lines)
+		"input_window": input_window_facts(lines),
+		# Y1 - the input SEQUENCES this file collects. A list appended to, a countdown stamped beside
+		# the append, and the same list emptied when the countdown runs out IS a combo detector, and
+		# no one of those three lines says so on its own.
+		"combo_lists": combo_lists(lines)
 	}
+
+
+## Y1. The lists this file uses as a COMBO buffer, as {list name: {timer, window}}.
+##
+## The shape a fighting game writes by hand is always the same three moves: push the pressed input
+## onto a list, stamp a countdown beside it, and empty the list when that countdown runs out. Once
+## those three are in place the list is not a list any more, it is a rolling window of recent inputs -
+## which is exactly what the Combo Box behaviour is - and the `match` on the joined list downstream is
+## that behaviour's triggers.
+##
+## The append and the stamp must be ADJACENT: it is the two of them together that open the window, and
+## a countdown that merely exists somewhere else in the file says nothing about this list. The window
+## is the literal the countdown is stamped with, so the reading can say how long the player has.
+static func combo_lists(lines: PackedStringArray) -> Dictionary:
+	var cleared: Dictionary = {}
+	var pushes: bool = false
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.ends_with(".clear()"):
+			cleared[text.substr(0, text.length() - 8).strip_edges()] = true
+		elif text.contains(".append("):
+			pushes = true
+	# Almost every file in the world neither pushes onto a list nor empties one, and the answer
+	# for those is "no combos here" - which must cost this one walk, not a second walk looking
+	# for the countdowns that only matter once a candidate exists.
+	if not pushes or cleared.is_empty():
+		return {}
+	var counters: Dictionary = countdown_variables(lines)
+	var found: Dictionary = {}
+	for index: int in range(lines.size() - 1):
+		var appended: String = _appended_list(lines[index])
+		if appended.is_empty() or not cleared.has(appended) or found.has(appended):
+			continue
+		var stamp: Dictionary = _sensor_assignment(lines[index + 1])
+		var timer: String = str(stamp.get("name", ""))
+		var window: String = str(stamp.get("value", "")).strip_edges()
+		if timer.is_empty() or not counters.has(timer) or not window.is_valid_float():
+			continue
+		found[appended] = {"timer": timer, "window": window}
+	return found
+
+
+## `combo.append(button)` -> "combo", "" for any other line. Only a plain member append counts: an
+## append onto something addressed through a call or an index is not a variable this file keeps.
+static func _appended_list(line: String) -> String:
+	var text: String = line.strip_edges()
+	if not text.ends_with(")"):
+		return ""
+	var at: int = text.find(".append(")
+	if at <= 0:
+		return ""
+	var owner_text: String = text.substr(0, at).strip_edges()
+	return owner_text if EventSheetSentence.is_identifier(owner_text) else ""
 
 
 ## X22. The values this file uses as a TILT: assigned the accelerometer (or the gravity direction)
