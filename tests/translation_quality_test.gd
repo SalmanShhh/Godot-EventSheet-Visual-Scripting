@@ -551,6 +551,7 @@ static func _test_doctor_gate() -> bool:
 			"res://demo/showcase/platformer_shooter/platformer_shooter.gd",
 			"res://demo/showcase/raycast_lab/raycast_lab.gd",
 			"res://demo/showcase/raycast_lab_3d/raycast_lab_3d.gd",
+			"res://demo/showcase/skill_tree/skill_tree.gd",
 			"res://demo/showcase/starfall/starfall.gd",
 		]))) and ok
 	ProjectSettings.set_setting(TRANSLATIONS_SETTING, previous)

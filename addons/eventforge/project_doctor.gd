@@ -95,6 +95,7 @@ static func run() -> Dictionary:
 	check_menu_ids(findings)
 	check_plugin_reading_health(findings)
 	check_facing_follows(sheet_paths, findings)
+	check_skill_trees(findings)
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
 	EventSheetDoctorTidiness.check_tidiness(sheet_paths, findings)
@@ -2423,6 +2424,153 @@ static func check_shared_sheet_includes(findings: Array[Dictionary]) -> void:
 			continue
 		for message: String in EventSheetSharedSheets.duplicate_trigger_messages(source, shared_by_class):
 			_add(findings, "info", "shared-sheet-includes", script_path, message)
+
+
+## Y12 / Y13. THE SKILL TREE ASSETS: the two ways a tree is wrong before it is ever played, and the
+## one way it is pointless.
+##
+## A skill tree is a graph written as text, and text cannot check itself. A `requires` cell naming
+## an id the tree does not hold makes a node permanently unreachable, and a cycle - a needs b, b
+## needs a - makes a whole branch unreachable, with no error at run time either way: the unlock
+## simply refuses forever, which reads as a balance decision rather than a typo. Both are errors,
+## because neither has an innocent reading.
+##
+## The third is advisory: a node that grants nothing and whose id no script anywhere asks about
+## costs points and changes the game in no way. That IS sometimes deliberate (a placeholder while a
+## tree is being laid out), so it is a warning that names the node rather than a refusal.
+##
+## Assets are found by SHAPE rather than by class, so a tree still reports when the pack that reads
+## it is not installed: a resource with a `skills` list, a `tree_name` and a `starting_points`.
+static func check_skill_trees(findings: Array[Dictionary]) -> void:
+	var sources: String = ""
+	for asset_path: String in _skill_tree_assets():
+		var asset: Resource = ResourceLoader.load(asset_path, "", ResourceLoader.CACHE_MODE_REUSE)
+		if asset == null:
+			continue
+		if sources.is_empty():
+			sources = _skill_tree_sources()
+		check_skill_tree_rows(asset_path, asset.get("skills") as Array, sources, findings)
+
+
+## Y12 / Y13. The three checks, run against one tree's ROWS - the shape a test can hand in directly
+## rather than through a saved asset, and the shape a project's own `.tres` arrives in.
+static func check_skill_tree_rows(asset_path: String, rows: Array, sources: String,
+		findings: Array[Dictionary]) -> void:
+	var requires: Dictionary = {}
+	var known: Dictionary = {}
+	for entry: Variant in rows:
+		if not (entry is Dictionary):
+			continue
+		var id: String = str((entry as Dictionary).get("id", "")).strip_edges()
+		if id.is_empty():
+			continue
+		if known.has(id):
+			_add(findings, "error", "skill-tree", asset_path,
+				"Two skills share the id \"%s\". Every action, condition and expression addresses a skill by its id, so the second row can never be reached - rename one of them." % id)
+			continue
+		known[id] = true
+		requires[id] = skill_tree_requires(entry as Dictionary)
+	for id: String in requires:
+		for required: String in (requires[id] as PackedStringArray):
+			if not known.has(required):
+				_add(findings, "error", "skill-tree", asset_path,
+					"\"%s\" requires \"%s\", which is not a skill in this tree. Nothing can ever unlock it - fix the spelling, or add the skill it is waiting for." % [id, required])
+		if skill_tree_cycle(id, requires):
+			_add(findings, "error", "skill-tree", asset_path,
+				"\"%s\" requires itself, through its own prerequisites. A cycle makes every skill on it permanently locked and never says so at run time - break the loop." % id)
+	for id: String in known:
+		if not _skill_tree_grants(rows, id).is_empty():
+			continue
+		if sources.contains("\"%s\"" % id) or sources.contains("'%s'" % id):
+			continue
+		_add(findings, "warning", "skill-tree", asset_path,
+			"\"%s\" grants nothing and no script asks whether it is unlocked, so buying it costs points and changes nothing. Fill in its Grants cell, or read it somewhere with Upgrades > Is Unlocked." % id)
+
+
+## Y12. The prerequisite ids one skill row names, as the asset's comma-separated cell spells them.
+static func skill_tree_requires(row: Dictionary) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for part: String in str(row.get("requires", "")).split(","):
+		var required: String = part.strip_edges()
+		if not required.is_empty() and not out.has(required):
+			out.append(required)
+	return out
+
+
+## Y12. What a skill grants, or "" when its cell is blank.
+static func _skill_tree_grants(rows: Array, id: String) -> String:
+	for entry: Variant in rows:
+		if entry is Dictionary and str((entry as Dictionary).get("id", "")).strip_edges() == id:
+			return str((entry as Dictionary).get("grants", "")).strip_edges()
+	return ""
+
+
+## Y12. Whether following a skill's prerequisites ever comes back to the skill itself. Breadth
+## first with a visited set, so a tree that is merely wide is walked once and a cycle is caught the
+## moment it closes rather than by a depth limit.
+static func skill_tree_cycle(start: String, requires: Dictionary) -> bool:
+	var seen: Dictionary = {}
+	var frontier: PackedStringArray = requires.get(start, PackedStringArray())
+	while not frontier.is_empty():
+		var next: PackedStringArray = PackedStringArray()
+		for id: String in frontier:
+			if id == start:
+				return true
+			if seen.has(id):
+				continue
+			seen[id] = true
+			for deeper: String in (requires.get(id, PackedStringArray()) as PackedStringArray):
+				if not next.has(deeper):
+					next.append(deeper)
+		frontier = next
+	return false
+
+
+## Y12. Every project script's text as one string - what the "grants nothing" check asks whether a
+## skill id appears in. Read once per doctor run, and only when a candidate is found.
+static func _skill_tree_sources() -> String:
+	var joined: PackedStringArray = PackedStringArray()
+	for script_path: String in _project_scripts():
+		joined.append(FileAccess.get_file_as_string(script_path))
+	return "\n".join(joined)
+
+
+## Y12. Whether a `.tres` is a skill tree, decided from its TEXT. A saved resource stores its
+## property names, so the three a tree has are readable without loading anything - which matters,
+## because loading every `.tres` in a project to find out would be slow and would report a stale
+## reference in an unrelated asset as though the Doctor had gone looking for trouble.
+static func _is_skill_tree_text(path: String) -> bool:
+	var text: String = FileAccess.get_file_as_string(path)
+	return text.contains("\nskills = ") and text.contains("\ntree_name = ") \
+		and text.contains("\nstarting_points = ")
+
+
+## Y12. Every `.tres` in the project whose shape is a skill tree - a `skills` list beside a
+## `tree_name` and a `starting_points`. Found by shape rather than by class so a tree still reports
+## when the pack that reads it has been removed from the project.
+static func _skill_tree_assets() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var pending: PackedStringArray = PackedStringArray(["res://"])
+	while not pending.is_empty():
+		var directory_path: String = pending[pending.size() - 1]
+		pending.remove_at(pending.size() - 1)
+		var directory: DirAccess = DirAccess.open(directory_path)
+		if directory == null:
+			continue
+		directory.list_dir_begin()
+		var entry: String = directory.get_next()
+		while not entry.is_empty():
+			var full_path: String = directory_path.path_join(entry)
+			if directory.current_is_dir():
+				if not entry.begins_with(".") and entry != "addons":
+					pending.append(full_path)
+			elif entry.ends_with(".tres") and _is_skill_tree_text(full_path):
+				var asset: Resource = ResourceLoader.load(full_path, "", ResourceLoader.CACHE_MODE_REUSE)
+				if asset != null and asset.get("skills") is Array:
+					found.append(full_path)
+			entry = directory.get_next()
+		directory.list_dir_end()
+	return found
 
 
 ## Every project GDScript, excluding addons/ (the plugin's own code is not a user's game).

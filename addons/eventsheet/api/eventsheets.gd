@@ -1597,6 +1597,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"proc_room": "ProcRoom",
 	"quest_resource": "Quest",
 	"random_table_resource": "Advanced-Random",
+	"skill_tree_resource": "Upgrades",
 	"skin_catalog_loader": "SkinVault",
 	"skin_catalog_resource": "SkinVault",
 	"skin_vault": "SkinVault",

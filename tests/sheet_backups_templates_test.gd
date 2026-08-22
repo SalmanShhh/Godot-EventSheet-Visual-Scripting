@@ -158,10 +158,11 @@ static func run() -> bool:
 	# W17 folded four flat Editor-Tools items into one submenu (-4 +1); kits 1 added four
 	# game-shape starters + their section separator (+5); kits 2 added Boomer Arsenal and
 	# Game Options (+2); X25 added the Level Stats Screen starter beside them (+1); Y16 added the
-	# Keycard Door starter (+1). 23 - 4 + 1 + 5 + 2 + 1 + 1 = 29.
+	# Keycard Door starter (+1); Y15 added the Skill Tree Screen starter beside it (+1).
+	# 23 - 4 + 1 + 5 + 2 + 1 + 1 + 1 = 30.
 	editor._starter._build_template_menu_items()
 	all_passed = _check("template menu lists built-ins and the project template",
-		editor._starter._template_menu.item_count == 23 - 4 + 1 + 5 + 2 + 1 + 1
+		editor._starter._template_menu.item_count == 23 - 4 + 1 + 5 + 2 + 1 + 1 + 1
 		and editor._starter._project_template_paths == PackedStringArray(["user://tpl_dir/boss_fight.tres"]), true) and all_passed
 	# The tool starters are VALUES rather than a count, so a renamed entry names itself. They now live
 	# in the submenu, which is where the mockup's "New Sheet ▸ Editor tool" list lives.

@@ -4168,3 +4168,9 @@ bar,barra
 soft,morbido
 x only,solo X
 y only,solo Y
+Is unlocked {id},È sbloccato {id}
+Is not unlocked {id},Non è sbloccato {id}
+{base} boosted by {skill} upgrade ({percent} per level),{base} potenziato dal miglioramento {skill} ({percent} per livello)
+{base} +{amount} per level,{base} +{amount} per livello
+"A skill tree - prerequisites, points and unlocks","Un albero delle abilità - prerequisiti, punti e sblocchi"
+Skill Tree Screen,Schermata dell'albero delle abilità

@@ -216,6 +216,16 @@ func activate_ability(id: String) -> void:
 	on_ability_activated.emit()
 
 ## @ace_action
+## @ace_name("Use Skill")
+## @ace_category("Abilities")
+## @ace_description("Uses a skill: consumes a charge, starts its cooldown and fires On Ability Activated. The skill wording for Activate Ability, so active skills and an Upgrades tree read alike.")
+## @ace_display_template("Use skill [b]{id}[/b]")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.use_skill({id})")
+func use_skill(id: String) -> void:
+	activate_ability(id)
+
+## @ace_action
 ## @ace_name("Set Ability Cooldown")
 ## @ace_category("Abilities")
 ## @ace_description("Puts an ability on cooldown (scaled by the global cooldown multiplier).")
@@ -537,6 +547,22 @@ func get_cooldown_progress(id: String) -> float:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_stacks({id})")
 func get_stacks(id: String) -> int:
 	return (abilities[id] as AbilityData).stacks if abilities.has(id) else 0
+
+## @ace_condition
+## @ace_name("Is Skill Ready")
+## @ace_description("The same readiness question in the skill words. A game whose active skills and whose passive tree are one vocabulary asks Is Skill Ready beside Upgrades' Is Unlocked and never has to remember that one of them is spelled "ability".")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.is_skill_ready({id})")
+func is_skill_ready(id: String) -> bool:
+	return is_ready(id)
+
+## @ace_expression
+## @ace_name("Skill Charges")
+## @ace_description("A skill's remaining charges, in the skill words - the number a hotbar prints on the icon.")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.skill_charges({id})")
+func skill_charges(id: String) -> int:
+	return get_stacks(id)
 
 ## @ace_expression
 ## @ace_name("Max Stacks")

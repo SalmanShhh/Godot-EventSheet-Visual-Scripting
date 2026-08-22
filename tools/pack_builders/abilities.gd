@@ -135,6 +135,20 @@ static func build() -> bool:
 		"func get_stacks(id: String) -> int:",
 		"\treturn (abilities[id] as AbilityData).stacks if abilities.has(id) else 0",
 		"",
+		"## The same readiness question in the skill words. A game whose active skills and whose passive",
+		"## tree are one vocabulary asks Is Skill Ready beside Upgrades' Is Unlocked and never has to",
+		"## remember that one of them is spelled \"ability\".",
+		"## @ace_condition",
+		"## @ace_name(\"Is Skill Ready\")",
+		"func is_skill_ready(id: String) -> bool:",
+		"\treturn is_ready(id)",
+		"",
+		"## A skill's remaining charges, in the skill words - the number a hotbar prints on the icon.",
+		"## @ace_expression",
+		"## @ace_name(\"Skill Charges\")",
+		"func skill_charges(id: String) -> int:",
+		"\treturn get_stacks(id)",
+		"",
 		"## @ace_expression",
 		"## @ace_name(\"Max Stacks\")",
 		"func get_max_stacks(id: String) -> int:",
@@ -365,6 +379,13 @@ static func build() -> bool:
 		"current_ability_id = id",
 		"on_ability_activated.emit()"
 	])))
+
+	# The skill words for the same act. A charge is consumed and the cooldown starts - the
+	# `charges -= 1; cooldown = 2.0` pair a game writes by hand - so an active skill and a passive
+	# one are asked for in one vocabulary.
+	Lib.append_function(sheet, "use_skill", "Use Skill", "Abilities",
+		"Uses a skill: consumes a charge, starts its cooldown and fires On Ability Activated. The skill wording for Activate Ability, so active skills and an Upgrades tree read alike.",
+		[["id", "String"]], "activate_ability(id)")
 
 	Lib.append_function(sheet, "set_cooldown", "Set Ability Cooldown", "Abilities",
 		"Puts an ability on cooldown (scaled by the global cooldown multiplier).",
@@ -612,6 +633,7 @@ static func build() -> bool:
 	Lib.verb_sentences(sheet, {
 		"activate_ability": "Activate ability [b]{id}[/b]",
 		"create_ability_with_cooldown": "Create ability [b]{id}[/b] with [b]{seconds}[/b] s cooldown, reset instantly [b]{reset_instantly}[/b]",
+		"use_skill": "Use skill [b]{id}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["activate_ability", "create_ability_with_cooldown"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/abilities/abilities_behavior")

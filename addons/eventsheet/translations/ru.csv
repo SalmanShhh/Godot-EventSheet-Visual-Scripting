@@ -4168,3 +4168,9 @@ bar,штанга
 soft,мягко
 x only,только X
 y only,только Y
+Is unlocked {id},Открыто {id}
+Is not unlocked {id},Не открыто {id}
+{base} boosted by {skill} upgrade ({percent} per level),{base} усилено улучшением {skill} ({percent} за уровень)
+{base} +{amount} per level,{base} +{amount} за уровень
+"A skill tree - prerequisites, points and unlocks","Дерево навыков - требования, очки и открытия"
+Skill Tree Screen,Экран дерева навыков

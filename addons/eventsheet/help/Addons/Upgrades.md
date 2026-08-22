@@ -9,8 +9,10 @@ Upgrades is the stacking buff engine an incremental game is built from, driven f
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
 5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
-6. [Use cases](#use-cases)
-7. [Tips and common mistakes](#tips-and-common-mistakes)
+6. [The Skill Tree data asset](#the-skill-tree-data-asset)
+7. [Progression - prerequisites, points and grants](#progression---prerequisites-points-and-grants)
+8. [Use cases](#use-cases)
+9. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -28,6 +30,8 @@ Upgrades is the stacking buff engine an incremental game is built from, driven f
 - **Automation and generator unlocks.** An upgrade with max_level 1 is a one-time toggle; Owns(id) gates the automation loop that upgrade unlocks.
 - **Save and load.** Level Of(id) reads out every level for saving; Set Level(id, level) restores them on load, clamped to the cap for you.
 - **Live balancing.** Set Effect retunes an upgrade's payoff and mode mid-session without disturbing the level a player already bought.
+- **Skill and talent trees.** The tree half answers from a Skill Tree data asset: prerequisites, a skill-point currency, per-node levels and what each node grants. Is Unlocked, Can Unlock, Unlock and Respec are the whole vocabulary.
+- **Perks that gate behaviour.** A node that grants nothing at all is a perk: Is Unlocked("double_jump") is the one question the rest of your game asks about it.
 
 ---
 
@@ -99,6 +103,13 @@ Every id and tag below is a string. Costs, budgets, and effects are numbers. All
 | Grant Level | id | Adds one free level (a reward), up to the max. No cost, no budget check. |
 | Set Level | id, level | Forces an upgrade's level (for a load or cheat), clamped to 0 and the max. |
 | Reset | (none) | Sets every upgrade back to level 0 (keeps the definitions) - for a prestige wipe. |
+| Load Skill Tree | tree | Points the tree words at a SkillTreeResource (.tres). Clears whatever was unlocked and hands the asset's Starting Points to the points counter, so one row opens a fresh tree. |
+| Set Skill Points | points | Forces the unspent skill points to a value (for a load or a cheat). Clamped at 0. |
+| Earn Skill Points | points | Adds skill points - the level-up reward. Goes into the Currency Ledger account when one was named. |
+| Use Points Account | account_id | Keeps skill points in a Currency Ledger account of this id instead of here, so the HUD, the save file and the shop all read one balance. Blank goes back to the built-in counter. |
+| Apply Grants To | stats | Names the node whose StatForge stack an unlocked skill's grants are applied to, and re-applies everything already unlocked. Without it a tree still unlocks - it just grants nothing. |
+| Unlock | id | Takes one level of a skill: spends its cost, records the level, applies its grants and fires On Skill Unlocked. Refuses (On Unlock Refused) when a required skill is still locked, the skill is capped, or the points are short. |
+| Respec | (none) | Refunds every point spent on the tree, clears every unlock and takes back every grant it applied - one action, so a respec button is one row. |
 
 ### Conditions
 
@@ -107,6 +118,10 @@ Every id and tag below is a string. Costs, budgets, and effects are numbers. All
 | Is Maxed | id | Whether an upgrade is at its max level. |
 | Owns | id | Whether an upgrade has at least one level. |
 | Purchase Succeeded | (none) | Whether the last Try Purchase went through (read it right after, or in On Upgrade Bought). |
+| Is Unlocked | id | Whether a skill has been taken at least once - the perk test a game asks wherever the perk matters. |
+| Can Unlock | id | Whether every skill this one requires is unlocked, it is not already capped, and the points are there. |
+| Can Afford | id | Whether the unspent points cover this skill's cost, ignoring its prerequisites. |
+| Requires | id, required_id | Whether the tree says this skill needs that one unlocked first. |
 
 ### Expressions
 
@@ -121,6 +136,21 @@ Every id and tag below is a string. Costs, budgets, and effects are numbers. All
 | Last Cost | Number | (none) | What the last Try Purchase cost - Spend this from your wallet. |
 | Last Upgrade | String | (none) | The id of the last upgrade bought or failed (read in the trigger). |
 | Upgrade Count | Number | (none) | How many upgrades are defined. |
+| Skill Points | Number | (none) | The unspent skill points - the number a tree screen's "points left" label shows. |
+| Skill Cost | Number | id | What one level of a skill costs in points (0 when the id is not in the tree). |
+| Skill Level | Number | id | How many levels of a skill are unlocked (0 = locked). |
+| Skill Max Level | Number | id | How many levels a skill can take (1 for a one-off perk). |
+| Skill Name | String | id | A skill's readable name from the asset ("" when the id is not in the tree). |
+| Skill Requires | String | id | The ids a skill needs first, comma-separated as the asset wrote them ("" for a root skill). |
+| Skill Grants | String | id | What a skill grants, as the asset's own words - the line a tree screen shows on hover. |
+| Skill Column | Number | id | A skill's column on a tree screen, or -1 when the asset leaves the layout to the screen. |
+| Skill Row | Number | id | A skill's row on a tree screen, or -1 when the asset leaves the layout to the screen. |
+| Skill Depth | Number | id | How many prerequisites deep a skill sits - 0 for a root, 1 for its children, and so on. A screen with no column/row in its asset lays the tree out by this. |
+| Skill Id At | String | index | The skill id at a position in the asset's own order ("" out of range) - what a screen walks to build its nodes. |
+| Skill Count | Number | (none) | How many skills the loaded tree holds (0 when none is loaded). |
+| Unlocked Count | Number | (none) | How many skills have at least one level - the "12 of 30" a tree screen prints. |
+| Last Skill | String | (none) | The skill Unlock last touched - read it inside On Skill Unlocked or On Unlock Refused. |
+| Tree Name | String | (none) | The loaded tree's readable name ("" when none is loaded) - a tree screen's title. |
 
 ### Triggers
 
@@ -128,6 +158,8 @@ Every id and tag below is a string. Costs, budgets, and effects are numbers. All
 |---|---|
 | On Upgrade Bought | After a Try Purchase raises a level. Read Last Cost (Spend it), Last Upgrade, and Purchase Succeeded inside it. |
 | On Purchase Failed | When a Try Purchase can't be afforded or the upgrade is maxed; nothing changed. Read Last Upgrade inside it. |
+| On Skill Unlocked | After Unlock takes a level of a skill. Read Last Skill, Skill Level and Skill Points inside it. |
+| On Unlock Refused | When Unlock could not go through - a prerequisite is missing, the skill is capped, or the points are short. Read Last Skill inside it; nothing changed. |
 
 ---
 
@@ -146,6 +178,104 @@ which survive auto-named children. While **Live Values** streams from a running 
 upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
 attached at runtime included, under their real names. And with your node selected in the Scene
 dock, the section grounds to that node's actual children before you even press Run.
+
+## The Skill Tree data asset
+
+Levels and cost curves are the incremental half of this pack. A skill TREE adds three things a curve
+has no room for: a list of nodes each node needs first, a currency spent on unlocking, and what a
+node actually GRANTS. All three live in one data asset - **SkillTreeResource**, the companion pack
+that ships beside this one - so a designer edits a grid instead of writing a dictionary of unlocked
+ids and a loop over a requires list.
+
+Make one with **FileSystem right-click ▸ Create New ▸ Resource ▸ SkillTreeResource**, or from the
+Upgrades pack folder. It follows the same `*_resource` convention as PriceTableResource and
+LootTableResource: a plain `Resource` with exported fields, editable in Godot's own Inspector, with
+no plugin needed at run time. Right-click the `.tres` and **Open as Event Sheet** to edit it as a
+TABLE instead - one row per skill, one column per field.
+
+| Field | What it holds |
+|---|---|
+| **tree_name** | A readable name for this tree ("Warrior", "Ship upgrades"), read back with the Tree Name expression for a screen's title. |
+| **starting_points** | How many skill points a fresh save begins with. Load Skill Tree hands this to the points counter. |
+| **skills** | One row per node of the tree. |
+
+And one row of `skills` is one node:
+
+| Column | What it holds |
+|---|---|
+| **id** | The string every action, condition and expression addresses. Keep it short and unique. |
+| **name** | What the player reads. |
+| **cost** | What unlocking one level costs in skill points. |
+| **requires** | The ids that must be unlocked first, separated by commas. Blank means a root node. |
+| **max_level** | How many times it can be taken. `1` is a one-off perk. |
+| **grants** | What unlocking applies to a StatForge stack (see below). Blank means a pure perk. |
+| **column** / **row** | Where the node sits on a skill-tree screen. Leave both at `-1` and the screen lays the tree out by depth. |
+
+The `grants` cell is a **StatForge modifier written as words**: `<stat> <op><amount>`, with an
+optional ` per level`, several separated by `;`. `x` (or `*`) multiplies, `+` and `-` add, `=`
+overrides. So `speed x1.1 per level` is a 10%-per-level speed buff and `speed x1.1 per level; jump +5`
+is that plus a flat jump bonus. Name the node whose stack they land on once, with **Apply Grants To**,
+and Unlock does the rest - there is no formula to write and nothing to re-apply by hand.
+
+Two mistakes in a tree are errors rather than balance decisions, and the **Project Doctor** says both
+out loud: a `requires` cell naming an id the tree does not hold (nothing can ever unlock that node),
+and a cycle - a needs b, b needs a - which locks a whole branch forever with no error at run time. A
+node that grants nothing AND whose id no script anywhere asks about is a warning, because that one is
+sometimes a deliberate placeholder.
+
+---
+
+## Progression - prerequisites, points and grants
+
+A whole tree is five rows. Point the pack at the asset, spend points, and read the three states.
+
+```
+On Ready
+  -> Upgrades: Load Skill Tree  tree
+  -> Upgrades: Apply Grants To  Player/Stats
+
+On Level Up
+  -> Upgrades: Earn Skill Points  1
+
+On Skill Button Pressed
+  -> Upgrades: Unlock  HudKit.Last Button Name()
+
+On Skill Unlocked
+  -> HUD Kit: Show Toast  Upgrades.Skill Name(Upgrades.Last Skill()) + " unlocked"
+
+On Respec Button Pressed
+  -> Upgrades: Respec
+```
+
+Three questions colour a node, and they are the same three the pack answers internally, so a screen
+can never disagree with what a click actually does:
+
+- **Is Unlocked(id)** - already taken.
+- **Can Unlock(id)** - takeable right now: every prerequisite met, not capped, points in hand.
+- Neither - locked, because a prerequisite is still missing or the points are short. **Can Afford(id)**
+  separates those two if you want to say which.
+
+Skill points can live here or in the **Currency Ledger** pack. Call **Use Points Account("skill_points")**
+once and every Earn, Spend and Respec refund goes through that account instead, so the HUD, the save
+file and any shop all read one balance. Leave it alone and the pack keeps the number itself.
+
+Persistence is the Save System's usual seam: the pack's own `save_state` / `load_state` carry the
+unlocked table and the points beside the upgrade levels, and loading re-applies every grant.
+
+For the SCREEN, **New Sheet ▸ Skill Tree Screen** writes the whole thing: one button per skill laid
+out from the asset (or by depth when the asset leaves `column`/`row` at -1), a line drawn to each
+node a skill requires, the three states as tints, a click that is one Unlock row, a hover that shows
+the Grants cell, and a points-left label - all bound through the **HUD Kit** pack.
+
+![A skill tree screen: two branches, prerequisite lines, and locked, affordable and unlocked nodes](../images/skill-tree-screen.png)
+
+A tree written out by hand - an unlocked table, a points number and a walk over a requires list -
+opens as those same words rather than as dictionary lookups and arithmetic, and offers this pack as
+the thing to adopt:
+
+![A hand-written skill tree read as event-sheet rows](../images/skill-tree-reading.png)
+
+---
 
 ## Use cases
 
@@ -361,6 +491,62 @@ On Upgrade Bought
   -> Total Spent Label: set text to "Just spent " + BigNumber.Format Short(Upgrades.Last Cost()) + " on " + Upgrades.Last Upgrade()
 ```
 
+### 17. A talent tree gated on its own prerequisites
+
+Scenario: a warrior tree where Sprint needs Swift, which needs Toughness, and a click may only spend
+points on a node the player has actually earned.
+
+```
+On Ready
+  -> Upgrades: Load Skill Tree  tree
+  -> Upgrades: Set Skill Points  4
+
+On Node Button Pressed
+  -> Upgrades: Unlock  HudKit.Last Button Name()
+
+On Unlock Refused
+  -> HUD Kit: Show Toast  "Needs " + Upgrades.Skill Requires(Upgrades.Last Skill()) + " first"
+```
+
+### 18. A perk that gates a mechanic, granting nothing at all
+
+Scenario: Double Jump is a node with a blank Grants cell. The tree records it; the player script asks.
+
+```
+On Physics Process  |  Player is on floor
+  -> Set jumps_left to 2 when Upgrades: Is Unlocked "double_jump", otherwise 1
+
+On Jump Pressed  |  jumps_left is greater than 0
+  -> Subtract 1 from jumps_left
+  -> Player: set velocity Y to -340
+```
+
+### 19. A speed upgrade carried by StatForge instead of a formula
+
+Scenario: Swift is `speed x1.1 per level` in the asset, taken up to three times. Nothing multiplies
+anything by hand - the body asks its stat stack for its speed every frame.
+
+```
+On Ready
+  -> Upgrades: Apply Grants To  Player/Stats
+  -> StatForge: Set Stat Base  "speed", 120
+
+On Physics Process
+  -> Player: set velocity X to steer * StatForge.Stat Total("speed")
+```
+
+### 20. A respec button that gives every point back
+
+Scenario: a "reset my build" button refunds the whole tree, clears the unlocks and strips the buffs
+they applied - without touching the player's gold, their level, or any upgrade outside the tree.
+
+```
+On Respec Button Pressed
+  -> Upgrades: Respec
+  -> HUD Kit: Set Text  "PointsValue", "Skill points left: " + Upgrades.Skill Points()
+  -> HUD Kit: Show Toast  "Build reset"
+```
+
 ### Other use cases
 
 **Tower-defense between-wave shops.** Define "tower_damage", "tower_range", and "fire_rate" as add-mode upgrades and let the player spend wave gold in the intermission. Each tower reads Total Bonus("damage") on the next wave, so one aggregate call retunes every turret on the map.
@@ -386,4 +572,8 @@ On Upgrade Bought
 - **Cost Of returns -1 at the cap.** A maxed or undefined upgrade reports -1, and Try Purchase on it fires On Purchase Failed. Guard buttons with Is Maxed(id) if you want to grey them out before the player taps.
 - **A one-time upgrade is just max_level 1.** There is no separate one-time type. Set max_level to 1 for a single purchase, a small number for a limited track, or -1 for unlimited. Owns(id) tells you if it has any levels; Is Maxed(id) tells you if it is full.
 - **Reset keeps definitions, wipes levels.** Reset sends every upgrade to level 0 but leaves its cost curve and tag intact, so buy prices restart at base_cost. It resets ALL upgrades, including prestige perks - re-Grant any meta upgrade that must survive, or read its value out before resetting.
+- **A tree grants nothing until you say where.** Unlock records the level and reads the Grants cell either way, but the modifiers land on a StatForge stack only after **Apply Grants To** has named one. Call it once on ready, beside Load Skill Tree.
+- **Levels replace, they do not stack.** A grant is written as one buff keyed by skill and stat, so taking Swift a second time REPLACES the first level's buff with the second's (`x1.1` becomes `x1.1^2`). That is why a per-level multiplier compounds correctly and a flat one does not double-count.
+- **Loading a tree wipes what was unlocked.** Load Skill Tree is "open this tree fresh": it clears the unlocked table and resets the points to the asset's Starting Points. Restore a save with Set Skill Points and the Save System's load_state, not by re-loading the asset afterwards.
+- **Requires is spelled with the id, not the name.** The `requires` cell holds ids from the `id` column, comma-separated. A display name there names a skill that does not exist, and the Project Doctor reports it as an error rather than letting the node sit unreachable.
 - **Define first, then Set Level on load.** Set Level needs the record to exist to clamp against the cap. Call Define Upgrade before Set Level when restoring a save, or the level lands on a default record instead of your real one.

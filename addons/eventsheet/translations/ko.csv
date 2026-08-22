@@ -4168,3 +4168,9 @@ bar,바
 soft,부드럽게
 x only,X만
 y only,Y만
+Is unlocked {id},{id} 해제됨
+Is not unlocked {id},{id} 해제되지 않음
+{base} boosted by {skill} upgrade ({percent} per level),{base}을(를) {skill} 업그레이드로 강화 (레벨당 {percent})
+{base} +{amount} per level,{base} +{amount} (레벨당)
+"A skill tree - prerequisites, points and unlocks","스킬 트리 - 선행 조건, 포인트, 해제"
+Skill Tree Screen,스킬 트리 화면

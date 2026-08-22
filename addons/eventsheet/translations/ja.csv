@@ -4168,3 +4168,9 @@ bar,バー
 soft,ゆるやか
 x only,X のみ
 y only,Y のみ
+Is unlocked {id},{id} が解放済み
+Is not unlocked {id},{id} が未解放
+{base} boosted by {skill} upgrade ({percent} per level),{base} を {skill} アップグレードで強化 (レベルごとに {percent})
+{base} +{amount} per level,{base} +{amount} (レベルごと)
+"A skill tree - prerequisites, points and unlocks",スキルツリー - 前提条件、ポイント、解放
+Skill Tree Screen,スキルツリー画面

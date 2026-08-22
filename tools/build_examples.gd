@@ -35,6 +35,7 @@ func _init() -> void:
 	all_ok = _build_mirror_and_flip() and all_ok
 	all_ok = _build_boomer_level() and all_ok
 	all_ok = _build_pin_modes() and all_ok
+	all_ok = _build_skill_tree() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -4563,3 +4564,255 @@ func _build_pin_modes_3d() -> bool:
 		Color(0.92, 0.94, 1.0, 1.0))
 
 	return _save_scene(root, "%s/pin_modes_3d.tscn" % PIN_MODES_DIR)
+
+
+# -- 22. Skill Tree - a data asset laid out as a tree, and a player it changes -----------------
+# The whole progression is ONE .tres: six skills in two branches, what each costs, what it needs
+# first and what it grants. The screen draws it, the Upgrades pack answers every question about it,
+# and StatForge carries the one grant that is a number - so unlocking Swift makes the player move
+# faster with no formula written anywhere.
+
+const UPGRADES_PACK := "res://eventsheet_addons/upgrades/upgrades_addon.gd"
+const SKILL_TREE_RESOURCE := "res://eventsheet_addons/skill_tree_resource/skill_tree_resource.gd"
+const STAT_FORGE := "res://eventsheet_addons/stat_forge/stat_forge_behavior.gd"
+const HUD_KIT := "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd"
+
+## The showcase tree: a body branch whose middle node is a StatForge speed buff taken up to three
+## times, and an agility branch whose middle node is a pure perk the player script asks about.
+const SKILL_TREE_ROWS: Array[Dictionary] = [
+	{"id": "toughness", "name": "Toughness", "cost": 1, "requires": "", "max_level": 1,
+		"grants": "armour +2", "column": 0, "row": 0},
+	{"id": "swift", "name": "Swift", "cost": 1, "requires": "toughness", "max_level": 3,
+		"grants": "speed x1.1 per level", "column": 1, "row": 0},
+	{"id": "sprint", "name": "Sprint", "cost": 2, "requires": "swift", "max_level": 1,
+		"grants": "speed x1.25", "column": 2, "row": 0},
+	{"id": "agility", "name": "Agility", "cost": 1, "requires": "", "max_level": 1,
+		"grants": "jump +1", "column": 0, "row": 1},
+	{"id": "double_jump", "name": "Double Jump", "cost": 2, "requires": "agility", "max_level": 1,
+		"grants": "", "column": 1, "row": 1},
+	{"id": "wall_jump", "name": "Wall Jump", "cost": 2, "requires": "double_jump", "max_level": 1,
+		"grants": "jump x1.2", "column": 2, "row": 1},
+]
+
+
+func _build_skill_tree() -> bool:
+	var tree: Resource = (load(SKILL_TREE_RESOURCE) as GDScript).new() as Resource
+	tree.set("tree_name", "Adventurer")
+	tree.set("starting_points", 4)
+	tree.set("skills", SKILL_TREE_ROWS.duplicate(true))
+	DirAccess.make_dir_recursive_absolute("res://demo/showcase/skill_tree")
+	if ResourceSaver.save(tree, "res://demo/showcase/skill_tree/adventurer_tree.tres") != OK:
+		return false
+
+	# The player: its speed is never written down, it is asked for. One StatForge total, read every
+	# frame, so a skill that multiplies speed changes how the body moves with nothing else touched.
+	var player_sheet: EventSheetResource = EventSheetResource.new()
+	player_sheet.host_class = "CharacterBody2D"
+	player_sheet.custom_class_name = "SkillTreeRunner"
+	player_sheet.emit_live_values = false
+	var player_note: CommentRow = CommentRow.new()
+	player_note.text = "[b]Runner[/b] - the body the tree changes. Its speed is StatForge's Stat Total for \"speed\", so unlocking Swift moves it faster without a formula anywhere; its second jump exists only while the Double Jump perk is unlocked, which is one Is Unlocked question."
+	player_sheet.events.append(player_note)
+	player_sheet.variables = {
+		"base_speed": {"type": "float", "default": 120.0, "exported": true,
+			"attributes": {"tooltip": "The speed before any skill touches it."}},
+		"jumps_left": {"type": "int", "default": 1, "exported": false,
+			"attributes": {"tooltip": "How many jumps are left before the ground is needed again."}},
+		"stats": {"type": "Node", "default": null, "exported": false,
+			"attributes": {"tooltip": "The StatForge stack the tree's grants are applied to."}},
+		"upgrades": {"type": "Node", "default": null, "exported": false,
+			"attributes": {"tooltip": "The Upgrades node that answers which skills are unlocked."}}
+	}
+	var player_ready: EventRow = EventRow.new()
+	player_ready.trigger_provider_id = "Core"
+	player_ready.trigger_id = "OnReady"
+	player_ready.actions.append(_raw("\n".join(PackedStringArray([
+		"stats = $Stats",
+		"upgrades = get_parent().get_node(\"Upgrades\")",
+		"stats.set_stat_base(\"speed\", base_speed)"
+	]))))
+	player_sheet.events.append(player_ready)
+	var player_tick: EventRow = EventRow.new()
+	player_tick.trigger_provider_id = "Core"
+	player_tick.trigger_id = "OnPhysicsProcess"
+	player_tick.actions.append(_raw("\n".join(PackedStringArray([
+		"var steer: float = Input.get_axis(&\"ui_left\", &\"ui_right\")",
+		"velocity.x = steer * stats.stat_total(\"speed\")",
+		"if is_on_floor():",
+		"\tjumps_left = 2 if upgrades.is_skill_unlocked(\"double_jump\") else 1",
+		"else:",
+		"\tvelocity.y += 900.0 * delta",
+		"if Input.is_action_just_pressed(&\"ui_accept\") and jumps_left > 0:",
+		"\tjumps_left -= 1",
+		"\tvelocity.y = -340.0",
+		"move_and_slide()"
+	]))))
+	player_sheet.events.append(player_tick)
+	if not _compile(player_sheet, "res://demo/showcase/skill_tree/runner.tres",
+			"res://demo/showcase/skill_tree/runner.gd"):
+		return false
+
+	# The screen: every node's state is read from the tree's own three questions, so the picture and
+	# the rules cannot disagree.
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Control"
+	sheet.custom_class_name = "SkillTreeShowcase"
+	sheet.emit_live_values = false
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Skill Tree[/b] - a data asset, laid out. Six skills in two branches live in adventurer_tree.tres with their costs, their prerequisites and what they grant. The screen spawns one button per skill and draws a line to each one it requires; grey means a prerequisite is missing, gold means it can be taken now, green means it is taken. Clicking one is a single Unlock row, which spends a point, records the level and hands the grant to StatForge - so Swift makes the runner faster with no formula written anywhere, and Double Jump grants nothing at all because the runner asks about it directly. Arrow keys move the runner, Space jumps."
+	sheet.events.append(about)
+	sheet.variables = {
+		"tree": {"type": "Resource", "default": null, "exported": true,
+			"attributes": {"tooltip": "The Skill Tree data asset this screen draws."}},
+		"upgrades": {"type": "Node", "default": null, "exported": false,
+			"attributes": {"tooltip": "The Upgrades node that answers every question about the tree."}},
+		"buttons": {"type": "Dictionary", "default": {}, "exported": false,
+			"attributes": {"tooltip": "Skill id to the button that stands for it."}},
+		"locked_tint": {"type": "Color", "default": Color(0.45, 0.45, 0.5), "exported": true,
+			"attributes": {"tooltip": "A skill whose prerequisites are not met yet."}},
+		"affordable_tint": {"type": "Color", "default": Color(1.0, 0.86, 0.4), "exported": true,
+			"attributes": {"tooltip": "A skill that can be unlocked right now."}},
+		"unlocked_tint": {"type": "Color", "default": Color(0.55, 0.9, 0.6), "exported": true,
+			"attributes": {"tooltip": "A skill already taken."}}
+	}
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	ready_row.actions.append(_raw("\n".join(PackedStringArray([
+		"upgrades = $Upgrades",
+		"upgrades.load_skill_tree(tree)",
+		"upgrades.apply_grants_to($Runner/Stats)",
+		"$HudKit.on_button_pressed.connect(unlock_pressed)",
+		"lay_out()"
+	]))))
+	sheet.events.append(ready_row)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	tick.actions.append(_raw("\n".join(PackedStringArray([
+		"refresh_states()",
+		"$HudKit.set_text(\"PointsValue\", \"Skill points left: %d\" % upgrades.skill_points_left())",
+		"$HudKit.set_text(\"SpeedValue\", \"Speed: %0.0f\" % $Runner/Stats.stat_total(\"speed\"))"
+	]))))
+	sheet.events.append(tick)
+	sheet.functions.append(_showcase_function("lay_out", "\n".join(PackedStringArray([
+		"for index: int in range(upgrades.skill_count()):",
+		"\tvar id: String = upgrades.skill_id_at(index)",
+		"\tvar button: Button = Button.new()",
+		"\tbutton.name = id",
+		"\tbutton.text = upgrades.skill_name_of(id)",
+		"\tbutton.size = Vector2(150.0, 40.0)",
+		"\tbutton.position = Vector2(40.0 + float(upgrades.skill_column_of(id)) * 190.0, 60.0 + float(upgrades.skill_row_of(id)) * 74.0)",
+		"\tbutton.mouse_entered.connect(show_grants.bind(id))",
+		"\t$TreeNodes.add_child(button)",
+		"\tbuttons[id] = button",
+		"$HudKit.connect_buttons()",
+		"refresh_states()",
+		"queue_redraw()"
+	]))))
+	sheet.functions.append(_showcase_function("refresh_states", "\n".join(PackedStringArray([
+		"for id: String in buttons:",
+		"\tvar button: Button = buttons[id]",
+		"\tvar takeable: bool = upgrades.can_unlock_skill(id)",
+		"\tif upgrades.is_skill_unlocked(id):",
+		"\t\tbutton.modulate = unlocked_tint",
+		"\telif takeable:",
+		"\t\tbutton.modulate = affordable_tint",
+		"\telse:",
+		"\t\tbutton.modulate = locked_tint",
+		"\tbutton.disabled = not takeable"
+	]))))
+	sheet.functions.append(_showcase_function("unlock_pressed", "\n".join(PackedStringArray([
+		"upgrades.unlock_skill($HudKit.last_button_name_value())",
+		"refresh_states()"
+	]))))
+	sheet.functions.append(_showcase_function("show_grants", "\n".join(PackedStringArray([
+		"var grants: String = upgrades.skill_grants_text(id)",
+		"$HudKit.set_text(\"GrantsValue\", grants if not grants.is_empty() else \"a perk the runner asks about\")"
+	])), [["id", "String"]]))
+	sheet.functions.append(_showcase_function("_draw", "\n".join(PackedStringArray([
+		"for id: String in buttons:",
+		"\tvar button: Button = buttons[id]",
+		"\tfor part: String in upgrades.skill_requires_text(id).split(\",\", false):",
+		"\t\tvar earlier: Variant = buttons.get(part.strip_edges())",
+		"\t\tif not (earlier is Button):",
+		"\t\t\tcontinue",
+		"\t\tvar earlier_box: Rect2 = (earlier as Button).get_global_rect()",
+		"\t\tvar box: Rect2 = button.get_global_rect()",
+		"\t\t# Edge to edge rather than centre to centre, so a line never crosses a node's own name.",
+		"\t\tvar from: Vector2 = Vector2(earlier_box.end.x, earlier_box.get_center().y) - global_position",
+		"\t\tvar to: Vector2 = Vector2(box.position.x, box.get_center().y) - global_position",
+		"\t\tdraw_line(from, to, Color(0.5, 0.62, 0.78), 2.0)"
+	]))))
+	if not _compile(sheet, "res://demo/showcase/skill_tree/skill_tree.tres",
+			"res://demo/showcase/skill_tree/skill_tree.gd"):
+		return false
+
+	var root: Control = Control.new()
+	root.name = "SkillTree"
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.set_script(load("res://demo/showcase/skill_tree/skill_tree.gd"))
+	root.set("tree", load("res://demo/showcase/skill_tree/adventurer_tree.tres"))
+	_attach_behavior(root, "Upgrades", UPGRADES_PACK, root)
+	_attach_behavior(root, "HudKit", HUD_KIT, root)
+	var nodes_parent: Control = Control.new()
+	nodes_parent.name = "TreeNodes"
+	nodes_parent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(nodes_parent)
+	nodes_parent.owner = root
+	for label_pair: Array in [["PointsValue", 18.0], ["GrantsValue", 218.0], ["SpeedValue", 248.0]]:
+		var label: Label = Label.new()
+		label.name = str(label_pair[0])
+		label.position = Vector2(40.0, float(label_pair[1]))
+		label.text = str(label_pair[0])
+		root.add_child(label)
+		label.owner = root
+	var runner: CharacterBody2D = CharacterBody2D.new()
+	runner.name = "Runner"
+	runner.position = Vector2(120.0, 420.0)
+	runner.set_script(load("res://demo/showcase/skill_tree/runner.gd"))
+	var body: CollisionShape2D = CollisionShape2D.new()
+	body.name = "Body"
+	var shape: RectangleShape2D = RectangleShape2D.new()
+	shape.size = Vector2(28.0, 44.0)
+	body.shape = shape
+	runner.add_child(body)
+	var runner_sprite: Sprite2D = Sprite2D.new()
+	runner_sprite.name = "Look"
+	runner_sprite.texture = _make_texture()
+	runner.add_child(runner_sprite)
+	root.add_child(runner)
+	runner.owner = root
+	body.owner = root
+	runner_sprite.owner = root
+	# After the runner is in the tree: an owner must be an ancestor, so the stack cannot be
+	# attached before its host has a parent.
+	_attach_behavior(runner, "Stats", STAT_FORGE, root)
+	var ground: StaticBody2D = StaticBody2D.new()
+	ground.name = "Ground"
+	ground.position = Vector2(400.0, 470.0)
+	var ground_shape: CollisionShape2D = CollisionShape2D.new()
+	ground_shape.name = "Floor"
+	var ground_rect: RectangleShape2D = RectangleShape2D.new()
+	ground_rect.size = Vector2(760.0, 24.0)
+	ground_shape.shape = ground_rect
+	ground.add_child(ground_shape)
+	root.add_child(ground)
+	ground.owner = root
+	ground_shape.owner = root
+	return _save_scene(root, "res://demo/showcase/skill_tree/skill_tree.tscn")
+
+
+## One plain helper function on a showcase sheet: a name, a body and, optionally, its parameters.
+func _showcase_function(function_name: String, body: String, params: Array = []) -> EventFunction:
+	var built: EventFunction = EventFunction.new()
+	built.function_name = function_name
+	for pair: Array in params:
+		var parameter: ACEParam = ACEParam.new()
+		parameter.id = str(pair[0])
+		parameter.type_name = str(pair[1])
+		built.params.append(parameter)
+	var body_row: RawCodeRow = RawCodeRow.new()
+	body_row.code = body
+	built.events.append(body_row)
+	return built

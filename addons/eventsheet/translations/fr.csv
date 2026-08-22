@@ -4168,3 +4168,9 @@ bar,barre
 soft,doux
 x only,X seulement
 y only,Y seulement
+Is unlocked {id},Est débloqué {id}
+Is not unlocked {id},N'est pas débloqué {id}
+{base} boosted by {skill} upgrade ({percent} per level),{base} augmenté par l'amélioration {skill} ({percent} par niveau)
+{base} +{amount} per level,{base} +{amount} par niveau
+"A skill tree - prerequisites, points and unlocks","Un arbre de compétences - prérequis, points et déblocages"
+Skill Tree Screen,Écran d'arbre de compétences

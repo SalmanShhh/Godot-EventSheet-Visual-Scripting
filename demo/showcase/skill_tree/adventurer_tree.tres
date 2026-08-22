@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="SkillTreeResource" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/skill_tree_resource/skill_tree_resource.gd" id="1_rtn7i"]
+
+[resource]
+script = ExtResource("1_rtn7i")
+starting_points = 4
+tree_name = "Adventurer"
+skills = Array[Dictionary]([{
+"column": 0,
+"cost": 1,
+"grants": "armour +2",
+"id": "toughness",
+"max_level": 1,
+"name": "Toughness",
+"requires": "",
+"row": 0
+}, {
+"column": 1,
+"cost": 1,
+"grants": "speed x1.1 per level",
+"id": "swift",
+"max_level": 3,
+"name": "Swift",
+"requires": "toughness",
+"row": 0
+}, {
+"column": 2,
+"cost": 2,
+"grants": "speed x1.25",
+"id": "sprint",
+"max_level": 1,
+"name": "Sprint",
+"requires": "swift",
+"row": 0
+}, {
+"column": 0,
+"cost": 1,
+"grants": "jump +1",
+"id": "agility",
+"max_level": 1,
+"name": "Agility",
+"requires": "",
+"row": 1
+}, {
+"column": 1,
+"cost": 2,
+"grants": "",
+"id": "double_jump",
+"max_level": 1,
+"name": "Double Jump",
+"requires": "agility",
+"row": 1
+}, {
+"column": 2,
+"cost": 2,
+"grants": "jump x1.2",
+"id": "wall_jump",
+"max_level": 1,
+"name": "Wall Jump",
+"requires": "double_jump",
+"row": 1
+}])

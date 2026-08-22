@@ -68,6 +68,52 @@ What changed in the build you have installed (v0.17.0), in the words the release
   the door that wants it, two grunts that shout to each other and fight, a health pickup that comes
   back, a secret and the exit tally - four sheets, because opening, coming back and being alerted are
   things an object does about itself rather than things a level does to it.
+### Added - a skill tree is a data asset, and the words to play it
+
+- **A whole tree in one file.** The new **Skill Tree** data asset holds every node of a progression -
+  its id, its name, what it costs in skill points, the nodes it needs unlocked first, how many levels
+  it can take, what it grants and where it sits on a screen - as one `.tres` a designer fills in.
+  It follows the convention the price table and the loot table already use, so it opens in Godot's
+  own Inspector, opens as a TABLE in the editor, and needs no plugin at run time.
+- **The Upgrades pack grew the tree half.** Load Skill Tree points it at the asset; then **Is
+  Unlocked**, **Can Unlock**, **Can Afford** and **Requires** are the four questions, **Unlock** and
+  **Respec** are the two verbs, and Skill Points, Skill Cost, Skill Level, Skill Requires, Skill
+  Grants, Skill Depth and Unlocked Count are the numbers a screen prints. Points live in the pack or,
+  with one row, in a Currency Ledger account, so a HUD, a save file and a shop read one balance.
+  Respec refunds every point spent, clears every unlock and takes back every buff they applied.
+- **What a skill DOES is a row, not a formula.** The asset's Grants cell is a StatForge modifier
+  written as words - `speed x1.1 per level; jump +5` - and Unlock applies it to the stack you named
+  once with Apply Grants To. An upgrade that touches five stats is five cells rather than five
+  formulas, and a node that grants nothing at all is a perk the rest of the game asks about.
+- **Active skills and passive ones share a vocabulary.** The Abilities pack answers **Use Skill**,
+  **Is Skill Ready** and **Skill Charges** beside its ability wording, so a dash on a cooldown and a
+  talent on a tree are asked for in the same words.
+- **A hand-written tree reads as that tree.** A file that keeps a table of unlocked ids, spends a
+  points number and walks a requires list now reads in the Skills object's words - `Is unlocked
+  \"double jump\"`, `Is not unlocked required` - wherever the test appears, whether the importer lifted
+  the line or left it verbatim. `base_speed * (1.0 + level_of(\"speed\") * 0.1)` reads *base_speed
+  boosted by Speed upgrade (10% per level)* and a flat `+ 5.0 * level_of(\"power\")` reads *+5 per
+  level*. All display only: the file still saves every byte it opened with, and the event offers the
+  Upgrades pack as the thing to adopt.
+- **The Doctor reads the graph.** A `requires` cell naming an id the tree does not hold, and a cycle
+  where two nodes wait on each other, are both errors: neither says anything at run time, the unlock
+  simply refuses forever. A repeated id is an error too. A node that grants nothing AND that no
+  script anywhere asks about is a warning, because that one is sometimes deliberate.
+- **A screen to play it on.** **New Sheet ▸ Skill Tree Screen** writes a Control that lays the asset
+  out as buttons with a line drawn to each node they require, tints them locked / affordable /
+  unlocked from the same three questions the rules use, makes a click one Unlock row, shows the
+  Grants cell on hover and keeps a points-left label - all bound through the HUD Kit pack, and
+  re-laid whenever the asset is swapped.
+- **A showcase that proves it.** `demo/showcase/skill_tree/` runs a six-node tree in two branches
+  with a runner whose speed is never written down: it asks its StatForge stack, so taking Swift moves
+  it faster and Double Jump exists only while that perk is unlocked.
+
+### Fixed - every starter the New Sheet menu offers is the starter it names
+
+- The New-Sheet menu resolved a handful of ids through a stale list of its own, so two Editor Tool
+  entries adopted the wrong sheet and seven game-shape starters adopted a blank one - while the
+  FileSystem Create New dialog, which asks the one dock-free builder, was right all along. The menu
+  now asks that builder too, so both doors open the same sheet.
 
 ### Added - Pin in every mode, in 2D and 3D, and the note for using it and parenting at once
 

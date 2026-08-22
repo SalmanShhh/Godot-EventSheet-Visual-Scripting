@@ -246,7 +246,8 @@ const PACK_LABELS: Dictionary = {
 	"advanced_random": "Advanced Random",
 	"line_of_sight": "Line Of Sight",
 	"touch_gestures": "Touch Gestures",
-	"fps_controller": "FPS Controller"
+	"fps_controller": "FPS Controller",
+	"upgrades": "Upgrades"
 }
 
 
