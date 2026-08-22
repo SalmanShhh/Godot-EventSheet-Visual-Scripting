@@ -38,6 +38,7 @@ func _init() -> void:
 	all_ok = _build_skill_tree() and all_ok
 	all_ok = _build_skate_park() and all_ok
 	all_ok = _build_skate_park_3d() and all_ok
+	all_ok = _build_combo_fighter() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -5350,3 +5351,235 @@ func _build_skate_park_3d() -> bool:
 	label.owner = root
 
 	return _save_scene(root, "%s/skate_park_3d.tscn" % SKATE_PARK_3D_DIR)
+
+
+# ── 24. Combo Fighter (Y1 / Y2 / Y3: the three timing tricks a fighting game is made of) ──────
+# Three combos drive three animations, a cancel window lets the next move interrupt the last one,
+# and the hit frame the animation itself names freezes the whole game for a moment. Every shape here
+# is one the READING recognises, so opening combo_fighter.gd as a sheet gives back these very rows:
+# the pressed-list-plus-window loop reads as Combo Box ▸ On combo "punch punch kick", the two
+# comparisons on the play head read as one Is between row, and the three time-scale lines read as one
+# Hitstop row. That double duty is the point - the showcase is also the fixture.
+
+
+## The three moves, as {combo id: [the joined inputs, the clip it plays]}. One table, so the sheet,
+## the animations and the on-screen move list can never disagree about what the character can do.
+const FIGHTER_MOVES: Dictionary = {
+	"uppercut": ["punch,punch,kick", "uppercut"],
+	"sweep": ["kick,kick", "sweep"],
+	"spin": ["punch,kick,punch", "spin"]
+}
+
+
+func _build_combo_fighter() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "ComboFighter"
+	sheet.emit_live_values = false
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Combo Fighter[/b] - the four pieces a fighting game is made of, each one a row. Press J (punch) and K (kick): the inputs collect into a rolling list with a 0.5 s window, and the move the list spells plays its animation. The uppercut's method track calls the hit frame, which freezes the whole game for 0.05 s - that is hit-stop. Between 0.3 s and 0.6 s of a move the next one may cancel it. A press made a few frames too early is buffered rather than dropped. Open this file as a sheet: every shape reads back as the row that writes it."
+	sheet.events.append(about)
+
+	sheet.variables = {
+		"combo": {"type": "Array", "default": [], "exported": false,
+			"attributes": {"tooltip": "The inputs pressed so far, oldest first. Emptied when the window runs out."}},
+		"combo_timer": {"type": "float", "default": 0.0, "exported": false,
+			"attributes": {"tooltip": "Seconds left to press the next input of a combo."}},
+		"punch_input": {"type": "int", "default": -1, "exported": false,
+			"attributes": {"tooltip": "The physics frame a buffered punch stops counting on."}},
+		"hits": {"type": "int", "default": 0, "exported": false,
+			"attributes": {"tooltip": "How many hit frames have landed this session."}},
+		"cancels": {"type": "int", "default": 0, "exported": false,
+			"attributes": {"tooltip": "How many moves were cancelled inside their window."}}
+	}
+
+	# ── The window that empties the buffer ──────────────────────────────────────────────────
+	# A countdown and the list it clears: the shape a combo detector is, and the shape the reading
+	# looks for before it will call anything here a combo at all.
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	tick.actions.append(_action("Core", "SubtractVar", "{var_name} -= {amount}",
+		{"var_name": "combo_timer", "amount": "delta"}))
+	tick.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]",
+		{"target": "$Info", "template": "\"J = punch   ·   K = kick   ·   %d hit frames   ·   %d cancels\"",
+			"args": "hits, cancels"}))
+	var expired: EventRow = EventRow.new()
+	expired.conditions.append(_condition("Core", "CompareVar", "{var_name} {op} {value}",
+		{"var_name": "combo_timer", "op": "<=", "value": "0.0"}))
+	expired.actions.append(_action("Core", "ArrayClear", "{var_name}.clear()", {"var_name": "combo"}))
+	tick.sub_events.append(expired)
+	sheet.events.append(tick)
+
+	# ── The buffered press ──────────────────────────────────────────────────────────────────
+	# A punch pressed while a move is still running is remembered for six physics frames rather than
+	# dropped, and spent the moment the character can act again.
+	var punch_pressed: EventRow = EventRow.new()
+	punch_pressed.trigger_provider_id = "Core"
+	punch_pressed.trigger_id = "OnUnhandledInput"
+	punch_pressed.conditions.append(_condition("Core", "KeyEventPressed", "(event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == {key})",
+		{"key": "KEY_J"}))
+	punch_pressed.actions.append(_action("Core", "BufferInput", "{input} = Engine.get_physics_frames() + {frames}",
+		{"input": "punch_input", "frames": "6"}))
+	sheet.events.append(punch_pressed)
+
+	var kick_pressed: EventRow = EventRow.new()
+	kick_pressed.trigger_provider_id = "Core"
+	kick_pressed.trigger_id = "OnUnhandledInput"
+	kick_pressed.conditions.append(_condition("Core", "KeyEventPressed", "(event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == {key})",
+		{"key": "KEY_K"}))
+	kick_pressed.actions.append(_raw("press(\"kick\")"))
+	sheet.events.append(kick_pressed)
+
+	# ── Spending the buffer ─────────────────────────────────────────────────────────────────
+	# Asked and consumed in the same breath, because the memory stays fresh for the whole six frames
+	# and an event that only asks would fire on every one of them.
+	var spend: EventRow = EventRow.new()
+	spend.trigger_provider_id = "Core"
+	spend.trigger_id = "OnPhysicsProcess"
+	spend.conditions.append(_condition("Core", "IsInputBuffered", "(Engine.get_physics_frames() <= {input})",
+		{"input": "punch_input"}))
+	spend.actions.append(_action("Core", "ConsumeBufferedInput", "{input} = Engine.get_physics_frames() - 1",
+		{"input": "punch_input"}))
+	spend.actions.append(_raw("press(\"punch\")"))
+	sheet.events.append(spend)
+
+	# ── The detector itself ─────────────────────────────────────────────────────────────────
+	# Push the input, stamp the window, and ask what the list now spells. Three moves, one arm each.
+	var press: EventFunction = EventFunction.new()
+	press.function_name = "press"
+	press.enabled = true
+	var button_param: ACEParam = ACEParam.new()
+	button_param.id = "button"
+	button_param.type_name = "String"
+	button_param.type = TYPE_STRING
+	press.params = [button_param]
+	var press_body: EventRow = EventRow.new()
+	press_body.actions.append(_action("Core", "ArrayAppend", "{var_name}.append({value})",
+		{"var_name": "combo", "value": "button"}))
+	press_body.actions.append(_action("Core", "SetVar", "{var_name} = {value}",
+		{"var_name": "combo_timer", "value": "0.5"}))
+	var moves: MatchRow = MatchRow.new()
+	moves.match_expression = "\",\".join(combo)"
+	for move_id: String in ["uppercut", "sweep", "spin"]:
+		var spelling: Array = FIGHTER_MOVES[move_id]
+		var arm: MatchCase = MatchCase.new()
+		arm.pattern = "\"%s\"" % str(spelling[0])
+		arm.events = [
+			_raw("$AnimationPlayer.play(\"%s\")" % str(spelling[1])),
+			_action("Core", "ArrayClear", "{var_name}.clear()", {"var_name": "combo"})
+		]
+		moves.cases.append(arm)
+	press_body.actions.append(moves)
+	press.events = [press_body]
+	sheet.functions.append(press)
+
+	# ── The cancel window ───────────────────────────────────────────────────────────────────
+	# Between 0.3 s and 0.6 s of the uppercut the next move may interrupt it. The clip is part of the
+	# question on purpose: a window that also opened during idle would not be a window.
+	var cancel: EventFunction = EventFunction.new()
+	cancel.function_name = "try_cancel"
+	cancel.enabled = true
+	cancel.return_type = TYPE_BOOL
+	var cancel_body: EventRow = EventRow.new()
+	cancel_body.conditions.append(_condition("Core", "AnimationIsBetween",
+		"{target.}current_animation == {animation} and {target.}current_animation_position > {from_time} and {target.}current_animation_position < {to_time}",
+		{"animation": "\"uppercut\"", "from_time": "0.3", "to_time": "0.6", "target": "$AnimationPlayer"}))
+	cancel_body.actions.append(_action("Core", "AddVar", "{var_name} += {amount}",
+		{"var_name": "cancels", "amount": "1"}))
+	cancel_body.actions.append(_raw("return true"))
+	cancel.events = [cancel_body, _raw("return false")]
+	sheet.functions.append(cancel)
+
+	# ── The hit frame the ANIMATION names ───────────────────────────────────────────────────
+	# The uppercut's method track calls this by name. Nothing in the script says so - which is why
+	# the sheet does, and why Project Doctor warns when a track names a function nobody wrote.
+	var hit: EventFunction = EventFunction.new()
+	hit.function_name = "_on_hit_frame"
+	hit.enabled = true
+	var hit_body: EventRow = EventRow.new()
+	hit_body.actions.append(_action("Core", "AddVar", "{var_name} += {amount}",
+		{"var_name": "hits", "amount": "1"}))
+	hit_body.actions.append(_action("Core", "Hitstop",
+		"Engine.time_scale = {scale}\nawait get_tree().create_timer({seconds}, true, false, true).timeout\nEngine.time_scale = 1.0",
+		{"seconds": "0.05", "scale": "0.1"}))
+	hit.events = [hit_body]
+	sheet.functions.append(hit)
+
+	if not _compile(sheet, "res://demo/showcase/combo_fighter/combo_fighter.tres",
+			"res://demo/showcase/combo_fighter/combo_fighter.gd"):
+		return false
+
+	var root: Node2D = Node2D.new()
+	root.name = "ComboFighter"
+	root.set_script(load("res://demo/showcase/combo_fighter/combo_fighter.gd"))
+	var body: Sprite2D = Sprite2D.new()
+	body.name = "Body"
+	body.texture = _make_texture()
+	body.position = Vector2(320, 300)
+	root.add_child(body)
+	body.owner = root
+	var player: AnimationPlayer = AnimationPlayer.new()
+	player.name = "AnimationPlayer"
+	player.add_animation_library("", _fighter_animations())
+	root.add_child(player)
+	player.owner = root
+	var label: Label = Label.new()
+	label.name = "Info"
+	label.position = Vector2(24, 18)
+	label.add_theme_font_size_override("font_size", 22)
+	label.text = "J = punch   ·   K = kick   ·   0 hit frames   ·   0 cancels"
+	root.add_child(label)
+	label.owner = root
+	var moves_label: Label = Label.new()
+	moves_label.name = "Moves"
+	moves_label.position = Vector2(24, 54)
+	moves_label.add_theme_font_size_override("font_size", 18)
+	var listed: PackedStringArray = PackedStringArray()
+	for move_id: String in ["uppercut", "sweep", "spin"]:
+		listed.append("%s = %s" % [str((FIGHTER_MOVES[move_id] as Array)[0]).replace(",", " "), move_id])
+	moves_label.text = "\n".join(listed)
+	root.add_child(moves_label)
+	moves_label.owner = root
+	return _save_scene(root, "res://demo/showcase/combo_fighter/combo_fighter.tscn")
+
+
+## The three moves as real animations, each one a slide-and-tint on the body plus - on the uppercut -
+## the METHOD TRACK that calls the hit frame. Built here rather than hand-authored so a regeneration
+## is byte-stable and the method track is guaranteed to name a function the sheet defines.
+func _fighter_animations() -> AnimationLibrary:
+	var library: AnimationLibrary = AnimationLibrary.new()
+	library.add_animation("idle", _fighter_move("idle", Vector2.ZERO, Color(1, 1, 1, 1), 0.6, false))
+	library.add_animation("uppercut", _fighter_move("uppercut", Vector2(40, -90), Color(1, 0.72, 0.3, 1), 0.9, true))
+	library.add_animation("sweep", _fighter_move("sweep", Vector2(70, 24), Color(0.5, 0.85, 1, 1), 0.7, false))
+	library.add_animation("spin", _fighter_move("spin", Vector2(0, -40), Color(0.8, 0.6, 1, 1), 0.8, false))
+	return library
+
+
+## One move: the body leaves its rest place, tints, and comes back. `with_hit_frame` adds the method
+## track at 0.35 s - the moment the blow connects, said by the animation rather than by a stopwatch.
+func _fighter_move(clip_name: String, offset: Vector2, tint: Color, length: float,
+		with_hit_frame: bool) -> Animation:
+	var move: Animation = Animation.new()
+	# The clip's own name, written into the file beside its tracks. Godot does not derive one from the
+	# library key, and without it nothing reading the SCENE could say which clip a method track sits on
+	# - which is exactly what the animation-event reading and the Doctor both need.
+	move.resource_name = clip_name
+	move.length = length
+	var rest: Vector2 = Vector2(320, 300)
+	var place: int = move.add_track(Animation.TYPE_VALUE)
+	move.track_set_path(place, "Body:position")
+	move.track_insert_key(place, 0.0, rest)
+	move.track_insert_key(place, length * 0.4, rest + offset)
+	move.track_insert_key(place, length, rest)
+	var colour: int = move.add_track(Animation.TYPE_VALUE)
+	move.track_set_path(colour, "Body:modulate")
+	move.track_insert_key(colour, 0.0, Color(1, 1, 1, 1))
+	move.track_insert_key(colour, length * 0.4, tint)
+	move.track_insert_key(colour, length, Color(1, 1, 1, 1))
+	if with_hit_frame:
+		var calls: int = move.add_track(Animation.TYPE_METHOD)
+		move.track_set_path(calls, ".")
+		move.track_insert_key(calls, 0.35, {"method": &"_on_hit_frame", "args": []})
+	return move
