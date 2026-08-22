@@ -4234,13 +4234,15 @@ On animation event {event_name},All'evento dell'animazione {event_name}
 Event,Evento
 "The name the animation's method track calls, in plain words (""hit frame"" becomes the function _on_hit_frame).","Il nome che la traccia di metodo dell'animazione chiama, in parole semplici (""hit frame"" diventa la funzione _on_hit_frame)."
 Buffer Input,Ricorda input
-"Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","Ricorda una pressione per qualche fotogramma, così un input dato un po' troppo presto esce comunque: il salto premuto poco prima di atterrare, il pugno premuto durante la mossa precedente. Mettilo sotto l'evento di pressione del comando stesso."
+"Remembers a press for a moment so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","Ricorda una pressione per un istante, così un input dato un po' troppo presto esce comunque: il salto premuto poco prima di atterrare, il pugno premuto durante la mossa precedente. Mettilo sotto l'evento di pressione del comando stesso."
 Timed Input,Input a tempo
+Buffer {input} for {seconds} s,Ricorda {input} per {seconds} s
 Buffer {input} for {frames} frames,Ricorda {input} per {frames} fotogrammi
 Buffered input,Input ricordato
 "The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.","La variabile numerica che ricorda la pressione. Chiamala come l'input - punch_input, jump_input - e la riga si rilegge con quel nome dentro."
+"How long the press stays remembered. A tenth of a second is about six frames at 60 fps, and stays that long on any machine.","Per quanto tempo la pressione resta ricordata. Un decimo di secondo sono circa sei fotogrammi a 60 fps, e dura uguale su qualsiasi macchina."
 Frames,Fotogrammi
-How many physics frames the press stays remembered for.,Per quanti fotogrammi di fisica la pressione resta ricordata.
+"How many physics frames the press stays remembered for. Physics frames, not drawn ones, so the count does not move with the frame rate - but it is still a different length of TIME on a project with a different physics tick.","Per quanti fotogrammi di fisica la pressione resta ricordata. Fotogrammi di fisica, non disegnati, quindi il conteggio non si muove con il frame rate - ma resta comunque un TEMPO diverso in un progetto con un altro tick di fisica."
 Is Input Buffered,Input ricordato?
 "True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.","Vero finché una pressione ricordata è ancora fresca. Chiedilo nel momento in cui la mossa diventa lecita e consumalo nello stesso gesto, così una pressione non esce due volte."
 {input} is buffered,{input} è ricordato
@@ -4248,6 +4250,14 @@ The number variable remembering the press.,La variabile numerica che ricorda la 
 Consume Buffered Input,Consuma input ricordato
 "Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.","Dimentica la pressione ricordata, così la mossa che ha lasciato passare non esce una seconda volta. Mettilo subito sotto la mossa che ha avviato."
 Consume {input},Consuma {input}
+Buffer Input (Frames),Ricorda input (fotogrammi)
+"The frame-counted buffer, for a game tuned against a frame-data table. Everything the seconds row does, measured in physics frames instead. Use the frame-counted condition and consume rows with it - do not mix the two clocks on one variable.","Il buffer contato in fotogrammi, per un gioco tarato su una tabella di frame data. Fa quello che fa la riga in secondi, ma misurato in fotogrammi di fisica. Usalo con la condizione e il consumo contati in fotogrammi: non mescolare i due orologi sulla stessa variabile."
+Is Input Buffered (Frames),Input ricordato? (fotogrammi)
+True while a frame-counted press is still fresh. Pair it with Buffer Input (Frames).,Vero finché una pressione contata in fotogrammi è ancora fresca. Va insieme a Ricorda input (fotogrammi).
+{input} is buffered (frames),{input} è ricordato (fotogrammi)
+Consume Buffered Input (Frames),Consuma input ricordato (fotogrammi)
+Forgets a frame-counted press. Pair it with Buffer Input (Frames).,Dimentica una pressione contata in fotogrammi. Va insieme a Ricorda input (fotogrammi).
+Consume {input} (frames),Consuma {input} (fotogrammi)
 Combo Box ▸ Press input {token},Combo Box ▸ Premi input {token}
 Combo Box ▸ On combo {combo},Combo Box ▸ Alla combo {combo}
 within {seconds} s,entro {seconds} s

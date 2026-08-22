@@ -5954,8 +5954,8 @@ func _build_combo_fighter() -> bool:
 			"attributes": {"tooltip": "The inputs pressed so far, oldest first. Emptied when the window runs out."}},
 		"combo_timer": {"type": "float", "default": 0.0, "exported": false,
 			"attributes": {"tooltip": "Seconds left to press the next input of a combo."}},
-		"punch_input": {"type": "int", "default": -1, "exported": false,
-			"attributes": {"tooltip": "The physics frame a buffered punch stops counting on."}},
+		"punch_input": {"type": "float", "default": -1.0, "exported": false,
+			"attributes": {"tooltip": "The moment, in seconds since the game started, a buffered punch stops counting."}},
 		"hits": {"type": "int", "default": 0, "exported": false,
 			"attributes": {"tooltip": "How many hit frames have landed this session."}},
 		"cancels": {"type": "int", "default": 0, "exported": false,
@@ -5988,8 +5988,8 @@ func _build_combo_fighter() -> bool:
 	punch_pressed.trigger_id = "OnUnhandledInput"
 	punch_pressed.conditions.append(_condition("Core", "KeyEventPressed", "(event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == {key})",
 		{"key": "KEY_J"}))
-	punch_pressed.actions.append(_action("Core", "BufferInput", "{input} = Engine.get_physics_frames() + {frames}",
-		{"input": "punch_input", "frames": "6"}))
+	punch_pressed.actions.append(_action("Core", "BufferInput", "{input} = Time.get_ticks_msec() / 1000.0 + {seconds}",
+		{"input": "punch_input", "seconds": "0.1"}))
 	sheet.events.append(punch_pressed)
 
 	var kick_pressed: EventRow = EventRow.new()
@@ -6001,14 +6001,14 @@ func _build_combo_fighter() -> bool:
 	sheet.events.append(kick_pressed)
 
 	# ── Spending the buffer ─────────────────────────────────────────────────────────────────
-	# Asked and consumed in the same breath, because the memory stays fresh for the whole six frames
-	# and an event that only asks would fire on every one of them.
+	# Asked and consumed in the same breath, because the memory stays fresh for the whole tenth of a
+	# second and an event that only asks would fire on every frame of it.
 	var spend: EventRow = EventRow.new()
 	spend.trigger_provider_id = "Core"
 	spend.trigger_id = "OnPhysicsProcess"
-	spend.conditions.append(_condition("Core", "IsInputBuffered", "(Engine.get_physics_frames() <= {input})",
+	spend.conditions.append(_condition("Core", "IsInputBuffered", "(Time.get_ticks_msec() / 1000.0 <= {input})",
 		{"input": "punch_input"}))
-	spend.actions.append(_action("Core", "ConsumeBufferedInput", "{input} = Engine.get_physics_frames() - 1",
+	spend.actions.append(_action("Core", "ConsumeBufferedInput", "{input} = Time.get_ticks_msec() / 1000.0 - 1.0",
 		{"input": "punch_input"}))
 	spend.actions.append(_raw("press(\"punch\")"))
 	sheet.events.append(spend)

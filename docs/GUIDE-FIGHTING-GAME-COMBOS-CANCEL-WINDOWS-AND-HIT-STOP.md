@@ -148,14 +148,14 @@ pack is the whole answer.
 
 ## Input buffering
 
-The player pressed punch four frames before the last move ended. Without a buffer, nothing happens and
+The player pressed punch a moment before the last move ended. Without a buffer, nothing happens and
 it feels like the game dropped the input. With one, the punch comes out the instant it becomes legal.
 
-Three rows, counted in FRAMES because that is the unit the genre thinks in:
+Three rows, counted in SECONDS:
 
 ```
 Keyboard On "punch" pressed
-  -> Buffer Input  punch_input for 6 frames
+  -> Buffer Input  punch_input for 0.1 s
 
 Every Physics Tick
   Condition: Can Act
@@ -164,12 +164,41 @@ Every Physics Tick
     -> ComboBox: Press Input  "punch"
 ```
 
-Ask and consume in the same breath. The memory stays fresh for the whole six frames, so an event that
-asks without consuming fires on every one of them - six punches from one press.
+Ask and consume in the same breath. The memory stays fresh for the whole tenth of a second, so an
+event that asks without consuming fires on every frame of it - six punches from one press at 60 fps,
+and twelve at 120.
 
 Name the variable after the input it remembers (`punch_input`, `jump_input`) and the row reads back
 with that name in it. The same three rows are the platformer's jump buffer, one of the two forgiveness
 tricks that make a jump feel good - the other being coyote time, which is a cooldown.
+
+### Counting it in frames instead
+
+Seconds are the default because a frame is not a fixed amount of time on somebody else's machine: six
+frames is 100 ms at 60 fps and 50 ms at 120 fps, so a fighter tuned on one monitor feels stiff on a
+faster one and forgiving on a slower one.
+
+A game tuned against a frame-data table has a real reason to count frames anyway, so the frame-counted
+pair ships beside the seconds one, spelled out as such:
+
+```
+Keyboard On "punch" pressed
+  -> Buffer Input (Frames)  punch_input for 6 frames
+
+Every Physics Tick
+  Condition: Can Act
+  Condition: Is Input Buffered (Frames)  punch_input
+    -> Consume Buffered Input (Frames)  punch_input
+    -> ComboBox: Press Input  "punch"
+```
+
+These count PHYSICS frames, which do not move with the drawn frame rate - but they are still a
+different length of time in a project with a different physics tick. Use one pair per buffer: both
+write the same variable, and each reads the other's number as nonsense.
+
+The frame-counted spelling is also the one an opened script reads back as a Buffer Input row: a line
+counting physics frames can only be a buffer, where `Time.get_ticks_msec() / 1000.0 + 0.1` is what
+every deadline in every project looks like. Authoring is the same either way.
 
 ## Animation-driven events
 
@@ -224,15 +253,17 @@ it went in.
 - **Press Input is yours to call.** Combo Box reads no hardware. Nothing happens until you push tokens
   into it from your own events - and that is the point: the same detector serves a keyboard, a pad, a
   touchscreen and an AI opponent.
-- **Timing is in seconds, buffering is in frames.** A `timing_window` of `0.3` is 300 ms. A buffer of
-  `6` is six physics ticks. Mixing the two units up is the most common way a move list feels wrong.
+- **Everything is in seconds unless the row says frames.** A `timing_window` of `0.3` is 300 ms and a
+  buffer of `0.1` is 100 ms. The only rows counted in frames are the three that say `(Frames)` in
+  their names, and mixing a frame count into a seconds row is the most common way a move list feels
+  wrong: `Buffer Input punch_input for 6` is six SECONDS of memory.
 - **A window without a clip name opens during idle too.** Is Between asks which animation on purpose.
 - **Never wait on a clock you stopped.** A hit-stop that waits in scaled time never ends. Use the
   Hitstop and Pause For rows, whose waits ignore the time scale, rather than a plain Wait.
 - **Hit-stop is global.** It freezes both fighters, the camera and the particles. When you meant to
   freeze one character, you meant Pause For.
 - **Consume the buffer the moment you act on it.** Otherwise the press comes out once per frame for
-  the whole buffer window.
+  the whole buffer window - and on a faster machine, more times.
 - **A looping clip never finishes.** Queue Animation and On Animation Finished both wait for an end
   that never comes, so a combo chained off a looping attack clip stalls forever.
 - **Method-track names are plain text and typos are silent.** `_on_hit_frame` in the track and

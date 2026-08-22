@@ -228,10 +228,21 @@
   just stopped never lifts, so a run missing that flag keeps reading as the three assignments it is.
   For the per-object twin - one character held still while the world runs on - `Animation ▸ Pause For`
   is new, and reads back the same way.
-- **Input buffering, counted in frames.** **Buffer Input**, **Is Input Buffered** and **Consume
+- **Input buffering, counted in seconds.** **Buffer Input**, **Is Input Buffered** and **Consume
   Buffered Input** are the three rows behind the jump pressed just before landing and the punch
-  pressed during the last move. Frames rather than seconds, because that is the unit the genre thinks
-  in, and the variable holds the frame the memory expires on, so nothing has to be counted down.
+  pressed during the last move. Seconds, on the same clock as the rest of the module, because a buffer
+  written in frames is a different length of time on every machine that runs the game: six frames is
+  100 ms at 60 fps and 50 ms at 120 fps, so a game tuned on one monitor feels stiff on a faster one and
+  forgiving on a slower one. The default is `0.1` - about six frames at 60 fps, and that long
+  everywhere. The variable holds the moment the memory expires on, so nothing has to be counted down.
+- **The frame count is still available, as a row that says so.** **Buffer Input (Frames)**, **Is Input
+  Buffered (Frames)** and **Consume Buffered Input (Frames)** are the same three rows measured in
+  physics frames, for a game tuned against a frame-data table. Use one pair per buffer: both write the
+  same variable and each reads the other's number as nonsense. Only the frame-counted spelling reads
+  BACK out of a hand-written script, and deliberately so - `Time.get_ticks_msec() / 1000.0 + 0.1` is
+  the line every deadline in every project is made of, including the second line Open Input Window
+  writes, so letting it speak for all of them would leave a hand-written window reading as two
+  unrelated rows. A line counting physics frames can only be a buffer. Both spellings author the same.
 - **Animations can raise events.** **On Animation Frame** fires the moment a sprite reaches one frame
   of one clip, adding the clip-and-frame question as a condition you can see and edit; **On Animation
   Event** IS the function an AnimationPlayer's METHOD TRACK calls, so the animator can move the hit
@@ -242,7 +253,9 @@
   the project defines is the one failure with no symptom at all: the key plays, nothing is called,
   and nothing is reported. It is now a warning naming the file, the clip and the function.
 - **A new showcase, `demo/showcase/combo_fighter/`.** Three combos driving three animations, a cancel
-  window, a buffered punch, and a hit frame the uppercut's own method track calls. Every shape in it
+  window, a buffered punch (in seconds, on a float variable - a seconds deadline assigned into an
+  int would have been truncated to the whole second), and a hit frame the uppercut's own method
+  track calls. Every shape in it
   is one the reading recognises, so the showcase is also the fixture.
 
 ### Added - a board keeps its speed, a rail is a curve you ride, and both read back

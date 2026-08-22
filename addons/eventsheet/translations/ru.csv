@@ -4234,13 +4234,15 @@ On animation event {event_name},На событии анимации {event_name
 Event,Событие
 "The name the animation's method track calls, in plain words (""hit frame"" becomes the function _on_hit_frame).","Имя, которое вызывает дорожка методов анимации, обычными словами (""hit frame"" превращается в функцию _on_hit_frame)."
 Buffer Input,Запомнить нажатие
-"Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","Запоминает нажатие на несколько кадров, чтобы чуть преждевременный ввод всё равно сработал - прыжок, нажатый прямо перед приземлением, удар, нажатый во время предыдущего приёма. Ставьте под событием нажатия самой кнопки."
+"Remembers a press for a moment so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","Запоминает нажатие на мгновение, чтобы чуть преждевременный ввод всё равно сработал - прыжок, нажатый прямо перед приземлением, удар, нажатый во время предыдущего приёма. Ставьте под событием нажатия самой кнопки."
 Timed Input,Ввод по времени
+Buffer {input} for {seconds} s,Запомнить {input} на {seconds} с
 Buffer {input} for {frames} frames,Запомнить {input} на {frames} кадров
 Buffered input,Запомненное нажатие
 "The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.","Числовая переменная, помнящая нажатие. Назовите её по имени ввода - punch_input, jump_input - и строка прочитается обратно с этим именем."
+"How long the press stays remembered. A tenth of a second is about six frames at 60 fps, and stays that long on any machine.","Сколько времени нажатие остаётся запомненным. Десятая доля секунды - это примерно шесть кадров при 60 fps, и она одинакова на любой машине."
 Frames,Кадры
-How many physics frames the press stays remembered for.,Сколько физических кадров нажатие остаётся запомненным.
+"How many physics frames the press stays remembered for. Physics frames, not drawn ones, so the count does not move with the frame rate - but it is still a different length of TIME on a project with a different physics tick.","Сколько физических кадров нажатие остаётся запомненным. Именно физических, а не отрисованных, так что число не зависит от частоты кадров - но в проекте с другим шагом физики это всё равно другая ДЛИТЕЛЬНОСТЬ."
 Is Input Buffered,Нажатие запомнено
 "True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.","Истина, пока запомненное нажатие ещё свежее. Спрашивайте в момент, когда приём становится разрешён, и тут же расходуйте его, чтобы одно нажатие не сработало дважды."
 {input} is buffered,{input} запомнено
@@ -4248,6 +4250,14 @@ The number variable remembering the press.,"Числовая переменна�
 Consume Buffered Input,Израсходовать запомненное нажатие
 "Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.","Забывает запомненное нажатие, чтобы пропущенный им приём не вышел во второй раз. Ставьте прямо под тем приёмом, который он начал."
 Consume {input},Израсходовать {input}
+Buffer Input (Frames),Запомнить нажатие (кадры)
+"The frame-counted buffer, for a game tuned against a frame-data table. Everything the seconds row does, measured in physics frames instead. Use the frame-counted condition and consume rows with it - do not mix the two clocks on one variable.","Буфер, отсчитываемый в кадрах, для игры, настроенной по таблице frame data. Делает то же, что и строка в секундах, но измеряет в физических кадрах. Используйте с ним условие и расход, тоже считающие кадры, - не смешивайте два разных отсчёта в одной переменной."
+Is Input Buffered (Frames),Нажатие запомнено (кадры)
+True while a frame-counted press is still fresh. Pair it with Buffer Input (Frames).,"Истинно, пока отсчитанное в кадрах нажатие ещё свежее. Работает в паре с «Запомнить нажатие (кадры)»."
+{input} is buffered (frames),{input} запомнено (кадры)
+Consume Buffered Input (Frames),Израсходовать запомненное нажатие (кадры)
+Forgets a frame-counted press. Pair it with Buffer Input (Frames).,Забывает отсчитанное в кадрах нажатие. Работает в паре с «Запомнить нажатие (кадры)».
+Consume {input} (frames),Израсходовать {input} (кадры)
 Combo Box ▸ Press input {token},Combo Box ▸ Нажать ввод {token}
 Combo Box ▸ On combo {combo},Combo Box ▸ При комбо {combo}
 within {seconds} s,в течение {seconds} с

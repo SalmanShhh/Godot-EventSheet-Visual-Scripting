@@ -4234,13 +4234,15 @@ On animation event {event_name},Bei Animationsereignis {event_name}
 Event,Ereignis
 "The name the animation's method track calls, in plain words (""hit frame"" becomes the function _on_hit_frame).","Der Name, den die Methodenspur der Animation aufruft, in einfachen Worten (""hit frame"" wird zur Funktion _on_hit_frame)."
 Buffer Input,Eingabe merken
-"Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","Merkt sich einen Tastendruck ein paar Bilder lang, damit eine leicht zu frühe Eingabe trotzdem herauskommt - der Sprung kurz vor der Landung, der Schlag noch während des letzten Angriffs. Unter das Gedrückt-Ereignis der Steuerung setzen."
+"Remembers a press for a moment so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","Merkt sich einen Tastendruck einen Moment lang, damit eine leicht zu frühe Eingabe trotzdem herauskommt - der Sprung kurz vor der Landung, der Schlag noch während des letzten Angriffs. Unter das Gedrückt-Ereignis der Steuerung setzen."
 Timed Input,Zeitfenster-Eingabe
+Buffer {input} for {seconds} s,{input} für {seconds} s merken
 Buffer {input} for {frames} frames,{input} für {frames} Bilder merken
 Buffered input,Gemerkte Eingabe
 "The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.","Die Zahlenvariable, die sich den Druck merkt. Benenne sie nach der Eingabe - punch_input, jump_input - dann liest sich die Zeile mit genau diesem Namen zurück."
+"How long the press stays remembered. A tenth of a second is about six frames at 60 fps, and stays that long on any machine.",Wie lange der Druck gemerkt bleibt. Eine Zehntelsekunde sind bei 60 fps etwa sechs Bilder - und bleiben auf jedem Rechner gleich lang.
 Frames,Bilder
-How many physics frames the press stays remembered for.,Wie viele Physikbilder lang der Druck gemerkt bleibt.
+"How many physics frames the press stays remembered for. Physics frames, not drawn ones, so the count does not move with the frame rate - but it is still a different length of TIME on a project with a different physics tick.","Wie viele Physikbilder lang der Druck gemerkt bleibt. Physikbilder, keine gezeichneten - die Zahl wandert also nicht mit der Bildrate, ist in einem Projekt mit anderem Physiktakt aber trotzdem eine andere ZEITSPANNE."
 Is Input Buffered,Eingabe gemerkt?
 "True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.","Wahr, solange ein gemerkter Druck noch frisch ist. Frage im Moment, in dem der Angriff erlaubt wird, und verbrauche ihn im selben Zug, damit ein Druck nicht zweimal herauskommt."
 {input} is buffered,{input} ist gemerkt
@@ -4248,6 +4250,14 @@ The number variable remembering the press.,"Die Zahlenvariable, die sich den Dru
 Consume Buffered Input,Gemerkte Eingabe verbrauchen
 "Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.","Vergisst den gemerkten Druck, damit der dadurch erlaubte Angriff nicht ein zweites Mal herauskommt. Direkt unter den Angriff setzen, den er ausgelöst hat."
 Consume {input},{input} verbrauchen
+Buffer Input (Frames),Eingabe merken (Bilder)
+"The frame-counted buffer, for a game tuned against a frame-data table. Everything the seconds row does, measured in physics frames instead. Use the frame-counted condition and consume rows with it - do not mix the two clocks on one variable.","Der in Bildern gezählte Puffer, für ein Spiel, das nach einer Frame-Data-Tabelle abgestimmt wird. Genau das, was die Sekunden-Zeile tut, nur in Physikbildern gemessen. Nutze dazu die ebenfalls in Bildern gezählte Bedingung und Verbrauchen-Zeile - mische die beiden Uhren nicht in einer Variablen."
+Is Input Buffered (Frames),Eingabe gemerkt? (Bilder)
+True while a frame-counted press is still fresh. Pair it with Buffer Input (Frames).,"Wahr, solange ein in Bildern gezählter Druck noch frisch ist. Gehört zu Eingabe merken (Bilder)."
+{input} is buffered (frames),{input} ist gemerkt (Bilder)
+Consume Buffered Input (Frames),Gemerkte Eingabe verbrauchen (Bilder)
+Forgets a frame-counted press. Pair it with Buffer Input (Frames).,Vergisst einen in Bildern gezählten Druck. Gehört zu Eingabe merken (Bilder).
+Consume {input} (frames),{input} verbrauchen (Bilder)
 Combo Box ▸ Press input {token},Combo Box ▸ Eingabe {token} drücken
 Combo Box ▸ On combo {combo},Combo Box ▸ Bei Combo {combo}
 within {seconds} s,innerhalb von {seconds} s

@@ -4584,13 +4584,16 @@ Timed inputs (X28): input windows, mashes, prompts and graded timing.
 - **Pressed In The Window** (`open_flag: String, action: String, deadline: String`) - True when the control goes down while the window is still open, used inside an input event. Pair it with the grade to tell a perfect answer from a good one.
 - **Input Window Missed** (`open_flag: String, deadline: String`) - True the moment an open window runs out with nothing pressed - the punish, the failed lockpick, the dropped finisher.
 - **Is Input Buffered** (`input: String`) - True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.
+- **Is Input Buffered (Frames)** (`input: String`) - True while a frame-counted press is still fresh. Pair it with Buffer Input (Frames).
 - **Mashed In Time** (`counter: String, count: String, started: String, seconds: String`) - True once the presses arrive quickly enough - breaking free, cranking a winch, shaking off a grab.
 
 #### Actions
 - **Open Input Window** (`open_flag: String, deadline: String, seconds: String, prompt: String`) - Opens a window the player has a moment to answer. Measured on the engine clock, which keeps running while the game is paused.
 - **Close Input Window** (`open_flag: String, prompt: String`) - Shuts the window whether or not the player answered - put it after the graded branches so one press cannot count twice.
-- **Buffer Input** (`input: String, frames: String`) - Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.
+- **Buffer Input** (`input: String, seconds: String`) - Remembers a press for a moment so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.
 - **Consume Buffered Input** (`input: String`) - Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.
+- **Buffer Input (Frames)** (`input: String, frames: String`) - The frame-counted buffer, for a game tuned against a frame-data table. Everything the seconds row does, measured in physics frames instead. Use the frame-counted condition and consume rows with it - do not mix the two clocks on one variable.
+- **Consume Buffered Input (Frames)** (`input: String`) - Forgets a frame-counted press. Pair it with Buffer Input (Frames).
 - **Start Mash Count** (`counter: String, started: String`) - Resets the press count and stamps the moment the mash began, so the question below can be asked about this attempt only.
 - **Count Mash Press** (`counter: String`) - Adds one press to the mash. Put it under the control's own pressed event.
 - **Show Prompt** (`label: String, action: String`) - Puts the control's real key or button on a label, so the prompt is right on every keyboard and after every rebind.

@@ -5,7 +5,7 @@ var cancels: int = 0
 var combo: Array = []
 var combo_timer: float = 0.0
 var hits: int = 0
-var punch_input: int = -1
+var punch_input: float = -1.0
 
 func _process(delta: float) -> void:
 	combo_timer -= delta
@@ -15,13 +15,13 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_J):
-		punch_input = Engine.get_physics_frames() + 6
+		punch_input = Time.get_ticks_msec() / 1000.0 + 0.1
 	if (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_K):
 		press("kick")
 
 func _physics_process(delta: float) -> void:
-	if (Engine.get_physics_frames() <= punch_input):
-		punch_input = Engine.get_physics_frames() - 1
+	if (Time.get_ticks_msec() / 1000.0 <= punch_input):
+		punch_input = Time.get_ticks_msec() / 1000.0 - 1.0
 		press("punch")
 
 ## @ace_hidden

@@ -108,9 +108,11 @@ const EXTENDED_MODULES: Dictionary = {
 		"AnimationIsBetween", "PauseAnimationFor",
 		"OnAnimationFrame", "SpriteAnimationFrameIs", "OnAnimationEvent",
 	],
-	# Y2 - the press remembered for a few frames so an input made slightly too early still lands.
+	# Y2 - the press remembered for a moment so an input made slightly too early still lands,
+	# in seconds and in the frame-counted spelling beside it.
 	"res://addons/eventforge/registration/modules/timed_input_aces.gd": [
 		"BufferInput", "IsInputBuffered", "ConsumeBufferedInput",
+		"BufferInputFrames", "IsInputBufferedFrames", "ConsumeBufferedInputFrames",
 	],
 }
 

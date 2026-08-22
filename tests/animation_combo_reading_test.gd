@@ -46,7 +46,7 @@ const SOURCE: String = """extends CharacterBody2D
 @onready var anim: AnimationPlayer = $AnimationPlayer
 var combo: Array = []
 var combo_timer := 0.0
-var punch_input := -1
+var punch_input := -1.0
 
 func press(button: String) -> void:
 	combo.append(button)
@@ -74,7 +74,7 @@ func may_cancel() -> void:
 		print("cancel")
 
 func remember_the_punch() -> void:
-	punch_input = Engine.get_physics_frames() + 6
+	punch_input = Time.get_ticks_msec() / 1000.0 + 0.1
 """
 
 ## The ace_ids these items add, with the template each one SHIPS - after the registry has given a
@@ -88,9 +88,9 @@ static var SHIPPED_TEMPLATES: Dictionary = {
 	"AnimationIsBetween": "{target.}current_animation == {animation} and {target.}current_animation_position > {from_time} and {target.}current_animation_position < {to_time}",
 	"PauseAnimationFor": "{target.}pause()\nawait get_tree().create_timer({seconds}, true, false, true).timeout\n{target.}play()",
 	"SpriteAnimationFrameIs": "{target.}animation == {animation} and {target.}frame == {frame}",
-	"BufferInput": "{input} = Engine.get_physics_frames() + {frames}",
-	"IsInputBuffered": "(Engine.get_physics_frames() <= {input})",
-	"ConsumeBufferedInput": "{input} = Engine.get_physics_frames() - 1",
+	"BufferInput": "{input} = Time.get_ticks_msec() / 1000.0 + {seconds}",
+	"IsInputBuffered": "(Time.get_ticks_msec() / 1000.0 <= {input})",
+	"ConsumeBufferedInput": "{input} = Time.get_ticks_msec() / 1000.0 - 1.0",
 	# Y2's hit-stop was NOT minted here: the Juice module already shipped this exact template, and a
 	# second row writing the same three lines under a second name would be the one thing the whole
 	# vocabulary is meant to prevent. The reading says the shipped row's words.

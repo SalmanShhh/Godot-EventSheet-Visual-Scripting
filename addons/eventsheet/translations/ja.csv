@@ -4234,13 +4234,15 @@ On animation event {event_name},アニメーションイベント {event_name} �
 Event,イベント
 "The name the animation's method track calls, in plain words (""hit frame"" becomes the function _on_hit_frame).","アニメーションのメソッドトラックが呼び出す名前を、普通の言葉で書きます（""hit frame"" は関数 _on_hit_frame になります）。"
 Buffer Input,入力を先行入力する
-"Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.",押した入力を数コマだけ覚えておき、少し早すぎた入力でもちゃんと出るようにします。着地直前に押したジャンプ、前の技の最中に押したパンチなどです。その操作の「押された」イベントの下に置いてください。
+"Remembers a press for a moment so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.",押した入力を少しのあいだ覚えておき、少し早すぎた入力でもちゃんと出るようにします。着地直前に押したジャンプ、前の技の最中に押したパンチなどです。その操作の「押された」イベントの下に置いてください。
 Timed Input,タイミング入力
+Buffer {input} for {seconds} s,{input} を {seconds} 秒先行入力する
 Buffer {input} for {frames} frames,{input} を {frames} コマ先行入力する
 Buffered input,先行入力
 "The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.",押されたことを覚えておく数値変数です。入力の名前を付ける（punch_input、jump_input）と、その名前がそのまま行に読み戻されます。
+"How long the press stays remembered. A tenth of a second is about six frames at 60 fps, and stays that long on any machine.",押したことをどれだけの時間覚えておくか。0.1 秒は 60 fps でおよそ 6 コマで、どのマシンでも同じ長さです。
 Frames,コマ数
-How many physics frames the press stays remembered for.,押したことを何物理コマのあいだ覚えておくか。
+"How many physics frames the press stays remembered for. Physics frames, not drawn ones, so the count does not move with the frame rate - but it is still a different length of TIME on a project with a different physics tick.",押したことを何物理コマのあいだ覚えておくか。描画コマではなく物理コマなので、フレームレートで数が変わることはありませんが、物理ティックが違うプロジェクトでは長さ（時間）が変わります。
 Is Input Buffered,先行入力が残っている
 "True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.",覚えている入力がまだ有効なあいだ真になります。技が出せるようになった瞬間に問い合わせ、同時に消費してください。そうしないと 1 回の入力が二度出てしまいます。
 {input} is buffered,{input} が先行入力されている
@@ -4248,6 +4250,14 @@ The number variable remembering the press.,押されたことを覚えておく�
 Consume Buffered Input,先行入力を消費する
 "Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.",覚えていた入力を忘れます。そのおかげで出た技が二度出ないようにするためです。開始した技のすぐ下に置いてください。
 Consume {input},{input} を消費する
+Buffer Input (Frames),入力を先行入力する（コマ数）
+"The frame-counted buffer, for a game tuned against a frame-data table. Everything the seconds row does, measured in physics frames instead. Use the frame-counted condition and consume rows with it - do not mix the two clocks on one variable.",コマ数で数えるバッファです。フレームデータ表を見て調整するゲーム向けで、秒のほうの行と同じことを物理コマで測ります。条件と消費もコマ数版を使ってください。ひとつの変数でふたつの時計を混ぜないように。
+Is Input Buffered (Frames),先行入力が残っている（コマ数）
+True while a frame-counted press is still fresh. Pair it with Buffer Input (Frames).,コマ数で数えた先行入力がまだ有効なあいだ真になります。「入力を先行入力する（コマ数）」と組で使います。
+{input} is buffered (frames),{input} が先行入力されている（コマ数）
+Consume Buffered Input (Frames),先行入力を消費する（コマ数）
+Forgets a frame-counted press. Pair it with Buffer Input (Frames).,コマ数で数えた先行入力を忘れます。「入力を先行入力する（コマ数）」と組で使います。
+Consume {input} (frames),{input} を消費する（コマ数）
 Combo Box ▸ Press input {token},Combo Box ▸ 入力 {token} を押す
 Combo Box ▸ On combo {combo},Combo Box ▸ コンボ {combo} が成立したとき
 within {seconds} s,{seconds} 秒以内

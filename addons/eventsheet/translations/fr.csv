@@ -4234,13 +4234,15 @@ On animation event {event_name},À l'événement d'animation {event_name}
 Event,Événement
 "The name the animation's method track calls, in plain words (""hit frame"" becomes the function _on_hit_frame).","Le nom qu'appelle la piste de méthode de l'animation, en mots simples (""hit frame"" devient la fonction _on_hit_frame)."
 Buffer Input,Mémoriser l'entrée
-"Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","Mémorise un appui pendant quelques images pour qu'une entrée faite un peu trop tôt sorte quand même - le saut appuyé juste avant l'atterrissage, le coup appuyé pendant le mouvement précédent. À placer sous l'événement d'appui de la commande."
+"Remembers a press for a moment so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","Mémorise un appui pendant un instant pour qu'une entrée faite un peu trop tôt sorte quand même - le saut appuyé juste avant l'atterrissage, le coup appuyé pendant le mouvement précédent. À placer sous l'événement d'appui de la commande."
 Timed Input,Entrée minutée
+Buffer {input} for {seconds} s,Mémoriser {input} pendant {seconds} s
 Buffer {input} for {frames} frames,Mémoriser {input} pendant {frames} images
 Buffered input,Entrée mémorisée
 "The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.","La variable numérique qui mémorise l'appui. Nommez-la d'après l'entrée - punch_input, jump_input - et la ligne se relit avec ce nom dedans."
+"How long the press stays remembered. A tenth of a second is about six frames at 60 fps, and stays that long on any machine.","Pendant combien de temps l'appui reste mémorisé. Un dixième de seconde fait environ six images à 60 fps, et dure autant sur n'importe quelle machine."
 Frames,Images
-How many physics frames the press stays remembered for.,Pendant combien d'images de physique l'appui reste mémorisé.
+"How many physics frames the press stays remembered for. Physics frames, not drawn ones, so the count does not move with the frame rate - but it is still a different length of TIME on a project with a different physics tick.","Pendant combien d'images de physique l'appui reste mémorisé. Des images de physique, pas des images dessinées : le compte ne bouge donc pas avec la fréquence d'affichage - mais cela reste une DURÉE différente dans un projet dont le pas de physique diffère."
 Is Input Buffered,Entrée mémorisée ?
 "True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.","Vrai tant qu'un appui mémorisé est encore frais. Posez la question à l'instant où le coup devient autorisé, et consommez-le dans la foulée pour qu'un appui ne sorte pas deux fois."
 {input} is buffered,{input} est mémorisée
@@ -4248,6 +4250,14 @@ The number variable remembering the press.,La variable numérique qui mémorise 
 Consume Buffered Input,Consommer l'entrée mémorisée
 "Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.","Oublie l'appui mémorisé, pour que le coup qu'il a autorisé ne ressorte pas une seconde fois. À placer juste sous le coup qu'il a déclenché."
 Consume {input},Consommer {input}
+Buffer Input (Frames),Mémoriser l'entrée (images)
+"The frame-counted buffer, for a game tuned against a frame-data table. Everything the seconds row does, measured in physics frames instead. Use the frame-counted condition and consume rows with it - do not mix the two clocks on one variable.","Le tampon compté en images, pour un jeu réglé sur une table de frame data. Exactement ce que fait la ligne en secondes, mais mesuré en images de physique. À utiliser avec la condition et la consommation comptées en images - ne mélangez pas les deux horloges sur une même variable."
+Is Input Buffered (Frames),Entrée mémorisée ? (images)
+True while a frame-counted press is still fresh. Pair it with Buffer Input (Frames).,Vrai tant qu'un appui compté en images est encore frais. À associer à Mémoriser l'entrée (images).
+{input} is buffered (frames),{input} est mémorisée (images)
+Consume Buffered Input (Frames),Consommer l'entrée mémorisée (images)
+Forgets a frame-counted press. Pair it with Buffer Input (Frames).,Oublie un appui compté en images. À associer à Mémoriser l'entrée (images).
+Consume {input} (frames),Consommer {input} (images)
 Combo Box ▸ Press input {token},Combo Box ▸ Appuyer sur l'entrée {token}
 Combo Box ▸ On combo {combo},Combo Box ▸ Au combo {combo}
 within {seconds} s,en moins de {seconds} s

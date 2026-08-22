@@ -2893,6 +2893,14 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# (Its sibling OpenInputWindow needs no entry here: a template spanning two lines can never match
 	# the single lines the reverse index is asked about, so the tail widens nothing.)
 	"StartListeningForControl", "StopListeningForControl", "CloseInputWindow", "CountMashPress",
+	# Y2. Buffer Input, now that it is counted in SECONDS, writes `{input} = <now> + {seconds}` -
+	# which is the SAME line Open Input Window writes as its second one. That template spans two
+	# lines and so never enters the index itself, and the window is put back together by the
+	# reading; admitting the one-line buffer would have it claim the deadline line first and
+	# leave the window as two unrelated rows. Every other "a moment from now" line in every
+	# project is the same story. The FRAME-counted twin stays in the index, where
+	# `Engine.get_physics_frames() + {frames}` means one thing and nothing else writes it.
+	"BufferInput",
 	"UsePalette", "CurrentWeapon", "SecretsFoundCount", "SecretAlreadyFound", "OffBeatBy",
 	# Y16. The keycard rows, out for exactly the reason the secrets rows above are: `list.append(x)`,
 	# `(a in b)` and `(not a in b)` are the list operations every project writes, and a keycard row

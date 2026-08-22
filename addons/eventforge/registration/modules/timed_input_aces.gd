@@ -50,28 +50,44 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 ## Y2 - input buffering, the third timing trick a combo game writes.
 ##
 ## A window asks "was it pressed while I was listening"; a BUFFER asks the other way round - the
-## player pressed a moment too early, and the game remembers the press for a few frames so the move
+## player pressed a moment too early, and the game remembers the press for a moment so the move
 ## still comes out when it becomes legal. Fighters, platformers (the jump pressed just before
 ## landing) and rhythm games all lean on it, and everybody writes the same three lines.
 ##
-## Counted in FRAMES, not seconds, because that is the unit the genre thinks in ("six frames of
-## buffer") and because the physics frame is the tick the move actually becomes legal on. The
-## variable holds the frame the memory expires ON, so nothing has to be counted down every tick.
+## Counted in SECONDS by default, on the same clock as every other row in this module. A buffer
+## written in frames is a different length of time on every machine that runs the game: six frames
+## is 100 ms at 60 fps and 50 ms at 120 fps, so a fighter tuned on one monitor feels stiff on a
+## faster one and forgiving on a slower one. Seconds are the same everywhere.
 ##
-## Consuming spells the expiry as "one frame ago" rather than as a bare -1 ON PURPOSE. A template of
-## `{input} = -1` is a longer literal than the general Set value row, so the reverse-lifter would
-## prefer it - and every `hp = -1` in every project on earth would start reading as "consume hp".
-## The clock spelling cannot be mistaken for anything else.
+## The frame-counted rows are still here, spelled out as such, because a genre that thinks in frames
+## has a real reason to: on a fixed physics tick the frame IS the moment the move becomes legal, and
+## a six-frame buffer is a number that gets compared against a frame-data table. Pick the pair that
+## matches how the game is tuned, and use one pair per buffer - the two clocks write the same
+## variable and would read each other's numbers as nonsense.
+##
+## Either way the variable holds the moment the memory expires ON, so nothing has to be counted down
+## every tick.
+##
+## Consuming spells the expiry as "a second ago" (or "one frame ago") rather than as a bare -1 ON
+## PURPOSE. A template of `{input} = -1` is a longer literal than the general Set value row, so the
+## reverse-lifter would prefer it - and every `hp = -1` in every project on earth would start reading
+## as "consume hp". The clock spelling cannot be mistaken for anything else.
 ##
 ## Name the variable after the input it remembers - `punch_input`, `jump_input` - and an opened
 ## script reads the row back with the input's own name in it.
 static func _buffering(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "BufferInput", "Buffer Input", ACEDescriptor.ACEType.ACTION, "{input} = Engine.get_physics_frames() + {frames}", "", [F.make_param("input", "String", "punch_input", "Buffered input", "The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.", "variable_reference"), F.make_param("frames", "String", "6", "Frames", "How many physics frames the press stays remembered for.", "expression")], TIMED, "Buffer {input} for {frames} frames")
-		.described("Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.").featured())
-	descriptors.append(F.make_descriptor("Core", "IsInputBuffered", "Is Input Buffered", ACEDescriptor.ACEType.CONDITION, "(Engine.get_physics_frames() <= {input})", "", [F.make_param("input", "String", "punch_input", "Buffered input", "The number variable remembering the press.", "variable_reference")], TIMED, "{input} is buffered")
+	descriptors.append(F.make_descriptor("Core", "BufferInput", "Buffer Input", ACEDescriptor.ACEType.ACTION, "{input} = %s + {seconds}" % NOW, "", [F.make_param("input", "String", "punch_input", "Buffered input", "The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.", "variable_reference"), F.make_param("seconds", "String", "0.1", "Seconds", "How long the press stays remembered. A tenth of a second is about six frames at 60 fps, and stays that long on any machine.", "expression")], TIMED, "Buffer {input} for {seconds} s")
+		.described("Remembers a press for a moment so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.").featured())
+	descriptors.append(F.make_descriptor("Core", "IsInputBuffered", "Is Input Buffered", ACEDescriptor.ACEType.CONDITION, "(%s <= {input})" % NOW, "", [F.make_param("input", "String", "punch_input", "Buffered input", "The number variable remembering the press.", "variable_reference")], TIMED, "{input} is buffered")
 		.described("True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.").featured())
-	descriptors.append(F.make_descriptor("Core", "ConsumeBufferedInput", "Consume Buffered Input", ACEDescriptor.ACEType.ACTION, "{input} = Engine.get_physics_frames() - 1", "", [F.make_param("input", "String", "punch_input", "Buffered input", "The number variable remembering the press.", "variable_reference")], TIMED, "Consume {input}")
+	descriptors.append(F.make_descriptor("Core", "ConsumeBufferedInput", "Consume Buffered Input", ACEDescriptor.ACEType.ACTION, "{input} = %s - 1.0" % NOW, "", [F.make_param("input", "String", "punch_input", "Buffered input", "The number variable remembering the press.", "variable_reference")], TIMED, "Consume {input}")
 		.described("Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started."))
+	descriptors.append(F.make_descriptor("Core", "BufferInputFrames", "Buffer Input (Frames)", ACEDescriptor.ACEType.ACTION, "{input} = Engine.get_physics_frames() + {frames}", "", [F.make_param("input", "String", "punch_input", "Buffered input", "The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.", "variable_reference"), F.make_param("frames", "String", "6", "Frames", "How many physics frames the press stays remembered for. Physics frames, not drawn ones, so the count does not move with the frame rate - but it is still a different length of TIME on a project with a different physics tick.", "expression")], TIMED, "Buffer {input} for {frames} frames")
+		.described("The frame-counted buffer, for a game tuned against a frame-data table. Everything the seconds row does, measured in physics frames instead. Use the frame-counted condition and consume rows with it - do not mix the two clocks on one variable."))
+	descriptors.append(F.make_descriptor("Core", "IsInputBufferedFrames", "Is Input Buffered (Frames)", ACEDescriptor.ACEType.CONDITION, "(Engine.get_physics_frames() <= {input})", "", [F.make_param("input", "String", "punch_input", "Buffered input", "The number variable remembering the press.", "variable_reference")], TIMED, "{input} is buffered (frames)")
+		.described("True while a frame-counted press is still fresh. Pair it with Buffer Input (Frames)."))
+	descriptors.append(F.make_descriptor("Core", "ConsumeBufferedInputFrames", "Consume Buffered Input (Frames)", ACEDescriptor.ACEType.ACTION, "{input} = Engine.get_physics_frames() - 1", "", [F.make_param("input", "String", "punch_input", "Buffered input", "The number variable remembering the press.", "variable_reference")], TIMED, "Consume {input} (frames)")
+		.described("Forgets a frame-counted press. Pair it with Buffer Input (Frames)."))
 
 
 ## The window itself: open it, ask about it, close it. The flag and the deadline are two ordinary

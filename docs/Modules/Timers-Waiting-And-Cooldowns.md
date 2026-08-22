@@ -689,26 +689,50 @@ A hand-written window reads back as the same row, and the note says which clock 
 
 ![A flag and a deadline read as one Open input window row](../images/input-window-reading.png)
 
-## Input buffering, counted in frames
+## Input buffering
 
 A window asks "was it pressed while I was listening". A **buffer** asks the other way round: the
-player pressed a moment too early, and the game remembers the press for a few frames so the move still
+player pressed a moment too early, and the game remembers the press for a moment so the move still
 comes out when it becomes legal. The jump pressed just before landing, the punch pressed during the
 last move, the dodge pressed mid-recovery - all the same three rows.
 
-**Buffer Input** remembers a press for N frames. **Is Input Buffered** asks whether the memory is
+**Buffer Input** remembers a press for N seconds. **Is Input Buffered** asks whether the memory is
 still fresh. **Consume Buffered Input** forgets it, so one press cannot come out twice.
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Buffer Input | Remembers a press for a few frames. Put it under the control's own pressed event. | `{input} = Engine.get_physics_frames() + {frames}` |
-| Is Input Buffered | True while a remembered press is still fresh. | `(Engine.get_physics_frames() <= {input})` |
-| Consume Buffered Input | Forgets the remembered press. | `{input} = Engine.get_physics_frames() - 1` |
+| Buffer Input | Remembers a press for a moment. Put it under the control's own pressed event. | `{input} = Time.get_ticks_msec() / 1000.0 + {seconds}` |
+| Is Input Buffered | True while a remembered press is still fresh. | `(Time.get_ticks_msec() / 1000.0 <= {input})` |
+| Consume Buffered Input | Forgets the remembered press. | `{input} = Time.get_ticks_msec() / 1000.0 - 1.0` |
 
-Counted in FRAMES rather than seconds, because that is the unit the genre thinks in ("six frames of
-buffer") and because the physics frame is the tick the move actually becomes legal on. The variable
-holds the frame the memory expires ON, so nothing has to be counted down every tick, and it needs no
-per-frame row at all.
+Counted in SECONDS, on the same clock as every other row in this module. A buffer written in frames
+is a different length of time on every machine that runs the game - six frames is 100 ms at 60 fps and
+50 ms at 120 fps, so a game tuned on one monitor feels stiff on a faster one and forgiving on a slower
+one. The variable holds the moment the memory expires ON, so nothing has to be counted down every
+tick, and it needs no per-frame row at all.
+
+### The same three rows, counted in frames
+
+A genre that thinks in frames has a real reason to: on a fixed physics tick the frame IS the moment
+the move becomes legal, and "six frames of buffer" is a number compared against a frame-data table.
+Those three rows ship too, and say so in their names.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Buffer Input (Frames) | Remembers a press for N physics frames. | `{input} = Engine.get_physics_frames() + {frames}` |
+| Is Input Buffered (Frames) | True while a frame-counted press is still fresh. | `(Engine.get_physics_frames() <= {input})` |
+| Consume Buffered Input (Frames) | Forgets a frame-counted press. | `{input} = Engine.get_physics_frames() - 1` |
+
+Physics frames do not move with the drawn frame rate, but they are still a different length of time in
+a project with a different physics tick. Use one pair per buffer: both write the same variable, and
+each reads the other's number as nonsense.
+
+One difference worth knowing when you open a hand-written script as a sheet: the FRAME-counted buffer
+reads back as its row, and the seconds one does not. `Engine.get_physics_frames() + 6` means one thing
+and nothing else in Godot writes it, but `Time.get_ticks_msec() / 1000.0 + 0.1` is the same line every
+deadline in every project is made of - including the second line **Open Input Window** writes - so
+letting it speak for all of them would cost more than it gives. Both rows author identically; only the
+reading back differs.
 
 Name the variable after the input it remembers - `punch_input`, `jump_input` - and the row reads back
 with that name in it. Ask and consume in the same breath:
