@@ -280,6 +280,71 @@ static func run() -> bool:
 	passed = _check("the squad keeps its group in the packed scene",
 		FileAccess.get_file_as_string("res://demo/showcase/hierarchy_playground/hierarchy_playground.tscn").contains("groups=[\"soldier\"]"), true) and passed
 
+	# The traversal courses: the Traversal Kit (2D) and its 3D twin, one station per move. The
+	# RUNTIME behaviour was verified by a NON-headless harness (physics does not step in this suite:
+	# run_tests.gd's _init runs before the main loop exists, so there is no scene tree to reach).
+	# The recipe, and the numbers it produced, so anyone can repeat it:
+	#   a temp SceneTree script instantiates traversal_course.tscn under `root`, connects
+	#   Climber/Traversal.on_climbed, steps 200 PHYSICS frames at 60 Hz, then reads:
+	#     Climber hangs at frame          -> 28    (it falls beside the tower with no drive at all)
+	#     Climber y while hanging         -> 431.6 (the tower's lip is y 420 - it is holding it)
+	#     On Climbed fires                -> 1     (the 0.4 s mantle put it on top of the tower)
+	#     Jumper peak |velocity.x|        -> 275   (its walking top speed is 200: the wall PUSHED it)
+	#     Jumper x range                  -> 626.1 .. 821.9 (it leaves both shaft walls, then homes back)
+	#     at frame 60: Diver y / Stone y  -> 517.7 / 566.0 (the stone has landed; the swimmer is
+	#                                        still 48 px higher, which is the whole point of Swim)
+	#   then the same for traversal_course_3d.tscn, 200 physics frames:
+	#     Climber hangs at frame          -> 31    at y 2.43 (the tower top is y 3.0)
+	#     Jumper z range                  -> -1.05 .. 1.05 (it crosses the shaft BOTH ways - the push
+	#                                        follows the wall's own normal, not a hard-coded side)
+	#     at frame 90: Diver y / Stone y  -> 2.42 / 0.80 (Float holds the swimmer a metre under the
+	#                                        surface at y 3.5 while the stone lies on the ground)
+	#     Vaulter reached x               -> 6.99  (it vaulted the block at x 3.5 .. 4.5)
+	#     Ladder Bot reached y            -> 4.48  (it climbed the marked Area3D from y 0.9)
+	# The margins are what matter here, not the decimals: a grab that never happens, a wall jump that
+	# pushes into the wall, or a swimmer that falls like a stone would each move one of these by more
+	# than the whole number.
+	passed = _check_sheet("traversal_course", "res://demo/showcase/traversal_course/traversal_course.gd", [
+		"class_name TraversalCourseDemo",
+		"$Player/Traversal.is_at_a_ledge() and $Player/Movement.is_falling()",
+		"$Player/Traversal.grab_ledge()",
+		"$Player/Traversal.climb_up(0.3)",
+		"$Player/Traversal.drop()",
+		"$Player/Traversal.slide_down_wall(60.0)",
+		"$Player/Traversal.climb_ladder(120.0)",
+		"$Player/Traversal.vault_over(0.4)",
+		"$Player/Traversal.swim(20.0, 10.0)",
+		"$Jumper/Traversal.wall_jump(300.0, 500.0)",
+		"$Jumper/Movement.ai_move_axis = signf($Jumper.velocity.x)",
+	]) and passed
+	passed = _check("traversal_course bakes every per-row uid",
+		FileAccess.get_file_as_string("res://demo/showcase/traversal_course/traversal_course.gd").contains("{uid}"), false) and passed
+	passed = _check_scene("traversal_course scene has every station and every actor",
+		"res://demo/showcase/traversal_course/traversal_course.tscn",
+		["Ground", "LedgeTower", "VaultBlock", "WallLeft", "WallRight", "Platform", "Ladder", "Pool",
+			"Player", "Climber", "Jumper", "Diver", "Stone", "Readout"]) and passed
+	# The kit finds a ladder and a pool by GROUP, and PackedScene.pack() saves persistent groups
+	# only: without the persistent flag both volumes reach the player as ordinary Areas and every
+	# water and ladder row silently never fires.
+	passed = _check("the ladder and the pool keep their groups in the packed scene",
+		FileAccess.get_file_as_string("res://demo/showcase/traversal_course/traversal_course.tscn").count("groups=["), 2) and passed
+	passed = _check_sheet("traversal_course_3d", "res://demo/showcase/traversal_course_3d/traversal_course_3d.gd", [
+		"class_name TraversalCourse3DDemo",
+		"$Climber/Traversal.grab_ledge()",
+		"$Climber/Traversal.climb_up(0.5)",
+		"$Jumper/Traversal.slide_down_wall(1.5)",
+		"$Jumper/Traversal.wall_jump(6.0, 4.5)",
+		"$LadderBot/Traversal.climb_ladder(2.5)",
+		"$Vaulter/Traversal.vault_over(0.4)",
+		"$Diver/Traversal.swim(20.0, 10.0)",
+		"$Diver/Traversal.float_in_water(12.0)",
+		"$Climber.move_and_slide()",
+	]) and passed
+	passed = _check_scene("traversal_course_3d scene has every station and every actor",
+		"res://demo/showcase/traversal_course_3d/traversal_course_3d.tscn",
+		["Ground", "LedgeTower", "WallLeft", "WallRight", "VaultBlock", "LadderWall", "Ladder",
+			"Pool", "Climber", "Jumper", "LadderBot", "Vaulter", "Diver", "Stone", "Readout"]) and passed
+
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/carousel/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",

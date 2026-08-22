@@ -553,6 +553,8 @@ static func _test_doctor_gate() -> bool:
 			"res://demo/showcase/raycast_lab_3d/raycast_lab_3d.gd",
 			"res://demo/showcase/skill_tree/skill_tree.gd",
 			"res://demo/showcase/starfall/starfall.gd",
+			"res://demo/showcase/traversal_course/traversal_course.gd",
+			"res://demo/showcase/traversal_course_3d/traversal_course_3d.gd",
 		]))) and ok
 	ProjectSettings.set_setting(TRANSLATIONS_SETTING, previous)
 	ok = _check("the gate is restored to what this repo actually has",

@@ -1,0 +1,271 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/traversal_course/traversal_course.gd" id="1_werkq"]
+[ext_resource type="Script" path="res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd" id="2_poj4k"]
+[ext_resource type="Script" path="res://eventsheet_addons/traversal_kit/traversal_kit_behavior.gd" id="3_4kga8"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3dulj"]
+size = Vector2(1400, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_64pvd"]
+size = Vector2(60, 160)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_o73bq"]
+size = Vector2(44, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_erqbn"]
+size = Vector2(30, 320)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ks1s1"]
+size = Vector2(30, 320)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dxd7w"]
+size = Vector2(220, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6fses"]
+size = Vector2(40, 300)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hlelc"]
+size = Vector2(160, 200)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uhj5h"]
+size = Vector2(22, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gdn2t"]
+size = Vector2(22, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kuv02"]
+size = Vector2(22, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xanek"]
+size = Vector2(22, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u2w8m"]
+size = Vector2(22, 28)
+
+[node name="TraversalCourse" type="Node2D"]
+script = ExtResource("1_werkq")
+
+[node name="Level" type="Node2D" parent="."]
+
+[node name="Ground" type="StaticBody2D" parent="Level"]
+position = Vector2(700, 600)
+
+[node name="Collider" type="CollisionShape2D" parent="Level/Ground"]
+shape = SubResource("RectangleShape2D_3dulj")
+
+[node name="Visual" type="ColorRect" parent="Level/Ground"]
+offset_left = -700.0
+offset_top = -20.0
+offset_right = 700.0
+offset_bottom = 20.0
+color = Color(0.34, 0.37, 0.43, 1)
+
+[node name="LedgeTower" type="StaticBody2D" parent="Level"]
+position = Vector2(300, 500)
+
+[node name="Collider" type="CollisionShape2D" parent="Level/LedgeTower"]
+shape = SubResource("RectangleShape2D_64pvd")
+
+[node name="Visual" type="ColorRect" parent="Level/LedgeTower"]
+offset_left = -30.0
+offset_top = -80.0
+offset_right = 30.0
+offset_bottom = 80.0
+color = Color(0.45, 0.4, 0.5, 1)
+
+[node name="VaultBlock" type="StaticBody2D" parent="Level"]
+position = Vector2(500, 570)
+
+[node name="Collider" type="CollisionShape2D" parent="Level/VaultBlock"]
+shape = SubResource("RectangleShape2D_o73bq")
+
+[node name="Visual" type="ColorRect" parent="Level/VaultBlock"]
+offset_left = -22.0
+offset_top = -10.0
+offset_right = 22.0
+offset_bottom = 10.0
+color = Color(0.6, 0.48, 0.32, 1)
+
+[node name="WallLeft" type="StaticBody2D" parent="Level"]
+position = Vector2(600, 420)
+
+[node name="Collider" type="CollisionShape2D" parent="Level/WallLeft"]
+shape = SubResource("RectangleShape2D_erqbn")
+
+[node name="Visual" type="ColorRect" parent="Level/WallLeft"]
+offset_left = -15.0
+offset_top = -160.0
+offset_right = 15.0
+offset_bottom = 160.0
+color = Color(0.4, 0.44, 0.52, 1)
+
+[node name="WallRight" type="StaticBody2D" parent="Level"]
+position = Vector2(720, 420)
+
+[node name="Collider" type="CollisionShape2D" parent="Level/WallRight"]
+shape = SubResource("RectangleShape2D_ks1s1")
+
+[node name="Visual" type="ColorRect" parent="Level/WallRight"]
+offset_left = -15.0
+offset_top = -160.0
+offset_right = 15.0
+offset_bottom = 160.0
+color = Color(0.4, 0.44, 0.52, 1)
+
+[node name="Platform" type="StaticBody2D" parent="Level"]
+position = Vector2(900, 350)
+
+[node name="Collider" type="CollisionShape2D" parent="Level/Platform"]
+shape = SubResource("RectangleShape2D_dxd7w")
+
+[node name="Visual" type="ColorRect" parent="Level/Platform"]
+offset_left = -110.0
+offset_top = -10.0
+offset_right = 110.0
+offset_bottom = 10.0
+color = Color(0.4, 0.44, 0.52, 1)
+
+[node name="Ladder" type="Area2D" parent="." groups=["ladder"]]
+position = Vector2(776, 445)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ladder"]
+shape = SubResource("RectangleShape2D_6fses")
+
+[node name="Visual" type="ColorRect" parent="Ladder"]
+offset_left = -20.0
+offset_top = -150.0
+offset_right = 20.0
+offset_bottom = 150.0
+color = Color(0.85, 0.72, 0.35, 0.5)
+
+[node name="Pool" type="Area2D" parent="." groups=["water"]]
+position = Vector2(1120, 480)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pool"]
+shape = SubResource("RectangleShape2D_hlelc")
+
+[node name="Visual" type="ColorRect" parent="Pool"]
+offset_left = -80.0
+offset_top = -100.0
+offset_right = 80.0
+offset_bottom = 100.0
+color = Color(0.3, 0.62, 0.85, 0.45)
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(120, 540)
+
+[node name="Collider" type="CollisionShape2D" parent="Player"]
+shape = SubResource("RectangleShape2D_uhj5h")
+
+[node name="Visual" type="ColorRect" parent="Player"]
+offset_left = -11.0
+offset_top = -14.0
+offset_right = 11.0
+offset_bottom = 14.0
+color = Color(0.45, 0.8, 0.55, 1)
+
+[node name="Movement" type="Node" parent="Player"]
+script = ExtResource("2_poj4k")
+
+[node name="Traversal" type="Node" parent="Player"]
+script = ExtResource("3_4kga8")
+
+[node name="Climber" type="CharacterBody2D" parent="."]
+position = Vector2(258, 330)
+
+[node name="Collider" type="CollisionShape2D" parent="Climber"]
+shape = SubResource("RectangleShape2D_gdn2t")
+
+[node name="Visual" type="ColorRect" parent="Climber"]
+offset_left = -11.0
+offset_top = -14.0
+offset_right = 11.0
+offset_bottom = 14.0
+color = Color(0.9, 0.72, 0.35, 1)
+
+[node name="Movement" type="Node" parent="Climber"]
+script = ExtResource("2_poj4k")
+ai_controlled = true
+
+[node name="Traversal" type="Node" parent="Climber"]
+script = ExtResource("3_4kga8")
+
+[node name="Jumper" type="CharacterBody2D" parent="."]
+position = Vector2(630, 540)
+
+[node name="Collider" type="CollisionShape2D" parent="Jumper"]
+shape = SubResource("RectangleShape2D_kuv02")
+
+[node name="Visual" type="ColorRect" parent="Jumper"]
+offset_left = -11.0
+offset_top = -14.0
+offset_right = 11.0
+offset_bottom = 14.0
+color = Color(0.85, 0.45, 0.5, 1)
+
+[node name="Movement" type="Node" parent="Jumper"]
+script = ExtResource("2_poj4k")
+ai_controlled = true
+
+[node name="Traversal" type="Node" parent="Jumper"]
+script = ExtResource("3_4kga8")
+
+[node name="Diver" type="CharacterBody2D" parent="."]
+position = Vector2(1120, 200)
+
+[node name="Collider" type="CollisionShape2D" parent="Diver"]
+shape = SubResource("RectangleShape2D_xanek")
+
+[node name="Visual" type="ColorRect" parent="Diver"]
+offset_left = -11.0
+offset_top = -14.0
+offset_right = 11.0
+offset_bottom = 14.0
+color = Color(0.45, 0.75, 0.9, 1)
+
+[node name="Movement" type="Node" parent="Diver"]
+script = ExtResource("2_poj4k")
+ai_controlled = true
+
+[node name="Traversal" type="Node" parent="Diver"]
+script = ExtResource("3_4kga8")
+
+[node name="Stone" type="CharacterBody2D" parent="."]
+position = Vector2(1290, 200)
+
+[node name="Collider" type="CollisionShape2D" parent="Stone"]
+shape = SubResource("RectangleShape2D_u2w8m")
+
+[node name="Visual" type="ColorRect" parent="Stone"]
+offset_left = -11.0
+offset_top = -14.0
+offset_right = 11.0
+offset_bottom = 14.0
+color = Color(0.6, 0.6, 0.62, 1)
+
+[node name="Movement" type="Node" parent="Stone"]
+script = ExtResource("2_poj4k")
+ai_controlled = true
+
+[node name="View" type="Camera2D" parent="."]
+position = Vector2(700, 380)
+zoom = Vector2(0.82, 0.82)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Title" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 24.0
+offset_bottom = 18.0
+theme_override_font_sizes/font_size = 17
+text = "Arrows run and jump   Space mantles a hang and vaults a low block   Up climbs the ladder   Down lets go"
+
+[node name="Readout" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 604.0
+offset_right = 24.0
+offset_bottom = 604.0
+theme_override_font_sizes/font_size = 17
+text = "climber hanging: false   jumper wall sliding: false   diver in water: false   depth: 0"

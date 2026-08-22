@@ -100,6 +100,15 @@ plugin's discovery) opens the flagship; the others are right there in the folder
   **is** the frame-spreading, while the FPS stays pinned. Tick `frame_spread_count` on any For Each and a
   heavy loop spreads itself across frames - no behavior, no await.
 
+- **`traversal_course/` - Traversal Course (one station per move).** The Traversal Kit on a
+  CharacterBody2D beside Platformer movement: a tower to hang from and mantle, a shaft to wall-jump
+  up, a marked ladder, a low block to vault, and a pool to swim in. Four actors run the same rows
+  with no input at all - watch the Diver and the Stone fall together and land seconds apart.
+- **`traversal_course_3d/` - Traversal Course 3D (the same words, in metres).** The 3D kit with no
+  controller pack anywhere: the sheet writes gravity and the move, the kit writes the ledge, the
+  wall, the ladder, the vault and the water - including **Float**, the buoyancy that holds a swimmer
+  under the surface instead of on the floor.
+
 Open any showcase's `.gd` as a sheet to see the whole thing as a handful of event rows - the `.gd` IS the sheet, there is no `.tres` companion.
 Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 
@@ -139,6 +148,8 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 | `showcase/draw_lab/` | **Draw Lab** - four Drawing Canvases at work: your live line-of-sight fan (walls carve it), an enemy telegraph cone, a comet ribbon, a persistent paint trail, and target-marker DRAWING PREFABS stamped from one .tres (Space stamps one where you stand) |
 | `showcase/skate_park/` | **Skate Park** - momentum movement on a board: a slope that hands you speed, a Path2D rail you snap to and ride, a quarterpipe, and a trick chain that multiplies until you bank it |
 | `showcase/skate_park_3d/` | **Skate Park 3D** - the same run on a surface: gravity projected onto the floor normal, the board kept flat on it, a named moment for leaving the bank, and a Path3D rail |
+| `showcase/traversal_course/` | **Traversal Course** - ledge grab and mantle, wall slide and wall jump, a marked ladder, a vault and a pool, with four self-driving actors demonstrating each one |
+| `showcase/traversal_course_3d/` | **Traversal Course 3D** - the same five moves in metres on CharacterBody3D, with no controller pack: the sheet writes gravity and the move, the kit writes the rest |
 | `themes/` | Nine bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |
 

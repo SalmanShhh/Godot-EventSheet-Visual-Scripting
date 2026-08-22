@@ -38,6 +38,8 @@ func _init() -> void:
 	all_ok = _build_skill_tree() and all_ok
 	all_ok = _build_skate_park() and all_ok
 	all_ok = _build_skate_park_3d() and all_ok
+	all_ok = _build_traversal_course() and all_ok
+	all_ok = _build_traversal_course_3d() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -4008,7 +4010,7 @@ func _add_block(parent: Node, root: Node, node_name: String, at: Vector3, box_si
 	return block
 
 
-# ── 20. Mirror and Flip - which way a thing faces, on every host ──────────────
+# ── 21. Mirror and Flip - which way a thing faces, on every host ──────────────
 
 
 const MIRROR_DIR := "res://demo/showcase/mirror_and_flip"
@@ -4297,7 +4299,7 @@ func _mirror_tile_set() -> TileSet:
 	tile_set.add_source(atlas, 0)
 	return tile_set
 
-# ── 21. Pin modes: every way one thing can ride another (Y4 / Y5) ───────────
+# ── 22. Pin modes: every way one thing can ride another (Y4 / Y5) ───────────
 #
 # One room per mode, side by side, all driven by anchors the sheet moves - so the DIFFERENCES are
 # the demo. A rope hangs slack and only pulls when it goes taut; a bar holds its length every tick
@@ -4848,7 +4850,7 @@ func _showcase_function(function_name: String, body: String, params: Array = [])
 	return built
 
 
-# ── 21. Skate Park (2D) ─────────────────────────────────────────────────────
+# ── 23. Skate Park (2D) ─────────────────────────────────────────────────────
 #
 # Y22 / Y9 / Y24. The Skateboard pack playable: a slope that hands you speed, a rail across the
 # middle, a quarterpipe at the end, and a HUD that shows the chain climbing until you land it.
@@ -5350,3 +5352,570 @@ func _build_skate_park_3d() -> bool:
 	label.owner = root
 
 	return _save_scene(root, "%s/skate_park_3d.tscn" % SKATE_PARK_3D_DIR)
+# ── 24. Traversal Course - the Traversal Kit's five moves, 2D ────────────────
+const TRAVERSAL_KIT := "res://eventsheet_addons/traversal_kit/traversal_kit_behavior.gd"
+const TRAVERSAL_KIT_3D := "res://eventsheet_addons/traversal_kit_3d/traversal_kit_3d_behavior.gd"
+const TRAVERSAL_DIR := "res://demo/showcase/traversal_course"
+const TRAVERSAL_3D_DIR := "res://demo/showcase/traversal_course_3d"
+
+
+## The 2D traversal course: one keyboard Player who can do everything, and four self-driving
+## actors who demonstrate the moves on a loop - a Climber that falls beside a tower, grabs the
+## lip and mantles onto it; a Jumper that ping-pongs up a wall shaft on wall slides and wall
+## jumps; and a Diver and a Stone dropped together, one into the pool and one beside it.
+func _build_traversal_course() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "TraversalCourseDemo"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"hang_time": {"type": "float", "default": 0.0, "exported": false},
+		"wall_time": {"type": "float", "default": 0.0, "exported": false},
+		"race_time": {"type": "float", "default": 0.0, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Traversal Course[/b] - the Traversal Kit on a CharacterBody2D, one move per station. Arrow keys run and jump (Platformer movement), and the kit does the rest: walk off the tower to hang from the lip and press Space to mantle, or Down to drop; press into the shaft walls to slide down them; stand on the ladder and hold Up; walk into the low block and press Space to vault it; swim in the pool. The kit writes velocity and Platformer movement does the moving, so both packs stack on the same body. Four actors run the same rows on a loop with no input at all: the Climber grabs and mantles, the Jumper wall-jumps up the shaft, and the Diver and the Stone fall together - one into the water, one beside it."
+	sheet.events.append(about)
+
+	var aim: EventRow = EventRow.new()
+	aim.trigger_provider_id = "Core"
+	aim.trigger_id = "OnReady"
+	var aim_body: RawCodeRow = RawCodeRow.new()
+	aim_body.code = "\n".join(PackedStringArray([
+		"# The Jumper drives itself into the shaft: the movement pack's AI seam is held like a",
+		"# key, and every wall jump turns it around to follow the push.",
+		"$Jumper/Movement.ai_move_axis = 1.0"
+	]))
+	aim.actions.append(aim_body)
+	sheet.events.append(aim)
+
+	var player_rows: EventRow = EventRow.new()
+	player_rows.trigger_provider_id = "Core"
+	player_rows.trigger_id = "OnPhysicsProcess"
+	var player_body: RawCodeRow = RawCodeRow.new()
+	player_body.code = "\n".join(PackedStringArray([
+		"# The player: every verb the kit publishes, on the arrow keys and Space.",
+		"if $Player/Traversal.is_hanging():",
+		"\tif Input.is_action_just_pressed(\"ui_accept\"):",
+		"\t\t$Player/Traversal.climb_up(0.3)",
+		"\telif Input.is_action_pressed(\"ui_down\"):",
+		"\t\t$Player/Traversal.drop()",
+		"elif $Player/Traversal.is_at_a_ledge() and $Player/Movement.is_falling():",
+		"\t$Player/Traversal.grab_ledge()",
+		"if $Player.is_on_wall() and $Player/Movement.is_falling():",
+		"\t$Player/Traversal.slide_down_wall(60.0)",
+		"if $Player/Traversal.is_on_ladder() and Input.is_action_pressed(\"ui_up\"):",
+		"\t$Player/Traversal.climb_ladder(120.0)",
+		"if $Player/Traversal.is_at_vaultable() and Input.is_action_just_pressed(\"ui_accept\"):",
+		"\t$Player/Traversal.vault_over(0.4)",
+		"if $Player/Traversal.is_in_water():",
+		"\t$Player/Traversal.swim(20.0, 10.0)"
+	]))
+	player_rows.actions.append(player_body)
+	sheet.events.append(player_rows)
+
+	var climber_rows: EventRow = EventRow.new()
+	climber_rows.trigger_provider_id = "Core"
+	climber_rows.trigger_id = "OnPhysicsProcess"
+	var climber_body: RawCodeRow = RawCodeRow.new()
+	climber_body.code = "\n".join(PackedStringArray([
+		"# The Climber: falls beside the tower, grabs the lip, hangs a second, mantles onto the",
+		"# top - then starts again from the drop point.",
+		"if $Climber/Traversal.is_at_a_ledge() and $Climber/Movement.is_falling():",
+		"\t$Climber/Traversal.grab_ledge()",
+		"if $Climber/Traversal.is_hanging():",
+		"\thang_time += delta",
+		"\tif hang_time >= 1.0:",
+		"\t\thang_time = 0.0",
+		"\t\t$Climber/Traversal.climb_up(0.4)",
+		"if $Climber.global_position.y < 420.0 and $Climber.is_on_floor():",
+		"\t$Climber.global_position = Vector2(258.0, 330.0)",
+		"\t$Climber.velocity = Vector2.ZERO"
+	]))
+	climber_rows.actions.append(climber_body)
+	sheet.events.append(climber_rows)
+
+	var jumper_rows: EventRow = EventRow.new()
+	jumper_rows.trigger_provider_id = "Core"
+	jumper_rows.trigger_id = "OnPhysicsProcess"
+	var jumper_body: RawCodeRow = RawCodeRow.new()
+	jumper_body.code = "\n".join(PackedStringArray([
+		"# The Jumper: jumps off the floor into the shaft, slides down whichever wall it lands",
+		"# on, and wall jumps AWAY from it - the push follows the wall's own normal, so it",
+		"# crosses to the other wall without being told which side it was on.",
+		"if $Jumper.is_on_floor():",
+		"\t# Landed: aim back at the shaft before the next hop, so it can never wander off.",
+		"\t$Jumper/Movement.ai_move_axis = signf(660.0 - $Jumper.global_position.x)",
+		"\t$Jumper/Movement.jump()",
+		"\twall_time = 0.0",
+		"elif $Jumper.is_on_wall():",
+		"\t$Jumper/Traversal.slide_down_wall(60.0)",
+		"\twall_time += delta",
+		"\tif wall_time >= 0.35:",
+		"\t\twall_time = 0.0",
+		"\t\t$Jumper/Traversal.wall_jump(300.0, 500.0)",
+		"\t\t$Jumper/Movement.ai_move_axis = signf($Jumper.velocity.x)",
+		"else:",
+		"\twall_time = 0.0"
+	]))
+	jumper_rows.actions.append(jumper_body)
+	sheet.events.append(jumper_rows)
+
+	var race_rows: EventRow = EventRow.new()
+	race_rows.trigger_provider_id = "Core"
+	race_rows.trigger_id = "OnPhysicsProcess"
+	var race_body: RawCodeRow = RawCodeRow.new()
+	race_body.code = "\n".join(PackedStringArray([
+		"# The Diver and the Stone: dropped from the same height every six seconds, one over the",
+		"# pool and one beside it. Swim trades gravity for the water's own pull and drag, so the",
+		"# Diver is still sinking long after the Stone has landed.",
+		"race_time += delta",
+		"if $Diver/Traversal.is_in_water():",
+		"\t$Diver/Traversal.swim(20.0, 10.0)",
+		"if race_time >= 6.0:",
+		"\trace_time = 0.0",
+		"\t$Diver.global_position = Vector2(1120.0, 200.0)",
+		"\t$Diver.velocity = Vector2.ZERO",
+		"\t$Stone.global_position = Vector2(1290.0, 200.0)",
+		"\t$Stone.velocity = Vector2.ZERO"
+	]))
+	race_rows.actions.append(race_body)
+	sheet.events.append(race_rows)
+
+	var hud_rows: EventRow = EventRow.new()
+	hud_rows.trigger_provider_id = "Core"
+	hud_rows.trigger_id = "OnProcess"
+	var hud_body: RawCodeRow = RawCodeRow.new()
+	hud_body.code = "\n".join(PackedStringArray([
+		"$HUD/Readout.text = \"climber hanging: %s   jumper wall sliding: %s   diver in water: %s   depth: %.0f\" % [",
+		"\tstr($Climber/Traversal.is_hanging()), str($Jumper/Traversal.is_wall_sliding()),",
+		"\tstr($Diver/Traversal.is_in_water()), $Diver/Traversal.water_depth()]"
+	]))
+	hud_rows.actions.append(hud_body)
+	sheet.events.append(hud_rows)
+
+	if not _compile(sheet, "%s/traversal_course.tres" % TRAVERSAL_DIR, "%s/traversal_course.gd" % TRAVERSAL_DIR):
+		return false
+
+	var root: Node2D = Node2D.new()
+	root.name = "TraversalCourse"
+	root.set_script(load("%s/traversal_course.gd" % TRAVERSAL_DIR))
+
+	var level: Node2D = Node2D.new()
+	level.name = "Level"
+	root.add_child(level)
+	level.owner = root
+	_course_block(level, root, "Ground", Vector2(700.0, 600.0), Vector2(1400.0, 40.0), Color(0.34, 0.37, 0.43))
+	_course_block(level, root, "LedgeTower", Vector2(300.0, 500.0), Vector2(60.0, 160.0), Color(0.45, 0.4, 0.5))
+	_course_block(level, root, "VaultBlock", Vector2(500.0, 570.0), Vector2(44.0, 20.0), Color(0.6, 0.48, 0.32))
+	_course_block(level, root, "WallLeft", Vector2(600.0, 420.0), Vector2(30.0, 320.0), Color(0.4, 0.44, 0.52))
+	_course_block(level, root, "WallRight", Vector2(720.0, 420.0), Vector2(30.0, 320.0), Color(0.4, 0.44, 0.52))
+	_course_block(level, root, "Platform", Vector2(900.0, 350.0), Vector2(220.0, 20.0), Color(0.4, 0.44, 0.52))
+
+	_course_volume(root, "Ladder", "ladder", Vector2(776.0, 445.0), Vector2(40.0, 300.0), Color(0.85, 0.72, 0.35, 0.5))
+	_course_volume(root, "Pool", "water", Vector2(1120.0, 480.0), Vector2(160.0, 200.0), Color(0.3, 0.62, 0.85, 0.45))
+
+	var player: CharacterBody2D = _chase_actor("Player", Vector2(120.0, 540.0), Color(0.45, 0.8, 0.55))
+	root.add_child(player)
+	_own_deep(player, root)
+	_attach_behavior(player, "Movement", PLATFORMER_MOVEMENT, root)
+	_attach_behavior(player, "Traversal", TRAVERSAL_KIT, root)
+
+	var climber: CharacterBody2D = _chase_actor("Climber", Vector2(258.0, 330.0), Color(0.9, 0.72, 0.35))
+	root.add_child(climber)
+	_own_deep(climber, root)
+	_attach_behavior(climber, "Movement", PLATFORMER_MOVEMENT, root, {"ai_controlled": true, "ai_move_axis": 0.0})
+	_attach_behavior(climber, "Traversal", TRAVERSAL_KIT, root)
+
+	var jumper: CharacterBody2D = _chase_actor("Jumper", Vector2(630.0, 540.0), Color(0.85, 0.45, 0.5))
+	root.add_child(jumper)
+	_own_deep(jumper, root)
+	_attach_behavior(jumper, "Movement", PLATFORMER_MOVEMENT, root, {"ai_controlled": true, "ai_move_axis": 1.0})
+	_attach_behavior(jumper, "Traversal", TRAVERSAL_KIT, root)
+
+	var diver: CharacterBody2D = _chase_actor("Diver", Vector2(1120.0, 200.0), Color(0.45, 0.75, 0.9))
+	root.add_child(diver)
+	_own_deep(diver, root)
+	_attach_behavior(diver, "Movement", PLATFORMER_MOVEMENT, root, {"ai_controlled": true, "ai_move_axis": 0.0})
+	_attach_behavior(diver, "Traversal", TRAVERSAL_KIT, root)
+
+	var stone: CharacterBody2D = _chase_actor("Stone", Vector2(1290.0, 200.0), Color(0.6, 0.6, 0.62))
+	root.add_child(stone)
+	_own_deep(stone, root)
+	_attach_behavior(stone, "Movement", PLATFORMER_MOVEMENT, root, {"ai_controlled": true, "ai_move_axis": 0.0})
+
+	var camera: Camera2D = Camera2D.new()
+	camera.name = "View"
+	camera.position = Vector2(700.0, 380.0)
+	camera.zoom = Vector2(0.82, 0.82)
+	root.add_child(camera)
+	camera.owner = root
+
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HUD"
+	root.add_child(hud_layer)
+	hud_layer.owner = root
+	var title: Label = Label.new()
+	title.name = "Title"
+	title.position = Vector2(24.0, 18.0)
+	title.add_theme_font_size_override("font_size", 17)
+	title.text = "Arrows run and jump   Space mantles a hang and vaults a low block   Up climbs the ladder   Down lets go"
+	hud_layer.add_child(title)
+	title.owner = root
+	var readout: Label = Label.new()
+	readout.name = "Readout"
+	readout.position = Vector2(24.0, 604.0)
+	readout.add_theme_font_size_override("font_size", 17)
+	readout.text = "climber hanging: false   jumper wall sliding: false   diver in water: false   depth: 0"
+	hud_layer.add_child(readout)
+	readout.owner = root
+
+	return _save_scene(root, "%s/traversal_course.tscn" % TRAVERSAL_DIR)
+
+
+## One solid block of the course: a StaticBody2D with a rectangle collider and a matching visual.
+func _course_block(parent: Node, root: Node, node_name: String, centre: Vector2, box_size: Vector2,
+		tint: Color) -> StaticBody2D:
+	var block: StaticBody2D = StaticBody2D.new()
+	block.name = node_name
+	block.position = centre
+	var collider: CollisionShape2D = CollisionShape2D.new()
+	collider.name = "Collider"
+	var shape: RectangleShape2D = RectangleShape2D.new()
+	shape.size = box_size
+	collider.shape = shape
+	block.add_child(collider)
+	var visual: ColorRect = ColorRect.new()
+	visual.name = "Visual"
+	visual.color = tint
+	visual.position = -box_size * 0.5
+	visual.size = box_size
+	block.add_child(visual)
+	parent.add_child(block)
+	_own_deep(block, root)
+	return block
+
+
+## One marked volume: an Area2D in the group the kit looks the name up in, with a see-through
+## visual. The group is added PERSISTENTLY - a group added without that flag is not saved into
+## the packed scene, and the kit would never find it.
+func _course_volume(root: Node, node_name: String, group_name: String, centre: Vector2,
+		box_size: Vector2, tint: Color) -> Area2D:
+	var volume: Area2D = Area2D.new()
+	volume.name = node_name
+	volume.position = centre
+	volume.add_to_group(group_name, true)
+	var collider: CollisionShape2D = CollisionShape2D.new()
+	collider.name = "CollisionShape2D"
+	var shape: RectangleShape2D = RectangleShape2D.new()
+	shape.size = box_size
+	collider.shape = shape
+	volume.add_child(collider)
+	var visual: ColorRect = ColorRect.new()
+	visual.name = "Visual"
+	visual.color = tint
+	visual.position = -box_size * 0.5
+	visual.size = box_size
+	volume.add_child(visual)
+	root.add_child(volume)
+	_own_deep(volume, root)
+	return volume
+
+# ── 25. Traversal Course 3D - the same five moves on a CharacterBody3D ───────
+
+
+## The 3D course: no controller pack at all. The sheet does the two lines a mover does - gravity
+## and move_and_slide - and the Traversal Kit 3D does every move in between, so the room shows
+## the kit stacking on rows you wrote yourself. Six actors, all self-driving.
+func _build_traversal_course_3d() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "TraversalCourse3DDemo"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"hang_time": {"type": "float", "default": 0.0, "exported": false},
+		"wall_time": {"type": "float", "default": 0.0, "exported": false},
+		"race_time": {"type": "float", "default": 0.0, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Traversal Course 3D[/b] - the same five moves as the 2D course, in metres on a CharacterBody3D, with no controller pack anywhere. The sheet writes the two lines a mover writes - gravity and move_and_slide - and Traversal Kit 3D writes everything between them: the Climber grabs the tower's lip and mantles onto it, the Jumper wall jumps across the shaft (the push follows the wall's own normal), the Ladder Bot climbs a marked Area3D, the Vaulter throws itself over the low block, and the Diver and the Stone fall together - the Diver into a marked pool where Swim and Float hold it near the surface."
+	sheet.events.append(about)
+
+	var climber_rows: EventRow = EventRow.new()
+	climber_rows.trigger_provider_id = "Core"
+	climber_rows.trigger_id = "OnPhysicsProcess"
+	var climber_body: RawCodeRow = RawCodeRow.new()
+	climber_body.code = "\n".join(PackedStringArray([
+		"# The Climber: falls beside the tower, grabs the lip, hangs a second and mantles up.",
+		"if not $Climber/Traversal.is_hanging():",
+		"\t$Climber.velocity.y -= 9.8 * delta",
+		"if $Climber/Traversal.is_at_a_ledge() and $Climber.velocity.y < 0.0:",
+		"\t$Climber/Traversal.grab_ledge()",
+		"if $Climber/Traversal.is_hanging():",
+		"\thang_time += delta",
+		"\tif hang_time >= 1.0:",
+		"\t\thang_time = 0.0",
+		"\t\t$Climber/Traversal.climb_up(0.5)",
+		"$Climber.move_and_slide()",
+		"if $Climber.global_position.y > 3.0 and $Climber.is_on_floor():",
+		"\t$Climber.global_position = Vector3(-9.5, 4.0, 0.0)",
+		"\t$Climber.velocity = Vector3.ZERO"
+	]))
+	climber_rows.actions.append(climber_body)
+	sheet.events.append(climber_rows)
+
+	var jumper_rows: EventRow = EventRow.new()
+	jumper_rows.trigger_provider_id = "Core"
+	jumper_rows.trigger_id = "OnPhysicsProcess"
+	var jumper_body: RawCodeRow = RawCodeRow.new()
+	jumper_body.code = "\n".join(PackedStringArray([
+		"# The Jumper: drives into a shaft wall, slides down it, and jumps away along its normal.",
+		"$Jumper.velocity.y -= 9.8 * delta",
+		"if $Jumper.is_on_floor():",
+		"\t$Jumper.velocity.y = 5.0",
+		"\t$Jumper.velocity.z = 2.0",
+		"\twall_time = 0.0",
+		"elif $Jumper.is_on_wall():",
+		"\t$Jumper/Traversal.slide_down_wall(1.5)",
+		"\twall_time += delta",
+		"\tif wall_time >= 0.35:",
+		"\t\twall_time = 0.0",
+		"\t\t$Jumper/Traversal.wall_jump(6.0, 4.5)",
+		"$Jumper.move_and_slide()"
+	]))
+	jumper_rows.actions.append(jumper_body)
+	sheet.events.append(jumper_rows)
+
+	var seam: EventRow = EventRow.new()
+	seam.trigger_provider_id = "Core"
+	seam.trigger_id = "OnReady"
+	var seam_body: RawCodeRow = RawCodeRow.new()
+	seam_body.code = "
+".join(PackedStringArray([
+		"# The Ladder Bot has no keyboard: the kit's AI seam holds the climb axis for it, the",
+		"# same way a driver or a sheet would hold an up key.",
+		"$LadderBot/Traversal.ai_controlled = true",
+		"$LadderBot/Traversal.ai_climb_axis = 1.0"
+	]))
+	seam.actions.append(seam_body)
+	sheet.events.append(seam)
+
+	var ladder_rows: EventRow = EventRow.new()
+	ladder_rows.trigger_provider_id = "Core"
+	ladder_rows.trigger_id = "OnPhysicsProcess"
+	var ladder_body: RawCodeRow = RawCodeRow.new()
+	ladder_body.code = "\n".join(PackedStringArray([
+		"# The Ladder Bot: the marked Area3D is the ladder, and the climb axis is held for it.",
+		"$LadderBot.velocity.y -= 9.8 * delta",
+		"if $LadderBot/Traversal.is_on_ladder():",
+		"\t$LadderBot/Traversal.climb_ladder(2.5)",
+		"$LadderBot.move_and_slide()",
+		"if $LadderBot.global_position.y > 4.5:",
+		"\t$LadderBot.global_position = Vector3(8.0, 0.9, 0.0)",
+		"\t$LadderBot.velocity = Vector3.ZERO"
+	]))
+	ladder_rows.actions.append(ladder_body)
+	sheet.events.append(ladder_rows)
+
+	var vault_rows: EventRow = EventRow.new()
+	vault_rows.trigger_provider_id = "Core"
+	vault_rows.trigger_id = "OnPhysicsProcess"
+	var vault_body: RawCodeRow = RawCodeRow.new()
+	vault_body.code = "\n".join(PackedStringArray([
+		"# The Vaulter: walks at the low block until the knee probe finds it and the chest probe",
+		"# does not, then throws itself over in four tenths of a second.",
+		"$Vaulter.velocity.y -= 9.8 * delta",
+		"$Vaulter.velocity.x = 1.6",
+		"if $Vaulter/Traversal.is_at_vaultable():",
+		"\t$Vaulter/Traversal.vault_over(0.4)",
+		"$Vaulter.move_and_slide()",
+		"if $Vaulter.global_position.x > 7.0:",
+		"\t$Vaulter.global_position = Vector3(1.0, 0.9, 6.0)",
+		"\t$Vaulter.velocity = Vector3.ZERO"
+	]))
+	vault_rows.actions.append(vault_body)
+	sheet.events.append(vault_rows)
+
+	var race_rows: EventRow = EventRow.new()
+	race_rows.trigger_provider_id = "Core"
+	race_rows.trigger_id = "OnPhysicsProcess"
+	var race_body: RawCodeRow = RawCodeRow.new()
+	race_body.code = "\n".join(PackedStringArray([
+		"# The Diver and the Stone, dropped together every six seconds: only the Diver falls into",
+		"# the marked pool, where Swim trades gravity for drag and Float pushes it back up by how",
+		"# deep it is.",
+		"race_time += delta",
+		"$Diver.velocity.y -= 9.8 * delta",
+		"$Stone.velocity.y -= 9.8 * delta",
+		"if $Diver/Traversal.is_in_water():",
+		"\t$Diver/Traversal.swim(20.0, 10.0)",
+		"\t$Diver/Traversal.float_in_water(12.0)",
+		"$Diver.move_and_slide()",
+		"$Stone.move_and_slide()",
+		"if race_time >= 6.0:",
+		"\trace_time = 0.0",
+		"\t$Diver.global_position = Vector3(13.0, 8.0, 4.0)",
+		"\t$Diver.velocity = Vector3.ZERO",
+		"\t$Stone.global_position = Vector3(13.0, 8.0, 9.0)",
+		"\t$Stone.velocity = Vector3.ZERO"
+	]))
+	race_rows.actions.append(race_body)
+	sheet.events.append(race_rows)
+
+	var hud_rows: EventRow = EventRow.new()
+	hud_rows.trigger_provider_id = "Core"
+	hud_rows.trigger_id = "OnProcess"
+	var hud_body: RawCodeRow = RawCodeRow.new()
+	hud_body.code = "\n".join(PackedStringArray([
+		"$HUD/Readout.text = \"climber hanging: %s   jumper wall sliding: %s   bot on ladder: %s   diver depth: %.2f\" % [",
+		"\tstr($Climber/Traversal.is_hanging()), str($Jumper/Traversal.is_wall_sliding()),",
+		"\tstr($LadderBot/Traversal.is_on_ladder()), $Diver/Traversal.water_depth()]"
+	]))
+	hud_rows.actions.append(hud_body)
+	sheet.events.append(hud_rows)
+
+	if not _compile(sheet, "%s/traversal_course_3d.tres" % TRAVERSAL_3D_DIR,
+			"%s/traversal_course_3d.gd" % TRAVERSAL_3D_DIR):
+		return false
+
+	var root: Node3D = Node3D.new()
+	root.name = "TraversalCourse3D"
+	root.set_script(load("%s/traversal_course_3d.gd" % TRAVERSAL_3D_DIR))
+
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-52.0, -38.0, 0.0)
+	root.add_child(sun)
+	sun.owner = root
+
+	_course_solid_3d(root, "Ground", Vector3(0.0, -0.5, 0.0), Vector3(44.0, 1.0, 44.0), Color(0.33, 0.36, 0.4))
+	_course_solid_3d(root, "LedgeTower", Vector3(-8.0, 1.5, 0.0), Vector3(2.0, 3.0, 2.0), Color(0.45, 0.4, 0.5))
+	_course_solid_3d(root, "WallLeft", Vector3(0.0, 2.0, -1.6), Vector3(4.0, 4.0, 0.5), Color(0.4, 0.44, 0.52))
+	_course_solid_3d(root, "WallRight", Vector3(0.0, 2.0, 1.6), Vector3(4.0, 4.0, 0.5), Color(0.4, 0.44, 0.52))
+	_course_solid_3d(root, "VaultBlock", Vector3(4.0, 0.35, 6.0), Vector3(1.0, 0.7, 3.0), Color(0.6, 0.48, 0.32))
+	_course_solid_3d(root, "LadderWall", Vector3(9.2, 2.0, 0.0), Vector3(0.5, 4.0, 2.4), Color(0.45, 0.4, 0.5))
+
+	_course_volume_3d(root, "Ladder", "ladder", Vector3(8.4, 2.2, 0.0), Vector3(1.2, 4.4, 2.0), Color(0.85, 0.72, 0.35, 0.35))
+	_course_volume_3d(root, "Pool", "water", Vector3(13.0, 1.5, 4.0), Vector3(6.0, 4.0, 6.0), Color(0.3, 0.62, 0.85, 0.35))
+
+	_course_actor_3d(root, "Climber", Vector3(-9.5, 4.0, 0.0), -90.0, Color(0.9, 0.72, 0.35), true)
+	_course_actor_3d(root, "Jumper", Vector3(0.0, 1.0, 0.0), 0.0, Color(0.85, 0.45, 0.5), true)
+	_course_actor_3d(root, "LadderBot", Vector3(8.0, 0.9, 0.0), 0.0, Color(0.45, 0.8, 0.55), true)
+	_course_actor_3d(root, "Vaulter", Vector3(1.0, 0.9, 6.0), -90.0, Color(0.7, 0.6, 0.85), true)
+	_course_actor_3d(root, "Diver", Vector3(13.0, 8.0, 4.0), 0.0, Color(0.45, 0.75, 0.9), true)
+	_course_actor_3d(root, "Stone", Vector3(13.0, 8.0, 9.0), 0.0, Color(0.6, 0.6, 0.62), false)
+
+	var camera: Camera3D = Camera3D.new()
+	camera.name = "View"
+	camera.position = Vector3(3.0, 13.0, 26.0)
+	camera.rotation_degrees = Vector3(-26.0, 0.0, 0.0)
+	root.add_child(camera)
+	camera.owner = root
+
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HUD"
+	root.add_child(hud_layer)
+	hud_layer.owner = root
+	var title: Label = Label.new()
+	title.name = "Title"
+	title.position = Vector2(24.0, 18.0)
+	title.add_theme_font_size_override("font_size", 17)
+	title.text = "Six actors, no controller pack: the sheet writes gravity and the move, the kit writes the ledge, the wall, the ladder, the vault and the water"
+	hud_layer.add_child(title)
+	title.owner = root
+	var readout: Label = Label.new()
+	readout.name = "Readout"
+	readout.position = Vector2(24.0, 604.0)
+	readout.add_theme_font_size_override("font_size", 17)
+	readout.text = "climber hanging: false   jumper wall sliding: false   bot on ladder: false   diver depth: 0.00"
+	hud_layer.add_child(readout)
+	readout.owner = root
+
+	return _save_scene(root, "%s/traversal_course_3d.tscn" % TRAVERSAL_3D_DIR)
+
+
+## One solid box of the 3D course: a StaticBody3D with a box collider and a matching mesh.
+func _course_solid_3d(root: Node3D, node_name: String, centre: Vector3, box_size: Vector3,
+		tint: Color) -> StaticBody3D:
+	var solid: StaticBody3D = StaticBody3D.new()
+	solid.name = node_name
+	solid.position = centre
+	var collider: CollisionShape3D = CollisionShape3D.new()
+	collider.name = "Collider"
+	var shape: BoxShape3D = BoxShape3D.new()
+	shape.size = box_size
+	collider.shape = shape
+	solid.add_child(collider)
+	var visual: MeshInstance3D = MeshInstance3D.new()
+	visual.name = "Visual"
+	var mesh: BoxMesh = BoxMesh.new()
+	mesh.size = box_size
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.albedo_color = tint
+	mesh.material = material
+	visual.mesh = mesh
+	solid.add_child(visual)
+	root.add_child(solid)
+	_own_deep(solid, root)
+	return solid
+
+
+## One marked volume in 3D. The group is added PERSISTENTLY, or packing the scene drops it and
+## the kit never finds the ladder or the water.
+func _course_volume_3d(root: Node3D, node_name: String, group_name: String, centre: Vector3,
+		box_size: Vector3, tint: Color) -> Area3D:
+	var volume: Area3D = Area3D.new()
+	volume.name = node_name
+	volume.position = centre
+	volume.add_to_group(group_name, true)
+	var collider: CollisionShape3D = CollisionShape3D.new()
+	collider.name = "CollisionShape3D"
+	var shape: BoxShape3D = BoxShape3D.new()
+	shape.size = box_size
+	collider.shape = shape
+	volume.add_child(collider)
+	var visual: MeshInstance3D = MeshInstance3D.new()
+	visual.name = "Visual"
+	var mesh: BoxMesh = BoxMesh.new()
+	mesh.size = box_size
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.albedo_color = tint
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mesh.material = material
+	visual.mesh = mesh
+	volume.add_child(visual)
+	root.add_child(volume)
+	_own_deep(volume, root)
+	return volume
+
+
+## One 3D course actor: a capsule CharacterBody3D, turned to face the way it travels, with the
+## kit attached unless it is the Stone (the control in the water race, which has no kit at all).
+func _course_actor_3d(root: Node3D, actor_name: String, at: Vector3, yaw: float, tint: Color,
+		with_kit: bool) -> CharacterBody3D:
+	var actor: CharacterBody3D = CharacterBody3D.new()
+	actor.name = actor_name
+	actor.position = at
+	actor.rotation_degrees = Vector3(0.0, yaw, 0.0)
+	var collider: CollisionShape3D = CollisionShape3D.new()
+	collider.name = "Collider"
+	var shape: CapsuleShape3D = CapsuleShape3D.new()
+	shape.height = 1.6
+	shape.radius = 0.3
+	collider.shape = shape
+	actor.add_child(collider)
+	var visual: MeshInstance3D = MeshInstance3D.new()
+	visual.name = "Visual"
+	var mesh: CapsuleMesh = CapsuleMesh.new()
+	mesh.height = 1.6
+	mesh.radius = 0.3
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.albedo_color = tint
+	mesh.material = material
+	visual.mesh = mesh
+	actor.add_child(visual)
+	root.add_child(actor)
+	_own_deep(actor, root)
+	if with_kit:
+		_attach_behavior(actor, "Traversal", TRAVERSAL_KIT_3D, root)
+	return actor

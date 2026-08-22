@@ -1,0 +1,326 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/traversal_course_3d/traversal_course_3d.gd" id="1_faxth"]
+[ext_resource type="Script" path="res://eventsheet_addons/traversal_kit_3d/traversal_kit_3d_behavior.gd" id="2_jtrvv"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_egp04"]
+size = Vector3(44, 1, 44)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b4xuw"]
+albedo_color = Color(0.33, 0.36, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_k1etg"]
+material = SubResource("StandardMaterial3D_b4xuw")
+size = Vector3(44, 1, 44)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vlwhe"]
+size = Vector3(2, 3, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7jnav"]
+albedo_color = Color(0.45, 0.4, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ylv8a"]
+material = SubResource("StandardMaterial3D_7jnav")
+size = Vector3(2, 3, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_w7sao"]
+size = Vector3(4, 4, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_arpww"]
+albedo_color = Color(0.4, 0.44, 0.52, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_o8mu3"]
+material = SubResource("StandardMaterial3D_arpww")
+size = Vector3(4, 4, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8pd6c"]
+size = Vector3(4, 4, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o3o3p"]
+albedo_color = Color(0.4, 0.44, 0.52, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_c80js"]
+material = SubResource("StandardMaterial3D_o3o3p")
+size = Vector3(4, 4, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_a7hv3"]
+size = Vector3(1, 0.7, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2k8xr"]
+albedo_color = Color(0.6, 0.48, 0.32, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_seqna"]
+material = SubResource("StandardMaterial3D_2k8xr")
+size = Vector3(1, 0.7, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qg85p"]
+size = Vector3(0.5, 4, 2.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ios0u"]
+albedo_color = Color(0.45, 0.4, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_1orso"]
+material = SubResource("StandardMaterial3D_ios0u")
+size = Vector3(0.5, 4, 2.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qxbno"]
+size = Vector3(1.2, 4.4, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sfqg7"]
+transparency = 1
+albedo_color = Color(0.85, 0.72, 0.35, 0.35)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3ngkv"]
+material = SubResource("StandardMaterial3D_sfqg7")
+size = Vector3(1.2, 4.4, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_djmb4"]
+size = Vector3(6, 4, 6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_i5ogc"]
+transparency = 1
+albedo_color = Color(0.3, 0.62, 0.85, 0.35)
+
+[sub_resource type="BoxMesh" id="BoxMesh_367s4"]
+material = SubResource("StandardMaterial3D_i5ogc")
+size = Vector3(6, 4, 6)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_mfugw"]
+radius = 0.3
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cpmma"]
+albedo_color = Color(0.9, 0.72, 0.35, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_k4rwt"]
+material = SubResource("StandardMaterial3D_cpmma")
+radius = 0.3
+height = 1.6
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_cdqn7"]
+radius = 0.3
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skpjc"]
+albedo_color = Color(0.85, 0.45, 0.5, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_7pbco"]
+material = SubResource("StandardMaterial3D_skpjc")
+radius = 0.3
+height = 1.6
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sp8j7"]
+radius = 0.3
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iaxkj"]
+albedo_color = Color(0.45, 0.8, 0.55, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_ei52v"]
+material = SubResource("StandardMaterial3D_iaxkj")
+radius = 0.3
+height = 1.6
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_md5qi"]
+radius = 0.3
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ass38"]
+albedo_color = Color(0.7, 0.6, 0.85, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_ml174"]
+material = SubResource("StandardMaterial3D_ass38")
+radius = 0.3
+height = 1.6
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_spjsv"]
+radius = 0.3
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pfcvv"]
+albedo_color = Color(0.45, 0.75, 0.9, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_krafe"]
+material = SubResource("StandardMaterial3D_pfcvv")
+radius = 0.3
+height = 1.6
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_7b4x0"]
+radius = 0.3
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bld02"]
+albedo_color = Color(0.6, 0.6, 0.62, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_j7pog"]
+material = SubResource("StandardMaterial3D_bld02")
+radius = 0.3
+height = 1.6
+
+[node name="TraversalCourse3D" type="Node3D"]
+script = ExtResource("1_faxth")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7880108, 0.48514786, -0.37903908, 0, 0.6156615, 0.7880107, 0.6156615, -0.62096095, 0.4851479, 0, 0, 0)
+
+[node name="Ground" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("BoxShape3D_egp04")
+
+[node name="Visual" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("BoxMesh_k1etg")
+
+[node name="LedgeTower" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.5, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="LedgeTower"]
+shape = SubResource("BoxShape3D_vlwhe")
+
+[node name="Visual" type="MeshInstance3D" parent="LedgeTower"]
+mesh = SubResource("BoxMesh_ylv8a")
+
+[node name="WallLeft" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -1.6)
+
+[node name="Collider" type="CollisionShape3D" parent="WallLeft"]
+shape = SubResource("BoxShape3D_w7sao")
+
+[node name="Visual" type="MeshInstance3D" parent="WallLeft"]
+mesh = SubResource("BoxMesh_o8mu3")
+
+[node name="WallRight" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 1.6)
+
+[node name="Collider" type="CollisionShape3D" parent="WallRight"]
+shape = SubResource("BoxShape3D_8pd6c")
+
+[node name="Visual" type="MeshInstance3D" parent="WallRight"]
+mesh = SubResource("BoxMesh_c80js")
+
+[node name="VaultBlock" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.35, 6)
+
+[node name="Collider" type="CollisionShape3D" parent="VaultBlock"]
+shape = SubResource("BoxShape3D_a7hv3")
+
+[node name="Visual" type="MeshInstance3D" parent="VaultBlock"]
+mesh = SubResource("BoxMesh_seqna")
+
+[node name="LadderWall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.2, 2, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="LadderWall"]
+shape = SubResource("BoxShape3D_qg85p")
+
+[node name="Visual" type="MeshInstance3D" parent="LadderWall"]
+mesh = SubResource("BoxMesh_1orso")
+
+[node name="Ladder" type="Area3D" parent="." groups=["ladder"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.4, 2.2, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ladder"]
+shape = SubResource("BoxShape3D_qxbno")
+
+[node name="Visual" type="MeshInstance3D" parent="Ladder"]
+mesh = SubResource("BoxMesh_3ngkv")
+
+[node name="Pool" type="Area3D" parent="." groups=["water"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 1.5, 4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pool"]
+shape = SubResource("BoxShape3D_djmb4")
+
+[node name="Visual" type="MeshInstance3D" parent="Pool"]
+mesh = SubResource("BoxMesh_367s4")
+
+[node name="Climber" type="CharacterBody3D" parent="."]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -9.5, 4, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="Climber"]
+shape = SubResource("CapsuleShape3D_mfugw")
+
+[node name="Visual" type="MeshInstance3D" parent="Climber"]
+mesh = SubResource("CapsuleMesh_k4rwt")
+
+[node name="Traversal" type="Node" parent="Climber"]
+script = ExtResource("2_jtrvv")
+
+[node name="Jumper" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="Jumper"]
+shape = SubResource("CapsuleShape3D_cdqn7")
+
+[node name="Visual" type="MeshInstance3D" parent="Jumper"]
+mesh = SubResource("CapsuleMesh_7pbco")
+
+[node name="Traversal" type="Node" parent="Jumper"]
+script = ExtResource("2_jtrvv")
+
+[node name="LadderBot" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.9, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="LadderBot"]
+shape = SubResource("CapsuleShape3D_sp8j7")
+
+[node name="Visual" type="MeshInstance3D" parent="LadderBot"]
+mesh = SubResource("CapsuleMesh_ei52v")
+
+[node name="Traversal" type="Node" parent="LadderBot"]
+script = ExtResource("2_jtrvv")
+
+[node name="Vaulter" type="CharacterBody3D" parent="."]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 1, 0.9, 6)
+
+[node name="Collider" type="CollisionShape3D" parent="Vaulter"]
+shape = SubResource("CapsuleShape3D_md5qi")
+
+[node name="Visual" type="MeshInstance3D" parent="Vaulter"]
+mesh = SubResource("CapsuleMesh_ml174")
+
+[node name="Traversal" type="Node" parent="Vaulter"]
+script = ExtResource("2_jtrvv")
+
+[node name="Diver" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 8, 4)
+
+[node name="Collider" type="CollisionShape3D" parent="Diver"]
+shape = SubResource("CapsuleShape3D_spjsv")
+
+[node name="Visual" type="MeshInstance3D" parent="Diver"]
+mesh = SubResource("CapsuleMesh_krafe")
+
+[node name="Traversal" type="Node" parent="Diver"]
+script = ExtResource("2_jtrvv")
+
+[node name="Stone" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 8, 9)
+
+[node name="Collider" type="CollisionShape3D" parent="Stone"]
+shape = SubResource("CapsuleShape3D_7b4x0")
+
+[node name="Visual" type="MeshInstance3D" parent="Stone"]
+mesh = SubResource("CapsuleMesh_j7pog")
+
+[node name="View" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.89879405, 0.43837115, 0, -0.43837115, 0.89879405, 3, 13, 26)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Title" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 24.0
+offset_bottom = 18.0
+theme_override_font_sizes/font_size = 17
+text = "Six actors, no controller pack: the sheet writes gravity and the move, the kit writes the ledge, the wall, the ladder, the vault and the water"
+
+[node name="Readout" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 604.0
+offset_right = 24.0
+offset_bottom = 604.0
+theme_override_font_sizes/font_size = 17
+text = "climber hanging: false   jumper wall sliding: false   bot on ladder: false   diver depth: 0.00"

@@ -46,6 +46,8 @@ const SHOWCASE_PITCHES: Dictionary = {
 	"input_rebind": ["Systems", "A rebinding screen that saves what the player chose."],
 	"skate_park": ["Sports", "A board that keeps its speed, a rail to grind and a chain to bank."],
 	"skate_park_3d": ["Sports", "The same run in three dimensions, with a bank you launch off."],
+	"traversal_course": ["Platformer", "Ledges, a wall shaft, a ladder, a vault and a pool - one station per traversal move."],
+	"traversal_course_3d": ["First person", "The same five traversal moves in metres, with no controller pack anywhere."],
 }
 
 const SHOWCASE_DIR: String = "res://demo/showcase"
