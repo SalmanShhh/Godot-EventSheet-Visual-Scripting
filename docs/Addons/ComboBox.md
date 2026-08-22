@@ -111,6 +111,25 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | **Enable Combos By Tag** | `tag` | Enables every combo carrying a tag (e.g. all `"air_move"` combos). |
 | **Disable Combos By Tag** | `tag` | Disables every combo carrying a tag. |
 | **Remove Combo** | `id` | Permanently removes a combo from the registry. |
+| **Add To Chain** | `hit`, `points` | Scores a hit into the running chain at the current multiplier, then raises the multiplier. |
+| **Bank Chain** | (none) | Moves the chain into the banked total and puts the multiplier back to one. |
+| **Drop Chain** | (none) | Throws the running chain away. The banked total is untouched. |
+
+### The hit chain
+
+A run of moves landed without a break is worth more than the moves apart, and nothing is safe
+until it is banked - which is what turns "one more hit" into a decision rather than a formality.
+**Add To Chain** scores at the running multiplier and raises it, **Bank Chain** makes it real, and
+**Drop Chain** is what getting hit costs you.
+
+These are deliberately the same three rows the Skateboard packs use for a trick chain, in the same
+words, so a reader who has met one has met both.
+
+```
+On Combo Matched -> Player | ComboBox: Add hit  ComboBox.Matched Id, 100
+On Finisher      -> Player | ComboBox: Bank the chain
+On Player Hit    -> Player | ComboBox: Drop the chain
+```
 
 ### Conditions
 
@@ -134,6 +153,10 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | **Buffer Token** | `index` | String | The token at a buffer index (`0` = oldest); `""` if out of range. |
 | **Buffer Time** | `index` | float | The clock time in seconds of the token at a buffer index (`0` if out of range). |
 | **Cleared Count** | (none) | int | How many tokens were in the buffer when it was last cleared (inside On Buffer Cleared). |
+| **Chain Score** | (none) | float | What the chain running right now is worth. |
+| **Multiplier** | (none) | int | What the next hit in the chain will be multiplied by. |
+| **Banked Score** | (none) | float | Everything banked so far this fight. |
+| **Chain Last Hit** | (none) | String | The name of the last hit added to the chain, or `""` before the first one. |
 | **Partial Count** | (none) | int | How many combos are part-way matched after the last input (inside On Partial Progress). |
 | **Partial Id** | `index` | String | The id of the part-way combo at an index (use with Partial Count to loop). |
 | **Partial Progress** | `index` | int | How many inputs of the part-way combo at an index are matched so far. |

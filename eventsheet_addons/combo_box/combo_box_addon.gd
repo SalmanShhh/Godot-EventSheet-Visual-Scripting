@@ -47,6 +47,13 @@ var _match_time: float = 0.0
 var _failed_id: String = ""
 var _fail_index: int = 0
 var _cleared_count: int = 0
+# Y24. The hit chain: what the run of moves landed so far is worth, what the next one will
+# be multiplied by, and the total that is already safe. The same three numbers a board's
+# trick chain keeps, in the same words.
+var _chain_score: float = 0.0
+var _chain_multiplier: int = 1
+var _banked_score: float = 0.0
+var _chain_last: String = ""
 
 func _process(delta: float) -> void:
 	_advance(delta)
@@ -204,6 +211,41 @@ func remove_combo(id: String) -> void:
 	_combos.erase(id)
 	_progress.erase(id)
 
+## @ace_action
+## @ace_name("Add To Chain")
+## @ace_category("ComboBox")
+## @ace_description("Scores a hit into the chain running right now: the points are multiplied by the current multiplier, then the multiplier climbs by one. Nothing is safe until the chain is banked.")
+## @ace_display_template("Add hit [b]{hit}[/b] to the chain for [b]{points}[/b]")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.add_to_chain({hit}, {points})")
+func add_to_chain(hit: String, points: float) -> void:
+	_chain_score += points * float(_chain_multiplier)
+	_chain_last = hit
+	_chain_multiplier += 1
+
+## @ace_action
+## @ace_name("Bank Chain")
+## @ace_category("ComboBox")
+## @ace_description("Cashes the chain in: everything it is worth moves into the banked total and the multiplier goes back to one. This is what landing the finisher is worth.")
+## @ace_display_template("[b]Bank[/b] the chain")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.bank_chain()")
+func bank_chain() -> void:
+	_banked_score += _chain_score
+	_chain_score = 0.0
+	_chain_multiplier = 1
+
+## @ace_action
+## @ace_name("Drop Chain")
+## @ace_category("ComboBox")
+## @ace_description("Throws the running chain away and puts the multiplier back to one. The banked total is untouched - this is what dropping the combo costs.")
+## @ace_display_template("[b]Drop[/b] the chain")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.drop_chain()")
+func drop_chain() -> void:
+	_chain_score = 0.0
+	_chain_multiplier = 1
+
 ## @ace_condition
 ## @ace_name("Has Combo")
 ## @ace_category("ComboBox")
@@ -320,6 +362,42 @@ func buffer_time(index: int) -> float:
 ## @ace_codegen_template("ComboBox.cleared_count()")
 func cleared_count() -> int:
 	return _cleared_count
+
+## @ace_expression
+## @ace_name("Chain Score")
+## @ace_category("ComboBox")
+## @ace_description("What the chain running right now is worth. Banking it moves this into the total and resets it.")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.chain_score()")
+func chain_score() -> float:
+	return _chain_score
+
+## @ace_expression
+## @ace_name("Multiplier")
+## @ace_category("ComboBox")
+## @ace_description("What the next hit in the chain will be multiplied by. Starts at 1 and climbs by one per hit.")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.multiplier()")
+func multiplier() -> int:
+	return _chain_multiplier
+
+## @ace_expression
+## @ace_name("Banked Score")
+## @ace_category("ComboBox")
+## @ace_description("Everything banked so far this fight. A dropped chain never reaches it.")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.banked_score()")
+func banked_score() -> float:
+	return _banked_score
+
+## @ace_expression
+## @ace_name("Chain Last Hit")
+## @ace_category("ComboBox")
+## @ace_description("The name of the last hit added to the chain, or "" before the first one.")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
+## @ace_codegen_template("ComboBox.chain_last_hit()")
+func chain_last_hit() -> String:
+	return _chain_last
 
 ## @ace_expression
 ## @ace_name("Partial Count")
