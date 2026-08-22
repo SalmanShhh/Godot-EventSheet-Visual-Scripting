@@ -32,6 +32,7 @@ func _init() -> void:
 	all_ok = _build_raycast_lab() and all_ok
 	all_ok = _build_raycast_lab_3d() and all_ok
 	all_ok = _build_hierarchy_playground() and all_ok
+	all_ok = _build_mirror_and_flip() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -3504,3 +3505,293 @@ func _add_block(parent: Node, root: Node, node_name: String, at: Vector3, box_si
 	parent.add_child(block)
 	block.owner = root
 	return block
+
+
+# ── 20. Mirror and Flip - which way a thing faces, on every host ──────────────
+
+
+const MIRROR_DIR := "res://demo/showcase/mirror_and_flip"
+
+
+func _build_mirror_and_flip() -> bool:
+	# The hero: a whole object that mirrors, so its ray, its muzzle point and its dust mirror WITH it.
+	# Its name plate is the one child that must not come along, and Keep Upright is why it does not.
+	var hero: EventSheetResource = EventSheetResource.new()
+	hero.host_class = "Node2D"
+	hero.custom_class_name = "MirrorHero"
+	hero.class_description = "A character that faces the way it moves - picture, sword ray, muzzle point and dust all together."
+	hero.emit_live_values = false
+	hero.variables = {
+		"speed": {"type": "float", "default": 120.0, "exported": true,
+			"attributes": {"tooltip": "How fast the hero paces back and forth, in pixels a second."}},
+		"t": {"type": "float", "default": 0.0, "exported": false,
+			"attributes": {"tooltip": "The pacing clock, in seconds."}},
+		"velocity": {"type": "Vector2", "default": Vector2.ZERO, "exported": false,
+			"attributes": {"tooltip": "How fast the hero is moving right now. Its sign is the whole of which way it faces."}}
+	}
+
+	var hero_about: CommentRow = CommentRow.new()
+	hero_about.text = "[b]Mirror Hero[/b] - one row faces the way it moves, and because it mirrors the WHOLE object every child comes along: the sword's ray reaches the way the hero looks, the muzzle point moves to the other hand, the dust blows the right way. The [b]name plate[/b] is the exception - Keep Upright re-negates it, so the text reads forwards whichever way the hero faces."
+	hero.events.append(hero_about)
+
+	var pace: EventRow = EventRow.new()
+	pace.trigger_provider_id = "Core"
+	pace.trigger_id = "OnProcess"
+	pace.actions.append(_raw("t += delta"))
+	pace.actions.append(_raw("velocity.x = sin(t * 1.2) * speed"))
+	pace.actions.append(_raw("position += velocity * delta"))
+	pace.actions.append(_action("Core", "FaceDirectionOfMovement",
+		_ace_template("FaceDirectionOfMovement"), {"velocity": "velocity", "target": ""}))
+	pace.actions.append(_action("Core", "KeepUpright",
+		_ace_template("KeepUpright"), {"target": "$Plate"}))
+	hero.events.append(pace)
+	if not _compile(hero, "%s/hero.tres" % MIRROR_DIR, "%s/hero.gd" % MIRROR_DIR):
+		return false
+
+	var hero_root: Node2D = _mirror_hero_node()
+	hero_root.set_script(load("%s/hero.gd" % MIRROR_DIR))
+	_own_tree(hero_root, hero_root)
+	if not _save_scene(hero_root, "%s/hero.tscn" % MIRROR_DIR):
+		return false
+
+	# The stage: the same two words on four more hosts - a UI panel, a sub-viewport's view, one tile,
+	# and a 3D twin that turns around instead of scaling itself inside out.
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "MirrorAndFlip"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"mirror_ui": {"type": "bool", "default": true, "exported": true,
+			"attributes": {"tooltip": "Mirror the panel. The pivot moves to its middle first, which is why it mirrors in place instead of jumping sideways."}},
+		"mirror_view": {"type": "bool", "default": true, "exported": true,
+			"attributes": {"tooltip": "Mirror what the sub-viewport shows - the rear-view-mirror trick."}},
+		"flip_tile": {"type": "bool", "default": true, "exported": true,
+			"attributes": {"tooltip": "Flip the third tile, so one wall drawing covers both sides of the corridor."}}
+	}
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Mirror and Flip[/b] - one verb, every host. The [b]hero[/b] mirrors as a whole object and drags its ray, its muzzle and its dust along. The [b]panel[/b] mirrors in place because its pivot moves to the middle first. The [b]sub-viewport[/b] mirrors its view. The third [b]tile[/b] carries the flip bit, so one drawing covers both sides. The [b]3D twin[/b] does NOT scale itself negative - it turns around, which is the honest 3D answer and leaves nothing inside out."
+	sheet.events.append(about)
+
+	var setup: EventRow = EventRow.new()
+	setup.trigger_provider_id = "Core"
+	setup.trigger_id = "OnReady"
+	setup.actions.append(_action("Core", "SetMirroredControl",
+		_ace_template("SetMirroredControl"), {"mirrored": "mirror_ui", "target": "$Panel"}))
+	setup.actions.append(_action("Core", "MirrorViewportView",
+		_ace_template("MirrorViewportView"), {"mirrored": "mirror_view", "target": "$Mirror"}))
+	setup.actions.append(_action("Core", "SetTileFlipped",
+		_ace_template("SetTileFlipped"),
+		{"coords": "Vector2i(2, 0)", "mirrored": "flip_tile", "target": "$Tiles"}))
+	sheet.events.append(setup)
+
+	var turn: EventRow = EventRow.new()
+	turn.trigger_provider_id = "Core"
+	turn.trigger_id = "OnProcess"
+	turn.conditions.append(_every("turn", "2.0"))
+	turn.actions.append(_action("Core", "TurnAround",
+		_ace_template("TurnAround"), {"target": "$Mirror/View/Twin"}))
+	sheet.events.append(turn)
+	if not _compile(sheet, "%s/mirror_and_flip.tres" % MIRROR_DIR, "%s/mirror_and_flip.gd" % MIRROR_DIR):
+		return false
+
+	# ── The room ──
+	var root: Node2D = Node2D.new()
+	root.name = "MirrorAndFlip"
+	root.set_script(load("%s/mirror_and_flip.gd" % MIRROR_DIR))
+
+	var title: Label = Label.new()
+	title.name = "Title"
+	title.position = Vector2(24, 18)
+	title.add_theme_font_size_override("font_size", 22)
+	title.text = "Mirror and flip   ·   one verb, every host"
+	root.add_child(title)
+	title.owner = root
+
+	var hero_in_room: Node2D = _mirror_hero_node()
+	hero_in_room.set_script(load("%s/hero.gd" % MIRROR_DIR))
+	hero_in_room.position = Vector2(300, 300)
+	root.add_child(hero_in_room)
+	hero_in_room.owner = root
+	_own_tree(hero_in_room, root)
+
+	var tiles: TileMapLayer = TileMapLayer.new()
+	tiles.name = "Tiles"
+	tiles.position = Vector2(80, 460)
+	tiles.tile_set = _mirror_tile_set()
+	for column: int in 4:
+		tiles.set_cell(Vector2i(column, 0), 0, Vector2i(0, 0))
+	root.add_child(tiles)
+	tiles.owner = root
+
+	var panel: PanelContainer = PanelContainer.new()
+	panel.name = "Panel"
+	panel.position = Vector2(760, 90)
+	panel.custom_minimum_size = Vector2(300, 84)
+	panel.size = Vector2(300, 84)
+	var panel_text: Label = Label.new()
+	panel_text.name = "PanelText"
+	panel_text.text = "This panel is mirrored in place."
+	panel_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	panel.add_child(panel_text)
+	root.add_child(panel)
+	panel.owner = root
+	panel_text.owner = root
+
+	var mirror: SubViewportContainer = SubViewportContainer.new()
+	mirror.name = "Mirror"
+	mirror.position = Vector2(760, 220)
+	mirror.custom_minimum_size = Vector2(300, 200)
+	mirror.size = Vector2(300, 200)
+	mirror.stretch = true
+	root.add_child(mirror)
+	mirror.owner = root
+
+	var view: SubViewport = SubViewport.new()
+	view.name = "View"
+	view.size = Vector2i(300, 200)
+	view.transparent_bg = false
+	mirror.add_child(view)
+	view.owner = root
+
+	var twin: Node3D = Node3D.new()
+	twin.name = "Twin"
+	view.add_child(twin)
+	twin.owner = root
+
+	var twin_mesh: MeshInstance3D = MeshInstance3D.new()
+	twin_mesh.name = "TwinMesh"
+	var box: BoxMesh = BoxMesh.new()
+	box.size = Vector3(1.4, 1.4, 0.5)
+	var skin: StandardMaterial3D = StandardMaterial3D.new()
+	skin.albedo_color = Color(0.35, 0.62, 0.95)
+	box.material = skin
+	twin_mesh.mesh = box
+	twin.add_child(twin_mesh)
+	twin_mesh.owner = root
+
+	var nose: MeshInstance3D = MeshInstance3D.new()
+	nose.name = "Nose"
+	nose.position = Vector3(0.0, 0.0, 0.5)
+	var nose_mesh: BoxMesh = BoxMesh.new()
+	nose_mesh.size = Vector3(0.4, 0.4, 0.5)
+	var nose_skin: StandardMaterial3D = StandardMaterial3D.new()
+	nose_skin.albedo_color = Color(0.98, 0.76, 0.32)
+	nose_mesh.material = nose_skin
+	nose.mesh = nose_mesh
+	twin.add_child(nose)
+	nose.owner = root
+
+	var eye: Camera3D = Camera3D.new()
+	eye.name = "Eye"
+	eye.position = Vector3(0.0, 1.2, 4.0)
+	eye.rotation_degrees = Vector3(-12.0, 0.0, 0.0)
+	view.add_child(eye)
+	eye.owner = root
+
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-42.0, -28.0, 0.0)
+	view.add_child(sun)
+	sun.owner = root
+
+	return _save_scene(root, "%s/mirror_and_flip.tscn" % MIRROR_DIR)
+
+
+## The hero subtree, built the same way wherever it is used so both scenes stay byte-stable. Every
+## child here exists to be dragged along by the mirror: the ray reaches, the muzzle spawns, the dust
+## blows - and the plate is the one that must not.
+func _mirror_hero_node() -> Node2D:
+	var hero: Node2D = Node2D.new()
+	hero.name = "Hero"
+
+	var picture: Sprite2D = Sprite2D.new()
+	picture.name = "Picture"
+	picture.texture = _make_texture()
+	picture.scale = Vector2(1.2, 1.6)
+	picture.modulate = Color(0.86, 0.88, 0.94)
+	hero.add_child(picture)
+
+	# A face, so which way the hero is looking is visible in a still picture and not only in motion.
+	var face: Sprite2D = Sprite2D.new()
+	face.name = "Face"
+	face.texture = _make_texture()
+	face.position = Vector2(14, -14)
+	face.scale = Vector2(0.22, 0.22)
+	face.modulate = Color(0.16, 0.20, 0.28)
+	hero.add_child(face)
+
+	var sword: RayCast2D = RayCast2D.new()
+	sword.name = "Sword"
+	sword.position = Vector2(20, 0)
+	sword.target_position = Vector2(72, 0)
+	sword.enabled = true
+	hero.add_child(sword)
+
+	# The ray reaches; this is what the reach LOOKS like, drawn along the same 72 pixels.
+	var blade: Sprite2D = Sprite2D.new()
+	blade.name = "Blade"
+	blade.texture = _make_texture()
+	blade.position = Vector2(36, 0)
+	blade.scale = Vector2(1.5, 0.14)
+	blade.modulate = Color(0.98, 0.76, 0.32)
+	sword.add_child(blade)
+
+	var muzzle: Marker2D = Marker2D.new()
+	muzzle.name = "Muzzle"
+	muzzle.position = Vector2(46, -12)
+	hero.add_child(muzzle)
+
+	var muzzle_dot: Sprite2D = Sprite2D.new()
+	muzzle_dot.name = "MuzzleDot"
+	muzzle_dot.texture = _make_texture()
+	muzzle_dot.scale = Vector2(0.18, 0.18)
+	muzzle_dot.modulate = Color(0.94, 0.42, 0.38)
+	muzzle.add_child(muzzle_dot)
+
+	var dust: GPUParticles2D = GPUParticles2D.new()
+	dust.name = "Dust"
+	dust.position = Vector2(-26, 22)
+	dust.amount = 16
+	dust.lifetime = 0.7
+	dust.local_coords = true
+	dust.texture = _make_texture()
+	hero.add_child(dust)
+
+	var plate: Label = Label.new()
+	plate.name = "Plate"
+	plate.position = Vector2(-34, -66)
+	plate.text = "Hero"
+	hero.add_child(plate)
+
+	return hero
+
+
+## Marks every node under `node` as owned by `owner_node`, which is what makes them part of the packed
+## scene rather than runtime children the pack drops on the floor.
+func _own_tree(node: Node, owner_node: Node) -> void:
+	for child: Node in node.get_children():
+		child.owner = owner_node
+		_own_tree(child, owner_node)
+
+
+## A tileset built in-tool, so the tile row depends on no art file. One tile, drawn once and flipped
+## for the far side of the corridor - which is the whole point the row makes.
+func _mirror_tile_set() -> TileSet:
+	var image: Image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.16, 0.20, 0.28, 1.0))
+	for y: int in 32:
+		for x: int in 32:
+			if x < 4 or y < 4:
+				image.set_pixel(x, y, Color(0.62, 0.70, 0.86, 1.0))
+			elif x + y < 22:
+				image.set_pixel(x, y, Color(0.42, 0.52, 0.72, 1.0))
+	var atlas: TileSetAtlasSource = TileSetAtlasSource.new()
+	atlas.texture = ImageTexture.create_from_image(image)
+	atlas.texture_region_size = Vector2i(32, 32)
+	atlas.create_tile(Vector2i(0, 0))
+	var tile_set: TileSet = TileSet.new()
+	tile_set.tile_size = Vector2i(32, 32)
+	tile_set.add_source(atlas, 0)
+	return tile_set

@@ -4056,3 +4056,77 @@ prompt taken off {label},подсказка убрана с {label}
 Close input window,Закрыть окно ввода
 "Every colour set this palette asset carries, side by side.","Все наборы цветов этого ресурса палитры, рядом друг с другом."
 Palette assets,Ресурсы палитр
+"Which way something faces. Mirror or flip a sprite, a whole object with its hitbox and its ray, a 3D model, a UI panel, the camera's view, one tile, or a path - each host in its own honest terms.","Куда что-то смотрит. Отразите или переверните спрайт, целый объект вместе с его областью попадания и лучом, 3D-модель, панель интерфейса, вид камеры, одну клетку или путь - каждый узел своими честными словами."
+Set Mirrored,Задать отражение
+Set Flipped,Задать переворот
+Is Mirrored,Отражён
+Is Flipped,Перевёрнут
+Set Mirrored (whole object),Задать отражение (весь объект)
+Turn Around,Развернуться
+Face Direction Of Movement,Смотреть по движению
+Face Object,Смотреть на объект
+Keep Upright,Держать прямо
+Mirror The View,Отразить вид
+Set Tile Flipped,Отразить клетку
+Mirror Path,Отразить путь
+Set mirrored {mirrored},Отражение: {mirrored}
+Set flipped {flipped},Переворот: {flipped}
+Is mirrored,Отражён
+Is flipped,Перевёрнут
+Set mirrored {mirrored} (whole object),Отражение: {mirrored} (весь объект)
+Turn around,Развернуться
+Face direction of movement,Смотреть по движению
+Face {object},Смотреть на {object}
+Keep {target} upright,Держать {target} прямо
+Mirror the view {mirrored},Отражение вида: {mirrored}
+Set tile at {coords} flipped {mirrored},Клетка {coords}: отражение {mirrored}
+Mirror path,Отразить путь
+Mirrored,Отражён
+Flipped,Перевёрнут
+On node,На узле
+"Mirror it horizontally (facing left), or put it back the way it was.",Отражает по горизонтали (смотрит влево) или возвращает как было.
+"Turn it upside down, or put it back the right way up.",Переворачивает вверх ногами или возвращает обратно.
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_tree().get_first_node_in_group(""player"").","Действует на другой узел вместо этого. Оставьте пустым для этого узла, выберите узел или укажите его без пути в дереве - например get_tree().get_first_node_in_group(""player"")."
+The value holding how fast this object is moving.,"Значение, в котором хранится скорость движения этого объекта."
+The object to turn toward.,"Объект, к которому нужно повернуться."
+"The child that must stay readable - a name plate, a health bar, a damage number.","Дочерний узел, который должен оставаться читаемым - табличка с именем, полоса здоровья, число урона."
+Cell coordinates (Vector2i).,Координаты клетки (Vector2i).
+Mirrors this node's picture left-to-right - the way a 2D character faces.,Отражает картинку этого узла слева направо - так 2D-персонаж поворачивается.
+"Turns this node's picture upside down, or puts it back the right way up.",Переворачивает картинку этого узла вверх ногами или возвращает обратно.
+True while this node's picture is mirrored - which way the character is facing.,"Истина, пока картинка этого узла отражена - куда смотрит персонаж."
+True while this node's picture is upside down.,"Истина, пока картинка этого узла перевёрнута вверх ногами."
+"Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.","Отражает этот объект И всё, что под ним - картинка, область попадания, точка выстрела и луч смотрят в одну сторону."
+"True while this object is mirrored, read off its own X scale.","Истина, пока этот объект отражён - читается по его собственному масштабу X."
+"Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead.","Отражает 3D-объект по оси X. Стоит знать: отрицательный масштаб выворачивает обход граней меша, поэтому свет и отсечение задних граней видят его наизнанку - обычно вам нужен «Развернуться»."
+"Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind.","Отражает 3D-надпись по оси X - читается задом наперёд, а это как раз то, что нужно для наклейки или вывески, видимой сзади."
+True while this 3D object is mirrored along X.,"Истина, пока этот 3D-объект отражён по оси X."
+Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.,Поворачивает 3D-объект в другую сторону - на пол-оборота вокруг его вертикальной оси. Честный 3D-ответ на отражение: после него ничто не вывернуто наизнанку.
+"Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.","Поворачивает объект туда, куда он движется, и оставляет его так при остановке - та самая строка, которую вручную пишет каждый платформер."
+"Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in.","Поворачивает этот объект к другому - враг смотрит на игрока, торговец смотрит на вошедшего."
+Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards.,"Ещё раз инвертирует масштаб X дочернего узла, чтобы он НЕ отражался вместе с объектом - именно это оставляет табличку с именем читаемой, а не зеркальной."
+"Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways.","Отражает элемент интерфейса на месте. Сначала точка вращения переносится в его середину - это та половина, о которой все забывают: без неё панель отражается И прыгает вбок."
+True while this UI element is mirrored.,"Истина, пока этот элемент интерфейса отражён."
+"Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards.","Отражает всё, что видит эта камера - зеркальный мир, отражение, уровень, пройденный наоборот."
+"Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water.","Отражает то, что показывает вложенный вьюпорт - зеркало заднего вида, монитор наблюдения, отражение в воде."
+"Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor.","Отражает плитку, которая уже стоит в клетке, сохраняя её тайлсет и саму плитку - так одна картинка стены закрывает обе стороны коридора."
+"Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way.","Отражает каждую точку этого пути относительно x = 0 - вторая половина симметричного уровня или маршрут патруля, переиспользованный в другую сторону."
+Set mirrored to {value},"Отразить, если {value}"
+Set flipped to {value},"Перевернуть, если {value}"
+Is not mirrored,Не отражён
+Is not flipped,Не перевёрнут
+Ray follows facing,Луч следует за направлением
+Spawn point follows facing,Точка появления следует за направлением
+Particles follow facing,Частицы следуют за направлением
+Keeps its text upright,Держит текст прямо
+Faces the way it moves,Смотрит по движению
+(flips the mesh's winding),(выворачивает обход граней меша)
+(UI),(интерфейс)
+(whole object),(весь объект)
+moving left,движется влево
+moving right,движется вправо
+{name} is to the left,{name} слева
+{name} is to the right,{name} справа
+"an object is mirrored to face the way it moves, and its ray, its spawn points and its particles turn with it","объект отражается, чтобы смотреть туда, куда движется, и его луч, точки появления и частицы поворачиваются вместе с ним"
+Mirror the view,Отразить вид
+Set tile at {coords} flipped,Отразить клетку {coords}
+Set tile at {coords} flipped to {value},"Отразить клетку {coords}, если {value}"

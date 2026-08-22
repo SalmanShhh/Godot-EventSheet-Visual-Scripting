@@ -447,6 +447,12 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	# The 3D lines: a direction and a speed, a turn, a facing turned toward, a place copied off
 	# another object, a tilt onto a slope. Every one of them is arithmetic on a property, so they go
 	# ahead of the compound / assignment split that would describe the property instead of the step.
+	# ── Y19 / Y20 ───────────────────────────────────────────────────────────────────────────────
+	# Half a turn is not a turn RATE, and a blend tree steered by the facing is not a property set by
+	# name. Both go ahead of the 3D reading below, which would otherwise describe the spelling.
+	var faced: Dictionary = facing_statement(text, context)
+	if not faced.is_empty():
+		return _with_indent(faced, indent)
 	var spatial: Dictionary = spatial_words_statement(text, context)
 	if not spatial.is_empty():
 		return _with_indent(spatial, indent)
@@ -537,6 +543,13 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var facing: Dictionary = spatial_words_condition(text, context)
 	if not facing.is_empty():
 		return facing
+	# ── Y19 ─────────────────────────────────────────────────────────────────────────────────────
+	# Which way something is facing, asked either way it is written - the sprite's flag, or the sign
+	# of a whole object's X scale. Ahead of the comparison reading, which would answer the narrower
+	# question "is this number below zero".
+	var mirrored_test: Dictionary = facing_condition(text, context)
+	if not mirrored_test.is_empty():
+		return mirrored_test
 	# S1. Which state the machine is in is the FSM behavior's own question, and the comparison and
 	# membership readings below would both answer a narrower one - `state = 2`, `state is in a list`.
 	var machine_test: Dictionary = _state_machine_condition(text, context)
@@ -2201,6 +2214,12 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 		assigned, context)
 	if not spatial.is_empty():
 		return spatial
+	# Y19 / Y20 / Y21. Which way something faces, on every host that can say it. Ahead of the `scale`
+	# arm below, which reads a whole-vector size and would leave the X-only mirroring spellings as the
+	# raw member write they are - and narrow enough that a plain `scale.x = 2` still reads as a size.
+	var faced: Dictionary = facing_assignment(member, owner_text, assigned, context)
+	if not faced.is_empty():
+		return faced
 	match member:
 		"visible":
 			if assigned != "true" and assigned != "false":
@@ -2220,13 +2239,19 @@ static func _engine_verb_assignment(target: String, assigned: String, context: D
 			# S11. A mirror driven by a TEST is the same verb with its condition said out loud - a
 			# `flip_h = dir < 0` sets it either way every tick, which "Set mirrored" alone would hide.
 			if assigned != "true" and assigned != "false":
-				return _mirror_when(object_name, "Set mirrored when {test}", member, assigned, context)
+				var mirrored_when: Dictionary = _mirror_when(object_name, "Set mirrored when {test}", member, assigned, context)
+				if not mirrored_when.is_empty():
+					return mirrored_when
+				return _facing_flag_value(object_name, "Set mirrored to {value}", member, owner_text, assigned, context)
 			return _with_pattern(_sentence(object_name,
 				"Set mirrored" if assigned == "true" else "Set not mirrored", {}),
 				"sprite_animation", _member_line(owner_text, member, assigned))
 		"flip_v":
 			if assigned != "true" and assigned != "false":
-				return _mirror_when(object_name, "Set flipped when {test}", member, assigned, context)
+				var flipped_when: Dictionary = _mirror_when(object_name, "Set flipped when {test}", member, assigned, context)
+				if not flipped_when.is_empty():
+					return flipped_when
+				return _facing_flag_value(object_name, "Set flipped to {value}", member, owner_text, assigned, context)
 			return _with_pattern(_sentence(object_name,
 				"Set flipped" if assigned == "true" else "Set not flipped", {}),
 				"sprite_animation", _member_line(owner_text, member, assigned))
@@ -7500,6 +7525,357 @@ static func _mirror_when(object_name: String, template: String, member: String, 
 static func _member_line(owner_text: String, member: String, value: String) -> String:
 	var target: String = member if owner_text.is_empty() else "%s.%s" % [owner_text, member]
 	return "%s = %s" % [target, value]
+
+
+# ── Y19 / Y20 / Y21: mirror and flip, on every host ───────────────────────────────────────────────
+#
+# Mirroring is how a 2D character faces, and it is ONE idea with a different spelling on every host: a
+# sprite has a flag, a body has an X scale (and takes its children with it), a 3D object has an X
+# scale that also flips its winding, a Control needs its pivot moved first, a camera has a zoom. The
+# readings below say the idea rather than the spelling, and they say it in the same words the picker's
+# Facing page writes - so a line typed by hand and the same line dropped from the picker are one row.
+#
+# The narrowness is the point. `scale.x` is claimed ONLY in the shapes that mean mirroring - the two
+# unit literals, the object's own negation, a sign, and the ternary everybody writes - and a plain
+# `scale.x = 2` stays the size it is. The same rule keeps the reverse-lifter honest.
+
+
+## Y19. The two zero literals a facing test is written against.
+const FACING_ZEROES: PackedStringArray = ["0", "0.0", "0.0001", "-0.0001"]
+
+## Y19. The members that hold how fast something is moving. A sign taken off one of these is the whole
+## of the "face the way it moves" idiom, which is why the words say it rather than repeating the test.
+const FACING_VELOCITY_MEMBERS: PackedStringArray = ["velocity", "linear_velocity", "motion", "direction"]
+
+## Y19. The members that hold where something IS. A comparison between two of these is a side-of-me
+## question, and the row says which side rather than spelling out two global positions.
+const FACING_PLACE_MEMBERS: PackedStringArray = ["global_position", "position"]
+
+## Y20. The nodes whose `local_coords` means "drawn in the emitter's own space", which is what makes
+## a particle effect turn with the object that mirrored.
+const FACING_PARTICLE_CLASSES: PackedStringArray = ["GPUParticles2D", "CPUParticles2D"]
+
+
+## Y19. `scale.x = …`, `flip_h = …` and the Y20 lines that must follow a facing, read as the one verb
+## they all are. {} for every other member write, including every other `scale.x` - a size is a size.
+static func facing_assignment(member: String, owner_text: String, assigned: String,
+		context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	var owner_member: String = _trailing_member(owner_text)
+	# Y20. The particles that come along because they are drawn in the object's own space. Gated on
+	# the class: `local_coords` is the particle node's own word, and a same-named flag on anything
+	# else is not this.
+	if member == "local_coords" and value == "true":
+		var emitter: String = _receiver_object(owner_text, context)
+		if _class_is_any(object_class_of(emitter, context), FACING_PARTICLE_CLASSES):
+			return _with_pattern(_sentence(emitter, "Particles follow facing", {}),
+				"facing", _member_line(owner_text, member, value))
+		return {}
+	if member != "x":
+		return {}
+	var subject_owner: String = _owner_of(owner_text)
+	if not subject_owner.is_empty() and not is_simple_target(subject_owner):
+		return {}
+	var subject: String = _receiver_object(subject_owner, context)
+	# Y20. A ray or a cast whose reach is signed by the facing turns with it; one that is not is the
+	# Doctor's business, not this reading's.
+	if owner_member == "target_position" and value.contains("scale.x"):
+		return _with_pattern(_sentence(subject, "Ray follows facing", {}),
+			"facing", _member_line(owner_text, member, value))
+	# Y21. A camera whose X zoom is negated shows everything the other way round - a mirror world, a
+	# reflection, a level played backwards. Gated on the class: a negative zoom is the camera's own
+	# spelling of mirroring and means nothing on anything else.
+	if owner_member == "zoom" and _class_is_any(object_class_of(subject, context),
+			PackedStringArray(["Camera2D"])):
+		if _facing_literal_sign(value) == -1 or _facing_self_negation(value, owner_text) \
+				or not _facing_absf_ternary(value, _facing_member_path(owner_text, member)).is_empty():
+			return _with_pattern(_sentence(subject, "Mirror the view", {}),
+				"facing", _member_line(owner_text, member, value))
+		return {}
+	if owner_member != "scale":
+		# Y20. A muzzle or a spawn place signed by the facing moves to the other side with it.
+		if FACING_PLACE_MEMBERS.has(owner_member) and value.contains("scale.x") \
+				and _class_is_any(object_class_of(subject, context), PackedStringArray(["Marker2D"])):
+			return _with_pattern(_sentence(subject, "Spawn point follows facing", {}),
+				"facing", _member_line(owner_text, member, value))
+		return {}
+	# Y20. A child re-negated against its parent is the one that must NOT come along - a name plate,
+	# a health bar, a damage number. Checked before the sign reading below, which would otherwise
+	# describe the same line as a mirror of whatever the parent is doing.
+	if not subject_owner.is_empty() and _facing_sign_of(value) == "scale.x":
+		return _with_pattern(_sentence(subject, "Keeps its text upright", {}),
+			"facing", _member_line(owner_text, member, value))
+	var reading: Dictionary = {}
+	var literal: int = _facing_literal_sign(value)
+	# Y21. `scale.x = -absf(scale.x) if <test> else absf(scale.x)` - the spelling that mirrors without
+	# throwing away a size the object already had, which is the one the 3D and UI rows write.
+	var kept_size: String = _facing_absf_ternary(value, _facing_member_path(owner_text, member))
+	if literal == -1 or _facing_self_negation(value, owner_text) or kept_size == "true":
+		reading = _sentence(subject, "Set mirrored", {})
+	elif literal == 1 or kept_size == "false":
+		reading = _sentence(subject, "Set not mirrored", {})
+	elif not kept_size.is_empty():
+		reading = _sentence(subject, "Set mirrored to {value}",
+			{"value": [_facing_test_words(kept_size, context), "value"]})
+	else:
+		var words: String = _facing_value_words(value, context)
+		if words.is_empty():
+			return {}
+		reading = _sentence(subject, "Set mirrored to {value}", {"value": [words, "value"]})
+	_append_note(reading, translate(_facing_host_note(object_class_of(subject, context))))
+	return _with_pattern(reading, "facing", _member_line(owner_text, member, value))
+
+
+## Y19 / Y20. The facing lines that are CALLS: the honest 3D "face the other way", and a blend tree
+## steered by which way the object is pointing. {} for anything else, so the turn reading below keeps
+## every rotation that is a rotation.
+static func facing_statement(text: String, context: Dictionary) -> Dictionary:
+	var call: Dictionary = call_parts(text)
+	if call.is_empty():
+		return {}
+	var method: String = str(call.get("method", ""))
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	var receiver: String = str(call.get("target", "")).strip_edges()
+	if not receiver.is_empty() and not is_simple_target(receiver):
+		return {}
+	if method == "rotate_y" and args.size() == 1 and _facing_half_turn(args[0]):
+		var object_name: String = _receiver_object(receiver, context)
+		if not is_spatial_object(object_name, context):
+			return {}
+		return _with_pattern(_sentence(object_name, "Turn around", {}), "facing", text.strip_edges())
+	# Y21. One cell repainted with its own tileset, its own tile and the flip bit turned on is not a
+	# Set Tile row: it is the same tile, mirrored, which is how one wall drawing covers both sides of
+	# a corridor. Said in the tilemap's own words, with the cell in front.
+	if method == "set_cell" and args.size() == 4 and args[3].contains("TRANSFORM_FLIP_H"):
+		var cell: String = expression_text(args[0], context)
+		var tile_owner: String = _receiver_object(receiver, context)
+		var switch: String = _facing_ternary_flag(args[3], "TileSetAtlasSource.TRANSFORM_FLIP_H", "0")
+		if switch == "true":
+			return _with_pattern(_sentence(tile_owner, "Set tile at {coords} flipped",
+				{"coords": [cell, "value"]}), "facing", text.strip_edges())
+		if not switch.is_empty():
+			return _with_pattern(_sentence(tile_owner, "Set tile at {coords} flipped to {value}",
+				{"coords": [cell, "value"], "value": [_facing_test_words(switch, context), "value"]}),
+				"facing", text.strip_edges())
+	# Y20. A blend tree steered by which way the object is pointing IS the facing, said to the
+	# animation. Filed under the object's own Animation aspect, the way every other blend row is, so
+	# the word "Animation" is said once rather than twice.
+	if method == "set" and args.size() == 2 and _unquote(args[0].strip_edges()).ends_with("/blend_position") \
+			and (args[1].contains("scale.x") or args[1].contains("velocity.x")) \
+			and _class_is_any(object_class_of(_receiver_object(receiver, context), context), ANIMATION_TREE_CLASSES):
+		return _with_pattern(_animation_aspect(_sentence(script_object(context),
+			"Faces the way it moves", {})), "facing", text.strip_edges())
+	return {}
+
+
+## Y19. `if flip_h:` / `if scale.x < 0:` - which way something is facing, asked. Both spellings are the
+## same question, which is the whole reason the row exists.
+static func facing_condition(text: String, context: Dictionary) -> Dictionary:
+	var bare: String = text.strip_edges().trim_prefix("self.")
+	var negated: bool = bare.begins_with("not ")
+	if negated:
+		bare = bare.substr(4).strip_edges()
+	var flag: String = _trailing_member(bare)
+	if (flag == "flip_h" or flag == "flip_v") and is_simple_target(bare):
+		var mirrored: bool = flag == "flip_h"
+		var words: String = ""
+		if mirrored:
+			words = "Is not mirrored" if negated else "Is mirrored"
+		else:
+			words = "Is not flipped" if negated else "Is flipped"
+		return _with_pattern(_sentence(_receiver_object(_owner_of(bare), context), words, {}),
+			"facing", text.strip_edges())
+	var parts: Array = _comparison_parts(bare)
+	if parts.size() != 3 or negated:
+		return {}
+	var left: String = str(parts[0])
+	var operator: String = str(parts[1])
+	var right: String = str(parts[2])
+	if _trailing_member(left) != "x" or _trailing_member(_owner_of(left)) != "scale":
+		return {}
+	if not FACING_ZEROES.has(right):
+		return {}
+	if operator != "<" and operator != ">":
+		return {}
+	var owner: String = _owner_of(_owner_of(left))
+	if not owner.is_empty() and not is_simple_target(owner):
+		return {}
+	return _with_pattern(_sentence(_receiver_object(owner, context),
+		"Is mirrored" if operator == "<" else "Is not mirrored", {}), "facing", text.strip_edges())
+
+
+## Y19. `flip_h = facing_left` - a flag set from a VALUE rather than from a test. The verb is the same
+## one, said with what decides it, so a reader never has to know that `flip_h` is the mirror. A value
+## the reading cannot say (a call, an expression that is neither idiom) keeps the plain write it is.
+static func _facing_flag_value(object_name: String, template: String, member: String,
+		owner_text: String, assigned: String, context: Dictionary) -> Dictionary:
+	var value: String = assigned.strip_edges()
+	var words: String = ""
+	if is_identifier(value):
+		words = _spaced_name(value)
+	elif is_simple_target(value):
+		words = expression_text(value, context)
+	else:
+		words = _facing_value_words(value, context)
+	if words.is_empty():
+		return {}
+	return _with_pattern(_sentence(object_name, template, {"value": [words, "value"]}),
+		"facing", _member_line(owner_text, member, value))
+
+
+## Y19. The trailing note a mirroring line earns from its host: WHAT turned, and the one consequence a
+## reader would otherwise find out the hard way. A 3D negative scale really does flip the winding, so
+## lighting and backface culling see the model inside out; the row says so rather than letting the
+## reader discover it as a rendering bug.
+static func _facing_host_note(object_class: String) -> String:
+	if _class_is_any(object_class, SPATIAL_CLASSES):
+		return "(flips the mesh's winding)"
+	if _class_is_any(object_class, PackedStringArray(["Control"])):
+		return "(UI)"
+	return "(whole object)"
+
+
+## Y19. `-1` / `-1.0` is a mirror, `1` / `1.0` is not one, and everything else is 0 (not a literal
+## mirror at all). Only the two UNIT literals count: `scale.x = -2` is a size, negated.
+static func _facing_literal_sign(value: String) -> int:
+	var bare: String = value.strip_edges()
+	if bare == "-1" or bare == "-1.0":
+		return -1
+	if bare == "1" or bare == "1.0":
+		return 1
+	return 0
+
+
+## Y19. `scale.x = -scale.x` - THIS object's own X scale, negated. The owner is compared so that
+## `body.scale.x = -other.scale.x` is never mistaken for the flip it is not.
+static func _facing_self_negation(value: String, owner_text: String) -> bool:
+	var bare: String = value.strip_edges()
+	if not bare.begins_with("-"):
+		return false
+	return bare.substr(1).strip_edges() == "%s.x" % owner_text.strip_edges().trim_prefix("self.")
+
+
+## Y19. `rotate_y(PI)` and the two other spellings of half a turn. A turn by any other amount is a
+## turn, and the X1 reading keeps it.
+static func _facing_half_turn(angle: String) -> bool:
+	var bare: String = angle.strip_edges().trim_prefix("-")
+	if bare == "PI":
+		return true
+	var call: Dictionary = call_parts(bare)
+	if call.is_empty() or str(call.get("method", "")) != "deg_to_rad":
+		return false
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	return args.size() == 1 and args[0].strip_edges() in ["180", "180.0"]
+
+
+## Y21. The member a write lands on, spelled exactly as the line spells it - `scale.x` when the host
+## wrote its own, `mesh.scale.x` when it named another object. The `absf` shapes read the member back
+## on their own right-hand side, so the comparison has to be against the same spelling.
+static func _facing_member_path(owner_text: String, member: String) -> String:
+	var owner: String = owner_text.strip_edges().trim_prefix("self.")
+	return member if owner.is_empty() else "%s.%s" % [owner, member]
+
+
+## Y21. The test inside `<on> if <test> else <off>` for two KNOWN branch texts, "" when the value is
+## not that ternary. A bare `<on>` answers "true" and a bare `<off>` answers "false", so a switch
+## written as a constant and a switch written as a test come back through the same door.
+static func _facing_ternary_flag(value: String, on_text: String, off_text: String) -> String:
+	var bare: String = value.strip_edges()
+	if bare == on_text:
+		return "true"
+	if bare == off_text:
+		return "false"
+	var if_at: int = top_level_index(bare, " if ")
+	var else_at: int = _last_top_level_index(bare, " else ")
+	if if_at <= 0 or else_at <= if_at:
+		return ""
+	if bare.substr(0, if_at).strip_edges() != on_text:
+		return ""
+	if bare.substr(else_at + 6).strip_edges() != off_text:
+		return ""
+	return bare.substr(if_at + 4, else_at - if_at - 4).strip_edges()
+
+
+## Y21. The test inside `-absf(<member>) if <test> else absf(<member>)`, "" for anything else. This is
+## mirroring that KEEPS the size the object already had, which is why the 3D and camera rows write it
+## rather than the two unit literals - a model scaled to 1.4 must stay 1.4 wide after it turns.
+static func _facing_absf_ternary(value: String, member_path: String) -> String:
+	var bare: String = value.strip_edges()
+	var if_at: int = top_level_index(bare, " if ")
+	var else_at: int = _last_top_level_index(bare, " else ")
+	if if_at <= 0 or else_at <= if_at:
+		return ""
+	if bare.substr(0, if_at).strip_edges() != "-absf(%s)" % member_path:
+		return ""
+	if bare.substr(else_at + 6).strip_edges() != "absf(%s)" % member_path:
+		return ""
+	return bare.substr(if_at + 4, else_at - if_at - 4).strip_edges()
+
+
+## Y19. What is inside a `sign(...)` / `signf(...)`, "" when the value is neither.
+static func _facing_sign_of(value: String) -> String:
+	var call: Dictionary = call_parts(value.strip_edges())
+	if call.is_empty() or not str(call.get("target", "")).strip_edges().is_empty():
+		return ""
+	if not str(call.get("method", "")) in ["sign", "signf", "signi"]:
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	return "" if args.size() != 1 else args[0].strip_edges()
+
+
+## Y19. The words a mirroring VALUE reads as, after "Set mirrored to". Two shapes are claimed - the
+## ternary every platformer writes and a bare sign - and each is then said as the IDIOM it is rather
+## than as the arithmetic it was typed as. "" when the value is neither shape, which leaves the plain
+## property write the line already reads as.
+static func _facing_value_words(value: String, context: Dictionary) -> String:
+	var signed: String = _facing_sign_of(value)
+	if not signed.is_empty():
+		return _facing_test_words("%s < 0.0" % signed, context)
+	var test: String = _facing_ternary_test(value)
+	return "" if test.is_empty() else _facing_test_words(test, context)
+
+
+## Y19. The test inside `-1.0 if <test> else 1.0`, "" for any other ternary. Only the mirrored-when-true
+## order is claimed: the other way round means the opposite, and a row that said the same thing for
+## both would be a reading nobody could trust.
+static func _facing_ternary_test(value: String) -> String:
+	var bare: String = value.strip_edges()
+	if _facing_literal_sign(bare.split(" if ")[0]) != -1:
+		return ""
+	var if_at: int = top_level_index(bare, " if ")
+	var else_at: int = _last_top_level_index(bare, " else ")
+	if if_at <= 0 or else_at <= if_at:
+		return ""
+	if _facing_literal_sign(bare.substr(else_at + 6)) != 1:
+		return ""
+	return bare.substr(if_at + 4, else_at - if_at - 4).strip_edges()
+
+
+## Y19. A facing test as the idiom it is: a velocity's sign is "moving left", another object's side is
+## "<it> is to the left", and anything else keeps the comparison it was written as. This is the whole
+## of the "face the way it moves" reading.
+static func _facing_test_words(test: String, context: Dictionary) -> String:
+	if is_identifier(test.strip_edges()):
+		return _spaced_name(test.strip_edges())
+	var parts: Array = _comparison_parts(test)
+	if parts.size() != 3:
+		return comparison_symbols(expression_text(test, context))
+	var left: String = str(parts[0])
+	var operator: String = str(parts[1])
+	var right: String = str(parts[2])
+	if _trailing_member(left) != "x":
+		return comparison_symbols(expression_text(test, context))
+	var left_owner: String = _owner_of(left)
+	if FACING_ZEROES.has(right) and FACING_VELOCITY_MEMBERS.has(_trailing_member(left_owner)):
+		return translate("moving left" if operator == "<" else "moving right")
+	if FACING_PLACE_MEMBERS.has(_trailing_member(left_owner)) \
+			and FACING_PLACE_MEMBERS.has(_trailing_member(_owner_of(right))) \
+			and _trailing_member(right) == "x":
+		var other: String = _owner_of(left_owner)
+		if not other.is_empty() and is_simple_target(other):
+			return _fill(translate("{name} is to the left" if operator == "<" else "{name} is to the right"),
+				{"name": _receiver_object(other, context)})
+	return comparison_symbols(expression_text(test, context))
 
 
 ## S13 / S12. One loudness in the words a mixer uses: a plain fraction is the percentage a reader set,

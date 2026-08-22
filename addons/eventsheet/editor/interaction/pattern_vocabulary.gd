@@ -219,6 +219,12 @@ const ENTRIES: Dictionary = {
 		"why": "a clock counts a mission down, shows the time left, and fails when it reaches zero",
 		"adoptable": "",
 		"rank": 32
+	},
+	"facing": {
+		"words": "Facing",
+		"why": "an object is mirrored to face the way it moves, and its ray, its spawn points and its particles turn with it",
+		"adoptable": "",
+		"rank": 33
 	}
 }
 

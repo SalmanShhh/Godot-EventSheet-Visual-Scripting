@@ -21,6 +21,7 @@ of the battle:
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
 3. [Reference tables](#reference-tables)
+   - [Mirror and flip](#mirror-and-flip)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -110,6 +111,25 @@ row's On node cell.
 | Set Image | Shows a different image on the sprite. | `texture = load({path})` |
 | Is Playing (AnimationPlayer) | True while this animation player is running an animation. | `is_playing()` |
 | Current Animation | Returns the name of the animation the sprite is currently using. | `animation` |
+
+### Mirror and flip
+
+Which way the picture faces. Four hosts own a real flip flag - **Sprite2D**, **AnimatedSprite2D**,
+**Sprite3D** and **TextureRect** - and these rows are offered on each of them. They set (or read) that
+node's OWN flag, so the picture turns and nothing else does: a hitbox, a muzzle point or a ray under
+the same character keeps pointing exactly where it pointed before. When those have to turn too, mirror
+the whole object instead - negating the X scale of the Node2D that owns the character turns every
+child with it, and the row that says so is **Set Mirrored (whole object)** on that node.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Mirrored | Mirrors this node's picture left-to-right - the way a 2D character faces. | `flip_h = {mirrored}` |
+| Set Flipped | Turns this node's picture upside down, or puts it back the right way up. | `flip_v = {flipped}` |
+| Is Mirrored | True while this node's picture is mirrored - which way the character is facing. | `flip_h` |
+| Is Flipped | True while this node's picture is upside down. | `flip_v` |
+
+The AnimatedSprite2D pair listed under sprite frames above is the same two lines, named `{flipped}`
+rather than `{mirrored}` in the parameter cell; the emitted GDScript is identical either way.
 
 ### Object-level - name the object, not its player
 

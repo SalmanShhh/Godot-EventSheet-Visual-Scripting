@@ -4056,3 +4056,77 @@ prompt taken off {label},{label}에서 안내 지움
 Close input window,입력 창 닫기
 "Every colour set this palette asset carries, side by side.",이 팔레트 애셋이 담고 있는 모든 색상 세트를 나란히 보여줍니다.
 Palette assets,팔레트 애셋
+"Which way something faces. Mirror or flip a sprite, a whole object with its hitbox and its ray, a 3D model, a UI panel, the camera's view, one tile, or a path - each host in its own honest terms.","무언가가 바라보는 방향. 스프라이트, 히트박스와 레이를 포함한 오브젝트 전체, 3D 모델, UI 패널, 카메라 화면, 타일 한 칸, 경로를 좌우 반전하거나 뒤집습니다 - 각 노드를 그 노드 자신의 정직한 표현으로."
+Set Mirrored,좌우 반전 설정
+Set Flipped,상하 반전 설정
+Is Mirrored,좌우 반전됨
+Is Flipped,상하 반전됨
+Set Mirrored (whole object),좌우 반전 설정 (오브젝트 전체)
+Turn Around,돌아서기
+Face Direction Of Movement,이동 방향 바라보기
+Face Object,오브젝트 바라보기
+Keep Upright,똑바로 유지
+Mirror The View,화면 좌우 반전
+Set Tile Flipped,타일 좌우 반전
+Mirror Path,경로 좌우 반전
+Set mirrored {mirrored},좌우 반전을 {mirrored} 로
+Set flipped {flipped},상하 반전을 {flipped} 로
+Is mirrored,좌우 반전됨
+Is flipped,상하 반전됨
+Set mirrored {mirrored} (whole object),좌우 반전을 {mirrored} 로 (오브젝트 전체)
+Turn around,돌아서기
+Face direction of movement,이동 방향 바라보기
+Face {object},{object} 바라보기
+Keep {target} upright,{target} 을(를) 똑바로 유지
+Mirror the view {mirrored},화면 좌우 반전을 {mirrored} 로
+Set tile at {coords} flipped {mirrored},{coords} 타일의 좌우 반전을 {mirrored} 로
+Mirror path,경로 좌우 반전
+Mirrored,좌우 반전
+Flipped,상하 반전
+On node,대상 노드
+"Mirror it horizontally (facing left), or put it back the way it was.",좌우로 반전시켜 (왼쪽을 보게) 만들거나 원래대로 되돌립니다.
+"Turn it upside down, or put it back the right way up.",위아래를 뒤집거나 원래 방향으로 되돌립니다.
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_tree().get_first_node_in_group(""player"").","이 노드 대신 다른 노드에 적용합니다. 비워 두면 이 노드이고, 노드를 고르거나 트리 경로 없이 지정할 수도 있습니다 - 예: get_tree().get_first_node_in_group(""player"")."
+The value holding how fast this object is moving.,이 오브젝트가 얼마나 빨리 움직이는지 담고 있는 값입니다.
+The object to turn toward.,바라볼 대상 오브젝트입니다.
+"The child that must stay readable - a name plate, a health bar, a damage number.","계속 읽을 수 있어야 하는 자식 노드입니다 - 이름표, 체력 바, 데미지 숫자 등."
+Cell coordinates (Vector2i).,셀 좌표 (Vector2i).
+Mirrors this node's picture left-to-right - the way a 2D character faces.,이 노드의 그림을 좌우로 반전합니다 - 2D 캐릭터가 방향을 바꾸는 방식입니다.
+"Turns this node's picture upside down, or puts it back the right way up.",이 노드의 그림을 위아래로 뒤집거나 원래 방향으로 되돌립니다.
+True while this node's picture is mirrored - which way the character is facing.,이 노드의 그림이 좌우 반전되어 있는 동안 참입니다 - 캐릭터가 향한 방향입니다.
+True while this node's picture is upside down.,이 노드의 그림이 위아래로 뒤집혀 있는 동안 참입니다.
+"Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.","이 오브젝트와 그 아래 모든 것을 함께 좌우 반전합니다 - 그림, 히트박스, 총구 위치, 레이가 모두 같은 방향을 봅니다."
+"True while this object is mirrored, read off its own X scale.",이 오브젝트가 좌우 반전되어 있는 동안 참입니다 - 자신의 X 스케일에서 읽습니다.
+"Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead.",3D 오브젝트를 X 방향으로 반전합니다. 알아둘 점: 스케일이 음수가 되면 메시 면의 방향이 뒤집혀 조명과 후면 컬링이 안쪽을 보게 됩니다 - 보통은 대신 '돌아서기'를 쓰는 것이 좋습니다.
+"Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind.","3D 라벨을 X 방향으로 반전합니다 - 거꾸로 읽히게 되는데, 데칼이나 뒤에서 본 표지판이라면 바로 그게 목적입니다."
+True while this 3D object is mirrored along X.,이 3D 오브젝트가 X 방향으로 반전되어 있는 동안 참입니다.
+Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.,"3D 오브젝트를 반대 방향으로 돌립니다 - 위쪽 축을 기준으로 반 바퀴입니다. 미러링에 대한 3D의 정직한 답이며, 뒤집히는 것이 아무것도 없습니다."
+"Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.","이 오브젝트가 움직이는 방향을 바라보고, 멈춰도 그 방향을 유지합니다 - 모든 플랫포머가 손으로 적는 바로 그 한 줄입니다."
+"Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in.","이 오브젝트를 다른 오브젝트 쪽으로 돌립니다 - 플레이어를 보는 적, 들어온 손님을 보는 상점 주인처럼."
+Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards.,자식 노드의 X 스케일을 다시 반전시켜 이 오브젝트의 좌우 반전을 따라가지 않게 합니다 - 이름표가 거꾸로 쓰이지 않고 읽히게 됩니다.
+"Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways.","UI 요소를 제자리에서 좌우 반전합니다. 먼저 피벗을 가운데로 옮기는데, 이것이 모두가 잊는 나머지 절반입니다 - 없으면 패널이 반전되면서 옆으로 튀어 나갑니다."
+True while this UI element is mirrored.,이 UI 요소가 좌우 반전되어 있는 동안 참입니다.
+"Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards.","이 카메라가 비추는 모든 것을 좌우 반전합니다 - 거울 세계, 반사, 거꾸로 진행하는 스테이지."
+"Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water.","서브 뷰포트가 보여주는 것을 좌우 반전합니다 - 백미러, 감시 모니터, 물에 비친 모습."
+"Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor.","셀에 이미 놓여 있는 타일을, 타일셋과 타일은 그대로 둔 채 좌우 반전합니다 - 벽 그림 하나로 복도 양쪽을 모두 처리하는 방법입니다."
+"Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way.","이 경로의 모든 점을 x = 0 기준으로 반전합니다 - 좌우 대칭 스테이지의 후반부나, 반대 방향으로 재사용하는 순찰 경로에 씁니다."
+Set mirrored to {value},좌우 반전을 {value} 로
+Set flipped to {value},상하 반전을 {value} 로
+Is not mirrored,좌우 반전되지 않음
+Is not flipped,상하 반전되지 않음
+Ray follows facing,레이가 방향을 따라감
+Spawn point follows facing,생성 지점이 방향을 따라감
+Particles follow facing,파티클이 방향을 따라감
+Keeps its text upright,글자를 똑바로 유지함
+Faces the way it moves,이동 방향을 바라봄
+(flips the mesh's winding),(메시 면의 방향이 뒤집힙니다)
+(UI),(UI)
+(whole object),(오브젝트 전체)
+moving left,왼쪽으로 이동 중
+moving right,오른쪽으로 이동 중
+{name} is to the left,{name} 이(가) 왼쪽에 있음
+{name} is to the right,{name} 이(가) 오른쪽에 있음
+"an object is mirrored to face the way it moves, and its ray, its spawn points and its particles turn with it","오브젝트가 이동 방향을 보도록 좌우 반전되고, 그 레이와 생성 지점과 파티클도 함께 방향을 바꿉니다"
+Mirror the view,화면을 좌우 반전
+Set tile at {coords} flipped,{coords} 타일을 좌우 반전
+Set tile at {coords} flipped to {value},{coords} 타일의 좌우 반전을 {value} 로

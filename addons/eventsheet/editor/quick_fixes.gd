@@ -59,6 +59,14 @@ const OFFERED := {
 	"freed-parent-reference": [
 		{"id": "guard_still_there", "label": "Ask whether %s is still there"},
 	],
+	# Y20 - the two things mirroring has to drag along. Each has exactly one accepted answer, and the
+	# chip says it in the words the row would use rather than in Godot's.
+	"ray-not-following-facing": [
+		{"id": "follow_facing", "label": "Put %s under the mirrored body"},
+	],
+	"label-under-a-mirrored-body": [
+		{"id": "keep_upright", "label": "Keep %s upright"},
+	],
 }
 
 
@@ -151,6 +159,12 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Move this out of On start of layout into a row that runs after the tree has settled - the parent is still adding its children while _ready runs."}
 		"guard_still_there":
 			return {"ok": true, "message": "Put the rows that use %s under a condition asking whether it is still there - a child goes when its parent goes." % subject}
+		# Y20. Both are one edit in the SCENE, not in the sheet, so each names it rather than
+		# rewriting bytes underneath the author.
+		"follow_facing":
+			return {"ok": true, "message": "Move %s under the node you mirror - a Set Mirrored (whole object) row turns everything beneath it, so the ray reaches the way the character faces." % subject}
+		"keep_upright":
+			return {"ok": true, "message": "Add a Facing ▸ Keep Upright row for %s under the same event that mirrors this object - it re-negates the child's scale so the text reads forwards either way." % subject}
 	return {"ok": false, "message": "No fix named %s." % fix_id}
 
 

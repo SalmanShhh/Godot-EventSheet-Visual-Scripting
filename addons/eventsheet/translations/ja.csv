@@ -4056,3 +4056,77 @@ prompt taken off {label},{label} から消去
 Close input window,入力ウィンドウを閉じる
 "Every colour set this palette asset carries, side by side.",このパレットアセットが持つすべての配色を並べて表示します。
 Palette assets,パレットアセット
+"Which way something faces. Mirror or flip a sprite, a whole object with its hitbox and its ray, a 3D model, a UI panel, the camera's view, one tile, or a path - each host in its own honest terms.",そのものが向いている方向。スプライト、当たり判定とレイを含むオブジェクト全体、3D モデル、UI パネル、カメラの映像、タイル 1 枚、パスを左右反転または上下反転します - どのノードもそのノード自身の正直な言葉で。
+Set Mirrored,左右反転を設定
+Set Flipped,上下反転を設定
+Is Mirrored,左右反転している
+Is Flipped,上下反転している
+Set Mirrored (whole object),左右反転を設定 (オブジェクト全体)
+Turn Around,振り返る
+Face Direction Of Movement,進行方向を向く
+Face Object,オブジェクトを向く
+Keep Upright,正しい向きに保つ
+Mirror The View,映像を左右反転
+Set Tile Flipped,タイルを左右反転
+Mirror Path,パスを左右反転
+Set mirrored {mirrored},左右反転を {mirrored} にする
+Set flipped {flipped},上下反転を {flipped} にする
+Is mirrored,左右反転している
+Is flipped,上下反転している
+Set mirrored {mirrored} (whole object),左右反転を {mirrored} にする (オブジェクト全体)
+Turn around,振り返る
+Face direction of movement,進行方向を向く
+Face {object},{object} を向く
+Keep {target} upright,{target} を正しい向きに保つ
+Mirror the view {mirrored},映像の左右反転を {mirrored} にする
+Set tile at {coords} flipped {mirrored},{coords} のタイルの左右反転を {mirrored} にする
+Mirror path,パスを左右反転
+Mirrored,左右反転
+Flipped,上下反転
+On node,対象ノード
+"Mirror it horizontally (facing left), or put it back the way it was.",左右反転させて (左を向かせて) 表示するか、元に戻します。
+"Turn it upside down, or put it back the right way up.",上下を逆さまにするか、元の向きに戻します。
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_tree().get_first_node_in_group(""player"").","このノードではなく別のノードに作用します。空欄ならこのノード、ノードを選ぶか、ツリーパスを使わずに指定することもできます - 例: get_tree().get_first_node_in_group(""player"")。"
+The value holding how fast this object is moving.,このオブジェクトの移動速度が入っている値です。
+The object to turn toward.,向き直る相手のオブジェクトです。
+"The child that must stay readable - a name plate, a health bar, a damage number.",読めるままでなければならない子ノードです - 名前プレート、体力バー、ダメージ数値など。
+Cell coordinates (Vector2i).,セルの座標 (Vector2i)。
+Mirrors this node's picture left-to-right - the way a 2D character faces.,このノードの絵を左右反転します - 2D キャラクターが向きを変えるやり方です。
+"Turns this node's picture upside down, or puts it back the right way up.",このノードの絵を上下逆さまにするか、元の向きに戻します。
+True while this node's picture is mirrored - which way the character is facing.,このノードの絵が左右反転している間、真になります - キャラクターの向きです。
+True while this node's picture is upside down.,このノードの絵が上下逆さまの間、真になります。
+"Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.",このオブジェクトと、その下にあるすべてを左右反転します - 絵も当たり判定も銃口の位置もレイも、同じ向きになります。
+"True while this object is mirrored, read off its own X scale.",このオブジェクトが左右反転している間、真になります - 自身の X スケールから読み取ります。
+"Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead.",3D オブジェクトを X 方向に反転します。知っておくべき点: スケールを負にするとメッシュの面の向きが裏返り、ライティングと裏面カリングが内側を見てしまいます - 多くの場合は代わりに「振り返る」を使ってください。
+"Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind.",3D ラベルを X 方向に反転します - 裏返しに読めるようになり、デカールや裏から見た看板ではそれが目的です。
+True while this 3D object is mirrored along X.,この 3D オブジェクトが X 方向に反転している間、真になります。
+Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.,3D オブジェクトを反対向きにします - 上方向の軸まわりに半回転させます。ミラーリングに対する 3D の正直な答えで、裏返しになるものは何もありません。
+"Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.",このオブジェクトが進んでいる方向を向き、止まったときもその向きのままにします - どのプラットフォーマーも手で書いている、あの 1 行です。
+"Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in.",このオブジェクトを別のオブジェクトの方に向けます - プレイヤーを見る敵、入ってきた相手を見る店主など。
+Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards.,子ノードの X スケールをもう一度反転させて、このオブジェクトの左右反転に付いてこないようにします - 名前プレートが裏文字にならず読めるままになります。
+"Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways.",UI 要素をその場で左右反転します。まずピボットを中央に移動します - これが皆が忘れる方の半分で、これがないとパネルは反転したうえ横にずれます。
+True while this UI element is mirrored.,この UI 要素が左右反転している間、真になります。
+"Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards.",このカメラが映すものすべてを左右反転します - 鏡の世界、水面の映り込み、逆向きに遊ぶステージなど。
+"Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water.",サブビューポートが映しているものを左右反転します - バックミラー、監視モニター、水面の映り込みなど。
+"Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor.",セルに既に置かれているタイルを、タイルセットとタイルはそのままに左右反転します - 1 枚の壁の絵で通路の両側をまかなえます。
+"Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way.",このパスのすべての点を x = 0 で左右反転します - 左右対称なステージの後半や、逆向きに使い回す巡回ルートに使えます。
+Set mirrored to {value},左右反転を {value} にする
+Set flipped to {value},上下反転を {value} にする
+Is not mirrored,左右反転していない
+Is not flipped,上下反転していない
+Ray follows facing,レイが向きに追従する
+Spawn point follows facing,出現位置が向きに追従する
+Particles follow facing,パーティクルが向きに追従する
+Keeps its text upright,文字を正しい向きに保つ
+Faces the way it moves,進行方向を向く
+(flips the mesh's winding),(メッシュの面の向きが裏返ります)
+(UI),(UI)
+(whole object),(オブジェクト全体)
+moving left,左に動いている
+moving right,右に動いている
+{name} is to the left,{name} が左にいる
+{name} is to the right,{name} が右にいる
+"an object is mirrored to face the way it moves, and its ray, its spawn points and its particles turn with it",オブジェクトが進行方向を向くように左右反転され、そのレイも出現位置もパーティクルも一緒に向きを変えます
+Mirror the view,映像を左右反転する
+Set tile at {coords} flipped,{coords} のタイルを左右反転する
+Set tile at {coords} flipped to {value},{coords} のタイルの左右反転を {value} にする

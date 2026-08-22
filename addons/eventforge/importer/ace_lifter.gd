@@ -2890,7 +2890,17 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# and trees as well, and the whole point of the menu reading is that the RUN of those lines is
 	# one bar naming the menu's items in order. Admitted to the reverse index the row would claim
 	# each line separately, and the bar would never see a run to collapse.
-	"MenuAddItem"
+	"MenuAddItem",
+	# Y19 / Y21. The facing rows exist once per HOST, because `flip_h` lives on four unrelated classes
+	# and the picker must offer the row only where the node can do it. That is a picker fact, not a
+	# reading one: `flip_h = true` is one line whichever class wrote it, so exactly ONE row speaks for
+	# it in the reverse index and the rest of the host table authors only. The kept ones are the
+	# shipped SetFlipH / SetFlipV and, for the scale spellings, the Node2D / Node3D rows.
+	"SetMirroredSprite2D", "SetMirroredSprite3D", "SetMirroredTextureRect",
+	"SetFlippedSprite3D", "SetFlippedTextureRect", "SetFlippedAnimatedSprite2D",
+	"IsMirroredAnimatedSprite2D", "IsMirroredSprite3D", "IsMirroredTextureRect",
+	"IsFlippedAnimatedSprite2D", "IsFlippedSprite3D", "IsFlippedTextureRect",
+	"IsMirroredSpatial", "IsMirroredControl", "SetMirroredLabel3D"
 ]
 
 

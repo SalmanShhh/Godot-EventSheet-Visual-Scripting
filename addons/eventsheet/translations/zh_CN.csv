@@ -4056,3 +4056,77 @@ prompt taken off {label},提示已从 {label} 移除
 Close input window,关闭输入窗口
 "Every colour set this palette asset carries, side by side.",该调色板资源包含的所有配色，并排显示。
 Palette assets,调色板资源
+"Which way something faces. Mirror or flip a sprite, a whole object with its hitbox and its ray, a 3D model, a UI panel, the camera's view, one tile, or a path - each host in its own honest terms.",某个东西朝向哪边。镜像或翻转一个精灵、连同碰撞区与射线的整个对象、一个 3D 模型、一个界面面板、相机画面、一格瓦片或一条路径 - 每种宿主都用它自己诚实的说法。
+Set Mirrored,设为镜像
+Set Flipped,设为上下翻转
+Is Mirrored,已镜像
+Is Flipped,已上下翻转
+Set Mirrored (whole object),设为镜像 (整个对象)
+Turn Around,转身
+Face Direction Of Movement,面向移动方向
+Face Object,面向对象
+Keep Upright,保持正向
+Mirror The View,镜像画面
+Set Tile Flipped,设置瓦片镜像
+Mirror Path,镜像路径
+Set mirrored {mirrored},设置镜像为 {mirrored}
+Set flipped {flipped},设置上下翻转为 {flipped}
+Is mirrored,已镜像
+Is flipped,已上下翻转
+Set mirrored {mirrored} (whole object),设置镜像为 {mirrored} (整个对象)
+Turn around,转身
+Face direction of movement,面向移动方向
+Face {object},面向 {object}
+Keep {target} upright,保持 {target} 正向
+Mirror the view {mirrored},镜像画面 {mirrored}
+Set tile at {coords} flipped {mirrored},将 {coords} 处的瓦片镜像设为 {mirrored}
+Mirror path,镜像路径
+Mirrored,镜像
+Flipped,上下翻转
+On node,作用于节点
+"Mirror it horizontally (facing left), or put it back the way it was.",将它水平镜像 (朝左) 或还原为原来的方向。
+"Turn it upside down, or put it back the right way up.",把它上下颠倒，或还原为正立。
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_tree().get_first_node_in_group(""player"").","作用于另一个节点而不是当前节点。留空表示当前节点，可以选择一个节点，也可以不用树路径来指定 - 例如 get_tree().get_first_node_in_group(""player"")。"
+The value holding how fast this object is moving.,保存这个对象移动速度的值。
+The object to turn toward.,要转向的对象。
+"The child that must stay readable - a name plate, a health bar, a damage number.",必须保持可读的子节点 - 名牌、血条、伤害数字。
+Cell coordinates (Vector2i).,格子坐标 (Vector2i)。
+Mirrors this node's picture left-to-right - the way a 2D character faces.,把这个节点的图像左右镜像 - 2D 角色就是这样朝向一边的。
+"Turns this node's picture upside down, or puts it back the right way up.",把这个节点的图像上下颠倒，或还原为正立。
+True while this node's picture is mirrored - which way the character is facing.,当这个节点的图像处于镜像状态时为真 - 也就是角色的朝向。
+True while this node's picture is upside down.,当这个节点的图像上下颠倒时为真。
+"Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.",把这个对象连同它下面的一切一起镜像 - 图像、碰撞区、枪口点和射线都朝同一个方向。
+"True while this object is mirrored, read off its own X scale.",当这个对象处于镜像状态时为真，取自它自己的 X 缩放。
+"Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead.",沿 X 轴镜像一个 3D 对象。需要知道：负缩放会翻转网格的面朝向，于是光照和背面剔除会把它看成里外颠倒 - 通常你想要的其实是「转身」。
+"Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind.",沿 X 轴镜像一个 3D 标签 - 会变成反着读，而当它是贴花或从背面看到的招牌时，这正是你要的。
+True while this 3D object is mirrored along X.,当这个 3D 对象沿 X 轴处于镜像状态时为真。
+Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.,把一个 3D 对象转向另一边 - 绕它的上方向轴转半圈。这是 3D 对镜像的诚实答案：之后没有任何东西是里外颠倒的。
+"Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.",面向这个对象正在移动的方向，停下来时也保持这个朝向 - 每个平台游戏都手写的那一行。
+"Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in.",让这个对象转向另一个对象 - 看向玩家的敌人，看向进门者的店主。
+Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards.,把子节点的 X 缩放再取一次反，让它不要跟着这个对象一起镜像 - 名牌因此保持可读，而不会写成反的。
+"Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways.",就地镜像一个界面元素。先把轴心移到它的中间，这是所有人都会忘掉的那一半 - 没有它，面板会一边镜像一边往旁边跳。
+True while this UI element is mirrored.,当这个界面元素处于镜像状态时为真。
+"Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards.",镜像这台相机看到的一切 - 镜像世界、倒影、反着玩的关卡。
+"Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water.",镜像子视口所显示的内容 - 后视镜、监控画面、水中的倒影。
+"Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor.",镜像已经放在某格上的瓦片，保留它的图块集和图块 - 一张墙面素材就能覆盖走廊的两边。
+"Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way.",把这条路径的每个点沿 x = 0 镜像 - 对称关卡的后半段，或反向复用的巡逻路线。
+Set mirrored to {value},按 {value} 设置镜像
+Set flipped to {value},按 {value} 设置上下翻转
+Is not mirrored,未镜像
+Is not flipped,未上下翻转
+Ray follows facing,射线跟随朝向
+Spawn point follows facing,生成点跟随朝向
+Particles follow facing,粒子跟随朝向
+Keeps its text upright,保持文字正向
+Faces the way it moves,面向移动方向
+(flips the mesh's winding),(会翻转网格的面朝向)
+(UI),(界面)
+(whole object),(整个对象)
+moving left,正在向左移动
+moving right,正在向右移动
+{name} is to the left,{name} 在左边
+{name} is to the right,{name} 在右边
+"an object is mirrored to face the way it moves, and its ray, its spawn points and its particles turn with it",对象被镜像以面向它移动的方向，它的射线、生成点和粒子也一起转过来
+Mirror the view,镜像画面
+Set tile at {coords} flipped,镜像 {coords} 处的瓦片
+Set tile at {coords} flipped to {value},按 {value} 镜像 {coords} 处的瓦片

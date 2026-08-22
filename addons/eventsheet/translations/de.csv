@@ -4056,3 +4056,77 @@ prompt taken off {label},Hinweis von {label} entfernt
 Close input window,Eingabefenster schließen
 "Every colour set this palette asset carries, side by side.","Alle Farbsätze dieses Palettenassets, nebeneinander."
 Palette assets,Palettenassets
+"Which way something faces. Mirror or flip a sprite, a whole object with its hitbox and its ray, a 3D model, a UI panel, the camera's view, one tile, or a path - each host in its own honest terms.","Wohin etwas schaut. Spiegle oder kippe ein Sprite, ein ganzes Objekt samt Trefferfläche und Strahl, ein 3D-Modell, ein UI-Panel, die Kamerasicht, eine Kachel oder einen Pfad - jeder Knoten in seinen eigenen ehrlichen Worten."
+Set Mirrored,Gespiegelt setzen
+Set Flipped,Umgedreht setzen
+Is Mirrored,Ist gespiegelt
+Is Flipped,Ist umgedreht
+Set Mirrored (whole object),Gespiegelt setzen (ganzes Objekt)
+Turn Around,Umdrehen
+Face Direction Of Movement,In Bewegungsrichtung schauen
+Face Object,Objekt anschauen
+Keep Upright,Aufrecht halten
+Mirror The View,Sicht spiegeln
+Set Tile Flipped,Kachel gespiegelt setzen
+Mirror Path,Pfad spiegeln
+Set mirrored {mirrored},Gespiegelt auf {mirrored} setzen
+Set flipped {flipped},Umgedreht auf {flipped} setzen
+Is mirrored,Ist gespiegelt
+Is flipped,Ist umgedreht
+Set mirrored {mirrored} (whole object),Gespiegelt auf {mirrored} setzen (ganzes Objekt)
+Turn around,Umdrehen
+Face direction of movement,In Bewegungsrichtung schauen
+Face {object},{object} anschauen
+Keep {target} upright,{target} aufrecht halten
+Mirror the view {mirrored},Sicht spiegeln {mirrored}
+Set tile at {coords} flipped {mirrored},Kachel bei {coords} gespiegelt auf {mirrored} setzen
+Mirror path,Pfad spiegeln
+Mirrored,Gespiegelt
+Flipped,Umgedreht
+On node,Auf Knoten
+"Mirror it horizontally (facing left), or put it back the way it was.",Spiegelt es waagerecht (schaut nach links) oder stellt es zurück.
+"Turn it upside down, or put it back the right way up.",Dreht es auf den Kopf oder stellt es wieder richtig herum.
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_tree().get_first_node_in_group(""player"").","Wirkt auf einen anderen Knoten statt auf diesen. Leer lassen für diesen Knoten, einen Knoten wählen oder einen ohne Baumpfad ansprechen - z. B. get_tree().get_first_node_in_group(""player"")."
+The value holding how fast this object is moving.,"Der Wert, der enthält, wie schnell sich dieses Objekt bewegt."
+The object to turn toward.,"Das Objekt, zu dem es sich drehen soll."
+"The child that must stay readable - a name plate, a health bar, a damage number.","Das Kind, das lesbar bleiben muss - ein Namensschild, ein Lebensbalken, eine Schadenszahl."
+Cell coordinates (Vector2i).,Zellenkoordinaten (Vector2i).
+Mirrors this node's picture left-to-right - the way a 2D character faces.,Spiegelt das Bild dieses Knotens von links nach rechts - so schaut eine 2D-Figur in eine Richtung.
+"Turns this node's picture upside down, or puts it back the right way up.",Dreht das Bild dieses Knotens auf den Kopf oder stellt es wieder richtig herum.
+True while this node's picture is mirrored - which way the character is facing.,"Wahr, solange das Bild dieses Knotens gespiegelt ist - wohin die Figur schaut."
+True while this node's picture is upside down.,"Wahr, solange das Bild dieses Knotens auf dem Kopf steht."
+"Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.","Spiegelt dieses Objekt UND alles darunter - Bild, Trefferfläche, Mündungspunkt und Strahl schauen alle in dieselbe Richtung."
+"True while this object is mirrored, read off its own X scale.","Wahr, solange dieses Objekt gespiegelt ist - abgelesen an seiner eigenen X-Skalierung."
+"Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead.","Spiegelt ein 3D-Objekt entlang X. Wichtig zu wissen: Eine negative Skalierung kehrt die Umlaufrichtung des Meshes um, sodass Beleuchtung und Rückseiten-Culling es von innen sehen - meist willst du stattdessen Umdrehen."
+"Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind.","Spiegelt eine 3D-Beschriftung entlang X - rückwärts lesbar, was genau der Zweck ist, wenn es ein Aufkleber oder ein von hinten gesehenes Schild ist."
+True while this 3D object is mirrored along X.,"Wahr, solange dieses 3D-Objekt entlang X gespiegelt ist."
+Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.,Dreht ein 3D-Objekt in die andere Richtung - eine halbe Drehung um seine Hochachse. Die ehrliche 3D-Antwort auf Spiegeln: danach ist nichts nach innen gekehrt.
+"Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.","Schaut in die Richtung, in die sich dieses Objekt bewegt, und lässt es beim Anhalten so stehen - die eine Zeile, die jedes Jump-and-run von Hand schreibt."
+"Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in.","Dreht dieses Objekt zu einem anderen - ein Gegner, der zum Spieler schaut, ein Händler, der zu dem schaut, der hereinkommt."
+Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards.,"Kehrt die X-Skalierung eines Kindes erneut um, damit es NICHT mitgespiegelt wird - so bleibt ein Namensschild lesbar, statt rückwärts geschrieben zu werden."
+"Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways.","Spiegelt ein UI-Element an Ort und Stelle. Der Drehpunkt wird zuerst in die Mitte gesetzt - die Hälfte, die alle vergessen: ohne sie spiegelt sich das Panel UND springt zur Seite."
+True while this UI element is mirrored.,"Wahr, solange dieses UI-Element gespiegelt ist."
+"Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards.","Spiegelt alles, was diese Kamera sieht - eine Spiegelwelt, eine Reflexion, ein rückwärts gespielter Level."
+"Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water.","Spiegelt, was ein Unter-Viewport zeigt - der Rückspiegel, der Überwachungsmonitor, die Spiegelung im Wasser."
+"Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor.","Spiegelt die Kachel, die bereits in einer Zelle liegt, und behält ihr Tileset und ihre Kachel - so deckt eine einzige Wandgrafik beide Seiten eines Gangs ab."
+"Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way.","Spiegelt jeden Punkt dieses Pfades an x = 0 - die zweite Hälfte eines symmetrischen Levels oder eine Patrouillenroute, andersherum wiederverwendet."
+Set mirrored to {value},Gespiegelt setzen auf {value}
+Set flipped to {value},Umgedreht setzen auf {value}
+Is not mirrored,Ist nicht gespiegelt
+Is not flipped,Ist nicht umgedreht
+Ray follows facing,Strahl folgt der Blickrichtung
+Spawn point follows facing,Erzeugungspunkt folgt der Blickrichtung
+Particles follow facing,Partikel folgen der Blickrichtung
+Keeps its text upright,Hält seinen Text aufrecht
+Faces the way it moves,Schaut in Bewegungsrichtung
+(flips the mesh's winding),(kehrt die Umlaufrichtung des Meshes um)
+(UI),(UI)
+(whole object),(ganzes Objekt)
+moving left,nach links unterwegs
+moving right,nach rechts unterwegs
+{name} is to the left,{name} ist links
+{name} is to the right,{name} ist rechts
+"an object is mirrored to face the way it moves, and its ray, its spawn points and its particles turn with it","ein Objekt wird gespiegelt, um in Bewegungsrichtung zu schauen, und sein Strahl, seine Erzeugungspunkte und seine Partikel drehen sich mit"
+Mirror the view,Sicht spiegeln
+Set tile at {coords} flipped,Kachel bei {coords} spiegeln
+Set tile at {coords} flipped to {value},"Kachel bei {coords} spiegeln, wenn {value}"

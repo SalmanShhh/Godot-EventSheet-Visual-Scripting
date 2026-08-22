@@ -310,6 +310,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_percent_sign` | [Percent Sign](ace:Core/PercentSign) | Translation | Vocabulary |
 | `get_physics_interpolation_fraction` | [Physics Interpolation Fraction](ace:Core/PhysicsInterpolationFraction) | Physics Server | Vocabulary |
 | `get_playback_position` | [Playback Position](ace:Core/AudioGetPosition) | Audio | Vocabulary |
+| `get_point_position` | [Mirror Path](ace:Core/MirrorPath) | Facing | Vocabulary |
 | `get_primary_interface` | [Language Reads Right To Left](ace:Core/LanguageIsRightToLeft) | Translation | Vocabulary |
 | `get_process_delta_time` | [Frame Took Longer Than](ace:Core/FrameOverBudget) | Debug | Vocabulary |
 | `get_process_frames` | [Frame Count](ace:Core/GetFrameCount) | Time | Vocabulary |
@@ -558,12 +559,14 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `pick_random` | [Pick Random](ace:Core/ArrayPickRandom) | Variables: Array | Vocabulary |
 | `pingpong` | [Ping-Pong](ace:Core/PingPong) | Math & Random | Vocabulary |
 | `pitch_scale` | [Set Pitch](ace:Core/AudioSetPitch) | Audio | Vocabulary |
+| `pivot_offset` | [Set Mirrored](ace:Core/SetMirroredControl) | Facing | Vocabulary |
 | `pixel_size` | [Set World Size](ace:Core/SetWorldSize) | World-space UI | Vocabulary |
 | `placeholder_text` | [Set Placeholder](ace:Core/SetTextInputPlaceholder) | UI | Vocabulary |
 | `play` | [Play](ace:Core/AudioPlay) | Audio | Vocabulary |
 | `play_current_scene` | [Play Current Scene](ace:Core/PlayCurrentScene) | Editor Tools | Vocabulary |
 | `playback_speed_scale` | [Set Audio Playback Speed](ace:Core/AudioSetPlaybackSpeed) | Audio Server | Vocabulary |
 | `playing` | [Is Playing](ace:Core/AudioIsPlaying) | Audio | Vocabulary |
+| `point_count` | [Mirror Path](ace:Core/MirrorPath) | Facing | Vocabulary |
 | `pop_back` | [Pop Back](ace:Core/ArrayPopBack) | Variables: Array | Vocabulary |
 | `pop_front` | [Pop Front](ace:Core/ArrayPopFront) | Variables: Array | Vocabulary |
 | `popup_centered` | [Show Dialog](ace:Core/ShowDialogCentred) | UI | Vocabulary |
@@ -639,7 +642,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `rotate` | [Rotate (3D)](ace:Core/RotateNode3D) | General Actions | Vocabulary |
 | `rotate_toward` | [Rotate Toward (angle)](ace:Core/RotateTowardAngle) | Math & Random | Vocabulary |
 | `rotate_x` | [Rotate Up Or Down](ace:Core/RotatePitch3D) | 3D: Move & Turn | Vocabulary |
-| `rotate_y` | [Rotate Clockwise](ace:Core/RotateClockwise3D) | 3D: Move & Turn | Vocabulary |
+| `rotate_y` | [Turn Around](ace:Core/TurnAround) | Facing | Vocabulary |
 | `rotate_z` | [Roll](ace:Core/Roll3D) | 3D: Move & Turn | Vocabulary |
 | `rotated` | [Rotated](ace:Core/VectorRotated) | Variables: Vector | Vocabulary |
 | `rotates` | [Set Rotate With Path](ace:Core/SetPathRotates) | Follow a Path | Vocabulary |
@@ -694,6 +697,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_meta` | [Clear Measurements](ace:Core/ClearMeasurements) | Debug | Vocabulary |
 | `set_mouse_mode` | [Request Pointer Lock](ace:Core/MouseRequestPointerLock) | Mouse | Vocabulary |
 | `set_physics_process` | [Set Node Physics Processing](ace:Core/NodeSetPhysicsProcessing) | Nodes: Activation | Vocabulary |
+| `set_point_position` | [Mirror Path](ace:Core/MirrorPath) | Facing | Vocabulary |
 | `set_pressed_no_signal` | [Set Button Pressed](ace:Core/SetButtonPressedState) | UI | Vocabulary |
 | `set_process` | [Set Node Per-Frame Processing](ace:Core/NodeSetProcessing) | Nodes: Activation | Vocabulary |
 | `set_process_input` | [Set Node Input Handling](ace:Core/NodeSetInputProcessing) | Nodes: Activation | Vocabulary |
@@ -711,6 +715,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `show` | [Show](ace:Core/ShowNode) | General Actions | Vocabulary |
 | `shuffle` | [Shuffle Array](ace:Core/ArrayShuffle) | Variables: Array | Vocabulary |
 | `sign` | [Sign](ace:Core/SignValue) | Helpers | Vocabulary |
+| `signf` | [Keep Upright](ace:Core/KeepUpright) | Facing | Vocabulary |
 | `signi` | [Compare Result](ace:Core/CompareResult) | Compare: Numbers | Vocabulary |
 | `sin` | [Sine](ace:Core/SinValue) | Helpers | Vocabulary |
 | `size` | [Switch To Next Weapon](ace:Core/SwitchToNextWeapon) | Weapons 3D | Vocabulary |
@@ -818,7 +823,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `window_set_vsync_mode` | [Set VSync Enabled](ace:Core/WindowSetVSync) | Game Window | Vocabulary |
 | `wrapf` | [Is Between Angles](ace:Core/IsBetweenAngles) | Math & Random | Vocabulary |
 | `wrapi` | [Wrap (int)](ace:Core/WrapIntValue) | Helpers | Vocabulary |
-| `x` | [Is Cell In Bounds](ace:Core/IsCellInBounds) | Math & Random | Vocabulary |
+| `x` | [Face Direction Of Movement](ace:Core/FaceDirectionOfMovement) | Facing | Vocabulary |
 | `y` | [Is Jumping](ace:Core/IsJumping) | Collisions | Vocabulary |
 | `year` | [Date: Year](ace:Core/DateYear) | Time | Vocabulary |
 | `z` | [Is Behind](ace:Core/IsBehindObject3D) | 3D: See | Vocabulary |

@@ -145,8 +145,11 @@ static func _check_refusals() -> bool:
 	passed = _pin("a lerp somewhere other than normal size is not the ease",
 		_reading("scale = scale.lerp(Vector2(2, 2), 10 * delta)"),
 		"System ▸ Set scale to scale.lerp((2, 2), 10 * dt)") and passed
-	passed = _pin("a mirror set from another flag stays a plain write",
-		_reading("sprite.flip_h = muted"), "sprite ▸ Set flip_h to muted") and passed
+	# Y19 re-pin. This was a refusal - a mirror set from a FLAG stayed the plain member write it was
+	# spelled as. It is the verb now, said with what decides it: the same row on every host that can
+	# mirror is the whole point of the Facing page, and `flip_h` was never a word a reader knew.
+	passed = _pin("a mirror set from another flag says the flag",
+		_reading("sprite.flip_h = muted"), "sprite ▸ Set mirrored to muted") and passed
 	passed = _pin("a pitch on something that makes no sound is a plain write",
 		_reading("thing.pitch_scale = 2.0"), "thing ▸ Set pitch_scale to 2") and passed
 	return passed

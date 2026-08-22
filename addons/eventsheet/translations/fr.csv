@@ -4056,3 +4056,77 @@ prompt taken off {label},indication retirée de {label}
 Close input window,Fermer la fenêtre de saisie
 "Every colour set this palette asset carries, side by side.","Tous les jeux de couleurs de cette ressource de palette, côte à côte."
 Palette assets,Ressources de palette
+"Which way something faces. Mirror or flip a sprite, a whole object with its hitbox and its ray, a 3D model, a UI panel, the camera's view, one tile, or a path - each host in its own honest terms.","Le sens dans lequel une chose regarde. Mets en miroir ou retourne un sprite, un objet entier avec sa zone de collision et son rayon, un modèle 3D, un panneau d'interface, la vue de la caméra, une tuile ou un chemin - chaque nœud dans ses propres termes honnêtes."
+Set Mirrored,Définir en miroir
+Set Flipped,Définir retourné
+Is Mirrored,Est en miroir
+Is Flipped,Est retourné
+Set Mirrored (whole object),Définir en miroir (objet entier)
+Turn Around,Faire demi-tour
+Face Direction Of Movement,Regarder vers son déplacement
+Face Object,Regarder l'objet
+Keep Upright,Garder à l'endroit
+Mirror The View,Mettre la vue en miroir
+Set Tile Flipped,Définir la tuile en miroir
+Mirror Path,Mettre le chemin en miroir
+Set mirrored {mirrored},Mettre en miroir {mirrored}
+Set flipped {flipped},Retourner {flipped}
+Is mirrored,Est en miroir
+Is flipped,Est retourné
+Set mirrored {mirrored} (whole object),Mettre en miroir {mirrored} (objet entier)
+Turn around,Faire demi-tour
+Face direction of movement,Regarder vers son déplacement
+Face {object},Regarder {object}
+Keep {target} upright,Garder {target} à l'endroit
+Mirror the view {mirrored},Mettre la vue en miroir {mirrored}
+Set tile at {coords} flipped {mirrored},Mettre la tuile en {coords} en miroir {mirrored}
+Mirror path,Mettre le chemin en miroir
+Mirrored,En miroir
+Flipped,Retourné
+On node,Sur le nœud
+"Mirror it horizontally (facing left), or put it back the way it was.",Le met en miroir horizontalement (regard vers la gauche) ou le remet comme avant.
+"Turn it upside down, or put it back the right way up.",Le retourne à l'envers ou le remet à l'endroit.
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_tree().get_first_node_in_group(""player"").","Agit sur un autre nœud plutôt que sur celui-ci. Laisse vide pour ce nœud, choisis un nœud, ou vise-en un sans chemin d'arbre - par exemple get_tree().get_first_node_in_group(""player"")."
+The value holding how fast this object is moving.,La valeur qui contient la vitesse de déplacement de cet objet.
+The object to turn toward.,L'objet vers lequel se tourner.
+"The child that must stay readable - a name plate, a health bar, a damage number.","L'enfant qui doit rester lisible - une plaque de nom, une barre de vie, un chiffre de dégâts."
+Cell coordinates (Vector2i).,Coordonnées de la cellule (Vector2i).
+Mirrors this node's picture left-to-right - the way a 2D character faces.,Met l'image de ce nœud en miroir de gauche à droite - c'est ainsi qu'un personnage 2D regarde d'un côté.
+"Turns this node's picture upside down, or puts it back the right way up.","Retourne l'image de ce nœud à l'envers, ou la remet à l'endroit."
+True while this node's picture is mirrored - which way the character is facing.,Vrai tant que l'image de ce nœud est en miroir - le côté vers lequel le personnage regarde.
+True while this node's picture is upside down.,Vrai tant que l'image de ce nœud est à l'envers.
+"Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.","Met en miroir cet objet ET tout ce qu'il contient - l'image, la zone de collision, le point de tir et le rayon regardent tous du même côté."
+"True while this object is mirrored, read off its own X scale.","Vrai tant que cet objet est en miroir, lu sur sa propre échelle X."
+"Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead.","Met un objet 3D en miroir selon X. À savoir : une échelle négative inverse le sens des faces du maillage, donc l'éclairage et l'élimination des faces arrière le voient à l'envers - en général tu veux plutôt Faire demi-tour."
+"Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind.","Met une étiquette 3D en miroir selon X - lisible à l'envers, ce qui est le but quand c'est un décalque ou un panneau vu de dos."
+True while this 3D object is mirrored along X.,Vrai tant que cet objet 3D est en miroir selon X.
+Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.,Fait pivoter un objet 3D vers l'autre côté - un demi-tour autour de son axe vertical. La réponse honnête de la 3D au miroir : rien n'est retourné ensuite.
+"Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.","Regarde dans la direction où cet objet se déplace, et le laisse ainsi quand il s'arrête - la ligne que tout jeu de plateforme écrit à la main."
+"Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in.","Tourne cet objet vers un autre - un ennemi qui regarde le joueur, un marchand qui regarde celui qui entre."
+Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards.,Inverse à nouveau l'échelle X d'un enfant pour qu'il ne suive PAS le miroir de cet objet - c'est ce qui garde une plaque de nom lisible au lieu de l'écrire à l'envers.
+"Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways.","Met un élément d'interface en miroir sur place. Le pivot est d'abord déplacé au centre, c'est la moitié que tout le monde oublie - sans elle le panneau se met en miroir ET saute sur le côté."
+True while this UI element is mirrored.,Vrai tant que cet élément d'interface est en miroir.
+"Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards.","Met en miroir tout ce que voit cette caméra - un monde miroir, un reflet, un niveau joué à l'envers."
+"Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water.","Met en miroir ce qu'affiche un sous-viewport - le rétroviseur, l'écran de surveillance, le reflet dans l'eau."
+"Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor.","Met en miroir la tuile déjà posée sur une cellule, en gardant son tileset et sa tuile - c'est ainsi qu'une seule image de mur couvre les deux côtés d'un couloir."
+"Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way.","Met chaque point de ce chemin en miroir autour de x = 0 - la seconde moitié d'un niveau symétrique, ou une ronde réutilisée dans l'autre sens."
+Set mirrored to {value},Mettre en miroir selon {value}
+Set flipped to {value},Retourner selon {value}
+Is not mirrored,N'est pas en miroir
+Is not flipped,N'est pas retourné
+Ray follows facing,Le rayon suit l'orientation
+Spawn point follows facing,Le point d'apparition suit l'orientation
+Particles follow facing,Les particules suivent l'orientation
+Keeps its text upright,Garde son texte à l'endroit
+Faces the way it moves,Regarde vers son déplacement
+(flips the mesh's winding),(inverse le sens des faces du maillage)
+(UI),(interface)
+(whole object),(objet entier)
+moving left,se déplace vers la gauche
+moving right,se déplace vers la droite
+{name} is to the left,{name} est à gauche
+{name} is to the right,{name} est à droite
+"an object is mirrored to face the way it moves, and its ray, its spawn points and its particles turn with it","un objet est mis en miroir pour regarder vers son déplacement, et son rayon, ses points d'apparition et ses particules tournent avec lui"
+Mirror the view,Mettre la vue en miroir
+Set tile at {coords} flipped,Mettre la tuile en {coords} en miroir
+Set tile at {coords} flipped to {value},Mettre la tuile en {coords} en miroir selon {value}

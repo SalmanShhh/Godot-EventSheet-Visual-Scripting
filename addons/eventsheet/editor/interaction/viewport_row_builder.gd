@@ -12391,6 +12391,16 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"ace_ids": ["Core/SetFlipH", "Core/SetFlipV", "Core/SetSpriteFrame", "Core/SetAnimationSpeed",
 			"Core/SetSpriteTexture", "Core/SetTreeParam", "Core/TravelToState", "Core/AnimationIsPlaying"]
 	},
+	# Y19 - Y21. Which way a thing faces. Separate from the sprite family because it is NOT a sprite
+	# fact: the same two words cover a body that mirrors its own children, a 3D model, a UI panel, the
+	# camera's view, a tile and a path, and every one of them is a different line in the file.
+	"facing": {
+		"words": "Facing",
+		"ace_ids": ["Core/SetMirroredObject", "Core/SetMirroredSpatial", "Core/TurnAround",
+			"Core/FaceDirectionOfMovement", "Core/FaceObject", "Core/KeepUpright",
+			"Core/IsMirroredObject", "Core/SetMirroredControl", "Core/MirrorTheView",
+			"Core/SetTileFlipped", "Core/MirrorPath"]
+	},
 	"ui": {
 		"words": "UI",
 		"ace_ids": ["Core/GrabFocus", "Core/SetProgress", "Core/ShowDialogCentred", "Core/SetMasterVolume"]
@@ -13505,6 +13515,32 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"SetFlipH":
 			return EventSheetSentence.statement("%s.flip_h = %s" % [
 				_ace_target(params_dict), str(params_dict.get("flipped", ""))], context)
+		# ── Y19 lens hook ────────────────────────────────────────────────────────────────────
+		# The facing rows. Set Flipped joins them here: it shipped without an arm, so the picked
+		# row and the typed `flip_v = true` said the same thing by luck rather than by contract.
+		# The host twins all hand over the same line their own host writes, so "Set mirrored" is
+		# one sentence whether the reader picked it on a sprite, an image or a 3D billboard.
+		"SetFlipV":
+			return EventSheetSentence.statement("%s.flip_v = %s" % [
+				_ace_target(params_dict), str(params_dict.get("flipped", ""))], context)
+		"SetMirroredSprite2D", "SetMirroredSprite3D", "SetMirroredTextureRect":
+			return EventSheetSentence.statement("%s.flip_h = %s" % [
+				_ace_target(params_dict), str(params_dict.get("mirrored", ""))], context)
+		"SetFlippedSprite3D", "SetFlippedTextureRect", "SetFlippedAnimatedSprite2D":
+			return EventSheetSentence.statement("%s.flip_v = %s" % [
+				_ace_target(params_dict), str(params_dict.get("flipped", ""))], context)
+		"SetMirroredObject":
+			return EventSheetSentence.statement("%s.scale.x = -1.0 if %s else 1.0" % [
+				_ace_target(params_dict), str(params_dict.get("mirrored", ""))], context)
+		"FaceObject":
+			return EventSheetSentence.statement(
+				"%s.scale.x = -1.0 if %s.global_position.x < global_position.x else 1.0" % [
+				_ace_target(params_dict), str(params_dict.get("object", ""))], context)
+		"KeepUpright":
+			return EventSheetSentence.statement("%s.scale.x = signf(scale.x)" % [
+				str(params_dict.get("target", "self"))], context)
+		"TurnAround":
+			return EventSheetSentence.statement("%s.rotate_y(PI)" % _ace_target(params_dict), context)
 		"SetRotationDeg":
 			return EventSheetSentence.statement("%s.rotation_degrees = %s" % [
 				_ace_target(params_dict), str(params_dict.get("degrees", ""))], context)

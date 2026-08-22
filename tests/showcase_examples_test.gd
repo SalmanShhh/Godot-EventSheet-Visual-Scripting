@@ -180,6 +180,47 @@ static func run() -> bool:
 	passed = _check_scene("hierarchy_playground scene wires the horse, the rider, the squad and the crates",
 		"res://demo/showcase/hierarchy_playground/hierarchy_playground.tscn",
 		["Horse", "Saddle", "Rider", "Head", "HealthBar", "Hat", "Squad", "Soldier1", "Crates", "Crate1", "CameraPivot", "Readout"]) and passed
+
+	# ── Y19 / Y20 / Y21 - Mirror and Flip ───────────────────────────────────────────────────────
+	#
+	# The RUNTIME behaviour was verified by a temp SceneTree harness (this suite has no main loop, so
+	# nothing here can step a frame). The recipe, and the numbers it produced, so anyone can repeat it:
+	#   a harness adds hero.tscn under `root`, connects `process_frame`, sets the pacing clock `t` and
+	#   reads after two frames - `t = 1.0` (moving right) then `t = 3.0` (moving left):
+	#     hero.scale.x                                    ->  1.0  then -1.0
+	#     sign(Sword tip global x - Sword global x)       ->  1.0  then -1.0   (the ray turns)
+	#     sign(Muzzle global x - Hero global x)           ->  1.0  then -1.0   (the spawn point turns)
+	#     Plate.get_global_transform().x.x                ->  1.0  then  1.0   (the name plate does NOT)
+	#   then mirror_and_flip.tscn for eight frames:
+	#     $Panel.scale.x -> -1.0 with pivot_offset.x -> 150.0 (half its 300-wide box: mirrored IN PLACE)
+	#     $Mirror.scale.x -> -1.0
+	#     $Tiles.is_cell_flipped_h(Vector2i(2, 0)) -> true, and (1, 0) -> false (one tile, not the row)
+	#     $Mirror/View/Twin yaw -> 0 degrees, then 180 after one Turn Around
+	# That fourth number is the whole of Y20: the ray and the muzzle turn because they are children of
+	# the object that mirrored, and the plate does not because Keep Upright re-negates it.
+	passed = _check_sheet("mirror_hero", "res://demo/showcase/mirror_and_flip/hero.gd", [
+		"class_name MirrorHero",
+		"var velocity: Vector2 = Vector2(0.0, 0.0)",
+		"if velocity.x != 0.0:",
+		"scale.x = -1.0 if velocity.x < 0.0 else 1.0",
+		"$Plate.scale.x = signf(scale.x)",
+	]) and passed
+	passed = _check_sheet("mirror_and_flip", "res://demo/showcase/mirror_and_flip/mirror_and_flip.gd", [
+		"class_name MirrorAndFlip",
+		"$Panel.pivot_offset.x = $Panel.size.x * 0.5",
+		"$Panel.scale.x = -1.0 if mirror_ui else 1.0",
+		"$Mirror.scale.x = -1.0 if mirror_view else 1.0",
+		"$Tiles.set_cell(Vector2i(2, 0), $Tiles.get_cell_source_id(Vector2i(2, 0)), $Tiles.get_cell_atlas_coords(Vector2i(2, 0)), TileSetAtlasSource.TRANSFORM_FLIP_H if flip_tile else 0)",
+		"$Mirror/View/Twin.rotate_y(PI)",
+	]) and passed
+	passed = _check("mirror_and_flip bakes every per-row uid",
+		FileAccess.get_file_as_string("res://demo/showcase/mirror_and_flip/mirror_and_flip.gd").contains("{uid}"), false) and passed
+	passed = _check_scene("the hero drags its ray, its muzzle, its dust and its name plate along",
+		"res://demo/showcase/mirror_and_flip/hero.tscn",
+		["Picture", "Face", "Sword", "Blade", "Muzzle", "MuzzleDot", "Dust", "Plate"]) and passed
+	passed = _check_scene("the room holds a panel, a tile row, a mirrored view and a 3D twin",
+		"res://demo/showcase/mirror_and_flip/mirror_and_flip.tscn",
+		["Hero", "Tiles", "Panel", "PanelText", "Mirror", "View", "Twin", "TwinMesh", "Nose", "Eye", "Sun"]) and passed
 	# The rider survives being mounted only because it is addressed by its scene-unique name: the
 	# moment it moves under the saddle, a $Rider path points at nothing.
 	passed = _check("the rider, head, bar and hat keep their scene-unique names in the packed scene",

@@ -1,7 +1,7 @@
 # Built-in Module Guides
 
-Deep-dive guides for the **built-in vocabulary** - the 1,520 actions, conditions and expressions
-(and 48 triggers) that are already in the picker on a fresh install, before you enable a single
+Deep-dive guides for the **built-in vocabulary** - the 1,556 actions, conditions and expressions
+(and 50 triggers) that are already in the picker on a fresh install, before you enable a single
 behavior pack. They are authored as the vocabulary modules in `addons/eventforge/registration/modules/`, one
 file per subject, and this index groups their guides by what you are trying to do rather than by
 which file they came from.
@@ -26,6 +26,7 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 - [Making Things Move In 2D](Making-Things-Move-In-2D.md) - move a 2D node by hand, by velocity, by impulse, or by a ready-made motion, and read back where things are and how fast they are going.
 - [Working In 3D](Working-In-3D.md) - Node3D transforms, CharacterBody3D and RigidBody3D, cameras and field of view, and building meshes at runtime.
 - [Animation And Sprites](Animation-And-Sprites.md) - play, stop, scrub and queue AnimationPlayer clips, flip a sprite, and drive an AnimationTree state machine.
+- [Mirroring And Flipping](Mirroring-And-Flipping.md) - which way something faces: mirror a sprite, a whole object with its hitbox and its ray, a 3D model, a UI panel, the camera's view, one tile or a path.
 - [Game Feel](Game-Feel.md) - the five snippets every game copies as rows: shake, hitstop, bob, flash, and the squash that eases back.
 - [Game Mechanics](Game-Mechanics.md) - four shapes every game writes by hand: pity rolls, meters that fill and drain, boss phases, and a mission clock with a deadline.
 - [Timers, Waiting And Cooldowns](Timers-Waiting-And-Cooldowns.md) - Wait, Every X Seconds, cooldowns, buffered presses, tweens, and the engine's own clocks.

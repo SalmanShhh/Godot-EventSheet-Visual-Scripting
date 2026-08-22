@@ -1652,6 +1652,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"dev": "Debugging-And-Printing",
 	"device": "Reading-Keyboard-Mouse-And-Gamepad",
 	"drawing": "Particles-And-Drawing-On-Screen",
+	"facing": "Mirroring-And-Flipping",
 	"file": "Working-With-Files",
 	"gradient_curve": "Colors-Gradients-And-Curves",
 	"helper": "Calling-Your-Own-Code-From-Rows",

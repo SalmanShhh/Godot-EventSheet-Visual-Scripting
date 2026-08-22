@@ -94,6 +94,7 @@ static func run() -> Dictionary:
 	check_task_notes(findings)
 	check_menu_ids(findings)
 	check_plugin_reading_health(findings)
+	check_facing_follows(sheet_paths, findings)
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
 	EventSheetDoctorTidiness.check_tidiness(sheet_paths, findings)
@@ -2950,6 +2951,105 @@ static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: 
 				"%s keeps hold of an object whose parent this file frees. A child is destroyed with its parent, so %s is left pointing at nothing and the next line that uses it crashes. Ask whether it is still there before touching it."
 					% [held, held])
 			(findings[findings.size() - 1] as Dictionary)["subject"] = held
+
+
+# ── Y20: what mirroring has to drag along ────────────────────────────────────────
+#
+# Mirroring a BODY mirrors its children; mirroring a SPRITE mirrors the picture and nothing else.
+# That one sentence is behind two of the most common "why does this only work facing right" bug
+# reports there are, and neither one announces itself: the game runs, the character turns, and the
+# attack simply misses on one side. Both notes below are advisory - the code is not wrong, it is
+# incomplete - and both name the one edit that completes it.
+
+
+## Y20. The spellings that mirror a WHOLE object (its children come along), as a plain text test. The
+## same shapes the reading claims, kept here so a hand-written line and a picked row are one check.
+static func mirrors_whole_object(source: String) -> bool:
+	for line: String in source.split("\n"):
+		var text: String = line.strip_edges()
+		if not text.contains("scale.x = "):
+			continue
+		var value: String = text.substr(text.find("scale.x = ") + 10).strip_edges()
+		if value in ["-1", "-1.0"] or value.begins_with("-1.0 if ") or value.begins_with("-1 if ") \
+				or value.begins_with("sign(") or value.begins_with("signf(") or value.begins_with("-"):
+			return true
+	return false
+
+
+## Y20. True when the only mirroring in this file is a sprite's own flag - the case where the picture
+## turns and the hitbox, the muzzle and the ray all stay exactly where they were.
+static func mirrors_only_a_sprite(source: String) -> bool:
+	return source.contains("flip_h = ") and not mirrors_whole_object(source)
+
+
+## Y20. The casts this file declares whose reach is never signed by the facing. A ray is the classic
+## one: `target_position` is a fixed offset, so a character that mirrors only its sprite attacks to
+## the right forever. Returns the names in declaration order, "" none.
+static func rays_not_following_facing(source: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if not mirrors_only_a_sprite(source):
+		return out
+	if source.contains("target_position") and source.contains("scale.x"):
+		return out  # the reach IS signed by the facing somewhere in this file
+	for line: String in source.split("\n"):
+		var text: String = line.strip_edges()
+		if not text.begins_with("@onready var ") and not text.begins_with("var "):
+			continue
+		var declared: String = _declared_name_of_class(text, ["RayCast2D", "ShapeCast2D"])
+		if not declared.is_empty() and not out.has(declared):
+			out.append(declared)
+	return out
+
+
+## Y20. The text children this file holds that sit under something it mirrors WHOLE, with nothing
+## putting them back upright. A mirrored parent writes its children's text backwards, which is the
+## other half of the same sentence.
+static func labels_under_a_mirrored_body(source: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if not mirrors_whole_object(source):
+		return out
+	if source.contains("signf(scale.x)") or source.contains("sign(scale.x)"):
+		return out  # something already keeps a child upright
+	for line: String in source.split("\n"):
+		var text: String = line.strip_edges()
+		if not text.begins_with("@onready var ") and not text.begins_with("var "):
+			continue
+		var declared: String = _declared_name_of_class(text, ["Label", "RichTextLabel", "Label3D"])
+		if not declared.is_empty() and not out.has(declared):
+			out.append(declared)
+	return out
+
+
+## The name a declaration line binds when its TYPE is one of `classes`, "" otherwise. Reads the type
+## hint and the cast alike, because both spellings say the same thing about what the name holds.
+static func _declared_name_of_class(line: String, classes: Array) -> String:
+	var head: String = line.trim_prefix("@onready ").trim_prefix("var ").strip_edges()
+	var name_text: String = head.split(":")[0].split(" ")[0].strip_edges()
+	if name_text.is_empty():
+		return ""
+	for class_text: String in classes:
+		if line.contains(": %s " % class_text) or line.contains(": %s=" % class_text) \
+				or line.contains(" as %s" % class_text) or line.rstrip(" ").ends_with(": %s" % class_text):
+			return name_text
+	return ""
+
+
+## Y20. The two facing notes, over the project's own scripts.
+static func check_facing_follows(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_scripts():
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if source.is_empty():
+			continue
+		for ray_name: String in rays_not_following_facing(source):
+			_add(findings, "info", "ray-not-following-facing", script_path,
+				"This file mirrors a sprite, which turns the picture and nothing else - so %s keeps pointing the same way whichever way the character faces. That is the \"attacks only work facing right\" bug. Put %s under a node you mirror with Set Mirrored (whole object) and it turns with the character."
+					% [ray_name, ray_name])
+			(findings[findings.size() - 1] as Dictionary)["subject"] = ray_name
+		for label_name: String in labels_under_a_mirrored_body(source):
+			_add(findings, "info", "label-under-a-mirrored-body", script_path,
+				"This file mirrors a whole object, so everything under it mirrors too - including %s, whose text comes out backwards every time the character faces left. A Keep Upright row on %s re-negates its scale and the text stays readable."
+					% [label_name, label_name])
+			(findings[findings.size() - 1] as Dictionary)["subject"] = label_name
 
 
 # ── U3: the notes a project leaves itself ────────────────────────────────────────

@@ -24,6 +24,7 @@ Every one compiles to the exact native call. **Node Name** ships as `{target}.na
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
 3. [Reference tables](#reference-tables)
+   - [Mirror and flip](#mirror-and-flip)
 4. [Use cases](#use-cases)
 5. [Tips and common mistakes](#tips-and-common-mistakes)
 
@@ -198,6 +199,29 @@ scene-reload order, delete the entry belonging to the node that had already repl
 **For Each Node That Can** is a loop ROW in the condition lane, not an action: its items arrive as
 `node`, and the per-item work is the event's actions. It walks the whole tree, so run it on an
 event - a save sweep, a pause sweep, a shutdown sweep - never every frame.
+
+### Mirror and flip
+
+Facing is a parent's business, which is why these rows read here rather than beside the sprite ones.
+Mirroring an OBJECT negates its own X scale, and **children come along**: the sprite, the hitbox, the
+muzzle point and the ray under that node all end up facing the same way. Mirroring a sprite turns the
+picture and nothing else, so a character whose attacks have to work in both directions is mirrored at
+the Node2D that owns it, not at the Sprite2D inside it.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Mirrored (whole object) | Mirrors this object AND everything under it - picture, hitbox, muzzle point and ray all face the same way. | `scale.x = -1.0 if {mirrored} else 1.0` |
+| Is Mirrored | True while this object is mirrored, read off its own X scale. | `scale.x < 0.0` |
+| Face Direction Of Movement | Faces the way this object is moving, and leaves it facing that way when it stops. On CharacterBody2D. | `if {velocity}.x != 0.0:` then `scale.x = -1.0 if {velocity}.x < 0.0 else 1.0` |
+| Face Object | Turns this object to face another one, comparing global X positions. | `scale.x = -1.0 if {object}.global_position.x < global_position.x else 1.0` |
+| Keep Upright | Re-negates a child's X scale so it does NOT come along when this object mirrors. | `{target}.scale.x = signf(scale.x)` |
+| Turn Around | The 3D answer: half a turn about the up axis, with nothing left inside out. On Node3D. | `rotate_y(PI)` |
+
+Everything coming along is usually the point, and occasionally the bug: a name plate, a health bar or
+a damage number parented under a mirrored body has its text written backwards. **Keep Upright** is the
+one row that opts a child out, re-negating that child's X scale so it stays readable while the rest of
+the object turns. A RayCast2D or a Marker2D, by contrast, wants to come along - parenting it under the
+mirrored node is the whole of "make attacks work facing left".
 
 ## Use cases
 

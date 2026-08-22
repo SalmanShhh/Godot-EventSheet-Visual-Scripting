@@ -4056,3 +4056,77 @@ prompt taken off {label},indicazione tolta da {label}
 Close input window,Chiudi finestra di input
 "Every colour set this palette asset carries, side by side.","Tutti i set di colori di questa risorsa palette, affiancati."
 Palette assets,Risorse palette
+"Which way something faces. Mirror or flip a sprite, a whole object with its hitbox and its ray, a 3D model, a UI panel, the camera's view, one tile, or a path - each host in its own honest terms.","Da che parte guarda una cosa. Specchia o capovolgi uno sprite, un oggetto intero con la sua area di colpo e il suo raggio, un modello 3D, un pannello di interfaccia, la vista della camera, una cella o un percorso - ogni nodo nei suoi termini onesti."
+Set Mirrored,Imposta specchiato
+Set Flipped,Imposta capovolto
+Is Mirrored,È specchiato
+Is Flipped,È capovolto
+Set Mirrored (whole object),Imposta specchiato (oggetto intero)
+Turn Around,Girati
+Face Direction Of Movement,Guarda dove si muove
+Face Object,Guarda l'oggetto
+Keep Upright,Mantieni dritto
+Mirror The View,Specchia la vista
+Set Tile Flipped,Imposta cella specchiata
+Mirror Path,Specchia il percorso
+Set mirrored {mirrored},Imposta specchiato {mirrored}
+Set flipped {flipped},Imposta capovolto {flipped}
+Is mirrored,È specchiato
+Is flipped,È capovolto
+Set mirrored {mirrored} (whole object),Imposta specchiato {mirrored} (oggetto intero)
+Turn around,Girati
+Face direction of movement,Guarda dove si muove
+Face {object},Guarda {object}
+Keep {target} upright,Mantieni {target} dritto
+Mirror the view {mirrored},Specchia la vista {mirrored}
+Set tile at {coords} flipped {mirrored},Imposta la cella in {coords} specchiata {mirrored}
+Mirror path,Specchia il percorso
+Mirrored,Specchiato
+Flipped,Capovolto
+On node,Sul nodo
+"Mirror it horizontally (facing left), or put it back the way it was.",Lo specchia in orizzontale (guarda a sinistra) o lo rimette com'era.
+"Turn it upside down, or put it back the right way up.",Lo capovolge o lo rimette dritto.
+"Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_tree().get_first_node_in_group(""player"").","Agisce su un altro nodo invece che su questo. Lascialo vuoto per questo nodo, scegli un nodo o indicane uno senza percorso nell'albero - per esempio get_tree().get_first_node_in_group(""player"")."
+The value holding how fast this object is moving.,Il valore che contiene quanto velocemente si muove questo oggetto.
+The object to turn toward.,L'oggetto verso cui girarsi.
+"The child that must stay readable - a name plate, a health bar, a damage number.","Il figlio che deve restare leggibile - una targhetta col nome, una barra della vita, un numero di danno."
+Cell coordinates (Vector2i).,Coordinate della cella (Vector2i).
+Mirrors this node's picture left-to-right - the way a 2D character faces.,Specchia l'immagine di questo nodo da sinistra a destra - è così che un personaggio 2D guarda da una parte.
+"Turns this node's picture upside down, or puts it back the right way up.","Capovolge l'immagine di questo nodo, o la rimette dritta."
+True while this node's picture is mirrored - which way the character is facing.,Vero finché l'immagine di questo nodo è specchiata - da che parte guarda il personaggio.
+True while this node's picture is upside down.,Vero finché l'immagine di questo nodo è capovolta.
+"Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.","Specchia questo oggetto E tutto ciò che sta sotto - immagine, area di colpo, punto di sparo e raggio guardano tutti dalla stessa parte."
+"True while this object is mirrored, read off its own X scale.","Vero finché questo oggetto è specchiato, letto dalla sua stessa scala X."
+"Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead.","Specchia un oggetto 3D lungo X. Da sapere: una scala negativa inverte il verso delle facce della mesh, quindi luci e culling delle facce posteriori la vedono al rovescio - di solito quello che vuoi è Girati."
+"Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind.","Specchia un'etichetta 3D lungo X - si legge al contrario, che è proprio il punto quando è una decalcomania o un cartello visto da dietro."
+True while this 3D object is mirrored along X.,Vero finché questo oggetto 3D è specchiato lungo X.
+Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.,Gira un oggetto 3D dall'altra parte - mezzo giro attorno al suo asse verticale. La risposta onesta del 3D allo specchiare: dopo non c'è niente al rovescio.
+"Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.","Guarda nella direzione in cui questo oggetto si muove, e lo lascia così quando si ferma - la riga che ogni platform scrive a mano."
+"Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in.","Gira questo oggetto verso un altro - un nemico che guarda il giocatore, un bottegaio che guarda chi entra."
+Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards.,Inverte di nuovo la scala X di un figlio perché NON venga specchiato insieme a questo oggetto - è ciò che tiene leggibile una targhetta invece di scriverla al contrario.
+"Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways.","Specchia un elemento di interfaccia sul posto. Prima sposta il pivot al centro, la metà che tutti dimenticano - senza di essa il pannello si specchia E salta di lato."
+True while this UI element is mirrored.,Vero finché questo elemento di interfaccia è specchiato.
+"Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards.","Specchia tutto ciò che questa camera vede - un mondo specchio, un riflesso, un livello giocato al contrario."
+"Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water.","Specchia ciò che mostra un sotto-viewport - lo specchietto retrovisore, il monitor di sorveglianza, il riflesso nell'acqua."
+"Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor.","Specchia la cella già presente, mantenendo il suo tileset e la sua cella - è così che una sola immagine di muro copre entrambi i lati di un corridoio."
+"Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way.","Specchia ogni punto di questo percorso rispetto a x = 0 - la seconda metà di un livello simmetrico, o una ronda riusata al contrario."
+Set mirrored to {value},Imposta specchiato in base a {value}
+Set flipped to {value},Imposta capovolto in base a {value}
+Is not mirrored,Non è specchiato
+Is not flipped,Non è capovolto
+Ray follows facing,Il raggio segue l'orientamento
+Spawn point follows facing,Il punto di comparsa segue l'orientamento
+Particles follow facing,Le particelle seguono l'orientamento
+Keeps its text upright,Tiene il suo testo dritto
+Faces the way it moves,Guarda dove si muove
+(flips the mesh's winding),(inverte il verso delle facce della mesh)
+(UI),(interfaccia)
+(whole object),(oggetto intero)
+moving left,si muove a sinistra
+moving right,si muove a destra
+{name} is to the left,{name} è a sinistra
+{name} is to the right,{name} è a destra
+"an object is mirrored to face the way it moves, and its ray, its spawn points and its particles turn with it","un oggetto viene specchiato per guardare dove si muove, e il suo raggio, i suoi punti di comparsa e le sue particelle girano con lui"
+Mirror the view,Specchia la vista
+Set tile at {coords} flipped,Specchia la cella in {coords}
+Set tile at {coords} flipped to {value},Specchia la cella in {coords} in base a {value}

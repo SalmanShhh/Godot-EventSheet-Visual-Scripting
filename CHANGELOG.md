@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+### Added - mirror and flip, in the same two words on every host that can do it
+
+- **Set Mirrored now means something on every node, not just a sprite.** The row shipped for
+  `Sprite2D` and `AnimatedSprite2D`, and everything else spelled the same idea differently. A new
+  **Facing** page carries the host table: `flip_h` / `flip_v` where the node has the flag (Sprite2D,
+  AnimatedSprite2D, Sprite3D, TextureRect), the object's own `scale.x` where it does not - which
+  mirrors the WHOLE object, hitbox, muzzle point and ray included, and says `(whole object)` because
+  that difference is the one that bites - the 3D `scale.x` with the note that a negative scale flips
+  the mesh's winding, a `Control` with its pivot moved to the middle first, a `Camera2D` and a
+  sub-viewport under **Mirror The View**, one tile under **Set Tile Flipped**, and a `Path2D` under
+  **Mirror Path**. The picker offers each only where the host can actually do it.
+- **`rotate_y(PI)` reads Turn around.** The honest 3D answer to mirroring is half a turn, not a
+  negative scale, and it now has a row and a reading of its own rather than reading as a rotation
+  rate of nothing per second.
+- **Every hand-written spelling of facing reads as the idiom it is.** `scale.x = -1`,
+  `scale.x = -scale.x`, `scale.x = sign(velocity.x)` and the `-1.0 if velocity.x < 0.0 else 1.0`
+  every platformer copies all read as **Set mirrored**, with the words people actually mean:
+  *to moving left*, *to target is to the left*. `flip_h = facing_left` reads **Set mirrored to facing
+  left** instead of naming a Godot property nobody learns. **Is mirrored** answers from the scale
+  sign and from the flag alike. A plain `scale.x = 2` is still a size, and the reverse-lifter is held
+  to the same line: only the mirroring shapes are claimed.
+- **Face Direction Of Movement, Face Object and Keep Upright.** The three lines the scale row is
+  nearly always written for, said once instead of copied - including the one that must NOT come
+  along: Keep Upright re-negates a child's scale so a name plate reads forwards while its parent
+  faces left.
+- **What mirroring drags along now reads, and the Doctor checks the two that go quietly wrong.** A
+  ray whose reach is signed by the facing reads **Ray follows facing**, a marker **Spawn point
+  follows facing**, `local_coords` particles **Particles follow facing**, and a blend tree steered by
+  the facing **Animation ▸ Faces the way it moves**. A file that mirrors only its SPRITE and holds a
+  ray earns the note that the ray keeps pointing one way - the "attacks only work facing right" bug -
+  with the chip *Put it under the mirrored body*; a file that mirrors a whole object and holds a
+  label earns *Keep it upright*.
+- **A `Mirror and Flip` showcase.** A hero that faces the way it moves with its ray, its muzzle point
+  and its dust coming along and its name plate staying readable, a mirrored UI panel, a mirrored
+  sub-viewport, a flipped tile and a 3D twin that turns around instead of scaling itself inside out.
+
 ### Added - a menu built in code reads as the menu it is, item by item
 
 - **The add_item run is one menu, not ten rows.** A run of `add_item("Save", 2)` calls on one menu
