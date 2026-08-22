@@ -29,15 +29,15 @@ const ENGINE_BASE_PACK: String = "res://eventsheet_addons/health/health_behavior
 ## Rebuilding the canvas rows of the sample pack. Measured 268 ms once the behaviour-pack index
 ## stopped re-asking the addon scanner (1718 ms before).
 ##
-## Raised from 1400 when the FPS Controller grew its feel layer: the FIXTURE went from 352 rows to
-## 389, and the headroom went with it. The rise is the fixture's, not a reading's - the same 389-row
-## sheet was measured at 1482 ms with the batch's new keycard and feel readings switched OFF, against
-## 1282-1771 ms with them on across five runs on the same (loaded) machine, which is one noise band.
-## 2400 is the top of that band plus the same third-again margin the 1400 carried, because a backstop
-## that trips on a busy machine teaches everyone to ignore it. The pin's job is to catch a rebuild
-## that got ALGORITHMICALLY slower - the 1718 ms it was written for was a per-function rescan, and a
-## regression of that kind lands far outside this band rather than just inside it.
-const REBUILD_BUDGET_MS: int = 2400
+## Raised from 1400 when the FPS Controller grew its feel layer (the FIXTURE went from 352 rows to
+## 389), then parked at 2400 because every machine measuring it that week was loaded. Re-measured
+## quiet at the close of batch 14: 852 ms on the same 389-row sheet, three runs inside 60 ms of each
+## other. 1600 is that figure with the same near-doubled margin the original 1400 carried over its
+## 852-class measurement, because a backstop that trips on a busy machine teaches everyone to ignore
+## it. The pin's job is to catch a rebuild that got ALGORITHMICALLY slower - the 1718 ms it was
+## written for was a per-function rescan, and a regression of that kind lands far outside this band
+## rather than just inside it.
+const REBUILD_BUDGET_MS: int = 1600
 ## A warm warm_registries() must be a no-op. Measured 0.1 ms; 50 catches a re-run without flapping.
 const WARM_REPEAT_BUDGET_MS: int = 50
 ## 200 mouse-motion events inside one cell. Measured 0.3 ms once a repeat is recognised as already
