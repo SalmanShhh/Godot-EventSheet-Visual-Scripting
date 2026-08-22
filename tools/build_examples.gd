@@ -5690,8 +5690,7 @@ func _build_traversal_course_3d() -> bool:
 	seam.trigger_provider_id = "Core"
 	seam.trigger_id = "OnReady"
 	var seam_body: RawCodeRow = RawCodeRow.new()
-	seam_body.code = "
-".join(PackedStringArray([
+	seam_body.code = "\n".join(PackedStringArray([
 		"# The Ladder Bot has no keyboard: the kit's AI seam holds the climb axis for it, the",
 		"# same way a driver or a sheet would hold an up key.",
 		"$LadderBot/Traversal.ai_controlled = true",
