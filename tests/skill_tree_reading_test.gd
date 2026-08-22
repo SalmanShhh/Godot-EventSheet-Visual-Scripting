@@ -236,7 +236,7 @@ static func _test_doctor() -> bool:
 ## Y15. The screen starter.
 static func _test_starter() -> bool:
 	var passed: bool = true
-	var sheet: EventSheetResource = EventSheetStarterTemplates.build_starter(33)
+	var sheet: EventSheetResource = EventSheetStarterTemplates.build_starter(34)
 	passed = _check("the skill tree screen is a Control", sheet.host_class, "Control") and passed
 	passed = _check("it names itself", sheet.custom_class_name, "SkillTreeScreen") and passed
 	passed = _check("it asks for the asset it draws",
@@ -261,7 +261,7 @@ static func _test_starter() -> bool:
 	# The FileSystem dialog offers it under the same words the New-Sheet menu uses.
 	var labels: PackedStringArray = PackedStringArray()
 	for starter: Dictionary in EventSheetStarterTemplates.create_new_starters():
-		if int(starter.get("id", 0)) == 33:
+		if int(starter.get("id", 0)) == 34:
 			labels.append(str(starter.get("label", "")))
 	passed = _check("the Create New dialog offers it too", ", ".join(labels), "Skill Tree Screen") and passed
 	return passed

@@ -41,6 +41,33 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **A `Mirror and Flip` showcase.** A hero that faces the way it moves with its ray, its muzzle point
   and its dust coming along and its name plate staying readable, a mirrored UI panel, a mirrored
   sub-viewport, a flipped tile and a 3D twin that turns around instead of scaling itself inside out.
+### Added - keycards, feel and a room that turns on itself: the shooter kit is finished
+
+- **Keys and doors are the list words, said about keys.** A keycard is a name in a list and a door is
+  a body that wants one, so **Pick Up Key**, **Has Key**, **Needs Key** and **Keys Held** are the
+  ordinary list operations under names a reader recognises. **Try Door** is the whole gesture in one
+  row - it reads the key the door wants off the door and either opens it or tells it it was refused -
+  **Open Door** stops the door blocking and slides it out of the way once, and **On Locked Door
+  Tried** is where the thud, the flash and the \"you need the red keycard\" line go. New Sheet ▸
+  Keycard Door (3D) writes all three halves of the door contract, and a door you name a key for in
+  its Object properties panel OFFERS the event that tries it the moment you drop it on the canvas.
+- **Feel is five knobs, not five hundred lines.** The FPS Controller gains **Air Control** (how much
+  of the run survives into the air), **Keep Momentum** (the bunny hop: land with jump held and the
+  frame keeps the speed it came in with), **Bob Amount** + **Bob Period** and **Sway Amount** +
+  **Sway Speed**, plus the two rows that spend them - **Bob With Movement** and **Sway With Mouse** -
+  on whatever node you want bobbing and swaying. **Is Bunny Hopping** and **Set Air Control** make
+  both retunable from rows, and the hand-written lerp, sine and sway shapes now READ as those knobs
+  rather than as the arithmetic they are written with.
+- **A room of enemies that turns on itself.** **Alert Enemies Within** is the noise words aimed at
+  somebody - everything in the group close enough is told who to come for, answering with **On
+  Alerted** - and **Retaliate Against Attacker** is the one line in a hurt handler that makes a rocket
+  splashed across a corridor start a fight, because it only ever turns on its own kind. Nobody is
+  alerted about themselves, so a hurt enemy shouting to the room never goes hunting for itself.
+  **Respawn After** takes a pickup away, waits and puts it back, uncollectable while it is gone.
+- **A playable level of all of it.** `demo/showcase/boomer_level/` is a small room with a red keycard,
+  the door that wants it, two grunts that shout to each other and fight, a health pickup that comes
+  back, a secret and the exit tally - four sheets, because opening, coming back and being alerted are
+  things an object does about itself rather than things a level does to it.
 ### Added - a skill tree is a data asset, and the words to play it
 
 - **A whole tree in one file.** The new **Skill Tree** data asset holds every node of a progression -
