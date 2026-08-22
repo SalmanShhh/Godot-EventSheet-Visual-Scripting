@@ -35,15 +35,17 @@ static func run() -> bool:
 		all_passed = _check("re-emits the group lines exactly (lossless round-trip)",
 			SheetCompiler._emit_tree_variable_line(lifted),
 			"@export_group(\"Combat\")\n@export_subgroup(\"Melee\")\n@export var attack: int = 10") and all_passed
-		# And the reopened grouped tree variable shows its "Group › Subgroup" chip in the sheet.
+		# And the reopened grouped tree variable still carries its Inspector section. The per-row chip is
+		# gone (the folder strip over the run names it once), so the fact rides in the row metadata -
+		# which is exactly what the folder outline, the drag-into-folder drop and the rename all read.
 		var viewport: EventSheetViewport = EventSheetViewport.new()
 		var row: EventRowData = viewport._build_tree_variable_row(lifted, 0)
-		var has_chip: bool = false
-		for span: Variant in row.spans:
-			var meta: Dictionary = (span as SemanticSpan).metadata if (span as SemanticSpan).metadata is Dictionary else {}
-			if str((span as SemanticSpan).text) == "Combat › Melee" and bool(meta.get("badge", false)):
-				has_chip = true
-		all_passed = _check("reopened grouped tree var shows its chip", has_chip, true) and all_passed
+		var row_meta: Dictionary = row.spans[0].metadata if row.spans[0].metadata is Dictionary else {}
+		all_passed = _check("reopened grouped tree var keeps its Inspector section",
+			str(row_meta.get("variable_group", "")), "Combat") and all_passed
+		all_passed = _check("…and its subsection", str(row_meta.get("variable_subgroup", "")), "Melee") and all_passed
+		all_passed = _check("but wears no group pill",
+			_has_badge_text(row, "Combat › Melee"), false) and all_passed
 		viewport.free()
 
 	# A plain (ungrouped) var is unaffected: lifts clean, no attributes, single-line emission.
@@ -181,4 +183,14 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	print("[FAIL] variable_group_roundtrip_test: %s" % label)
 	print("  expected: %s" % str(expected))
 	print("  actual:   %s" % str(actual))
+	return false
+
+
+## True when the row carries a BADGE span whose text is `text` - the pill shape a variable row no
+## longer wears for its Inspector section.
+static func _has_badge_text(row_data: EventRowData, text: String) -> bool:
+	for span: SemanticSpan in row_data.spans:
+		var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		if str(span.text) == text and bool(meta.get("badge", false)):
+			return true
 	return false

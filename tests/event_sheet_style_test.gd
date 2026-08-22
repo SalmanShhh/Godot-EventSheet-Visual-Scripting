@@ -192,16 +192,16 @@ static func run() -> bool:
 
 	var scope_index: int = _find_span_index_by_text(global_row, "global")
 	var name_index: int = _find_span_index_by_text(global_row, "health")
-	var const_index: int = _find_span_index_by_text(global_row, "const")
+	var const_index: int = _find_span_index_by_text(global_row, "Constant")
 	var value_index: int = _find_span_index_by_text(global_row, "100")
 	var global_row_rect: Rect2 = global_layout.get("row_rect", Rect2())
 	passed = _check(
-		"variable name, const, and value spans remain ordered (redundant 'global' pill removed)",
+		"the scope word leads the name, and the value stays inside the row (no 'global' pill)",
 		scope_index == -1
 			and name_index >= 0
 			and const_index >= 0
 			and value_index >= 0
-			and global_row.spans[name_index].rect.end.x < global_row.spans[const_index].rect.position.x
+			and global_row.spans[const_index].rect.end.x < global_row.spans[name_index].rect.position.x
 			and global_row.spans[value_index].rect.end.x <= global_row_rect.end.x - EventSheetPalette.ROW_HORIZONTAL_PADDING,
 		true
 	) and passed

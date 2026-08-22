@@ -122,23 +122,23 @@ static func _test_setting_facts() -> bool:
 		return false
 	ok = _check("a range says its limits and its step",
 		_texts(movement.children[0]),
-		"Instance number | speed | Inspector | = | 5 | 0 to 20, step 0.5 | How fast it walks, in pixels per second.") and ok
+		"x | Instance | number | speed | ⚙ | = | 5 | 0 to 20, step 0.5 | How fast it walks, in pixels per second. | @export_range(0, 20, 0.5) var speed: float = 5.0") and ok
 	ok = _check("a fixed set of choices is a combo, reading its label instead of its number",
-		_texts(movement.children[1]), "Instance combo | mode | Inspector | = | Walk | Walk / Run / Fly") and ok
+		_texts(movement.children[1]), "x | Instance | combo | mode | ⚙ | = | Walk | Walk / Run / Fly | @export_enum(\"Walk\", \"Run\", \"Fly\") var mode: int = 0") and ok
 	ok = _check("a 0-to-1 range reads as a percent",
-		_texts(movement.children[2]), "Instance number | grip | Inspector | = | 50%") and ok
+		_texts(movement.children[2]), "x | Instance | number | grip | ⚙ | = | 50% | @export_range(0, 1) var grip: float = 0.5") and ok
 	ok = _check("a file knob says it is a file, and what it accepts",
-		_texts(look.children[0]), "Instance file | portrait | Inspector | = | \"\" | *.png") and ok
+		_texts(look.children[0]), "x | Instance | file | portrait | ⚙ | = | \"\" | *.png | @export_file(\"*.png\") var portrait: String = \"\"") and ok
 	ok = _check("a directory knob says folder",
-		_texts(look.children[1]), "Instance folder | shot_folder | Inspector | = | \"\"") and ok
+		_texts(look.children[1]), "x | Instance | folder | shot_folder | ⚙ | = | \"\" | @export_dir var shot_folder: String = \"\"") and ok
 	ok = _check("a multiline text knob says so",
-		_texts(look.children[2]), "Instance text | intro_text | Inspector | = | \"\" | multiline") and ok
+		_texts(look.children[2]), "x | Instance | text | intro_text | ⚙ | = | \"\" | multiline | @export_multiline var intro_text: String = \"\"") and ok
 	ok = _check("a colour reads as its word",
-		_texts(look.children[3]), "Instance color | tint | Inspector | = | white | #ffffff") and ok
+		_texts(look.children[3]), "x | Instance | color | tint | ⚙ | = | white | #ffffff | @export_color_no_alpha var tint: Color = Color.WHITE") and ok
 	ok = _check("and it carries the swatch that IS the fact",
 		_swatch(look.children[3]), Color.WHITE) and ok
 	ok = _check("a bit field says flags, and names the bits",
-		_texts(look.children[4]), "Instance flags | elements | Inspector | = | 0 | Fire / Water / Wind") and ok
+		_texts(look.children[4]), "x | Instance | flags | elements | ⚙ | = | 0 | Fire / Water / Wind | @export_flags(\"Fire\", \"Water\", \"Wind\") var elements: int = 0") and ok
 
 	# The facts themselves, at the seam - so a caller other than the row builder reads the same.
 	var colour_variable := LocalVariable.new()

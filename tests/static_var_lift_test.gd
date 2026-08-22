@@ -110,9 +110,10 @@ static func _reads_as_shared_by_every_object() -> bool:
 		else:
 			plain_texts = texts
 	ok = _check("a static var reads as Static, and says who shares it",
-		static_texts, PackedStringArray(["Static whole number", "spawned", "=", "0", "shared by every StaticReadingProbe"])) and ok
+		static_texts, PackedStringArray(["x", "Static", "whole number", "spawned", "=", "0", "shared by every StaticReadingProbe",
+		"static var spawned: int = 0"])) and ok
 	ok = _check("an ordinary variable reads with its own scope word and none of the static note",
-		plain_texts, PackedStringArray(["Instance whole number", "hp", "=", "3"])) and ok
+		plain_texts, PackedStringArray(["x", "Instance", "whole number", "hp", "=", "3", "var hp: int = 3"])) and ok
 	view.free()
 	return ok
 

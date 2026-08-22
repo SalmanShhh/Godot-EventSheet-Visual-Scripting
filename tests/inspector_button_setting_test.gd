@@ -21,10 +21,10 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _check("a two-argument Inspector button reads as a button setting",
 		_setting_row(TWO_ARGUMENTS),
-		"Instance button | Bake | Inspector | in the Inspector · calls Bake") and ok
+		"x | Instance | button | Bake | ⚙ | in the Inspector · calls Bake | @export_tool_button(\"Bake\", \"Bake\") var bake = _bake") and ok
 	ok = _check("a one-argument one reads the same way",
 		_setting_row(ONE_ARGUMENT),
-		"Instance button | Rebuild | Inspector | in the Inspector · calls Rebuild") and ok
+		"x | Instance | button | Rebuild | ⚙ | in the Inspector · calls Rebuild | @export_tool_button(\"Rebuild\") var rebuild = _rebuild") and ok
 	ok = _check("the two-argument line round-trips byte-identically",
 		_roundtrip(TWO_ARGUMENTS), TWO_ARGUMENTS) and ok
 	ok = _check("the one-argument line round-trips byte-identically",

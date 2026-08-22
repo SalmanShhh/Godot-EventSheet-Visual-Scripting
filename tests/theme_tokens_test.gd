@@ -103,6 +103,7 @@ static func run() -> bool:
 		"indent_guide_color", "tree_guide_color", "drag_line_color", "drag_refusal_color",
 		"drag_bubble_refused_background_color", "drag_bubble_background_color", "drag_bubble_text_color",
 		"text_selection_color", "default_chip_plate_color",
+		"variable_row_wash_color", "variable_row_rule_color", "variable_row_wash_end_color",
 		"color_swatch_border_color", "name_highlight_strength",
 	]) and ok
 	ok = _check("chrome token names", _token_names(style.get_chrome_style()), [

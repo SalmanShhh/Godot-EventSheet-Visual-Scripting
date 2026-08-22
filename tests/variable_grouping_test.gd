@@ -81,7 +81,8 @@ static func run() -> bool:
 	if runs.size() == 1:
 		var run: Dictionary = runs[0]
 		ok = _check("the run carries the folder name", str(run.get("group")), "Movement") and ok
-		ok = _check("the run spans all three members", int(run.get("end")) - int(run.get("start")) + 1, 3) and ok
+		ok = _check("the run spans the folder strip and all three members",
+			int(run.get("end")) - int(run.get("start")) + 1, 4) and ok
 		for index: int in range(int(run.get("start")), int(run.get("end")) + 1):
 			var row_data: EventRowData = (flat[index] as Dictionary).get("row")
 			ok = _check("row %d in the bubble is a grouped variable row" % index,

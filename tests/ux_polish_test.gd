@@ -53,10 +53,10 @@ static func run() -> bool:
 	for flat_entry: Dictionary in viewport.get_flat_rows():
 		if (flat_entry.get("row") as EventRowData).source_resource == tree_var:
 			variable_row = flat_entry.get("row")
-	all_passed = _check("live chips resolve variable rows", viewport.live_value_chip_for(variable_row), "= 42") and all_passed
+	all_passed = _check("live chips resolve variable rows", viewport.live_value_chip_for(variable_row), "now 42") and all_passed
 	editor.update_live_values({"hp": 7})
 	all_passed = _check("frames forward to panes via the dock sink",
-		viewport.live_value_chip_for(variable_row), "= 7") and all_passed
+		viewport.live_value_chip_for(variable_row), "now 7") and all_passed
 
 	# Bookmarks panel lists marked rows (popup-free refresh).
 	viewport._select_row(1, -1)

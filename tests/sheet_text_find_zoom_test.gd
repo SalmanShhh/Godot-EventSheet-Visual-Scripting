@@ -73,9 +73,10 @@ static func _test_markdown() -> bool:
 	return passed
 
 
-## The listing puts a colon after the object it is about - but a declaration row already carries its
-## own ":" as its next word, and writing both read "player: : Player = $Player" in Save as Text and
-## in the Markdown export. The row's own punctuation wins, so the listing says what the canvas says.
+## The listing puts a colon after the object it is about - but a declaration row carries its own
+## punctuation, and writing both read "player: : Player = $Player" in Save as Text and in the
+## Markdown export. The row's own words win, so the listing says exactly what the canvas says - the
+## sentence, without the GDScript echo drawn beside it.
 static func _test_declaration_row_punctuation() -> bool:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(
 		"res://tests/fixtures/opened_scene_level.gd")
@@ -85,11 +86,11 @@ static func _test_declaration_row_punctuation() -> bool:
 	viewport.free()
 	var declaration: String = ""
 	for line: String in listing.split("\n"):
-		if line.strip_edges().begins_with("player"):
+		if line.contains("player") and line.contains("$Player"):
 			declaration = line.strip_edges()
 			break
-	var passed: bool = _check("a declaration row reads with one colon, not two",
-		declaration, "player : OpenedScenePlayer = $Player")
+	var passed: bool = _check("a declaration row reads as the sentence the canvas draws",
+		declaration, "Instance OpenedScenePlayer player = $Player")
 	passed = _check("and no line in the listing doubles the separator",
 		listing.contains(": :"), false) and passed
 	return passed

@@ -93,10 +93,11 @@ static func run() -> bool:
 	var knob: EventRowData = _variable_row(rows, "jump_velocity")
 	ok = _check("a knob reads type-word, name, value, description",
 		_texts(knob),
-		"Instance number | jump_velocity | Inspector | = | 4.5 | Upward velocity applied on a jump (and on a wall jump).") and ok
+		"x | Instance | number | jump_velocity | ⚙ | = | 4.5 | Upward velocity applied on a jump (and on a wall jump). | @export var jump_velocity: float = 4.5") and ok
 	ok = _check("a knob keeps its LocalVariable (the row is a lens, not a copy)",
 		knob != null and knob.source_resource is LocalVariable, true) and ok
-	ok = _check("the @export chip is gone from the row", _texts(knob).contains("@export"), false) and ok
+	ok = _check("the @export pill is gone from the row (a sliders mark says it instead)",
+		_span_texts(knob).has("@export"), false) and ok
 
 	# ── 5. Covenant: the preview is a pure view ──
 	var reemitted: String = str(SheetCompiler.compile(sheet, PACK_PATH).get("output", ""))
@@ -274,3 +275,14 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	print("  expected: %s" % str(expected))
 	print("  actual:   %s" % str(actual))
 	return false
+
+
+## Every span's text as a list - for asking whether the row carries one exact word, which a joined
+## line cannot answer once a span holds a whole declaration.
+static func _span_texts(row_data: EventRowData) -> PackedStringArray:
+	var parts: PackedStringArray = PackedStringArray()
+	if row_data == null:
+		return parts
+	for span: SemanticSpan in row_data.spans:
+		parts.append(str(span.text))
+	return parts
