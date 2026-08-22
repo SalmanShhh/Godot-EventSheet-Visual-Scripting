@@ -118,6 +118,16 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	extras["tilt_variables"] = EventSheetPatternReadings.tilt_variables(input_lines)
 	extras["rate_variables"] = EventSheetPatternReadings.rate_variables(input_lines)
 	extras["input_window"] = EventSheetPatternReadings.input_window_facts(input_lines)
+	# ── Y12 lens hook ──────────────────────────────────────────────────────────────────────────
+	# Which table this file keeps unlocked skill ids in. `unlocked.has("double_jump")` is a plain
+	# dictionary lookup until the file elsewhere owns that table beside a requires list, so the
+	# question is answered from one walk of the file rather than line by line. Both views of the
+	# file are walked: a declaration lifts to a variable ROW (so it is only in the half-lifted
+	# lines) while a prerequisite walk stays verbatim inside a function (so it is only in the
+	# ordered ones), and the shape is exactly the two of them together.
+	var owned_lines: PackedStringArray = input_lines.duplicate()
+	owned_lines.append_array(ordered_code_lines(sheet))
+	extras.merge(EventSheetPatternReadings.skill_tree_facts(owned_lines), true)
 	# ── S8 / S10 / S15 lens hook ───────────────────────────────────────────────────────────────
 	# The three patterns whose lines only mean something TOGETHER: the locals a background load
 	# threads its path and its progress through, the messages the file publishes with `@rpc`, and the
@@ -655,6 +665,12 @@ const SYSTEMS_PATTERN_EVIDENCE: Dictionary = {
 		"InputMap.action_erase_events(", "InputMap.action_add_event(", "effect_strength",
 		"no_flashing", "text_size_scale", "aim_assist_radius", "DisplayServer.tts_speak(",
 		"show_caption"
+	],
+	# Y12. A skill tree names itself: the points it is spent in, and the question it asks before
+	# every unlock. A dictionary of flags spells neither, which is what keeps a door that remembers
+	# being opened from reading as a talent tree.
+	"skill_tree": [
+		"skill_points", "skill_point", "can_unlock(", "unlock_skill(", "Upgrades.unlock_skill"
 	]
 }
 
@@ -671,7 +687,8 @@ const SYSTEMS_PATTERN_WORDS: Dictionary = {
 	"secrets": "Secrets found",
 	"keys_doors": "Keys and the doors that want them",
 	"detection": "Enemies noticing you, and each other",
-	"accessibility_options": "An accessibility options screen"
+	"accessibility_options": "An accessibility options screen",
+	"skill_tree": "A skill tree - prerequisites, points and unlocks"
 }
 
 ## The sheet ACEs each pattern is made of - what Adopt behavior would write, and what the Manual's
@@ -702,7 +719,10 @@ const SYSTEMS_PATTERN_ACES: Dictionary = {
 		"TreatControlAsToggle", "SetEffectStrength", "SetNoFlashing", "SetTextSizeScale",
 		"SetAimAssistRadius", "UsePalette", "SpeakText", "PlaySoundWithCaption",
 		"InputWaitForNextKey", "InputClearBindings", "InputBindTo", "InputSaveBindings",
-		"InputLoadBindings", "InputResetBindings"]
+		"InputLoadBindings", "InputResetBindings"],
+	"skill_tree": ["load_skill_tree", "unlock_skill", "respec", "is_skill_unlocked",
+		"can_unlock_skill", "can_afford_skill", "skill_requires", "skill_points_left",
+		"skill_cost_of", "skill_level_of", "earn_skill_points", "apply_grants_to"]
 }
 
 
@@ -791,6 +811,10 @@ static func _systems_adoptable(pattern: String, text: String, picked: PackedStri
 		# is the pack, not a row that writes a third of it.
 		"swipe":
 			return "touch_gestures"
+		# Y12. A hand-written tree has a pack that does the whole thing - the asset, the
+		# prerequisite walk, the points and the grants - so the honest offer is the pack.
+		"skill_tree":
+			return "upgrades"
 	return ""
 
 

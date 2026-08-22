@@ -4149,3 +4149,9 @@ Bob up and down,上下に揺れる
 "a sine wave, as you move",移動に合わせたサインカーブ
 Keys and the doors that want them,鍵と、それを求める扉
 "Enemies noticing you, and each other",敵があなたに、そして互いに気づく
+Is unlocked {id},{id} が解放済み
+Is not unlocked {id},{id} が未解放
+{base} boosted by {skill} upgrade ({percent} per level),{base} を {skill} アップグレードで強化 (レベルごとに {percent})
+{base} +{amount} per level,{base} +{amount} (レベルごと)
+"A skill tree - prerequisites, points and unlocks",スキルツリー - 前提条件、ポイント、解放
+Skill Tree Screen,スキルツリー画面

@@ -4149,3 +4149,9 @@ Bob up and down,上下起伏
 "a sine wave, as you move",随移动而起伏的正弦波
 Keys and the doors that want them,钥匙与需要它们的门
 "Enemies noticing you, and each other",敌人注意到你，也注意到彼此
+Is unlocked {id},已解锁 {id}
+Is not unlocked {id},未解锁 {id}
+{base} boosted by {skill} upgrade ({percent} per level),{base} 由 {skill} 升级强化（每级 {percent}）
+{base} +{amount} per level,{base} 每级 +{amount}
+"A skill tree - prerequisites, points and unlocks",技能树 - 前置条件、点数与解锁
+Skill Tree Screen,技能树界面

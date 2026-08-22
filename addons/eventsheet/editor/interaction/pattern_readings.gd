@@ -1652,3 +1652,77 @@ static func _numeric_cast_inner(value: String) -> String:
 		if text.begins_with(cast) and text.ends_with(")"):
 			return text.substr(cast.length(), text.length() - cast.length() - 1).strip_edges()
 	return text
+
+
+## Y12. The words a table of UNLOCKED ids is ever named with. Deliberately narrow: `skills` is the
+## table of what the tree HOLDS, not of what has been taken, and reading a lookup in it as "is
+## unlocked" would say the opposite of what the line asks. A file that keeps a dictionary of flags
+## under a name none of these appear in is keeping flags, and the tree words must not claim it.
+const SKILL_TABLE_WORDS: PackedStringArray = ["unlocked", "unlocks", "learned", "perk", "talent"]
+
+## Y12. The marks that say a file is running a TREE rather than a flat set of flags: a prerequisite
+## list walked before the unlock, a cost taken off a number, or a points counter named outright.
+## One of them has to be there before any `has()` in the file reads as Is unlocked.
+const SKILL_TREE_MARKS: PackedStringArray = ["requires", ".cost", "skill_point", "skill point"]
+
+
+## Y12 / Y13. What a file's own shape says about a SKILL TREE: which table it keeps unlocked ids in.
+## The question cannot be answered from a single line - `unlocked.has("double_jump")` is a plain
+## dictionary lookup until the file elsewhere writes `unlocked[id] = true` beside a requires list -
+## so it is answered from one walk here and handed to the grammar as ordinary context.
+##
+## {} for every file that keeps no such table, which is nearly all of them: the reading that asks
+## about a line checks this first and lets the general grammar carry on when it is empty.
+static func skill_tree_facts(lines: PackedStringArray) -> Dictionary:
+	var declared: Dictionary = {}
+	var marked: bool = false
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		for mark: String in SKILL_TREE_MARKS:
+			if text.contains(mark):
+				marked = true
+		var body: String = text.trim_prefix("@export ")
+		if body.begins_with("var ") or body.begins_with("const "):
+			var parts: Dictionary = _assigned_parts(body)
+			if not parts.is_empty():
+				declared[str(parts["name"])] = true
+	if not marked:
+		return {}
+	# A table counts when the file both OWNS it - it declares it, or it writes an unlock into it -
+	# and NAMES it as the record of what has been taken. Either half alone would be too loose: a
+	# neighbour's `unlocked` is not this file's, and a dictionary this file owns under any other
+	# name is not a tree.
+	var owned: Dictionary = declared.duplicate()
+	for line: String in lines:
+		var written: String = _unlocked_table_write(line.strip_edges())
+		if not written.is_empty():
+			owned[written] = true
+	var tables: Dictionary = {}
+	for table: String in owned:
+		for word: String in SKILL_TABLE_WORDS:
+			if table.to_lower().contains(word):
+				tables[table] = true
+	if tables.is_empty():
+		return {}
+	return {"unlocked_tables": tables}
+
+
+## Y12. The table an UNLOCK line writes into, or "" when the line is not an unlock. Both spellings
+## count: `unlocked[id] = true` for a dictionary of ids and `unlocked.append(id)` for a list of
+## them. The `= true` is required - a table written with a level or a timestamp is a different
+## shape, and the reading would say the wrong thing about it.
+static func _unlocked_table_write(text: String) -> String:
+	if text.ends_with(")") and text.contains(".append("):
+		var head: String = text.substr(0, text.find(".append(")).strip_edges()
+		return head if EventSheetSentence.is_identifier(head) else ""
+	var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+	if assign_at <= 0 or text.substr(assign_at + 3).strip_edges() != "true":
+		return ""
+	var target: String = text.substr(0, assign_at).strip_edges()
+	var open_at: int = target.find("[")
+	if open_at <= 0 or not target.ends_with("]"):
+		return ""
+	var table: String = target.substr(0, open_at).strip_edges()
+	return table if EventSheetSentence.is_identifier(table) else ""

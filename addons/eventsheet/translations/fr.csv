@@ -4149,3 +4149,9 @@ Bob up and down,Osciller de haut en bas
 "a sine wave, as you move",une onde sinusoïdale pendant que vous bougez
 Keys and the doors that want them,Les clés et les portes qui les réclament
 "Enemies noticing you, and each other","Des ennemis qui vous remarquent, et se remarquent entre eux"
+Is unlocked {id},Est débloqué {id}
+Is not unlocked {id},N'est pas débloqué {id}
+{base} boosted by {skill} upgrade ({percent} per level),{base} augmenté par l'amélioration {skill} ({percent} par niveau)
+{base} +{amount} per level,{base} +{amount} par niveau
+"A skill tree - prerequisites, points and unlocks","Un arbre de compétences - prérequis, points et déblocages"
+Skill Tree Screen,Écran d'arbre de compétences

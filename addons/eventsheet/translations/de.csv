@@ -4149,3 +4149,9 @@ Bob up and down,Auf und ab wippen
 "a sine wave, as you move","eine Sinuswelle, während du dich bewegst"
 Keys and the doors that want them,"Schlüssel und die Türen, die sie verlangen"
 "Enemies noticing you, and each other","Gegner, die dich und einander bemerken"
+Is unlocked {id},Ist freigeschaltet {id}
+Is not unlocked {id},Ist nicht freigeschaltet {id}
+{base} boosted by {skill} upgrade ({percent} per level),{base} verstärkt durch Verbesserung {skill} ({percent} pro Stufe)
+{base} +{amount} per level,{base} +{amount} pro Stufe
+"A skill tree - prerequisites, points and unlocks","Ein Fähigkeitenbaum - Voraussetzungen, Punkte und Freischaltungen"
+Skill Tree Screen,Fähigkeitenbaum-Bildschirm

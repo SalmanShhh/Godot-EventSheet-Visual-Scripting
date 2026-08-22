@@ -13810,6 +13810,14 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 		"IsAncestorOf":
 			return EventSheetSentence.condition("%s.is_ancestor_of(%s)" % [
 				str(params_dict.get("target", "self")), str(params_dict.get("node", ""))], context)
+		# ── Y12 lens hook ────────────────────────────────────────────────────────────────────────
+		# A lookup in the table a file keeps unlocked skill ids in is the skill tree's own question,
+		# and a row the importer lifted must ask it in the same words the typed line does. Every
+		# other Has Key row falls straight through - the grammar refuses the moment the file keeps
+		# no such table, which is every file that is not running a tree.
+		"DictHasKey":
+			return EventSheetSentence.skill_tree_condition("%s.has(%s)" % [
+				str(params_dict.get("var_name", "")), str(params_dict.get("key", ""))], context)
 		"IsActionPressed":
 			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), false)
 		"IsActionJustPressed":

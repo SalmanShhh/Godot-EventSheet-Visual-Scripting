@@ -40,7 +40,9 @@ const PATTERN_IDS: PackedStringArray = [
 	# Y19 / Y20 / Y21 - which way a thing faces, and everything that has to turn with it.
 	"facing",
 	# Y16 - the coloured keycard and the door that wants it.
-	"keys_doors"
+	"keys_doors",
+	# Y12 / Y13 - the skill tree: an unlocked table, a points number and a requires list.
+	"skill_tree"
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is

@@ -508,6 +508,13 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var keycard: Dictionary = keys_doors_condition(text, context)
 	if not keycard.is_empty():
 		return keycard
+	# ── Y12 ─────────────────────────────────────────────────────────────────────────────────────
+	# Whether a skill is unlocked is the tree's own question, and the membership reading below would
+	# answer a narrower one - "the unlocked table has this key". Gated on the file keeping such a
+	# table at all, so an ordinary dictionary lookup anywhere else is untouched.
+	var learned: Dictionary = skill_tree_condition(text, context)
+	if not learned.is_empty():
+		return learned
 	# ── T1 / T3 ─────────────────────────────────────────────────────────────────────────────────
 	# A projectile's distance travelled and a glide's arrival are ONE question each, and the readings
 	# below would describe them as the operator they happen to be written with.
@@ -1148,6 +1155,12 @@ static func expression_text(text: String, context: Dictionary = {}) -> String:
 	var clock_text: String = minutes_seconds_expression(trimmed, context)
 	if not clock_text.is_empty():
 		return clock_text
+	# Y13 - a stat with an upgrade's level inside it is one sentence about the upgrade, not a
+	# multiplication to spell out. Whole-expression only and gated on the level call itself, so no
+	# ordinary percentage anywhere is claimed.
+	var boosted: String = skill_boost_words(trimmed)
+	if not boosted.is_empty():
+		return boosted
 	# R3 - the value a tween local is declared from is "a new tween", not a call to repeat back.
 	var tween_value: String = tween_expression(trimmed)
 	if not tween_value.is_empty():
@@ -13856,6 +13869,155 @@ static func spatial_words_assignment(object_name: String, object_class: String, 
 			{"value": [expression_text(assigned, context), "value"]}), "camera",
 			_member_line(owner_text, member, assigned))
 	return {}
+
+
+# ── Y12 / Y13. The skill tree ──────────────────────────────────────────────────────────────────
+# A skill tree is three things a file writes apart: a table of unlocked ids, a number of points,
+# and a list of ids each node requires first. The Upgrades pack has words for all three, so a file
+# that hand-writes them reads in those words rather than as a dictionary lookup and some
+# arithmetic. Display only - nothing here reaches emission, and the byte round-trip cannot move.
+
+
+## The object the tree words belong to: the Upgrades pack's skill half, as a reader meets it.
+const OBJECT_SKILLS := "Skills"
+
+## The behavior a hand-written tree could be swapped for.
+const SKILL_TREE_PACK := "upgrades"
+
+## The method names that answer "how many levels of this upgrade are taken". A boost sentence is
+## claimed only when one of these is INSIDE the arithmetic, which is what keeps an ordinary
+## `(1.0 + x * 0.1)` from being read as an upgrade wherever it appears.
+const SKILL_LEVEL_METHODS: PackedStringArray = ["level", "level_of", "skill_level", "upgrade_level"]
+
+
+## Y12. The one question a hand-written tree asks: whether an id is in the unlocked table. {} when
+## the line is not that question, or when the file keeps no such table - the whole-file gate that
+## keeps every other `has()` in every other project reading as the lookup it is.
+static func skill_tree_condition(text: String, context: Dictionary) -> Dictionary:
+	var tables: Dictionary = context.get("unlocked_tables", {})
+	if tables.is_empty():
+		return {}
+	var bare: String = text.strip_edges()
+	var negated: bool = bare.begins_with("not ")
+	if negated:
+		bare = bare.substr(4).strip_edges()
+	var call: Dictionary = call_parts(bare)
+	if call.is_empty() or str(call.get("method", "")) != "has":
+		return {}
+	if not tables.has(str(call.get("target", "")).trim_prefix("self.")):
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1:
+		return {}
+	return _with_pattern(_sentence(OBJECT_SKILLS,
+		"Is not unlocked {id}" if negated else "Is unlocked {id}",
+		{"id": [skill_id_words(args[0]), "value"]}), "skill_tree", text.strip_edges(), SKILL_TREE_PACK)
+
+
+## Y12. A skill id as a reader meets it: the quotes kept, and the underscores that only ever stood
+## in for spaces turned back into spaces. A value that is not a literal - a loop's `req` - is shown
+## as itself, because naming it would show a skill actually called "req".
+static func skill_id_words(value: String) -> String:
+	var text: String = value.strip_edges().trim_prefix("&")
+	if not _is_string_literal(text):
+		return text
+	return "\"%s\"" % _unquote(text).replace("_", " ")
+
+
+## Y13. A stat with an upgrade's level inside it, said as the one sentence it is:
+##
+##   base_speed * (1.0 + upgrades.level("speed") * 0.1)   base_speed boosted by Speed upgrade (10% per level)
+##   base_damage + 5 * upgrades.level("power")            base_damage +5 per level
+##
+## "" when the expression is neither shape. Decided by the WHOLE expression and gated on a level
+## call rather than on the arithmetic, so no ordinary percentage anywhere is claimed.
+static func skill_boost_words(text: String) -> String:
+	var trimmed: String = text.strip_edges()
+	var scaled: String = _skill_scaled_words(trimmed)
+	if not scaled.is_empty():
+		return scaled
+	return _skill_flat_words(trimmed)
+
+
+## `base * (1.0 + <level call> * 0.1)` - the per-cent-per-level shape.
+static func _skill_scaled_words(trimmed: String) -> String:
+	var star_at: int = top_level_index(trimmed, " * (")
+	if star_at <= 0 or not trimmed.ends_with(")"):
+		return ""
+	var base: String = trimmed.substr(0, star_at).strip_edges()
+	var bracketed: String = trimmed.substr(star_at + 3).strip_edges()
+	if closing_paren(bracketed, 0) != bracketed.length() - 1:
+		return ""
+	var body: String = bracketed.substr(1, bracketed.length() - 2).strip_edges()
+	var plus_at: int = top_level_index(body, " + ")
+	if plus_at <= 0 or not ["1.0", "1"].has(body.substr(0, plus_at).strip_edges()):
+		return ""
+	var step: Dictionary = _skill_level_step(body.substr(plus_at + 3).strip_edges())
+	if step.is_empty() or base.is_empty():
+		return ""
+	return _fill(translate("{base} boosted by {skill} upgrade ({percent} per level)"), {
+		"base": base,
+		"skill": str(step["skill"]),
+		"percent": _skill_percent(float(step["factor"]))
+	})
+
+
+## `base + 5 * <level call>` - the flat-amount-per-level shape.
+static func _skill_flat_words(trimmed: String) -> String:
+	var plus_at: int = top_level_index(trimmed, " + ")
+	if plus_at <= 0:
+		return ""
+	var base: String = trimmed.substr(0, plus_at).strip_edges()
+	var step: Dictionary = _skill_level_step(trimmed.substr(plus_at + 3).strip_edges())
+	if step.is_empty() or base.is_empty():
+		return ""
+	return _fill(translate("{base} +{amount} per level"), {
+		"base": base,
+		"amount": _skill_amount(float(step["factor"]))
+	})
+
+
+## One `<number> * <level call>` product (either way round), as {skill, factor}. {} when neither
+## half is a level call, which is what every ordinary product in every project is.
+static func _skill_level_step(text: String) -> Dictionary:
+	var star_at: int = top_level_index(text, " * ")
+	if star_at <= 0:
+		return {}
+	var left: String = text.substr(0, star_at).strip_edges()
+	var right: String = text.substr(star_at + 3).strip_edges()
+	for pair: Array in [[left, right], [right, left]]:
+		var skill: String = skill_level_call_name(str(pair[0]))
+		if not skill.is_empty() and str(pair[1]).is_valid_float():
+			return {"skill": skill, "factor": float(str(pair[1]))}
+	return {}
+
+
+## Y13. The upgrade a level call asks about, as the reader's name for it - "" when the text is not
+## a level call. `upgrades.level("speed")` and `Upgrades.level_of("speed")` both answer "Speed".
+static func skill_level_call_name(text: String) -> String:
+	var call: Dictionary = call_parts(text.strip_edges())
+	if call.is_empty() or not SKILL_LEVEL_METHODS.has(str(call.get("method", ""))):
+		return ""
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 1 or not _is_string_literal(args[0]):
+		return ""
+	return function_words(_unquote(args[0].strip_edges().trim_prefix("&")))
+
+
+## A factor as the per-cent a reader thinks in: 0.1 is 10%, 1.25 is 125%. Trailing zeros go, so a
+## round number reads as a round number.
+static func _skill_percent(factor: float) -> String:
+	return "%s%%" % _skill_amount(factor * 100.0)
+
+
+## A number with no trailing zeros - 5.0 reads 5, 2.5 reads 2.5.
+static func _skill_amount(value: float) -> String:
+	var text: String = String.num(value, 3)
+	if not text.contains("."):
+		return text
+	while text.ends_with("0"):
+		text = text.substr(0, text.length() - 1)
+	return text.trim_suffix(".")
 
 
 ## Every batch-thirteen CALL reading in one place, in the same order and for the same reason.
