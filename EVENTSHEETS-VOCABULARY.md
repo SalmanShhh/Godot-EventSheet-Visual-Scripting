@@ -2159,6 +2159,81 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stroke Length** - How far the finger travelled along the whole stroke, in pixels - the drawn line's length, not the distance between its ends.
 - **Stroke Points** - How many points the stroke gathered so far.
 
+### TraversalKit (`res://eventsheet_addons/traversal_kit/traversal_kit_behavior.gd`)
+@ace_tags(movement, traversal, platformer) @ace_category("Traversal") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Ledge Grabbed**
+- **On Climbed**
+- **On Vaulted**
+- **On Entered Water**
+- **On Left Water**
+
+#### Conditions
+- **Is At A Ledge** - True when the forward probe finds a wall at chest height and the higher probe finds nothing - a lip you could hang from. False while already hanging, and for a moment after a Drop so you do not re-grab the lip you just let go of.
+- **Is Hanging** - True while the host is hanging from a ledge it grabbed. The kit holds it exactly where it grabbed - gravity cannot pull it off.
+- **Is Wall Sliding** - True on the frames a Slide Down Wall actually slowed a fall.
+- **Is Wall Running** - True on the frames a Wall Run is carrying the host along a wall (it stops on its own after Wall Run Max Time).
+- **Is On Ladder** - True while the host is standing inside an Area2D marked with the ladder group.
+- **Is At A Vaultable Obstacle** - True when the forward probe finds something at knee height and nothing at chest height - a low obstacle you could throw yourself over.
+- **Is Crouching** - True while the host is crouched (its collider is the short one).
+- **Is In Water** - True while the host is inside an Area2D marked with the water group.
+- **Is Above The Surface** - True when the host's own point is above the water line of the area it is in - the test that lets a swimmer breathe, jump out, or hold a boat at the top. Always true out of water.
+
+#### Actions
+- **Grab Ledge** - Grabs the ledge in front: the host stops dead, holds the lip (a little below it, by Hang Offset) and fires On Ledge Grabbed. Ignored if it is already hanging.
+- **Climb Up** (`duration: float`) - Leaves the ledge upward. With no duration it lets go and jumps (Climb Jump Velocity) - the quick platformer exit. With a duration it is a mantle: the host is carried up and over the lip in that many seconds, with nothing else able to move it, and On Climbed fires when it lands on top.
+- **Drop** - Lets go of the ledge and falls. The kit ignores the same lip for Regrab Delay seconds afterwards.
+- **Slide Down Wall** (`speed: float`) - Caps the fall while the host is pressed against a wall, so it slides instead of dropping. Does nothing when it is not on a wall or is still moving upward.
+- **Wall Jump** (`push: float, rise: float`) - Jumps AWAY from the wall: the push goes along the wall's own normal, so the host always leaves the wall it was on, whichever side that was.
+- **Wall Run** (`gravity_percent: float, min_speed: float`) - Runs along the wall: gravity is replaced by the percentage you give, so the host barely sinks while it keeps up speed. It needs to be on a wall, off the floor, and moving at least Min Speed - and it gives out after Wall Run Max Time.
+- **Climb Ladder** (`speed: float`) - Drives the host up or down the ladder at this speed, from the up/down controls (or the AI axis). It writes the vertical speed outright, so gravity is off for as long as you keep calling it.
+- **Vault Over** (`duration: float`) - Carries the host forward over the obstacle in this many seconds. Nothing else moves it while the vault runs, and On Vaulted fires on the far side.
+- **Crouch** - Crouches: the host's first collision shape is swapped for a copy scaled to Crouch Scale, kept standing on the same feet. The original is put back by Stand, so the shape in your scene is never edited.
+- **Stand** - Stands back up and puts the original collision shape back exactly as it was.
+- **Swim** (`gravity_percent: float, drag: float`) - Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every tick while in water.
+
+#### Expressions
+- **Water Depth** - How far below the water line the host is, in pixels (0 out of water or at the surface).
+
+### TraversalKit3D (`res://eventsheet_addons/traversal_kit_3d/traversal_kit_3d_behavior.gd`)
+@ace_tags(movement, traversal, 3d) @ace_category("Traversal 3D") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Ledge Grabbed**
+- **On Climbed**
+- **On Vaulted**
+- **On Entered Water**
+- **On Left Water**
+
+#### Conditions
+- **Is At A Ledge** - True when the forward probe finds a wall at chest height and the higher probe finds nothing - a lip you could hang from. False while already hanging, and for a moment after a Drop so you do not re-grab the lip you just let go of.
+- **Is Hanging** - True while the host is hanging from a ledge it grabbed. The kit holds it exactly where it grabbed - gravity cannot pull it off.
+- **Is Wall Sliding** - True on the frames a Slide Down Wall actually slowed a fall.
+- **Is Wall Running** - True on the frames a Wall Run is carrying the host along a wall (it stops on its own after Wall Run Max Time).
+- **Is On Ladder** - True while the host is standing inside an Area3D marked with the ladder group.
+- **Is At A Vaultable Obstacle** - True when the forward probe finds something at knee height and nothing at chest height - a low obstacle you could throw yourself over.
+- **Is Crouching** - True while the host is crouched (its collider is the short one).
+- **Is In Water** - True while the host is inside an Area3D marked with the water group.
+- **Is Above The Surface** - True when the host's own point is above the water line of the area it is in - the test that lets a swimmer breathe, climb out, or hold at the top. Always true out of water.
+
+#### Actions
+- **Grab Ledge** - Grabs the ledge in front: the host stops dead, holds the lip (a little below it, by Hang Offset) and fires On Ledge Grabbed. Ignored if it is already hanging.
+- **Climb Up** (`duration: float`) - Leaves the ledge upward. With no duration it lets go and jumps (Climb Jump Velocity) - the quick exit. With a duration it is a mantle: the host is carried up and over the lip in that many seconds, with nothing else able to move it, and On Climbed fires when it lands on top.
+- **Drop** - Lets go of the ledge and falls. The kit ignores the same lip for Regrab Delay seconds afterwards.
+- **Slide Down Wall** (`speed: float`) - Caps the fall while the host is pressed against a wall, so it slides instead of dropping. Does nothing when it is not on a wall or is still moving upward.
+- **Wall Jump** (`push: float, rise: float`) - Jumps AWAY from the wall: the push goes along the wall's own normal, flattened to the floor plane, so the host always leaves the wall it was on, whichever side that was.
+- **Wall Run** (`gravity_percent: float, min_speed: float`) - Runs along the wall: gravity is replaced by the percentage you give, so the host barely sinks while it keeps up speed. It needs to be on a wall, off the floor, and moving at least Min Speed - and it gives out after Wall Run Max Time.
+- **Climb Ladder** (`speed: float`) - Drives the host up or down the ladder at this speed, from the up/down controls (or the AI axis). It writes the vertical speed outright, so gravity is off for as long as you keep calling it.
+- **Vault Over** (`duration: float`) - Carries the host forward over the obstacle in this many seconds. Nothing else moves it while the vault runs, and On Vaulted fires on the far side.
+- **Crouch** - Crouches: the host's first collision shape is swapped for a copy scaled to Crouch Scale, kept standing on the same feet. The original is put back by Stand, so the shape in your scene is never edited.
+- **Stand** - Stands back up and puts the original collision shape back exactly as it was.
+- **Swim** (`gravity_percent: float, drag: float`) - Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every tick while in water.
+- **Float** (`buoyancy: float`) - Buoyancy: pushes the host upward in proportion to how deep under the surface it is, so it bobs up and settles at the water line instead of sinking. Call it every tick together with Swim.
+
+#### Expressions
+- **Water Depth** - How far below the water line the host is, in metres (0 out of water or at the surface).
+
 ### TweenBehavior (`res://eventsheet_addons/tween/tween_behavior.gd`)
 @ace_tags(motion, juice) @ace_category("Tween") @ace_expose_all(node) @ace_version(1.0.0)
 

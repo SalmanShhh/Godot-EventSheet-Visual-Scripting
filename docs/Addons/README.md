@@ -72,6 +72,7 @@ Attach to a node to move it.
 - [Car](Car.md) - arcade car steering (turn-and-drive), no physics body needed.
 - [Tile Movement](Tile-Movement.md) - grid-locked stepping, one tile per press.
 - [Slide Movement](Slide-Movement.md) - grid movement where a tap slides you until you hit a wall.
+- [Traversal Kit](Traversal-Kit.md) - ledge grabs, mantles, wall slides, wall jumps, wall runs, ladders, vaults, crouching and swimming, written as velocity on top of your mover.
 - [Bound To](Bound-To.md) - keep anything inside the screen or a custom area (with On Hit Bound).
 - [Wrap](Wrap.md) - Asteroids-style screen wrapping, per axis - rectangle or circular arenas.
 - [Rotate](Rotate.md) - constant spin with speed + acceleration, 2D or any 3D axis, previewable in the editor.
@@ -94,6 +95,7 @@ Attach to a node to move it.
 - [Orbit 3D](Orbit-3D.md) - circle a 3D node around a centre.
 - [Pin 3D](Pin-3D.md) - the Pin behavior's twin on a Node3D host, mode for mode, with the point pin riding a BoneAttachment3D so "pin the sword to the hand" is one name.
 - [Skateboard 3D](Skateboard-3D.md) - the board on a surface: gravity projected onto the floor normal so bowls carve, the board kept flat on ramps, a named moment for leaving a halfpipe lip, Path3D grinds, and landings judged by the board's up against the surface.
+- [Traversal Kit 3D](Traversal-Kit-3D.md) - the same traversal moveset in metres: ledge grabs, mantles, wall runs, ladders, vaults, crouching, swimming and buoyancy on top of the FPS Controller.
 
 ## AI and logic
 

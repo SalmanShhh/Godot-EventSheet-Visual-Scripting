@@ -45,7 +45,9 @@ const PACKS: Array[String] = [
 	"res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior",
 	"res://eventsheet_addons/weapon_kit/weapon_kit_behavior",
 	"res://eventsheet_addons/htn_agent/htn_agent_behavior",
-	"res://eventsheet_addons/abilities/abilities_behavior"
+	"res://eventsheet_addons/abilities/abilities_behavior",
+	"res://eventsheet_addons/traversal_kit/traversal_kit_behavior",
+	"res://eventsheet_addons/traversal_kit_3d/traversal_kit_3d_behavior"
 ]
 
 
