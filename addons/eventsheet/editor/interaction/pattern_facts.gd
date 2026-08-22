@@ -45,7 +45,10 @@ const PATTERN_IDS: PackedStringArray = [
 	"skill_tree",
 	# Y9 / Y22 - the rail ride and the board. Two ids rather than one because snapping to a curve
 	# and riding it is a general shape a traversal pack owns as readily as a skateboard does.
-	"grind", "skateboard"
+	"grind", "skateboard",
+	# Y7 / Y8 / Y11 - the traversal shapes: the ledge a two-probe test finds, the three moves
+	# built on the wall a body is touching, and the water volume that swaps gravity for drag.
+	"ledge", "wall_move", "swim"
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is

@@ -96,7 +96,10 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 		"rate_variables": rate_variables(lines),
 		# X28 - the input window this file writes, {} when it writes none. The flag, the deadline and
 		# the control are three lines apart, so the shape is worked out once rather than guessed at.
-		"input_window": input_window_facts(lines)
+		"input_window": input_window_facts(lines),
+		# Y11 - which booleans hold "I am in the water". The way in, the way out and the swimming
+		# itself are three places apart, so the question is answered once over the whole file.
+		"water_flags": water_flags(lines)
 	}
 
 
@@ -484,6 +487,18 @@ static func game_shape_claims(body: PackedStringArray, file_facts: Dictionary) -
 	var mission: Dictionary = _mission_timer_claim(body, file_facts)
 	if not mission.is_empty():
 		found.append(mission)
+	# Y7 / Y8 / Y11 - the three traversal shapes, each gated on the thing that makes it that shape
+	# rather than on the velocity write it ends in: the two-probe test, the wall the body is already
+	# touching, and a volume marked water that raises a flag on the way in.
+	var ledge: Dictionary = _ledge_claim(body)
+	if not ledge.is_empty():
+		found.append(ledge)
+	var walls: Dictionary = _wall_move_claim(body)
+	if not walls.is_empty():
+		found.append(walls)
+	var water: Dictionary = _swim_claim(body, file_facts)
+	if not water.is_empty():
+		found.append(water)
 	return found
 
 
@@ -611,6 +626,337 @@ static func _mission_timer_claim(body: PackedStringArray, file_facts: Dictionary
 			"adoptable": "", "ace_ids": PackedStringArray()
 		}
 	return {}
+
+
+## Y7. The ledge this body finds, with the two-probe test and the hang it raises as the evidence.
+##
+## The gate is the PAIR: one probe that hits and a higher one that does not, asked in the same
+## question. A single is_colliding() is a ray, and calling every ray a ledge would name a traversal
+## move in every file with a RayCast in it. The flag raised at the lip is required too, and so is a
+## line that ASKS about that flag: a boolean nobody reads is not a hang, it is a boolean.
+static func _ledge_claim(body: PackedStringArray) -> Dictionary:
+	var gate: String = ""
+	for line: String in body:
+		# The cheap gate first: this walk runs on every event of every rebuild, and a line with
+		# no cast in it cannot be half of a probe pair however it is spelled.
+		if not line.contains(".is_colliding()"):
+			continue
+		var condition: String = _branch_condition(line)
+		if condition.is_empty() or not is_ledge_probe_pair(condition):
+			continue
+		gate = line.strip_edges()
+		break
+	if gate.is_empty():
+		return {}
+	var flag: String = ""
+	var evidence: PackedStringArray = PackedStringArray([gate])
+	for line: String in body:
+		var text: String = line.strip_edges()
+		var raised: String = _flag_raised(text)
+		if raised.is_empty():
+			continue
+		flag = raised
+		evidence.append(text)
+		break
+	if flag.is_empty():
+		return {}
+	var asked: bool = false
+	for line: String in body:
+		var condition: String = _branch_condition(line)
+		if condition != flag and condition != "not %s" % flag:
+			continue
+		asked = true
+		evidence.append(line.strip_edges())
+	if not asked:
+		return {}
+	return {
+		"pattern": "ledge", "evidence": evidence,
+		"words": "a wall ahead with nothing above it is a ledge, and %s is the hang it puts the body in" % flag,
+		"adoptable": _traversal_pack(body), "ace_ids": PackedStringArray()
+	}
+
+
+## Y7. Whether a question is the two-probe ledge test: one cast that must HIT and a higher one that
+## must be CLEAR, joined by `and` in the same condition.
+static func is_ledge_probe_pair(condition: String) -> bool:
+	var hit: bool = false
+	var clear: bool = false
+	for term: String in condition.split(" and "):
+		var text: String = term.strip_edges()
+		while text.begins_with("(") and text.ends_with(")"):
+			text = text.substr(1, text.length() - 2).strip_edges()
+		var negated: bool = text.begins_with("not ")
+		if negated:
+			text = text.substr(4).strip_edges()
+		if not (text.ends_with(".is_colliding()") and text.length() > 15):
+			continue
+		if negated:
+			clear = true
+		else:
+			hit = true
+	return hit and clear
+
+
+## Y8. The wall moves this body writes, claimed on the wall it is already touching.
+##
+## The gate is that contact: is_on_wall() or the wall's own normal has to be asked for somewhere in
+## the same body, so an ordinary velocity write in a file that never touches a wall stays an ordinary
+## velocity write. What is claimed is which of the three moves the body actually spells out.
+static func _wall_move_claim(body: PackedStringArray) -> Dictionary:
+	var touching: bool = false
+	for line: String in body:
+		if line.contains("is_on_wall()") or line.contains("get_wall_normal()"):
+			touching = true
+			break
+	if not touching:
+		return {}
+	var normal_names: PackedStringArray = PackedStringArray()
+	for line: String in body:
+		if not line.contains("get_wall_normal()"):
+			continue
+		var parts: Dictionary = _assigned_parts(line.strip_edges())
+		if not parts.is_empty() and str(parts.get("value", "")).contains("get_wall_normal()"):
+			normal_names.append(str(parts.get("name", "")))
+	var moves: PackedStringArray = PackedStringArray()
+	var evidence: PackedStringArray = PackedStringArray()
+	for line: String in body:
+		var text: String = line.strip_edges()
+		var kind: String = wall_move_kind(text, normal_names)
+		if kind.is_empty():
+			continue
+		if not moves.has(kind):
+			moves.append(kind)
+		evidence.append(text)
+	if moves.is_empty():
+		return {}
+	var said: PackedStringArray = PackedStringArray()
+	for kind: String in moves:
+		said.append(str(WALL_MOVE_WORDS.get(kind, kind)))
+	return {
+		"pattern": "wall_move", "evidence": evidence,
+		"words": "the wall it is touching carries %s" % _and_list(said),
+		"adoptable": _traversal_pack(body), "ace_ids": PackedStringArray()
+	}
+
+
+## Y8. Which wall move a single statement is, or "" for anything else. `normal_names` are the local
+## values this body took the wall's normal into, so the jump is recognised whether it is written
+## against get_wall_normal() directly or against the variable it was kept in.
+static func wall_move_kind(text: String, normal_names: PackedStringArray = PackedStringArray()) -> String:
+	var rising: int = EventSheetSentence.top_level_index(text, " += ")
+	if rising > 0:
+		var risen: String = text.substr(0, rising).strip_edges()
+		var by: String = text.substr(rising + 4).strip_edges()
+		if _is_fall_speed(risen) and by.to_lower().contains("gravity") and _has_scale_factor(by):
+			return "run"
+		return ""
+	var at: int = EventSheetSentence.top_level_index(text, " = ")
+	if at <= 0:
+		return ""
+	var target: String = text.substr(0, at).strip_edges()
+	var value: String = text.substr(at + 3).strip_edges()
+	if not (_is_velocity(target) or _is_fall_speed(target)):
+		return ""
+	if value.contains("get_wall_normal()"):
+		return "jump"
+	for kept: String in normal_names:
+		if not kept.is_empty() and value.contains(kept):
+			return "jump"
+	if not _is_fall_speed(target):
+		return ""
+	for capped: String in ["min(", "minf(", "max(", "maxf("]:
+		if value.begins_with(capped) and value.contains(target):
+			return "slide"
+	return ""
+
+
+## Y8. The words each wall move is said in.
+const WALL_MOVE_WORDS: Dictionary = {
+	"slide": "a capped slide down it",
+	"jump": "a jump away along its own normal",
+	"run": "a run on reduced gravity"
+}
+
+
+## Y11. The swim this body writes, claimed on the water flag the file raises and lowers.
+##
+## Two halves, two rows a reader meets in different places: the toggle (entering and leaving the
+## marked volume) and the tick that trades gravity for drag while the flag is up. Either half claims
+## it, but only when the FILE holds both - a boolean with "water" in its name and no swim arithmetic
+## anywhere is a boolean, and drag on its own is a slowdown.
+static func _swim_claim(body: PackedStringArray, file_facts: Dictionary) -> Dictionary:
+	var flags: Dictionary = file_facts.get("water_flags", {})
+	if flags.is_empty():
+		return {}
+	var toggles: PackedStringArray = PackedStringArray()
+	var swum: PackedStringArray = PackedStringArray()
+	var flag: String = ""
+	for line: String in body:
+		var text: String = line.strip_edges()
+		for name_text: String in flags:
+			var marks: Dictionary = flags[name_text]
+			if text == str(marks.get("in_line", "")) or text == str(marks.get("out_line", "")):
+				toggles.append(text)
+				flag = name_text
+		if is_water_gravity_swap(text) or is_water_drag(text):
+			swum.append(text)
+	if swum.is_empty() and toggles.is_empty():
+		return {}
+	if flag.is_empty():
+		flag = str(flags.keys()[0])
+	var evidence: PackedStringArray = PackedStringArray()
+	evidence.append_array(toggles)
+	evidence.append_array(swum)
+	var words: String = "%s is raised on the way into the water and lowered on the way out" % flag
+	if not swum.is_empty():
+		words = "while %s is up, gravity is traded for the water's own pull and drag" % flag
+	return {
+		"pattern": "swim", "evidence": evidence, "words": words,
+		"adoptable": _traversal_pack(body), "ace_ids": PackedStringArray()
+	}
+
+
+## Y11. The values this file uses as a WATER flag: a boolean whose name says water, set BOTH ways
+## (the way in and the way out), in a file that also swims - swaps gravity for the water's own pull,
+## or drags the velocity down. Without the arithmetic the flag is only a flag.
+##
+## The value is {in_line, out_line} - the two statements themselves, so the claim can show them.
+static func water_flags(lines: PackedStringArray) -> Dictionary:
+	var found: Dictionary = {}
+	var swims: bool = false
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		# This one walks the whole FILE on every rebuild, so nothing below is parsed until a
+		# cheap `contains` says the line could possibly be part of the shape.
+		if text.contains("velocity") or text.contains("gravity"):
+			if is_water_gravity_swap(text) or is_water_drag(text):
+				swims = true
+		if not (text.ends_with("true") or text.ends_with("false")):
+			continue
+		var parts: Dictionary = _assigned_parts(text)
+		if parts.is_empty():
+			continue
+		var name_text: String = str(parts.get("name", ""))
+		if not is_water_word(name_text):
+			continue
+		var value: String = str(parts.get("value", ""))
+		if value != "true" and value != "false":
+			continue
+		var marks: Dictionary = found.get(name_text, {"in_line": "", "out_line": ""})
+		if value == "true":
+			marks["in_line"] = text
+		else:
+			marks["out_line"] = text
+		found[name_text] = marks
+	if not swims:
+		return {}
+	var complete: Dictionary = {}
+	for name_text: String in found:
+		var marks: Dictionary = found[name_text]
+		if str(marks.get("in_line", "")).is_empty() or str(marks.get("out_line", "")).is_empty():
+			continue
+		complete[name_text] = marks
+	return complete
+
+
+## Y11. Whether a name says water. The three words a project spells the same idea in; anything else
+## is a boolean about something else.
+static func is_water_word(name_text: String) -> bool:
+	var lowered: String = name_text.to_lower()
+	for word: String in ["water", "submerged", "swimming"]:
+		if lowered.contains(word):
+			return true
+	return false
+
+
+## Y11. Whether a statement trades gravity for the water's own pull - the swap that makes a fall a
+## sink. The water has to be NAMED in it, either side of the assignment.
+static func is_water_gravity_swap(text: String) -> bool:
+	for operator: String in [" = ", " += "]:
+		var at: int = EventSheetSentence.top_level_index(text, operator)
+		if at <= 0:
+			continue
+		var target: String = text.substr(0, at).strip_edges()
+		var value: String = text.substr(at + operator.length()).strip_edges()
+		if not (target.to_lower().ends_with("gravity") or _is_fall_speed(target)):
+			continue
+		if is_water_word(target) or is_water_word(value):
+			return true
+	return false
+
+
+## Y11. Whether a statement drags the whole velocity down by a fraction of itself - `velocity *= 0.9`
+## and the spellings of the same thing. The factor has to be between 0 and 1: multiplying velocity by
+## 2 is a boost, not a drag.
+static func is_water_drag(text: String) -> bool:
+	var at: int = EventSheetSentence.top_level_index(text, " *= ")
+	if at <= 0:
+		return false
+	if not _is_velocity(text.substr(0, at).strip_edges()):
+		return false
+	return _is_fraction(text.substr(at + 4).strip_edges())
+
+
+## Which traversal pack a claim could adopt: the 3D twin whenever the evidence is written in 3D.
+static func _traversal_pack(body: PackedStringArray) -> String:
+	for line: String in body:
+		for word: String in ["Vector3", "RayCast3D", "ShapeCast3D", "Area3D"]:
+			if line.contains(word):
+				return "traversal_kit_3d"
+	return "traversal_kit"
+
+
+## `<name> = true`, and the name it raises. Only a bare identifier (or `self.name`): a flag on
+## something else is that thing's business.
+static func _flag_raised(text: String) -> String:
+	var parts: Dictionary = _assigned_parts(text)
+	if parts.is_empty() or str(parts.get("value", "")) != "true":
+		return ""
+	return str(parts.get("name", ""))
+
+
+## Whether a target is the body's own velocity.
+static func _is_velocity(target: String) -> bool:
+	var text: String = target.strip_edges().trim_prefix("self.")
+	return text == "velocity" or text.ends_with(".velocity")
+
+
+## Whether a target is the velocity's fall component - `velocity.y` however it is reached.
+static func _is_fall_speed(target: String) -> bool:
+	var text: String = target.strip_edges().trim_prefix("self.")
+	return text == "velocity.y" or text.ends_with(".velocity.y")
+
+
+## Whether a multiplication carries a factor that SCALES something down: a fraction, or a value whose
+## name says it is a scale. This is what tells a wall run's reduced gravity from ordinary gravity.
+static func _has_scale_factor(value: String) -> bool:
+	for part: String in value.split("*"):
+		var text: String = part.strip_edges()
+		if _is_fraction(text):
+			return true
+		var lowered: String = text.to_lower()
+		for word: String in ["scale", "percent", "factor", "multiplier"]:
+			if lowered.contains(word):
+				return true
+	return false
+
+
+## A list said the way a sentence says it: "a", "a and b", "a, b and c".
+static func _and_list(words: PackedStringArray) -> String:
+	if words.size() <= 1:
+		return "" if words.is_empty() else words[0]
+	var head: PackedStringArray = words.slice(0, words.size() - 1)
+	return "%s and %s" % [", ".join(head), words[words.size() - 1]]
+
+
+## Whether a value is a literal between 0 and 1 - the fraction a drag or a gravity scale is written
+## as. A name is not a fraction: only the number can be read without guessing.
+static func _is_fraction(value: String) -> bool:
+	var text: String = value.strip_edges()
+	if not text.is_valid_float():
+		return false
+	var number: float = text.to_float()
+	return number > 0.0 and number < 1.0
 
 
 ## T8. The nearest-or-farthest LOOP a body writes: walk a list, measure the distance to each one,

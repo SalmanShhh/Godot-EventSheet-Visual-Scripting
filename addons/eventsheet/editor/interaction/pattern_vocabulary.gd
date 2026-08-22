@@ -237,6 +237,24 @@ const ENTRIES: Dictionary = {
 		"why": "speed is kept rather than chased, and the slope under you is where it comes from",
 		"adoptable": "skateboard",
 		"rank": 35
+	},
+	"ledge": {
+		"words": "Ledge grab",
+		"why": "a probe that finds a wall ahead and a higher one that finds nothing is a lip, and the flag raised there is the hang",
+		"adoptable": "traversal_kit",
+		"rank": 36
+	},
+	"wall_move": {
+		"words": "Wall moves",
+		"why": "the wall the body is already touching carries three moves: a capped slide, a jump along the wall's own normal, and a run on reduced gravity",
+		"adoptable": "traversal_kit",
+		"rank": 37
+	},
+	"swim": {
+		"words": "Swimming",
+		"why": "a marked volume that raises a flag on the way in and lowers it on the way out, and gravity traded for drag while it is up",
+		"adoptable": "traversal_kit",
+		"rank": 38
 	}
 }
 
@@ -260,7 +278,9 @@ const PACK_LABELS: Dictionary = {
 	"touch_gestures": "Touch Gestures",
 	"fps_controller": "FPS Controller",
 	"upgrades": "Upgrades",
-	"skateboard": "Skateboard"
+	"skateboard": "Skateboard",
+	"traversal_kit": "Traversal Kit",
+	"traversal_kit_3d": "Traversal Kit 3D"
 }
 
 
