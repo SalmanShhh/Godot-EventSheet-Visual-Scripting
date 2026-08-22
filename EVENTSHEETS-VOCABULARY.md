@@ -311,6 +311,7 @@ Node script extending `CharacterBody2D`.
 - **Is Combo Enabled** (`id: String`) - Whether a combo is registered and enabled.
 - **Is Buffer Empty** - Whether the input buffer has no tokens.
 - **Combo Has Tag** (`id: String, tag: String`) - Whether a combo carries a tag.
+- **Combo Has Animation** (`id: String`) - Whether a combo has been wired to an animation.
 
 #### Actions
 - **Register Combo** (`id: String, sequence: String, timing_window: float`) - Registers (or replaces) a combo: a unique id and its sequence as comma-separated tokens (for example "down,forward,punch"). timing_window is the seconds allowed between inputs (-1 = use the default, 0 = no time limit). Use "*" as a token to match any input.
@@ -329,6 +330,8 @@ Node script extending `CharacterBody2D`.
 - **Add To Chain** (`hit: String, points: float`) - Scores a hit into the chain running right now: the points are multiplied by the current multiplier, then the multiplier climbs by one. Nothing is safe until the chain is banked.
 - **Bank Chain** - Cashes the chain in: everything it is worth moves into the banked total and the multiplier goes back to one. This is what landing the finisher is worth.
 - **Drop Chain** - Throws the running chain away and puts the multiplier back to one. The banked total is untouched - this is what dropping the combo costs.
+- **Set Animation For Combo** (`id: String, player: AnimationPlayer, animation: String`) - Wires a registered combo to an animation: when that combo matches, the player you name plays that clip, and On Combo Matched still fires for everything else the move does. One row per move - the whole move list is a table.
+- **Clear Animation For Combo** (`id: String`) - Unwires a combo from its animation. The combo keeps matching and keeps firing its trigger; it simply stops playing a clip of its own.
 
 #### Expressions
 - **Matched Id** - The id of the combo that just matched (inside On Combo Matched).
@@ -350,6 +353,7 @@ Node script extending `CharacterBody2D`.
 - **Partial Length** (`index: int`) - The total length of the part-way combo at an index (pair with Partial Progress for a fill bar).
 - **Combo Count** - How many combos are registered.
 - **Combo Id At** (`index: int`) - The registered combo id at an index (use with Combo Count to list them).
+- **Animation For Combo** (`id: String`) - The animation a combo is wired to play; "" when it is wired to none.
 
 ### CurrencyLedgerAddon (`res://eventsheet_addons/currency_ledger/currency_ledger_addon.gd`)
 @ace_tags(economy, currency) @ace_category("Currency") @ace_version(1.0.0)
@@ -2507,10 +2511,16 @@ the AJAX object (asking a server for something, and sending it something).
 ### Animation Player (`res://addons/eventforge/registration/modules/animation_player_aces.gd`)
 Animation control vocabulary (drive an AnimationPlayer from events).
 
+#### Triggers
+- **On Animation Frame** (`animation: String, frame: String`) - Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. Applying it adds the clip-and-frame question as a condition you can see and edit.
+- **On Animation Event** (`event_name: String`) - Runs when an animation's method track reaches its key. The track calls a function by name and this event IS that function, so the animation and the sheet meet without a signal in between - name the event here and call the same name from the track.
+
 #### Conditions
 - **Has Animation** (`animation: String, target: String`) - True when this player owns a clip by that name - guard a Play so a missing animation never errors.
 - **Is Playing** (`target: String`) - True while this animation player is running an animation.
 - **Current State Is** (`state: String, target: String`) - True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.
+- **Is Between** (`animation: String, from_time: String, to_time: String, target: String`) - True while the play head is inside a slice of one clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on.
+- **Is Animation Frame** (`animation: String, frame: String, target: String`) - True when a sprite is showing one particular frame of one particular clip - the question under On Animation Frame, on its own for a per-tick check.
 
 #### Actions
 - **Set Animation Speed** (`scale: float, target: String`) - Scales how fast every animation on this player runs - slow-mo a death, speed up a fast-forward. 0 freezes it in place.
@@ -2521,6 +2531,7 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 - **Set Flipped** (`flipped: String, target: String`) - Turns this sprite upside down, or back the right way up.
 - **Set Image** (`path: String, target: String`) - Shows a different image on this sprite.
 - **Play One-Shot Animation** (`name: String, target: String`) - Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.
+- **Pause For** (`seconds: String, target: String`) - Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.
 
 #### Expressions
 - **Animation Position** (`target: String`) - How many seconds into the current animation the play head is - sync an effect to a frame or drive a progress bar.
@@ -4497,11 +4508,14 @@ Timed inputs (X28): input windows, mashes, prompts and graded timing.
 #### Conditions
 - **Pressed In The Window** (`open_flag: String, action: String, deadline: String`) - True when the control goes down while the window is still open, used inside an input event. Pair it with the grade to tell a perfect answer from a good one.
 - **Input Window Missed** (`open_flag: String, deadline: String`) - True the moment an open window runs out with nothing pressed - the punish, the failed lockpick, the dropped finisher.
+- **Is Input Buffered** (`input: String`) - True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.
 - **Mashed In Time** (`counter: String, count: String, started: String, seconds: String`) - True once the presses arrive quickly enough - breaking free, cranking a winch, shaking off a grab.
 
 #### Actions
 - **Open Input Window** (`open_flag: String, deadline: String, seconds: String, prompt: String`) - Opens a window the player has a moment to answer. Measured on the engine clock, which keeps running while the game is paused.
 - **Close Input Window** (`open_flag: String, prompt: String`) - Shuts the window whether or not the player answered - put it after the graded branches so one press cannot count twice.
+- **Buffer Input** (`input: String, frames: String`) - Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.
+- **Consume Buffered Input** (`input: String`) - Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.
 - **Start Mash Count** (`counter: String, started: String`) - Resets the press count and stamps the moment the mash began, so the question below can be asked about this attempt only.
 - **Count Mash Press** (`counter: String`) - Adds one press to the mash. Put it under the control's own pressed event.
 - **Show Prompt** (`label: String, action: String`) - Puts the control's real key or button on a label, so the prompt is right on every keyboard and after every rebind.
